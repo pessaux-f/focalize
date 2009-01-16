@@ -1,0 +1,1151 @@
+(** 
+   @title Quotient algebraic structures
+   @author Renaud Rioboo
+
+
+   A first try to model quotient sets using projectors
+
+   Further references in the book
+
+    A Course in Universal Algebra
+    by Stanley N. Burris and H.P. Sankappanavar
+
+    available at http://www.math.uwaterloo.ca/~snburris/htdocs/ualg.html
+
+*)
+
+
+use "quotients";;
+use "additive_law";;
+use "multiplicative_law";;
+use "weak_structures";;
+use "rings_fields";;
+(* uses general_properties;; *)
+
+open "quotients";;
+open "weak_structures";;
+open "additive_law";;
+open "rings_fields";;
+
+(** 
+   Compatibility between addition and equivalence relation 
+   an equivalence relation which is compatible with some algebraic laws
+   is often aclled a congruence
+ *)
+species Additive_congruence(G is Additive_group) 
+  inherits Equivalence_relation(G) =
+    (** additive compatibity *)
+    property plus_preserves_equiv: all x1 x2 y1 y2 in G,
+      !equiv(x1, x2) -> 
+        !equiv(y1, y2) -> 
+          !equiv(G!plus(x1, y1), G!plus(x2, y2));
+    (** opposite compatibity *)
+    property opposite_preserves_equiv: all x1 x2 in G,
+      !equiv(x1, x2) -> !equiv(G!opposite(x1), G!opposite(x2));
+end
+;;
+
+
+(** 
+   General properties for additive projections. The projection function
+   should preserve equivalence classes.
+   [rr]: we can note that we never need the fact the projection function is 
+         idempotent. This is a simple port of structure using a function
+*)
+species Additive_projections(G is Additive_group) 
+  inherits Additive_congruence(G), Projections(G) =
+
+  (** additive compatibility *)
+  property additive_compatibility : all x y in G,
+    G!equal(!reduce(G!plus(!reduce(x), !reduce(y))), !reduce(G!plus(x, y)));
+
+  (** the equivalence relation is compatible with addition *)
+  proof of plus_preserves_equiv = 
+    <1>1 assume x1 in G, assume x2 in G, assume y1 in G, assume y2 in G,
+         assume Hx: !equiv(x1, x2),
+         assume Hy: !equiv(y1, y2),
+         prove !equiv(G!plus(x1, y1), G!plus(x2, y2))
+            <2>1 prove G!equal(!reduce(G!plus(x1, y1)), !reduce(G!plus(x2, y2)))
+                 <3>1 prove 
+                      G!equal(!reduce(G!plus(x1, y1)),
+			      !reduce(G!plus(!reduce(x1), !reduce(y1))))
+                      by property !additive_compatibility, G!equal_symmetric
+                 <3>2 prove 
+                      G!equal(!reduce(G!plus(x2, y2)),
+			      !reduce(G!plus(!reduce(x2), !reduce(y2))))
+                      by property !additive_compatibility, G!equal_symmetric
+                 <3>3 prove G!equal(!reduce(x1), !reduce(x2)) 
+                      by hypothesis Hx definition of equiv, morph
+                 <3>4 prove G!equal(!reduce(y1), !reduce(y2)) 
+                      by hypothesis Hy definition of equiv, morph
+                 <3>5 prove G!equal(G!plus(!reduce(x1), !reduce(y1)),
+				    G!plus(!reduce(x2), !reduce(y2)))
+                      by step <3>3, <3>4 property G!plus_substitution_rule
+                 <3>6 prove G!equal(!reduce(G!plus(!reduce(x1),
+						   !reduce(y1))),
+				    !reduce(G!plus(!reduce(x2),
+						   !reduce(y2))))
+                      by step <3>5 property !reduce_substitution_rule
+                 <3>f qed 
+                      by step <3>6, <3>1, <3>2
+                         property G!equal_reflexive,
+                                  G!equal_symmetric,
+                                  G!equal_transitive
+            <2>2 qed by step <2>1 definition of equiv, morph
+     <1>2 conclude
+   ;
+
+
+   (** opposite compatibility *)
+   property opposite_compatibility: all x in G,
+     G!equal(!reduce(G!opposite(!reduce(x))), !reduce(G!opposite(x)));
+
+   (** the equivalence relation is compatibile with opposite *)
+   proof of opposite_preserves_equiv =
+    <1>1 assume x1 in G, assume x2 in G,
+         assume H: !equiv(x1, x2),
+         prove G!equal(!reduce(G!opposite(x1)), !reduce(G!opposite(x2)))
+         <2>1 prove G!equal(!reduce(x1), !reduce(x2)) 
+              by hypothesis H definition of equiv, morph
+         <2>2 prove G!equal(G!opposite(!reduce(x1)),
+			    G!opposite(!reduce(x2)))
+              by step <2>1 property G!opposite_substitution_rule
+         <2>3 prove G!equal(!reduce(G!opposite(!reduce(x1))),
+			    !reduce(G!opposite(!reduce(x2))))
+              by step <2>2 property !reduce_substitution_rule
+         <2>4 prove G!equal(!reduce(G!opposite(!reduce(x1))),
+			    !reduce(G!opposite(x1)))
+              by property !opposite_compatibility
+         <2>5 prove G!equal(!reduce(G!opposite(!reduce(x2))),
+			    !reduce(G!opposite(x2)))
+              by property !opposite_compatibility
+         <2>f qed 
+              by step <2>3, <2>4, <2>5
+                 property G!equal_reflexive,
+                          G!equal_symmetric,
+                          G!equal_transitive
+    <1>2 qed by step <1>1 definition of equiv, morph
+   ;
+
+   (** zero is stable *)
+   property reduce_preserves_zero: G!equal(!reduce(G!zero), G!zero);
+end
+;;
+
+(** Sometimes projections are linear,
+   this is the case when we project over a subgroup
+ *)
+species Linear_projections(G is Additive_group)
+  inherits Additive_projections(G) =
+
+   (** the image by the projection is a submonoid *)
+   property reduce_is_additive: all x y in G,
+     G!equal(G!plus(!reduce(x), !reduce(y)),
+	     !reduce(G!plus(x, y)));
+
+   (** This is conservative extension of the former *)
+   proof of additive_compatibility =
+     <1>1 assume x in G, assume y in G,
+          prove G!equal(!reduce(G!plus(!reduce(x), !reduce(y))),
+			!reduce(G!plus(x, y)))
+          <2>1 prove G!equal(G!plus(!reduce(x), !reduce(y)),
+	 		    !reduce(G!plus(x, y)))
+               by property !reduce_is_additive
+          <2>2 prove G!equal(!reduce(G!plus(!reduce(x), !reduce(y))),
+                             !reduce(!reduce(G!plus(x, y))))
+               by step <2>1 property !reduce_substitution_rule
+          <2>3 prove G!equal(!reduce(G!plus(x, y)),
+	                     !reduce(!reduce(G!plus(x, y))))
+               by property !reduce_is_projection
+          <2>f qed
+               by step <2>1, <2>2, <2>3
+                  property G!equal_reflexive,
+                           G!equal_symmetric,
+                           G!equal_transitive
+     <1>2 conclude
+   ;
+
+  (** The image by the projection is it's mirror *)
+  property reduce_preserves_opposite: all x in G,
+    G!equal(G!opposite(!reduce(x)), !reduce(G!opposite(x)));
+
+  proof of opposite_compatibility =
+    <1>1 assume x in G,
+         prove G!equal(!reduce(G!opposite(!reduce(x))),
+		       !reduce(G!opposite(x)))
+         <2>1 prove G!equal(G!opposite(!reduce(x)), !reduce(G!opposite(x)))
+              by property !reduce_preserves_opposite
+         <2>2 prove G!equal(!reduce(G!opposite(!reduce(x))),
+			    !reduce(!reduce(G!opposite(x))))
+              by step <2>1 property !reduce_substitution_rule
+         <2>3 prove G!equal(!reduce(G!opposite(x)),
+			    !reduce(!reduce(G!opposite(x))))
+              by property !reduce_is_projection
+         <2>f qed
+              by step <2>1, <2>2, <2>3
+                 property G!equal_reflexive,
+                          G!equal_symmetric,
+                          G!equal_transitive
+    <1>2 conclude
+  ;
+
+end
+;;
+
+(**
+  Quotient groups, are quotient sets with additive projection
+*)
+species Quotient_group (G is Additive_group,
+		        Proj is Additive_projections(G))
+
+  inherits Additive_group,
+           (* Definition from quotient_set take precedence *)
+           Quotient_set(G, Proj) =
+
+  let zero in Self = G!zero;
+  theorem zero_is_reduced: !correct_representation(!zero)
+   proof =
+    <1>1 prove !represents_some_self(!zero)
+         <2>1 prove G!equal(!zero, Proj!reduce(!zero))
+              <3>1 prove G!equal(Proj!reduce(G!zero), G!zero)
+                   by property Proj!reduce_preserves_zero
+              <3>f qed by step <3>1
+                          property G!equal_symmetric,
+                                   G!equal_transitive
+                          definition of zero
+         <2>2 qed by step <2>1
+                     property G!equal_symmetric
+                     definition of represents_some_self, from_rep
+    <1>2 qed by step <1>1 definition of to_rep, correct_representation
+    ;
+
+  let plus(x in Self, y in Self) in Self = Proj!reduce(G!plus(x, y));
+  theorem plus_preserves_invariant: all x y in Self,
+    !correct_representation(x) -> !correct_representation(y) ->
+       !correct_representation(!plus(x, y))
+    (* the sketch of the proof is simple:
+       - we may assume that x and y have correct representation
+       - we prove that x+y has correct representation
+       this is tricky because we need to fool the type checker
+       with to_rep and from_rep
+    *)
+    proof =
+    (* this needs to be local since statement depends on rep *)
+    <1>1 prove all x in Self,
+                 (* this is the invariant we use *)
+                 !correct_representation(x) -> G!equal(Proj!reduce(x), x)
+         <2>1 assume x in Self,
+              assume H: !correct_representation(x),
+              prove G!equal(Proj!reduce(x), x)
+              <3>1 prove !represents_some_self(x)
+                   by hypothesis H 
+                      definition of to_rep, correct_representation
+              <3>2 prove G!equal(!from_rep(x), x)
+                   by step <3>1 definition of represents_some_self
+              <3>f qed by step <3>2 definition of from_rep
+         <2>f conclude
+    (* this needs to be local since statement depends on rep *)
+    <1>2 prove all x in G,
+                 (* this is the invariant we use *)
+                 G!equal(Proj!reduce(x), x) -> !correct_representation(x)
+         <2>1 assume x in G,
+              assume H: G!equal(Proj!reduce(x), x),
+              prove !correct_representation(x)
+              <3>1 prove !represents_some_self(x)
+                   by hypothesis H 
+                      definition of represents_some_self, from_rep
+              <3>2 qed by step <3>1 
+                          definition of to_rep, correct_representation
+         <2>f conclude
+    (* this is where we do our work *)
+    <1>3 assume x in Self, assume y in Self,
+         prove G!equal(Proj!reduce(!plus(x, y)), !plus(x, y))
+         <2>1 prove G!equal(Proj!reduce(Proj!reduce(G!plus(x, y))),
+			    Proj!reduce(G!plus(x, y)))
+              <3>1 prove G!equal(Proj!reduce(G!plus(x, y)),
+				 Proj!reduce(Proj!reduce(G!plus(x, y))))
+                   by property Proj!reduce_is_projection
+              <3>2 qed by step <3>1 property G!equal_symmetric
+         <2>2 qed by step <2>1 definition of plus
+    <1>4 qed by step (* <1>1, *) <1>2, <1>3
+    ;
+
+  proof of plus_left_substitution_rule =
+    <1>1 assume x in Self, assume y in Self, assume z in Self,
+         assume H: !equal(x, y),
+         prove !equal(!plus(x, z), !plus(y, z))
+         <2>1 prove G!equal(!plus(x, z), !plus(y, z))
+              <3>1 prove G!equal(Proj!reduce(G!plus(x, z)),
+				 Proj!reduce(G!plus(y, z)))
+                   <4>0 prove G!equal(x, y)
+                        by hypothesis H definition of equal
+                   <4>1 prove G!equal(G!plus(x, z), G!plus(y, z))
+                        by step <4>0 property G!plus_left_substitution_rule
+                   <4>2 qed by step <4>1 property Proj!reduce_substitution_rule
+              <3>f qed by step <3>1 definition of plus
+         <2>2 qed by step <2>1 definition of equal
+    <1>2 conclude
+  ;
+
+  proof of plus_right_substitution_rule =
+    by property !plus_left_substitution_rule, !plus_commutes, !equal_transitive
+    ;
+
+  theorem zero_is_left_neutral: all x in Self, !equal(!plus(!zero, x), x)
+    proof =
+    <1>1 prove all x in Self,
+                 !correct_representation(x) -> G!equal(Proj!reduce(x), x)
+         <2>1 assume x in Self,
+              assume H: !correct_representation(x),
+              prove G!equal(Proj!reduce(x), x)
+              <3>1 prove !represents_some_self(x)
+                   by hypothesis H 
+                      definition of to_rep, correct_representation
+              <3>2 prove G!equal(!from_rep(x), x)
+                   by step <3>1 definition of represents_some_self
+              <3>f qed by step <3>2 definition of from_rep
+         <2>f conclude
+    <1>2 assume x in Self,
+         prove G!equal(!plus(!zero, x), x)
+         <2>1 prove !correct_representation(x)
+              (* this is the invariant *)
+              by property !correct_invariant
+         <2>2 prove G!equal(Proj!reduce(x), x) by step <2>1, <1>1
+         <2>3 prove G!equal(Proj!reduce(G!plus(G!zero, x)), x)
+              <3>1 prove G!equal(Proj!reduce(G!plus(G!zero, x)),
+				 Proj!reduce(x))
+                   <4>1 prove G!equal(Proj!reduce(G!zero), G!zero)
+                        by property Proj!reduce_preserves_zero
+                   <4>2 prove G!equal(G!plus(Proj!reduce(G!zero),
+					     Proj!reduce(x)),
+				      G!plus(G!zero, Proj!reduce(x)))
+                        by step <4>1 property G!plus_left_substitution_rule
+                   <4>3 prove G!equal(G!plus(G!zero, Proj!reduce(x)),
+				      Proj!reduce(x))
+                        by property G!equal_reflexive, G!zero_is_neutral
+                   <4>4 prove G!equal(G!plus(Proj!reduce(G!zero),
+					     Proj!reduce(x)),
+				      Proj!reduce(x))
+                        by step <4>2, <4>3 property G!equal_transitive
+                   <4>5 prove G!equal(Proj!reduce(x),
+				      Proj!reduce(Proj!reduce(x)))
+                        by property Proj!reduce_is_projection
+                   <4>6 prove G!equal(Proj!reduce(G!plus(Proj!reduce(G!zero),
+							 Proj!reduce(x))),
+				      Proj!reduce(Proj!reduce(x)))
+                        by step <4>4 property Proj!reduce_substitution_rule
+                   <4>7 prove G!equal(Proj!reduce(G!plus(Proj!reduce(G!zero),
+							 Proj!reduce(x))),
+				      Proj!reduce(x))
+                        by step <4>5, <4>6
+                           property G!equal_symmetric, G!equal_transitive
+                   <4>f qed
+                        by step <4>7
+                           property Proj!additive_compatibility,
+                                    G!equal_reflexive,
+                                    G!equal_symmetric,
+                                    G!equal_transitive
+              <3>2 qed by step <3>1, <2>2 property G!equal_transitive
+         <2>f qed by step <2>3  definition of zero, plus
+    <1>3 qed by step <1>2 definition of equal
+  ;
+
+  proof of zero_is_neutral =
+    by property !zero_is_left_neutral, !plus_commutes, !equal_transitive
+  ;
+
+  (* [rr]: this one is a little boring *)
+  proof of plus_is_associative =
+    <1>2 assume x in Self, assume y in Self, assume z in Self,
+          prove G!equal(Proj!reduce(G!plus(x, Proj!reduce(G!plus(y, z)))),
+			Proj!reduce(G!plus(Proj!reduce(G!plus(x, y)), z)))
+          <2>1 prove G!equal(G!plus(x, G!plus(y, z)),
+			     G!plus(G!plus(x, y), z))
+               by property G!plus_is_associative
+          <2>2 prove G!equal(Proj!reduce(G!plus(x, G!plus(y, z))),
+			     Proj!reduce(G!plus(G!plus(x, y), z)))
+               by step <2>1 property Proj!reduce_substitution_rule
+          <2>3 prove G!equal(Proj!reduce(G!plus(Proj!reduce(x),
+						Proj!reduce(G!plus(y, z)))),
+			     Proj!reduce(G!plus(Proj!reduce(G!plus(x, y)),
+						Proj!reduce(z))))
+               by step <2>2
+                  property Proj!additive_compatibility,
+                           G!equal_transitive, 
+                           G!equal_reflexive, 
+                           G!equal_symmetric
+          <2>4 prove G!equal(Proj!reduce(
+                        G!plus(Proj!reduce(x),
+			       Proj!reduce(G!plus(Proj!reduce(y),
+						  Proj!reduce(z))))),
+			     Proj!reduce(
+                        G!plus(Proj!reduce(G!plus(Proj!reduce(x),
+						  Proj!reduce(y))),
+			       Proj!reduce(z))))
+                <3>1 prove G!equal(Proj!reduce(G!plus(y, z)),
+				   Proj!reduce(G!plus(Proj!reduce(y),
+						      Proj!reduce(z))))
+                     by property Proj!additive_compatibility, G!equal_symmetric
+                <3>10 prove G!equal(G!plus(Proj!reduce(x),
+					   Proj!reduce(G!plus(y, z))),
+				    G!plus(Proj!reduce(x),
+					   Proj!reduce(G!plus(Proj!reduce(y),
+							      Proj!reduce(z)))))
+                      by step <3>1 property G!plus_right_substitution_rule
+                <3>11 prove G!equal(Proj!reduce(
+                                  G!plus(Proj!reduce(x),
+					 Proj!reduce(G!plus(y, z)))),
+				    Proj!reduce(
+                                  G!plus(Proj!reduce(x),
+					 Proj!reduce(G!plus(Proj!reduce(y),
+							    Proj!reduce(z))))))
+                     by step <3>10 property Proj!reduce_substitution_rule
+                <3>2 prove G!equal(Proj!reduce(G!plus(x, y)),
+				   Proj!reduce(G!plus(Proj!reduce(x),
+						      Proj!reduce(y))))
+                     by property Proj!additive_compatibility, G!equal_symmetric
+                <3>20 prove G!equal(G!plus(Proj!reduce(G!plus(x, y)),
+					   Proj!reduce(z)),
+				    G!plus(Proj!reduce(G!plus(Proj!reduce(x),
+							      Proj!reduce(y))),
+					   Proj!reduce(z)))
+                     by step <3>2 property G!plus_left_substitution_rule
+                <3>21 prove G!equal(Proj!reduce(
+                                G!plus(Proj!reduce(G!plus(x, y)),
+				       Proj!reduce(z))),
+				    Proj!reduce(
+                                G!plus(Proj!reduce(G!plus(Proj!reduce(x),
+							  Proj!reduce(y))),
+				       Proj!reduce(z))))
+                      by step <3>20 property Proj!reduce_substitution_rule
+                <3>f qed
+                     by step <2>3, <3>11, <3>21
+                        property G!equal_transitive, G!equal_symmetric
+          <2>5 prove G!equal(Proj!reduce(
+                        G!plus(Proj!reduce(x),
+			       Proj!reduce(Proj!reduce(
+                                   G!plus(Proj!reduce(y),
+					  Proj!reduce(z)))))),
+			     Proj!reduce(
+                        G!plus(Proj!reduce(Proj!reduce(
+                                   G!plus(Proj!reduce(x),
+					  Proj!reduce(y)))),
+			       Proj!reduce(z))))
+               <3>1 prove G!equal(Proj!reduce(
+                        G!plus(Proj!reduce(x),
+			       Proj!reduce(G!plus(Proj!reduce(y),
+						  Proj!reduce(z))))),
+				  Proj!reduce(
+                        G!plus(Proj!reduce(x),
+			       Proj!reduce(Proj!reduce(
+                                   G!plus(Proj!reduce(y),
+					  Proj!reduce(z)))))))
+                    <4>1 prove G!equal(Proj!reduce(
+                                         G!plus(Proj!reduce(y),
+						Proj!reduce(z))),
+				       Proj!reduce(Proj!reduce(
+                                        G!plus(Proj!reduce(y),
+					       Proj!reduce(z)))))
+                         by property Proj!reduce_is_projection
+                    <4>2 prove G!equal(
+                             G!plus(Proj!reduce(x),
+				    Proj!reduce(G!plus(Proj!reduce(y),
+						       Proj!reduce(z)))),
+                             G!plus(Proj!reduce(x),
+				    Proj!reduce(Proj!reduce(
+						 G!plus(Proj!reduce(y),
+							Proj!reduce(z))))))
+                         by step <4>1 property G!plus_right_substitution_rule
+
+                    <4>f qed by step <4>2 property Proj!reduce_substitution_rule
+               <3>2 prove G!equal(Proj!reduce(
+                        G!plus(Proj!reduce(G!plus(Proj!reduce(x),
+						  Proj!reduce(y))),
+			       Proj!reduce(z))),
+				  Proj!reduce(
+                        G!plus(Proj!reduce(Proj!reduce(
+                                   G!plus(Proj!reduce(x),
+					  Proj!reduce(y)))),
+			       Proj!reduce(z))))
+                    <4>1 prove G!equal(Proj!reduce(
+                                          G!plus(Proj!reduce(x),
+						 Proj!reduce(y))),
+				       Proj!reduce(Proj!reduce(
+                                          G!plus(Proj!reduce(x),
+						 Proj!reduce(y)))))
+                         by property Proj!reduce_is_projection
+                    <4>2 prove G!equal(G!plus(Proj!reduce(
+						G!plus(Proj!reduce(x),
+						       Proj!reduce(y))),
+					      Proj!reduce(z)),
+				       G!plus(Proj!reduce(Proj!reduce(
+                                                G!plus(Proj!reduce(x),
+						       Proj!reduce(y)))),
+					      Proj!reduce(z)))
+                         by step <4>1 property G!plus_left_substitution_rule
+                    <4>f qed by step <4>2 property Proj!reduce_substitution_rule
+               <3>f qed by step <2>4, <3>1, <3>2
+                           property G!equal_reflexive, 
+                                    G!equal_symmetric, 
+                                    G!equal_transitive
+          <2>6 prove G!equal(Proj!reduce(
+                        G!plus(x,
+			       Proj!reduce(G!plus(Proj!reduce(y),
+						  Proj!reduce(z))))),
+			     Proj!reduce(
+                        G!plus(Proj!reduce(G!plus(Proj!reduce(x),
+						  Proj!reduce(y))),
+			       z)))
+(*                 (\* [rr]: does not work anymore !*\) *)
+(*                by step <2>5 property Proj!additive_compatibility, *)
+(*                   G!equal_reflexive, G!equal_symmetric, G!equal_transitive *)
+               <3>1 prove G!equal(Proj!reduce(
+                        G!plus(Proj!reduce(x),
+			       Proj!reduce(Proj!reduce(
+                                   G!plus(Proj!reduce(y),
+					  Proj!reduce(z)))))),
+				  Proj!reduce(
+                        G!plus(x,
+			       Proj!reduce(G!plus(Proj!reduce(y),
+						  Proj!reduce(z))))))
+                    by property Proj!additive_compatibility
+               <3>2 prove G!equal(Proj!reduce(
+                        G!plus(Proj!reduce(Proj!reduce(
+                                   G!plus(Proj!reduce(x),
+					  Proj!reduce(y)))),
+			       Proj!reduce(z))),
+				  Proj!reduce(
+                        G!plus(Proj!reduce(G!plus(Proj!reduce(x),
+						  Proj!reduce(y))),
+			       z)))
+                    by property Proj!additive_compatibility
+               <3>f qed by step <2>5, <3>1, <3>2 
+                           property G!equal_symmetric, G!equal_transitive
+          <2>7 prove G!equal(Proj!reduce(
+                        G!plus(x, Proj!reduce(G!plus(y, z)))),
+			     Proj!reduce(
+                        G!plus(Proj!reduce(G!plus(x, y)), z)))
+               <3>1 prove G!equal(Proj!reduce(
+                        G!plus(x,
+			       Proj!reduce(G!plus(Proj!reduce(y),
+						  Proj!reduce(z))))),
+				  Proj!reduce(
+                        G!plus(x, Proj!reduce(G!plus(y, z)))))
+                    <4>1 prove G!equal(Proj!reduce(G!plus(Proj!reduce(y),
+						   Proj!reduce(z))),
+				       Proj!reduce(G!plus(y, z)))
+                        by property Proj!additive_compatibility
+                    <4>2 prove G!equal(G!plus(x,
+					      Proj!reduce(
+                                                 G!plus(Proj!reduce(y),
+							Proj!reduce(z)))),
+				       G!plus(x,
+					      Proj!reduce(G!plus(y, z))))
+                         by step <4>1 property G!plus_right_substitution_rule
+                    <4>f qed by step <4>2 property Proj!reduce_substitution_rule
+               <3>2 prove G!equal(Proj!reduce(
+                        G!plus(Proj!reduce(G!plus(Proj!reduce(x),
+						  Proj!reduce(y))),
+			       z)),
+				 Proj!reduce(
+                        G!plus(Proj!reduce(G!plus(x, y)), z)))
+                    <4>1 prove G!equal(Proj!reduce(G!plus(Proj!reduce(x),
+							  Proj!reduce(y))),
+				       Proj!reduce(G!plus(x, y)))
+                         by property Proj!additive_compatibility
+                    <4>2 prove G!equal(G!plus(Proj!reduce(
+                                                G!plus(Proj!reduce(x),
+						       Proj!reduce(y))),
+					      z),
+				       G!plus(Proj!reduce(G!plus(x, y)),
+					      z))
+                         by step  <4>1 property G!plus_left_substitution_rule
+                    <4>f qed by step <4>2 property Proj!reduce_substitution_rule
+               <3>f qed by step <2>6, <3>1, <3>2
+                           property G!equal_symmetric, G!equal_transitive
+          <2>f qed by step <2>7 property G!equal_symmetric
+    <1>f qed by step <1>2 definition of equal, plus
+  ;
+
+  proof of plus_commutes =
+    (* does not depend on the invariant *)
+    <1>1 assume x in Self, assume y in Self,
+         prove !equal(!plus(x, y), !plus(y, x))
+         <2>1 prove G!equal(!plus(x, y), !plus(y, x))
+              <3>1 prove G!equal(Proj!reduce(G!plus(x, y)),
+				 Proj!reduce(G!plus(y, x)))
+                   <4>1 prove G!equal(G!plus(x, y),
+				      G!plus(y, x))
+                        by property G!plus_commutes
+                   <4>f qed by step <4>1 property Proj!reduce_substitution_rule
+              <3>2 qed by step <3>1 definition of plus
+         <2>2 qed by step <2>1 definition of equal
+    <1>2 conclude
+  ;
+
+  let opposite(x in Self) in Self = Proj!reduce(G!opposite(x));
+  theorem opposite_preserves_invariant: all x in Self,
+    !correct_representation(x) -> !correct_representation(!opposite(x))
+    proof =
+      <1>1 prove all x in G,
+                 G!equal(Proj!reduce(x), x) -> !correct_representation(x)
+           <2>1 assume x in G,
+                assume H: G!equal(Proj!reduce(x), x),
+                prove !correct_representation(x)
+                <3>1 prove !represents_some_self(x)
+                     by hypothesis H 
+                        definition of represents_some_self, from_rep
+                <3>2 qed by step <3>1 
+                            definition of to_rep, correct_representation
+           <2>f conclude
+      <1>2 assume x in Self,
+           prove G!equal(Proj!reduce(!opposite(x)), !opposite(x))
+           <2>1 prove G!equal(Proj!reduce(Proj!reduce(G!opposite(x))),
+			      Proj!reduce(G!opposite(x)))
+                by property Proj!reduce_is_projection, G!equal_symmetric
+           <2>2 qed by step <2>1 definition of opposite
+      <1>2 conclude
+  ;
+
+
+  proof of opposite_is_opposite =
+    <1>1 prove all x in Self,
+                 !correct_representation(x) -> G!equal(Proj!reduce(x), x)
+         <2>1 assume x in Self,
+              assume H: !correct_representation(x),
+              prove G!equal(Proj!reduce(x), x)
+              <3>1 prove !represents_some_self(x)
+                   by hypothesis H definition of to_rep, correct_representation
+              <3>2 prove G!equal(!from_rep(x), x)
+                   by step <3>1 definition of represents_some_self
+              <3>f qed by step <3>2 definition of from_rep
+         <2>f conclude
+    <1>3 assume x in Self,
+         prove !equal(!plus(x, !opposite(x)), !zero)
+         (* use the invariant on x *)
+         <2>1 prove G!equal(Proj!reduce(x), x)
+              by step <1>1 property !correct_invariant
+         (* unfold definitions *)
+         <2>2 prove G!equal(Proj!reduce(G!plus(x,
+					       Proj!reduce(G!opposite(x)))),
+			    G!zero)
+              <3>1 prove
+                  G!equal(Proj!reduce(G!plus(x, Proj!reduce(G!opposite(x)))),
+			  Proj!reduce(G!plus(Proj!reduce(x),
+					     Proj!reduce(G!opposite(x)))))
+(* 		  (\* [rr]: does not work anymore *\) *)
+(*                   by step <2>1 *)
+(*                      property G!plus_left_substitution_rule, *)
+(* 		             Proj!reduce_substitution_rule, *)
+(*                              G!equal_symmetric, G!equal_transitive *)
+                   <4>1 prove G!equal(G!plus(x, Proj!reduce(G!opposite(x))),
+				      G!plus(Proj!reduce(x),
+					     Proj!reduce(G!opposite(x))))
+                        by step <2>1 
+                           property G!plus_left_substitution_rule,
+			            G!equal_symmetric,
+			            G!equal_transitive
+                   <4>2 qed by step <4>1 property Proj!reduce_substitution_rule
+              <3>2 prove G!equal(Proj!reduce(
+                                    G!plus(Proj!reduce(x),
+					   Proj!reduce(G!opposite(x)))),
+				 Proj!reduce(G!plus(x, G!opposite(x))))
+                   by property Proj!additive_compatibility
+              <3>3 prove G!equal(Proj!reduce(G!plus(x, G!opposite(x))),
+				 Proj!reduce(G!zero))
+                   by property Proj!reduce_substitution_rule,
+                               G!opposite_is_opposite
+              <3>f qed by step <3>1, <3>2, <3>3
+                          property Proj!reduce_preserves_zero, 
+                                   G!equal_transitive
+         <2>f qed by step <2>2 
+                     definition of zero, plus, opposite, equal
+    <1>f qed by step <1>3
+  ;
+end
+;;
+
+(**
+   We don't need to project since the target of the projection is a subgroup
+ *)
+species Reduced_group(G is Additive_group, Proj is Linear_projections(G))
+  inherits Quotient_group(G, Proj) =
+  (** Redefinition of plus invalidates previous properties *)
+  let plus(x, y) = G!plus(x, y);
+  proof of plus_left_substitution_rule =
+    <1>1 assume x in Self, assume y in Self, assume z in Self,
+         assume H: G!equal(x, y),
+         prove G!equal(G!plus(x, z), G!plus(y, z))
+         by hypothesis H property G!plus_left_substitution_rule
+    <1>2 qed by step <1>1 definition of equal, plus
+    ;
+
+  proof of plus_preserves_invariant =
+    <1>0 prove all x in Self,
+         !correct_representation(x) -> G!equal(Proj!reduce(x), x)
+         by definition of correct_representation, to_rep,
+                          represents_some_self, from_rep
+    <1>1 prove all x in Self,
+         G!equal(Proj!reduce(x), x) -> !correct_representation(x)
+         by definition of correct_representation, to_rep,
+                          represents_some_self, from_rep
+    <1>2 assume x in Self, assume y in Self,
+         assume Hx: !correct_representation(x),
+         assume Hy: !correct_representation(y),
+         prove !correct_representation(G!plus(x, y))
+         <2>1 prove G!equal(x, Proj!reduce(x))
+              by hypothesis Hx step <1>0 property G!equal_symmetric
+         <2>2 prove G!equal(y, Proj!reduce(y))
+              by hypothesis Hy step <1>0 property G!equal_symmetric
+         <2>3 prove G!equal(Proj!reduce(G!plus(x, y)), G!plus(x, y))
+              <3>1 prove G!equal(G!plus(Proj!reduce(x), Proj!reduce(y)),
+				 Proj!reduce(G!plus(x, y)))
+                   by property Proj!reduce_is_additive
+              <3>2 prove G!equal(G!plus(x, y),
+				 G!plus(Proj!reduce(x), Proj!reduce(y)))
+                   by step <2>1, <2>2 property G!plus_substitution_rule
+              <3>f qed by step <3>1, <3>2
+                          property G!equal_transitive, G!equal_symmetric
+         <2>f qed by step <2>3, <1>1
+    <1>3 qed by step <1>2 definition of plus
+  ;
+
+  proof of zero_is_left_neutral =
+    <1>1 assume x in Self,
+         prove G!equal(G!plus(G!zero, x), x)
+         by property G!zero_is_neutral
+    <1>2 qed by step <1>1 definition of equal, plus, zero
+    ;
+
+  proof of plus_is_associative =
+    by property G!plus_is_associative 
+       definition of plus, equal;
+
+  proof of plus_commutes = 
+    by property G!plus_commutes 
+       definition of plus, equal;
+
+  (** Redefinition of opposite invalidates previous properties *)
+
+  let opposite(x) = G!opposite(x);
+  proof of opposite_is_opposite =
+    <1>1 assume x in Self,
+         prove G!equal(G!plus(x, G!opposite(x)), G!zero)
+         by property G!opposite_is_opposite, G!is_zero_spec,
+                     G!equal_reflexive, G!equal_symmetric, G!equal_transitive
+    <1>2 qed by step <1>1 
+                definition of opposite, zero, plus, equal
+    ;
+
+  proof of opposite_preserves_invariant =
+    <1>0 prove all x in Self,
+         !correct_representation(x) -> G!equal(Proj!reduce(x), x)
+         by definition of correct_representation, to_rep,
+                          represents_some_self, from_rep
+    <1>1 prove all x in Self,
+         G!equal(Proj!reduce(x), x) -> !correct_representation(x)
+         by definition of correct_representation, to_rep,
+                          represents_some_self, from_rep
+    <1>2 prove all x in Self,
+            !correct_representation(x) -> !correct_representation(!opposite(x))
+         <2>1 assume x in Self,
+              assume H: !correct_representation(x),
+              prove G!equal(Proj!reduce(G!opposite(x)),
+			    G!opposite(x))
+              <3>1 prove G!equal(Proj!reduce(x), x)
+                   by step <1>0 hypothesis H
+              <3>2 prove G!equal(G!opposite(Proj!reduce(x)),
+				 Proj!reduce(G!opposite(x)))
+                   by property Proj!reduce_preserves_opposite,
+                               G!equal_symmetric
+              <3>3 prove G!equal(G!opposite(Proj!reduce(x)),
+				 G!opposite(x))
+                   by step <3>1 property G!opposite_substitution_rule
+              <3>f qed by step <3>3, <3>2
+                          property G!equal_symmetric, 
+                                   G!equal_transitive, 
+                                   G!equal_reflexive
+         <2>f qed by step <2>1, <1>1 definition of opposite
+    <1>f qed by step <1>2
+  ;
+end
+;;
+
+(**
+   in a ring we should project along an ideal, thus preserving equivalence
+*)
+species Projector_along_ideal(R is Commutative_ring)
+  inherits Additive_projections(R) =
+
+  (** multiplicative compatibility *)
+   property reduce_preserves_multiplication : all x y in R,
+     R!equal(!reduce(R!mult(x, y)), !reduce(R!mult(!reduce(x), !reduce(y))));
+
+   property reduce_preserves_one : R!equal(!reduce(R!one), R!one);
+
+end
+;;
+
+species Projector_on_zero(G is Additive_group)
+  inherits Additive_projections(G)=
+
+  representation = basics#unit;
+  let reduce(_x) = G!zero;
+
+  proof of reduce_substitution_rule = 
+    by property G!equal_reflexive definition of reduce;
+  proof of reduce_is_projection = 
+    by property G!equal_reflexive definition of reduce;
+  proof of opposite_compatibility = 
+    by property G!equal_reflexive definition of reduce;
+  proof of additive_compatibility = 
+    by property G!equal_reflexive definition of reduce;
+  proof of reduce_preserves_zero = 
+    by property G!equal_reflexive definition of reduce;
+
+end
+;;
+
+species Quotient_ring(R is Commutative_ring,
+		      Proj is Projector_along_ideal(R))
+  inherits Commutative_ring, Quotient_group(R, Proj) =
+
+  let one in Self = R!one;
+  theorem one_is_reduced: !correct_representation(!one)
+    proof =
+    <1>1 prove all x in R,
+                 R!equal(Proj!reduce(x), x) -> !correct_representation(x)
+         <2>1 assume x in R,
+              assume H: R!equal(Proj!reduce(x), x),
+              prove !correct_representation(x)
+              <3>1 prove !represents_some_self(x)
+                   by hypothesis H 
+                      definition of represents_some_self, from_rep
+              <3>2 qed by step <3>1 definition of to_rep, correct_representation
+         <2>f conclude
+    <1>2 prove R!equal(Proj!reduce(R!one), R!one)
+         by property Proj!reduce_preserves_one
+    <1>3 qed by step <1>1, <1>2 definition of one
+  ;
+
+  let is_one(x in Self) = R!is_one(x);
+  let mult(x in Self, y in Self) in Self = Proj!reduce(R!mult(x, y));
+  theorem mult_preserves_invariant: all x y in Self,
+    !correct_representation(x) -> !correct_representation(y) ->
+      !correct_representation(!mult(x, y))
+    proof =
+    (* this needs to be local since statement depends on rep *)
+    <1>1 prove all x in Self,
+                 !correct_representation(x) -> R!equal(Proj!reduce(x), x)
+         <2>1 assume x in Self,
+              assume H: !correct_representation(x),
+              prove R!equal(Proj!reduce(x), x)
+              <3>1 prove !represents_some_self(x)
+                   by hypothesis H definition of to_rep, correct_representation
+              <3>2 prove R!equal(!from_rep(x), x)
+                   by step <3>1 definition of represents_some_self
+              <3>f qed by step <3>2 definition of from_rep
+         <2>f conclude
+    (* this needs to be local since statement depends on rep *)
+    <1>2 prove all x in R,
+                 R!equal(Proj!reduce(x), x) -> !correct_representation(x)
+         <2>1 assume x in R,
+              assume H: R!equal(Proj!reduce(x), x),
+              prove !correct_representation(x)
+              <3>1 prove !represents_some_self(x)
+                   by hypothesis H 
+                      definition of represents_some_self, from_rep
+              <3>2 qed by step <3>1 definition of to_rep, correct_representation
+         <2>f conclude
+    (* this is where we do our work *)
+    <1>3 assume x in Self, assume y in Self,
+         prove R!equal(Proj!reduce(!mult(x, y)), !mult(x, y))
+         <2>1 prove R!equal(Proj!reduce(Proj!reduce(R!mult(x, y))),
+			    Proj!reduce(R!mult(x, y)))
+              <3>1 prove R!equal(Proj!reduce(R!mult(x, y)),
+				 Proj!reduce(Proj!reduce(R!mult(x, y))))
+                   by property Proj!reduce_is_projection
+              <3>2 qed by step <3>1 property R!equal_symmetric
+         <2>2 qed by step <2>1 definition of mult
+    <1>4 qed by step <1>1, <1>2, <1>3
+  ;
+
+  proof of mult_left_substitution_rule =
+    by property R!mult_left_substitution_rule, Proj!reduce_substitution_rule
+       definition of mult, equal
+    ;
+  (* [rr]: this one might be boring *)
+  proof of mult_assoc =
+(*     definition of mult equal; *)
+    assumed {* *}
+(*     by r!mult_assoc, *)
+(*        r!mult_left_substitution_rule, r!mult_right_substitution_rule, *)
+(*        proj!reduce_preserves_multiplication, *)
+(*        proj!reduce_substitution_rule, proj!reduce_is_projection *)
+(*     def !mult, !equal *)
+    ;
+  proof of mult_commutes =
+    by property R!mult_commutes, Proj!reduce_substitution_rule
+       definition of mult, equal
+    ;
+
+  proof of one_is_left_neutral =
+    (* this needs to be local since statement depends on rep *)
+    <1>1 prove all x in Self,
+                 !correct_representation(x) -> R!equal(Proj!reduce(x), x)
+         <2>1 assume x in Self,
+              assume H: !correct_representation(x),
+              prove R!equal(Proj!reduce(x), x)
+              <3>1 prove !represents_some_self(x)
+                   by hypothesis H definition of to_rep, correct_representation
+              <3>2 prove R!equal(!from_rep(x), x)
+                   by step <3>1 definition of represents_some_self
+              <3>f qed by step <3>2 definition of from_rep
+         <2>f conclude
+    (* this needs to be local since statement depends on rep *)
+    <1>2 prove all x in R,
+                 R!equal(Proj!reduce(x), x) -> !correct_representation(x)
+         <2>1 assume x in R,
+              assume H: R!equal(Proj!reduce(x), x),
+              prove !correct_representation(x)
+              <3>1 prove !represents_some_self(x)
+                   by hypothesis H 
+                      definition of represents_some_self, from_rep
+              <3>2 qed by step <3>1 definition of to_rep, correct_representation
+         <2>f conclude
+    (* this is where we do our work *)
+    <1>3 assume x in Self,
+         prove !equal(!mult(!one, x), x)
+         <2>1 prove !equal(Proj!reduce(R!mult(R!one, x)), x)
+              <3>1 prove R!equal(Proj!reduce(R!mult(R!one, x)), x)
+                   <4>1 prove R!equal(R!mult(R!one, x), x)
+                        by property R!one_is_left_neutral
+                   <4>2 prove R!equal(Proj!reduce(R!mult(R!one, x)),
+				      Proj!reduce(x))
+                        by step <4>1 property Proj!reduce_substitution_rule
+                   <4>3 prove R!equal(Proj!reduce(x), x)
+                        (* [rr]: this is where we use the invariant *)
+                        <5>1 prove !correct_representation(x)
+                             by property !correct_invariant
+                        <5>2 qed by step <1>1, <5>1
+                   <4>f qed by step <4>2, <4>3
+                               property R!equal_symmetric, R!equal_transitive
+              (* [rr]: this looks like the definition to me ! It fails*)
+              <3>2 qed by step <3>1 definition of equal
+         <2>2 qed by step <2>1 definition of mult, one
+    <1>2 conclude
+  ;
+  (* [rr]: this one might be boring *)
+  proof of mult_left_distributes_on_plus = assumed {* *};
+
+end
+;;
+
+(**
+   May be we can start thinking about this ?
+   An ideal I is prime if every time a product x.y is in I
+   then on of x and y is in I
+
+   The quotient of a ring by a prime ideal is an integral domain
+ *)
+species Projector_along_prime_ideal(R is Commutative_ring)
+   inherits Projector_along_ideal(R) =
+
+end
+;;
+
+(**
+  An ideal is principal if it is generated by one single element
+ *)
+species Projector_along_principal_ideal(R is Euclidean_domain)
+  inherits Projector_along_ideal(R) =
+
+  (** returns the generator of the ideal *)
+  signature ideal_generator: R;
+
+  property non_null_generator: ~(R!is_zero(!ideal_generator));
+
+  (** reudction is to take the canonical element of the residue class *)
+  let reduce(x) = R!remainder(x, !ideal_generator);
+
+  proof of reduce_substitution_rule =
+    <1>1 assume x in R, assume y in R,
+         assume H: R!equal(x, y),
+         prove R!equal(R!remainder(x, !ideal_generator),
+		       R!remainder(y, !ideal_generator))
+         by hypothesis H
+            property !non_null_generator, R!remainder_left_substitution_rule
+  <1>2 qed by step <1>1 definition of reduce;
+
+  proof of reduce_preserves_zero =
+    <1>1 prove R!equal(R!remainder(R!zero, !ideal_generator), R!zero)
+         <2>1 prove R!is_zero(R!remainder(R!zero, !ideal_generator))
+              by property R!zero_remainder_is_zero, !non_null_generator
+         <2>f qed by step <2>1
+                     property R!is_zero_spec,
+                              R!equal_transitive, R!equal_symmetric
+    <1>f qed by step <1>1 definition of reduce;
+
+
+  proof of reduce_is_projection =
+     <1>1 assume x in R,
+          prove R!equal(R!remainder(R!remainder(x, !ideal_generator),
+				    !ideal_generator),
+			R!remainder(x, !ideal_generator))
+          <2>1 prove
+               R!equal(x,
+		       R!plus(R!mult(!ideal_generator,
+				     R!plus(R!quotient(x, !ideal_generator),
+					   R!quotient(R!remainder(
+                                                         x,
+						         !ideal_generator),
+						      !ideal_generator))),
+			      R!remainder(R!remainder(x, !ideal_generator),
+					  !ideal_generator)))
+               assumed {* *}
+          <2>2 prove (R!is_zero(R!remainder(R!remainder(x, !ideal_generator),
+					    !ideal_generator))
+                      \/
+                      R!euclidean_ordering
+                        (R!remainder(R!remainder(x, !ideal_generator),
+				     !ideal_generator),
+                         !ideal_generator))
+               assumed {* *}
+          <2>f qed by step <2>1, <2>2 
+                      property !non_null_generator, R!euclidean_characterisation
+     <1>2 qed by step <1>1
+                 property R!equal_symmetric 
+                 definition of reduce
+   ;
+
+  proof of additive_compatibility =
+     <1>1 assume x in R, assume y in R,
+          prove R!equal(R!remainder(R!plus(R!remainder(x, !ideal_generator),
+					   R!remainder(y, !ideal_generator)),
+				    !ideal_generator),
+			R!remainder(R!plus(x, y), !ideal_generator))
+          assumed {* *}
+     <1>2 qed by step <1>1 definition of reduce;
+
+  proof of opposite_compatibility =
+     <1>1 assume x in R,
+          prove R!equal(R!remainder(R!opposite(R!remainder(x,
+							   !ideal_generator)),
+				    !ideal_generator),
+			R!remainder(R!opposite(x), !ideal_generator))
+          assumed {* *}
+     <1>f qed by step <1>1 definition of reduce;
+
+  proof of reduce_preserves_multiplication =
+     <1>1 assume x in R, assume y in R,
+          prove R!equal(R!remainder(R!mult(R!remainder(x, !ideal_generator),
+					   R!remainder(y, !ideal_generator)),
+				    !ideal_generator),
+			R!remainder(R!mult(x, y), !ideal_generator))
+          assumed {* *}
+     <1>2 qed by step <1>1 
+                 property R!equal_symmetric 
+                 definition of reduce;
+
+
+  proof of reduce_preserves_one =
+    <1>1 prove R!equal(R!remainder(R!one, !ideal_generator), R!one)
+         <2>1 prove R!equal(R!one,
+			    R!plus(R!mult(!ideal_generator, R!zero),
+				   R!one))
+              <3>1 prove R!equal(R!mult(!ideal_generator, R!zero), R!zero)
+                   by property R!zero_right_absorbes
+              <3>2 prove R!equal(R!plus(R!mult(!ideal_generator, R!zero),
+					R!one),
+				 R!plus(R!zero, R!one))
+                   by step <3>1 property R!plus_left_substitution_rule
+              <3>f qed by step <3>2
+                          property R!zero_is_neutral,
+                                   R!equal_transitive, R!equal_symmetric
+         <2>2 prove R!euclidean_ordering(R!one, !ideal_generator)
+              by property !non_null_generator, R!one_is_euclidean_minimal
+         <2>f qed by step <2>1, <2>2
+                    property !non_null_generator, 
+                             R!equal_symmetric,
+                             R!euclidean_characterisation
+    <1>2 qed by step <1>1 definition of reduce;
+
+end
+;;
+
+(* (\**  *)
+(*    This represents all the properties required to prove that the  *)
+(*    residue class ring can be defined by reduction *)
+(* *\) *)
+(* species remainder_projector(r is euclidean_domain, n in r)  *)
+(*    inherits projector_along_principal_ideal(r) = *)
+
+(*    (\** we state that the species has no real element *\) *)
+(*    rep = unit ; *)
+
+(*    let ideal_generator in r = *)
+(*       if r!is_zero(n) *)
+(*       then #foc_error("cannot instanciate the trivial ideal") *)
+(*       else n *)
+(*   ; *)
+
+(*    proof of non_null_generator= *)
+(*     def: ideal_generator; *)
+(*     assumed; *)
+
+(* end *)
+
+(* (\* [rr]: small_integers are not certified, does not compile to Coq *\) *)
+(* (\* uses small_integers;; *\) *)
+(* (\* open small_integers;; *\) *)
+
+(* (\* collection proj_z_2 implements *\) *)
+(* (\*   remainder_projector(foc_small_integers, foc_small_integers!parse("2"))= *\) *)
+(* (\* end *\) *)
+
+(**
+   We now project along a principal ideal to obtain the lateral classes
+   of the equivalence relation.
+ *)
+species Modular_ring(R is Euclidean_domain,
+                     Proj is Projector_along_principal_ideal(R))
+    inherits Quotient_ring(R, Proj) =
+end
+;;
+
+(**
+   A maximal ideal is an ideal which is not contained in any proper ideal
+*)
+species Projector_along_maximal_principal_ideal(R is Euclidean_domain)
+  inherits Projector_along_prime_ideal(R),
+           Projector_along_principal_ideal(R) =
+end
+;;
+
+(**
+   Some quotient rings are fields
+*)
+species Modular_field(R is Euclidean_domain,
+                      Proj is Projector_along_maximal_principal_ideal(R))
+  inherits Field, Modular_ring(R, Proj) =
+
+  (** n is assumed to be prime *)
+  proof of mult_is_integral = assumed {* *};
+
+  (** we define inversion and divison from inversion *)
+  let inv(x in Self) in Self =
+   let res = R!bezout(x, Proj!ideal_generator)
+   in
+   let g = weak_structures#gcd(res) in
+   let c1 = weak_structures#coef1(res) in
+   let ig = R!recip(g) in
+   if basics#is_failed(ig)
+   then basics#focalize_error ("Modular_field: inv: Bad Gcd")
+   else  R!remainder(R!mult(basics#non_failed(ig), c1), Proj!ideal_generator);
+
+  let div(x, y) = !mult(x, !inv(y));
+  proof of div_is_complete = assumed {* *};
+  proof of inv_substitution_rule = assumed {* *};
+
+end
+;;
