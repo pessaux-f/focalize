@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2008-12-12 08:24:54 weis Exp $
+# $Id: Makefile,v 1.10 2009-01-16 16:46:42 weis Exp $
 
 ROOT_DIR = ../../../..
 
@@ -28,8 +28,9 @@ all:: $(TEX_FILES)
 	latex refman.tex
 	makeindex refman
 	bibtex refman
-	latex refman.tex
+	latex refman.tex && latex refman.tex
+	dvips refman.dvi
 	dvipdf refman.dvi
 
 clean::
-	$(RM) *.aux *.log *.pdf *.ps *.dvi *.idx *.ilg *.ind *.toc
+	$(RM) *.aux *.log *.pdf refman.ps *.dvi *.idx *.ilg *.ind *.toc
