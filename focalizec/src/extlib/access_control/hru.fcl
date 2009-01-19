@@ -409,6 +409,16 @@ species S_model_acl (Rh is Rho,
         else aux_acl (S_c_o_s_s_m!tail (l))
      in aux_acl (liste_acl) ;
 
+(*   let rec aux_acl (l in S_c_o_s_s_m, ob) in S_s_m = *)
+(*      if S_c_o_s_s_m!equal (l, S_c_o_s_s_m!vide) *)
+(*      then S_s_m!vide *)
+(*      else if O!equal (ob, C_o_s_s_m!first (S_c_o_s_s_m!head (l))) *)
+(*      then C_o_s_s_m!second (S_c_o_s_s_m!head (l)) *)
+(*      else aux_acl (S_c_o_s_s_m!tail (l), ob) ; *)
+
+(*   let acl (ob) = *)
+(*      aux_acl (liste_acl, ob) ; *)
+
   let equal (m1, m2) =
      S_a!equal (lambda (m1), lambda (m2)) ;
 
