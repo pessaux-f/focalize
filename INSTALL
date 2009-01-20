@@ -13,12 +13,18 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: INSTALL,v 1.3 2009-01-16 14:00:48 weis Exp $
+#  $Id: INSTALL,v 1.4 2009-01-20 12:59:58 weis Exp $
 
 Compile and install with:
   ./configure [~/pkg]
   make
   make install
+
+Type:
+
+./configure -help | more
+
+or see below for details.
 
 Licence: New BSD Licence (see the file LICENSE for details)
 =======
@@ -32,15 +38,41 @@ Contacts:
   (Find and click on the ``Bug Tracking'' link)
 - Contact developers: focalize-devel@inria.fr
 
+Installation in brief:
+======================
+
+The FoCaLize installation is a two steps process, it needs two places where
+to permanently install files:
+
+(1) a directory writable during the configuration phase,
+
+(2) a directory writable during the installation phase.
+
+Directory (1) is typically ~/pkg (hence writable for you).
+Directory (2) is typically /usr/local (hence, on writable for root).
+
+Directory (1) is the argument of the -share-prefix option of configure.
+Directory (2) is the argument of the -prefix option of configure.
+
+In directory (1), the configuration phase builds and installs three external
+systems Objective Caml, CamlP5 and the Coq system. Internal tools zenon and
+zvtov will also install there.
+
+In directory (2) the installation phase installs the focalizec compiler, its
+library and documentation.
+
+All the tools in directory (1) and (2) are mandatory to use the FocaLize system.
+
 Details on installation:
 ========================
+
 The software will compile and install in three phases in turn:
  (1) Installation of mandatory external tools: Ocaml, Camlp5, Coq.
  (2) Installation of mandatory internal tools: zenon, zvtov.
      Compilation of the compiler focalizec and its libraries.
  (3) Installation of the compiler: focalizec.
 
-The command "./configure" performs task (1).
+The command "./configure ~/pkg" performs task (1).
 The command "make" performs task (2).
 The command "make install" performs task (3): it installs the compiler, its
 libraries, and the documentation.
