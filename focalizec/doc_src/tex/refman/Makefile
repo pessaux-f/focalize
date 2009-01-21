@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.11 2009-01-21 17:45:38 weis Exp $
+# $Id: Makefile,v 1.12 2009-01-21 19:47:03 weis Exp $
 
 ROOT_DIR = ../../../..
 
@@ -28,7 +28,7 @@ IMAGEN = imagen -extra "ppmquant 255"
 
 include $(ROOT_DIR)/Makefile.common
 
-all:: refman.dvi refman.ps refman.pdf refman.html
+all:: refman.dvi refman.ps refman.pdf #refman.html # Not yet...
 
 refman.dvi: $(TEX_FILES)
 	$(LATEX) refman.tex
