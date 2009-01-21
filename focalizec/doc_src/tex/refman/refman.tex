@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.42 2009-01-21 17:53:10 weis Exp $
+% $Id: refman.tex,v 1.43 2009-01-21 19:43:00 weis Exp $
 
 \documentclass[11pt]{report}
 \usepackage[english]{babel}
@@ -15,12 +15,12 @@
 %% Pour afficher les listings de manière plus sexy... ;)
 \lstdefinelanguage{FoCaLize}
   {morekeywords={alias, all, and, as, assume, assumed, begin, by, caml,
-      collection, coq, coq_require, definition, else, end,
+      collection, conclude, coq, coq_require, definition, else, end,
       ex, external, false, function, hypothesis, if, in,
       inherits, internal, implements, is, let, lexicographic,
       local, logical, match, measure, not, notation, of, open,
       on, or, order, proof, prop, property, prove, qed, rec,
-      representation, representation, Self, signature, species, step,
+      representation, Self, signature, species, step,
       structural, termination, then, theorem, true, type, use,
       with},
     sensitive=false,
@@ -159,13 +159,18 @@ ESTIME and GALLIUM are teams of INRIA Rocquencourt\footnote{INRIA,
 \mbox{} \vspace*{2cm}
 \end{center}
 
-The \focal\ project was first partially supported by LIP6 (Projet LIP6
+The {\focal} project was first partially supported by LIP6 (Projet Foc, LIP6
 1997) then by the Ministry of Research (Action Modulogic) and is
 currently partially supported by the French SSURF ANR project
 ANR-06-SETI-016 (Safety and Security UndeR Focal). This project also
 benefited of strong collaborations with EDEMOI ANR project and with
 BERTIN and SAFERIVER companies.
 
+The {\focal} language and compiler development effort started again from
+scratch in 2006 to achieve the current focalizec compiler distribution.
+
+This manual documents this completely revised system with the new syntax and
+sematics extensions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{tocdepth}{5}
