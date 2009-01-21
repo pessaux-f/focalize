@@ -1,20 +1,19 @@
-% $Id: refman.tex,v 1.41 2009-01-15 17:06:54 doligez Exp $
+% $Id: refman.tex,v 1.42 2009-01-21 17:53:10 weis Exp $
 
-\documentclass{report}
+\documentclass[11pt]{report}
 \usepackage[english]{babel}
 \usepackage{times}
 \usepackage[latin1]{inputenc}
+\usepackage{fullpage}
 \usepackage{color}
 \usepackage{listings}
 \usepackage{index}
 \usepackage{graphicx}
 
-
-
 \input{macros}
 
 %% Pour afficher les listings de manière plus sexy... ;)
-\lstdefinelanguage{Focal}
+\lstdefinelanguage{FoCaLize}
   {morekeywords={alias, all, and, as, assume, assumed, begin, by, caml,
       collection, coq, coq_require, definition, else, end,
       ex, external, false, function, hypothesis, if, in,
@@ -26,12 +25,12 @@
       with},
     sensitive=false,
     morecomment=[n]{(*}{*)},  %% Autoriser les nested comments
-    morecomment=[n]{(**}{*)},  %% Autoriser les nested comments
+    morecomment=[n]{(**}{*)}, %% Autoriser les nested comments
     morestring=[b]",
   }
 
 \lstset{
-  language=Focal, tabsize=2, frame=single, breaklines=true,
+  language=FoCaLize, tabsize=2, frame=single, breaklines=true,
   basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
 }
 
@@ -48,6 +47,8 @@
 
 {\Huge \textbf{\focal}}
 
+%HEVEA\setcounter{cuttingdepth}{0}
+%HEVEA\title{The {\focal} system, release {\focalversion}}
 
 \vspace*{3cm}
 
@@ -56,33 +57,28 @@
 
 \vspace*{2cm}
 
-{\LARGE \textbf{Version 1.0.0} }
+{\LARGE \textbf{\focalversion} }
 
 \vspace*{1cm}
 
-{\LARGE \textbf{December 2008}} 
+{\LARGE \textbf{\focalversiondate}}
 
 
 \vspace*{3cm}
 
 
 {\Large \textbf{Authors}}
- 
+
 \mbox{} \vspace*{2cm}
 
 {\large\em
+%%%% please add your name as soon as you modify the tex - Th-%%%
 Th\'er\`ese Hardin,
 Fran\c{c}ois Pessaux,
 Pierre Weis,
 Damien Doligez
 }
 \end{center}
-
-
-
-
-%%%% please add your name as soon as you modify the tex - Th-%%%
-
 
 \newpage
 
@@ -93,11 +89,6 @@ Damien Doligez
 
 \bigskip
 
-
-
-
-
-
 {\large\em \focal\ is the result of a collective work of several researchers,
 listed in the following, who designed, defined, compiled, studied,  extended,
 used and debugged the preceding versions. They were helped by many
@@ -106,10 +97,10 @@ would like to thank all these students and more generally all the
 persons who brought some contribution to \focal. }
 
 
- \vspace*{2cm}
+\vspace*{2cm}
 
 \begin{center}
-{\Large \textbf{ \focal\  contributors}} 
+{\Large \textbf{ \focal\  contributors}}
 \mbox{} \vspace*{2cm}
 \end{center}
 
@@ -128,13 +119,13 @@ Pierre Weis (ESTIME-INRIA)}
 \bigskip
 
 \begin{center}
-{\large \textbf{and their institutions}} 
+{\large \textbf{and their institutions}}
 \mbox{} \vspace*{2cm}
 \end{center}
 
 {\em SPI (Semantics, Proofs and Implementations) is a team of LIP6,
 (Laboratoire d'Infor\-matique de Paris 6) of UPMC (Pierre and Marie Curie
-University)\footnote{UPMC-LIP6, 
+University)\footnote{UPMC-LIP6,
 104 avenue du Pr\'esident Kennedy, Paris 75016, France,
 \email{Firstname.Lastname@lip6.fr}}.}
 
@@ -147,12 +138,12 @@ des Arts et M\'etiers)\footnote{CNAM-CEDRIC,
 292 rue Saint Martin, 75003, Paris, France,
 \email{Firstname.Lastname@cnam.fr}} and ENSIIE (Ecole Nationale d'Informatique pour
 l'Industrie et l'Entreprise)\footnote{ENSIIE-CEDRIC,
-1 Square de la R\'esistance, 91025 Evry Cedex, France, 
+1 Square de la R\'esistance, 91025 Evry Cedex, France,
 \email{Lastname@ensiie.fr}}. }
- 
+
 \bigskip
 {\em
-ESTIME and GALLIUM are teams of INRIA Rocquencourt\footnote{INRIA, 
+ESTIME and GALLIUM are teams of INRIA Rocquencourt\footnote{INRIA,
   Bat 8. Domaine de Voluceau, Rocquencourt, BP 105, F-78153 Le
   Chesnay, France, \email{Firstname.Lastname@inria.fr}}
 }
@@ -164,7 +155,7 @@ ESTIME and GALLIUM are teams of INRIA Rocquencourt\footnote{INRIA,
 
 
 \begin{center}
-{\Large \textbf{Thanks}} 
+{\Large \textbf{Thanks}}
 \mbox{} \vspace*{2cm}
 \end{center}
 
@@ -173,7 +164,7 @@ The \focal\ project was first partially supported by LIP6 (Projet LIP6
 currently partially supported by the French SSURF ANR project
 ANR-06-SETI-016 (Safety and Security UndeR Focal). This project also
 benefited of strong collaborations with EDEMOI ANR project and with
-BERTIN and SAFERIVER companies.  
+BERTIN and SAFERIVER companies.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -191,7 +182,7 @@ BERTIN and SAFERIVER companies.
 \section*{Introduction}
 
 %%%% Intro to give a short description of motivations and milestones
-%%%% in the development. 
+%%%% in the development.
 \input{motivations.tex}
 
 
@@ -200,7 +191,7 @@ BERTIN and SAFERIVER companies.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Overview}
 %%%% a smooth introduction to focal main concepts before entering the
-%%%% true reference manual. 
+%%%% true reference manual.
 
 \input{glimpse.tex}
 
@@ -235,7 +226,7 @@ BERTIN and SAFERIVER companies.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Making proofs in \focal\ Proof Language}
 \label{making-proofs}
-\input{proofs.tex}
+%\input{proofs.tex}
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
