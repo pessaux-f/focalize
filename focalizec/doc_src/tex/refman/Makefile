@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.12 2009-01-21 19:47:03 weis Exp $
+# $Id: Makefile,v 1.13 2009-01-21 21:01:15 weis Exp $
 
 ROOT_DIR = ../../../..
 
@@ -28,7 +28,7 @@ IMAGEN = imagen -extra "ppmquant 255"
 
 include $(ROOT_DIR)/Makefile.common
 
-all:: refman.dvi refman.ps refman.pdf #refman.html # Not yet...
+all:: refman.dvi refman.ps refman.pdf refman.html # Not so great but yet...
 
 refman.dvi: $(TEX_FILES)
 	$(LATEX) refman.tex
@@ -40,7 +40,7 @@ refman.pdf: refman.dvi
 	dvipdf refman.dvi
 
 refman.html: refman.dvi
-	$(HEVEA) -fix macros.hva refman
+	$(HEVEA) -fix macros.hva refman.hva refman.tex
 
 refman.ps: refman.dvi
 	dvips refman.dvi

@@ -1,0 +1,132 @@
+\def\bbbn{{\rm I\!N}}
+
+\def\url#1{{#1}}
+\def\email#1{{\tt#1}}
+\def{\ocaml}{{\sf OCaml}}
+\def{\moca}{{\sf Moca}}
+\def{\focal}{{\sf FoCaLize}}
+\def{\focalversion}{{\sf 1.0.0}}
+\def{\focalversiondate}{{\sf January 2009}}
+\def{\coq}{{\sf Coq}}
+\def{\cime}{{\sf CiME}}
+\def{\zenon}{{\sf Zenon}}
+\def{\focdoc}{{\sf FoCaLizeDoc}}
+\def{\dotty}{{\sf dotty}}
+\def{\graphviz}{{\sf graphviz}}
+\def{\emacs}{{\sf emacs}}
+\def{\cygwin}{{\sf Cygwin}}
+\def{\xsltproc}{{\sf xsltproc}}
+\def{\terminal}[1]{{\bf {\color{red}#1}}}
+
+
+\renewcommand{\@bodyargs}{TEXT=black BGCOLOR=white}
+\let\RequirePackage\usepackage
+
+\def\space{~}
+
+\def{\vfill}{}
+\def\number{}
+\def\year{2009}
+
+\def\vfil{}
+\def\hfill{\hspace*{4ex}}
+\def\hfil{\hspace*{2ex}}
+
+\def\halign{}
+
+% Pour alltt
+\def\rminalltt#1{{\rm #1}}
+\def\goodbreak{\ \\}
+\def\break{\ \\}
+\def\@savedlistI{}
+
+# From CSL
+\def{\machine}{\tt}
+%\def{\firstline}{\black\#\blue }
+%\def{\nextline}{\ }
+%\def{\@zyva}{\firstline\renewcommand{\?}{\nextline}}
+%\newenvironment{camlunder}{\@style{U}}{}
+%\def{\caml}{\begin{alltt}\renewcommand{\\}{\char92}\def\<{\begin{camlunder}}\def\>{\end{camlunder}}\activebracefalse}
+%\let\?=\@zyva
+%\def{\endcaml}{\activebracetrue\end{alltt}}
+%\renewcommand{\:}{\renewcommand{\?}{\@zyva}\maroon}
+%\def{\var}[1]{\textit{#1}}
+
+%\newenvironment{library}{}{}
+%\newcounter{page}
+%\newenvironment{comment}{\begin{quote}}{\end{quote}}
+%\def{\nth}[2]{\({#1}_{#2}\)}
+%\newenvironment{options}{\begin{description}}{\end{description}}
+
+%%venant de macros.tex
+
+%\def\versionspecific#1{\begin{quote}\textsf{#1:}\quad}
+%\def\unix{\versionspecific{Unix}}
+%\def\endunix{\end{quote}}
+%\def\macos{\versionspecific{MacOS~9}}
+%\def\endmacos{\end{quote}}
+%\def\windows{\versionspecific{Windows}}
+%\def\endwindows{\end{quote}}
+
+\def\requirements{\trivlist \item[\hskip\labelsep {\bf Requirements.}]}
+\def\endrequirements{\endtrivlist}
+\def\installation{\trivlist \item[\hskip\labelsep {\bf Installation.}]}
+\def\endinstallation{\endtrivlist}
+\def\troubleshooting{\trivlist \item[\hskip\labelsep {\bf Troubleshooting.}]}
+\def\endtroubleshooting{\endtrivlist}
+
+%\newtheorem{gcrule}{Rule}
+
+% Pour les tables de priorites et autres tableaux a deux colonnes, encadres
+
+%\def\entree#1#2{#1 & #2 \\}
+%\def\tableau#1#2#3{%
+%\par\begin{center}%
+%\begin{tabular*}{.8\linewidth}{#1}%
+%\multicolumn{1}{c}{\textbf{#2}} &
+%\multicolumn{1}{c}{\textbf{#3}} \\
+%%%#2 & #3 \\%
+%}%
+%\def\endtableau{\end{tabular*}\end{center}\par}
+
+% L'environnement library (pour composer les descriptions des modules
+% de bibliotheque).
+
+
+%\def\restoreindent{\begingroup\let\@listI=\@savedlistI}
+%\def\endrestoreindent{\endgroup}
+
+
+% PDF stuff
+
+\def\pdfchapterfold#1#2{}
+%\def\pdfsection#1{}
+%\def\pdfchapter{\pdfchapterfold{0}}
+%
+%%% Pour camlidl
+
+%\def\transl#1{$[\![\mbox{#1}]\!]$}
+
+% Pour l'index
+\usepackage{multind}
+\let\indexentry=\index
+\renewcommand{\index}[1]{\indexentry{\jobname}{#1}}
+\def\ikwd#1{\indexentry{\jobname.kwd}{#1}}
+% nth
+
+\def\th{^{\mbox{\scriptsize th}}}
+\renewcommand{\hbox}[1]{\mbox{#1}}
+
+% Notations pour les metavariables
+%\def\nmth#1#2#3{\({#1}_{#2}^{#3}\)}
+%\def\optvar#1{[\var{#1}\/]}
+%\def\event{§§}
+%\def\fromoneto#1#2{$#1 = 1,\ldots{} , #2$}
+
+%List of links with no space around items
+% If you use the html url package
+%\newstyle{.li-links}{margin:0ex 0ex;}
+%\newenvironment{links}
+%{\setenvclass{itemize}{ftoc2}\setenvclass{li-itemize}{li-links}\itemize}
+%{\enditemize}
+
