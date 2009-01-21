@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.43 2009-01-21 19:43:00 weis Exp $
+% $Id: refman.tex,v 1.44 2009-01-21 20:18:55 weis Exp $
 
 \documentclass[11pt]{report}
 \usepackage[english]{babel}
@@ -12,36 +12,11 @@
 
 \input{macros}
 
-%% Pour afficher les listings de manière plus sexy... ;)
-\lstdefinelanguage{FoCaLize}
-  {morekeywords={alias, all, and, as, assume, assumed, begin, by, caml,
-      collection, conclude, coq, coq_require, definition, else, end,
-      ex, external, false, function, hypothesis, if, in,
-      inherits, internal, implements, is, let, lexicographic,
-      local, logical, match, measure, not, notation, of, open,
-      on, or, order, proof, prop, property, prove, qed, rec,
-      representation, Self, signature, species, step,
-      structural, termination, then, theorem, true, type, use,
-      with},
-    sensitive=false,
-    morecomment=[n]{(*}{*)},  %% Autoriser les nested comments
-    morecomment=[n]{(**}{*)}, %% Autoriser les nested comments
-    morestring=[b]",
-  }
-
-\lstset{
-  language=FoCaLize, tabsize=2, frame=single, breaklines=true,
-  basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
-}
-
 \makeindex
 
 \begin{document}
 
 \vspace*{3cm}
-
-
-
 
 \begin{center}
 
