@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.6 2009-01-15 17:06:54 doligez Exp $
+% $Id: lexical_conventions.tex,v 1.7 2009-01-21 17:49:32 weis Exp $
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -27,8 +27,8 @@ Comments (possibly spanning) on several lines are introduced by the
 two characters {\tt (*}, with no intervening blanks, and terminated by
 the characters {\tt *)}, with no intervening blanks. Comments are
 treated as blanks. Comments can occur inside string or character
-literals and can be nested. They are discarded during the compilation
-process. Example:
+literals (provided the {\tt *} character is escaped) and can be nested. They
+are discarded during the compilation process. Example:
 {\scriptsize
 \begin{lstlisting}
 (* Discarded comment. *)
@@ -37,19 +37,19 @@ species S =
   let m (x in Self) = (* Another discarded comment. *)
   ...
 end ;;
-(* Another discarded comment for the end of file. *)
+(* Another discarded comment at end of file. *)
 \end{lstlisting}
 }
 
 
-Comments spanning on only one line start by the two characters
-{\tt --} and are implicitly ended by the end-of-line character.
+Comments spanning on a single line start by the two characters
+{\tt --} and end with the end-of-line character.
 Example:
 {\scriptsize
 \begin{lstlisting}
 -- Discarded uni-line comment.
 species S =
-  let m (x in Self) = -- Another discarded comment.
+  let m (x in Self) = -- Another uni-line comment.
   ...
 end ;;
 \end{lstlisting}
@@ -67,19 +67,22 @@ end ;;
 with no intervening blanks, and terminated by the two characters
 {\tt *)}, with no intervening blanks.
 Annotations cannot occur inside string or character literals and
-cannot be nested. They must precede the construct  they document. This
-especially means that a
-{\bf source file cannot end by an annotation} otherwise a syntax
-error will be issued.
+cannot be nested. They must precede the construct they document.
+In particular, this means that a {\bf source file cannot end by an
+annotation}.
 
 Unlike comments, annotations are kept during the compilation process
-and recorded in the compilation information (``.fo'' files). They can
-be processed by the external documentation tool \focdoc\ provided with
-the \focal\ development environment. Several annotations can be put
-in sequence for the same construct. We call such a sequence an
-{\bf annotations block}\index{annotation!block}. This allows to embed
-inside them tags that can be used by third-party tools to discriminate
-on meaningful annotations for them. For more information, consult
+and recorded in the compilation information (``.fo'' files). Annotations can
+be processed later on by external tools that could analyze them to
+produce a new {\focal} source code accordingly.
+For instance, the {\focal} development environment provides the {\focdoc}
+automatic production tool that uses annotations to automatically generate
+documentation.
+Several annotations can be put in sequence for the same construct. We call
+such a sequence an {\bf annotations block}\index{annotation!block}.
+Using embedded tags in annotations allows third-party tools to easily find
+out annotations that are meningful to them, and safely ignore others.
+For more information, consult
 \ref{documentation-generation}.
 Example:
 {\scriptsize
@@ -129,7 +132,7 @@ Examples: {\tt foo}, {\tt bar}, {\tt \_20}, {\tt \_\_\_gee\_42}.
 \subsection{Extended identifiers}
 \label{extended-identifiers}
 \index{identifier!extended}
-Moreover, \focal\ has special forms of identifiers to allow using
+Moreover, {\focal} has special forms of identifiers to allow using
 spaces inside or extend the notion of operator identifiers.
 \begin{itemize}
   \item {\bf Quoted identifiers}.
@@ -139,10 +142,10 @@ spaces inside or extend the notion of operator identifiers.
     {\tt ``equal is reflexive''}, {\tt ``fermat conjecture''}.
   \item {\bf Infix/prefix operators}.
     \index{identifier!operator}\index{operator}
-    \focal\ allows infix and prefix operators built from a
+    {\focal} allows infix and prefix operators built from a
     ``starting operator character'' and followed by a sequence of
     regular identifiers or operator characters. For example, all the
-    following are legal operators: 
+    following are legal operators:
     {\tt +}, {\tt ++}, {\tt $\sim$+zero}, {\tt =\_mod\_5}.
 
     The position in which to use the operator (i.e. infix or prefix)
@@ -179,47 +182,78 @@ spaces inside or extend the notion of operator identifiers.
     be a prefix one.
 
     This notion of infix/prefix operator does not mean that
-    \focal\ defines all these operators: it means that the programmer
-    is free to lexically define them and use them as regular
-    prefix/infix operators instead of using the regular function
-    application. For instance, instead of creating a function to check
-    if and integer {\tt x} is equal to an integer {\tt y} minus 1
+    {\focal} defines all these operators: it means that the programmer
+    is free to define them and use them as ordinary
+    prefix/infix operators instead of only using prefix function names and regular function
+    application. For instance, if you do not like the {\focal} predefined {\tt ^}
+    operator to catenate strings, you can define a new infix synonym for {\tt ^},
+    say {tt ++}, using
 {\scriptsize
 \begin{lstlisting}
-let is_eq_minus_1 (x, y) = ... ;
-... is_eq_minus_1 (5, 7) ... ;
+let ( ++ ) (s1, s2) = s1 ^ s2 ;
+\end{lstlisting}
+}
+   and use it in the usual way
+{\scriptsize
+\begin{lstlisting}
+let hw = "Hello" ++ " world!" ;
+\end{lstlisting}
+}
+
+    As shown in the example, at definition-time, the syntax requires
+    the operator to be embraced by parentheses. More precisely, you must
+    enclose the operator between {\bf spaces} and parentheses.
+    You must write {\tt ( + )} with spaces, not simply {\tt (+)} (which leads
+    to a syntax error anyway).
+
+    The notation {\tt ( op )} is named the {\em prefix form notation} for {\tt op}.
+
+    Since you can only define prefix identifiers in {\focal}, you must use the
+    prefix form notation to define an infix operator.
+
+    When a prefix or infix operator is defined, it is still possible
+    to use it as a regular identificator using the prefix form notation.
+    For instance, you can use the prefix form of operator {\tt ++}
+    to apply it in prefix position as a simple regular function (with a
+    strange name admittedly!):
+{\scriptsize
+\begin{lstlisting}
+... ( ++ ) ("Hello", " world!") ;
+\end{lstlisting}
+}
+
+    {\bf Attention}: a common error while defining an operator is to forget
+    the spaces around the operator. This is particularly confusing if you
+    redefine the {\tt *} operator without spaces around the operator: you
+    write the lexical entity {\tt (*)} which is the beginning (or the end)
+    of a comment!
+
+    The {\focal} notion of symbolic identifiers go largely beyond simple
+    infix operators. Symbolic identifiers let you assign sophisticated names
+    to your functions and operators.
+    For instance, instead of creating a function to check if integer {\tt x}
+    is equal to the predecessor of integer {\tt y}, as in
+{\scriptsize
+\begin{lstlisting}
+let is_eq_to_predecessor (x, y) = ... ;
+... if is_eq_to_predecessor (5, 7) ... ;
 \end{lstlisting}
 }
     it is possible to directly define
 {\scriptsize
 \begin{lstlisting}
-let ( =-one ) (x, y) = ... ;
-... 5 =-one 7 ... ;
-\end{lstlisting}
-}
-    As shown in the example, at definition-time, the syntax requires
-    the operator to be embraced by parentheses. {\bf Attention}: the
-    common error while defining the {\tt *} operator is to embrace it
-    between parentheses but with no spaces around, leading to the
-    lexical entity {\tt (*)} which is a start (or end) of comment,
-    hence to a lexical error. For this reason, we always advice to
-    get the habit of clearly put spaces around the operators names.
-
-    When a prefix or infix operator is defined, it is still possible
-    to use it as a regular function application with the syntax:
-{\scriptsize
-\begin{lstlisting}
-... ( =-one ) (5, 7) ... ;
+let ( =pred ) (x, y) = ... ;
+... if 5 =pred 7 ... ;
 \end{lstlisting}
 }
 
-    {\bf Attention} : since the comma character is a possible infix
-    starting character, when using a comma to separate tuples
-    components, be sure to put a blank behind the comma otherwise,
-    {\tt (0, 1,n)} will be understood as a couple starting with the
-    integer 0 as first component, then going on with the second
-    component being the infix application of the operator {\tt ,n} to
-    the integer 1 and nothing, hence leading to a syntax error.
+    {\bf Attention} : since the comma character is a possible
+    starting character for an infix, when using commas inside tuples
+    be sure to put a blank behind the comma. Otherwise, confusion arises
+    {\tt (0, 1,n)} is understood as a couple of two values:
+    integer 0 as first component, and a second
+    component taht is the infix application of operator {\tt ,n} to
+    the integer 1 and \ldots nothing, hence leading to a syntax error.
 
 \end{itemize}
 
@@ -270,8 +304,8 @@ integer\_literal & ::= & sign?\ unsigned\_integer\_literal
 
 An integer literal is a sequence of one or more digits, optionally
 preceded by a minus or plus sign and/or a base prefix. By default,
-i.e. without base prefix, integers are in decimal. For instance:
-{\tt 0}, {\tt -42}, {\tt +36}. \focal\ syntax allows to also specify
+i.e. without a base prefix, integers are in decimal. For instance:
+{\tt 0}, {\tt -42}, {\tt +36}. {\focal} syntax allows to also specify
 integers in other bases by preceding the digits by the following
 prefixes:
 \begin{itemize}
@@ -293,7 +327,7 @@ Here are various examples of integers in various bases:
 \label{string literal}
 String literals are sequences of any characters delimited by {\tt "}
 (double quote) characters ({\em ipso facto} with no intervening
-{\tt"}). 
+{\tt"}).
 Escape sequences (meta code to insert characters that can't appear
 simply in a string) available in string literals are summarised in the
 table below:
@@ -328,6 +362,10 @@ table below:
   $\setminus$( & (              & See comment above for $\setminus$*. \\
   \hline
   $\setminus$) & )              & See comment above for $\setminus$*. \\
+  \hline
+  $\setminus$\[ & \[              & See comment above for $\setminus$*. \\
+  \hline
+  $\setminus$\] & \]              & See comment above for $\setminus$*. \\
   \hline
   $\setminus$\{ & \{              & See comment above for $\setminus$*. \\
   \hline
@@ -394,7 +432,7 @@ Floating-point numbers literals are made of an optional sign ('+' or
 '-') followed by a non-empty sequence of digits followed by a dot
 ('.') followed by a possibly empty sequence of digits and finally an
 optional scientific notation ('e' or 'E' followed an optional sign
-then by a non-empty sequence of digits. \focal\ allows floats to be
+then by a non-empty sequence of digits. {\focal} allows floats to be
 written in decimal or in hexadecimal. In the first case, digits are
 [0-9]. Example: {\tt 0.}, {\tt -0.1}, {\tt 1.e-10}, {\tt +5E7}.
 In the second case, they are [0-9 a-f A-F] and the number must be
@@ -417,7 +455,7 @@ proof\_step\_bullet & ::= &
 A proof step bullet is a non-negative non-signed integer literal
 (i.e. a non empty sequence of [0-9] characters) delimited by the
 characters {\tt <} and {\tt >}, followed by a non-empty sequence of
-alphanumeric characters (i.e. [A-Z a-z 0-9]). 
+alphanumeric characters (i.e. [A-Z a-z 0-9]).
 The first part of the bullet (i.e. the integer literal) stands for the
 depth of the bullet and the second part stands for its name. Example:
 {\scriptsize
@@ -438,20 +476,20 @@ depth of the bullet and the second part stands for its name. Example:
 \subsection{Name qualification}
 \label{qualified-name}
 \index{qualified name} \index{name!resolution}
-\index{name!qualification} 
+\index{name!qualification}
 
 Name qualification is done according to the
-compilation unit status. 
+compilation unit status.
 
 
-As precisely described in section (\ref{toplevel-def}), 
+As precisely described in section (\ref{toplevel-def}),
 toplevel-definitions include species, collections, type definitions
 (and their constitutive elements like constructors, record fields),
 toplevel-theorems and toplevel-functions.  Any toplevel-definition (thus outside species
-and collections) is visible all along the compilation unit since its
+and collections) is visible all along the compilation unit after its
 apparition.
-If a toplevel-definition is required by another compilation unit, it can
-be reached by {\bf qualifying} its name, i.e. making explicit the
+If a toplevel-definition is required by another compilation unit, you can
+reference it by {\bf qualifying} its name, i.e. making explicit the
 compilation unit's name before the definition's name using the '\#'
 character as delimiter. Examples:
 
@@ -486,7 +524,7 @@ species S inherits Basic_object = ... end ;;
 
 After an {\tt open} directive, the definitions of loaded (object files
 of) compilation units are added in head of the current scope and mask
-the ones already existing and wearing the same names. For example, in
+existing definitions wearing the same names. For example, in
 the following program: {\scriptsize
 \begin{lstlisting}
 (* Redefine my basic object, containing nothing. *)
@@ -518,24 +556,28 @@ current compilation unit''.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Reserved keywords}
-The identifiers below are reserved as keywords, and cannot be employed
+The identifiers below are reserved keywords that cannot be employed
 otherwise:
 \begin{verbatim}
-   alias        all            and             as
-   assume       assumed        begin           by
-   caml         collection     coq             coq_require
-   definition   else           end             ex
-   external     false          function        hypothesis
-   if           in             inherits        internal
-   implements   is             let             lexicographic
-   local        logical        match           measure
-   not          notation       of              open
-   on           or             order           proof
-   prop         property       prove           qed
-   rec          representation representation  Self
-   signature    species        step            structural
-   termination  then           theorem         true
-   type         use            with
+   alias all and as assume assumed
+   begin by
+   caml collection conclude coq coq_require
+   definition
+   else end ex external
+   false function
+   hypothesis
+   if in inherits internal implements is
+   let lexicographic local logical
+   match measure
+   not notation
+   of on open or order
+   proof prop property prove
+   qed
+   rec representation
+   Self signature species step structural
+   termination then theorem true type
+   use
+   with
 \end{verbatim}
 
 
