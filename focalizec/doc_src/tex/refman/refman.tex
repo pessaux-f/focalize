@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.44 2009-01-21 20:18:55 weis Exp $
+% $Id: refman.tex,v 1.45 2009-01-21 20:50:54 weis Exp $
 
 \documentclass[11pt]{report}
 \usepackage[english]{babel}
@@ -12,7 +12,7 @@
 
 \input{macros}
 
-\makeindex
+\makeindex{}
 
 \begin{document}
 
@@ -64,12 +64,12 @@ Damien Doligez
 
 \bigskip
 
-{\large\em \focal\ is the result of a collective work of several researchers,
+{\large\em {\focal} is the result of a collective work of several researchers,
 listed in the following, who designed, defined, compiled, studied,  extended,
 used and debugged the preceding versions. They were helped by many
 students who had a summer internship under their supervision. They
 would like to thank all these students and more generally all the
-persons who brought some contribution to \focal. }
+persons who brought some contribution to {\focal}. }
 
 
 \vspace*{2cm}
@@ -134,18 +134,20 @@ ESTIME and GALLIUM are teams of INRIA Rocquencourt\footnote{INRIA,
 \mbox{} \vspace*{2cm}
 \end{center}
 
-The {\focal} project was first partially supported by LIP6 (Projet Foc, LIP6
-1997) then by the Ministry of Research (Action Modulogic) and is
-currently partially supported by the French SSURF ANR project
-ANR-06-SETI-016 (Safety and Security UndeR Focal). This project also
+The {\foc} project was first partially supported by LIP6 (Projet Foc, LIP6
+1997) then by the Ministry of Research (Action Modulogic).
+The {\oldfocal} research team was then partially supported by the French SSURF ANR project
+ANR-06-SETI-016 (Safety and Security UndeR Focal). The project also
 benefited of strong collaborations with EDEMOI ANR project and with
 BERTIN and SAFERIVER companies.
 
-The {\focal} language and compiler development effort started again from
-scratch in 2006 to achieve the current focalizec compiler distribution.
+The {\focal} language and compiler development effort started around 2005.
+The architecture conception and code rewritting started from scratch in 2006
+to finally make the first focalizec compiler and {\focalize} system
+distribution in 2009, January.
 
-This manual documents this completely revised system with the new syntax and
-sematics extensions.
+This manual documents the completely revised system with the new syntax and
+its semantics extensions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \setcounter{tocdepth}{5}
