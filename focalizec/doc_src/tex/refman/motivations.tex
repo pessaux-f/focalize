@@ -1,9 +1,5 @@
-% $Id: motivations.tex,v 1.6 2009-01-21 19:45:41 weis Exp $
+% $Id: motivations.tex,v 1.7 2009-01-21 20:49:27 weis Exp $
 
-
-\newcommand{\foc}{{\sf Foc}}
-\renewcommand{\focal}{{\sf Focal}}
-\newcommand{\focalize}{{\sf FoCaLize}}
 
 \subsection*{Motivations}
 
@@ -80,13 +76,13 @@ language. R. Rioboo~\cite{ThRRCalculemus,HardinRiobooTSI04} used the
 {\ocaml} language to try different solutions which are recorded in
 ~\cite{HardinRiobooTSI04}.
 
-\subsection*{Initial {\focal} design}
+\subsection*{Initial {\oldfocal} design}
 
 Then the time came to design the syntax of the language and the compiler. To
 overcome inconsistencies risks, an original dependency analysis was
 incorporated into the compiler (V. Prevosto
 thesis\cite{PrevostoPhD03,TPHOL2002,PrevostoJAR02}) and the correction of the
-compiler (mostly written by V. Prevosto) against {\focal}'s semantics is
+compiler (mostly written by V. Prevosto) against {\oldfocal}'s semantics is
 proved (by hand) \cite{TLCA2005}, a point which
 brings a satisfactory confidence in the language's correctness. Then
 Rioboo~\cite{ } began the development of a huge computer algebra
@@ -97,27 +93,27 @@ extensively test the language and (quite satisfactory)
 efficiency  of the produced code and then to provide a standard library
 of mathematical backgrounds. And D. Doligez\cite{ZenonBDD} started the
 development of {\zenon}, an automatic prover based on tableaux method,
-which takes a {\focal} statement and tries to build a proof of it and,
+which takes a {\oldfocal} statement and tries to build a proof of it and,
 when succeeds,  issues a {\coq} term. More  recently, M. Carlier and
 C. Dubois\cite{CarlierDuboisLNCS2008} began the development of a
-test tool for {\focal}.
+test tool for {\oldfocal}.
 
-{\focal} has already been used to develop huge examples such as  the
+{\oldfocal} has already been used to develop huge examples such as  the
 standard library and the computer algebra library. The library
 dedicated to the algebra of access control models, developed by
 M. Jaume and C. Morisset\cite{jias06,fcsarspa06,MorissetPhd},
 is another huge example, which borrows implementations of orderings,
 lattices and boolean algebras from the computer algebra library.
-{\focal} was also very successfully used to formalize airport security
+{\oldfocal} was also very successfully used to formalize airport security
 regulations, a work by D. Delahaye, J.-F. Etienne, C.  Dubois,
 V. Donzeau-Gouge ~\cite{EDEMOI-All,EDEMOI-Model,EDEMOI-Proof}. This
 last work led to the development of a translator\cite{Focal-UML}
-from {\focal} to UML for documentation purposes.
+from {\oldfocal} to UML for documentation purposes.
 
 \subsection*{The {\focalize} system}
 
 The {\focalize} development effort started in 2006: it was clearly a
-continuation of the {\foc} and {\focal} efforts. The new system was rewritten
+continuation of the {\foc} and {\oldfocal} efforts. The new system was rewritten
 from scratch. A new language and syntax was designed and carefully
 implemented, with in mind ease of use, expressivity, and programmer
 friendyness. The addition of powerful data structure definitions together
