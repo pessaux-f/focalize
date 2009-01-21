@@ -2,22 +2,43 @@
 
 \def\url#1{{#1}}
 \def\email#1{{\tt#1}}
-\newcommand{\ocaml}{{\sf OCaml}}
-\newcommand{\moca}{{\sf Moca}}
-\newcommand{\focal}{{\sf FoCaLize}}
-\newcommand{\focalversion}{{\sf 1.0.0}}
-\newcommand{\focalversiondate}{{\sf January 2009}}
-\newcommand{\coq}{{\sf Coq}}
-\newcommand{\cime}{{\sf CiME}}
-\newcommand{\zenon}{{\sf Zenon}}
-\newcommand{\focdoc}{{\sf FoCaLizeDoc}}
-\newcommand{\dotty}{{\sf dotty}}
-\newcommand{\graphviz}{{\sf graphviz}}
-\newcommand{\emacs}{{\sf emacs}}
-\newcommand{\cygwin}{{\sf Cygwin}}
-\newcommand{\xsltproc}{{\sf xsltproc}}
-\newcommand{\terminal}[1]{{\bf {\color{red}#1}}}
+\def\ocaml{{\sf OCaml}}
+\def\moca{{\sf Moca}}
+\def\focal{{\sf FoCaLize}}
+\def\focalversion{{\sf 1.0.0}}
+\def\focalversiondate{{\sf January 2009}}
+\def\coq{{\sf Coq}}
+\def\cime{{\sf CiME}}
+\def\zenon{{\sf Zenon}}
+\def\focdoc{{\sf FoCaLizeDoc}}
+\def\dotty{{\sf dotty}}
+\def\graphviz{{\sf graphviz}}
+\def\emacs{{\sf emacs}}
+\def\cygwin{{\sf Cygwin}}
+\def\xsltproc{{\sf xsltproc}}
+\def\terminal#1{{\bf {\color{red}#1}}}
 
+%% Pour afficher les listings de manière plus sexy... ;)
+\lstdefinelanguage{FoCaLize}
+  {morekeywords={alias, all, and, as, assume, assumed, begin, by, caml,
+      collection, conclude, coq, coq_require, definition, else, end,
+      ex, external, false, function, hypothesis, if, in,
+      inherits, internal, implements, is, let, lexicographic,
+      local, logical, match, measure, not, notation, of, open,
+      on, or, order, proof, prop, property, prove, qed, rec,
+      representation, Self, signature, species, step,
+      structural, termination, then, theorem, true, type, use,
+      with},
+    sensitive=false,
+    morecomment=[n]{(*}{*)},  %% Autoriser les nested comments
+    morecomment=[n]{(**}{*)}, %% Autoriser les nested comments
+    morestring=[b]",
+  }
+
+\lstset{
+  language=FoCaLize, tabsize=2, frame=single, breaklines=true,
+  basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
+}
 
 % For syntax definitions
 % \begin{syntax}
