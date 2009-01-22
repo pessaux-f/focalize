@@ -12,12 +12,38 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: lexer.spec,v 1.5 2008-10-22 17:51:30 weis Exp $
+# $Id: lexer.spec,v 1.6 2009-01-22 10:02:03 weis Exp $
 
 High level specification of the Focalize lexer
 ==============================================
 
 Could be use as a set of drafts for the documentation.
+
+2009/01/22:
+===========
+Documentation tokens have to be revisited to add a tag to them.
+
+let annotation_tag = '{@' [^ '}']* '}'
+
+In the main lexer:
+...
+  (* Documentation *)
+| "(**" (annotation_tag? as tag)
+  { reset_documentation_buffer ();
+    documentation_start_pos :=
+      Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
+    documentation lexbuf;
+    begin match !documentation_start_pos with
+    | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
+    | _ -> assert false end;
+    DOCUMENTATION (tag, get_stored_documentation ()) }
+...
+
+2009/01/21:
+===========
+Conformance to reference manual (!)
+Sharing of escaped characters as a regular expression used where we need
+escapes. That way escaped chars are always the same.
 
 2008/10/12:
 ===========
