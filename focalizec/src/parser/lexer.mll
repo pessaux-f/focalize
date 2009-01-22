@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.72 2009-01-11 00:55:56 weis Exp $ *)
+(* $Id: lexer.mll,v 1.73 2009-01-22 10:05:01 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -168,9 +168,7 @@ let start_ident_char s =
     let nc = s.[i] in
     match nc with
     | '_' -> loop (i + 1) nc
-    | c ->
-      (*prerr_endline (Printf.sprintf "start_ident_char %S is %C, %d" s c i);*)
-      c, i in
+    | c -> c, i in
   loop 0 '_'
 ;;
 
@@ -181,8 +179,6 @@ let token_of_lowercase_prefix_symbol s =
   let length_s = String.length s in
   let length_meaningful = length_s - i in
   match c with
-(*  | '`' (* ` Helping emacs *) ->
-      BACKQUOTE_OP s*)
   | '~' ->
     begin match length_s, length_meaningful with
     | 1, 1 -> NEGATION
@@ -235,7 +231,6 @@ let token_of_uppercase_infix_symbol s =
     begin match length_s, length_meaningful with
     | 1, 1 -> BACKQUOTE_OP s
     | n, _ when s.[n - 1] = '`' -> IUIDENT s
-(*FIXME    | _, _ when s.[1] <> '`' -> COLON_OP s*)
     | _, _ -> BACKQUOTE_OP s
     end
   | _ -> assert false
@@ -375,13 +370,13 @@ let token_of_delimited_ident s =
     token_of_lowercase_infix_symbol s
   (* start_lowercase_prefix_symbolic *)
   | '!' | '#'
-  | '~' | '?' | '$'  (* ` Helping emacs. *) ->
+  | '~' | '?' | '$' ->
     token_of_lowercase_prefix_symbol s
   (* start_uppercase_infix_symbol *)
   | ':' | '`' -> (* ` Helping emacs *)
     token_of_uppercase_infix_symbol s
   (* start_uppercase_prefix_symbol *)
-  | '(' | '[' | '{' -> (* ]) Helping Emacs *)
+  | '(' | '[' | '{' -> (* )]} Helping Emacs *)
     token_of_uppercase_prefix_symbol s
   | _ -> assert false
 (** The first meaningful character at the beginning of a delimited
@@ -392,7 +387,7 @@ let token_of_delimited_ident s =
 (** {6 Tokens for parenthesized symbols} *)
 
 (** The prefix version of symbolic identifiers is obtained by enclosing the
-    symbol between parens. *)
+    symbol between spaces and parens. *)
 
 let token_of_paren_lowercase_prefix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_paren_lowercase_prefix_symbol %s" s);*)
@@ -434,18 +429,18 @@ let reset_external_code_buffer () =
 ;;
 
 let store_external_code_char c =
-  if !external_code_index >= String.length (!external_code_buff) then begin
-    let new_buff = String.create (String.length (!external_code_buff) * 2) in
-    String.blit (!external_code_buff) 0
-                new_buff 0 (String.length (!external_code_buff));
+  if !external_code_index >= String.length !external_code_buff then begin
+    let new_buff = String.create (String.length !external_code_buff * 2) in
+    String.blit !external_code_buff 0
+                new_buff 0 (String.length !external_code_buff);
     external_code_buff := new_buff
   end;
-  String.unsafe_set (!external_code_buff) (!external_code_index) c;
+  String.unsafe_set !external_code_buff !external_code_index c;
   incr external_code_index
 ;;
 
 let get_stored_external_code () =
-  let s = String.sub (!external_code_buff) 0 (!external_code_index) in
+  let s = String.sub !external_code_buff 0 !external_code_index in
   external_code_buff := initial_external_code_buffer;
   s
 ;;
@@ -462,18 +457,18 @@ let reset_documentation_buffer () =
 ;;
 
 let store_documentation_char c =
-  if !documentation_index >= String.length (!documentation_buff) then begin
-    let new_buff = String.create (String.length (!documentation_buff) * 2) in
-    String.blit (!documentation_buff) 0
-                new_buff 0 (String.length (!documentation_buff));
+  if !documentation_index >= String.length !documentation_buff then begin
+    let new_buff = String.create (String.length !documentation_buff * 2) in
+    String.blit !documentation_buff 0
+                new_buff 0 (String.length !documentation_buff);
     documentation_buff := new_buff
   end;
-  String.unsafe_set (!documentation_buff) (!documentation_index) c;
+  String.unsafe_set !documentation_buff !documentation_index c;
   incr documentation_index
 ;;
 
 let get_stored_documentation () =
-  let s = String.sub (!documentation_buff) 0 (!documentation_index) in
+  let s = String.sub !documentation_buff 0 !documentation_index in
   documentation_buff := initial_documentation_buffer;
   s
 ;;
@@ -490,18 +485,18 @@ let reset_string_buffer () =
 ;;
 
 let store_string_char c =
-  if !string_index >= String.length (!string_buff) then begin
-    let new_buff = String.create (String.length (!string_buff) * 2) in
-      String.blit (!string_buff) 0
-                  new_buff 0 (String.length (!string_buff));
+  if !string_index >= String.length !string_buff then begin
+    let new_buff = String.create (String.length !string_buff * 2) in
+      String.blit !string_buff 0
+                  new_buff 0 (String.length !string_buff);
       string_buff := new_buff
   end;
-  String.unsafe_set (!string_buff) (!string_index) c;
+  String.unsafe_set !string_buff !string_index c;
   incr string_index
 ;;
 
 let get_stored_string () =
-  let s = String.sub (!string_buff) 0 (!string_index) in
+  let s = String.sub !string_buff 0 !string_index in
   string_buff := initial_string_buffer;
   s
 ;;
@@ -518,18 +513,18 @@ let reset_delimited_ident_buffer () =
 ;;
 
 let store_delimited_ident_char c =
-  if !delimited_ident_index >= String.length (!delimited_ident_buff) then begin
-    let new_buff = String.create (String.length (!delimited_ident_buff) * 2) in
-    String.blit (!delimited_ident_buff) 0
-                new_buff 0 (String.length (!delimited_ident_buff));
+  if !delimited_ident_index >= String.length !delimited_ident_buff then begin
+    let new_buff = String.create (String.length !delimited_ident_buff * 2) in
+    String.blit !delimited_ident_buff 0
+                new_buff 0 (String.length !delimited_ident_buff);
     delimited_ident_buff := new_buff
   end;
-  String.unsafe_set (!delimited_ident_buff) (!delimited_ident_index) c;
+  String.unsafe_set !delimited_ident_buff !delimited_ident_index c;
   incr delimited_ident_index
 ;;
 
 let get_stored_delimited_ident () =
-  let s = String.sub (!delimited_ident_buff) 0 (!delimited_ident_index) in
+  let s = String.sub !delimited_ident_buff 0 !delimited_ident_index in
   delimited_ident_buff := initial_external_code_buffer;
   s
 ;;
@@ -542,7 +537,7 @@ let comment_start_pos = ref [];;
 
 (** {6 Decoding characters} *)
 
-let char_for_backslash = function
+let char_for_character = function
   | 'n' -> '\010'
   | 'r' -> '\013'
   | 'b' -> '\008'
@@ -568,7 +563,7 @@ let char_for_hexadecimal_code lexbuf i =
     if d1 >= 97 then d1 - 87 else
     if d1 >= 65 then d1 - 55 else
     d1 - 48 in
-  let d2 = Char.code (Lexing.lexeme_char lexbuf (i+1)) in
+  let d2 = Char.code (Lexing.lexeme_char lexbuf (i + 1)) in
   let val2 =
     if d2 >= 97 then d2 - 87 else
     if d2 >= 65 then d2 - 55 else
@@ -592,7 +587,7 @@ let update_loc lexbuf fname line absolute chars =
   }
 ;;
 
-(** Un conditionally set the location as being on line [num],
+(** Unconditionally set the location as being on line [num],
     in file [fname]. *)
 let set_loc lexbuf fname num =
   update_loc lexbuf fname (int_of_string num) true 0
@@ -622,20 +617,29 @@ let blank = [ '\032' '\009' '\012' ]
 let whites = [ ' ' '\t' ]*
 (** Any number of space and tabs (including 0). *)
 
+(** {7 Classification of characters for numbers} *)
+
+let binary_digit = [ '0'-'1' ]
+let octal_digit = [ '0'-'7' ]
+let decimal_digit = [ '0'-'9' ]
+let hexadecimal_digit = [ '0'-'9' 'a'-'f' 'A'-'F' ]
+let sign = [ '+' '-' ]
+
+(** {7 Classification of characters for string and character tokens. *)
+let escaped_decimal_code = "\\" decimal_digit decimal_digit decimal_digit
+
+let escaped_hexadecimal_code = "\\" 'x' hexadecimal_digit hexadecimal_digit
+
+let escaped_character =
+    "\\" [ '(' '[' '{' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' '}' ']' ')' ]
+    (* ` Helping emacs }]) *)
+
 (** {3 Numbers} *)
 
 (** {6 Integers} *)
 
 (** Integers can be given in binary, octal, decimal, or hexadecimal
     notation; they may have an optional sign. *)
-
-(** {7 Classification of characters for integers} *)
-
-let binary_digit = [ '0'-'1' ]
-let octal_digit = [ '0'-'7' ]
-let decimal_digit = [ '0'-'9' ]
-let hexadecimal_digit = [ '0'-'9' 'A'-'F' 'a'-'f' ]
-let sign = [ '+' '-' ]
 
 (** {7 Definition of integer literals} *)
 
@@ -700,7 +704,8 @@ let float_literal = sign? unsigned_float_literal
   (1) Characters inside infix identifiers:
     infix binary identifiers, such as +, -, *.
 
-   Rq: End_Infix ::= SPACE  (::= blanc tab newline) ( ) [] {}
+   Rq: End_Infix ::= SPACE ( ) [] {}
+       (SPACE ::= blanc tab newline)
 
   (2) Characters inside prefix identifiers:
    prefix unary identifiers, such as ~| (boolean not), -.
@@ -741,21 +746,21 @@ let symbolic =
   [ '/' '%' '&' '|' ';' '<' '=' '>' '@' '^' '\\' ]
 
 (** Characters that can only start an uppercase prefix symbol. *)
-let start_uppercase_prefix_symbolic = [ '[' '(' '{' ] (* )] Helping emacs. *)
+let start_uppercase_prefix_symbolic = [ '[' '(' '{' ] (* ])} Helping emacs. *)
 (** Characters that can only start an uppercase infix symbol. *)
 let start_uppercase_infix_symbolic = [ ':' '`'] (* ` Helping emacs. *)
 
 (** Characters that certainly start a lowercase prefix symbol. *)
 let lowercase_prefix_symbolic = [ '~' '?' '$' ]
-(* Andalso characters '!' and '#' as a special case. *)
-(* To revisit:
+
+(** Characters that can only start a lowercase prefix symbol. *)
+(* Characters '!' and '#' are treated as special cases:
   - we want lowercase prefix symbols to follow the same rules as lowercase
   infix ones (otherwise lexical rules are weird and way too difficult to grasp).
   - so we need to review the status of '!' and '#': those should obey to
   special rules for lexing, since
   * '!' is BANG
-  * '!' start_lowercase_prefix_symbolic *)
-
+  * '!' start_lowercase_prefix_symbolic is a lowercase prefix symbol. *)
 let start_lowercase_prefix_symbolic =
     '!'
   | '#'
@@ -772,7 +777,7 @@ let start_lowercase_infix_symbolic =
 let inside_lowercase_prefix_symbolic =
     start_lowercase_infix_symbolic
   | start_lowercase_prefix_symbolic
-(* | start_uppercase_infix_symbolic ??? *)
+(* We may also choose to add start_uppercase_infix_symbolic ??? *)
 
 let inside_lowercase_infix_symbolic = inside_lowercase_prefix_symbolic
 
@@ -781,7 +786,8 @@ let inside_lowercase_infix_symbolic = inside_lowercase_prefix_symbolic
     - '*' (to prevent ambiguity with comments)
     - a sign ('-', '+') to let the lexer generate 2 tokens for (-1) or 3 for
     (- x).
-    So we restrict characters to be in the safe set for symbols. *)
+    So we restrict characters to be in the safe set for symbols.
+    Helping emacs }]) *)
 let inside_uppercase_prefix_symbolic = symbolic
 
 (** Symbolic characters inside a ':' or '`' starting uppercase prefix symbol.
@@ -789,7 +795,7 @@ let inside_uppercase_prefix_symbolic = symbolic
     a lowercase infix symbol. *)
 let inside_uppercase_infix_symbolic = inside_lowercase_infix_symbolic
 
-(** Symbolic characters inside any symbol.*)
+(** Symbolic characters inside any infix symbol.*)
 let inside_infix_symbol =
     inside_lowercase_infix_symbolic
   | start_uppercase_infix_symbolic
@@ -813,7 +819,9 @@ let start_uppercase_ident =
 let start_lowercase_infix_symbol =
     '_'* start_lowercase_infix_symbolic
 
-(** Starts a usual uppercase infix symbol, such as [::] or [:->:]. *)
+(** Starts a usual uppercase infix symbol, such as [::] or [:->:].
+    Note that ',' cannot be preceded by a '_' char due to a fatal conflict
+    with the pair notation: we want x_, y to be parsed as x_ then COMMA then y. *)
 let start_uppercase_infix_symbol =
     ','
   | '_'* start_uppercase_infix_symbolic
@@ -853,7 +861,7 @@ let continue_uppercase_prefix_symbol =
 let continue_lowercase_infix_symbol =
   continue_lowercase_prefix_symbol
 
-(* After ':' we can use any lowercase infix symbol character *)
+(* After ':' we can use any lowercase infix symbol character. *)
 let continue_uppercase_infix_symbol = continue_lowercase_infix_symbol
 
 (** {7 Identifier class definitions} *)
@@ -918,8 +926,11 @@ let regular_uppercase_infix_symbol =
 
 (** {6 Delimited identifiers} *)
 
-(** Delimited identifiers are way too complex to be discribe by a regular
-    expressions: we handle them with a sub-lexer. *)
+(** Delimited identifiers are way too complex to discribe using a regular
+    expression: we handle them with a sub-lexer.
+    The specifications given here are over-simplified and just intended to
+    give a hint via regular expressions that roughly summarize the semantics
+    of the sub-lexer. *)
 
 (** {7 Delimited regular identifiers} *)
 
@@ -971,35 +982,40 @@ Symbolic idents for arithmetic operators and the like
 
 Symbolic idents for collections and constructors of sum types
     :continue_infix_ident*:  -> symbolic_uppercase_infix
-    [continue_prefix_ident*]  -> symbolic_uppercase_prefix
+    [continue_prefix_ident*] -> symbolic_uppercase_prefix
 
     Instead of this continue_*fix_ident class we can use a new class
-    any_char_in_ident ? Or any_char_in_ident_but_colon ?
+    any_char_in_ident ? Or a new class any_char_in_ident_but_colon ?
 
 Problem: we need to parse ``:=''
 
-In, fact we want to distinguish:
- - ``fixity'' syntactic status of idents
-   (infix, prefix, mixfix (?))
- - precedence of idents when mixed together
+In fact, we want to distinguish 3 concepts:
 
- - ``categorisation'' for the language at hand
-   is this identifier a possible name for:
-    - a simple value ident naming some language expression ?
+ - ``fixity'': syntactic status of idents (infix, prefix, mixfix (?)),
+
+ - precedence of idents when mixed together,
+
+ - ``categorisation'' for the language at hand;
+   a category answers to the question is this identifier a ``possible name for
+   this kind of concept'' in the language. In some other cases, this is more
+   strict and the category states which concept must attach to the identifier
+   at hand.
+   Some of these semantics concepts can be: is this identifier
+    - a simple value ident naming some of the language expressions ?
     - a function name ?
     - a bound variable name ?
-    - an operator name ? (e.g. arithmetic operators)
-    - a type name ? (e.g. is [+] a valid type name ? or is it [->] ?)
+    - an operator name (e.g. arithmetic operators) ?
+    - a type name (e.g. is [+] a valid type name ? or is [->] a type name ?) ?
     - a type variable name ? (to syntactically disambiguate [int list] from ['a list])
     - a sum type constructor name ? (e.g. [C] is valid, [::] is valid, [\[\]]
                                      is valid, [()] is valid)
     - a record field label name ?
     - a module name ?
-    - a name for other classes such as
+    - a name for other classes, such as
     - a module type name ?
     - a species or collection name ?
 
-We distinguish identifiers with their first ``meaningful'' character:
+We distinguish identifiers using their first ``meaningful'' character:
 
 *)
 
@@ -1017,8 +1033,8 @@ let uppercase_ident =
 
 (** {8 Infix symbols} *)
 
-(* +, <= are lowercase infix symbols.
-   - `union` is a lowercase infix symbol. *)
+(* +, <=, -, are lowercase infix symbols.
+   `union` is a lowercase infix symbol. *)
 let lowercase_infix_symbol =
     regular_lowercase_infix_symbol
   | '`' lowercase_ident '`'
@@ -1026,7 +1042,7 @@ let lowercase_infix_symbol =
   | delimited_lowercase_infix_symbol *)
 
 (* ::, :!:, :A: are uppercase infix symbols.
-   - `Union` is an uppercase infix symbol. *)
+   `Union` is an uppercase infix symbol. *)
 let uppercase_infix_symbol =
     regular_uppercase_infix_symbol
   | '`' uppercase_ident '`'
@@ -1044,6 +1060,10 @@ let uppercase_prefix_symbol =
     regular_uppercase_prefix_symbol
 (* From main lexer:
    | delimited_uppercase_prefix_symbol *)
+
+(** {3 Annotation tags} *)
+
+let annotation_tag = "{@" [^ '}']* '}'
 
 (** {3 The main lexer. *)
 
@@ -1063,11 +1083,12 @@ rule token = parse
   (* Characters *)
   | "\'" [^ '\\' '\'' '\010'] "\'"
     { CHAR (Lexing.lexeme_char lexbuf 1) }
-  | "\'\\" ['\\' '\'' '\"' 'n' 't' 'b' 'r' ' '] "\'"
-    { CHAR (char_for_backslash (Lexing.lexeme_char lexbuf 2)) }
-  | "\'\\" ['0'-'9'] ['0'-'9'] ['0'-'9'] "\'"
+
+  | "\'" escaped_character "\'"
+    { CHAR (char_for_character (Lexing.lexeme_char lexbuf 2)) }
+  | "\'" escaped_decimal_code "\'"
     { CHAR (char_for_decimal_code lexbuf 2) }
-  | "\'\\" 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] "\'"
+  | "\'" escaped_hexadecimal_code "\'"
     { CHAR (char_for_hexadecimal_code lexbuf 3) }
   | "\'\\" _
     { let l = Lexing.lexeme lexbuf in
@@ -1121,7 +1142,7 @@ rule token = parse
                 lexbuf.lex_curr_p)) }
 
   (* Documentation *)
-  | "(**"
+  | "(**" (* (annotation_tag? as tag) *)
     { reset_documentation_buffer ();
       documentation_start_pos :=
         Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
@@ -1129,6 +1150,7 @@ rule token = parse
       begin match !documentation_start_pos with
       | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
       | _ -> assert false end;
+      (* DOCUMENTATION (tag, get_stored_documentation ())*)
       DOCUMENTATION (get_stored_documentation ()) }
 
   (* External code *)
@@ -1207,8 +1229,8 @@ rule token = parse
     { token_of_paren_uppercase_infix_symbol inner }
 
   (* Usual simple tokens *)
-  | '(' { (*prerr_endline (Printf.sprintf "%s" "(");*) LPAREN }
-  | ')' { (*prerr_endline (Printf.sprintf "%s" ")");*) RPAREN }
+  | '(' { LPAREN }
+  | ')' { RPAREN }
   | '[' { LBRACKET }
   | ']' { RBRACKET }
   | '{' { LBRACE }
@@ -1234,17 +1256,16 @@ rule token = parse
 and delimited_ident = parse
   | "\'\'"
     { () }
-  | '\\' [ '(' '{' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' '}' ')' ]
-    (* ` Helping emacs *)
-    { store_delimited_ident_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
+  | escaped_character
+    { store_delimited_ident_char (char_for_character (Lexing.lexeme_char lexbuf 1));
       delimited_ident lexbuf }
   | '\\' newline (whites as space)
     { incr_escaped_line_num lexbuf space;
       delimited_ident lexbuf }
-  | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
+  | escaped_decimal_code
     { store_delimited_ident_char (char_for_decimal_code lexbuf 1);
       delimited_ident lexbuf }
-  | '\\' 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F']
+  | escaped_hexadecimal_code
     { store_delimited_ident_char (char_for_hexadecimal_code lexbuf 2);
       delimited_ident lexbuf }
   | '\\' _
@@ -1298,7 +1319,7 @@ and uniline_comment = parse
     { incr_line_num lexbuf;
       uniline_comment lexbuf }
   | newline
-    { incr_line_num lexbuf; }
+    { incr_line_num lexbuf }
   | eof
     { raise
         (Error
@@ -1313,15 +1334,16 @@ and comment = parse
   | "(*"
     { comment_start_pos :=
         (lexbuf.lex_start_p, lexbuf.lex_curr_p) :: !comment_start_pos;
-      comment lexbuf; }
+      comment lexbuf }
   | '\\' '*'
     { comment lexbuf }
   | "*)"
     { match !comment_start_pos with
       | [] -> assert false
-      | [ _ ] -> comment_start_pos := [];
-      | _ :: l -> comment_start_pos := l;
-                  comment lexbuf; }
+      | [ _ ] -> comment_start_pos := []
+      | _ :: l ->
+        comment_start_pos := l;
+        comment lexbuf }
   | '\\' newline whites
     { incr_line_num lexbuf;
       comment lexbuf }
@@ -1344,17 +1366,17 @@ and comment = parse
 and string = parse
   | '\"'
     { () }
-  | '\\' [ '(' '{' '-' '\\' '`' '\'' '\"' 'n' 't' 'b' 'r' ' ' '*' '}' ')' ]
-    (* ` Helping emacs *)
-    { store_string_char (char_for_backslash (Lexing.lexeme_char lexbuf 1));
-      string lexbuf }
   | '\\' newline (whites as spaces)
     { incr_escaped_line_num lexbuf spaces;
       string lexbuf }
-  | '\\' ['0'-'9'] ['0'-'9'] ['0'-'9']
-    { store_string_char(char_for_decimal_code lexbuf 1);
+  | escaped_character
+    (* ` Helping emacs *)
+    { store_string_char (char_for_character (Lexing.lexeme_char lexbuf 1));
       string lexbuf }
-  | '\\' 'x' ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F']
+  | escaped_decimal_code
+    { store_string_char (char_for_decimal_code lexbuf 1);
+      string lexbuf }
+  | escaped_hexadecimal_code
     { store_string_char (char_for_hexadecimal_code lexbuf 2);
       string lexbuf }
   | '\\' _
