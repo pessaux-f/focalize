@@ -15,9 +15,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: polys_abstract.fcl,v 1.4 2009-01-12 13:37:26 pessaux Exp $ *)
+(* $Id: polys_abstract.fcl,v 1.5 2009-01-22 10:35:23 weis Exp $ *)
 
-(**                                                                      
+(**
  @title Abstract polynomials
  @author the FoC Project
  some polynomials for FoC
@@ -39,12 +39,12 @@ open "weak_structures";;
 open "rings_fields";;
 open "integers";;
 
-(** specifications for the monoid of formal sums of products of elements of 
+(** specifications for the monoid of formal sums of products of elements of
     a monoid m whose elements are coefficients and an ordered lattice i of
-    formal exponents of some variable 
+    formal exponents of some variable
     an element of i is often called a monomial *)
-species Formal_indexed_sum (M is Set_with_zero, 
-      	       	       	       I is Ordered_set)
+species Formal_indexed_sum (M is Set_with_zero,
+                            I is Ordered_set)
   inherits Additive_monoid =
 
    signature degree: Self -> I;
@@ -56,7 +56,7 @@ species Formal_indexed_sum (M is Set_with_zero,
          /\
         I!leq (!degree (r), !degree (q)));
    (**
-    any sum p can be written as 
+    any sum p can be written as
       monomial (leading_coefficient (p), degree (p)) + reductum (p)
     *)
    (* returns the coefficient of highest degree *)
@@ -68,7 +68,7 @@ species Formal_indexed_sum (M is Set_with_zero,
    signature reductum: Self -> Self;
 
    property reductum_has_smaller_degree: all p in Self,
-   ~ (!is_zero (p)) -> ~ (!is_zero (!reductum (p))) -> 
+   ~ (!is_zero (p)) -> ~ (!is_zero (!reductum (p))) ->
         I!lt (!degree (!reductum (p)), !degree (p)) ;
 
    property reductum_of_zero_is_zero: !equal (!reductum (!zero), !zero);
@@ -84,7 +84,7 @@ species Formal_indexed_sum (M is Set_with_zero,
 
    property reductum_is_reductum: all p in Self, all c in M, all d in I,
     ~ (!is_zero (p)) -> M!equal (c, !leading_coefficient (p)) ->
-      I!equal (d, !degree (p)) -> 
+      I!equal (d, !degree (p)) ->
        !equal (p, !plus (!monomial (c, d), !reductum (p)));
 
    property monomial_has_coefficient: all c in M, all d in I,
@@ -122,7 +122,7 @@ species Formal_indexed_sum (M is Set_with_zero,
      proof = assumed {* *};
 
    theorem tail_has_smaller_degree: all p q in Self, all d in I,
-     !equal (p, !tail (q, d)) -> 
+     !equal (p, !tail (q, d)) ->
        ~  (!is_zero (q)) ->  I!lt (!degree (q), d)
     proof = assumed {* *};
 
@@ -198,14 +198,14 @@ end;;
 (*        fun d -> foo!of_nat (d) *)
 (*     in *)
 (*     let rec aux (res, p) = *)
-(* 	let deg = degree (p) in *)
-(* 	  if nat!is_min (deg) then *)
-(* 	    res *)
-(* 	  else *)
-(* 	    aux ( *)
-(*       	      plus ( mult ((coeff_of_deg (deg)), (monomial (lc (p), pred (deg)))),  *)
-(*       	       	     res), *)
-(* 	      reductum (p)) *)
+(*         let deg = degree (p) in *)
+(*           if nat!is_min (deg) then *)
+(*             res *)
+(*           else *)
+(*             aux ( *)
+(*                     plus ( mult ((coeff_of_deg (deg)), (monomial (lc (p), pred (deg)))),  *)
+(*                                   res), *)
+(*               reductum (p)) *)
 (*     in *)
 (*       aux (self!zero); *)
 
@@ -248,12 +248,12 @@ end;;
 (*     !is_zero (q) *)
 (*       or *)
 (*     !equal (!plus (!mult (!pseudo_quotient (p, q), *)
-(* 		       q), *)
-(* 		 !pseudo_remainder (p, q)), *)
-(* 	   !module_mult (!pow (!leading_coefficient (q), *)
-(* 			     nat!successor (nat!minus (!degree (p), !degree (q)))), *)
-(* 			p)); *)
-		 
+(*                q), *)
+(*          !pseudo_remainder (p, q)), *)
+(*            !module_mult (!pow (!leading_coefficient (q), *)
+(*              nat!successor (nat!minus (!degree (p), !degree (q)))), *)
+(*         p)); *)
+
 (*   property pseudo_remainder_has_lower_degree: all p q rr in self, *)
 (*     not (!is_zero (q)) -> !equal (rr, !pseudo_remainder (p, q)) -> *)
 (*        not (!is_zero (rr)) -> nat!lt (!degree (rr), !degree (q)) *)
@@ -269,7 +269,7 @@ end;;
 
 (* (\** Univariate abstract polynomials over a gcd_domain *\) *)
 (* species formal_univariate_polynomials_gcd_domain (r is gcd_domain, *)
-(* 			                         nat is natural_number_system) *)
+(*                                  nat is natural_number_system) *)
 (*   inherits gcd_domain, *)
 (*            formal_univariate_polynomials_domain (r, nat) = *)
 (* end *)
@@ -277,7 +277,7 @@ end;;
 
 (* (\** Univariate abstract polynomials over a field *\) *)
 (* species formal_univariate_polynomials_field (r is field, *)
-(* 			                    nat is natural_number_system) *)
+(*                             nat is natural_number_system) *)
 (*   inherits euclidean_domain, *)
 (*            formal_univariate_polynomials_domain (r, nat) = *)
 
@@ -292,9 +292,9 @@ end;;
 (*       let diff = nat!minus (dp,dq) in *)
 (*       !inner_quo_rem (!fmecg (!reductum (p),cp,diff,q), *)
 (*                      lcq, *)
-(* 		     dq, *)
-(* 		     q, *)
-(* 		     !plus (!monomial (lcq, diff), res)); *)
+(*              dq, *)
+(*              q, *)
+(*              !plus (!monomial (lcq, diff), res)); *)
 
 
 (*   let quo_rem (p,q) = *)
