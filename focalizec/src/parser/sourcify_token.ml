@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.9 2009-01-11 00:55:56 weis Exp $ *)
+(* $Id: sourcify_token.ml,v 1.10 2009-01-22 10:36:01 weis Exp $ *)
 
 open Parser;;
 
@@ -32,7 +32,8 @@ let token ppf = function
   | BOOL s -> Format.fprintf ppf "%s %s" "BOOL" s
   | STRING s -> Format.fprintf ppf "%s %s" "STRING" s
   | CHAR c -> Format.fprintf ppf "%s %c" "CHAR" c
-  | DOCUMENTATION s -> Format.fprintf ppf "%s %s" "DOCUMENTATION" s
+  | DOCUMENTATION (tag, s) ->
+    Format.fprintf ppf "%s (%s, %s)" "DOCUMENTATION" tag s
   | PROOF_LABEL (s1, s2) -> Format.fprintf ppf "%s %s %s" "PROOF_LABEL" s1 s2
   | EXTERNAL_CODE s -> Format.fprintf ppf "%s %s" "EXTERNAL_CODE" s
   | BACKSLASH_OP s -> Format.fprintf ppf "%s %s" "BACKSLASH_OP" s

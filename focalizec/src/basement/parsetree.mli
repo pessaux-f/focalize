@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.46 2008-12-27 15:56:30 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.47 2009-01-22 10:36:01 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -55,7 +55,8 @@
 type documentation = doc_elem list
 and doc_elem = {
   de_loc : Location.t;
-  de_desc : string;
+  de_desc : string; (** The contents of the documentation. *)
+  de_tag : string; (** The tag to designate which processor is concerned. *)
 }
 ;;
 

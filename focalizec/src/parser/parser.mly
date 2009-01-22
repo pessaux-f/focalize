@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.125 2009-01-11 00:55:56 weis Exp $ *)
+(* $Id: parser.mly,v 1.126 2009-01-22 10:36:01 weis Exp $ *)
 
 open Parsetree;;
 
@@ -24,9 +24,10 @@ let mk_loc () = {
 }
 ;;
 
-let mk_doc_elem de = {
+let mk_doc_elem (tag, desc) = {
   de_loc = mk_loc ();
-  de_desc = de;
+  de_desc = desc;
+  de_tag = tag;
 }
 ;;
 
@@ -126,7 +127,7 @@ let mk_proof_label (s1, s2) =
 %token <char> CHAR
 
 /* Special tokens */
-%token <string> DOCUMENTATION
+%token <string * string> DOCUMENTATION
 %token <string * string> PROOF_LABEL
 %token <string> EXTERNAL_CODE
 

@@ -13,13 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.36 2008-12-27 15:56:58 weis Exp $ *)
+(* $Id: dump_ptree.ml,v 1.37 2009-01-22 10:36:01 weis Exp $ *)
 
 
 
 let pp_documentation ppf doc =
   List.iter
-    (fun { Parsetree.de_desc = d } -> Format.fprintf ppf "DOC: %s@\n" d)
+    (fun { Parsetree.de_tag = tag; Parsetree.de_desc = d } ->
+       Format.fprintf ppf "DOC: {@@%s}, %s@\n" tag d)
     doc
 ;;
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: utils_docgen.ml,v 1.2 2009-01-14 12:39:24 pessaux Exp $ *)
+(* $Id: utils_docgen.ml,v 1.3 2009-01-22 10:36:01 weis Exp $ *)
 
 
 
@@ -165,39 +165,42 @@ let extract_tagged_info_from_documentation doc_elems =
   let found_untagged = ref None in
   (* A local function to search the tags in an AST node. *)
   List.iter
-    (fun { Parsetree.de_desc = s } ->
-      let lexbuf = Lexing.from_string s in
-      let continue = ref true in
-      (* We lex ther string until we reach its end, i.e. until we get a
-         non-tagged string being empty (i.e. ""). *)
-      while !continue do
-        match Doc_lexer.start lexbuf with
-         | Doc_lexer.DT_Author s ->
-             (match !found_author with
-              | None -> found_author := Some s
-              | Some old -> found_author := Some (old ^ "\n" ^ s))
-         | Doc_lexer.DT_Title s ->
-             (match !found_title with
-              | None -> found_title := Some s
-              | Some old -> found_title := Some (old ^ "\n" ^ s))
-         | Doc_lexer.DT_Description s ->
-             (match !found_description with
-              | None -> found_description := Some s
-              | Some old -> found_description := Some (old ^ "\n" ^ s))
-         | Doc_lexer.DT_MathMl s ->
-             (match !found_mathml with
-              | None -> found_mathml := Some s
-              | Some old -> found_mathml := Some (old ^ "\n" ^ s))
-         | Doc_lexer.DT_LaTeX s ->
-             (match !found_latex with
-              | None -> found_latex := Some s
-              | Some old -> found_latex := Some (old ^ "\n" ^ s))
-         | Doc_lexer.DT_None "" -> continue := false
-         | Doc_lexer.DT_None s ->
-             (match !found_untagged with
-              | None -> found_untagged := Some s
-              | Some old -> found_untagged := Some (old ^ "\n" ^ s))
-      done)
+    (function
+     | { Parsetree.de_tag = ("" | "FoCaLize"); Parsetree.de_desc = s } ->
+       let lexbuf = Lexing.from_string s in
+       let continue = ref true in
+       (* We lex ther string until we reach its end, i.e. until we get a
+          non-tagged string being empty (i.e. ""). *)
+       while !continue do
+         match Doc_lexer.start lexbuf with
+          | Doc_lexer.DT_Author s ->
+              (match !found_author with
+               | None -> found_author := Some s
+               | Some old -> found_author := Some (old ^ "\n" ^ s))
+          | Doc_lexer.DT_Title s ->
+              (match !found_title with
+               | None -> found_title := Some s
+               | Some old -> found_title := Some (old ^ "\n" ^ s))
+          | Doc_lexer.DT_Description s ->
+              (match !found_description with
+               | None -> found_description := Some s
+               | Some old -> found_description := Some (old ^ "\n" ^ s))
+          | Doc_lexer.DT_MathMl s ->
+              (match !found_mathml with
+               | None -> found_mathml := Some s
+               | Some old -> found_mathml := Some (old ^ "\n" ^ s))
+          | Doc_lexer.DT_LaTeX s ->
+              (match !found_latex with
+               | None -> found_latex := Some s
+               | Some old -> found_latex := Some (old ^ "\n" ^ s))
+          | Doc_lexer.DT_None "" -> continue := false
+          | Doc_lexer.DT_None s ->
+              (match !found_untagged with
+               | None -> found_untagged := Some s
+               | Some old -> found_untagged := Some (old ^ "\n" ^ s))
+       done
+     (* Not our stuff. *)
+     | _ -> ())
     doc_elems ;
   (!found_title, !found_author, !found_description, !found_mathml,
    !found_latex, !found_untagged)

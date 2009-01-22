@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.66 2009-01-12 15:33:51 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.67 2009-01-22 10:36:01 weis Exp $ *)
 
 open Parsetree;;
 
@@ -70,7 +70,11 @@ let pp_node_labels sep ppf =
 (* ******************************************************************* *)
 let pp_ast desc_printer_fct ppf ast =
   let print_doc_elem ppf de =
-    Format.fprintf ppf "(** %s *)@ " de.Parsetree.de_desc in
+    Format.fprintf ppf "(** %s%s *)@ "
+      (match de.Parsetree.de_tag with
+       | "" -> ""
+       | tag -> Printf.sprintf "{@%s}" tag)
+      de.Parsetree.de_desc in
   let print_doc_elems ppf des =
       List.iter (fun d -> Format.fprintf ppf "%a@ " print_doc_elem d) des in
   let print_documentation = function
