@@ -1,5 +1,6 @@
 .depend
 *.aux
+*.haux
 *.dvi
 *.idx
 *.log
@@ -10,4 +11,5 @@
 *.ilg
 *.ind
 *.toc
+*.htoc
 odoc
