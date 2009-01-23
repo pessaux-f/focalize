@@ -1,14 +1,11 @@
-% $Id: lexical_conventions.tex,v 1.8 2009-01-21 17:59:35 weis Exp $
+% $Id: lexical_conventions.tex,v 1.9 2009-01-23 10:39:43 weis Exp $
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
 \index{lexical conventions}
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%
 \subsection{Blanks}
 \index{blank}
 The following characters are considered as blanks: space, newline,
@@ -17,10 +14,7 @@ feed. Blanks are ignored, but they separate adjacent identifiers,
 literals and keywords that would otherwise be confused as one single
 identifier, literal or keyword.
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%
 \subsection{Comments}
 \index{comment}
 Comments (possibly spanning) on several lines are introduced by the
@@ -41,7 +35,6 @@ end ;;
 \end{lstlisting}
 }
 
-
 Comments spanning on a single line start by the two characters
 {\tt --} and end with the end-of-line character.
 Example:
@@ -55,10 +48,7 @@ end ;;
 \end{lstlisting}
 }
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%
 \subsection{Annotations}
 \index{annotation}
 \index{documentation}
@@ -68,11 +58,10 @@ with no intervening blanks, and terminated by the two characters
 {\tt *)}, with no intervening blanks.
 Annotations cannot occur inside string or character literals and
 cannot be nested. They must precede the construct they document.
-In particular, this means that a {\bf source file cannot end by an
-annotation}.
+In particular, a {\bf source file cannot end by an annotation}.
 
 Unlike comments, annotations are kept during the compilation process
-and recorded in the compilation information (``.fo'' files). Annotations can
+and recorded in the compilation information (``{\tt .fo}'' files). Annotations can
 be processed later on by external tools that could analyze them to
 produce a new {\focal} source code accordingly.
 For instance, the {\focal} development environment provides the {\focdoc}
@@ -98,13 +87,133 @@ end ;;
 \end{lstlisting}
 }
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Basic identifiers}
+%%%%%%%%%%%
+\subsection{Identifiers}
 \index{identifier}
 \vspace{0.2cm}
+
+{\focal} features a rich class of identifiers with sophisticated lexical
+rules that provide fine distinction between the kind of notion a given
+identifier can designate.
+
+\subsubsection{Introduction}
+
+Sorting words to find out which kind of meaning they may have is a very common
+conceptual categorization of names that we use when we write or read ordinary
+english texts. We routinely distinguish between:
+\begin{citemize}
+\item a word only made of lowercase characters, that is supposed to be an
+  ordinary noune, such as "table", "ball", or a verb as in "is", or an
+  adjective as in "green",
+\item a word starting with an uppercase letter, that is supposed to be a name,
+  maybe a family or christian name, as in "Kennedy" or "David", or a location
+  name as in "London".
+\end{citemize}
+
+We use this distinctive look of words as a useful hint to help understanding
+phrases. For instance, we accept the phrase "my ball is green" as meaningful,
+whereas "my Paris is green" is considered a nonsense. This is simply because
+"ball" is a regular noune and "Paris" is a name. The word "ball" as the right
+lexical classification in the phrase, but "Paris" has not. This is also clear
+that you can replace "ball" by another ordinary noune and get something
+meaningful: "the table is green"; the same nonsense arrises as well if you
+replace "Paris" by another name: "Kennedy is green".
+
+Natural languages are far more complicated than computer languages, but
+{\focalize} uses the same kind of tricks: the ``look'' of words helps a lot to
+understand what the words are designating and how they can be used.
+
+\subsubsection{Conceptual properties of names}
+
+{\focal} distinguishes 4 concepts for each name:
+
+\being{citemize}
+\item the {\em fixity}: assigns the place where an identifier must be written,
+\item the {\em precedence}: decides the order of operations when
+  identifiers are combined together,
+\item the {\em categorisation}: fixes which concept the identifier designates.
+\item the {\em nature} of a name can be symbolic of alphanumeric.
+\end{citemize}
+
+Those concepts are compositional: these concepts are independant form one
+another. Put is another way: for any fixity, precedence, category and nature,
+there exist an identifier with this exact properties.
+
+We explain those concepts below.
+
+\subsubsection{Fixity of identifiers}
+\index{fixity of identifiers}
+\index{infix identifier}
+\index{prefix identifier}
+
+The fixity of an identifier answers to the question ``where this identifier
+must be written ?''.
+\begin{citemize}
+\item a {\em prefix} is written {\em before} its argument, as $sin$ in $sin
+  x$ or $-$ in $- y$,
+\item an {\em infix} is written {\em between} its arguments, as $+$ in $x +
+  y$ or $mod$ in $x mod 3$.
+\end{citemize}
+
+In {\focal}, as in maths, ordinary identifiers are always prefix and binary operators are
+always infix.
+
+\subsubsection{Precedence of identifiers}
+\index{precedence of identifiers}
+
+The precedence rules out where implicit parentheses should be written in a
+complex combinaison of symbols. For instance, according to usual mathematical
+conventions:
+\begin{citemize}
+\item $1 + 2 * 3$  means $1 + (2 * 3)$ hence $7$, it does not not mean $(1 +
+  2) * 3$ which is $9$,
+\item $2 * 3 ^ 4 + 5$ means $(2 * (3 ^ 4)) + 5$ hence $167$, it does not mean
+  $((2 * 3) ^ 4) + 5$ which is $1301$, nor $2 * (3 ^ (4 + 5))$ which is $39366$.
+\end{citemize}
+
+In {\focal}, all the binary operators have the precedence they have in maths.
+
+\subsubsection{Categorization of identifiers}
+
+\index{category of identifiers}
+The category of an identifier answers to the question is this identifier a
+``possible name for this kind of concept'' in the language.
+Very often, this is more strict and the category exactly states which concept
+must attach to the identifier.
+
+For {\focal} these categories are
+\begin{citemize}
+\item {\em lowercase}: the identifier starts with a lowercase letter and
+  deisgnates a simple entity of the language. It may names some of
+  the language expressions, a function name, a function parameter or bound
+  variable name, a method name; a type name, or a record field label name.
+
+\item {\em uppercase}: the identifier starts with an uppercase letter and
+  designates is a more complex entity in the langage. It may name a sum type
+  constructor name, a module name, a species or a collection name.
+\end{citemize}
+
+We distinguish identifiers using their first ``meaningful'' character:
+
+\subsubsection{Nature of identifiers}
+\index{nature of identifiers}
+
+In {\focal} identifiers are either:
+
+\begin{citemize}
+\item {\em symbolic}: the identifier contains characters that are not
+  letters. {\tt +}, {\tt :=}, {\tt -\>}, {\tt +float} are symbolic
+
+\item {\em alphanumeric}: the identifier contains letters, digits and
+  underscores. {\tt x}, {\tt _1}, {\tt Some}, {Basic_object} are alphanumeric.
+\end{citemize}
+
+\subsubsection{Regular identifiers}
+\index{regular identifiers}
+
+Regular lower case identifiers are used to designate the names of variables, functions,
+and labels of records.
+
 \begin{syntax}
 \syntaxclass{Basic identifiers:}
 digit & ::= & \terminal{0} \ldots \terminal{9} & \\
@@ -118,128 +227,129 @@ ident & ::= & lident \mid uident
 \end{syntax}
 \vspace{0.2cm}
 
-Identifiers are sequences of letters, digits, and {\tt \_} (the
+A regular identifier is a sequence of letters, digits, and {\tt \_} (the
 underscore character), starting with a letter or an underscore.
+
+The identifier is lowercase if its first letter is lowercase.
+
+The identifier is uppercase if its first letter is uppercase.
+
 Letters contain at least the 52 lowercase and uppercase
 letters from the standard ASCII set. In an identifier, all characters
 are meaningful.
 Examples: {\tt foo}, {\tt bar}, {\tt \_20}, {\tt \_\_\_gee\_42}.
 
+\subsubsection{Infix/prefix operators}
+\index{identifier!operator}\index{operator}
 
+{\focal} allows infix and prefix operators built from a
+``starting operator character'' and followed by a sequence of
+regular identifiers or operator characters. For example, all the
+following are legal operators:
+{\tt +}, {\tt ++}, {\tt $\sim$+zero}, {\tt =\_mod\_5}.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Extended identifiers}
-\label{extended-identifiers}
-\index{identifier!extended}
-Moreover, {\focal} has special forms of identifiers to allow using
-spaces inside or extend the notion of operator identifiers.
-\begin{itemize}
-  \item {\bf Quoted identifiers}.
-    \index{identifier!quoted}
-    They start and end by the two characters {\tt ''} (quote) and may
-    contain regular identifiers characters plus spaces. For example:
-    {\tt ``equal is reflexive''}, {\tt ``fermat conjecture''}.
-  \item {\bf Infix/prefix operators}.
-    \index{identifier!operator}\index{operator}
-    {\focal} allows infix and prefix operators built from a
-    ``starting operator character'' and followed by a sequence of
-    regular identifiers or operator characters. For example, all the
-    following are legal operators:
-    {\tt +}, {\tt ++}, {\tt $\sim$+zero}, {\tt =\_mod\_5}.
+The position in which to use the operator (i.e. infix or prefix)
+is determined by the position of the first operator character
+according to the following table:
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Prefix & Infix \\
+\hline
+` $\sim$ ? \$ ! \#                            &
+, + - * / \% \& $|$ : ; $<$ = $>$ @ \^\ $\setminus$ \\
+\hline
+\end{tabular}
+\end{center}
 
-    The position in which to use the operator (i.e. infix or prefix)
-    is determined by the position of the first operator character
-    according to the following table:
-    \begin{center}
-    \begin{tabular}{|c|c|}
-    \hline
-    Prefix & Infix \\
-    \hline
-    ` $\sim$ ? \$ ! \#                            &
-    , + - * / \% \& $|$ : ; $<$ = $>$ @ \^\ $\setminus$ \\
-    \hline
-    \end{tabular}
-    \end{center}
-
-    \begin{syntax}
-    \syntaxclass{\hspace{1cm} Infix/prefix operators:}
-    prefix\_char & ::= & \terminal{` \ \sim\ ?\ \$\ !\ \#\ }& \\
-    infix\_char & ::= &
-        \terminal{ ,\ +\ -\ *\ /\ \%\ \&\ \mid\ :\ ;\ <\ =\ >\ @ \wedge
-                  \ \setminus} & \\
-    prefix\_op & ::= & prefix\_char
-        \ \{ letter \mid prefix\_char \mid infix\_char
-        \mid digit \mid \terminal{\_} \}* & \\
-    infix\_op & ::= & infix\_char
-        \ \{ letter \mid prefix\_char \mid infix\_char
-        \mid digit \mid \terminal{\_} \}* & \\
+\begin{syntax}
+\syntaxclass{\hspace{1cm} Infix/prefix operators:}
+prefix\_char & ::= & \terminal{` \ \sim\ ?\ \$\ !\ \#\ }& \\
+ infix\_char & ::= &
+    \terminal{ ,\ +\ -\ *\ /\ \%\ \&\ \mid\ :\ ;\ <\ =\ >\ @ \wedge
+              \ \setminus} & \\
+  prefix\_op & ::= & prefix\_char
+    \ \{ letter \mid prefix\_char \mid infix\_char
+    \mid digit \mid \terminal{\_} \}* & \\
+   infix\_op & ::= & infix\_char
+    \ \{ letter \mid prefix\_char \mid infix\_char
+    \mid digit \mid \terminal{\_} \}* & \\
     op & ::= & infix\_op \mid prefix\_op
-    \end{syntax}
+\end{syntax}
 
-    Hence, in the above examples, {\tt +}, {\tt ++} and
-    {\tt =\_mod\_5} will be infix operators and {\tt $\sim$+zero} will
-    be a prefix one.
+Hence, in the above examples, {\tt +}, {\tt ++} and {\tt =\_mod\_5} will be
+infix operators and {\tt $\sim$+zero} will be a prefix one.
 
-    This notion of infix/prefix operator does not mean that
-    {\focal} defines all these operators: it means that the programmer
-    is free to define them and use them as ordinary
-    prefix/infix operators instead of only using prefix function names and regular function
-    application. For instance, if you do not like the {\focal} predefined \verb"^"
-    operator to catenate strings, you can define a new infix synonym for \verb"^",
-    say {tt ++}, using
+\subsubsection{Defining an infix operator}
+\index{defining operators}
+\index{defining an infix operator}
+\index{defining a prefix operator}
+
+The notion of infix/prefix operator does not mean that
+{\focal} defines all these operators: it means that the programmer
+may freely define and use them as ordinary
+prefix/infix operators instead of only writing prefix function names and regular function
+application. For instance, if you do not like the {\focal} predefined \verb"^"
+operator to catenate strings, you can define a new infix synonym for \verb"^",
+say {tt ++}, using:
 {\scriptsize
 \begin{lstlisting}
 let ( ++ ) (s1, s2) = s1 ^ s2 ;
 \end{lstlisting}
 }
-   and use it in the usual way
+Then you can use the {\tt ++} operator in the usual way
 {\scriptsize
 \begin{lstlisting}
 let hw = "Hello" ++ " world!" ;
 \end{lstlisting}
 }
 
-    As shown in the example, at definition-time, the syntax requires
-    the operator to be embraced by parentheses. More precisely, you must
-    enclose the operator between {\bf spaces} and parentheses.
-    You must write {\tt ( + )} with spaces, not simply {\tt (+)} (which leads
-    to a syntax error anyway).
+As shown in the example, at definition-time, the syntax requires
+the operator to be embraced by parentheses. More precisely, you must
+enclose the operator between {\bf spaces} and parentheses.
+You must write {\tt ( + )} with spaces, not simply {\tt (+)} (which leads
+to a syntax error anyway).
 
-    The notation {\tt ( op )} is named the {\em prefix form notation} for {\tt op}.
+\subsubsection{Prefix form notation}
+\index{prefix form notation}
+\index{infix in prefix position}
 
-    Since you can only define prefix identifiers in {\focal}, you must use the
-    prefix form notation to define an infix operator.
+The notation {\tt ( op )} is named the {\em prefix form notation} for
+operator {\tt op}.
 
-    When a prefix or infix operator is defined, it is still possible
-    to use it as a regular identificator using the prefix form notation.
-    For instance, you can use the prefix form of operator {\tt ++}
-    to apply it in prefix position as a simple regular function (with a
-    strange name admittedly!):
+Since you can only define prefix identifiers in {\focal}, you must use the
+prefix form notation to define an infix or prefix operator.
+
+When a prefix or infix operator has been defined, it is still possible
+to use it as a regular identificator using the prefix form notation.
+For instance, you can use the prefix form of operator {\tt ++}
+to apply it in a prefix position as a simple regular function (with a
+strange name admittedly!):
+
 {\scriptsize
 \begin{lstlisting}
 ... ( ++ ) ("Hello", " world!") ;
 \end{lstlisting}
 }
 
-    {\bf Attention}: a common error while defining an operator is to forget
-    the spaces around the operator. This is particularly confusing if you
-    redefine the {\tt *} operator without spaces around the operator: you
-    write the lexical entity {\tt (*)} which is the beginning (or the end)
-    of a comment!
+{\bf Attention}: a common error while defining an operator is to forget
+the spaces around the operator. This is particularly confusing, if you
+type the {\tt *} operator without spaces around the operator: you
+write the lexical entity {\tt (*)} which is the beginning (or the end)
+of a comment!
 
-    The {\focal} notion of symbolic identifiers go largely beyond simple
-    infix operators. Symbolic identifiers let you assign sophisticated names
-    to your functions and operators.
-    For instance, instead of creating a function to check if integer {\tt x}
-    is equal to the predecessor of integer {\tt y}, as in
+The {\focal} notion of symbolic identifiers go largely beyond simple
+infix operators. Symbolic identifiers let you assign sophisticated names
+to your functions and operators.
+For instance, instead of creating a function to check if integer {\tt x}
+is equal to the predecessor of integer {\tt y}, as in
 {\scriptsize
 \begin{lstlisting}
 let is_eq_to_predecessor (x, y) = ... ;
 ... if is_eq_to_predecessor (5, 7) ... ;
 \end{lstlisting}
 }
-    it is possible to directly define
+it is possible to directly define
 {\scriptsize
 \begin{lstlisting}
 let ( =pred ) (x, y) = ... ;
@@ -247,34 +357,52 @@ let ( =pred ) (x, y) = ... ;
 \end{lstlisting}
 }
 
-    {\bf Attention} : since the comma character is a possible
-    starting character for an infix, when using commas inside tuples
-    be sure to put a blank behind the comma. Otherwise, confusion arises
-    {\tt (0, 1,n)} is understood as a couple of two values:
-    integer 0 as first component, and a second
-    component taht is the infix application of operator {\tt ,n} to
-    the integer 1 and \ldots nothing, hence leading to a syntax error.
+{\bf Attention} : since a comma can start an infix symbol, be careful
+when using commas to add a space after each comma to prevent confusion.
+In particular when using commas to separate tuple components, always type
+a space afeter each comma. For instance, if you write {\tt (1,n)}
+then the lexical analyser finds only two words: the integer {\tt 1} as
+desired, then the infix operator {\tt ,n} which is certainly not the
+intended meaning. Hence, following usual typography rules, always type a
+space after a comma (unless you have define a special operator starting
+by a comma).
 
+{\bf Rule of thumb}: The prefix version of symbolic identifiers is obtained by enclosing the
+symbol between spaces and parens.
+
+%%%%%%%%%%%
+\subsection{Extended identifiers}
+\label{extended-identifiers}
+\index{identifier!extended}
+
+Moreover, {\focal} has special forms of identifiers to allow using
+spaces inside or extend the notion of operator identifiers.
+\begin{itemize}
+  \item {\bf Delimited alphanumerical identifiers}.
+    \index{identifier!delimited}
+    They start by two characters {\tt `} (backquote) and end by two
+    characters {\tt '} (quote). In addition to usual alpha-numerical
+    characters, the delimited identifiers can have spaces. For example:
+    {\tt ``equal is reflexive''}, {\tt ``fermat conjecture''}.
+  \item {\bf Delimited symbolic identifiers}.
+    They are delimited by the same characters and may contain symbolic characters.
 \end{itemize}
 
+The first meaningful character at the beginning of a delimited
+ident/symbol is used to find its associated token.
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%
 \subsection{Species and collection names}
 \index{species!name} Species, collection
-names and collection parameters are capitalized, non-extended
-identifiers.
+names and collection parameters are uppercas identifiers.
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%
 \subsection{Integer literals}
 \label{integer literals}
 \label{octal}
 \label{hexadecimal}
 \label{binary}
+
 \begin{syntax}
 \syntaxclass{Integer literals:}
 binary\_digit & ::= & \terminal{0} \mid \terminal{1} & \\
@@ -319,10 +447,7 @@ prefixes:
 Here are various examples of integers in various bases:
 {\tt -0x1Ff}, {\tt 0B01001}, {\tt +Oo347}.
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%
 \subsection{String literals}
 \label{string literal}
 String literals are sequences of any characters delimited by {\tt "}
@@ -394,10 +519,7 @@ table below:
   \hline
 \end{tabular}
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%
 \subsection{Character literals}
 \label{character literals}
 \label{hexadecimal}
@@ -408,9 +530,7 @@ simply in a character literal) must also be enclosed by
 quotes. Available escape sequences are summarised in the table above
 (see section~\ref{string literal}).
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%
 \subsection{Floating-point number literals}
 \begin{syntax}
 \syntaxclass{Float literals:}
@@ -439,10 +559,7 @@ In the second case, they are [0-9 a-f A-F] and the number must be
 prefixed by ``0x'' or ``0X''. Example {\tt 0x-F2.E4}, {\tt 0X4.3A},
 {\tt Ox5a.a3eef}, {\tt Ox5a.a3e-ef}.
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%
 \subsection{Proof step bullets}
 \index{proof!step bullet}
 \begin{syntax}
@@ -469,10 +586,7 @@ depth of the bullet and the second part stands for its name. Example:
 \end{lstlisting}
 }
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%
 \subsection{Name qualification}
 \label{qualified-name}
 \index{qualified name} \index{name!resolution}
@@ -480,7 +594,6 @@ depth of the bullet and the second part stands for its name. Example:
 
 Name qualification is done according to the
 compilation unit status.
-
 
 As precisely described in section (\ref{toplevel-def}),
 toplevel-definitions include species, collections, type definitions
@@ -551,10 +664,7 @@ The qualification starting by a '\#' character without compilation
 unit name before stands for ``the definition at toplevel of the
 current compilation unit''.
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%
 \subsection{Reserved keywords}
 The identifiers below are reserved keywords that cannot be employed
 otherwise:
@@ -579,7 +689,3 @@ otherwise:
    use
    with
 \end{verbatim}
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
