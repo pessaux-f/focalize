@@ -108,12 +108,12 @@
 %\def\transl#1{$[\![\mbox{#1}]\!]$}
 
 % Pour l'index
-\usepackage{multind}
-\let\indexentry=\index
-\renewcommand{\index}[1]{\indexentry{\jobname}{#1}}
-\def\ikwd#1{\indexentry{\jobname.kwd}{#1}}
-% nth
+%\usepackage{multind}
+%\let\indexentry=\index
+%\renewcommand{\index}[1]{\indexentry{\jobname}{#1}}
+%\def\ikwd#1{\indexentry{\jobname.kwd}{#1}}
 
+% nth
 \def\th{^{\mbox{\scriptsize th}}}
 \renewcommand{\hbox}[1]{\mbox{#1}}
 
