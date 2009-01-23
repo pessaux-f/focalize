@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.55 2009-01-20 13:05:19 weis Exp $
+# $Id: configure,v 1.56 2009-01-23 06:54:09 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -424,9 +424,9 @@ set_share_prefix () {
 
   # The list of directories that must be installable during configuration.
   # The normal setting is:
-  # CONFIGURATION_INSTALLABLE_DIRS="${SHARE_PROJECT_DIR)"
+  # CONFIGURATION_INSTALLABLE_DIRS="${SHARE_PROJECT_PREFIX)"
   if ${MAKE_EXTERNAL}; then
-    CONFIGURATION_INSTALLABLE_DIRS="${SHARE_PROJECT_DIR}"
+    CONFIGURATION_INSTALLABLE_DIRS="${SHARE_PROJECT_PREFIX}"
   else
     CONFIGURATION_INSTALLABLE_DIRS=""
   fi
