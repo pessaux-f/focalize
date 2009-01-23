@@ -13,18 +13,18 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: INSTALL,v 1.4 2009-01-20 12:59:58 weis Exp $
+#  $Id: INSTALL,v 1.5 2009-01-23 12:28:17 weis Exp $
 
 Compile and install with:
   ./configure [~/pkg]
   make
   make install
 
-Type:
+For more information, type:
 
 ./configure -help | more
 
-or see below for details.
+or see below.
 
 Licence: New BSD Licence (see the file LICENSE for details)
 =======
@@ -55,8 +55,8 @@ Directory (1) is the argument of the -share-prefix option of configure.
 Directory (2) is the argument of the -prefix option of configure.
 
 In directory (1), the configuration phase builds and installs three external
-systems Objective Caml, CamlP5 and the Coq system. Internal tools zenon and
-zvtov will also install there.
+systems: Objective Caml, CamlP5 and the Coq system. Internal tools, zenon and
+zvtov, will also install there.
 
 In directory (2) the installation phase installs the focalizec compiler, its
 library and documentation.
@@ -88,9 +88,9 @@ your home directory, configure using:
 After installation:
 ===================
 For checking the proofs with coqc, add this to your $HOME/.coqrc file:
-  Add LoadPath $PATH_TO_ZENON_LIB
-  Default for PATH_TO_ZENON_LIB is $SHARE_INSTALL_DIR/lib/zenon,
-  normally "/usr/local/focalize.0.1/lib/zenon".
+  Add LoadPath $SHARE_INSTALL_DIR/lib.
+  Add LoadPath $SHARE_INSTALL_DIR/lib/zenon.
+  Default $SHARE_INSTALL_DIR is "/usr/local/focalize.0.1.rc0".
 If you specified an alternate libdir when configuring focalize, you will
 need to adjust this path accordingly.
 

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.74 2009-01-22 10:36:01 weis Exp $ *)
+(* $Id: lexer.mll,v 1.75 2009-01-23 12:28:17 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -230,7 +230,7 @@ let token_of_uppercase_infix_symbol s =
   | '`' -> (* A regular uppercase ident enclosed in ` chars. *)
     begin match length_s, length_meaningful with
     | 1, 1 -> BACKQUOTE_OP s
-    | n, _ when s.[n - 1] = '`' -> IUIDENT s
+    | n, _ when s.[n - 1] = '`' (* Helping emacs ` *) -> IUIDENT s
     | _, _ -> BACKQUOTE_OP s
     end
   | _ -> assert false
@@ -689,7 +689,7 @@ let float_literal = sign? unsigned_float_literal
 (** {3 Identifiers} *)
 
 (** Identifiers can be:
-   - alphanumerical,
+   - alphanumerical or symbolic,
    - infix,
    - prefix.
 
