@@ -1,20 +1,13 @@
-% $Id: more_on_meths.tex,v 1.9 2008-12-19 10:13:53 pessaux Exp $
+% $Id: more_on_meths.tex,v 1.10 2009-01-23 10:40:32 weis Exp $
 
-
-
-
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+%%%%%%%%%%%
 \subsection{More about methods definition}
 We will now examine more technical points in methods definitions.
 \subsubsection{Well-formation}
 \label{well-formation}
 \index{well-formation}
 
-\focal\ providing late-binding, it is possible to {\bf declare} a
+{\focal} providing late-binding, it is possible to {\bf declare} a
 method {\tt m0} and use it in another {\bf defined method} {\tt m1}.
 
 {\scriptsize
@@ -37,7 +30,7 @@ end ;;
 \end{lstlisting}
 }
 
-As long as these two species live separately no problem arise. Now we
+As long as these two species have no interactions no problem can arise. Now, we
 consider a third species {\tt S2} inheriting from both {\tt S0} and
 {\tt S1}.
 {\scriptsize
@@ -57,7 +50,7 @@ recursive although it was not the case where each of them was
 
 To avoid this situation, we will say that a species is well-formed if
 and only if, once inheritance is resolved, no method initially not
-recursive turn to become recursive. The \focal\ compiler performs this
+recursive turn to become recursive. The {\focal} compiler performs this
 analysis and rejects any species that is not compliant to this
 criterion. In the above example, an error would be raised, explaining
 how the mutual recursion (the cycle of dependencies) appears,
@@ -73,9 +66,7 @@ for the following dependent fields: m1 -> m0.
 }
 }
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%
 \subsubsection{Def-dependencies on the representation}
 \label{def-dep-on-representation}
 \index{dependency!def!on representation}
