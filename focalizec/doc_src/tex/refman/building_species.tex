@@ -1,4 +1,4 @@
-% $Id: building_species.tex,v 1.10 2008-12-19 10:13:53 pessaux Exp $
+% $Id: building_species.tex,v 1.11 2009-01-26 12:46:21 hardin Exp $
 
 
 
@@ -123,7 +123,7 @@ instantiation of this parameter must satisfy.
 
 
 \smallskip It is important at this point to note that \focal\ deals with
-dependent types \index{type!dependent}, and therefore that {\em
+dependent types\index{type!dependent}, and therefore that {\em
   the order of the parameters is important}. To define the type of a
 parameter, one can use the preceding parameters. For instance, 
 assuming that a parametrised species {\tt List} 
@@ -497,10 +497,10 @@ species ListUnique (UElem is ...) inherits List (UElem) = ... ;;
 \end{lstlisting}
 }
 
-Hence, we can now defined more accurately the notion of {\bf species
+Hence, we can now define more accurately the notion of {\bf species
 expression} used for both inheritance and parametrisation. It is either
 a simple species name or the application of a parametrised species to
-as many species expressions as the parametrised species has
+as many collection expressions as the parametrised species has
 parameters.
 
 
@@ -513,8 +513,8 @@ parameters.
 (c.f. \ref{inheritance}) some signatures can be replaced by functions
 and properties by theorems. It is also possible to associate a
 definition of function to a signature (c.f \ref{idea-fun-using-sig})or
-a proof o a property. In the same order, it is possible to redefine a
-method already used by an existing method.
+a proof to a property. In the same order, it is possible to redefine a
+method even if it is  already used by an existing method.
 All these features are relevant of a mechanism known as {\em
   late-binding}. 
 
@@ -631,9 +631,7 @@ by the statement of the proof (with a syntax given in section
 \ref{zenon-an-dependencies}).  Now, what does mean for a theorem to
 def-depend on a method ? This basically means that to make the proof
 of the theorem statement, one must use not only the declaration of a
-method, but also its definition, its body. For instance, a theorem
-needs to have visibility on the code of a function to have its proof
-possible. This is a needed and powerful feature.
+method, but also its definition, its body. This is a needed and powerful feature.
 
 
 
@@ -645,10 +643,17 @@ redefined, all the proofs of theorems having def-dependencies on these
 methods are erased. This means that since the body of the method
 changed, may be the proof is not correct anymore and must be done
 again. In practice, it can happen that the proof still holds, but the
-compiler can't ensure this, hence will turn the theorem into a property
-in the species where the redefinition occurred. The developer will
-then have to provide a new proof of the inherited theorem thanks to the
-{\tt proof of} field.
+compiler can't ensure this, hence will turn the theorem into a
+property in the species where the redefinition occurred. The developer
+will then have to provide a new proof of the inherited theorem thanks
+to the {\tt proof of} field. For example, any sorting list algorithm
+must satisfy the invariant that its result is a sorted list with the
+same elements as its effective argument  but the
+proof that indeed this requirement is satisfied depends on the
+different possible implementations of sort. It is perhaps possible to
+decompose this proof into different lemmas to minimize erasing by
+redefinition, some lemmas needing only decl-dependencies over the
+redefined method. 
 
 
 

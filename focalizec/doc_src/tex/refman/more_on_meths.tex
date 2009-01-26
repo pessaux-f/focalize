@@ -1,4 +1,4 @@
-% $Id: more_on_meths.tex,v 1.10 2009-01-23 10:40:32 weis Exp $
+% $Id: more_on_meths.tex,v 1.11 2009-01-26 12:46:21 hardin Exp $
 
 %%%%%%%%%%%
 \subsection{More about methods definition}
@@ -50,7 +50,7 @@ recursive although it was not the case where each of them was
 
 To avoid this situation, we will say that a species is well-formed if
 and only if, once inheritance is resolved, no method initially not
-recursive turn to become recursive. The {\focal} compiler performs this
+recursive turns to become recursive. The {\focal} compiler performs this
 analysis and rejects any species that is not compliant to this
 criterion. In the above example, an error would be raised, explaining
 how the mutual recursion (the cycle of dependencies) appears,

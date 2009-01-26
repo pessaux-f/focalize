@@ -1,4 +1,4 @@
-% $Id: basic_concepts.tex,v 1.13 2008-12-19 10:13:53 pessaux Exp $
+% $Id: basic_concepts.tex,v 1.14 2009-01-26 12:46:21 hardin Exp $
 
 As stated in section \ref{glimpse}, the \focal\ language is designed
 to build an application step by step, going from very abstract
@@ -150,7 +150,7 @@ end ;;
     functions only introduced by their
     signatures. This means that it is possible to use something only
     declared, without yet effective implementation. We will address
-    this point later in detail in section\label{late-binding}.
+    this point later in detail in section \ref{late-binding}.
 
     \smallskip
     Although \focal\ is a functional language, function application
@@ -162,7 +162,7 @@ end ;;
     separated and enclosed by parentheses.
 
   \medskip
-\item {\bf Properties}\index{property}. They are first order logic
+\item {\bf Properties}\index{property}. They are first order 
   formulae containing names already introduced. When stating a
   property, the proof that it holds is not yet provided (but will have
   to be ultimately  provided). A property can be viewed as a declaration.
@@ -180,7 +180,7 @@ end ;;
 
     Proofs\index{proof!delayed} of properties can be {\bf delayed},
     that is,  done afterwards
-    using a {\tt proof} field in a species.The way to give proofs will
+    using a {\tt proof} field in a species. The way to give proofs will
     be seen further.
 
     {\scriptsize
@@ -333,7 +333,7 @@ Full.print (dv) ;;
 \end{lstlisting}
 }
 
-In the above example, we define a complete species {\tt Full}. Then
+In this example, we define a complete species {\tt Full}. Then 
 we  create the collection
 {\tt MyFull\_Instance}. And we use methods of this collection to
 create entities of this collection. We print the result of the
