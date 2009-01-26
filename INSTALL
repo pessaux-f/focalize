@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: INSTALL,v 1.5 2009-01-23 12:28:17 weis Exp $
+#  $Id: INSTALL,v 1.6 2009-01-26 18:25:28 weis Exp $
 
 Compile and install with:
   ./configure [~/pkg]
@@ -51,7 +51,7 @@ to permanently install files:
 Directory (1) is typically ~/pkg (hence writable for you).
 Directory (2) is typically /usr/local (hence, on writable for root).
 
-Directory (1) is the argument of the -share-prefix option of configure.
+Directory (1) is the argument of the -share_prefix option of configure.
 Directory (2) is the argument of the -prefix option of configure.
 
 In directory (1), the configuration phase builds and installs three external
