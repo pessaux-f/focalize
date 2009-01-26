@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.34 2009-01-15 17:06:54 doligez Exp $
+% $Id: constructs_syntax.tex,v 1.35 2009-01-25 23:58:44 hardin Exp $
 
  
 \section{Language constructs and syntax}
@@ -74,7 +74,7 @@ species. Hence, obviously {\tt Self} is only bound in the scope of a
 species.
 
 Type expressions representing function types are written using the
-arrow notation ({\tt ->} in which the type of the argument of the
+arrow notation ({\tt ->}) in which the type of the argument of the
 function is the left type expression and its return type is the right
 one. As usual in functional languages, a function with several (say
 $n$) arguments is considered as a function with {\bf 1} argument
@@ -595,7 +595,7 @@ For {\bf value} constructors with parameters, a value is created by
 evaluating an expression applying the constructor to as many expressions as
 the constructor's arity. Obviously, sub-expressions used as arguments of
 the constructor must we well-typed according to the type of the
-constructor. The resulting value is written by the
+constructor. The resulting value is denoted by the
 name of the constructor followed by the tuple of values given as
 arguments. For instance, with the following type definition:
 {\scriptsize
@@ -672,7 +672,7 @@ $exp$. This is basically the principle of the so-called {\bf eager} or
 \noindent{\bf Identifier resolution}
 Remember that identifiers forms differ depending on the syntactic
 class of entity they refer to, capitalized identifiers being used for
-species and colections.  To evaluate an identifier expression, the
+species and collections.  To evaluate an identifier expression, the
 \focal\ compiler tries to find its definition from the current scoping
 context.  \index{name!resolution} \index{name!qualification}
 \index{scoping} It searches for the closest definition with this name,
@@ -810,7 +810,7 @@ by the value bound to this identifier. For instance:
 let x = 5 in (x, x)
 \end{lstlisting}
 }
- binds {tt x} to the evaluation of the {\bf expression} {\tt (3+2)}
+ binds {\tt x} to the evaluation of the {\bf expression} {\tt (3+2)}
 (i.e. the integer {\bf value} $5$) and then, the evaluation of the
 trailing expression returns the tuple {\bf value} $(5, 5)$.  From the
 syntax, it is clear that {\tt let-in} constructs can be nested.  For
@@ -866,7 +866,7 @@ let x = 5 in
 \end{lstlisting}
 }
 leads to the value $((5,\ 5),\ true, (5,\ 5),\ true)$
-of type {\tt ((int * int) * bool * (int * int) * bool)}. Clearlythe
+of type {\tt ((int * int) * bool * (int * int) * bool)}. Clearly the
 first value bound to {\tt x}  holds until {\tt x}
 is bound again: $5$ is used to define {\tt y} but not to define
 {\tt z}, since the value of {\tt x} is then the boolean $true$.
@@ -1519,7 +1519,7 @@ notation without compilation unit name.
 \begin{lstlisting}
 open "sets";;
 \end{lstlisting}
-}This directive load the definitions of the compilation unit
+}This directive loads the definitions of the compilation unit
 ``sets.fcl'' in the current name resolution (scoping) environment.
 
 

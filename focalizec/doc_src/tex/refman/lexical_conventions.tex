@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.10 2009-01-23 10:54:09 weis Exp $
+% $Id: lexical_conventions.tex,v 1.11 2009-01-25 23:58:44 hardin Exp $
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -70,7 +70,7 @@ documentation.
 Several annotations can be put in sequence for the same construct. We call
 such a sequence an {\bf annotations block}\index{annotation!block}.
 Using embedded tags in annotations allows third-party tools to easily find
-out annotations that are meningful to them, and safely ignore others.
+out annotations that are meaningful to them, and safely ignore others.
 For more information, consult
 \ref{documentation-generation}.
 Example:
@@ -149,10 +149,10 @@ We explain those concepts below.
 The fixity of an identifier answers to the question ``where this identifier
 must be written ?''.
 \begin{citemize}
-\item a {\em prefix} is written {\em before} its argument, as $sin$ in $sin
+\item a {\em prefix} is written {\em before} its argument, as $sin$ in $sin\;
   x$ or $-$ in $- y$,
 \item an {\em infix} is written {\em between} its arguments, as $+$ in $x +
-  y$ or $mod$ in $x mod 3$.
+  y$ or $mod$ in $x\; mod \;3$.
 \end{citemize}
 
 In {\focal}, as in maths, ordinary identifiers are always prefix and binary operators are
@@ -184,12 +184,12 @@ must attach to the identifier.
 For {\focal} these categories are
 \begin{citemize}
 \item {\em lowercase}: the identifier starts with a lowercase letter and
-  deisgnates a simple entity of the language. It may names some of
+  designates a simple entity of the language. It may names some of
   the language expressions, a function name, a function parameter or bound
   variable name, a method name; a type name, or a record field label name.
 
 \item {\em uppercase}: the identifier starts with an uppercase letter and
-  designates is a more complex entity in the langage. It may name a sum type
+  designates a more complex entity in the langage. It may name a sum type
   constructor name, a module name, a species or a collection name.
 \end{citemize}
 
@@ -321,7 +321,7 @@ Since you can only define prefix identifiers in {\focal}, you must use the
 prefix form notation to define an infix or prefix operator.
 
 When a prefix or infix operator has been defined, it is still possible
-to use it as a regular identificator using the prefix form notation.
+to use it as a regular identifier using the prefix form notation.
 For instance, you can use the prefix form of operator {\tt ++}
 to apply it in a prefix position as a simple regular function (with a
 strange name admittedly!):
@@ -360,7 +360,7 @@ let ( =pred ) (x, y) = ... ;
 {\bf Attention} : since a comma can start an infix symbol, be careful
 when using commas to add a space after each comma to prevent confusion.
 In particular when using commas to separate tuple components, always type
-a space afeter each comma. For instance, if you write {\tt (1,n)}
+a space after each comma. For instance, if you write {\tt (1,n)}
 then the lexical analyser finds only two words: the integer {\tt 1} as
 desired, then the infix operator {\tt ,n} which is certainly not the
 intended meaning. Hence, following usual typography rules, always type a
@@ -394,7 +394,7 @@ ident/symbol is used to find its associated token.
 %%%%%%%%%%%
 \subsection{Species and collection names}
 \index{species!name} Species, collection
-names and collection parameters are uppercas identifiers.
+names and collection parameters are uppercase identifiers.
 
 %%%%%%%%%%%
 \subsection{Integer literals}
@@ -525,7 +525,7 @@ table below:
 \label{hexadecimal}
 Characters literals are composed of one character enclosed between two
 ``{\tt '}'' (quote) characters. Example: {\tt 'a'}, {\tt '?'}.
-Escape sequences (meta code to insert characters that can't appears
+Escape sequences (meta code to insert characters that can't appear
 simply in a character literal) must also be enclosed by
 quotes. Available escape sequences are summarised in the table above
 (see section~\ref{string literal}).
