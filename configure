@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.61 2009-01-27 18:20:27 weis Exp $
+# $Id: configure,v 1.62 2009-01-27 19:10:39 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -38,7 +38,7 @@ INTERNAL_TOOLS="zenon zvtov"
 PROJECT_TOOLS="${EXTERNAL_TOOLS} ${INTERNAL_TOOLS}"
 
 # The list of tools specific for the project (and not stand alone internal tools).
-#PROJECT_DELIVERABLE="focalizec"
+PROJECT_DELIVERABLES="focalizec"
 
 # The absolute path of this set of source files.
 ABSOLUTE_ROOT_DIR=`pwd`
@@ -741,7 +741,7 @@ argc="$#"
 #
 # Parsing arguments
 #
-case $argc in
+case ${argc} in
   0) prefix_main
      ;;
   1) PREFIX="$1";
@@ -751,36 +751,48 @@ case $argc in
   *)
 
   while : ; do
-    # If nothing to parse end the loop.
+    # If nothing else to parse then end the loop.
     case $# in 0) break;; *);; esac
+
     case "$1" in
       # Software specific options
-      -tools_prefix | --tools_prefix | --tools_installation_prefix)
+      -tools_prefix | --tools_prefix | \
+      -tools_installation_prefix | --tools_installation_prefix)
         TOOLS_PREFIX="$2"; TOOLS_PREFIX_GIVEN=true; shift 2
         ;;
       -prefix | --prefix | \
-      -project_prefix | --project_prefix | --project_installation_prefix)
+      -project_prefix | --project_prefix | \
+      -project_installation_prefix | --project_installation_prefix)
         PREFIX="$2"; PREFIX_GIVEN=true; shift 2
         ;;
       # Caml options
-      -caml_prefix | --caml_installation_prefix) CAML_PREFIX="$2"; shift 2
+      -caml_prefix | --caml_prefix | \
+      -caml_installation_prefix | --caml_installation_prefix)
+        CAML_PREFIX="$2"; shift 2
         ;;
       # Coq options
-      -coq_prefix | --coq_installation_prefix) COQ_PREFIX="$2"; shift 2
+      -coq_prefix | --coq_prefix | \
+      -coq_installation_prefix | --coq_installation_prefix)
+        COQ_PREFIX="$2"; shift 2
         ;;
       # Coq specific options (cannot be computed).
       -coq_rc | --coq_rc) COQ_RC="$2"; shift 2;;
       -coq_make | --coq_make) COQ_MAKE="$2"; shift 2;;
       # Zenon options
-      # 
-      -zenon_prefix | --zenon_installation_prefix) ZENON_PREFIX="$2"; shift 2;;
+      -zenon_prefix | --zenon_prefix | \
+      -zenon_installation_prefix | --zenon_installation_prefix)
+        ZENON_PREFIX="$2"; shift 2
+        ;;
       # Zenon specific options (cannot be computed).
       -use_coq_compiler | --use_coq_compiler) USE_COQ_COMPILER="$2"; shift 2;;
       -sum | --sum) SUM="$2"; shift 2;;
       -convert | --convert) CONVERT="$2"; shift 2;;
       -gs | --gs) GS="$2"; shift 2;;
       # Zvtov options
-      -zvtov_prefix | --zvtov_installation_prefix) ZVTOV_PREFIX="$2"; shift 2;;
+      -zvtov_prefix | --zvtov_prefix | \
+      -zvtov_installation_prefix | --zvtov_installation_prefix)
+        ZVTOV_PREFIX="$2"; shift 2
+        ;;
       # Zvtov specific options (cannot be computed).
       -use_xmlrpc | --use_xmlrpc) USE_XMLRPC="$2"; shift 2;;
       -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
@@ -791,18 +803,20 @@ case $argc in
       -magic_make_external | --magic_make_external) MAGIC_MAKE_EXTERNAL=true; shift;;
       -static_external | --static_external) STATIC_EXTERNAL=$2; shift 2;;
       -use_tools_prefix_directory | --use_tools_prefix_directory)
-       USE_TOOLS_PREFIX_DIRECTORY=$2; shift 2;;
+        USE_TOOLS_PREFIX_DIRECTORY=$2; shift 2
+        ;;
       -use_project_sub_directory | --use_project_sub_directory)
-       USE_PROJECT_SUB_DIRECTORY=$2; shift 2;;
+        USE_PROJECT_SUB_DIRECTORY=$2; shift 2
+        ;;
       # Generic options
       -debug | --debug) DEBUG=$2; shift 2;;
       -enable_debug | --enable_debug) DEBUG=true; shift;;
       -nodebug | --nodebug | -disable_debug | --disable_debug)
        DEBUG=false; shift;;
       -help | --help)
-         usage &&
-         exit 0
-         ;;
+        usage &&
+        exit 0
+        ;;
 
       -*)
          echo "./configure: bad option '$1'" >&2
@@ -865,6 +879,7 @@ build_config_file () {
       -e "s,@FULL_PROJECT_NAME@,$FULL_PROJECT_NAME," \
       -e "s,@INTERNAL_TOOLS@,$INTERNAL_TOOLS," \
       -e "s,@EXTERNAL_TOOLS@,$EXTERNAL_TOOLS," \
+      -e "s,@PROJECT_DELIVERABLES@,$PROJECT_DELIVERABLES," \
   \
       -e "s,@ABSOLUTE_ROOT_DIR@,$ABSOLUTE_ROOT_DIR," \
       -e "s,@PREFIX@,$PREFIX," \
