@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.57 2009-01-27 12:33:00 weis Exp $
+# $Id: configure,v 1.58 2009-01-27 14:31:03 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -620,25 +620,13 @@ usage () {
   echo "  [-]-prefix <directory>"
   echo "    set <directory> as the directory prefix for installation of ${PROJECT_NAME}."
   echo "    (Default value for <directory> is ${DEFAULT_PREFIX}.)"
-#  echo "  [-]-bindir <directory>"
-#  echo "    set <directory> as the binary directory for installation of binaries for ${PROJECT_NAME}."
-#  echo "    (Default value for <directory> is ${DEFAULT_BIN_DIR}.)"
-#  echo "  [-]-libdir <directory>"
-#  echo "    set <directory> as the library directory for installation of libraries for ${PROJECT_NAME}."
-#  echo "    (Default value for <directory> is ${DEFAULT_LIB_DIR}.)"
-#  echo "  [-]-docdir <directory>"
-#  echo "    set <directory> as the directory for installation of documentation for ${PROJECT_NAME}."
-#  echo "    (Default value for <directory> is ${DEFAULT_DOC_DIR}.)"
-#  echo "  [-]-mandir <directory>"
-#  echo "    set <directory> as the directory for installation of man pages for ${PROJECT_NAME}."
-#  echo "    (Default value for <directory> is ${DEFAULT_MAN_DIR}.)"
   echo "  [-]-tools_prefix <directory>"
   echo "    set <directory> as the directory prefix for the installation of external tools."
   echo "    External tools are mandatory for ${PROJECT_NAME} to work,"
   echo "    and must be built and installed during the configuration phase,"
   echo "    since they are needed to correctly compile, install, and safely use"
   echo "    ${PROJECT_NAME}."
-  echo "    External tools install in the directory <directory>/${FULL_PROJECT_NAME}/,"
+  echo "    External tools then install in <directory>/${FULL_PROJECT_NAME}/,"
   echo "    once they have ben built."
   echo "    As a consequence, you must have the permission to install directories"
   echo "    and files in <directory> to properly configure ${PROJECT_NAME}."
@@ -654,10 +642,6 @@ usage () {
   echo
   echo "  [-]-zenon_prefix <directory>"
   echo "    set <directory> as the directory prefix of installation for zenon."
-#  echo "  [-]-zenon_compiler <executable-file>"
-#  echo "    set absolute path for the command zenon."
-#  echo "  [-]-zenon_lib_dir <directory>"
-#  echo "    set absolute path for the Zenon libraries."
   echo "  [-]-use_coq_compiler <boolean>"
   echo "    set if the coq compiler must be used to verify the proofs given by zenon."
   echo "  [-]-convert <executable-file>"
@@ -671,8 +655,6 @@ usage () {
   echo
   echo "  [-]-zvtov_prefix <directory>"
   echo "    set <directory> as the directory prefix of installation for zvtov."
-#  echo "  [-]-zvtov_compiler <executable-file>"
-#  echo "    set absolute path for the command zvtov."
   echo "  [-]-use_xmlrpc <boolean>";
   echo "    set if xmlrpc must be used by zvtov."
   echo "  [-]-xmlrpc <executable-file>";
@@ -690,31 +672,11 @@ usage () {
   echo
   echo "  [-]-caml_prefix <directory>"
   echo "    set <directory> as the directory prefix of installation for caml."
- # echo "  [-]-caml_lib_dir <directory>"
- # echo "    set absolute path for the Caml libraries."
- # echo "  [-]-caml_byt_compiler <executable-file>"
- # echo "    set absolute path for the Caml byte code compiler."
- # echo "  [-]-caml_bin_compiler <executable-file>"
- # echo "    set absolute path for the Caml binary compiler."
- # echo "  [-]-caml_lex_compiler <executable-file>"
- # echo "    set absolute path for the Caml Lex compiler."
- # echo "  [-]-caml_yac_compiler <executable-file>"
- # echo "    set absolute path for the Caml Yacc compiler."
- # echo "  [-]-caml_dep_compiler <executable-file>"
- # echo "    set absolute path for the Caml automatic dependency manager."
- # echo "  [-]-caml_doc_compiler <executable-file>"
- # echo "    set absolute path for the Caml automatic documentation generator."
   echo
   echo "options specific to Coq are:"
   echo
   echo "  [-]-coq_prefix <directory>"
   echo "    set <directory> as the directory prefix of installation for coq."
-#  echo "  [-]-coq_lib_dir <directory>"
-#  echo "    set absolute path for the Coq library."
-#  echo "  [-]-coq_compiler <executable-file>"
-#  echo "    set absolute path for the Coq compiler."
-#  echo "  [-]-coq_dep_compiler <executable-file>"
-#  echo "    set absolute path for the Coq automatic dependency manager."
   echo "  [-]-coq_rc <file>"
   echo "    set absolute path for the file coqrc, the startup file for Coq."
   echo
@@ -751,101 +713,77 @@ argc="$#"
 case $argc in
   0) prefix_main
      ;;
-  1) FOCALIZE_INSTALL_TOOLS_PREFIX="$1"
+  1) PREFIX="$1"
      ;;
   *)
 
   while : ; do
-   case "$1" in
-     # Software specific options
-     -tools_prefix | --tools_installation_prefix)
- #    -tools_prefix | --share_prefix | -share_project_prefix | --share_project_prefix)
-       TOOLS_PREFIX="$2"; shift 2;;
-     -project_prefix | --project_installation_prefix | -prefix)
-       PREFIX="$2"; shift 2;;
- # Bindir libdir docdir mandir are computed from project prefix.
- #    -bindir | --bindir) BIN_DIR="$2"; shift 2;;
- #    -libdir | --libdir) LIB_DIR="$2"; shift 2;;
- #    -docdir | --docdir) DOC_DIR="$2"; shift 2;;
- #    -mandir | --mandir) MAN_DIR="$2"; shift 2;;
-     # Caml options
-     -caml_prefix | --caml_installation_prefix) CAML_PREFIX="$2"; shift 2;;
- # Caml_lib_dir and caml_bin_dir are computed from Caml prefix.
- #    -caml_lib_dir | --caml_lib_dir) CAML_LIB_DIR="$2"; shift 2;;
- #    -caml_bin_dir | --caml_bin_dir) CAML_BIN_DIR="$2"; shift 2;;
- # Caml commands are computed from the Caml prefix.
- #    -caml_byt_compiler | --caml_byt_compiler) CAML_BYT_COMPILER="$2"; shift 2;;
- #    -caml_bin_compiler | --caml_bin_compiler) CAML_BIN_COMPILER="$2"; shift 2;;
- #    -caml_lex_compiler | --caml_lex_compiler) CAML_LEX_COMPILER="$2"; shift 2;;
- #    -caml_yac_compiler | --caml_yac_compiler) CAML_YAC_COMPILER="$2"; shift 2;;
- #    -caml_dep_compiler | --caml_dep_compiler) CAML_DEP_COMPILER="$2"; shift 2;;
- #    -caml_doc_compiler | --caml_doc_compiler) CAML_DOC_COMPILER="$2"; shift 2;;
-     # Coq options
-     -coq_prefix | --coq_installation_prefix) COQ_PREFIX="$2"; shift 2;;
- # Coq commands are computed from the Coq prefix.
- #    -coq_lib_dir | --coq_lib_dir) COQ_LIB_DIR="$2"; shift 2;;
- #    -coq_compiler | --coq_compiler) COQ_COMPILER="$2"; shift 2;;
- #    -coq_dep_compiler | --coq_dep_compiler) COQ_DEP_COMPILER="$2"; shift 2;;
-     # Coq specific options (cannot be computed).
-     -coq_rc | --coq_rc) COQ_RC="$2"; shift 2;;
-     -coq_make | --coq_make) COQ_MAKE="$2"; shift 2;;
-     # Zenon options
-     # 
-     -zenon_prefix | --zenon_installation_prefix) ZENON_PREFIX="$2"; shift 2;;
- # Zenon commands are computed from Zenon prefix.
- #    -zenon_compiler | --zenon_compiler) ZENON_COMPILER="$2"; shift 2;;
- #    -zenon_lib_dir | --zenon_lib_dir) ZENON_LIB_DIR="$2"; shift 2;;
-     # Zenon specific options (cannot be computed).
-     -use_coq_compiler | --use_coq_compiler) USE_COQ_COMPILER="$2"; shift 2;;
-     -sum | --sum) SUM="$2"; shift 2;;
-     -convert | --convert) CONVERT="$2"; shift 2;;
-     -gs | --gs) GS="$2"; shift 2;;
-     # Zvtov options
-     -zvtov_prefix | --zvtov_installation_prefix) ZVTOV_PREFIX="$2"; shift 2;;
- # Zvtov commands are computed.
- #    -zvtov_compiler | --zvtov_compiler) ZVTOV_COMPILER="$2"; shift 2;;
-     # Zvtov specific options (cannot be computed).
-     -use_xmlrpc | --use_xmlrpc) USE_XMLRPC="$2"; shift 2;;
-     -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
-     -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
-     -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
-     # Configure script specific options
-     -no_make_external | --no_make_external) MAKE_EXTERNAL=false; shift;;
-     -magic_make_external | --magic_make_external) MAGIC_MAKE_EXTERNAL=true; shift;;
-     -static_external | --static_external) STATIC_EXTERNAL=$2; shift 2;;
-     -use_tools_prefix_directory | --use_tools_prefix_directory)
-      USE_TOOLS_PREFIX_DIRECTORY=$2; shift 2;;
-     -use_project_sub_directory | --use_project_sub_directory)
-      USE_PROJECT_SUB_DIRECTORY=$2; shift 2;;
-     # Generic options
-     -debug | --debug) DEBUG=$2; shift 2;;
-     -enable_debug | --enable_debug) DEBUG=true; shift;;
-     -nodebug | --nodebug | -disable_debug | --disable_debug)
-      DEBUG=false; shift;;
-     -help | --help)
-        usage &&
-        exit 0
+    case $# in 0) break;; *);; esac
+    case "$1" in
+      # Software specific options
+      -tools_prefix | --tools_prefix | --tools_installation_prefix)
+        TOOLS_PREFIX="$2"; shift 2
         ;;
+      -prefix | --prefix | \
+      -project_prefix | --project_prefix | --project_installation_prefix)
+        PREFIX="$2"; shift 2
+        ;;
+      # Caml options
+      -caml_prefix | --caml_installation_prefix) CAML_PREFIX="$2"; shift 2
+        ;;
+      # Coq options
+      -coq_prefix | --coq_installation_prefix) COQ_PREFIX="$2"; shift 2
+        ;;
+      # Coq specific options (cannot be computed).
+      -coq_rc | --coq_rc) COQ_RC="$2"; shift 2;;
+      -coq_make | --coq_make) COQ_MAKE="$2"; shift 2;;
+      # Zenon options
+      # 
+      -zenon_prefix | --zenon_installation_prefix) ZENON_PREFIX="$2"; shift 2;;
+      # Zenon specific options (cannot be computed).
+      -use_coq_compiler | --use_coq_compiler) USE_COQ_COMPILER="$2"; shift 2;;
+      -sum | --sum) SUM="$2"; shift 2;;
+      -convert | --convert) CONVERT="$2"; shift 2;;
+      -gs | --gs) GS="$2"; shift 2;;
+      # Zvtov options
+      -zvtov_prefix | --zvtov_installation_prefix) ZVTOV_PREFIX="$2"; shift 2;;
+      # Zvtov specific options (cannot be computed).
+      -use_xmlrpc | --use_xmlrpc) USE_XMLRPC="$2"; shift 2;;
+      -xmlrpc | --xmlrpc) XMLRPC="$2"; shift 2;;
+      -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
+      -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
+      # Configure script specific options
+      -no_make_external | --no_make_external) MAKE_EXTERNAL=false; shift;;
+      -magic_make_external | --magic_make_external) MAGIC_MAKE_EXTERNAL=true; shift;;
+      -static_external | --static_external) STATIC_EXTERNAL=$2; shift 2;;
+      -use_tools_prefix_directory | --use_tools_prefix_directory)
+       USE_TOOLS_PREFIX_DIRECTORY=$2; shift 2;;
+      -use_project_sub_directory | --use_project_sub_directory)
+       USE_PROJECT_SUB_DIRECTORY=$2; shift 2;;
+      # Generic options
+      -debug | --debug) DEBUG=$2; shift 2;;
+      -enable_debug | --enable_debug) DEBUG=true; shift;;
+      -nodebug | --nodebug | -disable_debug | --disable_debug)
+       DEBUG=false; shift;;
+      -help | --help)
+         usage &&
+         exit 0
+         ;;
 
-     -*)
-        echo "./configure: bad option '$1'" >&2
-        echo "For help, use ./configure -help" >&2
-        exit 2
-        ;;
+      -*)
+         echo "./configure: bad option '$1'" >&2
+         echo "For help, use ./configure -help" >&2
+         exit 2
+         ;;
 
-     *)
-        case $# in
-          1) TOOLS_PREFIX="$1"; shift;;
-          *)
-            echo "./configure: bad arguments '$@'" >&2
-            echo "For help, use ./configure -help" >&2
-            exit 2
-            ;;
-        esac
-        ;;
-   esac
- done
- ;;
+      *)
+         echo "./configure: bad arguments '$@'" >&2
+         echo "For help, use ./configure -help" >&2
+         exit 2
+         ;;
+    esac
+  done
+  ;;
 
 esac
 
