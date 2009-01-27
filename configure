@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.60 2009-01-27 15:14:50 weis Exp $
+# $Id: configure,v 1.61 2009-01-27 18:20:27 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -25,15 +25,20 @@ PATCH_VERSION_NUMBER=rc0
 FULL_VERSION_NUMBER=${MAIN_VERSION_NUMBER}.${SUB_VERSION_NUMBER}.${PATCH_VERSION_NUMBER}
 FULL_PROJECT_NAME=${PROJECT_NAME}-${FULL_VERSION_NUMBER}
 
-# The list of internal tools for the project.
-# (Also defined in ./Makefile.config if any.)
-INTERNAL_TOOLS="zenon zvtov"
-
 # The list of external tools for the project.
 # (Also defined in ./Makefile.config if any.)
 EXTERNAL_TOOLS="ocaml camlp5 coq"
 
+# The list of internal tools for the project. Those are likely to be
+# stan alone projects inside the main project: its sub-projects.
+# (Also defined in ./Makefile.config if any.)
+INTERNAL_TOOLS="zenon zvtov"
+
+# The list of tools not specific to the project.
 PROJECT_TOOLS="${EXTERNAL_TOOLS} ${INTERNAL_TOOLS}"
+
+# The list of tools specific for the project (and not stand alone internal tools).
+#PROJECT_DELIVERABLE="focalizec"
 
 # The absolute path of this set of source files.
 ABSOLUTE_ROOT_DIR=`pwd`
@@ -159,10 +164,6 @@ set_intrinsic_defaults () {
 
   # Intrinsic defaults for the project installation.
   DEFAULT_PREFIX="/usr/local"
-  # Do we use a tools specific prefix directory for the project ?
-  DEFAULT_USE_TOOLS_PREFIX_DIRECTORY=true
-  # Do we use a 'full project name' private sub directory ${TOOLS_PREFIX} for the project ?
-  DEFAULT_USE_PROJECT_SUB_DIRECTORY=true
 
   # External tools
   # Do we use statically known external tools ?
@@ -170,6 +171,12 @@ set_intrinsic_defaults () {
   # Do we make external tools ?
   DEFAULT_MAKE_EXTERNAL=true
   DEFAULT_MAGIC_MAKE_EXTERNAL=false
+
+  # Do we use a tools specific prefix directory for the project ?
+  DEFAULT_USE_TOOLS_PREFIX_DIRECTORY=true
+  # Do we use a 'full project name' private sub directory inside ${TOOLS_PREFIX}
+  # for the installation of the external/internal tools of the project ?
+  DEFAULT_USE_PROJECT_SUB_DIRECTORY=true
 
   # Intrinsic defaults for Caml
   DEFAULT_BYT_DEBUG_FLAGS="-g -dtypes"
@@ -562,8 +569,18 @@ set_variables () {
 }
 
 # Reading the project installation prefix directory. 
+
+# Flags to drive the interactive/continue machinery:
+# - if the ${PREFIX} directory has been explicitely given by the user,
+#   we don't need to ask for it again.
+# - if the ${TOOLS_PREFIX} directory has been explicitely given by the user,
+#   we don't need to ask for it again.
+# - if there is no tools (${PROJECT_TOOLS} is empty), TOOLS_PREFIX is
+#   considered given, since there is no need to ask.
+# - we should continue without asking, if all the prefixes has been given.
 PREFIX_GIVEN=false
-TOOLS_PREFIX_GIVEN=false
+TOOLS_PREFIX_GIVEN=`test -z "${PROJECT_TOOLS}"`
+CONTINUE_WITHOUT_ASKING=`test ${PREFIX_GIVEN} -a ${TOOLS_PREFIX_GIVEN}`
 
 read_prefix () {
   echo $BOLD_TAG"Where to install the ${PROJECT_NAME} files ?"$NORMAL_TAG
@@ -599,7 +616,7 @@ prefix_summary () {
 
 continue_configure () {
   # Don't ask if everything (important) has been given.
-  if ! (${PREFIX_GIVEN} -a ${TOOLS_PREFIX_GIVEN}); then
+  if ! ${CONTINUE_WITHOUT_ASKING}; then
     echo;
     echo "Ready to continue ?";
     #echo "Default is yes";
@@ -847,6 +864,7 @@ build_config_file () {
       -e "s,@FULL_VERSION_NUMBER@,$FULL_VERSION_NUMBER," \
       -e "s,@FULL_PROJECT_NAME@,$FULL_PROJECT_NAME," \
       -e "s,@INTERNAL_TOOLS@,$INTERNAL_TOOLS," \
+      -e "s,@EXTERNAL_TOOLS@,$EXTERNAL_TOOLS," \
   \
       -e "s,@ABSOLUTE_ROOT_DIR@,$ABSOLUTE_ROOT_DIR," \
       -e "s,@PREFIX@,$PREFIX," \
