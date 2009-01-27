@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.58 2009-01-27 14:31:03 weis Exp $
+# $Id: configure,v 1.59 2009-01-27 15:06:39 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -562,6 +562,9 @@ set_variables () {
 }
 
 # Reading the project installation prefix directory. 
+PREFIX_GIVEN=false
+TOOLS_PREFIX_GIVEN=false
+
 read_prefix () {
   echo $BOLD_TAG"Where to install the ${PROJECT_NAME} files ?"$NORMAL_TAG
   echo "Default is $DEFAULT_PREFIX."
@@ -570,6 +573,7 @@ read_prefix () {
   if ! test -z "$USER_INPUT"; then
      PREFIX="$USER_INPUT"
   fi
+  PREFIX_GIVEN=true
 }
 
 # Reading the project tools installation prefix directory. 
@@ -581,11 +585,11 @@ read_tools_prefix () {
   if ! test -z "$USER_INPUT"; then
      TOOLS_PREFIX="$USER_INPUT"
   fi
+  TOOLS_PREFIX_GIVEN=true
 }
 
 # Summary feedback.
 prefix_summary () {
-  echo &&
   echo "Configuration done for installation directories:" &&
   echo "- The ${PROJECT_NAME} system installs in ${PREFIX}" &&
   if ! test -z "${PROJECT_TOOLS}"; then
@@ -595,17 +599,24 @@ prefix_summary () {
 
 continue_configure () {
   echo;
-  echo "Ready to continue ?"; read USER_INPUT;
+  echo "Ready to continue ?";
+  echo "Default is yes";
+  echo "Just press enter to use the default answer."
+  read USER_INPUT;
   case ${USER_INPUT} in
-    y* | Y*) ;;
-    *) abort_configuration; exit 1;;
+    n* | N*) abort_configuration; exit 1;;
+    *) ;;
   esac
 }
 
 prefix_main () {
- read_prefix &&
+ if ! ${PREFIX_GIVEN}; then
+   read_prefix;
+ fi &&
  if ! test -z "${PROJECT_TOOLS}"; then
-   read_tools_prefix;
+   if ! ${TOOLS_PREFIX_GIVEN}; then
+     read_tools_prefix;
+   fi
  fi
 }
 
@@ -713,20 +724,23 @@ argc="$#"
 case $argc in
   0) prefix_main
      ;;
-  1) PREFIX="$1"
+  1) PREFIX="$1";
+     PREFIX_GIVEN=true;
+     prefix_main;
      ;;
   *)
 
   while : ; do
+    # If nothing to parse end the loop.
     case $# in 0) break;; *);; esac
     case "$1" in
       # Software specific options
       -tools_prefix | --tools_prefix | --tools_installation_prefix)
-        TOOLS_PREFIX="$2"; shift 2
+        TOOLS_PREFIX="$2"; TOOLS_PREFIX_GIVEN=true; shift 2
         ;;
       -prefix | --prefix | \
       -project_prefix | --project_prefix | --project_installation_prefix)
-        PREFIX="$2"; shift 2
+        PREFIX="$2"; PREFIX_GIVEN=true; shift 2
         ;;
       # Caml options
       -caml_prefix | --caml_installation_prefix) CAML_PREFIX="$2"; shift 2
@@ -793,23 +807,26 @@ esac
 check_installation_dirs () {
   # Check directories that must be configuration time installable (hence writable).
   for i in ${CONFIGURATION_INSTALLABLE_DIRS}; do
-    echo "Checking if we can install EXTERNAL tools in $i..." >&2
-    if test -d $i; then echo "  the directory exists: good." >&2
+    #echo "Checking if we can install EXTERNAL tools in $i..." >&2
+    if test -d $i; then
+      : #echo "  the directory exists: good." >&2
       else
-        echo "  the directory does not exist: unrecoverable failure." >&2
+        #echo "  the directory does not exist: unrecoverable failure." >&2
         abort_configuration \
           "You cannot install in $i, because it is not a directory.";
         abort_remedy \
           "Please, create a directory where you can install EXTERNAL tools.";
     fi
-    if test -w $i; then echo "  the directory is writable: good." >&2
+    if test -w $i; then
+      : #echo "  the directory is writable: good." >&2
       else
-        echo "  the directory is not writable: unrecoverable failure." >&2
+        #echo "  the directory is not writable: unrecoverable failure." >&2
         abort_configuration_not_writable_tools_prefix_directory "$i";
     fi
-    if (touch $i/$$; rm -f $i/$$); then echo "  you can install in the directory: good." >&2
+    if (touch $i/$$; rm -f $i/$$); then
+      : #echo "  you can install in the directory: good." >&2
       else
-        echo "  you cannot install in the directory: unrecoverable failure." >&2
+        #echo "  you cannot install in the directory: unrecoverable failure." >&2
         abort_configuration_not_writable_tools_prefix_directory "$i";
     fi
   done
@@ -943,24 +960,33 @@ summarize_configuration () {
 #
 main () {
 #  parse_arguments;
-  set_variables;
-  check_installation_dirs;
-  build_configuration_variables;
-  touch_depends;
-  configure_internal_tools;
+  set_variables &&
+  prefix_main &&
+  check_installation_dirs &&
+  build_configuration_variables &&
+  touch_depends &&
+  configure_internal_tools &&
   # Now that .config_var_for_shell is built, we can call ./.configure, the
   # script that does the rest of the work that never necessitates user's
   # interaction.
-  if test -x ./.configure; then ./.configure; fi;
+  if test -x ./.configure; then ./.configure; fi &&
   prefix_summary &&
   continue_configure &&
-  summarize_configuration;
+  summarize_configuration &&
   # Call the Makefile to go on configuring external tools.
   if ${MAGIC_MAKE_EXTERNAL}; then make magic_configure_external_tools; else
     if ${MAKE_EXTERNAL}; then make configure_external_tools; fi;
-  fi
- echo;
- echo "Done. Now, please invoke: make";
+  fi &&
+ echo &&
+ echo "Done. Now, please invoke: make"
 }
 
-main; exit 0
+main;
+IER=$?;
+if test ${IER} -ne 0; then
+  abort_configuration &&
+  exit 1;
+else
+ exit 0;
+fi
+
