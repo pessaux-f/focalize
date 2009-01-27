@@ -13,18 +13,30 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: INSTALL,v 1.6 2009-01-26 18:25:28 weis Exp $
+#  $Id: INSTALL,v 1.7 2009-01-27 12:33:35 weis Exp $
 
 Compile and install with:
-  ./configure [~/pkg]
+  ./configure
   make
   make install
+
+You may alternatively use:
+
+./configure ~/pkg
+
+or more precisely:
+
+./configure -tools_prefix ~/pkg
+
+To fix the tools and project installation directories, use:
+
+./configure -tools_prefix <directory> -prefix <directory>
 
 For more information, type:
 
 ./configure -help | more
 
-or see below.
+or see below to understand the configuation process.
 
 Licence: New BSD Licence (see the file LICENSE for details)
 =======
@@ -49,9 +61,9 @@ to permanently install files:
 (2) a directory writable during the installation phase.
 
 Directory (1) is typically ~/pkg (hence writable for you).
-Directory (2) is typically /usr/local (hence, on writable for root).
+Directory (2) is typically /usr/local (hence, writable for root only).
 
-Directory (1) is the argument of the -share_prefix option of configure.
+Directory (1) is the argument of the -tools_prefix option of configure.
 Directory (2) is the argument of the -prefix option of configure.
 
 In directory (1), the configuration phase builds and installs three external
@@ -66,7 +78,7 @@ All the tools in directory (1) and (2) are mandatory to use the FocaLize system.
 Details on installation:
 ========================
 
-The software will compile and install in three phases in turn:
+The software will compile and install in three tasks in turn:
  (1) Installation of mandatory external tools: Ocaml, Camlp5, Coq.
  (2) Installation of mandatory internal tools: zenon, zvtov.
      Compilation of the compiler focalizec and its libraries.
@@ -80,19 +92,20 @@ libraries, and the documentation.
 External and internal tools are installed in the file system in a directory
 private to the actual version of the focalizec compiler. Default directory is
 <directory>/focalize-0.1.rc0/, where <directory> is fixed when calling
-"./configure". For instance, if you want to install in sub-directory pkg of
-your home directory, configure using:
+"./configure <directory>". For instance, if you want to install tools in
+sub-directory pkg of your home directory, configure using:
 
 ./configure ~/pkg
 
 After installation:
 ===================
-For checking the proofs with coqc, add this to your $HOME/.coqrc file:
-  Add LoadPath $SHARE_INSTALL_DIR/lib.
-  Add LoadPath $SHARE_INSTALL_DIR/lib/zenon.
-  Default $SHARE_INSTALL_DIR is "/usr/local/focalize.0.1.rc0".
-If you specified an alternate libdir when configuring focalize, you will
-need to adjust this path accordingly.
+For checking the proofs with coqc, you need to add this to your $HOME/.coqrc file:
+  Add LoadPath $TOOLS_INSTALL_DIR/lib.
+  Add LoadPath $TOOLS_INSTALL_DIR/lib/zenon.
+
+The default $TOOLS_INSTALL_DIR is "~/pkg/focalize.0.1.rc0"; If you specified
+an alternate --tools_installation_prefix when configuring FoCaLize, you need
+to adjust these paths accordingly.
 
 Optional prerequisites:
 =======================
