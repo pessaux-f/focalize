@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.59 2009-01-27 15:06:39 weis Exp $
+# $Id: configure,v 1.60 2009-01-27 15:14:50 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -598,15 +598,18 @@ prefix_summary () {
 }
 
 continue_configure () {
-  echo;
-  echo "Ready to continue ?";
-  echo "Default is yes";
-  echo "Just press enter to use the default answer."
-  read USER_INPUT;
-  case ${USER_INPUT} in
-    n* | N*) abort_configuration; exit 1;;
-    *) ;;
-  esac
+  # Don't ask if everything (important) has been given.
+  if ! (${PREFIX_GIVEN} -a ${TOOLS_PREFIX_GIVEN}); then
+    echo;
+    echo "Ready to continue ?";
+    #echo "Default is yes";
+    echo "Just press enter to continue."
+    read USER_INPUT;
+    case ${USER_INPUT} in
+      n* | N*) abort_configuration; exit 1;;
+      *) ;;
+    esac
+ fi
 }
 
 prefix_main () {
