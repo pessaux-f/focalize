@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.37 2009-01-27 19:30:56 weis Exp $
+# $Id: configure,v 1.38 2009-01-27 21:35:05 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=zvtov
@@ -568,7 +568,7 @@ set_variables () {
   set_tools_prefix;
 }
 
-# Reading the project installation prefix directory. 
+# Reading the project installation prefix directory.
 
 # Flags to drive the interactive/continue machinery:
 # - if the ${PREFIX} directory has been explicitely given by the user,
