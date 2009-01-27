@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.42 2009-01-16 13:26:24 weis Exp $
+# $Id: Makefile,v 1.43 2009-01-27 21:54:57 weis Exp $
 
 ROOT_DIR = .
 
@@ -156,7 +156,7 @@ install_external_tools_sources: .done_install_external_tools_sources
 .done_build_external_camlp5_tool: .done_build_external_caml_tool
 	for i in $(ABSOLUTE_CAMLP5_SRC_DIR); do \
 	  ($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR) && \
-	   PATH=$(SHARE_PROJECT_DIR)/bin:$$PATH && \
+	   PATH=$(TOOLS_PROJECT_DIR)/bin:$$PATH && \
 	   ./configure $(CAMLP5_CONFIGURE_OPTIONS) && \
 	   $(MAKE) $(CAMLP5_MAKE_ALL_TARGET) && \
 	   $(MAKE) install); \
