@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.62 2009-01-27 19:10:39 weis Exp $
+# $Id: configure,v 1.63 2009-01-27 19:29:47 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -30,7 +30,7 @@ FULL_PROJECT_NAME=${PROJECT_NAME}-${FULL_VERSION_NUMBER}
 EXTERNAL_TOOLS="ocaml camlp5 coq"
 
 # The list of internal tools for the project. Those are likely to be
-# stan alone projects inside the main project: its sub-projects.
+# stand alone projects inside the main project: its sub-projects.
 # (Also defined in ./Makefile.config if any.)
 INTERNAL_TOOLS="zenon zvtov"
 
@@ -1025,4 +1025,3 @@ if test ${IER} -ne 0; then
 else
  exit 0;
 fi
-
