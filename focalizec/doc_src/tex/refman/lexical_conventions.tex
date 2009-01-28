@@ -1,5 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.11 2009-01-25 23:58:44 hardin Exp $
-
+% $Id: lexical_conventions.tex,v 1.12 2009-01-28 18:10:20 weis Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -76,12 +75,13 @@ For more information, consult
 Example:
 {\scriptsize
 \begin{lstlisting}
-(** This a documentation for species S. *)
+(** Annotation for the automatic documentation processor.
+    Documentation for species S. *)
 species S =
   ...
   let m (x in Self) =
-    (** [MY_TAG_TEST] Documentation for testers. *)
-    (** [MY_TAG_MAINT] Documentation for maintainers. *)
+    (** {@TEST} Annotation for the test generator. *)
+    (** {@MY_TAG_MAINTAIN} Annotation for maintainers. *)
     ... ;
 end ;;
 \end{lstlisting}
@@ -100,10 +100,10 @@ identifier can designate.
 
 Sorting words to find out which kind of meaning they may have is a very common
 conceptual categorization of names that we use when we write or read ordinary
-english texts. We routinely distinguish between:
+English texts. We routinely distinguish between:
 \begin{citemize}
 \item a word only made of lowercase characters, that is supposed to be an
-  ordinary noune, such as "table", "ball", or a verb as in "is", or an
+  ordinary noun, such as "table", "ball", or a verb as in "is", or an
   adjective as in "green",
 \item a word starting with an uppercase letter, that is supposed to be a name,
   maybe a family or christian name, as in "Kennedy" or "David", or a location
@@ -113,10 +113,10 @@ english texts. We routinely distinguish between:
 We use this distinctive look of words as a useful hint to help understanding
 phrases. For instance, we accept the phrase "my ball is green" as meaningful,
 whereas "my Paris is green" is considered a nonsense. This is simply because
-"ball" is a regular noune and "Paris" is a name. The word "ball" as the right
+"ball" is a regular noun and "Paris" is a name. The word "ball" as the right
 lexical classification in the phrase, but "Paris" has not. This is also clear
-that you can replace "ball" by another ordinary noune and get something
-meaningful: "the table is green"; the same nonsense arrises as well if you
+that you can replace "ball" by another ordinary noun and get something
+meaningful: "the table is green"; the same nonsense arises as well if you
 replace "Paris" by another name: "Kennedy is green".
 
 Natural languages are far more complicated than computer languages, but
@@ -135,7 +135,7 @@ understand what the words are designating and how they can be used.
 \item the {\em nature} of a name can be symbolic of alphanumeric.
 \end{citemize}
 
-Those concepts are compositional: these concepts are independant form one
+Those concepts are compositional: these concepts are independent form one
 another. Put is another way: for any fixity, precedence, category and nature,
 there exist an identifier with this exact properties.
 
@@ -149,10 +149,10 @@ We explain those concepts below.
 The fixity of an identifier answers to the question ``where this identifier
 must be written ?''.
 \begin{citemize}
-\item a {\em prefix} is written {\em before} its argument, as $sin$ in $sin\;
-  x$ or $-$ in $- y$,
-\item an {\em infix} is written {\em between} its arguments, as $+$ in $x +
-  y$ or $mod$ in $x\; mod \;3$.
+\item a {\em prefix} is written {\em before} its argument, as $sin$ in
+ $sin\; x$ or $-$ in $- y$,
+\item an {\em infix} is written {\em between} its arguments, as $+$ in
+ $x\; +\; y$ or $mod$ in $x\; mod \;3$.
 \end{citemize}
 
 In {\focal}, as in maths, ordinary identifiers are always prefix and binary operators are
@@ -162,13 +162,15 @@ always infix.
 \index{precedence of identifiers}
 
 The precedence rules out where implicit parentheses should be written in a
-complex combinaison of symbols. For instance, according to usual mathematical
+complex combination of symbols. For instance, according to usual mathematical
 conventions:
 \begin{citemize}
-\item $1 + 2 * 3$  means $1 + (2 * 3)$ hence $7$, it does not not mean $(1 +
-  2) * 3$ which is $9$,
-\item $2 * 3 ^ 4 + 5$ means $(2 * (3 ^ 4)) + 5$ hence $167$, it does not mean
-  $((2 * 3) ^ 4) + 5$ which is $1301$, nor $2 * (3 ^ (4 + 5))$ which is $39366$.
+\item $1\; +\; 2\; *\; 3$  means $1\; +\; (2\; *\; 3)$ hence $7$,
+      it does not mean $(1\; +\; 2)\; *\; 3$ which is $9$,
+\item $2\; *\; 3\; ^4\; +\; 5$ means
+      $(2\; *\; (3\; ^4))\; +\; 5$ hence $167$, it does not mean
+      $((2\; *\; 3)\; ^4)\; +\; 5$ which is $1301$,
+      nor $2\; *\; (3\; ^(4\; +\; 5))$ which is $39366$.
 \end{citemize}
 
 In {\focal}, all the binary operators have the precedence they have in maths.
@@ -184,16 +186,17 @@ must attach to the identifier.
 For {\focal} these categories are
 \begin{citemize}
 \item {\em lowercase}: the identifier starts with a lowercase letter and
-  designates a simple entity of the language. It may names some of
+  designates a simple entity of the language. It may name some of
   the language expressions, a function name, a function parameter or bound
   variable name, a method name; a type name, or a record field label name.
 
 \item {\em uppercase}: the identifier starts with an uppercase letter and
-  designates a more complex entity in the langage. It may name a sum type
+  designates a more complex entity in the language. It may name a sum type
   constructor name, a module name, a species or a collection name.
 \end{citemize}
 
 We distinguish identifiers using their first ``meaningful'' character:
+the first character that is not an underscore.
 
 \subsubsection{Nature of identifiers}
 \index{nature of identifiers}
@@ -256,7 +259,7 @@ according to the following table:
 \hline
 Prefix & Infix \\
 \hline
-` $\sim$ ? \$ ! \#                            &
+` $\sim$ ? \$ ! \# &
 , + - * / \% \& $|$ : ; $<$ = $>$ @ \^\ $\setminus$ \\
 \hline
 \end{tabular}
@@ -274,7 +277,7 @@ prefix\_char & ::= & \terminal{` \ \sim\ ?\ \$\ !\ \#\ }& \\
    infix\_op & ::= & infix\_char
     \ \{ letter \mid prefix\_char \mid infix\_char
     \mid digit \mid \terminal{\_} \}* & \\
-    op & ::= & infix\_op \mid prefix\_op
+          op & ::= & infix\_op \mid prefix\_op
 \end{syntax}
 
 Hence, in the above examples, {\tt +}, {\tt ++} and {\tt =\_mod\_5} will be
@@ -367,8 +370,8 @@ intended meaning. Hence, following usual typography rules, always type a
 space after a comma (unless you have define a special operator starting
 by a comma).
 
-{\bf Rule of thumb}: The prefix version of symbolic identifiers is obtained by enclosing the
-symbol between spaces and parens.
+{\bf Rule of thumb}: The prefix version of symbolic identifiers is obtained
+by enclosing the symbol between spaces and parens.
 
 %%%%%%%%%%%
 \subsection{Extended identifiers}
@@ -376,7 +379,7 @@ symbol between spaces and parens.
 \index{identifier!extended}
 
 Moreover, {\focal} has special forms of identifiers to allow using
-spaces inside or extend the notion of operator identifiers.
+spaces inside or to extend the notion of operator identifiers.
 \begin{itemize}
   \item {\bf Delimited alphanumerical identifiers}.
     \index{identifier!delimited}
@@ -405,29 +408,30 @@ names and collection parameters are uppercase identifiers.
 
 \begin{syntax}
 \syntaxclass{Integer literals:}
-binary\_digit & ::= & \terminal{0} \mid \terminal{1} & \\
-octal\_digit & ::= & \terminal{0} \ldots \terminal{7} & \\
-decimal\_digit & ::= & \terminal{0} \ldots \terminal{9} & \\
-hexadecimal\_digit & ::= & \terminal{0} \ldots \terminal{9}
-       \mid \terminal{A} \ldots \terminal{F}
-       \mid \terminal{a} \ldots \terminal{f} & \\
-sign & ::= & \terminal{+} \mid \terminal{-} & \\
-unsigned\_binary\_literal & ::= &
-  \terminal{0} \{ \terminal{b} \mid \terminal{B} \}
-  \ binary\_digit\ \{ binary\_digit \mid \terminal{\_} \}* & \\
-unsigned\_octal\_literal & ::= &
-  \terminal{0} \{ \terminal{o} \mid \terminal{O} \}
-  \ octal\_digit\ \{ octal\_digit \mid \terminal{\_} \}* & \\
-unsigned\_decimal\_literal & ::= &
-  decimal\_digit \{ decimal\_digit \mid \terminal{\_} \} * & \\
+                 binary\_digit & ::= & \terminal{0} \mid \terminal{1} & \\
+                  octal\_digit & ::= & \terminal{0} \ldots \terminal{7} & \\
+                decimal\_digit & ::= & \terminal{0} \ldots \terminal{9} & \\
+            hexadecimal\_digit & ::= & \terminal{0} \ldots \terminal{9}
+                                       \mid \terminal{A} \ldots \terminal{F}
+                                       \mid \terminal{a} \ldots \terminal{f} & \\
+                          sign & ::= & \terminal{+} \mid \terminal{-} & \\
+     unsigned\_binary\_literal & ::= & \terminal{0} \{ \terminal{b}
+                                       \mid \terminal{B} \} \ binary\_digit\ \{ binary\_digit
+                                       \mid \terminal{\_} \}* & \\
+      unsigned\_octal\_literal & ::= & \terminal{0} \{ \terminal{o}
+                                       \mid \terminal{O} \}
+                                       \ octal\_digit\ \{ octal\_digit
+                                       \mid \terminal{\_} \}* & \\
+    unsigned\_decimal\_literal & ::= & decimal\_digit \{ decimal\_digit
+                                       \mid \terminal{\_} \} * & \\
 unsigned\_hexadecimal\_literal & ::= &
   \terminal{0} \{ \terminal{x} \mid \terminal{X} \}
   \ hexadecimal\_digit\ \{ hexadecimal\_digit \mid \terminal{\_} \}* & \\
-unsigned\_integer\_literal & ::= & unsigned\_binary\_literal \\
-& & \mid unsigned\_octal\_literal & \\
-& & \mid unsigned\_decimal\_literal \\
-& & \mid unsigned\_hexadecimal\_literal & \\
-integer\_literal & ::= & sign?\ unsigned\_integer\_literal
+    unsigned\_integer\_literal & ::= & unsigned\_binary\_literal \\
+                               &     & \mid unsigned\_octal\_literal & \\
+                               &     & \mid unsigned\_decimal\_literal \\
+                               &     & \mid unsigned\_hexadecimal\_literal & \\
+              integer\_literal & ::= & sign?\ unsigned\_integer\_literal
 \end{syntax}
 
 An integer literal is a sequence of one or more digits, optionally
@@ -471,7 +475,7 @@ table below:
   \hline
   $\setminus$r & $\setminus$013 & Carriage return. \\
   \hline
-  $\setminus$\textvisiblespace & \textvisiblespace      & Space character. \\
+  $\setminus$\textvisiblespace  & \textvisiblespace      & Space character. \\
   \hline
   $\setminus$" & "              & Double quote. \\
   \hline
@@ -492,30 +496,30 @@ table below:
   \hline
   $\setminus$] & ]              & See comment above for $\setminus$*. \\
   \hline
-  $\setminus$\{ & \{              & See comment above for $\setminus$*. \\
+  $\setminus$\{ & \{            & See comment above for $\setminus$*. \\
   \hline
-  $\setminus$\} & \}              & See comment above for $\setminus$*. \\
+  $\setminus$\} & \}            & See comment above for $\setminus$*. \\
   \hline
   $\setminus\setminus$ & $\setminus$      & Backslash character. \\
   \hline
-  $\setminus$` & `      & Backquote character. \\
+  $\setminus$` & `              & Backquote character. \\
   \hline
-  $\setminus$\-- & \-- & Minus (dash) character. Like for multi-line
-                           comments, uni-line comments can't appear in
-                           strings. Hence, to insert the sequence
-                           ``\--\--'', use this escape sequence twice. \\
+  $\setminus$\-- & \--          & Minus (dash) character. Like for multi-line
+                                  comments, uni-line comments can't appear in
+                                  strings. Hence, to insert the sequence
+                                  ``\--\--'', use this escape sequence twice. \\
   \hline
-  $\setminus$[0-9][0-9][0-9] & & The character whose ASCII code in
-                                {\bf decimal} is given by the 3 digits
-                                following the $\setminus$. This
-                                sequence is valid for all
-                                ASCII codes. \\
+  $\setminus$[0-9][0-9][0-9] &  & The character whose ASCII code in
+                                  {\bf decimal} is given by the 3 digits
+                                  following the $\setminus$. This
+                                  sequence is valid for all
+                                  ASCII codes. \\
   \hline
   $\setminus$x[0-9a-fA-F][0-9a-fA-F] & & The character whose ASCII code in
-                                {\bf hexadecimal} is given by the 2
-                                digits following the $\setminus$. This
-                                sequence is valid for all
-                                ASCII codes.\\
+                                  {\bf hexadecimal} is given by the 2
+                                  digits following the $\setminus$. This
+                                  sequence is valid for all
+                                  ASCII codes.\\
   \hline
 \end{tabular}
 
@@ -534,18 +538,18 @@ quotes. Available escape sequences are summarised in the table above
 \subsection{Floating-point number literals}
 \begin{syntax}
 \syntaxclass{Float literals:}
-decimal\_literal & ::= & sign?\ unsigned\_decimal\_literal & \\
-hexadecimal\_literal & ::= & sign?\ unsigned\_hexadecimal\_literal & \\
-scientific\_notation & ::= & \terminal{e} \mid \terminal{E} & \\
+                 decimal\_literal & ::= & sign?\ unsigned\_decimal\_literal & \\
+             hexadecimal\_literal & ::= & sign?\ unsigned\_hexadecimal\_literal & \\
+             scientific\_notation & ::= & \terminal{e} \mid \terminal{E} & \\
 unsigned\_decimal\_float\_literal & ::= & unsigned\_decimal\_literal & \\
-& &  \{ \terminal{.}\ unsigned\_decimal\_literal* \} ? & \\
-& &  \{ scientific\_notation\ decimal\_literal \}? & \\
+                                  & &  \{ \terminal{.}\ unsigned\_decimal\_literal* \} ? & \\
+                                  & &  \{ scientific\_notation\ decimal\_literal \}? & \\
 unsigned\_hexadecimal\_float\_literal & ::= & unsigned\_hexadecimal\_literal &\\
-& & \{ \terminal{.}\ unsigned\_hexadecimal\_literal* \} ? \\
-& & \{ scientific\_notation\ hexadecimal\_literal \} ? & \\
-unsigned\_float\_literal & ::= & unsigned\_decimal\_float\_literal & \\
-& & \mid unsigned\_hexadecimal\_float\_literal & \\
-float\_literal & ::= & sign?\ unsigned\_float\_literal
+                                  & & \{ \terminal{.}\ unsigned\_hexadecimal\_literal* \} ? \\
+                                  & & \{ scientific\_notation\ hexadecimal\_literal \} ? & \\
+         unsigned\_float\_literal & ::= & unsigned\_decimal\_float\_literal & \\
+                                  & & \mid unsigned\_hexadecimal\_float\_literal & \\
+                   float\_literal & ::= & sign?\ unsigned\_float\_literal
 \end{syntax}
 
 Floating-point numbers literals are made of an optional sign ('+' or
@@ -598,9 +602,9 @@ compilation unit status.
 As precisely described in section (\ref{toplevel-def}),
 toplevel-definitions include species, collections, type definitions
 (and their constitutive elements like constructors, record fields),
-toplevel-theorems and toplevel-functions.  Any toplevel-definition (thus outside species
-and collections) is visible all along the compilation unit after its
-apparition.
+toplevel-theorems and toplevel-functions.  Any toplevel-definition (thus
+outside species and collections) is visible all along the compilation unit
+after its apparition.
 If a toplevel-definition is required by another compilation unit, you can
 reference it by {\bf qualifying} its name, i.e. making explicit the
 compilation unit's name before the definition's name using the '\#'
