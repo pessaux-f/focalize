@@ -13,22 +13,18 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: INSTALL,v 1.7 2009-01-27 12:33:35 weis Exp $
+#  $Id: INSTALL,v 1.8 2009-01-28 08:25:51 weis Exp $
 
 Compile and install with:
   ./configure
   make
   make install
 
-You may alternatively use:
-
-./configure ~/pkg
-
-or more precisely:
+The impatient may use:
 
 ./configure -tools_prefix ~/pkg
 
-To fix the tools and project installation directories, use:
+The careful may want to fix the tools and project installation directories and use:
 
 ./configure -tools_prefix <directory> -prefix <directory>
 
