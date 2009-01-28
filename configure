@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.65 2009-01-27 23:25:05 weis Exp $
+# $Id: configure,v 1.66 2009-01-27 23:29:26 weis Exp $
 
 # Fix the name and version of the software
 PROJECT_NAME=focalize
@@ -619,8 +619,10 @@ prefix_summary () {
 
 continue_configure () {
   # Don't ask if everything (important) has been given.
-  if test ${PREFIX_GIVEN} -a ${TOOLS_PREFIX_GIVEN}; then
+  if ${PREFIX_GIVEN}; then
+    if ${TOOLS_PREFIX_GIVEN}; then
       CONTINUE_WITHOUT_ASKING=true;
+    fi
   fi
   if ! ${CONTINUE_WITHOUT_ASKING}; then
     echo;
@@ -636,8 +638,8 @@ continue_configure () {
 }
 
 prefix_main () {
- echo "PREFIX_GIVEN = ${PREFIX_GIVEN}";
- echo "PREFIX_READ = ${PREFIX_READ}";
+ #echo "PREFIX_GIVEN = ${PREFIX_GIVEN}";
+ #echo "PREFIX_READ = ${PREFIX_READ}";
  if ! ${PREFIX_GIVEN}; then
    if ! ${PREFIX_READ}; then
      read_prefix;
