@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA                                       #
-#  $Id: .config_var.in,v 1.14 2009-01-29 19:30:05 weis Exp $
+#  $Id: .config_var.in,v 1.15 2009-01-29 19:41:24 weis Exp $
 
 #
 # The project identity card.
@@ -13,8 +13,8 @@ PROJECT_NAME_FULL=@PROJECT_NAME_FULL@
 
 PROJECT_DELIVERABLES=@PROJECT_DELIVERABLES@
 
-INTERNAL_TOOLS="@INTERNAL_TOOLS@"
-EXTERNAL_TOOLS="@EXTERNAL_TOOLS@"
+TOOLS_INTERNAL="@TOOLS_INTERNAL@"
+TOOLS_EXTERNAL="@TOOLS_EXTERNAL@"
 
 DEBUG=@DEBUG@
 
