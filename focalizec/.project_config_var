@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: .project_config_var,v 1.1 2009-01-29 19:30:05 weis Exp $
+# $Id: .project_config_var,v 1.2 2009-01-29 19:46:41 weis Exp $
 
 # The configuration variables specific to FoCaLize.
 
@@ -63,7 +63,7 @@ set_intrinsic_defaults () {
   DEFAULT_MAGIC_MAKE_EXTERNAL=false
 
   # Do we use a tools specific prefix directory for the project ?
-  DEFAULT_USE_TOOLS_PREFIX_DIRECTORY=false
+  DEFAULT_USE_TOOLS_PREFIX_DIRECTORY=true
   DEFAULT_TOOLS_PREFIX=~/pkg
   
   # Do we use a 'full project name' private sub directory inside ${TOOLS_PREFIX}
