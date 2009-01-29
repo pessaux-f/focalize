@@ -13,7 +13,9 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.1 2009-01-29 19:01:34 weis Exp $
+# $Id: Makefile.distribution,v 1.2 2009-01-29 19:59:15 weis Exp $
+
+ROOT_DIR=.
 
 # Just for the $(PACKAGE) maintainers, a Makefile to distribute the
 # software.
@@ -48,11 +50,12 @@ include Makefile.config
 
 # The prefix for the package tar ball file (without its extension) and the
 # package archive file name.
-PROJECT_FULL_NAME = $(PROJECT)-$(VERSION)
-PROJECT_ARCHIVE_NAME=$(PROJECT_FULL_NAME).tgz
+# We use variables stored at configuration time in .config_var.
+#PROJECT_NAME_FULL = $(PROJECT_NAME)-$(VERSION)
+PROJECT_ARCHIVE_NAME=$(PROJECT_NAME_FULL).tgz
 
 # The directory where the PROJECT will be cvs exported.
-PROJECT_RELEASE_DIR_NAME=$(PROJECT_FULL_NAME)
+PROJECT_RELEASE_DIR_NAME=$(PROJECT_NAME_FULL)
 
 # The group which should have w/r/x permissions on the distribution.
 PROJECT_GROUP=caml
@@ -62,12 +65,12 @@ PROJECT_CVS_ROOT="`cat CVS/root`"
 PROJECT_CVS_REPOSITORY="`cat CVS/Repository`"
 
 # The CVS root directory on the CVS server for the package.
-# Normally, something like: ROOT_OF_THE_CVS_REPOSITORY/$(PROJECT).
+# Normally, something like: ROOT_OF_THE_CVS_REPOSITORY/$(PROJECT_NAME).
 # Here, we get an extra sub-directory: bazar-ocaml.
-PROJECT_CVS_DIRECTORY=bazar-ocaml/$(PROJECT)
+PROJECT_CVS_DIRECTORY=bazar-ocaml/$(PROJECT_NAME)
 
 # The tag to set on files in the CVS repository when releasing
-PROJECT_RELEASE_TAG = $(PROJECT)-$(MAINVERSION)_$(SUBVERSION)_$(PATCHLEVEL)
+PROJECT_RELEASE_TAG = $(PROJECT_NAME)-$(MAINVERSION)_$(SUBVERSION)_$(PATCHLEVEL)
 
 # The file that contains the announce of the new relase in the
 # relevant mailing lists.
@@ -87,9 +90,9 @@ PROJECT_RELEASE_EXCLUDE_FILE_LIST=\
 PROJECT_RELEASE_REMOVE_FILE_LIST=\
   "$(PROJECT_RELEASE_DIR_NAME)/coq"
 
-WEB_SITE_DIR=/net/yquem/infosystems/www/bazaar/$(PROJECT)
-FTP_SITE_DIR=/net/yquem/infosystems/ftp/bazaar/$(PROJECT)
-FTP_SITE_DIR2=/net/pauillac/infosystems/ftp/cristal/caml-light/bazar-ocaml/$(PROJECT)
+WEB_SITE_DIR=/net/yquem/infosystems/www/bazaar/$(PROJECT_NAME)
+FTP_SITE_DIR=/net/yquem/infosystems/ftp/bazaar/$(PROJECT_NAME)
+FTP_SITE_DIR2=/net/pauillac/infosystems/ftp/cristal/caml-light/bazar-ocaml/$(PROJECT_NAME)
 
 .PHONY: fake distribute package website ftp ftp2 tag retag untag \
         announce version \
@@ -136,13 +139,13 @@ release_examples:
 	echo "Examples directory populated.";
 	echo && echo;
 
+# Clean the old release directory.
+# Check out a brand new version there.
+# Copy the documentation in it.
+# Clean it.
 release:
-	# Then clean the old stuff
 	$(RM) release && \
 	$(MKDIR) release && \
-	# And check out a brand new version,
-	# copy the documentation in it,
-	# clean it.
 	(cd release && \
 	   $(CVS) -d $(PROJECT_CVS_ROOT) export -P -r $(PROJECT_RELEASE_TAG) \
 		 $(PROJECT_CVS_REPOSITORY) -d $(PROJECT_RELEASE_DIR_NAME) && \
@@ -174,7 +177,7 @@ ftp:
 	$(CP) release/$(PROJECT_RELEASE_DIR)/LICENSE $(FTP_SITE_DIR)
 	$(CP) release/$(PROJECT_RELEASE_DIR)/AUTHORS $(FTP_SITE_DIR)
 #	# Give the release its versionning name
-#	cd release && mv $(PROJECT_RELEASE_DIR) bazar-ocaml/$(PROJECT_FULL_NAME) && \
+#	cd release && mv $(PROJECT_RELEASE_DIR) bazar-ocaml/$(PROJECT_NAME_FULL) && \
 	# Build the archive and move it in the proper ftp site
 	cd release && \
 	  $(TARC) $(PROJECT_ARCHIVE_NAME) $(PROJECT_RELEASE_DIR) && \
@@ -203,7 +206,7 @@ untag:
 
 # Sending the announce to the mailing lists.
 announce:
-	mail -n -s "New release of $(PROJECT)" \
+	mail -n -s "New release of $(PROJECT_NAME)" \
 	  $(PROJECT_ANNOUNCE_MAILING_LISTS) < $(ANNOUNCE_FILE)
 
 # Automatic handling of versionning
