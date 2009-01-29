@@ -1,0 +1,217 @@
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2009 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: Makefile.distribution,v 1.1 2009-01-29 19:01:34 weis Exp $
+
+# Just for the $(PACKAGE) maintainers, a Makefile to distribute the
+# software.
+# This Makefile includes the toplevel Makefile of the application that is
+# supposed to define the variables:
+# PACKAGE (the name of the system to distribute, e.g. Moca)
+# SOFTWARE (the name of the application or command to distribute, e.g. mocac)
+
+# Usage:
+# - you must set the variables WEBSITEDIR and FTPSITEDIR below,
+# - verify that the prerequisites below are fulfilled,
+# - then type in
+# make -f Distrib.mk distribute
+
+# The Makefile builds a tar ball file with the set of source files and moves
+# it the $(FTPSITEDIR) directory.
+# The Makefile copies the documentation in the $(WEBSITEDIR) directory.
+
+# Pre-requisites:
+# - You need a doc_src directory where the documentation has been written,
+#   presumably in HTML, with an index.htm file. This directory is copied
+#   onto the WEB site directory of the package, as mentioned in
+#   $(WEBSITEDIR).
+# - The doc directory is supposed to contain
+#   * 2 files named eng.htm and fra.htm that respectively contain
+#     the English and French documentation,
+#   * 2 files copyright.fra.htm and copyright.eng.htm to rule the copyright
+#     notice in french and english.
+
+#include Makefile
+include Makefile.config
+
+# The prefix for the package tar ball file (without its extension) and the
+# package archive file name.
+PROJECT_FULL_NAME = $(PROJECT)-$(VERSION)
+PROJECT_ARCHIVE_NAME=$(PROJECT_FULL_NAME).tgz
+
+# The directory where the PROJECT will be cvs exported.
+PROJECT_RELEASE_DIR_NAME=$(PROJECT_FULL_NAME)
+
+# The group which should have w/r/x permissions on the distribution.
+PROJECT_GROUP=caml
+
+# Where the software files reside on the CVS repository:
+PROJECT_CVS_ROOT="`cat CVS/root`"
+PROJECT_CVS_REPOSITORY="`cat CVS/Repository`"
+
+# The CVS root directory on the CVS server for the package.
+# Normally, something like: ROOT_OF_THE_CVS_REPOSITORY/$(PROJECT).
+# Here, we get an extra sub-directory: bazar-ocaml.
+PROJECT_CVS_DIRECTORY=bazar-ocaml/$(PROJECT)
+
+# The tag to set on files in the CVS repository when releasing
+PROJECT_RELEASE_TAG = $(PROJECT)-$(MAINVERSION)_$(SUBVERSION)_$(PATCHLEVEL)
+
+# The file that contains the announce of the new relase in the
+# relevant mailing lists.
+ANNOUNCE_FILE = Announce-$(VERSION)
+PROJECT_ANNOUNCE_MAILING_LISTS="caml-list@inria.fr caml-announce@inria.fr"
+
+# The list of files that will be searched and deleted from the entire
+# distribution before making the release tar ball.
+# This one is pretty standard: it removes working files useless to the user of
+# the package.
+PROJECT_RELEASE_EXCLUDE_FILE_LIST=\
+ "CVS *cvsignore* banner* .depend* TODO README.devel Makefile.distrib \
+  doc_src test"
+# The list of files that will be deleted from the distribution before
+# making the release tar ball.
+# This is the list of private directory/files.
+PROJECT_RELEASE_REMOVE_FILE_LIST=\
+  "$(PROJECT_RELEASE_DIR_NAME)/coq"
+
+WEB_SITE_DIR=/net/yquem/infosystems/www/bazaar/$(PROJECT)
+FTP_SITE_DIR=/net/yquem/infosystems/ftp/bazaar/$(PROJECT)
+FTP_SITE_DIR2=/net/pauillac/infosystems/ftp/cristal/caml-light/bazar-ocaml/$(PROJECT)
+
+.PHONY: fake distribute package website ftp ftp2 tag retag untag \
+        announce version \
+	documentation release_test release_examples release
+
+fake:
+	@echo
+	@echo 'This Makefile is used to distribute the software.'
+	@echo 'Read it to understand how to use it!'
+	@echo
+
+# Distribution of the software
+distribute: package website ftp ftp2 tag announce #version
+
+package: clean-all all release_test release_examples documentation release
+
+clean-all::
+	cd doc_src && $(MAKE) $@
+	$(RM) doc release
+
+documentation:
+	# Make documentation and test before release
+	(cd doc_src && $(MAKE) all)
+	# Build a clean documentation directory for distribution
+	(cd doc_src && $(MAKE) docdir)
+
+release_test:
+	# Recompile the tests
+	echo && echo;
+	echo "Compiling tests";
+	echo && echo;
+	(cd test && $(MAKE) all)
+	echo && echo;
+	echo "Tests compiled";
+	echo && echo;
+
+release_examples:
+	# Create the examples directory && copy the example files.
+	echo && echo;
+	echo "Populating the examples directory.";
+	echo && echo;
+	(cd test && $(MAKE) examplesdir)
+	echo && echo;
+	echo "Examples directory populated.";
+	echo && echo;
+
+release:
+	# Then clean the old stuff
+	$(RM) release && \
+	$(MKDIR) release && \
+	# And check out a brand new version,
+	# copy the documentation in it,
+	# clean it.
+	(cd release && \
+	   $(CVS) -d $(PROJECT_CVS_ROOT) export -P -r $(PROJECT_RELEASE_TAG) \
+		 $(PROJECT_CVS_REPOSITORY) -d $(PROJECT_RELEASE_DIR_NAME) && \
+	   $(CP) ../doc $(PROJECT_RELEASE_DIR_NAME) && \
+	   $(CP) ../examples $(PROJECT_RELEASE_DIR_NAME) && \
+	   for i in $(PROJECT_RELEASE_EXCLUDE_FILE_LIST); do \
+	     find . -name $$i | xargs $(RM); \
+	   done && \
+	   for i in $(PROJECT_RELEASE_REMOVE_FILE_LIST); do \
+	     $(RM) $$i; \
+	   done)
+
+website:
+	# Build the Web site
+	$(RM) $(WEB_SITE_DIR).new
+	$(MKDIR) $(WEB_SITE_DIR).new
+	$(CP) release/$(PROJECT_RELEASE_DIR)/doc/* $(WEB_SITE_DIR).new;
+	$(CHGRP) $(PROJECT_GROUP) $(WEB_SITE_DIR).new
+	$(CHMOD) $(WEB_SITE_DIR).new
+	$(MV) $(WEB_SITE_DIR) $(WEB_SITE_DIR).old
+	$(MV) $(WEB_SITE_DIR).new $(WEB_SITE_DIR)
+	$(RM) $(WEB_SITE_DIR).old
+
+ftp:
+	# Build the FTP site
+	# Copy the legalease to $(FTP_SITE_DIR)
+	$(MKDIR) $(FTP_SITE_DIR)
+	$(CP) release/$(PROJECT_RELEASE_DIR)/README $(FTP_SITE_DIR)
+	$(CP) release/$(PROJECT_RELEASE_DIR)/LICENSE $(FTP_SITE_DIR)
+	$(CP) release/$(PROJECT_RELEASE_DIR)/AUTHORS $(FTP_SITE_DIR)
+#	# Give the release its versionning name
+#	cd release && mv $(PROJECT_RELEASE_DIR) bazar-ocaml/$(PROJECT_FULL_NAME) && \
+	# Build the archive and move it in the proper ftp site
+	cd release && \
+	  $(TARC) $(PROJECT_ARCHIVE_NAME) $(PROJECT_RELEASE_DIR) && \
+	  $(MV) $(PROJECT_ARCHIVE_NAME) $(FTP_SITE_DIR)
+	$(CP) $(FTP_SITE_DIR)/$(PROJECT_ARCHIVE_NAME) $(WEB_SITE_DIR)/
+
+ftp2:
+	# Build the FTP2 site
+	# Copy the FTP site to $(FTP_SITE_DIR2)
+	$(MKDIR) $(FTP_SITE_DIR2)
+	$(CP) $(FTP_SITE_DIR)/* $(FTP_SITE_DIR2)/
+
+# Tagging the version.
+tag:
+	$(CVS) rtag -R $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_DIRECTORY)
+
+# Tagging the version again with the same tag,
+# (in case of bug during the distribution process).
+retag:
+	$(CVS) rtag -R -F $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_DIRECTORY)
+
+# Untagging the version (in case of bug in the software code).
+untag:
+	$(RM) ./release
+	$(CVS) rtag -R -d $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_DIRECTORY)
+
+# Sending the announce to the mailing lists.
+announce:
+	mail -n -s "New release of $(PROJECT)" \
+	  $(PROJECT_ANNOUNCE_MAILING_LISTS) < $(ANNOUNCE_FILE)
+
+# Automatic handling of versionning
+# Should be done with HTMLC
+#version:
+#	for i in $(PROJECT_VERSION_FILES); do \
+#	echo $$i && \
+#	$(MV) $$i $$i~ && \
+#	sed -e '/ersion/s/$(OLDVERSION)/$(VERSION)/' $$i~ | \
+#	sed -e '/year/s/$(OLDYEAR)/$(YEAR)/' > $$i; \
+#	done
