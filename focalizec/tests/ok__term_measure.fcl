@@ -18,8 +18,8 @@ species Test_measure =
     measure true_gt_false on z
     <1>1 assume z in bool,
          assume H: z = true,
-	 prove basics#int_lt (true_gt_false (false), true_gt_false (z))
-         by definition of true_gt_false
+	 prove wellfounded#int_wf (true_gt_false (false), true_gt_false (z))
+         by definition of true_gt_false, wellfounded#int_wf
             theorem zero_inf_one
             hypothesis H
     <1>2 conclude

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.16 2008-11-29 23:41:14 weis Exp $ *)
+(* $Id: misc_common.ml,v 1.17 2009-01-29 18:28:11 pessaux Exp $ *)
 
 
 
@@ -673,12 +673,6 @@ type let_connector =
 let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
   (* Build the list by side effect in reverse order for efficiency. *)
   let the_list_reversed = ref [] in
-  let all_deps_from_params =
-    Abstractions.merge_abstraction_infos
-      ai.Abstractions.ai_dependencies_from_params_via_body
-      (Abstractions.merge_abstraction_infos
-         ai.Abstractions.ai_dependencies_from_params_via_type
-         ai.Abstractions.ai_dependencies_from_params_via_completion) in
   (* First, abstract according to the species's parameters carriers types the
      current method depends on only if [care_types] is on. *)
   if care_types then
@@ -696,7 +690,7 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
   (* Next, abstract according to the species's parameters methods the current
      method depends on. *)
   List.iter
-    (fun (species_param, meths_from_param) ->
+    (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
       (* Recover the species parameter's name. *)
       let species_param_name =
         match species_param with
@@ -710,14 +704,14 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
          "IS". *)
       let prefix =
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
-      Parsetree_utils.ParamDepSet.iter
+      List.iter
         (fun (meth, _) ->
           the_list_reversed :=
             (prefix ^
              (Parsetree_utils.vname_as_string_with_operators_expanded meth))
             :: !the_list_reversed)
         meths_from_param)
-    all_deps_from_params ;
+    ai.Abstractions.ai_dependencies_from_params ;
   (* Next, the extra arguments due to methods of ourselves we depend on.
      They are always present in the species under the name "self_...". *)
   List.iter

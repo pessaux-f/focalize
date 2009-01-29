@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.89 2009-01-05 13:39:32 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.90 2009-01-29 18:28:12 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -538,22 +538,11 @@ let generate_methods ctx env field =
             (* No recursivity, then the method cannot call itself in its body
                then no need to set the [scc_lambda_lift_params_mapping] of the
                context. *)
-            let all_deps_from_params =
-              Abstractions.merge_abstraction_infos
-                abstraction_info.Abstractions.
-                  ai_dependencies_from_params_via_body
-                (Abstractions.merge_abstraction_infos
-                   abstraction_info.Abstractions.
-                     ai_dependencies_from_params_via_type
-                   abstraction_info.Abstractions.
-                     ai_dependencies_from_params_via_completion) in
-            let sorted_deps_from_params =
-              Dep_analysis.order_species_params_methods all_deps_from_params in
             let coq_min_typ_env_names =
               generate_one_field_binding
                 ctx env abstraction_info.Abstractions.ai_min_coq_env
                 ~let_connect: Misc_common.LC_first_non_rec
-                sorted_deps_from_params
+                abstraction_info.Abstractions.ai_dependencies_from_params
                 (from, name, params, (Some scheme), body_expr) in
             (* Now, build the [compiled_field_memory], even if the method was
                not really generated because it was inherited. *)
@@ -564,7 +553,7 @@ let generate_methods ctx env field =
               (* Never used for OCaml. *)
               Misc_common.cfm_used_species_parameter_tys = [] ;
               Misc_common.cfm_dependencies_from_parameters =
-                sorted_deps_from_params ;
+                abstraction_info.Abstractions.ai_dependencies_from_params ;
               Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
             Some (Misc_common.CSF_let compiled_field)
        end)
@@ -595,23 +584,12 @@ let generate_methods ctx env field =
                           Misc_common.make_params_list_from_abstraction_info
                             ~care_logical: false ~care_types: false ai))
                        l } in
-                 let all_deps_from_params =
-                   Abstractions.merge_abstraction_infos
-                     first_ai.Abstractions.ai_dependencies_from_params_via_body
-                     (Abstractions.merge_abstraction_infos
-                        first_ai.Abstractions.
-                          ai_dependencies_from_params_via_type
-                        first_ai.Abstractions.
-                          ai_dependencies_from_params_via_completion) in
-                 let sorted_deps_from_params =
-                   Dep_analysis.order_species_params_methods
-                     all_deps_from_params in
                  (* Now, generate the first method, introduced by "let rec". *)
                  let first_coq_min_typ_env_names =
                    generate_one_field_binding
                      ctx' env first_ai.Abstractions.ai_min_coq_env
                      ~let_connect: Misc_common.LC_first_rec
-                     sorted_deps_from_params
+                     first_ai.Abstractions.ai_dependencies_from_params
                      (from, name, params, (Some scheme), body_expr) in
                  let first_compiled = {
                    Misc_common.cfm_from_species = from ;
@@ -621,7 +599,7 @@ let generate_methods ctx env field =
                    (* Never used for OCaml. *)
                    Misc_common.cfm_used_species_parameter_tys = [] ;
                    Misc_common.cfm_dependencies_from_parameters =
-                     sorted_deps_from_params ;
+                     first_ai.Abstractions.ai_dependencies_from_params ;
                    Misc_common.cfm_coq_min_typ_env_names =
                      first_coq_min_typ_env_names } in
                  (* Finally, generate the remaining  methods, introduced by
@@ -637,22 +615,11 @@ let generate_methods ctx env field =
                                  done at scoping time is bugged ! *)
                               assert false
                           | Parsetree.BB_computational e -> e) in
-                       let all_deps_from_params =
-                         Abstractions.merge_abstraction_infos
-                           ai.Abstractions.ai_dependencies_from_params_via_body
-                           (Abstractions.merge_abstraction_infos
-                              ai.Abstractions.
-                                ai_dependencies_from_params_via_type
-                              ai.Abstractions.
-                                ai_dependencies_from_params_via_completion) in
-                       let sorted_deps_from_params =
-                         Dep_analysis.order_species_params_methods
-                           all_deps_from_params in
                        let coq_min_typ_env_names =
                          generate_one_field_binding
                            ctx' env ai.Abstractions.ai_min_coq_env
                            ~let_connect: Misc_common.LC_following
-                           sorted_deps_from_params
+                           ai.Abstractions.ai_dependencies_from_params
                            (from, name, params, (Some scheme), body_e) in
                        { Misc_common.cfm_from_species = from ;
                          Misc_common.cfm_method_name = name ;
@@ -661,7 +628,7 @@ let generate_methods ctx env field =
                          (* Never used for OCaml. *)
                          Misc_common.cfm_used_species_parameter_tys = [] ;
                          Misc_common.cfm_dependencies_from_parameters =
-                           sorted_deps_from_params ;
+                           ai.Abstractions.ai_dependencies_from_params ;
                          Misc_common.cfm_coq_min_typ_env_names =
                            coq_min_typ_env_names })
                      q in

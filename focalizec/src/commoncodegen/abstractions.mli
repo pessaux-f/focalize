@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.20 2008-12-03 09:07:26 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.21 2009-01-29 18:28:11 pessaux Exp $ *)
 
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
@@ -26,23 +26,10 @@ type field_body_kind =
 
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
-  ai_dependencies_from_params_via_body :
-    (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t)
-    list ;
-  ai_dependencies_from_params_via_type :
-    (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t)
-    list ;
-  ai_dependencies_from_params_via_completion :
-    (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t)
-    list ;
-  ai_min_coq_env : MinEnv.min_coq_env_element list;
+  ai_dependencies_from_params :
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
+  ai_min_coq_env : MinEnv.min_coq_env_element list
 }
-
-val merge_abstraction_infos :
-  (Env.TypeInformation.species_param *
-   Parsetree_utils.ParamDepSet.t) list ->
-  (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ->
-  (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list
 
 type field_abstraction_info =
   | FAI_sig of (Env.TypeInformation.sig_field_info * abstraction_info)
