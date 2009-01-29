@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.2 2009-01-29 19:59:15 weis Exp $
+# $Id: Makefile.distribution,v 1.3 2009-01-29 22:58:43 weis Exp $
 
 ROOT_DIR=.
 
@@ -61,16 +61,17 @@ PROJECT_RELEASE_DIR_NAME=$(PROJECT_NAME_FULL)
 PROJECT_GROUP=caml
 
 # Where the software files reside on the CVS repository:
-PROJECT_CVS_ROOT="`cat CVS/root`"
+PROJECT_CVS_ROOT="`cat CVS/Root`"
 PROJECT_CVS_REPOSITORY="`cat CVS/Repository`"
+
+#PROJECT_CVS="${CVS} -d $(PROJECT_CVS_ROOT)"
 
 # The CVS root directory on the CVS server for the package.
 # Normally, something like: ROOT_OF_THE_CVS_REPOSITORY/$(PROJECT_NAME).
-# Here, we get an extra sub-directory: bazar-ocaml.
-PROJECT_CVS_DIRECTORY=bazar-ocaml/$(PROJECT_NAME)
+PROJECT_CVS_DIRECTORY=$(PROJECT_NAME)
 
 # The tag to set on files in the CVS repository when releasing
-PROJECT_RELEASE_TAG = $(PROJECT_NAME)-$(MAINVERSION)_$(SUBVERSION)_$(PATCHLEVEL)
+PROJECT_RELEASE_TAG = $(PROJECT_NAME_FULL)
 
 # The file that contains the announce of the new relase in the
 # relevant mailing lists.
