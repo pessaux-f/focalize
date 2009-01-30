@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.22 2009-01-16 14:14:40 weis Exp $
+# $Id: Makefile.common,v 1.23 2009-01-30 09:02:28 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -44,6 +44,9 @@ clean::
 	fi
 	if test -d odoc; then \
 	  $(RM) odoc/*; \
+	fi
+	if test -d doc; then \
+	  $(RM) doc; \
 	fi
 
 unconfigure::
