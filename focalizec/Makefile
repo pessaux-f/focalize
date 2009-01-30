@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.31 2009-01-16 13:26:24 weis Exp $
+# $Id: Makefile,v 1.32 2009-01-30 08:17:51 weis Exp $
 
 ROOT_DIR = .
 
@@ -25,7 +25,9 @@ COMPILER_DIRS = src/basement src/parser src/typing\
 
 LIB_DIRS = src/stdlib src/extlib src/contribs
 
-SUB_DIRS = $(COMPILER_DIRS) $(LIB_DIRS)
+DOC_DIRS = doc_src
+
+SUB_DIRS = $(COMPILER_DIRS) $(LIB_DIRS) $(DOC_DIRS)
 
 COMPILER_INSTALL_DIRS = src/toplevel $(LIB_DIRS)
 
@@ -51,7 +53,7 @@ lib:
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
-clean doc depend::
+clean doc docdir depend::
 	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) $@); \
@@ -61,7 +63,7 @@ clean doc depend::
         done
 
 install::
-	@for i in $(COMPILER_INSTALL_DIRS); do \
+	@for i in $(COMPILER_INSTALL_DIRS) $(DOC_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
