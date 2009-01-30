@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.14 2009-01-30 09:24:32 weis Exp $
+# $Id: Makefile,v 1.15 2009-01-30 10:12:06 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -21,6 +21,8 @@ TEX_FILES = macros.tex basic_concepts.tex lexical_conventions.tex motivations.te
 	compiler_opts.tex more_on_meths.tex pres_requir.tex \
 	constructs_syntax.tex bibli.bib
 
+DOC_OBJS=refman.dvi refman.ps refman.pdf refman.html # Not so great but yet...
+
 TEXINPUT = /usr/share/texmf/tex/latex//:$(TEXINPUTS)
 LATEX = TEXINPUTS=$(TEXINPUT); latex
 HEVEA = TEXINPUTS=$(TEXINPUT); hevea
@@ -28,7 +30,11 @@ IMAGEN = imagen -extra "ppmquant 255"
 
 include $(ROOT_DIR)/Makefile.common
 
-all:: refman.dvi refman.ps refman.pdf refman.html # Not so great but yet...
+all doc docdir:: $(DOC_OBJS)
+
+docdir:: $(DOC_OBJS)
+	$(MKDIR) $(DOC_DIR) && \
+	$(CP) $(DOC_OBJS) $(DOC_DIR)
 
 refman.dvi: $(TEX_FILES)
 	$(LATEX) refman.tex
