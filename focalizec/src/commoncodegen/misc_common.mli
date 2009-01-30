@@ -13,9 +13,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.mli,v 1.11 2008-11-29 23:41:14 weis Exp $ *)
+(* $Id: misc_common.mli,v 1.12 2009-01-30 11:52:20 pessaux Exp $ *)
 
 type compiled_field_memory = {
+  cfm_is_logical : bool ;
   cfm_from_species : Env.from_history;
   cfm_method_name : Parsetree.vname;
   cfm_method_scheme : Env.method_type_kind;
@@ -48,8 +49,9 @@ val get_implements_effectives :
 val follow_instanciations_for_in_param :
   Context.species_compil_context -> Abstractions.environment_kind ->
   Parsetree.vname -> Parsetree.module_name -> int ->
-  (Parsetree.qualified_species * Parsetree_utils.simple_species_expr) list ->
-  Parsetree.expr
+  (Parsetree.qualified_species * Parsetree_utils.simple_species_expr * 'a)
+      list ->
+	Parsetree.expr
 ;;
 
 type is_parameter_instanciation =
@@ -60,8 +62,9 @@ type is_parameter_instanciation =
 
 val follow_instanciations_for_is_param :
   Context.species_compil_context -> Abstractions.environment_kind -> int ->
-  (Parsetree.qualified_species * Parsetree_utils.simple_species_expr) list ->
-  is_parameter_instanciation
+  (Parsetree.qualified_species * Parsetree_utils.simple_species_expr * 'a)
+      list ->
+	is_parameter_instanciation
 ;;
 
 val find_toplevel_spe_defining_meth_through_inheritance :

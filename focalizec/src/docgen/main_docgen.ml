@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.30 2009-01-15 11:26:21 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.31 2009-01-30 11:52:20 pessaux Exp $ *)
 
 
 
@@ -303,7 +303,7 @@ let gen_doc_history out_fmt from_hist =
   let (come_from_mod_name, come_from_spe_name)  =
     (match from_hist.Env.fh_inherited_along with
      | [] -> from_hist.Env.fh_initial_apparition
-     | (host, _) :: _ -> host) in
+     | (host, _, _) :: _ -> host) in
   Format.fprintf out_fmt "<foc:comes-from infile=\"%s\">%a</foc:comes-from>@\n"
     come_from_mod_name Utils_docgen.pp_xml_vname come_from_spe_name ;
   Format.fprintf out_fmt "@]</foc:history>@\n"

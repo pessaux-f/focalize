@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.167 2009-01-13 14:17:29 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.168 2009-01-30 11:52:20 pessaux Exp $ *)
 
 
 
@@ -394,7 +394,7 @@ let methods_history_to_text ~dirname ~current_species methods =
     Format.fprintf out_ppf "\tInitially appearing in species '%a'@\n"
       Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
     List.iter
-      (fun (inherited_from, by_expression) ->
+      (fun (inherited_from, by_expression, _) ->
         Format.fprintf out_ppf "\tAppearing by inheritance in species '%a'@\n"
           Sourcify.pp_qualified_species inherited_from ;
         Format.fprintf out_ppf "\t\tVia expression '%a'@\n"
@@ -2536,15 +2536,19 @@ let apply_substitutions_reversed_list_on_fields
 
 
 
-(* *********************************************************************** *)
-(* typing_context -> Env.TypingEnv.t ->                                    *)
-(*   Env.TypeInformation.species_description -> Parsetree.species_param -> *)
-(*     Env.TypeInformation.species_field list                              *)
-(** {b Descr} : Function managing application of arguments during species
-              applications in species expressions.
+(* ************************************************************** *)
+(* typing_context -> Env.TypingEnv.t ->                           *)
+(*   Env.TypeInformation.species_description ->                   *)
+(*     Parsetree.species_param list ->                            *)
+(*       Env.TypeInformation.species_field list *                 *)
+(*       (Types.fname * Types.collection_name) list *             *)
+(*       (Types.type_collection *                                 *)
+(*        Types.substitution_by_replacement_collection_kind) list *)
+(** {b Descr} : Function managing application of arguments during
+    species applications in species expressions.
 
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported outside this module.                   *)
+(* ************************************************************** *)
 let apply_species_arguments ctx env base_spe_descr params =
   (* ****************************************************************** *)
   (** {b Args} :
@@ -2564,7 +2568,7 @@ let apply_species_arguments ctx env base_spe_descr params =
              substitution is in tail.                                   *)
   (* ****************************************************************** *)
   let rec rec_apply accu_meths accu_substs accu_self_must_be = function
-    | ([], []) -> (accu_meths, accu_self_must_be)
+    | ([], []) -> (accu_meths, accu_self_must_be, (List.rev accu_substs))
     | ((f_param :: rem_f_params), (e_param :: rem_e_params)) ->
         let (new_meths, new_accu_substs, new_accu_self_must_be) =
           (begin
@@ -2748,13 +2752,14 @@ let typecheck_species_expr ctx env species_expr =
   species_expr_desc.Parsetree.se_name.Parsetree.ast_type <-
     Parsetree.ANTI_type species_carrier_type ;
   (* Now, create the "species type" (a somewhat of signature). *)
-  let species_methods =
+  let species_methods_n_substs =
     apply_species_arguments
       ctx env species_species_description
       species_expr_desc.Parsetree.se_params in
   (* Record the type in the AST node. *)
   species_expr.Parsetree.ast_type <- Parsetree.ANTI_type species_carrier_type ;
-  (species_methods, species_species_description.Env.TypeInformation.spe_kind,
+  (species_methods_n_substs,
+   species_species_description.Env.TypeInformation.spe_kind,
    species_species_description.Env.TypeInformation.spe_dep_graph)
 ;;
 
@@ -2836,7 +2841,7 @@ let typecheck_species_def_params ctx env species_params =
          | Parsetree.SPT_is species_expr ->
              (begin
              (* First, typecheck the species expression. *)
-             let ((species_expr_fields, self_must_be), base_species_kind,
+             let ((species_expr_fields, self_must_be, _), base_species_kind,
                   species_dep_graph) =
                typecheck_species_expr ctx accu_env species_expr in
              (* Create the [species_description] of the parameter and extend
@@ -2916,8 +2921,12 @@ let typecheck_species_def_params ctx env species_params =
 
 
 
+(** applied_substs : The list of substitutions of formal species parameters by
+    effective ones done during the inheritance expression. The substitutions
+    are in the right order for application. This means that the first to
+    perform is in head of the list. *)
 let extend_from_history ~current_species ~current_unit env
-    species_expr_inherited field =
+    species_expr_inherited applied_substs field =
   let simple_expr =
     species_expr_to_species_param_expr
       ~current_unit env species_expr_inherited in
@@ -2925,13 +2934,15 @@ let extend_from_history ~current_species ~current_unit env
    | Env.TypeInformation.SF_sig (from, n, sch) ->
        let from' = { from with
          Env.fh_inherited_along =
-           (current_species, simple_expr) :: from.Env.fh_inherited_along } in
+           (current_species, simple_expr, applied_substs) ::
+             from.Env.fh_inherited_along } in
        Env.TypeInformation.SF_sig (from', n, sch)
    | Env.TypeInformation.SF_let
            (from, n, parms, sch, body, otp, rep_deps, lflag) ->
        let from' = { from with
          Env.fh_inherited_along =
-           (current_species, simple_expr) :: from.Env.fh_inherited_along } in
+           (current_species, simple_expr, applied_substs) ::
+             from.Env.fh_inherited_along } in
        Env.TypeInformation.SF_let
          (from', n, parms, sch, body, otp, rep_deps, lflag)
    | Env.TypeInformation.SF_let_rec l ->
@@ -2940,7 +2951,7 @@ let extend_from_history ~current_species ~current_unit env
            (fun (from, n, parms, sch, body, otp, rep_deps, lflag) ->
              let from' = { from with
                Env.fh_inherited_along =
-                 (current_species, simple_expr) ::
+                 (current_species, simple_expr, applied_substs) ::
                  from.Env.fh_inherited_along } in
              (from', n, parms, sch, body, otp, rep_deps, lflag))
            l in
@@ -2948,12 +2959,14 @@ let extend_from_history ~current_species ~current_unit env
    | Env.TypeInformation.SF_theorem (from, n, sch, body, proof, rep_deps) ->
        let from' = { from with
          Env.fh_inherited_along =
-           (current_species, simple_expr) :: from.Env.fh_inherited_along } in
+           (current_species, simple_expr, applied_substs) ::
+             from.Env.fh_inherited_along } in
        Env.TypeInformation.SF_theorem (from', n, sch, body, proof, rep_deps)
    | Env.TypeInformation.SF_property (from, n, sch, body, rep_deps) ->
        let from' = { from with
          Env.fh_inherited_along =
-           (current_species, simple_expr) :: from.Env.fh_inherited_along } in
+           (current_species, simple_expr, applied_substs) ::
+             from.Env.fh_inherited_along } in
        Env.TypeInformation.SF_property (from', n, sch, body, rep_deps)
 ;;
 
@@ -2988,13 +3001,14 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
     | inh :: rem_inhs ->
       (* First typecheck the species expression in the initial (non extended)
          and recover its methods names and types. *)
-      let ((inh_species_methods, self_must_be), _, _) =
+      let ((inh_species_methods, self_must_be, applied_substs), _, _) =
         typecheck_species_expr current_ctx env inh in
       (* Change inside inherited fields the history information. *)
       let inh_species_methods =
         List.map
           (extend_from_history
-             ~current_species ~current_unit: ctx.current_unit env inh)
+             ~current_species ~current_unit: ctx.current_unit env inh
+             applied_substs)
           inh_species_methods in
       let (env', current_ctx')  =
         List.fold_left
@@ -4822,7 +4836,8 @@ let typecheck_collection_def ctx env coll_def =
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with current_species = Some current_species } in
   (* Typecheck the body's species expression .*)
-  let ((species_expr_fields, _self_must_be), _, _) = (* [Unsure] self_must_be *)
+  let ((species_expr_fields, _self_must_be, applied_substs), _, _) =
+    (* [Unsure] self_must_be *)
     typecheck_species_expr ctx env coll_def_desc.Parsetree.cd_body in
   (* One must ensure that the collection is really a completely defined
      species. *)
@@ -4833,7 +4848,7 @@ let typecheck_collection_def ctx env coll_def =
     List.map
       (extend_from_history
          ~current_species ~current_unit: ctx.current_unit env
-         coll_def_desc.Parsetree.cd_body)
+         coll_def_desc.Parsetree.cd_body applied_substs)
       species_expr_fields in
   let myself_coll_ty =
     (ctx.current_unit,

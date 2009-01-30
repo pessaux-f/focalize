@@ -12,7 +12,10 @@ exception Rebound_species of (Parsetree.vname * Location.t)
 type from_history = {
   fh_initial_apparition : Parsetree.qualified_species ;
   fh_inherited_along :
-    (Parsetree.qualified_species * Parsetree_utils.simple_species_expr) list
+    (Parsetree.qualified_species * Parsetree_utils.simple_species_expr *
+    ((Types.type_collection * Types.substitution_by_replacement_collection_kind)
+       list))
+      list
 }
 
 val intitial_inheritance_history : Parsetree.qualified_species -> from_history

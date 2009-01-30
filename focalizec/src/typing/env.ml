@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.120 2009-01-12 13:37:26 pessaux Exp $ *)
+(* $Id: env.ml,v 1.121 2009-01-30 11:52:20 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -212,7 +212,14 @@ type from_history = {
       is empty. For each species in the history, we have the simplified
       species expression used to build the species we inherited of. *)
   fh_inherited_along :
-    (Parsetree.qualified_species * Parsetree_utils.simple_species_expr) list
+    (Parsetree.qualified_species * Parsetree_utils.simple_species_expr *
+       (* The list of substitutions of formal species parameters by effective
+          ones done during the inheritance expression. The substitutions are in
+          the right order for application. This means that the first to perform
+          is in head of the list. *)
+       ((Types.type_collection *
+           Types.substitution_by_replacement_collection_kind) list))
+      list
 } ;;
 
 

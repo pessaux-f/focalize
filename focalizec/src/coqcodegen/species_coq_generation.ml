@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.156 2009-01-29 18:28:11 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.157 2009-01-30 11:52:20 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2276,7 +2276,7 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
               print_pattern_for_order
                 out_fmter ~var_suffix: "1" pattern_description in
             Format.fprintf out_fmter " =>@\n" ;
-            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n| " ;
+            Format.fprintf out_fmter "@[<2>match@ __y@ with@\n| " ;
             let printed2 =
               print_pattern_for_order
                 out_fmter ~var_suffix: "2" pattern_description in
@@ -2661,6 +2661,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        (* Close the pretty print box. *)
        Format.fprintf out_fmter ".@]@\n" ;
        let compiled = {
+         Misc_common.cfm_is_logical = false ;
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
          Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
@@ -2707,6 +2708,7 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
          (* Now, build the [compiled_field_memory], even if the method was not
             really generated because it was inherited. *)
          let compiled_field = {
+           Misc_common.cfm_is_logical = false ;
            Misc_common.cfm_from_species = from ;
            Misc_common.cfm_method_name = name ;
            Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
@@ -2736,6 +2738,7 @@ let generate_methods ctx print_ctx env generated_fields = function
           Parsetree_utils.pp_vname_with_operators_expanded name ;
       (* Nothing very exciting to keep for the collection generator. *)
       let compiled_field = {
+        Misc_common.cfm_is_logical = false ;
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_computational sch ;
@@ -2764,6 +2767,10 @@ let generate_methods ctx print_ctx env generated_fields = function
       (* Now, build the [compiled_field_memory], even if the method was not
          really generated because it was inherited. *)
       let compiled_field = {
+        Misc_common.cfm_is_logical =
+          (match body with
+           | Parsetree.BB_logical _ -> true
+           | Parsetree.BB_computational _ -> false) ;
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
@@ -2784,6 +2791,7 @@ let generate_methods ctx print_ctx env generated_fields = function
           abstraction_info.Abstractions.ai_dependencies_from_params
           generated_fields (from, name, logical_expr) pr in
       let compiled_field = {
+	Misc_common.cfm_is_logical = true ;
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_logical logical_expr ;
@@ -2796,6 +2804,7 @@ let generate_methods ctx print_ctx env generated_fields = function
   | Abstractions.FAI_property ((from, name, _, lexpr, _), abstraction_info) ->
       (* "Property"s are discarded. However we compute their dependencies. *)
       let compiled_field = {
+	Misc_common.cfm_is_logical = true ;
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_logical lexpr ;

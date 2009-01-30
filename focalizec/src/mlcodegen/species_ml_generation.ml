@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.90 2009-01-29 18:28:12 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.91 2009-01-30 11:52:20 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -497,11 +497,9 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
 
 
 (* *********************************************************************** *)
-(* species_compil_context -> Parsetree.vname list ->                       *)
-(*   Env.TypeInformation.species_field -> unit                             *)
 (** {b Desc} : Generates the OCaml code for ONE method field (i.e. for one
     let-bound construct or for one bunch of items of a let-rec-bound
-    construct.
+    construct or a theorem or a property or a signature.
 
     {b Args} :
       - [ctx] : The species-compilation-context merging the various
@@ -519,6 +517,7 @@ let generate_methods ctx env field =
          Format.eprintf "OCaml code for signature '%a' leads to void code.@."
            Parsetree_utils.pp_vname_with_operators_expanded name ;
        let compiled_field = {
+         Misc_common.cfm_is_logical = false ;
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
          Misc_common.cfm_method_scheme = Env.MTK_computational sch ;
@@ -526,14 +525,27 @@ let generate_methods ctx env field =
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_coq_min_typ_env_names = [] } in
-       Some (Misc_common.CSF_sig compiled_field)
+       Misc_common.CSF_sig compiled_field
    | Abstractions.FAI_let ((from, name, params, scheme, body, _, _, _),
                            abstraction_info) ->
        (begin
        match body with
         | Parsetree.BB_logical _ ->
             (* In OCaml, logical lets are not generated. *)
-            None
+            if Configuration.get_verbose () then
+              Format.eprintf
+                "OCaml code for logical let '%a' leads to void code.@."
+                Parsetree_utils.pp_vname_with_operators_expanded name ;
+            let compiled_field = {
+              Misc_common.cfm_is_logical = true ;
+              Misc_common.cfm_from_species = from ;
+              Misc_common.cfm_method_name = name ;
+              Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
+              (* Never used for OCaml. *)
+              Misc_common.cfm_used_species_parameter_tys = [] ;
+              Misc_common.cfm_dependencies_from_parameters = [] ;
+              Misc_common.cfm_coq_min_typ_env_names = [] } in
+            Misc_common.CSF_let compiled_field
         | Parsetree.BB_computational body_expr ->
             (* No recursivity, then the method cannot call itself in its body
                then no need to set the [scc_lambda_lift_params_mapping] of the
@@ -547,6 +559,7 @@ let generate_methods ctx env field =
             (* Now, build the [compiled_field_memory], even if the method was
                not really generated because it was inherited. *)
             let compiled_field = {
+              Misc_common.cfm_is_logical = false ;
               Misc_common.cfm_from_species = from ;
               Misc_common.cfm_method_name = name ;
               Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
@@ -555,7 +568,7 @@ let generate_methods ctx env field =
               Misc_common.cfm_dependencies_from_parameters =
                 abstraction_info.Abstractions.ai_dependencies_from_params ;
               Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
-            Some (Misc_common.CSF_let compiled_field)
+            Misc_common.CSF_let compiled_field
        end)
    | Abstractions.FAI_let_rec l ->
        (begin
@@ -569,7 +582,21 @@ let generate_methods ctx env field =
             match body with
              | Parsetree.BB_logical _ ->
                  (* In OCaml, logical lets are not generated. *)
-                 None
+                 if Configuration.get_verbose () then
+                   Format.eprintf
+                     "OCaml code for logical let '%a' leads to void code.@."
+                     Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 let compiled_field = {
+                   Misc_common.cfm_is_logical = true ;
+                   Misc_common.cfm_from_species = from ;
+                   Misc_common.cfm_method_name = name ;
+                   Misc_common.cfm_method_scheme =
+                     Env.MTK_computational scheme ;
+                   (* Never used for OCaml. *)
+                   Misc_common.cfm_used_species_parameter_tys = [] ;
+                   Misc_common.cfm_dependencies_from_parameters = [] ;
+                   Misc_common.cfm_coq_min_typ_env_names = [] } in
+                 Misc_common.CSF_let compiled_field
              | Parsetree.BB_computational body_expr ->
                  (* Extend the context with the mapping between these recursive
                     functions and their extra arguments. Since we are in OCaml,
@@ -592,6 +619,7 @@ let generate_methods ctx env field =
                      first_ai.Abstractions.ai_dependencies_from_params
                      (from, name, params, (Some scheme), body_expr) in
                  let first_compiled = {
+                   Misc_common.cfm_is_logical = false ;
                    Misc_common.cfm_from_species = from ;
                    Misc_common.cfm_method_name = name ;
                    Misc_common.cfm_method_scheme =
@@ -621,7 +649,8 @@ let generate_methods ctx env field =
                            ~let_connect: Misc_common.LC_following
                            ai.Abstractions.ai_dependencies_from_params
                            (from, name, params, (Some scheme), body_e) in
-                       { Misc_common.cfm_from_species = from ;
+                       { Misc_common.cfm_is_logical = false ;
+                         Misc_common.cfm_from_species = from ;
                          Misc_common.cfm_method_name = name ;
                          Misc_common.cfm_method_scheme =
                            Env.MTK_computational scheme ;
@@ -632,7 +661,7 @@ let generate_methods ctx env field =
                          Misc_common.cfm_coq_min_typ_env_names =
                            coq_min_typ_env_names })
                      q in
-                 Some (Misc_common.CSF_let_rec (first_compiled :: rem_compiled))
+                 Misc_common.CSF_let_rec (first_compiled :: rem_compiled)
             end)
        end)
    | Abstractions.FAI_theorem ((from, name, _, lexpr, _, _), _) ->
@@ -642,6 +671,7 @@ let generate_methods ctx env field =
            "OCaml code for theorem '%a' leads to void code.@."
            Parsetree_utils.pp_vname_with_operators_expanded name ;
        let compiled_field = {
+         Misc_common.cfm_is_logical = true ;
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
          Misc_common.cfm_method_scheme = Env.MTK_logical lexpr ;
@@ -649,7 +679,7 @@ let generate_methods ctx env field =
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_coq_min_typ_env_names = [] } in
-       Some (Misc_common.CSF_theorem compiled_field)
+       Misc_common.CSF_theorem compiled_field
    | Abstractions.FAI_property ((from, name, _, lexpr, _), _) ->
        (* Properties are purely discarded in the Ocaml translation. *)
        if Configuration.get_verbose () then
@@ -657,6 +687,7 @@ let generate_methods ctx env field =
            "OCaml code for property '%a' leads to void code.@."
            Parsetree_utils.pp_vname_with_operators_expanded name ;
        let compiled_field = {
+         Misc_common.cfm_is_logical = true ;
          Misc_common.cfm_from_species = from ;
          Misc_common.cfm_method_name = name ;
          Misc_common.cfm_method_scheme = Env.MTK_logical lexpr ;
@@ -664,7 +695,7 @@ let generate_methods ctx env field =
          Misc_common.cfm_used_species_parameter_tys = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_coq_min_typ_env_names = [] } in
-       Some (Misc_common.CSF_property compiled_field)
+       Misc_common.CSF_property compiled_field
 ;;
 
 
@@ -1127,9 +1158,17 @@ let generate_collection_generator ctx env compiled_species_fields =
     (function
       | Misc_common.CSF_sig _ | Misc_common.CSF_property _
       | Misc_common.CSF_theorem _ -> ()
-      | Misc_common.CSF_let field_memory -> process_one_field field_memory
+      | Misc_common.CSF_let field_memory ->
+          (* We only generate the field in OCaml if it is not a logical
+             method. *)
+          if not field_memory.Misc_common.cfm_is_logical then
+            process_one_field field_memory
       | Misc_common.CSF_let_rec l ->
-          List.iter (fun fm -> process_one_field fm) l)
+          List.iter
+            (fun fm ->
+              (* Same than above. *)
+              if not fm.Misc_common.cfm_is_logical then process_one_field fm)
+            l)
     compiled_species_fields ;
   (* And now, the record value. We just assign each record fields corresponding
      to the current species's method the corresponding local function we
@@ -1143,19 +1182,24 @@ let generate_collection_generator ctx env compiled_species_fields =
       | Misc_common.CSF_sig _ | Misc_common.CSF_property _
       | Misc_common.CSF_theorem _ -> ()
       | Misc_common.CSF_let field_memory ->
-          Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
-            Parsetree_utils.pp_vname_with_operators_expanded
-            field_memory.Misc_common.cfm_method_name
-            Parsetree_utils.pp_vname_with_operators_expanded
-            field_memory.Misc_common.cfm_method_name
+          (* We only generate the field in OCaml if it is not a logical
+             method. *)
+          if not field_memory.Misc_common.cfm_is_logical then
+            Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
+              Parsetree_utils.pp_vname_with_operators_expanded
+              field_memory.Misc_common.cfm_method_name
+              Parsetree_utils.pp_vname_with_operators_expanded
+              field_memory.Misc_common.cfm_method_name
       | Misc_common.CSF_let_rec l ->
           List.iter
             (fun field_memory ->
-              Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
-                Parsetree_utils.pp_vname_with_operators_expanded
-                field_memory.Misc_common.cfm_method_name
-                Parsetree_utils.pp_vname_with_operators_expanded
-                field_memory.Misc_common.cfm_method_name)
+              (* Same than above. *)
+              if not field_memory.Misc_common.cfm_is_logical then
+                Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
+                  Parsetree_utils.pp_vname_with_operators_expanded
+                  field_memory.Misc_common.cfm_method_name
+                  Parsetree_utils.pp_vname_with_operators_expanded
+                  field_memory.Misc_common.cfm_method_name)
             l)
     compiled_species_fields ;
   (* Close the record expression. *)
@@ -1199,9 +1243,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     Abstractions.compute_abstractions_for_fields
       ~with_def_deps_n_term_pr: false (Abstractions.EK_ml env)
       ctx species_descr.Env.TypeInformation.spe_sig_methods in
-  let compiled_fields_as_options =
+  let compiled_fields =
     List.map (generate_methods ctx env) field_abstraction_infos in
-  let compiled_fields = Handy.option_list_to_list compiled_fields_as_options in
   (* Now build the list of the species parameters names to make them public in
      the future ml generation environnment. *)
   let species_params_names_n_kinds =

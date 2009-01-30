@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.17 2009-01-29 18:28:11 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.18 2009-01-30 11:52:20 pessaux Exp $ *)
 
 
 
@@ -30,6 +30,9 @@
     {b Rem} : Exported outside this module.                                   *)
 (* ************************************************************************** *)
 type compiled_field_memory = {
+  (** Boolean telling if the method is logical, i.e. is either a logical let
+      or a property or a theorem. *)
+  cfm_is_logical : bool ;
   (** Where the method comes from via inheritance history. *)
   cfm_from_species : Env.from_history ;
   (** The method's name. *)
@@ -208,7 +211,7 @@ let follow_instanciations_for_in_param ctx env original_param_name
   let rec rec_follow params_unit ent_params accu_instanciated_expr = function
     | [] -> accu_instanciated_expr
     | inheritance_step :: rem_steps ->
-        let (step_species, step_inheritance_expr) = inheritance_step in
+        let (step_species, step_inheritance_expr, _) = inheritance_step in
         (* Here, we know that the method appears in a species that inherited. *)
         (* We have this species's name and the species expression used during *)
         (* inheritance.                                                       *)
@@ -424,7 +427,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
         IPI_by_species_parameter
           (List.nth current_species_parameters param_index)
     | inheritance_step :: rem_steps ->
-        let (step_species, step_inheritance_expr) = inheritance_step in
+        let (step_species, step_inheritance_expr, _) = inheritance_step in
         (* Here, we know that the method appears in a species that inherited. *)
         (* We have this species's name and the species expression used during *)
         (* inheritance.                                                       *)
