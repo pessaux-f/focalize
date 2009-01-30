@@ -9,13 +9,13 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.5 2009-01-30 10:52:09 weis Exp $
+# $Id: Makefile,v 1.6 2009-01-30 11:32:24 weis Exp $
 
 ROOT_DIR=../..
 
 include $(ROOT_DIR)/Makefile.config
 
-DOCDIR_DIR=$(DOCDIR_DIR)/man
+DOCDIR_DIR=$(DOCUMENTATION_DIR)/man
 
 # Makefile for man page generation.
 
@@ -25,8 +25,6 @@ DOCDIR_DIR=$(DOCDIR_DIR)/man
 # Usage: fill in the HTMLC and FILES variables below, then
 # make (or make all) will rebuild the whole thing
 # make clean will remove all the generated files
-
-RM=rm -f
 
 # The Htmlc compiler with its include path options
 # For instance htmlc -I Includes -env env

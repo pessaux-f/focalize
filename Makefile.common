@@ -13,13 +13,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.9 2009-01-30 10:02:39 weis Exp $
+# $Id: Makefile.common,v 1.10 2009-01-30 11:32:24 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
 .PHONY: all byt bin
 .PHONY: clean unconfigure distclean install uninstall
-.PHONY: doc depend tests lib
+.PHONY: doc docdir odoc depend tests lib
 
 all:: byt bin
 
@@ -27,7 +27,7 @@ byt:: $(BYT_OBJS)
 
 bin:: $(BIN_OBJS)
 
-doc:: $(BYT_OBJS)
+doc docdir:: $(BYT_OBJS)
 
 odoc:: $(BYT_OBJS)
 	$(MKDIR) odoc

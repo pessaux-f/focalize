@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.45 2009-01-30 10:02:39 weis Exp $
+# $Id: Makefile,v 1.46 2009-01-30 11:32:24 weis Exp $
 
 ROOT_DIR = .
 
@@ -25,6 +25,8 @@ include $(ROOT_DIR)/Makefile.config
 # INTERNAL_TOOLS_DIRS
 
 ALL_SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS)
+
+DOCDIR_DIR = $(DOCUMENTATION_DIR)
 
 include $(ROOT_DIR)/Makefile.common
 
@@ -270,10 +272,27 @@ install:: .done_build_internal_tools
 	done; \
 	$(TOUCH) .done_install_focalizec
 
-uninstall doc depend::
+uninstall doc odoc docdir depend::
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+	done
+
+distclean::
+	$(RM) $(DOCDIR_DIR)
+
+docdir:: doc
+	$(MKDIR) $(DOCDIR_DIR) && \
+	for i in $(INTERNAL_TOOLS_DIRS); do \
+	  echo "--> $$i ..." >&2 && \
+	  $(MKDIR) $(DOCDIR_DIR)/$$i && \
+	  ($(CD) $$i && $(MAKE) $@) && \
+	  if test -d $$i/$(DOCUMENTATION_DIR); then \
+	     $(CPR) $$i/$(DOCUMENTATION_DIR)/* $(DOCDIR_DIR)/$$i/; \
+	  fi; \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \

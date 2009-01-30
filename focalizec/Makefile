@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.33 2009-01-30 10:02:39 weis Exp $
+# $Id: Makefile,v 1.34 2009-01-30 11:32:24 weis Exp $
 
 ROOT_DIR = .
 
@@ -37,46 +37,46 @@ all:: lib
 
 byt bin::
 	@for i in $(COMPILER_DIRS); do \
-	  echo "--> $$i ..."; \
+	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
+	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
 lib:
 	@for i in $(LIB_DIRS); do \
-	  echo "--> $$i ..."; \
+	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
+	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
 odoc:: lib
 	@for i in $(COMPILER_DIRS); do \
-	  echo "--> $$i ..."; \
+	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
+	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
 
 clean doc docdir depend::
 	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..."; \
+	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
+	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
 install::
 	@for i in $(COMPILER_INSTALL_DIRS) $(DOC_DIRS); do \
-	  echo "--> $$i ..."; \
+	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
+	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done

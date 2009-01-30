@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.24 2009-01-30 10:02:39 weis Exp $
+# $Id: Makefile.common,v 1.25 2009-01-30 11:32:24 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -27,7 +27,7 @@ byt:: $(BYT_OBJS)
 
 bin:: $(BIN_OBJS)
 
-doc:: $(BYT_OBJS)
+doc docdir:: $(BYT_OBJS)
 
 odoc:: $(BYT_OBJS)
 	$(MKDIR) odoc
