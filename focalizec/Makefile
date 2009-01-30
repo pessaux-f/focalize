@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.32 2009-01-30 08:17:51 weis Exp $
+# $Id: Makefile,v 1.33 2009-01-30 10:02:39 weis Exp $
 
 ROOT_DIR = .
 
@@ -52,6 +52,16 @@ lib:
 	  echo "<-- $$i [$$err]"; \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
+
+odoc:: lib
+	@for i in $(COMPILER_DIRS); do \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i && $(MAKE) $@); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
+        done
+
 
 clean doc docdir depend::
 	@for i in $(SUB_DIRS); do \

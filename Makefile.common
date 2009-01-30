@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.8 2009-01-30 09:02:28 weis Exp $
+# $Id: Makefile.common,v 1.9 2009-01-30 10:02:39 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -28,7 +28,11 @@ byt:: $(BYT_OBJS)
 bin:: $(BIN_OBJS)
 
 doc:: $(BYT_OBJS)
+
+odoc:: $(BYT_OBJS)
 	$(MKDIR) odoc
+	echo "caml_doc_compiler is $(CAML_DOC_COMPILER)" >&2 && \
+	echo "caml_doc is $(CAML_DOC)" >&2 && \
 	$(CAML_DOC) $(CAML_INCLUDES) -html -d odoc $(BYT_OBJS:.cmo=.ml)
 
 clean::
