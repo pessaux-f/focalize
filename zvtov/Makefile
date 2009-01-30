@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.26 2009-01-15 09:33:20 weis Exp $
+#  $Id: Makefile,v 1.27 2009-01-30 07:43:55 weis Exp $
 
 # Reading configuration settings.
 include .config_var
@@ -99,6 +99,10 @@ parser_coq.ml: parser_coq.mly
 
 parser_coq.mli: parser_coq.ml
 	:
+
+.PHONY: doc docdir
+doc docdir:
+	@echo "The documentation for zvtov is not yet available :(" >&2
 
 .PHONY: clean
 clean:
