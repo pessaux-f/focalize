@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.46 2009-01-30 11:32:24 weis Exp $
+# $Id: Makefile,v 1.47 2009-01-30 14:13:51 weis Exp $
 
 ROOT_DIR = .
 
@@ -343,7 +343,7 @@ distclean_external_tools: distclean_internal_tools
 	$(RM) .done_build_external_tools && \
 	for i in $(EXTERNAL_TOOLS); do \
 	  $(RM) .done_build_external_$$i_tool; \
-	done &&
+	done && \
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) distclean); \
