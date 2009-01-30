@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2009-01-30 10:31:35 weis Exp $
+# $Id: Makefile,v 1.3 2009-01-30 10:55:50 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -23,7 +23,9 @@ SUB_DIRS = refman
 
 include $(ROOT_DIR)/Makefile.common
 
-all clean doc docdir depend::
+DOCDIR_DIR=$(DOCUMENTATION_DIR)/tex
+
+all clean distclean doc docdir depend::
 	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
@@ -31,6 +33,12 @@ all clean doc docdir depend::
 	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
+
+distclean:: clean
+	$(RM) $(DOCDIR_DIR)
+
+docdir::
+	$(MKDIR) $(DOCDIR_DIR)
 
 install::
 	@for i in $(SUB_DIRS); do \

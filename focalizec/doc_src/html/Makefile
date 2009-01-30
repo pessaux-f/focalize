@@ -9,13 +9,13 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.2 2009-01-30 09:24:32 weis Exp $
+# $Id: Makefile,v 1.3 2009-01-30 10:55:50 weis Exp $
 
 ROOT_DIR=../..
 
 include $(ROOT_DIR)/Makefile.config
 
-DOC_DIR=$(ROOT_DIR)/doc
+DOCDIR_DIR=$(DOCUMENTATION_DIR)/html
 
 # Makefile for man page generation.
 
@@ -30,12 +30,11 @@ DOC_DIR=$(ROOT_DIR)/doc
 # For instance htmlc -I Includes -env env
 HTMLC=htmlc -I Includes -env focalizec.env
 
-# Prefix before regular names
-PACKAGE=focalizec
-
 # The list of source files
 HTML_FILES=
 #$(PACKAGE).htm
+
+include $(ROOT_DIR)/Makefile.config
 
 ######## This part should automatically handle the generation of
 ######## object files
@@ -55,12 +54,12 @@ clean::
 	cd Includes; $(RM) *~
 
 distclean:: clean
-	$(RM) $(DOC_DIR)
+	$(RM) $(DOCDIR_DIR)/html
 
 docdir: $(HTML_OBJS)
-	$(MKDIR) $(DOC_DIR) && \
+	$(MKDIR) $(DOCDIR_DIR) && \
 	if ! test -z $(HTML_OBJS); then \
-	  $(CP) $(HTML_OBJS) $(DOC_DIR); \
+	  $(CP) $(HTML_OBJS) $(DOCDIR_DIR)/; \
 	fi
 
 depend::

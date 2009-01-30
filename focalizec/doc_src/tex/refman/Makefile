@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.15 2009-01-30 10:12:06 weis Exp $
+# $Id: Makefile,v 1.16 2009-01-30 10:55:50 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -30,11 +30,13 @@ IMAGEN = imagen -extra "ppmquant 255"
 
 include $(ROOT_DIR)/Makefile.common
 
+DOCDIR_DIR=$(DOCUMENTATION_DIR)/tex/refman
+
 all doc docdir:: $(DOC_OBJS)
 
 docdir:: $(DOC_OBJS)
-	$(MKDIR) $(DOC_DIR) && \
-	$(CP) $(DOC_OBJS) $(DOC_DIR)
+	$(MKDIR) $(DOCDIR_DIR) && \
+	$(CP) $(DOC_OBJS) $(DOCDIR_DIR)/
 
 refman.dvi: $(TEX_FILES)
 	$(LATEX) refman.tex
@@ -53,3 +55,6 @@ refman.ps: refman.dvi
 
 clean::
 	$(RM) *.aux *.log *.pdf refman.ps *.dvi *.idx *.ilg *.ind *.toc
+
+distclean:: clean
+	$(RM) $(DOCDIR_DIR)
