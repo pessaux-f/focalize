@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.3 2009-01-30 09:05:37 weis Exp $
+# $Id: Makefile,v 1.1 2009-01-30 09:05:37 weis Exp $
 
 ROOT_DIR=../..
 
@@ -26,42 +26,46 @@ DOC_DIR=$(ROOT_DIR)/doc
 # make (or make all) will rebuild the whole thing
 # make clean will remove all the generated files
 
-RM=rm -f
-
 # The Htmlc compiler with its include path options
 # For instance htmlc -I Includes -env env
-HTMLC=htmlc -env focalizec.env
+HTMLC=htmlc -I Includes -env focalizec.env
 
 # Prefix before regular names
 PACKAGE=focalizec
 
 # The list of source files
-MAN_FILES=$(PACKAGE).man
+HTML_FILES=
+#$(PACKAGE).htm
 
 ######## This part should automatically handle the generation of
 ######## object files
 
 # The list of object files
-MAN_OBJS=$(MAN_FILES:.man=.1)
+HTML_OBJS=$(HTML_FILES:.html=.htm)
 
 .PHONY: all doc visu clean docdir install
 
-all doc: $(MAN_OBJS)
+all doc: $(HTML_OBJS)
 
-visu: $(MAN_OBJS)
-	nroff -man $(PACKAGE).1 | more
+visu: $(HTML_OBJS)
+	dillo $(PACKAGE).htm
 
 clean::
-	$(RM) $(MAN_OBJS) *~
-#	cd Includes; $(RM) *~
+	$(RM) $(HTML_OBJS) *~
+	cd Includes; $(RM) *~
 
-docdir: $(MAN_OBJS)
+distclean:: clean
+	$(RM) $(DOC_DIR)
+
+docdir: $(HTML_OBJS)
 	$(MKDIR) $(DOC_DIR) && \
-	$(CP) $(MAN_OBJS) $(DOC_DIR)
+	if ! test -z $(HTML_OBJS); then \
+	  $(CP) $(HTML_OBJS) $(DOC_DIR); \
+	fi
 
 .SUFFIXES:
-.SUFFIXES: .man .1
+.SUFFIXES: .html .htm
 
-.man.1:
+.html.htm:
 	$(RM) $@
 	$(HTMLC) -f $< -t $@
