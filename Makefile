@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.43 2009-01-27 21:54:57 weis Exp $
+# $Id: Makefile,v 1.44 2009-01-30 08:17:28 weis Exp $
 
 ROOT_DIR = .
 
@@ -277,45 +277,51 @@ uninstall doc depend::
 	done
 
 clean_internal_tools:
+	$(RM) .done_build_internal_tools && \
+	for i in $(INTERNAL_TOOLS); do \
+	  $(RM) .done_build_$$i; \
+	  $(TOUCH) $$i/.config_var; \
+	done && \
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) clean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \
 	  case $$err in 0);; *) exit $$err;; esac; \
-	done; \
-	for i in $(INTERNAL_TOOLS); do \
-	  $(RM) .done_build_$$i; \
-	  $(TOUCH) $$i/.config_var; \
 	done
 
 distclean_internal_tools:
+	$(RM) .done_build_internal_tools && \
+	for i in $(INTERNAL_TOOLS); do \
+	  $(RM) .done_build_$$i; \
+	  $(TOUCH) $$i/.config_var; \
+	done && \
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) distclean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \
 	  case $$err in 0);; *) exit $$err;; esac; \
-	done; \
-	for i in $(INTERNAL_TOOLS); do \
-	  $(RM) .done_build_$$i; \
-	  $(TOUCH) $$i/.config_var; \
 	done
 
-clean_external_tools:
+clean_external_tools: clean_internal_tools
+	$(RM) .done_build_external_tools && \
+	for i in $(EXTERNAL_TOOLS); do \
+	  $(RM) .done_build_external_$$i_tool; \
+	done &&
 	for i in $(EXTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) clean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \
 	  case $$err in 0);; *) exit $$err;; esac; \
-	done; \
-	for i in $(EXTERNAL_TOOLS); do \
-	  $(RM) .done_build_external_$$i_tool; \
 	done
 
-distclean_external_tools:
-	$(RM) .done_*
+distclean_external_tools: distclean_internal_tools
+	$(RM) .done_build_external_tools && \
+	for i in $(EXTERNAL_TOOLS); do \
+	  $(RM) .done_build_external_$$i_tool; \
+	done &&
 	for i in $(TAR_BALLS_DIR); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) distclean); \
@@ -324,4 +330,4 @@ distclean_external_tools:
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
-distclean:: distclean_external_tools distclean_internal_tools unconfigure
+distclean:: distclean_external_tools unconfigure
