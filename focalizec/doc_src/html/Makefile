@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.1 2009-01-30 09:05:37 weis Exp $
+# $Id: Makefile,v 1.2 2009-01-30 09:24:32 weis Exp $
 
 ROOT_DIR=../..
 
@@ -62,6 +62,8 @@ docdir: $(HTML_OBJS)
 	if ! test -z $(HTML_OBJS); then \
 	  $(CP) $(HTML_OBJS) $(DOC_DIR); \
 	fi
+
+depend::
 
 .SUFFIXES:
 .SUFFIXES: .html .htm
