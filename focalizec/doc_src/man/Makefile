@@ -9,13 +9,13 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.4 2009-01-30 09:24:32 weis Exp $
+# $Id: Makefile,v 1.5 2009-01-30 10:52:09 weis Exp $
 
 ROOT_DIR=../..
 
 include $(ROOT_DIR)/Makefile.config
 
-DOC_DIR=$(ROOT_DIR)/doc
+DOCDIR_DIR=$(DOCDIR_DIR)/man
 
 # Makefile for man page generation.
 
@@ -49,8 +49,8 @@ MAN_OBJS=$(MAN_FILES:.man=.1)
 all doc: $(MAN_OBJS)
 
 docdir: $(MAN_OBJS)
-	$(MKDIR) $(DOC_DIR) && \
-	$(CP) $(MAN_OBJS) $(DOC_DIR)
+	$(MKDIR) $(DOCDIR_DIR) && \
+	$(CP) $(MAN_OBJS) $(DOCDIR_DIR)/
 
 visu: $(MAN_OBJS)
 	nroff -man $(PACKAGE).1 | more
@@ -58,6 +58,9 @@ visu: $(MAN_OBJS)
 clean::
 	$(RM) $(MAN_OBJS) *~
 #	cd Includes; $(RM) *~
+
+distclean:: clean
+	$(RM) $(DOCDIR_DIR)
 
 depend::
 
