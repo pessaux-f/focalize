@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.19 2008-11-29 20:35:30 weis Exp $ *)
+(* $Id: handy.ml,v 1.20 2009-02-02 14:10:04 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -102,6 +102,8 @@ let pp_generic_n_times n printer_fct ppf a =
   for i = 0 to n - 1 do printer_fct ppf a done
 ;;
 
+
+
 let list_assoc_custom_eq eq key lst =
   let rec rec_assoc = function
     | [] -> raise Not_found
@@ -110,6 +112,15 @@ let list_assoc_custom_eq eq key lst =
   rec_assoc lst
 ;;
 
+
+
+let list_find_custom_eq eq elem lst =
+  let rec rec_find = function
+    | [] -> raise Not_found
+    | h :: q ->
+	if eq elem h then h else rec_find q in
+  rec_find lst
+;;
 
 
 (* *************************************************************** *)

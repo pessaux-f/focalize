@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.30 2009-01-16 10:38:54 pessaux Exp $
+# $Id: Makefile,v 1.31 2009-02-02 14:10:04 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -46,8 +46,8 @@ FOCALIZE_SRC = \
 	randoms.fcl \
 	integers.fcl \
 	arrays.fcl \
-	product_structures.fcl
-#	quotient_structures.fcl
+	product_structures.fcl \
+	quotient_structures.fcl
 
 FOCALIZE_SRC_UNSAFE = \
 	iterators.fcl \
@@ -148,7 +148,7 @@ clean::
 	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
 	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
 	$(RM) big_integers.o parse_poly.o polys_abstract.o
-	$(RM) *.annot *.glob
+	$(RM) *.annot *.glob *.fcd
 
 
 # Were not compiled to Coq in the previous FoCaL compiler...

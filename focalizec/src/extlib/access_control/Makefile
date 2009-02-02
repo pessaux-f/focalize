@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.19 2009-01-15 09:05:34 weis Exp $
+# $Id: Makefile,v 1.20 2009-02-02 14:10:04 pessaux Exp $
 
 # Makefile for access control models
 
@@ -127,4 +127,4 @@ install::
 	fi
 
 clean::
-	$(RM) *.fo *.ml *.mli *.zv *.v *.vo *.pfc *.glob
+	$(RM) *.fo *.ml *.mli *.zv *.v *.vo *.pfc *.glob *.fcd

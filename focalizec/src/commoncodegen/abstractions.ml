@@ -14,7 +14,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.60 2009-01-29 18:28:11 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.61 2009-02-02 14:10:04 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -80,6 +80,7 @@ let debug_print_dependencies_from_parameters l =
       Format.eprintf "@.")
     l
 ;;
+
 let debug_print_dependencies_from_parameters2 l =
   List.iter
     (fun (species_param, (Env.ODFP_methods_list methods)) ->
@@ -122,6 +123,71 @@ let make_empty_param_deps species_parameters_names =
       (species_param, Parsetree_utils.ParamDepSet.empty) :: accu)
     species_parameters_names
     []
+;;
+
+
+
+(** {b Descr} : Applies a list of substitution on a [Parsetree.vname].
+    This [Parsetree.vname] is expected to be the name of a formal collection
+    parameter of a species from which we inherit.
+    The aim is to replace each formal collection parameter of the inherited
+    [used_species_parameter_tys] information, by applying the substitution
+    induced by the "inherits" clause making us inherit.
+
+    {b Args}:
+      -[pmodname]: The compilation unit where the species parameter name
+       appears. It is in fact the name of the compilation unit hosting the
+       species having this *FORMAL* species parameter.
+
+      - [pvname]: The formal species parameter name.
+
+    {b Rem} : Not exported outside this module.
+    Raises [Not_found] if the substitution replace a parameter by "Sefl".   *)
+let apply_substitutions_list_on_formal_param_vname pmodname pvname substs =
+  (* First, convert the species parameter's name into a [string] to make
+     comparison easier. *)
+  let pvname_as_string = Parsetree_utils.name_of_vname pvname in
+  let substed_pvname_as_string =
+    List.fold_left
+      (fun accu_vname ((c1_mod_name, c1_spe_name), c2) ->
+        match c2 with
+         | Types.SBRCK_coll (_, x) ->
+             (* By construction, the compilation unit name of c2 should always
+                be the current compilation unit. *)
+             if c1_mod_name = pmodname && c1_spe_name = accu_vname then x
+             else accu_vname
+         | Types.SBRCK_self ->
+             if c1_mod_name = pmodname && c1_spe_name = accu_vname then
+               (* Substituting a formal collection parameter make the dependency
+                  on the parameter disepear. In effect, in this case, instead of
+                  depending on the collection parameter carrier, we depend on
+                  OUR carrier. And this is caught by the minimal Coq typing
+                  environment. So this parameter purely disapears. *)
+               raise Not_found
+             else accu_vname)
+      pvname_as_string
+      substs in
+  (* Since during the substitutions we used [string]s we must finally convert
+     the result back to a [vname]. Because collection names are always
+     capitalized, we convert into a [Vuident]. *)
+  Parsetree.Vuident substed_pvname_as_string
+;;
+
+
+
+(** Must be called on a method about which we are sure is it inherited ! *)
+let find_most_recent_parent from_history =
+  match from_history.Env.fh_inherited_along with
+   | [] -> assert false
+   | [_] ->
+       (* We must take the initial apparition since the method has been
+          inherited only by one inheritance step. *)
+       from_history.Env.fh_initial_apparition
+   | _ :: ((parent_mod, parent_spe), _, _) :: _ ->
+       (* We skip the first element of the list since it represent the species
+          where the method arrived the most recently and we take the second
+          element which is hence the most recent *parent*. *)
+       (parent_mod, parent_spe)
 ;;
 
 
@@ -1649,6 +1715,226 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
 
 
 
+let remap_dependencies_on_params_for_field env ctx from name
+    non_mapped_used_species_parameter_tys non_mapped_deps =
+  (* We first check if the method was inherited. Only if it is the case then
+     we need to remap the computed dependencies on the parent's dependencies
+     scheme. *)
+  if from.Env.fh_initial_apparition <> ctx.Context.scc_current_species then
+    (begin
+    (* We recover most recent inherited method abstractions information. This
+       should never fail since the species must exist before the current one
+       is built. *)
+    let (inh_from_mod, inh_from_sp) = find_most_recent_parent from in
+    let (_, _, substs) = List.hd from.Env.fh_inherited_along in
+    (* Just create a temporary ident from the original hosting species name. *)
+    let fake_ident = {
+      Parsetree.ast_loc = Location.none ;
+      Parsetree.ast_doc = [] ;
+      Parsetree.ast_type = Parsetree.ANTI_none ;
+      Parsetree.ast_desc =
+        (* If the hosting species is in the current compilation unit, then we
+           make a fake LOCAL ident. Otherwise, a fake GLOBAL ident. *)
+        if inh_from_mod = ctx.Context.scc_current_unit then
+          Parsetree.I_local inh_from_sp
+        else
+          Parsetree.I_global
+            (Parsetree.Qualified (inh_from_mod, inh_from_sp)) } in
+    (* Really get in the environment the information about the method. *)
+    let original_hosting_species_meths =
+      (match env with
+       | EK_coq e ->
+           (* Just keep the information about methods. *)
+           let (_, ms, _, _) =
+             Env.CoqGenEnv.find_species
+               ~loc: Location.none
+               ~current_unit: ctx.Context.scc_current_unit fake_ident e in
+           ms
+       | EK_ml e ->
+           (* Just keep the information about methods. *)
+           let (_, ms, _, _) =
+             Env.MlGenEnv.find_species
+               ~loc: Location.none
+               ~current_unit: ctx.Context.scc_current_unit fake_ident e in
+           ms) in
+    (* We now must look for the inherited method name among the found
+       information. *)
+    let found_meth =
+      List.find
+        (fun info -> info.Env.mi_name = name) original_hosting_species_meths in
+    (* Implicitely the collection parameters of the found species are
+       hosted in the compilation unit where their species is hosted,
+       i.e. [inh_from_mod]. *)
+    (* The first step of the mapping addresses the
+       [used_species_parameter_tys]. We must make sure that original
+       parameters instanciated by the same effective parameter lead to
+       several times the corresponding argument in the abstraction info.
+       For instance, in:
+         species Couple (S is Simple, T is Simple) =
+           let equiv(e1, e2) = T!equal(!morph(e1), !morph(e2)) ;
+         end ;;
+         species Bug (G is Simple) inherits Couple (G, G) = ... end ;;
+       the formal parameters S and T are instanciated by inheritance both by
+       G. In Couple, equiv depends on the types S and T.
+       So application of the method generator of equiv in Bug must have twice
+       __p_G_T provided: once for the lambda-lift of S and once for the one of
+       T in Couple (yep, remember that in Couple, the method equiv depends on
+       2 species parameter types, S and T).
+
+       To do so we take the inherited method's [used_species_parameter_tys] and
+       we substitute the vnames by what they were instanciated during the
+       inheritance in Bug. Obviously we can now have in the result list several
+       times a same collection parameter [vname].
+
+       ATTENTION: If the collection used to instanciate was not a parameter but
+       a toplevel species or collection, then makeing anyway the substitution
+       doesn't matter because the list [used_species_parameter_tys] will not
+       contains a pointer to the instancier's carrier ... since the instancier
+       IS NOT a collection parameter. Hence, applying the substitution to a
+       list of [used_species_parameter_tys] that doesn't contain the toplevel
+       species/collection's carrier will trivially be "doing nothing". *)
+    (* Here is the new list of [used_species_parameter_tys] in our current
+       method. Do not [fold_left] otherwise parameters carriers list will be
+       reversed. We can't simply use [List.map] since in certain cases, the
+       dependency on collection parameter can disappear in the current
+       species. *)
+    let new_used_species_parameter_tys =
+      List.fold_right
+        (fun param_vname accu ->
+          try
+            let substitued_param =
+              apply_substitutions_list_on_formal_param_vname
+                inh_from_mod param_vname substs in
+            substitued_param :: accu
+          with
+          | Not_found ->
+              (* Case where the substitution replaced the formal parameter by
+                 "Self". In this case, the dependency on the parameter present
+                 in the inherited species disappears in the current species. *)
+              accu)
+        found_meth.Env.mi_used_species_parameter_tys [] in
+    (* The second step deals with the [ai_dependencies_from_params]. The
+       computation done on the body of our method may be biased because
+       methods of same names but belonging to different formal collection
+       parameters instanciated by a same effective collection will appear
+       only once.
+       For instance, modifing Couple of the above example:
+       species Couple (S is Simple, T is Simple) =
+         signature morph: S -> T;
+         let equiv(e1, e2) =
+         let _to_force_usage = S!equal in
+         T!equal(!morph(e1), !morph(e2)) ;
+       end ;;
+       T!equal and S!equal will be mapped onto only one G!equal.
+       At this point, we do not want to substitute because information
+       contained in the [ai_dependencies_from_params] is to big and too complex
+       and takes benefits of sharing. Substituting inside would be long and
+       break this sharing.
+       Instead, we take benefits that all the required dependencies are already
+       in [ai_dependencies_from_params], but not with the right number of
+       occurrences (hence order) compared to what is expected in the inherited
+       method generator.
+
+       To fix this, we will recover the inherited method's dependencies on
+       parameters scheme (i.e. which parameter, which methods) and build a
+       new [ai_dependencies_from_params] with the same scheme but replacing
+       information dealing with the formal parameters of the inherited method
+       generator by the dependencies information computed in the current
+       species for the corresponding effective parameters used to instanciate
+       the formal ones. *)
+    let new_deps_on_params_as_option =
+      List.map
+        (fun (inh_spe_param, (Env.ODFP_methods_list inh_ordered_meths)) ->
+          (* [inh_spe_param] : the instanciated formal parameter of the
+             inherited species. *)
+          (* [inh_ordered_meths] : the ordered list of methods of the
+             formal parameters the inherited had dependencies on. *)
+          (* We must find the corresponding argument that was used in the
+             current species to instanciate this formal collection
+             parameter. The stuff we search is then the bucket in
+             [non_mapped_deps] having the same name than what was used during
+             substitution to replace [inh_spe_param]. *)
+          let formal_instanciation =
+            Handy.list_assoc_custom_eq
+              (fun ty_col_to_replace param ->
+                (* [ty_col_to_replace] is the type collection mentionned
+                   to be replace in the substitution. *)
+                (* [param] is the formal collection parameter in the
+                   inherited species. *)
+                match param with
+                 | Env.TypeInformation.SPAR_in (_, _, _) ->
+                     (* We do not deal here with "IN" parameters. *)
+                     false
+                 | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
+                     prm_ty_col = ty_col_to_replace)
+              inh_spe_param substs in
+          try
+            (* Now we know that the currently processed formal argument was
+               instanciated by the substitution [formal_instanciation]. *)
+            let effective_instanciater =
+              (match formal_instanciation with
+               | Types.SBRCK_self ->
+                   (* Instanciation was not done by a species parameter. Make
+                      so that we go in the exception handler that handles the
+                      case where instanciation was done by a toplevel species
+                      or collection. In effect, as well as the dependency on
+                      the parameter's carrier disappeared, it's the same thing
+                      about its methods that are now methods of "Self" and
+                      these methods of "Self" are taken into account by the
+                      minimal Coq typing environment. *)
+                   raise Not_found
+               | Types.SBRCK_coll tc -> tc) in
+            (* Must recover the list of methods of [effective_instanciater] i.e.
+               in the current species dependencies information to pick
+               inside. *)
+            let (param_of_instanciater,
+                 (Env.ODFP_methods_list meths_of_instanciater)) =
+              Handy.list_find_custom_eq
+                (fun ty_col (param, _) ->
+                  match param with
+                   | Env.TypeInformation.SPAR_in (_, _, _) ->
+                       (* We do not deal here with "IN" parameters. *)
+                       false
+                   | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
+                       prm_ty_col = ty_col)
+                effective_instanciater non_mapped_deps in
+            (* We now must pick in [meths_of_instanciater] the methods having
+               the same name in the inherited dependencies information and put
+               them according the same layout than in the inherited dependencies
+               information. We will finaly reconstruct a bucket for
+               [param_of_instanciater] with this new list. *)
+            let new_meths =
+              List.map
+                (fun (meth_name_in_inherited, _) ->
+                  (* Let's fidn the same method name in the current species and
+                     current collection parameter dependencies information. *)
+                  List.find
+                    (fun (n, _) -> n = meth_name_in_inherited)
+                    meths_of_instanciater)
+                inh_ordered_meths in
+            Some (param_of_instanciater, (Env.ODFP_methods_list new_meths))
+          with Not_found ->
+            (* If we didn't find the collection used to instanciate among the
+               species parameters that's because the instanciation was done
+               by a toplevel collection or species. *)
+            None)
+        found_meth.Env.mi_dependencies_from_parameters in
+    (* Since we may have detected that some instanciations were done with
+     toplevel species/collections and not a species parameter, we may have
+       some [None]s in the list. Then juste forget them to get the list
+       containing really only stuff related to species parameters. *)
+    let new_deps_on_params =
+      Handy.option_list_to_list new_deps_on_params_as_option in
+    (new_used_species_parameter_tys, new_deps_on_params)
+    end)
+  else
+    (* The method is not inherited, so leave the dependencies as they were
+       naturally computed. *)
+    (non_mapped_used_species_parameter_tys, non_mapped_deps)
+;;
+
+
+
 (** Wrapper above [_compute_abstractions_for_fields] that returns the
     dependencies on species parameters once merged and sorted. This avoid
     all the language backends to have to do this work since the exploded
@@ -1662,7 +1948,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
   List.map
     (function
       | IFAI_sig (sig_field_info, iai) ->
-	  let all_deps_from_params =
+          let all_deps_from_params =
             merge_abstraction_infos
               iai.iai_dependencies_from_params_via_body
               (merge_abstraction_infos
@@ -1670,13 +1956,21 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_completion) in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
-	  let abstraction_info = {
-	    ai_used_species_parameter_tys = iai.iai_used_species_parameter_tys ;
-	    ai_dependencies_from_params = sorted_deps_from_params ;
-	    ai_min_coq_env = iai.iai_min_coq_env } in
-	  FAI_sig (sig_field_info, abstraction_info)
+          (* Remap computed dependencies onto the inherited parent's scheme if
+             the method is inherited. *)
+          let (from, name, _) = sig_field_info in
+          let (mapped_used_species_parameter_tys, mapped_deps) =
+            remap_dependencies_on_params_for_field
+              env ctx from name iai.iai_used_species_parameter_tys
+              sorted_deps_from_params in
+          (* Build the final [abstraction_info]. *)
+          let abstraction_info = {
+            ai_used_species_parameter_tys = mapped_used_species_parameter_tys ;
+            ai_dependencies_from_params = mapped_deps ;
+            ai_min_coq_env = iai.iai_min_coq_env } in
+          FAI_sig (sig_field_info, abstraction_info)
       | IFAI_let (let_field_info, iai) ->
-	  let all_deps_from_params =
+          let all_deps_from_params =
             merge_abstraction_infos
               iai.iai_dependencies_from_params_via_body
               (merge_abstraction_infos
@@ -1684,34 +1978,50 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_completion) in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
-	  let abstraction_info = {
-	    ai_used_species_parameter_tys = iai.iai_used_species_parameter_tys ;
-	    ai_dependencies_from_params = sorted_deps_from_params ;
-	    ai_min_coq_env = iai.iai_min_coq_env } in
-	  FAI_let (let_field_info, abstraction_info)
+          (* Remap computed dependencies onto the inherited parent's scheme if
+             the method is inherited. *)
+          let (from, name, _, _, _, _, _, _) = let_field_info in
+          let (mapped_used_species_parameter_tys, mapped_deps) =
+            remap_dependencies_on_params_for_field
+              env ctx from name iai.iai_used_species_parameter_tys
+              sorted_deps_from_params in
+          (* Build the final [abstraction_info]. *)
+          let abstraction_info = {
+            ai_used_species_parameter_tys = mapped_used_species_parameter_tys ;
+            ai_dependencies_from_params = mapped_deps ;
+            ai_min_coq_env = iai.iai_min_coq_env } in
+          FAI_let (let_field_info, abstraction_info)
       | IFAI_let_rec internal_infos ->
-	  let abstraction_infos =
-	    List.map
-	      (fun (let_field_info, iai) ->
-		let all_deps_from_params =
-		  merge_abstraction_infos
-		    iai.iai_dependencies_from_params_via_body
-		    (merge_abstraction_infos
+          let abstraction_infos =
+            List.map
+              (fun (let_field_info, iai) ->
+                let all_deps_from_params =
+                  merge_abstraction_infos
+                    iai.iai_dependencies_from_params_via_body
+                    (merge_abstraction_infos
                        iai.iai_dependencies_from_params_via_type
                        iai.iai_dependencies_from_params_via_completion) in
-		let sorted_deps_from_params =
-		  Dep_analysis.order_species_params_methods
-		    all_deps_from_params in
-		let abstraction_info = {
-		  ai_used_species_parameter_tys =
-		    iai.iai_used_species_parameter_tys ;
-		  ai_dependencies_from_params = sorted_deps_from_params ;
-		  ai_min_coq_env = iai.iai_min_coq_env } in
-		(let_field_info, abstraction_info))
-	      internal_infos in
-	  FAI_let_rec abstraction_infos
+                let sorted_deps_from_params =
+                  Dep_analysis.order_species_params_methods
+                    all_deps_from_params in
+                (* Remap computed dependencies onto the inherited parent's
+                   scheme if the method is inherited. *)
+                let (from, name, _, _, _, _, _, _) = let_field_info in
+                let (mapped_used_species_parameter_tys, mapped_deps) =
+                  remap_dependencies_on_params_for_field
+                    env ctx from name iai.iai_used_species_parameter_tys
+                    sorted_deps_from_params in
+                (* Build the final [abstraction_info]. *)
+                let abstraction_info = {
+                  ai_used_species_parameter_tys =
+                    mapped_used_species_parameter_tys ;
+                  ai_dependencies_from_params = mapped_deps ;
+                  ai_min_coq_env = iai.iai_min_coq_env } in
+                (let_field_info, abstraction_info))
+              internal_infos in
+          FAI_let_rec abstraction_infos
       | IFAI_theorem (theorem_field_info, iai) ->
-	  let all_deps_from_params =
+          let all_deps_from_params =
             merge_abstraction_infos
               iai.iai_dependencies_from_params_via_body
               (merge_abstraction_infos
@@ -1719,13 +2029,21 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_completion) in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
-	  let abstraction_info = {
-	    ai_used_species_parameter_tys = iai.iai_used_species_parameter_tys ;
-	    ai_dependencies_from_params = sorted_deps_from_params ;
-	    ai_min_coq_env = iai.iai_min_coq_env } in
-	  FAI_theorem (theorem_field_info, abstraction_info)
+          (* Remap computed dependencies onto the inherited parent's scheme if
+             the method is inherited. *)
+          let (from, name, _, _, _, _) = theorem_field_info in
+          let (mapped_used_species_parameter_tys, mapped_deps) =
+            remap_dependencies_on_params_for_field
+              env ctx from name iai.iai_used_species_parameter_tys
+              sorted_deps_from_params in
+          (* Build the final [abstraction_info]. *)
+          let abstraction_info = {
+            ai_used_species_parameter_tys = mapped_used_species_parameter_tys ;
+            ai_dependencies_from_params = mapped_deps ;
+            ai_min_coq_env = iai.iai_min_coq_env } in
+          FAI_theorem (theorem_field_info, abstraction_info)
       | IFAI_property (property_field_info, iai) ->
-	  let all_deps_from_params =
+          let all_deps_from_params =
             merge_abstraction_infos
               iai.iai_dependencies_from_params_via_body
               (merge_abstraction_infos
@@ -1733,11 +2051,19 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_completion) in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
-	  let abstraction_info = {
-	    ai_used_species_parameter_tys = iai.iai_used_species_parameter_tys ;
-	    ai_dependencies_from_params = sorted_deps_from_params ;
-	    ai_min_coq_env = iai.iai_min_coq_env } in
-	  FAI_property (property_field_info, abstraction_info))
+          (* Remap computed dependencies onto the inherited parent's scheme if
+             the method is inherited. *)
+          let (from, name, _, _, _) = property_field_info in
+          let (mapped_used_species_parameter_tys, mapped_deps) =
+            remap_dependencies_on_params_for_field
+              env ctx from name iai.iai_used_species_parameter_tys
+              sorted_deps_from_params in
+          (* Build the final [abstraction_info]. *)
+          let abstraction_info = {
+            ai_used_species_parameter_tys = mapped_used_species_parameter_tys ;
+            ai_dependencies_from_params = mapped_deps ;
+            ai_min_coq_env = iai.iai_min_coq_env } in
+          FAI_property (property_field_info, abstraction_info))
     internal_abstractions
 ;;
 

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.mli,v 1.19 2008-11-29 23:23:18 weis Exp $ *)
+(* $Id: handy.mli,v 1.20 2009-02-02 14:10:04 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -40,6 +40,9 @@ val pp_generic_n_times :
 
 val list_assoc_custom_eq : ('a -> 'b -> bool) -> 'b -> ('a * 'c) list -> 'c
 ;;
+
+val list_find_custom_eq : ('a -> 'b -> bool) -> 'a -> 'b list -> 'b
+
 val list_intersect_p : 'a list -> 'a list -> bool
 ;;
 val list_cons_uniq_eq : 'a -> 'a list -> 'a list

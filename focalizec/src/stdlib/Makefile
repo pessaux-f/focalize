@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.77 2009-01-22 10:42:49 weis Exp $
+# $Id: Makefile,v 1.78 2009-02-02 14:10:04 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -115,7 +115,7 @@ clean::
 	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
 	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
-	$(RM) *.annot *.glob
+	$(RM) *.annot *.glob *.fcd
 
 
 depend::
