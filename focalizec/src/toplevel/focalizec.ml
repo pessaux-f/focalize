@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.36 2009-01-12 13:37:26 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.37 2009-02-03 10:38:38 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -21,7 +21,7 @@ exception Bad_file_suffix of string ;;
 (* The main procedure *)
 let main () =
   Arg.parse
-    [ ("--dot-non-rec-dependencies",
+    [ ("-dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
        " dumps species non-let-rec- dependencies as dotty\n\tfiles into the \
          argument directory.") ;
@@ -41,45 +41,45 @@ let main () =
       ("-impose-termination-proof",
        Arg.Unit Configuration.set_impose_termination_proof,
        " makes termination proofs of recursive functions mandatory.") ;
-      ("--methods-history-to-text",
+      ("-methods-history-to-text",
        Arg.String Configuration.set_methods_history_to_text,
        " dumps species' methods' inheritance history as plain text\n\tfiles \
          into the argument directory.") ;
-      ("--no-ansi-escape",
+      ("-no-ansi-escape",
        Arg.Unit Configuration.unset_fancy_ansi,
        " disables ANSI escape sequences in the error messages.") ;
-      ("--no-coq-code",
+      ("-no-coq-code",
        Arg.Unit Configuration.unset_generate_coq,
        " disables the Coq code generation.") ;
-      ("--no-ocaml-code",
+      ("-no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
        " disables the OCaml code generation.") ;
       ("-no-stdlib-path",
        Arg.Unit Configuration.unset_use_default_lib,
        " does not include by default the standard library installation\n\t\
          directory in the search path.") ;
-      ("--pretty",
+      ("-pretty",
        Arg.String Configuration.set_pretty_print,
        " pretty-prints the parse tree of the focalize file as a focalize \
          source\n\t into the argument file.") ;
-      ("--raw-ast-dump",
+      ("-raw-ast-dump",
        Arg.Unit Configuration.set_raw_ast_dump,
        " (undocumented) prints on stderr the raw AST structure \
          after\n\tthe parsing stage.") ;
-      ("--scoped_pretty",
+      ("-scoped_pretty",
        Arg.String Configuration.set_pretty_scoped,
        " (undocumented) pretty-prints the parse tree of the focalize \
          file\n\tonce scoped as a focalize source into the argument file.") ;
-      ("--verbose",
+      ("-verbose",
        Arg.Unit Configuration.set_verbose,
        " be verbose.") ;
       ("-v", Arg.Unit Configuration.print_focalize_short_version,
        " prints the focalize version then exit.") ;
-      ("--version",
+      ("-version",
        Arg.Unit Configuration.print_focalize_full_version,
        " prints the full focalize version, sub-version and release date,\n\t\
          then exit.") ;
-       ("--where",
+       ("-where",
         Arg.Unit Configuration.print_install_dirs,
         " prints the binaries and libraries installation directories then \
           exit.")

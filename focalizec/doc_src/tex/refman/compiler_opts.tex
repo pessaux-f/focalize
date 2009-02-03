@@ -1,4 +1,4 @@
-% $Id: compiler_opts.tex,v 1.9 2009-01-14 15:00:12 pessaux Exp $
+% $Id: compiler_opts.tex,v 1.10 2009-02-03 10:38:38 pessaux Exp $
 
 
 \index{compiler option}
@@ -14,7 +14,7 @@ To generate the final \coq\ code, the ``.zv'' file must be sent to
 \zenon\ via the {\tt zvtov} command.
 
 \begin{itemize}
-  \item[*] {\bf $--$dot-non-rec-dependencies} {\em directory name}.
+  \item[*] {\bf $-$dot-non-rec-dependencies} {\em directory name}.
     Dumps non-let-rec dependencies of the species present in the
     compiled source file. The output format is suitable to be
     graphically displayed by \dotty\ (free software available via the
@@ -53,7 +53,7 @@ To generate the final \coq\ code, the ``.zv'' file must be sent to
     proof, a warning is printed during compilation when trying to make
     a collection from this species.
 
- \item[*] {\bf $--$methods-history-to-text} {\em directory
+ \item[*] {\bf $-$methods-history-to-text} {\em directory
    name}. Dumps the methods' inheritance history of the species
    present in the compilation unit. The result is sent as plain text files
    into the argument directory. For each method of each species a file
@@ -61,14 +61,14 @@ To generate the final \coq\ code, the ``.zv'' file must be sent to
    file base name (i.e. without path and suffix) + ``\_'' + the
    hosting species name + the suffix ``.txt''.
 
-  \item[*] {\bf $--$no-ansi-escape}. Disables ANSI escape sequences in
+  \item[*] {\bf $-$no-ansi-escape}. Disables ANSI escape sequences in
     the error messages. By default, when an error is reported, bold,
     italic, underline fonts are used to make easier reading the
     message. Using this option removes all these text attributes and
     may be used if your terminal doesn't support ANSI escape sequences
     or, for example, if compiling under \emacs.
 
-  \item[*] {\bf $--$no-coq-code}. Disables the \coq\ code
+  \item[*] {\bf $-$no-coq-code}. Disables the \coq\ code
     generation. By default \coq\ code is always generated.
 
   \item[*] {\bf $--$no-ocaml-code}. Disables the \ocaml\ code
@@ -79,20 +79,20 @@ To generate the final \coq\ code, the ``.zv'' file must be sent to
     option is rarely useful and mostly dedicated to the
     \focal\ compiler build process.
 
-  \item[*] {\bf $--$pretty} {\em file name}. (Undocumented: mostly for
+  \item[*] {\bf $-$pretty} {\em file name}. (Undocumented: mostly for
     debug purpose). Pretty-prints the parse tree of the \focal\ file
     as a \focal\ source into the argument file.
 
-  \item[*] {\bf $--$raw-ast-dump}. (Undocumented: mostly for debug
+  \item[*] {\bf $-$raw-ast-dump}. (Undocumented: mostly for debug
     purpose). Prints on stderr the raw AST structure after parsing
     stage.
 
- \item[*] {\bf $--$scoped\_pretty} {\em file name}. (Undocumented:
+ \item[*] {\bf $-$scoped\_pretty} {\em file name}. (Undocumented:
    mostly for debug purpose). Pretty-prints the parse tree of the
    \focal\ file once scoped as a \focal\ source into the argument
    file.
 
-  \item[*] {\bf $--$verbose}. Sets the compiler in verbose mode. It
+  \item[*] {\bf $-$verbose}. Sets the compiler in verbose mode. It
     will then generate the trace of the steps and operations is does
     during the compilation. This feature is mostly used for debugging
     purpose but can also explain the elaboration of the model during
@@ -101,10 +101,10 @@ To generate the final \coq\ code, the ``.zv'' file must be sent to
 
   \item[*] {\bf $-$v}. Prints the \focal\ version then exits.
 
-  \item[*] {\bf $--$version}. Prints the full \focal\ version,
+  \item[*] {\bf $-$version}. Prints the full \focal\ version,
     sub-version and release date, then exits.
 
-  \item[*] {\bf $--$where}. Prints the binaries and libraries
+  \item[*] {\bf $-$where}. Prints the binaries and libraries
     installation directories then exits.
 
   \item[*] {\bf $-$help} {\bf $--$help}. Prints the summary of command
