@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.31 2009-02-02 14:10:04 pessaux Exp $
+# $Id: Makefile,v 1.32 2009-02-03 12:18:03 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -153,11 +153,11 @@ clean::
 
 # Were not compiled to Coq in the previous FoCaL compiler...
 big_integers.ml: big_integers.fcl
-	$(FOCALIZEC) --no-coq-code $<
+	$(FOCALIZEC) -no-coq-code $<
 parse_poly.ml: parse_poly.fcl
-	$(FOCALIZEC) --no-coq-code $<
+	$(FOCALIZEC) -no-coq-code $<
 polys_abstract.ml: polys_abstract.fcl
-	$(FOCALIZEC) --no-coq-code $<
+	$(FOCALIZEC) -no-coq-code $<
 #End temporary
 
 # Should be generated ?
