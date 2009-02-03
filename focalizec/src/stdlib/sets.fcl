@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets.fcl,v 1.5 2008-11-30 22:26:05 weis Exp $ *)
+(* $Id: sets.fcl,v 1.6 2009-02-03 14:59:05 rr Exp $ *)
 
 (** 
    @title Basic sets operations. 
@@ -108,22 +108,22 @@ species Anti_setoid inherits Basic_object =
   (** Equality is a derived operation *)
   let equal(x, y) = not_b(!different(x, y));
 
-  theorem same_is_not_different : all x y in Self,
-    !equal(x, y) <-> ~ (!different(x, y))
+  theorem different_is_not_same : all x y in Self,
+    !equal(x, y) <-> ~(!different(x, y))
   proof = by definition of equal ;
 
   theorem equal_reflexive: all x in Self, !equal(x, x)
-    proof = by property !same_is_not_different, !different_is_irreflexive ;
+    proof = by property !different_is_not_same, !different_is_irreflexive ;
 
   theorem equal_symmetric: all x y in Self,
     Self!equal(x, y) -> !equal(y, x)
-    proof = by property !different_is_symmetric, !same_is_not_different ;
+    proof = by property !different_is_symmetric, !different_is_not_same ;
 
   theorem equal_transitive : all x y z in Self,
     !equal(x, y) -> !equal(y, z) -> !equal(x, z)
     proof =
      by property !different_is_complete, !different_is_symmetric,
-                       !different_is_irreflexive, !same_is_not_different ;
+                       !different_is_irreflexive, !different_is_not_same ;
 end
 ;;
   

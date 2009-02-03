@@ -60,7 +60,7 @@ species Strict_partial_order inherits Anti_setoid =
                         property !lt_left_substitution_rule
                  <3>f qed by step <3>1 property !lt_is_irreflexive
            <2>f conclude
-      <1>f qed by step <1>1 property !same_is_not_different
+      <1>f qed by step <1>1 property !different_is_not_same
   ;
     
 
@@ -126,14 +126,14 @@ species Strict_partial_order inherits Anti_setoid =
                 prove false
                 <3>1 prove !lt(x, y) 
                      by hypothesis H_xy, H
-                        property !leq_from_lt, !same_is_not_different
+                        property !leq_from_lt, !different_is_not_same
                 <3>2 prove !lt(y, x)
                      by hypothesis H_yx, H
-                        property !leq_from_lt, !same_is_not_different,
+                        property !leq_from_lt, !different_is_not_same,
                                  !different_is_symmetric, !equal_symmetric
                 <3>f qed by step <3>1, <3>2
                             property !lt_is_transitive, !lt_is_irreflexive
-           <2>f qed by step <2>1 property same_is_not_different
+           <2>f qed by step <2>1 property different_is_not_same
       <1>f conclude
   ;
 
@@ -200,12 +200,12 @@ species Strict_total_order inherits Strict_partial_order =
               <3>f qed by step <3>1, <3>2
                           hypothesis H
                           property !different_is_symmetric, 
-                                   !same_is_not_different
+                                   !different_is_not_same
                           definition of different
          <2>2 assume H2: !different(x, z),
               prove !different(x, z) by hypothesis H2
          <2>f qed by step <2>1, <2>2
-                     property !same_is_not_different
+                     property !different_is_not_same
     <1>f conclude
   ;
 
@@ -224,7 +224,7 @@ species Strict_total_order inherits Strict_partial_order =
               assumed {* *}
          <2>f qed by step <2>1, <2>2
                      hypothesis H_xy
-                     property same_is_not_different
+                     property different_is_not_same
 		     definition of different
     <1>f conclude
   ;
@@ -234,7 +234,9 @@ end
 
 (** *)
 species Strictly_ordered_set 
-  inherits Strict_total_order =
+  inherits Setoid, Strict_total_order =
+
+  proof of same_is_not_different = by property different_is_not_same;
 
   theorem incomparable_is_transitive: all x y z in Self,
     !incomparable(x, y) -> !incomparable(y, z) -> !incomparable(x, z)
