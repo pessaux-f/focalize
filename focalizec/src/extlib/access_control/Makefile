@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.20 2009-02-02 14:10:04 pessaux Exp $
+# $Id: Makefile,v 1.21 2009-02-04 12:26:51 pessaux Exp $
 
 # Makefile for access control models
 
@@ -40,13 +40,15 @@ include $(ROOT_DIR)/Makefile.common
 
 FOCALIZE_SRC = \
 	ensembles_finis.fcl \
-	access_control.fcl \
+	access_control.fcl
+
+# FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
+# their own rules at the end of this Makefile.
+FOCALIZE_SRC_UNSAFE = \
 	hru.fcl \
 	rbac.fcl \
 	ticket.fcl \
 	unix.fcl
-
-FOCALIZE_SRC_UNSAFE =
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
@@ -128,3 +130,13 @@ install::
 
 clean::
 	$(RM) *.fo *.ml *.mli *.zv *.v *.vo *.pfc *.glob *.fcd
+
+# Do not compile yet in Coq
+hru.ml: hru.fcl
+	$(FOCALIZEC) -no-coq-code $<
+rbac.ml: rbac.fcl
+	$(FOCALIZEC) -no-coq-code $<
+ticket.ml: ticket.fcl
+	$(FOCALIZEC) -no-coq-code $<
+unix.ml :unix.fcl
+# End temporary

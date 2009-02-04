@@ -13,9 +13,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.25 2009-02-02 14:10:04 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.26 2009-02-04 12:26:51 pessaux Exp $ *)
 
-exception Input_file_already_set;;
 exception No_input_file;;
 
 let focalize_version_number = (0, 1, 2) ;;
@@ -78,14 +77,12 @@ let (get_pretty_print, set_pretty_print) =
    (fun fname -> pretty_out_file := Some fname))
 ;;
 
-let (get_input_file_name, set_input_file_name) =
-  let input_file_name = ref "" in
+let (get_input_file_names, add_input_file_name) =
+  let input_file_names = ref [] in
   ((fun () ->
-    if !input_file_name = "" then raise No_input_file
-    else !input_file_name),
-   (fun fname ->
-     if !input_file_name = "" then input_file_name := fname
-     else raise Input_file_already_set))
+    if !input_file_names = [] then raise No_input_file
+    else List.rev !input_file_names),
+   (fun fname -> input_file_names := fname :: !input_file_names))
 ;;
 
 let (get_do_interface_output, set_do_interface_output) =
@@ -140,4 +137,35 @@ let (get_use_default_lib, unset_use_default_lib) =
   let use_default_lib = ref true in
   ((fun () -> !use_default_lib),
    (fun () -> use_default_lib := false))
+;;
+
+type ml_compiler =
+  | OCamlByt
+  | OCamlBin
+  | OCamlBoth
+;;
+
+exception Invalid_OCaml_compiler of string ;;
+
+let (set_ml_compiler, get_ml_compiler) =
+  let ml_compiler = ref OCamlByt in
+  ((fun s ->
+    match s with
+     | "bin" -> ml_compiler := OCamlBin
+     | "byt" -> ml_compiler := OCamlByt
+     | "both" -> ml_compiler := OCamlBoth
+     | other -> raise (Invalid_OCaml_compiler other)),
+   (fun () -> !ml_compiler))
+;;
+
+let (set_stop_before_zenon, get_stop_before_zenon) =
+  let stop_before_zenon = ref false in
+  ((fun () -> stop_before_zenon := true),
+   (fun () -> !stop_before_zenon))
+;;
+
+let (set_stop_before_coq, get_stop_before_coq) =
+  let stop_before_coq = ref false in
+  ((fun () -> stop_before_coq := true),
+   (fun () -> !stop_before_coq))
 ;;

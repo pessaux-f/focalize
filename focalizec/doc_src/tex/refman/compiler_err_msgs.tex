@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.25 2009-01-05 14:30:50 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.26 2009-02-04 12:26:51 pessaux Exp $
 
 
 
@@ -58,16 +58,18 @@ appropriate solution depending on this message.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Input file name is already set.}
-{\em Description}: The \focal\ compiler only compiles a compilation unit at
-once. If several files are specified on the command line this message
-arises.
+\section*{Invalid OCaml compiler kind "$string$" for option -ocaml-comp-mode. Must be "byt", "bin" or "both".}
+{\em Description}: By default, if some \ocaml\ code was generated, the
+\focal\ compiler sends the generated code to the \ocaml\ compiler. The
+default compilation mode is bytecode production. It is possible to
+select the native code production using the option {\tt -ocaml-comp-mode}
+followed by the string ``bin'' or to select both code production modes
+by the string ``both''. The argument string ``byt'' is not required
+since it is the default mode. Any other string is invalid and leads to
+the present error message.
 
-{\em Hints}: If several input files are specified, invoke the compiler
-once for each separately. Check if among what is considered as a
-compilation unit, you didn't forget to put a dash (``-'') character,
-hence turning an option into a regular string considered as another
-input file name.
+{\em Hints}: Select ``byt'', ``bin'' or ``both'' as argument to the
+{\tt -ocaml-comp-mode} option.
 
 
 

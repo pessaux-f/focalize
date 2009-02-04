@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.32 2009-02-03 12:18:03 pessaux Exp $
+# $Id: Makefile,v 1.33 2009-02-04 12:26:51 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -49,6 +49,8 @@ FOCALIZE_SRC = \
 	product_structures.fcl \
 	quotient_structures.fcl
 
+# FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
+# their own rules at the end of this Makefile.
 FOCALIZE_SRC_UNSAFE = \
 	iterators.fcl \
 	small_integers.fcl \
@@ -150,6 +152,15 @@ clean::
 	$(RM) big_integers.o parse_poly.o polys_abstract.o
 	$(RM) *.annot *.glob *.fcd
 
+
+# Do not compile yet in Coq
+iterators.ml: iterators.fcl
+	$(FOCALIZEC) -no-coq-code $<
+small_integers.ml: small_integers.fcl
+	$(FOCALIZEC) -no-coq-code $<
+big_integers.ml: big_integers.fcl
+	$(FOCALIZEC) -no-coq-code $<
+# End temporary
 
 # Were not compiled to Coq in the previous FoCaL compiler...
 big_integers.ml: big_integers.fcl

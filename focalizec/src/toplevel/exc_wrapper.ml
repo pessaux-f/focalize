@@ -13,9 +13,18 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.74 2009-01-05 14:30:50 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.75 2009-02-04 12:26:51 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
+  (* ************** *)
+  (* Miscellaneous. *)
+  | Configuration.Invalid_OCaml_compiler str ->
+      Format.fprintf ppf
+	"@[%tInvalid@ OCaml@ compiler@ kind%t \"%t%s%t\" %tfor option \
+	-ocaml-comp-mode. Must be \"byt\", \"bin\" or \"both\"%t.]@."
+        Handy.pp_set_bold Handy.pp_reset_effects
+	Handy.pp_set_underlined str Handy.pp_reset_effects
+	Handy.pp_set_bold Handy.pp_reset_effects
   (* ********************* *)
   (* General files access. *)
   | Files.Cant_access_file_in_search_path fname ->
@@ -41,10 +50,6 @@ let print_focalize_exception ppf = function
   | Sys_error m ->
       Format.fprintf ppf "@[%tSystem@ error%t -@ %s.@]@."
         Handy.pp_set_bold Handy.pp_reset_effects m
-  | Configuration.Input_file_already_set ->
-      Format.fprintf ppf
-        "@[%tInput@ file@ name@ is@ already@ set%t.@]@."
-        Handy.pp_set_bold Handy.pp_reset_effects
   | Configuration.No_input_file ->
       Format.fprintf ppf
         "@[%tNo@ input@ file.@ FoCaLize@ is@ cowardly@ giving@ up...%t@]@."

@@ -13,14 +13,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.22 2008-12-15 17:52:06 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.23 2009-02-04 12:26:51 pessaux Exp $ *)
 
 (** {3 The internal configuration of the FoCaLize compiler} *)
 
 (** The various flags and definitions useful to the internal behaviour of the
     focalize compiler. *)
 
-exception Input_file_already_set;;
 exception No_input_file;;
 
 val focalize_version_number : (int * int * int) ;;
@@ -42,8 +41,8 @@ val set_focalize_doc : unit -> unit;;
 val get_pretty_print : unit -> string option;;
 val set_pretty_print : string -> unit;;
 
-val get_input_file_name : unit -> string;;
-val set_input_file_name : string -> unit;;
+val get_input_file_names : unit -> string list ;;
+val add_input_file_name : string -> unit;;
 
 val get_do_interface_output : unit -> bool;;
 val set_do_interface_output : bool -> unit;;
@@ -75,3 +74,19 @@ val unset_fancy_ansi : unit -> unit;;
 
 val get_use_default_lib : unit -> bool;;
 val unset_use_default_lib : unit -> unit;;
+
+type ml_compiler =
+  | OCamlByt
+  | OCamlBin
+  | OCamlBoth
+
+exception Invalid_OCaml_compiler of string
+
+val set_ml_compiler : string -> unit
+val get_ml_compiler : unit -> ml_compiler
+
+val set_stop_before_zenon : unit -> unit
+val get_stop_before_zenon : unit -> bool
+
+val set_stop_before_coq : unit -> unit
+val get_stop_before_coq : unit -> bool

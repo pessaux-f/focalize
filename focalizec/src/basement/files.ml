@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: files.ml,v 1.13 2008-12-15 17:52:06 pessaux Exp $ *)
+(* $Id: files.ml,v 1.14 2009-02-04 12:26:51 pessaux Exp $ *)
 
 
 (** Paths for libraries lookup. *)
@@ -158,4 +158,25 @@ let write_magic out_handle (magic0, magic1, magic2, magic3) =
   output_value out_handle major ;
   output_value out_handle minor ;
   output_value out_handle patch_level
+;;
+
+
+
+(* *********************************************************************** *)
+(* string -> string                                                        *)
+(* {b Descr}: returns the suffix of a file name without the '.' character.
+   If the filename is empty or has no suffix or has an empty suffix (i.e.
+   "foo." then the returned suffix is the empty string ("").
+
+   {b Rem}: Exported outside this module.                                  *)
+(* *********************************************************************** *)
+let get_file_name_suffix name =
+  try
+    let dot_pos = String.rindex name '.' in
+    let name_len = String.length name in
+    let start = dot_pos + 1 in
+    if start > name_len then ""
+    else String.sub name start (name_len - start)
+  with
+  | Not_found -> ""
 ;;
