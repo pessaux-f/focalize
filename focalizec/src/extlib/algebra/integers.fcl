@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.7 2009-01-11 01:24:06 weis Exp $ *)
+(* $Id: integers.fcl,v 1.8 2009-02-05 08:42:36 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -27,6 +27,7 @@ open "basics" ;;
 (* open "iterators" ;; *)
 
 use "sets" ;;
+use "strict_orders";;
 use "orders_and_lattices";;
 use "additive_law" ;;
 use "multiplicative_law" ;;
@@ -34,6 +35,7 @@ use "weak_structures" ;;
 use "rings_fields" ;;
 
 open "sets" ;;
+open "strict_orders";;
 open "orders_and_lattices";;
 open "additive_law" ;;
 open "multiplicative_law" ;;
@@ -101,62 +103,8 @@ end ;;
   Implicitely we orient the binary relation x = succ(y)
   and consider its transitive closure
  *)
-species Ordered_Enumeration_system inherits Enumeration_system =
-  (** a strict inequality *)
-  (* [Usure] : j'ai remplacé la doc par un simple commentaire @mathml <lt/> *)
-  signature lt : Self -> Self -> basics#bool ;
-  (**  antisymmetry is usually stated for large orderings *)
-  property lt_is_anti_symmetric: all x y in Self,
-    !lt (x, y) -> ~ (!lt (y, x)) ;
-  theorem lt_is_irreflexive: all x in Self, ~ (!lt(x, x))
-    proof = by property lt_is_anti_symmetric ;
-  (** Transitivity *)
-  property lt_is_transitive: all x y z in Self,
-    !lt (x, y) -> !lt (y, z) -> !lt (x, z) ;
-  (** We only have three cases *)
-  property lt_is_total: all x y in Self,
-    !lt (x, y) \/ !equal (x, y) \/ !lt (y, x) ;
-
-  (** strict ordering enables to define large ordering *)
-  (* [Usure] : j'ai remplacé la doc par un simple commentaire @mathml <leq/> *)
-  let leq (x, y) = basics#or_b (!equal (x, y), !lt (x, y)) ;
-  theorem leq_is_reflexive: all x y in Self, !equal (x, y) -> !leq (x, y)
-    proof = by definition of leq ;
-  theorem leq_is_antisymmetric: all x y in Self,
-    !leq (x, y) -> !leq (y, x) -> !equal (x, y)
-    proof =
-      <1>1 assume x in Self,
-           assume y in Self,
-           assume Hxy: !leq (x, y),
-           assume Hyx: !leq (y, x),
-           prove !equal (x, y)
-           <2>1 assume Axy: !lt (x, y),
-                prove !equal (x, y)
-                <3>1 prove ~ (!lt (y, x))
-                   by hypothesis Axy
-                   property lt_is_anti_symmetric
-                <3>2 qed
-                     by step <3>1
-                     hypothesis Hyx
-                     property equal_symmetric
-                     definition of leq
-           <2>2 assume Ayx: !lt (y, x),
-                prove !equal (x, y)
-                <3>1 prove ~ (!lt (x, y))
-                       by hypothesis Ayx
-                       property lt_is_anti_symmetric
-                <3>2 qed by
-                         step <3>1
-                         hypothesis Hxy
-                         definition of leq
-           <2>f qed by step <2>1, <2>2
-                           property lt_is_total
-      <1>2 conclude
-    ;
-  theorem leq_is_transitive: all x y z in Self,
-    !leq (x, y) -> !leq (y, z) -> !leq (x, z)
-    (* [rr]: todo *)
-    proof = assumed {* Because todo *} ;
+species Ordered_Enumeration_system 
+  inherits Enumeration_system, Strictly_ordered_set =
 
   (** Properties which state that the ordering
      is induced by the successor function *)
@@ -172,6 +120,11 @@ species Ordered_Enumeration_system inherits Enumeration_system =
      reasonably implement natural numbers
    *)
 end ;;
+
+species Ordered_Enumerated_system
+  inherits Enumerated_system, Ordered_Enumeration_system =
+end
+;;
 
 
 (**
