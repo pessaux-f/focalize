@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.40 2008-12-12 08:01:04 weis Exp $
+# $Id: Makefile,v 1.41 2009-02-05 15:14:30 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -29,7 +29,7 @@ clean::
 	$(RM) lexer.ml lexer.mli
 	$(RM) parser.ml parser.mli parser.conflicts parser.output
 	$(RM) menhir.out
-	$(MAKE) depend
+	#$(MAKE) depend
 
 depend:: lexer.ml parser.ml
 	$(CAML_DEP) *.mli *.ml > ./.depend
