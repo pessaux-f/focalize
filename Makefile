@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.47 2009-01-30 14:13:51 weis Exp $
+# $Id: Makefile,v 1.48 2009-02-05 14:26:38 doligez Exp $
 
 ROOT_DIR = .
 
@@ -330,7 +330,7 @@ clean_external_tools: clean_internal_tools
 	$(RM) .done_build_external_tools && \
 	for i in $(EXTERNAL_TOOLS); do \
 	  $(RM) .done_build_external_$$i_tool; \
-	done &&
+	done && \
 	for i in $(EXTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) clean); \
