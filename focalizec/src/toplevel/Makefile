@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.47 2009-01-14 10:44:19 pessaux Exp $
+# $Id: Makefile,v 1.48 2009-02-05 15:14:49 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -107,6 +107,7 @@ fodump: fodump.cmo
 	fodump.cmo -o fodump
 
 install::
+	mkdir -p $(BIN_DIR)
 	$(CP) focalizec.byt focalizec.bin $(BIN_DIR)/
 	$(LN) $(BIN_DIR)/focalizec.bin $(BIN_DIR)/focalizec
 
