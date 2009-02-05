@@ -6,6 +6,14 @@ theorem zero_inf_one : int_lt (0, 1)
 proof = assumed {* Well known theorem ;) *}
 ;;
 
+theorem abs_basics : for all x, ((x = 0) \/ (0 < x)) => int_abs (x) = x
+proof = assumed {* Well known theorem ;) *}
+;;
+
+
+(* let abs (x) = if x = 0 || 0 < x then x else -x ;; *)
+
+
 species Test_measure =
   let true_gt_false (x in basics#bool) in basics#int =
     match x with
