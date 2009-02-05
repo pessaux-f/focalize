@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.38 2009-02-04 12:26:51 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.39 2009-02-05 15:15:26 doligez Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -168,10 +168,16 @@ let dispatch_compilation files =
              end) ;
            if Configuration.get_generate_coq () then
              (begin
-             (* If a .zv file was generated, let's compile it. *)
-             compile_zv (input_file_no_suffix ^ ".zv") ;
-             (* Finally, pass it to Coq. *)
-             compile_coq (input_file_no_suffix ^ ".v")
+             if not (Configuration.get_stop_before_zenon ()) then
+               (begin
+               (* If a .zv file was generated, let's compile it. *)
+               compile_zv (input_file_no_suffix ^ ".zv") ;
+               if not (Configuration.get_stop_before_coq ()) then
+                 (begin
+                 (* Finally, pass it to Coq. *)
+                 compile_coq (input_file_no_suffix ^ ".v")
+                 end) ;
+               end) ;
              end) ;
        | "ml" | "mli" -> compile_ml input_file_name
        | "zv" ->
