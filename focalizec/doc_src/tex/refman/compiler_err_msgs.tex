@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.26 2009-02-04 12:26:51 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.27 2009-02-06 14:01:15 pessaux Exp $
 
 
 
@@ -36,9 +36,9 @@ your current version.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Invalid file extension for '$name$'.}
 {\em Description}: The \focal\ compiler expects compilation units to be
-ended by the suffix ``.fcl''. If the submitted input file doesn't end
-by this suffix, this error message arises with the name, $name$ of the
-involved file.
+ended by the suffix ``.fcl'', ``.ml'', ``.mli'', ``.zv''or ``.v''. If
+the submitted input file doesn't end by one of these suffixes, this
+error message arises with the name, $name$ of the involved file.
 
 {\em Hints}: Change the extension of the input file name or ensure the
 submitted input file name is the correct one.
