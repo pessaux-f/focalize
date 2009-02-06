@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.35 2009-01-25 23:58:44 hardin Exp $
+% $Id: constructs_syntax.tex,v 1.36 2009-02-06 15:28:27 pessaux Exp $
 
  
 \section{Language constructs and syntax}
@@ -1492,7 +1492,14 @@ that they do not lead to values or computation.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{The {\tt use} directive}
-{\color{red}To to}.
+\index{directive!use}
+This directive is followed by the name of the file to open between
+double quotes without the ``.fcl'' extension.
+Before being allowed to use the qualified notation for an identifier,
+(i.e. the ``{\tt\#}''-notation), the qualifying compilation must be
+declared as ``used'' thanks to this directive. In other terms,
+``using'' a compilation units allows to access its entities from the
+current compilation unit.
 
 
 
@@ -1514,6 +1521,9 @@ from the point the directive appears. Remember that it is however
 possible to recover the hidden definitions, using the ``{\tt\#}''
 notation without compilation unit name.
 
+Note that the {\tt open} directive implicitly implies the {\tt use}
+directive. This means that it is not useful to add a {\tt use}
+together with an {\tt open} directive.
 
 {\scriptsize
 \begin{lstlisting}

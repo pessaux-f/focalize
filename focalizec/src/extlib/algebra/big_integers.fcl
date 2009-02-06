@@ -15,7 +15,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.5 2008-12-03 10:38:55 pessaux Exp $ *)
+(* $Id: big_integers.fcl,v 1.6 2009-02-06 15:28:27 pessaux Exp $ *)
+
+use "basics" ;;
 
 (** Ocamls bigint in FoCaLize. *)
 

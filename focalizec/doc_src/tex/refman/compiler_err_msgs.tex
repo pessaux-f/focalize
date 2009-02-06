@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.27 2009-02-06 14:01:15 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.28 2009-02-06 15:28:27 pessaux Exp $
 
 
 
@@ -123,21 +123,18 @@ report with the exception $msg$ that caused the error.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Compilation unit '$m$' was "use" several times.}
-{\em Description}: undocumented
-
-% Several occurrences of a {\tt use} directive
-% specify the same compilation unit $m$.
-
-% {\em Hints}: Remove the spurious occurrences.
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Compilation unit '$m$' was not declared as "use"}
-{\em Description}: Undocumented
+{\em Description}: It not possible to use a qualified notation for a
+compilation unit name (i.e. using an entity from this compilation unit
+by explicitly specifying the unit with the ``\#''-notation) before this
+compilation unit is declared ``use'' or ``open''. This error message
+indicates the location where an identifier refers to a compilation
+unit that was not qualified either by the {\tt use} or {\tt open}
+directive. Note that the {\tt open} directive implicitly implies
+{\tt use}.
 
-% {\em Hints}: {\color{red}To to once ``use'' really works.}
+{\em Hints}: Use the {\tt use} directive on the compilation detected
+unit.
 
 
 

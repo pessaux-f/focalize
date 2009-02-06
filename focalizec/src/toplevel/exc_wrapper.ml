@@ -13,18 +13,18 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.75 2009-02-04 12:26:51 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.76 2009-02-06 15:28:27 pessaux Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ************** *)
   (* Miscellaneous. *)
   | Configuration.Invalid_OCaml_compiler str ->
       Format.fprintf ppf
-	"@[%tInvalid@ OCaml@ compiler@ kind%t \"%t%s%t\" %tfor option \
-	-ocaml-comp-mode. Must be \"byt\", \"bin\" or \"both\"%t.]@."
+        "@[%tInvalid@ OCaml@ compiler@ kind%t \"%t%s%t\" %tfor option \
+        -ocaml-comp-mode. Must be \"byt\", \"bin\" or \"both\"%t.]@."
         Handy.pp_set_bold Handy.pp_reset_effects
-	Handy.pp_set_underlined str Handy.pp_reset_effects
-	Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined str Handy.pp_reset_effects
+        Handy.pp_set_bold Handy.pp_reset_effects
   (* ********************* *)
   (* General files access. *)
   | Files.Cant_access_file_in_search_path fname ->
@@ -72,17 +72,11 @@ let print_focalize_exception ppf = function
         Handy.pp_set_bold Handy.pp_reset_effects exc_string
   (* ************** *)
   (* Scoping stage. *)
-  | Scoping.Multiply_used_module modname ->
+  | Scoping.Module_not_specified_as_used (at, modname) ->
       Format.fprintf ppf
-        "@[%tCompilation@ unit%t@ '%s'@ %twas@ \"use\"@ several@ times%t.@]@."
-        Handy.pp_set_bold Handy.pp_reset_effects
-        modname
-        Handy.pp_set_bold Handy.pp_reset_effects
-  | Scoping.Module_not_specified_as_used modname ->
-      Format.fprintf ppf
-        "@[%tCompilation@ unit%t@ '%s'@ %twas@ not@ declared@ as@ \
+        "%a:@\n@[%tCompilation@ unit%t@ '%s'@ %twas@ not@ declared@ as@ \
          \"use\"%t.@]@."
-        Handy.pp_set_bold Handy.pp_reset_effects
+        Location.pp_location at Handy.pp_set_bold Handy.pp_reset_effects
         modname
         Handy.pp_set_bold Handy.pp_reset_effects
   | Scoping.Parametrized_species_wrong_arity (at, expected, used_with) ->

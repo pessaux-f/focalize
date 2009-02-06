@@ -14,7 +14,7 @@
 
 *)
 
-
+use "basics" ;;
 use "quotients";;
 use "additive_law";;
 use "multiplicative_law";;

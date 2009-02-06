@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.75 2008-12-27 15:56:58 weis Exp $ *)
+(* $Id: scoping.ml,v 1.76 2009-02-06 15:28:27 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -65,19 +65,6 @@ exception Non_logical_let_cant_define_logical_expr of
 ;;
 
 
-(* *********************************************************************** *)
-(** {b Descr} : Exception raised when a module is "use"-d (i.e. with the
-    [use] FoCaL directive) several times in the same source file.
-    Although this is not a damn, it reveals a useless idom, then we prefer
-    to reject it.
-
-    {b Rem} : Exported outside this module.                                *)
-(* *********************************************************************** *)
-exception Multiply_used_module of
-  Types.fname  (** The name of the module used several times. *)
-;;
-
-
 
 (* ************************************************************************ *)
 (** {b Descr} : Exception raised when a module is "open"-ed (i.e. with the
@@ -88,7 +75,9 @@ exception Multiply_used_module of
               Not yet implemented for the #-se notation indeed !            *)
 (* ************************************************************************ *)
 exception Module_not_specified_as_used of
-  Types.fname  (** The name of the module not mentioned as "use". *)
+  (Location.t *  (** The location where the illegally qualified identifier
+                     appears. *)
+   Types.fname)  (** The name of the module not mentioned as "use". *)
 ;;
 
 
@@ -225,8 +214,8 @@ type scoping_context = {
   current_unit : Types.fname ;
   (** The optional name of the currently analysed species. *)
   current_species : string option ;
-  (** The list of "use"-d modules. Not file with paths and extension : just
-      module name (ex: "Basics"). *)
+  (** The list of "use"-d (or open-ed since "open" implies "use") modules.
+      Not file with paths and extension : just module name (ex: "basics"). *)
   used_modules : Types.fname list
 } ;;
 
@@ -283,6 +272,61 @@ let unqualified_vname_of_expr_ident ident =
    | Parsetree.EI_local vname -> vname
    | Parsetree.EI_global qvname -> vname_of_qvname qvname
    | Parsetree.EI_method (_, vname) -> vname
+;;
+
+
+
+(* ************************************************************************* *)
+(* {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
+   of the [vname] was mentionned to be "used" or "opened".
+
+ {b Rem}; Not exported outside this module.                                  *)
+(* ************************************************************************* *)
+let ensure_qual_vname_allowed_qualified ctx loc = function
+  | Parsetree.Vname _ -> ()
+  | Parsetree.Qualified (mod_name, _) ->
+       if not (List.mem mod_name ctx.used_modules) then
+         raise (Module_not_specified_as_used (loc, mod_name))
+;;
+
+
+
+(* ************************************************************************* *)
+(* {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
+   of the [ident] was mentionned to be "used" or "opened".
+
+ {b Rem}; Not exported outside this module.                                  *)
+(* ************************************************************************* *)
+let ensure_ident_allowed_qualified ctx ident =
+  match ident.Parsetree.ast_desc with
+   | Parsetree.I_local _ -> ()
+   | Parsetree.I_global qual_vname ->
+       ensure_qual_vname_allowed_qualified
+         ctx ident.Parsetree.ast_loc qual_vname
+;;
+
+
+
+(* ************************************************************************* *)
+(* {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
+   of the [expr_ident] was mentionned to be "used" or "opened".
+
+ {b Rem}; Not exported outside this module.                                  *)
+(* ************************************************************************* *)
+let ensure_expr_ident_allowed_qualified ctx expr_ident =
+  match expr_ident.Parsetree.ast_desc with
+   | Parsetree.EI_local _ | Parsetree.EI_global (Parsetree.Vname _) -> ()
+   | Parsetree.EI_global (Parsetree.Qualified (mod_name, _)) ->
+       if not (List.mem mod_name ctx.used_modules) then
+         raise
+           (Module_not_specified_as_used
+              (expr_ident.Parsetree.ast_loc, mod_name))
+   | Parsetree.EI_method (qcoll_name_opt, _) ->
+       match qcoll_name_opt with
+        | None -> ()
+        | Some qual_vname ->
+            ensure_qual_vname_allowed_qualified
+              ctx expr_ident.Parsetree.ast_loc qual_vname
 ;;
 
 
@@ -449,12 +493,15 @@ let rec scope_type_expr ctx env ty_expr =
     (match ty_expr.Parsetree.ast_desc with
      | Parsetree.TE_ident ident ->
          (begin
-         let basic_vname = unqualified_vname_of_ident ident in
+         (* Ensure that the mentionned hosting compilation unit of the
+            constructor was mentionned to be "used" or "opened". *)
+         ensure_ident_allowed_qualified ctx ident ;
          let hosting_info =
            Env.ScopingEnv.find_type
              ~loc: ident.Parsetree.ast_loc
              ~current_unit: ctx.current_unit ident env in
          (* Let's re-construct a completely scoped identifier. *)
+         let basic_vname = unqualified_vname_of_ident ident in
          let scoped_ident_descr =
            match hosting_info with
             | Env.ScopeInformation.TBI_builtin_or_var ->
@@ -472,12 +519,15 @@ let rec scope_type_expr ctx env ty_expr =
          Parsetree.TE_fun (scoped_te1, scoped_te2)
      | Parsetree.TE_app (ident, tes) ->
          (begin
-         let basic_vname = unqualified_vname_of_ident ident in
+         (* Ensure that the mentionned hosting compilation unit if the
+            constructor was mentionned to be "used" or "opened". *)
+         ensure_ident_allowed_qualified ctx ident ;
          let hosting_info =
            Env.ScopingEnv.find_type
              ~loc: ident.Parsetree.ast_loc
              ~current_unit: ctx.current_unit ident env in
          (* Let's re-construct a completely scoped identifier. *)
+         let basic_vname = unqualified_vname_of_ident ident in
          let scoped_ident_descr =
            match hosting_info with
             | Env.ScopeInformation.TBI_builtin_or_var ->
@@ -617,12 +667,15 @@ let rec scope_rep_type_def ctx env rep_type_def =
     (match rep_type_def.Parsetree.ast_desc with
      | Parsetree.RTE_ident ident ->
          (begin
-         let basic_vname = unqualified_vname_of_ident ident in
+         (* Ensure that the mentionned hosting compilation unit if the
+            constructor was mentionned to be "used" or "opened". *)
+         ensure_ident_allowed_qualified ctx ident ;
          let hosting_info =
            Env.ScopingEnv.find_type
              ~loc: ident.Parsetree.ast_loc
              ~current_unit: ctx.current_unit ident env in
          (* Let's re-construct a completely scoped identifier. *)
+         let basic_vname = unqualified_vname_of_ident ident in
          let scoped_ident_descr =
            match hosting_info with
             | Env.ScopeInformation.TBI_builtin_or_var ->
@@ -640,12 +693,15 @@ let rec scope_rep_type_def ctx env rep_type_def =
          Parsetree.RTE_fun (scoped_rtd1, scoped_rtd2)
      | Parsetree.RTE_app (ident, rtds) ->
          (begin
-         let basic_vname = unqualified_vname_of_ident ident in
+         (* Ensure that the mentionned hosting compilation unit if the
+            constructor was mentionned to be "used" or "opened". *)
+         ensure_ident_allowed_qualified ctx ident ;
          let hosting_info =
            Env.ScopingEnv.find_type
              ~loc: ident.Parsetree.ast_loc
              ~current_unit: ctx.current_unit ident env in
          (* Let's re-construct a completely scoped identifier. *)
+         let basic_vname = unqualified_vname_of_ident ident in
          let scoped_ident_descr =
            match hosting_info with
             | Env.ScopeInformation.TBI_builtin_or_var ->
@@ -766,6 +822,8 @@ let scope_type_def_body_simple ctx env_with_params env ty_def_body_simple =
              Parsetree.TDBS_external scoped_external_tdef_body } in
        (scoped_ty_def_body_simple, env')
 ;;
+
+
 
 let scope_type_def_body ctx env_with_params env ty_def_body =
   match ty_def_body.Parsetree.ast_desc with
@@ -897,12 +955,15 @@ let scope_enforced_deps ctx env enforced_deps =
          let scoped_idents =
            List.map
              (fun ident ->
-               let basic_vname = unqualified_vname_of_expr_ident ident in
+               (* Ensure that the mentionned hosting compilation unit of the
+                  expr_ident was mentionned to be "used" or "opened". *)
+               ensure_expr_ident_allowed_qualified ctx ident ;
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
                    ~current_unit: ctx.current_unit
                    ~current_species_name: ctx.current_species ident env in
+               let basic_vname = unqualified_vname_of_expr_ident ident in
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
@@ -915,12 +976,15 @@ let scope_enforced_deps ctx env enforced_deps =
          let scoped_idents =
            List.map
              (fun ident ->
-               let basic_vname = unqualified_vname_of_expr_ident ident in
+               (* Ensure that the mentionned hosting compilation unit of the
+                  expr_ident was mentionned to be "used" or "opened". *)
+               ensure_expr_ident_allowed_qualified ctx ident ;
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
                    ~current_unit: ctx.current_unit
                    ~current_species_name: ctx.current_species ident env in
+               let basic_vname = unqualified_vname_of_expr_ident ident in
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
@@ -947,12 +1011,15 @@ let rec scope_fact ctx env fact =
          let scoped_idents =
            List.map
              (fun ident ->
-               let basic_vname = unqualified_vname_of_expr_ident ident in
+               (* Ensure that the mentionned hosting compilation unit of the
+                  expr_ident was mentionned to be "used" or "opened". *)
+               ensure_expr_ident_allowed_qualified ctx ident ;
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
                    ~current_unit: ctx.current_unit
                    ~current_species_name: ctx.current_species ident env in
+               let basic_vname = unqualified_vname_of_expr_ident ident in
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
@@ -965,6 +1032,9 @@ let rec scope_fact ctx env fact =
          let scoped_idents =
            List.map
              (fun ident ->
+               (* Ensure that the mentionned hosting compilation unit of the
+                  expr_ident was mentionned to be "used" or "opened". *)
+               ensure_expr_ident_allowed_qualified ctx ident ;
                let basic_vname = unqualified_vname_of_expr_ident ident in
                let scope_info =
                  Env.ScopingEnv.find_value
@@ -1114,15 +1184,18 @@ and scope_expr ctx env expr =
          Parsetree.E_fun (vnames, scoped_body)
      | Parsetree.E_var ident ->
          (begin
+         (* Ensure that the mentionned hosting compilation unit of the
+            expr_ident was mentionned to be "used" or "opened". *)
+         ensure_expr_ident_allowed_qualified ctx ident ;
          (* Here, we will finally use our environment in order to determine
             the effective scope of the [ident]. *)
-         let basic_vname = unqualified_vname_of_expr_ident ident in
          let hosting_info =
            Env.ScopingEnv.find_value
              ~loc: ident.Parsetree.ast_loc
              ~current_unit: ctx.current_unit
              ~current_species_name: ctx.current_species ident env in
          (* Let's re-construct a completely scoped identifier. *)
+         let basic_vname = unqualified_vname_of_expr_ident ident in
          let scoped_ident_descr =
            scoped_expr_ident_desc_from_value_binding_info
              ~basic_vname hosting_info in
@@ -1137,17 +1210,25 @@ and scope_expr ctx env expr =
      | Parsetree.E_constr (cstr_ident, args_exprs) ->
          (begin
          (* First, re-construct a fake [ident] to be able to look-up inside
-            the values environment. *)
+            the values environment. By the way, ensure that the mentionned
+            hosting compilation unit of the constructor was mentionned to be
+            "used" or "opened". *)
          let basic_vname =
            (match cstr_ident.Parsetree.ast_desc with
-            | Parsetree.CI (Parsetree.Vname vname)
-            | Parsetree.CI (Parsetree.Qualified (_, vname)) -> vname) in
+            | Parsetree.CI (Parsetree.Vname vname) -> vname
+            | Parsetree.CI (Parsetree.Qualified (mod_name, vname)) ->
+                if List.mem mod_name ctx.used_modules then
+                  vname
+                else
+                  raise
+                    (Module_not_specified_as_used
+                       (cstr_ident.Parsetree.ast_loc, mod_name))) in
          let pseudo_ident =
            let Parsetree.CI qvname =
              cstr_ident.Parsetree.ast_desc in
-           { Parsetree.ast_loc = cstr_ident.Parsetree.ast_loc;
-             Parsetree.ast_desc = Parsetree.CI qvname;
-             Parsetree.ast_doc = cstr_ident.Parsetree.ast_doc;
+           { Parsetree.ast_loc = cstr_ident.Parsetree.ast_loc ;
+             Parsetree.ast_desc = Parsetree.CI qvname ;
+             Parsetree.ast_doc = cstr_ident.Parsetree.ast_doc ;
              Parsetree.ast_type = Parsetree.ANTI_none } in
          let cstr_hosting_info =
            Env.ScopingEnv.find_constructor
@@ -1187,17 +1268,34 @@ and scope_expr ctx env expr =
      | Parsetree.E_record labels_exprs ->
          let scoped_labels_exprs =
            List.map
-             (fun (label, expr) -> (label, (scope_expr ctx env expr)))
+             (fun (label, bound_expr) ->
+               (* Ensure that the mentionned hosting compilation unit of the
+                  record label was mentionned to be "used" or "opened". *)
+               let Parsetree.LI lbl_qvname = label.Parsetree.ast_desc in
+               ensure_qual_vname_allowed_qualified
+                 ctx label.Parsetree.ast_loc lbl_qvname ;
+               (label, (scope_expr ctx env bound_expr)))
              labels_exprs in
          Parsetree.E_record scoped_labels_exprs
      | Parsetree.E_record_access (e, label) ->
+         (* Ensure that the mentionned hosting compilation unit of the
+            record label was mentionned to be "used" or "opened". *)
+         let Parsetree.LI lbl_qvname = label.Parsetree.ast_desc in
+         ensure_qual_vname_allowed_qualified
+           ctx label.Parsetree.ast_loc lbl_qvname ;
          let e' = scope_expr ctx env e in
          Parsetree.E_record_access (e', label)
      | Parsetree.E_record_with (e, labels_exprs) ->
          let scoped_e = scope_expr ctx env e in
          let scoped_labels_exprs =
            List.map
-             (fun (label, expr) -> (label, (scope_expr ctx env expr)))
+             (fun (label, bound_expr) ->
+               (* Ensure that the mentionned hosting compilation unit of the
+                  record label was mentionned to be "used" or "opened". *)
+               let Parsetree.LI lbl_qvname = label.Parsetree.ast_desc in
+               ensure_qual_vname_allowed_qualified
+                 ctx label.Parsetree.ast_loc lbl_qvname ;
+               (label, (scope_expr ctx env bound_expr)))
              labels_exprs in
          Parsetree.E_record_with (scoped_e, scoped_labels_exprs)
      | Parsetree.E_tuple exprs ->
@@ -1237,7 +1335,11 @@ and scope_pattern ctx env pattern =
            Env.ScopingEnv.add_value vname Env.ScopeInformation.SBI_local env' in
          ((Parsetree.P_as (scoped_p, vname)), env'')
      | Parsetree.P_constr  (cstr, pats) ->
-         let cstr_vname = unqualified_vname_of_constructor_ident cstr in
+         (* Ensure that the mentionned hosting compilation unit of the
+            sum constructor was mentionned to be "used" or "opened". *)
+         let Parsetree.CI cstr_qvname = cstr.Parsetree.ast_desc in
+         ensure_qual_vname_allowed_qualified
+           ctx cstr.Parsetree.ast_loc cstr_qvname ;
          let cstr_host_module =
            Env.ScopingEnv.find_constructor
              ~loc: cstr.Parsetree.ast_loc
@@ -1253,6 +1355,7 @@ and scope_pattern ctx env pattern =
              pats
              ([], env) in
          (* Reconstruct a completely scopped constructor. *)
+         let cstr_vname = unqualified_vname_of_constructor_ident cstr in
          let scoped_cstr =
            { cstr with Parsetree.ast_desc =
                Parsetree.CI
@@ -1263,6 +1366,11 @@ and scope_pattern ctx env pattern =
          let (scoped_labs_n_pats, env') =
            List.fold_right
              (fun (lab, pat) (accu_lab_pats, accu_env) ->
+               (* Ensure that the mentionned hosting compilation unit of the
+                  record label was mentionned to be "used" or "opened". *)
+               let Parsetree.LI lbl_qvname = lab.Parsetree.ast_desc in
+               ensure_qual_vname_allowed_qualified
+                 ctx lab.Parsetree.ast_loc lbl_qvname ;
                let (scoped_pat, accu_env') = scope_pattern ctx accu_env pat in
                (((lab, scoped_pat) :: accu_lab_pats), accu_env'))
              labs_n_pats
@@ -1862,6 +1970,10 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
          will get stucked at [false] and we won't see the opended species.
          Otherwise, we create a GLOBAL identifier. *)
       let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
+      (* Ensure that the mentionned hosting compilation unit of the species was
+         mentionned to be "used" or "opened". *)
+      ensure_qual_vname_allowed_qualified
+        ctx cstr_expr.Parsetree.ast_loc qvname ;
       let pseudo_ident = { cstr_expr with
         Parsetree.ast_desc = 
           (match qvname with
@@ -2232,20 +2344,16 @@ let scope_phrase ctx env phrase =
   let (new_desc, new_env, new_ctx) =
     (match phrase.Parsetree.ast_desc with
      | Parsetree.Ph_use fname ->
-         (* Check if the "module" was not already "use"-d. *)
-         if List.mem fname ctx.used_modules then
-           raise (Multiply_used_module fname);
          (* Allow this module to be used. *)
          let ctx' = { ctx with used_modules = fname :: ctx.used_modules } in
          (phrase.Parsetree.ast_desc, env, ctx')
      | Parsetree.Ph_open fname ->
-         (* Load this module interface to extend the current environment only
-            if this "module" was previously "use"-d. *)
-         if not (List.mem fname ctx.used_modules) then
-           raise (Module_not_specified_as_used fname);
+         (* Load this module interface to extend the current environment and
+            context. *)
          let env' =
            Env.scope_open_module ~loc: phrase.Parsetree.ast_loc fname env in
-         (phrase.Parsetree.ast_desc, env', ctx)
+         let ctx' = { ctx with used_modules = fname :: ctx.used_modules } in
+         (phrase.Parsetree.ast_desc, env', ctx')
      | Parsetree.Ph_coq_require _ ->
          (* Really nothing to do... *)
          (phrase.Parsetree.ast_desc, env, ctx)
