@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.29 2008-12-15 16:41:15 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.30 2009-02-06 15:51:42 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -116,9 +116,8 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_open (phrase_loc, modname) ->
       (* One must "open" the coq code generation environment of this module
          and return the environment extended with these "opened" bindings.
-         In fact it should also be "Import" but because the compiler always
-         generate fully qualified stuff, the notion of "opended" is not
-         needed anymore in the code generated for Coq. *)
+         We must also generate a "Require" for this Coq module. *)
+      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname ;
       Env.coqgen_open_module ~loc: phrase_loc modname env
   | Infer.PCM_coq_require fname ->
       Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" fname ;
