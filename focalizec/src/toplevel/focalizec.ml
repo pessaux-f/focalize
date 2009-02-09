@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.39 2009-02-05 15:15:26 doligez Exp $ *)
+(* $Id: focalizec.ml,v 1.40 2009-02-09 10:16:43 weis Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -125,7 +125,11 @@ let compile_ml input_file_name =
 
 
 let compile_zv input_file_name =
-  let cmd = Installation.zvtov_compiler ^ " -new " ^ input_file_name in
+  let cmd =
+    Printf.sprintf "%s -zenon %s -new %s"
+      Installation.zvtov_compiler
+      Installation.zenon_compiler
+      input_file_name in
   Format.eprintf "Invoking zvtov...@\n" ;
   Format.eprintf ">> %s@." cmd ;
   let ret_code = Sys.command cmd in
