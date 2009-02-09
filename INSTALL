@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: INSTALL,v 1.8 2009-01-28 08:25:51 weis Exp $
+#  $Id: INSTALL,v 1.9 2009-02-09 16:22:11 pessaux Exp $
 
 Compile and install with:
   ./configure
@@ -99,7 +99,7 @@ For checking the proofs with coqc, you need to add this to your $HOME/.coqrc fil
   Add LoadPath $TOOLS_INSTALL_DIR/lib.
   Add LoadPath $TOOLS_INSTALL_DIR/lib/zenon.
 
-The default $TOOLS_INSTALL_DIR is "~/pkg/focalize.0.1.rc0"; If you specified
+The default $TOOLS_INSTALL_DIR is "~/pkg/focalize-0.1.rc0"; If you specified
 an alternate --tools_installation_prefix when configuring FoCaLize, you need
 to adjust these paths accordingly.
 
