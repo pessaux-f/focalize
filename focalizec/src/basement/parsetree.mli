@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.47 2009-01-22 10:36:01 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.48 2009-02-09 10:58:14 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -99,7 +99,7 @@ type 'a ast = {
 type module_name = Types.fname
 (** The type of ``module'' names.
   Since there are no modules in Focalize yet, modules are just files and
-  module names are just file names. *)
+  module names are just file base names without their ".fcl" extension. *)
 ;;
 
 type vname =
