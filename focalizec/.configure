@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: .configure,v 1.8 2009-02-04 12:26:51 pessaux Exp $
+#  $Id: .configure,v 1.9 2009-02-09 10:15:48 weis Exp $
 
 # The file .config_var has been built by configure. We load it.
 . .config_var_for_shell
@@ -49,6 +49,7 @@ echo "let caml_byt_compiler = \"$CAML_BYT_COMPILER\" ;;" >> $INSTALL_ML
 echo "let caml_bin_compiler = \"$CAML_BIN_COMPILER\" ;;" >> $INSTALL_ML
 echo "let coq_compiler = \"$COQ_COMPILER\" ;;" >> $INSTALL_ML
 echo "let zvtov_compiler = \"$ZVTOV_COMPILER\" ;;" >> $INSTALL_ML
+echo "let zenon_compiler = \"$ZENON_COMPILER\" ;;" >> $INSTALL_ML
 echo "let zenon_libdir = \"$ZENON_LIB_DIR\" ;;" >> $INSTALL_ML
 echo "(* End of generated source file. *)" >> $INSTALL_ML
 chmod a-w $INSTALL_ML
