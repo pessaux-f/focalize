@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.7 2009-02-09 17:06:27 pessaux Exp $
+# $Id: Makefile,v 1.8 2009-02-09 20:17:39 weis Exp $
 
 ROOT_DIR=../..
 
@@ -53,6 +53,7 @@ docdir: $(MAN_OBJS)
 
 visu: $(MAN_OBJS)
 	nroff -man $(PACKAGE).1 | more
+	nroff -man $(PACKAGEDEP).1 | more
 
 clean::
 	$(RM) $(MAN_OBJS) *~
