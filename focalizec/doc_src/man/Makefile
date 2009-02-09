@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.6 2009-01-30 11:32:24 weis Exp $
+# $Id: Makefile,v 1.7 2009-02-09 17:06:27 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -32,9 +32,10 @@ HTMLC=htmlc -env focalizec.env
 
 # Prefix before regular names
 PACKAGE=focalizec
+PACKAGEDEP=focalizedep
 
 # The list of source files
-MAN_FILES=$(PACKAGE).man
+MAN_FILES=$(PACKAGE).man $(PACKAGEDEP).man
 
 ######## This part should automatically handle the generation of
 ######## object files

@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.\" \$Id: focalizec.man,v 1.7 2009-01-16 16:33:39 weis Exp $
+.\" \$Id: focalizec.man,v 1.8 2009-02-09 17:06:27 pessaux Exp $
 .\"
 .\"
 .\" First parameter, NAME, should be all caps
@@ -104,8 +104,8 @@ file. Result is sent to the standard output.
 Adds the \<dirname\> directory to the path list where to search for
 compiled interfaces. Several
 .B -I
-options can be used. The search order is in the standard library
-directory first (unless the
+options can be used. The search order is in the current directory first,
+second, in the standard library directory (unless the
 .B -no-stdlib-path
 option is used, see below), then in the directories specified by the
 .B -I
