@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2009-02-09 10:55:59 pessaux Exp $
+# $Id: Makefile,v 1.2 2009-02-09 13:28:47 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -20,7 +20,13 @@ include $(ROOT_DIR)/Makefile.config
 
 CAML_INCLUDES = -I ../basement -I ../parser
 
-BYT_OBJS = directive_lexer.cmo make_depend.cmo
+LOCAL_BYT_OBJS = directive_lexer.cmo make_depend.cmo
+
+BYT_OBJS = \
+	../basement/installation.cmo \
+	../basement/configuration.cmo \
+	../basement/files.cmo \
+	$(LOCAL_BYT_OBJS)
 
 include $(ROOT_DIR)/Makefile.common
 

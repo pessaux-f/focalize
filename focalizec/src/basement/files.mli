@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: files.mli,v 1.9 2009-02-04 12:26:51 pessaux Exp $ *)
+(* $Id: files.mli,v 1.10 2009-02-09 13:28:47 pessaux Exp $ *)
 
 exception Cant_access_file_in_search_path of Types.fname
 exception Corrupted_fo of Types.fname
@@ -21,6 +21,7 @@ exception Corrupted_fo of Types.fname
 val add_lib_path : string -> unit
 val get_lib_paths : unit -> string list
 val open_in_from_lib_paths : Types.fname -> in_channel
+val get_path_from_lib_paths : string -> string option
 
 val fo_basename_from_module_name : string -> string
 

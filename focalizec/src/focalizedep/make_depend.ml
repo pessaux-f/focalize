@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: make_depend.ml,v 1.2 2009-02-09 11:15:05 pessaux Exp $ *)
+(* $Id: make_depend.ml,v 1.3 2009-02-09 13:28:47 pessaux Exp $ *)
 
 
 type dep_kind =
@@ -29,7 +29,7 @@ type dep_kind =
     {b Rem}: Not exported outside this module.                             *)
 (* *********************************************************************** *)
 module CompUnitMod = struct
-  type t = (Parsetree.module_name * dep_kind)
+  type t = (string * dep_kind)
   let compare = compare
 end ;;
 module CompUnitSet = Set.Make (CompUnitMod) ;;
@@ -49,7 +49,7 @@ type file_dependency = {
                                               dependencies. In other words,
                                               what we call a "compilation
                                               unit". *)
-  fd_dependencies : CompUnitSet.t (** Base name without extension of the files
+  fd_dependencies : CompUnitSet.t (** Full path WITHOUT extension of the files
                                       we (i.e.[fd_comp_unit]) depend on. *)
 } ;;
 
@@ -83,9 +83,21 @@ let process_one_file fname =
     match Directive_lexer.start lexbuf with
      | Directive_lexer.D_end -> continue := false
      | Directive_lexer.D_use_open mod_name ->
-         comp_units := CompUnitSet.add (mod_name, DK_use_open) !comp_units
+	 (begin
+	 match Files.get_path_from_lib_paths (mod_name ^ ".fcl") with
+	  | None -> ()
+	  | Some p ->
+              let unit = Filename.concat p mod_name in
+	      comp_units := CompUnitSet.add (unit, DK_use_open) !comp_units
+	 end)
      | Directive_lexer.D_coq_require mod_name ->
-         comp_units := CompUnitSet.add (mod_name, DK_coq_require) !comp_units
+	 (begin
+	 match Files.get_path_from_lib_paths (mod_name ^ ".fcl") with
+	  | None -> ()
+	  | Some p ->
+              let unit = Filename.concat p mod_name in
+              comp_units := CompUnitSet.add (unit, DK_coq_require) !comp_units
+	 end)
   done ;
   close_in in_hd ;
   let basename = Filename.chop_suffix (Filename.basename fname) ".fcl" in
@@ -150,14 +162,20 @@ let make_targets deps =
 ;;
 
 
+
 let main () =
   (* The list of files to process in reverse order for sake of efficiency. *)
   let filenames = ref [] in
   try
     Arg.parse
-      [ ]
+      [ ("-I",
+	 Arg.String (fun path -> Files.add_lib_path path),
+	 " adds the specified path to the path list where to search for \
+           compiled\n\tinterfaces.") ]
       (fun n -> filenames := n :: !filenames)
       "Usage: focalizec <files>" ;
+    (* We don't include the standard lib path so that dependencies on files
+       of the standard lib won't appear. *)
     let deps = List.map process_one_file (List.rev !filenames) in
     List.iter make_targets deps ;
     exit 0
@@ -172,5 +190,7 @@ let main () =
           (Printexc.to_string x) ;
         exit (-1)
 ;;
+
+
 
 main () ;;

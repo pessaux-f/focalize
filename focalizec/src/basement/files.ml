@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: files.ml,v 1.14 2009-02-04 12:26:51 pessaux Exp $ *)
+(* $Id: files.ml,v 1.15 2009-02-09 13:28:47 pessaux Exp $ *)
 
 
 (** Paths for libraries lookup. *)
@@ -23,17 +23,17 @@ exception Corrupted_fo of Types.fname ;;
 
 
 let (add_lib_path, get_lib_paths) =
-  let lib_paths = ref ([] : string list) in
+  let lib_paths_reved = ref ([] : string list) in
   ((* ********************************************************************* *)
    (* string -> unit                                                        *)
    (* {b Descr} : Add a path to the list of filesystem directories where to
         look for ".fo" (compiled interface) files. The new path is added in
-        tail of the list, hence will be search after all those already in
-        the list.
+        head of the list, but because the list is returned reversed, it will
+        be searched after all those already in the list.
 
       {b Rem} : Exported outside this module.                               *)
    (* ********************************************************************* *)
-   (fun path -> lib_paths := !lib_paths @ [path]),
+   (fun path -> lib_paths_reved := path :: !lib_paths_reved),
 
 
 
@@ -45,7 +45,7 @@ let (add_lib_path, get_lib_paths) =
 
       {b Rem} : Exported outside this module.                                 *)
    (* *********************************************************************** *)
-   (fun () -> !lib_paths))
+   (fun () -> List.rev !lib_paths_reved))
 ;;
 
 
@@ -63,7 +63,7 @@ let (add_lib_path, get_lib_paths) =
    {b Rem} : Exported outside this module.                                *)
 (* ********************************************************************** *)
 let open_in_from_lib_paths filename =
-  let rec rec_open  = function
+  let rec rec_open = function
     | [] ->
         (begin
         try open_in_bin filename
@@ -78,6 +78,21 @@ let open_in_from_lib_paths filename =
     try open_in_bin filename with Sys_error _ -> rec_open (get_lib_paths ())
     end)
   else open_in_bin filename
+;;
+
+
+
+let get_path_from_lib_paths filename =
+  let rec rec_get = function
+    | [] -> if Sys.file_exists filename then Some filename else None
+    | h :: rem ->
+	let full_name = Filename.concat h filename in
+	if Sys.file_exists full_name then Some h
+	else rec_get rem in
+  (* First, try in the current local directory. *)
+  if (Filename.is_relative filename) && (Sys.file_exists filename) then
+    Some ""
+  else rec_get (get_lib_paths ())
 ;;
 
 
