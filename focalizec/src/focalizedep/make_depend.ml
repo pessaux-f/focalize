@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: make_depend.ml,v 1.3 2009-02-09 13:28:47 pessaux Exp $ *)
+(* $Id: make_depend.ml,v 1.4 2009-02-09 17:16:12 pessaux Exp $ *)
 
 
 type dep_kind =
@@ -52,25 +52,6 @@ type file_dependency = {
   fd_dependencies : CompUnitSet.t (** Full path WITHOUT extension of the files
                                       we (i.e.[fd_comp_unit]) depend on. *)
 } ;;
-
-
-
-(* ******************************************************************* *)
-(* string -> bool                                                      *)
-(** {b Descr}: Check if the file is a FoCaLize source file (i.e. has a
-    ".fcl"suffix and is not an Emacs temporary or backup file.
-
-    {b Rem}: Not exported outside this module.                         *)
-(* ******************************************************************* *)
-let is_focalize_file n =
-  if not (Filename.check_suffix n ".fcl") || (String.length n = 0) then false
-  else
-    match n.[0] with
-     | '#' | '.' ->
-         (* We don't analyse emacs buffers, and temporary files. *)
-         false
-     | _ -> true
-;;
 
 
 
@@ -134,12 +115,7 @@ let make_targets deps =
     (fun (n, _) -> Printf.printf " %s.v" n)
     deps.fd_dependencies ;
   Printf.printf "\n" ;
-  (* Handle dependencies for .cmi files. *)
-  Printf.printf "%s.cmi:" basename ;
-  CompUnitSet.iter
-    (fun (n, k) -> if k <> DK_coq_require then Printf.printf " %s.cmi" n)
-    deps.fd_dependencies ;
-  Printf.printf "\n" ;
+  (* No dependencies for .cmi files since we do not generate .mli files. *)
   (* Handle dependencies for .cmo files. *)
   Printf.printf "%s.cmo:" basename ;
   CompUnitSet.iter
