@@ -10,7 +10,8 @@ exception Directive_not_terminated ;;
 
 type directive =
   | D_end
-  | D_found of Parsetree.module_name
+  | D_use_open of Parsetree.module_name
+  | D_coq_require of Parsetree.module_name
 ;;
 
 
@@ -53,19 +54,19 @@ let whites = [ ' ' '\t' '\n' ]*
 
 
 rule start = parse
-  | "open" whites "\""  {
+  | "coq_require" whites "\""  {
     reset_string_buffer () ;
     try
       lex_directive lexbuf ;
       let comp_unit = get_stored_string () in
-      D_found comp_unit
+      D_coq_require comp_unit
     with Directive_not_terminated -> D_end }
-  | "use" whites "\""   {
+  | ("use" | "open") whites "\""   {
     reset_string_buffer () ;
     try
       lex_directive lexbuf ;
       let comp_unit = get_stored_string () in
-      D_found comp_unit
+      D_use_open comp_unit
     with Directive_not_terminated -> D_end }
   | eof       { D_end }
   | _         { start lexbuf }

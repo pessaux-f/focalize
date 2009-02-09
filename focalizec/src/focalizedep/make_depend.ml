@@ -13,7 +13,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: make_depend.ml,v 1.1 2009-02-09 10:55:59 pessaux Exp $ *)
+(* $Id: make_depend.ml,v 1.2 2009-02-09 11:15:05 pessaux Exp $ *)
+
+
+type dep_kind =
+  | DK_use_open
+  | DK_coq_require
+;;
 
 
 (* *********************************************************************** *)
@@ -23,7 +29,7 @@
     {b Rem}: Not exported outside this module.                             *)
 (* *********************************************************************** *)
 module CompUnitMod = struct
-  type t = Parsetree.module_name
+  type t = (Parsetree.module_name * dep_kind)
   let compare = compare
 end ;;
 module CompUnitSet = Set.Make (CompUnitMod) ;;
@@ -76,8 +82,10 @@ let process_one_file fname =
   while !continue do
     match Directive_lexer.start lexbuf with
      | Directive_lexer.D_end -> continue := false
-     | Directive_lexer.D_found mod_name ->
-         comp_units := CompUnitSet.add mod_name !comp_units
+     | Directive_lexer.D_use_open mod_name ->
+         comp_units := CompUnitSet.add (mod_name, DK_use_open) !comp_units
+     | Directive_lexer.D_coq_require mod_name ->
+         comp_units := CompUnitSet.add (mod_name, DK_coq_require) !comp_units
   done ;
   close_in in_hd ;
   let basename = Filename.chop_suffix (Filename.basename fname) ".fcl" in
@@ -92,43 +100,51 @@ let make_targets deps =
   (* Handle dependencies for .fo files. *)
   Printf.printf "%s.fo:" basename ;
   CompUnitSet.iter
-    (fun n -> Printf.printf " %s.fo" n)
+    (fun (n, k) -> if k <> DK_coq_require then Printf.printf " %s.fo" n)
     deps.fd_dependencies ;
   Printf.printf "\n" ;
   (* Handle dependencies for .ml files. *)
   Printf.printf "%s.ml:" basename ;
   CompUnitSet.iter
-    (fun n -> Printf.printf " %s.ml" n)
+    (fun (n, k) -> if k <> DK_coq_require then Printf.printf " %s.ml" n)
     deps.fd_dependencies ;
   Printf.printf "\n" ;
   (* Handle dependencies for .zv files. *)
   Printf.printf "%s.zv:" basename ;
   CompUnitSet.iter
-    (fun n -> Printf.printf " %s.zv" n)
+    (fun (n, k) -> if k <> DK_coq_require then Printf.printf " %s.zv" n)
     deps.fd_dependencies ;
   Printf.printf "\n" ;
-  (* Handle dependencies for .v files. *)
+  (* Handle dependencies for .v files. Dependencies from directives
+     "coq_require" must be printed. *)
   Printf.printf "%s.v:" basename ;
   CompUnitSet.iter
-    (fun n -> Printf.printf " %s.v" n)
+    (fun (n, _) -> Printf.printf " %s.v" n)
     deps.fd_dependencies ;
   Printf.printf "\n" ;
   (* Handle dependencies for .cmi files. *)
   Printf.printf "%s.cmi:" basename ;
   CompUnitSet.iter
-    (fun n -> Printf.printf " %s.cmi" n)
+    (fun (n, k) -> if k <> DK_coq_require then Printf.printf " %s.cmi" n)
     deps.fd_dependencies ;
   Printf.printf "\n" ;
   (* Handle dependencies for .cmo files. *)
   Printf.printf "%s.cmo:" basename ;
   CompUnitSet.iter
-    (fun n -> Printf.printf " %s.cmo" n)
+    (fun (n, k) -> if k <> DK_coq_require then Printf.printf " %s.cmo" n)
     deps.fd_dependencies ;
   Printf.printf "\n" ;
   (* Handle dependencies for .cmx files. *)
   Printf.printf "%s.cmx:" basename ;
   CompUnitSet.iter
-    (fun n -> Printf.printf " %s.cmx" n)
+    (fun (n, k) -> if k <> DK_coq_require then Printf.printf " %s.cmx" n)
+    deps.fd_dependencies ;
+  Printf.printf "\n" ;
+  (* Handle dependencies for .vo files. Dependencies from directives
+     "coq_require" must be printed. *)
+  Printf.printf "%s.cmx:" basename ;
+  CompUnitSet.iter
+    (fun (n, _) -> Printf.printf " %s.cmx" n)
     deps.fd_dependencies ;
   Printf.printf "\n"
 ;;
@@ -156,3 +172,5 @@ let main () =
           (Printexc.to_string x) ;
         exit (-1)
 ;;
+
+main () ;;
