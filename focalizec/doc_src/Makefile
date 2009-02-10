@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2009-01-30 09:05:37 weis Exp $
+# $Id: Makefile,v 1.2 2009-02-10 09:14:52 weis Exp $
 
 ROOT_DIR = ..
 
@@ -23,7 +23,7 @@ SUB_DIRS = html man tex
 
 include $(ROOT_DIR)/Makefile.common
 
-all clean doc docdir depend::
+all clean distclean doc docdir depend::
 	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) $@); \
