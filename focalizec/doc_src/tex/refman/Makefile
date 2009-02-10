@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.16 2009-01-30 10:55:50 weis Exp $
+# $Id: Makefile,v 1.17 2009-02-10 09:59:45 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -21,7 +21,8 @@ TEX_FILES = macros.tex basic_concepts.tex lexical_conventions.tex motivations.te
 	compiler_opts.tex more_on_meths.tex pres_requir.tex \
 	constructs_syntax.tex bibli.bib
 
-DOC_OBJS=refman.dvi refman.ps refman.pdf refman.html # Not so great but yet...
+DOC_OBJS=refman.dvi refman.ps refman.pdf \
+  refman.html # Not so great but yet...
 
 TEXINPUT = /usr/share/texmf/tex/latex//:$(TEXINPUTS)
 LATEX = TEXINPUTS=$(TEXINPUT); latex
