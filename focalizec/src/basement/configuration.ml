@@ -13,11 +13,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.26 2009-02-04 12:26:51 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.27 2009-02-10 14:51:27 pessaux Exp $ *)
 
 exception No_input_file;;
 
-let focalize_version_number = (0, 1, 2) ;;
+let focalize_version_number = (0, 1, 3) ;;
 
 let focalize_short_version =
   let (major, minor, patch_level) = focalize_version_number in

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.91 2009-01-30 11:52:20 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.92 2009-02-10 14:51:27 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -403,7 +403,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
         (List.map
            (function
              | MinEnv.MCEE_Defined_carrier _
-             | MinEnv.MCEE_Defined_computational (_, _, _, _, _)
+             | MinEnv.MCEE_Defined_computational (_, _, _, _, _, _)
              | MinEnv.MCEE_Defined_logical (_, _, _) ->
                  (* Anything defined is not abstracted. *)
                  []

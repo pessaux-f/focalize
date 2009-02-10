@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.157 2009-01-30 11:52:20 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.158 2009-02-10 14:51:27 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -361,7 +361,7 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                    ty ;
                (* Anything defined is not abstracted. *)
                []
-           | MinEnv.MCEE_Defined_computational (fr, n, _, _, _)
+           | MinEnv.MCEE_Defined_computational (fr, _, n, _, _, _)
            | MinEnv.MCEE_Defined_logical (fr, n, _) ->
                (* We must add an equivalence to enforce de def-dependency. *)
                if in_section then
@@ -944,12 +944,30 @@ let zenonify_by_definition ctx print_ctx env min_coq_env by_def_expr_ident =
                  raise
                    (Attempt_proof_by_def_of_declared_method_of_self
                       (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
-             | MinEnv.MCEE_Defined_computational (_, _, params, scheme, body) ->
+             | MinEnv.MCEE_Defined_computational
+                   (_, is_rec, _, params, scheme, body) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(* For method of Self used via \"by definition of \
                    %a\". *)@\n"
                    Sourcify.pp_expr_ident by_def_expr_ident ;
+                 if is_rec then
+                   (begin
+                   (* For bug #199, to make so that Zenon identifies "abst_xx"
+                      and "xx", we generate a fake Definition before generating
+                      the body of the recursive fonction whose body is needed
+                      because of the "by definition of...". *)
+                   Format.fprintf out_fmter
+                      "(* Method \"%a\" is recursive. Extra definition to \
+                       identify \"%a\" and \"abst_%a\". *)"
+                      Parsetree_utils.pp_vname_with_operators_expanded vname
+                      Parsetree_utils.pp_vname_with_operators_expanded vname
+                      Parsetree_utils.pp_vname_with_operators_expanded vname ;
+                   Format.fprintf out_fmter
+                      "@[<2>Definition %a := abst_%a.@]@\n"
+                      Parsetree_utils.pp_vname_with_operators_expanded vname
+                      Parsetree_utils.pp_vname_with_operators_expanded vname
+                   end);
                  Format.fprintf out_fmter "@[<2>Definition abst_%a"
                    Parsetree_utils.pp_vname_with_operators_expanded
                    vname ;
@@ -1280,7 +1298,7 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                     element. *)
                  assert false
              | MinEnv.MCEE_Declared_computational (_, scheme)
-             | MinEnv.MCEE_Defined_computational (_, _, _, scheme, _) ->
+             | MinEnv.MCEE_Defined_computational (_, _, _, _, scheme, _) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(* For method of Self used via \"by property %a\". *)@\n"
@@ -1841,7 +1859,7 @@ let generate_asserts_for_dependencies out_fmter dependencies_from_params
       | MinEnv.MCEE_Defined_carrier _ | MinEnv.MCEE_Declared_carrier ->
           Format.fprintf out_fmter
             "@[<2>assert (__force_use_abst_T :=@ abst_T).@]@\n"
-      | MinEnv.MCEE_Defined_computational (_, n, _, _, _)
+      | MinEnv.MCEE_Defined_computational (_, _, n, _, _, _)
       | MinEnv.MCEE_Defined_logical (_, n, _)
       | MinEnv.MCEE_Declared_computational (n, _)
       | MinEnv.MCEE_Declared_logical (n, _) ->
@@ -2791,7 +2809,7 @@ let generate_methods ctx print_ctx env generated_fields = function
           abstraction_info.Abstractions.ai_dependencies_from_params
           generated_fields (from, name, logical_expr) pr in
       let compiled_field = {
-	Misc_common.cfm_is_logical = true ;
+        Misc_common.cfm_is_logical = true ;
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_logical logical_expr ;
@@ -2804,7 +2822,7 @@ let generate_methods ctx print_ctx env generated_fields = function
   | Abstractions.FAI_property ((from, name, _, lexpr, _), abstraction_info) ->
       (* "Property"s are discarded. However we compute their dependencies. *)
       let compiled_field = {
-	Misc_common.cfm_is_logical = true ;
+        Misc_common.cfm_is_logical = true ;
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_logical lexpr ;
