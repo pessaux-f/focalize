@@ -239,7 +239,7 @@
       <!-- we must load another document... -->
       <xsl:variable name="myfile">
         <xsl:value-of select="concat($docpath,$matched-param/@infile)"/>
-        <xsl:text>.focdoc</xsl:text>
+        <xsl:text>.fcd</xsl:text>
       </xsl:variable>
 
       <xsl:call-template name="find-symbol">
