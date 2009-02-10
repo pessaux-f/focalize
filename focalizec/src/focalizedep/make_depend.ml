@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: make_depend.ml,v 1.4 2009-02-09 17:16:12 pessaux Exp $ *)
+(* $Id: make_depend.ml,v 1.5 2009-02-10 10:53:58 pessaux Exp $ *)
 
 
 type dep_kind =
@@ -130,9 +130,9 @@ let make_targets deps =
   Printf.printf "\n" ;
   (* Handle dependencies for .vo files. Dependencies from directives
      "coq_require" must be printed. *)
-  Printf.printf "%s.cmx:" basename ;
+  Printf.printf "%s.vo:" basename ;
   CompUnitSet.iter
-    (fun (n, _) -> Printf.printf " %s.cmx" n)
+    (fun (n, _) -> Printf.printf " %s.vo" n)
     deps.fd_dependencies ;
   Printf.printf "\n"
 ;;
