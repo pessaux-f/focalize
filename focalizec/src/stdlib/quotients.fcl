@@ -128,6 +128,9 @@ species Represented_by_setoid(S is Setoid)
   (** equality in self is equality in s *)
   let equal(x in Self, y in Self) = S!equal(x, y);
 
+(*   (\*[rr] should compile, equal has a declaration Self -> Self -> bool *\) *)
+(*   let equal(x, y) = S!equal(x, y); *)
+
   proof of equal_reflexive = 
     by property S!equal_reflexive 
        definition of equal
