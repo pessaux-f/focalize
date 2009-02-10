@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.4 2009-02-10 09:59:02 weis Exp $
+# $Id: Makefile.distribution,v 1.5 2009-02-10 10:03:21 weis Exp $
 
 ROOT_DIR=.
 
@@ -88,15 +88,17 @@ PROJECT_ANNOUNCE_MAILING_LISTS=\
 # This one is pretty standard: it removes working files useless to the user of
 # the package.
 PROJECT_RELEASE_EXCLUDE_FILE_LIST=\
- ".depend* .distribution_var* \
+ ".depend* \
   CVS *cvsignore* banner* \
   TODO README.devel Makefile.distribution \
   doc_src test"
+
 # The list of files that will be deleted from the distribution before
 # making the release tar ball.
 # This is the list of private directory/files.
 PROJECT_RELEASE_REMOVE_FILE_LIST=\
-  "$(PROJECT_RELEASE_DIR_NAME)/coq"
+  "$(PROJECT_RELEASE_DIR_NAME)/coq \
+   .configure_distribution .distribution_var*"
 
 WEB_SITE_DIR=/net/yquem/infosystems/www/bazaar/$(PROJECT_NAME)
 FTP_SITE_DIR=/net/yquem/infosystems/ftp/bazaar/$(PROJECT_NAME)
@@ -158,7 +160,7 @@ release:
 	$(RM) release && \
 	$(MKDIR) release && \
 	(cd release && \
-	   $(CVS) -d $(PROJECT_CVS_ROOT) export -P -r $(PROJECT_RELEASE_TAG) \
+	   $(CVS) -d $(PROJECT_CVS_ROOT) export -r $(PROJECT_RELEASE_TAG) \
 		 $(PROJECT_CVS_REPOSITORY) -d $(PROJECT_RELEASE_DIR_NAME) && \
 	   $(CP) ../doc $(PROJECT_RELEASE_DIR_NAME) && \
 	   $(CP) ../examples $(PROJECT_RELEASE_DIR_NAME) && \
