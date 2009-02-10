@@ -161,7 +161,7 @@
 
       <xsl:variable name="myfile">
         <xsl:value-of select="concat($docpath,$meth-node/foc:dependence/foc:comes-from/@infile)"/>
-        <xsl:text>.focdoc</xsl:text>
+        <xsl:text>.fcd</xsl:text>
         <!--
              NdV: should parameterize the suffix + potentially search
              in other directories.
