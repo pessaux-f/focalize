@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.3 2009-01-29 22:58:43 weis Exp $
+# $Id: Makefile.distribution,v 1.4 2009-02-10 09:59:02 weis Exp $
 
 ROOT_DIR=.
 
@@ -48,6 +48,9 @@ ROOT_DIR=.
 #include Makefile
 include Makefile.config
 
+# The definitions specific to this Makefile and to the distribution of the project.
+include ./.distribution_var
+
 # The prefix for the package tar ball file (without its extension) and the
 # package archive file name.
 # We use variables stored at configuration time in .config_var.
@@ -61,14 +64,15 @@ PROJECT_RELEASE_DIR_NAME=$(PROJECT_NAME_FULL)
 PROJECT_GROUP=caml
 
 # Where the software files reside on the CVS repository:
-PROJECT_CVS_ROOT="`cat CVS/Root`"
-PROJECT_CVS_REPOSITORY="`cat CVS/Repository`"
+# The definitions are in .distribution_var.
+#PROJECT_CVS_ROOT="`cat CVS/Root`"
+#PROJECT_CVS_REPOSITORY="`cat CVS/Repository`"
 
 #PROJECT_CVS="${CVS} -d $(PROJECT_CVS_ROOT)"
 
-# The CVS root directory on the CVS server for the package.
-# Normally, something like: ROOT_OF_THE_CVS_REPOSITORY/$(PROJECT_NAME).
-PROJECT_CVS_DIRECTORY=$(PROJECT_NAME)
+# The CVS module name for the project.
+# Normally, something like: $(PROJECT_NAME).
+PROJECT_CVS_MODULE=$(PROJECT_NAME)
 
 # The tag to set on files in the CVS repository when releasing
 PROJECT_RELEASE_TAG = $(PROJECT_NAME_FULL)
@@ -76,14 +80,17 @@ PROJECT_RELEASE_TAG = $(PROJECT_NAME_FULL)
 # The file that contains the announce of the new relase in the
 # relevant mailing lists.
 ANNOUNCE_FILE = Announce-$(VERSION)
-PROJECT_ANNOUNCE_MAILING_LISTS="caml-list@inria.fr caml-announce@inria.fr"
+PROJECT_ANNOUNCE_MAILING_LISTS=\
+  "coq-list@inria.fr coq-announce@inria.fr caml-list@inria.fr caml-announce@inria.fr"
 
 # The list of files that will be searched and deleted from the entire
 # distribution before making the release tar ball.
 # This one is pretty standard: it removes working files useless to the user of
 # the package.
 PROJECT_RELEASE_EXCLUDE_FILE_LIST=\
- "CVS *cvsignore* banner* .depend* TODO README.devel Makefile.distrib \
+ ".depend* .distribution_var* \
+  CVS *cvsignore* banner* \
+  TODO README.devel Makefile.distribution \
   doc_src test"
 # The list of files that will be deleted from the distribution before
 # making the release tar ball.
@@ -111,14 +118,17 @@ distribute: package website ftp ftp2 tag announce #version
 package: clean-all all release_test release_examples documentation release
 
 clean-all::
-	cd doc_src && $(MAKE) $@
-	$(RM) doc release
+	cd focalizec/doc_src && $(MAKE) $@
+	$(RM) documentation release
 
 documentation:
+	$(MAKE) -f Makefile doc &&
+	$(MAKE) -f Makefile docdir
+	$(CP) focalizec/documentation .
 	# Make documentation and test before release
-	(cd doc_src && $(MAKE) all)
+	#(cd doc_src && $(MAKE) all)
 	# Build a clean documentation directory for distribution
-	(cd doc_src && $(MAKE) docdir)
+	#(cd doc_src && $(MAKE) docdir)
 
 release_test:
 	# Recompile the tests
@@ -193,17 +203,17 @@ ftp2:
 
 # Tagging the version.
 tag:
-	$(CVS) rtag -R $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_DIRECTORY)
+    $(CVS) rtag -R $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_MODULE)
 
 # Tagging the version again with the same tag,
 # (in case of bug during the distribution process).
 retag:
-	$(CVS) rtag -R -F $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_DIRECTORY)
+	$(CVS) rtag -R -F $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_MODULE)
 
 # Untagging the version (in case of bug in the software code).
 untag:
 	$(RM) ./release
-	$(CVS) rtag -R -d $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_DIRECTORY)
+	$(CVS) rtag -R -d $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_MODULE)
 
 # Sending the announce to the mailing lists.
 announce:
