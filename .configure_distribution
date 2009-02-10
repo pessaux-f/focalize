@@ -1,0 +1,32 @@
+#!/bin/sh
+
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 INRIA                                                #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: .configure_distribution,v 1.1 2009-02-10 09:49:59 weis Exp $
+
+# The configuration script to collect various shell variables
+# for the project distribution
+
+PROJECT_CVS_ROOT=`cat ./CVS/Root`
+PROJECT_CVS_REPOSITORY=`cat ./CVS/Repository`
+
+sed \
+  -e "s,@PROJECT_CVS_ROOT@,$PROJECT_CVS_ROOT," \
+  -e "s,@PROJECT_CVS_REPOSITORY@,$PROJECT_CVS_REPOSITORY," \
+  <.distribution_var.in >.distribution_var
+
+chmod g+w .distribution_var
+
