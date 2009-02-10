@@ -1,0 +1,43 @@
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 INRIA                                                #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+#  $Id: README_FOR_DEVELOPERS,v 1.1 2009-02-10 10:39:47 weis Exp $
+
+# The name of the file says what it was written for :)
+
+(1) How to get the current branch release for focalize
+
+# Go to the focalize sources directory
+cd ~/src/focalize
+
+# Create a distribution sub directory to check out the distribution branch.
+mkdir distribution
+cd distribution
+
+# Checkout a fresh distribution branch.
+# (Change the name "weis" by your own login name on our CVS server modulogic.inria.fr)
+
+cvs -d weis@modulogic.inria.fr:/home/cvs \
+ co -r branch_focalize_release_0_1_rc0 -d focalize.0.1.rc0 focalize
+
+# Configure and compile it
+cd focalize.0.1.rc0
+./configure
+make
+
+# If necessary install it
+make install
+
+(2)

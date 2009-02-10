@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.6 2009-02-10 10:09:15 weis Exp $
+# $Id: Makefile.distribution,v 1.7 2009-02-10 10:39:47 weis Exp $
 
 ROOT_DIR=.
 
@@ -90,7 +90,7 @@ PROJECT_ANNOUNCE_MAILING_LISTS=\
 PROJECT_RELEASE_EXCLUDE_FILE_LIST=\
  ".depend* \
   CVS *cvsignore* banner* \
-  TODO README.devel Makefile.distribution \
+  TODO README_FOR_DEVELOPPERS Makefile.distribution \
   doc_src test"
 
 # The list of files that will be deleted from the distribution before
