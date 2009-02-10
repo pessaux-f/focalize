@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.5 2009-02-10 10:03:21 weis Exp $
+# $Id: Makefile.distribution,v 1.6 2009-02-10 10:09:15 weis Exp $
 
 ROOT_DIR=.
 
@@ -157,11 +157,12 @@ release_examples:
 # Copy the documentation in it.
 # Clean it.
 release:
+	./.configure_distribution && \
 	$(RM) release && \
 	$(MKDIR) release && \
 	(cd release && \
 	   $(CVS) -d $(PROJECT_CVS_ROOT) export -r $(PROJECT_RELEASE_TAG) \
-		 $(PROJECT_CVS_REPOSITORY) -d $(PROJECT_RELEASE_DIR_NAME) && \
+		  -d $(PROJECT_RELEASE_DIR_NAME) $(PROJECT_CVS_REPOSITORY) && \
 	   $(CP) ../doc $(PROJECT_RELEASE_DIR_NAME) && \
 	   $(CP) ../examples $(PROJECT_RELEASE_DIR_NAME) && \
 	   for i in $(PROJECT_RELEASE_EXCLUDE_FILE_LIST); do \
@@ -205,7 +206,7 @@ ftp2:
 
 # Tagging the version.
 tag:
-    $(CVS) rtag -R $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_MODULE)
+	$(CVS) rtag -R $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_MODULE)
 
 # Tagging the version again with the same tag,
 # (in case of bug during the distribution process).
