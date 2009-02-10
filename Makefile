@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.48 2009-02-05 14:26:38 doligez Exp $
+# $Id: Makefile,v 1.49 2009-02-10 09:01:35 weis Exp $
 
 ROOT_DIR = .
 
@@ -30,7 +30,7 @@ DOCDIR_DIR = $(DOCUMENTATION_DIR)
 
 include $(ROOT_DIR)/Makefile.common
 
-.PHONY: build_internal_tools clean_internal_tools
+.PHONY: build_internal_tools clean_zenon clean_zvtov clean_focalizec clean_internal_tools
 .PHONY: build_external_tools clean_external_tools
 
 all:: build_external_tools build_internal_tools
@@ -298,19 +298,49 @@ docdir:: doc
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
-clean_internal_tools:
+clean_zenon:
 	$(RM) .done_build_internal_tools && \
-	for i in $(INTERNAL_TOOLS); do \
+	for i in $(ZENON_NAME); do \
 	  $(RM) .done_build_$$i; \
 	  $(TOUCH) $$i/.config_var; \
 	done && \
-	for i in $(INTERNAL_TOOLS_DIRS); do \
+	for i in $(ZENON_NAME); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) clean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
+
+clean_zvtov:
+	$(RM) .done_build_internal_tools && \
+	for i in $(ZVTOV_NAME); do \
+	  $(RM) .done_build_$$i; \
+	  $(TOUCH) $$i/.config_var; \
+	done && \
+	for i in $(ZVTOV_NAME); do \
+	  echo "--> $$i ..." >&2 && \
+	  ($(CD) $$i && $(MAKE) clean); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+	done
+
+clean_focalizec:
+	$(RM) .done_build_internal_tools && \
+	for i in $(FOCALIZEC_NAME); do \
+	  $(RM) .done_build_$$i; \
+	  $(TOUCH) $$i/.config_var; \
+	done && \
+	for i in $(FOCALIZEC_NAME); do \
+	  echo "--> $$i ..." >&2 && \
+	  ($(CD) $$i && $(MAKE) clean); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+	done
+
+clean_internal_tools: clean_zenon clean_zvtov clean_focalizec
 
 distclean_internal_tools:
 	$(RM) .done_build_internal_tools && \
