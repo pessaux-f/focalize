@@ -1,6 +1,6 @@
 
 (* 
- *@version $Revision: 1.1 $ $Date: 2008-12-18 15:07:39 $
+ *@version $Revision: 1.2 $ $Date: 2009-02-12 16:00:40 $
  *)
 
 use "basics";;
@@ -302,7 +302,7 @@ proof =
       Coll_requests!diff_inconsistent_moving_time_out,
       Coll_ports!diff_empty_port_out1,
       Coll_switch_recovery_reverse_automata!port_out1_is_when_reverse_switch
-<1>0 qed.
+<1>0 conclude
 ;
 
 end;;
