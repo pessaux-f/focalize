@@ -14,7 +14,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.61 2009-02-02 14:10:04 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.62 2009-02-12 15:01:15 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -1845,30 +1845,30 @@ let remap_dependencies_on_params_for_field env ctx from name
     let new_deps_on_params_as_option =
       List.map
         (fun (inh_spe_param, (Env.ODFP_methods_list inh_ordered_meths)) ->
-          (* [inh_spe_param] : the instanciated formal parameter of the
-             inherited species. *)
-          (* [inh_ordered_meths] : the ordered list of methods of the
-             formal parameters the inherited had dependencies on. *)
-          (* We must find the corresponding argument that was used in the
-             current species to instanciate this formal collection
-             parameter. The stuff we search is then the bucket in
-             [non_mapped_deps] having the same name than what was used during
-             substitution to replace [inh_spe_param]. *)
-          let formal_instanciation =
-            Handy.list_assoc_custom_eq
-              (fun ty_col_to_replace param ->
-                (* [ty_col_to_replace] is the type collection mentionned
-                   to be replace in the substitution. *)
-                (* [param] is the formal collection parameter in the
-                   inherited species. *)
-                match param with
-                 | Env.TypeInformation.SPAR_in (_, _, _) ->
-                     (* We do not deal here with "IN" parameters. *)
-                     false
-                 | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
-                     prm_ty_col = ty_col_to_replace)
-              inh_spe_param substs in
           try
+            (* [inh_spe_param] : the instanciated formal parameter of the
+               inherited species. *)
+            (* [inh_ordered_meths] : the ordered list of methods of the
+               formal parameters the inherited had dependencies on. *)
+            (* We must find the corresponding argument that was used in the
+               current species to instanciate this formal collection
+               parameter. The stuff we search is then the bucket in
+               [non_mapped_deps] having the same name than what was used during
+               substitution to replace [inh_spe_param]. *)
+            let formal_instanciation =
+              Handy.list_assoc_custom_eq
+                (fun ty_col_to_replace param ->
+                  (* [ty_col_to_replace] is the type collection mentionned
+                     to be replace in the substitution. *)
+                  (* [param] is the formal collection parameter in the
+                     inherited species. *)
+                  match param with
+                   | Env.TypeInformation.SPAR_in (_, _, _) ->
+                       (* We do not deal here with "IN" parameters. *)
+                       false
+                   | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
+                       prm_ty_col = ty_col_to_replace)
+                inh_spe_param substs in
             (* Now we know that the currently processed formal argument was
                instanciated by the substitution [formal_instanciation]. *)
             let effective_instanciater =
@@ -1916,7 +1916,8 @@ let remap_dependencies_on_params_for_field env ctx from name
           with Not_found ->
             (* If we didn't find the collection used to instanciate among the
                species parameters that's because the instanciation was done
-               by a toplevel collection or species. *)
+               by a toplevel collection or species or because the parameter
+               is a IN parameter. *)
             None)
         found_meth.Env.mi_dependencies_from_parameters in
     (* Since we may have detected that some instanciations were done with
