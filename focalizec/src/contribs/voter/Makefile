@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2009-01-15 09:05:34 weis Exp $
+# $Id: Makefile,v 1.3 2009-02-12 15:47:03 ayrault Exp $
 
 # Makefile for algebra structures implementations
 
@@ -178,7 +178,7 @@ randoms_externals.vo: $(STDLIB_DIR)/basics.vo
 arrays_externals.vo: $(STDLIB_DIR)/basics.vo
 # End Should be generated ?
 
-build.x: byt
+build.x: bin
 	$(CAML_BIN_COMPILER) -o $@ \
            -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR) \
             $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
