@@ -27,3 +27,6 @@
    Version juste avant que l'on mette l'égalité en natif. Le commit suivant
    va rendre la lib non-compilable temporairement. Il faudra adapter les
    preuves.
+
+* branch_focalize_release_0_1_rc0:
+   Branche pour la release.
