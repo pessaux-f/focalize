@@ -7,3 +7,4 @@ coq-*
 ocaml-*
 camlp5-*
 odoc
+configure.log
