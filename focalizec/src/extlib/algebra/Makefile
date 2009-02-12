@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.34 2009-02-05 15:44:52 rr Exp $
+# $Id: Makefile,v 1.35 2009-02-12 12:56:49 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -63,6 +63,9 @@ FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
 FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.ml)
 
+FOCALIZE_CMIS = $(FOCALIZE_SRC:.ml=.cmi)
+FOCALIZE_CMIS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.ml=.cmi)
+
 FOCALIZE_BYT_OBJS = $(FOCALIZE_MLS:.ml=.cmo)
 FOCALIZE_BYT_OBJS_UNSAFE = $(FOCALIZE_MLS_UNSAFE:.ml=.cmo)
 
@@ -81,6 +84,7 @@ FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 EXTERNAL_BYT_OBJS =\
 	weak_structures_externals.cmo \
 	randoms_externals.cmo
+EXTERNAL_CMIS =$(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 
@@ -116,6 +120,15 @@ install::
 	  echo "Installing (FoCaLize) compiled non-certified libs." ; \
 	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
 	fi
+
+	@if [ "$(FOCALIZE_CMIS)" != "" ] ; then \
+	  echo "Installing (Ocaml interface) compiled certified libs." ; \
+	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/ ; \
+	fi
+	@if [ "$(FOCALIZE_CMIS_UNSAFE)" != "" ] ; then \
+	  echo "Installing (Ocaml interface) compiled non-certified libs." ; \
+	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
+	fi
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
 	fi
@@ -130,6 +143,9 @@ install::
 	fi
 	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/ ; \
+	fi
+	@if [ "$(EXTERNAL_CMIS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_CMIS) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
 	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
@@ -147,6 +163,7 @@ clean::
 	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
 	$(RM) $(FOCALIZE_BYT_OBJS_UNSAFE) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOCALIZE_VOS_UNSAFE)
 	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
+	$(RM) $(EXTERNAL_CMIS) $(FOCALIZE_CMIS_UNSAFE) $(FOCALIZE_CMIS)
 	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
 	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
 	$(RM) big_integers.o parse_poly.o polys_abstract.o

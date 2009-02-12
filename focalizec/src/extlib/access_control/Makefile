@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.22 2009-02-05 15:13:41 doligez Exp $
+# $Id: Makefile,v 1.23 2009-02-12 12:56:49 pessaux Exp $
 
 # Makefile for access control models
 
@@ -56,6 +56,9 @@ FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
 FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.ml)
 
+FOCALIZE_CMIS = $(FOCALIZE_MLS:.ml=.cmi)
+FOCALIZE_CMIS_UNSAFE = $(FOCALIZE_MLS_UNSAFE:.ml=.cmi)
+
 FOCALIZE_BYT_OBJS = $(FOCALIZE_MLS:.ml=.cmo)
 FOCALIZE_BYT_OBJS_UNSAFE = $(FOCALIZE_MLS_UNSAFE:.ml=.cmo)
 
@@ -71,23 +74,16 @@ FOCALIZE_VS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.v)
 # FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
 # FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
-EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
-
-EXTERNAL_BYT_OBJS = 
-
-EXTERNAL_VOS = 
 
 lib: all
 
 byt:: \
-      $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
       $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
       $(FOCALIZE_ZVS)\
       $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
       $(FOCALIZE_VS)
 
 bin:: \
-      $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
       $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
       $(FOCALIZE_ZVS)\
       $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
@@ -118,15 +114,7 @@ install::
 	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/ ; \
 	fi
-	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_VOS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ ; \
-	fi
+
 
 clean::
 	$(RM) *.fo *.ml *.mli *.zv *.v *.vo *.pfc *.glob *.fcd

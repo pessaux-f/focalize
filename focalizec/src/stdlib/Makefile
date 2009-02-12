@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.78 2009-02-02 14:10:04 pessaux Exp $
+# $Id: Makefile,v 1.79 2009-02-12 12:56:49 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -41,6 +41,8 @@ FOCALIZE_SRC = basics.fcl \
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
+
+FOCALIZE_CMIS = $(FOCALIZE_SRC:.ml=.cmi)
 
 FOCALIZE_BYT_OBJS = $(FOCALIZE_MLS:.ml=.cmo)
 FOCALIZE_BIN_OBJS = $(FOCALIZE_BYT_OBJS:.cmo=.cmx)
@@ -86,6 +88,10 @@ install::
 	  echo "Installing (FoCaLize) compiled certified libs." ; \
 	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/ ; \
 	fi
+	@if [ "$(FOCALIZE_CMIS)" != "" ] ; then \
+	  echo "Installing (OCaml interface) compiled certified libs." ; \
+	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/ ; \
+	fi
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
 	  echo "Installing (OCaml bytecode) compiled certified libs." ; \
 	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
@@ -115,7 +121,7 @@ clean::
 	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
 	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
-	$(RM) *.annot *.glob *.fcd
+	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd
 
 
 depend::
