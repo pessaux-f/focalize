@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.49 2009-02-10 09:01:35 weis Exp $
+# $Id: Makefile,v 1.50 2009-02-12 10:41:53 doligez Exp $
 
 ROOT_DIR = .
 
@@ -262,7 +262,11 @@ build_internal_tools: .done_build_external_tools .done_build_internal_tools
 
 clean:: clean_internal_tools
 
-install:: .done_build_internal_tools
+install::
+	if [ ! -f .done_build_internal_tools ]; then \
+	  echo 'you must "make all" before "make install"'; \
+	  exit 2; \
+	fi; \
 	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
