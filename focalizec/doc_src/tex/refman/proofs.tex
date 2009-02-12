@@ -1,35 +1,42 @@
-% $Id: proofs.tex,v 1.8 2009-01-23 10:44:17 weis Exp $
+% $Id: proofs.tex,v 1.9 2009-02-12 10:42:21 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of  theorems}
 As presented in \ref{proof-short-intro}, {\focal} proposes 3 ways to
 make proof of properties. We will only deal here with proofs written
-with the {\focal} Proof Languages. As a reminder, those written by a
-direct {\coq} script will be addressed in \ref{coq-proofs}. And the
+in the {\focal} Proof Language. As a reminder, proofs written as
+direct {\coq} scripts will be addressed in \ref{coq-proofs}. And the
 last kind of proof, by {\tt assumed} doesn't need anymore description
 since it consists in bypassing the formal proof mechanism.
 
 The syntax of proofs is as follows.
 \begin{syntax}
 \syntaxclass{Proofs:}
-proof & ::=  & proof\_step* qed\_step \\
+proof & ::=  & {proof\_step*} qed\_step \\
       & \mid & \terminal{by}\ fact* \\
       & \mid & \terminal{conclude}
 \end{syntax}
 
 \begin{syntax}
 \syntaxclass{Proof steps:}
-proof\_step & ::=  & proof\_bullet\ statement\ proof
-\end{syntax}
-
-\begin{syntax}
-\syntaxclass{Statements:}
-statement & ::=  & [\terminal{assume}\ logical\_expr\ \terminal{,}]*
-                   [\terminal{prove}\ logical\_expr]
+proof\_step & ::=  & proof\_bullet~~statement~~proof
 \end{syntax}
 
 \begin{syntax}
 \syntaxclass{QED steps:}
 qed\_step & ::=  & proof\_bullet\ \terminal{qed}\ proof \\
           & \mid & proof\_bullet\ \terminal{conclude}
+\end{syntax}
+
+\begin{syntax}
+\syntaxclass{Statements:}
+statement & ::=  & {\{\terminal{assume}\ logical\_expr\ \terminal{,}\}*}
+                   \{\terminal{prove}\ logical\_expr\}?
+\end{syntax}
+A statement must be non-empty: at least one \terminal{assume} or the
+\terminal{prove} part must be present.
+
+\begin{syntax}
+\syntaxclass{Facts:}
+fact & ::= & 
 \end{syntax}
