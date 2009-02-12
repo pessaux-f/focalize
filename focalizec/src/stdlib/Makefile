@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.79 2009-02-12 12:56:49 pessaux Exp $
+# $Id: Makefile,v 1.80 2009-02-12 15:50:09 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -42,7 +42,7 @@ FOCALIZE_SRC = basics.fcl \
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
 
-FOCALIZE_CMIS = $(FOCALIZE_SRC:.ml=.cmi)
+FOCALIZE_CMIS = $(FOCALIZE_SRC:.fcl=.cmi)
 
 FOCALIZE_BYT_OBJS = $(FOCALIZE_MLS:.ml=.cmo)
 FOCALIZE_BIN_OBJS = $(FOCALIZE_BYT_OBJS:.cmo=.cmx)

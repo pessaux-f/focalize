@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.35 2009-02-12 12:56:49 pessaux Exp $
+# $Id: Makefile,v 1.36 2009-02-12 15:52:33 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -63,8 +63,8 @@ FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
 FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.ml)
 
-FOCALIZE_CMIS = $(FOCALIZE_SRC:.ml=.cmi)
-FOCALIZE_CMIS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.ml=.cmi)
+FOCALIZE_CMIS = $(FOCALIZE_SRC:.fcl=.cmi)
+FOCALIZE_CMIS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.cmi)
 
 FOCALIZE_BYT_OBJS = $(FOCALIZE_MLS:.ml=.cmo)
 FOCALIZE_BYT_OBJS_UNSAFE = $(FOCALIZE_MLS_UNSAFE:.ml=.cmo)
