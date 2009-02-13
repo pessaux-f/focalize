@@ -1,0 +1,13 @@
+# Focalize 0.2.0
+- Lexing
+  Comments starting with a line (more than 3) * characters are accepted.
+
+# 2009-02-??
+# Focalize 0.1.0
+Initial distribution
+
+# 2009-02-13
+# Focalize 0.1.rc0
+First release candidate.
+
+$Id: CHANGES,v 1.1 2009-02-13 13:15:30 weis Exp $
