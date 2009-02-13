@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.70 2008-12-10 16:08:08 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.71 2009-02-13 16:00:24 pessaux Exp $ *)
 
 
 
@@ -1090,8 +1090,9 @@ let generate_record_type_parameters ctx env species_fields =
       Types.cpc_collections_carrier_mapping =
         ctx.Context.scc_collections_carrier_mapping } in
   (* We first build the lists of dependent methods for each property and
-     theorem fields. *)
-  let deps_for_fields = ref [] in
+     theorem fields. ATTENTION, for sake of efficiency, the list is built in
+     reverse order.*)
+  let reved_deps_for_fields = ref [] in
   List.iter
     (function
       | Env.TypeInformation.SF_sig (_, _, _)
@@ -1119,19 +1120,19 @@ let generate_record_type_parameters ctx env species_fields =
                        Handy.list_assoc_custom_eq
                          (fun sp n ->
                            (Env.TypeInformation.vname_of_species_param sp) = n)
-                         spe_param_name !deps_for_fields in
+                         spe_param_name !reved_deps_for_fields in
                      param_bucket :=
                        Parsetree_utils.ParamDepSet.union
                          meths_from_param !param_bucket
                    with Not_found ->
-                     deps_for_fields :=
+                     reved_deps_for_fields :=
                        (species_param, ref meths_from_param) ::
-                       !deps_for_fields)
+                       !reved_deps_for_fields)
             species_parameters_names)
       species_fields ;
   (* Just remove the references inside the assoc list. *)
   let deps_for_fields_no_ref =
-    List.map (fun (a, b) -> (a, !b)) !deps_for_fields in
+    List.map (fun (a, b) -> (a, !b)) (List.rev !reved_deps_for_fields) in
   (* We now sort these methods according to the parameters' dependency graph. *)
   let ordered_deps_for_fields =
     Dep_analysis.order_species_params_methods deps_for_fields_no_ref in

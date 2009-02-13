@@ -14,7 +14,7 @@
 (***********************************************************************)
 
 
-(* $Id: abstractions.ml,v 1.62 2009-02-12 15:01:15 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.63 2009-02-13 16:00:24 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -55,55 +55,6 @@ type environment_kind =
   | EK_ml of Env.MlGenEnv.t
   | EK_coq of Env.CoqGenEnv.t
 ;;
-
-
-
-(* For debugging purpose only.
-let debug_print_dependencies_from_parameters l =
-  List.iter
-    (fun (species_param, methods) ->
-      (match species_param with
-       | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _, _, _) ->
-           Format.eprintf "From IS-parameter '%s#%s', methods: "
-             mod_name spe_name ;
-       | Env.TypeInformation.SPAR_in (n, _, _) ->
-           Format.eprintf "From IN-parameter '%a', methods: "
-             Sourcify.pp_vname n) ;
-      Parsetree_utils.ParamDepSet.iter
-        (fun (n, k) -> Format.eprintf "\t%a: " Sourcify.pp_vname n ;
-          match k with
-           | Parsetree_utils.DETK_computational t ->
-               Format.eprintf "%a@." Types.pp_type_simple t
-           | Parsetree_utils.DETK_logical e ->
-               Format.eprintf "%a@." Sourcify.pp_logical_expr e)
-        methods ;
-      Format.eprintf "@.")
-    l
-;;
-
-let debug_print_dependencies_from_parameters2 l =
-  List.iter
-    (fun (species_param, (Env.ODFP_methods_list methods)) ->
-      (match species_param with
-       | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _, _, _) ->
-           Format.eprintf "From IS-parameter '%s#%s', methods: "
-             mod_name spe_name ;
-       | Env.TypeInformation.SPAR_in (n, _, _) ->
-           Format.eprintf "From IN-parameter '%a', methods: "
-             Sourcify.pp_vname n) ;
-      List.iter
-        (fun (n, k) ->
-          Format.eprintf "%a " Sourcify.pp_vname n ;
-          match k with
-           | Parsetree_utils.DETK_computational t ->
-               Format.eprintf "%a@." Types.pp_type_simple t
-           | Parsetree_utils.DETK_logical e ->
-               Format.eprintf "%a@." Sourcify.pp_logical_expr e)
-        methods ;
-      Format.eprintf "@.")
-    l
-;;
-*)
 
 
 
