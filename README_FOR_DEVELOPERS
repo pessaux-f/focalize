@@ -13,12 +13,50 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.2 2009-02-13 09:34:31 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.3 2009-02-16 13:43:47 weis Exp $
 
 # The name of the file says why and for who it was written :)
 
-(1) How to get the current branch release for focalize
+<H2>How to use the Focalize Makefile</H2>
 
+  <H3>Cleaning</H3>
+
+  Two main targets: clean and distclean.
+
+     <OL>
+       <LI>clean: cleans (internal tools), i.e. zenon zvtov and focalizec.
+           You should launch make to rebuild internal tools.
+       <LI>distclean: cleans every thing (internal and external tools).
+           You should reconfigure the software and recompile everything
+           afterwards.
+     </OL>
+
+  The target clean is a synonym for clean_internal_tools, 
+
+  The target distclean is a synonym for distclean_external_tools then
+  clean_internal_tools for consistency.
+
+  <P>Other cleaning targets:
+  <UL>
+    <LI>clean_internal_tools: performs clean_zenon clean_zvtov clean_focalizec
+    <LI>clean_external_tools: clean external tools (Ocaml, CamlP5, Coq),
+        (then clean internal_tools for consistency).
+    <LI>clean_zenon clean_zvtov clean_focalizec: specific targets for cleaning
+        internal tools.
+  </UL>
+
+  <H3>Making</H3>
+
+  Two main targets: "default" (got via make) and install (got via make install).
+
+  <OL>
+    <LI>default: build the internal tools.
+    <LI>install: install focalizec and its documentation.
+  </OL>
+
+<H2>How to get the current branch release for focalize</H2>
+
+<PRE>
 # Go to the focalize sources directory
 cd ~/src/focalize
 
@@ -39,5 +77,5 @@ make
 
 # If necessary install it
 make install
+</PRE>
 
-(2)
