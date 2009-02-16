@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.17 2009-02-10 09:59:45 weis Exp $
+# $Id: Makefile,v 1.18 2009-02-16 14:52:10 doligez Exp $
 
 ROOT_DIR = ../../..
 
@@ -49,7 +49,7 @@ refman.pdf: refman.dvi
 	dvipdf refman.dvi
 
 refman.html: refman.dvi
-	$(HEVEA) -fix macros.hva refman.hva refman.tex
+	#$(HEVEA) -fix macros.hva refman.hva refman.tex
 
 refman.ps: refman.dvi
 	dvips refman.dvi
