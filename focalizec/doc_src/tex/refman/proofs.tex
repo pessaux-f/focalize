@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.9 2009-02-12 10:42:21 doligez Exp $
+% $Id: proofs.tex,v 1.10 2009-02-16 14:52:46 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of  theorems}
@@ -12,15 +12,69 @@ since it consists in bypassing the formal proof mechanism.
 The syntax of proofs is as follows.
 \begin{syntax}
 \syntaxclass{Proofs:}
-proof & ::=  & {proof\_step*} qed\_step \\
-      & \mid & \terminal{by}\ fact* \\
+proof & ::=  & proof\_step*\ qed\_step \\
+      & \mid & \terminal{by}\ fact+{} \\
       & \mid & \terminal{conclude}
 \end{syntax}
+
+A proof is either a leaf proof or a compound proof. A leaf proof
+(introduced with the \terminal{by} or \terminal{conclude} keywords)
+invokes \zenon{} with the
+assumptions being the given facts and the goal being the goal of the
+proof itself (i.e. the statement that is proved by this leaf proof).
+See below for the kinds of facts that can be given.
+
+The \terminal{conclude} keyword is used to invoke \zenon{} without
+assumptions.
+
+A compound proof is a sequence of steps that ends with a \terminal{qed}
+step.  The goal of each step is stated in the step itself, except for
+the \terminal{qed} step, which has the same goal as the enclosing
+proof.
 
 \begin{syntax}
 \syntaxclass{Proof steps:}
 proof\_step & ::=  & proof\_bullet~~statement~~proof
 \end{syntax}
+
+A proof step starts with a proof bullet, which gives its level of
+nesting.  The top level of a proof is 0.  In a compound proof, the
+steps are at level one plus the level of the proof itself.
+
+\goodbreak
+For example, consider the following proof.
+
+\begin{verbatim}
+  theorem foo : A -> (B -> A)
+  proof =
+    <1>1 assume h1: A,
+         prove B -> A
+      <2>1 assume h2: B,
+           prove A
+        by hypothesis h1
+      <2>2 qed
+        by step <2>1
+    <1>2 qed
+      conclude
+\end{verbatim}
+
+In this proof, the steps \verb"<1>1" and \verb"<1>2" are at level 1
+and form a compound proof of the top-level theorem.  Step \verb"<1>1"
+also has a compound proof, composed of steps \verb"<2>1"
+and \verb"<2>2".  These are at level 2 (one more than the level of
+their enclosing step).
+
+After the proof bullet comes the statement of the step.  This is the
+statement that is asserted and proved by this step.  At the end of
+this step's proof, it becomes available as a fact for the next steps
+of this proof.  In our example, step \verb"<2>1" is available in the
+proof of \verb"<2>2", and \verb"<1>1" is available in the proof of
+\verb"<1>2".  Note that \verb"<2>1" is not available in the proof of
+\verb"<1>2": see section~\ref{sec:scoping} for the scoping rules.
+
+After the statement is the proof of the step.  See below (under
+Statements) for a description of what is the current goal for this
+proof.
 
 \begin{syntax}
 \syntaxclass{QED steps:}
@@ -28,15 +82,86 @@ qed\_step & ::=  & proof\_bullet\ \terminal{qed}\ proof \\
           & \mid & proof\_bullet\ \terminal{conclude}
 \end{syntax}
 
+A \terminal{qed} step is similar to a normal step, except that its
+statement is the goal of the enclosing proof.  It may be reduced to
+the word \terminal{conclude} when its proof is reduced to
+\terminal{conclude}.  In our example, we could have replaced
+\verb"<1>2" with:
+\begin{verbatim}
+    <1>2 conclude
+\end{verbatim}
+
 \begin{syntax}
 \syntaxclass{Statements:}
-statement & ::=  & {\{\terminal{assume}\ logical\_expr\ \terminal{,}\}*}
-                   \{\terminal{prove}\ logical\_expr\}?
+statement & ::=  & {\{\terminal{assume}\ assumption\ \terminal{,}\}*}
+                   \ \{\terminal{prove}\ logical\_expr\}?
 \end{syntax}
 A statement must be non-empty: at least one \terminal{assume} or the
 \terminal{prove} part must be present.
 
+A statement appearing in a step has two readings: internal and
+external.  The external reading is for the rest of the
+proof: the current step proves that the assumptions imply the
+conclusion (i.e. the {\em logical\_expr} that appears after
+\terminal{prove}).  The internal reading is for the proof of the step:
+the current goal is the \terminal{prove} expression, and the
+assumptions are available as facts.
+
+\begin{syntax}
+\syntaxclass{Assumptions:}
+assumption & ::= & ident\ \terminal{in}\ type\_expr \\
+           & \mid & ident\ \terminal{:}\ logical\_expr
+\end{syntax}
+
+An assumption can either introduce a new (universally quantified)
+variable with its type (first form), or a new named hypothesis (second
+form).
+
 \begin{syntax}
 \syntaxclass{Facts:}
-fact & ::= & 
+fact & ::= & \terminal{definition~of}
+                     \ \{ident?\terminal{\#}\}?ident
+     \ \{\{\terminal{,}\ ident?\terminal{\#}\}?ident\}*
+\\
+     & \mid & \terminal{hypothesis}
+                     \ ident
+     \ \{\terminal{,}\ ident\}*
+\\
+     & \mid & \terminal{property}
+          \ \{\{\{ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident
+\ \{\{\{\{\terminal{,}\ ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident\}*
+\\
+     & \mid & \terminal{theorem}
+          \ \{\{\{ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident
+\ \{\{\{\{\terminal{,}\ ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident\}*
+\\
+     & \mid & \terminal{step}
+                 \ proof\_bullet
+  \ \{\terminal{,}\ proof\_bullet\}*
 \end{syntax}
+
+A fact used in a leaf proof can be a definition, a hypothesis, a
+property, a theorem, or a step.
+
+Giving a definition as a fact allows \zenon{} to unfold this
+definition in the goal and in the other facts.
+
+Giving a hypothesis/property/theorem as a fact allows \zenon{} to use
+this hypothesis/property/theorem to prove the goal.
+
+Giving a {\em proof\_bullet} as a fact allows \zenon{} to use the
+(external reading of the) corresponding step as an assumption to prove
+the goal.  Note that even if several steps are labelled with this
+proof bullet, only one of them is in scope at any point, so there is
+no ambiguity (see section~\ref{sec:scoping}).
+
+\subsection{Scoping rules}\label{sec:scoping}
+
+The scope of a step bullet extends from the end of the proof of that
+step to the end of the proof of the enclosing step (i.e. the end of
+the proof of the \terminal{qed} step that has the same level as this
+step).  This means that proof bullets can be reused in other branches
+of the proof to name different steps.
+
+The scope of an assumption is the proof of the step where this
+assumption appears.
