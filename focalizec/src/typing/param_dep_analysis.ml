@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.23 2008-12-02 14:12:19 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.24 2009-02-17 16:20:21 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -26,24 +26,60 @@
   soit mémoriser son type-scheme si c'est une méthode calculatoire, soit
   son énoncé si c'est une propriété logique. Ca sert à ensuite construire
   les [dependencies_from_params_...]. Si c'est un let on renvoie le type
-    [meth_ty] originellement reçu en argument, sinon on renvoie l'expression
-    logique trouvée comme "type" de la priperty ou du theorem. *)
-let guess_method_computational_or_logical meth_name meth_ty among =
+    [meth_ty] originellement reçu en argument (si on en a un, sinon
+    l'instanciation du schéma de types trouvé dans la méthode), sinon on
+    renvoie l'expression logique trouvée comme "type" de la property ou du
+    theorem.
+    Pourquoi on passe un [type_simple option] ? Très bonne question.
+    En fait, je me suis aperçu dans "abstraction.ml" que l'on avait un bug
+    en Coq lorsque l'on appliquait la règle [DIDOU] car le type qu'on
+    récuperait en calculant "let mkind = Param_dep_analysis...." était
+    faux car il ne reflétait pas les instanciations de paramètres qui avaient
+    eté faites car on retournait le "type_simple" passé en argument dans
+    [guess_method_computational_or_logical]. Or il fallait que
+    [guess_method_computational_or_logical] nous retourne en effet le type
+    réellement trouvé dans la méthode car lui, avait été bien instancié.
+    Donc j'ai supprimé l'argument "type_simple" ... et en recompilant la
+    lib, ça a planté à cause de l'un des 2 appels à
+    [guess_method_computational_or_logical] ci-dessous dans ce fichier.
+    Donc, pour ne froisser personne, ben je l'ai laissé poru ces 2 appels
+    et supprimé pour l'appel se trouvant dans "abstraction.ml".
+    Vi, je sais, c'est crad, il faudra éclaircir ça, mais release dans pas
+    longtemps, donc on fixe d'abord :/ *)
+let guess_method_computational_or_logical meth_name meth_ty_opt among =
+  (* Just a local function to search among the bindings of a "let rec". *)
+  let rec find_in_let_rec = function
+    | [] -> raise Not_found
+    | (_, n, _, sch, _, _, _, _) :: q ->
+        if n = meth_name then
+          (begin
+          let ty =
+            match meth_ty_opt with
+             | None -> Types.specialize sch
+             | Some t -> t in
+          Parsetree_utils.DETK_computational ty
+          end)
+        else find_in_let_rec q in
+  (* Now, the function really performing the job. *)
   let rec rec_guess = function
     | [] -> raise Not_found
     | h :: q ->
         (begin
         match h with
-         | Env.TypeInformation.SF_sig (_, n, _)
-         | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
-             if n = meth_name then Parsetree_utils.DETK_computational meth_ty
+         | Env.TypeInformation.SF_sig (_, n, sch)
+         | Env.TypeInformation.SF_let (_, n, _, sch, _, _, _, _) ->
+             if n = meth_name then
+               (begin
+               let ty =
+                 match meth_ty_opt with
+                  | None -> Types.specialize sch
+                  | Some t -> t in
+               Parsetree_utils.DETK_computational ty
+               end)
              else rec_guess q
          | Env.TypeInformation.SF_let_rec let_infos ->
-             if
-               List.exists
-                 (fun (_, n, _, _, _, _, _, _) -> n = meth_name) let_infos then
-               Parsetree_utils.DETK_computational meth_ty
-           else rec_guess q
+             (try find_in_let_rec let_infos
+             with Not_found -> rec_guess q)
        | Env.TypeInformation.SF_theorem (_, n, _, lexpr, _, _)
        | Env.TypeInformation.SF_property (_, n, _, lexpr, _) ->
            if n = meth_name then Parsetree_utils.DETK_logical lexpr
@@ -112,7 +148,7 @@ let param_deps_ident ~current_species (param_coll_name, param_coll_meths)
               (begin
               let ty_or_log_expr =
                 guess_method_computational_or_logical
-                  vname ident_ty param_coll_meths in
+                  vname (Some ident_ty) param_coll_meths in
               Parsetree_utils.ParamDepSet.singleton (vname, ty_or_log_expr)
               end)
             else Parsetree_utils.ParamDepSet.empty
@@ -125,7 +161,7 @@ let param_deps_ident ~current_species (param_coll_name, param_coll_meths)
               (begin
               let ty_or_log_expr =
                 guess_method_computational_or_logical
-                  vname ident_ty param_coll_meths in
+                  vname (Some ident_ty) param_coll_meths in
               Parsetree_utils.ParamDepSet.singleton (vname, ty_or_log_expr)
               end)
             else Parsetree_utils.ParamDepSet.empty

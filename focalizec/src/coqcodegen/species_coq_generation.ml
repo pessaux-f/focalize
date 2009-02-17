@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.158 2009-02-10 14:51:27 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.159 2009-02-17 16:20:21 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3441,20 +3441,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   let module_name =
     String.capitalize (Parsetree_utils.name_of_vname species_name) in
   Format.fprintf out_fmter "@[<2>Module %s.@\n" module_name ;
-  (* Now, establish the mapping between collections available and the names
-     representing their carrier for the record type. *)
-  let collections_carrier_mapping =
-    build_collections_carrier_mapping_for_record ~current_unit species_descr in
-  (* Create the initial compilation context for this species. *)
-  let ctx = {
-    Context.scc_current_unit = current_unit ;
-    Context.scc_current_species = (current_unit, species_name) ;
-    Context.scc_dependency_graph_nodes = dep_graph ;
-    Context.scc_species_parameters_names =
-      species_descr.Env.TypeInformation.spe_sig_params ;
-    Context.scc_collections_carrier_mapping = collections_carrier_mapping ;
-    Context.scc_lambda_lift_params_mapping = [] ;
-    Context.scc_out_fmter = out_fmter } in
+
+
   (* Insert in the environment the value bindings of the species methods and
      the species bindings for its parameters. This is needed since in Coq
      polymorphism is explicit, hence we need to know for each method the extra
@@ -3462,35 +3450,55 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   let env' =
     extend_env_for_species_def
       ~current_species: (current_unit, species_name) env species_descr in
+
+  (* Create the initial compilation context for this species. *)
+  let ctxt_no_ccmap = {
+    Context.scc_current_unit = current_unit ;
+    Context.scc_current_species = (current_unit, species_name) ;
+    Context.scc_dependency_graph_nodes = dep_graph ;
+    Context.scc_species_parameters_names =
+      species_descr.Env.TypeInformation.spe_sig_params ;
+    Context.scc_collections_carrier_mapping = [] ;
+    Context.scc_lambda_lift_params_mapping = [] ;
+    Context.scc_out_fmter = out_fmter } in
+  (* Now, establish the mapping between collections available and the names
+     representing their carrier for the record type. *)
+  let collections_carrier_mapping =
+    build_collections_carrier_mapping_for_record ~current_unit species_descr in
+  let ctxt_ccmap =
+    { ctxt_no_ccmap with
+        Context.scc_collections_carrier_mapping =
+          collections_carrier_mapping } in
+
+  (* Now, compute abstractions for the methods of the species. *)
+  let field_abstraction_infos =
+    Abstractions.compute_abstractions_for_fields
+      ~with_def_deps_n_term_pr: true (Abstractions.EK_coq env')
+      ctxt_no_ccmap species_descr.Env.TypeInformation.spe_sig_methods in
+
   (* The record type representing the species' type. We get the parameters the
      record type has. *)
   let abstracted_params_methods_in_record_type =
     Species_record_type_generation.generate_record_type
-      ctx env' species_descr in
-  (* [Unsure] pourquoi ne pas fouttre le 1er carrier mapping local à la
-     fonction [generate_record_type] ? *)
-  (* Now, we don't need anymore the collections_carrier_mapping since fields
-     will do their own one. *)
-  let ctx' = { ctx with Context.scc_collections_carrier_mapping = [] } in
+      ctxt_ccmap env' species_descr field_abstraction_infos in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx'.Context.scc_current_unit ;
+    Types.cpc_current_unit = ctxt_no_ccmap.Context.scc_current_unit ;
     Types.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
-           ctx'.Context.scc_current_species) ;
+           ctxt_no_ccmap.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping = [] } in
-  (* Now, the methods of the species. *)
-  let field_abstraction_infos =
-    Abstractions.compute_abstractions_for_fields
-      ~with_def_deps_n_term_pr: true (Abstractions.EK_coq env')
-      ctx' species_descr.Env.TypeInformation.spe_sig_methods in
+
+
+
   (* Now, generate the Coq code of the methods. *)
   let compiled_fields =
     List.fold_left
       (fun accu field ->
         (* Pass the accu to be able to remind the already generated fields. *)
-        let compiled_field = generate_methods ctx' print_ctx env' accu field in
+        let compiled_field =
+          generate_methods ctxt_no_ccmap print_ctx env' accu field in
         (* Not efficient, but required to keep the fields in the right order. *)
         accu @ [compiled_field])
       []
@@ -3534,7 +3542,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
            recovered with the above [params_carriers_abstr_for_record]. *)
         abstr_params_methods_in_coll_gen) =
         generate_collection_generator
-          ctx env' compiled_fields abstracted_params_methods_in_record_type in
+          ctxt_ccmap env' compiled_fields
+          abstracted_params_methods_in_record_type in
       let coll_gen_params_info = {
         Env.CoqGenInformation.cgp_abstr_param_carriers_for_record =
         (* Just remove the "IN"/"IS" tag that is not needed to keep in the code
@@ -4118,7 +4127,12 @@ let collection_compile env ~current_unit out_fmter collection_def
      implemented species. *)
   ignore
     (Species_record_type_generation.generate_record_type
-      ctx env collection_descr) ;
+      ctx env collection_descr
+      [(* We can safely pass an empty list of abstraction infos about the
+          collection methods because this list is only used to compute
+          the dependencies on collection parameters in order to create the
+          right parameters for the record type. Since a collection NEVER has
+          collection parameter, it is useless. *)]) ;
   (* We do not want any collection generator. Instead, we will call the
      collection generator of the collection we implement and apply it to the
      functions it needs coming from the collection applied to its parameters
