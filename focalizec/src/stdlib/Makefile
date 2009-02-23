@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.80 2009-02-12 15:50:09 pessaux Exp $
+# $Id: Makefile,v 1.81 2009-02-23 09:10:51 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -55,6 +55,8 @@ EXTERNAL_BYT_OBJS =\
   ml_builtins.cmo sets_externals.cmo sets_orders_externals.cmo
 #  weak_structures_externals.cmo
 #  random_foc_externals.cmo
+
+EXTERNAL_CMIS = $(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 
@@ -104,6 +106,10 @@ install::
 	  echo "Installing (Coq) compiled certified libs." ; \
 	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/ ; \
 	fi
+	@if [ "$(EXTERNAL_CMIS)" != "" ] ; then \
+	  echo "Installing OCaml interfaces." ; \
+	  $(CP) $(EXTERNAL_CMIS) $(LIB_INSTALL_DIR)/ ; \
+	fi
 	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
 	  echo "Installing (OCaml bytecode) external stubs." ; \
 	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
@@ -121,7 +127,7 @@ clean::
 	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
 	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
-	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd
+	$(RM) $(FOCALIZE_CMIS) $(EXTERNAL_CMIS) *.annot *.glob *.fcd
 
 
 depend::
