@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.72 2009-02-17 16:20:21 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.73 2009-02-24 16:24:03 pessaux Exp $ *)
 
 
 
@@ -1043,6 +1043,8 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
     Returns the list of species params and methods required 
     to create a value of the type record, i.e. the one we found
     dependencies on in the body of the record type.
+
+    Used when generating the record type definition.
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)

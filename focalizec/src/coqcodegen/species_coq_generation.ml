@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.159 2009-02-17 16:20:21 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.160 2009-02-24 16:24:03 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3025,8 +3025,10 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
     compiled_species_fields =
   (* Let's create an assoc list mapping for each species paramater name the
      set of methods names from it that needed to be lambda-lifted, hence that
-     will lead to parameters of the collection generator. *)
-  let species_params_and_methods = ref [] in
+     will lead to parameters of the collection generator.
+     For sake of efficiency, the list is built in reverse order. We will
+     put it back in the right order just after it is finished. *)
+  let revd_species_params_and_methods = ref [] in
   (* ************************************************************************ *)
   (** {b Descr} :  Local function to process only one [compiled_field_memory].
          Handy to factorize the code in both the cases of [CSF_let] and
@@ -3057,11 +3059,11 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
                  Handy.list_assoc_custom_eq
                    (fun sp n ->
                      (Env.TypeInformation.vname_of_species_param sp) = n)
-                   spe_param_name !species_params_and_methods
+                   spe_param_name !revd_species_params_and_methods
                with Not_found ->
                  let bucket = ref [] in
-                 species_params_and_methods :=
-                   (spe_param, bucket) :: !species_params_and_methods ;
+                 revd_species_params_and_methods :=
+                   (spe_param, bucket) :: !revd_species_params_and_methods ;
                  bucket) in
              (* And now, union the current methods we depend on with the
                 already previously recorded. *)
@@ -3080,11 +3082,11 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
           process_one_field_memory field_memory
       | Misc_common.CSF_let_rec l -> List.iter process_one_field_memory l)
     compiled_species_fields ;
-  (* Remove the inner ref and transform into a set. *)
+  (* Reverse the list, remove the inner ref and transform into a set. *)
   let species_params_and_methods_no_ref =
     List.map
       (fun (a, b) -> (a, (Parsetree_utils.list_to_param_dep_set !b)))
-      !species_params_and_methods in
+      (List.rev !revd_species_params_and_methods) in
   (* We now order the methods of the parameters in accordance with their
      dependencies. *)
   let ordered_species_params_names_and_methods =
