@@ -1,0 +1,125 @@
+diddlina:~/devel/ssurf/focalize/focalizec/src/extlib/algebra$ coqtop -I ../../stdlib/ -I ../../../../zenon/
+Welcome to Coq trunk (Jun. 2008)
+
+Coq < Load "iterators.v".
+File "/home/didou/devel/ssurf/focalize/focalizec/src/extlib/algebra/iterators.v",
+line 141, characters 0-2:
+Syntax error: illegal begin of vernac.
+
+for_zenon_iterate_spec_base < Show.
+1 subgoal
+  
+  _p_Nat_T : Set
+  _p_S_T : Set
+  _p_Nat_lt : _p_Nat_T -> _p_Nat_T -> basics.bool__t
+  _p_Nat_predecessor : _p_Nat_T -> _p_Nat_T
+  _p_Nat_start : _p_Nat_T
+  _p_Nat_equal : _p_Nat_T -> _p_Nat_T -> basics.bool__t
+  _p_Nat_equal_reflexive : forall x : _p_Nat_T, Is_true (_p_Nat_equal x x)
+  _p_S_equal : _p_S_T -> _p_S_T -> basics.bool__t
+  _p_S_equal_reflexive : forall x : _p_S_T, Is_true (_p_S_equal x x)
+  _p_F_binary_binop : _p_S_T -> _p_S_T -> _p_S_T
+  _p_zero_zero : _p_S_T
+  abst_iterate := iterate _p_Nat_T _p_S_T _p_Nat_lt _p_Nat_predecessor
+                    _p_Nat_start _p_Nat_equal _p_F_binary_binop _p_zero_zero
+               : _p_S_T -> _p_Nat_T -> _p_S_T
+  ============================
+   forall x : _p_S_T,
+   Is_true (_p_S_equal (abst_iterate x _p_Nat_start) _p_zero_zero)
+
+for_zenon_iterate_spec_base < apply NNPP. intro zenon_G.
+apply zenon_G. zenon_intro zenon_Tx_a. apply NNPP. zenon_intro zenon_H4.
+assert (zenon_H5 : (~(Is_true (_p_S_equal (if (_p_Nat_equal _p_Nat_start _p_Nat_start) then _p_zero_zero else (_p_F_binary_binop zenon_Tx_a (abst_iterate zenon_Tx_a (_p_Nat_predecessor _p_Nat_start)))) _p_zero_zero)))).
+
+for_zenon_iterate_spec_base < 2 subgoals
+  
+  _p_Nat_T : Set
+  _p_S_T : Set
+  _p_Nat_lt : _p_Nat_T -> _p_Nat_T -> basics.bool__t
+  _p_Nat_predecessor : _p_Nat_T -> _p_Nat_T
+  _p_Nat_start : _p_Nat_T
+  _p_Nat_equal : _p_Nat_T -> _p_Nat_T -> basics.bool__t
+  _p_Nat_equal_reflexive : forall x : _p_Nat_T, Is_true (_p_Nat_equal x x)
+  _p_S_equal : _p_S_T -> _p_S_T -> basics.bool__t
+  _p_S_equal_reflexive : forall x : _p_S_T, Is_true (_p_S_equal x x)
+  _p_F_binary_binop : _p_S_T -> _p_S_T -> _p_S_T
+  _p_zero_zero : _p_S_T
+  abst_iterate := iterate _p_Nat_T _p_S_T _p_Nat_lt _p_Nat_predecessor
+                    _p_Nat_start _p_Nat_equal _p_F_binary_binop _p_zero_zero
+               : _p_S_T -> _p_Nat_T -> _p_S_T
+  zenon_G : ~
+            (forall x : _p_S_T,
+             Is_true (_p_S_equal (abst_iterate x _p_Nat_start) _p_zero_zero))
+  zenon_Tx_a : _p_S_T
+  zenon_H4 : ~
+             Is_true
+               (_p_S_equal (abst_iterate zenon_Tx_a _p_Nat_start)
+                  _p_zero_zero)
+  ============================
+   ~
+   Is_true
+     (_p_S_equal
+        (if _p_Nat_equal _p_Nat_start _p_Nat_start
+         then _p_zero_zero
+         else
+          _p_F_binary_binop zenon_Tx_a
+            (abst_iterate zenon_Tx_a (_p_Nat_predecessor _p_Nat_start)))
+        _p_zero_zero)
+
+subgoal 2 is:
+ False
+
+for_zenon_iterate_spec_base < unfold abst_iterate in zenon_H4.
+for_zenon_iterate_spec_base < unfold iterate in zenon_H4.
+for_zenon_iterate_spec_base < unfold Termination_iterate_namespace.Iteration__iterate in zenon_H4.
+
+for_zenon_iterate_spec_base < rewrite Termination_iterate_namespace.iterate_equation in zenon_H4.
+2 subgoals
+  
+  _p_Nat_T : Set
+  _p_S_T : Set
+  _p_Nat_lt : _p_Nat_T -> _p_Nat_T -> basics.bool__t
+  _p_Nat_predecessor : _p_Nat_T -> _p_Nat_T
+  _p_Nat_start : _p_Nat_T
+  _p_Nat_equal : _p_Nat_T -> _p_Nat_T -> basics.bool__t
+  _p_Nat_equal_reflexive : forall x : _p_Nat_T, Is_true (_p_Nat_equal x x)
+  _p_S_equal : _p_S_T -> _p_S_T -> basics.bool__t
+  _p_S_equal_reflexive : forall x : _p_S_T, Is_true (_p_S_equal x x)
+  _p_F_binary_binop : _p_S_T -> _p_S_T -> _p_S_T
+  _p_zero_zero : _p_S_T
+  abst_iterate := iterate _p_Nat_T _p_S_T _p_Nat_lt _p_Nat_predecessor
+                    _p_Nat_start _p_Nat_equal _p_F_binary_binop _p_zero_zero
+               : _p_S_T -> _p_Nat_T -> _p_S_T
+  zenon_G : ~
+            (forall x : _p_S_T,
+             Is_true (_p_S_equal (abst_iterate x _p_Nat_start) _p_zero_zero))
+  zenon_Tx_a : _p_S_T
+  zenon_H4 : ~
+             Is_true
+               (_p_S_equal
+                  (if _p_Nat_equal _p_Nat_start _p_Nat_start
+                   then _p_zero_zero
+                   else
+                    _p_F_binary_binop zenon_Tx_a
+                      (Termination_iterate_namespace.iterate _p_Nat_T _p_S_T
+                         _p_Nat_lt _p_Nat_predecessor _p_Nat_start
+                         _p_Nat_equal _p_F_binary_binop _p_zero_zero
+                         (__magic_order__ (_p_S_T * _p_Nat_T))
+                         (zenon_Tx_a, _p_Nat_predecessor _p_Nat_start)))
+                  _p_zero_zero)
+  ============================
+   ~
+   Is_true
+     (_p_S_equal
+        (if _p_Nat_equal _p_Nat_start _p_Nat_start
+         then _p_zero_zero
+         else
+          _p_F_binary_binop zenon_Tx_a
+            (abst_iterate zenon_Tx_a (_p_Nat_predecessor _p_Nat_start)))
+        _p_zero_zero)
+
+subgoal 2 is:
+ False
+
+for_zenon_iterate_spec_base < exact zenon_H4.
+for_zenon_iterate_spec_base < 
