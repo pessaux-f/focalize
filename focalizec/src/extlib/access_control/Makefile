@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.25 2009-02-26 10:29:50 habib Exp $
+# $Id: Makefile,v 1.26 2009-02-26 10:45:41 habib Exp $
 
 # Makefile for access control models
 
@@ -27,7 +27,7 @@ STDLIB_DIR = $(ROOT_DIR)/src/stdlib
 
 FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
 
-FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR) -stop-before-zenon
+FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR)
 
 #From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
@@ -124,4 +124,4 @@ install::
 
 
 clean::
-	$(RM) *.fo *.ml *.mli *.cm* *.zv *.v *.vo *.pfc *.glob *.fcd *.annot
+	$(RM) *.fo *.ml *.cm* *.zv *.v *.vo *.o *.pfc *.annot
