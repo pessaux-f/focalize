@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.8 2009-02-09 20:17:39 weis Exp $
+# $Id: Makefile,v 1.9 2009-02-26 13:53:46 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -32,16 +32,16 @@ HTMLC=htmlc -env focalizec.env
 
 # Prefix before regular names
 PACKAGE=focalizec
-PACKAGEDEP=focalizedep
+PACKAGE_DEP=focalizedep
 
 # The list of source files
-MAN_FILES=$(PACKAGE).man $(PACKAGEDEP).man
+MAN_FILES=$(PACKAGE).man $(PACKAGE_DEP).man
 
 ######## This part should automatically handle the generation of
 ######## object files
 
 # The list of object files
-MAN_OBJS=$(MAN_FILES:.man=.1)
+MAN_OBJS:=$(MAN_FILES:.man=.$(PROJECT_MAN_EXT))
 
 .PHONY: all doc visu clean docdir install
 
@@ -52,8 +52,8 @@ docdir: $(MAN_OBJS)
 	$(CP) $(MAN_OBJS) $(DOCDIR_DIR)/
 
 visu: $(MAN_OBJS)
-	nroff -man $(PACKAGE).1 | more
-	nroff -man $(PACKAGEDEP).1 | more
+	nroff -man $(PACKAGE).$(PROJECT_MAN_EXT) | more
+	nroff -man $(PACKAGE_DEP).$(PROJECT_MAN_EXT) | more
 
 clean::
 	$(RM) $(MAN_OBJS) *~
@@ -61,6 +61,15 @@ clean::
 
 distclean:: clean
 	$(RM) $(DOCDIR_DIR)
+
+install:
+	$(MKDIR) $(MAN_DIR) && \
+	$(CP) $(MAN_OBJS) $(MAN_DIR)/
+
+uninstall:
+	@for i in $(MAN_OBJS); do \
+	  $(RM) $(MAN_DIR)/$$i; \
+	done
 
 depend::
 

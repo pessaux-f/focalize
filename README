@@ -1,0 +1,37 @@
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: README,v 1.2 2009-02-26 13:53:46 pessaux Exp $
+
+The FoCaLize project attempts to provide a programming environment in
+which one can design and develop certified programs.
+
+The environment is based on a functional language with some
+object-oriented features. That way, programmers can write the formal
+specifications and the proofs of their code within the same
+setting. In FoCaLize, the proof development is computer  assisted via
+the Zenon proof finder; Zenon dramatically leverage the aamount of
+details to include in the proofs. In the end, all the proofs are
+formally machine checked using the trusty Coq proof checker. 
+
+Thanks to its inheritance and refinement mechanisms, FoCaLize
+encourages incremental refinements of the specification until
+efficient executable code is obtained (via a translation to Objective
+Caml).
+ 
+As a real sized testbed, FoCaLize features a library for mathematical
+structures, up to multivariate polynomial rings; this algebraic
+infrastructure is equipped with complex algorithms that perform
+on par with the best CAS in existence. 

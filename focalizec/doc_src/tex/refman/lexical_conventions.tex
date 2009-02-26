@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.12 2009-01-28 18:10:20 weis Exp $
+% $Id: lexical_conventions.tex,v 1.13 2009-02-26 13:53:46 pessaux Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -116,8 +116,8 @@ whereas "my Paris is green" is considered a nonsense. This is simply because
 "ball" is a regular noun and "Paris" is a name. The word "ball" as the right
 lexical classification in the phrase, but "Paris" has not. This is also clear
 that you can replace "ball" by another ordinary noun and get something
-meaningful: "the table is green"; the same nonsense arises as well if you
-replace "Paris" by another name: "Kennedy is green".
+meaningful: "my table is green"; the same nonsense arises as well if you
+replace "Paris" by another name: "my Kennedy is green".
 
 Natural languages are far more complicated than computer languages, but
 {\focalize} uses the same kind of tricks: the ``look'' of words helps a lot to
@@ -128,18 +128,18 @@ understand what the words are designating and how they can be used.
 {\focal} distinguishes 4 concepts for each name:
 
 \begin{citemize}
-\item the {\em fixity}: assigns the place where an identifier must be written,
-\item the {\em precedence}: decides the order of operations when
+\item the {\em fixity} assigns the place where an identifier must be written,
+\item the {\em precedence} decides the order of operations when
   identifiers are combined together,
-\item the {\em categorisation}: fixes which concept the identifier designates.
-\item the {\em nature} of a name can be symbolic of alphanumeric.
+\item the {\em categorisation} fixes which concept the identifier designates.
+\item the {\em nature} of a name can either be symbolic or alphanumeric.
 \end{citemize}
 
-Those concepts are compositional: these concepts are independent form one
-another. Put is another way: for any fixity, precedence, category and nature,
-there exist an identifier with this exact properties.
+Those concepts are compositional, i.e. all these concepts are independent
+from one another. Put is another way: for any fixity, precedence, category and nature,
+there exist identifiers with this exact properties.
 
-We explain those concepts below.
+We further explain those concepts below.
 
 \subsubsection{Fixity of identifiers}
 \index{fixity of identifiers}
@@ -148,11 +148,15 @@ We explain those concepts below.
 
 The fixity of an identifier answers to the question ``where this identifier
 must be written ?''.
+
 \begin{citemize}
 \item a {\em prefix} is written {\em before} its argument, as $sin$ in
  $sin\; x$ or $-$ in $- y$,
 \item an {\em infix} is written {\em between} its arguments, as $+$ in
  $x\; +\; y$ or $mod$ in $x\; mod \;3$.
+\item a {\em mixfix} is written {\em among} its arguments, as
+  $if\; \ldots then\; \ldots else\; \ldots$ in
+  $if\ c\; then\; 1\; else\; 2 $.
 \end{citemize}
 
 In {\focal}, as in maths, ordinary identifiers are always prefix and binary operators are
@@ -161,8 +165,8 @@ always infix.
 \subsubsection{Precedence of identifiers}
 \index{precedence of identifiers}
 
-The precedence rules out where implicit parentheses should be written in a
-complex combination of symbols. For instance, according to usual mathematical
+The precedence rules out where implicit parentheses take place in a
+complex combination of symbols. For instance, according to the usual mathematical
 conventions:
 \begin{citemize}
 \item $1\; +\; 2\; *\; 3$  means $1\; +\; (2\; *\; 3)$ hence $7$,
@@ -173,15 +177,15 @@ conventions:
       nor $2\; *\; (3\; ^(4\; +\; 5))$ which is $39366$.
 \end{citemize}
 
-In {\focal}, all the binary operators have the precedence they have in maths.
+In {\focal}, all the binary infix operators have the precedence they have in maths.
 
 \subsubsection{Categorization of identifiers}
 
 \index{category of identifiers}
-The category of an identifier answers to the question is this identifier a
-``possible name for this kind of concept'' in the language.
-Very often, this is more strict and the category exactly states which concept
-must attach to the identifier.
+The category of an identifier answers to the question ``is this identifier a
+possible name for this kind of concept ?''.
+In programming languages category are often strict, meaning that the category
+exactly states which concept attaches to the identifier.
 
 For {\focal} these categories are
 \begin{citemize}
@@ -288,13 +292,13 @@ infix operators and {\tt $\sim$+zero} will be a prefix one.
 \index{defining an infix operator}
 \index{defining a prefix operator}
 
-The notion of infix/prefix operator does not mean that
-{\focal} defines all these operators: it means that the programmer
-may freely define and use them as ordinary
-prefix/infix operators instead of only writing prefix function names and regular function
-application. For instance, if you do not like the {\focal} predefined \verb"^"
-operator to catenate strings, you can define a new infix synonym for \verb"^",
-say {tt ++}, using:
+The notion of infix/prefix operator does not mean that {\focal} defines all
+these operators: it means that the programmer may freely define and use them
+as ordinary prefix/infix operators instead of only writing prefix function
+names and regular function application. For instance, if you do not like the
+{\focal} predefined \verb"^" operator to catenate strings, you can define your
+own infix synonym for \verb"^", say {tt ++}, using:
+
 {\scriptsize
 \begin{lstlisting}
 let ( ++ ) (s1, s2) = s1 ^ s2 ;
@@ -324,7 +328,7 @@ Since you can only define prefix identifiers in {\focal}, you must use the
 prefix form notation to define an infix or prefix operator.
 
 When a prefix or infix operator has been defined, it is still possible
-to use it as a regular identifier using the prefix form notation.
+to use it as a regular identifier using its prefix form notation.
 For instance, you can use the prefix form of operator {\tt ++}
 to apply it in a prefix position as a simple regular function (with a
 strange name admittedly!):
@@ -362,7 +366,7 @@ let ( =pred ) (x, y) = ... ;
 
 {\bf Attention} : since a comma can start an infix symbol, be careful
 when using commas to add a space after each comma to prevent confusion.
-In particular when using commas to separate tuple components, always type
+In particular, when using commas to separate tuple components, always type
 a space after each comma. For instance, if you write {\tt (1,n)}
 then the lexical analyser finds only two words: the integer {\tt 1} as
 desired, then the infix operator {\tt ,n} which is certainly not the
@@ -388,7 +392,8 @@ spaces inside or to extend the notion of operator identifiers.
     characters, the delimited identifiers can have spaces. For example:
     {\tt ``equal is reflexive''}, {\tt ``fermat conjecture''}.
   \item {\bf Delimited symbolic identifiers}.
-    They are delimited by the same characters and may contain symbolic characters.
+    They are delimited by the same delimitor characters and contain
+    symbolic characters.
 \end{itemize}
 
 The first meaningful character at the beginning of a delimited
@@ -441,12 +446,12 @@ i.e. without a base prefix, integers are in decimal. For instance:
 integers in other bases by preceding the digits by the following
 prefixes:
 \begin{itemize}
-  \item {\bf Binary}: base 2. Prefix {\tt 0b} or {\tt 0B}.
-    Digits: [0-1].
-  \item {\bf Octal}: base 8. Prefix {\tt 0o} or {\tt 00}.
-    Digits: [0-7].
-  \item {\bf Hexadecimal}: base 16. Prefix {\tt 0x} or {\tt 0X}.
-    Digits: [0-9] [A-F] [a-F]
+  \item {\bf Binary}: base 2. Prefix is {\tt 0b} or {\tt 0B}.
+    Digits are [0-1].
+  \item {\bf Octal}: base 8. Prefix is {\tt 0o} or {\tt 00}.
+    Digits are [0-7].
+  \item {\bf Hexadecimal}: base 16. Prefix is {\tt 0x} or {\tt 0X}.
+    Digits are [0-9] [A-F] [a-f].
 \end{itemize}
 Here are various examples of integers in various bases:
 {\tt -0x1Ff}, {\tt 0B01001}, {\tt +Oo347}.
@@ -560,7 +565,7 @@ then by a non-empty sequence of digits. {\focal} allows floats to be
 written in decimal or in hexadecimal. In the first case, digits are
 [0-9]. Example: {\tt 0.}, {\tt -0.1}, {\tt 1.e-10}, {\tt +5E7}.
 In the second case, they are [0-9 a-f A-F] and the number must be
-prefixed by ``0x'' or ``0X''. Example {\tt 0x-F2.E4}, {\tt 0X4.3A},
+prefixed by ``0x'' or ``0X''. Example {\tt 0xF2.E4}, {\tt 0X4.3A},
 {\tt Ox5a.a3eef}, {\tt Ox5a.a3e-ef}.
 
 %%%%%%%%%%%

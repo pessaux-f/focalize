@@ -13,13 +13,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.27 2009-02-10 13:23:44 rr Exp $
+# $Id: Makefile.common,v 1.28 2009-02-26 13:53:46 pessaux Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
 .PHONY: all byt bin
 .PHONY: clean unconfigure distclean install uninstall
-.PHONY: doc docdir depend tests lib
+.PHONY: doc docdir odoc depend tests lib
 
 all:: byt bin
 
@@ -31,6 +31,8 @@ doc docdir:: $(BYT_OBJS)
 
 odoc:: $(BYT_OBJS)
 	$(MKDIR) odoc
+	echo "caml_doc_compiler is $(CAML_DOC_COMPILER)" >&2 && \
+	echo "caml_doc is $(CAML_DOC)" >&2 && \
 	$(CAML_DOC) $(CAML_INCLUDES) -html -d odoc $(BYT_OBJS:.cmo=.ml)
 
 clean::
@@ -73,6 +75,7 @@ tests::
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .fcd .zv .v .vo
 .SUFFIXES: .tex .dvi .ps .pdf .idx .xml
+.SUFFIXES: .shtml .html .htm
 
 .ml.cmo:
 	$(CAML_BYT) -c $<
@@ -115,5 +118,10 @@ tests::
 	$(DVIPS) $<
 .dvi.pdf:
 	$(DVIPDF) $<
+
+.shtml.html:
+	$(HTMLC) -s $<
+.html.htm:
+	$(HTMLC) -c $<
 
 include .depend

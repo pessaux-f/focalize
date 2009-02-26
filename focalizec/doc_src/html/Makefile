@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.3 2009-01-30 10:55:50 weis Exp $
+# $Id: Makefile,v 1.4 2009-02-26 13:53:46 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -61,6 +61,8 @@ docdir: $(HTML_OBJS)
 	if ! test -z $(HTML_OBJS); then \
 	  $(CP) $(HTML_OBJS) $(DOCDIR_DIR)/; \
 	fi
+
+install:
 
 depend::
 

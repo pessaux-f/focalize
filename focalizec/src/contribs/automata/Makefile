@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2009-02-12 16:00:40 ayrault Exp $
+# $Id: Makefile,v 1.4 2009-02-26 13:53:46 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -43,36 +43,27 @@ CAML_COMP_FLAGS =  -dtypes -I $(STDLIB_DIR)
 COQ_INCLUDES = -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 
 FOCALIZE_SRC = \
-	gen_def.fcl \
-	request.fcl \
-	switch_recovery_normal_automata.fcl \
-	switch_recovery_reverse_automata.fcl \
-	switch_recovery_automata.fcl \
-	switch_automata.fcl \
-	main.fcl
-
-FOCALIZE_SRC_UNSAFE = 
+  gen_def.fcl\
+  request.fcl\
+  switch_recovery_normal_automata.fcl\
+  switch_recovery_reverse_automata.fcl\
+  switch_recovery_automata.fcl\
+  switch_automata.fcl\
+  main.fcl
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
-FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
 
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
-FOCALIZE_MLS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.ml)
 
 FOCALIZE_BYT_OBJS = $(FOCALIZE_MLS:.ml=.cmo)
-FOCALIZE_BYT_OBJS_UNSAFE = $(FOCALIZE_MLS_UNSAFE:.ml=.cmo)
 
 FOCALIZE_BIN_OBJS = $(FOCALIZE_BYT_OBJS:.cmo=.cmx)
-FOCALIZE_BIN_OBJS_UNSAFE = $(FOCALIZE_BYT_OBJS_UNSAFE:.cmo=.cmx)
 
 FOCALIZE_ZVS = $(FOCALIZE_SRC:.fcl=.zv)
-FOCALIZE_ZVS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.zv)
 
 FOCALIZE_VS = $(FOCALIZE_ZVS:.zv=.v)
-FOCALIZE_VS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.v)
 
 FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
-FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
 EXTERNAL_BYT_OBJS =
 
@@ -99,64 +90,48 @@ include $(ROOT_DIR)/Makefile.common
 lib: all
 
 byt:: \
-      $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
-      $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
-      $(FOCALIZE_ZVS)\
-      $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
-      $(FOCALIZE_VS) $(FOCALIZE_VOS)
+  $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
+  $(FOCALIZE_MLS) $(FOCALIZE_ZVS)\
+  $(FOCALIZE_BYT_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 bin:: \
-      $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
-      $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
-      $(FOCALIZE_ZVS)\
-      $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
-      $(FOCALIZE_VS) $(FOCALIZE_VOS)
+  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
+  $(FOCALIZE_MLS) $(FOCALIZE_ZVS)\
+  $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install::
-	$(MKDIR) $(LIB_INSTALL_DIR)
-	@if [ "$(FOCALIZE_FOS)" != "" ] ; then \
-	  echo "Installing (FoCaLize) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then \
-	  echo "Installing (FoCaLize) compiled non-certified libs." ; \
-	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_VOS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ ; \
+	@$(MKDIR) $(LIB_INSTALL_DIR) && \
+	if [ "$(FOCALIZE_FOS)" != "" ] ; then \
+	  echo "Installing (FoCaLize) compiled certified libs." && \
+	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/ \
+	fi && \
+	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ \
+	fi && \
+	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/ \
+	fi && \
+	if [ "$(FOCALIZE_VOS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/ \
+	fi && \
+	if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/ \
+	fi && \
+	if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/ \
+	fi && \
+	if [ "$(EXTERNAL_VOS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ \
 	fi
 
 
 clean::
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
-	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
-	$(RM) $(FOCALIZE_BYT_OBJS_UNSAFE) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOCALIZE_VOS_UNSAFE)
-	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
-	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
-	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
-	$(RM) big_integers.o parse_poly.o polys_abstract.o
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) && \
+	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) && \
+	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) && \
+	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml && \
+	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm* && \
+	$(RM) big_integers.o parse_poly.o polys_abstract.o && \
 	$(RM) *.annot *.glob
 
 

@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.22 2008-12-15 16:41:46 pessaux Exp $
+# $Id: Makefile,v 1.23 2009-02-26 13:53:46 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -44,7 +44,7 @@ all:: $(CHECK_FILE) ok_all ko_all
 
 ok_all: $(OK_TEST_FILES)
 	# Compile from Focalize to OCaml.
-	for i in $(OK_TEST_FILES); do \
+	@for i in $(OK_TEST_FILES); do \
 	  echo "Focalizing $$i"; \
 	  $(CHECK_FILE) -I ../lib $$i; \
 	done; \
@@ -64,7 +64,7 @@ ok_all: $(OK_TEST_FILES)
 
 ko_all: $(KO_TEST_FILES)
 	# Compile from Focalize to OCaml.
-	for i in $(KO_TEST_FILES); do \
+	@for i in $(KO_TEST_FILES); do \
 	  echo "Focalizing $$i"; \
 	  $(CHECK_FILE) -I ../lib $$i; \
 	done

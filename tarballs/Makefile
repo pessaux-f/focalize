@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.13 2009-01-16 14:20:32 weis Exp $
+# $Id: Makefile,v 1.14 2009-02-26 13:53:46 pessaux Exp $
 
 ROOT_DIR = ..
 
@@ -22,7 +22,7 @@ include $(ROOT_DIR)/Makefile.config
 all:: $(EXTERNAL_TOOLS_DIRS)
 
 $(ABSOLUTE_CAML_SRC_DIR):
-	for i in $(CAML_TAR_BALLS); do \
+	@for i in $(CAML_TAR_BALLS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $(ROOT_DIR) && $(TARX) $(TAR_BALLS_DIR_NAME)/$$i); \
 	  err=$$?; \
@@ -31,7 +31,7 @@ $(ABSOLUTE_CAML_SRC_DIR):
 	done
 
 $(ABSOLUTE_CAMLP5_SRC_DIR):
-	for i in $(CAMLP5_TAR_BALLS); do \
+	@for i in $(CAMLP5_TAR_BALLS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $(ROOT_DIR) && $(TARX) $(TAR_BALLS_DIR_NAME)/$$i); \
 	  err=$$?; \
@@ -40,7 +40,7 @@ $(ABSOLUTE_CAMLP5_SRC_DIR):
 	done
 
 $(ABSOLUTE_COQ_SRC_DIR):
-	for i in $(COQ_TAR_BALLS); do \
+	@for i in $(COQ_TAR_BALLS); do \
 	  ($(CD) $(ROOT_DIR) && $(TARX) $(TAR_BALLS_DIR_NAME)/$$i); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \

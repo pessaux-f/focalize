@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.35 2009-02-09 10:57:18 pessaux Exp $
+# $Id: Makefile,v 1.36 2009-02-26 13:53:46 pessaux Exp $
 
 ROOT_DIR = .
 
@@ -62,21 +62,24 @@ odoc:: lib
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
-
 clean doc docdir depend::
 	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..." >&2 && \
-	  ($(CD) $$i && $(MAKE) $@); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" >&2 && \
-	  case $$err in 0);; *) exit $$err;; esac; \
+	  if test -d $$i; then \
+	    echo "--> $$i ..." >&2 && \
+	    ($(CD) $$i && $(MAKE) $@); \
+	    err=$$?; \
+	    echo "<-- $$i [$$err]" >&2 && \
+	    case $$err in 0);; *) exit $$err;; esac; \
+	  fi \
         done
 
 install::
 	@for i in $(COMPILER_INSTALL_DIRS) $(DOC_DIRS); do \
-	  echo "--> $$i ..." >&2 && \
-	  ($(CD) $$i && $(MAKE) $@); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" >&2 && \
-	  case $$err in 0);; *) exit $$err;; esac; \
+	  if test -d $$i; then \
+	    echo "--> $$i ..." >&2 && \
+	    ($(CD) $$i && $(MAKE) $@); \
+	    err=$$?; \
+	    echo "<-- $$i [$$err]" >&2 && \
+	    case $$err in 0);; *) exit $$err;; esac; \
+	  fi \
         done

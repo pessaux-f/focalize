@@ -5,6 +5,7 @@
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
+#                                                                      #
 #                               LIP6  --  INRIA Rocquencourt           #
 #                                                                      #
 #  Copyright 2008 LIP6 and INRIA                                       #
@@ -12,31 +13,33 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.81 2009-02-23 09:10:51 pessaux Exp $
+# $Id: Makefile,v 1.82 2009-02-26 13:53:46 pessaux Exp $
+
+# Makefile for the FoCaLize standard library
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
 
-FOCALIZE_COMPILER = ../toplevel/focalizec
+LIB_INSTALL_DIR=$(LIB_DIR)
+
+FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS = -no-stdlib-path
-
-LIB_INSTALL_DIR = $(LIB_DIR)
 
 # From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 # COQ_INCLUDES = -I $(ZENON_LIB_DIR)
 
-FOCALIZE_SRC = basics.fcl \
+FOCALIZE_SRC = basics.fcl\
 	sets.fcl\
-	products.fcl \
+	products.fcl\
 	lattices.fcl\
-	orders.fcl \
-	strict_orders.fcl \
-	orders_and_lattices.fcl \
-	sets_orders.fcl \
-	wellfounded.fcl \
-	sums.fcl \
+	orders.fcl\
+	strict_orders.fcl\
+	orders_and_lattices.fcl\
+	sets_orders.fcl\
+	wellfounded.fcl\
+	sums.fcl\
 	quotients.fcl
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
@@ -61,7 +64,7 @@ EXTERNAL_CMIS = $(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 
 EXTERNAL_VOS =\
-	coq_builtins.vo \
+	coq_builtins.vo\
 	wellfounded_externals.vo
 #	weak_structures_externals.vo
 #	random_foc_externals.vo array_foc_externals.vo
@@ -85,50 +88,49 @@ bin:: \
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install::
-	$(MKDIR) $(LIB_INSTALL_DIR)
-	@if [ "$(FOCALIZE_FOS)" != "" ] ; then \
-	  echo "Installing (FoCaLize) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_CMIS)" != "" ] ; then \
-	  echo "Installing (OCaml interface) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
-	  echo "Installing (OCaml bytecode) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
-	  echo "Installing (OCaml native) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
-	  echo "Installing (Coq) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_CMIS)" != "" ] ; then \
-	  echo "Installing OCaml interfaces." ; \
-	  $(CP) $(EXTERNAL_CMIS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
-	  echo "Installing (OCaml bytecode) external stubs." ; \
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
-	  echo "Installing (OCaml native) external stubs." ; \
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_VOS)" != "" ] ; then \
-	  echo "Installing (Coq) external stubs." ; \
-	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ ; \
+	@$(MKDIR) $(LIB_INSTALL_DIR) && \
+	if [ "$(FOCALIZE_FOS)" != "" ]; then \
+	  echo "Installing (FoCaLize) compiled certified libs." && \
+	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_CMIS)" != "" ]; then \
+	  echo "Installing (OCaml interface) compiled certified libs." && \
+	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_BYT_OBJS)" != "" ]; then \
+	  echo "Installing (OCaml bytecode) compiled certified libs." && \
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_BIN_OBJS)" != "" ]; then \
+	  echo "Installing (OCaml native) compiled certified libs." && \
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_VOS)" != "" ]; then \
+	  echo "Installing (Coq) compiled certified libs." && \
+	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(EXTERNAL_CMIS)" != "" ] ; then \
+	  echo "Installing OCaml interfaces." && \
+	  $(CP) $(EXTERNAL_CMIS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(EXTERNAL_BYT_OBJS)" != "" ]; then \
+	  echo "Installing (OCaml bytecode) external stubs." && \
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(EXTERNAL_BIN_OBJS)" != "" ]; then \
+	  echo "Installing (OCaml native) external stubs." && \
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(EXTERNAL_VOS)" != "" ]; then \
+	  echo "Installing (Coq) external stubs." && \
+	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/; \
 	fi
 
 clean::
-	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
-	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
+	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) && \
+	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) && \
+	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) && \
 	$(RM) $(FOCALIZE_CMIS) $(EXTERNAL_CMIS) *.annot *.glob *.fcd
-
 
 depend::
 

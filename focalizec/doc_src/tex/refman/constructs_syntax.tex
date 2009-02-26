@@ -1,6 +1,6 @@
-% $Id: constructs_syntax.tex,v 1.36 2009-02-06 15:28:27 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.37 2009-02-26 13:53:46 pessaux Exp $
 
- 
+
 \section{Language constructs and syntax}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -22,7 +22,7 @@ directive or by qualifying the type name as described in section
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Type constructors}
-A {\bf type constructor} is, roughly speaking, a type name. 
+A {\bf type constructor} is, roughly speaking, a type name.
 
 \focal\ provides the basic built-in
 types (constructors):
@@ -38,7 +38,7 @@ types (constructors):
 \end{itemize}
 
 New type constructors are introduced by
-{\bf type definitions}. 
+{\bf type definitions}.
 Types constructors can be parametrised by  {\bf type expressions}
 separated by commas and between parentheses.
 
@@ -65,7 +65,7 @@ data-types.
 \end{syntax}
 \vspace{0.2cm}
 
-A type expression can be a type constructor. 
+A type expression can be a type constructor.
 
 A type expression can denote the representation of a species or a
 collection by using their name, thus a capitalized name. The special
@@ -101,7 +101,7 @@ changing their semantics.
 \index{type!definition}
 \label{type-definition}
 A type {\bf definition} introduces  a new type
- constructor (the name of the type), which becomes available to build 
+ constructor (the name of the type), which becomes available to build
 new type expressions. Hence, defining a type is the
 way to give a name to a new type structure. \focal\ proposes 3 kinds
 of type definitions: aliases, sum types and record types.
@@ -151,7 +151,7 @@ aliases with and in any type expression or type definition.
 
 %  For
 % instance:
-% Je ne vois pas ce que cet exemple illustre. Th. 
+% Je ne vois pas ce que cet exemple illustre. Th.
 % {\scriptsize
 % \begin{lstlisting}
 % type t1 =
@@ -234,7 +234,7 @@ written on the card. Some values of type {\tt card} are: {\tt King},
 
 Any type
 expression, even recursive, can be used as a  parameter of value
-contructors\index{type!recursive}. 
+contructors\index{type!recursive}.
 For instance, the type of lists of boolean $\times$ integer pairs
 could be defined like:
 {\scriptsize
@@ -420,7 +420,7 @@ the expected argument in the function's prototype.
 % contains a formal collection parameter (thus an identifier which
 % ``smells'' like a variable  but which indeed is not a
 % variable), then in  $t_1$ this formal parameter can be replaced by an
-% effective one. 
+% effective one.
 
 
 
@@ -571,13 +571,13 @@ record\_field\_pattern & ::= &
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Literal expressions}
-\index{expression!literal} \index{expression!constant} 
+\index{expression!literal} \index{expression!constant}
 
 The literal
 expressions  of type integer, string, character,
 float and boolean) are evaluated into the constant represented by the
 literal. The expression {\tt 25} denotes the value 25 of type
-{\tt int}. 
+{\tt int}.
 
 
 
@@ -853,7 +853,7 @@ assignments.
 
 In a {\tt let-in} binding construct, an identifier is given a value
 once and for all: it is impossible to change its  value, once it
-has been bound. 
+has been bound.
 Each new definition, binding an already bound identifier will just hide the
 old definition. For instance:
 {\scriptsize
@@ -935,12 +935,12 @@ consequence, the identifiers introduced by a {\tt let ... and }
 cannot be used in the right members of this construction (in the {\tt
   exp\_i}). Do not confuse this construct with nested {\tt let-in} as
 the followig one, where {\tt exp\_2} can contain {\tt f} and {\tt
-  exp\_3} can contain {\tt f} and {\tt g}. 
+  exp\_3} can contain {\tt f} and {\tt g}.
 
 {\scriptsize
-\begin{lstlisting} 
+\begin{lstlisting}
 let f = exp_1 in
- g  = exp_2 in 
+ g  = exp_2 in
  h = exp_3 in exp
 \end{lstlisting}
 }
@@ -948,7 +948,7 @@ let f = exp_1 in
 Mutually recursive functions need to know each other because their
 bodies call these other functions and their definition require a
 non-nested evaluation of each function.  In this case, the keyword
-{\tt let} must be followed by the keyword {\tt rec}. 
+{\tt let} must be followed by the keyword {\tt rec}.
 
 {\scriptsize
 \begin{lstlisting}
@@ -979,13 +979,13 @@ expressions, i.e. a kind of functions returning a logical proposition.
 
 Suppose we want,  for a certain value of $x$ and $y$, to use the fact
 ``$x<y$ and $x+y < 10$'' (which holds or not) to build more complex
-logical expressions. 
+logical expressions.
 
 A first attempt is to use the logical expression $x < y /\setminus
 x+y<10$ where $x$ and $y$ are considered as fresh (free)
 variables. But there is no way in the language of properties to
 instantiate $x$ and $y$ by different integer values in order to obtain
-a proposition (regardless of its truth value). 
+a proposition (regardless of its truth value).
 
 Another attempt is to introduce a property bound to the proposition
 $\forall x, y : {\tt int}, x < y /\setminus x+y<10$. It does not fit
@@ -1009,7 +1009,7 @@ To allow functional bindings in logical expressions \focal\ provide
 the {\tt logical let} construct. It serves to introduce a
 parameterised logical expression,  which can be applied to effective
 arguments to obtain a logical proposition.  Our example would be
-expressed by: 
+expressed by:
 {\scriptsize
 \begin{lstlisting}
 use "basics" ;;
@@ -1057,7 +1057,7 @@ used to define associativity, commutativity, \ldots
 A conditional expression has the form:
 
 {\tt if} $exp_1$ {\tt then}
-$exp_2$ {\tt else} $exp_3$ 
+$exp_2$ {\tt else} $exp_3$
 
 Its evaluation starts by the evaluation of the $exp_1$ expression
 which must be of type boolean. If its value is $true$ then the result
@@ -1089,7 +1089,7 @@ otherwise.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Match expression}
-\index{match} \index{expression!match} \index{pattern matching} 
+\index{match} \index{expression!match} \index{pattern matching}
 
 The {\tt match-with} construct is a generalised conditional construct
 with pattern-matching. By ``generalised'', we mean that unlike the
@@ -1156,7 +1156,7 @@ from value constructors, variables, constants,{\tt \_}, roughly
 speaking, a value matches a pattern if this pattern can be seen as a
 prefix of this value. Then, the variables of the pattern get bound to
 the parts of the discriminating expression that are ``at the same
-place'' than those variables. For example: 
+place'' than those variables. For example:
 
 {\scriptsize
 \begin{lstlisting}
@@ -1209,7 +1209,7 @@ let x =
 \end{lstlisting}
 }
 This example shows different cases following the structure of the type
-{\tt t}. Note the use of the ``catch-all'' pattern 
+{\tt t}. Note the use of the ``catch-all'' pattern
 inside  patterns. In fact, the ``catch-all'' pattern acts like
 a variable  unused in the rightmost part of the
 case. It is however preferable to use ``{\tt \_}'' instead of a
@@ -1310,7 +1310,7 @@ usual a record
 expression follows the same structure, replacing the type expressions
 of the definition by values of these types. For instance, assuming the
 given record type definition, the following example shows a possible
-record value: 
+record value:
 {\scriptsize
 \begin{lstlisting}
 type identity = {
@@ -1426,7 +1426,7 @@ construct except the fact they do not have a ``{\tt in}'' expression.
 The idea is that the ``{\tt in}'' expression is implicitly the
 remaining of the species. Properties and theorems are respectively
 introduced by the keywords {\tt property} and {\tt theorem} and may
- contain expressions. The  section 
+ contain expressions. The  section
 \ref{properties-theorems-proofs}  is dedicated to their detailed explanation.
 {\scriptsize
 \begin{lstlisting}
@@ -1668,7 +1668,7 @@ species S =
   representation = int;
   let equal = (=Ox);
   theorem symetry : all x y in Self, Self!equal (x, y) -> equal (y, x)
-  proof : assumed 
+  proof : assumed
     {*The equality of machine integers is admitted to be symetric  *} ;
   ...
 end ;;
@@ -1704,7 +1704,7 @@ using this keyword may help.
         machine word (often $2^{32}$ or $2^{64}$ bits nowadays), the
         mathematical property $\forall x \in \mbox{\cal{N}}, x + 1 >
         x$ does not hold anymore.
-%%% I suppose that readers know about overflow. Th. 
+%%% I suppose that readers know about overflow. Th.
 %  In effect, taking a 32 bits-long
 %         machine word, taking $x = 2^{32} = 4294967296$, the binary
 %         configuration of $x$ is all 32 bits equal to 1. Then adding 1
@@ -1741,10 +1741,10 @@ using this keyword may help.
         developer is able to guaranty that the integer computations
         never overflow. If he cannot guaranty non-overflow, then this
         is a true problem of specification or design which should be
-        re-considered. 
+        re-considered.
     \end{itemize}
 
-In any case,  we advice the reader to use 
+In any case,  we advice the reader to use
 the test tool (or another mean) to comfort the confidence in the
 statement of the theorem.
 
@@ -1780,15 +1780,15 @@ statement of the theorem.
 }
 
   \item {\bf Write a \coq\ script} This way is the most difficult
-     since it means to directly write \coq\ code. It 
+     since it means to directly write \coq\ code. It
     requires the understanding of both \coq\ and the mapping the
     \focal\ compiler does to generate \coq\ code from \focal\ source
-    code. The section \ref{focal-coq-mapping} describes 
+    code. The section \ref{focal-coq-mapping} describes
      how \focal\ definitions are mapped onto
-    \coq\ names. 
+    \coq\ names.
 
 The \coq\ script is introduced by the keywords
-    {\tt coq proof} and surrounded by {\tt \{*} and {\tt *\}}. 
+    {\tt coq proof} and surrounded by {\tt \{*} and {\tt *\}}.
 % But,
 %     anyway, such a way to make proofs require some skills in \coq\ and we try
 %     as far as possible to provide, in the \focal\ framework, enough
@@ -1854,7 +1854,7 @@ particular point will be addressed with more details in chapter
 \ref{making-proofs}.
 
 Notice that theorems can be hosted in a species or can be
-toplevel-theorems. 
+toplevel-theorems.
 Unlike theorems, properties cannot appear at
 toplevel since there is no way to inherit at toplevel, hence no
 way to give a proof after the property definition in a ``parent''.

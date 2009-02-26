@@ -10,13 +10,14 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.18 2009-02-16 14:52:10 doligez Exp $
+# $Id: Makefile,v 1.19 2009-02-26 13:53:46 pessaux Exp $
 
 ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-TEX_FILES = macros.tex basic_concepts.tex lexical_conventions.tex motivations.tex \
+TEX_FILES = macros.tex basic_concepts.tex lexical_conventions.tex \
+	motivations.tex \
 	proofs.tex building_species.tex macros.tex output.tex refman.tex \
 	compiler_opts.tex more_on_meths.tex pres_requir.tex \
 	constructs_syntax.tex bibli.bib
@@ -32,6 +33,7 @@ IMAGEN = imagen -extra "ppmquant 255"
 include $(ROOT_DIR)/Makefile.common
 
 DOCDIR_DIR=$(DOCUMENTATION_DIR)/tex/refman
+DOC_TGT_DIR:=$(DOC_DIR)/tex/refman
 
 all doc docdir:: $(DOC_OBJS)
 
@@ -55,7 +57,17 @@ refman.ps: refman.dvi
 	dvips refman.dvi
 
 clean::
-	$(RM) *.aux *.log *.pdf refman.ps *.dvi *.idx *.ilg *.ind *.toc
+	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc
+	$(RM) $(DOC_OBJS)
 
 distclean:: clean
 	$(RM) $(DOCDIR_DIR)
+
+install:
+	$(MKDIR) $(DOC_TGT_DIR) && \
+	$(CP) $(DOC_OBJS) $(DOC_TGT_DIR)
+
+uninstall:
+	for i in $(DOC_OBJS); do \
+	  $(RM) $(DOC_TGT_DIR)/$$i; \
+	done

@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.36 2009-02-12 15:52:33 pessaux Exp $
+# $Id: Makefile,v 1.37 2009-02-26 13:53:46 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -37,23 +37,23 @@ CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
 # ZENON_LIB_DIR
 COQ_INCLUDES = -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 
-FOCALIZE_SRC = \
-	constants.fcl \
-	additive_law.fcl \
-	multiplicative_law.fcl \
-	weak_structures.fcl \
-	rings_fields.fcl \
-	randoms.fcl \
-	integers.fcl \
-	arrays.fcl \
-	product_structures.fcl \
+FOCALIZE_SRC =\
+	constants.fcl\
+	additive_law.fcl\
+	multiplicative_law.fcl\
+	weak_structures.fcl\
+	rings_fields.fcl\
+	randoms.fcl\
+	integers.fcl\
+	arrays.fcl\
+	product_structures.fcl\
 	quotient_structures.fcl
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
-FOCALIZE_SRC_UNSAFE = \
-	iterators.fcl \
-	small_integers.fcl \
+FOCALIZE_SRC_UNSAFE =\
+	iterators.fcl\
+	small_integers.fcl\
 	big_integers.fcl
 #	parse_poly.fcl polys_abstract.fcl polys_concrete finite_fields fractions finite_factorize
 
@@ -82,14 +82,14 @@ FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
 FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
 EXTERNAL_BYT_OBJS =\
-	weak_structures_externals.cmo \
+	weak_structures_externals.cmo\
 	randoms_externals.cmo
 EXTERNAL_CMIS =$(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 
 EXTERNAL_VOS =\
-	weak_structures_externals.vo \
+	weak_structures_externals.vo\
 	randoms_externals.vo arrays_externals.vo
 
 include $(ROOT_DIR)/Makefile.common
@@ -111,50 +111,49 @@ bin:: \
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install::
-	$(MKDIR) $(LIB_INSTALL_DIR)
-	@if [ "$(FOCALIZE_FOS)" != "" ] ; then \
-	  echo "Installing (FoCaLize) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then \
-	  echo "Installing (FoCaLize) compiled non-certified libs." ; \
-	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
-	fi
-
-	@if [ "$(FOCALIZE_CMIS)" != "" ] ; then \
-	  echo "Installing (Ocaml interface) compiled certified libs." ; \
-	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_CMIS_UNSAFE)" != "" ] ; then \
-	  echo "Installing (Ocaml interface) compiled non-certified libs." ; \
-	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(FOCALIZE_VOS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_CMIS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_CMIS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/ ; \
-	fi
-	@if [ "$(EXTERNAL_VOS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ ; \
+	@$(MKDIR) $(LIB_INSTALL_DIR) && \
+	if [ "$(FOCALIZE_FOS)" != "" ] ; then \
+	  echo "Installing (FoCaLize) compiled certified libs." && \
+	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then \
+	  echo "Installing (FoCaLize) compiled non-certified libs." && \
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_CMIS)" != "" ] ; then \
+	  echo "Installing (Ocaml interface) compiled certified libs." && \
+	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_CMIS_UNSAFE)" != "" ] ; then \
+	  echo "Installing (Ocaml interface) compiled non-certified libs." && \
+	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(FOCALIZE_VOS)" != "" ] ; then \
+	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(EXTERNAL_CMIS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_CMIS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(EXTERNAL_VOS)" != "" ] ; then \
+	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/; \
 	fi
 
 clean::
@@ -170,7 +169,7 @@ clean::
 	$(RM) *.annot *.glob *.fcd
 
 
-# Do not compile yet in Coq
+# Do not yet compile in Coq
 iterators.ml: iterators.fcl
 	$(FOCALIZEC) -no-coq-code $<
 small_integers.ml: small_integers.fcl
@@ -180,8 +179,8 @@ big_integers.ml: big_integers.fcl
 # End temporary
 
 # Were not compiled to Coq in the previous FoCaL compiler...
-big_integers.ml: big_integers.fcl
-	$(FOCALIZEC) -no-coq-code $<
+#big_integers.ml: big_integers.fcl
+#	$(FOCALIZEC) -no-coq-code $<
 parse_poly.ml: parse_poly.fcl
 	$(FOCALIZEC) -no-coq-code $<
 polys_abstract.ml: polys_abstract.fcl

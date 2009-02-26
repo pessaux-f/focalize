@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.33 2009-02-09 15:23:46 weis Exp $
+# $Id: configure,v 1.34 2009-02-26 13:53:46 pessaux Exp $
 
 ########################################################################
 #
@@ -26,19 +26,20 @@
 # - command line argument parsing,
 # - computation of configuration variables and validity checks.
 #
-# The final part records all the variables into the file "./.config_var", by
-# editing the template file "./.config_var.in".
+# The final part records all the variables into the file "./.config_var",
+# by editing the template file "./.config_var.in".
 
-# Configure reads the set of configuration variables specific to the project,
-# written by the developper in the file "./.project_config_var".
+# Configure reads the set of configuration variables specific
+# to the project, written by the developper in the file
+# "./.project_config_var".
 # This set of variables provides all the necessary information to properly
 # run this script.
-# Hence, there is no need to modify this script to configure another project:
-# it is entirely sharable.
+# Hence, there is no need to modify this script to configure another
+# project: it is entirely sharable.
 ##########################################################################
 
-# Remembering the number of arguments to this script, in order to parse them
-# properly.
+# Remembering the number of arguments to this script, in order
+# to parse them properly.
 argc="$#"
 
 #
@@ -60,12 +61,15 @@ abort_remedy () {
 
 abort_configuration_not_writable_tools_prefix_directory () {
   abort_configuration \
-    "You cannot install EXTERNAL tools in the directory $1: it is not writable for you.";
+    "You cannot install EXTERNAL tools in the directory $1: \
+     it is not writable for you.";
   abort_remedy \
-    "Please, use configure with the \"-tools_prefix\" option set to a writable directory.";
+    "Please, use configure with the \"-tools_prefix\" \
+     option set to a writable directory.";
   echo "Try for instance:";
   echo "./configure -tools_prefix ~/pkg";
-  echo "to install external tools in sub-directory pkg of your home directory.";
+  echo "to install external tools in sub-directory pkg of \
+        your home directory.";
 }
 
 include_project_configuration_variables () {
@@ -76,7 +80,8 @@ include_project_configuration_variables () {
     abort_configuration &&
     echo "There is no ./.project_config_var file." >&2
     abort_remedy \
-      "Define the project specific configuration variables in .project_config_var.";
+      "Define the project specific configuration variables \
+       in the .project_config_var file.";
     exit 1
   fi
 }
@@ -89,28 +94,81 @@ check_include () {
     abort_configuration;
     echo "The variable PROJECT_NAME is empty." >&2
     abort_remedy \
-      "Bind PROJECT_NAME to the name of the project in .project_config_var.";
+      "Bind PROJECT_NAME to the name of the project \
+       in the file .project_config_var.";
+    exit 1;
+  fi
+  if test -z "${PROJECT_NAME_TEXT}"; then
+    abort_configuration;
+    echo "The variable PROJECT_NAME_TEXT is empty." >&2
+    abort_remedy \
+      "Bind PROJECT_NAME_TEXT to the text of the project name \
+       in the file .project_config_var.";
+    exit 1;
+  fi
+  if test -z "${PROJECT_WEB_SERVER}"; then
+    abort_configuration;
+    echo "The variable PROJECT_WEB_SERVER is empty." >&2
+    abort_remedy \
+      "Bind PROJECT_WEB_SERVER to the name of \
+       the web server for the project \
+       in the file .project_config_var.";
+    exit 1;
+  fi
+  if test -z "${PROJECT_WEB_SITE_DIR}"; then
+    abort_configuration;
+    echo "The variable PROJECT_WEB_SITE_DIR is empty." >&2
+    abort_remedy \
+      "Bind PROJECT_WEB_SITE_DIR to the root directory \
+       of the project web site (in the web server hierarchy) \
+       (e.g. /home/www/${PROJECT_NAME}) \
+       in the file .project_config_var.";
+    exit 1;
+  fi
+  if test -z "${PROJECT_FIRST_YEAR}"; then
+    abort_configuration;
+    echo "The variable PROJECT_FIRST_YEAR is undefined." >&2
+    abort_remedy \
+      "Bind PROJECT_FIRST_YEAR to the first year of development \
+       for the project \
+       in the file .project_config_var.";
     exit 1;
   fi
   if test -z "${VERSION_NUMBER_MAIN}"; then
     abort_configuration;
     echo "The variable VERSION_NUMBER_MAIN is empty." >&2
     abort_remedy \
-      "Bind VERSION_NUMBER_MAIN to the project main version number in .project_config_var.";
+      "Bind VERSION_NUMBER_MAIN to the project \
+       main version number (e.g. 0) \
+       in the .project_config_var. file";
     exit 1;
   fi
   if test -z "${VERSION_NUMBER_SUB}"; then
     abort_configuration;
     echo "The variable VERSION_NUMBER_SUB is empty." >&2
     abort_remedy \
-      "Bind VERSION_NUMBER_SUB to the the project sub version number in .project_config_var.";
+      "Bind VERSION_NUMBER_SUB to the the project \
+       sub version number (e.g. 0) \
+       in the file .project_config_var.";
     exit 1;
   fi
   if test -z "${VERSION_NUMBER_PATCH}"; then
     abort_configuration;
     echo "The variable VERSION_NUMBER_PATCH is empty." >&2
     abort_remedy \
-      "Bind VERSION_NUMBER_PATCH to the project version patch level in .project_config_var.";
+      "Bind VERSION_NUMBER_PATCH to the project \
+       version patch level (e.g. 0) \
+       in the file .project_config_var.";
+    exit 1;
+  fi
+
+  if test -z "${PROJECT_MAN_EXT}"; then
+    abort_configuration;
+    echo "The variable PROJECT_MAN_EXT is empty." >&2
+    abort_remedy \
+      "Bind PROJECT_MAN_EXT to the project \
+       manual page extension (e.g. 1) \
+       in the file .project_config_var.";
     exit 1;
   fi
 }
@@ -128,15 +186,20 @@ set_project_specific_variables () {
 }
 
 #
-# Computing the list of all the tools not specific to the project, that
-# should be compiled and installed.
-# (needs project specific variables).
+# Computing TOOLS_PROJECT, the list of all the tools that are
+# not specific to the project, that should be compiled and installed.
 #
-# TOOLS_PROJECT should be TOOLS_EXTERNAL + TOOLS_INTERNAL, as defined in
-# file .project_config_var.
+# Needs the definitions of the project specific variables
+# TOOLS_EXTERNAL and TOOLS_INTERNAL, as defined
+# in the file .project_config_var.
 #
-# Setting the value of TOOLS_PROJECT avoiding spurious spaces
-# (i.e. preserving its emptyness to correctly test its value).
+# TOOLS_PROJECT should be equal to TOOLS_EXTERNAL + TOOLS_INTERNAL.
+#
+# Setting the value of TOOLS_PROJECT must carefully avoid the addition of
+# spurious spaces (i.e. we must preserve the emptyness of the variable, in
+# order to correctly test its value afterwards).
+#
+# Note we should use boolean operators, if we knew how to use them.
 set_tools_project () {
   if test ! -z "${TOOLS_EXTERNAL}"; then
     if test ! -z "${TOOLS_INTERNAL}"; then
@@ -203,21 +266,25 @@ set_command_defaults () {
 # The two root variables of the configuration are
 # $(PREFIX) and $(TOOLS_PREFIX).
 #
-# $(PREFIX) defines the root directory for the project installation after its
-# proper configuration and compilation.
+# $(PREFIX) defines the root directory for the project
+# installation after its proper configuration and compilation.
 # This directory will contain
 # - $(PREFIX)/bin for installation of the project binaries,
 # - $(PREFIX)/lib for installation of the project library files,
 # - $(PREFIX)/man for installation of the project manual pages,
 # - $(PREFIX)/doc for installation of the project documentation.
 #
-# $(TOOLS_PREFIX) defines the root directory for the installation of private
-# versions of external tools, if necessary.
+# $(TOOLS_PREFIX) defines the root directory for the installation
+# of the private versions of external tools, if necessary.
 # This directory will contain
-# - $(TOOLS_PREFIX)/bin for installation of the project external tools binaries,
-# - $(TOOLS_PREFIX)/lib for installation of the project external tools library files,
-# - $(TOOLS_PREFIX)/man for installation of the project external tools manual pages,
-# - $(TOOLS_PREFIX)/doc for installation of the project external tools documentation.
+# - $(TOOLS_PREFIX)/bin for installation of the project
+#   external tools binaries,
+# - $(TOOLS_PREFIX)/lib for installation of the project
+#   external tools library files,
+# - $(TOOLS_PREFIX)/man for installation of the project
+#   external tools manual pages,
+# - $(TOOLS_PREFIX)/doc for installation of the project
+#   external tools documentation.
 
 # Variable assigment
 
@@ -227,15 +294,18 @@ set_command_defaults () {
 # (3) tools prefix, that depend on ${DEFAULT_TOOLS_PREFIX}.
 #
 # For those groups we define a procedure that sets the defaults,
-# and a procedure that sets the variables after options have been processed.
+# and a procedure that sets the variables after options
+# have been processed.
 #
-# Variables in group (1), intrinsic defaults, are project dependent:
+# For variables in group (1), intrinsic defaults, are project dependent:
 # they are all defined in file .project_config_var with
 # their associated setting procedure ``set_intrinsic_defaults''.
-# # Variables in group (2) and (3), intrinsic defaults are defined in file .project_config_var.
+#
+# For variables in group (2) and (3), intrinsic defaults are defined
+# in the file .project_config_var.
 
-# Then procedure set_defaults is called before parsing options, and
-# set_variables is called after parsing options.
+# Then the procedure set_defaults is called before parsing options,
+# and the procedure set_variables is called after parsing options.
 
 # Setting intrinsic values.
 set_intrinsic () {
@@ -245,6 +315,7 @@ set_intrinsic () {
   if test -z ${DEBUG}; then DEBUG=${DEFAULT_DEBUG}; fi
 
   if test -z ${PREFIX}; then PREFIX=${DEFAULT_PREFIX}; fi
+
   if test -z "${USE_TOOLS_PREFIX_DIRECTORY}"; then
     USE_TOOLS_PREFIX_DIRECTORY="${DEFAULT_USE_TOOLS_PREFIX_DIRECTORY}"; fi
   if test -z "${USE_PROJECT_SUB_DIRECTORY}"; then
@@ -269,16 +340,20 @@ set_intrinsic () {
 
   # Setting coq make command.
   if test -z "${COQ_MAKE}"; then
-    # To compile Coq, prefer gmake, if GNU make is available with that name.
-    if check_command "${DEFAULT_COQ_MAKE}"; then COQ_MAKE="${DEFAULT_COQ_MAKE}";
+    # To compile Coq, prefer gmake,
+    # if GNU make is available with that name.
+    if check_command "${DEFAULT_COQ_MAKE}";
+    then COQ_MAKE="${DEFAULT_COQ_MAKE}";
     # Otherwise, use make (which is GNU make anyway on
     # boxes with GNU make as default!).
     else COQ_MAKE="make";
     fi
   fi
 
+  # Internal tools
   # Intrinsic settings for Zenon.
-  if test -z "${USE_COQ_COMPILER}"; then USE_COQ_COMPILER="${DEFAULT_USE_COQ_COMPILER}"; fi
+  if test -z "${USE_COQ_COMPILER}"; then
+    USE_COQ_COMPILER="${DEFAULT_USE_COQ_COMPILER}"; fi
   if test -z "${SUM}"; then SUM="${DEFAULT_SUM}"; else
     if check_command "${SUM}"; then :; else
       abort_configuration "unavailable command ${SUM}.";
@@ -315,7 +390,8 @@ set_intrinsic () {
     fi
     # set_XMLRPC_MODULE;
     if ${USE_XMLRPC}; then
-      if test -z "${XMLRPC_MODULE}"; then XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"; fi
+      if test -z "${XMLRPC_MODULE}"; then
+        XMLRPC_MODULE="${DEFAULT_XMLRPC_MODULE}"; fi
     fi
     # set_XMLRPC_FLAGS;
     if test -z "$XMLRPC_FLAGS"; then
@@ -348,22 +424,47 @@ set_prefix_defaults () {
 }
 
 # Setting variables that depend upon $PREFIX.
+# - PREFIX is the user's provided value or the computed default.
+# - MAN_DIR is the user's provided value or the computed default
+#   ${PREFIX}/man/man${PROJECT_MAN_EXT}
+# - BIN_DIR is the user's provided value or the computed default
+#   ${PREFIX}/lib/``project full name''
+# - DOC_DIR is the user's provided value or the computed default
+#   ${PREFIX}/doc/``project full name''
+#
+# Setting a ``project full name'' sub directory for
+# LIB_DIR and DOC_DIR id the only way to avoid confusion with
+# other versions of the libraries installed for other versions
+# of the project.
+#
+# Note: this implies that we must not modify those variables when
+# installing the project: we simply install
+# - the binaries for the project in the directory $(BIN_DIR),
+# - the libraries for the project in the directory $(LIB_DIR),
+# - the man pages for the project in the directory $(MAN_DIR),
+# - the documentation for the project in the directory $(DOC_DIR).
+#
 set_prefix () {
 
   if test -z "${PREFIX}"; then PREFIX="${DEFAULT_PREFIX}"; fi
 
-  if test -z "${BIN_DIR}"; then BIN_DIR="${PREFIX}/bin"; fi
-  if test -z "${LIB_DIR}"; then LIB_DIR="${PREFIX}/lib"; fi
-  if test -z "${MAN_DIR}"; then MAN_DIR="${PREFIX}/man"; fi
-  if test -z "${DOC_DIR}"; then DOC_DIR="${PREFIX}/doc"; fi
+  if test -z "${BIN_DIR}"; then
+    BIN_DIR="${PREFIX}/bin"; fi
+  if test -z "${LIB_DIR}"; then
+    LIB_DIR="${PREFIX}/lib/${PROJECT_NAME_FULL}"; fi
+  if test -z "${MAN_DIR}"; then
+    MAN_DIR="${PREFIX}/man/man${PROJECT_MAN_EXT}"; fi
+  if test -z "${DOC_DIR}"; then
+    DOC_DIR="${PREFIX}/doc/${PROJECT_NAME_FULL}"; fi
 
 }
 
 # Setting (or defining) variables that depend upon ${DEFAULT_TOOLS_PREFIX}.
 set_tools_prefix_defaults () {
 
-  # General defaults for the installation of the external tools of the project.
-  # Normal setting is:
+  # General defaults for the installation of the external tools
+  # of the project.
+  # The normal setting is:
   # DEFAULT_TOOLS_PREFIX=~/pkg
   # For Zenon the DEFAULT_TOOLS_PREFIX should be the DEFAULT_PREFIX.
   if ! ${DEFAULT_USE_TOOLS_PREFIX_DIRECTORY}; then
@@ -371,9 +472,11 @@ set_tools_prefix_defaults () {
   fi
 
   # The normal default binding is
-  # DEFAULT_TOOLS_PROJECT_DIR="${DEFAULT_TOOLS_PREFIX}/${PROJECT_NAME_FULL}"
-  # For traditional projects (e.g. zenon), there is no PROJECT_NAME_FULL sub directory,
-  # we directly use the DEFAULT_TOOLS_PREFIX.
+  # DEFAULT_TOOLS_PROJECT_DIR=
+  #   "${DEFAULT_TOOLS_PREFIX}/${PROJECT_NAME_FULL}"
+  # For traditional projects (e.g. zenon), there is no
+  # PROJECT_NAME_FULL sub directory: we directly use
+  # the DEFAULT_TOOLS_PREFIX.
   if ${DEFAULT_USE_PROJECT_SUB_DIRECTORY}; then
     DEFAULT_TOOLS_PROJECT_DIR="${DEFAULT_TOOLS_PREFIX}/${PROJECT_NAME_FULL}"
   else
@@ -387,8 +490,8 @@ set_tools_prefix_defaults () {
 
   # Defaults for Caml.
   DEFAULT_CAML_PREFIX="${DEFAULT_TOOLS_PROJECT_DIR}"
-  DEFAULT_CAML_LIB_DIR="${DEFAULT_CAML_PREFIX}/lib/ocaml"
   DEFAULT_CAML_BIN_DIR="${DEFAULT_CAML_PREFIX}/bin"
+  DEFAULT_CAML_LIB_DIR="${DEFAULT_CAML_PREFIX}/lib/ocaml"
 
   # The normal default binding for Caml command "com" is normally
   # "${DEFAULT_CAML_BIN_DIR}/com".
@@ -416,8 +519,8 @@ set_tools_prefix_defaults () {
 
   # Defaults for Coq.
   DEFAULT_COQ_PREFIX="${DEFAULT_TOOLS_PROJECT_DIR}"
-  DEFAULT_COQ_LIB_DIR="${DEFAULT_COQ_PREFIX}/lib/coq"
   DEFAULT_COQ_BIN_DIR="${DEFAULT_COQ_PREFIX}/bin"
+  DEFAULT_COQ_LIB_DIR="${DEFAULT_COQ_PREFIX}/lib/coq"
   DEFAULT_COQ_CAML_DIR="${DEFAULT_CAML_BIN_DIR}"
 
   # The normal default binding for coqc is
@@ -453,6 +556,28 @@ set_tools_prefix_defaults () {
     DEFAULT_ZVTOV_COMPILER="${DEFAULT_ZVTOV_BIN_DIR}/zvtov"
   else
     DEFAULT_ZVTOV_COMPILER="zvtov"
+  fi
+
+  # Defaults for Focalizec.
+  DEFAULT_FOCALIZEC_PREFIX="${DEFAULT_PREFIX}"
+  DEFAULT_FOCALIZEC_BIN_DIR="${DEFAULT_FOCALIZEC_PREFIX}/bin"
+  DEFAULT_FOCALIZEC_LIB_DIR="${DEFAULT_FOCALIZEC_PREFIX}/lib/focalizec"
+
+  if ${DEFAULT_STATIC_EXTERNAL}; then
+    DEFAULT_FOCALIZEC_COMPILER="${DEFAULT_FOCALIZEC_BIN_DIR}/focalizec"
+  else
+    DEFAULT_FOCALIZEC_COMPILER="focalizec"
+  fi
+
+  # Defaults for Focalizedep.
+  DEFAULT_FOCALIZEDEP_PREFIX="${DEFAULT_PREFIX}"
+  DEFAULT_FOCALIZEDEP_BIN_DIR="${DEFAULT_FOCALIZEDEP_PREFIX}/bin"
+  DEFAULT_FOCALIZEDEP_LIB_DIR="${DEFAULT_FOCALIZEDEP_PREFIX}/lib/focalizedep"
+
+  if ${DEFAULT_STATIC_EXTERNAL}; then
+    DEFAULT_FOCALIZEDEP_COMPILER="${DEFAULT_FOCALIZEDEP_BIN_DIR}/focalizedep"
+  else
+    DEFAULT_FOCALIZEDEP_COMPILER="focalizedep"
   fi
 
 }
@@ -584,6 +709,28 @@ set_tools_prefix () {
   if test -z "${ZVTOV_COMPILER}"; then
     ZVTOV_COMPILER="${ZVTOV_BIN_DIR}/zvtov"; fi
 
+  # Settings for Focalizec.
+  if test -z "${FOCALIZEC_PREFIX}"; then
+    FOCALIZEC_PREFIX="${PREFIX}"; fi
+
+  if test -z "${FOCALIZEC_BIN_DIR}"; then
+    FOCALIZEC_BIN_DIR="${FOCALIZEC_PREFIX}/bin"; fi
+  if test -z "${FOCALIZEC_LIB_DIR}"; then
+    FOCALIZEC_LIB_DIR="${FOCALIZEC_PREFIX}/lib/focalizec"; fi
+  if test -z "${FOCALIZEC_COMPILER}"; then
+    FOCALIZEC_COMPILER="${FOCALIZEC_BIN_DIR}/focalizec"; fi
+
+  # Settings for Focalizedep.
+  if test -z "${FOCALIZEDEP_PREFIX}"; then
+    FOCALIZEDEP_PREFIX="${PREFIX}"; fi
+
+  if test -z "${FOCALIZEDEP_BIN_DIR}"; then
+    FOCALIZEDEP_BIN_DIR="${FOCALIZEDEP_PREFIX}/bin"; fi
+  if test -z "${FOCALIZEDEP_LIB_DIR}"; then
+    FOCALIZEDEP_LIB_DIR="${FOCALIZEDEP_PREFIX}/lib/focalizedep"; fi
+  if test -z "${FOCALIZEDEP_COMPILER}"; then
+    FOCALIZEDEP_COMPILER="${FOCALIZEDEP_BIN_DIR}/focalizedep"; fi
+
 }
 
 #
@@ -593,8 +740,8 @@ set_tools_prefix () {
 # Flags to drive the interactive/continue machinery:
 # - if the ${PREFIX} directory has been explicitely given as an option
 #   by the user, we don't need to ask for it again.
-# - if the ${TOOLS_PREFIX} directory has been explicitely given as an option
-#   by the user, we don't need to ask for it again.
+# - if the ${TOOLS_PREFIX} directory has been explicitely given
+#   as an option by the user, we don't need to ask for it again.
 # - if there is no tools (${TOOLS_PROJECT} is empty), TOOLS_PREFIX is
 #   considered given, since there is no need to ask.
 # - we should continue without asking, if all the prefixes has been
@@ -626,7 +773,8 @@ read_prefix () {
 
 # Reading the project tools installation prefix directory.
 read_tools_prefix () {
-  echo $TAG_BOLD"Where to install the ${PROJECT_NAME} tools (${TOOLS_PROJECT}) ?"$TAG_NORMAL
+  echo $TAG_BOLD"Where to install the ${PROJECT_NAME} \
+                 tools (${TOOLS_PROJECT}) ?"$TAG_NORMAL
   echo "Default is ${DEFAULT_TOOLS_PREFIX}."
   echo "Just press enter to use the default location."
   read USER_INPUT
@@ -862,7 +1010,9 @@ case ${argc} in
         ZENON_PREFIX="$2"; shift 2
         ;;
       # Zenon specific options (cannot be computed).
-      -use_coq_compiler | --use_coq_compiler) USE_COQ_COMPILER="$2"; shift 2;;
+      -use_coq_compiler | --use_coq_compiler)
+        USE_COQ_COMPILER="$2"; shift 2
+        ;;
       -sum | --sum) SUM="$2"; shift 2;;
       -convert | --convert) CONVERT="$2"; shift 2;;
       -gs | --gs) GS="$2"; shift 2;;
@@ -877,8 +1027,12 @@ case ${argc} in
       -xmlrpc_flags | --xmlrpc_flags) XMLRPC_FLAGS="$2"; shift 2;;
       -xmlrpc_link | --xmlrpc_link) XMLRPC_LINK="$2"; shift 2;;
       # Configure script specific options
-      -no_make_external | --no_make_external) MAKE_EXTERNAL=false; shift;;
-      -magic_make_external | --magic_make_external) MAGIC_MAKE_EXTERNAL=true; shift;;
+      -no_make_external | --no_make_external)
+        MAKE_EXTERNAL=false; shift
+        ;;
+      -magic_make_external | --magic_make_external)
+        MAGIC_MAKE_EXTERNAL=true; shift
+        ;;
       -static_external | --static_external) STATIC_EXTERNAL=$2; shift 2;;
       -use_tools_prefix_directory | --use_tools_prefix_directory)
         USE_TOOLS_PREFIX_DIRECTORY=$2; shift 2
@@ -890,7 +1044,8 @@ case ${argc} in
       -debug | --debug) DEBUG=$2; shift 2;;
       -enable_debug | --enable_debug) DEBUG=true; shift;;
       -nodebug | --nodebug | -disable_debug | --disable_debug)
-       DEBUG=false; shift;;
+        DEBUG=false; shift
+        ;;
       -help | --help)
         shift;
         usage &&
@@ -909,7 +1064,8 @@ case ${argc} in
         if test ${argc} -eq 1; then
           PREFIX="$1";
           shift;
-          echo "Prefix installation directory for ${PROJECT_NAME} files set to \"${PREFIX}\"";
+          echo "Prefix installation directory for ${PROJECT_NAME} \
+                files set to \"${PREFIX}\"";
           PREFIX_GIVEN=true;
           prefix_main;
         else
@@ -931,7 +1087,8 @@ esac
 # Validity checking for installation of external tools.
 #
 check_installation_dirs () {
-  # Check directories that must be configuration time installable (hence writable).
+  # Check directories that must be installable
+  # at configuration time (hence writable at configuration time).
   for i in ${CONFIGURATION_INSTALLABLE_DIRS}; do
     #echo "Checking if we can install EXTERNAL tools in $i..." >&2
     if test -d $i; then
@@ -941,7 +1098,8 @@ check_installation_dirs () {
         abort_configuration \
           "You cannot install in $i, because it is not a directory.";
         abort_remedy \
-          "Please, create a directory where you can install EXTERNAL tools.";
+          "Please, create a directory where \
+           you can install EXTERNAL tools.";
     fi
     if test -w $i; then
       : #echo "  the directory is writable: good." >&2
@@ -962,16 +1120,22 @@ check_installation_dirs () {
 # Editing ./.config_var.in with what we learnt here.
 #
 build_config_file () {
-  sed -e "s,@PROJECT_NAME@,$PROJECT_NAME," \
+  sed \
       -e "s,@DEBUG@,$DEBUG," \
+      -e "s,@PROJECT_NAME@,$PROJECT_NAME," \
+      -e "s,@PROJECT_NAME_TEXT@,$PROJECT_NAME_TEXT," \
+      -e "s,@PROJECT_WEB_SERVER@,$PROJECT_WEB_SERVER," \
+      -e "s,@PROJECT_WEB_SITE_DIR@,$PROJECT_WEB_SITE_DIR," \
+      -e "s,@PROJECT_FIRST_YEAR@,$PROJECT_FIRST_YEAR," \
       -e "s,@VERSION_NUMBER_MAIN@,$VERSION_NUMBER_MAIN," \
       -e "s,@VERSION_NUMBER_SUB@,$VERSION_NUMBER_SUB," \
       -e "s,@VERSION_NUMBER_PATCH@,$VERSION_NUMBER_PATCH," \
       -e "s,@VERSION_NUMBER_FULL@,$VERSION_NUMBER_FULL," \
       -e "s,@PROJECT_NAME_FULL@,$PROJECT_NAME_FULL," \
-      -e "s,@TOOLS_INTERNAL@,$TOOLS_INTERNAL," \
       -e "s,@TOOLS_EXTERNAL@,$TOOLS_EXTERNAL," \
+      -e "s,@TOOLS_INTERNAL@,$TOOLS_INTERNAL," \
       -e "s,@PROJECT_DELIVERABLES@,$PROJECT_DELIVERABLES," \
+      -e "s,@PROJECT_MAN_EXT@,$PROJECT_MAN_EXT," \
   \
       -e "s,@ABSOLUTE_ROOT_DIR@,$ABSOLUTE_ROOT_DIR," \
       -e "s,@PREFIX@,$PREFIX," \
@@ -1027,6 +1191,14 @@ build_config_file () {
       -e "s,@XMLRPC_FLAGS@,$XMLRPC_FLAGS," \
       -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
       -e "s,@XMLRPC_MODULE@,$XMLRPC_MODULE," \
+  \
+      -e "s,@FOCALIZEC_PREFIX@,$FOCALIZEC_PREFIX," \
+      -e "s,@FOCALIZEC_LIB_DIR@,$FOCALIZEC_LIB_DIR," \
+      -e "s,@FOCALIZEC_COMPILER@,$FOCALIZEC_COMPILER," \
+  \
+      -e "s,@FOCALIZEDEP_PREFIX@,$FOCALIZEDEP_PREFIX," \
+      -e "s,@FOCALIZEDEP_LIB_DIR@,$FOCALIZEDEP_LIB_DIR," \
+      -e "s,@FOCALIZEDEP_COMPILER@,$FOCALIZEDEP_COMPILER," \
       <$1 >$2
 
   chmod g+w $2;
@@ -1039,7 +1211,18 @@ build_config_var () {
 
 build_config_var_for_shell () {
 
-  sed -e "s,@BYT_DEBUG_FLAGS@,\"$BYT_DEBUG_FLAGS\"," \
+  sed \
+     -e "s,@BYT_DEBUG_FLAGS@,\"$BYT_DEBUG_FLAGS\"," \
+     -e "s,@BIN_DEBUG_FLAGS@,\"$BIN_DEBUG_FLAGS\"," \
+     -e "s,@PREFIX@,\"$PREFIX\"," \
+     -e "s,@BIN_DIR@,\"$BIN_DIR\"," \
+     -e "s,@LIB_DIR@,\"$LIB_DIR\"," \
+     -e "s,@DOC_DIR@,\"$DOC_DIR\"," \
+     -e "s,@MAN_DIR@,\"$MAN_DIR\"," \
+     -e "s,@XMLRPC_FLAGS@,\"$XMLRPC_FLAGS\"," \
+     -e "s,@XMLRPC_LINK@,\"$XMLRPC_LINK\"," \
+     -e "s,@XMLRPC_MODULE@,\"$XMLRPC_MODULE\"," \
+     -e "s,@ABSOLUTE_ROOT_DIR@,\"$ABSOLUTE_ROOT_DIR\"," \
   <.config_var.in >.config_var_for_shell.in
 
   build_config_file .config_var_for_shell.in .config_var_for_shell
@@ -1098,11 +1281,15 @@ main () {
   # script that does the rest of the work that never necessitates user's
   # interaction.
   if test -x ./.configure; then ./.configure; fi &&
+  if test -x ./.configure_distribution; then ./.configure_distribution;
+  fi &&
   prefix_summary &&
   continue_configure &&
   summarize_configuration &&
   # Call the Makefile to go on configuring external tools.
-  if ${MAGIC_MAKE_EXTERNAL}; then make magic_configure_external_tools; else
+  if ${MAGIC_MAKE_EXTERNAL};
+  then make magic_configure_external_tools;
+  else
     if ${MAKE_EXTERNAL}; then make configure_external_tools; fi;
   fi &&
  echo &&

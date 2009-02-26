@@ -1,4 +1,4 @@
-  Copyright (c) 2007-2008, Institut National de Recherche en
+  Copyright (c) 2007-2009, Institut National de Recherche en
   Informatique et en Automatique (INRIA), LIP6 (Laboratoire d'Informatique de
   Paris 6)
 
@@ -32,4 +32,4 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-$Id: LICENSE,v 1.1 2008-11-30 12:27:54 weis Exp $
+$Id: LICENSE,v 1.2 2009-02-26 13:53:46 pessaux Exp $

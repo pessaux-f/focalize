@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.48 2009-02-05 15:14:49 doligez Exp $
+# $Id: Makefile,v 1.49 2009-02-26 13:53:46 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -23,54 +23,54 @@ CAML_INCLUDES = -I ../basement -I ../parser -I ../typing\
 
 LOCAL_BYT_OBJS = focalizec.cmo exc_wrapper.cmo
 
-BYT_OBJS = \
-	../basement/installation.cmo \
-	../basement/configuration.cmo \
-	../basement/handy.cmo \
-	../basement/location.cmo \
-	../basement/types.cmo \
-	../basement/files.cmo \
-	../basement/parsetree_utils.cmo \
-	../basement/miscHelpers.cmo \
+BYT_OBJS =\
+	../basement/installation.cmo\
+	../basement/configuration.cmo\
+	../basement/handy.cmo\
+	../basement/location.cmo\
+	../basement/types.cmo\
+	../basement/files.cmo\
+	../basement/parsetree_utils.cmo\
+	../basement/miscHelpers.cmo\
 	\
-	../parser/lexer.cmo \
-	../parser/parser.cmo \
-	../parser/parse_file.cmo \
-	../parser/dump_ptree.cmo \
-	../parser/sourcify.cmo \
+	../parser/lexer.cmo\
+	../parser/parser.cmo\
+	../parser/parse_file.cmo\
+	../parser/dump_ptree.cmo\
+	../parser/sourcify.cmo\
 	\
-	../typing/env.cmo \
-	../typing/scoping.cmo \
-	../typing/substExpr.cmo \
-	../typing/substColl.cmo \
-	../typing/ast_equal.cmo \
-	../typing/dep_analysis.cmo \
-	../typing/param_dep_analysis.cmo \
-	../typing/infer.cmo \
+	../typing/env.cmo\
+	../typing/scoping.cmo\
+	../typing/substExpr.cmo\
+	../typing/substColl.cmo\
+	../typing/ast_equal.cmo\
+	../typing/dep_analysis.cmo\
+	../typing/param_dep_analysis.cmo\
+	../typing/infer.cmo\
 	\
-	../docgen/doc_lexer.cmo \
-	../docgen/utils_docgen.cmo \
-	../docgen/env_docgen.cmo \
-	../docgen/main_docgen.cmo \
+	../docgen/doc_lexer.cmo\
+	../docgen/utils_docgen.cmo\
+	../docgen/env_docgen.cmo\
+	../docgen/main_docgen.cmo\
 	\
-	../commoncodegen/visUniverse.cmo \
-	../commoncodegen/minEnv.cmo \
-	../commoncodegen/abstractions.cmo \
-	../commoncodegen/misc_common.cmo \
-	../commoncodegen/externals_generation_errs.cmo \
-	../commoncodegen/recursion.cmo \
+	../commoncodegen/visUniverse.cmo\
+	../commoncodegen/minEnv.cmo\
+	../commoncodegen/abstractions.cmo\
+	../commoncodegen/misc_common.cmo\
+	../commoncodegen/externals_generation_errs.cmo\
+	../commoncodegen/recursion.cmo\
 	\
-	../mlcodegen/misc_ml_generation.cmo \
-        ../mlcodegen/type_ml_generation.cmo \
-        ../mlcodegen/base_exprs_ml_generation.cmo \
-	../mlcodegen/species_ml_generation.cmo \
-	../mlcodegen/main_ml_generation.cmo \
+	../mlcodegen/misc_ml_generation.cmo\
+        ../mlcodegen/type_ml_generation.cmo\
+        ../mlcodegen/base_exprs_ml_generation.cmo\
+	../mlcodegen/species_ml_generation.cmo\
+	../mlcodegen/main_ml_generation.cmo\
 	\
-	../coqcodegen/species_record_type_generation.cmo \
-	../coqcodegen/rec_let_gen.cmo \
-	../coqcodegen/species_coq_generation.cmo \
-	../coqcodegen/type_coq_generation.cmo \
-	../coqcodegen/main_coq_generation.cmo \
+	../coqcodegen/species_record_type_generation.cmo\
+	../coqcodegen/rec_let_gen.cmo\
+	../coqcodegen/species_coq_generation.cmo\
+	../coqcodegen/type_coq_generation.cmo\
+	../coqcodegen/main_coq_generation.cmo\
 	$(LOCAL_BYT_OBJS)
 
 include $(ROOT_DIR)/Makefile.common
@@ -78,37 +78,37 @@ include $(ROOT_DIR)/Makefile.common
 byt:: focalizec.byt
 
 focalizec.byt: $(BYT_OBJS)
-	$(CAML_BYT) str.cma $(BYT_OBJS) -o $@
+	$(CAML_BYT) str.cma $(BYT_OBJS) -o $@ && \
 	$(LN) focalizec.byt focalizec
 
 bin:: focalizec.bin
 
 focalizec.bin: $(BIN_OBJS)
-	$(CAML_BIN) str.cmxa $(BIN_OBJS) -o $@
+	$(CAML_BIN) str.cmxa $(BIN_OBJS) -o $@ && \
 	$(LN) focalizec.bin focalizec
 
 fodump: fodump.cmo
-	$(CAML_BYT) ../basement/installation.cmo \
-	../basement/configuration.cmo \
-	../basement/handy.cmo \
-	../basement/location.cmo \
-	../basement/types.cmo \
-	../basement/files.cmo \
-	../basement/parsetree_utils.cmo \
-	../basement/miscHelpers.cmo \
+	$(CAML_BYT) ../basement/installation.cmo\
+	../basement/configuration.cmo\
+	../basement/handy.cmo\
+	../basement/location.cmo\
+	../basement/types.cmo\
+	../basement/files.cmo\
+	../basement/parsetree_utils.cmo\
+	../basement/miscHelpers.cmo\
 	\
-	../parser/lexer.cmo \
-	../parser/parser.cmo \
-	../parser/parse_file.cmo \
-	../parser/dump_ptree.cmo \
-	../parser/sourcify.cmo \
+	../parser/lexer.cmo\
+	../parser/parser.cmo\
+	../parser/parse_file.cmo\
+	../parser/dump_ptree.cmo\
+	../parser/sourcify.cmo\
 	\
-	../typing/env.cmo \
+	../typing/env.cmo\
 	fodump.cmo -o fodump
 
 install::
-	mkdir -p $(BIN_DIR)
-	$(CP) focalizec.byt focalizec.bin $(BIN_DIR)/
+	mkdir -p $(BIN_DIR) && \
+	$(CP) focalizec.byt focalizec.bin $(BIN_DIR)/ && \
 	$(LN) $(BIN_DIR)/focalizec.bin $(BIN_DIR)/focalizec
 
 clean::

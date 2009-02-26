@@ -1,0 +1,52 @@
+The first release candidate for $(focal)
+========================================
+
+(0) What is it ?
+----------------
+
+$(focal) is an integrated development environment to write high integrity
+programs and systems. It provides a purely functional language to formally
+express specifications, describe the design and code the algorithms.
+Within the functional language, $(focal) provides a logical framework to
+express the properties of the code. A simple declarative language provides
+the natural expression of proofs of properties them from within the program 
+source code.
+
+The $(focal) compiler extracts statements and proof scripts from the source
+file, to pass them to the Zenon proof generator to produce Coq proof terms
+that are then formally verified.
+
+The $(focal) compiler also generates the code corresponding to the
+program as an Objective Caml source file. This way, programs developped in
+$(focal) can be efficiently compiled to native code on a large variety of
+architectures.
+
+Last but not least, $(focal) automatically generates the documentation
+corresponding to the development, a requirement for high evaluation
+assurance.
+
+The $(focal) system provides means for the developers to formally express
+their specifications and to go step by step (in an incremental approach) to
+design and implementation, while proving that such an implementation
+meets its specification or design requirements. The $(focal) language offers
+high level mechanisms such as inheritance, late binding, redefinition,
+parametrization, etc.  Confidence in proofs submitted by developers or
+automatically done relies on Coq formal proof verification. 
+
+$(focal) is a son of the previous Focal system. However, it is a completely
+new implementation with vastly revised syntax and semantices, featuring a
+rock-solid infrastructure and greatly improved capabilities.
+
+(1) Where to find it ?
+----------------------
+$(focal) home page is http://$(focal).inria.fr/
+$(focal) source files can be found at
+http://$(focal).inria.fr/download/$(PROJECT_NAME_FULL).tgz
+
+Enjoy.
+
+For the entire $(focal) implementor group,
+
+Pierre Weis.
+
+$(the_long_date)

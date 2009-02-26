@@ -13,63 +13,27 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.12 2009-01-16 13:26:24 weis Exp $
+# $Id: Makefile,v 1.13 2009-02-26 13:53:46 pessaux Exp $
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
 
 # Fill here to add a new directory for a new contribution
-SUB_DIRS = \
-	utils \
-#	voter \
-#	automata
+SUB_DIRS =\
+  utils
+#  voter\
+#  automata
 
 include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
-byt bin::
-	for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) all); \
+byt bin clean doc install depend::
+	@for i in $(SUB_DIRS); do \
+	  echo "--> $$i ..." && \
+	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
+	  echo "<-- $$i [$$err]" && \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
-
-clean::
-	for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) clean); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
-	  case $$err in 0);; *) exit $$err;; esac; \
-        done
-
-doc::
-	for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) doc); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
-	  case $$err in 0);; *) exit $$err;; esac; \
-	done
-
-install::
-	for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) install); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
-	  case $$err in 0);; *) exit $$err;; esac; \
-	done
-
-depend::
-	for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) depend); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
-	  case $$err in 0);; *) exit $$err;; esac; \
-	done

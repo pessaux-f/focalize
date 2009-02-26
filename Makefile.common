@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.10 2009-01-30 11:32:24 weis Exp $
+# $Id: Makefile.common,v 1.11 2009-02-26 13:53:46 pessaux Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -30,25 +30,25 @@ bin:: $(BIN_OBJS)
 doc docdir:: $(BYT_OBJS)
 
 odoc:: $(BYT_OBJS)
-	$(MKDIR) odoc
+	$(MKDIR) odoc && \
 	echo "caml_doc_compiler is $(CAML_DOC_COMPILER)" >&2 && \
 	echo "caml_doc is $(CAML_DOC)" >&2 && \
 	$(CAML_DOC) $(CAML_INCLUDES) -html -d odoc $(BYT_OBJS:.cmo=.ml)
 
 clean::
-	$(RM) *.cm* *.o *.a *.annot *.out *.vo *.fo *~ .*~ log *.mangled *.pfc
+	@(RM) *.cm* *.o *.a *.annot *.out *.vo *.fo *~ .*~ log *.mangled *.pfc && \
 	if test -d tests; then \
 	  for i in tests; do \
-	    echo "--> $$i ..."; \
+	    echo "--> $$i ..." >&2; \
 	    ($(CD) $$i && $(MAKE) $@); \
 	    err=$$?; \
-	    echo "<-- $$i [$$err]"; \
+	    echo "<-- $$i [$$err]" >&2; \
 	    case $$err in 0);; *) exit $$err;; esac; \
 	  done; \
-	fi
+	fi && \
 	if test -d odoc; then \
 	  $(RM) odoc/*; \
-	fi
+	fi && \
 	if test -d doc; then \
 	  $(RM) doc; \
 	fi
@@ -65,16 +65,17 @@ depend::
 tests::
 	if test -d tests; then \
 	  for i in tests; do \
-	    echo "--> $$i ..."; \
+	    echo "--> $$i ..." >&2; \
 	    ($(CD) $$i && $(MAKE) all); \
 	    err=$$?; \
-	    echo "<-- $$i [$$err]"; \
+	    echo "<-- $$i [$$err]" >&2; \
 	    case $$err in 0);; *) exit $$err;; esac; \
 	  done; \
 	fi
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .v .vo
 .SUFFIXES: .tex .dvi .ps .pdf .idx
+.SUFFIXES: .shtml .html .htm
 
 .ml.cmo:
 	$(CAML_BYT) -c $<
@@ -114,5 +115,10 @@ tests::
 	$(DVIPS) $<
 .dvi.pdf:
 	$(DVIPDF) $<
+
+.shtml.html:
+	$(HTMLC) -s $<
+.html.htm:
+	$(HTMLC) -c $<
 
 include .depend
