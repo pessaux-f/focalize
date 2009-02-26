@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.3 2009-02-16 13:43:47 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.4 2009-02-26 15:17:52 habib Exp $
 
 # The name of the file says why and for who it was written :)
 
@@ -44,15 +44,18 @@
     <LI>clean_zenon clean_zvtov clean_focalizec: specific targets for cleaning
         internal tools.
   </UL>
+  </P>
 
   <H3>Making</H3>
 
+  <P>
   Two main targets: "default" (got via make) and install (got via make install).
 
   <OL>
     <LI>default: build the internal tools.
     <LI>install: install focalizec and its documentation.
   </OL>
+  </P>
 
 <H2>How to get the current branch release for focalize</H2>
 
@@ -79,3 +82,43 @@ make
 make install
 </PRE>
 
+<H2>How to use the Focalize <code>doc_src</code> Makefile</H2>
+
+  <H3>Architecture</H3>
+
+  <P>The web site is organized in several sub directories: each
+  directory being the target of a menu item. The source of the web
+  site pages are files with extension <code>.shtml</code>; the html
+  pages are thus generated from those <code>.shtml</code> thanks to
+  htmlc (from bazar-ocaml).
+  </P>
+
+  <P>Warning: <code>.html</code> files are made read-only by htmlc as
+  they are generated, and thus must not be edited! Only
+  <code>.shtml</code> can be edited.
+  </P>
+
+  <H3>Making</H3>
+
+  <P>Two main targets: "default" (got via make) and install (got via
+    make install).
+
+  <OL>
+    <LI>default: use htmlc to build the web site pages.
+    <LI>install: install the web site pages on the http server using
+        "scp". By default "scp" uses your local machine login name, if
+        your login name on the server is different then you need to
+	define it while launching make, using: <br />
+	<pre>
+	make PROJECT_WEB_TARGET_DIR='serverloginname@$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)' install
+	</pre>
+	where $(PROJECT_WEB_SERVER) and $(PROJECT_WEB_SITE_DIR) are
+	variables known by <code>doc_src/Makefile</code>.
+  </OL>
+  </P>
+
+  <H3>Cleaning</H3>
+
+  <P>The target "clean" removes the compiled <code>.html</code> files
+  from the <code>doc_src</code> hirearchy.
+  </P>
