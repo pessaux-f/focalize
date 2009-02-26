@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.23 2009-02-12 12:56:49 pessaux Exp $
+# $Id: Makefile,v 1.24 2009-02-26 08:33:28 habib Exp $
 
 # Makefile for access control models
 
@@ -40,15 +40,15 @@ include $(ROOT_DIR)/Makefile.common
 
 FOCALIZE_SRC = \
 	ensembles_finis.fcl \
-	access_control.fcl
-
-# FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
-# their own rules at the end of this Makefile.
-FOCALIZE_SRC_UNSAFE = \
+	access_control.fcl \
 	hru.fcl \
 	rbac.fcl \
 	ticket.fcl \
 	unix.fcl
+
+# FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
+# their own rules at the end of this Makefile.
+FOCALIZE_SRC_UNSAFE = 
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
@@ -71,23 +71,22 @@ FOCALIZE_ZVS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.zv)
 FOCALIZE_VS = $(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.v)
 
-# FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
-# FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
-
+FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
+FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
 lib: all
 
 byt:: \
-      $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
-      $(FOCALIZE_ZVS)\
-      $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
-      $(FOCALIZE_VS)
+      $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE) \
+      $(FOCALIZE_ZVS) \
+      $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE) \
+      $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 bin:: \
-      $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
-      $(FOCALIZE_ZVS)\
-      $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
-      $(FOCALIZE_VS)
+      $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE) \
+      $(FOCALIZE_ZVS) \
+      $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE) \
+      $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install::
 	$(MKDIR) $(LIB_INSTALL_DIR)
@@ -98,6 +97,14 @@ install::
 	@if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then \
 	  echo "Installing (FoCaLize) compiled non-certified libs." ; \
 	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
+	fi
+	@if [ "$(FOCALIZE_CMIS)" != "" ] ; then \
+	  echo "Installing (Ocaml interface) compiled certified libs." ; \
+	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/ ; \
+	fi
+	@if [ "$(FOCALIZE_CMIS_UNSAFE)" != "" ] ; then \
+	  echo "Installing (Ocaml interface) compiled non-certified libs." ; \
+	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
 	fi
 	@if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
 	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ ; \
@@ -117,14 +124,14 @@ install::
 
 
 clean::
-	$(RM) *.fo *.ml *.mli *.zv *.v *.vo *.pfc *.glob *.fcd
+	$(RM) *.fo *.ml *.mli *.cm* *.zv *.v *.vo *.pfc *.glob *.fcd *.annot
 
 # Do not compile yet in Coq
-hru.ml: hru.fcl
-	$(FOCALIZEC) -no-coq-code $<
-rbac.ml: rbac.fcl
-	$(FOCALIZEC) -no-coq-code $<
-ticket.ml: ticket.fcl
-	$(FOCALIZEC) -no-coq-code $<
-unix.ml :unix.fcl
+# hru.ml: hru.fcl
+# 	$(FOCALIZEC) -no-coq-code $<
+# rbac.ml: rbac.fcl
+# 	$(FOCALIZEC) -no-coq-code $<
+# ticket.ml: ticket.fcl
+# 	$(FOCALIZEC) -no-coq-code $<
+# unix.ml :unix.fcl
 # End temporary
