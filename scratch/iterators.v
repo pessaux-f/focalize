@@ -106,7 +106,6 @@ Module Iteration.
           apply coq_builtins.magic_prove.
           Qed.
         Definition Iteration__iterate x  n := iterate (x, n).
-**
         End iterate.
       End Termination_iterate_namespace.
     Definition iterate (_p_Nat_T : Set) (_p_S_T : Set) (_p_Nat_lt :
@@ -158,7 +157,7 @@ Qed.
 
       (* Dummy theorem to enforce Coq abstractions. *)
       Theorem for_zenon_abstracted_iterate_spec_base :
-        forall x : _p_S_T,
+        forall x : _p_S_T,<
           Is_true ((_p_S_equal (abst_iterate x _p_Nat_start) _p_zero_zero)).
       assert (__force_use_p_Nat_T := _p_Nat_T).
       assert (__force_use_p_S_T := _p_S_T).

@@ -151,9 +151,19 @@ Module Iteration.
       (* For method of Self used via "by definition of !iterate". *)
 
 
+(*
       Definition abst_iterate (x : _p_S_T) (n : _p_Nat_T) : _p_S_T :=
         if (_p_Nat_equal n _p_Nat_start) then _p_zero_zero
           else (_p_F_binary_binop x (abst_iterate x (_p_Nat_predecessor n))).
+*)
+
+(*ICI*)
+      Function abst_iterate (x : _p_S_T) (n : _p_Nat_T)
+         {equation Termination_iterate_namespace.iterate_equation _p_S_T _p_Nat_T _p_Nat_lt _p_Nat_predecessor _p_Nat_start _p_Nat_equal _p_F_binary_binop _p_zero_zero coq_builtins.magic_order} : _p_S_T :=
+        if (_p_Nat_equal n _p_Nat_start) then _p_zero_zero
+          else (_p_F_binary_binop x (abst_iterate x (_p_Nat_predecessor n))).
+
+
       %%end-auto-proof
       (* Dummy theorem to enforce Coq abstractions. *)
       Theorem for_zenon_abstracted_iterate_spec_base :
