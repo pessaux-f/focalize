@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.24 2009-02-26 08:33:28 habib Exp $
+# $Id: Makefile,v 1.25 2009-02-26 10:29:50 habib Exp $
 
 # Makefile for access control models
 
@@ -125,13 +125,3 @@ install::
 
 clean::
 	$(RM) *.fo *.ml *.mli *.cm* *.zv *.v *.vo *.pfc *.glob *.fcd *.annot
-
-# Do not compile yet in Coq
-# hru.ml: hru.fcl
-# 	$(FOCALIZEC) -no-coq-code $<
-# rbac.ml: rbac.fcl
-# 	$(FOCALIZEC) -no-coq-code $<
-# ticket.ml: ticket.fcl
-# 	$(FOCALIZEC) -no-coq-code $<
-# unix.ml :unix.fcl
-# End temporary
