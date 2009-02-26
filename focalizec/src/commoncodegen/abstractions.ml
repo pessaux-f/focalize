@@ -12,10 +12,8 @@
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
-let debug_flg = ref false ;;
 
-
-(* $Id: abstractions.ml,v 1.65 2009-02-24 16:24:03 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.66 2009-02-26 11:08:38 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -615,7 +613,8 @@ type internal_abstraction_info = {
        Parsetree_utils.ParamDepSet.t)
   list ;
   (** Other dependencies found via [DEF-DEP], [UNIVERSE] and [PRM] of definition
-      72 page 153 of Virgile Prevosto's Phd. *)
+      72 page 153 of Virgile Prevosto's Phd + [DIDOU] applied on the rules
+      [DEF-DEP], [UNIVERSE] and [PRM]. *)
   iai_dependencies_from_params_via_completions :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
@@ -763,7 +762,7 @@ let find_field_abstraction_by_name name abstractions =
 let get_user_of_parameters_with_position ~current_unit species_parameters
     spe_expr =
   (* Do not [fold_right] otherwise, the counter will be reversed compared to
-    the order of the elements of the list, i.e. otherwise when processing the
+     the order of the elements of the list, i.e. otherwise when processing the
      last element of the list, the counter will be 0 and once on the first
      element of the list it will be length of the list minus 1. *)
   let (params_with_pos, _) =
@@ -1074,7 +1073,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
      For example: species S (Cp is ..., Cp' is S'(Cp))
      We want to know that Cp' uses Cp as 1st argument for the species S'.
      So we want to get the pair (Cp', (S', [(Cp, 1)])). If Cp' used another
-     Cq' as third argument, we would get the pair:
+     Cq as third argument, we would get the pair:
      (Cp', (S', [(Cp, 1); (Cq, 3)])). *)
   let parametrised_params_with_their_effective_args_being_params =
     List.map
@@ -1736,13 +1735,6 @@ let remap_dependencies_on_params_for_field env ctx from name
         else
           Parsetree.I_global
             (Parsetree.Qualified (inh_from_mod, inh_from_sp)) } in
-
-if !debug_flg then
-begin
-Format.eprintf "Field: %a coming from: %a@."
-  Sourcify.pp_vname name Sourcify.pp_ident fake_ident ;
-end;
-
     (* Really get in the environment the information about the method. *)
     let original_hosting_species_meths =
       (match env with
@@ -1762,20 +1754,9 @@ end;
            ms) in
     (* We now must look for the inherited method name among the found
        information. *)
-if !debug_flg then
-begin
-Format.eprintf "Searching for field: %a...@." Sourcify.pp_vname name ;
-end;
-
     let found_meth =
       List.find
         (fun info -> info.Env.mi_name = name) original_hosting_species_meths in
-
-if !debug_flg then
-begin
-Format.eprintf "Found.@." ;
-end;
-
     (* Implicitely the collection parameters of the found species are
        hosted in the compilation unit where their species is hosted,
        i.e. [inh_from_mod]. *)
@@ -1815,31 +1796,13 @@ end;
     let new_used_species_parameter_tys =
       List.fold_right
         (fun param_vname accu ->
-
-if !debug_flg then
-begin
-Format.eprintf "For carriers, searching by what parameter formal parameter %a was instanciated.@."
-  Sourcify.pp_vname param_vname ;
-end;
-
           try
             let substitued_param =
               apply_substitutions_list_on_formal_param_vname
                 inh_from_mod param_vname substs in
-if !debug_flg then
-begin
-Format.eprintf "For carriers, found instanciated by effective parameter %a@."
-  Sourcify.pp_vname substitued_param ;
-end;
             substitued_param :: accu
           with
           | Not_found ->
-
-if !debug_flg then
-begin
-Format.eprintf "For carriers, not found instanciated by an effective parameter@."
-end;
-
               (* Case where the substitution replaced the formal parameter by
                  "Self". In this case, the dependency on the parameter present
                  in the inherited species disappears in the current species. *)
@@ -1874,13 +1837,6 @@ end;
        generator by the dependencies information computed in the current
        species for the corresponding effective parameters used to instanciate
        the formal ones. *)
-
-if !debug_flg then
-begin
-Format.eprintf "Computing new_deps_on_params_as_option@."
-end;
-
-
     let new_deps_on_params_as_option =
       List.map
         (fun (inh_spe_param, (Env.ODFP_methods_list inh_ordered_meths)) ->
@@ -1894,17 +1850,6 @@ end;
                parameter. The stuff we search is then the bucket in
                [non_mapped_deps] having the same name than what was used during
                substitution to replace [inh_spe_param]. *)
-
-if !debug_flg then
-begin
-Format.eprintf "For methods, looking for the effective param used to instanciate the formal " ;
-(match inh_spe_param with
-  | Env.TypeInformation.SPAR_in (_, _, _) -> Format.eprintf "IN (forget)"
-  | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
-      Format.eprintf "%a" Types.pp_type_collection prm_ty_col);
-Format.eprintf " of the inherited species@."
-end;
-
             let formal_instanciation =
               Handy.list_assoc_custom_eq
                 (fun ty_col_to_replace param ->
@@ -1919,12 +1864,6 @@ end;
                    | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
                        prm_ty_col = ty_col_to_replace)
                 inh_spe_param substs in
-
-if !debug_flg then
-begin
-Format.eprintf "Ok, found@." ;
-end;
-
             (* Now we know that the currently processed formal argument was
                instanciated by the substitution [formal_instanciation]. *)
             let effective_instanciater =
@@ -1940,14 +1879,6 @@ end;
                       minimal Coq typing environment. *)
                    raise Not_found
                | Types.SBRCK_coll tc -> tc) in
-
-if !debug_flg then
-begin
-Format.eprintf "... and instancier is %a@."
-  Types.pp_type_collection effective_instanciater ;
-end;
-
-
             (* Must recover the list of methods of [effective_instanciater] i.e.
                in the current species dependencies information to pick
                inside. *)
@@ -1962,16 +1893,6 @@ end;
                    | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
                        prm_ty_col = ty_col)
                 effective_instanciater non_mapped_deps in
-
-if !debug_flg then
-begin
-Format.eprintf
-  "Methods of the instancier (i.e. in the current species) found via non yet mapped deps (i.e. those computed regularly):@." ;
-List.iter (fun (n, _) -> Format.eprintf "%a " Sourcify.pp_vname n)
-  meths_of_instanciater ;
-Format.eprintf "@." ;
-end;
-
             (* We now must pick in [meths_of_instanciater] the methods having
                the same name in the inherited dependencies information and put
                them according the same layout than in the inherited dependencies
@@ -1980,35 +1901,22 @@ end;
             let new_meths =
               List.fold_right
                 (fun (meth_name_in_inherited, _) accu ->
-                  (* Let's fidn the same method name in the current species and
+                  (* Let's find the same method name in the current species and
                      current collection parameter dependencies information. *)
-
-if !debug_flg then
-begin
-Format.eprintf "Trying to get in the current species parameter (instancier), the method that was called %a in the inherited species@."
-  Sourcify.pp_vname meth_name_in_inherited
-end ;
-		  try
-let tmp =
-                  List.find
-                    (fun (n, _) ->
-		      n = meth_name_in_inherited)
-                    meths_of_instanciater
-in
-if !debug_flg then
-begin
-Format.eprintf "The method that was called %a in the inherited species was found@."
-  Sourcify.pp_vname meth_name_in_inherited
-end ;
-
-tmp :: accu
-		  with Not_found ->
-		      (* The method appearing in the "inherited" dependencies
-			 is not present in the species that inherits. This can
-			 arise for instance when computing mapping for "partial"
-			 dependencies used for the record type. So, in this
-			 case, just ignore the method. *)
-		      accu)
+                  try
+                    let m =
+                      List.find
+                        (fun (n, _) ->
+                          n = meth_name_in_inherited)
+                        meths_of_instanciater in
+                    m :: accu
+                  with Not_found ->
+                      (* The method appearing in the "inherited" dependencies
+                         is not present in the species that inherits. This can
+                         arise for instance when computing mapping for "partial"
+                         dependencies used for the record type. So, in this
+                         case, just ignore the method. *)
+                      accu)
                 inh_ordered_meths [] in
             Some (param_of_instanciater, (Env.ODFP_methods_list new_meths))
           with Not_found ->
@@ -2054,23 +1962,23 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters. *)
-          let pre_partial_deps_from_params =
+             parameters, i.e. [TYPE]+[PRM]+([DIDOU] on [TYPE]+[PRM]). *)
+          let pre_for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
               ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let partial_deps_from_params =
+          let for_record_ty_deps_from_params =
             merge_abstraction_infos
-              pre_partial_deps_from_params
+              pre_for_record_ty_deps_from_params
               iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
-          let sorted_partial_deps_from_params =
+          let sorted_for_record_ty_deps_from_params =
             Dep_analysis.order_species_params_methods
-              partial_deps_from_params in
+              for_record_ty_deps_from_params in
           (* Remap computed dependencies onto the inherited parent's scheme if
              the method is inherited. *)
           let (from, name, _) = sig_field_info in
@@ -2078,16 +1986,16 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
             remap_dependencies_on_params_for_field
               env ctx from name iai.iai_used_species_parameter_tys
               sorted_deps_from_params in
-          let (_, mapped_partial_deps_from_params) =
+          let (_, mapped_for_record_ty_deps_from_params) =
              remap_dependencies_on_params_for_field
               env ctx from name iai.iai_used_species_parameter_tys
-              sorted_partial_deps_from_params in
+              sorted_for_record_ty_deps_from_params in
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys ;
             ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
-              mapped_partial_deps_from_params ;
+              mapped_for_record_ty_deps_from_params ;
             ai_min_coq_env = iai.iai_min_coq_env } in
           FAI_sig (sig_field_info, abstraction_info)
       | IFAI_let (let_field_info, iai) ->
@@ -2098,23 +2006,23 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters. *)
-          let pre_partial_deps_from_params =
+             parameters, i.e. [TYPE]+[PRM]+([DIDOU] on [TYPE]+[PRM]). *)
+          let pre_for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
               ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let partial_deps_from_params =
+          let for_record_ty_deps_from_params =
             merge_abstraction_infos
-              pre_partial_deps_from_params
+              pre_for_record_ty_deps_from_params
               iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
-          let sorted_partial_deps_from_params =
+          let sorted_for_record_ty_deps_from_params =
             Dep_analysis.order_species_params_methods
-              partial_deps_from_params in
+              for_record_ty_deps_from_params in
           (* Remap computed dependencies onto the inherited parent's scheme if
              the method is inherited. *)
           let (from, name, _, _, _, _, _, _) = let_field_info in
@@ -2122,16 +2030,16 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
             remap_dependencies_on_params_for_field
               env ctx from name iai.iai_used_species_parameter_tys
               sorted_deps_from_params in
-          let (_, mapped_partial_deps_from_params) =
+          let (_, mapped_for_record_ty_deps_from_params) =
              remap_dependencies_on_params_for_field
               env ctx from name iai.iai_used_species_parameter_tys
-              sorted_partial_deps_from_params in
+              sorted_for_record_ty_deps_from_params in
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys ;
             ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
-              mapped_partial_deps_from_params ;
+              mapped_for_record_ty_deps_from_params ;
             ai_min_coq_env = iai.iai_min_coq_env } in
           FAI_let (let_field_info, abstraction_info)
       | IFAI_let_rec internal_infos ->
@@ -2145,8 +2053,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        iai.iai_dependencies_from_params_via_type
                        iai.iai_dependencies_from_params_via_completions) in
                 (* Build the dependencies used to generate the record type
-                   parameters. *)
-                let pre_partial_deps_from_params =
+                   parameters, i.e. [TYPE]+[PRM]+([DIDOU] on [TYPE]+[PRM]). *)
+                let pre_for_record_ty_deps_from_params =
                   complete_dependencies_from_params_rule_didou
                     ~current_unit: ctx.Context.scc_current_unit
                     ~via_body:
@@ -2154,16 +2062,16 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        ctx.Context.scc_species_parameters_names)
                     ~via_type: iai.iai_dependencies_from_params_via_type
                     ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-                let partial_deps_from_params =
+                let for_record_ty_deps_from_params =
                   merge_abstraction_infos
-                    pre_partial_deps_from_params
+                    pre_for_record_ty_deps_from_params
                     iai.iai_dependencies_from_params_via_type in
                 let sorted_deps_from_params =
                   Dep_analysis.order_species_params_methods
                     all_deps_from_params in
-                let sorted_partial_deps_from_params =
+                let sorted_for_record_ty_deps_from_params =
                   Dep_analysis.order_species_params_methods
-                    partial_deps_from_params in
+                    for_record_ty_deps_from_params in
                 (* Remap computed dependencies onto the inherited parent's
                    scheme if the method is inherited. *)
                 let (from, name, _, _, _, _, _, _) = let_field_info in
@@ -2171,17 +2079,17 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                   remap_dependencies_on_params_for_field
                     env ctx from name iai.iai_used_species_parameter_tys
                     sorted_deps_from_params in
-		let (_, mapped_partial_deps_from_params) =
-		   remap_dependencies_on_params_for_field
-		    env ctx from name iai.iai_used_species_parameter_tys
-		    sorted_partial_deps_from_params in
+                let (_, mapped_for_record_ty_deps_from_params) =
+                   remap_dependencies_on_params_for_field
+                    env ctx from name iai.iai_used_species_parameter_tys
+                    sorted_for_record_ty_deps_from_params in
                 (* Build the final [abstraction_info]. *)
                 let abstraction_info = {
                   ai_used_species_parameter_tys =
                     mapped_used_species_parameter_tys ;
                   ai_dependencies_from_params = mapped_deps ;
                   ai_dependencies_from_params_for_record_type =
-                    mapped_partial_deps_from_params ;
+                    mapped_for_record_ty_deps_from_params ;
                   ai_min_coq_env = iai.iai_min_coq_env } in
                 (let_field_info, abstraction_info))
               internal_infos in
@@ -2194,94 +2102,40 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters. *)
-          let pre_partial_deps_from_params =
+             parameters, i.e. [TYPE]+[PRM]+([DIDOU] on [TYPE]+[PRM]). *)
+          let pre_for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
               ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-
-let (_, n, _, _, _, _) = theorem_field_info in
-(*                                  "tau_rbac_acc_r_correct" *)
-debug_flg := (n = Parsetree.Vlident "additive_compatibility") ;
-if !debug_flg then
-begin
-Format.eprintf "Theorem: %a of species %a@."
-  Sourcify.pp_vname n
- Sourcify.pp_qualified_species ctx.Context.scc_current_species ;
-Format.eprintf "[TYPE]@." ;
-Dep_analysis.debug_print_dependencies_from_parameters
-  iai.iai_dependencies_from_params_via_type ;
-Format.eprintf "[PRM]@." ;
-Dep_analysis.debug_print_dependencies_from_parameters
-  iai.iai_dependencies_from_params_via_PRM ;
-Format.eprintf "[DIDOU]@." ;
-Dep_analysis.debug_print_dependencies_from_parameters
-  pre_partial_deps_from_params
-end;
-
-
-          let partial_deps_from_params =
+          let for_record_ty_deps_from_params =
             merge_abstraction_infos
-              pre_partial_deps_from_params
+              pre_for_record_ty_deps_from_params
               iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
-          let sorted_partial_deps_from_params =
+          let sorted_for_record_ty_deps_from_params =
             Dep_analysis.order_species_params_methods
-              partial_deps_from_params in
-
+              for_record_ty_deps_from_params in
           (* Remap computed dependencies onto the inherited parent's scheme if
              the method is inherited. *)
           let (from, name, _, _, _, _) = theorem_field_info in
-
-if !debug_flg then
-begin
-Format.eprintf "[ALL]@." ;
-Dep_analysis.debug_print_dependencies_from_parameters2 sorted_deps_from_params ;
-Format.eprintf "Ready to map [ALL]@." ;
-end;
-
           let (mapped_used_species_parameter_tys, mapped_deps) =
             remap_dependencies_on_params_for_field
               env ctx from name iai.iai_used_species_parameter_tys
               sorted_deps_from_params in
-
-if !debug_flg then
-begin
-Format.eprintf "[SORTED PARTIAL]@." ;
-Dep_analysis.debug_print_dependencies_from_parameters2
-  sorted_partial_deps_from_params
-end;
-
-if !debug_flg then
-begin
-Format.eprintf "Ready to map [PARTIAL]@." ;
-end;
-
-          let (_, mapped_partial_deps_from_params) =
+          let (_, mapped_for_record_ty_deps_from_params) =
              remap_dependencies_on_params_for_field
               env ctx from name iai.iai_used_species_parameter_tys
-              sorted_partial_deps_from_params in
-
-if !debug_flg then
-begin
-Format.eprintf "[ALL MAPPED]@." ;
-Dep_analysis.debug_print_dependencies_from_parameters2 mapped_deps ;
-Format.eprintf "[PARTIAL MAPPED]@." ;
-Dep_analysis.debug_print_dependencies_from_parameters2
-  mapped_partial_deps_from_params ;
-debug_flg := false ;
-end;
-
+              sorted_for_record_ty_deps_from_params in
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys ;
             ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
-              mapped_partial_deps_from_params ;
+              mapped_for_record_ty_deps_from_params ;
             ai_min_coq_env = iai.iai_min_coq_env } in
           FAI_theorem (theorem_field_info, abstraction_info)
       | IFAI_property (property_field_info, iai) ->
@@ -2292,23 +2146,23 @@ end;
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters. *)
-          let pre_partial_deps_from_params =
+             parameters, i.e. [TYPE]+[PRM]+([DIDOU] on [TYPE]+[PRM]). *)
+          let pre_for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
               ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let partial_deps_from_params =
+          let for_record_ty_deps_from_params =
             merge_abstraction_infos
-              pre_partial_deps_from_params
+              pre_for_record_ty_deps_from_params
               iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
-          let sorted_partial_deps_from_params =
+          let sorted_for_record_ty_deps_from_params =
             Dep_analysis.order_species_params_methods
-              partial_deps_from_params in
+              for_record_ty_deps_from_params in
           (* Remap computed dependencies onto the inherited parent's scheme if
              the method is inherited. *)
           let (from, name, _, _, _) = property_field_info in
@@ -2316,16 +2170,16 @@ end;
             remap_dependencies_on_params_for_field
               env ctx from name iai.iai_used_species_parameter_tys
               sorted_deps_from_params in
-          let (_, mapped_partial_deps_from_params) =
+          let (_, mapped_for_record_ty_deps_from_params) =
              remap_dependencies_on_params_for_field
               env ctx from name iai.iai_used_species_parameter_tys
-              sorted_partial_deps_from_params in
+              sorted_for_record_ty_deps_from_params in
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys ;
             ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
-              mapped_partial_deps_from_params ;
+              mapped_for_record_ty_deps_from_params ;
             ai_min_coq_env = iai.iai_min_coq_env } in
           FAI_property (property_field_info, abstraction_info))
     internal_abstractions

@@ -13,11 +13,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.mli,v 1.23 2008-11-29 23:23:18 weis Exp $ *)
+(* $Id: parsetree_utils.mli,v 1.24 2009-02-26 11:08:38 pessaux Exp $ *)
 
 val name_of_vname : Parsetree.vname -> string
 (** Extracts the inner string name of the [vname] variable name. *)
-;;
 
 module SelfDepSet :
   sig
@@ -48,12 +47,10 @@ module SelfDepSet :
     val choose : t -> elt
     val split : elt -> t -> t * bool * t
   end
-;;
 
 type dependency_elem_type_kind =
   | DETK_computational of Types.type_simple
   | DETK_logical of Parsetree.logical_expr
-;;
 
 module ParamDepSet :
   sig
@@ -84,14 +81,11 @@ module ParamDepSet :
     val choose : t -> elt
     val split : elt -> t -> t * bool * t
   end
-;;
 
 val list_to_param_dep_set : ParamDepSet.elt list -> ParamDepSet.t
-;;
 
 val param_dep_set_find :
   (ParamDepSet.elt -> bool) -> ParamDepSet.t -> ParamDepSet.elt
-;;
 
 module VnameSet :
   sig
@@ -122,48 +116,37 @@ module VnameSet :
     val choose : t -> elt
     val split : elt -> t -> t * bool * t
   end
-;;
 
 val get_local_idents_from_pattern : Parsetree.pattern -> Parsetree.vname list
-;;
 
 val get_local_idents_and_types_from_pattern :
   Parsetree.pattern ->
   (Parsetree.vname * Parsetree.ast_node_type_information) list
-;;
 
 val pp_vname_with_operators_expanded :
   Format.formatter -> Parsetree.vname -> unit
-;;
 
 val vname_as_string_with_operators_expanded : Parsetree.vname -> string
-;;
 
 val type_coll_from_qualified_species :
   Parsetree.qualified_species -> Types.type_collection
-;;
 
 type simple_species_expr_as_effective_parameter =
   | SPE_Self
   | SPE_Species of (Parsetree.qualified_vname * Types.species_collection_kind)
   | SPE_Expr_entity of Parsetree.expr
-;;
 
 type simple_species_expr = {
   sse_name : Parsetree.ident ;
   sse_effective_args : simple_species_expr_as_effective_parameter list;
 }
-;;
 
 val make_pseudo_species_ident :
   current_unit: Parsetree.module_name -> Parsetree.qualified_species ->
   Parsetree.ident
-;;
 
 val make_concatenated_name_from_qualified_vname :
   Parsetree.qualified_vname -> string
-;;
 
 val make_concatenated_name_with_operators_expanded_from_qualified_vname :
   Parsetree.qualified_vname -> string
-;;
