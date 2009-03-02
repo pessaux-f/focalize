@@ -28,7 +28,7 @@ species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
         | h :: t ->
             match t with
             | [ ] -> A!print (h) ^ "]"
-            | _underscore -> A!print (h) ^ ",\n                     " ^ aux (t)
+            | _ -> A!print (h) ^ ",\n                     " ^ aux (t)
      in "[" ^ aux (l) ;
 
   let print_mod (l) =
@@ -38,7 +38,7 @@ species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
         | h :: t ->
             match t with
             | [ ] -> A!print (h) ^ ""
-            | _underscore -> A!print (h) ^ "" ^ aux (t)
+            | _ -> A!print (h) ^ "" ^ aux (t)
      in "[" ^ aux (l) ;
 
   proof of equal_prop = assumed {* Because todo *} ;

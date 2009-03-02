@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA
-#  $Id: .config_var.in,v 1.8 2009-02-26 13:53:46 pessaux Exp $
+#  $Id: .config_var.in,v 1.9 2009-03-02 10:19:30 weis Exp $
 
 #
 # The project identity card.

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.76 2009-02-12 16:01:03 weis Exp $ *)
+(* $Id: lexer.mll,v 1.77 2009-03-02 10:19:30 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -1142,12 +1142,6 @@ rule token = parse
                 lexbuf.lex_curr_p)) }
 
   (* Documentation *)
-  | "(***)"
-    { DOCUMENTATION ("", "") }
-  | "(***"
-    { comment_start_pos := [ lexbuf.lex_start_p, lexbuf.lex_curr_p ];
-      comment lexbuf;
-      token lexbuf }
   | "(**" (annotation_tag? as tag)
     { reset_documentation_buffer ();
       documentation_start_pos :=

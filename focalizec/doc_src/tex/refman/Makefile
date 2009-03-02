@@ -10,19 +10,18 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.19 2009-02-26 13:53:46 pessaux Exp $
+# $Id: Makefile,v 1.20 2009-03-02 10:19:30 weis Exp $
 
 ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-TEX_FILES = macros.tex basic_concepts.tex lexical_conventions.tex \
-	motivations.tex \
-	proofs.tex building_species.tex macros.tex output.tex refman.tex \
-	compiler_opts.tex more_on_meths.tex pres_requir.tex \
-	constructs_syntax.tex bibli.bib
+TEX_FILES = macros.tex basic_concepts.tex lexical_conventions.tex motivations.tex\
+  proofs.tex building_species.tex macros.tex output.tex refman.tex\
+  compiler_opts.tex more_on_meths.tex pres_requir.tex\
+  constructs_syntax.tex bibli.bib
 
-DOC_OBJS=refman.dvi refman.ps refman.pdf \
+DOC_OBJS = refman.dvi refman.ps refman.pdf\
   refman.html # Not so great but yet...
 
 TEXINPUT = /usr/share/texmf/tex/latex//:$(TEXINPUTS)
@@ -51,7 +50,7 @@ refman.pdf: refman.dvi
 	dvipdf refman.dvi
 
 refman.html: refman.dvi
-	#$(HEVEA) -fix macros.hva refman.hva refman.tex
+	$(HEVEA) -fix macros.hva refman.hva refman.tex
 
 refman.ps: refman.dvi
 	dvips refman.dvi

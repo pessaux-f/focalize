@@ -1,0 +1,1660 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+            "http://www.w3.org/TR/REC-html40/loose.dtd">
+<HTML>
+<HEAD><TITLE></TITLE>
+
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META name="GENERATOR" content="hevea 1.06">
+</HEAD>
+<BODY TEXT=black BGCOLOR=white>
+<!--HEVEA command line is: hevea -fix macros.hva refman.hva refman.tex -->
+<!--HTMLHEAD-->
+<!--ENDHTML-->
+<!--PREFIX <ARG ></ARG>-->
+<!--CUT DEF chapter 1 -->
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<DIV ALIGN=center><FONT SIZE=7><B><BR>
+<BR>
+<FONT COLOR=purple>FoCaLize</FONT></B></FONT><BR>
+<BR>
+
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<FONT SIZE=7><BR>
+<BR>
+<B>Reference Manual</B></FONT><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<FONT SIZE=5><B><BR>
+<BR>
+<FONT COLOR=purple>1.0.0</FONT></B> </FONT><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<FONT SIZE=5><B><BR>
+<BR>
+<FONT COLOR=purple>January 2009</FONT></B></FONT><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<FONT SIZE=5><BR>
+<BR>
+<B>Authors</B></FONT><BR>
+<BR>
+ <BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<FONT SIZE=4><EM>Thérèse Hardin,
+François Pessaux,
+Pierre Weis,
+Damien Doligez
+</EM></FONT>
+</DIV><BR>
+<DIV ALIGN=center>
+<FONT SIZE=7><B>About <FONT COLOR=purple>FoCaLize</FONT></B></FONT>
+</DIV><BR>
+<BR>
+<BR>
+<FONT SIZE=4><EM><BR>
+<BR>
+<FONT COLOR=purple>FoCaLize</FONT> is the result of a collective work of several researchers,
+listed in the following, who designed, defined, compiled, studied, extended,
+used and debugged the preceding versions. They were helped by many
+students who had a summer internship under their supervision. They
+would like to thank all these students and more generally all the
+persons who brought some contribution to <FONT COLOR=purple>FoCaLize</FONT>. </EM></FONT><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<DIV ALIGN=center>
+<FONT SIZE=5><B> <FONT COLOR=purple>FoCaLize</FONT> contributors</B></FONT>
+ <BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+
+</DIV><BR>
+<FONT SIZE=4>Philippe Ayrault (SPI-LIP6), William Bartlett (CPR-CEDRIC), Julien
+Blond (SPI-LIP6), Sylvain Boulmé (SPI-LIP6), Matthieu Carlier
+(CPR-CEDRIC), Damien Doligez (GALLIUM-INRIA), David Delahaye
+(CPR-CEDRIC), Catherine Dubois (CPR-CEDRIC), Jean-Frédéric Etienne
+(CPR-CEDRIC), Stéphane Fechter (SPI-LIP6), Mathieu Jaume (SPI-LIP6),
+Lionel Habib (SPI-LIP6), Thérèse Hardin (SPI-LIP6), Charles
+Morisset (SPI-LIP6), Ivan Noyer (SPI-LIP6), François Pessaux
+(SPI-LIP6), Virgile Prevosto (SPI-LIP6), Renaud Rioboo (CPR-CEDRC),
+Lien Tran (SPI-LIP6), Véronique Viguié Donzeau-Gouge (CPR-CNAM),
+Pierre Weis (ESTIME-INRIA)</FONT><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<DIV ALIGN=center>
+<FONT SIZE=4><B>and their institutions</B></FONT>
+ <BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+
+</DIV><BR>
+<EM>SPI (Semantics, Proofs and Implementations) is a team of LIP6,
+(Laboratoire d'Informatique de Paris 6) of UPMC (Pierre and Marie Curie
+University)</EM><SUP><A NAME="text1" HREF="#note1"><FONT SIZE=2>1</FONT></A></SUP><EM>.</EM><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<EM>CPR (Conception et Programmation Raisonnées) is a team of CEDRIC
+(Centre d'Etudes et de Recherches du CNAM) of CNAM (Conservatoire National
+des Arts et Métiers)</EM><SUP><A NAME="text2" HREF="#note2"><FONT SIZE=2>2</FONT></A></SUP><EM> and ENSIIE (Ecole Nationale d'Informatique pour
+l'Industrie et l'Entreprise)</EM><SUP><A NAME="text3" HREF="#note3"><FONT SIZE=2>3</FONT></A></SUP><EM>. </EM><BR>
+<BR>
+<BR>
+<BR>
+<EM>ESTIME and GALLIUM are teams of INRIA Rocquencourt</EM><SUP><A NAME="text4" HREF="#note4"><FONT SIZE=2>4</FONT></A></SUP><EM>
+</EM><BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<DIV ALIGN=center>
+<FONT SIZE=5><B>Thanks</B></FONT>
+ <BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+
+</DIV><BR>
+The <FONT COLOR=purple>Foc</FONT> project was first partially supported by LIP6 (Projet Foc, LIP6
+1997) then by the Ministry of Research (Action Modulogic).
+The <FONT COLOR=purple>Focal</FONT> research team was then partially supported by the French SSURF ANR project
+ANR-06-SETI-016 (Safety and Security UndeR Focal). The project also
+benefited of strong collaborations with EDEMOI ANR project and with
+BERTIN and SAFERIVER companies.<BR>
+<BR>
+The <FONT COLOR=purple>FoCaLize</FONT> language and compiler development effort started around 2005.
+The architecture conception and code rewritting started from scratch in 2006
+to finally make the first focalizec compiler and <FONT COLOR=purple>FoCaLize</FONT> system
+distribution in 2009, January.<BR>
+<BR>
+This manual documents the completely revised system with the new syntax and
+its semantics extensions.<BR>
+<BR>
+
+
+<!--BEGIN NOTES chapter-->
+<HR WIDTH="50%" SIZE=1><DL><DT><A NAME="note1" HREF="#text1"><FONT SIZE=5>1</FONT></A><DD>UPMC-LIP6,
+104 avenue du Président Kennedy, Paris 75016, France,
+<TT>Firstname.Lastname@lip6.fr</TT>
+<DT><A NAME="note2" HREF="#text2"><FONT SIZE=5>2</FONT></A><DD>CNAM-CEDRIC,
+292 rue Saint Martin, 75003, Paris, France,
+<TT>Firstname.Lastname@cnam.fr</TT>
+<DT><A NAME="note3" HREF="#text3"><FONT SIZE=5>3</FONT></A><DD>ENSIIE-CEDRIC,
+1 Square de la Résistance, 91025 Evry Cedex, France,
+<TT>Lastname@ensiie.fr</TT>
+<DT><A NAME="note4" HREF="#text4"><FONT SIZE=5>4</FONT></A><DD>INRIA,
+ Bat 8. Domaine de Voluceau, Rocquencourt, BP 105, F-78153 Le
+ Chesnay, France, <TT>Firstname.Lastname@inria.fr</TT>
+</DL>
+<!--END NOTES-->
+<!--TOC chapter Table of Contents-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#2de52d"><DIV ALIGN=center><TABLE>
+<TR><TD><B><FONT SIZE=6>Table of Contents</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<BR>
+<!--TOC section Introduction-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><B><FONT SIZE=5>Introduction</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+<!--TOC subsection Motivations-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><B><FONT SIZE=4>Motivations</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+The <FONT COLOR=purple>Foc</FONT> project was launched in 1998 by T. Hardin and R. Rioboo
+[<A HREF="#HardinRiobooTSI04"><CITE>HardinRiobooTSI04</CITE></A>] <SUP><A NAME="text5" HREF="#note5"><FONT SIZE=2>5</FONT></A></SUP>
+with the objective of helping all stages of development of critical software
+within safety and security domains. The methods used in these domains
+are evolving, ad-hoc and empirical approaches being replaced by more formal
+methods. For example, for high levels of safety, formal models of the
+requirement/specification phase are more and more considered as they
+allow mechanized proofs, test or static analysis of the required
+properties. In the same way, high level assurance in system security asks for
+the use of true formal methods along the process of software
+development and is often required for the specification level.
+Thus the project was to elaborate an Integrated
+Development Environment (IDE) able to provide high-level and justified
+confidence to users, but remaining easy to use by well-trained
+engineers.<BR>
+<BR>
+To ease developing high integrity systems with numerous software
+components, an Integrated Development Environment (IDE) should provide
+tools to formally express specifications, to describe design and
+coding and to ensure that specification requirements are met by the
+corresponding code. This is not enough. First, standards of critical systems
+ask for pertinent documentation which has to be maintained along all the revisions
+during the system life cycle. Second, the evaluation conformance
+process of software is by nature a sceptical analysis. Thus, any proof
+of code correctness must be easily redone at request and traceability
+must be eased. Third, design
+and coding are difficult tasks. Research in software engineering has
+demonstrated the help provided by some object-oriented
+features as inheritance, late binding and early research works on
+programming languages have pointed out the importance of abstraction
+mechanism such as modularity to help invariant maintaining. There are
+a lot of other points which should also be considered when designing
+an IDE for safe and/or secure systems to ensure conformance with high
+Evaluation Assurance or Safety Integrity Levels (EAL-5,7 or SIL 3,4)
+and to ease the evaluation process according to various standards
+(e.g. IEC61508, CC, ...): handling of non-functional contents of
+specification, handling of dysfunctional behaviors and vulnerabilities
+from the true beginning of development and fault avoidance, fault
+detection by validation testing, vulnerability and safety analysis.<BR>
+<BR>
+<!--TOC subsection Initial application testbed-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><B><FONT SIZE=4>Initial application testbed</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+When the <FONT COLOR=purple>Foc</FONT> project was launched by Hardin and Rioboo,
+only one specific domain was considered, the one of Computer
+Algebra. Algorithms used in this domain can be rather intricated and
+difficult to test and this is not rare that computer algebra systems
+issue a bad result, due to semantical flaws, compiler anomalies,
+etc. Thus the idea was to design a language allowing to specify the
+mathematics underlying these algorithms and to go step by step to
+different kinds of implementations according to the specifities of the
+problem under consideration<SUP><A NAME="text6" HREF="#note6"><FONT SIZE=2>6</FONT></A></SUP>. The first step was to design
+the semantics of such a language, trying to fit to several
+requirements: easing the expression of mathematical statements, clear
+distinction between the mathematical structure (semi-ring, polynomial,
+..) and its different implementations, easing the development
+(modularity, inheritance, parametrisation, abstraction, ..), runtime
+efficiency and confidence in the whole development (mechanised proofs,
+..). After an initial phase of conceptual design, the <FONT COLOR=purple>Foc</FONT>
+semantics was submitted to a double test. On one hand, this semantics
+was specified in <FONT COLOR=purple>Coq</FONT> and in a categorical model of type theories by
+S. Boulmé (see his thesis[<A HREF="#BoulmePhD00"><CITE>BoulmePhD00</CITE></A>]), a point which
+enlightened the borders of this approach, regarding the logical
+background. On the other hand, before designing the syntax, it was
+needed to study the development style in such a
+language. R. Rioboo&nbsp;[<A HREF="#ThRRCalculemus"><CITE>ThRRCalculemus</CITE></A><CITE>, </CITE><A HREF="#HardinRiobooTSI04"><CITE>HardinRiobooTSI04</CITE></A>] used the
+<FONT COLOR=purple>OCaml</FONT> language to try different solutions which are recorded in
+&nbsp;[<A HREF="#HardinRiobooTSI04"><CITE>HardinRiobooTSI04</CITE></A>].<BR>
+<BR>
+<!--TOC subsection Initial <FONT COLOR=purple>Focal</FONT> design-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><B><FONT SIZE=4>Initial <FONT COLOR=purple>Focal</FONT> design</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+Then the time came to design the syntax of the language and the compiler. To
+overcome inconsistencies risks, an original dependency analysis was
+incorporated into the compiler (V. Prevosto
+thesis[<A HREF="#PrevostoPhD03"><CITE>PrevostoPhD03</CITE></A><CITE>, </CITE><A HREF="#TPHOL2002"><CITE>TPHOL2002</CITE></A><CITE>, </CITE><A HREF="#PrevostoJAR02"><CITE>PrevostoJAR02</CITE></A>]) and the correction of the
+compiler (mostly written by V. Prevosto) against <FONT COLOR=purple>Focal</FONT>'s semantics is
+proved (by hand) [<A HREF="#TLCA2005"><CITE>TLCA2005</CITE></A>], a point which
+brings a satisfactory confidence in the language's correctness. Then
+Rioboo&nbsp;[] began the development of a huge computer algebra
+library, which offers full specification
+and implementation of usual algebraic structures up to multivariate
+polynomial rings with complex algorithms, first as a way to
+extensively test the language and (quite satisfactory)
+efficiency of the produced code and then to provide a standard library
+of mathematical backgrounds. And D. Doligez[<A HREF="#ZenonBDD"><CITE>ZenonBDD</CITE></A>] started the
+development of <FONT COLOR=purple>Zenon</FONT>, an automatic prover based on tableaux method,
+which takes a <FONT COLOR=purple>Focal</FONT> statement and tries to build a proof of it and,
+when succeeds, issues a <FONT COLOR=purple>Coq</FONT> term. More recently, M. Carlier and
+C. Dubois[<A HREF="#CarlierDuboisLNCS2008"><CITE>CarlierDuboisLNCS2008</CITE></A>] began the development of a
+test tool for <FONT COLOR=purple>Focal</FONT>.<BR>
+<BR>
+<FONT COLOR=purple>Focal</FONT> has already been used to develop huge examples such as the
+standard library and the computer algebra library. The library
+dedicated to the algebra of access control models, developed by
+M. Jaume and C. Morisset[<A HREF="#jias06"><CITE>jias06</CITE></A><CITE>, </CITE><A HREF="#fcsarspa06"><CITE>fcsarspa06</CITE></A><CITE>, </CITE><A HREF="#MorissetPhd"><CITE>MorissetPhd</CITE></A>],
+is another huge example, which borrows implementations of orderings,
+lattices and boolean algebras from the computer algebra library.
+<FONT COLOR=purple>Focal</FONT> was also very successfully used to formalize airport security
+regulations, a work by D. Delahaye, J.-F. Etienne, C. Dubois,
+V. Donzeau-Gouge &nbsp;[<A HREF="#EDEMOI-All"><CITE>EDEMOI-All</CITE></A><CITE>, </CITE><A HREF="#EDEMOI-Model"><CITE>EDEMOI-Model</CITE></A><CITE>, </CITE><A HREF="#EDEMOI-Proof"><CITE>EDEMOI-Proof</CITE></A>]. This
+last work led to the development of a translator[<A HREF="#Focal-UML"><CITE>Focal-UML</CITE></A>]
+from <FONT COLOR=purple>Focal</FONT> to UML for documentation purposes.<BR>
+<BR>
+<!--TOC subsection The <FONT COLOR=purple>FoCaLize</FONT> system-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><B><FONT SIZE=4>The <FONT COLOR=purple>FoCaLize</FONT> system</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+The <FONT COLOR=purple>FoCaLize</FONT> development effort started in 2006: it was clearly a
+continuation of the <FONT COLOR=purple>Foc</FONT> and <FONT COLOR=purple>Focal</FONT> efforts. The new system was rewritten
+from scratch. A new language and syntax was designed and carefully
+implemented, with in mind ease of use, expressivity, and programmer
+friendyness. The addition of powerful data structure definitions together
+with the corresponding pattern matching facility, lead to new expressing
+power.<BR>
+<BR>
+The <FONT COLOR=purple>Zenon</FONT> automatic theorem prover was also integrated in the
+compiler and natively interfaced within the <FONT COLOR=purple>FoCaLize</FONT> language. New
+developments for recursive functions support is on the way (in particular for
+termination proofs).<BR>
+<BR>
+A formal specification can be built by declaring names of functions
+and values and introducing
+properties. Then, design and implementation can incrementally be done
+by adding definitions of functions and proving that the implementation
+meets the specification or design requirements. Thus, developing in
+<FONT COLOR=purple>FoCaLize</FONT> is a kind of refinement process from formal model to design
+and code, completely done within <FONT COLOR=purple>FoCaLize</FONT>. Taking the global development
+in consideration within the same environment brings some conciseness,
+helps documentation and reviewing.
+Thus a <FONT COLOR=purple>FoCaLize</FONT> development is organised as a hierarchy that may have
+several roots. The upper levels of the hierarchy are built along the
+specification stage while the lower ones correspond to
+implementation and each node of the hierarchy corresponds to a progress
+toward a complete implementation.<BR>
+<BR>
+The <FONT COLOR=purple>FoCaLize</FONT> system provides means for the developers to formally express
+their specifications and to go step by step (in an incremental approach) to
+design and implementation while proving that such an implementation
+meets its specification or design requirements. The <FONT COLOR=purple>FoCaLize</FONT> language offers
+high level mechanisms such as inheritance, late binding, redefinition,
+parametrization, etc. Confidence in proofs submitted by developers or
+automatically done relies on formal proof verification. <FONT COLOR=purple>FoCaLize</FONT> also
+provides some automation of documentation production and management.<BR>
+<BR>
+We would like to mention several works about safety and/or security
+concerns within <FONT COLOR=purple>FoCaLize</FONT> and specially the definition of a safety life
+cycle by P. Ayrault, T. Hardin and F. Pessaux [<A HREF="#TTSS08"><CITE>TTSS08</CITE></A>] and the
+study of some traps within formal methods by E. Jaeger and
+T. Hardin[<A HREF="#traps"><CITE>traps</CITE></A>].<BR>
+<BR>
+<!--TOC subsection The <FONT COLOR=purple>FoCaLize</FONT> system in short-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><B><FONT SIZE=4>The <FONT COLOR=purple>FoCaLize</FONT> system in short</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+<FONT COLOR=purple>FoCaLize</FONT> can be seen as an IDE still in development, which
+gives a positive solution to the three requirements identified above:
+<OL type=1><LI>
+pertinent documentation is maintained within the system being written,
+ and its extraction is an automatic part of the compilation process,
+<LI>proofs are written using a high level proof language, so that proofs
+ are easier to write and their verification is automatic and reliable,
+<LI>the framework provides powerful abstraction mechanisms to facilitate
+ design and development; however, these mechanisms are carefully ruled:
+ the compiler performs numerous validity checks to ensure that no
+ further development can inadvertantly break the invariants or
+ invalidate the proofs; indeed, the compiler ensures that if a theorem
+ was based on assumptions that are now violated by the new development,
+ then the theorem is out of reach of the programmer.
+</OL>
+<!--BEGIN NOTES chapter-->
+<HR WIDTH="50%" SIZE=1><DL><DT><A NAME="note5" HREF="#text5"><FONT SIZE=5>5</FONT></A><DD>They were members of the SPI (Semantics, Proofs,
+Implementations) team of the LIP6 (Lab. Informatique de Paris 6)
+at Université Pierre et Marie Curie (UMPC), Paris
+<DT><A NAME="note6" HREF="#text6"><FONT SIZE=5>6</FONT></A><DD>For example Computer Algebra
+Libraries use several different representations of polynomials
+according to the treatment to be done
+</DL>
+<!--END NOTES-->
+<!--TOC chapter Overview-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#2de52d"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc1"><B><FONT SIZE=6>Chapter&nbsp;1</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=6>Overview</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<BR>
+ 
+<A NAME="glimpse"></A>
+Before entering the precise description of <FONT COLOR=purple>FoCaLize</FONT> we give an
+informal 
+presentation of near all its features, to help further reading of the
+reference manual. Every construction or feature of <FONT COLOR=purple>FoCaLize</FONT> will be
+entirely described in the following chapters. <BR>
+<BR>
+<!--TOC section The Basic Brick-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc2"><B><FONT SIZE=5>1.1</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>The Basic Brick</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+The primitive entity of a <FONT COLOR=purple>FoCaLize</FONT> development is the
+<EM>species</EM>. It can be viewed as a record grouping ``things'' related
+to a same concept. Like in most modular design systems (i.e. objected 
+oriented, algebraic abstract types) the idea is to group a data
+structure with the operations to process it. Since in <FONT COLOR=purple>FoCaLize</FONT> we don't
+only address data type and operations, among these ``things'' we also
+find the declaration (specification) of these operations, the
+properties (which may represent 
+requirements) and their proofs. <BR>
+<BR>
+We now describe each of these ``things'', called <EM>methods</EM>.
+<UL><LI>
+ The <EM>method</EM> introduced by the keyword
+ <TT>representation</TT> gives the data representation of entities
+ manipulated by the <EM>species</EM>. It is a type called the
+ <EM>representation</EM> (or the representation type when emphasising
+ on the fact that it is a type) and defined by a type expression. 
+ The <EM>representation</EM> may be not-yet-defined in a <EM>species</EM>, 
+ meaning that the real structure of the data-type the <EM>species</EM>
+ embeds does not need to be known at this point. In this case, it is
+ simply a type variable. However, to obtain an
+ implementation, the <EM>representation</EM>
+ has to be defined later either by setting <TT>representation = exp</TT> where
+ <TT>exp</TT> is a type expression or by inheritance (see below). 
+ Type expressions in <FONT COLOR=purple>FoCaLize</FONT> are roughly ML-like types (variables,
+ basic types, inductive types, record types) plus
+ <EM>species representation types</EM>, denoted by keyword <TT>Self</TT>
+ inside the species and by the name of their <EM>species</EM>
+ outside of them.<BR>
+<BR>
+Each <EM>species</EM> has a unique method <EM>representation</EM>. This
+ is not a restriction compared to other languages where
+ programs/objects/modules can own several private variables
+ representing the internal state, hence the data structure of the
+ manipulated entities by the program/object/module. In such a case,
+ the <EM>representation</EM> can simply be the tuple grouping all these
+ variables that were disseminated all along the
+ program/object/module.<BR>
+<BR>
+<LI>Declarations are composed of the keyword <TT>signature</TT>
+ followed by a name and a type. It serves to announce a <EM>method</EM> to
+ be defined later, i.e. to only specify its type, without
+ implementation yet. Such <EM>methods</EM> are especially dedicated
+ for specification or design purposes since declared names may be
+ used to define others <EM>methods</EM> while
+ delaying their definition. The type provided by
+ the <EM>signature</EM> allows <FONT COLOR=purple>FoCaLize</FONT> to ensure via type-checking
+ that the method is used in contexts compatibles with this
+ type. The late-binding and the collection mechanisms, further
+ introduced, ensure that the definition of the method will be
+ effectively known when needed.<BR>
+<BR>
+<LI>Definitions are composed of the keyword <TT>let</TT>, followed
+ by a name, a type and an expression. They serve to introduce
+ constants or functions, i.e. computational operations. The core
+ language used to implement them is roughly ML-like expressions
+ (let-binding, pattern matching, conditional, higher order
+ functions, ...) with the addition of a construction to call a
+ <EM>method</EM> from a given <EM>species</EM>. Mutually recursive
+ definitions are introduced by <TT>let rec</TT>.<BR>
+<BR>
+<LI>Statements are composed of the keyword <TT>property</TT>
+ followed by a name and a first-order
+ formula. A <EM>property</EM> may serve to express requirements
+ (i.e. facts that the system must hold to conform to the Statement
+ of Work) and then can be viewed as a
+ specification purpose <EM>method</EM>, like <EM>signature</EM>s were for
+ <TT>let</TT>-<EM>method</EM>s. It will lead to a proof obligation later
+ in the development. A <EM>property</EM> may also be used to express
+ some ``quality'' information of the system (soundness,
+ correctness, ..) also submitted to a proof obligation. Formulae
+ are written with usual logical connectors, universal and
+ existential quantifications over a <FONT COLOR=purple>FoCaLize</FONT> type, and names of <EM>methods</EM> known within the <EM>species</EM>'s context. For instance,
+ a <EM>property</EM> telling that if the speed is non-null, then doors
+ can't be opened could look like:
+ <DIV ALIGN=center>
+ <TT>all v in Speed, v &lt;&gt; Speed!zero -&gt; ~ doors_open</TT>
+ </DIV>
+ In the same way as <EM>signatures</EM>, even if no proof is
+ yet given, the name of the <EM>property</EM> can be used to express 
+ other ones and its statement can be used as an hypothesis in
+ proofs. <FONT COLOR=purple>FoCaLize</FONT> late binding and collection mechanisms ensure
+ that the proof of a <EM>property</EM> will be ultimately done.<BR>
+<BR>
+<LI>Theorems (<TT>theorem</TT>) made of a name, a statement and a
+ proof are <EM>properties</EM> together with the formal proof that their
+ statement holds in the context of the <EM>species</EM>. The proof
+ accompanying the statement will be processed by <FONT COLOR=purple>FoCaLize</FONT> and
+ ultimately checked with the theorem prover <FONT COLOR=purple>Coq</FONT>.<BR>
+<BR>
+Like in any formal development, one severe difficulty before
+ proving is obviously to state a true interesting and meaningful
+ statement. For instance, claiming that a piece of software is
+ ``formally proved'' as respecting the safety requirements <TT>system_ok</TT> ``since <B>its</B> property is demonstrated'' is a
+ lie if this property was, for instance, <TT>1 = 1 -&gt;
+ system_ok</TT>. This is obviously a non-sense since the text of the
+ property is trivial and does not link <TT>system_ok</TT> with the
+ rest of the software (see [<A HREF="#traps"><CITE>traps</CITE></A>] for less trivial examples).</UL>
+We now make concrete these notions on an example we will incrementally
+extend. We want to model some simple algebraic structures. Let's start
+with the description of a ``setoid'' representing the data structure of
+``things'' belonging to a set, which can be submitted to an
+equality test and
+exhibited (i.e. one can get a witness of existence of one of these
+``things'').<BR>
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT><FONT SIZE=2><TT>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;signature&nbsp;(&nbsp;=&nbsp;)&nbsp;:&nbsp;Self&nbsp;-&gt;&nbsp;Self&nbsp;-&gt;&nbsp;bool&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;signature&nbsp;element&nbsp;:&nbsp;Self&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;property&nbsp;refl&nbsp;:&nbsp;all&nbsp;x&nbsp;in&nbsp;Self,&nbsp;x&nbsp;=&nbsp;x&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;property&nbsp;symm&nbsp;:&nbsp;all&nbsp;x&nbsp;y&nbsp;in&nbsp;Self,&nbsp;x&nbsp;=&nbsp;y&nbsp;-&gt;&nbsp;y&nbsp;=&nbsp;x&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;property&nbsp;trans:&nbsp;all&nbsp;x&nbsp;y&nbsp;z&nbsp;in&nbsp;Self,&nbsp;x=y&nbsp;and&nbsp;y=z&nbsp;-&gt;&nbsp;x=z&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;let&nbsp;different&nbsp;(x,&nbsp;y)&nbsp;=&nbsp;basics#not_b&nbsp;(x&nbsp;=&nbsp;y)&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>end&nbsp;;;</TT></FONT></DIV><BR>
+In this <EM>species</EM>, the <EM>representation</EM> is not explicitly
+given (no keyword <TT>representation</TT>) , since we don't need to set
+it to be able to express functions and properties our ``setoid''
+requires. However, we can refer to it via <TT>Self</TT> and it is in fact
+a type variable. In the same way, we specify a <EM>signature</EM> for the
+equality (operator <TT>=</TT>). We introduce the three properties that
+an equality (equivalence relation) must conform to. <BR>
+<BR>
+We complete the example by the definition of
+the function <TT>different</TT> which use the name <TT>=</TT>
+(here <TT>basics#not_b</TT> stands for the
+function <TT>not_b</TT>, the boolean <TT>and</TT> coming from the <FONT COLOR=purple>FoCaLize</FONT>
+source file <TT>basics.fcl</TT>). It is possible right now to prove that
+<TT>different</TT> is irreflexive, under the hypothesis that <TT>=</TT> is an
+equivalence relation (i.e. that each implementation of <TT>=</TT> given
+further will satisfy these properties). <BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+It is possible to use <EM>methods</EM> only declared before they get a
+real <EM>definition</EM> thanks to the <EM>late-binding</EM> feature
+provided by <FONT COLOR=purple>FoCaLize</FONT>. In the same idea, redefining a <EM>method</EM> is
+allowed in <FONT COLOR=purple>FoCaLize</FONT> and, it is 
+always the last version which is kept as the effective <EM>definition</EM>
+inside the species.<BR>
+<BR>
+<!--TOC section Type of Species, Interfaces and Collections-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc3"><B><FONT SIZE=5>1.2</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Type of Species, Interfaces and Collections</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="species-type"></A>
+<A NAME="species-interface"></A>
+The <EM>type</EM> of a <EM>species</EM> is obtained by removing definitions
+and proofs. Thus, it is a kind of record type, made of all the method
+types of the species. If the <TT>representation</TT> is still a type
+variable say <FONT FACE=symbol>a</FONT>, then the <EM>species</EM> type is prefixed with an
+existential binder <FONT FACE=symbol>$</FONT> <FONT FACE=symbol>a</FONT>. This binder will be eliminated as
+soon as the <TT>representation</TT> will be instantiated (defined) and
+must be eliminated to obtain runnable code. <BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+The <EM>interface</EM> of a species is obtained by abstracting the <EM>representation</EM> type in the <EM>species type</EM> and this abstraction
+is permanent. <BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<B>Beware!</B> <EM>No special construction
+is given to denote interfaces in the concrete syntax, they are
+simply denoted by the name of the species underlying them.</EM> Do not
+confuse a species and its interface. <BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+ The <EM>species type</EM> remain totally implicit in the concrete syntax, being
+just used as a step to build <EM>species interface</EM>. It is used
+during inheritance resolution. <BR>
+<BR>
+Interfaces can be ordered by inclusion, a point providing a very
+simple notion of subtyping. This point will be further commented. <BR>
+<BR>
+A species is said to be <EM>complete</EM> if all declarations have
+received definitions and all properties have received proofs.<BR>
+<BR>
+When <EM>complete</EM>, a species can be submitted to an abstraction
+process of its representation to create a <EM>collection</EM>. Thus the
+<EM>interface</EM> of the collection is just the <EM>interface</EM> of the
+complete species underlying it. A collection can hence be seen as an
+abstract data type, only usable through the methods of its interface,
+but having the guarantee that all methods/theorems are defined/proved. <BR>
+<BR>
+<!--TOC section Combining Bricks by Inheritance-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc4"><B><FONT SIZE=5>1.3</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Combining Bricks by Inheritance</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+A <FONT COLOR=purple>FoCaLize</FONT> development is organised as a hierarchy which may have
+several roots. Usually the upper levels of the hierarchy are built
+during the specification stage while the lower ones correspond to
+implementations. Each node of the hierarchy, i.e. each <EM>species</EM>,
+is a progress to a complete implementation. On the previous 
+example, forgetting <TT>different</TT>, we typically presented a kind of
+<EM>species</EM> for ``specification'' since it expressed only
+<EM>signatures</EM> of functions to be later implemented and properties
+to which, later, give <EM>proofs</EM>.<BR>
+<BR>
+We can now create a new <EM>species</EM>, may be more complex, by
+<B>inheritance</B> of a previously defined. We say here ``may be more
+complex'' because it can add new operations and properties, but it can
+also only bring real definitions to <EM>signatures</EM> and <EM>proofs</EM>
+to <EM>properties</EM>, adding no new <EM>method</EM>.<BR>
+<BR>
+Hence, in <FONT COLOR=purple>FoCaLize</FONT> inheritance serves two kinds of evolutions. In the
+first case the evolution aims making a <EM>species</EM> with more
+operations but keeping those of its parents (or redefining some of
+them). In the second case, the <EM>species</EM> only tends to be closer
+to a ``run-able'' implementation, providing explicit definitions to
+<EM>methods</EM> that were previously only declared.<BR>
+<BR>
+Continuing our example, we want to extend our model to represent
+``things'' with a multiplication and a neutral element for this
+operation.<BR>
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT><FONT SIZE=2><TT>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;signature&nbsp;(&nbsp;*&nbsp;)&nbsp;:&nbsp;Self&nbsp;-&gt;&nbsp;Self&nbsp;-&gt;&nbsp;Self&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;signature&nbsp;one&nbsp;:&nbsp;Self&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;let&nbsp;element&nbsp;=&nbsp;one&nbsp;*&nbsp;one&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>end&nbsp;;;</TT></FONT></DIV><BR>
+We see here that we added new <EM>methods</EM> but also gave a definition
+to <TT>element</TT>, saying it is the application of the method <TT>*</TT>
+to <TT>one</TT> twice, both of them being only <EM>declared</EM>. Here, we
+used the inheritance in both the presented ways: making a more complex
+entity by adding <EM>methods</EM> and getting closer to the
+implementation by explicitly defining <TT>element</TT>.<BR>
+<BR>
+Multiple inheritance is available in <FONT COLOR=purple>FoCaLize</FONT>. For sake of simplicity,
+the above example uses simple inheritance. In case of inheriting a
+<EM>method</EM> from several parents, the order of parents in the
+<TT>inherits</TT> clause serves to determine the chosen <EM>method</EM>.<BR>
+<BR>
+The <EM>type</EM> of a <EM>species</EM> built using inheritance is defined
+like for other <EM>species</EM>, the <EM>methods</EM> types retained inside
+it being those of the <EM>methods</EM> present in the <EM>species</EM> after
+inheritance is resolved.<BR>
+<BR>
+A strong constraint in inheritance is that the type of inherited,
+and/or redefined <EM>methods</EM> must not change. This is required to
+ensure consistence of the <FONT COLOR=purple>FoCaLize</FONT> model, hence of the developed
+software. More precisely, if the representation is given by a type
+expression containing some type variables, then it can be more defined
+by instanciation of these variables. In the same way, two signatures
+have compatible types if they have a common unifier, thus, roughly
+speaking if they are compatible Ml-like types. For example, if the
+representation was not yet defined, thus being still a type variable,
+it can be defined by <TT>int</TT>. And if a species <I>S</I> inherits from
+<I>S</I><SUB><FONT SIZE=2>1</FONT></SUB> and <I>S</I>2 a method called <I>m</I>, there is no type clash if <I>S</I><SUB><FONT SIZE=2>1</FONT></SUB> !<I>m</I>
+and <I>S</I><SUB><FONT SIZE=2>2</FONT></SUB>!<I>m</I> can be unified, then the method <I>S</I>!<I>m</I> has the most general
+unifier of these two types as its own type. <BR>
+<BR>
+<!--TOC section Combining Bricks by Parametrisation-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc5"><B><FONT SIZE=5>1.4</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Combining Bricks by Parametrisation</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+Until now we are only able to enrich <EM>species</EM>. 
+However, we sometimes need to use a <EM>species</EM>, not to take over
+its <EM>methods</EM>, but rather to use it as an ``ingredient'' to build
+a new structure. For instance, a pair of setoids is a
+new structure, using the previous <EM>species</EM> as the ``ingredient''
+to create the structure of the pair. Indeed, the structure of a pair is
+independent of the structure of each component it is made of. A pair
+can be seen as <EM>parametrised</EM> by its two components.
+Following this idea, <FONT COLOR=purple>FoCaLize</FONT> allows two flavors of parametrisation.<BR>
+<BR>
+<!--TOC subsection Parametrisation by Collection Parameters-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc6"><B><FONT SIZE=4>1.4.1</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Parametrisation by Collection Parameters</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+We first introduce the <EM>collection parameters</EM>. They are
+<EM>collections</EM> that the hosting species may use through their
+<EM>methods</EM> to define its own ones.<BR>
+<BR>
+A <EM>collection parameter</EM> is given a name <I>C</I> and an interface
+<I>I</I>. The name <I>C</I> serves to call the <EM>methods</EM> of <I>C</I> which figure in
+<I>I</I>. <I>C</I> can be instantiated by an effective parameter <I>CE</I> of
+interface <I>IE</I>. <I>CE</I> is a collection and its interface <I>IE</I> must
+contain <I>I</I>. Moreover, the collection and late-binding mechanisms
+ensure that all methods appearing in <I>I</I> are indeed implemented
+(defined for functions, proved for properties) in <I>CE</I>. Thus, no
+runtime error, due to linkage of libraries, can occur and any <EM>properties</EM> stated in <I>I</I> can be safely used as an hypothesis.<BR>
+<BR>
+Calling a <EM>species</EM>'s <EM>method</EM> is
+done via the ``bang'' notation:
+<TT>!meth</TT> or <BR>
+<TT>Self!meth</TT> for a <EM>method</EM> of the current
+<EM>species</EM> (and in this case, even simpler: <TT>meth</TT>, since the
+<FONT COLOR=purple>FoCaLize</FONT> compiler will resolve scoping issues). To call
+<EM>collection parameters</EM>'s <EM>method</EM>, the same notation is used:
+<TT>A!element</TT> stands for the <EM>method</EM> <TT>element</TT> of the
+<EM>collection parameter</EM> <TT>A</TT>.<BR>
+<BR>
+To go on with our example, a pair of setoids has two components, hence a
+<EM>species</EM> for pairs of setoids will have two
+<EM>collection parameters</EM>. It is itself a setoid, a fact which is
+simply recorded via the inheritance mechanism:
+<TT>inherits Setoid</TT> gives to <TT>Setoid_product</TT> all the methods
+of <TT>Setoid</TT>.<BR>
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT><FONT SIZE=2><TT>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;representation&nbsp;=&nbsp;(A&nbsp;*&nbsp;B)&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;let&nbsp;(&nbsp;=&nbsp;)&nbsp;(x,&nbsp;y)&nbsp;=</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and_b</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(A!(&nbsp;=&nbsp;)&nbsp;(first&nbsp;(x),&nbsp;first&nbsp;(y)),</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;B!(&nbsp;=&nbsp;)&nbsp;(scnd&nbsp;(x),&nbsp;scnd&nbsp;(y)))&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;let&nbsp;create&nbsp;(x,&nbsp;y)&nbsp;in&nbsp;Self&nbsp;=&nbsp;basics#crp&nbsp;(x,&nbsp;y)&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;let&nbsp;element&nbsp;=&nbsp;Self!create&nbsp;(A!element,&nbsp;B!element)&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;proof&nbsp;of&nbsp;refl&nbsp;=&nbsp;by&nbsp;definition&nbsp;of&nbsp;(&nbsp;=&nbsp;)&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>end&nbsp;;;</TT></FONT></DIV><BR>
+We express the <EM>representation</EM> of the product of two setoids as the
+Cartesian product of the <EM>representation</EM> of the two parameters. In
+<TT>A * B</TT>, <TT>*</TT> is the <FONT COLOR=purple>FoCaLize</FONT> type  constructor of pairs, <TT>A</TT> denotes indeed 
+the representation of the first <EM>collection parameter</EM>, and <TT>B</TT>
+the one of of the second <EM>collection parameter</EM>.<BR>
+<BR>
+Next, we add a definition for <TT>=</TT> of <TT>Setoid_product</TT>,
+relying on the methods <TT>=</TT> of <TT>A</TT> (<TT>A!( = )</TT>) and <TT>B</TT>
+(which are not yet defined). Similarly, we introduce a definition for
+<TT>element</TT> by building a pair, using
+the function <TT>create</TT> (which calls the predefined function <TT>basics#crp</TT>) and the methods <TT>element</TT> of respectively <TT>A</TT>
+and <TT>B</TT>. And we can prove that <TT>=</TT> of <TT>Setoid_product</TT> is
+indeed reflexive, upon the hypothesis made on <TT>A!( = )</TT>
+and <TT>B!( = )</TT>. The part of <FONT COLOR=purple>FoCaLize</FONT> used to write proofs will be
+shortly presented later, in section <A HREF="#focal-proof-language">??</A>.<BR>
+<BR>
+This way, the <EM>species</EM> <TT>Setoid_product</TT> builds its <EM>methods</EM> relying on those of its <EM>collection parameters</EM>. Note the
+two different uses of <TT>Setoid</TT> in our <EM>species</EM> <TT>Setoid_product</TT>, which inherits of <TT>Setoid</TT> and is parametrised
+by <TT>Setoid</TT>.<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+<BR>
+Why such <EM>collection parameters</EM> and not simply <EM>species
+ parameters</EM>? There are two reasons. First, effective parameters must
+ provide definitions/proofs for all the methods of the required
+ interface: this is the contract. Thus, effective parameters must 
+ be <EM>complete</EM> species. Then, we do not want the parametrisation
+ to introduce dependencies
+on the parameters' <EM>representation</EM> definitions. For example, it is
+ impossible to express `` if <TT>A!representation</TT> is <TT>int</TT> and <TT>B!representation</TT>
+ is <TT>bool</TT> then <TT>A*B</TT> is a list of boolean values''. This would
+dramatically restrict possibilities to instantiate parameters since
+assumptions on the <EM>representation</EM>, possibly used in the
+parametrised <EM>species</EM> to write its own <EM>methods</EM>, 
+could prevent <EM>collections</EM> having the right set of <EM>methods</EM> but
+a different representation to be used as
+effective parameters. Such a behaviour would make parametrisation too
+weak to be usable. We choose to always hide the <EM>representation</EM> of a
+<EM>collection parameter</EM> to the parametrised
+hosting <EM>species</EM>. Hence the introduction of the notion of
+<EM>collection</EM>, obtained by abstracting the representation from a
+complete species.<BR>
+<BR>
+<!--TOC subsection Parametrisation by Entity Parameters-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc7"><B><FONT SIZE=4>1.4.2</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Parametrisation by Entity Parameters</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+Let us imagine we want to make a <EM>species</EM> working on natural numbers
+modulo a certain value. In the expression
+5 <TT> <I>modulo</I> </TT> 2 <I>is</I> 1, both 5 and 2
+are natural numbers. To be sure that the <EM>species</EM> will
+consistently work with the same modulo, this last one must be embedded
+in the <EM>species</EM>. However, the <EM>species</EM> itself doesn't rely
+on a particular value of the modulo. Hence this value is clearly a
+<B>parameter</B> of the species, but a parameter in which we are
+interested by its <B>value</B>, not only by its <EM>representation</EM> and the
+methods acting on it. We call
+such parameters <EM>entity parameters</EM>, their introduction rests upon
+the introduction of a <EM>collection parameter</EM> and they denote a
+<EM>value</EM> having the type of the <EM>representation</EM> of this
+<EM>collection parameter</EM>. <BR>
+<BR>
+Let us first have a <EM>species</EM> representing natural numbers:<BR>
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT><FONT SIZE=2><TT>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;signature&nbsp;one&nbsp;:&nbsp;Self&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;signature&nbsp;modulo&nbsp;:&nbsp;Self&nbsp;-&gt;&nbsp;Self&nbsp;-&gt;&nbsp;Self&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>end&nbsp;;;</TT></FONT></DIV>
+Note that <TT>IntModel</TT> can be later implemented in various ways,
+using Peano's integers, machine integers, arbitrary-precision
+arithmetic ...<BR>
+<BR>
+We now build our <EM>species</EM> ``working modulo ...'', embedding
+the value of this modulo:
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT><FONT SIZE=2><TT>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;let&nbsp;job1&nbsp;(x&nbsp;in&nbsp;Naturals)&nbsp;in&nbsp;...&nbsp;=</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;...&nbsp;Naturals!modulo&nbsp;(x,&nbsp;n)&nbsp;...&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;let&nbsp;job2&nbsp;(x&nbsp;in&nbsp;Naturals,&nbsp;...)&nbsp;in&nbsp;...&nbsp;=</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;...&nbsp;...&nbsp;Naturals!modulo&nbsp;(x,&nbsp;n)&nbsp;...&nbsp;...&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>end&nbsp;;;</TT></FONT></DIV>
+Using the <EM>entity parameter</EM> <TT>n</TT>, we ensure that the
+<EM>species</EM> <TT>Modulo_work</TT> works for <EM>any</EM> value of the
+modulo, but will always use the <EM>same</EM> value <TT>n</TT> of the modulo
+everywhere inside the <EM>species</EM>.<BR>
+<BR>
+<!--TOC section The Final Brick-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc8"><B><FONT SIZE=5>1.5</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>The Final Brick</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+As briefly introduced in <A HREF="#species-interface">??</A>, a <EM>species</EM>
+needs to be fully defined to lead to executable code for its functions
+and checkable proofs for its theorems. When a <EM>species</EM> is fully
+defined, it can be turned into a <EM>collection</EM>. Hence, a <EM>collection</EM>
+represents the final stage of the inheritance tree of a <EM>species</EM>
+and leads to an effective data representation with
+executable functions processing it.<BR>
+<BR>
+For instance, providing that the previous
+<EM>species</EM> <TT>IntModel</TT> turned into a fully-defined species
+<TT>MachineNativeInt</TT> through inheritances steps, with a <EM>method</EM>
+<TT>from_string</TT> allowing to create the natural representation of a
+string, we could get a related collection by:<BR>
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT></DIV><BR>
+Next, to get a <EM>collection</EM> implementing arithmetic modulo 8, we
+could extract from the <EM>species</EM> <TT>Modulo_work</TT> the following
+<EM>collection</EM>:<BR>
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT><FONT SIZE=2><TT>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;(MachineNativeIntColl,&nbsp;MachineNativeIntColl!from_string&nbsp;(``8'')&nbsp;;;</TT></FONT></DIV><BR>
+As seen by this example, a species can be applied to effective
+parameters by giving their values with the usual syntax of parameter
+passing. <BR>
+<BR>
+As said before, to ensure modularity and abstraction, the
+<EM>representation</EM> of a 
+<EM>collection</EM> turns hidden. This means that any software component
+dealing with a <EM>collection</EM> will only be able to manipulate it
+through the operations (<EM>methods</EM>) its interface provides. This
+point is especially important since it prevents other software
+components from possibly breaking invariants required by the internals
+of the <EM>collection</EM>.<BR>
+<BR>
+<!--TOC section Properties, Theorems and Proofs-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc9"><B><FONT SIZE=5>1.6</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Properties, Theorems and Proofs</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="focal-proof-language"></A><BR>
+<FONT COLOR=purple>FoCaLize</FONT> aims not only to write programs, it intends to encompass both
+the executable model (i.e. program) and properties this model must
+satisfy. For this reason, ``special'' <EM>methods</EM> deal with logic
+instead of purely behavioural aspects of the system: <EM>theorems</EM>,
+<EM>properties</EM> and <EM>proofs</EM>.<BR>
+<BR>
+Stating a <EM>property</EM> expects that a <EM>proof</EM> that it
+<B>holds</B> will finally be given. For <EM>theorems</EM>, the <EM>proof</EM> is
+directly embedded in the <EM>theorem</EM>. Such proofs must be done by
+the developer and will finally be sent to the formal proof assistant
+<FONT COLOR=purple>Coq</FONT> who will automatically check that the demonstration of the
+<EM>property</EM> is consistent. Writing a proof can be done in several ways.<BR>
+<BR>
+It can be written in ``<FONT COLOR=purple>FoCaLize</FONT>'s proof language'', a hierarchical proof
+language that allows to give hints and directions for a proof. This
+language will be sent to an external theorem prover,
+<FONT COLOR=purple>Zenon</FONT>&nbsp;[<A HREF="#Zenon"><CITE>Zenon</CITE></A><CITE>, </CITE><A HREF="#zenon0.4.1"><CITE>zenon0.4.1</CITE></A>] developed by D. Doligez. This prover is
+a first order theorem prover based on the tableau method incorporating
+implementation novelties such as sharing. <FONT COLOR=purple>Zenon</FONT> will attempt, from
+these hints to automatically generate the proof and exhibit a <FONT COLOR=purple>Coq</FONT>
+term suitable for verification by <FONT COLOR=purple>Coq</FONT>. Basic hints given by the
+developer to <FONT COLOR=purple>Zenon</FONT> are: ``prove by definition of a <EM>method</EM>''
+(i.e. looking inside its body) and ``prove by <EM>property</EM>''
+(i.e. using the logical body of a <EM>theorem</EM> or <EM>property</EM>''.
+Surrounding this hints mechanism, the language allows to build the
+proof by stating assumptions (that must obviously be demonstrated
+next) that can be used to prove lemmas or parts for the whole
+property. We show below an example of such demonstration.<BR>
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT><FONT SIZE=2><TT>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;!order_inf(i,&nbsp;x)&nbsp;-&gt;&nbsp;!order_inf(i,&nbsp;y)&nbsp;-&gt;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!order_inf(i,&nbsp;!inf(x,&nbsp;y))</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;proof:</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;1&gt;1&nbsp;assume&nbsp;x&nbsp;in&nbsp;Self,&nbsp;assume&nbsp;y&nbsp;in&nbsp;Self,</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assume&nbsp;i&nbsp;in&nbsp;Self,&nbsp;assume&nbsp;H1:&nbsp;!order_inf(i,&nbsp;x),</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;assume&nbsp;H2:&nbsp;!order_inf(i,&nbsp;y),</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;prove&nbsp;!order_inf(i,&nbsp;!inf(x,&nbsp;y))</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;2&gt;1&nbsp;prove&nbsp;!equal(i,&nbsp;!inf(!inf(i,&nbsp;x),&nbsp;y))</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by&nbsp;hypothesis&nbsp;H1,&nbsp;H2</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;property&nbsp;inf_left_substitution_rule,</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;equal_symmetric,&nbsp;equal_transitive</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;definition&nbsp;of&nbsp;order_inf</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;2&gt;9&nbsp;qed</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;by&nbsp;step&nbsp;&lt;2&gt;1</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;property&nbsp;inf_is_associative,&nbsp;equal_transitive</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;definition&nbsp;of&nbsp;order_inf</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&lt;1&gt;2&nbsp;conclude</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;;</TT></FONT></DIV><BR>
+The important point is that <FONT COLOR=purple>Zenon</FONT> works for the
+developer: <B>it searches the proof itself</B>, the developer does not
+have to elaborate it formally ``from scratch''.<BR>
+<BR>
+Like any automatic theorem prover, <FONT COLOR=purple>Zenon</FONT> may fail finding a
+demonstration. In this case, <FONT COLOR=purple>FoCaLize</FONT> allows to write verbatim
+<FONT COLOR=purple>Coq</FONT> proofs. In this case, the proof is not anymore automated, but
+this leaves the full power of expression of <FONT COLOR=purple>Coq</FONT> to the developer.<BR>
+<BR>
+Finally, the <TT>assumed</TT> keyword is the ultimate proof backdoor,
+telling that the proof is not given but that the property must be
+admitted. Obviously, a really safe development should not make usage of
+such ``proofs'' since they bypass the formal verification of
+software's model. However, such a functionality remains needed since
+some of ``well-known'' properties can never be proved for a computer.
+For instance, <FONT FACE=symbol>"</FONT> <I>x</I> <FONT FACE=symbol>Î</FONT> <I>I</I><I>N</I>, <I>x</I>+1 &gt;<I>n</I> does not hold in a
+computer with native integers. However, in a mathematical
+framework, this property holds and is needed to carry out other
+proofs. Thus the developer may prove either that all manipulated values
+remain in an interval where this property holds or may admit this
+property or may add code to detect overflow ... 
+ On another side, a development may be linked with external
+code, trusted or not, but for which properties cannot be proved inside
+the <FONT COLOR=purple>FoCaLize</FONT> part since it does not belong to it. Expressing properties
+of the <FONT COLOR=purple>FoCaLize</FONT> part may need to express properties on the imported
+code, that cannot be formally proved, then must be ``assumed''.<BR>
+<BR>
+<!--TOC section Around the Language-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc10"><B><FONT SIZE=5>1.7</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Around the Language</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+In the previous sections, we presented <FONT COLOR=purple>FoCaLize</FONT> through its programming
+model and shortly its syntax. We especially investigated the various
+entities making a <FONT COLOR=purple>FoCaLize</FONT> program. We now address what becomes a
+<FONT COLOR=purple>FoCaLize</FONT> program once compiled. We recall that <FONT COLOR=purple>FoCaLize</FONT> supports the
+redefinition of functions, which permits for example to specialise
+code to a specific representation (for example, there
+exists a generic implementation of integer addition modulo <TT>n</TT> but
+it can be redefined in arithmetics modulo <TT>2</TT> if boolean values
+are used to represent the two values). It is also a very convenient
+tool to maintain software. <BR>
+<BR>
+<!--TOC subsection Consistency of the Software-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc11"><B><FONT SIZE=4>1.7.1</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Consistency of the Software</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+All along the development cycle of a <FONT COLOR=purple>FoCaLize</FONT> program, the compiler
+keeps trace of dependencies between <EM>species</EM>, their
+<EM>methods</EM>, the <EM>proofs</EM>, ...to ensure that modifications
+of one of them will be detected those depending of it.<BR>
+<BR>
+<FONT COLOR=purple>FoCaLize</FONT> considers two types of dependencies:
+<UL><LI>
+The <B>decl</B>-dependency: a <EM>method</EM> <I>A</I> decl-depends on a
+ <EM>method</EM> <I>B</I>, if the <B>declaration</B> of <I>B</I> is required to
+ state <I>A</I>.
+<LI>The <B>def</B>-dependency: a <EM>method</EM> (and more especially, a
+ <EM>theorem</EM>) <I>A</I> def-depends on a <EM>method</EM> <I>B</I>, if the
+ <B>definition</B> of <I>B</I> is required to state <I>A</I> (and more
+ especially, to prove the property stated by the <EM>theorem</EM>
+ <I>A</I>).
+</UL>
+The redefinition of a function may invalidate the proofs that use
+properties of the body of the redefined function. All the proofs
+which truly depend of the definition are then erased by the compiler
+and must be done again in the context updated with the new
+definition. Thus the main difficulty is to choose the best level in
+the hierarchy to do a proof. In [<A HREF="#PrevostoJaume2003"><CITE>PrevostoJaume2003</CITE></A>], Prevosto and
+Jaume propose a <EM>coding style</EM> to minimise the number of proofs
+to be redone in the case of a redefinition, by a certain kind of
+modularisation of the proofs.<BR>
+<BR>
+<!--TOC subsection Code Generation-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc12"><B><FONT SIZE=4>1.7.2</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Code Generation</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+<FONT COLOR=purple>FoCaLize</FONT> currently compiles programs toward two languages, <FONT COLOR=purple>OCaml</FONT> to
+get an executable piece of software, and <FONT COLOR=purple>Coq</FONT> to have a formal model
+of the program, with theorems and proofs.<BR>
+<BR>
+In <FONT COLOR=purple>OCaml</FONT> code generation, all
+the logical aspects are discarded since they do not lead to executable
+code.<BR>
+<BR>
+Conversely, in <FONT COLOR=purple>Coq</FONT>, all the <EM>methods</EM> are compiled,
+i.e. ``computational'' <EM>methods</EM> and logical <EM>methods</EM> with
+their proofs. This allows <FONT COLOR=purple>Coq</FONT> to check the entire consistence of
+the system developed in <FONT COLOR=purple>FoCaLize</FONT>.<BR>
+<BR>
+<!--TOC subsection Tests-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc13"><B><FONT SIZE=4>1.7.3</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Tests</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<FONT COLOR=purple>FoCaLize</FONT> incorporates a tool named <EM>FocalTest</EM>
+[<A HREF="#CarlierDuboisLNCS2008"><CITE>CarlierDuboisLNCS2008</CITE></A>] for Integration/Validation testing. It
+allows to confront automatically a property of the specification with
+an implementation. It generates automatically test cases, executes
+them and produces a test report as an XML document. The property under
+test is used to generate the test cases, it also serves as an
+oracle. When a test case fails, it means a counterexample of the
+property has been found: the implantation does not match the property;
+it can also indicate an error in the specification.<BR>
+<BR>
+The tool <EM>FocalTest</EM> automatically produces the test environment and
+the drivers to conduct the tests. We benefit from the inheritance
+mechanism to isolate the testing harness from the components written
+by the programmer.<BR>
+<BR>
+The testable properties are required to be broken down into a
+precondition and a conclusion, both executable.
+<EM>FocalTest</EM> proposes a pure random test cases generation: it
+generates test cases until the precondition is satisfied, the verdict
+of the test case is given by executing the post-condition. It can be
+an expensive process for some kind of preconditions. To overcome this
+drawback, a constraint based generation is under development: it
+allows to produce directly test cases for which the precondition is
+satisfied.<BR>
+<BR>
+<!--TOC subsection Documentation-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc14"><B><FONT SIZE=4>1.7.4</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Documentation</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+The tool called <FONT COLOR=purple>FoCaLizeDoc</FONT> [<A HREF="#MaarekCalculemus03"><CITE>MaarekCalculemus03</CITE></A>] automatically
+generates documentation, thus the documentation of a component is
+always coherent with respect to its implementation.<BR>
+<BR>
+This tool uses its own XML format that contains information coming not
+only from structured comments (that are parsed and kept in the
+program's abstract syntax tree) and <FONT COLOR=purple>FoCaLize</FONT> concrete syntax but also
+from type inference and dependence analysis. From this XML
+representation and thanks to some XSLT stylesheets, it is possible to
+generate HTML files or L<sup>A</sup>T<sub>E</sub>X files. Although this documentation is
+not the complete safety case, it can helpfully contribute to its
+elaboration. In the same way, it is possible to produce UML
+models&nbsp;[<A HREF="#Focal-UML"><CITE>Focal-UML</CITE></A>] as means to provide a graphical documentation
+for <FONT COLOR=purple>FoCaLize</FONT> specifications. The use of graphical notations appears
+quite useful when interacting with end-users, as these tend to be more
+intuitive and are easier to grasp than their formal (or textual)
+counterparts. This transformation is based on a formal schema and
+captures every aspect of the <FONT COLOR=purple>FoCaLize</FONT> language, so that it has been
+possible to prove the soundness of this transformation (semantic
+preservation).<BR>
+<BR>
+<FONT COLOR=purple>FoCaLize</FONT>'s architecture is designed to easily plug third-parties
+analyses that can use the internal structures elaborated by the
+compiler from the source code. This allows, for example, to make
+dedicated documentation tools for custom purposes, just exploiting
+information stored in the <FONT COLOR=purple>FoCaLize</FONT> program's abstract syntax tree, or
+extra information possibly added by extra processes, analyses.
+<BR>
+<BR>
+<!--TOC chapter Installing and Compiling-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#2de52d"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc15"><B><FONT SIZE=6>Chapter&nbsp;2</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=6>Installing and Compiling</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<BR>
+<!--TOC section Required software-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc16"><B><FONT SIZE=5>2.1</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Required software</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="required-software"></A>
+To be able to develop with the <FONT COLOR=purple>FoCaLize</FONT> environment, a few third party
+tools are required. All of them can be freely downloaded from their
+related website.
+<UL><LI>
+ The Objective Caml compiler (version <FONT FACE=symbol>³</FONT> 3.10.2).<BR>
+Available
+ at <CODE>http://caml.inria.fr</CODE>. This will be used to compile both
+ the <FONT COLOR=purple>FoCaLize</FONT> system at installation stage from the tarball and
+ the <FONT COLOR=purple>FoCaLize</FONT> compiler's output generated by the compilation of
+ your <FONT COLOR=purple>FoCaLize</FONT> programs.<BR>
+<BR>
+<LI>The Coq Proof Assistant (version <FONT FACE=symbol>³</FONT> 8.1pl4).<BR>
+Available at
+ <CODE>http://coq.inria.fr</CODE>. This will be used to compile both
+ the <FONT COLOR=purple>FoCaLize</FONT> libraries at installation stage from the tarball and
+ the <FONT COLOR=purple>FoCaLize</FONT> compiler's output generated by the compilation of
+ your <FONT COLOR=purple>FoCaLize</FONT> programs.
+</UL>
+<!--TOC section Optional software-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc17"><B><FONT SIZE=5>2.2</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Optional software</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="optional-software"></A>
+The <FONT COLOR=purple>FoCaLize</FONT> compiler can generate dependencies graphs from compiled
+source code. It generates them in the format suitable to be processed
+and displayed by the <FONT COLOR=purple>dotty</FONT> tools suit of the ``Graphwiz'' package. If
+you plan to examine these graphs, you also need to install this
+software from <CODE>http://www.graphviz.org/</CODE>.<BR>
+<BR>
+<!--TOC section Operating systems-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc18"><B><FONT SIZE=5>2.3</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Operating systems</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<FONT COLOR=purple>FoCaLize</FONT> was fully developed under Linux using free software. Hence,
+any Unix-based operating system should support <FONT COLOR=purple>FoCaLize</FONT>. The currently
+tested Unix are: Fedora, Debian, Suse, BSD.<BR>
+<BR>
+Windows users can run <FONT COLOR=purple>FoCaLize</FONT> via the Unix-like
+environment <FONT COLOR=purple>Cygwin</FONT> providing both users and developers tools. This
+software is freely distributed and available
+at <CODE>http://www.cygwin.com/</CODE>.<BR>
+<BR>
+<BR>
+<!--TOC paragraph From the official <FONT COLOR=purple>Cygwin</FONT> web site:-->
+
+<H5>From the official <FONT COLOR=purple>Cygwin</FONT> web site:</H5><!--SEC END -->
+
+``<EM>Cygwin is a Linux-like environment for Windows. It consists of
+two parts: A DLL (cygwin1.dll) which acts as a Linux API emulation
+layer providing substantial Linux API functionality. A collection of
+tools which provide Linux look and feel.
+<BR>
+The Cygwin DLL currently works with all recent, commercially released
+x86 32 bit and 64 bit versions of Windows, with the exception of
+Windows CE.
+<BR>
+Cygwin is not a way to run native linux apps on Windows. You have to
+rebuild your application from source if you want it to run on
+Windows.<BR>
+<BR>
+Cygwin is not a way to magically make native Windows apps aware of
+UNIX ® functionality, like signals, ptys, etc. Again, you need to
+build your apps from source if you want to take advantage of Cygwin
+functionality.</EM>''<BR>
+<BR>
+<BR>
+Under <FONT COLOR=purple>Cygwin</FONT>, the required packages are the same as those listed
+in <A HREF="#required-software">??</A> and <A HREF="#optional-software">??</A>. As stated
+in <FONT COLOR=purple>Cygwin</FONT>'s citation above, you need to get the sources packages of
+this software and compile them yourself, following information
+provided in these packages.<BR>
+<BR>
+The installation of <FONT COLOR=purple>FoCaLize</FONT> itself is the same for all operating
+systems and is described in the following section
+(<A HREF="#installation">??</A>).<BR>
+<BR>
+<!--TOC section Installation-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc19"><B><FONT SIZE=5>2.4</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Installation</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="installation"></A>
+<A NAME="@default0"></A>
+<FONT COLOR=purple>FoCaLize</FONT> is currently distributed as a tarball containing the whole
+source code of the development environment. You must first deflate the
+archive (a directory will be created) by:
+<DIV ALIGN=center>
+<TT>tar xvzf focalize-x.x.x.tgz</TT>
+</DIV>
+Next, go in the sources directory:
+<DIV ALIGN=center>
+<TT>cd focalize-x.x.x/</TT>
+</DIV>
+You now must configure the build process by:
+<DIV ALIGN=center>
+<TT>./configure</TT>
+</DIV>
+The configuration script then asks for directories where to install
+the <FONT COLOR=purple>FoCaLize</FONT> components. You may just press enter to keep the default
+installation directories.
+<PRE>
+latour:~/src/focalize$ ./configure ~/pkg
+Where to install FoCaLize binaries ?
+Default is /usr/local/bin.
+Just press enter to use default location.
+
+Where to install FoCaLize libraries ?
+Default is /usr/local/lib/focalize.
+Just press enter to use default location.
+</PRE>After the configuration ends, just build the system:
+<DIV ALIGN=center>
+<TT>make all</TT>
+</DIV>
+And finally, get root priviledges to install the <FONT COLOR=purple>FoCaLize</FONT> system:
+<DIV ALIGN=center>
+<TT>su</TT><BR>
+<TT>make install</TT>
+</DIV>
+
+<BR>
+<!--TOC section Compilation process and outputs-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc20"><B><FONT SIZE=5>2.5</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Compilation process and outputs</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+We call <EM>compilation unit</EM><A NAME="@default1"></A> a file
+containing source code for toplevel-definitions, species,
+collections. Visibility rules, described in section
+<A HREF="#qualified-name">??</A>, are defined according to compilation units status.
+From a compilation unit, the compiler issues several files described
+on the following.<BR>
+<BR>
+<!--TOC subsection Outputs-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc21"><B><FONT SIZE=4>2.5.1</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Outputs</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+A <FONT COLOR=purple>FoCaLize</FONT> development contains both
+``computational code'' (i.e. code performing operations that lead to
+an effect, a result) and logical properties.<BR>
+<BR>
+<BR>
+When compiled, two outputs are generated:
+<UL><LI>
+ The ``computational code'' is compiled into <FONT COLOR=purple>OCaml</FONT> source
+ that can then be compiled with the <FONT COLOR=purple>OCaml</FONT> compiler to lead to an
+ executable binary. In this pass, logical properties are discarded
+ since they do not lead to executable code.
+ <LI>Both the ``computational code'' and the logical properties are
+ compiled into a <FONT COLOR=purple>Coq</FONT> model. This model can then be sent to the
+ <FONT COLOR=purple>Coq</FONT> proof assistant who will verify the consistency of both the
+ ``computational code'' and the logical properties (whose
+ proofs<A NAME="@default2"></A> must be obviously provided) of the
+ <FONT COLOR=purple>FoCaLize</FONT> development. This means that the <FONT COLOR=purple>Coq</FONT> code generated is
+ not intended to be used to generate an <FONT COLOR=purple>OCaml</FONT> source code by
+ automated extraction. As stated above, the executable generation
+ is preferred using directly the generated <FONT COLOR=purple>OCaml</FONT> code. In this
+ idea, <FONT COLOR=purple>Coq</FONT> acts as an assessor of the development instead of a
+ code generator.<BR>
+<BR>
+More accurately, <FONT COLOR=purple>FoCaLize</FONT> first generates a pre-<FONT COLOR=purple>Coq</FONT> code, i.e. a
+ file containing <FONT COLOR=purple>Coq</FONT> syntax plus ``holes'' in place of proofs
+ written in the <FONT COLOR=purple>FoCaLize</FONT> Proof Language. This kind of files is
+ suffixed by ``.zv'' instead of directly ``.v''. When sending this
+ file to <FONT COLOR=purple>Zenon</FONT> these ``holes'' will be filled by effective
+ <FONT COLOR=purple>Coq</FONT> code automatically generated by <FONT COLOR=purple>Zenon</FONT> (if it succeed in
+ finding a proof), hence leading to a pure <FONT COLOR=purple>Coq</FONT> code file that can
+ be compiled by <FONT COLOR=purple>Coq</FONT>.</UL>
+
+In addition, several other outputs can be generated for documentation
+or debug purposes. See the section <A HREF="#compiler-options">??</A> for
+details.<BR>
+<BR>
+<!--TOC subsection Compiling a source-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc22"><B><FONT SIZE=4>2.5.2</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Compiling a source</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+Compiling a <FONT COLOR=purple>FoCaLize</FONT> program involves several steps that are
+automatically handled by the <FONT COLOR=purple>focalizec</FONT> command. Using the command
+line options, it is possible to tune the code generations steps as
+described in <A HREF="#compiler-options">??</A>.
+<OL type=1><LI>
+ <B><FONT COLOR=purple>FoCaLize</FONT> source compilation</B>. This step takes the <FONT COLOR=purple>FoCaLize</FONT>
+ source code and generates the <FONT COLOR=purple>OCaml</FONT> and/or ``pre-''<FONT COLOR=purple>Coq</FONT> code.
+ You can disable the code generation for one of these languages
+ (see page <A HREF="#compiler-options">??</A>), or both, in this case, no code is
+ produced and you only get the <FONT COLOR=purple>FoCaLize</FONT> object code produced without
+ anymore else output and the process ends at this point. If you
+ disable one of the target languages, then you won't get any
+ generated file for it, hence no need to address its related
+ compilation process described below.<BR>
+<BR>
+Assuming you generate code for both <FONT COLOR=purple>OCaml</FONT> and <FONT COLOR=purple>Coq</FONT>&nbsp; you will get
+ two generated files: <TT>source.ml</TT> (the <FONT COLOR=purple>OCaml</FONT> code) and
+ <TT>source.zv</TT> (the ``pre-''<FONT COLOR=purple>Coq</FONT> code).<BR>
+<BR>
+<LI><B><FONT COLOR=purple>OCaml</FONT> code compilation</B>. This step takes the generated
+ <FONT COLOR=purple>OCaml</FONT> code (it is an <FONT COLOR=purple>OCaml</FONT> source file) and compile it. This
+ is done like any regular <FONT COLOR=purple>OCaml</FONT> compilation, the only difference
+ is that the search path containing the <FONT COLOR=purple>FoCaLize</FONT> installation path
+ and your own used extra <FONT COLOR=purple>FoCaLize</FONT> source files directories are
+ automatically passed to the <FONT COLOR=purple>OCaml</FONT> compiler. Hence this steps
+ acts like a manual invocation:
+ <PRE>
+ocamlc -c -I /usr/local/lib/focalize -I mylibs
+   -I myotherlibs source.ml
+    </PRE>This produces the <FONT COLOR=purple>OCaml</FONT> object file <TT>source.cmo</TT>. Note that
+ you can also ask to use the <FONT COLOR=purple>OCaml</FONT> code in native mode, in this
+ case the <TT>ocamlopt</TT> version of the <FONT COLOR=purple>OCaml</FONT> compiler is
+ selected (see <FONT COLOR=purple>OCaml</FONT> reference manual for more information) and
+ the object files are <TT>.cmx</TT> files instead of <TT>.cmo</TT>.
+ ones.<BR>
+<BR>
+<LI><B>``Pre-''<FONT COLOR=purple>Coq</FONT> code compilation</B>. This step takes the
+ generated <TT>.zv</TT> file and attempts to produce a real <FONT COLOR=purple>Coq</FONT>
+ <TT>.v</TT> source file by replacing proofs written in <FONT COLOR=purple>FoCaLize</FONT> Proof
+ Language by some effective <FONT COLOR=purple>Coq</FONT> proofs found by the <FONT COLOR=purple>Zenon</FONT>
+ theorem prover. Note that if <FONT COLOR=purple>Zenon</FONT> fails in finding a proof, a
+ hole will remain in the final <FONT COLOR=purple>Coq</FONT> <TT>.v</TT> file. Such a hole
+ appears as the text ``<TT>TO_BE_DONE_MANUALLY.</TT>'' in place of
+ the effective proof. In this case, <FONT COLOR=purple>Coq</FONT> will obviously fail
+ in compiling the file, so the user must do the proof by hand or
+ modify his original <FONT COLOR=purple>FoCaLize</FONT> source file to get a working proof.
+ This step acts like a manual invocation:
+ <DIV ALIGN=center>
+ <TT>zvtov -new source.zv</TT>
+ </DIV>
+ For more about the <FONT COLOR=purple>Zenon</FONT> options, consult section
+ <A HREF="#zenon_options">??</A>.<BR>
+<BR>
+<LI><B><FONT COLOR=purple>Coq</FONT> code compilation</B>. This step takes the generated
+ <TT>.v</TT> code and compiles it with <FONT COLOR=purple>Coq</FONT>. This is done like any
+ regular <FONT COLOR=purple>Coq</FONT> compilation. The only difference is that the search
+ path containing the <FONT COLOR=purple>FoCaLize</FONT> installation path and your own used
+ extra <FONT COLOR=purple>FoCaLize</FONT> source files directories are automatically passed
+ to the <FONT COLOR=purple>Coq</FONT> compiler.
+ <PRE>
+coqc -I /usr/local/lib/focalize -I mylibs
+  -I myotherlibs source.v
+    </PRE>Once this step is done, you have the <FONT COLOR=purple>Coq</FONT> object files and you
+ are sure that <FONT COLOR=purple>Coq</FONT> validated you program model, properties and
+ proofs. The final ``assessor'' of the tool-chain accepted your
+ program.
+</OL>
+<BR>
+<A NAME="@default3"></A>
+Once all separate files are compiled, to get an executable from the
+<FONT COLOR=purple>OCaml</FONT> object files, you must link them together, providing the same
+search path than above and the <TT>.cmo</TT> files corresponding to all
+the generated <FONT COLOR=purple>OCaml</FONT> files from all your <FONT COLOR=purple>FoCaLize</FONT> <TT>.foc</TT>
+files. You also need to add the <TT>.cmo</TT> files corresponding to the
+modules of the standard library you use (currently, this must be done
+by the user, next versions will automate this process).
+ <PRE>
+ocamlc -I mylibs -I myotherlibs
+  install_dir/ml_builtins.cmo install_dir/basics.cmo
+  install_dir/sets.cmo ...
+  mylibs/src1.cmo mylibs/src2.cmo ...
+  myotherlibs src3.cmo mylibs/src3.cmo ...
+  source1.cmo source2.cmo ...
+  -o exec_name
+    </PRE>
+<!--TOC chapter The core language-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#2de52d"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc23"><B><FONT SIZE=6>Chapter&nbsp;3</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=6>The core language</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="corelangage"></A>
+<BR>
+<!--TOC section Lexical conventions-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#66ff66"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc24"><B><FONT SIZE=5>3.1</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=5>Lexical conventions</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="@default4"></A><BR>
+<!--TOC subsection Blanks-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc25"><B><FONT SIZE=4>3.1.1</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Blanks</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="@default5"></A>
+The following characters are considered as blanks: space, newline,
+horizontal tabulation, carriage return, line feed and form
+feed. Blanks are ignored, but they separate adjacent identifiers,
+literals and keywords that would otherwise be confused as one single
+identifier, literal or keyword.<BR>
+<BR>
+<!--TOC subsection Comments-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc26"><B><FONT SIZE=4>3.1.2</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Comments</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="@default6"></A>
+Comments (possibly spanning) on several lines are introduced by the
+two characters <TT>(*</TT>, with no intervening blanks, and terminated by
+the characters <TT>*)</TT>, with no intervening blanks. Comments are
+treated as blanks. Comments can occur inside string or character
+literals (provided the <TT>*</TT> character is escaped) and can be nested. They
+are discarded during the compilation process. Example:
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT><FONT SIZE=2><TT>
+</TT></FONT><FONT SIZE=2><TT>species&nbsp;S&nbsp;=</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;...</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;let&nbsp;m&nbsp;(x&nbsp;in&nbsp;Self)&nbsp;=&nbsp;(*&nbsp;Another&nbsp;discarded&nbsp;comment.&nbsp;*)</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;...</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>end&nbsp;;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>(*&nbsp;Another&nbsp;discarded&nbsp;comment&nbsp;at&nbsp;end&nbsp;of&nbsp;file.&nbsp;*)</TT></FONT></DIV><BR>
+Comments spanning on a single line start by the two characters
+<TT>--</TT> and end with the end-of-line character.
+Example:
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT><FONT SIZE=2><TT>
+</TT></FONT><FONT SIZE=2><TT>species&nbsp;S&nbsp;=</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;let&nbsp;m&nbsp;(x&nbsp;in&nbsp;Self)&nbsp;=&nbsp;--&nbsp;Another&nbsp;uni-line&nbsp;comment.</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;...</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>end&nbsp;;;</TT></FONT></DIV><BR>
+<!--TOC subsection Annotations-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc27"><B><FONT SIZE=4>3.1.3</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Annotations</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="@default7"></A>
+<A NAME="@default8"></A>
+<A NAME="annotation"></A>
+<B>Annotations</B> are introduced by the three characters <TT>(**</TT>,
+with no intervening blanks, and terminated by the two characters
+<TT>*)</TT>, with no intervening blanks.
+Annotations cannot occur inside string or character literals and
+cannot be nested. They must precede the construct they document.
+In particular, a <B>source file cannot end by an annotation</B>.<BR>
+<BR>
+Unlike comments, annotations are kept during the compilation process
+and recorded in the compilation information (``<TT>.fo</TT>'' files). Annotations can
+be processed later on by external tools that could analyze them to
+produce a new <FONT COLOR=purple>FoCaLize</FONT> source code accordingly.
+For instance, the <FONT COLOR=purple>FoCaLize</FONT> development environment provides the <FONT COLOR=purple>FoCaLizeDoc</FONT>
+automatic production tool that uses annotations to automatically generate
+documentation.
+Several annotations can be put in sequence for the same construct. We call
+such a sequence an <B>annotations block</B><A NAME="@default9"></A>.
+Using embedded tags in annotations allows third-party tools to easily find
+out annotations that are meaningful to them, and safely ignore others.
+For more information, consult
+<A HREF="#documentation-generation">??</A>.
+Example:
+<DIV ALIGN=left><FONT SIZE=2><TT> </TT></FONT><FONT SIZE=2><TT>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;Documentation&nbsp;for&nbsp;species&nbsp;S.&nbsp;*)</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>species&nbsp;S&nbsp;=</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;...</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;let&nbsp;m&nbsp;(x&nbsp;in&nbsp;Self)&nbsp;=</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;(**&nbsp;{@TEST}&nbsp;Annotation&nbsp;for&nbsp;the&nbsp;test&nbsp;generator.&nbsp;*)</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;(**&nbsp;{@MY_TAG_MAINTAIN}&nbsp;Annotation&nbsp;for&nbsp;maintainers.&nbsp;*)</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>&nbsp;&nbsp;&nbsp;&nbsp;...&nbsp;;</TT></FONT><FONT SIZE=2><TT><BR>
+</TT></FONT><FONT SIZE=2><TT>end&nbsp;;;</TT></FONT></DIV><BR>
+<!--TOC subsection Identifiers-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#7fff7f"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc28"><B><FONT SIZE=4>3.1.4</FONT></B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B><FONT SIZE=4>Identifiers</FONT></B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="@default10"></A>
+<BR>
+<BR>
+<BR>
+<FONT COLOR=purple>FoCaLize</FONT> features a rich class of identifiers with sophisticated lexical
+rules that provide fine distinction between the kind of notion a given
+identifier can designate.<BR>
+<BR>
+<!--TOC subsubsection Introduction-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#98ff98"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc29"><B>3.1.4.1</B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B>Introduction</B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+Sorting words to find out which kind of meaning they may have is a very common
+conceptual categorization of names that we use when we write or read ordinary
+English texts. We routinely distinguish between:
+<DL COMPACT=compact><DT>0pt 5pt
+<FONT SIZE=4><FONT FACE=symbol>·</FONT></FONT><DD>a word only made of lowercase characters, that is supposed to be an
+ ordinary noun, such as "table", "ball", or a verb as in "is", or an
+ adjective as in "green",
+<DT><FONT SIZE=4><FONT FACE=symbol>·</FONT></FONT><DD>a word starting with an uppercase letter, that is supposed to be a name,
+ maybe a family or christian name, as in "Kennedy" or "David", or a location
+ name as in "London".
+</DL>
+We use this distinctive look of words as a useful hint to help understanding
+phrases. For instance, we accept the phrase "my ball is green" as meaningful,
+whereas "my Paris is green" is considered a nonsense. This is simply because
+"ball" is a regular noun and "Paris" is a name. The word "ball" as the right
+lexical classification in the phrase, but "Paris" has not. This is also clear
+that you can replace "ball" by another ordinary noun and get something
+meaningful: "my table is green"; the same nonsense arises as well if you
+replace "Paris" by another name: "my Kennedy is green".<BR>
+<BR>
+Natural languages are far more complicated than computer languages, but
+<FONT COLOR=purple>FoCaLize</FONT> uses the same kind of tricks: the ``look'' of words helps a lot to
+understand what the words are designating and how they can be used.<BR>
+<BR>
+<!--TOC subsubsection Conceptual properties of names-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#98ff98"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc30"><B>3.1.4.2</B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B>Conceptual properties of names</B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+<BR>
+<FONT COLOR=purple>FoCaLize</FONT> distinguishes 4 concepts for each name:
+<DL COMPACT=compact><DT>0pt 5pt
+<FONT SIZE=4><FONT FACE=symbol>·</FONT></FONT><DD>the <EM>fixity</EM> assigns the place where an identifier must be written,
+<DT><FONT SIZE=4><FONT FACE=symbol>·</FONT></FONT><DD>the <EM>precedence</EM> decides the order of operations when
+ identifiers are combined together,
+<DT><FONT SIZE=4><FONT FACE=symbol>·</FONT></FONT><DD>the <EM>categorisation</EM> fixes which concept the identifier designates.
+<DT><FONT SIZE=4><FONT FACE=symbol>·</FONT></FONT><DD>the <EM>nature</EM> of a name can either be symbolic or alphanumeric.
+</DL>
+Those concepts are compositional, i.e. all these concepts are independent
+from one another. Put is another way: for any fixity, precedence, category and nature,
+there exist identifiers with this exact properties.<BR>
+<BR>
+We further explain those concepts below.<BR>
+<BR>
+<!--TOC subsubsection Fixity of identifiers-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#98ff98"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc31"><B>3.1.4.3</B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B>Fixity of identifiers</B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="@default11"></A>
+<A NAME="@default12"></A>
+<A NAME="@default13"></A><BR>
+The fixity of an identifier answers to the question ``where this identifier
+must be written ?''.
+<DL COMPACT=compact><DT>0pt 5pt
+<FONT SIZE=4><FONT FACE=symbol>·</FONT></FONT><DD>a <EM>prefix</EM> is written <EM>before</EM> its argument, as <I>sin</I> in
+ <I>sin</I>&nbsp; <I>x</I> or - in - <I>y</I>,
+<DT><FONT SIZE=4><FONT FACE=symbol>·</FONT></FONT><DD>an <EM>infix</EM> is written <EM>between</EM> its arguments, as + in
+ <I>x</I>&nbsp; +&nbsp; <I>y</I> or <I>mod</I> in <I>x</I>&nbsp; <I>mod</I> &nbsp;3.
+<DT><FONT SIZE=4><FONT FACE=symbol>·</FONT></FONT><DD>a <EM>mixfix</EM> is written <EM>among</EM> its arguments, as
+ <I>if</I>&nbsp; ... <I>then</I>&nbsp; ... <I>else</I>&nbsp; ... in
+ <I>if</I> <I>c</I>&nbsp; <I>then</I>&nbsp; 1&nbsp; <I>else</I>&nbsp; 2 .
+</DL>
+In <FONT COLOR=purple>FoCaLize</FONT>, as in maths, ordinary identifiers are always prefix and binary operators are
+always infix.<BR>
+<BR>
+<!--TOC subsubsection Precedence of identifiers-->
+<TABLE CELLPADDING=0 CELLSPACING=0 WIDTH="100%">
+<TR><TD BGCOLOR="#98ff98"><DIV ALIGN=center><TABLE>
+<TR><TD><A NAME="htoc32"><B>3.1.4.4</B></A></TD>
+<TD WIDTH="100%" ALIGN=center><B>Precedence of identifiers</B></TD>
+</TR></TABLE></DIV></TD>
+</TR></TABLE><!--SEC END -->
+
+<A NAME="@default14"></A><BR>
+The precedence rules out where implicit parentheses take place in a
+complex combination of symbols. For instance, according to the usual mathematical
+conventions:
+<DL COMPACT=compact><DT>0pt 5pt
+<FONT SIZE=4><FONT FACE=symbol>·</FONT></FONT><DD>1&nbsp; +&nbsp; 2&nbsp; *&nbsp; 3 means 1&nbsp; +&nbsp; (2&nbsp; *&nbsp; 3) hence 7,
+ it

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.ml,v 1.9 2009-02-10 14:51:27 pessaux Exp $ *)
+(* $Id: minEnv.ml,v 1.10 2009-03-02 10:19:30 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -39,14 +39,6 @@ type min_coq_env_element =
            i.e. abstracted Let or abstracted Let_rec or Sig other than "rep". *)
   | MCEE_Defined_computational of
       (Env.from_history *
-       bool *  (* Tells if the method is recursive. This is needed when
-		  generating pseudo-Coq code for Zenon using a "by definition"
-		  of this method. In effect, the body of the method contains
-		  the ident of this method, but when generating the Zenon
-		  stuff, the definition of the method will be named "abst_xxx".
-		  So the internal recursive call to print when generating the
-		  method's body must be replaced by "abst_xxx". This is
-		  related to the bug report #199. *)
        Parsetree.vname * (Parsetree.vname list) * Types.type_scheme *
        Parsetree.binding_body)  (** Defined computational method, i.e. Let or
                                     Let_rec. *)
@@ -65,7 +57,7 @@ let find_coq_env_element_by_name name min_coq_env =
       | MCEE_Declared_carrier
       | MCEE_Defined_carrier _ -> name = (Parsetree.Vuident "rep")
       | MCEE_Declared_computational (n, _)
-      | MCEE_Defined_computational (_, _, n, _, _, _)
+      | MCEE_Defined_computational (_, n, _, _, _)
       | MCEE_Declared_logical (n, _)
       | MCEE_Defined_logical (_, n, _) -> n = name)
     min_coq_env
@@ -87,7 +79,7 @@ let find_coq_env_element_by_name name min_coq_env =
 let minimal_typing_environment universe species_fields =
   (* A local function to process one let-binding. Handy to factorize code for
      both [Let] and [Let_rec] fields. *)
-  let process_one_let_binding is_rec l_binding =
+  let process_one_let_binding l_binding =
     try
       let (from, n, params, sch, body, _, _, _) = l_binding in
       let reason = VisUniverse.Universe.find n universe in
@@ -96,7 +88,7 @@ let minimal_typing_environment universe species_fields =
         [MCEE_Declared_computational (n, sch)]
       else
         (* Otherwise, keep the full definition. *)
-        [MCEE_Defined_computational (from, is_rec, n, params, sch, body)]
+        [MCEE_Defined_computational (from, n, params, sch, body)]
     with Not_found ->
       (* Not in the universe. Hence not in the minimal typing env. *)
       [] in
@@ -121,9 +113,9 @@ let minimal_typing_environment universe species_fields =
                 else [])
               else (found_rep_field := Some sch ; [])
           | Env.TypeInformation.SF_let l_binding ->
-              process_one_let_binding false l_binding
+              process_one_let_binding l_binding
           | Env.TypeInformation.SF_let_rec l ->
-              List.flatten (List.map (process_one_let_binding true) l)
+              List.flatten (List.map process_one_let_binding l)
           | Env.TypeInformation.SF_theorem (from, n, _, body, _, _) ->
               (begin
               try

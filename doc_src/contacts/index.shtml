@@ -1,0 +1,125 @@
+<!--#include virtual="beforetitle-eng.html"-->
+Contacts
+<!--#include virtual="aftertitle-eng.html"-->
+
+<!-- \$Id: index.shtml,v 1.2 2009-03-02 10:19:30 weis Exp $ -->
+
+<div id="container">
+<div id="header">
+<h1>Contacts</h1>
+<br />
+<hr />
+</div>
+</div>
+
+<div class="spacer"></div>
+<div class="spacer"></div>
+
+<div id="content">
+<p>
+To contact users, write to <code>$(PROJECT_NAME)-users@inria.fr</code>.
+<br />
+If you find a bug, please, report it to the developers mailing list at
+<code>$(PROJECT_NAME)-devel@inria.fr</code>.
+</div>
+
+<div class="spacer"></div>
+<div class="spacer"></div>
+
+<div id="main">
+<h3>Members<h3>
+<p>
+<ul>
+<li>
+<a href="http://www.lip6.fr">LIP6</a>-
+<a href="http://www-spi.lip6.fr">SPI</a>
+<ul>
+<li><a href="mailto:blond@bertin.fr">Julien Blond</a> (Doctorant)</li>
+<li><a href="http://www-spi.lip6.fr/~lhabib/">Lionel Habib</a> (Doctorant)</li>
+<li><a href="http://www-spi.lip6.fr/~hardin/">Th&eacute;r&egrave;se Hardin</a> 
+(Professeur, Project Leader)
+</li>
+<li><a href="http://www-spi.lip6.fr/~jaume/">Mathieu Jaume</a> (Ma&icirc;tre
+de conf&eacute;rence)
+</li>
+<li><a href="mailto:noyer@spi.lip6.fr">Ivan Noyer</a> (Doctorant)
+</li>
+<li><a href="mailto:francois.pessaux@lip6.fr">Fran&ccedil;ois Pessaux</a> 
+(Ing&eacute;nieur de recherche - Attach&eacute; temporaire (2 ans))
+</li>
+<li><a href="mailto:lien.tran@lip6.fr">Li&ecirc;n Tran</a> (Doctorant)</li>
+</ul>
+</li>
+<br />
+<li>
+<a href="http://www.cnam.fr">CNAM</a>-
+<a href="http://cedric.cnam.fr/">CEDRIC</a>
+<ul>
+<li><a href="mailto:carlier at iie.cnam.fr">Matthieu Carlier</a>
+(Doctorant)
+</li>
+<li><a href="http://pauillac.inria.fr/~delahaye/">David Delahaye</a> 
+(Ma&icirc;tre de conf&eacute;rence)
+</li>
+<li><a href="http://www.iie.cnam.fr/~dubois/">Catherine Dubois</a> 
+(Professeur)
+</li>
+<li><a href="http://www-sop.inria.fr/lemme/Olivier.Pons/htdocs/accueil.html">
+Olivier Pons</a> (Ma&icirc;tre de conf&eacute;rence)
+</li>
+<li><a href="http://www-spi.lip6.fr/~rr/" target="_self">Renaud Rioboo</a> 
+(Professeur)
+</li>
+<li><a href="http://cedric.cnam.fr/AfficheMembre.php?id=142">Xavier Urbain</a> 
+(Ma&icirc;tre de conf&eacute;rence)
+</li>
+<li><a href="http://cedric.cnam.fr/~donzeau/" target="_self">
+V&eacute;ronique Vigui&eacute;-Donzeau-Gouge</a> (Professeur)
+</li>
+</ul>
+</li>
+<br />
+<li><a href="http://www-rocq.inria.fr/">INRIA-Rocquencourt</a>
+<ul>
+<li><a target="_self" href="http://pauillac.inria.fr/~doligez/">
+Damien Doligez</a> (Charg&eacute; de Recherche)
+</li>
+<li><a target="_self" href="http://pauillac.inria.fr/~weis/">Pierre Weis</a> 
+(Directeur de Recherche)
+</li>
+</ul>
+</li>
+<br />
+<li>Associate members
+<ul>
+<li><a href="http://www-spi.lip6.fr/~bonichon/">Richard Bonichon</a> 
+(Charg&eacute; de Recherche CEA)
+</li>
+<li><a href="http://www-lsr.imag.fr/Les.Personnes/Sylvain.Boulme/">
+Sylvain Boulm&eacute;</a> (Ma&icirc;tre de conf&eacute;rence INPG)
+</li>
+<li><a href="mailto:jean_frederic_etienne@yahoo.com">
+Jean-Fr&eacute;d&eacute;ric Etienne</a> (Safe-River)
+</li>
+<li><a href="mailto:stephane.fechter@safe-river.com">
+St&eacute;phane Fechter</a> (Safe-River)
+</li>
+<li><a href="http://www.macs.hw.ac.uk/~mm20/">Manuel Maarek</a> 
+(Postdoc CRP Henri Tudor)
+</li>
+<li><a href="http://www.iist.unu.edu/~morisset/en/index.html">
+Charles Morisset</a> (Postdoc UNU-IIST)
+</li>
+<li><a href="http://www.mpi-sb.mpg.de/~prevosto/">Virgile Prevosto</a>
+(Charg&eacute; de Recherche CEA)
+</li>
+</ul>
+</li>
+</ul>
+</p>
+</div>
+
+<div class="spacer"></div>
+<div class="spacer"></div>
+
+<!--#include virtual="endofpage-eng.html"-->

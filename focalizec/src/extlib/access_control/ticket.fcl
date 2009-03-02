@@ -28,7 +28,7 @@ species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
         | h :: t ->
             match t with
             | [ ] -> A!print (h) ^ "]"
-            | _underscore -> A!print (h) ^ ",\n                     " ^ aux (t)
+            | _ -> A!print (h) ^ ",\n                     " ^ aux (t)
      in "[" ^ aux (l) ;
 
   proof of equal_prop = assumed {* Because todo *} ;
@@ -551,8 +551,7 @@ species S_models_ticket (S_c is S_tickets,
         | h :: t ->
             match t with
             | [ ] -> S_c!print (h) ^ "]"
-            | _underscore ->
-	        S_c!print (h) ^ ",\n                     " ^ aux (t)
+            | _ -> S_c!print (h) ^ ",\n                     " ^ aux (t)
      in "[" ^ aux (l) ;
 
   let print_t (l in list ((S_obj * S_acc_mod) * S_c)) in string =
@@ -566,7 +565,7 @@ species S_models_ticket (S_c is S_tickets,
                 "," ^ S_acc_mod!print (snd (fst (h))) ^
                 ")," ^ S_c!print (snd (h)) ^
                 ")]"
-            | _underscore ->
+            | _ ->
                 "((" ^ S_obj!print (fst (fst (h))) ^
                 "," ^ S_acc_mod!print (snd (fst (h))) ^
                 ")," ^ S_c!print (snd (h)) ^
@@ -584,7 +583,7 @@ species S_models_ticket (S_c is S_tickets,
                 "(" ^ S_sub!print (fst (h)) ^
                 "," ^ S_c!print (snd (h)) ^
                 ")]"
-            | _underscore ->
+            | _ ->
                 "(" ^ S_sub!print (fst (h)) ^
                 "," ^ S_c!print (snd (h)) ^
                 "),\n                     " ^
@@ -601,7 +600,7 @@ species S_models_ticket (S_c is S_tickets,
                 "(" ^ S_obj!print (fst (h)) ^
                 "," ^ S_sub!print (snd (h)) ^
                 ")]"
-            | _underscore ->
+            | _ ->
                 "(" ^ S_obj!print (fst (h)) ^
                 "," ^ S_sub!print (snd (h)) ^
                 "),\n                     " ^

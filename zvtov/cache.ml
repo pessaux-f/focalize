@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: cache.ml,v 1.7 2009-02-26 13:53:46 pessaux Exp $  *)
+(*  $Id: cache.ml,v 1.8 2009-03-02 10:19:31 weis Exp $  *)
 
 (* format of a cache file:
 file ::= block block block

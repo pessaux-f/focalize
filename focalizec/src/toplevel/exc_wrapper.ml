@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.77 2009-02-10 13:08:39 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.78 2009-03-02 10:19:31 weis Exp $ *)
 
 let print_focalize_exception ppf = function
   (* ************** *)
@@ -497,7 +497,7 @@ let print_focalize_exception ppf = function
   | Env.No_available_OCaml_code_generation_envt file ->
       Format.fprintf ppf
         "@[%tUnable@ to@ find@ OCaml@ generation@ information@ for@ \
-        compiled@ file@ %t'%t%s.fcl%t'%t.@ Source@ file@ may@ have@ been@ \
+        compiled@ file@ %t'%t%s.foc%t'%t.@ Source@ file@ may@ have@ been@ \
         compiled@ without@ OCaml@ code@ generation@ enabled.%t.@]@."
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined file Handy.pp_reset_effects
@@ -515,7 +515,7 @@ let print_focalize_exception ppf = function
   | Env.No_available_Coq_code_generation_envt file ->
       Format.fprintf ppf
         "@[%tUnable@ to@ find@ Coq@ generation@ information@ for@ \
-        compiled@ file@ %t'%t%s.fcl%t'%t.@ Source@ file@ may@ have@ been@ \
+        compiled@ file@ %t'%t%s.foc%t'%t.@ Source@ file@ may@ have@ been@ \
         compiled@ without@ Coq@ code@ generation@ enabled.%t.@]@."
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined file Handy.pp_reset_effects

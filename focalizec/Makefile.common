@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.28 2009-02-26 13:53:46 pessaux Exp $
+# $Id: Makefile.common,v 1.29 2009-03-02 10:19:30 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -73,8 +73,8 @@ tests::
 	  done; \
 	fi
 
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .fcd .zv .v .vo
-.SUFFIXES: .tex .dvi .ps .pdf .idx .xml
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .v .vo
+.SUFFIXES: .tex .dvi .ps .pdf .idx
 .SUFFIXES: .shtml .html .htm
 
 .ml.cmo:
@@ -98,10 +98,7 @@ tests::
 	$(FOCALIZEC) $<
 .fcl.zv:
 	$(FOCALIZEC) $<
-.fcl.fcd:
-	$(FOCALIZEC) -focalize-doc $<
-.fcd.xml:
-	$(XSLTPROC) $(FD2HTML) $< | $(XSLTPROC) $(MMLC2P) - > $@
+
 .zv.v:
 	$(ZVTOV) $<
 

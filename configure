@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.71 2009-02-26 13:53:46 pessaux Exp $
+# $Id: configure,v 1.72 2009-03-02 10:19:30 weis Exp $
 
 ########################################################################
 #
@@ -85,7 +85,7 @@ include_project_configuration_variables () {
     echo "There is no ./.project_config_var file." >&2
     abort_remedy \
       "Define the project specific configuration variables \
-       in the .project_config_var file.";
+       in the file .project_config_var.";
     exit 1
   fi
 }
@@ -144,7 +144,7 @@ check_include () {
     abort_remedy \
       "Bind VERSION_NUMBER_MAIN to the project \
        main version number (e.g. 0) \
-       in the .project_config_var. file";
+       in the file .project_config_var.";
     exit 1;
   fi
   if test -z "${VERSION_NUMBER_SUB}"; then
@@ -199,7 +199,7 @@ set_project_specific_variables () {
 #
 # TOOLS_PROJECT should be equal to TOOLS_EXTERNAL + TOOLS_INTERNAL.
 #
-# Setting the value of TOOLS_PROJECT must carefully avoid the addition of
+# Setting the value of TOOLS_PROJECT we must carefully avoid the addition of
 # spurious spaces (i.e. we must preserve the emptyness of the variable, in
 # order to correctly test its value afterwards).
 #
@@ -316,9 +316,9 @@ set_intrinsic () {
 
   # Intrinsic settings for the project.
 
-  if test -z ${DEBUG}; then DEBUG=${DEFAULT_DEBUG}; fi
+  if test -z "${DEBUG}"; then DEBUG=${DEFAULT_DEBUG}; fi
 
-  if test -z ${PREFIX}; then PREFIX=${DEFAULT_PREFIX}; fi
+  if test -z "${PREFIX}"; then PREFIX=${DEFAULT_PREFIX}; fi
 
   if test -z "${USE_TOOLS_PREFIX_DIRECTORY}"; then
     USE_TOOLS_PREFIX_DIRECTORY="${DEFAULT_USE_TOOLS_PREFIX_DIRECTORY}"; fi
@@ -437,7 +437,7 @@ set_prefix_defaults () {
 #   ${PREFIX}/doc/``project full name''
 #
 # Setting a ``project full name'' sub directory for
-# LIB_DIR and DOC_DIR id the only way to avoid confusion with
+# LIB_DIR and DOC_DIR is the only way to avoid confusion with
 # other versions of the libraries installed for other versions
 # of the project.
 #
@@ -845,13 +845,13 @@ set_continue_without_asking () {
   # just check if we need to ask for TOOLS_PREFIX, and if not so continue.
   if ${PREFIX_GIVEN}; then
     # No project tools: useless to ask for TOOLS_PREFIX, hence continue.
-    if test -z ${TOOLS_PROJECT}; then
+    if test -z "${TOOLS_PROJECT}"; then
       CONTINUE_WITHOUT_ASKING=true;
     else
       # PREFIX and TOOLS_PREFIX have been given, hence continue.
       if ${TOOLS_PREFIX_GIVEN}; then
         CONTINUE_WITHOUT_ASKING=true;
-      fi
+      fi;
     fi;
   fi
 }
@@ -868,7 +868,7 @@ continue_configure () {
       n* | N*) abort_configuration; exit 1;;
       *) ;;
     esac;
- fi
+  fi
 }
 
 prefix_main () {
@@ -1170,9 +1170,8 @@ case ${argc} in
          shift;
          echo "./configure: bad arguments '${option}'" >&2 && \
          echo "For help, use ./configure -help" >&2;
-         exit 2
-       fi
-       ;;
+         exit 2;
+       fi;;
     esac;
 
   done
@@ -1381,8 +1380,11 @@ main () {
   # Now that .config_var_for_shell is built, we can call ./.configure, the
   # script that does the rest of the work that never necessitates user's
   # interaction.
-  if test -x ./.configure; then ./.configure; fi &&
-  if test -x ./.configure_distribution; then ./.configure_distribution;
+  if test -x ./.configure; then
+    ./.configure;
+  fi &&
+  if test -x ./.configure_distribution; then
+    ./.configure_distribution;
   fi &&
   prefix_summary &&
   continue_configure &&

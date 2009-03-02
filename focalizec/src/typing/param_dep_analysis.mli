@@ -12,11 +12,11 @@
 (***********************************************************************)
 
 
-(* $Id: param_dep_analysis.mli,v 1.15 2009-02-17 16:20:21 pessaux Exp $ *)
+(* $Id: param_dep_analysis.mli,v 1.16 2009-03-02 10:19:31 weis Exp $ *)
 
 
 val guess_method_computational_or_logical :
-  Parsetree.vname -> Types.type_simple option ->
+  Parsetree.vname -> Types.type_simple ->
     Env.TypeInformation.species_field list ->
       Parsetree_utils.dependency_elem_type_kind
 

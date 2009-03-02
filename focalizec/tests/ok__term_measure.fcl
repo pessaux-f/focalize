@@ -6,7 +6,7 @@ theorem zero_inf_one : int_lt (0, 1)
 proof = assumed {* Well known theorem ;) *}
 ;;
 
-theorem abs_basics : all x in int, ((x = 0) \/ int_lt (0, x)) -> int_abs (x) = x
+theorem abs_basics : for all x, ((x = 0) \/ (0 < x)) => int_abs (x) = x
 proof = assumed {* Well known theorem ;) *}
 ;;
 

@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.14 2009-02-13 12:45:31 pessaux Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.15 2009-03-02 10:19:30 weis Exp $ *)
 
 (**
 
@@ -624,7 +624,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
     let rec aux (l, x) =
       match l with
       | basics#[] -> x
-      | _underscore :: l -> aux (l, x + 1) in
+      |  _ :: l -> aux (l, x + 1) in
     aux (l, 0);
 
    let cardinal (l in Self) in int =
@@ -1792,7 +1792,7 @@ species Liste_triee (A is Ordered_set) inherits
   let raw_min (e in Self) =
     match e with
     | basics#[] -> A!element
-    | x :: _underscore -> x;
+    | x :: _ -> x;
 
   theorem raw_min_spec:
     all e in Self,

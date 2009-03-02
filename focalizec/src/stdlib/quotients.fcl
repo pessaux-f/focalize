@@ -15,26 +15,25 @@ open "sets";;
   We define two functions and two properties relating
   concrete values of representation and abstract values of Self
 *)
-species Represented_by (D_s is Basic_object) inherits Setoid =
+species Represented_by (S is Basic_object) inherits Setoid =
 
-  representation = D_s ;
+  representation = S ;
 
-  (** An element of Self is encoded by an element of D_s. *)
-  let to_rep (x in Self) in D_s = x ;
+  (** An element of Self is encoded by an element of S. *)
+  let to_rep (x in Self) in S = x ;
 
   (** One should be able to describe which values of s correspond to some
      abstract Self. *)
-  signature represents_some_self : D_s -> prop;
+  signature represents_some_self : S -> prop;
 
   (** A way to abstract concrete values, not intended to be used by the
      programmer *)
-  signature from_rep : D_s -> Self;
-
-  let ( ~>_s )(d) = from_rep(d);
+  signature from_rep : S -> Self;
 
   (** This property enables to state theorems about abstract Self. *)
   logical let correct_representation (x) =
-    !represents_some_self (!to_rep (x));
+    !represents_some_self (!to_rep (x))
+  ;
 
   theorem correct_rep_spec : all x in Self,
      !correct_representation (x) <-> !represents_some_self (!to_rep (x))
@@ -45,7 +44,7 @@ species Represented_by (D_s is Basic_object) inherits Setoid =
   property to_rep_reverses : all x in Self, !equal (!from_rep (!to_rep (x)), x) ;
 
   (** Since we provide an injection to s from_rep is a surjection. *)
-  theorem from_rep_is_surjective : all x in Self, ex y in D_s,
+  theorem from_rep_is_surjective : all x in Self, ex y in S,
     !equal (!from_rep (y), x)
   proof =
    <1>1 assume x in Self,
@@ -59,9 +58,9 @@ species Represented_by (D_s is Basic_object) inherits Setoid =
   property correct_invariant : all x in Self, !correct_representation (x) ;
 
   (** By default we print the concrete data. *)
-  let print (x) = D_s!print (!to_rep (x)) ;
+  let print (x) = S!print (!to_rep (x)) ;
   (** By default we parse concrete data and abstract it. *)
-  let parse (p) = !from_rep (D_s!parse (p)) ;
+  let parse (p) = !from_rep (S!parse (p)) ;
 end
 ;;
 
@@ -127,9 +126,6 @@ species Represented_by_setoid(S is Setoid)
 
   (** equality in self is equality in s *)
   let equal(x in Self, y in Self) = S!equal(x, y);
-
-(*   (\*[rr] should compile, equal has a declaration Self -> Self -> bool *\) *)
-(*   let equal(x, y) = S!equal(x, y); *)
 
   proof of equal_reflexive = 
     by property S!equal_reflexive 
@@ -198,7 +194,8 @@ end
 *)
 
 species Quotient_set(S is Setoid, 
-                     Proj is Projections(S))
+                     Proj is Projections(S)
+		    )
   inherits Represented_by_setoid(S), Setoid =
 
   (** We produce elements by projecting them  *)

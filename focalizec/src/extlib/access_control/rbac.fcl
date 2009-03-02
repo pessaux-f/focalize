@@ -28,7 +28,7 @@ species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
         | h :: t ->
             match t with
             | [ ] -> A!print (h) ^ "]"
-            | _underscore -> A!print (h) ^ ",\n                     " ^ aux (t)
+            | _ -> A!print (h) ^ ",\n                     " ^ aux (t)
      in "[" ^ aux (l) ;
 
   proof of equal_prop = assumed {* Because todo *} ;
@@ -572,7 +572,7 @@ species S_models_rbac (S_us is S_users,
                 "(" ^ S_us!print (fst (h)) ^
                 "," ^ S_ro!print (snd (h)) ^
                 ")]"
-            | _underscore ->
+            | _ ->
                 "(" ^ S_us!print (fst (h)) ^
                 "," ^ S_ro!print (snd (h)) ^
                 "),\n                     " ^

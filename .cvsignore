@@ -3,6 +3,7 @@
 .distribution_var
 .depend
 .done*
+.announce_text
 coq-*
 ocaml-*
 camlp5-*

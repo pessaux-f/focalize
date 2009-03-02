@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.82 2009-02-26 13:53:46 pessaux Exp $
+# $Id: Makefile,v 1.83 2009-03-02 10:19:30 weis Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -58,8 +58,6 @@ EXTERNAL_BYT_OBJS =\
   ml_builtins.cmo sets_externals.cmo sets_orders_externals.cmo
 #  weak_structures_externals.cmo
 #  random_foc_externals.cmo
-
-EXTERNAL_CMIS = $(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 
@@ -109,10 +107,6 @@ install::
 	  echo "Installing (Coq) compiled certified libs." && \
 	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/; \
 	fi && \
-	if [ "$(EXTERNAL_CMIS)" != "" ] ; then \
-	  echo "Installing OCaml interfaces." && \
-	  $(CP) $(EXTERNAL_CMIS) $(LIB_INSTALL_DIR)/; \
-	fi && \
 	if [ "$(EXTERNAL_BYT_OBJS)" != "" ]; then \
 	  echo "Installing (OCaml bytecode) external stubs." && \
 	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/; \
@@ -130,7 +124,8 @@ clean::
 	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) && \
 	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) && \
 	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) && \
-	$(RM) $(FOCALIZE_CMIS) $(EXTERNAL_CMIS) *.annot *.glob *.fcd
+	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd
+
 
 depend::
 

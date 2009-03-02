@@ -12,17 +12,9 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.20 2009-02-26 11:08:38 pessaux Exp $ *)
+(* $Id: dep_analysis.mli,v 1.21 2009-03-02 10:19:31 weis Exp $ *)
 
 
-(* For debugging purpose only.
-val debug_print_dependencies_from_parameters :
-  (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ->
-    unit
-val debug_print_dependencies_from_parameters2 :
-  (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ->
-    unit
-*)
 
 exception Ill_formed_species of
   (Parsetree.qualified_vname * DepGraphData.name_node *

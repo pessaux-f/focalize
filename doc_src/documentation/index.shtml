@@ -1,0 +1,59 @@
+<!--#include virtual="beforetitle-eng.html"-->
+Documentation
+<!--#include virtual="aftertitle-eng.html"-->
+
+<!-- \$Id: index.shtml,v 1.2 2009-03-02 10:19:30 weis Exp $ -->
+
+<div id="container">
+<div id="header">
+<h1>Documentation</h1>
+<br />
+<hr />
+</div>
+</div>
+
+<div class="spacer"></div>
+<div class="spacer"></div>
+
+<div id="main">
+<h3>The manual for the lastest release<h3>
+
+<p>The reference manual for the $(PROJECT_NAME) language and system:
+<ul>
+ <li><a href="$(PROJECT_NAME_FULL)_refman.ps">$(PROJECT_NAME_FULL)_refman.ps</a>,
+ size
+<!--#fsize file="$(PROJECT_NAME_FULL)_refman.ps" sizefmt="abbrev"-->,
+ (in PS format).
+ </li>
+ <li><a href="$(PROJECT_NAME_FULL)_refman.pdf">$(PROJECT_NAME_FULL)_refman.pdf</a>,
+ size
+<!--#fsize file="$(PROJECT_NAME_FULL)_refman.pdf" sizefmt="abbrev"-->,
+ (in PDF format).
+ </li>
+ <li><a href="$(PROJECT_NAME_FULL)_refman.dvi">$(PROJECT_NAME_FULL)_refman.dvi</a>,
+ size
+<!--#fsize file="$(PROJECT_NAME_FULL)_refman.dvi" sizefmt="abbrev"-->,
+ (in DVI format).
+ </li>
+</ul>
+</p>
+
+<h3>The manual pages for the $(PROJECT_NAME) commands<h3>
+
+<p>
+<ul>
+ <li><a href="focalizec.$(PROJECT_MAN_EXT)">
+     The manual for the <code>focalizec</code> compiler</a> (Unix man page).
+ </li>
+ <li><a href="focalizedep.$(PROJECT_MAN_EXT)">
+     The manual for the <code>focalizedep</code> make dependencies compiler</a> (Unix man page).
+ </li>
+</ul>
+</p>
+
+</div>
+
+<div class="spacer"></div>
+<div class="spacer"></div>
+
+<!--#include virtual="endofpage-eng.html"-->

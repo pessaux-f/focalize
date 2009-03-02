@@ -1,5 +1,7 @@
-The first release candidate for $(focal)
-========================================
+Hi to all of you careful bug hunters and happy hackers reading this message!
+
+It is my pleasure to announce the result of four years of hard development
+work: the first release candidate for $(focal).
 
 (0) What is it ?
 ----------------
@@ -42,6 +44,12 @@ rock-solid infrastructure and greatly improved capabilities.
 $(focal) home page is http://$(focal).inria.fr/
 $(focal) source files can be found at
 http://$(focal).inria.fr/download/$(PROJECT_NAME_FULL).tgz
+
+(2) How to install it ?
+-----------------------
+Uncompress, extract, then read the INSTALL file in the newly created
+directory focalize.0.1.rc0 and follow the simple instructions written there.
+
 
 Enjoy.
 

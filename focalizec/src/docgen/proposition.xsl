@@ -161,7 +161,7 @@
 
       <xsl:variable name="myfile">
         <xsl:value-of select="concat($docpath,$meth-node/foc:dependence/foc:comes-from/@infile)"/>
-        <xsl:text>.fcd</xsl:text>
+        <xsl:text>.focdoc</xsl:text>
         <!--
              NdV: should parameterize the suffix + potentially search
              in other directories.
@@ -239,7 +239,7 @@
       <!-- we must load another document... -->
       <xsl:variable name="myfile">
         <xsl:value-of select="concat($docpath,$matched-param/@infile)"/>
-        <xsl:text>.fcd</xsl:text>
+        <xsl:text>.focdoc</xsl:text>
       </xsl:variable>
 
       <xsl:call-template name="find-symbol">
