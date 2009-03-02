@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.15 2009-03-02 10:19:31 weis Exp $
+# $Id: Makefile,v 1.16 2009-03-02 13:24:05 weis Exp $
 
 ROOT_DIR = ..
 
@@ -61,5 +61,5 @@ $(COQ_PATCH_TAR_BALL): $(COQ_SRC_DIR_NAME)
 
 include $(ROOT_DIR)/Makefile.common
 
-clean uninstall::
+distclean clean uninstall::
 	($(RM) $(EXTERNAL_TOOLS_DIRS))
