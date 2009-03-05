@@ -1,6 +1,6 @@
 
 (* 
- *@version $Revision: 1.1 $ $Date: 2008-12-18 15:08:30 $
+ *@version $Revision: 1.2 $ $Date: 2009-03-05 18:57:20 $
  *)
 
 use "basics";;
@@ -22,6 +22,9 @@ open "pair";;
 species Gen_voter( V is Value, S is Setoid) =
 
 signature voter : V -> V -> V -> (V * S);
+(*
+signature compatible : (V * S) -> (V * S) -> bool;
+*)
 
 (* Shortcut to extract the value *)
 let value(p in V * S) in V = basics#fst(p);
@@ -29,12 +32,20 @@ let value(p in V * S) in V = basics#fst(p);
 (* Shortcut to extract the diagnostics *)
 let diag(p in V * S) in S = basics#snd(p);
 
-property voter_returns_a_value:
+(* voter does not invent value *)
+property voter_returns_an_input_value:
 all v1 v2 v3 in V,
    V!equal(value(voter(v1, v2, v3)), v1)
 \/ V!equal(value(voter(v1, v2, v3)), v2)
 \/ V!equal(value(voter(v1, v2, v3)), v3)
 ;
+
+(*
+property voter_independant_from_order_v1_v2:
+all v1 v2 v3 in V,
+  compatible(voter(v1, v2, v3), voter(v2, v1, v3))
+;
+*)
 
 end;;
 
@@ -96,7 +107,7 @@ property vote_range_c3 :
     ~ V!equal_value(v1, v3) /\
     ~ V!equal_value(v2, v3))
   ->
-  (V!equal(value(voter( v1, v2, v3)), v1) /\
+  (V!equal(value(voter( v1, v2, v3)), v3) /\
    P!equal(diag(voter( v1, v2, v3)), P!constr(C!capt_3, E!range_match)))
 ;
 
@@ -166,6 +177,98 @@ theorem t2 : all v1 v2 v3 in V,
       \/ C!equal(sensor(diag(voter( v1, v2, v3))), C!capt_3) )
 proof = by property C!all_value;
 
+proof of voter_returns_an_input_value =
+<1>1 
+  assume v1 in V,
+  assume v2 in V,
+  assume v3 in V,
+  prove  (V!equal(value(voter(v1, v2, v3)), v1)
+   \/ V!equal(value(voter(v1, v2, v3)), v2)
+   \/ V!equal(value(voter(v1, v2, v3)), v3))
+
+  <2>1 
+    assume H1: V!equal_value(v1, v2),
+    prove  (V!equal(value(voter(v1, v2, v3)), v1)
+   \/ V!equal(value(voter(v1, v2, v3)), v2)
+   \/ V!equal(value(voter(v1, v2, v3)), v3))
+
+     <3>1 assume H11: V!equal_value(v2, v3),
+     prove (V!equal(value(voter(v1, v2, v3)), v1)
+     \/ V!equal(value(voter(v1, v2, v3)), v2)
+     \/ V!equal(value(voter(v1, v2, v3)), v3))
+
+       <4>1 assume H111: V!equal_value(v1, v3),
+       prove V!equal(value(voter(v1, v2, v3)), v1)
+       by hypothesis H1, H11, H111 property vote_perfect
+       <4>2 assume H112: ~(V!equal_value(v1, v3)),
+       prove V!equal(value(voter(v1, v2, v3)), v2)
+       by hypothesis H1, H11, H112 property vote_partial_c2
+       <4>f conclude
+
+     <3>2 assume H12: ~(V!equal_value(v2, v3)),
+     prove (V!equal(value(voter(v1, v2, v3)), v1)
+     \/ V!equal(value(voter(v1, v2, v3)), v2)
+     \/ V!equal(value(voter(v1, v2, v3)), v3))
+
+       <4>1 assume H121: V!equal_value(v1, v3),
+       prove V!equal(value(voter(v1, v2, v3)), v1)
+       by hypothesis H1, H12, H121 property vote_partial_c1
+       <4>2 assume H122: ~(V!equal_value(v1, v3)),
+       prove V!equal(value(voter(v1, v2, v3)), v3)
+       by hypothesis H1, H12, H122 property vote_range_c3
+       <4>f conclude
+
+   <3>f conclude 
+
+   <2>2 
+    assume H2: ~(V!equal_value(v1, v2)),
+    prove  (V!equal(value(voter(v1, v2, v3)), v1)
+    \/ V!equal(value(voter(v1, v2, v3)), v2)
+    \/ V!equal(value(voter(v1, v2, v3)), v3)) 
+
+     <3>1 assume H21: V!equal_value(v2, v3),
+     prove (V!equal(value(voter(v1, v2, v3)), v1)
+     \/ V!equal(value(voter(v1, v2, v3)), v2)
+     \/ V!equal(value(voter(v1, v2, v3)), v3))
+
+       <4>1 assume H211: V!equal_value(v1, v3),
+       prove V!equal(value(voter(v1, v2, v3)), v3)
+       by hypothesis H2, H21, H211 property vote_partial_c3
+       <4>2 assume H212: ~(V!equal_value(v1, v3)),
+       prove V!equal(value(voter(v1, v2, v3)), v2)
+       by hypothesis H2, H21, H212 property vote_range_c1
+       <4>f conclude
+
+     <3>2 assume H22: ~(V!equal_value(v2, v3)),
+     prove (V!equal(value(voter(v1, v2, v3)), v1)
+     \/ V!equal(value(voter(v1, v2, v3)), v2)
+     \/ V!equal(value(voter(v1, v2, v3)), v3))
+
+       <4>1 assume H221: V!equal_value(v1, v3),
+       prove V!equal(value(voter(v1, v2, v3)), v1)
+       by hypothesis H2, H22, H221 property vote_range_c2
+       <4>2 assume H222: ~(V!equal_value(v1, v3)),
+       prove V!equal(value(voter(v1, v2, v3)), v1)
+       by hypothesis H2, H22, H222 property vote_no_match
+       <4>f conclude
+
+     <3>f conclude
+
+   <2>f conclude
+
+<1>f conclude ;
+
+(*
+property spec_compatible :
+all s1 s2 in (V * P),
+  E!equal(state(diag(s1)), state(diag(s2)));
+
+proof of voter_independant_from_order_v1_v2 =
+  by property V!equal_symmetric, spec_compatible, 
+     definition of voter, diag, value
+  assumed {* To do *};
+*)
+
 end ;;
 
 
@@ -191,7 +294,7 @@ let voter( v1 in V, v2 in V, v3 in V) in V * P =
       if c3 then
         (v2, P!constr(C!capt_2, E!partial_match))
       else
-        (v1, P!constr(C!capt_3, E!range_match))
+        (v3, P!constr(C!capt_3, E!range_match))
   else
     if c2 then
       if c3 then 
@@ -247,7 +350,7 @@ proof of vote_no_match =
      definition of voter, diag, value
 ;
 
-proof of voter_returns_a_value =
+proof of voter_returns_an_input_value =
   by property V!equal_reflexive 
      definition of voter, value
 ;
