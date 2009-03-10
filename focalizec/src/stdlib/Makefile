@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.83 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.84 2009-03-10 15:12:53 rr Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -54,6 +54,12 @@ FOCALIZE_ZVS = $(FOCALIZE_SRC:.fcl=.zv)
 FOCALIZE_VS = $(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
 
+FOCALIZE_DOCS = $(FOCALIZE_SRC:.fcl=.fcd)
+FOCALIZE_DOCS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fcd)
+
+FOCALIZE_MML = $(FOCALIZE_DOCS:.fcd=.xml)
+FOCALIZE_MML_UNSAFE = $(FOCALIZE_DOCS_UNSAFE:.fcd=.xml)
+
 EXTERNAL_BYT_OBJS =\
   ml_builtins.cmo sets_externals.cmo sets_orders_externals.cmo
 #  weak_structures_externals.cmo
@@ -70,6 +76,9 @@ EXTERNAL_VOS =\
 include $(ROOT_DIR)/Makefile.common
 
 lib: all
+
+focalizedoc:: \
+	$(FOCALIZE_MML) $(FOCALIZE_MML_UNSAFE)
 
 byt:: \
       $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
