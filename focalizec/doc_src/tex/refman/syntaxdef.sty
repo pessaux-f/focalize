@@ -1,0 +1,26 @@
+\newif\ifspace
+\def\addspace{\ifspace \; \spacefalse \fi}
+\def\token#1{\addspace\terminal{#1} \spacetrue}
+\def\nonterm#1{\addspace\nt{#1} \spacetrue}
+\def\nt#1{\hbox{\sl #1\/}}
+\def\brepet{\addspace\{}
+\def\erepet{\}}
+\def\boption{\addspace[}
+\def\eoption{]}
+\def\brepets{\addspace\{}
+\def\erepets{\}^+}
+\def\brepetsep{\addspace\{}
+\def\erepetsep#1{\}^+_{#1}}
+\def\bparen{\addspace(}
+\def\eparen{)}
+\def\orelse{\mid \spacefalse}
+\def\is{ & ::= & \spacefalse }
+\def\alt{ \\ & \mid & \spacefalse }
+\def\cutline{ \\ & & \spacefalse }
+\def\sep{ \\[2mm] \spacefalse }
+\def\emptystring{\epsilon}
+\def\syn{$$\begin{array}{rrl}\spacefalse}
+\def\endsyn{\end{array}$$}
+\let\oldldots=\ldots
+\def\ldots{\spacefalse\oldldots}
+\def\synt#1{$\spacefalse#1$}

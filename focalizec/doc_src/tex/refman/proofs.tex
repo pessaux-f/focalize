@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.12 2009-03-02 10:19:30 weis Exp $
+% $Id: proofs.tex,v 1.13 2009-03-11 13:57:12 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of  theorems}
@@ -6,16 +6,23 @@ As presented in \ref{proof-short-intro}, {\focal} proposes 3 ways to
 make proof of properties. We will only deal here with proofs written
 in the {\focal} Proof Language. As a reminder, proofs written as
 direct {\coq} scripts will be addressed in \ref{coq-proofs}. And the
-last kind of proof, by {\tt assumed} doesn't need anymore description
+last kind of proof, by \terminal{assumed} doesn't need anymore description
 since it consists in bypassing the formal proof mechanism.
 
 The syntax of proofs is as follows.
-\begin{syntax}
-\syntaxclass{Proofs:}
-proof & ::=  & proof\_step*\ qed\_step \\
-      & \mid & \terminal{by}\ fact+{} \\
-      & \mid & \terminal{conclude}
-\end{syntax}
+\begin{syn}
+\nonterm{proof} \is
+     \brepet \nonterm{proof\_step} \erepet \nonterm{qed\_step}
+\alt \token{by} \brepets \nonterm{fact} \erepets
+\alt \token{conclude}
+\end{syn}
+
+%\begin{syntax}
+%\syntaxclass{Proofs:}
+%proof & ::=  & proof\_step*\ qed\_step \\
+%      & \mid & \terminal{by}\ fact+{} \\
+%      & \mid & \terminal{conclude}
+%\end{syntax}
 
 A proof is either a leaf proof or a compound proof. A leaf proof
 (introduced with the \terminal{by} or \terminal{conclude} keywords)
@@ -32,10 +39,15 @@ step.  The goal of each step is stated in the step itself, except for
 the \terminal{qed} step, which has the same goal as the enclosing
 proof.
 
-\begin{syntax}
-\syntaxclass{Proof steps:}
-proof\_step & ::=  & proof\_bullet~~statement~~proof
-\end{syntax}
+\begin{syn}
+\nonterm{proof\_step} \is
+     \nonterm{proof\_bullet} \nonterm{statement} \nonterm{proof}
+\end{syn}
+
+%\begin{syntax}
+%\syntaxclass{Proof steps:}
+%proof\_step & ::=  & proof\_bullet~~statement~~proof
+%\end{syntax}
 
 A proof step starts with a proof bullet, which gives its level of
 nesting.  The top level of a proof is 0.  In a compound proof, the
@@ -76,11 +88,17 @@ After the statement is the proof of the step.  See below (under
 Statements) for a description of what is the current goal for this
 proof.
 
-\begin{syntax}
-\syntaxclass{QED steps:}
-qed\_step & ::=  & proof\_bullet\ \terminal{qed}\ proof \\
-          & \mid & proof\_bullet\ \terminal{conclude}
-\end{syntax}
+\begin{syn}
+\nonterm{qed\_step} \is
+     \nonterm{proof\_bullet} \token{qed} \nonterm{proof}
+\alt \nonterm{proof\_bullet} \token{conclude}
+\end{syn}
+
+%\begin{syntax}
+%\syntaxclass{QED steps:}
+%qed\_step & ::=  & proof\_bullet\ \terminal{qed}\ proof \\
+%          & \mid & proof\_bullet\ \terminal{conclude}
+%\end{syntax}
 
 A \terminal{qed} step is similar to a normal step, except that its
 statement is the goal of the enclosing proof.  It may be reduced to
@@ -91,11 +109,17 @@ the word \terminal{conclude} when its proof is reduced to
     <1>2 conclude
 \end{verbatim}
 
-\begin{syntax}
-\syntaxclass{Statements:}
-statement & ::=  & {\{\terminal{assume}\ assumption\ \terminal{,}\}*}
-                   \ \{\terminal{prove}\ logical\_expr\}?
-\end{syntax}
+\begin{syn}
+\nonterm{statement} \is
+     \brepet \token{assume} \nonterm{assumption} \token{,} \erepet
+     \boption \token{prove} \nonterm{logical\_expr} \eoption
+\end{syn}
+
+%\begin{syntax}
+%\syntaxclass{Statements:}
+%statement & ::=  & {\{\terminal{assume}\ assumption\ \terminal{,}\}*}
+%                   \ \{\terminal{prove}\ logical\_expr\}?
+%\end{syntax}
 A statement must be non-empty: at least one \terminal{assume} or the
 \terminal{prove} part must be present.
 
@@ -107,38 +131,81 @@ conclusion (i.e. the {\em logical\_expr} that appears after
 the current goal is the \terminal{prove} expression, and the
 assumptions are available as facts.
 
-\begin{syntax}
-\syntaxclass{Assumptions:}
-assumption & ::= & ident\ \terminal{in}\ type\_expr \\
-           & \mid & ident\ \terminal{:}\ logical\_expr
-\end{syntax}
+\begin{syn}
+\nonterm{assumption} \is
+     \nonterm{ident} \token{in} \nonterm{type\_expr}
+\alt \nonterm{ident} \token{:} \nonterm{logical\_expr}
+\end{syn}
+
+%\begin{syntax}
+%\syntaxclass{Assumptions:}
+%assumption & ::= & ident\ \terminal{in}\ type\_expr \\
+%           & \mid & ident\ \terminal{:}\ logical\_expr
+%\end{syntax}
 
 An assumption can either introduce a new (universally quantified)
 variable with its type (first form), or a new named hypothesis (second
 form).
 
-\begin{syntax}
-\syntaxclass{Facts:}
-fact & ::= & \terminal{definition~of}
-                     \ \{ident?\terminal{\#}\}?ident
-     \ \{\{\terminal{,}\ ident?\terminal{\#}\}?ident\}*
-\\
-     & \mid & \terminal{hypothesis}
-                     \ ident
-     \ \{\terminal{,}\ ident\}*
-\\
-     & \mid & \terminal{property}
-          \ \{\{\{ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident
-\ \{\{\{\{\terminal{,}\ ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident\}*
-\\
-     & \mid & \terminal{theorem}
-          \ \{\{\{ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident
-\ \{\{\{\{\terminal{,}\ ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident\}*
-\\
-     & \mid & \terminal{step}
-                 \ proof\_bullet
-  \ \{\terminal{,}\ proof\_bullet\}*
-\end{syntax}
+\begin{syn}
+\nonterm{fact} \is
+     \token{definition of}
+           \boption \boption \nonterm{ident} \eoption \token{\#} \eoption
+               \nonterm{ident}
+        \brepet \token{,}
+           \boption \boption \nonterm{ident} \eoption \token{\#} \eoption
+               \nonterm{ident}
+        \erepet
+\alt \token{hypothesis}
+           \nonterm{ident}
+        \brepet \token{,}
+           \nonterm{ident}
+        \erepet
+\alt \bparen \token{property} \mid \token{theorem} \eparen
+           \boption \boption \boption \boption \nonterm{ident}
+           \eoption \token{\#} \eoption \nonterm{ident} \eoption
+           \token{!} \eoption \nonterm{ident}
+        \brepet \token{,}
+           \boption \boption \boption \boption \nonterm{ident}
+           \eoption \token{\#} \eoption \nonterm{ident} \eoption
+           \token{!} \eoption \nonterm{ident}
+        \erepet
+% presentation allegee :
+\alt \bparen \token{property} \mid \token{theorem} \eparen
+        \brepetsep
+           \boption \boption \boption \boption \nonterm{ident}
+           \eoption \token{\#} \eoption \nonterm{ident} \eoption
+           \token{!} \eoption \nonterm{ident}
+        \erepetsep{\token{,}}
+\alt \token{step}
+           \nonterm{proof\_bullet}
+        \brepet \token{,}
+           \nonterm{proof\_bullet}
+        \erepet
+\end{syn}
+
+%\begin{syntax}
+%\syntaxclass{Facts:}
+%fact & ::= & \terminal{definition~of}
+%                     \ \{ident?\terminal{\#}\}?ident
+%     \ \{\{\terminal{,}\ ident?\terminal{\#}\}?ident\}*
+%\\
+%     & \mid & \terminal{hypothesis}
+%                     \ ident
+%     \ \{\terminal{,}\ ident\}*
+%\\
+%     & \mid & \terminal{property}
+%          \ \{\{\{ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident
+%\ \{\{\{\{\terminal{,}\ ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident\}*
+%\\
+%     & \mid & \terminal{theorem}
+%          \ \{\{\{ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident
+%\ \{\{\{\{\terminal{,}\ ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident\}*
+%\\
+%     & \mid & \terminal{step}
+%                 \ proof\_bullet
+%  \ \{\terminal{,}\ proof\_bullet\}*
+%\end{syntax}
 
 A fact used in a leaf proof can be a definition, a hypothesis, a
 property, a theorem, or a step.
