@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.6 2009-03-13 10:40:13 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -171,3 +171,8 @@ polys_abstract.ml: polys_abstract.fcl
 randoms_externals.vo: $(STDLIB_DIR)/basics.vo
 arrays_externals.vo: $(STDLIB_DIR)/basics.vo
 # End Should be generated ?
+
+build.x: bin
+	$(CAML_BIN_COMPILER) -o $@ \
+           -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR) \
+            $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
