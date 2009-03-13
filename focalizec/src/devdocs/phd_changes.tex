@@ -1,0 +1,127 @@
+% $Id: phd_changes.tex,v 1.1 2009-03-13 16:47:48 pessaux Exp $
+\subsection{Type unification}
+\noindent Section 3.3, definition 9, page 27.
+
+\noindent Rule [SELF1] should be: $mg(t, {\bf Self}, t) = {\bf Self}, id$
+
+\noindent Rule [SELF2] should be: $mg(t, t, {\bf Self}) = {\bf Self}, id$
+
+
+
+\subsection{Normal form algorithm}
+\noindent Section 3.7.1, page 36.
+
+\noindent In the algorithm, line 10 should be:
+$\mathbb{W}_1 \leftarrow ((\psi_{i_{0}} \varogreaterthan \phi), \mathbb{X}).$
+
+\smallskip
+
+\noindent In the algorithm, line 13 should be:
+$\mathbb{W}_2 \leftarrow (\mathbb{W}_2, \phi)$.
+
+\smallskip
+\noindent In the running text, page 37, line 8, the same modification
+must be done to get ``on garde $\psi_{i_{0}} \varogreaterthan \phi$
+dans $\mathbb{W}_1$ \ldots''.
+
+
+
+\subsection{Typing rules for parametrised species}
+\noindent Section 3.8, figure 3.2, page 43.
+
+\noindent Rule [COL-PRM] should be:
+
+\inferrule
+  {
+  {\cal C}, \Omega \vdash e^S : a \\
+  {\cal C} + C : {\cal A} (a, C), \Omega \vdash
+    {\bf species}\ S (prms)\ {\bf inherits}\ e^{S}_1, \ldots
+    e^{S}_{h_f} = \Phi_1 \ldots \Phi_n : t_S
+  }
+  {
+  {\cal C}, \Omega \vdash {\bf species}\ S(C \ {\bf is}\ e^S, prms)
+  \ {\bf inherits}\ e^{S}_1, \ldots e^{S}_{h_f} =
+  \Phi_1 \ldots \Phi_n : (C\ {\bf is}\ a)t_S
+  }
+
+
+
+\subsection{Dependency on the carrier}
+\noindent Section 3.9.4, definition 28, page 50.
+
+\noindent The definition should be: ``Soit une expression $e$, si une
+sous-expression de $e$ \rlap{----------}a le type {\bf fait référence à
+(``contient'')} {\tt Self}, il y a une
+ decl-dépendance
+vis-à-vis du type support.''.
+
+\noindent In English: ''Let's have $e$ an expression, if a
+sub-expression of $e$ \rlap{-----------}has type {\bf makes reference
+to (``contains'')} {\tt Self}, then there is a decl-dependency
+on the carier''.
+
+\medskip
+This is more  accurate since an expression having type
+${\tt int} \rightarrow {\tt Self}$ does not have type {\tt Self}, but
+when we state its type, {\tt Self} occurs in the type and must be
+bound somewhere (and the decl-dependency on the carrier is just there
+for this purpose).
+
+
+
+% MERDE !!! Je ne me souviens plus pourquoi. L'explication que j'ai
+% foutue sur la version papier de la thèse est merdique. Bon, à
+% investiguer plus tard...
+%
+% \subsection{Inference rules for logical statements}
+% \noindent Section 3.9.5, figure 3.3, page 52.
+
+% \noindent The rule [EXPR] states that one can infer that an expression
+% $expr$ has type {\tt prop} in $\Sigma$ if one can infer that is has
+% type {\tt bool} in the ``reduced'' $\Sigma^{*}$.
+% This is correct in the context of type checking. But this is not exact
+% in the context of type {\bf inference}. In fact, it doen't work since
+% the rules [EX] and [ALL] need to enter the bound variables 
+
+
+
+\subsection{Dependencies in a species}
+\noindent Section 3.9.5, definition 31, page 53.
+
+\noindent Lines 3 and 4 should be:
+
+\hspace{1cm} $\forall j < n,
+   \ y_{j} \in \decldeps{y_{i}}_S \cup \defdeps{y_{j+1}}_S$
+
+\noindent $x_1 <^{def}_{S} x_2 \ \widehat{=}\ \exists \{y_i\}_{i=1\ldots n}
+  \ tel\ que \ y_1 \circlearrowright_S x_1, y_n \circlearrowright_S x_2,
+  \forall j < n,\ y_j \in \defdeps{y_{j+1}}_S$
+
+
+
+\subsection{Parameters used by a method}
+\noindent Section 3.9.5, definition 66, page 124.
+
+\noindent To understand the rules [BODY], [TYPE], [DEF-DEP], [UNIVERS]
+and [PRM], it should be stated that implicitely the parameter $C_{p'}$
+has the form: $$C_{p'} {\tt is/in\ } \tau_{p'}$$.
+
+
+\subsection{Instanciation of species parameters}
+\noindent Section 3.9.5, definition 67, page 124.
+
+\noindent Second rule should be:
+\inferrule
+  {
+  x \Lsh S = S_h \\
+  {\cal E}(S_h) = (C_1 \centerdot \tau_1, \ldots,
+                   C_{p_f} \centerdot \tau_{p_f}) \\
+  l_h = e_1 \ldots\ e_{p_f}
+  }
+  {
+  {\tt Inst}_S (x) = \{ {\tt Inst}_{C_p}(e_p)_{C_p\in {\cal U}_{S_h}(x)}\}
+  }
+\subsection{Coq code generation model}
+\subsection{Missing rule for dependencies on parameters}
+\subsection{Missing order for dependencies on parameters}
+

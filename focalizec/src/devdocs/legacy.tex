@@ -1,3 +1,4 @@
+% $Id: legacy.tex,v 1.2 2009-03-13 16:47:48 pessaux Exp $
 \documentclass{book}
 
 
@@ -9,11 +10,13 @@
 \usepackage[latin1]{inputenc}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage{stmaryrd}
 \usepackage{amscd}
 \usepackage{graphicx}
 \usepackage{epsfig}
 \usepackage{color}
 \usepackage{listings}
+\usepackage{mathpartir}
 %%\usepackage{smallverbatim}
 
 \geometry{a4paper,twoside,body={5.5in,9in}}
@@ -23,9 +26,7 @@
 
 \begin{document}
 \chapter{Changes in Virgile's PhD}
-\subsection{Coq code generation model}
-\subsection{Missing rule for dependencies on parameters}
-\subsection{Missing order for dependencies on parameters}
+\input{phd_changes}
 
 \chapter{Code generation model}
 \section{Species}
@@ -67,4 +68,7 @@
 \subsection{Recursive functions}
 
 \chapter{Doc generation}
+
+\chapter{focalizedep}
+
 \end{document}
