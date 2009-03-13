@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.17 2009-03-13 16:11:17 doligez Exp $
+% $Id: lexical_conventions.tex,v 1.18 2009-03-13 17:00:23 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -231,7 +231,7 @@ and labels of records.
 \sep
 \nt{letter} \is \nt{lower} \orelse \nt{upper}
 \sep
-\nt{lident} \is \paren{ \nt{lower} \orelse \tok{\backslash} }
+\nt{lident} \is \paren{ \nt{lower} \orelse \tok{\_} }
                 \rep{ \nt{letter} \orelse \nt{digit} \orelse \tok{\_} }
 \sep
 \nt{uident} \is \nt{upper}
@@ -289,27 +289,27 @@ Prefix & Infix \\
 \end{center}
 
 \begin{syn}
-\nt{prefix\_char} \is
+\nt{prefix-char} \is
   \tok{`} \orelse \tok{\tilde} \orelse \tok{?} \orelse \tok{\$} \orelse
   \tok{!} \orelse \tok{\#}
 \sep
-\nt{infix\_char} \is
+\nt{infix-char} \is
   \tok{,} \orelse \tok{+} \orelse \tok{-} \orelse \tok{*} \orelse
   \tok{/} \orelse \tok{\%} \orelse \tok{\&} \orelse \tok{\vertical} \orelse
   \tok{:} \orelse \tok{;} \orelse \tok{<} \orelse \tok{=} \orelse
   \tok{>} \orelse \tok{@} \orelse \tok{\chapeau} \orelse
   \tok{\backslash}
 \sep
-\nt{prefix\_op} \is
-  \nt{prefix\_char} \rep{\nt{letter} \orelse \nt{prefix\_char} \orelse
-  \nt{infix\_char} \orelse \nt{digit} \orelse \tok{\_} }
+\nt{prefix-op} \is
+  \nt{prefix-char} \rep{\nt{letter} \orelse \nt{prefix-char} \orelse
+  \nt{infix-char} \orelse \nt{digit} \orelse \tok{\_} }
 \sep
-\nt{infix\_op} \is
-  \nt{infix\_char} \rep{\nt{letter} \orelse \nt{prefix\_char} \orelse
-  \nt{infix\_char} \orelse \nt{digit} \orelse \tok{\_} }
+\nt{infix-op} \is
+  \nt{infix-char} \rep{\nt{letter} \orelse \nt{prefix-char} \orelse
+  \nt{infix-char} \orelse \nt{digit} \orelse \tok{\_} }
 \sep
 \nt{operator} \is
-  \nt{infix\_op} \orelse \nt{prefix\_op}
+  \nt{infix-op} \orelse \nt{prefix-op}
 \end{syn}
 
 % \begin{syntax}
@@ -328,7 +328,7 @@ Prefix & Infix \\
 % \end{syntax}
 
 Hence, in the above examples, {\tt +}, {\tt ++} and {\tt =\_mod\_5} will be
-infix operators and {\tt $\sim$+zero} will be a prefix one.
+infix operators and {\tt \tilde+zero} will be a prefix one.
 
 \subsubsection{Defining an infix operator}
 \index{defining operators}
@@ -455,40 +455,40 @@ names and collection parameters are uppercase identifiers.
 \label{binary}
 
 \begin{syn}
-\nt{binary\_digit} \is \tok{0} \orelse \tok{1}
+\nt{binary-digit} \is \tok{0} \orelse \tok{1}
 \sep
-\nt{octal\_digit} \is \tok{0} \ldots \tok{7}
+\nt{octal-digit} \is \tok{0} \ldots \tok{7}
 \sep
-\nt{hexadecimal\_digit} \is
+\nt{hexadecimal-digit} \is
   \tok{0} \ldots \tok{9}
   \orelse \tok{A} \ldots \tok{F}
   \orelse \tok{a} \ldots \tok{f}
 \sep
 \nt{sign} \is \tok{+} \orelse \tok{-}
 \sep
-\nt{unsigned\_binary\_literal} \is
+\nt{unsigned-binary-literal} \is
   \tok{0} \paren{ \tok{b} \orelse \tok{B} }
-  \nt{binary\_digit} \rep{ \nt{binary\_digit} \orelse \tok{\_} }
+  \nt{binary-digit} \rep{ \nt{binary-digit} \orelse \tok{\_} }
 \sep
-\nt{unsigned\_octal\_literal} \is
+\nt{unsigned-octal-literal} \is
   \tok{0} \paren{ \tok{o} \orelse \tok{O} }
-  \nt{octal\_digit} \rep{ \nt{octal\_digit} \orelse \tok{\_} }
+  \nt{octal-digit} \rep{ \nt{octal-digit} \orelse \tok{\_} }
 \sep
-\nt{unsigned\_decimal\_literal} \is
+\nt{unsigned-decimal-literal} \is
   \nt{digit} \rep{ \nt{digit} \orelse \tok{\_} }
 \sep
-\nt{unsigned\_hexadecimal\_literal} \is
+\nt{unsigned-hexadecimal-literal} \is
   \tok{0} \paren{ \tok{x} \orelse \tok{X} }
-  \nt{hexadecimal\_digit} \rep{ \nt{hexadecimal\_digit} \orelse \tok{\_} }
+  \nt{hexadecimal-digit} \rep{ \nt{hexadecimal-digit} \orelse \tok{\_} }
 \sep
-\nt{unsigned\_integer\_literal} \is
-     \nt{unsigned\_binary\_literal}
-\alt \nt{unsigned\_octal\_literal}
-\alt \nt{unsigned\_decimal\_literal}
-\alt \nt{unsigned\_hexadecimal\_literal}
+\nt{unsigned-integer-literal} \is
+     \nt{unsigned-binary-literal}
+\alt \nt{unsigned-octal-literal}
+\alt \nt{unsigned-decimal-literal}
+\alt \nt{unsigned-hexadecimal-literal}
 \sep
-\nt{integer\_literal} \is
-  \opt{\nt{sign}} \nt{unsigned\_integer\_literal}
+\nt{integer-literal} \is
+  \opt{\nt{sign}} \nt{unsigned-integer-literal}
 \end{syn}
 
 % \begin{syntax}
@@ -541,9 +541,9 @@ Here are various examples of integers in various bases:
 \label{string literal}
 
 \begin{syn}
-\nt{string\_literal} \is
+\nt{string-literal} \is
   \tok{"}
-  \rep{\paren{ \nt{plain-char} \orelse \tok{\backslash} \nt{char-escape} }}
+  \rep{ \nt{plain-char} \orelse \tok{\backslash} \nt{char-escape} }
   \tok{"}
 \sep
 \nt{plain-char} \is \mbox{\em any printable character except backslash
@@ -556,7 +556,7 @@ Here are various examples of integers in various bases:
 \alt \tok{(} \orelse \tok{)} \orelse \tok{[} \orelse \tok{]}
      \orelse \tok{\{} \orelse \tok{\}}
 \alt \nt{digit} \nt{digit} \nt{digit}
-\alt \nt{hexadecimal\_digit} \nt{hexadecimal\_digit}
+\alt \nt{hexadecimal-digit} \nt{hexadecimal-digit}
 \end{syn}
 
 String literals are sequences of any characters delimited by {\tt "}
@@ -572,57 +572,61 @@ table below:
   \hline
   Sequence & Character & Comment \\
   \hline
-  \terminal{\backslash{}b} & $\setminus$008 & Backspace. \\
+  \terminal{\backslash{}b} & $\backslash008$ & Backspace. \\
   \hline
-  \terminal{\backslash{}n} & $\setminus$010 & Line feed. \\
+  \terminal{\backslash{}n} & $\backslash010$ & Line feed. \\
   \hline
-  \terminal{\backslash{}r} & $\setminus$013 & Carriage return. \\
+  \terminal{\backslash{}r} & $\backslash013$ & Carriage return. \\
   \hline
-  \terminal{\backslash{}t} & $\setminus$009 & Tabulation. \\
+  \terminal{\backslash{}t} & $\backslash009$ & Tabulation. \\
   \hline
-  $\setminus$\textvisiblespace  & \textvisiblespace      & Space character. \\
+  \terminal{\backslash\textvisiblespace}
+                           & \textvisiblespace      & Space character. \\
   \hline
-  $\setminus$" & "              & Double quote. \\
+  \terminal{\backslash"} & {\tt"}              & Double quote. \\
   \hline
-  $\setminus$' & '              & Single quote. \\
+  \terminal{\backslash'} & {\tt'}              & Single quote. \\
   \hline
-  $\setminus$* & *              & Since comments cannot appear inside
+  \terminal{\backslash*} & *              & Since comments cannot appear inside
                                   strings, to insert one of the
-                                  sequence ``(*'', ``*)'', ``\{*'', or
-                                  ``*\}'', use this escape sequence
-                                  combined with the four following
+                                  sequence ``(*'', ``*)'', ``\{*'',
+                                  ``*\}'', ``[*'', or ``*]'',
+                                  use this escape sequence
+                                  combined with the six following
                                   ones. \\
   \hline
-  $\setminus$( & (              & See comment above for $\setminus$*. \\
+  \terminal{\backslash(} & ( & \multirow{6}{*}{See comment above for \terminal{\backslash*}} \\
+  \cline{1-2}
+  \terminal{\backslash)} & ) & \\
+  \cline{1-2}
+  \terminal{\backslash[} & [ & \\
+  \cline{1-2}
+  \terminal{\backslash]} & ] & \\
+  \cline{1-2}
+  \terminal{\backslash\{} & \{ & \\
+  \cline{1-2}
+  \terminal{\backslash\}} & \} & \\
   \hline
-  $\setminus$) & )              & See comment above for $\setminus$*. \\
+  \terminal{\backslash\backslash} & $\backslash$      & Backslash character. \\
   \hline
-  $\setminus$[ & [              & See comment above for $\setminus$*. \\
+  \terminal{\backslash`} & `              & Backquote character. \\
   \hline
-  $\setminus$] & ]              & See comment above for $\setminus$*. \\
-  \hline
-  $\setminus$\{ & \{            & See comment above for $\setminus$*. \\
-  \hline
-  $\setminus$\} & \}            & See comment above for $\setminus$*. \\
-  \hline
-  $\setminus\setminus$ & $\setminus$      & Backslash character. \\
-  \hline
-  $\setminus$` & `              & Backquote character. \\
-  \hline
-  $\setminus$\-- & \--          & Minus (dash) character. Like for multi-line
+  \terminal{\backslash-} & {\tt-}  & Minus (dash) character. As for multi-line
                                   comments, uni-line comments can't appear in
                                   strings. Hence, to insert the sequence
-                                  ``\--\--'', use this escape sequence twice. \\
+                                  ``{\tt-{}-}'' use this escape
+                                  sequence twice. \\
   \hline
-  $\setminus$[0-9][0-9][0-9] &  & The character whose ASCII code in
+  \terminal{\backslash}{\em digit digit digit}
+                            &  & The character whose ASCII code in
                                   {\bf decimal} is given by the 3 digits
-                                  following the $\setminus$. This
+                                  following the $\backslash$. This
                                   sequence is valid for all
                                   ASCII codes. \\
   \hline
-  $\setminus$x[0-9a-fA-F][0-9a-fA-F] & & The character whose ASCII code in
+  \terminal{\backslash0x}{\em\ hex hex} & & The character whose ASCII code in
                                   {\bf hexadecimal} is given by the 2
-                                  digits following the $\setminus$. This
+                                  characters following the $\backslash$. This
                                   sequence is valid for all
                                   ASCII codes.\\
   \hline
@@ -633,9 +637,9 @@ table below:
 \label{character literals}
 
 \begin{syn}
-\nt{character\_literal} \is
+\nt{character-literal} \is
   \tok{'}
-  \rep{\paren{ \nt{plain-char} \orelse \tok{\backslash} \nt{char-escape} }}
+  \paren{ \nt{plain-char} \orelse \tok{\backslash} \nt{char-escape} }
   \tok{'}
 \end{syn}
 
@@ -650,29 +654,29 @@ quotes. Available escape sequences are summarised in the table above
 \subsection{Floating-point number literals}
 
 \begin{syn}
-\nt{decimal\_literal} \is
-  \opt{\nt{sign}} \nt{unsigned\_decimal\_literal}
+\nt{decimal-literal} \is
+  \opt{\nt{sign}} \nt{unsigned-decimal-literal}
 \sep
-\nt{hexadecimal\_literal} \is
-  \opt{\nt{sign}} \nt{unsigned\_hexadecimal\_literal}
+\nt{hexadecimal-literal} \is
+  \opt{\nt{sign}} \nt{unsigned-hexadecimal-literal}
 \sep
-\nt{scientific\_notation} \is \tok{e} \orelse \tok{E}
+\nt{scientific-notation} \is \tok{e} \orelse \tok{E}
 \sep
-\nt{unsigned\_decimal\_float\_literal} \is
-  \nt{unsigned\_decimal\_literal}
-  \opt{\tok{.} \rep{\nt{unsigned\_decimal\_literal}}}
-  \opt{\nt{scientific\_notation} \nt{decimal\_literal}}
+\nt{unsigned-decimal-float-literal} \is
+  \nt{unsigned-decimal-literal}
+  \opt{\tok{.} \rep{\nt{unsigned-decimal-literal}}} \cutline
+  \opt{\nt{scientific-notation} \nt{decimal-literal}}
 \sep
-\nt{unsigned\_hexadecimal\_float\_literal} \is
-  \nt{unsigned\_hexadecimal\_literal}
-  \opt{\tok{.} \rep{\nt{unsigned\_hexadecimal\_literal}}}
-  \opt{\nt{scientific\_notation} \nt{hexadecimal\_literal}}
+\nt{unsigned-hexadecimal-float-literal} \is
+  \nt{unsigned-hexadecimal-literal}
+  \opt{\tok{.} \rep{\nt{unsigned-hexadecimal-literal}}} \cutline
+  \opt{\nt{scientific-notation} \nt{hexadecimal-literal}}
 \sep
-\nt{unsigned\_float\_literal} \is
-  \nt{unsigned\_decimal\_float\_literal}
-  \orelse \nt{unsigned\_hexadecimal\_float\_literal}
+\nt{unsigned-float-literal} \is
+     \nt{unsigned-decimal-float-literal}
+\alt \nt{unsigned-hexadecimal-float-literal}
 \sep
-\nt{float\_literal} \is \opt{\nt{sign}} \nt{unsigned\_float\_literal}
+\nt{float-literal} \is \opt{\nt{sign}} \nt{unsigned-float-literal}
 \end{syn}
   
 % \begin{syntax}
@@ -706,7 +710,7 @@ prefixed by ``0x'' or ``0X''. Example {\tt 0xF2.E4}, {\tt 0X4.3A},
 \subsection{Proof step bullets}
 \index{proof!step bullet}
 \begin{syn}
-\nt{proof\_step\_bullet} \is
+\nt{proof-step-bullet} \is
   \tok{<} \reps{\nt{digit}} \tok{>}
   \reps{ \nt{letter} \orelse \nt{digit} }
 \end{syn}

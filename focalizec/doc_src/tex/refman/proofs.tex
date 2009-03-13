@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.17 2009-03-13 16:10:43 doligez Exp $
+% $Id: proofs.tex,v 1.18 2009-03-13 17:00:23 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of  theorems}
@@ -12,11 +12,11 @@ since it consists in bypassing the formal proof mechanism.
 The syntax of proofs is as follows.
 \begin{syn}
 \nt{proof} \is
-     \rep{\nt{proof\_step}} \nt{qed\_step}
+     \rep{\nt{proof-step}} \nt{qed-step}
 \alt \tok{by} \reps{\nt{fact}}
 \alt \tok{conclude}
-\alt \tok{coq~proof} \nt{enforced\_dependencies} \nt{external\_code}
-\alt \nt{enforced\_dependencies} \tok{assumed} \nt{external\_code}
+\alt \tok{coq~proof} \nt{enforced-dependencies} \nt{external-code}
+\alt \nt{enforced-dependencies} \tok{assumed} \nt{external-code}
 \end{syn}
 
 %\begin{syntax}
@@ -42,8 +42,8 @@ the \terminal{qed} step, which has the same goal as the enclosing
 proof.
 
 \begin{syn}
-\nt{proof\_step} \is
-     \nt{proof\_step\_bullet} \nt{statement} \nt{proof}
+\nt{proof-step} \is
+     \nt{proof-step-bullet} \nt{statement} \nt{proof}
 \end{syn}
 
 %\begin{syntax}
@@ -91,9 +91,9 @@ Statements) for a description of what is the current goal for this
 proof.
 
 \begin{syn}
-\nt{qed\_step} \is
-    \nt{proof\_step\_bullet} \tok{ qed} \nt{proof}
-\alt\nt{proof\_step\_bullet} \tok{ conclude}
+\nt{qed-step} \is
+    \nt{proof-step-bullet} \tok{ qed} \nt{proof}
+\alt\nt{proof-step-bullet} \tok{ conclude}
 \end{syn}
 
 %\begin{syntax}
@@ -114,7 +114,7 @@ the word \terminal{conclude} when its proof is reduced to
 \begin{syn}
 \nt{statement} \is
      \rep{\tok{assume} \nt{assumption} \tok{,}}
-     \opt{\tok{prove} \nt{logical\_exp}}
+     \opt{\tok{prove} \nt{logical-exp}}
 \end{syn}
 
 %\begin{syntax}
@@ -128,15 +128,15 @@ A statement must be non-empty: at least one \terminal{assume} or the
 A statement appearing in a step has two readings: internal and
 external.  The external reading is for the rest of the
 proof: the current step proves that the assumptions imply the
-conclusion (i.e. the {\em logical\_exp} that appears after
+conclusion (i.e. the {\em logical-exp} that appears after
 \terminal{prove}).  The internal reading is for the proof of the step:
 the current goal is the \terminal{prove} expression, and the
 assumptions are available as facts.
 
 \begin{syn}
 \nt{assumption} \is
-    \nt{ident} \tok{in} \nt{type\_exp}
-\alt\nt{ident} \tok{ :} \nt{logical\_exp}
+    \nt{ident} \tok{in} \nt{type-exp}
+\alt\nt{ident} \tok{ :} \nt{logical-exp}
 \end{syn}
 
 %\begin{syntax}
@@ -159,7 +159,7 @@ form).
         \repsep{\opt{\opt{\opt{\opt{\nt{ident}} \tok{\#}} \nt{ident}}
                      \tok{!}} \nt{ident}}{\tok{,}}
 \alt \tok{step}
-        \repsep{\nt{proof\_step\_bullet}}{\tok{,}}
+        \repsep{\nt{proof-step-bullet}}{\tok{,}}
 \end{syn}
 
 %\begin{syntax}
@@ -194,7 +194,7 @@ definition in the goal and in the other facts.
 Giving a hypothesis/property/theorem as a fact allows \zenon{} to use
 this hypothesis/property/theorem to prove the goal.
 
-Giving a {\em proof\_step\_bullet} as a fact allows \zenon{} to use the
+Giving a {\em proof-step-bullet} as a fact allows \zenon{} to use the
 (external reading of the) corresponding step as an assumption to prove
 the goal.  Note that even if several steps are labelled with this
 proof bullet, only one of them is in scope at any point, so there is

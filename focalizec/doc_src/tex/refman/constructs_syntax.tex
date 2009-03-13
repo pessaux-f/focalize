@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.40 2009-03-13 16:10:43 doligez Exp $
+% $Id: constructs_syntax.tex,v 1.41 2009-03-13 17:00:23 doligez Exp $
 
 
 \section{Language constructs and syntax}
@@ -50,15 +50,15 @@ Type definitions require {\bf type expressions} to build more complex
 data-types.
 \vspace{0.2cm}
 \begin{syn}
-\nt{type\_exp} \is
+\nt{type-exp} \is
      \nt{lident}
 \alt \nt{uident}
 \alt \tok{Self}
 \alt \tok{'}\nt{lident}
-\alt \nt{uident} \tok{(} \repsep{\nt{type\_exp}}{\tok{,}} \tok{)}
-\alt \nt{type\_exp} \tok{->} \nt{type\_exp}
-\alt \tok{(} \repsep{\nt{type\_exp}}{\tok{*}} \tok{)}
-\alt \tok{(} \nt{type\_exp} \tok{)}
+\alt \nt{uident} \tok{(} \repsep{\nt{type-exp}}{\tok{,}} \tok{)}
+\alt \nt{type-exp} \tok{->} \nt{type-exp}
+\alt \tok{(} \repsep{\nt{type-exp}}{\tok{*}} \tok{)}
+\alt \tok{(} \nt{type-exp} \tok{)}
 \end{syn}
 %\begin{syntax}
 %\syntaxclass{Type expressions:}
@@ -145,7 +145,7 @@ type date = alias (int * int * int * int * int) ;;
 
 \vspace{0.2cm}
 \begin{syn}
-\nt{alias\_type\_def} \is \tok{type} \nt{ident} \tok{=~alias} \nt{type\_exp}
+\nt{alias-type-def} \is \tok{type} \nt{ident} \tok{=~alias} \nt{type-exp}
 \end{syn}
 % \begin{syntax}
 % \syntaxclass{Alias type definitions:}
@@ -271,17 +271,17 @@ elements are {\tt (false, 2)} followed by {\tt (true, 1)}.
 
 \vspace{0.2cm}
 \begin{syn}
-\nt{type\_params} \is
+\nt{type-params} \is
   \tok{(} \repsep{\tok{'} \nt{lident}}{\tok{,}} \tok{)}
 \sep
-\nt{type\_args} \is
-  \tok{(} \repsep{\nt{type\_exp}}{\tok{,}} \tok{)}
+\nt{type-args} \is
+  \tok{(} \repsep{\nt{type-exp}}{\tok{,}} \tok{)}
 \sep
 \nt{constructor} \is
-  \tok{\vertical} \nt{uident} \opt{\nt{type\_args}}
+  \tok{\vertical} \nt{uident} \opt{\nt{type-args}}
 \sep
-\nt{sum\_type\_def} \is
-  \tok{type} \nt{lident} \opt{\nt{type\_params}} \tok{=}
+\nt{sum-type-def} \is
+  \tok{type} \nt{lident} \opt{\nt{type-params}} \tok{=}
   \reps{\nt{constructor}}
 \end{syn}
 % \begin{syntax}
@@ -329,10 +329,10 @@ type identity = {
 \vspace{0.2cm}
 \begin{syn}
 \nt{field} \is
-  \nt{lident} \tok{=} \nt{type\_exp} \tok{;}
+  \nt{lident} \tok{=} \nt{type-exp} \tok{;}
 \sep
-\nt{record\_type\_def} \is
-  \tok{type} \nt{lident} \nt{type\_params} \tok{=}
+\nt{record-type-def} \is
+  \tok{type} \nt{lident} \nt{type-params} \tok{=}
   \tok{\{} \reps{\nt{field}} \tok{\}}
 \end{syn}
 
@@ -492,7 +492,7 @@ denoted by {\tt Self} within the species.
 
 \vspace{0.2cm}
 \begin{syn}
-\nt{representation} \is \tok{representation~=} \nt{type\_exp}
+\nt{representation} \is \tok{representation~=} \nt{type-exp}
 \end{syn}
 
 % \begin{syntax}
@@ -517,68 +517,68 @@ not lead to \focal\ values thus live at another level.
 
 \vspace{0.2cm}
 \begin{syn}
-\nt{qualified\_uident} \is
+\nt{qualified-uident} \is
   \opt{\opt{\nt{ident}} \tok{\#}} \nt{uident}
 \sep
-\nt{qualified\_lident} \is
+\nt{qualified-lident} \is
   \opt{\opt{\nt{ident}} \tok{\#}} \nt{lident}
 \sep
-\nt{lident\_or\_operator} \is
+\nt{lident-or-operator} \is
   \nt{lident} \orelse \tok{(} \nt{operator} \tok{)}
 \sep
-\nt{method\_ident} \is
-     \opt{\tok{Self}} \tok{!} \nt{lident\_or\_operator}
-\alt \opt{\nt{lident} \tok{\#}} \nt{uident} \tok{!} \nt{lident\_or\_operator}
+\nt{method-ident} \is
+     \opt{\tok{Self}} \tok{!} \nt{lident-or-operator}
+\alt \opt{\nt{lident} \tok{\#}} \nt{uident} \tok{!} \nt{lident-or-operator}
 \sep
 \nt{exp} \is
-     \nt{integer\_literal}
-\alt \nt{string\_literal}
-\alt \nt{character\_literal}
-\alt \nt{float\_literal}
+     \nt{integer-literal}
+\alt \nt{string-literal}
+\alt \nt{character-literal}
+\alt \nt{float-literal}
 \alt \tok{true} \orelse \tok{false}
-\alt \nt{qualified\_uident}
-\alt \nt{method\_ident}
-\alt \tok{let~rec} \repsep{\nt{let\_binding}}{\tok{and}}
+\alt \nt{qualified-uident}
+\alt \nt{method-ident}
+\alt \tok{let~rec} \repsep{\nt{let-binding}}{\tok{and}}
      \tok{in} \nt{exp}
 \alt \tok{if} \nt{exp} \tok{then} \nt{exp} \tok{else} \nt{exp}
-\alt \tok{match} \nt{exp} \tok{with} \reps{\nt{match\_binding}}
+\alt \tok{match} \nt{exp} \tok{with} \reps{\nt{match-binding}}
 \alt \nt{exp} \tok{(} \repsep{\nt{exp}}{\tok{,}} \tok{)}
-\alt \nt{prefix\_op} \nt{exp}
-\alt \nt{exp} \nt{infix\_op} \nt{exp}
-\alt \tok{\{} \repsep{\nt{record\_field\_value}}{\tok{;}} \tok{\}}
+\alt \nt{prefix-op} \nt{exp}
+\alt \nt{exp} \nt{infix-op} \nt{exp}
+\alt \tok{\{} \repsep{\nt{record-field-value}}{\tok{;}} \tok{\}}
 \alt \tok{\{} \nt{exp} \tok{with}
-              \repsep{\nt{record\_field\_value}}{\tok{;}} \tok{\}}
-\alt \nt{exp} \tok{.} \nt{qualified\_lident}
+              \repsep{\nt{record-field-value}}{\tok{;}} \tok{\}}
+\alt \nt{exp} \tok{.} \nt{qualified-lident}
 \alt \tok{(} \nt{exp} \tok{)}
 \sep
-\nt{record\_field\_value} \is
-  \nt{qualified\_lident} \tok{=} \nt{exp}
+\nt{record-field-value} \is
+  \nt{qualified-lident} \tok{=} \nt{exp}
 \sep
-\nt{let\_binding} \is
-     \nt{lident} \opt{\tok{in} \nt{type\_exp}} \tok{=} \nt{exp}
+\nt{let-binding} \is
+     \nt{lident} \opt{\tok{in} \nt{type-exp}} \tok{=} \nt{exp}
 \alt \nt{lident} \tok{(}
-                 \repsep{\nt{lident} \tok{in} \nt{type\_exp}}{\tok{,}}
+                 \repsep{\nt{lident} \tok{in} \nt{type-exp}}{\tok{,}}
                  \tok{)}
      \tok{=} \nt{exp}
 \sep
-\nt{match\_binding} \is \tok{\vertical} \nt{pattern} \tok{->} \nt{exp}
+\nt{match-binding} \is \tok{\vertical} \nt{pattern} \tok{->} \nt{exp}
 \sep
 \nt{pattern} \is
-     \nt{integer\_literal}
-\alt \nt{string\_literal}
-\alt \nt{character\_literal}
-\alt \nt{float\_literal}
+     \nt{integer-literal}
+\alt \nt{string-literal}
+\alt \nt{character-literal}
+\alt \nt{float-literal}
 \alt \tok{true} \orelse \tok{false}
 \alt \nt{lident}
-\alt \nt{qualified\_uident}
+\alt \nt{qualified-uident}
      \opt{\tok{(} \repsep{\nt{pattern}}{\tok{,}} \tok{)}}
 \alt \tok{\_}
-\alt \tok{\{} \repsep{\nt{record\_field\_pattern}}{\tok{;}} \tok{\}}
+\alt \tok{\{} \repsep{\nt{record-field-pattern}}{\tok{;}} \tok{\}}
 \alt \tok{(} \repsep{\nt{pattern}}{\tok{,}} \tok{)}
 \alt \tok{(} \nt{pattern} \tok{)}
 \sep
-\nt{record\_field\_pattern} \is
-  \nt{qualified\_lident} \tok{=} \nt{lident}
+\nt{record-field-pattern} \is
+  \nt{qualified-lident} \tok{=} \nt{lident}
 \end{syn}
 
 % \begin{syntax}
@@ -858,7 +858,7 @@ Finally, infix/postfix operators can be used as regular
 identifiers. Usually, an operator is syntactically used according to
 it prefix or infix nature. For instance, the binary {\tt +} operator
 is used between its arguments as in {\tt x + 4}, the unary operator {\tt
-  $\sim$} is used before its argument as in {\tt $\sim$ x}. \focal\ allows to
+  \tilde} is used before its argument as in {\tt \tilde x}. \focal\ allows to
 refer to those operators as regular identifiers (for instance as function
 parameters).
 This allows to use operators as any other identifiers, and
@@ -1087,21 +1087,21 @@ Suppose we want,  for a certain value of $x$ and $y$, to use the fact
 ``$x<y$ and $x+y < 10$'' (which holds or not) to build more complex
 logical expressions.
 
-A first attempt is to use the logical expression $x < y /\setminus
+A first attempt is to use the logical expression $x < y /\backslash
 x+y<10$ where $x$ and $y$ are considered as fresh (free)
 variables. But there is no way in the language of properties to
 instantiate $x$ and $y$ by different integer values in order to obtain
 a proposition (regardless of its truth value).
 
 Another attempt is to introduce a property bound to the proposition
-$\forall x, y : {\tt int}, x < y /\setminus x+y<10$. It does not fit
+$\forall x, y : {\tt int}, x < y /\backslash x+y<10$. It does not fit
 because there is no provided way to substitute $x$ and $y$ by integer
 values: there is no syntactical construction for elimination of a
 universal (nor existential) quantifier in the language of properties
 (note that elimination can be done during a proof).
 
 % Replacing the proposition by $\exists x, y : {\tt int}, x < y
-% /\setminus x+y<10$ does not help as we want to chose a particular $x$
+% /\backslash x+y<10$ does not help as we want to chose a particular $x$
 % and a particular $y$
 
 % The point here is that we do not want to express a property to prove
@@ -1694,18 +1694,18 @@ proofs.
 Logical expressions are those used to write first order logic
 formulas.
 \begin{syn}
-\nt{logical\_exp} \is
-     \tok{all} \repsep{\nt{lident}}{\tok{,}} \tok{in} \nt{type\_exp}
-     \tok{,} \nt{logical\_exp}
-\alt \tok{ex} \repsep{\nt{lident}}{\tok{,}} \tok{in} \nt{type\_exp}
-     \tok{,} \nt{logical\_exp}
-\alt \nt{logical\_exp} \tok{->} \nt{logical\_exp}
-\alt \nt{logical\_exp} \tok{<->} \nt{logical\_exp}
-\alt \nt{logical\_exp} \tok{/\backslash} \nt{logical\_exp}
-\alt \nt{logical\_exp} \tok{\backslash/} \nt{logical\_exp}
-\alt \tok{\tilde} \nt{logical\_exp}
+\nt{logical-exp} \is
+     \tok{all} \repsep{\nt{lident}}{\tok{,}} \tok{in} \nt{type-exp}
+     \tok{,} \nt{logical-exp}
+\alt \tok{ex} \repsep{\nt{lident}}{\tok{,}} \tok{in} \nt{type-exp}
+     \tok{,} \nt{logical-exp}
+\alt \nt{logical-exp} \tok{->} \nt{logical-exp}
+\alt \nt{logical-exp} \tok{<->} \nt{logical-exp}
+\alt \nt{logical-exp} \tok{/\backslash} \nt{logical-exp}
+\alt \nt{logical-exp} \tok{\backslash/} \nt{logical-exp}
+\alt \tok{\tilde} \nt{logical-exp}
 \alt \nt{exp}
-\alt \tok{(} \nt{logical\_exp} \tok{)}
+\alt \tok{(} \nt{logical-exp} \tok{)}
 \end{syn}
 
 % \begin{syntax}
@@ -1765,7 +1765,7 @@ logical expression being its statement. See the example given in
 \ref{logical-expressions}.
 \begin{syn}
 \nt{property} \is
-  \tok{property} \nt{lident} \tok{:} \nt{logical\_exp}
+  \tok{property} \nt{lident} \tok{:} \nt{logical-exp}
 \end{syn}
 
 % \begin{syntax}
@@ -1950,11 +1950,11 @@ Now we know how to write a logical statement and
 to write a proof, the structure of a theorem appears simple since it
 contains both the statement and the proof inside the same
 construct. The theorem is introduced by the keyword {\tt theorem} and
-the proof by the keyword {\tt proof} followed by a colon character
-(``:'').
+the proof by the keyword {\tt proof} followed by an equal character
+(``='').
 \begin{syn}
 \nt{theorem} \is
-  \tok{theorem} \nt{lident} \tok{:} \nt{logical\_exp}
+  \tok{theorem} \nt{lident} \tok{:} \nt{logical-exp}
   \tok{proof~=} \nt{proof}
 \end{syn}
 

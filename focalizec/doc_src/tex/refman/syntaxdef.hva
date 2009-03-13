@@ -89,7 +89,7 @@
 \def\brepets{\addspace\{}
 \def\erepets{\}^+}
 \def\brepetsep{\addspace\{}
-\def\erepetsep#1{(\spacefalse#1)\}^+}
+\def\erepetsep#1{\}(\spacefalse#1)^+}
 \def\bparen{\addspace(}
 \def\eparen{)}
 \def\orelse{\mid \spacefalse}

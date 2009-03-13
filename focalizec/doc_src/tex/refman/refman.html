@@ -604,7 +604,7 @@ existential quantifications over a <FONT COLOR=purple>FoCaLize</FONT> type, and 
 a <EM>property</EM> telling that if the speed is non-null, then doors
 can&#X2019;t be opened could look like:
 <DIV CLASS="center">
-<TT>all v in Speed, v &lt;&gt; Speed!zero -&gt; </TT><TT>&#X223C;</TT><TT> doors_open</TT>
+<TT>all v in Speed, v &lt;&gt; Speed!zero -&gt; </TT><TT>~</TT><TT>doors_open</TT>
 </DIV>
 In the same way as <EM>signatures</EM>, even if no proof is
 yet given, the name of the <EM>property</EM> can be used to express 
@@ -1439,13 +1439,13 @@ according to the following table:
 <TR><TD ALIGN=center NOWRAP>&#X2018; ~ ? $ ! #</TD><TD ALIGN=center NOWRAP>, + - * / % &amp; | : ; &lt; = &gt; @ ^ \</TD></TR>
 </TABLE>
 </DIV><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="prefix_char"><I><FONT COLOR=maroon>prefix_char</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="prefix-char"><I><FONT COLOR=maroon>prefix-char</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>&#X2018;</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>~</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>?</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>$</FONT></TT> &#X2223; 
 <TT><FONT COLOR=blue>!</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>#</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="infix_char"><I><FONT COLOR=maroon>infix_char</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="infix-char"><I><FONT COLOR=maroon>infix-char</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>,</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>+</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>-</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>*</FONT></TT> &#X2223; 
 <TT><FONT COLOR=blue>/</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>%</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>&amp;</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>|</FONT></TT> &#X2223; 
 <TT><FONT COLOR=blue>:</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>;</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>&lt;</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>=</FONT></TT> &#X2223; 
@@ -1454,23 +1454,23 @@ according to the following table:
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="prefix_op"><I><FONT COLOR=maroon>prefix_op</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#prefix_char"><I><FONT COLOR=maroon>prefix_char</FONT></I></A>  {<A HREF="#letter"><I><FONT COLOR=maroon>letter</FONT></I></A> &#X2223;  <A HREF="#prefix_char"><I><FONT COLOR=maroon>prefix_char</FONT></I></A> &#X2223; 
-<A HREF="#infix_char"><I><FONT COLOR=maroon>infix_char</FONT></I></A> &#X2223;  <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
+<A NAME="prefix-op"><I><FONT COLOR=maroon>prefix-op</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#prefix-char"><I><FONT COLOR=maroon>prefix-char</FONT></I></A>  {<A HREF="#letter"><I><FONT COLOR=maroon>letter</FONT></I></A> &#X2223;  <A HREF="#prefix-char"><I><FONT COLOR=maroon>prefix-char</FONT></I></A> &#X2223; 
+<A HREF="#infix-char"><I><FONT COLOR=maroon>infix-char</FONT></I></A> &#X2223;  <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="infix_op"><I><FONT COLOR=maroon>infix_op</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#infix_char"><I><FONT COLOR=maroon>infix_char</FONT></I></A>  {<A HREF="#letter"><I><FONT COLOR=maroon>letter</FONT></I></A> &#X2223;  <A HREF="#prefix_char"><I><FONT COLOR=maroon>prefix_char</FONT></I></A> &#X2223; 
-<A HREF="#infix_char"><I><FONT COLOR=maroon>infix_char</FONT></I></A> &#X2223;  <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
+<A NAME="infix-op"><I><FONT COLOR=maroon>infix-op</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#infix-char"><I><FONT COLOR=maroon>infix-char</FONT></I></A>  {<A HREF="#letter"><I><FONT COLOR=maroon>letter</FONT></I></A> &#X2223;  <A HREF="#prefix-char"><I><FONT COLOR=maroon>prefix-char</FONT></I></A> &#X2223; 
+<A HREF="#infix-char"><I><FONT COLOR=maroon>infix-char</FONT></I></A> &#X2223;  <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
 <A NAME="operator"><I><FONT COLOR=maroon>operator</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#infix_op"><I><FONT COLOR=maroon>infix_op</FONT></I></A> &#X2223;  <A HREF="#prefix_op"><I><FONT COLOR=maroon>prefix_op</FONT></I></A></TD></TR>
+<A HREF="#infix-op"><I><FONT COLOR=maroon>infix-op</FONT></I></A> &#X2223;  <A HREF="#prefix-op"><I><FONT COLOR=maroon>prefix-op</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>Hence, in the above examples, <TT>+</TT>, <TT>++</TT> and <TT>=_mod_5</TT> will be
-infix operators and <TT>&#X223C;</TT><TT>+zero</TT> will be a prefix one.</P><!--TOC subsubsection Defining an infix operator-->
+infix operators and <TT>~</TT><TT>+zero</TT> will be a prefix one.</P><!--TOC subsubsection Defining an infix operator-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc37">3.1.4.9</A>  Defining an infix operator</H4><!--SEC END --><P>
 <A NAME="@default20"></A>
 <A NAME="@default21"></A>
@@ -1549,15 +1549,15 @@ names and collection parameters are uppercase identifiers.</P><!--TOC subsection
 <A NAME="octal"></A>
 <A NAME="hexadecimal"></A>
 <A NAME="binary"></A></P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="binary_digit"><I><FONT COLOR=maroon>binary_digit</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>0</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>1</FONT></TT>
+<A NAME="binary-digit"><I><FONT COLOR=maroon>binary-digit</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>0</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>1</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="octal_digit"><I><FONT COLOR=maroon>octal_digit</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>0</FONT></TT> &#X2026; <TT><FONT COLOR=blue>7</FONT></TT>
+<A NAME="octal-digit"><I><FONT COLOR=maroon>octal-digit</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>0</FONT></TT> &#X2026; <TT><FONT COLOR=blue>7</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="hexadecimal_digit"><I><FONT COLOR=maroon>hexadecimal_digit</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="hexadecimal-digit"><I><FONT COLOR=maroon>hexadecimal-digit</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>0</FONT></TT> &#X2026; <TT><FONT COLOR=blue>9</FONT></TT>
 &#X2223;  <TT><FONT COLOR=blue>A</FONT></TT> &#X2026; <TT><FONT COLOR=blue>F</FONT></TT>
 &#X2223;  <TT><FONT COLOR=blue>a</FONT></TT> &#X2026; <TT><FONT COLOR=blue>f</FONT></TT>
@@ -1568,42 +1568,42 @@ names and collection parameters are uppercase identifiers.</P><!--TOC subsection
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="unsigned_binary_literal"><I><FONT COLOR=maroon>unsigned_binary_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="unsigned-binary-literal"><I><FONT COLOR=maroon>unsigned-binary-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>0</FONT></TT> ( <TT><FONT COLOR=blue>b</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>B</FONT></TT> )
-<A HREF="#binary_digit"><I><FONT COLOR=maroon>binary_digit</FONT></I></A>  { <A HREF="#binary_digit"><I><FONT COLOR=maroon>binary_digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
+<A HREF="#binary-digit"><I><FONT COLOR=maroon>binary-digit</FONT></I></A>  { <A HREF="#binary-digit"><I><FONT COLOR=maroon>binary-digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="unsigned_octal_literal"><I><FONT COLOR=maroon>unsigned_octal_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="unsigned-octal-literal"><I><FONT COLOR=maroon>unsigned-octal-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>0</FONT></TT> ( <TT><FONT COLOR=blue>o</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>O</FONT></TT> )
-<A HREF="#octal_digit"><I><FONT COLOR=maroon>octal_digit</FONT></I></A>  { <A HREF="#octal_digit"><I><FONT COLOR=maroon>octal_digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
+<A HREF="#octal-digit"><I><FONT COLOR=maroon>octal-digit</FONT></I></A>  { <A HREF="#octal-digit"><I><FONT COLOR=maroon>octal-digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="unsigned_decimal_literal"><I><FONT COLOR=maroon>unsigned_decimal_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="unsigned-decimal-literal"><I><FONT COLOR=maroon>unsigned-decimal-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A>  { <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="unsigned_hexadecimal_literal"><I><FONT COLOR=maroon>unsigned_hexadecimal_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="unsigned-hexadecimal-literal"><I><FONT COLOR=maroon>unsigned-hexadecimal-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>0</FONT></TT> ( <TT><FONT COLOR=blue>x</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>X</FONT></TT> )
-<A HREF="#hexadecimal_digit"><I><FONT COLOR=maroon>hexadecimal_digit</FONT></I></A>  { <A HREF="#hexadecimal_digit"><I><FONT COLOR=maroon>hexadecimal_digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
+<A HREF="#hexadecimal-digit"><I><FONT COLOR=maroon>hexadecimal-digit</FONT></I></A>  { <A HREF="#hexadecimal-digit"><I><FONT COLOR=maroon>hexadecimal-digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="unsigned_integer_literal"><I><FONT COLOR=maroon>unsigned_integer_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#unsigned_binary_literal"><I><FONT COLOR=maroon>unsigned_binary_literal</FONT></I></A>
+<A NAME="unsigned-integer-literal"><I><FONT COLOR=maroon>unsigned-integer-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#unsigned-binary-literal"><I><FONT COLOR=maroon>unsigned-binary-literal</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#unsigned_octal_literal"><I><FONT COLOR=maroon>unsigned_octal_literal</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#unsigned-octal-literal"><I><FONT COLOR=maroon>unsigned-octal-literal</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#unsigned_decimal_literal"><I><FONT COLOR=maroon>unsigned_decimal_literal</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#unsigned-decimal-literal"><I><FONT COLOR=maroon>unsigned-decimal-literal</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#unsigned_hexadecimal_literal"><I><FONT COLOR=maroon>unsigned_hexadecimal_literal</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#unsigned-hexadecimal-literal"><I><FONT COLOR=maroon>unsigned-hexadecimal-literal</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="integer_literal"><I><FONT COLOR=maroon>integer_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-[<A HREF="#sign"><I><FONT COLOR=maroon>sign</FONT></I></A>]  <A HREF="#unsigned_integer_literal"><I><FONT COLOR=maroon>unsigned_integer_literal</FONT></I></A></TD></TR>
+<A NAME="integer-literal"><I><FONT COLOR=maroon>integer-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+[<A HREF="#sign"><I><FONT COLOR=maroon>sign</FONT></I></A>]  <A HREF="#unsigned-integer-literal"><I><FONT COLOR=maroon>unsigned-integer-literal</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>An integer literal is a sequence of one or more digits, optionally
 preceded by a minus or plus sign and/or a base prefix. By default,
@@ -1623,9 +1623,9 @@ Here are various examples of integers in various bases:
 <TT>-0x1Ff</TT>, <TT>0B01001</TT>, <TT>+Oo347</TT>.</P><!--TOC subsection String literals-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc42">3.1.8</A>  String literals</H3><!--SEC END --><P>
 <A NAME="string literal"></A></P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="string_literal"><I><FONT COLOR=maroon>string_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="string-literal"><I><FONT COLOR=maroon>string-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>"</FONT></TT>
-{( <A HREF="#plain-char"><I><FONT COLOR=maroon>plain-char</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>\</FONT></TT> <A HREF="#char-escape"><I><FONT COLOR=maroon>char-escape</FONT></I></A> )}<SUP>*</SUP>
+{ <A HREF="#plain-char"><I><FONT COLOR=maroon>plain-char</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>\</FONT></TT> <A HREF="#char-escape"><I><FONT COLOR=maroon>char-escape</FONT></I></A> }<SUP>*</SUP>
 <TT><FONT COLOR=blue>"</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
@@ -1646,7 +1646,7 @@ Here are various examples of integers in various bases:
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A>  <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A>  <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#hexadecimal_digit"><I><FONT COLOR=maroon>hexadecimal_digit</FONT></I></A>  <A HREF="#hexadecimal_digit"><I><FONT COLOR=maroon>hexadecimal_digit</FONT></I></A></TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#hexadecimal-digit"><I><FONT COLOR=maroon>hexadecimal-digit</FONT></I></A>  <A HREF="#hexadecimal-digit"><I><FONT COLOR=maroon>hexadecimal-digit</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>String literals are sequences of any characters delimited by <TT>"</TT>
 (double quote) characters (<EM>ipso facto</EM> with no intervening
@@ -1655,47 +1655,49 @@ Escape sequences (meta code to insert characters that can&#X2019;t appear
 simply in a string) available in string literals are summarised in the
 table below:</P><P><BR>
 </P><TABLE BORDER=1 CELLSPACING=0 CELLPADDING=1><TR><TD VALIGN=top ALIGN=center NOWRAP> Sequence</TD><TD VALIGN=top ALIGN=center NOWRAP>Character</TD><TD VALIGN=top ALIGN=left>Comment</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">b</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2216;008</TD><TD VALIGN=top ALIGN=left>Backspace.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">n</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2216;010</TD><TD VALIGN=top ALIGN=left>Line feed.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">r</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2216;013</TD><TD VALIGN=top ALIGN=left>Carriage return.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">t</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2216;009</TD><TD VALIGN=top ALIGN=left>Tabulation.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;&#X2423;</TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2423;</TD><TD VALIGN=top ALIGN=left>Space character.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;"</TD><TD VALIGN=top ALIGN=center NOWRAP>"</TD><TD VALIGN=top ALIGN=left>Double quote.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;&#X2019;</TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2019;</TD><TD VALIGN=top ALIGN=left>Single quote.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;*</TD><TD VALIGN=top ALIGN=center NOWRAP>*</TD><TD VALIGN=top ALIGN=left>Since comments cannot appear inside
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">b</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>\008</TD><TD VALIGN=top ALIGN=left>Backspace.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">n</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>\010</TD><TD VALIGN=top ALIGN=left>Line feed.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">r</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>\013</TD><TD VALIGN=top ALIGN=left>Carriage return.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">t</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>\009</TD><TD VALIGN=top ALIGN=left>Tabulation.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">&#X2423;</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2423;</TD><TD VALIGN=top ALIGN=left>Space character.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">"</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP><TT>"</TT></TD><TD VALIGN=top ALIGN=left>Double quote.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">&#X2019;</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP><TT>&#X2019;</TT></TD><TD VALIGN=top ALIGN=left>Single quote.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> </TD><TD VALIGN=top ALIGN=center NOWRAP>*</TD><TD VALIGN=top ALIGN=left>Since comments cannot appear inside
 strings, to insert one of the
-sequence &#X201C;(*&#X201D;, &#X201C;*)&#X201D;, &#X201C;{*&#X201D;, or
-&#X201C;*}&#X201D;, use this escape sequence
-combined with the four following
+sequence &#X201C;(*&#X201D;, &#X201C;*)&#X201D;, &#X201C;{*&#X201D;,
+&#X201C;*}&#X201D;, &#X201C;[*&#X201D;, or &#X201C;*]&#X201D;,
+use this escape sequence
+combined with the six following
 ones.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;(</TD><TD VALIGN=top ALIGN=center NOWRAP>(</TD><TD VALIGN=top ALIGN=left>See comment above for &#X2216;*.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;)</TD><TD VALIGN=top ALIGN=center NOWRAP>)</TD><TD VALIGN=top ALIGN=left>See comment above for &#X2216;*.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;[</TD><TD VALIGN=top ALIGN=center NOWRAP>[</TD><TD VALIGN=top ALIGN=left>See comment above for &#X2216;*.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;]</TD><TD VALIGN=top ALIGN=center NOWRAP>]</TD><TD VALIGN=top ALIGN=left>See comment above for &#X2216;*.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;{</TD><TD VALIGN=top ALIGN=center NOWRAP>{</TD><TD VALIGN=top ALIGN=left>See comment above for &#X2216;*.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;}</TD><TD VALIGN=top ALIGN=center NOWRAP>}</TD><TD VALIGN=top ALIGN=left>See comment above for &#X2216;*.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;&#X2216;</TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2216;</TD><TD VALIGN=top ALIGN=left>Backslash character.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;&#X2018;</TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2018;</TD><TD VALIGN=top ALIGN=left>Backquote character.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;-</TD><TD VALIGN=top ALIGN=center NOWRAP>-</TD><TD VALIGN=top ALIGN=left>Minus (dash) character. Like for multi-line
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">(</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>(</TD><TD VALIGN=top ALIGN=left>6*See comment above for</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">)</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>)</TD><TD VALIGN=top ALIGN=left>&nbsp;</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">[</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>[</TD><TD VALIGN=top ALIGN=left>&nbsp;</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">]</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>]</TD><TD VALIGN=top ALIGN=left>&nbsp;</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">{</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>{</TD><TD VALIGN=top ALIGN=left>&nbsp;</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">}</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>}</TD><TD VALIGN=top ALIGN=left>&nbsp;</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">\</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>\</TD><TD VALIGN=top ALIGN=left>Backslash character.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">&#X2018;</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2018;</TD><TD VALIGN=top ALIGN=left>Backquote character.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">-</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP><TT>-</TT></TD><TD VALIGN=top ALIGN=left>Minus (dash) character. As for multi-line
 comments, uni-line comments can&#X2019;t appear in
 strings. Hence, to insert the sequence
-&#X201C;--&#X201D;, use this escape sequence twice.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;[0-9][0-9][0-9]</TD><TD VALIGN=top ALIGN=center NOWRAP>&nbsp;</TD><TD VALIGN=top ALIGN=left>The character whose ASCII code in
+&#X201C;<TT>--</TT>&#X201D; use this escape
+sequence twice.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><EM>digit digit digit</EM></TD><TD VALIGN=top ALIGN=center NOWRAP>&nbsp;</TD><TD VALIGN=top ALIGN=left>The character whose ASCII code in
 <B>decimal</B> is given by the 3 digits
-following the &#X2216;. This
+following the \. This
 sequence is valid for all
 ASCII codes.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> &#X2216;x[0-9a-fA-F][0-9a-fA-F]</TD><TD VALIGN=top ALIGN=center NOWRAP>&nbsp;</TD><TD VALIGN=top ALIGN=left>The character whose ASCII code in
+<TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">0x</FONT></TT><EM> hex hex</EM></TD><TD VALIGN=top ALIGN=center NOWRAP>&nbsp;</TD><TD VALIGN=top ALIGN=left>The character whose ASCII code in
 <B>hexadecimal</B> is given by the 2
-digits following the &#X2216;. This
+characters following the \. This
 sequence is valid for all
 ASCII codes.</TD></TR>
 </TABLE><!--TOC subsection Character literals-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc43">3.1.9</A>  Character literals</H3><!--SEC END --><P>
 <A NAME="character literals"></A></P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="character_literal"><I><FONT COLOR=maroon>character_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="character-literal"><I><FONT COLOR=maroon>character-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>&#X2019;</FONT></TT>
-{( <A HREF="#plain-char"><I><FONT COLOR=maroon>plain-char</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>\</FONT></TT> <A HREF="#char-escape"><I><FONT COLOR=maroon>char-escape</FONT></I></A> )}<SUP>*</SUP>
+( <A HREF="#plain-char"><I><FONT COLOR=maroon>plain-char</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>\</FONT></TT> <A HREF="#char-escape"><I><FONT COLOR=maroon>char-escape</FONT></I></A> )
 <TT><FONT COLOR=blue>&#X2019;</FONT></TT></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>Characters literals are composed of one character enclosed between two
@@ -1705,41 +1707,42 @@ simply in a character literal) must also be enclosed by
 quotes. Available escape sequences are summarised in the table above
 (see section <A HREF="#string literal">3.1.8</A>).</P><!--TOC subsection Floating-point number literals-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc44">3.1.10</A>  Floating-point number literals</H3><!--SEC END --><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="decimal_literal"><I><FONT COLOR=maroon>decimal_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-[<A HREF="#sign"><I><FONT COLOR=maroon>sign</FONT></I></A>]  <A HREF="#unsigned_decimal_literal"><I><FONT COLOR=maroon>unsigned_decimal_literal</FONT></I></A>
+<A NAME="decimal-literal"><I><FONT COLOR=maroon>decimal-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+[<A HREF="#sign"><I><FONT COLOR=maroon>sign</FONT></I></A>]  <A HREF="#unsigned-decimal-literal"><I><FONT COLOR=maroon>unsigned-decimal-literal</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="hexadecimal_literal"><I><FONT COLOR=maroon>hexadecimal_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-[<A HREF="#sign"><I><FONT COLOR=maroon>sign</FONT></I></A>]  <A HREF="#unsigned_hexadecimal_literal"><I><FONT COLOR=maroon>unsigned_hexadecimal_literal</FONT></I></A>
+<A NAME="hexadecimal-literal"><I><FONT COLOR=maroon>hexadecimal-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+[<A HREF="#sign"><I><FONT COLOR=maroon>sign</FONT></I></A>]  <A HREF="#unsigned-hexadecimal-literal"><I><FONT COLOR=maroon>unsigned-hexadecimal-literal</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="scientific_notation"><I><FONT COLOR=maroon>scientific_notation</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>e</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>E</FONT></TT>
+<A NAME="scientific-notation"><I><FONT COLOR=maroon>scientific-notation</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>e</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>E</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="unsigned_decimal_float_literal"><I><FONT COLOR=maroon>unsigned_decimal_float_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#unsigned_decimal_literal"><I><FONT COLOR=maroon>unsigned_decimal_literal</FONT></I></A>
- [<TT><FONT COLOR=blue>.</FONT></TT> {<A HREF="#unsigned_decimal_literal"><I><FONT COLOR=maroon>unsigned_decimal_literal</FONT></I></A>}<SUP>*</SUP>]
- [<A HREF="#scientific_notation"><I><FONT COLOR=maroon>scientific_notation</FONT></I></A>  <A HREF="#decimal_literal"><I><FONT COLOR=maroon>decimal_literal</FONT></I></A>]
+<A NAME="unsigned-decimal-float-literal"><I><FONT COLOR=maroon>unsigned-decimal-float-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#unsigned-decimal-literal"><I><FONT COLOR=maroon>unsigned-decimal-literal</FONT></I></A>
+ [<TT><FONT COLOR=blue>.</FONT></TT> {<A HREF="#unsigned-decimal-literal"><I><FONT COLOR=maroon>unsigned-decimal-literal</FONT></I></A>}<SUP>*</SUP>] 
+ [<A HREF="#scientific-notation"><I><FONT COLOR=maroon>scientific-notation</FONT></I></A>  <A HREF="#decimal-literal"><I><FONT COLOR=maroon>decimal-literal</FONT></I></A>]
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="unsigned_hexadecimal_float_literal"><I><FONT COLOR=maroon>unsigned_hexadecimal_float_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#unsigned_hexadecimal_literal"><I><FONT COLOR=maroon>unsigned_hexadecimal_literal</FONT></I></A>
- [<TT><FONT COLOR=blue>.</FONT></TT> {<A HREF="#unsigned_hexadecimal_literal"><I><FONT COLOR=maroon>unsigned_hexadecimal_literal</FONT></I></A>}<SUP>*</SUP>]
- [<A HREF="#scientific_notation"><I><FONT COLOR=maroon>scientific_notation</FONT></I></A>  <A HREF="#hexadecimal_literal"><I><FONT COLOR=maroon>hexadecimal_literal</FONT></I></A>]
+<A NAME="unsigned-hexadecimal-float-literal"><I><FONT COLOR=maroon>unsigned-hexadecimal-float-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#unsigned-hexadecimal-literal"><I><FONT COLOR=maroon>unsigned-hexadecimal-literal</FONT></I></A>
+ [<TT><FONT COLOR=blue>.</FONT></TT> {<A HREF="#unsigned-hexadecimal-literal"><I><FONT COLOR=maroon>unsigned-hexadecimal-literal</FONT></I></A>}<SUP>*</SUP>] 
+ [<A HREF="#scientific-notation"><I><FONT COLOR=maroon>scientific-notation</FONT></I></A>  <A HREF="#hexadecimal-literal"><I><FONT COLOR=maroon>hexadecimal-literal</FONT></I></A>]
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="unsigned_float_literal"><I><FONT COLOR=maroon>unsigned_float_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#unsigned_decimal_float_literal"><I><FONT COLOR=maroon>unsigned_decimal_float_literal</FONT></I></A>
-&#X2223;  <A HREF="#unsigned_hexadecimal_float_literal"><I><FONT COLOR=maroon>unsigned_hexadecimal_float_literal</FONT></I></A>
+<A NAME="unsigned-float-literal"><I><FONT COLOR=maroon>unsigned-float-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#unsigned-decimal-float-literal"><I><FONT COLOR=maroon>unsigned-decimal-float-literal</FONT></I></A>
+ </TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#unsigned-hexadecimal-float-literal"><I><FONT COLOR=maroon>unsigned-hexadecimal-float-literal</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="float_literal"><I><FONT COLOR=maroon>float_literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> [<A HREF="#sign"><I><FONT COLOR=maroon>sign</FONT></I></A>]  <A HREF="#unsigned_float_literal"><I><FONT COLOR=maroon>unsigned_float_literal</FONT></I></A></TD></TR>
+<A NAME="float-literal"><I><FONT COLOR=maroon>float-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> [<A HREF="#sign"><I><FONT COLOR=maroon>sign</FONT></I></A>]  <A HREF="#unsigned-float-literal"><I><FONT COLOR=maroon>unsigned-float-literal</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>Floating-point numbers literals are made of an optional sign (&#X2019;+&#X2019; or
 &#X2019;-&#X2019;) followed by a non-empty sequence of digits followed by a dot
@@ -1754,7 +1757,7 @@ prefixed by &#X201C;0x&#X201D; or &#X201C;0X&#X201D;. Example <TT>0xF2.E4</TT>, 
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc45">3.1.11</A>  Proof step bullets</H3><!--SEC END --><P>
 <A NAME="@default28"></A>
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="proof_step_bullet"><I><FONT COLOR=maroon>proof_step_bullet</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="proof-step-bullet"><I><FONT COLOR=maroon>proof-step-bullet</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>&lt;</FONT></TT> {<A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A>}<SUP>+</SUP> <TT><FONT COLOR=blue>&gt;</FONT></TT>
  { <A HREF="#letter"><I><FONT COLOR=maroon>letter</FONT></I></A> &#X2223;  <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A> }<SUP>+</SUP></TD></TR>
 </TABLE></TD></TR>
@@ -1886,7 +1889,7 @@ data-types.
 <BR>
 
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A>
@@ -1895,13 +1898,13 @@ data-types.
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>&#X2019;</FONT></TT><A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A> <TT><FONT COLOR=blue>(</FONT></TT>  {<A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A> <TT><FONT COLOR=blue>(</FONT></TT>  {<A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A> <TT><FONT COLOR=blue>-&gt;</FONT></TT>  <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A> <TT><FONT COLOR=blue>-&gt;</FONT></TT>  <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> {<A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A>(<TT><FONT COLOR=blue>*</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> {<A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>}(<TT><FONT COLOR=blue>*</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A> <TT><FONT COLOR=blue>)</FONT></TT></TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A> <TT><FONT COLOR=blue>)</FONT></TT></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>
 <BR>
@@ -1950,7 +1953,7 @@ code. Example:
 </TABLE><P><BR>
 
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="alias_type_def"><I><FONT COLOR=maroon>alias_type_def</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>type</FONT></TT> <A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A> <TT><FONT COLOR=blue>= alias</FONT></TT>  <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A></TD></TR>
+<A NAME="alias-type-def"><I><FONT COLOR=maroon>alias-type-def</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>type</FONT></TT> <A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A> <TT><FONT COLOR=blue>= alias</FONT></TT>  <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>
 <BR>
@@ -2018,23 +2021,23 @@ elements are <TT>(false, 2)</TT> followed by <TT>(true, 1)</TT>.</P><P><BR>
 </P><P><BR>
 
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="type_params"><I><FONT COLOR=maroon>type_params</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<TT><FONT COLOR=blue>(</FONT></TT> {<TT><FONT COLOR=blue>&#X2019;</FONT></TT> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
+<A NAME="type-params"><I><FONT COLOR=maroon>type-params</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<TT><FONT COLOR=blue>(</FONT></TT> {<TT><FONT COLOR=blue>&#X2019;</FONT></TT> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="type_args"><I><FONT COLOR=maroon>type_args</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<TT><FONT COLOR=blue>(</FONT></TT> {<A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
+<A NAME="type-args"><I><FONT COLOR=maroon>type-args</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<TT><FONT COLOR=blue>(</FONT></TT> {<A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
 <A NAME="constructor"><I><FONT COLOR=maroon>constructor</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<TT><FONT COLOR=blue>|</FONT></TT> <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A>  [<A HREF="#type_args"><I><FONT COLOR=maroon>type_args</FONT></I></A>]
+<TT><FONT COLOR=blue>|</FONT></TT> <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A>  [<A HREF="#type-args"><I><FONT COLOR=maroon>type-args</FONT></I></A>]
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="sum_type_def"><I><FONT COLOR=maroon>sum_type_def</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<TT><FONT COLOR=blue>type</FONT></TT> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>  [<A HREF="#type_params"><I><FONT COLOR=maroon>type_params</FONT></I></A>] <TT><FONT COLOR=blue>=</FONT></TT>
+<A NAME="sum-type-def"><I><FONT COLOR=maroon>sum-type-def</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<TT><FONT COLOR=blue>type</FONT></TT> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>  [<A HREF="#type-params"><I><FONT COLOR=maroon>type-params</FONT></I></A>] <TT><FONT COLOR=blue>=</FONT></TT>
  {<A HREF="#constructor"><I><FONT COLOR=maroon>constructor</FONT></I></A>}<SUP>+</SUP></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>
@@ -2066,12 +2069,12 @@ a sequence of names and types between braces. For example:
 
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="field"><I><FONT COLOR=maroon>field</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>=</FONT></TT>  <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A> <TT><FONT COLOR=blue>;</FONT></TT>
+<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>=</FONT></TT>  <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A> <TT><FONT COLOR=blue>;</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="record_type_def"><I><FONT COLOR=maroon>record_type_def</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<TT><FONT COLOR=blue>type</FONT></TT> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>  <A HREF="#type_params"><I><FONT COLOR=maroon>type_params</FONT></I></A> <TT><FONT COLOR=blue>=</FONT></TT>
+<A NAME="record-type-def"><I><FONT COLOR=maroon>record-type-def</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<TT><FONT COLOR=blue>type</FONT></TT> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>  <A HREF="#type-params"><I><FONT COLOR=maroon>type-params</FONT></I></A> <TT><FONT COLOR=blue>=</FONT></TT>
 <TT><FONT COLOR=blue>{</FONT></TT>  {<A HREF="#field"><I><FONT COLOR=maroon>field</FONT></I></A>}<SUP>+</SUP> <TT><FONT COLOR=blue>}</FONT></TT></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P><BR>
@@ -2164,7 +2167,7 @@ names). Defining a species&#X2019;representation is simply done by adding the
 denoted by <TT>Self</TT> within the species.</P><P><BR>
 
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="representation"><I><FONT COLOR=maroon>representation</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>representation =</FONT></TT> <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A></TD></TR>
+<A NAME="representation"><I><FONT COLOR=maroon>representation</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>representation =</FONT></TT> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P><BR>
 </P><!--TOC subsection Expressions-->
@@ -2178,114 +2181,114 @@ in the <A HREF="#making-proofs">5</A>. Indeed proofs are not expressions, they d
 not lead to <FONT COLOR=purple>FoCaLize</FONT> values thus live at another level.</P><P><BR>
 
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="qualified_uident"><I><FONT COLOR=maroon>qualified_uident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="qualified-uident"><I><FONT COLOR=maroon>qualified-uident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 [[<A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>] <TT><FONT COLOR=blue>#</FONT></TT>]  <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="qualified_lident"><I><FONT COLOR=maroon>qualified_lident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="qualified-lident"><I><FONT COLOR=maroon>qualified-lident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 [[<A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>] <TT><FONT COLOR=blue>#</FONT></TT>]  <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="lident_or_operator"><I><FONT COLOR=maroon>lident_or_operator</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A NAME="lident-or-operator"><I><FONT COLOR=maroon>lident-or-operator</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>(</FONT></TT> <A HREF="#operator"><I><FONT COLOR=maroon>operator</FONT></I></A> <TT><FONT COLOR=blue>)</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="method_ident"><I><FONT COLOR=maroon>method_ident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-[<TT><FONT COLOR=blue>Self</FONT></TT>] <TT><FONT COLOR=blue>!</FONT></TT> <A HREF="#lident_or_operator"><I><FONT COLOR=maroon>lident_or_operator</FONT></I></A>
+<A NAME="method-ident"><I><FONT COLOR=maroon>method-ident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+[<TT><FONT COLOR=blue>Self</FONT></TT>] <TT><FONT COLOR=blue>!</FONT></TT> <A HREF="#lident-or-operator"><I><FONT COLOR=maroon>lident-or-operator</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> [<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>#</FONT></TT>]  <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A> <TT><FONT COLOR=blue>!</FONT></TT>  <A HREF="#lident_or_operator"><I><FONT COLOR=maroon>lident_or_operator</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> [<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>#</FONT></TT>]  <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A> <TT><FONT COLOR=blue>!</FONT></TT>  <A HREF="#lident-or-operator"><I><FONT COLOR=maroon>lident-or-operator</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
 <A NAME="exp"><I><FONT COLOR=maroon>exp</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#integer_literal"><I><FONT COLOR=maroon>integer_literal</FONT></I></A>
+<A HREF="#integer-literal"><I><FONT COLOR=maroon>integer-literal</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#string_literal"><I><FONT COLOR=maroon>string_literal</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#string-literal"><I><FONT COLOR=maroon>string-literal</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#character_literal"><I><FONT COLOR=maroon>character_literal</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#character-literal"><I><FONT COLOR=maroon>character-literal</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#float_literal"><I><FONT COLOR=maroon>float_literal</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#float-literal"><I><FONT COLOR=maroon>float-literal</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>true</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>false</FONT></TT>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#qualified_uident"><I><FONT COLOR=maroon>qualified_uident</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#qualified-uident"><I><FONT COLOR=maroon>qualified-uident</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#method_ident"><I><FONT COLOR=maroon>method_ident</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#method-ident"><I><FONT COLOR=maroon>method-ident</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>let rec</FONT></TT> {<A HREF="#let_binding"><I><FONT COLOR=maroon>let_binding</FONT></I></A>(<TT><FONT COLOR=blue>and</FONT></TT>)}<SUP>+</SUP>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>let rec</FONT></TT> {<A HREF="#let-binding"><I><FONT COLOR=maroon>let-binding</FONT></I></A>}(<TT><FONT COLOR=blue>and</FONT></TT>)<SUP>+</SUP>
 <TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>if</FONT></TT> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A> <TT><FONT COLOR=blue>then</FONT></TT>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A> <TT><FONT COLOR=blue>else</FONT></TT>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>match</FONT></TT> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A> <TT><FONT COLOR=blue>with</FONT></TT>  {<A HREF="#match_binding"><I><FONT COLOR=maroon>match_binding</FONT></I></A>}<SUP>+</SUP>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>match</FONT></TT> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A> <TT><FONT COLOR=blue>with</FONT></TT>  {<A HREF="#match-binding"><I><FONT COLOR=maroon>match-binding</FONT></I></A>}<SUP>+</SUP>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A> <TT><FONT COLOR=blue>(</FONT></TT>  {<A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A> <TT><FONT COLOR=blue>(</FONT></TT>  {<A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#prefix_op"><I><FONT COLOR=maroon>prefix_op</FONT></I></A>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#prefix-op"><I><FONT COLOR=maroon>prefix-op</FONT></I></A>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>  <A HREF="#infix_op"><I><FONT COLOR=maroon>infix_op</FONT></I></A>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>  <A HREF="#infix-op"><I><FONT COLOR=maroon>infix-op</FONT></I></A>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>{</FONT></TT> {<A HREF="#record_field_value"><I><FONT COLOR=maroon>record_field_value</FONT></I></A>(<TT><FONT COLOR=blue>;</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>}</FONT></TT>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>{</FONT></TT> {<A HREF="#record-field-value"><I><FONT COLOR=maroon>record-field-value</FONT></I></A>}(<TT><FONT COLOR=blue>;</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>}</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>{</FONT></TT> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A> <TT><FONT COLOR=blue>with</FONT></TT>
- {<A HREF="#record_field_value"><I><FONT COLOR=maroon>record_field_value</FONT></I></A>(<TT><FONT COLOR=blue>;</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>}</FONT></TT>
+ {<A HREF="#record-field-value"><I><FONT COLOR=maroon>record-field-value</FONT></I></A>}(<TT><FONT COLOR=blue>;</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>}</FONT></TT>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A> <TT><FONT COLOR=blue>.</FONT></TT>  <A HREF="#qualified_lident"><I><FONT COLOR=maroon>qualified_lident</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A> <TT><FONT COLOR=blue>.</FONT></TT>  <A HREF="#qualified-lident"><I><FONT COLOR=maroon>qualified-lident</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A> <TT><FONT COLOR=blue>)</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="record_field_value"><I><FONT COLOR=maroon>record_field_value</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#qualified_lident"><I><FONT COLOR=maroon>qualified_lident</FONT></I></A> <TT><FONT COLOR=blue>=</FONT></TT>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
+<A NAME="record-field-value"><I><FONT COLOR=maroon>record-field-value</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#qualified-lident"><I><FONT COLOR=maroon>qualified-lident</FONT></I></A> <TT><FONT COLOR=blue>=</FONT></TT>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="let_binding"><I><FONT COLOR=maroon>let_binding</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>  [<TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A>] <TT><FONT COLOR=blue>=</FONT></TT>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
+<A NAME="let-binding"><I><FONT COLOR=maroon>let-binding</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>  [<TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>] <TT><FONT COLOR=blue>=</FONT></TT>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>(</FONT></TT>
- {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>in</FONT></TT>  <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP>
+ {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>in</FONT></TT>  <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP>
 <TT><FONT COLOR=blue>)</FONT></TT>
 <TT><FONT COLOR=blue>=</FONT></TT> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="match_binding"><I><FONT COLOR=maroon>match_binding</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>|</FONT></TT> <A HREF="#pattern"><I><FONT COLOR=maroon>pattern</FONT></I></A> <TT><FONT COLOR=blue>-&gt;</FONT></TT>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
+<A NAME="match-binding"><I><FONT COLOR=maroon>match-binding</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>|</FONT></TT> <A HREF="#pattern"><I><FONT COLOR=maroon>pattern</FONT></I></A> <TT><FONT COLOR=blue>-&gt;</FONT></TT>  <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
 <A NAME="pattern"><I><FONT COLOR=maroon>pattern</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#integer_literal"><I><FONT COLOR=maroon>integer_literal</FONT></I></A>
+<A HREF="#integer-literal"><I><FONT COLOR=maroon>integer-literal</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#string_literal"><I><FONT COLOR=maroon>string_literal</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#string-literal"><I><FONT COLOR=maroon>string-literal</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#character_literal"><I><FONT COLOR=maroon>character_literal</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#character-literal"><I><FONT COLOR=maroon>character-literal</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#float_literal"><I><FONT COLOR=maroon>float_literal</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#float-literal"><I><FONT COLOR=maroon>float-literal</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>true</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>false</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#qualified_uident"><I><FONT COLOR=maroon>qualified_uident</FONT></I></A>
- [<TT><FONT COLOR=blue>(</FONT></TT> {<A HREF="#pattern"><I><FONT COLOR=maroon>pattern</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>]
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#qualified-uident"><I><FONT COLOR=maroon>qualified-uident</FONT></I></A>
+ [<TT><FONT COLOR=blue>(</FONT></TT> {<A HREF="#pattern"><I><FONT COLOR=maroon>pattern</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>]
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>_</FONT></TT>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>{</FONT></TT> {<A HREF="#record_field_pattern"><I><FONT COLOR=maroon>record_field_pattern</FONT></I></A>(<TT><FONT COLOR=blue>;</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>}</FONT></TT>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>{</FONT></TT> {<A HREF="#record-field-pattern"><I><FONT COLOR=maroon>record-field-pattern</FONT></I></A>}(<TT><FONT COLOR=blue>;</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>}</FONT></TT>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> {<A HREF="#pattern"><I><FONT COLOR=maroon>pattern</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> {<A HREF="#pattern"><I><FONT COLOR=maroon>pattern</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> <A HREF="#pattern"><I><FONT COLOR=maroon>pattern</FONT></I></A> <TT><FONT COLOR=blue>)</FONT></TT>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="record_field_pattern"><I><FONT COLOR=maroon>record_field_pattern</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#qualified_lident"><I><FONT COLOR=maroon>qualified_lident</FONT></I></A> <TT><FONT COLOR=blue>=</FONT></TT>  <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A></TD></TR>
+<A NAME="record-field-pattern"><I><FONT COLOR=maroon>record-field-pattern</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#qualified-lident"><I><FONT COLOR=maroon>qualified-lident</FONT></I></A> <TT><FONT COLOR=blue>=</FONT></TT>  <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P><BR>
 </P><!--TOC subsubsection Literal expressions-->
@@ -2416,7 +2419,7 @@ methods are indeed orthogonal.</P><P><BR>
 <B>Extended identifier expressions</B></P><P>Finally, infix/postfix operators can be used as regular
 identifiers. Usually, an operator is syntactically used according to
 it prefix or infix nature. For instance, the binary <TT>+</TT> operator
-is used between its arguments as in <TT>x + 4</TT>, the unary operator <TT>&#X223C;</TT> is used before its argument as in <TT>&#X223C;</TT><TT> x</TT>. <FONT COLOR=purple>FoCaLize</FONT> allows to
+is used between its arguments as in <TT>x + 4</TT>, the unary operator <TT>~</TT> is used before its argument as in <TT>~</TT><TT>x</TT>. <FONT COLOR=purple>FoCaLize</FONT> allows to
 refer to those operators as regular identifiers (for instance as function
 parameters).
 This allows to use operators as any other identifiers, and
@@ -2555,12 +2558,12 @@ in <A HREF="#properties-theorems-proofs">3.2.7</A> are first order logic
 formulae. We would sometimes like to have parametrised logical
 expressions, i.e. a kind of functions returning a logical proposition.</P><P>Suppose we want, for a certain value of <I>x</I> and <I>y</I>, to use the fact
 &#X201C;<I>x</I>&lt;<I>y</I> and <I>x</I>+<I>y</I> &lt; 10&#X201D; (which holds or not) to build more complex
-logical expressions.</P><P>A first attempt is to use the logical expression <I>x</I> &lt; <I>y</I> /&#X2216;
+logical expressions.</P><P>A first attempt is to use the logical expression <I>x</I> &lt; <I>y</I> /\
 <I>x</I>+<I>y</I>&lt;10 where <I>x</I> and <I>y</I> are considered as fresh (free)
 variables. But there is no way in the language of properties to
 instantiate <I>x</I> and <I>y</I> by different integer values in order to obtain
 a proposition (regardless of its truth value).</P><P>Another attempt is to introduce a property bound to the proposition
-&#X2200; <I>x</I>, <I>y</I> : <TT><I>int</I></TT>, <I>x</I> &lt; <I>y</I> /&#X2216; <I>x</I>+<I>y</I>&lt;10. It does not fit
+&#X2200; <I>x</I>, <I>y</I> : <TT><I>int</I></TT>, <I>x</I> &lt; <I>y</I> /\ <I>x</I>+<I>y</I>&lt;10. It does not fit
 because there is no provided way to substitute <I>x</I> and <I>y</I> by integer
 values: there is no syntactical construction for elimination of a
 universal (nor existential) quantifier in the language of properties
@@ -2993,26 +2996,26 @@ proofs.</P><!--TOC subsubsection Logical expressions-->
 Logical expressions are those used to write first order logic
 formulas.
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<TT><FONT COLOR=blue>all</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A>
-<TT><FONT COLOR=blue>,</FONT></TT>  <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A>
+<A NAME="logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<TT><FONT COLOR=blue>all</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
+<TT><FONT COLOR=blue>,</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>ex</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A>
-<TT><FONT COLOR=blue>,</FONT></TT>  <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>ex</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
+<TT><FONT COLOR=blue>,</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A> <TT><FONT COLOR=blue>-&gt;</FONT></TT>  <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A> <TT><FONT COLOR=blue>-&gt;</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A> <TT><FONT COLOR=blue>&lt;-&gt;</FONT></TT>  <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A> <TT><FONT COLOR=blue>&lt;-&gt;</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A> <TT><FONT COLOR=blue>/</FONT></TT><TT><FONT COLOR=blue>\</FONT></TT>  <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A> <TT><FONT COLOR=blue>/</FONT></TT><TT><FONT COLOR=blue>\</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A> <TT><FONT COLOR=blue>\</FONT></TT><TT><FONT COLOR=blue>/</FONT></TT>  <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A> <TT><FONT COLOR=blue>\</FONT></TT><TT><FONT COLOR=blue>/</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>~</FONT></TT> <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>~</FONT></TT> <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#exp"><I><FONT COLOR=maroon>exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A> <TT><FONT COLOR=blue>)</FONT></TT></TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A> <TT><FONT COLOR=blue>)</FONT></TT></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>Logical expressions contain the usual logical connectors &#X201C;imply&#X201D;
 (&#X21D2;), &#X201C;and&#X201D; (&#X2227;), &#X201C;or&#X201D; (&#X2228;), &#X201C;there exists&#X201D;
@@ -3045,7 +3048,7 @@ logical expression being its statement. See the example given in
 <A HREF="#logical-expressions">3.2.7.1</A>.
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="property"><I><FONT COLOR=maroon>property</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<TT><FONT COLOR=blue>property</FONT></TT> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>:</FONT></TT>  <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A></TD></TR>
+<TT><FONT COLOR=blue>property</FONT></TT> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>:</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><!--TOC subsubsection Proofs-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc77">3.2.7.3</A>  Proofs</H4><!--SEC END --><P>
@@ -3156,11 +3159,11 @@ Now we know how to write a logical statement and
 to write a proof, the structure of a theorem appears simple since it
 contains both the statement and the proof inside the same
 construct. The theorem is introduced by the keyword <TT>theorem</TT> and
-the proof by the keyword <TT>proof</TT> followed by a colon character
-(&#X201C;:&#X201D;).
+the proof by the keyword <TT>proof</TT> followed by an equal character
+(&#X201C;=&#X201D;).
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="theorem"><I><FONT COLOR=maroon>theorem</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<TT><FONT COLOR=blue>theorem</FONT></TT> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>:</FONT></TT>  <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A>
+<TT><FONT COLOR=blue>theorem</FONT></TT> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>:</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
 <TT><FONT COLOR=blue>proof =</FONT></TT>  <A HREF="#proof"><I><FONT COLOR=maroon>proof</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>For instance:
@@ -3952,15 +3955,15 @@ last kind of proof, by <TT><FONT COLOR="red">assumed</FONT></TT> doesn&#X2019;t 
 since it consists in bypassing the formal proof mechanism.</P><P>The syntax of proofs is as follows.
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="proof"><I><FONT COLOR=maroon>proof</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-{<A HREF="#proof_step"><I><FONT COLOR=maroon>proof_step</FONT></I></A>}<SUP>*</SUP>  <A HREF="#qed_step"><I><FONT COLOR=maroon>qed_step</FONT></I></A>
+{<A HREF="#proof-step"><I><FONT COLOR=maroon>proof-step</FONT></I></A>}<SUP>*</SUP>  <A HREF="#qed-step"><I><FONT COLOR=maroon>qed-step</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>by</FONT></TT> {<A HREF="#fact"><I><FONT COLOR=maroon>fact</FONT></I></A>}<SUP>+</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>conclude</FONT></TT>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>coq proof</FONT></TT> <I><FONT COLOR=maroon>enforced_dependencies</FONT></I>  <I><FONT COLOR=maroon>external_code</FONT></I>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>coq proof</FONT></TT> <I><FONT COLOR=maroon>enforced-dependencies</FONT></I>  <I><FONT COLOR=maroon>external-code</FONT></I>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <I><FONT COLOR=maroon>enforced_dependencies</FONT></I> <TT><FONT COLOR=blue>assumed</FONT></TT>  <I><FONT COLOR=maroon>external_code</FONT></I></TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <I><FONT COLOR=maroon>enforced-dependencies</FONT></I> <TT><FONT COLOR=blue>assumed</FONT></TT>  <I><FONT COLOR=maroon>external-code</FONT></I></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>A proof is either a leaf proof or a compound proof. A leaf proof
 (introduced with the <TT><FONT COLOR="red">by</FONT></TT> or <TT><FONT COLOR="red">conclude</FONT></TT> keywords)
@@ -3972,8 +3975,8 @@ assumptions.</P><P>A compound proof is a sequence of steps that ends with a <TT>
 step. The goal of each step is stated in the step itself, except for
 the <TT><FONT COLOR="red">qed</FONT></TT> step, which has the same goal as the enclosing
 proof.</P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="proof_step"><I><FONT COLOR=maroon>proof_step</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#proof_step_bullet"><I><FONT COLOR=maroon>proof_step_bullet</FONT></I></A>  <A HREF="#statement"><I><FONT COLOR=maroon>statement</FONT></I></A>  <A HREF="#proof"><I><FONT COLOR=maroon>proof</FONT></I></A></TD></TR>
+<A NAME="proof-step"><I><FONT COLOR=maroon>proof-step</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#proof-step-bullet"><I><FONT COLOR=maroon>proof-step-bullet</FONT></I></A>  <A HREF="#statement"><I><FONT COLOR=maroon>statement</FONT></I></A>  <A HREF="#proof"><I><FONT COLOR=maroon>proof</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>A proof step starts with a proof bullet, which gives its level of
 nesting. The top level of a proof is 0. In a compound proof, the
@@ -4002,10 +4005,10 @@ proof of <CODE>&lt;2&gt;2</CODE>, and <CODE>&lt;1&gt;1</CODE> is available in th
 <CODE>&lt;1&gt;2</CODE>: see section <A HREF="#sec:scoping">5.1.1</A> for the scoping rules.</P><P>After the statement is the proof of the step. See below (under
 Statements) for a description of what is the current goal for this
 proof.</P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
-<A NAME="qed_step"><I><FONT COLOR=maroon>qed_step</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#proof_step_bullet"><I><FONT COLOR=maroon>proof_step_bullet</FONT></I></A> <TT><FONT COLOR=blue> qed</FONT></TT>  <A HREF="#proof"><I><FONT COLOR=maroon>proof</FONT></I></A>
+<A NAME="qed-step"><I><FONT COLOR=maroon>qed-step</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
+<A HREF="#proof-step-bullet"><I><FONT COLOR=maroon>proof-step-bullet</FONT></I></A> <TT><FONT COLOR=blue> qed</FONT></TT>  <A HREF="#proof"><I><FONT COLOR=maroon>proof</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP><A HREF="#proof_step_bullet"><I><FONT COLOR=maroon>proof_step_bullet</FONT></I></A> <TT><FONT COLOR=blue> conclude</FONT></TT></TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP><A HREF="#proof-step-bullet"><I><FONT COLOR=maroon>proof-step-bullet</FONT></I></A> <TT><FONT COLOR=blue> conclude</FONT></TT></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>A <TT><FONT COLOR="red">qed</FONT></TT> step is similar to a normal step, except that its
 statement is the goal of the enclosing proof. It may be reduced to
@@ -4016,42 +4019,42 @@ the word <TT><FONT COLOR="red">conclude</FONT></TT> when its proof is reduced to
 </PRE><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="statement"><I><FONT COLOR=maroon>statement</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 {<TT><FONT COLOR=blue>assume</FONT></TT> <A HREF="#assumption"><I><FONT COLOR=maroon>assumption</FONT></I></A> <TT><FONT COLOR=blue>,</FONT></TT>}<SUP>*</SUP>
- [<TT><FONT COLOR=blue>prove</FONT></TT> <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A>]</TD></TR>
+ [<TT><FONT COLOR=blue>prove</FONT></TT> <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>]</TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>A statement must be non-empty: at least one <TT><FONT COLOR="red">assume</FONT></TT> or the
 <TT><FONT COLOR="red">prove</FONT></TT> part must be present.</P><P>A statement appearing in a step has two readings: internal and
 external. The external reading is for the rest of the
 proof: the current step proves that the assumptions imply the
-conclusion (i.e. the <EM>logical_exp</EM> that appears after
+conclusion (i.e. the <EM>logical-exp</EM> that appears after
 <TT><FONT COLOR="red">prove</FONT></TT>). The internal reading is for the proof of the step:
 the current goal is the <TT><FONT COLOR="red">prove</FONT></TT> expression, and the
 assumptions are available as facts.</P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="assumption"><I><FONT COLOR=maroon>assumption</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A> <TT><FONT COLOR=blue>in</FONT></TT>  <A HREF="#type_exp"><I><FONT COLOR=maroon>type_exp</FONT></I></A>
+<A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A> <TT><FONT COLOR=blue>in</FONT></TT>  <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP><A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A> <TT><FONT COLOR=blue> :</FONT></TT>  <A HREF="#logical_exp"><I><FONT COLOR=maroon>logical_exp</FONT></I></A></TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP><A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A> <TT><FONT COLOR=blue> :</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>An assumption can either introduce a new (universally quantified)
 variable with its type (first form), or a new named hypothesis (second
 form).</P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="fact"><I><FONT COLOR=maroon>fact</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>definition of</FONT></TT>
-{[ [<A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>] <TT><FONT COLOR=blue>#</FONT></TT> ]  <A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP>
+{[ [<A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>] <TT><FONT COLOR=blue>#</FONT></TT> ]  <A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>hypothesis</FONT></TT>
-{<A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP>
+{<A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> (<TT><FONT COLOR=blue>property</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>theorem</FONT></TT>)
 {[[[[<A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>] <TT><FONT COLOR=blue>#</FONT></TT>]  <A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>]
-<TT><FONT COLOR=blue>!</FONT></TT>]  <A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP>
+<TT><FONT COLOR=blue>!</FONT></TT>]  <A HREF="#ident"><I><FONT COLOR=maroon>ident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>step</FONT></TT>
-{<A HREF="#proof_step_bullet"><I><FONT COLOR=maroon>proof_step_bullet</FONT></I></A>(<TT><FONT COLOR=blue>,</FONT></TT>)}<SUP>+</SUP></TD></TR>
+{<A HREF="#proof-step-bullet"><I><FONT COLOR=maroon>proof-step-bullet</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>A fact used in a leaf proof can be a definition, a hypothesis, a
 property, a theorem, or a step.</P><P>Giving a definition as a fact allows <FONT COLOR=purple>Zenon</FONT> to unfold this
 definition in the goal and in the other facts.</P><P>Giving a hypothesis/property/theorem as a fact allows <FONT COLOR=purple>Zenon</FONT> to use
-this hypothesis/property/theorem to prove the goal.</P><P>Giving a <EM>proof_step_bullet</EM> as a fact allows <FONT COLOR=purple>Zenon</FONT> to use the
+this hypothesis/property/theorem to prove the goal.</P><P>Giving a <EM>proof-step-bullet</EM> as a fact allows <FONT COLOR=purple>Zenon</FONT> to use the
 (external reading of the) corresponding step as an assumption to prove
 the goal. Note that even if several steps are labelled with this
 proof bullet, only one of them is in scope at any point, so there is
@@ -4397,19 +4400,21 @@ associate the <I>side</I> argument of the <TT><FONT COLOR="red">/</FONT></TT><TT
 <H2 CLASS="section"><!--SEC ANCHOR -->Ambiguous logical expression. Add explicit parentheses to
 associate the <I>side</I> argument of the <TT><FONT COLOR="red">/</FONT></TT><TT><FONT COLOR="red">\</FONT></TT> properly.</H2><!--SEC END --><P>
 <EM>Description</EM>: A logical expression contains a
-<TT>/&#X2216;</TT> (logical &#X201C;and&#X201D;) with at least one argument being a
-<TT>-&gt; </TT> (logical &#X201C;implication&#X201D;) or a <TT>&lt;-&gt;</TT> (logical
+<TT><FONT COLOR="red">/</FONT></TT><TT><FONT COLOR="red">\</FONT></TT> (logical &#X201C;and&#X201D;) with at least one argument being a
+<TT><FONT COLOR="red">-&gt;</FONT></TT> (logical &#X201C;implication&#X201D;) or a <TT><FONT COLOR="red">&lt;-&gt;</FONT></TT> (logical
 &#X201C;equivalence&#X201D;) without parentheses around the <I>side</I> argument (&#X201C;left&#X201D;
-or &#X201C;right&#X201D;). Since this is not clear of how to associate, we ask the user to explicitly add parentheses.</P><P><EM>Hints</EM>: Explicitly add the parentheses to make the association
+or &#X201C;right&#X201D;). Since this is not clear of how to associate, we ask
+the user to explicitly add parentheses.</P><P><EM>Hints</EM>: Explicitly add the parentheses to make the association
 non-ambiguous.</P><!--TOC section Ambiguous logical expression. Add explicit parentheses to
-associate the <I>side</I> argument of the <TT>&#X2216;/</TT> properly.-->
+associate the <I>side</I> argument of the <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">/</FONT></TT> properly.-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Ambiguous logical expression. Add explicit parentheses to
-associate the <I>side</I> argument of the <TT>&#X2216;/</TT> properly.</H2><!--SEC END --><P>
+associate the <I>side</I> argument of the <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">/</FONT></TT> properly.</H2><!--SEC END --><P>
 <EM>Description</EM>: A logical expression contains a
-<TT>&#X2216;/</TT> (logical &#X201C;or&#X201D;) with at least one argument being a
-<TT>-&gt; </TT> (logical &#X201C;implication&#X201D;) or a <TT>&lt;-&gt;</TT> (logical
+<TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">/</FONT></TT> (logical &#X201C;or&#X201D;) with at least one argument being a
+<TT><FONT COLOR="red">-&gt;</FONT></TT> (logical &#X201C;implication&#X201D;) or a <TT><FONT COLOR="red">&lt;-&gt;</FONT></TT> (logical
 &#X201C;equivalence&#X201D;) without parentheses around the <I>side</I> argument (&#X201C;left&#X201D;
-or &#X201C;right&#X201D;). Since this is not clear of how to associate, we ask the user to explicitly add parentheses.</P><P><EM>Hints</EM>: Explicitly add the parentheses to make the association
+or &#X201C;right&#X201D;). Since this is not clear of how to associate, we ask
+the user to explicitly add parentheses.</P><P><EM>Hints</EM>: Explicitly add the parentheses to make the association
 non-ambiguous.</P><!--TOC section Unbound sum type value constructor &#X2019;<I>name</I>&#X2019;.-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Unbound sum type value constructor &#X2019;<I>name</I>&#X2019;.</H2><!--SEC END --><P>
 <EM>Description</EM>: An identifier representing a sum type value constructor

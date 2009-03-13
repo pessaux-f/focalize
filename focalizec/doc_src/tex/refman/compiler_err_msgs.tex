@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.32 2009-03-13 16:10:43 doligez Exp $
+% $Id: compiler_err_msgs.tex,v 1.33 2009-03-13 17:00:23 doligez Exp $
 
 
 
@@ -176,10 +176,11 @@ the property $ident$ but this property was not found in the species.
 \section*{Ambiguous logical expression. Add explicit parentheses to
   associate the $side$ argument of the \terminal{/\backslash} properly.}
 {\em Description}: A logical expression contains a
-{\tt $/\setminus$} (logical ``and'') with at least one argument being a
-{\tt -> } (logical ``implication'') or a {\tt <->} (logical
+\terminal{/\backslash} (logical ``and'') with at least one argument being a
+\terminal{->} (logical ``implication'') or a \terminal{<->} (logical
 ``equivalence'') without parentheses around the $side$ argument (``left''
-or ``right''). Since this is not clear of how to associate, we  ask the user to explicitly add parentheses.
+or ``right''). Since this is not clear of how to associate, we  ask
+the user to explicitly add parentheses.
 
 {\em Hints}: Explicitly add the parentheses to make the association
 non-ambiguous.
@@ -188,12 +189,13 @@ non-ambiguous.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Ambiguous logical expression. Add explicit parentheses to
-  associate the $side$ argument of the {\tt $\setminus/$} properly.}
+  associate the $side$ argument of the \terminal{\backslash/} properly.}
 {\em Description}: A logical expression contains a
-{\tt $\setminus/$} (logical ``or'') with at least one argument being a
-{\tt -> } (logical ``implication'') or a {\tt <->} (logical
+\terminal{\backslash/} (logical ``or'') with at least one argument being a
+\terminal{->} (logical ``implication'') or a \terminal{<->} (logical
 ``equivalence'') without parentheses around the $side$ argument (``left''
-or ``right''). Since this is not clear of how to associate, we  ask the user to explicitly add parentheses.
+or ``right''). Since this is not clear of how to associate, we  ask
+the user to explicitly add parentheses.
 
 {\em Hints}: Explicitly add the parentheses to make the association
 non-ambiguous.
