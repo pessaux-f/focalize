@@ -1,4 +1,4 @@
-% $Id: phd_changes.tex,v 1.1 2009-03-13 16:47:48 pessaux Exp $
+% $Id: phd_changes.tex,v 1.2 2009-03-13 16:57:57 pessaux Exp $
 \subsection{Type unification}
 \noindent Section 3.3, definition 9, page 27.
 
@@ -121,6 +121,19 @@ has the form: $$C_{p'} {\tt is/in\ } \tau_{p'}$$.
   {
   {\tt Inst}_S (x) = \{ {\tt Inst}_{C_p}(e_p)_{C_p\in {\cal U}_{S_h}(x)}\}
   }
+
+
+\subsection{Traduction example in \ocaml}
+\noindent Section 8.2, page 152.
+
+The code sample shown and the explanation about {\tt create} at the
+top of the page is wrong or at least not complete. In effect, if
+presented this way, we don't know from where {\tt create} comes. In
+fact, we must used the one coming from the species we
+``implement''. So a qualified notation (i.e. module name + function
+name) is required.
+
+
 \subsection{Coq code generation model}
 \subsection{Missing rule for dependencies on parameters}
 \subsection{Missing order for dependencies on parameters}
