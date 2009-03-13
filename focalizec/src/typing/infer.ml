@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.168 2009-01-30 11:52:20 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.169 2009-03-13 17:02:17 doligez Exp $ *)
 
 
 
@@ -4072,19 +4072,17 @@ let ensure_collection_completely_defined ctx fields =
                               (curr_spec, vname))
                        else
                          Format.eprintf
-                           "@[Warning: %tSpecies%t@ '%t%a%t'@ %tshould@ not@ \
-                           be@ turned@ into@ a@ collection.@ Field%t@ \
-                           '%t%a%t'@ %tdoes@ not@ have@ a@ termination@ \
-                           proof. Proof@ is@ assumed.%t@]@."
+                           "@[%tWarning:%t Species@ '%t%a%t'@ should@ not@ \
+                           be@ turned@ into@ a@ collection.@ Field@ \
+                           '%t%a%t'@ does@ not@ have@ a@ termination@ \
+                           proof. Proof@ is@ assumed.@]@."
                            Handy.pp_set_bold Handy.pp_reset_effects
                            Handy.pp_set_underlined
                            Sourcify.pp_qualified_species curr_spec
                            Handy.pp_reset_effects
-                           Handy.pp_set_bold Handy.pp_reset_effects
                            Handy.pp_set_underlined
                            Sourcify.pp_vname vname
                            Handy.pp_reset_effects
-                           Handy.pp_set_bold Handy.pp_reset_effects
                   end))
               l
         | Env.TypeInformation.SF_theorem (_, _, _, _, _, _) -> ()
