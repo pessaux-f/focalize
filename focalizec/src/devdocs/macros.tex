@@ -1,0 +1,33 @@
+\newcommand{\ocaml}{{\sf OCaml}}
+\newcommand{\moca}{{\sf Moca}}
+\newcommand{\focal}{{\sf FoCaL}}
+\newcommand{\coq}{{\sf Coq}}
+\newcommand{\Coq}{{\sf Coq}}
+\newcommand{\cime}{{\sf CiME}}
+\newcommand{\Cime}{{\sf CiME}}
+\newcommand{\zenon}{{\sf Zenon}}
+\newcommand{\Zenon}{{\sf Zenon}}
+\newcommand{\Ocaml}{{\sf OCaml}}
+\newcommand{\focdoc}{\textsc{focdoc}}
+
+%% To have fancier listings
+\lstdefinelanguage{Focal}
+  {morekeywords={alias, all, and, as, assume, assumed, begin, by, caml,
+      collection, coq, coq_require, definition, else, end,
+      ex, external, false, function, hypothesis, if, in,
+      inherits, internal, implements, is, let, lexicographic,
+      local, logical, match, measure, not, notation, of, open,
+      on, or, order, proof, prop, property, prove, qed, rec,
+      representation, representation, Self, signature, species, step,
+      structural, termination, then, theorem, true, type, use,
+      with},
+    sensitive=false,
+    morecomment=[n]{(*}{*)},  %% Allow nested comments
+    morecomment=[n]{(**}{*)},  %% Allow nested comments
+    morestring=[b]",
+  }
+
+\lstset{
+  language=Focal, tabsize=2, frame=single, breaklines=true,
+  basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
+}

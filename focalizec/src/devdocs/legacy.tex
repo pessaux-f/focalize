@@ -1,0 +1,70 @@
+\documentclass{book}
+
+
+%%\usepackage{dropping}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+\usepackage{geometry}
+\usepackage{alltt}
+\usepackage[latin1]{inputenc}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amscd}
+\usepackage{graphicx}
+\usepackage{epsfig}
+\usepackage{color}
+\usepackage{listings}
+%%\usepackage{smallverbatim}
+
+\geometry{a4paper,twoside,body={5.5in,9in}}
+
+\input{macros} 
+
+
+\begin{document}
+\chapter{Changes in Virgile's PhD}
+\subsection{Coq code generation model}
+\subsection{Missing rule for dependencies on parameters}
+\subsection{Missing order for dependencies on parameters}
+
+\chapter{Code generation model}
+\section{Species}
+\subsection{Species header}
+\subsection{Carrier representation}
+\subsection{The record type}
+\subsubsection{The record header}
+\subsubsection{Fields and their types}
+\subsection{Methods}
+\subsubsection{Inherited methods}
+\subsubsection{Defined methods}
+\subsection{Fully defined species}
+\subsection{Collection generator function's header}
+\subsubsection{Local functions}
+\subsubsection{Creating the record value}
+\section{Collection}
+\section{Toplevel functions}
+\section{Toplevel theorems}
+\section{Type definitions}
+\section{External definitions}
+
+\chapter{Lexing / parsing}
+\chapter{Scoping}
+
+\chapter{Typechecking}
+\subsection{Type inference}
+\subsection{Environments structures}
+\subsection{Inheritance resolution}
+\subsection{Dependency on Self's methods calculus}
+\subsection{Normal form}
+
+\chapter{Intermediate form}
+\subsection{Computing dependencies on parameters}
+
+\chapter{OCaml code generation}
+
+\chapter{Coq code generation}
+\subsection{Theorems and proofs}
+\subsection{Recursive functions}
+
+\chapter{Doc generation}
+\end{document}
