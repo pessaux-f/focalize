@@ -1,3 +1,4 @@
+
 open "basics" ;;
 open "sets" ;;
 open "products" ;;
@@ -143,9 +144,6 @@ species Models (Rh is Rho, St is States, R is Requests,
   (** Transition function allowing to move from one state to another *)
   signature tau : R -> St -> C ;
 
-  (** Returns true if the given state is the initial state, false otherwise *)
-  signature initial : St -> bool ;
-
   (** Infix alias to the Cartesian_product equal function *)
   let ( =_c ) (c1 in C, c2 in C) in bool = C!equal (c1, c2) ;
 
@@ -168,32 +166,6 @@ species Models (Rh is Rho, St is States, R is Requests,
       tau (r1, st1) =_c C!pair (d1, st2) -> 
         D!equal (d1, D!yes) -> 
           Se!sem_req (st1, r1, st2) ;
-
-  property initial_is_secure : 
-    all st in St,
-      initial (st) ->
-	Po!omega (st) ;
-
-(*   (\** Reachability *\) *)
-(*   logical let rec reachable (st in St) =  *)
-(*    initial (st) \/ *)
-(*      (ex st1 in St, ex r1 in R, ex d1 in D, *)
-(*        reachable (st1) ->  *)
-(* 	 tau (r1, st1) =_c C!pair (d1, st)) ; *)
-
-(*   (\** Correctness of the model *\) *)
-(*   theorem correctness :  *)
-(*     all st in St,  *)
-(*       reachable (st) ->  *)
-(* 	Po!omega (st)  *)
-(*   proof = assumed {* *} ; *)
-
-(*   (\** Completeness of the model *\) *)
-(*   theorem completeness :  *)
-(*     all st in St,  *)
-(*       Po!omega (st) ->  *)
-(* 	reachable (st)  *)
-(*   proof = assumed {* *} ; *)
 
 (*   (\** (d1,st1) = (d2,st2) &rarr; d1 = d2 *\) *)
 (*   property left_substitution :  *)
@@ -345,7 +317,7 @@ species Semantics_requests_gal(S is Subjects, O is Objects,
 end ;;
 
 (* ========================================================================= *)
-  
+
 species Objects_wf inherits Objects =
   signature fonctions_secu : Self ;
   signature csp : Self ;
@@ -375,9 +347,9 @@ species Concrete_objects inherits Objects_wf =
 
   proof of equal_transitive = by definition of equal ;
 end ;;
-  
+
 collection Security_objects implements Concrete_objects ;;
-  
+
 species Actions inherits Access_modes =
   signature initialiser : Self ;
   signature init_cles : Self ;
@@ -387,7 +359,7 @@ species Actions inherits Access_modes =
   signature telecharger : Self ;
   signature chiffrer : Self ;
 end ;;
-  
+
 species Concrete_actions inherits Actions =
   representation = int ;
   let element = 0 ;
@@ -406,10 +378,11 @@ species Concrete_actions inherits Actions =
   proof of equal_symmetric = by definition of equal ;
 
   proof of equal_transitive = by definition of equal ;
-end;;
-  
+end ;;
+
 collection Security_actions implements Concrete_actions ;;
 
+(* pour les uniques sujets *)
 species Singleton inherits Setoid =
   representation = unit ;
   let equal (x, y) = true ;
@@ -420,38 +393,64 @@ species Singleton inherits Setoid =
   proof of equal_symmetric = by definition of equal ;
 
   proof of equal_transitive = by definition of equal ;
-end;;
+end ;;
 
-collection User implements Singleton ;;
+collection Security_users implements Singleton ;;
 
-species Security_access
-  inherits Access (User, Security_objects, Security_actions) =
+species Access_wf
+  inherits Access (Security_users, Security_objects, Security_actions) =
+
+  let get_s (acc in Self) = Security_users!element ;
   
-  let get_s (acc in Self) = User!element ;
-  
-(*   property security_access_equal: *)
-    
-  let security_create (o in Security_objects, a in Security_actions) = 
-     create (User!element, o, a);
+  let access_create (o in Security_objects, a in Security_actions) = 
+     create (Security_users!element, o, a) ;
+end ;;
 
+species Regles (Sec is Set_of (Security_actions))
+  inherits Setoid = 
+  signature get_action : Self -> Security_actions ;
+  signature get_pre_true : Self -> Sec ;
+  signature get_pre_false : Self -> Sec ;
+  signature get_post_yes : Self -> Sec ;
+  signature get_post_fail : Self -> Sec ;
+end ;;
+
+species Rho_wf (Sec is Set_of (Security_actions), Reg is Regles (Sec)) 
+  inherits Rho =
+  signature f_lim : Sec -> int ;
+end ;;
+
+species Events inherits Setoid = 
+(* a partir d'une action
+   cree l'evenement reussi *)
+  
+(* a partir d'une action
+   cree l'evenement echoue *)
+  
+(* a partir d'une action
+   cree l'evenement refuse *)
+  
+(* a partir d'une action
+   renvoie l'evenement - reussi, echoue ou refuse - correspondant dans 
+   event_history *)
 end ;;
   
-species Actions_history
-  inherits Basic_object =
-  
-  signature action_done : Security_actions -> bool ;
-  
-end;;
+species Events_history
+  inherits Basic_object =  
+  signature event_done : Events -> bool ;
+  signature event_add : Events -> Self -> Self ;
+  signature event_rem : Events -> Self -> Self ;
+end ;;
 
-species Security_states (A is Actions_history) inherits States  = end ;;
+species States_wf (H is Events_history) inherits States = end ;;
 
-species Security_policy(Rh is Rho, A is Actions_history, 
-			St is Security_states (A)) 
+species Policy_wf (Rh is Rho, H is Events_history, St is States_wf (H), 
+		   Sec is Set_of (Security_actions)) 
   inherits Policy (Rh, St) = 
-
+  
   logical let init_key_before_crypt_bis =
-     A!action_done (Security_actions!chiffrer) -> 
-       A!action_done (Security_actions!initialiser) ;
+     H!event_done (Security_actions!chiffrer) -> 
+       H!event_done (Security_actions!initialiser) ;
 
 (*   logical let init_key_before_crypt (s_1 in H, s_2 in H, *)
 (* 				     a_1 in Security_actions, *)
@@ -463,44 +462,11 @@ species Security_policy(Rh is Rho, A is Actions_history,
 (*         ((Security_objects!get_o(s_2) = Security_objects!fonctions_secu) /\ *)
 (* 	 (Security_actions!get_a(s_2) = Security_actions!initialiser)) ->  *)
 (* 	   (H!action_done(s_1) -> H!acces_done(s_2)) ; *)
-
-end;;
-
-species Regles (Sec is Set_of (Security_actions))
-  inherits Setoid = 
-  signature get_action : Self -> Security_actions ;
-  signature get_pre_true : Self -> Sec ;
-  signature get_pre_false : Self -> Sec ;
-  signature get_post_yes : Self -> Sec ;
-  signature get_post_fail : Self -> Sec ;
-
-end ;;
   
-species Rho_wf (Sec is Set_of (Security_actions), R is Regles (Sec)) 
-  inherits Rho = end ;;
-
-(* retarder au max l'utilisation des listes *)
-species History (A is Security_actions) inherits Setoid = end ;;
-  
-species States_wf (H is History (Security_actions)) 
-  inherits States = 
-  
-(* retourne le nombre de refus maximum
-   qu'une action peut supporter *)
-  signature f_lim : Security_actions -> int ;
-  
-  signature f_e1 : Security_actions -> H ;
-  signature f_e2 : Security_actions -> H ;
-  signature f_e3 : Security_actions -> H ;
-  signature f_e4 : Security_actions -> H ;
-
-end ;;
-(* reecrire l'equivalent des proprietes *)
-  
-species Policy_wf (Sec is Set_of (Security_actions), R is Regles (Sec), 
-		   Rh is Rho_wf (Sec, R), H is History (Security_actions), 
-		   St is States_wf (H)) 
-  inherits Policy (Rh, St) = 
+  signature f_e1 : Security_actions -> Sec ;
+  signature f_e2 : Security_actions -> Sec ;
+  signature f_e3 : Security_actions -> Sec ;
+  signature f_e4 : Security_actions -> Sec ;
   
 (*   logical let a_normale (a) = *)
 (*      perform (a) = yes -> *)
@@ -510,50 +476,46 @@ species Policy_wf (Sec is Set_of (Security_actions), R is Regles (Sec),
 (*      \/ ex k <= n, *)
 (*      all j in [i+1 k], alpha_j in (a_barre \/ a_barre_barre \/ events_e3) *)
 (*   ; *)
-  
+
 (*   logical let a_fail (a) = *)
 (*      perform (a) = fail -> *)
 (*        f_e4 (a) = vide *)
 (*      \/ ex k <= n, *)
 (*      all j in [i+1 k], alpha_j in (a_barre \/ a_barre_barre \/ events_e4) *)
 (*   ; *)
-  
+
 (*   logical let a_no (a) = *)
 (*      perform (a) = no -> *)
 (*        nb_occ (a_i_barre_barre, [alpha_1 alpha_i-1]) <= f_lim (a) *)
 (*   ; *)
-  
+
 (*   logical let omega () = *)
 (*      a_normale /\ a_fail /\ a_no ; *)
-  
 end ;;
-  
+
 species Requests_wf inherits Requests = end ;;
-  
+
 species Decisions_wf inherits Decisions =
   signature fail : Self ;
-  
+
   property yes_is_not_fail :
     all x in Self,
       ~ (equal (x, yes) /\ equal (x, fail)) ;
-  
+
   property no_is_not_fail :
     all x in Self,
       ~ (equal (x, no) /\ equal (x, fail)) ;
-  
 end ;;
-  
-species Semantics_requests_wf (H is History (Security_actions), 
-			       St is States_wf (H), R is Requests_wf) 
-  inherits Semantics_requests (St, R) = end ;;
-(* Lionel veut encore modifier, a faire en dernier *)
-  
+
+species Semantics_requests_wf (H is Events_history, St is States_wf (H), 
+			       Req is Requests_wf)
+  inherits Semantics_requests (St, Req) = end ;;
+
 species Models_wf (Sec is Set_of (Security_actions), Reg is Regles (Sec), 
-		   Rh is Rho_wf (Sec, Reg), H is History (Security_actions), 
+		   Rh is Rho_wf (Sec, Reg), 
+		   H is Events_history, 
 		   St is States_wf (H), Req is Requests_wf, D is Decisions, 
 		   C is Cartesian_product (D, St), 
-		   Po is Policy_wf (Sec, Reg, Rh, H, St), 
+		   Po is Policy_wf (Rh, H, St, Sec), 
 		   Se is Semantics_requests_wf (H, St, Req)) 
   inherits Models (Rh, St, Req, D, C, Po, Se) = end ;;
-
-(* ========================================================================= *)
