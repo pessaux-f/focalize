@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.38 2009-03-02 10:19:30 weis Exp $
+% $Id: constructs_syntax.tex,v 1.39 2009-03-13 13:58:25 doligez Exp $
 
 
 \section{Language constructs and syntax}
@@ -49,20 +49,31 @@ separated by commas and between parentheses.
 Type definitions require {\bf type expressions} to build more complex
 data-types.
 \vspace{0.2cm}
-\begin{syntax}
-\syntaxclass{Type expressions:}
-\tau & ::= & lowercase\ ident  & Type constructor \\
-     & \mid & uppercase\ ident & Species representation \\
-     & \mid & \terminal{'}lowercase\ ident & Type variable \\
-     & \mid & uppercase\ ident
-              \ \terminal{(}\tau\ \{\terminal{,}\ \tau\}+\terminal{)} &
-               Parameterised type constructor \\
-     & \mid & \tau\ \terminal{\rightarrow}\ \tau & Functional type \\
-     & \mid & \terminal{(}\tau\ \terminal{*}\ \tau
-              \ \{\terminal{*}\ \tau\}+\terminal{)} & Tuple type \\
-     & \mid & \terminal {Self} & Current species representation \\
-     & \mid & \terminal{(}\tau\terminal{)} & Parenthesised type expression
-\end{syntax}
+\begin{syn}
+\nt{type\_expr} \is
+     \nt{lowercase\_ident}
+\alt \nt{uppercase\_ident}
+\alt \tok{'}\nt{lowercase\_ident}
+\alt \nt{uppercase\_ident} \tok{(} \repsep{\nt{type\_expr}}{\tok{,}} \tok{)}
+\alt \nt{type\_expr} \tok{->} \nt{type\_expr}
+\alt \tok{(} \repsep{\nt{type\_expr}}{\tok{*}} \tok{)}
+\alt \tok{Self}
+\alt \tok{(} \nt{type\_expr} \tok{)}
+\end{syn}
+%\begin{syntax}
+%\syntaxclass{Type expressions:}
+%\tau & ::= & lowercase\ ident  & Type constructor \\
+%     & \mid & uppercase\ ident & Species representation \\
+%     & \mid & \terminal{'}lowercase\ ident & Type variable \\
+%     & \mid & uppercase\ ident
+%              \ \terminal{(}\tau\ \{\terminal{,}\ \tau\}+\terminal{)} &
+%               Parameterised type constructor \\
+%     & \mid & \tau\ \terminal{\rightarrow}\ \tau & Functional type \\
+%     & \mid & \terminal{(}\tau\ \terminal{*}\ \tau
+%              \ \{\terminal{*}\ \tau\}+\terminal{)} & Tuple type \\
+%     & \mid & \terminal {Self} & Current species representation \\
+%     & \mid & \terminal{(}\tau\terminal{)} & Parenthesised type expression
+%\end{syntax}
 \vspace{0.2cm}
 
 A type expression can be a type constructor.

@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.15 2009-03-13 12:21:14 doligez Exp $
+% $Id: proofs.tex,v 1.16 2009-03-13 13:58:25 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of  theorems}
@@ -15,6 +15,8 @@ The syntax of proofs is as follows.
      \rep{\nt{proof\_step}} \nt{qed\_step}
 \alt \tok{by} \reps{\nt{fact}}
 \alt \tok{conclude}
+\alt \tok{coq~proof} \nt{enforced\_dependencies} \nt{external\_code}
+\alt \nt{enforced\_dependencies} \tok{assumed} \nt{external\_code}
 \end{syn}
 
 %\begin{syntax}
@@ -41,12 +43,12 @@ proof.
 
 \begin{syn}
 \nt{proof\_step} \is
-     \nt{proof\_bullet} \nt{statement} \nt{proof}
+     \nt{proof\_step\_bullet} \nt{statement} \nt{proof}
 \end{syn}
 
 %\begin{syntax}
 %\syntaxclass{Proof steps:}
-%proof\_step & ::=  & proof\_bullet~~statement~~proof
+%proof\_step & ::=  & proof\_step\_bullet~~statement~~proof
 %\end{syntax}
 
 A proof step starts with a proof bullet, which gives its level of
@@ -90,14 +92,14 @@ proof.
 
 \begin{syn}
 \nt{qed\_step} \is
-    \nt{proof\_bullet} \tok{ qed} \nt{proof}
-\alt\nt{proof\_bullet} \tok{ conclude}
+    \nt{proof\_step\_bullet} \tok{ qed} \nt{proof}
+\alt\nt{proof\_step\_bullet} \tok{ conclude}
 \end{syn}
 
 %\begin{syntax}
 %\syntaxclass{QED steps:}
-%qed\_step & ::=  & proof\_bullet\ \terminal{qed}\ proof \\
-%          & \mid & proof\_bullet\ \terminal{conclude}
+%qed\_step & ::=  & proof\_step\_bullet\ \terminal{qed}\ proof \\
+%          & \mid & proof\_step\_bullet\ \terminal{conclude}
 %\end{syntax}
 
 A \terminal{qed} step is similar to a normal step, except that its
@@ -157,7 +159,7 @@ form).
         \repsep{\opt{\opt{\opt{\opt{\nt{ident}} \tok{\#}} \nt{ident}}
                      \tok{!}} \nt{ident}}{\tok{,}}
 \alt \tok{step}
-        \repsep{\nt{proof\_bullet}}{\tok{,}}
+        \repsep{\nt{proof\_step\_bullet}}{\tok{,}}
 \end{syn}
 
 %\begin{syntax}
@@ -179,8 +181,8 @@ form).
 %\ \{\{\{\{\terminal{,}\ ident?\terminal{\#}\}?ident\}?\terminal{!}\}?ident\}*
 %\\
 %     & \mid & \terminal{step}
-%                 \ proof\_bullet
-%  \ \{\terminal{,}\ proof\_bullet\}*
+%                 \ proof\_step\_bullet
+%  \ \{\terminal{,}\ proof\_step\_bullet\}*
 %\end{syntax}
 
 A fact used in a leaf proof can be a definition, a hypothesis, a
@@ -192,7 +194,7 @@ definition in the goal and in the other facts.
 Giving a hypothesis/property/theorem as a fact allows \zenon{} to use
 this hypothesis/property/theorem to prove the goal.
 
-Giving a {\em proof\_bullet} as a fact allows \zenon{} to use the
+Giving a {\em proof\_step\_bullet} as a fact allows \zenon{} to use the
 (external reading of the) corresponding step as an assumption to prove
 the goal.  Note that even if several steps are labelled with this
 proof bullet, only one of them is in scope at any point, so there is

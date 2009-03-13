@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.14 2009-03-02 10:19:30 weis Exp $
+% $Id: lexical_conventions.tex,v 1.15 2009-03-13 13:58:25 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -174,7 +174,7 @@ conventions:
 \item $2\; *\; 3\; ^4\; +\; 5$ means
       $(2\; *\; (3\; ^4))\; +\; 5$ hence $167$, it does not mean
       $((2\; *\; 3)\; ^4)\; +\; 5$ which is $1301$,
-      nor $2\; *\; (3\; ^(4\; +\; 5))$ which is $39366$.
+      nor $2\; *\; (3\; ^{(4\; +\; 5)})$ which is $39366$.
 \end{citemize}
 
 In {\focal}, all the binary infix operators have the precedence they have in maths.
@@ -212,7 +212,8 @@ In {\focal} identifiers are either:
   letters. {\tt +}, {\tt :=}, {\tt ->}, {\tt +float} are symbolic
 
 \item {\em alphanumeric}: the identifier contains letters, digits and
-  underscores. {\tt x}, {\tt \_1}, {\tt Some}, {Basic\_object} are alphanumeric.
+  underscores. {\tt x}, {\tt \_1}, {\tt Some}, {\tt Basic\_object} are
+  alphanumeric.
 \end{citemize}
 
 \subsubsection{Regular identifiers}
@@ -221,17 +222,34 @@ In {\focal} identifiers are either:
 Regular lower case identifiers are used to designate the names of variables, functions,
 and labels of records.
 
-\begin{syntax}
-\syntaxclass{Basic identifiers:}
-digit & ::= & \terminal{0} \ldots \terminal{9} & \\
-lower & ::= & \terminal{a} \ldots \terminal{z} & \\
-upper & ::= & \terminal{A} \ldots \terminal{Z} & \\
-letter & ::= & lower \mid upper & \\
-lident & ::= & \{\ lower \mid \terminal{\_} \}
-            \{ letter \mid digit \mid \terminal{\_} \}* & \\
-uident & ::= & upper\ \{\ letter \mid digit \mid \terminal{\_} \}* & \\
-ident & ::= & lident \mid uident
-\end{syntax}
+\begin{syn}
+\nt{digit} \is \tok{0} \ldots \tok{9}
+\sep
+\nt{lower} \is \tok{a} \ldots \tok{z}
+\sep
+\nt{upper} \is \tok{A} \ldots \tok{Z}
+\sep
+\nt{letter} \is \nt{lower} \orelse \nt{upper}
+\sep
+\nt{lident} \is \paren{ \nt{lower} \orelse \tok{\_} }
+                \rep{ \nt{letter} \orelse \nt{digit} \orelse \tok{\_} }
+\sep
+\nt{uident} \is \nt{upper}
+                \rep{ \nt{letter} \orelse \nt{digit} \orelse \tok{\_} }
+\sep
+\nt{ident} \is \nt{lident} \orelse \nt{uident}
+\end{syn}
+% \begin{syntax}
+% \syntaxclass{Basic identifiers:}
+% digit & ::= & \terminal{0} \ldots \terminal{9} & \\
+% lower & ::= & \terminal{a} \ldots \terminal{z} & \\
+% upper & ::= & \terminal{A} \ldots \terminal{Z} & \\
+% letter & ::= & lower \mid upper & \\
+% lident & ::= & \{\ lower \mid \terminal{\_} \}
+%             \{ letter \mid digit \mid \terminal{\_} \}* & \\
+% uident & ::= & upper\ \{\ letter \mid digit \mid \terminal{\_} \}* & \\
+% ident & ::= & lident \mid uident
+% \end{syntax}
 \vspace{0.2cm}
 
 A regular identifier is a sequence of letters, digits, and {\tt \_} (the
@@ -269,20 +287,44 @@ Prefix & Infix \\
 \end{tabular}
 \end{center}
 
-\begin{syntax}
-\syntaxclass{\hspace{1cm} Infix/prefix operators:}
-prefix\_char & ::= & \terminal{` \ \sim\ ?\ \$\ !\ \#\ }& \\
- infix\_char & ::= &
-    \terminal{ ,\ +\ -\ *\ /\ \%\ \&\ \mid\ :\ ;\ <\ =\ >\ @ \wedge
-              \ \setminus} & \\
-  prefix\_op & ::= & prefix\_char
-    \ \{ letter \mid prefix\_char \mid infix\_char
-    \mid digit \mid \terminal{\_} \}* & \\
-   infix\_op & ::= & infix\_char
-    \ \{ letter \mid prefix\_char \mid infix\_char
-    \mid digit \mid \terminal{\_} \}* & \\
-          op & ::= & infix\_op \mid prefix\_op
-\end{syntax}
+\begin{syn}
+\nt{prefix\_char} \is
+  \tok{`} \orelse \tok{\sim} \orelse \tok{?} \orelse \tok{\$} \orelse
+  \tok{!} \orelse \tok{\#}
+\sep
+\nt{infix\_char} \is
+  \tok{,} \orelse \tok{+} \orelse \tok{-} \orelse \tok{*} \orelse
+  \tok{/} \orelse \tok{\%} \orelse \tok{\&} \orelse \tok{\mid} \orelse
+  \tok{:} \orelse \tok{;} \orelse \tok{<} \orelse \tok{=} \orelse
+  \tok{>} \orelse \tok{@} \orelse \tok{\hat{\ }} \orelse
+  \tok{\setminus}
+\sep
+\nt{prefix\_op} \is
+  \nt{prefix\_char} \rep{\nt{letter} \orelse \nt{prefix\_char} \orelse
+  \nt{infix\_char} \orelse \nt{digit} \orelse \tok{\_} }
+\sep
+\nt{infix\_op} \is
+  \nt{infix\_char} \rep{\nt{letter} \orelse \nt{prefix\_char} \orelse
+  \nt{infix\_char} \orelse \nt{digit} \orelse \tok{\_} }
+\sep
+\nt{op} \is
+  \nt{infix\_op} \orelse \nt{prefix\_op}
+\end{syn}
+
+% \begin{syntax}
+% \syntaxclass{\hspace{1cm} Infix/prefix operators:}
+% prefix\_char & ::= & \terminal{` \ \sim\ ?\ \$\ !\ \#\ }& \\
+%  infix\_char & ::= &
+%     \terminal{ ,\ +\ -\ *\ /\ \%\ \&\ \mid\ :\ ;\ <\ =\ >\ @ \wedge
+%               \ \setminus} & \\
+%   prefix\_op & ::= & prefix\_char
+%     \ \{ letter \mid prefix\_char \mid infix\_char
+%     \mid digit \mid \terminal{\_} \}* & \\
+%    infix\_op & ::= & infix\_char
+%     \ \{ letter \mid prefix\_char \mid infix\_char
+%     \mid digit \mid \terminal{\_} \}* & \\
+%           op & ::= & infix\_op \mid prefix\_op
+% \end{syntax}
 
 Hence, in the above examples, {\tt +}, {\tt ++} and {\tt =\_mod\_5} will be
 infix operators and {\tt $\sim$+zero} will be a prefix one.
@@ -411,33 +453,72 @@ names and collection parameters are uppercase identifiers.
 \label{hexadecimal}
 \label{binary}
 
-\begin{syntax}
-\syntaxclass{Integer literals:}
-                 binary\_digit & ::= & \terminal{0} \mid \terminal{1} & \\
-                  octal\_digit & ::= & \terminal{0} \ldots \terminal{7} & \\
-                decimal\_digit & ::= & \terminal{0} \ldots \terminal{9} & \\
-            hexadecimal\_digit & ::= & \terminal{0} \ldots \terminal{9}
-                                       \mid \terminal{A} \ldots \terminal{F}
-                                       \mid \terminal{a} \ldots \terminal{f} & \\
-                          sign & ::= & \terminal{+} \mid \terminal{-} & \\
-     unsigned\_binary\_literal & ::= & \terminal{0} \{ \terminal{b}
-                                       \mid \terminal{B} \} \ binary\_digit\ \{ binary\_digit
-                                       \mid \terminal{\_} \}* & \\
-      unsigned\_octal\_literal & ::= & \terminal{0} \{ \terminal{o}
-                                       \mid \terminal{O} \}
-                                       \ octal\_digit\ \{ octal\_digit
-                                       \mid \terminal{\_} \}* & \\
-    unsigned\_decimal\_literal & ::= & decimal\_digit \{ decimal\_digit
-                                       \mid \terminal{\_} \} * & \\
-unsigned\_hexadecimal\_literal & ::= &
-  \terminal{0} \{ \terminal{x} \mid \terminal{X} \}
-  \ hexadecimal\_digit\ \{ hexadecimal\_digit \mid \terminal{\_} \}* & \\
-    unsigned\_integer\_literal & ::= & unsigned\_binary\_literal \\
-                               &     & \mid unsigned\_octal\_literal & \\
-                               &     & \mid unsigned\_decimal\_literal \\
-                               &     & \mid unsigned\_hexadecimal\_literal & \\
-              integer\_literal & ::= & sign?\ unsigned\_integer\_literal
-\end{syntax}
+\begin{syn}
+\nt{binary\_digit} \is \tok{0} \orelse \tok{1}
+\sep
+\nt{octal\_digit} \is \tok{0} \ldots \tok{7}
+\sep
+\nt{decimal\_digit} \is \tok{0} \ldots \tok{9}
+\sep
+\nt{hexadecimal\_digit} \is
+  \tok{0} \ldots \tok{9}
+  \orelse \tok{A} \ldots \tok{F}
+  \orelse \tok{a} \ldots \tok{f}
+\sep
+\nt{sign} \is \tok{+} \orelse \tok{-}
+\sep
+\nt{unsigned\_binary\_literal} \is
+  \tok{0} \paren{ \tok{b} \orelse \tok{B} }
+  \nt{binary\_digit} \rep{ \nt{binary\_digit} \orelse \tok{\_} }
+\sep
+\nt{unsigned\_octal\_literal} \is
+  \tok{0} \paren{ \tok{o} \orelse \tok{O} }
+  \nt{octal\_digit} \rep{ \nt{octal\_digit} \orelse \tok{\_} }
+\sep
+\nt{unsigned\_decimal\_literal} \is
+  \nt{decimal\_digit} \rep{ \nt{decimal\_digit} \orelse \tok{\_} }
+\sep
+\nt{unsigned\_hexadecimal\_literal} \is
+  \tok{0} \paren{ \tok{x} \orelse \tok{X} }
+  \nt{hexadecimal\_digit} \rep{ \nt{hexadecimal\_digit} \orelse \tok{\_} }
+\sep
+\nt{unsigned\_integer\_literal} \is
+     \nt{unsigned\_binary\_literal}
+\alt \nt{unsigned\_octal\_literal}
+\alt \nt{unsigned\_decimal\_literal}
+\alt \nt{unsigned\_hexadecimal\_literal}
+\sep
+\nt{integer\_literal} \is
+  \opt{\nt{sign}} \nt{unsigned\_integer\_literal}
+\end{syn}
+
+% \begin{syntax}
+% \syntaxclass{Integer literals:}
+%                  binary\_digit & ::= & \terminal{0} \mid \terminal{1} & \\
+%                   octal\_digit & ::= & \terminal{0} \ldots \terminal{7} & \\
+%                 decimal\_digit & ::= & \terminal{0} \ldots \terminal{9} & \\
+%             hexadecimal\_digit & ::= & \terminal{0} \ldots \terminal{9}
+%                                        \mid \terminal{A} \ldots \terminal{F}
+%                                        \mid \terminal{a} \ldots \terminal{f} & \\
+%                           sign & ::= & \terminal{+} \mid \terminal{-} & \\
+%      unsigned\_binary\_literal & ::= & \terminal{0} \{ \terminal{b}
+%                                        \mid \terminal{B} \} \ binary\_digit\ \{ binary\_digit
+%                                        \mid \terminal{\_} \}* & \\
+%       unsigned\_octal\_literal & ::= & \terminal{0} \{ \terminal{o}
+%                                        \mid \terminal{O} \}
+%                                        \ octal\_digit\ \{ octal\_digit
+%                                        \mid \terminal{\_} \}* & \\
+%     unsigned\_decimal\_literal & ::= & decimal\_digit \{ decimal\_digit
+%                                        \mid \terminal{\_} \} * & \\
+% unsigned\_hexadecimal\_literal & ::= &
+%   \terminal{0} \{ \terminal{x} \mid \terminal{X} \}
+%   \ hexadecimal\_digit\ \{ hexadecimal\_digit \mid \terminal{\_} \}* & \\
+%     unsigned\_integer\_literal & ::= & unsigned\_binary\_literal \\
+%                                &     & \mid unsigned\_octal\_literal & \\
+%                                &     & \mid unsigned\_decimal\_literal \\
+%                                &     & \mid unsigned\_hexadecimal\_literal & \\
+%               integer\_literal & ::= & sign?\ unsigned\_integer\_literal
+% \end{syntax}
 
 An integer literal is a sequence of one or more digits, optionally
 preceded by a minus or plus sign and/or a base prefix. By default,
@@ -531,7 +612,6 @@ table below:
 %%%%%%%%%%%
 \subsection{Character literals}
 \label{character literals}
-\label{hexadecimal}
 Characters literals are composed of one character enclosed between two
 ``{\tt '}'' (quote) characters. Example: {\tt 'a'}, {\tt '?'}.
 Escape sequences (meta code to insert characters that can't appear
@@ -541,21 +621,48 @@ quotes. Available escape sequences are summarised in the table above
 
 %%%%%%%%%%%
 \subsection{Floating-point number literals}
-\begin{syntax}
-\syntaxclass{Float literals:}
-                 decimal\_literal & ::= & sign?\ unsigned\_decimal\_literal & \\
-             hexadecimal\_literal & ::= & sign?\ unsigned\_hexadecimal\_literal & \\
-             scientific\_notation & ::= & \terminal{e} \mid \terminal{E} & \\
-unsigned\_decimal\_float\_literal & ::= & unsigned\_decimal\_literal & \\
-                                  & &  \{ \terminal{.}\ unsigned\_decimal\_literal* \} ? & \\
-                                  & &  \{ scientific\_notation\ decimal\_literal \}? & \\
-unsigned\_hexadecimal\_float\_literal & ::= & unsigned\_hexadecimal\_literal &\\
-                                  & & \{ \terminal{.}\ unsigned\_hexadecimal\_literal* \} ? \\
-                                  & & \{ scientific\_notation\ hexadecimal\_literal \} ? & \\
-         unsigned\_float\_literal & ::= & unsigned\_decimal\_float\_literal & \\
-                                  & & \mid unsigned\_hexadecimal\_float\_literal & \\
-                   float\_literal & ::= & sign?\ unsigned\_float\_literal
-\end{syntax}
+
+\begin{syn}
+\nt{decimal\_literal} \is
+  \opt{\nt{sign}} \nt{unsigned\_decimal\_literal}
+\sep
+\nt{hexadecimal\_literal} \is
+  \opt{\nt{sign}} \nt{unsigned\_hexadecimal\_literal}
+\sep
+\nt{scientific\_notation} \is \tok{e} \orelse \tok{E}
+\sep
+\nt{unsigned\_decimal\_float\_literal} \is
+  \nt{unsigned\_decimal\_literal}
+  \opt{\tok{.} \rep{\nt{unsigned\_decimal\_literal}}}
+  \opt{\nt{scientific\_notation} \nt{decimal\_literal}}
+\sep
+\nt{unsigned\_hexadecimal\_float\_literal} \is
+  \nt{unsigned\_hexadecimal\_literal}
+  \opt{\tok{.} \rep{\nt{unsigned\_hexadecimal\_literal}}}
+  \opt{\nt{scientific\_notation} \nt{hexadecimal\_literal}}
+\sep
+\nt{unsigned\_float\_literal} \is
+  \nt{unsigned\_decimal\_float\_literal}
+  \orelse \nt{unsigned\_hexadecimal\_float\_literal}
+\sep
+\nt{float\_literal} \is \opt{\nt{sign}} \nt{unsigned\_float\_literal}
+\end{syn}
+  
+% \begin{syntax}
+% \syntaxclass{Float literals:}
+%                  decimal\_literal & ::= & sign?\ unsigned\_decimal\_literal & \\
+%              hexadecimal\_literal & ::= & sign?\ unsigned\_hexadecimal\_literal & \\
+%              scientific\_notation & ::= & \terminal{e} \mid \terminal{E} & \\
+% unsigned\_decimal\_float\_literal & ::= & unsigned\_decimal\_literal & \\
+%                                   & &  \{ \terminal{.}\ unsigned\_decimal\_literal* \} ? & \\
+%                                   & &  \{ scientific\_notation\ decimal\_literal \}? & \\
+% unsigned\_hexadecimal\_float\_literal & ::= & unsigned\_hexadecimal\_literal &\\
+%                                   & & \{ \terminal{.}\ unsigned\_hexadecimal\_literal* \} ? \\
+%                                   & & \{ scientific\_notation\ hexadecimal\_literal \} ? & \\
+%          unsigned\_float\_literal & ::= & unsigned\_decimal\_float\_literal & \\
+%                                   & & \mid unsigned\_hexadecimal\_float\_literal & \\
+%                    float\_literal & ::= & sign?\ unsigned\_float\_literal
+% \end{syntax}
 
 Floating-point numbers literals are made of an optional sign ('+' or
 '-') followed by a non-empty sequence of digits followed by a dot
@@ -571,12 +678,17 @@ prefixed by ``0x'' or ``0X''. Example {\tt 0xF2.E4}, {\tt 0X4.3A},
 %%%%%%%%%%%
 \subsection{Proof step bullets}
 \index{proof!step bullet}
-\begin{syntax}
-\syntaxclass{Proof step bullets:}
-proof\_step\_bullet & ::= &
-   \terminal{<} \{ \terminal{0} \ldots \terminal{9} \}+ \terminal{>}
-   \ \{letter \mid digit \}+
-\end{syntax}
+\begin{syn}
+\nt{proof\_step\_bullet} \is
+  \tok{<} \reps{\nt{digit}} \tok{>}
+  \reps{ \nt{letter} \orelse \nt{digit} }
+\end{syn}
+% \begin{syntax}
+% \syntaxclass{Proof step bullets:}
+% proof\_step\_bullet & ::= &
+%    \terminal{<} \{ \terminal{0} \ldots \terminal{9} \}+ \terminal{>}
+%    \ \{letter \mid digit \}+
+% \end{syntax}
 
 A proof step bullet is a non-negative non-signed integer literal
 (i.e. a non empty sequence of [0-9] characters) delimited by the
