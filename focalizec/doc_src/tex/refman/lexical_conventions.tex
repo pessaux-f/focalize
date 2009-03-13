@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.15 2009-03-13 13:58:25 doligez Exp $
+% $Id: lexical_conventions.tex,v 1.16 2009-03-13 16:10:43 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -262,7 +262,8 @@ The identifier is uppercase if its first letter is uppercase.
 Letters contain at least the 52 lowercase and uppercase
 letters from the standard ASCII set. In an identifier, all characters
 are meaningful.
-Examples: {\tt foo}, {\tt bar}, {\tt \_20}, {\tt \_\_\_gee\_42}.
+Examples: {\tt foo}, {\tt bar}, {\tt \_20},
+{\tt \_\_\_gee\_42}.
 
 \subsubsection{Infix/prefix operators}
 \index{identifier!operator}\index{operator}
@@ -271,7 +272,7 @@ Examples: {\tt foo}, {\tt bar}, {\tt \_20}, {\tt \_\_\_gee\_42}.
 ``starting operator character'' and followed by a sequence of
 regular identifiers or operator characters. For example, all the
 following are legal operators:
-{\tt +}, {\tt ++}, {\tt $\sim$+zero}, {\tt =\_mod\_5}.
+{\tt +}, {\tt ++}, {\tt \tilde+zero}, {\tt =\_mod\_5}.
 
 The position in which to use the operator (i.e. infix or prefix)
 is determined by the position of the first operator character
@@ -281,23 +282,23 @@ according to the following table:
 \hline
 Prefix & Infix \\
 \hline
-` $\sim$ ? \$ ! \# &
-, + - * / \% \& $|$ : ; $<$ = $>$ @ \^\ $\setminus$ \\
+` \tilde{} ? \$ ! \# &
+, + - * / \% \& $\vertical$ : ; $<$ = $>$ @ \chapeau{} $\backslash$ \\
 \hline
 \end{tabular}
 \end{center}
 
 \begin{syn}
 \nt{prefix\_char} \is
-  \tok{`} \orelse \tok{\sim} \orelse \tok{?} \orelse \tok{\$} \orelse
+  \tok{`} \orelse \tok{\tilde} \orelse \tok{?} \orelse \tok{\$} \orelse
   \tok{!} \orelse \tok{\#}
 \sep
 \nt{infix\_char} \is
   \tok{,} \orelse \tok{+} \orelse \tok{-} \orelse \tok{*} \orelse
-  \tok{/} \orelse \tok{\%} \orelse \tok{\&} \orelse \tok{\mid} \orelse
+  \tok{/} \orelse \tok{\%} \orelse \tok{\&} \orelse \tok{\vertical} \orelse
   \tok{:} \orelse \tok{;} \orelse \tok{<} \orelse \tok{=} \orelse
-  \tok{>} \orelse \tok{@} \orelse \tok{\hat{\ }} \orelse
-  \tok{\setminus}
+  \tok{>} \orelse \tok{@} \orelse \tok{\chapeau} \orelse
+  \tok{\backslash}
 \sep
 \nt{prefix\_op} \is
   \nt{prefix\_char} \rep{\nt{letter} \orelse \nt{prefix\_char} \orelse
@@ -307,7 +308,7 @@ Prefix & Infix \\
   \nt{infix\_char} \rep{\nt{letter} \orelse \nt{prefix\_char} \orelse
   \nt{infix\_char} \orelse \nt{digit} \orelse \tok{\_} }
 \sep
-\nt{op} \is
+\nt{operator} \is
   \nt{infix\_op} \orelse \nt{prefix\_op}
 \end{syn}
 
@@ -338,7 +339,7 @@ The notion of infix/prefix operator does not mean that {\focal} defines all
 these operators: it means that the programmer may freely define and use them
 as ordinary prefix/infix operators instead of only writing prefix function
 names and regular function application. For instance, if you do not like the
-{\focal} predefined \verb"^" operator to catenate strings, you can define your
+{\focal} predefined \verb"^" operator to concatenate strings, you can define your
 own infix synonym for \verb"^", say {tt ++}, using:
 
 {\scriptsize
@@ -458,8 +459,6 @@ names and collection parameters are uppercase identifiers.
 \sep
 \nt{octal\_digit} \is \tok{0} \ldots \tok{7}
 \sep
-\nt{decimal\_digit} \is \tok{0} \ldots \tok{9}
-\sep
 \nt{hexadecimal\_digit} \is
   \tok{0} \ldots \tok{9}
   \orelse \tok{A} \ldots \tok{F}
@@ -476,7 +475,7 @@ names and collection parameters are uppercase identifiers.
   \nt{octal\_digit} \rep{ \nt{octal\_digit} \orelse \tok{\_} }
 \sep
 \nt{unsigned\_decimal\_literal} \is
-  \nt{decimal\_digit} \rep{ \nt{decimal\_digit} \orelse \tok{\_} }
+  \nt{digit} \rep{ \nt{digit} \orelse \tok{\_} }
 \sep
 \nt{unsigned\_hexadecimal\_literal} \is
   \tok{0} \paren{ \tok{x} \orelse \tok{X} }
@@ -540,6 +539,26 @@ Here are various examples of integers in various bases:
 %%%%%%%%%%%%
 \subsection{String literals}
 \label{string literal}
+
+\begin{syn}
+\nt{string\_literal} \is
+  \tok{"}
+  \rep{\paren{ \nt{plain-char} \orelse \tok{\backslash} \nt{char-escape} }}
+  \tok{"}
+\sep
+\nt{plain-char} \is \mbox{\em any printable character except backslash
+  ($\backslash$) and double quote ({\tt"})}
+\sep
+\nt{char-escape} \is
+     \tok{b} \orelse \tok{n} \orelse \tok{r} \orelse \tok{t}
+\alt \tok{\textvisiblespace} \orelse \tok{"} \orelse \tok{'} \orelse \tok{*}
+     \orelse \tok{\backslash} \orelse \tok{`} \orelse \tok{-}
+\alt \tok{(} \orelse \tok{)} \orelse \tok{[} \orelse \tok{]}
+     \orelse \tok{\{} \orelse \tok{\}}
+\alt \nt{digit} \nt{digit} \nt{digit}
+\alt \nt{hexadecimal\_digit} \nt{hexadecimal\_digit}
+\end{syn}
+
 String literals are sequences of any characters delimited by {\tt "}
 (double quote) characters ({\em ipso facto} with no intervening
 {\tt"}).
@@ -553,13 +572,13 @@ table below:
   \hline
   Sequence & Character & Comment \\
   \hline
-  $\setminus$b & $\setminus$008 & Backspace. \\
+  \terminal{\backslash{}b} & $\setminus$008 & Backspace. \\
   \hline
-  $\setminus$t & $\setminus$009 & Tabulation. \\
+  \terminal{\backslash{}n} & $\setminus$010 & Line feed. \\
   \hline
-  $\setminus$n & $\setminus$010 & Line feed. \\
+  \terminal{\backslash{}r} & $\setminus$013 & Carriage return. \\
   \hline
-  $\setminus$r & $\setminus$013 & Carriage return. \\
+  \terminal{\backslash{}t} & $\setminus$009 & Tabulation. \\
   \hline
   $\setminus$\textvisiblespace  & \textvisiblespace      & Space character. \\
   \hline
@@ -612,6 +631,14 @@ table below:
 %%%%%%%%%%%
 \subsection{Character literals}
 \label{character literals}
+
+\begin{syn}
+\nt{character\_literal} \is
+  \tok{'}
+  \rep{\paren{ \nt{plain-char} \orelse \tok{\backslash} \nt{char-escape} }}
+  \tok{'}
+\end{syn}
+
 Characters literals are composed of one character enclosed between two
 ``{\tt '}'' (quote) characters. Example: {\tt 'a'}, {\tt '?'}.
 Escape sequences (meta code to insert characters that can't appear
