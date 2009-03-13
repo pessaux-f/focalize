@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.126 2009-01-22 10:36:01 weis Exp $ *)
+(* $Id: parser.mly,v 1.127 2009-03-13 17:02:57 doligez Exp $ *)
 
 open Parsetree;;
 
@@ -753,10 +753,6 @@ in_type_expr:
 proof:
   | opt_doc CONCLUDE
     { mk_doc $1 (Pf_auto []) }
-  | proof_development
-    { $1 }
-
-proof_development:
     /* Trailing is the reason why the proof was not given. */
   | opt_doc enforced_dependencies ASSUMED EXTERNAL_CODE
     { mk_doc $1 (Pf_assumed ($2, $4)) }
@@ -779,7 +775,7 @@ proof_node:
 ;
 
 proof_node_qed:
-  | opt_doc PROOF_LABEL QED proof_development
+  | opt_doc PROOF_LABEL QED proof
     { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
   | opt_doc PROOF_LABEL opt_doc CONCLUDE
     { mk_doc $1 (PN_qed (mk_proof_label $2, mk_doc $3 (Pf_auto []))) }
