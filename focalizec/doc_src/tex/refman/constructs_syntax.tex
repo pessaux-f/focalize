@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.39 2009-03-13 13:58:25 doligez Exp $
+% $Id: constructs_syntax.tex,v 1.40 2009-03-13 16:10:43 doligez Exp $
 
 
 \section{Language constructs and syntax}
@@ -50,15 +50,15 @@ Type definitions require {\bf type expressions} to build more complex
 data-types.
 \vspace{0.2cm}
 \begin{syn}
-\nt{type\_expr} \is
-     \nt{lowercase\_ident}
-\alt \nt{uppercase\_ident}
-\alt \tok{'}\nt{lowercase\_ident}
-\alt \nt{uppercase\_ident} \tok{(} \repsep{\nt{type\_expr}}{\tok{,}} \tok{)}
-\alt \nt{type\_expr} \tok{->} \nt{type\_expr}
-\alt \tok{(} \repsep{\nt{type\_expr}}{\tok{*}} \tok{)}
+\nt{type\_exp} \is
+     \nt{lident}
+\alt \nt{uident}
 \alt \tok{Self}
-\alt \tok{(} \nt{type\_expr} \tok{)}
+\alt \tok{'}\nt{lident}
+\alt \nt{uident} \tok{(} \repsep{\nt{type\_exp}}{\tok{,}} \tok{)}
+\alt \nt{type\_exp} \tok{->} \nt{type\_exp}
+\alt \tok{(} \repsep{\nt{type\_exp}}{\tok{*}} \tok{)}
+\alt \tok{(} \nt{type\_exp} \tok{)}
 \end{syn}
 %\begin{syntax}
 %\syntaxclass{Type expressions:}
@@ -144,11 +144,14 @@ type date = alias (int * int * int * int * int) ;;
 }
 
 \vspace{0.2cm}
-\begin{syntax}
-\syntaxclass{Alias type definitions:}
-alias\_type\_def & ::= & \terminal{type}\ ident\ \terminal{=}
-   \ \terminal{alias}\ \tau
-\end{syntax}
+\begin{syn}
+\nt{alias\_type\_def} \is \tok{type} \nt{ident} \tok{=~alias} \nt{type\_exp}
+\end{syn}
+% \begin{syntax}
+% \syntaxclass{Alias type definitions:}
+% alias\_type\_def & ::= & \terminal{type}\ ident\ \terminal{=}
+%    \ \terminal{alias}\ \tau
+% \end{syntax}
 \vspace{0.2cm}
 
 In the remaining of the development, the type names
@@ -195,7 +198,7 @@ Sum types provide the way to create new {\bf values} that
 called  {\tt color}. The {\bf only}  means that the created type {\tt color}
 is inhabited only by these 3 values. To define
 such a type, we itemize its value names (that are always capitalized
-identifiers) by  preceeding them by a ``$\mid$'' character :
+identifiers) by  preceeding them by a \terminal{\vertical} character :
 
 {\scriptsize
 \begin{lstlisting}
@@ -206,9 +209,9 @@ type color =
 ;;
 \end{lstlisting}
 }
-Note that the first ``$\mid$'' character is required: it is not a
+Note that the first \terminal{\vertical} character is required: it is not a
 separator. This especially means that when writing a sum type
-definition on a single line, the first ``$\mid$'' must be written:
+definition on a single line, the first \terminal{\vertical} must be written:
 {\scriptsize
 \begin{lstlisting}
 type color = | Red | Blue | Green ;;
@@ -267,17 +270,31 @@ elements are {\tt (false, 2)} followed by {\tt (true, 1)}.
 
 
 \vspace{0.2cm}
-\begin{syntax}
-\syntaxclass{Sum types definitions:}
-opt\_params & ::= & \epsilon
-    \mid \terminal{(}\ \terminal{'}ident \{\terminal{,} \terminal{'}ident \}*
-    \terminal{)} & \\
-opt\_args & ::= & \epsilon
-    \mid \terminal{(}\ \tau\ \{\terminal{,} \tau \}* \terminal{)} & \\
-constructor & ::= & \terminal{\mid}\ uident\ opt\_args & \\
-sum\_type\_def & ::= &
-    \terminal{type}\ ident\ opt\_params\  \terminal{=} \  constructor+
-\end{syntax}
+\begin{syn}
+\nt{type\_params} \is
+  \tok{(} \repsep{\tok{'} \nt{lident}}{\tok{,}} \tok{)}
+\sep
+\nt{type\_args} \is
+  \tok{(} \repsep{\nt{type\_exp}}{\tok{,}} \tok{)}
+\sep
+\nt{constructor} \is
+  \tok{\vertical} \nt{uident} \opt{\nt{type\_args}}
+\sep
+\nt{sum\_type\_def} \is
+  \tok{type} \nt{lident} \opt{\nt{type\_params}} \tok{=}
+  \reps{\nt{constructor}}
+\end{syn}
+% \begin{syntax}
+% \syntaxclass{Sum types definitions:}
+% opt\_params & ::= & \epsilon
+%     \mid \terminal{(}\ \terminal{'}ident \{\terminal{,} \terminal{'}ident \}*
+%     \terminal{)} & \\
+% opt\_args & ::= & \epsilon
+%     \mid \terminal{(}\ \tau\ \{\terminal{,} \tau \}* \terminal{)} & \\
+% constructor & ::= & \terminal{\mid}\ uident\ opt\_args & \\
+% sum\_type\_def & ::= &
+%     \terminal{type}\ ident\ opt\_params\  \terminal{=} \  constructor+
+% \end{syntax}
 \vspace{0.2cm}
 
 
@@ -310,16 +327,25 @@ type identity = {
 }
 
 \vspace{0.2cm}
-\begin{syntax}
-\syntaxclass{Record types definitions:}
-field & ::= & ident\ \terminal{:}\ \tau\ \terminal{;} & \\
-opt\_params & ::= & \epsilon
-    \mid \terminal{(}\ \terminal{'}ident \{\terminal{,} \terminal{'}ident \}*
-    \terminal{)} & \\
-record\_type\_def & ::= &
-    \terminal{type}\ ident\ opt\_params\  \terminal{=}
-    \ \terminal{\{} field+ \terminal{\}}
-\end{syntax}
+\begin{syn}
+\nt{field} \is
+  \nt{lident} \tok{=} \nt{type\_exp} \tok{;}
+\sep
+\nt{record\_type\_def} \is
+  \tok{type} \nt{lident} \nt{type\_params} \tok{=}
+  \tok{\{} \reps{\nt{field}} \tok{\}}
+\end{syn}
+
+% \begin{syntax}
+% \syntaxclass{Record types definitions:}
+% field & ::= & ident\ \terminal{:}\ \tau\ \terminal{;} & \\
+% opt\_params & ::= & \epsilon
+%     \mid \terminal{(}\ \terminal{'}ident \{\terminal{,} \terminal{'}ident \}*
+%     \terminal{)} & \\
+% record\_type\_def & ::= &
+%     \terminal{type}\ ident\ opt\_params\  \terminal{=}
+%     \ \terminal{\{} field+ \terminal{\}}
+% \end{syntax}
 \vspace{0.2cm}
 
 To create a {\bf value} of a record type, a value of the related
@@ -465,12 +491,16 @@ Recall that the type introduced by the method {\tt representation} is
 denoted by {\tt Self} within the species.
 
 \vspace{0.2cm}
-\begin{syntax}
-\syntaxclass{Representation:}
-representation & ::= &
-    \terminal{representation}\ \terminal{=}
-    \ \tau
-\end{syntax}
+\begin{syn}
+\nt{representation} \is \tok{representation~=} \nt{type\_exp}
+\end{syn}
+
+% \begin{syntax}
+% \syntaxclass{Representation:}
+% representation & ::= &
+%     \terminal{representation}\ \terminal{=}
+%     \ \tau
+% \end{syntax}
 \vspace{0.2cm}
 
 
@@ -486,96 +516,161 @@ in the \ref{making-proofs}. Indeed proofs are not expressions, they do
 not lead to \focal\ values thus live at another level.
 
 \vspace{0.2cm}
-\begin{syntax}
-\syntaxclass{Expressions:}
-exp & ::= & integer\_literal & \\
-    & \mid & string\_literal & \\
-    & \mid & character\_literal & \\
-    & \mid & float\_literal & \\
-    & \mid & {\tt true}\ \mid\ {\tt false} & Boolean constant \\
-    & \mid & \{ident? \terminal{\#}\}?uident & sum type value constructor \\
-    &      &                          & or species/collection identifier \\
-    & \mid & \terminal{Self}? \terminal{!} uident &
-                       Method of the current species \\
-    & \mid & \{ident? \terminal{\#}\}? \{uident \terminal{!}\}? lident &
-               Method from specified species/collection \\
-    & \mid & \{ident? \terminal{\#}\}? \{uident \terminal{!}\}?
-               \terminal{(} operator \terminal{)} & Infix or prefix
-            operator used in functional position \\
-    & \mid & \terminal{let}\ \terminal{rec}?\ let\_binding
-               \ \{\terminal{and}\ let\_binding \}* &  Let bound definition \\
-    &      & \ \ \ \terminal{in}\ exp & \\
-    & \mid & \terminal{if}\ exp\ \terminal{then}\ exp
-                 \ \terminal{else}\ exp & Conditional \\
-    & \mid & \terminal{match}\ exp\ \terminal{with}\ match\_binding+ &
-                     Pattern matching \\
-    & \mid & exp\ \terminal{(} exp \{\ \terminal{,} exp\ \}* \terminal{)} &
-                     Function application \\
-    & \mid & unary\_operator\ exp & Application of unary operator \\
-    & \mid & exp\ binary\_operator\ exp & Application of binary operator \\
-    & \mid & \terminal{\{}\ record\_field\_value & Record value \\
-    &      &     \hspace{0.6cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
-                \ \terminal{\}} & \\
-    & \mid & \terminal{\{}\ exp\ \terminal{with}\ record\_field\_value &
-                  Record value clone \\
-    &      &      \hspace{1.0cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
-                  \ \terminal{\}} & \\
-    & \mid & expr\ \terminal{.}\{ident\terminal{\#}\}?lident &
-                 Record field access \\
-    & \mid & \terminal{(} exp \terminal{)} & Parenthesised expression
-\end{syntax}
+\begin{syn}
+\nt{qualified\_uident} \is
+  \opt{\opt{\nt{ident}} \tok{\#}} \nt{uident}
+\sep
+\nt{qualified\_lident} \is
+  \opt{\opt{\nt{ident}} \tok{\#}} \nt{lident}
+\sep
+\nt{lident\_or\_operator} \is
+  \nt{lident} \orelse \tok{(} \nt{operator} \tok{)}
+\sep
+\nt{method\_ident} \is
+     \opt{\tok{Self}} \tok{!} \nt{lident\_or\_operator}
+\alt \opt{\nt{lident} \tok{\#}} \nt{uident} \tok{!} \nt{lident\_or\_operator}
+\sep
+\nt{exp} \is
+     \nt{integer\_literal}
+\alt \nt{string\_literal}
+\alt \nt{character\_literal}
+\alt \nt{float\_literal}
+\alt \tok{true} \orelse \tok{false}
+\alt \nt{qualified\_uident}
+\alt \nt{method\_ident}
+\alt \tok{let~rec} \repsep{\nt{let\_binding}}{\tok{and}}
+     \tok{in} \nt{exp}
+\alt \tok{if} \nt{exp} \tok{then} \nt{exp} \tok{else} \nt{exp}
+\alt \tok{match} \nt{exp} \tok{with} \reps{\nt{match\_binding}}
+\alt \nt{exp} \tok{(} \repsep{\nt{exp}}{\tok{,}} \tok{)}
+\alt \nt{prefix\_op} \nt{exp}
+\alt \nt{exp} \nt{infix\_op} \nt{exp}
+\alt \tok{\{} \repsep{\nt{record\_field\_value}}{\tok{;}} \tok{\}}
+\alt \tok{\{} \nt{exp} \tok{with}
+              \repsep{\nt{record\_field\_value}}{\tok{;}} \tok{\}}
+\alt \nt{exp} \tok{.} \nt{qualified\_lident}
+\alt \tok{(} \nt{exp} \tok{)}
+\sep
+\nt{record\_field\_value} \is
+  \nt{qualified\_lident} \tok{=} \nt{exp}
+\sep
+\nt{let\_binding} \is
+     \nt{lident} \opt{\tok{in} \nt{type\_exp}} \tok{=} \nt{exp}
+\alt \nt{lident} \tok{(}
+                 \repsep{\nt{lident} \tok{in} \nt{type\_exp}}{\tok{,}}
+                 \tok{)}
+     \tok{=} \nt{exp}
+\sep
+\nt{match\_binding} \is \tok{\vertical} \nt{pattern} \tok{->} \nt{exp}
+\sep
+\nt{pattern} \is
+     \nt{integer\_literal}
+\alt \nt{string\_literal}
+\alt \nt{character\_literal}
+\alt \nt{float\_literal}
+\alt \tok{true} \orelse \tok{false}
+\alt \nt{lident}
+\alt \nt{qualified\_uident}
+     \opt{\tok{(} \repsep{\nt{pattern}}{\tok{,}} \tok{)}}
+\alt \tok{\_}
+\alt \tok{\{} \repsep{\nt{record\_field\_pattern}}{\tok{;}} \tok{\}}
+\alt \tok{(} \repsep{\nt{pattern}}{\tok{,}} \tok{)}
+\alt \tok{(} \nt{pattern} \tok{)}
+\sep
+\nt{record\_field\_pattern} \is
+  \nt{qualified\_lident} \tok{=} \nt{lident}
+\end{syn}
 
-\begin{syntax}
-\syntaxclass{Record field value:}
-record\_field\_value & ::= &
-     \{ident? \terminal{\#}\}? lident\ \terminal{=}\ exp &
-\end{syntax}
+% \begin{syntax}
+% \syntaxclass{Expressions:}
+% exp & ::= & integer\_literal & \\
+%     & \mid & string\_literal & \\
+%     & \mid & character\_literal & \\
+%     & \mid & float\_literal & \\
+%     & \mid & {\tt true}\ \mid\ {\tt false} & Boolean constant \\
+%     & \mid & \{ident? \terminal{\#}\}?uident & sum type value constructor \\
+%     &      &                          & or species/collection identifier \\
+%     & \mid & \terminal{Self}? \terminal{!} uident &
+%                        Method of the current species \\
+%     & \mid & \{ident? \terminal{\#}\}? \{uident \terminal{!}\}? lident &
+%                Method from specified species/collection \\
+%     & \mid & \{ident? \terminal{\#}\}? \{uident \terminal{!}\}?
+%                \terminal{(} operator \terminal{)} & Infix or prefix
+%             operator used in functional position \\
+%     & \mid & \terminal{let}\ \terminal{rec}?\ let\_binding
+%                \ \{\terminal{and}\ let\_binding \}* &  Let bound definition \\
+%     &      & \ \ \ \terminal{in}\ exp & \\
+%     & \mid & \terminal{if}\ exp\ \terminal{then}\ exp
+%                  \ \terminal{else}\ exp & Conditional \\
+%     & \mid & \terminal{match}\ exp\ \terminal{with}\ match\_binding+ &
+%                      Pattern matching \\
+%     & \mid & exp\ \terminal{(} exp \{\ \terminal{,} exp\ \}* \terminal{)} &
+%                      Function application \\
+%     & \mid & unary\_operator\ exp & Application of unary operator \\
+%     & \mid & exp\ binary\_operator\ exp & Application of binary operator \\
+%     & \mid & \terminal{\{}\ record\_field\_value & Record value \\
+%     &      &     \hspace{0.6cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
+%                 \ \terminal{\}} & \\
+%     & \mid & \terminal{\{}\ exp\ \terminal{with}\ record\_field\_value &
+%                   Record value clone \\
+%     &      &      \hspace{1.0cm}  \{\ \terminal{;}\ record\_field\_value\ \}+
+%                   \ \terminal{\}} & \\
+%     & \mid & expr\ \terminal{.}\{ident\terminal{\#}\}?lident &
+%                  Record field access \\
+%     & \mid & \terminal{(} exp \terminal{)} & Parenthesised expression
+% \end{syntax}
 
-\begin{syntax}
-\syntaxclass{Let bindings:}
-let\_binding & ::= & lident\ \{\terminal{in}\ type\_expression\}?
-           \ \terminal{=}\ exp & Definition without parameter \\
-   & \mid & lident\
-                \terminal{(}lident\ \{\terminal{in}\ type\_expression\}? &
-                 Definition with parameter(s) \\
-   &     &      \hspace{1.3cm} \{\ \terminal{,}\ lident
-                  \ \{\terminal{in}\ type\_expression\}?\}* \terminal{)} & \\
-   &     &    \ \ \ \ \{\terminal{in}\ type\_expression\}?\ \terminal{=}\ exp &
-\end{syntax}
+% \begin{syntax}
+% \syntaxclass{Record field value:}
+% record\_field\_value & ::= &
+%      \{ident? \terminal{\#}\}? lident\ \terminal{=}\ exp &
+% \end{syntax}
 
-\begin{syntax}
-\syntaxclass{Match bindings:}
- match\_binding & ::= &
-   \terminal{\mid}\ pattern\ \terminal{-}\/\terminal{>}\ exp &
-\end{syntax}
+% \begin{syntax}
+% \syntaxclass{Let bindings:}
+% let\_binding & ::= & lident\ \{\terminal{in}\ type\_expression\}?
+%            \ \terminal{=}\ exp & Definition without parameter \\
+%    & \mid & lident\
+%                 \terminal{(}lident\ \{\terminal{in}\ type\_expression\}? &
+%                  Definition with parameter(s) \\
+%    &     &      \hspace{1.3cm} \{\ \terminal{,}\ lident
+%                   \ \{\terminal{in}\ type\_expression\}?\}* \terminal{)} & \\
+%    &     &    \ \ \ \ \{\terminal{in}\ type\_expression\}?\ \terminal{=}\ exp &
+% \end{syntax}
 
-\begin{syntax}
-\syntaxclass{Patterns:}
-pattern & ::= & integer\_literal & \\
-    & \mid & string\_literal & \\
-    & \mid & character\_literal & \\
-    & \mid & float\_literal & \\
-    & \mid & {\tt true}\ \mid\ {\tt false} & Boolean constant \\
-    & \mid & lident & Variable \\
-    & \mid & \{ident? \terminal{\#}\}?uident & 0-ary sum type value constructor\\
-    & \mid  & \{ident? \terminal{\#}\}?uident
-               \ \terminal{(}\ pattern\ \{\terminal{,}\ pattern\}*\terminal{)}&
-               N-ary sum type constructor \\
-    & \mid & \_ & ``Catch-all'' pattern \\
-    & \mid & \terminal{\{}
-               record\_field\_pattern\
-               \{ \terminal{;}\ record\_field\_pattern \}*
-                 \terminal{\}} & Record \\
-    & \mid & \terminal{(} pattern\ \{ \terminal{,}\ pattern\}+
-                  \terminal{)} & Tuple \\
-    & \mid & \terminal{(} pattern \terminal{)} & Parenthesised pattern
-\end{syntax}
+% \begin{syntax}
+% \syntaxclass{Match bindings:}
+%  match\_binding & ::= &
+%    \terminal{\mid}\ pattern\ \terminal{-}\/\terminal{>}\ exp &
+% \end{syntax}
 
-\begin{syntax}
-\syntaxclass{Record field pattern:}
-record\_field\_pattern & ::= &
-     \{ident? \terminal{\#}\}? lident\ \terminal{=}\ lident &
-\end{syntax}
+% \begin{syntax}
+% \syntaxclass{Patterns:}
+% pattern & ::= & integer\_literal & \\
+%     & \mid & string\_literal & \\
+%     & \mid & character\_literal & \\
+%     & \mid & float\_literal & \\
+%     & \mid & {\tt true}\ \mid\ {\tt false} & Boolean constant \\
+%     & \mid & lident & Variable \\
+%     & \mid & \{ident? \terminal{\#}\}?uident & 0-ary sum type value constructor\\
+%     & \mid  & \{ident? \terminal{\#}\}?uident
+%                \ \terminal{(}\ pattern\ \{\terminal{,}\ pattern\}*\terminal{)}&
+%                N-ary sum type constructor \\
+%     & \mid & \_ & ``Catch-all'' pattern \\
+%     & \mid & \terminal{\{}
+%                record\_field\_pattern\
+%                \{ \terminal{;}\ record\_field\_pattern \}*
+%                  \terminal{\}} & Record \\
+%     & \mid & \terminal{(} pattern\ \{ \terminal{,}\ pattern\}+
+%                   \terminal{)} & Tuple \\
+%     & \mid & \terminal{(} pattern \terminal{)} & Parenthesised pattern
+% \end{syntax}
+
+% \begin{syntax}
+% \syntaxclass{Record field pattern:}
+% record\_field\_pattern & ::= &
+%      \{ident? \terminal{\#}\}? lident\ \terminal{=}\ lident &
+% \end{syntax}
 \vspace{0.2cm}
 
 
@@ -1137,7 +1232,7 @@ the string ``zero''. When {\tt a + 5} is equal to $1$, the result is the string
 ``one'', and so on. The final pattern {\tt \_} stands for ``anything
 that was not in the previous cases'' (also called ``catch-all
 pattern''). Hence, the order of the patterns is important. If the
-case {\tt $\mid$ \_ ->} was put before the case {\tt $\mid$ 1 ->},
+case {\tt \vertical \_ ->} was put before the case {\tt \vertical 1 ->},
 then this last case would never be reached since the {\tt \_} pattern
 would have caught the discriminated value.
 
@@ -1597,31 +1692,46 @@ proofs.
 \label{logical-expressions}
 \index{expression!logical}
 Logical expressions are those used to write first order logic
-formulaes.
-\begin{syntax}
-\syntaxclass{Logical expressions:}
-logical\_expr & := & \terminal{all}\ lident\ [,lident]*
-          \ \terminal{in} \ type\_expr & Universal quantification \\
-              & \mid & \terminal{ex}\ lident\ [,lident]*
-          \ \terminal{in} \ type\_expr & Existential quantification \\
-              & \mid & logical\_expr\ \terminal{-}\/\terminal{>}
-                   \ logical\_expr & Implication \\
-              & \mid & logical\_expr\ \terminal{<}\/\terminal{-}\/\terminal{>}
-                   \ logical\_expr & Equivalence \\
-              & \mid & logical\_expr\ \terminal{/\setminus} \ logical\_expr &
-                              Conjunction \\
-              & \mid & logical\_expr\ \terminal{\setminus/} \ logical\_expr &
-                              Disjunction \\
-              & \mid & \terminal{\sim}\ logical\_expr & Negation \\
-              & \mid & expr & Arbitrary \focal\ expression (atom) \\
-              & \mid & \terminal{(} logical\_expr \terminal{)} &
-                              Parenthesised logical expression
-\end{syntax}
+formulas.
+\begin{syn}
+\nt{logical\_exp} \is
+     \tok{all} \repsep{\nt{lident}}{\tok{,}} \tok{in} \nt{type\_exp}
+     \tok{,} \nt{logical\_exp}
+\alt \tok{ex} \repsep{\nt{lident}}{\tok{,}} \tok{in} \nt{type\_exp}
+     \tok{,} \nt{logical\_exp}
+\alt \nt{logical\_exp} \tok{->} \nt{logical\_exp}
+\alt \nt{logical\_exp} \tok{<->} \nt{logical\_exp}
+\alt \nt{logical\_exp} \tok{/\backslash} \nt{logical\_exp}
+\alt \nt{logical\_exp} \tok{\backslash/} \nt{logical\_exp}
+\alt \tok{\tilde} \nt{logical\_exp}
+\alt \nt{exp}
+\alt \tok{(} \nt{logical\_exp} \tok{)}
+\end{syn}
+
+% \begin{syntax}
+% \syntaxclass{Logical expressions:}
+% logical\_expr & := & \terminal{all}\ lident\ [,lident]*
+%           \ \terminal{in} \ type\_expr & Universal quantification \\
+%               & \mid & \terminal{ex}\ lident\ [,lident]*
+%           \ \terminal{in} \ type\_expr & Existential quantification \\
+%               & \mid & logical\_expr\ \terminal{-}\/\terminal{>}
+%                    \ logical\_expr & Implication \\
+%               & \mid & logical\_expr\ \terminal{<}\/\terminal{-}\/\terminal{>}
+%                    \ logical\_expr & Equivalence \\
+%               & \mid & logical\_expr\ \terminal{/\setminus} \ logical\_expr &
+%                               Conjunction \\
+%               & \mid & logical\_expr\ \terminal{\setminus/} \ logical\_expr &
+%                               Disjunction \\
+%               & \mid & \terminal{\sim}\ logical\_expr & Negation \\
+%               & \mid & expr & Arbitrary \focal\ expression (atom) \\
+%               & \mid & \terminal{(} logical\_expr \terminal{)} &
+%                               Parenthesised logical expression
+% \end{syntax}
 
  Logical expressions contain the usual logical connectors ``imply''
 ($\Rightarrow$), ``and'' ($\wedge$), ``or'' ($\vee$), ``there exists''
 ($\exists$), ``for all'' ($\forall$), ``is equivalent''
-($\Leftrightarrow$) and ``not'' ($\sim$). Moreover, logical
+($\Leftrightarrow$) and ``not'' ($\neg$). Moreover, logical
 expressions embed the \focal\ expressions used in computational
 methods (i.e. identifiers, conditionals, application, \ldots). This
 allows to have connected propositions using the previously defined
@@ -1653,10 +1763,15 @@ A property is  a logical expression bound to an identifier. Its
 form is the name of the property, a colon character (``:'') and the
 logical expression being its statement. See the example given in
 \ref{logical-expressions}.
-\begin{syntax}
-\syntaxclass{Properties:}
-property & ::= & \terminal{property}\ lident\ \terminal{:}\ logical\_expr
-\end{syntax}
+\begin{syn}
+\nt{property} \is
+  \tok{property} \nt{lident} \tok{:} \nt{logical\_exp}
+\end{syn}
+
+% \begin{syntax}
+% \syntaxclass{Properties:}
+% property & ::= & \terminal{property}\ lident\ \terminal{:}\ logical\_expr
+% \end{syntax}
 
 
 
@@ -1837,11 +1952,17 @@ contains both the statement and the proof inside the same
 construct. The theorem is introduced by the keyword {\tt theorem} and
 the proof by the keyword {\tt proof} followed by a colon character
 (``:'').
-\begin{syntax}
-\syntaxclass{Theorems:}
-theorem & ::= & \terminal{theorem}\ lident\ \terminal{:}\ logical\_expr
-                \ \terminal{proof =}\ proof
-\end{syntax}
+\begin{syn}
+\nt{theorem} \is
+  \tok{theorem} \nt{lident} \tok{:} \nt{logical\_exp}
+  \tok{proof~=} \nt{proof}
+\end{syn}
+
+% \begin{syntax}
+% \syntaxclass{Theorems:}
+% theorem & ::= & \terminal{theorem}\ lident\ \terminal{:}\ logical\_expr
+%                 \ \terminal{proof =}\ proof
+% \end{syntax}
 
 \noindent For instance:
 {\scriptsize

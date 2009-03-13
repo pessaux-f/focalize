@@ -10,16 +10,19 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.20 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.21 2009-03-13 16:10:43 doligez Exp $
 
 ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-TEX_FILES = macros.tex basic_concepts.tex lexical_conventions.tex motivations.tex\
+TEX_FILES = macros.tex syntaxdef.sty \
+  basic_concepts.tex lexical_conventions.tex motivations.tex\
   proofs.tex building_species.tex macros.tex output.tex refman.tex\
   compiler_opts.tex more_on_meths.tex pres_requir.tex\
   constructs_syntax.tex bibli.bib
+
+HVA_FILES = macros.hva syntaxdef.hva refman.hva
 
 DOC_OBJS = refman.dvi refman.ps refman.pdf\
   refman.html # Not so great but yet...
@@ -49,8 +52,8 @@ refman.dvi: $(TEX_FILES)
 refman.pdf: refman.dvi
 	dvipdf refman.dvi
 
-refman.html: refman.dvi
-	$(HEVEA) -fix macros.hva refman.hva refman.tex
+refman.html: refman.dvi ${HVA_FILES}
+	$(HEVEA) -fix ${HVA_FILES} refman.tex
 
 refman.ps: refman.dvi
 	dvips refman.dvi

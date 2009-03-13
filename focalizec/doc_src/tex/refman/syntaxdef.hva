@@ -83,13 +83,13 @@
 %%%Link for non-terminal and format
 \def\nt#1{\addspace\nonterm{\@anchor{#1}}\spacetrue}
 \def\brepet{\addspace\{}
-\def\erepet{\}}
+\def\erepet{\}^*}
 \def\boption{\addspace[}
 \def\eoption{]}
 \def\brepets{\addspace\{}
 \def\erepets{\}^+}
 \def\brepetsep{\addspace\{}
-\def\erepetsep#1{\}{\spacefalse#1}^+}
+\def\erepetsep#1{(\spacefalse#1)\}^+}
 \def\bparen{\addspace(}
 \def\eparen{)}
 \def\orelse{\mid \spacefalse}

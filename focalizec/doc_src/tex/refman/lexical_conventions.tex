@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.16 2009-03-13 16:10:43 doligez Exp $
+% $Id: lexical_conventions.tex,v 1.17 2009-03-13 16:11:17 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -231,7 +231,7 @@ and labels of records.
 \sep
 \nt{letter} \is \nt{lower} \orelse \nt{upper}
 \sep
-\nt{lident} \is \paren{ \nt{lower} \orelse \tok{\_} }
+\nt{lident} \is \paren{ \nt{lower} \orelse \tok{\backslash} }
                 \rep{ \nt{letter} \orelse \nt{digit} \orelse \tok{\_} }
 \sep
 \nt{uident} \is \nt{upper}

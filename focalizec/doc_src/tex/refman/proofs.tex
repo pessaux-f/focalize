@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.16 2009-03-13 13:58:25 doligez Exp $
+% $Id: proofs.tex,v 1.17 2009-03-13 16:10:43 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of  theorems}
@@ -114,7 +114,7 @@ the word \terminal{conclude} when its proof is reduced to
 \begin{syn}
 \nt{statement} \is
      \rep{\tok{assume} \nt{assumption} \tok{,}}
-     \opt{\tok{prove} \nt{logical\_expr}}
+     \opt{\tok{prove} \nt{logical\_exp}}
 \end{syn}
 
 %\begin{syntax}
@@ -128,15 +128,15 @@ A statement must be non-empty: at least one \terminal{assume} or the
 A statement appearing in a step has two readings: internal and
 external.  The external reading is for the rest of the
 proof: the current step proves that the assumptions imply the
-conclusion (i.e. the {\em logical\_expr} that appears after
+conclusion (i.e. the {\em logical\_exp} that appears after
 \terminal{prove}).  The internal reading is for the proof of the step:
 the current goal is the \terminal{prove} expression, and the
 assumptions are available as facts.
 
 \begin{syn}
 \nt{assumption} \is
-    \nt{ident} \tok{in} \nt{type\_expr}
-\alt\nt{ident} \tok{ :} \nt{logical\_expr}
+    \nt{ident} \tok{in} \nt{type\_exp}
+\alt\nt{ident} \tok{ :} \nt{logical\_exp}
 \end{syn}
 
 %\begin{syntax}

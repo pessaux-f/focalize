@@ -19,11 +19,16 @@
 \def\emacs{{\sf emacs}}
 \def\cygwin{{\sf Cygwin}}
 \def\xsltproc{{\sf xsltproc}}
-\def\terminal#1{{\bf {\color{red}#1}}}
+\def\terminal#1{\mbox{\tt\color{red}#1}}
 \def\foc{{\sf Foc}}
 \def\oldfocal{{\sf Focal}}
 \def\focalize{{\sf FoCaLize}}
 \def\focalizec{{\sf focalizec}}
+
+\def\backslash{{\char92}}
+\def\chapeau{{\char94}}
+\def\vertical{{\char124}}
+\def\tilde{{\char126}}
 
 %% Pour afficher les listings de manière plus sexy... ;)
 \lstdefinelanguage{FoCaLize}
@@ -57,48 +62,48 @@
 % Use \begin{syntaxleft} ... \end{syntaxleft} to insert the title
 % lines to the left of the definitions.
 
-\def\syntax{
-\par\medskip\goodbreak\noindent
-\bgroup
-\let\\=\cr
-\interlinepenalty=50            % discourage page breaks in a definition
-\global\let\syntaxclass=\firstsyntaxclass
-\if@twocolumn
-\halign\bgroup~~$##$&\hfil${}##{}$&$##$~\hfil&##\hfil\cr
-\else
-\halign\bgroup\qquad\qquad$##$&\hfil${}##{}$&$##$\quad\hfil&##\hfil\cr
-\fi
-}
-\def\endsyntax{\cr\egroup\egroup\par\medskip\noindent\ignorespaces}
+% \def\syntax{
+% \par\medskip\goodbreak\noindent
+% \bgroup
+% \let\\=\cr
+% \interlinepenalty=50            % discourage page breaks in a definition
+% \global\let\syntaxclass=\firstsyntaxclass
+% \if@twocolumn
+% \halign\bgroup~~$##$&\hfil${}##{}$&$##$~\hfil&##\hfil\cr
+% \else
+% \halign\bgroup\qquad\qquad$##$&\hfil${}##{}$&$##$\quad\hfil&##\hfil\cr
+% \fi
+% }
+% \def\endsyntax{\cr\egroup\egroup\par\medskip\noindent\ignorespaces}
 
-\def\firstsyntaxclass#1{
-\omit\hbox to 0pt{#1\hss}\cr
-\global\let\syntaxclass=\nextsyntaxclass
-}
+% \def\firstsyntaxclass#1{
+% \omit\hbox to 0pt{#1\hss}\cr
+% \global\let\syntaxclass=\nextsyntaxclass
+% }
 
-\def\nextsyntaxclass#1{
-\cr\noalign{\smallskip\penalty-100}\omit\hbox to 0pt{#1\hss}\cr
-}
+% \def\nextsyntaxclass#1{
+% \cr\noalign{\smallskip\penalty-100}\omit\hbox to 0pt{#1\hss}\cr
+% }
 
-\def\syntaxleft{
-\par\medskip\goodbreak\noindent
-\bgroup
-\let\\=\cr
-\interlinepenalty=50            % discourage page breaks in a definition
-\global\let\syntaxclass=\firstsyntaxclassleft
-\if@twocolumn
-\halign\bgroup\hfil$##$&\hfil${}##{}$&$##$~\hfil&##\hfil\cr
-\else
-\halign\bgroup\hfil$##$&\hfil${}##{}$&$##$\quad\hfil&##\hfil\cr
-\fi
-}
-\let\endsyntaxleft=\endsyntax
+% \def\syntaxleft{
+% \par\medskip\goodbreak\noindent
+% \bgroup
+% \let\\=\cr
+% \interlinepenalty=50            % discourage page breaks in a definition
+% \global\let\syntaxclass=\firstsyntaxclassleft
+% \if@twocolumn
+% \halign\bgroup\hfil$##$&\hfil${}##{}$&$##$~\hfil&##\hfil\cr
+% \else
+% \halign\bgroup\hfil$##$&\hfil${}##{}$&$##$\quad\hfil&##\hfil\cr
+% \fi
+% }
+% \let\endsyntaxleft=\endsyntax
 
-\def\firstsyntaxclassleft#1{
-$\hfilneg#1\quad\hfil$
-\global\let\syntaxclass=\nextsyntaxclassleft
-}
+% \def\firstsyntaxclassleft#1{
+% $\hfilneg#1\quad\hfil$
+% \global\let\syntaxclass=\nextsyntaxclassleft
+% }
 
-\def\nextsyntaxclassleft#1{
-\cr\noalign{\smallskip\goodbreak}$\hfilneg#1\quad\hfil$
-}
+% \def\nextsyntaxclassleft#1{
+% \cr\noalign{\smallskip\goodbreak}$\hfilneg#1\quad\hfil$
+% }
