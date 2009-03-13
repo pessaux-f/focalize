@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.59 2009-03-02 10:19:31 weis Exp $ *)
+(* $Id: dep_analysis.ml,v 1.60 2009-03-13 07:52:05 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -26,6 +26,54 @@
     And in the condition for well-formation, <| must be subscripted by
     s and not a.                                                           *)
 (* *********************************************************************** *)
+
+
+(* For debugging purpose only.
+let debug_print_dependencies_from_parameters l =
+  List.iter
+    (fun (species_param, methods) ->
+      (match species_param with
+       | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _, _, _) ->
+           Format.eprintf "From IS-parameter '%s#%s', methods: "
+             mod_name spe_name ;
+       | Env.TypeInformation.SPAR_in (n, _, _) ->
+           Format.eprintf "From IN-parameter '%a', methods: "
+             Sourcify.pp_vname n) ;
+      Parsetree_utils.ParamDepSet.iter
+        (fun (n, k) -> Format.eprintf "\t%a: " Sourcify.pp_vname n ;
+          match k with
+           | Parsetree_utils.DETK_computational t ->
+               Format.eprintf "%a@." Types.pp_type_simple t
+           | Parsetree_utils.DETK_logical e ->
+               Format.eprintf "%a@." Sourcify.pp_logical_expr e)
+        methods ;
+      Format.eprintf "@.")
+    l
+;;
+
+let debug_print_dependencies_from_parameters2 l =
+  List.iter
+    (fun (species_param, (Env.ODFP_methods_list methods)) ->
+      (match species_param with
+       | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _, _, _) ->
+           Format.eprintf "From IS-parameter '%s#%s', methods: "
+             mod_name spe_name ;
+       | Env.TypeInformation.SPAR_in (n, _, _) ->
+           Format.eprintf "From IN-parameter '%a', methods: "
+             Sourcify.pp_vname n) ;
+      List.iter
+        (fun (n, k) ->
+          Format.eprintf "%a " Sourcify.pp_vname n ;
+          match k with
+           | Parsetree_utils.DETK_computational t ->
+               Format.eprintf "%a@." Types.pp_type_simple t
+           | Parsetree_utils.DETK_logical e ->
+               Format.eprintf "%a@." Sourcify.pp_logical_expr e)
+        methods ;
+      Format.eprintf "@.")
+    l
+;;
+*)
 
 
 

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.74 2009-03-02 10:19:30 weis Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.75 2009-03-13 07:52:05 pessaux Exp $ *)
 
 
 
@@ -1044,9 +1044,11 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
     to create a value of the type record, i.e. the one we found
     dependencies on in the body of the record type.
 
+    Used when generating the record type definition.
+
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
-let generate_record_type_parameters ctx env species_fields =
+let generate_record_type_parameters ctx env field_abstraction_infos =
   let ppf = ctx.Context.scc_out_fmter in
   let current_unit = ctx.Context.scc_current_unit in
   (* We first abstract the species/entity parameters carriers and entity
@@ -1080,7 +1082,7 @@ let generate_record_type_parameters ctx env species_fields =
   (* Now, we will find the methods of the parameters we decl-depend on in the
      Coq type expressions. Such dependencies can only appear through properties
      and theorems bodies. *)
-  let species_parameters_names = ctx.Context.scc_species_parameters_names in
+let species_parameters_names = ctx.Context.scc_species_parameters_names in
   let print_ctx = {
     Types.cpc_current_unit = ctx.Context.scc_current_unit ;
     Types.cpc_current_species =
@@ -1091,47 +1093,48 @@ let generate_record_type_parameters ctx env species_fields =
         ctx.Context.scc_collections_carrier_mapping } in
   (* We first build the lists of dependent methods for each property and
      theorem fields. *)
-  let deps_for_fields = ref [] in
+  let tmp_deps_for_fields =
+    Abstractions.make_empty_param_deps species_parameters_names in
+  let deps_for_fields =
+    List.map (fun (a, b) -> (a, ref b)) tmp_deps_for_fields in
   List.iter
     (function
-      | Env.TypeInformation.SF_sig (_, _, _)
-      | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _)
-      | Env.TypeInformation.SF_let_rec _ -> ()
-      | Env.TypeInformation.SF_theorem (_, _, _, logical_expr, _, _)
-      | Env.TypeInformation.SF_property (_, _, _, logical_expr, _) ->
-          (* Get the list of the methods from the species parameters the
-             current prop/theo depends on. *)
+      | Abstractions.FAI_sig ( _, _)
+      | Abstractions.FAI_let (_, _)
+      | Abstractions.FAI_let_rec _ -> ()
+      | Abstractions.FAI_theorem (_, ai)
+      | Abstractions.FAI_property (_, ai) ->
+          (* Recover the dependencies on parameters from the abstractions
+             but only taking care of dependencies induced by [TYPE] and
+             [COMPLETIONS]. *)
           List.iter
-            (fun species_param ->
+            (fun (species_param, (Env.ODFP_methods_list deps_on_meths)) ->
               match species_param with
                | Env.TypeInformation.SPAR_in (_, _, _) ->
                    ()   (* Skip to avoid double (c.f. comment above). *)
                | Env.TypeInformation.SPAR_is
-                   ((_, spe_param_name), _, spe_param_meths, _, _) ->
-                   let spe_param_name = Parsetree.Vuident spe_param_name in
-                   let meths_from_param =
-                     Param_dep_analysis.param_deps_logical_expr
-                       ~current_species: ctx.Context.scc_current_species
-                       (spe_param_name, spe_param_meths) logical_expr in
+                     ((_, spe_param_vname), _, _, _, _) ->
+                   let spe_param_name = Parsetree.Vuident spe_param_vname in
                    (* Merge the found dependencies by side effect. *)
                    try
                      let param_bucket =
                        Handy.list_assoc_custom_eq
                          (fun sp n ->
                            (Env.TypeInformation.vname_of_species_param sp) = n)
-                         spe_param_name !deps_for_fields in
+                         spe_param_name deps_for_fields in
+                     (* Make the union of all the elements of the list and
+                        the already found methods for this parameter. *)
                      param_bucket :=
-                       Parsetree_utils.ParamDepSet.union
-                         meths_from_param !param_bucket
-                   with Not_found ->
-                     deps_for_fields :=
-                       (species_param, ref meths_from_param) ::
-                       !deps_for_fields)
-            species_parameters_names)
-      species_fields ;
+                       List.fold_left
+                         (fun accu d ->
+                           Parsetree_utils.ParamDepSet.add d accu)
+                           !param_bucket deps_on_meths
+                   with Not_found -> assert false)
+            ai.Abstractions.ai_dependencies_from_params_for_record_type)
+    field_abstraction_infos ;
   (* Just remove the references inside the assoc list. *)
   let deps_for_fields_no_ref =
-    List.map (fun (a, b) -> (a, !b)) !deps_for_fields in
+    List.map (fun (a, b) -> (a, !b)) deps_for_fields in
   (* We now sort these methods according to the parameters' dependency graph. *)
   let ordered_deps_for_fields =
     Dep_analysis.order_species_params_methods deps_for_fields_no_ref in
@@ -1162,7 +1165,8 @@ let generate_record_type_parameters ctx env species_fields =
                Format.fprintf ppf "(%s : " llift_name ;
                generate_logical_expr ctx
                  ~in_recursive_let_section_of: [] ~local_idents: []
-                 ~self_methods_status: SMS_from_record env lexpr ;
+                 ~self_methods_status: (SMS_from_param species_param_name) env
+                 lexpr ;
                Format.fprintf ppf ")@ ")
         meths ;
       (* Just to avoid having the reference escaping... *)
@@ -1183,7 +1187,7 @@ let generate_record_type_parameters ctx env species_fields =
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let generate_record_type ctx env species_descr =
+let generate_record_type ctx env species_descr field_abstraction_infos =
   let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
     ctx.Context.scc_collections_carrier_mapping in
@@ -1204,7 +1208,7 @@ let generate_record_type ctx env species_descr =
   (* parameters and the methods from them we depend on ! *)
   let abstracted_params_methods_in_record_type =
     generate_record_type_parameters
-      ctx env species_descr.Env.TypeInformation.spe_sig_methods in
+      ctx env field_abstraction_infos in
   (* Print the type of the record and it's constructor. *)
   Format.fprintf out_fmter ": Type :=@ mk_record {@\n"  ;
   (* Always generate the "rep" coercion. *)

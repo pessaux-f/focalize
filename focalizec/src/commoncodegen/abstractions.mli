@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.24 2009-03-02 10:19:30 weis Exp $ *)
+(* $Id: abstractions.mli,v 1.25 2009-03-13 07:52:05 pessaux Exp $ *)
 
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
@@ -28,6 +28,8 @@ type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
   ai_dependencies_from_params :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
+  ai_dependencies_from_params_for_record_type :
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   ai_min_coq_env : MinEnv.min_coq_env_element list
 }
 
@@ -38,6 +40,10 @@ type field_abstraction_info =
   | FAI_theorem of (Env.TypeInformation.theorem_field_info * abstraction_info)
   | FAI_property of (Env.TypeInformation.property_field_info * abstraction_info)
 
+val make_empty_param_deps :
+    Env.TypeInformation.species_param list ->
+      (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list
+
 val compute_abstractions_for_fields :
   with_def_deps_n_term_pr : bool -> environment_kind ->
     Context.species_compil_context -> Env.TypeInformation.species_field list ->
@@ -45,12 +51,3 @@ val compute_abstractions_for_fields :
 
 val compute_abstractions_for_toplevel_theorem :
   Context.species_compil_context -> Parsetree.theorem_def -> abstraction_info
-
-(* For debugging purpose only.
-val debug_print_dependencies_from_parameters :
-  (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ->
-    unit
-val debug_print_dependencies_from_parameters2 :
-  (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ->
-    unit
-*)

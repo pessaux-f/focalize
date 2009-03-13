@@ -13,14 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.mli,v 1.8 2009-03-02 10:19:30 weis Exp $ *)
+(* $Id: minEnv.mli,v 1.9 2009-03-13 07:52:05 pessaux Exp $ *)
 
 type min_coq_env_element =
     MCEE_Declared_carrier
   | MCEE_Defined_carrier of Types.type_scheme
   | MCEE_Declared_computational of (Parsetree.vname * Types.type_scheme)
   | MCEE_Defined_computational of
-      (Env.from_history * Parsetree.vname * (Parsetree.vname list) *
+      (Env.from_history * bool * Parsetree.vname * (Parsetree.vname list) *
        Types.type_scheme * Parsetree.binding_body)
   | MCEE_Declared_logical of (Parsetree.vname * Parsetree.logical_expr)
   | MCEE_Defined_logical of

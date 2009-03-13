@@ -23,12 +23,12 @@ species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
   let head (l in Self) in A =
      match l with
      | [ ] -> A!element
-     | h :: _ -> h ;
+     | h :: _underscore -> h ;
 
   let tail (l in Self) in Self =
      match l with
      | [ ] -> vide
-     | _ :: t -> t ;
+     | _underscore:: t -> t ;
 
   let rec for_all (l, p) =
      match l with
@@ -42,7 +42,7 @@ species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
         | h :: t ->
             match t with
             | [ ] -> A!print (h) ^ "]"
-            | _ -> A!print (h) ^ ",\n                     " ^ aux (t)
+            | _underscore -> A!print (h) ^ ",\n                     " ^ aux (t)
      in "[" ^ aux (l) ;
 
   proof of equal_prop = assumed {* Because todo *} ;
@@ -400,24 +400,24 @@ species S_model_acl (Rh is Rho,
         (O!photos_de_vacances,
          S_s_m!create ([ C!create (S!mathieu, M!write) ])) ]) ;
 
-  let acl (ob) =
-     let rec aux_acl (l in S_c_o_s_s_m) in S_s_m =
-        if S_c_o_s_s_m!equal (l, S_c_o_s_s_m!vide)
-        then S_s_m!vide
-        else if O!equal (ob, C_o_s_s_m!first (S_c_o_s_s_m!head (l)))
-        then C_o_s_s_m!second (S_c_o_s_s_m!head (l))
-        else aux_acl (S_c_o_s_s_m!tail (l))
-     in aux_acl (liste_acl) ;
-
-(*   let rec aux_acl (l in S_c_o_s_s_m, ob) in S_s_m = *)
-(*      if S_c_o_s_s_m!equal (l, S_c_o_s_s_m!vide) *)
-(*      then S_s_m!vide *)
-(*      else if O!equal (ob, C_o_s_s_m!first (S_c_o_s_s_m!head (l))) *)
-(*      then C_o_s_s_m!second (S_c_o_s_s_m!head (l)) *)
-(*      else aux_acl (S_c_o_s_s_m!tail (l), ob) ; *)
-
 (*   let acl (ob) = *)
-(*      aux_acl (liste_acl, ob) ; *)
+(*      let rec aux_acl (l in S_c_o_s_s_m) in S_s_m = *)
+(*         if S_c_o_s_s_m!equal (l, S_c_o_s_s_m!vide) *)
+(*         then S_s_m!vide *)
+(*         else if O!equal (ob, C_o_s_s_m!first (S_c_o_s_s_m!head (l))) *)
+(*         then C_o_s_s_m!second (S_c_o_s_s_m!head (l)) *)
+(*         else aux_acl (S_c_o_s_s_m!tail (l)) *)
+(*      in aux_acl (liste_acl) ; *)
+
+  let rec aux_acl (l in S_c_o_s_s_m, ob) in S_s_m =
+     if S_c_o_s_s_m!equal (l, S_c_o_s_s_m!vide)
+     then S_s_m!vide
+     else if O!equal (ob, C_o_s_s_m!first (S_c_o_s_s_m!head (l)))
+     then C_o_s_s_m!second (S_c_o_s_s_m!head (l))
+     else aux_acl (S_c_o_s_s_m!tail (l), ob) ;
+
+  let acl (ob) =
+     aux_acl (liste_acl, ob) ;
 
   let equal (m1, m2) =
      S_a!equal (lambda (m1), lambda (m2)) ;
