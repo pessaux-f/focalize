@@ -1924,9 +1924,9 @@ last kind of proof, by <B><FONT COLOR="red">assumed</FONT></B> doesn&#X2019;t ne
 since it consists in bypassing the formal proof mechanism.</P><P>The syntax of proofs is as follows.
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="proof"><I><FONT COLOR=maroon>proof</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-{ <A HREF="#proof_step"><I><FONT COLOR=maroon>proof_step</FONT></I></A> }  <A HREF="#qed_step"><I><FONT COLOR=maroon>qed_step</FONT></I></A>
+{<A HREF="#proof_step"><I><FONT COLOR=maroon>proof_step</FONT></I></A>}  <A HREF="#qed_step"><I><FONT COLOR=maroon>qed_step</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>by</FONT></TT> { <A HREF="#fact"><I><FONT COLOR=maroon>fact</FONT></I></A> }<SUP>+</SUP>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>by</FONT></TT> {<A HREF="#fact"><I><FONT COLOR=maroon>fact</FONT></I></A>}<SUP>+</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>conclude</FONT></TT></TD></TR>
 </TABLE></TD></TR>
@@ -1971,9 +1971,9 @@ proof of <CODE>&lt;2&gt;2</CODE>, and <CODE>&lt;1&gt;1</CODE> is available in th
 Statements) for a description of what is the current goal for this
 proof.</P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="qed_step"><I><FONT COLOR=maroon>qed_step</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<I><FONT COLOR=maroon>proof_bullet</FONT></I> <TT><FONT COLOR=blue>qed</FONT></TT>  <A HREF="#proof"><I><FONT COLOR=maroon>proof</FONT></I></A>
+<I><FONT COLOR=maroon>proof_bullet</FONT></I> <TT><FONT COLOR=blue> qed</FONT></TT>  <A HREF="#proof"><I><FONT COLOR=maroon>proof</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <I><FONT COLOR=maroon>proof_bullet</FONT></I> <TT><FONT COLOR=blue>conclude</FONT></TT></TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP><I><FONT COLOR=maroon>proof_bullet</FONT></I> <TT><FONT COLOR=blue> conclude</FONT></TT></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>A <B><FONT COLOR="red">qed</FONT></B> step is similar to a normal step, except that its
 statement is the goal of the enclosing proof. It may be reduced to
@@ -1983,8 +1983,8 @@ the word <B><FONT COLOR="red">conclude</FONT></B> when its proof is reduced to
 </P><PRE CLASS="verbatim">    &lt;1&gt;2 conclude
 </PRE><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="statement"><I><FONT COLOR=maroon>statement</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-{ <TT><FONT COLOR=blue>assume</FONT></TT> <A HREF="#assumption"><I><FONT COLOR=maroon>assumption</FONT></I></A> <TT><FONT COLOR=blue>,</FONT></TT> }
- [ <TT><FONT COLOR=blue>prove</FONT></TT> <I><FONT COLOR=maroon>logical_expr</FONT></I> ]</TD></TR>
+{<TT><FONT COLOR=blue>assume</FONT></TT> <A HREF="#assumption"><I><FONT COLOR=maroon>assumption</FONT></I></A> <TT><FONT COLOR=blue>,</FONT></TT>}
+ [<TT><FONT COLOR=blue>prove</FONT></TT> <I><FONT COLOR=maroon>logical_expr</FONT></I>]</TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>A statement must be non-empty: at least one <B><FONT COLOR="red">assume</FONT></B> or the
 <B><FONT COLOR="red">prove</FONT></B> part must be present.</P><P>A statement appearing in a step has two readings: internal and
@@ -1997,48 +1997,24 @@ assumptions are available as facts.</P><TABLE CLASS="display dcenter"><TR VALIGN
 <A NAME="assumption"><I><FONT COLOR=maroon>assumption</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <I><FONT COLOR=maroon>ident</FONT></I> <TT><FONT COLOR=blue>in</FONT></TT>  <I><FONT COLOR=maroon>type_expr</FONT></I>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <I><FONT COLOR=maroon>ident</FONT></I> <TT><FONT COLOR=blue>:</FONT></TT>  <I><FONT COLOR=maroon>logical_expr</FONT></I></TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP><I><FONT COLOR=maroon>ident</FONT></I> <TT><FONT COLOR=blue> :</FONT></TT>  <I><FONT COLOR=maroon>logical_expr</FONT></I></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>An assumption can either introduce a new (universally quantified)
 variable with its type (first form), or a new named hypothesis (second
 form).</P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="fact"><I><FONT COLOR=maroon>fact</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
 <TT><FONT COLOR=blue>definition of</FONT></TT>
-[ [ <I><FONT COLOR=maroon>ident</FONT></I> ] <TT><FONT COLOR=blue>#</FONT></TT> ]
- <I><FONT COLOR=maroon>ident</FONT></I>
- { <TT><FONT COLOR=blue>,</FONT></TT>
-[ [ <I><FONT COLOR=maroon>ident</FONT></I> ] <TT><FONT COLOR=blue>#</FONT></TT> ]
- <I><FONT COLOR=maroon>ident</FONT></I>
-}
+{[ [<I><FONT COLOR=maroon>ident</FONT></I>] <TT><FONT COLOR=blue>#</FONT></TT> ]  <I><FONT COLOR=maroon>ident</FONT></I>}<TT><FONT COLOR=blue>,</FONT></TT><SUP>+</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>hypothesis</FONT></TT>
-<I><FONT COLOR=maroon>ident</FONT></I>
- { <TT><FONT COLOR=blue>,</FONT></TT>
-<I><FONT COLOR=maroon>ident</FONT></I>
-}
+{<I><FONT COLOR=maroon>ident</FONT></I>}<TT><FONT COLOR=blue>,</FONT></TT><SUP>+</SUP>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> ( <TT><FONT COLOR=blue>property</FONT></TT> &#X2223; <TT><FONT COLOR=blue>theorem</FONT></TT> )
-[ [ [ [ <I><FONT COLOR=maroon>ident</FONT></I>
-] <TT><FONT COLOR=blue>#</FONT></TT> ]  <I><FONT COLOR=maroon>ident</FONT></I> ]
-<TT><FONT COLOR=blue>!</FONT></TT> ]  <I><FONT COLOR=maroon>ident</FONT></I>
- { <TT><FONT COLOR=blue>,</FONT></TT>
-[ [ [ [ <I><FONT COLOR=maroon>ident</FONT></I>
-] <TT><FONT COLOR=blue>#</FONT></TT> ]  <I><FONT COLOR=maroon>ident</FONT></I> ]
-<TT><FONT COLOR=blue>!</FONT></TT> ]  <I><FONT COLOR=maroon>ident</FONT></I>
-}
- </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> ( <TT><FONT COLOR=blue>property</FONT></TT> &#X2223; <TT><FONT COLOR=blue>theorem</FONT></TT> )
-{
-[ [ [ [ <I><FONT COLOR=maroon>ident</FONT></I>
-] <TT><FONT COLOR=blue>#</FONT></TT> ]  <I><FONT COLOR=maroon>ident</FONT></I> ]
-<TT><FONT COLOR=blue>!</FONT></TT> ]  <I><FONT COLOR=maroon>ident</FONT></I>
-}<TT><FONT COLOR=blue>,</FONT></TT><SUP>+</SUP>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> (<TT><FONT COLOR=blue>property</FONT></TT> &#X2223;  <TT><FONT COLOR=blue>theorem</FONT></TT>)
+{[[[[<I><FONT COLOR=maroon>ident</FONT></I>] <TT><FONT COLOR=blue>#</FONT></TT>]  <I><FONT COLOR=maroon>ident</FONT></I>]
+<TT><FONT COLOR=blue>!</FONT></TT>]  <I><FONT COLOR=maroon>ident</FONT></I>}<TT><FONT COLOR=blue>,</FONT></TT><SUP>+</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>step</FONT></TT>
-<I><FONT COLOR=maroon>proof_bullet</FONT></I>
- { <TT><FONT COLOR=blue>,</FONT></TT>
-<I><FONT COLOR=maroon>proof_bullet</FONT></I>
-}</TD></TR>
+{<I><FONT COLOR=maroon>proof_bullet</FONT></I>}<TT><FONT COLOR=blue>,</FONT></TT><SUP>+</SUP></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>A fact used in a leaf proof can be a definition, a hypothesis, a
 property, a theorem, or a step.</P><P>Giving a definition as a fact allows <FONT COLOR=purple>Zenon</FONT> to unfold this

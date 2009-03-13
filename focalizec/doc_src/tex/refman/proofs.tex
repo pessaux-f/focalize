@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.14 2009-03-11 14:05:05 doligez Exp $
+% $Id: proofs.tex,v 1.15 2009-03-13 12:21:14 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of  theorems}
@@ -11,10 +11,10 @@ since it consists in bypassing the formal proof mechanism.
 
 The syntax of proofs is as follows.
 \begin{syn}
-\nonterm{proof} \is
-     \brepet \nonterm{proof\_step} \erepet \nonterm{qed\_step}
-\alt \token{by} \brepets \nonterm{fact} \erepets
-\alt \token{conclude}
+\nt{proof} \is
+     \rep{\nt{proof\_step}} \nt{qed\_step}
+\alt \tok{by} \reps{\nt{fact}}
+\alt \tok{conclude}
 \end{syn}
 
 %\begin{syntax}
@@ -40,8 +40,8 @@ the \terminal{qed} step, which has the same goal as the enclosing
 proof.
 
 \begin{syn}
-\nonterm{proof\_step} \is
-     \nonterm{proof\_bullet} \nonterm{statement} \nonterm{proof}
+\nt{proof\_step} \is
+     \nt{proof\_bullet} \nt{statement} \nt{proof}
 \end{syn}
 
 %\begin{syntax}
@@ -89,9 +89,9 @@ Statements) for a description of what is the current goal for this
 proof.
 
 \begin{syn}
-\nonterm{qed\_step} \is
-     \nonterm{proof\_bullet} \token{qed} \nonterm{proof}
-\alt \nonterm{proof\_bullet} \token{conclude}
+\nt{qed\_step} \is
+    \nt{proof\_bullet} \tok{ qed} \nt{proof}
+\alt\nt{proof\_bullet} \tok{ conclude}
 \end{syn}
 
 %\begin{syntax}
@@ -110,9 +110,9 @@ the word \terminal{conclude} when its proof is reduced to
 \end{verbatim}
 
 \begin{syn}
-\nonterm{statement} \is
-     \brepet \token{assume} \nonterm{assumption} \token{,} \erepet
-     \boption \token{prove} \nonterm{logical\_expr} \eoption
+\nt{statement} \is
+     \rep{\tok{assume} \nt{assumption} \tok{,}}
+     \opt{\tok{prove} \nt{logical\_expr}}
 \end{syn}
 
 %\begin{syntax}
@@ -132,9 +132,9 @@ the current goal is the \terminal{prove} expression, and the
 assumptions are available as facts.
 
 \begin{syn}
-\nonterm{assumption} \is
-     \nonterm{ident} \token{in} \nonterm{type\_expr}
-\alt \nonterm{ident} \token{:} \nonterm{logical\_expr}
+\nt{assumption} \is
+    \nt{ident} \tok{in} \nt{type\_expr}
+\alt\nt{ident} \tok{ :} \nt{logical\_expr}
 \end{syn}
 
 %\begin{syntax}
@@ -148,40 +148,16 @@ variable with its type (first form), or a new named hypothesis (second
 form).
 
 \begin{syn}
-\nonterm{fact} \is
-     \token{definition~of}
-           \boption \boption \nonterm{ident} \eoption \token{\#} \eoption
-               \nonterm{ident}
-        \brepet \token{,}
-           \boption \boption \nonterm{ident} \eoption \token{\#} \eoption
-               \nonterm{ident}
-        \erepet
-\alt \token{hypothesis}
-           \nonterm{ident}
-        \brepet \token{,}
-           \nonterm{ident}
-        \erepet
-\alt \bparen \token{property} \mid \token{theorem} \eparen
-           \boption \boption \boption \boption \nonterm{ident}
-           \eoption \token{\#} \eoption \nonterm{ident} \eoption
-           \token{!} \eoption \nonterm{ident}
-        \brepet \token{,}
-           \boption \boption \boption \boption \nonterm{ident}
-           \eoption \token{\#} \eoption \nonterm{ident} \eoption
-           \token{!} \eoption \nonterm{ident}
-        \erepet
-% presentation allegee :
-\alt \bparen \token{property} \mid \token{theorem} \eparen
-        \brepetsep
-           \boption \boption \boption \boption \nonterm{ident}
-           \eoption \token{\#} \eoption \nonterm{ident} \eoption
-           \token{!} \eoption \nonterm{ident}
-        \erepetsep{\token{,}}
-\alt \token{step}
-           \nonterm{proof\_bullet}
-        \brepet \token{,}
-           \nonterm{proof\_bullet}
-        \erepet
+\nt{fact} \is
+     \tok{definition~of}
+        \repsep{\opt{ \opt{\nt{ident}} \tok{\#} } \nt{ident}}{\tok{,}}
+\alt \tok{hypothesis}
+        \repsep{\nt{ident}}{\tok{,}}
+\alt \paren{\tok{property} \orelse \tok{theorem}}
+        \repsep{\opt{\opt{\opt{\opt{\nt{ident}} \tok{\#}} \nt{ident}}
+                     \tok{!}} \nt{ident}}{\tok{,}}
+\alt \tok{step}
+        \repsep{\nt{proof\_bullet}}{\tok{,}}
 \end{syn}
 
 %\begin{syntax}

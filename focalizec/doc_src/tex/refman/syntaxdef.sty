@@ -1,8 +1,8 @@
 \newif\ifspace
 \def\addspace{\ifspace \; \spacefalse \fi}
-\def\token#1{\addspace\terminal{#1} \spacetrue}
-\def\nonterm#1{\addspace\nt{#1} \spacetrue}
-\def\nt#1{\hbox{\sl #1\/}}
+\def\tok#1{\addspace\terminal{#1} \spacetrue}
+\def\nt#1{\addspace\nonterm{#1} \spacetrue}
+\def\nonterm#1{\hbox{\sl #1\/}}
 \def\brepet{\addspace\{}
 \def\erepet{\}}
 \def\boption{\addspace[}
@@ -10,7 +10,7 @@
 \def\brepets{\addspace\{}
 \def\erepets{\}^+}
 \def\brepetsep{\addspace\{}
-\def\erepetsep#1{\}{#1}^+}
+\def\erepetsep#1{\}{\spacefalse#1}^+}
 \def\bparen{\addspace(}
 \def\eparen{)}
 \def\orelse{\mid \spacefalse}
@@ -24,3 +24,10 @@
 \let\oldldots=\ldots
 \def\ldots{\spacefalse\oldldots}
 \def\synt#1{$\spacefalse#1$}
+
+%user-oriented macros
+\def\opt#1{\boption#1\eoption}
+\def\rep#1{\brepet#1\erepet}
+\def\reps#1{\brepets#1\erepets}
+\def\repsep#1#2{\brepetsep#1\erepetsep{#2}}
+\def\paren#1{\bparen#1\eparen}

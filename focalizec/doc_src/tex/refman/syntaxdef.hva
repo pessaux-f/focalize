@@ -22,9 +22,9 @@
 \newif\ifspace
 \def\addspace{\ifspace\;\spacefalse\fi}
 \ifhtml
-\newcommand{\token}[1]{\texttt{\blue#1}}
+\newcommand{\tok}[1]{\texttt{\blue#1}}
 \else
-\newcommand{\token}[1]{\texttt{#1}}
+\newcommand{\tok}[1]{\texttt{#1}}
 \fi
 %%% warnings
 \def\stx@warning#1#2{\@ifundefined{stx@#1@silent}{\hva@warn{#2}}{}}
@@ -79,9 +79,9 @@
 \def\@anchor{}
 \fi
 %%%Format non-terminal
-\def\nt#1{\textit{\maroon#1}}
+\def\nonterm#1{\textit{\maroon#1}}
 %%%Link for non-terminal and format
-\def\nonterm#1{\addspace\nt{\@anchor{#1}}\spacetrue}
+\def\nt#1{\addspace\nonterm{\@anchor{#1}}\spacetrue}
 \def\brepet{\addspace\{}
 \def\erepet{\}}
 \def\boption{\addspace[}
@@ -89,7 +89,7 @@
 \def\brepets{\addspace\{}
 \def\erepets{\}^+}
 \def\brepetsep{\addspace\{}
-\def\erepetsep#1{\}{#1}^+}
+\def\erepetsep#1{\}{\spacefalse#1}^+}
 \def\bparen{\addspace(}
 \def\eparen{)}
 \def\orelse{\mid \spacefalse}
@@ -101,3 +101,10 @@
 \def\syn{$$\begin{array}{>{\set@name}rcl}\spacefalse}
 \def\endsyn{\end{array}$$}
 \def\synt#1{$\spacefalse#1$}
+
+%user-oriented macros
+\def\opt#1{\boption#1\eoption}
+\def\rep#1{\brepet#1\erepet}
+\def\reps#1{\brepets#1\erepets}
+\def\repsep#1#2{\brepetsep#1\erepetsep{#2}}
+\def\paren#1{\bparen#1\eparen}
