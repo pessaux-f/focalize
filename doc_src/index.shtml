@@ -2,7 +2,7 @@
 $(PROJECT_NAME_TEXT)
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.2 2009-03-02 10:19:30 weis Exp $ -->
+<!-- \$Id: index.shtml,v 1.3 2009-03-16 09:15:32 habib Exp $ -->
 
 <div id="container">
 <div id="header">
@@ -50,7 +50,7 @@ $(PROJECT_NAME_TEXT).</p>
 <h3>New version of the $(PROJECT_NAME_TEXT) environment is coming soon<h3>
 <p>
 
-Since about 3 years, the $(PROJECT_NAME_TEXT) language and compiler are being
+For about 3 years, the $(PROJECT_NAME_TEXT) language and compiler are 
 rewritten from scratch. Several enhancements are <span style="font-style:
 italic;"> in the pipeline</span>. The syntax has been re-designed to be more
 homogenous and flexible. The core language provides new features like
