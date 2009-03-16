@@ -1,4 +1,4 @@
-% $Id: phd_changes.tex,v 1.4 2009-03-16 14:22:57 pessaux Exp $
+% $Id: phd_changes.tex,v 1.5 2009-03-16 14:42:24 pessaux Exp $
 \subsection{Type unification}
 \noindent Section 3.3, definition 9, page 27.
 
@@ -324,6 +324,7 @@ as {\tt S!rep[S<-G]} {\tt S!rep[S<-G]} and {\tt T!equal[T<-G]}
 
 
 \subsection{Coq code generation model}
+\subsubsection{The problem}
 The initial \coq\ code generation model appeared to have a strong
 weakness. Moreover, it was strongly different from the \ocaml\
 one. Let's understand the weakness on a simple example\ldots The
@@ -520,15 +521,44 @@ reference to this type, we need a way to speak of if. And if we remove
 it, then we are not able anymore to speak of it\ldots
 
 
-% Donc voilà l'état de la bavure. Maintenant, quelques remarques sur des questions que l'on s'était posées avec toi, David...
+\subsubsection{A few remarks}
+\begin{itemize}
+  \item The annoying {\tt Section} is then the outer one, the one of the
+    species. Indeed, when we leave the inner {\tt Section}, the
+    theorem gets right abstracted on the inner {\tt Variable}.
 
-% 1) C'est donc le Section externe, celle de l'espèce qui gêne. En effet, lorsque l'on sort de la Section interne, le théorème est bien abstrait par rapport à la Variable "interne".
+  \item This only arises on theorems because they are the only ones to
+    be in a nested {\tt Section}.
 
-% 2) Ca ne se produit que sur les Theorem car ce sont les seuls à être dans une Section imbriquée.
+  \item Moreover, we can note in this code generation model that the
+    {\tt Local self\_xxx} are always generated even when the method
+    {\tt xxx} is inherited. The reason is that since we do not
+    $\lambda$-lift in properties (leading to \coq\ {\tt Hypothesis}),
+    if a property depends on another method, it really need to have a
+    way to speak of it in the property's statement. And namely, that's
+    via this {\tt self\_xxx}.
+    However, in the \ocaml\ code generation model, inherited methods
+    are not generated again, hence do not lead to {\tt local\_xxx}
+    definitions. This is not really homogeneous.
+\end{itemize}
 
-% 3) De la nécessité de toujours générer les Local self_xxx (on en avait parlé hier David): comme on ne lambda-lifte pas dans les property (Hypothesis Coq), si une property dépend d'une méthode, il faut bien qu'elle ait de quoi en parler dans l'énoncé de la property. Et c'est justement par ce self_xxx.
 
-% 4) Maintenant, la question est de savoir si l'on pourrait s'affranchir de toutes ces me.des si on gérait les abstractions à la pogne, c'est-à-dire en lambda-liftant nous-mêmes, en virant les Sections, et en généralisant ces lambda-liftings aux property et theorems.
-% Par contre, je ne sais pas jusqu'où ça va nous emmener. En particulier, pour Zenon, qu'est-ce qu'il va lui arriver une fois que toutes les property et theorem seront passés à l'ordre sup...
+\subsubsection{Conclusion}
+In order to solve this problem and to make \coq\ and \ocaml\ code
+generation models (hence \coq\ and \ocaml\ generated codes), we
+decided to use the same model, without {\tt Section}s and
+{\tt Chapter}'s, and to manage abstractions ourselves via explicit
+$\lambda$-liftings even for properties and theorems.
 
-% LocalWords:  th eq lookatme
+This raises a technical problem however since \zenon\ does not support
+yet higher order. And in fact, with this generation model, out
+theorems get parametrised by all the $\lambda$-lifted definitions. o
+circumvent this problem, we decided to only reintroduce {\tt Section}s
+in the code dedicated to be sent to \zenon, then map back the proved
+theorems onto regular $\lambda$-lifted definitions. This means that on
+\zenon's the point of view, there is no $\lambda$-lifts, all is first
+order, and it can exhibit a proof. Once we get the proof done, we
+apply it to the stated theorem in the {\tt Section} to get a temporary
+version of the theorem. And finally, after closing the {\tt Section}
+for \zenon, we transform this temporary version into a fully
+$\lambda$-lifted definition.
