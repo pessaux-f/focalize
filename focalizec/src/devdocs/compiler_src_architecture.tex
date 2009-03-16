@@ -1,0 +1,395 @@
+%$
+
+\section{\focalizec\ source tree}
+The compiler source tree is split into several directories and files
+described below. The root of the compiler sources is located in
+{\tt focalize/focalizec}. All directories and files given below are
+relative to this root. In some of the directories is a sub-directory
+called {\tt odoc}. It can be safely ignored and is only used when
+invoking verb+make doc+ to store the \ocamldoc\ output (HTML
+documentation extracted from the source code of \focalize). In the
+below enumeration (d) stands for ''directory'' and (f) stands for
+''file".
+
+\begin{itemize}
+\item {\tt Makefile} (f) : The toplevel Makefile building the
+  compiler, the standard library, the extra libraries, the
+  documentation generator, the \focalize\ documentations and the
+  contributions. This Makefile indeed trigger the build process in all
+  the depper directories.
+\item {\tt Makefile.common} (f) : Defines once for all the implicit
+  rules and suffixes that will be used ni deeper Makefiles.
+\item {\tt .config\_var} (f) : File generated during the ``configure''
+  process (invoked by the file {\tt configure} below and that records
+  the various things among installation paths, installed commands and
+  tools, \ldots
+\item {\tt Makefile.config} (f) : Defines once for all the commands
+  according to the information the ``configure'' process recorded. It
+  especially include the {\tt .config\_var} file that kept trace of what
+  the ``configure'' process defined.
+\item {\tt TAGS} (f) : Documnentation file where developpers are
+  invited to note all the tags added to the development tree under CVS,
+  with a description of the status of the development tree when the
+  tag was set (or the reason why to put a tag).
+\item {\tt TODO} (f) : More or less describes points that are still
+  pending.
+\item {\tt configure} (f) : Script used to detect available commands
+  and tools, to ask the user where to install \focalize\ components,
+  \ldots Parts of its output is stored in the above file
+  {\tt .config\_var}.
+\item {\tt doc\_src} (d) : The directory containing all the
+  documentations at destination of the users.
+  \begin{itemize}
+  \item {\tt Makefile} (f) : Makefile trigering the documentations
+    build.
+  \item {\tt html} (d) : The \focalize\ WEB site in HML format.
+    \begin{itemize}
+    \item {\tt Includes} (d)
+      \begin{itemize}
+      \item {\tt aftertitle-eng.html} (f)
+      \item {\tt aprestitre-fra.html} (f)
+      \item {\tt avanttitre-fra.html} (f)
+      \item {\tt basdepage-fra.html} (f)
+      \item {\tt beforetitle-eng.html} (f)
+      \item {\tt bottomofpage-eng.html} (f)
+      \item {\tt copyright-eng.html} (f)
+      \item {\tt copyright-fra.html} (f)
+      \item {\tt doctype} (f)
+      \item {\tt endofpage-eng.html} (f)
+      \item {\tt findepage-fra.html} (f)
+      \item {\tt hautdepage-fra.html} (f)
+      \item {\tt htmlc-version.html} (f)
+      \item {\tt maquette-eng.html} (f)
+      \item {\tt maquette-fra.html} (f)
+      \item {\tt powered\_by\_caml.html} (f)
+      \item {\tt topofpage-eng.html} (f)
+      \end{itemize}
+    \item {\tt Makefile} (f)
+    \item {\tt Makefile.html} (f)
+    \item {\tt images} (d) : Directoty containing images for the WEB
+      site.
+      \begin{itemize}
+      \item {\tt focal\_picture.jpg} (f) : A niiiice 3D picture done with
+        Povray \smiley.
+      \end{itemize}
+    \end{itemize}
+  \item {\tt man} (d) : Directory containing the ``man'' manual.
+    \begin{itemize}
+    \item {\tt Makefile} (f)
+    \item {\tt focalizec.env} (f)
+    \item {\tt focalizec.man} (f) : ``man'' for \focalizec.
+    \item {\tt focalizedep.man} (f) : ``man'' for \focalizedep.
+    \end{itemize}
+  \item {\tt  tex} (d) : Documentations in \latex\ format.
+    \begin{itemize}
+    \item {\tt Makefile} (f)
+    \item {\tt refman} (d) : Directory containing the reference manual.
+      \begin{itemize}
+      \item {\tt Makefile} (f)
+      \item {\tt basic\_concepts.tex} (f)
+      \item {\tt bibli.bib} (f) : Contains bibliograpy references.
+      \item {\tt building\_species.tex} (f)
+      \item {\tt compiler\_err\_msgs.tex} (f) : About the \focalizec\
+        compiler error messages.
+      \item {\tt compiler\_opts.tex} (f) : About the \focalizec\
+        compiler command line options.
+      \item {\tt constructs\_syntax.tex} (f)
+      \item {\tt doc\_gen.tex} (f) : About the \focalize\ automated
+        documentation generation (option {\tt focalize-doc} of
+        \focalizec).
+      \item {\tt fullpage.sty} (f)
+      \item {\tt glimpse.tex} (f) : Short presentation of the language
+        to give a first an rapid taste.
+      \item {\tt header\_html\_snapshot.ps} (f)
+      \item {\tt introduction.tex} (f)
+      \item {\tt lexical\_conventions.tex} (f) : About \focalize\ lexical
+        conventions, description of the tokens and syntax.
+      \item {\tt macros.hva} (f)
+      \item {\tt macros.tex} (f) : \latex macros used in the reference
+        manual.
+      \item {\tt mathml\_snapshot.ps} (f)
+      \item {\tt more\_on\_meths.tex} (f)
+      \item {\tt motivations.tex} (f)
+      \item {\tt output.tex} (f) : About what the \focalizec\ compiler
+        generates.
+      \item {\tt pres\_requir.tex} (f)
+      \item {\tt proofs.tex} (f)
+      \item {\tt refman.html} (f)
+      \item {\tt refman.hva} (f)
+      \item {\tt refman.pdf} (f)
+      \item {\tt refman.tex} (f) : Entry point of the reference manual.
+      \item {\tt syntaxdef.hva} (f)
+      \item {\tt syntaxdef.sty} (f)
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\item {\tt src} (d) : Root of the sources of \focalizec\ and \focalizedep.
+  \begin{itemize}
+  \item {\tt attic} (d) : Contains miscellaneous interesting parts of
+    code that have been writen one day, that are not used anymore, but
+    that we didn't want to trash in case it could serve in the future.
+    \begin{itemize}
+    \item {\tt ast.mli}, {\tt lib\_pp.ml}, {\tt lib\_pp.mli},
+      {\tt misc.ml}, {\tt new2old.ml}, {\tt new2old.mli},
+      {\tt oldsourcify.ml}, {\tt oldsourcify.mli},
+      {\tt printer.ml}, {\tt printtree.ml},\\
+      {\tt string\_search\_stuff.ml}
+    \item May be more\ldots
+    \end{itemize}
+    \item {\tt basement} (d) : Contains the early basic bricks of the
+      compiler.
+      \begin{itemize}
+        \item {\tt Makefile} (f) : Trigger build in this directory.
+        \item {\tt configuration.ml} (f) : Manages version number (and
+          by side effect the {\tt -help} option output text) and the
+          command line options flags.
+        \item {\tt configuration.mli} (f)
+        \item {\tt files.ml} (f) : Contains primitives dealing with
+          files, taking into account search path, files suffixes,
+          read/write object files, \ldots
+        \item {\tt files.mli} (f)
+        \item {\tt handy.ml} (f) :
+        \item {\tt handy.mli} (f) :
+        \item {\tt installation.ml} (f) : File automatically generated
+          by the ``configure'' process and record as \ocaml\ source, the
+          various installation paths and commands the \focalizec\
+          compiler need to know when dealing with \focalize\ source
+          files.
+        \item {\tt location.ml} (f) : Defines the type of
+          ``locations'', i.e. point un a source file and gives
+          primitives to work with them.
+        \item {\tt location.mli} (f) :
+        \item {\tt miscHelpers.ml} (f) :
+        \item {\tt miscHelpers.mli} (f) :
+        \item {\tt parsetree.mli} (f) :
+        \item {\tt parsetree\_utils.ml} (f) :
+        \item {\tt parsetree\_utils.mli} (f) :
+        \item {\tt types.ml} (f) :
+        \item {\tt types.mli} (f) :
+\end{itemize}
+|   |-- ccodegen
+|   |-- commoncodegen
+|   |   |-- Makefile
+|   |   |-- abstractions.ml
+|   |   |-- abstractions.mli
+|   |   |-- context.mli
+|   |   |-- externals\_generation\_errs.ml
+|   |   |-- externals\_generation\_errs.mli
+|   |   |-- minEnv.ml
+|   |   |-- minEnv.mli
+|   |   |-- misc\_common.ml
+|   |   |-- misc\_common.mli
+|   |   |-- recursion.ml
+|   |   |-- recursion.mli
+|   |   |-- visUniverse.ml
+|   |   `-- visUniverse.mli
+|   |-- contribs
+|   |   |-- Makefile
+|   |   |-- automata
+|   |   |   |-- Makefile
+|   |   |   |-- gen\_def.fcl
+|   |   |   |-- main.fcl
+|   |   |   |-- request.fcl
+|   |   |   |-- switch\_automata.fcl
+|   |   |   |-- switch\_recovery\_automata.fcl
+|   |   |   |-- switch\_recovery\_normal\_automata.fcl
+|   |   |   `-- switch\_recovery\_reverse\_automata.fcl
+|   |   |-- utils
+|   |   |   |-- Makefile
+|   |   |   |-- pair.fcl
+|   |   |   `-- peano.fcl
+|   |   `-- voter
+|   |       |-- Makefile
+|   |       |-- etat\_vote.fcl
+|   |       |-- main.fcl
+|   |       |-- num\_capteur.fcl
+|   |       |-- value.fcl
+|   |       `-- vote.fcl
+|   |-- coqcodegen
+|   |   |-- FOCAL\_COQ\_MAPPINGS
+|   |   |-- Makefile
+|   |   |-- main\_coq\_generation.ml
+|   |   |-- rec\_let\_gen.ml
+|   |   |-- rec\_let\_gen.mli
+|   |   |-- species\_coq\_generation.ml
+|   |   |-- species\_coq\_generation.mli
+|   |   |-- species\_record\_type\_generation.ml
+|   |   |-- species\_record\_type\_generation.mli
+|   |   |-- type\_coq\_generation.ml
+|   |   `-- type\_coq\_generation.mli
+|   |-- devdocs
+|   |   |-- foc2ocaml.tex
+|   |   |-- legacy.tex
+|   |   |-- macros.tex
+|   |   |-- mathpartir.sty
+|   |   |-- pending.txt
+|   |   `-- phd\_changes.tex
+|   |-- docgen
+|   |   |-- Makefile
+|   |   |-- doc\_lexer.mll
+|   |   |-- env\_docgen.ml
+|   |   |-- env\_docgen.mli
+|   |   |-- focdoc.css
+|   |   |-- focdoc.dtd
+|   |   |-- focdoc.rnc
+|   |   |-- focdoc.xsd
+|   |   |-- focdoc2html.xsl
+|   |   |-- focdoc2tex.xsl
+|   |   |-- main\_docgen.ml
+|   |   |-- main\_docgen.mli
+|   |   |-- mmlctop2\_0.xsl
+|   |   |-- proposition.xsl
+|   |   |-- proposition2tex.xsl
+|   |   |-- utils\_docgen.ml
+|   |   `-- utils\_docgen.mli
+|   |-- extlib
+|   |   |-- Makefile
+|   |   |-- access\_control
+|   |   |   |-- Makefile
+|   |   |   |-- access\_control.fcl
+|   |   |   |-- ensembles\_finis.fcl
+|   |   |   |-- hru.fcl
+|   |   |   |-- rbac.fcl
+|   |   |   |-- ticket.fcl
+|   |   |   |-- tm
+|   |   |   |   |-- graph.ml
+|   |   |   |   `-- trust\_management.fcl
+|   |   |   `-- unix.fcl
+|   |   `-- algebra
+|   |       |-- Makefile
+|   |       |-- additive\_law.fcl
+|   |       |-- arrays.fcl
+|   |       |-- arrays\_externals.v
+|   |       |-- big\_integers.fcl
+|   |       |-- constants.fcl
+|   |       |-- integers.fcl
+|   |       |-- iterators.fcl
+|   |       |-- multiplicative\_law.fcl
+|   |       |-- parse\_poly.fcl
+|   |       |-- polys\_abstract.fcl
+|   |       |-- product\_structures.fcl
+|   |       |-- quotient\_structures.fcl
+|   |       |-- randoms.fcl
+|   |       |-- randoms\_externals.ml
+|   |       |-- randoms\_externals.v
+|   |       |-- rings\_fields.fcl
+|   |       |-- small\_integers.fcl
+|   |       |-- weak\_structures.fcl
+|   |       |-- weak\_structures\_externals.ml
+|   |       `-- weak\_structures\_externals.v
+|   |-- focalizedep
+|   |   |-- Makefile
+|   |   |-- directive\_lexer.ml
+|   |   |-- directive\_lexer.mll
+|   |   `-- make\_depend.ml
+|   |-- mlcodegen
+|   |   |-- FOCAL\_ML\_MAPPINGS
+|   |   |-- Makefile
+|   |   |-- base\_exprs\_ml\_generation.ml
+|   |   |-- base\_exprs\_ml\_generation.mli
+|   |   |-- main\_ml\_generation.ml
+|   |   |-- main\_ml\_generation.mli
+|   |   |-- misc\_ml\_generation.ml
+|   |   |-- misc\_ml\_generation.mli
+|   |   |-- species\_ml\_generation.ml
+|   |   |-- species\_ml\_generation.mli
+|   |   |-- type\_ml\_generation.ml
+|   |   `-- type\_ml\_generation.mli
+|   |-- parser
+|   |   |-- Makefile
+|   |   |-- dump\_ptree.ml
+|   |   |-- dump\_ptree.mli
+|   |   |-- lex\_file.ml
+|   |   |-- lexer.mll
+|   |   |-- lexer.spec
+|   |   |-- parse\_file.ml
+|   |   |-- parse\_file.mli
+|   |   |-- parser.mly
+|   |   |-- parser.spec
+|   |   |-- sourcify.ml
+|   |   |-- sourcify.mli
+|   |   |-- sourcify\_token.ml
+|   |   `-- test
+|   |       `-- sets\_orders.fcl
+|   |-- scoper
+|   |-- stdlib
+|   |   |-- Makefile
+|   |   |-- basics.fcl
+|   |   |-- coq\_builtins.v
+|   |   |-- generic\_proof\_cases.v
+|   |   |-- lattices.fcl
+|   |   |-- ml\_builtins.ml
+|   |   |-- orders.fcl
+|   |   |-- orders\_and\_lattices.fcl
+|   |   |-- products.fcl
+|   |   |-- quotients.fcl
+|   |   |-- sets.fcl
+|   |   |-- sets\_externals.ml
+|   |   |-- sets\_orders.fcl
+|   |   |-- sets\_orders\_externals.ml
+|   |   |-- strict\_orders.fcl
+|   |   |-- sums.fcl
+|   |   |-- wellfounded.fcl
+|   |   `-- wellfounded\_externals.v
+|   |-- toplevel
+|   |   |-- Makefile
+|   |   |-- exc\_wrapper.ml
+|   |   |-- focalizec.ml
+|   |   |-- focalizec.mli
+|   |   |-- fodump.ml
+|   `-- typing
+|       |-- Makefile
+|       |-- ast\_equal.ml
+|       |-- ast\_equal.mli
+|       |-- depGraphData.mli
+|       |-- dep\_analysis.ml
+|       |-- dep\_analysis.mli
+|       |-- env.ml
+|       |-- env.mli
+|       |-- infer.ml
+|       |-- infer.mli
+|       |-- param\_dep\_analysis.ml
+|       |-- param\_dep\_analysis.mli
+|       |-- scoping.ml
+|       |-- scoping.mli
+|       |-- substColl.ml
+|       |-- substColl.mli
+|       |-- substExpr.ml
+|       `-- substExpr.mli
+`-- tests
+    |-- Makefile
+    |-- ko\_\_bad\_self\_use.fcl
+    |-- ko\_\_param\_toy.fcl
+    |-- ko\_\_test\_error.fcl
+    |-- ko\_\_test\_rec.fcl
+    |-- ok\_\_baby\_toy.fcl
+    |-- ok\_\_baby\_toy\_externals.ml
+    |-- ok\_\_caveat.fcl
+    |-- ok\_\_coll\_outside.fcl
+    |-- ok\_\_definition\_72\_rule\_PRM.fcl
+    |-- ok\_\_in\_example.fcl
+    |-- ok\_\_in\_example2.fcl
+    |-- ok\_\_list.fcl
+    |-- ok\_\_multiple\_inherit.fcl
+    |-- ok\_\_need\_inspect\_self.fcl
+    |-- ok\_\_need\_re\_ordering.fcl
+    |-- ok\_\_odd\_even.fcl
+    |-- ok\_\_phd\_def\_deps.fcl
+    |-- ok\_\_phd\_meths\_gen.fcl
+    |-- ok\_\_phd\_sample.fcl
+    |-- ok\_\_scoping\_tricky.fcl
+    |-- ok\_\_term\_measure.fcl
+    |-- ok\_\_toplevel\_odd\_even.fcl
+    `-- ok\_\_torture\_params.fcl
+  \end{itemize}
+\end{itemize}
+
+\section{Other tools}
+Aside \focalizec\ itself and its library, 2 others tools explicitely
+dedicated to the \focalize\ packages exist.
+
+\subsection{zenon}
+Damien is the man in the place to describe ;)
+
+\subsection{zvtov}
+Damien is the man in the place to describe ;)

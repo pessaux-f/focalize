@@ -1,4 +1,4 @@
-% $Id: phd_changes.tex,v 1.5 2009-03-16 14:42:24 pessaux Exp $
+% $Id: phd_changes.tex,v 1.6 2009-03-16 16:38:37 pessaux Exp $
 \subsection{Type unification}
 \noindent Section 3.3, definition 9, page 27.
 
@@ -82,6 +82,7 @@ for this purpose).
 % This is correct in the context of type checking. But this is not exact
 % in the context of type {\bf inference}. In fact, it doen't work since
 % the rules [EX] and [ALL] need to enter the bound variables 
+% And then, we must also allow type {\tt prop} for expressions.
 
 
 
@@ -320,6 +321,35 @@ have dependencies on {\tt G!rep} and {\tt G!equal}. We look back in
 the inherited {\tt Couple} dependencies, we find {\tt S!rep},
 {\tt S!rep} and {\tt T!equal}. So we construct the final dependencies
 as {\tt S!rep[S<-G]} {\tt S!rep[S<-G]} and {\tt T!equal[T<-G]}
+
+
+
+\subsubsection{Dependencies on collection parameters for record type}
+Computing real dependencies on collection parameters for record type
+is not clearly stated. For \ocaml, it is quite trivial since we don't
+have any logical methods, hence we can only have dependencies via
+``types''. For \ocaml, the situation is more tricky. In fact, due to
+logical methods (theorems and properties), dependencies may more
+complex, involving types and methods found in the expressions forming
+the logical statements.
+
+The same kind of problems arises than above (missing rule): an extra
+rule is needed (the [DIDOU] rule), but the only difference is that
+since the record type only shows ``types'', the initial set of
+dependencies to close is the one obtained by the rule [TYPE].
+
+It is not yet formally clear that computing dependencies required by
+the record type is complete. Experiment seems to show that yes, but
+further theorical investigations should be performed.
+
+Taking a wider set of dependencies (for instance the same than those
+computed method per method, all grouped in a single big union) would
+lead to extra arguments (by $\lambda$-lifting) to the record type that
+would not be used. This is unwanted for 2 reasons:
+efficiency/readability of the generated code, and more importantly,
+the risk to have variables not bound to a type, infered as
+polymorphics, and for which \coq\ would say that it ``can't infer a
+type for this placeholder''.
 
 
 
