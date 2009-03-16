@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.85 2009-03-16 08:38:06 pessaux Exp $
+# $Id: Makefile,v 1.86 2009-03-16 16:38:49 weis Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -138,7 +138,7 @@ clean::
 	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) && \
 	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) && \
 	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) && \
-	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd
+	$(RM) $(EXTERNAL_CMIS) $(FOCALIZE_CMIS) *.annot *.glob *.fcd
 
 
 depend::
