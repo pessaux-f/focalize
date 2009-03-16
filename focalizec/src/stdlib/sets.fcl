@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets.fcl,v 1.6 2009-02-03 14:59:05 rr Exp $ *)
+(* $Id: sets.fcl,v 1.7 2009-03-16 12:37:37 rr Exp $ *)
 
 (** 
    @title Basic sets operations. 
@@ -80,10 +80,9 @@ species Setoid inherits Basic_object =
 end
 ;;
 
-(**
-   By an Anti_setoid we mean a setoid where appartness id considered as a
-   primitive operation. We have the same functiuonalities as Setoid!
-*)
+(** By an Anti_setoid we mean a setoid where appartness (difference) is
+   considered as a primitive operation. We provide the same (though
+   incompatible) functionalities as Setoid!  *)
 
 species Anti_setoid inherits Basic_object =
   (** An appartness decidable relation *)
@@ -105,7 +104,7 @@ species Anti_setoid inherits Basic_object =
   (** element returns some element of our non empty setoid *)
   signature element : Self ;
 
-  (** Equality is a derived operation *)
+  (** Equality is a derived operation, it is sometimes called an indifference *)
   let equal(x, y) = not_b(!different(x, y));
 
   theorem different_is_not_same : all x y in Self,

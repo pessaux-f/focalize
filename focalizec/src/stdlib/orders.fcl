@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: orders.fcl,v 1.7 2009-01-11 01:22:18 weis Exp $ *)
+(* $Id: orders.fcl,v 1.8 2009-03-16 12:37:37 rr Exp $ *)
 
 use "basics";;
 use "sets";;
@@ -35,11 +35,12 @@ species Pre_order inherits Setoid =
   property leq_transitive : all x y z in Self,
     !leq (x, y) -> !leq (y, z) -> !leq (x, z) ;
 
-   (** we may reverse inequalities by simply changing notations
-    @mathml <geq/> *)
+   (** we may reverse inequalities by simply changing notations, sometimes
+       called a preference @mathml <geq/> *)
+
   let geq(x, y)= !leq(y, x);
 
-  (** a characteristic property *)
+  (** A characteristic property *)
   theorem geq_is_leq : all x y in Self,
     !geq(x, y) <-> !leq(y, x)
     proof = by definition of geq
@@ -129,6 +130,7 @@ end
  *)
 species Total_pre_order inherits Pre_order =
 
+  (** a total order is a complete relation *)
   property total_order : all x y in Self, Self!leq(x, y) \/ Self!leq(y, x);
 
 
