@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.4 2009-02-26 15:17:52 habib Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.5 2009-03-16 16:40:31 weis Exp $
 
 # The name of the file says why and for who it was written :)
 
@@ -81,6 +81,21 @@ make
 # If necessary install it
 make install
 </PRE>
+
+More precisely
+<PRE>
+cvs -d weis@modulogic.inria.fr:/home/cvs \
+ co -r tag_cvs -d directory module
+</PRE>
+
+<P>
+For us, the module name is always "focalize". We can safely choose the
+"directory" name as being the cvs tag of the cvs tree we want, hence write
+<PRE>
+cvs -d weis@modulogic.inria.fr:/home/cvs \
+ co -r tag_cvs -d tag_cvs focalize
+</PRE>
+
 
 <H2>How to use the Focalize <code>doc_src</code> Makefile</H2>
 
