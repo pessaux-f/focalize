@@ -1,4 +1,4 @@
-% $Id: phd_changes.tex,v 1.2 2009-03-13 16:57:57 pessaux Exp $
+% $Id: phd_changes.tex,v 1.3 2009-03-16 10:35:17 pessaux Exp $
 \subsection{Type unification}
 \noindent Section 3.3, definition 9, page 27.
 
@@ -123,6 +123,7 @@ has the form: $$C_{p'} {\tt is/in\ } \tau_{p'}$$.
   }
 
 
+
 \subsection{Traduction example in \ocaml}
 \noindent Section 8.2, page 152.
 
@@ -132,6 +133,127 @@ presented this way, we don't know from where {\tt create} comes. In
 fact, we must used the one coming from the species we
 ``implement''. So a qualified notation (i.e. module name + function
 name) is required.
+
+
+
+\subsection{Dependencies of a method}
+\noindent Section 8.3.1, definition 72, page 153.
+
+
+\subsubsection{Missing notion of order}
+All along the rules, dependencies are stated as a set of names. In
+fact this is uncomplete since there can be dependencies between these
+names for a collection parameter. So they must be ordered according to
+their own dependencies (i.e. according to def-depencendies inside the
+hosting species that is that collection parameter).
+
+\noindent For instance:
+
+{\scriptsize
+\begin{lstlisting}
+species S1 ... =
+  let eq = ... ;
+  theorem th1 : all x in ..., !eq (...) ...
+ proof = ... ;
+end ;;
+
+species S2 (P is S1) ... =
+  theorem th2 : all x in P, ...
+  proof = ... property P!th1 ... ;
+end ;;
+\end{lstlisting}
+}
+
+In {\tt S1}, {\tt th1} decl-depends on {\tt eq}. In {\tt S2}, method
+{\tt th2} has a dependencies on its collection parameter {\tt P}
+methods. Especially, on {\tt P!th1}, and completions rules require to
+add {\tt P!eq} (in order to express the ``type'' of {\tt th1},
+i.e. its statement). Since in {\tt P},  {\tt th1} decl-depends on
+{\tt eq}, when making $\lambda$-liftings to abstract {\tt P}'s methods
+in the depdencencies on methods of parameters in {\tt S1}, we must
+ensure that {\tt eq} is $\lambda$-filter before {\tt th1} otherwise
+{\tt eq} will be unbound in {\tt th1}.
+
+This order is given be the dependencies of the methods inside the
+species used as collection parameter.
+
+
+\subsubsection{Missing rule}
+The rules [DEF-DEP], [UNIVERS] and [PRM] can add dependencies on
+parameters after rule [BODY] and [TYPES]. However, the added methods
+can have decl-dependencies via their ``types''. An this is not taken
+into account by the current set of rules.
+To circumvent, a new rule is added, [DIDOU] (better name to be found,
+but the day I thought to this rule, I was very poor in naming schemes
+\smiley). This rule intuitively takes the all dependencies found by
+[BODY], [TYPES], [DEF-DEP], [UNIVERS] and [PRM] as initial set and
+performs a fixpoint by adding for each method of dependencies, its
+decl-dependencies coming from its ``type'' (i.e. ML-like type for
+computational methods, and statement for logical methods). Of course,
+when tracking decl-dependencies of a method, we adress the method body
+in its species. But this species is a collection parameter. So before
+adding the found method to the set of dependencies on collection
+parameters of the analysed species, we must replace in the method,
+occurrences of {\tt Self} by the by the species parameter from where
+this method comes.
+
+
+\subsubsection{Missing substitution in rule [PRM]}
+First, the rule [PRM] needs further explanations to understand its
+presentation. It must first be understood that in this rule, the
+species {\tt S} has the folloging form:
+
+${\tt species}\ S (C_p\ {\tt is}\ \ldots, C_{p'}\ {\tt is}\ S'(C_p))$
+
+Moreover, implicitely $i_{p'}$ is the infertace of $C_{p'}$. And $C_p$
+is a valid implementation of the parameter $C'_k$ (having the
+interface $i'_k$) of the species $S'$.
+
+\medskip
+\noindent Now, the rule says:
+
+\inferrule
+  {
+  z \in Deps (S, C_{p'})[x] \\
+  i_{p'} = S'(e_1, \ldots, C_p, \ldots) \\
+  {\cal E}(S') = (C'_1 \centerdot i'_1, \ldots, C'_k\ {\tt is}\  i'_k,\ldots) \\
+  y \in Deps (S', C'_k) [z]
+  }
+  {
+  y \in Deps (S, C_p)[x]
+  }
+
+\noindent This rule forget to show that we must instanciate the formal
+parameter of {\tt S'} by the effective argument provided. In effect,
+in the bodies/types of the methods of {\tt S'} (those methods the
+conclusion adds to the curently computed dependencies set), parameters
+are those of {\tt S'}, not our current ones we use to instanciate the
+formal ones of {\tt S'} ! To prevent those of {\tt S'} to remain in
+the expressions and be unbound, we do the instanciation here.
+
+
+\subsubsection{Inconsistence between inherited/re-computed dependencies}
+{\scriptsize
+\begin{lstlisting}
+species Simple =
+   signature equal : Self -> Self -> bool ;
+end ;;
+
+species Couple (S is Simple, T is Simple) =
+  signature morph: S -> T;
+  let equiv(e1, e2) = T!equal(!morph(e1), !morph(e2));
+end ;;
+
+species Bug (G is Simple) inherits Couple (G, G) =
+  theorem theo: true
+  proof =
+    <1>1 
+         prove true
+         <2>f qed assumed {* *}
+    <1>2 qed by definition of equiv ;
+end ;;
+\end{lstlisting}
+}
 
 
 \subsection{Coq code generation model}
