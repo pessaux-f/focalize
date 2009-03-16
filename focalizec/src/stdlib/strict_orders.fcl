@@ -8,11 +8,15 @@ open "sets";;
 (** 
    Strict orderings. 
    There are various definitions of strict orderings and some authors 
-   define strict quasi orderings which are used in econometrics.
-   Here we follow Birkhoff.
+   define strict quasi orderings which are used in econometrics and 
+   so called preference logic.
 
  *)
-species Strict_partial_order inherits Anti_setoid =
+
+(** A strict partial order is an irreflexive and transitive relation, As a
+   consequence it is also asymetric. Sometimes called a strict quasi-order *)
+
+ species Strict_partial_order inherits Anti_setoid =
 
   signature lt: Self -> Self -> bool;
 
@@ -32,39 +36,10 @@ species Strict_partial_order inherits Anti_setoid =
       <1>f conclude
   ;
 
-  (** compatibility with equality *)
-  property lt_left_substitution_rule: all x y z in Self,
-    !equal(x, y) -> !lt(x, z) -> !lt(y, z);
 
+  (** gt is obtained by duality from lt, sometimes called a (strict)
+  preference *) 
 
-  property lt_right_substition_rule: all x y z in Self,
-    !equal(x, y) -> !lt(z, x) -> !lt(z, y);
-
-  theorem lt_substitution_rule: all x y z t in Self,
-    !equal(x, y) -> !equal(z, t) -> !lt(x, z) -> !lt(y, t)
-    proof = by property !lt_left_substitution_rule, 
-                       !lt_right_substition_rule, 
-                       !lt_is_transitive
-  ;
-
-  theorem lt_refines_different: all x y in Self,
-    !lt(x, y) -> !different(x, y)
-    proof =
-      <1>1 assume x in Self, assume y in Self,
-           assume H: !equal(x, y),
-           prove ~(!lt(x, y))
-           <2>1 assume F: !lt(x, y),
-                prove false
-                <3>1 prove !lt(y, y) 
-                     by hypothesis H, F
-                        property !lt_left_substitution_rule
-                 <3>f qed by step <3>1 property !lt_is_irreflexive
-           <2>f conclude
-      <1>f qed by step <1>1 property !different_is_not_same
-  ;
-    
-
-  (** gt is obtained by duality from lt *)
   let gt(x, y) = !lt(y, x);
 
   theorem gt_is_lt: all x y in Self,
@@ -74,37 +49,11 @@ species Strict_partial_order inherits Anti_setoid =
   theorem gt_is_irreflexive: all x in Self, ~(gt(x, x))
     proof = by property gt_is_lt, !lt_is_irreflexive;
 
-  theorem gt_refines_different: all x y in Self,
-    !gt(x, y) -> !different(x, y)
-    proof = by property gt_is_lt, lt_refines_different, !different_is_symmetric;
-
-  logical let comparable(x, y) = !lt(x, y) \/ !lt(y, x);
-
-  theorem comparable_refines_different: all x y in Self,
-    comparable(x, y) -> !different(x, y)
-    proof = by definition of comparable 
-              property !lt_refines_different, !different_is_symmetric;
-
-  theorem comparable_is_symmetric: all x y in Self,
-    comparable(x, y) -> comparable(y, x)
-    proof = by definition of comparable;
-
-  logical let incomparable(x, y) = ~(comparable(x, y));
-
-  theorem incomparable_is_reflexive: all x in Self,
-    !incomparable(x, x)
-    proof = by property !lt_is_irreflexive
-              definition of comparable, incomparable;
-
-  theorem incomparable_is_symmetric: all x y in Self,
-    !incomparable(x, y) -> !incomparable(y, x)
-    proof = by definition of comparable, incomparable;
-
-
-  let leq(x, y) = basics#or_b(!lt(x, y), !equal(x, y));
+  (** Large ordering is defined from strict ordering *) 
+  let leq(x, y) = or_b(!lt(x, y), syntactic_equal(x, y));
 
   theorem leq_from_lt: all x y in Self,
-    !leq(x, y) <-> (!lt(x, y) \/ !equal(x, y))
+    !leq(x, y) <-> (!lt(x, y) \/ syntactic_equal(x, y))
     proof = by definition of leq;
 
   theorem lt_refines_leq: all x y in Self, !lt(x, y) -> !leq(x, y)
@@ -113,27 +62,26 @@ species Strict_partial_order inherits Anti_setoid =
   theorem leq_reflexive : all x in Self, !leq(x, x)
     proof = by property !leq_from_lt, !equal_reflexive;
 
-  theorem leq_extends_equal: all x y in Self, !equal(x, y) -> !leq(x, y)
-    proof = by property !leq_from_lt;
-		    
   theorem leq_antisymmetric: all x y in Self,
     !leq(x, y) -> !leq(y, x) -> !equal(x, y)
     proof =
       <1>1 assume x in Self, assume y in Self,
            assume H_xy: !leq(x, y), assume H_yx: !leq(y, x),
            prove !equal(x, y)
-           <2>1 assume H: !different(x, y),
-                prove false
-                <3>1 prove !lt(x, y) 
-                     by hypothesis H_xy, H
-                        property !leq_from_lt, !different_is_not_same
-                <3>2 prove !lt(y, x)
-                     by hypothesis H_yx, H
-                        property !leq_from_lt, !different_is_not_same,
-                                 !different_is_symmetric, !equal_symmetric
-                <3>f qed by step <3>1, <3>2
-                            property !lt_is_transitive, !lt_is_irreflexive
-           <2>f qed by step <2>1 property different_is_not_same
+           <2>1 assume HH_xy: !lt(x, y) /\ !lt(y, x),
+                prove !equal(x, y)
+                by hypothesis HH_xy
+                   property !lt_is_transitive, !lt_is_irreflexive
+           <2>2 assume HH_xy: !lt(x, y) /\ syntactic_equal(y, x),
+                prove !equal(x, y) 
+                by hypothesis HH_xy property !equal_reflexive, !equal_symmetric
+           <2>3 assume HH_xy: syntactic_equal(x, y) /\ !lt(y, x),
+                prove !equal(x, y) by hypothesis HH_xy property equal_reflexive
+           <2>4 assume HH_xy: syntactic_equal(x, y) /\ syntactic_equal(y, x),
+                prove !equal(x, y) by hypothesis HH_xy property !equal_reflexive
+           <2>5 qed by step <2>1, <2>2, <2>3, <2>4
+                       hypothesis H_xy, H_yx
+                       property !leq_from_lt
       <1>f conclude
   ;
 
@@ -146,16 +94,15 @@ species Strict_partial_order inherits Anti_setoid =
            <2>1 assume H: (!lt(x, y) /\ !lt(y, z)),
                 prove !lt(x, z)
                 by hypothesis H property !lt_is_transitive
-           <2>2 assume H: (!lt(x, y) /\ !equal(y, z)),
+           <2>2 assume H: (!lt(x, y) /\ syntactic_equal(y, z)),
                 prove !lt(x, z) 
-                by hypothesis H property !lt_right_substition_rule
-           <2>3 assume H: (!equal(x, y) /\ !lt(y, z)),
+                by hypothesis H 
+           <2>3 assume H: (syntactic_equal(x, y) /\ !lt(y, z)),
                 prove !lt(x, z)
                 by hypothesis H 
-                   property !equal_symmetric, !lt_left_substitution_rule
-           <2>4 assume H: (!equal(x, y) /\ !equal(y, z)),
+           <2>4 assume H: (syntactic_equal(x, y) /\ syntactic_equal(y, z)),
                 prove !equal(x, z)
-                by hypothesis H property !equal_transitive
+                by hypothesis H property !equal_transitive, !equal_reflexive
            <2>f qed by step <2>1, <2>2, <2>3, <2>4
                        hypothesis H_xy, H_yz
                        property !leq_from_lt
@@ -165,100 +112,41 @@ species Strict_partial_order inherits Anti_setoid =
 end
 ;;
 
-(** *)
-species Strict_total_order inherits Strict_partial_order =
+(** 
+   Here we specify that incomparability is difference 
 
-  let different(x, y) = basics#or_b(!lt(x, y), !lt(y, x));
+ *)
+species Strict_order inherits Strict_partial_order =
 
-  theorem total_order: all x y in Self,
-    !different(x, y) -> (!lt(x, y) \/ !lt(y, x))
-      proof = by definition of different;
+  (** Strict comparability is difference, this is sometimes called weakly
+   connected *) 
 
-  proof of lt_refines_different = by definition of different;
+  let different(x, y) = and_b(!lt(x, y), !lt(y, x));
 
   proof of different_is_symmetric = by definition of different;
 
   proof of different_is_irreflexive = 
-    by property !lt_is_irreflexive
+    by property !lt_is_irreflexive definition of different;
+
+  proof of different_is_complete =
+    by property leq_from_lt, !different_is_not_same, 
+                !lt_is_irreflexive, !lt_is_transitive
        definition of different
   ;
 
-  proof of different_is_complete =
-    <1>1 assume x in Self, assume y in Self, assume z in Self,
-         assume H: !different(x, y),
-         prove !different(x, z) \/ !different(y, z)
-         <2>1 assume H1: !equal(x, z),
-              prove !different(y, z)
-              <3>1 assume HH1: !lt(x, y),
-                   prove !lt(z, y)
-                   by property !lt_left_substitution_rule 
-                      hypothesis H1, HH1
-              <3>2 assume HH2: !lt(y, x),
-                   prove !lt(y, z)
-                   by property !lt_right_substition_rule
-		      hypothesis H1, HH2
-              <3>f qed by step <3>1, <3>2
-                          hypothesis H
-                          property !different_is_symmetric, 
-                                   !different_is_not_same
-                          definition of different
-         <2>2 assume H2: !different(x, z),
-              prove !different(x, z) by hypothesis H2
-         <2>f qed by step <2>1, <2>2
-                     property !different_is_not_same
-    <1>f conclude
-  ;
-
-  proof of lt_left_substitution_rule =
-    <1>1 assume x in Self, assume y in Self, assume z in Self,
-         assume H_xy: !equal(x, y), assume H_xz: !lt(x, z),
-         prove !lt(y, z)
-         <2>1 assume HH1: ~(!lt(x, y)), 
-              prove !lt(y, z)
-              <3>1 assume F: ~(!lt(y, z)),
-                   prove false
-                   assumed {* *}
-              <3>f conclude
-         <2>2 assume HH1: ~(!lt(y, x)), 
-              prove !lt(y, z)
-              assumed {* *}
-         <2>f qed by step <2>1, <2>2
-                     hypothesis H_xy
-                     property different_is_not_same
-		     definition of different
-    <1>f conclude
-  ;
 
 end
 ;;
 
-(** *)
-species Strictly_ordered_set 
-  inherits Setoid, Strict_total_order =
+(** Restoring compatibility between strict and large ordering *)
+species Strictly_ordered_set
+  inherits Setoid, Strict_order =
+
+  (** An ordering is total if the &lq; relation is complete *)
+  property total_order: all x y in Self,
+    !leq(x, y) \/ leq(y, x);
 
   proof of same_is_not_different = by property different_is_not_same;
-
-  theorem incomparable_is_transitive: all x y z in Self,
-    !incomparable(x, y) -> !incomparable(y, z) -> !incomparable(x, z)
-    proof =
-      <1>1 assume x in Self, assume y in Self, assume z in Self,
-           assume H_xy: !incomparable(x, y), assume H_yz: !incomparable(y, z),
-           prove !incomparable(x, z)
-           <2>1 assume F: comparable(x, z),
-                prove false
-                <3>1 assume FF: !lt(x, z),
-                     prove false
-                     assumed {* to do *}
-                <3>2 assume FF: !lt(z, x),
-                     prove false
-                     assumed {* to do *}
-                <3>f qed by 
-                     step <3>1, <3>2 
-                     hypothesis F
-                     definition of comparable
-           <2>f qed by step <2>1 definition of incomparable
-      <1>2 conclude
-  ;
 
 end
 ;;
