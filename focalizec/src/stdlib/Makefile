@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.84 2009-03-10 15:12:53 rr Exp $
+# $Id: Makefile,v 1.85 2009-03-16 08:38:06 pessaux Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -66,6 +66,7 @@ EXTERNAL_BYT_OBJS =\
 #  random_foc_externals.cmo
 
 EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
+EXTERNAL_CMIS = $(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_VOS =\
 	coq_builtins.vo\
@@ -115,6 +116,10 @@ install::
 	if [ "$(FOCALIZE_VOS)" != "" ]; then \
 	  echo "Installing (Coq) compiled certified libs." && \
 	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/; \
+	fi && \
+	if [ "$(EXTERNAL_CMIS)" != "" ]; then \
+	  echo "Installing (OCaml interface) external stubs." && \
+	  $(CP) $(EXTERNAL_CMIS) $(LIB_INSTALL_DIR)/; \
 	fi && \
 	if [ "$(EXTERNAL_BYT_OBJS)" != "" ]; then \
 	  echo "Installing (OCaml bytecode) external stubs." && \
