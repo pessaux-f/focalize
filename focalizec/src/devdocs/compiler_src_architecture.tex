@@ -148,8 +148,9 @@ below enumeration (d) stands for ''directory'' and (f) stands for
           files, taking into account search path, files suffixes,
           read/write object files, \ldots
         \item {\tt files.mli} (f)
-        \item {\tt handy.ml} (f) :
-        \item {\tt handy.mli} (f) :
+        \item {\tt handy.ml} (f) : Various general functions, on lists,
+          pretty-printers, font setting\ldots
+        \item {\tt handy.mli} (f)
         \item {\tt installation.ml} (f) : File automatically generated
           by the ``configure'' process and record as \ocaml\ source, the
           various installation paths and commands the \focalizec\
@@ -158,53 +159,105 @@ below enumeration (d) stands for ''directory'' and (f) stands for
         \item {\tt location.ml} (f) : Defines the type of
           ``locations'', i.e. point un a source file and gives
           primitives to work with them.
-        \item {\tt location.mli} (f) :
-        \item {\tt miscHelpers.ml} (f) :
-        \item {\tt miscHelpers.mli} (f) :
-        \item {\tt parsetree.mli} (f) :
-        \item {\tt parsetree\_utils.ml} (f) :
-        \item {\tt parsetree\_utils.mli} (f) :
-        \item {\tt types.ml} (f) :
+        \item {\tt location.mli} (f)
+        \item {\tt miscHelpers.ml} (f) : Mostly contains 1 fonction
+          used during several passes to bind formal names to their
+          types from a type scheme and a list of formal names. May be
+          could somewhere else to save one file\ldots
+        \item {\tt miscHelpers.mli} (f)
+        \item {\tt parsetree.mli} (f) : The description of the AST.
+        \item {\tt parsetree\_utils.ml} (f) : General utilities to process
+          the AST.
+        \item {\tt parsetree\_utils.mli} (f)
+        \item {\tt types.ml} (f) : The description of the types
+          structure and operations to work with them. Because types
+          are a complex structure with invariants, they are exported
+          as opaque to prevent breaking these invariants. Hence, any
+          function dealing with the intime representation of a type
+          must be in this file since his is the only location where
+          this representation is visible.
         \item {\tt types.mli} (f) :
-\end{itemize}
-|   |-- ccodegen
-|   |-- commoncodegen
-|   |   |-- Makefile
-|   |   |-- abstractions.ml
-|   |   |-- abstractions.mli
-|   |   |-- context.mli
-|   |   |-- externals\_generation\_errs.ml
-|   |   |-- externals\_generation\_errs.mli
-|   |   |-- minEnv.ml
-|   |   |-- minEnv.mli
-|   |   |-- misc\_common.ml
-|   |   |-- misc\_common.mli
-|   |   |-- recursion.ml
-|   |   |-- recursion.mli
-|   |   |-- visUniverse.ml
-|   |   `-- visUniverse.mli
-|   |-- contribs
-|   |   |-- Makefile
-|   |   |-- automata
-|   |   |   |-- Makefile
-|   |   |   |-- gen\_def.fcl
-|   |   |   |-- main.fcl
-|   |   |   |-- request.fcl
-|   |   |   |-- switch\_automata.fcl
-|   |   |   |-- switch\_recovery\_automata.fcl
-|   |   |   |-- switch\_recovery\_normal\_automata.fcl
-|   |   |   `-- switch\_recovery\_reverse\_automata.fcl
-|   |   |-- utils
-|   |   |   |-- Makefile
-|   |   |   |-- pair.fcl
-|   |   |   `-- peano.fcl
-|   |   `-- voter
-|   |       |-- Makefile
-|   |       |-- etat\_vote.fcl
-|   |       |-- main.fcl
-|   |       |-- num\_capteur.fcl
-|   |       |-- value.fcl
-|   |       `-- vote.fcl
+        \end{itemize}
+      \item {\tt ccodegen} (d) : Dedicated to the C code generation
+        back-end. Managed by Julien Blond and is not currently
+        included in \focalize.
+        \begin{itemize}
+        \item \ldots not stable.
+        \end{itemize}
+      \item {\tt commoncodegen} (d) : Contains processing common to
+        all target languages that is performed in any case before
+        emitting the target code.
+        \begin{itemize}
+        \item {\tt Makefile} (f) : 
+        \item {\tt abstractions.ml} (f) : Performs the synthesis of
+          $\lambda$-lifted things, summarising def and
+          decl-depdendencies and dependencies on collection
+          parameters methods. It especially performs the final
+          (complete) computation of dependencies on collection
+          parameters, applying the various completion rules on the
+          dependencies found previously by the rules [TYPE] and
+          [BODY].
+        \item {\tt abstractions.mli} (f)
+        \item {\tt context.mli} (f) : The structure of the
+          ``context'', i.e. the structure inductively passed to each
+          function during this pass and that group into one single
+          record type all the information needed by the various
+          functions. This a handy way to prevent from having numerous
+          parameters to pass each time to the functions.
+        \item {\tt externals\_generation\_errs.ml} (f) : Exceptions
+          that can be raised when generating code for ``external''
+          definitions, i.e. definitions that are not writen in native
+          \focalize language and used to interface with other
+          programming languages.
+        \item {\tt externals\_generation\_errs.mli} (f)
+        \item {\tt minEnv.ml} (f) : Compute the ``\coq minimal typing
+          environment''.
+        \item {\tt minEnv.mli} (f)
+        \item {\tt misc\_common.ml} (f) : Various type definitions and
+          functions used in several points during this pass.
+        \item {\tt misc\_common.mli} (f)
+        \item {\tt recursion.ml} (f) : Deals the the recursive
+          functions processing.
+        \item {\tt recursion.mli} (f)
+        \item {\tt visUniverse.ml} (f) : Compute the ``visible
+          universe''.
+        \item {\tt visUniverse.mli} (f)
+        \end{itemize}
+      \item {\tt contribs} (d) : Contains contribution source codes
+        writen by users that are not developpers of the compiler and
+        its framework.
+        \begin{itemize}
+          \item {\tt Makefile} (f)
+          \item {\tt automata} (d) : Hierarchical automata. Managed by
+            Philippe Ayrault.
+            \begin{itemize}
+              \item {\tt Makefile} (f)
+              \item {\tt gen\_def.fcl} (f)
+              \item {\tt main.fcl} (f)
+              \item {\tt request.fcl} (f)
+              \item {\tt switch\_automata.fcl} (f)
+              \item {\tt switch\_recovery\_automata.fcl} (f)
+              \item {\tt switch\_recovery\_normal\_automata.fcl} (f)
+              \item {\tt switch\_recovery\_reverse\_automata.fcl} (f)
+            \end{itemize}
+          \item {\tt utils} (d) : Various utilities. Managed by
+            Philippe Ayrault.
+            \begin{itemize}
+            \item {Makefile} (f)
+            \item {pair.fcl} (f)
+            \item {peano.fcl} (f)
+            \end{itemize}
+          \item {\tt voter} (d) : Model of a generic voter. Managed by
+            Philippe Ayrault.
+            \begin{itemize}
+              \item {Makefile} (f)
+              \item {etat\_vote.fcl} (f)
+              \item {main.fcl} (f)
+              \item {num\_capteur.fcl} (f)
+              \item {value.fcl} (f)
+              \item {vote.fcl} (f)
+            \end{itemize}
+         \end{itemize}
 |   |-- coqcodegen
 |   |   |-- FOCAL\_COQ\_MAPPINGS
 |   |   |-- Makefile
