@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.5 2009-03-16 16:40:31 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.6 2009-03-17 11:16:22 weis Exp $
 
 # The name of the file says why and for who it was written :)
 
@@ -31,7 +31,7 @@
            afterwards.
      </OL>
 
-  The target clean is a synonym for clean_internal_tools, 
+  The target clean is a synonym for clean_internal_tools.
 
   The target distclean is a synonym for distclean_external_tools then
   clean_internal_tools for consistency.
