@@ -629,3 +629,43 @@ Maintained by Damien Doliger, he is the man in the place to describe
 \subsection{zvtov}
 Maintained by Damien Doliger, he is the man in the place to describe
 \smiley.
+
+
+\section{Passes and directories}
+Each directory described above roughly corresponds to one pass of the
+compiler except the directory {\tt src/basement} which contains basic
+stuff used a bit everywhere. The order of the tasks performed at
+compile-time can be mapped on the source directories as follows:
+\begin{enumerate}
+\item {\tt src/toplevel} : Entry point of the compiler, performing I/O
+  and administrative tasks to initiate the compilation process.
+\item {\tt src/parser} : Lex and parse the source code
+\item {\tt src/typing} : Scopes the parsed source (i.e. the primary
+  AST, hence leading to a ``scoped'' AST), then type-check the scoped
+  AST (hence leading to a ``typed'' AST), resolves inheritance, compute
+  def and decl-dependencies, ensure well-formation and performs a first
+  partial computation of dependencies on collection parameters'
+  methods.
+\item {\tt src/commoncodegen} : Compute final abstractions
+  (i.e. $\lambda$-liftings) due to def and decl-dependencies and
+  dependencies on collection parameters' methods. This process is in
+  fact done once for \ocaml\ code generation and once for \coq\ code
+  generation (obviously if code generation for each language is
+  enabled via the command line options of the compiler). The \ocaml\
+  code production is done first is the \coq\ one is also requested.
+\item {\tt src/mlcodegen} : Emits the \ocaml\ code if requested.
+\item {\tt src/commoncodegen} : As describe above but for \coq\ code
+  generation if requested.
+\item {\tt src/coqcodegen} : Emits the \coq\ code if requested.
+\end{enumerate}
+
+Libraries, standard ({\tt src/stdlib}) and other libraries
+({\tt src/extlib}) are compiled once, when the compiler is built. Then
+they get installed according to the user's configuration and not
+touched anymore. However, when compiling a \focalize\ program, they
+will be used if references are done to entities they host.
+
+During the compilation of the \focalize\ source, only object files of
+the libraries are needed. \ocaml\ and \coq\ files of the libraries
+will be used once \focalizec\ has output the generated code, in order
+to produce the whole \ocaml\ executable or \coq\ model.
