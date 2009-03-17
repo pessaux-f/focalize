@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.29 2009-03-13 07:52:05 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.30 2009-03-17 11:17:19 weis Exp $ *)
 
 exception No_input_file;;
 
@@ -87,7 +87,7 @@ let (get_input_file_names, add_input_file_name) =
 
 let (get_do_interface_output, set_do_interface_output) =
   let do_interface_output_flag = ref false in
-    ((fun () -> !do_interface_output_flag),
+  ((fun () -> !do_interface_output_flag),
    (fun b -> do_interface_output_flag := b))
 ;;
 
@@ -150,7 +150,7 @@ exception Invalid_OCaml_compiler of string ;;
 let (set_ml_compiler, get_ml_compiler) =
   let ml_compiler = ref OCamlByt in
   ((fun s ->
-    match s with
+     match s with
      | "bin" -> ml_compiler := OCamlBin
      | "byt" -> ml_compiler := OCamlByt
      | "both" -> ml_compiler := OCamlBoth
