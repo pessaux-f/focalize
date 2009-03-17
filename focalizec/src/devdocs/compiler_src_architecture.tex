@@ -346,7 +346,8 @@ $x$ nesting level of the root (i.e. of {\tt focalize/focalizec}) and
         %% \end{itemize}
       \item{\tt unix.fcl} (f)
       \end{itemize}
-    \item {\tt algebra} (d 3) : Formal calculus library.
+    \item {\tt algebra} (d 3) : Formal calculus library. Maintained by
+      Renaud Rioboo.
       \begin{itemize}
       \item {\tt Makefile} (f)
       \item {\tt additive\_law.fcl} (f)
@@ -438,77 +439,167 @@ $x$ nesting level of the root (i.e. of {\tt focalize/focalizec}) and
         the standard library used ti test the lexer/parser. Not used
         anymore.
       \end{itemize}
-   \end{itemize}
-|   |-- scoper
-|   |-- stdlib
-|   |   |-- Makefile
-|   |   |-- basics.fcl
-|   |   |-- coq\_builtins.v
-|   |   |-- generic\_proof\_cases.v
-|   |   |-- lattices.fcl
-|   |   |-- ml\_builtins.ml
-|   |   |-- orders.fcl
-|   |   |-- orders\_and\_lattices.fcl
-|   |   |-- products.fcl
-|   |   |-- quotients.fcl
-|   |   |-- sets.fcl
-|   |   |-- sets\_externals.ml
-|   |   |-- sets\_orders.fcl
-|   |   |-- sets\_orders\_externals.ml
-|   |   |-- strict\_orders.fcl
-|   |   |-- sums.fcl
-|   |   |-- wellfounded.fcl
-|   |   `-- wellfounded\_externals.v
-|   |-- toplevel
-|   |   |-- Makefile
-|   |   |-- exc\_wrapper.ml
-|   |   |-- focalizec.ml
-|   |   |-- focalizec.mli
-|   |   |-- fodump.ml
-|   `-- typing
-|       |-- Makefile
-|       |-- ast\_equal.ml
-|       |-- ast\_equal.mli
-|       |-- depGraphData.mli
-|       |-- dep\_analysis.ml
-|       |-- dep\_analysis.mli
-|       |-- env.ml
-|       |-- env.mli
-|       |-- infer.ml
-|       |-- infer.mli
-|       |-- param\_dep\_analysis.ml
-|       |-- param\_dep\_analysis.mli
-|       |-- scoping.ml
-|       |-- scoping.mli
-|       |-- substColl.ml
-|       |-- substColl.mli
-|       |-- substExpr.ml
-|       `-- substExpr.mli
-`-- tests
-    |-- Makefile
-    |-- ko\_\_bad\_self\_use.fcl
-    |-- ko\_\_param\_toy.fcl
-    |-- ko\_\_test\_error.fcl
-    |-- ko\_\_test\_rec.fcl
-    |-- ok\_\_baby\_toy.fcl
-    |-- ok\_\_baby\_toy\_externals.ml
-    |-- ok\_\_caveat.fcl
-    |-- ok\_\_coll\_outside.fcl
-    |-- ok\_\_definition\_72\_rule\_PRM.fcl
-    |-- ok\_\_in\_example.fcl
-    |-- ok\_\_in\_example2.fcl
-    |-- ok\_\_list.fcl
-    |-- ok\_\_multiple\_inherit.fcl
-    |-- ok\_\_need\_inspect\_self.fcl
-    |-- ok\_\_need\_re\_ordering.fcl
-    |-- ok\_\_odd\_even.fcl
-    |-- ok\_\_phd\_def\_deps.fcl
-    |-- ok\_\_phd\_meths\_gen.fcl
-    |-- ok\_\_phd\_sample.fcl
-    |-- ok\_\_scoping\_tricky.fcl
-    |-- ok\_\_term\_measure.fcl
-    |-- ok\_\_toplevel\_odd\_even.fcl
-    `-- ok\_\_torture\_params.fcl
+    \end{itemize}
+  \item {\tt scoper} (d 2) : Old stuff. Was discarded a long time
+    ago. The directory is empty by the way.
+  \item {\tt stdlib} (d 2) : The standard library. Most of these
+    sources are maintained by Renaud Rioboo. A few ones (basics and
+    builtins) are low-level code close to the compiler and maintained
+    by the core compiler development team.
+    \begin{itemize}
+    \item {\tt Makefile} (f)
+    \item {\tt basics.fcl} (f) : Basic bricks and internal-related
+      stuff. Contains the primitive type definitions dans some very
+      basic functions for \focalize.
+    \item {\tt coq\_builtins.v} (f) : Basic bricks and internal-related
+      stuff especially dedicated to \coq\ code.
+    \item {\tt generic\_proof\_cases.v} (f) : Contains builtin stuff
+      for \coq\ about builtin lists and some tactics.
+    \item {\tt lattices.fcl} (f)
+    \item {\tt ml\_builtins.ml} (f) : Basic bricks and internal-related
+      stuff especially dedicated to \ocaml\ code.
+    \item {\tt orders.fcl} (f)
+    \item {\tt orders\_and\_lattices.fcl} (f)
+    \item {\tt products.fcl} (f)
+    \item {\tt quotients.fcl} (f)
+    \item {\tt sets.fcl} (f)
+    \item {\tt sets\_externals.ml} (f) : External definitions to link
+      for \ocaml\ related to {\tt sets.fcl}.
+    \item {\tt sets\_orders.fcl} (f)
+    \item {\tt sets\_orders\_externals.ml} (f) : External definitions
+      to link for \ocaml\ related to {\tt sets\_orders.fcl}.
+    \item {\tt strict\_orders.fcl} (f)
+    \item {\tt sums.fcl} (f)
+    \item {\tt wellfounded.fcl} (f) : Define well foundation,
+      termination orders for recursive function definitions for \coq.
+    \item {\tt wellfounded\_externals.v} (f) : External definitions
+      to link for \ocaml\ related to {\tt wellfounded.fcl}.
+    \end{itemize}
+  \item {\tt toplevel} (d 2)
+    \begin{itemize}
+    \item {\tt Makefile} (f)
+    \item {\tt exc\_wrapper.ml} (f) : Firewall designed to recover all
+      the exceptions that can be raised during a source compilation
+      and issues the related error message. Roughly, this code wraps
+      the main call to the compilation engine.
+    \item {\tt focalizec.ml} (f) : The compiler entry point.
+    \item {\tt focalizec.mli} (f)
+    \item {\tt fodump.ml} (f) : For debug only, dumps (partially) the
+      content of a \focalize\ object file (``.fo'' file).
+    \end{itemize}
+  \item {\tt typing} (d 2) : Performs the type-checking of the
+    language, normal form of species, checks well-formation of
+    species, compute def and decl-dependencies, initiate computation
+    of dependencies on collection parameters' methods, resolves
+    inheritance.
+    \begin{itemize}
+    \item {\tt Makefile} (f)
+    \item {\tt ast\_equal.ml} (f) : Implements equality test between
+      logical expressions (indeed, between expressions since logical
+      statements fully embedd expressions).
+    \item {\tt ast\_equal.mli} (f)
+    \item {\tt depGraphData.mli} (f) : Defines the structure of the
+      dependencies graph used to compute well-formation from def and
+      decl-dependencies.
+    \item {\tt dep\_analysis.ml} (f) : Handles the dependencies
+      analyses on methods of {\tt Self}, i.e. def nd decl-dependencies.
+    \item {\tt dep\_analysis.mli} (f)
+    \item {\tt env.ml} (f) : Structure of the environments used all
+      allong the compilation. Contains a generic environment
+      structure, the specialised scoping environment the specialised
+      typing environment, the specialised \ocaml\ code generation
+      environment and the specialised \coq\ code generation
+      environment. All these environments are instantiations of the
+      generic environment structure. Also contains data-structures
+      used from type-checking up to code generation to record the
+      various information about analysed species, collections,
+      methods, types, \ldots Some of these data-structures will appear
+      in later passes, picked-up from these environments.
+    \item {\tt env.mli} (f)
+    \item {\tt infer.ml} : Core engine performing type-checking,
+      inheritance resolution, normal form of species, check of
+      well-formation, def and decl-dependencies computation and
+      triggers the initial computation of dependencies on collection
+      parameters' methods.
+    \item {\tt infer.mli} (f)
+    \item {\tt param\_dep\_analysis.ml} (f) : Handles the initial
+      computation of dependencies on collection parameters'
+      methods. The computed dependencies will have to be completed
+      later in the next pass.
+    \item {\tt param\_dep\_analysis.mli} (f)
+    \item {\tt scoping.ml} (f) : Performs scoping analysis.
+    \item {\tt scoping.mli}
+    \item {\tt substColl.ml} (f) : Performs substitution of a
+      collection (name/carrier) by another one or {\tt Self} in an
+      AST.
+    \item {\tt substColl.mli} (f)
+    \item {\tt substExpr.ml} (f) : Performs substitution of an
+    expression (i.e. {\tt Parsetree.expr}) by another in an AST.
+    \item {\tt substExpr.mli} (f)
+    \end{itemize}
+  \end{itemize}
+\item {\tt tests} (d 1) : Various little tests we wrote to shake the
+  compiler or to ensure that some particular features/processing
+  required by the compiler were really working. This code is most of
+  the time meaningless and only design totarget a particular point of
+  the compilation process. The naming scheme is: a source file name
+  starting by ``ko\_\_'' must lead to an error (an error message, not
+  a failure of the compiler), a source file name starting by
+  ``ok\_\_'' must be accepted by the compiler and lead to effective
+  code.
+  \begin{itemize}
+  \item {\tt Makefile} (f)
+  \item {\tt ko\_\_bad\_self\_use.fcl} (f)
+  \item {\tt ko\_\_param\_toy.fcl} (f)
+  \item {\tt ko\_\_test\_error.fcl} (f)
+  \item {\tt ko\_\_test\_rec.fcl} (f)
+  \item {\tt ok\_\_baby\_toy.fcl} (f) : A bit of everything, without
+    any order.
+  \item {\tt ok\_\_baby\_toy\_externals.ml} : External code to link
+    for \ocaml\ related to {\tt ok\_\_baby\_toy.fcl}.
+  \item {\tt ok\_\_caveat.fcl} (f) : Illustrates the pitfall of sum
+    type constructors that have {\bf 1} argument that is a tupple or
+    {\bf several} arguments but are hardly different from the syntax
+    point of view.
+  \item {\tt ok\_\_coll\_outside.fcl} (f) :
+  \item {\tt ok\_\_definition\_72\_rule\_PRM.fcl} (f) : Illustrates
+    the need for rule PRM in definition 72 page 153 in Virgile
+    Prevosto's PhD.
+    \item {\tt ok\_\_in\_example.fcl} (f)
+    \item {\tt ok\_\_in\_example2.fcl} (f)
+    \item {\tt ok\_\_list.fcl} (f)
+    \item {\tt ok\_\_multiple\_inherit.fcl} (f) : Used to track the
+      provenance of methods in case of multiple inheritance.
+    \item {\tt ok\_\_need\_inspect\_self.fcl} (f) : Example showing
+      how now use the need to inspect the structure of
+      {\tt representation} while computing the \\
+      ``{\tt used\_species\_parameters\_ty}'' in the case where a
+      method has a  def-dependency on {\tt Self}.
+    \item {\tt ok\_\_need\_re\_ordering.fcl} (f) : Example showing the
+      need of the final re-organization of methods due to the
+      collapsing procedure of properties and {\tt proof of}s.
+    \item {\tt ok\_\_odd\_even.fcl} (f) : Example showing simple
+      mutually recursive methods that must pass for \ocaml\ code
+      generation. Note that \coq\ code generation does not yet handle
+      mutual recursion.
+    \item {\tt ok\_\_phd\_def\_deps.fcl} (f) : Example of Virgile
+      Prevosto's Phd, section 3.9.6, page 56. Illustrates the need for
+      the erasing procedure.
+    \item {\tt ok\_\_phd\_meths\_gen.fcl} (f) : Example from Virgile
+      Prevosto's Phd, section 6.4.3, page 115.
+    \item {\tt ok\_\_phd\_sample.fcl} (f) : The initial example given
+      in Virgile Prevosto's Phd, section 2.2.2 starting page 14.
+    \item {\tt ok\_\_scoping\_tricky.fcl} (f) : Example showing
+      scoping occurrences of a same name in case wher this name is not
+      recursively defined. Combines the stuff with late-binding.
+    \item {\tt ok\_\_term\_measure.fcl} (f)
+    \item {\tt ok\_\_toplevel\_odd\_even.fcl} (f)
+    \item {\tt ok\_\_torture\_params.fcl} (f) : Example showing how to
+      torture parametrised species. It exhibits various non-trivial
+      cases that must pass and lead to effective \ocaml\/\coq\
+      code. These examples make heavy use of {\tt in}, {\tt is}
+      parameters and inheritance to shake the compiler's instanciation
+      of parameters during inheritance.
   \end{itemize}
 \end{itemize}
 
