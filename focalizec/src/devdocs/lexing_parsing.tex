@@ -1,0 +1,45 @@
+% $Id: lexing_parsing.tex,v 1.1 2009-03-17 17:24:48 pessaux Exp $
+
+\section{Lexing}
+The lexing process is performed as usual, by a lexer created by
+\ocamllex. The description of the lexer is located in
+{\tt src/parser/lexer.mll}. The structure of this file is like any
+regular lexer for a realistic language.
+
+The keywords of the language is stored in a hash-table to
+prevent the automaton from being too big. Each time a stream of
+alpha-numeric characters that can be either an identifier or a keyword
+is found, we lookup in this hash-table. If the word make of this
+stream of characters belongs to the hash-table, then we return the
+corresponding token, else we return an identifier based on the form of
+the word (capitalised or not).
+
+As any lexer, each time it is called (by the lexer), it returns one
+and only one lexem.
+
+
+
+\section{Parsing}
+The lexing process is performed as usual, by a lexer created by
+\ocamlyacc. The description of the parser is located in
+{\tt src/parser/parser.mly}. The structure of this file is like any
+regular parser for a realistic language. The parser doesn't try to
+implements recovery on error, hence, it describes the syntax of the
+language without any addition (conversely to \ocaml\ or \gcc\'s
+parsers).
+
+The important rule applied in the parser is that at each AST node it
+creates, it record the corresponding location (extend) in the source
+file and the corresponding (optional) documentation (i.e. special
+comments kept in the AST). This mechanism is performed by a set of
+basic functions with names derivated from {\tt mk} ({\tt mk\_loc},
+{\tt mk\_doc\_elem}, {\tt mk\_doc}, {\tt mk\_local\_ident},
+{\tt mk}, \ldots). This especially
+means that one never must create an AST node by hand. Any created AST
+node must be created via these basic functions.
+
+The parser, returns a complete AST corresponding to the parse of the
+whole submited source file. It currently doesn't have an entry rule
+returning only an AST for one definition. This especially means that
+the result of the parsing is always an AST node of the form
+{\tt Parsetree.file}.

@@ -1,0 +1,121 @@
+% $Id: environments.tex,v 1.1 2009-03-17 17:24:48 pessaux Exp $
+
+All allong the compilation pass, we need to keep trace of various
+informations about compiled entities (methods, types, identifiers,
+\ldots). This is done by a kind of association list, mapping a name of
+entity onto an information.
+
+Depending on the compilation passe, the nature of the recorded
+information is different. However, the basis of name mapping is always
+the same. For this reason, instead of building several times the name
+mapping system, we decided to create a structure of generic
+environments which can be instantiated by specific information to
+record for each compilation pass.
+
+Environments implementation is located in the file
+{\tt src/typing/env.ml}.
+
+
+\section{The generic environment}
+As previously stated, the core of an environment is to map names onto
+informations. In \focalize\, names can designate several types of
+entities:
+\begin{itemize}
+  \item Sum type value constructors (e.g. {\tt None}, {\tt Some}).
+  \item Record type field labels.
+  \item Types constructors (e.g. {\tt int}, {\tt option}).
+  \item Values.
+  \item Species.
+\end{itemize}
+
+To ensure there is no conflicts between these different types of
+entities, i.e. to be allowed to give a same name to a record types
+field and to a type constructor or a value identifier, en environment
+will keep separate namespaces for each type of entity.
+
+As we stated before, an environment maps a name (the {\bf key}) onto
+an information (the {\bf value}). Hence, the {\bf key} of an
+environment being a name, it will be mapped onto a
+{\tt Parsetree.vname}. Since we want environments to record different
+values (to be polymorphic in fact), the {\bf value} will be a
+different type variable for each namespace.
+
+Hence, the generic environments have type:
+{\scriptsize
+\begin{lstlisting}[language=MyOCaml]
+type ('a, 'b, 'c, 'd, 'e) generic_env = {
+  constructors : (Parsetree.constructor_name * 'a binding_origin) list ;
+  labels : (Parsetree.vname * 'b binding_origin) list ;
+  types : (Parsetree.vname * 'c binding_origin) list ;
+  values : (Parsetree.vname * 'd binding_origin) list ;
+  species : (Parsetree.vname * 'e binding_origin) list
+}
+\end{lstlisting}
+}
+
+To create a module system, we need to wrap this core structure inside
+a module providing access to this structure, i.e. search the
+{\bf value} bound to a {\bf key}: {\tt find} and add binding of a
+{\bf key} to a {\bf value} : {\tt add}. Obviously, we need these 2
+functions for each namespace.
+
+We would like to directly create a functor taking as argument a module
+whose signature implements the types of bound information in each
+namespace for an environement and gives back a module providing the
+functions {\tt find} and {\tt add} for each namespace, in this
+environment. The idea is then to apply this functor to a set of
+various modules to get the scoping environment, the typing
+environment, the \ocaml\ and the \coq\ code generation environments.
+
+This simplistic view fails because of the notion of ``modules'',
+i.e. in \focalize\, species and collections. In effect, since species
+and collections host definitions, they can be seen as modules. Hence
+we need an extra 
+
+
+To do so, we process in two steps. First we create a module handling
+access to each namespace, independently of the information bound in
+the namespace. This way, we get a 
+
+create a functor taking as argument a module describing
+the {\bf values} to bind to {\bf keys} for each namespace. Such a
+module is required to have the signature:
+{\scriptsize
+\begin{lstlisting}[language=MyOCaml]
+module type EnvModuleAccessSig =
+  type constructor_bound_data
+  type label_bound_data
+  type type_bound_data
+  type value_bound_data
+  type species_bound_data
+  val find_module :
+    loc: Location.t -> current_unit: Types.fname -> Types.fname option ->
+      (constructor_bound_data, label_bound_data, type_bound_data,
+       value_bound_data, species_bound_data)
+      generic_env ->
+        (constructor_bound_data, label_bound_data, type_bound_data,
+         value_bound_data, species_bound_data)
+      generic_env
+  val pervasives : unit ->
+    (constructor_bound_data, label_bound_data, type_bound_data,
+     value_bound_data, species_bound_data)
+      generic_env
+  val make_value_env_from_species_methods :
+    Parsetree.qualified_vname -> species_bound_data ->
+      (constructor_bound_data, label_bound_data, type_bound_data,
+       value_bound_data, species_bound_data)
+        generic_env
+  val post_process_method_value_binding :
+    Parsetree.qualified_vname -> value_bound_data -> value_bound_data
+  end
+\end{lstlisting}
+}
+
+
+\section{Scoping environment}
+
+\section{Typing environment}
+
+\section{\ocaml\ code generation environment}
+
+\section{\coq\ code generation environment}
