@@ -8,8 +8,9 @@ relative to this root. In some of the directories is a sub-directory
 called {\tt odoc}. It can be safely ignored and is only used when
 invoking verb+make doc+ to store the \ocamldoc\ output (HTML
 documentation extracted from the source code of \focalize). In the
-below enumeration (d) stands for ''directory'' and (f) stands for
-''file".
+below enumeration (d x) stands for ''directory'' whose content is at
+$x$ nesting level of the root (i.e. of {\tt focalize/focalizec}) and
+(f) stands for ''file".
 
 \begin{itemize}
 \item {\tt Makefile} (f) : The toplevel Makefile building the
@@ -37,14 +38,14 @@ below enumeration (d) stands for ''directory'' and (f) stands for
   and tools, to ask the user where to install \focalize\ components,
   \ldots Parts of its output is stored in the above file
   {\tt .config\_var}.
-\item {\tt doc\_src} (d) : The directory containing all the
+\item {\tt doc\_src} (d 1) : The directory containing all the
   documentations at destination of the users.
   \begin{itemize}
   \item {\tt Makefile} (f) : Makefile trigering the documentations
     build.
-  \item {\tt html} (d) : The \focalize\ WEB site in HML format.
+  \item {\tt html} (d 2) : The \focalize\ WEB site in HML format.
     \begin{itemize}
-    \item {\tt Includes} (d)
+    \item {\tt Includes} (d 3)
       \begin{itemize}
       \item {\tt aftertitle-eng.html} (f)
       \item {\tt aprestitre-fra.html} (f)
@@ -66,24 +67,24 @@ below enumeration (d) stands for ''directory'' and (f) stands for
       \end{itemize}
     \item {\tt Makefile} (f)
     \item {\tt Makefile.html} (f)
-    \item {\tt images} (d) : Directoty containing images for the WEB
+    \item {\tt images} (d 3) : Directoty containing images for the WEB
       site.
       \begin{itemize}
       \item {\tt focal\_picture.jpg} (f) : A niiiice 3D picture done with
         Povray \smiley.
       \end{itemize}
     \end{itemize}
-  \item {\tt man} (d) : Directory containing the ``man'' manual.
+  \item {\tt man} (d 2) : Directory containing the ``man'' manual.
     \begin{itemize}
     \item {\tt Makefile} (f)
     \item {\tt focalizec.env} (f)
     \item {\tt focalizec.man} (f) : ``man'' for \focalizec.
     \item {\tt focalizedep.man} (f) : ``man'' for \focalizedep.
     \end{itemize}
-  \item {\tt  tex} (d) : Documentations in \latex\ format.
+  \item {\tt  tex} (d 2) : Documentations in \latex\ format.
     \begin{itemize}
     \item {\tt Makefile} (f)
-    \item {\tt refman} (d) : Directory containing the reference manual.
+    \item {\tt refman} (d 3) : Directory containing the reference manual.
       \begin{itemize}
       \item {\tt Makefile} (f)
       \item {\tt basic\_concepts.tex} (f)
@@ -123,7 +124,7 @@ below enumeration (d) stands for ''directory'' and (f) stands for
       \end{itemize}
     \end{itemize}
   \end{itemize}
-\item {\tt src} (d) : Root of the sources of \focalizec\ and \focalizedep.
+\item {\tt src} (d 1) : Root of the sources of \focalizec\ and \focalizedep.
   \begin{itemize}
   \item {\tt attic} (d) : Contains miscellaneous interesting parts of
     code that have been writen one day, that are not used anymore, but
@@ -136,234 +137,308 @@ below enumeration (d) stands for ''directory'' and (f) stands for
       {\tt string\_search\_stuff.ml}
     \item May be more\ldots
     \end{itemize}
-    \item {\tt basement} (d) : Contains the early basic bricks of the
-      compiler.
+  \item {\tt basement} (d 2) : Contains the early basic bricks of the
+    compiler.
+    \begin{itemize}
+    \item {\tt Makefile} (f) : Trigger build in this directory.
+    \item {\tt configuration.ml} (f) : Manages version number (and
+      by side effect the {\tt -help} option output text) and the
+      command line options flags.
+    \item {\tt configuration.mli} (f)
+    \item {\tt files.ml} (f) : Contains primitives dealing with
+      files, taking into account search path, files suffixes,
+      read/write object files, \ldots
+    \item {\tt files.mli} (f)
+    \item {\tt handy.ml} (f) : Various general functions, on lists,
+      pretty-printers, font setting\ldots
+    \item {\tt handy.mli} (f)
+    \item {\tt installation.ml} (f) : File automatically generated
+      by the ``configure'' process and record as \ocaml\ source, the
+      various installation paths and commands the \focalizec\
+      compiler need to know when dealing with \focalize\ source
+      files.
+    \item {\tt location.ml} (f) : Defines the type of
+      ``locations'', i.e. point un a source file and gives
+      primitives to work with them.
+    \item {\tt location.mli} (f)
+    \item {\tt miscHelpers.ml} (f) : Mostly contains 1 fonction
+      used during several passes to bind formal names to their
+      types from a type scheme and a list of formal names. May be
+      could somewhere else to save one file\ldots
+    \item {\tt miscHelpers.mli} (f)
+    \item {\tt parsetree.mli} (f) : The description of the AST.
+    \item {\tt parsetree\_utils.ml} (f) : General utilities to process
+      the AST.
+    \item {\tt parsetree\_utils.mli} (f)
+    \item {\tt types.ml} (f) : The description of the types structure
+      and operations to work with them. Because types are a complex
+      structure with invariants, they are exported as opaque to
+      prevent breaking these invariants. Hence, any function dealing
+      with the intime representation of a type must be in this file
+      since his is the only location where this representation is visible.
+    \item {\tt types.mli} (f) :
+    \end{itemize}
+  \item {\tt ccodegen} (d) : Dedicated to the C code generation
+    back-end. Maintained by Julien Blond and is not currently included in
+    \focalize.
+    \begin{itemize}
+    \item \ldots not stable.
+    \end{itemize}
+  \item {\tt commoncodegen} (d 2) : Contains processing common to all
+    target languages that is performed in any case before emitting the
+    target code.
+    \begin{itemize}
+    \item {\tt Makefile} (f) : 
+    \item {\tt abstractions.ml} (f) : Performs the synthesis of
+      $\lambda$-lifted things, summarising def and decl-depdendencies
+      and dependencies on collection parameters methods. It especially
+      performs the final (complete) computation of dependencies on
+      collection parameters, applying the various completion rules on
+      the dependencies found previously by the rules [TYPE] and [BODY].
+    \item {\tt abstractions.mli} (f)
+    \item {\tt context.mli} (f) : The structure of the ``context'',
+      i.e. the structure inductively passed to each function during
+      this pass and that group into one single record type all the
+      information needed by the various functions. This a handy way to
+      prevent from having numerous parameters to pass each time to the
+      functions.
+    \item {\tt externals\_generation\_errs.ml} (f) : Exceptions that
+      can be raised when generating code for ``external'' definitions,
+      i.e. definitions that are not writen in native \focalize
+      language and used to interface with other programming languages.
+    \item {\tt externals\_generation\_errs.mli} (f)
+    \item {\tt minEnv.ml} (f) : Compute the ``\coq minimal typing
+      environment''.
+    \item {\tt minEnv.mli} (f)
+    \item {\tt misc\_common.ml} (f) : Various type definitions and
+      functions used in several points during this pass.
+    \item {\tt misc\_common.mli} (f)
+    \item {\tt recursion.ml} (f) : Deals the the recursive
+      functions processing.
+    \item {\tt recursion.mli} (f)
+    \item {\tt visUniverse.ml} (f) : Compute the ``visible
+      universe''.
+    \item {\tt visUniverse.mli} (f)
+    \end{itemize}
+  \item {\tt contribs} (d 2) : Contains contribution source codes writen
+    by users that are not developpers of the compiler and its framework.
+    \begin{itemize}
+    \item {\tt Makefile} (f)
+    \item {\tt automata} (d 3) : Hierarchical automata. Maintained by
+      Philippe Ayrault.
       \begin{itemize}
-        \item {\tt Makefile} (f) : Trigger build in this directory.
-        \item {\tt configuration.ml} (f) : Manages version number (and
-          by side effect the {\tt -help} option output text) and the
-          command line options flags.
-        \item {\tt configuration.mli} (f)
-        \item {\tt files.ml} (f) : Contains primitives dealing with
-          files, taking into account search path, files suffixes,
-          read/write object files, \ldots
-        \item {\tt files.mli} (f)
-        \item {\tt handy.ml} (f) : Various general functions, on lists,
-          pretty-printers, font setting\ldots
-        \item {\tt handy.mli} (f)
-        \item {\tt installation.ml} (f) : File automatically generated
-          by the ``configure'' process and record as \ocaml\ source, the
-          various installation paths and commands the \focalizec\
-          compiler need to know when dealing with \focalize\ source
-          files.
-        \item {\tt location.ml} (f) : Defines the type of
-          ``locations'', i.e. point un a source file and gives
-          primitives to work with them.
-        \item {\tt location.mli} (f)
-        \item {\tt miscHelpers.ml} (f) : Mostly contains 1 fonction
-          used during several passes to bind formal names to their
-          types from a type scheme and a list of formal names. May be
-          could somewhere else to save one file\ldots
-        \item {\tt miscHelpers.mli} (f)
-        \item {\tt parsetree.mli} (f) : The description of the AST.
-        \item {\tt parsetree\_utils.ml} (f) : General utilities to process
-          the AST.
-        \item {\tt parsetree\_utils.mli} (f)
-        \item {\tt types.ml} (f) : The description of the types
-          structure and operations to work with them. Because types
-          are a complex structure with invariants, they are exported
-          as opaque to prevent breaking these invariants. Hence, any
-          function dealing with the intime representation of a type
-          must be in this file since his is the only location where
-          this representation is visible.
-        \item {\tt types.mli} (f) :
-        \end{itemize}
-      \item {\tt ccodegen} (d) : Dedicated to the C code generation
-        back-end. Managed by Julien Blond and is not currently
-        included in \focalize.
-        \begin{itemize}
-        \item \ldots not stable.
-        \end{itemize}
-      \item {\tt commoncodegen} (d) : Contains processing common to
-        all target languages that is performed in any case before
-        emitting the target code.
-        \begin{itemize}
-        \item {\tt Makefile} (f) : 
-        \item {\tt abstractions.ml} (f) : Performs the synthesis of
-          $\lambda$-lifted things, summarising def and
-          decl-depdendencies and dependencies on collection
-          parameters methods. It especially performs the final
-          (complete) computation of dependencies on collection
-          parameters, applying the various completion rules on the
-          dependencies found previously by the rules [TYPE] and
-          [BODY].
-        \item {\tt abstractions.mli} (f)
-        \item {\tt context.mli} (f) : The structure of the
-          ``context'', i.e. the structure inductively passed to each
-          function during this pass and that group into one single
-          record type all the information needed by the various
-          functions. This a handy way to prevent from having numerous
-          parameters to pass each time to the functions.
-        \item {\tt externals\_generation\_errs.ml} (f) : Exceptions
-          that can be raised when generating code for ``external''
-          definitions, i.e. definitions that are not writen in native
-          \focalize language and used to interface with other
-          programming languages.
-        \item {\tt externals\_generation\_errs.mli} (f)
-        \item {\tt minEnv.ml} (f) : Compute the ``\coq minimal typing
-          environment''.
-        \item {\tt minEnv.mli} (f)
-        \item {\tt misc\_common.ml} (f) : Various type definitions and
-          functions used in several points during this pass.
-        \item {\tt misc\_common.mli} (f)
-        \item {\tt recursion.ml} (f) : Deals the the recursive
-          functions processing.
-        \item {\tt recursion.mli} (f)
-        \item {\tt visUniverse.ml} (f) : Compute the ``visible
-          universe''.
-        \item {\tt visUniverse.mli} (f)
-        \end{itemize}
-      \item {\tt contribs} (d) : Contains contribution source codes
-        writen by users that are not developpers of the compiler and
-        its framework.
-        \begin{itemize}
-          \item {\tt Makefile} (f)
-          \item {\tt automata} (d) : Hierarchical automata. Managed by
-            Philippe Ayrault.
-            \begin{itemize}
-              \item {\tt Makefile} (f)
-              \item {\tt gen\_def.fcl} (f)
-              \item {\tt main.fcl} (f)
-              \item {\tt request.fcl} (f)
-              \item {\tt switch\_automata.fcl} (f)
-              \item {\tt switch\_recovery\_automata.fcl} (f)
-              \item {\tt switch\_recovery\_normal\_automata.fcl} (f)
-              \item {\tt switch\_recovery\_reverse\_automata.fcl} (f)
-            \end{itemize}
-          \item {\tt utils} (d) : Various utilities. Managed by
-            Philippe Ayrault.
-            \begin{itemize}
-            \item {Makefile} (f)
-            \item {pair.fcl} (f)
-            \item {peano.fcl} (f)
-            \end{itemize}
-          \item {\tt voter} (d) : Model of a generic voter. Managed by
-            Philippe Ayrault.
-            \begin{itemize}
-              \item {Makefile} (f)
-              \item {etat\_vote.fcl} (f)
-              \item {main.fcl} (f)
-              \item {num\_capteur.fcl} (f)
-              \item {value.fcl} (f)
-              \item {vote.fcl} (f)
-            \end{itemize}
-         \end{itemize}
-|   |-- coqcodegen
-|   |   |-- FOCAL\_COQ\_MAPPINGS
-|   |   |-- Makefile
-|   |   |-- main\_coq\_generation.ml
-|   |   |-- rec\_let\_gen.ml
-|   |   |-- rec\_let\_gen.mli
-|   |   |-- species\_coq\_generation.ml
-|   |   |-- species\_coq\_generation.mli
-|   |   |-- species\_record\_type\_generation.ml
-|   |   |-- species\_record\_type\_generation.mli
-|   |   |-- type\_coq\_generation.ml
-|   |   `-- type\_coq\_generation.mli
-|   |-- devdocs
-|   |   |-- foc2ocaml.tex
-|   |   |-- legacy.tex
-|   |   |-- macros.tex
-|   |   |-- mathpartir.sty
-|   |   |-- pending.txt
-|   |   `-- phd\_changes.tex
-|   |-- docgen
-|   |   |-- Makefile
-|   |   |-- doc\_lexer.mll
-|   |   |-- env\_docgen.ml
-|   |   |-- env\_docgen.mli
-|   |   |-- focdoc.css
-|   |   |-- focdoc.dtd
-|   |   |-- focdoc.rnc
-|   |   |-- focdoc.xsd
-|   |   |-- focdoc2html.xsl
-|   |   |-- focdoc2tex.xsl
-|   |   |-- main\_docgen.ml
-|   |   |-- main\_docgen.mli
-|   |   |-- mmlctop2\_0.xsl
-|   |   |-- proposition.xsl
-|   |   |-- proposition2tex.xsl
-|   |   |-- utils\_docgen.ml
-|   |   `-- utils\_docgen.mli
-|   |-- extlib
-|   |   |-- Makefile
-|   |   |-- access\_control
-|   |   |   |-- Makefile
-|   |   |   |-- access\_control.fcl
-|   |   |   |-- ensembles\_finis.fcl
-|   |   |   |-- hru.fcl
-|   |   |   |-- rbac.fcl
-|   |   |   |-- ticket.fcl
-|   |   |   |-- tm
-|   |   |   |   |-- graph.ml
-|   |   |   |   `-- trust\_management.fcl
-|   |   |   `-- unix.fcl
-|   |   `-- algebra
-|   |       |-- Makefile
-|   |       |-- additive\_law.fcl
-|   |       |-- arrays.fcl
-|   |       |-- arrays\_externals.v
-|   |       |-- big\_integers.fcl
-|   |       |-- constants.fcl
-|   |       |-- integers.fcl
-|   |       |-- iterators.fcl
-|   |       |-- multiplicative\_law.fcl
-|   |       |-- parse\_poly.fcl
-|   |       |-- polys\_abstract.fcl
-|   |       |-- product\_structures.fcl
-|   |       |-- quotient\_structures.fcl
-|   |       |-- randoms.fcl
-|   |       |-- randoms\_externals.ml
-|   |       |-- randoms\_externals.v
-|   |       |-- rings\_fields.fcl
-|   |       |-- small\_integers.fcl
-|   |       |-- weak\_structures.fcl
-|   |       |-- weak\_structures\_externals.ml
-|   |       `-- weak\_structures\_externals.v
-|   |-- focalizedep
-|   |   |-- Makefile
-|   |   |-- directive\_lexer.ml
-|   |   |-- directive\_lexer.mll
-|   |   `-- make\_depend.ml
-|   |-- mlcodegen
-|   |   |-- FOCAL\_ML\_MAPPINGS
-|   |   |-- Makefile
-|   |   |-- base\_exprs\_ml\_generation.ml
-|   |   |-- base\_exprs\_ml\_generation.mli
-|   |   |-- main\_ml\_generation.ml
-|   |   |-- main\_ml\_generation.mli
-|   |   |-- misc\_ml\_generation.ml
-|   |   |-- misc\_ml\_generation.mli
-|   |   |-- species\_ml\_generation.ml
-|   |   |-- species\_ml\_generation.mli
-|   |   |-- type\_ml\_generation.ml
-|   |   `-- type\_ml\_generation.mli
-|   |-- parser
-|   |   |-- Makefile
-|   |   |-- dump\_ptree.ml
-|   |   |-- dump\_ptree.mli
-|   |   |-- lex\_file.ml
-|   |   |-- lexer.mll
-|   |   |-- lexer.spec
-|   |   |-- parse\_file.ml
-|   |   |-- parse\_file.mli
-|   |   |-- parser.mly
-|   |   |-- parser.spec
-|   |   |-- sourcify.ml
-|   |   |-- sourcify.mli
-|   |   |-- sourcify\_token.ml
-|   |   `-- test
-|   |       `-- sets\_orders.fcl
+      \item {\tt Makefile} (f)
+      \item {\tt gen\_def.fcl} (f)
+      \item {\tt main.fcl} (f)
+      \item {\tt request.fcl} (f)
+      \item {\tt switch\_automata.fcl} (f)
+      \item {\tt switch\_recovery\_automata.fcl} (f)
+      \item {\tt switch\_recovery\_normal\_automata.fcl} (f)
+      \item {\tt switch\_recovery\_reverse\_automata.fcl} (f)
+      \end{itemize}
+    \item {\tt utils} (d 3) : Various utilities. Maintained by Philippe
+      Ayrault.
+      \begin{itemize}
+      \item {Makefile} (f)
+      \item {pair.fcl} (f)
+      \item {peano.fcl} (f)
+      \end{itemize}
+    \item {\tt voter} (d 3) : Model of a generic voter. Maintained by
+      Philippe Ayrault.
+      \begin{itemize}
+      \item {Makefile} (f)
+      \item {etat\_vote.fcl} (f)
+      \item {main.fcl} (f)
+      \item {num\_capteur.fcl} (f)
+      \item {value.fcl} (f)
+      \item {vote.fcl} (f)
+      \end{itemize}
+    \end{itemize}
+  \item {\tt coqcodegen} (d 2) : Contains \coq\ code generation back-end.
+    \begin{itemize}
+    \item {FOCAL\_COQ\_MAPPINGS} (f) : Short (incomplete) description
+      of how \focalize\ names are mapped onto \coq\ names in the
+      generated source code.
+    \item {Makefile} (f)
+    \item {main\_coq\_generation.ml} (f) : Entry point of \coq\ code
+      generation. Start code generation for a compilation unit, deals
+      with toplevel entities ({\tt let}, theorems, expressions and
+      type definitions) and triggers processing of species,
+      collections.
+    \item {rec\_let\_gen.ml} (f) : Manages parts of the code
+      generation for recursive functions with stuff dedicated to
+      \coq.. Especially, generates the termination lemmas and
+      transforms arguments of a recursive into a tuple.
+    \item {rec\_let\_gen.mli} (f)
+    \item {species\_coq\_generation.ml} (f) : Main part of code
+      generation for species and collections.
+    \item {species\_coq\_generation.mli} (f)
+    \item {species\_record\_type\_generation.ml} (f) : Deals with the
+      generation of the record type representing species and
+      collections. Also generates code for expressions.
+    \item {species\_record\_type\_generation.mli} (f)
+    \item {type\_coq\_generation.ml} (f) : Deals with code generation
+      for (toplevel) type definitions.
+    \item {type\_coq\_generation.mli} (f)
+    \end{itemize}
+  \item {\tt devdocs} (d 2) : The current documentation explaining the
+    compiler's architecture and mechanisms.
+    \begin{itemize}
+    \item {\tt foc2ocaml.tex}, {\tt pending.txt} (f) :
+      Oldies. Should disapear.
+    \item {\tt legacy.tex} (f) : The main \latex file. Compile it to
+      get the current documentation.
+    \item {\tt macros.tex} (f) : Miscellaneous macros to make life
+      easier \smiley.
+    \item {\tt mathpartir.sty} : Inference rules package.
+    \item {\tt phd\_changes.tex} : Things we changed, corrected,
+      enhanced since Virgile Prevosto's PhD Thesis.
+    \end{itemize}
+  \item {\tt docgen} (d 2) : Source for \focalizec\ automated
+    documentation generation ({\tt -focalize-doc} option of the
+    compiler) as XML files.
+    \begin{itemize}
+    \item {\tt Makefile} (f) :
+    \item {\tt doc\_lexer.mll} : Lexer to scan ``@''-markups in a
+      \focalize\ source code.
+    \item {\tt env\_docgen.ml} : Contains the documentation environment
+      mechanisms. This environment maps methods names onto some optional MathML
+      and LaTeX code.
+    \item {\tt env\_docgen.mli} (f)
+    \item {\tt focdoc.css} (f) : \focalizedoc-XML style sheet.
+    \item {\tt focdoc.dtd} (f) :
+    \item {\tt focdoc.rnc} (f) :
+    \item {\tt focdoc.xsd} (f) :
+    \item {\tt focdoc2html.xsl} : Transforms some \focalizedoc-XML into
+        HTML + MathML.
+    \item {\tt focdoc2tex.xsl} (f) : Transforms some \focalizedoc-XML
+        into \latex.
+    \item {\tt main\_docgen.ml} (f) : Engine extracting information from
+        a \focalize\ source code to produce \focalizedoc-XML.
+    \item {\tt main\_docgen.mli} (f)
+    \item {\tt mmlctop2\_0.xsl} (f) : Transforms HTML + MathML into
+      HTML.
+    \item {\tt proposition.xsl} (f) : : Processing of logical
+      expressions from \focalizedoc-XML to HTML + MathML.
+    \item {\tt proposition2tex.xsl} (f) : Processing of logical
+      expressions from \focalizedoc-XML to \latex.
+    \item {\tt utils\_docgen.ml} (f) : Various helpers used for XML
+      production.
+    \item {\tt tils\_docgen.mli} (f)
+    \end{itemize}
+  \item {\tt extlib} (d 2) : Libraries higher level than the basic
+    standard library. Especially contains formal calculus structures.
+    \begin{itemize}
+    \item {\tt Makefile} (f)
+    \item {\tt access\_control} (d 3) : Access control
+      policies. Maintained by Lionel Habib and Mathieu Jaume.
+      \begin{itemize}
+      \item {\tt Makefile} (f)
+      \item {\tt access\_control.fcl} (f)
+      \item {\tt ensembles\_finis.fcl} (f)
+      \item {\tt hru.fcl} (f)
+      \item {\tt rbac.fcl} (f)
+      \item {\tt ticket.fcl} (f)
+      \item {\tt tm} (d 4)
+        %% \begin{itemize}  Latex says "Too deeply nested"...
+        \item \hspace{0.7cm} {\tt graph.ml} (f)
+        \item \hspace{0.7cm} {\tt trust\_management.fcl} (f)
+        %% \end{itemize}
+      \item{\tt unix.fcl} (f)
+      \end{itemize}
+    \item {\tt algebra} (d 3) : Formal calculus library.
+      \begin{itemize}
+      \item {\tt Makefile} (f)
+      \item {\tt additive\_law.fcl} (f)
+      \item {\tt arrays.fcl} (f)
+      \item {\tt arrays\_externals.v} (f)
+      \item {\tt big\_integers.fcl} (f)
+      \item {\tt constants.fcl} (f)
+      \item {\tt integers.fcl} (f)
+      \item {\tt iterators.fcl} (f)
+      \item {\tt multiplicative\_law.fcl} (f)
+      \item {\tt parse\_poly.fcl} (f)
+      \item {\tt polys\_abstract.fcl} (f)
+      \item {\tt product\_structures.fcl} (f)
+      \item {\tt quotient\_structures.fcl} (f)
+      \item {\tt randoms.fcl} (f)
+      \item {\tt randoms\_externals.ml} (f)
+      \item {\tt randoms\_externals.v} (f)
+      \item {\tt rings\_fields.fcl} (f)
+      \item {\tt small\_integers.fcl} (f)
+      \item {\tt weak\_structures.fcl} (f)
+      \item {\tt weak\_structures\_externals.ml} (f)
+      \item {\tt weak\_structures\_externals.v} (f)
+      \end{itemize}
+    \end{itemize}
+  \item {\tt focalizedep} (d 2) : The dependencies generator to create
+    Makefiles.
+    \begin{itemize}
+    \item {\tt Makefile} (f)
+    \item {\tt directive\_lexer.mll} (f) : Lexer to scan {\tt open}
+      and {\tt use} directives in a \focalize\ source.
+    \item {\tt make\_depend.ml} (f) : Source of the generator.
+    \end{itemize}
+  \item {\tt mlcodegen} (d 2) : Contains \ocaml\ code generation back-end.
+    \begin{itemize}
+    \item {\tt FOCAL\_ML\_MAPPINGS} (f) : Short (incomplete) description
+      of how \focalize\ names are mapped onto \ocaml\ names in the
+      generated source code.
+    \item {\tt Makefile} (f)
+    \item {\tt base\_exprs\_ml\_generation.ml} (f)
+    \item {\tt base\_exprs\_ml\_generation.mli} (f)
+    \item {\tt main\_ml\_generation.ml} (f)
+    \item {\tt main\_ml\_generation.mli} (f)
+    \item {\tt misc\_ml\_generation.ml} (f)
+    \item {\tt misc\_ml\_generation.mli} (f)
+    \item {\tt species\_ml\_generation.ml} (f)
+    \item {\tt species\_ml\_generation.mli} (f)
+    \item {\tt type\_ml\_generation.ml} (f)
+    \item {\tt type\_ml\_generation.mli} (f)
+    \end{itemize}
+  \item {\tt parser} (d 2) : Contains the lexical and syntactic
+    analysers to process \focalize\ source code.
+    \begin{itemize}
+    \item {\tt Makefile} (f)
+    \item {\tt dump\_ptree.ml} (f) : Dumps the AST structure of a file
+      in raw text mode. Used for debugging purpose.
+    \item {\tt dump\_ptree.mli} (f)
+    \item {\tt lex\_file.ml} (f) : Initial attempt to have a small
+      ``main'' to check the behaviour of the lexser on a file at the
+      early stages of development. This is not used anymore.
+    \item {\tt lexer.mll} (f)
+    \item {\tt lexer.spec} (f) : Trace of thoughts we had all along
+      the time. Initially contained ideas about the language syntax,
+      (at lexical level) to make it smooth.
+    \item {\tt parse\_file.ml} (f) : Initial attempt to have a small
+      ``main'' to check the behaviour of the parser on a file at the
+      early stages of development. This is not used anymore.
+    \item {\tt parse\_file.mli} (f)
+    \item {\tt parser.mly} (f) : The parser description in \ocamlyacc.
+    \item {\tt parser.spec} (f) : Trace of thoughts we had all along
+      the time. Initially contained ideas about the language syntax,
+      (at syntactic level) to make it smooth. Next other ideas were
+      added, beyond syntax, more oriented toward the AST structure.
+    \item {\tt sourcify.ml} (f) : Dumps the AST structure of a file
+      in \focalize\ syntax. Gives back a source code from a parsed
+      code. This is mostly useful for debugging purpose. May be used
+      bu customers to pretty-print their source, but I don't
+      recommand. This more specialy serves to report pieces of code in
+      a good-looking form in error messages. Each time we need to tell
+      the user something involving a piece of code, we pretty-print it
+      with functions provided here.
+    \item {\tt sourcify.mli} (f)
+    \item {\tt sourcify\_token.ml} (f) : Not used anymore. Was used to
+      test the lexer at the early stages of development. It was used
+      to print the found token.
+    \item {\tt test} (d 3) : Oldies originally used to test the
+      lexer/parser in the early times. No used anymore.
+      \begin{itemize}
+      \item {\tt sets\_orders.fcl} (f) : First translation of a file of
+        the standard library used ti test the lexer/parser. Not used
+        anymore.
+      \end{itemize}
+   \end{itemize}
 |   |-- scoper
 |   |-- stdlib
 |   |   |-- Makefile
