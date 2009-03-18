@@ -1,0 +1,268 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: peano.fcl,v 1.1 2009-03-18 21:30:59 rr Exp $ *)
+
+(** We want here to provide abstract definitions for what is usually called 
+   integers. That is natural numbers, and integers. The problem is that. *)
+
+use "basics" ;;
+open "basics" ;;
+
+(* use "iterators" ;; *)
+(* open "iterators" ;; *)
+
+use "sets" ;;
+use "strict_orders";;
+use "orders_and_lattices";;
+
+open "sets" ;;
+open "strict_orders";;
+open "orders_and_lattices";;
+
+(**
+   An abstract enumeration system is a system where we have a
+   successor and a predecessor function.
+ *)
+
+species Enumeration_system inherits Setoid =
+
+  signature start: Self ;
+
+  let element = !start;
+
+  (** An abstract successor function *)
+  signature successor : Self -> Self ;
+
+  (** Compatibility with equality *)
+  property successor_substitution_rule: all x y in Self,
+   !equal (x, y) -> !equal (!successor(x), !successor(y)) ;
+
+  (** Injectivity of successor is a Peano axiom *)
+  property successor_is_injective: all x y in Self,
+     !equal (!successor(x), !successor(y)) -> !equal (x, y) ;
+
+end ;;
+
+type peano =
+  | P_zero
+  | P_succ(peano)
+;;
+
+species Peano_enumeration_system inherits Enumeration_system =
+
+  representation = peano;
+
+  let successor(x) = P_succ(x);
+
+  theorem equal_is_syntactic: all x y in Self, !equal(x, y ) -> x = y
+    proof = assumed {* *};
+
+  proof of successor_substitution_rule =
+   by definition of successor
+      property equal_reflexive, equal_is_syntactic;
+
+  proof of successor_is_injective =
+    <1>1 assume x in Self, assume y in Self,
+         assume H: !equal(!successor(x), !successor(y)),
+         prove !equal(x, y)
+         <2>0 prove P_succ(x) = P_succ(y)
+              by hypothesis H 
+                 definition of successor
+                 property equal_is_syntactic
+         <2>1 prove x = y
+              coq proof 
+              {* apply coq_builtins.magic_prove. Qed. *}
+         <2>f qed by step <2>1 property !equal_reflexive
+    <1>f conclude;
+
+
+end;;
+
+
+(**
+   An abstract enumeration system is a system that could be obtained
+   by stating from the 0 element and iterating the successor function.
+ *)
+species Enumerated_system
+   inherits Enumeration_system, Partial_set =
+  (** Zero is not a successor is a Peano axiom *)
+  property successor_is_non_trivial: all n in Self,
+    ~ (!equal (!successor (n), !start));
+
+  (**
+     predecessor computes the unique y such that successor(y) = x
+     This makes sense because predecessor is injective.
+   *)
+  signature predecessor : Self -> Self;
+  property predecessor_reverses_successor : all x y in Self,
+     !equal (x, !successor (y)) ->
+       !equal (y, !predecessor (x)) ;
+
+  (** Weak injectivity of predecessor is a Peano axiom *)
+  property predecessor_is_injective: all n m in Self,
+    ~ (!equal (n, !start)) -> ~ (!equal (m, !start)) ->
+      !equal (!predecessor (n), !predecessor (m)) -> !equal (n, m) ;
+
+  (** An induction principle for natural numbers *)
+  logical let enumerated_induction(p in (Self -> prop)) =
+    p (!start) -> (all n in Self, p (n) -> p (!successor (n)))
+      -> (all n in Self, p (n));
+
+end ;;
+
+(**
+  Here we state properties for a total ordering over an enumeration.
+  Implicitely we orient the binary relation x = succ(y)
+  and consider its transitive closure
+ *)
+species Ordered_Enumeration_system 
+  inherits Enumeration_system, Strictly_ordered_set=
+
+
+  (** The ordering is compatible with the successor function *)
+  property successor_defines_bigger: all x in Self,
+    !lt (x, !successor (x)) ;
+
+end ;;
+
+species Ordered_Enumerated_system
+  inherits Enumerated_system, Ordered_Enumeration_system =
+
+  (** a lower bound for the ordering *)
+  property start_is_min: all x in Self,
+    !leq(!start, x);
+
+  (** the successor defines the weakest possible element *)
+  property successor_defines_infimum: all x y in Self,
+    !lt(x, y) -> !leq (!successor (x), y);
+
+  (* [rr]:
+     To be continued ... One should be able to implement something which
+     reasonably describes natural numbers
+   *)
+end
+;;
+
+species Peano_base inherits Peano_enumeration_system, Ordered_Enumerated_system =
+
+  let start = P_zero;
+
+  let predecessor(x) = match x with
+    | P_zero -> P_zero
+    | P_succ(x) -> x;
+
+  (** Here we should be able to provide a witness! *)
+  proof of predecessor_is_injective =
+   <2>1 assume x in Self, assume y in Self,
+        assume H_x: ~(!equal(x, !start)),
+        assume H_y: ~(!equal(y, !start)),
+        assume H: !equal(!predecessor(x), !predecessor(y)),
+        prove !equal(x, y)
+        <2>1 assume F: !different(x, y),
+             prove false
+             assumed {* *}
+        <2>f qed by step <2>1 property !different_is_not_same
+   <2>f conclude;
+
+  proof of predecessor_reverses_successor =
+    assumed {* *};
+
+  proof of successor_is_non_trivial = assumed {* *};
+end;;
+
+
+species Peano_dumb inherits Peano_base =
+
+let lt(x, y) = false;
+
+proof of lt_is_irreflexive = by definition of lt;
+proof of lt_is_transitive = by definition of lt;
+
+proof of successor_defines_bigger = assumed {* this is wrong *};
+proof of successor_defines_infimum = assumed {* this is wrong *};
+
+proof of start_is_min = assumed {* this is wrong *};
+
+proof of total_order = assumed {* questionable? *};
+end;;
+
+collection Peano_dumb_coll implements Peano_dumb;;
+
+(* species Peano_order inherits Peano_base, Ordered_Enumerated_system = *)
+
+(*   proof of successor_is_non_trivial = *)
+(*     <1>1 assume x in Self, *)
+(*          assume F: !equal(successor(x), !start), *)
+(*          prove false *)
+(*          <2>1 prove !successor(x) = !start *)
+(*               by hypothesis F *)
+(*                  property !equal_is_syntactic *)
+(*          <2>f qed  *)
+(*               coq proof *)
+(*               definition of successor, start *)
+(*               {* intros ; unfold abst_successor, abst_start; *)
+(*                  apply coq_builtins.magic_prove. Qed. *} *)
+(*     <1>f conclude; *)
+
+(*   let rec lt(x, y) = match (x, y) with *)
+(*     | (P_zero, P_zero) -> false *)
+(*     | (P_zero, P_succ(_y)) -> true *)
+(*     | (P_succ(x), P_zero) -> false *)
+(*     | (P_succ(x), P_succ(y)) -> !lt(x, y) *)
+(*     ; *)
+
+(*   proof of lt_is_irreflexive =  *)
+(*     definition of lt assumed {* *}; *)
+
+(*   proof of lt_is_transitive = *)
+(*     definition of lt assumed {* *}; *)
+
+
+(* (\*     termination proof = order (  ) on x *\) *)
+(* (\*     assumed {* *}; *\) *)
+(*   proof of successor_defines_infimum = *)
+(*     definition of successor, lt *)
+(*     property different_is_not_same, leq_from_lt *)
+(*     assumed {* *}; *)
+
+(*   proof of successor_defines_bigger = *)
+(*     definition of successor, lt *)
+(*     property different_is_not_same, leq_from_lt *)
+(*     assumed {* *}; *)
+
+(*   proof of predecessor_reverses_successor = *)
+(*     definition of predecessor, successor, equal *)
+(*     assumed {* *}; *)
+
+(*   let start = P_zero; *)
+
+(*   proof of start_is_min = *)
+(*     definition of start *)
+(*     property different_is_not_same, leq_from_lt *)
+(*     assumed {* *}; *)
+
+(*   proof of total_order = *)
+(*     <1>1 assume x in Self, assume y in Self, *)
+(*          prove !leq(x, y) /\ !leq(y, x) *)
+(*          assumed {* *} *)
+(*     <1>f conclude; *)
+
+
+(* end;; *)
+
+(* collection Peano_coll implements Peano_order ;; *)
