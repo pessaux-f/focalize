@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.1 2009-03-17 17:24:48 pessaux Exp $
+% $Id: environments.tex,v 1.2 2009-03-18 15:58:22 pessaux Exp $
 
 All allong the compilation pass, we need to keep trace of various
 informations about compiled entities (methods, types, identifiers,
@@ -17,6 +17,8 @@ Environments implementation is located in the file
 
 
 \section{The generic environment}
+
+\subsection{Environement ``recording'' structure}
 As previously stated, the core of an environment is to map names onto
 informations. In \focalize\, names can designate several types of
 entities:
@@ -59,6 +61,9 @@ a module providing access to this structure, i.e. search the
 {\bf key} to a {\bf value} : {\tt add}. Obviously, we need these 2
 functions for each namespace.
 
+
+
+\subsection{Making an environment}
 We would like to directly create a functor taking as argument a module
 whose signature implements the types of bound information in each
 namespace for an environement and gives back a module providing the
@@ -68,17 +73,38 @@ various modules to get the scoping environment, the typing
 environment, the \ocaml\ and the \coq\ code generation environments.
 
 This simplistic view fails because of the notion of ``modules'',
-i.e. in \focalize\, species and collections. In effect, since species
-and collections host definitions, they can be seen as modules. Hence
-we need an extra 
+i.e. in \focalize\, compilation units.
+
+In effect, since compilation units host definitions, they can be seen
+as modules. Hence we need an extra function to search inside
+``modules''. This will especially serve to look-up names qualified by
+the \#-notation . For example the identifier {\tt basics!int} is bound
+in the module {\tt basics} by the name {\tt int}. This
+{\tt find\_module} function doesn't need to be visible in our generic
+environments since it only serves for internal purpose. It must
+conceptuall take a module name, an environment and return the
+``sub''-environment composed of all the definitions hosted by the
+module. This {\tt find\_module} function is then dependant of the type
+of the the namespace in which to look-up in the managed environment.
+On must have 1 {\tt find\_module} for when we look-up for values, one
+for when we look-up for types, one for sum type constructors, one for
+record field labels, etc\ldots The problem is that ``creating'' the
+''sub''-environment from the informations contained in a module
+depend on the structure of information recorded in the environment.
+This means that we can't consider these informations as anymore
+polymorphic since we know to know their structure to build the
+''sub''-environment.
+
+For this reason, we proceed in two steps, i.e. two functors. One,
+{\tt EMAccess}), will provide the ``way to access'' the informations
+kept as {\bf values} in the environment. The second ({\tt Make}) will
+take a module produced by the previous one and glue the structure of
+the environment (i.e. in fact the association list) with the access
+primitives provided.
 
 
-To do so, we process in two steps. First we create a module handling
-access to each namespace, independently of the information bound in
-the namespace. This way, we get a 
 
-create a functor taking as argument a module describing
-the {\bf values} to bind to {\bf keys} for each namespace. Such a
+\subsection{EMAccess : accessing functions for an environment}
 module is required to have the signature:
 {\scriptsize
 \begin{lstlisting}[language=MyOCaml]
@@ -110,6 +136,34 @@ module type EnvModuleAccessSig =
   end
 \end{lstlisting}
 }
+
+The fields type definitions {\tt constructor\_bound\_data},
+{\tt label\_bound\_data}, {\tt type\_bound\_data}, {\tt value\_bound\_data}
+and {\tt species\_bound\_data} respectively represent the information the
+environment maps onto names of sum type value constructors, record
+field labels, type constructors, values and species.
+
+Next come the {\tt find\_module} function that looks for a ``module''
+name (the {\tt Types.fname option}, we will see later the reason of
+the {\tt option}) in the current environment and returns the
+environment composed of all the definitions present in this module
+(compilation unit). For technical reason, some extra arguments are
+passed to this function and we will explain their presence later.
+
+Next come the {\tt pervasives} value that is the initial (may
+non-empty) environment containing built-in bindings that are
+needed. Note that this environment may be the empty environment
+(i.e. containing no binding) is nothing has to exist in a built-in
+way.
+
+Next come a the function {\tt make\_value\_env\_from\_species\_methods}
+whose purpose can be understood once the module system is
+understood. Basically, this function must create an environment,
+populating the values name-space with informations extracted from the
+methods of a species.
+
+Finally, the function {\tt post\_process\_method\_value\_binding} can
+also be understood via the module system mechanism.
 
 
 \section{Scoping environment}
