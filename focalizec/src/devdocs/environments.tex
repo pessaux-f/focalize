@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.2 2009-03-18 15:58:22 pessaux Exp $
+% $Id: environments.tex,v 1.3 2009-03-18 17:25:16 pessaux Exp $
 
 All allong the compilation pass, we need to keep trace of various
 informations about compiled entities (methods, types, identifiers,
@@ -63,7 +63,7 @@ functions for each namespace.
 
 
 
-\subsection{Making an environment}
+\subsection{Principle of making an environment}
 We would like to directly create a functor taking as argument a module
 whose signature implements the types of bound information in each
 namespace for an environement and gives back a module providing the
@@ -72,6 +72,7 @@ environment. The idea is then to apply this functor to a set of
 various modules to get the scoping environment, the typing
 environment, the \ocaml\ and the \coq\ code generation environments.
 
+\medskip
 This simplistic view fails because of the notion of ``modules'',
 i.e. in \focalize\, compilation units.
 
@@ -95,6 +96,7 @@ This means that we can't consider these informations as anymore
 polymorphic since we know to know their structure to build the
 ''sub''-environment.
 
+\medskip
 For this reason, we proceed in two steps, i.e. two functors. One,
 {\tt EMAccess}), will provide the ``way to access'' the informations
 kept as {\bf values} in the environment. The second ({\tt Make}) will
@@ -102,9 +104,7 @@ take a module produced by the previous one and glue the structure of
 the environment (i.e. in fact the association list) with the access
 primitives provided.
 
-
-
-\subsection{EMAccess : accessing functions for an environment}
+\subsection{{\tt EMAccess} : accessing functions for an environment}
 module is required to have the signature:
 {\scriptsize
 \begin{lstlisting}[language=MyOCaml]
@@ -137,12 +137,14 @@ module type EnvModuleAccessSig =
 \end{lstlisting}
 }
 
+\medskip
 The fields type definitions {\tt constructor\_bound\_data},
 {\tt label\_bound\_data}, {\tt type\_bound\_data}, {\tt value\_bound\_data}
 and {\tt species\_bound\_data} respectively represent the information the
 environment maps onto names of sum type value constructors, record
 field labels, type constructors, values and species.
 
+\medskip
 Next come the {\tt find\_module} function that looks for a ``module''
 name (the {\tt Types.fname option}, we will see later the reason of
 the {\tt option}) in the current environment and returns the
@@ -150,20 +152,93 @@ environment composed of all the definitions present in this module
 (compilation unit). For technical reason, some extra arguments are
 passed to this function and we will explain their presence later.
 
+\medskip
 Next come the {\tt pervasives} value that is the initial (may
 non-empty) environment containing built-in bindings that are
 needed. Note that this environment may be the empty environment
 (i.e. containing no binding) is nothing has to exist in a built-in
 way.
 
+\medskip
 Next come a the function {\tt make\_value\_env\_from\_species\_methods}
 whose purpose can be understood once the module system is
 understood. Basically, this function must create an environment,
 populating the values name-space with informations extracted from the
 methods of a species.
 
+\medskip
 Finally, the function {\tt post\_process\_method\_value\_binding} can
-also be understood via the module system mechanism.
+also be understood via the module system mechanism. This function takes
+a collection name, an information bound to a value and is applied on
+this information. This function is called by {\tt find\_value} to
+post-process the information bound to a value name if needed.
+
+\medskip
+For sake of simplicity, we decide to group the types definitions
+representing informations bound for each name-space of an environment
+in a module. This is not mandatory but allows a better structure of
+the code.
+
+
+\subsection{{\tt Make}-ing the environment}
+This functor finally create the final environment structure, linking
+the access functions provided by its argument (of interface
+{\tt EMAccess}) and the basic structure of generic environment
+({\tt ('a, 'b, 'c, 'd, 'e) generic\_env}).
+
+\medskip
+This functor must create a module whose signature contains an abstract
+type representing the environment, an abstract value representing the
+empty environment (i.e. with no binding), an abstract value
+representing the ``pervasives'' environment and finally, for each
+name-space a search function and an extention function (i.e. a
+function that adds a binding to an environement, then returning this
+environement with the binding ``in front''). This means that an
+environement (dedicated to a ``Blabla'' processing) will have a
+signature like (forget the noisy arguments we spoke about, like
+{\tt loc}, {\tt current\_unit}, we will check them in detail later) :
+{\scriptsize
+\begin{lstlisting}[language=MyOCaml]
+module BlablaEnv :
+  sig
+    type t
+    val empty : unit -> t
+    val pervasives : unit -> t
+
+    val add_value :
+      Parsetree.vname -> BlablaInformation.value_binding_info -> t -> t
+    val find_value :
+      loc: Location.t -> current_unit: Types.fname ->
+        current_species_name: string option -> Parsetree.expr_ident -> t ->
+          BlablaInformation.value_binding_info
+
+    val add_constructor : Parsetree.constructor_name -> Types.fname -> t -> t
+    val find_constructor :
+      loc: Location.t -> current_unit:Types.fname ->
+        Parsetree.constructor_ident -> t -> Types.fname
+
+    val add_label : Parsetree.vname -> Types.fname -> t -> t
+    val find_label :
+      loc: Location.t -> current_unit: Types.fname -> Parsetree.label_ident ->
+        t -> Types.fname
+
+    val add_type :
+      loc: Location.t -> Parsetree.vname ->
+        BlablaInformation.type_binding_info ->
+      t -> t
+    val find_type :
+      loc: Location.t -> current_unit: Types.fname -> Parsetree.ident -> t ->
+        BlablaInformation.type_binding_info
+
+    val add_species :
+      loc: Location.t -> Parsetree.vname ->
+        BlablaInformation.species_binding_info -> t -> t
+    val find_species :
+        loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
+      t -> BlablaInformation.species_binding_info
+  end
+\end{lstlisting}
+}
 
 
 \section{Scoping environment}
