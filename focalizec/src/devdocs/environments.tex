@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.3 2009-03-18 17:25:16 pessaux Exp $
+% $Id: environments.tex,v 1.4 2009-03-19 08:46:06 pessaux Exp $
 
 All allong the compilation pass, we need to keep trace of various
 informations about compiled entities (methods, types, identifiers,
@@ -240,6 +240,54 @@ module BlablaEnv :
 \end{lstlisting}
 }
 
+\medskip
+We address now some remarks about the {\tt Make} functor. This functor
+provides the environment access functions that do not depends on the
+structure of data stored in the environment. However, it uses the
+functions that depends on that are provided by its argument module.
+
+As a general scheme, for each name-space {\tt xxx}, we have 3
+functions:
+\begin{itemize}
+\item {\tt add\_xxx} : Adds a binding to the environment (exported
+  function).
+\item {\tt find\_xxx} : Entry point to find the information bound to
+  an identifier (exported function).
+\item {\tt find\_xxx\_vname} : Find the information bound to a
+{\tt Parsetree.vname} (not exported). This function is just an
+internal used by {\tt find\_xxx\_vname} once it decomposed the
+initially looked-up identifier into a primitive
+{\tt Parsetree.vname}.
+\end{itemize}
+
+\medskip
+All the environment extention functions ({\tt add\_xxx}) are quite
+simple, they just add a bindind to the association list in field of
+the environment related to the right name-space. One may note that an
+added bindind is always tagged {\tt BO\_absolute}. This means that the
+binding comes in the environment from the current compilation unit,
+opposite as the tag {\tt BO\_opened} that serves to identify bindings
+present in the environment due to an {\tt open} directive.
+
+\medskip
+Look-up functions are more complex, especially the one lokking for
+values. We now describe the general look-up mechanism that is exactly
+the one used for {\tt find\_label}, {\tt find\_constructor} and
+{\tt find\_type}.
+
+The principle is to split the looked-up name into a scope specifier (a
+qualification) and a simple name. For instance, {\tt foo} has no scope
+specifier and a simple name equal to ``foo''. Conversely,
+{\tt basics\#bar} has the scope specifier ``basics'' and the simple
+name ``bar''.
+Then, from the scope specifier (i.e. in fact an ``module'' name), we
+try to load the (``sub'')-environment of this module. If the specifier
+is {\tt None}, then we will get back the current environment. It is in
+this environment that we will perform the search. Now, the point is to
+check if we are allowed to accept to find a binding induced by an
+{\tt open} directive. This is usually the case except if ...........
+AH AH AH J'AI TROUVÉ UN BUG DANS LE CODE CAR ÇA NE CORRESPOND À CE QUE
+JE PENSE... PAUSE 2 MN, ON CORRIGE LE CODE...
 
 \section{Scoping environment}
 
