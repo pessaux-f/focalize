@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.38 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.39 2009-03-19 21:08:29 rr Exp $
 
 # Makefile for algebra structures implementations
 
@@ -27,7 +27,7 @@ STDLIB_DIR = $(ROOT_DIR)/src/stdlib
 
 FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
 
-FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR) -stop-before-zenon
+FOCALIZE_COMP_FLAGS = -stop-before-coq -no-stdlib-path -I $(STDLIB_DIR)
 
 #From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
@@ -81,6 +81,13 @@ FOCALIZE_VS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.v)
 FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
 FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
+FOCALIZE_DOCS = $(FOCALIZE_SRC:.fcl=.fcd)
+FOCALIZE_DOCS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fcd)
+
+FOCALIZE_MML = $(FOCALIZE_DOCS:.fcd=.xml)
+FOCALIZE_MML_UNSAFE = $(FOCALIZE_DOCS_UNSAFE:.fcd=.xml)
+
+
 EXTERNAL_BYT_OBJS =\
 	weak_structures_externals.cmo\
 	randoms_externals.cmo
@@ -95,6 +102,9 @@ EXTERNAL_VOS =\
 include $(ROOT_DIR)/Makefile.common
 
 lib: all
+
+focalizedoc:: \
+	$(FOCALIZE_MML) $(FOCALIZE_MML_UNSAFE)
 
 byt:: \
       $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
