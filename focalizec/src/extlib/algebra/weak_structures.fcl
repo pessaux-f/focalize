@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: weak_structures.fcl,v 1.7 2009-01-15 22:32:08 rr Exp $ *)
+(* $Id: weak_structures.fcl,v 1.8 2009-03-19 21:07:18 rr Exp $ *)
 
 (** We define here some weak notions such as rings with no subtraction. *)
 
@@ -77,6 +77,10 @@ species Left_semi_module (A is Semi_ring)
       scalar multiplication *)
   signature mult : A -> Self -> Self ;
 
+  (** compatibility with equality *)
+  property mult_left_substitution_rule : all a b in A, all x in Self,
+    A!equal (a, b) -> (!equal (!mult (a, x), !mult (b, x))) ;
+
   (** note that !plus and a!plus are commutative ! *)
   property mult_right_distributes_on_plus : all x y in A, all z in Self,
     !equal (!mult (A!plus (x, y), z), !plus (!mult (x, z), !mult (y, z))) ;
@@ -87,8 +91,8 @@ species Left_semi_module (A is Semi_ring)
 
   property one_is_left_neutral: all x in Self, !equal (!mult (A!one, x), x) ;
 
- (** (b.(c.x)=(b.c).x *)
- property mult_assoc: all b c in A, all x in Self,
+  (** (b.(c.x)=(b.c).x *)
+  property mult_assoc: all b c in A, all x in Self,
     !equal (!mult (b, !mult (c, x)), !mult (A!mult (b, c), x)) ;        
 
 (* [rr] : not true on general semi modules *)
@@ -101,6 +105,36 @@ species Left_semi_module (A is Semi_ring)
 *)
 end ;;
 
+species Left_regular_semi_module(A is Semi_ring)
+  inherits Regular_additive_monoid,
+           Left_semi_module(A) =
+
+  theorem zero_left_absorbes: all x in Self,
+    !equal (!mult (A!zero, x), !zero)
+    proof =
+    <1>1 assume x in Self,
+         prove !equal (!mult (A!zero, x), !zero)
+      <2>2 prove !equal (!mult (A!plus (A!zero, A!one), x), x)
+           by property A!zero_is_neutral, !mult_left_substitution_rule,
+                       A!equal_transitive,
+                       !one_is_left_neutral, !equal_transitive
+      <2>3 prove !equal (!mult (A!plus (A!zero, A!one), x),
+                         !plus (!mult (A!zero, x), !mult (A!one, x)))
+           by property mult_right_distributes_on_plus
+      <2>4 prove !equal (!plus (!mult (A!zero, x), x), x)
+           by step <2>2, <2>3 
+              property plus_right_substitution_rule, !one_is_left_neutral,
+                       equal_symmetric, equal_transitive
+      <2>5 prove !equal (!plus (!mult (A!zero, x), x),
+			 !plus (!zero, x))
+           by step <2>4
+           property !zero_is_neutral, equal_transitive, equal_symmetric
+      <2>f qed by step <2>5 property plus_is_regular
+    <1>2 conclude
+;
+
+end;;
+
 (** a commutative semi_ring is a semi_module on itself *)
 species Commutative_semi_ring
   inherits Commutative_monoid_with_absorbant, 
@@ -109,28 +143,28 @@ species Commutative_semi_ring
    proof of one_is_right_neutral = 
      by property one_is_left_neutral, mult_commutes, equal_transitive ;
 
-   proof of mult_right_distributes_on_plus = 
-     <1>1 assume x in Self,
-          assume y in Self,
-          assume z in Self,
-          prove !equal (!mult (!plus (x, y), z),
-                       !plus (!mult (x, z), !mult (y, z)))
-          <2>1 prove !equal (!mult (!plus (x, y), z),
-                            !mult (z, !plus (x, y)))
-               by property mult_commutes
-          <2>2 prove !equal (!mult (z, !plus (x, y)),
-                            !plus (!mult (z, x), !mult (z, y)))
-               by property mult_left_distributes_on_plus
-          <2>3 prove !equal (!plus (!mult (z, x), !mult (z, y)),
-                            !plus (!mult (x, z), !mult (y, z)))
-               <3>1 prove !equal (!mult (z, x), !mult (x, z))
-                    by property mult_commutes
-               <3>2 prove !equal (!mult (z, y), !mult (y, z))
-                    by property mult_commutes
-               <3>2 qed by step <3>1, <3>2 property plus_substitution_rule
-          <2>f qed by step <2>1, <2>2, <2>3 property equal_transitive
-     <1>f conclude
-   ;
+(*    proof of mult_right_distributes_on_plus =  *)
+(*      <1>1 assume x in Self, *)
+(*           assume y in Self, *)
+(*           assume z in Self, *)
+(*           prove !equal (!mult (!plus (x, y), z), *)
+(*                        !plus (!mult (x, z), !mult (y, z))) *)
+(*           <2>1 prove !equal (!mult (!plus (x, y), z), *)
+(*                             !mult (z, !plus (x, y))) *)
+(*                by property mult_commutes *)
+(*           <2>2 prove !equal (!mult (z, !plus (x, y)), *)
+(*                             !plus (!mult (z, x), !mult (z, y))) *)
+(*                by property mult_left_distributes_on_plus *)
+(*           <2>3 prove !equal (!plus (!mult (z, x), !mult (z, y)), *)
+(*                             !plus (!mult (x, z), !mult (y, z))) *)
+(*                <3>1 prove !equal (!mult (z, x), !mult (x, z)) *)
+(*                     by property mult_commutes *)
+(*                <3>2 prove !equal (!mult (z, y), !mult (y, z)) *)
+(*                     by property mult_commutes *)
+(*                <3>2 qed by step <3>1, <3>2 property plus_substitution_rule *)
+(*           <2>f qed by step <2>1, <2>2, <2>3 property equal_transitive *)
+(*      <1>f conclude *)
+(*    ; *)
 
    proof of zero_right_absorbes =
      by property zero_left_absorbes, mult_commutes, equal_transitive ;
@@ -202,9 +236,9 @@ species Integral_semi_ring
   inherits Regular_monoid, 
            Commutative_semi_ring,
            Torsion_free_semi_module(Self) =
-  let is_zero (x) = !equal (x, !zero);
+(*   let is_zero (x) = !equal (x, !zero); *)
 
-  proof of is_zero_spec = by property !equal_symmetric definition of is_zero;
+(*   proof of is_zero_spec = by property !equal_symmetric definition of is_zero; *)
 
   theorem divides_is_additive: all x y z in Self,
     !divides(x, y) -> !divides(x, z) -> !divides(x, !plus(y, z))

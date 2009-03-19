@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: additive_law.fcl,v 1.7 2009-01-15 22:32:08 rr Exp $ *)
+(* $Id: additive_law.fcl,v 1.8 2009-03-19 21:07:18 rr Exp $ *)
 
 (** The FoCaLize library does not intend to model binary laws which are not
    associative, thus some mathematical notions such as magmas (groupoids) are
@@ -484,10 +484,10 @@ end ;;
 
 (** an additive group is an additive monoid with total substraction *)
 species Additive_group inherits Cancellative_additive_monoid =
-  let is_zero (x) = !equal (x, !zero) ;
-  proof of is_zero_spec =
-    by property equal_symmetric
-    definition of is_zero ;
+(*   let is_zero (x) = !equal (x, !zero) ; *)
+(*   proof of is_zero_spec = *)
+(*     by property equal_symmetric *)
+(*     definition of is_zero ; *)
 
  (** @mathml <minus/> *)
   signature opposite : Self -> Self ;

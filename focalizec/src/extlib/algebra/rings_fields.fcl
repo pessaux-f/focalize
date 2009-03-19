@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.7 2009-02-06 15:28:27 pessaux Exp $ *)
+(* $Id: rings_fields.fcl,v 1.8 2009-03-19 21:07:18 rr Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
@@ -32,7 +32,7 @@ species Ring inherits Additive_group, Semi_ring =
   let zero = Self!minus (Self!one, Self!one) ;
   proof of zero_is_neutral =
     definition of zero
-    property one_is_left_neutral, one_is_left_neutral,
+    property one_is_left_neutral, one_is_right_neutral,
       mult_left_distributes_on_plus
     assumed {* Todo *} ;
 
@@ -250,4 +250,4 @@ species Ordered_field inherits Ordered_gcd_domain, Real_field = end ;;
 (*                Ouf !                                                   *)
 (*                                                                        *)
 
-(* $Id: rings_fields.fcl,v 1.7 2009-02-06 15:28:27 pessaux Exp $ *)
+(* $Id: rings_fields.fcl,v 1.8 2009-03-19 21:07:18 rr Exp $ *)
