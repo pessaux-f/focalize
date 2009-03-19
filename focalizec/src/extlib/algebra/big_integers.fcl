@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.6 2009-02-06 15:28:27 pessaux Exp $ *)
+(* $Id: big_integers.fcl,v 1.7 2009-03-19 21:35:51 rr Exp $ *)
 
 use "basics" ;;
 
@@ -377,6 +377,8 @@ species Integers_big_int inherits integers#Integer_system, Base_big_int =
   proof of mult_assoc = assumed {* Because todo *} ;
   proof of mult_commutes = assumed {* Because todo *} ;
   proof of mult_left_distributes_on_plus = assumed {* Because todo *} ;
+  (*[rr]: needs check *)
+  proof of mult_right_distributes_on_plus = assumed {* Because toto *} ;
   proof of mult_left_substitution_rule = assumed {* Because todo *} ;
   let sign (x) = #sign_big_int (x) ;
   proof of order_compatible_with_plus = assumed {* Because todo *} ;

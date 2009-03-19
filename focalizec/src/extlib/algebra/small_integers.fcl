@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: small_integers.fcl,v 1.5 2009-01-11 01:24:06 weis Exp $ *)
+(* $Id: small_integers.fcl,v 1.6 2009-03-19 21:35:51 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -96,9 +96,9 @@ species Basic_small_nats inherits Small_numbers_system =
      ;
 
   let equal (x in Self, y in Self) = x = y ;
-  proof of equal_reflexive = assumed {* Because toto *} ;
-  proof of equal_symmetric = assumed {* Because toto *} ;
-  proof of equal_transitive = assumed {* Because toto *} ;
+  proof of equal_reflexive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_transitive = by definition of equal;
 --  proof of equal_from_leq = assumed {* Because toto *};
   let is_one (x in Self ) = x = 1 ;
   let leq (x in Self, y in Self )= int_leq (x, y) ;
@@ -168,12 +168,14 @@ species Small_naturals inherits Natural_number_system, Basic_small_nats =
   proof of add_left_distributes_on_inf = assumed {* Because toto *} ;
   proof of order_compatible_with_plus = assumed {* Because toto *} ;
   proof of zero_left_absorbes = assumed {* Because toto *} ;
-  proof of mult_left_distributes_on_plus = assumed {* Because toto *} ;
   proof of mult_is_integral = assumed {* Because toto *} ;
   proof of mult_is_left_regular = assumed {* Because toto *} ;
   proof of mult_commutes = assumed {* Because toto *} ;
   proof of mult_left_substitution_rule = assumed {* Because toto *} ;
   proof of mult_assoc = assumed {* Because toto *} ;
+  proof of mult_left_distributes_on_plus = assumed {* Because toto *} ;
+  (*[rr]: needs check *)
+  proof of mult_right_distributes_on_plus = assumed {* Because toto *} ;
   proof of one_is_left_neutral = assumed {* Because toto *} ;
   proof of minus_right_substitution_rule = assumed {* Because toto *} ;
   proof of minus_left_substitution_rule = assumed {* Because toto *} ;
@@ -209,13 +211,15 @@ species Small_integers inherits Integer_system, Basic_small_ints =
 
   proof of order_compatible_with_plus = assumed {* Because toto *} ;
   proof of zero_left_absorbes = assumed {* Because toto *} ;
-  proof of mult_left_distributes_on_plus = assumed {* Because toto *} ;
   proof of mult_is_integral = assumed {* Because toto *} ;
   proof of mult_is_regular = assumed {* Because toto *} ;
   proof of mult_commutes = assumed {* Because toto *} ;
   proof of mult_left_substitution_rule = assumed {* Because toto *} ;
   proof of mult_compat_with_order = assumed {* Because toto *} ;
   proof of mult_assoc = assumed {* Because toto *} ;
+  proof of mult_left_distributes_on_plus = assumed {* Because toto *} ;
+  (*[rr]: needs check *)
+  proof of mult_right_distributes_on_plus = assumed {* Because toto *} ;
   proof of one_is_left_neutral = assumed {* Because toto *} ;
 
   proof of euclidean_ordering_is_transitive = assumed {* Because toto *} ;
