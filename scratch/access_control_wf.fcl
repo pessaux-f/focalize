@@ -420,37 +420,49 @@ species Rho_wf (Sec is Set_of (Security_actions), Reg is Regles (Sec))
   signature f_lim : Sec -> int ;
 end ;;
 
-species Events inherits Setoid = 
+species Events (A is Security_actions) inherits Setoid = 
 (* a partir d'une action
    cree l'evenement reussi *)
+  signature a2e_yes : Security_actions -> Self ;
   
 (* a partir d'une action
    cree l'evenement echoue *)
+  signature a2e_fail : Security_actions -> Self ;
   
 (* a partir d'une action
    cree l'evenement refuse *)
+  signature a2e_no : Security_actions -> Self ;
   
-(* a partir d'une action
+(* BOF : a partir d'une action
    renvoie l'evenement - reussi, echoue ou refuse - correspondant dans 
    event_history *)
 end ;;
   
-species Events_history
+species Events_history (A is Security_actions, E is Events (A))
   inherits Basic_object =  
-  signature event_done : Events -> bool ;
-  signature event_add : Events -> Self -> Self ;
-  signature event_rem : Events -> Self -> Self ;
+(* renvoie true si l'evenement reussi figure dans l'historique *)
+  signature event_done : E -> bool ;
+
+(* ajoute l'evenement dans l'historique *)
+  signature event_add : E -> Self -> Self ;
+
+(* supprime l'evenement dans l'historique *)
+  signature event_rem : E -> Self -> Self ;
 end ;;
 
-species States_wf (H is Events_history) inherits States = end ;;
+species States_wf (A is Security_actions, E is Events (A), 
+		   H is Events_history (A, E) )
+  inherits States = end ;;
 
-species Policy_wf (Rh is Rho, H is Events_history, St is States_wf (H), 
+species Policy_wf (Rh is Rho, A is Security_actions, E is Events (A), 
+		   H is Events_history (A, E),
+		   St is States_wf (A, E, H), 
 		   Sec is Set_of (Security_actions)) 
   inherits Policy (Rh, St) = 
   
   logical let init_key_before_crypt_bis =
-     H!event_done (Security_actions!chiffrer) -> 
-       H!event_done (Security_actions!initialiser) ;
+     H!event_done (E!a2e_yes (Security_actions!chiffrer)) -> 
+       H!event_done (E!a2e_yes (Security_actions!initialiser)) ;
 
 (*   logical let init_key_before_crypt (s_1 in H, s_2 in H, *)
 (* 				     a_1 in Security_actions, *)
@@ -507,15 +519,16 @@ species Decisions_wf inherits Decisions =
       ~ (equal (x, no) /\ equal (x, fail)) ;
 end ;;
 
-species Semantics_requests_wf (H is Events_history, St is States_wf (H), 
-			       Req is Requests_wf)
+species Semantics_requests_wf (A is Security_actions, E is Events (A), 
+			       H is Events_history (A, E), 
+			       St is States_wf (A, E, H), Req is Requests_wf)
   inherits Semantics_requests (St, Req) = end ;;
 
 species Models_wf (Sec is Set_of (Security_actions), Reg is Regles (Sec), 
-		   Rh is Rho_wf (Sec, Reg), 
-		   H is Events_history, 
-		   St is States_wf (H), Req is Requests_wf, D is Decisions, 
-		   C is Cartesian_product (D, St), 
-		   Po is Policy_wf (Rh, H, St, Sec), 
-		   Se is Semantics_requests_wf (H, St, Req)) 
+		   Rh is Rho_wf (Sec, Reg), A is Security_actions, 
+		   E is Events (A), H is Events_history (A, E), 
+		   St is States_wf (A, E, H), Req is Requests_wf, 
+		   D is Decisions, C is Cartesian_product (D, St), 
+		   Po is Policy_wf (Rh, A, E, H, St, Sec), 
+		   Se is Semantics_requests_wf (A, E, H, St, Req)) 
   inherits Models (Rh, St, Req, D, C, Po, Se) = end ;;
