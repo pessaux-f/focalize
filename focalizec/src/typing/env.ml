@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.122 2009-03-20 11:14:23 pessaux Exp $ *)
+(* $Id: env.ml,v 1.123 2009-03-20 14:39:56 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -1622,8 +1622,15 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
       {b Rem} : Exported outside this module.                              *)
   (* ********************************************************************* *)
   let rec find_constructor ~loc ~current_unit cstr_ident (env : t) =
+    (* Just mask the previous [cstr_ident] to simply remove the only possible 
+       constructor [CI], and to get the interesting information. *)
+    let Parsetree.CI cstr_ident = cstr_ident.Parsetree.ast_desc in
     match cstr_ident.Parsetree.ast_desc with
-     | Parsetree.CI qvname ->
+     | Parsetree.I_local vname ->
+         (* No explicit scoping information was provided, hence opened modules
+            bindings are acceptable. *)
+         find_constructor_vname ~loc ~allow_opened: true vname env
+     | Parsetree.I_global qvname ->
          let (opt_scope, vname) = opt_scope_vname qvname in
          let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
          (* Check if the lookup can return something coming from an opened
@@ -1684,7 +1691,6 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
          (* Check if the lookup can return something coming from an opened
             module. *)
          let allow_opened = allow_opened_p current_unit opt_scope in
-Format.eprintf "allow_opened: %b@." allow_opened ;
          find_label_vname ~loc ~allow_opened vname env'
 
 

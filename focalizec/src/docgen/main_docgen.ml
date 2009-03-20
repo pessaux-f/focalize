@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.32 2009-03-20 11:14:23 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.33 2009-03-20 14:39:56 pessaux Exp $ *)
 
 
 
@@ -55,12 +55,12 @@ let gen_doc_species_expr out_fmt ~current_unit species_expr =
          Format.fprintf out_fmt "<foc:param>Self</foc:param>@\n"
      | Parsetree.E_constr (cstr_expr, []) ->
          (begin
-         let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
-         match qvname with
-          | Parsetree.Vname vn ->
+         let Parsetree.CI glob_ident = cstr_expr.Parsetree.ast_desc in
+         match glob_ident.Parsetree.ast_desc with
+          | Parsetree.I_local vn | Parsetree.I_global (Parsetree.Vname vn) ->
               Format.fprintf out_fmt "<foc:param>%a</foc:param>@\n"
                 Utils_docgen.pp_xml_vname vn
-          | Parsetree.Qualified (mod_name, vn) ->
+          | Parsetree.I_global (Parsetree.Qualified (mod_name, vn)) ->
               Format.fprintf out_fmt
                 "<foc:param infile=\"%s\">%a</foc:param>@\n"
                 mod_name Utils_docgen.pp_xml_vname vn
@@ -956,7 +956,7 @@ let gen_doc_pcm out_fmt env ~current_unit = function
         theo_def.Parsetree.ast_doc
   | Infer.PCM_expr _ ->
       (* Since toplevel expressions are not usable for any developpement, we
-	 do not document them. *)
+         do not document them. *)
       env
   | Infer.PCM_species (species_def, species_descr, _) ->
       gen_doc_species out_fmt env ~current_unit species_def species_descr

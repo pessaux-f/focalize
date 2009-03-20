@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.75 2009-03-13 07:52:05 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.76 2009-03-20 14:39:56 pessaux Exp $ *)
 
 
 
@@ -366,11 +366,13 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
      | None ->
          (begin
          (* The constructor isn't coming from an external definition. *)
-         match cstr_expr.Parsetree.ast_desc with
-          | Parsetree.CI (Parsetree.Vname name) ->
+         let Parsetree.CI global_ident = cstr_expr.Parsetree.ast_desc in
+         match global_ident.Parsetree.ast_desc with
+          | Parsetree.I_local name
+          | Parsetree.I_global (Parsetree.Vname name) ->
               Format.fprintf ctx.Context.scc_out_fmter "%a"
                 Parsetree_utils.pp_vname_with_operators_expanded name
-          | Parsetree.CI (Parsetree.Qualified (fname, name)) ->
+          | Parsetree.I_global (Parsetree.Qualified (fname, name)) ->
               (* If the constructor belongs to the current compilation unit
                  then one must not qualify it. *)
               if fname <> ctx.Context.scc_current_unit then
@@ -1013,7 +1015,11 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
    | Parsetree.E_constr (constr_ident, exprs) ->
        (* Remember that species names are capitalized. Hence the only legal
           core expression denoting species are sum type constructors. *)
-       let Parsetree.CI cstr_qual_name = constr_ident.Parsetree.ast_desc in
+       let Parsetree.CI glob_ident = constr_ident.Parsetree.ast_desc in
+       let cstr_qual_name =
+         (match glob_ident.Parsetree.ast_desc with
+          | Parsetree.I_local vn -> Parsetree.Vname vn
+          | Parsetree.I_global qvn -> qvn) in
        Format.fprintf ppf "%a"
          (simply_pp_to_coq_qualified_vname ~current_unit) cstr_qual_name ;
        if exprs <> [] then

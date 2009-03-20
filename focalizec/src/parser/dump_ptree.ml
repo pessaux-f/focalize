@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.38 2009-03-20 11:14:23 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.39 2009-03-20 14:39:56 pessaux Exp $ *)
 
 
 
@@ -214,8 +214,8 @@ let pp_expr_idents ppf =
 
 
 
-let pp_constructor_ident_desc ppf (Parsetree.CI qvname) =
-  Format.fprintf ppf "@[<2>CI@ (%a)@]" pp_qvname qvname
+let pp_constructor_ident_desc ppf (Parsetree.CI ident) =
+  Format.fprintf ppf "@[<2>CI@ (%a)@]" pp_ident ident
 ;;
 let pp_constructor_ident ppf = pp_ast pp_constructor_ident_desc ppf;;
 

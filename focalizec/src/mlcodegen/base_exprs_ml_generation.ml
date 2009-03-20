@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.36 2008-12-17 12:11:38 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.37 2009-03-20 14:39:56 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -286,11 +286,12 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
   with
   | Env.Unbound_constructor (_, _) ->
       (begin
-      match cstr_expr.Parsetree.ast_desc with
-       | Parsetree.CI (Parsetree.Vname name) ->
+      let Parsetree.CI glob_ident = cstr_expr.Parsetree.ast_desc in
+      match glob_ident.Parsetree.ast_desc with
+       | Parsetree.I_local name | Parsetree.I_global (Parsetree.Vname name) ->
            Format.fprintf ctx.Context.rcc_out_fmter "%a"
              Parsetree_utils.pp_vname_with_operators_expanded name
-       | Parsetree.CI (Parsetree.Qualified (fname, name)) ->
+       | Parsetree.I_global (Parsetree.Qualified (fname, name)) ->
            (* If the constructor belongs to the current compilation unit then
               one must not qualify it. *)
            if fname <> ctx.Context.rcc_current_unit then

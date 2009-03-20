@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.169 2009-03-13 17:02:17 doligez Exp $ *)
+(* $Id: infer.ml,v 1.170 2009-03-20 14:39:56 pessaux Exp $ *)
 
 
 
@@ -2241,16 +2241,14 @@ let rec expr_to_species_param_expr ~current_unit env expr =
    | Parsetree.E_self -> Parsetree_utils.SPE_Self
    | Parsetree.E_constr (cstr_expr, []) ->
        (begin
-       let Parsetree.CI qualified_vname = cstr_expr.Parsetree.ast_desc in
-       let pseudo_ident = { cstr_expr with
-          Parsetree.ast_desc =
-            (match qualified_vname with
-               | Parsetree.Vname n -> Parsetree.I_local n
-               | Parsetree.Qualified _ -> Parsetree.I_global qualified_vname)
-          } in
+       let Parsetree.CI glob_ident = cstr_expr.Parsetree.ast_desc in
+       let qualified_vname =
+         (match glob_ident.Parsetree.ast_desc with
+          | Parsetree.I_local vname -> Parsetree.Vname vname
+          | Parsetree.I_global qvn -> qvn) in
        let species =
          Env.TypingEnv.find_species
-           ~loc: Location.none ~current_unit pseudo_ident env in
+           ~loc: Location.none ~current_unit glob_ident env in
        Parsetree_utils.SPE_Species
          (qualified_vname, species.Env.TypeInformation.spe_kind)
        end)
@@ -2317,21 +2315,17 @@ let rec typecheck_expr_as_species_parameter_argument ctx env initial_expr =
          create a LOCAL ident otherwsise, [~allow_opened] in [find_species]
          will get stucked at [false] and we won't see the opended species.
          Otherwise, we create a GLOBAL identifier. *)
-      let Parsetree.CI id_qvname = cstr_expr.Parsetree.ast_desc in
-      let pseudo_ident = { cstr_expr with
-        Parsetree.ast_desc =
-          (match id_qvname with
-             | Parsetree.Vname n -> Parsetree.I_local n
-             | Parsetree.Qualified _ -> Parsetree.I_global id_qvname) } in
+      let Parsetree.CI glob_ident = cstr_expr.Parsetree.ast_desc in
       let descr =
         Env.TypingEnv.find_species
-          ~loc: pseudo_ident.Parsetree.ast_loc
-          ~current_unit: ctx.current_unit pseudo_ident env in
+          ~loc: glob_ident.Parsetree.ast_loc
+          ~current_unit: ctx.current_unit glob_ident env in
       let (id_effective_module, id_name_as_string) =
-        (match id_qvname with
-         | Parsetree.Vname vname ->
+        (match glob_ident.Parsetree.ast_desc with
+         | Parsetree.I_local vname
+         | Parsetree.I_global (Parsetree.Vname vname) ->
              (ctx.current_unit, (Parsetree_utils.name_of_vname vname))
-         | Parsetree.Qualified (n, vname) ->
+         | Parsetree.I_global (Parsetree.Qualified (n, vname)) ->
              (n, (Parsetree_utils.name_of_vname  vname))) in
       (* Record the type in the AST nodes. *)
       let ty =

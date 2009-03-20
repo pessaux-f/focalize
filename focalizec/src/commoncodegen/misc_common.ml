@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.21 2009-03-13 07:52:05 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.22 2009-03-20 14:39:56 pessaux Exp $ *)
 
 
 
@@ -110,8 +110,13 @@ let get_implements_effectives species_params_exprs species_formals_info =
            (begin
            match expr.Parsetree.ast_desc with
             | Parsetree.E_constr (cstr_ident, []) ->
-                let Parsetree.CI effective_species_name =
-                  cstr_ident.Parsetree.ast_desc in
+                let Parsetree.CI glob_ident = cstr_ident.Parsetree.ast_desc in
+                let effective_species_name =
+                  (match glob_ident.Parsetree.ast_desc with
+                   | Parsetree.I_local vn
+                   | Parsetree.I_global (Parsetree.Vname vn) ->
+                       Parsetree.Vname vn
+                   | Parsetree.I_global qvn -> qvn) in
                 CEA_collection_name_for_is effective_species_name
             | _ ->
                 (* Collections expressions used as parameters of an      *)

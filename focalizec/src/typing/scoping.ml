@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.77 2009-03-20 11:14:23 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.78 2009-03-20 14:39:56 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -252,8 +252,8 @@ let unqualified_vname_of_ident ident =
     {b Rem} : Not exported outside this module.                        *)
 (* ******************************************************************* *)
 let unqualified_vname_of_constructor_ident ident =
-  match ident.Parsetree.ast_desc with
-   | Parsetree.CI qvname -> vname_of_qvname qvname
+  let Parsetree.CI ident = ident.Parsetree.ast_desc in
+  unqualified_vname_of_ident ident
 ;;
 
 
@@ -1209,35 +1209,22 @@ and scope_expr ctx env expr =
          Parsetree.E_app (scoped_fun_expr, scoped_args)
      | Parsetree.E_constr (cstr_ident, args_exprs) ->
          (begin
-         (* First, re-construct a fake [ident] to be able to look-up inside
-            the values environment. By the way, ensure that the mentionned
-            hosting compilation unit of the constructor was mentionned to be
-            "used" or "opened". *)
-         let basic_vname =
-           (match cstr_ident.Parsetree.ast_desc with
-            | Parsetree.CI (Parsetree.Vname vname) -> vname
-            | Parsetree.CI (Parsetree.Qualified (mod_name, vname)) ->
-                if List.mem mod_name ctx.used_modules then
-                  vname
-                else
-                  raise
-                    (Module_not_specified_as_used
-                       (cstr_ident.Parsetree.ast_loc, mod_name))) in
-         let pseudo_ident =
-           let Parsetree.CI qvname =
-             cstr_ident.Parsetree.ast_desc in
-           { Parsetree.ast_loc = cstr_ident.Parsetree.ast_loc ;
-             Parsetree.ast_desc = Parsetree.CI qvname ;
-             Parsetree.ast_doc = cstr_ident.Parsetree.ast_doc ;
-             Parsetree.ast_type = Parsetree.ANTI_none } in
+         let basic_vname = unqualified_vname_of_constructor_ident cstr_ident in
          let cstr_hosting_info =
            Env.ScopingEnv.find_constructor
              ~loc: cstr_ident.Parsetree.ast_loc
-             ~current_unit: ctx.current_unit pseudo_ident env in
+             ~current_unit: ctx.current_unit cstr_ident env in
+         let Parsetree.CI global_ident = cstr_ident.Parsetree.ast_desc in
+         (* Ensure that the mentionned hosting compilation unit if the
+            constructor was mentionned to be "used" or "opened". *)
+         ensure_ident_allowed_qualified ctx global_ident ;
+         let scoped_global_ident = {
+           global_ident with
+             Parsetree.ast_desc =
+               Parsetree.I_global
+                 (Parsetree.Qualified (cstr_hosting_info, basic_vname)) } in
          let scoped_cstr = { cstr_ident with
-           Parsetree.ast_desc =
-             Parsetree.CI
-               (Parsetree.Qualified (cstr_hosting_info, basic_vname)) } in
+           Parsetree.ast_desc = Parsetree.CI scoped_global_ident } in
          (* Now, scopes the arguments. *)
          let scoped_args = List.map (scope_expr ctx env) args_exprs in
          Parsetree.E_constr (scoped_cstr, scoped_args)
@@ -1334,9 +1321,8 @@ and scope_pattern ctx env pattern =
      | Parsetree.P_constr  (cstr, pats) ->
          (* Ensure that the mentionned hosting compilation unit of the
             sum constructor was mentionned to be "used" or "opened". *)
-         let Parsetree.CI cstr_qvname = cstr.Parsetree.ast_desc in
-         ensure_qual_vname_allowed_qualified
-           ctx cstr.Parsetree.ast_loc cstr_qvname ;
+         let Parsetree.CI glob_ident = cstr.Parsetree.ast_desc in
+         ensure_ident_allowed_qualified ctx glob_ident ;
          let cstr_host_module =
            Env.ScopingEnv.find_constructor
              ~loc: cstr.Parsetree.ast_loc
@@ -1353,10 +1339,14 @@ and scope_pattern ctx env pattern =
              ([], env) in
          (* Reconstruct a completely scopped constructor. *)
          let cstr_vname = unqualified_vname_of_constructor_ident cstr in
+         let scoped_glob_ident = {
+           glob_ident with
+             Parsetree.ast_desc =
+               Parsetree.I_global
+                 (Parsetree.Qualified (cstr_host_module, cstr_vname)) } in
          let scoped_cstr =
            { cstr with Parsetree.ast_desc =
-               Parsetree.CI
-                (Parsetree.Qualified (cstr_host_module, cstr_vname)) } in
+               Parsetree.CI (scoped_glob_ident) } in
          ((Parsetree.P_constr (scoped_cstr, scoped_pats)), env')
      | Parsetree.P_record labs_n_pats ->
          (* Same remark than in the case of the arguments of [P_app]. *)
@@ -1957,39 +1947,30 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
   | Parsetree.E_self -> initial_expr
   | Parsetree.E_constr (cstr_expr, []) ->
-      (* We re-construct a fake ident from the constructor expression just to
-         be able to lookup inside the environment. Be careful, in order to
-         allow to acces "opened" species, we must check if we have a
-         qualification (even being [None]) to create either a GLOBAL or a
-         LOCAL ident. If we don't have any module qualification, we must
-         create a LOCAL ident otherwsise, [~allow_opened] in [find_species]
-         will get stucked at [false] and we won't see the opended species.
-         Otherwise, we create a GLOBAL identifier. *)
-      let Parsetree.CI qvname = cstr_expr.Parsetree.ast_desc in
+      let Parsetree.CI glob_ident = cstr_expr.Parsetree.ast_desc in
       (* Ensure that the mentionned hosting compilation unit of the species was
          mentionned to be "used" or "opened". *)
-      ensure_qual_vname_allowed_qualified
-        ctx cstr_expr.Parsetree.ast_loc qvname ;
-      let pseudo_ident = { cstr_expr with
-        Parsetree.ast_desc = 
-          (match qvname with
-            | Parsetree.Vname n -> Parsetree.I_local n
-            | Parsetree.Qualified _ -> Parsetree.I_global qvname) } in
+      ensure_ident_allowed_qualified ctx glob_ident ;
       let species_info =
         Env.ScopingEnv.find_species
-          ~loc: pseudo_ident.Parsetree.ast_loc
-          ~current_unit: ctx.current_unit pseudo_ident env in
+          ~loc: glob_ident.Parsetree.ast_loc
+          ~current_unit: ctx.current_unit glob_ident env in
       (* Recover the hosting file of the species. If the species is a
          parameter, then the hosting file is the current compilation unit. *)
       let hosting_file =
         (match species_info.Env.ScopeInformation.spbi_scope with
          | Env.ScopeInformation.SPBI_file n -> n
          | Env.ScopeInformation.SPBI_parameter -> ctx.current_unit) in
+      let scoped_glob_ident = {
+        glob_ident with
+          Parsetree.ast_desc =
+            Parsetree.I_global
+              (Parsetree.Qualified
+                 (hosting_file,
+                  (unqualified_vname_of_constructor_ident cstr_expr))) } in
       let scoped_cstr_expr = {
         cstr_expr with
-          Parsetree.ast_desc =
-            Parsetree.CI
-              (Parsetree.Qualified (hosting_file, vname_of_qvname qvname)) } in
+          Parsetree.ast_desc = Parsetree.CI scoped_glob_ident } in
       { initial_expr with
           Parsetree.ast_desc = Parsetree.E_constr (scoped_cstr_expr, []) }
   | Parsetree.E_paren expr ->

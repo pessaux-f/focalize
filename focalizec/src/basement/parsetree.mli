@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.49 2009-03-20 11:14:23 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.50 2009-03-20 14:39:56 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -155,13 +155,6 @@ and expr_ident_desc =
     locally bound identifiers or method names. *)
 ;;
 
-type constructor_ident = constructor_ident_desc ast
-and constructor_ident_desc =
-  | CI of qualified_vname
-(** The constructor names that can appear in an expression or a pattern.
-    This is always a global uppercase qualified identifier. *)
-;;
-
 (** {6 Other identifiers} *)
 
 type ident = ident_desc ast
@@ -170,6 +163,13 @@ and ident_desc =
   | I_global of qualified_vname
 (** Unclassified identifiers: identifiers that can appear anywhere
     in the parse trees. *)
+;;
+
+type constructor_ident = constructor_ident_desc ast
+and constructor_ident_desc =
+  | CI of ident
+(** The constructor names that can appear in an expression or a pattern.
+    This is always a global uppercase qualified identifier. *)
 ;;
 
 type label_ident = label_ident_desc ast

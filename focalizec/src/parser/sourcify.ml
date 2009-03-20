@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.68 2009-03-20 11:14:23 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.69 2009-03-20 14:39:56 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -185,8 +185,8 @@ let pp_expr_idents sep ppf =
 
 
 
-let pp_constructor_ident_desc ppf (Parsetree.CI qvname) =
-  Format.fprintf ppf "%a" pp_qvname qvname
+let pp_constructor_ident_desc ppf (Parsetree.CI ident) =
+  Format.fprintf ppf "%a" pp_ident ident
 ;;
 let pp_constructor_ident ppf = pp_ast pp_constructor_ident_desc ppf
 ;;

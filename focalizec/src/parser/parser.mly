@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.128 2009-03-20 11:14:23 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.129 2009-03-20 14:39:56 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -71,8 +71,12 @@ let mk_label_ident opt_qual vname =
    | Some qual -> mk (LI (mk_global_ident qual vname))
 ;;
 
-let mk_global_constructor_ident qual vname =
-  mk (CI (mk_qual_vname qual vname))
+(* Same process and remarks than for record type field labels. *)
+let mk_global_constructor_ident opt_qual vname =
+  match opt_qual with
+   | None -> mk (CI (mk (I_local vname)))
+   | Some qual -> mk (CI (mk_global_ident qual vname))
+
 ;;
 
 let mk_local_expr_ident vname =
@@ -105,9 +109,15 @@ let mk_prefix_application s e1 =
   mk (E_app (mk_local_expr_var (Vpident s), [ e1 ]))
 ;;
 
-let mk_cons () = mk_global_constructor_ident (Some "basics") (Vuident "::");;
-let mk_nil () = mk_global_constructor_ident (Some "basics") (Vuident "[]");;
-let mk_unit () = mk_global_constructor_ident (Some "basics") (Vuident "()");;
+let mk_cons () =
+  mk_global_constructor_ident (Some (Some "basics")) (Vuident "::")
+;;
+let mk_nil () =
+  mk_global_constructor_ident (Some (Some "basics")) (Vuident "[]")
+;;
+let mk_unit () =
+  mk_global_constructor_ident (Some (Some "basics")) (Vuident "()")
+;;
 
 let mk_proof_label (s1, s2) =
   try int_of_string s1, s2 with
@@ -906,9 +916,18 @@ type_expr_comma_list:
 
 constructor_ref:
   | constructor_vname
-    { mk_global_constructor_ident None $1 }
+    {
+     (* Here we pass the optional qualification None to say that there is
+	no qualification at all. I.e. there is no # notation. *)
+     mk_global_constructor_ident None $1
+   }
   | opt_lident SHARP constructor_vname
-    { mk_global_constructor_ident $1 $3 }
+    {
+     (* Here, we pass the optional qualification Some to say that there is a
+	# notation. And if the effective qualifier is None, that because we
+	are in the case of "#foo". *)
+     mk_global_constructor_ident (Some $1) $3
+   }
 ;
 
 /* IDENTIFIERS */
