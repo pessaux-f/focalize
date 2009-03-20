@@ -58,8 +58,8 @@ end;;
    type theoetic models which are traditionally used
    in conjunction with variant types.
  *)
-species Sum_set(A is Setoid, BB is Setoid)
-  inherits Abstract_sum(A, BB), Setoid =
+species Sum_set(A is Setoid, B is Setoid)
+  inherits Abstract_sum(A, B), Setoid =
 
   (** this is a (partial) function which is intended to reverse first *)
   signature first_term: Self -> A;
@@ -67,9 +67,9 @@ species Sum_set(A is Setoid, BB is Setoid)
     A!equal(!first_term(!first(x)), x);
 
   (** this is a (partial) function which is intended to reverse second *)
-  signature second_term: Self -> BB;
-  property second_reverses_term: all x in BB,
-    BB!equal(!second_term(!second(x)), x);
+  signature second_term: Self -> B;
+  property second_reverses_term: all x in B,
+    B!equal(!second_term(!second(x)), x);
 
 
   (** Equality defined with protected extractors  *)
@@ -79,7 +79,7 @@ species Sum_set(A is Setoid, BB is Setoid)
        A!equal(!first_term(x), !first_term(y))
      else 
        if basics#and_b(!second_case(x), !second_case(y))
-       then BB!equal(!second_term(x), !second_term(y))
+       then B!equal(!second_term(x), !second_term(y))
        else
          (* [rr]: start thinking about this,
             an auxiliary function ? Better specs ? *)
@@ -95,23 +95,23 @@ species Sum_set(A is Setoid, BB is Setoid)
       \/
       (!second_case(x) /\
        !second_case(y) /\
-        BB!equal(!second_term(x), !second_term(y))))
+        B!equal(!second_term(x), !second_term(y))))
     proof = by property !case_exclusive 
               definition of equal;
 
   (** Since equality is defined, we prove its reflexity *)
   proof of equal_reflexive = 
-    by property A!equal_reflexive, BB!equal_reflexive, !case_complete, 
+    by property A!equal_reflexive, B!equal_reflexive, !case_complete, 
        !equal_spec;
 
   (** Since equality is defined, we prove its symmetry *)
   proof of equal_symmetric = 
-    by property A!equal_symmetric, BB!equal_symmetric,
+    by property A!equal_symmetric, B!equal_symmetric,
        !equal_spec;
 
   (** Since equality is defined, we prove its transitivity *)
   proof of equal_transitive = 
-    by property A!equal_transitive, BB!equal_transitive, !case_exclusive,
+    by property A!equal_transitive, B!equal_transitive, !case_exclusive,
        !equal_spec;
 
   (** 
@@ -165,12 +165,12 @@ species Sum_set(A is Setoid, BB is Setoid)
   (** specifications are compatible with equality *)
   theorem second_term_substitution_rule: all x_1 x_2 in Self,
     !second_case(x_1) -> !equal(x_1, x_2) ->
-      BB!equal(!second_term(x_1), !second_term(x_2))
+      B!equal(!second_term(x_1), !second_term(x_2))
     proof =
       <1>1 assume x_1 in Self, assume x_2 in Self,
            assume H_1: !second_case(x_1),
            assume H_2: !equal(x_1, x_2),
-           prove BB!equal(!second_term(x_1), !second_term(x_2))
+           prove B!equal(!second_term(x_1), !second_term(x_2))
            <2>1 prove ~(!first_case(x_1) /\ !first_case(x_2))
                 by property !case_exclusive hypothesis H_1
            <2>f qed by 
@@ -185,17 +185,17 @@ species Sum_set(A is Setoid, BB is Setoid)
      A classical theorem from category theory says that there exists 
      an injection from B to A + B
    *)
-  theorem second_is_injective: all x y in BB,
-    !equal(!second(x), !second(y)) -> BB!equal(x, y)
+  theorem second_is_injective: all x y in B,
+    !equal(!second(x), !second(y)) -> B!equal(x, y)
     proof =
-      <1>1 assume x in BB, assume y in BB,
+      <1>1 assume x in B, assume y in B,
            assume H: !equal(!second(x), !second(y)),
-           prove BB!equal(x, y)
-           <2>1 prove BB!equal(!second_term(!second(x)), x) 
+           prove B!equal(x, y)
+           <2>1 prove B!equal(!second_term(!second(x)), x) 
                 by property !second_reverses_term
-           <2>2 prove BB!equal(!second_term(!second(y)), y)
+           <2>2 prove B!equal(!second_term(!second(y)), y)
                 by property !second_reverses_term
-           <2>3 prove BB!equal(!second_term(!second(x)),
+           <2>3 prove B!equal(!second_term(!second(x)),
                               !second_term(!second(y)))
                 <3>1 prove !second_case(!second(x)) 
                      by property !second_has_case
@@ -204,9 +204,9 @@ species Sum_set(A is Setoid, BB is Setoid)
                        hypothesis H
                        property !second_term_substitution_rule
            <2>f qed by step <2>1, <2>2, <2>3
-                       property BB!equal_reflexive, 
-                                BB!equal_symmetric, 
-                                BB!equal_transitive
+                       property B!equal_reflexive, 
+                                B!equal_symmetric, 
+                                B!equal_transitive
       <1>f conclude
     ;
 
@@ -276,12 +276,12 @@ species Sum_set(A is Setoid, BB is Setoid)
       A non test case ?
     *)
    theorem second_reverses: all x in Self,
-     !second_case(x) -> (ex x_b in BB, !equal(!second(x_b), x))
+     !second_case(x) -> (ex x_b in B, !equal(!second(x_b), x))
      proof =
      <1>1 assume x in Self,
           assume H: !second_case(x),
           prove !equal(!second(!second_term(x)), x)
-          <2>1 prove BB!equal(!second_term(!second(!second_term(x))),
+          <2>1 prove B!equal(!second_term(!second(!second_term(x))),
                              !second_term(x))
                by property !second_reverses_term
           <2>2 prove !second_case(!second(!second_term(x)))
