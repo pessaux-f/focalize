@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.165 2009-03-20 11:14:23 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.166 2009-03-20 16:18:55 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -878,12 +878,24 @@ let rec find_only_PN_subs_in_proof_nodes = function
 
 
 
-let generate_final_recursive_definifion_body out_fmter species_name name
-    used_species_parameter_tys dependencies_from_params abstracted_methods =
-  Format.fprintf out_fmter "Termination_%a_namespace.%a__%a@ "
-    Parsetree_utils.pp_vname_with_operators_expanded name
-    Parsetree_utils.pp_vname_with_operators_expanded species_name
-    Parsetree_utils.pp_vname_with_operators_expanded name ;
+(* The [~in_zenon_by_def] boolean says if we are in a Zenon
+   "by definition of a rec function".
+   If we are in a Zenon "by definition of a rec function" we must emit the
+   name "Termination_fct_namespace.fct_equation".
+   If we are not, then we must emit the name
+   "Termination_fct_namespace.species__fct". *)
+let generate_final_recursive_definifion_body out_fmter ~in_zenon_by_def
+    species_name name used_species_parameter_tys dependencies_from_params
+    abstracted_methods =
+  if in_zenon_by_def then
+    Format.fprintf out_fmter "Termination_%a_namespace.%a_equation@ "
+      Parsetree_utils.pp_vname_with_operators_expanded name
+      Parsetree_utils.pp_vname_with_operators_expanded name
+  else
+    Format.fprintf out_fmter "Termination_%a_namespace.%a__%a@ "
+      Parsetree_utils.pp_vname_with_operators_expanded name
+      Parsetree_utils.pp_vname_with_operators_expanded species_name
+      Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* We directly apply the abstracted arguments. That's a kind of
      eta-expansion. *)
   List.iter
@@ -956,9 +968,12 @@ let zenonify_by_recursive_definition ctx print_ctx env
   (* Now, for Zenon, we print the **real** definition of the recursive
      function, i.e. the one using the temporaries of the Section/namespace. *)
   Format.fprintf out_fmter "@\n{ " ;
+  (* Say that we are in a Zenon "by definition of a rec function" in order
+     to have the name "Termination_fct_namespace.fct_equation" instead of
+     "Termination_fct_namespace.species__fct". *)
   generate_final_recursive_definifion_body
-    out_fmter species_name vname used_species_parameter_tys
-    dependencies_from_params abstracted_methods ;
+    out_fmter ~in_zenon_by_def: true species_name vname
+    used_species_parameter_tys dependencies_from_params abstracted_methods ;
   Format.fprintf out_fmter " }@\n:=@\n" ;
   (* Now, we generate the body of the recursive function as given in the
      regular way (i.e. exactly like
@@ -2761,9 +2776,12 @@ let generate_defined_recursive_let_definition ctx print_ctx env
             ai.Abstractions.ai_dependencies_from_params generated_fields) ;
        Format.fprintf out_fmter " :=@ " ;
        (* Now, emit the code of the final definition, using the definition
-          created in the above Section enclosed by the above namespace. *)
+          created in the above Section enclosed by the above namespace.
+          Say that we are NOT in a Zenon "by definition of a rec function" in
+          order to have the name "Termination_fct_namespace.species__fct"
+          instead of "Termination_fct_namespace.fct_equation". *)
        generate_final_recursive_definifion_body
-         out_fmter species_name name
+         out_fmter ~in_zenon_by_def: false species_name name
          ai.Abstractions.ai_used_species_parameter_tys
          ai.Abstractions.ai_dependencies_from_params
          abstracted_methods ;
