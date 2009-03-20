@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.8 2009-02-05 08:42:36 rr Exp $ *)
+(* $Id: integers.fcl,v 1.9 2009-03-20 08:38:13 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -53,6 +53,8 @@ open "randoms" ;;
 species Enumeration_system inherits Setoid =
 
   signature start : Self ;
+
+  let element = !start ;
 
   (** An abstract successor function *)
   signature successor : Self -> Self ;
