@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.1 2009-03-18 21:30:59 rr Exp $ *)
+(* $Id: peano.fcl,v 1.2 2009-03-20 10:29:14 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -63,32 +63,44 @@ type peano =
   | P_succ(peano)
 ;;
 
-species Peano_enumeration_system inherits Enumeration_system =
+species Peano_enumeration_system 
+  inherits Syntactical_setoid, Enumeration_system =
 
   representation = peano;
 
   let successor(x) = P_succ(x);
 
-  theorem equal_is_syntactic: all x y in Self, !equal(x, y ) -> x = y
-    proof = assumed {* *};
-
+  (**
+     functional model a = b -> f(a) = f(b) and = is least reflexive relation
+   *)
   proof of successor_substitution_rule =
    by definition of successor
       property equal_reflexive, equal_is_syntactic;
 
+  theorem equal_very_reflexive: all x y in Self, (x = y) -> !equal(x, y)
+    proof = by property !equal_reflexive;
+
   proof of successor_is_injective =
+    <1>0 prove all x y in Self, (P_succ(x) = P_succ(y)) -> (x = y)
+         assumed {* should be injectivity of constructor, needs Coq *}
     <1>1 assume x in Self, assume y in Self,
          assume H: !equal(!successor(x), !successor(y)),
          prove !equal(x, y)
-         <2>0 prove P_succ(x) = P_succ(y)
+         <2>1 prove P_succ(x) = P_succ(y)
               by hypothesis H 
                  definition of successor
                  property equal_is_syntactic
-         <2>1 prove x = y
-              coq proof 
-              {* apply coq_builtins.magic_prove. Qed. *}
-         <2>f qed by step <2>1 property !equal_reflexive
+         <2>f qed
+              (* [rr]: time limit!   *)
+              by step <2>1, <1>0 property !equal_very_reflexive
+              (* [rr]: exhausted! *)
+              (* by step <2>1, <1>0 property !equal_reflexive *)
+              (* assumed {*  *}  *)
+(*               coq proof *)
+(*               property !equal_reflexive *)
+(*               {* apply coq_builtins.magic_prove. Qed. *} *)
     <1>f conclude;
+(*          qed assumed {* __A_1_LEMMA not found *}; *)
 
 
 end;;
@@ -102,7 +114,7 @@ species Enumerated_system
    inherits Enumeration_system, Partial_set =
   (** Zero is not a successor is a Peano axiom *)
   property successor_is_non_trivial: all n in Self,
-    ~ (!equal (!successor (n), !start));
+    !different(!successor (n), !start);
 
   (**
      predecessor computes the unique y such that successor(y) = x
@@ -110,16 +122,41 @@ species Enumerated_system
    *)
   signature predecessor : Self -> Self;
   property predecessor_reverses_successor : all x y in Self,
-     !equal (x, !successor (y)) ->
-       !equal (y, !predecessor (x)) ;
+     !different(y, !start) ->
+       !equal (x, !predecessor(y)) ->
+         !equal (y, !successor(x)) ;
 
   (** Weak injectivity of predecessor is a Peano axiom *)
-  property predecessor_is_injective: all n m in Self,
-    ~ (!equal (n, !start)) -> ~ (!equal (m, !start)) ->
-      !equal (!predecessor (n), !predecessor (m)) -> !equal (n, m) ;
+  theorem predecessor_is_injective: all n m in Self,
+    !different(n, !start) -> !different (m, !start) ->
+      !equal (!predecessor (n), !predecessor (m)) -> !equal (n, m)
+    proof =
+    <2>1 assume x in Self, assume y in Self,
+         assume H_x: !different(x, !start),
+         assume H_y: !different(y, !start),
+         (* sort of let *)
+         assume px in Self, assume Px: px = !predecessor(x),
+         assume py in Self, assume Py: py = !predecessor(y),
+         assume H: !equal(!predecessor(x), !predecessor(y)),
+         prove !equal(x, y)
+         <2>1 prove !equal(px, py)
+              by hypothesis H, Px, Py 
+                 property !equal_symmetric, !equal_transitive
+         <2>2 prove !equal(x, !successor(px)) 
+              by hypothesis Px, H_x 
+                 property !equal_reflexive, !predecessor_reverses_successor
+         <2>3 prove !equal(y, !successor(py)) 
+              by hypothesis Py, H_y 
+                 property !equal_reflexive, !predecessor_reverses_successor
+         <2>f qed by step <2>1, <2>2, <2>3 
+                    property !equal_symmetric, !equal_transitive,
+                             !successor_is_injective,
+                             !successor_substitution_rule
+    <2>f conclude;
+
 
   (** An induction principle for natural numbers *)
-  logical let enumerated_induction(p in (Self -> prop)) =
+  logical let enumerated_induction(p in (Self -> bool)) =
     p (!start) -> (all n in Self, p (n) -> p (!successor (n)))
       -> (all n in Self, p (n));
 
@@ -158,7 +195,9 @@ species Ordered_Enumerated_system
 end
 ;;
 
-species Peano_base inherits Peano_enumeration_system, Ordered_Enumerated_system =
+species Peano_base 
+  inherits Peano_enumeration_system, 
+           Ordered_Enumerated_system =
 
   let start = P_zero;
 
@@ -166,23 +205,39 @@ species Peano_base inherits Peano_enumeration_system, Ordered_Enumerated_system 
     | P_zero -> P_zero
     | P_succ(x) -> x;
 
-  (** Here we should be able to provide a witness! *)
-  proof of predecessor_is_injective =
-   <2>1 assume x in Self, assume y in Self,
-        assume H_x: ~(!equal(x, !start)),
-        assume H_y: ~(!equal(y, !start)),
-        assume H: !equal(!predecessor(x), !predecessor(y)),
-        prove !equal(x, y)
-        <2>1 assume F: !different(x, y),
-             prove false
-             assumed {* *}
-        <2>f qed by step <2>1 property !different_is_not_same
-   <2>f conclude;
-
   proof of predecessor_reverses_successor =
-    assumed {* *};
+    <1>1 assume x in Self, assume y in Self,
+         assume H_y: !different(x, !start),
+         assume H_xy: !equal(y, !predecessor(x)),
+         prove !equal(x, !successor(y))
+         assumed {* To do *}
+    <1>f conclude;
 
-  proof of successor_is_non_trivial = assumed {* *};
+  proof of successor_is_non_trivial =
+    <1>1 assume x in Self,
+         prove !different(!successor(x), !start)
+         <2>1 assume F: !equal(!successor(x), !start),
+              prove false
+              <2>1 prove P_succ(x) = P_zero
+(*                    by definition of successor, start *)
+(*                       hypothesis F *)
+(*                       property !equal_is_syntactic *)
+                   coq proof
+                   definition of successor, start
+                   {* apply coq_builtins.magic_prove. Qed.*}
+              <2>f qed (* by step <2>1 property !equal_reflexive *)
+                   coq proof 
+                   property !equal_reflexive
+                   {* apply coq_builtins.magic_prove. Qed.*}
+         <2>2 qed by step <2>1 property same_is_not_different
+    <1>f conclude;
+
+  proof of total_order =
+    <1>1 assume x in Self, assume y in Self,
+         prove !leq(x, y) \/ !leq(y, x)
+         assumed {* *}
+    <1>f conclude;
+
 end;;
 
 
@@ -198,26 +253,13 @@ proof of successor_defines_infimum = assumed {* this is wrong *};
 
 proof of start_is_min = assumed {* this is wrong *};
 
-proof of total_order = assumed {* questionable? *};
+proof of equal_is_syntactic = assumed {* this is wrong *};
+
 end;;
 
 collection Peano_dumb_coll implements Peano_dumb;;
 
-(* species Peano_order inherits Peano_base, Ordered_Enumerated_system = *)
-
-(*   proof of successor_is_non_trivial = *)
-(*     <1>1 assume x in Self, *)
-(*          assume F: !equal(successor(x), !start), *)
-(*          prove false *)
-(*          <2>1 prove !successor(x) = !start *)
-(*               by hypothesis F *)
-(*                  property !equal_is_syntactic *)
-(*          <2>f qed  *)
-(*               coq proof *)
-(*               definition of successor, start *)
-(*               {* intros ; unfold abst_successor, abst_start; *)
-(*                  apply coq_builtins.magic_prove. Qed. *} *)
-(*     <1>f conclude; *)
+species Peano_order inherits Peano_base, Ordered_Enumerated_system =
 
 (*   let rec lt(x, y) = match (x, y) with *)
 (*     | (P_zero, P_zero) -> false *)
@@ -226,8 +268,20 @@ collection Peano_dumb_coll implements Peano_dumb;;
 (*     | (P_succ(x), P_succ(y)) -> !lt(x, y) *)
 (*     ; *)
 
-(*   proof of lt_is_irreflexive =  *)
-(*     definition of lt assumed {* *}; *)
+  proof of lt_is_irreflexive =
+    <1>0 prove ~(!lt(P_zero, P_zero))
+         definition of lt assumed {* Should be trivial *}
+    <1>1 prove all x in Self, ~(!lt(x, x)) -> ~(!lt(P_succ(x), P_succ(x)))
+         <2>1 assume x in Self,
+              assume H_x: !lt(x, x),
+              prove !lt(P_succ(x), P_succ(x))
+              definition of lt
+              assumed {* inductive step *}
+         <2>f qed assumed {* reaches time limit!*}
+    <1>f qed 
+         definition of enumerated_induction
+         (* step <1>0, <1>1 *) 
+         assumed {* induction principle *};
 
 (*   proof of lt_is_transitive = *)
 (*     definition of lt assumed {* *}; *)
@@ -249,20 +303,25 @@ collection Peano_dumb_coll implements Peano_dumb;;
 (*     definition of predecessor, successor, equal *)
 (*     assumed {* *}; *)
 
-(*   let start = P_zero; *)
-
-(*   proof of start_is_min = *)
-(*     definition of start *)
-(*     property different_is_not_same, leq_from_lt *)
-(*     assumed {* *}; *)
-
-(*   proof of total_order = *)
-(*     <1>1 assume x in Self, assume y in Self, *)
-(*          prove !leq(x, y) /\ !leq(y, x) *)
-(*          assumed {* *} *)
-(*     <1>f conclude; *)
+  let start = P_zero;
 
 
-(* end;; *)
+  proof of start_is_min =
+    (* transparent theorem reveals representation!*)
+    <1>0 prove  all x in Self, !lt(P_zero, x) \/ (x = P_zero)
+         definition of lt
+         assumed {* should apply some form of discrimination *}
+    (* transparent theorem !*)
+    <1>1 prove all x in Self, !leq(P_zero, x)
+         property leq_from_lt
+         (* step <1>0 *)
+         assumed {* direct consequence of <1>0 *}
+    <1>f qed
+         definition of start
+         (* step <1>1 *)
+         assumed {* direct consequence of <1>1 *}
+  ;
+
+end;;
 
 (* collection Peano_coll implements Peano_order ;; *)
