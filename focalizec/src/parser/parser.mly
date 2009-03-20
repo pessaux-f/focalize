@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.127 2009-03-13 17:02:57 doligez Exp $ *)
+(* $Id: parser.mly,v 1.128 2009-03-20 11:14:23 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -55,8 +55,20 @@ let mk_global_ident qual vname =
 
 let mk_global_species_ident = mk_global_ident;;
 
-let mk_label_ident qual vname =
-  mk (LI (mk_qual_vname qual vname))
+(* ATTENTION: record fields are **always** parsed as **global** identifiers.
+   This is required for the [allow_opened] mechanism of the environments to
+   work.
+   We take an optional qualification. If it is None, then we are in the case
+   of a simple ident like "foo". If the optional qualification is Some (xxx),
+   then 2 cases.
+   If xxx is None, we are in the case of an identifier like"#foo" (denoting
+   the identifier defined in THIS compilation unit).
+   Otherwise, xxx is Some (...) and we have an explicit module name like in
+   "basics#foo". *)
+let mk_label_ident opt_qual vname =
+  match opt_qual with
+   | None -> mk (LI (mk (I_local vname)))
+   | Some qual -> mk (LI (mk_global_ident qual vname))
 ;;
 
 let mk_global_constructor_ident qual vname =
@@ -1200,8 +1212,17 @@ following_binding_list:
 /**** NAMES ****/
 
 label_ident:
-  | label_vname { mk_label_ident None $1 }
-  | opt_lident SHARP label_vname { mk_label_ident $1 $3 }
+  | label_vname {
+      (* Here we pass the optional qualification None to say that there is
+	 no qualification at all. I.e. there is no # notation. *)
+      mk_label_ident None $1
+      }
+  | opt_lident SHARP label_vname {
+      (* Here, we pass the optional qualification Some to say that there is a
+	 # notation. And if the effective qualifier is None, that because we
+	 are in the case of "#foo". *)
+      mk_label_ident (Some $1) $3
+      }
 ;
 
 bound_vname:

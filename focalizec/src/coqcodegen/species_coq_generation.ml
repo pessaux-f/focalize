@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.164 2009-03-19 17:46:35 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.165 2009-03-20 11:14:23 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1739,7 +1739,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
        (* Now, print the lemma body. Inside, any method of "Self" is
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
-       Format.fprintf out_fmter "(* Theorem's body1. *)@\n" ;
+       Format.fprintf out_fmter "(* Theorem's body. *)@\n" ;
        Format.fprintf out_fmter "@[<2>Theorem %a :@ "
          Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
        (* Generate the aim depending on if we are in a regular proof or in the
@@ -1776,7 +1776,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
        (* Now, print the lemma body. Inside, any method of "Self" is
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
-       Format.fprintf out_fmter "(* Theorem's body2. *)@\n" ;
+       Format.fprintf out_fmter "(* Theorem's body. *)@\n" ;
        (* Be careful if the coq proof appears in a nested proof of a Zenon
           script under a Zenon script then we must not apply the naming scheme
           "for_zenon__xxx". Otherwise, if the coq proof is at toplevel of the
@@ -1849,7 +1849,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
        (* Now, print the lemma body. Inside, any method of "Self" is
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
-       Format.fprintf out_fmter "(* Theorem's body3. *)@\n" ;
+       Format.fprintf out_fmter "(* Theorem's body. *)@\n" ;
        (* Generate the aim depending on if we are in a regular proof or in the
           initial stage of a termination proof. *)
        (match aim_gen_method with

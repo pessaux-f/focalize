@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.48 2009-02-09 10:58:14 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.49 2009-03-20 11:14:23 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -132,7 +132,8 @@ type constructor_name = vname
 ;;
 
 type label_name = vname
-(** A label name as mentioned in type definitions. *)
+(** A label name as mentioned in type definitions and ONLY there. Not in
+    expressions ! *)
 ;;
 
 type node_label = int * string
@@ -161,13 +162,6 @@ and constructor_ident_desc =
     This is always a global uppercase qualified identifier. *)
 ;;
 
-type label_ident = label_ident_desc ast
-and label_ident_desc =
-  | LI of qualified_vname
-(** The label names that can appear in an expression or a pattern.
-    This is always a global lowercase qualified identifier. *)
-;;
-
 (** {6 Other identifiers} *)
 
 type ident = ident_desc ast
@@ -176,6 +170,13 @@ and ident_desc =
   | I_global of qualified_vname
 (** Unclassified identifiers: identifiers that can appear anywhere
     in the parse trees. *)
+;;
+
+type label_ident = label_ident_desc ast
+and label_ident_desc =
+  | LI of ident
+(** The label names that can appear in an expression or a pattern.
+    This is always a global lowercase qualified identifier. *)
 ;;
 
 (** {3 Type expressions} *)

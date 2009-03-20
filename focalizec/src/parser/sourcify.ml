@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.67 2009-01-22 10:36:01 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.68 2009-03-20 11:14:23 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -136,8 +136,8 @@ let pp_idents sep ppf = Handy.pp_generic_separated_list sep pp_ident ppf
     {b Rem} : Not exported ouside this module.                 *)
 (* *********************************************************** *)
 let pp_label_ident_desc ppf = function
-  | Parsetree.LI qvname ->
-    Format.fprintf ppf "%a" pp_qvname qvname
+  | Parsetree.LI ident ->
+    Format.fprintf ppf "%a" pp_ident ident
 ;;
 (* *************************************************************** *)
 (* Format.formatter -> Parsetree.label_ident -> unit               *)

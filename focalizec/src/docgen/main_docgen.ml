@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.31 2009-01-30 11:52:20 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.32 2009-03-20 11:14:23 pessaux Exp $ *)
 
 
 
@@ -241,6 +241,22 @@ let gen_doc_qualified_vname_not_EI_method out_fmt env qvname =
 
 
 
+let gen_doc_ident out_fmt env id =
+  match id.Parsetree.ast_desc with
+   | Parsetree.I_local vname ->
+       let symbol_markup_open = gen_doc_symbol_if_any out_fmt env vname in
+       Format.fprintf out_fmt "@[<h 2><foc:identifier>@\n" ;
+       Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+         Utils_docgen.pp_xml_vname vname ;
+       Format.fprintf out_fmt "@]</foc:identifier>@\n" ;
+       if symbol_markup_open then
+         Format.fprintf out_fmt "@]</foc:symbol>@\n"
+   | Parsetree.I_global qvname ->
+       gen_doc_qualified_vname_not_EI_method out_fmt env qvname
+;;
+
+
+
 let gen_doc_expr_ident out_fmt env id =
   match id.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
@@ -464,8 +480,7 @@ and gen_doc_expression out_fmt env initial_expression =
              let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
              (* Since record labels are not methods, we don't want any symbol
                 at this point. Hence pass the empty environment. *)
-             gen_doc_qualified_vname_not_EI_method
-               out_fmt Env_docgen.empty label ;
+             gen_doc_ident out_fmt Env_docgen.empty label ;
              rec_gen expr)
            label_exprs ;
          Format.fprintf out_fmt "@]</foc:record-expr>@\n"
@@ -475,7 +490,7 @@ and gen_doc_expression out_fmt env initial_expression =
          let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
          (* Since record labels are not methods, we don't want any symbol
             at this point. Hence pass the empty environment. *)
-         gen_doc_qualified_vname_not_EI_method out_fmt Env_docgen.empty label ;
+         gen_doc_ident out_fmt Env_docgen.empty label ;
          Format.fprintf out_fmt "@]</foc:record-access-expr>@\n"
      | Parsetree.E_record_with (expr, label_exprs) ->
          Format.fprintf out_fmt "@[<h 2><foc:record-with-expr>@\n" ;
@@ -485,8 +500,7 @@ and gen_doc_expression out_fmt env initial_expression =
              let (Parsetree.LI label) = label_ident.Parsetree.ast_desc in
              (* Since record labels are not methods, we don't want any symbol
                 at this point. Hence pass the empty environment. *)
-             gen_doc_qualified_vname_not_EI_method
-               out_fmt Env_docgen.empty label ;
+             gen_doc_ident out_fmt Env_docgen.empty label ;
              rec_gen expr)
            label_exprs ;
          Format.fprintf out_fmt "@]</foc:record-with-expr>@\n"

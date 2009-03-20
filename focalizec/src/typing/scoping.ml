@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.76 2009-02-06 15:28:27 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.77 2009-03-20 11:14:23 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1271,18 +1271,16 @@ and scope_expr ctx env expr =
              (fun (label, bound_expr) ->
                (* Ensure that the mentionned hosting compilation unit of the
                   record label was mentionned to be "used" or "opened". *)
-               let Parsetree.LI lbl_qvname = label.Parsetree.ast_desc in
-               ensure_qual_vname_allowed_qualified
-                 ctx label.Parsetree.ast_loc lbl_qvname ;
+               let Parsetree.LI lbl_glob_ident = label.Parsetree.ast_desc in
+               ensure_ident_allowed_qualified ctx lbl_glob_ident ;
                (label, (scope_expr ctx env bound_expr)))
              labels_exprs in
          Parsetree.E_record scoped_labels_exprs
      | Parsetree.E_record_access (e, label) ->
          (* Ensure that the mentionned hosting compilation unit of the
             record label was mentionned to be "used" or "opened". *)
-         let Parsetree.LI lbl_qvname = label.Parsetree.ast_desc in
-         ensure_qual_vname_allowed_qualified
-           ctx label.Parsetree.ast_loc lbl_qvname ;
+         let Parsetree.LI lbl_glob_ident = label.Parsetree.ast_desc in
+         ensure_ident_allowed_qualified ctx lbl_glob_ident ;
          let e' = scope_expr ctx env e in
          Parsetree.E_record_access (e', label)
      | Parsetree.E_record_with (e, labels_exprs) ->
@@ -1292,9 +1290,8 @@ and scope_expr ctx env expr =
              (fun (label, bound_expr) ->
                (* Ensure that the mentionned hosting compilation unit of the
                   record label was mentionned to be "used" or "opened". *)
-               let Parsetree.LI lbl_qvname = label.Parsetree.ast_desc in
-               ensure_qual_vname_allowed_qualified
-                 ctx label.Parsetree.ast_loc lbl_qvname ;
+               let Parsetree.LI lbl_glob_ident = label.Parsetree.ast_desc in
+               ensure_ident_allowed_qualified ctx lbl_glob_ident ;
                (label, (scope_expr ctx env bound_expr)))
              labels_exprs in
          Parsetree.E_record_with (scoped_e, scoped_labels_exprs)
@@ -1368,9 +1365,8 @@ and scope_pattern ctx env pattern =
              (fun (lab, pat) (accu_lab_pats, accu_env) ->
                (* Ensure that the mentionned hosting compilation unit of the
                   record label was mentionned to be "used" or "opened". *)
-               let Parsetree.LI lbl_qvname = lab.Parsetree.ast_desc in
-               ensure_qual_vname_allowed_qualified
-                 ctx lab.Parsetree.ast_loc lbl_qvname ;
+               let Parsetree.LI lbl_glob_ident = lab.Parsetree.ast_desc in
+               ensure_ident_allowed_qualified ctx lbl_glob_ident ;
                let (scoped_pat, accu_env') = scope_pattern ctx accu_env pat in
                (((lab, scoped_pat) :: accu_lab_pats), accu_env'))
              labs_n_pats

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.37 2009-01-22 10:36:01 weis Exp $ *)
+(* $Id: dump_ptree.ml,v 1.38 2009-03-20 11:14:23 pessaux Exp $ *)
 
 
 
@@ -161,8 +161,8 @@ let pp_idents ppf = Handy.pp_generic_separated_list "," pp_ident ppf;;
     {b Rem} : Not exported ouside this module.                 *)
 (* *********************************************************** *)
 let pp_label_ident_desc ppf = function
-  | Parsetree.LI qvname->
-      Format.fprintf ppf "@[<2>LI@ (%a)@]" pp_qvname qvname
+  | Parsetree.LI ident ->
+      Format.fprintf ppf "@[<2>LI@ (%a)@]" pp_ident ident
 ;;
 (* *************************************************************** *)
 (* Format.formatter -> Parsetree.label_ident -> unit               *)

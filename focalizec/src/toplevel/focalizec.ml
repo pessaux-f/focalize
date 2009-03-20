@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.40 2009-02-09 10:16:43 weis Exp $ *)
+(* $Id: focalizec.ml,v 1.41 2009-03-20 11:14:23 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -201,7 +201,7 @@ let dispatch_compilation files =
 (* The main procedure *)
 let main () =
   Arg.parse
-    [ ("-dot-non-rec-dependencies",
+    [ ("-dot-non-rec-dependencies <outdir>",
        Arg.String Configuration.set_dotty_dependencies,
        " dumps species non-let-rec- dependencies as dotty\n\tfiles into the \
          argument directory.") ;
@@ -214,7 +214,7 @@ let main () =
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
        " prints the source file interface.") ;
-      ("-I",
+      ("-I <libdir>",
        Arg.String (fun path -> Files.add_lib_path path),
        " adds the specified path to the path list where to search for \
          compiled\n\tinterfaces.") ;
@@ -222,7 +222,7 @@ let main () =
        Arg.Unit Configuration.set_impose_termination_proof,
        " makes termination proofs of recursive functions \n\
          mandatory.") ;
-      ("-methods-history-to-text",
+      ("-methods-history-to-text <outdir>",
        Arg.String Configuration.set_methods_history_to_text,
        " dumps species' methods' inheritance history as plain text\n\tfiles \
          into the argument directory.") ;
@@ -239,12 +239,12 @@ let main () =
        Arg.Unit Configuration.unset_use_default_lib,
        " does not include by default the standard library installation\n\t\
          directory in the search path.") ;
-      ("-ocaml-comp-mode",
+      ("-ocaml-comp-mode <mode>",
        Arg.String Configuration.set_ml_compiler,
        " specify the OCaml compiler mode. Can be \"byt\" for bytecode \
          compilation, \"bin\" for native code compilation, or \"both\" \
          for bytecode and native code compilation.") ;
-      ("-pretty",
+      ("-pretty <outfile>",
        Arg.String Configuration.set_pretty_print,
        " pretty-prints the parse tree of the focalize file as a focalize\n\
          source into the argument file.") ;
@@ -252,7 +252,7 @@ let main () =
        Arg.Unit Configuration.set_raw_ast_dump,
        " (undocumented) prints on stderr the raw AST structure \
          after\n\tthe parsing stage.") ;
-      ("-scoped_pretty",
+      ("-scoped-pretty <outfile>",
        Arg.String Configuration.set_pretty_scoped,
        " (undocumented) pretty-prints the parse tree of the focalize \
          file\n\tonce scoped as a focalize source into the argument file.") ;
