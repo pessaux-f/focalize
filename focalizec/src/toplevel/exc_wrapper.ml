@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.79 2009-03-13 17:01:49 doligez Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.80 2009-03-20 11:19:41 pessaux Exp $ *)
 
 let header ppf =
   Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
@@ -114,7 +114,7 @@ let print_focalize_exception ppf = function
         Handy.pp_reset_effects
   | Env.Unbound_label (lvname, at) ->
       Format.fprintf ppf
-        "%a:@\n@[%tUnbound@ record@ method@ label@ '%t%a%t'.@]@."
+        "%a:@\n@[%tUnbound@ record@ type@ label@ '%t%a%t'.@]@."
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname lvname
         Handy.pp_reset_effects
@@ -428,7 +428,7 @@ let print_focalize_exception ppf = function
   | Externals_generation_errs.No_external_field_def (lang, label_ident) ->
       Format.fprintf ppf
         "%a:@\n@[%tNo@ %s@ mapping@ given@ for@ the@ external@ \
-         record@ method@ '%t%a%t'.@]@."
+         record@ field@ '%t%a%t'.@]@."
         Location.pp_location label_ident.Parsetree.ast_loc header
         lang
         Handy.pp_set_underlined Sourcify.pp_label_ident label_ident
@@ -446,7 +446,7 @@ let print_focalize_exception ppf = function
   (* Coq code generation errors. *)
   | Type_coq_generation.Mutable_record_fields_not_in_coq (at, field) ->
        Format.fprintf ppf
-        "%a:@\n@[%tType@ definition@ contains@ a@ mutable@ method@ \
+        "%a:@\n@[%tRecord@ type@ definition@ contains@ a@ mutable@ field@ \
         '%t%a%t'@ that@ cannot@ be@ compiled@ to@ Coq.@]@."
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname field
