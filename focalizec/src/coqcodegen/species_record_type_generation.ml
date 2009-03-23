@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.76 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.77 2009-03-23 15:37:57 pessaux Exp $ *)
 
 
 
@@ -115,8 +115,15 @@ type self_methods_status =
 
 
 
+type recursive_methods_status =
+  | RMS_abstracted     (** Must be called "abst_<meth>". *)
+  | RMS_regular        (** Must be called directly by its name. *)
+;;
+
+
+
 let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
-   ~self_methods_status ident =
+   ~self_methods_status ~recursive_methods_status ident =
   let out_fmter = ctx.Context.scc_out_fmter in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
@@ -158,14 +165,32 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
        else
          (begin
          (* Really a local identifier or a call to a recursive method. *)
-         Format.fprintf out_fmter "%a"
-           Parsetree_utils.pp_vname_with_operators_expanded vname ;
+         let is_a_rec_fun = List.mem vname in_recursive_let_section_of in
+         (* If the function is recursive, we must apply to it the naming scheme
+            applied to recursive functions of Self. This means if
+            must be called "abst_xxx" or "xxx" depending on the current
+            "recursive_methods_status". In effect, when giving to Zenon the
+            body of a recursive function, since we are in a Section, the
+            methods of "Self" are abstracted and named "abst_xxx". In all
+            other places, the recursive functions names must be generated
+            without anything more than their name. *)
+         if is_a_rec_fun then
+           (match recursive_methods_status with
+             | RMS_abstracted ->
+                 Format.fprintf out_fmter "abst_%a"
+                   Parsetree_utils.pp_vname_with_operators_expanded vname
+             | RMS_regular ->
+                 Format.fprintf out_fmter "%a"
+                   Parsetree_utils.pp_vname_with_operators_expanded vname)
+         else
+           Format.fprintf out_fmter "%a"
+             Parsetree_utils.pp_vname_with_operators_expanded vname ;
          (* Because this method can be recursive, we must apply it to its
             extra parameters if it has some ONLY if the function IS NOT a
             recursive one. In effect, in this last case, a Section has been
             created with all the abstrations the function requires. So no need
             to apply each recursive call. *)
-         if not (List.mem vname in_recursive_let_section_of) then
+         if not is_a_rec_fun then
            (begin
             try
             (* We are not in a recursive definition, so we can apply to the
@@ -470,7 +495,8 @@ END of changed by Damien. *)
 
 
 let rec let_binding_compile ctx ~in_recursive_let_section_of
-    ~local_idents ~self_methods_status ~is_rec ~toplevel env bd =
+    ~local_idents ~self_methods_status ~recursive_methods_status ~is_rec
+    ~toplevel env bd =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
@@ -592,7 +618,7 @@ let rec let_binding_compile ctx ~in_recursive_let_section_of
        generate_expr
          ctx
          ~in_recursive_let_section_of ~local_idents: local_idents'
-         ~self_methods_status env' e
+         ~self_methods_status ~recursive_methods_status env' e
    | Parsetree.BB_logical _ -> assert false) ;
   (* Finally, we record, even if it was already done in [env'] the number of
      extra arguments due to polymorphism the current bound identifier has. *)
@@ -604,7 +630,7 @@ let rec let_binding_compile ctx ~in_recursive_let_section_of
 
 
 and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
-      ~self_methods_status env let_def =
+      ~self_methods_status ~recursive_methods_status env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     failwith "Coq compilation of logical let in TODO" ;  (* [Unsure]. *)
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -631,14 +657,14 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
      | [one_bnd] ->
          let_binding_compile
            ctx ~in_recursive_let_section_of ~local_idents
-           ~self_methods_status ~toplevel: false ~is_rec env
-           one_bnd
+           ~self_methods_status ~recursive_methods_status ~toplevel: false
+           ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
              (let_binding_compile
                 ctx ~in_recursive_let_section_of ~local_idents
-                ~self_methods_status ~toplevel: false
+                ~self_methods_status ~recursive_methods_status ~toplevel: false
                 ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
@@ -648,8 +674,8 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
              accu_env :=
                let_binding_compile
                  ctx ~in_recursive_let_section_of ~local_idents
-                 ~self_methods_status ~is_rec ~toplevel: false
-                 !accu_env binding)
+                 ~self_methods_status ~recursive_methods_status ~is_rec
+                 ~toplevel: false !accu_env binding)
            next_bnds ;
            !accu_env) in
   Format.fprintf out_fmter "@]" ;
@@ -658,7 +684,8 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
 
 
 and generate_expr ctx ~in_recursive_let_section_of ~local_idents
-    ~self_methods_status initial_env initial_expression =
+    ~self_methods_status ~recursive_methods_status initial_env
+    initial_expression =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
@@ -712,7 +739,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          (begin
          generate_expr_ident_for_E_var
            ctx ~in_recursive_let_section_of ~local_idents: loc_idents
-           ~self_methods_status ident ;
+           ~self_methods_status ~recursive_methods_status ident ;
          (* Now, add the extra "_"'s if the identifier is polymorphic. *)
          try
            let current_species_name =
@@ -795,7 +822,7 @@ END of changed by Damien *)
          let env' =
            let_in_def_compile
              ctx ~in_recursive_let_section_of ~local_idents
-             ~self_methods_status env let_def in
+             ~self_methods_status ~recursive_methods_status env let_def in
          Format.fprintf out_fmter "@ in@\n" ;
          rec_generate_expr loc_idents env' in_expr
      | Parsetree.E_record _labs_exprs ->
@@ -859,7 +886,8 @@ END of changed by Damien *)
 
 
 let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
-    ~self_methods_status initial_env initial_proposition =
+    ~self_methods_status ~recursive_methods_status initial_env
+    initial_proposition =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
@@ -983,7 +1011,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          if is_bool then Format.fprintf out_fmter "@[<2>Is_true (" ;
          generate_expr
            ctx ~in_recursive_let_section_of ~local_idents: loc_idents
-           ~self_methods_status env expr ;
+           ~self_methods_status ~recursive_methods_status env expr ;
          (* The end of the wrapper surrounding the expression if it has type
             bool. *)
          if is_bool then Format.fprintf out_fmter ")@]"
@@ -1171,8 +1199,12 @@ let species_parameters_names = ctx.Context.scc_species_parameters_names in
                Format.fprintf ppf "(%s : " llift_name ;
                generate_logical_expr ctx
                  ~in_recursive_let_section_of: [] ~local_idents: []
-                 ~self_methods_status: (SMS_from_param species_param_name) env
-                 lexpr ;
+                 ~self_methods_status: (SMS_from_param species_param_name)
+                 (* Anyway, in the record type, bodies of recursive are
+                    never expanded. Hence this choice or another for
+                    [~recursive_methods_status] is not important.
+                    It could be if we allowed recursive logical methods. *)
+                 ~recursive_methods_status: RMS_regular env lexpr ;
                Format.fprintf ppf ")@ ")
         meths ;
       (* Just to avoid having the reference escaping... *)
@@ -1301,7 +1333,13 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
            to [SMS_from_record]. *)
         generate_logical_expr ctx
           ~in_recursive_let_section_of: [] ~local_idents: []
-          ~self_methods_status: SMS_from_record env logical_expr ;
+          ~self_methods_status: SMS_from_record
+          (* Anyway, in the record type, bodies of recursive are never
+             expanded. Hence this choice or another for
+             [~recursive_methods_status] is not important.
+             It could be if we allowed recursive logical methods. *)
+          ~recursive_methods_status: RMS_regular
+          env logical_expr ;
         if semi then Format.fprintf out_fmter " ;" ;
         Format.fprintf out_fmter "@]@\n" in
   (* Coq syntax required not semi after the last field. That's why a simple

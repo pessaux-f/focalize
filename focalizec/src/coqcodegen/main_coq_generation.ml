@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.30 2009-02-06 15:51:42 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.31 2009-03-23 15:37:57 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -66,6 +66,7 @@ let toplevel_let_def_compile ctx env let_def =
            ctx ~local_idents: [] ~in_recursive_let_section_of
            (* Or whatever since "Self" does not exist anymore. *)
            ~self_methods_status: Species_record_type_generation.SMS_from_record
+           ~recursive_methods_status: Species_record_type_generation.RMS_regular
            ~toplevel: true ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
@@ -75,6 +76,8 @@ let toplevel_let_def_compile ctx env let_def =
                 (* Or whatever since "Self" does not exist anymore. *)
                 ~self_methods_status:
                   Species_record_type_generation.SMS_from_record
+                ~recursive_methods_status:
+                  Species_record_type_generation.RMS_regular
                 ~toplevel: true ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
@@ -85,6 +88,8 @@ let toplevel_let_def_compile ctx env let_def =
                  (* Or whatever since "Self" does not exist anymore. *)
                  ~self_methods_status:
                    Species_record_type_generation.SMS_from_record
+                 ~recursive_methods_status:
+                   Species_record_type_generation.RMS_regular
                  ~toplevel: true ~is_rec !accu_env binding)
            next_bnds ;
          !accu_env) in
@@ -228,6 +233,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       Species_record_type_generation.generate_expr
         ctx ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_generation.SMS_from_record
+        ~recursive_methods_status: Species_record_type_generation.RMS_regular
         env expr ;
       Format.fprintf out_fmter ").@]@\n@\n" ;
       (* Nothing to extend the environment. *)
@@ -257,7 +263,7 @@ let root_compile ~current_unit ~out_file_name stuff =
   if Configuration.get_experimental () then
     Format.fprintf out_fmter
       "(* Below: to prevent Function to apply heuristics that would@\n\
-	  the expected aim in recursive functions termination proofs. *)@\n@\n\
+          the expected aim in recursive functions termination proofs. *)@\n@\n\
        Set Function_raw_tcc.@\n@\n" ;
   try
     List.iter

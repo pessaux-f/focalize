@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.14 2008-12-10 16:08:08 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.15 2009-03-23 15:37:57 pessaux Exp $ *)
 
 
 
@@ -228,6 +228,7 @@ let generate_binding_match ctx env expr pattern =
   Species_record_type_generation.generate_expr
     ctx ~in_recursive_let_section_of: [] ~local_idents
     ~self_methods_status: Species_record_type_generation.SMS_abstracted
+    ~recursive_methods_status: Species_record_type_generation.RMS_regular
     env expr
 ;;
 
@@ -295,11 +296,13 @@ let generate_binding_let ctx print_ctx env binding =
        Species_record_type_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_generation.RMS_regular
          env e
    | Parsetree.BB_logical p ->
        Species_record_type_generation.generate_logical_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_generation.RMS_regular
          env p) ;
   (* If there were parameters, we must close a parenthesis. *)
   if binding_desc.Parsetree.b_params <> [] then
@@ -390,7 +393,8 @@ let generate_exprs_as_tuple ctx env exprs =
        Species_record_type_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
-         env one
+         ~recursive_methods_status: Species_record_type_generation.RMS_regular
+     env one
    | _ ->
        let fake_tuple_desc = Parsetree.E_tuple exprs in
        let fake_tuple = {
@@ -401,6 +405,7 @@ let generate_exprs_as_tuple ctx env exprs =
            Species_record_type_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_generation.RMS_regular
          env fake_tuple
 ;;
 
@@ -457,7 +462,10 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
               Species_record_type_generation.generate_expr
                 ctx ~in_recursive_let_section_of: [] ~local_idents: []
                 ~self_methods_status:
-                  Species_record_type_generation.SMS_abstracted env expr ;
+                  Species_record_type_generation.SMS_abstracted
+                ~recursive_methods_status:
+                  Species_record_type_generation.RMS_regular
+                env expr ;
               Format.fprintf out_fmter "@]) ->@ ")
         bindings ;
       (* Now, generate the expression that telling the decreasing applying

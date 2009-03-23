@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.166 2009-03-20 16:18:55 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.167 2009-03-23 15:37:57 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -297,6 +297,8 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                    ~self_methods_status:
                      (Species_record_type_generation.SMS_from_param
                         species_param_name)
+                   ~recursive_methods_status:
+                     Species_record_type_generation.RMS_regular
                    env lexpr ;
                  Format.fprintf out_fmter "@].@\n"
             end)
@@ -332,6 +334,8 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                    ~self_methods_status:
                      (Species_record_type_generation.SMS_from_param
                         species_param_name)
+                   ~recursive_methods_status:
+                     Species_record_type_generation.RMS_regular
                    env lexpr ;
                  Format.fprintf out_fmter ")"
             end))
@@ -417,7 +421,9 @@ let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
                Species_record_type_generation.generate_logical_expr
                  new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
                  ~self_methods_status:
-                   Species_record_type_generation.SMS_abstracted env b ;
+                   Species_record_type_generation.SMS_abstracted env b
+                 ~recursive_methods_status:
+                   Species_record_type_generation.RMS_regular ;
                if in_section then Format.fprintf out_fmter ".@]@\n"
                else Format.fprintf out_fmter ")" ;
                [n])
@@ -489,12 +495,16 @@ let generate_defined_non_recursive_method_postlude ctx print_ctx env params
               ctx ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               env e
         | Parsetree.BB_logical p ->
             Species_record_type_generation.generate_logical_expr
               ctx ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               env p))
 ;;
 
@@ -773,6 +783,8 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                (* Or whatever, "Self" will never appear at this point. *)
                ~self_methods_status:
                  Species_record_type_generation.SMS_abstracted
+               ~recursive_methods_status:
+                 Species_record_type_generation.RMS_regular
                env instancied_expr ;
              Format.fprintf out_fmter ")@]"
              end)
@@ -944,18 +956,14 @@ let zenonify_by_recursive_definition ctx print_ctx env
     vname params scheme body =
   let out_fmter = ctx.Context.scc_out_fmter in
   let species_name = snd ctx.Context.scc_current_species in
+
+
+
   (* For bug #199, to make so that Zenon identifies "abst_xx" and "xx", we
      generate a fake Definition before generating the body of the recursive
      fonction whose body is needed because of the "by definition of...". *)
   Format.fprintf out_fmter
-    "(* Method \"%a\" is recursive. Extra definition to \
-    identify \"%a\" and \"abst_%a\". *)"
-    Parsetree_utils.pp_vname_with_operators_expanded vname
-    Parsetree_utils.pp_vname_with_operators_expanded vname
-    Parsetree_utils.pp_vname_with_operators_expanded vname ;
-  Format.fprintf out_fmter
-    "@[<2>Definition %a := abst_%a.@]@\n"
-    Parsetree_utils.pp_vname_with_operators_expanded vname
+    "(* Method \"%a\" is recursive. Special syntax for Zenon. *)@\n"
     Parsetree_utils.pp_vname_with_operators_expanded vname ;
   (* Use specific syntax to tell Zenon that the function is recursive. *)
   Format.fprintf out_fmter "@[<2>Function abst_%a"
@@ -978,17 +986,25 @@ let zenonify_by_recursive_definition ctx print_ctx env
   (* Now, we generate the body of the recursive function as given in the
      regular way (i.e. exactly like
      [generate_defined_non_recursive_method_postlude] does if a body is
-     provided. *)
+     provided.
+     ATTENTION: Since here the recursively defined function is an "abst_xxx",
+     we must ensure that occurrences of this function in its body will also
+     be named "abst_xxx". For this, we explicitly say that the
+     [recursive_methods_status] is [RMS_abstracted]. *)
   (match body with
    | Parsetree.BB_computational e ->
        Species_record_type_generation.generate_expr
-         ctx ~local_idents: [] ~in_recursive_let_section_of: []
+         ctx ~local_idents: [] ~in_recursive_let_section_of: [vname]
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ~recursive_methods_status:
+           Species_record_type_generation.RMS_abstracted
          env e
    | Parsetree.BB_logical p ->
        Species_record_type_generation.generate_logical_expr
-         ctx ~local_idents: [] ~in_recursive_let_section_of: []
+         ctx ~local_idents: [] ~in_recursive_let_section_of: [vname]
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ~recursive_methods_status:
+           Species_record_type_generation.RMS_abstracted
          env p);
   (* Done... Then, final carriage return. *)
   Format.fprintf out_fmter ".@]@\n"
@@ -1043,6 +1059,8 @@ let zenonify_by_definition ctx print_ctx env min_coq_env generated_fields
               ctx ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
                 Species_record_type_generation.SMS_from_record (* Or anything *)
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               env lexpr ;
             (* Done... Then, final carriage return. *)
             Format.fprintf out_fmter ".@]@\n"
@@ -1122,6 +1140,8 @@ let zenonify_by_definition ctx print_ctx env min_coq_env generated_fields
                    ctx ~local_idents: [] ~in_recursive_let_section_of: []
                    ~self_methods_status:
                      Species_record_type_generation.SMS_abstracted env
+                   ~recursive_methods_status:
+                     Species_record_type_generation.RMS_regular
                    body ;
                  (* Done... Then, final carriage return. *)
                  Format.fprintf out_fmter ".@]@\n"
@@ -1300,6 +1320,8 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
                 (* Or whatever since we substituted Self by the effective
                    collection. *)
                 Species_record_type_generation.SMS_from_record
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               env lexpr' ;
             Format.fprintf out_fmter ".@]@\n"
        end)
@@ -1353,6 +1375,8 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               ctx' ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
                 (Species_record_type_generation.SMS_from_param param_name)
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               env lexpr ;
             Format.fprintf out_fmter ".@]@\n"
        end)
@@ -1405,6 +1429,8 @@ let zenonify_by_property ctx print_ctx env min_coq_env
               ctx ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
                 Species_record_type_generation.SMS_from_record (* Or anything *)
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               env lexpr ;
             (* Done... Then, final carriage return. *)
             Format.fprintf out_fmter ".@]@\n"
@@ -1453,6 +1479,8 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                    ctx ~local_idents: [] ~in_recursive_let_section_of: []
                    ~self_methods_status:
                      Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
                    env body ;
                  (* Done... Then, final carriage return. *)
                  Format.fprintf out_fmter ".@]@\n"
@@ -1496,6 +1524,7 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
         Species_record_type_generation.generate_logical_expr
           ctx ~local_idents: [] ~in_recursive_let_section_of: []
           ~self_methods_status: Species_record_type_generation.SMS_abstracted
+          ~recursive_methods_status: Species_record_type_generation.RMS_regular
           env log_expr ;
         Format.fprintf out_fmter ") ->@ " ;
         print_implications_string q ;
@@ -1548,6 +1577,8 @@ let zenonify_fact ctx print_ctx env min_coq_env dependencies_from_params
              ctx ~local_idents: [] ~in_recursive_let_section_of: []
              ~self_methods_status:
                Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
              env hyp_logical_expr ;
            (* Done... Then, final carriage return. *)
            Format.fprintf out_fmter ".@]@\n")
@@ -1580,6 +1611,8 @@ let zenonify_fact ctx print_ctx env min_coq_env dependencies_from_params
            Species_record_type_generation.generate_logical_expr
              ctx ~local_idents: [] ~in_recursive_let_section_of: []
              ~self_methods_status: Species_record_type_generation.SMS_abstracted
+             ~recursive_methods_status:
+               Species_record_type_generation.RMS_regular
              env avail_info.psa_base_logical_expr ;
            (* Done... Then, final carriage return. *)
            Format.fprintf out_fmter ".@]@\n")
@@ -1610,6 +1643,7 @@ let zenonify_hyp ctx print_ctx env hyp =
        Species_record_type_generation.generate_logical_expr
          ~local_idents: [] ~in_recursive_let_section_of: []
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_generation.RMS_regular
          ctx env logical_expr ;
        Format.fprintf out_fmter ".@]@\n"
    | Parsetree.H_notation (vname, expr) ->
@@ -1619,6 +1653,7 @@ let zenonify_hyp ctx print_ctx env hyp =
        Species_record_type_generation.generate_expr
          ctx ~local_idents: [] ~in_recursive_let_section_of: []
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_generation.RMS_regular
          env expr ;
        Format.fprintf out_fmter ".@]@\n"
 ;;
@@ -1765,6 +1800,8 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
               ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               ctx env aim
         | ZSGM_from_termination_lemma rec_calls ->
             Rec_let_gen.generate_termination_lemmas
@@ -1812,6 +1849,8 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
               ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
             ctx env aim
         | ZSGM_from_termination_lemma rec_calls ->
             Rec_let_gen.generate_termination_lemmas
@@ -1873,6 +1912,8 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
               ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               ctx env aim
         | ZSGM_from_termination_lemma rec_calls ->
             Rec_let_gen.generate_termination_lemmas
@@ -1935,6 +1976,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
          Species_record_type_generation.generate_logical_expr
            ~local_idents: [] ~in_recursive_let_section_of: []
            ~self_methods_status: Species_record_type_generation.SMS_abstracted
+           ~recursive_methods_status: Species_record_type_generation.RMS_regular
            ctx env aim ;
          Format.fprintf out_fmter ".@]@\n" ;
          (* Enforce Hypothesis to be used to prevent Coq from removing it. *)
@@ -2128,6 +2170,8 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
               ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               ctx env logical_expr
         | ZSGM_from_termination_lemma rec_calls ->
             Rec_let_gen.generate_termination_lemmas
@@ -2202,6 +2246,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env
   Species_record_type_generation.generate_logical_expr
     ~local_idents: [] ~in_recursive_let_section_of: []
     ~self_methods_status: Species_record_type_generation.SMS_abstracted
+    ~recursive_methods_status: Species_record_type_generation.RMS_regular
     new_ctx env logical_expr ;
   Format.fprintf out_fmter ".@]@\n" ;
   (* End the proof matter. *)
@@ -2451,6 +2496,8 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
               ctx ~local_idents ~in_recursive_let_section_of: [name]
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               env measure_expr ;
             (* Now apply this expression to the first tuple of used arguments
                extracted by the 2 "matchs". *)
@@ -2461,6 +2508,8 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
               ctx ~local_idents ~in_recursive_let_section_of: [name]
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               env measure_expr ;
             Format.fprintf out_fmter "@ " ;
             print_idents_as_tuple out_fmter printed2 ;
@@ -2503,6 +2552,8 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
               ctx ~local_idents ~in_recursive_let_section_of: [name]
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
               env order_expr ;
             (* Now apply this expression to the 2 tuples of used arguments
                extracted by the 2 "matchs". *)
@@ -2723,6 +2774,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        Species_record_type_generation.generate_expr
          new_ctx ~local_idents: [] ~in_recursive_let_section_of: [name]
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_generation.RMS_regular
          env tuplified_body ;
        (* Print the "end" of the "match" introduced to split the tuple of
           "__arg". *)
@@ -3815,6 +3867,8 @@ let print_record_type_carriers_args_instanciations ctx env args_instanciations =
           Species_record_type_generation.generate_expr
             ctx ~local_idents: [] ~in_recursive_let_section_of: []
             ~self_methods_status: Species_record_type_generation.SMS_from_record
+            ~recursive_methods_status:
+              Species_record_type_generation.RMS_regular
             env expr)
     args_instanciations
 ;;
@@ -3874,6 +3928,8 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
              ~self_methods_status:
                (* Or what you prefer. *)
                Species_record_type_generation.SMS_abstracted
+             ~recursive_methods_status:
+               Species_record_type_generation.RMS_regular
              env expr ;
            Format.fprintf out_fmter ")@]" ;
            end))
