@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.4 2009-03-19 08:46:06 pessaux Exp $
+% $Id: environments.tex,v 1.5 2009-03-23 17:16:07 pessaux Exp $
 
 All allong the compilation pass, we need to keep trace of various
 informations about compiled entities (methods, types, identifiers,
@@ -135,7 +135,7 @@ module type EnvModuleAccessSig =
     Parsetree.qualified_vname -> value_bound_data -> value_bound_data
   end
 \end{lstlisting}
-}
+}{\sc Sample code for EMAccess signature}
 
 \medskip
 The fields type definitions {\tt constructor\_bound\_data},
@@ -260,7 +260,9 @@ initially looked-up identifier into a primitive
 {\tt Parsetree.vname}.
 \end{itemize}
 
-\medskip
+
+
+\subsubsection{Adding a binding}
 All the environment extention functions ({\tt add\_xxx}) are quite
 simple, they just add a bindind to the association list in field of
 the environment related to the right name-space. One may note that an
@@ -269,13 +271,21 @@ binding comes in the environment from the current compilation unit,
 opposite as the tag {\tt BO\_opened} that serves to identify bindings
 present in the environment due to an {\tt open} directive.
 
-\medskip
-Look-up functions are more complex, especially the one lokking for
+
+
+\subsubsection{Looking for a binding (except for values)}
+Look-up functions are more complex, especially the one lokoing for
 values. We now describe the general look-up mechanism that is exactly
 the one used for {\tt find\_label}, {\tt find\_constructor} and
 {\tt find\_type}.
 
-The principle is to split the looked-up name into a scope specifier (a
+\medskip
+The first and simplest case is when the looked-up identifier doesn't
+have any qualification. In this case, it must trivially be searched in
+the related association list of the current environment.
+
+The second case inolves a qualified identifier and is more complex.The
+principle is to split the looked-up name into a scope specifier (a
 qualification) and a simple name. For instance, {\tt foo} has no scope
 specifier and a simple name equal to ``foo''. Conversely,
 {\tt basics\#bar} has the scope specifier ``basics'' and the simple
@@ -283,11 +293,71 @@ name ``bar''.
 Then, from the scope specifier (i.e. in fact an ``module'' name), we
 try to load the (``sub'')-environment of this module. If the specifier
 is {\tt None}, then we will get back the current environment. It is in
-this environment that we will perform the search. Now, the point is to
-check if we are allowed to accept to find a binding induced by an
-{\tt open} directive. This is usually the case except if ...........
-AH AH AH J'AI TROUVÉ UN BUG DANS LE CODE CAR ÇA NE CORRESPOND À CE QUE
-JE PENSE... PAUSE 2 MN, ON CORRIGE LE CODE...
+this environment that we will perform the search (like in the first
+case described above since the obtained identifier doesn't have
+anymore qualification) . Now, the point is to check if we are allowed
+to accept to find a binding induced by an {\tt open} directive. This
+is usually the case except if the identifier has an explicit
+qualification equal to {\tt None} or {\tt Some (file)} where
+{\tt file} is the current compilation unit. 
+
+The first point allows to recover an identifier defined in the
+{\bf current compilation unit} even if some opened modules imported
+identifiers wearing the same name. This features strongly relies on
+the fact that the parser {\bf must} parse qualified identifiers like
+{\tt \#foo} as a {\bf global} one with {\tt None} as qualifier. In
+other words, such an identifier means ``the related definition being
+at toplevel in the current compilation unit''.
+
+The second point simply states that if we are looking for a qualified
+identifier being in the current compilation unit, then is must not be
+searched among identifiers imported by opened modules.
+
+Based on this information, we simply look-up in the assocition list to
+find de related binding.
+{\scriptsize
+\begin{lstlisting}[language=MyOCaml]
+  (* ****************************************************************** *)
+  (** {b Descr} : Looks-up for an [ident] inside the types environment.
+
+      {b Rem} : Exported outside this module.                           *)
+  (* ****************************************************************** *)
+  let rec find_type ~loc ~current_unit type_ident (env : t) =
+    match type_ident.Parsetree.ast_desc with
+     | Parsetree.I_local vname ->
+         (* No explicit scoping information was provided, hence *)
+         (* opened modules bindings are acceptable.             *)
+         find_type_vname ~loc ~allow_opened: true vname env
+     | Parsetree.I_global qvname ->
+         let (opt_scope, vname) = opt_scope_vname qvname in
+         let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
+         (* Check if the lookup can return something *)
+         (* coming from an opened module.            *)
+         let allow_opened = allow_opened_p current_unit opt_scope in
+         find_type_vname ~loc ~allow_opened vname env'
+
+
+  (* **************************************************************** *)
+  (** {b Descr} : Looks-up for a [vname] inside the types environment.
+
+      {b Rem} : Not exported outside this module.                     *)
+  (* **************************************************************** *)
+  and find_type_vname ~loc ~allow_opened vname (env : t) =
+    try env_list_assoc ~allow_opened vname env.types with
+    | Not_found -> raise (Unbound_type (vname, loc))
+\end{lstlisting}
+}{\sc Sample code for simple look-up function}
+
+
+\subsubsection{Looking for a binding for values}
+This case is more subtil since it involves more kinds of ideitifiers,
+especially because of the ``!-notation''. Processing for local and
+global identifiers ({\tt Parsetree.I\_local} and {\tt Parsetree.I\_global})
+are the same as previously described.
+
+We must then address the case of finding a binding for a method with
+the ``!''-notation (i.e. {\tt Parsetree.EI\_method}).
+
 
 \section{Scoping environment}
 
