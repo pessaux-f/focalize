@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.6 2009-03-17 11:16:22 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.7 2009-03-24 10:52:21 weis Exp $
 
 # The name of the file says why and for who it was written :)
 
@@ -25,7 +25,7 @@
 
      <OL>
        <LI>clean: cleans (internal tools), i.e. zenon zvtov and focalizec.
-           You should launch make to rebuild internal tools.
+           You should launch <code>make</code> to rebuild internal tools.
        <LI>distclean: cleans every thing (internal and external tools).
            You should reconfigure the software and recompile everything
            afterwards.
@@ -49,7 +49,7 @@
   <H3>Making</H3>
 
   <P>
-  Two main targets: "default" (got via make) and install (got via make install).
+  Two main targets: "default" (got via <code>make</code>) and install (got via <code>make</code> install).
 
   <OL>
     <LI>default: build the internal tools.
@@ -82,12 +82,12 @@ make
 make install
 </PRE>
 
-More precisely
+<P>More precisely
 <PRE>
 cvs -d weis@modulogic.inria.fr:/home/cvs \
  co -r tag_cvs -d directory module
 </PRE>
-
+</P>
 <P>
 For us, the module name is always "focalize". We can safely choose the
 "directory" name as being the cvs tag of the cvs tree we want, hence write
@@ -95,41 +95,53 @@ For us, the module name is always "focalize". We can safely choose the
 cvs -d weis@modulogic.inria.fr:/home/cvs \
  co -r tag_cvs -d tag_cvs focalize
 </PRE>
-
+</P>
 
 <H2>How to use the Focalize <code>doc_src</code> Makefile</H2>
+
+  <P>The <code>doc_src</code> directory contains the Web site of the project.
+  </P>
 
   <H3>Architecture</H3>
 
   <P>The web site is organized in several sub directories: each
-  directory being the target of a menu item. The source of the web
-  site pages are files with extension <code>.shtml</code>; the html
-  pages are thus generated from those <code>.shtml</code> thanks to
-  htmlc (from bazar-ocaml).
+  directory being the target of a menu item of the main index page (or of a
+  sub-index page, if we need one in the future).
+  The source of the web site pages are files with extension
+  <code>.shtml</code>; the <code>.html</code> pages are thus generated from
+  those <code>.shtml</code> thanks to the <code>htmlc</code> text file
+  generator (from bazar-ocaml).
   </P>
 
-  <P>Warning: <code>.html</code> files are made read-only by htmlc as
+  <P>Warning: <code>.html</code> files are made read-only by <code>htmlc</code> as
   they are generated, and thus must not be edited! Only
-  <code>.shtml</code> can be edited.
+  <code>.shtml</code> files can be edited.
   </P>
 
   <H3>Making</H3>
 
-  <P>Two main targets: "default" (got via make) and install (got via
-    make install).
+  <P>Two main targets: "default" (got via <code>make</code>) and install (got
+  via <code>make</code> install).
 
   <OL>
-    <LI>default: use htmlc to build the web site pages.
-    <LI>install: install the web site pages on the http server using
-        "scp". By default "scp" uses your local machine login name, if
-        your login name on the server is different then you need to
-	define it while launching make, using: <br />
-	<pre>
-	make PROJECT_WEB_TARGET_DIR='serverloginname@$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)' install
-	</pre>
-	where $(PROJECT_WEB_SERVER) and $(PROJECT_WEB_SITE_DIR) are
-	variables known by <code>doc_src/Makefile</code>.
+    <LI>default: use <code>htmlc</code> to build the web site pages.
+    <LI>install: install the web site pages on the http server using the Unix
+    command <code>scp</code>.
   </OL>
+  </P>
+
+  <P> Note:
+  by default "scp" uses your local machine login name to contact the http
+  server. Thus, if your login name on the server is different then you need
+  to define it while launching <code>make</code>, using:
+  <br />
+<pre>
+  make PROJECT_WEB_TARGET_DIR='serverloginname@$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)' install
+</pre>
+  (where <code>$(PROJECT_WEB_SERVER)</code> and
+  <code>$(PROJECT_WEB_SITE_DIR)</code> are variables you should write
+  verbatim here: they are already known by the <code>doc_src/Makefile</code>
+  file and <code>make</code> automatically handles them for you).
   </P>
 
   <H3>Cleaning</H3>
