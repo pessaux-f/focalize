@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.123 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: env.ml,v 1.124 2009-03-24 08:28:51 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -1519,7 +1519,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
          (begin
          (* We handle the case where the searched ident is qualified but the
             qualification represents the current species in the current unit.
-            This may arise because of substiution performed during typechecking
+            This may arise because of substitution performed during typechecking
             in species signatures. *)
          let ignore_qualification =
            (match current_species_name with
