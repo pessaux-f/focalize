@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.5 2009-03-23 17:16:07 pessaux Exp $
+% $Id: environments.tex,v 1.6 2009-03-24 13:13:58 pessaux Exp $
 
 All allong the compilation pass, we need to keep trace of various
 informations about compiled entities (methods, types, identifiers,
@@ -356,7 +356,32 @@ global identifiers ({\tt Parsetree.I\_local} and {\tt Parsetree.I\_global})
 are the same as previously described.
 
 We must then address the case of finding a binding for a method with
-the ``!''-notation (i.e. {\tt Parsetree.EI\_method}).
+the ``!''-notation (i.e. {\tt Parsetree.EI\_method}). There are two
+different cases.
+\begin{enumerate}
+\item There is no species qualification before the !, or the specified
+  species is {\tt Self}. In this case then the searched identifier
+  must belong to the inheritance of {\tt Self}. First, this means that
+  opened stuff is forbidden. Next, because the {\tt values} bucket is so
+  that inherited methods and our methods belong to it, we just have to
+  search for the {\tt vname} inside the current environment.
+\item There remain the case where these is an explicit species
+  qualifier different of {\tt Self}. We still have two cases.
+  \begin{enumerate}
+  \item The specified species is the current species (not {\tt Self},
+    the real name of the current species). This may arise because of
+    substitution performed during typechecking in species
+    signatures. In this case, the search is obviously the same than
+    the previous case since it is really like the case where the
+    qualifier is {\tt Self}.
+  \item In the other cases, we must recover the environment in where
+    to search,according to if the species is qualified by a module
+    name. Note that in this environment, all the imported bindings are
+    tagged {\tt BO_absolute}. This tag allows to make the difference
+    between bindings introduced by the definitions of the current
+    compilation unit and those brought by opened modules.
+  \end{enumerate}
+\end{enumerate}
 
 
 \section{Scoping environment}
