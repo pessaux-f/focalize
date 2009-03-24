@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.3 2009-03-20 14:22:07 doligez Exp $ *)
+(* $Id: peano.fcl,v 1.4 2009-03-24 11:08:16 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -92,10 +92,11 @@ species Peano_enumeration_system
                  property equal_is_syntactic
          <2>f qed
               (* [rr]: time limit!   *)
-              by step <2>1, <1>0 property !equal_very_reflexive
+              (* by step <2>1, <1>0 property !equal_very_reflexive *)
               (* [rr]: exhausted! *)
               (* by step <2>1, <1>0 property !equal_reflexive *)
-              (* assumed {*  *}  *)
+              property equal_reflexive
+              assumed {*  *}
 (*               coq proof *)
 (*               property !equal_reflexive *)
 (*               {* apply coq_builtins.magic_prove. Qed. *} *)
@@ -214,29 +215,18 @@ species Peano_base
     <1>f conclude;
 
   proof of successor_is_non_trivial =
+    <1>0 prove all x in Self, ~(P_succ(x) = P_zero)
+         assumed {* should be exclusivity of constructors needs Coq *}
     <1>1 assume x in Self,
          prove !different(!successor(x), !start)
-         <2>1 assume F: !equal(!successor(x), !start),
-              prove false
-              <2>1 prove P_succ(x) = P_zero
-(*                    by definition of successor, start *)
-(*                       hypothesis F *)
-(*                       property !equal_is_syntactic *)
-                   coq proof
-                   definition of successor, start
-                   {* apply coq_builtins.magic_prove. Qed.*}
-              <2>f qed (* by step <2>1 property !equal_reflexive *)
-                   coq proof 
-                   property !equal_reflexive
-                   {* apply coq_builtins.magic_prove. Qed.*}
-         <2>2 qed by step <2>1 property same_is_not_different
-    <1>f conclude;
-
-  proof of total_order =
-    <1>1 assume x in Self, assume y in Self,
-         prove !leq(x, y) \/ !leq(y, x)
-         assumed {* *}
-    <1>f conclude;
+         <2>1 prove ~(P_succ(x) = P_zero)
+              assumed {* by step <1>0 *}
+         <2>2 prove ~(!successor(x) = !start)
+              (* by step <2>1  *)
+              definition of successor, start
+              assumed {* *}
+         <2>f qed by step <2>2 property !different_is_syntactic
+    <1>f qed by step <1>1 ;
 
 end;;
 
@@ -255,11 +245,33 @@ proof of start_is_min = assumed {* this is wrong *};
 
 proof of equal_is_syntactic = assumed {* this is wrong *};
 
+proof of total_order = assumed {* this is true *};
+
 end;;
 
 collection Peano_dumb_coll implements Peano_dumb;;
 
 species Peano_order inherits Peano_base, Ordered_Enumerated_system =
+
+(*   (\* generic proof that syntactic equality induces total ordering *\) *)
+(*   proof of total_order = *)
+(*     <1>1 assume x in Self, assume y in Self, *)
+(*          prove !leq(x, y) \/ !leq(y, x) *)
+(*          <2>1 assume H_e: !equal(x, y), *)
+(*               prove !leq(x, y)  *)
+(*               by property !leq_from_lt,  *)
+(*                           !equal_is_syntactic *)
+(*          <2>2 assume H_d: !different(x, y), *)
+(*               prove !leq(x, y) \/ !leq(y, x) *)
+(*               <3>1 assume H_xy: !lt(x, y), *)
+(*                    prove leq(x, y) by hypothesis H_xy property leq_from_lt *)
+(*               <3>2 assume H_yx: !lt(y, x), *)
+(*                    prove !leq(y, x) by hypothesis H_yx property leq_from_lt *)
+(*               <3>f qed by step <3>1, <3>2  *)
+(*                           hypothesis H_d  *)
+(*                           definition of different *)
+(*          <2>f qed by step <2>1, <2>2 property same_is_not_different *)
+(*     <1>f conclude; *)
 
 (*   let rec lt(x, y) = match (x, y) with *)
 (*     | (P_zero, P_zero) -> false *)
@@ -270,25 +282,26 @@ species Peano_order inherits Peano_base, Ordered_Enumerated_system =
 
   proof of lt_is_irreflexive =
     <1>0 prove ~(!lt(P_zero, P_zero))
-         definition of lt assumed {* Should be trivial *}
+         definition of lt assumed {* base case *}
     <1>1 prove all x in Self, ~(!lt(x, x)) -> ~(!lt(P_succ(x), P_succ(x)))
          <2>1 assume x in Self,
-              assume H_x: !lt(x, x),
-              prove !lt(P_succ(x), P_succ(x))
+              assume H_x: !lt(P_succ(x), P_succ(x)),
+              prove !lt(x, x)
               definition of lt
               assumed {* inductive step *}
-         <2>f qed assumed {* reaches time limit!*}
-    <1>f qed 
-         definition of enumerated_induction
-         (* step <1>0, <1>1 *) 
-         assumed {* induction principle *};
+         <2>f conclude 
+    <1>2 prove (all x in Self, ~(!lt(x, x)))
+         (* definition of enumerated_induction *)
+         assumed {* induction principle *}
+    <1>f qed assumed {* by step <1>2 *};
+
+  proof of total_order =
+    definition of lt assumed {* *};
 
 (*   proof of lt_is_transitive = *)
 (*     definition of lt assumed {* *}; *)
 
 
-(* (\*     termination proof = order (  ) on x *\) *)
-(* (\*     assumed {* *}; *\) *)
 (*   proof of successor_defines_infimum = *)
 (*     definition of successor, lt *)
 (*     property different_is_not_same, leq_from_lt *)
