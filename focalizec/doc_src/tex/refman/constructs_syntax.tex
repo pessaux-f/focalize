@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.42 2009-03-25 15:57:59 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.43 2009-03-25 17:30:18 pessaux Exp $
 
 
 \section{Language constructs and syntax}
@@ -93,6 +93,7 @@ returning a function with $n-1$ arguments. Hence,
 {\tt int -> int -> bool} is the type of a function taking 2 integers
 and returning a boolean.
 
+\index{tuple}
 \focal\ provides native tuples (generalisation of pairs). The type of
 a tuple is the type of each of its components separated by a *
 character and surrounded by parentheses. Hence,
@@ -189,7 +190,7 @@ aliases with and in any type expression or type definition.
 
 \vspace{0.5cm}\noindent{\bf Sum types}
 \index{type!definition!sum}
-
+\index{sum type}
 
 Sum types provide the way to create new {\bf values} that
  belong to the same {\bf type}. Like {\tt 1} or {\tt 42} are
@@ -218,6 +219,7 @@ type color = | Red | Blue | Green ;;
 \end{lstlisting}
 }
 
+\index{value constructor}
 {\bf Values} of a sum type  are built from the
 {\bf value constructors}, i.e. from the names enumerated in the
 definition (that must not be confused with the {\bf type constructor}
@@ -225,7 +227,7 @@ which is the name of the type. For, instance,
 {\tt Red} is a {\bf value} of the type constructor {\tt color}.
 
 
- Value constructors of sum
+Value constructors of sum
 types can be {\bf parametrised} by a type expressions, corresponding
 values being obtained by applying the value constructor to values of
 the parameters types. For instance, let's define the type of playing
@@ -245,40 +247,35 @@ written on the card. Some values of type {\tt card} are: {\tt King},
 {\tt (Numbered 4)}, {\tt (Numbered 42)}. The {\tt Numbered}
 constructor has {\bf parameter}.
 
+\index{tuple!as sum type value constructor arg}
 \medskip
 An important attention must be taken for constructors having
 ``several'' arguments. \focalize provides 2 different
 (``type-incompatible'') ways to make a value constructor carrying
 several values.
 \begin{itemize}
-\item Either the constructor has {\bf 1} argument that is a tuple.
+\item Either the constructor has {\bf 1} argument that is a tuple,
+  i.e. a type expression involving the {\tt *} constructor.
 
   The corresponding type definition for such a type would be:
 {\scriptsize
 \begin{lstlisting}
 type t =
-  | Cstr ((bool * int * string))
+  | Cstr (bool * int * string)
 ;;
 \end{lstlisting}
 }
-  You may notice the 2 sets of parentheses. In effect, the basic syntax
-  for constructor arguments implies surrounding the arguments be
-  parentheses. The type expression denoting a tuple surrounds the
-  components of the tuple by parentheses. Hence combining these two
-  things, we now understand why a tuple value parametrising a
-  constructor must have 2 layers of parentheses.
 
-\item Or the constructor has {\bf several} arguments. In this case, since
-  as state above the basic syntax for constructor arguments implies
-  surrounding the arguments be parentheses, a type definition like:
+\item Or the constructor has {\bf several} arguments, i.e. several
+  type expressions separated by a comma.
 {\scriptsize
 \begin{lstlisting}
 type t2 =
-  | Cstr2 (bool * int * string)
+  | Cstr2 (bool, int, string)
 ;;
 \end{lstlisting}
 }
-  means that the constructor {\tt Cstr2} has {\bf 3 arguments}.
+means that the constructor {\tt Cstr2} has {\bf 3 arguments}.
 \end{itemize}
 
 \medskip
@@ -292,45 +289,73 @@ between these concepts.
 type mytuple = alias (bool * int * string) ;;
 
 type t =
-  | Cstr ((bool * int * string))
+  | Cstr (bool * int * string)
 ;;
 
 let fct_t1 (x) =
   match x with
    | Cstr (a, b, c) -> ()
 ;;
-(* Leads to
+\end{lstlisting}
+}
+\noindent leads to
+\begin{verbatim}
 Error: Types
 (basics#bool * basics#int * basics#string),  '_a,  '_b and
 (basics#bool * basics#int * basics#string) are not compatible.
-because Cstr expects 1 tuple argument and not 3 arguments.
-*)
+\end{verbatim}
+\noindent because {\tt Cstr} expects 1 tuple argument and not 3
+arguments.
 
-
+\medskip
+{\scriptsize
+\begin{lstlisting}
 let fct_t2 (x) in mytuple =
   match x with
    | Cstr (x) -> x
 ;;
-(* Is accepted since the type mytuple aliases a 3 components tuples
-and Cstr is really parametrised by 1 argument that is a 3 components
-tuple.
+\end{lstlisting}
+}
+\noindent is accepted since the type {\tt mytuple} aliases a 3
+components tuples and {\tt Cstr} is really parametrised by 1 argument
+that is a 3 components tuple.
 
+\medskip
+{\scriptsize
+\begin{lstlisting}
 type tt =
-  | Cstr2 (bool * int * string)
+  | Cstr2 (bool, int, string)
 ;;
 
 let fct_t3 (x) in mytuple =
   match x with
    | Cstr2 (y) -> y............
 ;;
-
 \end{lstlisting}
 }
+\noindent leads to
+\begin{verbatim}
+Error: Types basics#bool and
+basics#bool,  basics#int,  basics#string are not compatible.
+\end{verbatim}
+because {\tt Cstr2} expects 3 arguments (types separated by comma) and
+{\tt mytuple} aliases a tuple.
 
+\medskip
+{\scriptsize
+\begin{lstlisting}
+let fct_t4(x) in mytuple =
+  match x with
+   | Cstr2 (a, b, c) -> (a, b, c)
+;;
+\end{lstlisting}
+}
+\noindent is accepted since we rebuild explicitly a tuple from the 3
+arguments of {\tt Cstr2}.
 
-Any type
-expression, even recursive, can be used as a  parameter of value
-contructors\index{type!recursive}.
+\medskip
+Any type expression, even recursive, can be used as a  parameter of
+value contructors\index{type!recursive}.
 For instance, the type of lists of boolean $\times$ integer pairs
 could be defined like:
 {\scriptsize
@@ -453,7 +478,7 @@ definition of generic (polymorphic) lists may be defined by:
 \begin{lstlisting}
 type list ('a) =
   | Empty
-  | Cons ('a * list ('a))
+  | Cons ('a,  list ('a))
 ;;
 \end{lstlisting}
 }

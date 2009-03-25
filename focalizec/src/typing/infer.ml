@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.172 2009-03-25 15:57:59 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.173 2009-03-25 17:30:18 pessaux Exp $ *)
 
 
 
@@ -4749,8 +4749,11 @@ let typecheck_type_def_body_simple
        typecheck_regular_type_def_body
          ctx ~is_repr_of_external:false env td_name regular_type_def_body
    | Parsetree.TDBS_external external_type_def_body ->
-       typecheck_external_type_def_body ctx env td_name params external_type_def_body
+       typecheck_external_type_def_body
+	 ctx env td_name params external_type_def_body
 ;;
+
+
 
 let typecheck_type_def ctx env type_def =
   let type_def_desc = type_def.Parsetree.ast_desc in

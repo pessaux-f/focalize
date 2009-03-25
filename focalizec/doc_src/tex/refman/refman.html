@@ -1919,7 +1919,8 @@ one. As usual in functional languages, a function with several (say
 <I>n</I>) arguments is considered as a function with <B>1</B> argument
 returning a function with <I>n</I>&#X2212;1 arguments. Hence,
 <TT>int -&gt; int -&gt; bool</TT> is the type of a function taking 2 integers
-and returning a boolean.</P><P><FONT COLOR=purple>FoCaLize</FONT> provides native tuples (generalisation of pairs). The type of
+and returning a boolean.</P><P><A NAME="@default35"></A>
+<FONT COLOR=purple>FoCaLize</FONT> provides native tuples (generalisation of pairs). The type of
 a tuple is the type of each of its components separated by a *
 character and surrounded by parentheses. Hence,
 <TT>(int * bool * string) </TT> is the type of triplets whose first
@@ -1927,14 +1928,14 @@ component is an integer, second component is a boolean and third
 component is a string.</P><P>Finally, type expressions can be written between parentheses without
 changing their semantics.</P><!--TOC subsubsection Type definitions-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc52">3.2.1.3</A>  Type definitions</H4><!--SEC END --><P>
-<A NAME="@default35"></A>
+<A NAME="@default36"></A>
 <A NAME="type-definition"></A>
 A type <B>definition</B> introduces a new type
 constructor (the name of the type), which becomes available to build
 new type expressions. Hence, defining a type is the
 way to give a name to a new type structure. <FONT COLOR=purple>FoCaLize</FONT> proposes 3 kinds
 of type definitions: aliases, sum types and record types.</P><P><BR>
-<B>Aliases</B></P><P><A NAME="@default36"></A></P><P><BR>
+<B>Aliases</B></P><P><A NAME="@default37"></A></P><P><BR>
 <BR>
 </P><P>Aliases provide a way to create type abbreviations. It is not handy to
 manipulate large <B>type expressions</B> like for instance, a tuple of
@@ -1966,7 +1967,8 @@ expression and this name is type-compatible with any occurrence of the
 type expression it is bound to</EM>. Obviously, it is possible to use
 aliases with and in any type expression or type definition.</P><P><BR>
 <B>Sum types</B>
-<A NAME="@default37"></A></P><P>Sum types provide the way to create new <B>values</B> that
+<A NAME="@default38"></A>
+<A NAME="@default39"></A></P><P>Sum types provide the way to create new <B>values</B> that
 belong to the same <B>type</B>. Like <TT>1</TT> or <TT>42</TT> are
 <B>values</B> of <B>type</B> <TT>int</TT>, one may want to have <TT>Red</TT>,
 <TT>Blue</TT> and <TT>Green</TT> as the <B>only</B> values of a new type
@@ -1984,7 +1986,8 @@ separator. This especially means that when writing a sum type
 definition on a single line, the first <TT><FONT COLOR="red">|</FONT></TT> must be written:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>color</FONT><FONT SIZE=2> = | </FONT><FONT SIZE=2>Red</FONT><FONT SIZE=2> | </FONT><FONT SIZE=2>Blue</FONT><FONT SIZE=2> | </FONT><FONT SIZE=2>Green</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
-</TABLE><P><B>Values</B> of a sum type are built from the
+</TABLE><P><A NAME="@default40"></A>
+<B>Values</B> of a sum type are built from the
 <B>value constructors</B>, i.e. from the names enumerated in the
 definition (that must not be confused with the <B>type constructor</B>
 which is the name of the type. For, instance,
@@ -2001,29 +2004,24 @@ cards as king, queen, jack and simply numbered cards:</P><TABLE CLASS="lstframe"
 </TABLE><P> Hence, the <TT>Numbered</TT> constructor &#X201C;carries&#X201D; the integer value
 written on the card. Some values of type <TT>card</TT> are: <TT>King</TT>,
 <TT>(Numbered 4)</TT>, <TT>(Numbered 42)</TT>. The <TT>Numbered</TT>
-constructor has <B>parameter</B>.</P><P><BR>
+constructor has <B>parameter</B>.</P><P><A NAME="@default41"></A>
+<BR>
 An important attention must be taken for constructors having
 &#X201C;several&#X201D; arguments. <FONT COLOR=purple>FoCaLize</FONT>provides 2 different
 (&#X201C;type-incompatible&#X201D;) ways to make a value constructor carrying
 several values.
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
-Either the constructor has <B>1</B> argument that is a tuple.<P>The corresponding type definition for such a type would be:
+Either the constructor has <B>1</B> argument that is a tuple,
+i.e. a type expression involving the <TT>*</TT> constructor.<P>The corresponding type definition for such a type would be:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>t</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> ((</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
-</TABLE><P>
-You may notice the 2 sets of parentheses. In effect, the basic syntax
-for constructor arguments implies surrounding the arguments be
-parentheses. The type expression denoting a tuple surrounds the
-components of the tuple by parentheses. Hence combining these two
-things, we now understand why a tuple value parametrising a
-constructor must have 2 layers of parentheses.</P></LI><LI CLASS="li-itemize">Or the constructor has <B>several</B> arguments. In this case, since
-as state above the basic syntax for constructor arguments implies
-surrounding the arguments be parentheses, a type definition like:
+</TABLE></LI><LI CLASS="li-itemize">Or the constructor has <B>several</B> arguments, i.e. several
+type expressions separated by a comma.
 <FONT SIZE=2>
 </FONT><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>t2</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
 </TABLE>
 means that the constructor <TT>Cstr2</TT> has <B>3 arguments</B>.
@@ -2037,40 +2035,54 @@ between these concepts.
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2><B>alias</B></FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>) ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>t</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> ((</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t1</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>) -&gt; ()</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Leads to</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>Error: Types</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>(basics#bool * basics#int * basics#string),  '_a,  '_b and</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>(basics#bool * basics#int * basics#string) are not compatible.</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>because Cstr expects 1 tuple argument and not 3 arguments.</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>*)</FONT></EM></FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT></TD></TR>
+</TABLE><P>
+leads to
+</P><PRE CLASS="verbatim">Error: Types
+(basics#bool * basics#int * basics#string),  '_a,  '_b and
+(basics#bool * basics#int * basics#string) are not compatible.
+</PRE><P>because <TT>Cstr</TT> expects 1 tuple argument and not 3
+arguments.</P><P><BR>
+<FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) -&gt; </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT></TD></TR>
+</TABLE><P>
+is accepted since the type <TT>mytuple</TT> aliases a 3
+components tuples and <TT>Cstr</TT> is really parametrised by 1 argument
+that is a 3 components tuple.</P><P><BR>
+<FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>tt</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Is accepted since the type mytuple aliases a 3 components tuples</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>and Cstr is really parametrised by 1 argument that is a 3 components</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>tuple.</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>type tt =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  | Cstr2 (bool * int * string)</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>let fct_t3 (x) in mytuple =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  match x with</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>   | Cstr2 (y) -&gt; y............</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>;;</FONT></EM></FONT></TD></TR>
-</TABLE><P>Any type
-expression, even recursive, can be used as a parameter of value
-contructors<A NAME="@default38"></A>.
+</FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t3</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) -&gt; </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>............</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT></TD></TR>
+</TABLE><P>
+leads to
+</P><PRE CLASS="verbatim">Error: Types basics#bool and
+basics#bool,  basics#int,  basics#string are not compatible.
+</PRE><P>because <TT>Cstr2</TT> expects 3 arguments (types separated by comma) and
+<TT>mytuple</TT> aliases a tuple.</P><P><BR>
+<FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t4</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>) -&gt; (</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT></TD></TR>
+</TABLE><P>
+is accepted since we rebuild explicitly a tuple from the 3
+arguments of <TT>Cstr2</TT>.</P><P><BR>
+Any type expression, even recursive, can be used as a parameter of
+value contructors<A NAME="@default42"></A>.
 For instance, the type of lists of boolean × integer pairs
 could be defined like:
 <FONT SIZE=2>
@@ -2112,7 +2124,7 @@ elements are <TT>(false, 2)</TT> followed by <TT>(true, 1)</TT>.</P><P><BR>
 </P><P><BR>
 <B>Record types</B>
 <A NAME="record-type-definition"></A>
-<A NAME="@default39"></A></P><P><BR>
+<A NAME="@default43"></A></P><P><BR>
 <BR>
 </P><P>Record types provide a way to aggregate data of various types, a bit like
 tuples, but naming the components of the group, instead of
@@ -2157,7 +2169,7 @@ can be instantiated by any type expression. A type variable is written
 as an identifier preceded by a <TT>&#X2019;</TT> (quote) character.</P><P>For instance, the type
 definition of generic (polymorphic) lists may be defined by:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>list</FONT><FONT SIZE=2> ('</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Empty</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cons</FONT><FONT SIZE=2> ('</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>list</FONT><FONT SIZE=2> ('</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cons</FONT><FONT SIZE=2> ('</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>,  </FONT><FONT SIZE=2>list</FONT><FONT SIZE=2> ('</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
 </TABLE><P>The value
 constructor <TT>Cons</TT> carries a value of type &#X201C;unknown&#X201D; (of type
@@ -2189,7 +2201,7 @@ expression&#X201D;.</P><P>For example, &#X2032;<I>a</I> &#X2192; <TT> <I>int</I>
 is an instanciation of
 &#X2032;<I>a</I> &#X2192; <TT> <I>int</I> </TT> &#X2192; &#X2032;<I>c</I> since we replaced
 the variable &#X2032;<I>c</I> by the type <TT>bool</TT>.</P><P><BR>
-Two types <I>t</I><SUB>1</SUB> and <I>t</I><SUB>2</SUB> are said <B>compatible</B><A NAME="@default40"></A>
+Two types <I>t</I><SUB>1</SUB> and <I>t</I><SUB>2</SUB> are said <B>compatible</B><A NAME="@default44"></A>
 if they have a <B>common</B> instanciation. For the intuition, this
 means that replacing variables in <I>t</I><SUB>1</SUB> and replacing variables in
 <I>t</I><SUB>2</SUB> leads to a same type.</P><P>For example, we consider the two following types:
@@ -2240,7 +2252,7 @@ denoted by <TT>Self</TT> within the species.</P><P><BR>
 </P><!--TOC subsection Expressions-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc55">3.2.4</A>  Expressions</H3><!--SEC END --><P>
 <A NAME="expressions"></A>
-<A NAME="@default41"></A> Expressions are constructs of the language that are
+<A NAME="@default45"></A> Expressions are constructs of the language that are
 evaluated into a <B>value</B> of a certain <B>type</B>. Hence values and
 types are not at the same level. Types serve to classify values into
 categories. Although proofs may contain expressions, we describe them
@@ -2360,13 +2372,13 @@ not lead to <FONT COLOR=purple>FoCaLize</FONT> values thus live at another level
 </TABLE><P><BR>
 </P><!--TOC subsubsection Literal expressions-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc56">3.2.4.1</A>  Literal expressions</H4><!--SEC END --><P>
-<A NAME="@default42"></A> <A NAME="@default43"></A></P><P>The literal
+<A NAME="@default46"></A> <A NAME="@default47"></A></P><P>The literal
 expressions of type integer, string, character,
 float and boolean) are evaluated into the constant represented by the
 literal. The expression <TT>25</TT> denotes the value 25 of type
 <TT>int</TT>.</P><!--TOC subsubsection Sum type value constructor expressions-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc57">3.2.4.2</A>  Sum type value constructor expressions</H4><!--SEC END --><P>
-<A NAME="@default44"></A>
+<A NAME="@default48"></A>
 We presented in section <A HREF="#type-definition">3.2.1.3</A> the way to define sum
 types. We saw that <B>values</B> of such a <B>type</B> are built using
 its <B>value</B> constructors.</P><P>Hence, for <B>value</B> constructors with no argument, the constructor itself
@@ -2387,14 +2399,14 @@ the expression <TT>A</TT> is evaluated into <I>A</I>, the expression
 <TT>B ((2 + 3), true)</TT> is evaluated into the value <I>B</I> (5, <I>true</I>).</P><!--TOC subsubsection Identifier expressions-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc58">3.2.4.3</A>  Identifier expressions</H4><!--SEC END --><P>
 <A NAME="identifier-expressions"></A>
-<A NAME="@default45"></A>
-<A NAME="@default46"></A></P><P>An identifier expression is either a basic identifier, an extended
+<A NAME="@default49"></A>
+<A NAME="@default50"></A></P><P>An identifier expression is either a basic identifier, an extended
 identifier or a qualified identifier (see section
 <A HREF="#qualified-name">3.1.12</A>), which denotes the value of this identifier in
 the scope of the expression. The identifier is said to be <B>bound</B>
 to this value.</P><P>The value bound to an identifier can be of any type. A value having a
 functional type, that is a <B>functional
-value</B><A NAME="functional-value"></A><A NAME="@default47"></A> also called a
+value</B><A NAME="functional-value"></A><A NAME="@default51"></A> also called a
 <B>closure</B>, is created by a function definition. Such a value,
 obtained by the evaluation of the body of the function, is slightly
 different from other ones since it embeds both the code of the
@@ -2429,8 +2441,8 @@ Remember that identifiers forms differ depending on the syntactic
 class of entity they refer to, capitalized identifiers being used for
 species and collections. To evaluate an identifier expression, the
 <FONT COLOR=purple>FoCaLize</FONT> compiler tries to find its definition from the current scoping
-context. <A NAME="@default48"></A> <A NAME="@default49"></A>
-<A NAME="@default50"></A> It searches for the closest definition with this name,
+context. <A NAME="@default52"></A> <A NAME="@default53"></A>
+<A NAME="@default54"></A> It searches for the closest definition with this name,
 starting by the parameters present in the current definition
 (i.e. formal parameters in a function and in a <TT>match-with</TT>
 construction and <TT>let-in</TT> bound identifiers). If no identifier
@@ -2439,7 +2451,7 @@ methods of the current species. If a method is found with this name,
 it will be retained, otherwise the identifier is looked in the
 preceding toplevel-definitions of the current compilation unit.
 <A NAME="identifier-scoping-and-open"></A>
-<A NAME="@default51"></A> If no suitable definition is found, then the
+<A NAME="@default55"></A> If no suitable definition is found, then the
 ones imported by the <TT>open</TT> directives are examined to find one
 with the searched name. Finally if no definition is found, the
 identifier is <B>reported unbound</B> by an error message.</P><P>Note that an
@@ -2457,7 +2469,7 @@ will be the retained one.</P><P><BR>
 <B>Identifier qualification</B></P><P>Identifiers can manually be disambiguated in term of compilation unit
 location using the sharp (#) notation as explained in section
 <A HREF="#qualified-name">3.1.12</A>.</P><P><BR>
-<A NAME="@default52"></A> As further presented in section
+<A NAME="@default56"></A> As further presented in section
 <A HREF="#method-qualification">4.2.1</A>, species methods identifiers are made
 explicit using the &#X201C;!&#X201D; notation. The notation <TT>Spe!meth</TT> stands
 for &#X201C;the method <TT>meth</TT> of the species <TT>Spe</TT>&#X201D;. By extension,
@@ -2514,8 +2526,8 @@ leading to a syntax error or any other cryptic error long after the faulty
 Conversely <TT>*)</TT> is always considered as an end of comment by the lexical
 analyzer.</P><!--TOC subsubsection <TT>let-in</TT> expression-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc59">3.2.4.4</A>  <TT>let-in</TT> expression</H4><!--SEC END --><P>
-<A NAME="@default53"></A>
-<A NAME="@default54"></A>
+<A NAME="@default57"></A>
+<A NAME="@default58"></A>
 <TT>let-in</TT> expression binds an identifier to a value to
 evaluate a trailing expression (the &#X201C;<TT>in-part</TT>&#X201D; of the &#X201C;<TT>let-in</TT>&#X201D;
 or &#X201C;body&#X201D;) where this ident may appear. During the evaluation of the
@@ -2536,7 +2548,7 @@ instance, <FONT SIZE=2>
 </TABLE><P>
 returns the value ((5, 5), <I>true</I>, (5, 5), <I>true</I>) of type
 <TT>((int * int) * bool * (int * int) * bool)</TT>.</P><P><BR>
-<A NAME="@default55"></A>
+<A NAME="@default59"></A>
 Note that the notion of &#X201C;binding an identifier to a value&#X201D; is
 essentially different from the
 notion of assignment in imperative languages. In such languages (like
@@ -2669,8 +2681,8 @@ See other examples in the standard library where this construction is
 used to define associativity, commutativity, &#X2026;</P><!--TOC subsubsection Conditional expression-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc61">3.2.4.6</A>  Conditional expression</H4><!--SEC END --><P>
 <A NAME="conditional-expression"></A>
-<A NAME="@default56"></A>
-<A NAME="@default57"></A>
+<A NAME="@default60"></A>
+<A NAME="@default61"></A>
 A conditional expression has the form:</P><P><TT>if</TT> <I>exp</I><SUB>1</SUB> <TT>then</TT>
 <I>exp</I><SUB>2</SUB> <TT>else</TT> <I>exp</I><SUB>3</SUB></P><P>Its evaluation starts by the evaluation of the <I>exp</I><SUB>1</SUB> expression
 which must be of type boolean. If its value is <I>true</I> then the result
@@ -2694,7 +2706,7 @@ to a certain value. The result of the conditional expression bound to
 <TT>y_corrected</TT> will be either 0 if the condition is met or <I>y</I>
 otherwise.</P><!--TOC subsubsection Match expression-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc62">3.2.4.7</A>  Match expression</H4><!--SEC END --><P>
-<A NAME="@default58"></A> <A NAME="@default59"></A> <A NAME="@default60"></A></P><P>The <TT>match-with</TT> construct is a generalised conditional construct
+<A NAME="@default62"></A> <A NAME="@default63"></A> <A NAME="@default64"></A></P><P>The <TT>match-with</TT> construct is a generalised conditional construct
 with pattern-matching. By &#X201C;generalised&#X201D;, we mean that unlike the
 <TT>if-then-else</TT> which has only 2 branches, the present expression
 can have several branches. The notion of condition here is not anymore
@@ -2815,7 +2827,7 @@ to a variable (so, any value can match it) and the field
 <TT>birth</TT> is absent (so, considered as <TT>birth = _</TT>).</P><!--TOC subsubsection Application expression-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc63">3.2.4.8</A>  Application expression</H4><!--SEC END --><P>
 <A NAME="function-application"></A>
-<A NAME="@default61"></A> <A NAME="@default62"></A> We previously
+<A NAME="@default65"></A> <A NAME="@default66"></A> We previously
 saw that the <TT>let-in</TT> construct allows to define functions by
 binding an identifier to a functional value. Using a function by
 providing it with effective arguments to get its result value is
@@ -2853,7 +2865,7 @@ parameter <TT>x</TT> by the effective argument <I>true</I> and <TT>y</TT> by
 <TT>y</TT> in the first component and <TT>x</TT> in the second. Hence, the
 result of the application is the tuple <B>value</B> (1, <I>true</I>).</P><!--TOC subsubsection Operator application expression-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc64">3.2.4.9</A>  Operator application expression</H4><!--SEC END --><P>
-<A NAME="@default63"></A>
+<A NAME="@default67"></A>
 Since operators are designed to be used in infix or prefix position,
 application of operators consists simply in providing arguments
 according to the operator infix/prefix nature. For infix operators,
@@ -2861,7 +2873,7 @@ arguments are on left and right sides. For prefix operators, the
 operator is in front of the argument expression.</P><!--TOC subsubsection Record expression-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc65">3.2.4.10</A>  Record expression</H4><!--SEC END --><P>
 <A NAME="record-expression"></A>
-<A NAME="@default64"></A>
+<A NAME="@default68"></A>
 As stated in <A HREF="#record-type-definition">3.2.1.3</A>,
 record types are defined by a list of labels with their types. As
 usual a record
@@ -2887,7 +2899,7 @@ may qualify the record fields by the &#X201C;<TT>#</TT>&#X201D; notation:
 </TABLE><!--TOC subsubsection Cloning a record expression-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc66">3.2.4.11</A>  Cloning a record expression</H4><!--SEC END --><P>
 <A NAME="record-clone-expression"></A>
-<A NAME="@default65"></A>
+<A NAME="@default69"></A>
 It is sometimes needed to create a new
 value of a record type by modifying a few fields of an existing
 record, leaving the other fields unchanged. If the record type
@@ -2922,7 +2934,7 @@ is in a different compilation unit, you may qualify the record fields
 by the &#X201C;<TT>#</TT>&#X201D; notation.</P><!--TOC subsubsection Record field access expression-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc67">3.2.4.12</A>  Record field access expression</H4><!--SEC END --><P>
 <A NAME="record-field-access"></A>
-<A NAME="@default66"></A>
+<A NAME="@default70"></A>
 Once a record value is created by aggregating values of its fields, it
 is possible to recover the value of one field by a dot notation. For
 instance, assuming the type definition and record values of the
@@ -3003,7 +3015,7 @@ introduced by the <TT>theorem</TT> keyword. These definitions must be ended by a
 <FONT COLOR=purple>FoCaLize</FONT> provides 3 directives that are not expressions. This means
 that they do not lead to values or computation.</P><!--TOC subsubsection The <TT>use</TT> directive-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc71">3.2.6.1</A>  The <TT>use</TT> directive</H4><!--SEC END --><P>
-<A NAME="@default67"></A>
+<A NAME="@default71"></A>
 This directive is followed by the name of the file to open between
 double quotes without the &#X201C;.fcl&#X201D; extension.
 Before being allowed to use the qualified notation for an identifier,
@@ -3012,7 +3024,7 @@ declared as &#X201C;used&#X201D; thanks to this directive. In other terms,
 &#X201C;using&#X201D; a compilation units allows to access its entities from the
 current compilation unit.</P><!--TOC subsubsection The <TT>open</TT> directive-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc72">3.2.6.2</A>  The <TT>open</TT> directive</H4><!--SEC END --><P>
-<A NAME="@default68"></A></P><P>This directive is followed by the name of the file to open between
+<A NAME="@default72"></A></P><P>This directive is followed by the name of the file to open between
 double quotes without the &#X201C;.fcl&#X201D; extension. As previously introduced
 (c.f. <A HREF="#identifier-scoping-and-open">3.2.4.3</A> and <A HREF="#qualified-name">3.1.12</A>) the
 <TT>open</TT> directive loads in the current name resolution (scoping)
@@ -3030,7 +3042,7 @@ together with an <TT>open</TT> directive.</P><TABLE CLASS="lstframe" STYLE="padd
 will be searched in the library search path specified with the
 <TT>-I</TT> option (c.f. <A HREF="#compiler-options">7</A>).</P><!--TOC subsubsection The <TT>coq_require</TT> directive-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc73">3.2.6.3</A>  The <TT>coq_require</TT> directive</H4><!--SEC END --><P>
-<A NAME="@default69"></A>
+<A NAME="@default73"></A>
 Some source files of a development may be directly written in <FONT COLOR=purple>Coq</FONT> to
 provide external definitions (more detailed further in
 <A HREF="#interfacing-other-languages">9.0.5</A>) to import and use in the
@@ -3051,15 +3063,15 @@ fact in its early lines of code:
 </TABLE><!--TOC subsection Properties, theorems and proofs-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc74">3.2.7</A>  Properties, theorems and proofs</H3><!--SEC END --><P>
 <A NAME="properties-theorems-proofs"></A>
-<A NAME="@default70"></A>
-<A NAME="@default71"></A></P><P>Properties are first order logic propositions and theorems are
+<A NAME="@default74"></A>
+<A NAME="@default75"></A></P><P>Properties are first order logic propositions and theorems are
 properties with their proofs. We will study here first the structure
 of logical expressions used to express the statements, show properties
 and theorems forms and shorty present the 3 available ways to write
 proofs.</P><!--TOC subsubsection Logical expressions-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc75">3.2.7.1</A>  Logical expressions</H4><!--SEC END --><P>
 <A NAME="logical-expressions"></A>
-<A NAME="@default72"></A>
+<A NAME="@default76"></A>
 Logical expressions are those used to write first order logic
 formulas.
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
@@ -3278,7 +3290,7 @@ To ensure that this part can be read independently of the section
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc80">4.1</A>  Basic concepts</H2><!--SEC END --><!--TOC subsection Top-level Definitions-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc81">4.1.1</A>  Top-level Definitions</H3><!--SEC END --><P>
 <A NAME="topleve-def"></A>
-<A NAME="@default73"></A>
+<A NAME="@default77"></A>
 We call <B>toplevel-definition</B> (just one word) a definition which
 appears outside species and collections. Such definitions can only be:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
@@ -3291,13 +3303,13 @@ Species
 bind their value to an identifier).
 </LI></UL><P>
 Any toplevel-definition is terminated by a double semi-character
-(&#X201C;;;&#X201D;).<A NAME="@default74"></A></P><!--TOC subsection Species-->
+(&#X201C;;;&#X201D;).<A NAME="@default78"></A></P><!--TOC subsection Species-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc82">4.1.2</A>  Species</H3><!--SEC END --><P>
 <A NAME="species-intro"></A>
-<B>Species</B> <A NAME="@default75"></A> are the nodes of the <FONT COLOR=purple>FoCaLize</FONT>
-hierarchy. A species is a sequence of <B>methods</B> <A NAME="@default76"></A> or
-<B>fields</B><A NAME="@default77"></A>, each one being terminated by a semi
-character (&#X201C;;&#X201D;)<A NAME="@default78"></A>. Hence, a basic species looks like:
+<B>Species</B> <A NAME="@default79"></A> are the nodes of the <FONT COLOR=purple>FoCaLize</FONT>
+hierarchy. A species is a sequence of <B>methods</B> <A NAME="@default80"></A> or
+<B>fields</B><A NAME="@default81"></A>, each one being terminated by a semi
+character (&#X201C;;&#X201D;)<A NAME="@default82"></A>. Hence, a basic species looks like:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>  </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Name</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    </FONT><FONT SIZE=2>meth1</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
@@ -3305,27 +3317,27 @@ character (&#X201C;;&#X201D;)<A NAME="@default78"></A>. Hence, a basic species l
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>Species names are always <B>capitalised</B>. As any
 toplevel-definition, a species ends with a double semi-character
-(&#X201C;;;&#X201D;).<A NAME="@default79"></A> There are several kinds of methods:
+(&#X201C;;;&#X201D;).<A NAME="@default83"></A> There are several kinds of methods:
 <BR>
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
 <BR>
 <A NAME="rep-is-method"></A>
-The <B>representation</B><A NAME="@default80"></A>. It
-defines<A NAME="@default81"></A> the type of the entities
+The <B>representation</B><A NAME="@default84"></A>. It
+defines<A NAME="@default85"></A> the type of the entities
 manipulated in the species and is a kind of alias type (see section
 <A HREF="#representation-type">3.2.3</A>). The representation can be a type
 variable and then is said to be &#X201C;not yet defined&#X201D; or &#X201C;only
 declared&#X201D; and is not explicitly introduced
-<A NAME="@default82"></A>. It can be bound to a type defined
+<A NAME="@default86"></A>. It can be bound to a type defined
 by a more complex type expression possibly containing type variables
 (introduced via collection parameters). Either, this type value is
-obtained by inheritance or is introduced by the keyword <TT>representation</TT><A NAME="@default83"></A> followed by <TT>=</TT> followed
+obtained by inheritance or is introduced by the keyword <TT>representation</TT><A NAME="@default87"></A> followed by <TT>=</TT> followed
 by a type expression. Ultimately to get a <EM>complete</EM> (fully
 defined) species, the representation must be a fully instantiated
 type (directly or by <A HREF="#inheritance">4.3.1</A>).<P>In the context of a species, the representation is denoted by <TT>Self</TT>.</P><P>Note that a representation is never a polymorphic type. When it is
 only declared, it is a type variable, which can receive only one
 instantiation. In other words, this type variable is not universally
-quantified, as are the type variables of polymorphic types. </P></LI><LI CLASS="li-itemize"><B>Signatures</B><A NAME="@default84"></A>. They introduce names of
+quantified, as are the type variables of polymorphic types. </P></LI><LI CLASS="li-itemize"><B>Signatures</B><A NAME="@default88"></A>. They introduce names of
 constants and functions, uniquely providing their type as a type
 expression. A signature
 begins with the keyword <TT>signature</TT> followed by the introduced
@@ -3340,7 +3352,7 @@ type) of the current species. Hence an operation pushing an integer
 onto a stack takes as parameter the integer to push, the stack on
 which to push and give back a new stack, that is, an entity of type
 <TT>Self</TT>.</P><P><BR>
-</P></LI><LI CLASS="li-itemize"><B>Functions</B><A NAME="@default85"></A>. They are implementations of
+</P></LI><LI CLASS="li-itemize"><B>Functions</B><A NAME="@default89"></A>. They are implementations of
 signatures, providing effective code. A function is
 introduced by the <TT>let</TT> keyword followed by the name followed
 by <TT>=</TT> followed by a definition, which is similar to ML
@@ -3367,7 +3379,7 @@ previously
 described in the core syntax (c.f <A HREF="#function-application">3.2.4.8</A>),
 function application is &#X201C;à la C&#X201D;, that is with arguments comma
 separated and enclosed by parentheses.</P><P><BR>
-</P></LI><LI CLASS="li-itemize"><B>Properties</B><A NAME="@default86"></A>. They are first order 
+</P></LI><LI CLASS="li-itemize"><B>Properties</B><A NAME="@default90"></A>. They are first order 
 formulae containing names already introduced. When stating a
 property, the proof that it holds is not yet provided (but will have
 to be ultimately provided). A property can be viewed as a declaration.<TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntStack</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
@@ -3375,14 +3387,14 @@ to be ultimately provided). A property can be viewed as a declaration.<TABLE CLA
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>push_returns_non_empty</FONT><FONT SIZE=2> :</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>v</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>s</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>push</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>v</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>s</FONT><FONT SIZE=2>) -&gt; ~ </FONT><FONT SIZE=2>is_empty</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>s</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
-</TABLE><P>Proofs<A NAME="@default87"></A> of properties can be <B>delayed</B>,
+</TABLE><P>Proofs<A NAME="@default91"></A> of properties can be <B>delayed</B>,
 that is, done afterwards
 using a <TT>proof</TT> field in a species. The way to give proofs will
 be seen further.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntStack2</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntStack</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>push_returns_non_empty</FONT><FONT SIZE=2> = ... ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P><BR>
-</P></LI><LI CLASS="li-itemize"><B>Theorems</B><A NAME="@default88"></A>. They are properties with their
+</P></LI><LI CLASS="li-itemize"><B>Theorems</B><A NAME="@default92"></A>. They are properties with their
 proofs. In fact, when defining a property, we only give the
 statement of a theorem, leaving its proof for later. A theorem can
 be viewed as a definition.<TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntStack</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
@@ -3394,12 +3406,12 @@ be viewed as a definition.<TABLE CLASS="lstframe" STYLE="padding:1ex;border-styl
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE></LI></UL><P><A NAME="no-polymorphism-for-methods"></A>
 One important restriction on the type of the methods is that it cannot
-be polymorphic<A NAME="@default89"></A>. However, <FONT COLOR=purple>FoCaLize</FONT> provides another
+be polymorphic<A NAME="@default93"></A>. However, <FONT COLOR=purple>FoCaLize</FONT> provides another
 mechanism to circumvent this restriction, the
-parametrisation<A NAME="@default90"></A> as explained further
+parametrisation<A NAME="@default94"></A> as explained further
 (c.f. <A HREF="#parametrisation">4.2</A>).</P><!--TOC subsection Complete species-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc83">4.1.3</A>  Complete species</H3><!--SEC END --><P>
-A species is said <EM>complete</EM><A NAME="@default91"></A> if all
+A species is said <EM>complete</EM><A NAME="@default95"></A> if all
 its methods are <EM>defined</EM>, i.e. have an implementation. In other
 words this means that there is no more methods only <EM>declared</EM>. This notion implies that:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
@@ -3423,7 +3435,7 @@ species with methods not defined, leaving the user the freedom to
 chose an effective implementation for some algorithms.</P><!--TOC subsection Interfaces-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc84">4.1.4</A>  Interfaces</H3><!--SEC END --><P>
 <A NAME="interface"></A>
-<A NAME="@default92"></A>
+<A NAME="@default96"></A>
 The <B>interface</B> of a species is the list of the declarations of
 its methods. It corresponds to the end-user point of view, who wants
 to know which functions he can use, and which properties these
@@ -3446,7 +3458,7 @@ collection parameters (see section <A HREF="#collection-parameter">4.2.1</A>) an
 apply methods of collection parameters.</P><!--TOC subsection Collections-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc85">4.1.5</A>  Collections</H3><!--SEC END --><P>
 <A NAME="collection"></A>
-<A NAME="@default93"></A></P><P>A <B>collection</B> is a kind of &#X201C;grey box&#X201D;, built from a <EM>complete</EM> species by abstraction of the representation. A collection
+<A NAME="@default97"></A></P><P>A <B>collection</B> is a kind of &#X201C;grey box&#X201D;, built from a <EM>complete</EM> species by abstraction of the representation. A collection
 has exactly the same sequence of methods than the complete species
 underlying it, apart the representation which is hidden. 
 Note that creating a collection from it is the
@@ -3487,15 +3499,15 @@ means that no method can be added to a collection. Moreover, a
 collection may not be used to create a new species by inheritance (as
 explained in the next section).</P><!--TOC section Parametrisation-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc86">4.2</A>  Parametrisation</H2><!--SEC END --><P>
-<A NAME="@default94"></A>
+<A NAME="@default98"></A>
 <A NAME="parametrisation"></A></P><P>This section describes a first mechanism to incrementally build new
 species from existing ones: the parametrisation. 
 </P><!--TOC subsection Collection parameters-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc87">4.2.1</A>  Collection parameters</H3><!--SEC END --><P>
-<A NAME="@default95"></A>
-<A NAME="@default96"></A>
+<A NAME="@default99"></A>
+<A NAME="@default100"></A>
 <A NAME="collection-parameter"></A>
-Remember that methods cannot be polymorphic<A NAME="@default97"></A>
+Remember that methods cannot be polymorphic<A NAME="@default101"></A>
 (c.f. <A HREF="#no-polymorphism-for-methods">4.1.2</A>). For
 example, how to implement the well-known polymorphic type of 
 lists ? Grouping elements in a list does not
@@ -3530,7 +3542,7 @@ example, <TT>Basic_object</TT> is a pre-defined species from the
 standard library, containing only few methods and this name is used
 here to denote the interface of this species. A
 collection parameter can be instantiated by any collection which
-interface is <EM>compatible</EM><A NAME="@default98"></A> with the one required by
+interface is <EM>compatible</EM><A NAME="@default102"></A> with the one required by
 the parametrised species (c.f <A HREF="#interface">4.1.4</A>). In the example, any
 effective parameter instantiating <TT>Elem</TT> is a collection which
 interface contains at least the methods listed in the interface of
@@ -3572,7 +3584,7 @@ species means providing two things: the (capitalized) name of the
 parameter and the interface (denoted by a species name) that the
 instantiation of this parameter must satisfy.</P><P><BR>
 It is important at this point to note that <FONT COLOR=purple>FoCaLize</FONT> deals with
-dependent types<A NAME="@default99"></A>, and therefore that <EM>the order of the parameters is important</EM>. To define the type of a
+dependent types<A NAME="@default103"></A>, and therefore that <EM>the order of the parameters is important</EM>. To define the type of a
 parameter, one can use the preceding parameters. For instance, 
 assuming that a parametrised species <TT>List</TT> 
 declares the basic operations over lists, one can specify a new
@@ -3590,12 +3602,12 @@ the example the species <TT>MyCouple</TT>) cannot be only partially
 instantiated. An
 instantiation for <B>all</B> its parameters is required. </P><P><BR>
 <A NAME="method-qualification"></A>
-<A NAME="@default100"></A>
+<A NAME="@default104"></A>
 The previous example used
 a parameter to build the representation of the species. 
 Collection parameters can also be used via their other methods,
 i.e. signatures, functions, properties and theorems, denoted by the
-parameter&#X2019;s name followed by the &#X201C;!&#X201D;<A NAME="@default101"></A>
+parameter&#X2019;s name followed by the &#X201C;!&#X201D;<A NAME="@default105"></A>
 character followed by the method name. </P><P>To create a species describing a notion of generic couple, it suffices
 to use two collection parameters, one for each component of the
 couple. To define a printing (i.e. returning a string, not making side
@@ -3637,13 +3649,13 @@ with no species name, hence implicitly telling &#X201C;from myself&#X201D;:
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m2</FONT><FONT SIZE=2> (...) = </FONT><FONT SIZE=2>if</FONT><FONT SIZE=2> ... </FONT><FONT SIZE=2>then</FONT><FONT SIZE=2> ... </FONT><FONT SIZE=2>else</FONT><FONT SIZE=2> !</FONT><FONT SIZE=2>m1</FONT><FONT SIZE=2> (...) ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>
-<A NAME="@default102"></A>
-<A NAME="@default103"></A>
+<A NAME="@default106"></A>
+<A NAME="@default107"></A>
 In fact, without explicit &#X201C;!&#X201D;, the <FONT COLOR=purple>FoCaLize</FONT> compiler performs the
 name resolution itself, allowing a lighter way of writing programs
 instead of always needing a &#X201C;!&#X201D; character before each method call.</P><!--TOC subsection Entity parameters-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc88">4.2.2</A>  Entity parameters</H3><!--SEC END --><P>
-<A NAME="@default104"></A>
+<A NAME="@default108"></A>
 <A NAME="entity-parameter"></A>
 There is a second kind of parameter: the <B>entity-parameter</B>. Such
 a parameter can be instantiated by an <B>entity of a certain
@@ -3682,7 +3694,7 @@ based on existing ones. It will cover the notion of <EM>inheritance</EM>
 and its related feature the <EM>late-binding</EM>.</P><!--TOC subsection Inheritance-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc90">4.3.1</A>  Inheritance</H3><!--SEC END --><P>
 <A NAME="inheritance"></A>
-<A NAME="@default105"></A> <FONT COLOR=purple>FoCaLize</FONT> <EM>inheritance</EM> is the ability to create
+<A NAME="@default109"></A> <FONT COLOR=purple>FoCaLize</FONT> <EM>inheritance</EM> is the ability to create
 a species, not from scratch, but by integrating methods of other
 species. The inheritance mechanism also allows to redefine methods
 already existing as long as they keep the same type expression. For
@@ -3717,7 +3729,7 @@ is really ordered).</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:s
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is_ordered</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>c</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>first</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>) &lt;= </FONT><FONT SIZE=2>scnd</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P><BR>
-<A NAME="@default106"></A>
+<A NAME="@default110"></A>
 <B>Multiple inheritance</B>, i.e. inheriting from several species is
 allowed by specifying several species separated by comma in the
 <TT>inherits</TT> clause. The inheriting species inherits of all the
@@ -3753,11 +3765,11 @@ is inherited.
 </FONT><FONT SIZE=2>  ... </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (...) ... ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P><BR>
-<A NAME="@default107"></A>
+<A NAME="@default111"></A>
 <B>Inheritance and parametrisation</B>
 If a species <TT>S1</TT> inherits from a parametrised species <TT>S0</TT>,
 it must instantiate all the parameters of <TT>S0</TT>. Due to the
-dependent types<A NAME="@default108"></A> framework, if <TT>S1</TT> is itself
+dependent types<A NAME="@default112"></A> framework, if <TT>S1</TT> is itself
 parametrised, it can use its own parameters to do that. </P><P>Assume we
 have a species <TT>List</TT> parametrised by a collection parameter
 representing the kind of elements of the list. We want to derive
@@ -3783,7 +3795,7 @@ available, for instance, for pattern-matching. </P><P>As a consequence, if two m
 name and if at least one of them is itself a parametrised one, then
 the signatures of these methods are no longer required to be identical
 but their type must have a common instance after instanciation of the
-collection parameters.</P><P><A NAME="@default109"></A>
+collection parameters.</P><P><A NAME="@default113"></A>
 <B>Species inheriting species parametrised by </B><B><TT>Self</TT></B> 
 A species can also inherit from a species parametrised by itself
 (i.e. by <TT>Self</TT>). Although this is rather tricky programming, the
@@ -3801,7 +3813,7 @@ the compiler tries to build a kind of fix-point but this process is
 always terminating, issuing either the new species or rejecting it in
 case of interface non-compliance. </P><!--TOC subsection Species expressions-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc91">4.3.2</A>  Species expressions</H3><!--SEC END --><P>
-<A NAME="@default110"></A>
+<A NAME="@default114"></A>
 We summarize the different ways of building species. The first way is
 to introduce a simple collection parameter, requiring that the
 effective parameter can offer all the methods listed in the associated
@@ -3825,7 +3837,7 @@ parameters.</P><!--TOC section Late-binding and dependencies-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc92">4.4</A>  Late-binding and dependencies</H2><!--SEC END --><!--TOC subsection Late-binding-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc93">4.4.1</A>  Late-binding</H3><!--SEC END --><P>
 <A NAME="late-binding"></A>
-<A NAME="@default111"></A> When building by multiple inheritance
+<A NAME="@default115"></A> When building by multiple inheritance
 (c.f. <A HREF="#inheritance">4.3.1</A>) some signatures can be replaced by functions
 and properties by theorems. It is also possible to associate a
 definition of function to a signature (c.f <A HREF="#idea-fun-using-sig">4.1.2</A>)or
@@ -3854,7 +3866,7 @@ implementation of a given function.
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc94">4.4.2</A>  Dependencies and erasing</H3><!--SEC END --><P><A NAME="dependencies"></A>
 We previously saw that methods of a species can use other methods of
 this species and methods from its collection parameters. This induce
-what we call <B>dependencies</B><A NAME="@default112"></A>. There are two kinds
+what we call <B>dependencies</B><A NAME="@default116"></A>. There are two kinds
 of dependencies, depending on their nature:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
 <B>Decl-dependencies</B>
@@ -3863,7 +3875,7 @@ of dependencies, depending on their nature:
 In order to understand the difference between, we must inspect further
 the notion of representation, function, and theorem.</P><!--TOC subsubsection Decl-dependencies-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc95">4.4.2.1</A>  Decl-dependencies</H4><!--SEC END --><P>
-<A NAME="@default113"></A>
+<A NAME="@default117"></A>
 When defining a function, a property or a theorem it is possible to
 use another functions or signatures. For instance:
 <FONT SIZE=2>
@@ -3890,7 +3902,7 @@ decl-dependency on the representation. Moreover, <TT>f2</TT> has one on
 decl-depends on <TT>p1</TT>, <TT>test</TT>, <TT>f1</TT> and <TT>Self</TT>.</P><!--TOC subsubsection Def-dependencies-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc96">4.4.2.2</A>  Def-dependencies</H4><!--SEC END --><P>
 <A NAME="def-dependency"></A>
-<A NAME="@default114"></A> 
+<A NAME="@default118"></A> 
 A method <I>m</I> has a 
 <B>def-dependency</B> over another one <I>p</I> if the system needs to
 know the <B>definition</B> of <I>p</I> to ensure that <I>m</I> is well-formed.</P><P>A definition of function can create only decl-dependencies on
@@ -3901,7 +3913,7 @@ method, since signature only contain types, no def-dependencies can
 arise.</P><P>Now remember that <TT>representation</TT> is also a method and there is
 no syntactical way to forbid constructions like <TT>if representation
 = int ..</TT> in function or properties. Such definitions would have a
-<B>def-dependency</B> on the representation<A NAME="@default115"></A>. For consistency reasons going beyond this manual
+<B>def-dependency</B> on the representation<A NAME="@default119"></A>. For consistency reasons going beyond this manual
 but that will be shortly presented below in
 <A HREF="#def-dep-on-representation">4.4.3.2</A>, the <B><FONT COLOR=purple>FoCaLize</FONT></B><B> system rejects
 functions and properties having def-dependencies on the
@@ -3917,7 +3929,7 @@ def-depend on a method ? This basically means that to make the proof
 of the theorem statement, one must use not only the declaration of a
 method, but also its definition, its body. This is a needed and powerful feature.</P><!--TOC subsubsection Erasing during inheritance-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc97">4.4.2.3</A>  Erasing during inheritance</H4><!--SEC END --><P>
-<A NAME="@default116"></A>
+<A NAME="@default120"></A>
 <A NAME="erasing"></A>
 As a consequence of def-dependencies and late-binding, if a method is
 redefined, all the proofs of theorems having def-dependencies on these
@@ -3948,7 +3960,7 @@ We will now examine more technical points in methods definitions.
 </P><!--TOC subsubsection Well-formation-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc100">4.4.3.1</A>  Well-formation</H4><!--SEC END --><P>
 <A NAME="well-formation"></A>
-<A NAME="@default117"></A></P><P><FONT COLOR=purple>FoCaLize</FONT> providing late-binding, it is possible to <B>declare</B> a
+<A NAME="@default121"></A></P><P><FONT COLOR=purple>FoCaLize</FONT> providing late-binding, it is possible to <B>declare</B> a
 method <TT>m0</TT> and use it in another <B>defined method</B> <TT>m1</TT>.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S0</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m0</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m1</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>m0</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
@@ -3986,7 +3998,7 @@ for the following dependent fields: m1 -&gt; m0.
 </FONT></P><!--TOC subsubsection Def-dependencies on the representation-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc101">4.4.3.2</A>  Def-dependencies on the representation</H4><!--SEC END --><P>
 <A NAME="def-dep-on-representation"></A>
-<A NAME="@default118"></A>
+<A NAME="@default122"></A>
 As we previously said (c.f. <A HREF="#def-dependency">4.4.2.2</A>) def-dependencies on
 the representation are not allowed in properties and theorems. The reason
 comes from the need to create consistent species interfaces. Let&#X2019;s
@@ -4135,14 +4147,14 @@ assumption appears.
 </P><!--TOC chapter Recursive function definitions-->
 <H1 CLASS="chapter"><!--SEC ANCHOR --><A NAME="htoc105">Chapter 6</A>  Recursive function definitions</H1><!--SEC END --><P>
 <A NAME="recursive-function"></A>
-<A NAME="@default119"></A></P><P><A NAME="@default120"></A>
+<A NAME="@default123"></A></P><P><A NAME="@default124"></A>
 In the current alpha-release, the logical counterpart of recursive functions
 is not completely handled (<FONT COLOR=purple>Coq</FONT> code generation). We are still working on the
 point: recursive functions are planed to be fully supported as soon as
 possible, in addition with new material to help writing the required termination
 proofs.
 </P><!--TOC chapter Compiler options-->
-<H1 CLASS="chapter"><!--SEC ANCHOR --><A NAME="htoc106">Chapter 7</A>  Compiler options</H1><!--SEC END --><P><A NAME="@default121"></A>
+<H1 CLASS="chapter"><!--SEC ANCHOR --><A NAME="htoc106">Chapter 7</A>  Compiler options</H1><!--SEC END --><P><A NAME="@default125"></A>
 <A NAME="compiler-options"></A>
 When invoking the <FONT COLOR=purple>FoCaLize</FONT> compiler with the <FONT COLOR=purple>focalizec</FONT> command,
 various command line options can be provided. The compiler can process
@@ -4936,7 +4948,7 @@ Making proofs in a hierarchy of mathematical structures.
 In <EM>Proceedings of the 11th Calculemus Symposium</EM>, Rome, sep
 2003.</DD></DL><!--TOC chapter Index-->
 <H1 CLASS="chapter"><!--SEC ANCHOR -->Index</H1><!--SEC END --><P></P><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD VALIGN=top ALIGN=left><UL CLASS="indexenv"><LI CLASS="li-indexenv">
-;;, <A HREF="#@default74">4.1.1</A>, <A HREF="#@default78">4.1.2</A>, <A HREF="#@default79">4.1.2</A>
+;;, <A HREF="#@default78">4.1.1</A>, <A HREF="#@default82">4.1.2</A>, <A HREF="#@default83">4.1.2</A>
 <BR>
 <BR>
 </LI><LI CLASS="li-indexenv">annotation, <A HREF="#@default7">3.1.3</A>
@@ -4945,111 +4957,109 @@ block, <A HREF="#@default9">3.1.3</A>
 </LI></UL>
 <BR>
 <BR>
-</LI><LI CLASS="li-indexenv">bang character, <A HREF="#@default101">4.2.1</A>
+</LI><LI CLASS="li-indexenv">bang character, <A HREF="#@default105">4.2.1</A>
 </LI><LI CLASS="li-indexenv">blank, <A HREF="#@default5">3.1.1</A>
 <BR>
 <BR>
 </LI><LI CLASS="li-indexenv">category of identifiers, <A HREF="#@default15">3.1.4.5</A>
-</LI><LI CLASS="li-indexenv">collection, <A HREF="#@default93">4.1.5</A>
+</LI><LI CLASS="li-indexenv">collection, <A HREF="#@default97">4.1.5</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-parameter, <A HREF="#@default96">4.2.1</A>
+parameter, <A HREF="#@default100">4.2.1</A>
 </LI></UL>
 </LI><LI CLASS="li-indexenv">comment, <A HREF="#@default6">3.1.2</A>
 </LI><LI CLASS="li-indexenv">compilation unit, <A HREF="#@default1">2.5</A>
-</LI><LI CLASS="li-indexenv">compiler option, <A HREF="#@default121">7</A>
+</LI><LI CLASS="li-indexenv">compiler option, <A HREF="#@default125">7</A>
 <BR>
 <BR>
 </LI><LI CLASS="li-indexenv">defining a prefix operator, <A HREF="#@default22">3.1.4.9</A>
 </LI><LI CLASS="li-indexenv">defining an infix operator, <A HREF="#@default21">3.1.4.9</A>
 </LI><LI CLASS="li-indexenv">defining operators, <A HREF="#@default20">3.1.4.9</A>
-</LI><LI CLASS="li-indexenv">dependency, <A HREF="#@default112">4.4.2</A>
+</LI><LI CLASS="li-indexenv">dependency, <A HREF="#@default116">4.4.2</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-decl, <A HREF="#@default113">4.4.2.1</A>
-</LI><LI CLASS="li-indexenv">def, <A HREF="#@default114">4.4.2.2</A>
+decl, <A HREF="#@default117">4.4.2.1</A>
+</LI><LI CLASS="li-indexenv">def, <A HREF="#@default118">4.4.2.2</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
 on
-representation, <A HREF="#@default115">4.4.2.2</A>
-</LI><LI CLASS="li-indexenv">on representation, <A HREF="#@default118">4.4.3.2</A>
+representation, <A HREF="#@default119">4.4.2.2</A>
+</LI><LI CLASS="li-indexenv">on representation, <A HREF="#@default122">4.4.3.2</A>
 </LI></UL>
 </LI></UL>
 </LI><LI CLASS="li-indexenv">directive<UL CLASS="indexenv"><LI CLASS="li-indexenv">
-coq_require, <A HREF="#@default69">3.2.6.3</A>
-</LI><LI CLASS="li-indexenv">open, <A HREF="#@default32">3.1.12</A>, <A HREF="#@default51">3.2.4.3</A>, <A HREF="#@default68">3.2.6.2</A>
-</LI><LI CLASS="li-indexenv">use, <A HREF="#@default67">3.2.6.1</A>
+coq_require, <A HREF="#@default73">3.2.6.3</A>
+</LI><LI CLASS="li-indexenv">open, <A HREF="#@default32">3.1.12</A>, <A HREF="#@default55">3.2.4.3</A>, <A HREF="#@default72">3.2.6.2</A>
+</LI><LI CLASS="li-indexenv">use, <A HREF="#@default71">3.2.6.1</A>
 </LI></UL>
 </LI><LI CLASS="li-indexenv">documentation, <A HREF="#@default8">3.1.3</A>
 <BR>
 <BR>
-</LI><LI CLASS="li-indexenv">erasing, <A HREF="#@default116">4.4.2.3</A>
-</LI><LI CLASS="li-indexenv">expression, <A HREF="#@default41">3.2.4</A>
+</LI><LI CLASS="li-indexenv">erasing, <A HREF="#@default120">4.4.2.3</A>
+</LI><LI CLASS="li-indexenv">expression, <A HREF="#@default45">3.2.4</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-application, <A HREF="#@default62">3.2.4.8</A>
-</LI><LI CLASS="li-indexenv">constant, <A HREF="#@default43">3.2.4.1</A>
-</LI><LI CLASS="li-indexenv">identifier, <A HREF="#@default46">3.2.4.3</A>
-</LI><LI CLASS="li-indexenv">if, <A HREF="#@default56">3.2.4.6</A>
-</LI><LI CLASS="li-indexenv">let-in, <A HREF="#@default54">3.2.4.4</A>
-</LI><LI CLASS="li-indexenv">literal, <A HREF="#@default42">3.2.4.1</A>
-</LI><LI CLASS="li-indexenv">logical, <A HREF="#@default72">3.2.7.1</A>
-</LI><LI CLASS="li-indexenv">match, <A HREF="#@default59">3.2.4.7</A>
-</LI><LI CLASS="li-indexenv">operator, <A HREF="#@default63">3.2.4.9</A>
-</LI><LI CLASS="li-indexenv">record, <A HREF="#@default64">3.2.4.10</A>
+application, <A HREF="#@default66">3.2.4.8</A>
+</LI><LI CLASS="li-indexenv">constant, <A HREF="#@default47">3.2.4.1</A>
+</LI><LI CLASS="li-indexenv">identifier, <A HREF="#@default50">3.2.4.3</A>
+</LI><LI CLASS="li-indexenv">if, <A HREF="#@default60">3.2.4.6</A>
+</LI><LI CLASS="li-indexenv">let-in, <A HREF="#@default58">3.2.4.4</A>
+</LI><LI CLASS="li-indexenv">literal, <A HREF="#@default46">3.2.4.1</A>
+</LI><LI CLASS="li-indexenv">logical, <A HREF="#@default76">3.2.7.1</A>
+</LI><LI CLASS="li-indexenv">match, <A HREF="#@default63">3.2.4.7</A>
+</LI><LI CLASS="li-indexenv">operator, <A HREF="#@default67">3.2.4.9</A>
+</LI><LI CLASS="li-indexenv">record, <A HREF="#@default68">3.2.4.10</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-clone, <A HREF="#@default65">3.2.4.11</A>
-</LI><LI CLASS="li-indexenv">field, <A HREF="#@default66">3.2.4.12</A>
+clone, <A HREF="#@default69">3.2.4.11</A>
+</LI><LI CLASS="li-indexenv">field, <A HREF="#@default70">3.2.4.12</A>
 </LI></UL>
-</LI><LI CLASS="li-indexenv">sum type constructor, <A HREF="#@default44">3.2.4.2</A>
+</LI><LI CLASS="li-indexenv">sum type constructor, <A HREF="#@default48">3.2.4.2</A>
 </LI><LI CLASS="li-indexenv">type, <A HREF="#@default34">3.2.1.2</A>
 </LI></UL>
 <BR>
 <BR>
-</LI><LI CLASS="li-indexenv">field, <A HREF="#@default77">4.1.2</A>
+</LI><LI CLASS="li-indexenv">field, <A HREF="#@default81">4.1.2</A>
 </LI><LI CLASS="li-indexenv">fixity of identifiers, <A HREF="#@default11">3.1.4.3</A>
-</LI><LI CLASS="li-indexenv">function, <A HREF="#@default85">4.1.2</A>
+</LI><LI CLASS="li-indexenv">function, <A HREF="#@default89">4.1.2</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-recursive, <A HREF="#@default119">6</A>
+recursive, <A HREF="#@default123">6</A>
 </LI></UL>
-</LI><LI CLASS="li-indexenv">functional value, <A HREF="#@default47">3.2.4.3</A>, <A HREF="#@default61">3.2.4.8</A>
+</LI><LI CLASS="li-indexenv">functional value, <A HREF="#@default51">3.2.4.3</A>, <A HREF="#@default65">3.2.4.8</A>
 <BR>
 <BR>
-</LI><LI CLASS="li-indexenv">identifier, <A HREF="#@default10">3.1.4</A>, <A HREF="#@default45">3.2.4.3</A>
+</LI><LI CLASS="li-indexenv">identifier, <A HREF="#@default10">3.1.4</A>, <A HREF="#@default49">3.2.4.3</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
 delimited, <A HREF="#@default26">3.1.5</A>
 </LI><LI CLASS="li-indexenv">extended, <A HREF="#@default25">3.1.5</A>
 </LI><LI CLASS="li-indexenv">operator, <A HREF="#@default18">3.1.4.8</A>
 </LI></UL>
-</LI><LI CLASS="li-indexenv">identifier binding, <A HREF="#@default55">3.2.4.4</A>
-</LI><LI CLASS="li-indexenv">if, <A HREF="#@default57">3.2.4.6</A>
+</LI><LI CLASS="li-indexenv">identifier binding, <A HREF="#@default59">3.2.4.4</A>
+</LI><LI CLASS="li-indexenv">if, <A HREF="#@default61">3.2.4.6</A>
 </LI><LI CLASS="li-indexenv">infix identifier, <A HREF="#@default12">3.1.4.3</A>
 </LI><LI CLASS="li-indexenv">infix in prefix position, <A HREF="#@default24">3.1.4.10</A>
-</LI><LI CLASS="li-indexenv">inheritance, <A HREF="#@default105">4.3.1</A>
+</LI><LI CLASS="li-indexenv">inheritance, <A HREF="#@default109">4.3.1</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-multiple, <A HREF="#@default106">4.3.1</A>
-</LI><LI CLASS="li-indexenv">parametrised by <TT>Self</TT>, <A HREF="#@default109">4.3.1</A>
-</LI><LI CLASS="li-indexenv">parametrised species, <A HREF="#@default107">4.3.1</A>
+multiple, <A HREF="#@default110">4.3.1</A>
+</LI><LI CLASS="li-indexenv">parametrised by <TT>Self</TT>, <A HREF="#@default113">4.3.1</A>
+</LI><LI CLASS="li-indexenv">parametrised species, <A HREF="#@default111">4.3.1</A>
 </LI></UL>
-</LI></UL></TD><TD VALIGN=top ALIGN=left><UL CLASS="indexenv"><LI CLASS="li-indexenv">installation, <A HREF="#@default0">2.4</A>
-</LI><LI CLASS="li-indexenv">interface, <A HREF="#@default92">4.1.4</A>
+</LI><LI CLASS="li-indexenv">installation, <A HREF="#@default0">2.4</A>
+</LI><LI CLASS="li-indexenv">interface, <A HREF="#@default96">4.1.4</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-compatibility, <A HREF="#@default98">4.2.1</A>
+compatibility, <A HREF="#@default102">4.2.1</A>
 </LI></UL>
-<BR>
-<BR>
-</LI><LI CLASS="li-indexenv">late-binding, <A HREF="#@default111">4.4.1</A>
-</LI><LI CLASS="li-indexenv">let-in, <A HREF="#@default53">3.2.4.4</A>
+</LI></UL></TD><TD VALIGN=top ALIGN=left><UL CLASS="indexenv"><LI CLASS="li-indexenv">late-binding, <A HREF="#@default115">4.4.1</A>
+</LI><LI CLASS="li-indexenv">let-in, <A HREF="#@default57">3.2.4.4</A>
 </LI><LI CLASS="li-indexenv">lexical conventions, <A HREF="#@default4">3.1</A>
 </LI><LI CLASS="li-indexenv">linking files, <A HREF="#@default3">2.5.2</A>
 <BR>
 <BR>
-</LI><LI CLASS="li-indexenv">match, <A HREF="#@default58">3.2.4.7</A>
-</LI><LI CLASS="li-indexenv">method, <A HREF="#@default76">4.1.2</A>
+</LI><LI CLASS="li-indexenv">match, <A HREF="#@default62">3.2.4.7</A>
+</LI><LI CLASS="li-indexenv">method, <A HREF="#@default80">4.1.2</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-qualification, <A HREF="#@default52">3.2.4.3</A>, <A HREF="#@default100">4.2.1</A>
+qualification, <A HREF="#@default56">3.2.4.3</A>, <A HREF="#@default104">4.2.1</A>
 </LI></UL>
 <BR>
 <BR>
 </LI><LI CLASS="li-indexenv">name<UL CLASS="indexenv"><LI CLASS="li-indexenv">
-qualification, <A HREF="#@default31">3.1.12</A>, <A HREF="#@default49">3.2.4.3</A>
-</LI><LI CLASS="li-indexenv">resolution, <A HREF="#@default30">3.1.12</A>, <A HREF="#@default48">3.2.4.3</A>, <A HREF="#@default102">4.2.1</A>
+qualification, <A HREF="#@default31">3.1.12</A>, <A HREF="#@default53">3.2.4.3</A>
+</LI><LI CLASS="li-indexenv">resolution, <A HREF="#@default30">3.1.12</A>, <A HREF="#@default52">3.2.4.3</A>, <A HREF="#@default106">4.2.1</A>
 </LI></UL>
 </LI><LI CLASS="li-indexenv">nature of identifiers, <A HREF="#@default16">3.1.4.6</A>
 <BR>
@@ -5058,62 +5068,70 @@ qualification, <A HREF="#@default31">3.1.12</A>, <A HREF="#@default49">3.2.4.3</
 <BR>
 <BR>
 </LI><LI CLASS="li-indexenv">parameter<UL CLASS="indexenv"><LI CLASS="li-indexenv">
-collection, <A HREF="#@default95">4.2.1</A>
-</LI><LI CLASS="li-indexenv">entity, <A HREF="#@default104">4.2.2</A>
+collection, <A HREF="#@default99">4.2.1</A>
+</LI><LI CLASS="li-indexenv">entity, <A HREF="#@default108">4.2.2</A>
 </LI></UL>
-</LI><LI CLASS="li-indexenv">parametrisation, <A HREF="#@default90">4.1.2</A>, <A HREF="#@default94">4.2</A>
-</LI><LI CLASS="li-indexenv">pattern matching, <A HREF="#@default60">3.2.4.7</A>
-</LI><LI CLASS="li-indexenv">polymorphism, <A HREF="#@default89">4.1.2</A>, <A HREF="#@default97">4.2.1</A>
+</LI><LI CLASS="li-indexenv">parametrisation, <A HREF="#@default94">4.1.2</A>, <A HREF="#@default98">4.2</A>
+</LI><LI CLASS="li-indexenv">pattern matching, <A HREF="#@default64">3.2.4.7</A>
+</LI><LI CLASS="li-indexenv">polymorphism, <A HREF="#@default93">4.1.2</A>, <A HREF="#@default101">4.2.1</A>
 </LI><LI CLASS="li-indexenv">precedence of identifiers, <A HREF="#@default14">3.1.4.4</A>
 </LI><LI CLASS="li-indexenv">prefix form notation, <A HREF="#@default23">3.1.4.10</A>
 </LI><LI CLASS="li-indexenv">prefix identifier, <A HREF="#@default13">3.1.4.3</A>
 </LI><LI CLASS="li-indexenv">proof, <A HREF="#@default2">2.5.1</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-delayed, <A HREF="#@default87">4.1.2</A>
+delayed, <A HREF="#@default91">4.1.2</A>
 </LI><LI CLASS="li-indexenv">step bullet, <A HREF="#@default28">3.1.11</A>
 </LI></UL>
-</LI><LI CLASS="li-indexenv">property, <A HREF="#@default71">3.2.7</A>, <A HREF="#@default86">4.1.2</A>
+</LI><LI CLASS="li-indexenv">property, <A HREF="#@default75">3.2.7</A>, <A HREF="#@default90">4.1.2</A>
 <BR>
 <BR>
 </LI><LI CLASS="li-indexenv">qualified name, <A HREF="#@default29">3.1.12</A>
 <BR>
 <BR>
-</LI><LI CLASS="li-indexenv">recursion, <A HREF="#@default120">6</A>
+</LI><LI CLASS="li-indexenv">recursion, <A HREF="#@default124">6</A>
 </LI><LI CLASS="li-indexenv">regular identifiers, <A HREF="#@default17">3.1.4.7</A>
-</LI><LI CLASS="li-indexenv">representation, <A HREF="#@default80">4.1.2</A>, <A HREF="#@default83">4.1.2</A>
+</LI><LI CLASS="li-indexenv">representation, <A HREF="#@default84">4.1.2</A>, <A HREF="#@default87">4.1.2</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-declared, <A HREF="#@default82">4.1.2</A>
-</LI><LI CLASS="li-indexenv">defined, <A HREF="#@default81">4.1.2</A>
+declared, <A HREF="#@default86">4.1.2</A>
+</LI><LI CLASS="li-indexenv">defined, <A HREF="#@default85">4.1.2</A>
 </LI></UL>
 <BR>
 <BR>
-</LI><LI CLASS="li-indexenv">scoping, <A HREF="#@default50">3.2.4.3</A>, <A HREF="#@default103">4.2.1</A>
-</LI><LI CLASS="li-indexenv">signature, <A HREF="#@default84">4.1.2</A>
-</LI><LI CLASS="li-indexenv">species, <A HREF="#@default75">4.1.2</A>
+</LI><LI CLASS="li-indexenv">scoping, <A HREF="#@default54">3.2.4.3</A>, <A HREF="#@default107">4.2.1</A>
+</LI><LI CLASS="li-indexenv">signature, <A HREF="#@default88">4.1.2</A>
+</LI><LI CLASS="li-indexenv">species, <A HREF="#@default79">4.1.2</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-complete, <A HREF="#@default91">4.1.3</A>
-</LI><LI CLASS="li-indexenv">expression, <A HREF="#@default110">4.3.2</A>
+complete, <A HREF="#@default95">4.1.3</A>
+</LI><LI CLASS="li-indexenv">expression, <A HREF="#@default114">4.3.2</A>
 </LI><LI CLASS="li-indexenv">name, <A HREF="#@default27">3.1.6</A>
 </LI></UL>
+</LI><LI CLASS="li-indexenv">sum type, <A HREF="#@default39">3.2.1.3</A>
 <BR>
 <BR>
-</LI><LI CLASS="li-indexenv">theorem, <A HREF="#@default70">3.2.7</A>, <A HREF="#@default88">4.1.2</A>
-</LI><LI CLASS="li-indexenv">toplevel, <A HREF="#@default73">4.1.1</A>
-</LI><LI CLASS="li-indexenv">type<UL CLASS="indexenv"><LI CLASS="li-indexenv">
-compatible, <A HREF="#@default40">3.2.2</A>
-</LI><LI CLASS="li-indexenv">definition, <A HREF="#@default35">3.2.1.3</A>
+</LI><LI CLASS="li-indexenv">theorem, <A HREF="#@default74">3.2.7</A>, <A HREF="#@default92">4.1.2</A>
+</LI><LI CLASS="li-indexenv">toplevel, <A HREF="#@default77">4.1.1</A>
+</LI><LI CLASS="li-indexenv">tuple, <A HREF="#@default35">3.2.1.2</A>
 <UL CLASS="indexenv"><LI CLASS="li-indexenv">
-alias, <A HREF="#@default36">3.2.1.3</A>
-</LI><LI CLASS="li-indexenv">record, <A HREF="#@default39">3.2.1.3</A>
-</LI><LI CLASS="li-indexenv">sum, <A HREF="#@default37">3.2.1.3</A>
+as sum type value constructor arg, <A HREF="#@default41">3.2.1.3</A>
 </LI></UL>
-</LI><LI CLASS="li-indexenv">dependent, <A HREF="#@default99">4.2.1</A>, <A HREF="#@default108">4.3.1</A>
+</LI><LI CLASS="li-indexenv">type<UL CLASS="indexenv"><LI CLASS="li-indexenv">
+compatible, <A HREF="#@default44">3.2.2</A>
+</LI><LI CLASS="li-indexenv">definition, <A HREF="#@default36">3.2.1.3</A>
+<UL CLASS="indexenv"><LI CLASS="li-indexenv">
+alias, <A HREF="#@default37">3.2.1.3</A>
+</LI><LI CLASS="li-indexenv">record, <A HREF="#@default43">3.2.1.3</A>
+</LI><LI CLASS="li-indexenv">sum, <A HREF="#@default38">3.2.1.3</A>
+</LI></UL>
+</LI><LI CLASS="li-indexenv">dependent, <A HREF="#@default103">4.2.1</A>, <A HREF="#@default112">4.3.1</A>
 </LI><LI CLASS="li-indexenv">expression, <A HREF="#@default33">3.2.1.2</A>
-</LI><LI CLASS="li-indexenv">recursive, <A HREF="#@default38">3.2.1.3</A>
+</LI><LI CLASS="li-indexenv">recursive, <A HREF="#@default42">3.2.1.3</A>
 </LI></UL>
 <BR>
 <BR>
-</LI><LI CLASS="li-indexenv">well-formation, <A HREF="#@default117">4.4.3.1</A>
+</LI><LI CLASS="li-indexenv">value constructor, <A HREF="#@default40">3.2.1.3</A>
+<BR>
+<BR>
+</LI><LI CLASS="li-indexenv">well-formation, <A HREF="#@default121">4.4.3.1</A>
 </LI></UL></TD></TR>
 </TABLE><!--CUT END -->
 <!--HTMLFOOT-->
