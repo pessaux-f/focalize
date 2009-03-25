@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.75 2009-01-12 13:37:26 pessaux Exp $ *)
+(* $Id: types.ml,v 1.76 2009-03-25 12:43:15 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -68,6 +68,10 @@ type type_simple =
   | ST_var of type_variable                   (** Type variable. *)
   | ST_arrow of (type_simple * type_simple)   (** Functionnal type. *)
   | ST_tuple of type_simple list              (** Tuple type. *)
+  | ST_sum_arguments of type_simple list      (** Type of sum type value
+                                                  constructor's arguments. To
+                                                  prevent them from being
+                                                  confused with tuples. *)
   | ST_construct of
       (** Type constructor, possibly with arguments. Encompass the types
           related to records and sums. Any value of these types are typed as
@@ -277,7 +281,17 @@ let type_prop () = type_basic ("coq_builtins", "prop") [] ;;
 
 let type_tuple tys = ST_tuple tys ;;
 
+let type_sum_arguments tys = ST_sum_arguments tys ;;
+
 let type_list t1 = type_basic ("basics", "list") [t1] ;;
+
+let type_sum_arguments_from_type_tuple ty =
+  let ty = repr ty in
+  match ty with
+   | ST_tuple tys -> ST_sum_arguments tys
+   | _ -> assert false
+;;
+
 
 (* Generate the carrier type of the currently analysed species.  *)
 let type_self () = ST_self_rep ;;
@@ -377,10 +391,16 @@ let (pp_type_simple, pp_type_scheme) =
         if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@ ->@ %a@]" (rec_pp 2) ty1 (rec_pp 1) ty2 ;
         if prio >= 2 then Format.fprintf ppf ")@]"
+    | ST_sum_arguments tys ->  (* Printed like tuple. *)
+        (* Like tuple priority: 3. *)
+        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
+        Format.fprintf ppf "@[<2>!%a!@]"
+          (Handy.pp_generic_separated_list ", " (rec_pp 3)) tys ;
+        if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>%a@]"
+        Format.fprintf ppf "@[<2>?%a?@]"
           (Handy.pp_generic_separated_list " *" (rec_pp 3)) tys ;
         if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
@@ -434,6 +454,8 @@ let (specialize,
      | ST_arrow (ty1, ty2) ->
          ST_arrow
            (copy_type_simple ty1, copy_type_simple ty2)
+     | ST_sum_arguments tys ->
+         ST_sum_arguments (List.map copy_type_simple tys)
      | ST_tuple tys ->  ST_tuple (List.map copy_type_simple tys)
      | ST_construct (name, args) ->
          ST_construct (name, List.map copy_type_simple args)
@@ -534,6 +556,7 @@ let copy_type_simple_but_variables ~and_abstract =
            ty
          end)
      | ST_arrow (ty1, ty2) -> ST_arrow (rec_copy ty1, rec_copy ty2)
+     | ST_sum_arguments tys -> ST_sum_arguments (List.map rec_copy tys)
      | ST_tuple tys -> ST_tuple (List.map rec_copy tys)
      | ST_construct (name, args) ->
          ST_construct (name, List.map rec_copy args)
@@ -600,6 +623,7 @@ let generalize =
            found_ty_parameters := var :: !found_ty_parameters
            end
      | ST_arrow (ty1, ty2) -> find_parameters ty1 ; find_parameters ty2
+     | ST_sum_arguments tys -> List.iter find_parameters tys
      | ST_tuple tys -> List.iter find_parameters tys
      | ST_construct (_, args) -> List.iter find_parameters args
      | ST_self_rep | ST_species_rep _ -> () in
@@ -646,6 +670,7 @@ let rec lowerize_levels max_level ty =
    | ST_arrow (ty1, ty2) ->
        lowerize_levels max_level ty1 ;
        lowerize_levels max_level ty2
+   | ST_sum_arguments tys -> List.iter (lowerize_levels max_level) tys
    | ST_tuple tys -> List.iter (lowerize_levels max_level) tys
    | ST_construct (_, args) -> List.iter (lowerize_levels max_level) args
    | ST_self_rep | ST_species_rep _ -> ()
@@ -666,8 +691,8 @@ let scheme_contains_variable_p scheme =
     let ty = repr ty in
     match ty with
      | ST_var _ -> true
-     | ST_arrow (ty1, ty2) ->
-         (rec_check ty1) || (rec_check ty2)
+     | ST_arrow (ty1, ty2) -> (rec_check ty1) || (rec_check ty2)
+     | ST_sum_arguments tys -> List.exists rec_check tys
      | ST_tuple tys -> List.exists rec_check tys
      | ST_construct (_, args) -> List.exists rec_check args
      | ST_self_rep | ST_species_rep _ -> false in
@@ -772,6 +797,7 @@ let refers_to_self_p ty =
     match t with
      | ST_var _ -> false
      | ST_arrow (ty1, ty2) -> test ty1 || test ty2
+     | ST_sum_arguments tys -> List.exists test tys
      | ST_tuple tys -> List.exists test tys
      | ST_construct (_, args) -> List.exists test args
      | ST_self_rep -> true
@@ -793,6 +819,7 @@ let refers_to_prop_p ty =
     match t with
      | ST_var _ -> false
      | ST_arrow (ty1, ty2) -> test ty1 || test ty2
+     | ST_sum_arguments tys -> List.exists test tys
      | ST_tuple tys -> List.exists test tys
      | ST_construct (cstr_name, args) ->
          cstr_name = ("coq_builtins", "prop") || List.exists test args
@@ -878,6 +905,7 @@ let occur_check ~loc var ty =
      | ST_var var' ->
          if var == var' then raise (Circularity (t, ty, loc))
      | ST_arrow (ty1, ty2) -> test ty1 ; test ty2
+     | ST_sum_arguments tys -> List.iter test tys
      | ST_tuple tys -> List.iter test tys
      | ST_construct (_, args) -> List.iter test args
      | ST_species_rep _ -> ()
@@ -916,11 +944,11 @@ let unify ~loc ~self_manifest type1 type2 =
          let arg3 = rec_unify arg1 arg2 in
          let res3 = rec_unify res1 res2 in
          ST_arrow (arg3, res3)
-     | ((ST_tuple tys1), (ST_tuple tys2)) ->
+     | ((ST_sum_arguments tys1), (ST_sum_arguments tys2)) ->
          let tys3 =
            (try List.map2 rec_unify tys1 tys2 with
            | Invalid_argument "List.map2" ->
-               (* In fact, that's an arity mismatch on the tuple. There is a
+               (* In fact, that's an arity mismatch on the types. There is a
                   strange case appearing when using a sum type constructor that
                   requires arguments without arguments. The type of the
                   constructor's arguments is an ampty list. Then the conflict is
@@ -930,6 +958,19 @@ let unify ~loc ~self_manifest type1 type2 =
                if (List.length tys1) = 0 || (List.length tys2) = 0 then
                  raise (Arity_mismatch_unexpected_args (loc))
                else raise (Conflict (ty1, ty2, loc))) in
+         ST_sum_arguments tys3
+     | ((ST_sum_arguments _), (ST_tuple _))
+     | ((ST_tuple _), (ST_sum_arguments _)) ->
+         (* Special cases to handle confusion between sum type value
+            constructor's that take SEVERAL arguments and not 1 argument that
+            is a tuple. *)
+         raise (Arity_mismatch_unexpected_args (loc))
+     | ((ST_tuple tys1), (ST_tuple tys2)) ->
+         let tys3 =
+           (try List.map2 rec_unify tys1 tys2 with
+           | Invalid_argument "List.map2" ->
+               (* In fact, that's an arity mismatch on the tuple. *)
+               raise (Conflict (ty1, ty2, loc))) in
          ST_tuple tys3
      | (ST_construct (name, args), ST_construct (name', args')) ->
          (if name <> name' then raise (Conflict (ty1, ty2, loc))) ;
@@ -1030,6 +1071,7 @@ let subst_type_simple (fname1, spe_name1) c2 =
            fresh_var
          end)
      | ST_arrow (ty1, ty2) -> ST_arrow (rec_copy ty1, rec_copy ty2)
+     | ST_sum_arguments tys -> ST_sum_arguments (List.map rec_copy tys)
      | ST_tuple tys ->  ST_tuple (List.map rec_copy tys)
      | ST_construct (name, args) ->
          ST_construct (name, List.map rec_copy args)
@@ -1268,6 +1310,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
           (rec_pp_to_ml ~current_unit collections_carrier_mapping 2) ty1
           (rec_pp_to_ml ~current_unit collections_carrier_mapping 1) ty2 ;
         if prio >= 2 then Format.fprintf ppf ")@]"
+    | ST_sum_arguments tys  (** Printed like tuples in OCaml. *)
     | ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
@@ -1424,6 +1467,12 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
           (rec_pp_to_coq ctx 2) ty1
           (rec_pp_to_coq ctx 1) ty2 ;
         if prio >= 2 then Format.fprintf ppf ")@]"
+    | ST_sum_arguments tys ->
+        (* In coq, constructors' arguments are curried, not tupled. *)
+        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
+        Format.fprintf ppf "@[<2>%a@]"
+          (rec_pp_to_coq_sum_arguments ctx 3) tys ;
+        if prio >= 3 then Format.fprintf ppf ")@]" 
     | ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
@@ -1523,7 +1572,21 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
         Format.fprintf ppf "%a@ * %a"
           (rec_pp_to_coq ctx prio) ty1
           (rec_pp_to_coq_tuple ctx prio)
+          (ty2 :: rem)
+
+
+
+  and rec_pp_to_coq_sum_arguments ctx prio ppf = function
+    | [] -> ()
+    | [last] ->
+        Format.fprintf ppf "%a" (rec_pp_to_coq ctx prio) last
+    | ty1 :: ty2 :: rem ->
+        Format.fprintf ppf "%a@ -> %a"
+          (rec_pp_to_coq ctx prio) ty1
+          (rec_pp_to_coq_sum_arguments ctx prio)
           (ty2 :: rem) in
+
+
 
   (* ************************************************** *)
   (* Now, the real definition of the printing functions *)
@@ -1570,6 +1633,7 @@ let rec get_species_types_in_type ty =
    | ST_arrow (ty1, ty2) ->
        SpeciesCarrierTypeSet.union
          (get_species_types_in_type ty1) (get_species_types_in_type ty2)
+   | ST_sum_arguments tys
    | ST_tuple tys
    | ST_construct (_, tys) ->
        List.fold_left
@@ -1646,6 +1710,10 @@ let pp_type_simple_to_xml ~reuse_mapping =
     | ST_arrow (ty1, ty2) ->
         Format.fprintf ppf "@[<h 2><foc:fct>@\n%a%a@]</foc:fct>@\n"
           rec_pp  ty1 rec_pp ty2 ;
+    | ST_sum_arguments tys ->
+        Format.fprintf ppf "@[<h 2><foc:sum_args>@\n" ;
+        List.iter (rec_pp ppf) tys ;
+        Format.fprintf ppf "@]</foc:sum_args>@\n"
     | ST_tuple tys ->
         Format.fprintf ppf "@[<h 2><foc:prod>@\n" ;
         List.iter (rec_pp ppf) tys ;
@@ -1718,6 +1786,8 @@ let rec type_simple_to_local_type ty =
    | ST_arrow (l, r) ->
        (* [julius:] no changes. *)
        Lt_fun (type_simple_to_local_type l, type_simple_to_local_type r)
+
+   | ST_sum_arguments _ -> failwith "Julien, à toi de voir..."
 
    | ST_tuple l ->
        (* [julius:] no changes. *)

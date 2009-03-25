@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.170 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.171 2009-03-25 12:43:15 pessaux Exp $ *)
 
 
 
@@ -862,8 +862,12 @@ let rec typecheck_pattern ctx env pat_desc =
                  | _ ->
                      { pat_desc with
                        Parsetree.ast_desc = Parsetree.P_tuple nempty_pats }) in
-              let (cstr_arg_ty, sub_bindings) =
+              let (pre_cstr_arg_ty, sub_bindings) =
                 typecheck_pattern ctx env hacked_pat in
+              (* Put back the artificial tuple into a type of sum type value
+                 constructor. *)
+              let cstr_arg_ty =
+                Types.type_sum_arguments_from_type_tuple pre_cstr_arg_ty in
               (* Constructeurs being functions, we will unify [cstr_type] with
                  an arrow type to ensure that it is really one and to ensure
                  the arguments types and extract the result type. *)
@@ -930,6 +934,7 @@ let rec typecheck_pattern ctx env pat_desc =
 
 (* Does not make any assumption. Crudely returns a fresh type variable. *)
 let typecheck_external_expr ext_expr =
+Format.eprintf "Yop yop@." ;
   let ty = Types.type_variable () in
   (* A somewhat taste of magic obj... *)
   ext_expr.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
@@ -1109,9 +1114,9 @@ let rec typecheck_expr ctx env initial_expr =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
               (* Record the type in the AST node of the [cstr_ident]. *)
               cstr_ident.Parsetree.ast_type <- Parsetree.ANTI_type cstr_ty ;
-              (* Build the shadow tuple type as the real argument of the
-                 constructor. *)
-              let cstr_arg_ty = Types.type_tuple tys in
+              (* Build the shadow [ST_sum_arguments] type as the real argument
+		 of the constructor. *)
+              let cstr_arg_ty = Types.type_sum_arguments tys in
               (* And simulate an application. *)
               let unified_cstr_ty =
                 Types.unify
@@ -4524,13 +4529,10 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env type_name
                 List.map
                   (typecheck_type_expr ctx env_with_proto_ourselves)
                   cstr_args in
-              (* Make a tuple of the arguments. *)
-              let as_tuple =
-                (match cstr_args with
-                  | [ { Parsetree.ast_desc = Parsetree.TE_prod _ } ] ->
-                     List.hd args_ty
-                  | _ -> Types.type_tuple args_ty) in
-              let arrow = Types.type_arrow as_tuple futur_type_type in
+              (* Make a [ST_sum_arguments] of the arguments. *)
+              let as_sum_arguments_ty = Types.type_sum_arguments args_ty in
+              let arrow =
+                Types.type_arrow as_sum_arguments_ty futur_type_type in
               Types.end_definition () ;
               let cstr_descr = {
                 Env.TypeInformation.cstr_arity = Env.TypeInformation.CA_one ;

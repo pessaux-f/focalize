@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.45 2009-01-12 13:37:26 pessaux Exp $ *)
+(* $Id: types.mli,v 1.46 2009-03-25 12:43:15 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string;;
@@ -53,6 +53,7 @@ val type_string : unit -> type_simple;;
 val type_char : unit -> type_simple;;
 val type_unit : unit -> type_simple;;
 val type_arrow : type_simple -> type_simple -> type_simple;;
+val type_sum_arguments : type_simple list -> type_simple;;
 val type_tuple : type_simple list -> type_simple;;
 val type_list : type_simple -> type_simple;;
 val type_prop : unit -> type_simple;;
@@ -62,6 +63,7 @@ val type_rep_species :
 val type_self : unit -> type_simple;;
 val is_bool_type : type_simple -> bool;;
 
+val type_sum_arguments_from_type_tuple : type_simple -> type_simple
 val refers_to_self_p : type_simple -> bool;;
 val refers_to_prop_p : type_simple -> bool;;
 
