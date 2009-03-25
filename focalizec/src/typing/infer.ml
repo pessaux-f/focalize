@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.171 2009-03-25 12:43:15 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.172 2009-03-25 15:57:59 pessaux Exp $ *)
 
 
 
@@ -838,7 +838,7 @@ let rec typecheck_pattern ctx env pat_desc =
            Env.TypingEnv.find_constructor
              ~loc: cstr_name.Parsetree.ast_loc
              ~current_unit: ctx.current_unit cstr_name env in
-         (match pats, cstr_decl.Env.TypeInformation.cstr_arity with
+         (match (pats, cstr_decl.Env.TypeInformation.cstr_arity) with
           | ([], Env.TypeInformation.CA_zero) ->
               let cstr_ty =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
@@ -846,28 +846,17 @@ let rec typecheck_pattern ctx env pat_desc =
           | (nempty_pats, Env.TypeInformation.CA_one) ->
               let cstr_ty =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
-              (* Recover the type of the sub-patterns by typechecking an
-                 artificial tuple argument compound of the sub-patterns.
-                 Proceed this way ONLY if there is not only ONE argument or if
-                 there is only one but already begin a tuple !
-                 This hack is linked to the same process in the function
-                 [typecheck_regular_type_def_body]. This way, we ensure that
-                 constructor argument(s) is (are) always in a tuple, but never
-                 in a trivial tuple containing only one component being a
-                 tuple. This means that we only add a tuple layer if there is
-                 not one already. *)
-              let hacked_pat =
-                (match nempty_pats with
-                 | [ { Parsetree.ast_desc = Parsetree.P_tuple _ } as p] -> p
-                 | _ ->
-                     { pat_desc with
-                       Parsetree.ast_desc = Parsetree.P_tuple nempty_pats }) in
-              let (pre_cstr_arg_ty, sub_bindings) =
-                typecheck_pattern ctx env hacked_pat in
-              (* Put back the artificial tuple into a type of sum type value
-                 constructor. *)
-              let cstr_arg_ty =
-                Types.type_sum_arguments_from_type_tuple pre_cstr_arg_ty in
+              (* Do not [fold_left] otherwise types of the arguments will be
+                 reversed ! *)
+              let (pre_cstr_arg_tys, sub_bindings) =
+                List.fold_right
+                  (fun pat (accu_tys, accu_binds) ->
+                    let (ty, binds) = typecheck_pattern ctx env pat in
+                    ((ty :: accu_tys), (binds @ accu_binds)))
+                  nempty_pats
+                  ([], []) in
+              (* Embed the types in a [ST_sum_arguments]. *)
+              let cstr_arg_ty = Types.type_sum_arguments pre_cstr_arg_tys in
               (* Constructeurs being functions, we will unify [cstr_type] with
                  an arrow type to ensure that it is really one and to ensure
                  the arguments types and extract the result type. *)
@@ -934,7 +923,6 @@ let rec typecheck_pattern ctx env pat_desc =
 
 (* Does not make any assumption. Crudely returns a fresh type variable. *)
 let typecheck_external_expr ext_expr =
-Format.eprintf "Yop yop@." ;
   let ty = Types.type_variable () in
   (* A somewhat taste of magic obj... *)
   ext_expr.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
@@ -1115,7 +1103,7 @@ let rec typecheck_expr ctx env initial_expr =
               (* Record the type in the AST node of the [cstr_ident]. *)
               cstr_ident.Parsetree.ast_type <- Parsetree.ANTI_type cstr_ty ;
               (* Build the shadow [ST_sum_arguments] type as the real argument
-		 of the constructor. *)
+                 of the constructor. *)
               let cstr_arg_ty = Types.type_sum_arguments tys in
               (* And simulate an application. *)
               let unified_cstr_ty =

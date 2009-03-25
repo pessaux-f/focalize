@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.41 2009-03-13 17:00:23 doligez Exp $
+% $Id: constructs_syntax.tex,v 1.42 2009-03-25 15:57:59 pessaux Exp $
 
 
 \section{Language constructs and syntax}
@@ -226,11 +226,10 @@ which is the name of the type. For, instance,
 
 
  Value constructors of sum
-types can be {\bf parametrised} by a type expression, corresponding
-values being obtained by applying the value constructor to a value of
-the parameter type. For
-instance, let's define the type of playing cards as king, queen, jack
-and simply numbered cards:
+types can be {\bf parametrised} by a type expressions, corresponding
+values being obtained by applying the value constructor to values of
+the parameters types. For instance, let's define the type of playing
+cards as king, queen, jack and simply numbered cards:
 
 {\scriptsize
 \begin{lstlisting}
@@ -243,7 +242,90 @@ type card =
 \end{lstlisting}
 } Hence, the {\tt Numbered} constructor ``carries'' the integer value
 written on the card. Some values of type {\tt card} are: {\tt King},
-{\tt (Numbered 4)}, {\tt (Numbered 42)}.
+{\tt (Numbered 4)}, {\tt (Numbered 42)}. The {\tt Numbered}
+constructor has {\bf parameter}.
+
+\medskip
+An important attention must be taken for constructors having
+``several'' arguments. \focalize provides 2 different
+(``type-incompatible'') ways to make a value constructor carrying
+several values.
+\begin{itemize}
+\item Either the constructor has {\bf 1} argument that is a tuple.
+
+  The corresponding type definition for such a type would be:
+{\scriptsize
+\begin{lstlisting}
+type t =
+  | Cstr ((bool * int * string))
+;;
+\end{lstlisting}
+}
+  You may notice the 2 sets of parentheses. In effect, the basic syntax
+  for constructor arguments implies surrounding the arguments be
+  parentheses. The type expression denoting a tuple surrounds the
+  components of the tuple by parentheses. Hence combining these two
+  things, we now understand why a tuple value parametrising a
+  constructor must have 2 layers of parentheses.
+
+\item Or the constructor has {\bf several} arguments. In this case, since
+  as state above the basic syntax for constructor arguments implies
+  surrounding the arguments be parentheses, a type definition like:
+{\scriptsize
+\begin{lstlisting}
+type t2 =
+  | Cstr2 (bool * int * string)
+;;
+\end{lstlisting}
+}
+  means that the constructor {\tt Cstr2} has {\bf 3 arguments}.
+\end{itemize}
+
+\medskip
+This especially important since when matching on such value
+constructors, confusing the argument{\bf s} of {\tt Cstr2} with
+one and unique tuple with 3 components will result in a type error.
+Below are shown several pieces of source code with valid/invalid mixes
+between these concepts.
+{\scriptsize
+\begin{lstlisting}
+type mytuple = alias (bool * int * string) ;;
+
+type t =
+  | Cstr ((bool * int * string))
+;;
+
+let fct_t1 (x) =
+  match x with
+   | Cstr (a, b, c) -> ()
+;;
+(* Leads to
+Error: Types
+(basics#bool * basics#int * basics#string),  '_a,  '_b and
+(basics#bool * basics#int * basics#string) are not compatible.
+because Cstr expects 1 tuple argument and not 3 arguments.
+*)
+
+
+let fct_t2 (x) in mytuple =
+  match x with
+   | Cstr (x) -> x
+;;
+(* Is accepted since the type mytuple aliases a 3 components tuples
+and Cstr is really parametrised by 1 argument that is a 3 components
+tuple.
+
+type tt =
+  | Cstr2 (bool * int * string)
+;;
+
+let fct_t3 (x) in mytuple =
+  match x with
+   | Cstr2 (y) -> y............
+;;
+
+\end{lstlisting}
+}
 
 
 Any type

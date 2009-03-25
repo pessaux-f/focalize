@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.16 2009-03-13 07:52:05 pessaux Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.17 2009-03-25 15:57:59 pessaux Exp $ *)
 
 (**
 
@@ -312,7 +312,7 @@ species Liste (A is Setoid) inherits Ensembles_finis (A) =
   let print (l in Self) =
     let rec aux (l) =
       match l with
-      | basics#[] -> "]"
+      | [] -> "]"
       | x :: l -> A!print (x) ^ "," ^ aux (l) in
     "[" ^ (aux (l));
 

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.76 2009-03-25 12:43:15 pessaux Exp $ *)
+(* $Id: types.ml,v 1.77 2009-03-25 15:57:59 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -394,13 +394,13 @@ let (pp_type_simple, pp_type_scheme) =
     | ST_sum_arguments tys ->  (* Printed like tuple. *)
         (* Like tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>!%a!@]"
+        Format.fprintf ppf "@[<2>%a@]"
           (Handy.pp_generic_separated_list ", " (rec_pp 3)) tys ;
         if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>?%a?@]"
+        Format.fprintf ppf "@[<2>%a@]"
           (Handy.pp_generic_separated_list " *" (rec_pp 3)) tys ;
         if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->

@@ -1989,11 +1989,10 @@ definition on a single line, the first <TT><FONT COLOR="red">|</FONT></TT> must 
 definition (that must not be confused with the <B>type constructor</B>
 which is the name of the type. For, instance,
 <TT>Red</TT> is a <B>value</B> of the type constructor <TT>color</TT>.</P><P>Value constructors of sum
-types can be <B>parametrised</B> by a type expression, corresponding
-values being obtained by applying the value constructor to a value of
-the parameter type. For
-instance, let&#X2019;s define the type of playing cards as king, queen, jack
-and simply numbered cards:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>card</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+types can be <B>parametrised</B> by a type expressions, corresponding
+values being obtained by applying the value constructor to values of
+the parameters types. For instance, let&#X2019;s define the type of playing
+cards as king, queen, jack and simply numbered cards:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>card</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>King</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Queen</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Jack</FONT><FONT SIZE=2>
@@ -2001,7 +2000,75 @@ and simply numbered cards:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
 </TABLE><P> Hence, the <TT>Numbered</TT> constructor &#X201C;carries&#X201D; the integer value
 written on the card. Some values of type <TT>card</TT> are: <TT>King</TT>,
-<TT>(Numbered 4)</TT>, <TT>(Numbered 42)</TT>.</P><P>Any type
+<TT>(Numbered 4)</TT>, <TT>(Numbered 42)</TT>. The <TT>Numbered</TT>
+constructor has <B>parameter</B>.</P><P><BR>
+An important attention must be taken for constructors having
+&#X201C;several&#X201D; arguments. <FONT COLOR=purple>FoCaLize</FONT>provides 2 different
+(&#X201C;type-incompatible&#X201D;) ways to make a value constructor carrying
+several values.
+</P><UL CLASS="itemize"><LI CLASS="li-itemize">
+Either the constructor has <B>1</B> argument that is a tuple.<P>The corresponding type definition for such a type would be:
+<FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>t</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> ((</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT></TD></TR>
+</TABLE><P>
+You may notice the 2 sets of parentheses. In effect, the basic syntax
+for constructor arguments implies surrounding the arguments be
+parentheses. The type expression denoting a tuple surrounds the
+components of the tuple by parentheses. Hence combining these two
+things, we now understand why a tuple value parametrising a
+constructor must have 2 layers of parentheses.</P></LI><LI CLASS="li-itemize">Or the constructor has <B>several</B> arguments. In this case, since
+as state above the basic syntax for constructor arguments implies
+surrounding the arguments be parentheses, a type definition like:
+<FONT SIZE=2>
+</FONT><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>t2</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT></TD></TR>
+</TABLE>
+means that the constructor <TT>Cstr2</TT> has <B>3 arguments</B>.
+</LI></UL><P><BR>
+This especially important since when matching on such value
+constructors, confusing the argument<B>s</B> of <TT>Cstr2</TT> with
+one and unique tuple with 3 components will result in a type error.
+Below are shown several pieces of source code with valid/invalid mixes
+between these concepts.
+<FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2><B>alias</B></FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>) ;;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>t</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> ((</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t1</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>) -&gt; ()</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Leads to</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>Error: Types</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>(basics#bool * basics#int * basics#string),  '_a,  '_b and</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>(basics#bool * basics#int * basics#string) are not compatible.</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>because Cstr expects 1 tuple argument and not 3 arguments.</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>*)</FONT></EM></FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) -&gt; </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Is accepted since the type mytuple aliases a 3 components tuples</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>and Cstr is really parametrised by 1 argument that is a 3 components</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>tuple.</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>type tt =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  | Cstr2 (bool * int * string)</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>let fct_t3 (x) in mytuple =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  match x with</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>   | Cstr2 (y) -&gt; y............</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT></EM></FONT></TD></TR>
+</TABLE><P>Any type
 expression, even recursive, can be used as a parameter of value
 contructors<A NAME="@default38"></A>.
 For instance, the type of lists of boolean × integer pairs
