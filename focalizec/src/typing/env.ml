@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.124 2009-03-24 08:28:51 pessaux Exp $ *)
+(* $Id: env.ml,v 1.125 2009-03-27 13:06:38 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -264,17 +264,18 @@ module ScopeInformation = struct
   type value_binding_info =
       (** The ident is at toplevel of a file (including the current file). *)
     | SBI_file of Types.fname
-      (** The ident is a method implicitely of self. *)
+      (** The ident is a method implicitely of "Self". *)
     | SBI_method_of_self
       (** The ident is a method explicitly of a collection. ATTENTION: while
-          inserting a method in the environment, it must always be tagged with
-          [SBI_method_of_self]. The tag [SBI_method_of_coll] can only be
-          returned by [find_value] who may perform a change on the fly if
-          required. *)
+          inserting a method in the environment at its definition point,
+          it must always be tagged with [SBI_method_of_self]. The tag
+          [SBI_method_of_coll] can only be returned by [find_value] or
+          [make_value_env_from_species_methods] who may perform a change on
+          the fly if required. *)
     | SBI_method_of_coll of
         Parsetree.qualified_vname (** The module name hosting the collection
-              and the collection the
-            method belongs to. *)
+                                      and the collection the method belongs
+                                      to. *)
       (** The ident is a locally bound indentifier
           (let or function parameter). *)
     | SBI_local
@@ -308,7 +309,7 @@ module ScopeInformation = struct
 
   type species_binding_info = {
     (** The list of *ALL* the method owned, including those added by
-        inheritance. Methods from the toplevel ancestor are in head of the
+        inheritance. Methods from the most recent ancestor are in head of the
         list. In case of multiple inheritance, we consider that ancestors
         are older from left to right. *)
     spbi_methods : Parsetree.vname list ;
@@ -994,11 +995,11 @@ let (scope_find_module, type_find_module,
      mlgen_find_module, coqgen_find_module,
      scope_open_module, type_open_module,
      mlgen_open_module, coqgen_open_module) =
-  (* Let's just make the list used to bufferize opened files' content. *)
-  (* Because ".fo" files contains always both the scoping and typing   *)
-  (* information, once loaded for scoping purpose, the typing info     *)
-  (* and ml code generation information are made available. Hence, the *)
-  (* buffer list contains couples with no optionnal component.         *)
+  (* Let's just make the list used to bufferize opened files' content.
+     Because ".fo" files contains always both the scoping and typing
+     information, once loaded for scoping purpose, the typing info and ml code
+     generation information are made available. Hence, the buffer list contains
+     couples with no optionnal component. *)
   let buffered = ref ([] : (Types.fname * fo_file_structure) list) in
 
 
@@ -1390,9 +1391,9 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (* loc: Location.t -> Parsetree.vname -> EMAccess.species_bound_data -> *)
   (*   t -> t                                                             *)
   let add_species ~loc species_name data (env : t) =
-    (* Ensure the species name does not already exists in the *)
-    (* current module. This means that this name must not be  *)
-    (* already bound to a [BO_absolute].                      *)
+    (* Ensure the species name does not already exists in the current module.
+       This means that this name must not be already bound to a
+       [BO_absolute]. *)
     if List.exists
         (function (n, (BO_absolute _)) -> n = species_name | _ -> false)
         env.species then
@@ -1557,12 +1558,12 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
            let coll_info =
              find_species_vname_and_binding_origin
                ~loc ~allow_opened  coll_vname env' in
-           (* We must now understand if the collection was found via "open" *)
-           (* or not. If yes, then the methods we will import will also     *)
-           (* have to be considered by the post-process                     *)
-           (* [make_value_env_from_species_methods] as coming not from      *)
-           (* [tmp_full_coll_name] but from the species qualified by the    *)
-           (* "opened" module that made it visible without qualification.   *)
+           (* We must now understand if the collection was found via "open" or
+              not. If yes, then the methods we will import will also have to be
+              considered by the post-process
+              [make_value_env_from_species_methods] as coming not from
+              [tmp_full_coll_name] but from the species qualified by the
+              "opened" module that made it visible without qualification. *)
            let (methods_info, real_full_coll_name) =
              match coll_info with
               | BO_absolute meths_i ->
@@ -1740,14 +1741,14 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   let rec find_type ~loc ~current_unit type_ident (env : t) =
     match type_ident.Parsetree.ast_desc with
      | Parsetree.I_local vname ->
-         (* No explicit scoping information was provided, hence *)
-         (* opened modules bindings are acceptable.             *)
+         (* No explicit scoping information was provided, hence opened modules
+            bindings are acceptable. *)
          find_type_vname ~loc ~allow_opened: true vname env
      | Parsetree.I_global qvname ->
          let (opt_scope, vname) = opt_scope_vname qvname in
          let env' = EMAccess.find_module ~loc ~current_unit opt_scope env in
-         (* Check if the lookup can return something *)
-         (* coming from an opened module.            *)
+         (* Check if the lookup can return something coming from an opened
+            module. *)
          let allow_opened = allow_opened_p current_unit opt_scope in
          find_type_vname ~loc ~allow_opened vname env'
 
@@ -1848,9 +1849,9 @@ module TypingEMAccess = struct
       {b Rem} : Not exported outside this module.                         *)
   (* ******************************************************************** *)
   let make_value_env_from_species_methods _spec_name spec_info =
-    (* By folding left, fields at the head of the list will be at the tail *)
-    (* of the environment list. Hence, methods seen first are inserted     *)
-    (* first, hence are deeper in the environment.                         *)
+    (* By folding left, fields at the head of the list will be at the tail of
+       the environment list. Hence, methods seen first are inserted first,
+       hence are deeper in the environment. *)
     let values_bucket =
       List.fold_left
         (fun accu field ->
@@ -1897,9 +1898,9 @@ module MlGenEMAccess = struct
 
 
   let make_value_env_from_species_methods _species _spec_info =
-    (* Non sense for ml code generation environments because we do not *)
-    (* provide any [find_value] function and that's this function that *)
-    (* requires [make_value_env_from_species_methods].                 *)
+    (* Non sense for ml code generation environments because we do not provide
+       any [find_value] function and that's this function that requires
+       [make_value_env_from_species_methods]. *)
     assert false
 
 
@@ -1924,9 +1925,9 @@ module CoqGenEMAccess = struct
 
 
   let make_value_env_from_species_methods _species (_, meths_info, _, _) =
-    (* Because methods are never polymorphics this was checked before), *)
-    (* we can safely insert each method as a value bound to 0 extra     *)
-    (* parameters that woud come from ... polymorphism.                 *)
+    (* Because methods are never polymorphics this was checked before), we can
+       safely insert each method as a value bound to 0 extra parameters that
+       woud come from ... polymorphism. *)
     let values_bucket =
       List.map
         (fun { mi_name = field_name } ->
@@ -1958,31 +1959,30 @@ module CoqGenEnv = Make (CoqGenEMAccess);;
 (* **************************************************************** *)
 let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
     opt_mlgen_toplevel_env opt_coqgen_toplevel_env =
-  (* First, recover from the scoping environment only bindings *)
-  (* coming from definitions of our current compilation unit.  *)
+  (* First, recover from the scoping environment only bindings coming from
+     definitions of our current compilation unit. *)
   let scoping_toplevel_env' =
     env_from_only_absolute_bindings scoping_toplevel_env in
-  (* Next, recover from the typing environment only bindings *)
-  (* coming from definitions of our current compilation unit.  *)
+  (* Next, recover from the typing environment only bindings coming from
+     definitions of our current compilation unit. *)
   let typing_toplevel_env' =
     env_from_only_absolute_bindings typing_toplevel_env in
-  (* Next, recover from the ml generation environment only bindings *)
-  (* coming from definitions of our current compilation unit.        *)
+  (* Next, recover from the ml generation environment only bindings coming
+     from definitions of our current compilation unit. *)
   let opt_mlgen_toplevel_env' =
     match opt_mlgen_toplevel_env with
      | None -> None
      | Some e -> Some (env_from_only_absolute_bindings e) in
-  (* Finally, recover from the coq generation environment only bindings *)
-  (* coming from definitions of our current compilation unit.           *)
+  (* Finally, recover from the coq generation environment only bindings coming
+     from definitions of our current compilation unit. *)
   let opt_coqgen_toplevel_env' =
     match opt_coqgen_toplevel_env with
      | None -> None
      | Some e -> Some (env_from_only_absolute_bindings e) in
   let module_name = Filename.chop_extension source_filename in
   let fo_basename = Files.fo_basename_from_module_name module_name in
-  (* Add to the module name the path of the currently compiled source *)
-  (* file in order to make the ".fo" lying at the same place than the *)
-  (* ".foc" file.                                                     *)
+  (* Add to the module name the path of the currently compiled source file in
+     order to make the ".fo" lying at the same place than the ".fcl" file. *)
   let with_path =
     Filename.concat (Filename.dirname source_filename) fo_basename in
   let out_hd = open_out_bin with_path in
