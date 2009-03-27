@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.13 2009-03-24 13:13:58 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.14 2009-03-27 13:40:10 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -175,7 +175,7 @@ let type_def_compile ctx env type_def_name type_descr =
              try
                let unified_sum_cstr_ty =
                  (* If it has argument(s), then it will be functionnal. *)
-                 if sum_cstr_arity = Env.TypeInformation.CA_one then
+                 if sum_cstr_arity = Env.TypeInformation.CA_some then
                    Types.unify
                      ~loc: Location.none ~self_manifest: None
                      (Types.type_arrow

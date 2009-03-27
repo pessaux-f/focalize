@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.80 2009-03-20 11:19:41 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.81 2009-03-27 13:40:10 pessaux Exp $ *)
 
 let header ppf =
   Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
@@ -198,7 +198,7 @@ let print_focalize_exception ppf = function
       let (expected, used) =
         (match defined_arity with
          | Env.TypeInformation.CA_zero -> ("no", "1")
-         | Env.TypeInformation.CA_one -> ("1", "no")) in
+         | Env.TypeInformation.CA_some -> ("1", "no")) in
       Format.fprintf ppf
         "@[%tSum@ type@ constructor@ '%t%a%t'@ expected@ %s@ \
          argument@ but@ was@ used@ with@ %s@ argument.@]@."

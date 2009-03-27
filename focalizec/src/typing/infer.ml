@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.173 2009-03-25 17:30:18 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.174 2009-03-27 13:40:10 pessaux Exp $ *)
 
 
 
@@ -843,7 +843,7 @@ let rec typecheck_pattern ctx env pat_desc =
               let cstr_ty =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
               (cstr_ty, [])
-          | (nempty_pats, Env.TypeInformation.CA_one) ->
+          | (nempty_pats, Env.TypeInformation.CA_some) ->
               let cstr_ty =
                 Types.specialize cstr_decl.Env.TypeInformation.cstr_scheme in
               (* Do not [fold_left] otherwise types of the arguments will be
@@ -1094,7 +1094,7 @@ let rec typecheck_expr ctx env initial_expr =
               (* Record the type in the AST node of the [cstr_ident]. *)
               cstr_ident.Parsetree.ast_type <- Parsetree.ANTI_type ty ;
               ty
-          | (_, Env.TypeInformation.CA_one) ->
+          | (_, Env.TypeInformation.CA_some) ->
               (* The constructor must be viewed as a function. *)
               let tys = List.map (typecheck_expr ctx env) exprs in
               (* Get an instance of the constructor's type scheme. *)
@@ -4523,9 +4523,9 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env type_name
                 Types.type_arrow as_sum_arguments_ty futur_type_type in
               Types.end_definition () ;
               let cstr_descr = {
-                Env.TypeInformation.cstr_arity = Env.TypeInformation.CA_one ;
+                Env.TypeInformation.cstr_arity = Env.TypeInformation.CA_some ;
                 Env.TypeInformation.cstr_scheme = Types.generalize arrow } in
-              (cstr_name, Env.TypeInformation.CA_one, cstr_descr))
+              (cstr_name, Env.TypeInformation.CA_some, cstr_descr))
           constructors in
       (* And finally, extends the environment with the constructors. *)
       let env_with_constructors =

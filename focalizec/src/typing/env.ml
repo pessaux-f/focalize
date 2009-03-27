@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.125 2009-03-27 13:06:38 pessaux Exp $ *)
+(* $Id: env.ml,v 1.126 2009-03-27 13:40:10 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -520,7 +520,7 @@ module TypeInformation = struct
   (* *********************************************************************** *)
   type constructor_arity =
     | CA_zero   (** Constructor has no argument. *)
-    | CA_one    (** Constructor has argument(s). *)
+    | CA_some   (** Constructor has argument(s). *)
 
 
 

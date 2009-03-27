@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.10 2008-11-17 10:53:57 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.11 2009-03-27 13:40:10 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -192,7 +192,7 @@ let type_def_compile ctx env type_def_name type_descr =
        let sum_constructors_to_print =
          List.map
            (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
-             if sum_cstr_arity = Env.TypeInformation.CA_one then
+             if sum_cstr_arity = Env.TypeInformation.CA_some then
                (begin
                try
                  let sum_cstr_ty = Types.specialize sum_cstr_scheme in

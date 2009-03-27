@@ -98,7 +98,7 @@ module TypeInformation :
       spe_sig_methods : species_field list ;
       spe_dep_graph : DepGraphData.name_node list
     }
-    type constructor_arity = CA_zero | CA_one
+    type constructor_arity = CA_zero | CA_some
     type constructor_description = {
       cstr_arity : constructor_arity ;
       cstr_scheme : Types.type_scheme

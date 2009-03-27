@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.7 2009-03-27 12:58:51 pessaux Exp $
+% $Id: environments.tex,v 1.8 2009-03-27 13:40:10 pessaux Exp $
 
 All allong the compilation pass, we need to keep trace of various
 informations about compiled entities (methods, types, identifiers,
@@ -403,7 +403,7 @@ different cases.
 
 
 \section{Scoping environment}
-The scoping environment provide information required to compute the
+The scoping environment provides information required to compute the
 scope of an identifier. In other words, it enables to state the extend
 in the program where an identifier is visible. The aim is to prevent
 name confusion and to ensure that names are identified by
@@ -491,7 +491,7 @@ Finally ({\tt spbi\_scope}), we record if the current species is
 defined at toplevel in a compilation unit ({\tt SPBI\_file}) or is a
 collection parameter of another species ({\tt SPBI\_parameter}).
 
-\subsection{The {ScopingEMAccess} module}
+\subsection{The {\tt ScopingEMAccess} module}
 This module provides the functions we previously stated to help the
 generic environment module to access the information stored in the
 environment. We have 2 functions to inspect.
@@ -523,7 +523,7 @@ which we loaded the methods in our environment.
 
 For example, let's examine the following source code:
 {\scriptsize
-\begin{lstlisting}[language=MyOCaml]
+\begin{lstlisting}
 species S (P is ...) =
   let meth1 (x) = ... P!meth2 ... ;
 end ;;
@@ -547,7 +547,85 @@ tag of {\tt meth2} before inserting the binding in our environment.
 
 
 \section{Typing environment}
+The typing environment provides information required to type-check the
+program, i.e. to infer types where they are not writen, to check that
+explicitly writen types are correct and to annotate the AST with the
+type found type of each AST node. Moreover, \focalize\ requires more
+than type-checking ``à la'' ML. We will also record information about
+dependencies.
+
+\subsection{The {\tt TypeInformation} module}
+We first look at the information bound to each name in the different
+name-spaces.
+
+\subsubsection{Sum type value constructors}
+A sum type value constructor is considered as a function taking as
+many parameters as they have arguments and returning a value whose
+type is the one hosting the constructor.
+
+For example:
+{\scriptsize
+\begin{lstlisting}
+type t =
+  | A
+  | B of (int * bool)
+  | C of (int, bool)
+;
+\end{lstlisting}
+}
+leads to 3 value constructors of types: {\tt A: t},
+{\tt B : (int * bool) -> t} and {\tt C: int -> bool -> t}. Note the
+difference between {\tt B} and {\tt C}: the first one take 1 argument
+that is a pair, the second take 2 arguments.
+
+Later, to type-checking an expression using a constructor applied to
+some arguments, we will simply simulate a regular function
+application and type-check this application like any other one.
+
+So, for each constructor of a sum type, we record its type scheme
+({\tt cstr_scheme}) and if it has arguments or not (.
+\subsubsection{Record type field names}
+
+\subsubsection{Values}
+
+\subsubsection{Types}
+
+\subsubsection{Species}
+
+\subsection{The {\tt TypingEMAccess} module}
+
+
 
 \section{\ocaml\ code generation environment}
 
+\subsection{The {\tt MlGenInformation} module}
+
+\subsubsection{Sum type value constructors}
+
+\subsubsection{Record type field names}
+
+\subsubsection{Values}
+
+\subsubsection{Types}
+
+\subsubsection{Species}
+
+
+
 \section{\coq\ code generation environment}
+
+\subsection{The {\tt CoqGenInformation} module}
+
+\subsection{The {\tt CoqGenEMAccess} module}
+
+\subsubsection{Sum type value constructors}
+
+\subsubsection{Record type field names}
+
+\subsubsection{Values}
+
+\subsubsection{Types}
+
+\subsubsection{Species}
+
+\subsection{The {\tt MlGenEMAccess} module}
