@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.6 2009-03-24 13:13:58 pessaux Exp $
+% $Id: environments.tex,v 1.7 2009-03-27 12:58:51 pessaux Exp $
 
 All allong the compilation pass, we need to keep trace of various
 informations about compiled entities (methods, types, identifiers,
@@ -375,16 +375,176 @@ different cases.
     the previous case since it is really like the case where the
     qualifier is {\tt Self}.
   \item In the other cases, we must recover the environment in where
-    to search,according to if the species is qualified by a module
-    name. Note that in this environment, all the imported bindings are
-    tagged {\tt BO_absolute}. This tag allows to make the difference
-    between bindings introduced by the definitions of the current
-    compilation unit and those brought by opened modules.
+    to search (i.e. the environment compound of the definitions present
+    in the species), according to if the species is qualified by a
+    module name. Note that in this environment, all the imported
+    bindings are tagged {\tt BO\_absolute}. This tag allows to make the
+    difference between bindings introduced by the definitions of the
+    current compilation unit and those brought by opened modules.
+    So if the species is hosted in a module (i.e. compilation unit),
+    we first get this module's environment otherwise we keep the
+    current environment. Then we look for the species/collection
+    definition. We transform all its definitions into an environment
+    via the function {\tt EMAccess.make\_value\_env\_from\_species\_methods}.
+    Finally in this environment, we look for the binding of the
+    method name.
+
+    This should be sufficient, but in case of scoping environment, we
+    still have to modify the value bound to our identifier. For this
+    reason, we have an extra function provided by the {\tt EMAccess}
+    module that will be finally applied on the obtained
+    value. Currently, in the other environments, this function is the
+    identity (do nothing on the argument) since we only found a job to
+    do in case of the scoping environment. We will describe what this
+    function really does in the case of the scoping environment in its
+    dedicated section.
   \end{enumerate}
 \end{enumerate}
 
 
 \section{Scoping environment}
+The scoping environment provide information required to compute the
+scope of an identifier. In other words, it enables to state the extend
+in the program where an identifier is visible. The aim is to prevent
+name confusion and to ensure that names are identified by
+(i.e. related to) only one definition.
+
+\subsection{The {\tt ScopeInformation} module}
+We first look at the information bound to each name in the different
+name-spaces.
+
+\subsubsection{Sum type value constructors}
+Since these identifiers are always introduced by type definitions that
+are at toplevel, we only need to remind in which compilation unit they
+were introduced, hence hosted. Then a constructor will be bound in the
+environment to a compilation unit name.
+
+\subsubsection{Record type field names}
+For the same reason than for the sum type value constructors, Record
+type field names are bound to a compilation unit name.
+
+\subsubsection{Values}
+Information bound to value identifiers is more complex since it must
+depict the different cases of identifiers.
+\begin{itemize}
+\item{\tt SBI\_file}\ \ The identifier is at toplevel of
+  a file (including the current file). We record the file name.
+  
+\item {\tt SBI\_method\_of\_self}\ \ The identifier is a method
+  implicitly of {\tt Self}.
+
+\item {\tt SBI\_method\_of\_coll}\ \ The identifier is a method
+  explicitly of a collection. We record the fully qualified name of
+  the collection.\\
+  {\bf Attention}: while inserting a method at its definition point in
+  the environment, it must always be tagged with
+  {\tt SBI\_method\_of\_self}. The tag {\tt SBI\_method\_of\_coll} can
+  only be returned by \\
+  {\tt find\_value} who may perform a change on the fly if required.
+
+\item {\tt SBI\_local}\ \ The identifier is locally bound ({\tt let}
+  or function parameter).
+\end{itemize}
+
+\subsubsection{Types}
+Type constructors may be separated in two cateories:
+\begin{itemize}
+\item {\tt TBI\_builtin\_or\_var}\ \ The type identifier is either a
+  type variable name ({\tt 'a} for instance) or a builtin type. In
+  these two cases, the constructor is not hosted in a type definition
+  in a particular compilation unit. In effect, type variables arise
+  during the type-checking process and are not attached to a
+  particular type definition. In fact, a type variable {\bf is not} a
+  type constructor and only this jusfifies the fact is doesn't belong
+  to a particular compilation unit. \\
+  On the other side, we allow the possibility to have builtin type
+  constructors in the \focalize\ language. This means that we can have
+  type constructors related to no type definition written as
+  \focalize. In this case, the compiler must deal internally with this
+  type constructor. Currently this feature is not used since even
+  basic types constructors like {\tt int}, {\tt bool}, {\tt char},
+  \ldots have a regular \focalize\ (external) definition.
+
+\item {\tt TBI\_defined\_in}\ \ The identifier is a type constructor
+  name defined at toplevel by a type definition in a file. We record
+  the hosting compilation unit.
+\end{itemize}
+
+\subsubsection{Species}
+Data recorded for species is the most complex. It must depicts the
+scope of the species name itself, but also give information about the
+methods and parameters available through this species. For this
+reason, we have a record grouping several things.
+
+First, ({\tt spbi\_methods} records the list of {\bf all} the methods
+names owned by the species, {\bf including those added by
+inheritance}. Methods from the most recent ancestor are in head of the 
+list. In case of multiple inheritance, we consider that ancestors
+are older from left to right.
+
+Next, we record information about the species's parameters
+({\tt spbi\_params\_kind}). For each parameter we simple
+record if it is a collection ({\tt SPK\_is}) or entity
+({\tt SPK\_in}) parameter.
+
+Finally ({\tt spbi\_scope}), we record if the current species is
+defined at toplevel in a compilation unit ({\tt SPBI\_file}) or is a
+collection parameter of another species ({\tt SPBI\_parameter}).
+
+\subsection{The {ScopingEMAccess} module}
+This module provides the functions we previously stated to help the
+generic environment module to access the information stored in the
+environment. We have 2 functions to inspect.
+
+\medskip
+The function {\tt make\_value\_env\_from\_species\_methods} simply
+takes the list of the method names of the species and add them as
+methods {\bf ``of the species''} passed as argument
+(usage of {\tt SBI\_method\_of\_coll}) in the {\bf values}
+name-space. Here the insertion explicitly shows that the methods
+inserted in the environment are those of a particular species, not of
+{\tt Self}. Moreover, the methods are tagged as {\tt BO\_absolute} to
+say that by default they do not come from an ``opened'' module since
+we consider that may be the species comes from an ``opened'' module,
+but not its methods who are hosted {\bf in} the species.
+
+\medskip
+The function {\tt post\_process\_method\_value\_binding} is important
+for the scoping environment (and in fact, currently we have such a
+function in the interface of {\tt EMAccess} only because we need to
+make a special job in the case of the scoping environment). Its job
+consists in changing the tag of the methods of the species from
+{\tt SBI\_method\_of\_self} to {\tt SBI\_method\_of\_coll}. In effect
+when we create a species, its methods are tagged as being
+``of {\tt Self}''. But when we load the methods of this species in an
+environment we must say that these methods are not belonging to the
+currently processed species but are belonging to the species from
+which we loaded the methods in our environment.
+
+For example, let's examine the following source code:
+{\scriptsize
+\begin{lstlisting}[language=MyOCaml]
+species S (P is ...) =
+  let meth1 (x) = ... P!meth2 ... ;
+end ;;
+}
+\end{lstlisting}
+}
+When we are scoping in the Species {\tt S} le method {\tt meth1} we
+encounter the expression (identifier) {\tt P!meth2}. To scope this
+identifier we need to get the list (i.e. a ``sub''-environment)
+containing the methods of {\tt P} in order to search for the name
+{\tt meth2} among them. When {\tt P} was ``created'' (in fact when it
+was scoped) we inserted in its scoping description the fact that it
+had a method {\tt meth2} \ldots of {\tt Self} (yep, inside {\tt P},
+{\tt meth2} is really a method of {\tt Self}). So it was tagged with
+{\tt SBI\_method\_of\_self}. So if we insert straight-line this
+information in our environment, while scoping our species {\tt S} we
+will see that there exists a method {\tt meth2} \ldots of {\tt Self},
+i.e. of {\tt S} which is wrong. For this reason, we must change the
+tag of {\tt meth2} before inserting the binding in our environment.
+
+
 
 \section{Typing environment}
 
