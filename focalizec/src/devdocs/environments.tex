@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.9 2009-03-27 15:02:10 pessaux Exp $
+% $Id: environments.tex,v 1.10 2009-03-27 17:35:19 pessaux Exp $
 
 All along the compilation pass, we need to keep trace of various
 information about compiled entities (methods, types, identifiers,
@@ -673,14 +673,14 @@ additional things used during type-checking stage.
 \item {\tt spe\_kind} \ \ Describes if the species is a toplevel
   collection ({\tt SCK\_toplevel\_collection}), a toplevel species
   ({\tt SCK\_toplevel\_species}) or a collection parameter
-  ({\t SCK\_species\_parameter}).
+  ({\tt SCK\_species\_parameter}).
 
 \item {\tt spe\_is\_closed} \ \ This boolean tells if the species if
   fully defined (even if not turned into a collection). This information
   will be useful to known when collection generators must be created.
 
 \item {\tt spe\_sig\_params} \ \  The list of descriptions of the
-  paremeters the species has, ordered the same way they appear in the
+  parameters the species has, ordered the same way they appear in the
   species definition (i.e. the left-most in head of the list). We will
   examine the structure of this information a bit later. 
 
@@ -695,13 +695,136 @@ additional things used during type-checking stage.
 \item {\tt spe\_dep\_graph} \ \ We record here the dependency graph of
   the species' methods. Hence, this deals with methods
   ``of {\tt Self}'' and represents def and decl-dependencies. This
-  doens't include dependencies on collection parameters !
+  doesn't include dependencies on collection parameters !
+\end{itemize}
 
+\paragraph{Species parameter information}
+Since \focalize\ provides 2 kinds of parameters we have 2 types of
+information to record:
+\begin{itemize}
+\item For entity parameters, {\tt SPAR\_in}, we keep the parameter's
+  name, the collection representing its type and the flag telling if
+  this collection is a parameter, a toplevel one (like for the field
+  {\tt spe\_kind} of a species description seen above).
+
+  For example, {\tt species S (Nat is ..., n in Nat)} will record for
+  {\tt n} that its name is ``{\tt in}'', its type is {\tt Nat} and that
+  this type is from a collection that is a collection parameter (i.e.
+  {\tt SCK\_species\_parameter}) and not a toplevel one.
+
+\item For collection parameters, {\tt SPAR\_is} we record more
+  information, especially things that have already be computed about
+  the species the parameter is ``{\tt is}'' in order to have a quick
+  access to information instead of computing it each time we encounter
+  a collection parameter of a certain ``type''. To base our
+  presentation let's take the case of the species taken just above for
+  the entity parameters.
+
+  \begin{itemize}
+  \item We record the name of the parameter with its compilation unit
+    name. In fact, this will be the ``type'' of the collection this
+    parameter makes available in the hosting species. In our example,
+    {\tt Nat} is both the name of the parameter and the type that
+    uniquely represents the collection is bring. In effect, to use
+    methods of this parameter, we will use {\tt Nat!xxx}. By adding
+    the compilation unit name, we exactly build a ``type of species''
+    like we use anywhere else in the compiler.
+
+  \item Like for entity parameters  we record the flag telling if the
+    species the parameter is ``{\tt is}'' a parameter, a toplevel
+    collection or a toplevel species. In our example, assuming that
+    {\tt Nat} is a species defined somewhere else, we would have
+    {\tt SCK\_toplevel\_species}.
+
+  \item Next come the list of all the methods descriptions the
+    parameter has. This list is exactly of the same type than the list
+    that describes a species methods (whose structure will be examined
+    just after). It is in fact the normalised form of the species
+    methods the parameter has.
+
+  \item Since a collection parameter ``is'' a species expression, not
+    only a simple identifier (for example {\tt P2} and {\tt P3} in
+    {\tt species S (P1 is ..., P2 is T (P1), P3 is U (P1, P2)) = ... ;;}
+    who are built by applying arguments to parametrised species, we
+    must record the complete species expression denoting what ``is''
+    the parameter. Instead of directly recording the AST part
+    representing the expression, we translate it into a custom type.
+
+    In effect, in the AST, expressions used to represent species
+    expressions are general expressions for sake of parsing technical
+    issues. But in fact, due to the structure of the syntax, only a
+    few kinds of AST nodes can be created. In particular, expressions
+    coming out from the parser have restricted forms (invariants due
+    to the syntax). Hence, instead of always assuming these invariants
+    hold in the expressions representing species expressions, we
+    prefer to convert them in a dedicated structure, more restricted
+    than the general expressions, to enforce these invariants to hold
+    directly by the type of the structure. For this reason, we record
+    the species expression under the form of a \\
+    {\tt Parsetree\_utils.simple\_species\_expr}.
+  \end{itemize}
+\end{itemize}
+
+
+\paragraph{Method information}
+Depending on the kind of the methods we have different strucutures to
+record. In any case, we always record the history of the method,
+i.e. where it was defined and from where and how it was inherited
+until it arrives in the current species (structure
+{\tt from\_history}) and its name. The kinds of method are basically
+sumarised by the type {\tt spe\_sig\_methods} and can be:
+\begin{itemize}
+\item {\tt SF\_sig} \ \ represents a signature. since we do not have
+  anything more than a type for this method, we keep it as a type
+  scheme.
+
+\item {\tt SF\_let} \ \ represents a {\tt let} definition, either
+  ``computational'' or ``logical''. We record the list of parameter
+  names of the definition (if it's a constant, then this list is
+  empty), the type scheme of the definition, its the body
+  (``computational'' or ``logical''), a termination proof if it has
+  some, a structure telling if during type-checking we detected
+  def and decl-dependencies on the carrier (on {\tt representation})
+  and finally the flags found in the AST telling if the definition was
+  {\tt logical} and was recursive.
+
+\item {\tt SF\_let\_rec} \ \ Here is a list of information identical
+  to what we store for {\tt SF\_let}, one for each recursively defined
+  functions (i.e. only 1 element in the list if there is no mutually
+  recursive functions).
+
+\item {\tt SF\_theorem} \ \ represents a theorem definition. We record
+  the mapping of type variables found in the {\tt forall} and
+  {\tt exists}" in the property's logical expression onto their
+  name. This is a technical point. In fact, theorems and properties do
+  not have a type scheme. Their ``type'' is their logical
+  statement. However, it is possible to have universally quantified
+  type variables appearing in a theorem statement. Without a type
+  scheme we are not able to technically instanciate these variables in
+  a consistent way. To we patch this leak of scheme by recording for
+  each universally quantified type variables, what identifier in the
+  statement has this type.
+  Next, we record the logical statement of the theorem, its proof, and
+  like for {\tt SF\_let}, information on dependencies found on the
+  carrier.
+\item {\tt SF\_property} \ \  represents a property definition. We
+  record the same information than for a theorem, except the proof
+  since a property doesn't have any proof.
 \end{itemize}
 
 
 
 \subsection{The {\tt TypingEMAccess} module}
+The access module for the typing environments is quite trivial. The
+function {\tt make\_value\_env\_from\_species\_methods} works simply
+inserting the methods of a species in the value bucket like it's done
+for the scoping environments. The only point is that since theorems
+and properties no do have a type scheme, we insert them with a trivial
+type scheme whose body (core type) is simply {\tt prop}.
+
+The function {\tt post\_process\_method\_value\_binding} is trivial
+and is the identity. In effect, we do not need any post-processing
+like we needed for scoping environments.
 
 
 
