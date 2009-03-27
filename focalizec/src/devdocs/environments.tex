@@ -1,7 +1,7 @@
-% $Id: environments.tex,v 1.8 2009-03-27 13:40:10 pessaux Exp $
+% $Id: environments.tex,v 1.9 2009-03-27 15:02:10 pessaux Exp $
 
-All allong the compilation pass, we need to keep trace of various
-informations about compiled entities (methods, types, identifiers,
+All along the compilation pass, we need to keep trace of various
+information about compiled entities (methods, types, identifiers,
 \ldots). This is done by a kind of association list, mapping a name of
 entity onto an information.
 
@@ -18,9 +18,9 @@ Environments implementation is located in the file
 
 \section{The generic environment}
 
-\subsection{Environement ``recording'' structure}
+\subsection{Environment ``recording'' structure}
 As previously stated, the core of an environment is to map names onto
-informations. In \focalize\, names can designate several types of
+information. In \focalize\, names can designate several types of
 entities:
 \begin{itemize}
   \item Sum type value constructors (e.g. {\tt None}, {\tt Some}).
@@ -33,14 +33,14 @@ entities:
 To ensure there is no conflicts between these different types of
 entities, i.e. to be allowed to give a same name to a record types
 field and to a type constructor or a value identifier, en environment
-will keep separate namespaces for each type of entity.
+will keep separate name-spaces for each type of entity.
 
 As we stated before, an environment maps a name (the {\bf key}) onto
 an information (the {\bf value}). Hence, the {\bf key} of an
 environment being a name, it will be mapped onto a
 {\tt Parsetree.vname}. Since we want environments to record different
 values (to be polymorphic in fact), the {\bf value} will be a
-different type variable for each namespace.
+different type variable for each name-space.
 
 Hence, the generic environments have type:
 {\scriptsize
@@ -59,15 +59,15 @@ To create a module system, we need to wrap this core structure inside
 a module providing access to this structure, i.e. search the
 {\bf value} bound to a {\bf key}: {\tt find} and add binding of a
 {\bf key} to a {\bf value} : {\tt add}. Obviously, we need these 2
-functions for each namespace.
+functions for each name-space.
 
 
 
 \subsection{Principle of making an environment}
 We would like to directly create a functor taking as argument a module
 whose signature implements the types of bound information in each
-namespace for an environement and gives back a module providing the
-functions {\tt find} and {\tt add} for each namespace, in this
+name-space for an environment and gives back a module providing the
+functions {\tt find} and {\tt add} for each name-space, in this
 environment. The idea is then to apply this functor to a set of
 various modules to get the scoping environment, the typing
 environment, the \ocaml\ and the \coq\ code generation environments.
@@ -83,22 +83,22 @@ the \#-notation . For example the identifier {\tt basics!int} is bound
 in the module {\tt basics} by the name {\tt int}. This
 {\tt find\_module} function doesn't need to be visible in our generic
 environments since it only serves for internal purpose. It must
-conceptuall take a module name, an environment and return the
+conceptual take a module name, an environment and return the
 ``sub''-environment composed of all the definitions hosted by the
 module. This {\tt find\_module} function is then dependant of the type
-of the the namespace in which to look-up in the managed environment.
+of the the name-space in which to look-up in the managed environment.
 On must have 1 {\tt find\_module} for when we look-up for values, one
 for when we look-up for types, one for sum type constructors, one for
 record field labels, etc\ldots The problem is that ``creating'' the
-''sub''-environment from the informations contained in a module
+''sub''-environment from the in formations contained in a module
 depend on the structure of information recorded in the environment.
-This means that we can't consider these informations as anymore
+This means that we can't consider these in formations as anymore
 polymorphic since we know to know their structure to build the
 ''sub''-environment.
 
 \medskip
 For this reason, we proceed in two steps, i.e. two functors. One,
-{\tt EMAccess}), will provide the ``way to access'' the informations
+{\tt EMAccess}), will provide the ``way to access'' the information
 kept as {\bf values} in the environment. The second ({\tt Make}) will
 take a module produced by the previous one and glue the structure of
 the environment (i.e. in fact the association list) with the access
@@ -163,7 +163,7 @@ way.
 Next come a the function {\tt make\_value\_env\_from\_species\_methods}
 whose purpose can be understood once the module system is
 understood. Basically, this function must create an environment,
-populating the values name-space with informations extracted from the
+populating the values name-space with information extracted from the
 methods of a species.
 
 \medskip
@@ -175,7 +175,7 @@ post-process the information bound to a value name if needed.
 
 \medskip
 For sake of simplicity, we decide to group the types definitions
-representing informations bound for each name-space of an environment
+representing information bound for each name-space of an environment
 in a module. This is not mandatory but allows a better structure of
 the code.
 
@@ -191,10 +191,10 @@ This functor must create a module whose signature contains an abstract
 type representing the environment, an abstract value representing the
 empty environment (i.e. with no binding), an abstract value
 representing the ``pervasives'' environment and finally, for each
-name-space a search function and an extention function (i.e. a
-function that adds a binding to an environement, then returning this
-environement with the binding ``in front''). This means that an
-environement (dedicated to a ``Blabla'' processing) will have a
+name-space a search function and an extension function (i.e. a
+function that adds a binding to an environment, then returning this
+environment with the binding ``in front''). This means that an
+environment (dedicated to a ``Blabla'' processing) will have a
 signature like (forget the noisy arguments we spoke about, like
 {\tt loc}, {\tt current\_unit}, we will check them in detail later) :
 {\scriptsize
@@ -263,10 +263,10 @@ initially looked-up identifier into a primitive
 
 
 \subsubsection{Adding a binding}
-All the environment extention functions ({\tt add\_xxx}) are quite
-simple, they just add a bindind to the association list in field of
+All the environment extension functions ({\tt add\_xxx}) are quite
+simple, they just add a binding to the association list in field of
 the environment related to the right name-space. One may note that an
-added bindind is always tagged {\tt BO\_absolute}. This means that the
+added binding is always tagged {\tt BO\_absolute}. This means that the
 binding comes in the environment from the current compilation unit,
 opposite as the tag {\tt BO\_opened} that serves to identify bindings
 present in the environment due to an {\tt open} directive.
@@ -274,7 +274,7 @@ present in the environment due to an {\tt open} directive.
 
 
 \subsubsection{Looking for a binding (except for values)}
-Look-up functions are more complex, especially the one lokoing for
+Look-up functions are more complex, especially the one looking for
 values. We now describe the general look-up mechanism that is exactly
 the one used for {\tt find\_label}, {\tt find\_constructor} and
 {\tt find\_type}.
@@ -284,7 +284,7 @@ The first and simplest case is when the looked-up identifier doesn't
 have any qualification. In this case, it must trivially be searched in
 the related association list of the current environment.
 
-The second case inolves a qualified identifier and is more complex.The
+The second case involves a qualified identifier and is more complex.The
 principle is to split the looked-up name into a scope specifier (a
 qualification) and a simple name. For instance, {\tt foo} has no scope
 specifier and a simple name equal to ``foo''. Conversely,
@@ -313,8 +313,8 @@ The second point simply states that if we are looking for a qualified
 identifier being in the current compilation unit, then is must not be
 searched among identifiers imported by opened modules.
 
-Based on this information, we simply look-up in the assocition list to
-find de related binding.
+Based on this information, we simply look-up in the association list to
+find the related binding.
 {\scriptsize
 \begin{lstlisting}[language=MyOCaml]
   (* ****************************************************************** *)
@@ -350,7 +350,7 @@ find de related binding.
 
 
 \subsubsection{Looking for a binding for values}
-This case is more subtil since it involves more kinds of ideitifiers,
+This case is more subtle since it involves more kinds of identifiers,
 especially because of the ``!-notation''. Processing for local and
 global identifiers ({\tt Parsetree.I\_local} and {\tt Parsetree.I\_global})
 are the same as previously described.
@@ -447,17 +447,17 @@ depict the different cases of identifiers.
 \end{itemize}
 
 \subsubsection{Types}
-Type constructors may be separated in two cateories:
+Type constructors may be separated in two categories:
 \begin{itemize}
 \item {\tt TBI\_builtin\_or\_var}\ \ The type identifier is either a
-  type variable name ({\tt 'a} for instance) or a builtin type. In
+  type variable name ({\tt 'a} for instance) or a built-in type. In
   these two cases, the constructor is not hosted in a type definition
   in a particular compilation unit. In effect, type variables arise
   during the type-checking process and are not attached to a
   particular type definition. In fact, a type variable {\bf is not} a
-  type constructor and only this jusfifies the fact is doesn't belong
+  type constructor and only this justifies the fact is doesn't belong
   to a particular compilation unit. \\
-  On the other side, we allow the possibility to have builtin type
+  On the other side, we allow the possibility to have built-in type
   constructors in the \focalize\ language. This means that we can have
   type constructors related to no type definition written as
   \focalize. In this case, the compiler must deal internally with this
@@ -478,9 +478,9 @@ reason, we have a record grouping several things.
 
 First, ({\tt spbi\_methods} records the list of {\bf all} the methods
 names owned by the species, {\bf including those added by
-inheritance}. Methods from the most recent ancestor are in head of the 
-list. In case of multiple inheritance, we consider that ancestors
-are older from left to right.
+inheritance}. Methods however appear only once and are ordered from
+the most recent ancestor are in head of the list. In case of multiple
+inheritance, we consider that ancestors are older from left to right.
 
 Next, we record information about the species's parameters
 ({\tt spbi\_params\_kind}). For each parameter we simple
@@ -530,7 +530,7 @@ end ;;
 }
 \end{lstlisting}
 }
-When we are scoping in the Species {\tt S} le method {\tt meth1} we
+When we are scoping in the Species {\tt S} the method {\tt meth1} we
 encounter the expression (identifier) {\tt P!meth2}. To scope this
 identifier we need to get the list (i.e. a ``sub''-environment)
 containing the methods of {\tt P} in order to search for the name
@@ -548,29 +548,35 @@ tag of {\tt meth2} before inserting the binding in our environment.
 
 \section{Typing environment}
 The typing environment provides information required to type-check the
-program, i.e. to infer types where they are not writen, to check that
-explicitly writen types are correct and to annotate the AST with the
+program, i.e. to infer types where they are not written, to check that
+explicitly written types are correct and to annotate the AST with the
 type found type of each AST node. Moreover, \focalize\ requires more
 than type-checking ``à la'' ML. We will also record information about
 dependencies.
 
 \subsection{The {\tt TypeInformation} module}
 We first look at the information bound to each name in the different
-name-spaces.
+name-spaces. We will speak here of {\em type} and
+{\em type scheme}. The different between them will be exposed later
+while presenting the type-checking process. Let's intuitively say that
+a {\em type scheme} is a ``template'' from which one can extract a
+{\em type} by ``instanciation'' of the scheme. So in {\bf expressions},
+only {\em types} are present, {\em type schemes} are bound to
+{\bf definitions}.
+
 
 \subsubsection{Sum type value constructors}
 A sum type value constructor is considered as a function taking as
 many parameters as they have arguments and returning a value whose
-type is the one hosting the constructor.
-
-For example:
+type is the one hosting the constructor (i.e. the current type
+definition). For example:
 {\scriptsize
 \begin{lstlisting}
 type t =
   | A
   | B of (int * bool)
   | C of (int, bool)
-;
+;;
 \end{lstlisting}
 }
 leads to 3 value constructors of types: {\tt A: t},
@@ -578,19 +584,122 @@ leads to 3 value constructors of types: {\tt A: t},
 difference between {\tt B} and {\tt C}: the first one take 1 argument
 that is a pair, the second take 2 arguments.
 
+So, for each constructor of a sum type, we record its type scheme
+({\tt cstr\_scheme}) and if it has arguments or not ({\tt cstr\_arity},
+that can be {\tt CA\_zero} or {\tt CA\_some}).
+
 Later, to type-checking an expression using a constructor applied to
 some arguments, we will simply simulate a regular function
-application and type-check this application like any other one.
+application and type-check this application like any other one. That
+the reason why we also need to know if the constructor has argument(s)
+or not since if it has none, there is no application to simulate: the
+constructor in not a function but a value with the right type
+directly.
 
-So, for each constructor of a sum type, we record its type scheme
-({\tt cstr_scheme}) and if it has arguments or not (.
+
 \subsubsection{Record type field names}
+In the same idea than for sum type value constructors, a record type
+field label will be considered as a function taking 1 argument whose
+type is the type of the field an returning a value value whose
+type is the one hosting the field label (i.e. the current type
+definition). For example:
+{\scriptsize
+\begin{lstlisting}
+type t = {
+  lbl1 : int ;
+  lbl2 : string }
+;;
+\end{lstlisting}
+}
+leads to 2 value field labels of types: {\tt lbl1: int -> t} and
+{\tt lbl2 : string -> t}.
+
+So, for each field label, we simply record its type scheme
+({\tt field\_scheme}) . We also record if the field is mutable or not
+({\tt field\_mut}) but this features is not used (for extension
+purpose) since \focalize\ doesn't handle mutability (i.e references).
+
 
 \subsubsection{Values}
+Values are simply bound to their type scheme.
 
 \subsubsection{Types}
+Type constructors must be bound to more complex information since they
+must exhibit the kind of definition they are introduced by. We have 4
+kinds of definitions:
+
+\begin{itemize}
+\item {\tt TK\_abstract} \ \ The constructor represents an abstract
+  definition, i.e. a type whose values are not introduced by the
+  definition itself. For instance, {\tt int} is abstract since its
+  values do not appear in the type definition: they are built-in in
+  the compiler. Type abbreviations are also handled this way. This
+  means that defining {\tt type t = (int * string)} create a type
+  {\tt t} that is abstract. Since there is no value and no structure
+  information in the definition, we do not need to record anything
+  special.
+
+\item {\tt TK\_external} \ \ The constructor represents a type whose
+  representation is explicitly provided for external languages. In
+  other words, we import in \focalize\ types from (an)other
+  language(s). We record on what this constructor must be mapped in
+  the various foreign languages, the value constructors or field
+  labels if some exist that can be used on \focalize's side and on
+  what to map them in the various foreign languages.
+
+\item {\tt TK\_variant} \ \ The constructor represents a sum type
+  definition. Hence values are given in the definition's structure
+  itself. Hence we record the list of value constructor names with for
+  each its arity and its type scheme (in fact these 2 things are the
+  same than recorded for each value constructor in the related
+  name-space).
+
+\item {\tt TK\_record} \ \ The constructor represents a record type
+  definition. Hence, field labels are given in the definition's structure
+  itself. Hence we record the list of these fields names with their
+  type scheme and their mutability (like for sum types value
+  constructors, these 2 things are those recorded for each field label
+  in the related name-space).
+\end{itemize}
+
 
 \subsubsection{Species}
+The structure of information recorded about species is pretty complex
+since it must depict the complete species structure, most
+importantly the parameters and all the methods stuff, but some other
+additional things used during type-checking stage.
+
+\begin{itemize}
+\item {\tt spe\_kind} \ \ Describes if the species is a toplevel
+  collection ({\tt SCK\_toplevel\_collection}), a toplevel species
+  ({\tt SCK\_toplevel\_species}) or a collection parameter
+  ({\t SCK\_species\_parameter}).
+
+\item {\tt spe\_is\_closed} \ \ This boolean tells if the species if
+  fully defined (even if not turned into a collection). This information
+  will be useful to known when collection generators must be created.
+
+\item {\tt spe\_sig\_params} \ \  The list of descriptions of the
+  paremeters the species has, ordered the same way they appear in the
+  species definition (i.e. the left-most in head of the list). We will
+  examine the structure of this information a bit later. 
+
+\item {\tt spe\_sig\_methods} \ \ The list of description of all the
+  methods of the species. We will examine the structure of this
+  information a bit later. One may note that like for scoping
+  information, all the methods are present, i.e. the inherited also,
+  once and in the inheritance resolution order. This way, the methods
+  represent the ``normal form'' of the species as described in the
+  theory.
+
+\item {\tt spe\_dep\_graph} \ \ We record here the dependency graph of
+  the species' methods. Hence, this deals with methods
+  ``of {\tt Self}'' and represents def and decl-dependencies. This
+  doens't include dependencies on collection parameters !
+
+\end{itemize}
+
+
 
 \subsection{The {\tt TypingEMAccess} module}
 
@@ -629,3 +738,4 @@ So, for each constructor of a sum type, we record its type scheme
 \subsubsection{Species}
 
 \subsection{The {\tt MlGenEMAccess} module}
+
