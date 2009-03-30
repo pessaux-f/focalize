@@ -8,5 +8,6 @@
 *.fo
 *.mangled
 *.coz
+*.xml
 .depend
 odoc
