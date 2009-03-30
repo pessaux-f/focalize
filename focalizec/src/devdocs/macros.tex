@@ -1,4 +1,4 @@
-% $Id: macros.tex,v 1.6 2009-03-17 17:24:48 pessaux Exp $
+% $Id: macros.tex,v 1.7 2009-03-30 15:05:17 pessaux Exp $
 \newcommand{\ocaml}{{\sf OCaml}}
 \newcommand{\moca}{{\sf Moca}}
 \newcommand{\focal}{{\sf FoCaL}}
@@ -47,9 +47,10 @@
 
 
 %% To have fancier listings for Coq code.
-\lstdefinelanguage{Coq}
+\lstdefinelanguage{MyCoq}
   {morekeywords={Variable, Theorem, Section, assert, End, Qed, Let,
-      forall, ex, Chapter, Record, Parameter, Definition},
+      forall, ex, Chapter, Record, Parameter, Definition, Hypothesis,
+      let, match, if, then, else, end, Function},
     sensitive=false,
     morecomment=[n]{(*}{*)},   %% Allow nested comments.
     morecomment=[n]{(**}{*)},  %% Allownested comments.
@@ -58,7 +59,7 @@
 
 \newcommand{\setlangcoq}{
 \lstset{
-  language=Coq, tabsize=2, frame=single, breaklines=true,
+  language=MyCoq, tabsize=2, frame=single, breaklines=true,
   basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
 }
 }

@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.10 2009-03-27 17:35:19 pessaux Exp $
+% $Id: environments.tex,v 1.11 2009-03-30 15:05:17 pessaux Exp $
 
 All along the compilation pass, we need to keep trace of various
 information about compiled entities (methods, types, identifiers,
@@ -385,7 +385,8 @@ different cases.
     we first get this module's environment otherwise we keep the
     current environment. Then we look for the species/collection
     definition. We transform all its definitions into an environment
-    via the function {\tt EMAccess.make\_value\_env\_from\_species\_methods}.
+    via the function
+    {\tt EMAccess.make\_value\_env\_from\_species\_methods}.
     Finally in this environment, we look for the binding of the
     method name.
 
@@ -829,36 +830,181 @@ like we needed for scoping environments.
 
 
 \section{\ocaml\ code generation environment}
+The \ocaml\ code generation environment provides information required
+to generate the target \ocaml\ source code.
 
 \subsection{The {\tt MlGenInformation} module}
+We first look at the information bound to each name in the different
+name-spaces.
 
 \subsubsection{Sum type value constructors}
+In this bucket, we only record on which string a sum type value
+constructor that has been introduced by a type definition involving an
+external representation must be translated into \ocaml.
+
+For instance, in \ocaml, {\tt Nil} will be mapped onto {\tt []} and
+{\tt Cons} to {\tt ( :: )}.  It may be clearly noticed that for
+\ocaml, only constructors coming from {\bf external} sum types are
+entered in the generation environment. Hence, if a constructor is not
+found, then this means that it comes from a regular \focalize\ type
+definition, not dealing with any external material, hence must be
+simply translated into \ocaml\ using the name given in \focalize\
+side.
 
 \subsubsection{Record type field names}
+\focalize's records are generated as real records in the target
+languages. Hence, we only need to remind the name on which to map each
+record field name of the \focalize\ type definition. Conversely to the
+sum type value constructors, all the record field labels are recorded
+in the environment.
 
 \subsubsection{Values}
+For \ocaml\ code generation, we do not need any information about
+values. Hence, the type of the bound values is trivially
+{\tt unit}. But in fact, we will never enter values not look for
+values in such an environment.
+
 
 \subsubsection{Types}
+Types also do not need any information to be generated. Hence, they
+are handled like values above in term of environment.
+
 
 \subsubsection{Species}
+For species (and collections) we must find a way to know their methods
+and other information coming from the dependency computation. All this
+is recorded in the {\tt species\_binding\_info} structure below:
+\begin{itemize}
+\item The list of parameters (collection and entity) of the species
+  with their kind. This information is the same than the one stored
+  in the type-checking environment.
+
+\item The list of methods the species has. This information is the
+  same than the one stored in the type-checking environment. Remember
+  that is represents the methods present in the normal form of the
+  species, i.e. with not double, with inheritance resolved and in the
+  right order (to prevent dependency issues).
+
+\item An optional {\tt collection\_generator\_info} describing, if
+  available, the structure of the species' collection generator. This
+  generator is optional because species that are non fully defined do
+  not have any collection generator although they are entered in the
+  environment. Generator data is used to prevent computing several
+  times (in case where several collections are built from a same
+  closed species) and contains:
+  \begin{itemize}
+  \item The list of species parameters names and kinds the species
+    whose collection generator belongs to has. This list is
+    positional, i.e. that the first name of the list is the name of
+    the first species parameter and so on. The kind of a parameter is
+    the same thing than the one recorded in the scoping environment.
+  \item The list mapping for each parameter name, the set of methods the
+    collection generator depends on, hence must be provided an instance
+    to be used. Note that the list is not guaranteed to be ordered
+    according to the order of the species parameters names (that's why
+    we have the information about this order given in the first
+    component of the {\tt species\_binding\_info} structure we are
+    globally describing).
+  \end{itemize}
+
+\item Finally, a flag telling if this information is bound to a
+  species ({\tt COS\_species} or a collection ({\tt COS\_collection}).
+\end{itemize}
+
+
+
+\subsection{The {\tt MlGenEMAccess} module}
+The access module for the \ocaml\ code generation environments is
+really trivial. The function
+{\tt make\_value\_env\_from\_species\_methods} has no meaning for
+\ocaml\ code generation environments because we do not provide any
+{\tt find\_value} function and that's this function that requires
+{\tt make\_value\_env\_from\_species\_methods}.
+
+The function {\tt post\_process\_method\_value\_binding} is trivial
+and is the identity. In effect, we do not need any post-processing
+like we needed for scoping environments.
 
 
 
 \section{\coq\ code generation environment}
+The \coq\ code generation environment provides information required
+to generate the target \coq\ source code. Its structure will be pretty
+close to the \ocaml\ environment. Most of the differences are induced
+by the explicit polymorphism in \coq\ (that imposes to keep trace of
+polymorphic type variables) and by the presence of logical methods
+(i.e. theorems, that were discarded in \ocaml).
 
 \subsection{The {\tt CoqGenInformation} module}
+We first look at the information bound to each name in the different
+name-spaces.
 
-\subsection{The {\tt CoqGenEMAccess} module}
 
 \subsubsection{Sum type value constructors}
+The idea behind information bound to sum type value constructors is
+about the same than in \ocaml. We want to know if needed on what
+string to map a constructor name if it comes from an external type
+definition. But we always need another information to handle
+polymorphic constructors.
+
+In effect, in \coq\ a polymorphic function (because constructors are
+functions in fact) must be provided one extra argument for each
+polymorphic type variable appearing in the type of the function. This
+argument must have type {\tt Set} and be provided at application-time,
+like the other remaining (regular) explicit arguments of the function
+definition. In fact, \coq\ can infer the value of these arguments and
+we can simply use a {\tt \_} (underscore) in place of these extra
+arguments at application-time. However, we need to know how many
+{\tt \_}s must be generated (i.e. how many extra arguments the
+constructor has due to its polymorphism). For instance, the type
+{\tt t} defined in \coq\ by:
+{\scriptsize[language=MyCoq]
+\begin{lstlisting}
+Inductive t (alpha : Set) : Set :=
+ | A : (alpha -> (t alpha)).
+\end{lstlisting}
+}
+introduces 1 value constructor {\tt A} with not 1 argument, but 2 ! If
+we want to create a {\tt t} value parametrised by the integer {\tt 1},
+\begin{verbatim}
+Coq < Check (A 1).
+Toplevel input, characters 9-10:
+> Check (A 1).
+>          ^
+Error: The term "1" has type "nat" while it is expected to have type "Set".
+\end{verbatim}
+To have a valid application, we must add one {\tt \_} before our
+{\tt 1}, like in:
+\begin{verbatim}
+Coq < Check (A _ 1).
+A nat 1
+     : t nat
+\end{verbatim}
+We could be more explicit by directly providing the value of the first
+argument that is in our case {\tt nat}:
+\begin{verbatim}
+Coq < Check (A nat 1). 
+A nat 1
+     : t nat
+\end{verbatim}
+but since \coq\ knows to infer it, we prefer let \coq\ doing the work
+(type-checking get simpler on \focalize\'s side).
+
+
+For this reason any sum type value constructor is recorded in the
+environment with an optional mapping to a name on \coq\ side and the
+number of extra arguments it must be apply to due to the type
+generalised variables appearing in its type.
+
 
 \subsubsection{Record type field names}
 
 \subsubsection{Values}
 
 \subsubsection{Types}
+Like in \ocaml, types also do not need any information to be generated.
 
 \subsubsection{Species}
 
-\subsection{The {\tt MlGenEMAccess} module}
+\subsection{The {\tt CoqGenEMAccess} module}
 
