@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.11 2009-03-30 15:05:17 pessaux Exp $
+% $Id: environments.tex,v 1.12 2009-03-30 16:28:54 pessaux Exp $
 
 All along the compilation pass, we need to keep trace of various
 information about compiled entities (methods, types, identifiers,
@@ -998,13 +998,28 @@ generalised variables appearing in its type.
 
 
 \subsubsection{Record type field names}
+Record type field names are handled like in \ocaml.
 
 \subsubsection{Values}
+In the same order of idea than for sum type value constructors we need
+to record the number of extra arguments to apply (when the value is
+functional) due to polymorphic type variables present in the value's
+type.
+
+Moreover, for technical reasons due to \zenon, we also need to remind
+if the value is a toplevel property ({\tt VB\_toplevel\_property} with
+its logical expression body), a toplevel let-bound value
+({\tt VB\_toplevel\_let\_bound}) or something else
+({\tt VB\_non\_toplevel}).
 
 \subsubsection{Types}
 Like in \ocaml, types also do not need any information to be generated.
 
 \subsubsection{Species}
+Species are bound to exactly the same information than they are in
+\ocaml\ code generation environments.
+
 
 \subsection{The {\tt CoqGenEMAccess} module}
-
+The access module for the \ocaml\ code generation environments is
+pretty simple and works exactly like for type-checking environments.
