@@ -1,0 +1,70 @@
+% $Id: codegen_model.tex,v 1.1 2009-03-31 12:18:58 pessaux Exp $
+
+The code generation model is the now closely the same for both \ocaml\
+and \coq\ generated source files. The main difference comes from the
+fact that in \ocaml, logical methods are discarded. However, except
+for the case of \zenon\ proofs where we introduce \coq\ {\tt Section},
+the generation model for ``computation'' and logical methods are
+exactly the the same. This especially means that dependencies are
+``manually'' abstracted by explicit $\lambda$-lifting instead of using
+(like in the previous compiler) the \coq's {\tt Section}
+mechanism. In the same order of idea, in order to have a common model,
+both \ocaml\ and \coq\ code are based on a record-oriented structure
+for the species and collection, with explicit record fields accesses.
+
+\section{Species}
+A species is modelled as a record type. This type can parametrised due
+to various abstraction requirements induced by the late-binding
+feature of \focalize. \ocaml\ requires a parameter not needed for
+\coq: this is the only fundamental difference. We will see that
+abstractions (hence, parameters) required by \coq\ can involves
+methods but this is only because some of the dependencies that are
+present in the \coq code are always trivialy absent in the
+\ocaml\ code.
+
+The name of the record type is the name of the species. Since species
+names in \focalize\ are capitalised and capitalised identifiers in
+\ocaml\ are reserved for modules and sum type value constructors, we
+just need to un-capitalise the name when generating \ocaml\ code.
+
+\begin{enumerate}
+\item In the \ocaml\ code, the record type is always parameterised by
+  a type variable representing the carrier of (i.e. the internal
+  representation of the type encapsulated in this) species. By
+  convention, this type variable is always nammed {\tt 'me\_as\_carrier}.
+  In \coq\ we don't have this mandatory type parameter, but instead of
+  it, we will have one extra field in the body of the record. This
+  variable enable to ``late-bind'' the {\tt representation} of the
+  species.
+
+\item Next come all the species parameter carriers appearing in the
+  {\bf types} of the methods of the species. Each carrier will be
+  abstracted by one type variable. This allows to ``late-bind'' the
+  {\tt representation} of the species parameters. We say here 
+  ``appearing in the {\bf types}\ldots'': be aware that the type of
+  ``computational'' methods are ML-like types and the ones of logical
+  methods are their {\bf statement} ! We do not explain here how these
+  parameters are found: this is the role of dependency computation on
+  species parameters.
+
+\item Finally come all the methods of the species parameter carriers
+  appearing in the {\bf types} of the methods of the species.
+\end{enumerate}
+
+\subsection{Species header}
+\subsection{Carrier representation}
+\subsection{The record type}
+\subsubsection{The record header}
+\subsubsection{Fields and their types}
+\subsection{Methods}
+\subsubsection{Inherited methods}
+\subsubsection{Defined methods}
+\subsection{Fully defined species}
+\subsection{Collection generator function's header}
+\subsubsection{Local functions}
+\subsubsection{Creating the record value}
+\section{Collection}
+\section{Toplevel functions}
+\section{Toplevel theorems}
+\section{Type definitions}
+\section{External definitions}
