@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.1 2009-03-31 12:18:58 pessaux Exp $
+% $Id: codegen_model.tex,v 1.2 2009-03-31 13:41:34 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -13,25 +13,86 @@ both \ocaml\ and \coq\ code are based on a record-oriented structure
 for the species and collection, with explicit record fields accesses.
 
 \section{Species}
-A species is modelled as a record type. This type can parametrised due
-to various abstraction requirements induced by the late-binding
-feature of \focalize. \ocaml\ requires a parameter not needed for
-\coq: this is the only fundamental difference. We will see that
-abstractions (hence, parameters) required by \coq\ can involves
+
+\subsection{Species header}
+The generated code for a species is hosted by a module whose name is
+the species' name. This way, it is possible to have species having the
+same names of methods without conflict. The module hence defines the
+name-space of ``things'' contained in and induced by a species.
+
+
+\subsection{Carrier representation}
+In \ocaml, if the structure of the carrier of the species is known
+(i.e. if the method {\tt representation} was defined), then we
+generate a type definition whose name is {\tt me\_as\_carrier} and
+body is the type translation of the corresponding \focalize\ type
+expression.
+
+In such a type definition, carriers of species parameters appearing in
+the species' carrier are abstracted by type variables. The naming
+scheme of these variable is ''{\tt '}'' + the species parameter's name
+un-capitalised + ``{\tt \_as\_carrier}''. Since species names in
+\focalize\ are capitalised and capitalised identifiers in \ocaml\ are
+reserved for modules and sum type value constructors, we need to
+un-capitalise the name when generating \ocaml\ code.
+
+For instance, the following header of a species definition:
+{\scriptsize
+\begin{lstlisting}
+species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
+  representation = (A * B) ;
+  ...
+\end{lstlisting}
+}
+will generate the type definition:
+{\scriptsize
+\begin{lstlisting}[language=MyOCaml]
+module Setoide_produit =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('a0_as_carrier, 'b1_as_carrier) me_as_carrier =
+    'a0_as_carrier * 'b1_as_carrier
+  ...
+\end{lstlisting}
+}
+
+In fact, {\em a posteriori}, I think now that it's useless in case
+of a species, even closed. This type definition is only used in the
+case of a collection.
+
+\medskip
+In \coq, no definition generated, the knowledge of the structure of
+the carrier being reflected directly is needed in the methods (see
+later).
+
+
+
+\subsection{The record type}
+The type of data representing a species is a record type. We first
+examine its header, i.e. stuff before this type definition's body,
+then it's body.
+
+
+\subsubsection{The record header}
+The name of this type is always {\tt me\_as\_carrier}. It can be
+parametrised due to various abstraction requirements induced by the
+late-binding feature of \focalize. \ocaml\ requires a parameter not
+needed for \coq: this is the only fundamental difference. We will see
+that abstractions (hence, parameters) required by \coq\ can involve
 methods but this is only because some of the dependencies that are
 present in the \coq code are always trivialy absent in the
 \ocaml\ code.
 
-The name of the record type is the name of the species. Since species
-names in \focalize\ are capitalised and capitalised identifiers in
-\ocaml\ are reserved for modules and sum type value constructors, we
-just need to un-capitalise the name when generating \ocaml\ code.
 
 \begin{enumerate}
 \item In the \ocaml\ code, the record type is always parameterised by
   a type variable representing the carrier of (i.e. the internal
   representation of the type encapsulated in this) species. By
-  convention, this type variable is always nammed {\tt 'me\_as\_carrier}.
+  convention, this type variable is always nammed {\tt 'me\_as\_carrier}
+  (don't confuse with {\tt me\_as\_carrier} that is the name of the
+  type definition representing the effective structure of the carrier
+  when it is known).
+
   In \coq\ we don't have this mandatory type parameter, but instead of
   it, we will have one extra field in the body of the record. This
   variable enable to ``late-bind'' the {\tt representation} of the
@@ -47,14 +108,21 @@ just need to un-capitalise the name when generating \ocaml\ code.
   parameters are found: this is the role of dependency computation on
   species parameters.
 
-\item Finally come all the methods of the species parameter carriers
-  appearing in the {\bf types} of the methods of the species.
+\item Finally come all the methods of the species parameter appearing
+  in the {\bf types} of the methods of the species. Since in \ocaml\
+  the type of a method can only involve type constructors (a ML-like
+  type), it is clear that we won't have any such parameters. In
+  effect, in \ocaml\ the logical methods are discarded. However,
+  since for the type of a logical method is its logical statement, to
+  \coq's side, we can have any expression inside their type.. In
+  particular, we can have calls to some collection parameters'
+  methods. Having these parameters in the record type allows the
+  ``late-binding'' on the collection parameter itself (i.e. on by
+  which effective collection will be used to instanciate the
+  parameter).
 \end{enumerate}
 
-\subsection{Species header}
-\subsection{Carrier representation}
-\subsection{The record type}
-\subsubsection{The record header}
+
 \subsubsection{Fields and their types}
 \subsection{Methods}
 \subsubsection{Inherited methods}
