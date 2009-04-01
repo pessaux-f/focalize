@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.167 2009-03-23 15:37:57 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.168 2009-04-01 13:54:48 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3605,7 +3605,6 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     String.capitalize (Parsetree_utils.name_of_vname species_name) in
   Format.fprintf out_fmter "@[<2>Module %s.@\n" module_name ;
 
-
   (* Insert in the environment the value bindings of the species methods and
      the species bindings for its parameters. This is needed since in Coq
      polymorphism is explicit, hence we need to know for each method the extra
@@ -3707,13 +3706,25 @@ let species_compile env ~current_unit out_fmter species_def species_descr
         generate_collection_generator
           ctxt_ccmap env' compiled_fields
           abstracted_params_methods_in_record_type in
+      (* From this, we must remove parameters whose methods list is empty.
+         In fact, they correspond to entity parameters. Since to generate
+         the code, we use the [print_methods_from_params_instanciations] (via
+         [make_collection_effective_record] and since this function takes
+         care of entity parameters (for the collection generator arguments),
+         we don't want extra parameters added to the record accesses while
+         building a collection (in effect, this info is used only for this). *)
+      let abstracted_params_methods_in_record_type' =
+        List.fold_right
+          (fun (pname, Env.ODFP_methods_list m) accu ->
+            if m = [] then accu else (pname, Env.ODFP_methods_list m) :: accu)
+          abstracted_params_methods_in_record_type [] in
       let coll_gen_params_info = {
         Env.CoqGenInformation.cgp_abstr_param_carriers_for_record =
         (* Just remove the "IN"/"IS" tag that is not needed to keep in the code
            generation environment. *)
           List.map snd params_carriers_abstr_for_record ;
         Env.CoqGenInformation.cgp_abstr_param_methods_for_record =
-          abstracted_params_methods_in_record_type ;
+          abstracted_params_methods_in_record_type' ;
         Env.CoqGenInformation.cgp_abstr_param_methods_for_coll_gen =
           abstr_params_methods_in_coll_gen } in
       Some
@@ -3970,6 +3981,7 @@ let apply_collection_generator_to_parameters ctx env formal_to_effective_map
     ctx env record_type_args_instanciations ;
   (* Now, we generate identifiers for methods of these species parameters we
      have dependencies on. *)
+Format.fprintf ctx.Context.scc_out_fmter "(* .......... *)" ;
   print_methods_from_params_instanciations
     ctx env formal_to_effective_map
     col_gen_params_info.Env.CoqGenInformation.

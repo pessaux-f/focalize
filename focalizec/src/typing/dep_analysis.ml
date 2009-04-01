@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.60 2009-03-13 07:52:05 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.61 2009-04-01 13:54:48 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -61,6 +61,24 @@ let debug_print_dependencies_from_parameters2 l =
        | Env.TypeInformation.SPAR_in (n, _, _) ->
            Format.eprintf "From IN-parameter '%a', methods: "
              Sourcify.pp_vname n) ;
+      List.iter
+        (fun (n, k) ->
+          Format.eprintf "%a " Sourcify.pp_vname n ;
+          match k with
+           | Parsetree_utils.DETK_computational t ->
+               Format.eprintf "%a@." Types.pp_type_simple t
+           | Parsetree_utils.DETK_logical e ->
+               Format.eprintf "%a@." Sourcify.pp_logical_expr e)
+        methods ;
+      Format.eprintf "@.")
+    l
+;;
+
+let debug_print_dependencies_from_parameters3 l =
+  List.iter
+    (fun (param_name, (Env.ODFP_methods_list methods)) ->
+      Format.eprintf "From parameter '%a', methods: "
+        Sourcify.pp_vname param_name ;
       List.iter
         (fun (n, k) ->
           Format.eprintf "%a " Sourcify.pp_vname n ;

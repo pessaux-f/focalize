@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.21 2009-03-02 10:19:31 weis Exp $ *)
+(* $Id: dep_analysis.mli,v 1.22 2009-04-01 13:54:48 pessaux Exp $ *)
 
 
 
@@ -49,3 +49,15 @@ val dependencies_graph_to_dotty :
 val order_species_params_methods :
   (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ->
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list
+
+(* For debugging purpose only.
+val debug_print_dependencies_from_parameters :
+  (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ->
+    unit
+val debug_print_dependencies_from_parameters2 :
+  (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ->
+    unit
+val debug_print_dependencies_from_parameters3 :
+  (Parsetree.vname * Env.ordered_methods_from_params) list ->
+    unit
+*)

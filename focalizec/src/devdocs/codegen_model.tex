@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.4 2009-04-01 06:16:29 pessaux Exp $
+% $Id: codegen_model.tex,v 1.5 2009-04-01 13:54:48 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -79,7 +79,7 @@ then it's body.
 
 
 \subsubsection{The record header}
-The name of this type is always {\tt me\_as\_carrier}. It can be
+The name of this type is always {\tt me\_as\_species}. It can be
 parametrised due to various abstraction requirements induced by the
 late-binding feature of \focalize. \ocaml\ requires a parameter not
 needed for \coq: this is the only fundamental difference. We will see
@@ -132,7 +132,12 @@ present in the \coq code are always trivially absent in the
   methods. Having these parameters in the record type allows the
   ``late-binding'' on the collection parameter itself (i.e. on by
   which effective collection will be used to instantiate the
-  parameter).
+  parameter). The naming scheme for the parameters induced by these
+  dependencies is ``{\tt \_p\_}'' + the species parameter's name  +
+  {\tt \_} + the method's name.
+
+  There is a special a case: the entity parameters. We will explain
+  this after the following example.
 \end{enumerate}
 
 Let's now change our previous example to illustrate the header of our
@@ -141,14 +146,82 @@ record type in \ocaml\ and \coq:
 \begin{lstlisting}
 species Cartesian_product(A is Setoid, B is Setoid) =
   representation = A * B;
-  let make (x in A, y in B) = (x, y) ;
-  let equal (x in Self) = ... A!equal (...) && B!equal (...) ;
+  let make (x in A, y in B) in Self = (x, y) ;
+  let equiv (x in Self) = ... A!equal (...) && B!equal (...) ;
   theorem thm : all x in A, A!tst (x) -> ...
     proof = ... by property A!commutes ... ;
   ...
 \end{lstlisting}
 }
+We can see that we have:
+\begin{itemize}
+\item the carrier defined,
+\item a method {\tt make} of type {\tt A -> B -> Self}
+\item a method {\tt equiv} having type {\tt Self -> bool}, having
+  depedencies on the methods {\tt equal} of the collection parameters
+  {\tt A} and {tt B}, but in its {\bf body}, not in its type
+  ({\tt equal} doesn't appear in {\tt equiv}'s type). Hence, the
+  record type (in \coq\ and in \ocaml) won't have any parameter to
+  abstract the depedencies on these methods.
+\item a theorem {\tt thm} of ``type''
+  {\tt all x in A, A!tst (x) -> ...} and ``body'' (proof)
+  {\tt ... by property A!commutes ...}. Hence, it has dependencies on
+  {\tt A!tst} in its type and on {\tt A!commutes} in its body. This
+  means that in \coq\ the record type will have a parameter to abstract
+  the dependency found in the type of the theorem, i.e. {\tt A!tst}
+  but not for {\tt A!commutes}
+\end{itemize}
 
+The record type for \ocaml\ will then look like:
+{\scriptsize
+\begin{lstlisting}[language=MyOCaml]
+module Cartesian_product =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('a0_as_carrier, 'b1_as_carrier) me_as_carrier =
+    'a0_as_carrier * 'b1_as_carrier
+  type ('a0_as_carrier, 'b1_as_carrier, 'me_as_carrier) me_as_species =
+  ...
+\end{lstlisting}
+}
+
+
+The record type for \coq\ will then look like:
+{\scriptsize
+\begin{lstlisting}[language=MyCoq]
+Module Cartesian_product.
+  Record Cartesian_product (A_T : Set) (B_T : Set)
+    (_p_A_tst : A_T -> basics.bool__t) : Type :=
+    mk_record
+  ...
+\end{lstlisting}
+}
+
+\medskip
+\paragraph{The entity parameters} In \ocaml\ they can never appear in
+the record type since in ML-like types, we can't have expressions. 
+However, in \coq\ it is possible to have dependency on an entity
+parameter in a theorem or property statement (i.e. in the type of a
+logical method). For example:
+{\scriptsize
+\begin{lstlisting}
+species Me (Naturals is IntModel, n in Naturals) =
+  representation = Naturals ;
+
+ theorem myth : all x in Self,
+    basics#syntactic_equal (n, Naturals!un)
+  proof = assumed {* *} ;
+  end ;;
+\end{lstlisting}
+}
+The theorem {\tt myth} show a dependency on the entity parameter
+{\tt n}. In this case, the record type will be parameterised by this
+entity parameter like if it was a collection parameter's
+method. Obviously, an entity parameter doesn't have methods since it
+is a ``value'' and not a species. So we don't have any notion of
+method in the naming scheme. We choose to name these entity parameters
+by ``{\tt \_p\_}'' + the entity parameter's name  + {\tt \_} + the
+the entity parameter's name again.
 
 \subsubsection{Fields and their types}
 \subsection{Methods}

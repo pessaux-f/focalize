@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.11 2009-03-27 13:40:10 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.12 2009-04-01 13:54:48 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -122,11 +122,10 @@ let type_def_compile ctx env type_def_name type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
   (* Type definition header. *)
   Format.fprintf out_fmter "@[<2>type" ;
-  (* Get a fresh instance of the type's identity scheme directly   *)
-  (* instanciated with the variables that will serve as parameters *)
-  (* of the definition. We keep the list of these variables to be  *)
-  (* able to print them in front of the type constructor in the    *)
-  (* OCaml definition.                                             *)
+  (* Get a fresh instance of the type's identity scheme directly instanciated
+     with the variables that will serve as parameters of the definition. We
+     keep the list of these variables to be able to print them in front of the
+     type constructor in the OCaml definition. *)
   let type_def_params =
     List.map
       (fun _ -> Types.type_variable ())
@@ -158,8 +157,8 @@ let type_def_compile ctx env type_def_name type_descr =
        (* Print the parameter(s) stuff if any. *)
        print_types_comma_with_same_vmapping_and_empty_carrier_mapping
          ctx type_def_params ;
-       (* Now, the type name, renamed as "_focty_" followed by *)
-       (* the original name.                                   *)
+       (* Now, the type name, renamed as "_focty_" followed by the original
+          name. *)
        Format.fprintf out_fmter " _focty_%a =@ "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* And now, bind the FoCaL identifier to the OCaml one. *)
@@ -177,18 +176,18 @@ let type_def_compile ctx env type_def_name type_descr =
          raise
            (Externals_generation_errs.No_external_type_def
               ("OCaml", type_def_name, external_expr.Parsetree.ast_loc))) ;
-       (* Finally, we return the extended code generation environment in *)
-       (* which sum constructors or labels are recorded in order to be   *)
-       (* able to remind on what to map them when we will see them.      *)
+       (* Finally, we return the extended code generation environment in
+          which sum constructors or labels are recorded in order to be able to
+          remind on what to map them when we will see them. *)
        extend_ml_gen_env_with_type_external_bindings env external_bindings
        end)
    | Env.TypeInformation.TK_variant cstrs ->
        (begin
-       (* To ensure variables names sharing, we will unify an instance of   *)
-       (* each constructor result type (remind they have a functional type  *)
-       (* whose arguments are the sum constructor's arguments and result is *)
-       (* the same type that the hosting type itself) with the instance of  *)
-       (* the defined type identity.                                        *)
+       (* To ensure variables names sharing, we will unify an instance of each
+          constructor result type (remind they have a functional type whose
+          arguments are the sum constructor's arguments and result is the same
+          type that the hosting type itself) with the instance of the defined
+          type identity. *)
        let sum_constructors_to_print =
          List.map
            (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
@@ -203,24 +202,23 @@ let type_def_compile ctx env type_def_name type_descr =
                         (Types.type_variable ()) instanciated_body)
                      sum_cstr_ty in
                  let sum_cstr_args =
-		   (* We do not have anymore information about "Self"'s
-		      structure... *)
+                   (* We do not have anymore information about "Self"'s
+                      structure... *)
                    Types.extract_fun_ty_arg
-		     ~self_manifest: None unified_sum_cstr_ty in
+                     ~self_manifest: None unified_sum_cstr_ty in
                  (sum_cstr_name, (Some sum_cstr_args))
                with _ ->
-                 (* Because program is already well-typed, this *)
-                 (* should always succeed.                      *)
+                 (* Because program is already well-typed, this should always
+                    succeed. *)
                  assert false
                end)
              else (sum_cstr_name, None))
            cstrs in
-       (* Print the parameter(s) stuff if any. Do it only now the  *)
-       (* unifications have been done with the sum constructors to *)
-       (* be sure that thanks to unifications, "sames" variables   *)
-       (* will have the "same" name everywhere (i.e. in the        *)
-       (* the parameters enumeration of the type and in the sum    *)
-       (* constructors definitions).                               *)
+       (* Print the parameter(s) stuff if any. Do it only now the unifications
+          have been done with the sum constructors to be sure that thanks to
+          unifications, "sames" variables will have the "same" name everywhere
+          (i.e. in the the parameters enumeration of the type and in the sum
+          constructors definitions). *)
        print_types_comma_with_same_vmapping_and_empty_carrier_mapping
          ctx type_def_params ;
        (* Now print the type constructor's name. *)
@@ -248,10 +246,10 @@ let type_def_compile ctx env type_def_name type_descr =
        end)
    | Env.TypeInformation.TK_record fields ->
        (begin
-       (* Like for the sum types, we make use of unification to ensure the *)
-       (* sharing of variables names. We proceed exactly the same way,     *)
-       (* delaying the whole print until we unified into each record-field *)
-       (* type.                                                            *)
+       (* Like for the sum types, we make use of unification to ensure the
+          sharing of variables names. We proceed exactly the same way,
+          delaying the whole print until we unified into each record-field
+          type. *)
        let record_fields_to_print =
          List.map
            (fun (field_name, field_mut, field_scheme) ->
@@ -262,15 +260,15 @@ let type_def_compile ctx env type_def_name type_descr =
                    ~loc: Location.none ~self_manifest: None
                    (Types.type_arrow (Types.type_variable ()) instanciated_body)
                    field_ty in
-	       (* We do not have anymore information about "Self"'s
-		  structure... *)
+               (* We do not have anymore information about "Self"'s
+                  structure... *)
                let field_args =
-		 Types.extract_fun_ty_arg
-		   ~self_manifest: None unified_field_ty in
+                 Types.extract_fun_ty_arg
+                   ~self_manifest: None unified_field_ty in
                (field_name, field_mut, field_args)
              with _ ->
-               (* Because program is already well-typed, this *)
-               (* should always succeed.                      *)
+               (* Because program is already well-typed, this should always
+                  succeed. *)
                assert false)
            fields in
        (* Print the parameter(s) stuff if any. *)

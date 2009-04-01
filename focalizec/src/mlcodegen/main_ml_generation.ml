@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.18 2008-09-12 09:56:19 pessaux Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.19 2009-04-01 13:54:48 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -42,8 +42,8 @@
 let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_use (_, _) -> env
   | Infer.PCM_open (phrase_loc, fname) ->
-      (* One must "open" the ml code generation environment of this module *)
-      (* and return the environment extended with these "opened" bindings. *)
+      (* One must "open" the ml code generation environment of this module and
+         return the environment extended with these "opened" bindings. *)
       Env.mlgen_open_module ~loc: phrase_loc fname env
   | Infer.PCM_coq_require _ ->
       (* Really nothing to do... *)
@@ -52,8 +52,8 @@ let toplevel_compile env ~current_unit out_fmter = function
       let species_binding_info =
         Species_ml_generation.species_compile
           env ~current_unit out_fmter species_def species_descr dep_graph in
-      (* Return the ml code generation environment extended by the *)
-      (* current species's collection generator information.       *)
+      (* Return the ml code generation environment extended by the current
+         species's collection generator information. *)
       Env.MlGenEnv.add_species
         ~loc: species_def.Parsetree.ast_loc
         species_def.Parsetree.ast_desc.Parsetree.sd_name
@@ -61,11 +61,11 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_collection (coll_def, coll_descr, dep_graph) ->
       Species_ml_generation.collection_compile
         env ~current_unit out_fmter coll_def coll_descr dep_graph ;
-      (* Collections don't have parameters or any remaining abstraction. *)
-      (* Moreover, since we can never inherit of a collection, just      *)
-      (* forget all methods information, it will never be used.          *)
-      (* Collections do not have collection generator, then simply add *)
-      (* them in the environment with None.                            *)
+      (* Collections don't have parameters or any remaining abstraction.
+         Moreover, since we can never inherit of a collection, just forget all
+         methods information, it will never be used.
+         Collections do not have collection generator, then simply add them in
+         the environment with None. *)
       Env.MlGenEnv.add_species
         ~loc: coll_def.Parsetree.ast_loc
         coll_def.Parsetree.ast_desc.Parsetree.cd_name
@@ -93,9 +93,9 @@ let toplevel_compile env ~current_unit out_fmter = function
         (* Not in the context of generating a method's body code, so, empty. *)
         Context.rcc_lambda_lift_params_mapping = [] ;
         Context.rcc_out_fmter = out_fmter } in
-      (* We have the schemes under the hand. Then we will be able    *)
-      (* to annotate the parameters of the toplevel let-bound idents *)
-      (* with type constraints.                                      *)
+      (* We have the schemes under the hand. Then we will be able to annotate
+         the parameters of the toplevel let-bound idents with type
+         constraints. *)
       let bound_schemes = List.map (fun sch -> Some sch) def_schemes in
       (* No local idents in the scope because we are at toplevel. *)
       Base_exprs_ml_generation.let_def_compile
@@ -146,9 +146,9 @@ let root_compile ~current_unit ~out_file_name stuff =
     close_out out_hd ;
     (begin
     try
-      (* And rename it to prevent an incorrecty OCaml source file   *)
-      (* from remaining, but to still keep a trace of what could be *)
-      (* generated until the error arose.                           *)
+      (* And rename it to prevent an incorrecty OCaml source file from
+         remaining, but to still keep a trace of what could be generated until
+         the error arose. *)
       let trace_filename = out_file_name ^ ".mangled" in
       (* If the file of trace already exists, then first *)
       (* discard it to prevent OS file I/O errors.       *)
@@ -156,10 +156,10 @@ let root_compile ~current_unit ~out_file_name stuff =
       Sys.rename out_file_name trace_filename ;
     with second_error ->
       (begin
-      (* Here we want to catch errors that can arise during the trace file  *)
-      (* stuff. Because we don't want these errors to hide the real initial *)
-      (* problem that made the code generation impossible, we first process *)
-      (* here I/O errors, then will be raise again the initial error.       *)
+      (* Here we want to catch errors that can arise during the trace file
+         stuff. Because we don't want these errors to hide the real initial
+         problem that made the code generation impossible, we first process
+         here I/O errors, then will be raise again the initial error. *)
       Format.eprintf "Error@ while@ trying@ to@ keep@ trace@ of@ the@ partially@ generated@ OCaml@ code:@ %s.@\nInitial@ error@ follows.@."
         (Printexc.to_string second_error)
       end)
