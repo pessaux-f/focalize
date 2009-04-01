@@ -32,11 +32,7 @@ species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
   let creer (x, y) in Self = basics#pair (x, y) ;
   let element = Self!creer (A!element, B!element) ;
   let print (x) =
-     sc ("(",
-         sc (A!print (fst (x)),
-             sc (",",
-                 sc (B!print (snd (x)),
-                     ")")))) ;
+     "(" ^ A!print (fst (x)) ^ "," ^ B!print (snd (x)) ^ ")" ;
 
   proof of refl = (* by definition of ( = ) *) assumed {* *} ;
   proof of symm = assumed {* *} ;
@@ -49,7 +45,7 @@ species Monoide_produit (C is Monoide, D is Monoide)
 
   let un = !creer (C!un, D!un) ;
   let ( * ) (x, y) =
-     crp (C!( * ) (fst (x), fst (y)),
+     pair (C!( * ) (fst (x), fst (y)),
           D!( * ) (snd (x), snd (y))) ;
 end ;;
 
