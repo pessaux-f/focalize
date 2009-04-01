@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.126 2009-03-27 13:40:10 pessaux Exp $ *)
+(* $Id: env.ml,v 1.127 2009-04-01 06:16:29 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -408,7 +408,7 @@ module TypeInformation = struct
      from_history *
      Parsetree.vname *         (** The theorem's name. *)
      (** The mapping of type variables found in the "forall" and "exists" in the
-         theorem's logical expression.onto their name. *)
+         theorem's logical expression onto their name. *)
      ((Parsetree.vname * Types.type_simple) list) *
      Parsetree.logical_expr *  (** The theorem's body. *)
      Parsetree.proof *         (** The theorem's proof. *)
@@ -422,7 +422,7 @@ module TypeInformation = struct
      from_history *
      Parsetree.vname *         (** The property's name. *)
      (** The mapping of type variables found in the "forall" and "exists" in the
-         property's logical expression.onto their name. *)
+         property's logical expression onto their name. *)
      ((Parsetree.vname * Types.type_simple) list) *
      Parsetree.logical_expr *  (** The property's body. *)
      (** Tells if the property has dependencies on the carrier ("rep"). *)
@@ -451,7 +451,7 @@ module TypeInformation = struct
              parameters. *)
          Types.species_collection_kind *
          (** The list of fields this parameter has. It is in fact the normalized
-             form of the species type the parameter has. *)
+             form of the species methods the parameter has. *)
          (species_field list) *
          (** The species expression of the parameter. This expression has the
              normalized form compound of the above list of fields. This
@@ -495,7 +495,7 @@ module TypeInformation = struct
   (* *********************************************************************** *)
   type species_description = {
     spe_kind : Types.species_collection_kind ;  (** Whether the
-         species is a toplevel collection, a toplevel species or a species
+         species is a toplevel collection, a toplevel species or a collection
          parameter. *)
     spe_is_closed : bool ;   (** Whether the species is fully defined, even if
          not turned into a collection. This information
@@ -790,7 +790,7 @@ type generic_code_gen_method_info = {
 module MlGenInformation = struct
   type collection_generator_info = {
     (** The list of species parameters names and kinds the species whose
-        collection generator belongs to has. This list is positionnal, i.e.
+        collection generator belongs to has. This list is positional, i.e.
         that the first name of the list is the name of the first species
         parameter and so on. *)
     cgi_implemented_species_params_names :
@@ -829,7 +829,7 @@ module MlGenInformation = struct
       "Nil" will be mapped onto "[]" and "Cons" to "( :: )".  For Ocaml,
       only constructors coming from "external" sum types are entered in the
       generation environment. Hence, if a constructor is not found, then this
-      means that it come from a regular FoCaL type definition, not dealing
+      means that it comes from a regular FoCaL type definition, not dealing
       with any external material. *)
   type constructor_mapping_info = Parsetree.external_expr_desc
 
@@ -870,7 +870,7 @@ module CoqGenInformation = struct
 
   type collection_generator_info = {
     (** The list of species parameters names and kinds the species whose
-        collection generator belongs to has. This list is positionnal, i.e.
+        collection generator belongs to has. This list is positional, i.e.
         that the first name of the list is the name of the first species
         parameter and so on. *)
     cgi_implemented_species_params_names :
@@ -999,7 +999,7 @@ let (scope_find_module, type_find_module,
      Because ".fo" files contains always both the scoping and typing
      information, once loaded for scoping purpose, the typing info and ml code
      generation information are made available. Hence, the buffer list contains
-     couples with no optionnal component. *)
+     couples with no optional component. *)
   let buffered = ref ([] : (Types.fname * fo_file_structure) list) in
 
 

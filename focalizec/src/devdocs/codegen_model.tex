@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.3 2009-03-31 14:11:30 pessaux Exp $
+% $Id: codegen_model.tex,v 1.4 2009-04-01 06:16:29 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -100,7 +100,15 @@ present in the \coq code are always trivially absent in the
   parameters are found: this is the role of dependency computation on
   species parameters.
 
-\item Next, only in the \ocaml\ code, the record type is always
+  The naming scheme of these type variable in \ocaml\ is the same than
+  described above for the carrier representation.
+
+  In \coq\, these parameters of the type are not ``really type
+  variables'' but arguments of type {\tt Set} (simply a technical
+  question). Their naming scheme is the species parameter's name +
+  ``{\tt \_T}''.
+
+\item Next, {\bf only in the \ocaml\ code}, the record type is always
   parametrised by a type variable representing the carrier of
   (i.e. the internal representation of the type encapsulated in this)
   species. By convention, this type variable is always named
@@ -127,9 +135,8 @@ present in the \coq code are always trivially absent in the
   parameter).
 \end{enumerate}
 
-Let's now extend our previous example to illustrate the header of our
+Let's now change our previous example to illustrate the header of our
 record type in \ocaml\ and \coq:
-
 {\scriptsize
 \begin{lstlisting}
 species Cartesian_product(A is Setoid, B is Setoid) =
