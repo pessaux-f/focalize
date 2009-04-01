@@ -1,4 +1,4 @@
-% $Id: phd_changes.tex,v 1.7 2009-03-30 15:05:17 pessaux Exp $
+% $Id: phd_changes.tex,v 1.8 2009-04-01 15:34:34 pessaux Exp $
 \subsection{Type unification}
 \noindent Section 3.3, definition 9, page 27.
 
@@ -150,7 +150,8 @@ hosting species that is that collection parameter).
 
 \noindent For instance:
 
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}
 species S1 ... =
   let eq = ... ;
@@ -164,6 +165,7 @@ species S2 (P is S1) ... =
 end ;;
 \end{lstlisting}
 }
+\end{table}
 
 In {\tt S1}, {\tt th1} decl-depends on {\tt eq}. In {\tt S2}, method
 {\tt th2} has a dependencies on its collection parameter {\tt P}
@@ -255,7 +257,8 @@ inherited species may ``disappear'' due to parameters instantiations.
 
 \noindent For example:
 
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}
 species Simple =
    signature equal : Self -> Self -> bool ;
@@ -276,6 +279,7 @@ species Bug (G is Simple) inherits Couple (G, G) =
 end ;;
 \end{lstlisting}
 }
+\end{table}
 
 In fact, the problem is that when we compute dependencies on
 collection parameters, in the case where we inherit from a species
@@ -360,7 +364,8 @@ weakness. Moreover, it was strongly different from the \ocaml\
 one. Let's understand the weakness on a simple example\ldots The
 problem is:
 
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[emph={one}, emphstyle=\color{red},
                    emph={[2]lookatme}, emphstyle={[2]\color{blue}}]
 species IntModel inherits Basic_object =
@@ -379,13 +384,14 @@ species Me (Naturals is IntModel, n in Naturals) =
 end ;;
 \end{lstlisting}
 }
+\end{table}
 
 The generated \coq\ code follows (at least, for the interesting part
 of our problem, i.e. the {\tt lookatme} theorem):
 
 
-
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyCoq,
                    emph={one, _p_Naturals_one}, emphstyle=\color{red},
                    emph={[2]lookatme, self_lookatme, Me__lookatme, Me_lookatme},
@@ -447,6 +453,7 @@ Chapter Me.
   End Me.
 \end{lstlisting}
 }
+\end{table}
 
 We see that there is a {\tt Section} for the species {\tt Me}. The
 theorem {\color{blue}{\tt lookatme}} is in a nested {\tt Section}
@@ -463,7 +470,8 @@ of the {\bf theorem generator} {\color{blue}{\tt Me\_\_lookatme}}
 {\bf inside} the {\tt Section} {\color{blue}{\tt lookatme}}, we see
 that is has type:
 
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyCoq,
                    emph={one, _p_Naturals_one}, emphstyle=\color{red},
                    emph={[2]Me__lookatme, Me_lookatme},
@@ -472,6 +480,7 @@ Me__lookatme:
   self_T -> Is_true (basics.base_eq _p_Naturals_T _p_n_n _p_Naturals_one)
 \end{lstlisting}
 }
+\end{table}
 
 \noindent since the {\tt Section} is not closed, because the
 {\tt Variable}s are not yet abstracted by the \coq's {\tt Section}
@@ -482,7 +491,8 @@ We now close the {\tt Section}, then naturally the
 {\bf theorem generator} {\color{blue}{\tt Me\_\_lookatme}} turns
 having the type:
 
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyCoq,
                    emph={one, _p_Naturals_one}, emphstyle=\color{red},
                    emph={[2]Me__lookatme, Me_lookatme},
@@ -492,26 +502,29 @@ Me__lookatme :
     self_T -> Is_true (basics.base_eq _p_Naturals_T _p_n_n _p_Naturals_one)
 \end{lstlisting}
 }
+\end{table}
 
 Great ! the {\tt Variable}s have been abstracted for us by \coq. Now,
 the idea is that this generator will be used to create a collection
 like:
 
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[emph={one}, emphstyle=\color{red},
                    emph={[2]Me}, emphstyle={[2]\color{blue}}]
 collection ConcreteInt implements IntModel ;;
 collection ConcreteMe implements Me (ConcreteInt, ConcreteInt!one) ;;
 \end{lstlisting}
 }
-
+\end{table}
 
 Let's continue and close the {\tt Chapter} ($\simeq$ a {\tt Section})
 of species {\color{blue}{\tt Me}}. And then, here the theorem
 generator {\color{blue}{\tt Me\_\_lookatme}} turns unfortunately to
 have type:
 
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyCoq,
                    emph={one, _p_Naturals_one}, emphstyle=\color{red},
                    emph={[2]Me__lookatme, Me_lookatme},
@@ -523,6 +536,7 @@ Me__lookatme:
         Is_true (basics.base_eq _p_Naturals_T _p_n_n _p_Naturals_one)
 \end{lstlisting}
 }
+\end{table}
 
 \noindent We see that we have an extra {\tt Naturals\_T : Set} in
 

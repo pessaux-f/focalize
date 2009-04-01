@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.5 2009-04-01 13:54:48 pessaux Exp $
+% $Id: codegen_model.tex,v 1.6 2009-04-01 15:34:34 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -42,15 +42,18 @@ and an entity parameter whose names differ only by the capitalisation
 of the first letter.
 
 For instance, the following header of a species definition:
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}
 species Cartesian_product(A is Setoid, B is Setoid) =
   representation = A * B;
   ...
 \end{lstlisting}
 }
+\end{table}
 will generate the \ocaml\ type definition:
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyOCaml]
 module Cartesian_product =
   struct
@@ -60,6 +63,7 @@ module Cartesian_product =
   ...
 \end{lstlisting}
 }
+\end{table}
 
 In fact, {\em a posteriori}, I think now that it's useless in case
 of a species, even closed. This type definition is only used in the
@@ -142,7 +146,8 @@ present in the \coq code are always trivially absent in the
 
 Let's now change our previous example to illustrate the header of our
 record type in \ocaml\ and \coq:
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}
 species Cartesian_product(A is Setoid, B is Setoid) =
   representation = A * B;
@@ -153,16 +158,17 @@ species Cartesian_product(A is Setoid, B is Setoid) =
   ...
 \end{lstlisting}
 }
+\end{table}
 We can see that we have:
 \begin{itemize}
 \item the carrier defined,
 \item a method {\tt make} of type {\tt A -> B -> Self}
 \item a method {\tt equiv} having type {\tt Self -> bool}, having
-  depedencies on the methods {\tt equal} of the collection parameters
-  {\tt A} and {tt B}, but in its {\bf body}, not in its type
+  dependencies on the methods {\tt equal} of the collection parameters
+  {\tt A} and {\tt B}, but in its {\bf body}, not in its type
   ({\tt equal} doesn't appear in {\tt equiv}'s type). Hence, the
   record type (in \coq\ and in \ocaml) won't have any parameter to
-  abstract the depedencies on these methods.
+  abstract the dependencies on these methods.
 \item a theorem {\tt thm} of ``type''
   {\tt all x in A, A!tst (x) -> ...} and ``body'' (proof)
   {\tt ... by property A!commutes ...}. Hence, it has dependencies on
@@ -173,7 +179,8 @@ We can see that we have:
 \end{itemize}
 
 The record type for \ocaml\ will then look like:
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyOCaml]
 module Cartesian_product =
   struct
@@ -184,10 +191,13 @@ module Cartesian_product =
   ...
 \end{lstlisting}
 }
+\end{table}
 
-
-The record type for \coq\ will then look like:
-{\scriptsize
+In \coq\ a record is introduced by a constructor. By convention, we
+always name it {\tt mk\_record}. The record type for \coq\ will then
+look like:
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyCoq]
 Module Cartesian_product.
   Record Cartesian_product (A_T : Set) (B_T : Set)
@@ -196,6 +206,7 @@ Module Cartesian_product.
   ...
 \end{lstlisting}
 }
+\end{table}
 
 \medskip
 \paragraph{The entity parameters} In \ocaml\ they can never appear in
@@ -203,7 +214,8 @@ the record type since in ML-like types, we can't have expressions.
 However, in \coq\ it is possible to have dependency on an entity
 parameter in a theorem or property statement (i.e. in the type of a
 logical method). For example:
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}
 species Me (Naturals is IntModel, n in Naturals) =
   representation = Naturals ;
@@ -214,19 +226,146 @@ species Me (Naturals is IntModel, n in Naturals) =
   end ;;
 \end{lstlisting}
 }
-The theorem {\tt myth} show a dependency on the entity parameter
-{\tt n}. In this case, the record type will be parameterised by this
+\end{table}
+The theorem {\tt myth} shows a dependency on the entity parameter
+{\tt n}. In this case, the record type will be parametrised by this
 entity parameter like if it was a collection parameter's
 method. Obviously, an entity parameter doesn't have methods since it
 is a ``value'' and not a species. So we don't have any notion of
 method in the naming scheme. We choose to name these entity parameters
 by ``{\tt \_p\_}'' + the entity parameter's name  + {\tt \_} + the
 the entity parameter's name again.
+\begin{table}[h]
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+Module Me.
+  Record Me (Naturals_T : Set) (_p_n_n : Naturals_T)
+    (_p_Naturals_un : Naturals_T) : Type :=
+    mk_record 
+  ...
+\end{lstlisting}
+}
+\end{table}
+
 
 \subsubsection{Fields and their types}
+Now we saw the header of the record type definition, we must address
+its body, i.e. its fields. Roughly speaking, the fields will be all
+the methods with their types hosted in the species in normal form. By
+``all'' we mean the methods declared, defined in the species and those
+inherited. Because the species is in normal form, this means that we
+do not have several times a method: inheritance has been resolved and
+chose the right version of each method to keep.
+
+The type accompanying each method is, like we previously said, a
+ML-like type for ``computational'' methods and a logical statement for
+logical methods. This especially means that since logical methods are
+discarded in \ocaml, in this target language, we will only have
+ML-like types.
+
+The only important difference between \ocaml\ and \coq is that in
+\coq\ we always have an extra (and first) field representing the
+carrier of the species (remember that in \ocaml, instead, we had a
+type definition that we didn't have in \coq). This field always
+appears as {\tt  rf\_T :> Set ;} and represents the type encapsulated
+in the species. In \ocaml, the field corresponding to a method is
+straight the method's name. In \coq, the field's name is
+``{\tt rf\_}'' + the method's name (``rf'' for {\bf r}ecord
+{\bf f}ield).
+
+Let's now take a simple example and seen the record types in
+\ocaml\ and in \coq.
+\begin{table}[h]
+{\footnotesize
+\begin{lstlisting}
+species Me (Naturals is IntModel, n in Naturals) =
+  representation = Naturals ;
+
+ theorem daube : all x in Self,
+    basics#syntactic_equal (n, Naturals!un)
+  proof = assumed {* *} ;
+
+  let junk (x in Self) in int = 1 ;
+
+  let reduce (x in Naturals) in Self =
+    Naturals!modulo (x, n) ;
+end ;;
+\end{lstlisting}
+}
+\caption{\focalize\ sample code}
+\end{table}
+
+\begin{table}[h]
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml]
+module Me =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('naturals0_as_carrier, 'n1_as_carrier) me_as_carrier =
+    'naturals0_as_carrier
+  type ('naturals0_as_carrier, 'n1_as_carrier, 'me_as_carrier) me_as_species = {
+    (* From species ok__in_example#Me. *)
+    junk : 'me_as_carrier -> Basics._focty_int ;
+    (* From species ok__in_example#Me. *)
+    reduce : 'naturals0_as_carrier -> 'me_as_carrier ;
+    }
+\end{lstlisting}
+}
+\caption{Generated \ocaml\ code}
+\end{table}
+
+\begin{table}[h]
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+Module Me.
+  Record Me (Naturals_T : Set) (_p_n_n : Naturals_T)
+    (_p_Naturals_un : Naturals_T) : Type :=
+  mk_record {
+    rf_T :> Set ;
+    (* From species ok__in_example#Me. *)
+    rf_daube :
+      forall x : rf_T,
+        Is_true ((basics.syntactic_equal _ _p_n_n _p_Naturals_un)) ;
+    (* From species ok__in_example#Me. *)
+    rf_junk : rf_T -> basics.int__t ;
+    (* From species ok__in_example#Me. *)
+    rf_reduce : Naturals_T -> rf_T
+    }.
+\end{lstlisting}
+}
+\caption{Generated \coq\ code}
+\end{table}
+
+Note that in the generated \coq\ code, the method {\tt daube} (in
+fact, the theorem) contains an application of \\
+{\tt basics.syntactic\_equal}. We can see the mechanism of explicit
+polymorphism and the interest of having kept in the \coq\ code
+generation environment the number of extra arguments ({\tt \_}s) that
+must be added to identifiers in applicative position.
+
+
+
 \subsection{Methods}
-\subsubsection{Inherited methods}
+Once the record type is defined, it is time to generate the
+definitions corresponding to the various methods of the
+species. Several cases exist: a method can be declared, defined and in
+each case either at the current inheritance level or inherited from an
+ancestor.
+
+\subsubsection{Inherited, declared, defined ?}
+First of all, the point is that methods only declared or {\bf inherited}
+are {\bf never} leading to generated code, neither in \ocaml, nor in
+\coq. This means that only methods freshly defined in the species are
+leading to code.
+
 \subsubsection{Defined methods}
+In term of generation model, there is no difference between \ocaml\
+and \coq. The point is because in \ocaml\ we don't have logical
+methods, all what we will explain about theorems and proof is
+trivially out of the subject for \ocaml. Hence we won't make any
+difference in our explanation here, simply considering both kinds of
+methods independently of the target language.
+
 \subsection{Fully defined species}
 \subsection{Collection generator function's header}
 \subsubsection{Local functions}

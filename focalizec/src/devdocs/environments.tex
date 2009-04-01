@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.12 2009-03-30 16:28:54 pessaux Exp $
+% $Id: environments.tex,v 1.13 2009-04-01 15:34:34 pessaux Exp $
 
 All along the compilation pass, we need to keep trace of various
 information about compiled entities (methods, types, identifiers,
@@ -43,7 +43,8 @@ values (to be polymorphic in fact), the {\bf value} will be a
 different type variable for each name-space.
 
 Hence, the generic environments have type:
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyOCaml]
 type ('a, 'b, 'c, 'd, 'e) generic_env = {
   constructors : (Parsetree.constructor_name * 'a binding_origin) list ;
@@ -54,6 +55,7 @@ type ('a, 'b, 'c, 'd, 'e) generic_env = {
 }
 \end{lstlisting}
 }
+\end{table}
 
 To create a module system, we need to wrap this core structure inside
 a module providing access to this structure, i.e. search the
@@ -106,7 +108,8 @@ primitives provided.
 
 \subsection{{\tt EMAccess} : accessing functions for an environment}
 module is required to have the signature:
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyOCaml]
 module type EnvModuleAccessSig =
   type constructor_bound_data
@@ -135,7 +138,9 @@ module type EnvModuleAccessSig =
     Parsetree.qualified_vname -> value_bound_data -> value_bound_data
   end
 \end{lstlisting}
-}{\sc Sample code for EMAccess signature}
+}
+\caption{Sample code for EMAccess signature}
+\end{table}
 
 \medskip
 The fields type definitions {\tt constructor\_bound\_data},
@@ -197,7 +202,8 @@ environment with the binding ``in front''). This means that an
 environment (dedicated to a ``Blabla'' processing) will have a
 signature like (forget the noisy arguments we spoke about, like
 {\tt loc}, {\tt current\_unit}, we will check them in detail later) :
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyOCaml]
 module BlablaEnv :
   sig
@@ -239,6 +245,7 @@ module BlablaEnv :
   end
 \end{lstlisting}
 }
+\end{table}
 
 \medskip
 We address now some remarks about the {\tt Make} functor. This functor
@@ -315,7 +322,8 @@ searched among identifiers imported by opened modules.
 
 Based on this information, we simply look-up in the association list to
 find the related binding.
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}[language=MyOCaml]
   (* ****************************************************************** *)
   (** {b Descr} : Looks-up for an [ident] inside the types environment.
@@ -346,8 +354,9 @@ find the related binding.
     try env_list_assoc ~allow_opened vname env.types with
     | Not_found -> raise (Unbound_type (vname, loc))
 \end{lstlisting}
-}{\sc Sample code for simple look-up function}
-
+}
+\caption{Sample code for simple look-up function}
+\end{table}
 
 \subsubsection{Looking for a binding for values}
 This case is more subtle since it involves more kinds of identifiers,
@@ -523,7 +532,8 @@ currently processed species but are belonging to the species from
 which we loaded the methods in our environment.
 
 For example, let's examine the following source code:
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}
 species S (P is ...) =
   let meth1 (x) = ... P!meth2 ... ;
@@ -531,6 +541,7 @@ end ;;
 }
 \end{lstlisting}
 }
+\end{table}
 When we are scoping in the Species {\tt S} the method {\tt meth1} we
 encounter the expression (identifier) {\tt P!meth2}. To scope this
 identifier we need to get the list (i.e. a ``sub''-environment)
@@ -571,7 +582,8 @@ A sum type value constructor is considered as a function taking as
 many parameters as they have arguments and returning a value whose
 type is the one hosting the constructor (i.e. the current type
 definition). For example:
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}
 type t =
   | A
@@ -580,6 +592,7 @@ type t =
 ;;
 \end{lstlisting}
 }
+\end{table}
 leads to 3 value constructors of types: {\tt A: t},
 {\tt B : (int * bool) -> t} and {\tt C: int -> bool -> t}. Note the
 difference between {\tt B} and {\tt C}: the first one take 1 argument
@@ -604,7 +617,8 @@ field label will be considered as a function taking 1 argument whose
 type is the type of the field an returning a value value whose
 type is the one hosting the field label (i.e. the current type
 definition). For example:
-{\scriptsize
+\begin{table}[h]
+{\footnotesize
 \begin{lstlisting}
 type t = {
   lbl1 : int ;
@@ -612,6 +626,7 @@ type t = {
 ;;
 \end{lstlisting}
 }
+\end{table}
 leads to 2 value field labels of types: {\tt lbl1: int -> t} and
 {\tt lbl2 : string -> t}.
 
@@ -958,12 +973,14 @@ arguments at application-time. However, we need to know how many
 {\tt \_}s must be generated (i.e. how many extra arguments the
 constructor has due to its polymorphism). For instance, the type
 {\tt t} defined in \coq\ by:
-{\scriptsize[language=MyCoq]
+\begin{table}[h]
+{\footnotesize[language=MyCoq]
 \begin{lstlisting}
 Inductive t (alpha : Set) : Set :=
  | A : (alpha -> (t alpha)).
 \end{lstlisting}
 }
+\end{table}
 introduces 1 value constructor {\tt A} with not 1 argument, but 2 ! If
 we want to create a {\tt t} value parametrised by the integer {\tt 1},
 \begin{verbatim}
