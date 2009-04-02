@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.174 2009-03-27 13:40:10 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.175 2009-04-02 12:53:45 pessaux Exp $ *)
 
 
 
@@ -4346,18 +4346,36 @@ let typecheck_species_def ctx env species_def =
       ~species_name:
         (Parsetree_utils.name_of_vname species_def_desc.Parsetree.sd_name) in
   Types.end_definition () ;
-  let species_as_type_description = {
-    Env.TypeInformation.type_loc = Location.none ;
-    Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
-    Env.TypeInformation.type_identity = Types.generalize species_carrier_type;
-    (* Nevers parameters for a species's carrier type ! *)
-    Env.TypeInformation.type_params = [] ;
-    Env.TypeInformation.type_arity = 0 } in
+  (* We only insert a type constructor that represents the species carrier
+     if the species is fully defined. That is, if it really has a carrier.
+     This especially avoid such things:
+       species A =
+         signature f : int
+       end ;;
+       species B =
+         signature b : A -> A
+       end ;;
+     If we generate the code for this, in ocaml we won't have any type
+     definition for "me_as_carrier" in "A". And in "B", "g" will have the
+     type "A.me_as_carrier -> A.me_as_carrier" where "A.me_as_carrier" is
+     unbound. This is moral since "A" doesn't have a carrier. *)
   let full_env =
-    Env.TypingEnv.add_type
-      ~loc: species_def.Parsetree.ast_loc
-      species_def_desc.Parsetree.sd_name species_as_type_description
-      env_with_species in
+    if is_closed then
+      (begin
+      let species_as_type_description = {
+        Env.TypeInformation.type_loc = Location.none ;
+        Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract ;
+        Env.TypeInformation.type_identity =
+          Types.generalize species_carrier_type;
+        (* Nevers parameters for a species's carrier type ! *)
+        Env.TypeInformation.type_params = [] ;
+        Env.TypeInformation.type_arity = 0 } in
+      Env.TypingEnv.add_type
+        ~loc: species_def.Parsetree.ast_loc
+        species_def_desc.Parsetree.sd_name species_as_type_description
+        env_with_species
+      end)
+    else env_with_species in
   (* Record the type in the AST node. *)
   species_def.Parsetree.ast_type <- Parsetree.ANTI_type species_carrier_type ;
   if Configuration.get_verbose () then
@@ -4750,7 +4768,7 @@ let typecheck_type_def_body_simple
          ctx ~is_repr_of_external:false env td_name regular_type_def_body
    | Parsetree.TDBS_external external_type_def_body ->
        typecheck_external_type_def_body
-	 ctx env td_name params external_type_def_body
+         ctx env td_name params external_type_def_body
 ;;
 
 

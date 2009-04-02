@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.81 2009-03-27 13:40:10 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.82 2009-04-02 12:53:45 pessaux Exp $ *)
 
 let header ppf =
   Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
@@ -142,16 +142,23 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname sname
         Handy.pp_reset_effects
+  | Env.Unbound_closed_species (sname, at) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tSpecies@ '%t%a%t'@ is@ neither@ fully@ defined@ nor@ a@ \
+	collection.@ Its@ carrier@ can't@ be@ used@ in@ type@ expressions.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_vname sname
+        Handy.pp_reset_effects
   | Env.Rebound_type (vname, at) ->
       Format.fprintf ppf
-        "%a:@\n@[%tType@ name@ '%t%a%t' already@ bound@ in@ the@ \
+        "%a:@\n@[%tType@ name@ '%t%a%t'@ already@ bound@ in@ the@ \
          current@ scope.@]@."
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname vname
         Handy.pp_reset_effects
   | Env.Rebound_species (vname, at) ->
       Format.fprintf ppf
-        "%a:@\n@[%tSpecies@ name@ '%t%a%t' already@ bound@ in@ the@ \
+        "%a:@\n@[%tSpecies@ name@ '%t%a%t'@ already@ bound@ in@ the@ \
          current@ scope.@]@."
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname vname

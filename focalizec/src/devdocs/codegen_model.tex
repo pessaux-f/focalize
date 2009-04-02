@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.6 2009-04-01 15:34:34 pessaux Exp $
+% $Id: codegen_model.tex,v 1.7 2009-04-02 12:53:45 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -365,6 +365,44 @@ methods, all what we will explain about theorems and proof is
 trivially out of the subject for \ocaml. Hence we won't make any
 difference in our explanation here, simply considering both kinds of
 methods independently of the target language.
+
+There are 2 kinds of methods: ``computational'' and logical. The
+generation model makes only a difference for theorems because they
+have a proof, but the final definition of both kinds of method uses
+the same mechanism: making explicit abstractions ($\lambda$-lifts) for
+all the types and {\bf declared} methods (from {\tt Self} or from the
+species parameters) the defined method depends on. Moreover, an entity
+parameter (since it's in fact a value) will appear as an argument of a
+method if it is used by it: it becomes hence an argument of the
+method.
+
+To help us, we need 3 notions. We don't examine here how they are
+computed. This will be investigated later and is mostly described in
+Virgile Prevosto's PhD.
+\begin{itemize}
+\item The carriers present in the methods from parameters (and in the
+  type of entity parameters) and methods of {\tt Self} the method
+  depends on. Since they are atomic types, there is no ordering issue
+  in this set.
+\item The ``minimal typing environment''. It represents the
+  {\bf ordered} set of methods of {\tt Self} a method depends on. It
+  must be ordered because some of the dependencies can depend on some
+  others. Because of the well-formation property, we are sure this
+  order exists.
+\item The {\bf ordered} set of methods from parameters the method
+  depends on.
+\end{itemize}
+
+A method will lead to a {\tt let} of {\tt theorem} definition
+depending on its kind. The generated name is the same than in the
+\focalize\ source. Only a ``stringification'' is done when the method
+is an operator (e.g. {\tt =}, {\tt +}, {\tt +=e}, \ldots). This
+stringification is done on the fly using a very simple mechanism
+(check function {\tt pp\_vname\_with\_operators\_expanded} in the source
+file {\tt focalize/focalizec/src//basement/parsetree\_utils.ml}.
+
+Next come all the $\lambda$-lifts that represent the dependencies of
+the method.
 
 \subsection{Fully defined species}
 \subsection{Collection generator function's header}
