@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.50 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.51 2009-04-02 14:33:54 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -454,7 +454,7 @@ and termination_proof_desc =
 (** {6 Intra species definitions} *)
 
 (** Signatures, proofs, theorems, and property definitions that
-    may appear inside species.} *)
+    may appear inside species. *)
 
 type sig_def = sig_def_desc ast
 and sig_def_desc = {
@@ -565,6 +565,7 @@ and phrase_desc =
   | Ph_let of let_def
   | Ph_theorem of theorem_def
   | Ph_expr of expr_def
+  | Ph_documentation_title
 ;;
 
 type file = file_desc ast

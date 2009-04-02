@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.39 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.40 2009-04-02 14:33:54 weis Exp $ *)
 
 
 
@@ -1016,6 +1016,7 @@ let pp_type_def ppf = pp_ast pp_type_def_desc ppf;;
 
 
 let pp_phrase_desc ppf = function
+  | Parsetree.Ph_documentation_title -> Format.fprintf ppf "Ph_documentation_title"
   | Parsetree.Ph_use fname -> Format.fprintf ppf "@[<2>Ph_use@ (%s)@]@ " fname
   | Parsetree.Ph_open fname -> Format.fprintf ppf "@[<2>Ph_open@ (%s)@]@ " fname
   | Parsetree.Ph_coq_require fname ->

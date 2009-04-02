@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.129 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.130 2009-04-02 14:33:54 weis Exp $ *)
 
 open Parsetree;;
 
@@ -150,6 +150,8 @@ let mk_proof_label (s1, s2) =
 
 /* Special tokens */
 %token <string * string> DOCUMENTATION
+%token <string * string> DOCUMENTATION_HEADER
+%token <string * string> DOCUMENTATION_TITLE
 %token <string * string> PROOF_LABEL
 %token <string> EXTERNAL_CODE
 
@@ -359,8 +361,8 @@ let mk_proof_label (s1, s2) =
 %%
 
 file:
+  | DOCUMENTATION_HEADER phrases { mk_doc [mk_doc_elem $1] (File $2) }
   | phrases { mk (File $1) }
-  | opt_doc BEGIN phrases { mk_doc $1 (File $3) }
 ;
 
 phrases:
@@ -369,6 +371,7 @@ phrases:
 ;
 
 phrase:
+  | DOCUMENTATION_TITLE { mk_doc [mk_doc_elem $1] Ph_documentation_title }
   | define_let SEMI_SEMI { mk (Ph_let $1) }
   | define_logical SEMI_SEMI { mk (Ph_let $1) }
   | define_theorem SEMI_SEMI { mk (Ph_theorem $1) }

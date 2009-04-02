@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.77 2009-03-02 10:19:30 weis Exp $ *)
+(* $Id: lexer.mll,v 1.78 2009-04-02 14:33:54 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -1150,7 +1150,14 @@ rule token = parse
       begin match !documentation_start_pos with
       | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
       | _ -> assert false end;
-      DOCUMENTATION (tag, get_stored_documentation ()) }
+      begin match tag with
+      | "@0" ->
+        DOCUMENTATION_HEADER (tag, get_stored_documentation ())
+      | "@1" | "@2" | "@3" | "@4" | "@5"
+      | "@6" | "@7" | "@8" | "@9" ->
+        DOCUMENTATION_TITLE (tag, get_stored_documentation ())
+      | tag ->
+        DOCUMENTATION (tag, get_stored_documentation ()) end }
 
   (* External code *)
   | "{*"

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.69 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.70 2009-04-02 14:33:54 weis Exp $ *)
 
 open Parsetree;;
 
@@ -1102,6 +1102,7 @@ let pp_type_def ppf = pp_ast pp_type_def_desc ppf;;
 
 
 let pp_phrase_desc ppf = function
+  | Parsetree.Ph_documentation_title -> ()
   | Parsetree.Ph_use fname ->
       Format.fprintf ppf "@[<2>use@ \"%s\";;@]" fname
   | Parsetree.Ph_open fname ->
