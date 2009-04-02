@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.175 2009-04-02 12:53:45 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.176 2009-04-02 15:10:54 weis Exp $ *)
 
 
 
@@ -4154,6 +4154,7 @@ let detect_polymorphic_method ~loc = function
     {b Rem} : Clearly exported outside this module.                    *)
 (* ******************************************************************* *)
 type please_compile_me =
+  | PCM_documentation_title
   | PCM_use of (Location.t * Parsetree.module_name)
   | PCM_open of (Location.t * Parsetree.module_name)
   | PCM_coq_require of
@@ -4936,6 +4937,8 @@ let typecheck_collection_def ctx env coll_def =
 (* ****************************************************************** *)
 let typecheck_phrase ctx env phrase =
   match phrase.Parsetree.ast_desc with
+   | Parsetree.Ph_documentation_title ->
+       (PCM_documentation_title, env)
    | Parsetree.Ph_use fname ->
        (* Store the type information in the phrase's node. *)
        phrase.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;

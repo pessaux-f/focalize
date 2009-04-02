@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.51 2009-04-02 14:33:54 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.52 2009-04-02 15:10:54 weis Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -556,6 +556,7 @@ type expr_def = expr
 
 type phrase = phrase_desc ast
 and phrase_desc =
+  | Ph_documentation_title
   | Ph_use of Types.fname
   | Ph_open of Types.fname
   | Ph_coq_require of Types.fname
@@ -565,7 +566,6 @@ and phrase_desc =
   | Ph_let of let_def
   | Ph_theorem of theorem_def
   | Ph_expr of expr_def
-  | Ph_documentation_title
 ;;
 
 type file = file_desc ast

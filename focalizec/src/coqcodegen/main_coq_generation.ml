@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.31 2009-03-23 15:37:57 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.32 2009-04-02 15:10:54 weis Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -114,6 +114,7 @@ let toplevel_let_def_compile ctx env let_def =
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
 let toplevel_compile env ~current_unit out_fmter = function
+  | Infer.PCM_documentation_title -> env
   | Infer.PCM_use (_, modname) ->
       (* One must let known that the module is required. *)
       Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname ;

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.78 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.79 2009-04-02 15:10:54 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -2320,6 +2320,8 @@ let scope_collection_def ctx env coll_def =
 let scope_phrase ctx env phrase =
   let (new_desc, new_env, new_ctx) =
     (match phrase.Parsetree.ast_desc with
+     | Parsetree.Ph_documentation_title ->
+         (phrase.Parsetree.ast_desc, env, ctx)
      | Parsetree.Ph_use fname ->
          (* Allow this module to be used. *)
          let ctx' = { ctx with used_modules = fname :: ctx.used_modules } in

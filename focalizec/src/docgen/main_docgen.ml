@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.33 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.34 2009-04-02 15:10:54 weis Exp $ *)
 
 
 
@@ -891,6 +891,8 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
 
 
 let gen_doc_pcm out_fmt env ~current_unit = function
+  | Infer.PCM_documentation_title ->
+      env
   | Infer.PCM_use (_, comp_unit) ->
       Format.fprintf out_fmt "<foc:load>%s</foc:load>@\n" comp_unit ;
       env
