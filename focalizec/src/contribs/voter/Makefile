@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2009-03-13 10:40:13 pessaux Exp $
+# $Id: Makefile,v 1.7 2009-04-03 15:50:36 doligez Exp $
 
 # Makefile for algebra structures implementations
 
@@ -21,7 +21,7 @@ ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-LIB_INSTALL_DIR = $(LIB_DIR)/utils
+LIB_INSTALL_DIR = $(LIB_DIR)/voter
 
 STDLIB_DIR = $(ROOT_DIR)/src/stdlib
 
@@ -88,7 +88,7 @@ STD_BIN_OBJS =\
   multiplicative_law.cmx additive_law.cmx\
   integers.cmx iterators.cmx\
   weak_structures_externals.cmx weak_structures.cmx\
-  rings_fields.cmx 
+  rings_fields.cmx
 
 BIN_EXE = build.x
 
@@ -147,6 +147,9 @@ install::
 	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ \
 	fi
 
+uninstall::
+	@($(CD) $(LIB_DIR) && \
+	  $(RM) $(LIB_INSTALL_DIR))
 
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) && \

@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.5 2009-04-03 15:50:36 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -30,22 +30,32 @@ BYT_OBJS =\
 
 include $(ROOT_DIR)/Makefile.common
 
-byt:: focalizedep.byt
+EXE_NAME = focalizedep
 
-focalizedep.byt: $(BYT_OBJS)
+EXE = $(EXE_NAME)-$(VERSION_NUMBER_FULL)
+
+byt:: $(EXE_NAME).byt
+
+$(EXE_NAME).byt: $(BYT_OBJS)
 	$(CAML_BYT) str.cma $(BYT_OBJS) -o $@ && \
-	$(LN) focalizedep.byt focalizedep
+	$(LN) $(EXE_NAME).byt $(EXE_NAME)
 
-bin:: focalizedep.bin
+bin:: $(EXE_NAME).bin
 
-focalizedep.bin: $(BIN_OBJS)
+$(EXE_NAME).bin: $(BIN_OBJS)
 	$(CAML_BIN) str.cmxa $(BIN_OBJS) -o $@ && \
-	$(LN) focalizedep.bin focalizedep
+	$(LN) $(EXE_NAME).bin $(EXE_NAME)
 
 install::
-	@mkdir -p $(BIN_DIR) && \
-	$(CP) focalizedep.byt focalizedep.bin $(BIN_DIR)/ && \
-	$(LN) $(BIN_DIR)/focalizedep.bin $(BIN_DIR)/focalizedep
+	$(MKDIR) $(BIN_DIR) && \
+	$(CP) $(EXE_NAME).bin $(BIN_DIR)/$(EXE) && \
+	($(CD) $(BIN_DIR) && \
+	 $(RM) $(EXE_NAME) && \
+	 $(LN) $(EXE) $(EXE_NAME))
+
+uninstall::
+	($(CD) $(BIN_DIR) && \
+	 $(RM) $(EXE) $(EXE_NAME))
 
 clean::
-	$(RM) focalizedep.byt focalizedep.bin focalizedep
+	$(RM) $(EXE_NAME).byt $(EXE_NAME).bin $(EXE_NAME)

@@ -13,15 +13,24 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.86 2009-03-16 16:38:49 weis Exp $
+# $Id: Makefile,v 1.87 2009-04-03 15:50:36 doligez Exp $
 
 # Makefile for the FoCaLize standard library
+
+LIB_INSTALL_SUB_DIR =
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
 
-LIB_INSTALL_DIR=$(LIB_DIR)
+PROJECT_LIB_INSTALL_DIR = $(LIB_DIR)/$(PROJECT_NAME_FULL)
+
+# Should be:
+#LIB_INSTALL_DIR = $(PROJECT_LIB_INSTALL_DIR)/$(LIB_INSTALL_SUB_DIR)
+# but since $(LIB_INSTALL_SUB_DIR) is empty, this definition would violate
+# the ``no / at the end of a directory'' rule.
+# Thus, we prefer the following:
+LIB_INSTALL_DIR = $(PROJECT_LIB_INSTALL_DIR)
 
 FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
 
@@ -65,6 +74,7 @@ EXTERNAL_BYT_OBJS =\
 #  weak_structures_externals.cmo
 #  random_foc_externals.cmo
 
+EXTERNAL_CMIS = $(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 EXTERNAL_CMIS = $(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
@@ -132,14 +142,22 @@ install::
 	if [ "$(EXTERNAL_VOS)" != "" ]; then \
 	  echo "Installing (Coq) external stubs." && \
 	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/; \
-	fi
+	fi && \
+	($(CD) $(LIB_DIR) && \
+	 $(LN) $(PROJECT_NAME_FULL) $(PROJECT_NAME))
+
+uninstall:
+	$(RM) $(LIB_INSTALL_DIR) && \
+	($(CD) $(LIB_DIR) && \
+	 $(RM) $(PROJECT_NAME_FULL) $(PROJECT_NAME))
 
 clean::
-	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) && \
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) && \
-	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) && \
-	$(RM) $(EXTERNAL_CMIS) $(FOCALIZE_CMIS) *.annot *.glob *.fcd
-
+	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) && \
+	$(RM) $(FOCALIZE_VS) $(FOCALIZE_VOS) && \
+	$(RM) $(FOCALIZE_CMIS) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) && \
+        $(RM) $(EXTERNAL_VOS) && \
+	$(RM) $(EXTERNAL_CMIS) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) && \
+	$(RM) *.annot *.glob *.fcd
 
 depend::
 

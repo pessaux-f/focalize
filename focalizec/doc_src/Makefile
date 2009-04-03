@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2009-02-10 09:14:52 weis Exp $
+# $Id: Makefile,v 1.3 2009-04-03 15:50:36 doligez Exp $
 
 ROOT_DIR = ..
 
@@ -32,7 +32,7 @@ all clean distclean doc docdir depend::
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
-install::
+install uninstall::
 	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..."; \
 	  ($(CD) $$i && $(MAKE) $@); \

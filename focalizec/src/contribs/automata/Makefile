@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2009-03-13 10:40:13 pessaux Exp $
+# $Id: Makefile,v 1.7 2009-04-03 15:50:36 doligez Exp $
 
 # Makefile for algebra structures implementations
 
@@ -21,7 +21,7 @@ ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-LIB_INSTALL_DIR = $(LIB_DIR)/utils
+LIB_INSTALL_DIR = $(LIB_DIR)/automata
 
 STDLIB_DIR = $(ROOT_DIR)/src/stdlib
 
@@ -36,7 +36,7 @@ FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR)
 #From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
 #CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
-CAML_COMP_FLAGS =  -dtypes -I $(STDLIB_DIR)
+CAML_COMP_FLAGS = -dtypes -I $(STDLIB_DIR)
 
 # From Makefile.config ZENON_LIB_DIR
 # Was ZENON_LIB_DIR = $(ROOT_DIR)/../zenon/
@@ -81,7 +81,7 @@ sets_orders_externals.cmx sets_orders.cmx \
 multiplicative_law.cmx additive_law.cmx \
 integers.cmx iterators.cmx \
 weak_structures_externals.cmx weak_structures.cmx \
-rings_fields.cmx 
+rings_fields.cmx
 
 BINARY = build.x
 
@@ -124,6 +124,9 @@ install::
 	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ \
 	fi
 
+uninstall::
+	@($(CD) $(LIB_DIR) && \
+	  $(RM) $(LIB_INSTALL_DIR))
 
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) && \

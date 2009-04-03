@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.37 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.38 2009-04-03 15:50:36 doligez Exp $
 
 ROOT_DIR = .
 
@@ -32,6 +32,9 @@ SUB_DIRS = $(COMPILER_DIRS) $(LIB_DIRS) $(DOC_DIRS)
 COMPILER_INSTALL_DIRS = src/toplevel src/focalizedep $(LIB_DIRS)
 
 include $(ROOT_DIR)/Makefile.common
+
+# Where we install the libraries.
+PROJECT_LIB_INSTALL_DIR = $(LIB_DIR)/$(PROJECT_NAME_FULL)
 
 all:: lib
 
@@ -73,7 +76,7 @@ clean doc docdir depend::
 	  fi \
         done
 
-install::
+install uninstall::
 	@for i in $(COMPILER_INSTALL_DIRS) $(DOC_DIRS); do \
 	  if test -d $$i; then \
 	    echo "--> $$i ..." >&2 && \
@@ -83,3 +86,11 @@ install::
 	    case $$err in 0);; *) exit $$err;; esac; \
 	  fi \
         done
+
+install::
+	($(CD) $(LIB_DIR) && \
+	 $(RM) $(PROJECT_NAME) && \
+	 $(LN) $(PROJECT_NAME_FULL) $(PROJECT_NAME))
+
+uninstall::
+	$(RM) $(PROJECT_LIB_INSTALL_DIR)

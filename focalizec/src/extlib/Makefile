@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.20 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.21 2009-04-03 15:50:36 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -53,7 +53,7 @@ doc::
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
-install::
+install uninstall::
 	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..." && \
 	  ($(CD) $$i && $(MAKE) install); \

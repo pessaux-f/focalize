@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.14 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.15 2009-04-03 15:50:36 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -29,7 +29,7 @@ include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
-byt bin clean doc install depend::
+byt bin clean doc install uninstall depend::
 	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..." && \
 	  ($(CD) $$i && $(MAKE) $@); \

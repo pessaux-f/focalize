@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.21 2009-03-13 16:10:43 doligez Exp $
+# $Id: Makefile,v 1.22 2009-04-03 15:50:36 doligez Exp $
 
 ROOT_DIR = ../../..
 
@@ -24,8 +24,7 @@ TEX_FILES = macros.tex syntaxdef.sty \
 
 HVA_FILES = macros.hva syntaxdef.hva refman.hva
 
-DOC_OBJS = refman.dvi refman.ps refman.pdf\
-  refman.html # Not so great but yet...
+DOC_OBJS = refman.dvi refman.ps refman.pdf refman.html
 
 TEXINPUT = /usr/share/texmf/tex/latex//:$(TEXINPUTS)
 LATEX = TEXINPUTS=$(TEXINPUT); latex
@@ -34,8 +33,11 @@ IMAGEN = imagen -extra "ppmquant 255"
 
 include $(ROOT_DIR)/Makefile.common
 
-DOCDIR_DIR=$(DOCUMENTATION_DIR)/tex/refman
-DOC_TGT_DIR:=$(DOC_DIR)/tex/refman
+# DOCDIR_DIR is the directory doc that this Makefile must populate.
+DOCDIR_DIR=$(DOC_ROOT_DIR)/tex/refman
+
+# DOC_TGT_DIR is the target directory for the installation of the documentation
+DOC_TGT_DIR:=$(DOC_DIR)/tex/$(PROJECT_NAME_FULL)/refman
 
 all doc docdir:: $(DOC_OBJS)
 
@@ -70,6 +72,4 @@ install:
 	$(CP) $(DOC_OBJS) $(DOC_TGT_DIR)
 
 uninstall:
-	for i in $(DOC_OBJS); do \
-	  $(RM) $(DOC_TGT_DIR)/$$i; \
-	done
+	$(RM) $(DOC_TGT_DIR)

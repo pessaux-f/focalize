@@ -9,13 +9,13 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.5 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.6 2009-04-03 15:50:36 doligez Exp $
 
 ROOT_DIR=../..
 
 include $(ROOT_DIR)/Makefile.config
 
-DOCDIR_DIR=$(DOCUMENTATION_DIR)/html
+DOCDIR_DIR=$(DOC_ROOT_DIR)/html
 
 # Makefile for man page generation.
 

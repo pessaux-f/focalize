@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.9 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile.distribution,v 1.10 2009-04-03 15:50:36 doligez Exp $
 
 ROOT_DIR=.
 
@@ -74,23 +74,26 @@ PROJECT_GROUP=caml
 PROJECT_CVS_MODULE=$(PROJECT_NAME)
 
 # The tag to set on files in the CVS repository when releasing
+# We cannot use PROJECT_NAME_FULL since it has '.' in it, and
+# CVS tags cannot have '.' in their names. We thus replace '.' by '_'.
 PROJECT_RELEASE_TAG =\
- branch_$(PROJECT_NAME)_release_$(VERSION_NUMBER_MAIN)_$(VERSION_NUMBER_SUB)_$(VERSION_NUMBER_PATCH)
+ $(PROJECT_NAME)_release_$(VERSION_NUMBER_MAIN)_$(VERSION_NUMBER_SUB)_$(VERSION_NUMBER_PATCH)
+PROJECT_RELEASE_BRANCH_TAG =\
+ branch_$(PROJECT_RELEASE_TAG)
 
 PROJECT_ADMINISTRATIVE_FILES=\
  AUTHORS INSTALL LICENSE README
 
 PROJECT_ANNOUNCE_MAILING_LISTS=\
-  "coq-list@inria.fr coq-announce@inria.fr caml-list@inria.fr\
-   caml-announce@inria.fr"
+  "focalize-users@inria.fr coq-list@inria.fr coq-announce@inria.fr \
+   caml-list@inria.fr caml-announce@inria.fr"
 
 # The list of files that will be searched and deleted from the entire
 # distribution before making the release tar ball.
 # This one is pretty standard: it removes working files useless to the user of
 # the package.
 PROJECT_RELEASE_EXCLUDE_FILE_LIST=\
-  ".depend*\
-  CVS .cvsignore* .svnignore* banner*\
+  "CVS .cvsignore* .svnignore* banner*\
   TODO README.for_developers Makefile.distribution\
   doc_src tests"
 
@@ -102,13 +105,14 @@ PROJECT_RELEASE_REMOVE_FILE_LIST=\
   focalizec/TAGS\
   focalizec/src/attic"
 
+# Definition of the Web site for the project.
+# Where is the Web site to generate for the application
+WEB_SITE_SRC_DIR=$(ROOT_DIR)/doc_src
 WEB_SITE_URL=http://$(PROJECT_WEB_SERVER)
 WEB_SITE_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
 WEB_SITE_DOWNLOAD_DIR=$(WEB_SITE_DIR)/download
 WEB_SITE_DOWNLOAD_URL = $(WEB_SITE_URL)/download
 WEB_SITE_DIR_MOUNT_POINT=/net/yquem/infosystems/www/bazaar/$(PROJECT_NAME)
-FTP_SITE_DIR_MOUNT_POINT=/net/yquem/infosystems/ftp/bazaar/$(PROJECT_NAME)
-FTP_SITE_DIR_MOUNT_POINT2=/net/pauillac/infosystems/ftp/cristal/caml-light/bazar-ocaml/$(PROJECT_NAME)
 
 HTMLC_COMP_FLAGS=-env $(ROOT_DIR)/.config_var_for_shell -env project.env
 HTMLC_INCLUDES=-I doc_src/Includes
@@ -138,18 +142,18 @@ package: clean all project_test project_examples documentation release
 .PHONY: clean_configure_distribution
 distclean:: clean clean_configure_distribution
 
-.PHONY: clean_documentation clean_release_directory clean_tarball
-.PHONY: clean_ftp clean_website clean_announce clean_test_release
+.PHONY: clean_documentation clean_release clean_release_directory clean_tarball
+.PHONY: clean_ftp clean_web_site clean_announce clean_test_release
 clean clean-all:: clean_documentation\
   clean_release_directory clean_tarball\
-  clean_ftp clean_website\
+  clean_ftp clean_web_site\
   clean_test_release\
   clean_announce
 
 .PHONY: documentation
 documentation: .done_build_documentation
 
-# Make documentation and test before the release
+# Make the documentation and Web sitexs before the release
 .done_build_documentation: .distribution_var
 	@echo "documentation --> ..." >&2 && \
 	$(MAKE) -f Makefile doc && \
@@ -157,13 +161,19 @@ documentation: .done_build_documentation
 	err=$$?; \
 	echo "documentation <-- $$i [$$err]" >&2 && \
 	case $$err in 0);; *) exit $$err;; esac && \
-	(cd doc_src && $(MAKE) all) && \
+	($(CD) $(WEB_SITE_SRC_DIR) && $(MAKE) all) && \
 	$(TOUCH) .done_build_documentation
 
 clean_documentation:
-	$(RM) .done_build_documentation && \
-	cd focalizec/doc_src && $(MAKE) clean && \
-	$(RM) $(DOCUMENTATION_DIR)
+	@$(RM) .done_build_documentation && \
+	 for i in $(INTERNAL_TOOLS_DIRS) $(WEB_SITE_SRC_DIR); do \
+	   echo "--> $$i ..." >&2 && \
+	   ($(CD) $$i && $(MAKE) clean); \
+	   err=$$?; \
+	   echo "<-- $$i [$$err]" >&2 && \
+	   case $$err in 0);; *) exit $$err;; esac; \
+	 done && \
+	 $(RM) $(DOC_ROOT_DIR)
 
 # Recompile the tests
 .PHONY: project_test
@@ -196,24 +206,25 @@ project_examples:
 .PHONY: release_directory
 release_directory: .done_build_release_directory
 
-clean_release_directory:
+clean_release clean_release_directory:
 	$(RM) .done_build_release_directory
 	$(RM) release
 
 .done_build_release_directory: .done_build_documentation
 	@$(RM) release && \
 	$(MKDIR) release && \
-	(cd release && \
-	   $(CVS) -d $(PROJECT_CVS_ROOT) export -r $(PROJECT_RELEASE_TAG) \
-		  -d $(PROJECT_RELEASE_DIR_NAME) $(PROJECT_CVS_REPOSITORY) && \
-	   $(CPR) $(ABSOLUTE_DOCUMENTATION_DIR) $(PROJECT_RELEASE_DIR_NAME) && \
-	   for i in "$(PROJECT_RELEASE_EXCLUDE_FILE_LIST)"; do \
-	     find . -name $$i | xargs $(RM); \
-	   done && \
-	   for i in "$(PROJECT_RELEASE_REMOVE_FILE_LIST)"; do \
-	     echo "$(RM) $(PROJECT_RELEASE_DIR_NAME)/$$i" >&2 && \
-	     $(RM) $(PROJECT_RELEASE_DIR_NAME)/$$i; \
-	   done) && \
+	($(CD) release && \
+	 $(CVS) -d $(PROJECT_CVS_ROOT) export -r $(PROJECT_RELEASE_TAG) \
+	        -d $(PROJECT_RELEASE_DIR_NAME) $(PROJECT_CVS_REPOSITORY) && \
+	 $(CPR) $(ABSOLUTE_DOC_ROOT_DIR) $(PROJECT_RELEASE_DIR_NAME) && \
+	 for i in "$(PROJECT_RELEASE_EXCLUDE_FILE_LIST)"; do \
+	    find . -name $$i | xargs $(RM); \
+	 done && \
+	 for i in "$(PROJECT_RELEASE_REMOVE_FILE_LIST)"; do \
+	   echo "$(RM) $(PROJECT_RELEASE_DIR_NAME)/$$i" >&2 && \
+	   $(RM) $(PROJECT_RELEASE_DIR_NAME)/$$i; \
+	 done \
+	) && \
 	$(TOUCH) ./.done_build_release_directory
 
 # Build the tarball
@@ -228,17 +239,12 @@ clean_tarball:
 
 # Build the archive and move it in the proper directory
 .done_build_release_tarball: .done_build_release_directory
-	(cd release && \
-	  $(CP) ../.depend $(PROJECT_RELEASE_DIR_NAME)/ && \
-	  $(CP) ../zenon/.depend $(PROJECT_RELEASE_DIR_NAME)/zenon/ && \
-	  $(CP) ../zvtov/.depend $(PROJECT_RELEASE_DIR_NAME)/zvtov/ && \
-	  $(CP) ../focalizec/.depend $(PROJECT_RELEASE_DIR_NAME)/focalizec/ && \
-	  $(TARC) $(PROJECT_ARCHIVE_NAME) $(PROJECT_RELEASE_DIR_NAME) && \
-	  $(MV) $(PROJECT_ARCHIVE_NAME) .. \
+	($(CD) release && \
+	  $(TARC) ../$(PROJECT_ARCHIVE_NAME) $(PROJECT_RELEASE_DIR_NAME) \
         ) && \
 	$(TOUCH) .done_build_release_tarball
 
-# Install the tarball on the website.
+# Install the tarball on the web site.
 .PHONY: install_tarball
 install_tarball: .done_install_release_tarball
 
@@ -248,7 +254,8 @@ clean_install_tarball:
 .done_install_release_tarball: .done_build_release_tarball
 	for i in $(PROJECT_ADMINISTRATIVE_FILES); do \
 	  $(CHMODGRW) release/$(PROJECT_RELEASE_DIR_NAME)/$$i && \
-	  $(SCP) release/$(PROJECT_RELEASE_DIR_NAME)/$$i $(WEB_SITE_DOWNLOAD_DIR); \
+	  $(SCP) release/$(PROJECT_RELEASE_DIR_NAME)/$$i \
+	     $(WEB_SITE_DOWNLOAD_DIR); \
 	  err=$$?; \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done && \
@@ -257,63 +264,96 @@ clean_install_tarball:
 	$(TOUCH) .done_install_release_tarball
 
 # Build the Web site
-.PHONY: website clean_website
-website: .done_website
-clean_website:
-	$(RM) .done_website
+.PHONY: web_site clean_web_site
+web_site: .done_build_web_site
+clean_web_site:
+	($(CD) $(WEB_SITE_SRC_DIR); $(MAKE) clean) && \
+	$(RM) .done_build_web_site
 
-.done_website: .done_ftp
-	$(RM) $(WEB_SITE_DIR).new && \
-	$(MKDIR) $(WEB_SITE_DIR).new && \
-	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/doc/* $(WEB_SITE_DIR).new; && \
-	$(CHGRP) $(PROJECT_GROUP) $(WEB_SITE_DIR).new && \
-	$(CHMOD) $(WEB_SITE_DIR).new && \
-	$(MV) $(WEB_SITE_DIR) $(WEB_SITE_DIR).old && \
-	$(MV) $(WEB_SITE_DIR).new $(WEB_SITE_DIR) && \
-	$(RM) $(WEB_SITE_DIR).old && \
-	$(TOUCH) .done_website
+.done_build_web_site: .done_build_documentation
+	($(CD) $(WEB_SITE_SRC_DIR); $(MAKE) all) && \
+	$(TOUCH) .done_build_web_site
+
+# Install the Web site
+.PHONY: install_web_site
+install_web_site: .done_install_web_site
+ .done_install_web_site: .done_install_release_tarball .done_build_web_site
+	($(CD) $(WEB_SITE_SRC_DIR); $(MAKE) install) && \
+	$(TOUCH) .done_install_web_site
 
 # Build the FTP site
-.PHONY: ftp clean_ftp
-ftp: .done_ftp
+FTP_SITE_SRC_DIR=$(ROOT_DIR)/ftp_src
+FTP_SITE_URL=ftp://$(PROJECT_FTP_SERVER)
+FTP_SITE_DIR=$(PROJECT_FTP_SERVER):$(PROJECT_FTP_SITE_DIR)
+FTP_SITE_DOWNLOAD_DIR=$(FTP_SITE_DIR)/download
+FTP_SITE_DOWNLOAD_URL = $(FTP_SITE_URL)/download
 
-clean_ftp:
-	$(RM) .done_ftp
+# When the ftp site for the project is accessible via NFS.
+FTP_SITE_DIR_MOUNT_POINT=/net/yquem/infosystems/www/bazaar/$(PROJECT_NAME)
+FTP_SITE_DIR_MOUNT_POINT=/net/yquem/infosystems/ftp/bazaar/$(PROJECT_NAME)
+FTP_SITE_DIR_MOUNT_POINT2=/net/pauillac/infosystems/ftp/cristal/caml-light/bazar-ocaml/$(PROJECT_NAME)
+
+.PHONY: ftp_site clean_ftp_site distclean_ftp_site
+ftp_site: .done_build_ftp_site
+
+distclean:: distclean_ftp_site
+distclean_ftp_site clean_ftp_site:
+	$(RM) .done_build_ftp_site && \
+	$(RM) $(FTP_SITE_SRC_DIR)
 
 # Copy the legalease to $(FTP_SITE_DIR)
-# Build the archive and move it in the proper ftp site
-.done_ftp: .done_build_release_tarball
-	$(MKDIR) $(FTP_SITE_DIR) && \
-	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/README $(FTP_SITE_DIR) && \
-	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/LICENSE $(FTP_SITE_DIR) && \
-	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/AUTHORS $(FTP_SITE_DIR) && \
-	cd release && \
+# Build the archive.
+.done_build_ftp_site: .done_build_release_tarball
+	$(MKDIR) $(FTP_SITE_SRC_DIR) && \
+	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/README $(FTP_SITE_SRC_DIR) && \
+	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/LICENSE $(FTP_SITE_SRC_DIR) && \
+	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/AUTHORS $(FTP_SITE_SRC_DIR) && \
+	($(CD) release && \
 	  $(TARC) $(PROJECT_ARCHIVE_NAME) $(PROJECT_RELEASE_DIR_NAME) && \
-	  $(MV) $(PROJECT_ARCHIVE_NAME) $(FTP_SITE_DIR) && \
-	$(CP) $(FTP_SITE_DIR)/$(PROJECT_ARCHIVE_NAME) $(WEB_SITE_DIR)/ && \
-	$(TOUCH) .done_ftp
+	  $(MV) $(PROJECT_ARCHIVE_NAME) $(FTP_SITE_SRC_DIR)) && \
+	$(TOUCH) .done_build_ftp_site
+
+# Move the ftp stuff in the proper ftp site
+.PHONY: install_ftp_site
+install_ftp_site: .done_build_ftp_site
+	$(CP) $(FTP_SITE_SRC_DIR) $(FTP_SITE_DIR)/ && \
+	$(TOUCH) .done_install_ftp_site
+
 
 # Build the FTP2 site
 # Copy the FTP site to $(FTP_SITE_DIR2)
 #ftp2:
 #	$(MKDIR) $(FTP_SITE_DIR2) && \
 #	$(CP) $(FTP_SITE_DIR)/* $(FTP_SITE_DIR2)/ && \
-#	$(TOUCH) .done_ftp
+#	$(TOUCH) .done_ftp2
 
 # Tagging the version.
-.PHONY: tag retag untag
+#
+.PHONY: tag retag untag branch
+# Branching for a new release.
+branch:
+	$(CVS) rtag -b $(PROJECT_RELEASE_BRANCH_TAG) $(PROJECT_CVS_MODULE)
 tag:
-	$(CVS) rtag -R $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_MODULE)
+	$(CVS) tag $(PROJECT_RELEASE_TAG)
 
 # Tagging the version again with the same tag,
 # (in case of bug during the distribution process).
 retag:
-	$(CVS) rtag -R -F $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_MODULE)
+	$(CVS) tag -F $(PROJECT_RELEASE_TAG)
 
 # Untagging the version (in case of bug in the software code).
 untag:
 	$(RM) ./release
-	$(CVS) rtag -R -d $(PROJECT_RELEASE_TAG) $(PROJECT_CVS_MODULE)
+	$(CVS) tag -d $(PROJECT_RELEASE_TAG)
+
+# The file that contains the announce of the new relase in the
+# relevant mailing lists.
+ANNOUNCE_FILE = .announce_text
+#ANNOUNCE_FILE_SRC = Announce-$(VERSION_NUMBER_FULL)
+ANNOUNCE_FILE_SRC = Announce
+
+$(ANNOUNCE_FILE): $(ANNOUNCE_FILE_SRC)
+	$(HTMLC) -f $(ANNOUNCE_FILE_SRC) -t $(ANNOUNCE_FILE)
 
 # The file that contains the announce of the new relase in the
 # relevant mailing lists.
@@ -326,9 +366,67 @@ $(ANNOUNCE_FILE): $(ANNOUNCE_FILE_SRC)
 
 # Sending the announce to the mailing lists.
 .PHONY: announce
-announce: .done_website $(ANNOUNCE_FILE)
-	mail -n -s "New release of $(PROJECT_NAME)" \
-	  $(PROJECT_ANNOUNCE_MAILING_LISTS) < $(ANNOUNCE_FILE)
+announce: .done_install_web_site $(ANNOUNCE_FILE)
+	for i in $(PROJECT_ANNOUNCE_MAILING_LISTS); do \
+	  mail -n -s \
+	    "First release of $(PROJECT_NAME), a development environment for high integrity programs." \
+	    $$i < $(ANNOUNCE_FILE); \
+	done
+
+clean_announce:
+	$(RM) $(ANNOUNCE_FILE)
+
+# Testing the release tarball
+TEST_RELEASE_PREFIX=~/release
+TEST_RELEASE_TOOLS_PREFIX=$(TEST_RELEASE_PREFIX)
+
+test_release_tarball test_release: .done_test_release_tarball
+.done_test_release_tarball: .done_install_release_tarball
+	$(RM) test_release && $(MKDIR) test_release && \
+	if test -d $(TOOLS_PROJECT_DIR); then \
+	  $(RM) $(TOOLS_PROJECT_DIR); \
+	fi && \
+	($(CD) test_release && \
+	 $(WGET) $(WEB_SITE_DOWNLOAD_URL)/$(PROJECT_ARCHIVE_NAME) && \
+	 $(TARX) $(PROJECT_ARCHIVE_NAME) && \
+	 ($(CD) $(PROJECT_RELEASE_DIR_NAME) && \
+          ./configure \
+	    --prefix $(TEST_RELEASE_PREFIX) \
+	    --tools_prefix $(TEST_RELEASE_TOOLS_PREFIX) && \
+	  $(MAKE) && \
+	  $(SUDO) $(MAKE) install \
+	 ) \
+	) && \
+	$(TOUCH) .done_test_release_tarball
+
+# We uninstall the stuff installed by the test and then remove the
+# test_release directory.
+clean_test_release_tarball clean_test_release:
+	$(RM) .done_test_release_tarball && \
+	(if test -d test_release; then \
+           $(CD) test_release/$(PROJECT_RELEASE_DIR_NAME) && \
+	   $(MAKE) uninstall; \
+	 fi \
+	) && \
+	$(RM) ./test_release
+# In case we remove completely the directory where the test release is installed.
+distclean:: distclean_test_release_tarball
+distclean_test_release_tarball: clean_test_release_tarball
+	$(RM) $(TEST_RELEASE_PREFIX)/* && \
+	$(RM) $(TEST_RELEASE_TOOLS_PREFIX)/*
+
+# An entry to brutally remove old FoCaLize installed stuff.
+# We suppose:
+# - /usr/local as configuration prefix
+# - $(HOME)/pkg or $(HOME)/release as configuration tools prefix.
+RELEASE_MANAGER=weis
+new-balls:
+	$(RM) /usr/local/bin/focalize* && \
+	$(RM) /usr/local/lib/focalize* && \
+	$(RM) /usr/local/man/man*/focalize* && \
+	$(RM) /usr/local/doc/tex/focalize* && \
+	$(RM) ~$(RELEASE_MANAGER)/pkg/focalize* && \
+	$(RM) ~$(RELEASE_MANAGER)/release/focalize*
 
 clean_announce:
 	$(RM) $(ANNOUNCE_FILE)
@@ -369,3 +467,15 @@ clean_test_release:
 #	sed -e '/ersion/s/$(OLDVERSION)/$(VERSION)/' $$i~ | \
 #	sed -e '/year/s/$(OLDYEAR)/$(YEAR)/' > $$i; \
 #	done
+#
+# When a release is to be completed, and preferably before branching, you must
+# consolidate the version number of every component of FoCaLize.
+# For each component, this means to edit the file .project_config_var to verify
+# that this file indicates the correct current version of the tool.
+#
+# For the FoCaLize system, it means to edit and verify the following files:
+# - ./.project_config_var (the version for FoCaLize is in this file)
+# - zenon/.project_config_var (the version for zenon is in the file versionnum.ml)
+# - zvtov/.project_config_var (the version for zvtov is in the file version.ml)
+# - focalizec/.project_config_var
+#   (the version for focalizec is in the file src/basement/configuration.ml)

@@ -13,15 +13,19 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.39 2009-03-19 21:08:29 rr Exp $
+# $Id: Makefile,v 1.40 2009-04-03 15:50:36 doligez Exp $
 
 # Makefile for algebra structures implementations
+
+LIB_INSTALL_SUB_DIR = algebra
 
 ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-LIB_INSTALL_DIR = $(LIB_DIR)/algebra
+PROJECT_LIB_INSTALL_DIR = $(LIB_DIR)/$(PROJECT_NAME_FULL)
+
+LIB_INSTALL_DIR = $(PROJECT_LIB_INSTALL_DIR)/$(LIB_INSTALL_SUB_DIR)
 
 STDLIB_DIR = $(ROOT_DIR)/src/stdlib
 
@@ -165,6 +169,9 @@ install::
 	if [ "$(EXTERNAL_VOS)" != "" ] ; then \
 	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/; \
 	fi
+
+uninstall::
+	$(RM) $(LIB_INSTALL_DIR)
 
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)

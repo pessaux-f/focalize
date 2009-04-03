@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.6 2009-04-03 15:50:36 doligez Exp $
 
 # Makefile for algebra structures implementations
 
@@ -21,7 +21,7 @@ ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-LIB_INSTALL_DIR = $(LIB_DIR)
+LIB_INSTALL_DIR = $(LIB_DIR)/$(PROJECT_NAME_FULL)
 
 FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
 
@@ -92,6 +92,10 @@ install::
 	  echo "Installing (Coq) compiled certified libs." && \
 	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/; \
 	fi
+
+uninstall::
+	@($(CD) $(LIB_DIR) && \
+	  $(RM) $(LIB_INSTALL_DIR))
 
 clean::
 	@$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) && \

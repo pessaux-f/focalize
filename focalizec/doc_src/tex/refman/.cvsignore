@@ -7,9 +7,6 @@
 *.ilg
 *.ind
 *.toc
-*.pdf
-*.ps
-*.dvi
 *.haux
 *.hind
 *.htoc

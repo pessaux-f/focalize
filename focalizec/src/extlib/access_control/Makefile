@@ -13,15 +13,19 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.29 2009-03-13 07:52:05 pessaux Exp $
+# $Id: Makefile,v 1.30 2009-04-03 15:50:36 doligez Exp $
 
 # Makefile for access control models
+
+LIB_INSTALL_SUB_DIR = access_control
 
 ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-LIB_INSTALL_DIR = $(LIB_DIR)/access_control
+PROJECT_LIB_INSTALL_DIR = $(LIB_DIR)/$(PROJECT_NAME_FULL)
+
+LIB_INSTALL_DIR = $(PROJECT_LIB_INSTALL_DIR)/$(LIB_INSTALL_SUB_DIR)
 
 STDLIB_DIR = $(ROOT_DIR)/src/stdlib
 
@@ -48,7 +52,7 @@ FOCALIZE_SRC =\
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
-FOCALIZE_SRC_UNSAFE = 
+FOCALIZE_SRC_UNSAFE =
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
@@ -122,6 +126,8 @@ install::
 	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/; \
 	fi
 
+uninstall::
+	$(RM) $(LIB_INSTALL_DIR)
 
 clean::
 	$(RM) *.fo *.ml *.cm* *.zv *.v *.vo *.o *.pfc *.annot

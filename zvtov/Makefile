@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.28 2009-01-30 11:32:24 weis Exp $
+#  $Id: Makefile,v 1.29 2009-04-03 15:50:36 doligez Exp $
 
 # Reading configuration settings.
 include .config_var
@@ -68,13 +68,16 @@ zvtov: zvtov.byt
 .PHONY: install
 install:
 	mkdir -p "$(DESTDIR)$(BIN_DIR)"
-	cp -p zvtov "$(DESTDIR)$(BIN_DIR)"/
+	cp -p zvtov "$(DESTDIR)$(BIN_DIR)"/$(PROJECT_NAME_FULL)
+	(cd "$(DESTDIR)$(BIN_DIR)" && \
+         rm -f zvtov && ln -s $(PROJECT_NAME_FULL) zvtov)
 	mkdir -p "$(DESTDIR)$(MAN_DIR)"/man1
 	cp zvtov.1 "$(DESTDIR)$(MAN_DIR)"/man1/
 
 .PHONY: uninstall
 uninstall:
 	rm -f "$(DESTDIR)$(BIN_DIR)"/zvtov
+	rm -f "$(DESTDIR)$(BIN_DIR)"/$(PROJECT_NAME_FULL)
 	rm -f "$(DESTDIR)$(MAN_DIR)"/man1/zvtov.1
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .v .vo

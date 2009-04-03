@@ -13,20 +13,28 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.52 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.53 2009-04-03 15:50:36 doligez Exp $
 
 ROOT_DIR = .
 
 include $(ROOT_DIR)/Makefile.config
 
 # Defined in Makefile.config:
-# TAR_BALLS_DIR
-# EXTERNAL_TOOLS_DIRS
-# INTERNAL_TOOLS_DIRS
+#
+# TAR_BALLS_DIR = $(ROOT_DIR)/$(TAR_BALLS_DIR_NAME)
+## TAR_BALLS_DIR_NAME = tarballs
+#
+# EXTERNAL_TOOLS_DIRS = \
+#  $(ABSOLUTE_CAML_SRC_DIR) $(ABSOLUTE_CAMLP5_SRC_DIR) $(ABSOLUTE_COQ_SRC_DIR)
+#
+# INTERNAL_TOOLS_DIRS = $(ZENON_SRC_DIR) $(ZVTOV_SRC_DIR) $(FOCALIZEC_SRC_DIR)
+## ZENON_SRC_DIR = $(ROOT_DIR)/$(ZENON_SRC_DIR_NAME)
+#
+# DOC_ROOT_DIR=$(ROOT_DIR)/doc
 
 ALL_SUB_DIRS = $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS)
 
-DOCDIR_DIR = $(DOCUMENTATION_DIR)
+DOCDIR_DIR = $(DOC_ROOT_DIR)
 
 include $(ROOT_DIR)/Makefile.common
 
@@ -228,7 +236,10 @@ build_internal_tools: .done_build_internal_tools
 .done_build_internal_tools: \
   .done_build_external_tools\
   .done_build_focalizedep
-	$(TOUCH) .done_build_internal_tools
+	$(TOUCH) .done_build_internal_tools && \
+	echo && \
+        echo "Done. Now, please invoke: make install"
+
 
 $(ZENON_EXES): .done_build_zenon
 .done_build_zenon: .done_build_external_tools
@@ -301,6 +312,10 @@ install::
 	  echo 'you must run "make" before running "make install"' && \
 	  exit 2; \
 	fi && \
+	if [ ! -d doc ]; then \
+	  echo 'you must run "make docdir" before running "make install"' && \
+	  exit 2; \
+	fi && \
 	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
@@ -329,8 +344,8 @@ docdir:: doc
 	  echo "--> $$i ..." >&2 && \
 	  $(MKDIR) $(DOCDIR_DIR)/$$i && \
 	  ($(CD) $$i && $(MAKE) $@) && \
-	  if test -d $$i/$(DOCUMENTATION_DIR); then \
-	    $(CPR) $$i/$(DOCUMENTATION_DIR)/* $(DOCDIR_DIR)/$$i/; \
+	  if test -d $$i/$(DOC_ROOT_DIR); then \
+	    $(CPR) $$i/$(DOC_ROOT_DIR)/* $(DOCDIR_DIR)/$$i/; \
 	  fi; \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
