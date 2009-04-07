@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.168 2009-04-01 13:54:48 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.169 2009-04-07 15:41:41 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -860,19 +860,26 @@ let find_hypothesis_by_name name l =
 
 
 
+(** Kind of things that one can "assume" in a Zenon script. *)
+type assumed_hypothesis =
+  | AH_variable of (Parsetree.vname * Parsetree.type_expr)
+  | AH_lemma of Parsetree.logical_expr
+;;
+
+
+
 (** {b Descr} : Helper. *)
 let rec find_assumed_variables_and_lemmas_in_hyps = function
-  | [] -> ([], [])
+  | [] -> []
   | h :: q ->
       (begin
-      let (found_vars, found_lemmas) =
-        find_assumed_variables_and_lemmas_in_hyps q in
+      let found_stuff = find_assumed_variables_and_lemmas_in_hyps q in
       match h.Parsetree.ast_desc with
        | Parsetree.H_variable (n, ty_expr) ->
-           (((n, ty_expr) :: found_vars), found_lemmas)
+           (AH_variable (n, ty_expr)) :: found_stuff
        | Parsetree.H_hypothesis (_, body) ->
-           (found_vars, (body :: found_lemmas))
-       | Parsetree.H_notation (_, _) -> (found_vars, found_lemmas)
+           (AH_lemma body) :: found_stuff
+       | Parsetree.H_notation (_, _) -> found_stuff
       end)
 ;;
 
@@ -1498,38 +1505,46 @@ type proof_step_availability = {
   psa_node_label : Parsetree.node_label ;
   psa_lemma_name : Parsetree.vname ;
   psa_base_logical_expr : Parsetree.logical_expr ;
-  psa_assumed_variables : (Parsetree.vname * Parsetree.type_expr) list ;
-  psa_assumed_lemmas : Parsetree.logical_expr list
+  psa_assumed_variables_and_lemmas : assumed_hypothesis list
 } ;;
 
 
 
 let add_quantifications_and_implications ctx print_ctx env avail_info =
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* First, quantify all the assumed variables. *)
-  List.iter
-    (fun (var_vname, ty_expr) ->
-      (match ty_expr.Parsetree.ast_type with
-       | Parsetree.ANTI_type ty ->
-           Format.fprintf out_fmter "forall %a :@ %a,@ "
-             Parsetree_utils.pp_vname_with_operators_expanded var_vname
-             (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty
-       | _ -> assert false))
-    avail_info.psa_assumed_variables ;
-  (* Now, make a string of implications with the assumed logical expressions. *)
-  let rec print_implications_string = function
+  let rec rec_print = function
     | [] -> ()
-    | log_expr :: q ->
-        Format.fprintf out_fmter "@[<1>(" ;
-        Species_record_type_generation.generate_logical_expr
-          ctx ~local_idents: [] ~in_recursive_let_section_of: []
-          ~self_methods_status: Species_record_type_generation.SMS_abstracted
-          ~recursive_methods_status: Species_record_type_generation.RMS_regular
-          env log_expr ;
-        Format.fprintf out_fmter ") ->@ " ;
-        print_implications_string q ;
-        Format.fprintf out_fmter "@]" in
-  print_implications_string avail_info.psa_assumed_lemmas
+    | assumed :: q ->
+        (begin
+        match assumed with
+         | AH_variable (var_vname, ty_expr) ->
+             (begin
+             (* Quantify all the assumed variables. *)
+             (match ty_expr.Parsetree.ast_type with
+              | Parsetree.ANTI_type ty ->
+                  Format.fprintf out_fmter "forall %a :@ %a,@ "
+                    Parsetree_utils.pp_vname_with_operators_expanded var_vname
+                    (Types.pp_type_simple_to_coq
+                       print_ctx ~reuse_mapping: false) ty
+              | _ -> assert false) ;
+             rec_print q
+             end)
+         | AH_lemma log_expr ->
+             (* Make a string of implications with the assumed logical
+                expressions. *)
+             Format.fprintf out_fmter "@[<1>(" ;
+             Species_record_type_generation.generate_logical_expr
+               ctx ~local_idents: [] ~in_recursive_let_section_of: []
+               ~self_methods_status:
+                 Species_record_type_generation.SMS_abstracted
+               ~recursive_methods_status:
+                 Species_record_type_generation.RMS_regular
+               env log_expr ;
+             Format.fprintf out_fmter ") ->@ " ;
+             rec_print q ;
+             Format.fprintf out_fmter "@]"
+        end) in
+  rec_print avail_info.psa_assumed_variables_and_lemmas
 ;;
 
 
@@ -1759,7 +1774,7 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
        Format.fprintf out_fmter "End __%s.@]@\n" section_name ;
        (* Since we end a Section, all the lemma will have now to be explicitely
           quantified/implified by the assumed variables and hypotheses. *)
-       let (assumed_variables, assumed_lemmas) =
+       let assumed_variables_and_lemmas =
          find_assumed_variables_and_lemmas_in_hyps stmt_desc.Parsetree.s_hyps in
        (* We return the extra step known thanks to the current [PN_sub] This
           extra step will be made available for the rest of the surrounding
@@ -1767,8 +1782,7 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
        [{ psa_node_label = (label_num, label_name) ;
           psa_lemma_name = lemma_name ;
           psa_base_logical_expr = new_aim ;
-          psa_assumed_variables = assumed_variables ;
-          psa_assumed_lemmas = assumed_lemmas }]
+          psa_assumed_variables_and_lemmas = assumed_variables_and_lemmas }]
        end)
    | Parsetree.PN_qed ((_label_num, _label_name), proof) ->
        zenonify_proof ~in_nested_proof ~qed:true ctx print_ctx env min_coq_env
