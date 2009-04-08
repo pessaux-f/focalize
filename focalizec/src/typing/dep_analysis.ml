@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.61 2009-04-01 13:54:48 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.62 2009-04-08 13:41:51 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1168,7 +1168,7 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
              | DepGraphData.DK_def DepGraphData.DfDK_from_term_proof ->
                  ("style=dotted,", "yellow") ) in
           Printf.fprintf out_hd
-            "\"%s\" -> \"%s\" [%scolor=%s,fontsize=10];"
+            "\"%s\" -> \"%s\" [%scolor=%s,fontsize=10];\n"
             (Parsetree_utils.name_of_vname n)
             (Parsetree_utils.name_of_vname child_name) style color)
         children)

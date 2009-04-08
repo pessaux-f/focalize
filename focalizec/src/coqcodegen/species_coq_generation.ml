@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.169 2009-04-07 15:41:41 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.170 2009-04-08 13:41:51 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -963,9 +963,6 @@ let zenonify_by_recursive_definition ctx print_ctx env
     vname params scheme body =
   let out_fmter = ctx.Context.scc_out_fmter in
   let species_name = snd ctx.Context.scc_current_species in
-
-
-
   (* For bug #199, to make so that Zenon identifies "abst_xx" and "xx", we
      generate a fake Definition before generating the body of the recursive
      fonction whose body is needed because of the "by definition of...". *)
@@ -1015,6 +1012,83 @@ let zenonify_by_recursive_definition ctx print_ctx env
          env p);
   (* Done... Then, final carriage return. *)
   Format.fprintf out_fmter ".@]@\n"
+;;
+
+
+
+(** Ensure that the enforced dependencies of a coq script or assumed proof are
+    related to entities that are really definitions, and not signatures or
+    properties. This task is done for regular dependencies of Zenon proofs while
+    generating the Zenon stuff. But for assumed or Coq script, since we directly
+    emit verbatim code, dependencies must be checked aside.
+
+    This function works like the below [zenonify_by_definition] but only does
+    not emit any code. *)
+let ensure_enforced_by_definition_is_definition min_coq_env def_expr_ident =
+  match def_expr_ident.Parsetree.ast_desc with
+   | Parsetree.EI_local _ ->
+       raise
+         (Attempt_proof_by_def_of_local_ident
+            (def_expr_ident.Parsetree.ast_loc, def_expr_ident))
+   | Parsetree.EI_global _ ->
+       (* Since stuff is at toplevel, it cannot be a declaration and can only
+          be a definition. *)
+       ()
+   | Parsetree.EI_method (qcollname_opt, vname) ->
+       (begin
+       match qcollname_opt with
+        | None ->
+            (begin
+            (* The method comes from ourselves (Self). So we will search it
+               inside the coq minimal typing environment. *)
+            let method_info =
+              MinEnv.find_coq_env_element_by_name vname min_coq_env in
+            match method_info with
+             | MinEnv.MCEE_Declared_carrier | MinEnv.MCEE_Defined_carrier _ ->
+                 (* Syntax does not allow to mention "Self" as a proof
+                    element. *)
+                 assert false
+             | MinEnv.MCEE_Declared_computational (_, _)
+             | MinEnv.MCEE_Declared_logical (_, _) ->
+                 (* We can't prove "by definition" of something only
+                    declared ! *)
+                 raise
+                   (Attempt_proof_by_def_of_declared_method_of_self
+                      (def_expr_ident.Parsetree.ast_loc, def_expr_ident))
+             | MinEnv.MCEE_Defined_computational (_, _, _, _, _, _)
+             | MinEnv.MCEE_Defined_logical (_, _, _) -> ()
+            end)
+        | Some (Parsetree.Qualified (_, _)) ->
+            (* The method comes from another module's species. Hence it is for
+               sure from a toplevel species. And this is not correct since the
+               methods used for proofs must only come from our methods or
+               species parameters' ones. [Unsure] *)
+            failwith "I think this is a toplevel species method (1)."
+        | Some (Parsetree.Vname _) ->
+            (begin
+            (* The method belongs to a species parameters. Since they are
+               always abstract, it is forbidden to prove "by definition" of a
+               species parameter method. *)
+            raise
+              (Attempt_proof_by_def_of_species_param
+                 (def_expr_ident.Parsetree.ast_loc, def_expr_ident))
+            end)
+       end)
+;;
+
+
+
+let ensure_enforced_dependencies_by_definition_are_definitions min_coq_env
+    enf_deps =
+  List.iter
+    (fun enf_dep ->
+      match enf_dep.Parsetree.ast_desc with
+       | Parsetree.Ed_definition expr_idents ->
+           List.iter
+             (ensure_enforced_by_definition_is_definition min_coq_env)
+	     expr_idents
+       | Parsetree.Ed_property _ -> ())
+    enf_deps
 ;;
 
 
@@ -1158,7 +1232,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env generated_fields
                sure from a toplevel species. And this is not correct since the
                methods used for proofs must only come from our methods or
                species parameters' ones. [Unsure] *)
-            failwith "I think this is a toplevel species method (1)."
+            failwith "I think this is a toplevel species method (2)."
         | Some (Parsetree.Vname _) ->
             (begin
             (* The method belongs to a species parameters. Since they are
@@ -1799,7 +1873,11 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
     section_name_seed aim_gen_method aim_name parent_proof_opt proof =
   let out_fmter = ctx.Context.scc_out_fmter in
   match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed (_, reason) ->
+   | Parsetree.Pf_assumed (enforced_deps, reason) ->
+       (* [Unsure] Bad place to make the check. This should be made in
+          something like "abstration.ml". Ensure that the *)
+       ensure_enforced_dependencies_by_definition_are_definitions
+         min_coq_env enforced_deps ;
        (* Now, print the lemma body. Inside, any method of "Self" is
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
@@ -1838,7 +1916,11 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
        Format.fprintf out_fmter
          "(* Proof assumed because \"%s\". *)@\n" reason ;
        Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\nQed.@\n"
-   | Parsetree.Pf_coq (_, script) ->
+   | Parsetree.Pf_coq (enforced_deps, script) ->
+       (* [Unsure] Bad place to make the check. This should be made in
+          something like "abstration.ml". Ensure that the *)
+       ensure_enforced_dependencies_by_definition_are_definitions
+         min_coq_env enforced_deps ;
        (* Now, print the lemma body. Inside, any method of "Self" is
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
