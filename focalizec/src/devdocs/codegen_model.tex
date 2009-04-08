@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.7 2009-04-02 12:53:45 pessaux Exp $
+% $Id: codegen_model.tex,v 1.8 2009-04-08 13:41:04 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -247,6 +247,56 @@ Module Me.
 }
 \end{table}
 
+The record type for \ocaml\ will then look like:
+{\scriptsize
+\begin{lstlisting}[language=MyOCaml]
+module Cartesian_product =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('a0_as_carrier, 'b1_as_carrier) me_as_carrier =
+    'a0_as_carrier * 'b1_as_carrier
+  type ('a0_as_carrier, 'b1_as_carrier, 'me_as_carrier) me_as_species =
+  ...
+\end{lstlisting}
+}
+
+
+The record type for \coq\ will then look like:
+{\scriptsize
+\begin{lstlisting}[language=MyCoq]
+Module Cartesian_product.
+  Record Cartesian_product (A_T : Set) (B_T : Set)
+    (_p_A_tst : A_T -> basics.bool__t) : Type :=
+    mk_record
+  ...
+\end{lstlisting}
+}
+
+\medskip
+\paragraph{The entity parameters} In \ocaml\ they can never appear in
+the record type since in ML-like types, we can't have expressions. 
+However, in \coq\ it is possible to have dependency on an entity
+parameter in a theorem or property statement (i.e. in the type of a
+logical method). For example:
+{\scriptsize
+\begin{lstlisting}
+species Me (Naturals is IntModel, n in Naturals) =
+  representation = Naturals ;
+
+ theorem myth : all x in Self,
+    basics#syntactic_equal (n, Naturals!un)
+  proof = assumed {* *} ;
+  end ;;
+\end{lstlisting}
+}
+The theorem {\tt myth} show a dependency on the entity parameter
+{\tt n}. In this case, the record type will be parameterised by this
+entity parameter like if it was a collection parameter's
+method. Obviously, an entity parameter doesn't have methods since it
+is a ``value'' and not a species. So we don't have any notion of
+method in the naming scheme. We choose to name these entity parameters
+by ``{\tt \_p\_}'' + the entity parameter's name  + {\tt \_} + the
+the entity parameter's name again.
 
 \subsubsection{Fields and their types}
 Now we saw the header of the record type definition, we must address
