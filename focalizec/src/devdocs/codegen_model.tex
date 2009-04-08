@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.8 2009-04-08 13:41:04 pessaux Exp $
+% $Id: codegen_model.tex,v 1.9 2009-04-08 15:33:58 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -42,7 +42,6 @@ and an entity parameter whose names differ only by the capitalisation
 of the first letter.
 
 For instance, the following header of a species definition:
-\begin{table}[h]
 {\footnotesize
 \begin{lstlisting}
 species Cartesian_product(A is Setoid, B is Setoid) =
@@ -50,9 +49,7 @@ species Cartesian_product(A is Setoid, B is Setoid) =
   ...
 \end{lstlisting}
 }
-\end{table}
 will generate the \ocaml\ type definition:
-\begin{table}[h]
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml]
 module Cartesian_product =
@@ -63,7 +60,6 @@ module Cartesian_product =
   ...
 \end{lstlisting}
 }
-\end{table}
 
 In fact, {\em a posteriori}, I think now that it's useless in case
 of a species, even closed. This type definition is only used in the
@@ -146,7 +142,7 @@ present in the \coq code are always trivially absent in the
 
 Let's now change our previous example to illustrate the header of our
 record type in \ocaml\ and \coq:
-\begin{table}[h]
+
 {\footnotesize
 \begin{lstlisting}
 species Cartesian_product(A is Setoid, B is Setoid) =
@@ -158,7 +154,7 @@ species Cartesian_product(A is Setoid, B is Setoid) =
   ...
 \end{lstlisting}
 }
-\end{table}
+
 We can see that we have:
 \begin{itemize}
 \item the carrier defined,
@@ -179,7 +175,6 @@ We can see that we have:
 \end{itemize}
 
 The record type for \ocaml\ will then look like:
-\begin{table}[h]
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml]
 module Cartesian_product =
@@ -191,12 +186,10 @@ module Cartesian_product =
   ...
 \end{lstlisting}
 }
-\end{table}
 
 In \coq\ a record is introduced by a constructor. By convention, we
 always name it {\tt mk\_record}. The record type for \coq\ will then
 look like:
-\begin{table}[h]
 {\footnotesize
 \begin{lstlisting}[language=MyCoq]
 Module Cartesian_product.
@@ -206,7 +199,6 @@ Module Cartesian_product.
   ...
 \end{lstlisting}
 }
-\end{table}
 
 \medskip
 \paragraph{The entity parameters} In \ocaml\ they can never appear in
@@ -214,7 +206,6 @@ the record type since in ML-like types, we can't have expressions.
 However, in \coq\ it is possible to have dependency on an entity
 parameter in a theorem or property statement (i.e. in the type of a
 logical method). For example:
-\begin{table}[h]
 {\footnotesize
 \begin{lstlisting}
 species Me (Naturals is IntModel, n in Naturals) =
@@ -226,7 +217,7 @@ species Me (Naturals is IntModel, n in Naturals) =
   end ;;
 \end{lstlisting}
 }
-\end{table}
+
 The theorem {\tt myth} shows a dependency on the entity parameter
 {\tt n}. In this case, the record type will be parametrised by this
 entity parameter like if it was a collection parameter's
@@ -235,7 +226,6 @@ is a ``value'' and not a species. So we don't have any notion of
 method in the naming scheme. We choose to name these entity parameters
 by ``{\tt \_p\_}'' + the entity parameter's name  + {\tt \_} + the
 the entity parameter's name again.
-\begin{table}[h]
 {\footnotesize
 \begin{lstlisting}[language=MyCoq]
 Module Me.
@@ -245,7 +235,7 @@ Module Me.
   ...
 \end{lstlisting}
 }
-\end{table}
+
 
 The record type for \ocaml\ will then look like:
 {\scriptsize
@@ -325,7 +315,6 @@ straight the method's name. In \coq, the field's name is
 
 Let's now take a simple example and seen the record types in
 \ocaml\ and in \coq.
-\begin{table}[h]
 {\footnotesize
 \begin{lstlisting}
 species Me (Naturals is IntModel, n in Naturals) =
@@ -342,10 +331,8 @@ species Me (Naturals is IntModel, n in Naturals) =
 end ;;
 \end{lstlisting}
 }
-\caption{\focalize\ sample code}
-\end{table}
 
-\begin{table}[h]
+
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml]
 module Me =
@@ -361,10 +348,8 @@ module Me =
     }
 \end{lstlisting}
 }
-\caption{Generated \ocaml\ code}
-\end{table}
 
-\begin{table}[h]
+
 {\footnotesize
 \begin{lstlisting}[language=MyCoq]
 Module Me.
@@ -383,8 +368,6 @@ Module Me.
     }.
 \end{lstlisting}
 }
-\caption{Generated \coq\ code}
-\end{table}
 
 Note that in the generated \coq\ code, the method {\tt daube} (in
 fact, the theorem) contains an application of \\
@@ -448,16 +431,359 @@ depending on its kind. The generated name is the same than in the
 \focalize\ source. Only a ``stringification'' is done when the method
 is an operator (e.g. {\tt =}, {\tt +}, {\tt +=e}, \ldots). This
 stringification is done on the fly using a very simple mechanism
-(check function {\tt pp\_vname\_with\_operators\_expanded} in the source
-file {\tt focalize/focalizec/src//basement/parsetree\_utils.ml}.
+(check function \\
+{\tt pp\_vname\_with\_operators\_expanded} in the source
+file \\
+{\tt focalize/focalizec/src//basement/parsetree\_utils.ml}.
 
+The generated definition is in fact a {\bf method generator}, not the
+method itself. Its is a function that si parametrised by all the thing
+the method depends on, and whose body is the method's body''. This
+mechanism serves the late-binding feature and allow to really create a
+method once things it depends on are defined by applying the generator
+to the effective definitions of the methods teh current method depends
+on. Hence, until the method we depend on are not yet defined, one can
+still work with our method generator. Moreover, this allows to make
+several effective methods from a same generator, by applying
+different effective definitions for $\lambda$-lifted  parameters of
+thbe generator.
+
+\medskip
 Next come all the $\lambda$-lifts that represent the dependencies of
-the method.
+the method: In the following order come:
+\begin{enumerate}
+\item The parameters representing the carriers of species parameters
+  appearing in the method (i.e. used in its whole definition). Their
+  name is ``{\tt \_p\_}'' + the species parameter's name +
+  ``{\tt \_T}. 
+\item The parameters representing the methods of species' parameters
+  the current method depends on. They are ordered in 2
+  directions. First, all the methods of a same parameter are
+  consecutive and we $\lambda$-lift following the order of apparition of
+  the species parameters. Second, for each species parameter, the
+  consecutive list of its methods is ordered according to their own
+  dependencies together.
+
+  The first point naturally ensure that following the species
+  parameters' order, definitions of methods of a parameter can only
+  depend on former parameters (otherwise, scoping and type-checking
+  would have told ``Unbound ...''). The second point is not obtained
+  for free. We must really order the methods of a species parameter
+  according to their own dependencies ``on Self's methods'' in their
+  hosting species. For instance, let's imagine that in a species, we
+  need to abstract
+  {\tt P1!eq\_refl : all x in Self, !equal (x, x)} and
+  {\tt P1!equal : Self -> Self -> bool}, clearly to have
+  {\tt P1!eq\_refl} well typed, {\tt P1!equal} must be known, hence
+  appear sooner (i.e. must be $\lambda$-lifted before
+  {\tt P1!eq\_refl}).
+
+  Methods are named by ``{\tt \_p\_}'' + the species parameter's name
+  + ``{\tt \_}'' + the method's name.
+
+  The translation mechanisms of expressions is not studied in this
+  section since it isn't really part of the ``species'' compilation
+  model. We can however note that in the body of a species
+  parameter's method, calls performed to other methods of {\bf this}
+  parameter (i.e. so, obviously, on which the method of the parameter
+  depends on) are done using the naming scheme: ``{\tt \_p\_}''+ the
+  species parameter's name + ``{\tt \_}'' + called method's name (flag
+  {\tt SMS\_from\_param} used when calling the function \\
+  {\tt Species\_record\_type\_generation.generate\_logical\_expr}).
+
+\item The parameters representing the methods of ourselves (i.e. of
+  {\tt Self}) we depend on. They are named by ``{\tt abst\_}'' + the
+  method's name. The only exception is in case where the method is the
+  {\tt representation}, the name will be {\tt abst\_T}.
+\end{enumerate}
+
+\medskip
+Finally come the translation of the definition itself, i.e. it's
+parameters (if the definition is functional) and its body. As above,
+we leave for later the translation mechanisms of expressions.
+We can however note that in the body of a method, calls performed to
+other methods of {\tt Self} (i.e. so obviously on which we depend) are
+done using the naming scheme: ``{\tt abst\_}''+ the called method's
+name (flag {\tt SMS\_abstracted} used when calling the function \\
+{\tt Species\_record\_type\_generation.generate\_logical\_expr}).
+
+
+\subsubsection{Sample code to help summary}
+We take a part of the example given in Virgile Prevosto's Phd, section
+2.2.2 starting page 14 to illustrate the model we exposed until
+now. Attention, we explicitly skipped (removed in the generated
+listings) code dealing with collection generator we will explain in
+the next section.
+
+{\footnotesize
+\begin{lstlisting}
+species Setoide inherits Basic_object =
+  signature ( = ) : Self -> Self -> bool ;
+  signature element : Self ;
+  let different (x, y) = basics#not_b (x = y) ;
+
+  property refl : all x in Self, x = x ;
+  property symm : all x y in Self, Self!( = ) (x, y) -> y = x ;
+end ;;
+
+species Monoide inherits Setoide =
+  signature ( * ) : Self -> Self -> Self ;
+  signature un : Self ;
+  let element = Self! un * !un ;
+end ;;
+
+species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
+  representation = (A * B) ;
+
+  let ( = ) (x, y) =
+     and_b
+       (A!( = ) (basics#fst (x), basics#fst (y)),
+        B!( = ) (snd (x), snd (y))) ;
+  let creer (x, y) in Self = basics#pair (x, y) ;
+  let element = Self!creer (A!element, B!element) ;
+  let print (x) =
+     "(" ^ A!print (fst (x)) ^ "," ^ B!print (snd (x)) ^ ")" ;
+
+  proof of refl = (* by definition of ( = ) *) assumed {* *} ;
+  proof of symm = assumed {* *} ;
+
+end ;;
+\end{lstlisting}
+}
+
+
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml]
+module Setoide =
+  struct
+  type 'me_as_carrier me_as_species = {
+    (* From species ok__phd_sample#Setoide. *)
+    element : 'me_as_carrier ;
+    (* From species ok__phd_sample#Setoide. *)
+    _equal_ : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species basics#Basic_object. *)
+    parse : Basics._focty_string -> 'me_as_carrier ;
+    (* From species basics#Basic_object. *)
+    print : 'me_as_carrier -> Basics._focty_string ;
+    (* From species ok__phd_sample#Setoide. *)
+    different : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    }
+  let different abst__equal_ (x : 'me_as_carrier) (y : 'me_as_carrier) =
+    (Basics.not_b (abst__equal_ x y))
+  end ;;
+
+module Monoide =
+  struct
+  type 'me_as_carrier me_as_species = {
+    (* From species ok__phd_sample#Monoide. *)
+    un : 'me_as_carrier ;
+    (* From species ok__phd_sample#Monoide. *)
+    _star_ : 'me_as_carrier -> 'me_as_carrier -> 'me_as_carrier ;
+    (* From species ok__phd_sample#Setoide. *)
+    _equal_ : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species basics#Basic_object. *)
+    parse : Basics._focty_string -> 'me_as_carrier ;
+    (* From species basics#Basic_object. *)
+    print : 'me_as_carrier -> Basics._focty_string ;
+    (* From species ok__phd_sample#Monoide. *)
+    element : 'me_as_carrier ;
+    (* From species ok__phd_sample#Setoide. *)
+    different : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    }
+  let element abst_un abst__star_ = (abst__star_ abst_un abst_un)
+  end ;;
+
+module Setoide_produit =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('a0_as_carrier, 'b1_as_carrier) me_as_carrier =
+    'a0_as_carrier * 'b1_as_carrier
+  type ('a0_as_carrier, 'b1_as_carrier, 'me_as_carrier) me_as_species = {
+    (* From species ok__phd_sample#Setoide_produit. *)
+    creer : 'a0_as_carrier -> 'b1_as_carrier -> 'me_as_carrier ;
+    (* From species basics#Basic_object. *)
+    parse : Basics._focty_string -> 'me_as_carrier ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    print : 'me_as_carrier -> Basics._focty_string ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    _equal_ : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    element : 'me_as_carrier ;
+    (* From species ok__phd_sample#Setoide. *)
+    different : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    }
+  let creer (x : 'a0_as_carrier) (y : 'b1_as_carrier) = (Basics.pair x y)
+  let print _p_A_print _p_B_print (x : 'me_as_carrier) =
+    (Basics._hat_ "("
+      (Basics._hat_ (_p_A_print (Basics.fst x))
+        (Basics._hat_ "," (Basics._hat_ (_p_B_print (Basics.snd x)) ")"))))
+  let _equal_ _p_A__equal_ _p_B__equal_ (x : 'me_as_carrier)
+    (y : 'me_as_carrier) =
+    (Basics.and_b (_p_A__equal_ (Basics.fst x) (Basics.fst y))
+      (_p_B__equal_ (Basics.snd x) (Basics.snd y)))
+  let element _p_A_element _p_B_element abst_creer =
+    (abst_creer _p_A_element _p_B_element)
+
+  <<<< ATTENTION:                                                   >>>>
+  <<<< SKIPPED THE COLLECTION GENERATOR STUFF THAT WE EXPLAIN LATER >>>>
+ end ;;
+\end{lstlisting}
+}
+
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+Module Setoide.
+  Record Setoide : Type :=
+    mk_record {
+    rf_T :> Set ;
+    (* From species ok__phd_sample#Setoide. *)
+    rf_element : rf_T ;
+    (* From species ok__phd_sample#Setoide. *)
+    rf__equal_ : rf_T -> rf_T -> basics.bool__t ;
+    (* From species basics#Basic_object. *)
+    rf_parse : basics.string__t -> rf_T ;
+    (* From species basics#Basic_object. *)
+    rf_print : rf_T -> basics.string__t ;
+    (* From species ok__phd_sample#Setoide. *)
+    rf_different : rf_T -> rf_T -> basics.bool__t ;
+    (* From species ok__phd_sample#Setoide. *)
+    rf_refl : forall x : rf_T, Is_true ((rf__equal_ x x)) ;
+    (* From species ok__phd_sample#Setoide. *)
+    rf_symm :
+      forall x  y : rf_T,
+        Is_true ((rf__equal_ x y)) -> Is_true ((rf__equal_ y x))
+    }.
+  
+  Definition different (abst_T : Set)
+    (abst__equal_ : abst_T -> abst_T -> basics.bool__t) (x : abst_T)
+    (y : abst_T) : basics.bool__t := (basics.not_b (abst__equal_ x y)).
+  
+End Setoide.
+
+Module Monoide.
+  Record Monoide : Type :=
+    mk_record {
+    rf_T :> Set ;
+    (* From species ok__phd_sample#Monoide. *)
+    rf_un : rf_T ;
+    (* From species ok__phd_sample#Monoide. *)
+    rf__star_ : rf_T -> rf_T -> rf_T ;
+    (* From species ok__phd_sample#Setoide. *)
+    rf__equal_ : rf_T -> rf_T -> basics.bool__t ;
+    (* From species basics#Basic_object. *)
+    rf_parse : basics.string__t -> rf_T ;
+    (* From species basics#Basic_object. *)
+    rf_print : rf_T -> basics.string__t ;
+    (* From species ok__phd_sample#Monoide. *)
+    rf_element : rf_T ;
+    (* From species ok__phd_sample#Setoide. *)
+    rf_different : rf_T -> rf_T -> basics.bool__t ;
+    (* From species ok__phd_sample#Setoide. *)
+    rf_refl : forall x : rf_T, Is_true ((rf__equal_ x x)) ;
+    (* From species ok__phd_sample#Setoide. *)
+    rf_symm :
+      forall x  y : rf_T,
+        Is_true ((rf__equal_ x y)) -> Is_true ((rf__equal_ y x))
+    }.
+  
+  Definition element (abst_T : Set) (abst_un : abst_T)
+    (abst__star_ : abst_T -> abst_T -> abst_T) : abst_T :=
+    (abst__star_ abst_un abst_un).
+  
+End Monoide.
+
+Module Setoide_produit.
+  Record Setoide_produit (A_T : Set) (B_T : Set) : Type :=
+    mk_record {
+    rf_T :> Set ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    rf_creer : A_T -> B_T -> rf_T ;
+    (* From species basics#Basic_object. *)
+    rf_parse : basics.string__t -> rf_T ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    rf_print : rf_T -> basics.string__t ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    rf__equal_ : rf_T -> rf_T -> basics.bool__t ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    rf_element : rf_T ;
+    (* From species ok__phd_sample#Setoide. *)
+    rf_different : rf_T -> rf_T -> basics.bool__t ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    rf_refl : forall x : rf_T, Is_true ((rf__equal_ x x)) ;
+    (* From species ok__phd_sample#Setoide_produit. *)
+    rf_symm :
+      forall x  y : rf_T,
+        Is_true ((rf__equal_ x y)) -> Is_true ((rf__equal_ y x))
+    }.
+  
+  Definition creer (_p_A_T : Set) (_p_B_T : Set)
+    (abst_T := ((_p_A_T * _p_B_T)%type)) (x : _p_A_T) (y : _p_B_T) :
+    abst_T := (basics.pair _ _ x y).
+  Definition print (_p_A_T : Set) (_p_B_T : Set) (_p_A_print :
+    _p_A_T -> basics.string__t) (_p_B_print : _p_B_T -> basics.string__t)
+    (abst_T := ((_p_A_T * _p_B_T)%type)) (x : abst_T) : basics.string__t :=
+    (basics._hat_ coq_builtins.___a_string
+      (basics._hat_ (_p_A_print (basics.fst _ _ x))
+        (basics._hat_ coq_builtins.___a_string
+          (basics._hat_ (_p_B_print (basics.snd _ _ x))
+            coq_builtins.___a_string)))).
+  Definition _equal_ (_p_A_T : Set) (_p_B_T : Set) (_p_A__equal_ :
+    _p_A_T -> _p_A_T -> basics.bool__t) (_p_B__equal_ :
+    _p_B_T -> _p_B_T -> basics.bool__t) (abst_T := ((_p_A_T * _p_B_T)%type))
+    (x : abst_T) (y : abst_T) : basics.bool__t :=
+    (basics.and_b (_p_A__equal_ (basics.fst _ _ x) (basics.fst _ _ y))
+      (_p_B__equal_ (basics.snd _ _ x) (basics.snd _ _ y))).
+  Definition element (_p_A_T : Set) (_p_B_T : Set) (_p_A_element : _p_A_T)
+    (_p_B_element : _p_B_T) (abst_T : Set)
+    (abst_creer : _p_A_T -> _p_B_T -> abst_T) : abst_T :=
+    (abst_creer _p_A_element _p_B_element).
+  
+  (* From species ok__phd_sample#Setoide_produit. *)
+  Theorem refl  (_p_A_T : Set) (_p_B_T : Set) (abst_T : Set)
+    (abst__equal_ : abst_T -> abst_T -> basics.bool__t):
+    forall x : abst_T, Is_true ((abst__equal_ x x)).
+  (* Proof assumed because " ". *)
+  apply coq_builtins.magic_prove.
+  Qed.
+  
+  (* From species ok__phd_sample#Setoide_produit. *)
+  Theorem symm  (_p_A_T : Set) (_p_B_T : Set) (abst_T : Set)
+    (abst__equal_ : abst_T -> abst_T -> basics.bool__t):
+    forall x  y : abst_T,
+      Is_true ((abst__equal_ x y)) -> Is_true ((abst__equal_ y x)).
+  (* Proof assumed because " ". *)
+  apply coq_builtins.magic_prove.
+  Qed.
+  
+    <<<< ATTENTION:                                                   >>>>
+  <<<< SKIPPED THE COLLECTION GENERATOR STUFF THAT WE EXPLAIN LATER >>>>
+End Setoide_produit.
+\end{lstlisting}
+}
+
+
+
+\subsubsection{Defined recursive methods}
+The compilation scheme of a recursive function is pretty different and
+will be explained in a dedicated section. It however finally uses the
+same abstraction mechanism (i.e. $\lambda$-lifted things). The main
+difference is induced by the use of the \coq\ construct
+``{\tt Function}'' and the need for a termination proof.
+
+
 
 \subsection{Fully defined species}
-\subsection{Collection generator function's header}
+In case a species is fully defined, i.e. all its methods are defined,
+no more only declared, the species can be turned into a collection by
+an {\tt implements}. To allow creating collections, we must then add
+to this species a {\bf collection generator}. The intuitive view.
+
+\subsubsection{Collection generator function's header}
 \subsubsection{Local functions}
 \subsubsection{Creating the record value}
+
+
 \section{Collection}
 \section{Toplevel functions}
 \section{Toplevel theorems}
