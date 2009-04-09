@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.78 2009-04-02 14:33:54 weis Exp $ *)
+(* $Id: lexer.mll,v 1.79 2009-04-09 17:43:43 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -610,8 +610,8 @@ let incr_escaped_line_num lexbuf spaces =
 (** {3 The main lexer} *)
 
 (** {6 Classifying characters} *)
-let newline = '\010'
-(** ASCII 010 is newline or ['\n']. *)
+let newline = ( '\n' | '\r' | "\r\n" )
+(** ASCII 010 is newline or ['\n'], ASCII 013 is carriage return or ['\r']. *)
 let blank = [ '\032' '\009' '\012' ]
 (** ASCII 32 is space, ASCII 9 is tab, ASCII 12 is CTRL-L *)
 let whites = [ ' ' '\t' ]*
