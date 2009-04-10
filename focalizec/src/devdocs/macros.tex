@@ -1,4 +1,4 @@
-% $Id: macros.tex,v 1.7 2009-03-30 15:05:17 pessaux Exp $
+% $Id: macros.tex,v 1.8 2009-04-10 14:22:42 pessaux Exp $
 \newcommand{\ocaml}{{\sf OCaml}}
 \newcommand{\moca}{{\sf Moca}}
 \newcommand{\focal}{{\sf FoCaL}}
@@ -30,6 +30,7 @@
       representation, representation, Self, signature, species, step,
       structural, termination, then, theorem, true, type, use,
       with},
+    otherkeywords={->, :, /\\, \\/, =>, \~, \#, ;, \& \|},
     sensitive=false,
     morecomment=[n]{(*}{*)},  %% Allow nested comments
     morecomment=[n]{(**}{*)},  %% Allow nested comments
@@ -50,7 +51,8 @@
 \lstdefinelanguage{MyCoq}
   {morekeywords={Variable, Theorem, Section, assert, End, Qed, Let,
       forall, ex, Chapter, Record, Parameter, Definition, Hypothesis,
-      let, match, if, then, else, end, Function},
+      let, match, if, then, else, end, Function, Module},
+    otherkeywords={->, :, :=, =>, ;},
     sensitive=false,
     morecomment=[n]{(*}{*)},   %% Allow nested comments.
     morecomment=[n]{(**}{*)},  %% Allownested comments.
@@ -71,6 +73,7 @@
   {morekeywords={let, if, then, else, match, with, module,
       functor, sig, end, rec, type, raise, begin, struct, fun, function,
       in, try, val},
+    otherkeywords={->, :, ;, \&, \|},
     sensitive=false,
     morecomment=[n]{(*}{*)},   %% Allow nested comments.
     morecomment=[n]{(**}{*)},  %% Allownested comments.
