@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.130 2009-04-02 14:33:54 weis Exp $ *)
+(* $Id: parser.mly,v 1.131 2009-04-10 08:07:35 weis Exp $ *)
 
 open Parsetree;;
 
@@ -330,8 +330,8 @@ let mk_proof_label (s1, s2) =
        /* expr (e OP e OP OP e) with OP starting with '+' or '-' */
 %left     STAR_OP SLASH_OP PERCENT_OP
        /* expr (e OP e OP e) with OP starting with '*', '/', or '%' */
-%right    STAR_STAR_OP
-       /* expr (e OP e OP e) with OP starting with "**" */
+
+%nonassoc prec_unary_minus         /* unary DASH_OP e.g. DASH_OP is '-' */
 
 /* Unary prefix operators. */
 %nonassoc PLIDENT
@@ -342,8 +342,10 @@ let mk_proof_label (s1, s2) =
 %nonassoc DOLLAR_OP                /* expr OP e with OP starting with '$' */
 %nonassoc BANG_OP                  /* expr OP e with OP starting with '!' */
 
+%right    STAR_STAR_OP
+       /* expr (e OP e OP e) with OP starting with "**" */
+
 /* Predefined precedences to resolve conflicts. */
-%nonassoc prec_unary_minus         /* unary DASH_OP e.g. DASH_OP is '-' */
 %nonassoc prec_constant_constructor /* cf. simple_expr (C versus C x) */
                                    /* above AS BAR COLON_COLON COMMA */
 %nonassoc below_SHARP
@@ -361,46 +363,68 @@ let mk_proof_label (s1, s2) =
 %%
 
 file:
-  | DOCUMENTATION_HEADER phrases { mk_doc [mk_doc_elem $1] (File $2) }
-  | phrases { mk (File $1) }
+  | DOCUMENTATION_HEADER phrases
+    { mk_doc [mk_doc_elem $1] (File $2) }
+  | phrases
+    { mk (File $1) }
 ;
 
 phrases:
-  | EOF { [] }
-  | phrase phrases { $1 :: $2 }
+  | EOF
+    { [] }
+  | phrase phrases
+    { $1 :: $2 }
 ;
 
 phrase:
-  | DOCUMENTATION_TITLE { mk_doc [mk_doc_elem $1] Ph_documentation_title }
-  | define_let SEMI_SEMI { mk (Ph_let $1) }
-  | define_logical SEMI_SEMI { mk (Ph_let $1) }
-  | define_theorem SEMI_SEMI { mk (Ph_theorem $1) }
-  | define_type SEMI_SEMI { mk (Ph_type $1) }
-  | define_species SEMI_SEMI { mk (Ph_species $1) }
-  | define_collection SEMI_SEMI { mk (Ph_collection $1) }
-  | opt_doc OPEN STRING SEMI_SEMI { mk_doc $1 (Ph_open $3) }
-  | opt_doc USE STRING SEMI_SEMI { mk_doc $1 (Ph_use $3) }
-  | opt_doc COQ_REQUIRE STRING SEMI_SEMI { mk_doc $1 (Ph_coq_require $3) }
-  | opt_doc expr SEMI_SEMI { mk_doc $1 (Ph_expr $2) }
+  | DOCUMENTATION_TITLE
+    { mk_doc [mk_doc_elem $1] Ph_documentation_title }
+  | define_let SEMI_SEMI
+    { mk (Ph_let $1) }
+  | define_logical SEMI_SEMI
+    { mk (Ph_let $1) }
+  | define_theorem SEMI_SEMI
+    { mk (Ph_theorem $1) }
+  | define_type SEMI_SEMI
+    { mk (Ph_type $1) }
+  | define_species SEMI_SEMI
+    { mk (Ph_species $1) }
+  | define_collection SEMI_SEMI
+    { mk (Ph_collection $1) }
+  | opt_doc OPEN STRING SEMI_SEMI
+    { mk_doc $1 (Ph_open $3) }
+  | opt_doc USE STRING SEMI_SEMI
+    { mk_doc $1 (Ph_use $3) }
+  | opt_doc COQ_REQUIRE STRING SEMI_SEMI
+    { mk_doc $1 (Ph_coq_require $3) }
+  | opt_doc expr SEMI_SEMI
+    { mk_doc $1 (Ph_expr $2) }
 ;
 
 external_language:
-  | CAML { EL_Caml }
-  | COQ { EL_Coq }
-  | STRING { EL_external $1 }
+  | CAML
+    { EL_Caml }
+  | COQ
+    { EL_Coq }
+  | STRING
+    { EL_external $1 }
 ;
 
 external_expr_one:
-  | BAR external_language DASH_GT EXTERNAL_CODE { ($2, $4) }
+  | BAR external_language DASH_GT EXTERNAL_CODE
+    { ($2, $4) }
 ;
 
 external_expr_desc:
-  | external_expr_one { [ $1 ] }
-  | external_expr_one external_expr_desc { $1 :: $2 }
+  | external_expr_one
+    { [ $1 ] }
+  | external_expr_one external_expr_desc
+    { $1 :: $2 }
 ;
 
 external_expr:
-  external_expr_desc { mk $1 }
+  external_expr_desc
+  { mk $1 }
 ;
 
 /**** TYPE DEFINITION ****/
@@ -412,12 +436,15 @@ define_type:
 
 define_type_params:
   | { [] }
-  | LPAREN define_type_param_comma_list RPAREN { $2 }
+  | LPAREN define_type_param_comma_list RPAREN
+    { $2 }
 ;
 
 define_type_param_comma_list:
-  | type_param_vname { [ $1 ] }
-  | type_param_vname COMMA define_type_param_comma_list { $1 :: $3 }
+  | type_param_vname
+    { [ $1 ] }
+  | type_param_vname COMMA define_type_param_comma_list
+    { $1 :: $3 }
 ;
 
 define_type_body:
@@ -440,54 +467,70 @@ define_type_body_private:
 ;
 
 define_type_body_contents:
-  | opt_doc define_type_body_regular { mk_doc $1 (TDBS_regular $2) }
-  | opt_doc define_type_body_external { mk_doc $1 (TDBS_external $2) }
+  | opt_doc define_type_body_regular
+    { mk_doc $1 (TDBS_regular $2) }
+  | opt_doc define_type_body_external
+    { mk_doc $1 (TDBS_external $2) }
 ;
 
 define_type_body_external:
   | INTERNAL define_type_body_regular_opt
     opt_doc EXTERNAL external_expr_desc following_external_bindings
-     { mk { etdb_internal = $2;
-            etdb_external = mk_doc $3 $5;
-            etdb_bindings = mk $6; }
-     }
+    { mk {
+        etdb_internal = $2;
+        etdb_external = mk_doc $3 $5;
+        etdb_bindings = mk $6;
+      }
+    }
 ;
 
 external_binding:
-  | external_value_vname EQUAL external_expr { mk ($1, $3) }
+  | external_value_vname EQUAL external_expr
+    { mk ($1, $3) }
 ;
 
 following_external_bindings:
   | { [] }
-  | AND external_binding following_external_bindings { $2 :: $3 }
+  | AND external_binding following_external_bindings
+    { $2 :: $3 }
 ;
 
 define_type_body_regular_opt:
   | { None }
-  | define_type_body_regular { Some $1 }
+  | define_type_body_regular
+    { Some $1 }
 ;
 
 define_type_body_regular:
-  | ALIAS type_expr { mk (RTDB_alias $2) }
-  | define_sum { mk (RTDB_union $1) }
-  | define_product { mk (RTDB_record $1) }
+  | ALIAS type_expr
+    { mk (RTDB_alias $2) }
+  | define_sum
+    { mk (RTDB_union $1) }
+  | define_product
+    { mk (RTDB_record $1) }
 ;
 
 define_sum:
-  | define_constructor_list { $1 }
+  | define_constructor_list
+    { $1 }
 ;
 
 define_constructor:
-  | constructor_vname { ($1, []) }
-  | constructor_vname LPAREN type_expr_comma_list RPAREN { ($1, $3) }
+  | constructor_vname
+    { ($1, []) }
+  | constructor_vname LPAREN type_expr_comma_list RPAREN
+    { ($1, $3) }
 ;
 define_constructor_list:
-  | BAR define_constructor { [ $2 ] }
-  | BAR define_constructor define_constructor_list { $2 :: $3 }
+  | BAR define_constructor
+    { [ $2 ] }
+  | BAR define_constructor define_constructor_list
+    { $2 :: $3 }
 ;
 
 define_product:
-  | LBRACE define_record_field_list RBRACE { $2 }
+  | LBRACE define_record_field_list RBRACE
+    { $2 }
 ;
 define_record_field_list:
   | label_vname EQUAL type_expr opt_semi
@@ -503,33 +546,44 @@ define_species:
     SPECIES species_vname define_species_params define_species_inherits EQUAL
       species_fields
     END
-    { mk_doc $1
-        { sd_name = $3; sd_params = $4;
-          sd_inherits = $5; sd_fields = $7; } }
+    { mk_doc $1 {
+        sd_name = $3; sd_params = $4;
+        sd_inherits = $5; sd_fields = $7;
+      }
+    }
 ;
 
 define_species_params:
   | { [] }
-  | LPAREN define_species_param_list RPAREN { $2 }
+  | LPAREN define_species_param_list RPAREN
+    { $2 }
 ;
 
 define_species_param_list:
-  | define_species_param { [ $1 ] }
-  | define_species_param COMMA define_species_param_list { $1 :: $3 }
+  | define_species_param
+    { [ $1 ] }
+  | define_species_param COMMA define_species_param_list
+    { $1 :: $3 }
 ;
 
 define_species_param:
-  | bound_vname IN carrier_ident { ($1, mk (SPT_in $3)) }
-  | collection_vname IS species_expr { ($1, mk (SPT_is $3)) }
+  | bound_vname IN carrier_ident
+    { ($1, mk (SPT_in $3)) }
+  | collection_vname IS species_expr
+    { ($1, mk (SPT_is $3)) }
 ;
 
 define_species_inherits:
-  | opt_doc INHERITS species_expr_list { mk_doc $1 $3}
   | { mk [] }
+  | opt_doc INHERITS species_expr_list
+    { mk_doc $1 $3}
+;
 
 species_expr_list:
-  | species_expr { [ $1 ] }
-  | species_expr COMMA species_expr_list { $1 :: $3 }
+  | species_expr
+    { [ $1 ] }
+  | species_expr COMMA species_expr_list
+    { $1 :: $3 }
 ;
 
 species_expr:
@@ -537,30 +591,43 @@ species_expr:
     { mk { se_name = $1; se_params = []; } }
   | species_ident LPAREN species_param_list RPAREN
     { mk { se_name = $1; se_params = $3; } }
+;
 
 species_param:
-  | expr { mk (SP $1) }
+  | expr
+    { mk (SP $1) }
 ;
 
 species_param_list:
-  | species_param { [ $1 ] }
-  | species_param COMMA species_param_list { $1 :: $3 }
+  | species_param
+    { [ $1 ] }
+  | species_param COMMA species_param_list
+    { $1 :: $3 }
 ;
 
 species_fields:
   | { [] }
-  | species_field SEMI species_fields { $1 :: $3 }
+  | species_field SEMI species_fields
+    { $1 :: $3 }
+;
 
 species_field :
-  | define_representation { mk (SF_rep $1) }
-  | define_signature      { mk (SF_sig $1) }
-  | define_let            { mk (SF_let $1) }
-  | define_logical        { mk (SF_let $1) }
-  | define_property       { mk (SF_property $1) }
-  | define_theorem        { mk (SF_theorem $1) }
-  | define_proof          { mk (SF_proof $1) }
+  | define_representation
+    { mk (SF_rep $1) }
+  | define_signature
+    { mk (SF_sig $1) }
+  | define_let
+    { mk (SF_let $1) }
+  | define_logical
+    { mk (SF_let $1) }
+  | define_property
+    { mk (SF_property $1) }
+  | define_theorem
+    { mk (SF_theorem $1) }
+  | define_proof
+    { mk (SF_proof $1) }
   | define_termination_proof
-                 { mk (SF_termination_proof $1) }
+    { mk (SF_termination_proof $1) }
 ;
 
 termination_proof_profiles:
@@ -608,7 +675,8 @@ simple_representation_type:
     /* To have qualified species names as representation types. */
   | species_glob_ident
     { RTE_ident $1 }
-  | RLIDENT { RTE_ident (mk_local_ident (Vlident $1)) }
+  | RLIDENT
+    { RTE_ident (mk_local_ident (Vlident $1)) }
   | glob_ident LPAREN representation_type_comma_list RPAREN
     { RTE_app ($1, $3) }
     /* To have non-qualified parameterized type constructors names. */
@@ -627,8 +695,10 @@ representation_type_tuple:
 ;
 
 representation_type_comma_list:
-  | representation_type { [ mk $1 ] }
-  | representation_type COMMA representation_type_comma_list { mk $1 :: $3 }
+  | representation_type
+    { [ mk $1 ] }
+  | representation_type COMMA representation_type_comma_list
+    { mk $1 :: $3 }
 ;
 
 /**** COLLECTION DEFINITION ****/
@@ -642,15 +712,28 @@ define_collection:
 
 let_binding:
   | opt_local LET binding following_binding_list
-    { mk { ld_rec = RF_no_rec; ld_logical = LF_no_logical; ld_local = $1;
-           ld_bindings = $3 :: $4; ld_termination_proof = None; } }
+    { mk {
+        ld_rec = RF_no_rec;
+        ld_logical = LF_no_logical;
+        ld_local = $1;
+        ld_bindings = $3 :: $4;
+        ld_termination_proof = None;
+      }
+    }
   | opt_local LET REC binding following_binding_list opt_termination_proof
-    { mk { ld_rec = RF_rec; ld_logical = LF_no_logical; ld_local = $1;
-           ld_bindings = $4 :: $5; ld_termination_proof = $6; } }
+    { mk {
+       ld_rec = RF_rec;
+       ld_logical = LF_no_logical;
+       ld_local = $1;
+       ld_bindings = $4 :: $5;
+       ld_termination_proof = $6;
+      }
+    }
 ;
 
 define_let:
-  | opt_doc let_binding { mk_doc $1 ($2.ast_desc) }
+  | opt_doc let_binding
+    { mk_doc $1 ($2.ast_desc) }
 ;
 
 logical_binding:
@@ -659,7 +742,8 @@ logical_binding:
 ;
 
 define_logical:
-  | opt_doc logical_binding { mk_doc $1 $2.ast_desc }
+  | opt_doc logical_binding
+    { mk_doc $1 $2.ast_desc }
 ;
 
 /** Since logical let is followed by a logical_expr, and since logical_expr
@@ -674,52 +758,76 @@ define_logical:
 binding:
   | bound_vname EQUAL logical_expr
     { mk {
-        b_name = $1; b_params = []; b_type = None;
-        b_body = Parsetree.BB_logical $3 }
+        b_name = $1;
+        b_params = [];
+        b_type = None;
+        b_body = Parsetree.BB_logical $3;
+      }
     }
   | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_expr
     { mk {
-        b_name = $1; b_params = []; b_type = Some $4;
-        b_body = Parsetree.BB_computational (mk (E_external $6)) }
+        b_name = $1;
+        b_params = [];
+        b_type = Some $4;
+        b_body = Parsetree.BB_computational (mk (E_external $6));
+      }
     }
   | bound_vname IN type_expr EQUAL logical_expr
     { mk {
-        b_name = $1; b_params = []; b_type = Some $3;
-        b_body = Parsetree.BB_logical $5 }
+        b_name = $1;
+        b_params = [];
+        b_type = Some $3;
+        b_body = Parsetree.BB_logical $5;
+      }
     }
   | bound_vname LPAREN param_list RPAREN EQUAL logical_expr
     { mk {
-        b_name = $1; b_params = $3; b_type = None;
-        b_body = Parsetree.BB_logical $6 }
+        b_name = $1;
+        b_params = $3;
+        b_type = None;
+        b_body = Parsetree.BB_logical $6;
+      }
     }
   | bound_vname LPAREN param_list RPAREN IN type_expr
     EQUAL logical_expr
     { mk {
-        b_name = $1; b_params = $3; b_type = Some $6;
-        b_body = Parsetree.BB_logical $8 }
+        b_name = $1;
+        b_params = $3;
+        b_type = Some $6;
+        b_body = Parsetree.BB_logical $8;
+      }
     }
 ;
 
 opt_termination_proof:
   | { None }
-  | TERMINATION PROOF EQUAL termination_proof { Some $4 }
+  | TERMINATION PROOF EQUAL termination_proof
+    { Some $4 }
 ;
 
 termination_proof:
-  | opt_doc STRUCTURAL bound_vname { mk_doc $1 (TP_structural $3) }
-  | opt_doc LEXICOGRAPHIC fact_list { mk_doc $1 (TP_lexicographic $3) }
-  | opt_doc MEASURE expr ON param_list proof { mk_doc $1 (TP_measure ($3, $5, $6)) }
-  | opt_doc ORDER expr ON param_list proof { mk_doc $1 (TP_order ($3, $5, $6)) }
+  | opt_doc STRUCTURAL bound_vname
+    { mk_doc $1 (TP_structural $3) }
+  | opt_doc LEXICOGRAPHIC fact_list
+    { mk_doc $1 (TP_lexicographic $3) }
+  | opt_doc MEASURE expr ON param_list proof
+    { mk_doc $1 (TP_measure ($3, $5, $6)) }
+  | opt_doc ORDER expr ON param_list proof
+    { mk_doc $1 (TP_order ($3, $5, $6)) }
 ;
 
 param_list:
-  | param { [ $1 ] }
-  | param COMMA param_list { $1 :: $3 }
+  | param
+    { [ $1 ] }
+  | param COMMA param_list
+    { $1 :: $3 }
 ;
 
 param:
-  | bound_vname { ($1, None) }
-  | bound_vname IN type_expr { ($1, Some $3) }
+  | bound_vname
+    { ($1, None) }
+  | bound_vname IN type_expr
+    { ($1, Some $3) }
 ;
 
 /**** PROPERTIES & THEOREM DEFINITION ****/
@@ -728,7 +836,8 @@ signature_binding:
   | SIGNATURE bound_vname COLON type_expr
     { { sig_name = $2; sig_type = $4; sig_logical = LF_no_logical; } }
   | LOGICAL signature_binding
-    { { $2 with sig_logical = LF_logical; }; }
+    { { $2 with sig_logical = LF_logical; } }
+;
 
 define_signature:
   | opt_doc signature_binding
@@ -742,9 +851,13 @@ define_property:
 
 define_theorem:
   | opt_doc opt_local THEOREM theorem_vname COLON logical_expr PROOF EQUAL proof
-    { mk_doc $1
-        { th_name = $4; th_local = $2;
-          th_stmt = $6; th_proof = $9 } }
+    { mk_doc $1 {
+        th_name = $4;
+        th_local = $2;
+        th_stmt = $6;
+        th_proof = $9;
+      }
+    }
 ;
 
 logical_expr:
@@ -778,7 +891,6 @@ in_type_expr:
 proof:
   | opt_doc CONCLUDE
     { mk_doc $1 (Pf_auto []) }
-    /* Trailing is the reason why the proof was not given. */
   | opt_doc enforced_dependencies ASSUMED EXTERNAL_CODE
     { mk_doc $1 (Pf_assumed ($2, $4)) }
   | opt_doc COQ PROOF enforced_dependencies EXTERNAL_CODE
@@ -790,8 +902,10 @@ proof:
 ;
 
 proof_node_list:
-  | proof_node_qed { [ $1 ] }
-  | proof_node proof_node_list { $1 :: $2 }
+  | proof_node_qed
+    { [ $1 ] }
+  | proof_node proof_node_list
+    { $1 :: $2 }
 ;
 
 proof_node:
@@ -818,31 +932,43 @@ facts:
 ;
 
 fact:
-  | DEFINITION OF definition_ident_comma_list { mk (F_definition $3) }
-  | HYPOTHESIS proof_hypothesis_list { mk (F_hypothesis $2) }
-  | PROPERTY property_ident_comma_list { mk (F_property ($2)) }
-  | THEOREM property_ident_comma_list { mk (F_property ($2)) }
-  | STEP proof_label_comma_list { mk (F_node (List.map mk_proof_label $2)) }
+  | DEFINITION OF definition_ident_comma_list
+    { mk (F_definition $3) }
+  | HYPOTHESIS proof_hypothesis_list
+    { mk (F_hypothesis $2) }
+  | PROPERTY property_ident_comma_list
+    { mk (F_property ($2)) }
+  | THEOREM property_ident_comma_list
+    { mk (F_property ($2)) }
+  | STEP proof_label_comma_list
+    { mk (F_node (List.map mk_proof_label $2)) }
 ;
 
 enforced_dependencies:
   | { [ ] }
-  | enforced_dependency enforced_dependencies { $1 :: $2 }
+  | enforced_dependency enforced_dependencies
+    { $1 :: $2 }
 ;
 
 enforced_dependency:
-  | DEFINITION OF definition_ident_comma_list { mk (Ed_definition $3) }
-  | PROPERTY property_ident_comma_list { mk (Ed_property ($2)) }
+  | DEFINITION OF definition_ident_comma_list
+    { mk (Ed_definition $3) }
+  | PROPERTY property_ident_comma_list
+    { mk (Ed_property ($2)) }
 ;
 
 proof_hypothesis:
-  | RUIDENT { Vuident $1 }
-  | RLIDENT { Vlident $1 }
+  | RUIDENT
+    { Vuident $1 }
+  | RLIDENT
+    { Vlident $1 }
 ;
 
 proof_hypothesis_list:
-  | proof_hypothesis { [ $1 ] }
-  | proof_hypothesis COMMA proof_hypothesis_list { $1 :: $3 }
+  | proof_hypothesis
+    { [ $1 ] }
+  | proof_hypothesis COMMA proof_hypothesis_list
+    { $1 :: $3 }
 ;
 
 opt_logical_expr:
@@ -859,14 +985,19 @@ statement:
 ;
 
 hypothesis:
-  | ASSUME bound_vname IN type_expr { mk (H_variable ($2, $4)) }
-  | ASSUME proof_hypothesis COLON logical_expr { mk (H_hypothesis ($2, $4)) }
-  | NOTATION proof_hypothesis EQUAL expr { mk (H_notation ($2, $4)) }
+  | ASSUME bound_vname IN type_expr
+    { mk (H_variable ($2, $4)) }
+  | ASSUME proof_hypothesis COLON logical_expr
+    { mk (H_hypothesis ($2, $4)) }
+  | NOTATION proof_hypothesis EQUAL expr
+    { mk (H_notation ($2, $4)) }
 ;
 
 hypothesis_list:
-  | hypothesis COMMA { [$1] }
-  | hypothesis COMMA hypothesis_list { $1 :: $3 }
+  | hypothesis COMMA
+    { [$1] }
+  | hypothesis COMMA hypothesis_list
+    { $1 :: $3 }
 ;
 
 /**** TYPE EXPRESSIONS ****/
@@ -913,24 +1044,26 @@ type_tuple:
 ;
 
 type_expr_comma_list:
-  | type_expr { [ $1 ] }
-  | type_expr COMMA type_expr_comma_list { $1 :: $3 }
+  | type_expr
+    { [ $1 ] }
+  | type_expr COMMA type_expr_comma_list
+    { $1 :: $3 }
 ;
 
 constructor_ref:
   | constructor_vname
     {
      (* Here we pass the optional qualification None to say that there is
-	no qualification at all. I.e. there is no # notation. *)
+        no qualification at all. I.e. there is no # notation. *)
      mk_global_constructor_ident None $1
-   }
+    }
   | opt_lident SHARP constructor_vname
     {
      (* Here, we pass the optional qualification Some to say that there is a
-	# notation. And if the effective qualifier is None, that because we
-	are in the case of "#foo". *)
+        # notation. And if the effective qualifier is None, that because we
+        are in the case of "#foo". *)
      mk_global_constructor_ident (Some $1) $3
-   }
+    }
 ;
 
 /* IDENTIFIERS */
@@ -1001,8 +1134,10 @@ expr:
     { mk E_self }
   | simple_expr %prec below_SHARP
     { $1 }
-  | constructor_ref LPAREN expr_comma_list RPAREN { mk (E_constr ($1, $3)) }
-  | constructor_ref { mk (E_constr ($1, [])) } %prec prec_constant_constructor
+  | constructor_ref LPAREN expr_comma_list RPAREN
+    { mk (E_constr ($1, $3)) }
+  | constructor_ref %prec prec_constant_constructor
+    { mk (E_constr ($1, [])) }
   | FUNCTION bound_vname_list DASH_GT expr
     { mk (E_fun ($2, $4)) }
   | expr LPAREN expr_comma_list RPAREN
@@ -1077,6 +1212,8 @@ expr:
     { mk_infix_application $1 $2 $3 }
 
   /* Unary operators. */
+  | DASH_OP expr %prec prec_unary_minus
+    { mk_prefix_application $1 $2 }
   | TILDA_OP expr
     { mk_prefix_application $1 $2 }
   | BACKQUOTE_OP expr
@@ -1088,8 +1225,6 @@ expr:
   | BANG_OP expr
     { mk_prefix_application $1 $2 }
   | SHARP_OP expr
-    { mk_prefix_application $1 $2 }
-  | DASH_OP expr %prec prec_unary_minus
     { mk_prefix_application $1 $2 }
   | PLIDENT expr
     { mk_prefix_application $1 $2 }
@@ -1107,13 +1242,17 @@ expr_semi_list:
 ;
 
 expr_comma_list:
-  | expr { [ $1 ] }
-  | expr COMMA expr_comma_list { $1 :: $3 }
+  | expr
+    { [ $1 ] }
+  | expr COMMA expr_comma_list
+    { $1 :: $3 }
 ;
 
 record_field_list:
-  | label_ident EQUAL expr opt_semi { [ ($1, $3) ] }
-  | label_ident EQUAL expr SEMI record_field_list { ($1, $3) :: $5 }
+  | label_ident EQUAL expr opt_semi
+    { [ ($1, $3) ] }
+  | label_ident EQUAL expr SEMI record_field_list
+    { ($1, $3) :: $5 }
 ;
 
 /* In a proof, "by definition" is always refering to something local      */
@@ -1134,7 +1273,8 @@ property_ident:
 ;
 
 carrier_ident:
-  | species_ident { $1 }
+  | species_ident
+    { $1 }
 ;
 
 species_ident:
@@ -1145,23 +1285,31 @@ species_ident:
 ;
 
 definition_ident_comma_list:
-  | definition_ident { [ $1 ] }
-  | definition_ident COMMA definition_ident_comma_list { $1 :: $3 }
+  | definition_ident
+    { [ $1 ] }
+  | definition_ident COMMA definition_ident_comma_list
+    { $1 :: $3 }
 ;
 
 property_ident_comma_list:
-  | property_ident { [ $1 ] }
-  | property_ident COMMA property_ident_comma_list { $1 :: $3 }
+  | property_ident
+    { [ $1 ] }
+  | property_ident COMMA property_ident_comma_list
+    { $1 :: $3 }
 ;
 
 proof_label_comma_list:
-  | PROOF_LABEL { [ $1 ] }
-  | PROOF_LABEL COMMA proof_label_comma_list { $1 :: $3 }
+  | PROOF_LABEL
+    { [ $1 ] }
+  | PROOF_LABEL COMMA proof_label_comma_list
+    { $1 :: $3 }
 ;
 
 clause_list:
-  | BAR clause { [ $2 ] }
-  | BAR clause clause_list { $2 :: $3 }
+  | BAR clause
+    { [ $2 ] }
+  | BAR clause clause_list
+    { $2 :: $3 }
 ;
 
 clause:
@@ -1170,27 +1318,43 @@ clause:
 ;
 
 constant:
-  | INT { mk (C_int $1) }
-  | FLOAT { mk (C_float $1) }
-  | BOOL { mk (C_bool $1) }
-  | STRING { mk (C_string $1) }
-  | CHAR { mk (C_char $1) }
+  | INT
+    { mk (C_int $1) }
+  | FLOAT
+    { mk (C_float $1) }
+  | BOOL
+    { mk (C_bool $1) }
+  | STRING
+    { mk (C_string $1) }
+  | CHAR
+    { mk (C_char $1) }
 ;
 
 pattern:
-  | constant { mk (P_const $1) }
-  | RLIDENT { mk (P_var (Vlident $1)) }
-  | UNDERSCORE { mk (P_wild) }
-  | constructor_ref LPAREN pattern_comma_list RPAREN { mk (P_constr ($1, $3)) }
-  | constructor_ref { mk (P_constr ($1, [])) }
-  | LBRACKET pattern_semi_list RBRACKET { $2 }
-  | pattern COLON_COLON pattern { mk (P_constr (mk_cons (), [ $1; $3 ])) }
+  | constant
+    { mk (P_const $1) }
+  | RLIDENT
+    { mk (P_var (Vlident $1)) }
+  | UNDERSCORE
+    { mk (P_wild) }
+  | constructor_ref LPAREN pattern_comma_list RPAREN
+    { mk (P_constr ($1, $3)) }
+  | constructor_ref
+    { mk (P_constr ($1, [])) }
+  | LBRACKET pattern_semi_list RBRACKET
+    { $2 }
+  | pattern COLON_COLON pattern
+    { mk (P_constr (mk_cons (), [ $1; $3 ])) }
   | pattern IUIDENT pattern
     { mk (P_constr (mk_global_constructor_ident None (Vuident $2), [ $1; $3 ])) }
-  | LBRACE pattern_record_field_list RBRACE { mk (P_record $2) }
-  | pattern AS RLIDENT { mk (P_as ($1, Vlident $3)) }
-  | LPAREN pattern COMMA pattern_comma_list RPAREN { mk (P_tuple ($2 :: $4)) }
-  | LPAREN pattern RPAREN { mk (P_paren $2) }
+  | LBRACE pattern_record_field_list RBRACE
+    { mk (P_record $2) }
+  | pattern AS RLIDENT
+    { mk (P_as ($1, Vlident $3)) }
+  | LPAREN pattern COMMA pattern_comma_list RPAREN
+    { mk (P_tuple ($2 :: $4)) }
+  | LPAREN pattern RPAREN
+    { mk (P_paren $2) }
 ;
 
 pattern_semi_list:
@@ -1202,109 +1366,145 @@ pattern_semi_list:
 ;
 
 pattern_comma_list:
-  | pattern { [ $1 ] }
-  | pattern COMMA pattern_comma_list { $1 :: $3 }
+  | pattern
+    { [ $1 ] }
+  | pattern COMMA pattern_comma_list
+    { $1 :: $3 }
 ;
 
 pattern_record_field_list:
-  | label_ident EQUAL pattern opt_semi { [ ($1, $3) ] }
-  | label_ident EQUAL pattern SEMI pattern_record_field_list { ($1, $3) :: $5 }
+  | label_ident EQUAL pattern opt_semi
+    { [ ($1, $3) ] }
+  | label_ident EQUAL pattern SEMI pattern_record_field_list
+    { ($1, $3) :: $5 }
 ;
 
 opt_local:
   | { LF_no_local }
-  | LOCAL { LF_local }
+  | LOCAL
+    { LF_local }
 ;
 
 opt_semi:
   | { () }
-  | SEMI { () }
+  | SEMI
+    { () }
 ;
 
 opt_doc:
   | { [] }
-  | DOCUMENTATION opt_doc { mk_doc_elem $1 :: $2 }
+  | DOCUMENTATION opt_doc
+    { mk_doc_elem $1 :: $2 }
 ;
 
 following_binding_list:
   | { [] }
-  | AND binding following_binding_list { $2 :: $3 }
+  | AND binding following_binding_list
+    { $2 :: $3 }
 ;
 
 /**** NAMES ****/
 
 label_ident:
-  | label_vname {
+  | label_vname
+    {
       (* Here we pass the optional qualification None to say that there is
-	 no qualification at all. I.e. there is no # notation. *)
+         no qualification at all. I.e. there is no # notation. *)
       mk_label_ident None $1
-      }
-  | opt_lident SHARP label_vname {
+    }
+  | opt_lident SHARP label_vname
+    {
       (* Here, we pass the optional qualification Some to say that there is a
-	 # notation. And if the effective qualifier is None, that because we
-	 are in the case of "#foo". *)
+         # notation. And if the effective qualifier is None, that because we
+         are in the case of "#foo". *)
       mk_label_ident (Some $1) $3
-      }
+    }
 ;
 
 bound_vname:
-  | RLIDENT { Vlident $1 }
-  | PLIDENT { Vpident $1 }
-  | ILIDENT { Viident $1 }
+  | RLIDENT
+    { Vlident $1 }
+  | PLIDENT
+    { Vpident $1 }
+  | ILIDENT
+    { Viident $1 }
 ;
 
 bound_vname_list:
-  | bound_vname { [ $1 ] }
-  | bound_vname bound_vname_list { $1 :: $2 }
+  | bound_vname
+    { [ $1 ] }
+  | bound_vname bound_vname_list
+    { $1 :: $2 }
 ;
 
 external_value_vname:
-  | RLIDENT { Vlident $1 }
-  | constructor_vname { $1 }
+  | RLIDENT
+    { Vlident $1 }
+  | constructor_vname
+    { $1 }
 ;
 
 method_vname:
-  | bound_vname { $1 }
+  | bound_vname
+    { $1 }
 ;
 
 constructor_vname:
-  | RUIDENT { Vuident $1 }
-  | PUIDENT { Vuident $1 }
-  | IUIDENT { Vuident $1 }
-  | LRPARENS { Vuident "()" }
-  | LRBRACKETS { Vuident "[]" }
+  | RUIDENT
+    { Vuident $1 }
+  | PUIDENT
+    { Vuident $1 }
+  | IUIDENT
+    { Vuident $1 }
+  | LRPARENS
+    { Vuident "()" }
+  | LRBRACKETS
+    { Vuident "[]" }
 ;
 
 label_vname:
-  | bound_vname { $1 }
+  | bound_vname
+    { $1 }
 ;
 
 species_vname:
-  | RUIDENT { Vuident $1 }
+  | RUIDENT
+    { Vuident $1 }
 ;
 
 collection_vname:
-  | RUIDENT { Vuident $1 }
+  | RUIDENT
+    { Vuident $1 }
 ;
 
 property_vname:
-  | RLIDENT { Vlident $1 }
-  | RUIDENT { Vuident $1 }
-  | PLIDENT { Vpident $1 }
-  | ILIDENT { Viident $1 }
-  | PUIDENT { Vuident $1 }
-  | IUIDENT { Vuident $1 }
+  | RLIDENT
+    { Vlident $1 }
+  | RUIDENT
+    { Vuident $1 }
+  | PLIDENT
+    { Vpident $1 }
+  | ILIDENT
+    { Viident $1 }
+  | PUIDENT
+    { Vuident $1 }
+  | IUIDENT
+    { Vuident $1 }
 ;
 
 theorem_vname:
-  | property_vname { $1 }
+  | property_vname
+    { $1 }
 ;
 
 type_vname:
-  | RLIDENT { Vlident $1 }
+  | RLIDENT
+    { Vlident $1 }
 ;
 
 type_param_vname:
-  | RLIDENT { Vlident $1 }
-  | QLIDENT { Vqident $1 }
+  | RLIDENT
+    { Vlident $1 }
+  | QLIDENT
+    { Vqident $1 }
 ;
