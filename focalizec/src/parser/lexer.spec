@@ -12,12 +12,21 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: lexer.spec,v 1.6 2009-01-22 10:02:03 weis Exp $
+# $Id: lexer.spec,v 1.7 2009-04-10 07:06:48 weis Exp $
 
 High level specification of the Focalize lexer
 ==============================================
 
 Could be use as a set of drafts for the documentation.
+
+2009/04/02:
+===========
+Documentation with levels for file header and section titles (addition of
+inter phrases documentation tokens and phrases).
+
+2009/02/12:
+===========
+Adding special rules for (*** starting lines.
 
 2009/01/22:
 ===========
