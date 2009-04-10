@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.12 2009-04-10 14:22:42 pessaux Exp $
+% $Id: codegen_model.tex,v 1.13 2009-04-10 14:57:06 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -369,6 +369,7 @@ Module Me.
 \end{lstlisting}
 }
 
+\label{coq-explicit-polymorphism}
 Note that in the generated \coq\ code, the method {\tt daube} (in
 fact, the theorem) contains an application of \\
 {\tt basics.syntactic\_equal}. We can see the mechanism of explicit
@@ -524,7 +525,7 @@ function \\
 before one can directly build their method generator. In effect, their
 proof may involve a script for \zenon\ and in this case, a complex
 process must be inserted in order to get the proof done to finally get
-the method generator. This will be explained in section {\ref foo}.
+the method generator. This will be explained in section {\ref todo1}.
 
 
 \subsubsection{Sample code to help to summarise}
@@ -786,10 +787,10 @@ End Setoide_produit.
 
 \subsubsection{Defined recursive methods}
 The compilation scheme of a recursive function is pretty different and
-will be explained in a dedicated section. It however finally uses the
-same abstraction mechanism (i.e. $\lambda$-lifted things). The main
-difference is induced by the use of the \coq\ construct
-``{\tt Function}'' and the need for a termination proof.
+will be explained in the dedicated section \ref{todo0}. It however
+finally uses the same abstraction mechanism (i.e. $\lambda$-lifted
+things). The main difference is induced by the use of the \coq\
+construct ``{\tt Function}'' and the need for a termination proof.
 
 
 
@@ -1500,7 +1501,71 @@ End Couple_d_entiers.
 }
 
 
-\section{Toplevel functions}
+\section{Toplevel values}
+At toplevel, since we are not in a species, there is no possible
+dependencies on species parameters (since there is no parameter) and
+no possible dependencies on methods of {\tt Self} (since there is no
+notion of {\tt Self}).
+Hence, code generation for toplevel value definitions (either constant
+or functions) is a simple translation to the target language with no
+particular analysis to do before-hand. The name of the generated
+definition is simply the name given in the \focalize\ source file and
+the definition is generated at toplevel.
+
+Hence, we are in the case where there is no more problems than those
+intrinsic to the target language. For instance, in \coq, we will have
+to be careful with polymorphic identifiers and handle the explicit
+polymorphism by providing extra type arguments like seen in
+\ref{coq-explicit-polymorphism}.
+
+For instance:
+{\footnotesize
+\begin{lstlisting}[title=\focalize\ toplevel value definition]
+let x = 42 ;;
+
+let fst (x) =
+  match x with
+  | (v, _) -> v
+;;
+\end{lstlisting}
+}
+
+
+{\footnotesize
+\begin{lstlisting}[title=Generated \ocaml\ toplevel value definition]
+let x = 42 ;;
+
+let snd (x : 'a * 'b) =
+  match x with
+   | (_, v) ->
+     (begin
+     v
+     end)
+;;
+\end{lstlisting}
+}
+
+\index{\%type}\index{tuple}\index{type!tuple}
+In the \coq\ code, we see again here a hack to speak of the type of
+tuples. In effect, we must explicitly tell \coq\ that the {\tt *} used
+in the type expression {\tt (\_\_var\_a * \_\_var\_b)} is the {\tt *}
+dealing with {\bf types}. That's the reason of the presence of the
+{\tt \%type} notation postfixing the type expression of the tuple.
+
+{\footnotesize
+\begin{lstlisting}[title=Generated \coq\ toplevel value definition]
+Let x : basics.int__t := 42.
+
+Let snd (__var_a : Set) (__var_b : Set) (x : ((__var_a * __var_b)%type)) :
+    __var_b :=
+  match x with
+   | (_, v) =>
+        v
+  end.
+\end{lstlisting}
+}
+
+
 \section{Toplevel theorems}
 \section{Type definitions}
 \section{External definitions}
