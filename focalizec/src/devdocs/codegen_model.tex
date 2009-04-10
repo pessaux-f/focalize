@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.13 2009-04-10 14:57:06 pessaux Exp $
+% $Id: codegen_model.tex,v 1.14 2009-04-10 16:08:40 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -842,7 +842,28 @@ method generator to its required arguments taken among the effective
 arguments of the collection generator. Hence, for each method of the
 species, we build (locally to the collection generator) a function.
 These local functions will be named: ``{\tt local\_}'' + method's
-name.
+name. We have 2 possible cases to find the method generator to use to
+create the collection generator:
+\begin{itemize}
+  \item Either the method generator belongs to the current inheritance
+    level (i.e. the method was defined at this level in the species).
+    In this case, this generator is simply the name of the method
+    because a local function in the module was generated with this
+    name. In the following sample code, that's the case for the
+    methods {\tt creer}, {\tt print}, {\tt element}, \ldots
+  \item Or the method generator belongs a previous inheritance level
+    (i.e. the method was defined previously, in an ancestor). In this
+    case, the name of the method generator is qualified by the module
+    hosting the ancestor. This means that is the ancestor belongs to
+    another compilation unit, we need to also specify the module on
+    which the compilation unit is mapped. This gives a name like:
+    file as module + ``{\tt .} + hosting species name + ``{\tt .} +
+    name of the method corresponding to this generator.
+    In the following sample code, that's the case for the method
+    {\tt parse} defined in the species {\tt Basic\_object} of the
+    compilation unit ``{\tt basics.fcl}''.
+\end{itemize}
+
 
 \subsubsection{Creating the record value}
 Now we have our bunch of functions representing the methods of the
