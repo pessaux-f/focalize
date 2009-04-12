@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.131 2009-04-10 08:07:35 weis Exp $ *)
+(* $Id: parser.mly,v 1.132 2009-04-11 22:20:10 weis Exp $ *)
 
 open Parsetree;;
 
@@ -76,7 +76,6 @@ let mk_global_constructor_ident opt_qual vname =
   match opt_qual with
    | None -> mk (CI (mk (I_local vname)))
    | Some qual -> mk (CI (mk_global_ident qual vname))
-
 ;;
 
 let mk_local_expr_ident vname =
@@ -410,21 +409,21 @@ external_language:
     { EL_external $1 }
 ;
 
-external_expr_one:
-  | BAR external_language DASH_GT EXTERNAL_CODE
-    { ($2, $4) }
+external_expr_clause:
+  | external_language DASH_GT EXTERNAL_CODE
+    { ($1, $3) }
 ;
 
-external_expr_desc:
-  | external_expr_one
-    { [ $1 ] }
-  | external_expr_one external_expr_desc
-    { $1 :: $2 }
+external_expr_clause_list:
+  | BAR external_expr_clause
+    { [ $2 ] }
+  | BAR external_expr_clause external_expr_clause_list
+    { $2 :: $3 }
 ;
 
 external_expr:
-  external_expr_desc
-  { mk $1 }
+  | external_expr_clause_list
+    { mk $1 }
 ;
 
 /**** TYPE DEFINITION ****/
@@ -475,7 +474,7 @@ define_type_body_contents:
 
 define_type_body_external:
   | INTERNAL define_type_body_regular_opt
-    opt_doc EXTERNAL external_expr_desc following_external_bindings
+    opt_doc EXTERNAL external_expr_clause_list following_external_bindings
     { mk {
         etdb_internal = $2;
         etdb_external = mk_doc $3 $5;
@@ -1229,7 +1228,7 @@ expr:
   | PLIDENT expr
     { mk_prefix_application $1 $2 }
 
-  | EXTERNAL external_expr END
+  | EXTERNAL external_expr
     { mk (E_external $2) }
 ;
 
