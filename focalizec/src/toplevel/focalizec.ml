@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.42 2009-03-20 14:19:49 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.43 2009-04-11 22:21:45 weis Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -89,13 +89,14 @@ let compile_fcl input_file_name =
 ;;
 
 
+let make_includes get_libs =
+  String.concat " -I " ("" :: List.rev (get_libs ()))
+;;
 
 let compile_ml input_file_name =
   (* We include the library search paths for OCaml. *)
-  let stdlib =
-    List.fold_right
-      (fun s accu -> accu ^ " -I " ^ s) (Files.get_lib_paths ()) "" in
-  let args = stdlib ^ " -c " ^ input_file_name in
+  let includes = make_includes Files.get_lib_paths in
+  let args = Printf.sprintf "%s -c %s" includes input_file_name in
   match Configuration.get_ml_compiler () with
    | Configuration.OCamlByt ->
        let cmd = Installation.caml_byt_compiler ^ args in
@@ -142,10 +143,10 @@ let compile_coq input_file_name =
   (* Coq always requires Zenon .v files. *)
   let for_zenon = " -I " ^ Installation.zenon_libdir in
   (* We include the library search paths for Coq. *)
-  let stdlib =
-    List.fold_right
-      (fun s accu -> accu ^ " -I " ^ s) (Files.get_lib_paths ()) for_zenon in
-  let cmd = Installation.coq_compiler ^ stdlib ^ " " ^ input_file_name in
+  let includes = make_includes Files.get_lib_paths in
+  let cmd =
+    Printf.sprintf "%s %s %s %s"
+      Installation.coq_compiler includes for_zenon input_file_name in
   Format.eprintf "Invoking coqc...@\n" ;
   Format.eprintf ">> %s@." cmd ;
   let ret_code = Sys.command cmd in
