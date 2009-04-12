@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.70 2009-04-02 14:33:54 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.71 2009-04-11 22:20:55 weis Exp $ *)
 
 open Parsetree;;
 
@@ -551,7 +551,7 @@ let rec pp_species_def_desc ppf def =
     Format.fprintf ppf "inherits %a"
       (pp_species_exprs ",") def.Parsetree.sd_inherits.Parsetree.ast_desc
     end;
-  Format.fprintf ppf " =@\n%a@\nend;;@]@\n"
+  Format.fprintf ppf " =@ %a@ end;;@]@ "
     pp_species_fields def.Parsetree.sd_fields
 (* ***************************************************************** *)
 (* pp_species_def :                                                  *)
@@ -685,7 +685,7 @@ and pp_let_def_desc ppf ldd =
    | first :: nexts ->
        Format.fprintf ppf "%a" pp_binding first;
        List.iter
-         (fun b -> Format.fprintf ppf "@]@\n@[<2>and %a" pp_binding b)
+         (fun b -> Format.fprintf ppf "@]@ @[<2>and %a" pp_binding b)
          nexts);
   Format.fprintf ppf "@]"
 (* ************************************************************* *)
@@ -753,7 +753,7 @@ and pp_binding ppf = pp_ast pp_binding_desc ppf
     {b Rem} : Not exported ouside this module.                            *)
 (* ********************************************************************** *)
 and pp_theorem_def_desc ppf tdd =
-  Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@\nproof =@ %a@]"
+  Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@ proof =@ %a@]"
     pp_vname tdd.Parsetree.th_name
     pp_local_flag tdd.Parsetree.th_local
     pp_logical_expr tdd.Parsetree.th_stmt
@@ -838,10 +838,10 @@ and pp_termination_proof ppf = pp_ast pp_termination_proof_desc ppf
 
 and pp_proof_node_desc ppf = function
   | Parsetree.PN_sub (node_label, stmt, proof) ->
-      Format.fprintf ppf "%a %a@\n%a"
+      Format.fprintf ppf "%a %a@ %a"
         pp_node_label node_label pp_statement stmt pp_proof proof
   | Parsetree.PN_qed (node_label, proof) ->
-      Format.fprintf ppf "%a qed@\n%a" pp_node_label node_label pp_proof proof
+      Format.fprintf ppf "%a qed@ %a" pp_node_label node_label pp_proof proof
 and pp_proof_nodes sep ppf = Handy.pp_generic_separated_list sep proof_node ppf
 and proof_node ppf = pp_ast pp_proof_node_desc ppf
 
@@ -976,7 +976,7 @@ and pp_expr_desc ppf = function
   | Parsetree.E_tuple exprs ->
       Format.fprintf ppf "@[<1>(%a)@]" (pp_exprs ",") exprs
   | Parsetree.E_external external_expr ->
-      Format.fprintf ppf "@[<2>external@\n%a@\nend@]"
+      Format.fprintf ppf "@[<2>external@ %a@]"
         pp_external_expr external_expr
   | Parsetree.E_paren expr ->
       Format.fprintf ppf "@[<1>(%a)@]" pp_expr expr
@@ -987,7 +987,7 @@ and pp_expr ppf = pp_ast pp_expr_desc ppf
 
 
 let pp_collection_def_desc ppf cdd =
-  Format.fprintf ppf "@[<2>collection@ %a@ implements@ %a@\nend@;;@]@\n"
+  Format.fprintf ppf "@[<2>collection@ %a@ implements@ %a@ end@;;@]@ "
     pp_vname cdd.Parsetree.cd_name pp_species_expr cdd.Parsetree.cd_body
 ;;
 let pp_collection_def ppf = pp_ast pp_collection_def_desc ppf
@@ -1034,7 +1034,7 @@ let pp_external_binding ppf eb =
 let pp_external_bindings ppf ebs =
   List.iter
     (fun binding ->
-      Format.fprintf ppf "@[<2>and %a@]@\n" pp_external_binding binding)
+      Format.fprintf ppf "@[<2>and %a@]@ " pp_external_binding binding)
     ebs.Parsetree.ast_desc
 ;;
 
@@ -1043,11 +1043,11 @@ let pp_external_bindings ppf ebs =
 let pp_external_type_def_body_desc ppf ex_tydef_body =
   Format.fprintf ppf "internal";
   (match ex_tydef_body.Parsetree.etdb_internal with
-   | None -> Format.fprintf ppf "@\n"
+   | None -> Format.fprintf ppf "@ "
    | Some regular_tydef_body ->
-       Format.fprintf ppf "@ %a@\n"
+       Format.fprintf ppf "@ %a@ "
          pp_regular_type_def_body regular_tydef_body);
-  Format.fprintf ppf "external@ %a@\n"
+  Format.fprintf ppf "external@ %a@ "
     pp_external_expr ex_tydef_body.Parsetree.etdb_external;
   Format.fprintf ppf "%a"
     pp_external_bindings ex_tydef_body.Parsetree.etdb_bindings
