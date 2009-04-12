@@ -1,0 +1,15 @@
+.depend
+*.aux
+*.idx
+*.log
+*.bbl
+*.blg
+*.ilg
+*.ind
+*.toc
+*.haux
+*.hind
+*.htoc
+legacy.dvi
+legacy.ps
+legacy.pdf
