@@ -8,4 +8,6 @@ coq-*
 ocaml-*
 camlp5-*
 odoc
+doc
 configure.log
+distribution
