@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets_orders.fcl,v 1.22 2009-01-11 01:22:18 weis Exp $ *)
+(* $Id: sets_orders.fcl,v 1.23 2009-04-11 22:22:21 weis Exp $ *)
 
 (**
  @title FoC Project. Basic algebra.
@@ -185,8 +185,7 @@ species Partial_set inherits Setoid =
     let ifailed (r in string, elt in Self) in Self =
        external
        | caml -> {* Sets_orders_externals.i_failed r elt *}
-       | coq -> {* elt *}
-       end in
+       | coq -> {* elt *} in
     function reason -> ifailed (reason, !element) ;
 end ;;
 

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets.fcl,v 1.7 2009-03-16 12:37:37 rr Exp $ *)
+(* $Id: sets.fcl,v 1.8 2009-04-11 22:22:21 weis Exp $ *)
 
 (** 
    @title Basic sets operations. 
@@ -138,8 +138,7 @@ species Partial_set inherits Setoid =
     let ifailed (r in string, elt in Self) in Self =
       external
       | caml -> {* Sets_externals.i_failed r elt *}
-      | coq -> {* elt *}
-      end in
+      | coq -> {* elt *} in
     function reason -> ifailed (reason, !element) ;
 end
 ;;
