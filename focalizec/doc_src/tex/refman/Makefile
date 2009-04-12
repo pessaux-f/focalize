@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.22 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.23 2009-04-11 22:12:21 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -62,6 +62,7 @@ refman.ps: refman.dvi
 
 clean::
 	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc
+	$(RM) refman*.gif reman.image.tex
 	$(RM) $(DOC_OBJS)
 
 distclean:: clean
