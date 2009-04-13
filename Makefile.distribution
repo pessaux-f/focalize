@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.10 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile.distribution,v 1.11 2009-04-13 20:47:52 weis Exp $
 
 ROOT_DIR=.
 
@@ -85,8 +85,10 @@ PROJECT_ADMINISTRATIVE_FILES=\
  AUTHORS INSTALL LICENSE README
 
 PROJECT_ANNOUNCE_MAILING_LISTS=\
-  "focalize-users@inria.fr coq-list@inria.fr coq-announce@inria.fr \
-   caml-list@inria.fr caml-announce@inria.fr"
+  "focalize-users@inria.fr \
+   coq-club@inria.fr coq-list@inria.fr coq-announce@inria.fr \
+   caml-list@inria.fr caml-announce@inria.fr \
+   gdr.gpl@imag.fr"
 
 # The list of files that will be searched and deleted from the entire
 # distribution before making the release tar ball.
@@ -346,20 +348,11 @@ untag:
 	$(RM) ./release
 	$(CVS) tag -d $(PROJECT_RELEASE_TAG)
 
-# The file that contains the announce of the new relase in the
+# The file that contains the announce of the new release in the
 # relevant mailing lists.
 ANNOUNCE_FILE = .announce_text
 #ANNOUNCE_FILE_SRC = Announce-$(VERSION_NUMBER_FULL)
 ANNOUNCE_FILE_SRC = Announce
-
-$(ANNOUNCE_FILE): $(ANNOUNCE_FILE_SRC)
-	$(HTMLC) -f $(ANNOUNCE_FILE_SRC) -t $(ANNOUNCE_FILE)
-
-# The file that contains the announce of the new relase in the
-# relevant mailing lists.
-ANNOUNCE_FILE = .announce_text
-#ANNOUNCE_FILE_SRC = Announce-$(VERSION_NUMBER_FULL)
-ANNOUNCE_FILE_SRC = Announce-0.1.rc0
 
 $(ANNOUNCE_FILE): $(ANNOUNCE_FILE_SRC)
 	$(HTMLC) -f $(ANNOUNCE_FILE_SRC) -t $(ANNOUNCE_FILE)
@@ -369,7 +362,7 @@ $(ANNOUNCE_FILE): $(ANNOUNCE_FILE_SRC)
 announce: .done_install_web_site $(ANNOUNCE_FILE)
 	for i in $(PROJECT_ANNOUNCE_MAILING_LISTS); do \
 	  mail -n -s \
-	    "First release of $(PROJECT_NAME), a development environment for high integrity programs." \
+	    "New release of $(PROJECT_NAME), a development environment for high integrity programs." \
 	    $$i < $(ANNOUNCE_FILE); \
 	done
 
@@ -409,7 +402,7 @@ clean_test_release_tarball clean_test_release:
 	 fi \
 	) && \
 	$(RM) ./test_release
-# In case we remove completely the directory where the test release is installed.
+# In case, we remove completely the directory where the test release is installed.
 distclean:: distclean_test_release_tarball
 distclean_test_release_tarball: clean_test_release_tarball
 	$(RM) $(TEST_RELEASE_PREFIX)/* && \
@@ -425,37 +418,9 @@ new-balls:
 	$(RM) /usr/local/lib/focalize* && \
 	$(RM) /usr/local/man/man*/focalize* && \
 	$(RM) /usr/local/doc/tex/focalize* && \
+	$(RM) /usr/local/doc/html/focalize* && \
 	$(RM) ~$(RELEASE_MANAGER)/pkg/focalize* && \
 	$(RM) ~$(RELEASE_MANAGER)/release/focalize*
-
-clean_announce:
-	$(RM) $(ANNOUNCE_FILE)
-
-# Testing the release tarball
-test_release: .done_test_release_tarball
-.done_test_release_tarball: .done_install_release_tarball
-	$(RM) test_release && $(MKDIR) test_release && \
-	($(CD) test_release && \
-	 $(WGET) $(WEB_SITE_DOWNLOAD_URL)/$(PROJECT_ARCHIVE_NAME) && \
-	 $(TARX) $(PROJECT_ARCHIVE_NAME) && \
-	 ($(CD) $(PROJECT_RELEASE_DIR_NAME) && \
-	  ./configure -default && \
-	  $(MAKE) && \
-	  $(SUDO) $(MAKE) install \
-	 ) \
-	) && \
-	$(TOUCH) .done_test_release_tarball
-
-# We uninstall the stuff installed by the test and then remove the
-# test_release directory.
-clean_test_release:
-	$(RM) .done_test_release_tarball && \
-	(if test -d test_release; then \
-           $(CD) test_release/$(PROJECT_RELEASE_DIR_NAME) && \
-	   $(MAKE) uninstall; \
-	 fi \
-	) && \
-	$(RM) ./test_release
 
 # Automatic handling of versionning
 # Should be done with HTMLC
