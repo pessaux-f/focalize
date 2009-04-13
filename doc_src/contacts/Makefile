@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.3 2009-04-13 19:56:47 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -35,6 +35,9 @@ clean::
 	$(RM) $(BYT_OBJS)
 
 install::
-	$(CHMODGRW) $(BYT_OBJS)
+	$(CHMODGRW) $(BYT_OBJS) && \
 	$(SCP) $(BYT_OBJS) $(PROJECT_WEB_TARGET_DIR)/$(THIS_DIR)/
-	$(RM) $(BYT_OBJS)
+
+uninstall::
+	$(SSH) $(PROJECT_WEB_SERVER) \
+	  $(CD) $(PROJECT_WEB_SITE_DIR)/$(THIS_DIR)/\; $(RM) $(BYT_OBJS)

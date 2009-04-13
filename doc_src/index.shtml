@@ -2,7 +2,7 @@
 $(PROJECT_NAME_TEXT)
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.4 2009-03-16 12:41:27 habib Exp $ -->
+<!-- \$Id: index.shtml,v 1.5 2009-04-13 19:56:47 weis Exp $ -->
 
 <div id="container">
 <div id="header">
@@ -47,12 +47,12 @@ $(PROJECT_NAME_TEXT).</p>
 <div class="spacer"></div>
 
 <div id="main">
-<h3>New version of the $(PROJECT_NAME_TEXT) environment is coming soon<h3>
+<h3>Current version of the $(PROJECT_NAME_TEXT) environment<h3>
 <p>
 
-For about 3 years, the $(PROJECT_NAME_TEXT) language and compiler are 
-rewritten from scratch. Several enhancements are <span style="font-style:
-italic;"> in the pipeline</span>. The syntax has been re-designed to be more
+For about 3 years, the $(PROJECT_NAME_TEXT) language and compiler have been
+rewritten from scratch. Numerous enhancements have <span style="font-style:
+italic;">been implemented</span>. The syntax has been re-designed to be more
 homogenous and flexible. The core language provides new features like
 records, irrefutable pattern bindings, simpler &quot;external&quot;
 mappings... All syntactic elements (species, collection, record field, sum
@@ -64,9 +64,9 @@ $(PROJECT_NAME_TEXT) philosophy. The compilation speed has been enhanced. The
 global architecture of the compiler enables third party analyses to be
 grafted onto the compiler before code generation. A new backend for the C
 language is under development and should be available soon (provided license
-issues can be worked out). A public release is planned for the next few
-days. Currently Fran&ccedil;ois Pessaux, in collaboration with Pierre Weis
-and Damien Doligez are in charge of this new version of the
+issues can be worked out). This is the first public release of this entirely
+revised system. Currently Fran&ccedil;ois Pessaux, in collaboration with
+Pierre Weis and Damien Doligez are in charge of this new version of the
 $(PROJECT_NAME_TEXT) environment. If you want more information, please feel
 free to contact us.
 
@@ -90,7 +90,7 @@ started. This project consists in :
 
 </p>
 
-<p>Further information (in french) can be found 
+<p>Further information (in french) can be found
 <a href="http://www-spi.lip6.fr/~jaume/ssurf.html">here.</a></p>
 
 </div>

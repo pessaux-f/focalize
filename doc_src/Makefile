@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.3 2009-04-13 19:56:47 weis Exp $
 
 ROOT_DIR = ..
 
@@ -31,7 +31,7 @@ include $(ROOT_DIR)/Makefile.common
 
 PROJECT_WEB_TARGET_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
 
-byt clean install::
+byt clean distclean install uninstall::
 	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && \
@@ -44,6 +44,11 @@ byt clean install::
 clean::
 	$(RM) $(BYT_OBJS)
 
+# Installation, deinstallation.
+
+# We must operate on the HTTP server: we use scp to copy a file remotely,
+# and ssh + rm to remove a file remotely.
+
 # We chmod g+rw the files that we transfer to the HTTP server in order to grant
 # other developers the right to install them afterwards.
 install::
@@ -53,3 +58,11 @@ install::
 	  $(SCP) imgs/*.* $(PROJECT_WEB_TARGET_DIR)/imgs && \
 	$(CHMODGRW) $(BYT_OBJS) && \
 	  $(SCP) $(BYT_OBJS) $(PROJECT_WEB_TARGET_DIR)
+
+uninstall::
+	$(SSH) $(PROJECT_WEB_SERVER) \
+	  $(CD) $(PROJECT_WEB_SITE_DIR)/css; $(RM) project.css
+	$(SSH) $(PROJECT_WEB_SERVER) \
+	  $(CD) $(PROJECT_WEB_SITE_DIR)/imgs; $(RM) *.*
+	$(SSH) $(PROJECT_WEB_SERVER) \
+	  $(CD) $(PROJECT_WEB_SITE_DIR); $(RM) $(BYT_OBJS)

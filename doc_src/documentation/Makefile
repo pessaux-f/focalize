@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.3 2009-04-13 19:56:47 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -29,9 +29,9 @@ DOC_SRC_DIR=$(ROOT_DIR)/doc/focalizec
 REFERENCE_MANUAL_SRC_DIR=$(DOC_SRC_DIR)/tex/refman
 REFERENCE_MANUAL_NAME=$(PROJECT_NAME_FULL)_refman
 REFERENCE_MANUAL_OBJS=\
+ $(REFERENCE_MANUAL_NAME).dvi\
  $(REFERENCE_MANUAL_NAME).ps\
  $(REFERENCE_MANUAL_NAME).pdf\
- $(REFERENCE_MANUAL_NAME).dvi\
  $(REFERENCE_MANUAL_NAME).html
 
 # The Unix manual pages.
@@ -39,18 +39,22 @@ MAN_PAGES_OBJS=\
  focalizec.$(PROJECT_MAN_EXT) \
  focalizedep.$(PROJECT_MAN_EXT)
 
-SOURCES=index.shtml
-BYT_OBJS=$(SOURCES:.shtml=.html)
-
-ALL_OBJS=$(BYT_OBJS) $(MAN_PAGES_OBJS) $(REFERENCE_MANUAL_OBJS)
-
-include $(ROOT_DIR)/Makefile.common
-
 HTMLC_INCLUDES =\
  -I $(ROOT_DIR)/doc_src/Includes\
  -env $(ROOT_DIR)/.config_var_for_shell -env project.env
 
-all:: .done_copy_documentation $(BYT_OBJS)
+SOURCES=index.shtml
+BYT_OBJS=$(SOURCES:.shtml=.html)
+
+# We cannot use the default behaviour for BYT_OBJS in Makefile.common,
+# since the default rules for .dvi -> .ps, dvi -> pdf, etc.
+# would conflict with the simple copies we do here, unless we redefine properly the
+# compilers associated to the rules (DVIPS, DVIPDF, and so on).
+include $(ROOT_DIR)/Makefile.common
+
+DOC_OBJS=$(BYT_OBJS) $(MAN_PAGES_OBJS) $(REFERENCE_MANUAL_OBJS)
+
+all:: .done_copy_documentation
 
 clean::
 	$(RM) .done_copy_man_pages
@@ -60,27 +64,28 @@ clean::
 	$(CP) $(DOC_SRC_DIR)/man/focalizedep.$(PROJECT_MAN_EXT) focalizedep.$(PROJECT_MAN_EXT)
 	$(TOUCH) .done_copy_man_pages
 
+# Generate the copies of the reference manual to put it on the Web site afterwards.
 clean::
 	$(RM) .done_copy_documentation
-.done_copy_documentation: .done_copy_man_pages\
-  $(REFERENCE_MANUAL_SRC_DIR)/refman.ps\
-  $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi\
-  $(REFERENCE_MANUAL_SRC_DIR)/refman.pdf\
-  $(REFERENCE_MANUAL_SRC_DIR)/refman.html
-
-.done_copy_documentation:
-	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.ps $(REFERENCE_MANUAL_NAME).ps && \
+.done_copy_documentation: .done_copy_man_pages $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi
 	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi $(REFERENCE_MANUAL_NAME).dvi && \
+	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.ps $(REFERENCE_MANUAL_NAME).ps && \
 	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.pdf $(REFERENCE_MANUAL_NAME).pdf && \
 	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.html $(REFERENCE_MANUAL_NAME).html && \
 	$(TOUCH) .done_copy_documentation
 
 clean::
-	$(RM) $(ALL_OBJS)
+	$(RM) $(DOC_OBJS)
 
 install::
-	$(CHMODGRW) $(ALL_OBJS) && \
-	  $(SCP) $(ALL_OBJS) $(PROJECT_WEB_TARGET_DIR)/$(THIS_DIR)/ && \
-	$(RM) $(BYT_OBJS)
+	$(CHMODGRW) $(DOC_OBJS) && \
+	$(SCP) $(DOC_OBJS) $(PROJECT_WEB_TARGET_DIR)/$(THIS_DIR)/
 
+
+uninstall::
+	$(SSH) $(PROJECT_WEB_SERVER) \
+	  $(CD) $(PROJECT_WEB_SITE_DIR)/$(THIS_DIR)/\; $(RM) $(DOC_OBJS)
+
+# We need the copies of the various formats of the refman in order
+# to calculate their sizes. Hence this extra dependency.
 index.html: .done_copy_documentation
