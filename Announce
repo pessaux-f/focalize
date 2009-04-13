@@ -50,6 +50,11 @@ http://$(focal).inria.fr/download/$(PROJECT_NAME_FULL).tgz
 Uncompress, extract, then read the INSTALL file in the newly created
 directory focalize.0.1.rc0 and follow the simple instructions written there.
 
+(3) How to join people and discussions ?
+----------------------------------------
+focalize-users@inria.fr
+focalize-devel@inria.fr
+focalize-bugs@inria.fr
 
 Enjoy.
 
