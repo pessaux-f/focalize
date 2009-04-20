@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.14 2009-04-10 16:08:40 pessaux Exp $
+% $Id: codegen_model.tex,v 1.15 2009-04-20 15:02:54 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -1362,7 +1362,7 @@ For instance, our collection {\tt Couple\_d\_entiers}
 {\tt ``implements''} a {\tt Monoide\_produit}. Looking at the record
 type of {\tt Monoide\_produit}, we see:
 {\footnotesize
-\begin{lstlisting}
+\begin{lstlisting}[language=MyCoq]
   Record Monoide_produit (C_T : Set) (D_T : Set) : Type :=
     mk_record {
     rf_T :> Set ;
@@ -1381,7 +1381,7 @@ Then, accessing the field {\tt rf\_creer} (corresponding to the method
 {\tt creer} of the species {\tt Monoide\_produit}) of the value
 {\tt v} returned by the collection generator:
 {\footnotesize
-\begin{lstlisting}
+\begin{lstlisting}[language=MyCoq]
 let t :=
   Monoide_produit.collection_create
   Les_entiers.effective_collection.(Les_entiers.rf_T)
@@ -1391,7 +1391,7 @@ let t :=
 }
 will look like:
 {\footnotesize
-\begin{lstlisting}
+\begin{lstlisting}[language=MyCoq]
  t.(Monoide_produit.rf_creer
       Les_entiers.effective_collection.(Les_entiers.rf_T)
       Les_entiers.effective_collection.(Les_entiers.rf_T))
@@ -1526,9 +1526,11 @@ End Couple_d_entiers.
 At toplevel, since we are not in a species, there is no possible
 dependencies on species parameters (since there is no parameter) and
 no possible dependencies on methods of {\tt Self} (since there is no
-notion of {\tt Self}).
-Hence, code generation for toplevel value definitions (either constant
-or functions) is a simple translation to the target language with no
+notion of {\tt Self}). For this reason, we do not have to wonder about
+how naming methods od {\tt Self} and of species parameters.
+
+Hence, code generation for toplevel value definitions (either constants
+or functions) is a simple translation into the target language with no
 particular analysis to do before-hand. The name of the generated
 definition is simply the name given in the \focalize\ source file and
 the definition is generated at toplevel.
@@ -1553,7 +1555,8 @@ let fst (x) =
 
 
 {\footnotesize
-\begin{lstlisting}[title=Generated \ocaml\ toplevel value definition]
+\begin{lstlisting}[language=MyOCaml,
+                   title=Generated \ocaml\ toplevel value definition]
 let x = 42 ;;
 
 let snd (x : 'a * 'b) =
@@ -1571,10 +1574,11 @@ In the \coq\ code, we see again here a hack to speak of the type of
 tuples. In effect, we must explicitly tell \coq\ that the {\tt *} used
 in the type expression {\tt (\_\_var\_a * \_\_var\_b)} is the {\tt *}
 dealing with {\bf types}. That's the reason of the presence of the
-{\tt \%type} notation postfixing the type expression of the tuple.
+{\tt \%type} notation post-fixing the type expression of the tuple.
 
 {\footnotesize
-\begin{lstlisting}[title=Generated \coq\ toplevel value definition]
+\begin{lstlisting}[language=MyCoq,
+                   title=Generated \coq\ toplevel value definition]
 Let x : basics.int__t := 42.
 
 Let snd (__var_a : Set) (__var_b : Set) (x : ((__var_a * __var_b)%type)) :
@@ -1588,5 +1592,346 @@ Let snd (__var_a : Set) (__var_b : Set) (x : ((__var_a * __var_b)%type)) :
 
 
 \section{Toplevel theorems}
+Toplevel theorems, like toplevel values do not have any dependencies
+since they are not in a species. Hence they are generated like other
+theorems, with the {\tt Section} mechanism for the proof part (if the
+proof is done in \focal\ Proof Language), but with no
+$\lambda$-lifting stuff.
+
+For instance:
+{\footnotesize
+\begin{lstlisting}[title=\focalize\ toplevel theorem definition]
+theorem beq_trans :
+  all x y z in 'a, x = y -> y = z -> x = z
+  proof = assumed {* Import trusted external code. *} ;;
+\end{lstlisting}
+}
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq,
+                   title=Generated \coq\ toplevel theorem definition]
+Theorem beq_trans :
+  forall __var_a : Set, forall x  y  z : __var_a,
+    Is_true ((_equal_ _ x y)) ->
+      Is_true ((_equal_ _ y z)) -> Is_true ((_equal_ _ x z)).
+(* Proof assumed because " Import trusted external code. ". *)
+apply coq_builtins.magic_prove.
+Qed.
+\end{lstlisting}
+}
+
 \section{Type definitions}
+Type definitions always appear at toplevel, i.e. outside a
+species. For a given type definition named ``{\tt myty}'' in
+\focalize, the corresponding generated names are historically a few
+different in \ocaml\ and in \coq. In \ocaml\ the generated type will
+be named ``{tt \_focty\_}'' + {\tt mtty}. In \coq, the generated type
+will be named {\tt mtty} + ``{\tt \_\_t}''.
+
+We have 4 kinds of type definitions:
+\begin{itemize}
+  \item Alias : the definition doesn't create a new type (i.e. a new
+    set of values inhabiting a type) but is a shortcut for naming a
+    (complex ?) type expression. For instance:
+    {\footnotesize\lstinline!type t = alias (int * char * int) ;;!}
+    The type constructor {\tt t} is only an alias for the type of
+    tuples with 3 components whose first and third components are an
+    integer and second one is a character. In particular, {\tt t} will
+    be unifiable with any occurrence of its alias. 
+  \item Union : the definition create a new sum type and gives its
+    value constructors. This new type will be compatible with only
+    itself. For instance:
+    {\footnotesize\lstinline!type t = | A | B (int * char) ;;!}
+    The type constructor {\tt t} denotes the type whose 2 value
+    constructors are {\tt A} and {\tt B}. The constructor {\tt B} is
+    parametrised by a pair of an integer and a character.
+\item Record: the definition create a new record type and gives its
+  fields names and types. This new type will be compatible with only
+    itself. For instance:
+    {\footnotesize\lstinline!type t = { name : string ; birth : int } ;;!}
+    The type constructor {\tt t} denotes the record type whose 2
+    fields are named {\tt name} and {\tt birth} and types are
+    respectively {\tt string} and {\tt int}.
+  \item External : the definition establishes the link between a type
+    of an external language and its representation in
+    \focalize. Because they are quite complex, they will be studied in
+    more details in a next dedicated section (
+    see \ref{external-typedefinition}).
+\end{itemize}
+
+
+\subsection{Type alias}
+\index{type!alias}
+\index{alias}
+As stated before, such a {\bf type definition} introduces a new type
+name (i.e. type constructor) to represent a
+{\bf type expression}. Fortunately, both \ocaml\ and \coq\ have the
+notion of type alias. Hence, we simply need to translate the
+\focalize\ type expression in the corresponding target type
+expression. This doesn't pose any particular problem. The only thing
+to remind is that since in \coq\ polymorphism is explicit, if a type
+definition is parametrised by a type variable, then one must
+explicitly give this variable the type {\tt Set}. In \ocaml\, there
+is no need to give the type of this variable, the syntax only requires
+to bind this variable name in the type definition's name (i.e. \\
+\lstinline!type 'a t = ... ;;!).
+
+Below follow a few simple alias type definitions examples with their
+corresponding generated source code in \coq\ and \ocaml.
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml,
+                   title=Generated \coq\ type definition]
+open "basics" ;;
+
+type t = alias int ;;
+type u = alias (t * (char * bool * string)) ;;
+type poly_pair ('a) = alias ('a * 'a) ;;
+type inv_prod ('a, 'b) = alias ('b * 'a) ;;
+\end{lstlisting}
+}
+
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml,
+                   title=Generated \coq\ type definition]
+type _focty_t = Basics._focty_int ;;
+type _focty_u =
+  Basics._focty_int *
+    (Basics._focty_char * Basics._focty_bool * Basics._focty_string) ;;
+type 'a _focty_poly_pair = 'a * 'a ;;
+type ('a, 'b) _focty_inv_prod = 'b * 'a ;;
+\end{lstlisting}
+}
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq,
+                   title=Generated \coq\ type definition]
+Require basics.
+Definition t__t := basics.int__t.
+Definition u__t :=
+  ((basics.int__t
+    * (((basics.char__t * basics.bool__t * basics.string__t)%type)))%type).
+Definition poly_pair__t (__var_a : Set) := ((__var_a * __var_a)%type).
+Definition inv_prod__t (__var_b : Set) (__var_c : Set) :=
+  ((__var_c * __var_b)%type).
+\end{lstlisting}
+}
+
+The only technical thing is to make sure that type variables are
+correctly identified all along the unifications to be sure that they
+are properly link between their declaration (with the type name) and
+their usage. This is illustrated by the {\tt inv\_prod} definition
+where we want to have variables inverted between the binding order and
+their usage order.
+
+\medskip
+Be careful that the aliases we made here are {\bf tuples}. They use
+the type constructor {\tt *} (star) to create {\bf one} type
+expression that is a tuple compound of several type
+(sub-)expressions. This will not have to be confused with the problem
+of parametrising sum type value constructors with {\bf one} tuple of
+several components or several values as explained later in
+\ref{sum-value-cstr-tuple-versus-several-args}.
+
+
+\subsection{Type union (sum type)}
+\index{type!union}
+\index{type!sum}
+As stated before, such a sum type definition introduces a new type
+name (i.e. type constructor) with its value constructors. Again
+fortunately, both \ocaml\ and \coq\ have the notion of sum
+type. Hence, we do not need to encode sums, we need to translate them
+into the corresponding constructs in the target languages. Each value
+constructor in \focalize\ will lead to a value constructor in the
+target languages.
+
+In \ocaml\ the return type of a constructor doesn't need to be
+explicit. Conversely, in \coq\ it needs to be. Hence for the simple
+sum type definition:
+{\footnotesize
+\begin{lstlisting}[title=Simple sum type in \focalize]
+type t =
+  | A
+  | B
+ ;;
+\end{lstlisting}
+}
+we get the following \ocaml\ code where only the value constructors
+names {\tt A} and {\tt B} are emitted:
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml,
+                   title=Simple sum type generated in \ocaml]
+type _focty_t = 
+  | A
+  | B
+ ;;
+\end{lstlisting}
+}
+Whereas in \coq, in addition to the constructors names, one must
+explicitly say that they are values of this type:
+{\footnotesize
+\begin{lstlisting}[language=MyCoq,
+                   title=Simple sum type generated in \coq]
+Inductive t__t : Set := 
+  | A : (t__t)
+  | B : (t__t).
+\end{lstlisting}
+}
+
+\medskip
+Parametrised value constructors are a bit more complex. We first
+introduce the simplest case, where value constructors have one
+parameter. In this case, in \ocaml\ code, we have the quite obvious
+translation that tells ``{\tt of}'' the argument's type. In \coq\,
+the constructor will simply be considered to have a functional type
+whose argument is the type of the value constructor's argument and
+whose return type is the defined type itself.
+Hence, even for recursive and/or parametrised type definitions, we
+easily generate the code of the example:
+{\footnotesize[title=Sum types with simply parametrised value constructors]
+\begin{lstlisting}
+type t_poly ('a) =
+  | None
+  | Some ('a)
+;;
+
+type t_rec =
+  | TR1 (int)
+  | TR2 (t_rec)
+;;
+
+type t_poly_rec ('a) =
+  | TPR1 ('a)
+  | TPR2 (t_poly_rec ('a))
+;;
+\end{lstlisting}
+}
+\noindent in \ocaml\ to get:
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml, title=Sum type generated in \ocaml]
+type 'a _focty_t_poly = 
+  | None
+  | Some of ('a)
+ ;;
+type _focty_t_rec = 
+  | TR1 of (Basics._focty_int)
+  | TR2 of (_focty_t_rec)
+ ;;
+type 'a _focty_t_poly_rec = 
+  | TPR1 of ('a)
+  | TPR2 of ('a _focty_t_poly_rec)
+ ;;
+\end{lstlisting}
+}
+
+\noindent and in \coq\ to get:
+{\footnotesize
+\begin{lstlisting}[language=MyCoq, title=Sum type generated in \coq]
+Inductive t_poly__t (__var_a : Set) : Set := 
+  | None : (t_poly__t __var_a)
+  | Some : (__var_a -> (t_poly__t __var_a)).
+
+Inductive t_rec__t : Set := 
+  | TR1 : (basics.int__t -> t_rec__t)
+  | TR2 : (t_rec__t -> t_rec__t).
+
+Inductive t_poly_rec__t (__var_b : Set) : Set := 
+  | TPR1 : (__var_b -> (t_poly_rec__t __var_b))
+  | TPR2 : ((t_poly_rec__t __var_b) -> (t_poly_rec__t __var_b)).
+\end{lstlisting}
+}
+in both of which see see that the generated type constructor's name is
+consistently the same between the code of the name of the definition
+and the generated type expressions (so, recursive) where this type
+constructor's name appears.
+
+\medskip
+\label{sum-value-cstr-tuple-versus-several-args}
+The translation of sum type is quite complete, but we still need to
+deal with a choice of representation to do about value
+constructors that ``look having'' several parameters, like in
+{\footnotesize
+\begin{lstlisting}[title=Value constructor parameterised by
+  ``several'' arguments]
+type t_prm_val_cstr =
+  | C (int * int * int)
+;;
+\end{lstlisting}
+}
+In such a case, is the value constructor {\tt C} parametrised by
+{\bf three} integers or by {\bf one} tuple of 3 integers ? This makes
+a particular difference in \coq\ because value constructors are
+curried. For \coq\, unless an explicit tuple is stated, the value
+constructor for the above example must have the functional type
+{\tt int -> int -> int -> int -> t\_prm\_val\_cstr}.
+
+Of course, it would be possible to always group the arguments into one
+unique tuple,but making proofs using such a value constructor would
+not be tractable (dixit Renaud). In \ocaml, since we do not have this
+concern of proof, this choice would not be a real problem.
+
+In fact, in the syntax, \focalize\ propose two value constructor
+argument expressions different: one for ``several'' parameters and one
+for 1 tuple parameter of ``several'' components. Hence, translation
+into the target languages are not ambiguous. In a sum type definition,
+for a value constructor, arguments separated by {\tt ,} (``comma'')
+are considered as ``several arguments'', and arguments separated by
+{\tt *} (``star'') are considered as grouped inside one unique
+argument that is a tuple. Hence, for the following \focalize\ example:
+{\footnotesize
+\begin{lstlisting}[title=Value constructor parameterised by
+  ``several'' arguments (2)]
+type t_prm_val_cstr =
+  | C (int * int * int)
+  | D (int, int, int)
+;;
+\end{lstlisting}
+}
+we get the generated \ocaml\ code that follows, where we do make any
+difference between one and several arguments: all is every considered
+as a tuple
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml,
+                   title=Value constructor parameterised by
+                   ``several'' arguments in \ocaml\ (2)]
+type _focty_t_prm_val_cstr = 
+  | C of ((Basics._focty_int * Basics._focty_int * Basics._focty_int))
+  | D of (Basics._focty_int * Basics._focty_int * Basics._focty_int)
+ ;;
+\end{lstlisting}
+}
+and the generated \coq\ code where the types of {\tt C} and {\tt D}
+are clearly different:
+{\footnotesize
+\begin{lstlisting}[language=MyCoq,
+                   title=Value constructor parameterised by
+                   ``several'' arguments in \coq\ (2)]
+Inductive t_prm_val_cstr__t : Set := 
+  | C :
+    ((((basics.int__t * basics.int__t * basics.int__t)%type)) ->
+      t_prm_val_cstr__t)
+  | D :
+    (basics.int__t -> basics.int__t -> basics.int__t -> t_prm_val_cstr__t).
+\end{lstlisting}
+}
+
+
+
 \section{External definitions}
+
+\subsection{External value definitions}
+
+\subsection{External type definitions}
+\label{external-type-definition}
+
+%  External definitions can be either manifest or
+%     abstract. In the first case, it is possible to have access in
+%     \focalize\ the structure of the type as seen under \focalize. In
+%     the second case, the type doesn't have any explicit representation
+%     in \focalize\ and is considered as purely abstracted. The only way
+%     to manipulate it will be via functions defined later (obviously
+%     defined as ``external'', i.e. establishing a link between
+%     \focalize\ and the target  languages. See
+%     \ref{external-definitions}).
+%     External definitions may provide value constructors (if the
+%     definition is a sum) or field labels (if the definition is a
+%     record) and their mapping into the target languages.
