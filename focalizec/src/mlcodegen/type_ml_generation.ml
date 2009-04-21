@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.12 2009-04-01 13:54:48 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.13 2009-04-21 12:47:19 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -133,7 +133,6 @@ let type_def_compile ctx env type_def_name type_descr =
   let instanciated_body =
     Types.specialize_with_args
       type_descr.Env.TypeInformation.type_identity type_def_params in
-  (* Useless, but just in case.... This does not hurt ! *)
   Types.purge_type_simple_to_ml_variable_mapping () ;
   (* Now, generates the type definition's body. *)
   match type_descr.Env.TypeInformation.type_kind with

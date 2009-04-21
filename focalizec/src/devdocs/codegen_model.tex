@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.16 2009-04-21 12:26:47 pessaux Exp $
+% $Id: codegen_model.tex,v 1.17 2009-04-21 12:47:19 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -2280,6 +2280,7 @@ We now continue to inspect the generated code in both \ocaml and \coq:
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml,
                    title=\ocaml\ code for external definitions (2)]
+type _focty_int =  int ;;
 type 'a _focty_foc_diag =  ('a * 'a)  ;;
 type 'a _focty_list =  'a list ;;
 type ('a, 'b) _focty_foc_record =  ('b, 'a) Ml_stubs.bbt_record ;;
@@ -2289,9 +2290,8 @@ type ('a, 'b) _focty_foc_record =  ('b, 'a) Ml_stubs.bbt_record ;;
 {\footnotesize
 \begin{lstlisting}[language=MyCoq,
                    title=\coq\ code for external definitions (2)]
-type 'a _focty_foc_diag = ('a * 'a)  ;;
-type 'a _focty_list = 'a list ;;
-type ('a, 'b) _focty_foc_record = ('b, 'a) Ml_stubs.bbt_record ;;
+Definition int__t :=  Z.
+................
 \end{lstlisting}
 }
 

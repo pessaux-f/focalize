@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.14 2009-03-27 13:40:10 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.15 2009-04-21 12:47:19 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -106,8 +106,7 @@ let type_def_compile ctx env type_def_name type_descr =
   let instanciated_body =
     Types.specialize_with_args
       type_descr.Env.TypeInformation.type_identity type_def_params in
-  (* Useless, but just in case.... This does not hurt ! *)
-  Types.purge_type_simple_to_ml_variable_mapping () ;
+  Types.purge_type_simple_to_coq_variable_mapping () ;
   (* Compute the number of extra polymorphic-induced *)
   (* arguments to the constructor.                   *)
   let nb_extra_args = List.length type_def_params in
@@ -160,13 +159,13 @@ let type_def_compile ctx env type_def_name type_descr =
    | Env.TypeInformation.TK_variant cstrs ->
        (begin
        (* To ensure variables names sharing, we will unify an instance of each
-	  constructor result type (remind they have a functional type whose
-	  arguments are the sum constructor's arguments and result is the same
-	  type that the hosting type itself) with the instance of the defined
-	  type identity. The only difference with OCaml is that we keep the
-	  complete functionnal type since in Coq constructors are really
-	  "functions" : one must also write the return type of the constructor
-	  (that is always the type of the definition hosting the constructor. *)
+          constructor result type (remind they have a functional type whose
+          arguments are the sum constructor's arguments and result is the same
+          type that the hosting type itself) with the instance of the defined
+          type identity. The only difference with OCaml is that we keep the
+          complete functionnal type since in Coq constructors are really
+          "functions" : one must also write the return type of the constructor
+          (that is always the type of the definition hosting the constructor. *)
        let sum_constructors_to_print =
          List.map
            (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
@@ -188,16 +187,16 @@ let type_def_compile ctx env type_def_name type_descr =
                (sum_cstr_name, unified_sum_cstr_ty)
              with _ ->
                (* Because program is already well-typed, this should always
-		  succeed. *)
+                  succeed. *)
                assert false)
            cstrs in
        Format.fprintf out_fmter "@[<2>Inductive %a__t@ "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* Print the parameter(s) stuff if any. Do it only now the unifications
-	  have been done with the sum constructors to be sure that thanks to
-	  unifications, "sames" variables will have the "same" name everywhere
-	  (i.e. in the the parameters enumeration of the type and in the sum
-	  constructors definitions). *)
+          have been done with the sum constructors to be sure that thanks to
+          unifications, "sames" variables will have the "same" name everywhere
+          (i.e. in the the parameters enumeration of the type and in the sum
+          constructors definitions). *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
          print_ctx out_fmter type_def_params ;
        Format.fprintf out_fmter ":@ Set :=@ " ;
@@ -214,8 +213,8 @@ let type_def_compile ctx env type_def_name type_descr =
          sum_constructors_to_print ;
        Format.fprintf out_fmter ".@]@\n@\n" ;
        (* Since any variant type constructors must be inserted in the
-	  environment in order to know the number of extra leading "_" due to
-	  polymorphism, we return the extended environment. *)
+          environment in order to know the number of extra leading "_" due to
+          polymorphism, we return the extended environment. *)
        List.fold_left
          (fun accu_env (sum_cstr_name, _) ->
            Env.CoqGenEnv.add_constructor 
@@ -230,9 +229,9 @@ let type_def_compile ctx env type_def_name type_descr =
    | Env.TypeInformation.TK_record fields ->
        (begin
        (* Like for the sum types, we make use of unification to ensure the
-	  sharing of variables names. We proceed exactly the same way,
-	  delaying the whole print until we unified into each record-field
-	  type. *)
+          sharing of variables names. We proceed exactly the same way,
+          delaying the whole print until we unified into each record-field
+          type. *)
        let record_fields_to_print =
          List.map
            (fun (field_name, field_mut, field_scheme) ->
@@ -251,7 +250,7 @@ let type_def_compile ctx env type_def_name type_descr =
                (field_name, field_mut, field_args)
              with _ ->
                (* Because program is already well-typed, this should always
-		  succeed. *)
+                  succeed. *)
                assert false)
            fields in
        Format.fprintf out_fmter "@[<2>Record@ %a__t@ "
@@ -262,8 +261,8 @@ let type_def_compile ctx env type_def_name type_descr =
        Format.fprintf out_fmter ":@ Type :=@\nmk_%a__t {@\n"
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* And finally really print the fields definitions. We just create a
-	  local handy function to print the trailing semi only if the
-	  processed field is not the last of the list (Coq syntax need). *)
+          local handy function to print the trailing semi only if the
+          processed field is not the last of the list (Coq syntax need). *)
        let rec local_print_fields = function
          | [] -> ()
          | (field_name, field_mut, field_ty) :: q ->
