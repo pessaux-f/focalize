@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.15 2009-04-20 15:02:54 pessaux Exp $
+% $Id: codegen_model.tex,v 1.16 2009-04-21 12:26:47 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -187,6 +187,7 @@ module Cartesian_product =
 \end{lstlisting}
 }
 
+\label{mk-record-introduction1}
 In \coq\ a record is introduced by a constructor. By convention, we
 always name it {\tt mk\_record}. The record type for \coq\ will then
 look like:
@@ -430,7 +431,9 @@ Virgile Prevosto's PhD.
 
 A method will lead to a {\tt let} of {\tt theorem} definition
 depending on its kind. The generated name is the same than in the
-\focalize\ source. Only a ``stringification'' is done when the method
+\focalize\ source.
+label{ident-stringification}
+Only a ``stringification'' is done when the method
 is an operator (e.g. {\tt =}, {\tt +}, {\tt +=e}, \ldots). This
 stringification is done on the fly using a very simple mechanism
 (check function \\
@@ -1357,7 +1360,9 @@ model, second the record access notation is much more complex in
 In effect in \coq\, to access a field of a value of type record, one
 must provide, of course the value and the field name, but also all the
 effective arguments that were provided when the type record was
-created from the {\tt mk\_record} that represents the species.
+created from the {\tt mk\_record}
+\label{mk-record-introduction2}
+that represents the species.
 For instance, our collection {\tt Couple\_d\_entiers}
 {\tt ``implements''} a {\tt Monoide\_produit}. Looking at the record
 type of {\tt Monoide\_produit}, we see:
@@ -1645,8 +1650,8 @@ We have 4 kinds of type definitions:
     The type constructor {\tt t} denotes the type whose 2 value
     constructors are {\tt A} and {\tt B}. The constructor {\tt B} is
     parametrised by a pair of an integer and a character.
-\item Record: the definition create a new record type and gives its
-  fields names and types. This new type will be compatible with only
+  \item Record: the definition create a new record type and gives its
+    fields names and types. This new type will be compatible with only
     itself. For instance:
     {\footnotesize\lstinline!type t = { name : string ; birth : int } ;;!}
     The type constructor {\tt t} denotes the record type whose 2
@@ -1787,8 +1792,9 @@ whose argument is the type of the value constructor's argument and
 whose return type is the defined type itself.
 Hence, even for recursive and/or parametrised type definitions, we
 easily generate the code of the example:
-{\footnotesize[title=Sum types with simply parametrised value constructors]
-\begin{lstlisting}
+{\footnotesize
+\begin{lstlisting}[title=Sum types with simply parametrised value
+  constructors]
 type t_poly ('a) =
   | None
   | Some ('a)
@@ -1916,11 +1922,394 @@ Inductive t_prm_val_cstr__t : Set :=
 
 
 
-\section{External definitions}
+\subsection{Record type}
+\index{type!record}
+As stated before, such a record type definition introduces a new type
+name (i.e. type constructor) with its fields labels and types. Again
+fortunately, both \ocaml\ and \coq\ have the notion of record
+type. Hence, we do not need to encode record, we need to translate them
+into the corresponding constructs in the target languages. Each field
+in \focalize\ will lead to a field in the record generated in the
+target languages.
 
-\subsection{External value definitions}
+The translation process is simple since it map a each field label of
+the \focalize\ definition onto a field label of the same name in the
+target language: The type of the field is generated like any type
+expression in the target language.
+{\footnotesize
+\begin{lstlisting}[title=Record type definitions in \focalize]
+type r0 = { x0 = int ; y0 = float } ;;
+type r1 ('a) = { x1 = 'a } ;;
+\end{lstlisting}
+}
+
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml,
+                   title=Generated record type definitions in \ocaml]
+type _focty_r0 = { 
+   x0 : Basics._focty_int ;
+   y0 : Basics._focty_float ;
+} ;;
+
+type 'a _focty_r1 = { 
+    x1 : 'a ;
+} ;;
+\end{lstlisting}
+}
+
+The only difference for \coq\ is (like already encountered when
+dealing with the record type representing species and collections,
+in \ref{mk-record-introduction1} and \ref{mk-record-introduction2}) 
+that a record type definition requires a ``record constructor''. By
+convention, it will always be named by ``{\tt mk\_}'' + the record
+type's name + ``{\tt \_\_t}''. 
+{\footnotesize
+\begin{lstlisting}[language=MyCoq,
+                   title=Generated record type definitions in \coq]
+Record r0__t : Type :=
+  mk_r0__t {
+  x0 : basics.int__t ;
+  y0 : basics.float__t
+  }.
+
+Record r1__t (__var_c : Set) : Type :=
+  mk_r1__t {
+  x1 : __var_c
+  }.
+\end{lstlisting}
+}
+
+
+\section{External definitions}
+External definitions are intended to make the interface between code
+imported from foreign target languages to be able to use it on
+\focalize's side. There are 2 kinds of external definitions: type
+definitions and value definitions.
+
+Type definitions are used either to import basic types and to allows
+\focalize to map its internal types on them (for instance, {\tt int},
+{\tt bool}, etc that are built-in type in \focalize\ and that must be
+mapped onto their \ocaml\ and \coq\ counterparts), or to specify the
+type of values developed outside \focalize\ and that we want to use
+from \focalize.
+
+Value definitions are used to provide support (i.e. primitives to
+manipulate) and inhabitants to external types or to provide values of
+a type known in \focalize\ but whose construction was done outside the
+\focalize\ source code.
+
+Any external definition contains 2 aspects: its ``internal'' view that
+says how the defined entity must be seen by \focalize (during its
+analyses) and its ``external'' view that says how this entity must be
+mapped onto target languages (during code generation) when it is used
+in a \focalize\ source code.
+
 
 \subsection{External type definitions}
+An external type definition starts like a regular type definition,
+i.e. by the type constructor's name and possibly parameters:
+\lstinline!type ('a, 'b) t =!). The body of the definition shows that
+it is an external by having the following shape:
+{\footnotesize
+\begin{lstlisting}
+type t  =
+  internal ...
+  external ...
+and ...
+and ...
+\end{lstlisting}
+}
+
+{\bf Attention}: Be careful that the {\tt and ...} are {\bf not} other
+type definitions: they are optional and belong to the current external
+type definition. We will see later the meaning.
+
+\subsubsection{The {\tt internal} clause}
+For a type definition, the {\tt internal} clause shows at which
+\focalize\ type definition the body of the external definition
+corresponds. In fact this is equivalent to establish an alias between
+the structure of the external type and the structure of the type
+definition inside \focalize.
+
+However, since we do not always want to really have this alias
+(i.e. an equivalence between the internal and external
+representations), this clause can be empty. In this case, the created
+type constructor will be fully abstract on \focalize's side and the
+only way to make and manipulate values of this type will have to be
+provided via other external (values) definitions or via built-ins of
+the compiler.
+
+\medskip
+So, when the {\tt internal} clause is not empty, we said that is
+represented a type definition. Hence this clause can have 3 shapes: an
+alias, a sum or a record (the 3 kinds of type definitions in
+\focalize). For example (with the first case representing a fully
+abstract type as described above):
+{\footnotesize
+\begin{lstlisting}[title=External type definitions]
+type int =
+  internal (* Internal#int *)
+  ...
+;;
+
+type foc_diag ('a) =
+  internal alias ('a * 'a)
+  ...
+;;
+
+type list ('a) =
+  internal
+  | []
+  | ( :: ) ('a, list ('a))
+  ...
+;;
+
+type foc_record ('a, 'b) =
+  internal  { hcode = int ; contents = ('b * 'a) }
+  ...
+;;
+\end{lstlisting}
+}
+The first definition creates a type {\tt int} that is fully
+abstract. Obviously, this one will be used magically by the internals
+of the compiler, so no need to have external definitions tomanipulate
+its representation, this will be built-in in the compiler. Consult
+\ref{external-ty-defs-and-builtin-tys} for a discussion about this
+mechanism.
+
+The second definition creates a parameterised type {\tt foc\_diag}
+that will internally be compatible with a pair of elements of the same
+type.
+
+The third definition creates a parameterised type {\tt list} that is
+made of 2 value constructors: {\tt []} with no argument and {\tt ::}
+with 2 arguments (not a tuple). Hence this corresponds to an internal
+representation of a sum type. We can see here how to define the lists
+like they are in \coq\ and \ocaml\ to directmy map them onto those of 
+\coq\ and \ocaml, without making any internal hack inside the
+compiler. We could have defined our custom lists by a regular type
+definition like
+{\footnotesize
+\begin{lstlisting}
+type list ('a) =
+  | []
+  | ( :: ) ('a, list ('a))
+;;
+\end{lstlisting}
+}
+but we wouldn't have been able to make so that constructors directly
+map onto their counterparts in \coq\ and \ocaml\ (in effect, these
+constructors being non-regular identifiers, they would have been
+``stringified'' like we saw in \ref{ident-stringification}).
+
+The fourth and last definition creates a parameterised type
+{\tt foc\_record} that is a record type with 2 fields:
+{\tt hcode} and {\tt contents}.
+
+\medskip
+{\bf So, a question}: but why to use external definitions to create
+such types ? It should be possible to define these sum and record
+types by a regular definition ! The answer, partially given about the
+{\tt list} example is that this allows to control manually and
+explicitely the mapping of the type and of its components (fields and
+value constructors) into the target languages. We will see a clear
+example once we have ended the case of {\tt foc\_diag}.
+
+\medskip
+To summarise, the {\tt internal} clause controls how the type is seen
+on \focalize's side.
+
+
+\subsubsection{The {\tt external} clause}
+The external clause tells how the {\bf type constructor} (not it's
+components like fields, value constructors : this will be done by the
+extra {\tt and ...} clauses descibed below in
+\ref{external-ty-def-extra-clauses} ) must be {\bf defined} into the
+target languages. In other words, what to emit to define the type
+constructor in the target languages.
+
+Like in any {\tt external clause}, we have an enumeration of mapping
+``language $\mapsto$ external code''. Languages can syntactically be
+{\tt coq}, {\tt caml} or a string for other languages not internally
+handled by the \focalize\ compiler. External code is an arbitrary
+string enclosed by {\tt \{*} and {\tt *\}} that will be emited
+verbatim at code generation pass when the type constructor will have
+to be defined.
+
+At code generation time, the shape of the definition in \ocaml\ will
+look like: {\tt type} followed by the enumeration of polymorphic type
+variables ``{\tt \_focty\_}'' + type's name {\tt =} followed by the
+vertatim copy of the external code. The polymorphic type variables are
+named as usual in \ocaml. If there are several then they
+comma-separated and enclosed between parentheses. Their name are
+{\tt, 'a}, then {\tt, 'b}, then {\tt, 'c} and if there are more than
+26, it goes on with {\tt 'aa}, {\tt 'ab} etc\ldots. In fact it is like
+printing their numbers in base 26, using lowercase letters as digits.
+
+In \coq, it will look like: {\tt Definition} followed the the type's
+name + ``{\tt \_t}'' followed by the enumeration of the polymorphic
+type variables {\tt :=} followed by the vertatim copy of the
+external code. The polymorphic type variables are named by
+``{\tt \_\_var\_}'' + ``a'', then ``b'', then ``c''. Like for \ocaml\
+the suffix is the variable's number writen in base 26. Hence the name
+of the 27$^{th}$ variable will be {\tt \_\_var\_ab}. In \coq\, we must
+explicitly anotate variables with the type {\tt Set}.
+
+Hence, with the definitions we started in our example, the beginning
+of the generated code in \ocaml\ and \coq\ will look like:
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml,
+                   title=\ocaml\ code for external definitions]
+type _focty_int = ...
+type 'a _focty_foc_diag = ...
+type 'a _focty_list = ...
+type ('a, 'b) _focty_foc_record = ...
+\end{lstlisting}
+}
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq,
+                   title=\coq\ code for external definitions]
+Definition foc_diag__t (__var_a : Set) := ...
+Definition list__t (__var_a : Set) := ...
+Definition foc_record__t (__var_a : Set) (__var_b : Set) :=
+\end{lstlisting}
+}
+
+
+Continuing our previous example, we state the \focalize\ external type
+definitions:
+{\footnotesize
+\begin{lstlisting}[title=External type definitions (2)]
+type int =
+  internal (* Internal#int *)
+  external
+  | caml -> {* int *}
+  | coq -> {* Z *}
+;;
+
+type foc_diag ('a) =
+  internal alias ('a * 'a)
+  external
+  | caml -> {* ('a * 'a) *}
+  | coq -> {* coq_stubs.foc_diag ['a] *}
+;;
+
+type list ('a) =
+  internal
+  | []
+  | ( :: ) ('a, list ('a))
+  external
+  | caml -> {* 'a list *}
+  | coq -> {* (list __var_a) *} (* From the List module. *)
+  ...
+;;
+
+type foc_record ('a, 'b) =
+  internal  { hcode = int ; contents = ('b * 'a) }
+  external
+  | caml -> {* ('b, 'a) Ml_stubs.bbt_record *}
+  | coq -> {* coq_stubs.foc_record ['b, 'a] *}
+  ...
+;;
+\end{lstlisting}
+}
+
+In the first definition we see that to define the {\tt int}
+{\bf type constructor} in \ocaml, we will emit ``int'' and in \coq, we
+will emit ``Z''. That's because we want the {\tt int}
+{\bf type constructor} to be mapped onto these existing types of the
+target languages.
+
+The second definition shows that we want {\tt foc\_diag} to be defined
+as a pair in \ocaml. In \coq, we don't want a pair, instead let's say
+that we want 
+
+In the third definition, we say that lists are implemented in \ocaml\
+by its native lists and in \coq, by an existing data-type (the one
+provided my \coq's module ``List'').
+
+Finally, in the last definition, we want to say that the type
+{\tt foc\_record} is implemented by a user-defined type. For instance,
+a record type in both \ocaml\ and \coq. Due to the way the code is
+emitted we can't write directly in the external code a record
+definition in each of the target languages: it would be syntactically
+incorrect. So, instead, we say that the type {\tt foc\_record} is
+implemented by a type name given in a other source file (one file for
+\ocaml\ and one for \coq). We must remember that de generated
+definition in the target languages will correspond to an alias
+(i.e. of the form {\tt type} name {\tt =} external-code in \ocaml, and
+{\tt Definition} name {\tt :=} external-code in \coq), so we must put
+in the external code only things that will comply the target
+language's syntax. For instance, specifying for the \coq\ language a
+definition like:
+{\footnotesize
+\begin{lstlisting}
+type foc_diag ('a) =
+  internal alias ('a * 'a)
+  external
+  | caml -> {* ('a * 'a) *}
+  | coq -> {* Record : Type :=
+                mk_foc_diag (alpha : Set) {
+                  fst : alpha ;
+                  snd : alpha } *}
+;;
+\end{lstlisting}
+}
+would lead to a syntactically incorrect garbage rejected by \coq\
+like:
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+Definition foc_diag__t (__var_a : Set) :=
+   Record : Type :=
+                mk_foc_diag (alpha : Set) {
+                  fst : alpha ;
+                  snd : alpha } .
+\end{lstlisting}
+}
+
+\medskip
+Finally, one may note in this last definition that a
+\focalize\ {\tt foc\_record ('a, 'b)} is implemented by a
+{\tt ('b, 'a) Ml\_stubs.bbt\_record}. We inverted the parameters !
+This means that so they will be in the generated definifion (have a
+look in the sample generated code below) !
+
+\medskip
+We now continue to inspect the generated code in both \ocaml and \coq:
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml,
+                   title=\ocaml\ code for external definitions (2)]
+type 'a _focty_foc_diag =  ('a * 'a)  ;;
+type 'a _focty_list =  'a list ;;
+type ('a, 'b) _focty_foc_record =  ('b, 'a) Ml_stubs.bbt_record ;;
+\end{lstlisting}
+}
+\noindent and:
+{\footnotesize
+\begin{lstlisting}[language=MyCoq,
+                   title=\coq\ code for external definitions (2)]
+type 'a _focty_foc_diag = ('a * 'a)  ;;
+type 'a _focty_list = 'a list ;;
+type ('a, 'b) _focty_foc_record = ('b, 'a) Ml_stubs.bbt_record ;;
+\end{lstlisting}
+}
+
+
+
+\subsubsection{The extra {\tt and ...} clauses}
+\label{external-ty-def-extra-clauses}
+
+
+\subsubsection{External type definitions and built-in types.}
+\label{external-ty-defs-and-builtin-tys}
+A propos de basics.fcl.
+Blabla à propos du fait que le nom (int) est justement bien senti car
+dans le compilo, on utilise justement ``int'' comme nom de
+constructeur pour inférer le type des expressions entières. Etc...
+
+
+\subsection{External value definitions}
 \label{external-type-definition}
 
 %  External definitions can be either manifest or
