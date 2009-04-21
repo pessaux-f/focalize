@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.13 2009-04-01 15:34:34 pessaux Exp $
+% $Id: environments.tex,v 1.14 2009-04-21 14:49:32 pessaux Exp $
 
 All along the compilation pass, we need to keep trace of various
 information about compiled entities (methods, types, identifiers,
@@ -974,8 +974,8 @@ arguments at application-time. However, we need to know how many
 constructor has due to its polymorphism). For instance, the type
 {\tt t} defined in \coq\ by:
 \begin{table}[h]
-{\footnotesize[language=MyCoq]
-\begin{lstlisting}
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
 Inductive t (alpha : Set) : Set :=
  | A : (alpha -> (t alpha)).
 \end{lstlisting}

@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.17 2009-04-21 12:47:19 pessaux Exp $
+% $Id: codegen_model.tex,v 1.18 2009-04-21 14:49:32 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -2072,20 +2072,20 @@ type foc_record ('a, 'b) =
 }
 The first definition creates a type {\tt int} that is fully
 abstract. Obviously, this one will be used magically by the internals
-of the compiler, so no need to have external definitions tomanipulate
+of the compiler, so no need to have external definitions to manipulate
 its representation, this will be built-in in the compiler. Consult
 \ref{external-ty-defs-and-builtin-tys} for a discussion about this
 mechanism.
 
-The second definition creates a parameterised type {\tt foc\_diag}
+The second definition creates a parametrised type {\tt foc\_diag}
 that will internally be compatible with a pair of elements of the same
 type.
 
-The third definition creates a parameterised type {\tt list} that is
+The third definition creates a parametrised type {\tt list} that is
 made of 2 value constructors: {\tt []} with no argument and {\tt ::}
 with 2 arguments (not a tuple). Hence this corresponds to an internal
 representation of a sum type. We can see here how to define the lists
-like they are in \coq\ and \ocaml\ to directmy map them onto those of 
+like they are in \coq\ and \ocaml\ to directly map them onto those of 
 \coq\ and \ocaml, without making any internal hack inside the
 compiler. We could have defined our custom lists by a regular type
 definition like
@@ -2102,7 +2102,7 @@ map onto their counterparts in \coq\ and \ocaml\ (in effect, these
 constructors being non-regular identifiers, they would have been
 ``stringified'' like we saw in \ref{ident-stringification}).
 
-The fourth and last definition creates a parameterised type
+The fourth and last definition creates a parametrised type
 {\tt foc\_record} that is a record type with 2 fields:
 {\tt hcode} and {\tt contents}.
 
@@ -2111,7 +2111,7 @@ The fourth and last definition creates a parameterised type
 such types ? It should be possible to define these sum and record
 types by a regular definition ! The answer, partially given about the
 {\tt list} example is that this allows to control manually and
-explicitely the mapping of the type and of its components (fields and
+explicitly the mapping of the type and of its components (fields and
 value constructors) into the target languages. We will see a clear
 example once we have ended the case of {\tt foc\_diag}.
 
@@ -2123,7 +2123,7 @@ on \focalize's side.
 \subsubsection{The {\tt external} clause}
 The external clause tells how the {\bf type constructor} (not it's
 components like fields, value constructors : this will be done by the
-extra {\tt and ...} clauses descibed below in
+extra {\tt and ...} clauses described below in
 \ref{external-ty-def-extra-clauses} ) must be {\bf defined} into the
 target languages. In other words, what to emit to define the type
 constructor in the target languages.
@@ -2132,14 +2132,14 @@ Like in any {\tt external clause}, we have an enumeration of mapping
 ``language $\mapsto$ external code''. Languages can syntactically be
 {\tt coq}, {\tt caml} or a string for other languages not internally
 handled by the \focalize\ compiler. External code is an arbitrary
-string enclosed by {\tt \{*} and {\tt *\}} that will be emited
+string enclosed by {\tt \{*} and {\tt *\}} that will be emitted
 verbatim at code generation pass when the type constructor will have
 to be defined.
 
 At code generation time, the shape of the definition in \ocaml\ will
 look like: {\tt type} followed by the enumeration of polymorphic type
 variables ``{\tt \_focty\_}'' + type's name {\tt =} followed by the
-vertatim copy of the external code. The polymorphic type variables are
+verbatim copy of the external code. The polymorphic type variables are
 named as usual in \ocaml. If there are several then they
 comma-separated and enclosed between parentheses. Their name are
 {\tt, 'a}, then {\tt, 'b}, then {\tt, 'c} and if there are more than
@@ -2148,12 +2148,12 @@ printing their numbers in base 26, using lowercase letters as digits.
 
 In \coq, it will look like: {\tt Definition} followed the the type's
 name + ``{\tt \_t}'' followed by the enumeration of the polymorphic
-type variables {\tt :=} followed by the vertatim copy of the
+type variables {\tt :=} followed by the verbatim copy of the
 external code. The polymorphic type variables are named by
 ``{\tt \_\_var\_}'' + ``a'', then ``b'', then ``c''. Like for \ocaml\
-the suffix is the variable's number writen in base 26. Hence the name
+the suffix is the variable's number written in base 26. Hence the name
 of the 27$^{th}$ variable will be {\tt \_\_var\_ab}. In \coq\, we must
-explicitly anotate variables with the type {\tt Set}.
+explicitly annotate variables with the type {\tt Set}.
 
 Hence, with the definitions we started in our example, the beginning
 of the generated code in \ocaml\ and \coq\ will look like:
@@ -2181,6 +2181,8 @@ Continuing our previous example, we state the \focalize\ external type
 definitions:
 {\footnotesize
 \begin{lstlisting}[title=External type definitions (2)]
+coq_require "coq_stubs" ;;
+
 type int =
   internal (* Internal#int *)
   external
@@ -2192,7 +2194,7 @@ type foc_diag ('a) =
   internal alias ('a * 'a)
   external
   | caml -> {* ('a * 'a) *}
-  | coq -> {* coq_stubs.foc_diag ['a] *}
+  | coq -> {* ((__var_a * __var_a)%type) *}
 ;;
 
 type list ('a) =
@@ -2222,8 +2224,7 @@ will emit ``Z''. That's because we want the {\tt int}
 target languages.
 
 The second definition shows that we want {\tt foc\_diag} to be defined
-as a pair in \ocaml. In \coq, we don't want a pair, instead let's say
-that we want 
+as a pair in \ocaml and in \coq.
 
 In the third definition, we say that lists are implemented in \ocaml\
 by its native lists and in \coq, by an existing data-type (the one
@@ -2236,7 +2237,7 @@ emitted we can't write directly in the external code a record
 definition in each of the target languages: it would be syntactically
 incorrect. So, instead, we say that the type {\tt foc\_record} is
 implemented by a type name given in a other source file (one file for
-\ocaml\ and one for \coq). We must remember that de generated
+\ocaml\ and one for \coq). We must remember that the generated
 definition in the target languages will correspond to an alias
 (i.e. of the form {\tt type} name {\tt =} external-code in \ocaml, and
 {\tt Definition} name {\tt :=} external-code in \coq), so we must put
@@ -2269,10 +2270,23 @@ Definition foc_diag__t (__var_a : Set) :=
 }
 
 \medskip
+{\bf Attention}: In the sample code in \focalize\ we are studying,
+when we extended it, we added a first line that reads
+\lstinline!coq_require "coq_stubs" ;;! This is needed to make so \coq\
+can see definitions of the source file  {\tt \coq\_stubs.v} in which we
+wrote our stubs for \coq. Since the \focalize\ compiler doesn't
+analyse inside the external code, it can't see that there is a
+dependency for \coq onto this source file, hence can't add itself in
+the generated \coq\ file the {\tt Require} directive. By adding this
+{\tt coq\_require} directive in the \focalize\ source code, we tell
+the compiler to add the corresponding {\tt Require} directive in the
+generated \coq\ code.
+
+\medskip
 Finally, one may note in this last definition that a
 \focalize\ {\tt foc\_record ('a, 'b)} is implemented by a
 {\tt ('b, 'a) Ml\_stubs.bbt\_record}. We inverted the parameters !
-This means that so they will be in the generated definifion (have a
+This means that so they will be in the generated definition (have a
 look in the sample generated code below) !
 
 \medskip
@@ -2290,15 +2304,97 @@ type ('a, 'b) _focty_foc_record =  ('b, 'a) Ml_stubs.bbt_record ;;
 {\footnotesize
 \begin{lstlisting}[language=MyCoq,
                    title=\coq\ code for external definitions (2)]
+Require coq_stubs.
+
 Definition int__t :=  Z.
-................
+Definition foc_diag__t (__var_a : Set) :=  ((__var_a * __var_a)%type) .
+Definition list__t (__var_a : Set) :=  (list __var_a) .
+Definition foc_record__t (__var_a : Set) (__var_b : Set) :=
+  coq_stubs.foc_record __var_b __var_a .
+\end{lstlisting}
+}
+
+To fully understand the mapping mechanism, we must now see the stubs
+written for each target language.
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml, title=Stub file ml\_stubs.ml]
+type ('c, 'd) bbt_record = {
+  bbt_hashing_code : int ;
+  bbt_contents : ('c * 'd)
+} ;;
+\end{lstlisting}
+}
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq, title=Stub file coq\_stubs.v]
+Require Export ZArith. (* To have type Z. *)
+
+Record foc_record (param_a : Set) (param_b : Set) : Type :=
+  mk_foc_record {
+    hc : Z;
+    conts : ((param_a * param_b)%type)
+}.
 \end{lstlisting}
 }
 
 
-
 \subsubsection{The extra {\tt and ...} clauses}
 \label{external-ty-def-extra-clauses}
+Finally, there are still two things to describe\ldots We know how the
+type constructor must be seen internally, how it must be mapped onto
+target languages but we don't know yet on what to map the sum value
+constructors and the record fields names !
+
+The extra {\tt and} directive are here for this purpose and will be
+used only in case of sum or record type definitions. We now complete
+our external definitions:
+{\footnotesize
+\begin{lstlisting}[title=External type definitions (3)]
+type list ('a) =
+  internal
+  | []
+  | ( :: ) ('a, list ('a))
+  external
+  | caml -> {* 'a list *}
+  | coq -> {* (list __var_a) *} (* From the List module. *)
+
+and [] =
+  | caml -> {* [] *}
+  | coq -> {* List.nil *}
+
+and ( :: ) =
+  | caml -> {* ( :: ) *}
+  | coq -> {* List.cons *}
+;;
+
+type foc_record ('a, 'b) =
+  internal  { hcode = int ; contents = ('b * 'a) }
+  external
+  | caml -> {* ('b, 'a) Ml_stubs.bbt_record *}
+  | coq -> {* coq_stubs.foc_record __var_b __var_a *}
+
+  and hcode =
+  | caml -> {* Ml_stubs.bbt_hashing_code *}
+  | coq -> {* coq_stubs.hc *}
+
+  and contents =
+  | caml -> {* Ml_stubs.bbt_contents *}
+  | coq -> {* coq_stubs.conts *}
+;;
+\end{lstlisting}
+}
+
+We must note that for {\tt foc\_record}, we mapped the record fields
+onto the related fields present in our stubs source files. Obviously,
+an external type definition must consistently map the type
+constructor, its field label or value constructor to a definition
+existing in the target language. For instance, if we mapped
+{\tt foc\_record} to a type {\tt t1}, and its field labels to labels
+of a type {\tt t2} or to field names that do not exist in the target
+language, then the compilation \underline{of the generated code would
+fail}. It is important to see that the compilation process on
+\focalize's side wouldn't point out any error: however \coq or/and
+\ocaml would complain.
 
 
 \subsubsection{External type definitions and built-in types.}

@@ -1,5 +1,6 @@
 use "basics" ;;
 open "basics" ;;
+coq_require "ok__baby_toy_coq_externals" ;;
 
 
 (* ******************************************************************* *)
@@ -51,7 +52,7 @@ type foc_diag ('a) =
   internal alias ('a * 'a)
   external
   | caml -> {* ('a * 'a) *}
-  | coq -> {* { fst : 'a ; snd : 'a } *}
+  | coq -> {* ((__var_a * __var_a)%type) *}
 ;;
 
 (* An external record type. *)
@@ -59,15 +60,15 @@ type foc_record ('a) =
   internal  { hcode = int ; contents = 'a }
   external
   | caml -> {* 'a Ok__baby_toy_externals.bbt_record *}
-  | coq -> {* Focq.foc_record ['a] *}
+  | coq -> {* ok__baby_toy_coq_externals.foc_record __var_b __var_a *}
 
   and hcode =
   | caml -> {* Ok__baby_toy_externals.bbt_hashing_code *}
-  | coq -> {* Focq.hc *}
+  | coq -> {* ok__baby_toy_coq_externals.hc *}
 
   and contents =
   | caml -> {* Ok__baby_toy_externals.bbt_contents *}
-  | coq -> {* Focq.conts *}
+  | coq -> {* ok__baby_toy_coq_externals.conts *}
 ;;
 let junk = { hcode = 42 ; contents = "Same same..." } ;;
 if true then junk else { hcode = 43 ; contents = "Not same..." } ;;
