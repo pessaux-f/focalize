@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.18 2009-04-21 14:49:32 pessaux Exp $
+% $Id: codegen_model.tex,v 1.19 2009-04-22 15:59:00 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -2129,7 +2129,9 @@ target languages. In other words, what to emit to define the type
 constructor in the target languages.
 
 Like in any {\tt external clause}, we have an enumeration of mapping
-``language $\mapsto$ external code''. Languages can syntactically be
+``language $\mapsto$ external code'': we call this an ``external
+expression''.
+Languages can syntactically be
 {\tt coq}, {\tt caml} or a string for other languages not internally
 handled by the \focalize\ compiler. External code is an arbitrary
 string enclosed by {\tt \{*} and {\tt *\}} that will be emitted
@@ -2317,7 +2319,8 @@ Definition foc_record__t (__var_a : Set) (__var_b : Set) :=
 To fully understand the mapping mechanism, we must now see the stubs
 written for each target language.
 {\footnotesize
-\begin{lstlisting}[language=MyOCaml, title=Stub file ml\_stubs.ml]
+\begin{lstlisting}[frameround=fttt, frame=trBL, language=MyOCaml,
+                   title=Stub file ml\_stubs.ml]
 type ('c, 'd) bbt_record = {
   bbt_hashing_code : int ;
   bbt_contents : ('c * 'd)
@@ -2326,7 +2329,8 @@ type ('c, 'd) bbt_record = {
 }
 
 {\footnotesize
-\begin{lstlisting}[language=MyCoq, title=Stub file coq\_stubs.v]
+\begin{lstlisting}[frameround=fttt, frame=trBL,
+                   language=MyCoq, title=Stub file coq\_stubs.v]
 Require Export ZArith. (* To have type Z. *)
 
 Record foc_record (param_a : Set) (param_b : Set) : Type :=
@@ -2393,30 +2397,134 @@ existing in the target language. For instance, if we mapped
 of a type {\tt t2} or to field names that do not exist in the target
 language, then the compilation \underline{of the generated code would
 fail}. It is important to see that the compilation process on
-\focalize's side wouldn't point out any error: however \coq or/and
-\ocaml would complain.
+\focalize's side wouldn't point out any error: however \coq\ or/and
+\ocaml\ would complain.
+
+\medskip
+This last set of clauses, since they are involved in how to map value
+constructors and record fields {\bf when they are encountered} do not
+lead to any code when the type definition is emitted. So we do not
+have any more generated code related to the type definition to
+examine.
+
 
 
 \subsubsection{External type definitions and built-in types.}
 \label{external-ty-defs-and-builtin-tys}
-A propos de basics.fcl.
-Blabla à propos du fait que le nom (int) est justement bien senti car
-dans le compilo, on utilise justement ``int'' comme nom de
-constructeur pour inférer le type des expressions entières. Etc...
+As stated before, external type definition are also used to setup the
+basic types internally known by the compiler :{\tt int}, {\tt unit},
+{\tt string}, {\tt bool} and {\tt char}. These definitions are in the
+file {\tt stdlib/basics.fcl}. We could have fully hidden these
+definition by directly hard-coding these types and their components
+(value constructor for {\tt unit}) in the pervasive environments. But
+this would have been doing manually a job the compiler knows how to
+make. So, instead, we used these external definitions. They magically
+work with the inner of the compiler because this one is made so that
+when it has to infer the type of an integer value, it will generate a
+type whose name is \ldots justly ``int'' \ldots exactly the name we
+gave in our external type definition. This means that internally, the
+compiler knows that an integer value has type ''int'', even if it
+doesn't know what is an integer. This especially means that if no
+external definition is given for {\tt int}, the compiler is still able
+to infer the type of integer expressions. However, is the user writes
+``int'', then he will be rejected because the scoper won't find any
+definition of this type constructor.
+
+The case of {\tt unit} is slightly different since the external
+definition also gives the (only) value inhabiting this type. So, the
+compiler doesn't have built-in mechanism to synthesise a type
+{\tt unit}: to get this type, the only ways are either the user wrote
+``unit'' or he wrote ``()'' and looking-up in the environment for the
+value constructor's type we will normally get {\tt unit}. The
+difference with the case of {\tt int} is really that in {\tt unit},
+the definition gives the values of the type although in {\tt int},
+they are not given by the definition but rather ``hard-wired'' in the
+compiler (it knows syntactically what is an integer).
+
+Hence, considering this difference point, {\tt int}, {\tt char} and
+{\tt string} are handled the same way, and {\tt unit} and {\tt bool}
+are handled the same way.
+
 
 
 \subsection{External value definitions}
 \label{external-type-definition}
+External value definitions follow the same idea than types, they have
+an {\tt internal} and an {\tt external} clause. The {\tt internal}
+clause deals with how the compiler must consider the value during its
+analyses: it deals with the value's {\bf type}. The {\tt external}
+clause deals with how the compiler must map this value at code
+generation time in the target languages.
 
-%  External definitions can be either manifest or
-%     abstract. In the first case, it is possible to have access in
-%     \focalize\ the structure of the type as seen under \focalize. In
-%     the second case, the type doesn't have any explicit representation
-%     in \focalize\ and is considered as purely abstracted. The only way
-%     to manipulate it will be via functions defined later (obviously
-%     defined as ``external'', i.e. establishing a link between
-%     \focalize\ and the target  languages. See
-%     \ref{external-definitions}).
-%     External definitions may provide value constructors (if the
-%     definition is a sum) or field labels (if the definition is a
-%     record) and their mapping into the target languages.
+Hence, an external definition is compound of the {\tt internal} clause
+followed by a type expression and tne {\tt external} clause followed
+by an ``external expression''. For instance:
+
+{\footnotesize
+\begin{lstlisting}[title=External value definitions]
+let int_max =
+  internal int -> int -> int
+  external
+  | caml -> {* Ml_builtins.bi__int_max *}
+  | coq -> {* coq_builtins.bi__int_max *}
+;;
+
+let ( || ) =
+  internal bool -> bool -> bool
+  external
+  | caml -> {* Ml_builtins.bi__or_b *}
+  | coq -> {* coq_builtins.bi__or_b *}
+;;
+
+let physical_equal =
+  internal 'a -> 'a -> bool
+  external
+  | caml -> {* Ml_builtins.bi__physical_equal *}
+  | coq -> {* coq_builtins.bi__syntactic_equal __var_a *}
+    (* Wrong, but don't know how to do better. *)
+;;
+\end{lstlisting}
+}
+
+Such a definition is simply compiled into a definition having the same
+name in the target language than in \focalize\ (except in case where
+stringification is required like in {\tt ||}) whose body is the
+verbatim copy of the external expression corresponding to the target
+language. In \ocaml, we do not need to make the type of the definition
+explicit. In \coq, we need to and also, as usual, need to handle the
+explicit polymorphism with the extra arguments of type {\tt Set} to
+represent the polymorphic type variables (like in
+{\tt physical\_equal}).
+
+For the above \focalize\ sample code, we then simply get the generated
+code:
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml,
+                   title=\ocaml\ code for external value definitions]
+let int_max =  Ml_builtins.bi__int_max ;;
+let _bar__bar_ =  Ml_builtins.bi__or_b ;;
+let physical_equal =  Ml_builtins.bi__physical_equal ;;
+\end{lstlisting}
+}
+and:
+{\footnotesize
+\begin{lstlisting}[language=MyCoq,
+                   title=\coq code for external value definitions]
+Let int_max : int__t -> int__t -> int__t :=  coq_builtins.bi__int_max.
+Let _bar__bar_ : bool__t -> bool__t -> bool__t := coq_builtins.bi__or_b.
+Let physical_equal (__var_a : Set) : __var_a -> __var_a -> bool__t :=
+  coq_builtins.bi__syntactic_equal __var_a .
+\end{lstlisting}
+}
+
+Hence, with this code generation model, since the identifier bound to
+an external definition receives, in the generated code, an effective
+definition, we do not need to replace each occurrence of this
+identifier of the \focalize\ source code by its related external
+expression in the generated source code. This makes the code
+generation simpler since when we ``see'' the identifier in the
+\focalize\ source code, we generate exactly the same identifier in the
+generated source code. Otherwise we should have reminded for each
+identifier whether it is bound to an external stuff to see by what to
+replace its occurrence. Too heavy, and may be could lead to incorrect
+syntactic forms in the generated source !
