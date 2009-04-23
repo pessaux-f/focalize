@@ -1,4 +1,4 @@
-% $Id: scoping.tex,v 1.2 2009-04-22 15:59:00 pessaux Exp $
+% $Id: scoping.tex,v 1.3 2009-04-23 16:49:56 pessaux Exp $
 The scoping process aims to link each identifier occurrence to its
 related definition according to the rules that drive the visibility of
 identifers. It avoids name confusion and ensure that each occurrence
@@ -141,8 +141,9 @@ The scoping environment of a species will be gradually extended as
 long as we process its components: we must first add the parameters of
 collection and entity in their order of apparition then import the
 bindings from the inheritance tree, and finally local bindings will be
-added while scoping the species' body (fields). Scoping must be done
-by searching in the environment in the following order:
+added while scoping the species' body (fields). When scoping involves
+searches in the environment, searches must be done in the following
+order:
 \begin{enumerate}
 \item Try to find the identifier in local environment.
 \item Check if it's a parameter of entity (``{\tt in}'') or collection
@@ -152,7 +153,7 @@ by searching in the environment in the following order:
 \item ``Else'' \ldots not found !
 \end{enumerate}
 So the order in which the identifiers are inserted into the
-environment used to scope the species must respect extentions in the
+environment used to scope the species must respect extensions in the
 reverse order in order to find the most recently added bindings first.
 
 Hence we first scope the species parameters. Once they are scoped, we
@@ -161,10 +162,63 @@ get an environment where they are bound to their scoping information.
 Using this new environment, we now scope the {\tt inherits} clause,
 i.e. the inheritance. In addition to the scoped inheritance
 expression, this will give us bake the names of the methods we
-inherits. This is especially usefull because we must add them into our
+inherits. This is especially useful because we must add them into our
 environment before scoping the methods defined in this
-species. Indeedn the bodies od these defined may make reference to
-identifiers corresponding to inherited methods.
+species. Indeed, the bodies of these defined methods may make
+reference to identifiers corresponding to inherited methods.
+
+Once these inherited methods are added to the current environment, we
+can scope the defined methods in this new environment. Each scoped
+method is added to the environment used to scope the remaining
+methods.
+
+Once all is scoped, we create the scoping information for the species
+itself and add it to our initial environment (not to the one where we
+gradually added parameters, methods etc, since they do not need to be
+visible outside the species). And finally, in the type bucket of this
+environment, we add the type corresponding the the species carrier.
+
+We then return the scoped species definition and the new environment
+where the species and it carrier are bound. This new environment is
+not a delta, it is a complete ''all-in-one'' environment suitable to
+scope the remaining phrases of the source file.
+
+\subsubsection{Scoping the species parameters}
+The species parameters (i.e. collection and entity parameters) are
+scoped in their apparition order, adding the scoping information of
+each one to scope the next ones. We have two cases of parameters.
+\begin{itemize}
+\item Entity parameter {\tt a in C(...)}: we must scope the collection
+  expression {\tt C(...)} the parameter {\tt a} is ``{\tt in}''. To
+  do so, we use the current scoping environment. Once this collection
+  expression is scoped, we must insert in the environment the name of
+  the parameter (here, {\tt A}. Since it is a {\bf value} (whose type
+  will be the carrier of the collection expression), we add it in the
+  values bucket of the environment.
+\item Collection parameter {\tt P is C(...)} we must scope the
+  collection expression {\tt C(...)} . This gives back the scoping
+  information (with methods list) of this expression. Because
+  collections and species are not first-class values, the environment
+  extension will not be done in the values bucket. Instead, we must
+  extend the environment with a ``locally defined'' collection having
+  the same methods than those coming from the collection expression
+  {\tt C(...)}. So from the obtained scoping information (with methods
+  list) of this expression, we create a fresh species scoping
+  information that we bind to the parameter name {\tt P} in the
+  environment. Then, because a species induces a type by its carrier,
+  we insert in the type bucket of the environment a type constructor
+  representing the carrier of the parameter (here a type {\tt P}).
+\end{itemize}
+The scoping of a parameter returns the extended environment and the
+scoped version of the list of parameters.
+
+
+\subsubsection{Scoping the inheritance clause}
+
+\subsubsection{Scoping the defined methods}
+
+
+
 
 \subsection{Scoping a collection definition}
 
