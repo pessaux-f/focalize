@@ -135,6 +135,30 @@ species Sum_set(A is Setoid, B is Setoid)
     ;
 
 
+  (** first construction is a function *)
+
+  theorem first_substitution_rule: all x y in A,
+    A!equal(x, y) -> !equal(!first(x), !first(y))
+    proof = 
+      <1>1 assume x in A, assume y in A,
+           assume H: A!equal(x, y),
+           prove !equal(!first(x), !first(y))
+           <2>1 prove A!equal(x, !first_term(!first(x)))
+                by property !first_reverses_term, A!equal_symmetric
+           <2>2 prove A!equal(y, !first_term(!first(y)))
+                by property !first_reverses_term, A!equal_symmetric
+           <2>3 prove !first_case(!first(x))
+                by property !first_has_case
+           <2>4 prove !first_case(!first(y))
+                by property !first_has_case
+           <2>5 prove A!equal(!first_term(!first(x)), !first_term(!first(y)))
+                by step <2>1, <2>2
+                   hypothesis H
+                   property A!equal_transitive, A!equal_symmetric
+           <2>f qed by step <2>3, <2>4, <2>5 definition of equal
+      <1>f conclude;
+
+
   (**
      A classical theorem from category theory says that there exists 
      an injection from A to A + B
@@ -180,6 +204,31 @@ species Sum_set(A is Setoid, B is Setoid)
       <1>f conclude
     ;
 
+
+  (** second construction is a function *)
+
+  theorem second_substitution_rule: all x y in B,
+    B!equal(x, y) -> !equal(!second(x), !second(y))
+    proof = 
+      <1>1 assume x in B, assume y in B,
+           assume H: B!equal(x, y),
+           prove !equal(!second(x), !second(y))
+           <2>1 prove B!equal(x, !second_term(!second(x)))
+                by property !second_reverses_term, B!equal_symmetric
+           <2>2 prove B!equal(y, !second_term(!second(y)))
+                by property !second_reverses_term, B!equal_symmetric
+           <2>3 prove !second_case(!second(x))
+                by property !second_has_case
+           <2>4 prove !second_case(!second(y))
+                by property !second_has_case
+           <2>5 prove B!equal(!second_term(!second(x)), !second_term(!second(y)))
+                by step <2>1, <2>2
+                   hypothesis H
+                   property B!equal_transitive, B!equal_symmetric
+           <2>f qed by step <2>3, <2>4, <2>5 
+                       property !case_complete, !case_exclusive
+                       definition of equal
+      <1>f conclude;
 
   (**
      A classical theorem from category theory says that there exists 
