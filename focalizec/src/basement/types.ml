@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.77 2009-03-25 15:57:59 pessaux Exp $ *)
+(* $Id: types.ml,v 1.78 2009-04-24 14:35:58 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -893,7 +893,7 @@ let (reset_deps_on_rep,
     creating cyclic types. This is used when unifying a variable with
     something else.
     By the way, since it performs a walk on the whole type's structure, we
-    take benefit of this to check if the unified type {ty] involved "Self",
+    take benefit of this to check if the unified type [ty] involved "Self",
     hence has a dependency on the carrier.
 
     {b Rem} : Non exported oustide this module.                              *)

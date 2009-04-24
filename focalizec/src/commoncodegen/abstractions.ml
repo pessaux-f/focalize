@@ -13,19 +13,31 @@
 (*                                                                     *)
 (***********************************************************************)
 
+(* $Id: abstractions.ml,v 1.71 2009-04-24 14:35:58 pessaux Exp $ *)
 
-(* $Id: abstractions.ml,v 1.70 2009-04-03 15:50:36 doligez Exp $ *)
+
+(* ************************************************************************* *)
+(** {b Desc} : This module performs abstraction computation over the species
+    parameters of a species. It computes the dependencies on species
+    parameters and creates a structure that sumarises all the abstractions
+    the methods of a species require. To have *all* the dependencies, it
+    asks to build the minimal coq typing environment and the visible
+    universe. It will use the fact that dependencies on methods on "Self"
+    for each method is already computed.
+    The output data-structure will be sent to the code generation pass.      *)
+(* ************************************************************************* *)
 
 
-(* ******************************************************************** *)
+
+(* ********************************************************************* *)
 (** {b Descr} : Describes if the argument passed to the function
     [compute_lambda_liftings_for_field] is the body of a "let", "logical
     let" or of a "property/theorem". This allows the function to process
     at once the case of the liftings computation for expressions,
     propositions and proofs.
 
-    {b Rem} : Exported outside this module.                             *)
-(* ******************************************************************** *)
+    {b Exported} : Yes.                                                  *)
+(* ********************************************************************* *)
 type field_body_kind =
   | FBK_expr of Parsetree.expr
   | FBK_logical_expr of Parsetree.logical_expr
@@ -78,7 +90,12 @@ let make_empty_param_deps species_parameters_names =
 
 
 
-(** {b Descr} : Applies a list of substitution on a [Parsetree.vname].
+(* ************************************************************************ *)
+(* Types.fname -> Parsetree.vname ->                                        *)
+(*   ((Types.fname * Types.collection_name) *                               *)
+(*    Types.substitution_by_replacement_collection_kind) list ->            *)
+(*     Parsetree.vname                                                      *)
+(** {b Descr} : Applies a list of substitutions on a [Parsetree.vname].
     This [Parsetree.vname] is expected to be the name of a formal collection
     parameter of a species from which we inherit.
     The aim is to replace each formal collection parameter of the inherited
@@ -94,6 +111,7 @@ let make_empty_param_deps species_parameters_names =
 
     {b Rem} : Not exported outside this module.
     Raises [Not_found] if the substitution replace a parameter by "Sefl".   *)
+(* ************************************************************************ *)
 let apply_substitutions_list_on_formal_param_vname pmodname pvname substs =
   (* First, convert the species parameter's name into a [string] to make
      comparison easier. *)
@@ -126,7 +144,28 @@ let apply_substitutions_list_on_formal_param_vname pmodname pvname substs =
 
 
 
-(** Must be called on a method about which we are sure is it inherited ! *)
+(* ************************************************************************* *)
+(* Env.from_history -> Parsetree.qualified_species                           *)
+(** {b Descr} : Find the species that is the most recent parent according to
+    the passed [from_history].
+    Attention, this function must be called on a method about which we are
+    sure is it inherited. If it is not the case, then assersion will fail.
+    This function is used by [remap_dependencies_on_params_for_field] in
+    order to recover from which species an inherited method comes to later
+    look at its dependencies on parameters and adjust the computed
+    abstractions for the parameters in the inheriting species according to
+    those computed in the inherited species.
+
+    {b Args} :
+      - [from_history] : The history structure in which to search.
+
+    {b Ret} :
+      - [Parsetree.qualified_species] : The full name (i.e. compilation
+        unit name and species name) of the species being the most recent
+        parent.
+
+    {b Exported} : No.                                                       *)
+(* ************************************************************************* *)
 let find_most_recent_parent from_history =
   match from_history.Env.fh_inherited_along with
    | [] -> assert false
@@ -135,7 +174,7 @@ let find_most_recent_parent from_history =
           inherited only by one inheritance step. *)
        from_history.Env.fh_initial_apparition
    | _ :: ((parent_mod, parent_spe), _, _) :: _ ->
-       (* We skip the first element of the list since it represent the species
+       (* We skip the first element of the list since it represents the species
           where the method arrived the most recently and we take the second
           element which is hence the most recent *parent*. *)
        (parent_mod, parent_spe)

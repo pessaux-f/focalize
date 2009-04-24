@@ -1,4 +1,4 @@
-% $Id: scoping.tex,v 1.3 2009-04-23 16:49:56 pessaux Exp $
+% $Id: scoping.tex,v 1.4 2009-04-24 14:35:58 pessaux Exp $
 The scoping process aims to link each identifier occurrence to its
 related definition according to the rules that drive the visibility of
 identifers. It avoids name confusion and ensure that each occurrence
@@ -132,7 +132,7 @@ imported identifiers will be known as possible definitions to use as
 rules.
 
 
-\subsection{Scoping a species definition}
+\subsection{Scoping a species definition ({\tt scope\_species\_def})}
 Before scoping a species, the first thing is to pass a modified
 context in which we record that we are inside this species (field
 {\tt current\_species} on the context.
@@ -149,7 +149,7 @@ order:
 \item Check if it's a parameter of entity (``{\tt in}'') or collection
   (``{\tt is}'').
 \item Try to find the identifier throughout the hierarchy.
-\item Try to find the identifier is a global identifier..
+\item Try to find if the identifier is a global identifier..
 \item ``Else'' \ldots not found !
 \end{enumerate}
 So the order in which the identifiers are inserted into the
@@ -183,7 +183,7 @@ where the species and it carrier are bound. This new environment is
 not a delta, it is a complete ''all-in-one'' environment suitable to
 scope the remaining phrases of the source file.
 
-\subsubsection{Scoping the species parameters}
+\subsubsection{Scoping the species parameters ({\tt scope\_species\_params\_types})}
 The species parameters (i.e. collection and entity parameters) are
 scoped in their apparition order, adding the scoping information of
 each one to scope the next ones. We have two cases of parameters.
@@ -197,7 +197,7 @@ each one to scope the next ones. We have two cases of parameters.
   values bucket of the environment.
 \item Collection parameter {\tt P is C(...)} we must scope the
   collection expression {\tt C(...)} . This gives back the scoping
-  information (with methods list) of this expression. Because
+  information (with methods names list) of this expression. Because
   collections and species are not first-class values, the environment
   extension will not be done in the values bucket. Instead, we must
   extend the environment with a ``locally defined'' collection having
@@ -213,11 +213,35 @@ The scoping of a parameter returns the extended environment and the
 scoped version of the list of parameters.
 
 
-\subsubsection{Scoping the inheritance clause}
+\subsubsection{Scoping the inheritance clause ({\tt scope\_inheritance})}
+Scoping the inheritance is done by scoping each collection expression
+in their order of apparition. Like we saw for species parameters
+scoping, scoping a collection expression returns the scoped expression
+and the list of the methods names this expression has.
+Hence, for each parent, we collect the obtained scoped methods. They
+will be later inserted in the environment to scope the remaining of
+the species. Note that we don't need to add the methods found of a
+parent to scope the next parent in the inheritance list. When all
+these collected will have to be inserted in the environment, we must
+take care to insert first those of the ``left-most'' parent in the
+{\tt inherits} clause, going on from left to right. This ensure
+searches in the environment will comply the inheritance resolution
+order of \focalize. During insertion in the environment, because these
+methods are inherited, they now are methods of ourselves, hence
+methodes of {\tt Self} and they must be inserted as
+{\tt SBI\_method\_of\_self} ! The change needed to say that one of
+these methods is a method of the ``current collection'''s name,
+i.e. toggling the flag to {\tt SBI\_method\_of\_coll} will be done
+during accesses in the environment (by {\tt find\_value}).
 
-\subsubsection{Scoping the defined methods}
+
+\subsubsection{Scoping the defined methods ({\tt scope\_species\_fields})}
+To scope all the defined methods of the species, we scope each field
+in its order of apparition, then add the obtained information about it
+in the environment used to scope the remaining methods.
 
 
+\subsubsection{Scoping one defined method ({\tt scope\_species\_field})}
 
 
 \subsection{Scoping a collection definition}

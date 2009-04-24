@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.128 2009-04-02 12:53:45 pessaux Exp $ *)
+(* $Id: env.ml,v 1.129 2009-04-24 14:35:58 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -54,7 +54,7 @@ exception Rebound_species of (Parsetree.vname * Location.t) ;;
     definitions really present in the current compilation unit and bindings
     introduced by a "open" directive.
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 type 'a binding_origin =
     (** The binding comes from the current compilation unit. *)
@@ -72,7 +72,7 @@ type 'a binding_origin =
     BO_opened binding if the [~allow_opened] flag is true.
     Otherwise, continue search until a BO_absolute binding is found.
 
-    {b Rem} : Not exported outside this module.                       *)
+    {b Exported} : No.                                                *)
 (* ****************************************************************** *)
 let env_list_assoc ~allow_opened searched list =
   let rec rec_assoc = function
@@ -143,7 +143,7 @@ let debug_env_list_assoc ~allow_opened searched list =
       - Values
       - Species (and collections)
 
-    {b Rem} : Exported abstract outside this module.                     *)
+    {b Exported} : Abstract.                                             *)
 (* ********************************************************************* *)
 type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
   constructors : (Parsetree.constructor_name * ('constrs binding_origin)) list;
@@ -168,7 +168,7 @@ type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
    Such an environment will be suitable to be dumped in a persistent
    datastructure on disk for the "modules" mechanism.
 
-   {b Rem} : Not exported outside this module.                             *)
+   {b Exported} : No.                                                      *)
 (* *********************************************************************** *)
 let env_from_only_absolute_bindings generic_env =
   let filter l =
@@ -196,10 +196,12 @@ let env_from_only_absolute_bindings generic_env =
       species Foo1 (A1 is Sp1) inherits Foo0 (A1) = let v = 2 end ;;
       species Foo2 (A2 is Sp1) inherits Foo1 (A2) = end ;;
       species Foo3 (A3 is Sp1, A4 is A3) inherits Foo2 (A4) = end ;;
+
     For method "v" in "Foo3" :
       [fh_initial_apparition] : Foo1
       [fh_inherited_along] : [(Foo3, Foo2(A4)); (Foo2, Foo1 (A2))]
-    {b Rem} : Exported outside this module.                            *)
+
+    {b Exported} : Yes.                                              *)
 (* ***************************************************************** *)
 type from_history = {
   (** The species where the method was defined or declared for the first time.
@@ -230,7 +232,7 @@ type from_history = {
 (** {b Descr} : Create an inheritance history by setting the initial
     apparition of a method.
 
-    {b Rem} : Exported outside this module.                            *)
+    {b Exported} : Yes.                                              *)
 (* ***************************************************************** *)
 let intitial_inheritance_history species =
   { fh_initial_apparition = species ;
@@ -245,24 +247,23 @@ let intitial_inheritance_history species =
 
 
 
-(* *********************************************************************** *)
+(* ********************************************************************** *)
 (** {b Descr} : This module contains the structure of scoping information
     used in scoping environments.
 
-    {b Rem} : This module is exported. Only the type of the environment is
-    abstracted to prevent savage manipulations.                    *)
-(* *********************************************************************** *)
+    {b Exported} : Yes. Only the type of the environment is abstracted to
+    prevent savage manipulations.                                         *)
+(* ********************************************************************** *)
 module ScopeInformation = struct
-  (* *********************************************************************** *)
-  (* type value_binding_info                                                 *)
-  (** {b Descr} : Tag each binding in the scopping environment in order to
-      know if the [ident] is currently bound to a global toplevel definition
-      inside a file, if it's a method found in the current species
+  (* ************************************************************************ *)
+  (** {b Descr} : Tags each value binding in the scopping environment in
+      order to know if the [ident] is currently bound to a global toplevel
+      definition inside a file, if it's a method found in the current species
       inheritance tree (including itself), if it's a method found in another
       species inheritance tree or finally if it's a locally bound identifier.
 
-      {b Rem} : Exported outside this module.                                *)
-  (* *********************************************************************** *)
+      {b Exported} : Yes.                                                     *)
+  (* ************************************************************************ *)
   type value_binding_info =
       (** The ident is at toplevel of a file (including the current file). *)
     | SBI_file of Types.fname
@@ -284,6 +285,13 @@ module ScopeInformation = struct
 
 
 
+  (* ************************************************************************ *)
+  (** {b Descr} : Tags each type binding in the scopping environment in order
+      to know if the [ident] is a type variable (or a builtin type) or a type
+      defined at toplevel in a compilation unit.
+
+      {b Exported} : Yes.                                                     *)
+  (* ************************************************************************ *)
   type type_binding_info =
       (** The type identifier is either a type variable name
           ('a for instance) or a builtin type (int for instance). *)
@@ -293,6 +301,13 @@ module ScopeInformation = struct
 
 
 
+  (* ****************************************************************** *)
+  (** {b Descr} : Flag defining the scope of a species, i.e. if it is a
+      species defined at toplevel or is a collection parameter of the
+      current species.
+
+      {b Exported} : Yes.                                               *)
+  (* ****************************************************************** *)
   type species_scope =
       (** The identifier is a specied name defined at toplevel in a file. *)
     | SPBI_file of Types.fname
@@ -302,13 +317,25 @@ module ScopeInformation = struct
     | SPBI_parameter
 
 
+  (* *********************************************************************** *)
+  (** {b Descr} : Flag describing if the species parameter is an entity or a
+      collection parameter.
 
+      {b Exported} : Yes.                                                    *)
+  (* *********************************************************************** *)
   type species_parameter_kind =
     | SPK_in       (** Parameter is an entity parameter ("in"). *)
     | SPK_is       (** Parameter is a collection parameter ("is"). *)
 
 
+  (* ********************************************************************** *)
+  (** {b Descr} : Tags each species binding in the scopping environment in
+      order to record the scoping information of the things contained in the
+      species. It especially record material related to scoping its
+      parameters, its methods and its own scope.
 
+      {b Exported} : Yes.                                                   *)
+  (* ********************************************************************** *)
   type species_binding_info = {
     (** The list of *ALL* the method owned, including those added by
         inheritance. Methods from the most recent ancestor are in head of the
@@ -332,12 +359,13 @@ module ScopeInformation = struct
   }
 
 
-  (* ************************************************************** *)
-  (** {b Descr} : Type abbreviation to shorten the structure of the
-      scoping environments.
 
-      {b Rem} : Not exported outside this module.                   *)
-  (* ************************************************************** *)
+  (* *********************************************************************** *)
+  (** {b Descr} : Type abbreviation to shorten the structure of the scoping
+      environments.
+
+      {b Exported} : No.                                                     *)
+  (* *********************************************************************** *)
   type env =
     (Types.fname, Types.fname, type_binding_info, value_binding_info,
      species_binding_info) generic_env
@@ -352,25 +380,31 @@ end
 
 
 
-(* *********************************************************************** *)
+(* ********************************************************************** *)
 (** {b Descr} : This module contains the structure of typing information
     used in typing environments.
 
-    {b Rem} : This module is exported. Only the type of the environment is
-    abstracted to prevent savage manipulations.                            *)
-(* *********************************************************************** *)
+    {b Exported} : Yes. Only the type of the environment is abstracted to
+    prevent savage manipulations.                                         *)
+(* ********************************************************************** *)
 module TypeInformation = struct
-  (* ************************************************************** *)
+  (* **************************************************************** *)
   (** {b Descr} : Records if a method has dependencies on the carrier
       representation "rep".
 
-      {b Rem} : Exported outside this module.                       *)
-  (* ************************************************************** *)
+      {b Exported} : Yes.                                             *)
+  (* **************************************************************** *)
   type dependency_on_rep = {
     dor_def : bool  ;  (** Flag for a def-dependency. *)
     dor_decl : bool }  (** Flag for a decl-dependency. *)
 
 
+  (* ******************************************************************** *)
+  (** {b Descr} : Describes the kind of a "let" definition, i.e. if it is
+      recursive and if it is a "regular" "let" or a "logical let".
+
+      {b Exported} : Yes.                                                 *)
+  (* ******************************************************************** *)
   type let_definition_flags = {
     ldf_recursive : Parsetree.rec_flag ; (** Tells if the  let-bound identifier
                                              is recursive or not. *)
@@ -379,6 +413,13 @@ module TypeInformation = struct
                                              definition. *)
     }
 
+
+  (* *********************************************************************** *)
+  (** {b Descr} : Type of information recorded in the typing environment for
+      a method being a "signature".
+
+      {b Exported} : Yes.                                                    *)
+  (* *********************************************************************** *)
   type sig_field_info =
     ((** Where the sig comes from (and inheritance history). *)
      from_history *
@@ -386,7 +427,12 @@ module TypeInformation = struct
      Types.type_scheme)         (** The sig's type scheme. *)
 
 
+  (* *********************************************************************** *)
+  (** {b Descr} : Type of information recorded in the typing environment for
+      a method being a "let" (either regular, or logical, or recursive).
 
+      {b Exported} : Yes.                                                    *)
+  (* *********************************************************************** *)
   type let_field_info =
     ((** Where the let-bound comes from (and inheritance history). *)
      from_history *
@@ -404,7 +450,12 @@ module TypeInformation = struct
                                  not). *)
 
 
+  (* *********************************************************************** *)
+  (** {b Descr} : Type of information recorded in the typing environment for
+      a method being a "theorem".
 
+      {b Exported} : Yes.                                                    *)
+  (* *********************************************************************** *)
   type theorem_field_info =
     ((** Where the theorem comes from (and inheritance history). *)
      from_history *
@@ -419,6 +470,12 @@ module TypeInformation = struct
 
 
 
+  (* *********************************************************************** *)
+  (** {b Descr} : Type of information recorded in the typing environment for
+      a method being a "property".
+
+      {b Exported} : Yes.                                                    *)
+  (* *********************************************************************** *)
   type property_field_info =
     ((** Where the property comes from (and inheritance history). *)
      from_history *
@@ -432,6 +489,13 @@ module TypeInformation = struct
 
 
 
+  (* *********************************************************************** *)
+  (** {b Descr} : Describes the kind of a species parameter. Can be either
+      an entity or a collection parameter. In each case, we record various
+      information to avoid computing them again.
+
+      {b Exported} : Yes.                                                    *)
+  (* *********************************************************************** *)
   type species_param =
     (** Entity parameter. *)
     | SPAR_in of
@@ -468,32 +532,32 @@ module TypeInformation = struct
 
 
   (* ************************************************************************ *)
-  (** {b Desc} : Describe the essence of a species field, i.e. if it's
-      a signature, a let-binding, let let-rec-binding, a theorem or
-      a property. Through this description the name, type, body and
-      provenance (and even more if needed to fully describe the field
-      according to its nature) of the field is made available.
+  (** {b Desc} : Describes the essence of a species field, i.e. if it's a
+      signature, a let-binding, let let-rec-binding, a theorem or a property.
+      Through this description the name, type, body and provenance (and even
+      more if needed to fully describe the field according to its nature) of
+      the field is made available.
 
-      {b Rem} : Exported outside this module.                                 *)
+      {b Exported} : Yes.                                                     *)
   (* ************************************************************************ *)
   and species_field =
-    | SF_sig of sig_field_info
-    | SF_let of let_field_info
+    | SF_sig of sig_field_info   (** Field is a "signature". *)
+    | SF_let of let_field_info   (** Field is a "let" bound definition. *)
     | SF_let_rec of let_field_info list   (** The list of information similar
                                               to what can be found for a
                                               [SF_let], but for each mutually
                                               recursive bound identifier. *)
-    | SF_theorem of theorem_field_info
-    | SF_property of property_field_info
+    | SF_theorem of theorem_field_info    (** Field is a theorem. *)
+    | SF_property of property_field_info  (** Field is a property. *)
 
 
 
   (* *********************************************************************** *)
-  (** {b Desc} : Describe the essence of a species or collection. This
-      description contains a flag telling if ti's a species or a collection,
+  (** {b Desc} : Describes the essence of a species or collection. This
+      description contains a flag telling if it's a species or a collection,
       the possible parameters of the species and a link to all its fields.
 
-      {b Rem} : Exported outside this module.                                *)
+      {b Exported} : Yes.                                                    *)
   (* *********************************************************************** *)
   type species_description = {
     spe_kind : Types.species_collection_kind ;  (** Whether the
@@ -512,14 +576,14 @@ module TypeInformation = struct
 
 
 
-  (* *********************************************************************** *)
+  (* ********************************************************************** *)
   (** {b Descr} : Because sum-type constructors are considered either with
       not parameter or with only ONE parameter (that can be a tuple), the
       arity of such a sum-type constructor is only given by the 2 following
       values.
 
-      {b Rem} : Exported outside this module.                                *)
-  (* *********************************************************************** *)
+      {b Exported} : Yes.                                                   *)
+  (* ********************************************************************** *)
   type constructor_arity =
     | CA_zero   (** Constructor has no argument. *)
     | CA_some   (** Constructor has argument(s). *)
@@ -540,7 +604,7 @@ module TypeInformation = struct
       For instance: [type u = Bar of int] will lead to the constructor
       [Bar : (int) -> u].
 
-      {b Rem} : Exported outside this module.                                 *)
+      {b Exported} : Yes.                                                     *)
   (* ************************************************************************ *)
   type constructor_description = {
     (** Arity : 0 or 1 (many = 1 type tuple), (1 = type, not a 1 tuple). *)
@@ -551,18 +615,30 @@ module TypeInformation = struct
 
 
 
-  (* ***************************************************************** *)
-  (** {b Descr} : Tells is a record field is "mutable" (i.e. can be
-      modified physically in place) or not.
+  (* *********************************************************************** *)
+  (** {b Descr} : Tells is a record field is "mutable" (i.e. can be modified
+      physically in place) or not.
+      This is not yet really used in FoCaLize since mutable field are not
+      available. All fields are non-mutable. It's just there in case for
+      later...
 
-      {b Rem} : Exported outside this module.
-      Not yet used in FoC. Just there in case... Currently all
-      record fields are non-mutable.                                   *)
-  (* ***************************************************************** *)
-  type field_mutability = FM_mutable | FM_immutable
+      {b Exported} : Yes.                                                    *)
+  (* *********************************************************************** *)
+  type field_mutability =
+     | FM_mutable      (** Field's content can be changed in place. *)
+     | FM_immutable    (** Field's content can't be changed in place. *)
 
 
 
+  (* ******************************************************************** *)
+  (** {b Descr} : Information bound to record field labels in the typing
+      environment. It descibes it mutability policy and its type scheme.
+      A record field is typed as a function taking a parameter whose type
+      is the type of the data stored in the field and returning a value
+      having the type of the record.
+
+      {b Exported} : Yes.                                                 *)
+  (* ******************************************************************** *)
   type label_description = {
     field_mut : field_mutability ;    (** Mutability for this field. *)
     (** Full type scheme for this field, i.e arg -> ty result. *)
@@ -570,7 +646,28 @@ module TypeInformation = struct
   }
 
 
+  (* ************************************************************************ *)
+  (** {b Descr} : Describes the kind of a type definition. We currently
+      support 4 kinds of type definitions: abstract, external, sum and
+      record.
+      Abstract types are either types whose value are fully hidden and that
+      may be manipulated via dedicated functions knowing the representation of
+      the values of these types. This may be builtin or external functions, but
+      this also can be the methods of a collection in which the carrier type is
+      abstracted. Type abbreviations (i.e. type definitions that do no lead to
+      new values but that are only a way to give a name to a combination of
+      existing types are also represented as "abstract".
+      External types are types provided by code writen in a foreign target
+      language. The description of how to map these types is contained in the
+      types definitions themselves.
+      Sum types (variant) are roughly like in OCaml, having their own defined
+      value (value constructors) that can possibly be parameterised.
+      Record types are roughly like in OCaml, having their own defined fields
+      referenced by labels. The only diference is that in FoCaLiZe, fields
+      are not mutable.
 
+      {b Exported} : Yes.                                                     *)
+  (* ************************************************************************ *)
   type type_kind =
     | TK_abstract       (** Abstract types and type abbreviations. *)
     | TK_external of    (** Abstract types externally defined. *)
@@ -595,6 +692,16 @@ module TypeInformation = struct
 
 
 
+  (* ************************************************************************ *)
+  (** {b Descr} : Information bound to a type name in the typing environment.
+      It records the kind of the type defined, the location of the definition,
+      the type scheme representing the internal type structure (in the
+      compiler) of values having this type, the list of its parameters (in
+      fact, the variables used inside the type scheme) and the number of
+      parameters it has.
+
+      {b Exported} : Yes.                                                     *)
+  (* ************************************************************************ *)
   type type_description = {
     type_loc : Location.t ;     (** The type definition's location. *)
     type_kind : type_kind ;     (** Kind of the type definition. *)
@@ -1766,21 +1873,21 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   and find_type_vname ~loc ~allow_opened vname (env : t) =
     try env_list_assoc ~allow_opened vname env.types with
     | Not_found ->
-	(* Since when a species is not complete, we don't insert its carrier
-	   as a type constructor, tryign to use a non-closed species name as
-	   type will lead to an "Unbound type". This message is a bit unclear
-	   for the user who will however see his species and won't think that
-	   it's because it is not closed that he is not allowed to use it's
-	   carrier.
-	   So, to generate a clearer errot message, we try to search a species
-	   with this constructor name. If we don't find any, then we leave the
-	   initial error message. If we find some, we raise an error telling
-	   that the species whose carrier is used as type is not closed, hence
-	   this is forbiden. *)
-	(try ignore (find_species_vname ~loc ~allow_opened vname env) with
-	| _ ->	raise (Unbound_type (vname, loc))) ;
-	(* If we found a species with this name, issue the better message. *)
-	raise (Unbound_closed_species (vname, loc))
+        (* Since when a species is not complete, we don't insert its carrier
+           as a type constructor, tryign to use a non-closed species name as
+           type will lead to an "Unbound type". This message is a bit unclear
+           for the user who will however see his species and won't think that
+           it's because it is not closed that he is not allowed to use it's
+           carrier.
+           So, to generate a clearer errot message, we try to search a species
+           with this constructor name. If we don't find any, then we leave the
+           initial error message. If we find some, we raise an error telling
+           that the species whose carrier is used as type is not closed, hence
+           this is forbiden. *)
+        (try ignore (find_species_vname ~loc ~allow_opened vname env) with
+        | _ ->  raise (Unbound_type (vname, loc))) ;
+        (* If we found a species with this name, issue the better message. *)
+        raise (Unbound_closed_species (vname, loc))
 end
 ;;
 

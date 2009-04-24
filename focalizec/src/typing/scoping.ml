@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.79 2009-04-02 15:10:54 weis Exp $ *)
+(* $Id: scoping.ml,v 1.80 2009-04-24 14:35:59 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -61,7 +61,8 @@
 (* *********************************************************************** *)
 exception Non_logical_let_cant_define_logical_expr of
   (Parsetree.vname *     (** The guilty bound name. *)
-   Location.t)           (** The location of the logical_expr bound to the name. *)
+   Location.t)           (** The location of the logical_expr bound to the
+                             name. *)
 ;;
 
 
@@ -139,6 +140,13 @@ exception Invalid_external_binding_identifier of (Location.t * Parsetree.vname)
 
 
 
+(* ********************************************************************** *)
+(** {b Descr} : Raised when an exteral sum type or record type definition
+    doesn't introduce the same number of sum type constructors or label
+    names than those found in the "and" clauses found for this definition.
+
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
 exception Invalid_external_binding_number of Location.t ;;
 
 
@@ -338,7 +346,7 @@ let ensure_expr_ident_allowed_qualified ctx expr_ident =
    contained in an [ident] and the value scoping information found for this
    [ident].
    Basically, this function dissecates the scoping information and
-   differentiate the case of "method" : of Self or of another collection.
+   differentiate the case of method of "Self" or of another collection.
 
    {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************* *)
@@ -402,7 +410,7 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
      | Parsetree.TE_prop -> accu_env
      | Parsetree.TE_paren inner -> rec_extend_texpr inner accu_env
 
-  (* *************************************************** *)
+  (* *********************************************************** *)
   (* The local recursive function operating on a [logical_expr]. *)
   and rec_extend_logical_expr pexpr accu_env =
     match pexpr.Parsetree.ast_desc with
@@ -724,14 +732,30 @@ let rec scope_rep_type_def ctx env rep_type_def =
 
 
 
-(* ******************************************************************** *)
-(** {b Descr} : Ensure that the sum type constructors and/or the record
+(* ********************************************************************* *)
+(* type_def_body_loc:Location.t -> Parsetree.external_bindings_desc ->   *)
+(*   Parsetree.vname list -> unit                                        *)
+(** {b Descr} : Ensures that the sum type constructors and/or the record
     type field names introduced by the external bindings of a
     [external_type_def_body] exactly correspond to those induced by the
     internal representation of this [external_type_def_body].
 
-    {b Rem} : Not exported outside this module.                         *)
-(* ******************************************************************** *)
+    {b Args} :
+      - [~type_def_body_loc] : Location of the source code corresponding to
+        the type definition's body. It will be used in case of error to
+        point the user to the related location.
+
+      - [external_bindings] : The list of external bindings of the type
+        definition we are verifying.
+
+      - [bound_names] : The names of field labels or sum value constructors
+        induced by the type definition we are verifying.
+
+    {b Ret}:
+      - [unit]
+
+    {b Rem} : Not exported outside this module.                          *)
+(* ********************************************************************* *)
 let rec verify_external_binding ~type_def_body_loc external_bindings
     bound_names =
   match external_bindings with
@@ -763,6 +787,35 @@ let rec verify_external_binding ~type_def_body_loc external_bindings
 
 
 
+(* ************************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Env.ScopingEnv.t ->                 *)
+(*   Parsetree.external_type_def_body_desc Parsetree.ast ->                   *)
+(*     (Parsetree.external_type_def_body * Env.ScopingEnv.t)                  *)
+(* {b Descr}: Scopes an external type definition's body.
+   This function takes 2 environments, the first one to scope, the second one
+   being the environment where we will really add the bindings finally induced
+   by the type definition. See comment in [scope_regular_type_def_body] for
+   more details.
+
+   {b Args} :
+     - [ctx] : Current scoping context.
+
+     - [env_with_params] : Scoping environment where the type variables bound
+       by the type constructor must be already inserted.
+
+     - [env] : The scoping environment where to add the final bindings induced
+       by the type definition.
+
+     - [tdef_body] : Type definition's body to scope.
+
+   {b Ret}:
+     - [Parsetree.external_type_def_body] : The scoped type definition's body.
+
+     - [Env.ScopingEnv.t] : The new environment where bindings have been
+       added.
+
+   {b Rem} : Not exported outside this module.                                *)
+(* ************************************************************************** *)
 let scope_external_type_def_body ctx env_with_params env tdef_body =
   let tdef_body_desc = tdef_body.Parsetree.ast_desc in
   (* First scope the internal representation of the external type definition. *)
@@ -770,6 +823,9 @@ let scope_external_type_def_body ctx env_with_params env tdef_body =
     (match tdef_body_desc.Parsetree.etdb_internal with
      | None -> (None, env, [])
      | Some internal_repr ->
+         (* Get the scoped repr, the extended environment and the list of
+            field names or sum value constructors induced by the body of the
+            definition. *)
          let (scoped_internal_repr, env', names) =
            scope_regular_type_def_body ctx env_with_params env internal_repr in
          ((Some scoped_internal_repr), env', names)) in
@@ -780,7 +836,7 @@ let scope_external_type_def_body ctx env_with_params env tdef_body =
      by the internal representation of the type definition. *)
   verify_external_binding
     ~type_def_body_loc: tdef_body.Parsetree.ast_loc
-    tdef_body_desc.Parsetree.etdb_bindings.Parsetree.ast_desc bound_names;
+    tdef_body_desc.Parsetree.etdb_bindings.Parsetree.ast_desc bound_names ;
   let scoped_tdef_body_desc = {
     Parsetree.etdb_internal = etdb_internal';
     Parsetree.etdb_external = tdef_body_desc.Parsetree.etdb_external;
@@ -2193,7 +2249,7 @@ let scope_species_params_types ctx env params =
       2) check if it's a parameter of entity ("in") or
          collection ("is")
       4) try to find the ident throughout the hierarchy
-      5) try to find the ident is a global identifier
+      5) try to find if the ident is a global identifier
              else) not found
     So the order in which the idents are inserted into the environment used
     to scope the species must respect extentions in the reverse order in

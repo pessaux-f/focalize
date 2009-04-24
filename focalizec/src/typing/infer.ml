@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.176 2009-04-02 15:10:54 weis Exp $ *)
+(* $Id: infer.ml,v 1.177 2009-04-24 14:35:58 pessaux Exp $ *)
 
 
 
@@ -3409,7 +3409,7 @@ let order_fields_according_to order fields =
 (** {b Descr} : Implements the "fusion" algorithm (c.f [fields_fusion])
     in the particular case of fusionning 1 field Sig and 1 field Let_rec.
 
-    {Args}:
+    {b Args}:
       - [loc] : Location of the whole hosting species expression.
 
     {b Rem} : Not exported outside this module.                           *)
@@ -3644,7 +3644,7 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
     these 2 original fields (implementing the late binding feature by the
     way).
 
-    {Args}:
+    {b Args}:
       - [loc] : Location of the whole hosting species expression.
 
     {b Rem} : Not exported outside this module.                              *)
@@ -3967,7 +3967,7 @@ let non_conflicting_fields_p f1 f2 =
     must not be performed ! That's like if we did as if there was no
     erasing to do.
 
-    {Args}:
+    {b Args}:
       - [loc] : Location of the whole hosting species expression.
 
     {b Rem}: Not exported outside this module.                        *)
