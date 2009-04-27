@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.78 2009-04-24 14:35:58 pessaux Exp $ *)
+(* $Id: types.ml,v 1.79 2009-04-27 15:26:25 pessaux Exp $ *)
 
 
 (* **************************************************************** *)
@@ -66,7 +66,7 @@ let generic_level = 100000000 ;;
 (* ************************************************* *)
 type type_simple =
   | ST_var of type_variable                   (** Type variable. *)
-  | ST_arrow of (type_simple * type_simple)   (** Functionnal type. *)
+  | ST_arrow of (type_simple * type_simple)   (** Functional type. *)
   | ST_tuple of type_simple list              (** Tuple type. *)
   | ST_sum_arguments of type_simple list      (** Type of sum type value
                                                   constructor's arguments. To
@@ -78,10 +78,10 @@ type type_simple =
           a [ST_construct] whose name is the name of the record (or sum)
           type. *)
       (type_name * type_simple list)
-  | ST_self_rep
-    (** Carrier type of the currently analysed species. *)
-  | ST_species_rep of (fname * collection_name)
-    (** Carrier type of a collection hosted in the specified module. *)
+  | ST_self_rep     (** Carrier type of the currently analysed species. *)
+  | ST_species_rep of
+      (** Carrier type of a collection hosted in the specified module. *)
+      (fname * collection_name)
 
 
 

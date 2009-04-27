@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.52 2009-04-02 15:10:54 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.53 2009-04-27 15:26:25 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -62,11 +62,23 @@ and doc_elem = {
 
 (** {6 Type information provision in the AST} *)
 
+(** Tag telling the kind of type-checking information is available in the AST
+    node. Because we want to keep the same AST structure all along the
+    compilation process, since initially types are not infered, and then, since
+    once infered the type information can be either really a type, or a type
+    scheme, or non relevant, we must be able to have several way to represent
+    the type information of an AST node. *)
 type ast_node_type_information =
-   | ANTI_non_relevant
-   | ANTI_none
-   | ANTI_type of Types.type_simple
-   | ANTI_scheme of Types.type_scheme
+   | ANTI_non_relevant   (** The node has no meaningful type information.
+			     However, it was processed by the type-checker. *)
+   | ANTI_none      (** The node was not yet processed by the type-checker.
+		        Clearly, after the type-checking pass, no AST node
+			should remain with this tag in the [ast_type] field of
+			the node ! *)
+   | ANTI_type of Types.type_simple  (** The type information is a type. Mostly
+					 used to label expressions. *)
+   | ANTI_scheme of Types.type_scheme (** The type information is a type scheme.
+					  Mostly used to label definitions. *)
 ;;
 
 (** {6 The polymorphic AST data structure} *)

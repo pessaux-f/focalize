@@ -1,0 +1,326 @@
+% $Id: typing.tex,v 1.1 2009-04-27 15:26:25 pessaux Exp $
+
+The type-checking pass performs in fact several important tasks. It
+obviously infer the type of each expression and construct, but it also
+performs inheritance resolution, compute dependencies on methods of
+{\tt Self} (def and decl-dependencies), ensure that the species are
+well-formed and sort the methods in order they are properly ordered.
+Once the type-checking pass is ended, a processed species gets in
+normal form, i.e. with all its methods present once, inherited and
+defined ones having been consistently put together.
+
+This especially means that at each inheritance step, any species
+issued by the type-checker has all its methods: the inheritance
+disappears from the species structure. Obviously, the still have means
+to know about the inheritance history somewhere, but all the methods,
+inherited, defined, declared are always all together in a species in
+normal form.
+
+In other words, considering only the bunch of methods a species has,
+there is no difference between a species having them via inheritance
+and a species having them in its own current body with no
+inheritance.
+
+This point is especially important since it allows to inductively be
+sure that if one inherits of a species, then in just one shot we know
+which methods we have inherited: there is no need to walk again along
+all the inheritance steps. Then, we can says that we inductively build
+the normal form of species all along the inheritance tree. This point
+allows faster searches and prevent from having information
+disseminated in several place which would be more difficult to
+maintain.
+
+In fact, the scoping pass already used a similar way to proceed,
+keeping for each species the list of all the methods it had, either in
+its own body or by arbitrary inheritance.
+
+\medskip
+We will now examine various points of this typing pass.
+
+
+
+
+\subsection{Type inference}
+\subsubsection{Where to record type information in the AST ?}
+Type inference is the process of guessing the type of each expression,
+each definition of the source code. In fact, in \focalize, types are
+partly inferred, partly given by the programmer. Signatures are a way
+to make types explicit by giving annotations. However, at each node of
+the AST, types must be infer-ed to finally label the node. In effect,
+the first output of the type-checking pass it a ``typed AST'',
+i.e. the initial AST with each node now having its type recorded in
+the node itself.
+
+As defined in the source file {\tt basement/parsetree.mli}, an AST
+node is a generic data-structure containing a specific description:
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml, title=Generic AST node]
+type 'a ast = {
+   (** The location in the source of the AST node. *)
+   ast_loc : Location.t;
+   (** The description of the node. *)
+   ast_desc : 'a;
+   (** The support for documentation. *)
+   ast_doc : documentation;
+   (** The type of the node. *)
+   mutable ast_type : ast_node_type_information;
+}
+\end{lstlisting}
+}
+Hence, a node containing an expression (hence of type
+{\tt Parsetree.expr}) will be built by something like:
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml, title=An ``expression'' AST node]
+type expr_desc =
+  | E_self
+  | E_const of constant
+  | E_fun of vname list * expr
+  | ...
+
+type expr = expr_desc ast
+\end{lstlisting}
+}
+
+In the generic data-structure of the node, the field
+{\tt ast\_type} is used to record the type inferred for this
+node. Since we want to keep the same AST structure all along the
+compilation process, we use a mutable field for the type because
+initially, after lexing/parsing and scoping, the type is not yet
+known. So, the type-checking pass will modify the value contained in
+this field for each node of the AST.
+
+According to the source file {\tt basement/parsetree.mli}, values for
+this field can be:
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml, title=An ``expression'' AST node]
+type ast_node_type_information =
+   | ANTI_non_relevant   (** The node has no meaningful type information.
+			     However, it was processed by the type-checker. *)
+   | ANTI_none      (** The node was not yet processed by the type-checker.
+		        Clearly, after the type-checking pass, no AST node
+			should remain with this tag in the [ast_type] field of
+			the node ! *)
+   | ANTI_type of Types.type_simple  (** The type information is a type. Mostly
+					 used to label expressions. *)
+   | ANTI_scheme of Types.type_scheme (** The type information is a type scheme.
+					  Mostly used to label definitions. *)
+\end{lstlisting}
+}
+
+Before type-checking is done, all the node of the AST have their
+{\tt ast\_type} field worthing {\tt ANTI\_none}. Once the
+type-checking pass is done, no AST node should remain with this
+tag. If some do, then is must be considered as a bug (node forgotten
+during processing) of the compiler. At least, when a node does not
+require a type information (for instance, the AST node of a {\tt open}
+directive), it must however be traversed by the type-checker and must
+be updated with the {\tt ANTI\_non\_relevant} value.
+
+
+
+\subsubsection{Types and type schemes}
+Like in regular ML-like type-checkers, expressions are assigned
+``types'' although definitions are assigned ``type schemes''. The
+difference is due to the ability for definitions to be polymorphic and
+to be instantiated differently at each usage occurrence. In effect, an
+expression exists in only one point. So it has one {\bf type}, that's
+all. A definition leads to a ``template'' of types, where polymorphic
+type variables car be instantiated as wished each time the identifier
+bound by the definition is used. For this reason, a definition is
+bound to a ``model'' of types, a ``family'' of type, that is usually
+called a {\bf type scheme}.
+
+Then a type scheme is in fact a list of polymorphic type variables and
+a body that is a type expression. For instance, the ML-like type scheme
+(possibly bound to a {\tt List.map} function)
+{\tt ('a -> 'b) -> 'a list -> 'b list} will be represented by the list
+of it's 2 type variables {\tt 'a} and {\tt 'b} and its body that is
+the expression {\tt ('a -> 'b) -> 'a list -> 'b list}. In fact, in a
+type scheme all the polymorphic type variables are {\bf implicitly
+quantified universally}. The ``implicitly'' is the reason why it is
+so difficult for the programmer to really see the difference between a
+type and a type scheme. For the above type scheme, we should be more
+explicit and better write:
+
+$\forall$ {\tt 'a, 'b . ('a -> 'b) -> 'a list -> 'b\ list}
+
+If we now have a look at the following expression:
+{\tt List.map (fun x -> x + 1)}, then the expression (i.e. the
+identifier node) {\tt List.map} will have the {\bf type}
+{\tt ('t -> 'u) -> 't list -> 'u list} (in which we intentionally
+changed the names of the types variables to show that they are {\bf not
+the same} that those of the type scheme). This type expression
+contains 2 variables {\tt 't} and {\tt 'u} that will be unified during
+the type-checking of the whole application expression (unified with
+{\tt int} in the current example).
+
+
+
+\subsubsection{Working ``in place'' for substitutions}
+The type-checking algorithm of ML-like languages is often stated using
+the notion of MGU and using substitutions. In \focalize, the effective
+inference algorithm uses techniques more efficient in practice than
+regular substitutions to manually apply and combine on the type
+terms. Instead, we work ``in place'', by taking benefits of sharing
+between type sub-terms to simulate the substitutions by direct
+physical modifications inside the terms.
+
+\medskip
+The full description of this technique is outside the scope of the
+present document, but a clear and efficient explanation can be found
+in ``Le langage Caml'' written by Pierre Weis and Xavier Leroy.
+
+\medskip
+The idea is to represent the types by terms that can be physically
+shared, with type variables that can be directly assign a
+value. Hence, as described in the source file {\tt basement/type.ml},
+our type algebra is:
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml, title=An ``expression'' AST node]
+type type_simple =
+  | ST_var of type_variable                   (** Type variable. *)
+  | ST_arrow of (type_simple * type_simple)   (** Functional type. *)
+  | ST_tuple of type_simple list              (** Tuple type. *)
+  | ST_sum_arguments of type_simple list      (** Type of sum type value
+                                                  constructor's arguments. To
+                                                  prevent them from being
+                                                  confused with tuples. *)
+  | ST_construct of
+      (** Type constructor, possibly with arguments. Encompass the types
+          related to records and sums. Any value of these types are typed as
+          a [ST_construct] whose name is the name of the record (or sum)
+          type. *)
+      (type_name * type_simple list)
+  | ST_self_rep     (** Carrier type of the currently analysed species. *)
+  | ST_species_rep of
+      (** Carrier type of a collection hosted in the specified module. *)
+      (fname * collection_name)
+
+
+(** Variable of type. Must be repr'ed. *)
+and type_variable = {
+  (** Binding level of the type. *)
+  mutable tv_level : int ;
+  (** Value of the type variable. *)
+  mutable tv_value : type_variable_value
+}
+
+
+(** Value of a type link (generalization principle of type variable's value. *)
+and type_variable_value =
+  | TVV_unknown
+  | TVV_known of type_simple
+\end{lstlisting}
+}
+The algebra describes the built-in type constructors and more
+interestingly for our explanation, the {\bf type variables}. We can
+see that in the type algebra, all the variables look pretty
+structurally the same: the constructor {\tt ST\_var} and a
+{\tt type\_variable} containing a few information. Hence, for instance
+2 variables whose value are unknown will look exactly the same. To
+make the difference, we must consider physical equality. Hence, if 2
+variables are physically equal, ``they are {\bf the} same''
+variable(s?), otherwise they are really different. The aim of this
+mechanism is to share the same physical data to represent all the
+occurrences of a variable in a term, so that when we want to assign it
+a value, we just need to modify it in place and all the shared
+occurrences will be updated for free.
+
+A type variable is initially an unknown of the unification equation
+induced by the type-checking process. Hence it starts with its field
+{\tt tv\_value} worthing {\tt TVV\_unknown}. If during unification, a
+variable needs to be assigned a value (i.e. a constraint was found on
+this variable), then its {\tt tv\_value} that is mutable will be
+assigned {\tt TVV\_known} ``of something''. This ``something'' is
+itself a type and this allows indeed to instantiate a type variable by
+a type expression.
+
+Obviously, this mechanism to represent instantiations will create
+``strings'' of links between variables and their effective value. To
+be sure that the value of a variable is know ``equal to something'' or
+really unknown, we must use a mechanism that returns the canonical
+representation of a type. For instance, let's imagine that in our
+inference problem, we arrived to have 4 variables $\alpha$, $\beta$,
+$\gamma$ and $\delta$, with $\alpha = \beta$, $\beta = {\tt int}$,
+$\delta = \gamma$ and $\gamma = \beta$. Hence, we have the following
+picture:
+
+\noindent
+\begin{math}
+\begin{array}{ccccc}
+\alpha & \rightarrow & \beta & \rightarrow & {\tt int} \\
+       &             & \uparrow & & \\
+\delta & \rightarrow & \gamma & &
+\end{array}
+\end{math}
+
+\noindent representing the system: where
+{\footnotesize\lstinline!'a = ST_var (TVV_known (...))!} where
+{\footnotesize\lstinline!...!} represents {\tt 'b} and has the
+structure
+{\footnotesize\lstinline!ST_var (TVV_known (ST_construct (``int'', [])))!}.
+We have the same kind of thing for $\delta$ and $\gamma$, with
+$\gamma$ worthing
+{\footnotesize\lstinline!TVV_known (...)!} with
+{\footnotesize\lstinline!...!} representing the structure of $\beta$.
+In fact, despite all the variables we see above, all are equal and are
+instantiated by {\tt int}. This means than must not trust the first
+value constructor seen for a type to know what it is equal to. One
+must ``follow'' the links.
+
+Moreover, to avoid the loss of efficiency induced by walking each
+time along these ``strings'' of links, the operation of getting the
+canonical representation of a type will use the ``path compression''
+operation in order to suppress indirections a soon as they are
+encountered a first time.
+
+The operation returning the canonical representation is the guardian
+of the correct structure of the types. {\bf Any operation working /
+relying / walking on the type structure must call this operation to be
+sure that the structural view of the type is has is really the
+canonical view of the type}. This operation called {\tt repr} is
+located in the {\tt basement/types.ml} source file of the
+compiler. The presence of such a strong invariant is the reason why
+the types are exported as {\bf abstract}. This ensures that outside
+the module manipulating the type algebra, nobody will forget to get
+the canonical representation of a type.
+
+
+\subsubsection{Unification}
+Based on the representation of our types, since the unification tends
+to return a substitution to apply on the 2 unified types in order to
+make them equal, instead of getting this substitution to later apply
+it to each type (and combine this substitution with the other
+substitutions the types may be subject to), we will directly make the
+type terms equal by instantiating their type variables. The
+``instanciation'' is then made in place, by changing in place the
+mutable field {\tt tv\_value} of the unknown variables from
+{\tt TVV\_unknown} to {\tt TVV\_known} ``of'' the type required to
+have equality.
+
+This is especially fast since all the occurrences of a variable share
+the same physical location. Hence, changing the value of the field
+{\tt tv\_value} at this location is equivalent to simultaneously
+instantiate all the occurrences of this variable (past and future) in
+type terms.
+
+
+\subsubsection{Polymorphism}
+Binding level, specialize et generalize.
+
+
+
+
+
+
+
+
+
+Parler du hack de Self\_manifest.
+
+\subsection{Environments structures}
+\subsection{Inheritance resolution}
+\subsection{Dependency on Self's methods calculus}
+Parler de comment on détecte les dépendances sur Self.
+
+\subsection{Normal form}
