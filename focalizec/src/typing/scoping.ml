@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.80 2009-04-24 14:35:59 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.81 2009-04-27 09:35:25 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -57,7 +57,7 @@
     of the form [Pr_expr], then we remove this constructor and turn the
     binding_body into an expression body.
 
-   {b Rem} : Exported outside this module.                                 *)
+   {b Exported} : Yes.                                                     *)
 (* *********************************************************************** *)
 exception Non_logical_let_cant_define_logical_expr of
   (Parsetree.vname *     (** The guilty bound name. *)
@@ -72,8 +72,7 @@ exception Non_logical_let_cant_define_logical_expr of
     [open] FoCaL directive) or directly invoked with the #-notation without
     having be "use"-d (i.e. with the [use] FoCaL directive) before.
 
-    {b Rem} : Exported outside this module.
-              Not yet implemented for the #-se notation indeed !            *)
+    {b Exported} : Yes.                                                     *)
 (* ************************************************************************ *)
 exception Module_not_specified_as_used of
   (Location.t *  (** The location where the illegally qualified identifier
@@ -88,7 +87,7 @@ exception Module_not_specified_as_used of
     used in a [species_expr] that is a parameter of the current defined
     species.
 
-    {b Rem} : Exported outside this module.                                *)
+    {b Exported} : Yes.                                                    *)
 (* *********************************************************************** *)
 exception Self_cant_parameterize_itself of Location.t ;;
 
@@ -103,7 +102,7 @@ exception Self_cant_parameterize_itself of Location.t ;;
     collection names being capitalized, they must be parsed as sum types
     constructors with no argument.
 
-    {b Rem} : Exported outside this module.                               *)
+    {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
 exception Is_parameter_only_coll_ident of Location.t ;;
 
@@ -111,10 +110,10 @@ exception Is_parameter_only_coll_ident of Location.t ;;
 
 (* ********************************************************************** *)
 (** {b Descr} : Exception raised when a species application expression do
-      not contain the right number of effective arguments according to
-      the number of parameter the applied species has in its definition.
+    not contain the right number of effective arguments according to
+    the number of parameter the applied species has in its definition.
 
-    {b Rem} : Exported outside this module.                               *)
+    {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
 exception Parametrized_species_wrong_arity of
   ((** The location of the faulty species application expression. *)
@@ -133,20 +132,22 @@ exception Parametrized_species_wrong_arity of
     styles of idents are the only legal. Capitalized ones are sum type
     constructors. Lowercase ones are record type field names.
 
-    {b Rem} : Exported outside this module.                              *)
+    {b Exported} : Yes.                                                  *)
 (* ********************************************************************* *)
-exception Invalid_external_binding_identifier of (Location.t * Parsetree.vname)
+exception Invalid_external_binding_identifier of
+  (Location.t *
+   Parsetree.vname)  (** The faulty identifier's name. *)
 ;;
 
 
 
-(* ********************************************************************** *)
+(* *********************************************************************** *)
 (** {b Descr} : Raised when an exteral sum type or record type definition
     doesn't introduce the same number of sum type constructors or label
     names than those found in the "and" clauses found for this definition.
 
-    {b Rem} : Exported outside this module.                               *)
-(* ********************************************************************** *)
+    {b Exported} : Yes.                                                    *)
+(* *********************************************************************** *)
 exception Invalid_external_binding_number of Location.t ;;
 
 
@@ -155,7 +156,7 @@ exception Invalid_external_binding_number of Location.t ;;
 (** {b Descr} : Exception raised when a termination proof mentions a
     structural decreasing ident that is not an argument of the function.
 
-    {b Rem} : Exported outside this module.                              *)
+    {b Exported} :  Yes.                                                 *)
 (* ********************************************************************* *)
 exception Structural_termination_only_on_fun_arg of
   (Location.t * Parsetree.vname)
@@ -168,7 +169,7 @@ exception Structural_termination_only_on_fun_arg of
     profile mentionning a method identifier that is not bound to one of
     the current species methods.
 
-    {b Rem} : Exported outside this module.                              *)
+    {b Exported} :Yes.                                                   *)
 (* ********************************************************************* *)
 exception Termination_proof_delayed_only_on_self_meth of
   (Location.t *  Parsetree.vname)
@@ -183,7 +184,7 @@ exception Termination_proof_delayed_only_on_self_meth of
     Since this is not clear of how to associate, we prefer to asks the
     user to explicitely add parentheses.
 
-    {b Rem} : Exported outside this module.                             *)
+    {b Exported} : Yes.                                                 *)
 (* ******************************************************************** *)
 exception Ambiguous_logical_expression_or of
   (int *  (** 0 means left argument must be parenthesed, 1 means right. *)
@@ -199,7 +200,7 @@ exception Ambiguous_logical_expression_or of
     Since this is not clear of how to associate, we prefer to asks the
     user to explicitely add parentheses.
 
-    {b Rem} : Exported outside this module.                             *)
+    {b Exported} : Yes.                                                 *)
 (* ******************************************************************** *)
 exception Ambiguous_logical_expression_and of
   (int *  (** 0 means left argument must be parenthesed, 1 means right. *)
@@ -215,7 +216,7 @@ exception Ambiguous_logical_expression_and of
     time as arguments of each recursive call.
     This datastructure serves especially this purpose.
 
-    {b Rem} : Not exported outside this module.                           *)
+    {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
 type scoping_context = {
   (** The name of the currently analysed compilation unit. *)
@@ -227,6 +228,24 @@ type scoping_context = {
   used_modules : Types.fname list
 } ;;
 
+
+
+
+(* ********************************************************************** *)
+(* Parsetree.qualified_vname -> Parsetree.vname                           *)
+(** {b Descr} : Helper to extract the [vname] from a [qualified_vname].
+    This basically is forgetting the compilation unit specification if
+    there is one in the [qualified_vname].
+
+    {b Args} :
+      - unnammed : The [qualified_vname] in which to find the inner
+        [vname].
+
+    {b Ret} :
+      - Parsetree.vname : The [vname] contained in the [qualified_vname].
+
+    {b Exported} : No.                                                    *)
+(* ********************************************************************** *)
 let vname_of_qvname = function
   | Parsetree.Vname vname | Parsetree.Qualified (_, vname) -> vname
 ;;
@@ -240,7 +259,13 @@ let vname_of_qvname = function
     For example, "bar", "foo#bar" or "foo!bar" will lead to the [vname]
     "bar".
 
-    {b Rem} : Not exported outside this module.                            *)
+    {b Args} :
+      - [ident] : The identifier in which to find the inner [vname].
+
+    {b Ret} :
+      - Parsetree.vname : The [vname] contained in the identifier.
+
+    {b Exported} : No.                                                     *)
 (* *********************************************************************** *)
 let unqualified_vname_of_ident ident =
   match ident.Parsetree.ast_desc with
@@ -250,15 +275,21 @@ let unqualified_vname_of_ident ident =
 
 
 
-(* ******************************************************************* *)
-(* Parsetree.constructor_ident -> Parsetree.vname                      *)
+(* ************************************************************************* *)
+(* Parsetree.constructor_ident -> Parsetree.vname                            *)
 (** {b Descr} : Extracts the [vname] from a [constructor_ident], hence
     providing the name denoted by this identifier without any
     qualification/scoping.
     For example, "bar", "foo#Bar" will lead to the [vname] "Bar".
 
-    {b Rem} : Not exported outside this module.                        *)
-(* ******************************************************************* *)
+    {b Args} :
+      - [ident] : The [constructor_ident] in which to find the inner [vname].
+
+    {b Ret} :
+      - Parsetree.vname : The [vname] contained in the [constructor_ident].
+
+    {b Exported} : No.                                                       *)
+(* ************************************************************************* *)
 let unqualified_vname_of_constructor_ident ident =
   let Parsetree.CI ident = ident.Parsetree.ast_desc in
   unqualified_vname_of_ident ident
@@ -266,15 +297,21 @@ let unqualified_vname_of_constructor_ident ident =
 
 
 
-(* ************************************************************************ *)
-(* Parsetree.expr_ident -> Parsetree.vname                                  *)
+(* *********************************************************************** *)
+(* Parsetree.expr_ident -> Parsetree.vname                                 *)
 (** {b Descr} : Extracts the [vname] from an [expt_ident], hence providing
     the name denoted by this identifier without any qualification/scoping.
     For example, "bar", "foo#bar" or "foo!bar" will lead to the [vname]
     "bar".
 
-    {b Rem} : Not exported outside this module.                             *)
-(* ************************************************************************ *)
+    {b Args} :
+      - [ident] : The [expr_ident] in which to find the inner [vname].
+
+    {b Ret} :
+      - Parsetree.vname : The [vname] contained in the [expr_ident].
+
+    {b Exported} : No.                                                     *)
+(* *********************************************************************** *)
 let unqualified_vname_of_expr_ident ident =
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname -> vname
@@ -286,9 +323,24 @@ let unqualified_vname_of_expr_ident ident =
 
 (* ************************************************************************* *)
 (* {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
-   of the [vname] was mentionned to be "used" or "opened".
+   of the [qualified_vname] was mentionned to be "used" or "opened".
 
- {b Rem}; Not exported outside this module.                                  *)
+   {b Args} :
+     - [ctx] : The current scoping context.
+
+     - [loc] : The location of the occurrence of the identifier where the
+       check is performed. This will be used in case of error to add this
+       location to the error message to help the user to find out where he
+       must make his correction.
+
+     - unnammed: The identifier (more accurately the [qualified_vname]) that
+       may contain a compilation unit qualification that must be checked.
+
+    {b Ret} :
+      - [unit] : If the verification is successful, otherwise an exception
+        is raised to exhibit the error.
+
+   {b Exported} : No.                                                        *)
 (* ************************************************************************* *)
 let ensure_qual_vname_allowed_qualified ctx loc = function
   | Parsetree.Vname _ -> ()
@@ -303,7 +355,18 @@ let ensure_qual_vname_allowed_qualified ctx loc = function
 (* {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
    of the [ident] was mentionned to be "used" or "opened".
 
- {b Rem}; Not exported outside this module.                                  *)
+   {b Args} :
+
+     - [ctx] : The current scoping context.
+
+     - [ident]: The identifier that may contain a compilation unit
+       qualification that must be checked.
+
+    {b Ret} :
+      - [unit] : If the verification is successful, otherwise an exception
+        is raised to exhibit the error.
+
+   {b Exported} : No.                                                        *)
 (* ************************************************************************* *)
 let ensure_ident_allowed_qualified ctx ident =
   match ident.Parsetree.ast_desc with
@@ -319,7 +382,18 @@ let ensure_ident_allowed_qualified ctx ident =
 (* {b Descr}: Ensures that the mentionned hosting compilation unit (if some)
    of the [expr_ident] was mentionned to be "used" or "opened".
 
- {b Rem}; Not exported outside this module.                                  *)
+   {b Args} :
+
+     - [ctx] : The current scoping context.
+
+     - [expr_ident]: The identifier that may contain a compilation unit
+       qualification that must be checked.
+
+    {b Ret} :
+      - [unit] : If the verification is successful, otherwise an exception
+        is raised to exhibit the error.
+
+ {b Exported} : No.                                                          *)
 (* ************************************************************************* *)
 let ensure_expr_ident_allowed_qualified ctx expr_ident =
   match expr_ident.Parsetree.ast_desc with
@@ -342,13 +416,28 @@ let ensure_expr_ident_allowed_qualified ctx expr_ident =
 (* ************************************************************************* *)
 (* basic_vname:Parsetree.vname -> Env.ScopeInformation.value_binding_info -> *)
 (*   Parsetree.expr_ident_desc                                               *)
-(* {b Descr} : Build a [Parsetree.ident] from both the [vname] initialy
+(* {b Descr} : Builds a [Parsetree.ident] from both the [vname] initialy
    contained in an [ident] and the value scoping information found for this
    [ident].
    Basically, this function dissecates the scoping information and
    differentiate the case of method of "Self" or of another collection.
 
-   {b Rem} : Not exported outside this module.                               *)
+   {b Args} :
+     - [~basic_vname] : the [vname] contained inside a more complicated
+       identifier structure and that we must use to re-build a completly
+       scoped [expr_ident_desc].
+
+     - unammed : The scoping information found in the scoping environment
+       bound to the initial "more complicated identifier structure". Based
+       on the information contained in this, we build the qualification
+       that scopes the [~basic_vname].
+
+   {b Ret} :
+     - [Parsetree.expr_ident_desc] : The core information of an identifier
+       scoped based on the [~basic_vname] and the effective scope found in
+       the scoping environment.
+
+   {b Exported} : No.                                                        *)
 (* ************************************************************************* *)
 let scoped_expr_ident_desc_from_value_binding_info ~basic_vname = function
   | Env.ScopeInformation.SBI_file fname ->
@@ -359,8 +448,7 @@ let scoped_expr_ident_desc_from_value_binding_info ~basic_vname = function
       (* We now know the module of the collection and the collection the
          method belongs to. *)
       Parsetree.EI_method (Some coll_qvname, basic_vname)
-  | Env.ScopeInformation.SBI_local ->
-      Parsetree.EI_local basic_vname
+  | Env.ScopeInformation.SBI_local -> Parsetree.EI_local basic_vname
 ;;
 
 
@@ -436,11 +524,11 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
          accu_env in
 
   (
-   (* *********************************************************************** *)
-   (* extend_env_with_implicit_gen_vars_from_type_exprs :                     *)
-   (*   Parsetree.type_expr list -> Env.ScopingEnv.t -> Env.ScopingEnv.t      *)
-   (** {b Descr} : Insert in the scoping environment the variables present in
-       a list of type expressions, considering they are implicitely
+   (* ********************************************************************* *)
+   (* extend_env_with_implicit_gen_vars_from_type_exprs :                   *)
+   (*   Env.ScopingEnv.t -> Parsetree.type_expr list -> Env.ScopingEnv.t    *)
+   (** {b Descr} : Inserts in the scoping environment the variables present
+       in a list of type expressions, considering they are implicitely
        generalized. This is used when one creates a type structure from an
        external value's type expression or a type constraint on an
        expression.
@@ -454,8 +542,18 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
        this definition the context must have a variable mapping where ['a]
        is known. Using the present function, one can build such a mapping.
 
-       {b Rem} : Not exported outside this module.                           *)
-   (* ********************************************************************** *)
+       {b Args} :
+         - [env] : The current scoping environment.
+
+         - [type_expressions] : The list of all the expressions in which
+           one must search the type variables to add to the environment.
+
+       {b Ret}:
+         - [Env.ScopingEnv.t] : The scoping environment extended with the
+           type variables found in the type expressions.
+
+       {b Exported} : No.                                                   *)
+   (* ********************************************************************* *)
    (fun env type_expressions ->
      seen_vars := [] ;
      List.fold_left
@@ -465,6 +563,7 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
 
    (* ********************************************************************** *)
    (* extend_env_with_implicit_gen_vars_from_logical_expr :                  *)
+   (*   Env.ScopingEnv.t -> Parsetree.logical_expr -> Env.ScopingEnv.t       *)
    (** {b Descr} : Insert in the scoping environment the variables present
        in a type parts of a [logical_expr], considering they are implicitely
        generalized. This is used when one creates a type structure from a
@@ -478,7 +577,17 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
        this definitionn the context must have a variable mapping where ['a]
        is known. Using the present function, one can build such a mapping.
 
-       {b Rem} : Not exported outside this module.                           *)
+       {b Args} :
+         - [env] : The current scoping environment.
+
+         - [logical_expr] : The logical expression in which one must search
+           the type variables to add to the environment.
+
+       {b Ret}:
+         - [Env.ScopingEnv.t] : The scoping environment extended with the
+           type variables found in the type expressions.
+
+       {b Exported} : No.                                                    *)
    (* ********************************************************************** *)
    (fun env logical_expr ->
      seen_vars := [];
@@ -494,7 +603,7 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
 (** {b Descr} : Scopes a type expression. This resolves the
               constructors, labels and type names.
 
-    {b Rem} : Not exported outside this module.                  *)
+    {b Exported} : No.                                           *)
 (* ************************************************************* *)
 let rec scope_type_expr ctx env ty_expr =
   let new_desc =
@@ -565,7 +674,7 @@ let rec scope_type_expr ctx env ty_expr =
 (*     (Parsetree.simple_type_def_body * Env.ScopingEnv.t *               *)
 (*      (Parsetree.vname_list))                                           *)
 (** {b Descr} : Scopes a the body of a simple type definition by scoping
-     its internal type expressions and return the scoped version of it.
+     its internal type expressions and returns the scoped version of it.
      Returns the extended environment with bindings for the possible sum
      type constructors or record type fields label.
      Also returns the list of names bound to sum type constructors or
@@ -599,7 +708,7 @@ let rec scope_type_expr ctx env ty_expr =
 
        - [sty_def_body] : The simple type definition's body to scope.
 
-    {b Rem} : Not exported outside this module.                           *)
+    {b Exported} : No.                                                    *)
 (* ********************************************************************** *)
 let scope_regular_type_def_body ctx env env_to_extend sty_def_body =
   let (scoped_desc, new_env, bound_names) =
@@ -668,7 +777,7 @@ let scope_regular_type_def_body ctx env env_to_extend sty_def_body =
 (* {b Descr} : Scopes a [scope_rep_type_def] and returns this scoped
    [scope_rep_type_def].
 
-   {b Rem} : Not exported outside this module.                       *)
+   {b Exported} : No.                                                *)
 (* ***************************************************************** *)
 let rec scope_rep_type_def ctx env rep_type_def =
   let new_desc =
@@ -732,9 +841,9 @@ let rec scope_rep_type_def ctx env rep_type_def =
 
 
 
-(* ********************************************************************* *)
-(* type_def_body_loc:Location.t -> Parsetree.external_bindings_desc ->   *)
-(*   Parsetree.vname list -> unit                                        *)
+(* ************************************************************************ *)
+(* type_def_body_loc:Location.t -> Parsetree.external_bindings_desc ->      *)
+(*   Parsetree.vname list -> unit                                           *)
 (** {b Descr} : Ensures that the sum type constructors and/or the record
     type field names introduced by the external bindings of a
     [external_type_def_body] exactly correspond to those induced by the
@@ -754,8 +863,8 @@ let rec scope_rep_type_def ctx env rep_type_def =
     {b Ret}:
       - [unit]
 
-    {b Rem} : Not exported outside this module.                          *)
-(* ********************************************************************* *)
+    {b Exported} : No.                                                      *)
+(* ************************************************************************ *)
 let rec verify_external_binding ~type_def_body_loc external_bindings
     bound_names =
   match external_bindings with
@@ -881,6 +990,19 @@ let scope_type_def_body_simple ctx env_with_params env ty_def_body_simple =
 
 
 
+(* ************************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Env.ScopingEnv.t ->                 *)
+(*   Parsetree.type_def_body -> Parsetree.type_def_body * Env.ScopingEnv.t    *)
+(** {b Descr} : Scopes a type definition body. Returns the extended
+    environment with bindings for the possible sum type constructors or
+    record type fields label and a binding to this type name with the current
+    compilation unit.
+    Takes 2 scoping environments because we need one with the parameters
+    type variables if the definition has some and another where they are
+    not. C.f. comment in the function [scope_regular_type_def_body].
+
+    {b Exported} : No.                                                        *)
+(* ************************************************************************** *)
 let scope_type_def_body ctx env_with_params env ty_def_body =
   match ty_def_body.Parsetree.ast_desc with
    | Parsetree.TDB_abstract type_def_body_simple ->
@@ -927,7 +1049,7 @@ let scope_type_def_body ctx env_with_params env ty_def_body =
     constructors or record type fields label and a binding to this type name
     with the current compilation unit.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let scope_type_def ctx env ty_def =
   let ty_def_descr = ty_def.Parsetree.ast_desc in
@@ -979,7 +1101,7 @@ let scope_type_def ctx env ty_def =
     just need to ensure that a [vname] really corresponds to a locally
     bound name.
 
-    {b Rem} : Not exported outside this module.                            *)
+    {b Exported} : No.                                                     *)
 (* *********************************************************************** *)
 let can_be_scoped_as_local_p ctx env ~loc vname =
   (* We embedd the [vname] inside a dummy [ident] in order to lookup. *)
@@ -1003,6 +1125,16 @@ let can_be_scoped_as_local_p ctx env ~loc vname =
 
 
 
+(* ************************************************************************* *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.enforced_dependency ->   *)
+(*   Parsetree.enforced_dependency                                           *)
+(** {b Descr} : Scopes the dependencies add to a Coq or assumed proof.
+    Returns the scoped dependencies. Since enforced dependencies expressions
+    do not bind names, there is no need to return an environement since
+    nothing will never be added to the current one.
+
+    {b Exported} : No.                                                       *)
+(* ************************************************************************* *)
 let scope_enforced_deps ctx env enforced_deps =
   let new_desc =
     (match enforced_deps.Parsetree.ast_desc with
@@ -1057,7 +1189,7 @@ let scope_enforced_deps ctx env enforced_deps =
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.fact -> Parsetree.fact *)
 (* {b Descr} : Scopes a [fact] and return this scoped fact].
 
-   {b Rem} : Not exported outside this module.                             *)
+   {b Exported} : No.                                                      *)
 (* *********************************************************************** *)
 let rec scope_fact ctx env fact =
   let new_desc =
@@ -1122,7 +1254,7 @@ let rec scope_fact ctx env fact =
     This environment will then be suitable to be used by [scope_statement]
     in order to scope the body of a statement under these hypotheses.
 
-    {b Rem} : Not exported outside this module.                            *)
+    {b Exported} : No.                                                     *)
 (* *********************************************************************** *)
 and scope_hyps ctx env hyps =
   let (final_env, revd_scoped_hyps) =
@@ -1525,10 +1657,10 @@ and scope_termination_proof ctx env params_env tp =
 
 
 
-(* ********************************************************************* *)
-(* toplevel_let: bool -> scoping_context -> Env.ScopingEnv.t ->          *)
-(*   Parsetree.let_def -> (Parsetree.let_def * Env.ScopingEnv.t *        *)
-(*                         Parsetree.vname list)                         *)
+(* ************************************************************************* *)
+(* toplevel_let: bool -> scoping_context -> Env.ScopingEnv.t ->              *)
+(*   Parsetree.let_def -> (Parsetree.let_def * Env.ScopingEnv.t *            *)
+(*                         Parsetree.vname list)                             *)
 (** {b Descr} : Scopes a let-definition. This returns the scoped
     bindings, the initial scoping environment extended with the
     information bound to the identifiers defined in the let-definition
@@ -1541,8 +1673,28 @@ and scope_termination_proof ctx env params_env tp =
     first case, the bool argument [toplevel_let] must be [true]. In the
     second, it must be [false].
 
-    {b Rem} : Not exported outside this module.                          *)
-(* ********************************************************************* *)
+    {b Args} :
+      - [~toplevel_let] : Boolean telling if the let-definition is at
+        toplevel. If not, then the let-definition is in fact a "let in"
+        definition
+
+      - [ctx] : Current scoping context.
+
+      - [env] : Current scoping environment.
+
+      - [let_def] : The let definition to scope.
+
+    {b Ret} :
+      - [Parsetree.let_def] : The scoped let definition.
+
+      - [Env.ScopingEnv.t] : The initial scoping environment extended with
+        the information bound to the identifiers defined in the
+        let-definition.
+
+      - [Parsetree.vname list] : The list of names bound by this definition.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 and scope_let_definition ~toplevel_let ctx env let_def =
   let let_def_descr = let_def.Parsetree.ast_desc in
   (* If the let-definition is at toplevel, then we will scope the idents as
@@ -1915,7 +2067,7 @@ let scope_termination_proof_def ctx env termination_proof_def =
 (* {b Descr} : Scopes a property definition and return both the scoped
    property definition and its name as a [vname].
 
-   {b Rem} : Not exported outside this module.                         *)
+   {b Exported} : No.                                                  *)
 (* ******************************************************************* *)
 let scope_property_def ctx env property_def =
   let property_def_desc = property_def.Parsetree.ast_desc in
@@ -2441,6 +2593,18 @@ let scope_phrase ctx env phrase =
     scoping environment is totally empty. Returns the scoped AST
     structure and the complete toplevel scoping environment obtained
     after the scoping is finished.
+
+    {b Args} :
+      - [current_unit] : The name of the compilation unit to scope.
+
+      - [file] : The top-most node of the AST obtained by parsing the
+        compilation unit's source.
+
+    {b Ret} :
+      - [Parsetree.file] : The scoped AST.
+
+      - [Env.ScopingEnv.t] : The scoping environment where information
+        about scoping entities of the compilation have been inserted.
 
     {b Rem} : Exported outside this module.                            *)
 (* ******************************************************************* *)

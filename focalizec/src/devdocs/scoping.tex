@@ -1,10 +1,10 @@
-% $Id: scoping.tex,v 1.4 2009-04-24 14:35:58 pessaux Exp $
+% $Id: scoping.tex,v 1.5 2009-04-27 09:35:25 pessaux Exp $
 The scoping process aims to link each identifier occurrence to its
 related definition according to the rules that drive the visibility of
-identifers. It avoids name confusion and ensure that each occurrence
+identifiers. It avoids name confusion and ensure that each occurrence
 of identifier refers to one and one unique effective definition.
 
-Ideally, once scoped, a program shoud have unique names for each
+Ideally, once scoped, a program should have unique names for each
 identifier (i.e. a name plus a stamp that ensure the unicity). For
 example in the following piece of code:
 {\footnotesize
@@ -35,11 +35,18 @@ y_0 + x_0 ;;
 This way, each occurrence has a clearly identified definition since if
 two identifiers have the same name then they refer to the same
 definition. Moreover, this ensure that all the occurrences have one
-and opne unique related definition, hence preventing unbound
+and one unique related definition, hence preventing unbound
 identifiers.
 
+Moreover, since compilation unit can be ``{\tt open}-ed'', some
+identifiers can be used without explicit qualification, then looking
+like belonging to the current compilation unit although they belong to
+another one. Scoping also allow to ``rename'' identifiers belonging to
+an ``{\tt open}-ed'' unit to make their hosting unit clear by adding a
+qualification.
+
 In \focalize, we do not rename the identifiers with indices. Instead,
-we make they qualification explicit. The case where twho identifiers
+we make they qualification explicit. The case where two identifiers
 with the same qualification are present is handled by the environment
 mechanism that will hide the oldest identifier definition by the
 newest according to their order in the source code. In fact, in the
@@ -62,7 +69,7 @@ file) names. The transformation is not performed in place. Instead, we
 return a fresh AST (still possibly having sharing with the original
 one) that will be suitable for the typechecking phase.
 
-For identifiers already disamguated by the parser, there are 2 cases:
+For identifiers already disambiguated by the parser, there are 2 cases:
 ``\#-ed'' and ``!-ed'' identifiers. The scoper will still work by
 ensuring that these identifiers are really related to an existing
 definition.
@@ -84,11 +91,11 @@ definition.
 The scoping heavily uses the ``scoping environment'' structure
 described in \ref{scoping-environment-presentation}. Scoping is
 performed on each phrase of the source text, in the order of
-apparition of these phrases. Hence we have to scope phrases amongt
+apparition of these phrases. Hence we have to scope phrases among
 documentation title, {\tt use} directive, {\tt open} directive,
 {\tt coq\_require} directive, species definition, collection
 definition, type definition, toplevel value definition, toplevel
-therorem definition and toplevel expression. For each scoped phrase,
+theorem definition and toplevel expression. For each scoped phrase,
 the {\bf new environment} made of the initially received one extended
 by the new scoped definitions is returned. We don't return only a
 delta: we return a complete usable new environment.
@@ -113,7 +120,7 @@ type scoping_context = {
 
 
 \subsection{Scoping an {\tt use} directive}
-Scoping a {\tt use} directive returns un unchanged environment.
+Scoping a {\tt use} directive returns an unchanged environment.
 It simply adds the ``used'' module to the list modules allowed to be
 used of the current context and return a new context with this
 extended list. The point is only to mention for the rest of the
@@ -228,7 +235,7 @@ take care to insert first those of the ``left-most'' parent in the
 searches in the environment will comply the inheritance resolution
 order of \focalize. During insertion in the environment, because these
 methods are inherited, they now are methods of ourselves, hence
-methodes of {\tt Self} and they must be inserted as
+methods of {\tt Self} and they must be inserted as
 {\tt SBI\_method\_of\_self} ! The change needed to say that one of
 these methods is a method of the ``current collection'''s name,
 i.e. toggling the flag to {\tt SBI\_method\_of\_coll} will be done
@@ -240,21 +247,33 @@ To scope all the defined methods of the species, we scope each field
 in its order of apparition, then add the obtained information about it
 in the environment used to scope the remaining methods.
 
+Scoping a method is done by scoping its body (a
+{\tt Parsetree.expression}) then returning this scoped method and the
+scoping environment extended by a binding between this method and the
+computed scoping information. One must note that depending on if the
+method is recursive, we pre-insert its name in the scoping environment
+before scoping its body or not. If the method is recursive, we
+pre-insert, otherwise no.
 
-\subsubsection{Scoping one defined method ({\tt scope\_species\_field})}
 
+\subsubsection{Scoping in general, scoping other constructs}
+ For each used ``identifier'' occurrences (i.e. structures that
+ represent identifiers since we have several kinds in \focalize), we
+ look-up in the scoping environment for information about this
+ identifier.
 
-\subsection{Scoping a collection definition}
+Depending on the form of the identifier, we either re-build explicitly
+a scoped identifier with explicit qualification (case of
+{\tt Parsetree.expr\_ident}) or we simply check that the identifier is
+really bound (case of identifiers where qualification is already
+built-in in its structure).
 
-\subsection{Scoping a type definition}
+Depending on the class of the identifier (value, type, record
+field\ldots) we look-up in the related bucket in the scoping
+environment to get the required information.
 
-\subsection{Scoping a toplevel value definition}
-
-\subsection{Scoping a toplevel theorem definition}
-
-\subsection{Scoping a toplevel expression}
-There nothing special to say on this point. Scoping is done like for
-any expression we already spoke about. It can be noticed that since
-the toplevel is not bound to an identifier, the returned scoping
-environment remains unchanged. The returned context is also
-unchanged.
+The interesting function in scoping is
+{\tt scoped\_expr\_ident\_desc\_from\_value\_binding\_info} that in
+fact re-build an {\tt expr\_ident\_desc} from the inner simple name (i.e.
+{\tt vname}) found in an {\tt expr\_ident} and the scoping
+information bound to this name in the scoping environment.
