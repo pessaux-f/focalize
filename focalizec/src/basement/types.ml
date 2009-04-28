@@ -13,57 +13,64 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.79 2009-04-27 15:26:25 pessaux Exp $ *)
+(* $Id: types.ml,v 1.80 2009-04-28 16:56:10 pessaux Exp $ *)
 
 
-(* **************************************************************** *)
+(* ***************************************************************** *)
 (** {b Descr} : File ("module") name (without the ".fcl" extension).
 
-    {b Rem} : Clearly exported outside this module.                  *)
-(* **************************************************************** *)
+    {b Exported} : Yes.                                              *)
+(* ***************************************************************** *)
 type fname = string ;;
 
 
 
-(* ************************************************ *)
-(** {b Descr} : Collection / species name.
+(* ***************************************************** *)
+(** {b Descr} : Represents a collection or species name.
 
-    {b Rem} : Clearly exported outside this module. *)
-(* ************************************************ *)
+    {b Exported} : Yes.                                  *)
+(* ***************************************************** *)
 type collection_name = string ;;
 
 
 
-(* ************************************************************************ *)
-(** {b Descr} : Type constructot name. Records both the constructor's name
-              and it's hosting module (file) name).
+(* *********************************************************************** *)
+(** {b Descr} : Type constructor name. Records both the constructor's name
+    and it's hosting module (file) name).
 
-    {b Rem} : Abstract outside this module..                                *)
-(* ************************************************************************ *)
-type type_name = (fname * string) ;;
+    {b Exported} : Abstract.                                               *)
+(* *********************************************************************** *)
+type type_name =
+  (fname *      (** Compilation unit where the type constructor was defined. *)
+   string)      (** Name of the constructor (for instance "int"). *)
+;;
 
 
 
-(** Label name. *)
+(* ************************************* *)
+(** {b Descr] Record field (label) name.
+
+    {b Exported} : Yes                   *)
+(* ************************************* *)
 type label_name = string ;;
 
 
 
 (* ****************************************************************** *)
 (** {b Descr} : Binding level considered as describing the level of a
-                generalized type.
+    generalized type variable.
 
-    {b Rem} : Not exported outside this module.                       *)
+    {b Exported} : No.                                                *)
 (* ****************************************************************** *)
 let generic_level = 100000000 ;;
 
 
 
-(* ************************************************* *)
+(* **************************************************** *)
 (** {b Descr} : Describes the type algebra of FoCaLize.
 
-    {b Rem} : Exported opaque outside this module.   *)
-(* ************************************************* *)
+    {b Exported} : Abstract.                            *)
+(* **************************************************** *)
 type type_simple =
   | ST_var of type_variable                   (** Type variable. *)
   | ST_arrow of (type_simple * type_simple)   (** Functional type. *)
@@ -85,7 +92,13 @@ type type_simple =
 
 
 
-(** Variable of type. Must be repr'ed. *)
+(* ********************************************************************* *)
+(** {b Descr} : Variable of type (type variable).
+    Attention, they introduce the requirement for types to be repr'ed in
+    order to get their canonical representation !
+
+    {b Exported} : No.                                                   *)
+(* ********************************************************************* *)
 and type_variable = {
   (** Binding level of the type. *)
   mutable tv_level : int ;
@@ -94,7 +107,13 @@ and type_variable = {
 }
 
 
-(** Value of a type link (generalization principle of type variable's value. *)
+
+(* ******************************************************************* *)
+(** {b Descr} : Value of a type link (generalization principle of type
+    variable's value.
+
+    {b Exported} : No.                                                 *)
+(* ******************************************************************* *)
 and type_variable_value =
   | TVV_unknown
   | TVV_known of type_simple
@@ -102,16 +121,16 @@ and type_variable_value =
 
 
 
-(* ************************************************************************ *)
+(* ************************************************************************** *)
 (** {b Descr} : Interface of a collection. It could be the list of its
-         method'n'types, i.e. (string * type_simple) list but we don't want
-        a structural unification. That's not because 2 collections have the
-        same signature that they have the same semantics.
-        Instead, one will get the type of the collection via an environment
-        using the [collection_name] and the [fname] as key.
+    method'n'types, i.e. (string * type_simple) list but we don't want a
+    structural unification. That's not because 2 collections have the same
+    signature that they have the same semantics.
+    Instead, one will get the type of the collection via an environment using
+    the [collection_name] and the [fname] as key.
 
-    {b Rem} : Exported outside this module.                                 *)
-(* ************************************************************************ *)
+    {b Exported} : Yes.                                                       *)
+(* ************************************************************************** *)
 type type_collection =
   (fname *           (** The "module" hosting the collection' code. *)
   collection_name)   (** The name of the collection as a string (not a
@@ -124,11 +143,10 @@ type type_collection =
 
 (* ************************************************************************ *)
 (** {b Descr} : Type schemes, i.e. model of types.
-              Scheme parameters are silent inside the scheme. In fact, they
-              are types in the body with a binding level equals to
-              [generic_level].
+    Scheme parameters are silent inside the scheme. In fact, they are types
+    in the body with a binding level equals to [generic_level].
 
-    {b Rem} : Exported opaque outside this module.                          *)
+    {b Exported} : Abstract.                                                *)
 (* ************************************************************************ *)
 type type_scheme = {
   ts_vars : type_variable list ;          (** Parameters in the scheme. *)
@@ -144,7 +162,9 @@ type type_scheme = {
     arguments are stored a a tuple, one of the type is a tuple with an
     empty list of types. Hence the error message reported  "Types and ...
     are not compatible" (c.f. bub report #180). We prefer a more specific
-    error message.                                                           *)
+    error message.
+
+    {b Exported} : Yes.                                                      *)
 (* ************************************************************************* *)
 exception Arity_mismatch_unexpected_args of Location.t ;;
 
@@ -153,17 +173,21 @@ exception Arity_mismatch_unexpected_args of Location.t ;;
 (* ********************************************************************* *)
 (** {b Descr} : Exception meaning that the 2 arguments types cannot be
     unified. The location related to the point where unification occured
-    is provided for error reporting purposes.                            *)
+    is provided for error reporting purposes.
+
+    {b Exported} : Yes.                                                  *)
 (* ********************************************************************* *)
 exception Conflict of (type_simple * type_simple * Location.t) ;;
 
 
 
-(* **************************************************************** *)
-(** {b Descr} : Exception meaning that a circularity would occur if
-    the unification of these 2 types was performed.
-    In other words, the first type occurs inside the second.        *)
-(* **************************************************************** *)
+(* ******************************************************************** *)
+(** {b Descr} : Exception meaning that a circularity would occur if the
+    unification of these 2 types was performed.
+    In other words, the first type occurs inside the second.
+
+    {b Exported} : Yes.                                                 *)
+(* ******************************************************************** *)
 exception Circularity of (type_simple * type_simple * Location.t) ;;
 
 
@@ -171,7 +195,9 @@ exception Circularity of (type_simple * type_simple * Location.t) ;;
 (* *********************************************************************** *)
 (** {b Descr} : A functional type constructor has been used with the wrong
     number of arguments. The exception carries on the name of the type and
-    the conflicting arities.                                               *)
+    the conflicting arities.
+
+    {b Exported} : Yes.                                                    *)
 (* *********************************************************************** *)
 exception Arity_mismatch of (type_name * int * int  * Location.t) ;;
 
@@ -185,7 +211,7 @@ exception Arity_mismatch of (type_name * int * int  * Location.t) ;;
     will be called if needed to get a deeper canonical representation of
     the type (i.e. the canonical representation of its subterms).
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Exported} : No                                                    *)
 (* ********************************************************************* *)
 let rec repr = function
   | ST_var ({ tv_value = TVV_known ty1 } as var) ->
@@ -205,7 +231,7 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
       definition. It increases the binding level to enable generalization
       once we go back to a lower level.
 
-      {b Rem} : Exported outside this module.                             *)
+      {b Exported} : Yes.                                                 *)
    (* ******************************************************************* *)
    (fun () -> incr current_binding_level),
 
@@ -217,7 +243,7 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
       definition. It decreases the binding level to prevent generalization
       of higher binding level type variables.
 
-      {b Rem} : Exported outside this module.                              *)
+      {b Exported} : Yes.                                                  *)
    (* ******************************************************************** *)
    (fun () -> decr current_binding_level),
 
@@ -228,7 +254,8 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
    (* {b Descr} : Returns the current binding level, i.e. the level of
       variables than be generalized if they are of a level strictly
       greater than the current binding level.
-      {b Rem} : Not exported outside this module.                      *)
+
+      {b Exported} : No.                                               *)
    (* **************************************************************** *)
    (fun () -> !current_binding_level),
 
@@ -238,7 +265,7 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
    (* type_variable : unit -> type_simple                                 *)
    (* {b Descr} : Generates a type variable at the current binding level.
 
-      {b Rem} : Exported outside this module.                             *)
+      {b Exported} : Yes.                                                 *)
    (* ******************************************************************* *)
    (fun () ->
      ST_var { tv_level = !current_binding_level ; tv_value = TVV_unknown }))
@@ -253,7 +280,9 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
     For instance, "int" coming from the module "basics.foc" will be
     represented by [("basics", "int")].
     This allows to record in a type constructor both the constructor name
-    and the hosting file where this constructor was defined.              *)
+    and the hosting file where this constructor was defined.
+
+    {Exported} : Yes.                                                     *)
 (* ********************************************************************** *)
 let make_type_constructor hosting_module constructor_name =
   (hosting_module, constructor_name)
@@ -293,10 +322,25 @@ let type_sum_arguments_from_type_tuple ty =
 ;;
 
 
-(* Generate the carrier type of the currently analysed species.  *)
+
+(* ************************************************************************* *)
+(* unit -> type_simple                                                       *)
+(* {b Descr} : Generates the carrier type of the currently analysed species.
+   This builds a type we usually call "Self".
+
+   {b Exported} : Yes.                                                       *)
+(* ************************************************************************* *)
 let type_self () = ST_self_rep ;;
 
 
+
+(* ************************************************************************* *)
+(* unit -> type_simple                                                       *)
+(* {b Descr} : Generates the carrier type of the a particular species whose
+   hosting compilation unit and name are provided as arguments.
+
+   {b Exported} : Yes.                                                       *)
+(* ************************************************************************* *)
 let type_rep_species ~species_module ~species_name =
   ST_species_rep (species_module, species_name)
 ;;
@@ -309,7 +353,7 @@ let type_rep_species ~species_module ~species_name =
     generation to determine if an expression must be surrounded by a
     wrapper applying Coq's "Is_true".
 
-    {b Rem}: Exported outside this module.                           *)
+    {b Exported}: Yes.                                               *)
 (* ***************************************************************** *)
 let is_bool_type ty =
   let ty = repr ty in
@@ -327,29 +371,30 @@ let pp_type_name ppf (hosting_module, constructor_name) =
 
 
 let (pp_type_simple, pp_type_scheme) =
-  (* ********************************************************************* *)
-  (* ((type_simple * string) list) ref                                     *)
+  (* *********************************************************************** *)
+  (* ((type_simple * string) list) ref                                       *)
   (** {b Descr} : The mapping giving for each variable already seen the
                 name used to denote it while printing it.
 
-      {b Rem} : Not exported. This mapping is purely local to the
-              pretty-print function of type into the FoCaLize syntax. It is
-              especially not shared with the type printing routine used to
-              generate the OCaml or Coq code.                              *)
-  (* ********************************************************************* *)
+      This mapping is purely local to the pretty-print function of type into
+      the FoCaLize syntax. It is especially not shared with the type
+      printing routine used to generate the OCaml or Coq code.
+      {b Exported} : No.                                                     *)
+  (* *********************************************************************** *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
-  (* ******************************************************************* *)
-  (* int ref                                                             *)
+  (* ************************************************************************ *)
+  (* int ref                                                                  *)
   (** {b Descr} : The counter counting the number of different variables
       already seen hence printed. It serves to generate a fresh name to
       new variables to print.
 
-      {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCaLize syntax. It is
-      especially not shared with the type printing routine used to
-      generate the OCaml or Coq code.                                    *)
-  (* ******************************************************************* *)
+      This counter is purely local to the pretty-print function of type into
+      the FoCaLize syntax. It is especially not shared with the type printing
+      routine used to generate the OCaml or Coq code.
+
+      {b Exported} : No.                                                      *)
+  (* ************************************************************************ *)
   let type_variables_counter = ref 0 in
 
   (* ************************************************************* *)
@@ -658,9 +703,20 @@ let build_type_def_scheme ~variables ~body =
 
 
 
-(** {b Rem} : Exported oustide this module. *)
-let trivial_scheme ty = { ts_vars = [] ; ts_body = ty }
-;;
+(* ************************************************************************ *)
+(* type_simple -> type_scheme                                               *)
+(** {b Descr} : Creates a type scheme whose body is the type passed as
+    argument in which we do not perform any generalisation. Hence, the type
+    scheme is trivially non-polymorphic.
+    This is very useful to insert the scheme of a recursive function in the
+    typing environment used to type-check the body of this function.
+
+   {b Exported} : Yes.                                                      *)
+(* ************************************************************************ *)
+let trivial_scheme ty = { ts_vars = [] ; ts_body = ty } ;;
+
+
+
 
 (** {b Rem} : Non exported oustide this module. *)
 let rec lowerize_levels max_level ty =

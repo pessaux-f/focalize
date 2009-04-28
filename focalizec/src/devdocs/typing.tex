@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.2 2009-04-28 12:54:14 pessaux Exp $
+% $Id: typing.tex,v 1.3 2009-04-28 16:56:11 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -9,6 +9,7 @@ Once the type-checking pass is ended, a processed species gets in
 normal form, i.e. with all its methods present once, inherited and
 defined ones having been consistently put together.
 
+\label{cool-incremental-nf}
 This especially means that at each inheritance step, any species
 issued by the type-checker has all its methods: the inheritance
 disappears from the species structure. Obviously, the still have means
@@ -122,6 +123,8 @@ be updated with the {\tt ANTI\_non\_relevant} value.
 
 
 \subsubsection{Types and type schemes}
+\index{type!scheme}
+\label{type-scheme}
 Like in regular ML-like type-checkers, expressions are assigned
 ``types'' although definitions are assigned ``type schemes''. The
 difference is due to the ability for definitions to be polymorphic and
@@ -156,6 +159,20 @@ the same} that those of the type scheme). This type expression
 contains 2 variables {\tt 't} and {\tt 'u} that will be unified during
 the type-checking of the whole application expression (unified with
 {\tt int} in the current example).
+
+\medskip
+In \focalize, type schemes are compound of the list of the polymorphic
+type variables that are its parameters and the type expression that is
+its body:
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml, title=An ``expression'' AST node]
+type type_scheme = {
+  ts_vars : type_variable list ;          (** Parameters in the scheme. *)
+  ts_body : type_simple    (** Body of the scheme where generalized types
+                               have a level equal to [generic_level]. *)
+}
+\end{lstlisting}
+}
 
 
 
@@ -201,7 +218,6 @@ type type_simple =
       (fname * collection_name)
 
 
-(** Variable of type. Must be repr'ed. *)
 and type_variable = {
   (** Binding level of the type. *)
   mutable tv_level : int ;
@@ -210,12 +226,12 @@ and type_variable = {
 }
 
 
-(** Value of a type link (generalization principle of type variable's value. *)
 and type_variable_value =
   | TVV_unknown
   | TVV_known of type_simple
 \end{lstlisting}
 }
+
 The algebra describes the built-in type constructors and more
 interestingly for our explanation, the {\bf type variables}. We can
 see that in the type algebra, all the variables look pretty
@@ -303,7 +319,7 @@ inductively know each step of indirection. So, once we get our
 canonical representation of our ``something'', {\bf this is} in fact
 the canonical representation of our type, since it was a variable
 ``known to be equal to {\bf this} something''. By the way, before
-returning, sincenow we know that the variable is in fact ``pointing''
+returning, since now we know that the variable is in fact ``pointing''
 onto a type (i.e. is not anymore a variable, was instantiated), we
 take benefit to cut the string of indirections by directly
 establishing a link between the variable and the canonical
@@ -328,10 +344,10 @@ let rec repr = function
 \subsubsection{Unification}
 The computation of the most general type of an expression, called type
 inference, strongly rely on unification of type terms. We will say
-that 2 terms $\tau_1$ et $\tau_2$ can be {\em unified} if there exists
+that 2 terms $\tau_1$ and $\tau_2$ can be {\em unified} if there exists
 a substitution $\phi$ so that $\phi(\tau_1) = \phi (\tau_2)$. The
 substitution $\phi$ is then called {\em unifier}.
-\index{unifier} of the terms $\tau_1$ and $\tau_2$. Hence, two termes
+\index{unifier} of the terms $\tau_1$ and $\tau_2$. Hence, two terms
 can be unified if it is possible to instantiate all or part of their
 variables by a same substitution, so that they become structurally
 equal.
@@ -360,18 +376,18 @@ instead of using one of the type on which we apply its related
 substitution, we can directly use any one of the 2 types once unified
 since they are now equal.
 
-In fact, in our case this is not completly the case since we have an
-additionnal problem that forces us to return a type. This is due to
-the fact that when unifing a type and {\tt Self}, \focalize's rules
+In fact, in our case this is not completely the case since we have an
+additional problem that forces us to return a type. This is due to
+the fact that when unifying a type and {\tt Self}, \focalize's rules
 require to have {\tt Self} as unification result rather than any of
 one the two types. This is a problem when the unification used the
-known representation of {\tt Self} to achive finding the mgu. In
+known representation of {\tt Self} to achieve finding the mgu. In
 effect, in this case, one of the 2 type is {\tt Self} and this other
 is a type expression that is compatible with {\tt Self}'s
-representation. And in this fact, chosing any of the 2 types as result
+representation. And in this fact, choosing any of the 2 types as result
 is wrong: the result must always chose (prefer) {\tt Self}. Hence our
-unification routine returns the prefered unifier in addition to make
-the mhysical modifications in place when required. We then have a
+unification routine returns the preferred unifier in addition to make
+the physical modifications in place when required. We then have a
 unification function described in the compiler's source file
 {\tt basement/types.ml} looking like (explanations follow):
 
@@ -486,7 +502,7 @@ representation by calling {\tt repr} (lines 2 and 3).
 If the 2 types are already the same (physically, note the usage of
 {\tt ==} and not {\tt =}), then there is nothing more to to and we can
 return any one of the 2 types as unifier. We can really return any one
-since they are really equal and the problem of prefering {\tt Self}
+since they are really equal and the problem of preferring {\tt Self}
 doesn't apply here: either the 2 types are both {\tt Self} or they are
 both something else.
 
@@ -520,14 +536,14 @@ expression is rejected.
 
 For the moment, the lines 14 and 20 (and the comment lines 7-12) can
 be forgotten since they will be explained when we will be dealing
-whith polymorphism.
+with polymorphism.
 
 When unifying with one type being a variable, the returned type is
 always the type assigned to the variable (lines 16 and 22). We could
 also choose to return the variable but this would be less efficient
 since no {\tt repr} is yet applied since we assigned it a value, then
-to use this variable as type, one {\tt repr} will immediatly be
-required. Chosing to return the other type that has been
+to use this variable as type, one {\tt repr} will immediately be
+required. Choosing to return the other type that has been
 ``{\tt repr}-ed'' we can save one call. This may seems a tiny
 advantage, but unification in place is efficient for several tiny
 advantages put together ! An this one is part of them.
@@ -536,10 +552,10 @@ advantages put together ! An this one is part of them.
 In term of difficulty, we now have the unification of {\tt Self} and a
 type. The simplest case (line 65) is the unification of {\tt Self} and
 itself. Trivially, the unification succeed. Forget the line 66 for the
-moment. There remain 2 symetric cases: unifying {\tt Self} and another
+moment. There remain 2 symmetric cases: unifying {\tt Self} and another
 type that is not {\tt Self} and not a variable (lines 71 and 81).
 In these cases, we are in the rules [{\tt Self1}] and [{\tt Self2}] of
-Virgile Prevosto's Phd, page 27, definition 9. These are the cases
+Virgile Prevosto's PhD, page 27, definition 9. These are the cases
 where, if the structure of the carrier (i.e. of the {\tt representation}
 method) is visible then an occurrence of {\tt Self} is allowed to be
 unified with a type having a structure compatible with the one given
@@ -569,19 +585,19 @@ the result an return {\tt ST\_self\_rep}, meaning the type
 {\bf Attention}: With this mechanism, we directly unify the type that
 represents the structure of the carrier. This means that we directly
 apply modification in place on it. This especially means that, because
-this is not a type scheme but a type, there is a cumulative effect fo
+this is not a type scheme but a type, there is a cumulative effect of
 all the unifications that are made between {\tt Self} and other
 types. Hopefully, this is not a problem since methods are not allowed
-to be polymorphics. And {\tt representation}, defining the structure
+to be polymorphic. And {\tt representation}, defining the structure
 of {\tt Self} is a method. So it can't be polymorphic. This especially
 means that the structure of {\tt Self} will never have remaining
-variables that could be instanciated by a unification. Hence, there is
+variables that could be instantiated by a unification. Hence, there is
 no risk that a unification pollutes the type used as reference for the
-structure of {\tt Self} by instanciating a type variable by a type
+structure of {\tt Self} by instantiating a type variable by a type
 that would be incompatible for a later unification of this variable by
 another type. Sooooo, this means that {\tt $\sim$self\_manifest} is a type
 and not a type scheme because we don't have polymorphism on
-methods. If we had some, we woud need another mechanism to ``prefer
+methods. If we had some, we would need another mechanism to ``prefer
 {\tt Self}'' during unification (problem of specialisation,
 generalisation, putting the right binding level, and so on\ldots).
 
@@ -599,18 +615,112 @@ constructor (line 93). This leads to a type-checking error by raising
 an exception.
 
 \subsubsection{Polymorphism}
-Binding level, specialize et generalize.
+Like introduced in \ref{type-scheme}, type schemes are used to
+implement the polymorphism in type inference. They act as ``models''
+of types. But the question is how to make such ``models'' and how
+extract types from such ``models''. The first point is handled by the
+{\tt generalize} function and the second by the {\tt specialize}
+function of the source file {\tt basement/types.ml}.
+
+We must start our explanation by introducing the notion of
+{\bf binding level}. The aim is to keep trace of type variables
+introduced in let-definitions that are deeper than our level. The
+binding level counts the number of nested let-definitions. Hence, the
+current level must be incremented each {\bf before} every potentially
+generalisable definition. This increase will enable the generalisation
+once we will go back to a lower level. And it must be decreased at the
+end of this definition. To increase the current binding level, the
+function {\tt begin\_definition} must be used; to decrease it the
+function {\tt end\_definition} must be used.
+
+We said ``potentially generalisable'' definition since all
+let-definitions can't be generalised (non-expansivity problem).
+
+There remains a little problem with the level of variables. The higher
+the level, the closest is the definition that introduced this type
+variable. When a variable is put in contact (i.e. unified) with a type
+containing variables with a lower level (i.e. created in outer
+let-definitions), hence that may not be generalisable when we will
+leave the current definition, we must reflect this onto our variable !
+In effect, unification means equality. So if our variable is ``equal''
+to a variable than can be generalised, so it must be for our
+variable. Hence, when unifying a variable with a type, we must hunt in
+this type for variables that have a lower level and if we find some,
+we must lower the level of our variable to this found level. That's
+what the function {\tt lowerize\_levels} does. And in effect, this
+function is called when unifying a type variable with something (lines 
+14 and 20 in the {\tt unify} function listed above).
+
+
+\medskip
+So, the generalisation process consists in considering as
+generalisable, all the variables having a level strictly greater than
+the current binding level. We then search for all the generalisable
+variables, and remind them in a list. By the way, we change in place
+the level {\tt tv\_level} field) of the found variables by setting a
+level meaning ``generalised'' (technically, we choose a value to big,
+that there is no chance that anybody nests so many let-definitions to
+reach this level). Finally, to build the type scheme, we simply
+create a {\tt type\_scheme} structure with the list of found variables
+and the type itself as body.
+
+\medskip
+Now, taking an instance of a type scheme is done by the function
+{\tt specialize} that simply create a fresh type variable for each
+generalised variable of the type scheme, then copies the body of the
+type scheme, replacing each generalised variable by the corresponding
+fresh one.
+
+
+\subsubsection{Type inference among other typing things to do}
+The type inference we spoke about deals with expressions and
+definitions. Hence it is only one part of the analyses performed
+during the ``typing pass''. More accurately, it is the first analysis
+carried out after the scoping. Each expression of a program must be
+type-checked anyway where it appears, in entity parameters, in
+methods, in toplevel definitions. Some other constructs of the
+\focalize\ language require some other kinds of type-checking: that is
+the case of species, collections, collection parameters, inheritance
+species expressions. However, during these other kinds of
+type-checking, we use the type-checking of expressions to make the
+``glue'' ensuring consistency. Rules given in Virgile' PhD in figure
+3.2, page 43, section 3.8 are example of this idea (these rules deal
+with with species parameters).
+
+\medskip
+Aside this notion of type-checking, we also have other analyses to
+ensure a program is sound and also to extract the basic shape of a
+species by resolving inheritance and late binding. All these things
+are performed during the typing pass, the type-checking being the
+first step.
+
+\medskip
+The typing pass is driven by the source file {\tt typing/infer.ml} and
+more especially by the entry point function {\tt
+  typecheck\_file}. This function triggers the type-checking of each
+phrase of the compilation unit. Be aware that in the source of the
+compiler, ``type-check'' is widely overloaded and denotes the process
+of infering type for entities and then ensuring they are well-formed
+and building the first pieces of information that will ease the code
+generation. In particular, the fact that each species is given a
+normal form containing all its methods is handy to recover the methods
+of parameters or inheritance species expressions since there is no
+need to walk along all the inheritance level (point already mentionned
+in the introduction of this chapter, at \ref{cool-incremental-nf}).
 
 
 
+\subsection{Environment structures}
+The structure of the environment used during the tying pass has been
+presented in \ref{typing-environment}.
 
 
 
-
-
-\subsection{Environments structures}
 \subsection{Inheritance resolution}
+
 \subsection{Dependency on Self's methods calculus}
 Parler de comment on détecte les dépendances sur Self.
+
+
 
 \subsection{Normal form}

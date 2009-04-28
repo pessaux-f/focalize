@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.15 2009-04-22 15:59:00 pessaux Exp $
+% $Id: environments.tex,v 1.16 2009-04-28 16:56:10 pessaux Exp $
 
 All along the compilation pass, we need to keep trace of various
 information about compiled entities (methods, types, identifiers,
@@ -17,7 +17,7 @@ Environments implementation is located in the file
 
 
 \section{The generic environment}
-
+\index{environment!generic}
 \subsection{Environment ``recording'' structure}
 As previously stated, the core of an environment is to map names onto
 information. In \focalize\, names can designate several types of
@@ -414,6 +414,7 @@ different cases.
 
 
 \section{Scoping environment}
+\index{environment!scoping}
 \label{scoping-environment-presentation}
 The scoping environment provides information required to compute the
 scope of an identifier. In other words, it enables to state the extend
@@ -561,6 +562,8 @@ tag of {\tt meth2} before inserting the binding in our environment.
 
 
 \section{Typing environment}
+\label{typing-environment}
+\index{environment!typing}
 The typing environment provides information required to type-check the
 program, i.e. to infer types where they are not written, to check that
 explicitly written types are correct and to annotate the AST with the
@@ -847,6 +850,7 @@ like we needed for scoping environments.
 
 
 \section{\ocaml\ code generation environment}
+\index{environment!ocaml code gen}
 The \ocaml\ code generation environment provides information required
 to generate the target \ocaml\ source code.
 
@@ -945,6 +949,7 @@ like we needed for scoping environments.
 
 
 \section{\coq\ code generation environment}
+\index{environment!coq code gen}
 The \coq\ code generation environment provides information required
 to generate the target \coq\ source code. Its structure will be pretty
 close to the \ocaml\ environment. Most of the differences are induced
