@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.1 2009-04-27 15:26:25 pessaux Exp $
+% $Id: typing.tex,v 1.2 2009-04-28 12:54:14 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -53,6 +53,7 @@ the node itself.
 
 As defined in the source file {\tt basement/parsetree.mli}, an AST
 node is a generic data-structure containing a specific description:
+
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml, title=Generic AST node]
 type 'a ast = {
@@ -69,6 +70,7 @@ type 'a ast = {
 }
 Hence, a node containing an expression (hence of type
 {\tt Parsetree.expr}) will be built by something like:
+
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml, title=An ``expression'' AST node]
 type expr_desc =
@@ -91,6 +93,7 @@ this field for each node of the AST.
 
 According to the source file {\tt basement/parsetree.mli}, values for
 this field can be:
+
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml, title=An ``expression'' AST node]
 type ast_node_type_information =
@@ -175,6 +178,7 @@ The idea is to represent the types by terms that can be physically
 shared, with type variables that can be directly assign a
 value. Hence, as described in the source file {\tt basement/type.ml},
 our type algebra is:
+
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml, title=An ``expression'' AST node]
 type type_simple =
@@ -285,8 +289,53 @@ the types are exported as {\bf abstract}. This ensures that outside
 the module manipulating the type algebra, nobody will forget to get
 the canonical representation of a type.
 
+Basically, this function receives a type. If this type is not a
+variable, then it returns it directly. This means that the type
+constructor is already known to be something else than a variable for
+which we should investigate further. On the other side, if the
+received type is a variable whose ``value'' (i.e. field
+{\tt tv\_value} is ``known to be equal to something'' (i.e. is
+{\tt TVV\_known (...)}, then we will ask to get the canonical
+representation of this ``something''. This is typically a recursive
+call on this ``something''. This way, if this ``something'' is itself
+a variable ``known to be equal to something else'', then we will
+inductively know each step of indirection. So, once we get our
+canonical representation of our ``something'', {\bf this is} in fact
+the canonical representation of our type, since it was a variable
+``known to be equal to {\bf this} something''. By the way, before
+returning, sincenow we know that the variable is in fact ``pointing''
+onto a type (i.e. is not anymore a variable, was instantiated), we
+take benefit to cut the string of indirections by directly
+establishing a link between the variable and the canonical
+representation we obtained. Hence, next time we will access this
+variable via a type sub-term shared somewhere else, we won't have
+anymore to walk along the whole ``string'' of links to know the
+variable's value. Then, the {\tt repr} function simply looks like:
+
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml,
+                   title=Getting the canonical representation of a type]
+let rec repr = function
+  | ST_var ({ tv_value = TVV_known ty1 } as var) ->
+      let val_of_ty1 = repr ty1 in
+      var.tv_value <- TVV_known val_of_ty1 ;
+      val_of_ty1
+  | ty -> ty
+\end{lstlisting}
+}
+
 
 \subsubsection{Unification}
+The computation of the most general type of an expression, called type
+inference, strongly rely on unification of type terms. We will say
+that 2 terms $\tau_1$ et $\tau_2$ can be {\em unified} if there exists
+a substitution $\phi$ so that $\phi(\tau_1) = \phi (\tau_2)$. The
+substitution $\phi$ is then called {\em unifier}.
+\index{unifier} of the terms $\tau_1$ and $\tau_2$. Hence, two termes
+can be unified if it is possible to instantiate all or part of their
+variables by a same substitution, so that they become structurally
+equal.
+
 Based on the representation of our types, since the unification tends
 to return a substitution to apply on the 2 unified types in order to
 make them equal, instead of getting this substitution to later apply
@@ -304,6 +353,250 @@ the same physical location. Hence, changing the value of the field
 instantiate all the occurrences of this variable (past and future) in
 type terms.
 
+Hence, ideally unification doesn't return any result and makes the 2
+unified type equal by side effect or fails because there exist no
+unifier for the 2 types. And then, in the type-checking algorithm,
+instead of using one of the type on which we apply its related
+substitution, we can directly use any one of the 2 types once unified
+since they are now equal.
+
+In fact, in our case this is not completly the case since we have an
+additionnal problem that forces us to return a type. This is due to
+the fact that when unifing a type and {\tt Self}, \focalize's rules
+require to have {\tt Self} as unification result rather than any of
+one the two types. This is a problem when the unification used the
+known representation of {\tt Self} to achive finding the mgu. In
+effect, in this case, one of the 2 type is {\tt Self} and this other
+is a type expression that is compatible with {\tt Self}'s
+representation. And in this fact, chosing any of the 2 types as result
+is wrong: the result must always chose (prefer) {\tt Self}. Hence our
+unification routine returns the prefered unifier in addition to make
+the mhysical modifications in place when required. We then have a
+unification function described in the compiler's source file
+{\tt basement/types.ml} looking like (explanations follow):
+
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml,numbers=left, firstnumber=0,
+                   title=The unification algorithm]
+let unify ~loc ~self_manifest type1 type2 =
+  let rec rec_unify ty1 ty2 =
+    let ty1 = repr ty1 in
+    let ty2 = repr ty2 in
+    if ty1 == ty2 then ty1 else
+    match (ty1, ty2) with
+     | (ST_var var, _) ->
+         (* BE CAREFUL: [occur_check] performs the setting of decl-dependencies
+            on the carrier ! In effect, if [ty2] involved Self then we have a
+            dependency on the carrier and that must be taken into account !
+            The interest to make [occur_check] doing this work is that it
+            walk all along the type so it's a good idea to take benefit of this
+            walk to avoid one more walk. *)
+         occur_check ~loc var ty2 ;
+         lowerize_levels var.tv_level ty2 ;
+         var.tv_value <- TVV_known ty2 ;
+         ty2
+     | (_, ST_var var) ->
+         (* BE CAREFUL: Same remark than above for [occur_check]. *)
+         occur_check ~loc var ty1 ;
+         lowerize_levels var.tv_level ty1 ;
+         var.tv_value <- TVV_known ty1 ;
+         ty1
+     | ((ST_arrow (arg1, res1)), (ST_arrow (arg2, res2))) ->
+         let arg3 = rec_unify arg1 arg2 in
+         let res3 = rec_unify res1 res2 in
+         ST_arrow (arg3, res3)
+     | ((ST_sum_arguments tys1), (ST_sum_arguments tys2)) ->
+         let tys3 =
+           (try List.map2 rec_unify tys1 tys2 with
+           | Invalid_argument "List.map2" ->
+               (* In fact, that's an arity mismatch on the types. There is a
+                  strange case appearing when using a sum type constructor that
+                  requires arguments without arguments. The type of the
+                  constructor's arguments is an ampty list. Then the conflict is
+                  reported as "Types and ... are not compatible". Hence one of
+                  the type is printed as nothing (c.f. bub report #180).
+                  In this case, we generate a special error message. *)
+               if (List.length tys1) = 0 || (List.length tys2) = 0 then
+                 raise (Arity_mismatch_unexpected_args (loc))
+               else raise (Conflict (ty1, ty2, loc))) in
+         ST_sum_arguments tys3
+     | ((ST_sum_arguments _), (ST_tuple _))
+     | ((ST_tuple _), (ST_sum_arguments _)) ->
+         (* Special cases to handle confusion between sum type value
+            constructor's that take SEVERAL arguments and not 1 argument that
+            is a tuple. *)
+         raise (Arity_mismatch_unexpected_args (loc))
+     | ((ST_tuple tys1), (ST_tuple tys2)) ->
+         let tys3 =
+           (try List.map2 rec_unify tys1 tys2 with
+           | Invalid_argument "List.map2" ->
+               (* In fact, that's an arity mismatch on the tuple. *)
+               raise (Conflict (ty1, ty2, loc))) in
+         ST_tuple tys3
+     | (ST_construct (name, args), ST_construct (name', args')) ->
+         (if name <> name' then raise (Conflict (ty1, ty2, loc))) ;
+         let args'' =
+           (try List.map2 rec_unify args args' with
+           | Invalid_argument "List.map2" ->
+               (* In fact, that's an arity mismatch. *)
+               raise
+                 (Arity_mismatch
+                    (name, (List.length args), (List.length args'), loc))) in
+         ST_construct (name, args'')
+     | (ST_self_rep, ST_self_rep) ->
+         (begin
+         (* Trivial, but anyway, proceed as everywhere else. *)
+         set_decl_dep_on_rep () ;
+         ST_self_rep
+         end)
+     | (ST_self_rep, _) ->
+         (begin
+         match self_manifest with
+          | None -> raise (Conflict (ty1, ty2, loc))
+          | Some self_is_that ->
+              ignore (rec_unify self_is_that ty2) ;
+              set_def_dep_on_rep () ;
+              (* Always prefer Self ! *)
+              ST_self_rep
+         end)
+     | (_, ST_self_rep) ->
+         (begin
+         match self_manifest with
+          | None -> raise (Conflict (ty1, ty2, loc))
+          | Some self_is_that ->
+              ignore (rec_unify self_is_that ty1) ;
+              set_def_dep_on_rep () ;
+              (* Always prefer Self ! *)
+              ST_self_rep
+         end)
+     | ((ST_species_rep c1), (ST_species_rep c2)) ->
+         if c1 = c2 then ty1 else raise (Conflict (ty1, ty2, loc))
+     | (_, _) -> raise (Conflict (ty1, ty2, loc)) in
+  (* ****************** *)
+  (* Now, let's work... *)
+  rec_unify type1 type2
+;;
+\end{lstlisting}
+}
+
+First of all, we see that as previously said, since we intend to work
+on the structure of the types, we start by computing their canonical
+representation by calling {\tt repr} (lines 2 and 3).
+
+If the 2 types are already the same (physically, note the usage of
+{\tt ==} and not {\tt =}), then there is nothing more to to and we can
+return any one of the 2 types as unifier. We can really return any one
+since they are really equal and the problem of prefering {\tt Self}
+doesn't apply here: either the 2 types are both {\tt Self} or they are
+both something else.
+
+Then the algorithm considers all the cases of two types. When one is a
+variable (lines 6 and 17), we assign to the variable the other type
+hence telling that the variable is not anymore unknown (lines 15 and
+21).
+
+Before assigning the variable, we perform an ``occur check''
+\index{occur check}
+(lines 13 and 19). This ensures that the variable we assign doesn't
+appear in the type is it assigned. This is to prevent types from being
+cyclic. In effect, if we try to unify $\alpha$ with $\alpha
+\rightarrow \alpha$, we get in the following situation:
+
+\noindent
+\begin{math}
+\begin{array}{ccc}
+\alpha     & \rightarrow & \alpha \\
+ \uparrow  &             & \downarrow  \\
+           & \leftarrow &
+\end{array}
+\end{math}
+
+\noindent with the arrow on the same line than the $\alpha$s
+represent the functional type constructor and the arrows below the
+link the unification creates between variables and types. Hence, if
+the unification falls in this case, an error is raised telling that
+the type of the expression leads to cyclic types and that this
+expression is rejected.
+
+For the moment, the lines 14 and 20 (and the comment lines 7-12) can
+be forgotten since they will be explained when we will be dealing
+whith polymorphism.
+
+When unifying with one type being a variable, the returned type is
+always the type assigned to the variable (lines 16 and 22). We could
+also choose to return the variable but this would be less efficient
+since no {\tt repr} is yet applied since we assigned it a value, then
+to use this variable as type, one {\tt repr} will immediatly be
+required. Chosing to return the other type that has been
+``{\tt repr}-ed'' we can save one call. This may seems a tiny
+advantage, but unification in place is efficient for several tiny
+advantages put together ! An this one is part of them.
+
+\medskip
+In term of difficulty, we now have the unification of {\tt Self} and a
+type. The simplest case (line 65) is the unification of {\tt Self} and
+itself. Trivially, the unification succeed. Forget the line 66 for the
+moment. There remain 2 symetric cases: unifying {\tt Self} and another
+type that is not {\tt Self} and not a variable (lines 71 and 81).
+In these cases, we are in the rules [{\tt Self1}] and [{\tt Self2}] of
+Virgile Prevosto's Phd, page 27, definition 9. These are the cases
+where, if the structure of the carrier (i.e. of the {\tt representation}
+method) is visible then an occurrence of {\tt Self} is allowed to be
+unified with a type having a structure compatible with the one given
+by the {\tt representation} method.
+
+To be able to make so, in the typing context, we record if the
+structure of the carrier is known of not. This information if passed
+to the unification function via the parameter
+{\tt $\sim$self\_manifest}. This parameter has type
+{\tt simple\_type option}. If the value is {\tt None}, this means that
+the structure of the carrier is not visible (hence {\tt Self} can only
+be unified with {\tt Self}). If the value is {\tt Some ...}, then this
+means that we know that the carrier was defined as the type ``...''
+(hence unifying {\tt Self} with a type expression compatible with
+``...'' must be successful).
+
+So, when unifying {\tt Self} with a type, if {\tt $\sim$self\_manifest}
+is {\tt None} we raise an error because the carrier is abstract. If 
+{\tt  $\sim$self\_manifest} is {\tt Some (}$\tau${\tt )}, then we must
+ensure that $\tau$ can be unified (and if so, the possible side
+effects induced by this unification must be done) with the other type
+(lines 76 and 96): it is then simply a recursive call. Since if the
+unification succeed we want to return {\tt Self} as unifier, we throw
+the result an return {\tt ST\_self\_rep}, meaning the type
+``{\tt Self}''.
+
+{\bf Attention}: With this mechanism, we directly unify the type that
+represents the structure of the carrier. This means that we directly
+apply modification in place on it. This especially means that, because
+this is not a type scheme but a type, there is a cumulative effect fo
+all the unifications that are made between {\tt Self} and other
+types. Hopefully, this is not a problem since methods are not allowed
+to be polymorphics. And {\tt representation}, defining the structure
+of {\tt Self} is a method. So it can't be polymorphic. This especially
+means that the structure of {\tt Self} will never have remaining
+variables that could be instanciated by a unification. Hence, there is
+no risk that a unification pollutes the type used as reference for the
+structure of {\tt Self} by instanciating a type variable by a type
+that would be incompatible for a later unification of this variable by
+another type. Sooooo, this means that {\tt $\sim$self\_manifest} is a type
+and not a type scheme because we don't have polymorphism on
+methods. If we had some, we woud need another mechanism to ``prefer
+{\tt Self}'' during unification (problem of specialisation,
+generalisation, putting the right binding level, and so on\ldots).
+
+
+\medskip
+The other cases of unification are simpler and structural. The
+unification can now only be successful if the 2 types have the same
+constructor. So we check the types 2 by 2 with each time the same
+constructor and if the matching is right, we recurse structurally on
+the types structures.
+
+\medskip
+Finally remains the all cases where the 2 types do not have the same
+constructor (line 93). This leads to a type-checking error by raising
+an exception.
 
 \subsubsection{Polymorphism}
 Binding level, specialize et generalize.
@@ -314,9 +607,6 @@ Binding level, specialize et generalize.
 
 
 
-
-
-Parler du hack de Self\_manifest.
 
 \subsection{Environments structures}
 \subsection{Inheritance resolution}
