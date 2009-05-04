@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.4 2009-05-04 09:04:45 pessaux Exp $
+% $Id: typing.tex,v 1.5 2009-05-04 09:23:08 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -759,7 +759,7 @@ to a ``parameter description'' that will be recorded in the
 hosting species {\tt spe\_sig\_params} field.
 
 
-\subsection{Typinf a species expression}
+\subsection{Typing a species expression}
 A species expression is either a simple species/collection identifier
 like {\tt Setoid} or an application of a species/collection identifier
 to one or more {\bf species/collection identifiers}. This means that
@@ -791,9 +791,60 @@ species C inherits A (D) ... ;
 {\footnotesize\lstinline*let eq (x in B, y in B) = B!bla (x, y) && B!bli (y, x) ...*}
 but with the body
 {\footnotesize\lstinline*let eq (x in D, y in D) = D!bla (x, y) && D!bli (y, x) ...*}
-where {\tt B} was replaced by {\tt D}.
+where {\tt B} was replaced by {\tt D}. This is done by
+{\tt apply\_species\_arguments} that returns the correct (substituted)
+list of methods but also the list of these substitutions and the list
+of species types {\tt Self} must be compatible with. This is used in
+case of a species expression parameterised used applied to {\tt Self}
+(this point is a bit more detailed in the following section
+\ref{inheritance-resolution}).
+
+The most tricky point is to build and use this list of substitutions
+during typing. In effect, we obviously build it while applying the
+arguments, {\bf but we also use it} (in fact, the substitutions
+already existing in the list accumulator at the point we process an
+effective argument). In effect, this list contains the substitutions
+to apply to each effective parameter before processing it. This is the
+way to represent the fact that in rule [{\tt COLL-INST}, page 43,
+figure 3.2, section 3.8 in Virgile Prevosto's Phd, the substutition
+$[C_1 \leftarrow C_2]$ is performed on $t_s$, i.e. in it's methods
+types {\bf but also in the remaining effective species parameters}
+(yep, indeed, the $t_s$ signature of a species contains both the
+methodes and the parameters). Because these parameters will be
+``evaluated'' after the current one, we need to delay the substitution
+until they are really processed. Be carreful that by construction,
+this list contains the substitutions in {\bf reverse} order of the
+application order. This means that the first required substitution is
+in tail !
+
+Hence, for each species parameter, when we encounter a collection
+parameter, we type the expression it is ``{\tt is}'' and we then must
+apply the already seen substitutions to this type to ensure that it is
+transformed if required to collections of possible previous ``{\tt is}''
+parameters. For instance, let's take the following code:
+
+{\footnotesize
+\begin{lstlisting}
+species Me (Naturals is Intmodel, n in Naturals) = ...
+collection ConcreteInt implements Intmodel ;;
+collection Foo implements Me (ConcreteInt, ConcreteInt!un) ;;
+\end{lstlisting}
+}
+
+\noindent while typechecking the {\tt ConcreteInt!un}, we get a type
+{\tt Naturals}. But since in the {\tt Foo} collection, {\tt Naturals} is
+instanciated by the effective {\tt ConcreteInt}, {\tt Naturals} appears
+to be incompatible with {\tt ConcreteInt}. However, in {\tt Foo}, with
+the first instanciation, we said that {\tt Naturals} {\bf is} a
+{\tt ConcreteInt}, and we substituted everywhere {\tt Naturals} by
+{\tt ConcreteInt}. So idem must we do in the type infered for the
+effective argument {\tt ConcreteInt!un}.
+
+
 
 \subsection{Inheritance resolution}
+\index{inheritance resolution}
+\label{inheritance-resolution}
 The expected result of inheritance resolution is to load the inherited
 methods in the environment and get their signatures and methods
 information. Hence, combined with the defined methods, we will be able
