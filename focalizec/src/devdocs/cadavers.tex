@@ -1,0 +1,60 @@
+% $Id: cadavers.tex,v 1.1 2009-05-04 09:04:45 pessaux Exp $
+
+Here is the holly section of things that are not yet done and for
+which we know there is still something to do. Currently, most of them
+are not very intricate and do not impact the general sanity of the
+compiler. However, it is possible to create some cases of programs
+falling in these open points. Here are the cadavers we hide under the
+carpet\ldots\smiley
+
+
+\begin{itemize}
+\item The verification that {\tt Self} is really compatible with the
+  list of species types encountered during species expression typing
+  is not currently done. This deals with inheritance from parametrised
+  species applied to {\tt Self} as described in
+  \ref{cadaver-self-must-be}. Most of the points in the code are
+  tagged by a comment {\tt [Unsure]} and involve an identifier
+  named {\tt self\_must\_be} to represent the unused list of these
+  species types {\tt Self} must be compatible with. In fact, the
+  function performing compatibility test already exists and is called
+  {\tt is\_sub\_species\_of} in the source file {\tt typing/infer.ml}
+  but we do not use it for this task.
+
+\item Recursive functions with termination proofs using \coq's
+  {\tt Function} construct are to be finished. I have some notes
+  about this and must scan them instead of rewriting all. $A
+  priori$, there is not tons of work to do for this and major
+  identified points are:
+  \begin{itemize}
+  \item Adding $\alpha$ conversion in some parts of the generated
+    code to prevent name conflicts in \coq.
+  \item Rewrite the {\tt LTac} of William that should provide a mean
+    to prove well foundation of orders from simple basic orders.
+  \item Instead of using {\tt magic\_order} at the end of the proof,
+    use the defined order (can be done only when the above {\tt LTac}
+    will work since it will provide the well foundation of the
+    order.
+  \item Verify the {\tt measure} kind of proof and implement the
+    {\tt structural} kind based on the primary brick {\tt order}.
+  \end{itemize}
+
+\item Check record label exhaustivity when dealing with expressions of
+  type record. Currently the compiler only issues a warning to say
+  that it is not done.
+  
+\item Have an automated and transparent renaming mechanism to prevent
+  identifiers used in \focalize\ to make syntax errors in the target
+  languages if they are token of these languages. For instance,
+  defining an identifier ``{\tt module}'' will make a syntax error in
+  the generated \ocaml\ code since ``{\tt module}'' is a keyword in
+  \ocaml.
+
+\item Local collections are not yet re-implemented. One must
+  understand the semantics of the structure we want before.
+
+\item And most generally, the few points in the code tagged by a
+  comment  {\tt [Unsure]}. These are the points where I strongly
+  wondered without having yet found a solution in which I have a
+  strong, indubitable confidence.
+\end{itemize}

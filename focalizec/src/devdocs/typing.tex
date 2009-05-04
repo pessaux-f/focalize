@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.3 2009-04-28 16:56:11 pessaux Exp $
+% $Id: typing.tex,v 1.4 2009-05-04 09:04:45 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -710,17 +710,168 @@ in the introduction of this chapter, at \ref{cool-incremental-nf}).
 
 
 
-\subsection{Environment structures}
-The structure of the environment used during the tying pass has been
-presented in \ref{typing-environment}.
+\subsection{Environment and structures for typing pass}
+The structure of the environment used during the typing pass has been
+presented in \ref{typing-environment} and is coded in {typing/env.ml}.
+
+The only other structure used during this pass is the typing context
+that group various information to pass to the functions instead of
+having to pass them individually hence preventing from having tons of
+arguments for each call. This structure, shown below is local to
+the {\tt typing/infer.ml} and passed to each function under the
+parameter name {\tt ctx}.
+
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml, title=Typing context]
+type typing_context = {
+  (** The name of the currently analysed compilation unit (i.e. the name
+      of the file without extension and not capitalized). *)
+  current_unit : Types.fname ;
+  (** The name of the current species if relevant. *)
+  current_species : Parsetree.qualified_species option ;
+  (** Optional type Self is known to be equal to. *)
+  self_manifest : Types.type_simple option ;
+  (** Mapping between 'variables [vname]s and the [simple_type] they are
+      bound to. Used when creating a polymorphic type definition. *)
+  tyvars_mapping : (Parsetree.vname * Types.type_simple) list
+}
+\end{lstlisting}
+}
+
+\section{Typing a species definition}
+The process of typing a species will be now examined step by step by
+step. This is done by typing its parameters, resolving inheritance,
+type-checking the methods, merging properties and proofs, normalising
+the species, computing its dependencies graph and then inserting it in
+the environment. A few other administrative tasks are performed and
+will be detailled below.
+
+\subsection{Dealing with the species parameters}
+For each parameter, this process builds the species type of the
+parameter and get the list of methods it has. Each parameter will be
+inserted in the environment as species and type (the type representing
+the carrier of this parameter).
+
+\medskip
+There are 2 cases: entity and collection parameters. Both of them lead
+to a ``parameter description'' that will be recorded in the
+{\tt Env.TypeInformation.species\_param} that will appear in the
+hosting species {\tt spe\_sig\_params} field.
 
 
+\subsection{Typinf a species expression}
+A species expression is either a simple species/collection identifier
+like {\tt Setoid} or an application of a species/collection identifier
+to one or more {\bf species/collection identifiers}. This means that
+we have no expressions like {\tt A(B(C))}.
+
+The first thing is to find in the environment the name of the ``main''
+species (i.e. the unique only if there is no application, or the name
+in ``applicative'' position if there is an application). From this
+search, we get a species description of a previously existing species.
+
+The aim is to finally get (among other things, but this is the most
+obvious result we want) the list of methods this species expression
+has. If there is no parameter, then the list of methods is trivially
+the one obtained in the structure found in the environment. The most
+interesting point is when the expression is an application. We then
+must apply the species to its effective argument(s) before being able
+to know the methods it has. In effect, let's imagine we have:
+
+{\footnotesize
+\begin{lstlisting}
+species A (B is Setoid) =
+  let eq (x in B, y in B) = B!bla (x, y) && B!bli (y, x) ... ;;
+
+species C inherits A (D) ... ;
+\end{lstlisting}
+}
+
+\noindent {\tt C} inherits {\tt eq} but not with the body
+{\footnotesize\lstinline*let eq (x in B, y in B) = B!bla (x, y) && B!bli (y, x) ...*}
+but with the body
+{\footnotesize\lstinline*let eq (x in D, y in D) = D!bla (x, y) && D!bli (y, x) ...*}
+where {\tt B} was replaced by {\tt D}.
 
 \subsection{Inheritance resolution}
+The expected result of inheritance resolution is to load the inherited
+methods in the environment and get their signatures and methods
+information. Hence, combined with the defined methods, we will be able
+to know all the methods of the species. We also want to get a possibly
+new context where the fact that {\tt Self} is now manifest is
+updated, in case we inherited a {\tt representation} method.
 
+By the way, since in the inheritance clause, we can have parametrised
+collection applied to {\tt Self} as effective argument, we remind all
+the species type that {\tt Self} must be compatible with (called
+{\tt self\_must\_be} in the source code). In effect, since we are
+building the current species, the species type of {\tt Self} (i.e. the
+currently built species) is not yet known. Then to ensure consistency
+we must check afterwards, i.e. once we got all the methods of the
+species if it compliant with all the species types expected as
+effective argument fo the used collections on which we applied
+{\tt Self}.
+\label{cadaver-self-must-be}
+{\bf {\large Note that currently the test is not performed
+and to remind we have to do this, the compiler emits a warning}}.
+
+\medskip
+When processing each inherited species expression, we type it like we
+did for the collection parameters. This gives us the list of methods
+the species has (hence the list of methods the current species inherits
+via the processed species expression), the list of species types that
+{\tt Self} must be compatible with, and finally the substitutions
+applied on the formal parameters of parametrised species used in the
+{\tt inherits} clause. Such substitutions are those replacing formal
+parameters by effective collection expressions when the species
+expression used in the {\tt inherits} clause uses application.
+This information will be recorded in the history information of the
+inherited methods for later use.
+
+For instance, considering the \focalize\ sample code:
+{\footnotesize
+\begin{lstlisting}
+species Foo0 (A0 is Sp0) inherits ... = let v = 1 end ;;
+species Foo1 (A1 is Sp1) inherits Foo0 (A1) = let v = 2 end ;;
+species Foo2 (A2 is Sp1) inherits Foo1 (A2) = end ;;
+species Foo3 (A3 is Sp1, A4 is A3) inherits Foo2 (A4) = end ;;
+\end{lstlisting}
+}
+
+\noindent we will remind that in {\tt Foo3}, we inherited from
+{\tt Foo2} applied to {\tt A4} and that in {\tt Foo2}, we inherited
+from {\tt Foo1} applied to {\tt A2}.
+
+These substitutions will be used to represent the fact that in rule
+[{\tt COLL-INST}], page 43, figure 3.2, section 3.8 in Virgile
+Prevosto's PhD, the substutition $[C_1 \leftarrow C_2]$ is performed
+on $t_s$.
+
+% (
+%         - [accu_substs] : The list of substitutions to apply to each
+%              effective parameter before processing it. This is the way
+%              to represent the fact that in rule COLL-INST, page 43,
+%              fig 3.2, section 3.8 in Virgile Prevosto's Phd, the
+%              substutition "[c1 <- c2]" is performed on ts, i.e. in
+%              it's methods types but also in the remaining effective
+%              species parameters (yep, indeed, the ts signature of a
+%              species contains both the methodes and the parameters).
+%              Because these parameters will be "evaluated" after the
+%              current one, we need to delay the substitution until they
+%              are really processed.
+%              This list contains the in *REVERSE* order of the
+%              application order. This means that the first required
+%              substitution is in tail.           
+% )
+
+
+
+\subsection{Type-checking methods}
 \subsection{Dependency on Self's methods calculus}
 Parler de comment on détecte les dépendances sur Self.
 
 
 
 \subsection{Normal form}
+proof collapsing.
+fusion
