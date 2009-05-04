@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.6 2009-05-04 11:00:10 pessaux Exp $
+% $Id: typing.tex,v 1.7 2009-05-04 15:18:17 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -559,7 +559,6 @@ let occur_check ~loc var ty =
 \end{lstlisting}
 }
 
-
 Let's go back to our unification routine. For the moment, the lines 14
 and 20 (and the comment lines 7-12) can be forgotten since they will
 be explained when we will be dealing with polymorphism.
@@ -726,12 +725,12 @@ more especially by the entry point function {\tt
   typecheck\_file}. This function triggers the type-checking of each
 phrase of the compilation unit. Be aware that in the source of the
 compiler, ``type-check'' is widely overloaded and denotes the process
-of infering type for entities and then ensuring they are well-formed
+of inferring type for entities and then ensuring they are well-formed
 and building the first pieces of information that will ease the code
 generation. In particular, the fact that each species is given a
 normal form containing all its methods is handy to recover the methods
 of parameters or inheritance species expressions since there is no
-need to walk along all the inheritance level (point already mentionned
+need to walk along all the inheritance level (point already mentioned
 in the introduction of this chapter, at \ref{cool-incremental-nf}).
 
 
@@ -764,13 +763,16 @@ type typing_context = {
 \end{lstlisting}
 }
 
+
+
+
 \section{Typing a species definition}
 The process of typing a species will be now examined step by step by
 step. This is done by typing its parameters, resolving inheritance,
 type-checking the methods, merging properties and proofs, normalising
 the species, computing its dependencies graph and then inserting it in
 the environment. A few other administrative tasks are performed and
-will be detailled below.
+will be detailed below.
 
 \subsection{Dealing with the species parameters}
 For each parameter, this process builds the species type of the
@@ -822,7 +824,7 @@ where {\tt B} was replaced by {\tt D}. This is done by
 {\tt apply\_species\_arguments} that returns the correct (substituted)
 list of methods but also the list of these substitutions and the list
 of species types {\tt Self} must be compatible with. This is used in
-case of a species expression parameterised used applied to {\tt Self}
+case of a species expression parametrised used applied to {\tt Self}
 (this point is a bit more detailed in the following section
 \ref{inheritance-resolution}).
 
@@ -833,13 +835,13 @@ already existing in the list accumulator at the point we process an
 effective argument). In effect, this list contains the substitutions
 to apply to each effective parameter before processing it. This is the
 way to represent the fact that in rule [{\tt COLL-INST}, page 43,
-figure 3.2, section 3.8 in Virgile Prevosto's Phd, the substutition
+figure 3.2, section 3.8 in Virgile Prevosto's Phd, the substitution
 $[C_1 \leftarrow C_2]$ is performed on $t_s$, i.e. in it's methods
 types {\bf but also in the remaining effective species parameters}
 (yep, indeed, the $t_s$ signature of a species contains both the
-methodes and the parameters). Because these parameters will be
+methods and the parameters). Because these parameters will be
 ``evaluated'' after the current one, we need to delay the substitution
-until they are really processed. Be carreful that by construction,
+until they are really processed. Be careful that by construction,
 this list contains the substitutions in {\bf reverse} order of the
 application order. This means that the first required substitution is
 in tail !
@@ -860,11 +862,11 @@ collection Foo implements Me (ConcreteInt, ConcreteInt!un) ;;
 
 \noindent while typechecking the {\tt ConcreteInt!un}, we get a type
 {\tt Naturals}. But since in the {\tt Foo} collection, {\tt Naturals} is
-instanciated by the effective {\tt ConcreteInt}, {\tt Naturals} appears
+instantiated by the effective {\tt ConcreteInt}, {\tt Naturals} appears
 to be incompatible with {\tt ConcreteInt}. However, in {\tt Foo}, with
 the first instanciation, we said that {\tt Naturals} {\bf is} a
 {\tt ConcreteInt}, and we substituted everywhere {\tt Naturals} by
-{\tt ConcreteInt}. So idem must we do in the type infered for the
+{\tt ConcreteInt}. So idem must we do in the type inferred for the
 effective argument {\tt ConcreteInt!un}.
 
 
@@ -887,7 +889,7 @@ building the current species, the species type of {\tt Self} (i.e. the
 currently built species) is not yet known. Then to ensure consistency
 we must check afterwards, i.e. once we got all the methods of the
 species if it compliant with all the species types expected as
-effective argument fo the used collections on which we applied
+effective argument of the used collections on which we applied
 {\tt Self}.
 \label{cadaver-self-must-be}
 {\bf {\large Note that currently the test is not performed
@@ -923,7 +925,7 @@ from {\tt Foo1} applied to {\tt A2}.
 As described above in \ref{typing-a-species-expression}, these
 substitutions will be used to represent the fact that in rule
 [{\tt COLL-INST}], page 43, figure 3.2, section 3.8 in Virgile
-Prevosto's PhD, the substutition $[C_1 \leftarrow C_2]$ is performed
+Prevosto's PhD, the substitution $[C_1 \leftarrow C_2]$ is performed
 on $t_s$.
 
 
@@ -932,29 +934,29 @@ on $t_s$.
 This is done by {\tt typecheck\_species\_fields}. This function infers
 the types of the species fields contained in the list of methods
 definitions. The typing environment is incrementally extended with the
-found methods and used to typecheck the next methods.
+found methods and used to type-check the next methods.
 
 The function returns a 5-uplet whose 3 first components are suitable to
 be inserted in the structure of a species's type, and the last ones are
 the {\tt proof of} and {\tt termination proof of} fields that have
 been found among the fields. These {\tt proof of}'s must be collapsed
 with their related property {\bf but} at the inheritance level where
-the proof is found (not at the one where the property was enounced),
-to lead to a theorem before the normalization process starts.
+the proof is found (not at the one where the property was stated),
+to lead to a theorem before the formalisation process starts.
 The {\tt termination proof of}'s must be collapsed with their related
-{\tt let rec} definitions also before the normalization process
+{\tt let rec} definitions also before the normalisation process
 starts.
 
 Type-checking of methods need some comments in some field types
 cases.
 
-The first one is for the signature {\tt representaton}. Once
+The first one is for the signature {\tt representation}. Once
 {\tt representation} is found, the typing context will be modified by
 setting the field {\tt self\_manifest} to {\tt Some} of the type
 expression. Then we first type-check the provided type expression for
-the carrier. But we can't directly set the infered type into
-{\tt self\_manifest}. We must make a copy of the infered type in order
-to keep the originally infered type aside any further modifications that
+the carrier. But we can't directly set the inferred type into
+{\tt self\_manifest}. We must make a copy of the inferred type in order
+to keep the originally inferred type aside any further modifications that
 could arise while unifying anywhere {\tt Self} with ``its known
 representation''. In effect, unification in place would establish a
 link by side effect from the representation to the type
@@ -968,33 +970,30 @@ any types, even those incompatible with the original {\bf correct}
 representation of {\tt representation}'s type.
 
 \medskip
-Next, we need to add a bit of explaination about type-checking
+Next, we need to add a bit of explanation about type-checking
 properties and theorems. For the same reason that in external
 definition, type variables present in a type expression in a property
-or a theorem are implicitely considered as universally quantified. In
+or a theorem are implicitly considered as universally quantified. In
 effect, there no syntax to make explicit the quantification. Then we
 first create a variable mapping from the type expression to prevent
-variables from being ``unbound''. We must increase the bindind level
+variables from being ``unbound''. We must increase the binding level
 because when processing {\tt Pr\_forall} and {\tt Pr\_exists}, the
 function {\tt typecheck\_logical\_expr} needs to store the type scheme
 of the identifiers introduced. And since generalisation if done in
 {\tt typecheck\_logical\_expr} with a binding level of + 1 compared to
-our current one, generalization could not be done otherwise.
-
-
-\subsection{Dependencies on Self's methods calculus}
-\label{deps-on-self-methods}
+our current one, generalisation could not be done otherwise.
 
 
 \subsubsection{Dependencies on the carrier}
 \label{deps-on-carrier}
-We have a special case for dependencies on the carrier {\tt Self}
-introduced by usuig the type introduced by {\tt representation}.
+We have a special case for computing dependencies on the carrier
+{\tt Self} introduced by using the type introduced by
+{\tt representation}. 
 
 In effect, we have a decl-dependency on the carrier if the type of a
 method contains a reference to {\tt Self} (i.e. if a type sub-term is
 {\tt Self}). One could only perform this check for each field as soon
-as we infered its type. However, without any type annotation, the type
+as we inferred its type. However, without any type annotation, the type
 of a method could hide the fact that it refers to {\tt Self}. For
 instance, let's have the case:
 {\footnotesize
@@ -1010,10 +1009,10 @@ end ;;
 \end{lstlisting}
 }
 
-\noindent infering the type of {\tt m} in {\tt B} would simply lead to
+\noindent inferring the type of {\tt m} in {\tt B} would simply lead to
 {\tt int}, hence telling that there is no decl-dependency no
 {\tt Self}. In fact, after the species is put in normal form, it
-appears that indeed there was since the type fo {\tt m} is not
+appears that indeed there was since the type of {\tt m} is not
 {\tt int} but rather {\tt Self}. For this reason, the detection of
 this dependency is also performed at ``fields fusion'' stage, when
 building the normal form of the species. More accurately, the take
@@ -1045,17 +1044,132 @@ unification between all the types of the found occurrences of a
 same-name method !
 
 \medskip
-As previously statedd, in fact, the recording of these dependencies is
+As previously stated, in fact, the recording of these dependencies is
 also done as soon as we typed a field since doing it only at the
 fusion stage can be non sufficient in some case since at fusion we do
 not descent on the whole expressions of methods.
 
 \medskip
 Hence, these global flags reminding the presence of
-dec/def-dependencies must obviously be reset before addressing a
+decl/def-dependencies must obviously be reset before addressing a
 new method. That's done by calling {\tt reset\_deps\_on\_rep}.
 
 
+\subsection{Proof collapsing}
+Since it is possible to provide the proof of an existing property
+after this property, we must transform properties having a proof
+collapsing the two into one theorem. In effect, a {\tt proof} field
+alone is not a correct field in the normal form of a species: it must
+be related to a property. This process is carried out by the function
+{\tt collapse\_proofs\_of} This function tries to find among
+the list of methods it receives as argument, property fields whose
+proofs are separately given in the list of proofs also passed as
+argument.
+
+Each time the search succeeds, the property and the related proof are
+merged in a new theorem field, hence discarding the property
+fields. Because this process is performed before the normalisation
+pass, we still require to have 2 separate lists of methods:
+\begin{itemize}
+\item the inherited ones,
+\item those defined at the current inheritance level.
+\end{itemize}
+
+For this reason, the search will be done first on the methods defined at
+the current inheritance level (in order to find the ``most recent'') and
+only if the search failed, we will try it again on the inherited methods.
+
+{\bf Attention}: Such a merge now requires a re-ordering of the final
+list of fields. In effect, by moving the {\tt proof of} field when
+merging it as a {\tt SF\_theorem} located where the initial
+{\tt SF\_property} field was, if the proof (that was originally
+``later'') uses stuff defined between the {\tt SF\_property} and the
+original location of the proof, then this stuff will now appear
+``after'' the proof itself. And this is not well-formed. The example
+file found in \\
+{\tt focalizec/tests/ok\_\_need\_re\_ordering.fcl}
+illustrates this need. This re-ordering will be done after the normal
+form of the species is computed.
+
+
 \subsection{Normal form}
-proof collapsing.
-fusion
+The normalisation is done in {\tt normalize\_species}, applying the
+algorithm described in Virgile Prevosto's PhD in Section 3.7.1, page
+36 plus its extension to properties and theorems in Section 3.9.7,
+page 57. Type ``equality'' test is performed as usual using the
+unification, with no unification error meaning ``true'' and error
+meaning ``false''.
+
+The only thing is that we make clearly explicit the ``silently
+described'' notion of conflict detection mentioned in Virgile
+Prevosto's PhD page 57 line 6.
+
+In effect, if a field is inherited several times via the {\bf same}
+parent, erasing must not be performed ! That's like if we did as if
+there was no erasing to do ! Such a situation can arise if 2 species
+{\tt B} and {\tt C} inherit from a species {\tt A} (with a method
+{\tt m}) and another species {\tt D} inherits from from {\tt B} and
+{\tt C}. The method {\tt m} then appears twice in {\tt D}, once from
+{\tt A} via {\tt B}, once from {\tt A} via {\tt C}. And this is not a
+conflict that requires erasement: in effect, there is no
+``redefinition''. For this reason, before erasing a field, we check
+with the function {\tt non\_conflicting\_fields\_p}.
+
+\medskip
+During normalisation, an operation of ``fusion'' is used. This is
+mostly the once described in Virgile Prevosto's PhD in section 3.6,
+page 35 and completed in Section 3.9.7, page 56, definition 35. The
+only difference is that we made explicit the notion of ``to be
+equal'', ``to have the same types'' for 2 properties or 2 theorems.
+In effect, the type of a logical method is its logical
+statement. Hence, it is an expression of the \focalize\ language. This
+means that we must compare 2 AST structures. A simple structural
+equality doesn't have any sense since at least the 2 structures will
+differ by their source location, hence always returning ``different''.
+So, the comparison we adopt here is performed thank to the
+{\tt typing/ast\_equal.ml} module. Hence we implement a custom
+structural equality to determine if 2 expressions have the same form
+modulo $\alpha$-conversion of the free identifiers. In particular, we
+are only interested in comparing only the {\tt Parsetree.ast\_desc}
+field. We also try to consider that parentheses are non significant is
+case an {\tt E\_paren} is found not equal to another
+expression. Currently, the comparison is done on the skeleton of the
+expression without tricky heuristic like considering that
+$A \Rightarrow B \Rightarrow C$ is equivalent to
+$(A \wedge B) \Rightarrow C$ and so on\ldots
+
+
+\subsection{Miscellaneous}
+When finally the species is built, after having checked that it is
+well-formed, it has no doubles, it is fully defined or not and so on,
+we finally add the species description in the environment. We also
+must add in the environment a type that represents the species'
+carrier. However, this must be done only the species is really fully
+defined. In effect, in this case, it will really have a carrier for
+the species. This especially avoid such things:
+{\footnotesize
+\begin{lstlisting}
+species A =
+  signature f : int
+end ;;
+species B =
+  signature b : A -> A
+end ;;
+\end{lstlisting}
+}
+
+\noindent for which, if we generate the code for this, in \ocaml\ we
+won't have any type definition for {\tt me\_as\_carrier} in
+{\tt A}. And in {\tt B}, {\tt g} will have the type
+{\footnotesize\lstinline*A.me_as_carrier -> A.me_as_carrier*}
+where {\footnotesize\lstinline*A.me_as_carrier*} unbound. This is moral
+since {\tt A} doesn't have a carrier.
+
+{\bf Attention}: While writing this note, I wonder if the point that
+the species must have a method "representation" would be in fact
+sufficient\ldots
+
+
+
+
+\section{Typing a collection definition}
