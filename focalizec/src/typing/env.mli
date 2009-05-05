@@ -211,6 +211,8 @@ module CoqGenInformation :
       | VB_toplevel_property of Parsetree.logical_expr
 
     type value_mapping_info = (int * value_body)
+
+    type type_info = TypeInformation.type_description
   end
 
 
@@ -358,6 +360,13 @@ module CoqGenEnv :
     val find_label :
       loc: Location.t -> current_unit: Types.fname ->
       Parsetree.label_ident -> t -> CoqGenInformation.label_mapping_info
+
+    val add_type :
+      loc: Location.t -> Parsetree.vname ->
+        CoqGenInformation.type_info -> t -> t
+    val find_type :
+      loc: Location.t -> current_unit: Types.fname ->
+      Parsetree.ident -> t -> CoqGenInformation.type_info
   end
 
 

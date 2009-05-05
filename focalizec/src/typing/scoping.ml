@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.82 2009-05-05 13:49:09 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.83 2009-05-05 16:33:27 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -227,97 +227,6 @@ type scoping_context = {
       Not file with paths and extension : just module name (ex: "basics"). *)
   used_modules : Types.fname list
 } ;;
-
-
-
-
-(* ********************************************************************** *)
-(* Parsetree.qualified_vname -> Parsetree.vname                           *)
-(** {b Descr} : Helper to extract the [vname] from a [qualified_vname].
-    This basically is forgetting the compilation unit specification if
-    there is one in the [qualified_vname].
-
-    {b Args} :
-      - unnammed : The [qualified_vname] in which to find the inner
-        [vname].
-
-    {b Ret} :
-      - Parsetree.vname : The [vname] contained in the [qualified_vname].
-
-    {b Exported} : No.                                                    *)
-(* ********************************************************************** *)
-let vname_of_qvname = function
-  | Parsetree.Vname vname | Parsetree.Qualified (_, vname) -> vname
-;;
-
-
-
-(* *********************************************************************** *)
-(* Parsetree.ident -> Parsetree.vname                                      *)
-(** {b Descr} : Extracts the [vname] from an [ident], hence providing the
-    name denoted by this identifier without any qualification/scoping.
-    For example, "bar", "foo#bar" or "foo!bar" will lead to the [vname]
-    "bar".
-
-    {b Args} :
-      - [ident] : The identifier in which to find the inner [vname].
-
-    {b Ret} :
-      - Parsetree.vname : The [vname] contained in the identifier.
-
-    {b Exported} : No.                                                     *)
-(* *********************************************************************** *)
-let unqualified_vname_of_ident ident =
-  match ident.Parsetree.ast_desc with
-  | Parsetree.I_local vname -> vname
-  | Parsetree.I_global qvname -> vname_of_qvname qvname
-;;
-
-
-
-(* ************************************************************************* *)
-(* Parsetree.constructor_ident -> Parsetree.vname                            *)
-(** {b Descr} : Extracts the [vname] from a [constructor_ident], hence
-    providing the name denoted by this identifier without any
-    qualification/scoping.
-    For example, "bar", "foo#Bar" will lead to the [vname] "Bar".
-
-    {b Args} :
-      - [ident] : The [constructor_ident] in which to find the inner [vname].
-
-    {b Ret} :
-      - Parsetree.vname : The [vname] contained in the [constructor_ident].
-
-    {b Exported} : No.                                                       *)
-(* ************************************************************************* *)
-let unqualified_vname_of_constructor_ident ident =
-  let Parsetree.CI ident = ident.Parsetree.ast_desc in
-  unqualified_vname_of_ident ident
-;;
-
-
-
-(* *********************************************************************** *)
-(* Parsetree.expr_ident -> Parsetree.vname                                 *)
-(** {b Descr} : Extracts the [vname] from an [expt_ident], hence providing
-    the name denoted by this identifier without any qualification/scoping.
-    For example, "bar", "foo#bar" or "foo!bar" will lead to the [vname]
-    "bar".
-
-    {b Args} :
-      - [ident] : The [expr_ident] in which to find the inner [vname].
-
-    {b Ret} :
-      - Parsetree.vname : The [vname] contained in the [expr_ident].
-
-    {b Exported} : No.                                                     *)
-(* *********************************************************************** *)
-let unqualified_vname_of_expr_ident ident =
-  match ident.Parsetree.ast_desc with
-   | Parsetree.EI_local vname -> vname
-   | Parsetree.EI_global qvname -> vname_of_qvname qvname
-   | Parsetree.EI_method (_, vname) -> vname
-;;
 
 
 
@@ -618,7 +527,7 @@ let rec scope_type_expr ctx env ty_expr =
              ~loc: ident.Parsetree.ast_loc
              ~current_unit: ctx.current_unit ident env in
          (* Let's re-construct a completely scoped identifier. *)
-         let basic_vname = unqualified_vname_of_ident ident in
+         let basic_vname = Parsetree_utils.unqualified_vname_of_ident ident in
          let scoped_ident_descr =
            match hosting_info with
             | Env.ScopeInformation.TBI_builtin_or_var ->
@@ -644,7 +553,7 @@ let rec scope_type_expr ctx env ty_expr =
              ~loc: ident.Parsetree.ast_loc
              ~current_unit: ctx.current_unit ident env in
          (* Let's re-construct a completely scoped identifier. *)
-         let basic_vname = unqualified_vname_of_ident ident in
+         let basic_vname = Parsetree_utils.unqualified_vname_of_ident ident in
          let scoped_ident_descr =
            match hosting_info with
             | Env.ScopeInformation.TBI_builtin_or_var ->
@@ -792,7 +701,7 @@ let rec scope_rep_type_def ctx env rep_type_def =
              ~loc: ident.Parsetree.ast_loc
              ~current_unit: ctx.current_unit ident env in
          (* Let's re-construct a completely scoped identifier. *)
-         let basic_vname = unqualified_vname_of_ident ident in
+         let basic_vname = Parsetree_utils.unqualified_vname_of_ident ident in
          let scoped_ident_descr =
            match hosting_info with
             | Env.ScopeInformation.TBI_builtin_or_var ->
@@ -818,7 +727,7 @@ let rec scope_rep_type_def ctx env rep_type_def =
              ~loc: ident.Parsetree.ast_loc
              ~current_unit: ctx.current_unit ident env in
          (* Let's re-construct a completely scoped identifier. *)
-         let basic_vname = unqualified_vname_of_ident ident in
+         let basic_vname = Parsetree_utils.unqualified_vname_of_ident ident in
          let scoped_ident_descr =
            match hosting_info with
             | Env.ScopeInformation.TBI_builtin_or_var ->
@@ -1151,7 +1060,8 @@ let scope_enforced_deps ctx env enforced_deps =
                    ~loc: ident.Parsetree.ast_loc
                    ~current_unit: ctx.current_unit
                    ~current_species_name: ctx.current_species ident env in
-               let basic_vname = unqualified_vname_of_expr_ident ident in
+               let basic_vname =
+                 Parsetree_utils.unqualified_vname_of_expr_ident ident in
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
@@ -1172,7 +1082,8 @@ let scope_enforced_deps ctx env enforced_deps =
                    ~loc: ident.Parsetree.ast_loc
                    ~current_unit: ctx.current_unit
                    ~current_species_name: ctx.current_species ident env in
-               let basic_vname = unqualified_vname_of_expr_ident ident in
+               let basic_vname =
+                 Parsetree_utils.unqualified_vname_of_expr_ident ident in
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
@@ -1207,7 +1118,8 @@ let rec scope_fact ctx env fact =
                    ~loc: ident.Parsetree.ast_loc
                    ~current_unit: ctx.current_unit
                    ~current_species_name: ctx.current_species ident env in
-               let basic_vname = unqualified_vname_of_expr_ident ident in
+               let basic_vname =
+                 Parsetree_utils.unqualified_vname_of_expr_ident ident in
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
@@ -1223,7 +1135,8 @@ let rec scope_fact ctx env fact =
                (* Ensure that the mentionned hosting compilation unit of the
                   expr_ident was mentionned to be "used" or "opened". *)
                ensure_expr_ident_allowed_qualified ctx ident ;
-               let basic_vname = unqualified_vname_of_expr_ident ident in
+               let basic_vname =
+                 Parsetree_utils.unqualified_vname_of_expr_ident ident in
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
@@ -1254,7 +1167,8 @@ let rec scope_fact ctx env fact =
                    ~loc: ident.Parsetree.ast_loc
                    ~current_unit: ctx.current_unit ident env in
                (* Let's re-construct a completely scoped identifier. *)
-               let basic_vname = unqualified_vname_of_ident ident in
+               let basic_vname =
+                 Parsetree_utils.unqualified_vname_of_ident ident in
                let scoped_ident_descr =
                  match hosting_info with
                   | Env.ScopeInformation.TBI_builtin_or_var ->
@@ -1408,7 +1322,8 @@ and scope_expr ctx env expr =
              ~current_unit: ctx.current_unit
              ~current_species_name: ctx.current_species ident env in
          (* Let's re-construct a completely scoped identifier. *)
-         let basic_vname = unqualified_vname_of_expr_ident ident in
+         let basic_vname =
+           Parsetree_utils.unqualified_vname_of_expr_ident ident in
          let scoped_ident_descr =
            scoped_expr_ident_desc_from_value_binding_info
              ~basic_vname hosting_info in
@@ -1422,7 +1337,8 @@ and scope_expr ctx env expr =
          Parsetree.E_app (scoped_fun_expr, scoped_args)
      | Parsetree.E_constr (cstr_ident, args_exprs) ->
          (begin
-         let basic_vname = unqualified_vname_of_constructor_ident cstr_ident in
+         let basic_vname =
+           Parsetree_utils.unqualified_vname_of_constructor_ident cstr_ident in
          let cstr_hosting_info =
            Env.ScopingEnv.find_constructor
              ~loc: cstr_ident.Parsetree.ast_loc
@@ -1551,7 +1467,8 @@ and scope_pattern ctx env pattern =
              pats
              ([], env) in
          (* Reconstruct a completely scopped constructor. *)
-         let cstr_vname = unqualified_vname_of_constructor_ident cstr in
+         let cstr_vname =
+           Parsetree_utils.unqualified_vname_of_constructor_ident cstr in
          let scoped_glob_ident = {
            glob_ident with
              Parsetree.ast_desc =
@@ -2200,7 +2117,8 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
             Parsetree.I_global
               (Parsetree.Qualified
                  (hosting_file,
-                  (unqualified_vname_of_constructor_ident cstr_expr))) } in
+                  (Parsetree_utils.unqualified_vname_of_constructor_ident
+                     cstr_expr))) } in
       let scoped_cstr_expr = {
         cstr_expr with
           Parsetree.ast_desc = Parsetree.CI scoped_glob_ident } in
@@ -2256,7 +2174,7 @@ let rec scope_species_expr ctx env species_expr =
     Env.ScopingEnv.find_species
       ~loc: se_name_ident.Parsetree.ast_loc
       ~current_unit: ctx.current_unit se_name_ident env in
-  let basic_vname = unqualified_vname_of_ident se_name_ident in
+  let basic_vname = Parsetree_utils.unqualified_vname_of_ident se_name_ident in
   let scoped_ident_descr =
     match ident_scope_info.Env.ScopeInformation.spbi_scope with
      | Env.ScopeInformation.SPBI_parameter -> Parsetree.I_local basic_vname
@@ -2351,7 +2269,8 @@ let scope_species_params_types ctx env params =
               Env.ScopingEnv.find_species
                 ~loc: ident.Parsetree.ast_loc
                 ~current_unit: ctx.current_unit ident accu_env in
-            let basic_vname = unqualified_vname_of_ident ident in
+            let basic_vname =
+              Parsetree_utils.unqualified_vname_of_ident ident in
             let scoped_ident_descr =
               match ident_scope_info.Env.ScopeInformation.spbi_scope with
               | Env.ScopeInformation.SPBI_parameter ->

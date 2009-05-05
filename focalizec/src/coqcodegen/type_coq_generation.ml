@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.15 2009-04-21 12:47:19 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.16 2009-05-05 16:33:27 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -19,7 +19,7 @@
       mutable field tries to be translated into Coq. Currently, we don't
       know how to map mutable records into Coq.
 
-    {b Rem} : Exported outside this module.                               *)
+    {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
 exception Mutable_record_fields_not_in_coq of
   (Location.t *      (** Location of the type definition hosting the field. *)
@@ -38,7 +38,7 @@ exception Mutable_record_fields_not_in_coq of
     We must share the variable-mapping for each printed type since the
     definition variables were inserted inside before we go on printing here.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
     print_ctx out_fmter tys =
@@ -86,7 +86,31 @@ let extend_coq_gen_env_with_type_external_bindings env nb_extra_args
 
 
 
-let type_def_compile ctx env type_def_name type_descr =
+
+(* ************************************************************************* *)
+(* record_in_env: bool -> Context.reduced_compil_context ->                  *)
+(*   Env.CoqGenEnv.t -> Parsetree.vname ->                                   *)
+(*     Env.TypeInformation.type_description -> Env.CoqGenEnv.t               *)
+(** {b Descr} : Emits the Coq code for a type definition. Depending on the
+    [~record_in_env] flag, it enriches the environment with elements induced
+    by the type definition. Returns the environment either enriched or
+    non-modified.
+
+    {b Params} :
+      - [~record_in_env] : Since this function is used to generate the Coq
+    code for a type definition (and in this case, we want to enrich the
+    environment) and the tip for Zenon in a proof "by type ..." (and in this
+    case, since the type is already defined, we don't want to enrich the
+    environment otherwise we would have an error telling that the type name
+    already exist in the environment), this flag tells if the environment
+    got as argument must be enriched and returned as function result. Note
+    that if we don't want to enrich the environment, then when we invoke the
+    current function, the user should make an "ignore" since it should not
+    be interested in the function return value.
+
+    {b Exported} : Yes.                                                      *)
+(* ************************************************************************* *)
+let type_def_compile ~record_in_env ctx env type_def_name type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
@@ -125,8 +149,13 @@ let type_def_compile ctx env type_def_name type_descr =
        Format.fprintf out_fmter ":=@ %a.@]@\n"
          (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
          instanciated_body ;
-       (* Not an external type definition, so nothing new in the environment. *)
-       env
+       if record_in_env then
+         (* Not an external type definition, so just add the type definition in
+            the environment. *)
+         Env.CoqGenEnv.add_type
+           ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
+           type_descr env
+       else env
    | Env.TypeInformation.TK_external (external_expr, external_bindings) ->
        (begin
        Format.fprintf out_fmter "@[<2>Definition %a__t@ "
@@ -150,11 +179,18 @@ let type_def_compile ctx env type_def_name type_descr =
          raise
            (Externals_generation_errs.No_external_type_def
               ("Coq", type_def_name, external_expr.Parsetree.ast_loc))) ;
-       (* Finally, we return the extended code generation environment in *)
-       (* which sum constructors or labels are recorded in order to be   *)
-       (* able to remind on what to map them when we will see them.      *)
-       extend_coq_gen_env_with_type_external_bindings
-         env nb_extra_args external_bindings
+       (* We build the extended code generation environment in which sum
+          constructors or labels are recorded in order to be able to remind on
+          what to map them when we will see them. *)
+       let env_with_external_bindings =
+         extend_coq_gen_env_with_type_external_bindings
+           env nb_extra_args external_bindings in
+       if record_in_env then
+         (* Finally add the type definition in the returned environment. *)
+         Env.CoqGenEnv.add_type
+           ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
+           type_descr env_with_external_bindings
+       else env
        end)
    | Env.TypeInformation.TK_variant cstrs ->
        (begin
@@ -212,19 +248,28 @@ let type_def_compile ctx env type_def_name type_descr =
              cstr_ty)
          sum_constructors_to_print ;
        Format.fprintf out_fmter ".@]@\n@\n" ;
-       (* Since any variant type constructors must be inserted in the
-          environment in order to know the number of extra leading "_" due to
-          polymorphism, we return the extended environment. *)
-       List.fold_left
-         (fun accu_env (sum_cstr_name, _) ->
-           Env.CoqGenEnv.add_constructor 
-             sum_cstr_name
-             { Env.CoqGenInformation.cmi_num_polymorphics_extra_args =
-                 nb_extra_args ;
-               Env.CoqGenInformation.cmi_external_expr = None}
-             accu_env)
-         env
-         sum_constructors_to_print
+       if record_in_env then
+         (begin
+         (* Since any variant type constructors must be inserted in the
+            environment in order to know the number of extra leading "_" due to
+            polymorphism, we return the extended environment. *)
+         let env_with_value_constructors =
+           List.fold_left
+             (fun accu_env (sum_cstr_name, _) ->
+               Env.CoqGenEnv.add_constructor 
+                 sum_cstr_name
+                 { Env.CoqGenInformation.cmi_num_polymorphics_extra_args =
+                   nb_extra_args ;
+                   Env.CoqGenInformation.cmi_external_expr = None}
+                 accu_env)
+             env
+             sum_constructors_to_print in
+         (* Finally add the type definition in the returned environment. *)
+         Env.CoqGenEnv.add_type
+           ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
+           type_descr env_with_value_constructors
+         end)
+       else env
        end)
    | Env.TypeInformation.TK_record fields ->
        (begin
@@ -281,7 +326,12 @@ let type_def_compile ctx env type_def_name type_descr =
        (* Do the printing job... *)
        local_print_fields record_fields_to_print ;
        Format.fprintf out_fmter " }.@]@\n " ;
-       (* Not an external type definition, so nothing new in the environment. *)
-       env
+       (* Not an external type definition, so just add the type definition in
+          the environment. *)
+       if record_in_env then
+         Env.CoqGenEnv.add_type
+           ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
+           type_descr env
+       else env
        end)
 ;;

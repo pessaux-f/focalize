@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.32 2009-04-02 15:10:54 weis Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.33 2009-05-05 16:33:27 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -162,7 +162,12 @@ let toplevel_compile env ~current_unit out_fmter = function
         (* Not in the context of generating a method's body code, then empty. *)
         Context.rcc_lambda_lift_params_mapping = [] ;
         Context.rcc_out_fmter = out_fmter } in
-      Type_coq_generation.type_def_compile ctx env type_def_name type_descr
+      (* Since we are on the definition of the type, this type doesn't already
+         exists normally. Hence, we want the code generation to enrich the
+         environment with the components (record labels, sum value
+         constructors) and the type the definition induces. *)
+      Type_coq_generation.type_def_compile
+        ~record_in_env: true ctx env type_def_name type_descr
   | Infer.PCM_let_def (let_def, _) ->
       (* Create the initial context for compiling the let definition.
          We would not need a "full" context, a "reduced" one would be

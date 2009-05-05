@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.171 2009-05-05 13:49:09 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.172 2009-05-05 16:33:27 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1575,10 +1575,44 @@ let zenonify_by_property ctx print_ctx env min_coq_env
 
 
 
-let zenonify_by_type _ctx _print_ctx _type_ident =
-  failwith
-    "Not yet available Renaud... I must add types in the coq code gen \
-    environment before."
+(** We must pass to Zenon the definition of the type in Coq-like syntax. *)
+let zenonify_by_type ctx env type_ident =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* We first search for the type definition in the code generation
+     environment. *)
+  let ty_def =
+    Env.CoqGenEnv.find_type
+      ~loc: type_ident.Parsetree.ast_loc
+      ~current_unit: ctx.Context.scc_current_unit type_ident env in
+  (* A bit of comment. *)
+  Format.fprintf out_fmter
+    "(* For type definition used via \"by type %a\". *)@\n"
+    Sourcify.pp_ident type_ident ;
+  (* Now, generate the definition like we usually do in Coq syntax. *)
+  let reduced_ctx = {
+    Context.rcc_current_unit = ctx.Context.scc_current_unit ;
+    (* Since type definitions are at toplevel, they can never reference
+       species parameters, so we can safely leave this list empty. *)
+    Context.rcc_species_parameters_names = [] ;
+    (* Since type definitions are at toplevel, they can never reference
+       species parameters carriers, so we can safely leave this list empty. *)
+    Context.rcc_collections_carrier_mapping = [] ;
+    (* For the same reason than above, we can leave this list empty. *)
+    Context.rcc_lambda_lift_params_mapping = [] ;
+    Context.rcc_out_fmter = out_fmter } in
+  (* Unqualify the type name since in a type definition, the name is always
+     without any qualification. We never write "type foo#t = ..." ! *)
+  let type_vname = Parsetree_utils.unqualified_vname_of_ident type_ident in
+  (* Throw the resulting environment since we do not to bind any thing
+     anymore. The returned value of [type_def_compile] is only useful when
+     compiling the type definition the first time it appears, i.e. when we
+     encounter it as a FoCaLize phrase. By the way, tell not to enrich the
+     environment otherwise, since the type is already defined, when inserting
+     it again in the environment, we will have an error telling "already
+     bound". *)
+  ignore
+    (Type_coq_generation.type_def_compile
+       ~record_in_env: false reduced_ctx env type_vname ty_def)
 ;;
 
 
@@ -1717,7 +1751,7 @@ let zenonify_fact ctx print_ctx env min_coq_env dependencies_from_params
    | Parsetree.F_type type_idents ->
        (* Syntax: "by type ...". *)
        List.iter
-         (fun type_ident -> zenonify_by_type ctx print_ctx type_ident)
+         (fun type_ident -> zenonify_by_type ctx env type_ident)
          type_idents
 ;;
 

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.129 2009-04-24 14:35:58 pessaux Exp $ *)
+(* $Id: env.ml,v 1.130 2009-05-05 16:33:27 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -1038,15 +1038,18 @@ module CoqGenInformation = struct
                              value_body) (** The expression bound to the
                                              ident. *)
 
+
+  type type_info = TypeInformation.type_description
+
   (* ************************************************************** *)
   (** {b Descr} : Type abbreviation to shorten the structure of the
       scoping environments.
 
-      {b Rem} : Not exported outside this module.                   *)
+      {b Exported} : No.                                            *)
   (* ************************************************************** *)
   type env =
-    (constructor_mapping_info, label_mapping_info, unit, value_mapping_info,
-     species_binding_info) generic_env
+    (constructor_mapping_info, label_mapping_info, type_info,
+     value_mapping_info, species_binding_info) generic_env
 end
 ;;
 
@@ -1064,7 +1067,7 @@ end
    generation environment although the corresponding file has been compiled
    without OCaml code generation enabled.
 
-   {b Rem} : Exported outside this module.                                  *)
+   {b Exported} : Yes.                                                      *)
 (* ************************************************************************ *)
 exception No_available_OCaml_code_generation_envt of Types.fname ;;
 
@@ -1075,7 +1078,7 @@ exception No_available_OCaml_code_generation_envt of Types.fname ;;
    environment although the corresponding file has been compiled without Coq
    code generation enabled.
 
-   {b Rem} : Exported outside this module.                                   *)
+   {b Exported} : Yes.                                                       *)
 (* ************************************************************************* *)
 exception No_available_Coq_code_generation_envt of Types.fname ;;
 
@@ -1087,7 +1090,7 @@ exception No_available_Coq_code_generation_envt of Types.fname ;;
     and the OCaml/Coq code generation environments if the source file was
     compiled with this target code generation enabled.
 
-    {b Rem} : Exported abstract outside this module.                          *)
+    {b Exported} : Abstract.                                                  *)
 (* ************************************************************************** *)
 type fo_file_structure = {
   ffs_scoping : ScopeInformation.env ;
@@ -1120,7 +1123,7 @@ let (scope_find_module, type_find_module,
       The lookup also performs a bufferisation to prevent futher calls
       from accessing again the disk. This should enhance lookup speed.
 
-      {b Rem} : Not exported outside this module.                      *)
+      {b Exported} : No.                                               *)
   (* ***************************************************************** *)
   let internal_find_module ~loc fname =
     (begin
@@ -1458,16 +1461,17 @@ end
     the argument [EMAccess] to access FoCal "modules" persistent data on
     disk.
 
-    {b Rem} : Not exported outside this module.
-    This functor is fully local to this file, it will be internally be
-    used to create the various environment structures (scoping, typing)
-    we need.                                                               *)
+    {b Rem} : This functor is fully local to this file, it will be
+    internally be used to create the various environment structures
+    (scoping, typing) we need.
+
+    {b Exported} : No.                                                     *)
 (* *********************************************************************** *)
 module Make(EMAccess : EnvModuleAccessSig) = struct
   (* ************************************************ *)
   (** {b Descr} : The type of the environment itself.
 
-      {b Rem} : Exported outside this module.         *)
+      {b Exported} : Yes.                             *)
   (* ************************************************ *)
   type t =
     (EMAccess.constructor_bound_data, EMAccess.label_bound_data,
@@ -1479,7 +1483,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (** {b Descr} : Creates a fresh TOTALY empty environment
       (no even pervasive stuff inside).
 
-      {b Rem} : Exported outside this module.              *)
+      {b Exported} : Yes.                                  *)
   (* ***************************************************** *)
   let empty () =
     ({ constructors = []; labels = []; types = []; values = [];
@@ -1491,7 +1495,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (** {b Descr} : Creates a fresh environment containing
       information bound the basic builtins.
 
-      {b Rem} : Exported outside this module.              *)
+      {b Exported} : Yes.                                  *)
   (* ***************************************************** *)
   let pervasives () = EMAccess.pervasives ()
 
@@ -1518,7 +1522,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* loc: Location.t -> allow_opened: bool -> Parsetree.vname -> *)
-  (*    t -> EMAccess.species_bound_data                         *)
+  (*   t -> EMAccess.species_bound_data                          *)
   let find_species_vname ~loc ~allow_opened vname (env : t) =
     try env_list_assoc ~allow_opened vname env.species with
     | Not_found -> raise (Unbound_species (vname, loc))
@@ -1543,7 +1547,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
        information to know if the species is [SPBI_local] or [SPBI_file]
         yet.
 
-     {b Rem} : Not exported outside this module.                           *)
+     {b Exported} : No.                                                    *)
   (* ********************************************************************* *)
   let find_species_vname_and_binding_origin ~loc ~allow_opened vname (env : t) =
     let rec rec_assoc = function
@@ -1585,7 +1589,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
       value [ident] and the argument [data].
       The initial environment is passed as last argument.
 
-      {b Rem} : Exported outside this module.                             *)
+      {b Exported} : Yes.                                                 *)
   (* ******************************************************************** *)
   let add_value ident data (env : t) =
     ({ env with values = (ident, BO_absolute data) :: env.values } : t)
@@ -1598,7 +1602,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (*     Parsetree.expr_ident -> t -> EMAccess.value_bound_data          *)
   (** {b Descr} : Looks-up for an [ident] inside the values environment.
 
-      {b Rem} : Exported outside this module.                            *)
+      {b Exported} : Yes.                                                *)
   (* ******************************************************************* *)
   let rec find_value ~loc ~current_unit ~current_species_name ident_ident
       (env : t) =
@@ -1752,12 +1756,12 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
   (* *********************************************************** *)
   (* allow_opened: loc: Location.t -> bool ->                    *)
-  (*   Parsetree.constructor_name -> t ->                             *)
-  (*   EMAccess.constructor_bound_data                           *)
+  (*   Parsetree.constructor_name -> t ->                        *)
+  (*     EMAccess.constructor_bound_data                         *)
   (** {b Descr} : Looks-up for a [vname] inside the constructors
       environment.
 
-      {b Rem} : Not exported outside this module.                *)
+      {b Exported} : No.                                         *)
   (* *********************************************************** *)
   and find_constructor_vname ~loc ~allow_opened vname (env : t) =
     try env_list_assoc ~allow_opened vname env.constructors
@@ -1771,7 +1775,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
       record field label [lbl_vname] and the argument [data].
       The initial environment is passed as last argument.
 
-      {b Rem} : Exported outside this module.                             *)
+      {b Exported} : Yes.                                                 *)
   (* ******************************************************************** *)
   let add_label lbl_vname data (env : t) =
     ({ env with labels = (lbl_vname, BO_absolute data) :: env.labels } : t)
@@ -1784,7 +1788,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (** {b Descr} : Looks-up for an [ident] inside the record fields
       labels environment.
 
-      {b Rem} : Exported outside this module.                      *)
+      {b Exported} : Yes.                                          *)
   (* ************************************************************* *)
   let rec find_label ~loc ~current_unit lbl_ident (env : t) =
     (* Just mask the previous [lbl_ident] to simply remove the only possible 
@@ -1811,7 +1815,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (** {b Descr} : Looks-up for a [vname] inside the record type labels
       environment.
 
-      {b Rem} : Not exported outside this module.                      *)
+      {b Exported} : No.                                               *)
   (* ***************************************************************** *)
   and find_label_vname ~loc ~allow_opened vname (env : t) =
     try env_list_assoc ~allow_opened vname env.labels with
@@ -1826,12 +1830,12 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
       type [ident] and the argument [data].
       The initial environment is passed as last argument.
 
-      {b Rem} : Exported outside this module.                             *)
+      {b Exported} : Yes.                                                 *)
   (* ******************************************************************** *)
   let add_type ~loc tyname data (env : t) =
-    (* Ensure the type name does not already exists in the *)
-    (* current module. This means that this name must not  *)
-    (* be already bound to a [BO_absolute].                *)
+    (* Ensures the type name does not already exists in the current module.
+       This means that this name must not be already bound to a
+       [BO_absolute]. *)
     if List.exists
         (function (n, (BO_absolute _)) -> n = tyname | _ -> false)
         env.types then
@@ -1845,7 +1849,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   (*   t -> EMAccess.type_bound_data                                    *)
   (** {b Descr} : Looks-up for an [ident] inside the types environment.
 
-      {b Rem} : Exported outside this module.                           *)
+      {b Exported} : Yes.                                               *)
   (* ****************************************************************** *)
   let rec find_type ~loc ~current_unit type_ident (env : t) =
     match type_ident.Parsetree.ast_desc with
@@ -2039,7 +2043,7 @@ module MlGenEnv = Make (MlGenEMAccess) ;;
 module CoqGenEMAccess = struct
   type constructor_bound_data = CoqGenInformation.constructor_mapping_info
   type label_bound_data = CoqGenInformation.label_mapping_info
-  type type_bound_data = unit
+  type type_bound_data = CoqGenInformation.type_info
   type value_bound_data = CoqGenInformation.value_mapping_info
   type species_bound_data = CoqGenInformation.species_binding_info
 
@@ -2066,7 +2070,7 @@ module CoqGenEMAccess = struct
   let post_process_method_value_binding _collname data = data
 end
 ;;
-module CoqGenEnv = Make (CoqGenEMAccess);;
+module CoqGenEnv = Make (CoqGenEMAccess) ;;
 
 
 

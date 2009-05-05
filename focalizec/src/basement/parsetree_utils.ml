@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.30 2008-12-01 12:45:40 weis Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.31 2009-05-05 16:33:27 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -327,11 +327,103 @@ let make_pseudo_species_ident ~current_unit (species_mod, species_name) =
 ;;
 
 
+(* ********************************************************************** *)
+(* Parsetree.qualified_vname -> Parsetree.vname                           *)
+(** {b Descr} : Helper to extract the [vname] from a [qualified_vname].
+    This basically is forgetting the compilation unit specification if
+    there is one in the [qualified_vname].
+
+    {b Args} :
+      - unnammed : The [qualified_vname] in which to find the inner
+        [vname].
+
+    {b Ret} :
+      - Parsetree.vname : The [vname] contained in the [qualified_vname].
+
+    {b Exported} : No.                                                    *)
+(* ********************************************************************** *)
+let vname_of_qvname = function
+  | Parsetree.Vname vname | Parsetree.Qualified (_, vname) -> vname
+;;
+
+
+
+(* *********************************************************************** *)
+(* Parsetree.ident -> Parsetree.vname                                      *)
+(** {b Descr} : Extracts the [vname] from an [ident], hence providing the
+    name denoted by this identifier without any qualification/scoping.
+    For example, "bar", "foo#bar" or "foo!bar" will lead to the [vname]
+    "bar".
+
+    {b Args} :
+      - [ident] : The identifier in which to find the inner [vname].
+
+    {b Ret} :
+      - Parsetree.vname : The [vname] contained in the identifier.
+
+    {b Exported} : Yes.                                                     *)
+(* *********************************************************************** *)
+let unqualified_vname_of_ident ident =
+  match ident.Parsetree.ast_desc with
+  | Parsetree.I_local vname -> vname
+  | Parsetree.I_global qvname -> vname_of_qvname qvname
+;;
+
+
+
+(* ************************************************************************* *)
+(* Parsetree.constructor_ident -> Parsetree.vname                            *)
+(** {b Descr} : Extracts the [vname] from a [constructor_ident], hence
+    providing the name denoted by this identifier without any
+    qualification/scoping.
+    For example, "bar", "foo#Bar" will lead to the [vname] "Bar".
+
+    {b Args} :
+      - [ident] : The [constructor_ident] in which to find the inner [vname].
+
+    {b Ret} :
+      - Parsetree.vname : The [vname] contained in the [constructor_ident].
+
+    {b Exported} : Yes.                                                       *)
+(* ************************************************************************* *)
+let unqualified_vname_of_constructor_ident ident =
+  let Parsetree.CI ident = ident.Parsetree.ast_desc in
+  unqualified_vname_of_ident ident
+;;
+
+
+
+(* *********************************************************************** *)
+(* Parsetree.expr_ident -> Parsetree.vname                                 *)
+(** {b Descr} : Extracts the [vname] from an [expt_ident], hence providing
+    the name denoted by this identifier without any qualification/scoping.
+    For example, "bar", "foo#bar" or "foo!bar" will lead to the [vname]
+    "bar".
+
+    {b Args} :
+      - [ident] : The [expr_ident] in which to find the inner [vname].
+
+    {b Ret} :
+      - Parsetree.vname : The [vname] contained in the [expr_ident].
+
+    {b Exported} : Yes.                                                     *)
+(* *********************************************************************** *)
+let unqualified_vname_of_expr_ident ident =
+  match ident.Parsetree.ast_desc with
+   | Parsetree.EI_local vname -> vname
+   | Parsetree.EI_global qvname -> vname_of_qvname qvname
+   | Parsetree.EI_method (_, vname) -> vname
+;;
+
+
+
 let make_concatenated_name_from_qualified_vname = function
   | Parsetree.Vname vname -> name_of_vname vname
   | Parsetree.Qualified (mod_name, vname) ->
       mod_name ^ "." ^(name_of_vname vname)
 ;;
+
+
 
 let make_concatenated_name_with_operators_expanded_from_qualified_vname =
   function

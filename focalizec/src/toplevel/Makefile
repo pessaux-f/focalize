@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.51 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.52 2009-05-05 16:33:27 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -68,8 +68,8 @@ BYT_OBJS =\
 	\
 	../coqcodegen/species_record_type_generation.cmo\
 	../coqcodegen/rec_let_gen.cmo\
-	../coqcodegen/species_coq_generation.cmo\
 	../coqcodegen/type_coq_generation.cmo\
+	../coqcodegen/species_coq_generation.cmo\
 	../coqcodegen/main_coq_generation.cmo\
 	$(LOCAL_BYT_OBJS)
 
