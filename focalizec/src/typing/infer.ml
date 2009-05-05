@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.178 2009-05-05 09:26:18 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.179 2009-05-05 13:49:09 pessaux Exp $ *)
 
 
 
@@ -21,7 +21,7 @@
     normal form of a species) find 2 computational fields with the same
     names but not the same ML type.
 
-    {b Rem} : Exported outside this module.                              *)
+    {b Exported} : Yes.                                                  *)
 (* ********************************************************************* *)
 exception Wrong_type_by_inheritance of
   (Location.t *         (** Location of the whole hosting species. *)
@@ -34,7 +34,7 @@ exception Wrong_type_by_inheritance of
 
 
 
-(* ******************************************************************** *)
+(* ******************************************************************* *)
 (** {b Descr} : Exception used when two properties or theorems must be
     merged because they have the same names but it appears that their
     statement could not be seen as the same. In effect, the meaning of
@@ -46,8 +46,8 @@ exception Wrong_type_by_inheritance of
     locations and modulo alpha-conversion to check if 2 logical
     statements are "equal".
 
-    {b Rem} : Exported outside this module.                             *)
-(* ******************************************************************** *)
+    {b Exported} : Yes.                                                *)
+(* ******************************************************************* *)
 exception Logical_statements_mismatch of
   (Parsetree.vname *     (** Name of the involved theorem/property. *)
    Parsetree.qualified_species *  (** First hosting species. *)
@@ -63,7 +63,7 @@ exception Logical_statements_mismatch of
     defined because a recursive function doesn't have any termination
     proof.
 
-    {b Rem} : Exported outside this module.                           *)
+    {b Exported} : Yes.                                               *)
 (* ****************************************************************** *)
 exception Collection_not_fully_defined_missing_term_proof of
   (Parsetree.qualified_species * Parsetree.vname)
@@ -75,7 +75,7 @@ exception Collection_not_fully_defined_missing_term_proof of
 (** {b Descr} : Exception used to inform that a delayed proof for a
     property was found several time in the same species.
 
-    {b Rem} : Exported outside this module.                         *)
+    {b Exported} : Yes.                                             *)
 (* **************************************************************** *)
 exception Proof_of_multiply_defined of
   (Location.t *   (** Location of one of the occurrence of "proof of". *)
@@ -90,7 +90,7 @@ exception Proof_of_multiply_defined of
     but no property for this proof exist. Since, this a a proof of a
     non-existing property.
 
-    {b Rem} : Exported outside this module.                             *)
+    {b Exported} : Yes.                                                 *)
 (* ******************************************************************** *)
 exception Proof_of_unknown_property of
   (Location.t *   (** Location of the detected error. *)
@@ -105,7 +105,7 @@ exception Proof_of_unknown_property of
     used with an incorrect arity. The correct expected arity is stored in
     the second argument of the exception constructor.
 
-    {b Rem} : Exported outside this module.                               *)
+    {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
 exception Bad_sum_type_constructor_arity of
   (Parsetree.constructor_ident *     (** The name of the misused sum type
@@ -123,7 +123,7 @@ exception Bad_sum_type_constructor_arity of
     typechecking a type definition, its body contains a type variable not
     specified in the type parameters list.
 
-    {b Rem} : Exported outside this module.                                 *)
+    {b Exported} : Yes.                                                     *)
 (* ************************************************************************ *)
 exception Unbound_type_variable of
   (Location.t *        (* The location where the variable was found unbound. *)
@@ -136,7 +136,7 @@ exception Unbound_type_variable of
 (** {b Descr} : Exception raised when a method is defined several times in
     the same species.
 
-    {b Rem} : Exported outside this module.                                *)
+    {b Exported} : Yes.                                                    *)
 (* *********************************************************************** *)
 exception Method_multiply_defined of
   (Parsetree.vname *                (** The method's name. *)
@@ -150,7 +150,7 @@ exception Method_multiply_defined of
 (** {b Descr} : Exception raised when a type constructor is applied to an
     incorrect number of type arguments.
 
-    {b Rem} : Exported outside this module.                               *)
+    {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
 exception Bad_type_arity of
   (Location.t *
@@ -169,20 +169,20 @@ exception Bad_type_arity of
     by the exception [Rep_multiply_defined_by_multiple_inheritance]).
   
 
-    {b Rem} : Exported outside this module.                                *)
+    {b Exported} : Yes.                                                    *)
 (* *********************************************************************** *)
 exception Rep_multiply_defined of Location.t ;;
 
 
 
-(* ********************************************************************** *)
+(* ******************************************************************** *)
 (** {b Descr} : Exception raised when "rep" is defined several times in
     the same species due to multiple inheritance
     by the exception [Rep_multiply_defined_by_multiple_inheritance]).
   
 
-    {b Rem} : Exported outside this module.                               *)
-(* ********************************************************************** *)
+    {b Exported} : Yes.                                                 *)
+(* ******************************************************************** *)
 exception Rep_multiply_defined_by_multiple_inheritance of
   (Types.type_simple *   (** Former type found for "rep". *)
    Types.type_simple *   (** Newer and incompatible type found for "rep". *)
@@ -196,7 +196,7 @@ exception Rep_multiply_defined_by_multiple_inheritance of
 (** {b Descr} : During subspecies relation checking, a field was found
               with 2 incompatible types.
 
-    {b Rem} : Exported outside this module.                            *)
+    {b Exported} : Yes.                                                *)
 (* ******************************************************************* *)
 exception Not_subspecies_conflicting_field of
   ((** The collection name that should be a subspecies of the one below. *)
@@ -216,8 +216,9 @@ exception Not_subspecies_conflicting_field of
     with 2 types that can't be unified because one of them occurs in
     the other.
 
-    {b Rem} : Exported outside this module.
-              Note that I can't really see how this coudl happen...    *)
+    {b Rem} : Note that I can't really see how this coudl happen...
+
+    {b Exported} : Yes.                                                *)
 (* ******************************************************************* *)
 exception Not_subspecies_circular_field of
   ((** The collection name that should be a subspecies of the one below. *)
@@ -237,8 +238,9 @@ exception Not_subspecies_circular_field of
     with 2 types that can't be unified because they do not respect the
     correct type constructor arity.
 
-    {b Rem} : Exported outside this module.
-              Note that I can't really see how this coudl happen...    *)
+    {b Rem} : Note that I can't really see how this coudl happen...
+
+    {b Exported} : Yes.                                                *)
 (* ******************************************************************* *)
 exception Not_subspecies_arity_mismatch of
   ((** The collection name that should be a subspecies of the one below. *)
@@ -258,7 +260,7 @@ exception Not_subspecies_arity_mismatch of
 (** {b Descr} : During subspecies relation checking, a field was not
     found in the species signature that is considered as the subspecies.
 
-    {b Rem} : Exported outside this module.                              *)
+    {b Exported} : Yes.                                                  *)
 (* ********************************************************************* *)
 exception Not_subspecies_missing_field of
   ((** The collection name that should be a subspecies of the one below. *)
@@ -276,7 +278,7 @@ exception Not_subspecies_missing_field of
     of provided arguments is incorrect compared to the number of
     expected arguments.
 
-    {b Rem} : Exported outside this module.                            *)
+    {b Exported} : Yes.                                                *)
 (* ******************************************************************* *)
 exception Parameterized_species_arity_mismatch of
   string    (** The message to insert in the error message: "many" or "few". *)
@@ -289,7 +291,7 @@ exception Parameterized_species_arity_mismatch of
     can't be created because at leat one field is only declared and not
     defined.
 
-    {b Rem} : Exported outside this module.                                *)
+    {b Exported} : Yes.                                                    *)
 (* *********************************************************************** *)
 exception Collection_not_fully_defined of
   (Parsetree.qualified_species *  (** The incompletely defined species. *)
@@ -306,7 +308,7 @@ exception Collection_not_fully_defined of
     also reject schemes with non-generalized variables. Hence, more globally,
     we reject schemes containing variables.
 
-    {b Rem} : Exported outside this module.                                   *)
+    {b Exported} : Yes.                                                       *)
 (* ************************************************************************** *)
 exception Scheme_contains_type_vars of (
   Parsetree.vname *   (** The method's name whose scheme contains variables. *)
@@ -320,7 +322,7 @@ exception Scheme_contains_type_vars of (
 (** {b Descr} : Exception raised when a delayed termination proof is told
     to be related to a function that doesn't exist in the current species.
 
-    {b Rem} : Exported outside this module.                               *)
+    {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
 exception No_function_for_termination_proof of (Location.t * Parsetree.vname)
 ;;
@@ -331,7 +333,7 @@ exception No_function_for_termination_proof of (Location.t * Parsetree.vname)
 (** {b Descr} : Exception raised when a delayed termination proof profile
     uses a parameter that doesn't exist in the original function.
 
-    {b Rem} : Exported outside this module.                               *)
+    {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
 exception Invalid_parameter_in_delayed_proof_termination of
   (Location.t * Parsetree.vname)
@@ -344,21 +346,21 @@ exception Invalid_parameter_in_delayed_proof_termination of
     with another logical flag than the original one. This prevents from
     having a "logical let" and a "let" having the same name.
 
-    {b Rem} : Exported outside this module.                              *)
+    {b Exported} : Yes.                                                  *)
 (* ********************************************************************* *)
 exception No_mix_between_logical_defs of (Location.t * Parsetree.vname) ;;
 
 
 
-(* ************************************************************************** *)
+(* ************************************************************************* *)
 (** {b Descr} : Datastructure recording the various information required and
     propagated during the type inference. It is much more convenient to
     group the various flags and stuff needed than passing them all the time
     as arguments of each recursive call.
     This datastructure serves especially this purpose.
 
-    {b Rem} : Not exported outside this module.                               *)
-(* ************************************************************************** *)
+    {b Exported} : No.                                                       *)
+(* ************************************************************************* *)
 type typing_context = {
   (** The name of the currently analysed compilation unit (i.e. the name
       of the file without extension and not capitalized). *)
@@ -430,7 +432,7 @@ let methods_history_to_text ~dirname ~current_species methods =
     a type definition, if the definition is polymorphic, the
     parameter-variables must already exist inside the mapping.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let rec typecheck_type_expr ctx env ty_expr =
   let final_ty =
@@ -507,9 +509,9 @@ let rec typecheck_type_expr ctx env ty_expr =
 
 
 
-(* ******************************************************************* *)
-(* typing_context -> Env.Env.ScopeInformation.t ->                     *)
-(*   Parsetree.rep_type_def -> Types.type_simple                       *)
+(* ******************************************************************** *)
+(* typing_context -> Env.Env.ScopeInformation.t ->                      *)
+(*   Parsetree.rep_type_def -> Types.type_simple                        *)
 (** {b Descr} : Translates a rep type expression into a [type_simple].
     This function behaves exactly like [typecheck_type_expr].
     Variable are translated according to the mapping found inside the
@@ -517,8 +519,8 @@ let rec typecheck_type_expr ctx env ty_expr =
     body type of a type definition, if the definition is polymorphic,
     the parameter-variables must already exist inside the mapping.
 
-    {b Rem} : Not exported outside this module.                        *)
-(* ******************************************************************* *)
+    {b Exported} : No.                                                  *)
+(* ******************************************************************** *)
 let rec typecheck_rep_type_def ctx env rep_type_def =
   let final_ty =
     (match rep_type_def.Parsetree.ast_desc with
@@ -610,7 +612,7 @@ let rec typecheck_rep_type_def ctx env rep_type_def =
     definition the context must have a variable mapping where ['a] is known.
     Using the present function, one can build such a mapping.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let make_implicit_var_mapping_from_type_exprs type_expressions =
   let mapping = ref [] in
@@ -657,7 +659,7 @@ let make_implicit_var_mapping_from_type_exprs type_expressions =
     definitionn the context must have a variable mapping where ['a] is known.
     Using the present function, one can build such a mapping.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let make_implicit_var_mapping_from_logical_expr logical_expr_expression =
   let mapping = ref [] in
@@ -697,7 +699,7 @@ let make_implicit_var_mapping_from_logical_expr logical_expr_expression =
 (** {b Descr} : If returns [true] then one can generalise the expression
     passed as argument.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Exported} : No.                                                   *)
 (* ********************************************************************* *)
 let rec expr_is_non_expansive ~current_unit env expr =
   match expr.Parsetree.ast_desc with
@@ -793,7 +795,7 @@ let find_function_by_name fct_vname fields =
 (** {b Descr} : Infers the type of a constant. Records this type in the
               AST node and return the type.
 
-    {b Rem} : Not exported outside this module.                         *)
+    {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
 let typecheck_constant constant_desc =
   let ty =
@@ -816,7 +818,7 @@ let typecheck_constant constant_desc =
     AST node and return the type and a list of bindings that map the
     variables found in the pattern and their types.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Exported} : No.                                                   *)
 (* ********************************************************************* *)
 let rec typecheck_pattern ctx env pat_desc =
   (* First, get the pattern's type and induced bindings. *)
@@ -939,7 +941,7 @@ let typecheck_external_expr ext_expr =
     is relevant and to screw this type in the [ast_type] field of these
     AST-nodes (i.e especially throug [expr_ident]s.
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 let typecheck_fact ctx env fact =
   (* No relevant type information to insert in the AST node. *)
@@ -962,8 +964,7 @@ let typecheck_fact ctx env fact =
            (* Record the ident's type in the AST node. *)
            expr_ident.Parsetree.ast_type <- Parsetree.ANTI_type ident_ty)
          expr_idents
-   | Parsetree.F_hypothesis _ -> ()
-   | Parsetree.F_node _ -> ()
+   | Parsetree.F_hypothesis _ | Parsetree.F_node _ | Parsetree.F_type _ -> ()
 ;;
 
 
@@ -977,7 +978,7 @@ let typecheck_fact ctx env fact =
    [Method_multiply_defined], else returns le concatenation of the 2
    lists (first @ second)
 
-   {b Rem} : Not exported outside this module.                         *)
+   {b Exported} : No.                                                *)
 (* ***************************************************************** *)
 let append_and_ensure_method_uniquely_defined current_species l1 l2 =
   (* Just a local flattening function... *)
@@ -1016,7 +1017,7 @@ let append_and_ensure_method_uniquely_defined current_species l1 l2 =
 (** {b Descr} : Infers the type o an [expr] and assign it by side effect in
     the [ast_type] field of the [expr] node.
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 let rec typecheck_expr ctx env initial_expr =
   let current_species_name =
@@ -1222,7 +1223,7 @@ let rec typecheck_expr ctx env initial_expr =
       - fields : The list of fields values of the record expression.
       - opt_with_expr : The optional "with" clause.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 and typeckeck_record_expr ctx env fields opt_with_expr =
   (* At then end, must be the type of the host of all these labels. *)
@@ -1292,7 +1293,7 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
     When this function is called from under a field definition, then this
     flag must obviously be [true].
 
-    {b Rem} : Not exported outside this module.                               *)
+    {b Exported} : No.                                                        *)
 (* ************************************************************************** *)
 and typecheck_let_definition ~is_a_field ctx env let_def =
   (* A [let_definition] doesn't really has a type. Record in the AST node. *)
@@ -1511,7 +1512,7 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
       a [logical_expr]'s type inside a property/theorem definition and not
       in it's proof !
 
-    {b Rem} : Not exported outside this module.                               *)
+    {b Exported} : No.                                                        *)
 (* ************************************************************************** *)
 and typecheck_logical_expr ~in_proof ctx env logical_expr =
   (* The local recursive function to save carying and changing the context. *)
@@ -1629,7 +1630,7 @@ and typecheck_binding_body ctx env = function
     relevant and to screw this type in the [ast_type] field of these
     AST-nodes (i.e especially throug [statement]s.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Exported} : No.                                                   *)
 (* ********************************************************************* *)
 and typecheck_proof ctx env proof =
   let current_species_name =
@@ -1682,7 +1683,7 @@ and typecheck_node ctx env node =
     current environment before typechecking the optional [s_concl]
     proposition.
 
-    {b Rem} : Not exported outside this module.                         *)
+    {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
 and typecheck_statement ctx env statement =
   (* No relevant type information to insert in the AST node. *)
@@ -1735,7 +1736,7 @@ and typecheck_statement ctx env statement =
     "exists". They will lead to extra "forall ... : Set" in front of the
     theorem's logical expression.
 
-    {b Rem} : Not exported outside this module.                           *)
+    {b Exported} : No.                                                    *)
 (* ********************************************************************** *)
 and typecheck_theorem_def ctx env theorem_def =
   (* For the same reason that in external definition, variables present in a
@@ -1778,7 +1779,7 @@ and typecheck_theorem_def ctx env theorem_def =
     information. This only ensures that inner expressions are well-types
     and get their "type" bucket set.
 
-    {b Rem} : Not exported outside this module.                            *)
+    {b Exported} : Not.                                                    *)
 (* *********************************************************************** *)
 and typecheck_termination_proof ctx env tp =
   (* Anyway, a proof has no type... So... *)
@@ -1886,7 +1887,7 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
     The "termination-proof-of" must be collapsed with their related
     "let-rec" definitions also before the normalization process starts.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 and typecheck_species_fields initial_ctx initial_env initial_fields =
   let rec rec_typecheck ctx env accu_fields accu_proofs accu_term_proofs =
@@ -2227,7 +2228,7 @@ type typed_species_parameter_argument =
     constructor (possibly enclosed by paren) disapears since we enforce
     this structurally in the type [species_param_expr].
 
-    {b Rem}: Not exported outside this module.                             *)
+    {b Exported}: No.                                                    *)
 (* ********************************************************************* *)
 let rec expr_to_species_param_expr ~current_unit env expr =
   match expr.Parsetree.ast_desc with
@@ -2262,7 +2263,7 @@ let rec expr_to_species_param_expr ~current_unit env expr =
     enclosed by paren) disapears since we enforce this structurally in the
     type [species_param_expr].
 
-    {b Rem}: Not exported outside this module.                                *)
+    {b Exported}: No.                                                       *)
 (* ************************************************************************ *)
 let species_expr_to_species_param_expr ~current_unit env species_expr =
   let species_expr_desc = species_expr.Parsetree.ast_desc in
@@ -2292,7 +2293,7 @@ let species_expr_to_species_param_expr ~current_unit env species_expr =
     possible expression, ... but is also too large. Hence we perfom this
     check afterward, during the typing stage.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let rec typecheck_expr_as_species_parameter_argument ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
@@ -2359,7 +2360,7 @@ let rec typecheck_expr_as_species_parameter_argument ctx env initial_expr =
     the "A" function described in Virgile Prevosto's Phd, section 3.8, page
     41.
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 let abstraction ~current_unit cname fields =
   let rec rec_abstract = function
@@ -2420,7 +2421,7 @@ let abstraction ~current_unit cname fields =
               The names of the 2 engaged species are provided for error
               reporting purposes.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Exported} : No.                                                   *)
 (* ********************************************************************* *)
 let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
     ~name_should_be_over_spe s2 =
@@ -2534,7 +2535,7 @@ let apply_substitutions_reversed_list_on_fields
 (** {b Descr} : Function managing application of arguments during
     species applications in species expressions.
 
-    {b Rem} : Not exported outside this module.                   *)
+    {b Exported} : No.                                            *)
 (* ************************************************************** *)
 let apply_species_arguments ctx env base_spe_descr params =
   (* ****************************************************************** *)
@@ -2698,12 +2699,12 @@ let apply_species_arguments ctx env base_spe_descr params =
 
 
 
-(* **************************************************************** *)
-(* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr ->   *)
-(*   ((Env.TypeInformation.species_field list) *                    *)
-(*    ((Types.fname * Types.collection_name) list)) *               *)
-(*   Env.TypeInformation.species_collection_kind *                  *)
-(*   (DepGraphData.name_node list)                                  *)
+(* ****************************************************************** *)
+(* typing_context -> Env.TypingEnv.t -> Parsetree.species_expr ->     *)
+(*   ((Env.TypeInformation.species_field list) *                      *)
+(*    ((Types.fname * Types.collection_name) list)) *                 *)
+(*   Env.TypeInformation.species_collection_kind *                    *)
+(*   (DepGraphData.name_node list)                                    *)
 (** {b Descr} : Typechecks a species expression, record its type in
               the AST node and returns:
                 - the list of its methods names type schemes and
@@ -2715,8 +2716,8 @@ let apply_species_arguments ctx env base_spe_descr params =
                   the expression (i.e. toplevel  collection, toplevel
                   species or species parameter)
 
-    {b Rem} :Not exported outside this module.                      *)
-(* **************************************************************** *)
+    {b Exported} :No.                                                 *)
+(* ****************************************************************** *)
 let typecheck_species_expr ctx env species_expr =
   let species_expr_desc = species_expr.Parsetree.ast_desc in
   (* Recover the information about the species. *)
@@ -2767,7 +2768,7 @@ let typecheck_species_expr ctx env species_expr =
     parameters and the carrier types of these species induced by the
     parameters.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Exported} : No.                                                   *)
 (* ********************************************************************* *)
 let typecheck_species_def_params ctx env species_params =
   let rec rec_typecheck_params accu_env accu_self_must_be = function
@@ -2979,7 +2980,7 @@ let extend_from_history ~current_species ~current_unit env
     (current_species, simple_species_expr from which the method is
     inherited).
 
-    {b Rem} : Not exported outside this module.                            *)
+    {b Exported} : No.                                                     *)
 (* *********************************************************************** *)
 let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
   let rec rec_extend current_ctx current_env accu_found_methods
@@ -3091,7 +3092,7 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
    the changed field must then be put in the non-inherited fields in
    order that the rest of the analysis works correctly !
 
-   {b Rem} : Not exported outside this module.                              *)
+   {b Exported} : No.                                                       *)
 (* ************************************************************************ *)
 let collapse_proof_in_non_inherited proof_of ~current_species fields =
   let name_of_proof_of = proof_of.Parsetree.pd_name in
@@ -3227,7 +3228,7 @@ let rec collapse_proof_in_inherited proof_of ~current_species fields =
    [SF_property] and the original location of the proof, then this stuff
    will now appear "after" the proof itself. And this is not well-formed.
 
-   Not exported outside this module.                              *)
+   {b Exported} : Yes.                                                      *)
 (* ************************************************************************ *)
 let collapse_proofs_of ~current_species found_proofs_of
       inherited_methods_infos methods_info =
@@ -3287,7 +3288,7 @@ let collapse_proofs_of ~current_species found_proofs_of
     name [name]. Return both the found field and the list minus this
     found field.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Exported} : No.                                                   *)
 (* ********************************************************************* *)
 let extract_field_from_list_by_name name fields =
   let rec rec_extract = function
@@ -3319,7 +3320,8 @@ let extract_field_from_list_by_name name fields =
 
     {b Rem} : Implicitely assumes that "rep" exists at most once in the
     list [l] (no doubles).
-    Not exported outside this module.                                   *)
+
+    {b Exported} : Yes.                                                 *)
 (* ******************************************************************** *)
 let ensure_rep_in_first l =
   let rec rec_search = function
@@ -3356,7 +3358,7 @@ let ensure_rep_in_first l =
     case the lookup via [extract_field_from_list_by_name] may fail.
     That's the only case where we accept it to fail.
 
-    {b Rem} : Not exported outside this module.                         *)
+    {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
 let order_fields_according_to order fields =
   let rec rec_reorder rec_order rec_fields =
@@ -3412,7 +3414,7 @@ let order_fields_according_to order fields =
     {b Args}:
       - [loc] : Location of the whole hosting species expression.
 
-    {b Rem} : Not exported outside this module.                           *)
+    {b Exported} : No.                                                    *)
 (* ********************************************************************** *)
 let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme sig_hist rec_meths =
   let rec_meths' =
@@ -3463,7 +3465,7 @@ let fusion_fields_let_rec_sig ~loc ctx sig_name sig_scheme sig_hist rec_meths =
    If the searched name is not found in the list, then the exception
    [Not_found] is raised.
 
-   {b Rem} : Not exported outside this module.                       *)
+   {b Exported} : No.                                                *)
 (* ***************************************************************** *)
 let find_and_remain name meths =
   let rec rec_find = function
@@ -3487,7 +3489,7 @@ let find_and_remain name meths =
 (** {b Descr} : Implements the "fusion" algorithm (c.f [fields_fusion])
     in the particular case of fusionning 2 fields Let_rec.
 
-    {b Rem} : Not exported outside this module.                         *)
+    {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
 let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
   let rec rec_fusion l1 l2 =
@@ -3648,7 +3650,7 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
     {b Args}:
       - [loc] : Location of the whole hosting species expression.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let fields_fusion ~loc ctx phi1 phi2 =
   match phi1, phi2 with
@@ -3832,7 +3834,7 @@ let fields_fusion ~loc ctx phi1 phi2 =
     Since the list is ordered in the inheritance direction, i.e. oldest
     inherited fields in head, the oldest is the first found in the list.
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 let oldest_inter_n_field_n_fields phi fields =
   let flat_phi_names =
@@ -3971,7 +3973,7 @@ let non_conflicting_fields_p f1 f2 =
     {b Args}:
       - [loc] : Location of the whole hosting species expression.
 
-    {b Rem}: Not exported outside this module.                        *)
+    {b Exported}: No.                                                 *)
 (* ****************************************************************** *)
 let normalize_species ~loc ctx methods_info inherited_methods_infos =
   let w1 = ref (inherited_methods_infos @ methods_info) in
@@ -4021,7 +4023,7 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
     any "declared" fields (i.e. SF_sig) except for "rep" who must be
     declared (of course, its declaration is also its definition !).
 
-    {b Rem} : Not exported outside this module.                            *)
+    {b Exported} : No.                                                     *)
 (* *********************************************************************** *)
 let ensure_collection_completely_defined ctx fields =
   (* Let just make a reference for checking the presence pf "rep" instead of
@@ -4125,7 +4127,7 @@ let ensure_collection_completely_defined ctx fields =
     "equal" in A, and doesn't look anymore polymorphics. That's why the
     polymorphic hunt must be done only once fields have been fusionned.
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 let detect_polymorphic_method ~loc = function
   | Env.TypeInformation.SF_theorem (_, _, _, _, _, _)
@@ -4152,7 +4154,7 @@ let detect_polymorphic_method ~loc = function
     typechecking pass needed to go to the code generation pass.
     This is mostly obvious and self-describing.
 
-    {b Rem} : Clearly exported outside this module.                    *)
+    {b Exported} : Yes.                                                *)
 (* ******************************************************************* *)
 type please_compile_me =
   | PCM_documentation_title
@@ -4224,7 +4226,7 @@ let ensure_no_proof_of_doubles proofs_of =
     Also performs the interface printing stuff of a species.
     It returns both the extended environment and the species's carrier type.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let typecheck_species_def ctx env species_def =
   let species_def_desc = species_def.Parsetree.ast_desc in
@@ -4438,7 +4440,7 @@ let typecheck_species_def ctx env species_def =
          to take into account that the type must not show its sum
          constructors or fields labels in its structure.
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 let typecheck_regular_type_def_body ctx ~is_repr_of_external env type_name
     regular_type_def_body =
@@ -4677,7 +4679,7 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env type_name
       - [external_type_def_body] : The external definition's body to
           typecheck.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let typecheck_external_type_def_body ctx env type_name params
     external_type_def_body =
@@ -4835,7 +4837,7 @@ let typecheck_type_def ctx env type_def =
               onto types.
       - [coll_def] : Collection definition to typecheck.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let typecheck_collection_def ctx env coll_def =
   let coll_def_desc = coll_def.Parsetree.ast_desc in
@@ -4939,7 +4941,7 @@ let typecheck_collection_def ctx env coll_def =
     Also assign the infered type in the [ast_type] field of the
     [phrase] node.
 
-    {b Rem} : Not exported outside this module                        *)
+    {b Exported} : No.                                                *)
 (* ****************************************************************** *)
 let typecheck_phrase ctx env phrase =
   match phrase.Parsetree.ast_desc with
@@ -5041,7 +5043,7 @@ let typecheck_phrase ctx env phrase =
 (*   (Env.TypingEnv.t * (please_compile_me list))                        *)
 (** {b Descr} : Performs type inference on a complete FoCaL source file.
 
-    {b Rem} : Exported outside this module.                              *)
+    {b Exported} : Yes.                                                  *)
 (* ********************************************************************* *)
 let typecheck_file ~current_unit ast_file =
   match ast_file.Parsetree.ast_desc with

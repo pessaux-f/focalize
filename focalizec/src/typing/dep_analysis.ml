@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.63 2009-05-05 09:26:18 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.64 2009-05-05 13:49:09 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -101,7 +101,7 @@ let debug_print_dependencies_from_parameters3 l =
 (** {b Descr} : Compute the set of vnames the expression [expression]
     decl-depends of in the species [~current_species].
 
-    {b Rem} : Not exported outside this module.                       *)
+    {b Exported} : No.                                                *)
 (* ****************************************************************** *)
 let rec expr_decl_dependencies ~current_species expression =
   (* Let's just make a local function to save the stack, avoid passing each
@@ -221,7 +221,7 @@ let rec expr_decl_dependencies ~current_species expression =
 (** {b Descr} : Compute the set of vnames the prop expression
     [initial_prop_expression] decl-depends in the species [~current_species].
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 and prop_decl_dependencies ~current_species initial_prop_expression =
   let rec rec_depend prop_expression =
@@ -257,7 +257,8 @@ and prop_decl_dependencies ~current_species initial_prop_expression =
 
     {b Rem} : MUST only called with idents extracted from a [fact]'s
     structure !
-    Not exported outside this module.                               *)
+
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 let ident_in_fact_dependencies ~current_species ident =
   (* Recover the ident's type. *)
@@ -309,7 +310,7 @@ let ident_in_fact_dependencies ~current_species ident =
 (** {b Descr} : Compute the set of vnames the fact [fact] decl-depends
     and def-depends of in the species [~current_species].
 
-    {b Rem} : Not exported outside this module.                        *)
+    {b Exported} : No.                                                 *)
 (* ******************************************************************* *)
 let fact_decl_n_def_dependencies ~current_species fact =
   match fact.Parsetree.ast_desc with
@@ -333,8 +334,7 @@ let fact_decl_n_def_dependencies ~current_species fact =
            Parsetree_utils.SelfDepSet.empty
            idents in
        (Parsetree_utils.SelfDepSet.empty, def_deps)
-   | Parsetree.F_hypothesis _
-   | Parsetree.F_node _ ->
+   | Parsetree.F_hypothesis _ | Parsetree.F_node _ | Parsetree.F_type _ ->
        (Parsetree_utils.SelfDepSet.empty,
         Parsetree_utils.SelfDepSet.empty)
 ;;
@@ -494,7 +494,7 @@ let binding_body_decl_dependencies ~current_species = function
 (** {b Descr} : Compute the set of vnames the argument field depends of
     in the species [~current_species].
 
-    {b Rem} : Exported outside this module.                             *)
+    {b Exported} : Yes.                                                 *)
 (* ******************************************************************** *)
 let field_only_decl_dependencies ~current_species = function
   | Env.TypeInformation.SF_sig (_, _, _) ->
@@ -612,7 +612,7 @@ let clockwise_arrow field_name fields =
 (** {b Descr} : Computes the set Where as defined in Virgile Prevosto's
     Phd, section 3.5, page 32, definition 15.
 
-    {b Rem} : Not exported outside this module.                         *)
+    {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
 let where field_name fields =
   List.fold_right
@@ -642,7 +642,7 @@ let where field_name fields =
 (** {b Descr} : Just an helper returning the set of all names bound in
     a species fields.
 
-    {b Rem} : Not exported outside this module.                        *)
+    {b Exported} : No.                                                 *)
 (* ******************************************************************* *)
 let names_set_of_field = function
   | Env.TypeInformation.SF_property (_, vname, _, _, _)
@@ -674,7 +674,7 @@ let names_set_of_field = function
     Example: [let s; sig y; let rec z ... and t] will give the
     list [s; y; z; t].
 
-    {b Rem} : Exported outside this module.                                 *)
+    {b Exported} : Yes.                                                     *)
 (* ************************************************************************ *)
 let ordered_names_list_of_fields fields =
   List.fold_right
@@ -708,7 +708,7 @@ let ordered_names_list_of_fields fields =
     with oldest inherited fields are in head of the list and the most
     recent are in tail.
 
-    {b Rem} : Not exported outside this module.                       *)
+    {b Exported} : No.                                                *)
 (* ****************************************************************** *)
 let find_most_recent_rec_field_binding y_name fields =
   (* The search is a simple walk in the list, starting by the head and going
@@ -740,9 +740,9 @@ let find_most_recent_rec_field_binding y_name fields =
 (*   Env.TypeInformation.species_field list ->                             *)
 (*     Parsetree_utils.DepNameSet.t                                        *)
 (** {b Descr} : Implements the second case of the definition 16 in Virgile
-              Prevosto's Phd, section 3.5, page 32.
+    Prevosto's Phd, section 3.5, page 32.
 
-    {b Rem} : Not exported outside this module.                            *)
+    {b Exported} : No.                                                     *)
 (* *********************************************************************** *)
 let union_y_clock_x_etc ~current_species x_name fields =
   let all_ys = clockwise_arrow x_name fields in
@@ -771,15 +771,16 @@ let union_y_clock_x_etc ~current_species x_name fields =
 (*     Env.TypeInformation.species_field list ->                        *)
 (*       Parsetree_utils.DepNameSet.t                                   *)
 (** {b Descr} : Compute the dependencies of a sig, let or let-rec bound
-      name in a species. Namely this is the \lbag x \rbag_s in Virgile
-      Prevosto's Pdh, section 3.5, page 32, definition 16.
-      Does take into account dependencies on the carrier (they must be
-      handled appart).
+    name in a species. Namely this is the \lbag x \rbag_s in Virgile
+    Prevosto's Pdh, section 3.5, page 32, definition 16.
+    Does take into account dependencies on the carrier (they must be
+    handled appart).
      
 
     {b Rem} : MUST be called only with a [name] sig, let or let-rec
-              bound !
-              Not exported outside this module.                         *)
+    bound !
+
+    {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
 let in_species_decl_dependencies_for_one_function_name ~current_species
     (name, body) fields =
@@ -814,8 +815,9 @@ let in_species_decl_dependencies_for_one_function_name ~current_species
     dependencies computation !
 
     {b Rem} : MUST be called only with a [name] property or theorem
-              bound !
-              Not exported outside this module.                           *)
+    bound !
+
+    {b Exported} : No.                                                    *)
 (* ********************************************************************** *)
 let in_species_decl_n_def_dependencies_for_one_theo_property_name
     ~current_species (t_prop, opt_body) =
@@ -835,7 +837,7 @@ let in_species_decl_n_def_dependencies_for_one_theo_property_name
 (* ********************************************************** *)
 (** {b Descr} : Raised if a species appears to be ill-formed.
 
-    {b Rem} : Exported outside this module.                   *)
+    {b Exported} : Yes.                                       *)
 (* ********************************************************** *)
 exception Ill_formed_species of
   (Parsetree.qualified_vname *  (** Species considered as ill-formed. *)
@@ -857,7 +859,7 @@ exception Ill_formed_species of
     This is mostly a helper for the function
     [build_dependencies_graph_for_fields].
 
-    {b Rem} : Not exported outside this module.                       *)
+    {b Exported} : No.                                                *)
 (* ****************************************************************** *)
 let find_or_create tree_nodes (name, ty) =
   try List.find (fun node -> node.DepGraphData.nn_name = name) !tree_nodes
@@ -880,7 +882,7 @@ let find_or_create tree_nodes (name, ty) =
     In such a graph, if an arrow exists from n1 to n2, then it means
     that in the body of n1, call(s) to n2 is (are) performed.
 
-    {b Rem} : Exported outside this module.                          *)
+    {b Exported} : Yes.                                              *)
 (* ***************************************************************** *)
 let build_dependencies_graph_for_fields ~current_species fields =
   (* The root hoot used to remind all the created nodes in the graph. *)
@@ -1119,7 +1121,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
 (*   DepGraphData.name_node list -> unit                                    *)
 (** {b Descr} : Prints the dependencies graph of a species in dotty format.
 
-    {b Rem} : Exported outside this module.                                 *)
+    {b Exported} : Yes.                                                     *)
 (* ************************************************************************ *)
 let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
   (* For each species, a file named with "deps_", the species name and the
@@ -1180,11 +1182,11 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
 
 
 
-(* ********************************************************************* *)
+(* ********************************************************************** *)
 (** {b Descr} : Module stuff to create maps of [DepGraphData.name_node]s.
 
-    {b Rem} : Not exported outside this module.                          *)
-(* ********************************************************************* *)
+    {b Exported} : No.                                                    *)
+(* ********************************************************************** *)
 module NameNodeMod = struct
   type t = DepGraphData.name_node
   let compare nn1 nn2 =
@@ -1202,7 +1204,7 @@ module NameNodeMap = Map.Make (NameNodeMod);;
     of different kinds between 2 same nodes are considered as only 1
     edge.
 
-    {b Rem} : Not exported outside this module.                         *)
+    {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
 let node_out_degree node =
   let count = ref 0 in
@@ -1240,7 +1242,8 @@ let node_out_degree node =
     {b Rem} : Because of well-formation properties, this process should never
     find a cyclic graph. If so, then may be the well-formness process is
     bugged somewhere-else.
-    Not exported outside this module.                                         *)
+
+    {b Exported} : No.                                                        *)
 (* ************************************************************************** *)
 let ___compute_names_reordering dep_graph_nodes =
   (* Map recording for each node its "outputs degree", *)
@@ -1382,7 +1385,7 @@ let order_species_params_methods spe_params_n_meths_set =
     starting node.
     If no path is found, we return the empty list.
 
-    {b Rem} : Not exported outside this module.                         *)
+    {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
 let is_reachable start_node end_node =
   (* List of already seen nodes. Will be extended during the search. *)
@@ -1446,7 +1449,7 @@ let is_reachable start_node end_node =
     ill-formation) and we provide by the way the 2 fields between
     which the path exists.
 
-    {b Rem} : Not exported outside this module.                       *)
+    {b Exported} : No.                                                *)
 (* ****************************************************************** *)
 let left_triangle dep_graph_nodes x1 x2 fields =
   (* Guess the fields where x1 is recursively bound. *)
@@ -1496,7 +1499,7 @@ let left_triangle dep_graph_nodes x1 x2 fields =
 (** {b Descr} : Checks if a species is well-formed, applying the definition
     17 in Virgile Prevosto's Phd, section 3.5, page 32.
 
-    {b Rem} : Exported outside this module.                                 *)
+    {b Exported} : Yes.                                                     *)
 (* ************************************************************************ *)
 let ensure_species_well_formed ~current_species fields =
   let names =
@@ -1526,20 +1529,21 @@ let ensure_species_well_formed ~current_species fields =
 
 
 
-(* ************************************************************************ *)
-(* Env.TypeInformation.species_field ->                                     *)
-(*   Env.TypeInformation.species_field list                                 *)
+(* ********************************************************************** *)
+(* Env.TypeInformation.species_field ->                                   *)
+(*   Env.TypeInformation.species_field list                               *)
 (** {b Descr} : Implements the erasing procedure of one field described
     in Virgile Prevosto's Phd, Section 3.9.5, page 53, definition 33.
 
-    {b Rem} : Not exported outside this module.
-    Because the erasing of one Let_rec leads to several Sig fields this
-    function takes 1 fields and may return several.
+    {b Rem} : Because the erasing of one Let_rec leads to several Sig
+    fields this function takes 1 fields and may return several.
     In the same spirit, because we don't have any "silent"  Sig for "rep"
     (of course, "rep" is always a Sig when present), if we find "rep"
     defined, then the only way to abstract it is to remove it. Hence this
-    function may also return an empty list of fields.                      *)
-(* ************************************************************************ *)
+    function may also return an empty list of fields.
+
+   {b Exported} : No.                                                      *)
+(* *********************************************************************** *)
 let erase_field field =
   match field with
   | Env.TypeInformation.SF_sig (from, vname, _) ->
@@ -1587,19 +1591,19 @@ let erase_field field =
 
 
 
-(* ******************************************************************* *)
-(* current_species: Parsetree.qualified_vname ->                       *)
-(*   Parsetree_utils.DepNameSet.elt list ->                            *)
-(*     Env.TypeInformation.species_field list ->                       *)
-(*       Env.TypeInformation.species_field list                        *)
+(* ****************************************************************** *)
+(* current_species: Parsetree.qualified_vname ->                      *)
+(*   Parsetree_utils.DepNameSet.elt list ->                           *)
+(*     Env.TypeInformation.species_field list ->                      *)
+(*       Env.TypeInformation.species_field list                       *)
 (** {b Descr} : Implements the erasing procedure in a list of fields
     [fields] as described in Virgile Prevosto's Phd, Section 3.9.5,
     page 53, definition 33.
     Erases in the list of fields definitions according to the context
     represented by the list of names [context].
 
-    {b Rem} : Exported outside this module.                            *)
-(* ******************************************************************* *)
+    {b Exported} : Yes.                                               *)
+(* ****************************************************************** *)
 let erase_fields_in_context ~current_species context fields =
   (* Now, the recursive function dealing with each field... *)
   let rec rec_erase rec_context = function

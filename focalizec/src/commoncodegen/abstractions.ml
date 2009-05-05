@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.71 2009-04-24 14:35:58 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.72 2009-05-05 13:49:09 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -61,7 +61,7 @@ type field_type_kind =
     Hence, when we will need to access an environment, with this 2
     constructors, we will know its type and which primitives to use.
 
-    {b Rem} : Exported outside this module.                                  *)
+    {b Exported} : Yes.                                                      *)
 (* ************************************************************************* *)
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
@@ -78,7 +78,7 @@ type environment_kind =
     initial accumulator as the list mapping each species parameter name
     onto the empty dependencies set.
 
-    {b Rem}: Exported outside this module.                                 *)
+    {b Exported}: Yes.                                                     *)
 (* *********************************************************************** *)
 let make_empty_param_deps species_parameters_names =
   List.fold_right
@@ -90,11 +90,11 @@ let make_empty_param_deps species_parameters_names =
 
 
 
-(* ************************************************************************ *)
-(* Types.fname -> Parsetree.vname ->                                        *)
-(*   ((Types.fname * Types.collection_name) *                               *)
-(*    Types.substitution_by_replacement_collection_kind) list ->            *)
-(*     Parsetree.vname                                                      *)
+(* ************************************************************************* *)
+(* Types.fname -> Parsetree.vname ->                                         *)
+(*   ((Types.fname * Types.collection_name) *                                *)
+(*    Types.substitution_by_replacement_collection_kind) list ->             *)
+(*     Parsetree.vname                                                       *)
 (** {b Descr} : Applies a list of substitutions on a [Parsetree.vname].
     This [Parsetree.vname] is expected to be the name of a formal collection
     parameter of a species from which we inherit.
@@ -109,9 +109,11 @@ let make_empty_param_deps species_parameters_names =
 
       - [pvname]: The formal species parameter name.
 
-    {b Rem} : Not exported outside this module.
-    Raises [Not_found] if the substitution replace a parameter by "Sefl".   *)
-(* ************************************************************************ *)
+    {b Rem} : Raises [Not_found] if the substitution replace a parameter by
+    "Sefl".
+
+    {b Exported} : No.                                                       *)
+(* ************************************************************************* *)
 let apply_substitutions_list_on_formal_param_vname pmodname pvname substs =
   (* First, convert the species parameter's name into a [string] to make
      comparison easier. *)
@@ -369,7 +371,7 @@ let get_if_field_logical_statement name fields =
     page 153 in Virgile Prevosto's Phd. In fact, the present function only
     implements rule [BODY] !
 
-    {b Rem} : Exported oustide this module.                                  *)
+    {b Exported} : Yes.                                                      *)
 (* ************************************************************************* *)
 let compute_lambda_liftings_for_field ~current_unit ~current_species
     species_parameters_names dependency_graph_nodes name body my_type
@@ -625,10 +627,10 @@ let compute_lambda_liftings_for_toplevel_theorem dependency_graph_nodes name =
 
 
 
-(** For intermediate internal computation where we need to remind from where
-    the found dependencies on species parameters come.
+(** {b Descr} : For intermediate internal computation where we need to remind
+    from where the found dependencies on species parameters come.
 
-    {b Rem}: Not exported outside this module. *)
+    {b Exported}: No.                                                       *)
 type internal_abstraction_info = {
   iai_used_species_parameter_tys : Parsetree.vname list ;
   (** Dependencies found via [BODY] of definition 72 page 153 of Virgile
@@ -665,7 +667,7 @@ type internal_abstraction_info = {
 
 
 
-(** {b Rem}: Exported outside this module. *)
+(** {b Exported}: Yes. *)
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
   (** Dependencies on species parameters' methods. They are the union of:
@@ -709,7 +711,7 @@ type abstraction_info = {
     Hence, all the lists to merge must have been built in the scope of the
     same species to ensure these invariants.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let merge_abstraction_infos ai1 ai2 =
   List.map2
@@ -797,7 +799,7 @@ let find_field_abstraction_by_name name abstractions =
      another Cq' as third argument, we would get the pair:
      (Cp', (S', [(Cp, 1); (Cq, 3)])).
 
-    {b Rem} : Not exported outside this module.                            *)
+    {b Exported} : No.                                                     *)
 (* *********************************************************************** *)
 let get_user_of_parameters_with_position ~current_unit species_parameters
     spe_expr =
@@ -862,7 +864,7 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
     of methods names representing the dependencies) in the bucket of the
     species parameter [~param].
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let add_param_dependencies ~param_name ~deps ~to_deps =
   let param_name_as_string =
@@ -1092,7 +1094,7 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
 (* {b Args}:
      - [dependencies_from_params] Those computer by all the other rules.
 
-   {b Rem} : Not exported outside this module.                              *)
+   {b Exported} : No.                                                       *)
 (* ************************************************************************ *)
 let complete_dependencies_from_params_rule_PRM env ~current_unit
     species_parameters starting_dependencies_from_params =
@@ -1390,7 +1392,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
     are relevant and since there is no termination proof, dependencies induced
     by them must be forgotten
 
-   {b Rem}: Not exported outside this module.                                 *)
+   {b Exported}: No.                                                          *)
 (* ************************************************************************** *)
 let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
   let reversed_abstractions =

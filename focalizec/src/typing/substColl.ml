@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.29 2008-11-21 16:54:34 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.30 2009-05-05 13:49:09 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -21,7 +21,7 @@
 (* ************************************************************************ *)
 
 
-(* ************************************************************************** *)
+(* ************************************************************************* *)
 (** {b Descr} : Describes which kind of collection type must be replaced
               by a substitution. It can be either Self or another collection
               "name". This enables factorizing the substitution code for
@@ -30,8 +30,8 @@
               One must make a difference because Self is a special
               constructor in both types and expressions.
 
-    {b Rem} : Exported outside this module.                                   *)
-(* ************************************************************************** *)
+    {b Exported} : Yes.                                                      *)
+(* ************************************************************************* *)
 type substitution_replaced_collection_kind =
     (** The collection to replace is the one named in the argument. *)
   | SRCK_coll of Types.type_collection
@@ -47,7 +47,7 @@ type substitution_replaced_collection_kind =
               in an optional [Types.type_simple] under the form of a
               [Parsetree.ast_node_type_information].
 
-    {b Rem} : Not exported outside this module.                        *)
+    {b Exported} : No.                                                 *)
 (* ******************************************************************* *)
 let subst_ast_node_type_information c1 c2 = function
   | Parsetree.ANTI_none -> Parsetree.ANTI_none
@@ -61,8 +61,8 @@ let subst_ast_node_type_information c1 c2 = function
            let ty' =
              (match c2 with
               | Types.SBRCK_self ->
-                  (* If the substitution is to replace by Self, then leave *)
-                  (* the Self occurrences in the type, only copy it.       *)
+                  (* If the substitution is to replace by Self, then leave
+                     the "Self" occurrences in the type, only copy it. *)
                   Types.copy_type_simple_but_variables ~and_abstract: None ty
               | Types.SBRCK_coll c2_ty ->
                   Types.copy_type_simple_but_variables
@@ -80,8 +80,8 @@ let subst_ast_node_type_information c1 c2 = function
             | Types.SBRCK_coll c2_ty ->
                 Parsetree.ANTI_scheme (Types.abstract_in_scheme c2_ty sch)
             | Types.SBRCK_self ->
-                (* Just copy the scheme, because replacing  *)
-                (* Self by Self is identity. *)
+                (* Just copy the scheme, because replacing "Self" by "Self" is
+                   identity. *)
                 let new_ty = Types.specialize sch in
                 let sch' = Types.generalize new_ty in
                 Parsetree.ANTI_scheme sch'
@@ -99,8 +99,8 @@ let subst_ident c1 c2 ident =
     subst_ast_node_type_information c1 c2 ident.Parsetree.ast_type in
   match c1 with
    | SRCK_self ->
-       (* We are asked to replace "Self"...          *)
-       (* Since an ident is not Self, nothing to do. *)
+       (* We are asked to replace "Self"...
+          Since an ident is not Self, nothing to do. *)
        Parsetree.TE_ident { ident with Parsetree.ast_type = new_type }
    | SRCK_coll (c1_mod, c1_name) -> 
        (begin
@@ -109,12 +109,11 @@ let subst_ident c1 c2 ident =
             (* No substitution on local identifiers. *)
             Parsetree.TE_ident { ident with Parsetree.ast_type = new_type }
         | Parsetree.I_global (Parsetree.Vname _) ->
-            (* Should never happen since scoping pass should *)
-            (* have explicitely scoped the identifiers.      *)
+            (* Should never happen since scoping pass should have explicitely
+               scoped the identifiers. *)
             assert false
         | Parsetree.I_global (Parsetree.Qualified (id_mod, id_name)) ->
-            (* Perform the substitution only if *)
-            (* the ident is equal to c1.        *)
+            (* Perform the substitution only if the ident is equal to c1. *)
             if c1_mod = id_mod && (Parsetree.Vuident c1_name) = id_name then
               (begin
               match c2 with
@@ -163,25 +162,25 @@ let subst_expr_ident ~current_unit c1 c2 ident =
      | Parsetree.EI_method (Some coll_qvname, vname) ->
          match c1 with
           | SRCK_self ->
-              (* Because Self is a special constructor, an expr_ident can't  *)
-              (* be Self. Then in this case, the substitution is identity.   *)
+              (* Because "Self" is a special constructor, an expr_ident can't
+                 be "Self". Then in this case, the substitution is identity. *)
               ident.Parsetree.ast_desc
           | SRCK_coll effective_coll_ty ->
               let coll_ty =
                 match coll_qvname with
                  | Parsetree.Vname coll_vname ->
-                     (* If no module specifier appears in the ident, then it *)
-                     (* implicitely refers to the current compilation unit.  *)
-                     (* Should never happen because the scoping pass should  *)
-                     (* have made the hosting module explicit.               *)
+                     (* If no module specifier appears in the ident, then it
+                        implicitely refers to the current compilation unit.
+                        Should never happen because the scoping pass should
+                        have made the hosting module explicit. *)
                      (current_unit, Parsetree_utils.name_of_vname coll_vname)
                  | Parsetree.Qualified (modname, coll_vname) ->
                      (modname, Parsetree_utils.name_of_vname coll_vname) in
-              (* Attention, [c2] is a [Types.collection_type], then it has *)
-              (* to be transformed into a [Parsetree.vname] before being   *)
-              (* inserted in the [Parsetree.EI_method]. Because collection *)
-              (* names are always capitalized, the transformation is       *)
-              (* trivially to surround [c2] byt a [Parsetree.Vuident].     *)
+              (* Attention, [c2] is a [Types.collection_type], then it has to
+                 be transformed into a [Parsetree.vname] before being inserted
+                 in the [Parsetree.EI_method]. Because collection names are
+                 always capitalized, the transformation is trivially to
+                 surround [c2] byt a [Parsetree.Vuident]. *)
               if coll_ty = effective_coll_ty then
                 (begin
                 match c2 with
@@ -231,9 +230,9 @@ let subst_fact ~current_unit c1 c2 fact =
          let expr_idents' =
            List.map (subst_expr_ident ~current_unit c1 c2) expr_idents in
          Parsetree.F_property expr_idents'
-     | Parsetree.F_hypothesis _ | Parsetree.F_node _ ->
+     | Parsetree.F_hypothesis _ | Parsetree.F_node _ | Parsetree.F_type _ ->
          (* No change since no idents that can denote species parameters
-            methods. *)
+            methods or types. *)
          fact.Parsetree.ast_desc) in
   (* Substitute in the AST node type. *)
   let new_type =
@@ -255,7 +254,7 @@ let subst_fact ~current_unit c1 c2 fact =
     substitute in the types hooked in the AST's pattern [Parsetree.ast_type]
     field.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let subst_pattern c1 c2 pattern =
   (* Let's just make a local recursive function to save the stack, *)
@@ -295,8 +294,8 @@ let subst_pattern c1 c2 pattern =
 
 
 let subst_type_expr c1 c2 type_expression =
-  (* Let's just make a local recursive function to save the stack, *)
-  (* avoiding passing each time the 2 arguments [c1] and [c2].     *)
+  (* Let's just make a local recursive function to save the stack, avoiding
+     passing each time the 2 arguments [c1] and [c2]. *)
   let rec rec_subst ty_expr =
     (* Substitute in the AST node description. *)
     let new_desc =
@@ -311,11 +310,11 @@ let subst_type_expr c1 c2 type_expression =
            match ident' with
             | Parsetree.TE_ident id -> Parsetree.TE_app (id, tys')
             | Parsetree.TE_self ->
-                (* The substitution transformed an ident into "Self". In *)
-                (* this case, the arguments of the constructeur must be  *)
-                (* non-existant because by construction, species types   *)
-                (* have no parameters. If that's not the case, then      *)
-                (* there's something wrong in the compiler.              *)
+                (* The substitution transformed an ident into "Self". In this
+                   case, the arguments of the constructeur must be non-existant
+                   because by construction, species types have no parameters.
+                   If that's not the case, then there's something wrong in the
+                   compiler. *)
                 if tys' <> [] then assert false ;
                 ident'
             | _ ->
@@ -350,8 +349,8 @@ let subst_type_expr c1 c2 type_expression =
                      ty_expr.Parsetree.ast_desc
                 end)
             | _ ->
-                (* Since the substitution tries to replace a    *)
-                (* collection other than Self, no change to do. *)
+                (* Since the substitution tries to replace a collection other
+                   than Self, no change to do. *)
                 ty_expr.Parsetree.ast_desc
            end)
        | Parsetree.TE_prop -> ty_expr.Parsetree.ast_desc
@@ -369,8 +368,8 @@ let subst_type_expr c1 c2 type_expression =
 
 
 let rec subst_expr ~current_unit c1 c2 expression =
-  (* Let's just make a local recursive function to save the stack, avoiding *)
-  (* passing each time the 3 arguments [~current_unit], [c1] and [c2].      *)
+  (* Let's just make a local recursive function to save the stack, avoiding
+     passing each time the 3 arguments [~current_unit], [c1] and [c2]. *)
   let rec rec_subst initial_expr =
     (* Substitute in the AST node description. *)
     let new_desc =
@@ -388,9 +387,9 @@ let rec subst_expr ~current_unit c1 c2 expression =
            let args_exprs' = List.map rec_subst args_exprs in
            Parsetree.E_app (functional_expr', args_exprs')
        | Parsetree.E_constr (cstr_expr, exprs) ->
-           (* The constructor expression can not be substituted. May be only *)
-           (* in its type, and it's even pretty sure that no. So just hack   *)
-           (* it's type, but leave the structure unchanged.                  *)
+           (* The constructor expression can not be substituted. May be only
+              in its type, and it's even pretty sure that no. So just hack
+              it's type, but leave the structure unchanged. *)
            let cstr_expr' = { cstr_expr with
              Parsetree.ast_type =
                subst_ast_node_type_information
@@ -501,7 +500,7 @@ and subst_let_definition ~current_unit c1 c2 let_def =
 (** {b Descr} : Performs the collection name substitution [c1] <- [c2]
               in a [Parsetree.logical_expr].
 
-    {b Rem} : Exported outside this module.                            *)
+    {b Exported} : Yes.                                                *)
 (* ******************************************************************* *)
 and subst_logical_expr ~current_unit c1 c2 initial_logical_expr =
   let rec rec_subst logical_expr =
@@ -731,9 +730,9 @@ let subst_species_field ~current_unit c1 c2 = function
                    begin
                    match c2 with
                     | Types.SBRCK_self ->
-                        (* If the substitution is to replace by Self, then  *)
-                        (* leave the Self occurrences in the type, only     *)
-                        (* copy it.                                         *)
+                        (* If the substitution is to replace by Self, then
+                           leave the Self occurrences in the type, only copy
+                           it. *)
                         Types.copy_type_simple_but_variables
                           ~and_abstract: None ty
                     | Types.SBRCK_coll c2_ty ->

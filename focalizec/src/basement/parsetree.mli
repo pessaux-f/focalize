@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.53 2009-04-27 15:26:25 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.54 2009-05-05 13:49:09 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -415,6 +415,7 @@ and fact_desc =
   | F_property of expr_ident list
   | F_hypothesis of vname list
   | F_node of node_label list
+  | F_type of ident list
 
 (** {3 Proofs} *)
 

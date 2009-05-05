@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.26 2009-03-13 07:52:05 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.27 2009-05-05 13:49:09 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -100,7 +100,7 @@ let guess_method_computational_or_logical meth_name meth_ty_opt among =
     species as [param_coll_name] and is counted as a dependency. Or it
     is not and then the returned set of dependencies is empty.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Exported} : No.                                                   *)
 (* ********************************************************************* *)
 let param_deps_ident ~current_species (param_coll_name, param_coll_meths)
     local_idents ident =
@@ -181,7 +181,7 @@ let param_deps_ident ~current_species (param_coll_name, param_coll_meths)
       must never be called in a context where there would already exists
       local identifiers.
 
-  {b Rem} : Not exported outside this module.                               *)
+  {b Exported} : No.                                                        *)
 (* ************************************************************************ *)
 let rec __param_deps_expr ~current_species (param_coll_name, param_coll_meths)
     start_local_idents expression =
@@ -327,8 +327,8 @@ let param_deps_fact ~current_species (param_coll_name, param_coll_meths) fact =
            Parsetree_utils.ParamDepSet.union deps accu_deps)
          Parsetree_utils.ParamDepSet.empty
          expr_idents
-   | Parsetree.F_hypothesis _
-   | Parsetree.F_node  _ -> Parsetree_utils.ParamDepSet.empty
+   | Parsetree.F_hypothesis _ | Parsetree.F_node _ | Parsetree.F_type _ -> 
+       Parsetree_utils.ParamDepSet.empty
 ;;
 
 
@@ -387,9 +387,9 @@ let rec param_deps_proof_node ~current_species
 
 
 
-(* current_species: Parsetree.qualified_species ->                      *)
+(* current_species: Parsetree.qualified_species ->                       *)
 (*   Parsetree.vname -> Parsetree.proof -> Parsetree_utils.ParamDepSet.t *)
-(* Exported. *)
+(* {b Exported} : Yes.                                                   *)
 and param_deps_proof ~current_species (param_coll_name, param_coll_meths)
     proof =
   match proof.Parsetree.ast_desc with
@@ -475,7 +475,7 @@ let param_deps_termination_proof ~current_species
           dependencies on the species parameter whose name is
           [param_coll_name].
 
-    {b Rem} : Exported outside this module.                                  *)
+    {b Exported} : Yes.                                                      *)
 (* ************************************************************************* *)
 let param_deps_expr ~current_species (param_coll_name, param_coll_meths)
     expression =

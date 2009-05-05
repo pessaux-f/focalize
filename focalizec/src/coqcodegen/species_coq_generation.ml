@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.170 2009-04-08 13:41:51 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.171 2009-05-05 13:49:09 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -73,7 +73,7 @@ let section_gen_sym =
       - [method_name] : The name of the method the generator is looked for.
       - [env] : The current Coq code generation environment.
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 let find_inherited_method_generator_abstractions ~current_unit from_species
     method_name env =
@@ -115,7 +115,7 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
     species. And this list will grow wih the newly ompiled field and wil be
     passed to compile the next field on the species. And so on...
 
-    {b Rem} : Not exported outside this module.                             *)
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 let find_compiled_field_memory name fields =
   let rec find = function
@@ -524,7 +524,7 @@ let generate_defined_non_recursive_method_postlude ctx print_ctx env params
     It returns the list of methods of ourselves we depend on and that were
     lambda-lifted according to th minimal coq environment.
 
-    {b Rem}: Not exported outside this module.                               *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let generate_defined_non_recursive_method ctx print_ctx env min_coq_env
     used_species_parameter_tys dependencies_from_params generated_fields name
@@ -805,7 +805,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
     And in any case, it generate the local definition "self_..." by
     applying the generator to the local definitions.
 
-    {b Rem} Not exported outside this module.                             *)
+    {b Exported} : No.                                                    *)
 (* ********************************************************************** *)
 let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
     used_species_parameter_tys dependencies_from_params
@@ -843,7 +843,7 @@ let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
 (** {b Descr} : Helper to find, during a Zenon proof by steps, an hypothesis
     by its name among the list of available material to do the proof.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let find_hypothesis_by_name name l =
   let rec rec_find = function
@@ -1086,7 +1086,7 @@ let ensure_enforced_dependencies_by_definition_are_definitions min_coq_env
        | Parsetree.Ed_definition expr_idents ->
            List.iter
              (ensure_enforced_by_definition_is_definition min_coq_env)
-	     expr_idents
+             expr_idents
        | Parsetree.Ed_property _ -> ())
     enf_deps
 ;;
@@ -1575,6 +1575,14 @@ let zenonify_by_property ctx print_ctx env min_coq_env
 
 
 
+let zenonify_by_type _ctx _print_ctx _type_ident =
+  failwith
+    "Not yet available Renaud... I must add types in the coq code gen \
+    environment before."
+;;
+
+
+
 type proof_step_availability = {
   psa_node_label : Parsetree.node_label ;
   psa_lemma_name : Parsetree.vname ;
@@ -1631,7 +1639,7 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
     decl-dependency. Hence, to recover them, we will search inside these 2
     kinds of information.
 
-    {b Rem} : Not exported outside this module.                            *)
+    {b Exported} : No.                                                     *)
 (* *********************************************************************** *)
 let zenonify_fact ctx print_ctx env min_coq_env dependencies_from_params
     generated_fields available_hyps available_steps fact =
@@ -1706,6 +1714,11 @@ let zenonify_fact ctx print_ctx env min_coq_env dependencies_from_params
            (* Done... Then, final carriage return. *)
            Format.fprintf out_fmter ".@]@\n")
          node_labels
+   | Parsetree.F_type type_idents ->
+       (* Syntax: "by type ...". *)
+       List.iter
+         (fun type_ident -> zenonify_by_type ctx print_ctx type_ident)
+         type_idents
 ;;
 
 

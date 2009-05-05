@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.81 2009-04-27 09:35:25 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.82 2009-05-05 13:49:09 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -923,7 +923,7 @@ let rec verify_external_binding ~type_def_body_loc external_bindings
      - [Env.ScopingEnv.t] : The new environment where bindings have been
        added.
 
-   {b Rem} : Not exported outside this module.                                *)
+   {b Exported} : No.                                                         *)
 (* ************************************************************************** *)
 let scope_external_type_def_body ctx env_with_params env tdef_body =
   let tdef_body_desc = tdef_body.Parsetree.ast_desc in
@@ -965,7 +965,7 @@ let scope_external_type_def_body ctx env_with_params env tdef_body =
    type variables if the definition has some and another where they are
    not. C.f. comment in the function [scope_regular_type_def_body].
 
-   {b Rem} : Not exported outside this module.                          *)
+   {b Exported} : No.                                                   *)
 (* ******************************************************************** *)
 let scope_type_def_body_simple ctx env_with_params env ty_def_body_simple =
   match ty_def_body_simple.Parsetree.ast_desc with
@@ -1240,7 +1240,32 @@ let rec scope_fact ctx env fact =
      | Parsetree.F_node _ ->
          (* [Unsure] They MUST be scoped in order to ensure they exist !
             TODO ! *)
-         fact.Parsetree.ast_desc) in
+         fact.Parsetree.ast_desc
+     | Parsetree.F_type idents ->
+         (begin
+         let scoped_idents =
+           List.map
+             (fun ident ->
+               (* Ensure that the mentionned hosting compilation unit of the
+                  ident was mentionned to be "used" or "opened". *)
+               ensure_ident_allowed_qualified ctx ident ;
+               let hosting_info =
+                 Env.ScopingEnv.find_type
+                   ~loc: ident.Parsetree.ast_loc
+                   ~current_unit: ctx.current_unit ident env in
+               (* Let's re-construct a completely scoped identifier. *)
+               let basic_vname = unqualified_vname_of_ident ident in
+               let scoped_ident_descr =
+                 match hosting_info with
+                  | Env.ScopeInformation.TBI_builtin_or_var ->
+                      Parsetree.I_local basic_vname
+                  | Env.ScopeInformation.TBI_defined_in hosting_file ->
+                      Parsetree.I_global
+                        (Parsetree.Qualified (hosting_file, basic_vname)) in
+               { ident with Parsetree.ast_desc = scoped_ident_descr })
+             idents in
+         Parsetree.F_type scoped_idents
+         end)) in
   { fact with Parsetree.ast_desc = new_desc }
 
 
@@ -1310,7 +1335,7 @@ and scope_statement ctx env stmt =
 (*   Parsetree.proof_node                                                 *)
 (** {b Descr} : Scopes a [proof_node] and returns a scoped version of it.
 
-    {b Rem} : Not exported outside this module.                           *)
+    {b Exported} : No.                                                    *)
 (* ********************************************************************** *)
 and scope_proof_node ctx env node =
   let new_desc =
@@ -1351,7 +1376,7 @@ and scope_proof ctx env proof =
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.expr -> Parsetree.expr *)
 (* {b Descr} : Scopes an [expr] and returns this scoped [expr].
 
-   {b Rem} : Not exported outside this module.                             *)
+   {b Exported} : No.                                                      *)
 (* *********************************************************************** *)
 and scope_expr ctx env expr =
   let new_desc =
@@ -1490,7 +1515,7 @@ and scope_expr ctx env expr =
 (** {b Descr} : Scopes a pattern and return the extended scoping environment
     that can be used to scope the expression part of the branch.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 and scope_pattern ctx env pattern =
   let (new_desc, new_env) =
@@ -1585,7 +1610,7 @@ and scope_pattern ctx env pattern =
           of each of the functions' parameters (but not the function
           themselves).
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 and scope_termination_proof ctx env params_env tp =
 (*   [params_env] is a special environment used only when the syntax requires
@@ -1693,7 +1718,7 @@ and scope_termination_proof ctx env params_env tp =
 
       - [Parsetree.vname list] : The list of names bound by this definition.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 and scope_let_definition ~toplevel_let ctx env let_def =
   let let_def_descr = let_def.Parsetree.ast_desc in
@@ -2096,7 +2121,7 @@ let scope_property_def ctx env property_def =
    Especially, [rep] and [proof] and [termination_proof] are not
    methods hence are not values to bind in the environment.
 
-   {b Rem} : Not exported outside this module.                       *)
+   {b Exported} : No.                                                *)
 (* ***************************************************************** *)
 let scope_species_field ctx env field =
   let (new_desc, method_name_opt) =
@@ -2221,7 +2246,7 @@ let scope_species_param ctx env param param_kind =
     check that C really has a [m] method providing that [Spec] has also
     it.
 
-    {b Rem} : Not exported outside this module.                         *)
+    {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
 let rec scope_species_expr ctx env species_expr =
   let species_expr_descr = species_expr.Parsetree.ast_desc in
@@ -2275,7 +2300,7 @@ let rec scope_species_expr ctx env species_expr =
     This list of methods contains those of the first inherited species in
     head, then the laters...
 
-    {b Rem} : Not exported outside this module.                           *)
+    {b Exported} : No.                                                    *)
 (* ********************************************************************** *)
 let scope_inheritance ctx env spec_exprs =
   let spec_exprs_descr = spec_exprs.Parsetree.ast_desc in
@@ -2305,7 +2330,7 @@ let scope_inheritance ctx env spec_exprs =
     This extended environment will be later used to scope the body of
     the species definition.
 
-    {b Rem} : Not exported outside this module.                         *)
+    {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
 let scope_species_params_types ctx env params =
   (* Do not fold_right otherwise params will be inserted in reverse order in
@@ -2395,7 +2420,7 @@ let scope_species_params_types ctx env params =
 (** {b Descr} : Scopes a species and returns the environment extended with
               the bindings induced by the species.
 
-    {b Rem} : Not exported outside this module.
+    {b Rem} :
     Environment search must proceed in the following order:
       1) try to find the identifier in local environment
       2) check if it's a parameter of entity ("in") or
@@ -2405,7 +2430,9 @@ let scope_species_params_types ctx env params =
              else) not found
     So the order in which the idents are inserted into the environment used
     to scope the species must respect extentions in the reverse order in
-    order to find the most recently added bindings first !                  *)
+    order to find the most recently added bindings first !
+
+    {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
 let scope_species_def ctx env species_def =
   let species_def_descr = species_def.Parsetree.ast_desc in
@@ -2488,7 +2515,7 @@ let scope_species_def ctx env species_def =
     definition and the initial environment extended with a binding
     for this collection inside.
 
-    {b Rem} : Not exported outside this module.                    *)
+    {b Exported} : No.                                             *)
 (* *************************************************************** *)
 let scope_collection_def ctx env coll_def =
   let coll_def_desc = coll_def.Parsetree.ast_desc in
@@ -2586,9 +2613,8 @@ let scope_phrase ctx env phrase =
 
 
 
-(* ******************************************************************* *)
-(* scope_file : Types.fname -> Parsetree.file ->                       *)
-(*   (Parsetree.file * Env.ScopingEnv.t)                               *)
+(* ******************************************************************** *)
+(* Types.fname -> Parsetree.file -> (Parsetree.file * Env.ScopingEnv.t) *)
 (** {b Descr} : Starts the scoping phase on a whole file. The initial
     scoping environment is totally empty. Returns the scoped AST
     structure and the complete toplevel scoping environment obtained
@@ -2606,8 +2632,8 @@ let scope_phrase ctx env phrase =
       - [Env.ScopingEnv.t] : The scoping environment where information
         about scoping entities of the compilation have been inserted.
 
-    {b Rem} : Exported outside this module.                            *)
-(* ******************************************************************* *)
+    {b Exported} : Yes.                                                 *)
+(* ******************************************************************** *)
 let scope_file current_unit file =
   match file.Parsetree.ast_desc with
    | Parsetree.File phrases ->

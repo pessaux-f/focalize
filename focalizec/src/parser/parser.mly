@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.132 2009-04-11 22:20:10 weis Exp $ *)
+(* $Id: parser.mly,v 1.133 2009-05-05 13:49:09 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -941,7 +941,27 @@ fact:
     { mk (F_property ($2)) }
   | STEP proof_label_comma_list
     { mk (F_node (List.map mk_proof_label $2)) }
+  | TYPE type_ident_comma_list
+    { mk (F_type ($2)) }
 ;
+
+/* Added François for proof "by type" requested by Renaud. */
+type_ident_comma_list:
+  | type_ident
+    { [ $1 ] }
+  | type_ident COMMA type_ident_comma_list
+    { $1 :: $3 }
+;
+
+type_ident:
+  | QLIDENT
+    { mk_local_ident (Vqident $1) }
+  | RLIDENT
+    { mk_local_ident (Vlident $1) }
+  | glob_ident
+    { $1 }
+;
+/* End added François. */
 
 enforced_dependencies:
   | { [ ] }
