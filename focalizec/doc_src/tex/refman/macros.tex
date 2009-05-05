@@ -33,14 +33,15 @@
 %% Pour afficher les listings de manière plus sexy... ;)
 \lstdefinelanguage{FoCaLize}
   {morekeywords={alias, all, and, as, assume, assumed, begin, by, caml,
-      collection, conclude, coq, coq_require, definition, else, end,
+      collection, coq, coq_require, definition, else, end,
       ex, external, false, function, hypothesis, if, in,
       inherits, internal, implements, is, let, lexicographic,
       local, logical, match, measure, not, notation, of, open,
       on, or, order, proof, prop, property, prove, qed, rec,
-      representation, Self, signature, species, step,
+      representation, representation, Self, signature, species, step,
       structural, termination, then, theorem, true, type, use,
-      with},
+      with, conclude},
+    otherkeywords={->, :, /\\, \\/, =>, \~, \#, ;, \&, \|},
     sensitive=false,
     morecomment=[n]{(*}{*)},  %% Autoriser les nested comments
     morecomment=[n]{(**}{*)}, %% Autoriser les nested comments

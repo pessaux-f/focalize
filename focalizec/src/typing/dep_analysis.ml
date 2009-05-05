@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.62 2009-04-08 13:41:51 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.63 2009-05-05 09:26:18 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1535,7 +1535,7 @@ let ensure_species_well_formed ~current_species fields =
     {b Rem} : Not exported outside this module.
     Because the erasing of one Let_rec leads to several Sig fields this
     function takes 1 fields and may return several.
-    In the same spirit, because we don't have any "slilent"  Sig for "rep"
+    In the same spirit, because we don't have any "silent"  Sig for "rep"
     (of course, "rep" is always a Sig when present), if we find "rep"
     defined, then the only way to abstract it is to remove it. Hence this
     function may also return an empty list of fields.                      *)

@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.ml,v 1.9 2008-10-17 06:13:34 pessaux Exp $ *)
+(* $Id: ast_equal.ml,v 1.10 2009-05-05 09:26:18 pessaux Exp $ *)
 
 (* ********************************************************************** *)
 (** {b Descr} : This module performs test equality of the AST expression.
@@ -21,7 +21,7 @@
               It is unclear whether the physical equality would be
               sufficient. Hence we implement here a custom structural
               equality to determine if 2 expressions have the same
-              form modulo alph-conversion of the free identifiers.
+              form modulo alpha-conversion of the free identifiers.
               In particular, we are only interested in comparing only
               the [Parsetree.ast_desc] field.
               Currently, the comparison is done on the skeleton of the

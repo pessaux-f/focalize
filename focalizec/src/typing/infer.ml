@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.177 2009-04-24 14:35:58 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.178 2009-05-05 09:26:18 pessaux Exp $ *)
 
 
 
@@ -1742,7 +1742,7 @@ and typecheck_theorem_def ctx env theorem_def =
      type expression in a theorem are implicitely considered as universally
      quantified. In effect, there no syntax to make explicit the
      quantification. Then we first create a variable mapping from the type
-     expression to avoid variable from being "unbound".
+     expression to prevent variables from being "unbound".
      We must increase the bindind level because when processing [Pr_forall]
      and [Pr_exists], the function [typecheck_logical_expr] needs to store
      the scheme of the idents introduced. And since generalisation if done
@@ -1919,8 +1919,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                   establish a link by side effect from the representation to
                   the type [Types.ST_self_rep], hence fooling the explicit
                   structure of what is initially "rep".
-                  This first would prevent us from being to generate code
-                  finally relying on the representation of "rep". Furthermore
+                  This first would prevent us from being able to generate code
+                  finally relying on the representation of "rep". Furthermore,
                   because of how [Types.unify] handles unification with
                   [Types.ST_self_rep] to prevent cycles, unification of this
                   **mangled** representation would succeed with any types, even
@@ -2069,8 +2069,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                   present in a type expression in a property are implicitely
                   considered as universally quantified. In effect, there no
                   syntax to make explicit the quantification. Then we first
-                  create a variable mapping from the type expression to avoid
-                  variable from being "unbound".
+                  create a variable mapping from the type expression to prevent
+                  variables from being "unbound".
                   We must increase the bindind level because when processing
                   [Pr_forall] and [Pr_exists], the function
                   [typecheck_logical_expr] needs to store the scheme of the
@@ -2550,9 +2550,9 @@ let apply_species_arguments ctx env base_spe_descr params =
              Because these parameters will be "evaluated" after the
              current one, we need to delay the substitution until they
              are really processed.
-             This list contains the in *REVERSE* order of the
+             This list contains the substitutions in *REVERSE* order of
              application order. This means that the first required
-             substitution is in tail.                                   *)
+             the substitution is in tail.                               *)
   (* ****************************************************************** *)
   let rec rec_apply accu_meths accu_substs accu_self_must_be = function
     | ([], []) -> (accu_meths, accu_self_must_be, (List.rev accu_substs))
@@ -2573,7 +2573,7 @@ let apply_species_arguments ctx env base_spe_descr params =
                  Types.type_rep_species
                    ~species_module: (fst f_ty) ~species_name: (snd f_ty) in
                (* We must apply the already seen substitutions to this type
-                  to ensure that it is tansformed if required to collections
+                  to ensure that it is transformed if required to collections
                   of possible previous "is" parameters. For instance, let's
                   take the following code:
                     species Me (Naturals is Intmodel, n in Naturals) = ...
@@ -2581,10 +2581,10 @@ let apply_species_arguments ctx env base_spe_descr params =
                     collection Foo implements Me
                       (ConcreteInt, ConcreteInt!un) ;;
                   While typechecking the ConcreteInt!un, we get a type
-                  Naturals. but since in the Foo collection, Naturals is
+                  Naturals. But since in the Foo collection, Naturals is
                   instanciated by the effective ConcreteInt, Naturals appears
                   to be incompatible with ConcreteInt. However, in Foo, with
-                  the first instanciation, we said that Naturals IS A
+                  the first instanciation, we said that Naturals IS a
                   ConcreteInt, and we substituted everywhere Naturals by
                   ConcreteInt. So idem must we do in the type infered for the
                   effective argument ConcreteInt!un. *)
@@ -3638,8 +3638,9 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
 (* loc: Location.t -> typing_context -> Env.TypeInformation.species_field -> *)
 (*   Env.TypeInformation.species_field -> Env.TypeInformation.species_field  *)
 (** {b Descr} : Implements the "fusion" algorithm described in Virgile
-    Prevosto's Phd, Section 3.6, page 35.
-    This basically ensure that 2 fields with at leat 1 common name are
+    Prevosto's Phd, Section 3.6, page 35 and completed in Section 3.9.7,
+    page 56, definition 35.
+    This basically ensures that 2 fields with at leat 1 common name are
     type-compatible and select the new field information that summarizes
     these 2 original fields (implementing the late binding feature by the
     way).
@@ -4101,7 +4102,7 @@ let ensure_collection_completely_defined ctx fields =
 (* ************************************************************************ *)
 (* loc: Location.t -> Env.TypeInformation.species_field -> unit             *)
 (** {b Descr} : Detects and reject polymorphic methods. This proces is done
-    once the fusion of inhérited methods and current methods is done.
+    once the fusion of inherited methods and current methods is done.
     In effect, it is possible to have an inherited signature specifying a
     non polymorphic type and a definition of this method not specifying the
     types (hence that could seem polymorphic). The expected behaviour is
@@ -4235,14 +4236,17 @@ let typecheck_species_def ctx env species_def =
   (* First of all, we are in a species !!! *)
   let ctx = { ctx with current_species = Some current_species } in
   (* Extend the environment with the species param and synthetize the species
-     type of the current species. *)
+     type of the current species. A priori [_self_must_be1] should always be
+     an empty list since expressions of parameters are not allowed to use
+     [Self]. So ther eis no reason to have found that [Self] must be compatible
+     with a species type while processing parameters. *)
   let (env_with_species_params, sig_params, _self_must_be1) =   (*** ***)
     typecheck_species_def_params
       ctx env species_def_desc.Parsetree.sd_params in
   (* We first load the inherited methods in the environment and get their
      signatures and methods information by the way.
      We also get a possibly new context where the fact that Self is now
-     manifest is unpdated, in case we inherited a [repr]. *)
+     manifest is updated, in case we inherited a [repr]. *)
   let (inherited_methods_infos,
        env_with_inherited_methods,
        ctx_with_inherited_repr,
@@ -4360,6 +4364,8 @@ let typecheck_species_def ctx env species_def =
      definition for "me_as_carrier" in "A". And in "B", "g" will have the
      type "A.me_as_carrier -> A.me_as_carrier" where "A.me_as_carrier" is
      unbound. This is moral since "A" doesn't have a carrier. *)
+  (* [Unsure] At doc writing stage, I now wonder if the point that the species
+     must have a method "representation" would be in fact sufficient... *)
   let full_env =
     if is_closed then
       (begin
