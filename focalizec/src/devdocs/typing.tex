@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.7 2009-05-04 15:18:17 pessaux Exp $
+% $Id: typing.tex,v 1.8 2009-05-06 20:06:49 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -1139,6 +1139,143 @@ $A \Rightarrow B \Rightarrow C$ is equivalent to
 $(A \wedge B) \Rightarrow C$ and so on\ldots
 
 
+\subsection{Computing def/decl-dependencies (let's just begin)}
+As previously stated, def and decl-dependencies reflect dependencies
+of methods of the species on methods of this species. In other words,
+they are related to dependencies of methods of {\tt Self} on methods
+of {\tt Self}. We already examined how to compute theses dependencies
+for the particular case of the carrier (the method
+{\tt representation}) in \label{deps-on-carrier}. We now address this
+problem for all the other methods. In fact, dependencies computation
+is done in two passes. The first one is to create a simple dependency
+graph and is performed at typing stage. The second will be to exploit
+this graph to compute for each method of {\tt Self}, the set of
+methods of {\tt Self} that must be abstracted because of
+dependencies. This will be done via the ``minimal coq typing \coq\
+environment'' in a next stage.
+
+\medskip
+So, for the moment, we concentrate on building the dependency
+graph of each field. In effect, each {\bf field} will have its own
+dependency graph (note, a field can contain several functions like in
+the case of mutually recursive methods). The graph of each method is
+built sharing node information between methods. In other words, like
+any graph, we have nodes, if a same node is required to build the
+graph of {\tt m1} and {\tt m2}, then these 2 graphs whill physically
+share the node. Again, in other words, the dependency graph of each
+species is a sub-graph of a global graph.
+
+The data-structure for such graphs can be found in the source file
+{\tt typing/depGraphData.mli}.
+
+In this graph, a node is a method an edge between 2 nodes $n_1$ and
+$n_2$ is a direct dependency relation telling that $n_1$ depends on
+$n_2$. Hence, $meth_{foo} \rightarrow meth_{bar}$ means that $meth_{foo}$
+depends on $meth_{bar}$. Each edge is tagged with information telling
+if the dependency is a decl ({\tt DK\_decl}) or a def
+({\tt DK\_def}) dependency. In case of decl-dependency, we have a tag
+telling if this dependency comes from the type
+({\tt DcDK\_from\_type}, the body ({\tt DcDK\_from\_body}) or the
+termination proof ({\tt DcDK\_from\_term\_proof)} of the field. In
+case of def-dependency, we have a tag indicating if this dependency
+comes from a termination proof ({\tt DfDK\_from\_term\_proof}) or not
+({\tt DfDK\_not\_from\_term\_proof}).
+
+\medskip
+The method {\tt representation} on which we can have dependencies via
+dependencies on {\tt Self} as previously see, is handled like the
+other methods by the graph building algorithm. The only difference is
+that because we recording at type-checking stage directly if a method
+has dependencies on {\tt Self} and recorded this information in flags
+of the methods, we will have hard-wired cases to check for a
+dependency on the carrier since this information is obtained just
+consulting the flags in opposition with others methods where we need
+now to inspect their code.
+
+\medskip
+A few things to remark:
+\begin{itemize}
+\item Signatures can't introduce decl or def-dependencies.
+\item {\tt let} methods can only introduce decl-dependencies via their
+  computational body.
+\item Prpoerties can only introduce decl-dependencies via their
+  logical statement (i.e. their type in fact).
+\item Theorems can introduce both kinds of dependencies: decl by their
+  statement (i.e. type in fact) and decl/def by their proof (i.e. body
+  in fact).
+\end{itemize}
+
+The basic process to build the graph is to process each field in
+turn. Each name defined in the field will lead to a node in the graph
+(i.e. ``somebody'' that may depend on ``somebody else'' or
+``somebody'' on which ``somebody else'' may depend on). Hence, each
+time we need to create a node, we use a special function that first
+look among the already created nodes, if it find a node having a right
+name, it returns this node, otherwise it really creates the node. This
+ensure that node wil be create once and will be shared between every
+occurrence of apparition.
+
+The starting point of graph construction is the function
+{\tt build\_dependencies\_graph\_for\_fields} hosted in the source
+file {\tt typing/dep\_analysis.ml}. This function contains 2 local
+function that deal respectively with {\tt let}-definitions and
+theorems/properties. They basically behave the same way:
+\begin{enumerate}
+\item Check in the field's tag if there is a a decl-dependency on
+  {\tt representation}. If so, manually add an edge from the current
+  name's node to the node of {\tt representation}. Note that this edge
+  is always tagged as ``coming from type'' ({\tt DcDK\_from\_type})
+  since even in a theorem, a decl-dependency on the carrier can only
+  come from the type because one can't say in the body, i.e. in the
+  proof,
+  {\footnotesize\lstinline*by definition of Self*} or
+  {\footnotesize\lstinline*by property Self*}.
+
+\item Find the names of decl and defs dependencies for the current
+  name (trivially, for {\tt let-definitions} def-dependencies are
+  trivially always empty). This gives us the names of methods we
+  decl-depend from our type, those we decl-depend from our body and
+  those we def-depend. This computation is a simple descent over the
+  AST of the method, hunting for calls to methods identified to belong
+  to use. Once we got these 3 sets of names, for each of them, we
+  create a node (create or get if it already exists). Finally, for all
+  these nodes (``dependencies nodes''), we add an edge properly tagged
+  from the current name's node to each of the dependencies names' nodes.
+
+\item {\bf Only for} {\tt let}{\bf -definitions}: we process the
+  optional termination proof. By making a descent on the AST of the
+  proof, we get the names of methods we decl-depend and those we
+  def-depend. Exactly like in the above point, we create nodes for
+  these names and add edges properly tagged (refining the decl or def
+  tag by the tags telling ``coming from a termination proof'', i.e.
+  {\tt DcDK\_from\_term\_proof} or {\tt DfDK\_from\_term\_proof}).
+
+\item Check in the field's tag if there is a a def-dependency on
+  {\tt representation}. If so, manually add an edge from the current
+  name's node to the node of {\tt representation}. Note that this edge 
+  is always tagged as ``coming not from a termination proof''
+  ({\tt DfDK\_not\_from\_term\_proof}) since properties and theorem do
+  not have such proof and in the case of recursive
+  {\tt let}-definitions, anyway if the termination proof refers to
+  {\tt Self}, then the parts outside the proof obviously also. Hence,
+  the carrier will always need to be lambda-lifted.
+\end{enumerate}
+
+At the end of this process, we have a dependency graph telling for
+each method of the species, which method is depends on. Such a graph
+can be exported in \dotty\ using the option
+{\tt -dot-non-rec-dependencies} of \focalizec.
+\medskip
+\includegraphics[scale=0.75]{dep_graph_example.ps}
+
+{\bf Attention} : However, this does not give us yet what we need to
+$\lambda$-lift in term of methods of {\tt Self} ! We still need to
+perform some analyses, especially to compute the ``minimal
+\coq\ typing environment'' to have this information. But this is done
+in another pass.
+
+
+
 \subsection{Miscellaneous}
 When finally the species is built, after having checked that it is
 well-formed, it has no doubles, it is fully defined or not and so on,
@@ -1173,3 +1310,27 @@ sufficient\ldots
 
 
 \section{Typing a collection definition}
+Typing a collection definition is pretty close to typing a
+species. The main difference is that we don't have inheritance, hence
+the normal form of the collection is directly the normal form of the
+species it ``implements''.
+
+\medskip
+We have to ensure that the species expression we ``implements'' is
+fully defined before being able to accept the collection.
+
+\medskip
+Type-checking the collection's fields is in fact just performing the
+abstraction, replacing {\tt Self} by the collection name in the fields
+(i.e. in the bodies and in the types). Then we do this substitution by
+applying {\tt SubstColl.subst\_species\_field} on each fields. This
+gives us the list of fields of the collection. This list will be later
+saved as part of the information bound to a collection in the
+type-checking environment.
+
+\medskip
+Note that we do not use the dependency graph of the implemented
+species: we compute it in a regular way. This prevent us from having
+to manage ourselves substitutions due to abstractions all over the
+graph. Using the regular process, we get a graph with the right types
+and so on directly.

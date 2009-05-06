@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.64 2009-05-05 13:49:09 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.65 2009-05-06 20:06:49 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1010,10 +1010,10 @@ let build_dependencies_graph_for_fields ~current_species fields =
       let node =
         find_or_create
           tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
-      (* Now add an edge from the current name's node to the decl-dependencies
-         node of "rep". Even in a theorem, a decl-dependency on the carrier
-         can only come from the type (of course, one can't say in the body,
-         i.e. in the proof, "by def Self" or "by property Self" !). *)
+      (* Now add an edge from the current name's node to the node of "rep".
+	 Even in a theorem, a decl-dependency on the carrier can only come
+	 from the type (of course, one can't say in the body, i.e. in the
+	 proof, "by def Self" or "by property Self" !). *)
       let edge = (node, DepGraphData.DK_decl DepGraphData.DcDK_from_type) in
       n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
@@ -1069,8 +1069,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
       let node =
         find_or_create
           tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
-      (* Now add an edge from the current name's node to the *)
-      (* def-dependencies node of "rep".                     *)
+      (* Now add an edge from the current name's node to the def-dependencies
+	 node of "rep". *)
       let edge =
         (node, (DepGraphData.DK_def DepGraphData.DfDK_not_from_term_proof)) in
       n_node.DepGraphData.nn_children <-
