@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.8 2009-05-11 08:54:20 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -154,26 +154,9 @@ uninstall::
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) && \
 	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) && \
-	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) && \
-	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml && \
-	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm* && \
-	$(RM) big_integers.o parse_poly.o polys_abstract.o && \
 	$(RM) *.annot *.glob && \
 	$(RM) $(BIN_EXE)
 
-# Were not compiled to Coq in the previous FoCaL compiler...
-big_integers.ml: big_integers.fcl
-	$(FOCALIZEC) --no-coq-code $<
-parse_poly.ml: parse_poly.fcl
-	$(FOCALIZEC) --no-coq-code $<
-polys_abstract.ml: polys_abstract.fcl
-	$(FOCALIZEC) --no-coq-code $<
-#End temporary
-
-# Should be generated ?
-randoms_externals.vo: $(STDLIB_DIR)/basics.vo
-arrays_externals.vo: $(STDLIB_DIR)/basics.vo
-# End Should be generated ?
 
 build.x: bin
 	$(CAML_BIN_COMPILER) -o $@ \
