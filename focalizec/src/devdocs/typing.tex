@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.8 2009-05-06 20:06:49 pessaux Exp $
+% $Id: typing.tex,v 1.9 2009-05-12 07:31:40 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -41,8 +41,8 @@ We will now examine various points of this typing pass.
 
 
 
-\subsection{Type inference}
-\subsubsection{Where to record type information in the AST ?}
+\section{Type inference}
+\subsection{Where to record type information in the AST ?}
 Type inference is the process of guessing the type of each expression,
 each definition of the source code. In fact, in \focalize, types are
 partly inferred, partly given by the programmer. Signatures are a way
@@ -122,7 +122,7 @@ be updated with the {\tt ANTI\_non\_relevant} value.
 
 
 
-\subsubsection{Types and type schemes}
+\subsection{Types and type schemes}
 \index{type!scheme}
 \label{type-scheme}
 Like in regular ML-like type-checkers, expressions are assigned
@@ -176,7 +176,7 @@ type type_scheme = {
 
 
 
-\subsubsection{Working ``in place'' for substitutions}
+\subsection{Working ``in place'' for substitutions}
 The type-checking algorithm of ML-like languages is often stated using
 the notion of MGU and using substitutions. In \focalize, the effective
 inference algorithm uses techniques more efficient in practice than
@@ -341,7 +341,7 @@ let rec repr = function
 }
 
 
-\subsubsection{Unification}
+\subsection{Unification}
 The computation of the most general type of an expression, called type
 inference, strongly rely on unification of type terms. We will say
 that 2 terms $\tau_1$ and $\tau_2$ can be {\em unified} if there exists
@@ -639,7 +639,7 @@ Finally remains the all cases where the 2 types do not have the same
 constructor (line 93). This leads to a type-checking error by raising
 an exception.
 
-\subsubsection{Polymorphism}
+\subsection{Polymorphism}
 Like introduced in \ref{type-scheme}, type schemes are used to
 implement the polymorphism in type inference. They act as ``models''
 of types. But the question is how to make such ``models'' and how
@@ -697,7 +697,7 @@ type scheme, replacing each generalised variable by the corresponding
 fresh one.
 
 
-\subsubsection{Type inference among other typing things to do}
+\subsection{Type inference among other typing things to do}
 The type inference we spoke about deals with expressions and
 definitions. Hence it is only one part of the analyses performed
 during the ``typing pass''. More accurately, it is the first analysis
@@ -735,7 +735,7 @@ in the introduction of this chapter, at \ref{cool-incremental-nf}).
 
 
 
-\subsection{Environment and structures for typing pass}
+\section{Environment and structures for typing pass}
 The structure of the environment used during the typing pass has been
 presented in \ref{typing-environment} and is coded in {typing/env.ml}.
 
@@ -1270,9 +1270,9 @@ can be exported in \dotty\ using the option
 
 {\bf Attention} : However, this does not give us yet what we need to
 $\lambda$-lift in term of methods of {\tt Self} ! We still need to
-perform some analyses, especially to compute the ``minimal
-\coq\ typing environment'' to have this information. But this is done
-in another pass.
+perform some analyses, especially to compute the ``visible universe of
+each method to finally get the ``minimal \coq\ typing environment'' to
+have this information. But this is done in another pass.
 
 
 
@@ -1334,3 +1334,12 @@ species: we compute it in a regular way. This prevent us from having
 to manage ourselves substitutions due to abstractions all over the
 graph. Using the regular process, we get a graph with the right types
 and so on directly.
+
+In effect, creating a collection implies abstracting {\tt Self},
+i.e. replace it in types and bodies by the carrier of the
+collection. If we reused the dependency graph of the species the
+collection implements, we would have to perform ourselves the
+substitutions all over the information contained in the graph. Since
+this information represents a lot of stuff and involved sharing and
+cycles, doing this manually would be very hard and error prone. So we
+prefer to let the regular mechanism working for us.

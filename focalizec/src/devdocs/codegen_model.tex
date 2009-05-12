@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.20 2009-04-28 12:54:14 pessaux Exp $
+% $Id: codegen_model.tex,v 1.21 2009-05-12 07:31:40 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -503,7 +503,8 @@ the method: In the following order come:
   {\tt SMS\_from\_param} used when calling the function \\
   {\tt Species\_record\_type\_generation.generate\_logical\_expr}).
 
-\item The parameters representing the methods of ourselves (i.e. of
+\item The \index{$\lambda$-lift!methods of {\tt Self}}
+  parameters representing the methods of ourselves (i.e. of
   {\tt Self}) we {\bf decl}-depend on. They are named by
   ``{\tt abst\_}'' + the method's name. The only exception is in case
   where the method is the {\tt representation}, the name will be
@@ -516,7 +517,9 @@ the method: In the following order come:
   method that depends on. Otherwise, their would be no link between
   the fact the method depends on a definition and a $\lambda$-lift
   that would represent any definition that will be provided one days,
-  nobody know when and where !
+  nobody know when and where ! This deals with the first sentence of
+  the last paragraph of page 116 (below definition 58) in Virgile
+  Prevosto's PhD.
 \end{enumerate}
 
 \medskip

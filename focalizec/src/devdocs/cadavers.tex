@@ -1,4 +1,4 @@
-% $Id: cadavers.tex,v 1.2 2009-05-04 11:00:10 pessaux Exp $
+% $Id: cadavers.tex,v 1.3 2009-05-12 07:31:40 pessaux Exp $
 
 Here is the holly section of things that are not yet done and for
 which we know there is still something to do. Currently, most of them
@@ -67,4 +67,19 @@ carpet\ldots\smiley
   comment  {\tt [Unsure]}. These are the points where I strongly
   wondered without having yet found a solution in which I have a
   strong, indubitable confidence.
+
+\item The notion of ``{\tt local}'' {\tt let} is not implemented. Some
+  questions about its semantics\ldots Should it be inherited,
+  i.e. visible in the children ? but not when the species is used as
+  parameter ? as collection ? Does it appear in the signature ? What
+  are the usage restrictions (ok or not in proofs) ? Does it lead to
+  code ? Depending on these points, one must be careful to prevent
+  dependencies on a {\tt local} that would not visible. What does it
+  means to have a ``{\tt local}'' {\tt signature}, {\tt theorem},
+  {\tt property} ?
+
+\item Change the patterns so that they are as simple as those that
+  \coq\ can handle. We don't want to keep our \ocaml-like patterns and
+  decompose them into simpler patterns to prevent the user from trying
+  to make proofs on a code that is not really the one he wrote.
 \end{itemize}
