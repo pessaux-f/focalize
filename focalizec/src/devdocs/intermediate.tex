@@ -1,4 +1,4 @@
-% $Id: intermediate.tex,v 1.1 2009-05-12 14:09:25 pessaux Exp $
+% $Id: intermediate.tex,v 1.2 2009-05-12 15:47:20 pessaux Exp $
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
 the species and collections in normal form, having resolved
@@ -28,3 +28,182 @@ signature of {\tt m2} and idem for {\tt m1}. Moreover, since this
 $\lambda$-lifts information will be used at various points of the code
 generation, it is better to record it once for all instead of compute
 it again and again.
+
+All this work is performed by stuff located in the source directly
+{\tt src/commoncodegen} whose ``entry'' point is mostly the function
+{\tt compute\_abstractions\_for\_fields} of the source file
+{\tt src/commoncodegen/abstraction.ml} (note that we have a dedicated
+function to process toplevel theorems because they are not hosted in
+species although they may require abstractions).
+
+As explained in \ref{becoming-of-typing-output} The call to this pass
+is triggered by each target code generator (i.e. once by the
+\ocaml\ code generation back-end, and once by the \coq\ one, obviously
+only if the code generation is requested for these target languages
+via the command line options). Conversely to previous passes, this one
+does not enrich any environment. However it takes a code generation
+environment. Since we have 2 target languages, we have 2 code
+generation environments (c.f. \ref{ocaml-code-gen-envt} and
+\ref{coq-code-gen-envt}). Hence, the entry point of abstractions
+computation must be able to work with the 2 kinds of
+environments. That the reason why the environment is passed as a sum
+type
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml]
+type environment_kind =
+  | EK_ml of Env.MlGenEnv.t
+  | EK_coq of Env.CoqGenEnv.t
+\end{lstlisting}
+}
+
+\noindent to allow to have only one set of functions to do this pass
+instead of duplicating the code and adapting it's behaviour in the few
+cases where one are interested in accessing the environment. The
+output of this pass is directly used by the code generation that
+called it to produce its final output (i.e. target language source
+code).
+
+
+
+\section{``Computing abstractions''}
+As stated in introduction the aim is to fully build the set of
+methods of {\tt Self} and the set of collection parameters' methods a
+method depends on. At the end of this process, we want to get for each
+definition a structure grouping both the information present in the
+typing environment and the one synthetised about abstractions. Such a
+structure will then be suitable to be sent to a code generation
+backend abd looks like:
+
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml]
+type field_abstraction_info =
+  | FAI_sig of
+     (Env.TypeInformation.sig_field_info * abstraction_info)
+  | FAI_let of
+     (Env.TypeInformation.let_field_info * abstraction_info)
+  | FAI_let_rec of
+     (Env.TypeInformation.let_field_info * abstraction_info) list
+  | FAI_theorem of
+     (Env.TypeInformation.theorem_field_info * abstraction_info)
+  | FAI_property of
+     (Env.TypeInformation.property_field_info * abstraction_info)
+\end{lstlisting}
+}
+
+As we said, the second component of each parameters of the
+constructors is a {\tt abstraction\_info} that sumarises all the
+things we will compute. Nothing very special about the constructors of
+this type: it is clear that we have one for each kind of method (just
+note that, as we presented before in the type-checking section, there
+is no more methods {\tt proof of} since they have been collapsed with
+teir respective property into theorems). This structure groups the
+results of various abstractions computation passes:
+
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml]
+type abstraction_info = {
+  ai_used_species_parameter_tys : Parsetree.vname list ;
+  (** Dependencies on species parameters' methods. They are the union of:
+        - dependencies found via [BODY] of definition 72 page 153 of Virgile
+          Prevosto's Phd,
+        - dependencies found via [TYPE] of definition 72 page 153 of Virgile
+          Prevosto's Phd,
+        - other dependencies found via [DEF-DEP], [UNIVERSE] and [PRM] of
+          definition 72 page 153 of Virgile Prevosto's Phd + those found
+          by the missing rule in Virgile Prevosto's Phd that temporarily
+          named [DIDOU]. *)
+  ai_dependencies_from_params :
+    ((** The species parameter's name and kind. *)
+     Env.TypeInformation.species_param *
+     Env.ordered_methods_from_params)  (** The set of methods we depend on. *)
+      list ;
+  (* Dependencies used to generate the record type's parameters. It only
+     contains dependencies obtained by [TYPE] and [DIDOU]. *)
+  ai_dependencies_from_params_for_record_type :
+    ((** The species parameter's name and kind. *)
+     Env.TypeInformation.species_param *
+     Env.ordered_methods_from_params)  (** The set of methods we depend on
+                                           only through types and completion. *)
+      list ;
+  ai_min_coq_env : MinEnv.min_coq_env_element list
+}
+\end{lstlisting}
+}
+
+In effect, knowledge of what to $\lambda$-lift is acquired along
+different steps (corresponding to rules of definition 72 page 153 in
+Virgile Prevosto's PhD + one new rule that didn't exist and appeared
+to be mandatory). Hence this structure reminds the state of computated
+dependencies at some key steps. In fact, before being able to create
+so a summarising (!!$\smiley$) view of the information, we need to
+internally remind more key steps and use a more detailled structure
+where the results of the consecutives steps are not yet collapsed:
+
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml]
+type internal_abstraction_info = {
+  iai_used_species_parameter_tys : Parsetree.vname list ;
+  (** Dependencies found via [BODY] of definition 72 page 153 of Virgile
+      Prevosto's Phd. *)
+  iai_dependencies_from_params_via_body :
+    ((** The species parameter's name and kind. *)
+     Env.TypeInformation.species_param *
+     Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
+      list ;
+  (** Dependencies found via [TYPE] of definition 72 page 153 of Virgile
+      Prevosto's Phd. *)
+  iai_dependencies_from_params_via_type :
+    ((** The species parameter's name and kind. *)
+     Env.TypeInformation.species_param *
+     Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
+      list ;
+  (** Dependencies found via only [PRM]. Obviously they are all present in
+      the set below ([iai_dependencies_from_params_via_completions]). *)
+  iai_dependencies_from_params_via_PRM :
+    ((** The species parameter's name and kind. *)
+     Env.TypeInformation.species_param *
+       Parsetree_utils.ParamDepSet.t)
+      list ;
+  (** Other dependencies found via [DEF-DEP], [UNIVERSE] and [PRM] of definition
+      72 page 153 of Virgile Prevosto's Phd + [DIDOU] applied on the rules
+      [DEF-DEP], [UNIVERSE] and [PRM]. *)
+  iai_dependencies_from_params_via_completions :
+    ((** The species parameter's name and kind. *)
+     Env.TypeInformation.species_param *
+     Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
+      list ;
+  iai_min_coq_env : MinEnv.min_coq_env_element list
+}
+\end{lstlisting}
+}
+
+As already said, the steps correspond to rules and we will a bit later
+explain how they are implemented. The rules deal with dependencies on
+species parameters' methods. The only point dealing with
+dependencies on methods of {\tt Self} is the ``minimal \coq\ typing
+environment stored in the field {\tt iai\_min\_coq\_env} (respectively
+in {\tt ai\_min\_coq\_env}).
+
+At the end of each rule, the compiler will record the state of
+dependencies on the species parameters for further usage. Finally,
+once all the key steps are no more needed, we merge all the
+computed dependencies, keeping only the 3 different sets:
+\begin{itemize}
+\item {\tt used\_species\_parameter\_tys} that records the list of
+  collection parameters' names that are used by the species and hence
+  that must be abstracted.
+\item {\tt ai\_dependencies\_from\_params} that records the dependencies
+  on species parameters' methods that need to be abstracted to
+  ``write'' (emit the code so that it is well-typed in the target
+  language) the definition of the method.
+\item {\tt ai\_dependencies\_from\_params\_for\_record\_type} that
+  records the dependencies on species parameters that impose
+  abstractions when ``writing'' the record type representing the
+  species. In effect, the record type doesn't mandatorily requires all
+  the dependencies required by the definition of a method. Note that
+  in \ocaml, since the record type only makes visible types, there is
+  never dependencies on species parameters' methods).
+\item {\tt ai\_min\_coq\_env} the minimal \coq\ typing environment that
+  describes the set of methods of {\tt Self} that must be abstracted
+  because of dependencies in the method.
+\end{itemize}

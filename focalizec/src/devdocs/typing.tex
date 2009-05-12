@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.10 2009-05-12 13:10:19 pessaux Exp $
+% $Id: typing.tex,v 1.11 2009-05-12 15:47:20 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -42,8 +42,9 @@ to the ``abstraction'' stuff (directory {\tt src/commoncodegen}) to
 compute extra dependency information and group all the dependencies
 together and factorise some computations required by code generation
 (more especially, what to lambda-lift and to instanciate). This
-``abstraction'' pass is called before calling the code generation (in
-fact, called by each target code generator).
+``abstraction'' pass is called before calling the code generation by
+each code generator back-end (in fact, called by each target code
+generator).
 
 \medskip
 We will now examine various points of this typing pass.
