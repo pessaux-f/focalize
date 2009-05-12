@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.179 2009-05-05 13:49:09 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.180 2009-05-12 12:37:30 pessaux Exp $ *)
 
 
 
@@ -4415,14 +4415,16 @@ let typecheck_species_def ctx env species_def =
     initialized, telling the link between the type definition's parameters
     and the type variables they are related to.
     Both field labels and constructors with arguments are assigned a type
-    scheme like a function taking as argument the field's type (or a tuple
-    with type constructor's arguments types) and returning a ST_construct
-    embedding the record/sum type's name.
+    scheme like a function taking as argument the field's type (or several
+    arguments that are the constructor's arguments types, NOT THE TUPLE OF
+    THEM) and returning a ST_construct embedding the record/sum type's name.
     For instance:
       [type t = A of int]
-    will create a constructor [A : (int) -> t]
-    where one must note that (int) stands for a degenerated tuple type with
-    only 1 component.
+    will create a constructor [A : int -> t].
+      [type t = B of (int, int)]
+    will create a constructor [B : int -> int -> t].
+      [type t = C of (int * int)]
+    will create a constructor [C : (int * int) -> t].
     For other instance:
       [type u = { junk : string }]
     will create a field label [junk : string -> u]
@@ -4528,17 +4530,9 @@ let typecheck_regular_type_def_body ctx ~is_repr_of_external env type_name
               (cstr_name, Env.TypeInformation.CA_zero, cstr_descr)
             | _ ->
               (* There are some argument(s). So the constructor is type as a
-                 function taking a tuple of argument(s)  and returning the
-                 type of the current definition.
-                 Be careful, in accordance with what is done in function
-                 [typecheck_pattern], we take care of not adding an extra
-                 tuple layer if the argument of the constructor is already
-                 a tuple. To do this, we add a tuple layer ONLY if there is not
-                 only ONE argument or if there is only one but already begin a
-                 tuple ! This way, we ensure that constructor argument(s) is
-                 (are) always in a tuple, but never in a trivial tuple
-                 containing only one component being a tuple. This means that
-                 we only add a tuple layer if there is not one already. *)
+                 function taking as many argument(s) as the arity of the value
+                 constructor and returning the type of the current
+                 definition. *)
               Types.begin_definition () ;
               let args_ty =
                 List.map
