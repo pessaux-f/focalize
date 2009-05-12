@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.11 2009-05-12 15:47:20 pessaux Exp $
+% $Id: typing.tex,v 1.12 2009-05-12 18:02:35 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -35,6 +35,7 @@ In fact, the scoping pass already used a similar way to proceed,
 keeping for each species the list of all the methods it had, either in
 its own body or by arbitrary inheritance.
 
+\label{becoming-of-typing-output}
 The output of the typing pass is a {\tt Infer.please\_compile\_me}
 structure in which we have both the AST of the definitions and
 information computed during typing. This structure will then be passed

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.72 2009-05-05 13:49:09 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.73 2009-05-12 18:02:35 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -376,10 +376,10 @@ let get_if_field_logical_statement name fields =
 let compute_lambda_liftings_for_field ~current_unit ~current_species
     species_parameters_names dependency_graph_nodes name body my_type
     opt_term_pr all_my_fields =
-  (* Get all the methods we directly decl-depend on. They will   *)
-  (* lead each to an extra parameter of the final OCaml function *)
-  (* (lambda-lifing). Get the methods we directly def-depend.    *)
-  (* They will be ignored for OCaml but used for Coq.            *)
+  (* Get all the methods we directly decl-depend on. They will lead each to an
+     extra parameter of the final OCaml function (lambda-lifing). Get the
+     methods we directly def-depend. They will be ignored for OCaml but used
+     for Coq. *)
   let (decl_children, def_children) =
     (try
       let my_node =
@@ -639,21 +639,21 @@ type internal_abstraction_info = {
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
      Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
-  list ;
+      list ;
   (** Dependencies found via [TYPE] of definition 72 page 153 of Virgile
       Prevosto's Phd. *)
   iai_dependencies_from_params_via_type :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
      Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
-  list ;
+      list ;
   (** Dependencies found via only [PRM]. Obviously they are all present in
       the set below ([iai_dependencies_from_params_via_completions]). *)
   iai_dependencies_from_params_via_PRM :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
        Parsetree_utils.ParamDepSet.t)
-  list ;
+      list ;
   (** Other dependencies found via [DEF-DEP], [UNIVERSE] and [PRM] of definition
       72 page 153 of Virgile Prevosto's Phd + [DIDOU] applied on the rules
       [DEF-DEP], [UNIVERSE] and [PRM]. *)
@@ -661,7 +661,7 @@ type internal_abstraction_info = {
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
      Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
-  list ;
+      list ;
   iai_min_coq_env : MinEnv.min_coq_env_element list
 } ;;
 
@@ -683,7 +683,7 @@ type abstraction_info = {
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
      Env.ordered_methods_from_params)  (** The set of methods we depend on. *)
-  list ;
+      list ;
   (* Dependencies used to generate the record type's parameters. It only
      contains dependencies obtained by [TYPE] and [DIDOU]. *)
   ai_dependencies_from_params_for_record_type :
@@ -691,7 +691,7 @@ type abstraction_info = {
      Env.TypeInformation.species_param *
      Env.ordered_methods_from_params)  (** The set of methods we depend on
                                            only through types and completion. *)
-  list ;
+      list ;
   ai_min_coq_env : MinEnv.min_coq_env_element list
 } ;;
 
@@ -1241,8 +1241,69 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
 
 
 
-(** Implements rules [TYPE], [DEF-DEP], [UNIVERSE] and [PRM] of the
-    definition 72 page 153 of Virgile Prevosto's Phd. *)
+(* ************************************************************************* *)
+(* environment_kind -> current_unit: Types.fname ->                          *)
+(*   current_species: Parsetree.qualified_species ->                         *)
+(*     internal_field_abstraction_info list ->                               *)
+(*       Env.TypeInformation.species_param list ->                           *)
+(*         (DepGraphData.name_node * 'a) list ->                             *)
+(*           'b VisUniverse.Universe.t -> field_type_kind ->                 *)
+(*             (Env.TypeInformation.species_param *                          *)
+(*              Parsetree_utils.ParamDepSet.t) list *                        *)
+(*             (Env.TypeInformation.species_param *                          *)
+(*              Parsetree_utils.ParamDepSet.t) list *                        *)
+(*             (Env.TypeInformation.species_param *                          *)
+(*       Parsetree_utils.ParamDepSet.t) list *                               *)
+(*             Types.SpeciesCarrierTypeSet.t                                 *)
+(** {b Descr} : Implements rules [TYPE], [DEF-DEP], [UNIVERSE] and [PRM] of
+    the definition 72 page 153 of Virgile Prevosto's Phd.
+
+    {b Args} :
+      - [env] : The current code generation environment.
+
+      - [~current_unit] : The current compilation unit.
+
+      - [~current_species] : The current species, i.e. the one that hosts
+        the fields currently processed.
+
+      - [seen_abstractions] : The list of [abstraction_info] computed for
+        the methods of the current species we already processed. It is in
+        fact the accumulator of the [abstraction_info]s we are computing.
+
+      - [species_parameters] : The information abou species parameters
+        the current species has.
+
+      - [def_children] : The methods on which the current method has
+        def-dependencies (i.e. the children of the current method in the
+        dependency graph of the current method).
+
+      - [universe] : The visible universe of the current method (the method
+        for which we are currently computing abstractions).
+
+      - [type_kind] : The "type" of the method, i.e. the ML-like type if
+        the method is computational, the logical expression if the method
+        is logical (theorem or property).
+
+    {b Ret} :
+      - [(Env.TypeInformation.species_param *
+          Parsetree_utils.ParamDepSet.t) list] : The dependencies on species
+        parameters' methods induced by only the [TYPE] rule.
+
+      - [(Env.TypeInformation.species_param *
+          Parsetree_utils.ParamDepSet.t) list] : The dependencies on species
+        parameters' methods induced by only the [PRM] rule.
+
+      - [(Env.TypeInformation.species_param *
+          Parsetree_utils.ParamDepSet.t) list] : The union of dependencies
+        on species coming from [DEF-DEP], [UNIVERSE] and [PRM].
+
+      - [Types.SpeciesCarrierTypeSet.t] : The list of carriers of species
+        parameters appearing in types that appears in the above
+        dependencies (i.e. in the types of methods tagged as we depend
+        on).
+
+    {b Exported} : No.                                                       *)
+(* ************************************************************************* *)
 let complete_dependencies_from_params env ~current_unit ~current_species
     seen_abstractions species_parameters def_children universe type_kind =
   (* Rule [TYPE] possible only if a logical expression is provided. In effect,
@@ -1371,9 +1432,9 @@ let complete_dependencies_from_params env ~current_unit ~current_species
   let dependencies_from_params_via_compl3 =
     merge_abstraction_infos
       dependencies_from_params_via_compl2 dependencies_from_params_via_PRM in
- (dependencies_from_params_via_type, (* The dependencies induces by only the
+ (dependencies_from_params_via_type, (* The dependencies induced by only the
                                         [TYPE] rule. *)
-  dependencies_from_params_via_PRM, (* The dependencies induces by only the
+  dependencies_from_params_via_PRM, (* The dependencies induced by only the
                                        [PRM] rule. *)
   dependencies_from_params_via_compl3, (* The union of dependencies coming
                                           from [DEF-DEP], [UNIVERSE] and
@@ -1384,15 +1445,19 @@ let complete_dependencies_from_params env ~current_unit ~current_species
 
 
 (* ************************************************************************** *)
+(* with_def_deps_n_term_pr: bool -> environment_kind ->                       *)
+(*   Context.species_compil_context ->                                        *)
+(*     Env.TypeInformation.species_field list ->                              *)
+(*       internal_field_abstraction_info list                                 *)
 (** {b Descr}:
     To be usable for OCaml generation, the [with_def_deps_n_term_pr] flag
     enables to forget the def-dependencies and their implied
     transitive decl-dependencies and also dependencies induced by recursive
     functions termination proofs. In effect, in OCaml, only decl-dependencies
-    are relevant and since there is no termination proof, dependencies induced
-    by them must be forgotten
+    are relevant and since there is no termination proof, dependencies
+    induced by them must be forgotten.
 
-   {b Exported}: No.                                                          *)
+   {b Exported} : No.                                                         *)
 (* ************************************************************************** *)
 let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
   let reversed_abstractions =
@@ -1984,11 +2049,18 @@ let remap_dependencies_on_params_for_field env ctx from name
 
 
 
-(** Wrapper above [_compute_abstractions_for_fields] that returns the
-    dependencies on species parameters once merged and sorted. This avoid
-    all the language backends to have to do this work since the exploded
-    form of the dependencies (i.e. "from type", "from body", "from completion"
-    etc is only something needed during internal computation. *)
+(* ************************************************************************* *)
+(* with_def_deps_n_term_pr : bool -> environment_kind ->                     *)
+(*   Context.species_compil_context ->                                       *)
+(*     Env.TypeInformation.species_field list -> field_abstraction_info list *)
+(** {b Descr} : Wrapper above [_compute_abstractions_for_fields] that
+    returns the dependencies on species parameters once merged and sorted.
+    This avoid all the language backends to have to do this work since the
+    exploded form of the dependencies (i.e. "from type", "from body", "from
+    completion" etc is only something needed during internal computation).
+
+    {b Exported} : Yes.                                                      *)
+(* ************************************************************************* *)
 let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
   let internal_abstractions =
     __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields in
