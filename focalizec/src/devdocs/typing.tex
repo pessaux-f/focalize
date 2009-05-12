@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.9 2009-05-12 07:31:40 pessaux Exp $
+% $Id: typing.tex,v 1.10 2009-05-12 13:10:19 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -34,6 +34,16 @@ maintain.
 In fact, the scoping pass already used a similar way to proceed,
 keeping for each species the list of all the methods it had, either in
 its own body or by arbitrary inheritance.
+
+The output of the typing pass is a {\tt Infer.please\_compile\_me}
+structure in which we have both the AST of the definitions and
+information computed during typing. This structure will then be passed
+to the ``abstraction'' stuff (directory {\tt src/commoncodegen}) to
+compute extra dependency information and group all the dependencies
+together and factorise some computations required by code generation
+(more especially, what to lambda-lift and to instanciate). This
+``abstraction'' pass is called before calling the code generation (in
+fact, called by each target code generator).
 
 \medskip
 We will now examine various points of this typing pass.
@@ -176,7 +186,7 @@ type type_scheme = {
 
 
 
-\subsection{Working ``in place'' for substitutions}
+\subsection{Working ``in place'' with substitutions}
 The type-checking algorithm of ML-like languages is often stated using
 the notion of MGU and using substitutions. In \focalize, the effective
 inference algorithm uses techniques more efficient in practice than
@@ -1139,7 +1149,7 @@ $A \Rightarrow B \Rightarrow C$ is equivalent to
 $(A \wedge B) \Rightarrow C$ and so on\ldots
 
 
-\subsection{Computing def/decl-dependencies (let's just begin)}
+\subsection{Computing def/decl-dependencies}
 As previously stated, def and decl-dependencies reflect dependencies
 of methods of the species on methods of this species. In other words,
 they are related to dependencies of methods of {\tt Self} on methods
@@ -1161,7 +1171,7 @@ dependency graph (note, a field can contain several functions like in
 the case of mutually recursive methods). The graph of each method is
 built sharing node information between methods. In other words, like
 any graph, we have nodes, if a same node is required to build the
-graph of {\tt m1} and {\tt m2}, then these 2 graphs whill physically
+graph of {\tt m1} and {\tt m2}, then these 2 graphs will physically
 share the node. Again, in other words, the dependency graph of each
 species is a sub-graph of a global graph.
 
@@ -1198,7 +1208,7 @@ A few things to remark:
 \item Signatures can't introduce decl or def-dependencies.
 \item {\tt let} methods can only introduce decl-dependencies via their
   computational body.
-\item Prpoerties can only introduce decl-dependencies via their
+\item Properties can only introduce decl-dependencies via their
   logical statement (i.e. their type in fact).
 \item Theorems can introduce both kinds of dependencies: decl by their
   statement (i.e. type in fact) and decl/def by their proof (i.e. body
@@ -1212,7 +1222,7 @@ turn. Each name defined in the field will lead to a node in the graph
 time we need to create a node, we use a special function that first
 look among the already created nodes, if it find a node having a right
 name, it returns this node, otherwise it really creates the node. This
-ensure that node wil be create once and will be shared between every
+ensure that node will be create once and will be shared between every
 occurrence of apparition.
 
 The starting point of graph construction is the function
@@ -1343,3 +1353,193 @@ substitutions all over the information contained in the graph. Since
 this information represents a lot of stuff and involved sharing and
 cycles, doing this manually would be very hard and error prone. So we
 prefer to let the regular mechanism working for us.
+
+
+
+\section{Typing a type definition}
+Type-checking a type definition serves to introduce in the typing
+environment a type constructor and possibly elements induced by the
+type, like value constructors in case of sum type definition or field
+labels in case of record type definition. We basically have 2 kinds of
+type definitions: ``regular'' and ``external''. Both of them can
+introduce 3 kinds of types: aliases, sum types and record types. The
+main difference between ``regular'' and ``external'' definition is in
+the way the type and its components are mapped onto the target
+languages. In a ``regular'' definition, mapping is handled by the
+compiler model scheme. In an ``external'' one, the mapping is guided
+by the user's annotations. Anyway, both kinds of definitions can
+introduce the same kinds of elements in the typing environment.
+
+\medskip
+Because type definitions are implicitly recursive, before
+type-checking a type definition, we always pre-insert in the typing
+environment the currently typed type constructor. At this point,
+anyway its real definition, it is considered a abstract (i.e. we don't
+know its body). In particular, if it is a sum or a record we don't
+insert (know) anything about its possible value constructors or field
+labels. In fact, that's not a problem since these 2 kinds of
+information can never arise inside a definition body. After the type
+definition is fully type-checked, we will forget this primary
+insertion and prefer the new one coming from the type-checking.
+
+\medskip
+In type definitions, type variables are implicitly universally
+quantified and are bound before the definition's body. In a definition
+like {\footnotesize\lstinline*type t ('a) = alias ('a * 'a)*}, we see
+that the {\tt 'a} appears just after the name {\tt t} and before the
+body of the definition. Hence, before type-checking the definition, we
+previously insert in the environment the bound variables to that they
+be known while analysing the body. The mapping between type variable
+names and their related type (in term of type in our algebra) is
+recorded in the type-checking context in the field
+{\tt tyvars\_mapping}.
+
+
+
+\subsection{Regular type definitions}
+\subsubsection{Type alias}
+A type alias simply introduces an equivalence between a name (the type
+constructor) and a type expression. For instance, in
+{\footnotesize\lstinline*type t = alias (int * int)*}, the name
+{\tt t} becomes compatible with {\tt (int * int)}. This means that we
+do not create a type having new values: the values are only made of
+gluing existing values. Moreover, this type {\tt t} is not really new
+in the sense it is not only compatible with itself but with any type
+compatible with {\tt (int * int)}.
+
+To type-check such a definition, we simply type-check the aliased type
+expression. This gives us a type ({\tt Types.type\_simple}) that is
+the canonical representation of the type expression. Then we simply
+bind the new constructor to this type. In other word, in the
+environment we bind the new type constructor to its identity in our
+algebra.
+
+Since types can be polymorphic (i.e. parametrised by type variables),
+like for values, we do not really bind the name to a type but to a
+type scheme where polymorphic type variables are generalised. Hence,
+a type constructor can be seen like a function taking types as
+arguments and returning a type. For instance, considering the type of
+pairs {\footnotesize\lstinline*type t ('a) = alias ('a * 'a)*}, the
+constructor {\tt t} is considered internally by the compiler like a
+``function of types''. For this polymorphic stuff, we find as for
+values, the usual story of binding level and generalisation.
+
+Then, once the body of the definition is type-checked, we generalise
+it and add the new type constructor bound to this type scheme in the
+environment. Hence, each the type {\tt t} will appear in a type
+expression, we will know its effective structure via the environment.
+For instance, using the above type {\tt t}, if we encounter a type
+expression {\tt t (int)}, we will ask for the scheme of {\tt t}, get
+$\forall \alpha. \alpha \rightarrow {\tt t}(\alpha)$, we take an
+instance of this scheme and get
+$\alpha' \rightarrow {\tt t}(\alpha')$ and unify the leftmost
+$\alpha'$ with {\tt int} to simulate an application, and finally we
+get the type {\tt int * int} for the initial expression.
+
+\subsubsection{Type sum (A.K.A variant)}
+In addition to insert in the environment a type constructor, it also
+introduces value constructors. In this sense, such a definition
+creates a new type, with new values. This values may be parametrised
+by values of existing types, but they are anyway {\bf new} values.
+In \focalize, a sum type is only compatible with itself. This means
+that anywhere a value of this type is expected, the provided
+expression will have to reduce on one of the values introduced by this
+type.
+
+\medskip
+The difference with aliases previously examined is that we now must
+type-check, not a type expression, but an enumeration of constructors
+expressions as body of the definition. For each constructor of a sum
+type definition {\tt t}, we have 2 cases: either it has no argument
+and is considered to have the type {\tt t}, or it has arguments and is
+considered as a function taking values whose types are those of the
+enumerated arguments and returning a value of type {\tt t}. Be aware
+that a value constructor parametrised by several arguments is a
+function taking {\b several} arguments, not a tuple of all the
+arguments ! Hence, on the following type definition:
+{\footnotesize
+\begin{lstlisting}
+type t =
+ | A of int
+ | B of (int, int)
+ | C of (int * int)
+;;
+\end{lstlisting}
+}
+
+\noindent we will get: {\tt A: int -> t}, {\tt B : int -> int -> t}
+and {C : (int * int) -> t}. One may notice the difference between
+{\tt B} that is parametrised by 2 arguments and {\tt C} that is
+parametrised by 1 argument that is a tuple of 2 components. As usual,
+in the environment we bind each constructor not to a type but to a
+type scheme to be able to use polymorphic constructors with various
+instantiations.
+
+\medskip
+Hence, to synthesise the type of an expression involving a sum value
+constructor of {\tt t}, we will get in the environment its type
+scheme. If the constructor is used alone (i.e. with no expression as
+argument), then the type of the whole expression will be by construction
+{\tt t}. Note that if the constructor is used alone although it
+shouldn't, we wont return a functional type but an error because the
+compiler always checks that value constructors are used with the
+correct arity.
+
+\medskip
+There remains the problem of what to bind the type constructor to ? In
+effect, by opposition to alias types, here we don't have any type
+expression giving the ``identity'' of the type. In fact, a sum type is
+a new type only compatible with itself. Hence, we will bind it to a
+new type whose name is the name of the constructor. And to make values
+of this type, the only way will be to manipulate its value
+constructors.
+
+\medskip
+Once the type scheme of each value constructor is inferred, we just
+have to add them into the environment, as well as the type
+constructor. 
+
+
+\subsubsection{Type record}
+The principle of type-checking of records is very similar to the one
+of sum types. The only difference is that instead of value
+constructors, we deal with field label. In the same spirit that value
+constructors were considered like function, so are field labels. At
+programming level, a field label has one type. So, internally a field
+label of a record type {\tt t} is considered to be a function taking
+an argument whose type is the type of the label and returning a value
+of type {\tt t}. Note that to have an effective complete value of
+type {\tt t}, of course we need all the fields to be assigned a value,
+but at typing stage, this is not our concern.
+
+\medskip
+Hence, we infer the type of each field of the record and finally
+insert them in the environment as well as the type constructor
+itself.
+
+
+\subsection{External type definitions}
+Like seen in \ref{external-type-def-codegen-model}, external type
+definitions have two sides: the ``internal'' and ``external''. In
+fact, the ``internal'' part describes exactly the same thing than a
+regular type definition: ``how the type is seen inside the
+compiler''. For this reason, is it type-checked exactly the same way.
+
+The ``internal'' part, since it contains some external code out of
+reach of \focalize, doesn't need any type-checking analysis: we simply
+record the various mappings it contains into the type definition for
+further usages.
+
+
+\section{All other toplevel constructs}
+For the remaining constructs, i.e. toplevel expression, toplevel
+theorems and toplevel {\tt let}-definitions, the same principles than
+previously presented apply. The only difference is that in the typing
+context it will be recorded that we are not inside a species. For
+toplevel definitions, the test of non-polymorphism will not be
+performed since toplevel definitions can be polymorphic.
+
+Directives don't need any type-checking. The {\tt open} directive will
+act exactly like during the scoping pass, dealing this time with the
+typing environment instead of the scoping one (c.f.
+\ref{scoping-open-directive}).

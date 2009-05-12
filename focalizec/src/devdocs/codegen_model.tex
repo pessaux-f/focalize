@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.21 2009-05-12 07:31:40 pessaux Exp $
+% $Id: codegen_model.tex,v 1.22 2009-05-12 13:10:19 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -1683,7 +1683,7 @@ We have 4 kinds of type definitions:
     of an external language and its representation in
     \focalize. Because they are quite complex, they will be studied in
     more details in a next dedicated section (
-    see \ref{external-typedefinition}).
+    see \ref{external-type-def-codegen-model}).
 \end{itemize}
 
 
@@ -2041,6 +2041,8 @@ in a \focalize\ source code.
 
 
 \subsection{External type definitions}
+\index{external!type definition}
+\label{external-type-def-codegen-model}
 An external type definition starts like a regular type definition,
 i.e. by the type constructor's name and possibly parameters:
 \lstinline!type ('a, 'b) t =!). The body of the definition shows that
@@ -2494,7 +2496,8 @@ are handled the same way.
 
 
 \subsection{External value definitions}
-\label{external-type-definition}
+\index{external!value definition}
+\label{external-value-definition}
 External value definitions follow the same idea than types, they have
 an {\tt internal} and an {\tt external} clause. The {\tt internal}
 clause deals with how the compiler must consider the value during its
