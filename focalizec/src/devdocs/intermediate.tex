@@ -1,0 +1,30 @@
+% $Id: intermediate.tex,v 1.1 2009-05-12 14:09:25 pessaux Exp $
+Once type-checking pass is ended, we saw that in addition to have the
+type of each expression computed and screwed in each AST node, we put
+the species and collections in normal form, having resolved
+inheritance and ordering problems between the methods. More over we
+computed the dependency graph of each method, hence indicated for each
+method which other method of {\tt Self} is directly depends on (decl
+or def, via type, via body or via termination proof).
+
+However this is not sufficient yet to known exactly what to abstract
+(i.e. $\lambda$-lift) in our method generators, then collection
+generators. We still need to find the complete set of methods of
+{\tt Self} a method depends on and the set of collection parameters'
+methods a method depends on.
+
+The first point will be carried out by computing the ``visible
+universe'' of a method. The second will be by computing the ``minimal
+\coq\ typing environment''. Once these sets are known, the current
+pass will create a compact form of several data useful for code
+generation, hence preventing from having to compute several time the
+same things and to ensure that the same structure (in fact, most
+often, the order dependencies are abstracted) will be used every time
+needed. For instance, if in a method {\tt m} we $\lambda$-lifted
+{\tt m2}, then {\tt m1}, extra arguments of this method will appear
+and will need to be always used consistently with this order (i.e. one
+must sure that we instantiate {\tt m2} by a a method implementing the
+signature of {\tt m2} and idem for {\tt m1}. Moreover, since this
+$\lambda$-lifts information will be used at various points of the code
+generation, it is better to record it once for all instead of compute
+it again and again.
