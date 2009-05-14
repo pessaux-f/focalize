@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.72 2009-05-05 13:49:09 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.73 2009-05-14 15:52:35 weis Exp $ *)
 
 open Parsetree;;
 
@@ -981,7 +981,7 @@ and pp_expr ppf = pp_ast pp_expr_desc ppf
 
 
 let pp_collection_def_desc ppf cdd =
-  Format.fprintf ppf "@[<2>collection@ %a@ implements@ %a@ end@;;@]@ "
+  Format.fprintf ppf "@[<2>collection@ %a =@ implement@ %a@ end@;;@]@ "
     pp_vname cdd.Parsetree.cd_name pp_species_expr cdd.Parsetree.cd_body
 ;;
 let pp_collection_def ppf = pp_ast pp_collection_def_desc ppf

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.12 2009-05-14 15:42:30 weis Exp $ *)
+(* $Id: sourcify_token.ml,v 1.13 2009-05-14 15:52:35 weis Exp $ *)
 
 open Parser;;
 
@@ -115,7 +115,7 @@ let token ppf = function
   | IN -> Format.fprintf ppf "%s" "IN"
   | INHERIT -> Format.fprintf ppf "%s" "INHERIT"
   | INTERNAL -> Format.fprintf ppf "%s" "INTERNAL"
-  | IMPLEMENTS -> Format.fprintf ppf "%s" "IMPLEMENTS"
+  | IMPLEMENT -> Format.fprintf ppf "%s" "IMPLEMENT"
   | IS -> Format.fprintf ppf "%s" "IS"
   | LET -> Format.fprintf ppf "%s" "LET"
   | LEXICOGRAPHIC -> Format.fprintf ppf "%s" "LEXICOGRAPHIC"
