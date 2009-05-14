@@ -2,7 +2,7 @@
 Contacts
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.3 2009-04-13 19:56:47 weis Exp $ -->
+<!-- \$Id: index.shtml,v 1.4 2009-05-14 09:59:46 habib Exp $ -->
 
 <div id="container">
 <div id="header">
@@ -39,20 +39,31 @@ the developers mailing list at
 <a href="http://www.lip6.fr">LIP6</a>-
 <a href="http://www-spi.lip6.fr">SPI</a>
 <ul>
-<li><a href="mailto:blond@bertin.fr">Julien Blond</a> (Doctorant)</li>
+<li><a href="mailto:Philippe.Ayrault [[at]] etersafe.com">
+Philippe Ayrault</a> (Doctorant, EterSafe)
+</li>
+<li><a href="mailto:blond [[at]] bertin.fr">Julien Blond</a> 
+(Doctorant, Bertin)
+</li>
 <li><a href="http://www-spi.lip6.fr/~lhabib/">Lionel Habib</a> (Doctorant)</li>
 <li><a href="http://www-spi.lip6.fr/~hardin/">Th&eacute;r&egrave;se Hardin</a>
 (Professeur, Project Leader)
 </li>
+<li><a href="mailto:eric.jaeger [[at]] sgdn.gouv.fr">Eric Jaeger</a> 
+(Doctorant, SGDN)
+</li>
 <li><a href="http://www-spi.lip6.fr/~jaume/">Mathieu Jaume</a> (Ma&icirc;tre
 de conf&eacute;rence)
 </li>
-<li><a href="mailto:noyer@spi.lip6.fr">Ivan Noyer</a> (Doctorant)
+<li><a href="mailto:noyer [[at]] spi.lip6.fr">Ivan Noyer</a> (Doctorant)
 </li>
-<li><a href="mailto:francois.pessaux@lip6.fr">Fran&ccedil;ois Pessaux</a>
+<li><a href="mailto:francois.pessaux [[at]] lip6.fr">
+Fran&ccedil;ois Pessaux</a>
 (Ing&eacute;nieur de recherche - Attach&eacute; temporaire (2 ans))
 </li>
-<li><a href="mailto:lien.tran@lip6.fr">Li&ecirc;n Tran</a> (Doctorant)</li>
+<li><a href="mailto:lien.tran [[at]] lip6.fr">Li&ecirc;n Tran</a> 
+(Doctorant)
+</li>
 </ul>
 </li>
 <br />
@@ -103,10 +114,10 @@ Damien Doligez</a> (Charg&eacute; de Recherche)
 <li><a href="http://www-lsr.imag.fr/Les.Personnes/Sylvain.Boulme/">
 Sylvain Boulm&eacute;</a> (Ma&icirc;tre de conf&eacute;rence INPG)
 </li>
-<li><a href="mailto:jean_frederic_etienne@yahoo.com">
+<li><a href="mailto:jean_frederic_etienne [[at]] yahoo.com">
 Jean-Fr&eacute;d&eacute;ric Etienne</a> (Safe-River)
 </li>
-<li><a href="mailto:stephane.fechter@safe-river.com">
+<li><a href="mailto:stephane.fechter [[at]] safe-river.com">
 St&eacute;phane Fechter</a> (Safe-River)
 </li>
 <li><a href="http://www.macs.hw.ac.uk/~mm20/">Manuel Maarek</a>
