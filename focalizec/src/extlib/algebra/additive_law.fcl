@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: additive_law.fcl,v 1.8 2009-03-19 21:07:18 rr Exp $ *)
+(* $Id: additive_law.fcl,v 1.9 2009-05-14 15:57:40 doligez Exp $ *)
 
 (** The FoCaLize library does not intend to model binary laws which are not
    associative, thus some mathematical notions such as magmas (groupoids) are
@@ -39,7 +39,8 @@ open "constants";;
 open "lattices" ;;
 
 (** We state that checking to 0 is a unary operation distinct from equality *)
-species Zero_check_set inherits Setoid_with_zero =
+species Zero_check_set =
+  inherit Setoid_with_zero ;
  (**
     in the theory of zero checks we claim that checking to zero
     is a primitive operation.
@@ -63,7 +64,8 @@ end ;;
 
 
 (** semi_group with additive notation, these are commutative *)
-species Additive_semi_group inherits Setoid =
+species Additive_semi_group =
+  inherit Setoid ;
  (** @mathml <plus/>
      will be rendered as infix +
 *)
@@ -96,7 +98,8 @@ species Additive_semi_group inherits Setoid =
 end ;;
 
 (** Monoids with additive notation, these are commutative *)
-species Additive_monoid inherits Additive_semi_group, Setoid_with_zero =
+species Additive_monoid =
+  inherit Additive_semi_group, Setoid_with_zero ;
  (** @mathml <plus/>
      will be rendered as infix +
 *)
@@ -123,7 +126,8 @@ species Additive_monoid inherits Additive_semi_group, Setoid_with_zero =
 end ;;
 
 (** A semi_group is cancellative if we can simplify *)
-species Cancellative_additive_semi_group inherits Additive_semi_group =
+species Cancellative_additive_semi_group =
+  inherit Additive_semi_group ;
   (** Left cancellation *)
   property plus_is_left_regular : all x y z in Self,
     !equal (!plus (x, y), !plus (x, z)) -> !equal (y, z) ;
@@ -145,8 +149,8 @@ species Cancellative_additive_semi_group inherits Additive_semi_group =
 end ;;
 
 (** A monoid is cancellative if we can simplify *)
-species Cancellative_additive_monoid inherits
-  Cancellative_additive_semi_group, Additive_monoid =
+species Cancellative_additive_monoid =
+  inherit Cancellative_additive_semi_group, Additive_monoid ;
 end ;;
 
 
@@ -154,8 +158,8 @@ end ;;
 a zero check additive monoid has a unary operation that checks
 if an element is 0
 *)
-species Zero_check_additive_monoid
-   inherits Zero_check_set, Cancellative_additive_monoid =
+species Zero_check_additive_monoid =
+   inherit Zero_check_set, Cancellative_additive_monoid ;
 
   (* [rr]:
      here we should add some prperties about 0, zero check and addition
@@ -276,8 +280,8 @@ species Zero_check_additive_monoid
 end ;;
 
 (** In a regular semi_group we can simplify effectively *)
-species Regular_additive_semi_group
-  inherits Cancellative_additive_semi_group, Partial_set =
+species Regular_additive_semi_group =
+  inherit Cancellative_additive_semi_group, Partial_set ;
 
   (** from the cancellation property we define a partial subtraction
       @mathml <minus/>
@@ -303,9 +307,9 @@ end ;;
 
 
 (** In a regular monoid we can simplify effectively *)
-species Regular_additive_monoid
-  inherits Regular_additive_semi_group, Cancellative_additive_monoid,
-                              Partial_set =
+species Regular_additive_monoid =
+  inherit Regular_additive_semi_group, Cancellative_additive_monoid,
+                              Partial_set ;
 
   theorem zero_is_right_neutral_for_minus: all x in Self,
     !equal (!minus (x, !zero), x)
@@ -332,8 +336,8 @@ end ;;
     commutative multiplcation (add).
 *)
 
-species Additive_monoid_with_infimum inherits
-   Meet_semi_lattice_with_min, Cancellative_additive_monoid =
+species Additive_monoid_with_infimum =
+  inherit Meet_semi_lattice_with_min, Cancellative_additive_monoid ;
 
    (** absorption law *)
    property inf_absorbes_add : all  x y in Self,
@@ -396,8 +400,8 @@ end ;;
    These are kind of max, plus semi rings in the literature
  *)
 
-species Additive_monoid_with_supremum inherits
-   Join_semi_lattice_with_min, Cancellative_additive_monoid =
+species Additive_monoid_with_supremum =
+  inherit Join_semi_lattice_with_min, Cancellative_additive_monoid ;
 
    (** absorption law *)
    property sup_absorbes_add: all x y in Self,
@@ -447,8 +451,8 @@ end ;;
 
 
 (** additive monoids with a total ordering *)
-species Ordered_additive_monoid
-  inherits Cancellative_additive_monoid, Ordered_set =
+species Ordered_additive_monoid =
+  inherit Cancellative_additive_monoid, Ordered_set ;
 
   (** adding an element keeps the ordering *)
   property order_compatible_with_plus : all x y z in Self,
@@ -462,14 +466,14 @@ end ;;
 
 (** a monomial ordering has a total order
     compatible with addition *)
-species Monomial_ordering
-  inherits Additive_monoid_with_infimum,
+species Monomial_ordering =
+  inherit  Additive_monoid_with_infimum,
            Ordered_meet_semi_lattice,
            Additive_monoid_with_supremum,
            Ordered_join_semi_lattice,
            Regular_additive_monoid,
            Ordered_additive_monoid
-  =
+  ;
 
   (** adding always increase order *)
   theorem leq_absorbes_add: all x y in Self,
@@ -483,7 +487,8 @@ end ;;
 
 
 (** an additive group is an additive monoid with total substraction *)
-species Additive_group inherits Cancellative_additive_monoid =
+species Additive_group =
+  inherit Cancellative_additive_monoid ;
 (*   let is_zero (x) = !equal (x, !zero) ; *)
 (*   proof of is_zero_spec = *)
 (*     by property equal_symmetric *)
@@ -672,8 +677,8 @@ end ;;
 
 
 (** In an ordered group we have a total ordering compatible with addition *)
-species Ordered_additive_group inherits
-  Additive_group, Ordered_additive_monoid =
+species Ordered_additive_group =
+  inherit Additive_group, Ordered_additive_monoid ;
   (** this is the sign function which split the group into
       the set of negative elements ,
       the zero element and

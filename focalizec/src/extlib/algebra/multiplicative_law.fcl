@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: multiplicative_law.fcl,v 1.5 2009-01-11 01:24:06 weis Exp $ *)
+(* $Id: multiplicative_law.fcl,v 1.6 2009-05-14 15:57:40 doligez Exp $ *)
 
 (** Common properties of multiplicative laws. *)
 
@@ -27,7 +27,8 @@ open "sets" ;;
 open "constants";;
 
 (** one associative multiplicative binop, this is sometimes called a magma *)
-species Semi_group inherits Setoid =
+species Semi_group =
+  inherit Setoid ;
  (** @mathml <times/>*)
  signature mult : Self -> Self -> Self ;
 
@@ -54,7 +55,8 @@ end ;;
 
 
 (** multiplicative monoids  have a unit element one *)
-species Monoid inherits Setoid_with_one, Semi_group =
+species Monoid =
+  inherit Setoid_with_one, Semi_group ;
   (** right neutrality *)
   property one_is_right_neutral : all x in Self,
     !equal (!mult (x, !one), x) ;
@@ -82,8 +84,8 @@ end ;;
 (* species Power_by_dichotomy (M is Monoid, *)
 (*                             Nat is Dichotomic_system, *)
 (*                             Bins is Binop (M), *)
-(*                             Dicho is Dichotomy (Nat, M, Bins)) *)
-(*     inherits Basic_object = *)
+(*                             Dicho is Dichotomy (Nat, M, Bins)) = *)
+(*     inherit Basic_object ; *)
 (*   let expt (x, n) = Dicho!dichot (x, n) ; *)
 (* end ;; *)
 
@@ -91,15 +93,16 @@ end ;;
 
 (* (\* [rr]: this should be renamed *\) *)
 (* species Power (M is Monoid, Nat is Dichotomic_system, *)
-(*                Bins is Binop (M), Dicho is Dichotomy (Nat, M, Bins)) *)
-(*   inherits Power_by_dichotomy (M, Nat, Bins, Dicho) = *)
+(*                Bins is Binop (M), Dicho is Dichotomy (Nat, M, Bins)) = *)
+(*   inherit Power_by_dichotomy (M, Nat, Bins, Dicho) ; *)
 (*   rep = unit ; *)
 (* end ;; *)
 
 
 (** A commutative monoid has a commutative multiplicative law.
    we shloud be able to reduce right neutrality to left neutrality *)
-species Commutative_monoid inherits Monoid =
+species Commutative_monoid =
+  inherit Monoid ;
   (** commutativity *)
   property mult_commutes: all x y in Self,
     !equal (!mult (x, y), !mult (y, x)) ;
@@ -123,7 +126,8 @@ species Commutative_monoid inherits Monoid =
 end ;;
 
 (** Commonly multiplication by zero gives zero  *)
-species Monoid_with_absorbant inherits Setoid_with_zero, Monoid =
+species Monoid_with_absorbant =
+  inherit Setoid_with_zero, Monoid ;
   property zero_left_absorbes: all x in Self,
    !equal (!mult (!zero, x), !zero) ;
 
@@ -137,14 +141,14 @@ species Monoid_with_absorbant inherits Setoid_with_zero, Monoid =
    proof = by property zero_right_absorbes, zero_left_absorbes ;
 end ;;
 
-species Commutative_monoid_with_absorbant
-   inherits Monoid_with_absorbant, Commutative_monoid =
+species Commutative_monoid_with_absorbant =
+   inherit Monoid_with_absorbant, Commutative_monoid ;
    proof of zero_right_absorbes =
      by property mult_commutes, zero_left_absorbes, equal_transitive ;
 end ;;
 
-species Commutative_integral_monoid_with_absorbant
-  inherits Commutative_monoid_with_absorbant =
+species Commutative_integral_monoid_with_absorbant =
+  inherit Commutative_monoid_with_absorbant ;
 
   property mult_is_integral: all x in Self, all a in Self,
     !equal (!mult (a, x), !zero) -> (!equal(a, !zero) \/ !equal (x, !zero)) ;
@@ -161,7 +165,8 @@ end ;;
    but this is not constructive.
    Here we simply express compatibility with multiplication
  *)
-species Commutative_monoid_with_divisibility inherits Commutative_monoid =
+species Commutative_monoid_with_divisibility =
+  inherit Commutative_monoid ;
    signature divides : Self -> Self -> prop ;
 
    (** A reflexive relation should be expressed as an extension of equality *)
@@ -203,9 +208,9 @@ end ;;
    In a monoid with 0 and 1,
    0 acts as a biggest element and 1 as a smallest
  *)
-species Commutative_monoid_with_absorbant_divibility
-  inherits Commutative_monoid_with_divisibility,
-           Commutative_monoid_with_absorbant =
+species Commutative_monoid_with_absorbant_divibility =
+  inherit  Commutative_monoid_with_divisibility,
+           Commutative_monoid_with_absorbant ;
 
   theorem zero_is_maximal: all x in Self,
     !divides (x, !zero)
@@ -215,8 +220,8 @@ species Commutative_monoid_with_absorbant_divibility
 end ;;
 
 (** A cancellation monoid has some form of simplification property *)
-species Cancellative_commutative_monoid
-   inherits Commutative_monoid_with_absorbant =
+species Cancellative_commutative_monoid =
+   inherit Commutative_monoid_with_absorbant ;
 
    (** Left cancellation by non null element *)
    property mult_is_left_regular: all x y z in Self,
@@ -243,10 +248,10 @@ end ;;
    Regular multiplicative monoids are commutative multiplicative monoids
     with a special 0 element and a safe division named exquo
 *)
-species Regular_monoid
-  inherits  Commutative_monoid_with_absorbant_divibility,
+species Regular_monoid =
+  inherit   Commutative_monoid_with_absorbant_divibility,
             Commutative_integral_monoid_with_absorbant,
-            Cancellative_commutative_monoid =
+            Cancellative_commutative_monoid ;
 
   signature exquo : Self -> Self -> partiel (Self) ;
 
@@ -271,10 +276,10 @@ end ;;
 (** a division monoid is like a regular monoid but has a division
     which can raise an error
 *)
-species Division_monoid
-  inherits Commutative_monoid_with_absorbant_divibility,
+species Division_monoid =
+  inherit  Commutative_monoid_with_absorbant_divibility,
            Commutative_integral_monoid_with_absorbant,
-           Cancellative_commutative_monoid =
+           Cancellative_commutative_monoid ;
   (** @mathml <quotient/> *)
   signature div : Self -> Self -> Self ;
 
@@ -412,7 +417,8 @@ species Division_monoid
 end ;;
 
 (* gcd (Original ocaml version by Louis Mandel) *)
-species Factorization_monoid inherits Regular_monoid =
+species Factorization_monoid =
+  inherit Regular_monoid ;
   (** @mathml <gcd/>*)
   signature gcd : Self-> Self-> Self;
   property gcd_divides: all x y z in Self,

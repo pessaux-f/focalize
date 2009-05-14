@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.7 2009-03-19 21:35:51 rr Exp $ *)
+(* $Id: big_integers.fcl,v 1.8 2009-05-14 15:57:40 doligez Exp $ *)
 
 use "basics" ;;
 
@@ -343,8 +343,8 @@ use "integers" ;;
 open "weak_structures" ;;
 
 (** Basic big integers simply form a monoid with an element one*)
-species Base_big_int
-  inherits additive_law#Cancellative_additive_monoid, Unitary_additive_monoid =
+species Base_big_int =
+  inherit additive_law#Cancellative_additive_monoid, Unitary_additive_monoid ;
   representation = big_int ;
   let one = #unit_big_int ;
   let zero = #zero_big_int ;
@@ -370,7 +370,8 @@ end ;;
 collection Foc_basic_integers implements Base_big_int ;;
 
 (** Big integers *)
-species Integers_big_int inherits integers#Integer_system, Base_big_int =
+species Integers_big_int =
+  inherit integers#Integer_system, Base_big_int ;
   proof of one_is_left_neutral = assumed {* Because todo *};
   let mult (m, n) = #mult_big_int (m, n) ;
   proof of mult_is_integral = assumed {* Because todo *} ;

@@ -15,7 +15,8 @@ open "sets";;
   We define two functions and two properties relating
   concrete values of representation and abstract values of Self
 *)
-species Represented_by (S is Basic_object) inherits Setoid =
+species Represented_by (S is Basic_object) =
+  inherit Setoid ;
 
   representation = S ;
 
@@ -68,8 +69,8 @@ end
 
 
 (** Equivalence relations over a set *)
-species Equivalence_relation(S is Setoid) 
-  inherits Basic_object =
+species Equivalence_relation(S is Setoid) =
+  inherit Basic_object ;
   (**
      @mathml <equivalent/>
      will be denoted as infix congruence
@@ -88,8 +89,8 @@ end
 ;;
 
 (** General properties about any function *)
-species Setoid_morphism(S is Setoid, T is Setoid) 
-   inherits Equivalence_relation(S) =
+species Setoid_morphism(S is Setoid, T is Setoid) =
+   inherit Equivalence_relation(S) ;
 
   (** an abstract reduction function *)
   signature morph: S -> T;
@@ -121,8 +122,8 @@ end
    taking elements as arguments we have some free theorems
 *)
 
-species Represented_by_setoid(S is Setoid)
-   inherits Represented_by(S) =
+species Represented_by_setoid(S is Setoid) =
+   inherit Represented_by(S) ;
 
   (** equality in self is equality in s *)
   let equal(x in Self, y in Self) = S!equal(x, y);
@@ -168,8 +169,8 @@ end
 ;;
 
 
-species Projections(S is Setoid) 
-  inherits Setoid_morphism(S, S) = 
+species Projections(S is Setoid) =
+  inherit Setoid_morphism(S, S) ; 
   signature reduce: S -> S;
   property reduce_substitution_rule: all x y in S,
      S!equal(x, y) -> S!equal(!reduce(x), !reduce(y));
@@ -195,8 +196,8 @@ end
 
 species Quotient_set(S is Setoid, 
                      Proj is Projections(S)
-		    )
-  inherits Represented_by_setoid(S), Setoid =
+		    ) =
+  inherit Represented_by_setoid(S), Setoid ;
 
   (** We produce elements by projecting them  *)
   let from_rep(x) = Proj!reduce(x);
@@ -218,7 +219,8 @@ species Quotient_set(S is Setoid,
 end
 ;;
 
-species Singleton inherits Setoid =
+species Singleton =
+  inherit Setoid ;
   representation = unit;
   (* [rr]: better parse *)
   let element = basics#();
@@ -233,8 +235,8 @@ end
 collection Un_singleton implements Singleton;;
 
 
-species Projection_over_sample(S is Setoid)
-  inherits Projections(S) =
+species Projection_over_sample(S is Setoid) =
+  inherit Projections(S) ;
     representation = unit;
     let reduce(_x) = S!element ;
     proof of reduce_substitution_rule = 
@@ -247,9 +249,9 @@ end
 collection Trivial_projection
   implements Projection_over_sample(Un_singleton);;
 
-species Trivial_quotient_final
-  inherits Quotient_set(Un_singleton,
-			  Trivial_projection)=
+species Trivial_quotient_final =
+  inherit Quotient_set(Un_singleton,
+			  Trivial_projection) ;
   (** the only signature returning a value of self preserves the invariant  *)
   proof of correct_invariant =
     property sample_is_reduced

@@ -24,10 +24,10 @@ open "orders";;
 (**
    Sometimes it is convenient to define lattices from partial ordering
 *)
-species Partially_ordered_set_as_meet_semi_lattice
-  inherits Meet_semi_lattice,
+species Partially_ordered_set_as_meet_semi_lattice =
+  inherit  Meet_semi_lattice,
            (* partial ordering takes precedence *)
-           Partial_order =
+           Partial_order ;
 
   (** we define lattice ordering from normal ordering *)
   let order_inf(x, y) = !leq(x, y);
@@ -108,10 +108,10 @@ species Partially_ordered_set_as_meet_semi_lattice
 end
 ;;
 
-species Partially_ordered_set_as_join_semi_lattice
-  inherits Join_semi_lattice,
+species Partially_ordered_set_as_join_semi_lattice =
+  inherit  Join_semi_lattice,
            (* partial ordering takes precedence *)
-           Partial_order =
+           Partial_order ;
 
   (** we define lattice ordering from normal ordering *)
   let order_sup(x, y) = !geq(x, y);
@@ -197,10 +197,10 @@ species Partially_ordered_set_as_join_semi_lattice
 end
 ;;
 
-species Partially_ordered_set_as_lattice
-  inherits Lattice,
+species Partially_ordered_set_as_lattice =
+  inherit  Lattice,
            Partially_ordered_set_as_meet_semi_lattice,
-           Partially_ordered_set_as_join_semi_lattice =
+           Partially_ordered_set_as_join_semi_lattice ;
 
   proof of order_inf_refines_order_sup =
     by property order_inf_spec, order_sup_spec, geq_is_leq;
@@ -259,7 +259,8 @@ end
    Ordered meet semi lattices have a complete ordering which refines that
    of the semi lattice structure.
  *)
-species Ordered_meet_semi_lattice inherits Meet_semi_lattice, Ordered_set =
+species Ordered_meet_semi_lattice =
+  inherit Meet_semi_lattice, Ordered_set ;
 
   property leq_refines_order_inf : all x y in Self,
     !order_inf(x, y) -> !leq(x, y);
@@ -270,8 +271,8 @@ end
 (**
  We view an ordered set as a meet semi lattice
 *)
-species Ordered_set_as_meet_semi_lattice
-  inherits Ordered_meet_semi_lattice =
+species Ordered_set_as_meet_semi_lattice =
+  inherit Ordered_meet_semi_lattice ;
 
   let inf(x, y) = if !leq(x, y) then x else y ;
 
@@ -355,7 +356,8 @@ end
    Ordered join semi lattices have a complete ordering which refines that
    of the join semi lattice structure.
  *)
-species Ordered_join_semi_lattice inherits Join_semi_lattice, Ordered_set =
+species Ordered_join_semi_lattice =
+  inherit Join_semi_lattice, Ordered_set ;
 
   property geq_refines_order_sup : all x y in Self,
     !order_sup(x, y) -> !geq(x, y)
@@ -368,7 +370,8 @@ end
  We view an ordered set as a join semi lattice
 *)
 
-species Ordered_set_as_join_semi_lattice inherits Ordered_join_semi_lattice =
+species Ordered_set_as_join_semi_lattice =
+  inherit Ordered_join_semi_lattice ;
 
   let sup(x, y) = if !geq(x, y) then x else y ;
 
@@ -402,19 +405,19 @@ end
 ;;
 
 (** here we complete the partial ordering of the lattice *)
-species Ordered_lattice
-  inherits Ordered_meet_semi_lattice,
+species Ordered_lattice =
+  inherit  Ordered_meet_semi_lattice,
            Ordered_join_semi_lattice,
-           Lattice =
+           Lattice ;
 
 end
 ;;
 
 (** a toitally ordered set may be viewed as a lattice *)
-species Ordered_set_as_lattice
-  inherits Ordered_set_as_meet_semi_lattice,
+species Ordered_set_as_lattice =
+  inherit  Ordered_set_as_meet_semi_lattice,
            Ordered_set_as_join_semi_lattice,
-           Ordered_lattice =
+           Ordered_lattice ;
 
   (** absorption laws are a mess !*)
   proof of sup_absorbes_inf =

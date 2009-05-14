@@ -20,8 +20,8 @@ open "basics";;
    there is nothing that is both a sum and a product.
    This forbids to inherits from a product and a sum.
  *)
-species Abstract_sum(A is Basic_object, B is Basic_object)
-  inherits Basic_object =
+species Abstract_sum(A is Basic_object, B is Basic_object) =
+  inherit Basic_object ;
 
   (** first builder, name clash with product is intentional. *)
   signature first: A -> Self;
@@ -58,8 +58,8 @@ end;;
    type theoetic models which are traditionally used
    in conjunction with variant types.
  *)
-species Sum_set(A is Setoid, B is Setoid)
-  inherits Abstract_sum(A, B), Setoid =
+species Sum_set(A is Setoid, B is Setoid) =
+  inherit Abstract_sum(A, B), Setoid ;
 
   (** this is a (partial) function which is intended to reverse first *)
   signature first_term: Self -> A;
@@ -351,7 +351,8 @@ species Categorical_sum_property
    E is Setoid,
    M_a is Setoid_morphism(AX, E),
    M_b is Setoid_morphism(BX, E),
-   S is Sum_set(AX, BX)) inherits Setoid_morphism(S, E) =
+   S is Sum_set(AX, BX)) =
+  inherit Setoid_morphism(S, E) ;
 
   (** An effective way to factor functions *)
   let morph(x) =
@@ -413,8 +414,8 @@ end;;
    this is the usual model for variant types.
    We thus recommend to inherit from this species when abstracting variants.
  *)
-species Disjoint_sum(A is Setoid, B is Setoid)
-  inherits Sum_set(A, B) =
+species Disjoint_sum(A is Setoid, B is Setoid) =
+  inherit Sum_set(A, B) ;
   (** Each part is strictly included by its components *)
   theorem sum_is_non_trivial: all x in A, all y in B,
     ~(!equal(!first(x), !second(y)))
@@ -447,7 +448,8 @@ type simple_variant('a, 'b) =
    we build concrete injections, testers and extractors
    needed by our framework.
  *)
-species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
+species Variant_sum(A is Setoid, B is Setoid) =
+  inherit Sum_set(A, B) ;
 
   representation = simple_variant(A, B);
 
@@ -538,8 +540,8 @@ species Variant_sum(A is Setoid, B is Setoid) inherits Sum_set(A, B) =
 end;;
 
 (* (\** A concrete species to specify strict disjoint unions *\) *)
-(* species disjoint_variant_sum(a is setoid) *)
-(*   inherits disjoint_sum(a, a), variant_sum(a, a) = *)
+(* species disjoint_variant_sum(a is setoid) = *)
+(*   inherit disjoint_sum(a, a), variant_sum(a, a) ; *)
 (* end *)
 
 (* (\**  *)

@@ -16,7 +16,8 @@ open "sets";;
 (** A strict partial order is an irreflexive and transitive relation, As a
    consequence it is also asymetric. Sometimes called a strict quasi-order *)
 
- species Strict_partial_order inherits Anti_setoid =
+ species Strict_partial_order =
+  inherit Anti_setoid ;
 
   signature lt: Self -> Self -> bool;
 
@@ -112,7 +113,8 @@ end
    Here we specify that incomparability is difference 
 
  *)
-species Strict_order inherits Strict_partial_order =
+species Strict_order =
+  inherit Strict_partial_order ;
 
   (** Strict comparability is difference, this is sometimes called weakly
    connected *) 
@@ -129,7 +131,8 @@ species Strict_order inherits Strict_partial_order =
 end
 ;;
 
-species Syntactical_setoid inherits Setoid =
+species Syntactical_setoid =
+  inherit Setoid ;
 
   property equal_is_syntactic: all x y in Self, !equal(x, y ) -> x = y;
 
@@ -141,9 +144,9 @@ species Syntactical_setoid inherits Setoid =
 end;;
 
 (** Restoring compatibility between strict and large ordering *)
-species Strictly_ordered_set
+species Strictly_ordered_set =
   (** Here we cannot inherit from Ordered_set because lt is defined there *)
-  inherits Syntactical_setoid, Strict_order =
+  inherit Syntactical_setoid, Strict_order ;
 
   theorem leq_from_lt: all x y in Self,
     !leq(x, y) <-> (!lt(x, y) \/ syntactic_equal(x, y))

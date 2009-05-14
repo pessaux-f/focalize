@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: constants.fcl,v 1.4 2009-01-15 22:32:08 rr Exp $ *)
+(* $Id: constants.fcl,v 1.5 2009-05-14 15:57:40 doligez Exp $ *)
 
 
 (* for bool *)
@@ -32,7 +32,8 @@ open "sets" ;;
    A set with zero has an element called zero, 
    some authors make this a primitive operation .
 *)
-species Setoid_with_zero inherits Setoid =
+species Setoid_with_zero =
+  inherit Setoid ;
  (** @mathml <mn>0</mn>
     will be rendered as 0
   *)
@@ -51,7 +52,8 @@ species Setoid_with_zero inherits Setoid =
 end ;;
 
 (** A setoid with one has a special element named one *)
-species Setoid_with_one inherits Setoid =
+species Setoid_with_one =
+  inherit Setoid ;
  (** @mathml <mn>1</mn>
     will be rendered as 1
  *)
