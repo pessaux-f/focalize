@@ -2,7 +2,7 @@
 Resources
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.2 2009-03-02 10:19:30 weis Exp $ -->
+<!-- \$Id: index.shtml,v 1.3 2009-05-14 09:13:14 habib Exp $ -->
 
 <div id="container">
 <div id="header">
@@ -28,17 +28,23 @@ Technique et Science Informatique, TSI 27(8):951-976, 2008.
 </li>
 <li>
 Julien Blond and Charles Morisset. Un moniteur de r&eacute;f&eacute;rence 
-s&ucirc;r d'une base de donn&eacute;es. TSI (Technique et Science Informatiques),
-2007.
+s&ucirc;r d'une base de donn&eacute;es. 
+TSI (Technique et Science Informatiques), 2007.
 <br />
 <a href="http://www-spi.lip6.fr/%7Ejaume/blondmorisset.pdf"> Pdf</a>
 </li>
 <li>
-Mathieu Jaume and Charles Morisset.A formal approach to implement
+Mathieu Jaume and Charles Morisset. A formal approach to implement
 access control models. Journal of Information Assurance and
 Security, Volume 2, pp 137-148. June 2006.<br />
 <a href="http://focal.inria.fr/site/dmdocuments/jias06.pdf">Pdf</a>
-- <a href="http://focal.inria.fr/site/dmdocuments/jias06.bibtex">Bibtex</a><br />
+- <a href="http://focal.inria.fr/site/dmdocuments/jias06.bibtex">Bibtex</a>
+</li>
+<li>
+Catherine Dubois and Th&eacute;r&egrave;se Hardin and 
+V&eacute;ronique Vigui&eacute; Donzeau Gouge. 
+Building certified components within FOCAL. 
+Trends in Functional Programming, Volume 5, pp 33-48. February 2006.
 </li>
 <li>
 David Delahaye, Mathieu Jaume and Virgile Prevosto. Coq, un outil
@@ -48,14 +54,16 @@ italic;">Technique et Science Informatique</span>, 24(9):1139-1160,
 2005. (in French)<br />
 <a href="http://focal.inria.fr/site/images/stories/articles/delahayetsi05.pdf"
 target="_self">Pdf</a> - 
-<a href="http://focal.inria.fr/site/images/stories/articles/delahayetsi05.bibtex"
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/delahayetsi05.bibtex"
 target="_self">Bibtex</a>
 </li>
 <li>
 Th&eacute;r&egrave;se Hardin and Renaud Rioboo. Les Objets des
 Math&eacute;matiques. <em></em>RSTI - L'objet, October 2004. <br />
 <a target="_self"
-href="http://focal.inria.fr/site/images/stories/articles/lobjet.ps">Postscript</a>
+href="http://focal.inria.fr/site/images/stories/articles/lobjet.ps">Postscript
+</a>
 - <a href="http://focal.inria.fr/site/images/stories/articles/lobjet.bibtex"
 target="_self">Bibtex</a>
 </li>
@@ -63,7 +71,8 @@ target="_self">Bibtex</a>
 inheritance in the foc language. <em>Journal of Automated Reasoning</em>, 
 29(3-4):337-363, December 2002.<br />
 <a target="_self"
-href="http://focal.inria.fr/site/images/stories/articles/rr02.ps.gz">Postscript</a>
+href="http://focal.inria.fr/site/images/stories/articles/rr02.ps.gz">
+Postscript</a>
 - <a href="http://focal.inria.fr/site/images/stories/articles/rr02.bibtex"
 target="_self">Bibtex</a>
 </li>
@@ -143,13 +152,14 @@ Mathieu Jaume and Charles Morisset. Towards a formal specification
 of access control. Workshop on Foundations of Computer Security and
 Automated Reasoning for Security Protocol Analysis
 (FCS-ARSPA'06),Seattle, August
-2006.<br /><a href="http://focal.inria.fr/site/dmdocuments/fcsarspa06.pdf">Pdf</a>
+2006.<br /><a href="http://focal.inria.fr/site/dmdocuments/fcsarspa06.pdf">
+Pdf</a>
 - <a href="http://focal.inria.fr/site/dmdocuments/fcsarspa06.bibtex">Bibtex</a>
 </li>
 <li>
 David Delahaye, Jean-Fr&eacute;d&eacute;ric
-&Eacute;tienne, and V&eacute;ronique Vigui&eacute; Donzeau-Gouge. Certifying Airport
-Security Regulations using the Focal Environment. In
+&Eacute;tienne, and V&eacute;ronique Vigui&eacute; Donzeau-Gouge. 
+Certifying Airport Security Regulations using the Focal Environment. In
 <span style="font-style: italic;">Formal Methods (FM)</span>, volume
 4085 of <span style="font-style: italic;">LNCS</span>, pages 48--63,
 Hamilton, Ontario (Canada), August
@@ -195,9 +205,11 @@ Bibtex</a>
 Virgile Prevosto and Sylvain Boulm&eacute;. Proof contexts with late binding.
 In <em>Typed Lambda Calculi and Applications</em>, volume 3461 of 
 <em>LNCS</em>, pages 324-338. Springer, April 2005</li>
-<a href="http://focal.inria.fr/site/images/stories/articles/prevostotlca05.pdf">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/prevostotlca05.pdf">
 Pdf</a>-
-<a href="http://focal.inria.fr/site/images/stories/articles/prevostotlca05.bibtex">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/prevostotlca05.bibtex">
 Bibtex</a>
 <li>
 Virgile Prevosto. Certified mathematical hierarchies: the FoCal
@@ -271,9 +283,11 @@ Sylvain Boulm&eacute;. Op&eacute;rateurs de raffinement sur les structures
 alg&eacute;briques. In 
 <em>Actes des Journ&eacute;es Francophones des Langages Applicatifs</em>, 
 2000.<br />
-<a href="http://focal.inria.fr/site/images/stories/articles/BoulmeJFLA00.ps.gz">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/BoulmeJFLA00.ps.gz">
 Postscript</a>-
-<a href="http://focal.inria.fr/site/images/stories/articles/BoulmeJFLA00.bibtex">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/BoulmeJFLA00.bibtex">
 Bibtex</a>
 </li>
 <li>
@@ -288,8 +302,9 @@ Postscript</a>-
 Bibtex</a>
 </li>
 <li>
-S. Boulm&eacute;, T. Hardin, and R. Rioboo. Modules, objets et calcul formel. In
-<em>Actes des Journ&eacute;es Francophones des Langages Applicatifs</em>, 1999.<br /> 
+S. Boulm&eacute;, T. Hardin, and R. Rioboo. Modules, objets et calcul formel. 
+In <em>Actes des Journ&eacute;es Francophones des Langages Applicatifs</em>, 
+1999.<br /> 
 <a href="http://focal.inria.fr/site/images/stories/articles/BHRJFLA99.ps">
 Postscript</a>-
 <a href="http://focal.inria.fr/site/images/stories/articles/BHRJFLA99.bibtex">
@@ -326,7 +341,8 @@ Focal. <br />Th&egrave;se de doctorat,  Universit&eacute; Paris 6,  Juillet
 <br />Postscript</a>-
 <a href="http://focal.inria.fr/site/images/stories/articles/fechter_these.pdf">
 Pdf</a> -
-<a href="http://focal.inria.fr/site/images/stories/articles/fechter_these.bibtex">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/fechter_these.bibtex">
 Bibtex</a>
 </li>
 <li>
@@ -334,9 +350,11 @@ Virgile Prevosto. Conception et implantation du langage FoC pour le
 d&eacute;veloppement de logiciels certifi&eacute;s. Th&egrave;se de
 doctorat, Universit&eacute; 
 Paris 6, 2003.<br />
-<a href="http://focal.inria.fr/site/images/stories/articles/prevosto_these.ps.gz">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/prevosto_these.ps.gz">
 Postscript</a>-
-<a href="http://focal.inria.fr/site/images/stories/articles/prevosto_these.bibtex">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/prevosto_these.bibtex">
 Bibtex</a>
 </li>
 <li>Sylvain Boulm&eacute;.
@@ -344,9 +362,11 @@ Bibtex</a>
 &agrave; la programmation certifi&eacute;e de biblioth&egrave;ques de
 Calcul Formel</em>. Th&egrave;se de doctorat, 
 Universit&eacute; Paris 6, 2000.<br /> 
-<a href="http://focal.inria.fr/site/images/stories/articles/boulme_these.ps.gz">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/boulme_these.ps.gz">
 Postscript</a>-
-<a href="http://focal.inria.fr/site/images/stories/articles/boulme_these.bibtex">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/boulme_these.bibtex">
 Bibtex</a>
 </li>
 <br /> <br /> <br />
@@ -363,7 +383,8 @@ contr&ocirc;le d'acc&egrave;s dans l'atelier Focal. Rapport de D.E.A.,
 Universit&eacute; Paris 6, September 2004.<br />
 <a href="http://focal.inria.fr/site/images/stories/articles/morisset_dea.ps">
 Postscript</a>-
-<a href="http://focal.inria.fr/site/images/stories/articles/morisset_dea.bibtex">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/morisset_dea.bibtex">
 Bibtex</a>
 </li>
 <li>
@@ -400,7 +421,8 @@ St&eacute;phane Fechter. Une s&eacute;mantique pour foc. Rapport de
 D.E.A., Universit&eacute; Paris 6, September 2001.<br /> 
 <a href="http://focal.inria.fr/site/images/stories/articles/fechter_dea.ps.gz">
 Postscript</a>-
-<a href="http://focal.inria.fr/site/images/stories/articles/fechter_dea.bibtex">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/fechter_dea.bibtex">
 Bibtex</a>
 </li>
 <li>
@@ -414,16 +436,20 @@ Bibtex</a>
 <li>
 Louis Mandel. Factorisation de polyn&ocirc;mes sur les corps finis.
 Rapport de magist&egrave;re, Universit&eacute; Paris 6, 2001.<br />
-<a href="http://focal.inria.fr/site/images/stories/articles/mandel_miaif.ps.gz">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/mandel_miaif.ps.gz">
 Postscript</a>-
-<a href="http://focal.inria.fr/site/images/stories/articles/mandel_miaif.bibtex">
+<a
+href="http://focal.inria.fr/site/images/stories/articles/mandel_miaif.bibtex">
 Bibtex</a>
 </li>
 <li>V. Prevosto. Vers une interface utilisateur pour foc. Rapport
 de D.E.A., Universit&eacute; Paris 6, September 2000.<br />
-<a href="http://focal.inria.fr/site/images/stories/articles/prevosto_dea.ps.gz">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/prevosto_dea.ps.gz">
 Postscript</a>-
-<a href="http://focal.inria.fr/site/images/stories/articles/prevosto_dea.bibtex">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/prevosto_dea.bibtex">
 Bibtex</a>
 </li>
 <li>
@@ -448,18 +474,22 @@ Bibtex</a>
 <li>
 Sylvain Boulm&eacute;. Specifying in coq inheritance used in computer
 algebra. Research report, LIP6, 2000.<br />
-<a href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00a.ps.gz">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00a.ps.gz">
 Postscript</a>-
-<a href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00a.bibtex">
+<a
+href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00a.bibtex">
 Bibtex</a>
 </li>
 <li>
 Sylvain Boulm&eacute;, Th&eacute;r&egrave;se Hardin, and Renaud
 Rioboo. Polymorphic data types, objects, modules and functors: is it
 too much? Research report, LIP6, 2000.<br />
-<a href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00b.ps.gz">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00b.ps.gz">
 Postscript</a>-
-<a href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00b.bibtex">
+<a 
+href="http://focal.inria.fr/site/images/stories/articles/boulme_rr00b.bibtex">
 Bibtex</a>
 </li>
 <li>Projet FoC. &Eacute;tat d'avancement du projet FoC au printemps
