@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.81 2009-05-14 13:47:47 weis Exp $ *)
+(* $Id: lexer.mll,v 1.82 2009-05-14 15:31:06 doligez Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -115,7 +115,7 @@ List.iter
   "hypothesis", HYPOTHESIS;
   "if", IF;
   "in", IN;
-  "inherits", INHERITS;
+  "inherit", INHERITS;
   "internal", INTERNAL;
   "implements", IMPLEMENTS;
   "is", IS;

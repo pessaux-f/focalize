@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products.fcl,v 1.8 2009-01-11 01:22:18 weis Exp $ *)
+(* $Id: products.fcl,v 1.9 2009-05-14 15:31:06 doligez Exp $ *)
 
 (**
 
@@ -34,8 +34,8 @@ open "sets";;
 
 
 (** a product of two things *)
-species Abstract_product(A is Basic_object, B is Basic_object)
-  inherits Basic_object =
+species Abstract_product(A is Basic_object, B is Basic_object) =
+  inherit Basic_object ;
 
   (** first projection *)
   signature first: Self -> A;
@@ -55,8 +55,8 @@ end;;
 
    Here we explicit two projections and a builder.
 *)
-species Product_set(A is Setoid, B is Setoid)
-  inherits Setoid, Abstract_product(A, B) =
+species Product_set(A is Setoid, B is Setoid) =
+  inherit Setoid, Abstract_product(A, B) ;
 
 
   (** this is a way to express surjectivity of the first projection *)
@@ -203,8 +203,8 @@ species Categorical_property_of_Product_set
    E is Setoid,
    M_a is sets#Setoid_morphism(E, A),
    M_b is sets#Setoid_morphism(E, B)
-   )
-  inherits  Setoid_morphism(E, P) =
+   ) =
+  inherit Setoid_morphism(E, P) ;
 
     let morph(x) = P!pair(M_a!morph(x), M_b!morph(x));
     proof of morph_substitution_rule =
@@ -266,7 +266,7 @@ end;;
    We need to fill the proof knowing how these are compiled into Coq.
 *)
 
-species Cartesian_product(A is Setoid, B is Setoid)
+species Cartesian_product(A is Setoid, B is Setoid) =
   (** 
      Rule of thumb: 
       - use intros without parameters -> independant of FoCaL compiler
@@ -274,7 +274,7 @@ species Cartesian_product(A is Setoid, B is Setoid)
       - use apply with properties involved
    *)
 
-  inherits Product_set(A, B) =
+  inherit Product_set(A, B) ;
 
   representation = A * B;
 
@@ -308,8 +308,8 @@ end;;
 (*    Commonly product by a singleton is isomorphic to the set itself, *)
 (*    this is a use case for our specifications. *)
 (*  *\) *)
-(* species product_singleton(a is abstract_singleton, b is abstract_singleton) *)
-(*   inherits product_set(a, b), abstract_singleton = *)
+(* species product_singleton(a is abstract_singleton, b is abstract_singleton) = *)
+(*   inherit product_set(a, b), abstract_singleton ; *)
 
 (*   proof of only_one_element = *)
 (*     <1>1 assume x in self,  *)
@@ -334,8 +334,8 @@ end;;
 (* end *)
 
 (* (\** A simple instance of the latter *\) *)
-(* species cartesian_singleton(a is abstract_singleton, b is abstract_singleton) *)
-(*   inherits product_singleton(a, b), cartesian_product(a, b) = *)
+(* species cartesian_singleton(a is abstract_singleton, b is abstract_singleton) = *)
+(*   inherit product_singleton(a, b), cartesian_product(a, b) ; *)
 (* end *)
 
 (* (\** A final model for products  *\) *)

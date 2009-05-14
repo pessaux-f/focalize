@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets.fcl,v 1.8 2009-04-11 22:22:21 weis Exp $ *)
+(* $Id: sets.fcl,v 1.9 2009-05-14 15:31:06 doligez Exp $ *)
 
 (** 
    @title Basic sets operations. 
@@ -28,7 +28,8 @@ open "basics";;
 
 (** In a setoid, we can test the equality (note for logicians: this is
    a congruence). The setoid must be be non empty. *)
-species Setoid inherits Basic_object =
+species Setoid =
+  inherit Basic_object ;
 
   (** @mathml <eq/> *)
   (* sig ( = ) : Self -> Self -> bool ; *)
@@ -84,7 +85,9 @@ end
    considered as a primitive operation. We provide the same (though
    incompatible) functionalities as Setoid!  *)
 
-species Anti_setoid inherits Basic_object =
+species Anti_setoid =
+  inherit Basic_object ;
+
   (** An appartness decidable relation *)
   signature different: Self -> Self -> bool;
 
@@ -132,7 +135,9 @@ end
    This requires to include some form of predicate for failing operations.
 
  *)
-species Partial_set inherits Setoid =
+species Partial_set =
+  inherit Setoid ;
+
   (** this is intended to model failure *)
   let failed in (string -> Self) =
     let ifailed (r in string, elt in Self) in Self =
@@ -144,8 +149,8 @@ end
 ;;
 
 (** Equivalence relations over a set *)
-species Equivalence_relation(S is Setoid) 
-  inherits Basic_object =
+species Equivalence_relation(S is Setoid) =
+  inherit Basic_object ;
   (**
      @mathml <equivalent/>
      will be denoted as infix congruence
@@ -168,9 +173,9 @@ end;;
 (**
    The FoCaL way to use functions, abstract into a species!
  *)
-species Setoid_morphism(A is Setoid, B is Setoid)
+species Setoid_morphism(A is Setoid, B is Setoid) =
   (** strictly speaking we don't need representation here *)
-  inherits Basic_object =
+  inherit Basic_object ;
     (** an explicit signature *)
     signature morph: A -> B;
     (**
@@ -185,7 +190,7 @@ end
 (**
    An automorphism is a function from a set to itself
  *)
-species Setoid_automorphism(A is Setoid)
+species Setoid_automorphism(A is Setoid) =
   (** All properties from Setoid_morphism *)
-  inherits Setoid_morphism(A, A) =
+  inherit Setoid_morphism(A, A) ;
 end;;

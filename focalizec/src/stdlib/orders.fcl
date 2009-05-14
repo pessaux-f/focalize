@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: orders.fcl,v 1.8 2009-03-16 12:37:37 rr Exp $ *)
+(* $Id: orders.fcl,v 1.9 2009-05-14 15:31:06 doligez Exp $ *)
 
 use "basics";;
 use "sets";;
@@ -21,7 +21,8 @@ open "basics";;
 open "sets";;
 
 (** pre orderings are sometimes called quasi orderings *)
-species Pre_order inherits Setoid =
+species Pre_order =
+  inherit Setoid ;
   (** leq(x,y) is x <= y
       @mathml <leq/> *)
   signature leq : Self -> Self -> bool;
@@ -128,7 +129,8 @@ end
    An ordering is total whenever two elements are always comparable
    these are sometimes called linear orders or chains
  *)
-species Total_pre_order inherits Pre_order =
+species Total_pre_order =
+  inherit Pre_order ;
 
   (** a total order is a complete relation *)
   property total_order : all x y in Self, Self!leq(x, y) \/ Self!leq(y, x);
@@ -139,7 +141,8 @@ end
 
 
 (** In a set an ordering is often called a partial order *)
-species Partial_order inherits Pre_order =
+species Partial_order =
+  inherit Pre_order ;
   property leq_antisymmetric :  all x y in Self,
     !leq(x, y) -> !leq(y, x) -> !equal(x, y)
   ;
@@ -208,7 +211,8 @@ end
 (** 
    An ordering is total whenever two elements are always comparable,
  *)
-species Ordered_set inherits Partial_order, Total_pre_order =
+species Ordered_set =
+  inherit Partial_order, Total_pre_order ;
   let equal(x, y) = and_b(Self!leq(x, y), Self!leq(y, x));
 
   theorem equal_from_leq: all x y in Self, 

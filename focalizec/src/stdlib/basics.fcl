@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.53 2008-12-17 12:12:16 pessaux Exp $ *)
+(* $Id: basics.fcl,v 1.54 2009-05-14 15:31:06 doligez Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -478,15 +478,15 @@ let print_string =
 
 theorem beq_refl :
   all x in 'a, x = x
-  proof = assumed {* Import trusted external code. *} ;;
+  proof = coq proof {* apply syntactic_equal_refl. Qed. *} ;;
 
 theorem beq_symm :
   all x y in 'a, x = y -> y = x
-  proof = assumed {* Import trusted external code. *} ;;
+  proof = coq proof {* apply syntactic_equal_sym. Qed. *} ;;
 
 theorem beq_trans :
   all x y z in 'a, x = y -> y = z -> x = z
-  proof = assumed {* Import trusted external code. *} ;;
+  proof = coq proof {* apply syntactic_equal_trans. Qed. *} ;;
 
 (** {8 Integer comparisons fundamental properties} *)
 

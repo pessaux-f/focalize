@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.135 2009-05-14 14:53:44 weis Exp $ *)
+(* $Id: parser.mly,v 1.136 2009-05-14 15:31:06 doligez Exp $ *)
 
 open Parsetree;;
 
@@ -578,8 +578,8 @@ define_species_param:
 define_species_body:
   | species_fields
     { mk [], $1}
-  | define_species_inherits_list species_fields SEMI
-    { $1, $2}
+  | define_species_inherits_list SEMI species_fields
+    { $1, $3}
 ;
 
 define_species_inherits_list:

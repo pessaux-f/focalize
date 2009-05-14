@@ -13,13 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lattices.fcl,v 1.4 2009-01-11 01:22:18 weis Exp $ *)
+(* $Id: lattices.fcl,v 1.5 2009-05-14 15:31:06 doligez Exp $ *)
 
 use "sets";;
 open "sets";;
 
 (** In a meet semi lattice we have an operation inducing an ordering (&lt;=). *)
-species Meet_semi_lattice inherits Setoid =
+species Meet_semi_lattice =
+  inherit Setoid ;
   (** The infimum of two elements *)
   (* [rr]: need a mathml symbol for that,
      we don't want to use <min/> nor <intersect/>
@@ -145,7 +146,8 @@ end
 
 
 (** in a join semi lattice we have an operation inducing an ordering (&gt;=) *)
-species Join_semi_lattice inherits Setoid =
+species Join_semi_lattice =
+  inherit Setoid ;
 
   (** the supremum of two elements *)
   (* [rr]: need a mathml symbol for that,
@@ -262,7 +264,8 @@ end
 
 (** lattices have an inf and sup operation which induce a partial order *)
 
-species Lattice inherits Meet_semi_lattice, Join_semi_lattice =
+species Lattice =
+  inherit Meet_semi_lattice, Join_semi_lattice ;
 
   (** the first absorbtion law *)
    property inf_absorbes_sup : all x y in Self,
@@ -336,7 +339,8 @@ end
 ;;
 
 (** Modular lattices *)
-species Modular_lattice inherits Lattice =
+species Modular_lattice =
+  inherit Lattice ;
 
 (** a generalization of ditributivity  *)
 property modular_law : all x y z in Self,
@@ -347,15 +351,15 @@ end
 ;;
 
 -- The doc ``Every distribute lattice is modular'' was
--- just before the inherits keyword: need to insert it into the species
+-- just before the inherit keyword: need to insert it into the species
 -- documentation instead.
 
 (** Distributive lattices
     Every distribute lattice is modular.
  *)
-species Distributive_lattice
+species Distributive_lattice =
 
-  inherits Lattice, Modular_lattice =
+  inherit Lattice, Modular_lattice ;
   property sup_left_distributes : all x y z in Self,
     !equal(!sup(x, !inf(y, z)), !inf(!sup(x, y), !sup(x, z)));
 
@@ -469,7 +473,8 @@ end
 A meet semi lattice with an upper bound as neutral element for infimum.
 That is a meet semi lattice with a monoid structure.
 *)
-species Meet_semi_lattice_with_max inherits Meet_semi_lattice =
+species Meet_semi_lattice_with_max =
+  inherit Meet_semi_lattice ;
   signature max : Self;
   property max_is_right_neutral : all x in Self,
     !equal(!inf(x, !max), x);
@@ -486,7 +491,8 @@ end
 A meet semi lattice with a lower bound.
 That is a meet semi lattice with an absorbant element
 *)
-species Meet_semi_lattice_with_min inherits Meet_semi_lattice =
+species Meet_semi_lattice_with_min =
+  inherit Meet_semi_lattice ;
   signature min : Self;
   property min_right_absorbes : all x in Self,
     !equal(!inf(x, !min), !min);
@@ -503,7 +509,8 @@ end
 A join semi lattice with a lower bound as neutral element for supremum.
 That is a join semi lattice with a monoid structure.
 *)
-species Join_semi_lattice_with_min inherits Join_semi_lattice =
+species Join_semi_lattice_with_min =
+  inherit Join_semi_lattice ;
   signature min : Self;
   property min_is_right_neutral : all x in Self,
     !equal(!sup(x, !min), x);
@@ -523,7 +530,8 @@ end
 A join semi lattice with an upper bound.
 That is a join semi lattice with an absorbant element
 *)
-species Join_semi_lattice_with_max inherits Join_semi_lattice =
+species Join_semi_lattice_with_max =
+  inherit Join_semi_lattice ;
   signature max : Self;
   property max_right_absorbes : all x in Self,
     !equal(!sup(x, !max), !max);
@@ -537,12 +545,12 @@ end
 ;;
 
 (** These are commonly named lattices *)
-species Bounded_lattice
-  inherits Lattice,
+species Bounded_lattice =
+  inherit  Lattice,
            Meet_semi_lattice_with_min,
            Meet_semi_lattice_with_max,
            Join_semi_lattice_with_min,
-           Join_semi_lattice_with_max =
+           Join_semi_lattice_with_max ;
 
   (** absorption laws enable to prove that being absorbant for one law
       is being neutral for the other *)
