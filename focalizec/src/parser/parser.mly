@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.137 2009-05-14 15:42:30 weis Exp $ *)
+(* $Id: parser.mly,v 1.138 2009-05-14 15:46:13 weis Exp $ *)
 
 open Parsetree;;
 
@@ -235,7 +235,7 @@ let mk_proof_label (s1, s2) =
 %token IN
 %token INHERIT
 %token INTERNAL
-%token IMPLEMENTS
+%token IMPLEMENT
 %token IS
 %token LET
 %token LEXICOGRAPHIC
@@ -706,8 +706,8 @@ representation_type_comma_list:
 /**** COLLECTION DEFINITION ****/
 
 define_collection:
-  | opt_doc COLLECTION collection_vname IMPLEMENTS species_expr
-    { mk_doc $1 { cd_name = $3; cd_body = $5; } }
+  | opt_doc COLLECTION collection_vname EQUAL IMPLEMENT species_expr
+    { mk_doc $1 { cd_name = $3; cd_body = $6; } }
 ;
 
 /**** FUNCTION & VALUES DEFINITION ****/
