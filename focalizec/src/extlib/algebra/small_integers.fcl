@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: small_integers.fcl,v 1.6 2009-03-19 21:35:51 rr Exp $ *)
+(* $Id: small_integers.fcl,v 1.7 2009-05-14 16:19:29 doligez Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -41,13 +41,15 @@ open "randoms" ;;
    small_numbers can be converted to int
    (from the implementation/runtime system
  *)
-species Small_numbers_system inherits Partial_set =
+species Small_numbers_system =
+  inherit Partial_set ;
   signature of_int : int -> Self ;
   signature to_int : Self -> int ;
 end ;;
 
 (** Very simple small integers we simply give definitions *)
-species Basic_small_nats inherits Small_numbers_system =
+species Basic_small_nats =
+  inherit Small_numbers_system ;
   representation = int ;
   let zero in Self = 0 ;
   let is_zero (x in Self) =  x = 0 ;
@@ -122,7 +124,8 @@ species Basic_small_nats inherits Small_numbers_system =
 end ;;
 
 
-species Basic_small_ints inherits Basic_small_nats =
+species Basic_small_ints =
+  inherit Basic_small_nats ;
   let opposite (x in Self) in Self = int_minus (0, x) ;
 (*   let minus (x in Self, y in Self) in Self = #int_minus (x, y);  *)
   let sign (x in Self) =
@@ -132,7 +135,8 @@ species Basic_small_ints inherits Basic_small_nats =
      else 0 ;
 end ;;
 
-species Small_naturals inherits Natural_number_system, Basic_small_nats =
+species Small_naturals =
+  inherit Natural_number_system, Basic_small_nats ;
 
   proof of is_zero_spec = by definition of zero, is_zero, equal;
   proof of is_one_spec = by definition of one, is_one, equal;
@@ -190,7 +194,8 @@ end ;;
 
 collection Foc_small_naturals implements Small_naturals ;;
 
-species Small_integers inherits Integer_system, Basic_small_ints =
+species Small_integers =
+  inherit Integer_system, Basic_small_ints ;
 
   let to_int (n in Self) in int = n ;
   let of_int (n in int) in Self = n ;

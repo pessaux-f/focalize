@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: product_structures.fcl,v 1.6 2009-01-11 01:24:06 weis Exp $ *)
+(* $Id: product_structures.fcl,v 1.7 2009-05-14 16:19:28 doligez Exp $ *)
 
 (** Cartesian product of two structures, common orderings. *)
 
@@ -35,8 +35,8 @@ open "rings_fields" ;;
 
 
 (** additive product monoid *)
-species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid)
-  inherits Additive_monoid, Cartesian_product(M1, M2) =
+species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
+  inherit Additive_monoid, Cartesian_product(M1, M2) ;
   let zero = (M1!zero, M2!zero) ;
 
   let plus (a, b) =
@@ -96,8 +96,8 @@ end;;
 
 (** Product of two regular monoids *)
 species Product_regular_additive_monoid
-         (M1 is Regular_additive_monoid , M2 is Regular_additive_monoid)
-  inherits Regular_additive_monoid, Product_additive_monoid (M1, M2) =
+         (M1 is Regular_additive_monoid , M2 is Regular_additive_monoid) =
+  inherit Regular_additive_monoid, Product_additive_monoid (M1, M2) ;
 
   let is_zero (a) =
     let a1 = !first (a) in
@@ -122,9 +122,9 @@ end ;;
 (** Partial ordering, we have an inf operation *)
 species Product_additive_monoid_with_infimum
          (M1 is Additive_monoid_with_infimum,
-          M2 is Additive_monoid_with_infimum)
-   inherits Additive_monoid_with_infimum,
-            Product_additive_monoid (M1, M2) =
+          M2 is Additive_monoid_with_infimum) =
+   inherit  Additive_monoid_with_infimum,
+            Product_additive_monoid (M1, M2) ;
 
 
    let inf (a, b) =
@@ -154,8 +154,8 @@ end ;;
 (** Partial ordering, we have a sup operation *)
 species Product_additive_monoid_with_supremum
          (M1 is Additive_monoid_with_supremum,
-          M2 is Additive_monoid_with_supremum)
-   inherits Additive_monoid_with_supremum, Product_additive_monoid (M1, M2) =
+          M2 is Additive_monoid_with_supremum) =
+   inherit Additive_monoid_with_supremum, Product_additive_monoid (M1, M2) ;
 
 
    let sup (a, b) =
@@ -185,11 +185,11 @@ end ;;
 (** Lexicographic product *)
 species Lexicographic_product_additive_monoid
          (M1 is Monomial_ordering,
-          M2 is Monomial_ordering)
-   inherits Monomial_ordering,
+          M2 is Monomial_ordering) =
+   inherit  Monomial_ordering,
             Product_regular_additive_monoid (M1, M2),
             Product_additive_monoid_with_infimum (M1, M2),
-            Product_additive_monoid_with_supremum (M1, M2) =
+            Product_additive_monoid_with_supremum (M1, M2) ;
 
    (** lexicgraphic ordering @mathml <leq/> *)
    let leq (a, b) =
@@ -219,8 +219,8 @@ species Lexicographic_product_additive_monoid_named
         (M1 is Monomial_ordering,
          M2 is Monomial_ordering,
          V1 in string,
-         V2 in string)
-  inherits Lexicographic_product_additive_monoid (M1, M2) =
+         V2 in string) =
+  inherit Lexicographic_product_additive_monoid (M1, M2) ;
 
   let print (x) =
     "(" ^ !output (x, v1, v2) ^ ")" ;
@@ -229,11 +229,11 @@ end ;;
 
 (** reverse lexicographic ordering *)
 species Reverse_lexicographic_product_additive_monoid
-         (M1 is Monomial_ordering, M2 is Monomial_ordering)
-  inherits Monomial_ordering,
+         (M1 is Monomial_ordering, M2 is Monomial_ordering) =
+  inherit  Monomial_ordering,
            Product_regular_additive_monoid (M1, M2),
            Product_additive_monoid_with_infimum (M1, M2),
-           Product_additive_monoid_with_supremum (M1, M2) =
+           Product_additive_monoid_with_supremum (M1, M2) ;
 
   (** reverse lexicographic ordering @mathml <leq/> *)
   let leq (a, b) =

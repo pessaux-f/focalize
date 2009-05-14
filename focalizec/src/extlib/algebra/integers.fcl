@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.9 2009-03-20 08:38:13 rr Exp $ *)
+(* $Id: integers.fcl,v 1.10 2009-05-14 16:19:28 doligez Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called 
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -50,7 +50,8 @@ open "randoms" ;;
    successor and a predecessor function.
  *)
 
-species Enumeration_system inherits Setoid =
+species Enumeration_system =
+  inherit Setoid ;
 
   signature start : Self ;
 
@@ -82,8 +83,8 @@ end ;;
    An abstract enumeration system is a system that could be obtained
    by stating from the 0 element and iterating the successor function.
  *)
-species Enumerated_system
-   inherits Enumeration_system, Partial_set =
+species Enumerated_system =
+   inherit Enumeration_system, Partial_set ;
   (** Zero is not a successor is a Peano axiom *)
   property successor_is_non_trivial: all n in Self,
     ~ (!equal (!successor (n), !start));
@@ -105,8 +106,8 @@ end ;;
   Implicitely we orient the binary relation x = succ(y)
   and consider its transitive closure
  *)
-species Ordered_Enumeration_system 
-  inherits Enumeration_system, Strictly_ordered_set =
+species Ordered_Enumeration_system =
+  inherit Enumeration_system, Strictly_ordered_set ;
 
   (** Properties which state that the ordering
      is induced by the successor function *)
@@ -123,8 +124,8 @@ species Ordered_Enumeration_system
    *)
 end ;;
 
-species Ordered_Enumerated_system
-  inherits Enumerated_system, Ordered_Enumeration_system =
+species Ordered_Enumerated_system =
+  inherit Enumerated_system, Ordered_Enumeration_system ;
 end
 ;;
 
@@ -133,12 +134,12 @@ end
    A number system intends to model common properties for integers and 
    natural numbers
  *)
-species Number_system
+species Number_system =
            (* [rr}: should look at that, might be deducable *)
-  inherits Cancellative_additive_monoid,
+  inherit  Cancellative_additive_monoid,
            Euclidean_semi_ring,
-           Enumeration_system=
-(*            Dichotomic_system = *)
+           Enumeration_system ;
+(*            Dichotomic_system ; *)
 
   (** multiplication by two is just adding twice *)
 (*   let mult2 (x) = !plus (x, x) ; *)
@@ -186,12 +187,12 @@ species Number_system
 end ;;
 
 (** natural numbers abstraction *)
-species Natural_number_system 
-  inherits Monomial_ordering,
+species Natural_number_system =
+  inherit  Monomial_ordering,
            Ordered_set_as_lattice, 
 (*            Ordered_enumeration_system, *)
            Number_system,
-           Enumerated_system =
+           Enumerated_system ;
 
   proof of successor_is_non_trivial = assumed {* Because todo *} ;
   (** the predecessor is a partial operation *)
@@ -206,10 +207,10 @@ end ;;
 
 
 (** Integers abstraction, this needs more work *)
-species Integer_system
-  inherits Euclidean_domain, 
+species Integer_system =
+  inherit  Euclidean_domain, 
            Ordered_ring,
-           Number_system =
+           Number_system ;
 
 
   (** the predecessor is a total function *)

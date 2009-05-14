@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.8 2009-03-19 21:07:18 rr Exp $ *)
+(* $Id: rings_fields.fcl,v 1.9 2009-05-14 16:19:29 doligez Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
@@ -28,7 +28,8 @@ open "multiplicative_law" ;;
 open "weak_structures" ;;
 
 (** Rings are additive groups and multiplicative monoids *)
-species Ring inherits Additive_group, Semi_ring =
+species Ring =
+  inherit Additive_group, Semi_ring ;
   let zero = Self!minus (Self!one, Self!one) ;
   proof of zero_is_neutral =
     definition of zero
@@ -108,24 +109,29 @@ end ;;
 
 
 (** Modules are a sort of vector space over rings *)
-species Module (R is Ring) inherits Left_semi_module (R), Additive_group =
+species Module (R is Ring) =
+  inherit Left_semi_module (R), Additive_group ;
     theorem zero_left_absorbes: all x in Self,
       !equal (!mult (R!zero, x), !zero)
       proof = assumed {* Because todo *} ;
 end ;;
 
 (** A commutative ring has commutative multiplication *)
-species Commutative_ring inherits Commutative_semi_ring, Ring = end ;;
+species Commutative_ring =
+  inherit Commutative_semi_ring, Ring ;
+end ;;
 
 (** Ordered Rings have an ordering compatible with plus and mult *)
-species Ordered_ring inherits Ordered_additive_group, Commutative_ring =
+species Ordered_ring =
+  inherit Ordered_additive_group, Commutative_ring ;
   property mult_compat_with_order: all x y z in Self,
     !leq (!zero, x) -> !leq (y, z) -> !leq (!mult (x, y), !mult (x, z)) ;
  let abs (x) = if basics#int_lt (!sign (x), 0) then !opposite (x) else x ;
 end ;;
 
 (** R-algebras are both R-modules and rings *)
-species Algebra(R is Commutative_ring) inherits Ring, Semi_algebra(R) =
+species Algebra(R is Commutative_ring) =
+  inherit Ring, Semi_algebra(R) ;
    let opposite (x) = 
      let under_minus_un = R!opposite (R!one) in
        Self!module_mult (under_minus_un, x) ;
@@ -133,15 +139,15 @@ species Algebra(R is Commutative_ring) inherits Ring, Semi_algebra(R) =
 end ;;
 
 (** Commutative algebras  are a distinguished class of algebras *)
-species Commutative_algebra (R is Commutative_ring)
-  inherits Algebra(R), Commutative_semi_algebra (R) =
+species Commutative_algebra (R is Commutative_ring) =
+  inherit Algebra(R), Commutative_semi_algebra (R) ;
 end ;;
 
 (** Integral domain have a partial division *)
-species Integral_domain 
-  inherits Integral_semi_ring, 
+species Integral_domain =
+  inherit  Integral_semi_ring, 
            Commutative_ring,
-           Torsion_free_semi_module (Self)  =
+           Torsion_free_semi_module (Self) ;
    (* Ajout de BIBIN Lazar *)
    let unit_canonical (x in Self) in Self = x ;
    (* ax = ay => x=y ou a=0 <-> a(x-y)=0 *)
@@ -149,12 +155,14 @@ species Integral_domain
 end ;;
 
 (** Ordered integral domains *)
-species Ordered_domain inherits Ordered_ring, Integral_domain = end ;;
+species Ordered_domain =
+  inherit Ordered_ring, Integral_domain ;
+end ;;
         
 
 (** a torsion free algebra is both a faithfull R-module and an R-Algebra *)
-species Torsion_free_algebra (R is Integral_domain)
-  inherits Torsion_free_semi_algebra (R), Algebra (R), Ring =
+species Torsion_free_algebra (R is Integral_domain) =
+  inherit Torsion_free_semi_algebra (R), Algebra (R), Ring ;
 
   property lift_is_injective: all a in R,
    !is_zero (!lift (a)) -> R!is_zero (a) ;
@@ -164,22 +172,24 @@ species Torsion_free_algebra (R is Integral_domain)
 end ;;
 
 (** module with external division *)
-species Division_module (R is Ring)
-  inherits Division_semi_module (R), Module (R) =
+species Division_module (R is Ring) =
+  inherit Division_semi_module (R), Module (R) ;
 end ;;
 
 (** in a Gcd Domain one can find a common divisor of two elements *)
-species Gcd_domain 
-  inherits Factorial_semi_ring, Factorial_semi_module (Self), Integral_domain =
+species Gcd_domain =
+  inherit Factorial_semi_ring, Factorial_semi_module (Self), Integral_domain ;
 end ;;
 
 (** ordered gcd domains *)
-species Ordered_gcd_domain inherits Gcd_domain, Ordered_domain =
+species Ordered_gcd_domain =
+  inherit Gcd_domain, Ordered_domain ;
 end ;;
 
 
 
-species Euclidean_domain inherits Euclidean_semi_ring, Gcd_domain =
+species Euclidean_domain =
+  inherit Euclidean_semi_ring, Gcd_domain ;
  let rec bez_aux (p1, c11, c12, p2, c21, c22) =
    if Self!is_zero (p2) then weak_structures#cr_br (p1, c11, c12)
    else
@@ -202,7 +212,8 @@ end ;;
 
 
 (** a skew field is a non commutative field *)
-species Skew_field inherits Ring, Division_monoid =
+species Skew_field =
+  inherit Ring, Division_monoid ;
   property div_is_complete: all x y in Self,
    !is_zero (y) \/ !equal (x, !mult (y, !div (x, y))) ;
   proof of div_divides =
@@ -210,16 +221,17 @@ species Skew_field inherits Ring, Division_monoid =
     assumed {* Because todo *} ;
 end ;;
 
-species Vector_space (F is Skew_field)
- inherits Division_module (F) =
+species Vector_space (F is Skew_field) =
+ inherit Division_module (F) ;
   let opposite (x) = Self!mult (F!opposite (F!one), x) ;
   proof of opposite_is_opposite = assumed {* Because todo *} ;
 end ;;
 
-species Field inherits Skew_field,
+species Field =
+               inherit Skew_field,
                        Commutative_ring,
                        Gcd_domain (* ,
-                        division_module(Self)*)  =
+                        division_module(Self)*) ;
 
   (** in a field we only have two association classes  *)
   let gcd (x, y) = 
@@ -240,14 +252,18 @@ species Field inherits Skew_field,
 end ;;
 
 (** real fields, in a real field -1 is no a sum of squares *)
-species Real_field inherits Field = end ;;
+species Real_field =
+  inherit Field ;
+end ;;
 
 
 (** ordered fields *)
-species Ordered_field inherits Ordered_gcd_domain, Real_field = end ;;
+species Ordered_field =
+  inherit Ordered_gcd_domain, Real_field ;
+end ;;
 
 (*                                                                        *)
 (*                Ouf !                                                   *)
 (*                                                                        *)
 
-(* $Id: rings_fields.fcl,v 1.8 2009-03-19 21:07:18 rr Exp $ *)
+(* $Id: rings_fields.fcl,v 1.9 2009-05-14 16:19:29 doligez Exp $ *)

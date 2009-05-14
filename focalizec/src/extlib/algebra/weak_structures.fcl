@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: weak_structures.fcl,v 1.9 2009-03-19 21:35:51 rr Exp $ *)
+(* $Id: weak_structures.fcl,v 1.10 2009-05-14 16:19:29 doligez Exp $ *)
 
 (** We define here some weak notions such as rings with no subtraction. *)
 
@@ -29,12 +29,12 @@ open "constants";;
 coq_require "weak_structures_externals" ;;
 
 (** we have an element 1 and an additive law *)
-species Unitary_additive_monoid inherits 
-  Additive_monoid, Setoid_with_one =
+species Unitary_additive_monoid =
+  inherit Additive_monoid, Setoid_with_one ;
 end ;;
 
-(* species unitary_monoid_as_binop(m is unitary_additive_monoid) *)
-(*    inherits binop(m) = *)
+(* species unitary_monoid_as_binop(m is unitary_additive_monoid) = *)
+(*    inherit binop(m) ; *)
 (*    let binop(x, y) = m!plus(x, y); *)
 (*    let value = m!zero;  *)
 (* end *)
@@ -47,13 +47,14 @@ end ;;
 (*      (M is Unitary_additive_monoid, *)
 (*       Nat is Dichotomic_system, *)
 (*       Bins is Binop (M), *)
-(*       Dicho is Dichotomy (Nat, M, Bins)) *)
-(*   inherits Basic_object = *)
+(*       Dicho is Dichotomy (Nat, M, Bins)) = *)
+(*   inherit Basic_object ; *)
 (*   let of_nat (n) = Dicho!dichot (M!one, n) ; *)
 (* end ;; *)
 
 (** A semi ring has +,*,1,0 is sometimes called a rig *)
-species Semi_ring inherits Unitary_additive_monoid, Monoid = 
+species Semi_ring =
+  inherit Unitary_additive_monoid, Monoid ;
   property mult_left_distributes_on_plus: all x y z in Self,
     !equal (!mult (x, !plus (y, z)), !plus (!mult (x, y), !mult (x, z))) ;
 
@@ -71,8 +72,8 @@ end ;;
 (** a left semi module has the same properties as a vector space, 
    but on a semi_ring
 *)
-species Left_semi_module (A is Semi_ring) 
-  inherits Additive_monoid =
+species Left_semi_module (A is Semi_ring) =
+  inherit Additive_monoid ;
   (** @mathml <times/> 
       scalar multiplication *)
   signature mult : A -> Self -> Self ;
@@ -105,9 +106,9 @@ species Left_semi_module (A is Semi_ring)
 *)
 end ;;
 
-species Left_regular_semi_module(A is Semi_ring)
-  inherits Regular_additive_monoid,
-           Left_semi_module(A) =
+species Left_regular_semi_module(A is Semi_ring) =
+  inherit  Regular_additive_monoid,
+           Left_semi_module(A) ;
 
   theorem zero_left_absorbes: all x in Self,
     !equal (!mult (A!zero, x), !zero)
@@ -136,10 +137,10 @@ species Left_regular_semi_module(A is Semi_ring)
 end;;
 
 (** a commutative semi_ring is a semi_module on itself *)
-species Commutative_semi_ring
-  inherits Commutative_monoid_with_absorbant, 
+species Commutative_semi_ring =
+  inherit  Commutative_monoid_with_absorbant, 
            Semi_ring, 
-           Left_semi_module(Self) =
+           Left_semi_module(Self) ;
    proof of one_is_right_neutral = 
      by property one_is_left_neutral, mult_commutes, equal_transitive ;
 
@@ -171,8 +172,8 @@ species Commutative_semi_ring
 end ;;
 
 
-species Semi_algebra (R is Commutative_semi_ring) 
-  inherits Semi_ring =
+species Semi_algebra (R is Commutative_semi_ring) =
+  inherit Semi_ring ;
    signature module_mult : R -> Self -> Self ;
    let lift (x) = Self!module_mult (x, Self!one) ;
    property lift_one : !equal (!lift (R!one), !one) ;
@@ -191,8 +192,8 @@ end ;;
 
 
 
-species Commutative_semi_algebra(R is Commutative_semi_ring)
-  inherits Semi_algebra (R), Commutative_semi_ring =
+species Commutative_semi_algebra(R is Commutative_semi_ring) =
+  inherit Semi_algebra (R), Commutative_semi_ring ;
   proof of lift_in_center = by property mult_commutes ;
 end ;;
 
@@ -202,8 +203,8 @@ end ;;
   a*m = 0 implies a = 0 \/ m = 0, so that we can define an  
   external division
  *)
-species Torsion_free_semi_module (R is Semi_ring)
-  inherits Left_semi_module (R) =
+species Torsion_free_semi_module (R is Semi_ring) =
+  inherit Left_semi_module (R) ;
    signature exquo : Self -> R-> partiel (Self) ;
 
   (** external division *)
@@ -232,10 +233,10 @@ end ;;
 (** 
    in an Integral_semi_ring one can divide. if xy=0 then x=0 or y=0.
  *)
-species Integral_semi_ring 
-  inherits Regular_monoid, 
+species Integral_semi_ring =
+  inherit  Regular_monoid, 
            Commutative_semi_ring,
-           Torsion_free_semi_module(Self) =
+           Torsion_free_semi_module(Self) ;
 (*   let is_zero (x) = !equal (x, !zero); *)
 
 (*   proof of is_zero_spec = by property !equal_symmetric definition of is_zero; *)
@@ -252,8 +253,8 @@ species Integral_semi_ring
 
 end ;;
 
-species Torsion_free_semi_algebra(R is Integral_semi_ring)
-  inherits Commutative_semi_algebra (R)=
+species Torsion_free_semi_algebra(R is Integral_semi_ring) =
+  inherit Commutative_semi_algebra (R) ;
    signature module_exquo : Self -> R -> partiel (Self) ;
    property module_exquo_divides: all a in R, all x y in Self,
      basics#is_failed (!module_exquo (x, a))
@@ -280,8 +281,8 @@ end ;;
 
 
 (** division may raise an error *)
-species Division_semi_module (R is Semi_ring) 
-  inherits Left_semi_module (R) =
+species Division_semi_module (R is Semi_ring) =
+  inherit Left_semi_module (R) ;
     signature div : Self -> R -> Self ;
     property div_divides : all x y in Self, all z in R,
      !equal (y, !div (x, z)) -> !equal (x, !mult (z, y)) ;
@@ -289,14 +290,15 @@ end ;;
 
 
 (** factorisation is unique up to units and order *)
-species Factorial_semi_ring inherits Factorization_monoid, Integral_semi_ring = 
+species Factorial_semi_ring =
+  inherit Factorization_monoid, Integral_semi_ring ;
 end ;;
 
 
 (** extension of gcds to semi_module
  *)
-species Factorial_semi_module(R is Integral_semi_ring)
-  inherits Torsion_free_semi_module (R) =
+species Factorial_semi_module(R is Integral_semi_ring) =
+  inherit Torsion_free_semi_module (R) ;
    signature gcd : Self -> R -> R ;
    property gcd_divides: all x in Self, all y z in R,
      R!equal (z, !gcd (x, y)) -> 
@@ -311,8 +313,8 @@ species Factorial_semi_module(R is Integral_semi_ring)
 end ;;
 
 
-species Factorial_semi_algebra (R is Factorial_semi_ring)
-  inherits Torsion_free_semi_algebra (R) =
+species Factorial_semi_algebra (R is Factorial_semi_ring) =
+  inherit Torsion_free_semi_algebra (R) ;
    signature module_gcd : Self -> R -> R ;
 end ;;
 
@@ -349,7 +351,8 @@ let rema =
 
 
 (** euclidean algorithm *)
-species Euclidean_semi_ring inherits Factorial_semi_ring =
+species Euclidean_semi_ring =
+  inherit Factorial_semi_ring ;
   signature quo_rem : Self -> Self -> quo_rem_result (Self) ;
   let quotient (x, y) = #quot (Self!quo_rem (x, y)) ;
   let remainder (x, y) = #rema (Self!quo_rem (x, y)) ;
