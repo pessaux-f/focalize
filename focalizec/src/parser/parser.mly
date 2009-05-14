@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.134 2009-05-14 13:46:21 weis Exp $ *)
+(* $Id: parser.mly,v 1.135 2009-05-14 14:53:44 weis Exp $ *)
 
 open Parsetree;;
 
@@ -543,12 +543,14 @@ define_record_field_list:
 define_species:
   | opt_doc
     SPECIES species_vname define_species_params EQUAL
-      define_species_inherits
-      species_fields
+      define_species_body
     END
-    { mk_doc $1 {
-        sd_name = $3; sd_params = $4;
-        sd_inherits = $6; sd_fields = $7;
+    { let (inherits, fields) = $6 in
+      mk_doc $1 {
+        sd_name = $3;
+        sd_params = $4;
+        sd_inherits = inherits;
+        sd_fields = fields;
       }
     }
 ;
@@ -573,8 +575,14 @@ define_species_param:
     { ($1, mk (SPT_is $3)) }
 ;
 
-define_species_inherits:
-  | { mk [] }
+define_species_body:
+  | species_fields
+    { mk [], $1}
+  | define_species_inherits_list species_fields SEMI
+    { $1, $2}
+;
+
+define_species_inherits_list:
   | opt_doc INHERITS species_expr_list
     { mk_doc $1 $3}
 ;
