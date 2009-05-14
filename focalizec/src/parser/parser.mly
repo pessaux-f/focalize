@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.133 2009-05-05 13:49:09 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.134 2009-05-14 13:46:21 weis Exp $ *)
 
 open Parsetree;;
 
@@ -67,15 +67,15 @@ let mk_global_species_ident = mk_global_ident;;
    "basics#foo". *)
 let mk_label_ident opt_qual vname =
   match opt_qual with
-   | None -> mk (LI (mk (I_local vname)))
-   | Some qual -> mk (LI (mk_global_ident qual vname))
+  | None -> mk (LI (mk (I_local vname)))
+  | Some qual -> mk (LI (mk_global_ident qual vname))
 ;;
 
 (* Same process and remarks than for record type field labels. *)
 let mk_global_constructor_ident opt_qual vname =
   match opt_qual with
-   | None -> mk (CI (mk (I_local vname)))
-   | Some qual -> mk (CI (mk_global_ident qual vname))
+  | None -> mk (CI (mk (I_local vname)))
+  | Some qual -> mk (CI (mk_global_ident qual vname))
 ;;
 
 let mk_local_expr_ident vname =
@@ -542,12 +542,13 @@ define_record_field_list:
 
 define_species:
   | opt_doc
-    SPECIES species_vname define_species_params define_species_inherits EQUAL
+    SPECIES species_vname define_species_params EQUAL
+      define_species_inherits
       species_fields
     END
     { mk_doc $1 {
         sd_name = $3; sd_params = $4;
-        sd_inherits = $5; sd_fields = $7;
+        sd_inherits = $6; sd_fields = $7;
       }
     }
 ;
@@ -1130,6 +1131,8 @@ expr_ident:
 ;
 
 simple_expr:
+  | SELF
+    { mk E_self }
   | constant
     { mk (E_const $1) }
   | expr_ident
@@ -1149,8 +1152,6 @@ simple_expr:
 ;
 
 expr:
-  | SELF
-    { mk E_self }
   | simple_expr %prec below_SHARP
     { $1 }
   | constructor_ref LPAREN expr_comma_list RPAREN
@@ -1248,6 +1249,7 @@ expr:
   | PLIDENT expr
     { mk_prefix_application $1 $2 }
 
+  /* External expressions. */
   | EXTERNAL external_expr
     { mk (E_external $2) }
 ;
