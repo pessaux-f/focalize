@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.82 2009-05-14 15:31:06 doligez Exp $ *)
+(* $Id: lexer.mll,v 1.83 2009-05-14 15:42:30 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -115,7 +115,7 @@ List.iter
   "hypothesis", HYPOTHESIS;
   "if", IF;
   "in", IN;
-  "inherit", INHERITS;
+  "inherit", INHERIT;
   "internal", INTERNAL;
   "implements", IMPLEMENTS;
   "is", IS;
@@ -1247,9 +1247,6 @@ rule token = parse
   | ']' { RBRACKET }
   | '{' { LBRACE }
   | '}' { RBRACE }
-  | "()" { LRPARENS }
-  | "[]" { LRBRACKETS }
-  | "{}" { LRBRACES }
   | '.' { DOT }
   | ':' { COLON }
   | ',' { COMMA }

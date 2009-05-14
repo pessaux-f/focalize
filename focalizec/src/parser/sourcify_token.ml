@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.11 2009-04-02 14:33:54 weis Exp $ *)
+(* $Id: sourcify_token.ml,v 1.12 2009-05-14 15:42:30 weis Exp $ *)
 
 open Parser;;
 
@@ -49,13 +49,10 @@ let token ppf = function
   | STAR_STAR_OP s -> Format.fprintf ppf "%s %s" "STAR_STAR_OP" s
   | LPAREN -> Format.fprintf ppf "%s" "LPAREN"
   | RPAREN -> Format.fprintf ppf "%s" "RPAREN"
-  | LRPARENS -> Format.fprintf ppf "%s" "LRPARENS"
   | LBRACE -> Format.fprintf ppf "%s" "LBRACE"
   | RBRACE -> Format.fprintf ppf "%s" "RBRACE"
-  | LRBRACES -> Format.fprintf ppf "%s" "LRBRACES"
   | LBRACKET -> Format.fprintf ppf "%s" "LBRACKET"
   | RBRACKET -> Format.fprintf ppf "%s" "RBRACKET"
-  | LRBRACKETS -> Format.fprintf ppf "%s" "LRBRACKETS"
   | COMMA -> Format.fprintf ppf "%s" "COMMA"
   | COMMA_OP s -> Format.fprintf ppf "%s %s" "COMMA_OP" s
   | CONJUNCTION -> Format.fprintf ppf "%s" "CONJUNCTION"
@@ -116,7 +113,7 @@ let token ppf = function
   | HYPOTHESIS -> Format.fprintf ppf "%s" "HYPOTHESIS"
   | IF -> Format.fprintf ppf "%s" "IF"
   | IN -> Format.fprintf ppf "%s" "IN"
-  | INHERITS -> Format.fprintf ppf "%s" "INHERITS"
+  | INHERIT -> Format.fprintf ppf "%s" "INHERIT"
   | INTERNAL -> Format.fprintf ppf "%s" "INTERNAL"
   | IMPLEMENTS -> Format.fprintf ppf "%s" "IMPLEMENTS"
   | IS -> Format.fprintf ppf "%s" "IS"

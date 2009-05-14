@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.136 2009-05-14 15:31:06 doligez Exp $ *)
+(* $Id: parser.mly,v 1.137 2009-05-14 15:42:30 weis Exp $ *)
 
 open Parsetree;;
 
@@ -114,9 +114,6 @@ let mk_cons () =
 let mk_nil () =
   mk_global_constructor_ident (Some (Some "basics")) (Vuident "[]")
 ;;
-let mk_unit () =
-  mk_global_constructor_ident (Some (Some "basics")) (Vuident "()")
-;;
 
 let mk_proof_label (s1, s2) =
   try int_of_string s1, s2 with
@@ -166,13 +163,10 @@ let mk_proof_label (s1, s2) =
 /* Nested symbols */
 %token LPAREN
 %token RPAREN
-%token LRPARENS
 %token LBRACE
 %token RBRACE
-%token LRBRACES
 %token LBRACKET
 %token RBRACKET
-%token LRBRACKETS
 
 /* General infix and prefix operators */
 %token COMMA
@@ -239,7 +233,7 @@ let mk_proof_label (s1, s2) =
 %token HYPOTHESIS
 %token IF
 %token IN
-%token INHERITS
+%token INHERIT
 %token INTERNAL
 %token IMPLEMENTS
 %token IS
@@ -583,7 +577,7 @@ define_species_body:
 ;
 
 define_species_inherits_list:
-  | opt_doc INHERITS species_expr_list
+  | opt_doc INHERIT species_expr_list
     { mk_doc $1 $3}
 ;
 
@@ -1485,10 +1479,6 @@ constructor_vname:
     { Vuident $1 }
   | IUIDENT
     { Vuident $1 }
-  | LRPARENS
-    { Vuident "()" }
-  | LRBRACKETS
-    { Vuident "[]" }
 ;
 
 label_vname:
