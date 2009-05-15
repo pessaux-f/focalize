@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: small_integers.fcl,v 1.7 2009-05-14 16:19:29 doligez Exp $ *)
+(* $Id: small_integers.fcl,v 1.8 2009-05-15 08:06:03 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -192,7 +192,10 @@ species Small_naturals =
   proof of order_compatible_with_cancellation = assumed {* Because toto *} ;
 end ;;
 
-collection Foc_small_naturals implements Small_naturals ;;
+collection Foc_small_naturals =
+  implement Small_naturals
+end
+;;
 
 species Small_integers =
   inherit Integer_system, Basic_small_ints ;
@@ -233,4 +236,7 @@ species Small_integers =
   proof of remainder_is_smaller = assumed {* Because toto *} ;
 end ;;
 
-collection Foc_small_integers implements Small_integers ;;
+collection Foc_small_integers =
+  implement Small_integers
+end
+;;

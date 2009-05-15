@@ -15,9 +15,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.4 2009-03-24 11:08:16 rr Exp $ *)
+(* $Id: peano.fcl,v 1.5 2009-05-15 08:06:03 weis Exp $ *)
 
-(** We want here to provide abstract definitions for what is usually called 
+(** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
 
 use "basics" ;;
@@ -63,7 +63,7 @@ type peano =
   | P_succ(peano)
 ;;
 
-species Peano_enumeration_system 
+species Peano_enumeration_system
   inherits Syntactical_setoid, Enumeration_system =
 
   representation = peano;
@@ -87,7 +87,7 @@ species Peano_enumeration_system
          assume H: !equal(!successor(x), !successor(y)),
          prove !equal(x, y)
          <2>1 prove P_succ(x) = P_succ(y)
-              by hypothesis H 
+              by hypothesis H
                  definition of successor
                  property equal_is_syntactic
          <2>f qed
@@ -141,15 +141,15 @@ species Enumerated_system
          assume H: !equal(!predecessor(x), !predecessor(y)),
          prove !equal(x, y)
          <2>1 prove !equal(px, py)
-              by hypothesis H, Px, Py 
+              by hypothesis H, Px, Py
                  property !equal_symmetric, !equal_transitive
-         <2>2 prove !equal(x, !successor(px)) 
-              by hypothesis Px, H_x 
+         <2>2 prove !equal(x, !successor(px))
+              by hypothesis Px, H_x
                  property !equal_reflexive, !predecessor_reverses_successor
-         <2>3 prove !equal(y, !successor(py)) 
-              by hypothesis Py, H_y 
+         <2>3 prove !equal(y, !successor(py))
+              by hypothesis Py, H_y
                  property !equal_reflexive, !predecessor_reverses_successor
-         <2>f qed by step <2>1, <2>2, <2>3 
+         <2>f qed by step <2>1, <2>2, <2>3
                     property !equal_symmetric, !equal_transitive,
                              !successor_is_injective,
                              !successor_substitution_rule
@@ -168,7 +168,7 @@ end ;;
   Implicitely we orient the binary relation x = succ(y)
   and consider its transitive closure
  *)
-species Ordered_Enumeration_system 
+species Ordered_Enumeration_system
   inherits Enumeration_system, Strictly_ordered_set=
 
 
@@ -196,8 +196,8 @@ species Ordered_Enumerated_system
 end
 ;;
 
-species Peano_base 
-  inherits Peano_enumeration_system, 
+species Peano_base
+  inherits Peano_enumeration_system,
            Ordered_Enumerated_system =
 
   let start = P_zero;
@@ -249,7 +249,10 @@ proof of total_order = assumed {* this is true *};
 
 end;;
 
-collection Peano_dumb_coll implements Peano_dumb;;
+collection Peano_dumb_coll =
+  implement Peano_dumb
+end
+;;
 
 species Peano_order inherits Peano_base, Ordered_Enumerated_system =
 
@@ -289,7 +292,7 @@ species Peano_order inherits Peano_base, Ordered_Enumerated_system =
               prove !lt(x, x)
               definition of lt
               assumed {* inductive step *}
-         <2>f conclude 
+         <2>f conclude
     <1>2 prove (all x in Self, ~(!lt(x, x)))
          (* definition of enumerated_induction *)
          assumed {* induction principle *}
@@ -337,4 +340,8 @@ species Peano_order inherits Peano_base, Ordered_Enumerated_system =
 
 end;;
 
-(* collection Peano_coll implements Peano_order ;; *)
+(*
+ collection Peano_coll =
+     implement Peano_order
+ end
+ ;; *)

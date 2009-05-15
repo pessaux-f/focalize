@@ -1,3 +1,20 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: unix.fcl,v 1.12 2009-05-15 08:07:29 weis Exp $ *)
+
 (**
    @title Implementation of the Unix model
    @author Melanie Jacquel, Diane Pipon
@@ -14,7 +31,9 @@ open "access_control" ;;
 
 (** Unix implementation *)
 
-species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
+species S_set_of (A is Setoid) =
+
+  inherit Set_of (A), Liste (A);
 
   let rec for_all (l, p) =
      match l with
@@ -45,9 +64,12 @@ species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
 
   proof of singleton_prop = assumed {* Because todo *} ;
 
-end ;;
+end
+;;
 
-species S_setoid inherits Setoid =
+species S_setoid =
+
+  inherit Setoid;
 
   representation = int * string ;
 
@@ -68,13 +90,22 @@ species S_setoid inherits Setoid =
   proof of equal_transitive =
     by definition of equal ;
 
-end ;;
+end
+;;
 
-species S_subjects inherits Subjects, S_setoid = end ;;
+species S_subjects =
+  inherit Subjects, S_setoid;
+end
+;;
 
-species S_objects inherits Objects, S_setoid = end ;;
+species S_objects =
+  inherit Objects, S_setoid;
+end
+;;
 
-species S_access_mode inherits Access_mode, S_setoid =
+species S_access_mode =
+
+  inherit Access_mode, S_setoid;
 
   let read = (1,  "r") ;
 
@@ -82,12 +113,14 @@ species S_access_mode inherits Access_mode, S_setoid =
 
   let execute in Self = (3,  "x") ;
 
-end ;;
+end
+;;
 
 species S_access (S_sub is S_subjects,
                   S_obj is S_objects,
-                  S_acc_mod is S_access_mode)
-  inherits Access (S_sub, S_obj, S_acc_mod) =
+                  S_acc_mod is S_access_mode) =
+
+  inherit Access (S_sub, S_obj, S_acc_mod);
 
   representation = (S_sub * (S_obj * S_acc_mod)) ;
 
@@ -132,9 +165,12 @@ species S_access (S_sub is S_subjects,
 
   proof of access_equal = assumed {* Because todo *} ;
 
-end ;;
+end
+;;
 
-species S_decisions inherits Decisions, S_setoid =
+species S_decisions =
+
+  inherit Decisions, S_setoid;
 
   let yes = (1, "yes") ;
 
@@ -142,9 +178,12 @@ species S_decisions inherits Decisions, S_setoid =
 
   proof of yes_is_not_no = assumed {* Because todo *} ;
 
-end ;;
+end
+;;
 
-species S_get_release inherits S_setoid =
+species S_get_release =
+
+  inherit S_setoid;
 
   let get in Self = (1, "+") ;
 
@@ -166,9 +205,12 @@ species S_get_release inherits S_setoid =
 
   let m_group in Self = (10, "-group") ;
 
-end ;;
+end
+;;
 
-species S_groups inherits Groups, S_setoid =
+species S_groups =
+
+  inherit Groups, S_setoid;
 
   let curry in Self = (1, "curry ") ;
 
@@ -178,12 +220,16 @@ species S_groups inherits Groups, S_setoid =
 
   let truc in Self = (4, "truc  ") ;
 
-end ;;
+end
+;;
 
-species S_rho_unix (S_g is S_groups)
-  inherits Rho_unix (S_g), S_setoid = end ;;
+species S_rho_unix (S_g is S_groups) =
+  inherit Rho_unix (S_g), S_setoid;
+end
+;;
 
-species S_rights inherits Rights, S_setoid =
+species S_rights =
+  inherit Rights, S_setoid;
 
   let d_p = (1, "dp") ;
 
@@ -191,11 +237,14 @@ species S_rights inherits Rights, S_setoid =
 
   let d_o = (3, "do") ;
 
-end ;;
+end
+;;
 
 species S_requests_unix (S is S_subjects, O is S_objects, M is S_access_mode,
                          Sgr is S_get_release, G is S_groups, Z is S_rights)
-  inherits Requests_unix (S, O, M, G, Z) =
+                         =
+
+  inherit Requests_unix (S, O, M, G, Z);
 
   representation = (Sgr * (S * (O * (M * (G * (Z * S)))))) ;
 
@@ -342,7 +391,8 @@ species S_requests_unix (S is S_subjects, O is S_objects, M is S_access_mode,
 
   proof of get_is_not_rel = assumed {* Because todo *} ;
 
-end ;;
+end
+;;
 
 species S_models_unix (S_grp is S_groups,
                        S_rh is S_rho_unix (S_grp),
@@ -357,10 +407,10 @@ species S_models_unix (S_grp is S_groups,
                        S_gr is S_get_release,
                        S_req is S_requests_unix (S_sub, S_obj, S_acc_mod,
                                                  S_gr, S_grp, S_z),
-                       S_dec is S_decisions)
+                       S_dec is S_decisions) =
 
-  inherits Models_unix (S_grp, S_rh, S_sub, S_obj, S_acc_mod, S_acc,
-                        S_set_acc, S_set_mod, S_set_grp, S_z, S_req, S_dec) =
+  inherit Models_unix (S_grp, S_rh, S_sub, S_obj, S_acc_mod, S_acc,
+                        S_set_acc, S_set_mod, S_set_grp, S_z, S_req, S_dec);
 
   representation =
     (S_set_acc * (list (S_grp) * (* ag *)
@@ -713,44 +763,86 @@ species S_models_unix (S_grp is S_groups,
 
   proof of add_prop = assumed {* Because todo *} ;
 
-end ;;
+end
+;;
 
-collection C_subjects implements S_subjects ;;
+collection C_subjects =
+  implement S_subjects
+end
+;;
 
-collection C_objects implements S_objects ;;
+collection C_objects =
+  implement S_objects
+end
+;;
 
-collection C_access_mode implements S_access_mode ;;
+collection C_access_mode =
+  implement S_access_mode
+end
+;;
 
-collection C_access
-  implements S_access (C_subjects, C_objects, C_access_mode) ;;
+collection C_access =
+  implement S_access (C_subjects, C_objects, C_access_mode)
+end
+;;
 
-collection C_set_of_access implements S_set_of (C_access) ;;
+collection C_set_of_access =
+  implement S_set_of (C_access)
+end
+;;
 
-collection C_set_of_mode implements S_set_of (C_access_mode) ;;
+collection C_set_of_mode =
+  implement S_set_of (C_access_mode)
+end
+;;
 
-collection C_decisions implements S_decisions ;;
+collection C_decisions =
+  implement S_decisions
+end
+;;
 
-collection C_get_release implements S_get_release ;;
+collection C_get_release =
+  implement S_get_release
+end
+;;
 
-collection C_groups implements S_groups ;;
+collection C_groups =
+  implement S_groups
+end
+;;
 
-collection C_set_of_groups implements S_set_of (C_groups) ;;
+collection C_set_of_groups =
+  implement S_set_of (C_groups)
+end
+;;
 
-collection C_rho_unix implements S_rho_unix (C_groups) ;;
+collection C_rho_unix =
+  implement S_rho_unix (C_groups)
+end
+;;
 
-collection C_rights implements S_rights ;;
+collection C_rights =
+  implement S_rights
+end
+;;
 
 collection C_requests_unix
-  implements S_requests_unix (C_subjects, C_objects, C_access_mode,
-                              C_get_release, C_groups, C_rights) ;;
+  =
+  implement S_requests_unix (C_subjects, C_objects, C_access_mode,
+                              C_get_release, C_groups, C_rights)
+end
+;;
 
 collection C_models_unix
-  implements S_models_unix (C_groups, C_rho_unix,
+  =
+  implement S_models_unix (C_groups, C_rho_unix,
                             C_subjects, C_objects, C_access_mode,
                             C_access, C_set_of_access,
                             C_set_of_mode, C_set_of_groups,
                             C_rights, C_get_release,
-                            C_requests_unix, C_decisions) ;;
+                            C_requests_unix, C_decisions)
+end
+;;
 
 let pierre = C_subjects!create (1, "pierre") ;;
 

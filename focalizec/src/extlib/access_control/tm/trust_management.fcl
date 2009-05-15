@@ -1,4 +1,19 @@
-(* $Id: trust_management.fcl,v 1.1 2008-09-22 11:55:33 habib Exp $ *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: trust_management.fcl,v 1.2 2009-05-15 08:07:29 weis Exp $ *)
 
 use "basics" ;;
 open "basics" ;;
@@ -371,7 +386,7 @@ species Models_tm(Rh is Rho_tm, S is Subjects, O is Objects,
 
      if (R!is_get (r1)) then
        if valideR
-	    (buildG (create_sa (st1), create_sd (st1)), sp, op, mp, D!zero)
+            (buildG (create_sa (st1), create_sd (st1)), sp, op, mp, D!zero)
        then
          (Dec!yes, !add(st1, A!create(sp, op, mp)))
        else (Dec!no, st1)
@@ -817,46 +832,94 @@ species S_models_tm(S_rh is S_rho,
 end ;;
 
 
-collection C_rho implements S_rho ;;
+collection C_rho =
+  implement S_rho
+end
+;;
 
-collection C_subjects implements S_subjects ;;
+collection C_subjects =
+  implement S_subjects
+end
+;;
 
-collection C_objects implements S_objects ;;
+collection C_objects =
+  implement S_objects
+end
+;;
 
-collection C_access_mode implements S_access_mode ;;
+collection C_access_mode =
+  implement S_access_mode
+end
+;;
 
-collection C_depth implements S_depth ;;
+collection C_depth =
+  implement S_depth
+end
+;;
 
-collection C_access
-  implements S_access(C_subjects, C_objects, C_access_mode) ;;
+collection C_access =
+  implement S_access(C_subjects, C_objects, C_access_mode)
+end
+;;
 
-collection C_set_of_access implements S_set_of(C_access) ;;
+collection C_set_of_access =
+  implement S_set_of(C_access)
+end
+;;
 
-collection C_decisions implements S_decisions ;;
+collection C_decisions =
+  implement S_decisions
+end
+;;
 
-collection C_get_release implements S_get_release ;;
+collection C_get_release =
+  implement S_get_release
+end
+;;
 
-collection C_requests_tm
-  implements S_requests_tm (C_subjects, C_objects, C_access_mode, C_depth,
-                            C_get_release) ;;
+collection C_requests_tm =
+  implement
+    S_requests_tm
+      (C_subjects, C_objects, C_access_mode, C_depth,
+       C_get_release)
+end
+;;
 
-collection C_quad implements S_quad (C_subjects, C_objects, C_access_mode,
-                                     C_depth) ;;
+collection C_quad =
+  implement S_quad (C_subjects, C_objects, C_access_mode, C_depth)
+end
+;;
 
-collection C_quint implements S_quint (C_subjects, C_objects, C_access_mode,
-                                       C_subjects, C_depth) ;;
+collection C_quint =
+  implement
+    S_quint
+      (C_subjects, C_objects, C_access_mode, C_subjects, C_depth)
+end
+;;
 
-collection C_sa implements S_sa(C_subjects, C_objects, C_access_mode, C_depth,
-                                C_quad) ;;
+collection C_sa =
+  implement
+    S_sa
+      (C_subjects, C_objects, C_access_mode, C_depth, C_quad)
+end
+;;
 
-collection C_sd implements S_sd(C_subjects, C_objects, C_access_mode, C_depth,
-                                C_quint) ;;
+collection C_sd =
+  implement
+    S_sd
+      (C_subjects, C_objects, C_access_mode, C_depth, C_quint)
+end
+;;
 
-collection C_models_tm
-  implements S_models_tm(C_rho, C_subjects, C_objects, C_access_mode, C_depth,
-                         C_access, C_set_of_access, C_get_release,
-                         C_requests_tm, C_decisions, C_quad, C_quint, C_sa,
-                         C_sd) ;;
+collection C_models_tm =
+  implement
+    S_models_tm
+      (C_rho, C_subjects, C_objects, C_access_mode, C_depth,
+       C_access, C_set_of_access, C_get_release,
+       C_requests_tm, C_decisions, C_quad, C_quint, C_sa,
+       C_sd)
+end
+;;
 
 let a_ex(o, m) =
    let rec rec_a_ex(l) =

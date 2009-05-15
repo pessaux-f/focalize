@@ -1,3 +1,20 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: hru.fcl,v 1.17 2009-05-15 08:07:29 weis Exp $ *)
+
 (**
    @title Implementation of the HRU model
    @author Florian Brecht, Andrea-Diane Kadja
@@ -270,48 +287,100 @@ species S_couple (A is Setoid, B is Setoid) inherits Pair (A, B) =
 
 end ;;
 
-collection C_subjects implements S_subjects ;;
+collection C_subjects =
+  implement S_subjects
+end
+;;
 
-collection C_objects implements S_objects ;;
+collection C_objects =
+  implement S_objects
+end
+;;
 
-collection C_access_mode implements S_access_mode ;;
+collection C_access_mode =
+  implement S_access_mode
+end
+;;
 
-collection C_access
-  implements S_access (C_subjects, C_objects, C_access_mode) ;;
+collection C_access =
+  implement S_access (C_subjects, C_objects, C_access_mode)
+end
+;;
 
-collection C_set_of_access implements S_set_of(C_access) ;;
+collection C_set_of_access =
+  implement S_set_of(C_access)
+end
+;;
 
-collection C_decisions implements S_decisions ;;
+collection C_decisions =
+  implement S_decisions
+end
+;;
 
-collection C_get_release implements S_get_release ;;
+collection C_get_release =
+  implement S_get_release
+end
+;;
 
-collection C_requests_gal
-  implements S_requests_gal (C_subjects,
-                             C_objects,
-                             C_access_mode,
-                             C_get_release) ;;
+collection C_requests_gal =
+  implement
+    S_requests_gal
+      (C_subjects,
+       C_objects,
+       C_access_mode,
+       C_get_release)
+end
+;;
 
-collection C_rho implements S_rho ;;
+collection C_rho =
+  implement S_rho
+end
+;;
 
-collection C_couple_s_m implements S_couple (C_subjects, C_access_mode) ;;
+collection C_couple_s_m =
+  implement S_couple (C_subjects, C_access_mode)
+end
+;;
 
-collection C_couple_o_m implements S_couple (C_objects, C_access_mode) ;;
+collection C_couple_o_m =
+  implement S_couple (C_objects, C_access_mode)
+end
+;;
 
-collection C_set_of_s implements S_set_of (C_subjects) ;;
+collection C_set_of_s =
+  implement S_set_of (C_subjects)
+end
+;;
 
-collection C_set_of_o implements S_set_of (C_objects) ;;
+collection C_set_of_o =
+  implement S_set_of (C_objects)
+end
+;;
 
-collection C_set_of_couple_s_m implements S_set_of (C_couple_s_m) ;;
+collection C_set_of_couple_s_m =
+  implement S_set_of (C_couple_s_m)
+end
+;;
 
-collection C_set_of_couple_o_m implements S_set_of (C_couple_o_m) ;;
+collection C_set_of_couple_o_m =
+  implement S_set_of (C_couple_o_m)
+end
+;;
 
-collection C_couple_o_s_s_m
-  implements S_couple (C_objects, C_set_of_couple_s_m) ;;
+collection C_couple_o_s_s_m =
+  implement S_couple (C_objects, C_set_of_couple_s_m)
+end
+;;
 
-collection C_set_of_c_o_s_s_m implements S_set_of (C_couple_o_s_s_m) ;;
+collection C_set_of_c_o_s_s_m =
+  implement S_set_of (C_couple_o_s_s_m)
+end
+;;
 
-collection C_states
-  implements S_couple (C_set_of_access, C_set_of_c_o_s_s_m) ;;
+collection C_states =
+  implement S_couple (C_set_of_access, C_set_of_c_o_s_s_m)
+end
+;;
 
 print_string ("Les sujets:\n") ;;
 
@@ -460,15 +529,19 @@ species S_model_acl (Rh is Rho,
 
 end ;;
 
-collection C_model_acl
-  implements S_model_acl (C_rho,
-                          C_subjects, C_objects, C_access_mode,
-                          C_access, C_set_of_access,
-                          C_get_release, C_requests_gal,
-                          C_decisions,
-                          C_couple_s_m, C_set_of_couple_s_m,
-                          C_couple_o_s_s_m,
-                          C_set_of_c_o_s_s_m, C_states) ;;
+collection C_model_acl =
+  implement
+    S_model_acl
+      (C_rho,
+       C_subjects, C_objects, C_access_mode,
+       C_access, C_set_of_access,
+       C_get_release, C_requests_gal,
+       C_decisions,
+       C_couple_s_m, C_set_of_couple_s_m,
+       C_couple_o_s_s_m,
+       C_set_of_c_o_s_s_m, C_states)
+end
+;;
 
 
 print_string ("Exemple implantation ACL\n") ;;
@@ -658,13 +731,17 @@ species S_model_capabilities (Rh is Rho, S is S_subjects, O is S_objects,
 
 end ;;
 
-collection C_model_capabilities
-  implements S_model_capabilities(C_rho,
-                                  C_subjects, C_objects, C_access_mode,
-                                  C_access, C_set_of_access,
-                                  C_get_release, C_requests_gal,
-                                  C_decisions,
-                                  C_couple_o_m, C_set_of_couple_o_m) ;;
+collection C_model_capabilities =
+  implement
+    S_model_capabilities
+      (C_rho,
+       C_subjects, C_objects, C_access_mode,
+       C_access, C_set_of_access,
+       C_get_release, C_requests_gal,
+       C_decisions,
+       C_couple_o_m, C_set_of_couple_o_m)
+end
+;;
 
 
 print_string ("Exemple implantation CAPABILITIES\n") ;;

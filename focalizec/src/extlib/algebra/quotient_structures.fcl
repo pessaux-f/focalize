@@ -1,4 +1,23 @@
-(** 
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: quotient_structures.fcl,v 1.4 2009-05-15 08:06:03 weis Exp $ *)
+
+(**
    @title Quotient algebraic structures
    @author Renaud Rioboo
 
@@ -27,8 +46,8 @@ open "weak_structures";;
 open "additive_law";;
 open "rings_fields";;
 
-(** 
-   Compatibility between addition and equivalence relation 
+(**
+   Compatibility between addition and equivalence relation
    an equivalence relation which is compatible with some algebraic laws
    is often aclled a congruence
  *)
@@ -36,8 +55,8 @@ species Additive_congruence(G is Additive_group) =
   inherit Equivalence_relation(G) ;
     (** additive compatibity *)
     property plus_preserves_equiv: all x1 x2 y1 y2 in G,
-      !equiv(x1, x2) -> 
-        !equiv(y1, y2) -> 
+      !equiv(x1, x2) ->
+        !equiv(y1, y2) ->
           !equiv(G!plus(x1, y1), G!plus(x2, y2));
     (** opposite compatibity *)
     property opposite_preserves_equiv: all x1 x2 in G,
@@ -46,10 +65,10 @@ end
 ;;
 
 
-(** 
+(**
    General properties for additive projections. The projection function
    should preserve equivalence classes.
-   [rr]: we can note that we never need the fact the projection function is 
+   [rr]: we can note that we never need the fact the projection function is
          idempotent. This is a simple port of structure using a function
 *)
 species Additive_projections(G is Additive_group) =
@@ -60,33 +79,33 @@ species Additive_projections(G is Additive_group) =
     G!equal(!reduce(G!plus(!reduce(x), !reduce(y))), !reduce(G!plus(x, y)));
 
   (** the equivalence relation is compatible with addition *)
-  proof of plus_preserves_equiv = 
+  proof of plus_preserves_equiv =
     <1>1 assume x1 in G, assume x2 in G, assume y1 in G, assume y2 in G,
          assume Hx: !equiv(x1, x2),
          assume Hy: !equiv(y1, y2),
          prove !equiv(G!plus(x1, y1), G!plus(x2, y2))
             <2>1 prove G!equal(!reduce(G!plus(x1, y1)), !reduce(G!plus(x2, y2)))
-                 <3>1 prove 
+                 <3>1 prove
                       G!equal(!reduce(G!plus(x1, y1)),
-			      !reduce(G!plus(!reduce(x1), !reduce(y1))))
+              !reduce(G!plus(!reduce(x1), !reduce(y1))))
                       by property !additive_compatibility, G!equal_symmetric
-                 <3>2 prove 
+                 <3>2 prove
                       G!equal(!reduce(G!plus(x2, y2)),
-			      !reduce(G!plus(!reduce(x2), !reduce(y2))))
+              !reduce(G!plus(!reduce(x2), !reduce(y2))))
                       by property !additive_compatibility, G!equal_symmetric
-                 <3>3 prove G!equal(!reduce(x1), !reduce(x2)) 
+                 <3>3 prove G!equal(!reduce(x1), !reduce(x2))
                       by hypothesis Hx definition of equiv, morph
-                 <3>4 prove G!equal(!reduce(y1), !reduce(y2)) 
+                 <3>4 prove G!equal(!reduce(y1), !reduce(y2))
                       by hypothesis Hy definition of equiv, morph
                  <3>5 prove G!equal(G!plus(!reduce(x1), !reduce(y1)),
-				    G!plus(!reduce(x2), !reduce(y2)))
+            G!plus(!reduce(x2), !reduce(y2)))
                       by step <3>3, <3>4 property G!plus_substitution_rule
                  <3>6 prove G!equal(!reduce(G!plus(!reduce(x1),
-						   !reduce(y1))),
-				    !reduce(G!plus(!reduce(x2),
-						   !reduce(y2))))
+           !reduce(y1))),
+            !reduce(G!plus(!reduce(x2),
+           !reduce(y2))))
                       by step <3>5 property !reduce_substitution_rule
-                 <3>f qed 
+                 <3>f qed
                       by step <3>6, <3>1, <3>2
                          property G!equal_reflexive,
                                   G!equal_symmetric,
@@ -105,21 +124,21 @@ species Additive_projections(G is Additive_group) =
     <1>1 assume x1 in G, assume x2 in G,
          assume H: !equiv(x1, x2),
          prove G!equal(!reduce(G!opposite(x1)), !reduce(G!opposite(x2)))
-         <2>1 prove G!equal(!reduce(x1), !reduce(x2)) 
+         <2>1 prove G!equal(!reduce(x1), !reduce(x2))
               by hypothesis H definition of equiv, morph
          <2>2 prove G!equal(G!opposite(!reduce(x1)),
-			    G!opposite(!reduce(x2)))
+            G!opposite(!reduce(x2)))
               by step <2>1 property G!opposite_substitution_rule
          <2>3 prove G!equal(!reduce(G!opposite(!reduce(x1))),
-			    !reduce(G!opposite(!reduce(x2))))
+            !reduce(G!opposite(!reduce(x2))))
               by step <2>2 property !reduce_substitution_rule
          <2>4 prove G!equal(!reduce(G!opposite(!reduce(x1))),
-			    !reduce(G!opposite(x1)))
+            !reduce(G!opposite(x1)))
               by property !opposite_compatibility
          <2>5 prove G!equal(!reduce(G!opposite(!reduce(x2))),
-			    !reduce(G!opposite(x2)))
+            !reduce(G!opposite(x2)))
               by property !opposite_compatibility
-         <2>f qed 
+         <2>f qed
               by step <2>3, <2>4, <2>5
                  property G!equal_reflexive,
                           G!equal_symmetric,
@@ -141,21 +160,21 @@ species Linear_projections(G is Additive_group) =
    (** the image by the projection is a submonoid *)
    property reduce_is_additive: all x y in G,
      G!equal(G!plus(!reduce(x), !reduce(y)),
-	     !reduce(G!plus(x, y)));
+             !reduce(G!plus(x, y)));
 
    (** This is conservative extension of the former *)
    proof of additive_compatibility =
      <1>1 assume x in G, assume y in G,
           prove G!equal(!reduce(G!plus(!reduce(x), !reduce(y))),
-			!reduce(G!plus(x, y)))
+        !reduce(G!plus(x, y)))
           <2>1 prove G!equal(G!plus(!reduce(x), !reduce(y)),
-	 		    !reduce(G!plus(x, y)))
+                     !reduce(G!plus(x, y)))
                by property !reduce_is_additive
           <2>2 prove G!equal(!reduce(G!plus(!reduce(x), !reduce(y))),
                              !reduce(!reduce(G!plus(x, y))))
                by step <2>1 property !reduce_substitution_rule
           <2>3 prove G!equal(!reduce(G!plus(x, y)),
-	                     !reduce(!reduce(G!plus(x, y))))
+                             !reduce(!reduce(G!plus(x, y))))
                by property !reduce_is_projection
           <2>f qed
                by step <2>1, <2>2, <2>3
@@ -172,14 +191,14 @@ species Linear_projections(G is Additive_group) =
   proof of opposite_compatibility =
     <1>1 assume x in G,
          prove G!equal(!reduce(G!opposite(!reduce(x))),
-		       !reduce(G!opposite(x)))
+               !reduce(G!opposite(x)))
          <2>1 prove G!equal(G!opposite(!reduce(x)), !reduce(G!opposite(x)))
               by property !reduce_preserves_opposite
          <2>2 prove G!equal(!reduce(G!opposite(!reduce(x))),
-			    !reduce(!reduce(G!opposite(x))))
+            !reduce(!reduce(G!opposite(x))))
               by step <2>1 property !reduce_substitution_rule
          <2>3 prove G!equal(!reduce(G!opposite(x)),
-			    !reduce(!reduce(G!opposite(x))))
+            !reduce(!reduce(G!opposite(x))))
               by property !reduce_is_projection
          <2>f qed
               by step <2>1, <2>2, <2>3
@@ -196,7 +215,7 @@ end
   Quotient groups, are quotient sets with additive projection
 *)
 species Quotient_group (G is Additive_group,
-		        Proj is Additive_projections(G)) =
+                Proj is Additive_projections(G)) =
 
   inherit  Additive_group,
            (* Definition from quotient_set take precedence *)
@@ -238,7 +257,7 @@ species Quotient_group (G is Additive_group,
               assume H: !correct_representation(x),
               prove G!equal(Proj!reduce(x), x)
               <3>1 prove !represents_some_self(x)
-                   by hypothesis H 
+                   by hypothesis H
                       definition of to_rep, correct_representation
               <3>2 prove G!equal(!from_rep(x), x)
                    by step <3>1 definition of represents_some_self
@@ -252,18 +271,18 @@ species Quotient_group (G is Additive_group,
               assume H: G!equal(Proj!reduce(x), x),
               prove !correct_representation(x)
               <3>1 prove !represents_some_self(x)
-                   by hypothesis H 
+                   by hypothesis H
                       definition of represents_some_self, from_rep
-              <3>2 qed by step <3>1 
+              <3>2 qed by step <3>1
                           definition of to_rep, correct_representation
          <2>f conclude
     (* this is where we do our work *)
     <1>3 assume x in Self, assume y in Self,
          prove G!equal(Proj!reduce(!plus(x, y)), !plus(x, y))
          <2>1 prove G!equal(Proj!reduce(Proj!reduce(G!plus(x, y))),
-			    Proj!reduce(G!plus(x, y)))
+            Proj!reduce(G!plus(x, y)))
               <3>1 prove G!equal(Proj!reduce(G!plus(x, y)),
-				 Proj!reduce(Proj!reduce(G!plus(x, y))))
+         Proj!reduce(Proj!reduce(G!plus(x, y))))
                    by property Proj!reduce_is_projection
               <3>2 qed by step <3>1 property G!equal_symmetric
          <2>2 qed by step <2>1 definition of plus
@@ -276,7 +295,7 @@ species Quotient_group (G is Additive_group,
          prove !equal(!plus(x, z), !plus(y, z))
          <2>1 prove G!equal(!plus(x, z), !plus(y, z))
               <3>1 prove G!equal(Proj!reduce(G!plus(x, z)),
-				 Proj!reduce(G!plus(y, z)))
+         Proj!reduce(G!plus(y, z)))
                    <4>0 prove G!equal(x, y)
                         by hypothesis H definition of equal
                    <4>1 prove G!equal(G!plus(x, z), G!plus(y, z))
@@ -299,7 +318,7 @@ species Quotient_group (G is Additive_group,
               assume H: !correct_representation(x),
               prove G!equal(Proj!reduce(x), x)
               <3>1 prove !represents_some_self(x)
-                   by hypothesis H 
+                   by hypothesis H
                       definition of to_rep, correct_representation
               <3>2 prove G!equal(!from_rep(x), x)
                    by step <3>1 definition of represents_some_self
@@ -313,30 +332,30 @@ species Quotient_group (G is Additive_group,
          <2>2 prove G!equal(Proj!reduce(x), x) by step <2>1, <1>1
          <2>3 prove G!equal(Proj!reduce(G!plus(G!zero, x)), x)
               <3>1 prove G!equal(Proj!reduce(G!plus(G!zero, x)),
-				 Proj!reduce(x))
+         Proj!reduce(x))
                    <4>1 prove G!equal(Proj!reduce(G!zero), G!zero)
                         by property Proj!reduce_preserves_zero
                    <4>2 prove G!equal(G!plus(Proj!reduce(G!zero),
-					     Proj!reduce(x)),
-				      G!plus(G!zero, Proj!reduce(x)))
+             Proj!reduce(x)),
+              G!plus(G!zero, Proj!reduce(x)))
                         by step <4>1 property G!plus_left_substitution_rule
                    <4>3 prove G!equal(G!plus(G!zero, Proj!reduce(x)),
-				      Proj!reduce(x))
+              Proj!reduce(x))
                         by property G!equal_reflexive, G!zero_is_neutral
                    <4>4 prove G!equal(G!plus(Proj!reduce(G!zero),
-					     Proj!reduce(x)),
-				      Proj!reduce(x))
+             Proj!reduce(x)),
+              Proj!reduce(x))
                         by step <4>2, <4>3 property G!equal_transitive
                    <4>5 prove G!equal(Proj!reduce(x),
-				      Proj!reduce(Proj!reduce(x)))
+              Proj!reduce(Proj!reduce(x)))
                         by property Proj!reduce_is_projection
                    <4>6 prove G!equal(Proj!reduce(G!plus(Proj!reduce(G!zero),
-							 Proj!reduce(x))),
-				      Proj!reduce(Proj!reduce(x)))
+         Proj!reduce(x))),
+              Proj!reduce(Proj!reduce(x)))
                         by step <4>4 property Proj!reduce_substitution_rule
                    <4>7 prove G!equal(Proj!reduce(G!plus(Proj!reduce(G!zero),
-							 Proj!reduce(x))),
-				      Proj!reduce(x))
+         Proj!reduce(x))),
+              Proj!reduce(x))
                         by step <4>5, <4>6
                            property G!equal_symmetric, G!equal_transitive
                    <4>f qed
@@ -358,207 +377,207 @@ species Quotient_group (G is Additive_group,
   proof of plus_is_associative =
     <1>2 assume x in Self, assume y in Self, assume z in Self,
           prove G!equal(Proj!reduce(G!plus(x, Proj!reduce(G!plus(y, z)))),
-			Proj!reduce(G!plus(Proj!reduce(G!plus(x, y)), z)))
+        Proj!reduce(G!plus(Proj!reduce(G!plus(x, y)), z)))
           <2>1 prove G!equal(G!plus(x, G!plus(y, z)),
-			     G!plus(G!plus(x, y), z))
+             G!plus(G!plus(x, y), z))
                by property G!plus_is_associative
           <2>2 prove G!equal(Proj!reduce(G!plus(x, G!plus(y, z))),
-			     Proj!reduce(G!plus(G!plus(x, y), z)))
+             Proj!reduce(G!plus(G!plus(x, y), z)))
                by step <2>1 property Proj!reduce_substitution_rule
           <2>3 prove G!equal(Proj!reduce(G!plus(Proj!reduce(x),
-						Proj!reduce(G!plus(y, z)))),
-			     Proj!reduce(G!plus(Proj!reduce(G!plus(x, y)),
-						Proj!reduce(z))))
+        Proj!reduce(G!plus(y, z)))),
+             Proj!reduce(G!plus(Proj!reduce(G!plus(x, y)),
+        Proj!reduce(z))))
                by step <2>2
                   property Proj!additive_compatibility,
-                           G!equal_transitive, 
-                           G!equal_reflexive, 
+                           G!equal_transitive,
+                           G!equal_reflexive,
                            G!equal_symmetric
           <2>4 prove G!equal(Proj!reduce(
                         G!plus(Proj!reduce(x),
-			       Proj!reduce(G!plus(Proj!reduce(y),
-						  Proj!reduce(z))))),
-			     Proj!reduce(
+               Proj!reduce(G!plus(Proj!reduce(y),
+          Proj!reduce(z))))),
+             Proj!reduce(
                         G!plus(Proj!reduce(G!plus(Proj!reduce(x),
-						  Proj!reduce(y))),
-			       Proj!reduce(z))))
+          Proj!reduce(y))),
+               Proj!reduce(z))))
                 <3>1 prove G!equal(Proj!reduce(G!plus(y, z)),
-				   Proj!reduce(G!plus(Proj!reduce(y),
-						      Proj!reduce(z))))
+           Proj!reduce(G!plus(Proj!reduce(y),
+              Proj!reduce(z))))
                      by property Proj!additive_compatibility, G!equal_symmetric
                 <3>10 prove G!equal(G!plus(Proj!reduce(x),
-					   Proj!reduce(G!plus(y, z))),
-				    G!plus(Proj!reduce(x),
-					   Proj!reduce(G!plus(Proj!reduce(y),
-							      Proj!reduce(z)))))
+           Proj!reduce(G!plus(y, z))),
+            G!plus(Proj!reduce(x),
+           Proj!reduce(G!plus(Proj!reduce(y),
+              Proj!reduce(z)))))
                       by step <3>1 property G!plus_right_substitution_rule
                 <3>11 prove G!equal(Proj!reduce(
                                   G!plus(Proj!reduce(x),
-					 Proj!reduce(G!plus(y, z)))),
-				    Proj!reduce(
+         Proj!reduce(G!plus(y, z)))),
+            Proj!reduce(
                                   G!plus(Proj!reduce(x),
-					 Proj!reduce(G!plus(Proj!reduce(y),
-							    Proj!reduce(z))))))
+         Proj!reduce(G!plus(Proj!reduce(y),
+            Proj!reduce(z))))))
                      by step <3>10 property Proj!reduce_substitution_rule
                 <3>2 prove G!equal(Proj!reduce(G!plus(x, y)),
-				   Proj!reduce(G!plus(Proj!reduce(x),
-						      Proj!reduce(y))))
+           Proj!reduce(G!plus(Proj!reduce(x),
+              Proj!reduce(y))))
                      by property Proj!additive_compatibility, G!equal_symmetric
                 <3>20 prove G!equal(G!plus(Proj!reduce(G!plus(x, y)),
-					   Proj!reduce(z)),
-				    G!plus(Proj!reduce(G!plus(Proj!reduce(x),
-							      Proj!reduce(y))),
-					   Proj!reduce(z)))
+           Proj!reduce(z)),
+            G!plus(Proj!reduce(G!plus(Proj!reduce(x),
+              Proj!reduce(y))),
+           Proj!reduce(z)))
                      by step <3>2 property G!plus_left_substitution_rule
                 <3>21 prove G!equal(Proj!reduce(
                                 G!plus(Proj!reduce(G!plus(x, y)),
-				       Proj!reduce(z))),
-				    Proj!reduce(
+               Proj!reduce(z))),
+            Proj!reduce(
                                 G!plus(Proj!reduce(G!plus(Proj!reduce(x),
-							  Proj!reduce(y))),
-				       Proj!reduce(z))))
+          Proj!reduce(y))),
+               Proj!reduce(z))))
                       by step <3>20 property Proj!reduce_substitution_rule
                 <3>f qed
                      by step <2>3, <3>11, <3>21
                         property G!equal_transitive, G!equal_symmetric
           <2>5 prove G!equal(Proj!reduce(
                         G!plus(Proj!reduce(x),
-			       Proj!reduce(Proj!reduce(
+               Proj!reduce(Proj!reduce(
                                    G!plus(Proj!reduce(y),
-					  Proj!reduce(z)))))),
-			     Proj!reduce(
+          Proj!reduce(z)))))),
+             Proj!reduce(
                         G!plus(Proj!reduce(Proj!reduce(
                                    G!plus(Proj!reduce(x),
-					  Proj!reduce(y)))),
-			       Proj!reduce(z))))
+          Proj!reduce(y)))),
+               Proj!reduce(z))))
                <3>1 prove G!equal(Proj!reduce(
                         G!plus(Proj!reduce(x),
-			       Proj!reduce(G!plus(Proj!reduce(y),
-						  Proj!reduce(z))))),
-				  Proj!reduce(
+               Proj!reduce(G!plus(Proj!reduce(y),
+          Proj!reduce(z))))),
+          Proj!reduce(
                         G!plus(Proj!reduce(x),
-			       Proj!reduce(Proj!reduce(
+               Proj!reduce(Proj!reduce(
                                    G!plus(Proj!reduce(y),
-					  Proj!reduce(z)))))))
+          Proj!reduce(z)))))))
                     <4>1 prove G!equal(Proj!reduce(
                                          G!plus(Proj!reduce(y),
-						Proj!reduce(z))),
-				       Proj!reduce(Proj!reduce(
+        Proj!reduce(z))),
+               Proj!reduce(Proj!reduce(
                                         G!plus(Proj!reduce(y),
-					       Proj!reduce(z)))))
+               Proj!reduce(z)))))
                          by property Proj!reduce_is_projection
                     <4>2 prove G!equal(
                              G!plus(Proj!reduce(x),
-				    Proj!reduce(G!plus(Proj!reduce(y),
-						       Proj!reduce(z)))),
+            Proj!reduce(G!plus(Proj!reduce(y),
+               Proj!reduce(z)))),
                              G!plus(Proj!reduce(x),
-				    Proj!reduce(Proj!reduce(
-						 G!plus(Proj!reduce(y),
-							Proj!reduce(z))))))
+            Proj!reduce(Proj!reduce(
+         G!plus(Proj!reduce(y),
+        Proj!reduce(z))))))
                          by step <4>1 property G!plus_right_substitution_rule
 
                     <4>f qed by step <4>2 property Proj!reduce_substitution_rule
                <3>2 prove G!equal(Proj!reduce(
                         G!plus(Proj!reduce(G!plus(Proj!reduce(x),
-						  Proj!reduce(y))),
-			       Proj!reduce(z))),
-				  Proj!reduce(
+          Proj!reduce(y))),
+               Proj!reduce(z))),
+          Proj!reduce(
                         G!plus(Proj!reduce(Proj!reduce(
                                    G!plus(Proj!reduce(x),
-					  Proj!reduce(y)))),
-			       Proj!reduce(z))))
+          Proj!reduce(y)))),
+               Proj!reduce(z))))
                     <4>1 prove G!equal(Proj!reduce(
                                           G!plus(Proj!reduce(x),
-						 Proj!reduce(y))),
-				       Proj!reduce(Proj!reduce(
+         Proj!reduce(y))),
+               Proj!reduce(Proj!reduce(
                                           G!plus(Proj!reduce(x),
-						 Proj!reduce(y)))))
+         Proj!reduce(y)))))
                          by property Proj!reduce_is_projection
                     <4>2 prove G!equal(G!plus(Proj!reduce(
-						G!plus(Proj!reduce(x),
-						       Proj!reduce(y))),
-					      Proj!reduce(z)),
-				       G!plus(Proj!reduce(Proj!reduce(
+        G!plus(Proj!reduce(x),
+               Proj!reduce(y))),
+              Proj!reduce(z)),
+               G!plus(Proj!reduce(Proj!reduce(
                                                 G!plus(Proj!reduce(x),
-						       Proj!reduce(y)))),
-					      Proj!reduce(z)))
+               Proj!reduce(y)))),
+              Proj!reduce(z)))
                          by step <4>1 property G!plus_left_substitution_rule
                     <4>f qed by step <4>2 property Proj!reduce_substitution_rule
                <3>f qed by step <2>4, <3>1, <3>2
-                           property G!equal_reflexive, 
-                                    G!equal_symmetric, 
+                           property G!equal_reflexive,
+                                    G!equal_symmetric,
                                     G!equal_transitive
           <2>6 prove G!equal(Proj!reduce(
                         G!plus(x,
-			       Proj!reduce(G!plus(Proj!reduce(y),
-						  Proj!reduce(z))))),
-			     Proj!reduce(
+               Proj!reduce(G!plus(Proj!reduce(y),
+          Proj!reduce(z))))),
+             Proj!reduce(
                         G!plus(Proj!reduce(G!plus(Proj!reduce(x),
-						  Proj!reduce(y))),
-			       z)))
+          Proj!reduce(y))),
+               z)))
 (*                 (\* [rr]: does not work anymore !*\) *)
 (*                by step <2>5 property Proj!additive_compatibility, *)
 (*                   G!equal_reflexive, G!equal_symmetric, G!equal_transitive *)
                <3>1 prove G!equal(Proj!reduce(
                         G!plus(Proj!reduce(x),
-			       Proj!reduce(Proj!reduce(
+               Proj!reduce(Proj!reduce(
                                    G!plus(Proj!reduce(y),
-					  Proj!reduce(z)))))),
-				  Proj!reduce(
+          Proj!reduce(z)))))),
+          Proj!reduce(
                         G!plus(x,
-			       Proj!reduce(G!plus(Proj!reduce(y),
-						  Proj!reduce(z))))))
+               Proj!reduce(G!plus(Proj!reduce(y),
+          Proj!reduce(z))))))
                     by property Proj!additive_compatibility
                <3>2 prove G!equal(Proj!reduce(
                         G!plus(Proj!reduce(Proj!reduce(
                                    G!plus(Proj!reduce(x),
-					  Proj!reduce(y)))),
-			       Proj!reduce(z))),
-				  Proj!reduce(
+          Proj!reduce(y)))),
+               Proj!reduce(z))),
+          Proj!reduce(
                         G!plus(Proj!reduce(G!plus(Proj!reduce(x),
-						  Proj!reduce(y))),
-			       z)))
+          Proj!reduce(y))),
+               z)))
                     by property Proj!additive_compatibility
-               <3>f qed by step <2>5, <3>1, <3>2 
+               <3>f qed by step <2>5, <3>1, <3>2
                            property G!equal_symmetric, G!equal_transitive
           <2>7 prove G!equal(Proj!reduce(
                         G!plus(x, Proj!reduce(G!plus(y, z)))),
-			     Proj!reduce(
+             Proj!reduce(
                         G!plus(Proj!reduce(G!plus(x, y)), z)))
                <3>1 prove G!equal(Proj!reduce(
                         G!plus(x,
-			       Proj!reduce(G!plus(Proj!reduce(y),
-						  Proj!reduce(z))))),
-				  Proj!reduce(
+               Proj!reduce(G!plus(Proj!reduce(y),
+          Proj!reduce(z))))),
+          Proj!reduce(
                         G!plus(x, Proj!reduce(G!plus(y, z)))))
                     <4>1 prove G!equal(Proj!reduce(G!plus(Proj!reduce(y),
-						   Proj!reduce(z))),
-				       Proj!reduce(G!plus(y, z)))
+           Proj!reduce(z))),
+               Proj!reduce(G!plus(y, z)))
                         by property Proj!additive_compatibility
                     <4>2 prove G!equal(G!plus(x,
-					      Proj!reduce(
+              Proj!reduce(
                                                  G!plus(Proj!reduce(y),
-							Proj!reduce(z)))),
-				       G!plus(x,
-					      Proj!reduce(G!plus(y, z))))
+        Proj!reduce(z)))),
+               G!plus(x,
+              Proj!reduce(G!plus(y, z))))
                          by step <4>1 property G!plus_right_substitution_rule
                     <4>f qed by step <4>2 property Proj!reduce_substitution_rule
                <3>2 prove G!equal(Proj!reduce(
                         G!plus(Proj!reduce(G!plus(Proj!reduce(x),
-						  Proj!reduce(y))),
-			       z)),
-				 Proj!reduce(
+          Proj!reduce(y))),
+               z)),
+         Proj!reduce(
                         G!plus(Proj!reduce(G!plus(x, y)), z)))
                     <4>1 prove G!equal(Proj!reduce(G!plus(Proj!reduce(x),
-							  Proj!reduce(y))),
-				       Proj!reduce(G!plus(x, y)))
+          Proj!reduce(y))),
+               Proj!reduce(G!plus(x, y)))
                          by property Proj!additive_compatibility
                     <4>2 prove G!equal(G!plus(Proj!reduce(
                                                 G!plus(Proj!reduce(x),
-						       Proj!reduce(y))),
-					      z),
-				       G!plus(Proj!reduce(G!plus(x, y)),
-					      z))
+               Proj!reduce(y))),
+              z),
+               G!plus(Proj!reduce(G!plus(x, y)),
+              z))
                          by step  <4>1 property G!plus_left_substitution_rule
                     <4>f qed by step <4>2 property Proj!reduce_substitution_rule
                <3>f qed by step <2>6, <3>1, <3>2
@@ -573,9 +592,9 @@ species Quotient_group (G is Additive_group,
          prove !equal(!plus(x, y), !plus(y, x))
          <2>1 prove G!equal(!plus(x, y), !plus(y, x))
               <3>1 prove G!equal(Proj!reduce(G!plus(x, y)),
-				 Proj!reduce(G!plus(y, x)))
+         Proj!reduce(G!plus(y, x)))
                    <4>1 prove G!equal(G!plus(x, y),
-				      G!plus(y, x))
+              G!plus(y, x))
                         by property G!plus_commutes
                    <4>f qed by step <4>1 property Proj!reduce_substitution_rule
               <3>2 qed by step <3>1 definition of plus
@@ -593,15 +612,15 @@ species Quotient_group (G is Additive_group,
                 assume H: G!equal(Proj!reduce(x), x),
                 prove !correct_representation(x)
                 <3>1 prove !represents_some_self(x)
-                     by hypothesis H 
+                     by hypothesis H
                         definition of represents_some_self, from_rep
-                <3>2 qed by step <3>1 
+                <3>2 qed by step <3>1
                             definition of to_rep, correct_representation
            <2>f conclude
       <1>2 assume x in Self,
            prove G!equal(Proj!reduce(!opposite(x)), !opposite(x))
            <2>1 prove G!equal(Proj!reduce(Proj!reduce(G!opposite(x))),
-			      Proj!reduce(G!opposite(x)))
+              Proj!reduce(G!opposite(x)))
                 by property Proj!reduce_is_projection, G!equal_symmetric
            <2>2 qed by step <2>1 definition of opposite
       <1>2 conclude
@@ -627,38 +646,38 @@ species Quotient_group (G is Additive_group,
               by step <1>1 property !correct_invariant
          (* unfold definitions *)
          <2>2 prove G!equal(Proj!reduce(G!plus(x,
-					       Proj!reduce(G!opposite(x)))),
-			    G!zero)
+               Proj!reduce(G!opposite(x)))),
+            G!zero)
               <3>1 prove
                   G!equal(Proj!reduce(G!plus(x, Proj!reduce(G!opposite(x)))),
-			  Proj!reduce(G!plus(Proj!reduce(x),
-					     Proj!reduce(G!opposite(x)))))
-(* 		  (\* [rr]: does not work anymore *\) *)
+          Proj!reduce(G!plus(Proj!reduce(x),
+             Proj!reduce(G!opposite(x)))))
+(*           (\* [rr]: does not work anymore *\) *)
 (*                   by step <2>1 *)
 (*                      property G!plus_left_substitution_rule, *)
-(* 		             Proj!reduce_substitution_rule, *)
+(*                      Proj!reduce_substitution_rule, *)
 (*                              G!equal_symmetric, G!equal_transitive *)
                    <4>1 prove G!equal(G!plus(x, Proj!reduce(G!opposite(x))),
-				      G!plus(Proj!reduce(x),
-					     Proj!reduce(G!opposite(x))))
-                        by step <2>1 
+              G!plus(Proj!reduce(x),
+             Proj!reduce(G!opposite(x))))
+                        by step <2>1
                            property G!plus_left_substitution_rule,
-			            G!equal_symmetric,
-			            G!equal_transitive
+                    G!equal_symmetric,
+                    G!equal_transitive
                    <4>2 qed by step <4>1 property Proj!reduce_substitution_rule
               <3>2 prove G!equal(Proj!reduce(
                                     G!plus(Proj!reduce(x),
-					   Proj!reduce(G!opposite(x)))),
-				 Proj!reduce(G!plus(x, G!opposite(x))))
+           Proj!reduce(G!opposite(x)))),
+         Proj!reduce(G!plus(x, G!opposite(x))))
                    by property Proj!additive_compatibility
               <3>3 prove G!equal(Proj!reduce(G!plus(x, G!opposite(x))),
-				 Proj!reduce(G!zero))
+         Proj!reduce(G!zero))
                    by property Proj!reduce_substitution_rule,
                                G!opposite_is_opposite
               <3>f qed by step <3>1, <3>2, <3>3
-                          property Proj!reduce_preserves_zero, 
+                          property Proj!reduce_preserves_zero,
                                    G!equal_transitive
-         <2>f qed by step <2>2 
+         <2>f qed by step <2>2
                      definition of zero, plus, opposite, equal
     <1>f qed by step <1>3
   ;
@@ -699,10 +718,10 @@ species Reduced_group(G is Additive_group, Proj is Linear_projections(G)) =
               by hypothesis Hy step <1>0 property G!equal_symmetric
          <2>3 prove G!equal(Proj!reduce(G!plus(x, y)), G!plus(x, y))
               <3>1 prove G!equal(G!plus(Proj!reduce(x), Proj!reduce(y)),
-				 Proj!reduce(G!plus(x, y)))
+         Proj!reduce(G!plus(x, y)))
                    by property Proj!reduce_is_additive
               <3>2 prove G!equal(G!plus(x, y),
-				 G!plus(Proj!reduce(x), Proj!reduce(y)))
+         G!plus(Proj!reduce(x), Proj!reduce(y)))
                    by step <2>1, <2>2 property G!plus_substitution_rule
               <3>f qed by step <3>1, <3>2
                           property G!equal_transitive, G!equal_symmetric
@@ -718,11 +737,11 @@ species Reduced_group(G is Additive_group, Proj is Linear_projections(G)) =
     ;
 
   proof of plus_is_associative =
-    by property G!plus_is_associative 
+    by property G!plus_is_associative
        definition of plus, equal;
 
-  proof of plus_commutes = 
-    by property G!plus_commutes 
+  proof of plus_commutes =
+    by property G!plus_commutes
        definition of plus, equal;
 
   (** Redefinition of opposite invalidates previous properties *)
@@ -733,7 +752,7 @@ species Reduced_group(G is Additive_group, Proj is Linear_projections(G)) =
          prove G!equal(G!plus(x, G!opposite(x)), G!zero)
          by property G!opposite_is_opposite, G!is_zero_spec,
                      G!equal_reflexive, G!equal_symmetric, G!equal_transitive
-    <1>2 qed by step <1>1 
+    <1>2 qed by step <1>1
                 definition of opposite, zero, plus, equal
     ;
 
@@ -751,19 +770,19 @@ species Reduced_group(G is Additive_group, Proj is Linear_projections(G)) =
          <2>1 assume x in Self,
               assume H: !correct_representation(x),
               prove G!equal(Proj!reduce(G!opposite(x)),
-			    G!opposite(x))
+            G!opposite(x))
               <3>1 prove G!equal(Proj!reduce(x), x)
                    by step <1>0 hypothesis H
               <3>2 prove G!equal(G!opposite(Proj!reduce(x)),
-				 Proj!reduce(G!opposite(x)))
+         Proj!reduce(G!opposite(x)))
                    by property Proj!reduce_preserves_opposite,
                                G!equal_symmetric
               <3>3 prove G!equal(G!opposite(Proj!reduce(x)),
-				 G!opposite(x))
+         G!opposite(x))
                    by step <3>1 property G!opposite_substitution_rule
               <3>f qed by step <3>3, <3>2
-                          property G!equal_symmetric, 
-                                   G!equal_transitive, 
+                          property G!equal_symmetric,
+                                   G!equal_transitive,
                                    G!equal_reflexive
          <2>f qed by step <2>1, <1>1 definition of opposite
     <1>f qed by step <1>2
@@ -792,22 +811,22 @@ species Projector_on_zero(G is Additive_group) =
   representation = basics#unit;
   let reduce(_x) = G!zero;
 
-  proof of reduce_substitution_rule = 
+  proof of reduce_substitution_rule =
     by property G!equal_reflexive definition of reduce;
-  proof of reduce_is_projection = 
+  proof of reduce_is_projection =
     by property G!equal_reflexive definition of reduce;
-  proof of opposite_compatibility = 
+  proof of opposite_compatibility =
     by property G!equal_reflexive definition of reduce;
-  proof of additive_compatibility = 
+  proof of additive_compatibility =
     by property G!equal_reflexive definition of reduce;
-  proof of reduce_preserves_zero = 
+  proof of reduce_preserves_zero =
     by property G!equal_reflexive definition of reduce;
 
 end
 ;;
 
 species Quotient_ring(R is Commutative_ring,
-		      Proj is Projector_along_ideal(R)) =
+              Proj is Projector_along_ideal(R)) =
   inherit Commutative_ring, Quotient_group(R, Proj) ;
 
   let one in Self = R!one;
@@ -819,7 +838,7 @@ species Quotient_ring(R is Commutative_ring,
               assume H: R!equal(Proj!reduce(x), x),
               prove !correct_representation(x)
               <3>1 prove !represents_some_self(x)
-                   by hypothesis H 
+                   by hypothesis H
                       definition of represents_some_self, from_rep
               <3>2 qed by step <3>1 definition of to_rep, correct_representation
          <2>f conclude
@@ -853,7 +872,7 @@ species Quotient_ring(R is Commutative_ring,
               assume H: R!equal(Proj!reduce(x), x),
               prove !correct_representation(x)
               <3>1 prove !represents_some_self(x)
-                   by hypothesis H 
+                   by hypothesis H
                       definition of represents_some_self, from_rep
               <3>2 qed by step <3>1 definition of to_rep, correct_representation
          <2>f conclude
@@ -861,9 +880,9 @@ species Quotient_ring(R is Commutative_ring,
     <1>3 assume x in Self, assume y in Self,
          prove R!equal(Proj!reduce(!mult(x, y)), !mult(x, y))
          <2>1 prove R!equal(Proj!reduce(Proj!reduce(R!mult(x, y))),
-			    Proj!reduce(R!mult(x, y)))
+            Proj!reduce(R!mult(x, y)))
               <3>1 prove R!equal(Proj!reduce(R!mult(x, y)),
-				 Proj!reduce(Proj!reduce(R!mult(x, y))))
+         Proj!reduce(Proj!reduce(R!mult(x, y))))
                    by property Proj!reduce_is_projection
               <3>2 qed by step <3>1 property R!equal_symmetric
          <2>2 qed by step <2>1 definition of mult
@@ -909,7 +928,7 @@ species Quotient_ring(R is Commutative_ring,
               assume H: R!equal(Proj!reduce(x), x),
               prove !correct_representation(x)
               <3>1 prove !represents_some_self(x)
-                   by hypothesis H 
+                   by hypothesis H
                       definition of represents_some_self, from_rep
               <3>2 qed by step <3>1 definition of to_rep, correct_representation
          <2>f conclude
@@ -921,7 +940,7 @@ species Quotient_ring(R is Commutative_ring,
                    <4>1 prove R!equal(R!mult(R!one, x), x)
                         by property R!one_is_left_neutral
                    <4>2 prove R!equal(Proj!reduce(R!mult(R!one, x)),
-				      Proj!reduce(x))
+              Proj!reduce(x))
                         by step <4>1 property Proj!reduce_substitution_rule
                    <4>3 prove R!equal(Proj!reduce(x), x)
                         (* [rr]: this is where we use the invariant *)
@@ -972,7 +991,7 @@ species Projector_along_principal_ideal(R is Euclidean_domain) =
     <1>1 assume x in R, assume y in R,
          assume H: R!equal(x, y),
          prove R!equal(R!remainder(x, !ideal_generator),
-		       R!remainder(y, !ideal_generator))
+               R!remainder(y, !ideal_generator))
          by hypothesis H
             property !non_null_generator, R!remainder_left_substitution_rule
   <1>2 qed by step <1>1 definition of reduce;
@@ -990,74 +1009,74 @@ species Projector_along_principal_ideal(R is Euclidean_domain) =
   proof of reduce_is_projection =
      <1>1 assume x in R,
           prove R!equal(R!remainder(R!remainder(x, !ideal_generator),
-				    !ideal_generator),
-			R!remainder(x, !ideal_generator))
+            !ideal_generator),
+        R!remainder(x, !ideal_generator))
           <2>1 prove
                R!equal(x,
-		       R!plus(R!mult(!ideal_generator,
-				     R!plus(R!quotient(x, !ideal_generator),
-					   R!quotient(R!remainder(
+               R!plus(R!mult(!ideal_generator,
+             R!plus(R!quotient(x, !ideal_generator),
+           R!quotient(R!remainder(
                                                          x,
-						         !ideal_generator),
-						      !ideal_generator))),
-			      R!remainder(R!remainder(x, !ideal_generator),
-					  !ideal_generator)))
+                 !ideal_generator),
+              !ideal_generator))),
+              R!remainder(R!remainder(x, !ideal_generator),
+          !ideal_generator)))
                assumed {* *}
           <2>2 prove (R!is_zero(R!remainder(R!remainder(x, !ideal_generator),
-					    !ideal_generator))
+            !ideal_generator))
                       \/
                       R!euclidean_ordering
                         (R!remainder(R!remainder(x, !ideal_generator),
-				     !ideal_generator),
+             !ideal_generator),
                          !ideal_generator))
                assumed {* *}
-          <2>f qed by step <2>1, <2>2 
+          <2>f qed by step <2>1, <2>2
                       property !non_null_generator, R!euclidean_characterisation
      <1>2 qed by step <1>1
-                 property R!equal_symmetric 
+                 property R!equal_symmetric
                  definition of reduce
    ;
 
   proof of additive_compatibility =
      <1>1 assume x in R, assume y in R,
           prove R!equal(R!remainder(R!plus(R!remainder(x, !ideal_generator),
-					   R!remainder(y, !ideal_generator)),
-				    !ideal_generator),
-			R!remainder(R!plus(x, y), !ideal_generator))
+           R!remainder(y, !ideal_generator)),
+            !ideal_generator),
+        R!remainder(R!plus(x, y), !ideal_generator))
           assumed {* *}
      <1>2 qed by step <1>1 definition of reduce;
 
   proof of opposite_compatibility =
      <1>1 assume x in R,
           prove R!equal(R!remainder(R!opposite(R!remainder(x,
-							   !ideal_generator)),
-				    !ideal_generator),
-			R!remainder(R!opposite(x), !ideal_generator))
+           !ideal_generator)),
+            !ideal_generator),
+        R!remainder(R!opposite(x), !ideal_generator))
           assumed {* *}
      <1>f qed by step <1>1 definition of reduce;
 
   proof of reduce_preserves_multiplication =
      <1>1 assume x in R, assume y in R,
           prove R!equal(R!remainder(R!mult(R!remainder(x, !ideal_generator),
-					   R!remainder(y, !ideal_generator)),
-				    !ideal_generator),
-			R!remainder(R!mult(x, y), !ideal_generator))
+           R!remainder(y, !ideal_generator)),
+            !ideal_generator),
+        R!remainder(R!mult(x, y), !ideal_generator))
           assumed {* *}
-     <1>2 qed by step <1>1 
-                 property R!equal_symmetric 
+     <1>2 qed by step <1>1
+                 property R!equal_symmetric
                  definition of reduce;
 
 
   proof of reduce_preserves_one =
     <1>1 prove R!equal(R!remainder(R!one, !ideal_generator), R!one)
          <2>1 prove R!equal(R!one,
-			    R!plus(R!mult(!ideal_generator, R!zero),
-				   R!one))
+            R!plus(R!mult(!ideal_generator, R!zero),
+           R!one))
               <3>1 prove R!equal(R!mult(!ideal_generator, R!zero), R!zero)
                    by property R!zero_right_absorbes
               <3>2 prove R!equal(R!plus(R!mult(!ideal_generator, R!zero),
-					R!one),
-				 R!plus(R!zero, R!one))
+        R!one),
+         R!plus(R!zero, R!one))
                    by step <3>1 property R!plus_left_substitution_rule
               <3>f qed by step <3>2
                           property R!zero_is_neutral,
@@ -1065,7 +1084,7 @@ species Projector_along_principal_ideal(R is Euclidean_domain) =
          <2>2 prove R!euclidean_ordering(R!one, !ideal_generator)
               by property !non_null_generator, R!one_is_euclidean_minimal
          <2>f qed by step <2>1, <2>2
-                    property !non_null_generator, 
+                    property !non_null_generator,
                              R!equal_symmetric,
                              R!euclidean_characterisation
     <1>2 qed by step <1>1 definition of reduce;
@@ -1099,9 +1118,9 @@ end
 (* (\* uses small_integers;; *\) *)
 (* (\* open small_integers;; *\) *)
 
-(* (\* collection proj_z_2 implements *\) *)
-(* (\*   remainder_projector(foc_small_integers, foc_small_integers!parse("2"))= *\) *)
-(* (\* end *\) *)
+(* (\* collection proj_z_2 = implement *\) *)
+(* (\*   remainder_projector(foc_small_integers, foc_small_integers!parse("2")) *\) *)
+(* (\* end;; *\) *)
 
 (**
    We now project along a principal ideal to obtain the lateral classes

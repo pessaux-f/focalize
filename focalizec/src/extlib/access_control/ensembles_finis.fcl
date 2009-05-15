@@ -2,8 +2,6 @@
 (*                                                                     *)
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
-(*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -15,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.17 2009-03-25 15:57:59 pessaux Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.18 2009-05-15 08:07:29 weis Exp $ *)
 
 (**
 
@@ -2070,9 +2068,15 @@ species Entiers_concrets inherits Ordered_set =
   proof of lt_is_not_leq = assumed {* Because todo *};
 end;;
 
-collection Entiers implements Entiers_concrets;;
+collection Entiers =
+  implement Entiers_concrets
+end
+;;
 
-collection Ensemble_entiers implements Liste_triee (Entiers);;
+collection Ensemble_entiers =
+  implement Liste_triee (Entiers)
+end
+;;
 
 let zero = Entiers!parse ("0");;
 let un = Entiers!parse ("1");;

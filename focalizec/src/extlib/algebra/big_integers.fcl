@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.8 2009-05-14 15:57:40 doligez Exp $ *)
+(* $Id: big_integers.fcl,v 1.9 2009-05-15 08:06:02 weis Exp $ *)
 
 use "basics" ;;
 
@@ -365,9 +365,13 @@ species Base_big_int =
   let parse = #big_int_of_string ;
 
 
-end ;;
+end
+;;
 
-collection Foc_basic_integers implements Base_big_int ;;
+collection Foc_basic_integers =
+  implement Base_big_int
+end
+;;
 
 (** Big integers *)
 species Integers_big_int =
@@ -412,6 +416,10 @@ species Integers_big_int =
   proof of euclidean_ordering_is_transitive = assumed {* Because todo *} ;
   proof of remainder_is_smaller = assumed {* Because todo *} ;
   proof of equal_from_leq = assumed {* Because broken by equal redefinition.*} ;
-end ;;
+end
+;;
 
-collection Foc_big_integers implements Integers_big_int ;;
+collection Foc_big_integers =
+  implement Integers_big_int
+end
+;;

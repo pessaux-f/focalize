@@ -1,3 +1,20 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: access_control.fcl,v 1.10 2009-05-15 08:09:55 weis Exp $ *)
+
 (**
    @title Implementation of access control models
    @author Florent Anseaume, Jean Baron, Philippe Berthelin, Florian Brecht,
@@ -15,25 +32,25 @@ open "ensembles_finis" ;;
 (** Framework *)
 
 (** Set_of is a stub species inheriting Ensembles_finis *)
-species Set_of (A is Setoid) inherits Ensembles_finis (A) = 
+species Set_of (A is Setoid) inherits Ensembles_finis (A) =
 
   (** for_all(E, P) is true iff for any x in E, P(x) is true *)
   signature for_all : Self -> (A -> bool) -> bool ;
 
   (**
-     If two sets set1 and set2 are equal and if x belongs to set1 
+     If two sets set1 and set2 are equal and if x belongs to set1
      then x belongs to set2
    *)
-  property equal_prop : 
-    all set1 set2 in Self, all x in A, 
-      equal (set1, set2) -> 
-        est_element (x, set1) -> 
+  property equal_prop :
+    all set1 set2 in Self, all x in A,
+      equal (set1, set2) ->
+        est_element (x, set1) ->
           est_element (x, set2) ;
 
   (** If x1 belongs to the singleton {x2} then x1 = x2 *)
-  property singleton_prop : 
-    all x1 x2 in A, 
-      est_element (x1, singleton (x2)) -> 
+  property singleton_prop :
+    all x1 x2 in A,
+      est_element (x1, singleton (x2)) ->
         A!equal (x1, x2) ;
 
 end ;;
@@ -48,7 +65,7 @@ species Subjects inherits Setoid = end ;;
 species Objects inherits Setoid = end ;;
 
 (** The usually considered access modes *)
-species Access_mode inherits Setoid = 
+species Access_mode inherits Setoid =
 
   (** The read access mode *)
   signature read : Self ;
@@ -59,8 +76,8 @@ species Access_mode inherits Setoid =
 end ;;
 
 (** An access is a triple Subject x Object x Access mode *)
-species Access (S is Subjects, O is Objects, M is Access_mode) 
-  inherits Setoid = 
+species Access (S is Subjects, O is Objects, M is Access_mode)
+  inherits Setoid =
 
   (** Allows to create an access *)
   signature create : S -> O -> M -> Self ;
@@ -75,12 +92,12 @@ species Access (S is Subjects, O is Objects, M is Access_mode)
   signature get_m : Self -> M ;
 
   (**
-     If two accesses (s1,o1,m1) and (s2,o2,m2) are equal 
+     If two accesses (s1,o1,m1) and (s2,o2,m2) are equal
      then s1 = s2 and o1 = o2 and m1 = m2
    *)
-  property access_equal : 
-    all s1 s2 in S, all o1 o2 in O, all m1 m2 in M, 
-      equal (create (s1, o1, m1), create (s2, o2, m2)) -> 
+  property access_equal :
+    all s1 s2 in S, all o1 o2 in O, all m1 m2 in M,
+      equal (create (s1, o1, m1), create (s2, o2, m2)) ->
         (S!equal (s1, s2) /\ O!equal (o1, o2) /\ M!equal (m1, m2)) ;
 
 end ;;
@@ -88,7 +105,7 @@ end ;;
 (** A state contains at least the set of current accesses *)
 species States (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
                 A is Access (S, O, M), S_a is Set_of (A))
-  inherits Setoid = 
+  inherits Setoid =
 
   (** Returns the set of current accesses *)
   signature lambda : Self -> S_a ;
@@ -102,40 +119,40 @@ species States (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
   (**
      If two states are equal then they have the same set of current accesses
    *)
-  property lambda_prop : 
-    all st1 st2 in Self, 
-      equal (st1, st2) -> 
+  property lambda_prop :
+    all st1 st2 in Self,
+      equal (st1, st2) ->
         S_a!equal (lambda (st1), lambda (st2)) ;
 
-  property add_prop : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
-      equal (add (st1, A!create (s1, o1, m1)), st2) -> 
-        S_a!equal (lambda (st2), 
-                   S_a!union (lambda (st1), 
+  property add_prop :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      equal (add (st1, A!create (s1, o1, m1)), st2) ->
+        S_a!equal (lambda (st2),
+                   S_a!union (lambda (st1),
                               S_a!singleton (A!create (s1, o1, m1)))) ;
 
   (**
-     &Lambda;(st1) &cup; {(s1,o1,m1)} = &Lambda;(st2) &rarr; 
+     &Lambda;(st1) &cup; {(s1,o1,m1)} = &Lambda;(st2) &rarr;
      (s1,o1,m1) &isin; &Lambda;(st2)
    *)
-  property add_mem : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
-      equal (add (st1, A!create (s1, o1, m1)), st2) -> 
+  property add_mem :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      equal (add (st1, A!create (s1, o1, m1)), st2) ->
         S_a!est_element (A!create (s1, o1, m1), lambda (st2)) ;
 
   (** a1 &isin; &Lambda;(st1) \ {(s1,o1,m1)} &rarr; a1 &isin; &Lambda;(st1) *)
-  property del_prop : 
-    all st1 in Self, all a1 in A, all s1 in S, all o1 in O, all m1 in M, 
-      S_a!est_element (a1, lambda (del (st1, A!create (s1, o1, m1)))) -> 
+  property del_prop :
+    all st1 in Self, all a1 in A, all s1 in S, all o1 in O, all m1 in M,
+      S_a!est_element (a1, lambda (del (st1, A!create (s1, o1, m1)))) ->
         S_a!est_element (a1, lambda (st1)) ;
 
   (**
-     &Lambda;(st1) \ {(s1,o1,m1)} = &Lambda;(st2) &rarr; 
+     &Lambda;(st1) \ {(s1,o1,m1)} = &Lambda;(st2) &rarr;
      {(s1,o1,m1)} &notin; &Lambda;(st2)
    *)
-  property del_mem : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
-      equal(del (st1, A!create (s1, o1, m1)), st2) -> 
+  property del_mem :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      equal(del (st1, A!create (s1, o1, m1)), st2) ->
         ~ S_a!est_element (A!create (s1, o1, m1), lambda (st2)) ;
 
 end ;;
@@ -143,19 +160,19 @@ end ;;
 (** An access control policy defines a security predicate *)
 species Policy (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
                 A is Access (S, O, M), S_a is Set_of (A))
-  inherits States (Rh, S, O, M, A, S_a) = 
+  inherits States (Rh, S, O, M, A, S_a) =
 
   (** Security predicate of an access control policy *)
   signature omega : Self -> prop ;
 
   (**
-     If two states st1 and st2 are equal and if st1 satisfies the security 
+     If two states st1 and st2 are equal and if st1 satisfies the security
      predicate then st2 satisfies the security predicate
    *)
-  property secure_state : 
-    all st1 st2 in Self, 
-      equal (st1, st2) -> 
-        omega (st1) -> 
+  property secure_state :
+    all st1 st2 in Self,
+      equal (st1, st2) ->
+        omega (st1) ->
           omega (st2) ;
 
 end ;;
@@ -164,7 +181,7 @@ end ;;
 species Requests inherits Setoid = end ;;
 
 (** The decisions that can be answered by a reference monitor *)
-species Decisions inherits Setoid = 
+species Decisions inherits Setoid =
 
   (** The decision yes *)
   signature yes : Self ;
@@ -173,21 +190,21 @@ species Decisions inherits Setoid =
   signature no : Self ;
 
   (** A decision is either yes or no *)
-  property yes_is_not_no : 
-    all x in Self, 
+  property yes_is_not_no :
+    all x in Self,
       ~ (equal (x, yes) /\ equal(x, no)) ;
 
 end ;;
 
 (**
-   The species representing the semantics of requests of an access control 
+   The species representing the semantics of requests of an access control
    model
  *)
 species Semantics_requests (Rh is Rho,
                             S is Subjects, O is Objects, M is Access_mode,
                             A is Access (S, O, M), S_a is Set_of (A),
                             R is Requests)
-  inherits States (Rh, S, O, M, A, S_a) = 
+  inherits States (Rh, S, O, M, A, S_a) =
 
   (** The predicate defining the semantics of requests *)
   signature sem_req : R -> Self -> prop ;
@@ -195,71 +212,71 @@ species Semantics_requests (Rh is Rho,
 end ;;
 
 (**
-   An access control model regroups the concepts present in an access 
+   An access control model regroups the concepts present in an access
    control policy (the security predicate) and in the semantics of requests
  *)
 species Models (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
                 A is Access (S, O, M), S_a is Set_of (A),
                 R is Requests,
                 D is Decisions)
-  inherits 
-    Policy (Rh, S, O, M, A, S_a), 
-    Semantics_requests(Rh, S, O, M, A, S_a, R) = 
+  inherits
+    Policy (Rh, S, O, M, A, S_a),
+    Semantics_requests(Rh, S, O, M, A, S_a, R) =
 
   (** (d1,st1) = (d2,st2) &rarr; d1 = d2 *)
-  property left_substitution : 
-    all d1 d2 in D, all st1 st2 in Self, 
-    (d1, st1) = (d2, st2) -> 
+  property left_substitution :
+    all d1 d2 in D, all st1 st2 in Self,
+    (d1, st1) = (d2, st2) ->
       D!equal (d1, d2) ;
 
   (** (d1,st1) = (d2,st2) &rarr; st1 = st2 *)
-  property right_substitution : 
-    all d1 d2 in D, all st1 st2 in Self, 
-    (d1, st1) = (d2, st2) -> 
+  property right_substitution :
+    all d1 d2 in D, all st1 st2 in Self,
+    (d1, st1) = (d2, st2) ->
       equal (st1, st2) ;
 
 end ;;
 
 (**
-   The usually considered requests : 
-   - &lang; +,s,o,m &rang; : the subject s asks to get an access over the 
+   The usually considered requests :
+   - &lang; +,s,o,m &rang; : the subject s asks to get an access over the
      object o according to the access mode m
-   - &lang; -,s,o,m &rang; : the subject s asks to release an access over the 
+   - &lang; -,s,o,m &rang; : the subject s asks to release an access over the
      object o according to the access mode m
  *)
 species Requests_gal(S is Subjects, O is Objects, M is Access_mode)
-  inherits Requests = 
+  inherits Requests =
 
   (** Returns the subject involved in the given request *)
   signature get_s : Self -> S ;
 
   (** Returns the object involved in the given request *)
   signature get_o : Self -> O ;
-  
+
   (** Returns the access mode involved in the given request *)
   signature get_m : Self -> M ;
 
   (**
-     Returns true if the given request is a "get an access" request, 
+     Returns true if the given request is a "get an access" request,
      false otherwise
    *)
   signature is_get : Self -> bool ;
 
   (**
-     Returns true if the given request is a "release an access" request, 
+     Returns true if the given request is a "release an access" request,
      false otherwise
    *)
   signature is_rel : Self -> bool ;
 
   (**
      A request is either a "get an access" or a "release an access" request
-   *)  
-  property get_or_rel : 
-    all x in Self, 
+   *)
+  property get_or_rel :
+    all x in Self,
       is_get (x) \/ is_rel (x) ;
 
-  property get_is_not_rel : 
-    all x in Self, 
+  property get_is_not_rel :
+    all x in Self,
       ~ (is_get (x) /\ is_rel (x)) ;
 
 end ;;
@@ -269,22 +286,22 @@ species Semantics_requests_gal(Rh is Rho,
                                S is Subjects, O is Objects, M is Access_mode,
                                A is Access (S, O, M), S_a is Set_of (A),
                                R is Requests_gal (S, O, M))
-  inherits Semantics_requests (Rh, S, O, M, A, S_a, R) = 
+  inherits Semantics_requests (Rh, S, O, M, A, S_a, R) =
 
   (** Semantics of request &lang; +,s,o,m &rang; *)
-  logical let sem_req_get (r1, st1) = 
-    R!is_get (r1) -> 
-      S_a!est_element (A!create (R!get_s(r1), R!get_o(r1), R!get_m(r1)), 
+  logical let sem_req_get (r1, st1) =
+    R!is_get (r1) ->
+      S_a!est_element (A!create (R!get_s(r1), R!get_o(r1), R!get_m(r1)),
                        lambda (st1)) ;
 
   (** Semantics of request &lang; -,s,o,m &rang; *)
-  logical let sem_req_rel (r1, st1) = 
-     R!is_rel (r1) -> 
-       ~ S_a!est_element (A!create (R!get_s(r1), R!get_o(r1), R!get_m(r1)), 
+  logical let sem_req_rel (r1, st1) =
+     R!is_rel (r1) ->
+       ~ S_a!est_element (A!create (R!get_s(r1), R!get_o(r1), R!get_m(r1)),
                           lambda (st1)) ;
 
-  (** Semantics of both requests *)  
-  logical let sem_req (r1, st1) = 
+  (** Semantics of both requests *)
+  logical let sem_req (r1, st1) =
      sem_req_get (r1, st1) /\ sem_req_rel (r1, st1) ;
 
 end ;;
@@ -297,95 +314,95 @@ species Rho_blp inherits Rho, Lattice = end ;;
 (**
    A BLP state contains security information given by two functions f_s and f_o
  *)
-species States_blp (Rh is Rho_blp, 
-                    S is Subjects, O is Objects, M is Access_mode, 
-                    A is Access (S, O, M), S_a is Set_of (A)) 
-  inherits States (Rh, S, O, M, A, S_a) = 
+species States_blp (Rh is Rho_blp,
+                    S is Subjects, O is Objects, M is Access_mode,
+                    A is Access (S, O, M), S_a is Set_of (A))
+  inherits States (Rh, S, O, M, A, S_a) =
 
   (** Returns the level of security of the given subject *)
   signature f_s : Self -> S -> Rh ;
 
   (** Returns the level of security of the given object *)
   signature f_o : Self -> O -> Rh ;
- 
+
 end ;;
 
 (** Definition of the BLP security predicate *)
-species Policy_blp (Rh is Rho_blp, 
-                    S is Subjects, O is Objects, M is Access_mode, 
+species Policy_blp (Rh is Rho_blp,
+                    S is Subjects, O is Objects, M is Access_mode,
                     A is Access (S, O, M), S_a is Set_of (A))
-  inherits 
-    States_blp (Rh, S, O, M, A, S_a), 
-    Policy (Rh, S, O, M, A, S_a) = 
+  inherits
+    States_blp (Rh, S, O, M, A, S_a),
+    Policy (Rh, S, O, M, A, S_a) =
 
   (** (s,o,read) &isin; &Lambda;(st) &rarr; f_o(o) &le; f_s(s) *)
-  logical let mac (st in Self) = 
-     all a1 in A, 
-       S_a!est_element (a1, lambda (st)) -> 
-         M!equal (A!get_m (a1), M!read) -> 
-           Rh!order_inf (f_o (st, A!get_o (a1)), 
+  logical let mac (st in Self) =
+     all a1 in A,
+       S_a!est_element (a1, lambda (st)) ->
+         M!equal (A!get_m (a1), M!read) ->
+           Rh!order_inf (f_o (st, A!get_o (a1)),
                          f_s (st, A!get_s (a1))) ;
 
   (**
-     (s,o1,read) &isin; &Lambda;(st) &and; 
-     (s,o2,write) &isin; &Lambda;(st) &rarr; 
+     (s,o1,read) &isin; &Lambda;(st) &and;
+     (s,o2,write) &isin; &Lambda;(st) &rarr;
      f_o(o1) &le; f_o(o2)
    *)
-  logical let mac_star (st in Self) = 
-     all a1 a2 in A, 
-       S_a!est_element (a1, lambda (st)) -> 
-         S_a!est_element (a2, lambda (st)) -> 
-           M!equal (A!get_m (a1), M!read) -> 
-             M!equal (A!get_m (a2), M!write) -> 
-               S!equal (A!get_s (a1), A!get_s (a2)) -> 
-                 Rh!order_inf (f_o (st, A!get_o (a1)), 
+  logical let mac_star (st in Self) =
+     all a1 a2 in A,
+       S_a!est_element (a1, lambda (st)) ->
+         S_a!est_element (a2, lambda (st)) ->
+           M!equal (A!get_m (a1), M!read) ->
+             M!equal (A!get_m (a2), M!write) ->
+               S!equal (A!get_s (a1), A!get_s (a2)) ->
+                 Rh!order_inf (f_o (st, A!get_o (a1)),
                                f_o (st, A!get_o (a2))) ;
   (**
-     The BLP security predicate is the conjunction of the properties 
+     The BLP security predicate is the conjunction of the properties
      mac and mac_star
    *)
-  logical let omega (st in Self) = 
+  logical let omega (st in Self) =
      mac (st) /\ mac_star (st) ;
 
 end ;;
 
 (** Definition of the BLP transition function (reference monitor) *)
-species Models_blp (Rh is Rho_blp, 
-                    S is Subjects, O is Objects, M is Access_mode, 
-                    A is Access (S, O, M), S_a is Set_of (A), 
-                    R is Requests_gal (S, O, M), 
+species Models_blp (Rh is Rho_blp,
+                    S is Subjects, O is Objects, M is Access_mode,
+                    A is Access (S, O, M), S_a is Set_of (A),
+                    R is Requests_gal (S, O, M),
                     D is Decisions)
-  inherits 
-    Policy_blp (Rh, S, O, M, A, S_a), 
-    Semantics_requests_gal (Rh, S, O, M, A, S_a, R), 
-    Models (Rh, S, O, M, A, S_a, R, D)  = 
+  inherits
+    Policy_blp (Rh, S, O, M, A, S_a),
+    Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
+    Models (Rh, S, O, M, A, S_a, R, D)  =
 
   (** BLP transition function *)
-  let tau_blp (r1 in R, st1 in Self) = 
-     let s1 = R!get_s (r1) in 
-     let o1 = R!get_o (r1) in 
-     if R!is_get (r1) then 
+  let tau_blp (r1 in R, st1 in Self) =
+     let s1 = R!get_s (r1) in
+     let o1 = R!get_o (r1) in
+     if R!is_get (r1) then
        if M!equal (M!read, R!get_m (r1)) then (* R = <+,s,o,read> *)
-         if Rh!order_inf (f_o (st1, o1), f_s (st1, s1)) then 
-           if S_a!for_all (lambda (st1), 
-                          function a1 -> 
-                            let o2 = A!get_o (a1) in 
-                            or_b (M!different (M!write, A!get_m (a1)), 
-                                  or_b (O!equal (o1, o2), 
-                                        (Rh!order_inf (f_o (st1, o1), 
-                                                       f_o (st1, o2)))))) 
+         if Rh!order_inf (f_o (st1, o1), f_s (st1, s1)) then
+           if S_a!for_all (lambda (st1),
+                          function a1 ->
+                            let o2 = A!get_o (a1) in
+                            or_b (M!different (M!write, A!get_m (a1)),
+                                  or_b (O!equal (o1, o2),
+                                        (Rh!order_inf (f_o (st1, o1),
+                                                       f_o (st1, o2))))))
            then (D!yes, add (st1, A!create (s1, o1, M!read)))
            else (D!no, st1) (* s is writing in a non higher object *)
          else (D!no, st1) (* s has a lower level of security than o *)
-       else 
+       else
          if M!equal (M!write, R!get_m (r1)) then  (* R = <+,s,o,write> *)
-           if S_a!for_all (lambda (st1), 
-                          function a1 -> 
-                            let o2 = A!get_o (a1) in 
-                            or_b (M!different (M!read, A!get_m (a1)), 
-                                  or_b (O!equal (o1, o2), 
-                                        (Rh!order_inf (f_o (st1, o2), 
-                                                       f_o (st1, o1)))))) 
+           if S_a!for_all (lambda (st1),
+                          function a1 ->
+                            let o2 = A!get_o (a1) in
+                            or_b (M!different (M!read, A!get_m (a1)),
+                                  or_b (O!equal (o1, o2),
+                                        (Rh!order_inf (f_o (st1, o2),
+                                                       f_o (st1, o1))))))
            then (D!yes, add (st1, A!create (s1, o1, M!write)))
            else (D!no, st1) (* s is reading in a non lower object *)
          else (D!no, st1) (* R = <+,s,o,???> *)
@@ -412,34 +429,34 @@ species Rho_rbac (U is Users, Ro is Roles) inherits Rho = end ;;
    - A relation PA &sube; &weierp;((Objects x Access_mode) x Roles)
    - A function roles : Subjects &rarr; &weierp;(Roles)
  *)
-species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro), 
-                     S is Subjects, O is Objects, M is Access_mode, 
-                     A is Access (S, O, M), S_a is Set_of (A)) 
-  inherits States (Rh, S, O, M, A, S_a) = 
+species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
+                     S is Subjects, O is Objects, M is Access_mode,
+                     A is Access (S, O, M), S_a is Set_of (A))
+  inherits States (Rh, S, O, M, A, S_a) =
 
   (** Returns the user associated with the given subject *)
   signature user : Self -> S -> U ;
 
   (**
-     Returns true if the given user and role belong to the relation UA, 
+     Returns true if the given user and role belong to the relation UA,
      false otherwise
    *)
   signature ua : Self -> U -> Ro -> bool ;
 
   (**
-     Returns true if the given object, access mode and role belong to the 
+     Returns true if the given object, access mode and role belong to the
      relation PA, false otherwise
    *)
   signature pa : Self -> O -> M -> Ro -> bool ;
 
   (**
-     Returns true if the given role belongs to the given subject's active 
+     Returns true if the given role belongs to the given subject's active
      roles (function roles), false otherwise
    *)
   signature roles_s : Self -> S -> Ro -> bool ;
 
   (**
-     Returns true if a role satisfying two predicates is found, 
+     Returns true if a role satisfying two predicates is found,
      false otherwise
    *)
   signature exists_role : Self -> (Ro -> bool) -> (Ro -> bool) -> bool ;
@@ -447,349 +464,349 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
   signature exists_role_ua : Self -> (Ro -> bool) -> (Ro -> bool) -> bool ;
 
   (**
-     Add a relation between the given user and the given role to the 
+     Add a relation between the given user and the given role to the
      given state's UA relation
    *)
   signature add_ua : Self -> U -> Ro -> Self ;
 
   (**
-     Remove a relation between the given user and the given role from the 
+     Remove a relation between the given user and the given role from the
      given state's UA relation
    *)
   signature rm_ua : Self -> U -> Ro -> Self ;
 
   (**
-     Add a relation between the given object, the given access mode and 
+     Add a relation between the given object, the given access mode and
      the given role to the given state's PA relation
    *)
   signature add_pa : Self -> O -> M -> Ro -> Self ;
 
   (**
-     Remove a relation between the given object, the given access mode and 
+     Remove a relation between the given object, the given access mode and
      the given role from the given state's PA relation
-   *)     
+   *)
   signature rm_pa : Self -> O -> M -> Ro -> Self ;
 
   (**
-     If the only difference between two states is their current accesses 
+     If the only difference between two states is their current accesses
      then they have the same relation UA
    *)
-  property add_access_ua : 
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M, 
-      all ro1 in Ro, 
-        equal (st2, add (st1, A!create (s1, o1, m1))) -> 
-          ua (st1, user (st1, s2), ro1) -> 
+  property add_access_ua :
+    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
+      all ro1 in Ro,
+        equal (st2, add (st1, A!create (s1, o1, m1))) ->
+          ua (st1, user (st1, s2), ro1) ->
             ua (st2, user (st2, s2), ro1) ;
 
-  property del_access_ua : 
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M, 
-      all ro1 in Ro, 
-        equal (st2, del (st1, A!create (s1, o1, m1))) -> 
-          ua (st1, user (st1, s2), ro1) -> 
+  property del_access_ua :
+    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
+      all ro1 in Ro,
+        equal (st2, del (st1, A!create (s1, o1, m1))) ->
+          ua (st1, user (st1, s2), ro1) ->
             ua (st2, user (st2, s2), ro1) ;
 
   (**
-     If the only difference between two states is their current accesses 
+     If the only difference between two states is their current accesses
      then they have the same relation PA
    *)
-  property add_access_pa : 
-    all st1 st2 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M, 
-      all ro1 in Ro, 
-        equal (st2, add (st1, A!create (s1, o1, m1))) -> 
-          pa (st1, o2, m2, ro1) -> 
+  property add_access_pa :
+    all st1 st2 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M,
+      all ro1 in Ro,
+        equal (st2, add (st1, A!create (s1, o1, m1))) ->
+          pa (st1, o2, m2, ro1) ->
             pa (st2, o2, m2, ro1) ;
 
-  property del_access_pa : 
-    all st1 st2 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M, 
-      all ro1 in Ro, 
-        equal (st2, del (st1, A!create (s1, o1, m1))) -> 
-          pa (st1, o2, m2, ro1) -> 
+  property del_access_pa :
+    all st1 st2 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M,
+      all ro1 in Ro,
+        equal (st2, del (st1, A!create (s1, o1, m1))) ->
+          pa (st1, o2, m2, ro1) ->
             pa (st2, o2, m2, ro1) ;
 
   (**
-     If the only difference between two states is their current accesses 
+     If the only difference between two states is their current accesses
      then they have the "same" function roles
    *)
-  property add_access_roles_s_1 : 
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M, 
-      all ro1 in Ro, 
-        equal (st2, add (st1, A!create (s1, o1, m1))) -> 
-          roles_s (st1, s2, ro1) -> 
+  property add_access_roles_s_1 :
+    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
+      all ro1 in Ro,
+        equal (st2, add (st1, A!create (s1, o1, m1))) ->
+          roles_s (st1, s2, ro1) ->
             roles_s (st2, s2, ro1) ;
 
-  property add_access_roles_s_2 : 
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M, 
-      all ro1 in Ro, 
-        equal (st2, add (st1, A!create (s1, o1, m1))) -> 
-          roles_s (st2, s2, ro1) -> 
+  property add_access_roles_s_2 :
+    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
+      all ro1 in Ro,
+        equal (st2, add (st1, A!create (s1, o1, m1))) ->
+          roles_s (st2, s2, ro1) ->
             roles_s (st1, s2, ro1) ;
 
-  property del_access_roles_s_1 : 
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M, 
-      all ro1 in Ro, 
-        equal (st2, del (st1, A!create (s1, o1, m1))) -> 
-          roles_s (st1, s2, ro1) -> 
+  property del_access_roles_s_1 :
+    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
+      all ro1 in Ro,
+        equal (st2, del (st1, A!create (s1, o1, m1))) ->
+          roles_s (st1, s2, ro1) ->
             roles_s (st2, s2, ro1) ;
 
-  property del_access_roles_s_2 : 
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M, 
-      all ro1 in Ro, 
-        equal (st2, del (st1, A!create (s1, o1, m1))) -> 
-          roles_s (st2, s2, ro1) -> 
+  property del_access_roles_s_2 :
+    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
+      all ro1 in Ro,
+        equal (st2, del (st1, A!create (s1, o1, m1))) ->
+          roles_s (st2, s2, ro1) ->
             roles_s (st1, s2, ro1) ;
 
   (**
-     If the only difference between two states is their relation UA 
+     If the only difference between two states is their relation UA
      then they have the same current accesses
    *)
-  property add_ua_access : 
-    all st1 st2 in Self, all u1 in U, all ro1 in Ro, 
-      equal (st2, add_ua (st1, u1, ro1)) -> 
+  property add_ua_access :
+    all st1 st2 in Self, all u1 in U, all ro1 in Ro,
+      equal (st2, add_ua (st1, u1, ro1)) ->
         S_a!equal (lambda (st1), lambda (st2)) ;
 
-  property rm_ua_access : 
-    all st1 st2 in Self, all u1 in U, all ro1 in Ro, 
-      equal (st2, rm_ua (st1, u1, ro1)) -> 
+  property rm_ua_access :
+    all st1 st2 in Self, all u1 in U, all ro1 in Ro,
+      equal (st2, rm_ua (st1, u1, ro1)) ->
         S_a!equal (lambda(st1), lambda (st2)) ;
 
   (**
-     If the only difference between two states is their relation PA 
+     If the only difference between two states is their relation PA
      then they have the same current accesses
    *)
-  property add_pa_access : 
-    all st1 st2 in Self, all o1 in O, all m1 in M, all ro1 in Ro, 
-      equal (st2, add_pa (st1, o1, m1, ro1)) -> 
+  property add_pa_access :
+    all st1 st2 in Self, all o1 in O, all m1 in M, all ro1 in Ro,
+      equal (st2, add_pa (st1, o1, m1, ro1)) ->
         S_a!equal (lambda (st1), lambda (st2)) ;
 
-  property rm_pa_access : 
-    all st1 st2 in Self, all o1 in O, all m1 in M, all ro1 in Ro, 
-      equal (st2, rm_pa (st1, o1, m1, ro1)) -> 
+  property rm_pa_access :
+    all st1 st2 in Self, all o1 in O, all m1 in M, all ro1 in Ro,
+      equal (st2, rm_pa (st1, o1, m1, ro1)) ->
         S_a!equal (lambda (st1), lambda (st2)) ;
 
   (**
-     If state st2's relation UA is equal to state st1's relation UA 
-     plus a pair (u1,ro1) (UA_st2 = UA_st1 &cup; {(u1,ro1)}) then, 
-     If a pair belongs to state st1's relation UA then it belongs to 
+     If state st2's relation UA is equal to state st1's relation UA
+     plus a pair (u1,ro1) (UA_st2 = UA_st1 &cup; {(u1,ro1)}) then,
+     If a pair belongs to state st1's relation UA then it belongs to
      state st2's relation UA
    *)
-  property add_ua_ua : 
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro, 
-      equal (st2, add_ua (st1, u1, ro1)) -> 
-        ua (st1, user (st1, s1), ro2) -> 
+  property add_ua_ua :
+    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+      equal (st2, add_ua (st1, u1, ro1)) ->
+        ua (st1, user (st1, s1), ro2) ->
           ua (st2, user (st2, s1), ro2) ;
 
   (**
-     If state st2's relation UA is equal to state st1's relation UA 
-     minus a pair (u1,ro1) (UA_st2 = UA_st1 \ {(u1,ro1)}) then, 
-     If a pair belongs to state st2's relation UA then it belongs to 
+     If state st2's relation UA is equal to state st1's relation UA
+     minus a pair (u1,ro1) (UA_st2 = UA_st1 \ {(u1,ro1)}) then,
+     If a pair belongs to state st2's relation UA then it belongs to
      state st1's relation UA
    *)
-  property rm_ua_ua : 
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro, 
-      equal (st2, rm_ua (st1, u1, ro1)) -> 
-        ua (st2, user (st2, s1), ro2) -> 
+  property rm_ua_ua :
+    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+      equal (st2, rm_ua (st1, u1, ro1)) ->
+        ua (st2, user (st2, s1), ro2) ->
           ua (st1, user (st1, s1), ro2) ;
   (**
-     If the only difference between two states is their relation UA 
+     If the only difference between two states is their relation UA
      then they have the same relation PA
    *)
-  property add_ua_pa : 
-    all st1 st2 in Self, all o1 in O, all m1 in M, all u1 in U, 
-      all ro1 ro2 in Ro, 
-        equal (st2, add_ua (st1, u1, ro1)) -> 
-          pa (st1, o1, m1, ro2) -> 
+  property add_ua_pa :
+    all st1 st2 in Self, all o1 in O, all m1 in M, all u1 in U,
+      all ro1 ro2 in Ro,
+        equal (st2, add_ua (st1, u1, ro1)) ->
+          pa (st1, o1, m1, ro2) ->
             pa (st2, o1, m1, ro2) ;
 
-  property rm_ua_pa : 
-    all st1 st2 in Self, all o1 in O, all m1 in M, all u1 in U, 
-      all ro1 ro2 in Ro, 
-        equal (st2, rm_ua (st1, u1, ro1)) -> 
-          pa (st1, o1, m1, ro2) -> 
+  property rm_ua_pa :
+    all st1 st2 in Self, all o1 in O, all m1 in M, all u1 in U,
+      all ro1 ro2 in Ro,
+        equal (st2, rm_ua (st1, u1, ro1)) ->
+          pa (st1, o1, m1, ro2) ->
             pa (st2, o1, m1, ro2) ;
 
   (**
-     If the only difference between two states is their relation UA 
+     If the only difference between two states is their relation UA
      then they have the "same" function roles
    *)
-  property add_ua_roles_s_1 : 
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro, 
-      equal (st2, add_ua (st1, u1, ro1)) -> 
-        roles_s (st1, s1, ro2) -> 
+  property add_ua_roles_s_1 :
+    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+      equal (st2, add_ua (st1, u1, ro1)) ->
+        roles_s (st1, s1, ro2) ->
           roles_s (st2, s1, ro2) ;
 
-  property add_ua_roles_s_2 : 
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro, 
-      equal (st2, add_ua (st1, u1, ro1)) -> 
-        roles_s (st2, s1, ro2) -> 
+  property add_ua_roles_s_2 :
+    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+      equal (st2, add_ua (st1, u1, ro1)) ->
+        roles_s (st2, s1, ro2) ->
           roles_s (st1, s1, ro2) ;
 
-  property rm_ua_roles_s_1 : 
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro, 
-      equal (st2, rm_ua (st1, u1, ro1)) -> 
-        roles_s (st1, s1, ro2) -> 
+  property rm_ua_roles_s_1 :
+    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+      equal (st2, rm_ua (st1, u1, ro1)) ->
+        roles_s (st1, s1, ro2) ->
           roles_s (st2, s1, ro2) ;
 
-  property rm_ua_roles_s_2 : 
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro, 
-      equal (st2, rm_ua (st1, u1, ro1)) -> 
-        roles_s (st2, s1, ro2) -> 
+  property rm_ua_roles_s_2 :
+    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+      equal (st2, rm_ua (st1, u1, ro1)) ->
+        roles_s (st2, s1, ro2) ->
           roles_s (st1, s1, ro2) ;
 
   (**
-     If the only difference between two states is their relation PA 
+     If the only difference between two states is their relation PA
      then they have the same relation UA
    *)
-  property add_pa_ua : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
-      all ro1 ro2 in Ro, 
-        equal (st2, add_pa (st1, o1, m1, ro1)) -> 
-          ua (st1, user (st1, s1), ro2) -> 
+  property add_pa_ua :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      all ro1 ro2 in Ro,
+        equal (st2, add_pa (st1, o1, m1, ro1)) ->
+          ua (st1, user (st1, s1), ro2) ->
             ua (st2, user (st2, s1), ro2) ;
 
-  property rm_pa_ua : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
-      all ro1 ro2 in Ro, 
-        equal (st2, rm_pa (st1, o1, m1, ro1)) -> 
-          ua (st1, user (st1, s1), ro2) -> 
+  property rm_pa_ua :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      all ro1 ro2 in Ro,
+        equal (st2, rm_pa (st1, o1, m1, ro1)) ->
+          ua (st1, user (st1, s1), ro2) ->
             ua (st2, user (st2, s1), ro2) ;
 
   (**
-     If state st2's relation PA is equal to state st1's relation PA 
-     plus a pair ((o1,m1),ro1) (PA_st2 = PA_st1 &cup; {((o1,m1),ro1)}) then, 
-     If a pair belongs to state st1's relation PA then it belongs to 
+     If state st2's relation PA is equal to state st1's relation PA
+     plus a pair ((o1,m1),ro1) (PA_st2 = PA_st1 &cup; {((o1,m1),ro1)}) then,
+     If a pair belongs to state st1's relation PA then it belongs to
      state st2's relation PA
    *)
-  property add_pa_pa : 
-    all st1 st2 in Self, all o1 o2 in O, all m1 m2 in M, all ro1 ro2 in Ro, 
-      equal (st2, add_pa (st1, o1, m1, ro1)) -> 
-        pa (st1, o2, m2, ro2) -> 
+  property add_pa_pa :
+    all st1 st2 in Self, all o1 o2 in O, all m1 m2 in M, all ro1 ro2 in Ro,
+      equal (st2, add_pa (st1, o1, m1, ro1)) ->
+        pa (st1, o2, m2, ro2) ->
           pa (st2, o2, m2, ro2) ;
 
   (**
-     If state st2's relation PA is equal to state st1's relation PA 
-     minus a pair ((o1,m1),ro1) (PA_st2 = PA_st1 \ {((o1,m1),ro1)}) then, 
-     If a pair belongs to state st2's relation PA then it belongs to 
+     If state st2's relation PA is equal to state st1's relation PA
+     minus a pair ((o1,m1),ro1) (PA_st2 = PA_st1 \ {((o1,m1),ro1)}) then,
+     If a pair belongs to state st2's relation PA then it belongs to
      state st1's relation PA
    *)
-  property rm_pa_pa : 
-    all st1 st2 in Self, all o1 o2 in O, all m1 m2 in M, all ro1 ro2 in Ro, 
-      equal (st2, rm_pa (st1, o1, m1, ro1)) -> 
-        pa (st2, o2, m2, ro2) -> 
+  property rm_pa_pa :
+    all st1 st2 in Self, all o1 o2 in O, all m1 m2 in M, all ro1 ro2 in Ro,
+      equal (st2, rm_pa (st1, o1, m1, ro1)) ->
+        pa (st2, o2, m2, ro2) ->
           pa (st1, o2, m2, ro2) ;
 
   (**
-     If the only difference between two states is their relation PA 
+     If the only difference between two states is their relation PA
      then they have the "same" function roles
    *)
-  property add_pa_roles_s_1 : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
-      all ro1 ro2 in Ro, 
-        equal (st2, add_pa (st1, o1, m1, ro1)) -> 
-          roles_s (st1, s1, ro2) -> 
+  property add_pa_roles_s_1 :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      all ro1 ro2 in Ro,
+        equal (st2, add_pa (st1, o1, m1, ro1)) ->
+          roles_s (st1, s1, ro2) ->
             roles_s (st2, s1, ro2) ;
 
-  property add_pa_roles_s_2 : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
-      all ro1 ro2 in Ro, 
-        equal (st2, add_pa (st1, o1, m1, ro1)) -> 
-          roles_s (st2, s1, ro2) -> 
+  property add_pa_roles_s_2 :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      all ro1 ro2 in Ro,
+        equal (st2, add_pa (st1, o1, m1, ro1)) ->
+          roles_s (st2, s1, ro2) ->
             roles_s (st1, s1, ro2) ;
 
-  property rm_pa_roles_s_1 : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
-      all ro1 ro2 in Ro, 
-        equal (st2, rm_pa (st1, o1, m1, ro1)) -> 
-          roles_s (st1, s1, ro2) -> 
+  property rm_pa_roles_s_1 :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      all ro1 ro2 in Ro,
+        equal (st2, rm_pa (st1, o1, m1, ro1)) ->
+          roles_s (st1, s1, ro2) ->
             roles_s (st2, s1, ro2) ;
 
-  property rm_pa_roles_s_2 : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
-      all ro1 ro2 in Ro, 
-        equal (st2, rm_pa (st1, o1, m1, ro1)) -> 
-          roles_s (st2, s1, ro2) -> 
+  property rm_pa_roles_s_2 :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      all ro1 ro2 in Ro,
+        equal (st2, rm_pa (st1, o1, m1, ro1)) ->
+          roles_s (st2, s1, ro2) ->
             roles_s (st1, s1, ro2) ;
 
 end ;;
 
 (** Definition of the RBAC security predicate *)
-species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro), 
-                     S is Subjects, O is Objects, M is Access_mode, 
-                     A is Access (S, O, M), S_a is Set_of (A)) 
-  inherits 
-    States_rbac (U, Ro, Rh, S, O, M, A, S_a), 
-    Policy (Rh, S, O, M, A, S_a) = 
+species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
+                     S is Subjects, O is Objects, M is Access_mode,
+                     A is Access (S, O, M), S_a is Set_of (A))
+  inherits
+    States_rbac (U, Ro, Rh, S, O, M, A, S_a),
+    Policy (Rh, S, O, M, A, S_a) =
 
   (** The set of authorized roles for a given subject  *)
-  logical let er (st in Self, sp in S, r1 in Ro) = 
-     ex r2 in Ro, 
+  logical let er (st in Self, sp in S, r1 in Ro) =
+     ex r2 in Ro,
        Ro!leq (r1, r2) /\ ua (st, user (st, sp), r2) ;
 
   (** The set of authorized permissions for a given subject  *)
-  logical let ep (st in Self, sp in S, op in O, mo in M) = 
-     ex r1 r2 in Ro, 
+  logical let ep (st in Self, sp in S, op in O, mo in M) =
+     ex r1 r2 in Ro,
        roles_s (st, sp, r1) /\ Ro!leq (r2, r1) /\ pa (st, op, mo, r2) ;
 
   (**
-     If a role r has been activated by a subject sp 
+     If a role r has been activated by a subject sp
      then r belongs to sp's authorized roles
    *)
-  logical let roles_er (st in Self) = 
-     all sp in S, all r in Ro, 
-       roles_s (st, sp, r) -> 
+  logical let roles_er (st in Self) =
+     all sp in S, all r in Ro,
+       roles_s (st, sp, r) ->
          er (st, sp, r) ;
   (**
-     If the access (sp,op,mo) belongs to the current accesses of state 
+     If the access (sp,op,mo) belongs to the current accesses of state
      then the permission (op,mo) belongs to sp's authorized permissions
    *)
-  logical let perm_ep (st in Self) = 
-     all sp in S, all op in O, all mo in M, 
-       S_a!est_element (A!create (sp, op, mo), lambda (st)) -> 
+  logical let perm_ep (st in Self) =
+     all sp in S, all op in O, all mo in M,
+       S_a!est_element (A!create (sp, op, mo), lambda (st)) ->
          ep (st, sp, op, mo) ;
 
   (**
-     The RBAC security predicate is the conjunction of the properties 
+     The RBAC security predicate is the conjunction of the properties
      roles_er and perm_ep
    *)
-  logical let omega (st in Self) = 
+  logical let omega (st in Self) =
      roles_er (st) /\ perm_ep (st) ;
 
   (**
-     If s1 = s2, o1 = o2, m1 = m2 and if the permission (o1,m1) is authorized 
+     If s1 = s2, o1 = o2, m1 = m2 and if the permission (o1,m1) is authorized
      for s1 then the permission (o2,m2) is authorized for s2
    *)
-  property ep_equal : 
-    all st in Self, all s1 s2 in S, all o1 o2 in O, all m1 m2 in M, 
-      S!equal (s1, s2) -> 
-        O!equal (o1, o2) -> 
-          M!equal (m1, m2) -> 
-            ep (st, s1, o1, m1) -> 
+  property ep_equal :
+    all st in Self, all s1 s2 in S, all o1 o2 in O, all m1 m2 in M,
+      S!equal (s1, s2) ->
+        O!equal (o1, o2) ->
+          M!equal (m1, m2) ->
+            ep (st, s1, o1, m1) ->
               ep (st, s2, o2, m2) ;
 
   (** Specification of the function exists_role *)
-  property exists_role_spec : 
-    all st in Self, all sp in S, all op in O, all mo in M, 
-      exists_role (st, roles_s (st, sp), pa (st, op, mo)) -> 
-        ex ro1 ro2 in Ro, 
-          roles_s (st, sp, ro1) /\ 
-          Ro!equal (ro2, ro1) /\ 
+  property exists_role_spec :
+    all st in Self, all sp in S, all op in O, all mo in M,
+      exists_role (st, roles_s (st, sp), pa (st, op, mo)) ->
+        ex ro1 ro2 in Ro,
+          roles_s (st, sp, ro1) /\
+          Ro!equal (ro2, ro1) /\
           pa (st, op, mo, ro2) ;
 
   (** Specification of the function exists_role_ua *)
-  property exists_role_ua_spec : 
-    all st in Self, all sp in S, 
-      exists_role_ua (st, roles_s (st, sp), ua (st, user (st, sp))) -> 
-        ex ro1 ro2 in Ro, 
-          roles_s (st, sp, ro1) /\ 
-          Ro!equal (ro2, ro1) /\ 
+  property exists_role_ua_spec :
+    all st in Self, all sp in S,
+      exists_role_ua (st, roles_s (st, sp), ua (st, user (st, sp))) ->
+        ex ro1 ro2 in Ro,
+          roles_s (st, sp, ro1) /\
+          Ro!equal (ro2, ro1) /\
           ua (st, user (st, sp), ro2) ;
 
   (** If the predicate exists_role is true then the property ep is satisfied *)
-  theorem exists_role_ep : 
-    all st in Self, all sp in S, all op in O, all mo in M, 
-      exists_role (st, roles_s (st, sp), pa (st, op, mo)) -> 
+  theorem exists_role_ep :
+    all st in Self, all sp in S, all op in O, all mo in M,
+      exists_role (st, roles_s (st, sp), pa (st, op, mo)) ->
         ep (st, sp, op, mo)
-    proof = 
-      by property Ro!leq_reflexive, exists_role_spec 
+    proof =
+      by property Ro!leq_reflexive, exists_role_spec
          definition of ep ;
 
 (*   theorem exists_role_er :  *)
@@ -806,19 +823,19 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 end ;;
 
 (**
-   The administrative requests of the RBAC model : 
-   - &lang; +ua,s,u,r &rang; : the subject s asks to add to the relation UA 
+   The administrative requests of the RBAC model :
+   - &lang; +ua,s,u,r &rang; : the subject s asks to add to the relation UA
      a connection between the user u and the role r
-   - &lang; -ua,s,u,r &rang; : the subject s asks to remove from the relation 
+   - &lang; -ua,s,u,r &rang; : the subject s asks to remove from the relation
      UA the connection between the user u and the role r
-   - &lang; +pa,s,o,m,r &rang; : the subject s asks to add to the relation PA 
+   - &lang; +pa,s,o,m,r &rang; : the subject s asks to add to the relation PA
      a connection between the permission (o,m) and the role r
-   - &lang; -pa,s,o,m,r &rang; : the subject s asks to remove from the 
+   - &lang; -pa,s,o,m,r &rang; : the subject s asks to remove from the
      relation PA the connection between the permission (o,m) and the role r
  *)
-species Requests_adm_rbac (S is Subjects, O is Objects, M is Access_mode, 
-                           U is Users, R is Roles) 
-  inherits Requests = 
+species Requests_adm_rbac (S is Subjects, O is Objects, M is Access_mode,
+                           U is Users, R is Roles)
+  inherits Requests =
 
   (** Returns the user involved in the given administrative request *)
   signature get_u : Self -> U ;
@@ -827,161 +844,161 @@ species Requests_adm_rbac (S is Subjects, O is Objects, M is Access_mode,
   signature get_r : Self -> R ;
 
   (**
-     Returns true if the given administrative request is a "+ua" request, 
+     Returns true if the given administrative request is a "+ua" request,
      false otherwise
    *)
   signature is_add_ua : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "-ua" request, 
+     Returns true if the given administrative request is a "-ua" request,
      false otherwise
    *)
   signature is_rm_ua : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "+pa" request, 
+     Returns true if the given administrative request is a "+pa" request,
      false otherwise
    *)
   signature is_add_pa : Self -> bool ;
-  
+
   (**
-     Returns true if the given administrative request is a "-pa" request, 
+     Returns true if the given administrative request is a "-pa" request,
      false otherwise
    *)
   signature is_rm_pa : Self -> bool ;
 
   (**
-     Properties stating that an administrative request is either a 
+     Properties stating that an administrative request is either a
      "+ua" or a "-ua" or a "+pa" or a "-pa" request
    *)
-  property add_ua_then_not_rm_ua : 
-    all req in Self, 
-      is_rm_ua (req) -> 
+  property add_ua_then_not_rm_ua :
+    all req in Self,
+      is_rm_ua (req) ->
         ~ is_add_ua (req) ;
 
-  property add_pa_then_not_ua : 
-    all req in Self, 
-      is_add_pa (req) -> 
+  property add_pa_then_not_ua :
+    all req in Self,
+      is_add_pa (req) ->
         ((~ is_add_ua (req)) /\ (~ is_rm_ua (req))) ;
 
-  property rm_pa_then_not_add_pa_ua : 
-    all req in Self, 
-      is_rm_pa (req) -> 
+  property rm_pa_then_not_add_pa_ua :
+    all req in Self,
+      is_rm_pa (req) ->
         ((~ is_add_pa (req)) /\ (~ is_add_ua (req)) /\ (~ is_rm_ua (req))) ;
 
 end ;;
 
 (**
-   The requests of the RBAC model are the general requests and 
+   The requests of the RBAC model are the general requests and
    the RBAC administrative requests
  *)
-species Requests_rbac (S is Subjects, O is Objects, M is Access_mode, 
-                       U is Users, R is Roles) 
-  inherits 
-    Requests_gal (S, O, M), 
+species Requests_rbac (S is Subjects, O is Objects, M is Access_mode,
+                       U is Users, R is Roles)
+  inherits
+    Requests_gal (S, O, M),
     Requests_adm_rbac (S, O, M, U, R) = end ;;
 
 (** Definition of the RBAC transition function (reference monitor) *)
-species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro), 
-                     S is Subjects, O is Objects, M is Access_mode, 
-                     A is Access (S, O, M), S_a is Set_of (A), 
-                     Rr is Requests_rbac (S, O, M, U, Ro), 
-                     D is Decisions) 
-  inherits 
-    Policy_rbac (U, Ro, Rh, S, O, M, A, S_a), 
-    Semantics_requests_gal (Rh, S, O, M, A, S_a, Rr), 
-    Models (Rh, S, O, M, A, S_a, Rr, D) = 
+species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
+                     S is Subjects, O is Objects, M is Access_mode,
+                     A is Access (S, O, M), S_a is Set_of (A),
+                     Rr is Requests_rbac (S, O, M, U, Ro),
+                     D is Decisions)
+  inherits
+    Policy_rbac (U, Ro, Rh, S, O, M, A, S_a),
+    Semantics_requests_gal (Rh, S, O, M, A, S_a, Rr),
+    Models (Rh, S, O, M, A, S_a, Rr, D) =
 
   (** RBAC transition function on accesses *)
-  let tau_rbac_acc (r1 in Rr, st1 in Self) = 
+  let tau_rbac_acc (r1 in Rr, st1 in Self) =
      let s1 = Rr!get_s (r1) in
      let o1 = Rr!get_o (r1) in
      let m1 = Rr!get_m (r1) in
-     if Rr!is_get (r1) then 
+     if Rr!is_get (r1) then
        (* if ep(st1, s1, o1, m1) then *)
-       if exists_role (st1, roles_s (st1, s1), pa (st1, o1, m1)) 
+       if exists_role (st1, roles_s (st1, s1), pa (st1, o1, m1))
        then (D!yes, add (st1, A!create (s1, o1, m1)))
        else (D!no, st1)
      else (D!yes, del (st1, A!create (s1, o1, m1))) ;
 
-  let iter_ua (st1, u1, ro1, ap) = 
-     let sp = A!get_s (ap) in 
-     exists_role_ua (rm_ua (st1, u1, ro1), 
-                     roles_s (rm_ua (st1, u1, ro1), sp), 
-                     ua (rm_ua (st1, u1, ro1), 
+  let iter_ua (st1, u1, ro1, ap) =
+     let sp = A!get_s (ap) in
+     exists_role_ua (rm_ua (st1, u1, ro1),
+                     roles_s (rm_ua (st1, u1, ro1), sp),
+                     ua (rm_ua (st1, u1, ro1),
                          user (st1, sp))) ;
 
-  let iter_pa (st1, o1, m1, ro1, ap) = 
-     let sp = A!get_s (ap) in 
-     let op = A!get_o (ap) in 
-     let mp = A!get_m (ap) in 
-     exists_role (rm_pa (st1, o1, m1, ro1), 
-                  roles_s (rm_pa (st1, o1, m1, ro1), sp), 
+  let iter_pa (st1, o1, m1, ro1, ap) =
+     let sp = A!get_s (ap) in
+     let op = A!get_o (ap) in
+     let mp = A!get_m (ap) in
+     exists_role (rm_pa (st1, o1, m1, ro1),
+                  roles_s (rm_pa (st1, o1, m1, ro1), sp),
                   pa (rm_pa (st1, o1, m1, ro1), op, mp)) ;
 
   (** RBAC administrative transition function *)
-  let tau_rbac_adm (r1 in Rr, st1 in Self) = 
-     if Rr!is_add_ua (r1) then 
-       let u1 = Rr!get_u (r1) in
-       let ro1 = Rr!get_r (r1) in 
-          (D!yes, add_ua (st1, u1, ro1))
-     else if Rr!is_rm_ua (r1) then 
+  let tau_rbac_adm (r1 in Rr, st1 in Self) =
+     if Rr!is_add_ua (r1) then
        let u1 = Rr!get_u (r1) in
        let ro1 = Rr!get_r (r1) in
-       if S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) 
+          (D!yes, add_ua (st1, u1, ro1))
+     else if Rr!is_rm_ua (r1) then
+       let u1 = Rr!get_u (r1) in
+       let ro1 = Rr!get_r (r1) in
+       if S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1))
        then (D!yes, rm_ua (st1, u1, ro1))
        else (D!no, st1)
-     else if Rr!is_add_pa (r1) then 
-       let o1 = Rr!get_o (r1) in 
-       let m1 = Rr!get_m (r1) in 
-       let ro1 = Rr!get_r (r1) in 
+     else if Rr!is_add_pa (r1) then
+       let o1 = Rr!get_o (r1) in
+       let m1 = Rr!get_m (r1) in
+       let ro1 = Rr!get_r (r1) in
           (D!yes, add_pa (st1, o1, m1, ro1))
-     else if Rr!is_rm_pa (r1) then 
-       let o1 = Rr!get_o (r1) in 
-       let m1 = Rr!get_m (r1) in 
-       let ro1 = Rr!get_r (r1) in 
-       if S_a!for_all (lambda (st1), iter_pa (st1, o1, m1, ro1)) 
+     else if Rr!is_rm_pa (r1) then
+       let o1 = Rr!get_o (r1) in
+       let m1 = Rr!get_m (r1) in
+       let ro1 = Rr!get_r (r1) in
+       if S_a!for_all (lambda (st1), iter_pa (st1, o1, m1, ro1))
        then (D!yes, rm_pa (st1, o1, m1, ro1))
        else (D!no, st1)
      else (D!no, st1) ;
 
   (** RBAC transition function *)
-  let tau_rbac (r1 in Rr, st1 in Self) = 
-     if or_b (Rr!is_get (r1), Rr!is_rel (r1)) 
+  let tau_rbac (r1 in Rr, st1 in Self) =
+     if or_b (Rr!is_get (r1), Rr!is_rel (r1))
      then tau_rbac_acc (r1, st1)
      else tau_rbac_adm (r1, st1) ;
 
   (** Problem ro1 ro2 *)
-  property for_all_spec_ua_1 : 
-    all st1 st2 in Self, all u1 u2 in U, all ro1 ro2 in Ro, 
-      S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) -> 
-        equal (st2, rm_ua (st1, u2, ro2)) -> 
+  property for_all_spec_ua_1 :
+    all st1 st2 in Self, all u1 u2 in U, all ro1 ro2 in Ro,
+      S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) ->
+        equal (st2, rm_ua (st1, u2, ro2)) ->
           S_a!for_all (lambda(st2), iter_ua (st2, u1, ro1)) ;
 
   (** Problem ro1 ro2 *)
-  property for_all_spec_ua_2 : 
-    all st1 in Self, all u1 u2 in U, all ro1 ro2 in Ro, 
-      S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) -> 
+  property for_all_spec_ua_2 :
+    all st1 in Self, all u1 u2 in U, all ro1 ro2 in Ro,
+      S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) ->
         ua (st1, u2, ro2) ;
 
   (** Specification of the function iter_pa *)
-  property iter_pa_spec : 
-    all st1 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M, 
-      all ro1 in Ro, 
-        S_a!for_all (lambda (st1), iter_pa (st1, o1, m1, ro1)) -> 
-          S_a!est_element (A!create (s1, o2, m2), lambda (st1)) -> 
-            exists_role (rm_pa (st1, o1, m1, ro1), 
-                         roles_s (rm_pa (st1, o1, m1, ro1), s1), 
+  property iter_pa_spec :
+    all st1 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M,
+      all ro1 in Ro,
+        S_a!for_all (lambda (st1), iter_pa (st1, o1, m1, ro1)) ->
+          S_a!est_element (A!create (s1, o2, m2), lambda (st1)) ->
+            exists_role (rm_pa (st1, o1, m1, ro1),
+                         roles_s (rm_pa (st1, o1, m1, ro1), s1),
                          pa (rm_pa (st1, o1, m1, ro1), o2, m2)) ;
 
   (**
-     If two states st1 and st2 are equal and if the predicate exists_role 
+     If two states st1 and st2 are equal and if the predicate exists_role
      is true for st1 then it is also true for st2
    *)
-  property equal_exists_role : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
-      equal (st1, st2) -> 
-        exists_role (st1, roles_s (st1, s1), pa (st1, o1, m1)) -> 
+  property equal_exists_role :
+    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+      equal (st1, st2) ->
+        exists_role (st1, roles_s (st1, s1), pa (st1, o1, m1)) ->
           exists_role (st2, roles_s (st2, s1), pa (st2, o1, m1)) ;
 
   theorem tau_rbac_acc_secure :
@@ -1088,7 +1105,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                                   (D!yes, add(st1, A!create (Rr!get_s (r1),
                                                              Rr!get_o (r1),
                                                              Rr!get_m (r1))))
-      
+
                            by step <9>1
                               hypothesis H3
                       <9>3 prove tau_rbac_acc (r1, st1) =
@@ -1097,7 +1114,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                                                             Rr!get_m (r1))))
                            by step <9>2
                               hypothesis H7
-                      <9>4 prove (d1, st2) = 
+                      <9>4 prove (d1, st2) =
                                  (D!yes, add (st1, A!create (Rr!get_s (r1),
                                                              Rr!get_o (r1),
                                                              Rr!get_m (r1))))
@@ -1461,7 +1478,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                                                             Rr!get_m (r1))))
                            by step <9>11
                               hypothesis H7
-                      <9>2 prove (d1, st2) = 
+                      <9>2 prove (d1, st2) =
                                  (D!yes, add (st1, A!create (Rr!get_s (r1),
                                                              Rr!get_o (r1),
                                                              Rr!get_m (r1))))
@@ -1587,7 +1604,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                          by step <8>1
                             hypothesis H4
                             property Rr!get_is_not_rel
-                    <8>3 prove (d1, st2) = 
+                    <8>3 prove (d1, st2) =
                                (D!yes, del (st1, A!create (Rr!get_s (r1),
                                                            Rr!get_o (r1),
                                                            Rr!get_m (r1))))
@@ -1670,7 +1687,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                                                      Rr!get_m (r1))))
                    by step <5>11
                       hypothesis H7
-              <5>2 prove (d1, st2) = 
+              <5>2 prove (d1, st2) =
                          (D!yes, add (st1, A!create (Rr!get_s (r1),
                                                      Rr!get_o (r1),
                                                      Rr!get_m (r1))))
@@ -1743,7 +1760,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                  by step <4>10
                     hypothesis H4
                     property Rr!get_is_not_rel
-            <4>2 prove (d1, st2) = 
+            <4>2 prove (d1, st2) =
                        (D!yes, del(st1, A!create (Rr!get_s (r1),
                                                   Rr!get_o (r1),
                                                   Rr!get_m (r1))))
@@ -2404,7 +2421,7 @@ end ;;
 (** HRU *)
 
 (** Definition of a pair *)
-species Pair (X is Setoid, Y is Setoid) inherits Setoid = 
+species Pair (X is Setoid, Y is Setoid) inherits Setoid =
 
   (** Allows to create a pair *)
   signature create : X -> Y -> Self ;
@@ -2418,30 +2435,30 @@ species Pair (X is Setoid, Y is Setoid) inherits Setoid =
 end ;;
 
 (** Definition of the HRU security predicate *)
-species Policy_hru (Rh is Rho, 
-                    S is Subjects, O is Objects, M is Access_mode, 
-                    A is Access (S, O, M), S_a is Set_of (A)) 
-  inherits Policy (Rh, S, O, M, A, S_a) = 
+species Policy_hru (Rh is Rho,
+                    S is Subjects, O is Objects, M is Access_mode,
+                    A is Access (S, O, M), S_a is Set_of (A))
+  inherits Policy (Rh, S, O, M, A, S_a) =
 
   (** Returns true if the given access is authorized, false otherwise *)
   signature fd : A -> bool;
 
   (**
-     If two accesses a1 and a2 are equal and if a1 is authorized 
+     If two accesses a1 and a2 are equal and if a1 is authorized
      then a2 is authorized
    *)
   property fd_access :
     all a1 a2 in A,
-      A!equal (a1, a2) -> 
-        fd (a1) -> 
+      A!equal (a1, a2) ->
+        fd (a1) ->
           fd (a2) ;
   (**
-     The HRU security predicate : if an access belongs to the current 
+     The HRU security predicate : if an access belongs to the current
      accesses of a state then it is authorized
    *)
   logical let omega (st in Self) =
      all s1 in S, all o1 in O, all m1 in M,
-       S_a!est_element (A!create (s1, o1, m1), lambda (st)) -> 
+       S_a!est_element (A!create (s1, o1, m1), lambda (st)) ->
          fd (A!create (s1, o1, m1)) ;
 
 end ;;
@@ -2450,7 +2467,7 @@ end ;;
 species Model_hru (Rh is Rho,
                    S is Subjects, O is Objects, M is Access_mode,
                    A is Access (S, O, M), S_a is Set_of (A),
-                   R is Requests_gal (S, O, M), 
+                   R is Requests_gal (S, O, M),
                    D is Decisions)
   inherits
     Policy_hru (Rh, S, O, M, A, S_a),
@@ -2460,14 +2477,14 @@ species Model_hru (Rh is Rho,
   (** HRU transition function *)
   let tau_hru (r1 in R, st in Self) =
      if R!is_get (r1) then
-       if fd (A!create (R!get_s (r1), R!get_o (r1), R!get_m (r1))) 
-       then (D!yes, add (st, 
+       if fd (A!create (R!get_s (r1), R!get_o (r1), R!get_m (r1)))
+       then (D!yes, add (st,
                          A!create (R!get_s (r1), R!get_o (r1), R!get_m (r1))))
        else (D!no, st)
      else  (* R!is_rel (r1) *)
-         (D!yes, del (st, 
+         (D!yes, del (st,
                       A!create (R!get_s (r1), R!get_o (r1), R!get_m(r1)))) ;
-  
+
   theorem tau_hru_secure :
     all st1 st2 in Self, all r1 in R, all d1 in D,
       tau_hru (r1, st1) = (d1, st2) ->
@@ -2535,7 +2552,7 @@ species Model_hru (Rh is Rho,
                                                         R!get_m (r1))))
                        by step <7>2
                           hypothesis H31
-                  <7>4 prove (d1, st2) = 
+                  <7>4 prove (d1, st2) =
                              (D!yes, add (st1, A!create (R!get_s (r1),
                                                          R!get_o (r1),
                                                          R!get_m (r1))))
@@ -2643,7 +2660,7 @@ species Model_hru (Rh is Rho,
                                                   R!get_o (r1),
                                                   R!get_m (r1))))
                    by hypothesis H1, H4
-                      property (* beq_symm, *) 
+                      property (* beq_symm, *)
                                R!get_is_not_rel, right_substitution
                       definition of tau_hru
               <5>2 assume acc in A,
@@ -2748,7 +2765,7 @@ species Model_hru (Rh is Rho,
                                                              R!get_m (r1))))
                             by step <9>11
                                hypothesis H31
-                       <9>2 prove (d1, st2) = 
+                       <9>2 prove (d1, st2) =
                                   (D!yes, add(st1, A!create (R!get_s (r1),
                                                              R!get_o (r1),
                                                              R!get_m (r1))))
@@ -2870,7 +2887,7 @@ species Model_hru (Rh is Rho,
                           by step <8>1
                              hypothesis H4
                              property R!get_is_not_rel
-                     <8>3 prove (d1, st2) = 
+                     <8>3 prove (d1, st2) =
                                 (D!yes, del (st1, A!create (R!get_s (r1),
                                                             R!get_o (r1),
                                                             R!get_m (r1))))
@@ -2953,7 +2970,7 @@ species Model_hru (Rh is Rho,
                                                      R!get_m (r1))))
                    by step <5>11
                       hypothesis H31
-              <5>2 prove (d1, st2) = 
+              <5>2 prove (d1, st2) =
                          (D!yes, add (st1, A!create (R!get_s (r1),
                                                      R!get_o (r1),
                                                      R!get_m (r1))))
@@ -3021,7 +3038,7 @@ species Model_hru (Rh is Rho,
                  by step <4>10
                     hypothesis H4
                     property R!get_is_not_rel
-            <4>2 prove (d1, st2) = 
+            <4>2 prove (d1, st2) =
                        (D!yes, del (st1, A!create (R!get_s (r1),
                                                    R!get_o (r1),
                                                    R!get_m (r1))))
@@ -3049,8 +3066,8 @@ end ;;
 (** An ACL state contains security information given by the function acl *)
 species States_acl (Rh is Rho,
                     S is Subjects, O is Objects, M is Access_mode,
-                    A is Access (S, O, M), S_a is Set_of (A), 
-                    C is Pair (S, M), S_s_m is Set_of (C)) 
+                    A is Access (S, O, M), S_a is Set_of (A),
+                    C is Pair (S, M), S_s_m is Set_of (C))
   inherits States (Rh, S, O, M, A, S_a) =
 
   (** Incorrect *)
@@ -3061,14 +3078,14 @@ end ;;
 (** The ACL is the same as the HRU policy *)
 species Policy_acl (Rh is Rho,
                     S is Subjects, O is Objects, M is Access_mode,
-                    A is Access (S, O, M), S_a is Set_of (A), 
+                    A is Access (S, O, M), S_a is Set_of (A),
                     C is Pair (S, M), S_s_m is Set_of (C))
-  inherits 
+  inherits
     Policy_hru (Rh, S, O, M, A, S_a),
     States_acl (Rh, S, O, M, A, S_a, C, S_s_m) =
 
   (** Definition of the function fd *)
-  let fd (ac) = 
+  let fd (ac) =
      S_s_m!est_element (C!create (A!get_s (ac), A!get_m (ac)),
                         acl (A!get_o (ac))) ;
 
@@ -3081,21 +3098,21 @@ species Model_acl (Rh is Rho,
                    R is Requests_gal (S, O, M),
                    D is Decisions,
                    C is Pair (S, M), S_s_m is Set_of(C))
-  inherits 
+  inherits
     Policy_acl (Rh, S, O, M, A, S_a, C, S_s_m),
     Model_hru (Rh, S, O, M, A, S_a, R, D) = end ;;
 
 (** Capabilities *)
 
 (**
-   A Capabilities state contains security information given by the function 
+   A Capabilities state contains security information given by the function
    capabilities
  *)
-species States_capabilities (Rh is Rho, 
-                             S is Subjects, O is Objects, M is Access_mode, 
-                             A is Access (S, O, M), S_a is Set_of (A), 
-                             C is Pair (O, M), S_o_m is Set_of (C)) 
-  inherits States (Rh, S, O, M, A, S_a) = 
+species States_capabilities (Rh is Rho,
+                             S is Subjects, O is Objects, M is Access_mode,
+                             A is Access (S, O, M), S_a is Set_of (A),
+                             C is Pair (O, M), S_o_m is Set_of (C))
+  inherits States (Rh, S, O, M, A, S_a) =
 
   (** Returns the set of permissions associated with the given subject *)
   signature capabilities :  S -> S_o_m ;
@@ -3103,32 +3120,32 @@ species States_capabilities (Rh is Rho,
 end ;;
 
 (** The Capabilities policy is the same as the HRU policy *)
-species Policy_capabilities (Rh is Rho, 
-                             S is Subjects, O is Objects, M is Access_mode, 
-                             A is Access (S, O, M), S_a is Set_of (A), 
+species Policy_capabilities (Rh is Rho,
+                             S is Subjects, O is Objects, M is Access_mode,
+                             A is Access (S, O, M), S_a is Set_of (A),
                              C is Pair (O, M), S_o_m is Set_of (C))
-  inherits 
+  inherits
     Policy_hru (Rh, S, O, M, A, S_a),
     States_capabilities (Rh, S, O, M, A, S_a, C, S_o_m) =
 
   (** Definition of the function fd *)
-  let fd (ac) = 
+  let fd (ac) =
      S_o_m!est_element (C!create (A!get_o (ac), A!get_m (ac)),
                         capabilities (A!get_s (ac))) ;
 end ;;
 
 (**
-   The Capabilities transition function is the same as the HRU transition 
+   The Capabilities transition function is the same as the HRU transition
    function
  *)
-species Model_capabilities (Rh is Rho, 
-                            S is Subjects, O is Objects, M is Access_mode, 
+species Model_capabilities (Rh is Rho,
+                            S is Subjects, O is Objects, M is Access_mode,
                             A is Access (S, O, M), S_a is Set_of (A),
                             R is Requests_gal (S, O, M),
                             D is Decisions,
                             C is Pair (O, M),
                             S_o_m is Set_of (C))
-  inherits 
+  inherits
     Policy_capabilities (Rh, S, O, M, A, S_a, C, S_o_m),
     Model_hru (Rh, S, O, M, A, S_a, R, D) = end ;;
 
@@ -3151,20 +3168,20 @@ species Rho_unix (G is Groups) inherits Rho = end ;;
    - A function f_d_g : Objects &rarr; &weierp;(Access_mode)
    - A function f_d_o : Objects &rarr; &weierp;(Access_mode)
  *)
-species States_unix (G is Groups, Rh is Rho_unix (G), 
-                     S is Subjects, O is Objects, M is Access_mode, 
-                     A is Access (S, O, M), S_a is Set_of (A), 
-                     S_m is Set_of (M), S_g is Set_of (G)) 
-  inherits States (Rh, S, O, M, A, S_a) = 
-  
+species States_unix (G is Groups, Rh is Rho_unix (G),
+                     S is Subjects, O is Objects, M is Access_mode,
+                     A is Access (S, O, M), S_a is Set_of (A),
+                     S_m is Set_of (M), S_g is Set_of (G))
+  inherits States (Rh, S, O, M, A, S_a) =
+
   (**
-     Returns true if the given group belongs to the set of active groups (AG), 
+     Returns true if the given group belongs to the set of active groups (AG),
      false otherwise
    *)
   signature ag : Self -> G -> bool ;
 
   (**
-     Returns true if the given subject belongs to the set of super-users (SU), 
+     Returns true if the given subject belongs to the set of super-users (SU),
      false otherwise
    *)
   signature su : Self -> S -> bool ;
@@ -3181,10 +3198,10 @@ species States_unix (G is Groups, Rh is Rho_unix (G),
   (** Returns the owner's rights of the given object *)
   signature f_d_p : Self -> O -> S_m ;
 
-  (** Returns the group's rights of the given object *)  
+  (** Returns the group's rights of the given object *)
   signature f_d_g : Self -> O -> S_m ;
 
-  (** Returns the others' rights of the given object *)  
+  (** Returns the others' rights of the given object *)
   signature f_d_o : Self -> O -> S_m ;
 
   (** Add a group to the given state's active groups *)
@@ -3206,13 +3223,13 @@ species States_unix (G is Groups, Rh is Rho_unix (G),
   signature chgrp : Self -> O -> G -> Self ;
 
   (**
-     Add the given group to the set of groups to which belongs the given 
+     Add the given group to the set of groups to which belongs the given
      subject
    *)
   signature add_g_s : Self -> S -> G -> Self ;
 
   (**
-     Remove the given group from the set of groups to which belongs the given 
+     Remove the given group from the set of groups to which belongs the given
      subject
    *)
   signature rm_g_s : Self -> S -> G -> Self ;
@@ -3244,53 +3261,53 @@ species States_unix (G is Groups, Rh is Rho_unix (G),
 end ;;
 
 (** Definition of the Unix security predicate *)
-species Policy_unix (G is Groups, Rh is Rho_unix (G), 
-                     S is Subjects, O is Objects, M is Access_mode, 
-                     A is Access (S, O, M), S_a is Set_of (A), 
-                     S_m is Set_of (M), S_g is Set_of (G)) 
+species Policy_unix (G is Groups, Rh is Rho_unix (G),
+                     S is Subjects, O is Objects, M is Access_mode,
+                     A is Access (S, O, M), S_a is Set_of (A),
+                     S_m is Set_of (M), S_g is Set_of (G))
   inherits
-    States_unix (G, Rh, S, O, M, A, S_a, S_m, S_g), 
-    Policy (Rh, S, O, M, A, S_a) = 
+    States_unix (G, Rh, S, O, M, A, S_a, S_m, S_g),
+    Policy (Rh, S, O, M, A, S_a) =
 
   (** f_p(op) = sp &and; mp &isin; f_d_p(op) *)
-  logical let owner_access (st in Self) = 
-     all sp in S, all op in O, all mp in M, 
-       S!equal (f_p (st, op), sp) /\ 
+  logical let owner_access (st in Self) =
+     all sp in S, all op in O, all mp in M,
+       S!equal (f_p (st, op), sp) /\
        S_m!est_element (mp, f_d_p (st, op)) ;
 
   (** f_p(op) &ne; sp &and; f_g(op) &isin; f_s(sp) &and; mp &isin; f_d_g(op) *)
-  logical let group_access (st in Self) = 
-     all sp in S, all op in O, all mp in M, 
-     (~ S!equal (f_p (st, op), sp)) /\ 
-     S_g!est_element (f_g (st, op), f_s (st, sp)) /\ 
+  logical let group_access (st in Self) =
+     all sp in S, all op in O, all mp in M,
+     (~ S!equal (f_p (st, op), sp)) /\
+     S_g!est_element (f_g (st, op), f_s (st, sp)) /\
      S_m!est_element (mp, f_d_g (st, op)) ;
 
   (** f_p(op) &ne; sp &and; f_g(op) &notin; f_s(sp) &and; mp &isin; f_d_o(op) *)
-  logical let others_access (st in Self) = 
-     all sp in S, all op in O, all mp in M, 
-     (~ S!equal (f_p (st, op), sp)) /\  
-     (~ S_g!est_element (f_g (st, op), f_s (st, sp))) /\ 
+  logical let others_access (st in Self) =
+     all sp in S, all op in O, all mp in M,
+     (~ S!equal (f_p (st, op), sp)) /\
+     (~ S_g!est_element (f_g (st, op), f_s (st, sp))) /\
      S_m!est_element (mp, f_d_o (st, op)) ;
 
   (**
-     If an access (sp,op,mp) belongs to the current accesses of a state 
-     then sp can access op thanks to the owner's rights (owner_access) or 
-     thanks to the group's rights (group_access) or 
-     thanks to the others' rights (others_access) or 
+     If an access (sp,op,mp) belongs to the current accesses of a state
+     then sp can access op thanks to the owner's rights (owner_access) or
+     thanks to the group's rights (group_access) or
+     thanks to the others' rights (others_access) or
      because sp is a super-user
    *)
-  logical let omega (st in Self) = 
-     all sp in S, all op in O, all mp in M, 
-       S_a!est_element (A!create (sp, op, mp), lambda (st)) -> 
-         (owner_access (st) \/ 
-          group_access (st) \/ 
-          others_access (st) \/ 
+  logical let omega (st in Self) =
+     all sp in S, all op in O, all mp in M,
+       S_a!est_element (A!create (sp, op, mp), lambda (st)) ->
+         (owner_access (st) \/
+          group_access (st) \/
+          others_access (st) \/
           su (st, sp)) ;
 
 end ;;
 
 (** The species representing the rights of the Unix model *)
-species Rights inherits Setoid = 
+species Rights inherits Setoid =
 
   (** The right "owner" *)
   signature d_p : Self ;
@@ -3304,25 +3321,25 @@ species Rights inherits Setoid =
 end ;;
 
 (**
-   The administrative requests of the Unix model : 
+   The administrative requests of the Unix model :
    - &lang; +active,s,g &rang; : the subject s asks to activate the group g
    - &lang; -inactive,s,g &rang; : the subject s asks to deactivate the group g
-   - &lang; +right,s,o,a,z &rang; : the subject s asks to add the access mode 
+   - &lang; +right,s,o,a,z &rang; : the subject s asks to add the access mode
      a to the z's right of the object o
-   - &lang; -right,s,o,a,z &rang; : the subject s asks to remove the access 
+   - &lang; -right,s,o,a,z &rang; : the subject s asks to remove the access
      mode a from the z's right of the object o
-   - &lang; +chown,s1,o,s2 &rang; : the subject s1 asks to give the ownership 
+   - &lang; +chown,s1,o,s2 &rang; : the subject s1 asks to give the ownership
      over the object o to the subject s2
-   - &lang; +chgrp,s,o,g &rang; : the subject s asks to change the goup of the 
+   - &lang; +chgrp,s,o,g &rang; : the subject s asks to change the goup of the
      object o to the group g
-   - &lang; +group,s1,s2,g &rang; : the subject s1 asks to add the group g to 
+   - &lang; +group,s1,s2,g &rang; : the subject s1 asks to add the group g to
      subject s2's groups
-   - &lang; -group,s1,s2,g &rang; : the subject s1 asks to remove the group g 
+   - &lang; -group,s1,s2,g &rang; : the subject s1 asks to remove the group g
      from subject s2's groups
  *)
-species Requests_adm_unix (S is Subjects, O is Objects, M is Access_mode, 
-                           G is Groups, Z is Rights) 
-  inherits Requests = 
+species Requests_adm_unix (S is Subjects, O is Objects, M is Access_mode,
+                           G is Groups, Z is Rights)
+  inherits Requests =
 
   (** Returns the group involved in the given administrative request *)
   signature get_g : Self -> G ;
@@ -3336,67 +3353,67 @@ species Requests_adm_unix (S is Subjects, O is Objects, M is Access_mode,
   signature get_s2 : Self -> S ;
 
   (**
-     Returns true if the given administrative request is a "+active" request, 
+     Returns true if the given administrative request is a "+active" request,
      false otherwise
    *)
   signature is_active : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "-inactive" 
+     Returns true if the given administrative request is a "-inactive"
      request, false otherwise
    *)
   signature is_inactive : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "+right" request, 
+     Returns true if the given administrative request is a "+right" request,
      false otherwise
    *)
   signature is_add_right : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "-right" request, 
+     Returns true if the given administrative request is a "-right" request,
      false otherwise
    *)
   signature is_rm_right : Self -> bool ;
 
   (**
-     Returns true if the right involved in the given administrative request 
+     Returns true if the right involved in the given administrative request
      is the right "owner", false otherwise
    *)
   signature is_d_p : Self -> bool ;
 
   (**
-     Returns true if the right involved in the given administrative request 
+     Returns true if the right involved in the given administrative request
      is the right "group", false otherwise
    *)
   signature is_d_g : Self -> bool ;
 
   (**
-     Returns true if the right involved in the given administrative request 
+     Returns true if the right involved in the given administrative request
      is the right "others", false otherwise
    *)
   signature is_d_o : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "+chown" request, 
+     Returns true if the given administrative request is a "+chown" request,
      false otherwise
    *)
   signature is_chown : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "+chgrp" request, 
+     Returns true if the given administrative request is a "+chgrp" request,
      false otherwise
    *)
   signature is_chgrp : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "+group" request, 
+     Returns true if the given administrative request is a "+group" request,
      false otherwise
    *)
   signature is_add_group : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "-group" request, 
+     Returns true if the given administrative request is a "-group" request,
      false otherwise
    *)
   signature is_rm_group : Self -> bool ;
@@ -3404,309 +3421,309 @@ species Requests_adm_unix (S is Subjects, O is Objects, M is Access_mode,
 end ;;
 
 (**
-   The requests of the Unix model are the general requests and 
+   The requests of the Unix model are the general requests and
    the Unix administrative requests
  *)
-species Requests_unix (S is Subjects, O is Objects, M is Access_mode, 
-                       G is Groups, Z is Rights) 
-  inherits 
-    Requests_gal (S, O, M), 
+species Requests_unix (S is Subjects, O is Objects, M is Access_mode,
+                       G is Groups, Z is Rights)
+  inherits
+    Requests_gal (S, O, M),
     Requests_adm_unix (S, O, M, G, Z) = end ;;
 
 (** Definition of the Unix transition function (reference monitor) *)
-species Models_unix (G is Groups, Rh is Rho_unix (G), 
-                     S is Subjects, O is Objects, M is Access_mode, 
-                     A is Access (S, O, M), S_a is Set_of (A), 
-                     S_m is Set_of (M), S_g is Set_of (G), 
-                     Z is Rights, 
-                     R is Requests_unix (S, O, M, G, Z), 
-                     D is Decisions) 
+species Models_unix (G is Groups, Rh is Rho_unix (G),
+                     S is Subjects, O is Objects, M is Access_mode,
+                     A is Access (S, O, M), S_a is Set_of (A),
+                     S_m is Set_of (M), S_g is Set_of (G),
+                     Z is Rights,
+                     R is Requests_unix (S, O, M, G, Z),
+                     D is Decisions)
   inherits
-    Policy_unix (G, Rh, S, O, M, A, S_a, S_m, S_g), 
-    Semantics_requests_gal (Rh, S, O, M, A, S_a, R), 
-    Models (Rh, S, O, M, A, S_a, R, D)  = 
+    Policy_unix (G, Rh, S, O, M, A, S_a, S_m, S_g),
+    Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
+    Models (Rh, S, O, M, A, S_a, R, D)  =
 
   (** Unix transition function on accesses *)
-  let tau_unix_acc (r1 in R, st in Self) = 
+  let tau_unix_acc (r1 in R, st in Self) =
      let sp = R!get_s (r1) in
      let op = R!get_o (r1) in
      let mp = R!get_m (r1) in
-     if R!is_get (r1) then 
-       if(or_b (or_b (or_b (and_b (S!equal (f_p (st, op), sp), 
-                                   S_m!est_element (mp, f_d_p (st, op))), 
-                            (and_b (and_b ((not_b (S!equal (f_p (st, op), 
-                                                            sp))), 
-                                           S_g!est_element (f_g (st, op), 
-                                                            f_s (st, sp))), 
-                                    (S_m!est_element (mp, f_d_g (st, op)))))), 
-                      (and_b (and_b (not_b (S!equal (f_p (st, op), sp)), 
-                                     not_b (S_g!est_element (f_g (st, op), 
-                                                             f_s (st, sp)))), 
-                              (S_m!est_element (mp, f_d_o (st, op)))))), 
+     if R!is_get (r1) then
+       if(or_b (or_b (or_b (and_b (S!equal (f_p (st, op), sp),
+                                   S_m!est_element (mp, f_d_p (st, op))),
+                            (and_b (and_b ((not_b (S!equal (f_p (st, op),
+                                                            sp))),
+                                           S_g!est_element (f_g (st, op),
+                                                            f_s (st, sp))),
+                                    (S_m!est_element (mp, f_d_g (st, op)))))),
+                      (and_b (and_b (not_b (S!equal (f_p (st, op), sp)),
+                                     not_b (S_g!est_element (f_g (st, op),
+                                                             f_s (st, sp)))),
+                              (S_m!est_element (mp, f_d_o (st, op)))))),
                 su (st, sp)))
        then (D!yes, add (st, A!create (sp, op, mp)))
        else (D!no, st)
      else (D!yes, del (st, A!create (sp, op, mp))) ;
 
   (**
-     Returns true if the given access ac satisfies the conditions needed to 
+     Returns true if the given access ac satisfies the conditions needed to
      apply the request "-inactive", false otherwise
    *)
-  let predicate_inactive (st, ga, ac) = 
+  let predicate_inactive (st, ga, ac) =
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (not_b (S!equal (sp, f_p (st, od))), 
-                   (and_b (and_b (and_b (S_g!est_element (f_g (st, od), 
-                                                          f_s (st, sp)), 
-                                         not_b (S_m!est_element (md, 
-                                                                 f_d_o (st, 
-                                                                       od)))), 
-                                  G!equal (f_g (st, od), ga)), 
+     not_b (and_b (not_b (S!equal (sp, f_p (st, od))),
+                   (and_b (and_b (and_b (S_g!est_element (f_g (st, od),
+                                                          f_s (st, sp)),
+                                         not_b (S_m!est_element (md,
+                                                                 f_d_o (st,
+                                                                       od)))),
+                                  G!equal (f_g (st, od), ga)),
                            not_b (su (st, sp)))))) ;
 
   (**
-     Returns true if the given access ac satisfies the conditions needed to 
+     Returns true if the given access ac satisfies the conditions needed to
      apply the request "+right" with the right "owner", false otherwise
    *)
-  let predicate_right_d_p (st, sa, oa, ma, ac) = 
+  let predicate_right_d_p (st, sa, oa, ma, ac) =
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (A!equal (A!create (sp, od, md), 
-                            A!create (sa, oa, ma)), 
+     not_b (and_b (A!equal (A!create (sp, od, md),
+                            A!create (sa, oa, ma)),
                    not_b (su (st, sp)))) ;
 
   (**
-     Returns true if the given access ac satisfies the conditions needed to 
+     Returns true if the given access ac satisfies the conditions needed to
      apply the request "+right" with the right "group", false otherwise
    *)
-  let predicate_right_d_g (st, oa, ma, ac) = 
+  let predicate_right_d_g (st, oa, ma, ac) =
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (and_b (and_b (and_b (O!equal (od, oa), 
-                                        M!equal (md, ma)), 
-                                 S_g!est_element (f_g (st, od), f_s (st, 
-                                                                     sp))), 
-                          S_m!est_element (md, f_d_g (st, od))), 
+     not_b (and_b (and_b (and_b (and_b (O!equal (od, oa),
+                                        M!equal (md, ma)),
+                                 S_g!est_element (f_g (st, od), f_s (st,
+                                                                     sp))),
+                          S_m!est_element (md, f_d_g (st, od))),
                    not_b (su (st, sp)))) ;
 
   (**
-     Returns true if the given access ac satisfies the conditions needed to 
+     Returns true if the given access ac satisfies the conditions needed to
      apply the request "+right" with the right "others", false otherwise
    *)
-  let predicate_right_d_o (st, oa, ma, ac) = 
+  let predicate_right_d_o (st, oa, ma, ac) =
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (and_b (and_b (and_b (O!equal (od, oa), 
-                                        M!equal (md, ma)), 
-                                 not_b (S_g!est_element (f_g (st, od), 
-                                                         f_s (st, sp)))), 
-                          not_b (S!equal (sp, f_p(st, od)))), 
+     not_b (and_b (and_b (and_b (and_b (O!equal (od, oa),
+                                        M!equal (md, ma)),
+                                 not_b (S_g!est_element (f_g (st, od),
+                                                         f_s (st, sp)))),
+                          not_b (S!equal (sp, f_p(st, od)))),
                    not_b (su (st, sp)))) ;
 
   (**
-     Returns true if the given access ac satisfies the conditions needed to 
+     Returns true if the given access ac satisfies the conditions needed to
      apply the request "+chown", false otherwise
    *)
-  let predicate_chown (st, oa, s2a, ac) = 
+  let predicate_chown (st, oa, s2a, ac) =
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b 
-        (and_b (O!equal (od, oa), 
-                and_b 
-                (and_b 
-                 (or_b (and_b 
-                        (and_b 
-                         (S!equal (f_p (st, oa), sp), 
-                          S_m!est_element(md, f_d_p (st, oa))), 
-                         or_b (and_b (not_b (S_m!est_element (md, 
-                                                              f_d_g (st, oa))), 
-                                      not_b (S_g!est_element (f_g (st, oa), 
-                                                              f_s (st, sp)))), 
-                               not_b (S_m!est_element (md, f_d_o (st, oa))))), 
-                        and_b (S!equal (sp, s2a), 
-                               not_b (S_m!est_element (md, f_d_p (st, oa))))), 
-                  not_b (su (st, sp))), 
+     not_b
+        (and_b (O!equal (od, oa),
+                and_b
+                (and_b
+                 (or_b (and_b
+                        (and_b
+                         (S!equal (f_p (st, oa), sp),
+                          S_m!est_element(md, f_d_p (st, oa))),
+                         or_b (and_b (not_b (S_m!est_element (md,
+                                                              f_d_g (st, oa))),
+                                      not_b (S_g!est_element (f_g (st, oa),
+                                                              f_s (st, sp)))),
+                               not_b (S_m!est_element (md, f_d_o (st, oa))))),
+                        and_b (S!equal (sp, s2a),
+                               not_b (S_m!est_element (md, f_d_p (st, oa))))),
+                  not_b (su (st, sp))),
                  not_b (su (st, s2a))))) ;
-     
+
   (**
-     Returns true if the given access ac satisfies the conditions needed to 
+     Returns true if the given access ac satisfies the conditions needed to
      apply the request "+chgrp", false otherwise
    *)
-  let predicate_chgrp (st, oa, ga, ac) = 
+  let predicate_chgrp (st, oa, ga, ac) =
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b 
-        (and_b 
-         (and_b 
-          (O!equal (oa, od), 
+     not_b
+        (and_b
+         (and_b
+          (O!equal (oa, od),
            (or_b
             (and_b
              (and_b
-              (and_b (not_b (S!equal (sp, f_p (st, oa))), 
-                      S_g!est_element (f_g (st, od), 
-                                       f_s (st, sp))), 
-               not_b (S_g!est_element (ga, f_s (st, sp)))), 
-              not_b (S_m!est_element (md, f_d_o (st, od)))), 
-             and_b (and_b (and_b (not_b (S!equal (sp, f_p (st, oa))), 
-                                  not_b (S_g!est_element (f_g (st, oa), 
-                                                          f_s (st, sp)))), 
-                           S_g!est_element (ga, f_s (st, sp))), 
-                    not_b (S_m!est_element (md, f_d_g (st, od))))))), 
+              (and_b (not_b (S!equal (sp, f_p (st, oa))),
+                      S_g!est_element (f_g (st, od),
+                                       f_s (st, sp))),
+               not_b (S_g!est_element (ga, f_s (st, sp)))),
+              not_b (S_m!est_element (md, f_d_o (st, od)))),
+             and_b (and_b (and_b (not_b (S!equal (sp, f_p (st, oa))),
+                                  not_b (S_g!est_element (f_g (st, oa),
+                                                          f_s (st, sp)))),
+                           S_g!est_element (ga, f_s (st, sp))),
+                    not_b (S_m!est_element (md, f_d_g (st, od))))))),
           not_b (su (st, sp)))) ;
 
   (**
-     Returns true if the given access ac satisfies the conditions needed to 
+     Returns true if the given access ac satisfies the conditions needed to
      apply the request "+group", false otherwise
    *)
-  let predicate_pls_grp (st, ga, s2a, ac) = 
+  let predicate_pls_grp (st, ga, s2a, ac) =
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (and_b (and_b (and_b (and_b (S!equal (sp, s2a), 
-                                               not_b (S!equal (s2a, 
-                                                               f_p(st, od)))), 
-                                        G!equal (f_g (st, od), ga)), 
-                                 not_b (S_g!est_element (f_g (st, od), 
-                                                         f_s (st, s2a)))), 
-                          not_b (S_m!est_element (md, f_d_g (st, od)))), 
+     not_b (and_b (and_b (and_b (and_b (and_b (S!equal (sp, s2a),
+                                               not_b (S!equal (s2a,
+                                                               f_p(st, od)))),
+                                        G!equal (f_g (st, od), ga)),
+                                 not_b (S_g!est_element (f_g (st, od),
+                                                         f_s (st, s2a)))),
+                          not_b (S_m!est_element (md, f_d_g (st, od)))),
                    not_b (su (st, sp)))) ;
 
   (**
-     Returns true if the given access ac satisfies the conditions needed to 
+     Returns true if the given access ac satisfies the conditions needed to
      apply the request "-group", false otherwise
-   *)     
-  let predicate_mns_grp (st, ga, s2a, ac) = 
+   *)
+  let predicate_mns_grp (st, ga, s2a, ac) =
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (and_b (and_b (and_b (S!equal (sp, s2a), 
-                                        S_m!est_element (md, f_d_g (st, od))), 
-                                 G!equal (f_g (st, od), ga)), 
-                          not_b (S_m!est_element (md, f_d_o (st, od)))), 
+     not_b (and_b (and_b (and_b (and_b (S!equal (sp, s2a),
+                                        S_m!est_element (md, f_d_g (st, od))),
+                                 G!equal (f_g (st, od), ga)),
+                          not_b (S_m!est_element (md, f_d_o (st, od)))),
                    not_b (su (st, sp)))) ;
 
   (** Unix administrative transition function *)
-  let tau_unix_adm (r1 in R, st in Self) = 
-     if R!is_active (r1) then 
+  let tau_unix_adm (r1 in R, st in Self) =
+     if R!is_active (r1) then
        (* <+active,s,g> *)
        let sp = R!get_s (r1) in
        let sg = R!get_g (r1) in
-       if su (st, sp) 
+       if su (st, sp)
        then (D!yes, add_ag (st, sg))
        else (D!no, st)
-     else if R!is_inactive (r1) then 
+     else if R!is_inactive (r1) then
        (* <-active,s,g> *)
        let sp = R!get_s (r1) in
        let sg = R!get_g (r1) in
-       if and_b (and_b (su (st, sp), 
-                        ag (st, sg)), 
-                 S_a!for_all (lambda (st), 
+       if and_b (and_b (su (st, sp),
+                        ag (st, sg)),
+                 S_a!for_all (lambda (st),
                              predicate_inactive (st, sg)))
        then (D!yes, rm_ag (st, sg))
        else (D!no, st)
-     else if R!is_add_right (r1) then 
+     else if R!is_add_right (r1) then
        let ss = R!get_s (r1) in
        let so = R!get_o (r1) in
        let sm = R!get_m (r1) in
        (* same condition for all the requests <+right,...> *)
-       if or_b (S!equal (ss, f_p (st, so)), su (st, ss)) then 
-         if R!is_d_p (r1) then 
+       if or_b (S!equal (ss, f_p (st, so)), su (st, ss)) then
+         if R!is_d_p (r1) then
            (* <+right,s,o,a,DP> *)
            (D!yes, add_d_p (st, so, sm))
-         else if R!is_d_g (r1) then 
+         else if R!is_d_g (r1) then
            (* <+right,s,o,a,DG> *)
            (D!yes, add_d_g (st, so, sm))
-         else 
+         else
            (* <+right,s,o,a,DO> *)
            (D!yes, add_d_o (st, so, sm))
        else (D!no, st)
-     else  if R!is_rm_right (r1) then 
+     else  if R!is_rm_right (r1) then
        let ss = R!get_s (r1) in
        let so = R!get_o (r1) in
        let sm = R!get_m (r1) in
        if R!is_d_p (r1) then
          (* <-right,s,o,a,DP> *)
-         if and_b (or_b (S!equal (ss, f_p (st, so)), 
-                         su (st, ss)), 
-                   S_a!for_all (lambda (st), 
+         if and_b (or_b (S!equal (ss, f_p (st, so)),
+                         su (st, ss)),
+                   S_a!for_all (lambda (st),
                                predicate_right_d_p (st, ss, so, sm)))
          then (D!yes, rm_d_p (st, so, sm))
          else (D!no, st)
-       else if R!is_d_g (r1) then 
+       else if R!is_d_g (r1) then
          (* <-right,s,o,a,DG> *)
-         if and_b (or_b (S!equal (ss, f_p (st, so)), 
-                         su (st, ss)), 
-                   S_a!for_all (lambda (st), 
+         if and_b (or_b (S!equal (ss, f_p (st, so)),
+                         su (st, ss)),
+                   S_a!for_all (lambda (st),
                                predicate_right_d_g (st, so, sm)))
          then (D!yes, rm_d_g (st, so, sm))
          else (D!no, st)
-       else if and_b (or_b (S!equal (ss, f_p (st, so)), 
-                            su (st, ss)), 
-                      S_a!for_all (lambda (st), 
+       else if and_b (or_b (S!equal (ss, f_p (st, so)),
+                            su (st, ss)),
+                      S_a!for_all (lambda (st),
                                   predicate_right_d_o (st, so, sm)))
             (* <-right,s,o,a,DO> *)
        then (D!yes, rm_d_o (st, so, sm))
        else (D!no, st)
-     else if R!is_chown (r1) then 
+     else if R!is_chown (r1) then
        (* <+chown,s1,o,s2> *)
        let ss = R!get_s (r1) in
        let so = R!get_o (r1) in
        let ss2 = R!get_s2 (r1) in
-       if and_b (su (st, ss), 
+       if and_b (su (st, ss),
                  S_a!for_all (lambda (st), predicate_chown (st, so, ss2)))
        then (D!yes, chown (st, so, ss2))
        else (D!no, st)
-     else if R!is_chgrp (r1) then 
+     else if R!is_chgrp (r1) then
        (* <+chgrp,s,o,g> *)
        let ss = R!get_s (r1) in
        let so = R!get_o (r1) in
        let sg = R!get_g (r1) in
-       if and_b (su (st, ss), 
-                 S_a!for_all (lambda (st), 
+       if and_b (su (st, ss),
+                 S_a!for_all (lambda (st),
                              predicate_chgrp (st, so, sg)))
        then (D!yes, chgrp (st, so, sg))
        else (D!no, st)
-     else if R!is_add_group (r1) then 
+     else if R!is_add_group (r1) then
        let ss = R!get_s (r1) in
        let ss2 = R!get_s2 (r1) in
        let sg = R!get_g (r1) in
-       (* <+group,s1,s2,g> *) 
-       if and_b (su (st, ss), 
-                 S_a!for_all (lambda (st),  
+       (* <+group,s1,s2,g> *)
+       if and_b (su (st, ss),
+                 S_a!for_all (lambda (st),
                              predicate_pls_grp (st, sg, ss2)))
        then (D!yes, add_g_s (st, ss2, sg))
        else (D!no, st)
-     else if R!is_rm_group (r1) then 
+     else if R!is_rm_group (r1) then
        let ss = R!get_s (r1) in
        let ss2 = R!get_s2 (r1) in
        let sg = R!get_g (r1) in
        (* <-group,s1,s2,g> *)
-       if and_b (and_b (su (st, ss), 
-                        S_a!for_all (lambda (st), 
-                                    predicate_mns_grp (st, sg, ss2))), 
+       if and_b (and_b (su (st, ss),
+                        S_a!for_all (lambda (st),
+                                    predicate_mns_grp (st, sg, ss2))),
                  S_g!est_element (sg, f_s (st, ss2)))
        then (D!yes, rm_g_s (st, ss2, sg))
        else (D!no, st)
      else (D!no, st) ;
 
   (** Unix transition function *)
-  let tau_unix (r1 in R, st in Self) = 
-     if or_b (R!is_get (r1), R!is_rel (r1)) 
+  let tau_unix (r1 in R, st in Self) =
+     if or_b (R!is_get (r1), R!is_rel (r1))
      then tau_unix_acc (r1, st)
      else tau_unix_adm (r1, st) ;
- 
+
 end ;;
 
 (** Tickets *)
 
 (**
-   The species representing the unforgeable capabilities (tickets) of the 
+   The species representing the unforgeable capabilities (tickets) of the
    Tickets model
  *)
 species Tickets inherits Setoid = end ;;
@@ -3721,42 +3738,42 @@ species Rho_ticket (C is Tickets) inherits Rho = end ;;
    - A function W : Subjects &rarr; &weierp;(Tickets)
    - A function Owner : Objects &rarr; Subjects
  *)
-species States_ticket (C is Tickets, Rh is Rho_ticket (C), 
-                       S is Subjects, O is Objects, M is Access_mode, 
-                       A is Access (S, O, M), S_a is Set_of (A)) 
-  inherits States (Rh, S, O, M, A, S_a) = 
+species States_ticket (C is Tickets, Rh is Rho_ticket (C),
+                       S is Subjects, O is Objects, M is Access_mode,
+                       A is Access (S, O, M), S_a is Set_of (A))
+  inherits States (Rh, S, O, M, A, S_a) =
 
   (**
-     Returns true if the given ticket belongs to the set of used tickets (UC), 
+     Returns true if the given ticket belongs to the set of used tickets (UC),
      false otherwise
    *)
   signature uc : Self -> C -> bool ;
 
   (**
-     Returns true if the given ticket is associated with the given object and 
+     Returns true if the given ticket is associated with the given object and
      access mode according to the function T, false otherwise
    *)
   signature t : Self -> O -> M -> C -> bool ;
 
   (**
-     Returns true if the given ticket is associated with the given subject 
+     Returns true if the given ticket is associated with the given subject
      according to the function W, false otherwise
    *)
   signature w : Self -> S -> C -> bool ;
-  
+
   (**
-     Returns true if the given subject is the owner of the given object, 
+     Returns true if the given subject is the owner of the given object,
      false otherwise
    *)
   signature owner : Self -> O -> S -> bool ;
 
   (**
-     Returns true if a ticket satisfying three predicates is found, 
+     Returns true if a ticket satisfying three predicates is found,
      false otherwise
    *)
-  signature exists_ticket : 
+  signature exists_ticket :
             Self -> (C -> bool) -> (C -> bool) -> (C -> bool) -> bool ;
-  
+
   (**
      Updates the given state's security information concerning the given ticket
    *)
@@ -3769,63 +3786,63 @@ species States_ticket (C is Tickets, Rh is Rho_ticket (C),
   signature rm_uc : Self -> C -> Self ;
 
   (**
-     Add the given ticket to the set returned by the given state's T function 
+     Add the given ticket to the set returned by the given state's T function
      when applied to the given object and access mode
    *)
   signature add_t : Self -> O -> M -> C -> Self ;
 
   (**
-     Remove the given ticket from the set returned by the given state's T 
+     Remove the given ticket from the set returned by the given state's T
      function when applied to the given object and access mode
-   *)  
+   *)
   signature rm_t : Self -> O -> M -> C -> Self ;
 
   (**
-     Add the given ticket to the set returned by the given state's W function 
+     Add the given ticket to the set returned by the given state's W function
      when applied to the given subject
    *)
   signature add_w : Self -> S -> C -> Self ;
 
   (**
-     Remove the given ticket from the set returned by the given state's W 
+     Remove the given ticket from the set returned by the given state's W
      function when applied to the given subject
-   *)  
+   *)
   signature rm_w : Self -> S -> C -> Self ;
-  
+
 end ;;
 
-(** Definition of the Tickets security predicate *)  
-species Policy_ticket (C is Tickets, Rh is Rho_ticket (C), 
-                       S is Subjects, O is Objects, M is Access_mode, 
-                       A is Access (S, O, M), S_a is Set_of (A)) 
-  inherits 
-    States_ticket (C, Rh, S, O, M, A, S_a), 
-    Policy (Rh, S, O, M, A, S_a) = 
-  
+(** Definition of the Tickets security predicate *)
+species Policy_ticket (C is Tickets, Rh is Rho_ticket (C),
+                       S is Subjects, O is Objects, M is Access_mode,
+                       A is Access (S, O, M), S_a is Set_of (A))
+  inherits
+    States_ticket (C, Rh, S, O, M, A, S_a),
+    Policy (Rh, S, O, M, A, S_a) =
+
   (**
-     If an access (sp,op,mo) belongs to the current accesses of a state 
+     If an access (sp,op,mo) belongs to the current accesses of a state
      then there exists a ticket ct such that ct belongs to W(sp) and T(op,mo)
    *)
-  logical let omega (st in Self) = 
-     all sp in S, all op in O, all mo in M, 
-       ex ct in C, 
-         S_a!est_element (A!create (sp, op, mo), lambda (st)) -> 
+  logical let omega (st in Self) =
+     all sp in S, all op in O, all mo in M,
+       ex ct in C,
+         S_a!est_element (A!create (sp, op, mo), lambda (st)) ->
            (w (st, sp, ct) /\ t (st, op, mo, ct)) ;
 
 end ;;
 
 (**
-   The administrative requests of the Tickets model : 
-   - &lang; +generate,s,c,o,a &rang; : the subject s asks to generate a 
+   The administrative requests of the Tickets model :
+   - &lang; +generate,s,c,o,a &rang; : the subject s asks to generate a
      ticket c corresponding to the permission (o,a)
-   - &lang; +pass,s1,c,s2 &rang; : the subject s1 asks to give the ticket c 
+   - &lang; +pass,s1,c,s2 &rang; : the subject s1 asks to give the ticket c
      to the subject s2
-   - &lang; -remove,c,o,a, &rang; : the request allowing to ask to remove the 
+   - &lang; -remove,c,o,a, &rang; : the request allowing to ask to remove the
      ticket c corresponding to the permission (o,a)
  *)
-species Requests_adm_ticket (S is Subjects, O is Objects, M is Access_mode, 
-                             C is Tickets) 
-  inherits Requests = 
+species Requests_adm_ticket (S is Subjects, O is Objects, M is Access_mode,
+                             C is Tickets)
+  inherits Requests =
 
   (** Returns the ticket involved in the given administrative request *)
   signature get_c : Self -> C ;
@@ -3836,19 +3853,19 @@ species Requests_adm_ticket (S is Subjects, O is Objects, M is Access_mode,
   signature get_s2 : Self -> S ;
 
   (**
-     Returns true if the given administrative request is a "+generate" 
+     Returns true if the given administrative request is a "+generate"
      request, false otherwise
    *)
   signature is_generate : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "+pass" request, 
+     Returns true if the given administrative request is a "+pass" request,
      false otherwise
    *)
   signature is_pass : Self -> bool ;
 
   (**
-     Returns true if the given administrative request is a "-remove" request, 
+     Returns true if the given administrative request is a "-remove" request,
      false otherwise
    *)
   signature is_remove : Self -> bool ;
@@ -3856,42 +3873,42 @@ species Requests_adm_ticket (S is Subjects, O is Objects, M is Access_mode,
 end ;;
 
 (**
-   The requests of the Tickets model are the general requests and 
+   The requests of the Tickets model are the general requests and
    the Tickets administrative requests
  *)
-species Requests_ticket (S is Subjects, O is Objects, M is Access_mode, 
-                         C is Tickets) 
-  inherits 
-    Requests_gal (S, O, M), 
+species Requests_ticket (S is Subjects, O is Objects, M is Access_mode,
+                         C is Tickets)
+  inherits
+    Requests_gal (S, O, M),
     Requests_adm_ticket (S, O, M, C) = end ;;
 
 (** Definition of the Tickets transition function (reference monitor) *)
-species Models_ticket (C is Tickets, Rh is Rho_ticket (C), 
-                       S is Subjects, O is Objects, M is Access_mode, 
-                       A is Access (S, O, M), S_a is Set_of (A), 
-                       R is Requests_ticket (S, O, M, C), 
-                       D is Decisions) 
-  inherits 
-    Policy_ticket (C, Rh, S, O, M, A, S_a), 
-    Semantics_requests_gal (Rh, S, O, M, A, S_a, R), 
-    Models (Rh, S, O, M, A, S_a, R, D) = 
+species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
+                       S is Subjects, O is Objects, M is Access_mode,
+                       A is Access (S, O, M), S_a is Set_of (A),
+                       R is Requests_ticket (S, O, M, C),
+                       D is Decisions)
+  inherits
+    Policy_ticket (C, Rh, S, O, M, A, S_a),
+    Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
+    Models (Rh, S, O, M, A, S_a, R, D) =
 
   (** Tickets transition function on accesses *)
-  let tau_ticket_acc (r1 in R, st1 in Self) = 
+  let tau_ticket_acc (r1 in R, st1 in Self) =
      let s1 = R!get_s (r1) in
      let o1 = R!get_o (r1) in
      let m1 = R!get_m (r1) in
-     if R!is_get (r1) then 
-       if exists_ticket (st1, uc (st1), w (st1, s1), t (st1, o1, m1)) 
+     if R!is_get (r1) then
+       if exists_ticket (st1, uc (st1), w (st1, s1), t (st1, o1, m1))
        then (D!yes, add (st1, A!create (s1, o1, m1)))
        else (D!no, st1)
      else (D!yes, del (st1, A!create (s1, o1, m1))) ;
-     
+
   (**
-     Returns true if the given access ap satisfies the conditions needed to 
+     Returns true if the given access ap satisfies the conditions needed to
      apply the request "-remove", false otherwise
    *)
-  let iter_ticket (st1, c1, o1, m1, ap) = 
+  let iter_ticket (st1, c1, o1, m1, ap) =
      let sp = A!get_s (ap) in
      let op = A!get_o (ap) in
      let mp = A!get_m (ap) in
@@ -3899,34 +3916,34 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
      exists_ticket (stp, uc (stp), w (stp, sp), t (stp, op, mp)) ;
 
   (** Tickets administrative transition function *)
-  let tau_ticket_adm (r1 in R, st1 in Self) = 
-     if R!is_generate (r1) then 
+  let tau_ticket_adm (r1 in R, st1 in Self) =
+     if R!is_generate (r1) then
        let s1 = R!get_s (r1) in
        let c1 = R!get_c (r1) in
        let o1 = R!get_o (r1) in
        let m1 = R!get_m (r1) in
-       if and_b (not_b (uc (st1, c1)), owner (st1, o1, s1)) 
+       if and_b (not_b (uc (st1, c1)), owner (st1, o1, s1))
        then (D!yes, add_uc (add_w (add_t (st1, o1, m1, c1), s1, c1), c1))
        else (D!no, st1)
-     else if R!is_remove (r1) then 
+     else if R!is_remove (r1) then
        let c1 = R!get_c (r1) in
        let o1 = R!get_o (r1) in
        let m1 = R!get_m (r1) in
-       if S_a!for_all (lambda (st1), iter_ticket (st1, c1, o1, m1)) 
+       if S_a!for_all (lambda (st1), iter_ticket (st1, c1, o1, m1))
        then (D!yes, map_ticket (rm_uc (rm_t (st1, o1, m1, c1), c1), c1))
        else (D!no, st1)
-     else if R!is_pass (r1) then 
+     else if R!is_pass (r1) then
        let s1 = R!get_s (r1) in
        let c1 = R!get_c (r1) in
        let s2 = R!get_s2 (r1) in
-       if w (st1, s1, c1) 
+       if w (st1, s1, c1)
        then (D!yes, add_w (st1, s2, c1))
        else (D!no, st1)
      else (D!no, st1) ;
 
   (** Tickets transition function *)
-  let tau_ticket (r1 in R, st1 in Self) = 
-     if or_b (R!is_get (r1), R!is_rel (r1)) 
+  let tau_ticket (r1 in R, st1 in Self) =
+     if or_b (R!is_get (r1), R!is_rel (r1))
      then tau_ticket_acc (r1, st1)
      else tau_ticket_adm (r1, st1) ;
 

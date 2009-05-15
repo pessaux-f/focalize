@@ -1,12 +1,13 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  -  INRIA Rocquencourt           *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -14,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products.fcl,v 1.9 2009-05-14 15:31:06 doligez Exp $ *)
+(* $Id: products.fcl,v 1.10 2009-05-15 08:03:20 weis Exp $ *)
 
 (**
 
@@ -339,9 +340,10 @@ end;;
 (* end *)
 
 (* (\** A final model for products  *\) *)
-(* collection product_singleton_test *)
-(*   implements cartesian_singleton(singleton_1, singleton_2) = *)
+(* collection product_singleton_test = *)
+(*   implement cartesian_singleton(singleton_1, singleton_2) *)
 (*   (\* [rr] Hack to include representation types *\) *)
 (*   let _rep_a(a, b) = singleton_1!equal(a, b); *)
 (*   let _rep_b(a, b) = singleton_2!equal(a, b); *)
 (* end *)
+(* ;; *)

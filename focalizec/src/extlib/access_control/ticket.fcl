@@ -1,3 +1,20 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: ticket.fcl,v 1.12 2009-05-15 08:07:29 weis Exp $ *)
+
 (**
    @title Implementation of the Tickets model
    @author Jean Baron
@@ -552,7 +569,7 @@ species S_models_ticket (S_c is S_tickets,
             match t with
             | [ ] -> S_c!print (h) ^ "]"
             | _underscore ->
-	        S_c!print (h) ^ ",\n                     " ^ aux (t)
+                S_c!print (h) ^ ",\n                     " ^ aux (t)
      in "[" ^ aux (l) ;
 
   let print_t (l in list ((S_obj * S_acc_mod) * S_c)) in string =
@@ -652,36 +669,67 @@ species S_models_ticket (S_c is S_tickets,
 
 end ;;
 
-collection C_subjects implements S_subjects ;;
+collection C_subjects =
+  implement S_subjects
+end
+;;
 
-collection C_objects implements S_objects ;;
+collection C_objects =
+  implement S_objects
+end
+;;
 
-collection C_access_mode implements S_access_mode ;;
+collection C_access_mode =
+  implement S_access_mode
+end
+;;
 
-collection C_access
-  implements S_access (C_subjects, C_objects, C_access_mode) ;;
+collection C_access =
+  implement S_access (C_subjects, C_objects, C_access_mode)
+end
+;;
 
-collection C_set_of_access implements S_set_of (C_access) ;;
+collection C_set_of_access =
+  implement S_set_of (C_access)
+end
+;;
 
-collection C_decisions implements S_decisions ;;
+collection C_decisions =
+  implement S_decisions
+end
+;;
 
-collection C_get_release implements S_get_release ;;
+collection C_get_release =
+  implement S_get_release
+end
+;;
 
-collection C_tickets implements S_tickets ;;
+collection C_tickets =
+  implement S_tickets
+end
+;;
 
-collection C_requests_ticket
-  implements S_requests_ticket (C_subjects, C_objects, C_access_mode,
-        C_get_release, C_tickets) ;;
+collection C_requests_ticket =
+  implement S_requests_ticket (C_subjects, C_objects, C_access_mode,
+        C_get_release, C_tickets)
+end
+;;
 
-collection C_rho_ticket implements S_rho_ticket (C_tickets) ;;
+collection C_rho_ticket =
+  implement S_rho_ticket (C_tickets)
+end
+;;
 
-collection C_models_ticket
-  implements S_models_ticket (C_tickets, C_rho_ticket,
-                              C_subjects, C_objects, C_access_mode,
-                              C_access, C_set_of_access,
-                              C_get_release, C_requests_ticket, C_decisions) ;;
+collection C_models_ticket =
+  implement S_models_ticket
+    (C_tickets, C_rho_ticket,
+     C_subjects, C_objects, C_access_mode,
+     C_access, C_set_of_access,
+     C_get_release, C_requests_ticket, C_decisions)
+end
+;;
 
-let o1 = C_objects!create (1, "o1")  ;;
+let o1 = C_objects!create (1, "o1") ;;
 
 let o2 = C_objects!create (2, "o2") ;;
 
