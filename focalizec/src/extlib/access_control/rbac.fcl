@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rbac.fcl,v 1.13 2009-05-15 08:09:55 weis Exp $ *)
+(* $Id: rbac.fcl,v 1.12 2009-05-15 08:07:29 weis Exp $ *)
 
 (**
    @title Implementation of the RBAC model
@@ -542,7 +542,7 @@ species S_models_rbac (S_us is S_users,
 
 (*   let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self = *)
 (*      let rec aux (f in list ((S_obj * S_acc_mod) * S_ro), *)
-(*           l in list ((S_obj * S_acc_mod) * S_ro)) = *)
+(* 		  l in list ((S_obj * S_acc_mod) * S_ro)) = *)
 (*         match l with *)
 (*         | [ ] -> *)
 (*             (lambda (st), (fst (upsilon (st)), *)
@@ -558,8 +558,8 @@ species S_models_rbac (S_us is S_users,
 (*      in aux ([ ], fst (snd (snd (upsilon (st))))) ; *)
 
   let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
-     let rec aux (l in list ((S_obj * S_acc_mod) * S_ro),
-          f in list ((S_obj * S_acc_mod) * S_ro)) =
+     let rec aux (l in list ((S_obj * S_acc_mod) * S_ro), 
+		  f in list ((S_obj * S_acc_mod) * S_ro)) =
         match l with
         | [ ] ->
             (lambda (st), (fst (upsilon (st)),
@@ -576,7 +576,7 @@ species S_models_rbac (S_us is S_users,
 
   let equal (st1, st2) = S_set_acc!equal (lambda (st1), lambda (st2)) ;
 
-  let element =
+  let element = 
      create (S_set_acc!vide, (function _su -> S_us!element), [ ], [ ], [ ]) ;
 
   let print_ua (l in list (S_us * S_ro)) in string =
