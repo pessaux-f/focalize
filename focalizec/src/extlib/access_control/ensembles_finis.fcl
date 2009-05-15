@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.18 2009-05-15 08:07:29 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.19 2009-05-15 11:20:25 doligez Exp $ *)
 
 (**
 
@@ -37,7 +37,8 @@ open "sets_orders" ;;
 @latex \mathcal{A}
 *)
 
-species Ensembles_finis (A is Setoid) inherits Partial_order =
+species Ensembles_finis (A is Setoid) =
+  inherit Partial_order ;
   (** l'ensemble vide.
      @mathml <emptyset/>
      @latex \emptyset
@@ -259,8 +260,8 @@ end
 (****************************************************************************)
 
 (** Cas des sous-ensemble d'un ensemble ordonné. *)
-species Ensembles_finis_ordonnes (A is Ordered_set) inherits
-  Ensembles_finis (A) =
+species Ensembles_finis_ordonnes (A is Ordered_set) =
+  inherit Ensembles_finis (A) ;
 
   (** Le minimum d'un ensemble. *)
   signature min : Self -> A;
@@ -302,7 +303,8 @@ end
 (*******************************************************)
 
 (** implantation des sous-ensembles à partir de listes; cas non ordonné. *)
-species Liste (A is Setoid) inherits Ensembles_finis (A) =
+species Liste (A is Setoid) =
+  inherit Ensembles_finis (A) ;
 
   representation = basics#list (A);
 
@@ -1497,8 +1499,8 @@ end
 (*********************************************)
 
 (** ensembles représentés par des listes; cas ordonné. *)
-species Liste_triee (A is Ordered_set) inherits
-   Ensembles_finis_ordonnes (A), Liste (A) =
+species Liste_triee (A is Ordered_set) =
+  inherit Ensembles_finis_ordonnes (A), Liste (A) ;
 
    (** invariant de représentation: les listes sont triées dans l'ordre croissant;
        chaque élément est strictement plus petit que le suivant. *)
@@ -2048,7 +2050,8 @@ end
 
 (**************************************************************)
 
-species Entiers_concrets inherits Ordered_set =
+species Entiers_concrets =
+  inherit Ordered_set ;
   representation = int;
   let element = 1;
   let equal = int_eq;

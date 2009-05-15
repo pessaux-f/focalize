@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: access_control.fcl,v 1.10 2009-05-15 08:09:55 weis Exp $ *)
+(* $Id: access_control.fcl,v 1.11 2009-05-15 11:20:25 doligez Exp $ *)
 
 (**
    @title Implementation of access control models
@@ -32,7 +32,8 @@ open "ensembles_finis" ;;
 (** Framework *)
 
 (** Set_of is a stub species inheriting Ensembles_finis *)
-species Set_of (A is Setoid) inherits Ensembles_finis (A) =
+species Set_of (A is Setoid) =
+  inherit Ensembles_finis (A) ;
 
   (** for_all(E, P) is true iff for any x in E, P(x) is true *)
   signature for_all : Self -> (A -> bool) -> bool ;
@@ -56,16 +57,17 @@ species Set_of (A is Setoid) inherits Ensembles_finis (A) =
 end ;;
 
 (** The security parameter of an access control policy *)
-species Rho inherits Setoid = end ;;
+species Rho = inherit Setoid ; end ;;
 
 (** The species representing the subjects of an access control policy *)
-species Subjects inherits Setoid = end ;;
+species Subjects = inherit Setoid ; end ;;
 
 (** The species representing the objects of an access control policy *)
-species Objects inherits Setoid = end ;;
+species Objects = inherit Setoid ; end ;;
 
 (** The usually considered access modes *)
-species Access_mode inherits Setoid =
+species Access_mode =
+  inherit Setoid ;
 
   (** The read access mode *)
   signature read : Self ;
@@ -76,8 +78,8 @@ species Access_mode inherits Setoid =
 end ;;
 
 (** An access is a triple Subject x Object x Access mode *)
-species Access (S is Subjects, O is Objects, M is Access_mode)
-  inherits Setoid =
+species Access (S is Subjects, O is Objects, M is Access_mode) =
+  inherit Setoid ;
 
   (** Allows to create an access *)
   signature create : S -> O -> M -> Self ;
@@ -104,8 +106,8 @@ end ;;
 
 (** A state contains at least the set of current accesses *)
 species States (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
-                A is Access (S, O, M), S_a is Set_of (A))
-  inherits Setoid =
+                A is Access (S, O, M), S_a is Set_of (A)) =
+  inherit Setoid ;
 
   (** Returns the set of current accesses *)
   signature lambda : Self -> S_a ;
@@ -159,8 +161,8 @@ end ;;
 
 (** An access control policy defines a security predicate *)
 species Policy (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
-                A is Access (S, O, M), S_a is Set_of (A))
-  inherits States (Rh, S, O, M, A, S_a) =
+                A is Access (S, O, M), S_a is Set_of (A)) =
+  inherit States (Rh, S, O, M, A, S_a) ;
 
   (** Security predicate of an access control policy *)
   signature omega : Self -> prop ;
@@ -178,10 +180,11 @@ species Policy (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
 end ;;
 
 (** The species representing the requests of an access control policy *)
-species Requests inherits Setoid = end ;;
+species Requests = inherit Setoid ; end ;;
 
 (** The decisions that can be answered by a reference monitor *)
-species Decisions inherits Setoid =
+species Decisions =
+  inherit Setoid ;
 
   (** The decision yes *)
   signature yes : Self ;
@@ -203,8 +206,8 @@ end ;;
 species Semantics_requests (Rh is Rho,
                             S is Subjects, O is Objects, M is Access_mode,
                             A is Access (S, O, M), S_a is Set_of (A),
-                            R is Requests)
-  inherits States (Rh, S, O, M, A, S_a) =
+                            R is Requests) =
+  inherit States (Rh, S, O, M, A, S_a) ;
 
   (** The predicate defining the semantics of requests *)
   signature sem_req : R -> Self -> prop ;
@@ -218,10 +221,10 @@ end ;;
 species Models (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
                 A is Access (S, O, M), S_a is Set_of (A),
                 R is Requests,
-                D is Decisions)
-  inherits
+                D is Decisions) =
+  inherit
     Policy (Rh, S, O, M, A, S_a),
-    Semantics_requests(Rh, S, O, M, A, S_a, R) =
+    Semantics_requests(Rh, S, O, M, A, S_a, R) ;
 
   (** (d1,st1) = (d2,st2) &rarr; d1 = d2 *)
   property left_substitution :
@@ -244,8 +247,8 @@ end ;;
    - &lang; -,s,o,m &rang; : the subject s asks to release an access over the
      object o according to the access mode m
  *)
-species Requests_gal(S is Subjects, O is Objects, M is Access_mode)
-  inherits Requests =
+species Requests_gal(S is Subjects, O is Objects, M is Access_mode) =
+  inherit Requests ;
 
   (** Returns the subject involved in the given request *)
   signature get_s : Self -> S ;
@@ -285,8 +288,8 @@ end ;;
 species Semantics_requests_gal(Rh is Rho,
                                S is Subjects, O is Objects, M is Access_mode,
                                A is Access (S, O, M), S_a is Set_of (A),
-                               R is Requests_gal (S, O, M))
-  inherits Semantics_requests (Rh, S, O, M, A, S_a, R) =
+                               R is Requests_gal (S, O, M)) =
+  inherit Semantics_requests (Rh, S, O, M, A, S_a, R) ;
 
   (** Semantics of request &lang; +,s,o,m &rang; *)
   logical let sem_req_get (r1, st1) =
@@ -309,15 +312,15 @@ end ;;
 (** Bell & LaPadula (BLP) *)
 
 (** The security parameter of the BLP model is a lattice *)
-species Rho_blp inherits Rho, Lattice = end ;;
+species Rho_blp = inherit Rho, Lattice ; end ;;
 
 (**
    A BLP state contains security information given by two functions f_s and f_o
  *)
 species States_blp (Rh is Rho_blp,
                     S is Subjects, O is Objects, M is Access_mode,
-                    A is Access (S, O, M), S_a is Set_of (A))
-  inherits States (Rh, S, O, M, A, S_a) =
+                    A is Access (S, O, M), S_a is Set_of (A)) =
+  inherit States (Rh, S, O, M, A, S_a) ;
 
   (** Returns the level of security of the given subject *)
   signature f_s : Self -> S -> Rh ;
@@ -330,10 +333,10 @@ end ;;
 (** Definition of the BLP security predicate *)
 species Policy_blp (Rh is Rho_blp,
                     S is Subjects, O is Objects, M is Access_mode,
-                    A is Access (S, O, M), S_a is Set_of (A))
-  inherits
+                    A is Access (S, O, M), S_a is Set_of (A)) =
+  inherit
     States_blp (Rh, S, O, M, A, S_a),
-    Policy (Rh, S, O, M, A, S_a) =
+    Policy (Rh, S, O, M, A, S_a) ;
 
   (** (s,o,read) &isin; &Lambda;(st) &rarr; f_o(o) &le; f_s(s) *)
   logical let mac (st in Self) =
@@ -371,11 +374,11 @@ species Models_blp (Rh is Rho_blp,
                     S is Subjects, O is Objects, M is Access_mode,
                     A is Access (S, O, M), S_a is Set_of (A),
                     R is Requests_gal (S, O, M),
-                    D is Decisions)
-  inherits
+                    D is Decisions) =
+  inherit
     Policy_blp (Rh, S, O, M, A, S_a),
     Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
-    Models (Rh, S, O, M, A, S_a, R, D)  =
+    Models (Rh, S, O, M, A, S_a, R, D) ;
 
   (** BLP transition function *)
   let tau_blp (r1 in R, st1 in Self) =
@@ -414,13 +417,13 @@ end ;;
 (** Role-Based Access Control (RBAC) *)
 
 (** The species representing the users of the RBAC model *)
-species Users inherits Setoid = end ;;
+species Users = inherit Setoid ; end ;;
 
 (** The roles of an RBAC model are partially ordered *)
-species Roles inherits Partial_order = end ;;
+species Roles = inherit Partial_order ; end ;;
 
 (** The security parameter of the RBAC model is composed of users and roles *)
-species Rho_rbac (U is Users, Ro is Roles) inherits Rho = end ;;
+species Rho_rbac (U is Users, Ro is Roles) = inherit Rho ; end ;;
 
 (**
    An RBAC state contains security information given by :
@@ -431,8 +434,8 @@ species Rho_rbac (U is Users, Ro is Roles) inherits Rho = end ;;
  *)
 species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                      S is Subjects, O is Objects, M is Access_mode,
-                     A is Access (S, O, M), S_a is Set_of (A))
-  inherits States (Rh, S, O, M, A, S_a) =
+                     A is Access (S, O, M), S_a is Set_of (A)) =
+  inherit States (Rh, S, O, M, A, S_a) ;
 
   (** Returns the user associated with the given subject *)
   signature user : Self -> S -> U ;
@@ -731,10 +734,10 @@ end ;;
 (** Definition of the RBAC security predicate *)
 species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                      S is Subjects, O is Objects, M is Access_mode,
-                     A is Access (S, O, M), S_a is Set_of (A))
-  inherits
+                     A is Access (S, O, M), S_a is Set_of (A)) =
+  inherit
     States_rbac (U, Ro, Rh, S, O, M, A, S_a),
-    Policy (Rh, S, O, M, A, S_a) =
+    Policy (Rh, S, O, M, A, S_a) ;
 
   (** The set of authorized roles for a given subject  *)
   logical let er (st in Self, sp in S, r1 in Ro) =
@@ -834,8 +837,8 @@ end ;;
      relation PA the connection between the permission (o,m) and the role r
  *)
 species Requests_adm_rbac (S is Subjects, O is Objects, M is Access_mode,
-                           U is Users, R is Roles)
-  inherits Requests =
+                           U is Users, R is Roles) =
+  inherit Requests ;
 
   (** Returns the user involved in the given administrative request *)
   signature get_u : Self -> U ;
@@ -893,21 +896,22 @@ end ;;
    the RBAC administrative requests
  *)
 species Requests_rbac (S is Subjects, O is Objects, M is Access_mode,
-                       U is Users, R is Roles)
-  inherits
+                       U is Users, R is Roles) =
+  inherit
     Requests_gal (S, O, M),
-    Requests_adm_rbac (S, O, M, U, R) = end ;;
+    Requests_adm_rbac (S, O, M, U, R) ;
+end ;;
 
 (** Definition of the RBAC transition function (reference monitor) *)
 species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                      S is Subjects, O is Objects, M is Access_mode,
                      A is Access (S, O, M), S_a is Set_of (A),
                      Rr is Requests_rbac (S, O, M, U, Ro),
-                     D is Decisions)
-  inherits
+                     D is Decisions) =
+  inherit
     Policy_rbac (U, Ro, Rh, S, O, M, A, S_a),
     Semantics_requests_gal (Rh, S, O, M, A, S_a, Rr),
-    Models (Rh, S, O, M, A, S_a, Rr, D) =
+    Models (Rh, S, O, M, A, S_a, Rr, D) ;
 
   (** RBAC transition function on accesses *)
   let tau_rbac_acc (r1 in Rr, st1 in Self) =
@@ -2421,7 +2425,8 @@ end ;;
 (** HRU *)
 
 (** Definition of a pair *)
-species Pair (X is Setoid, Y is Setoid) inherits Setoid =
+species Pair (X is Setoid, Y is Setoid) =
+  inherit Setoid ;
 
   (** Allows to create a pair *)
   signature create : X -> Y -> Self ;
@@ -2437,8 +2442,8 @@ end ;;
 (** Definition of the HRU security predicate *)
 species Policy_hru (Rh is Rho,
                     S is Subjects, O is Objects, M is Access_mode,
-                    A is Access (S, O, M), S_a is Set_of (A))
-  inherits Policy (Rh, S, O, M, A, S_a) =
+                    A is Access (S, O, M), S_a is Set_of (A)) =
+  inherit Policy (Rh, S, O, M, A, S_a) ;
 
   (** Returns true if the given access is authorized, false otherwise *)
   signature fd : A -> bool;
@@ -2468,11 +2473,11 @@ species Model_hru (Rh is Rho,
                    S is Subjects, O is Objects, M is Access_mode,
                    A is Access (S, O, M), S_a is Set_of (A),
                    R is Requests_gal (S, O, M),
-                   D is Decisions)
-  inherits
+                   D is Decisions) =
+  inherit
     Policy_hru (Rh, S, O, M, A, S_a),
     Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
-    Models (Rh, S, O, M, A, S_a, R, D) =
+    Models (Rh, S, O, M, A, S_a, R, D) ;
 
   (** HRU transition function *)
   let tau_hru (r1 in R, st in Self) =
@@ -3067,8 +3072,8 @@ end ;;
 species States_acl (Rh is Rho,
                     S is Subjects, O is Objects, M is Access_mode,
                     A is Access (S, O, M), S_a is Set_of (A),
-                    C is Pair (S, M), S_s_m is Set_of (C))
-  inherits States (Rh, S, O, M, A, S_a) =
+                    C is Pair (S, M), S_s_m is Set_of (C)) =
+  inherit States (Rh, S, O, M, A, S_a) ;
 
   (** Incorrect *)
   signature acl : O -> S_s_m ;
@@ -3079,10 +3084,10 @@ end ;;
 species Policy_acl (Rh is Rho,
                     S is Subjects, O is Objects, M is Access_mode,
                     A is Access (S, O, M), S_a is Set_of (A),
-                    C is Pair (S, M), S_s_m is Set_of (C))
-  inherits
+                    C is Pair (S, M), S_s_m is Set_of (C)) =
+  inherit
     Policy_hru (Rh, S, O, M, A, S_a),
-    States_acl (Rh, S, O, M, A, S_a, C, S_s_m) =
+    States_acl (Rh, S, O, M, A, S_a, C, S_s_m) ;
 
   (** Definition of the function fd *)
   let fd (ac) =
@@ -3097,10 +3102,11 @@ species Model_acl (Rh is Rho,
                    A is Access (S, O, M), S_a is Set_of (A),
                    R is Requests_gal (S, O, M),
                    D is Decisions,
-                   C is Pair (S, M), S_s_m is Set_of(C))
-  inherits
+                   C is Pair (S, M), S_s_m is Set_of(C)) =
+  inherit
     Policy_acl (Rh, S, O, M, A, S_a, C, S_s_m),
-    Model_hru (Rh, S, O, M, A, S_a, R, D) = end ;;
+    Model_hru (Rh, S, O, M, A, S_a, R, D) ;
+end ;;
 
 (** Capabilities *)
 
@@ -3111,8 +3117,8 @@ species Model_acl (Rh is Rho,
 species States_capabilities (Rh is Rho,
                              S is Subjects, O is Objects, M is Access_mode,
                              A is Access (S, O, M), S_a is Set_of (A),
-                             C is Pair (O, M), S_o_m is Set_of (C))
-  inherits States (Rh, S, O, M, A, S_a) =
+                             C is Pair (O, M), S_o_m is Set_of (C)) =
+  inherit States (Rh, S, O, M, A, S_a) ;
 
   (** Returns the set of permissions associated with the given subject *)
   signature capabilities :  S -> S_o_m ;
@@ -3123,10 +3129,10 @@ end ;;
 species Policy_capabilities (Rh is Rho,
                              S is Subjects, O is Objects, M is Access_mode,
                              A is Access (S, O, M), S_a is Set_of (A),
-                             C is Pair (O, M), S_o_m is Set_of (C))
-  inherits
+                             C is Pair (O, M), S_o_m is Set_of (C)) =
+  inherit
     Policy_hru (Rh, S, O, M, A, S_a),
-    States_capabilities (Rh, S, O, M, A, S_a, C, S_o_m) =
+    States_capabilities (Rh, S, O, M, A, S_a, C, S_o_m) ;
 
   (** Definition of the function fd *)
   let fd (ac) =
@@ -3144,18 +3150,19 @@ species Model_capabilities (Rh is Rho,
                             R is Requests_gal (S, O, M),
                             D is Decisions,
                             C is Pair (O, M),
-                            S_o_m is Set_of (C))
-  inherits
+                            S_o_m is Set_of (C)) =
+  inherit
     Policy_capabilities (Rh, S, O, M, A, S_a, C, S_o_m),
-    Model_hru (Rh, S, O, M, A, S_a, R, D) = end ;;
+    Model_hru (Rh, S, O, M, A, S_a, R, D) ;
+end ;;
 
 (** Unix *)
 
 (** The species representing the groups of the Unix model *)
-species Groups inherits Setoid = end ;;
+species Groups = inherit Setoid ; end ;;
 
 (** The security parameter of the Unix model is composed of groups *)
-species Rho_unix (G is Groups) inherits Rho = end ;;
+species Rho_unix (G is Groups) = inherit Rho ; end ;;
 
 (**
    A Unix state contains security information given by :
@@ -3171,8 +3178,8 @@ species Rho_unix (G is Groups) inherits Rho = end ;;
 species States_unix (G is Groups, Rh is Rho_unix (G),
                      S is Subjects, O is Objects, M is Access_mode,
                      A is Access (S, O, M), S_a is Set_of (A),
-                     S_m is Set_of (M), S_g is Set_of (G))
-  inherits States (Rh, S, O, M, A, S_a) =
+                     S_m is Set_of (M), S_g is Set_of (G)) =
+  inherit States (Rh, S, O, M, A, S_a) ;
 
   (**
      Returns true if the given group belongs to the set of active groups (AG),
@@ -3264,10 +3271,10 @@ end ;;
 species Policy_unix (G is Groups, Rh is Rho_unix (G),
                      S is Subjects, O is Objects, M is Access_mode,
                      A is Access (S, O, M), S_a is Set_of (A),
-                     S_m is Set_of (M), S_g is Set_of (G))
-  inherits
+                     S_m is Set_of (M), S_g is Set_of (G)) =
+  inherit
     States_unix (G, Rh, S, O, M, A, S_a, S_m, S_g),
-    Policy (Rh, S, O, M, A, S_a) =
+    Policy (Rh, S, O, M, A, S_a) ;
 
   (** f_p(op) = sp &and; mp &isin; f_d_p(op) *)
   logical let owner_access (st in Self) =
@@ -3307,7 +3314,8 @@ species Policy_unix (G is Groups, Rh is Rho_unix (G),
 end ;;
 
 (** The species representing the rights of the Unix model *)
-species Rights inherits Setoid =
+species Rights =
+  inherit Setoid ;
 
   (** The right "owner" *)
   signature d_p : Self ;
@@ -3338,8 +3346,8 @@ end ;;
      from subject s2's groups
  *)
 species Requests_adm_unix (S is Subjects, O is Objects, M is Access_mode,
-                           G is Groups, Z is Rights)
-  inherits Requests =
+                           G is Groups, Z is Rights) =
+  inherit Requests ;
 
   (** Returns the group involved in the given administrative request *)
   signature get_g : Self -> G ;
@@ -3425,10 +3433,11 @@ end ;;
    the Unix administrative requests
  *)
 species Requests_unix (S is Subjects, O is Objects, M is Access_mode,
-                       G is Groups, Z is Rights)
-  inherits
+                       G is Groups, Z is Rights) =
+  inherit
     Requests_gal (S, O, M),
-    Requests_adm_unix (S, O, M, G, Z) = end ;;
+    Requests_adm_unix (S, O, M, G, Z) ;
+end ;;
 
 (** Definition of the Unix transition function (reference monitor) *)
 species Models_unix (G is Groups, Rh is Rho_unix (G),
@@ -3437,11 +3446,11 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                      S_m is Set_of (M), S_g is Set_of (G),
                      Z is Rights,
                      R is Requests_unix (S, O, M, G, Z),
-                     D is Decisions)
-  inherits
+                     D is Decisions) =
+  inherit
     Policy_unix (G, Rh, S, O, M, A, S_a, S_m, S_g),
     Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
-    Models (Rh, S, O, M, A, S_a, R, D)  =
+    Models (Rh, S, O, M, A, S_a, R, D) ;
 
   (** Unix transition function on accesses *)
   let tau_unix_acc (r1 in R, st in Self) =
@@ -3726,10 +3735,10 @@ end ;;
    The species representing the unforgeable capabilities (tickets) of the
    Tickets model
  *)
-species Tickets inherits Setoid = end ;;
+species Tickets = inherit Setoid ; end ;;
 
 (** The security parameter of the Tickets model is composed of tickets *)
-species Rho_ticket (C is Tickets) inherits Rho = end ;;
+species Rho_ticket (C is Tickets) = inherit Rho ; end ;;
 
 (**
    A Tickets state contains security information given by :
@@ -3740,8 +3749,8 @@ species Rho_ticket (C is Tickets) inherits Rho = end ;;
  *)
 species States_ticket (C is Tickets, Rh is Rho_ticket (C),
                        S is Subjects, O is Objects, M is Access_mode,
-                       A is Access (S, O, M), S_a is Set_of (A))
-  inherits States (Rh, S, O, M, A, S_a) =
+                       A is Access (S, O, M), S_a is Set_of (A)) =
+  inherit States (Rh, S, O, M, A, S_a) ;
 
   (**
      Returns true if the given ticket belongs to the set of used tickets (UC),
@@ -3814,10 +3823,10 @@ end ;;
 (** Definition of the Tickets security predicate *)
 species Policy_ticket (C is Tickets, Rh is Rho_ticket (C),
                        S is Subjects, O is Objects, M is Access_mode,
-                       A is Access (S, O, M), S_a is Set_of (A))
-  inherits
+                       A is Access (S, O, M), S_a is Set_of (A)) =
+  inherit
     States_ticket (C, Rh, S, O, M, A, S_a),
-    Policy (Rh, S, O, M, A, S_a) =
+    Policy (Rh, S, O, M, A, S_a) ;
 
   (**
      If an access (sp,op,mo) belongs to the current accesses of a state
@@ -3841,8 +3850,8 @@ end ;;
      ticket c corresponding to the permission (o,a)
  *)
 species Requests_adm_ticket (S is Subjects, O is Objects, M is Access_mode,
-                             C is Tickets)
-  inherits Requests =
+                             C is Tickets) =
+  inherit Requests ;
 
   (** Returns the ticket involved in the given administrative request *)
   signature get_c : Self -> C ;
@@ -3877,21 +3886,22 @@ end ;;
    the Tickets administrative requests
  *)
 species Requests_ticket (S is Subjects, O is Objects, M is Access_mode,
-                         C is Tickets)
-  inherits
+                         C is Tickets) =
+  inherit
     Requests_gal (S, O, M),
-    Requests_adm_ticket (S, O, M, C) = end ;;
+    Requests_adm_ticket (S, O, M, C) ;
+end ;;
 
 (** Definition of the Tickets transition function (reference monitor) *)
 species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
                        S is Subjects, O is Objects, M is Access_mode,
                        A is Access (S, O, M), S_a is Set_of (A),
                        R is Requests_ticket (S, O, M, C),
-                       D is Decisions)
-  inherits
+                       D is Decisions) =
+  inherit
     Policy_ticket (C, Rh, S, O, M, A, S_a),
     Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
-    Models (Rh, S, O, M, A, S_a, R, D) =
+    Models (Rh, S, O, M, A, S_a, R, D) ;
 
   (** Tickets transition function on accesses *)
   let tau_ticket_acc (r1 in R, st1 in Self) =

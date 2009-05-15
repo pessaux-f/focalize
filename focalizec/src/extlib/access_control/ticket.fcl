@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ticket.fcl,v 1.12 2009-05-15 08:07:29 weis Exp $ *)
+(* $Id: ticket.fcl,v 1.13 2009-05-15 11:20:25 doligez Exp $ *)
 
 (**
    @title Implementation of the Tickets model
@@ -31,7 +31,8 @@ open "access_control" ;;
 
 (** Tickets implementation  *)
 
-species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
+species S_set_of (A is Setoid) =
+  inherit Set_of (A), Liste (A) ;
 
   let rec for_all (l, p) =
      match l with
@@ -54,7 +55,8 @@ species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
 
 end ;;
 
-species S_setoid inherits Setoid =
+species S_setoid =
+  inherit Setoid ;
 
   representation = int * string ;
 
@@ -77,7 +79,8 @@ species S_setoid inherits Setoid =
 
 end ;;
 
-species S_subjects inherits Subjects, S_setoid =
+species S_subjects =
+  inherit Subjects, S_setoid ;
 
   let s1 = create (1, "s1") ;
 
@@ -110,9 +113,10 @@ species S_subjects inherits Subjects, S_setoid =
 
 end ;;
 
-species S_objects inherits Objects, S_setoid = end ;;
+species S_objects = inherit Objects, S_setoid ; end ;;
 
-species S_access_mode inherits Access_mode, S_setoid =
+species S_access_mode =
+  inherit Access_mode, S_setoid ;
 
   let read = (1, "read") ;
 
@@ -122,8 +126,8 @@ end ;;
 
 species S_access (S_sub is S_subjects,
                   S_obj is S_objects,
-                  S_acc_mod is S_access_mode)
-  inherits Access (S_sub, S_obj, S_acc_mod) =
+                  S_acc_mod is S_access_mode) =
+  inherit Access (S_sub, S_obj, S_acc_mod) ;
 
   representation = S_sub * (S_obj * S_acc_mod) ;
 
@@ -170,7 +174,8 @@ species S_access (S_sub is S_subjects,
 
 end ;;
 
-species S_decisions inherits Decisions, S_setoid =
+species S_decisions =
+  inherit Decisions, S_setoid ;
 
   let yes = (1, "yes") ;
 
@@ -180,7 +185,8 @@ species S_decisions inherits Decisions, S_setoid =
 
 end ;;
 
-species S_get_release inherits S_setoid =
+species S_get_release =
+  inherit S_setoid ;
 
   let get in Self = (1, "+") ;
 
@@ -194,7 +200,8 @@ species S_get_release inherits S_setoid =
 
 end ;;
 
-species S_tickets inherits Tickets, S_setoid =
+species S_tickets =
+  inherit Tickets, S_setoid ;
 
   let c1 = create (1, "c1") ;
 
@@ -227,13 +234,14 @@ species S_tickets inherits Tickets, S_setoid =
 
 end ;;
 
-species S_rho_ticket (C is S_tickets)
-  inherits Rho_ticket (C), S_setoid = end ;;
+species S_rho_ticket (C is S_tickets) =
+  inherit Rho_ticket (C), S_setoid ;
+end ;;
 
 species S_requests_ticket (S is S_subjects, O is S_objects,
                            M is S_access_mode, Sgr is S_get_release,
-                           C is S_tickets)
-  inherits Requests_ticket (S, O, M, C) =
+                           C is S_tickets) =
+  inherit Requests_ticket (S, O, M, C) ;
 
   representation = (Sgr * (S * (C * (O * (M * (S)))))) ;
 
@@ -353,9 +361,9 @@ species S_models_ticket (S_c is S_tickets,
                          S_gr is S_get_release,
                          S_req is S_requests_ticket (S_sub, S_obj, S_acc_mod,
                                                      S_gr, S_c),
-                         S_dec is S_decisions)
-  inherits Models_ticket (S_c, S_rh, S_sub, S_obj, S_acc_mod,
-                          S_acc, S_set_acc, S_req, S_dec) =
+                         S_dec is S_decisions) =
+  inherit Models_ticket (S_c, S_rh, S_sub, S_obj, S_acc_mod,
+                         S_acc, S_set_acc, S_req, S_dec) ;
 
   representation = (S_set_acc * (list (S_c) *
                                  (list ((S_obj * S_acc_mod) * S_c) *

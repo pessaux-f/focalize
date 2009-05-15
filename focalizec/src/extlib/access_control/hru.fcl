@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: hru.fcl,v 1.17 2009-05-15 08:07:29 weis Exp $ *)
+(* $Id: hru.fcl,v 1.18 2009-05-15 11:20:25 doligez Exp $ *)
 
 (**
    @title Implementation of the HRU model
@@ -31,7 +31,8 @@ open "access_control" ;;
 
 (** HRU implementation *)
 
-species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
+species S_set_of (A is Setoid) =
+  inherit Set_of (A), Liste (A) ;
 
   let create (l in list (A)) in Self = l ;
 
@@ -68,7 +69,8 @@ species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
 
 end ;;
 
-species S_setoid inherits Setoid =
+species S_setoid =
+  inherit Setoid ;
 
   representation = int * string ;
 
@@ -91,7 +93,8 @@ species S_setoid inherits Setoid =
 
 end ;;
 
-species S_subjects inherits Subjects, S_setoid =
+species S_subjects =
+  inherit Subjects, S_setoid ;
 
   let therese in Self = (1, "Therese") ;
 
@@ -101,7 +104,8 @@ species S_subjects inherits Subjects, S_setoid =
 
 end ;;
 
-species S_objects inherits Objects, S_setoid =
+species S_objects =
+  inherit Objects, S_setoid ;
 
   let ssurf in Self = (1, "ssurf") ;
 
@@ -111,7 +115,8 @@ species S_objects inherits Objects, S_setoid =
 
 end ;;
 
-species S_access_mode inherits Access_mode, S_setoid =
+species S_access_mode =
+  inherit Access_mode, S_setoid ;
 
   let read = (1, "read") ;
 
@@ -121,8 +126,8 @@ end ;;
 
 species S_access (S_sub is S_subjects,
                   S_obj is S_objects,
-                  S_acc_mod is S_access_mode)
-  inherits Access (S_sub, S_obj, S_acc_mod) =
+                  S_acc_mod is S_access_mode) =
+  inherit Access (S_sub, S_obj, S_acc_mod) ;
 
   representation = S_sub * (S_obj * S_acc_mod) ;
 
@@ -169,7 +174,8 @@ species S_access (S_sub is S_subjects,
 
 end ;;
 
-species S_decisions inherits Decisions, S_setoid =
+species S_decisions =
+  inherit Decisions, S_setoid ;
 
   let yes = (1, "yes") ;
 
@@ -179,7 +185,8 @@ species S_decisions inherits Decisions, S_setoid =
 
 end ;;
 
-species S_get_release inherits S_setoid =
+species S_get_release =
+  inherit S_setoid ;
 
   let get in Self = (1, "+") ;
 
@@ -190,8 +197,8 @@ end ;;
 species S_requests_gal (S is S_subjects,
                         O is S_objects,
                         M is S_access_mode,
-                        Sgr is S_get_release)
-  inherits Requests_gal (S, O, M) =
+                        Sgr is S_get_release) =
+  inherit Requests_gal (S, O, M) ;
 
   representation = (Sgr * (S * (O * M))) ;
 
@@ -252,9 +259,10 @@ species S_requests_gal (S is S_subjects,
 
 end ;;
 
-species S_rho inherits Rho, S_setoid = end ;;
+species S_rho = inherit Rho, S_setoid ; end ;;
 
-species S_couple (A is Setoid, B is Setoid) inherits Pair (A, B) =
+species S_couple (A is Setoid, B is Setoid) =
+  inherit Pair (A, B) ;
 
   representation = A * B ;
 
@@ -440,8 +448,8 @@ species S_model_acl (Rh is Rho,
                      S_s_m is S_set_of (C),
                      C_o_s_s_m is S_couple (O, S_s_m),
                      S_c_o_s_s_m is S_set_of (C_o_s_s_m),
-                     Co is S_couple (S_a, S_c_o_s_s_m))
-  inherits Model_acl (Rh, S, O, M, A, S_a, R, D, C, S_s_m) =
+                     Co is S_couple (S_a, S_c_o_s_s_m)) =
+  inherit Model_acl (Rh, S, O, M, A, S_a, R, D, C, S_s_m) ;
 
   representation = S_a * (A -> bool) ;
 
@@ -658,8 +666,8 @@ species S_model_capabilities (Rh is Rho, S is S_subjects, O is S_objects,
                               Sgr is S_get_release,
                               R is S_requests_gal (S, O, M, Sgr),
                               D is S_decisions,
-                              C is S_couple (O, M), S_o_m is S_set_of (C))
-  inherits Model_capabilities (Rh, S, O, M, A, S_a, R, D, C, S_o_m) =
+                              C is S_couple (O, M), S_o_m is S_set_of (C)) =
+  inherit Model_capabilities (Rh, S, O, M, A, S_a, R, D, C, S_o_m) ;
 
   representation = S_a * (A -> bool) ;
 

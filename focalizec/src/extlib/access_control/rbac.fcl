@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rbac.fcl,v 1.12 2009-05-15 08:07:29 weis Exp $ *)
+(* $Id: rbac.fcl,v 1.14 2009-05-15 11:20:25 doligez Exp $ *)
 
 (**
    @title Implementation of the RBAC model
@@ -31,7 +31,8 @@ open "access_control" ;;
 
 (** RBAC implementation *)
 
-species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
+species S_set_of (A is Setoid) =
+  inherit Set_of (A), Liste (A) ;
 
   let rec for_all (l, p) =
      match l with
@@ -54,7 +55,8 @@ species S_set_of (A is Setoid) inherits Set_of (A), Liste (A) =
 
 end ;;
 
-species S_setoid inherits Setoid =
+species S_setoid =
+  inherit Setoid ;
 
   representation = int * string ;
 
@@ -77,11 +79,12 @@ species S_setoid inherits Setoid =
 
 end ;;
 
-species S_subjects inherits Subjects, S_setoid = end ;;
+species S_subjects = inherit Subjects, S_setoid ; end ;;
 
-species S_objects inherits Objects, S_setoid = end ;;
+species S_objects = inherit Objects, S_setoid ; end ;;
 
-species S_access_mode inherits Access_mode, S_setoid =
+species S_access_mode =
+  inherit Access_mode, S_setoid ;
 
   let read = (1, "read") ;
 
@@ -91,8 +94,8 @@ end ;;
 
 species S_access (S_sub is S_subjects,
                   S_obj is S_objects,
-                  S_acc_mod is S_access_mode)
-  inherits Access (S_sub, S_obj, S_acc_mod) =
+                  S_acc_mod is S_access_mode) =
+  inherit Access (S_sub, S_obj, S_acc_mod) ;
 
   representation = (S_sub * (S_obj * S_acc_mod)) ;
 
@@ -139,7 +142,8 @@ species S_access (S_sub is S_subjects,
 
 end ;;
 
-species S_decisions inherits Decisions, S_setoid =
+species S_decisions =
+  inherit Decisions, S_setoid ;
 
   let yes = (1, "yes") ;
 
@@ -149,7 +153,8 @@ species S_decisions inherits Decisions, S_setoid =
 
 end ;;
 
-species S_get_release inherits S_setoid =
+species S_get_release =
+  inherit S_setoid ;
 
   let get in Self = (1, "+") ;
 
@@ -165,9 +170,10 @@ species S_get_release inherits S_setoid =
 
 end ;;
 
-species S_users inherits Users, S_setoid = end ;;
+species S_users = inherit Users, S_setoid ; end ;;
 
-species S_roles inherits Roles, S_setoid =
+species S_roles =
+  inherit Roles, S_setoid ;
 
   let directeur in Self = (1, "directeur") ;
 
@@ -281,8 +287,8 @@ species S_requests_rbac (S is S_subjects,
                          M is S_access_mode,
                          Sgr is S_get_release,
                          U is S_users,
-                         Ro is S_roles)
-  inherits Requests_rbac (S, O, M, U, Ro) =
+                         Ro is S_roles) =
+  inherit Requests_rbac (S, O, M, U, Ro) ;
 
   representation = (Sgr * (S * (O * (M * (U * Ro))))) ;
 
@@ -400,8 +406,9 @@ species S_requests_rbac (S is S_subjects,
 
 end ;;
 
-species S_rho_rbac (S_us is S_users, S_ro is S_roles)
-  inherits Rho_rbac (S_us, S_ro), S_setoid = end ;;
+species S_rho_rbac (S_us is S_users, S_ro is S_roles) =
+  inherit Rho_rbac (S_us, S_ro), S_setoid ;
+end ;;
 
 species S_models_rbac (S_us is S_users,
                        S_ro is S_roles,
@@ -414,9 +421,9 @@ species S_models_rbac (S_us is S_users,
                        S_gr is S_get_release,
                        S_req is S_requests_rbac (S_sub, S_obj, S_acc_mod,
                                                  S_gr, S_us, S_ro),
-                       S_dec is S_decisions)
-  inherits Models_rbac (S_us, S_ro, S_rh, S_sub, S_obj, S_acc_mod, S_acc,
-                        S_set_acc, S_req, S_dec) =
+                       S_dec is S_decisions) =
+  inherit Models_rbac (S_us, S_ro, S_rh, S_sub, S_obj, S_acc_mod, S_acc,
+                       S_set_acc, S_req, S_dec) ;
 
   representation = (S_set_acc * ((S_sub -> S_us) *
                                  (list (S_us * S_ro) *
@@ -542,7 +549,7 @@ species S_models_rbac (S_us is S_users,
 
 (*   let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self = *)
 (*      let rec aux (f in list ((S_obj * S_acc_mod) * S_ro), *)
-(* 		  l in list ((S_obj * S_acc_mod) * S_ro)) = *)
+(*           l in list ((S_obj * S_acc_mod) * S_ro)) = *)
 (*         match l with *)
 (*         | [ ] -> *)
 (*             (lambda (st), (fst (upsilon (st)), *)
@@ -558,8 +565,8 @@ species S_models_rbac (S_us is S_users,
 (*      in aux ([ ], fst (snd (snd (upsilon (st))))) ; *)
 
   let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
-     let rec aux (l in list ((S_obj * S_acc_mod) * S_ro), 
-		  f in list ((S_obj * S_acc_mod) * S_ro)) =
+     let rec aux (l in list ((S_obj * S_acc_mod) * S_ro),
+          f in list ((S_obj * S_acc_mod) * S_ro)) =
         match l with
         | [ ] ->
             (lambda (st), (fst (upsilon (st)),
@@ -576,7 +583,7 @@ species S_models_rbac (S_us is S_users,
 
   let equal (st1, st2) = S_set_acc!equal (lambda (st1), lambda (st2)) ;
 
-  let element = 
+  let element =
      create (S_set_acc!vide, (function _su -> S_us!element), [ ], [ ], [ ]) ;
 
   let print_ua (l in list (S_us * S_ro)) in string =
