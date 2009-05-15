@@ -232,7 +232,10 @@ species Singleton =
 end
 ;;
 
-collection Un_singleton implements Singleton;;
+collection Un_singleton =
+  implement Singleton
+end
+;;
 
 
 species Projection_over_sample(S is Setoid) =
@@ -246,8 +249,9 @@ species Projection_over_sample(S is Setoid) =
 end
 ;;
 
-collection Trivial_projection
-  implements Projection_over_sample(Un_singleton);;
+collection Trivial_projection =
+  implement Projection_over_sample(Un_singleton)
+end;;
 
 species Trivial_quotient_final =
   inherit Quotient_set(Un_singleton,
@@ -259,5 +263,7 @@ species Trivial_quotient_final =
 end
 ;;
 
-collection Trivial_quotient implements Trivial_quotient_final;;
+collection Trivial_quotient =
+  implement Trivial_quotient_final
+end;;
 
