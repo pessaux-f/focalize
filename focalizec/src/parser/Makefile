@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.41 2009-02-05 15:14:30 doligez Exp $
+# $Id: Makefile,v 1.42 2009-05-15 10:55:43 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -42,3 +42,5 @@ clean::
 lex_file: $(BYT_OBJS)
 	$(CAML_BYT) -o lex_file lexer.cmo sourcify_token.cmo lex_file.cmo
 
+parser.mli : parser.ml
+parser.cmi : parser.mli
