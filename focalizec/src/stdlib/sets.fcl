@@ -1,9 +1,8 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -14,47 +13,47 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets.fcl,v 1.9 2009-05-14 15:31:06 doligez Exp $ *)
+(* $Id: sets.fcl,v 1.10 2009-05-16 10:26:59 weis Exp $ *)
 
-(** 
-   @title Basic sets operations. 
-   @author The FoCaL devolopers Team
+(**
+   @title Basic sets operations.
+   @author The FoCaLize devolopers Team
    Basic Set operations
  *)
-
 
 use "basics";;
 open "basics";;
 
 (** In a setoid, we can test the equality (note for logicians: this is
-   a congruence). The setoid must be be non empty. *)
+    a congruence). The setoid must be be non empty. *)
 species Setoid =
-  inherit Basic_object ;
+
+  inherit Basic_object;
 
   (** @mathml <eq/> *)
-  (* sig ( = ) : Self -> Self -> bool ; *)
-  signature equal : Self -> Self -> bool ;
+  (* sig ( = ) : Self -> Self -> bool; *)
+  signature equal : Self -> Self -> bool;
 
   (*
   property ``equal is reflexive'' : all x y in Self,
-    Self!( = ) (x, x) and x = x ;
+    Self!( = ) (x, x) and x = x;
    *)
-  property equal_reflexive : all x in Self, !equal (x, x) ;
+  property equal_reflexive : all x in Self, !equal (x, x);
 
   property equal_symmetric : all x y in Self,
-    Self!equal(x, y) -> !equal(y, x) ;
+    Self!equal (x, y) -> !equal (y, x);
 
   property equal_transitive : all x y z in Self,
-    !equal(x, y) -> !equal(y, z) -> !equal(x, z) ;
+    !equal (x, y) -> !equal (y, z) -> !equal (x, z);
 
   (** element returns some element of our non empty setoid *)
-  signature element : Self ;
+  signature element : Self;
 
   (** @mathml <neq/> *)
-  let different (x, y) = not_b(!equal(x, y)) ;
+  let different (x, y) = not_b (!equal (x, y));
 
   theorem same_is_not_different : all x y in Self,
-     !different(x, y) <-> ~ (!equal(x, y))
+     !different (x, y) <-> ~ (!equal (x, y))
   proof =
     by definition of different;
 
@@ -62,21 +61,21 @@ species Setoid =
     ~ (!different (x, x))
   proof =
     (* by property ``equal is reflexive'', same_is_not_different *)
-    by property equal_reflexive, same_is_not_different ;
+    by property equal_reflexive, same_is_not_different;
 
   theorem different_is_symmetric: all x y in Self,
     !different (x, y) -> !different (y, x)
-  proof = by property equal_symmetric, same_is_not_different ;
+  proof = by property equal_symmetric, same_is_not_different;
 
-  (** 
-     Take two distinct elements then any third element is distinct from 
+  (**
+     Take two distinct elements then any third element is distinct from
      one of the first two
   *)
   theorem different_is_complete: all x y z in Self,
-    !different(x, y) -> (!different(x, z) \/ !different(y, z))
+    !different (x, y) -> (!different (x, z) \/ !different (y, z))
     proof =
       by property !equal_reflexive, !equal_symmetric,
-                  !equal_transitive, !same_is_not_different 
+                  !equal_transitive, !same_is_not_different
   ;
 end
 ;;
@@ -86,7 +85,8 @@ end
    incompatible) functionalities as Setoid!  *)
 
 species Anti_setoid =
-  inherit Basic_object ;
+
+  inherit Basic_object;
 
   (** An appartness decidable relation *)
   signature different: Self -> Self -> bool;
@@ -102,33 +102,33 @@ species Anti_setoid =
      one of the first two
   *)
   property different_is_complete: all x y z in Self,
-    !different(x, y) -> (!different(x, z) \/ !different(y, z));
+    !different (x, y) -> (!different (x, z) \/ !different (y, z));
 
   (** element returns some element of our non empty setoid *)
-  signature element : Self ;
+  signature element : Self;
 
   (** Equality is a derived operation, it is sometimes called an indifference *)
-  let equal(x, y) = not_b(!different(x, y));
+  let equal (x, y) = not_b (!different (x, y));
 
   theorem different_is_not_same : all x y in Self,
-    !equal(x, y) <-> ~(!different(x, y))
-  proof = by definition of equal ;
+    !equal (x, y) <-> ~ (!different (x, y))
+  proof = by definition of equal;
 
-  theorem equal_reflexive: all x in Self, !equal(x, x)
-    proof = by property !different_is_not_same, !different_is_irreflexive ;
+  theorem equal_reflexive: all x in Self, !equal (x, x)
+    proof = by property !different_is_not_same, !different_is_irreflexive;
 
   theorem equal_symmetric: all x y in Self,
-    Self!equal(x, y) -> !equal(y, x)
-    proof = by property !different_is_symmetric, !different_is_not_same ;
+    Self!equal (x, y) -> !equal (y, x)
+    proof = by property !different_is_symmetric, !different_is_not_same;
 
   theorem equal_transitive : all x y z in Self,
-    !equal(x, y) -> !equal(y, z) -> !equal(x, z)
+    !equal (x, y) -> !equal (y, z) -> !equal (x, z)
     proof =
      by property !different_is_complete, !different_is_symmetric,
-                       !different_is_irreflexive, !different_is_not_same ;
+                       !different_is_irreflexive, !different_is_not_same;
 end
 ;;
-  
+
 (**
    Here we state that in some cases we may view partial operations
    as total operations.
@@ -136,7 +136,8 @@ end
 
  *)
 species Partial_set =
-  inherit Setoid ;
+
+  inherit Setoid;
 
   (** this is intended to model failure *)
   let failed in (string -> Self) =
@@ -144,53 +145,55 @@ species Partial_set =
       external
       | caml -> {* Sets_externals.i_failed r elt *}
       | coq -> {* elt *} in
-    function reason -> ifailed (reason, !element) ;
+    function reason -> ifailed (reason, !element);
 end
 ;;
 
 (** Equivalence relations over a set *)
-species Equivalence_relation(S is Setoid) =
-  inherit Basic_object ;
+species Equivalence_relation (S is Setoid) =
+
+  inherit Basic_object;
+
   (**
      @mathml <equivalent/>
      will be denoted as infix congruence
    *)
-    signature equiv: S -> S -> prop;
-    property equiv_symmetric: all x y in S, 
-      !equiv(x, y) -> !equiv(y, x);
-    property equiv_transitive: all x y z in S, 
-      !equiv(x, y) -> !equiv(y, z) -> !equiv(x, z);
-    (** compatibility with equality *)
-    property equal_refines_equiv: all x y in S, 
-       S!equal(x, y) -> !equiv(x, y);
-    theorem equiv_reflexive: all x in S, !equiv(x, x)
-      proof = by property!equal_refines_equiv, S!equal_reflexive;
+  signature equiv: S -> S -> prop;
+  property equiv_symmetric: all x y in S,
+    !equiv (x, y) -> !equiv (y, x);
+  property equiv_transitive: all x y z in S,
+    !equiv (x, y) -> !equiv (y, z) -> !equiv (x, z);
+  (** compatibility with equality *)
+  property equal_refines_equiv: all x y in S,
+     S!equal (x, y) -> !equiv (x, y);
+  theorem equiv_reflexive: all x in S, !equiv (x, x)
+    proof = by property!equal_refines_equiv, S!equal_reflexive;
 end;;
 
-
-
-
 (**
-   The FoCaL way to use functions, abstract into a species!
+   The FoCaLize way to use functions, abstract into a species!
  *)
-species Setoid_morphism(A is Setoid, B is Setoid) =
+species Setoid_morphism (A is Setoid, B is Setoid) =
+
   (** strictly speaking we don't need representation here *)
-  inherit Basic_object ;
-    (** an explicit signature *)
-    signature morph: A -> B;
-    (**
-      A function taking setoids as arguments should be compatible with equality
-     *)
-    property morph_substitution_rule: all x y in A,
-      A!equal(x, y) -> B!equal(!morph(x), !morph(y));
+  inherit Basic_object;
+
+  (** an explicit signature *)
+  signature morph: A -> B;
+  (**
+    A function taking setoids as arguments should be compatible with equality
+   *)
+  property morph_substitution_rule: all x y in A,
+    A!equal (x, y) -> B!equal (!morph (x), !morph (y));
 end
 ;;
-
 
 (**
    An automorphism is a function from a set to itself
  *)
-species Setoid_automorphism(A is Setoid) =
+species Setoid_automorphism (A is Setoid) =
   (** All properties from Setoid_morphism *)
-  inherit Setoid_morphism(A, A) ;
+
+  inherit Setoid_morphism (A, A);
+
 end;;

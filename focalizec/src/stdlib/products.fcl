@@ -3,7 +3,6 @@
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -15,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products.fcl,v 1.10 2009-05-15 08:03:20 weis Exp $ *)
+(* $Id: products.fcl,v 1.11 2009-05-16 10:26:59 weis Exp $ *)
 
 (**
 
@@ -33,10 +32,10 @@ use "sets";;
 open "basics";;
 open "sets";;
 
-
 (** a product of two things *)
-species Abstract_product(A is Basic_object, B is Basic_object) =
-  inherit Basic_object ;
+species Abstract_product (A is Basic_object, B is Basic_object) =
+
+  inherit Basic_object;
 
   (** first projection *)
   signature first: Self -> A;
@@ -56,93 +55,93 @@ end;;
 
    Here we explicit two projections and a builder.
 *)
-species Product_set(A is Setoid, B is Setoid) =
-  inherit Setoid, Abstract_product(A, B) ;
+species Product_set (A is Setoid, B is Setoid) =
 
+  inherit Setoid, Abstract_product (A, B);
 
   (** this is a way to express surjectivity of the first projection *)
   property pair_preserves_first: all x in A, all y in B,
-    A!equal(!first(!pair(x, y)), x) ;
+    A!equal (!first (!pair (x, y)), x);
   (** this is the surjection property *)
   theorem first_accessibility: all x in A, ex s in Self,
-    A!equal(!first(s), x)
+    A!equal (!first (s), x)
     proof =
     <1>1 assume x in A,
-         prove A!equal(!first(!pair(x, B!element)), x)
+         prove A!equal (!first (!pair (x, B!element)), x)
          by property !pair_preserves_first
-    <1>f conclude ;
+    <1>f conclude;
 
   (** this is a way to express surjectivity of the second projection *)
   property pair_preserves_second: all x in A, all y in B,
-    B!equal(!second(!pair(x, y)), y);
+    B!equal (!second (!pair (x, y)), y);
   (** this is the surjection property *)
   theorem second_accessibility: all x in B, ex s in Self,
-    B!equal(!second(s), x)
+    B!equal (!second (s), x)
     proof =
     <1>1 assume x in B,
-         prove B!equal(!second(!pair(A!element, x)), x)
+         prove B!equal (!second (!pair (A!element, x)), x)
          by property !pair_preserves_second
-    <1>f conclude ;
+    <1>f conclude;
 
   (** a product is not empty *)
-  let element = !pair(A!element, B!element) ;
+  let element = !pair (A!element, B!element);
 
   (** equality can be derived from first and second *)
   (** @mathml <eq/> *)
-  let equal(x, y) =
-     and_b(A!equal(!first(x), !first(y)),
-          B!equal(!second(x), !second(y))) ;
+  let equal (x, y) =
+     and_b (A!equal (!first (x), !first (y)),
+          B!equal (!second (x), !second (y)));
 
   theorem equal_spec: all x y in Self,
-    (!equal(x, y)
+    (!equal (x, y)
       <->
-    (A!equal(!first(x), !first(y)) /\ B!equal(!second(x), !second(y))))
+    (A!equal (!first (x), !first (y)) /\ B!equal (!second (x), !second (y))))
     proof =
-       by definition of equal ;
+       by definition of equal;
 
   proof of equal_reflexive =
     by property A!equal_reflexive, B!equal_reflexive
-       definition of equal ;
+       definition of equal;
 
   proof of equal_symmetric =
     by property A!equal_symmetric, B!equal_symmetric
-       definition of equal ;
+       definition of equal;
 
   proof of equal_transitive =
     by property A!equal_transitive, B!equal_transitive
-       definition of equal ;
+       definition of equal;
 
   (** Our definition of equality is coherent with first compenent *)
   theorem first_substitution_rule: all x y in Self,
-    !equal(x, y) -> A!equal(!first(x), !first(y))
-    proof = by definition of equal ;
+    !equal (x, y) -> A!equal (!first (x), !first (y))
+    proof = by definition of equal;
 
   (** Our definition of equality is coherent with second compenent *)
   theorem second_substitution_rule: all x y in Self,
-    !equal(x, y) -> B!equal(!second(x), !second(y))
-    proof = by definition of equal ;
+    !equal (x, y) -> B!equal (!second (x), !second (y))
+    proof = by definition of equal;
 
   (** consistency between builder and equality, first argument *)
   theorem pair_left_substitution_rule: all x_1 x_2 in A, all y in B,
-    A!equal(x_1, x_2) -> !equal(!pair(x_1, y), !pair(x_2, y))
+    A!equal (x_1, x_2) -> !equal (!pair (x_1, y), !pair (x_2, y))
     proof =
       <1>1 assume x_1 in A,
            assume x_2 in A,
            assume y in B,
-           assume H: A!equal(x_1, x_2),
-           prove !equal(!pair(x_1, y), !pair(x_2, y))
-           <2>1 prove A!equal(!first(!pair(x_1, y)), !first(!pair(x_2, y)))
-                <3>1 prove A!equal(!first(!pair(x_1, y)), x_1)
+           assume H: A!equal (x_1, x_2),
+           prove !equal (!pair (x_1, y), !pair (x_2, y))
+           <2>1 prove A!equal (!first (!pair (x_1, y)), !first (!pair (x_2, y)))
+                <3>1 prove A!equal (!first (!pair (x_1, y)), x_1)
                      by property !pair_preserves_first
-                <3>2 prove A!equal(!first(!pair(x_2, y)), x_2)
+                <3>2 prove A!equal (!first (!pair (x_2, y)), x_2)
                      by property pair_preserves_first
                 <3>f qed by hypothesis H
                             step <3>1, <3>2
             property A!equal_transitive, A!equal_symmetric
-           <2>2 prove B!equal(!second(!pair(x_1, y)), !second(!pair(x_2, y)))
-                <3>1 prove B!equal(!second(!pair(x_1, y)), y)
+           <2>2 prove B!equal (!second (!pair (x_1, y)), !second (!pair (x_2, y)))
+                <3>1 prove B!equal (!second (!pair (x_1, y)), y)
                      by property !pair_preserves_second
-                <3>2 prove B!equal(!second(!pair(x_2, y)), y)
+                <3>2 prove B!equal (!second (!pair (x_2, y)), y)
                      by property !pair_preserves_second
                 <3>f qed by
                      step <3>1, <3>2
@@ -150,45 +149,44 @@ species Product_set(A is Setoid, B is Setoid) =
                B!equal_transitive, B!equal_symmetric
            <2>f qed by step <2>1, <2>2
                        definition of equal
-      <1>f conclude ;
+      <1>f conclude;
 
   (** consistency between builder and equality, second arg *)
   theorem pair_right_substitution_rule: all x in A, all y_1 y_2 in B,
-    B!equal(y_1, y_2) -> !equal(!pair(x, y_1), !pair(x, y_2))
+    B!equal (y_1, y_2) -> !equal (!pair (x, y_1), !pair (x, y_2))
     proof =
       <1>1 assume x in A,
            assume y_1 in B,
            assume y_2 in B,
-           assume H: B!equal(y_1, y_2),
-           prove !equal(!pair(x, y_1), !pair(x, y_2))
-           <2>1 prove A!equal(!first(!pair(x, y_1)), !first(!pair(x, y_2)))
-                <3>1 prove A!equal(!first(!pair(x, y_1)), x)
+           assume H: B!equal (y_1, y_2),
+           prove !equal (!pair (x, y_1), !pair (x, y_2))
+           <2>1 prove A!equal (!first (!pair (x, y_1)), !first (!pair (x, y_2)))
+                <3>1 prove A!equal (!first (!pair (x, y_1)), x)
                      by property !pair_preserves_first
-                <3>2 prove A!equal(!first(!pair(x, y_2)), x)
+                <3>2 prove A!equal (!first (!pair (x, y_2)), x)
                      by property !pair_preserves_first
                 <3>f qed by step <3>1, <3>2
                      property A!equal_reflexive,
               A!equal_transitive, A!equal_symmetric
-           <2>2 prove B!equal(!second(!pair(x, y_1)), !second(!pair(x, y_2)))
-                <3>1 prove B!equal(!second(!pair(x, y_1)), y_1)
+           <2>2 prove B!equal (!second (!pair (x, y_1)), !second (!pair (x, y_2)))
+                <3>1 prove B!equal (!second (!pair (x, y_1)), y_1)
                      by property !pair_preserves_second
-                <3>2 prove B!equal(!second(!pair(x, y_2)), y_2)
+                <3>2 prove B!equal (!second (!pair (x, y_2)), y_2)
                      by property !pair_preserves_second
                 <3>f qed by  step <3>1, <3>2
                              hypothesis H
              property B!equal_transitive, B!equal_symmetric
            <2>f qed by step <2>1, <2>2
                        definition of equal
-      <1>f conclude ;
+      <1>f conclude;
 
   (** Programmers should use this global consistency property when possible *)
   theorem pair_substitution_rule: all x_1 x_2 in A, all y_1 y_2 in B,
-    A!equal(x_1, x_2) -> B!equal(y_1, y_2) ->
-      !equal(!pair(x_1, y_1), !pair(x_2, y_2))
+    A!equal (x_1, x_2) -> B!equal (y_1, y_2) ->
+      !equal (!pair (x_1, y_1), !pair (x_2, y_2))
     proof = by
        property !pair_left_substitution_rule, !pair_right_substitution_rule,
-                !equal_transitive ;
-
+                !equal_transitive;
 
 end
 ;;
@@ -200,48 +198,49 @@ end
 species Categorical_property_of_Product_set
   (A is Setoid,
    B is Setoid,
-   P is Product_set(A, B),
+   P is Product_set (A, B),
    E is Setoid,
-   M_a is sets#Setoid_morphism(E, A),
-   M_b is sets#Setoid_morphism(E, B)
+   M_a is sets#Setoid_morphism (E, A),
+   M_b is sets#Setoid_morphism (E, B)
    ) =
-  inherit Setoid_morphism(E, P) ;
 
-    let morph(x) = P!pair(M_a!morph(x), M_b!morph(x));
+  inherit Setoid_morphism (E, P);
+
+    let morph (x) = P!pair (M_a!morph (x), M_b!morph (x));
     proof of morph_substitution_rule =
       <1>1 assume x in E, assume y in E,
-           assume H: E!equal(x, y),
-           prove P!equal(!morph(x), !morph(y))
-           <2>1 prove A!equal(P!first(!morph(x)), P!first(!morph(y)))
-                <3>1 prove A!equal(P!first(P!pair(M_a!morph(x), M_b!morph(x))),
-                                   P!first(P!pair(M_a!morph(y), M_b!morph(y))))
-                     <4>1 prove A!equal(M_a!morph(x), M_a!morph(y))
+           assume H: E!equal (x, y),
+           prove P!equal (!morph (x), !morph (y))
+           <2>1 prove A!equal (P!first (!morph (x)), P!first (!morph (y)))
+                <3>1 prove A!equal (P!first (P!pair (M_a!morph (x), M_b!morph (x))),
+                                   P!first (P!pair (M_a!morph (y), M_b!morph (y))))
+                     <4>1 prove A!equal (M_a!morph (x), M_a!morph (y))
                           by hypothesis H property M_a!morph_substitution_rule
-                     <4>2 prove A!equal(P!first(P!pair(M_a!morph(x),
-                                                       M_b!morph(x))),
-                                        M_a!morph(x))
+                     <4>2 prove A!equal (P!first (P!pair (M_a!morph (x),
+                                                       M_b!morph (x))),
+                                        M_a!morph (x))
                           by property P!pair_preserves_first
-                     <4>3 prove A!equal(P!first(P!pair(M_a!morph(y),
-                                                       M_b!morph(y))),
-                                        M_a!morph(y))
+                     <4>3 prove A!equal (P!first (P!pair (M_a!morph (y),
+                                                       M_b!morph (y))),
+                                        M_a!morph (y))
                           by property P!pair_preserves_first
                      <4>f qed by step <4>1, <4>2, <4>3
                                  property A!equal_transitive, A!equal_symmetric
                 <3>f qed by step <3>1 definition of morph
-           <2>2 prove B!equal(P!second(!morph(x)), P!second(!morph(y)))
-                <3>1 prove B!equal(P!second(P!pair(M_a!morph(x),
-						   M_b!morph(x))),
-                                   P!second(P!pair(M_a!morph(y),
-						   M_b!morph(y))))
-                     <4>1 prove B!equal(M_b!morph(x), M_b!morph(y))
+           <2>2 prove B!equal (P!second (!morph (x)), P!second (!morph (y)))
+                <3>1 prove B!equal (P!second (P!pair (M_a!morph (x),
+           M_b!morph (x))),
+                                   P!second (P!pair (M_a!morph (y),
+           M_b!morph (y))))
+                     <4>1 prove B!equal (M_b!morph (x), M_b!morph (y))
                           by hypothesis H property M_b!morph_substitution_rule
-                     <4>2 prove B!equal(P!second(P!pair(M_a!morph(x),
-							M_b!morph(x))),
-                                        M_b!morph(x))
+                     <4>2 prove B!equal (P!second (P!pair (M_a!morph (x),
+        M_b!morph (x))),
+                                        M_b!morph (x))
                           by property P!pair_preserves_second
-                     <4>3 prove B!equal(P!second(P!pair(M_a!morph(y),
-							M_b!morph(y))),
-                                        M_b!morph(y))
+                     <4>3 prove B!equal (P!second (P!pair (M_a!morph (y),
+        M_b!morph (y))),
+                                        M_b!morph (y))
                           by property P!pair_preserves_second
                      <4>f qed by step <4>1, <4>2, <4>3
                                  property B!equal_transitive, B!equal_symmetric
@@ -251,12 +250,12 @@ species Categorical_property_of_Product_set
   ;
 
     theorem morph_first_factorize: all x in E,
-      A!equal(P!first(!morph(x)), M_a!morph(x))
-      proof = by property P!pair_preserves_first definition of morph ;
+      A!equal (P!first (!morph (x)), M_a!morph (x))
+      proof = by property P!pair_preserves_first definition of morph;
 
     theorem morph_second_factorize: all x in E,
-      B!equal(P!second(!morph(x)), M_b!morph(x))
-      proof = by property P!pair_preserves_second definition of morph ;
+      B!equal (P!second (!morph (x)), M_b!morph (x))
+      proof = by property P!pair_preserves_second definition of morph;
 
 end;;
 
@@ -267,21 +266,21 @@ end;;
    We need to fill the proof knowing how these are compiled into Coq.
 *)
 
-species Cartesian_product(A is Setoid, B is Setoid) =
-  (** 
-     Rule of thumb: 
-      - use intros without parameters -> independant of FoCaL compiler
+species Cartesian_product (A is Setoid, B is Setoid) =
+  (**
+     Rule of thumb:
+      - use intros without parameters -> independant of FoCaLize compiler
       - explicitly use unfold with needed definitions instead of simpl
       - use apply with properties involved
    *)
 
-  inherit Product_set(A, B) ;
+  inherit Product_set (A, B);
 
   representation = A * B;
 
-  let first(x) = match x with | (r, _) -> r ;
-  let second(x) = match x with | (_, r) -> r ;
-  let pair(x, y) = (x, y);
+  let first (x) = match x with | (r, _) -> r;
+  let second (x) = match x with | (_, r) -> r;
+  let pair (x, y) = (x, y);
 
   (** Credits Eric Jaeger, William Bartlett *)
   proof of pair_preserves_first =
@@ -309,22 +308,23 @@ end;;
 (*    Commonly product by a singleton is isomorphic to the set itself, *)
 (*    this is a use case for our specifications. *)
 (*  *\) *)
-(* species product_singleton(a is abstract_singleton, b is abstract_singleton) = *)
-(*   inherit product_set(a, b), abstract_singleton ; *)
-
+(* species product_singleton (a is abstract_singleton, b is abstract_singleton) = *)
+(* *)
+(*   inherit product_set (a, b), abstract_singleton; *)
+(* *)
 (*   proof of only_one_element = *)
 (*     <1>1 assume x in self,  *)
-(*          prove !equal(x, !element) *)
-(*          <2>1 prove a!equal(!first(x), !first(!element)) *)
-(*               <3>1 prove a!equal(!first(x), a!element) by a!only_one_element *)
-(*               <3>2 prove a!equal(!first(!element), a!element) *)
+(*          prove !equal (x, !element) *)
+(*          <2>1 prove a!equal (!first (x), !first (!element)) *)
+(*               <3>1 prove a!equal (!first (x), a!element) by a!only_one_element *)
+(*               <3>2 prove a!equal (!first (!element), a!element) *)
 (*                    by !pair_preserves_first def !element *)
 (*               <3>3 qed  *)
 (*                    by <3>1, <3>2, *)
 (*                       a!equal_transitive, a!equal_symmetric, a!equal_reflexive *)
-(*          <2>2 prove b!equal(!second(x), !second(!element)) *)
-(*               <3>1 prove b!equal(!second(x), b!element) by b!only_one_element *)
-(*               <3>2 prove b!equal(!second(!element), b!element) *)
+(*          <2>2 prove b!equal (!second (x), !second (!element)) *)
+(*               <3>1 prove b!equal (!second (x), b!element) by b!only_one_element *)
+(*               <3>2 prove b!equal (!second (!element), b!element) *)
 (*                    by !pair_preserves_second def !element *)
 (*               <3>3 qed  *)
 (*                    by <3>1, <3>2, *)
@@ -335,15 +335,20 @@ end;;
 (* end *)
 
 (* (\** A simple instance of the latter *\) *)
-(* species cartesian_singleton(a is abstract_singleton, b is abstract_singleton) = *)
-(*   inherit product_singleton(a, b), cartesian_product(a, b) ; *)
+(* species cartesian_singleton (a is abstract_singleton, b is abstract_singleton) = *)
+(* *)
+(*   inherit product_singleton (a, b), cartesian_product (a, b); *)
+(* *)
 (* end *)
+(* ;; *)
 
 (* (\** A final model for products  *\) *)
 (* collection product_singleton_test = *)
-(*   implement cartesian_singleton(singleton_1, singleton_2) *)
+(* *)
+(*   implement cartesian_singleton (singleton_1, singleton_2) *)
+(* *)
 (*   (\* [rr] Hack to include representation types *\) *)
-(*   let _rep_a(a, b) = singleton_1!equal(a, b); *)
-(*   let _rep_b(a, b) = singleton_2!equal(a, b); *)
+(*   let _rep_a (a, b) = singleton_1!equal (a, b); *)
+(*   let _rep_b (a, b) = singleton_2!equal (a, b); *)
 (* end *)
 (* ;; *)

@@ -3,7 +3,6 @@
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -15,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sums.fcl,v 1.13 2009-05-15 08:03:20 weis Exp $ *)
+(* $Id: sums.fcl,v 1.14 2009-05-16 10:26:59 weis Exp $ *)
 
 (**
 
@@ -38,8 +37,9 @@ open "basics";;
    there is nothing that is both a sum and a product.
    This forbids to inherits from a product and a sum.
  *)
-species Abstract_sum(A is Basic_object, B is Basic_object) =
-  inherit Basic_object ;
+species Abstract_sum (A is Basic_object, B is Basic_object) =
+
+  inherit Basic_object;
 
   (** first builder, name clash with product is intentional. *)
   signature first: A -> Self;
@@ -77,7 +77,8 @@ end;;
    in conjunction with variant types.
  *)
 species Sum_set(A is Setoid, B is Setoid) =
-  inherit Abstract_sum(A, B), Setoid ;
+
+  inherit Abstract_sum(A, B), Setoid;
 
   (** this is a (partial) function which is intended to reverse first *)
   signature first_term: Self -> A;
@@ -290,7 +291,7 @@ species Sum_set(A is Setoid, B is Setoid) =
            <2>2 prove (!first_case(x) /\ !first_case(y) )
                 by step <2>1 hypothesis H property !equal_spec
            <2>f qed by step <2>2
-      <1>f conclude ;
+      <1>f conclude;
 
 (*   (\** specifications are compatible with bollean logic *\) *)
 (*   theorem first_case_full_subtitution_rule: all x y in self, *)
@@ -370,7 +371,8 @@ species Categorical_sum_property
    M_a is Setoid_morphism(AX, E),
    M_b is Setoid_morphism(BX, E),
    S is Sum_set(AX, BX)) =
-  inherit Setoid_morphism(S, E) ;
+
+  inherit Setoid_morphism(S, E);
 
   (** An effective way to factor functions *)
   let morph(x) =
@@ -433,7 +435,9 @@ end;;
    We thus recommend to inherit from this species when abstracting variants.
  *)
 species Disjoint_sum(A is Setoid, B is Setoid) =
-  inherit Sum_set(A, B) ;
+
+  inherit Sum_set(A, B);
+
   (** Each part is strictly included by its components *)
   theorem sum_is_non_trivial: all x in A, all y in B,
     ~(!equal(!first(x), !second(y)))
@@ -467,7 +471,8 @@ type simple_variant('a, 'b) =
    needed by our framework.
  *)
 species Variant_sum(A is Setoid, B is Setoid) =
-  inherit Sum_set(A, B) ;
+
+  inherit Sum_set(A, B);
 
   representation = simple_variant(A, B);
 
@@ -484,7 +489,7 @@ species Variant_sum(A is Setoid, B is Setoid) =
   proof of first_has_case =
     coq proof
     definition of first, first_case
-    {* intros ; unfold abst_first_case, abst_first; exact I. Qed. *}
+    {* intros; unfold abst_first_case, abst_first; exact I. Qed. *}
     ;
 
   (**
@@ -517,7 +522,7 @@ species Variant_sum(A is Setoid, B is Setoid) =
   proof of second_has_case=
     coq proof
     definition of second, second_case
-    {* intros ; unfold abst_second_case, abst_second; exact I. Qed. *};
+    {* intros; unfold abst_second_case, abst_second; exact I. Qed. *};
 
   (**
      Ill behavior is unspecified, in this case
@@ -544,7 +549,6 @@ species Variant_sum(A is Setoid, B is Setoid) =
     {* intros; unfold first_case, second_case;
        destruct x; simpl; tauto. Qed. *};
 
-
   (**
      This is a completeness property,
      every element in a variant is of known kind
@@ -559,8 +563,10 @@ end;;
 
 (* (\** A concrete species to specify strict disjoint unions *\) *)
 (* species disjoint_variant_sum(a is setoid) = *)
-(*   inherit disjoint_sum(a, a), variant_sum(a, a) ; *)
+(**)
+(*   inherit disjoint_sum(a, a), variant_sum(a, a); *)
 (* end *)
+(* ;; *)
 
 (* (\**  *)
 (*    A final model for disjoint sums, when are they the same ? *)

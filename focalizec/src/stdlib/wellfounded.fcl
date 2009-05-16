@@ -1,8 +1,9 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            William Bartlett                                         *)
+(*                                                                     *)
 (*                      ENSIIE - LIP6  -  INRIA Rocquencourt           *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -10,11 +11,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: wellfounded.fcl,v 1.7 2009-05-14 15:57:40 doligez Exp $ *)
+(* $Id: wellfounded.fcl,v 1.8 2009-05-16 10:26:59 weis Exp $ *)
 
 (* Definition (import) of the notion of wellfoundedness.
-   Since this notion is not defineable in Focal, this library is a veritable
-   toolbox for reasoning with it inside Focal without resorting to low level
+   Since this notion is not defineable in FoCaLize, this library is a veritable
+   toolbox for reasoning with it inside FoCaLize without resorting to low level
    Coq proofs. *)
 
 use "basics";;
@@ -24,7 +25,9 @@ open "sets_orders";;
 coq_require "wellfounded_externals";;
 
 species PartialWellOrder =
-  inherit Partial_order ;
+
+  inherit Partial_order;
+
   (** The predicate of Wellfoundedness
    * @param r the relation that is said to be well founded
    *
@@ -39,20 +42,25 @@ species PartialWellOrder =
   ;
 
   property wellfounded_lt: wellfounded (lt);
-end;;
+end
+;;
 
 
 
 species WellOrder =
-  inherit PartialWellOrder, Ordered_set ;
-end;;
+
+  inherit PartialWellOrder, Ordered_set;
+
+end
+;;
 
 (** Well founded order over integers *)
 let int_wf (x in int, y in int) in bool =
   int_lt (int_abs (x), int_abs (y)) ;;
 
 species RelativeIntegers =
-  inherit WellOrder ;
+
+  inherit WellOrder;
 
   representation = int;
 
@@ -69,10 +77,12 @@ species RelativeIntegers =
   let lt (x, y) = and_b (int_leq (lowerbound, y), int_lt (x, y)) ;
 
   proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
-end;;
+end
+;;
 
 species InverseImage (A is PartialWellOrder) =
-  inherit PartialWellOrder ;
+
+  inherit PartialWellOrder;
 
   signature meazure: Self -> A;
 
@@ -80,22 +90,26 @@ species InverseImage (A is PartialWellOrder) =
     lt (x, y) -> A!lt (meazure (x), meazure (y));
 
   proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
-end;;
+end
+;;
 
 
 
 species Subrelation (A is PartialWellOrder) =
-  inherit InverseImage (A) ;
+
+  inherit InverseImage (A);
 
   representation = A;
 
   let meazure (x in Self) in A = x;
-end;;
+end
+;;
 
 
 
 species CartesianProduct (A is Basic_object, B is Basic_object) =
-        inherit Basic_object ;
+
+  inherit Basic_object;
 
   representation = A * B;
 
@@ -103,10 +117,12 @@ species CartesianProduct (A is Basic_object, B is Basic_object) =
 
   let fst (x in Self) = match x with | (a , _) -> a ;
   let snd (x in Self) = match x with | (_ , b) -> b ;
-end;;
+end
+;;
 
 species LexicographicProduct (A is PartialWellOrder, B is PartialWellOrder) =
-  inherit CartesianProduct (A, B), PartialWellOrder ;
+
+  inherit CartesianProduct (A, B), PartialWellOrder;
 
   let lt (x, y) =
     match (x, y) with
@@ -114,18 +130,21 @@ species LexicographicProduct (A is PartialWellOrder, B is PartialWellOrder) =
         or_b (A!lt (xA, yA), and_b (A!equal (xA, yA), B!lt (xB, yB))) ;
 
   proof of wellfounded_lt = assumed {* *} ;
-end;;
+end
+;;
 
 
 species RelationalProduct
   (A is PartialWellOrder,
    B is PartialWellOrder,
    C is LexicographicProduct (A, B)) =
-  inherit Subrelation (C) ;
+
+  inherit Subrelation (C);
 
   let lt (x, y) =
     and_b (A!lt (C!fst (x), C!fst (y)),
            B!lt (C!snd (x), C!snd (y))) ;
 
   proof of compatibility_lt_Alt_meazure = assumed {* *} ;
-end;;
+end
+;;

@@ -13,19 +13,21 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lattices.fcl,v 1.5 2009-05-14 15:31:06 doligez Exp $ *)
+(* $Id: lattices.fcl,v 1.6 2009-05-16 10:26:59 weis Exp $ *)
 
 use "sets";;
 open "sets";;
 
 (** In a meet semi lattice we have an operation inducing an ordering (&lt;=). *)
 species Meet_semi_lattice =
-  inherit Setoid ;
+
+  inherit Setoid;
+
   (** The infimum of two elements *)
   (* [rr]: need a mathml symbol for that,
      we don't want to use <min/> nor <intersect/>
   *)
-  signature inf : Self -> Self -> Self ;
+  signature inf : Self -> Self -> Self;
   (** compatibility with equality *)
   property inf_left_substitution_rule : all x y z in Self,
     !equal (x, y) -> !equal (!inf (x, z), !inf (y, z))
@@ -147,70 +149,71 @@ end
 
 (** in a join semi lattice we have an operation inducing an ordering (&gt;=) *)
 species Join_semi_lattice =
-  inherit Setoid ;
+
+  inherit Setoid;
 
   (** the supremum of two elements *)
   (* [rr]: need a mathml symbol for that,
      we don't want to use <max/> nor <union/>
   *)
-  signature sup : Self -> Self -> Self ;
+  signature sup : Self -> Self -> Self;
   (** compatibility with equality *)
   property sup_left_substitution_rule : all x y z in Self,
     !equal (x, y) -> !equal (!sup (x, z), !sup (y, z))
   ;
   property sup_commutes : all x y in Self,
-    !equal(!sup(x, y), !sup(y, x));
+    !equal (!sup (x, y), !sup (y, x));
 
   (**
      for a  commutative law right congruence is a consequence
       of left congruence
    *)
   theorem sup_right_substitution_rule : all x y z in Self,
-     !equal(y, z) -> !equal(!sup(x, y), !sup(x, z))
+     !equal (y, z) -> !equal (!sup (x, y), !sup (x, z))
      proof =
        by
         property sup_left_substitution_rule, sup_commutes, equal_transitive
      ;
   (** users should use global congruence when possible *)
   theorem sup_substitution_rule : all x y z t in Self,
-    !equal(x, y) -> !equal(z, t) -> !equal(!sup(x, z), !sup(y, t))
-(*    !equal(x, y) -> !equal(y, t) -> !equal(!sup(x, y), !sup(y, t)) *)
+    !equal (x, y) -> !equal (z, t) -> !equal (!sup (x, z), !sup (y, t))
+(*    !equal (x, y) -> !equal (y, t) -> !equal (!sup (x, y), !sup (y, t)) *)
     proof =
       by
         property sup_left_substitution_rule, sup_right_substitution_rule,
            (* [rr]: if not given reflexivity Zenon fails *)
-           equal_transitive(*, !equal_reflexive*)
+           equal_transitive (*, !equal_reflexive*)
     ;
   (* sup is an associative law *)
   property sup_is_associative : all x y z in Self,
-    !equal(!sup(!sup(x, y), z), !sup(x, !sup(y, z)));
+    !equal (!sup (!sup (x, y), z), !sup (x, !sup (y, z)));
   (* sup is an idempotent law  *)
   property sup_idempotent : all x y in Self,
-    !equal(x, y) -> !equal(x, !sup(x, y));
+    !equal (x, y) -> !equal (x, !sup (x, y));
 
   (** order_sup is the least defined ordering compatible with sup *)
   (* [rr]: need a mathml symbol for that,
      we don't want to use <geq/>
   *)
-  let order_sup(x, y) = !equal(x, !sup(x, y));
+  let order_sup (x, y) = !equal (x, !sup (x, y));
 
   theorem order_sup_is_reflexive : all x y in Self,
-     !equal(x, y) -> !order_sup(x, y)
+     !equal (x, y) -> !order_sup (x, y)
      proof =
        by property sup_idempotent
           definition of order_sup
   ;
 
   theorem order_sup_is_antisymmetric : all x y in Self,
-     !order_sup(x, y) -> !order_sup(y, x) -> !equal(x, y)
+     !order_sup (x, y) -> !order_sup (y, x) -> !equal (x, y)
      proof =
        by property sup_commutes, equal_symmetric, equal_transitive
           definition of order_sup
      ;
 
   theorem order_sup_is_transitive : all x y z in Self,
-     !order_sup(x, y) -> !order_sup(y, z) -> !order_sup(x, z)
-     (* x=inf(x, y) et y=inf(y, z) x=inf(x, inf(y, z)=inf(inf(x, y), z)=inf(x, z)*)
+     !order_sup (x, y) -> !order_sup (y, z) -> !order_sup (x, z)
+     (* x=inf (x, y) et y=inf (y, z) x=inf (x, inf (y, z)=inf (inf (x, y), z)=inf (x, z)*)
      proof =
        <1>1 assume x in Self,
             assume y in Self,
@@ -237,16 +240,16 @@ species Join_semi_lattice =
 
   (** any element bigger than two elements is bigger than their supremum *)
   theorem order_sup_is_supremum : all x y i in Self,
-    !order_sup(i, x) -> !order_sup(i, y) ->
-      !order_sup(i, !sup(x, y))
+    !order_sup (i, x) -> !order_sup (i, y) ->
+      !order_sup (i, !sup (x, y))
     proof =
       <1>1 assume x in Self,
            assume y in Self,
            assume i in Self,
-           assume H1 : !order_sup(i, x),
-           assume H2 : !order_sup(i, y),
-           prove !order_sup(i, !sup(x, y))
-        <2>1 prove !equal(i, !sup(!sup(i, x), y))
+           assume H1 : !order_sup (i, x),
+           assume H2 : !order_sup (i, y),
+           prove !order_sup (i, !sup (x, y))
+        <2>1 prove !equal (i, !sup (!sup (i, x), y))
           by
            hypothesis H1, H2
            property sup_left_substitution_rule,
@@ -265,7 +268,8 @@ end
 (** lattices have an inf and sup operation which induce a partial order *)
 
 species Lattice =
-  inherit Meet_semi_lattice, Join_semi_lattice ;
+
+  inherit Meet_semi_lattice, Join_semi_lattice;
 
   (** the first absorbtion law *)
    property inf_absorbes_sup : all x y in Self,
@@ -279,7 +283,7 @@ species Lattice =
    theorem order_inf_refines_order_sup : all x y in Self,
      !order_sup(y, x) -> !order_inf(x, y)
      proof =
-       (* x = x v y ; x ^ y = x ^ (x v y) = x *)
+       (* x = x v y; x ^ y = x ^ (x v y) = x *)
        <1>1 assume x in Self,
             assume y in Self,
             assume H : !order_sup(y, x),
@@ -305,7 +309,7 @@ species Lattice =
 
   (** in a lattice there is only one ordering *)
    theorem order_sup_refines_order_inf : all x y in Self,
-     (* x = x ^ y ; x v y = (x ^ y) v x = x v (x ^ y) = x *)
+     (* x = x ^ y; x v y = (x ^ y) v x = x v (x ^ y) = x *)
      !order_inf (y, x) -> !order_sup (x, y)
      proof =
        <1>1 assume x in Self,
@@ -340,7 +344,8 @@ end
 
 (** Modular lattices *)
 species Modular_lattice =
-  inherit Lattice ;
+
+  inherit Lattice;
 
 (** a generalization of ditributivity  *)
 property modular_law : all x y z in Self,
@@ -359,7 +364,8 @@ end
  *)
 species Distributive_lattice =
 
-  inherit Lattice, Modular_lattice ;
+  inherit Lattice, Modular_lattice;
+
   property sup_left_distributes : all x y z in Self,
     !equal(!sup(x, !inf(y, z)), !inf(!sup(x, y), !sup(x, z)));
 
@@ -474,7 +480,9 @@ A meet semi lattice with an upper bound as neutral element for infimum.
 That is a meet semi lattice with a monoid structure.
 *)
 species Meet_semi_lattice_with_max =
-  inherit Meet_semi_lattice ;
+
+  inherit Meet_semi_lattice;
+
   signature max : Self;
   property max_is_right_neutral : all x in Self,
     !equal(!inf(x, !max), x);
@@ -492,7 +500,9 @@ A meet semi lattice with a lower bound.
 That is a meet semi lattice with an absorbant element
 *)
 species Meet_semi_lattice_with_min =
-  inherit Meet_semi_lattice ;
+
+  inherit Meet_semi_lattice;
+
   signature min : Self;
   property min_right_absorbes : all x in Self,
     !equal(!inf(x, !min), !min);
@@ -510,7 +520,9 @@ A join semi lattice with a lower bound as neutral element for supremum.
 That is a join semi lattice with a monoid structure.
 *)
 species Join_semi_lattice_with_min =
-  inherit Join_semi_lattice ;
+
+  inherit Join_semi_lattice;
+
   signature min : Self;
   property min_is_right_neutral : all x in Self,
     !equal(!sup(x, !min), x);
@@ -531,7 +543,9 @@ A join semi lattice with an upper bound.
 That is a join semi lattice with an absorbant element
 *)
 species Join_semi_lattice_with_max =
-  inherit Join_semi_lattice ;
+
+  inherit Join_semi_lattice;
+
   signature max : Self;
   property max_right_absorbes : all x in Self,
     !equal(!sup(x, !max), !max);
@@ -546,11 +560,12 @@ end
 
 (** These are commonly named lattices *)
 species Bounded_lattice =
-  inherit  Lattice,
-           Meet_semi_lattice_with_min,
-           Meet_semi_lattice_with_max,
-           Join_semi_lattice_with_min,
-           Join_semi_lattice_with_max ;
+
+  inherit Lattice,
+          Meet_semi_lattice_with_min,
+          Meet_semi_lattice_with_max,
+          Join_semi_lattice_with_min,
+          Join_semi_lattice_with_max;
 
   (** absorption laws enable to prove that being absorbant for one law
       is being neutral for the other *)
@@ -596,4 +611,3 @@ species Bounded_lattice =
     ;
 end
 ;;
-

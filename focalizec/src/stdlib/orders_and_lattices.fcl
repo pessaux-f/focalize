@@ -3,7 +3,6 @@
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -15,13 +14,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: orders_and_lattices.fcl,v 1.5 2009-05-16 09:25:30 weis Exp $ *)
+(* $Id: orders_and_lattices.fcl,v 1.6 2009-05-16 10:26:59 weis Exp $ *)
 
 use "lattices";;
 use "orders";;
 open "lattices";;
 open "orders";;
-
 
 (**
    Sometimes it is convenient to define lattices from partial ordering
@@ -33,10 +31,10 @@ species Partially_ordered_set_as_meet_semi_lattice =
           Partial_order;
 
   (** we define lattice ordering from normal ordering *)
-  let order_inf(x, y) = !leq(x, y);
+  let order_inf (x, y) = !leq (x, y);
 
   theorem order_inf_spec: all x y in Self,
-    !order_inf(x, y) <-> !leq(x, y)
+    !order_inf (x, y) <-> !leq (x, y)
     proof = by definition of order_inf;
 
   proof of order_inf_is_reflexive =
@@ -49,10 +47,10 @@ species Partially_ordered_set_as_meet_semi_lattice =
     by property leq_transitive, order_inf_spec;
 
   property inf_is_smaller : all x y in Self,
-    !leq(!inf(x, y), x) /\ !leq(!inf(x, y), y) ;
+    !leq (!inf (x, y), x) /\ !leq (!inf (x, y), y);
 
   property leq_defines_infimum : all x y i in Self,
-    !leq(i, x) -> !leq(i, y) -> !leq(i, !inf(x, y));
+    !leq (i, x) -> !leq (i, y) -> !leq (i, !inf (x, y));
 
   proof of order_inf_is_infimum =
     by property leq_defines_infimum, order_inf_spec;
@@ -60,15 +58,15 @@ species Partially_ordered_set_as_meet_semi_lattice =
   proof of inf_idempotent =
     <1>1 assume x in Self,
          assume y in Self,
-         assume H : !equal(x, y),
-         prove !equal(x, !inf(x, y))
-         <2>1 prove !leq(x, y)
+         assume H : !equal (x, y),
+         prove !equal (x, !inf (x, y))
+         <2>1 prove !leq (x, y)
               by hypothesis H property leq_reflexive, leq_extends_equal
-         <2>2 prove !leq(x, x)
+         <2>2 prove !leq (x, x)
               by property leq_reflexive, equal_reflexive, leq_extends_equal
-         <2>3 prove !leq(x, !inf(x, y))
+         <2>3 prove !leq (x, !inf (x, y))
               by step <2>2, <2>1 property leq_defines_infimum
-         <2>4 prove !leq(!inf(x, y), x) by property inf_is_smaller
+         <2>4 prove !leq (!inf (x, y), x) by property inf_is_smaller
          <2>f qed by step <2>4, <2>3 property leq_antisymmetric
     <1>f conclude
   ;
@@ -83,24 +81,24 @@ species Partially_ordered_set_as_meet_semi_lattice =
     <1>1 assume x in Self,
          assume y in Self,
          assume z in Self,
-         prove !equal(!inf(x, !inf(y, z)), !inf(!inf(x, y), z))
-         <2>1 prove !leq(!inf(!inf(x, y), z), !inf(x, !inf(y, z)))
-              <3>1 prove !leq(!inf(!inf(x, y), z), x)
+         prove !equal (!inf (x, !inf (y, z)), !inf (!inf (x, y), z))
+         <2>1 prove !leq (!inf (!inf (x, y), z), !inf (x, !inf (y, z)))
+              <3>1 prove !leq (!inf (!inf (x, y), z), x)
                    by property inf_is_smaller, leq_transitive
-              <3>2 prove !leq(!inf(!inf(x, y), z), !inf(y, z))
-                   <4>1 prove !leq(!inf(!inf(x, y), z), y)
+              <3>2 prove !leq (!inf (!inf (x, y), z), !inf (y, z))
+                   <4>1 prove !leq (!inf (!inf (x, y), z), y)
                         by property inf_is_smaller, leq_transitive
-                   <4>2 prove !leq(!inf(!inf(x, y), z), z)
+                   <4>2 prove !leq (!inf (!inf (x, y), z), z)
                         by property inf_is_smaller
                    <4>f qed by step <4>1, <4>2 property leq_defines_infimum
               <3>f qed by step <3>1, <3>2 property leq_defines_infimum
-         <2>2 prove !leq (!inf (x, !inf (y, z)), !inf (!inf(x, y), z))
-              <3>1 prove !leq (!inf(x, !inf(y, z)), z)
+         <2>2 prove !leq  (!inf  (x, !inf  (y, z)), !inf  (!inf (x, y), z))
+              <3>1 prove !leq  (!inf (x, !inf (y, z)), z)
                    by property inf_is_smaller, leq_transitive
-              <3>2 prove !leq (!inf (x, !inf (y, z)), !inf (x, y))
-                   <4>1 prove !leq (!inf (x, !inf (y, z)), y)
+              <3>2 prove !leq  (!inf  (x, !inf  (y, z)), !inf  (x, y))
+                   <4>1 prove !leq  (!inf  (x, !inf  (y, z)), y)
                         by property inf_is_smaller, leq_transitive
-                   <4>2 prove !leq (!inf (x, !inf (y, z)), x)
+                   <4>2 prove !leq  (!inf  (x, !inf  (y, z)), x)
                         by property inf_is_smaller
                    <4>f qed by step <4>1, <4>2 property leq_defines_infimum
               <3>f qed by step <3>1, <3>2 property leq_defines_infimum
@@ -114,14 +112,14 @@ end
 species Partially_ordered_set_as_join_semi_lattice =
 
   inherit Join_semi_lattice,
-          (* partial ordering takes precedence *)
+           (* partial ordering takes precedence *)
           Partial_order;
 
   (** we define lattice ordering from normal ordering *)
-  let order_sup(x, y) = !geq(x, y);
+  let order_sup (x, y) = !geq (x, y);
 
   theorem order_sup_spec: all x y in Self,
-    !order_sup(x, y) <-> !geq(x, y)
+    !order_sup (x, y) <-> !geq (x, y)
     proof = by definition of order_sup;
 
   proof of order_sup_is_reflexive =
@@ -135,11 +133,11 @@ species Partially_ordered_set_as_join_semi_lattice =
 
   (**  a supremum should be bigger than its arguments *)
   property sup_is_bigger : all x y in Self,
-    !geq(!sup(x, y), x) /\ !geq(!sup(x, y), y)  ;
+    !geq (!sup (x, y), x) /\ !geq (!sup (x, y), y) ;
 
   (** Anything bigger than a supremum is bigger than the supremum  *)
   property geq_defines_supremum : all x y s in Self,
-    !geq(s, x) -> !geq(s, y) -> !geq(s, !sup(x, y));
+    !geq (s, x) -> !geq (s, y) -> !geq (s, !sup (x, y));
 
   (**  We relate to lattice notions *)
   proof of order_sup_is_supremum =
@@ -148,15 +146,15 @@ species Partially_ordered_set_as_join_semi_lattice =
   proof of sup_idempotent =
     <1>1 assume x in Self,
          assume y in Self,
-         assume H : !equal(x, y),
-         prove !equal(x, !sup(x, y))
-         <2>1 prove !geq(x, y)
+         assume H : !equal (x, y),
+         prove !equal (x, !sup (x, y))
+         <2>1 prove !geq (x, y)
                 by hypothesis H property geq_reflexive, geq_extends_equal
-         <2>2 prove !geq(x, x)
+         <2>2 prove !geq (x, x)
                 by property geq_reflexive, equal_reflexive
-         <2>3 prove !geq(x, !sup(x, y))
+         <2>3 prove !geq (x, !sup (x, y))
                 by step <2>2, <2>1 property geq_defines_supremum
-         <2>4 prove !geq(!sup(x, y), x)
+         <2>4 prove !geq (!sup (x, y), x)
                 by property sup_is_bigger
          <2>f qed
             by step <2>4, <2>3 property geq_antisymmetric
@@ -173,24 +171,24 @@ species Partially_ordered_set_as_join_semi_lattice =
     <1>1 assume x in Self,
          assume y in Self,
          assume z in Self,
-         prove !equal(!sup(x, !sup(y, z)), !sup(!sup(x, y), z))
-         <2>1 prove !geq(!sup(!sup(x, y), z), !sup(x, !sup(y, z)))
-              <3>1 prove !geq(!sup(!sup(x, y), z), x)
+         prove !equal (!sup (x, !sup (y, z)), !sup (!sup (x, y), z))
+         <2>1 prove !geq (!sup (!sup (x, y), z), !sup (x, !sup (y, z)))
+              <3>1 prove !geq (!sup (!sup (x, y), z), x)
                    by property sup_is_bigger, geq_transitive
-              <3>2 prove !geq(!sup(!sup(x, y), z), !sup(y, z))
-                   <4>1 prove !geq(!sup(!sup(x, y), z), y)
+              <3>2 prove !geq (!sup (!sup (x, y), z), !sup (y, z))
+                   <4>1 prove !geq (!sup (!sup (x, y), z), y)
                         by property sup_is_bigger, geq_transitive
-                   <4>2 prove !geq(!sup(!sup(x, y), z), z)
+                   <4>2 prove !geq (!sup (!sup (x, y), z), z)
                         by property sup_is_bigger
                    <4>f qed by step <4>1, <4>2 property geq_defines_supremum
               <3>f qed by step <3>1, <3>2 property geq_defines_supremum
-         <2>2 prove !geq (!sup (x, !sup (y, z)), !sup (!sup (x, y), z))
-              <3>1 prove !geq (!sup (x, !sup (y, z)), z)
+         <2>2 prove !geq  (!sup  (x, !sup  (y, z)), !sup  (!sup  (x, y), z))
+              <3>1 prove !geq  (!sup  (x, !sup  (y, z)), z)
                    by property sup_is_bigger, geq_transitive
-              <3>2 prove !geq (!sup (x, !sup (y, z)), !sup (x, y))
-                   <4>1 prove !geq (!sup (x, !sup (y, z)), y)
+              <3>2 prove !geq  (!sup  (x, !sup  (y, z)), !sup  (x, y))
+                   <4>1 prove !geq  (!sup  (x, !sup  (y, z)), y)
                         by property sup_is_bigger, geq_transitive
-                   <4>2 prove !geq (!sup (x, !sup (y, z)), x)
+                   <4>2 prove !geq  (!sup  (x, !sup  (y, z)), x)
                         by property sup_is_bigger
                    <4>f qed by step <4>1, <4>2 property geq_defines_supremum
               <3>f qed by step <3>1, <3>2 property geq_defines_supremum
@@ -216,11 +214,11 @@ species Partially_ordered_set_as_lattice =
   proof of sup_absorbes_inf =
     <1>1 assume x in Self,
          assume y in Self,
-         prove !equal(!inf(x, !sup(x, y)), x)
-         <2>1 prove !leq(!inf(x, !sup(x, y)), x)
+         prove !equal (!inf (x, !sup (x, y)), x)
+         <2>1 prove !leq (!inf (x, !sup (x, y)), x)
               by property inf_is_smaller
-         <2>2 prove !leq(x, !inf(x, !sup(x, y)))
-              <3>1 prove !leq(x, !sup(x, y))
+         <2>2 prove !leq (x, !inf (x, !sup (x, y)))
+              <3>1 prove !leq (x, !sup (x, y))
                    by property sup_is_bigger, geq_is_leq
               <3>f qed
                    by step <3>1
@@ -235,15 +233,15 @@ species Partially_ordered_set_as_lattice =
   proof of inf_absorbes_sup =
     (* [rr]: damned prover this should work !
     by !inf_is_smaller, !sup_is_bigger, !geq_reflexive, !equal_reflexive,
-       !geq_defines_supremum def !geq ;
+       !geq_defines_supremum def !geq;
      *)
     <1>1 assume x in Self,
          assume y in Self,
-         prove !equal(!sup(x, !inf(x, y)), x)
-         <2>1 prove !geq(!sup(x, !inf(x, y)), x)
+         prove !equal (!sup (x, !inf (x, y)), x)
+         <2>1 prove !geq (!sup (x, !inf (x, y)), x)
               by property sup_is_bigger
-         <2>2 prove !geq(x, !sup(x, !inf(x, y)))
-              <3>1 prove !geq(x, !inf(x, y))
+         <2>2 prove !geq (x, !sup (x, !inf (x, y)))
+              <3>1 prove !geq (x, !inf (x, y))
                    by property inf_is_smaller, geq_is_leq
               <3>f qed
                  by step <3>1
@@ -260,7 +258,7 @@ species Partially_ordered_set_as_lattice =
 end
 ;;
 
-(**
+ (**
    Ordered meet semi lattices have a complete ordering which refines that
    of the semi lattice structure.
  *)
@@ -269,7 +267,7 @@ species Ordered_meet_semi_lattice =
   inherit Meet_semi_lattice, Ordered_set;
 
   property leq_refines_order_inf : all x y in Self,
-    !order_inf(x, y) -> !leq(x, y);
+    !order_inf (x, y) -> !leq (x, y);
 
 end
 ;;
@@ -278,9 +276,10 @@ end
  We view an ordered set as a meet semi lattice
 *)
 species Ordered_set_as_meet_semi_lattice =
+
   inherit Ordered_meet_semi_lattice;
 
-  let inf(x, y) = if !leq(x, y) then x else y ;
+  let inf (x, y) = if !leq (x, y) then x else y;
 
   proof of leq_refines_order_inf =
    by property leq_reflexive, leq_extends_equal
@@ -304,7 +303,7 @@ species Ordered_set_as_meet_semi_lattice =
   ;
 
   theorem order_inf_refines_leq : all x y in Self,
-    !leq(x, y) -> !order_inf(x, y)
+    !leq (x, y) -> !order_inf (x, y)
     proof =
       by property total_order, total_order, leq_antisymmetric
          definition of inf, order_inf
@@ -313,28 +312,28 @@ species Ordered_set_as_meet_semi_lattice =
   proof of inf_commutes =
    <1>1 assume x in Self,
         assume y in Self,
-        prove !equal(!inf(x, y), !inf(y, x))
-        <2>1 assume Hxy : !leq(x, y),
-             prove !equal(!inf(x, y), !inf(y, x))
-             <3>1 prove !equal(x, !inf(x, y))
+        prove !equal (!inf (x, y), !inf (y, x))
+        <2>1 assume Hxy : !leq (x, y),
+             prove !equal (!inf (x, y), !inf (y, x))
+             <3>1 prove !equal (x, !inf (x, y))
                   by hypothesis Hxy
                      property equal_reflexive
                      definition of inf
-             <3>2 prove !equal(x, !inf(y, x))
-                  <4>1 assume Hyx : !leq(y, x),
-                       prove !equal(x, !inf(y, x))
-                       <5>1 prove !equal(x, y)
+             <3>2 prove !equal (x, !inf (y, x))
+                  <4>1 assume Hyx : !leq (y, x),
+                       prove !equal (x, !inf (y, x))
+                       <5>1 prove !equal (x, y)
                             by hypothesis Hxy, Hyx
                                property leq_antisymmetric
-                        <5>2 prove !equal(y, !inf(y, x))
+                        <5>2 prove !equal (y, !inf (y, x))
                              by hypothesis Hyx
                                 property equal_reflexive
                                 definition of inf
                         <5>f qed
                              by step <5>1, <5>2
                                 property equal_transitive
-                  <4>2 assume H : ~(!leq(y, x)),
-                        prove !equal(x, !inf(y, x))
+                  <4>2 assume H : ~ (!leq (y, x)),
+                        prove !equal (x, !inf (y, x))
                         by hypothesis H
                            property equal_reflexive
                            definition of inf
@@ -342,8 +341,8 @@ species Ordered_set_as_meet_semi_lattice =
              <3>f qed
                 by step <3>1, <3>2
                    property equal_symmetric, equal_transitive
-        <2>2 assume Hyx : !leq(y, x),
-             prove !equal(!inf(x, y), !inf(y, x))
+        <2>2 assume Hyx : !leq (y, x),
+             prove !equal (!inf (x, y), !inf (y, x))
              (* [rr]: could do as <2>1 above, but zenon is wiser *)
              by hypothesis Hyx
                 property equal_reflexive, leq_antisymmetric
@@ -367,7 +366,7 @@ species Ordered_join_semi_lattice =
   inherit Join_semi_lattice, Ordered_set;
 
   property geq_refines_order_sup : all x y in Self,
-    !order_sup(x, y) -> !geq(x, y)
+    !order_sup (x, y) -> !geq (x, y)
   ;
 
 end
@@ -380,7 +379,7 @@ species Ordered_set_as_join_semi_lattice =
 
   inherit Ordered_join_semi_lattice;
 
-  let sup(x, y) = if !geq(x, y) then x else y ;
+  let sup (x, y) = if !geq (x, y) then x else y;
 
   proof of sup_idempotent =
     by property equal_reflexive
@@ -432,14 +431,14 @@ species Ordered_set_as_lattice =
   proof of sup_absorbes_inf =
     <1>1 assume x in Self,
          assume y in Self,
-         prove !equal(x, !inf(x, !sup(x, y)))
-         <2>1 assume H : !leq(x, y),
-              prove !equal(x, !inf(x, !sup(x, y)))
-              <3>1 prove !equal(y, !sup(x, y))
-                   <4>1 prove !geq(y, x)
+         prove !equal (x, !inf (x, !sup (x, y)))
+         <2>1 assume H : !leq (x, y),
+              prove !equal (x, !inf (x, !sup (x, y)))
+              <3>1 prove !equal (y, !sup (x, y))
+                   <4>1 prove !geq (y, x)
                         by hypothesis H
                            definition of geq
-                   <4>2 prove !equal(!sup(y, x), y)
+                   <4>2 prove !equal (!sup (y, x), y)
                         by step <4>1
                            property equal_reflexive
                            definition of sup
@@ -447,29 +446,29 @@ species Ordered_set_as_lattice =
                       by step <4>2
                          property sup_commutes,
                                   equal_symmetric, equal_transitive
-              <3>2 prove !equal(x, !inf(x, y))
+              <3>2 prove !equal (x, !inf (x, y))
                    by hypothesis H
                       property equal_reflexive
                       definition of inf
-              <3>3 prove !equal(!inf(x, !sup(x, y)),
-                                !inf(x, y))
+              <3>3 prove !equal (!inf (x, !sup (x, y)),
+                                !inf (x, y))
 (* [rr]: loops?    by step <3>1 property !inf_substitution_rule, !equal_symmetric *)
                    by step <3>1
                       property inf_right_substitution_rule, equal_symmetric
               <3>f qed
                  by step <3>3, <3>2
                     property equal_symmetric, equal_transitive
-         <2>2 assume H : !leq(y, x),
-              prove !equal(x, !inf(x, !sup(x, y)))
-              <3>1 prove !geq(x, y)
+         <2>2 assume H : !leq (y, x),
+              prove !equal (x, !inf (x, !sup (x, y)))
+              <3>1 prove !geq (x, y)
                    by hypothesis H
                       definition of geq
-              <3>2 prove !equal(x, !sup(x, y))
+              <3>2 prove !equal (x, !sup (x, y))
                    by step <3>1
                       property equal_reflexive
                       definition of sup
-              <3>3 prove !equal(!inf(x, !sup(x, y)),
-                                !inf(x, x))
+              <3>3 prove !equal (!inf (x, !sup (x, y)),
+                                !inf (x, x))
                    by step <3>2
                       property inf_right_substitution_rule, equal_symmetric
               <3>f qed
@@ -505,7 +504,7 @@ species Ordered_set_as_lattice =
                    <4>1 prove !equal (y, !inf (y, x))
                         by hypothesis H property equal_reflexive
                         definition of inf
-                   <4>2 prove !equal(y, !inf(x, y))
+                   <4>2 prove !equal (y, !inf (x, y))
                         by step <4>1 property inf_commutes,
                            equal_transitive, equal_symmetric
                    <4>f qed by step <4>2 property sup_right_substitution_rule
@@ -520,4 +519,3 @@ species Ordered_set_as_lattice =
 
 end
 ;;
-

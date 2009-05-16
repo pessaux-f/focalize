@@ -1,9 +1,8 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -15,11 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets_orders.fcl,v 1.25 2009-05-16 09:25:30 weis Exp $ *)
+(* $Id: sets_orders.fcl,v 1.26 2009-05-16 10:26:59 weis Exp $ *)
 
 (**
- @title FoC Project. Basic algebra.
- @author The FoC project
+ @title FoCaLize team. Basic algebra.
+ @author The FoCaLize team
  @description Basic sets operations, orderings and lattices.
 *)
 
@@ -828,6 +827,7 @@ end
 
 (** These are commonly named lattices *)
 species Bounded_lattice =
+
   inherit Lattice,
           Meet_semi_lattice_with_min,
           Meet_semi_lattice_with_max,
