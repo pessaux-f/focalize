@@ -1,5 +1,23 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Philippe Ayrault                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: switch_automata.fcl,v 1.7 2009-05-15 23:31:48 weis Exp $ *)
+
 (* 
- *@version $Revision: 1.6 $ $Date: 2009-03-13 10:40:13 $
+ *@version $Revision: 1.7 $ $Date: 2009-05-15 23:31:48 $
  *)
 
 use "basics";;
@@ -57,7 +75,8 @@ theorem diff_reverse_uncontroled:
 proof = assumed {* To do *}
 ;
 
-end;;
+end
+;;
 
 species Imp_state_aut1 inherits State_aut1 =
 (* Definition of the automata's states using a sum type *)
@@ -101,9 +120,13 @@ let print(s) =
      focalize_error("State_aut1 : Unknown state")
 ;
 
-end;;
+end
+;;
 
-collection Coll_state_aut1 implements Imp_state_aut1;;
+collection Coll_state_aut1 =
+  implement Imp_state_aut1
+end
+;;
 
 (********************************************************************)
 (*                     Automate d'aiguille                          *)
@@ -128,7 +151,8 @@ species Switch_automata(
 							 St4, Aut4))
 inherits Automata(St1, Req, Po) =
 representation = St1 * Aut2;
-end;;
+end
+;;
 
 
 species Imp_switch_automata(St1 is State_aut1, 
@@ -321,7 +345,8 @@ proof =
   <1>0 conclude
 ;
 
-end;;
+end
+;;
 
  
 species Imp2_switch_automata inherits 
@@ -363,9 +388,12 @@ proof =
 <1>f conclude 
 ;
 
-end;;
+end
+;;
 
-collection Coll_switch_automata implements 
-  Imp2_switch_automata;;
+collection Coll_switch_automata =
+  implement Imp2_switch_automata
+end
+;;
 
 
