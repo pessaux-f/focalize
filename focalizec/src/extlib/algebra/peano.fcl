@@ -3,8 +3,7 @@
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
-(*            FranÃ§ois Pessaux                                         *)
+(*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*                                                                     *)
@@ -15,22 +14,22 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.5 2009-05-15 08:06:03 weis Exp $ *)
+(* $Id: peano.fcl,v 1.6 2009-05-16 13:21:27 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
 
-use "basics" ;;
-open "basics" ;;
+use "basics";;
+open "basics";;
 
-(* use "iterators" ;; *)
-(* open "iterators" ;; *)
+(* use "iterators";; *)
+(* open "iterators";; *)
 
-use "sets" ;;
+use "sets";;
 use "strict_orders";;
 use "orders_and_lattices";;
 
-open "sets" ;;
+open "sets";;
 open "strict_orders";;
 open "orders_and_lattices";;
 
@@ -39,32 +38,36 @@ open "orders_and_lattices";;
    successor and a predecessor function.
  *)
 
-species Enumeration_system inherits Setoid =
+species Enumeration_system =
 
-  signature start: Self ;
+  inherit Setoid;
+
+  signature start: Self;
 
   let element = !start;
 
   (** An abstract successor function *)
-  signature successor : Self -> Self ;
+  signature successor : Self -> Self;
 
   (** Compatibility with equality *)
   property successor_substitution_rule: all x y in Self,
-   !equal (x, y) -> !equal (!successor(x), !successor(y)) ;
+   !equal (x, y) -> !equal (!successor(x), !successor(y));
 
   (** Injectivity of successor is a Peano axiom *)
   property successor_is_injective: all x y in Self,
-     !equal (!successor(x), !successor(y)) -> !equal (x, y) ;
+     !equal (!successor(x), !successor(y)) -> !equal (x, y);
 
-end ;;
+end
+;;
 
 type peano =
   | P_zero
   | P_succ(peano)
 ;;
 
-species Peano_enumeration_system
-  inherits Syntactical_setoid, Enumeration_system =
+species Peano_enumeration_system =
+
+  inherit Syntactical_setoid, Enumeration_system;
 
   representation = peano;
 
@@ -104,15 +107,18 @@ species Peano_enumeration_system
 (*          qed assumed {* __A_1_LEMMA not found *}; *)
 
 
-end;;
+end
+;;
 
 
 (**
    An abstract enumeration system is a system that could be obtained
    by stating from the 0 element and iterating the successor function.
  *)
-species Enumerated_system
-   inherits Enumeration_system, Partial_set =
+species Enumerated_system =
+
+  inherit Enumeration_system, Partial_set;
+
   (** Zero is not a successor is a Peano axiom *)
   property successor_is_non_trivial: all n in Self,
     !different(!successor (n), !start);
@@ -125,7 +131,7 @@ species Enumerated_system
   property predecessor_reverses_successor : all x y in Self,
      !different(y, !start) ->
        !equal (x, !predecessor(y)) ->
-         !equal (y, !successor(x)) ;
+         !equal (y, !successor(x));
 
   (** Weak injectivity of predecessor is a Peano axiom *)
   theorem predecessor_is_injective: all n m in Self,
@@ -161,25 +167,29 @@ species Enumerated_system
     p (!start) -> (all n in Self, p (n) -> p (!successor (n)))
       -> (all n in Self, p (n));
 
-end ;;
+end
+;;
 
 (**
   Here we state properties for a total ordering over an enumeration.
   Implicitely we orient the binary relation x = succ(y)
   and consider its transitive closure
  *)
-species Ordered_Enumeration_system
-  inherits Enumeration_system, Strictly_ordered_set=
+species Ordered_Enumeration_system =
+
+  inherit Enumeration_system, Strictly_ordered_set;
 
 
   (** The ordering is compatible with the successor function *)
   property successor_defines_bigger: all x in Self,
-    !lt (x, !successor (x)) ;
+    !lt (x, !successor (x));
 
-end ;;
+end
+;;
 
-species Ordered_Enumerated_system
-  inherits Enumerated_system, Ordered_Enumeration_system =
+species Ordered_Enumerated_system =
+
+  inherit Enumerated_system, Ordered_Enumeration_system;
 
   (** a lower bound for the ordering *)
   property start_is_min: all x in Self,
@@ -196,9 +206,9 @@ species Ordered_Enumerated_system
 end
 ;;
 
-species Peano_base
-  inherits Peano_enumeration_system,
-           Ordered_Enumerated_system =
+species Peano_base =
+  inherit Peano_enumeration_system,
+          Ordered_Enumerated_system;
 
   let start = P_zero;
 
@@ -226,35 +236,43 @@ species Peano_base
               definition of successor, start
               assumed {* *}
          <2>f qed by step <2>2 property !different_is_syntactic
-    <1>f qed by step <1>1 ;
+    <1>f qed by step <1>1;
 
-end;;
-
-
-species Peano_dumb inherits Peano_base =
-
-let lt(x, y) = false;
-
-proof of lt_is_irreflexive = by definition of lt;
-proof of lt_is_transitive = by definition of lt;
-
-proof of successor_defines_bigger = assumed {* this is wrong *};
-proof of successor_defines_infimum = assumed {* this is wrong *};
-
-proof of start_is_min = assumed {* this is wrong *};
-
-proof of equal_is_syntactic = assumed {* this is wrong *};
-
-proof of total_order = assumed {* this is true *};
-
-end;;
-
-collection Peano_dumb_coll =
-  implement Peano_dumb
 end
 ;;
 
-species Peano_order inherits Peano_base, Ordered_Enumerated_system =
+
+species Peano_dumb =
+
+  inherit Peano_base;
+
+  let lt(x, y) = false;
+
+  proof of lt_is_irreflexive = by definition of lt;
+  proof of lt_is_transitive = by definition of lt;
+
+  proof of successor_defines_bigger = assumed {* this is wrong *};
+  proof of successor_defines_infimum = assumed {* this is wrong *};
+
+  proof of start_is_min = assumed {* this is wrong *};
+
+  proof of equal_is_syntactic = assumed {* this is wrong *};
+
+  proof of total_order = assumed {* this is true *};
+
+end
+;;
+
+collection Peano_dumb_coll =
+
+  implement Peano_dumb
+
+end
+;;
+
+species Peano_order =
+
+  inherit Peano_base, Ordered_Enumerated_system;
 
 (*   (\* generic proof that syntactic equality induces total ordering *\) *)
 (*   proof of total_order = *)
@@ -281,7 +299,7 @@ species Peano_order inherits Peano_base, Ordered_Enumerated_system =
 (*     | (P_zero, P_succ(_y)) -> true *)
 (*     | (P_succ(x), P_zero) -> false *)
 (*     | (P_succ(x), P_succ(y)) -> !lt(x, y) *)
-(*     ; *)
+(*    ; *)
 
   proof of lt_is_irreflexive =
     <1>0 prove ~(!lt(P_zero, P_zero))
@@ -321,7 +339,6 @@ species Peano_order inherits Peano_base, Ordered_Enumerated_system =
 
   let start = P_zero;
 
-
   proof of start_is_min =
     (* transparent theorem reveals representation!*)
     <1>0 prove  all x in Self, !lt(P_zero, x) \/ (x = P_zero)
@@ -336,12 +353,13 @@ species Peano_order inherits Peano_base, Ordered_Enumerated_system =
          definition of start
          (* step <1>1 *)
          assumed {* direct consequence of <1>1 *}
-  ;
+ ;
 
-end;;
+end
+;;
 
 (*
  collection Peano_coll =
      implement Peano_order
  end
- ;; *)
+;; *)

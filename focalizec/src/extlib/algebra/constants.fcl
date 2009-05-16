@@ -3,8 +3,7 @@
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
-(*            Franï¿½ois Pessaux                                         *)
+(*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*                                                                     *)
@@ -15,33 +14,34 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: constants.fcl,v 1.5 2009-05-14 15:57:40 doligez Exp $ *)
-
+(* $Id: constants.fcl,v 1.6 2009-05-16 13:21:27 weis Exp $ *)
 
 (* for bool *)
 use "basics";;
 open "basics";;
 
 (* for equality *)
-use "sets" ;;
-open "sets" ;;
+use "sets";;
+open "sets";;
 
-
-
-(** 
-   A set with zero has an element called zero, 
+(**
+   A set with zero has an element called zero,
    some authors make this a primitive operation .
 *)
 species Setoid_with_zero =
-  inherit Setoid ;
+
+  inherit Setoid;
+
  (** @mathml <mn>0</mn>
     will be rendered as 0
   *)
-  signature zero : Self ;
+  signature zero : Self;
+
   (** sample element can be definbed to zero *)
-  let element = Self!zero ;
+  let element = Self!zero;
   (** A unary function which checks to zero *)
-  let is_zero(x) = !equal(x, !zero) ;
+  let is_zero(x) = !equal(x, !zero);
+
   theorem is_zero_spec: all x in Self,
     !is_zero(x) <-> (!equal (x, !zero) \/ !equal (!zero, x))
     proof = by definition of is_zero
@@ -49,23 +49,26 @@ species Setoid_with_zero =
   theorem zero_checks_to_zero: !is_zero(!zero)
     proof = by property is_zero_spec, !equal_reflexive;
 
-end ;;
+end
+;;
 
 (** A setoid with one has a special element named one *)
 species Setoid_with_one =
-  inherit Setoid ;
+
+  inherit Setoid;
+
  (** @mathml <mn>1</mn>
     will be rendered as 1
  *)
-  signature one : Self ;
+  signature one : Self;
+
   (** A unary function that checks to one *)
-  let is_one (x) = Self!equal (x, !one) ;
-  let element = Self!one ;
+  let is_one (x) = Self!equal (x, !one);
+  let element = Self!one;
+
   theorem is_one_spec: all x in Self,
     !is_one(x) <-> (!equal (x, !one) \/ !equal (!one, x))
     proof = by definition of is_one property !equal_reflexive, !equal_symmetric;
 
-end ;;
-
-
-
+end
+;;

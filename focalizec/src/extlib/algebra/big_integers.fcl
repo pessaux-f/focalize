@@ -3,7 +3,6 @@
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -15,9 +14,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.9 2009-05-15 08:06:02 weis Exp $ *)
+(* $Id: big_integers.fcl,v 1.10 2009-05-16 13:21:27 weis Exp $ *)
 
-use "basics" ;;
+use "basics";;
 
 (** Ocamls bigint in FoCaLize. *)
 
@@ -69,6 +68,7 @@ let add_big_int =
   | caml -> {* Big_int.add_big_int *}
   | coq -> {* (* [Unsure] *) *}
 ;;
+
 let succ_big_int =
   internal big_int -> big_int
   external
@@ -161,8 +161,8 @@ let power_int_positive_int =
 ;;
 
 let power_big_int_positive_int =
- internal big_int -> basics#int -> big_int
- external
+  internal big_int -> basics#int -> big_int
+  external
   | caml -> {* Big_int.power_big_int_positive_int *}
   | coq -> {* (* [Unsure] *) *}
 ;;
@@ -335,59 +335,74 @@ let approx_big_int =
   | coq -> {* (* [Unsure] *) *}
 ;;
 
-use "additive_law" ;;
-use "weak_structures" ;;
-use "rings_fields" ;;
-use "integers" ;;
+use "additive_law";;
+use "weak_structures";;
+use "rings_fields";;
+use "integers";;
 
-open "weak_structures" ;;
+open "weak_structures";;
 
 (** Basic big integers simply form a monoid with an element one*)
 species Base_big_int =
-  inherit additive_law#Cancellative_additive_monoid, Unitary_additive_monoid ;
-  representation = big_int ;
-  let one = #unit_big_int ;
-  let zero = #zero_big_int ;
-  let is_zero (m)= #eq_big_int (m, #zero_big_int) ;
-  proof of is_zero_spec = by definition of is_zero, zero, equal ;
-  let plus (m, n) = #add_big_int (m, n) ;
-  proof of zero_is_neutral= assumed {* Because todo *} ;
-  proof of plus_is_left_regular = assumed {* Because todo *} ;
-  proof of plus_is_associative = assumed {* Because todo *} ;
-  proof of plus_commutes = assumed {* Because todo *} ;
-  proof of plus_right_substitution_rule = assumed {* Because todo *} ;
-  let equal (m, n) =  #eq_big_int (m, n) ;
-  proof of equal_symmetric = assumed {* Because todo *} ;
-  proof of equal_reflexive = assumed {* Because todo *} ;
-  proof of equal_transitive = assumed {* Because todo *} ;
-  let of_int (n) = #big_int_of_int (n) ;
-  let print = #string_of_big_int ;
-  let parse = #big_int_of_string ;
 
+  inherit additive_law#Cancellative_additive_monoid, Unitary_additive_monoid;
+
+  representation = big_int;
+
+  let one = #unit_big_int;
+  let zero = #zero_big_int;
+  let is_zero (m)= #eq_big_int (m, #zero_big_int);
+
+  proof of is_zero_spec = by definition of is_zero, zero, equal;
+
+  let plus (m, n) = #add_big_int (m, n);
+
+  proof of zero_is_neutral= assumed {* Because todo *};
+  proof of plus_is_left_regular = assumed {* Because todo *};
+  proof of plus_is_associative = assumed {* Because todo *};
+  proof of plus_commutes = assumed {* Because todo *};
+  proof of plus_right_substitution_rule = assumed {* Because todo *};
+
+  let equal (m, n) =  #eq_big_int (m, n);
+
+  proof of equal_symmetric = assumed {* Because todo *};
+  proof of equal_reflexive = assumed {* Because todo *};
+  proof of equal_transitive = assumed {* Because todo *};
+
+  let of_int (n) = #big_int_of_int (n);
+  let print = #string_of_big_int;
+  let parse = #big_int_of_string;
 
 end
 ;;
 
 collection Foc_basic_integers =
+
   implement Base_big_int
+
 end
 ;;
 
 (** Big integers *)
 species Integers_big_int =
-  inherit integers#Integer_system, Base_big_int ;
+  inherit integers#Integer_system, Base_big_int;
+
   proof of one_is_left_neutral = assumed {* Because todo *};
-  let mult (m, n) = #mult_big_int (m, n) ;
-  proof of mult_is_integral = assumed {* Because todo *} ;
-  proof of mult_assoc = assumed {* Because todo *} ;
-  proof of mult_commutes = assumed {* Because todo *} ;
-  proof of mult_left_distributes_on_plus = assumed {* Because todo *} ;
+
+  let mult (m, n) = #mult_big_int (m, n);
+
+  proof of mult_is_integral = assumed {* Because todo *};
+  proof of mult_assoc = assumed {* Because todo *};
+  proof of mult_commutes = assumed {* Because todo *};
+  proof of mult_left_distributes_on_plus = assumed {* Because todo *};
   (*[rr]: needs check *)
-  proof of mult_right_distributes_on_plus = assumed {* Because toto *} ;
-  proof of mult_left_substitution_rule = assumed {* Because todo *} ;
-  let sign (x) = #sign_big_int (x) ;
-  proof of order_compatible_with_plus = assumed {* Because todo *} ;
-  proof of mult_compat_with_order = assumed {* Because todo *} ;
+  proof of mult_right_distributes_on_plus = assumed {* Because toto *};
+  proof of mult_left_substitution_rule = assumed {* Because todo *};
+
+  let sign (x) = #sign_big_int (x);
+
+  proof of order_compatible_with_plus = assumed {* Because todo *};
+  proof of mult_compat_with_order = assumed {* Because todo *};
 
   let quo_rem (m, n) =
     let nn = n in
@@ -399,9 +414,9 @@ species Integers_big_int =
         let q = basics#fst (qr) in let r = basics#snd (qr) in
         cr_qrr (#mult_int_big_int (s, q), r);
 
-  let opposite (x) = #minus_big_int (x) ;
+  let opposite (x) = #minus_big_int (x);
 
-  proof of opposite_is_opposite = assumed {* Because todo *} ;
+  proof of opposite_is_opposite = assumed {* Because todo *};
 
   logical let euclidean_ordering (x, y) =
     if basics#int_lt (!sign(x), 0) then
@@ -409,17 +424,20 @@ species Integers_big_int =
       else !lt (x, !opposite (y))
     else
       if basics#int_lt (#sign_big_int (y), 0) then !lt (x, !opposite (y))
-      else !lt (x, y) ;
+      else !lt (x, y);
 
-  proof of euclidean_ordering_is_irreflexive = assumed {* Because todo *} ;
-  proof of euclidean_order_is_antisymmetric = assumed {* Because todo *} ;
-  proof of euclidean_ordering_is_transitive = assumed {* Because todo *} ;
-  proof of remainder_is_smaller = assumed {* Because todo *} ;
-  proof of equal_from_leq = assumed {* Because broken by equal redefinition.*} ;
+  proof of euclidean_ordering_is_irreflexive = assumed {* Because todo *};
+  proof of euclidean_order_is_antisymmetric = assumed {* Because todo *};
+  proof of euclidean_ordering_is_transitive = assumed {* Because todo *};
+  proof of remainder_is_smaller = assumed {* Because todo *};
+  proof of equal_from_leq = assumed {* Because broken by equal redefinition.*};
+
 end
 ;;
 
 collection Foc_big_integers =
+
   implement Integers_big_int
+
 end
 ;;

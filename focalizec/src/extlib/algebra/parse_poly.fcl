@@ -3,7 +3,6 @@
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -15,47 +14,54 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parse_poly.fcl,v 1.2 2009-01-11 01:24:06 weis Exp $ *)
+(* $Id: parse_poly.fcl,v 1.3 2009-05-16 13:21:27 weis Exp $ *)
 
 (**
    @author Violaine Ruffie
    semi abstract model to parse polynomials
 *)
 
-use "basics" ;;
-open "basics" ;;
+use "basics";;
+open "basics";;
 
-species Parse_poly (Coeff is Basic_object, Deg is Basic_object)
-inherits Basic_object =
-  signature read_var : string -> Self ;
-  signature read_monomial : string -> Deg -> Self ;
+species Parse_poly (Coeff is Basic_object, Deg is Basic_object) =
 
-  signature read_deg : string -> Deg ;
-  signature read_coeff : string -> Coeff ;
+  inherit Basic_object;
 
-  signature module_mult : Coeff -> Self -> Self ;
-  signature read_cst : Coeff -> Self ;
+  signature read_var : string -> Self;
+  signature read_monomial : string -> Deg -> Self;
 
-  signature mult : Self -> Self -> Self ;
-  signature plus : Self -> Self -> Self ;
-  signature minus : Self -> Self -> Self ;
-end ;;
+  signature read_deg : string -> Deg;
+  signature read_coeff : string -> Coeff;
 
+  signature module_mult : Coeff -> Self -> Self;
+  signature read_cst : Coeff -> Self;
 
-species Parse_poly_uni (Coeff is Basic_object, Deg is Basic_object)
-inherits Basic_object =
-  signature read_monomial : Deg -> Self ;
+  signature mult : Self -> Self -> Self;
+  signature plus : Self -> Self -> Self;
+  signature minus : Self -> Self -> Self;
 
-  signature read_deg : string -> Deg ;
-  signature read_coeff : string -> Coeff ;
+end
+;;
 
-  signature module_mult : Coeff -> Self -> Self ;
-  signature read_cst : Coeff -> Self ;
+species Parse_poly_uni (Coeff is Basic_object, Deg is Basic_object) =
 
-  signature mult : Self -> Self -> Self ;
-  signature plus : Self -> Self -> Self ;
-  signature minus : Self -> Self -> Self ;
-end ;;
+  inherits Basic_object;
+
+  signature read_monomial : Deg -> Self;
+
+  signature read_deg : string -> Deg;
+  signature read_coeff : string -> Coeff;
+
+  signature module_mult : Coeff -> Self -> Self;
+  signature read_cst : Coeff -> Self;
+
+  signature mult : Self -> Self -> Self;
+  signature plus : Self -> Self -> Self;
+  signature minus : Self -> Self -> Self;
+
+end
+;;
 
 
 

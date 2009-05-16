@@ -3,7 +3,6 @@
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -15,10 +14,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: arrays.fcl,v 1.4 2009-01-11 01:24:06 weis Exp $ *)
+(* $Id: arrays.fcl,v 1.5 2009-05-16 13:21:27 weis Exp $ *)
 
-use "basics" ;;
-coq_require "arrays_externals" ;;
+use "basics";;
+coq_require "arrays_externals";;
 
 (** Arrays for FoC *)
 type array ('a) =
