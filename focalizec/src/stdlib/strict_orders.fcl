@@ -3,12 +3,10 @@ use "sets";;
 open "basics";;
 open "sets";;
 
-
-
-(** 
-   Strict orderings. 
-   There are various definitions of strict orderings and some authors 
-   define strict quasi orderings which are used in econometrics and 
+(**
+   Strict orderings.
+   There are various definitions of strict orderings and some authors
+   define strict quasi orderings which are used in econometrics and
    so called preference logic.
 
  *)
@@ -17,7 +15,8 @@ open "sets";;
    consequence it is also asymetric. Sometimes called a strict quasi-order *)
 
  species Strict_partial_order =
-  inherit Anti_setoid ;
+
+  inherit Anti_setoid;
 
   signature lt: Self -> Self -> bool;
 
@@ -27,7 +26,7 @@ open "sets";;
     !lt(x, y) -> !lt(y, z) -> !lt(x, z);
 
   theorem lt_is_asymetric: all x y in Self, !lt(x, y) -> ~(!lt(y, x))
-    proof = 
+    proof =
       <1>1 assume x in Self, assume y in Self,
            assume H: !lt(x, y),
            prove ~(!lt(y, x))
@@ -39,7 +38,7 @@ open "sets";;
 
 
   (** gt is obtained by duality from lt, sometimes called a (strict)
-  preference *) 
+  preference *)
 
   let gt(x, y) = !lt(y, x);
 
@@ -50,7 +49,7 @@ open "sets";;
   theorem gt_is_irreflexive: all x in Self, ~(gt(x, x))
     proof = by property gt_is_lt, !lt_is_irreflexive;
 
-  (** Large ordering is defined from strict ordering *) 
+  (** Large ordering is defined from strict ordering *)
   let leq(x, y) = or_b(!lt(x, y), syntactic_equal(x, y));
 
   theorem lt_refines_leq: all x y in Self, !lt(x, y) -> !leq(x, y)
@@ -70,7 +69,7 @@ open "sets";;
                 by hypothesis HH_xy
                    property !lt_is_transitive, !lt_is_irreflexive
            <2>2 assume HH_xy: !lt(x, y) /\ syntactic_equal(y, x),
-                prove !equal(x, y) 
+                prove !equal(x, y)
                 by hypothesis HH_xy property !equal_reflexive, !equal_symmetric
            <2>3 assume HH_xy: syntactic_equal(x, y) /\ !lt(y, x),
                 prove !equal(x, y) by hypothesis HH_xy property equal_reflexive
@@ -84,7 +83,7 @@ open "sets";;
 
   theorem leq_transitive: all x y z in Self,
     !leq(x, y) -> !leq(y, z) -> !leq(x, z)
-    proof = 
+    proof =
       <1>1 assume x in Self, assume y in Self, assume z in Self,
            assume H_xy: !leq(x, y), assume H_yz: !leq(y, z),
            prove !leq(x, z)
@@ -92,11 +91,11 @@ open "sets";;
                 prove !lt(x, z)
                 by hypothesis H property !lt_is_transitive
            <2>2 assume H: (!lt(x, y) /\ syntactic_equal(y, z)),
-                prove !lt(x, z) 
-                by hypothesis H 
+                prove !lt(x, z)
+                by hypothesis H
            <2>3 assume H: (syntactic_equal(x, y) /\ !lt(y, z)),
                 prove !lt(x, z)
-                by hypothesis H 
+                by hypothesis H
            <2>4 assume H: (syntactic_equal(x, y) /\ syntactic_equal(y, z)),
                 prove !equal(x, z)
                 by hypothesis H property !equal_transitive, !equal_reflexive
@@ -109,21 +108,22 @@ open "sets";;
 end
 ;;
 
-(** 
-   Here we specify that incomparability is difference 
+(**
+   Here we specify that incomparability is difference
 
  *)
 species Strict_order =
-  inherit Strict_partial_order ;
+
+  inherit Strict_partial_order;
 
   (** Strict comparability is difference, this is sometimes called weakly
-   connected *) 
+   connected *)
 
   let different(x, y) = or_b(!lt(x, y), !lt(y, x));
 
   proof of different_is_symmetric = by definition of different;
 
-  proof of different_is_irreflexive = 
+  proof of different_is_irreflexive =
     by property !lt_is_irreflexive definition of different;
 
 
@@ -132,7 +132,8 @@ end
 ;;
 
 species Syntactical_setoid =
-  inherit Setoid ;
+
+  inherit Setoid;
 
   property equal_is_syntactic: all x y in Self, !equal(x, y ) -> x = y;
 
@@ -146,7 +147,8 @@ end;;
 (** Restoring compatibility between strict and large ordering *)
 species Strictly_ordered_set =
   (** Here we cannot inherit from Ordered_set because lt is defined there *)
-  inherit Syntactical_setoid, Strict_order ;
+
+  inherit Syntactical_setoid, Strict_order;
 
   theorem leq_from_lt: all x y in Self,
     !leq(x, y) <-> (!lt(x, y) \/ syntactic_equal(x, y))
@@ -157,7 +159,7 @@ species Strictly_ordered_set =
     !leq(x, y) \/ leq(y, x);
 
   proof of different_is_complete =
-    by property leq_from_lt, !different_is_not_same, 
+    by property leq_from_lt, !different_is_not_same,
                 !total_order,
                 !lt_is_irreflexive, !lt_is_transitive
        definition of different
@@ -165,24 +167,24 @@ species Strictly_ordered_set =
   proof of same_is_not_different = by property different_is_not_same;
 
   theorem different_is_syntactic: all x y in Self, ~(x = y) -> different(x, y)
-    proof = 
+    proof =
     <1>1 assume x in Self, assume y in Self,
          assume D_xy: ~(x = y),
          prove !different(x, y)
          <3>1 assume L_xy: !leq(x, y),
               prove !lt(x, y)
-              by hypothesis D_xy, L_xy 
+              by hypothesis D_xy, L_xy
                  property leq_from_lt, lt_is_irreflexive
          <3>2 assume L_yx: !leq(y, x),
               prove !lt(y, x)
-              by hypothesis L_yx, D_xy 
+              by hypothesis L_yx, D_xy
                  property leq_from_lt, lt_is_irreflexive
-         <3>f qed by step <3>1, <3>2 
+         <3>f qed by step <3>1, <3>2
                      property different_is_symmetric, !total_order
                      definition of different
     <1>f conclude;
 
-  proof of equal_is_syntactic =  
+  proof of equal_is_syntactic =
     by property different_is_syntactic, different_is_not_same;
 
 end
