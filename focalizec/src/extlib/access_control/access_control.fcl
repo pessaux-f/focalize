@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: access_control.fcl,v 1.11 2009-05-15 11:20:25 doligez Exp $ *)
+(* $Id: access_control.fcl,v 1.12 2009-05-16 17:53:00 weis Exp $ *)
 
 (**
    @title Implementation of access control models
@@ -22,21 +22,22 @@
    @author Charles Morisset, Francois Pessaux, Diane Pipon
  *)
 
-use "basics" ;;
-open "basics" ;;
-use "sets_orders" ;;
-open "sets_orders" ;;
-use "ensembles_finis" ;;
-open "ensembles_finis" ;;
+use "basics";;
+open "basics";;
+use "sets_orders";;
+open "sets_orders";;
+use "ensembles_finis";;
+open "ensembles_finis";;
 
 (** Framework *)
 
 (** Set_of is a stub species inheriting Ensembles_finis *)
 species Set_of (A is Setoid) =
-  inherit Ensembles_finis (A) ;
+
+  inherit Ensembles_finis (A);
 
   (** for_all(E, P) is true iff for any x in E, P(x) is true *)
-  signature for_all : Self -> (A -> bool) -> bool ;
+  signature for_all : Self -> (A -> bool) -> bool;
 
   (**
      If two sets set1 and set2 are equal and if x belongs to set1
@@ -46,52 +47,66 @@ species Set_of (A is Setoid) =
     all set1 set2 in Self, all x in A,
       equal (set1, set2) ->
         est_element (x, set1) ->
-          est_element (x, set2) ;
+          est_element (x, set2);
 
   (** If x1 belongs to the singleton {x2} then x1 = x2 *)
   property singleton_prop :
     all x1 x2 in A,
       est_element (x1, singleton (x2)) ->
-        A!equal (x1, x2) ;
+        A!equal (x1, x2);
 
-end ;;
+end;;
 
 (** The security parameter of an access control policy *)
-species Rho = inherit Setoid ; end ;;
+species Rho =
+
+ inherit Setoid;
+
+end;;
 
 (** The species representing the subjects of an access control policy *)
-species Subjects = inherit Setoid ; end ;;
+species Subjects =
+
+  inherit Setoid;
+
+end;;
 
 (** The species representing the objects of an access control policy *)
-species Objects = inherit Setoid ; end ;;
+species Objects =
+
+  inherit Setoid;
+
+end;;
 
 (** The usually considered access modes *)
 species Access_mode =
-  inherit Setoid ;
+
+  inherit Setoid;
 
   (** The read access mode *)
-  signature read : Self ;
+  signature read : Self;
 
   (** The write access mode *)
-  signature write : Self ;
+  signature write : Self;
 
-end ;;
+end;;
 
 (** An access is a triple Subject x Object x Access mode *)
 species Access (S is Subjects, O is Objects, M is Access_mode) =
-  inherit Setoid ;
+
+  inherit Setoid;
 
   (** Allows to create an access *)
-  signature create : S -> O -> M -> Self ;
+  signature create : S -> O -> M -> Self;
 
   (** Returns the subject involved in the given access *)
-  signature get_s : Self -> S ;
+  signature get_s : Self -> S;
 
   (** Returns the object involved in the given access *)
-  signature get_o : Self -> O ;
+  signature get_o : Self -> O;
 
   (** Returns the access mode involved in the given access *)
-  signature get_m : Self -> M ;
+  signature get_m : Self -> M;
 
   (**
      If two accesses (s1,o1,m1) and (s2,o2,m2) are equal
@@ -100,23 +115,24 @@ species Access (S is Subjects, O is Objects, M is Access_mode) =
   property access_equal :
     all s1 s2 in S, all o1 o2 in O, all m1 m2 in M,
       equal (create (s1, o1, m1), create (s2, o2, m2)) ->
-        (S!equal (s1, s2) /\ O!equal (o1, o2) /\ M!equal (m1, m2)) ;
+        (S!equal (s1, s2) /\ O!equal (o1, o2) /\ M!equal (m1, m2));
 
-end ;;
+end;;
 
 (** A state contains at least the set of current accesses *)
 species States (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
                 A is Access (S, O, M), S_a is Set_of (A)) =
-  inherit Setoid ;
+
+  inherit Setoid;
 
   (** Returns the set of current accesses *)
-  signature lambda : Self -> S_a ;
+  signature lambda : Self -> S_a;
 
   (** Add an access to the set of current accesses of the given state *)
-  signature add : Self -> A -> Self ;
+  signature add : Self -> A -> Self;
 
   (** Delete an access from the set of current accesses of the given state *)
-  signature del : Self -> A -> Self ;
+  signature del : Self -> A -> Self;
 
   (**
      If two states are equal then they have the same set of current accesses
@@ -124,14 +140,14 @@ species States (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
   property lambda_prop :
     all st1 st2 in Self,
       equal (st1, st2) ->
-        S_a!equal (lambda (st1), lambda (st2)) ;
+        S_a!equal (lambda (st1), lambda (st2));
 
   property add_prop :
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
       equal (add (st1, A!create (s1, o1, m1)), st2) ->
         S_a!equal (lambda (st2),
                    S_a!union (lambda (st1),
-                              S_a!singleton (A!create (s1, o1, m1)))) ;
+                              S_a!singleton (A!create (s1, o1, m1))));
 
   (**
      &Lambda;(st1) &cup; {(s1,o1,m1)} = &Lambda;(st2) &rarr;
@@ -140,13 +156,13 @@ species States (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
   property add_mem :
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
       equal (add (st1, A!create (s1, o1, m1)), st2) ->
-        S_a!est_element (A!create (s1, o1, m1), lambda (st2)) ;
+        S_a!est_element (A!create (s1, o1, m1), lambda (st2));
 
   (** a1 &isin; &Lambda;(st1) \ {(s1,o1,m1)} &rarr; a1 &isin; &Lambda;(st1) *)
   property del_prop :
     all st1 in Self, all a1 in A, all s1 in S, all o1 in O, all m1 in M,
       S_a!est_element (a1, lambda (del (st1, A!create (s1, o1, m1)))) ->
-        S_a!est_element (a1, lambda (st1)) ;
+        S_a!est_element (a1, lambda (st1));
 
   (**
      &Lambda;(st1) \ {(s1,o1,m1)} = &Lambda;(st2) &rarr;
@@ -155,17 +171,18 @@ species States (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
   property del_mem :
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
       equal(del (st1, A!create (s1, o1, m1)), st2) ->
-        ~ S_a!est_element (A!create (s1, o1, m1), lambda (st2)) ;
+        ~ S_a!est_element (A!create (s1, o1, m1), lambda (st2));
 
-end ;;
+end;;
 
 (** An access control policy defines a security predicate *)
 species Policy (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
                 A is Access (S, O, M), S_a is Set_of (A)) =
-  inherit States (Rh, S, O, M, A, S_a) ;
+
+  inherit States (Rh, S, O, M, A, S_a);
 
   (** Security predicate of an access control policy *)
-  signature omega : Self -> prop ;
+  signature omega : Self -> prop;
 
   (**
      If two states st1 and st2 are equal and if st1 satisfies the security
@@ -175,29 +192,34 @@ species Policy (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
     all st1 st2 in Self,
       equal (st1, st2) ->
         omega (st1) ->
-          omega (st2) ;
+          omega (st2);
 
-end ;;
+end;;
 
 (** The species representing the requests of an access control policy *)
-species Requests = inherit Setoid ; end ;;
+species Requests =
+
+  inherit Setoid;
+
+end;;
 
 (** The decisions that can be answered by a reference monitor *)
 species Decisions =
-  inherit Setoid ;
+
+  inherit Setoid;
 
   (** The decision yes *)
-  signature yes : Self ;
+  signature yes : Self;
 
   (** The decision no *)
-  signature no : Self ;
+  signature no : Self;
 
   (** A decision is either yes or no *)
   property yes_is_not_no :
     all x in Self,
-      ~ (equal (x, yes) /\ equal(x, no)) ;
+      ~ (equal (x, yes) /\ equal(x, no));
 
-end ;;
+end;;
 
 (**
    The species representing the semantics of requests of an access control
@@ -207,12 +229,13 @@ species Semantics_requests (Rh is Rho,
                             S is Subjects, O is Objects, M is Access_mode,
                             A is Access (S, O, M), S_a is Set_of (A),
                             R is Requests) =
-  inherit States (Rh, S, O, M, A, S_a) ;
+
+  inherit States (Rh, S, O, M, A, S_a);
 
   (** The predicate defining the semantics of requests *)
-  signature sem_req : R -> Self -> prop ;
+  signature sem_req : R -> Self -> prop;
 
-end ;;
+end;;
 
 (**
    An access control model regroups the concepts present in an access
@@ -222,23 +245,24 @@ species Models (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
                 A is Access (S, O, M), S_a is Set_of (A),
                 R is Requests,
                 D is Decisions) =
+
   inherit
     Policy (Rh, S, O, M, A, S_a),
-    Semantics_requests(Rh, S, O, M, A, S_a, R) ;
+    Semantics_requests(Rh, S, O, M, A, S_a, R);
 
   (** (d1,st1) = (d2,st2) &rarr; d1 = d2 *)
   property left_substitution :
     all d1 d2 in D, all st1 st2 in Self,
     (d1, st1) = (d2, st2) ->
-      D!equal (d1, d2) ;
+      D!equal (d1, d2);
 
   (** (d1,st1) = (d2,st2) &rarr; st1 = st2 *)
   property right_substitution :
     all d1 d2 in D, all st1 st2 in Self,
     (d1, st1) = (d2, st2) ->
-      equal (st1, st2) ;
+      equal (st1, st2);
 
-end ;;
+end;;
 
 (**
    The usually considered requests :
@@ -248,71 +272,77 @@ end ;;
      object o according to the access mode m
  *)
 species Requests_gal(S is Subjects, O is Objects, M is Access_mode) =
-  inherit Requests ;
+
+  inherit Requests;
 
   (** Returns the subject involved in the given request *)
-  signature get_s : Self -> S ;
+  signature get_s : Self -> S;
 
   (** Returns the object involved in the given request *)
-  signature get_o : Self -> O ;
+  signature get_o : Self -> O;
 
   (** Returns the access mode involved in the given request *)
-  signature get_m : Self -> M ;
+  signature get_m : Self -> M;
 
   (**
      Returns true if the given request is a "get an access" request,
      false otherwise
    *)
-  signature is_get : Self -> bool ;
+  signature is_get : Self -> bool;
 
   (**
      Returns true if the given request is a "release an access" request,
      false otherwise
    *)
-  signature is_rel : Self -> bool ;
+  signature is_rel : Self -> bool;
 
   (**
      A request is either a "get an access" or a "release an access" request
    *)
   property get_or_rel :
     all x in Self,
-      is_get (x) \/ is_rel (x) ;
+      is_get (x) \/ is_rel (x);
 
   property get_is_not_rel :
     all x in Self,
-      ~ (is_get (x) /\ is_rel (x)) ;
+      ~ (is_get (x) /\ is_rel (x));
 
-end ;;
+end;;
 
 (** Semantics of requests &lang; +,s,o,m &rang; and &lang; -,s,o,m &rang; *)
 species Semantics_requests_gal(Rh is Rho,
                                S is Subjects, O is Objects, M is Access_mode,
                                A is Access (S, O, M), S_a is Set_of (A),
                                R is Requests_gal (S, O, M)) =
-  inherit Semantics_requests (Rh, S, O, M, A, S_a, R) ;
+
+  inherit Semantics_requests (Rh, S, O, M, A, S_a, R);
 
   (** Semantics of request &lang; +,s,o,m &rang; *)
   logical let sem_req_get (r1, st1) =
     R!is_get (r1) ->
       S_a!est_element (A!create (R!get_s(r1), R!get_o(r1), R!get_m(r1)),
-                       lambda (st1)) ;
+                       lambda (st1));
 
   (** Semantics of request &lang; -,s,o,m &rang; *)
   logical let sem_req_rel (r1, st1) =
      R!is_rel (r1) ->
        ~ S_a!est_element (A!create (R!get_s(r1), R!get_o(r1), R!get_m(r1)),
-                          lambda (st1)) ;
+                          lambda (st1));
 
   (** Semantics of both requests *)
   logical let sem_req (r1, st1) =
-     sem_req_get (r1, st1) /\ sem_req_rel (r1, st1) ;
+     sem_req_get (r1, st1) /\ sem_req_rel (r1, st1);
 
-end ;;
+end;;
 
 (** Bell & LaPadula (BLP) *)
 
 (** The security parameter of the BLP model is a lattice *)
-species Rho_blp = inherit Rho, Lattice ; end ;;
+species Rho_blp =
+
+  inherit Rho, Lattice;
+
+end;;
 
 (**
    A BLP state contains security information given by two functions f_s and f_o
@@ -320,23 +350,25 @@ species Rho_blp = inherit Rho, Lattice ; end ;;
 species States_blp (Rh is Rho_blp,
                     S is Subjects, O is Objects, M is Access_mode,
                     A is Access (S, O, M), S_a is Set_of (A)) =
-  inherit States (Rh, S, O, M, A, S_a) ;
+
+  inherit States (Rh, S, O, M, A, S_a);
 
   (** Returns the level of security of the given subject *)
-  signature f_s : Self -> S -> Rh ;
+  signature f_s : Self -> S -> Rh;
 
   (** Returns the level of security of the given object *)
-  signature f_o : Self -> O -> Rh ;
+  signature f_o : Self -> O -> Rh;
 
-end ;;
+end;;
 
 (** Definition of the BLP security predicate *)
 species Policy_blp (Rh is Rho_blp,
                     S is Subjects, O is Objects, M is Access_mode,
                     A is Access (S, O, M), S_a is Set_of (A)) =
+
   inherit
     States_blp (Rh, S, O, M, A, S_a),
-    Policy (Rh, S, O, M, A, S_a) ;
+    Policy (Rh, S, O, M, A, S_a);
 
   (** (s,o,read) &isin; &Lambda;(st) &rarr; f_o(o) &le; f_s(s) *)
   logical let mac (st in Self) =
@@ -344,7 +376,7 @@ species Policy_blp (Rh is Rho_blp,
        S_a!est_element (a1, lambda (st)) ->
          M!equal (A!get_m (a1), M!read) ->
            Rh!order_inf (f_o (st, A!get_o (a1)),
-                         f_s (st, A!get_s (a1))) ;
+                         f_s (st, A!get_s (a1)));
 
   (**
      (s,o1,read) &isin; &Lambda;(st) &and;
@@ -359,15 +391,15 @@ species Policy_blp (Rh is Rho_blp,
              M!equal (A!get_m (a2), M!write) ->
                S!equal (A!get_s (a1), A!get_s (a2)) ->
                  Rh!order_inf (f_o (st, A!get_o (a1)),
-                               f_o (st, A!get_o (a2))) ;
+                               f_o (st, A!get_o (a2)));
   (**
      The BLP security predicate is the conjunction of the properties
      mac and mac_star
    *)
   logical let omega (st in Self) =
-     mac (st) /\ mac_star (st) ;
+     mac (st) /\ mac_star (st);
 
-end ;;
+end;;
 
 (** Definition of the BLP transition function (reference monitor) *)
 species Models_blp (Rh is Rho_blp,
@@ -375,10 +407,11 @@ species Models_blp (Rh is Rho_blp,
                     A is Access (S, O, M), S_a is Set_of (A),
                     R is Requests_gal (S, O, M),
                     D is Decisions) =
+
   inherit
     Policy_blp (Rh, S, O, M, A, S_a),
     Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
-    Models (Rh, S, O, M, A, S_a, R, D) ;
+    Models (Rh, S, O, M, A, S_a, R, D);
 
   (** BLP transition function *)
   let tau_blp (r1 in R, st1 in Self) =
@@ -410,20 +443,32 @@ species Models_blp (Rh is Rho_blp,
            else (D!no, st1) (* s is reading in a non lower object *)
          else (D!no, st1) (* R = <+,s,o,???> *)
      else (* R = <-,s,o,x> *)
-          (D!yes, del (st1, A!create (s1, o1, R!get_m (r1)))) ;
+          (D!yes, del (st1, A!create (s1, o1, R!get_m (r1))));
 
-end ;;
+end;;
 
 (** Role-Based Access Control (RBAC) *)
 
 (** The species representing the users of the RBAC model *)
-species Users = inherit Setoid ; end ;;
+species Users =
+
+  inherit Setoid;
+
+end;;
 
 (** The roles of an RBAC model are partially ordered *)
-species Roles = inherit Partial_order ; end ;;
+species Roles =
+
+  inherit Partial_order;
+
+end;;
 
 (** The security parameter of the RBAC model is composed of users and roles *)
-species Rho_rbac (U is Users, Ro is Roles) = inherit Rho ; end ;;
+species Rho_rbac (U is Users, Ro is Roles) =
+
+  inherit Rho;
+
+end;;
 
 (**
    An RBAC state contains security information given by :
@@ -435,60 +480,61 @@ species Rho_rbac (U is Users, Ro is Roles) = inherit Rho ; end ;;
 species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                      S is Subjects, O is Objects, M is Access_mode,
                      A is Access (S, O, M), S_a is Set_of (A)) =
-  inherit States (Rh, S, O, M, A, S_a) ;
+
+  inherit States (Rh, S, O, M, A, S_a);
 
   (** Returns the user associated with the given subject *)
-  signature user : Self -> S -> U ;
+  signature user : Self -> S -> U;
 
   (**
      Returns true if the given user and role belong to the relation UA,
      false otherwise
    *)
-  signature ua : Self -> U -> Ro -> bool ;
+  signature ua : Self -> U -> Ro -> bool;
 
   (**
      Returns true if the given object, access mode and role belong to the
      relation PA, false otherwise
    *)
-  signature pa : Self -> O -> M -> Ro -> bool ;
+  signature pa : Self -> O -> M -> Ro -> bool;
 
   (**
      Returns true if the given role belongs to the given subject's active
      roles (function roles), false otherwise
    *)
-  signature roles_s : Self -> S -> Ro -> bool ;
+  signature roles_s : Self -> S -> Ro -> bool;
 
   (**
      Returns true if a role satisfying two predicates is found,
      false otherwise
    *)
-  signature exists_role : Self -> (Ro -> bool) -> (Ro -> bool) -> bool ;
+  signature exists_role : Self -> (Ro -> bool) -> (Ro -> bool) -> bool;
 
-  signature exists_role_ua : Self -> (Ro -> bool) -> (Ro -> bool) -> bool ;
+  signature exists_role_ua : Self -> (Ro -> bool) -> (Ro -> bool) -> bool;
 
   (**
      Add a relation between the given user and the given role to the
      given state's UA relation
    *)
-  signature add_ua : Self -> U -> Ro -> Self ;
+  signature add_ua : Self -> U -> Ro -> Self;
 
   (**
      Remove a relation between the given user and the given role from the
      given state's UA relation
    *)
-  signature rm_ua : Self -> U -> Ro -> Self ;
+  signature rm_ua : Self -> U -> Ro -> Self;
 
   (**
      Add a relation between the given object, the given access mode and
      the given role to the given state's PA relation
    *)
-  signature add_pa : Self -> O -> M -> Ro -> Self ;
+  signature add_pa : Self -> O -> M -> Ro -> Self;
 
   (**
      Remove a relation between the given object, the given access mode and
      the given role from the given state's PA relation
    *)
-  signature rm_pa : Self -> O -> M -> Ro -> Self ;
+  signature rm_pa : Self -> O -> M -> Ro -> Self;
 
   (**
      If the only difference between two states is their current accesses
@@ -499,14 +545,14 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       all ro1 in Ro,
         equal (st2, add (st1, A!create (s1, o1, m1))) ->
           ua (st1, user (st1, s2), ro1) ->
-            ua (st2, user (st2, s2), ro1) ;
+            ua (st2, user (st2, s2), ro1);
 
   property del_access_ua :
     all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
       all ro1 in Ro,
         equal (st2, del (st1, A!create (s1, o1, m1))) ->
           ua (st1, user (st1, s2), ro1) ->
-            ua (st2, user (st2, s2), ro1) ;
+            ua (st2, user (st2, s2), ro1);
 
   (**
      If the only difference between two states is their current accesses
@@ -517,14 +563,14 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       all ro1 in Ro,
         equal (st2, add (st1, A!create (s1, o1, m1))) ->
           pa (st1, o2, m2, ro1) ->
-            pa (st2, o2, m2, ro1) ;
+            pa (st2, o2, m2, ro1);
 
   property del_access_pa :
     all st1 st2 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M,
       all ro1 in Ro,
         equal (st2, del (st1, A!create (s1, o1, m1))) ->
           pa (st1, o2, m2, ro1) ->
-            pa (st2, o2, m2, ro1) ;
+            pa (st2, o2, m2, ro1);
 
   (**
      If the only difference between two states is their current accesses
@@ -535,28 +581,28 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       all ro1 in Ro,
         equal (st2, add (st1, A!create (s1, o1, m1))) ->
           roles_s (st1, s2, ro1) ->
-            roles_s (st2, s2, ro1) ;
+            roles_s (st2, s2, ro1);
 
   property add_access_roles_s_2 :
     all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
       all ro1 in Ro,
         equal (st2, add (st1, A!create (s1, o1, m1))) ->
           roles_s (st2, s2, ro1) ->
-            roles_s (st1, s2, ro1) ;
+            roles_s (st1, s2, ro1);
 
   property del_access_roles_s_1 :
     all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
       all ro1 in Ro,
         equal (st2, del (st1, A!create (s1, o1, m1))) ->
           roles_s (st1, s2, ro1) ->
-            roles_s (st2, s2, ro1) ;
+            roles_s (st2, s2, ro1);
 
   property del_access_roles_s_2 :
     all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
       all ro1 in Ro,
         equal (st2, del (st1, A!create (s1, o1, m1))) ->
           roles_s (st2, s2, ro1) ->
-            roles_s (st1, s2, ro1) ;
+            roles_s (st1, s2, ro1);
 
   (**
      If the only difference between two states is their relation UA
@@ -565,12 +611,12 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
   property add_ua_access :
     all st1 st2 in Self, all u1 in U, all ro1 in Ro,
       equal (st2, add_ua (st1, u1, ro1)) ->
-        S_a!equal (lambda (st1), lambda (st2)) ;
+        S_a!equal (lambda (st1), lambda (st2));
 
   property rm_ua_access :
     all st1 st2 in Self, all u1 in U, all ro1 in Ro,
       equal (st2, rm_ua (st1, u1, ro1)) ->
-        S_a!equal (lambda(st1), lambda (st2)) ;
+        S_a!equal (lambda(st1), lambda (st2));
 
   (**
      If the only difference between two states is their relation PA
@@ -579,12 +625,12 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
   property add_pa_access :
     all st1 st2 in Self, all o1 in O, all m1 in M, all ro1 in Ro,
       equal (st2, add_pa (st1, o1, m1, ro1)) ->
-        S_a!equal (lambda (st1), lambda (st2)) ;
+        S_a!equal (lambda (st1), lambda (st2));
 
   property rm_pa_access :
     all st1 st2 in Self, all o1 in O, all m1 in M, all ro1 in Ro,
       equal (st2, rm_pa (st1, o1, m1, ro1)) ->
-        S_a!equal (lambda (st1), lambda (st2)) ;
+        S_a!equal (lambda (st1), lambda (st2));
 
   (**
      If state st2's relation UA is equal to state st1's relation UA
@@ -596,7 +642,7 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
     all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
       equal (st2, add_ua (st1, u1, ro1)) ->
         ua (st1, user (st1, s1), ro2) ->
-          ua (st2, user (st2, s1), ro2) ;
+          ua (st2, user (st2, s1), ro2);
 
   (**
      If state st2's relation UA is equal to state st1's relation UA
@@ -608,7 +654,7 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
     all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
       equal (st2, rm_ua (st1, u1, ro1)) ->
         ua (st2, user (st2, s1), ro2) ->
-          ua (st1, user (st1, s1), ro2) ;
+          ua (st1, user (st1, s1), ro2);
   (**
      If the only difference between two states is their relation UA
      then they have the same relation PA
@@ -618,14 +664,14 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       all ro1 ro2 in Ro,
         equal (st2, add_ua (st1, u1, ro1)) ->
           pa (st1, o1, m1, ro2) ->
-            pa (st2, o1, m1, ro2) ;
+            pa (st2, o1, m1, ro2);
 
   property rm_ua_pa :
     all st1 st2 in Self, all o1 in O, all m1 in M, all u1 in U,
       all ro1 ro2 in Ro,
         equal (st2, rm_ua (st1, u1, ro1)) ->
           pa (st1, o1, m1, ro2) ->
-            pa (st2, o1, m1, ro2) ;
+            pa (st2, o1, m1, ro2);
 
   (**
      If the only difference between two states is their relation UA
@@ -635,25 +681,25 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
     all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
       equal (st2, add_ua (st1, u1, ro1)) ->
         roles_s (st1, s1, ro2) ->
-          roles_s (st2, s1, ro2) ;
+          roles_s (st2, s1, ro2);
 
   property add_ua_roles_s_2 :
     all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
       equal (st2, add_ua (st1, u1, ro1)) ->
         roles_s (st2, s1, ro2) ->
-          roles_s (st1, s1, ro2) ;
+          roles_s (st1, s1, ro2);
 
   property rm_ua_roles_s_1 :
     all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
       equal (st2, rm_ua (st1, u1, ro1)) ->
         roles_s (st1, s1, ro2) ->
-          roles_s (st2, s1, ro2) ;
+          roles_s (st2, s1, ro2);
 
   property rm_ua_roles_s_2 :
     all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
       equal (st2, rm_ua (st1, u1, ro1)) ->
         roles_s (st2, s1, ro2) ->
-          roles_s (st1, s1, ro2) ;
+          roles_s (st1, s1, ro2);
 
   (**
      If the only difference between two states is their relation PA
@@ -664,14 +710,14 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       all ro1 ro2 in Ro,
         equal (st2, add_pa (st1, o1, m1, ro1)) ->
           ua (st1, user (st1, s1), ro2) ->
-            ua (st2, user (st2, s1), ro2) ;
+            ua (st2, user (st2, s1), ro2);
 
   property rm_pa_ua :
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
       all ro1 ro2 in Ro,
         equal (st2, rm_pa (st1, o1, m1, ro1)) ->
           ua (st1, user (st1, s1), ro2) ->
-            ua (st2, user (st2, s1), ro2) ;
+            ua (st2, user (st2, s1), ro2);
 
   (**
      If state st2's relation PA is equal to state st1's relation PA
@@ -683,7 +729,7 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
     all st1 st2 in Self, all o1 o2 in O, all m1 m2 in M, all ro1 ro2 in Ro,
       equal (st2, add_pa (st1, o1, m1, ro1)) ->
         pa (st1, o2, m2, ro2) ->
-          pa (st2, o2, m2, ro2) ;
+          pa (st2, o2, m2, ro2);
 
   (**
      If state st2's relation PA is equal to state st1's relation PA
@@ -695,7 +741,7 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
     all st1 st2 in Self, all o1 o2 in O, all m1 m2 in M, all ro1 ro2 in Ro,
       equal (st2, rm_pa (st1, o1, m1, ro1)) ->
         pa (st2, o2, m2, ro2) ->
-          pa (st1, o2, m2, ro2) ;
+          pa (st1, o2, m2, ro2);
 
   (**
      If the only difference between two states is their relation PA
@@ -706,48 +752,49 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       all ro1 ro2 in Ro,
         equal (st2, add_pa (st1, o1, m1, ro1)) ->
           roles_s (st1, s1, ro2) ->
-            roles_s (st2, s1, ro2) ;
+            roles_s (st2, s1, ro2);
 
   property add_pa_roles_s_2 :
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
       all ro1 ro2 in Ro,
         equal (st2, add_pa (st1, o1, m1, ro1)) ->
           roles_s (st2, s1, ro2) ->
-            roles_s (st1, s1, ro2) ;
+            roles_s (st1, s1, ro2);
 
   property rm_pa_roles_s_1 :
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
       all ro1 ro2 in Ro,
         equal (st2, rm_pa (st1, o1, m1, ro1)) ->
           roles_s (st1, s1, ro2) ->
-            roles_s (st2, s1, ro2) ;
+            roles_s (st2, s1, ro2);
 
   property rm_pa_roles_s_2 :
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
       all ro1 ro2 in Ro,
         equal (st2, rm_pa (st1, o1, m1, ro1)) ->
           roles_s (st2, s1, ro2) ->
-            roles_s (st1, s1, ro2) ;
+            roles_s (st1, s1, ro2);
 
-end ;;
+end;;
 
 (** Definition of the RBAC security predicate *)
 species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                      S is Subjects, O is Objects, M is Access_mode,
                      A is Access (S, O, M), S_a is Set_of (A)) =
+
   inherit
     States_rbac (U, Ro, Rh, S, O, M, A, S_a),
-    Policy (Rh, S, O, M, A, S_a) ;
+    Policy (Rh, S, O, M, A, S_a);
 
   (** The set of authorized roles for a given subject  *)
   logical let er (st in Self, sp in S, r1 in Ro) =
      ex r2 in Ro,
-       Ro!leq (r1, r2) /\ ua (st, user (st, sp), r2) ;
+       Ro!leq (r1, r2) /\ ua (st, user (st, sp), r2);
 
   (** The set of authorized permissions for a given subject  *)
   logical let ep (st in Self, sp in S, op in O, mo in M) =
      ex r1 r2 in Ro,
-       roles_s (st, sp, r1) /\ Ro!leq (r2, r1) /\ pa (st, op, mo, r2) ;
+       roles_s (st, sp, r1) /\ Ro!leq (r2, r1) /\ pa (st, op, mo, r2);
 
   (**
      If a role r has been activated by a subject sp
@@ -756,7 +803,7 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
   logical let roles_er (st in Self) =
      all sp in S, all r in Ro,
        roles_s (st, sp, r) ->
-         er (st, sp, r) ;
+         er (st, sp, r);
   (**
      If the access (sp,op,mo) belongs to the current accesses of state
      then the permission (op,mo) belongs to sp's authorized permissions
@@ -764,14 +811,14 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
   logical let perm_ep (st in Self) =
      all sp in S, all op in O, all mo in M,
        S_a!est_element (A!create (sp, op, mo), lambda (st)) ->
-         ep (st, sp, op, mo) ;
+         ep (st, sp, op, mo);
 
   (**
      The RBAC security predicate is the conjunction of the properties
      roles_er and perm_ep
    *)
   logical let omega (st in Self) =
-     roles_er (st) /\ perm_ep (st) ;
+     roles_er (st) /\ perm_ep (st);
 
   (**
      If s1 = s2, o1 = o2, m1 = m2 and if the permission (o1,m1) is authorized
@@ -783,7 +830,7 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
         O!equal (o1, o2) ->
           M!equal (m1, m2) ->
             ep (st, s1, o1, m1) ->
-              ep (st, s2, o2, m2) ;
+              ep (st, s2, o2, m2);
 
   (** Specification of the function exists_role *)
   property exists_role_spec :
@@ -792,7 +839,7 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
         ex ro1 ro2 in Ro,
           roles_s (st, sp, ro1) /\
           Ro!equal (ro2, ro1) /\
-          pa (st, op, mo, ro2) ;
+          pa (st, op, mo, ro2);
 
   (** Specification of the function exists_role_ua *)
   property exists_role_ua_spec :
@@ -801,7 +848,7 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
         ex ro1 ro2 in Ro,
           roles_s (st, sp, ro1) /\
           Ro!equal (ro2, ro1) /\
-          ua (st, user (st, sp), ro2) ;
+          ua (st, user (st, sp), ro2);
 
   (** If the predicate exists_role is true then the property ep is satisfied *)
   theorem exists_role_ep :
@@ -810,7 +857,7 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
         ep (st, sp, op, mo)
     proof =
       by property Ro!leq_reflexive, exists_role_spec
-         definition of ep ;
+         definition of ep;
 
 (*   theorem exists_role_er :  *)
 (*     all st in Self, all sp in S,  *)
@@ -821,9 +868,9 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 (*            er (st, sp, rop) *)
 (*     proof = *)
 (*       by property Ro!leq_reflexive, exists_role_ua_spec  *)
-(*          definition of er ; *)
+(*          definition of er; *)
 
-end ;;
+end;;
 
 (**
    The administrative requests of the RBAC model :
@@ -838,37 +885,38 @@ end ;;
  *)
 species Requests_adm_rbac (S is Subjects, O is Objects, M is Access_mode,
                            U is Users, R is Roles) =
-  inherit Requests ;
+
+  inherit Requests;
 
   (** Returns the user involved in the given administrative request *)
-  signature get_u : Self -> U ;
+  signature get_u : Self -> U;
 
   (** Returns the role involved in the given administrative request *)
-  signature get_r : Self -> R ;
+  signature get_r : Self -> R;
 
   (**
      Returns true if the given administrative request is a "+ua" request,
      false otherwise
    *)
-  signature is_add_ua : Self -> bool ;
+  signature is_add_ua : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "-ua" request,
      false otherwise
    *)
-  signature is_rm_ua : Self -> bool ;
+  signature is_rm_ua : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "+pa" request,
      false otherwise
    *)
-  signature is_add_pa : Self -> bool ;
+  signature is_add_pa : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "-pa" request,
      false otherwise
    *)
-  signature is_rm_pa : Self -> bool ;
+  signature is_rm_pa : Self -> bool;
 
   (**
      Properties stating that an administrative request is either a
@@ -877,19 +925,19 @@ species Requests_adm_rbac (S is Subjects, O is Objects, M is Access_mode,
   property add_ua_then_not_rm_ua :
     all req in Self,
       is_rm_ua (req) ->
-        ~ is_add_ua (req) ;
+        ~ is_add_ua (req);
 
   property add_pa_then_not_ua :
     all req in Self,
       is_add_pa (req) ->
-        ((~ is_add_ua (req)) /\ (~ is_rm_ua (req))) ;
+        ((~ is_add_ua (req)) /\ (~ is_rm_ua (req)));
 
   property rm_pa_then_not_add_pa_ua :
     all req in Self,
       is_rm_pa (req) ->
-        ((~ is_add_pa (req)) /\ (~ is_add_ua (req)) /\ (~ is_rm_ua (req))) ;
+        ((~ is_add_pa (req)) /\ (~ is_add_ua (req)) /\ (~ is_rm_ua (req)));
 
-end ;;
+end;;
 
 (**
    The requests of the RBAC model are the general requests and
@@ -897,10 +945,13 @@ end ;;
  *)
 species Requests_rbac (S is Subjects, O is Objects, M is Access_mode,
                        U is Users, R is Roles) =
+
   inherit
     Requests_gal (S, O, M),
-    Requests_adm_rbac (S, O, M, U, R) ;
-end ;;
+    Requests_adm_rbac (S, O, M, U, R);
+
+end
+;;
 
 (** Definition of the RBAC transition function (reference monitor) *)
 species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
@@ -908,10 +959,11 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                      A is Access (S, O, M), S_a is Set_of (A),
                      Rr is Requests_rbac (S, O, M, U, Ro),
                      D is Decisions) =
+
   inherit
     Policy_rbac (U, Ro, Rh, S, O, M, A, S_a),
     Semantics_requests_gal (Rh, S, O, M, A, S_a, Rr),
-    Models (Rh, S, O, M, A, S_a, Rr, D) ;
+    Models (Rh, S, O, M, A, S_a, Rr, D);
 
   (** RBAC transition function on accesses *)
   let tau_rbac_acc (r1 in Rr, st1 in Self) =
@@ -923,14 +975,14 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
        if exists_role (st1, roles_s (st1, s1), pa (st1, o1, m1))
        then (D!yes, add (st1, A!create (s1, o1, m1)))
        else (D!no, st1)
-     else (D!yes, del (st1, A!create (s1, o1, m1))) ;
+     else (D!yes, del (st1, A!create (s1, o1, m1)));
 
   let iter_ua (st1, u1, ro1, ap) =
      let sp = A!get_s (ap) in
      exists_role_ua (rm_ua (st1, u1, ro1),
                      roles_s (rm_ua (st1, u1, ro1), sp),
                      ua (rm_ua (st1, u1, ro1),
-                         user (st1, sp))) ;
+                         user (st1, sp)));
 
   let iter_pa (st1, o1, m1, ro1, ap) =
      let sp = A!get_s (ap) in
@@ -938,7 +990,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      let mp = A!get_m (ap) in
      exists_role (rm_pa (st1, o1, m1, ro1),
                   roles_s (rm_pa (st1, o1, m1, ro1), sp),
-                  pa (rm_pa (st1, o1, m1, ro1), op, mp)) ;
+                  pa (rm_pa (st1, o1, m1, ro1), op, mp));
 
   (** RBAC administrative transition function *)
   let tau_rbac_adm (r1 in Rr, st1 in Self) =
@@ -964,26 +1016,26 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
        if S_a!for_all (lambda (st1), iter_pa (st1, o1, m1, ro1))
        then (D!yes, rm_pa (st1, o1, m1, ro1))
        else (D!no, st1)
-     else (D!no, st1) ;
+     else (D!no, st1);
 
   (** RBAC transition function *)
   let tau_rbac (r1 in Rr, st1 in Self) =
      if or_b (Rr!is_get (r1), Rr!is_rel (r1))
      then tau_rbac_acc (r1, st1)
-     else tau_rbac_adm (r1, st1) ;
+     else tau_rbac_adm (r1, st1);
 
   (** Problem ro1 ro2 *)
   property for_all_spec_ua_1 :
     all st1 st2 in Self, all u1 u2 in U, all ro1 ro2 in Ro,
       S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) ->
         equal (st2, rm_ua (st1, u2, ro2)) ->
-          S_a!for_all (lambda(st2), iter_ua (st2, u1, ro1)) ;
+          S_a!for_all (lambda(st2), iter_ua (st2, u1, ro1));
 
   (** Problem ro1 ro2 *)
   property for_all_spec_ua_2 :
     all st1 in Self, all u1 u2 in U, all ro1 ro2 in Ro,
       S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) ->
-        ua (st1, u2, ro2) ;
+        ua (st1, u2, ro2);
 
   (** Specification of the function iter_pa *)
   property iter_pa_spec :
@@ -993,7 +1045,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
           S_a!est_element (A!create (s1, o2, m2), lambda (st1)) ->
             exists_role (rm_pa (st1, o1, m1, ro1),
                          roles_s (rm_pa (st1, o1, m1, ro1), s1),
-                         pa (rm_pa (st1, o1, m1, ro1), o2, m2)) ;
+                         pa (rm_pa (st1, o1, m1, ro1), o2, m2));
 
   (**
      If two states st1 and st2 are equal and if the predicate exists_role
@@ -1003,7 +1055,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
       equal (st1, st2) ->
         exists_role (st1, roles_s (st1, s1), pa (st1, o1, m1)) ->
-          exists_role (st2, roles_s (st2, s1), pa (st2, o1, m1)) ;
+          exists_role (st2, roles_s (st2, s1), pa (st2, o1, m1));
 
   theorem tau_rbac_acc_secure :
     all st1 st2 in Self, all r1 in Rr, all d1 in D,
@@ -1413,7 +1465,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
              by step <2>2, <2>3
                 property Rr!get_or_rel
       <1>f conclude
-  ;
+ ;
 
   theorem tau_rbac_acc_r_correct :
     all st1 st2 in Self, all r1 in Rr, all d1 in D,
@@ -1636,7 +1688,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
              by step <2>2, <2>3
                 property Rr!get_or_rel
       <1>f conclude
-  ;
+ ;
 
   theorem tau_rbac_acc_r_correct_bis :
     all st1 st2 in Self, all r1 in Rr, all d1 in D,
@@ -1783,7 +1835,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
              by step <2>2, <2>3
                 property Rr!get_or_rel
       <1>f conclude
-  ;
+ ;
 
   theorem tau_rbac_adm_secure :
     all st1 st2 in Self, all r1 in Rr, all d1 in D,
@@ -2410,7 +2462,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
         <2>f qed
              by step <2>1, <2>2, <2>3, <2>4, <2>5
       <1>f conclude
-  ;
+ ;
 
   theorem tau_rbac_secure :
     all st1 st2 in Self, all r1 in Rr, all d1 in D,
@@ -2418,32 +2470,34 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
         omega (st1) ->
           omega(st2)
     proof = by property tau_rbac_acc_secure, tau_rbac_adm_secure
-              definition of tau_rbac ;
+              definition of tau_rbac;
 
-end ;;
+end;;
 
 (** HRU *)
 
 (** Definition of a pair *)
 species Pair (X is Setoid, Y is Setoid) =
-  inherit Setoid ;
+
+  inherit Setoid;
 
   (** Allows to create a pair *)
-  signature create : X -> Y -> Self ;
+  signature create : X -> Y -> Self;
 
   (** Returns the first element of the given pair *)
-  signature first : Self -> X ;
+  signature first : Self -> X;
 
   (** Returns the second element of the given pair *)
-  signature second : Self -> Y ;
+  signature second : Self -> Y;
 
-end ;;
+end;;
 
 (** Definition of the HRU security predicate *)
 species Policy_hru (Rh is Rho,
                     S is Subjects, O is Objects, M is Access_mode,
                     A is Access (S, O, M), S_a is Set_of (A)) =
-  inherit Policy (Rh, S, O, M, A, S_a) ;
+
+  inherit Policy (Rh, S, O, M, A, S_a);
 
   (** Returns true if the given access is authorized, false otherwise *)
   signature fd : A -> bool;
@@ -2456,7 +2510,7 @@ species Policy_hru (Rh is Rho,
     all a1 a2 in A,
       A!equal (a1, a2) ->
         fd (a1) ->
-          fd (a2) ;
+          fd (a2);
   (**
      The HRU security predicate : if an access belongs to the current
      accesses of a state then it is authorized
@@ -2464,9 +2518,9 @@ species Policy_hru (Rh is Rho,
   logical let omega (st in Self) =
      all s1 in S, all o1 in O, all m1 in M,
        S_a!est_element (A!create (s1, o1, m1), lambda (st)) ->
-         fd (A!create (s1, o1, m1)) ;
+         fd (A!create (s1, o1, m1));
 
-end ;;
+end;;
 
 (** Definition of the HRU transition function (reference monitor) *)
 species Model_hru (Rh is Rho,
@@ -2474,10 +2528,11 @@ species Model_hru (Rh is Rho,
                    A is Access (S, O, M), S_a is Set_of (A),
                    R is Requests_gal (S, O, M),
                    D is Decisions) =
+
   inherit
     Policy_hru (Rh, S, O, M, A, S_a),
     Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
-    Models (Rh, S, O, M, A, S_a, R, D) ;
+    Models (Rh, S, O, M, A, S_a, R, D);
 
   (** HRU transition function *)
   let tau_hru (r1 in R, st in Self) =
@@ -2488,7 +2543,7 @@ species Model_hru (Rh is Rho,
        else (D!no, st)
      else  (* R!is_rel (r1) *)
          (D!yes, del (st,
-                      A!create (R!get_s (r1), R!get_o (r1), R!get_m(r1)))) ;
+                      A!create (R!get_s (r1), R!get_o (r1), R!get_m(r1))));
 
   theorem tau_hru_secure :
     all st1 st2 in Self, all r1 in R, all d1 in D,
@@ -2700,7 +2755,7 @@ species Model_hru (Rh is Rho,
               by step <2>2, <2>3
                  property R!get_or_rel
        <1>f conclude
-  ;
+ ;
 
   theorem tau_hru_correct :
     all st1 st2 in Self, all r1 in R, all d1 in D,
@@ -2920,7 +2975,7 @@ species Model_hru (Rh is Rho,
               by step <2>2, <2>3
                  property R!get_or_rel
        <1>f conclude
-  ;
+ ;
 
   theorem tau_hru_correct_bis :
     all st1 st2 in Self, all r1 in R, all d1 in D,
@@ -3062,9 +3117,9 @@ species Model_hru (Rh is Rho,
              by step <2>2, <2>3
                 property R!get_or_rel
       <1>f conclude
-  ;
+ ;
 
-end ;;
+end;;
 
 (** Access Control List (ACL) *)
 
@@ -3073,28 +3128,30 @@ species States_acl (Rh is Rho,
                     S is Subjects, O is Objects, M is Access_mode,
                     A is Access (S, O, M), S_a is Set_of (A),
                     C is Pair (S, M), S_s_m is Set_of (C)) =
-  inherit States (Rh, S, O, M, A, S_a) ;
+
+  inherit States (Rh, S, O, M, A, S_a);
 
   (** Incorrect *)
-  signature acl : O -> S_s_m ;
+  signature acl : O -> S_s_m;
 
-end ;;
+end;;
 
 (** The ACL is the same as the HRU policy *)
 species Policy_acl (Rh is Rho,
                     S is Subjects, O is Objects, M is Access_mode,
                     A is Access (S, O, M), S_a is Set_of (A),
                     C is Pair (S, M), S_s_m is Set_of (C)) =
+
   inherit
     Policy_hru (Rh, S, O, M, A, S_a),
-    States_acl (Rh, S, O, M, A, S_a, C, S_s_m) ;
+    States_acl (Rh, S, O, M, A, S_a, C, S_s_m);
 
   (** Definition of the function fd *)
   let fd (ac) =
      S_s_m!est_element (C!create (A!get_s (ac), A!get_m (ac)),
-                        acl (A!get_o (ac))) ;
+                        acl (A!get_o (ac)));
 
-end ;;
+end;;
 
 (** The ACL transition function is the same as the HRU transition function *)
 species Model_acl (Rh is Rho,
@@ -3103,10 +3160,13 @@ species Model_acl (Rh is Rho,
                    R is Requests_gal (S, O, M),
                    D is Decisions,
                    C is Pair (S, M), S_s_m is Set_of(C)) =
+
   inherit
     Policy_acl (Rh, S, O, M, A, S_a, C, S_s_m),
-    Model_hru (Rh, S, O, M, A, S_a, R, D) ;
-end ;;
+    Model_hru (Rh, S, O, M, A, S_a, R, D);
+
+end
+;;
 
 (** Capabilities *)
 
@@ -3118,27 +3178,31 @@ species States_capabilities (Rh is Rho,
                              S is Subjects, O is Objects, M is Access_mode,
                              A is Access (S, O, M), S_a is Set_of (A),
                              C is Pair (O, M), S_o_m is Set_of (C)) =
-  inherit States (Rh, S, O, M, A, S_a) ;
+
+  inherit States (Rh, S, O, M, A, S_a);
 
   (** Returns the set of permissions associated with the given subject *)
-  signature capabilities :  S -> S_o_m ;
+  signature capabilities :  S -> S_o_m;
 
-end ;;
+end;;
 
 (** The Capabilities policy is the same as the HRU policy *)
 species Policy_capabilities (Rh is Rho,
                              S is Subjects, O is Objects, M is Access_mode,
                              A is Access (S, O, M), S_a is Set_of (A),
                              C is Pair (O, M), S_o_m is Set_of (C)) =
+
   inherit
     Policy_hru (Rh, S, O, M, A, S_a),
-    States_capabilities (Rh, S, O, M, A, S_a, C, S_o_m) ;
+    States_capabilities (Rh, S, O, M, A, S_a, C, S_o_m);
 
   (** Definition of the function fd *)
   let fd (ac) =
      S_o_m!est_element (C!create (A!get_o (ac), A!get_m (ac)),
-                        capabilities (A!get_s (ac))) ;
-end ;;
+                        capabilities (A!get_s (ac)));
+
+end
+;;
 
 (**
    The Capabilities transition function is the same as the HRU transition
@@ -3151,18 +3215,29 @@ species Model_capabilities (Rh is Rho,
                             D is Decisions,
                             C is Pair (O, M),
                             S_o_m is Set_of (C)) =
+
   inherit
     Policy_capabilities (Rh, S, O, M, A, S_a, C, S_o_m),
-    Model_hru (Rh, S, O, M, A, S_a, R, D) ;
-end ;;
+    Model_hru (Rh, S, O, M, A, S_a, R, D);
+
+end
+;;
 
 (** Unix *)
 
 (** The species representing the groups of the Unix model *)
-species Groups = inherit Setoid ; end ;;
+species Groups =
+
+  inherit Setoid;
+
+end;;
 
 (** The security parameter of the Unix model is composed of groups *)
-species Rho_unix (G is Groups) = inherit Rho ; end ;;
+species Rho_unix (G is Groups) =
+
+  inherit Rho;
+
+end;;
 
 (**
    A Unix state contains security information given by :
@@ -3179,122 +3254,124 @@ species States_unix (G is Groups, Rh is Rho_unix (G),
                      S is Subjects, O is Objects, M is Access_mode,
                      A is Access (S, O, M), S_a is Set_of (A),
                      S_m is Set_of (M), S_g is Set_of (G)) =
-  inherit States (Rh, S, O, M, A, S_a) ;
+
+  inherit States (Rh, S, O, M, A, S_a);
 
   (**
      Returns true if the given group belongs to the set of active groups (AG),
      false otherwise
    *)
-  signature ag : Self -> G -> bool ;
+  signature ag : Self -> G -> bool;
 
   (**
      Returns true if the given subject belongs to the set of super-users (SU),
      false otherwise
    *)
-  signature su : Self -> S -> bool ;
+  signature su : Self -> S -> bool;
 
   (** Returns the owner of the given object *)
-  signature f_p : Self -> O -> S ;
+  signature f_p : Self -> O -> S;
 
   (** Returns the group associated with the given object *)
-  signature f_g : Self -> O -> G ;
+  signature f_g : Self -> O -> G;
 
   (** Returns the set of groups to which belongs the given subject *)
-  signature f_s : Self -> S -> S_g ;
+  signature f_s : Self -> S -> S_g;
 
   (** Returns the owner's rights of the given object *)
-  signature f_d_p : Self -> O -> S_m ;
+  signature f_d_p : Self -> O -> S_m;
 
   (** Returns the group's rights of the given object *)
-  signature f_d_g : Self -> O -> S_m ;
+  signature f_d_g : Self -> O -> S_m;
 
   (** Returns the others' rights of the given object *)
-  signature f_d_o : Self -> O -> S_m ;
+  signature f_d_o : Self -> O -> S_m;
 
   (** Add a group to the given state's active groups *)
-  signature add_ag : Self -> G -> Self ;
+  signature add_ag : Self -> G -> Self;
 
   (** Remove a group from the given state's active groups *)
-  signature rm_ag : Self -> G -> Self ;
+  signature rm_ag : Self -> G -> Self;
 
   (** Add a subject to the given state's super-users *)
-  signature add_su : Self -> S -> Self ;
+  signature add_su : Self -> S -> Self;
 
   (** Remove a subject from the given state's super-users *)
-  signature rm_su : Self -> S -> Self ;
+  signature rm_su : Self -> S -> Self;
 
   (** Set the given subject as the owner of the given object *)
-  signature chown : Self -> O -> S -> Self ;
+  signature chown : Self -> O -> S -> Self;
 
   (** Set the given group as the group to which belongs the given object *)
-  signature chgrp : Self -> O -> G -> Self ;
+  signature chgrp : Self -> O -> G -> Self;
 
   (**
      Add the given group to the set of groups to which belongs the given
      subject
    *)
-  signature add_g_s : Self -> S -> G -> Self ;
+  signature add_g_s : Self -> S -> G -> Self;
 
   (**
      Remove the given group from the set of groups to which belongs the given
      subject
    *)
-  signature rm_g_s : Self -> S -> G -> Self ;
+  signature rm_g_s : Self -> S -> G -> Self;
 
   (** Add the given access mode to the owner's rights of the given object *)
-  signature add_d_p : Self -> O -> M -> Self ;
+  signature add_d_p : Self -> O -> M -> Self;
 
   (**
      Remove the given access mode from the owner's rights of the given object
    *)
-  signature rm_d_p : Self -> O -> M -> Self ;
+  signature rm_d_p : Self -> O -> M -> Self;
 
   (** Add the given access mode to the group's rights of the given object *)
-  signature add_d_g : Self -> O -> M -> Self ;
+  signature add_d_g : Self -> O -> M -> Self;
 
   (**
      Remove the given access mode from the group's rights of the given object
    *)
-  signature rm_d_g : Self -> O -> M -> Self ;
+  signature rm_d_g : Self -> O -> M -> Self;
 
   (** Add the given access mode to the others' rights of the given object *)
-  signature add_d_o : Self -> O -> M -> Self ;
+  signature add_d_o : Self -> O -> M -> Self;
 
   (**
      Remove the given access mode from the others' rights of the given object
    *)
-  signature rm_d_o : Self -> O -> M -> Self ;
+  signature rm_d_o : Self -> O -> M -> Self;
 
-end ;;
+end;;
 
 (** Definition of the Unix security predicate *)
 species Policy_unix (G is Groups, Rh is Rho_unix (G),
                      S is Subjects, O is Objects, M is Access_mode,
                      A is Access (S, O, M), S_a is Set_of (A),
                      S_m is Set_of (M), S_g is Set_of (G)) =
+
   inherit
     States_unix (G, Rh, S, O, M, A, S_a, S_m, S_g),
-    Policy (Rh, S, O, M, A, S_a) ;
+    Policy (Rh, S, O, M, A, S_a);
 
   (** f_p(op) = sp &and; mp &isin; f_d_p(op) *)
   logical let owner_access (st in Self) =
      all sp in S, all op in O, all mp in M,
        S!equal (f_p (st, op), sp) /\
-       S_m!est_element (mp, f_d_p (st, op)) ;
+       S_m!est_element (mp, f_d_p (st, op));
 
   (** f_p(op) &ne; sp &and; f_g(op) &isin; f_s(sp) &and; mp &isin; f_d_g(op) *)
   logical let group_access (st in Self) =
      all sp in S, all op in O, all mp in M,
      (~ S!equal (f_p (st, op), sp)) /\
      S_g!est_element (f_g (st, op), f_s (st, sp)) /\
-     S_m!est_element (mp, f_d_g (st, op)) ;
+     S_m!est_element (mp, f_d_g (st, op));
 
   (** f_p(op) &ne; sp &and; f_g(op) &notin; f_s(sp) &and; mp &isin; f_d_o(op) *)
   logical let others_access (st in Self) =
      all sp in S, all op in O, all mp in M,
      (~ S!equal (f_p (st, op), sp)) /\
      (~ S_g!est_element (f_g (st, op), f_s (st, sp))) /\
-     S_m!est_element (mp, f_d_o (st, op)) ;
+     S_m!est_element (mp, f_d_o (st, op));
 
   (**
      If an access (sp,op,mp) belongs to the current accesses of a state
@@ -3309,24 +3386,25 @@ species Policy_unix (G is Groups, Rh is Rho_unix (G),
          (owner_access (st) \/
           group_access (st) \/
           others_access (st) \/
-          su (st, sp)) ;
+          su (st, sp));
 
-end ;;
+end;;
 
 (** The species representing the rights of the Unix model *)
 species Rights =
-  inherit Setoid ;
+
+  inherit Setoid;
 
   (** The right "owner" *)
-  signature d_p : Self ;
+  signature d_p : Self;
 
   (** The right "group" *)
-  signature d_g : Self ;
+  signature d_g : Self;
 
   (** The right "others" *)
-  signature d_o : Self ;
+  signature d_o : Self;
 
-end ;;
+end;;
 
 (**
    The administrative requests of the Unix model :
@@ -3347,86 +3425,87 @@ end ;;
  *)
 species Requests_adm_unix (S is Subjects, O is Objects, M is Access_mode,
                            G is Groups, Z is Rights) =
-  inherit Requests ;
+
+  inherit Requests;
 
   (** Returns the group involved in the given administrative request *)
-  signature get_g : Self -> G ;
+  signature get_g : Self -> G;
 
   (** Returns the right involved in the given administrative request *)
-  signature get_z : Self -> Z ;
+  signature get_z : Self -> Z;
 
   (**
      Returns the second subject involved in the given administrative request
    *)
-  signature get_s2 : Self -> S ;
+  signature get_s2 : Self -> S;
 
   (**
      Returns true if the given administrative request is a "+active" request,
      false otherwise
    *)
-  signature is_active : Self -> bool ;
+  signature is_active : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "-inactive"
      request, false otherwise
    *)
-  signature is_inactive : Self -> bool ;
+  signature is_inactive : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "+right" request,
      false otherwise
    *)
-  signature is_add_right : Self -> bool ;
+  signature is_add_right : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "-right" request,
      false otherwise
    *)
-  signature is_rm_right : Self -> bool ;
+  signature is_rm_right : Self -> bool;
 
   (**
      Returns true if the right involved in the given administrative request
      is the right "owner", false otherwise
    *)
-  signature is_d_p : Self -> bool ;
+  signature is_d_p : Self -> bool;
 
   (**
      Returns true if the right involved in the given administrative request
      is the right "group", false otherwise
    *)
-  signature is_d_g : Self -> bool ;
+  signature is_d_g : Self -> bool;
 
   (**
      Returns true if the right involved in the given administrative request
      is the right "others", false otherwise
    *)
-  signature is_d_o : Self -> bool ;
+  signature is_d_o : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "+chown" request,
      false otherwise
    *)
-  signature is_chown : Self -> bool ;
+  signature is_chown : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "+chgrp" request,
      false otherwise
    *)
-  signature is_chgrp : Self -> bool ;
+  signature is_chgrp : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "+group" request,
      false otherwise
    *)
-  signature is_add_group : Self -> bool ;
+  signature is_add_group : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "-group" request,
      false otherwise
    *)
-  signature is_rm_group : Self -> bool ;
+  signature is_rm_group : Self -> bool;
 
-end ;;
+end;;
 
 (**
    The requests of the Unix model are the general requests and
@@ -3434,10 +3513,13 @@ end ;;
  *)
 species Requests_unix (S is Subjects, O is Objects, M is Access_mode,
                        G is Groups, Z is Rights) =
+
   inherit
     Requests_gal (S, O, M),
-    Requests_adm_unix (S, O, M, G, Z) ;
-end ;;
+    Requests_adm_unix (S, O, M, G, Z);
+
+end
+;;
 
 (** Definition of the Unix transition function (reference monitor) *)
 species Models_unix (G is Groups, Rh is Rho_unix (G),
@@ -3447,10 +3529,11 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                      Z is Rights,
                      R is Requests_unix (S, O, M, G, Z),
                      D is Decisions) =
+
   inherit
     Policy_unix (G, Rh, S, O, M, A, S_a, S_m, S_g),
     Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
-    Models (Rh, S, O, M, A, S_a, R, D) ;
+    Models (Rh, S, O, M, A, S_a, R, D);
 
   (** Unix transition function on accesses *)
   let tau_unix_acc (r1 in R, st in Self) =
@@ -3472,7 +3555,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                 su (st, sp)))
        then (D!yes, add (st, A!create (sp, op, mp)))
        else (D!no, st)
-     else (D!yes, del (st, A!create (sp, op, mp))) ;
+     else (D!yes, del (st, A!create (sp, op, mp)));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3489,7 +3572,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                                                                  f_d_o (st,
                                                                        od)))),
                                   G!equal (f_g (st, od), ga)),
-                           not_b (su (st, sp)))))) ;
+                           not_b (su (st, sp))))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3501,7 +3584,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let md = A!get_m (ac) in
      not_b (and_b (A!equal (A!create (sp, od, md),
                             A!create (sa, oa, ma)),
-                   not_b (su (st, sp)))) ;
+                   not_b (su (st, sp))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3516,7 +3599,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                                  S_g!est_element (f_g (st, od), f_s (st,
                                                                      sp))),
                           S_m!est_element (md, f_d_g (st, od))),
-                   not_b (su (st, sp)))) ;
+                   not_b (su (st, sp))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3531,7 +3614,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                                  not_b (S_g!est_element (f_g (st, od),
                                                          f_s (st, sp)))),
                           not_b (S!equal (sp, f_p(st, od)))),
-                   not_b (su (st, sp)))) ;
+                   not_b (su (st, sp))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3557,7 +3640,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                         and_b (S!equal (sp, s2a),
                                not_b (S_m!est_element (md, f_d_p (st, oa))))),
                   not_b (su (st, sp))),
-                 not_b (su (st, s2a))))) ;
+                 not_b (su (st, s2a)))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3584,7 +3667,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                                                           f_s (st, sp)))),
                            S_g!est_element (ga, f_s (st, sp))),
                     not_b (S_m!est_element (md, f_d_g (st, od))))))),
-          not_b (su (st, sp)))) ;
+          not_b (su (st, sp))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3601,7 +3684,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                                  not_b (S_g!est_element (f_g (st, od),
                                                          f_s (st, s2a)))),
                           not_b (S_m!est_element (md, f_d_g (st, od)))),
-                   not_b (su (st, sp)))) ;
+                   not_b (su (st, sp))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3615,7 +3698,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                                         S_m!est_element (md, f_d_g (st, od))),
                                  G!equal (f_g (st, od), ga)),
                           not_b (S_m!est_element (md, f_d_o (st, od)))),
-                   not_b (su (st, sp)))) ;
+                   not_b (su (st, sp))));
 
   (** Unix administrative transition function *)
   let tau_unix_adm (r1 in R, st in Self) =
@@ -3719,15 +3802,15 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
                  S_g!est_element (sg, f_s (st, ss2)))
        then (D!yes, rm_g_s (st, ss2, sg))
        else (D!no, st)
-     else (D!no, st) ;
+     else (D!no, st);
 
   (** Unix transition function *)
   let tau_unix (r1 in R, st in Self) =
      if or_b (R!is_get (r1), R!is_rel (r1))
      then tau_unix_acc (r1, st)
-     else tau_unix_adm (r1, st) ;
+     else tau_unix_adm (r1, st);
 
-end ;;
+end;;
 
 (** Tickets *)
 
@@ -3735,10 +3818,18 @@ end ;;
    The species representing the unforgeable capabilities (tickets) of the
    Tickets model
  *)
-species Tickets = inherit Setoid ; end ;;
+species Tickets =
+
+ inherit Setoid;
+
+end;;
 
 (** The security parameter of the Tickets model is composed of tickets *)
-species Rho_ticket (C is Tickets) = inherit Rho ; end ;;
+species Rho_ticket (C is Tickets) =
+
+  inherit Rho;
+
+end;;
 
 (**
    A Tickets state contains security information given by :
@@ -3750,83 +3841,85 @@ species Rho_ticket (C is Tickets) = inherit Rho ; end ;;
 species States_ticket (C is Tickets, Rh is Rho_ticket (C),
                        S is Subjects, O is Objects, M is Access_mode,
                        A is Access (S, O, M), S_a is Set_of (A)) =
-  inherit States (Rh, S, O, M, A, S_a) ;
+
+  inherit States (Rh, S, O, M, A, S_a);
 
   (**
      Returns true if the given ticket belongs to the set of used tickets (UC),
      false otherwise
    *)
-  signature uc : Self -> C -> bool ;
+  signature uc : Self -> C -> bool;
 
   (**
      Returns true if the given ticket is associated with the given object and
      access mode according to the function T, false otherwise
    *)
-  signature t : Self -> O -> M -> C -> bool ;
+  signature t : Self -> O -> M -> C -> bool;
 
   (**
      Returns true if the given ticket is associated with the given subject
      according to the function W, false otherwise
    *)
-  signature w : Self -> S -> C -> bool ;
+  signature w : Self -> S -> C -> bool;
 
   (**
      Returns true if the given subject is the owner of the given object,
      false otherwise
    *)
-  signature owner : Self -> O -> S -> bool ;
+  signature owner : Self -> O -> S -> bool;
 
   (**
      Returns true if a ticket satisfying three predicates is found,
      false otherwise
    *)
   signature exists_ticket :
-            Self -> (C -> bool) -> (C -> bool) -> (C -> bool) -> bool ;
+            Self -> (C -> bool) -> (C -> bool) -> (C -> bool) -> bool;
 
   (**
      Updates the given state's security information concerning the given ticket
    *)
-  signature map_ticket : Self -> C -> Self ;
+  signature map_ticket : Self -> C -> Self;
 
   (** Add the given ticket to the set of used tickets *)
-  signature add_uc : Self -> C -> Self ;
+  signature add_uc : Self -> C -> Self;
 
   (** Remove the given ticket from the set of used tickets *)
-  signature rm_uc : Self -> C -> Self ;
+  signature rm_uc : Self -> C -> Self;
 
   (**
      Add the given ticket to the set returned by the given state's T function
      when applied to the given object and access mode
    *)
-  signature add_t : Self -> O -> M -> C -> Self ;
+  signature add_t : Self -> O -> M -> C -> Self;
 
   (**
      Remove the given ticket from the set returned by the given state's T
      function when applied to the given object and access mode
    *)
-  signature rm_t : Self -> O -> M -> C -> Self ;
+  signature rm_t : Self -> O -> M -> C -> Self;
 
   (**
      Add the given ticket to the set returned by the given state's W function
      when applied to the given subject
    *)
-  signature add_w : Self -> S -> C -> Self ;
+  signature add_w : Self -> S -> C -> Self;
 
   (**
      Remove the given ticket from the set returned by the given state's W
      function when applied to the given subject
    *)
-  signature rm_w : Self -> S -> C -> Self ;
+  signature rm_w : Self -> S -> C -> Self;
 
-end ;;
+end;;
 
 (** Definition of the Tickets security predicate *)
 species Policy_ticket (C is Tickets, Rh is Rho_ticket (C),
                        S is Subjects, O is Objects, M is Access_mode,
                        A is Access (S, O, M), S_a is Set_of (A)) =
+
   inherit
     States_ticket (C, Rh, S, O, M, A, S_a),
-    Policy (Rh, S, O, M, A, S_a) ;
+    Policy (Rh, S, O, M, A, S_a);
 
   (**
      If an access (sp,op,mo) belongs to the current accesses of a state
@@ -3836,9 +3929,9 @@ species Policy_ticket (C is Tickets, Rh is Rho_ticket (C),
      all sp in S, all op in O, all mo in M,
        ex ct in C,
          S_a!est_element (A!create (sp, op, mo), lambda (st)) ->
-           (w (st, sp, ct) /\ t (st, op, mo, ct)) ;
+           (w (st, sp, ct) /\ t (st, op, mo, ct));
 
-end ;;
+end;;
 
 (**
    The administrative requests of the Tickets model :
@@ -3851,35 +3944,36 @@ end ;;
  *)
 species Requests_adm_ticket (S is Subjects, O is Objects, M is Access_mode,
                              C is Tickets) =
-  inherit Requests ;
+
+  inherit Requests;
 
   (** Returns the ticket involved in the given administrative request *)
-  signature get_c : Self -> C ;
+  signature get_c : Self -> C;
 
   (**
      Returns the second subject involved in the given administrative request
    *)
-  signature get_s2 : Self -> S ;
+  signature get_s2 : Self -> S;
 
   (**
      Returns true if the given administrative request is a "+generate"
      request, false otherwise
    *)
-  signature is_generate : Self -> bool ;
+  signature is_generate : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "+pass" request,
      false otherwise
    *)
-  signature is_pass : Self -> bool ;
+  signature is_pass : Self -> bool;
 
   (**
      Returns true if the given administrative request is a "-remove" request,
      false otherwise
    *)
-  signature is_remove : Self -> bool ;
+  signature is_remove : Self -> bool;
 
-end ;;
+end;;
 
 (**
    The requests of the Tickets model are the general requests and
@@ -3887,10 +3981,12 @@ end ;;
  *)
 species Requests_ticket (S is Subjects, O is Objects, M is Access_mode,
                          C is Tickets) =
+
   inherit
     Requests_gal (S, O, M),
-    Requests_adm_ticket (S, O, M, C) ;
-end ;;
+    Requests_adm_ticket (S, O, M, C);
+
+end;;
 
 (** Definition of the Tickets transition function (reference monitor) *)
 species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
@@ -3898,10 +3994,11 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
                        A is Access (S, O, M), S_a is Set_of (A),
                        R is Requests_ticket (S, O, M, C),
                        D is Decisions) =
+
   inherit
     Policy_ticket (C, Rh, S, O, M, A, S_a),
     Semantics_requests_gal (Rh, S, O, M, A, S_a, R),
-    Models (Rh, S, O, M, A, S_a, R, D) ;
+    Models (Rh, S, O, M, A, S_a, R, D);
 
   (** Tickets transition function on accesses *)
   let tau_ticket_acc (r1 in R, st1 in Self) =
@@ -3912,7 +4009,7 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
        if exists_ticket (st1, uc (st1), w (st1, s1), t (st1, o1, m1))
        then (D!yes, add (st1, A!create (s1, o1, m1)))
        else (D!no, st1)
-     else (D!yes, del (st1, A!create (s1, o1, m1))) ;
+     else (D!yes, del (st1, A!create (s1, o1, m1)));
 
   (**
      Returns true if the given access ap satisfies the conditions needed to
@@ -3923,7 +4020,7 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
      let op = A!get_o (ap) in
      let mp = A!get_m (ap) in
      let stp = rm_uc (rm_w (rm_t (st1, o1, m1, c1), sp, c1), c1) in
-     exists_ticket (stp, uc (stp), w (stp, sp), t (stp, op, mp)) ;
+     exists_ticket (stp, uc (stp), w (stp, sp), t (stp, op, mp));
 
   (** Tickets administrative transition function *)
   let tau_ticket_adm (r1 in R, st1 in Self) =
@@ -3949,12 +4046,12 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
        if w (st1, s1, c1)
        then (D!yes, add_w (st1, s2, c1))
        else (D!no, st1)
-     else (D!no, st1) ;
+     else (D!no, st1);
 
   (** Tickets transition function *)
   let tau_ticket (r1 in R, st1 in Self) =
      if or_b (R!is_get (r1), R!is_rel (r1))
      then tau_ticket_acc (r1, st1)
-     else tau_ticket_adm (r1, st1) ;
+     else tau_ticket_adm (r1, st1);
 
-end ;;
+end;;

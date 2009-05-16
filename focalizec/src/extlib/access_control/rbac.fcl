@@ -13,31 +13,32 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rbac.fcl,v 1.14 2009-05-15 11:20:25 doligez Exp $ *)
+(* $Id: rbac.fcl,v 1.15 2009-05-16 17:53:00 weis Exp $ *)
 
 (**
    @title Implementation of the RBAC model
    @author Lionel Habib
  *)
 
-use "basics" ;;
-open "basics" ;;
-use "sets_orders" ;;
-open "sets_orders" ;;
-use "ensembles_finis" ;;
-open "ensembles_finis" ;;
-use "access_control" ;;
-open "access_control" ;;
+use "basics";;
+open "basics";;
+use "sets_orders";;
+open "sets_orders";;
+use "ensembles_finis";;
+open "ensembles_finis";;
+use "access_control";;
+open "access_control";;
 
 (** RBAC implementation *)
 
 species S_set_of (A is Setoid) =
-  inherit Set_of (A), Liste (A) ;
+
+  inherit Set_of (A), Liste (A);
 
   let rec for_all (l, p) =
      match l with
      | [ ] -> true
-     | h :: t -> and_b(p (h), for_all (t, p)) ;
+     | h :: t -> and_b(p (h), for_all (t, p));
 
   let print (l) =
      let rec aux (ls) =
@@ -47,155 +48,182 @@ species S_set_of (A is Setoid) =
             match t with
             | [ ] -> A!print (h) ^ "]"
             | _underscore -> A!print (h) ^ ",\n                     " ^ aux (t)
-     in "[" ^ aux (l) ;
+     in "[" ^ aux (l);
 
-  proof of equal_prop = assumed {* Because todo *} ;
+  proof of equal_prop = assumed {* Because todo *};
 
-  proof of singleton_prop = assumed {* Because todo *} ;
+  proof of singleton_prop = assumed {* Because todo *};
 
-end ;;
+end
+;;
 
 species S_setoid =
-  inherit Setoid ;
 
-  representation = int * string ;
+  inherit Setoid;
 
-  let create (n in int, s in string) in Self = (n, s) ;
+  representation = int * string;
 
-  let equal (s1, s2) =  fst (s1) = fst (s2) ;
+  let create (n in int, s in string) in Self = (n, s);
 
-  let element = (0, "element") ;
+  let equal (s1, s2) =  fst (s1) = fst (s2);
 
-  let print (s) = snd (s) ;
+  let element = (0, "element");
+
+  let print (s) = snd (s);
 
   proof of equal_reflexive =
-    by definition of equal ;
+    by definition of equal;
 
   proof of equal_symmetric =
-    by definition of equal ;
+    by definition of equal;
 
   proof of equal_transitive =
-    by definition of equal ;
+    by definition of equal;
 
-end ;;
+end
+;;
 
-species S_subjects = inherit Subjects, S_setoid ; end ;;
+species S_subjects =
 
-species S_objects = inherit Objects, S_setoid ; end ;;
+  inherit Subjects, S_setoid;
+
+end
+;;
+
+species S_objects =
+
+  inherit Objects, S_setoid;
+
+end
+;;
 
 species S_access_mode =
-  inherit Access_mode, S_setoid ;
 
-  let read = (1, "read") ;
+  inherit Access_mode, S_setoid;
 
-  let write = (2, "write") ;
+  let read = (1, "read");
 
-end ;;
+  let write = (2, "write");
+
+end
+;;
 
 species S_access (S_sub is S_subjects,
                   S_obj is S_objects,
                   S_acc_mod is S_access_mode) =
-  inherit Access (S_sub, S_obj, S_acc_mod) ;
 
-  representation = (S_sub * (S_obj * S_acc_mod)) ;
+  inherit Access (S_sub, S_obj, S_acc_mod);
 
-  let create (s, o, m) = (s, (o, m)) ;
+  representation = (S_sub * (S_obj * S_acc_mod));
 
-  let get_s (a) = fst (a) ;
+  let create (s, o, m) = (s, (o, m));
 
-  let get_o (a) = fst (snd (a)) ;
+  let get_s (a) = fst (a);
 
-  let get_m (a) = snd (snd (a)) ;
+  let get_o (a) = fst (snd (a));
+
+  let get_m (a) = snd (snd (a));
 
   let equal (a1, a2) =
      and_b (and_b (S_sub!equal (get_s (a1), get_s (a2)),
                    S_obj!equal (get_o (a1), get_o (a2))),
-            S_acc_mod!equal (get_m (a1), get_m (a2))) ;
+            S_acc_mod!equal (get_m (a1), get_m (a2)));
 
-  let element = create (S_sub!element, S_obj!element, S_acc_mod!element) ;
+  let element = create (S_sub!element, S_obj!element, S_acc_mod!element);
 
   let print(a) =
      "(" ^ S_sub!print (get_s (a)) ^
      "," ^ S_obj!print (get_o (a)) ^
      "," ^ S_acc_mod!print (get_m (a)) ^
-     ")" ;
+     ")";
 
   proof of equal_reflexive =
     by property S_sub!equal_reflexive,
                 S_obj!equal_reflexive,
                 S_acc_mod!equal_reflexive
-       definition of equal ;
+       definition of equal;
 
   proof of equal_symmetric =
     by property S_sub!equal_symmetric,
                 S_obj!equal_symmetric,
                 S_acc_mod!equal_symmetric
-       definition of equal ;
+       definition of equal;
 
   proof of equal_transitive =
     by property S_sub!equal_transitive,
                 S_obj!equal_transitive,
                 S_acc_mod!equal_transitive
-       definition of equal ;
+       definition of equal;
 
-  proof of access_equal = assumed {* Because todo *} ;
+  proof of access_equal = assumed {* Because todo *};
 
-end ;;
+end
+;;
 
 species S_decisions =
-  inherit Decisions, S_setoid ;
 
-  let yes = (1, "yes") ;
+  inherit Decisions, S_setoid;
 
-  let no = (2, "no") ;
+  let yes = (1, "yes");
 
-  proof of yes_is_not_no = assumed {* Because todo *} ;
+  let no = (2, "no");
 
-end ;;
+  proof of yes_is_not_no = assumed {* Because todo *};
+
+end
+;;
 
 species S_get_release =
-  inherit S_setoid ;
 
-  let get in Self = (1, "+") ;
+  inherit S_setoid;
 
-  let rel in Self = (2, "-") ;
+  let get in Self = (1, "+");
 
-  let p_ua in Self = (3, "+ua") ;
+  let rel in Self = (2, "-");
 
-  let m_ua in Self = (4, "-ua") ;
+  let p_ua in Self = (3, "+ua");
 
-  let p_pa in Self = (5, "+pa") ;
+  let m_ua in Self = (4, "-ua");
 
-  let m_pa in Self = (6, "-pa") ;
+  let p_pa in Self = (5, "+pa");
 
-end ;;
+  let m_pa in Self = (6, "-pa");
 
-species S_users = inherit Users, S_setoid ; end ;;
+end
+;;
+
+species S_users =
+
+ inherit Users, S_setoid;
+
+end
+;;
 
 species S_roles =
-  inherit Roles, S_setoid ;
 
-  let directeur in Self = (1, "directeur") ;
+  inherit Roles, S_setoid;
 
-  let secretaire in Self = (2, "secretaire") ;
+  let directeur in Self = (1, "directeur");
 
-  let chirurgienChef in Self = (3, "chirurgienChef") ;
+  let secretaire in Self = (2, "secretaire");
 
-  let chirurgien in Self = (4, "chirurgien") ;
+  let chirurgienChef in Self = (3, "chirurgienChef");
 
-  let radiologiste in Self = (5, "radiologiste") ;
+  let chirurgien in Self = (4, "chirurgien");
 
-  let radiologisteAssistant in Self = (6, "radiologisteAssistant") ;
+  let radiologiste in Self = (5, "radiologiste");
 
-  let specialiste in Self = (7, "specialiste") ;
+  let radiologisteAssistant in Self = (6, "radiologisteAssistant");
 
-  let generaliste in Self = (8, "generaliste") ;
+  let specialiste in Self = (7, "specialiste");
 
-  let infirmiere in Self = (9, "infirmiere") ;
+  let generaliste in Self = (8, "generaliste");
 
-  let secretaireMedicale in Self = (10, "secretaireMedicale") ;
+  let infirmiere in Self = (9, "infirmiere");
 
-  let patient in Self = (11, "patient") ;
+  let secretaireMedicale in Self = (10, "secretaireMedicale");
+
+  let patient in Self = (11, "patient");
 
   let roles_list in list(Self) =
      [ directeur; secretaire;
@@ -203,7 +231,7 @@ species S_roles =
        radiologiste; radiologisteAssistant;
        specialiste; generaliste;
        infirmiere; secretaireMedicale;
-       patient ] ;
+       patient ];
 
   let leq (r1, r2) =
      if equal (r1, directeur) then
@@ -272,15 +300,16 @@ species S_roles =
                       equal (r2, secretaireMedicale)))
        then true
        else false
-     else false ;
+     else false;
 
-  proof of leq_reflexive = assumed {* Because todo *} ;
+  proof of leq_reflexive = assumed {* Because todo *};
 
-  proof of leq_antisymmetric = assumed {* Because todo *} ;
+  proof of leq_antisymmetric = assumed {* Because todo *};
 
-  proof of leq_transitive = assumed {* Because todo *} ;
+  proof of leq_transitive = assumed {* Because todo *};
 
-end ;;
+end
+;;
 
 species S_requests_rbac (S is S_subjects,
                          O is S_objects,
@@ -288,37 +317,38 @@ species S_requests_rbac (S is S_subjects,
                          Sgr is S_get_release,
                          U is S_users,
                          Ro is S_roles) =
-  inherit Requests_rbac (S, O, M, U, Ro) ;
 
-  representation = (Sgr * (S * (O * (M * (U * Ro))))) ;
+  inherit Requests_rbac (S, O, M, U, Ro);
+
+  representation = (Sgr * (S * (O * (M * (U * Ro)))));
 
   let create (g in Sgr, sa in S, oa in O, ma in M,
               ua in U, roa in Ro) in Self =
-     (g, (sa, (oa, (ma, (ua, roa))))) ;
+     (g, (sa, (oa, (ma, (ua, roa)))));
 
-  let get_gr (rg in Self) in Sgr = fst (rg) ;
+  let get_gr (rg in Self) in Sgr = fst (rg);
 
-  let get_s (rg) = fst (snd (rg)) ;
+  let get_s (rg) = fst (snd (rg));
 
-  let get_o (rg) = fst (snd (snd (rg))) ;
+  let get_o (rg) = fst (snd (snd (rg)));
 
-  let get_m (rg) = fst (snd (snd (snd (rg)))) ;
+  let get_m (rg) = fst (snd (snd (snd (rg))));
 
-  let get_u (rg) = fst (snd (snd (snd (snd (rg))))) ;
+  let get_u (rg) = fst (snd (snd (snd (snd (rg)))));
 
-  let get_r (rg) = snd (snd (snd (snd (snd (rg))))) ;
+  let get_r (rg) = snd (snd (snd (snd (snd (rg)))));
 
-  let is_get (rg) = Sgr!equal (Sgr!get, get_gr (rg)) ;
+  let is_get (rg) = Sgr!equal (Sgr!get, get_gr (rg));
 
-  let is_rel (rg) = Sgr!equal (Sgr!rel, get_gr (rg)) ;
+  let is_rel (rg) = Sgr!equal (Sgr!rel, get_gr (rg));
 
-  let is_add_ua (rg) = Sgr!equal (Sgr!p_ua, get_gr (rg)) ;
+  let is_add_ua (rg) = Sgr!equal (Sgr!p_ua, get_gr (rg));
 
-  let is_rm_ua (rg) = Sgr!equal (Sgr!m_ua, get_gr (rg)) ;
+  let is_rm_ua (rg) = Sgr!equal (Sgr!m_ua, get_gr (rg));
 
-  let is_add_pa (rg) = Sgr!equal (Sgr!p_pa, get_gr (rg)) ;
+  let is_add_pa (rg) = Sgr!equal (Sgr!p_pa, get_gr (rg));
 
-  let is_rm_pa (rg) = Sgr!equal (Sgr!m_pa, get_gr (rg)) ;
+  let is_rm_pa (rg) = Sgr!equal (Sgr!m_pa, get_gr (rg));
 
   let equal (rg1, rg2) =
      and_b (and_b (and_b (Sgr!equal (get_gr (rg1), get_gr (rg2)),
@@ -326,10 +356,10 @@ species S_requests_rbac (S is S_subjects,
                    and_b (O!equal (get_o (rg1), get_o (rg2)),
                           M!equal (get_m (rg1), get_m (rg2)))),
             and_b (U!equal (get_u (rg1), get_u (rg2)),
-                   Ro!equal (get_r (rg1), get_r (rg2)))) ;
+                   Ro!equal (get_r (rg1), get_r (rg2))));
 
   let element =
-     create (Sgr!get, S!element, O!element, M!element, U!element, Ro!element) ;
+     create (Sgr!get, S!element, O!element, M!element, U!element, Ro!element);
 
   let print (rg) =
      if or_b (Sgr!equal (Sgr!get, get_gr (rg)),
@@ -365,7 +395,7 @@ species S_requests_rbac (S is S_subjects,
        "," ^ M!print (get_m (rg)) ^
        "," ^ Ro!print (get_r (rg)) ^
        ">"
-     else "Unknown request" ;
+     else "Unknown request";
 
   proof of equal_reflexive =
     by property S!equal_reflexive,
@@ -374,7 +404,8 @@ species S_requests_rbac (S is S_subjects,
                 U!equal_reflexive,
                 Ro!equal_reflexive,
                 Sgr!equal_reflexive
-       definition of equal ;
+       definition of equal
+  ;
 
   proof of equal_symmetric =
     by property S!equal_symmetric,
@@ -383,7 +414,8 @@ species S_requests_rbac (S is S_subjects,
                 U!equal_symmetric,
                 Ro!equal_symmetric,
                 Sgr!equal_symmetric
-       definition of equal ;
+       definition of equal
+  ;
 
   proof of equal_transitive =
     by  property S!equal_transitive,
@@ -392,23 +424,28 @@ species S_requests_rbac (S is S_subjects,
                  U!equal_transitive,
                  Ro!equal_transitive,
                  Sgr!equal_transitive
-        definition of equal ;
+        definition of equal
+  ;
 
-  proof of get_or_rel = assumed {* Because todo *} ;
+  proof of get_or_rel = assumed {* Because todo *};
 
-  proof of get_is_not_rel = assumed {* Because todo *} ;
+  proof of get_is_not_rel = assumed {* Because todo *};
 
-  proof of add_ua_then_not_rm_ua = assumed {* Because todo *} ;
+  proof of add_ua_then_not_rm_ua = assumed {* Because todo *};
 
-  proof of add_pa_then_not_ua = assumed {* Because todo *} ;
+  proof of add_pa_then_not_ua = assumed {* Because todo *};
 
-  proof of rm_pa_then_not_add_pa_ua = assumed {* Because todo *} ;
+  proof of rm_pa_then_not_add_pa_ua = assumed {* Because todo *};
 
-end ;;
+end
+;;
 
 species S_rho_rbac (S_us is S_users, S_ro is S_roles) =
-  inherit Rho_rbac (S_us, S_ro), S_setoid ;
-end ;;
+
+  inherit Rho_rbac (S_us, S_ro), S_setoid;
+
+end
+;;
 
 species S_models_rbac (S_us is S_users,
                        S_ro is S_roles,
@@ -422,36 +459,37 @@ species S_models_rbac (S_us is S_users,
                        S_req is S_requests_rbac (S_sub, S_obj, S_acc_mod,
                                                  S_gr, S_us, S_ro),
                        S_dec is S_decisions) =
+
   inherit Models_rbac (S_us, S_ro, S_rh, S_sub, S_obj, S_acc_mod, S_acc,
-                       S_set_acc, S_req, S_dec) ;
+                       S_set_acc, S_req, S_dec);
 
   representation = (S_set_acc * ((S_sub -> S_us) *
                                  (list (S_us * S_ro) *
                                   (list ((S_obj * S_acc_mod) * S_ro) *
-                                   list (S_sub * S_ro))))) ;
+                                   list (S_sub * S_ro)))));
 
   let create (s in S_set_acc,
               ur in (S_sub -> S_us),
               u in list (S_us * S_ro),
               p in list ((S_obj * S_acc_mod) * S_ro),
               r in list (S_sub * S_ro)) in Self =
-     (s, (ur, (u, (p, r)))) ;
+     (s, (ur, (u, (p, r))));
 
-  let lambda (st) = fst (st) ;
+  let lambda (st) = fst (st);
 
   let upsilon (st in Self) in ((S_sub -> S_us) *
                                (list (S_us * S_ro) *
                                 (list ((S_obj * S_acc_mod) * S_ro) *
                                  list (S_sub * S_ro)))) =
-     snd (st) ;
+     snd (st);
 
   let add (st, ac) =
-     (S_set_acc!union (lambda (st), S_set_acc!singleton (ac)), upsilon (st)) ;
+     (S_set_acc!union (lambda (st), S_set_acc!singleton (ac)), upsilon (st));
 
   let del (st, ac) =
-     (S_set_acc!diff (lambda (st), S_set_acc!singleton (ac)), upsilon (st)) ;
+     (S_set_acc!diff (lambda (st), S_set_acc!singleton (ac)), upsilon (st));
 
-  let user (st, sub) = fst (upsilon (st)) (sub) ;
+  let user (st, sub) = fst (upsilon (st)) (sub);
 
   let ua (st, us, ro) =
      let rec aux (l) =
@@ -462,7 +500,7 @@ species S_models_rbac (S_us is S_users,
                       S_ro!equal (ro, snd (h)))
             then true
             else aux (t)
-     in aux (fst (snd (upsilon (st)))) ;
+     in aux (fst (snd (upsilon (st))));
 
   let pa (st, obj, mo, ro) =
      let rec aux (l) =
@@ -474,7 +512,7 @@ species S_models_rbac (S_us is S_users,
                       S_ro!equal (ro, snd (h)))
             then true
             else aux (t)
-     in aux (fst (snd (snd (upsilon (st))))) ;
+     in aux (fst (snd (snd (upsilon (st)))));
 
   let roles_s (st, sub, ro) =
      let rec aux (l) =
@@ -485,7 +523,7 @@ species S_models_rbac (S_us is S_users,
                       S_ro!equal (ro, snd (h)))
             then true
             else aux (t)
-     in aux (snd (snd (snd (upsilon (st))))) ;
+     in aux (snd (snd (snd (upsilon (st)))));
 
   let exists_role (_st , fr, fp) =
      let rec aux (l) =
@@ -495,7 +533,7 @@ species S_models_rbac (S_us is S_users,
             if and_b (fr (h), fp (h))
             then true
             else aux (t)
-     in aux (S_ro!roles_list) ;
+     in aux (S_ro!roles_list);
 
   let exists_role_ua (_st, fr, fp) =
      let rec aux (l) =
@@ -505,13 +543,13 @@ species S_models_rbac (S_us is S_users,
             if and_b (fr (h), fp (h))
             then true
             else aux (t)
-     in aux (S_ro!roles_list) ;
+     in aux (S_ro!roles_list);
 
   let add_ua (st in Self, u in S_us, r in S_ro) in Self =
      (lambda (st), (fst (upsilon (st)),
                     ((u, r) :: fst (snd (upsilon (st))),
                      (fst (snd (snd (upsilon (st)))),
-                      snd (snd (snd (upsilon (st)))))))) ;
+                      snd (snd (snd (upsilon (st))))))));
 
 (*   let rm_ua (st in Self, u in S_us, r in S_ro) in Self = *)
 (*      let rec aux (f in list (S_us * S_ro), l in list (S_us * S_ro)) = *)
@@ -525,7 +563,7 @@ species S_models_rbac (S_us is S_users,
 (*             if and_b (S_us!equal (u, fst (h)), S_ro!equal (r, snd (h))) *)
 (*             then aux (f, t) *)
 (*             else aux (h :: f, t) *)
-(*      in aux ([ ], fst (snd (upsilon (st)))) ; *)
+(*      in aux ([ ], fst (snd (upsilon (st)))); *)
 
   let rm_ua (st in Self, u in S_us, r in S_ro) in Self =
      let rec aux (l in list (S_us * S_ro), f in list (S_us * S_ro)) =
@@ -539,13 +577,13 @@ species S_models_rbac (S_us is S_users,
             if and_b (S_us!equal (u, fst (h)), S_ro!equal (r, snd (h)))
             then aux (t, f)
             else aux (t, h :: f)
-     in aux (fst (snd (upsilon (st))), [ ]) ;
+     in aux (fst (snd (upsilon (st))), [ ]);
 
   let add_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
      (lambda (st), (fst (upsilon (st)),
                     (fst (snd (upsilon (st))),
                      (((o, m), r) :: fst (snd (snd (upsilon (st)))),
-                      snd (snd (snd (upsilon (st)))))))) ;
+                      snd (snd (snd (upsilon (st))))))));
 
 (*   let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self = *)
 (*      let rec aux (f in list ((S_obj * S_acc_mod) * S_ro), *)
@@ -562,7 +600,7 @@ species S_models_rbac (S_us is S_users,
 (*                       S_ro!equal (r, snd (h))) *)
 (*             then aux (f, t) *)
 (*             else aux (h :: f, t) *)
-(*      in aux ([ ], fst (snd (snd (upsilon (st))))) ; *)
+(*      in aux ([ ], fst (snd (snd (upsilon (st))))); *)
 
   let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
      let rec aux (l in list ((S_obj * S_acc_mod) * S_ro),
@@ -579,12 +617,12 @@ species S_models_rbac (S_us is S_users,
                       S_ro!equal (r, snd (h)))
             then aux (t, f)
             else aux (t, h :: f)
-     in aux (fst (snd (snd (upsilon (st)))), [ ]) ;
+     in aux (fst (snd (snd (upsilon (st)))), [ ]);
 
-  let equal (st1, st2) = S_set_acc!equal (lambda (st1), lambda (st2)) ;
+  let equal (st1, st2) = S_set_acc!equal (lambda (st1), lambda (st2));
 
   let element =
-     create (S_set_acc!vide, (function _su -> S_us!element), [ ], [ ], [ ]) ;
+     create (S_set_acc!vide, (function _su -> S_us!element), [ ], [ ], [ ]);
 
   let print_ua (l in list (S_us * S_ro)) in string =
      let rec aux (ls in list (S_us * S_ro)) =
@@ -601,7 +639,7 @@ species S_models_rbac (S_us is S_users,
                 "," ^ S_ro!print (snd (h)) ^
                 "),\n                     " ^
                 aux (t)
-     in "[" ^ aux (l) ;
+     in "[" ^ aux (l);
 
   let print_pa (l in list ((S_obj * S_acc_mod) * S_ro)) in string =
      let rec aux (ls in list((S_obj * S_acc_mod) * S_ro)) =
@@ -620,7 +658,7 @@ species S_models_rbac (S_us is S_users,
                 ")," ^ S_ro!print (snd (h)) ^
                 "),\n                     " ^
                 aux (t)
-     in "[" ^ aux (l) ;
+     in "[" ^ aux (l);
 
   let print (st) in string =
      "(" ^ S_set_acc!print (lambda (st)) ^
@@ -628,253 +666,282 @@ species S_models_rbac (S_us is S_users,
      print_ua (fst (snd (upsilon (st)))) ^
      ",\n                    " ^
      print_pa (fst (snd (snd (upsilon (st))))) ^
-     ")" ;
+     ")";
 
   proof of equal_reflexive =
     by property S_set_acc!equal_reflexive
-       definition of equal ;
+       definition of equal
+  ;
 
   proof of equal_symmetric =
     by property S_set_acc!equal_symmetric
-       definition of equal ;
+       definition of equal
+  ;
 
   proof of equal_transitive =
     by property S_set_acc!equal_transitive
-       definition of equal ;
+       definition of equal
+  ;
 
-  proof of lambda_prop = by definition of equal ;
+  proof of lambda_prop = by definition of equal
+  ;
 
-  proof of add_prop = assumed {* Because todo *} ;
+  proof of add_prop = assumed {* Because todo *};
 
-  proof of add_mem = assumed {* Because todo *} ;
+  proof of add_mem = assumed {* Because todo *};
 
-  proof of del_prop = assumed {* Because todo *} ;
+  proof of del_prop = assumed {* Because todo *};
 
-  proof of del_mem = assumed {* Because todo *} ;
+  proof of del_mem = assumed {* Because todo *};
 
-  (*proof of union_spec = assumed {* Because todo *} ;*)
+  (*proof of union_spec = assumed {* Because todo *};*)
 
-  (*proof of sous_ensemble_spec = assumed {* Because todo *} ;*)
+  (*proof of sous_ensemble_spec = assumed {* Because todo *};*)
 
-  proof of add_access_ua = assumed {* Because todo *} ;
+  proof of add_access_ua = assumed {* Because todo *};
 
-  proof of del_access_ua = assumed {* Because todo *} ;
+  proof of del_access_ua = assumed {* Because todo *};
 
-  proof of add_access_pa = assumed {* Because todo *} ;
+  proof of add_access_pa = assumed {* Because todo *};
 
-  proof of del_access_pa = assumed {* Because todo *} ;
+  proof of del_access_pa = assumed {* Because todo *};
 
-  proof of add_access_roles_s_1 = assumed {* Because todo *} ;
+  proof of add_access_roles_s_1 = assumed {* Because todo *};
 
-  proof of add_access_roles_s_2 = assumed {* Because todo *} ;
+  proof of add_access_roles_s_2 = assumed {* Because todo *};
 
-  proof of del_access_roles_s_1 = assumed {* Because todo *} ;
+  proof of del_access_roles_s_1 = assumed {* Because todo *};
 
-  proof of del_access_roles_s_2 = assumed {* Because todo *} ;
+  proof of del_access_roles_s_2 = assumed {* Because todo *};
 
-  proof of add_ua_access = assumed {* Because todo *} ;
+  proof of add_ua_access = assumed {* Because todo *};
 
-  proof of rm_ua_access = assumed {* Because todo *} ;
+  proof of rm_ua_access = assumed {* Because todo *};
 
-  proof of add_pa_access = assumed {* Because todo *} ;
+  proof of add_pa_access = assumed {* Because todo *};
 
-  proof of rm_pa_access = assumed {* Because todo *} ;
+  proof of rm_pa_access = assumed {* Because todo *};
 
-  proof of add_ua_ua = assumed {* Because todo *} ;
+  proof of add_ua_ua = assumed {* Because todo *};
 
-  proof of add_ua_pa = assumed {* Because todo *} ;
+  proof of add_ua_pa = assumed {* Because todo *};
 
-  proof of add_ua_roles_s_1 = assumed {* Because todo *} ;
+  proof of add_ua_roles_s_1 = assumed {* Because todo *};
 
-  proof of add_ua_roles_s_2 = assumed {* Because todo *} ;
+  proof of add_ua_roles_s_2 = assumed {* Because todo *};
 
-  proof of rm_ua_ua = assumed {* Because todo *} ;
+  proof of rm_ua_ua = assumed {* Because todo *};
 
-  proof of rm_ua_pa = assumed {* Because todo *} ;
+  proof of rm_ua_pa = assumed {* Because todo *};
 
-  proof of rm_ua_roles_s_1 = assumed {* Because todo *} ;
+  proof of rm_ua_roles_s_1 = assumed {* Because todo *};
 
-  proof of rm_ua_roles_s_2 = assumed {* Because todo *} ;
+  proof of rm_ua_roles_s_2 = assumed {* Because todo *};
 
-  proof of add_pa_ua = assumed {* Because todo *} ;
+  proof of add_pa_ua = assumed {* Because todo *};
 
-  proof of add_pa_pa = assumed {* Because todo *} ;
+  proof of add_pa_pa = assumed {* Because todo *};
 
-  proof of add_pa_roles_s_1 = assumed {* Because todo *} ;
+  proof of add_pa_roles_s_1 = assumed {* Because todo *};
 
-  proof of add_pa_roles_s_2 = assumed {* Because todo *} ;
+  proof of add_pa_roles_s_2 = assumed {* Because todo *};
 
-  proof of rm_pa_ua = assumed {* Because todo *} ;
+  proof of rm_pa_ua = assumed {* Because todo *};
 
-  proof of rm_pa_pa = assumed {* Because todo *} ;
+  proof of rm_pa_pa = assumed {* Because todo *};
 
-  proof of rm_pa_roles_s_1 = assumed {* Because todo *} ;
+  proof of rm_pa_roles_s_1 = assumed {* Because todo *};
 
-  proof of rm_pa_roles_s_2 = assumed {* Because todo *} ;
+  proof of rm_pa_roles_s_2 = assumed {* Because todo *};
 
-  proof of secure_state = assumed {* Because todo *} ;
+  proof of secure_state = assumed {* Because todo *};
 
-  proof of ep_equal = assumed {* Because todo *} ;
+  proof of ep_equal = assumed {* Because todo *};
 
-  proof of for_all_spec_ua_1 = assumed {* Because todo *} ;
+  proof of for_all_spec_ua_1 = assumed {* Because todo *};
 
-  proof of for_all_spec_ua_2 = assumed {* Because todo *} ;
+  proof of for_all_spec_ua_2 = assumed {* Because todo *};
 
-  proof of iter_pa_spec = assumed {* Because todo *} ;
+  proof of iter_pa_spec = assumed {* Because todo *};
 
-  proof of exists_role_spec = assumed {* Because todo *} ;
+  proof of exists_role_spec = assumed {* Because todo *};
 
-  proof of exists_role_ua_spec = assumed {* Because todo *} ;
+  proof of exists_role_ua_spec = assumed {* Because todo *};
 
-  proof of equal_exists_role = assumed {* Because todo *} ;
+  proof of equal_exists_role = assumed {* Because todo *};
 
-  proof of left_substitution = assumed {* Because todo *} ;
+  proof of left_substitution = assumed {* Because todo *};
 
-  proof of right_substitution = assumed {* Because todo *} ;
+  proof of right_substitution = assumed {* Because todo *};
 
-end ;;
+end
+;;
 
 collection C_subjects =
+
   implement S_subjects
+
 end
 ;;
 
 collection C_objects =
+
   implement S_objects
+
 end
 ;;
 
 collection C_access_mode =
+
   implement S_access_mode
+
 end
 ;;
 
 collection C_access =
+
   implement S_access (C_subjects, C_objects, C_access_mode)
+
 end
 ;;
 
 collection C_set_of_access =
+
   implement S_set_of (C_access)
+
 end
 ;;
 
 collection C_decisions =
+
   implement S_decisions
+
 end
 ;;
 
 collection C_get_release =
+
   implement S_get_release
+
 end
 ;;
 
 collection C_users =
+
   implement S_users
+
 end
 ;;
 
 collection C_roles =
+
   implement S_roles
+
 end
 ;;
 
 collection C_requests_rbac =
+
   implement
     S_requests_rbac
       (C_subjects,  C_objects,  C_access_mode,
        C_get_release, C_users, C_roles)
+
 end
 ;;
 
 collection C_rho_rbac =
+
   implement S_rho_rbac (C_users, C_roles)
+
 end
 ;;
 
 collection C_models_rbac =
+
   implement
     S_models_rbac
       (C_users, C_roles, C_rho_rbac,
        C_subjects, C_objects, C_access_mode,
        C_access, C_set_of_access,
        C_get_release, C_requests_rbac, C_decisions)
+
 end
 ;;
 
-let s1 = C_subjects!create (1, "s1") ;;
+let s1 = C_subjects!create (1, "s1");;
 
-let s2 = C_subjects!create (2, "s2") ;;
+let s2 = C_subjects!create (2, "s2");;
 
-let s3 = C_subjects!create (3, "s3") ;;
+let s3 = C_subjects!create (3, "s3");;
 
-let s4 = C_subjects!create (4, "s4") ;;
+let s4 = C_subjects!create (4, "s4");;
 
-let s5 = C_subjects!create (5, "s5") ;;
+let s5 = C_subjects!create (5, "s5");;
 
-let s6 = C_subjects!create (6, "s6") ;;
+let s6 = C_subjects!create (6, "s6");;
 
-let s7 = C_subjects!create (7, "s7") ;;
+let s7 = C_subjects!create (7, "s7");;
 
-let s8 = C_subjects!create (8, "s8") ;;
+let s8 = C_subjects!create (8, "s8");;
 
-let s9 = C_subjects!create (9, "s9") ;;
+let s9 = C_subjects!create (9, "s9");;
 
-let s10 = C_subjects!create (10, "s10") ;;
+let s10 = C_subjects!create (10, "s10");;
 
-let s11 = C_subjects!create (11, "s11") ;;
+let s11 = C_subjects!create (11, "s11");;
 
-let s12 = C_subjects!create (12, "s12") ;;
+let s12 = C_subjects!create (12, "s12");;
 
-let dossierMedecin_1 = C_objects!create (1, "dossierMedecin_1") ;;
+let dossierMedecin_1 = C_objects!create (1, "dossierMedecin_1");;
 
-let dossierMedecin_2 = C_objects!create (2, "dossierMedecin_2") ;;
+let dossierMedecin_2 = C_objects!create (2, "dossierMedecin_2");;
 
-let dossierMedecin_3 = C_objects!create (3, "dossierMedecin_3") ;;
+let dossierMedecin_3 = C_objects!create (3, "dossierMedecin_3");;
 
-let dossierPatient_1 = C_objects!create (4, "dossierPatient_1") ;;
+let dossierPatient_1 = C_objects!create (4, "dossierPatient_1");;
 
-let dossierPatient_2 = C_objects!create (5, "dossierPatient_2") ;;
+let dossierPatient_2 = C_objects!create (5, "dossierPatient_2");;
 
-let dossierPatient_3 = C_objects!create (6, "dossierPatient_3") ;;
+let dossierPatient_3 = C_objects!create (6, "dossierPatient_3");;
 
-let ordonnance_1 = C_objects!create (7, "ordonnance_1") ;;
+let ordonnance_1 = C_objects!create (7, "ordonnance_1");;
 
-let ordonnance_2 = C_objects!create (8, "ordonnance_2") ;;
+let ordonnance_2 = C_objects!create (8, "ordonnance_2");;
 
-let ordonnance_3 = C_objects!create (9, "ordonnance_3") ;;
+let ordonnance_3 = C_objects!create (9, "ordonnance_3");;
 
-let compteRenduOp_1 = C_objects!create (10, "compteRenduOp_1") ;;
+let compteRenduOp_1 = C_objects!create (10, "compteRenduOp_1");;
 
-let compteRenduOp_2 = C_objects!create (11, "compteRenduOp_2") ;;
+let compteRenduOp_2 = C_objects!create (11, "compteRenduOp_2");;
 
-let compteRenduOp_3 = C_objects!create (12, "compteRenduOp_3") ;;
+let compteRenduOp_3 = C_objects!create (12, "compteRenduOp_3");;
 
-let radio_1 = C_objects!create (13, "radio_1") ;;
+let radio_1 = C_objects!create (13, "radio_1");;
 
-let radio_2 = C_objects!create (14, "radio_2") ;;
+let radio_2 = C_objects!create (14, "radio_2");;
 
-let radio_3 = C_objects!create (15, "radio_3") ;;
+let radio_3 = C_objects!create (15, "radio_3");;
 
-let alice = C_users!create (1, "alice") ;;
+let alice = C_users!create (1, "alice");;
 
-let bob = C_users!create (2, "bob") ;;
+let bob = C_users!create (2, "bob");;
 
-let charly = C_users!create (3, "charly") ;;
+let charly = C_users!create (3, "charly");;
 
-let dalia = C_users!create (4, "dalia") ;;
+let dalia = C_users!create (4, "dalia");;
 
-let estel = C_users!create (5, "estel") ;;
+let estel = C_users!create (5, "estel");;
 
-let franck = C_users!create (6, "franck") ;;
+let franck = C_users!create (6, "franck");;
 
-let gregory = C_users!create (7, "gregory") ;;
+let gregory = C_users!create (7, "gregory");;
 
-let helen = C_users!create (8, "helen") ;;
+let helen = C_users!create (8, "helen");;
 
-let isabel = C_users!create (9, "isabel") ;;
+let isabel = C_users!create (9, "isabel");;
 
-let john = C_users!create (10, "john") ;;
+let john = C_users!create (10, "john");;
 
 let user_ex (s in C_subjects) in C_users =
    if C_subjects!equal (s, s1) then alice
@@ -889,7 +956,8 @@ let user_ex (s in C_subjects) in C_users =
    else if C_subjects!equal (s, s10) then isabel
    else if C_subjects!equal (s, s11) then john
    else if C_subjects!equal (s, s12) then john
-   else C_users!element ;;
+   else C_users!element
+;;
 
 let ua_ex in list (C_users * C_roles) =
    [ (alice, C_roles!directeur);
@@ -901,7 +969,8 @@ let ua_ex in list (C_users * C_roles) =
      (gregory, C_roles!generaliste);
      (helen, C_roles!secretaire);
      (isabel, C_roles!infirmiere);
-     (john, C_roles!radiologisteAssistant) ] ;;
+     (john, C_roles!radiologisteAssistant) ]
+;;
 
 let pa_ex in list((C_objects * C_access_mode) * C_roles) =
    [ ((dossierMedecin_1, C_access_mode!read), C_roles!directeur);
@@ -960,7 +1029,8 @@ let pa_ex in list((C_objects * C_access_mode) * C_roles) =
      ((radio_3, C_access_mode!write), C_roles!radiologisteAssistant);
      ((radio_1, C_access_mode!read), C_roles!patient);
      ((radio_2, C_access_mode!read), C_roles!patient);
-     ((radio_3, C_access_mode!read), C_roles!patient) ] ;;
+     ((radio_3, C_access_mode!read), C_roles!patient) ]
+;;
 
 let roles_s_ex in list (C_subjects * C_roles) =
    [ (s1, C_roles!directeur);
@@ -977,194 +1047,224 @@ let roles_s_ex in list (C_subjects * C_roles) =
      (s10, C_roles!infirmiere);
      (s10, C_roles!patient);
      (s11, C_roles!radiologisteAssistant);
-     (s12, C_roles!generaliste) ] ;;
+     (s12, C_roles!generaliste) ]
+;;
 
-print_string ("Exemple d'execution :\n\n") ;;
+print_string ("Exemple d'execution :\n\n");;
 
 let st0 = C_models_rbac!create (C_set_of_access!vide,
                                 user_ex,
                                 ua_ex,
                                 pa_ex,
-                                roles_s_ex) ;;
+                                roles_s_ex)
+;;
 
-print_string ("Acces0 : " ^ C_models_rbac!print (st0) ^ "\n") ;;
+print_string ("Acces0 : " ^ C_models_rbac!print (st0) ^ "\n");;
 
 let req0 = C_requests_rbac!create (C_get_release!get,
                                    s1,
                                    dossierMedecin_1,
                                    C_access_mode!write,
                                    C_users!element,
-                                   C_roles!element) ;;
+                                   C_roles!element)
+;;
 
-print_string ("Requete0 : " ^ C_requests_rbac!print (req0) ^ "\n") ;;
+print_string ("Requete0 : " ^ C_requests_rbac!print (req0) ^ "\n");;
 
-let rep0 = C_models_rbac!tau_rbac_acc (req0, st0) ;;
+let rep0 = C_models_rbac!tau_rbac_acc (req0, st0);;
 
-let dec0 = fst (rep0) ;;
+let dec0 = fst (rep0);;
 
-let st1 = snd (rep0) ;;
+let st1 = snd (rep0);;
 
 print_string ("Reponse0 : Decision0 : " ^
               C_decisions!print (dec0) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string ("           Acces1 : " ^
               C_models_rbac!print (st1) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+   ("\n--------------------------------------------------------\n")
+;;
 
 let req1 = C_requests_rbac!create (C_get_release!get,
                                    s8,
                                    ordonnance_1,
                                    C_access_mode!write,
                                    C_users!element,
-                                   C_roles!element) ;;
+                                   C_roles!element)
+;;
 
-print_string ("Requete1 : " ^ C_requests_rbac!print (req1) ^ "\n") ;;
+print_string ("Requete1 : " ^ C_requests_rbac!print (req1) ^ "\n");;
 
-let rep1 = C_models_rbac!tau_rbac_acc (req1, st1) ;;
+let rep1 = C_models_rbac!tau_rbac_acc (req1, st1);;
 
-let dec1 = fst (rep1) ;;
+let dec1 = fst (rep1);;
 
-let st2 = snd (rep1) ;;
+let st2 = snd (rep1);;
 
 print_string ("Reponse1 : Decision1 : " ^
               C_decisions!print (dec1) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string ("           Acces2 : " ^
               C_models_rbac!print (st2) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+   ("\n--------------------------------------------------------\n")
+;;
 
 let req2 = C_requests_rbac!create (C_get_release!get,
                                    s10,
                                    ordonnance_1,
                                    C_access_mode!read,
                                    C_users!element,
-                                   C_roles!element) ;;
+                                   C_roles!element)
+;;
 
-print_string ("Requete2 : " ^ C_requests_rbac!print (req2) ^ "\n") ;;
+print_string ("Requete2 : " ^ C_requests_rbac!print (req2) ^ "\n");;
 
-let rep2 = C_models_rbac!tau_rbac_acc (req2, st2) ;;
+let rep2 = C_models_rbac!tau_rbac_acc (req2, st2);;
 
-let dec2 = fst (rep2) ;;
+let dec2 = fst (rep2);;
 
-let st3 = snd (rep2) ;;
+let st3 = snd (rep2);;
 
 print_string ("Reponse2 : Decision2 : " ^
               C_decisions!print (dec2) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string ("           Acces3 : " ^
               C_models_rbac!print (st3) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+   ("\n--------------------------------------------------------\n")
+;;
 
 let req3 = C_requests_rbac!create (C_get_release!get,
                                    s6,
                                    ordonnance_3,
                                    C_access_mode!write,
                                    C_users!element,
-                                   C_roles!element) ;;
+                                   C_roles!element)
+;;
 
-print_string ("Requete3 : " ^ C_requests_rbac!print (req3) ^ "\n") ;;
+print_string ("Requete3 : " ^ C_requests_rbac!print (req3) ^ "\n");;
 
-let rep3 = C_models_rbac!tau_rbac_acc (req3, st3) ;;
+let rep3 = C_models_rbac!tau_rbac_acc (req3, st3);;
 
-let dec3 = fst (rep3) ;;
+let dec3 = fst (rep3);;
 
-let st4 = snd (rep3) ;;
+let st4 = snd (rep3);;
 
 print_string ("Reponse3 : Decision3 : " ^
               C_decisions!print (dec3) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string ("           Acces4 : " ^
               C_models_rbac!print (st4) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+   ("\n--------------------------------------------------------\n")
+;;
 
 let req4 = C_requests_rbac!create (C_get_release!get,
                                    s3,
                                    compteRenduOp_2,
                                    C_access_mode!read,
                                    C_users!element,
-                                   C_roles!element) ;;
+                                   C_roles!element)
+;;
 
-print_string ("Requete4 : " ^ C_requests_rbac!print (req4) ^ "\n") ;;
+print_string ("Requete4 : " ^ C_requests_rbac!print (req4) ^ "\n");;
 
-let rep4 = C_models_rbac!tau_rbac_acc (req4, st4) ;;
+let rep4 = C_models_rbac!tau_rbac_acc (req4, st4);;
 
-let dec4 = fst (rep4) ;;
+let dec4 = fst (rep4);;
 
-let st5 = snd (rep4) ;;
+let st5 = snd (rep4);;
 
 print_string ("Reponse4 : Decision4 : " ^
               C_decisions!print (dec4) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string ("           Acces5 : " ^
               C_models_rbac!print (st5) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+   ("\n--------------------------------------------------------\n")
+;;
 
 let req5 = C_requests_rbac!create (C_get_release!rel,
                                    s9,
                                    radio_1,
                                    C_access_mode!read,
                                    C_users!element,
-                                   C_roles!element) ;;
+                                   C_roles!element)
+;;
 
-print_string ("Requete5 : " ^ C_requests_rbac!print (req5) ^ "\n") ;;
+print_string ("Requete5 : " ^ C_requests_rbac!print (req5) ^ "\n");;
 
-let rep5 = C_models_rbac!tau_rbac_acc (req5, st5) ;;
+let rep5 = C_models_rbac!tau_rbac_acc (req5, st5);;
 
-let dec5 = fst (rep5) ;;
+let dec5 = fst (rep5);;
 
-let st6 = snd (rep5) ;;
+let st6 = snd (rep5);;
 
 print_string ("Reponse5 : Decision5 : " ^
               C_decisions!print (dec5) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string ("           Acces6 : " ^
               C_models_rbac!print (st6) ^
-              "\n") ;;
+              "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+   ("\n--------------------------------------------------------\n")
+;;
 
 let req6 = C_requests_rbac!create (C_get_release!rel,
                                    s1,
                                    dossierMedecin_1,
                                    C_access_mode!write,
                                    C_users!element,
-                                   C_roles!element) ;;
+                                   C_roles!element)
+;;
 
-print_string ("Requete6 : " ^ C_requests_rbac!print (req6) ^ "\n") ;;
+print_string ("Requete6 : " ^ C_requests_rbac!print (req6) ^ "\n");;
 
-let rep6 = C_models_rbac!tau_rbac_acc (req6, st6) ;;
+let rep6 = C_models_rbac!tau_rbac_acc (req6, st6);;
 
-let dec6 = fst (rep6) ;;
+let dec6 = fst (rep6);;
 
-let st7 = snd (rep6) ;;
+let st7 = snd (rep6);;
 
-print_string ("Reponse6 : Decision6 : " ^
-              C_decisions!print (dec6) ^
-              "\n") ;;
+print_string
+  ("Reponse6 : Decision6 : " ^
+   C_decisions!print (dec6) ^
+   "\n")
+;;
 
-print_string ("           Acces7 : " ^
-              C_models_rbac!print (st7) ^
-
-              "\n") ;;
+print_string
+  ("           Acces7 : " ^
+   C_models_rbac!print (st7) ^
+   "\n")
+;;

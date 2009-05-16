@@ -13,237 +13,270 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ticket.fcl,v 1.13 2009-05-15 11:20:25 doligez Exp $ *)
+(* $Id: ticket.fcl,v 1.14 2009-05-16 17:53:00 weis Exp $ *)
 
 (**
    @title Implementation of the Tickets model
    @author Jean Baron
  *)
 
-use "basics" ;;
-open "basics" ;;
-use "sets_orders" ;;
-open "sets_orders" ;;
-use "ensembles_finis" ;;
-open "ensembles_finis" ;;
-use "access_control" ;;
-open "access_control" ;;
+use "basics";;
+open "basics";;
+use "sets_orders";;
+open "sets_orders";;
+use "ensembles_finis";;
+open "ensembles_finis";;
+use "access_control";;
+open "access_control";;
 
 (** Tickets implementation  *)
 
 species S_set_of (A is Setoid) =
-  inherit Set_of (A), Liste (A) ;
+
+  inherit Set_of (A), Liste (A);
 
   let rec for_all (l, p) =
-     match l with
-     | [ ] -> true
-     | h :: t -> and_b(p (h), for_all (t, p)) ;
+    match l with
+    | [] -> true
+    | h :: t -> and_b(p (h), for_all (t, p));
 
   let print (l) =
-     let rec aux (ls) =
-        match ls with
-        | [ ] -> "]"
-        | h :: t ->
-            match t with
-            | [ ] -> A!print (h) ^ "]"
-            | _underscore -> A!print (h) ^ ",\n                     " ^ aux (t)
-     in "[" ^ aux (l) ;
+    let rec aux (ls) =
+      match ls with
+      | [] -> "]"
+      | h :: t ->
+        match t with
+        | [] -> A!print (h) ^ "]"
+        | _underscore ->
+          A!print (h) ^ ",\n                     " ^
+          aux (t) in
+  "[" ^ aux (l);
 
-  proof of equal_prop = assumed {* Because todo *} ;
+  proof of equal_prop = assumed {* Because todo *};
 
-  proof of singleton_prop = assumed {* Because todo *} ;
+  proof of singleton_prop = assumed {* Because todo *};
 
-end ;;
+end
+;;
 
 species S_setoid =
-  inherit Setoid ;
 
-  representation = int * string ;
+  inherit Setoid;
 
-  let create (n in int, s in string) in Self = (n, s) ;
+  representation = int * string;
 
-  let equal (s1, s2) =  fst (s1) = fst (s2) ;
+  let create (n in int, s in string) in Self = (n, s);
 
-  let element = (0, "element") ;
+  let equal (s1, s2) =  fst (s1) = fst (s2);
 
-  let print (s) = snd (s) ;
+  let element = (0, "element");
+
+  let print (s) = snd (s);
 
   proof of equal_reflexive =
-    by definition of equal ;
+    by definition of equal
+  ;
 
   proof of equal_symmetric =
-    by definition of equal ;
+    by definition of equal
+  ;
 
   proof of equal_transitive =
-    by definition of equal ;
+    by definition of equal
+  ;
 
-end ;;
+end
+;;
 
 species S_subjects =
-  inherit Subjects, S_setoid ;
 
-  let s1 = create (1, "s1") ;
+  inherit Subjects, S_setoid;
 
-  let s2 = create (2, "s2") ;
+  let s1 = create (1, "s1");
 
-  let s3 = create (3, "s3") ;
+  let s2 = create (2, "s2");
 
-  let s4 = create (4, "s4") ;
+  let s3 = create (3, "s3");
 
-  let s5 = create (5, "s5") ;
+  let s4 = create (4, "s4");
 
-  let s6 = create (6, "s6") ;
+  let s5 = create (5, "s5");
 
-  let s7 = create (7, "s7") ;
+  let s6 = create (6, "s6");
 
-  let s8 = create (8, "s8") ;
+  let s7 = create (7, "s7");
 
-  let s9 = create (9, "s9") ;
+  let s8 = create (8, "s8");
 
-  let s10 = create (10, "s10") ;
+  let s9 = create (9, "s9");
 
-  let s11 = create (11, "s11") ;
+  let s10 = create (10, "s10");
 
-  let s12 = create (12, "s12") ;
+  let s11 = create (11, "s11");
+
+  let s12 = create (12, "s12");
 
   let subjects_list in list (Self) =
      [ s1; s2; s3; s4;
        s5; s6; s7; s8;
-       s9; s10; s11; s12 ] ;
+       s9; s10; s11; s12 ];
 
-end ;;
+end
+;;
 
-species S_objects = inherit Objects, S_setoid ; end ;;
+species S_objects =
+
+  inherit Objects, S_setoid;
+
+end
+;;
 
 species S_access_mode =
-  inherit Access_mode, S_setoid ;
 
-  let read = (1, "read") ;
+  inherit Access_mode, S_setoid;
 
-  let write = (2, "write") ;
+  let read = (1, "read");
 
-end ;;
+  let write = (2, "write");
+
+end
+;;
 
 species S_access (S_sub is S_subjects,
                   S_obj is S_objects,
                   S_acc_mod is S_access_mode) =
-  inherit Access (S_sub, S_obj, S_acc_mod) ;
 
-  representation = S_sub * (S_obj * S_acc_mod) ;
+  inherit Access (S_sub, S_obj, S_acc_mod);
 
-  let create (s, o, m) = (s, (o, m)) ;
+  representation = S_sub * (S_obj * S_acc_mod);
 
-  let get_s (a) = fst (a) ;
+  let create (s, o, m) = (s, (o, m));
 
-  let get_o (a) = fst (snd (a)) ;
+  let get_s (a) = fst (a);
 
-  let get_m (a) = snd (snd (a)) ;
+  let get_o (a) = fst (snd (a));
+
+  let get_m (a) = snd (snd (a));
 
   let equal (a1, a2) =
      and_b (and_b (S_sub!equal (get_s (a1), get_s (a2)),
                    S_obj!equal (get_o (a1), get_o (a2))),
-            S_acc_mod!equal (get_m (a1), get_m (a2))) ;
+            S_acc_mod!equal (get_m (a1), get_m (a2)));
 
-  let element = create (S_sub!element, S_obj!element, S_acc_mod!element) ;
+  let element = create (S_sub!element, S_obj!element, S_acc_mod!element);
 
   let print(a) =
-     "(" ^ S_sub!print (get_s (a)) ^
-     "," ^ S_obj!print (get_o (a)) ^
-     "," ^ S_acc_mod!print (get_m (a)) ^
-     ")" ;
+    "(" ^ S_sub!print (get_s (a)) ^
+    "," ^ S_obj!print (get_o (a)) ^
+    "," ^ S_acc_mod!print (get_m (a)) ^
+    ")";
 
   proof of equal_reflexive =
     by property S_sub!equal_reflexive,
                 S_obj!equal_reflexive,
                 S_acc_mod!equal_reflexive
-       definition of equal ;
+       definition of equal
+  ;
 
   proof of equal_symmetric =
     by property S_sub!equal_symmetric,
                 S_obj!equal_symmetric,
                 S_acc_mod!equal_symmetric
-       definition of equal ;
+       definition of equal
+  ;
 
   proof of equal_transitive =
     by property S_sub!equal_transitive,
                 S_obj!equal_transitive,
                 S_acc_mod!equal_transitive
-       definition of equal ;
+       definition of equal
+  ;
 
-  proof of access_equal = assumed {* Because todo *} ;
+  proof of access_equal = assumed {* Because todo *};
 
-end ;;
+end
+;;
 
 species S_decisions =
-  inherit Decisions, S_setoid ;
 
-  let yes = (1, "yes") ;
+  inherit Decisions, S_setoid;
 
-  let no = (2, "no") ;
+  let yes = (1, "yes");
 
-  proof of yes_is_not_no = assumed {* Because todo *} ;
+  let no = (2, "no");
 
-end ;;
+  proof of yes_is_not_no = assumed {* Because todo *};
+
+end
+;;
 
 species S_get_release =
-  inherit S_setoid ;
 
-  let get in Self = (1, "+") ;
+  inherit S_setoid;
 
-  let rel in Self = (2, "-") ;
+  let get in Self = (1, "+");
 
-  let generate in Self = (3, "+generate") ;
+  let rel in Self = (2, "-");
 
-  let remove in Self = (4, "-remove") ;
+  let generate in Self = (3, "+generate");
 
-  let pass in Self = (5, "+pass") ;
+  let remove in Self = (4, "-remove");
 
-end ;;
+  let pass in Self = (5, "+pass");
+
+end
+;;
 
 species S_tickets =
-  inherit Tickets, S_setoid ;
 
-  let c1 = create (1, "c1") ;
+  inherit Tickets, S_setoid;
 
-  let c2 = create (2, "c2") ;
+  let c1 = create (1, "c1");
 
-  let c3 = create (3, "c3") ;
+  let c2 = create (2, "c2");
 
-  let c4 = create (4, "c4") ;
+  let c3 = create (3, "c3");
 
-  let c5 = create (5, "c5") ;
+  let c4 = create (4, "c4");
 
-  let c6 = create (6, "c6") ;
+  let c5 = create (5, "c5");
 
-  let c7 = create (7, "c7") ;
+  let c6 = create (6, "c6");
 
-  let c8 = create (8, "c8") ;
+  let c7 = create (7, "c7");
 
-  let c9 = create (9, "c9") ;
+  let c8 = create (8, "c8");
 
-  let c10 = create (10, "c10") ;
+  let c9 = create (9, "c9");
 
-  let c11 = create (11, "c11") ;
+  let c10 = create (10, "c10");
 
-  let c12 = create (12, "c12") ;
+  let c11 = create (11, "c11");
+
+  let c12 = create (12, "c12");
 
   let tickets_list in list (Self) =
-     [ c1; c2; c3; c4;
-       c5; c6; c7; c8;
-       c9; c10; c11; c12 ] ;
+    [ c1; c2; c3; c4;
+      c5; c6; c7; c8;
+      c9; c10; c11; c12 ];
 
-end ;;
+end
+;;
 
 species S_rho_ticket (C is S_tickets) =
-  inherit Rho_ticket (C), S_setoid ;
-end ;;
+
+  inherit Rho_ticket (C), S_setoid;
+
+end
+;;
 
 species S_requests_ticket (S is S_subjects, O is S_objects,
                            M is S_access_mode, Sgr is S_get_release,
                            C is S_tickets) =
-  inherit Requests_ticket (S, O, M, C) ;
 
-  representation = (Sgr * (S * (C * (O * (M * (S)))))) ;
+  inherit Requests_ticket (S, O, M, C);
+
+  representation = (Sgr * (S * (C * (O * (M * (S))))));
 
   let create (sgrp in Sgr,
               sp1 in S,
@@ -251,75 +284,75 @@ species S_requests_ticket (S is S_subjects, O is S_objects,
               op in O,
               mp in M,
               sp2 in S) in Self =
-     (sgrp, (sp1, (cp, (op, (mp, (sp2)))))) ;
+     (sgrp, (sp1, (cp, (op, (mp, (sp2))))));
 
-  let get_gr (rg in Self) in Sgr = fst (rg) ;
+  let get_gr (rg in Self) in Sgr = fst (rg);
 
-  let get_s (rg in Self) in S = fst (snd (rg)) ;
+  let get_s (rg in Self) in S = fst (snd (rg));
 
-  let get_c (rg in Self) in C = fst (snd (snd (rg))) ;
+  let get_c (rg in Self) in C = fst (snd (snd (rg)));
 
-  let get_o(rg in Self) in O = fst (snd (snd (snd (rg)))) ;
+  let get_o(rg in Self) in O = fst (snd (snd (snd (rg))));
 
-  let get_m (rg in Self) in M = fst (snd (snd (snd (snd (rg))))) ;
+  let get_m (rg in Self) in M = fst (snd (snd (snd (snd (rg)))));
 
-  let get_s2 (rg in Self) in S = snd (snd (snd (snd (snd (rg))))) ;
+  let get_s2 (rg in Self) in S = snd (snd (snd (snd (snd (rg)))));
 
   let is_get (rg in Self) in bool =
-     Sgr!equal (Sgr!get, get_gr (rg)) ;
+    Sgr!equal (Sgr!get, get_gr (rg));
 
   let is_rel (rg in Self) in bool =
-     Sgr!equal (Sgr!rel, get_gr (rg)) ;
+    Sgr!equal (Sgr!rel, get_gr (rg));
 
   let is_generate (rg in Self) in bool =
-     Sgr!equal (Sgr!generate, get_gr (rg)) ;
+    Sgr!equal (Sgr!generate, get_gr (rg));
 
   let is_pass (rg in Self) in bool =
-     Sgr!equal (Sgr!pass, get_gr (rg)) ;
+    Sgr!equal (Sgr!pass, get_gr (rg));
 
   let is_remove (rg in Self) in bool =
-     Sgr!equal (Sgr!remove, get_gr (rg)) ;
+    Sgr!equal (Sgr!remove, get_gr (rg));
 
   let equal (rg1 in Self, rg2 in Self) in bool =
-     and_b (and_b (and_b (Sgr!equal (get_gr (rg1), get_gr (rg2)),
-                          S!equal (get_s (rg1), get_s (rg2))),
-                   and_b (C!equal (get_c (rg1), get_c (rg2)),
-                          O!equal (get_o (rg1), get_o (rg2)))),
-            and_b (M!equal (get_m (rg1), get_m (rg2)),
-                   S!equal (get_s2 (rg1), get_s2 (rg2)))) ;
+    and_b (and_b (and_b (Sgr!equal (get_gr (rg1), get_gr (rg2)),
+                         S!equal (get_s (rg1), get_s (rg2))),
+                  and_b (C!equal (get_c (rg1), get_c (rg2)),
+                         O!equal (get_o (rg1), get_o (rg2)))),
+           and_b (M!equal (get_m (rg1), get_m (rg2)),
+                  S!equal (get_s2 (rg1), get_s2 (rg2))));
 
   let element =
-     create (Sgr!get, S!element, C!element, O!element, M!element, S!element) ;
+    create (Sgr!get, S!element, C!element, O!element, M!element, S!element);
 
   let print (rg) =
-     if or_b (Sgr!equal (Sgr!get, get_gr (rg)),
-              Sgr!equal (Sgr!rel, get_gr (rg))) then
-       "<" ^ Sgr!print (get_gr (rg)) ^
-       "," ^ S!print (get_s (rg)) ^
-       "," ^ O!print (get_o (rg)) ^
-       "," ^ M!print (get_m (rg)) ^
-       ">"
-     else if Sgr!equal (Sgr!generate, get_gr (rg)) then
-       "<" ^ Sgr!print (get_gr (rg)) ^
-       "," ^ S!print (get_s (rg)) ^
-       "," ^ C!print (get_c (rg)) ^
-       "," ^ O!print (get_o (rg)) ^
-       "," ^ M!print (get_m (rg)) ^
-       ">"
-     else if Sgr!equal (Sgr!remove, get_gr (rg)) then
-       "<" ^ Sgr!print (get_gr (rg)) ^
-       "," ^ C!print (get_c (rg)) ^
-       "," ^ O!print (get_o (rg)) ^
-       "," ^ M!print (get_m (rg)) ^
-       ">"
-     else if Sgr!equal (Sgr!pass, get_gr (rg)) then
-       "<" ^ Sgr!print (get_gr (rg)) ^
-       "," ^ S!print (get_s (rg)) ^
-       "," ^ C!print (get_c (rg)) ^
-       "," ^ S!print (get_s2 (rg)) ^
-       ">"
-     else
-       "Unknown request" ;
+    if or_b (Sgr!equal (Sgr!get, get_gr (rg)),
+             Sgr!equal (Sgr!rel, get_gr (rg))) then
+      "<" ^ Sgr!print (get_gr (rg)) ^
+      "," ^ S!print (get_s (rg)) ^
+      "," ^ O!print (get_o (rg)) ^
+      "," ^ M!print (get_m (rg)) ^
+      ">"
+    else if Sgr!equal (Sgr!generate, get_gr (rg)) then
+      "<" ^ Sgr!print (get_gr (rg)) ^
+      "," ^ S!print (get_s (rg)) ^
+      "," ^ C!print (get_c (rg)) ^
+      "," ^ O!print (get_o (rg)) ^
+      "," ^ M!print (get_m (rg)) ^
+      ">"
+    else if Sgr!equal (Sgr!remove, get_gr (rg)) then
+      "<" ^ Sgr!print (get_gr (rg)) ^
+      "," ^ C!print (get_c (rg)) ^
+      "," ^ O!print (get_o (rg)) ^
+      "," ^ M!print (get_m (rg)) ^
+      ">"
+    else if Sgr!equal (Sgr!pass, get_gr (rg)) then
+      "<" ^ Sgr!print (get_gr (rg)) ^
+      "," ^ S!print (get_s (rg)) ^
+      "," ^ C!print (get_c (rg)) ^
+      "," ^ S!print (get_s2 (rg)) ^
+      ">"
+    else
+      "Unknown request";
 
   proof of equal_reflexive =
     by property S!equal_reflexive,
@@ -327,7 +360,8 @@ species S_requests_ticket (S is S_subjects, O is S_objects,
                 M!equal_reflexive,
                 C!equal_reflexive,
                 Sgr!equal_reflexive
-       definition of equal ;
+       definition of equal
+  ;
 
   proof of equal_symmetric =
     by property S!equal_symmetric,
@@ -335,7 +369,8 @@ species S_requests_ticket (S is S_subjects, O is S_objects,
                 M!equal_symmetric,
                 C!equal_symmetric,
                 Sgr!equal_symmetric
-       definition of equal ;
+       definition of equal
+  ;
 
   proof of equal_transitive =
     by property S!equal_transitive,
@@ -343,13 +378,15 @@ species S_requests_ticket (S is S_subjects, O is S_objects,
                 M!equal_transitive,
                 C!equal_transitive,
                 Sgr!equal_transitive
-       definition of equal ;
+       definition of equal
+  ;
 
-  proof of get_or_rel = assumed {* Because todo *} ;
+  proof of get_or_rel = assumed {* Because todo *};
 
-  proof of get_is_not_rel = assumed {* Because todo *} ;
+  proof of get_is_not_rel = assumed {* Because todo *};
 
-end ;;
+end
+;;
 
 species S_models_ticket (S_c is S_tickets,
                          S_rh is S_rho_ticket (S_c),
@@ -362,117 +399,119 @@ species S_models_ticket (S_c is S_tickets,
                          S_req is S_requests_ticket (S_sub, S_obj, S_acc_mod,
                                                      S_gr, S_c),
                          S_dec is S_decisions) =
+
   inherit Models_ticket (S_c, S_rh, S_sub, S_obj, S_acc_mod,
-                         S_acc, S_set_acc, S_req, S_dec) ;
+                         S_acc, S_set_acc, S_req, S_dec);
 
   representation = (S_set_acc * (list (S_c) *
                                  (list ((S_obj * S_acc_mod) * S_c) *
                                   (list (S_sub * S_c) *
-                                   list (S_obj * S_sub))))) ;
+                                   list (S_obj * S_sub)))));
 
   let create (s in S_set_acc,
               lc in list (S_c),
               lt in list ((S_obj * S_acc_mod) * S_c),
               lw in list (S_sub * S_c),
               lo in list (S_obj * S_sub)) in Self =
-     (s, (lc, (lt, (lw, lo)))) ;
+     (s, (lc, (lt, (lw, lo))));
 
-  let lambda (st in Self) = fst (st) ;
+  let lambda (st in Self) = fst (st);
 
-  let upsilon (st in Self) = snd (st) ;
+  let upsilon (st in Self) = snd (st);
 
   let add (st, ac) =
-     (S_set_acc!union (lambda (st), S_set_acc!singleton (ac)), upsilon (st)) ;
+    (S_set_acc!union (lambda (st), S_set_acc!singleton (ac)), upsilon (st));
 
   let del (st, ac) =
-     (S_set_acc!diff (lambda (st), S_set_acc!singleton (ac)), upsilon (st)) ;
+    (S_set_acc!diff (lambda (st), S_set_acc!singleton (ac)), upsilon (st));
 
   let uc (st in Self, c in S_c) in bool =
-     let rec aux (l in list (S_c)) =
-        match l with
-        | [ ] -> false
-        | h :: t ->
-            if S_c!equal (c, h)
-            then true
-            else aux (t)
-     in aux (fst (snd (st))) ;
+    let rec aux (l in list (S_c)) =
+      match l with
+      | [] -> false
+      | h :: t ->
+        if S_c!equal (c, h)
+        then true
+        else aux (t) in
+    aux (fst (snd (st)));
 
   let w (st in Self, s in S_sub, c in S_c) in bool =
-     let rec aux (l in list (S_sub * S_c)) =
-        match l with
-        | [ ] -> false
-        | h :: t ->
-            if and_b (S_sub!equal (s, fst (h)), S_c!equal (c, snd (h)))
-            then true
-            else aux (t)
-     in aux (fst (snd (snd (snd (st))))) ;
+    let rec aux (l in list (S_sub * S_c)) =
+      match l with
+      | [] -> false
+      | h :: t ->
+        if and_b (S_sub!equal (s, fst (h)), S_c!equal (c, snd (h)))
+        then true
+        else aux (t) in
+    aux (fst (snd (snd (snd (st)))));
 
   let t (st in Self, o in S_obj, m in S_acc_mod, c in S_c) in bool =
-     let rec aux (l in list ((S_obj * S_acc_mod) * S_c)) =
-        match l with
-        | [ ] -> false
-        | h :: t ->
-            if and_b (and_b (S_obj!equal (o, fst (fst (h))),
-                             S_acc_mod!equal (m, snd (fst (h)))),
-                      S_c!equal (c, snd (h)))
-            then true
-            else aux (t)
-     in aux (fst (snd (snd (st)))) ;
+    let rec aux (l in list ((S_obj * S_acc_mod) * S_c)) =
+      match l with
+      | [] -> false
+      | h :: t ->
+        if and_b (and_b (S_obj!equal (o, fst (fst (h))),
+                         S_acc_mod!equal (m, snd (fst (h)))),
+                  S_c!equal (c, snd (h)))
+        then true
+        else aux (t) in
+    aux (fst (snd (snd (st))));
 
   let owner (st in Self, o in S_obj, s in S_sub) in bool =
-     let rec aux (l in list (S_obj * S_sub)) =
-        match l with
-        | [ ] -> false
-        | h :: t ->
-            if and_b (S_obj!equal (o, fst (h)),
-                      S_sub!equal (s, snd (h)))
-            then true
-            else aux (t)
-     in aux (snd (snd (snd (snd (st))))) ;
+    let rec aux (l in list (S_obj * S_sub)) =
+      match l with
+      | [] -> false
+      | h :: t ->
+        if and_b (S_obj!equal (o, fst (h)),
+                  S_sub!equal (s, snd (h)))
+        then true
+        else aux (t) in
+    aux (snd (snd (snd (snd (st)))));
 
-  let exists_ticket (_st in Self,
-                     fuc in (S_c -> bool),
-                     fw in (S_c -> bool),
-                     ft in (S_c -> bool)) in bool =
-     let rec aux (l) =
-        match l with
-        | [ ] -> false
-        | h :: t ->
-            if and_b (and_b (fuc (h), fw (h)), ft (h))
-            then true
-            else aux (t)
-     in aux (S_c!tickets_list) ;
+  let exists_ticket
+        (_st in Self,
+         fuc in (S_c -> bool),
+         fw in (S_c -> bool),
+         ft in (S_c -> bool)) in bool =
+    let rec aux (l) =
+      match l with
+      | [] -> false
+      | h :: t ->
+        if and_b (and_b (fuc (h), fw (h)), ft (h))
+        then true
+        else aux (t) in
+    aux (S_c!tickets_list);
 
   let map_ticket (st in Self, c in S_c) =
-     let rec aux (l) =
-        match l with
-        | [ ] -> st
-        | h :: t ->
-            rm_w (aux (t), h, c)
-     in aux (S_sub!subjects_list) ;
+    let rec aux (l) =
+      match l with
+      | [] -> st
+      | h :: t ->
+        rm_w (aux (t), h, c) in
+    aux (S_sub!subjects_list);
 
   let add_uc (st in Self, c in S_c) in Self =
-     (lambda (st), (c :: fst (upsilon (st)),
-                    (fst (snd (upsilon (st))),
-                     (fst (snd (snd (upsilon (st)))),
-                      snd (snd (snd (upsilon (st)))))))) ;
+    (lambda (st), (c :: fst (upsilon (st)),
+                   (fst (snd (upsilon (st))),
+                    (fst (snd (snd (upsilon (st)))),
+                     snd (snd (snd (upsilon (st))))))));
 
   let add_w (st in Self, s in S_sub, c in S_c) in Self =
-     (lambda (st), (fst (upsilon (st)),
-                    (fst (snd (upsilon (st))),
-                     ((s, c) :: fst (snd (snd (upsilon (st)))),
-                      snd (snd (snd (upsilon (st)))))))) ;
+    (lambda (st), (fst (upsilon (st)),
+                   (fst (snd (upsilon (st))),
+                    ((s, c) :: fst (snd (snd (upsilon (st)))),
+                     snd (snd (snd (upsilon (st))))))));
 
   let add_t (st in Self, o in S_obj, m in S_acc_mod, c in S_c) in Self =
-     (lambda (st), (fst (upsilon (st)),
-                    (((o, m), c) :: fst (snd (upsilon (st))),
-                     (fst (snd (snd (upsilon (st)))),
-                      snd (snd (snd (upsilon (st)))))))) ;
+    (lambda (st), (fst (upsilon (st)),
+                   (((o, m), c) :: fst (snd (upsilon (st))),
+                    (fst (snd (snd (upsilon (st)))),
+                     snd (snd (snd (upsilon (st))))))));
 
 (*   let rm_uc (st in Self, c in S_c) in Self = *)
 (*      let rec aux (f in list (S_c), l in list (S_c)) = *)
 (*         match l with *)
-(*         | [ ] -> *)
+(*         | [] -> *)
 (*             (lambda (st), (f, *)
 (*            (fst (snd (upsilon (st))), *)
 (*             (fst (snd (snd (upsilon (st)))), *)
@@ -481,27 +520,27 @@ species S_models_ticket (S_c is S_tickets,
 (*             if S_c!equal (c, h) *)
 (*             then aux (f, t) *)
 (*             else aux (h :: f, t) *)
-(*      in aux ([ ], fst (snd (st))) ; *)
+(*      in aux ([], fst (snd (st))); *)
 
   let rec rm_uc_aux (f in list (S_c), l in list (S_c), st in Self, c in S_c) =
-     match l with
-     | [ ] ->
-         (lambda (st), (f,
-                        (fst (snd (upsilon (st))),
-                         (fst (snd (snd (upsilon (st)))),
-                          snd (snd (snd (upsilon (st))))))))
-     | h :: t ->
-         if S_c!equal (c, h)
-         then rm_uc_aux (f, t, st, c)
-         else rm_uc_aux (h :: f, t, st, c) ;
+    match l with
+    | [] ->
+      (lambda (st), (f,
+                     (fst (snd (upsilon (st))),
+                      (fst (snd (snd (upsilon (st)))),
+                       snd (snd (snd (upsilon (st))))))))
+    | h :: t ->
+      if S_c!equal (c, h)
+      then rm_uc_aux (f, t, st, c)
+      else rm_uc_aux (h :: f, t, st, c);
 
   let rm_uc (st in Self, c in S_c) in Self =
-     rm_uc_aux ([ ], fst (snd (st)), st, c) ;
+    rm_uc_aux ([], fst (snd (st)), st, c);
 
 (*   let rm_w (st in Self, s in S_sub, c in S_c) in Self = *)
 (*      let rec aux (f in list (S_sub * S_c), l in list (S_sub * S_c)) = *)
 (*         match l with *)
-(*         | [ ] -> *)
+(*         | [] -> *)
 (*             (lambda (st), (fst (upsilon (st)), *)
 (*            (fst (snd (upsilon(st))), *)
 (*             (f, *)
@@ -510,29 +549,30 @@ species S_models_ticket (S_c is S_tickets,
 (*             if and_b (S_sub!equal (s, fst (h)), S_c!equal (c, snd (h))) *)
 (*             then aux (f, t) *)
 (*             else aux (h :: f, t) *)
-(*      in aux ([ ], fst (snd (snd (snd (st))))) ; *)
+(*      in aux ([], fst (snd (snd (snd (st))))); *)
 
-  let rec rm_w_aux (f in list (S_sub * S_c), l in list (S_sub * S_c),
-                    st in Self, s in S_sub, c in S_c) =
-     match l with
-     | [ ] ->
-         (lambda (st), (fst (upsilon (st)),
-                        (fst (snd (upsilon(st))),
-                         (f,
-                          snd (snd (snd (upsilon (st))))))))
-     | h :: t ->
-         if and_b (S_sub!equal (s, fst (h)), S_c!equal (c, snd (h)))
-         then rm_w_aux (f, t, st, s, c)
-         else rm_w_aux (h :: f, t, st, s, c) ;
+  let rec rm_w_aux
+            (f in list (S_sub * S_c), l in list (S_sub * S_c),
+             st in Self, s in S_sub, c in S_c) =
+    match l with
+    | [] ->
+      (lambda (st), (fst (upsilon (st)),
+                     (fst (snd (upsilon(st))),
+                      (f,
+                       snd (snd (snd (upsilon (st))))))))
+    | h :: t ->
+      if and_b (S_sub!equal (s, fst (h)), S_c!equal (c, snd (h)))
+      then rm_w_aux (f, t, st, s, c)
+      else rm_w_aux (h :: f, t, st, s, c);
 
   let rm_w (st in Self, s in S_sub, c in S_c) in Self =
-     rm_w_aux ([ ], fst (snd (snd (snd (st)))), st, s, c) ;
+    rm_w_aux ([], fst (snd (snd (snd (st)))), st, s, c);
 
 (*   let rm_t (st in Self, o in S_obj, m in S_acc_mod, c in S_c) in Self = *)
 (*      let rec aux (f in list ((S_obj * S_acc_mod) * S_c), *)
 (*           l in list ((S_obj * S_acc_mod) * S_c)) = *)
 (*         match l with *)
-(*         | [ ] -> *)
+(*         | [] -> *)
 (*             (lambda (st), (fst (upsilon (st)), *)
 (*            (f, *)
 (*             (fst (snd (snd (upsilon (st)))), *)
@@ -543,644 +583,823 @@ species S_models_ticket (S_c is S_tickets,
 (*              S_c!equal (c, snd (h)))) *)
 (*             then aux (f, t) *)
 (*             else aux (h :: f, t) *)
-(*      in aux ([ ], fst (snd (snd (st)))) ; *)
+(*      in aux ([], fst (snd (snd (st)))); *)
 
-  let rec rm_t_aux (f in list ((S_obj * S_acc_mod) * S_c),
-                    l in list ((S_obj * S_acc_mod) * S_c),
-                    st in Self, o in S_obj, m in S_acc_mod, c in S_c) =
-     match l with
-     | [ ] ->
-         (lambda (st), (fst (upsilon (st)),
-                        (f,
-                         (fst (snd (snd (upsilon (st)))),
-                          snd (snd (snd (upsilon (st))))))))
-     | h :: t ->
-         if and_b (S_obj!equal (o, fst (fst (h))),
-                   and_b (S_acc_mod!equal (m, snd (fst (h))),
-                          S_c!equal (c, snd (h))))
-         then rm_t_aux (f, t, st, o, m, c)
-         else rm_t_aux (h :: f, t, st, o, m, c) ;
+  let rec rm_t_aux
+            (f in list ((S_obj * S_acc_mod) * S_c),
+             l in list ((S_obj * S_acc_mod) * S_c),
+             st in Self, o in S_obj, m in S_acc_mod, c in S_c) =
+    match l with
+    | [] ->
+      (lambda (st), (fst (upsilon (st)),
+                     (f,
+                      (fst (snd (snd (upsilon (st)))),
+                       snd (snd (snd (upsilon (st))))))))
+    | h :: t ->
+      if and_b (S_obj!equal (o, fst (fst (h))),
+                and_b (S_acc_mod!equal (m, snd (fst (h))),
+                       S_c!equal (c, snd (h))))
+      then rm_t_aux (f, t, st, o, m, c)
+      else rm_t_aux (h :: f, t, st, o, m, c);
 
   let rm_t (st in Self, o in S_obj, m in S_acc_mod, c in S_c) in Self =
-     rm_t_aux ([ ], fst (snd (snd (st))), st, o, m, c) ;
+    rm_t_aux ([], fst (snd (snd (st))), st, o, m, c);
 
   let equal (st1, st2) =
-     S_set_acc!equal (lambda(st1), lambda (st2)) ;
+    S_set_acc!equal (lambda(st1), lambda (st2));
 
-  let element = create (S_set_acc!vide, [ ], [ ], [ ], [ ]) ;
+  let element = create (S_set_acc!vide, [], [], [], []);
 
   let print_uc (l in list (S_c)) in string =
-     let rec aux (ls in list (S_c)) =
-        match ls with
-        | [ ] -> "]"
-        | h :: t ->
-            match t with
-            | [ ] -> S_c!print (h) ^ "]"
-            | _underscore ->
-                S_c!print (h) ^ ",\n                     " ^ aux (t)
-     in "[" ^ aux (l) ;
+    let rec aux (ls in list (S_c)) =
+      match ls with
+      | [] -> "]"
+      | h :: t ->
+        match t with
+        | [] -> S_c!print (h) ^ "]"
+        | _underscore ->
+          S_c!print (h) ^ ",\n                     " ^
+          aux (t) in
+    "[" ^ aux (l);
 
   let print_t (l in list ((S_obj * S_acc_mod) * S_c)) in string =
-     let rec aux (ls in list((S_obj * S_acc_mod) * S_c)) =
-        match ls with
-        | [ ] -> "]"
-        | h :: t ->
-            match t with
-            | [ ] ->
-                "((" ^ S_obj!print (fst (fst (h))) ^
-                "," ^ S_acc_mod!print (snd (fst (h))) ^
-                ")," ^ S_c!print (snd (h)) ^
-                ")]"
-            | _underscore ->
-                "((" ^ S_obj!print (fst (fst (h))) ^
-                "," ^ S_acc_mod!print (snd (fst (h))) ^
-                ")," ^ S_c!print (snd (h)) ^
-                "),\n                     " ^
-                aux (t)
-     in "[" ^ aux (l) ;
+    let rec aux (ls in list((S_obj * S_acc_mod) * S_c)) =
+      match ls with
+      | [] -> "]"
+      | h :: t ->
+        match t with
+        | [] ->
+          "((" ^ S_obj!print (fst (fst (h))) ^
+          "," ^ S_acc_mod!print (snd (fst (h))) ^
+          ")," ^ S_c!print (snd (h)) ^
+          ")]"
+        | _underscore ->
+          "((" ^ S_obj!print (fst (fst (h))) ^
+          "," ^ S_acc_mod!print (snd (fst (h))) ^
+          ")," ^ S_c!print (snd (h)) ^
+          "),\n                     " ^
+          aux (t) in
+    "[" ^ aux (l);
 
   let print_w (l in list (S_sub * S_c)) in string =
-     let rec aux (ls in list (S_sub * S_c)) =
-        match ls with
-        | [ ] -> "]"
-        | h :: t ->
-            match t with
-            | [ ] ->
-                "(" ^ S_sub!print (fst (h)) ^
-                "," ^ S_c!print (snd (h)) ^
-                ")]"
-            | _underscore ->
-                "(" ^ S_sub!print (fst (h)) ^
-                "," ^ S_c!print (snd (h)) ^
-                "),\n                     " ^
-                aux (t)
-     in "[" ^ aux (l) ;
+    let rec aux (ls in list (S_sub * S_c)) =
+      match ls with
+      | [] -> "]"
+      | h :: t ->
+        match t with
+        | [] ->
+          "(" ^ S_sub!print (fst (h)) ^
+          "," ^ S_c!print (snd (h)) ^
+          ")]"
+        | _underscore ->
+          "(" ^ S_sub!print (fst (h)) ^
+          "," ^ S_c!print (snd (h)) ^
+          "),\n                     " ^
+          aux (t) in
+    "[" ^ aux (l);
 
   let print_owner (l in list (S_obj * S_sub)) in string =
-     let rec aux (ls in list (S_obj * S_sub)) =
-        match ls with
-        | [ ] -> "]"
-        | h :: t ->
-            match t with
-            | [ ] ->
-                "(" ^ S_obj!print (fst (h)) ^
-                "," ^ S_sub!print (snd (h)) ^
-                ")]"
-            | _underscore ->
-                "(" ^ S_obj!print (fst (h)) ^
-                "," ^ S_sub!print (snd (h)) ^
-                "),\n                     " ^
-                aux (t)
-     in "[" ^ aux (l) ;
+    let rec aux (ls in list (S_obj * S_sub)) =
+      match ls with
+      | [] -> "]"
+      | h :: t ->
+        match t with
+        | [] ->
+          "(" ^ S_obj!print (fst (h)) ^
+          "," ^ S_sub!print (snd (h)) ^
+          ")]"
+        | _underscore ->
+          "(" ^ S_obj!print (fst (h)) ^
+          "," ^ S_sub!print (snd (h)) ^
+          "),\n                     " ^
+          aux (t) in
+    "[" ^ aux (l);
 
   let print (st) in string =
-     "(" ^ S_set_acc!print (lambda (st)) ^
-     ",\n                    " ^
-     print_uc (fst (upsilon (st))) ^
-     ",\n                    " ^
-     print_t (fst (snd (upsilon (st)))) ^
-     ",\n                    " ^
-     print_w (fst (snd (snd (upsilon (st))))) ^
-     ",\n                    " ^
-     print_owner (snd (snd (snd (upsilon (st))))) ^
-     ")" ;
+    "(" ^ S_set_acc!print (lambda (st)) ^
+    ",\n                    " ^
+    print_uc (fst (upsilon (st))) ^
+    ",\n                    " ^
+    print_t (fst (snd (upsilon (st)))) ^
+    ",\n                    " ^
+    print_w (fst (snd (snd (upsilon (st))))) ^
+    ",\n                    " ^
+    print_owner (snd (snd (snd (upsilon (st))))) ^
+    ")";
 
   proof of equal_reflexive =
     by property S_set_acc!equal_reflexive
-       definition of equal ;
+       definition of equal
+  ;
 
   proof of equal_symmetric =
     by property S_set_acc!equal_symmetric
-       definition of equal ;
+       definition of equal
+  ;
 
   proof of equal_transitive =
     by property S_set_acc!equal_transitive
-       definition of equal ;
+       definition of equal
+  ;
 
-  proof of lambda_prop = by definition of equal ;
+  proof of lambda_prop = by definition of equal
+  ;
 
-  proof of secure_state = assumed {* Because todo *} ;
+  proof of secure_state = assumed {* Because todo *};
 
-  proof of right_substitution = assumed {* Because todo *} ;
+  proof of right_substitution = assumed {* Because todo *};
 
-  proof of left_substitution = assumed {* Because todo *} ;
+  proof of left_substitution = assumed {* Because todo *};
 
-  proof of del_mem = assumed {* Because todo *} ;
+  proof of del_mem = assumed {* Because todo *};
 
-  proof of del_prop = assumed {* Because todo *} ;
+  proof of del_prop = assumed {* Because todo *};
 
-  (*proof of del_prop_bis = assumed {* Because todo *} ;*)
+  (*proof of del_prop_bis = assumed {* Because todo *};*)
 
-  proof of add_mem = assumed {* Because todo *} ;
+  proof of add_mem = assumed {* Because todo *};
 
-  proof of add_prop = assumed {* Because todo *} ;
+  proof of add_prop = assumed {* Because todo *};
 
-end ;;
+end
+;;
 
 collection C_subjects =
+
   implement S_subjects
+
 end
 ;;
 
 collection C_objects =
+
   implement S_objects
+
 end
 ;;
 
 collection C_access_mode =
+
   implement S_access_mode
+
 end
 ;;
 
 collection C_access =
+
   implement S_access (C_subjects, C_objects, C_access_mode)
+
 end
 ;;
 
 collection C_set_of_access =
+
   implement S_set_of (C_access)
+
 end
 ;;
 
 collection C_decisions =
+
   implement S_decisions
+
 end
 ;;
 
 collection C_get_release =
+
   implement S_get_release
+
 end
 ;;
 
 collection C_tickets =
+
   implement S_tickets
+
 end
 ;;
 
 collection C_requests_ticket =
-  implement S_requests_ticket (C_subjects, C_objects, C_access_mode,
+
+  implement
+     S_requests_ticket
+       (C_subjects, C_objects, C_access_mode,
         C_get_release, C_tickets)
+
 end
 ;;
 
 collection C_rho_ticket =
+
   implement S_rho_ticket (C_tickets)
+
 end
 ;;
 
 collection C_models_ticket =
+
   implement S_models_ticket
     (C_tickets, C_rho_ticket,
      C_subjects, C_objects, C_access_mode,
      C_access, C_set_of_access,
      C_get_release, C_requests_ticket, C_decisions)
+
 end
 ;;
 
-let o1 = C_objects!create (1, "o1") ;;
+let o1 = C_objects!create (1, "o1");;
 
-let o2 = C_objects!create (2, "o2") ;;
+let o2 = C_objects!create (2, "o2");;
 
-let o3 = C_objects!create (3, "o3") ;;
+let o3 = C_objects!create (3, "o3");;
 
-let o4 = C_objects!create (4, "o4") ;;
+let o4 = C_objects!create (4, "o4");;
 
-let o5 = C_objects!create (5, "o5") ;;
+let o5 = C_objects!create (5, "o5");;
 
-let o6 = C_objects!create (6, "o6") ;;
+let o6 = C_objects!create (6, "o6");;
 
-let o7 = C_objects!create (7, "o7") ;;
+let o7 = C_objects!create (7, "o7");;
 
-let o8 = C_objects!create (8, "o8") ;;
+let o8 = C_objects!create (8, "o8");;
 
-let o9 = C_objects!create (9, "o9") ;;
+let o9 = C_objects!create (9, "o9");;
 
 let owner_ex in list (C_objects * C_subjects) =
    [ (o1, C_subjects!s1);
      (o2, C_subjects!s2);
      (o3, C_subjects!s3);
      (o4, C_subjects!s4);
-     (o5, C_subjects!s5) ] ;;
+     (o5, C_subjects!s5) ]
+;;
 
-let st0 = C_models_ticket!create (C_set_of_access!vide,
-          [ ],
-          [ ],
-          [ ],
-          owner_ex) ;;
-
-print_string
-   ("\n--------------------------------------------------------\n") ;;
-
-print_string
-   ("   GENERATION D'UN TICKET DANS UN CAS OU s=owner(o)     ") ;;
+let st0 =
+  C_models_ticket!create
+    (C_set_of_access!vide,
+     [],
+     [],
+     [],
+     owner_ex)
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
 
 print_string
-   ("           Etat0 : " ^ C_models_ticket!print(st0) ^ "\n") ;;
-
-let req0 = C_requests_ticket!create (C_get_release!generate,
-                                     C_subjects!s1,
-                                     C_tickets!c1,
-                                     o1,
-                                     C_access_mode!read,
-                                     C_subjects!element) ;;
-
-print_string ("Requete0 : " ^ C_requests_ticket!print (req0) ^ "\n") ;;
-
-let rep0 = C_models_ticket!tau_ticket (req0, st0) ;;
-
-let dec0 = fst (rep0) ;;
-
-let st1 = snd (rep0) ;;
-
-print_string ("Reponse0 : Decision0 : " ^
-              C_decisions!print (dec0) ^
-              "\n") ;;
-
-print_string ("           Etat1 : " ^
-              C_models_ticket!print (st1) ^
-              "\n") ;;
+  ("   GENERATION D'UN TICKET DANS UN CAS OU s=owner(o)     ")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
 
 print_string
-   ("   GENERATION D'UN TICKET DANS UN CAS OU s!=owner(o)     ") ;;
+  ("           Etat0 : " ^ C_models_ticket!print(st0) ^ "\n")
+;;
+
+let req0 =
+  C_requests_ticket!create
+    (C_get_release!generate,
+     C_subjects!s1,
+     C_tickets!c1,
+     o1,
+     C_access_mode!read,
+     C_subjects!element)
+;;
+
+print_string ("Requete0 : " ^ C_requests_ticket!print (req0) ^ "\n")
+;;
+
+let rep0 = C_models_ticket!tau_ticket (req0, st0);;
+
+let dec0 = fst (rep0);;
+
+let st1 = snd (rep0);;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
-
-let req1 = C_requests_ticket!create (C_get_release!generate,
-                                     C_subjects!s2,
-                                     C_tickets!c2,
-                                     o1,
-                                     C_access_mode!write,
-                                     C_subjects!element) ;;
-
-print_string ("Requete1 : " ^ C_requests_ticket!print (req1) ^ "\n") ;;
-
-let rep1 = C_models_ticket!tau_ticket (req1, st1) ;;
-
-let dec1 = fst (rep1) ;;
-
-let st2 = snd (rep1) ;;
-
-print_string ("Reponse1 : Decision1 : " ^
-              C_decisions!print (dec1) ^
-              "\n") ;;
-
-print_string ("           Etat2 : " ^
-              C_models_ticket!print (st2) ^
-              "\n") ;;
+  ("Reponse0 : Decision0 : " ^
+   C_decisions!print (dec0) ^
+   "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("           Etat1 : " ^
+   C_models_ticket!print (st1) ^
+   "\n")
+;;
 
 print_string
-   ("   TENTATIVE D'ACCES A o PAR s SELON LE MODE D'ACCESS x \n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
 
 print_string
-   ("   DANS LE CAS OU W(s) ET/OU T(o,x) NE CONTIENT PAS c    ") ;;
+  ("   GENERATION D'UN TICKET DANS UN CAS OU s!=owner(o)     ")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
 
-let req2 = C_requests_ticket!create (C_get_release!get,
-                                     C_subjects!s4,
-                                     C_tickets!element,
-                                     o1,
-                                     C_access_mode!write,
-                                     C_subjects!element) ;;
+let req1 =
+  C_requests_ticket!create
+    (C_get_release!generate,
+     C_subjects!s2,
+     C_tickets!c2,
+     o1,
+     C_access_mode!write,
+     C_subjects!element)
+;;
 
-print_string ("Requete2 : " ^ C_requests_ticket!print (req2) ^ "\n") ;;
+print_string ("Requete1 : " ^ C_requests_ticket!print (req1) ^ "\n")
+;;
 
-let rep2 = C_models_ticket!tau_ticket (req2, st2) ;;
+let rep1 = C_models_ticket!tau_ticket (req1, st1);;
 
-let dec2 = fst (rep2) ;;
+let dec1 = fst (rep1);;
 
-let st3 = snd (rep2) ;;
-
-print_string ("Reponse2 : Decision2 : " ^
-              C_decisions!print (dec2) ^
-              "\n") ;;
-
-print_string ("           Etat3 : " ^
-              C_models_ticket!print (st3) ^
-              "\n") ;;
+let st2 = snd (rep1);;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("Reponse1 : Decision1 : " ^
+   C_decisions!print (dec1) ^
+   "\n")
+;;
 
 print_string
-   ("   TENTATIVE D'ACCES A o PAR s SELON LE MODE D'ACCESS x \n") ;;
+  ("           Etat2 : " ^
+   C_models_ticket!print (st2) ^
+   "\n")
+;;
 
 print_string
-   ("   DANS LE CAS OU c APPARTIENT A W(s), A T(o,x) et A UC   ") ;;
+  ("\n--------------------------------------------------------\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
-
-let req3 = C_requests_ticket!create (C_get_release!get,
-                                     C_subjects!s1,
-                                     C_tickets!element,
-                                     o1,
-                                     C_access_mode!read,
-                                     C_subjects!element) ;;
-
-print_string ("Requete3 : " ^ C_requests_ticket!print (req3) ^ "\n") ;;
-
-let rep3 = C_models_ticket!tau_ticket (req3, st3) ;;
-
-let dec3 = fst (rep3) ;;
-
-let st4 = snd (rep3) ;;
-
-print_string ("Reponse3 : Decision3 : " ^
-              C_decisions!print (dec3) ^
-              "\n") ;;
-
-print_string ("           Etat4 : " ^
-              C_models_ticket!print (st4) ^
-              "\n") ;;
+  ("   TENTATIVE D'ACCES A o PAR s SELON LE MODE D'ACCESS x \n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
-print_string
-   ("   REQUETE REMOVE ALORS QUE s EFFECTUE UN ACCESS A o SELON\n") ;;
-print_string
-   ("   LE MODE D'ACCES x") ;;
-print_string
-   ("\n--------------------------------------------------------\n") ;;
-
-let req4 = C_requests_ticket!create (C_get_release!remove,
-                                     C_subjects!element,
-                                     C_tickets!c1,
-                                     o1,
-                                     C_access_mode!read,
-                                     C_subjects!element) ;;
-
-print_string ("Requete4 : " ^ C_requests_ticket!print (req4) ^ "\n") ;;
-
-let rep4 = C_models_ticket!tau_ticket (req4, st4) ;;
-
-let dec4 = fst (rep4) ;;
-
-let st5 = snd (rep4) ;;
-
-print_string ("Reponse4 : Decision4 : " ^
-              C_decisions!print(dec4) ^
-              "\n") ;;
-
-print_string ("           Etat5 : " ^
-              C_models_ticket!print (st5) ^
-              "\n") ;;
+  ("   DANS LE CAS OU W(s) ET/OU T(o,x) NE CONTIENT PAS c    ")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
+
+let req2 =
+  C_requests_ticket!create
+    (C_get_release!get,
+     C_subjects!s4,
+     C_tickets!element,
+     o1,
+     C_access_mode!write,
+     C_subjects!element)
+;;
+
+print_string ("Requete2 : " ^ C_requests_ticket!print (req2) ^ "\n")
+;;
+
+let rep2 = C_models_ticket!tau_ticket (req2, st2);;
+
+let dec2 = fst (rep2);;
+
+let st3 = snd (rep2);;
 
 print_string
-   ("   RETRAIT DE L'ACCES EFFECTUE PAR s SUR L'OBJET o SELON\n") ;;
+  ("Reponse2 : Decision2 : " ^
+   C_decisions!print (dec2) ^
+   "\n")
+;;
 
 print_string
-   ("   LE MODE D'ACCES x") ;;
+  ("           Etat3 : " ^
+   C_models_ticket!print (st3) ^
+   "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
-
-let req5 = C_requests_ticket!create (C_get_release!rel,
-                                     C_subjects!s1,
-                                     C_tickets!element,
-                                     o1,
-                                     C_access_mode!read,
-                                     C_subjects!element) ;;
-
-print_string ("Requete5 : " ^ C_requests_ticket!print (req5) ^ "\n") ;;
-
-let rep5 = C_models_ticket!tau_ticket (req5, st5) ;;
-
-let dec5 = fst (rep5) ;;
-
-let st6 = snd (rep5) ;;
-
-print_string ("Reponse5 : Decision5 : " ^
-              C_decisions!print (dec5) ^
-              "\n") ;;
-
-print_string ("           Etat6 : " ^
-              C_models_ticket!print (st6) ^
-              "\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("   TENTATIVE D'ACCES A o PAR s SELON LE MODE D'ACCESS x \n")
+;;
 
 print_string
-   ("   REQUETE REMOVE ALORS QU'IL N'Y A PLUS D'ACCESS COURANT \n") ;;
+  ("   DANS LE CAS OU c APPARTIENT A W(s), A T(o,x) et A UC   ")
+;;
 
 print_string
-   ("   A L'OBJET o") ;;
+  ("\n--------------------------------------------------------\n")
+;;
+
+let req3 =
+  C_requests_ticket!create
+    (C_get_release!get,
+     C_subjects!s1,
+     C_tickets!element,
+     o1,
+     C_access_mode!read,
+     C_subjects!element)
+;;
+
+print_string ("Requete3 : " ^ C_requests_ticket!print (req3) ^ "\n")
+;;
+
+let rep3 = C_models_ticket!tau_ticket (req3, st3);;
+
+let dec3 = fst (rep3);;
+
+let st4 = snd (rep3);;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
-
-let req6 = C_requests_ticket!create (C_get_release!remove,
-                                     C_subjects!element,
-                                     C_tickets!c1,
-                                     o1,
-                                     C_access_mode!read,
-                                     C_subjects!element) ;;
-
-print_string ("Requete6 : " ^ C_requests_ticket!print (req6) ^ "\n") ;;
-
-let rep6 = C_models_ticket!tau_ticket (req6, st6) ;;
-
-let dec6 = fst (rep6) ;;
-
-let st7 = snd (rep6) ;;
-
-print_string ("Reponse6 : Decision6 : " ^
-              C_decisions!print (dec6) ^
-              "\n") ;;
-
-print_string ("           Etat7 : " ^
-              C_models_ticket!print (st7) ^
-              "\n") ;;
+  ("Reponse3 : Decision3 : " ^
+   C_decisions!print (dec3) ^
+   "\n")
+   ;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("           Etat4 : " ^
+   C_models_ticket!print (st4) ^
+   "\n")
+;;
 
 print_string
-   ("   TENTATIVE DE s DE PASSER UN TICKET c AU SUJET s' ALORS\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
+print_string
+  ("   REQUETE REMOVE ALORS QUE s EFFECTUE UN ACCESS A o SELON\n")
+;;
+print_string
+  ("   LE MODE D'ACCES x")
+;;
+print_string
+  ("\n--------------------------------------------------------\n")
+;;
+
+let req4 =
+  C_requests_ticket!create
+    (C_get_release!remove,
+     C_subjects!element,
+     C_tickets!c1,
+     o1,
+     C_access_mode!read,
+     C_subjects!element)
+;;
+
+print_string ("Requete4 : " ^ C_requests_ticket!print (req4) ^ "\n")
+;;
+
+let rep4 = C_models_ticket!tau_ticket (req4, st4);;
+
+let dec4 = fst (rep4);;
+
+let st5 = snd (rep4);;
 
 print_string
-   ("   QUE c N'APPARTIENT PAS A w(s)") ;;
+  ("Reponse4 : Decision4 : " ^
+   C_decisions!print(dec4) ^
+   "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
-
-let req7 = C_requests_ticket!create (C_get_release!pass,
-                                     C_subjects!s1,
-                                     C_tickets!c3,
-                                     C_objects!element,
-                                     C_access_mode!element,
-                                     C_subjects!s2) ;;
-
-print_string ("Requete7 : " ^ C_requests_ticket!print (req7) ^ "\n") ;;
-
-let rep7 = C_models_ticket!tau_ticket (req7, st7) ;;
-
-let dec7 = fst (rep7) ;;
-
-let st8 = snd (rep7) ;;
-
-print_string ("Reponse7 : Decision7 : " ^
-              C_decisions!print (dec7) ^
-              "\n") ;;
-
-print_string ("           Etat8 : " ^
-              C_models_ticket!print (st8) ^
-              "\n") ;;
+  ("           Etat5 : " ^
+   C_models_ticket!print (st5) ^
+   "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
 
 print_string
-   ("   GENERATION D'UN NOUVEAU TICKET POUR LES FUTURS EXEMPLES") ;;
+  ("   RETRAIT DE L'ACCES EFFECTUE PAR s SUR L'OBJET o SELON\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
-
-let req8 = C_requests_ticket!create (C_get_release!generate,
-                                     C_subjects!s3,
-                                     C_tickets!c5,
-                                     o3,
-                                     C_access_mode!write,
-                                     C_subjects!element) ;;
-
-print_string ("Requete8 : " ^ C_requests_ticket!print (req8) ^ "\n") ;;
-
-let rep8 = C_models_ticket!tau_ticket (req8, st8) ;;
-
-let dec8 = fst (rep8) ;;
-
-let st9 = snd (rep8) ;;
-
-print_string ("Reponse8 : Decision8 : " ^
-              C_decisions!print (dec8) ^
-              "\n") ;;
-
-print_string ("           Etat9 : " ^
-              C_models_ticket!print (st9) ^
-              "\n") ;;
+  ("   LE MODE D'ACCES x")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
+
+let req5 =
+  C_requests_ticket!create
+    (C_get_release!rel,
+     C_subjects!s1,
+     C_tickets!element,
+     o1,
+     C_access_mode!read,
+     C_subjects!element)
+;;
+
+print_string ("Requete5 : " ^ C_requests_ticket!print (req5) ^ "\n")
+;;
+
+let rep5 = C_models_ticket!tau_ticket (req5, st5);;
+
+let dec5 = fst (rep5);;
+
+let st6 = snd (rep5);;
 
 print_string
-   ("   TENTATIVE DE s DE PASSER UN TICKET c AU SUJET s' ALORS\n") ;;
+  ("Reponse5 : Decision5 : " ^
+   C_decisions!print (dec5) ^
+   "\n")
+;;
 
 print_string
-   ("   QUE c APPARTIENT A w(s)") ;;
+  ("           Etat6 : " ^
+   C_models_ticket!print (st6) ^
+   "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
-
-let req9 = C_requests_ticket!create (C_get_release!pass,
-                                     C_subjects!s3,
-                                     C_tickets!c5,
-                                     C_objects!element,
-                                     C_access_mode!element,
-                                     C_subjects!s2) ;;
-
-print_string ("Requete9 : " ^ C_requests_ticket!print (req9) ^ "\n") ;;
-
-let rep9 = C_models_ticket!tau_ticket (req9, st9) ;;
-
-let dec9 = fst (rep9) ;;
-
-let st10 = snd (rep9) ;;
-
-print_string ("Reponse9 : Decision9 : " ^
-              C_decisions!print (dec9) ^
-              "\n") ;;
-
-print_string ("           Etat10 : " ^
-              C_models_ticket!print (st10) ^
-              "\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("   REQUETE REMOVE ALORS QU'IL N'Y A PLUS D'ACCESS COURANT \n")
+;;
 
 print_string
-   ("   TENTATIVE D'ACCES A o PAR s' AVEC LE TICKET QUE S LUI A\n") ;;
+  ("   A L'OBJET o")
+;;
 
 print_string
-   ("   PASSE SELON UN MODE D'ACCESS DIFFERENT QUE CELUI\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
+
+let req6 =
+  C_requests_ticket!create
+    (C_get_release!remove,
+     C_subjects!element,
+     C_tickets!c1,
+     o1,
+     C_access_mode!read,
+     C_subjects!element)
+;;
+
+print_string ("Requete6 : " ^ C_requests_ticket!print (req6) ^ "\n")
+;;
+
+let rep6 = C_models_ticket!tau_ticket (req6, st6);;
+
+let dec6 = fst (rep6);;
+
+let st7 = snd (rep6);;
 
 print_string
-   ("   ASSOCIE AU TICKET DANS t") ;;
+  ("Reponse6 : Decision6 : " ^
+   C_decisions!print (dec6) ^
+   "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
-
-let req10 = C_requests_ticket!create (C_get_release!get,
-                                      C_subjects!s2,
-                                      C_tickets!element,
-                                      o3,
-                                      C_access_mode!read,
-                                      C_subjects!element) ;;
-
-print_string ("Requete10 : " ^ C_requests_ticket!print (req10) ^ "\n") ;;
-
-let rep10 = C_models_ticket!tau_ticket (req10, st10) ;;
-
-let dec10 = fst (rep10) ;;
-
-let st11 = snd (rep10) ;;
-
-print_string ("Reponse10 : Decision10 : " ^
-              C_decisions!print (dec10) ^
-              "\n") ;;
-
-print_string ("           Etat11 : " ^
-              C_models_ticket!print (st11) ^
-              "\n") ;;
+  ("           Etat7 : " ^
+   C_models_ticket!print (st7) ^
+   "\n")
+;;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("\n--------------------------------------------------------\n")
+;;
 
 print_string
-   ("   TENTATIVE D'ACCES A o PAR s' AVEC LE TICKET QUE S LUI A\n") ;;
+  ("   TENTATIVE DE s DE PASSER UN TICKET c AU SUJET s' ALORS\n")
+;;
 
 print_string
-   ("   PASSE SELON UN MODE D'ACCESS DIFFERENT QUE CELUI\n") ;;
+  ("   QUE c N'APPARTIENT PAS A w(s)")
+;;
 
 print_string
-   ("   ASSOCIE AU TICKET DANS t") ;;
+  ("\n--------------------------------------------------------\n")
+;;
+
+let req7 =
+  C_requests_ticket!create
+    (C_get_release!pass,
+     C_subjects!s1,
+     C_tickets!c3,
+     C_objects!element,
+     C_access_mode!element,
+     C_subjects!s2)
+;;
+
+print_string ("Requete7 : " ^ C_requests_ticket!print (req7) ^ "\n")
+;;
+
+let rep7 = C_models_ticket!tau_ticket (req7, st7);;
+
+let dec7 = fst (rep7);;
+
+let st8 = snd (rep7);;
 
 print_string
-   ("\n--------------------------------------------------------\n") ;;
+  ("Reponse7 : Decision7 : " ^
+   C_decisions!print (dec7) ^
+   "\n")
+;;
 
-let req11 = C_requests_ticket!create (C_get_release!get,
-                                      C_subjects!s2,
-                                      C_tickets!element,
-                                      o3,
-                                      C_access_mode!write,
-                                      C_subjects!element) ;;
+print_string
+  ("           Etat8 : " ^
+   C_models_ticket!print (st8) ^
+   "\n")
+;;
 
-print_string ("Requete11 : " ^ C_requests_ticket!print (req11) ^ "\n") ;;
+print_string
+  ("\n--------------------------------------------------------\n")
+;;
 
-let rep11 = C_models_ticket!tau_ticket (req11, st11) ;;
+print_string
+  ("   GENERATION D'UN NOUVEAU TICKET POUR LES FUTURS EXEMPLES")
+;;
 
-let dec11 = fst (rep11) ;;
+print_string
+  ("\n--------------------------------------------------------\n")
+;;
 
-let st12 = snd (rep11) ;;
+let req8 =
+  C_requests_ticket!create
+    (C_get_release!generate,
+     C_subjects!s3,
+     C_tickets!c5,
+     o3,
+     C_access_mode!write,
+     C_subjects!element)
+;;
 
-print_string ("Reponse11 : Decision11 : " ^
-              C_decisions!print (dec11) ^
-              "\n") ;;
+print_string ("Requete8 : " ^ C_requests_ticket!print (req8) ^ "\n")
+;;
 
-print_string ("           Etat12 : " ^
-              C_models_ticket!print (st12) ^
-              "\n") ;;
+let rep8 = C_models_ticket!tau_ticket (req8, st8);;
+
+let dec8 = fst (rep8);;
+
+let st9 = snd (rep8);;
+
+print_string
+  ("Reponse8 : Decision8 : " ^
+   C_decisions!print (dec8) ^
+   "\n")
+;;
+
+print_string
+  ("           Etat9 : " ^
+   C_models_ticket!print (st9) ^
+   "\n")
+;;
+
+print_string
+  ("\n--------------------------------------------------------\n")
+;;
+
+print_string
+  ("   TENTATIVE DE s DE PASSER UN TICKET c AU SUJET s' ALORS\n")
+;;
+
+print_string
+  ("   QUE c APPARTIENT A w(s)")
+;;
+
+print_string
+  ("\n--------------------------------------------------------\n")
+;;
+
+let req9 =
+  C_requests_ticket!create
+    (C_get_release!pass,
+     C_subjects!s3,
+     C_tickets!c5,
+     C_objects!element,
+     C_access_mode!element,
+     C_subjects!s2)
+;;
+
+print_string ("Requete9 : " ^ C_requests_ticket!print (req9) ^ "\n")
+;;
+
+let rep9 = C_models_ticket!tau_ticket (req9, st9);;
+
+let dec9 = fst (rep9);;
+
+let st10 = snd (rep9);;
+
+print_string
+  ("Reponse9 : Decision9 : " ^
+   C_decisions!print (dec9) ^
+   "\n")
+;;
+
+print_string
+  ("           Etat10 : " ^
+   C_models_ticket!print (st10) ^
+   "\n")
+;;
+
+print_string
+  ("\n--------------------------------------------------------\n")
+;;
+
+print_string
+  ("   TENTATIVE D'ACCES A o PAR s' AVEC LE TICKET QUE S LUI A\n")
+;;
+
+print_string
+  ("   PASSE SELON UN MODE D'ACCESS DIFFERENT QUE CELUI\n")
+;;
+
+print_string
+  ("   ASSOCIE AU TICKET DANS t")
+;;
+
+print_string
+  ("\n--------------------------------------------------------\n")
+;;
+
+let req10 =
+  C_requests_ticket!create
+    (C_get_release!get,
+     C_subjects!s2,
+     C_tickets!element,
+     o3,
+     C_access_mode!read,
+     C_subjects!element)
+;;
+
+print_string ("Requete10 : " ^ C_requests_ticket!print (req10) ^ "\n")
+;;
+
+let rep10 = C_models_ticket!tau_ticket (req10, st10);;
+
+let dec10 = fst (rep10);;
+
+let st11 = snd (rep10);;
+
+print_string
+  ("Reponse10 : Decision10 : " ^
+   C_decisions!print (dec10) ^
+   "\n")
+;;
+
+print_string
+  ("           Etat11 : " ^
+   C_models_ticket!print (st11) ^
+   "\n")
+;;
+
+print_string
+  ("\n--------------------------------------------------------\n")
+;;
+
+print_string
+  ("   TENTATIVE D'ACCES A o PAR s' AVEC LE TICKET QUE S LUI A\n")
+;;
+
+print_string
+  ("   PASSE SELON UN MODE D'ACCESS DIFFERENT QUE CELUI\n")
+;;
+
+print_string
+  ("   ASSOCIE AU TICKET DANS t")
+;;
+
+print_string
+  ("\n--------------------------------------------------------\n")
+;;
+
+let req11 =
+  C_requests_ticket!create
+    (C_get_release!get,
+     C_subjects!s2,
+     C_tickets!element,
+     o3,
+     C_access_mode!write,
+     C_subjects!element)
+;;
+
+print_string ("Requete11 : " ^ C_requests_ticket!print (req11) ^ "\n")
+;;
+
+let rep11 = C_models_ticket!tau_ticket (req11, st11);;
+
+let dec11 = fst (rep11);;
+
+let st12 = snd (rep11);;
+
+print_string
+  ("Reponse11 : Decision11 : " ^
+   C_decisions!print (dec11) ^
+   "\n")
+;;
+
+print_string
+  ("           Etat12 : " ^
+   C_models_ticket!print (st12) ^
+   "\n")
+;;
