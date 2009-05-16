@@ -1,5 +1,23 @@
-(* 
- *@version $Revision: 1.1 $ $Date: 2008-12-18 15:08:30 $
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Philippe Ayrault                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: etat_vote.fcl,v 1.2 2009-05-15 23:44:51 weis Exp $ *)
+
+(*
+ *@version $Revision: 1.2 $ $Date: 2009-05-15 23:44:51 $
  *)
 
 use "basics";;
@@ -15,10 +33,10 @@ open "peano";;
 
 (** Type somme : Etats possibles de la sortie voteur *)
 species Sp_etat_vote inherits Setoid =
- 
+
   (** The 3 values are inconsistant *)
-  signature no_match : Self; 
-  (** 1 value is consistant with the two other which are mutually inconsistant *) 
+  signature no_match : Self;
+  (** 1 value is consistant with the two other which are mutually inconsistant *)
   signature range_match : Self;
   (** 2 value are consistant but the third is inconsistant *)
   signature partial_match : Self;
@@ -32,7 +50,7 @@ species Sp_etat_vote inherits Setoid =
       \/ !equal(e, !range_match)
       \/ !equal(e, !partial_match)
       \/ !equal(e, !perfect_match));
-  
+
   (** Each field of the sum type are different from the other one *)
   property all_field_different_0_1:
     ~(equal( no_match, range_match));
@@ -47,39 +65,40 @@ species Sp_etat_vote inherits Setoid =
   property all_field_different_2_3:
     ~(!equal( !partial_match, !perfect_match));
 
-end ;;
+end
+;;
 
-species Imp_etat_vote(P is Peano) inherits Sp_etat_vote =	
+species Imp_etat_vote(P is Peano) inherits Sp_etat_vote =
 
 representation = P;
 
 let no_match = P!zero;
 let range_match = P!s(no_match);
 let partial_match = P!s(range_match);
-let perfect_match = P!s(partial_match); 
+let perfect_match = P!s(partial_match);
 
-let equal(x in Self, y in Self) in bool = 
+let equal(x in Self, y in Self) in bool =
    P!equal(x, y);
 let element = no_match;
 
-proof of equal_transitive = 
- by property P!equal_transitive definition of equal; 
-proof of equal_symmetric = 
+proof of equal_transitive =
+ by property P!equal_transitive definition of equal;
+proof of equal_symmetric =
  by property P!equal_symmetric definition of equal;
-proof of equal_reflexive = 
+proof of equal_reflexive =
  by property P!equal_reflexive definition of equal;
 
-proof of all_field_different_0_1 = 
+proof of all_field_different_0_1 =
  by definition of no_match, range_match, equal
  property P!zero_is_not_successor
 ;
 
-proof of all_field_different_0_2 = 
+proof of all_field_different_0_2 =
  by definition of no_match, partial_match, equal
  property P!zero_is_not_successor
 ;
 
-proof of all_field_different_0_3 = 
+proof of all_field_different_0_3 =
  by definition of no_match, perfect_match, equal
  property P!zero_is_not_successor
 ;
@@ -89,28 +108,31 @@ proof of all_field_different_1_2 =
  property P!zero_is_not_successor, P!succ_is_an_injection
 ;
 
-proof of all_field_different_1_3 = 
+proof of all_field_different_1_3 =
  by definition of range_match, partial_match, perfect_match, equal, no_match
  property P!zero_is_not_successor, P!succ_is_an_injection
 ;
 
-proof of all_field_different_2_3 = 
+proof of all_field_different_2_3 =
  by definition of range_match, partial_match, perfect_match, equal, no_match
  property P!zero_is_not_successor, P!succ_is_an_injection
 ;
 
 proof of all_value = assumed {* By construction *};
 
-let print(x in Self) in string =  
+let print(x in Self) in string =
                 if !equal(x, !no_match) then
                   "no_match"
                 else if !equal(x, !range_match) then
                   "range_match"
                 else if !equal(x, !partial_match) then
                   "partial_match"
-                else 
+                else
                   "perfect_match";
-end ;;
+end
+;;
 
-
-collection Coll_etat_vote implements Imp_etat_vote(Coll_peano) ;;
+collection Coll_etat_vote =
+  implement Imp_etat_vote(Coll_peano)
+end
+;;
