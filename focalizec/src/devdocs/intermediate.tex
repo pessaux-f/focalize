@@ -1,4 +1,4 @@
-% $Id: intermediate.tex,v 1.3 2009-05-12 18:00:34 pessaux Exp $
+% $Id: intermediate.tex,v 1.4 2009-05-18 16:21:34 pessaux Exp $
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
 the species and collections in normal form, having resolved
@@ -238,16 +238,13 @@ theorems when we need an example (since for them, no rule lead to
 trivially empty dependencies sets since theorems can induce both def
 and decl-dependencies).
 
-\medskip
 \subsubsection{{\tt compute\_lambda\_liftings\_for\_field}}
 The first step is to compute the dependencies on species parameters
 appearing in the body of the method. This is basically the rule
 [BODY]. This process is done by a structural descent on the body of
 the method, looking for identifiers of the form {\tt C!meth}.
 
-.......................ICI
-
-
+\medskip
 By the way, we recover the decl and def-children of the current
 method. The idea is simply to split the list of children of the node
 representing the current method in 2 parts, the ones whose edge is
@@ -264,6 +261,140 @@ compilation process was better understood, we identified the common
 algorithm and rules and made to that now abstractions computation is
 exactly the same for both target languages. And then, the part dealing
 with def and decl-dependencies splitting remained here.
+
+Then we really walk along the AST to find species parameters' methods
+called in the body of the method. This is done parameter per
+parameter, we don't look for methods of all the parameters in one
+shot. In fact, we process one parameter at time, in the order of
+apparition of the parameters. This is very important because this
+gives a particular structure (we rely on it everywhere) to our
+dependency on parameters information. This information is a list of
+parameters and for each of them the set of methods we depend on. This
+set structure is described in {\tt basement/parsetree\_utils.ml}.
+The parameters appear in the list in the same order they appear in the
+species definition. Hence if a method has no dependency on the species
+parameters, the dependency information {\bf won't} be an empty list,
+but a list with all the parameters and for each an empty set. Not
+comply this invariant will straight lead to break the compiler (assert
+failure will occur in various places). Since we added termination
+proof, we must also walk along these proofs to find the dependencies.
+
+\medskip
+During this process, we also hunt types representing species
+parameters {\bf carriers} appearing in the type method.
+{\bf Note on the fly}: I see that for computational methods, I inspect
+the ML-like type and for logical ones, I inspect the logical statement
+(which is really the ``type'' of the method. But what is a bit strange
+is that I do this in {\bf types} while dealing with species
+parameters' methods in {\bf bodies}. The point is not so the fact that
+I mix ``body'' and ``type'', but more the fact that I wonder if I also
+hunt later in the bodies\ldots).
+
+\medskip
+Once we are done with parameters' carriers appearing in the type of
+the method, we do the same thing on the methods of {\tt Self} we
+decl-depend on. Note that if we have a decl-dependency on
+{\tt representation},  then we do not need to inspect its structure to
+know if it contains references to some species parameter types since
+this means that the {\tt representation} is still kept abstract.
+
+
+\medskip
+We then do the same process for the methods of {\tt Self} we
+def-depend on. Attention, if we have a def-dependency on
+{\tt representation}, we must inspect its structure to know if it
+contains references to some species parameter since
+{\tt representation}'s structure will appear in clear, possibly using
+these species parameters carrier types. So, conversely to just above,
+we don't make any difference between {\tt representation} and other
+methods of ourselves.
+
+\medskip
+In fact, technically, to get the set of species parameters' carriers,
+we get the set of carriers, and afterward, we filter those that are
+among our parameters. This is more efficient that testign each time
+before inserting or not a carrier in the set.
+
+\medskip
+Finally, we return the species parameters' carriers used in the
+method, the dependencies from parameters found in the body of the
+method, the decl-children of the method in the dependency graph and
+the def-children of it.
+
+
+\subsubsection{{\tt VisUniverse.visible\_universe}}
+The next step is to compute the ``visible universe'' of the
+method. This is done by calling the function of
+{\tt commoncodegen/visUniverse.ml}. This universe describes which
+methods of {\tt Self} must be $\lambda$-lifted for the current method,
+according to the definition 57 page 116 section 6.4.4 in Virgile
+Prevosto's PhD. The algorithm mostly implement the rules of the
+definition, without any special extra comment.
+
+The structure of the universe is simply a map of method names. If a
+name belongs to the keys of the map, then it is in the visible
+universe. The bound key is then the way method arrived into the
+visible universe (needed later to be able to $\lambda$-lift). A method
+can arrive in th iniverse either by a decl-dependency and {\bf no}
+transitive def-dependency (tag {\tt IU\_only\_decl}), or by at least a
+transitive def-dependency (tag {\tt IU\_trans\_def}) and in this case,
+no matter if it also arrives thanks to a decl-dependency.
+
+
+\subsubsection{Completion of the dependency on parameter's methods}
+It is now time to apply the rules [{\tt TYPE}], [{\tt DEF-DEP}],
+[{\tt UNIVERSE}] and [{\tt PRM}] of the definition 72 page 153 of
+Virgile Prevosto's Phd. They contribute to extend the visibility a
+method must have on those of its parameters. Note that in term of
+implementation, we {\bf don't} return the initial set of dependencies
+extended by the freshly found one ! We always return separate sets of
+dependencies related to each rule (or set of rules in the case of
+[{\tt DEF-DEP}], [{\tt UNIVERSE}] and [{\tt PRM}] that are returned
+together in one set because we never need to differentiate their
+provenance). The rules are computed in the following order:
+[{\tt TYPE}], [{\tt DEF-DEP}], [{\tt UNIVERS}] and then [{\tt PRM}].
+
+\begin{enumerate}
+\item Rule [{\tt TYPE}]. This rule says that we must search for
+  dependencies on species parameters' methods among the ``type'' of
+  the currently examined method of {\tt Self}. This rule is possible
+  only if a logical expression is provided. In effect, in a type
+  scheme, species parameters' methods can never appear since it is a
+  ML-like type. Furthermore, even in case of termination proof, we
+  have nothing to do since expressions appearing have ML-like types
+  and proofs are not considered as ``type''. This rule simply walk
+  along  the ``type'' of the currently examined method of {\tt Self},
+  searching occurrences of identifiers having the form
+  {\tt param!meth}.
+
+\item Rule [{\tt DEF-DEP}]. This rule is implemented bby first
+  recovering all the abstraction infos of the methods of {\tt Self} we
+  def-depend. Because species are well-formed, there is no cycle in
+  its dependencies, and because it is in normal form, the methods we
+  depend on have already be processed and their abstraction infos are
+  known. This rule tells if the method def-depends on a method {\tt z}
+  and in the body of {\tt t} we find a dependency on a parameter's
+  method, then this parameter's method must be added to the
+  dependencies of the current method. Instead of implementing this
+  rule this way, we read it like ``add to the dependencies of the
+  current method all the dependencies on parameters computed on
+  methods we def-depend''. Then, instead of looking for each method if
+  there is individually a dependency on each species parameter's
+  method to add, we make a big union in one shot.
+
+  By the way we recover all the abstraction infos of the methods of
+  {\tt Self} we directly start reminding the species parameters'
+  carriers appearing in the type of the methods we def-depend. In
+  effect, by definition, the methods we def-depend belong to our
+  visible universe. And because the rule [{\tt UNIVERS}] just below
+  will deal with methods of species parameters appearing in ``types''
+  of methods of {\tt Self} belonging to the visible universe,
+  recording these carriers soon will serve for the next rule.
+
+\item Rule [{\tt UNIVERS}].
+\item Rule [{\tt PRM}].
+\end{enumerate}
+
 
 
 \section{The outer computation (wrapper)}

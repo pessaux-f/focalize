@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.13 2009-05-14 14:33:56 pessaux Exp $
+% $Id: typing.tex,v 1.14 2009-05-18 16:21:34 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -1103,6 +1103,12 @@ file found in \\
 illustrates this need. This re-ordering will be done after the normal
 form of the species is computed.
 
+\medskip
+{\bf A question on the fly}: While writing the document, I wonder if
+this collapsing process wouldn't be carried out in the fusion
+algorithm used to create the normal form, exactly like when we pair
+signatures and {\tt let}-definitions\ldots
+
 
 \subsection{Normal form}
 The normalisation is done in {\tt normalize\_species}, applying the
@@ -1149,6 +1155,63 @@ expression. Currently, the comparison is done on the skeleton of the
 expression without tricky heuristic like considering that
 $A \Rightarrow B \Rightarrow C$ is equivalent to
 $(A \wedge B) \Rightarrow C$ and so on\ldots
+
+\medskip
+\index{signature matching}
+During this fusion operation, when we ``fusion'' a signature and a
+{\tt let}-definition, if the unification succeeds, then we
+{\bf keep the type given by the signature} to assign it to the
+method. We don't keep the type infered for the method. In effect, the
+inference algorithm may find a type that is more general than the
+signature, or may leave some type occurrences expanded althgough they
+are in fact occurrences of {\tt Self} (obviously because there was
+previously de definition of {\tt representation} equal to type. For
+instance, if we have:
+{\footnotesize
+\begin{lstlisting}
+species A0 =
+  sig f : Self ->Self ;
+end ;;
+species A1 inherits A0 =
+  let f (x) = x ;
+end ;;
+\end{lstlisting}
+}
+
+\noindent, the inference algorithm will find in {\tt A1} that {\tt f}
+has type $\forall \alpha.\alpha \rightarrow \alpha$ since this is the
+most general unifier. And because polymorphic methods are not allowed,
+if we do not perform signature matching for {\tt f}, then first, we
+won't see that it must be considered to be
+${\tt Self} \rightarrow {\tt Self}$, then second we will reject the
+method. Hence this point shows that verification that methods are not
+polymorphic must be done {\bf after} the definitions are assigned the
+type of their possible signatures.
+
+\medskip
+Another example, that doesn't involve polymorphism would be:
+{\footnotesize
+\begin{lstlisting}
+species B0 =
+  representation = int
+  sig f : int -> Self ;
+end ;;
+species B1 inherits B0 =
+  let f (x) = x + 1 ;
+end ;;
+\end{lstlisting}
+}
+
+Since nowhere in the definition of {\tt f} in {\tt B1} {\tt Self}
+appears, the type inference algorithm will see that {\tt 1} has type
+{\tt int}, that {\tt +} as type
+${\tt int} \rightarrow {\tt int} \rightarrow {\tt int}$ and then will
+deduce that {\tt f} has type ${\tt int} \rightarrow {\tt int}$.
+Unfortunately, the developer wanted to see {\tt f} has a function
+injecting an integer into the species data-type, hence wanted to
+consider it with type ${\tt int} \rightarrow {\tt Self}$. So if we
+don't keep the type of the signature to assign it to the definition,
+we forget this constraint information.
 
 
 \subsection{Computing def/decl-dependencies}
