@@ -13,15 +13,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: visUniverse.ml,v 1.9 2008-12-09 12:51:58 pessaux Exp $ *)
+(* $Id: visUniverse.ml,v 1.10 2009-05-18 15:29:38 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : Describes how a method arrives into a visible universe.
     Either by a decl-dependency and NO transitive def-dependency. Or by
     at least a transitive def-dependency (in this case, no matter if it
-    also arrives thanks a decl-dependency.
+    also arrives thanks to a decl-dependency).
 
-    {b Rem} : Not exported outside this module.                         *)
+    {b Exported} : Yes.                                                 *)
 (* ******************************************************************** *)
 type in_the_universe_because =
   | IU_only_decl   (** The method arrives in the visible universe by the
@@ -38,7 +38,7 @@ type in_the_universe_because =
 (* ********************************************************************* *)
 (** {b Descr} : Structure of a visible universe. It's a [Map] linking
     a method name with the reason how this method arrives in the visible
-  universe.
+    universe.
     Building the visible universe with this information ease the
     computation of the \inter\smallinter operation of Virgile Prevosto's
     Phd, page 116, definition 58, section 6.4.4. In effect, with the
@@ -46,7 +46,7 @@ type in_the_universe_because =
     rule 3 or 4 is immediate instead of having to look again if the
     method was a introduced my a decl ou a transitive-def dependency.
 
-    {b Rem} : Not exported outside this module.                          *)
+    {b Exported} : Yes.                                                  *)
 (* ********************************************************************* *)
 module UniverseElem = struct
   type t = Parsetree.vname
@@ -63,7 +63,7 @@ module Universe = Map.Make(UniverseElem) ;;
 (** {b Descr} : Computes the visible universe of a species field whose decl,
     def-dependencies and fields are given as argument.
     This function works according to the definition 57 page 116 section
-    6.4.4 in Virgile Prevosto's Phg.
+    6.4.4 in Virgile Prevosto's Phd.
     To be usable for OCaml generation, the [with_def_deps_n_term_pr] flag
     enables to forget the def-dependencies and their implied transitive
     decl-dependencies and the dependencies induced from recursive functions
@@ -71,7 +71,7 @@ module Universe = Map.Make(UniverseElem) ;;
     relevant and since there is no termination proof, dependencies induced
     by them must be forgotten.
 
-    {b Rem} : Not exported outside this module.                              *)
+    {b Exported} : Yes.                                                      *)
 (* ************************************************************************* *)
 let visible_universe ~with_def_deps_n_term_pr dep_graph x_decl_dependencies
     x_def_dependencies =

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.73 2009-05-12 18:02:35 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.74 2009-05-18 15:29:38 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -446,7 +446,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
                         (species_param_name, species_param_meths) pr in
                          Parsetree_utils.ParamDepSet.union deps1 deps2
                     end)
-                | _ -> failwith "todo 123") in
+                | _ -> failwith "todo 123" (* [Unsure] *)) in
         (* Finally, the complete dependencies are the union of above. *)
         let meths_from_param =
           Parsetree_utils.ParamDepSet.union
@@ -465,7 +465,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
      the theorem/property's statement doesn't use some parameters methods,
      then the [dependencies_from_params_in_bodies] will be empty and when,
      below, we will search used species parameters tys in "bodies", since no
-     method of the parameterss are used, we will never see that the parameter
+     method of the parameters are used, we will never see that the parameter
      carriers are indeed used to quantify variables.
      Example:
        species Test (A is Setoid, B is Setoid) inherits Setoid =
@@ -1308,7 +1308,7 @@ let complete_dependencies_from_params env ~current_unit ~current_species
     seen_abstractions species_parameters def_children universe type_kind =
   (* Rule [TYPE] possible only if a logical expression is provided. In effect,
      in a type scheme, species_parameters can never appear since it is a
-     ML-like type. Furthermore, even in case pf termination proof, we have
+     ML-like type. Furthermore, even in case of termination proof, we have
      nothing to do since expressions appearing have ML-like types and proofs
      are not considered as "type". *)
   let dependencies_from_params_via_type =
