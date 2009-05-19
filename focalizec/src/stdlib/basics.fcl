@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.56 2009-05-18 07:42:58 pessaux Exp $ *)
+(* $Id: basics.fcl,v 1.57 2009-05-19 09:45:37 rr Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -599,24 +599,24 @@ theorem int_lt_le_S:
 ;;
 
 theorem int_plus_assoc:
-  all x y z in int, (* (x + y) + z = x + (y + z) *)
-  #syntactic_equal ((x + y) + z, x + (y + z))
+  all x y z in int, (x + y) + z = x + (y + z)
+(*   #syntactic_equal ((x + y) + z, x + (y + z)) *)
   proof =
     coq proof {*
       unfold int_plus in |- *; intros x y z;
-      unfold syntactic_equal;
+      unfold _equal_, syntactic_equal;
       apply EQ_syntactic_equal; auto with zarith.
       Qed.
     *}
 ;;
 
 theorem int_plus_commute:
-  all x y  in int, (* x + y = y + x *)
-  #syntactic_equal (x + y, y + x)
+  all x y  in int, x + y = y + x
+(*   #syntactic_equal (x + y, y + x) *)
   proof =
     coq proof {*
       unfold int_plus in |- *; intros x y;
-      unfold syntactic_equal;
+      unfold _equal_, syntactic_equal;
       apply EQ_syntactic_equal;
       auto with zarith.
       Qed.
