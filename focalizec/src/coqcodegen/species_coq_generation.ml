@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.172 2009-05-05 16:33:27 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.173 2009-05-19 11:57:44 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -901,8 +901,9 @@ let rec find_only_PN_subs_in_proof_nodes = function
    "by definition of a rec function".
    If we are in a Zenon "by definition of a rec function" we must emit the
    name "Termination_fct_namespace.fct_equation".
-   If we are not, then we must emit the name
-   "Termination_fct_namespace.species__fct". *)
+   "Termination_fct_namespace.species__fct".
+
+   {b Rem} : For Function.    *)
 let generate_final_recursive_definifion_body out_fmter ~in_zenon_by_def
     species_name name used_species_parameter_tys dependencies_from_params
     abstracted_methods =
@@ -957,7 +958,9 @@ let generate_final_recursive_definifion_body out_fmter ~in_zenon_by_def
 
 
 
-(** To make the construct "Function" of Coq working with Zenon. *)
+(** To make the construct "Function" of Coq working with Zenon.
+
+    {b Rem} : For Function. *)
 let zenonify_by_recursive_definition ctx print_ctx env
     used_species_parameter_tys dependencies_from_params abstracted_methods
     vname params scheme body =
@@ -1929,7 +1932,17 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
        Format.fprintf out_fmter "(* Theorem's body. *)@\n" ;
-       Format.fprintf out_fmter "@[<2>Theorem %a :@ "
+      (* Be careful if the coq proof appears in a nested proof of a Zenon
+          script under a Zenon script then we must not apply the naming scheme
+          "for_zenon__xxx". Otherwise, if the coq proof is at toplevel of the
+          Zenon proof (i.e. in fact ends the Zenon proof), we must directly
+          give the theorem the real name since we do not have to (and we do
+          not) create the various intermediate theorems induced by Zenon
+          stuff, especially the fact that we open some Sections to "look like"
+          first-order. *)
+       let opt_for_zenon = if in_nested_proof then "" else "for_zenon_" in
+       Format.fprintf out_fmter "@[<2>Theorem %s%a :@ "
+         opt_for_zenon
          Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
        (* Generate the aim depending on if we are in a regular proof or in the
           initial stage of a termination proof. *)
@@ -2571,7 +2584,9 @@ let print_idents_as_tuple out_fmter idents =
     function. The order will have to be suitable to compare these two
     tuples.
 
-    {b Rem}: Not exported outside this module.                              *)
+    {b Rem} : For Function.
+
+    {b Exported}: No.                                                       *)
 (* ************************************************************************ *)
 let generate_termination_order ctx print_ctx env name fun_params_n_tys
     ai sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
@@ -2715,6 +2730,7 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
 
 
 
+(** {b Rem} :  For Function. *)
 let generate_termination_proof ctx print_ctx env name
     ai
     sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
@@ -2799,6 +2815,7 @@ let generate_termination_proof ctx print_ctx env name
 
 
 
+(** {b Rem} : For Function. *)
 let generate_defined_recursive_let_definition ctx print_ctx env
     generated_fields from name params scheme body opt_term_pr ai =
   let out_fmter = ctx.Context.scc_out_fmter in
