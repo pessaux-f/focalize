@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.6 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: peano.fcl,v 1.7 2009-05-19 08:52:00 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -32,6 +32,8 @@ use "orders_and_lattices";;
 open "sets";;
 open "strict_orders";;
 open "orders_and_lattices";;
+
+
 
 (**
    An abstract enumeration system is a system where we have a
@@ -64,6 +66,13 @@ type peano =
   | P_zero
   | P_succ(peano)
 ;;
+let my_order=
+  internal peano -> peano -> prop
+  external
+  | caml -> {* fun _x _y -> assert false *}
+  | coq -> {* (fun x y => magic_order x y) *}
+;;
+
 
 species Peano_enumeration_system =
 
@@ -236,7 +245,7 @@ species Peano_base =
               definition of successor, start
               assumed {* *}
          <2>f qed by step <2>2 property !different_is_syntactic
-    <1>f qed by step <1>1;
+    <1>f qed by step <1>1 ;
 
 end
 ;;
@@ -294,12 +303,19 @@ species Peano_order =
 (*          <2>f qed by step <2>1, <2>2 property same_is_not_different *)
 (*     <1>f conclude; *)
 
-(*   let rec lt(x, y) = match (x, y) with *)
-(*     | (P_zero, P_zero) -> false *)
-(*     | (P_zero, P_succ(_y)) -> true *)
-(*     | (P_succ(x), P_zero) -> false *)
-(*     | (P_succ(x), P_succ(y)) -> !lt(x, y) *)
-(*    ; *)
+  let rec lt(x, y) = match x with
+    | P_zero -> 
+        (match y with 
+          | P_zero -> false
+          | _y -> true)
+    | P_succ(x_1) ->
+        (match y with 
+          | P_zero -> false
+          | P_succ(y_1) -> !lt(x_1, y_1))
+    termination proof =
+       order my_order on x, y
+       assumed {* *}
+    ;
 
   proof of lt_is_irreflexive =
     <1>0 prove ~(!lt(P_zero, P_zero))
