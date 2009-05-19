@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.173 2009-05-19 11:57:44 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.174 2009-05-19 12:05:38 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -900,13 +900,12 @@ let rec find_only_PN_subs_in_proof_nodes = function
 (* The [~in_zenon_by_def] boolean says if we are in a Zenon
    "by definition of a rec function".
    If we are in a Zenon "by definition of a rec function" we must emit the
-   name "Termination_fct_namespace.fct_equation".
    "Termination_fct_namespace.species__fct".
 
    {b Rem} : For Function.    *)
-let generate_final_recursive_definifion_body out_fmter ~in_zenon_by_def
-    species_name name used_species_parameter_tys dependencies_from_params
-    abstracted_methods =
+let generate_final_recursive_definifion_body_With_Function out_fmter
+    ~in_zenon_by_def species_name name used_species_parameter_tys
+    dependencies_from_params abstracted_methods =
   if in_zenon_by_def then
     Format.fprintf out_fmter "Termination_%a_namespace.%a_equation@ "
       Parsetree_utils.pp_vname_with_operators_expanded name
@@ -961,7 +960,7 @@ let generate_final_recursive_definifion_body out_fmter ~in_zenon_by_def
 (** To make the construct "Function" of Coq working with Zenon.
 
     {b Rem} : For Function. *)
-let zenonify_by_recursive_definition ctx print_ctx env
+let zenonify_by_recursive_definition_With_Function ctx print_ctx env
     used_species_parameter_tys dependencies_from_params abstracted_methods
     vname params scheme body =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -986,7 +985,7 @@ let zenonify_by_recursive_definition ctx print_ctx env
   (* Say that we are in a Zenon "by definition of a rec function" in order
      to have the name "Termination_fct_namespace.fct_equation" instead of
      "Termination_fct_namespace.species__fct". *)
-  generate_final_recursive_definifion_body
+  generate_final_recursive_definifion_body_With_Function
     out_fmter ~in_zenon_by_def: true species_name vname
     used_species_parameter_tys dependencies_from_params abstracted_methods ;
   Format.fprintf out_fmter " }@\n:=@\n" ;
@@ -1185,7 +1184,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env generated_fields
                       in the already [generated_fields]. *)
                    let memory =
                      find_compiled_field_memory vname generated_fields in
-                   zenonify_by_recursive_definition
+                   zenonify_by_recursive_definition_With_Function
                      ctx print_ctx env
                      memory.Misc_common.cfm_used_species_parameter_tys
                      memory.Misc_common.cfm_dependencies_from_parameters
@@ -2588,8 +2587,9 @@ let print_idents_as_tuple out_fmter idents =
 
     {b Exported}: No.                                                       *)
 (* ************************************************************************ *)
-let generate_termination_order ctx print_ctx env name fun_params_n_tys
-    ai sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
+let generate_termination_order_With_Function ctx print_ctx env name
+    fun_params_n_tys ai sorted_deps_from_params
+    generated_fields (* Only needed for "prelude". *)
     opt_term_pr =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* The order's name: the function's name + "_wforder". *)
@@ -2731,7 +2731,7 @@ let generate_termination_order ctx print_ctx env name fun_params_n_tys
 
 
 (** {b Rem} :  For Function. *)
-let generate_termination_proof ctx print_ctx env name
+let generate_termination_proof_With_Function ctx print_ctx env name
     ai
     sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
     recursive_calls opt_term_pr =
@@ -2816,7 +2816,7 @@ let generate_termination_proof ctx print_ctx env name
 
 
 (** {b Rem} : For Function. *)
-let generate_defined_recursive_let_definition ctx print_ctx env
+let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
     generated_fields from name params scheme body opt_term_pr ai =
   let out_fmter = ctx.Context.scc_out_fmter in
   match body with
@@ -2857,7 +2857,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        (* Generate the order. *)
 (* [Unsure] *)
        if (Configuration.get_experimental ()) then
-         generate_termination_order
+         generate_termination_order_With_Function
            ctx' print_ctx env name params_with_type ai
            ai.Abstractions.ai_dependencies_from_params generated_fields
            opt_term_pr ;
@@ -2868,7 +2868,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        (* Generate the termination proof. *)
 (* [Unsure] *)
        if (Configuration.get_experimental ()) then
-         generate_termination_proof ctx' print_ctx env name
+         generate_termination_proof_With_Function ctx' print_ctx env name
            ai ai.Abstractions.ai_dependencies_from_params generated_fields
            recursive_calls opt_term_pr ;
        (* Start the "Section" containing the definition of the "Function". *)
@@ -2992,7 +2992,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
           Say that we are NOT in a Zenon "by definition of a rec function" in
           order to have the name "Termination_fct_namespace.species__fct"
           instead of "Termination_fct_namespace.fct_equation". *)
-       generate_final_recursive_definifion_body
+       generate_final_recursive_definifion_body_With_Function
          out_fmter ~in_zenon_by_def: false species_name name
          ai.Abstractions.ai_used_species_parameter_tys
          ai.Abstractions.ai_dependencies_from_params
@@ -3026,7 +3026,7 @@ let generate_recursive_let_definition ctx print_ctx env generated_fields l =
           generated. Inherited methods ARE NOT generated again ! *)
        if from.Env.fh_initial_apparition = ctx.Context.scc_current_species
        then
-         generate_defined_recursive_let_definition
+         generate_defined_recursive_let_definition_With_Function
            ctx print_ctx env generated_fields from name params scheme body
            opt_term_pr ai
        else
