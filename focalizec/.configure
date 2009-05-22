@@ -15,10 +15,10 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: .configure,v 1.11 2009-04-03 15:50:36 doligez Exp $
+#  $Id: .configure,v 1.12 2009-05-22 13:37:59 weis Exp $
 
 # The file .config_var has been built by configure. We load it.
-. .config_var_for_shell
+. ./.config_var_for_shell
 
 SUB_DIRS="src/basement src/parser src/typing \
   src/docgen src/commoncodegen src/mlcodegen src/coqcodegen \
