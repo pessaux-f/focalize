@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.73 2009-04-03 15:50:36 doligez Exp $
+# $Id: configure,v 1.74 2009-05-22 09:51:14 weis Exp $
 
 ########################################################################
 #
@@ -77,9 +77,9 @@ abort_configuration_not_writable_tools_prefix_directory () {
 }
 
 include_project_configuration_variables () {
-  if test -r .project_config_var; then
-    . .project_config_var;
-    #echo ".project_config_var loaded" >&2;
+  if test -r ./.project_config_var; then
+    . ./.project_config_var;
+    #echo "./.project_config_var loaded" >&2;
   else
     abort_configuration &&
     echo "There is no ./.project_config_var file." >&2
