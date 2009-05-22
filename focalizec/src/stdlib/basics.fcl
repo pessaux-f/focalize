@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.58 2009-05-22 10:26:04 weis Exp $ *)
+(* $Id: basics.fcl,v 1.59 2009-05-22 13:23:47 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -222,7 +222,6 @@ let ( <=0x ) =
 let int_leq = ( <=0x );;
 
 and does not. *)
-*)
 
 let int_leq =
   internal int -> int -> bool
