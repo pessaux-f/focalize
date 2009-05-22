@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.57 2009-05-19 09:45:37 rr Exp $ *)
+(* $Id: basics.fcl,v 1.58 2009-05-22 10:26:04 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -220,6 +220,8 @@ let ( <=0x ) =
 ;;
 
 let int_leq = ( <=0x );;
+
+and does not. *)
 *)
 
 let int_leq =
@@ -395,7 +397,7 @@ let physical_equal =
   external
   | caml -> {* Ml_builtins.bi__physical_equal *}
   | coq -> {* coq_builtins.bi__syntactic_equal __var_a *}
-    (* Wrong, but don't know how to do better. *)
+    (* Wrong, but don't know how to do it better. *)
 ;;
 
 let ( == ) = physical_equal
@@ -600,7 +602,6 @@ theorem int_lt_le_S:
 
 theorem int_plus_assoc:
   all x y z in int, (x + y) + z = x + (y + z)
-(*   #syntactic_equal ((x + y) + z, x + (y + z)) *)
   proof =
     coq proof {*
       unfold int_plus in |- *; intros x y z;
@@ -612,7 +613,6 @@ theorem int_plus_assoc:
 
 theorem int_plus_commute:
   all x y  in int, x + y = y + x
-(*   #syntactic_equal (x + y, y + x) *)
   proof =
     coq proof {*
       unfold int_plus in |- *; intros x y;
@@ -729,10 +729,9 @@ end
 (* .......... SNIPED .......... *)
 
 type partiel ('a) =
-  | Failed
-  | Unfailed ('a)
+   | Failed
+   | Unfailed ('a)
 ;;
-
 
 let is_failed (x) =
   match x with
