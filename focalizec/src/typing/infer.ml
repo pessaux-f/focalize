@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.180 2009-05-12 12:37:30 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.181 2009-05-25 11:03:22 pessaux Exp $ *)
 
 
 
@@ -891,7 +891,7 @@ let rec typecheck_pattern ctx env pat_desc =
            let lbl_ty =
              Types.specialize
                lbl_desc.Env.TypeInformation.field_scheme in
-           (* Now, ensure the 2 sub-pattners types are compatible and that the
+           (* Now, ensure the 2 sub-patterns types are compatible and that the
               resulting record type for the whole pattern is consistent. *)
            let unified_field_ty =
              Types.unify
@@ -3212,7 +3212,7 @@ let rec collapse_proof_in_inherited proof_of ~current_species fields =
 (* {b Descr} : Tries to find among [methods], property fields whose proofs
    are separately given in the list of proofs [found_proofs_of].
    Each time the search succeeds, the property and the related proof are
-   merged in a new theorem field, hence discarding the property fiels.
+   merged in a new theorem field, hence discarding the property fields.
    Because this process is performed before the normalization pass, we
    still require to have 2 separate lists of methods:
      - the inherited ones,

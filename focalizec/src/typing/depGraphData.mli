@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: depGraphData.mli,v 1.4 2009-05-06 20:06:49 pessaux Exp $ *)
+(* $Id: depGraphData.mli,v 1.5 2009-05-25 11:04:00 pessaux Exp $ *)
 
 
 
@@ -62,7 +62,7 @@ type dependency_kind =
 (** {b Descr} : Strutrure of a node in a dependency graph representing
     the fact that some names' bodies contain call to non-let-rec-bound
     othernames (relation \lbag n \rbag in Virgile Prevosto's Phd,
-    section 3.5, definition 16, page 32.
+    section 3.5, definition 16, page 32).
 
     {b Rem} : Exported outside this module.                            *)
 (* ******************************************************************* *)

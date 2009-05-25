@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.139 2009-05-14 15:52:35 weis Exp $ *)
+(* $Id: parser.mly,v 1.140 2009-05-25 11:05:27 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -97,7 +97,7 @@ let mk_global_expr_var qual vname =
   mk (E_var (mk_global_expr_ident qual vname))
 ;;
 
-(* Infix/Prefix operators without scope MUST be parsed as LOCAL!     *)
+(* Infix/Prefix identifiers without scope MUST be parsed as LOCAL!   *)
 (* A global identifier whose scope is None is reserved for           *)
 (* identifiers of the form "#foo", meaning that we refer to          *)
 (* identifier "foo" at toplevel of the current compilation unit.     *)
