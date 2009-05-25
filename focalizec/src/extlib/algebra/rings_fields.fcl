@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.10 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: rings_fields.fcl,v 1.11 2009-05-25 12:35:58 doligez Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
@@ -295,7 +295,7 @@ species Field =
 
   (** in a field we only have two association classes  *)
   let gcd (x, y) =
-     if basics#and_b (Self!is_zero (x), Self!is_zero (y)) then Self!zero
+     if basics#( && ) (Self!is_zero (x), Self!is_zero (y)) then Self!zero
      else Self!one;
 
   proof of gcd_divides =

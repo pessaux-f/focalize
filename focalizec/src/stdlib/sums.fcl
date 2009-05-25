@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sums.fcl,v 1.14 2009-05-16 10:26:59 weis Exp $ *)
+(* $Id: sums.fcl,v 1.15 2009-05-25 12:35:58 doligez Exp $ *)
 
 (**
 
@@ -93,11 +93,11 @@ species Sum_set(A is Setoid, B is Setoid) =
 
   (** Equality defined with protected extractors  *)
   let equal(x, y) =
-     if basics#and_b(!first_case(x), !first_case(y))
+     if !first_case(x) && !first_case(y)
      then
        A!equal(!first_term(x), !first_term(y))
      else
-       if basics#and_b(!second_case(x), !second_case(y))
+       if !second_case(x) && !second_case(y)
        then B!equal(!second_term(x), !second_term(y))
        else
          (* [rr]: start thinking about this,

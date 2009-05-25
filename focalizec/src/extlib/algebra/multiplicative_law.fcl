@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: multiplicative_law.fcl,v 1.7 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: multiplicative_law.fcl,v 1.8 2009-05-25 12:35:58 doligez Exp $ *)
 
 (** Common properties of multiplicative laws. *)
 
@@ -301,7 +301,7 @@ species Regular_monoid =
   let recip (x) = Self!exquo (Self!one, x);
 
   (* [rr]: need to fill those *)
-  logical let divides (x, y) = not_b (is_failed (!exquo (y, x)));
+  logical let divides (x, y) = ~~ is_failed (!exquo (y, x));
   proof of divides_extends_equal =
     definition of divides
     assumed {* To do. *};
@@ -402,7 +402,7 @@ species Division_monoid =
     ;
 
   logical let divides (x, y) =
-    or_b(!equal (y, !zero), not_b (!equal (x, !zero)));
+    !equal (y, !zero) ||  ~~ !equal (x, !zero);
 
   proof of divides_extends_equal =
   <1>1 assume x in Self,

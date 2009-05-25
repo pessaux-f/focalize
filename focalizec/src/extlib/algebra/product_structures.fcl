@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: product_structures.fcl,v 1.8 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: product_structures.fcl,v 1.9 2009-05-25 12:35:58 doligez Exp $ *)
 
 (** Cartesian product of two structures, common orderings. *)
 
@@ -109,7 +109,7 @@ species Product_regular_additive_monoid
   let is_zero (a) =
     let a1 = !first (a) in
     let a2 = !second (a) in
-    basics#and_b (M1!is_zero (a1), M2!is_zero (a2));
+    M1!is_zero (a1) && M2!is_zero (a2);
 
   proof of is_zero_spec = assumed {* Because todo *};
 
@@ -211,8 +211,7 @@ species Lexicographic_product_additive_monoid
     let a2 = !second (a) in
     let b1 = !first (b) in
     let b2 = !second (b) in
-    basics#or_b (M1!lt (a1, b1),
-                 basics#and_b (M1!equal (a1, b1), M2!leq (a2, b2)));
+    M1!lt (a1, b1) || (M1!equal (a1, b1) && M2!leq (a2, b2));
 
   proof of order_compatible_with_cancellation = assumed {* Because todo *};
   proof of order_compatible_with_plus = assumed {* Because todo *};
@@ -261,8 +260,7 @@ species Reverse_lexicographic_product_additive_monoid
     let a2 = !second (a) in
     let b1 = !first (b) in
     let b2 = !second (b) in
-    basics#or_b (M2!lt (a2, b2),
-                basics#and_b (M2!equal (a2, b2), M1!leq (a1, b1)));
+    M2!lt (a2, b2) || (M2!equal (a2, b2) && M1!leq (a1, b1));
 
   proof of order_compatible_with_cancellation = assumed {* Because todo *};
   proof of order_compatible_with_plus = assumed {* Because todo *};

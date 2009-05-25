@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: wellfounded.fcl,v 1.8 2009-05-16 10:26:59 weis Exp $ *)
+(* $Id: wellfounded.fcl,v 1.9 2009-05-25 12:35:58 doligez Exp $ *)
 
 (* Definition (import) of the notion of wellfoundedness.
    Since this notion is not defineable in FoCaLize, this library is a veritable
@@ -72,9 +72,9 @@ species RelativeIntegers =
 
   signature lowerbound: Self;
 
-  let leq (x, y) = and_b (int_leq (lowerbound, y), int_leq (x, y)) ;
+  let leq (x, y) = int_leq (lowerbound, y) && int_leq (x, y) ;
 
-  let lt (x, y) = and_b (int_leq (lowerbound, y), int_lt (x, y)) ;
+  let lt (x, y) = int_leq (lowerbound, y) && int_lt (x, y) ;
 
   proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
 end
@@ -127,7 +127,7 @@ species LexicographicProduct (A is PartialWellOrder, B is PartialWellOrder) =
   let lt (x, y) =
     match (x, y) with
     | ((xA, xB), (yA, yB)) ->
-        or_b (A!lt (xA, yA), and_b (A!equal (xA, yA), B!lt (xB, yB))) ;
+        A!lt (xA, yA) || (A!equal (xA, yA) && B!lt (xB, yB)) ;
 
   proof of wellfounded_lt = assumed {* *} ;
 end
@@ -142,8 +142,8 @@ species RelationalProduct
   inherit Subrelation (C);
 
   let lt (x, y) =
-    and_b (A!lt (C!fst (x), C!fst (y)),
-           B!lt (C!snd (x), C!snd (y))) ;
+    A!lt (C!fst (x), C!fst (y))
+    && B!lt (C!snd (x), C!snd (y)) ;
 
   proof of compatibility_lt_Alt_meazure = assumed {* *} ;
 end

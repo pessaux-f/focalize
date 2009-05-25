@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: orders.fcl,v 1.10 2009-05-16 10:26:59 weis Exp $ *)
+(* $Id: orders.fcl,v 1.11 2009-05-25 12:35:58 doligez Exp $ *)
 
 use "basics";;
 use "sets";;
@@ -89,7 +89,7 @@ species Pre_order =
 
   (** strict inequality
      @mathml <lt/> *)
-  let lt (x, y) = basics#and_b (!leq (x, y), !different (x, y));
+  let lt (x, y) = !leq (x, y) && !different (x, y);
 
   (** some results about strict and large inequalities *)
   theorem lt_is_leq_and_different : all x y in Self,
@@ -218,7 +218,7 @@ species Ordered_set =
 
   inherit Partial_order, Total_pre_order;
 
-  let equal (x, y) = and_b (Self!leq (x, y), Self!leq (y, x));
+  let equal (x, y) = Self!leq (x, y) && Self!leq (y, x);
 
   theorem equal_from_leq: all x y in Self,
     !equal (x, y) <-> (!leq (x, y) /\ !leq (y, x))

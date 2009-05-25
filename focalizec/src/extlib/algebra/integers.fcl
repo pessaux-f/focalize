@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.11 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: integers.fcl,v 1.12 2009-05-25 12:35:58 doligez Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -180,7 +180,7 @@ species Number_system =
 
   (** odd and even can be defined from euclidean division *)
   let is_even (n) = !is_zero (!remainder (n, !deux));
-  let is_odd (n) = basics#not_b (!is_even (n));
+  let is_odd (n) = ~~ !is_even (n);
 
   -- proof of even_odd_complete = by definition of is_odd;
   -- proof of successor_of_even_is_odd = assumed {* Because todo *};

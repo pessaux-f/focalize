@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.59 2009-05-22 13:23:47 weis Exp $ *)
+(* $Id: basics.fcl,v 1.60 2009-05-25 12:35:58 doligez Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -128,7 +128,7 @@ let ( || ) =
   | coq -> {* coq_builtins.bi__or_b *}
 ;;
 
-let ( ~| ) =
+let ( ~~ ) =
   internal bool -> bool
   external
   | caml -> {* Ml_builtins.bi__not_b *}
@@ -145,7 +145,7 @@ let ( |<>| ) =
 (* For compatibility only: should be removed ? *)
 let and_b = ( && );;
 let or_b = ( || );;
-let not_b = ( ~| );;
+let not_b = ( ~~ );;
 let xor_b = ( |<>| );;
 
 (** {7 Operations on pairs} *)
@@ -691,7 +691,7 @@ theorem int_plus_minus: all x y z in int,
     coq proof {*
       intros x y z; unfold int_plus, int_minus, syntactic_equal in |- *;
       intros H;
-      unfold bi__int_minus;
+      unfold bi__int_minus, _equal_, syntactic_equal;
       apply EQ_syntactic_equal; apply Zplus_minus_eq;
       symmetry  in |- *; apply (decidable _ _ _ (Z_eq_dec (x + y) z) H).
       Qed.
@@ -705,7 +705,7 @@ theorem int_minus_plus:
     coq proof {*
       intros x y z; unfold int_plus, int_minus, syntactic_equal in |- *;
       intros H;
-      unfold bi__int_minus;
+      unfold bi__int_minus, _equal_, syntactic_equal;
       apply EQ_syntactic_equal; rewrite <- (Zplus_minus y x);
       apply Zplus_eq_compat; trivial; apply decidable. apply Z_eq_dec. assumption.
       Qed.

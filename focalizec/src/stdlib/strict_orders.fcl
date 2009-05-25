@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: strict_orders.fcl,v 1.8 2009-05-16 10:26:59 weis Exp $ *)
+(* $Id: strict_orders.fcl,v 1.9 2009-05-25 12:35:58 doligez Exp $ *)
 
 use "basics";;
 use "sets";;
@@ -67,7 +67,7 @@ open "sets";;
     proof = by property gt_is_lt, !lt_is_irreflexive;
 
   (** Large ordering is defined from strict ordering *)
-  let leq(x, y) = or_b(!lt(x, y), syntactic_equal(x, y));
+  let leq(x, y) = !lt(x, y) || syntactic_equal(x, y);
 
   theorem lt_refines_leq: all x y in Self, !lt(x, y) -> !leq(x, y)
     proof = by definition of leq;
@@ -136,7 +136,7 @@ species Strict_order =
   (** Strict comparability is difference, this is sometimes called weakly
    connected *)
 
-  let different(x, y) = or_b(!lt(x, y), !lt(y, x));
+  let different(x, y) = !lt(x, y) || !lt(y, x);
 
   proof of different_is_symmetric = by definition of different;
 

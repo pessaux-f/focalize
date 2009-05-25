@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets_orders.fcl,v 1.26 2009-05-16 10:26:59 weis Exp $ *)
+(* $Id: sets_orders.fcl,v 1.27 2009-05-25 12:35:58 doligez Exp $ *)
 
 (**
  @title FoCaLize team. Basic algebra.
@@ -51,7 +51,7 @@ species Setoid =
   signature element : Self ;
 
   (** @mathml <neq/> *)
-  let different (x, y) = basics#not_b (!equal (x, y)) ;
+  let different (x, y) = ~~ !equal (x, y) ;
 
   theorem same_is_not_different : all x y in Self,
      !different (x, y) <-> ~( !equal (x, y))
@@ -74,7 +74,7 @@ end
 
 (**
    By an Anti_setoid we mean a setoid where appartness id considered as a
-   primitive operation. We have the same functiuonalities as Setoid!
+   primitive operation. We have the same functionalities as Setoid!
 *)
 
 species Anti_setoid =
@@ -100,7 +100,7 @@ species Anti_setoid =
   (** element returns some element of our non empty setoid *)
   signature element : Self ;
 
-  let equal (x, y) = basics#not_b (!different (x, y));
+  let equal (x, y) = ~~ !different (x, y);
 
   theorem same_is_not_different : all x y in Self,
     !equal (x, y) <-> ~ (!different (x, y))
@@ -236,7 +236,7 @@ species Pre_order =
 
   (** strict inequality
      @mathml <lt/> *)
-  let lt (x, y) = basics#and_b (!leq (x, y), basics#not_b (!equal (x, y)));
+  let lt (x, y) = !leq (x, y) && ~~ !equal (x, y);
 
   (** some results about strict and large inequalities *)
   theorem lt_is_not_leq : all x y in Self,
@@ -886,7 +886,7 @@ species Ordered_set =
 
   property total_order : all x y in Self, Self!leq (x, y) \/ Self!leq (y, x);
 
-  let equal (x, y) = and_b (Self!leq (x, y), Self!leq (y, x));
+  let equal (x, y) = Self!leq (x, y) && Self!leq (y, x);
 
   proof of equal_reflexive =
     by property total_order definition of equal
@@ -900,7 +900,7 @@ species Ordered_set =
     by property leq_transitive definition of equal
   ;
 
-  let lt (x, y) = not_b (Self!leq (y, x));
+  let lt (x, y) = ~~ Self!leq (y, x);
 
   proof of lt_is_not_leq =
     by property total_order definition of lt, different, equal ;
