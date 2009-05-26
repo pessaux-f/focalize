@@ -1,4 +1,4 @@
-% $Id: intermediate.tex,v 1.4 2009-05-18 16:21:34 pessaux Exp $
+% $Id: intermediate.tex,v 1.5 2009-05-26 16:32:12 pessaux Exp $
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
 the species and collections in normal form, having resolved
@@ -367,7 +367,7 @@ provenance). The rules are computed in the following order:
   searching occurrences of identifiers having the form
   {\tt param!meth}.
 
-\item Rule [{\tt DEF-DEP}]. This rule is implemented bby first
+\item Rule [{\tt DEF-DEP}]. This rule is implemented by first
   recovering all the abstraction infos of the methods of {\tt Self} we
   def-depend. Because species are well-formed, there is no cycle in
   its dependencies, and because it is in normal form, the methods we
@@ -391,8 +391,77 @@ provenance). The rules are computed in the following order:
   of methods of {\tt Self} belonging to the visible universe,
   recording these carriers soon will serve for the next rule.
 
-\item Rule [{\tt UNIVERS}].
-\item Rule [{\tt PRM}].
+\item Rule [{\tt UNIVERS}]. This rule says that if a method $z$
+  belongs to the visible universe of the method, if $m$ has a
+  dependency on a species parameter method $y$ via the type of $z$,
+  then we must add this dependency to the current method.
+  To make thing faster and simpler, instead of checking if there
+  exists a $y$, we directly do so that for each $z$ in the visible
+  universe, we must add its
+  {\tt iai\_dependencies\_from\_params\_via\_type} (i.e. the dependencies
+  on species parameters we already computed for the method $z$. Since
+  the methods are well-ordered, we are sure that we will find this
+  information for $z$ since it was mandatorily processed before.
+
+  By the way, we go on reminding the species parameters' carriers
+  appearing in the type of the methods added in the dependencies.
+\item Rule [{\tt PRM}]. This one is really trickier and suffered of
+  small typos and implicit stuff in the original PhD. The correction
+  is presented in \ref{rule-PRM-corrected}.
+  It deals with the fact that a parameter $C_{p'}$ using a previous
+  parameter $C_p$ may induce dependencies on methods of $C_p$ via its
+  own dependencies on its own parameters (those instantiated by
+  $C_p$). Hence, we are interested in computing dependencies on
+  species parameters of a species having the shape:
+  $${\tt species}\ S (C_p\ {\tt is}\ \ldots, C_{p'}\ {\tt is}\ S'(C_p))$$
+
+  First, we look for {\tt is} parameters themselves parametrised. We
+  hunt in the {\tt species\_parameters}, to get some
+  {\tt Env.TypeInformation.SPAR\_is} whose
+  {\tt simple\_species\_expr} has a non empty list \\
+  {\tt sse\_effective\_args}.
+
+  Then, we get for each parametrised parameter of the species, which
+  other parameters it uses as effective argument in which species and
+  at which position.
+  This is the typical shape already given: \\
+  ${\tt species}\ S (C_p\ {\tt is}\ \ldots, C_{p'}\ {\tt is}\ S'(C_p))$
+  We want to know that $C_{p'}$ uses $C_p$ as first argument for the
+  species S'.
+  So we want to get the pair $(C_{p'}, (S', [(C_p, 1)]))$. If $C_{p'}$
+  used another $C_q$ as third argument, we would get the pair:
+  $(C_{p'}, (S', [(C_p, 1); (C_q, 3)]))$.
+
+  Now, we know that $C_{p'}$ is a species parameter built from $S'$
+  applying $C_p$ at position 0. We must find the name of the formal
+  parameter in $S'$ corresponding to the position where $C_p$ is
+  applied. Let's call it $K$. We  have now to find all the
+  dependencies (methods $y$) of $K$ in $S'$ and we must add them to
+  the dependencies of $C_p$.
+  This is done by checking for each affective argument and position if
+  it is an entity or a collection parameter. in the first case, since
+  an entity doesn't have ``call-able'' method we do not have any
+  dependency to add, then we have nothing to do. In the second case,
+  we have in our hand the effective argument used. We then get the
+  name of the formal parameter ($C_p$) of $S'$ at the position where
+  the effective argument was used. Now, get all the $z$ in
+  ${\tt Deps}\ (S, C_{p'})$ (that can be found in the
+  {\tt starting\_dependencies\_from\_params}). Now, for all $z$, we
+  must search the set of methods, $y$, on which $z$ depends on in $S'$
+  via the formal parameter's name. So, first we get $z$'s dependencies
+  information $y$. In these dependencies, we try to find the one
+  corresponding to formal name . If none is found in the assoc list
+  that because there no method in the dependencies on this parameter
+  and then we ``add'' and empty set of dependencies. If we found some,
+  before adding the dependencies, we must instantiate the formal
+  parameter of $S'$ by the effective argument provided. In the code,
+  this means that we must replace {\tt formal\_name} by
+  {\tt eff\_arg\_qual\_vname} in the dependencies $y$. In effect, in
+  the bodies/types of the methods of $S'$, parameters are those of
+  $S'$, not our current ones we use to instantiate the formal ones of
+  $S'$ ! To prevent those of S' to remain in the expressions and be
+  unbound, we do the instanciation here. And finally, we add the
+  substituted dependencies in the current dependencies accumulator.
 \end{enumerate}
 
 
