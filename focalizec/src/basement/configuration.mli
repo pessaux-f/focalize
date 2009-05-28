@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.23 2009-02-04 12:26:51 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.24 2009-05-28 08:43:26 pessaux Exp $ *)
 
 (** {3 The internal configuration of the FoCaLize compiler} *)
 
@@ -28,6 +28,9 @@ val focalize_full_version : string;;
 
 val get_experimental : unit -> bool;;
 val set_experimental : unit -> unit;;
+
+val get_tmp_use_Function_for_recursive_functions : unit -> bool;;
+val set_tmp_use_Function_for_recursive_functions : unit -> unit;;
 
 val get_impose_termination_proof : unit -> bool;;
 val set_impose_termination_proof : unit -> unit;;

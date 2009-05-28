@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.22 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.23 2009-05-28 08:43:26 pessaux Exp $ *)
 
 
 
@@ -751,4 +751,43 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
     ai.Abstractions.ai_min_coq_env ;
   (* Finally, reverse the list to keep the right oder. *)
   List.rev !the_list_reversed
+;;
+
+
+
+(* ************************************************************************* *)
+(* Abstractions.field_abstraction_info list -> Types.type_simple option      *)
+(** {b Descr} : Finds among the fields abstractions if there is the
+    signature "representation". If finds some, then returns an instance of
+    its type scheme. If doesn't find any, returns [None].
+
+    This function is needed for when we use
+    [MiscHelpers.bind_parameters_to_types_from_type_scheme] during code
+    generation. In effect this function takes as parameter [~self_manifest].
+    One could think that at code generation time we would not need to still
+    know the structure of [Self]. In fact, we need since the above function
+    performs unifications to extract each argument's type in a functional
+    type.
+    The devilish FoCaL code showing this need follows:
+        species Subset(Val is Superset) =
+          signature empty : Self ;
+        end ;;
+
+        species Subset (Val is Superset) =
+          inherit Subset_Comp (Val) ;
+          representation = Val -> bool ;
+          let empty(v in Val) = false ;
+        end ;;
+
+    {b Exported} : No.                                                       *)
+(* ************************************************************************* *)
+let rec find_self_representation_if_some = function
+  | [] -> None
+  | h :: q ->
+      (begin
+      match h with
+       | Abstractions.FAI_sig ((_, (Parsetree.Vlident "rep"), sch), _) ->
+           Some (Types.specialize sch)
+       | _ -> find_self_representation_if_some q
+      end)
 ;;

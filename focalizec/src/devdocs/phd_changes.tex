@@ -1,5 +1,7 @@
-% $Id: phd_changes.tex,v 1.10 2009-05-26 16:32:13 pessaux Exp $
-\subsection{Type unification}
+% $Id: phd_changes.tex,v 1.11 2009-05-28 08:43:26 pessaux Exp $
+\subsection{Type unification (1)}
+\index{unification}
+\index{rule![SELF1/2]}
 \noindent Section 3.3, definition 9, page 27.
 
 \noindent Rule [SELF1] should be: $mg(t, {\bf Self}, t) = {\bf Self}, id$
@@ -7,13 +9,14 @@
 \noindent Rule [SELF2] should be: $mg(t, t, {\bf Self}) = {\bf Self}, id$
 
 
-\subsection{Type unification2}
+\subsection{Type unification (2)}
 Is the ``preference of {\tt Self}'' (see above) rule really needed ?
 It seems it can lead to absence of principal type. C.f. the section
 \ref{cadavers}.
 
 
 \subsection{Normal form algorithm}
+\index{normal form}
 \noindent Section 3.7.1, page 36.
 
 \noindent In the algorithm, line 10 should be:
@@ -32,6 +35,7 @@ dans $\mathbb{W}_1$ \ldots''.
 
 
 \subsection{Typing rules for parametrised species}
+\index{rule![COL-PRM]}
 \noindent Section 3.8, figure 3.2, page 43.
 
 \noindent Rule [COL-PRM] should be:
@@ -52,6 +56,7 @@ dans $\mathbb{W}_1$ \ldots''.
 
 
 \subsection{Dependency on the carrier}
+\index{dependency!on carrier}
 \noindent Section 3.9.4, definition 28, page 50.
 
 \noindent The definition should be: ``Soit une expression $e$, si une
@@ -108,12 +113,14 @@ for this purpose).
 \subsection{Parameters used by a method}
 \noindent Section 3.9.5, definition 66, page 124.
 
-\noindent To understand the rules [BODY], [TYPE], [DEF-DEP], [UNIVERS]
-and [PRM], it should be stated that implicitly the parameter $C_{p'}$
-has the form: $$C_{p'} {\tt is/in\ } \tau_{p'}$$.
+\noindent To understand the rules {\tt [BODY]}, {\tt [TYPE]},
+{\tt [DEF-DEP]}, {\tt [UNIVERS]} and {\tt [PRM]}, it should be stated
+that implicitly the parameter $C_{p'}$ has the form:
+$$C_{p'} {\tt is/in\ } \tau_{p'}$$.
 
 
 \subsection{Instanciation of species parameters}
+\index{instanciation}
 \noindent Section 3.9.5, definition 67, page 124.
 
 \noindent Second rule should be:
@@ -207,9 +214,10 @@ this method comes.
 
 
 \subsubsection{Missing substitution in rule [PRM]}
+\index{rule![PRM]}
 \label{rule-PRM-corrected}
-First, the rule [PRM] needs further explanations to understand its
-presentation. It must first be understood that in this rule, the
+First, the rule {\tt [PRM]} needs further explanations to understand
+its presentation. It must first be understood that in this rule, the
 species {\tt S} has the following form:
 
 ${\tt species}\ S (C_p\ {\tt is}\ \ldots, C_{p'}\ {\tt is}\ S'(C_p))$

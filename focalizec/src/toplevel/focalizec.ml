@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.43 2009-04-11 22:21:45 weis Exp $ *)
+(* $Id: focalizec.ml,v 1.44 2009-05-28 08:43:26 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -249,6 +249,9 @@ let main () =
        Arg.String Configuration.set_pretty_print,
        " pretty-prints the parse tree of the focalize file as a focalize\n\
          source into the argument file.") ;
+      ("-I-do-no-want-to-use-this-option",
+       Arg.Unit Configuration.set_tmp_use_Function_for_recursive_functions,
+       " Do not use if you don't know what it does: dev team reserved.") ;
       ("-raw-ast-dump",
        Arg.Unit Configuration.set_raw_ast_dump,
        " (undocumented) prints on stderr the raw AST structure \

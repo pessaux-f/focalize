@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.94 2009-03-13 07:52:05 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.95 2009-05-28 08:43:26 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -351,7 +351,7 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
-let generate_one_field_binding ctx env min_coq_env ~let_connect
+let generate_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
     dependencies_from_params (from, name, params, scheme, body) =
   let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
@@ -430,7 +430,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
        structure... *)
     let (params_with_type, _, _) =
       MiscHelpers.bind_parameters_to_types_from_type_scheme
-        ~self_manifest: None scheme params in
+        ~self_manifest scheme params in
     (* We are printing each parameter's type. These types in fact belong to a
        same type scheme. Hence, they may share variables together.
        For this reason, we first purge the printing variable mapping and after,
@@ -509,7 +509,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
-let generate_methods ctx env field =
+let generate_methods ctx env ~self_manifest field =
   match field with
    | Abstractions.FAI_sig ((from, name, sch), _) ->
        (* Only declared, hence, no code to generate yet ! *)
@@ -553,7 +553,7 @@ let generate_methods ctx env field =
             let coq_min_typ_env_names =
               generate_one_field_binding
                 ctx env abstraction_info.Abstractions.ai_min_coq_env
-                ~let_connect: Misc_common.LC_first_non_rec
+                ~let_connect: Misc_common.LC_first_non_rec ~self_manifest
                 abstraction_info.Abstractions.ai_dependencies_from_params
                 (from, name, params, (Some scheme), body_expr) in
             (* Now, build the [compiled_field_memory], even if the method was
@@ -615,7 +615,7 @@ let generate_methods ctx env field =
                  let first_coq_min_typ_env_names =
                    generate_one_field_binding
                      ctx' env first_ai.Abstractions.ai_min_coq_env
-                     ~let_connect: Misc_common.LC_first_rec
+                     ~let_connect: Misc_common.LC_first_rec ~self_manifest
                      first_ai.Abstractions.ai_dependencies_from_params
                      (from, name, params, (Some scheme), body_expr) in
                  let first_compiled = {
@@ -646,7 +646,7 @@ let generate_methods ctx env field =
                        let coq_min_typ_env_names =
                          generate_one_field_binding
                            ctx' env ai.Abstractions.ai_min_coq_env
-                           ~let_connect: Misc_common.LC_following
+                           ~let_connect: Misc_common.LC_following ~self_manifest
                            ai.Abstractions.ai_dependencies_from_params
                            (from, name, params, (Some scheme), body_e) in
                        { Misc_common.cfm_is_logical = false ;
@@ -1243,8 +1243,17 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     Abstractions.compute_abstractions_for_fields
       ~with_def_deps_n_term_pr: false (Abstractions.EK_ml env)
       ctx species_descr.Env.TypeInformation.spe_sig_methods in
+  (* Because we sometimes need to bind function parameters to thei types
+     with the function
+     [MiscHelpers.bind_parameters_to_types_from_type_scheme], we must
+     beforehand know is [Self] is manifest or not. I.e. if there is a
+     signature called "representation". *)
+  let self_manifest =
+    Misc_common.find_self_representation_if_some field_abstraction_infos in
   let compiled_fields =
-    List.map (generate_methods ctx env) field_abstraction_infos in
+    List.map
+      (generate_methods ctx env ~self_manifest)
+      field_abstraction_infos in
   (* Now build the list of the species parameters names to make them public in
      the future ml generation environnment. *)
   let species_params_names_n_kinds =

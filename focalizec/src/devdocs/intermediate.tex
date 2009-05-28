@@ -1,4 +1,4 @@
-% $Id: intermediate.tex,v 1.5 2009-05-26 16:32:12 pessaux Exp $
+% $Id: intermediate.tex,v 1.6 2009-05-28 08:43:26 pessaux Exp $
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
 the species and collections in normal form, having resolved
@@ -66,6 +66,7 @@ code).
 
 
 \section{``Computing abstractions''}
+\index{abstraction}
 As stated in introduction the aim is to fully build the set of
 methods of {\tt Self} and the set of collection parameters' methods a
 method depends on. At the end of this process, we want to get for each
@@ -130,6 +131,7 @@ type abstraction_info = {
 \end{lstlisting}
 }
 
+\index{$\lambda$-lift}
 In effect, knowledge of what to $\lambda$-lift is acquired along
 different steps (corresponding to rules of definition 72 page 153 in
 Virgile Prevosto's PhD + one new rule that didn't exist and appeared
@@ -323,6 +325,7 @@ the def-children of it.
 
 
 \subsubsection{{\tt VisUniverse.visible\_universe}}
+\index{visible universe}
 The next step is to compute the ``visible universe'' of the
 method. This is done by calling the function of
 {\tt commoncodegen/visUniverse.ml}. This universe describes which

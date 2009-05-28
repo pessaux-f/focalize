@@ -1,4 +1,5 @@
-% $Id: scoping.tex,v 1.6 2009-05-12 13:10:19 pessaux Exp $
+% $Id: scoping.tex,v 1.7 2009-05-28 08:43:26 pessaux Exp $
+\index{scoping}
 The scoping process aims to link each identifier occurrence to its
 related definition according to the rules that drive the visibility of
 identifiers. It avoids name confusion and ensure that each occurrence
@@ -192,6 +193,7 @@ not a delta, it is a complete ''all-in-one'' environment suitable to
 scope the remaining phrases of the source file.
 
 \subsubsection{Scoping the species parameters ({\tt scope\_species\_params\_types})}
+\index{species!parameter!scoping}
 The species parameters (i.e. collection and entity parameters) are
 scoped in their apparition order, adding the scoping information of
 each one to scope the next ones. We have two cases of parameters.
@@ -222,6 +224,7 @@ scoped version of the list of parameters.
 
 
 \subsubsection{Scoping the inheritance clause ({\tt scope\_inheritance})}
+\index{inheritance!scoping}
 Scoping the inheritance is done by scoping each collection expression
 in their order of apparition. Like we saw for species parameters
 scoping, scoping a collection expression returns the scoped expression
@@ -244,6 +247,7 @@ during accesses in the environment (by {\tt find\_value}).
 
 
 \subsubsection{Scoping the defined methods ({\tt scope\_species\_fields})}
+\index{method!scoping}
 To scope all the defined methods of the species, we scope each field
 in its order of apparition, then add the obtained information about it
 in the environment used to scope the remaining methods.

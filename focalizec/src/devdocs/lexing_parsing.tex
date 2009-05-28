@@ -1,6 +1,7 @@
-% $Id: lexing_parsing.tex,v 1.1 2009-03-17 17:24:48 pessaux Exp $
+% $Id: lexing_parsing.tex,v 1.2 2009-05-28 08:43:26 pessaux Exp $
 
 \section{Lexing}
+\index{lexing}
 The lexing process is performed as usual, by a lexer created by
 \ocamllex. The description of the lexer is located in
 {\tt src/parser/lexer.mll}. The structure of this file is like any
@@ -20,6 +21,7 @@ and only one lexem.
 
 
 \section{Parsing}
+\index{parsing}
 The lexing process is performed as usual, by a lexer created by
 \ocamlyacc. The description of the parser is located in
 {\tt src/parser/parser.mly}. The structure of this file is like any
@@ -28,6 +30,7 @@ implements recovery on error, hence, it describes the syntax of the
 language without any addition (conversely to \ocaml\ or \gcc\'s
 parsers).
 
+\index{AST!node structure}
 The important rule applied in the parser is that at each AST node it
 creates, it record the corresponding location (extend) in the source
 file and the corresponding (optional) documentation (i.e. special

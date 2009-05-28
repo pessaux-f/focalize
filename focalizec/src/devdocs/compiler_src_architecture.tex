@@ -326,7 +326,9 @@ $x$ nesting level of the root (i.e. of {\tt focalize/focalizec}) and
       production.
     \item {\tt utils\_docgen.mli} (f)
     \end{itemize}
-  \item {\tt extlib} (d 2) : Libraries higher level than the basic
+  \item {\tt extlib} (d 2) : \index{extra library}
+    \index{library!extra}
+    Libraries higher level than the basic
     standard library. Especially contains formal calculus structures.
     \begin{itemize}
     \item {\tt Makefile} (f)
@@ -407,7 +409,8 @@ $x$ nesting level of the root (i.e. of {\tt focalize/focalizec}) and
     \item {\tt lex\_file.ml} (f) : Initial attempt to have a small
       ``main'' to check the behaviour of the lexer on a file at the
       early stages of development. This is not used anymore.
-    \item {\tt lexer.mll} (f)
+    \item {\tt lexer.mll} (f) : \index{lexer}
+      The lexer description in \ocamllex.
     \item {\tt lexer.spec} (f) : Trace of thoughts we had all along
       the time. Initially contained ideas about the language syntax,
       (at lexical level) to make it smooth.
@@ -415,7 +418,8 @@ $x$ nesting level of the root (i.e. of {\tt focalize/focalizec}) and
       ``main'' to check the behaviour of the parser on a file at the
       early stages of development. This is not used anymore.
     \item {\tt parse\_file.mli} (f)
-    \item {\tt parser.mly} (f) : The parser description in \ocamlyacc.
+    \item {\tt parser.mly} (f) : \index{parser}
+      The parser description in \ocamlyacc.
     \item {\tt parser.spec} (f) : Trace of thoughts we had all along
       the time. Initially contained ideas about the language syntax,
       (at syntactic level) to make it smooth. Next other ideas were
@@ -442,7 +446,9 @@ $x$ nesting level of the root (i.e. of {\tt focalize/focalizec}) and
     \end{itemize}
   \item {\tt scoper} (d 2) : Old stuff. Was discarded a long time
     ago. The directory is empty by the way.
-  \item {\tt stdlib} (d 2) : The standard library. Most of these
+  \item {\tt stdlib} (d 2) : \index{stdlib}
+    \index{standard library} \index{library!standard}
+    The standard library. Most of these
     sources are maintained by Renaud Rioboo. A few ones (basics and
     built-ins) are low-level code close to the compiler and maintained
     by the core compiler development team.
@@ -482,12 +488,15 @@ $x$ nesting level of the root (i.e. of {\tt focalize/focalizec}) and
       the exceptions that can be raised during a source compilation
       and issues the related error message. Roughly, this code wraps
       the main call to the compilation engine.
-    \item {\tt focalizec.ml} (f) : The compiler entry point.
+    \item {\tt focalizec.ml} (f) : \index{compiler entry point}
+      \index{entry point}
+      The compiler entry point.
     \item {\tt focalizec.mli} (f)
     \item {\tt fodump.ml} (f) : For debug only, dumps (partially) the
       content of a \focalize\ object file (``.fo'' file).
     \end{itemize}
-  \item {\tt typing} (d 2) : Performs the type-checking of the
+  \item {\tt typing} (d 2) : \index{type-checking}
+    Performs the type-checking of the
     language, normal form of species, checks well-formation of
     species, compute def and decl-dependencies, initiate computation
     of dependencies on collection parameters' methods, resolves

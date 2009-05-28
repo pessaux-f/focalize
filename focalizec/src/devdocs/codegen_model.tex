@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.22 2009-05-12 13:10:19 pessaux Exp $
+% $Id: codegen_model.tex,v 1.23 2009-05-28 08:43:26 pessaux Exp $
 
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -13,7 +13,7 @@ both \ocaml\ and \coq\ code are based on a record-oriented structure
 for the species and collection, with explicit record fields accesses.
 
 \section{Species}
-
+\index{species}
 \subsection{Species header}
 The generated code for a species is hosted by a module whose name is
 the species' name. This way, it is possible to have species having the
@@ -22,6 +22,7 @@ name-space of ``things'' contained in and induced by a species.
 
 
 \subsection{Carrier representation}
+\index{carrier!representation}
 In \ocaml, if the structure of the carrier of the species is known
 (i.e. if the method {\tt representation} was defined), then we
 generate a type definition whose name is {\tt me\_as\_carrier} and
@@ -75,6 +76,7 @@ later).
 
 
 \subsection{The record type}
+\index{record!type}
 The type of data representing a species is a record type. We first
 examine its header, i.e. stuff before this type definition's body,
 then it's body.
@@ -388,6 +390,7 @@ must be added to identifiers in applicative position.
 
 
 \subsection{Methods}
+\index{method}
 \label{code-gen-model-methods}
 Once the record type is defined, it is time to generate the
 definitions corresponding to the various methods of the
@@ -448,6 +451,7 @@ stringification is done on the fly using a very simple mechanism
 file \\
 {\tt focalize/focalizec/src//basement/parsetree\_utils.ml}.
 
+\index{method!generator}
 The generated definition is in fact a {\bf method generator}, not the
 method itself. Its is a function that is parametrised by all the thing
 the method depends on, and whose body is the method's body''. This
@@ -808,6 +812,7 @@ construct ``{\tt Function}'' and the need for a termination proof.
 
 
 \subsection{Fully defined species}
+\index{species!complete}
 In case a species is fully defined, i.e. all its methods are defined,
 no more remaining only declared, the species can be turned into a
 collection by an {\tt implements}. To allow creating collections, we
@@ -999,6 +1004,7 @@ End Setoide_produit.
 }
 
 \subsubsection{Sample code for extra () parameter for \ocaml}
+\index{extra!() parameter}
 \label{sample-code-coll-gen-no-param}
 As described in \ref{point-the-extra-unit-parameter-need}, here is a
 full example showing the need to have an extra {\tt ()} in \ocaml\ for
@@ -1191,6 +1197,7 @@ now be generalised (i.e. become polymorphic) and there is no more
 instanciation issue.
 
 \section{Collection}
+\index{collection}
 Collections are compiled differently as species but they start by
 exactly the same kind of record type definition. This record type will
 represent the type of data in the target language collections are
@@ -1618,6 +1625,7 @@ Let snd (__var_a : Set) (__var_b : Set) (x : ((__var_a * __var_b)%type)) :
 
 
 \section{Toplevel theorems}
+\index{theorem!toplevel}
 Toplevel theorems, like toplevel values do not have any dependencies
 since they are not in a species. Hence they are generated like other
 theorems, with the {\tt Section} mechanism for the proof part (if the
@@ -1648,6 +1656,7 @@ Qed.
 }
 
 \section{Type definitions}
+\index{type!definition}
 Type definitions always appear at toplevel, i.e. outside a
 species. For a given type definition named ``{\tt myty}'' in
 \focalize, the corresponding generated names are historically a few
@@ -2016,6 +2025,7 @@ Record r1__t (__var_c : Set) : Type :=
 
 
 \section{External definitions}
+\index{external!definition}
 External definitions are intended to make the interface between code
 imported from foreign target languages to be able to use it on
 \focalize's side. There are 2 kinds of external definitions: type
@@ -2042,6 +2052,7 @@ in a \focalize\ source code.
 
 \subsection{External type definitions}
 \index{external!type definition}
+\index{type!definition!external}
 \label{external-type-def-codegen-model}
 An external type definition starts like a regular type definition,
 i.e. by the type constructor's name and possibly parameters:
@@ -2063,6 +2074,7 @@ type definitions: they are optional and belong to the current external
 type definition. We will see later the meaning.
 
 \subsubsection{The {\tt internal} clause}
+\index{internal clause}
 For a type definition, the {\tt internal} clause shows at which
 \focalize\ type definition the body of the external definition
 corresponds. In fact this is equivalent to establish an alias between
@@ -2161,6 +2173,7 @@ on \focalize's side.
 
 
 \subsubsection{The {\tt external} clause}
+\index{external!clause}
 The external clause tells how the {\bf type constructor} (not it's
 components like fields, value constructors : this will be done by the
 extra {\tt and ...} clauses described below in
@@ -2459,6 +2472,7 @@ examine.
 
 \subsubsection{External type definitions and built-in types.}
 \label{external-ty-defs-and-builtin-tys}
+\index{type!builtin}
 As stated before, external type definition are also used to setup the
 basic types internally known by the compiler :{\tt int}, {\tt unit},
 {\tt string}, {\tt bool} and {\tt char}. These definitions are in the

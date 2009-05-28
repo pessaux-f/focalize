@@ -1,4 +1,4 @@
-% $Id: environments.tex,v 1.17 2009-05-12 15:47:20 pessaux Exp $
+% $Id: environments.tex,v 1.18 2009-05-28 08:43:26 pessaux Exp $
 
 All along the compilation pass, we need to keep trace of various
 information about compiled entities (methods, types, identifiers,
@@ -78,6 +78,7 @@ environment, the \ocaml\ and the \coq\ code generation environments.
 This simplistic view fails because of the notion of ``modules'',
 i.e. in \focalize\, compilation units.
 
+\index{module}
 In effect, since compilation units host definitions, they can be seen
 as modules. Hence we need an extra function to search inside
 ``modules''. This will especially serve to look-up names qualified by
@@ -427,16 +428,19 @@ We first look at the information bound to each name in the different
 name-spaces.
 
 \subsubsection{Sum type value constructors}
+\index{value!constructor!scoping env info}
 Since these identifiers are always introduced by type definitions that
 are at toplevel, we only need to remind in which compilation unit they
 were introduced, hence hosted. Then a constructor will be bound in the
 environment to a compilation unit name.
 
 \subsubsection{Record type field names}
+\index{record!type!scoping env info}
 For the same reason than for the sum type value constructors, Record
 type field names are bound to a compilation unit name.
 
 \subsubsection{Values}
+\index{value!scoping env info}
 Information bound to value identifiers is more complex since it must
 depict the different cases of identifiers.
 \begin{itemize}
@@ -460,6 +464,7 @@ depict the different cases of identifiers.
 \end{itemize}
 
 \subsubsection{Types}
+\index{type!scoping env info}
 Type constructors may be separated in two categories:
 \begin{itemize}
 \item {\tt TBI\_builtin\_or\_var}\ \ The type identifier is either a
@@ -484,6 +489,7 @@ Type constructors may be separated in two categories:
 \end{itemize}
 
 \subsubsection{Species}
+\index{species!scoping env info}
 Data recorded for species is the most complex. It must depicts the
 scope of the species name itself, but also give information about the
 methods and parameters available through this species. For this
@@ -583,6 +589,7 @@ only {\em types} are present, {\em type schemes} are bound to
 
 
 \subsubsection{Sum type value constructors}
+\index{value!constructor!typing env info}
 A sum type value constructor is considered as a function taking as
 many parameters as they have arguments and returning a value whose
 type is the one hosting the constructor (i.e. the current type
@@ -617,6 +624,7 @@ directly.
 
 
 \subsubsection{Record type field names}
+\index{record!type!typing env info}
 In the same idea than for sum type value constructors, a record type
 field label will be considered as a function taking 1 argument whose
 type is the type of the field an returning a value value whose
@@ -642,9 +650,11 @@ purpose) since \focalize\ doesn't handle mutability (i.e references).
 
 
 \subsubsection{Values}
+\index{value!typing env info}
 Values are simply bound to their type scheme.
 
 \subsubsection{Types}
+\index{type!typing env info}
 Type constructors must be bound to more complex information since they
 must exhibit the kind of definition they are introduced by. We have 4
 kinds of definitions:
@@ -685,6 +695,7 @@ kinds of definitions:
 
 
 \subsubsection{Species}
+\index{species!typing env info}
 The structure of information recorded about species is pretty complex
 since it must depict the complete species structure, most
 importantly the parameters and all the methods stuff, but some other
@@ -860,6 +871,7 @@ We first look at the information bound to each name in the different
 name-spaces.
 
 \subsubsection{Sum type value constructors}
+\index{value!constructor!\ocaml\ gen env info}
 In this bucket, we only record on which string a sum type value
 constructor that has been introduced by a type definition involving an
 external representation must be translated into \ocaml.
@@ -874,6 +886,7 @@ simply translated into \ocaml\ using the name given in \focalize\
 side.
 
 \subsubsection{Record type field names}
+\index{record!type!\ocaml\ gen env info}
 \focalize's records are generated as real records in the target
 languages. Hence, we only need to remind the name on which to map each
 record field name of the \focalize\ type definition. Conversely to the
@@ -881,6 +894,7 @@ sum type value constructors, all the record field labels are recorded
 in the environment.
 
 \subsubsection{Values}
+\index{value!\ocaml\ gen env info}
 For \ocaml\ code generation, we do not need any information about
 values. Hence, the type of the bound values is trivially
 {\tt unit}. But in fact, we will never enter values not look for
@@ -888,11 +902,13 @@ values in such an environment.
 
 
 \subsubsection{Types}
+\index{type!\ocaml\ gen env info}
 Types also do not need any information to be generated. Hence, they
 are handled like values above in term of environment.
 
 
 \subsubsection{Species}
+\index{species!\ocaml\ gen env info}
 For species (and collections) we must find a way to know their methods
 and other information coming from the dependency computation. All this
 is recorded in the {\tt species\_binding\_info} structure below:
@@ -965,6 +981,7 @@ name-spaces.
 
 
 \subsubsection{Sum type value constructors}
+\index{value!constructor!\coq\ gen env info}
 The idea behind information bound to sum type value constructors is
 about the same than in \ocaml. We want to know if needed on what
 string to map a constructor name if it comes from an external type
@@ -1024,9 +1041,11 @@ generalised variables appearing in its type.
 
 
 \subsubsection{Record type field names}
+\index{record!type!\coq\ gen env info}
 Record type field names are handled like in \ocaml.
 
 \subsubsection{Values}
+\index{value!\coq\ gen env info}
 In the same order of idea than for sum type value constructors we need
 to record the number of extra arguments to apply (when the value is
 functional) due to polymorphic type variables present in the value's
@@ -1039,9 +1058,11 @@ its logical expression body), a toplevel let-bound value
 ({\tt VB\_non\_toplevel}).
 
 \subsubsection{Types}
+\index{type!\coq\ gen env info}
 Like in \ocaml, types also do not need any information to be generated.
 
 \subsubsection{Species}
+\index{species!\coq\ gen env info}
 Species are bound to exactly the same information than they are in
 \ocaml\ code generation environments.
 

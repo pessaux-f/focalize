@@ -1,4 +1,4 @@
-% $Id: cadavers.tex,v 1.6 2009-05-18 16:21:34 pessaux Exp $
+% $Id: cadavers.tex,v 1.7 2009-05-28 08:43:26 pessaux Exp $
 \label{cadavers}
 Here is the holly section of things that are not yet done and for
 which we know there is still something to do. Currently, most of them
@@ -140,4 +140,23 @@ species C inherits S (Self) = end ;;
 \item The \focalizec\ command should be enhanced upon producing an
   executable instead of stopping only on object files (.cmo).
 
+\item On Eric's request: what to do of such a program (that compiles in
+  \focal, \ocaml\ and \coq) but is a bit weird.
+{\footnotesize
+\begin{lstlisting}
+species Subset(Val is Superset) =
+  signature empty : Self ;
+end ;;
+
+species Subset (Val is Superset) =
+  inherit Subset_Comp (Val) ;
+  representation = Val -> bool ;
+  let empty(v in Val) = false ;
+end ;;
+\end{lstlisting}
+}
+
+ In effect, {\tt empty} is first declared as a constant, then it is
+ implemented as a function, just thanks to the fact that {\tt Self} is
+ known to be equal to a functional type.
 \end{itemize}

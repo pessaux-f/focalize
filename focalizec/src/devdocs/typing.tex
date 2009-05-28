@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.14 2009-05-18 16:21:34 pessaux Exp $
+% $Id: typing.tex,v 1.15 2009-05-28 08:43:26 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -55,6 +55,7 @@ We will now examine various points of this typing pass.
 
 \section{Type inference}
 \subsection{Where to record type information in the AST ?}
+\index{AST!node structure}
 Type inference is the process of guessing the type of each expression,
 each definition of the source code. In fact, in \focalize, types are
 partly inferred, partly given by the programmer. Signatures are a way
@@ -135,6 +136,7 @@ be updated with the {\tt ANTI\_non\_relevant} value.
 
 
 \subsection{Types and type schemes}
+\index{type}
 \index{type!scheme}
 \label{type-scheme}
 Like in regular ML-like type-checkers, expressions are assigned
@@ -189,6 +191,7 @@ type type_scheme = {
 
 
 \subsection{Working ``in place'' with substitutions}
+\index{substitution}
 The type-checking algorithm of ML-like languages is often stated using
 the notion of MGU and using substitutions. In \focalize, the effective
 inference algorithm uses techniques more efficient in practice than
@@ -203,6 +206,7 @@ present document, but a clear and efficient explanation can be found
 in ``Le langage Caml'' written by Pierre Weis and Xavier Leroy.
 
 \medskip
+\index{type!algebra}
 The idea is to represent the types by terms that can be physically
 shared, with type variables that can be directly assign a
 value. Hence, as described in the source file {\tt basement/type.ml},
@@ -354,6 +358,7 @@ let rec repr = function
 
 
 \subsection{Unification}
+\index{unification}
 The computation of the most general type of an expression, called type
 inference, strongly rely on unification of type terms. We will say
 that 2 terms $\tau_1$ and $\tau_2$ can be {\em unified} if there exists
@@ -652,6 +657,7 @@ constructor (line 93). This leads to a type-checking error by raising
 an exception.
 
 \subsection{Polymorphism}
+\index{polymorphism}
 Like introduced in \ref{type-scheme}, type schemes are used to
 implement the polymorphism in type inference. They act as ``models''
 of types. But the question is how to make such ``models'' and how
@@ -659,6 +665,7 @@ extract types from such ``models''. The first point is handled by the
 {\tt generalize} function and the second by the {\tt specialize}
 function of the source file {\tt basement/types.ml}.
 
+\index{binding level}
 We must start our explanation by introducing the notion of
 {\bf binding level}. The aim is to keep trace of type variables
 introduced in let-definitions that are deeper than our level. The
@@ -747,7 +754,7 @@ in the introduction of this chapter, at \ref{cool-incremental-nf}).
 
 
 
-\section{Environment and structures for typing pass}
+\section{Environment and structures for the typing pass}
 The structure of the environment used during the typing pass has been
 presented in \ref{typing-environment} and is coded in {typing/env.ml}.
 
@@ -779,6 +786,7 @@ type typing_context = {
 
 
 \section{Typing a species definition}
+\index{species!typing}
 The process of typing a species will be now examined step by step by
 step. This is done by typing its parameters, resolving inheritance,
 type-checking the methods, merging properties and proofs, normalising
@@ -787,6 +795,7 @@ the environment. A few other administrative tasks are performed and
 will be detailed below.
 
 \subsection{Dealing with the species parameters}
+\index{species!parameter!typing}
 For each parameter, this process builds the species type of the
 parameter and get the list of methods it has. Each parameter will be
 inserted in the environment as species and type (the type representing
@@ -800,6 +809,7 @@ hosting species {\tt spe\_sig\_params} field.
 
 
 \subsection{Typing a species expression}
+\index{species!typing}
 \label{typing-a-species-expression}
 A species expression is either a simple species/collection identifier
 like {\tt Setoid} or an application of a species/collection identifier
@@ -884,7 +894,7 @@ effective argument {\tt ConcreteInt!un}.
 
 
 \subsection{Inheritance resolution}
-\index{inheritance resolution}
+\index{inheritance!resolution}
 \label{inheritance-resolution}
 The expected result of inheritance resolution is to load the inherited
 methods in the environment and get their signatures and methods
@@ -943,6 +953,7 @@ on $t_s$.
 
 
 \subsection{Type-checking methods}
+\index{method!typing}
 This is done by {\tt typecheck\_species\_fields}. This function infers
 the types of the species fields contained in the list of methods
 definitions. The typing environment is incrementally extended with the
@@ -997,6 +1008,7 @@ our current one, generalisation could not be done otherwise.
 
 
 \subsubsection{Dependencies on the carrier}
+\index{dependency!on carrier}
 \label{deps-on-carrier}
 We have a special case for computing dependencies on the carrier
 {\tt Self} introduced by using the type introduced by
@@ -1068,6 +1080,7 @@ new method. That's done by calling {\tt reset\_deps\_on\_rep}.
 
 
 \subsection{Proof collapsing}
+\index{collapsing proof}
 Since it is possible to provide the proof of an existing property
 after this property, we must transform properties having a proof
 collapsing the two into one theorem. In effect, a {\tt proof} field
@@ -1111,6 +1124,7 @@ signatures and {\tt let}-definitions\ldots
 
 
 \subsection{Normal form}
+\index{normal form}
 The normalisation is done in {\tt normalize\_species}, applying the
 algorithm described in Virgile Prevosto's PhD in Section 3.7.1, page
 36 plus its extension to properties and theorems in Section 3.9.7,
@@ -1134,6 +1148,7 @@ conflict that requires erasement: in effect, there is no
 with the function {\tt non\_conflicting\_fields\_p}.
 
 \medskip
+\index{fusion}
 During normalisation, an operation of ``fusion'' is used. This is
 mostly the once described in Virgile Prevosto's PhD in section 3.6,
 page 35 and completed in Section 3.9.7, page 56, definition 35. The
@@ -1215,6 +1230,7 @@ we forget this constraint information.
 
 
 \subsection{Computing def/decl-dependencies}
+\index{dependency}
 As previously stated, def and decl-dependencies reflect dependencies
 of methods of the species on methods of this species. In other words,
 they are related to dependencies of methods of {\tt Self} on methods
@@ -1385,6 +1401,7 @@ sufficient\ldots
 
 
 \section{Typing a collection definition}
+\index{collection!typing}
 Typing a collection definition is pretty close to typing a
 species. The main difference is that we don't have inheritance, hence
 the normal form of the collection is directly the normal form of the
@@ -1422,6 +1439,7 @@ prefer to let the regular mechanism working for us.
 
 
 \section{Typing a type definition}
+\index{type!definition!typing}
 Type-checking a type definition serves to introduce in the typing
 environment a type constructor and possibly elements induced by the
 type, like value constructors in case of sum type definition or field
@@ -1463,6 +1481,7 @@ recorded in the type-checking context in the field
 
 \subsection{Regular type definitions}
 \subsubsection{Type alias}
+\index{type!alias}
 A type alias simply introduces an equivalence between a name (the type
 constructor) and a type expression. For instance, in
 {\footnotesize\lstinline*type t = alias (int * int)*}, the name
@@ -1502,6 +1521,7 @@ $\alpha'$ with {\tt int} to simulate an application, and finally we
 get the type {\tt int * int} for the initial expression.
 
 \subsubsection{Type sum (A.K.A variant)}
+\index{type!sum}
 In addition to insert in the environment a type constructor, it also
 introduces value constructors. In this sense, such a definition
 creates a new type, with new values. This values may be parametrised
@@ -1566,6 +1586,7 @@ constructor.
 
 
 \subsubsection{Type record}
+\index{type!record}
 The principle of type-checking of records is very similar to the one
 of sum types. The only difference is that instead of value
 constructors, we deal with field label. In the same spirit that value
@@ -1584,6 +1605,7 @@ itself.
 
 
 \subsection{External type definitions}
+\index{type!definition!external}
 Like seen in \ref{external-type-def-codegen-model}, external type
 definitions have two sides: the ``internal'' and ``external''. In
 fact, the ``internal'' part describes exactly the same thing than a
