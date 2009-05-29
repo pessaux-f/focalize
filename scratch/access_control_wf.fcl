@@ -1,16 +1,17 @@
-
-open "basics" ;;
-open "sets" ;;
-open "products" ;;
-open "ensembles_finis" ;;
+open "basics";;
+open "sets";;
+open "products";;
+open "ensembles_finis";;
 
 (** Framework *)
 
 (** Set_of is a stub species inheriting Ensembles_finis *)
-species Set_of (A is Setoid) inherits Ensembles_finis (A) = 
+species Set_of (A is Setoid) =
+  
+  inherit Ensembles_finis (A);
 
   (** for_all(E, P) is true iff for any x in E, P(x) is true *)
-  signature for_all : Self -> (A -> bool) -> bool ;
+  signature for_all : Self -> (A -> bool) -> bool;
 
   (**
      If two sets set1 and set2 are equal and if x belongs to set1 
@@ -22,44 +23,61 @@ species Set_of (A is Setoid) inherits Ensembles_finis (A) =
         est_element (x, set1) -> 
           est_element (x, set2) 
   proof = by definition of equal, est_element
-             property est_element_spec, sous_ensemble_spec ;
+             property est_element_spec, sous_ensemble_spec;
 
   (** If x1 belongs to the singleton {x2} then x1 = x2 *)
   theorem singleton_prop : 
     all x1 x2 in A, 
       est_element (x1, singleton (x2)) -> 
         A!equal (x1, x2) 
-  proof = by property singleton_spec, A!equal_symmetric ;
+  proof = by property singleton_spec, A!equal_symmetric;
 
-end ;;
+end;;
 
 (** The security parameter of an access control policy *)
-species Rho inherits Basic_object = end ;;
+species Rho = 
+
+  inherit Basic_object;
+
+end;;
 
 (** The species representing the subjects of an access control policy *)
-species Subjects inherits Setoid = end ;;
+species Subjects = 
+
+  inherit Setoid;
+
+end;;
 
 (** The species representing the objects of an access control policy *)
-species Objects inherits Setoid = end ;;
+species Objects = 
+
+  inherit Setoid;
+
+end;;
 
 (** The species representing the access modes of an access control policy *)
-species Access_modes inherits Setoid = end ;;
+species Access_modes = 
+  
+  inherit Setoid;
+
+end;;
 
 (** An access is a triple Subject x Object x Access mode *)
-species Access (S is Subjects, O is Objects, M is Access_modes) 
-  inherits Setoid = 
+species Access (S is Subjects, O is Objects, M is Access_modes) = 
+
+  inherit Setoid;
 
   (** Allows to create an access *)
-  signature create : S -> O -> M -> Self ;
+  signature create : S -> O -> M -> Self;
 
   (** Returns the subject involved in the given access *)
-  signature get_s : Self -> S ;
+  signature get_s : Self -> S;
 
   (** Returns the object involved in the given access *)
-  signature get_o : Self -> O ;
+  signature get_o : Self -> O;
 
   (** Returns the access mode involved in the given access *)
-  signature get_m : Self -> M ;
+  signature get_m : Self -> M;
 
   (**
      If two accesses (s1,o1,m1) and (s2,o2,m2) are equal 
@@ -68,19 +86,24 @@ species Access (S is Subjects, O is Objects, M is Access_modes)
   property access_equal : 
     all s1 s2 in S, all o1 o2 in O, all m1 m2 in M, 
       equal (create (s1, o1, m1), create (s2, o2, m2)) -> 
-        (S!equal (s1, s2) /\ O!equal (o1, o2) /\ M!equal (m1, m2)) ;
+        (S!equal (s1, s2) /\ O!equal (o1, o2) /\ M!equal (m1, m2));
 
-end ;;
+end;;
 
 (** The species representing the states of the system *)
-species States inherits Setoid = end ;;
+species States = 
+
+  inherit Setoid;
+
+end;;
 
 (** An access control policy defines a security predicate *)
-species Policy (Rh is Rho, St is States) 
-  inherits Basic_object = 
+species Policy (Rh is Rho, St is States) = 
+
+  inherit Basic_object;
 
   (** Security predicate of an access control policy *)
-  signature omega : St -> prop ;
+  signature omega : St -> prop;
 
   (**
      If two states st1 and st2 are equal and if st1 satisfies the security 
@@ -90,47 +113,54 @@ species Policy (Rh is Rho, St is States)
     all st1 st2 in St, 
       St!equal (st1, st2) -> 
         omega (st1) -> 
-          omega (st2) ;
+          omega (st2);
 
-end ;;
+end;;
 
 (**
    The species representing the requests that will allow a user to ask to 
    move from one state to another
  *)
-species Requests inherits Setoid = end ;;
+species Requests = 
+
+  inherit Setoid;
+
+end;;
 
 (** The decisions that can be answered by a reference monitor *)
-species Decisions inherits Setoid = 
+species Decisions = 
+
+  inherit Setoid;
 
   (** The decision yes *)
-  signature yes : Self ;
+  signature yes : Self;
 
   (** The decision no *)
-  signature no : Self ;
+  signature no : Self;
 
   (** A decision is either yes or no *)
   property yes_is_not_no : 
     all x in Self, 
-      ~ (equal (x, yes) /\ equal(x, no)) ;
+      ~ (equal (x, yes) /\ equal(x, no));
 
-end ;;
+end;;
 
 (**
    The species representing the semantics of requests of an access control 
    model
  *)
-species Semantics_requests (St is States, R is Requests)
-  inherits Basic_object = 
+species Semantics_requests (St is States, R is Requests) = 
+
+  inherit Basic_object;
 
   (** The predicate defining the semantics of requests
       for a state s_i a request r and a state s_f this specifies that 
       s_f is the state obtained when r has been successfully applied from 
       the state s_i
   *)
-  signature sem_req : St -> R -> St -> prop ;
+  signature sem_req : St -> R -> St -> prop;
 
-end ;;
+end;;
 
 (**
    An access control model regroups the concepts present in an access 
@@ -138,14 +168,15 @@ end ;;
  *)
 species Models (Rh is Rho, St is States, R is Requests, 
 		D is Decisions, C is Cartesian_product (D, St), 
-	        Po is Policy (Rh, St), Se is Semantics_requests (St, R)) 
-  inherits Basic_object =
+	        Po is Policy (Rh, St), Se is Semantics_requests (St, R)) = 
+
+  inherit Basic_object;
 
   (** Transition function allowing to move from one state to another *)
-  signature tau : R -> St -> C ;
+  signature tau : R -> St -> C;
 
   (** Infix alias to the Cartesian_product equal function *)
-  let ( =_c ) (c1 in C, c2 in C) in bool = C!equal (c1, c2) ;
+  let ( =_c ) (c1 in C, c2 in C) in bool = C!equal (c1, c2);
 
   (**
      Correctness of the transition function tau with regards to the security 
@@ -155,7 +186,7 @@ species Models (Rh is Rho, St is States, R is Requests,
     all st1 st2 in St, all r1 in R, all d1 in D, 
       tau (r1, st1) =_c C!pair (d1, st2) -> 
 	Po!omega (st1) -> 
-	  Po!omega (st2) ;
+	  Po!omega (st2);
 
   (**
      Correctness of the transition function tau with regards to the semantics
@@ -165,46 +196,49 @@ species Models (Rh is Rho, St is States, R is Requests,
     all st1 st2 in St, all r1 in R, all d1 in D, 
       tau (r1, st1) =_c C!pair (d1, st2) -> 
         D!equal (d1, D!yes) -> 
-          Se!sem_req (st1, r1, st2) ;
+          Se!sem_req (st1, r1, st2);
 
 (*   (\** (d1,st1) = (d2,st2) &rarr; d1 = d2 *\) *)
 (*   property left_substitution :  *)
 (*     all d1 d2 in D, all st1 st2 in St,  *)
 (*     (d1, st1) = (d2, st2) ->  *)
-(*       D!equal (d1, d2) ; *)
+(*       D!equal (d1, d2); *)
 
 (*   (\** (d1,st1) = (d2,st2) &rarr; st1 = st2 *\) *)
 (*   property right_substitution :  *)
 (*     all d1 d2 in D, all st1 st2 in Self,  *)
 (*     (d1, st1) = (d2, st2) ->  *)
-(*       equal (st1, st2) ; *)
+(*       equal (st1, st2); *)
 
-end ;;
+end;;
 
 (** The usually considered access modes *)
-species Access_modes_gal inherits Access_modes =
+species Access_modes_gal = 
+
+  inherit Access_modes;
 
   (** The read access mode *)
-  signature read : Self ;
+  signature read : Self;
 
   (** The write access mode *)
-  signature write : Self ;
+  signature write : Self;
 
-end ;;
+end;;
 
 (** A state contains at least the set of current accesses *)
 species States_gal (S is Subjects, O is Objects, M is Access_modes_gal, 
-		    A is Access (S, O, M), S_a is Set_of (A)) 
-  inherits States = 
+		    A is Access (S, O, M), S_a is Set_of (A)) = 
+
+  inherit States;
 
   (** Returns the set of current accesses *)
-  signature lambda : Self -> S_a ;
+  signature lambda : Self -> S_a;
 
   (** Add an access to the set of current accesses of the given state *)
-  signature add : Self -> A -> Self ;
+  signature add : Self -> A -> Self;
 
   (** Delete an access from the set of current accesses of the given state *)
-  signature del : Self -> A -> Self ;
+  signature del : Self -> A -> Self;
 
   (**
      If two states are equal then they have the same set of current accesses
@@ -212,14 +246,14 @@ species States_gal (S is Subjects, O is Objects, M is Access_modes_gal,
   property lambda_prop : 
     all st1 st2 in Self, 
       equal (st1, st2) -> 
-        S_a!equal (lambda (st1), lambda (st2)) ;
+        S_a!equal (lambda (st1), lambda (st2));
 
   property add_prop : 
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
       equal (add (st1, A!create (s1, o1, m1)), st2) -> 
         S_a!equal (lambda (st2), 
                    S_a!union (lambda (st1), 
-                              S_a!singleton (A!create (s1, o1, m1)))) ;
+                              S_a!singleton (A!create (s1, o1, m1))));
 
   (**
      &Lambda;(st1) &cup; {(s1,o1,m1)} = &Lambda;(st2) &rarr; 
@@ -228,13 +262,13 @@ species States_gal (S is Subjects, O is Objects, M is Access_modes_gal,
   property add_mem : 
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
       equal (add (st1, A!create (s1, o1, m1)), st2) -> 
-        S_a!est_element (A!create (s1, o1, m1), lambda (st2)) ;
+        S_a!est_element (A!create (s1, o1, m1), lambda (st2));
 
   (** a1 &isin; &Lambda;(st1) \ {(s1,o1,m1)} &rarr; a1 &isin; &Lambda;(st1) *)
   property del_prop : 
     all st1 in Self, all a1 in A, all s1 in S, all o1 in O, all m1 in M, 
       S_a!est_element (a1, lambda (del (st1, A!create (s1, o1, m1)))) -> 
-        S_a!est_element (a1, lambda (st1)) ;
+        S_a!est_element (a1, lambda (st1));
 
   (**
      &Lambda;(st1) \ {(s1,o1,m1)} = &Lambda;(st2) &rarr; 
@@ -243,9 +277,9 @@ species States_gal (S is Subjects, O is Objects, M is Access_modes_gal,
   property del_mem : 
     all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
       equal(del (st1, A!create (s1, o1, m1)), st2) -> 
-        ~ S_a!est_element (A!create (s1, o1, m1), lambda (st2)) ;
+        ~ S_a!est_element (A!create (s1, o1, m1), lambda (st2));
 
-end ;;
+end;;
 
 (**
    The usually considered requests : 
@@ -254,215 +288,271 @@ end ;;
    - &lang; -,s,o,m &rang; : the subject s asks to release an access over the 
      object o according to the access mode m
  *)
-species Requests_gal(S is Subjects, O is Objects, M is Access_modes_gal)
-  inherits Requests = 
+species Requests_gal(S is Subjects, O is Objects, M is Access_modes_gal) = 
+
+  inherit Requests;
 
   (** Returns the subject involved in the given request *)
-  signature get_s : Self -> S ;
+  signature get_s : Self -> S;
 
   (** Returns the object involved in the given request *)
-  signature get_o : Self -> O ;
+  signature get_o : Self -> O;
 
   (** Returns the access mode involved in the given request *)
-  signature get_m : Self -> M ;
+  signature get_m : Self -> M;
 
   (**
      Returns true if the given request is a "get an access" request, 
      false otherwise
    *)
-  signature is_get : Self -> bool ;
+  signature is_get : Self -> bool;
 
   (**
      Returns true if the given request is a "release an access" request, 
      false otherwise
    *)
-  signature is_rel : Self -> bool ;
+  signature is_rel : Self -> bool;
 
   (**
      A request is either a "get an access" or a "release an access" request
    *)  
   property get_or_rel : 
     all x in Self, 
-      is_get (x) \/ is_rel (x) ;
+      is_get (x) \/ is_rel (x);
 
   property get_is_not_rel : 
     all x in Self, 
-      ~ (is_get (x) /\ is_rel (x)) ;
+      ~ (is_get (x) /\ is_rel (x));
 
-end ;;
+end;;
 
 (** Semantics of requests &lang; +,s,o,m &rang; and &lang; -,s,o,m &rang; *)
 species Semantics_requests_gal(S is Subjects, O is Objects, 
 			       M is Access_modes_gal, A is Access (S, O, M), 
 			       S_a is Set_of (A), R is Requests_gal (S, O, M), 
-			       St is States_gal (S, O, M, A, S_a)) 
-  inherits Semantics_requests (St, R) = 
+			       St is States_gal (S, O, M, A, S_a)) = 
+
+  inherit Semantics_requests (St, R);
 
   (** Semantics of request &lang; +,s,o,m &rang; *)
   logical let sem_req_get (st1, r1, st2) = 
     R!is_get (r1) -> 
       S_a!est_element (A!create (R!get_s(r1), R!get_o(r1), R!get_m(r1)), 
-                       St!lambda (st2)) ;
+                       St!lambda (st2));
 
   (** Semantics of request &lang; -,s,o,m &rang; *)
   logical let sem_req_rel (st1, r1, st2) = 
      R!is_rel (r1) -> 
        ~ S_a!est_element (A!create (R!get_s(r1), R!get_o(r1), R!get_m(r1)), 
-                          St!lambda (st2)) ;
+                          St!lambda (st2));
 
   (** Semantics of both requests *)  
   logical let sem_req (st1, r1, st2) = 
-     sem_req_get (st1, r1, st2) /\ sem_req_rel (st1, r1, st2) ;
+     sem_req_get (st1, r1, st2) /\ sem_req_rel (st1, r1, st2);
 
-end ;;
+end;;
 
 (* ========================================================================= *)
 
-species Objects_wf inherits Objects =
-  signature fonctions_secu : Self ;
-  signature csp : Self ;
-  signature psp : Self ;
-  signature infos_statut : Self ;
-  signature auto_tests : Self ;
-  signature code_ext : Self ;
-  signature a_chiffrer : Self ;
-end ;;
+species Objects_wf = 
 
-species Concrete_objects inherits Objects_wf =
-  representation = int ;
-  let element = 0 ;
-  let fonctions_secu = 1 ;
-  let csp = 2 ;
-  let psp = 3 ;
-  let infos_statut = 4 ;
-  let auto_tests = 5 ;
-  let code_ext = 6 ;
-  let a_chiffrer = 7 ;
+  inherit Objects;
 
-  let equal (o1, o2) = o1 = o2 ;
+  signature fonctions_secu : Self;
+  signature csp : Self;
+  signature psp : Self;
+  signature infos_statut : Self;
+  signature auto_tests : Self;
+  signature code_ext : Self;
+  signature a_chiffrer : Self;
 
-  proof of equal_reflexive = by definition of equal ;
+end;;
 
-  proof of equal_symmetric = by definition of equal ;
+species Concrete_objects = 
 
-  proof of equal_transitive = by definition of equal ;
-end ;;
+  inherit Objects_wf;
 
-collection Security_objects implements Concrete_objects ;;
+  representation = int;
+  let element = 0;
+  let fonctions_secu = 1;
+  let csp = 2;
+  let psp = 3;
+  let infos_statut = 4;
+  let auto_tests = 5;
+  let code_ext = 6;
+  let a_chiffrer = 7;
 
-species Actions inherits Access_modes =
-  signature initialiser : Self ;
-  signature init_cles : Self ;
-  signature raz : Self ;
-  signature afficher : Self ;
-  signature lancer : Self ;
-  signature telecharger : Self ;
-  signature chiffrer : Self ;
-end ;;
+  let equal (o1, o2) = o1 = o2;
 
-species Concrete_actions inherits Actions =
-  representation = int ;
-  let element = 0 ;
-  let initialiser = 1 ;
-  let init_cles = 2 ;
-  let raz = 3 ;
-  let afficher = 4 ;
-  let lancer = 5 ;
-  let telecharger = 6 ;
-  let chiffrer = 7 ;
+  proof of equal_reflexive = by definition of equal;
 
-  let equal (a1, a2) = a1 = a2 ;
+  proof of equal_symmetric = by definition of equal;
 
-  proof of equal_reflexive = by definition of equal ;
+  proof of equal_transitive = by definition of equal;
 
-  proof of equal_symmetric = by definition of equal ;
+end;;
 
-  proof of equal_transitive = by definition of equal ;
-end ;;
+collection Security_objects = 
 
-collection Security_actions implements Concrete_actions ;;
+  implement Concrete_objects
+
+end;;
+
+species Actions = 
+
+  inherit Access_modes;
+
+  signature initialiser : Self;
+  signature init_cles : Self;
+  signature raz : Self;
+  signature afficher : Self;
+  signature lancer : Self;
+  signature telecharger : Self;
+  signature chiffrer : Self;
+
+end;;
+
+species Concrete_actions = 
+
+  inherit Actions;
+
+  representation = int;
+
+  let element = 0;
+  let initialiser = 1;
+  let init_cles = 2;
+  let raz = 3;
+  let afficher = 4;
+  let lancer = 5;
+  let telecharger = 6;
+  let chiffrer = 7;
+
+  let equal (a1, a2) = a1 = a2;
+
+  proof of equal_reflexive = by definition of equal;
+
+  proof of equal_symmetric = by definition of equal;
+
+  proof of equal_transitive = by definition of equal;
+
+end;;
+
+collection Security_actions = 
+
+  implement Concrete_actions
+
+end;;
 
 (* pour les uniques sujets *)
-species Singleton inherits Setoid =
-  representation = unit ;
-  let equal (x, y) = true ;
-  let element = basics#() ;
+species Singleton = 
 
-  proof of equal_reflexive = by definition of equal ;
+  inherit Setoid;
 
-  proof of equal_symmetric = by definition of equal ;
+  representation = unit;
 
-  proof of equal_transitive = by definition of equal ;
-end ;;
+  let equal (x, y) = true;
 
-collection Security_users implements Singleton ;;
+  let element = basics#();
 
-species Access_wf
-  inherits Access (Security_users, Security_objects, Security_actions) =
+  proof of equal_reflexive = by definition of equal;
 
-  let get_s (acc in Self) = Security_users!element ;
+  proof of equal_symmetric = by definition of equal;
+
+  proof of equal_transitive = by definition of equal;
+
+end;;
+
+collection Security_users = 
+
+  implement Singleton
+
+end;;
+
+species Access_wf = 
+
+  inherit Access (Security_users, Security_objects, Security_actions);
+
+  let get_s (acc in Self) = Security_users!element;
   
   let access_create (o in Security_objects, a in Security_actions) = 
-     create (Security_users!element, o, a) ;
-end ;;
+     create (Security_users!element, o, a);
 
-species Regles (Sec is Set_of (Security_actions))
-  inherits Setoid = 
-  signature get_action : Self -> Security_actions ;
-  signature get_pre_true : Self -> Sec ;
-  signature get_pre_false : Self -> Sec ;
-  signature get_post_yes : Self -> Sec ;
-  signature get_post_fail : Self -> Sec ;
-end ;;
+end;;
 
-species Rho_wf (Sec is Set_of (Security_actions), Reg is Regles (Sec)) 
-  inherits Rho =
-  signature f_lim : Sec -> int ;
-end ;;
+species Regles (Sec is Set_of (Security_actions)) = 
 
-species Events (A is Security_actions) inherits Setoid = 
+  inherit Setoid;
+
+  signature get_action : Self -> Security_actions;
+  signature get_pre_true : Self -> Sec;
+  signature get_pre_false : Self -> Sec;
+  signature get_post_yes : Self -> Sec;
+  signature get_post_fail : Self -> Sec;
+
+end;;
+
+species Rho_wf (Sec is Set_of (Security_actions), Reg is Regles (Sec)) = 
+
+  inherit Rho;
+
+  signature f_lim : Sec -> int;
+
+end;;
+
+species Events (A is Security_actions) = 
+
+  inherit Setoid;
+
 (* a partir d'une action
    cree l'evenement reussi *)
-  signature a2e_yes : Security_actions -> Self ;
+  signature a2e_yes : Security_actions -> Self;
   
 (* a partir d'une action
    cree l'evenement echoue *)
-  signature a2e_fail : Security_actions -> Self ;
+  signature a2e_fail : Security_actions -> Self;
   
 (* a partir d'une action
    cree l'evenement refuse *)
-  signature a2e_no : Security_actions -> Self ;
+  signature a2e_no : Security_actions -> Self;
   
 (* BOF : a partir d'une action
    renvoie l'evenement - reussi, echoue ou refuse - correspondant dans 
    event_history *)
-end ;;
+
+end;;
   
-species Events_history (A is Security_actions, E is Events (A))
-  inherits Basic_object =  
+species Events_history (A is Security_actions, E is Events (A)) = 
+
+  inherit Basic_object;
+
 (* renvoie true si l'evenement reussi figure dans l'historique *)
-  signature event_done : E -> bool ;
+  signature event_done : E -> bool;
 
 (* ajoute l'evenement dans l'historique *)
-  signature event_add : E -> Self -> Self ;
+  signature event_add : E -> Self -> Self;
 
 (* supprime l'evenement dans l'historique *)
-  signature event_rem : E -> Self -> Self ;
-end ;;
+  signature event_rem : E -> Self -> Self;
+
+end;;
 
 species States_wf (A is Security_actions, E is Events (A), 
-		   H is Events_history (A, E) )
-  inherits States = end ;;
+		   H is Events_history (A, E)) = 
+
+  inherit States;
+
+end;;
 
 species Policy_wf (Rh is Rho, A is Security_actions, E is Events (A), 
 		   H is Events_history (A, E),
 		   St is States_wf (A, E, H), 
-		   Sec is Set_of (Security_actions)) 
-  inherits Policy (Rh, St) = 
+		   Sec is Set_of (Security_actions)) = 
+
+  inherit Policy (Rh, St);
   
   logical let init_key_before_crypt_bis =
      H!event_done (E!a2e_yes (Security_actions!chiffrer)) -> 
-       H!event_done (E!a2e_yes (Security_actions!initialiser)) ;
+       H!event_done (E!a2e_yes (Security_actions!initialiser));
 
 (*   logical let init_key_before_crypt (s_1 in H, s_2 in H, *)
 (* 				     a_1 in Security_actions, *)
@@ -471,14 +561,14 @@ species Policy_wf (Rh is Rho, A is Security_actions, E is Events (A),
 (* 				     o_2 in Security_objects) = *)
 (*      ((Security_objects!get_o(s_1) = Security_objects!a_chiffrer) /\ *)
 (*       (Security_actions!get_a(s_1) = Security_actions!chiffrer)) ->  *)
-(*         ((Security_objects!get_o(s_2) = Security_objects!fonctions_secu) /\ *)
+(*       ((Security_objects!get_o(s_2) = Security_objects!fonctions_secu) /\ *)
 (* 	 (Security_actions!get_a(s_2) = Security_actions!initialiser)) ->  *)
-(* 	   (H!action_done(s_1) -> H!acces_done(s_2)) ; *)
+(* 	   (H!action_done(s_1) -> H!acces_done(s_2)); *)
   
-  signature f_e1 : Security_actions -> Sec ;
-  signature f_e2 : Security_actions -> Sec ;
-  signature f_e3 : Security_actions -> Sec ;
-  signature f_e4 : Security_actions -> Sec ;
+  signature f_e1 : Security_actions -> Sec;
+  signature f_e2 : Security_actions -> Sec;
+  signature f_e3 : Security_actions -> Sec;
+  signature f_e4 : Security_actions -> Sec;
   
 (*   logical let a_normale (a) = *)
 (*      perform (a) = yes -> *)
@@ -487,42 +577,54 @@ species Policy_wf (Rh is Rho, A is Security_actions, E is Events (A),
 (* 	   /\ ( f_e4 (a) = vide *)
 (*      \/ ex k <= n, *)
 (*      all j in [i+1 k], alpha_j in (a_barre \/ a_barre_barre \/ events_e3) *)
-(*   ; *)
+(*  ; *)
 
 (*   logical let a_fail (a) = *)
 (*      perform (a) = fail -> *)
 (*        f_e4 (a) = vide *)
 (*      \/ ex k <= n, *)
 (*      all j in [i+1 k], alpha_j in (a_barre \/ a_barre_barre \/ events_e4) *)
-(*   ; *)
+(*  ; *)
 
 (*   logical let a_no (a) = *)
 (*      perform (a) = no -> *)
 (*        nb_occ (a_i_barre_barre, [alpha_1 alpha_i-1]) <= f_lim (a) *)
-(*   ; *)
+(*  ; *)
 
 (*   logical let omega () = *)
-(*      a_normale /\ a_fail /\ a_no ; *)
-end ;;
+(*      a_normale /\ a_fail /\ a_no; *)
+end;;
 
-species Requests_wf inherits Requests = end ;;
+species Requests_wf = 
 
-species Decisions_wf inherits Decisions =
-  signature fail : Self ;
+  inherit Requests;
+
+end;;
+
+species Decisions_wf = 
+
+  inherit Decisions;
+
+  signature fail : Self;
 
   property yes_is_not_fail :
     all x in Self,
-      ~ (equal (x, yes) /\ equal (x, fail)) ;
+      ~ (equal (x, yes) /\ equal (x, fail));
 
   property no_is_not_fail :
     all x in Self,
-      ~ (equal (x, no) /\ equal (x, fail)) ;
-end ;;
+      ~ (equal (x, no) /\ equal (x, fail));
+
+end;;
 
 species Semantics_requests_wf (A is Security_actions, E is Events (A), 
 			       H is Events_history (A, E), 
-			       St is States_wf (A, E, H), Req is Requests_wf)
-  inherits Semantics_requests (St, Req) = end ;;
+			       St is States_wf (A, E, H), 
+			       Req is Requests_wf) = 
+
+  inherit Semantics_requests (St, Req);
+
+end;;
 
 species Models_wf (Sec is Set_of (Security_actions), Reg is Regles (Sec), 
 		   Rh is Rho_wf (Sec, Reg), A is Security_actions, 
@@ -530,5 +632,8 @@ species Models_wf (Sec is Set_of (Security_actions), Reg is Regles (Sec),
 		   St is States_wf (A, E, H), Req is Requests_wf, 
 		   D is Decisions, C is Cartesian_product (D, St), 
 		   Po is Policy_wf (Rh, A, E, H, St, Sec), 
-		   Se is Semantics_requests_wf (A, E, H, St, Req)) 
-  inherits Models (Rh, St, Req, D, C, Po, Se) = end ;;
+		   Se is Semantics_requests_wf (A, E, H, St, Req)) = 
+
+  inherit Models (Rh, St, Req, D, C, Po, Se);
+
+end;;
