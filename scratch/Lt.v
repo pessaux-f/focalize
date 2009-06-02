@@ -73,3 +73,6 @@ Let lt_aux : forall args : (peano__t * peano__t), (__T args) -> bool :=
 
 Let lt := Fix well_founded_myfun_order
   (fun (args : peano__t * peano__t) => bool) lt_aux.
+
+
+Eval compute in lt (P_zero, (P_succ P_zero)).
