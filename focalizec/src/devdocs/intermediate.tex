@@ -1,4 +1,4 @@
-% $Id: intermediate.tex,v 1.6 2009-05-28 08:43:26 pessaux Exp $
+% $Id: intermediate.tex,v 1.7 2009-06-02 16:15:09 pessaux Exp $
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
 the species and collections in normal form, having resolved
@@ -358,7 +358,9 @@ provenance). The rules are computed in the following order:
 [{\tt TYPE}], [{\tt DEF-DEP}], [{\tt UNIVERS}] and then [{\tt PRM}].
 
 \begin{enumerate}
-\item Rule [{\tt TYPE}]. This rule says that we must search for
+\item Rule [{\tt TYPE}].
+  \index{rule!TYPE}
+  This rule says that we must search for
   dependencies on species parameters' methods among the ``type'' of
   the currently examined method of {\tt Self}. This rule is possible
   only if a logical expression is provided. In effect, in a type
@@ -370,7 +372,9 @@ provenance). The rules are computed in the following order:
   searching occurrences of identifiers having the form
   {\tt param!meth}.
 
-\item Rule [{\tt DEF-DEP}]. This rule is implemented by first
+\item Rule [{\tt DEF-DEP}].
+ \index{rule!DEF-DEP}
+  This rule is implemented by first
   recovering all the abstraction infos of the methods of {\tt Self} we
   def-depend. Because species are well-formed, there is no cycle in
   its dependencies, and because it is in normal form, the methods we
@@ -394,7 +398,9 @@ provenance). The rules are computed in the following order:
   of methods of {\tt Self} belonging to the visible universe,
   recording these carriers soon will serve for the next rule.
 
-\item Rule [{\tt UNIVERS}]. This rule says that if a method $z$
+\item Rule [{\tt UNIVERS}].
+  \index{rule!UNIVERS}
+  This rule says that if a method $z$
   belongs to the visible universe of the method, if $m$ has a
   dependency on a species parameter method $y$ via the type of $z$,
   then we must add this dependency to the current method.
@@ -408,7 +414,10 @@ provenance). The rules are computed in the following order:
 
   By the way, we go on reminding the species parameters' carriers
   appearing in the type of the methods added in the dependencies.
-\item Rule [{\tt PRM}]. This one is really trickier and suffered of
+
+\item Rule [{\tt PRM}].
+  \index{rule!PRM}
+  This one is really trickier and suffered of
   small typos and implicit stuff in the original PhD. The correction
   is presented in \ref{rule-PRM-corrected}.
   It deals with the fact that a parameter $C_{p'}$ using a previous
@@ -466,6 +475,45 @@ provenance). The rules are computed in the following order:
   unbound, we do the instanciation here. And finally, we add the
   substituted dependencies in the current dependencies accumulator.
 \end{enumerate}
+
+
+\subsubsection{Extra completion of the dependency on parameter's methods}
+\index{rule!DIDOU}
+Here is a point I identified as missing in Virgile's PhD. The related
+rule is called [{\tt DIDOU}] because I didn't have any better idea
+while I was working on this, and it remained until somebody finds a
+better name \smiley
+
+This rule performs a transitive closure on the species parameters'
+methods appearing in types of methods already found by the previous
+completion rules. An open question is does this rule must also compute
+the fix point taking into account the methods {\tt it} adds ? In
+practice I never saw such a need, but\ldots a bit of theory wouldn't
+hurt\smiley The important point here is to understand that for each
+method of species parameters, we will look for it's own dependencies
+on methods of ``its {\tt Self}''. Since in the parameter, these
+methods are ``from {\tt Self}'', in effect, in the species declaring
+the parameter, they will look as methods of the species parameter.
+
+This processing is performed by the function
+{\tt Abstraction.complete\_dependencies\_from\_params\_rule\_didou}.
+It starts by making the union of all the dependencies found by the
+previous rules. Then it creates a fresh empty set of dependencies that
+will serve as dependencies accumulator all along the fix point
+iterations. Then, for each species parameter, for each method already
+found of this parameter, we compute the dependencies the
+decl-dependencies coming from {\bf the type} of the method of this
+species parameter, we must add it as a dependency on this species
+parameter method. In fact, we only add it if it was not already
+present, which allows to detect the fix point reached. But, since we
+computed the decl-dependencies of the method (i.e. dependencies
+related to other methods of this species parameter which are methods
+of {\tt Self} in this parameter), we must replace the occurrences of
+{\tt Self} in this method by the species parameter from where this
+method comes.
+
+The process iterates until no more method have been added for any of
+the species parameters.
 
 
 
