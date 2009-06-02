@@ -49,7 +49,7 @@ Let length_aux : forall alpha : Set, forall args : (list alpha),
      | Nil =>
         fun _ (* : (__T alpha (Nil alpha)) *) => 0
      | Cons h q =>
-        fun (length_rec : alpha -> __T alpha (Cons alpha h q)) =>
-          1 + (length_rec alpha q (decrease q args))
+        fun (length_rec : __T alpha (Cons alpha h q)) =>
+          1 + (length_rec alpha q (decrease alpha q))
     end.
 
