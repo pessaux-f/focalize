@@ -1,4 +1,4 @@
-% $Id: intermediate.tex,v 1.7 2009-06-02 16:15:09 pessaux Exp $
+% $Id: intermediate.tex,v 1.8 2009-06-02 16:41:19 pessaux Exp $
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
 the species and collections in normal form, having resolved
@@ -231,14 +231,16 @@ will investigate its work in detail. The outer function doesn't
 present any special difficulty and will be explained in a shorter way.
 
 
-\section{The inner computation}
+\subsection{The inner computation}
 The basic process to apply to a method is always the same. Only
 {\tt signature}s are a bit simpler because some rules do not apply
 (i.e. trivially lead to empty sets of dependencies). Hence, we will
 expose the general case, more specifically presenting the case of
 theorems when we need an example (since for them, no rule lead to
 trivially empty dependencies sets since theorems can induce both def
-and decl-dependencies).
+and decl-dependencies). The function taking care of this job is
+{\tt Abstractions.\_\_compute\_abstractions\_for\_fields}.
+
 
 \subsubsection{{\tt compute\_lambda\_liftings\_for\_field}}
 The first step is to compute the dependencies on species parameters
@@ -356,6 +358,9 @@ dependencies related to each rule (or set of rules in the case of
 together in one set because we never need to differentiate their
 provenance). The rules are computed in the following order:
 [{\tt TYPE}], [{\tt DEF-DEP}], [{\tt UNIVERS}] and then [{\tt PRM}].
+This work is done by the function
+{\tt Abstractions.complete\_dependencies\_from\_params}.
+
 
 \begin{enumerate}
 \item Rule [{\tt TYPE}].
@@ -496,7 +501,7 @@ methods are ``from {\tt Self}'', in effect, in the species declaring
 the parameter, they will look as methods of the species parameter.
 
 This processing is performed by the function
-{\tt Abstraction.complete\_dependencies\_from\_params\_rule\_didou}.
+{\tt Abstractions.complete\_dependencies\_from\_params\_rule\_didou}.
 It starts by making the union of all the dependencies found by the
 previous rules. Then it creates a fresh empty set of dependencies that
 will serve as dependencies accumulator all along the fix point
@@ -516,7 +521,45 @@ The process iterates until no more method have been added for any of
 the species parameters.
 
 
+\subsubsection{Completion of the dependency on parameter's carriers}
+This work is done by the function
+{\tt Abstractions.complete\_used\_species\_parameters\_ty}.
+Now, we complete the species parameters carriers seen by taking into
+account types of methods obtained by the completion of the
+dependencies on parameters achieved by the previous rules. This is
+simply a scan of the previously built dependencies. The only hack is
+that we scan the types and remind all the species carriers appearing
+inside. Then we finally filter to only keep the carriers that are
+really coming from parameters, forgetting those comming from other
+toplevel species or collection.
 
-\section{The outer computation (wrapper)}
+
+\subsubsection{End of the inner computation}
+
+Once all the dependencies from the rules, the visible universe, the
+carriers we depend on are computed, we simply stlow, in the ore them in a
+{\tt Abstractions.internal\_abstraction\_info} structure to further
+create the more compact form of the dependencies. This compact form is
+computed as described in ``The outer computation (wrapper)'' (C.f.
+\ref{abstraction-outer-computation}.
+
+
+
+
+\subsection{The outer computation (wrapper)}
+\label{abstraction-outer-computation}
+The wrapper is the function {\tt compute\_abstractions\_for\_fields}.
+Basically it's big {\tt List.map} on the temporary abstractions info
+we computed above. Its aim is to process this temporary information to
+make it more compact and adjust some things due to inheritance and
+order of dependencies between them and to apply the rule [{\tt DIDOU}]
+on dependencies that will appear in the {\bf record type} of the
+species.
+
+\medskip
+The first thing to do is to merge all the dependencies found by the
+rules [TYPE] and all the completion rules.
+
+
 Donner le processus appliqué sur 1 champ, ceci étant pareil pour tous
 les types de champs. Parler du merge, du remap (!!!!) et du tri.
