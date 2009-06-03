@@ -1,4 +1,4 @@
-% $Id: intermediate.tex,v 1.8 2009-06-02 16:41:19 pessaux Exp $
+% $Id: intermediate.tex,v 1.9 2009-06-03 12:18:26 pessaux Exp $
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
 the species and collections in normal form, having resolved
@@ -329,7 +329,7 @@ the def-children of it.
 \subsubsection{{\tt VisUniverse.visible\_universe}}
 \index{visible universe}
 The next step is to compute the ``visible universe'' of the
-method. This is done by calling the function of
+method. This is done by calling the function of \\
 {\tt commoncodegen/visUniverse.ml}. This universe describes which
 methods of {\tt Self} must be $\lambda$-lifted for the current method,
 according to the definition 57 page 116 section 6.4.4 in Virgile
@@ -500,7 +500,7 @@ on methods of ``its {\tt Self}''. Since in the parameter, these
 methods are ``from {\tt Self}'', in effect, in the species declaring
 the parameter, they will look as methods of the species parameter.
 
-This processing is performed by the function
+This processing is performed by the function \\
 {\tt Abstractions.complete\_dependencies\_from\_params\_rule\_didou}.
 It starts by making the union of all the dependencies found by the
 previous rules. Then it creates a fresh empty set of dependencies that
@@ -530,14 +530,14 @@ dependencies on parameters achieved by the previous rules. This is
 simply a scan of the previously built dependencies. The only hack is
 that we scan the types and remind all the species carriers appearing
 inside. Then we finally filter to only keep the carriers that are
-really coming from parameters, forgetting those comming from other
+really coming from parameters, forgetting those coming from other
 toplevel species or collection.
 
 
 \subsubsection{End of the inner computation}
 
 Once all the dependencies from the rules, the visible universe, the
-carriers we depend on are computed, we simply stlow, in the ore them in a
+carriers we depend on are computed, we simply store them in a
 {\tt Abstractions.internal\_abstraction\_info} structure to further
 create the more compact form of the dependencies. This compact form is
 computed as described in ``The outer computation (wrapper)'' (C.f.
@@ -558,8 +558,124 @@ species.
 
 \medskip
 The first thing to do is to merge all the dependencies found by the
-rules [TYPE] and all the completion rules.
+rules [{\tt TYPE}] and all the completion rules.
 
+Next, we compute the dependencies used to generate the record type
+parameters, i.e. [{\tt TYPE}]+[{\tt PRM}]+([{\tt DIDOU}] on [{\tt TYPE}]
++[{\tt PRM}]). This is simply done like previously, using the function \\
+{\tt complete\_dependencies\_from\_params\_rule\_didou} but providing
+it an empty dependency set for the parameter {\tt $\sim$via\_body}, hence,
+the completion will not take any body dependency into account.
 
-Donner le processus appliqué sur 1 champ, ceci étant pareil pour tous
-les types de champs. Parler du merge, du remap (!!!!) et du tri.
+\medskip
+Once we get the dependencies needed for the method definition and for
+the record type field definition, we must order them. In effect,
+nothing guaranties that the order the dependencies are stored in our
+data-structures are consistent with the dependencies of the methods in
+their own species (that are, remind, our species parameters). Then we
+sort the methods like we did when we computed dependencies on methods
+of {\tt Self}.
+
+\medskip
+The final process deals with inheritance and instantiations of species
+parameters. If the method is inherited, it consists in mapping the
+computed dependencies on parameters in the current species on the
+dependencies on parameters previously computed in the species we
+inherited the method. Note that if the method is not inherited, we do
+nothing, returning directly the dependencies on parameters we computed
+until now.
+
+We need this process to correctly compile code like:
+{\footnotesize
+\begin{lstlisting}
+species Couple (S is Simple, T is Simple) =
+  signature morph: S -> T ;
+  let equiv (e1, e2) =
+    let _to_force_usage = S!equal in
+    T!equal (!morph (e1), !morph (e2)) ;
+end ;;
+species Bug (G is Simple) inherits Couple (G, G) = ... end ;;
+\end{lstlisting}
+}
+
+The formal parameters {\tt S} and {\tt T} are instantiated by
+inheritance both by {\tt G}. In {\tt Couple}, {\tt equiv} depends on
+the types {\tt S} and {\tt T} and on the methods {\tt S!equal} and
+{\tt T!equal}. So, the application of the method generator
+of {\tt equiv} in {\tt Bug} must have twice {\tt \_\_p\_G\_T} and
+{\tt \_\_p\_G\_equal} provided: once for the $\lambda$-lift of {\tt S}
+and once for the one of {\tt T} in {\tt Couple} (yep, remember that in
+{\tt Couple}, the method {\tt equiv} depends on 2 species parameter
+types, {\tt S} and {\tt T} and the methods {\tt S!equal} and
+{\tt T!equal}). Unfortunately, when we compute directly the
+dependencies in the species {\tt Bug}, since we work with sets, the 2
+occurrences of {\tt \_\_p\_G\_T} are reduced into 1, and same thing
+for {\tt \_\_p\_G\_equal}. Hence the dependencies information we have
+for the method {\tt equiv} inherited from {\tt Couple} in the species
+{\tt Bug} gives  us a wrong number of dependencies (hence of
+$\lambda$-lifts) compared to those required to use the method
+generator which lies in {\tt Couple}.
+
+\medskip
+One solution would have to take the dependencies information directly
+in the species we inherit (i.e. {\tt Couple} here) and to perform the
+substitution replacing the formal parameters by the effective
+arguments provided in the {\tt inherits} clause. Technically, because
+the data-structure representing dependency information is very
+complex, involves sharing, I didn't dare to do this to avoid errors,
+forgetting parts of the data-structure and so on, and also to preserve
+the sharing. In effect, the substitution returns a copy of the
+term. Hence, all the shared parts in the data-structure would be
+freshly copied, then separated of their other occurrences somewhere
+else in the data-structure.
+
+\medskip
+So, if we have a deeper look at our problem, by re-using directly the
+dependency information in the species we inherits, we have the right
+number of abstractions (the right abstractions scheme), but without
+the substitutions induced by the {\tt inherits} clause. On the other
+side, by computing directly the dependency information in the current
+species, we have the right substitutions, but without the correct
+number of abstractions (i.e. without the right abstractions
+scheme). One may note however that in the second point, only the
+number of abstractions  (and their positions) are incorrect. However,
+nothing completely disappear: if in the inherited species we had a
+dependency on a parameter method, so we have in the current
+species. The only thing that could happen is that several methods
+initially identified as differentiate got merged into one same method
+after instantiation.
+
+\medskip
+The solution is then simply to trust the abstractions scheme of the
+inherited species. Next, we compute the dependency information in the
+current species. This will give us the ``dependency bricks'' with the
+right substitution applied. And then we will just map our bricks onto
+the scheme according to the formal by effective parameter
+instantiations.
+
+For instance, on our previous example, the dependencies (and hence the
+$\lambda$-lifts) computed in {\tt Couple} are: {\tt S}, {\tt T},
+{\tt S!equal}, {\tt T!equal}, so the method generator of {\tt equal}
+has 4 extra parameters (and in this order).
+
+Now, computing the dependencies in {\tt Bug} gives us {\tt G},
+{\tt G!equal}.
+
+We see that {\tt S} was instantiated by {\tt G}, so in the inherited
+scheme we replace the dependencies information related to {\tt S} by
+those computed in {\tt Bug}, i.e. by those related to {\tt G}. We see
+that {\tt T} was instantiated by {\tt G}, so we do the same thing in
+the inherited scheme for the dependencies information related to
+{\tt T}. Hence, the final dependencies information we get for the
+method {\tt equal} in {\tt Bug} is {\tt G}, {\tt G}, {\tt G!equal},
+{\tt G!equal} which is right according to what the method generator
+expects.
+
+\medskip
+Note this impacts only collection parameters since entity parameters
+do not provide methods during the inheritance.
+
+\medskip
+Once all this job ends, we have all our dependencies computed and we
+store all the information in a {\tt abstraction\_info} structure that
+will be exported toward the code generation back-ends.
