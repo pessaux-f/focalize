@@ -1,4 +1,5 @@
-% $Id: intermediate.tex,v 1.9 2009-06-03 12:18:26 pessaux Exp $
+% $Id: intermediate.tex,v 1.10 2009-06-03 13:41:26 pessaux Exp $
+\label{intermediate-abstractions}
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
 the species and collections in normal form, having resolved
@@ -67,6 +68,7 @@ code).
 
 \section{``Computing abstractions''}
 \index{abstraction}
+\index{dependency!on parameter's method}
 As stated in introduction the aim is to fully build the set of
 methods of {\tt Self} and the set of collection parameters' methods a
 method depends on. At the end of this process, we want to get for each
@@ -245,8 +247,8 @@ and decl-dependencies). The function taking care of this job is
 \subsubsection{{\tt compute\_lambda\_liftings\_for\_field}}
 The first step is to compute the dependencies on species parameters
 appearing in the body of the method. This is basically the rule
-[BODY]. This process is done by a structural descent on the body of
-the method, looking for identifiers of the form {\tt C!meth}.
+[{\tt BODY}]. This process is done by a structural descent on the body
+of the method, looking for identifiers of the form {\tt C!meth}.
 
 \medskip
 By the way, we recover the decl and def-children of the current
@@ -577,6 +579,7 @@ sort the methods like we did when we computed dependencies on methods
 of {\tt Self}.
 
 \medskip
+\index{remapping dependencies}
 The final process deals with inheritance and instantiations of species
 parameters. If the method is inherited, it consists in mapping the
 computed dependencies on parameters in the current species on the

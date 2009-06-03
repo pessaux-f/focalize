@@ -1,5 +1,5 @@
-% $Id: codegen_model.tex,v 1.23 2009-05-28 08:43:26 pessaux Exp $
-
+% $Id: codegen_model.tex,v 1.24 2009-06-03 13:41:26 pessaux Exp $
+\label{code-gen-model}
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
 fact that in \ocaml, logical methods are discarded. However, except
@@ -53,6 +53,7 @@ species Cartesian_product(A is Setoid, B is Setoid) =
 }
 will generate the \ocaml\ type definition:
 
+\label{ocaml-tydef-for-defined-repr}
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml]
 module Cartesian_product =

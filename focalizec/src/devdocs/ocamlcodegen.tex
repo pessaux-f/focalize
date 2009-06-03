@@ -1,0 +1,72 @@
+% $Id: ocamlcodegen.tex,v 1.1 2009-06-03 13:41:26 pessaux Exp $
+
+The code generation starts from the {\tt Infer.please\_compile\_me}
+structure returned by the type-checking pass. It will examine each
+phrase of the program, call the abstractions computation previously
+described (c.f. \ref{intermediate-abstractions}) if needed, before
+starting generating some target code.
+
+The most interesting parts of the code generator are those dealing
+with species and collection. Toplevel functions do not pose particular
+problems, as well as type definitions since \ocaml\ has similar type
+definitions. One may note that because \ocaml\ doesn't have logical
+features, toplevel theorems trivially lead to no produced
+code. Generation for {\tt use} and {\tt open} directives doesn't
+produce any code, only {\tt open} has a significant effect, loading
+the definitions of the related module in the environment (exactly like
+for the other passes).
+
+
+\subsection{Species generation}
+
+\subsubsection{The collection carrier mapping}
+To be able to properly map the species parameters' carriers to
+type variables in the generated code, we start by creating a
+``collection carrier mapping''. This mapping is the correspondance
+between the collection type of the species definition parameters and
+the type variables names to be used later during the OCaml
+translation. For a species parameter {\tt A is/in ...}, the type
+variable that will be used is ``''' + the lowercased name of the
+species parameter + an integer unique in this type +
+``{\tt \_as\_carrier}''.
+
+We need to add an extra integer (in fact, a stamp) to prevent a same
+type variable from appearing several time in the tricky case where a
+{\tt in} and a {\tt is} parameters wear the same lowercased name. For
+instance in
+{\footnotesize\lstinline!species A (F is B, f in F)!}
+where {\tt F} and {\tt f} will lead to a same name of \ocaml\ type
+variable: ``{\tt 'f\_as\_carrier}''.
+
+Hence, each time we will need to generate a type expression involving
+a species parameter carrier, by a simple look-up in the mapping we
+will get the type variable's name to emit. This mapping primarily
+serves to the type pretty-print function. It also have few minor
+usages that will be explained when we will encounter the case.
+
+\medskip
+The mapping gets stored in a compilation context (a bit like the
+context we already saw for type-checking) with various other
+structures that will be always passed to the compilation
+functions. This way, grouping all in one unique argument makes the
+code clearer.
+
+\subsubsection{The record type}
+As described in \label{code-gen-model}, a species starts by a record
+type definition. This record contains one field per method. This type
+is named ``{\tt me\_as\_species}'' to reflect the point that it
+represents the \ocaml\ structure representing the \focal\ species.
+Depending on whether the species has parameters, this record type also
+has parameters. In any case, it at least has a parameter representing
+``self as it will be once instanciated'' once ``we'' (i.e. the
+species) will be really living as a collection.
+
+\medskip
+If the carrier is defined, then before the record definition, we
+generate the type definition ``{\tt me\_as\_carrier}'' that shown the
+constraints due to the {\tt representation} definition
+(c.f. {ocaml-tydef-for-defined-repr}). This is done by the function
+{\tt generate\_rep\_constraint\_in\_record\_type].
+
+
+\subsection{Collection generation}
