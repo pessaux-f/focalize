@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.77 2009-03-23 15:37:57 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.78 2009-06-04 15:32:08 pessaux Exp $ *)
 
 
 
@@ -768,10 +768,10 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
      | Parsetree.E_constr (cstr_ident, args) ->
          (begin
          Format.fprintf out_fmter "@[<1>(@@" ;
-         let _nb_poly_args =
+         let nb_poly_args =
            generate_constructor_ident_for_method_generator ctx env cstr_ident in
          (* Add the "_"'s due to polymorphism of the constructor. *)
-         for i = 0 to _nb_poly_args - 1 do
+         for i = 0 to nb_poly_args - 1 do
            Format.fprintf out_fmter "@ _"
          done ;
          begin match args with

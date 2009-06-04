@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.31 2009-05-05 16:33:27 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.32 2009-06-04 15:32:08 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -155,7 +155,7 @@ let rec get_local_idents_and_types_from_pattern pat =
    | Parsetree.P_record labs_pats ->
         List.flatten
          (List.map
-	    (fun (_, p) -> get_local_idents_and_types_from_pattern p) labs_pats)
+            (fun (_, p) -> get_local_idents_and_types_from_pattern p) labs_pats)
    | Parsetree.P_paren p -> get_local_idents_and_types_from_pattern p
 ;;
 
@@ -233,15 +233,9 @@ let parse_operator_string op_string =
 ;;
 
 let vname_as_string_with_operators_expanded = function
-  | Parsetree.Vlident s
-  | Parsetree.Vqident s -> s
+  | Parsetree.Vqident s ->  "'" ^ (parse_operator_string s)
   | Parsetree.Vuident ("()" | "[]" | "::" as s) -> s
-  | Parsetree.Vuident s ->
-      assert (String.length s > 0);
-      begin match s.[0] with
-      | 'A' .. 'Z' -> s
-      | _ -> parse_operator_string s end
-  | Parsetree.Vpident s
+  | Parsetree.Vuident s | Parsetree.Vlident s | Parsetree.Vpident s
   | Parsetree.Viident s -> parse_operator_string s
 ;;
 
