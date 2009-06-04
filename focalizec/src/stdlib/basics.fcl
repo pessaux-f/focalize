@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.61 2009-06-04 14:40:45 pessaux Exp $ *)
+(* $Id: basics.fcl,v 1.62 2009-06-04 15:23:46 doligez Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -483,11 +483,11 @@ theorem int_0_plus:
 ;;
 
 theorem int_lt_le_S:
-  all x y in int, #int_lt (x, y) -> #int_leq (#int_plus (x, 1), y)
+  all x y in int, #int_lt (x, y) -> #int_leq (x + 1, y)
   proof =
     coq proof {*
       unfold int_lt, _lt_0x, int_leq, _lt__equal_0x,
-        int_plus in |- *; intros x y Hlt;
+        _plus_ in |- *; intros x y Hlt;
       unfold bi__int_lt, bi__int_leq, bi__int_plus;
       apply dec_IsTrue; fold (Zsucc x) in |- *; apply Zlt_le_succ;
       trivial. exact (IsTrue_dec Hlt).
@@ -520,12 +520,11 @@ theorem int_plus_commute:
 
 theorem int_plus_plus:
   all x y z t in int,
-  x = y -> z = t ->
-  #syntactic_equal (x + z, y + t)
+  x = y -> z = t -> x + z = y + t
   proof =
     coq proof {*
       unfold int_plus in |- *; intros x y z t H1 H2;
-      unfold syntactic_equal;
+      unfold _equal_;
       apply EQ_syntactic_equal; replace y with x. replace t with z. reflexivity.
       apply decidable. apply Z_eq_dec. assumption.
       apply decidable. apply Z_eq_dec. assumption.
@@ -539,7 +538,7 @@ theorem int_le_plus_plus:
   #int_leq (x + z, y + t)
   proof =
     coq proof {*
-      unfold int_plus, int_leq in |- *; intros x y z t H1 H2;
+      unfold _plus_, int_leq, _lt__equal_0x in |- *; intros x y z t H1 H2;
       unfold bi__int_leq, bi__int_plus, bi__int_plus;
       apply dec_IsTrue; apply Zplus_le_compat;
       [ exact (IsTrue_dec H1) | exact (IsTrue_dec H2) ].
@@ -571,11 +570,10 @@ theorem int_min_le2:
       unfold bi__int_min.
       case (Z_lt_dec x y); intros H1 H2; split; trivial.
       apply int_le_trans with x; trivial.
-      unfold int_leq in |- *;
-      unfold int_leq, bi__int_leq;
+      unfold int_leq, _lt__equal_0x, bi__int_leq;
       apply dec_IsTrue; apply Zlt_le_weak; trivial.
       apply int_le_trans with y; trivial.
-      unfold int_leq in |- *; unfold bi__int_leq; apply dec_IsTrue.
+      unfold int_leq, _lt__equal_0x, bi__int_leq; apply dec_IsTrue.
       elim (Zle_or_lt y x); trivial.   intros Habs; absurd (x < y)%Z; trivial.
       Qed.
     *}
