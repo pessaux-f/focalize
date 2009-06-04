@@ -1,73 +1,53 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLize compiler                            *)
-(*                                                                     *)
-(*            Philippe Ayrault                                         *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                                                                     *)
-(*                               LIP6  -  INRIA Rocquencourt           *)
-(*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: main.fcl,v 1.5 2009-05-15 23:44:51 weis Exp $ *)
 
 use "basics";;
 use "pair";;
 use "etat_vote";;
 use "num_capteur";;
 use "value";;
+use "diag";;
 use "vote";;
 
 open "pair";;
 open "etat_vote";;
 open "num_capteur";;
 open "value";;
+open "diag";;
 open "vote";;
 
-collection Coll_pair =
-  implement Imp_pair(Coll_capteur, Coll_etat_vote)
-end
-;;
 
-species Sp_int_imp_vote_tol inherits
-  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_int_imp_value_tol, Coll_pair) =
-  proof of equal_value_is_symmetric =
+collection Coll_diag implements Imp_diag_2oo3(Coll_etat_vote, Coll_capteur) ;;
+
+species Sp_int_imp_vote_tol inherits 
+  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_int_imp_value_tol, Coll_diag) =
+  proof of equal_value_is_symmetric = 
     by property Coll_int_imp_value_tol!equal_value_symmetric;
-  proof of equal_value_is_reflexive =
+  proof of equal_value_is_reflexive = 
     by property Coll_int_imp_value_tol!equal_value_reflexive;
 end ;;
 
-collection Coll_int_imp_vote_tol =
-  implement Sp_int_imp_vote_tol
-end
-;;
+collection Coll_int_imp_vote_tol implements Sp_int_imp_vote_tol ;;
 
 (* Pour les entiers avec tolérance *)
 let p_int_tol(x) = Coll_int_imp_value_tol!parse(x);;
 
-let voter_value_int_tol(v1, v2, v3) =
-  let s = Coll_int_imp_vote_tol!value(
-          Coll_int_imp_vote_tol!voter(#p_int_tol(v1),
-                                     #p_int_tol(v2),
+let voter_value_int_tol(v1, v2, v3) = 
+  let s = Coll_int_imp_vote_tol!value( 
+          Coll_int_imp_vote_tol!voter(#p_int_tol(v1), 
+                                     #p_int_tol(v2), 
                                      #p_int_tol(v3))) in
   Coll_int_imp_value_tol!print(s);;
 
-let voter_etat_int_tol(v1, v2, v3) =
-  let s = Coll_int_imp_vote_tol!diag(
-          Coll_int_imp_vote_tol!voter(#p_int_tol(v1),
-                                     #p_int_tol(v2),
+let voter_etat_int_tol(v1, v2, v3) = 
+  let s = Coll_int_imp_vote_tol!diag( 
+          Coll_int_imp_vote_tol!voter(#p_int_tol(v1), 
+                                     #p_int_tol(v2), 
                                      #p_int_tol(v3))) in
   Coll_etat_vote!print(Coll_int_imp_vote_tol!state(s));;
 
-let voter_val_int_tol(v1, v2, v3) =
-  let s = Coll_int_imp_vote_tol!diag(
-         Coll_int_imp_vote_tol!voter(#p_int_tol(v1),
-                                     #p_int_tol(v2),
+let voter_val_int_tol(v1, v2, v3) = 
+  let s = Coll_int_imp_vote_tol!diag( 
+         Coll_int_imp_vote_tol!voter(#p_int_tol(v1), 
+                                     #p_int_tol(v2), 
                                      #p_int_tol(v3))) in
   Coll_capteur!print(Coll_int_imp_vote_tol!sensor(s));;
 
@@ -148,33 +128,30 @@ let va34 = "7";;
 
 
 
-species Sp_int_imp_vote inherits
-  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_int_imp_value, Coll_pair) =
-  proof of equal_value_is_symmetric =
+species Sp_int_imp_vote inherits 
+  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_int_imp_value, Coll_diag) =
+  proof of equal_value_is_symmetric = 
     by property Coll_int_imp_value!equal_value_symmetric;
-  proof of equal_value_is_reflexive =
+  proof of equal_value_is_reflexive = 
     by property Coll_int_imp_value!equal_value_reflexive;
 end ;;
 
-collection Coll_int_imp_vote =
-  implement Sp_int_imp_vote
-end
-;;
+collection Coll_int_imp_vote implements Sp_int_imp_vote ;;
 
 (* Pour les entiers sans tolérance *)
 let p_int(x) = Coll_int_imp_value!parse(x);;
 
-let voter_value_int(v1, v2, v3) =
-  let s = Coll_int_imp_vote!value(
+let voter_value_int(v1, v2, v3) = 
+  let s = Coll_int_imp_vote!value( 
     Coll_int_imp_vote!voter(#p_int(v1), #p_int(v2), #p_int(v3))) in
   Coll_int_imp_value!print(s);;
 
-let voter_etat_int(v1, v2, v3) =
+let voter_etat_int(v1, v2, v3) = 
   let s = Coll_int_imp_vote!diag(
     Coll_int_imp_vote!voter(#p_int(v1), #p_int(v2), #p_int(v3))) in
   Coll_etat_vote!print(Coll_int_imp_vote!state(s));;
 
-let voter_val_int(v1, v2, v3) =
+let voter_val_int(v1, v2, v3) = 
   let s = Coll_int_imp_vote!diag(
     Coll_int_imp_vote!voter(#p_int(v1), #p_int(v2), #p_int(v3))) in
   Coll_capteur!print(Coll_int_imp_vote!sensor(s));;
@@ -256,33 +233,30 @@ let vb34 = "7";;
 
 
 
-species Sp_bool_imp_vote inherits
-  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_bool_imp_value, Coll_pair) =
-  proof of equal_value_is_symmetric =
+species Sp_bool_imp_vote inherits 
+  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_bool_imp_value, Coll_diag) =
+  proof of equal_value_is_symmetric = 
     by property Coll_bool_imp_value!equal_value_symmetric;
-  proof of equal_value_is_reflexive =
+  proof of equal_value_is_reflexive = 
     by property Coll_bool_imp_value!equal_value_reflexive;
 end ;;
 
-collection Coll_bool_imp_vote =
-  implement Sp_bool_imp_vote
-end
-;;
+collection Coll_bool_imp_vote implements Sp_bool_imp_vote ;;
 
 (* Pour les booléens *)
 let p_bool(x) = Coll_bool_imp_value!parse(x);;
 
-let voter_value_bool(v1, v2, v3) =
+let voter_value_bool(v1, v2, v3) = 
   let s = Coll_bool_imp_vote!value(
     Coll_bool_imp_vote!voter(#p_bool(v1), #p_bool(v2), #p_bool(v3))) in
   Coll_bool_imp_value!print(s);;
 
-let voter_etat_bool(v1, v2, v3) =
+let voter_etat_bool(v1, v2, v3) = 
   let s = Coll_bool_imp_vote!diag(
     Coll_bool_imp_vote!voter(#p_bool(v1), #p_bool(v2), #p_bool(v3))) in
   Coll_etat_vote!print(Coll_bool_imp_vote!state(s));;
 
-let voter_val_bool(v1, v2, v3) =
+let voter_val_bool(v1, v2, v3) = 
   let s = Coll_bool_imp_vote!diag(
     Coll_bool_imp_vote!voter(#p_bool(v1), #p_bool(v2), #p_bool(v3))) in
   Coll_capteur!print(Coll_bool_imp_vote!sensor(s));;
@@ -328,12 +302,12 @@ let va35 = "False";;
 
 let p_bool2(x) = Coll_bool_imp_value!parse(x);;
 
-let voter_etat_bool2(v1, v2, v3) =
+let voter_etat_bool2(v1, v2, v3) = 
   let s = Coll_bool_imp_vote!diag(
     Coll_bool_imp_vote!voter(#p_bool2(v1), #p_bool2(v2), #p_bool2(v3))) in
   Coll_etat_vote!print(Coll_bool_imp_vote!state(s));;
 
-let voter_val_bool2(v1, v2, v3) =
+let voter_val_bool2(v1, v2, v3) = 
   let s = Coll_bool_imp_vote!diag(
     Coll_bool_imp_vote!voter(#p_bool2(v1), #p_bool2(v2), #p_bool2(v3))) in
   Coll_capteur!print(Coll_bool_imp_vote!sensor(s));;

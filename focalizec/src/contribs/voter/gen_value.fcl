@@ -1,0 +1,28 @@
+(* 
+ *@version $Revision: 1.1 $ $Date: 2009-06-04 16:17:33 $
+ *)
+
+use "basics";;
+use "sets_orders";;
+
+open "basics";;
+open "sets_orders";;
+
+
+(** Common species defining the exported operations used by the voter.
+ This permits to hide (thrue inheritance) the real value species used *)
+species Value inherits Setoid =
+  (** Operator: Egality between 2 values *)
+  signature equal_value : Self -> Self -> bool;
+
+  (* Property needed for voter proving *)
+  (** Equal_value is symmetric *)
+  property equal_value_symmetric:
+   all a b in Self, !equal_value(a, b) -> !equal_value(b, a);
+
+  (** Equal_value is reflexive *)
+  property equal_value_reflexive:
+   all a in Self, !equal_value(a, a);
+
+end ;;
+

@@ -1,0 +1,58 @@
+(* 
+ *@version $Revision: 1.1 $ $Date: 2009-06-04 16:17:33 $
+ *)
+
+use "basics";;
+use "sets_orders";; 
+use "value";;
+use "gen_diag";;
+
+open "basics";;
+open "sets_orders";;
+open "value";;
+open "gen_diag";;
+
+
+(* Generic voter *)
+species Gen_voter( V is Value, S is Gen_diag) =
+
+(* Main function of a voter *)
+signature voter : V -> V -> V -> (V * S);
+
+(* Shortcut to extract the value *)
+let value(p in V * S) in V = basics#fst(p);
+
+(* Shortcut to extract the diagnostics *)
+let diag(p in V * S) in S = basics#snd(p);
+
+(* 2 outputs are compatible if :   *)
+(*  - the returned values are consistent regarding to the consistency law *)
+(*  - the returned states are not valid (ie. values not comparable)        *)
+logical let compatible( s1, s2) =
+or_b(V!equal_value(value(s1), value(s2)),
+     and_b(not_b(S!valid(diag(s1))),  not_b(S!valid(diag(s2)))))
+;
+
+(* voter does not invent value *)
+property voter_returns_an_input_value:
+all v1 v2 v3 in V,
+   (value(voter(v1, v2, v3)) = v1)
+\/ (value(voter(v1, v2, v3)) = v2)
+\/ (value(voter(v1, v2, v3)) = v3) 
+\/ (~(S!valid(diag(voter(v1, v2, v3)))))
+;
+
+(* Returned value is independant from order of input values *)
+property voter_independant_from_order_v1_v2:
+all v1 v2 v3 in V,
+   compatible(voter(v1, v2, v3), voter(v2, v1, v3))
+/\ compatible(voter(v1, v2, v3), voter(v3, v1, v2))
+(*
+/\ compatible(voter(v1, v2, v3), voter(v2, v3, v1))
+/\ compatible(voter(v1, v2, v3), voter(v3, v1, v2))
+/\ compatible(voter(v1, v2, v3), voter(v3, v2, v1))
+*)
+;
+
+end;;
+

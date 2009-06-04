@@ -1,29 +1,10 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLize compiler                            *)
-(*                                                                     *)
-(*            Philippe Ayrault                                         *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                                                                     *)
-(*                               LIP6  -  INRIA Rocquencourt           *)
-(*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: pair.fcl,v 1.4 2009-05-15 23:37:38 weis Exp $ *)
-
 use "basics" ;;
 use "sets_orders" ;;
 
 open "basics" ;;
 open "sets_orders" ;;
 
-species Sp_pair (S1 is Setoid, S2 is Setoid) =
-  inherit Setoid ;
+species Sp_pair (S1 is Setoid, S2 is Setoid) inherits Setoid =
 
 signature constr : S1 -> S2 -> Self;
 (* first projection *)
@@ -64,7 +45,7 @@ all p1 p2 in Self,
 property def_equal1:
 all n1 n3 in S1, all n2 n4 in S2,
   !equal(!constr(n1, n2), !constr(n3, n4)) <->
-    (S1!equal(n1, n3) /\ S2!equal(n2, n4))
+    (S1!equal(n1, n3) /\ S2!equal(n2, n4)) 
 ;
 
 property equal_reflexive2:
@@ -74,23 +55,21 @@ all n1 in S1, all n2  in S2,
 
 property equal_symmetric2:
 all n1 n3 in S1, all n2 n4 in S2,
-  !equal(!constr(n1, n2), !constr(n3, n4)) ->
+  !equal(!constr(n1, n2), !constr(n3, n4)) -> 
     !equal(!constr(n3, n4), !constr(n1, n2))
 ;
 
 property equal_transitive2:
 all n1 n3 n5 in S1, all n2 n4 n6 in S2,
-  !equal(!constr(n1, n2), !constr(n3, n4)) ->
+  !equal(!constr(n1, n2), !constr(n3, n4)) -> 
     !equal(!constr(n3, n4), !constr(n5, n6)) ->
       !equal(!constr(n1, n2), !constr(n5, n6))
 ;
 
-end
-;;
+end ;;
 
 
-species Imp_pair (S1 is Setoid, S2 is Setoid) =
-  inherit Sp_pair(S1, S2) ;
+species Imp_pair (S1 is Setoid, S2 is Setoid) inherits Sp_pair(S1, S2) =
 
 representation = S1 * S2;
 
@@ -101,11 +80,11 @@ let constr( n1 in S1, n2 in S2) in Self = basics#pair(n1, n2);
 let prj_a( nn in Self) in S1 = basics#fst(nn);
 
 (* second projection *)
-let prj_b( nn in Self) in S2 = basics#snd(nn);
+let prj_b( nn in Self) in S2 = basics#snd(nn); 
 
 (* Implementation of equal *)
 let equal( n1 in Self, n2 in Self) in bool =
-    (S1!equal(basics#fst(n1), basics#fst(n2)))
+    (S1!equal(basics#fst(n1), basics#fst(n2))) 
  && (S2!equal(basics#snd(n1), basics#snd(n2)))
 ;
 
@@ -138,26 +117,26 @@ assumed {* ??? *}
 
 proof of def_equal1 =
 <1>1  assume n1 in S1,
-      assume n3 in S1,
+      assume n3 in S1, 
       assume n2 in S2,
       assume n4 in S2,
       assume H1 : equal(constr(n1, n2), constr(n3, n4)),
   prove
   (S1!equal(n1, n3) /\ S2!equal(n2, n4))
 
-  <2>1 prove (S1!equal(!prj_a(!constr(n1, n2)), !prj_a(!constr(n3, n4)))
+  <2>1 prove (S1!equal(!prj_a(!constr(n1, n2)), !prj_a(!constr(n3, n4))) 
        /\ S2!equal(!prj_b(!constr(n1, n2)), !prj_b(!constr(n3, n4))))
   by hypothesis H1 property def_equal
-
-  <2>2 prove S1!equal(!prj_a(!constr(n1, n2)), !prj_a(!constr(n3, n4)))
+  
+  <2>2 prove S1!equal(!prj_a(!constr(n1, n2)), !prj_a(!constr(n3, n4))) 
   by step <2>1
 
-  <2>3 prove S2!equal(!prj_b(!constr(n1, n2)), !prj_b(!constr(n3, n4)))
+  <2>3 prove S2!equal(!prj_b(!constr(n1, n2)), !prj_b(!constr(n3, n4))) 
   by step <2>1
-
+  
   (* Ancienne preuve qui marchait en Focal *)
   <2>4 prove S1!equal(prj_a(constr(n1, n2)), n3)
-  by step <2>2 property prj_a_is_first_of_pair, S1!equal_transitive
+  by step <2>2 property prj_a_is_first_of_pair, S1!equal_transitive 
 
   <2>5 prove S2!equal(!prj_b(!constr(n1, n2)), n4)
   by  step <2>3 property prj_b_is_snd_of_pair, S2!equal_transitive
@@ -169,8 +148,8 @@ proof of def_equal1 =
   by step <2>5 property prj_b_is_snd_of_pair, S2!equal_transitive, S2!equal_symmetric
 
   <2>0 qed by step <2>6, <2>7
-
-<1>2
+  
+<1>2 
   assume n1 in S1,
   assume n3 in S1,
   assume n2 in S2,
@@ -184,15 +163,15 @@ proof of def_equal1 =
 
   <2>2 prove S2!equal(!prj_b(!constr(n1, n2)), n4)
   by hypothesis H22 property prj_b_is_snd_of_pair,  S2!equal_transitive
-
+   
   <2>3 prove S1!equal(!prj_a(!constr(n1, n2)), !prj_a(!constr(n3, n4)))
-  by step <2>1 property prj_a_is_first_of_pair,  S1!equal_transitive,
+  by step <2>1 property prj_a_is_first_of_pair,  S1!equal_transitive, 
    S1!equal_symmetric
 
   <2>4 prove S2!equal(!prj_b(!constr(n1, n2)), !prj_b(!constr(n3, n4)))
-  by step <2>2 property prj_b_is_snd_of_pair,  S2!equal_transitive,
+  by step <2>2 property prj_b_is_snd_of_pair,  S2!equal_transitive, 
    S2!equal_symmetric
-
+   
   <2>0 qed by step <2>3, <2>4 property def_equal
 
 <1>0 conclude
@@ -200,7 +179,7 @@ proof of def_equal1 =
 
 proof of  equal_reflexive =
 <1>1 assume p in Self,
-  prove
+  prove 
    !equal(p, p)
 
    <2>1
@@ -213,7 +192,7 @@ proof of  equal_reflexive =
 ;
 
 proof of  equal_reflexive2 =
-by property def_equal1, S1!equal_reflexive, S2!equal_reflexive
+by property def_equal1, S1!equal_reflexive, S2!equal_reflexive 
 ;
 
 
@@ -242,15 +221,15 @@ proof of  equal_symmetric =
 ;
 
 proof of  equal_symmetric2 =
-<1>1
+<1>1 
   assume n1 in S1,
-  assume n3 in S1,
+  assume n3 in S1,  
   assume n2 in S2,
   assume n4 in S2,
   assume H1: equal(constr(n1, n2), constr(n3, n4)),
-  prove
+  prove 
   equal(constr(n3, n4), constr(n1, n2))
-
+    
   <2>1 prove (S1!equal(n1, n3) /\ S2!equal(n2, n4))
   by hypothesis H1 property def_equal1
 
@@ -267,7 +246,7 @@ proof of  equal_symmetric2 =
 ;
 
 proof of  equal_transitive =
-<1>1
+<1>1 
   assume p1 in Self,
   assume p2 in Self,
   assume p3 in Self,
@@ -285,16 +264,16 @@ proof of  equal_transitive =
 ;
 
 proof of  equal_transitive2 =
-<1>1
+<1>1 
   assume n1 in S1,
   assume n3 in S1,
-  assume n5 in S1,
+  assume n5 in S1, 
   assume n2 in S2,
   assume n4 in S2,
   assume n6 in S2,
   assume H1: equal(constr(n1, n2), constr(n3, n4)),
   assume H2: equal(constr(n3, n4), constr(n5, n6)),
-  prove
+  prove 
     equal(constr(n1, n2), constr(n5, n6))
     <2>1 prove (S1!equal(n1, n5) /\ S2!equal(n2, n6)) ->
                equal(constr(n1, n2), constr(n5, n6))
@@ -303,10 +282,9 @@ proof of  equal_transitive2 =
     by hypothesis H1 property def_equal1
     <2>3 prove (S1!equal(n3, n5) /\ S2!equal(n4, n6))
     by hypothesis H2 property def_equal1
-    <2>0 qed by step <2>1, <2>2, <2>3
+    <2>0 qed by step <2>1, <2>2, <2>3 
            property S1!equal_transitive, S2!equal_transitive
 <1>0 conclude
 ;
 
-end
-;;
+end ;;

@@ -1,21 +1,3 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLize compiler                            *)
-(*                                                                     *)
-(*            Philippe Ayrault                                         *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                                                                     *)
-(*                               LIP6  -  INRIA Rocquencourt           *)
-(*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
-
-(* $Id: peano.fcl,v 1.4 2009-05-15 23:37:38 weis Exp $ *)
-
 use "basics";;
 
 open "basics";;
@@ -90,12 +72,11 @@ all x y in Self,
         if p(n) is true, then p(s(n)) is true,
           then p(n) is true for every natural number n. *)
 
-end
-;;
+
+end;;
 
 
-species Imp_peano =
-  inherit Peano ;
+species Imp_peano inherits Peano =
 
 representation = int;
 
@@ -155,17 +136,13 @@ proof of succ_is_an_injection =
 assumed {* to do *}
 ;
 
-end
-;;
+end;;
 
-collection Coll_peano =
-  implement Imp_peano
-end
-;;
+collection Coll_peano implements Imp_peano;;
+
 
 (* Arithmetic on peano axioms with common operations plus, diff, inf, ... *)
-species Peano_Arith =
-  inherit Peano ;
+species Peano_Arith inherits Peano =
 
 signature plus : Self -> Self -> Self;
 
@@ -186,5 +163,4 @@ proof =
 assumed {* nécessite l'induction pour faire une preuve sur y *}
 ;
 
-end
-;;
+end;;

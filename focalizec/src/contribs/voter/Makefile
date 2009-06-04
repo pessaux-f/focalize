@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.8 2009-05-11 08:54:20 pessaux Exp $
+# $Id: Makefile,v 1.9 2009-06-04 16:17:33 ayrault Exp $
 
 # Makefile for algebra structures implementations
 
@@ -49,11 +49,15 @@ COQ_INCLUDES =\
   -I $(UTILSLIB_DIR)
 
 FOCALIZE_SRC =\
-  etat_vote.fcl\
-  num_capteur.fcl\
-  value.fcl\
-  vote.fcl\
-  main.fcl
+	etat_vote.fcl \
+	num_capteur.fcl \
+	gen_value.fcl \
+	value.fcl \
+	gen_diag.fcl \
+	diag.fcl \
+	gen_vote.fcl \
+	vote.fcl \
+	main.fcl
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 
