@@ -6,7 +6,7 @@ theorem zero_inf_one : int_lt (0, 1)
 proof = assumed {* Well known theorem ;) *}
 ;;
 
-theorem abs_basics : for all x, ((x = 0) \/ (0 < x)) => int_abs (x) = x
+theorem abs_basics : all x in int, ((x = 0) \/ int_lt (0, x)) -> int_abs (x) = x
 proof = assumed {* Well known theorem ;) *}
 ;;
 
@@ -33,3 +33,45 @@ species Test_measure =
     <1>2 conclude
   ;
 end ;;
+
+
+(*
+species Test_measure =
+  let true_gt_false (x in basics#bool) in basics#int =
+    match x with
+     | true -> 1
+     | false -> 0 ;
+
+  let rec f (y in basics#int, z in basics#bool) =
+       if z then f (y, false) else y
+  termination proof =
+    measure true_gt_false on z
+    <1>1 assume z in bool,
+         assume H: z = true,
+	 prove wellfounded#int_wf (true_gt_false (false), true_gt_false (z))
+         by definition of true_gt_false, wellfounded#int_wf
+            theorem zero_inf_one
+            hypothesis H
+    <1>2 conclude
+  ;
+
+  order f_order = TUPLE_ORDER ((_, x), MEASURE_ORDER (true_gt_false));
+
+  sig f_order : int * bool -> int * bool -> bool ;
+  property f_order_wf : all P in int * bool -> Prop,
+     (all z in int * bool, (all t in int * bool, f_order (t, z) -> P (t)) -> P (z)) -> all z in int * bool, P (z)
+
+  property decrease_f : all x in basics#int, all y in basics#bool,
+      f_order ((x, false), (x, y))
+  ;
+end ;;
+*)
+
+type order =
+ | Onat
+ | Oint
+ | Ostring
+ | Obool
+ | Otuple of int * int * order  (* tuple length, indice in the tuple, ... *)
+ | Olexico of int * (int * order) list  (* tuple length, ... *)
+ | Omeasure of Parsetree.Vlident  (* Function name. *)

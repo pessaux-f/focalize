@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.95 2009-05-28 08:43:26 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.96 2009-06-04 10:10:02 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -172,8 +172,8 @@ let generate_record_type ctx species_descr =
   let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
     ctx.Context.scc_collections_carrier_mapping in
-  (* First, check if "rep" is defined. If so, then generate  *)
-  (* the type constraint reflecting its effective structure. *)
+  (* First, check if "rep" is defined. If so, then generate the type
+     constraint reflecting its effective structure. *)
   generate_rep_constraint_in_record_type
     ctx species_descr.Env.TypeInformation.spe_sig_methods ;
   (* The header of the OCaml type definition for the species record. *)

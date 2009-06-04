@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.74 2009-05-18 15:29:38 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.75 2009-06-04 10:10:02 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -1562,7 +1562,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
              (* Now, we complete the species parameters carriers seen by
                 taking into account types of methods obtained by the
                 completion of the dependencies on parameters achieved by
-                [complete_dependencies_from_params]. *)
+                [complete_dependencies_from_params] and
+                [complete_dependencies_from_params_rule_didou]. *)
              let all_used_species_parameter_tys =
                complete_used_species_parameters_ty
                  ~current_unit: ctx.Context.scc_current_unit
@@ -1873,7 +1874,7 @@ let remap_dependencies_on_params_for_field env ctx from name
        several times the corresponding argument in the abstraction info.
        For instance, in:
          species Couple (S is Simple, T is Simple) =
-           let equiv(e1, e2) = T!equal(!morph(e1), !morph(e2)) ;
+           let equiv (e1, e2) = T!equal (!morph (e1), !morph (e2)) ;
          end ;;
          species Bug (G is Simple) inherits Couple (G, G) = ... end ;;
        the formal parameters S and T are instanciated by inheritance both by
@@ -1922,10 +1923,10 @@ let remap_dependencies_on_params_for_field env ctx from name
        only once.
        For instance, modifing Couple of the above example:
        species Couple (S is Simple, T is Simple) =
-         signature morph: S -> T;
+         signature morph: S -> T ;
          let equiv(e1, e2) =
-         let _to_force_usage = S!equal in
-         T!equal(!morph(e1), !morph(e2)) ;
+           let _to_force_usage = S!equal in
+           T!equal (!morph (e1), !morph (e2)) ;
        end ;;
        T!equal and S!equal will be mapped onto only one G!equal.
        At this point, we do not want to substitute because information
@@ -2034,8 +2035,8 @@ let remap_dependencies_on_params_for_field env ctx from name
             None)
         found_meth.Env.mi_dependencies_from_parameters in
     (* Since we may have detected that some instanciations were done with
-     toplevel species/collections and not a species parameter, we may have
-       some [None]s in the list. Then juste forget them to get the list
+       toplevel species/collections and not a species parameter, we may have
+       some [None]s in the list. Then just forget them to get the list
        containing really only stuff related to species parameters. *)
     let new_deps_on_params =
       Handy.option_list_to_list new_deps_on_params_as_option in
