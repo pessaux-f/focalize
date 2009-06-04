@@ -140,8 +140,7 @@ persons who brought some contribution to </EM></FONT><FONT SIZE=4><EM><FONT COLO
 Blond (SPI-LIP6), Sylvain Boulmé (SPI-LIP6), Matthieu Carlier
 (CPR-CEDRIC), Damien Doligez (GALLIUM-INRIA), David Delahaye
 (CPR-CEDRIC), Catherine Dubois (CPR-CEDRIC), Jean-Frédéric Etienne
-(CPR-CEDRIC), Stéphane Fechter (SPI-LIP6), Mathieu Jaume (SPI-LIP6),
-Lionel Habib (SPI-LIP6), Thérèse Hardin (SPI-LIP6), Charles
+(CPR-CEDRIC), Stéphane Fechter (SPI-LIP6), Eric Jaeger (SPI-LIP6), Mathieu Jaume (SPI-LIP6), Lionel Habib (SPI-LIP6), Thérèse Hardin (SPI-LIP6), Charles
 Morisset (SPI-LIP6), Ivan Noyer (SPI-LIP6), François Pessaux
 (SPI-LIP6), Virgile Prevosto (SPI-LIP6), Renaud Rioboo (CPR-CEDRC),
 Lien Tran (SPI-LIP6), Véronique Viguié Donzeau-Gouge (CPR-CNAM),
@@ -211,10 +210,10 @@ Chesnay, France, <TT>Firstname.Lastname@inria.fr</TT>
 <A HREF="#htoc2">1.1  The Basic Brick</A>
 </LI><LI CLASS="li-toc"><A HREF="#htoc3">1.2  Type of Species, Interfaces and Collections</A>
 </LI><LI CLASS="li-toc"><A HREF="#htoc4">1.3  Combining Bricks by Inheritance</A>
-</LI><LI CLASS="li-toc"><A HREF="#htoc5">1.4  Combining Bricks by Parametrisation</A>
+</LI><LI CLASS="li-toc"><A HREF="#htoc5">1.4  Combining Bricks by Parameterisation</A>
 <UL CLASS="ftoc3"><LI CLASS="li-toc">
-<A HREF="#htoc6">1.4.1  Parametrisation by Collection Parameters</A>
-</LI><LI CLASS="li-toc"><A HREF="#htoc7">1.4.2  Parametrisation by Entity Parameters</A>
+<A HREF="#htoc6">1.4.1  Parameterisation by Collection</A>
+</LI><LI CLASS="li-toc"><A HREF="#htoc7">1.4.2  Parameterisation by Entity (Value)</A>
 </LI></UL>
 </LI><LI CLASS="li-toc"><A HREF="#htoc8">1.5  The Final Brick</A>
 </LI><LI CLASS="li-toc"><A HREF="#htoc9">1.6  Properties, Theorems and Proofs</A>
@@ -384,7 +383,7 @@ Chesnay, France, <TT>Firstname.Lastname@inria.fr</TT>
 </LI></UL><!--TOC section Introduction-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Introduction</H2><!--SEC END --><!--TOC subsection Motivations-->
 <H3 CLASS="subsection"><!--SEC ANCHOR -->Motivations</H3><!--SEC END --><P>The <FONT COLOR=purple>Foc</FONT> project was launched in 1998 by T. Hardin and R. Rioboo
-[<A HREF="#HardinRiobooTSI04">11</A>] <SUP><A NAME="text5" HREF="#note5">5</A></SUP>
+[<A HREF="#HardinRiobooTSI04">10</A>] <SUP><A NAME="text5" HREF="#note5">5</A></SUP>
 with the objective of helping all stages of development of critical software
 within safety and security domains. The methods used in these domains
 are evolving, ad-hoc and empirical approaches being replaced by more formal
@@ -398,31 +397,31 @@ Thus the project was to elaborate an Integrated
 Development Environment (IDE) able to provide high-level and justified
 confidence to users, but remaining easy to use by well-trained
 engineers.</P><P>To ease developing high integrity systems with numerous software
-components, an Integrated Development Environment (IDE) should provide
+components, an IDE should provide
 tools to formally express specifications, to describe design and
 coding and to ensure that specification requirements are met by the
-corresponding code. This is not enough. First, standards of critical systems
+corresponding code. But this is not enough. First, standards of critical systems
 ask for pertinent documentation which has to be maintained along all the revisions
 during the system life cycle. Second, the evaluation conformance
-process of software is by nature a sceptical analysis. Thus, any proof
+process of software is by nature a skeptical analysis. Thus, any proof
 of code correctness must be easily redone at request and traceability
 must be eased. Third, design
 and coding are difficult tasks. Research in software engineering has
 demonstrated the help provided by some object-oriented
 features as inheritance, late binding and early research works on
 programming languages have pointed out the importance of abstraction
-mechanism such as modularity to help invariant maintaining. There are
+mechanisms such as modularity to help invariant preservation. There are
 a lot of other points which should also be considered when designing
 an IDE for safe and/or secure systems to ensure conformance with high
-Evaluation Assurance or Safety Integrity Levels (EAL-5,7 or SIL 3,4)
+Evaluation Assurance or Safety Integrity Levels (EAL-5 to 7 or SIL 3 and 4)
 and to ease the evaluation process according to various standards
 (e.g. IEC61508, CC, ...): handling of non-functional contents of
 specification, handling of dysfunctional behaviors and vulnerabilities
-from the true beginning of development and fault avoidance, fault
+from the true beginning of development as well as fault avoidance and fault
 detection by validation testing, vulnerability and safety analysis.</P><!--TOC subsection Initial application testbed-->
-<H3 CLASS="subsection"><!--SEC ANCHOR -->Initial application testbed</H3><!--SEC END --><P>When the <FONT COLOR=purple>Foc</FONT> project was launched by Hardin and Rioboo,
-only one specific domain was considered, the one of Computer
-Algebra. Algorithms used in this domain can be rather intricated and
+<H3 CLASS="subsection"><!--SEC ANCHOR -->Initial application testbed</H3><!--SEC END --><P>When the <FONT COLOR=purple>Foc</FONT> project was launched by T. Hardin and R. Rioboo,
+only the specific domain of Computer Algebra was initially considered.
+Algorithms used in this domain can be rather intricated and
 difficult to test and this is not rare that computer algebra systems
 issue a bad result, due to semantical flaws, compiler anomalies,
 etc. Thus the idea was to design a language allowing to specify the
@@ -438,27 +437,25 @@ efficiency and confidence in the whole development (mechanised proofs,
 ..). After an initial phase of conceptual design, the <FONT COLOR=purple>Foc</FONT>
 semantics was submitted to a double test. On one hand, this semantics
 was specified in <FONT COLOR=purple>Coq</FONT> and in a categorical model of type theories by
-S. Boulmé (see his thesis[<A HREF="#BoulmePhD00">3</A>]), a point which
-enlightened the borders of this approach, regarding the logical
-background. On the other hand, before designing the syntax, it was
-needed to study the development style in such a
-language. R. Rioboo [<A HREF="#ThRRCalculemus">4</A>, <A HREF="#HardinRiobooTSI04">11</A>] used the
-<FONT COLOR=purple>OCaml</FONT> language to try different solutions which are recorded in
- [<A HREF="#HardinRiobooTSI04">11</A>].</P><!--TOC subsection Initial <FONT COLOR=purple>Focal</FONT> design-->
+S. Boulmé (see his thesis [<A HREF="#BoulmePhD00">3</A>]), a point which
+enlightened the borders of this approach, regarding the logical background. On the other hand, as a preliminary step before designing the syntax,
+a strudy of the typical development style was conducted.
+R. Rioboo [<A HREF="#ThRRCalculemus">4</A>, <A HREF="#HardinRiobooTSI04">10</A>] used the
+<FONT COLOR=purple>OCaml</FONT> language to try different solutions, recorded in
+ [<A HREF="#HardinRiobooTSI04">10</A>].</P><!--TOC subsection Initial <FONT COLOR=purple>Focal</FONT> design-->
 <H3 CLASS="subsection"><!--SEC ANCHOR -->Initial <FONT COLOR=purple>Focal</FONT> design</H3><!--SEC END --><P>Then the time came to design the syntax of the language and the compiler. To
 overcome inconsistencies risks, an original dependency analysis was
 incorporated into the compiler (V. Prevosto
-thesis[<A HREF="#PrevostoPhD03">17</A>, <A HREF="#TPHOL2002">20</A>, <A HREF="#PrevostoJAR02">19</A>]) and the correction of the
+thesis [<A HREF="#PrevostoPhD03">17</A>, <A HREF="#TPHOL2002">20</A>, <A HREF="#PrevostoJAR02">19</A>]) and the correction of the
 compiler (mostly written by V. Prevosto) against <FONT COLOR=purple>Focal</FONT>&#X2019;s semantics is
 proved (by hand) [<A HREF="#TLCA2005">18</A>], a point which
 brings a satisfactory confidence in the language&#X2019;s correctness. Then
-Rioboo [] began the development of a huge computer algebra
-library, which offers full specification
+R. Rioboo [] began the development of a huge Computer Algebra library, offering full specification
 and implementation of usual algebraic structures up to multivariate
-polynomial rings with complex algorithms, first as a way to
-extensively test the language and (quite satisfactory)
-efficiency of the produced code and then to provide a standard library
-of mathematical backgrounds. And D. Doligez[<A HREF="#ZenonBDD">2</A>] started the
+polynomial rings with complex algorithms, to
+extensively test the language and the
+efficiency of the produced code, aswell as to provide a standard library
+of mathematical backgrounds. D. Doligez [<A HREF="#ZenonBDD">2</A>] started the
 development of <FONT COLOR=purple>Zenon</FONT>, an automatic prover based on tableaux method,
 which takes a <FONT COLOR=purple>Focal</FONT> statement and tries to build a proof of it and,
 when succeeds, issues a <FONT COLOR=purple>Coq</FONT> term. More recently, M. Carlier and
@@ -466,24 +463,32 @@ C. Dubois[<A HREF="#CarlierDuboisLNCS2008">15</A>] began the development of a
 test tool for <FONT COLOR=purple>Focal</FONT>.</P><P><FONT COLOR=purple>Focal</FONT> has already been used to develop huge examples such as the
 standard library and the computer algebra library. The library
 dedicated to the algebra of access control models, developed by
-M. Jaume and C. Morisset[<A HREF="#jias06">12</A>, <A HREF="#fcsarspa06">13</A>, <A HREF="#MorissetPhd">16</A>],
+M. Jaume and C. Morisset [<A HREF="#jias06">12</A>, <A HREF="#fcsarspa06">13</A>, <A HREF="#MorissetPhd">16</A>],
 is another huge example, which borrows implementations of orderings,
 lattices and boolean algebras from the computer algebra library.
 <FONT COLOR=purple>Focal</FONT> was also very successfully used to formalize airport security
 regulations, a work by D. Delahaye, J.-F. Etienne, C. Dubois,
 V. Donzeau-Gouge  [<A HREF="#EDEMOI-All">6</A>, <A HREF="#EDEMOI-Model">7</A>, <A HREF="#EDEMOI-Proof">8</A>]. This
-last work led to the development of a translator[<A HREF="#Focal-UML">5</A>]
+last work led to the development of a translator [<A HREF="#Focal-UML">5</A>]
 from <FONT COLOR=purple>Focal</FONT> to UML for documentation purposes.</P><!--TOC subsection The <FONT COLOR=purple>FoCaLize</FONT> system-->
-<H3 CLASS="subsection"><!--SEC ANCHOR -->The <FONT COLOR=purple>FoCaLize</FONT> system</H3><!--SEC END --><P>The <FONT COLOR=purple>FoCaLize</FONT> development effort started in 2006: it was clearly a
+<H3 CLASS="subsection"><!--SEC ANCHOR -->The <FONT COLOR=purple>FoCaLize</FONT> system</H3><!--SEC END --><P>The <FONT COLOR=purple>FoCaLize</FONT> development started in 2006, as a
 continuation of the <FONT COLOR=purple>Foc</FONT> and <FONT COLOR=purple>Focal</FONT> efforts. The new system was rewritten
 from scratch. A new language and syntax was designed and carefully
 implemented, with in mind ease of use, expressivity, and programmer
-friendyness. The addition of powerful data structure definitions together
-with the corresponding pattern matching facility, lead to new expressing
+friendlyness. The addition of powerful data structure definitions &#X2013; together
+with the corresponding pattern matching facilities &#X2013; leads to new expressive
 power.</P><P>The <FONT COLOR=purple>Zenon</FONT> automatic theorem prover was also integrated in the
 compiler and natively interfaced within the <FONT COLOR=purple>FoCaLize</FONT> language. New
-developments for recursive functions support is on the way (in particular for
-termination proofs).</P><P>A formal specification can be built by declaring names of functions
+developments for a better support of recursive functions is on the way (in particular for
+termination proofs).</P><!--TOC subsection The <FONT COLOR=purple>FoCaLize</FONT> system in short-->
+<H3 CLASS="subsection"><!--SEC ANCHOR -->The <FONT COLOR=purple>FoCaLize</FONT> system in short</H3><!--SEC END --><P>The <FONT COLOR=purple>FoCaLize</FONT> system provides means for the developers to formally express
+their specifications and to go step by step (in an incremental approach) to
+design and implementation while proving that such an implementation
+meets its specification or design requirements. The <FONT COLOR=purple>FoCaLize</FONT> language offers
+high level mechanisms such as multiple inheritance, late binding, redefinition,
+parametrization, etc. Confidence in proofs submitted by developers or
+automatically done relies on formal proof verification. <FONT COLOR=purple>FoCaLize</FONT> also
+provides some automation of documentation production and management.</P><P>A formal specification can be built by declaring names of functions
 and values and introducing
 properties. Then, design and implementation can incrementally be done
 by adding definitions of functions and proving that the implementation
@@ -491,28 +496,19 @@ meets the specification or design requirements. Thus, developing in
 <FONT COLOR=purple>FoCaLize</FONT> is a kind of refinement process from formal model to design
 and code, completely done within <FONT COLOR=purple>FoCaLize</FONT>. Taking the global development
 in consideration within the same environment brings some conciseness,
-helps documentation and reviewing.
-Thus a <FONT COLOR=purple>FoCaLize</FONT> development is organised as a hierarchy that may have
+helps documentation and reviewing.</P><P>A <FONT COLOR=purple>FoCaLize</FONT> development is organised as a hierarchy that may have
 several roots. The upper levels of the hierarchy are built along the
 specification stage while the lower ones correspond to
 implementation and each node of the hierarchy corresponds to a progress
-toward a complete implementation.</P><P>The <FONT COLOR=purple>FoCaLize</FONT> system provides means for the developers to formally express
-their specifications and to go step by step (in an incremental approach) to
-design and implementation while proving that such an implementation
-meets its specification or design requirements. The <FONT COLOR=purple>FoCaLize</FONT> language offers
-high level mechanisms such as inheritance, late binding, redefinition,
-parametrization, etc. Confidence in proofs submitted by developers or
-automatically done relies on formal proof verification. <FONT COLOR=purple>FoCaLize</FONT> also
-provides some automation of documentation production and management.</P><P>We would like to mention several works about safety and/or security
+toward a complete implementation.</P><P>We would like to mention several works about safety and/or security
 concerns within <FONT COLOR=purple>FoCaLize</FONT> and specially the definition of a safety life
 cycle by P. Ayrault, T. Hardin and F. Pessaux [<A HREF="#TTSS08">1</A>] and the
 study of some traps within formal methods by E. Jaeger and
-T. Hardin[<A HREF="#traps">10</A>].</P><!--TOC subsection The <FONT COLOR=purple>FoCaLize</FONT> system in short-->
-<H3 CLASS="subsection"><!--SEC ANCHOR -->The <FONT COLOR=purple>FoCaLize</FONT> system in short</H3><!--SEC END --><P><FONT COLOR=purple>FoCaLize</FONT> can be seen as an IDE still in development, which
+T. Hardin[<A HREF="#traps">11</A>].</P><P><FONT COLOR=purple>FoCaLize</FONT> can be seen as an IDE still in development, which
 gives a positive solution to the three requirements identified above:</P><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">
 pertinent documentation is maintained within the system being written,
 and its extraction is an automatic part of the compilation process,
-</LI><LI CLASS="li-enumerate">proofs are written using a high level proof language, so that proofs
+</LI><LI CLASS="li-enumerate">proofs are produced using an automated proved which can be guided using a high level proof language, so that proofs
 are easier to write and their verification is automatic and reliable,
 </LI><LI CLASS="li-enumerate">the framework provides powerful abstraction mechanisms to facilitate
 design and development; however, these mechanisms are carefully ruled:
@@ -520,25 +516,24 @@ the compiler performs numerous validity checks to ensure that no
 further development can inadvertantly break the invariants or
 invalidate the proofs; indeed, the compiler ensures that if a theorem
 was based on assumptions that are now violated by the new development,
-then the theorem is out of reach of the programmer.
+then the theorem is out of reach of the programmer and the properties have to be proven again.
 </LI></OL><!--BEGIN NOTES chapter-->
 <HR CLASS="ffootnoterule"><DL CLASS="thefootnotes"><DT CLASS="dt-thefootnotes">
 <A NAME="note5" HREF="#text5">5</A></DT><DD CLASS="dd-thefootnotes">They were members of the SPI (Semantics, Proofs,
 Implementations) team of the LIP6 (Lab. Informatique de Paris 6)
 at Université Pierre et Marie Curie (UMPC), Paris
 </DD><DT CLASS="dt-thefootnotes"><A NAME="note6" HREF="#text6">6</A></DT><DD CLASS="dd-thefootnotes">For example Computer Algebra
-Libraries use several different representations of polynomials
+Libraries use different representations of polynomials
 according to the treatment to be done
 </DD></DL>
 <!--END NOTES-->
 <!--TOC chapter Overview-->
-<H1 CLASS="chapter"><!--SEC ANCHOR --><A NAME="htoc1">Chapter 1</A>  Overview</H1><!--SEC END --><P> 
-<A NAME="glimpse"></A>
+<H1 CLASS="chapter"><!--SEC ANCHOR --><A NAME="htoc1">Chapter 1</A>  Overview</H1><!--SEC END --><P> <A NAME="glimpse"></A>
 Before entering the precise description of <FONT COLOR=purple>FoCaLize</FONT> we give an
 informal 
-presentation of near all its features, to help further reading of the
-reference manual. Every construction or feature of <FONT COLOR=purple>FoCaLize</FONT> will be
-entirely described in the following chapters. </P><!--TOC section The Basic Brick-->
+presentation of its main features, to help further reading of the
+reference manual. Every construction or feature of <FONT COLOR=purple>FoCaLize</FONT> is
+entirely and precisely described in the following chapters.</P><!--TOC section The Basic Brick-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc2">1.1</A>  The Basic Brick</H2><!--SEC END --><P>The primitive entity of a <FONT COLOR=purple>FoCaLize</FONT> development is the
 <EM>species</EM>. It can be viewed as a record grouping &#X201C;things&#X201D; related
 to a same concept. Like in most modular design systems (i.e. objected 
@@ -548,42 +543,36 @@ only address data type and operations, among these &#X201C;things&#X201D; we als
 find the declaration (specification) of these operations, the
 properties (which may represent 
 requirements) and their proofs. </P><P>We now describe each of these &#X201C;things&#X201D;, called <EM>methods</EM>.</P><UL CLASS="itemize"><LI CLASS="li-itemize">
-The <EM>method</EM> introduced by the keyword
-<TT>representation</TT> gives the data representation of entities
-manipulated by the <EM>species</EM>. It is a type called the
-<EM>representation</EM> (or the representation type when emphasising
-on the fact that it is a type) and defined by a type expression. 
-The <EM>representation</EM> may be not-yet-defined in a <EM>species</EM>, 
+The <TT>representation</TT> gives the data representation of entities
+manipulated by the <EM>species</EM>. It is a type
+defined by a type expression. 
+The <EM>representation</EM> definition may be deferred,
 meaning that the real structure of the data-type the <EM>species</EM>
 embeds does not need to be known at this point. In this case, it is
 simply a type variable. However, to obtain an
 implementation, the <EM>representation</EM>
 has to be defined later either by setting <TT>representation = exp</TT> where
-<TT>exp</TT> is a type expression or by inheritance (see below). 
+<TT>exp</TT> is a type expression or by inheritance (see below).
 Type expressions in <FONT COLOR=purple>FoCaLize</FONT> are roughly ML-like types (variables,
-basic types, inductive types, record types) plus
-<EM>species representation types</EM>, denoted by keyword <TT>Self</TT>
-inside the species and by the name of their <EM>species</EM>
-outside of them.<P>Each <EM>species</EM> has a unique method <EM>representation</EM>. This
+basic types, inductive types, record types).
+<P>Each <EM>species</EM> has a unique <EM>representation</EM>. This
 is not a restriction compared to other languages where
 programs/objects/modules can own several private variables
 representing the internal state, hence the data structure of the
 manipulated entities by the program/object/module. In such a case,
-the <EM>representation</EM> can simply be the tuple grouping all these
+the <EM>representation</EM> is simply the tuple grouping all these
 variables that were disseminated all along the
 program/object/module.</P></LI><LI CLASS="li-itemize">Declarations are composed of the keyword <TT>signature</TT>
-followed by a name and a type. It serves to announce a <EM>method</EM> to
-be defined later, i.e. to only specify its type, without
-implementation yet. Such <EM>methods</EM> are especially dedicated
-for specification or design purposes since declared names may be
-used to define others <EM>methods</EM> while
-delaying their definition. The type provided by
-the <EM>signature</EM> allows <FONT COLOR=purple>FoCaLize</FONT> to ensure via type-checking
-that the method is used in contexts compatibles with this
+followed by a name and a type. They announce a <EM>method</EM> to
+be defined later (the type is given but not yet the
+implementation).
+Declaration can however be used in definition of other methods: the type provided by
+the <EM>signature</EM> allows <FONT COLOR=purple>FoCaLize</FONT> to ensure
+that the method is used in contexts compatible with this
 type. The late-binding and the collection mechanisms, further
 introduced, ensure that the definition of the method will be
 effectively known when needed.</LI><LI CLASS="li-itemize">Definitions are composed of the keyword <TT>let</TT>, followed
-by a name, a type and an expression. They serve to introduce
+by a name, a type (optional) and an expression. They serve to introduce
 constants or functions, i.e. computational operations. The core
 language used to implement them is roughly ML-like expressions
 (let-binding, pattern matching, conditional, higher order
@@ -595,33 +584,32 @@ formula. A <EM>property</EM> may serve to express requirements
 (i.e. facts that the system must hold to conform to the Statement
 of Work) and then can be viewed as a
 specification purpose <EM>method</EM>, like <EM>signature</EM>s were for
-<TT>let</TT>-<EM>method</EM>s. It will lead to a proof obligation later
+<TT>let</TT>-<EM>method</EM>s. They induce a proof obligation to be discharged at some point
 in the development. A <EM>property</EM> may also be used to express
 some &#X201C;quality&#X201D; information of the system (soundness,
-correctness, ..) also submitted to a proof obligation. Formulae
-are written with usual logical connectors, universal and
-existential quantifications over a <FONT COLOR=purple>FoCaLize</FONT> type, and names of <EM>methods</EM> known within the <EM>species</EM>&#X2019;s context. For instance,
-a <EM>property</EM> telling that if the speed is non-null, then doors
+correctness, ..) also submitted to a proof obligation. Formulae are written with usual logical connectors, universal and
+existential quantifications over a <FONT COLOR=purple>FoCaLize</FONT> type, and name of <EM>methods</EM> known within the <EM>species</EM>&#X2019; context. For instance,
+a <EM>property</EM> telling that for any vehicle, if the speed is non-null, then doors
 can&#X2019;t be opened could look like:
 <DIV CLASS="center">
-<TT>all v in Speed, v &lt;&gt; Speed!zero -&gt; </TT><TT>~</TT><TT>doors_open</TT>
+<TT>all m in Self, !speed(m) &lt;&gt; Speed!zero -&gt; </TT><TT>~</TT><TT>doors_open(m)</TT>
 </DIV>
-In the same way as <EM>signatures</EM>, even if no proof is
-yet given, the name of the <EM>property</EM> can be used to express 
-other ones and its statement can be used as an hypothesis in
-proofs. <FONT COLOR=purple>FoCaLize</FONT> late binding and collection mechanisms ensure
+In the same way as <EM>signatures</EM>, a yet to be proved <EM>property</EM>
+can be used
+as an hypothesis in
+proof of other properties or theorems. <FONT COLOR=purple>FoCaLize</FONT> late binding and collection mechanisms ensure
 that the proof of a <EM>property</EM> will be ultimately done.</LI><LI CLASS="li-itemize">Theorems (<TT>theorem</TT>) made of a name, a statement and a
 proof are <EM>properties</EM> together with the formal proof that their
 statement holds in the context of the <EM>species</EM>. The proof
-accompanying the statement will be processed by <FONT COLOR=purple>FoCaLize</FONT> and
-ultimately checked with the theorem prover <FONT COLOR=purple>Coq</FONT>.<P>Like in any formal development, one severe difficulty before
-proving is obviously to state a true interesting and meaningful
-statement. For instance, claiming that a piece of software is
-&#X201C;formally proved&#X201D; as respecting the safety requirements <TT>system_ok</TT> &#X201C;since <B>its</B> property is demonstrated&#X201D; is a
-lie if this property was, for instance, <TT>1 = 1 -&gt;
-system_ok</TT>. This is obviously a non-sense since the text of the
-property is trivial and does not link <TT>system_ok</TT> with the
-rest of the software (see [<A HREF="#traps">10</A>] for less trivial examples).</P></LI></UL><P>We now make concrete these notions on an example we will incrementally
+accompanying the statement will be processed by <FONT COLOR=purple>FoCaLize</FONT>  <FONT COLOR=purple>Zenon</FONT> and
+ultimately checked with the theorem prover <FONT COLOR=purple>Coq</FONT>.</LI></UL><P>Regarding properties and theorems, note that
+like in any formal development, the difficulty may be more to
+express a true, interesting and meaningful
+statement, than to prove it. For instance, claiming that a piece of software is
+&#X201C;formally proved&#X201D; because it respects a safety requirement
+is meaningless
+if the statement of this requirement is trivially true (see [<A HREF="#traps">11</A>] for examples).
+</P><P>Let&#X2019;s illustrate these notions on an example that we incrementally
 extend. We want to model some simple algebraic structures. Let&#X2019;s start
 with the description of a &#X201C;setoid&#X201D; representing the data structure of
 &#X201C;things&#X201D; belonging to a set, which can be submitted to an
@@ -635,28 +623,30 @@ exhibited (i.e. one can get a witness of existence of one of these
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>symm</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>trans</FONT><FONT SIZE=2>: </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>=</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>and</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>=</FONT><FONT SIZE=2>z</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>=</FONT><FONT SIZE=2>z</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>different</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>basics</FONT><FONT SIZE=2>#</FONT><FONT SIZE=2>not_b</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>different_irrefl</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, ~</FONT><FONT SIZE=2>different</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>   </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>definition</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>different</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>              </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>refl</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>In this <EM>species</EM>, the <EM>representation</EM> is not explicitly
-given (no keyword <TT>representation</TT>) , since we don&#X2019;t need to set
+given (the keyword <TT>representation</TT> is not used) , since we don&#X2019;t need to set
 it to be able to express functions and properties our &#X201C;setoid&#X201D;
-requires. However, we can refer to it via <TT>Self</TT> and it is in fact
-a type variable. In the same way, we specify a <EM>signature</EM> for the
+requires. However, we can refer to it via <TT>Self</TT>
+(in this case a type variable). In the same way, we specify a <EM>signature</EM> for the
 equality (operator <TT>=</TT>). We introduce the three properties that
-an equality (equivalence relation) must conform to. </P><P>We complete the example by the definition of
+an equality (an equivalence relation) must conform to.</P><P>We complete the example by the definition of
 the function <TT>different</TT> which use the name <TT>=</TT>
-(here <TT>basics#not_b</TT> stands for the
-function <TT>not_b</TT>, the boolean <TT>and</TT> coming from the <FONT COLOR=purple>FoCaLize</FONT>
+(<TT>basics#not_b</TT> stands for the
+the boolean negation function defined in the <FONT COLOR=purple>FoCaLize</FONT>
 source file <TT>basics.fcl</TT>). It is possible right now to prove that
 <TT>different</TT> is irreflexive, under the hypothesis that <TT>=</TT> is an
-equivalence relation (i.e. that each implementation of <TT>=</TT> given
-further will satisfy these properties). </P><P><BR>
+equivalence relation (i.e. that any implementation of <TT>=</TT> used by
+<TT>different</TT> will satisfy these properties). </P><P><BR>
 <BR>
 </P><P>It is possible to use <EM>methods</EM> only declared before they get a
 real <EM>definition</EM> thanks to the <EM>late-binding</EM> feature
 provided by <FONT COLOR=purple>FoCaLize</FONT>. In the same idea, redefining a <EM>method</EM> is
-allowed in <FONT COLOR=purple>FoCaLize</FONT> and, it is 
-always the last version which is kept as the effective <EM>definition</EM>
+allowed in <FONT COLOR=purple>FoCaLize</FONT> 
+the last version being always kept as the effective <EM>definition</EM>
 inside the species.</P><!--TOC section Type of Species, Interfaces and Collections-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc3">1.2</A>  Type of Species, Interfaces and Collections</H2><!--SEC END --><P>
 <A NAME="species-type"></A>
@@ -669,10 +659,10 @@ existential binder &#X2203; &#X3B1;. This binder will be eliminated as
 soon as the <TT>representation</TT> will be instantiated (defined) and
 must be eliminated to obtain runnable code. </P><P><BR>
 <BR>
-</P><P>The <EM>interface</EM> of a species is obtained by abstracting the <EM>representation</EM> type in the <EM>species type</EM> and this abstraction
-is permanent. </P><P><BR>
+</P><P>The <EM>interface</EM> of a species is obtained by abstracting the <EM>representation</EM> type in the <EM>species type</EM>; this abstraction
+is permanent.</P><P><BR>
 <BR>
-</P><P><B>Beware!</B> <EM>No special construction
+</P><P><B>Warning</B> <EM>No special construction
 is given to denote interfaces in the concrete syntax, they are
 simply denoted by the name of the species underlying them.</EM> Do not
 confuse a species and its interface. </P><P><BR>
@@ -680,38 +670,39 @@ confuse a species and its interface. </P><P><BR>
 </P><P>The <EM>species type</EM> remain totally implicit in the concrete syntax, being
 just used as a step to build <EM>species interface</EM>. It is used
 during inheritance resolution. </P><P>Interfaces can be ordered by inclusion, a point providing a very
-simple notion of subtyping. This point will be further commented. </P><P>A species is said to be <EM>complete</EM> if all declarations have
-received definitions and all properties have received proofs.</P><P>When <EM>complete</EM>, a species can be submitted to an abstraction
+simple notion of subtyping. This point will be further commented. </P><P>A species is said to be <EM>complete</EM> when the representation and all declarations have
+received a definition and all properties have received a proof.</P><P>When <EM>complete</EM>, a species can be submitted to an abstraction
 process of its representation to create a <EM>collection</EM>. Thus the
 <EM>interface</EM> of the collection is just the <EM>interface</EM> of the
 complete species underlying it. A collection can hence be seen as an
 abstract data type, only usable through the methods of its interface,
-but having the guarantee that all methods/theorems are defined/proved. </P><!--TOC section Combining Bricks by Inheritance-->
+but having the guarantee that all declarations are defined and all statements are proved.</P><!--TOC section Combining Bricks by Inheritance-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc4">1.3</A>  Combining Bricks by Inheritance</H2><!--SEC END --><P>A <FONT COLOR=purple>FoCaLize</FONT> development is organised as a hierarchy which may have
 several roots. Usually the upper levels of the hierarchy are built
 during the specification stage while the lower ones correspond to
 implementations. Each node of the hierarchy, i.e. each <EM>species</EM>,
-is a progress to a complete implementation. On the previous 
-example, forgetting <TT>different</TT>, we typically presented a kind of
-<EM>species</EM> for &#X201C;specification&#X201D; since it expressed only
+is a progress towards a complete implementation. On the previous 
+example, putting aside <TT>different</TT>, we typically presented a kind of
+<EM>species</EM> for &#X201C;specification&#X201D; since it expresses only
 <EM>signatures</EM> of functions to be later implemented and properties
-to which, later, give <EM>proofs</EM>.</P><P>We can now create a new <EM>species</EM>, may be more complex, by
-<B>inheritance</B> of a previously defined. We say here &#X201C;may be more
-complex&#X201D; because it can add new operations and properties, but it can
-also only bring real definitions to <EM>signatures</EM> and <EM>proofs</EM>
-to <EM>properties</EM>, adding no new <EM>method</EM>.</P><P>Hence, in <FONT COLOR=purple>FoCaLize</FONT> inheritance serves two kinds of evolutions. In the
+to be later proved.</P><P>We can now create a new <EM>species</EM> by
+<B>inheriting</B> of a previously defined one. We can make this new species more
+&#X201C;complex&#X201D; by adding new operations and properties, or we can make it more concrete
+by providing definitions to <EM>signatures</EM> and proofs
+to <EM>properties</EM>, without adding new features.</P><P>Hence, in <FONT COLOR=purple>FoCaLize</FONT> inheritance serves two kinds of evolutions. In the
 first case the evolution aims making a <EM>species</EM> with more
-operations but keeping those of its parents (or redefining some of
-them). In the second case, the <EM>species</EM> only tends to be closer
-to a &#X201C;run-able&#X201D; implementation, providing explicit definitions to
+operations while keeping those of its parents (possibly redefining some of
+them if required). In the second case, the <EM>species</EM> only tends to be closer
+to a &#X201C;runnable&#X201D; implementation, providing explicit definitions to
 <EM>methods</EM> that were previously only declared.</P><P>Continuing our example, we want to extend our model to represent
 &#X201C;things&#X201D; with a multiplication and a neutral element for this
-operation.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Monoid</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+operation.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Monoid</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> ( * ) : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>one</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>element</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>one</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>one</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
-</TABLE><P>We see here that we added new <EM>methods</EM> but also gave a definition
+</TABLE><P><EM>Monoid</EM> are &#X201C;things&#X201D; that are <EM>Setoids</EM> but also have an operation <TT>*</TT> and a specific value called <EM>one</EM>; besides the new <EM>methods</EM> we also gave a definition
 to <TT>element</TT>, saying it is the application of the method <TT>*</TT>
 to <TT>one</TT> twice, both of them being only <EM>declared</EM>. Here, we
 used the inheritance in both the presented ways: making a more complex
@@ -719,41 +710,43 @@ entity by adding <EM>methods</EM> and getting closer to the
 implementation by explicitly defining <TT>element</TT>.</P><P>Multiple inheritance is available in <FONT COLOR=purple>FoCaLize</FONT>. For sake of simplicity,
 the above example uses simple inheritance. In case of inheriting a
 <EM>method</EM> from several parents, the order of parents in the
-<TT>inherits</TT> clause serves to determine the chosen <EM>method</EM>.</P><P>The <EM>type</EM> of a <EM>species</EM> built using inheritance is defined
-like for other <EM>species</EM>, the <EM>methods</EM> types retained inside
+<TT>inherit</TT> clause serves to determine the chosen <EM>method</EM> (only
+the latest definition of any method appearing several times in the
+list of inherited species is retained).</P><P>The <EM>type</EM> of a <EM>species</EM> built using inheritance is defined
+like for other <EM>species</EM>, the <EM>method</EM> types retained inside
 it being those of the <EM>methods</EM> present in the <EM>species</EM> after
-inheritance is resolved.</P><P>A strong constraint in inheritance is that the type of inherited,
+inheritance resolution.</P><P>A strong constraint in inheritance is that the type of inherited,
 and/or redefined <EM>methods</EM> must not change. This is required to
-ensure consistence of the <FONT COLOR=purple>FoCaLize</FONT> model, hence of the developed
+ensure consistency of the <FONT COLOR=purple>FoCaLize</FONT> model, hence of the developed
 software. More precisely, if the representation is given by a type
 expression containing some type variables, then it can be more defined
 by instanciation of these variables. In the same way, two signatures
 have compatible types if they have a common unifier, thus, roughly
-speaking if they are compatible Ml-like types. For example, if the
+speaking if they are compatible ML-like types. For example, if the
 representation was not yet defined, thus being still a type variable,
 it can be defined by <TT>int</TT>. And if a species <I>S</I> inherits from
 <I>S</I><SUB>1</SUB> and <I>S</I>2 a method called <I>m</I>, there is no type clash if <I>S</I><SUB>1</SUB> !<I>m</I>
 and <I>S</I><SUB>2</SUB>!<I>m</I> can be unified, then the method <I>S</I>!<I>m</I> has the most general
-unifier of these two types as its own type. </P><!--TOC section Combining Bricks by Parametrisation-->
-<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc5">1.4</A>  Combining Bricks by Parametrisation</H2><!--SEC END --><P>Until now we are only able to enrich <EM>species</EM>. 
+unifier of these two types as its own type. </P><P>In a nutshell, if a species <EM>B</EM> inherits from a species <EM>A</EM>, the intuition is that any instance of <EM>B</EM> is also an instance of <EM>A</EM>.</P><!--TOC section Combining Bricks by Parameterisation-->
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc5">1.4</A>  Combining Bricks by Parameterisation</H2><!--SEC END --><P>As indicated, inheritance is used to enrich or to implement <EM>species</EM>.
 However, we sometimes need to use a <EM>species</EM>, not to take over
 its <EM>methods</EM>, but rather to use it as an &#X201C;ingredient&#X201D; to build
-a new structure. For instance, a pair of setoids is a
-new structure, using the previous <EM>species</EM> as the &#X201C;ingredient&#X201D;
-to create the structure of the pair. Indeed, the structure of a pair is
-independent of the structure of each component it is made of. A pair
-can be seen as <EM>parametrised</EM> by its two components.
-Following this idea, <FONT COLOR=purple>FoCaLize</FONT> allows two flavors of parametrisation.</P><!--TOC subsection Parametrisation by Collection Parameters-->
-<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc6">1.4.1</A>  Parametrisation by Collection Parameters</H3><!--SEC END --><P>We first introduce the <EM>collection parameters</EM>. They are
+a new structure. For instance, a product of setoids is a
+new structure, using the previous <EM>species</EM> as the &#X201C;ingredient&#X201D;.
+Indeed, the structure of a product is not similar to any of its component,
+but is build using the structures of its components. A product
+can be seen as <EM>parameterised</EM> by its two components.
+Following this idea, <FONT COLOR=purple>FoCaLize</FONT> allows two flavors of parameterisation.</P><!--TOC subsection Parameterisation by Collection-->
+<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc6">1.4.1</A>  Parameterisation by Collection</H3><!--SEC END --><P>We first introduce the <EM>collection parameters</EM>. They are
 <EM>collections</EM> that the hosting species may use through their
-<EM>methods</EM> to define its own ones.</P><P>A <EM>collection parameter</EM> is given a name <I>C</I> and an interface
-<I>I</I>. The name <I>C</I> serves to call the <EM>methods</EM> of <I>C</I> which figure in
-<I>I</I>. <I>C</I> can be instantiated by an effective parameter <I>CE</I> of
-interface <I>IE</I>. <I>CE</I> is a collection and its interface <I>IE</I> must
-contain <I>I</I>. Moreover, the collection and late-binding mechanisms
+<EM>methods</EM> to define its own ones.</P><P>A <EM>collection parameter</EM> is given a name <I>C</I> and a (species) interface
+<I>I</I>. The name <I>C</I> serves to call the <EM>methods</EM> declared in
+<I>I</I>. Intuitively, <I>C</I> will at some stage be implemented by a collection <I>CE</I> whose
+interface contains the methods of the interface <I>I</I>.
+Moreover, the collection and late-binding mechanisms
 ensure that all methods appearing in <I>I</I> are indeed implemented
 (defined for functions, proved for properties) in <I>CE</I>. Thus, no
-runtime error, due to linkage of libraries, can occur and any <EM>properties</EM> stated in <I>I</I> can be safely used as an hypothesis.</P><P>Calling a <EM>species</EM>&#X2019;s <EM>method</EM> is
+runtime error, due to linkage of libraries, can occur and any <EM>property</EM> or <EM>theorem</EM> stated in <I>I</I> can be safely used as an hypothesis.</P><P>Calling a <EM>species</EM>&#X2019;s <EM>method</EM> is
 done via the &#X201C;bang&#X201D; notation:
 <TT>!meth</TT> or<BR>
 <TT>Self!meth</TT> for a <EM>method</EM> of the current
@@ -761,60 +754,64 @@ done via the &#X201C;bang&#X201D; notation:
 <FONT COLOR=purple>FoCaLize</FONT> compiler will resolve scoping issues). To call
 <EM>collection parameters</EM>&#X2019;s <EM>method</EM>, the same notation is used:
 <TT>A!element</TT> stands for the <EM>method</EM> <TT>element</TT> of the
-<EM>collection parameter</EM> <TT>A</TT>.</P><P>To go on with our example, a pair of setoids has two components, hence a
-<EM>species</EM> for pairs of setoids will have two
-<EM>collection parameters</EM>. It is itself a setoid, a fact which is
+<EM>collection parameter</EM> <TT>A</TT>.</P><P>To go on with our example, a product of setoids has two components, hence a
+<EM>species</EM> for products of setoids has two
+<EM>collection parameters</EM>. It is itself a setoid (that is, a &#X201C;thing&#X201D; with an equality), a fact which is
 simply recorded via the inheritance mechanism:
-<TT>inherits Setoid</TT> gives to <TT>Setoid_product</TT> all the methods
-of <TT>Setoid</TT>.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid_product</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>A</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>representation</FONT><FONT SIZE=2> = (</FONT><FONT SIZE=2>A</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
+<TT>inherit Setoid</TT> gives to <TT>Setoid_product</TT> all the methods
+of <TT>Setoid</TT>.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid_product</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>A</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> ( = ) (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>     </FONT><FONT SIZE=2>and_b</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>       (</FONT><FONT SIZE=2>A</FONT><FONT SIZE=2>!( = ) (</FONT><FONT SIZE=2>first</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>), </FONT><FONT SIZE=2>first</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>)),</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>        </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2>!( = ) (</FONT><FONT SIZE=2>scnd</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>), </FONT><FONT SIZE=2>scnd</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>))) ;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>create</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>basics</FONT><FONT SIZE=2>#</FONT><FONT SIZE=2>crp</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>element</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>create</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>A</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>element</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>element</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fst</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>A</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>snd</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>pair</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>A</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>refl</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>definition</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> ( = ) ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>element</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>pair</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>A</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>element</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>element</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> ( = ) (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>basics</FONT><FONT SIZE=2>#</FONT><FONT SIZE=2>and_b</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>A</FONT><FONT SIZE=2>!( = )(</FONT><FONT SIZE=2>fst</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>), </FONT><FONT SIZE=2>fst</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>)),</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>                                   </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2>!( = )(</FONT><FONT SIZE=2>snd</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>), </FONT><FONT SIZE=2>snd</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>))) ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>refl</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>definition</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> ( = )</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>                     </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>A</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>refl</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>refl</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
-</TABLE><P>We express the <EM>representation</EM> of the product of two setoids as the
-Cartesian product of the <EM>representation</EM> of the two parameters. In
-<TT>A * B</TT>, <TT>*</TT> is the <FONT COLOR=purple>FoCaLize</FONT> type  constructor of pairs, <TT>A</TT> denotes indeed 
-the representation of the first <EM>collection parameter</EM>, and <TT>B</TT>
-the one of of the second <EM>collection parameter</EM>.</P><P>Next, we add a definition for <TT>=</TT> of <TT>Setoid_product</TT>,
-relying on the methods <TT>=</TT> of <TT>A</TT> (<TT>A!( = )</TT>) and <TT>B</TT>
-(which are not yet defined). Similarly, we introduce a definition for
-<TT>element</TT> by building a pair, using
-the function <TT>create</TT> (which calls the predefined function <TT>basics#crp</TT>) and the methods <TT>element</TT> of respectively <TT>A</TT>
-and <TT>B</TT>. And we can prove that <TT>=</TT> of <TT>Setoid_product</TT> is
+</TABLE><P>We first declare methods <TT>fst</TT>, <TT>snd</TT> and <TT>pair</TT> to represent the
+two projections and the construction of pairs.
+Next, we introduce a definition for <TT>element</TT> by building a pair, using
+the function <TT>pair</TT> applied to the method <TT>element</TT> of respectively <TT>A</TT>
+and <TT>B</TT>. We also add a definition for <TT>=</TT> of <TT>Setoid_product</TT>,
+relying on the methods <TT>=</TT> of <TT>A</TT> and <TT>B</TT>
+(which are not yet defined), and we prove that <TT>=</TT> of <TT>Setoid_product</TT> is
 indeed reflexive, upon the hypothesis made on <TT>A!( = )</TT>
 and <TT>B!( = )</TT>. The part of <FONT COLOR=purple>FoCaLize</FONT> used to write proofs will be
-shortly presented later, in section <A HREF="#focal-proof-language">1.6</A>.</P><P>This way, the <EM>species</EM> <TT>Setoid_product</TT> builds its <EM>methods</EM> relying on those of its <EM>collection parameters</EM>. Note the
-two different uses of <TT>Setoid</TT> in our <EM>species</EM> <TT>Setoid_product</TT>, which inherits of <TT>Setoid</TT> and is parametrised
-by <TT>Setoid</TT>.</P><P><BR>
+shortly presented later, in section <A HREF="#focal-proof-language">1.6</A>.</P><P>Such a species can be refined with <TT>representation = A * B</TT>, indicating that 
+the representation of the product is the
+Cartesian Product of the representation of the two parameters. In
+<TT>A * B</TT>, <TT>*</TT> is the <FONT COLOR=purple>FoCaLize</FONT> type  constructor of pairs, <TT>A</TT> denotes indeed 
+the representation of the first <EM>collection parameter</EM>, and <TT>B</TT>
+the one of of the second <EM>collection parameter</EM>.</P><P>This way, the <EM>species</EM> <TT>Setoid_product</TT> builds its <EM>methods</EM> relying on those of its <EM>collection parameters</EM>. Note the
+two different uses of <TT>Setoid</TT> in our <EM>species</EM> <TT>Setoid_product</TT>, which both inherits of and is parameterised by it.</P><P><BR>
 <BR>
-</P><P>Why such <EM>collection parameters</EM> and not simply <EM>species
+</P><P>Why <EM>collection parameters</EM> and not simply <EM>species
 parameters</EM>? There are two reasons. First, effective parameters must
 provide definitions/proofs for all the methods of the required
 interface: this is the contract. Thus, effective parameters must 
-be <EM>complete</EM> species. Then, we do not want the parametrisation
+be <EM>complete</EM> species. Then, we do not want the parameterisation
 to introduce dependencies
 on the parameters&#X2019; <EM>representation</EM> definitions. For example, it is
 impossible to express &#X201C; if <TT>A!representation</TT> is <TT>int</TT> and <TT>B!representation</TT>
 is <TT>bool</TT> then <TT>A*B</TT> is a list of boolean values&#X201D;. This would
 dramatically restrict possibilities to instantiate parameters since
 assumptions on the <EM>representation</EM>, possibly used in the
-parametrised <EM>species</EM> to write its own <EM>methods</EM>, 
+parameterised <EM>species</EM> to write its own <EM>methods</EM>, 
 could prevent <EM>collections</EM> having the right set of <EM>methods</EM> but
 a different representation to be used as
-effective parameters. Such a behaviour would make parametrisation too
+effective parameters. Such a behaviour would make parameterisation too
 weak to be usable. We choose to always hide the <EM>representation</EM> of a
-<EM>collection parameter</EM> to the parametrised
+<EM>collection parameter</EM> to the parameterised
 hosting <EM>species</EM>. Hence the introduction of the notion of
 <EM>collection</EM>, obtained by abstracting the representation from a
-complete species.</P><!--TOC subsection Parametrisation by Entity Parameters-->
-<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc7">1.4.2</A>  Parametrisation by Entity Parameters</H3><!--SEC END --><P>Let us imagine we want to make a <EM>species</EM> working on natural numbers
+complete species.</P><!--TOC subsection Parameterisation by Entity (Value)-->
+<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc7">1.4.2</A>  Parameterisation by Entity (Value)</H3><!--SEC END --><P>Let us imagine we want to make a <EM>species</EM> working on natural numbers
 modulo a certain value. In the expression
 5 <TT> <I>modulo</I> </TT> 2 <I>is</I> 1, both 5 and 2
 are natural numbers. To be sure that the <EM>species</EM> will
@@ -824,17 +821,18 @@ on a particular value of the modulo. Hence this value is clearly a
 <B>parameter</B> of the species, but a parameter in which we are
 interested by its <B>value</B>, not only by its <EM>representation</EM> and the
 methods acting on it. We call
-such parameters <EM>entity parameters</EM>, their introduction rests upon
+those <EM>entity parameters</EM>, their introduction rests upon
 the introduction of a <EM>collection parameter</EM> and they denote a
 <EM>value</EM> having the type of the <EM>representation</EM> of this
 <EM>collection parameter</EM>. </P><P>Let us first have a <EM>species</EM> representing natural numbers:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntModel</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>one</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inc</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>modulo</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>
 Note that <TT>IntModel</TT> can be later implemented in various ways,
 using Peano&#X2019;s integers, machine integers, arbitrary-precision
-arithmetic &#X2026;</P><P>We now build our <EM>species</EM> &#X201C;working modulo &#X2026;&#X201D;, embedding
+arithmetic (as well as things that are not really integers, our specification being too simplistic)&#X2026;</P><P>We now build our <EM>species</EM> &#X201C;working modulo &#X2026;&#X201D;, embedding
 the value of this modulo:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_work</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntModel</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>n</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
@@ -849,25 +847,26 @@ Using the <EM>entity parameter</EM> <TT>n</TT>, we ensure that the
 modulo, but will always use the <EM>same</EM> value <TT>n</TT> of the modulo
 everywhere inside the <EM>species</EM>.</P><!--TOC section The Final Brick-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc8">1.5</A>  The Final Brick</H2><!--SEC END --><P>As briefly introduced in <A HREF="#species-interface">1.2</A>, a <EM>species</EM>
-needs to be fully defined to lead to executable code for its functions
-and checkable proofs for its theorems. When a <EM>species</EM> is fully
-defined, it can be turned into a <EM>collection</EM>. Hence, a <EM>collection</EM>
+needs to be complete to lead to executable code for its functions
+and checkable proofs for its theorems. When a <EM>species</EM> is
+complete, it can be turned into a <EM>collection</EM>. Hence, a <EM>collection</EM>
 represents the final stage of the inheritance tree of a <EM>species</EM>
 and leads to an effective data representation with
 executable functions processing it.</P><P>For instance, providing that the previous
-<EM>species</EM> <TT>IntModel</TT> turned into a fully-defined species
+<EM>species</EM> <TT>IntModel</TT> has been refined into a fully-defined species
 <TT>MachineNativeInt</TT> through inheritances steps, with a <EM>method</EM>
 <TT>from_string</TT> allowing to create the natural representation of a
-string, we could get a related collection by:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MachineNativeIntColl</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>implements</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MachineNativeInt</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
+string, we could get a related collection by:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MachineNativeIntColl</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>implement</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MachineNativeInt</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>Next, to get a <EM>collection</EM> implementing arithmetic modulo 8, we
 could extract from the <EM>species</EM> <TT>Modulo_work</TT> the following
-<EM>collection</EM>:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_8_work</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>implements</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_work</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>   (</FONT><FONT SIZE=2>MachineNativeIntColl</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>MachineNativeIntColl</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>from_string</FONT><FONT SIZE=2> (``8'') ;;</FONT></TD></TR>
+<EM>collection</EM>:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_8_work</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>implement</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_work</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>   (</FONT><FONT SIZE=2>MachineNativeIntColl</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>MachineNativeIntColl</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>from_string</FONT><FONT SIZE=2> (``8'')</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>end</FONT><FONT SIZE=2>;;</FONT></TD></TR>
 </TABLE><P>As seen by this example, a species can be applied to effective
 parameters by giving their values with the usual syntax of parameter
 passing. </P><P>As said before, to ensure modularity and abstraction, the
 <EM>representation</EM> of a 
-<EM>collection</EM> turns hidden. This means that any software component
+<EM>collection</EM> is hidden (as well as the definitions). This means that any software component
 dealing with a <EM>collection</EM> will only be able to manipulate it
 through the operations (<EM>methods</EM>) its interface provides. This
 point is especially important since it prevents other software
@@ -878,29 +877,28 @@ of the <EM>collection</EM>.</P><!--TOC section Properties, Theorems and Proofs--
 the executable model (i.e. program) and properties this model must
 satisfy. For this reason, &#X201C;special&#X201D; <EM>methods</EM> deal with logic
 instead of purely behavioural aspects of the system: <EM>theorems</EM>,
-<EM>properties</EM> and <EM>proofs</EM>.</P><P>Stating a <EM>property</EM> expects that a <EM>proof</EM> that it
-<B>holds</B> will finally be given. For <EM>theorems</EM>, the <EM>proof</EM> is
-directly embedded in the <EM>theorem</EM>. Such proofs must be done by
+<EM>properties</EM> and <EM>proofs</EM>.</P><P>Stating a <EM>property</EM> indicates that a <EM>proof</EM> that it
+<B>holds</B> will be given at some stage of the development. For <EM>theorems</EM>, the <EM>proof</EM> is
+directly provided with the statement. Such proofs must be done by
 the developer and will finally be sent to the formal proof assistant
 <FONT COLOR=purple>Coq</FONT> who will automatically check that the demonstration of the
 <EM>property</EM> is consistent. Writing a proof can be done in several ways.</P><P>It can be written in <FONT COLOR=purple>FoCaLize</FONT>&#X2019;s proof language, a hierarchical proof
 language that allows to give hints and directions for a proof. This
 language will be sent to an external theorem prover,
-<FONT COLOR=purple>Zenon</FONT> [<A HREF="#Zenon"></A>, <A HREF="#zenon0.4.1">9</A>] developed by D. Doligez. This prover is
-a first order theorem prover based on the tableau method incorporating
+<FONT COLOR=purple>Zenon</FONT>[<A HREF="#Zenon"></A>, <A HREF="#zenon0.4.1">9</A>] developed by D. Doligez. This prover is a first order theorem prover based on the tableau method incorporating
 implementation novelties such as sharing. <FONT COLOR=purple>Zenon</FONT> will attempt, from
-these hints to automatically generate the proof and exhibit a <FONT COLOR=purple>Coq</FONT>
+these hints, to automatically generate the proof and exhibit a <FONT COLOR=purple>Coq</FONT>
 term suitable for verification by <FONT COLOR=purple>Coq</FONT>. Basic hints given by the
 developer to <FONT COLOR=purple>Zenon</FONT> are: &#X201C;prove by definition of a <EM>method</EM>&#X201D;
 (i.e. looking inside its body) and &#X201C;prove by <EM>property</EM>&#X201D;
-(i.e. using the logical body of a <EM>theorem</EM> or <EM>property</EM>&#X201D;.
+(i.e. using the logical statement of a <EM>theorem</EM> or <EM>property</EM>).
 Surrounding this hints mechanism, the language allows to build the
 proof by stating assumptions (that must obviously be demonstrated
 next) that can be used to prove lemmas or parts for the whole
 property. We show below an example of such demonstration.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>  </FONT><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>order_inf_is_infimum</FONT><FONT SIZE=2>: </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>i</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) -&gt; !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) -&gt;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>      !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, !</FONT><FONT SIZE=2>inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>    </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2>:</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>    </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>      &lt;1&gt;1 </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>           </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>i</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>H1</FONT><FONT SIZE=2>: !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>),</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>           </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>H2</FONT><FONT SIZE=2>: !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>),</FONT><FONT SIZE=2>
@@ -910,11 +908,11 @@ property. We show below an example of such demonstration.</P><TABLE CLASS="lstfr
 </FONT><FONT SIZE=2>             </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inf_left_substitution_rule</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>               </FONT><FONT SIZE=2>equal_symmetric</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>equal_transitive</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>             </FONT><FONT SIZE=2>definition</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>        &lt;2&gt;9 </FONT><FONT SIZE=2>qed</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>        &lt;2&gt;</FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>qed</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>          </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>step</FONT><FONT SIZE=2> &lt;2&gt;1</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>             </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inf_is_associative</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>equal_transitive</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>             </FONT><FONT SIZE=2>definition</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>      &lt;1&gt;2 </FONT><FONT SIZE=2>conclude</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>      &lt;1&gt;</FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>conclude</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    ;</FONT></TD></TR>
 </TABLE><P>The important point is that <FONT COLOR=purple>Zenon</FONT> works for the
 developer: <B>it searches the proof itself</B>, the developer does not
@@ -924,20 +922,13 @@ demonstration. In this case, <FONT COLOR=purple>FoCaLize</FONT> allows to write 
 this leaves the full power of expression of <FONT COLOR=purple>Coq</FONT> to the developer.</P><P>Finally, the <TT>assumed</TT> keyword is the ultimate proof backdoor,
 telling that the proof is not given but that the property must be
 admitted. Obviously, a really safe development should not make usage of
-such &#X201C;proofs&#X201D; since they bypass the formal verification of
-software&#X2019;s model. However, such a functionality remains needed since
-some of &#X201C;well-known&#X201D; properties can never be proved for a computer.
-For instance, &#X2200; <I>x</I> &#X2208; <I>I</I><I>N</I>, <I>x</I>+1 &gt;<I>n</I> does not hold in a
-computer with native integers. However, in a mathematical
-framework, this property holds and is needed to carry out other
-proofs. Thus the developer may prove either that all manipulated values
-remain in an interval where this property holds or may admit this
-property or may add code to detect overflow ... 
-On another side, a development may be linked with external
-code, trusted or not, but for which properties cannot be proved inside
-the <FONT COLOR=purple>FoCaLize</FONT> part since it does not belong to it. Expressing properties
-of the <FONT COLOR=purple>FoCaLize</FONT> part may need to express properties on the imported
-code, that cannot be formally proved, then must be &#X201C;assumed&#X201D;.</P><!--TOC section Around the Language-->
+this feature since it bypasses the formal verification of
+software&#X2019;s model. However, such a functionality remains needed for various
+reasons. For example, a development may be linked with external code; 
+properties of the <FONT COLOR=purple>FoCaLize</FONT> code may depends on properties of the external
+code that have to be stated (for example using the documentation of this
+code) but also assumed.
+</P><!--TOC section Around the Language-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc10">1.7</A>  Around the Language</H2><!--SEC END --><P>In the previous sections, we presented <FONT COLOR=purple>FoCaLize</FONT> through its programming
 model and shortly its syntax. We especially investigated the various
 entities making a <FONT COLOR=purple>FoCaLize</FONT> program. We now address what becomes a
@@ -948,10 +939,10 @@ exists a generic implementation of integer addition modulo <TT>n</TT> but
 it can be redefined in arithmetics modulo <TT>2</TT> if boolean values
 are used to represent the two values). It is also a very convenient
 tool to maintain software. </P><!--TOC subsection Consistency of the Software-->
-<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc11">1.7.1</A>  Consistency of the Software</H3><!--SEC END --><P>All along the development cycle of a <FONT COLOR=purple>FoCaLize</FONT> program, the compiler
-keeps trace of dependencies between <EM>species</EM>, their
-<EM>methods</EM>, the <EM>proofs</EM>, &#X2026;to ensure that modifications
-of one of them will be detected those depending of it.</P><P><FONT COLOR=purple>FoCaLize</FONT> considers two types of dependencies:
+<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc11">1.7.1</A>  Consistency of the Software</H3><!--SEC END --><P>All along the <FONT COLOR=purple>FoCaLize</FONT> development cycle, the compiler
+keeps trace of dependencies between <EM>species</EM>,
+<EM>methods</EM>, and <EM>proofs</EM> &#X2026;to ensure that the consequences of any modification
+will be managed consistently and propagated to those depending of it.</P><P><FONT COLOR=purple>FoCaLize</FONT> deals with two types of dependencies:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
 The <B>decl</B>-dependency: a <EM>method</EM> <I>A</I> decl-depends on a
 <EM>method</EM> <I>B</I>, if the <B>declaration</B> of <I>B</I> is required to
@@ -963,7 +954,7 @@ especially, to prove the property stated by the <EM>theorem</EM>
 <I>A</I>).
 </LI></UL><P>The redefinition of a function may invalidate the proofs that use
 properties of the body of the redefined function. All the proofs
-which truly depend of the definition are then erased by the compiler
+which truly depend of the definition are then invalidated by the compiler
 and must be done again in the context updated with the new
 definition. Thus the main difficulty is to choose the best level in
 the hierarchy to do a proof. In [<A HREF="#PrevostoJaume2003">21</A>], Prevosto and
@@ -984,17 +975,18 @@ the system developed in <FONT COLOR=purple>FoCaLize</FONT>.</P><!--TOC subsectio
 allows to confront automatically a property of the specification with
 an implementation. It generates automatically test cases, executes
 them and produces a test report as an XML document. The property under
-test is used to generate the test cases, it also serves as an
-oracle. When a test case fails, it means a counterexample of the
-property has been found: the implantation does not match the property;
-it can also indicate an error in the specification.</P><P>The tool <EM>FocalTest</EM> automatically produces the test environment and
-the drivers to conduct the tests. We benefit from the inheritance
+test is used to generate the test case but also as an
+oracle. When a test case fails, it means that a counterexample of the
+property has been found: the implementation does not match the property.
+Note that this indentifies a problem in the code or in the specification.</P><P>The tool <EM>FocalTest</EM> automatically produces the test environment and
+the drivers to conduct the tests. It benefits from the inheritance
 mechanism to isolate the testing harness from the components written
 by the programmer.</P><P>The testable properties are required to be broken down into a
-precondition and a conclusion, both executable.
-<EM>FocalTest</EM> proposes a pure random test cases generation: it
-generates test cases until the precondition is satisfied, the verdict
-of the test case is given by executing the post-condition. It can be
+precondition and a conclusion, both executable. The current version of
+<EM>FocalTest</EM> proposes a pure random test cases generation: a test case
+is generated, if it satisfies the pre-condition then the verdict of the test case
+is obtained by executing the post-condition, else the test case is rejected.
+It can be
 an expensive process for some kind of preconditions. To overcome this
 drawback, a constraint based generation is under development: it
 allows to produce directly test cases for which the precondition is
@@ -1004,7 +996,7 @@ generates documentation, thus the documentation of a component is
 always coherent with respect to its implementation.</P><P>This tool uses its own XML format that contains information coming not
 only from structured comments (that are parsed and kept in the
 program&#X2019;s abstract syntax tree) and <FONT COLOR=purple>FoCaLize</FONT> concrete syntax but also
-from type inference and dependence analysis. From this XML
+from type inference and dependency analysis. From this XML
 representation and thanks to some XSLT stylesheets, it is possible to
 generate HTML files or L<sup>A</sup>T<sub>E</sub>X files. Although this documentation is
 not the complete safety case, it can helpfully contribute to its
@@ -1041,12 +1033,13 @@ your <FONT COLOR=purple>FoCaLize</FONT> programs.</LI><LI CLASS="li-itemize">The
 the <FONT COLOR=purple>FoCaLize</FONT> libraries at installation stage from the tarball and
 the <FONT COLOR=purple>FoCaLize</FONT> compiler&#X2019;s output generated by the compilation of
 your <FONT COLOR=purple>FoCaLize</FONT> programs.
-</LI></UL><!--TOC section Optional software-->
+</LI></UL><P>Note that some distributions of <FONT COLOR=purple>FoCaLize</FONT> includes these tools and are
+automatically installed during the <FONT COLOR=purple>FoCaLize</FONT>installation process.</P><!--TOC section Optional software-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc17">2.2</A>  Optional software</H2><!--SEC END --><P>
 <A NAME="optional-software"></A>
 The <FONT COLOR=purple>FoCaLize</FONT> compiler can generate dependencies graphs from compiled
 source code. It generates them in the format suitable to be processed
-and displayed by the <FONT COLOR=purple>dotty</FONT> tools suit of the &#X201C;Graphwiz&#X201D; package. If
+and displayed by the <FONT COLOR=purple>dotty</FONT> tools suite of the &#X201C;Graphwiz&#X201D; package. If
 you plan to examine these graphs, you also need to install this
 software from <CODE>http://www.graphviz.org/</CODE>.</P><!--TOC section Operating systems-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc18">2.3</A>  Operating systems</H2><!--SEC END --><P>
@@ -1087,9 +1080,9 @@ systems and is described in the following section
 source code of the development environment. You must first deflate the
 archive (a directory will be created) by:
 </P><DIV CLASS="center">
-<TT>tar xvzf focalize-x.x.x.tgz</TT>
+<TT>tar xvzf focalize-x.y.z.tgz</TT>
 </DIV><P>
-Next, go in the sources directory:
+Where <I>x</I>.<I>y</I>.<I>z</I> is the version number. Next, go in the sources directory:
 </P><DIV CLASS="center">
 <TT>cd focalize-x.x.x/</TT>
 </DIV><P>
@@ -1122,10 +1115,10 @@ containing source code for toplevel-definitions, species,
 collections. Visibility rules, described in section
 <A HREF="#qualified-name">3.1.12</A>, are defined according to compilation units status.
 From a compilation unit, the compiler issues several files described
-on the following.</P><!--TOC subsection Outputs-->
+thereafter.</P><!--TOC subsection Outputs-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc21">2.5.1</A>  Outputs</H3><!--SEC END --><P>
 A <FONT COLOR=purple>FoCaLize</FONT> development contains both
-&#X201C;computational code&#X201D; (i.e. code performing operations that lead to
+computational code (i.e. code performing operations leading to
 an effect, a result) and logical properties.</P><P><BR>
 When compiled, two outputs are generated:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
@@ -1155,7 +1148,7 @@ In addition, several other outputs can be generated for documentation
 or debug purposes. See the section <A HREF="#compiler-options">7</A> for
 details.</P><!--TOC subsection Compiling a source-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc22">2.5.2</A>  Compiling a source</H3><!--SEC END --><P>
-Compiling a <FONT COLOR=purple>FoCaLize</FONT> program involves several steps that are
+Compiling a <FONT COLOR=purple>FoCaLize</FONT> program involves several steps (numbered here 1, 2, 3 and 4) that are
 automatically handled by the <FONT COLOR=purple>focalizec</FONT> command. Using the command
 line options, it is possible to tune the code generations steps as
 described in <A HREF="#compiler-options">7</A>.</P><OL CLASS="enumerate" type=1><LI CLASS="li-enumerate">
@@ -1198,7 +1191,7 @@ This step acts like a manual invocation:
 <TT>zvtov -new source.zv</TT>
 </DIV>
 For more about the <FONT COLOR=purple>Zenon</FONT> options, consult section
-<A HREF="#zenon_options">??</A>.</LI><LI CLASS="li-enumerate"><B><FONT COLOR=purple>Coq</FONT></B><B> code compilation</B>. This step takes the generated
+<A HREF="#zenon_options">??</A>. </LI><LI CLASS="li-enumerate"><B><FONT COLOR=purple>Coq</FONT></B><B> code compilation</B>. This step takes the generated
 <TT>.v</TT> code and compiles it with <FONT COLOR=purple>Coq</FONT>. This is done like any
 regular <FONT COLOR=purple>Coq</FONT> compilation. The only difference is that the search
 path containing the <FONT COLOR=purple>FoCaLize</FONT> installation path and your own used
@@ -1248,23 +1241,26 @@ treated as blanks. Comments can occur inside string or character
 literals (provided the <TT>*</TT> character is escaped) and can be nested. They
 are discarded during the compilation process. Example:
 <FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(* Discarded comment. *)</FONT></EM></FONT><FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(* Discarded comment *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Another discarded comment. *)</FONT></EM></FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Another discarded comment *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Another discarded comment at end of file. *)</FONT></EM></FONT></TD></TR>
+</FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Another discarded comment at end of file *)</FONT></EM></FONT></TD></TR>
 </TABLE><P>Comments spanning on a single line start by the two characters
 <TT>--</TT> and end with the end-of-line character.
 Example:
 <FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>-- </FONT><FONT SIZE=2>Discarded</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>uni</FONT><FONT SIZE=2>-</FONT><FONT SIZE=2>line</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>comment</FONT><FONT SIZE=2>.</FONT><FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>-- </FONT><FONT SIZE=2>Discarded</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>uni</FONT><FONT SIZE=2>-</FONT><FONT SIZE=2>line</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>comment</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) = -- </FONT><FONT SIZE=2>Another</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>uni</FONT><FONT SIZE=2>-</FONT><FONT SIZE=2>line</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>comment</FONT><FONT SIZE=2>.</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) = -- </FONT><FONT SIZE=2>Another</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>uni</FONT><FONT SIZE=2>-</FONT><FONT SIZE=2>line</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>comment</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
-</TABLE><!--TOC subsection Annotations-->
+</TABLE><P>Note that double quotes (symbol ") should not appear in comments, and that
+a spanning comment should not start with uniline comment mark. A uniline
+comment should also always be terminated by a carriage return (an unclosed
+uniline comment cannot end a file).</P><!--TOC subsection Annotations-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc27">3.1.3</A>  Annotations</H3><!--SEC END --><P>
 <A NAME="@default7"></A>
 <A NAME="@default8"></A>
@@ -1282,12 +1278,11 @@ For instance, the <FONT COLOR=purple>FoCaLize</FONT> development environment pro
 automatic production tool that uses annotations to automatically generate
 documentation.
 Several annotations can be put in sequence for the same construct. We call
-such a sequence an <B>annotations block</B><A NAME="@default9"></A>.
+such a sequence an <B>annotation block</B><A NAME="@default9"></A>.
 Using embedded tags in annotations allows third-party tools to easily find
 out annotations that are meaningful to them, and safely ignore others.
 For more information, consult
-<A HREF="#documentation-generation">??</A>.
-Example:
+<A HREF="#documentation-generation">??</A>. Example:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(** Annotation for the automatic documentation processor.</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    Documentation for species S. *)</FONT></EM></FONT><FONT SIZE=2>
@@ -1311,11 +1306,11 @@ English texts. We routinely distinguish between:
 </P><DL CLASS="list"><DT CLASS="dt-list">
 0pt 5pt
 &#X2022;</DT><DD CLASS="dd-list">a word only made of lowercase characters, that is supposed to be an
-ordinary noun, such as "table", "ball", or a verb as in "is", or an
-adjective as in "green",
+ordinary noun, such as &#X201C;table&#X201D;, &#X201C;ball&#X201D;, or a verb as in &#X201C;is&#X201D;, or an
+adjective as in &#X201C;green&#X201D;,
 </DD><DT CLASS="dt-list">&#X2022;</DT><DD CLASS="dd-list">a word starting with an uppercase letter, that is supposed to be a name,
-maybe a family or christian name, as in "Kennedy" or "David", or a location
-name as in "London".
+maybe a family or christian name, as in &#X201C;Kennedy&#X201D; or &#X201C;David&#X201D;, or a location
+name as in &#X201C;London&#X201D;.
 </DD></DL><P>We use this distinctive look of words as a useful hint to help understanding
 phrases. For instance, we accept the phrase "my ball is green" as meaningful,
 whereas "my Paris is green" is considered a nonsense. This is simply because
@@ -1367,23 +1362,24 @@ nor 2  *  (3  <SUP>(4  +  5)</SUP>) which is 39366.
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc33">3.1.4.5</A>  Categorization of identifiers</H4><!--SEC END --><P><A NAME="@default15"></A>
 The category of an identifier answers to the question &#X201C;is this identifier a
 possible name for this kind of concept ?&#X201D;.
-In programming languages category are often strict, meaning that the category
+In programming languages categories are often strict, meaning that the category
 exactly states which concept attaches to the identifier.</P><P>For <FONT COLOR=purple>FoCaLize</FONT> these categories are
 </P><DL CLASS="list"><DT CLASS="dt-list">
 0pt 5pt
 &#X2022;</DT><DD CLASS="dd-list"><EM>lowercase</EM>: the identifier starts with a lowercase letter and
 designates a simple entity of the language. It may name some of
 the language expressions, a function name, a function parameter or bound
-variable name, a method name; a type name, or a record field label name.</DD><DT CLASS="dt-list">&#X2022;</DT><DD CLASS="dd-list"><EM>uppercase</EM>: the identifier starts with an uppercase letter and
+variable name, a method name, a type name, or a record field label name.</DD><DT CLASS="dt-list">&#X2022;</DT><DD CLASS="dd-list"><EM>uppercase</EM>: the identifier starts with an uppercase letter and
 designates a more complex entity in the language. It may name a sum type
 constructor name, a module name, a species or a collection name.
 </DD></DL><P>We distinguish identifiers using their first &#X201C;meaningful&#X201D; character:
-the first character that is not an underscore.</P><!--TOC subsubsection Nature of identifiers-->
+the first character that is not an underscore.
+</P><!--TOC subsubsection Nature of identifiers-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc34">3.1.4.6</A>  Nature of identifiers</H4><!--SEC END --><P>
 <A NAME="@default16"></A></P><P>In <FONT COLOR=purple>FoCaLize</FONT> identifiers are either:</P><DL CLASS="list"><DT CLASS="dt-list">
 0pt 5pt
 &#X2022;</DT><DD CLASS="dd-list"><EM>symbolic</EM>: the identifier contains characters that are not
-letters. <TT>+</TT>, <TT>:=</TT>, <TT>-&gt;</TT>, <TT>+float</TT> are symbolic</DD><DT CLASS="dt-list">&#X2022;</DT><DD CLASS="dd-list"><EM>alphanumeric</EM>: the identifier contains letters, digits and
+letters. <TT>+</TT>, <TT>:=</TT>, <TT>-&gt;</TT>, <TT>+float</TT> are symbolic</DD><DT CLASS="dt-list">&#X2022;</DT><DD CLASS="dd-list"><EM>alphanumeric</EM>: the identifier only contains letters, digits and
 underscores. <TT>x</TT>, <TT>_1</TT>, <TT>Some</TT>, <TT>Basic_object</TT> are
 alphanumeric.
 </DD></DL><!--TOC subsubsection Regular identifiers-->
@@ -1418,10 +1414,10 @@ and labels of records.</P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD
 <TR><TD ALIGN=right NOWRAP>
 <A NAME="ident"><I><FONT COLOR=maroon>ident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> &#X2223;  <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
-</TABLE><P>
-<BR>
+</TABLE><P><BR>
 </P><P>A regular identifier is a sequence of letters, digits, and <TT>_</TT> (the
-underscore character), starting with a letter or an underscore.</P><P>The identifier is lowercase if its first letter is lowercase.</P><P>The identifier is uppercase if its first letter is uppercase.</P><P>Letters contain at least the 52 lowercase and uppercase
+underscore character), starting with a letter or an underscore.</P><P>The identifier is lowercase if its first letter is lowercase.</P><P>The identifier is uppercase if its first letter is uppercase.
+</P><P>Letters contain at least the 52 lowercase and uppercase
 letters from the standard ASCII set. In an identifier, all characters
 are meaningful.
 Examples: <TT>foo</TT>, <TT>bar</TT>, <TT>_20</TT>,
@@ -1470,7 +1466,10 @@ according to the following table:
 <A HREF="#infix-op"><I><FONT COLOR=maroon>infix-op</FONT></I></A> &#X2223;  <A HREF="#prefix-op"><I><FONT COLOR=maroon>prefix-op</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P>Hence, in the above examples, <TT>+</TT>, <TT>++</TT> and <TT>=_mod_5</TT> will be
-infix operators and <TT>~</TT><TT>+zero</TT> will be a prefix one.</P><!--TOC subsubsection Defining an infix operator-->
+infix operators and <TT>~</TT><TT>+zero</TT> will be a prefix one.</P><P>Note that some of these symbols, such as <TT>:</TT>, are considered as uppercase
+identifiers, and others, such as <TT>+</TT>, as lowercase identifiers. The consequence
+is that for example a notation starting with a <TT>:</TT> can be used as a constructor
+name for a union type, but not as a method name.</P><!--TOC subsubsection Defining an infix operator-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc37">3.1.4.9</A>  Defining an infix operator</H4><!--SEC END --><P>
 <A NAME="@default20"></A>
 <A NAME="@default21"></A>
@@ -1479,7 +1478,7 @@ these operators: it means that the programmer may freely define and use them
 as ordinary prefix/infix operators instead of only writing prefix function
 names and regular function application. For instance, if you do not like the
 <FONT COLOR=purple>FoCaLize</FONT> predefined <CODE>^</CODE> operator to concatenate strings, you can define your
-own infix synonym for <CODE>^</CODE>, say tt ++, using:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> ( ++ ) (</FONT><FONT SIZE=2>s1</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>s2</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>s1</FONT><FONT SIZE=2> ^ </FONT><FONT SIZE=2>s2</FONT><FONT SIZE=2> ;</FONT></TD></TR>
+own infix synonym for <CODE>^</CODE>, say <TT>++</TT>, using:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> ( ++ ) (</FONT><FONT SIZE=2>s1</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>s2</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>s1</FONT><FONT SIZE=2> ^ </FONT><FONT SIZE=2>s2</FONT><FONT SIZE=2> ;</FONT></TD></TR>
 </TABLE><P>
 Then you can use the <TT>++</TT> operator in the usual way
 <FONT SIZE=2>
@@ -1496,11 +1495,10 @@ operator <TT>op</TT>.</P><P>Since you can only define prefix identifiers in <FON
 prefix form notation to define an infix or prefix operator.</P><P>When a prefix or infix operator has been defined, it is still possible
 to use it as a regular identifier using its prefix form notation.
 For instance, you can use the prefix form of operator <TT>++</TT>
-to apply it in a prefix position as a simple regular function (with a
-strange name admittedly!):</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>... ( ++ ) (</FONT><FONT SIZE=2><FONT SIZE=2>"Hello"</FONT></FONT><FONT SIZE=2>, </FONT><FONT SIZE=2><FONT SIZE=2>" world!"</FONT></FONT><FONT SIZE=2>) ;</FONT></TD></TR>
-</TABLE><P><B>Attention</B>: a common error while defining an operator is to forget
-the spaces around the operator. This is particularly confusing, if you
-type the <TT>*</TT> operator without spaces around the operator: you
+to apply it in a prefix position as a simple regular function: </P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>... ( ++ ) (</FONT><FONT SIZE=2><FONT SIZE=2>"Hello"</FONT></FONT><FONT SIZE=2>, </FONT><FONT SIZE=2><FONT SIZE=2>" world!"</FONT></FONT><FONT SIZE=2>) ;</FONT></TD></TR>
+</TABLE><P><B>Warning!</B> A common error while defining an operator is to forget
+the blanks around the operator. This is particularly confusing, if you
+type the <TT>*</TT> operator without blanks around the operator: you
 write the lexical entity <TT>(*)</TT> which is the beginning (or the end)
 of a comment!</P><P>The <FONT COLOR=purple>FoCaLize</FONT> notion of symbolic identifiers go largely beyond simple
 infix operators. Symbolic identifiers let you assign sophisticated names
@@ -1620,7 +1618,7 @@ Digits are [0-7].
 Digits are [0-9] [A-F] [a-f].
 </LI></UL><P>
 Here are various examples of integers in various bases:
-<TT>-0x1Ff</TT>, <TT>0B01001</TT>, <TT>+Oo347</TT>.</P><!--TOC subsection String literals-->
+<TT>-0x1Ff</TT>, <TT>0B01001</TT>, <TT>+Oo347</TT>, <TT>-OxFF_FF</TT>.</P><!--TOC subsection String literals-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc42">3.1.8</A>  String literals</H3><!--SEC END --><P>
 <A NAME="string literal"></A></P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="string-literal"><I><FONT COLOR=maroon>string-literal</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
@@ -1662,13 +1660,7 @@ table below:</P><P><BR>
 <TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">&#X2423;</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>&#X2423;</TD><TD VALIGN=top ALIGN=left>Space character.</TD></TR>
 <TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">"</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP><TT>"</TT></TD><TD VALIGN=top ALIGN=left>Double quote.</TD></TR>
 <TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">&#X2019;</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP><TT>&#X2019;</TT></TD><TD VALIGN=top ALIGN=left>Single quote.</TD></TR>
-<TR><TD VALIGN=top ALIGN=center NOWRAP> </TD><TD VALIGN=top ALIGN=center NOWRAP>*</TD><TD VALIGN=top ALIGN=left>Since comments cannot appear inside
-strings, to insert one of the
-sequence &#X201C;(*&#X201D;, &#X201C;*)&#X201D;, &#X201C;{*&#X201D;,
-&#X201C;*}&#X201D;, &#X201C;[*&#X201D;, or &#X201C;*]&#X201D;,
-use this escape sequence
-combined with the six following
-ones.</TD></TR>
+<TR><TD VALIGN=top ALIGN=center NOWRAP> </TD><TD VALIGN=top ALIGN=center NOWRAP>*</TD><TD VALIGN=top ALIGN=left>Allows e.g. for insertion of &#X201C;(*&#X201D; in a string</TD></TR>
 <TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">(</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>(</TD><TD VALIGN=top ALIGN=left>6*See comment above for</TD></TR>
 <TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">)</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>)</TD><TD VALIGN=top ALIGN=left>&nbsp;</TD></TR>
 <TR><TD VALIGN=top ALIGN=center NOWRAP> <TT><FONT COLOR="red">\</FONT></TT><TT><FONT COLOR="red">[</FONT></TT></TD><TD VALIGN=top ALIGN=center NOWRAP>[</TD><TD VALIGN=top ALIGN=left>&nbsp;</TD></TR>
@@ -1772,21 +1764,22 @@ depth of the bullet and the second part stands for its name. Example:
 </FONT><FONT SIZE=2>      ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>      </FONT><FONT SIZE=2>prove</FONT><FONT SIZE=2> ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   &lt;2&gt;1 </FONT><FONT SIZE=2>prove</FONT><FONT SIZE=2> ... </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> ...</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>   &lt;2&gt;9 </FONT><FONT SIZE=2>qed</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>step</FONT><FONT SIZE=2> &lt;2&gt;1 </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> ...</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>   &lt;2&gt;</FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>qed</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>step</FONT><FONT SIZE=2> &lt;2&gt;1 </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2> &lt;1&gt;2 </FONT><FONT SIZE=2>conclude</FONT></TD></TR>
 </TABLE><!--TOC subsection Name qualification-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc46">3.1.12</A>  Name qualification</H3><!--SEC END --><P>
 <A NAME="qualified-name"></A>
 <A NAME="@default29"></A> <A NAME="@default30"></A>
 <A NAME="@default31"></A></P><P>Name qualification is done according to the
-compilation unit status.</P><P>As precisely described in section (<A HREF="#toplevel-def">??</A>),
-toplevel-definitions include species, collections, type definitions
+compilation unit status.</P><P>As precisely described in section (<A HREF="#toplevel-def">??</A>), toplevel-definitions include species, collections, type definitions
 (and their constitutive elements like constructors, record fields),
 toplevel-theorems and toplevel-functions. Any toplevel-definition (thus
 outside species and collections) is visible all along the compilation unit
 after its apparition.
 If a toplevel-definition is required by another compilation unit, you can
-reference it by <B>qualifying</B> its name, i.e. making explicit the
+reference it by referencing the external compilation unit
+(with a <TT>use</TT> or a <TT>open</TT> command) and then
+<B>qualifying</B> its name, i.e. making explicit the
 compilation unit&#X2019;s name before the definition&#X2019;s name using the &#X2019;#&#X2019;
 character as delimiter. Examples:</P><UL CLASS="itemize"><LI CLASS="li-itemize">
 <TT>basics#string</TT> stands for the type definition of
@@ -1800,12 +1793,13 @@ source file &#X201C;db.fcl&#X201D;.
 The qualification can be omitted by using the <TT>open</TT> directive
 that loads the interface of the argument compilation unit and make it
 directly visible in the scope of the current compilation unit. For
-instance:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>basics</FONT><FONT SIZE=2>#</FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2> = ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
+instance:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>use</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"basics"</FONT></FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>basics</FONT><FONT SIZE=2>#</FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>
 can be transformed with no explicit qualification into:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>open</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"basics"</FONT></FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2> = ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
+</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>After an <TT>open</TT> directive, the definitions of loaded (object files
 of) compilation units are added in head of the current scope and mask
 existing definitions wearing the same names. For example, in
@@ -1813,7 +1807,7 @@ the following program: <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(* Redefine my basic object, containing nothing. *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>open</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"basics"</FONT></FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2> = ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
+</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>
 the species <TT>S</TT> inherits from the last <TT>Basic_object</TT> in the
 scope, that is the one loaded by the <TT>open</TT> directive and not from
@@ -1824,7 +1818,7 @@ to recover the first definition by using the &#X201C;empty&#X201D; qualification
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(* Redefine my basic object, containing nothing. *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>open</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"basics"</FONT></FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> #</FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2> = ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
+</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> #</FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>The qualification starting by a &#X2019;#&#X2019; character without compilation
 unit name before stands for &#X201C;the definition at toplevel of the
 current compilation unit&#X201D;.</P><!--TOC subsection Reserved keywords-->
@@ -1838,7 +1832,7 @@ otherwise:
    else end ex external
    false function
    hypothesis
-   if in inherits internal implements is
+   if in inherit internal implement is
    let lexicographic local logical
    match measure
    not notation
@@ -1850,7 +1844,11 @@ otherwise:
    termination then theorem true type
    use
    with
-</PRE><!--TOC section Language constructs and syntax-->
+</PRE><P>Keywords of <FONT COLOR=purple>Coq</FONT>or <FONT COLOR=purple>OCaml</FONT>are also reserved (For example <TT>Set</TT>),
+and may cause problems at later stages of the <FONT COLOR=purple>FoCaLize</FONT>compilation.</P><P>Some symbols (such as <TT>:</TT>) are also reserved, and cannot be used to name methods.
+It is still possible to use such symbols as first character of a symbolic identifier.
+
+</P><!--TOC section Language constructs and syntax-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc48">3.2</A>  Language constructs and syntax</H2><!--SEC END --><!--TOC subsection Types-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc49">3.2.1</A>  Types</H3><!--SEC END --><P>
 Before dealing with expressions and in general, constructs that allow to
@@ -1877,9 +1875,12 @@ defined in &#X201C;basics.fcl&#X201D;),
 </LI><LI CLASS="li-itemize"><TT>unit</TT> for the trivial type whose only value is <TT>()</TT>,
 </LI><LI CLASS="li-itemize"><TT>char</TT> for characters literals,
 </LI><LI CLASS="li-itemize"><TT>string</TT> for strings literals.
-</LI></UL><P>New type constructors are introduced by
+</LI></UL><P>
+Note that these types are translated to <FONT COLOR=purple>OCaml</FONT>types; for example
+<TT>int</TT> on 32-bits architecture encode values between &#X2212;2<SUP>30</SUP>
+and +2<SUP>30</SUP>&#X2212;1.</P><P>New type constructors are introduced by
 <B>type definitions</B>.
-Types constructors can be parametrised by <B>type expressions</B>
+Types constructors can be parameterised by <B>type expressions</B>
 separated by commas and between parentheses.</P><!--TOC subsubsection Type expressions-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc51">3.2.1.2</A>  Type expressions</H4><!--SEC END --><P>
 <A NAME="@default33"></A>
@@ -1898,8 +1899,7 @@ data-types.
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>&#X2019;</FONT></TT><A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A> <TT><FONT COLOR=blue>(</FONT></TT>  {<A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
- </TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A> <TT><FONT COLOR=blue>(</FONT></TT>  {<A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A> <TT><FONT COLOR=blue>-&gt;</FONT></TT>  <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> {<A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>}(<TT><FONT COLOR=blue>*</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
@@ -1925,7 +1925,7 @@ a tuple is the type of each of its components separated by a *
 character and surrounded by parentheses. Hence,
 <TT>(int * bool * string) </TT> is the type of triplets whose first
 component is an integer, second component is a boolean and third
-component is a string.</P><P>Finally, type expressions can be written between parentheses without
+component is a string, e.g. <TT>(-3, true, "test")</TT>.</P><P>Finally, type expressions can be written between parentheses without
 changing their semantics.</P><!--TOC subsubsection Type definitions-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc52">3.2.1.3</A>  Type definitions</H4><!--SEC END --><P>
 <A NAME="@default36"></A>
@@ -1941,8 +1941,8 @@ of type definitions: aliases, sum types and record types.</P><P><BR>
 manipulate large <B>type expressions</B> like for instance, a tuple of
 5 components: <TT>(int * int * int * int * int)</TT>. Moreover, several
 kind of information can be represented by such a
-tuple. For instance, x, y, z 3D-coordinates and temperature and
-pressure. For another example, year, month, day, hours, minutes. In
+tuple. For instance, a tuple with x, y, z (3D-coordinates), temperature and
+pressure has the same type as a tuple with year, month, day, hours, minutes. In
 these two cases, the manipulated type expression is the same and
 the two uses cannot be easily differentiated. Type aliases allows to
 give a name to a
@@ -1992,7 +1992,7 @@ definition on a single line, the first <TT><FONT COLOR="red">|</FONT></TT> must 
 definition (that must not be confused with the <B>type constructor</B>
 which is the name of the type. For, instance,
 <TT>Red</TT> is a <B>value</B> of the type constructor <TT>color</TT>.</P><P>Value constructors of sum
-types can be <B>parametrised</B> by a type expressions, corresponding
+types can be <B>parameterised</B> by a type expressions, corresponding
 values being obtained by applying the value constructor to values of
 the parameters types. For instance, let&#X2019;s define the type of playing
 cards as king, queen, jack and simply numbered cards:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>card</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
@@ -2050,6 +2050,15 @@ leads to
 </PRE><P>because <TT>Cstr</TT> expects 1 tuple argument and not 3
 arguments.</P><P><BR>
 <FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t1</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> ((</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>)) -&gt; ()</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>;;</FONT></TD></TR>
+</TABLE><P>
+is accepted since it makes explicit that the pattern matches
+the unique argument of <TT>Cstr</TT> that is a tuple and by the way
+de-structurates this tuple.</P><P><BR>
+<FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) -&gt; </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>
@@ -2057,31 +2066,12 @@ arguments.</P><P><BR>
 </TABLE><P>
 is accepted since the type <TT>mytuple</TT> aliases a 3
 components tuples and <TT>Cstr</TT> is really parametrised by 1 argument
-that is a 3 components tuple.</P><P><BR>
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>tt</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t3</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+that is a 3 components tuple.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>
+</FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) -&gt; </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>............</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>) -&gt; ()</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
-</TABLE><P>
-leads to
-</P><PRE CLASS="verbatim">Error: Types basics#bool and
-basics#bool,  basics#int,  basics#string are not compatible.
-</PRE><P>because <TT>Cstr2</TT> expects 3 arguments (types separated by comma) and
-<TT>mytuple</TT> aliases a tuple.</P><P><BR>
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fct_t4</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>Cstr2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>) -&gt; (</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>;;</FONT></TD></TR>
-</TABLE><P>
-is accepted since we rebuild explicitly a tuple from the 3
-arguments of <TT>Cstr2</TT>.</P><P><BR>
-Any type expression, even recursive, can be used as a parameter of
+</TABLE><P>NOTA: TO BE COMPLETED.</P><P>Any type expression, even recursive, can be used as a parameter of
 value contructors<A NAME="@default42"></A>.
 For instance, the type of lists of boolean × integer pairs
 could be defined like:
@@ -2092,7 +2082,7 @@ could be defined like:
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
 </TABLE><P> From this type definition, a value of type <TT>b_i_list</TT> is
 either empty (constructor <TT>Empty</TT>) or has a head (the first
-component of the <TT>Cons</TT> constructor) and a trailing list (the
+component of the <TT>Cons</TT> constructor) and a tail list (the
 second component of this constructor): <TT>Cons ((false, 2), (Cons
 ((true, 1), Empty)))</TT>. The length of this list is 2 and its
 elements are <TT>(false, 2)</TT> followed by <TT>(true, 1)</TT>.</P><P><BR>
@@ -2157,14 +2147,14 @@ a sequence of names and types between braces. For example:
 <TT><FONT COLOR=blue>{</FONT></TT>  {<A HREF="#field"><I><FONT COLOR=maroon>field</FONT></I></A>}<SUP>+</SUP> <TT><FONT COLOR=blue>}</FONT></TT></TD></TR>
 </TABLE></TD></TR>
 </TABLE><P><BR>
-</P><P>To create a <B>value</B> of a record type, a value of the related
-type must be provided for each field of the record.
+</P><P>To create a <B>value</B> of a record type, a value
+must be provided for each field of the record.
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>{ </FONT><FONT SIZE=2>name</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2><FONT SIZE=2>"Benjamin"</FONT></FONT><FONT SIZE=2> ; </FONT><FONT SIZE=2>birth</FONT><FONT SIZE=2> = 2003 ; </FONT><FONT SIZE=2>living</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>true</FONT><FONT SIZE=2> }</FONT></TD></TR>
 </TABLE><P>
 Like in tuples, records can mix types of fields.</P><P><BR>
-<B>Parameterised type definitions</B></P><P>It is possible, <EM>at toplevel</EM>, to <B>parametrise a type
-definition</B>, i.e. to create a type with a <B>type variable</B> that
+<B>Parameterised type definitions</B></P><P>It is possible, <EM>at toplevel</EM>, to <B>parameterise a type
+definition</B> with a <B>type variable</B> that
 can be instantiated by any type expression. A type variable is written
 as an identifier preceded by a <TT>&#X2019;</TT> (quote) character.</P><P>For instance, the type
 definition of generic (polymorphic) lists may be defined by:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>list</FONT><FONT SIZE=2> ('</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
@@ -2172,8 +2162,8 @@ definition of generic (polymorphic) lists may be defined by:</P><TABLE CLASS="ls
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cons</FONT><FONT SIZE=2> ('</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>,  </FONT><FONT SIZE=2>list</FONT><FONT SIZE=2> ('</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
 </TABLE><P>The value
-constructor <TT>Cons</TT> carries a value of type &#X201C;unknown&#X201D; (of type
-&#X201C;variable&#X201D;) and the tail of the list, i.e. a value of type
+constructor <TT>Cons</TT> carries a value of type &#X201C;variable&#X201D;
+and a tail of type
 <TT>list</TT> with its parameter instantiated by the same type
 variable. This explicitly says that all the elements of such a list
 have the same type. It is now possible to use the <TT>list</TT> type in
@@ -2181,7 +2171,7 @@ type <B>expressions</B> by providing a type <B>expression</B> as
 argument of the <B>type constructor</B> <TT>list</TT>. For instance,
 <TT>list (int)</TT> is the type of lists containing integers,
 <TT>list (list (char))</TT> is the type of lists containing lists of
-characters.</P><P>Parametrised record types can also be introduced, as in the following example:
+characters.</P><P>Parameterised record types can also be introduced, as in the following example:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>pair</FONT><FONT SIZE=2> ('</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>, '</FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>) = {</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>first</FONT><FONT SIZE=2> : '</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
@@ -2203,8 +2193,11 @@ is an instanciation of
 the variable &#X2032;<I>c</I> by the type <TT>bool</TT>.</P><P><BR>
 Two types <I>t</I><SUB>1</SUB> and <I>t</I><SUB>2</SUB> are said <B>compatible</B><A NAME="@default44"></A>
 if they have a <B>common</B> instanciation. For the intuition, this
-means that replacing variables in <I>t</I><SUB>1</SUB> and replacing variables in
-<I>t</I><SUB>2</SUB> leads to a same type.</P><P>For example, we consider the two following types:
+means that there is an instanciation of the variables in <I>t</I><SUB>1</SUB> and
+an instanciation of the variables in <I>t</I><SUB>2</SUB> such that these instanciations
+make <I>t</I><SUB>1</SUB> and <I>t</I><SUB>2</SUB> the same type. Note that type variables appearing in
+different type expressions are different variables, that is
+&#X2032;<I>a</I> &#X2192; <TT><I>int</I></TT> and <TT><I>bool</I></TT> &#X2192; &#X2032;<I>a</I> are compatible.</P><P>For example, we consider the two following types:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
 <I>t</I><SUB>1</SUB> = &#X2032;<I>a</I> &#X2192; <TT> <I>int</I> </TT> &#X2192; &#X2032;<I>b</I> &#X2192; &#X2032;<I>c</I>
 </LI><LI CLASS="li-itemize"><I>t</I><SUB>2</SUB> = <TT><I>bool</I> </TT> &#X2192; &#X2032;<I>d</I> &#X2192; &#X2032;<I>d</I> &#X2192; &#X2032;<I>e</I>
@@ -2212,15 +2205,15 @@ means that replacing variables in <I>t</I><SUB>1</SUB> and replacing variables i
 variables unchanged. We get the new type
 <I>t</I>&#X2032;<SUB>1</SUB> = <TT><I>bool</I> </TT> &#X2192; <TT> <I>int</I> </TT> &#X2192; &#X2032;<I>b</I> &#X2192; &#X2032;<I>c</I>.</P><P>In <I>t</I><SUB>2</SUB>, we replace &#X2032;<I>d</I> by <TT>int</TT>, &#X2032;<I>e</I> by &#X2032;<I>c</I>. We get the new
 type
-<I>t</I>&#X2032;<SUB>2</SUB> = <TT><I>bool</I> </TT> &#X2192; <TT> <I>int</I> </TT> &#X2192; &#X2032;<I>b</I> &#X2192; &#X2032;<I>c</I>.</P><P>The type <I>t</I>&#X2032;<SUB>1</SUB> is an instanciation of <I>t</I><SUB>1</SUB>. The type <I>t</I>&#X2032;<SUB>2</SUB> is an
+<I>t</I>&#X2032;<SUB>2</SUB> = <TT><I>bool</I> </TT> &#X2192; <TT> <I>int</I> </TT> &#X2192; <TT> <I>int</I> </TT> &#X2192; &#X2032;<I>c</I>.</P><P>The type <I>t</I>&#X2032;<SUB>1</SUB> is an instanciation of <I>t</I><SUB>1</SUB>. The type <I>t</I>&#X2032;<SUB>2</SUB> is an
 instanciation of <I>t</I><SUB>2</SUB>. The two types <I>t</I>&#X2032;<SUB>1</SUB> and <I>t</I>&#X2032;<SUB>2</SUB> are
-structurally the same. Hence <I>t</I><SUB>1</SUB> and <I>t</I><SUB>2</SUB> are <B>compatible</B>.</P><P>As it can be seen, an instanciation does not need to change all the
-type variables. Only part (or none) of them may be sufficient.</P><P><BR>
-For the sake of intuitive view, compatibility is a generalisation of
+structurally the same. Hence <I>t</I><SUB>1</SUB> and <I>t</I><SUB>2</SUB> are <B>compatible</B>.</P><P>As it can be seen, an instanciation does not need to give a value to all the
+type variables.</P><P><BR>
+For the sake of intuition, compatibility is a generalisation of
 the notion of types being &#X201C;equal&#X201D;. The most trivial instanciation
-appears when the two types do not have any type variables. Hence in
-this case, for them to be compatible is to be structurally equal. We
-find in this case, the common view of &#X201C;being a good type&#X201D; when for
+appears when the two types do not have any type variables; in
+this case they are compatible iff they are structurally equal. This
+illustrates the common view of &#X201C;being a good type&#X201D; when for
 instance providing an argument to a function according to the type of
 the expected argument in the function&#X2019;s prototype.</P><!--TOC subsection Representations-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc54">3.2.3</A>  Representations</H3><!--SEC END --><P><A NAME="representation-type"></A>
@@ -2234,7 +2227,7 @@ species. Moreover, like for any other methods (c.f. section
 <A HREF="#no-polymorphism-for-methods">4.1.2</A>), <EM>the representation must not
 be a polymorphic type</EM>. Thus its definition cannot
 contain type variables (but may contain collection parameter
-names). Defining a species&#X2019;representation is simply done by adding the
+names). Defining a species&#X2019; representation is simply done by adding the
 <TT>representation</TT> method:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>open</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"basics"</FONT></FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
@@ -2256,7 +2249,7 @@ denoted by <TT>Self</TT> within the species.</P><P><BR>
 evaluated into a <B>value</B> of a certain <B>type</B>. Hence values and
 types are not at the same level. Types serve to classify values into
 categories. Although proofs may contain expressions, we describe them
-in the <A HREF="#making-proofs">5</A>. Indeed proofs are not expressions, they do
+in Sec. <A HREF="#making-proofs">5</A>. Indeed proofs are not expressions, they do
 not lead to <FONT COLOR=purple>FoCaLize</FONT> values thus live at another level.</P><P><BR>
 
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
@@ -2374,7 +2367,7 @@ not lead to <FONT COLOR=purple>FoCaLize</FONT> values thus live at another level
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc56">3.2.4.1</A>  Literal expressions</H4><!--SEC END --><P>
 <A NAME="@default46"></A> <A NAME="@default47"></A></P><P>The literal
 expressions of type integer, string, character,
-float and boolean) are evaluated into the constant represented by the
+float and boolean are evaluated into the constant represented by the
 literal. The expression <TT>25</TT> denotes the value 25 of type
 <TT>int</TT>.</P><!--TOC subsubsection Sum type value constructor expressions-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc57">3.2.4.2</A>  Sum type value constructor expressions</H4><!--SEC END --><P>
@@ -2385,8 +2378,7 @@ its <B>value</B> constructors.</P><P>Hence, for <B>value</B> constructors with n
 is an expression that gets evaluated in a value wearing the same name.</P><P>For <B>value</B> constructors with parameters, a value is created by
 evaluating an expression applying the constructor to as many expressions as
 the constructor&#X2019;s arity. Obviously, sub-expressions used as arguments of
-the constructor must we well-typed according to the type of the
-constructor. The resulting value is denoted by the
+the constructor must be well-typed (compatible) according to the type of the constructor. The resulting value is denoted by the
 name of the constructor followed by the tuple of values given as
 arguments. For instance, with the following type definition:
 <FONT SIZE=2>
@@ -2406,8 +2398,8 @@ identifier or a qualified identifier (see section
 the scope of the expression. The identifier is said to be <B>bound</B>
 to this value.</P><P>The value bound to an identifier can be of any type. A value having a
 functional type, that is a <B>functional
-value</B><A NAME="functional-value"></A><A NAME="@default51"></A> also called a
-<B>closure</B>, is created by a function definition. Such a value,
+value</B><A NAME="functional-value"></A><A NAME="@default51"></A> (also called a
+<B>closure</B>), is created by a function definition. Such a value,
 obtained by the evaluation of the body of the function, is slightly
 different from other ones since it embeds both the code of the
 function (i.e. a kind of evaluation of its body expression) and its
@@ -2421,17 +2413,16 @@ ways to introduce and directly bind an identifier:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
 By a <TT>let-in</TT> construct,
 </LI><LI CLASS="li-itemize">By a toplevel-definition (<TT>let</TT> or <TT>theorem</TT>),
-</LI><LI CLASS="li-itemize">by a method definition (<TT>let</TT>),
-</LI></UL><P>
-Each of these three cases will
+</LI><LI CLASS="li-itemize">by a method definition (<TT>let</TT>), </LI></UL><P>
+Each of these cases will
 be described in their related section.</P><P>There are two ways to introduce basic identifiers as parameters:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
 in a function definition
 </LI><LI CLASS="li-itemize">by a pattern inside a <TT>match-with</TT> construct
 </LI></UL><P>
-Then the binding of the parameter is differed until the application of
+Then the binding of the parameter is deferred until the application of
 the function or the pattern-matching mechanism.
-Each of these two cases will
+Each of these cases will
 be described in their related section.</P><P>Suppose that an expression <I>exp</I> contains several occurrences of an
 identifier <TT>my_var</TT>. Assume that, in the scope of <I>exp</I>, <TT>my_var</TT> is bound to a <B>value</B> <I>v</I>, then each occurrence of <TT>my_var</TT> in <I>exp</I> is substituted by <I>v</I> during the evaluation of
 <I>exp</I>. This is basically the principle of the so-called <B>eager</B> or
@@ -2442,7 +2433,7 @@ class of entity they refer to, capitalized identifiers being used for
 species and collections. To evaluate an identifier expression, the
 <FONT COLOR=purple>FoCaLize</FONT> compiler tries to find its definition from the current scoping
 context. <A NAME="@default52"></A> <A NAME="@default53"></A>
-<A NAME="@default54"></A> It searches for the closest definition with this name,
+<A NAME="@default54"></A> It searches for the closest (latest) definition with this name,
 starting by the parameters present in the current definition
 (i.e. formal parameters in a function and in a <TT>match-with</TT>
 construction and <TT>let-in</TT> bound identifiers). If no identifier
@@ -2463,7 +2454,7 @@ considering that the toplevel-definitions and the imported ones are
 ordered according to the apparition of the effective definitions in
 the file themselves and the imported ones. In other words, if a
 toplevel-definition exists for an entity <TT>foo</TT>, if later an
-<TT>open</TT> directive imports another <TT>foo</TT>, then this last one
+<TT>open</TT>directive imports another <TT>foo</TT>, then this last one
 will be the retained one.</P><P><BR>
 </P><P><BR>
 <B>Identifier qualification</B></P><P>Identifiers can manually be disambiguated in term of compilation unit
@@ -2508,7 +2499,10 @@ using them as regular function (i.e. in functional position),
 </LI><LI CLASS="li-itemize">use them as regular identifiers in expressions, for example to
 pass them as arguments of other functions.
 </LI></UL><P>
-To get an identifier from an operator, its symbol
+The following example illustrate the second point:
+
+</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting">let twice(( + ), x, y, z) = (x + y) + z ;;</TD></TR>
+</TABLE><P>To get an identifier from an operator, its symbol
 (c.f. <A HREF="#extended-identifiers">3.1.5</A>) must be delimited by spaces and enclosed
 into matching parentheses.
 For example: <TT>( + )</TT> is the regular identifier corresponding to the
@@ -2534,7 +2528,7 @@ or &#X201C;body&#X201D;) where this ident may appear. During the evaluation of t
 trailing expression, any occurrence of the bound identifier is &#X201C;replaced&#X201D;
 by the value bound to this identifier. For instance:
 <FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> = 5 </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>)</FONT></TD></TR>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> = 3 + 2 </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>)</FONT></TD></TR>
 </TABLE><P>
 binds <TT>x</TT> to the evaluation of the <B>expression</B> <TT>(3+2)</TT>
 (i.e. the integer <B>value</B> 5) and then, the evaluation of the
@@ -2593,7 +2587,7 @@ parameters <TT>x</TT> and <TT>y</TT>, and the body of <TT>f</TT> is the
 addition of these 2 parameters. Then the body of the <TT>let-in</TT>
 construct applies <TT>f</TT> to 2 effective arguments <TT>6</TT> and <TT>7</TT> (we obviously expect the result of this <EM>application</EM> to be
 13). (Function application is explained below in
-<A HREF="#application-expression">??</A>).</P><P>It is possible to provide a type constraint to precise the type of the
+<A HREF="#application-expression">??</A>). </P><P>It is possible to provide a type constraint to precise the type of the
 return value of a function, or the type of the <TT>let</TT>-bound
 variable or parameters:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> + </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> (6, 7)</FONT></TD></TR>
@@ -2629,24 +2623,14 @@ recursive functions cannot be compiled into <FONT COLOR=purple>Coq</FONT> code. 
 <FONT COLOR=purple>OCaml</FONT> code generation is available. Moreover, for <FONT COLOR=purple>Coq</FONT>, recursive
 functions imply termination proofs. This last point will be covered in
 the section <A HREF="#recursive-function">6</A> especially dedicated to
-recursive (non-mutually) function definitions.</P><!--TOC subsubsection <TT>logical let</TT>-->
+(non-mutually) recursive function definitions.</P><!--TOC subsubsection <TT>logical let</TT>-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc60">3.2.4.5</A>  <TT>logical let</TT></H4><!--SEC END --><P>
 As seen above, the <TT>let-in</TT> construct is used to bind
-computational expressions. Logical expressions described further
-in <A HREF="#properties-theorems-proofs">3.2.7</A> are first order logic
-formulae. We would sometimes like to have parametrised logical
-expressions, i.e. a kind of functions returning a logical proposition.</P><P>Suppose we want, for a certain value of <I>x</I> and <I>y</I>, to use the fact
+computational expressions. We would sometimes also like to have parameterised logical
+expressions, i.e. a kind of functions returning a logical proposition.
+For example we may want, for a certain value of <I>x</I> and <I>y</I>, to use the statement
 &#X201C;<I>x</I>&lt;<I>y</I> and <I>x</I>+<I>y</I> &lt; 10&#X201D; (which holds or not) to build more complex
-logical expressions.</P><P>A first attempt is to use the logical expression <I>x</I> &lt; <I>y</I> /\
-<I>x</I>+<I>y</I>&lt;10 where <I>x</I> and <I>y</I> are considered as fresh (free)
-variables. But there is no way in the language of properties to
-instantiate <I>x</I> and <I>y</I> by different integer values in order to obtain
-a proposition (regardless of its truth value).</P><P>Another attempt is to introduce a property bound to the proposition
-&#X2200; <I>x</I>, <I>y</I> : <TT><I>int</I></TT>, <I>x</I> &lt; <I>y</I> /\ <I>x</I>+<I>y</I>&lt;10. It does not fit
-because there is no provided way to substitute <I>x</I> and <I>y</I> by integer
-values: there is no syntactical construction for elimination of a
-universal (nor existential) quantifier in the language of properties
-(note that elimination can be done during a proof).</P><P>To allow functional bindings in logical expressions <FONT COLOR=purple>FoCaLize</FONT> provide
+logical expressions.</P><P>To allow functional bindings in logical expressions <FONT COLOR=purple>FoCaLize</FONT> provide
 the <TT>logical let</TT> construct. It serves to introduce a
 parameterised logical expression, which can be applied to effective
 arguments to obtain a logical proposition. Our example would be
@@ -2657,7 +2641,7 @@ expressed by:
 </FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>logical</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> &lt; </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> /\ </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> + </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> &lt; 10 ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>logical</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> &lt; </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> /\ </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> + </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> &lt; 10 ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;</FONT></TD></TR>
 </TABLE><P>Since <TT>logical let</TT> binds an identifier to a logical expression, the
@@ -2671,8 +2655,8 @@ properties and theorems statements. For instance:
 </FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) = ... ;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>logical</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> &lt; </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> /\ </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> + </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> &lt; 10 ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> = ... ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>logical</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> &lt; </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> /\ </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> + </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> &lt; 10 ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>p</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>a</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>c</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>c</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>) =&gt; </FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>), </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;</FONT></TD></TR>
@@ -2683,7 +2667,8 @@ used to define associativity, commutativity, &#X2026;</P><!--TOC subsubsection C
 <A NAME="conditional-expression"></A>
 <A NAME="@default60"></A>
 <A NAME="@default61"></A>
-A conditional expression has the form:</P><P><TT>if</TT> <I>exp</I><SUB>1</SUB> <TT>then</TT>
+A conditional expression has the form:
+<TT>if</TT> <I>exp</I><SUB>1</SUB> <TT>then</TT>
 <I>exp</I><SUB>2</SUB> <TT>else</TT> <I>exp</I><SUB>3</SUB></P><P>Its evaluation starts by the evaluation of the <I>exp</I><SUB>1</SUB> expression
 which must be of type boolean. If its value is <I>true</I> then the result
 value of the whole expression is the value of <I>exp</I><SUB>2</SUB>, otherwise
@@ -2716,7 +2701,7 @@ of a <TT>match-with</TT> consists in a discriminating expression followed
 by an enumeration of cases (called <B>patterns</B>). The dicriminating
 expression is evaluated and its value is matched against the patterns,
 following the textual ordering of these patterns, until a match
-succeeds. Then the expression associated with the matchng pattern is
+succeeds. Then the expression associated with the matching pattern is
 evaluated to obtain the value of the whole expression <TT>match-with</TT>.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>a</FONT><FONT SIZE=2> = ... ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>a</FONT><FONT SIZE=2> + 5 </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
@@ -2726,7 +2711,7 @@ evaluated to obtain the value of the whole expression <TT>match-with</TT>.</P><T
 </FONT><FONT SIZE=2>   | 10 -&gt; </FONT><FONT SIZE=2><FONT SIZE=2>"ten"</FONT></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>_</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2><FONT SIZE=2>"other"</FONT></FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>...</FONT></TD></TR>
-</TABLE><P> The discriminating expression in this case is <TT>a + 5</TT> of type
+</TABLE><P> The discriminated expression in this case is <TT>a + 5</TT> of type
 <TT>int</TT>. We can then react to each (or some of the) values of this
 expression. When <TT>a + 5</TT> is equal to 0 the result of the
 whole <TT>match-with</TT> expression (bound to the identifier <TT>x</TT>) is
@@ -2746,15 +2731,18 @@ type of the patterns.
 types.
 </LI><LI CLASS="li-itemize">The types of all the result expressions in the rightmost parts
 of the cases must be compatible.
+</LI><LI CLASS="li-itemize">The patterns have to be mutually exclusive (except for the catch-all
+pattern, see below).
+</LI><LI CLASS="li-itemize">The different cases have to capture every possible pattern.
 </LI></UL><P><BR>
-In the example above, the patterns were constants. A value
+In the example above, the patterns were constant. A value
 matches a constant pattern if and only if it is equal to this
-constant. In addition to this multi-branches conditional feature, the
+constant. In addition, the
 <TT>match-with</TT> construct provides true <B>pattern matching</B>. That
 is, patterns may be built from constants, value constructors,
 variables and the catch-all symbol <TT>_</TT>. Any value matches any
 variable pattern and the <TT>_</TT> pattern. For general patterns built
-from value constructors, variables, constants,<TT>_</TT>, roughly
+from value constructors, variables, constants, <TT>_</TT>, roughly
 speaking, a value matches a pattern if this pattern can be seen as a
 prefix of this value. Then, the variables of the pattern get bound to
 the parts of the discriminating expression that are &#X201C;at the same
@@ -2780,7 +2768,7 @@ evaluation of the expression <TT>x + y</TT> where x will be bound to the
 effective second component of the value of <TT>e</TT> and <TT>y</TT> will be
 bound to its third component. We can notice that no &#X201C;catch-all pattern&#X201D;
 is needed since the enumerated patterns cover all the possible values
-of tuples with 3 components (look at the last pattern that do not put
+of tuples with 3 components (the last pattern does not put
 any constraint on the tuple components, hence will match all the
 remaining cases).</P><P>The previous example used tuples as matched expression and patterns,
 but patterns also contain sum type value constructors, hence allowing
@@ -2788,7 +2776,7 @@ to &#X201C;match&#X201D; on any sum type structure. For example: <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>t</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>A</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>C</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>C</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>e</FONT><FONT SIZE=2> = ... </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2>
@@ -2800,8 +2788,7 @@ to &#X201C;match&#X201D; on any sum type structure. For example: <FONT SIZE=2>
 </FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>C</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, 10) -&gt; 5</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>C</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>_</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) -&gt; </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
-</TABLE><P>
-This example shows different cases following the structure of the type
+</TABLE><P> This example shows different cases following the structure of the type
 <TT>t</TT>. Note the use of the &#X201C;catch-all&#X201D; pattern
 inside patterns. In fact, the &#X201C;catch-all&#X201D; pattern acts like
 a variable unused in the rightmost part of the
@@ -2828,7 +2815,7 @@ to a variable (so, any value can match it) and the field
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc63">3.2.4.8</A>  Application expression</H4><!--SEC END --><P>
 <A NAME="function-application"></A>
 <A NAME="@default65"></A> <A NAME="@default66"></A> We previously
-saw that the <TT>let-in</TT> construct allows to define functions by
+saw that the <TT>let-in</TT> construct allow for the definition of functions by
 binding an identifier to a functional value. Using a function by
 providing it with effective arguments to get its result value is
 called <B>application</B>. Hence, in an application there are 2
@@ -2854,7 +2841,7 @@ following function and application:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>g</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) = (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>g</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>true</FONT><FONT SIZE=2>, 1)</FONT></TD></TR>
-</TABLE><P> The evaluation of this <TT>let-in</TT> expression first binds the
+</TABLE><P> The evaluation of the <TT>let-in</TT> expression first binds the
 identifier <TT>g</TT> to a <B>functional value</B> also called <B>closure</B>. Then the application expression <TT>g (true, 1)</TT> is
 evaluated. So the values of <TT>g</TT> and of the expression <TT>(true,1)</TT> are elaborated: the evaluation of <TT>g</TT> returns a
 closure, <TT>true</TT> is evaluated into the boolean <B>value</B> <I>true</I>,
@@ -2983,7 +2970,7 @@ contain expressions. The section
 </P><P>Toplevel-definitions are definitions introduced outside of any
 species. General functions and general theorems, i.e. that do not
 depend on a particular species can be introduced as
-toplvel-definitions. Toplevel-functions are introduced by the <TT>let</TT> keyword and don&#X2019;t have a &#X201C;<TT>in</TT>&#X201D; expression, this part
+toplevel-definitions. Toplevel-functions are introduced by the <TT>let</TT> keyword and don&#X2019;t have a &#X201C;<TT>in</TT>&#X201D; expression, this part
 being implicitly the remaining of the program (i.e. the current
 compilation unit and those using the current). Toplevel-theorems are
 introduced by the <TT>theorem</TT> keyword. These definitions must be ended by a double semi
@@ -2997,7 +2984,7 @@ introduced by the <TT>theorem</TT> keyword. These definitions must be ended by a
 </FONT><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int_plus_minus</FONT><FONT SIZE=2>: </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2><EM><FONT SIZE=2>(*   x + y = z -&gt; y = z - x *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  #</FONT><FONT SIZE=2>base_eq</FONT><FONT SIZE=2> (#</FONT><FONT SIZE=2>int_plus</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>), </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2>) -&gt; #</FONT><FONT SIZE=2>base_eq</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>, #</FONT><FONT SIZE=2>int_minus</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>z</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2>:</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    </FONT><FONT SIZE=2>coq</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> {*</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>      </FONT><FONT SIZE=2>intros</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>      </FONT><FONT SIZE=2>unfold</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int_plus</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>int_minus</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>base_eq</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>syntactic_equal</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> |- *;</FONT><FONT SIZE=2>
@@ -3017,12 +3004,14 @@ that they do not lead to values or computation.</P><!--TOC subsubsection The <TT
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc71">3.2.6.1</A>  The <TT>use</TT> directive</H4><!--SEC END --><P>
 <A NAME="@default71"></A>
 This directive is followed by the name of the file to open between
-double quotes without the &#X201C;.fcl&#X201D; extension.
+double quotes without the &#X201C;.fo&#X201D; extension (compiled version of a &#X201C;.fcl&#X201D;).
 Before being allowed to use the qualified notation for an identifier,
 (i.e. the &#X201C;<TT>#</TT>&#X201D;-notation), the qualifying compilation must be
-declared as &#X201C;used&#X201D; thanks to this directive. In other terms,
+declared with a directive <TT>use</TT>. In other terms,
 &#X201C;using&#X201D; a compilation units allows to access its entities from the
-current compilation unit.</P><!--TOC subsubsection The <TT>open</TT> directive-->
+current compilation unit.</P><P>Note that if several files at different locations have the same name,
+the <TT>use</TT> directive will use the first find in the library path
+of the compiler.</P><!--TOC subsubsection The <TT>open</TT> directive-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc72">3.2.6.2</A>  The <TT>open</TT> directive</H4><!--SEC END --><P>
 <A NAME="@default72"></A></P><P>This directive is followed by the name of the file to open between
 double quotes without the &#X201C;.fcl&#X201D; extension. As previously introduced
@@ -3038,21 +3027,21 @@ notation without compilation unit name.</P><P>Note that the <TT>open</TT> direct
 directive. This means that it is not useful to add a <TT>use</TT>
 together with an <TT>open</TT> directive.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>open</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"sets"</FONT></FONT><FONT SIZE=2>;;</FONT></TD></TR>
 </TABLE><P>This directive loads the definitions of the compilation unit
-&#X201C;sets.fcl&#X201D; in the current name resolution (scoping) environment.</P><P>The path of the compilation unit is never specified. The file
+&#X201C;sets.fo&#X201D; in the current name resolution (scoping) environment.</P><P>The path of the compilation unit is never specified. The file
 will be searched in the library search path specified with the
 <TT>-I</TT> option (c.f. <A HREF="#compiler-options">7</A>).</P><!--TOC subsubsection The <TT>coq_require</TT> directive-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc73">3.2.6.3</A>  The <TT>coq_require</TT> directive</H4><!--SEC END --><P>
 <A NAME="@default73"></A>
 Some source files of a development may be directly written in <FONT COLOR=purple>Coq</FONT> to
-provide external definitions (more detailed further in
-<A HREF="#interfacing-other-languages">9.0.5</A>) to import and use in the
-<FONT COLOR=purple>FoCaLize</FONT> source code. In this case, the <FONT COLOR=purple>Coq</FONT> code generated for the
+provide external definitions (detailed further in
+<A HREF="#interfacing-other-languages">9.0.5</A>) to import and use in the <FONT COLOR=purple>FoCaLize</FONT> source code. In this case, the <FONT COLOR=purple>Coq</FONT> code generated for the
 <FONT COLOR=purple>FoCaLize</FONT> source code must be aware of the need to import the external
 definitions from the manually written <FONT COLOR=purple>Coq</FONT> file. For this reason, the
 <FONT COLOR=purple>FoCaLize</FONT> source must explicitly indicate by the <TT>coq_require</TT>
 directive that it makes references to definitions hosted in this
 <FONT COLOR=purple>Coq</FONT> source file. For example, the file &#X201C;wellfounded.fcl&#X201D; of the
-standard library needs &#X201C;wellfounded_externals.v&#X201D; and signals this
+standard library needs &#X201C;wellfounded_externals.vo&#X201D; (the compiled version of
+&#X201C;wellfounded_externals.v&#X201D;) and signals this
 fact in its early lines of code:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>...</FONT><FONT SIZE=2>
@@ -3067,7 +3056,7 @@ fact in its early lines of code:
 <A NAME="@default75"></A></P><P>Properties are first order logic propositions and theorems are
 properties with their proofs. We will study here first the structure
 of logical expressions used to express the statements, show properties
-and theorems forms and shorty present the 3 available ways to write
+and theorems forms and shortly present the 3 available ways to write
 proofs.</P><!--TOC subsubsection Logical expressions-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc75">3.2.7.1</A>  Logical expressions</H4><!--SEC END --><P>
 <A NAME="logical-expressions"></A>
@@ -3076,8 +3065,7 @@ Logical expressions are those used to write first order logic
 formulas.
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<TT><FONT COLOR=blue>all</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
-<TT><FONT COLOR=blue>,</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
+<TT><FONT COLOR=blue>all</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A> <TT><FONT COLOR=blue>,</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>ex</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
 <TT><FONT COLOR=blue>,</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
@@ -3135,17 +3123,17 @@ logical expression being its statement. See the example given in
 <FONT COLOR=purple>FoCaLize</FONT> currently provides 3 ways to write proofs. We only give here a
 simple description of these 3 means without going deeply in the
 technical mechanisms since this problem will be especially addressed
-in section <A HREF="#making-proofs">5</A> and <A HREF="#coq-proofs">9.0.6</A>.</P><UL CLASS="itemize"><LI CLASS="li-itemize">
+in section <A HREF="#making-proofs">5</A> and <A HREF="#coq-proofs">9.0.6</A>. </P><UL CLASS="itemize"><LI CLASS="li-itemize">
 <B>Consider the proof as &#X201C;assumed&#X201D;</B>. This way is the
 simplest but also the weakest one since it consists in saying that
-no proof is given and the system must trust the stated statement.
+no proof is given and the system must accept the statement as an axiom.
 <FONT SIZE=2>
 </FONT><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>representation</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2> = (=</FONT><FONT SIZE=2>Ox</FONT><FONT SIZE=2>);</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>symetry</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) -&gt; </FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>assumed</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>    {*</FONT><FONT SIZE=2>The</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>equality</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>machine</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>integers</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>admitted</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>to</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>be</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>symetric</FONT><FONT SIZE=2>  *} ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>symmetry</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) -&gt; </FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>assumed</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>    {* </FONT><FONT SIZE=2>Machine</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>integers</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>equality</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>admitted</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>to</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>be</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>symmetric</FONT><FONT SIZE=2>  *} ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>Following the <TT>assumed</TT> keyword is a mandatory message used for
@@ -3157,7 +3145,7 @@ using this keyword may help.
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
 The first case is simply that the developer doesn&#X2019;t know
 (yet ?) how to make the proof, doesn&#X2019;t have time yet to write
-it, is not interested in proofs but still wants his program to
+it, or is not interested in proofs but still wants his program to
 compile to get the executable code.</LI><LI CLASS="li-itemize">Second case deals with import of external code, i.e. code
 not written in <FONT COLOR=purple>FoCaLize</FONT> and considered as external. In this
 case, since the imported code does not fit the <FONT COLOR=purple>FoCaLize</FONT> model
@@ -3165,25 +3153,25 @@ and more accurately, does not have formal properties, it is
 impossible to make any proof on <FONT COLOR=purple>FoCaLize</FONT>&#X2019;s side based on the
 structure of this code and its non-existing implementation
 properties. In other terms, things coming outside <FONT COLOR=purple>FoCaLize</FONT>
- universe can not be modeled by <FONT COLOR=purple>FoCaLize</FONT>. The developer only can
+ universe can not be modeled by <FONT COLOR=purple>FoCaLize</FONT>. The developer can only
 import them providing a binding is given and must trust them.</LI><LI CLASS="li-itemize">Last case addresses &#X201C;well-known&#X201D; mathematical properties
 that do not actually hold in computers since they are finite
 machines, working on bounded arithmetics. The most obvious
 example is the fact that since an integer is coded on a
-machine word (often 2<SUP>32</SUP> or 2<SUP>64</SUP> bits nowadays), the
+machine word (e.g. 32-bit values), the
 mathematical property &#X2200; <I>x</I> &#X2208; <FONT COLOR=red>N</FONT>, <I>x</I> + 1 &gt;
 <I>x</I> does not hold anymore.
 <P>
 However, conceptually, except when dealing with boundaries,
 this property holds and we need to achieve further proofs. For
 this reason, assuming that the proof holds is legitimate, if the
-developer is able to guaranty that the integer computations
-never overflow. If he cannot guaranty non-overflow, then this
+developer is able to guarantee that the integer computations
+never overflow. If he cannot guarantee non-overflow, then this
 is a true problem of specification or design which should be
 re-considered.
 </P></LI></UL><P>In any case, we advice the reader to use
 the test tool (or another mean) to comfort the confidence in the
-statement of the theorem.</P></LI><LI CLASS="li-itemize"><B>Write an automated proof script</B>. <FONT COLOR=purple>FoCaLize</FONT> provides a
+statement of the theorem, when such statement is admitted.</P></LI><LI CLASS="li-itemize"><B>Write an automated proof script</B>. <FONT COLOR=purple>FoCaLize</FONT> provides a
 syntax, the <FONT COLOR=purple>FoCaLize</FONT> Proof Language, to split proofs into steps that
 may be proved by the <FONT COLOR=purple>Zenon</FONT> theorem prover. Without entering deeply
 into the syntax further described in chapter <A HREF="#making-proofs">5</A>,
@@ -3192,7 +3180,7 @@ demonstrate subgoals that will serve as lemmas for a higher level
 goal and may give hints about definitions or declarations of
 methods. Then <FONT COLOR=purple>Zenon</FONT> tries to automatically guess a proof of this
 goal, then tries to prove those lemmas, hence building a proof tree
-until the top goal (i.e. the theorem) is proved. Below follows an
+until the top goal (i.e. the theorem) is proved. Here is an
 example of such proof.<TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2> </FONT><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>zero_is_unique</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>o</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  (</FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, !</FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, !</FONT><FONT SIZE=2>plus</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>o</FONT><FONT SIZE=2>))) -&gt; !</FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>o</FONT><FONT SIZE=2>, !</FONT><FONT SIZE=2>zero</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
@@ -3211,8 +3199,7 @@ example of such proof.<TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:so
 since it means to directly write <FONT COLOR=purple>Coq</FONT> code. It
 requires the understanding of both <FONT COLOR=purple>Coq</FONT> and the mapping the
 <FONT COLOR=purple>FoCaLize</FONT> compiler does to generate <FONT COLOR=purple>Coq</FONT> code from <FONT COLOR=purple>FoCaLize</FONT> source
-code. The section <A HREF="#focal-coq-mapping">9.0.6</A> describes
-how <FONT COLOR=purple>FoCaLize</FONT> definitions are mapped onto
+code. The section <A HREF="#focal-coq-mapping">9.0.6</A> describes how <FONT COLOR=purple>FoCaLize</FONT> definitions are mapped onto
 <FONT COLOR=purple>Coq</FONT> names.<P>The <FONT COLOR=purple>Coq</FONT> script is introduced by the keywords
 <TT>coq proof</TT> and surrounded by <TT>{*</TT> and <TT>*}</TT>.
 Below follows an example of such proof.
@@ -3220,7 +3207,7 @@ Below follows an example of such proof.
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int_minus_plus</FONT><FONT SIZE=2>: </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2><EM><FONT SIZE=2>(* x - y = z -&gt; x = y + z *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  #</FONT><FONT SIZE=2>base_eq</FONT><FONT SIZE=2> (#</FONT><FONT SIZE=2>int_minus</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>), </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2>) -&gt; #</FONT><FONT SIZE=2>base_eq</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, #</FONT><FONT SIZE=2>int_plus</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2>:</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    </FONT><FONT SIZE=2>coq</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> {*</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>      </FONT><FONT SIZE=2>intros</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2>; </FONT><FONT SIZE=2>unfold</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int_plus</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>int_minus</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>base_eq</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>        </FONT><FONT SIZE=2>syntactic_equal</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> |- *;</FONT><FONT SIZE=2>
@@ -3234,7 +3221,7 @@ Below follows an example of such proof.
 </TABLE></LI></UL><!--TOC subsubsection Theorems-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc78">3.2.7.4</A>  Theorems</H4><!--SEC END --><P>
 Now we know how to write a logical statement and
-(nearly &#X223C;<SUP><FONT SIZE=2>..</FONT></SUP>) how
+how
 to write a proof, the structure of a theorem appears simple since it
 contains both the statement and the proof inside the same
 construct. The theorem is introduced by the keyword <TT>theorem</TT> and
@@ -3251,7 +3238,7 @@ the proof by the keyword <TT>proof</TT> followed by an equal character
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inf_right_substitution_rule</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>     </FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2>) -&gt; </FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2>(!</FONT><FONT SIZE=2>inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>), !</FONT><FONT SIZE=2>inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>     </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2>:</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>     </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>       </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>          </FONT><FONT SIZE=2>inf_left_substitution_rule</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>          </FONT><FONT SIZE=2>inf_commutes</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
@@ -3266,7 +3253,7 @@ particular point will be addressed with more details in chapter
 toplevel-theorems.
 Unlike theorems, properties cannot appear at
 toplevel since there is no way to inherit at toplevel, hence no
-way to give a proof after the property definition in a &#X201C;parent&#X201D;.
+way to give a proof after the property declaration in a &#X201C;parent&#X201D;.
 
 </P><!--TOC chapter The <FONT COLOR=purple>FoCaLize</FONT> model-->
 <H1 CLASS="chapter"><!--SEC ANCHOR --><A NAME="htoc79">Chapter 4</A>  The <FONT COLOR=purple>FoCaLize</FONT> model</H1><!--SEC END --><P>As stated in section <A HREF="#glimpse">1</A>, the <FONT COLOR=purple>FoCaLize</FONT> language is designed
@@ -3390,7 +3377,8 @@ to be ultimately provided). A property can be viewed as a declaration.<TABLE CLA
 </TABLE><P>Proofs<A NAME="@default91"></A> of properties can be <B>delayed</B>,
 that is, done afterwards
 using a <TT>proof</TT> field in a species. The way to give proofs will
-be seen further.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntStack2</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntStack</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+be seen further.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntStack2</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntStack</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>push_returns_non_empty</FONT><FONT SIZE=2> = ... ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P><BR>
@@ -3463,7 +3451,7 @@ has exactly the same sequence of methods than the complete species
 underlying it, apart the representation which is hidden. 
 Note that creating a collection from it is the
 only way to turn methods of a complete species into executable
-code. This point is emphasised by the syntax:</P><P><TT>collection</TT> <EM>name-collection</EM> <TT>implements</TT> <EM>name-species</EM></P><P>The interface of a collection is the one of the
+code. This point is emphasised by the syntax:</P><P><TT>collection</TT> <EM>name-collection</EM> = <TT>implement</TT> <EM>name-species</EM> <TT>end</TT></P><P>The interface of a collection is the one of the
 complete species it implements. The interface <I>I</I><SUB>1</SUB> of a collection
 <I>C</I><SUB>1</SUB> is <EM>compatible</EM> with an interface <I>I</I><SUB>2</SUB> if <I>I</I><SUB>1</SUB> contains
 all the components of <I>I</I><SUB>2</SUB>.</P><P><BR>
@@ -3478,7 +3466,7 @@ only be manipulated by the methods of the <EM>implemented</EM> species.</P><TABL
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>print</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>print_int</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MyFull_Instance</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>implements</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Full</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MyFull_Instance</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>implement</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Full</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>v</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>Full</FONT><FONT SIZE=2>.</FONT><FONT SIZE=2>create_random</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>Full</FONT><FONT SIZE=2>.</FONT><FONT SIZE=2>print</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>v</FONT><FONT SIZE=2>) ;;</FONT><FONT SIZE=2>
@@ -3722,7 +3710,8 @@ is really ordered).</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:s
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>OrderedIntCouple</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>IntCouple</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>OrderedIntCouple</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntCouple</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>create</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    </FONT><FONT SIZE=2>if</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> &lt; </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>then</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>else</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
@@ -3732,7 +3721,7 @@ is really ordered).</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:s
 <A NAME="@default110"></A>
 <B>Multiple inheritance</B>, i.e. inheriting from several species is
 allowed by specifying several species separated by comma in the
-<TT>inherits</TT> clause. The inheriting species inherits of all the
+<TT>inherit</TT> clause. The inheriting species inherits of all the
 methods of inherited species. In case of a same name appears in
 several inherited species, the compiler proceeds as follows. </P><P>If all the inherited species have only declared representations, then
 the representation of the inheriting species is only declared, unless
@@ -3747,21 +3736,21 @@ representation.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid
 </FONT><FONT SIZE=2>representation</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> ; .. </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S2</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>representation</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S3</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S1</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>S2</FONT><FONT SIZE=2> = ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S4</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S0</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>S1</FONT><FONT SIZE=2> = ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2>;;</FONT></TD></TR>
+</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S3</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S1</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>S2</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S4</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S0</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>S1</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2>;;</FONT></TD></TR>
 </TABLE><P>If some methods of inherited species have the same name, if they are
 all signatures or properties, if these species have no parameters,
 then signatures must be identical, properties must be identical. If
 some of these methods have already received definitions, if they have
 the same type, then the definition which is retained for the
 inheriting species is the one coming from the rightmost defined parent
-in the <TT>inherits</TT> clause. For instance below, if species <TT>A</TT>,
+in the <TT>inherit</TT> clause. For instance below, if species <TT>A</TT>,
 <TT>B</TT> 
 and <TT>C</TT> provide a method <TT>m</TT> which is defined in <TT>A</TT> and
 <TT>B</TT> but only declared in <TT>C</TT>, then <TT>B!m</TT> is the one which
 is inherited.
 <FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Foo</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>A</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>C</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>D</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Foo</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>A</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>C</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>D</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ... </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (...) ... ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P><BR>
@@ -3781,7 +3770,8 @@ once. We build <TT>ListUnique</TT> by inheriting from <TT>List</TT>.</P><TABLE C
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>concat</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>l1</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>l2</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) = ... ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>ListUnique</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>UElem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> ...) </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>List</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>UElem</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>ListUnique</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>UElem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> ...) =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>List</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>UElem</FONT><FONT SIZE=2>);</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>add</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>e</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>UElem</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>l</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    ... </FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Ensure the element e is not already present. *)</FONT></EM></FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>concat</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>l1</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>l2</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
@@ -3825,10 +3815,10 @@ a species parametrised by a parametrised species, like in the example:
 </TABLE><P>Going on, we can inherit
 from species that are referenced only by their name, like in:
 <FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>OrderedIntCouple</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>IntCouple</FONT><FONT SIZE=2>) = ... ;;</FONT></TD></TR>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>OrderedIntCouple</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntCouple</FONT><FONT SIZE=2>; ... ;;</FONT></TD></TR>
 </TABLE><P>And finally, we mix the two possibilities, building a species by
 inheritance of a parametrised species, like in: <FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>ListUnique</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>UElem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> ...) </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>List</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>UElem</FONT><FONT SIZE=2>) = ... ;;</FONT></TD></TR>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>ListUnique</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>UElem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> ...) = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>List</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>UElem</FONT><FONT SIZE=2>); ... ;;</FONT></TD></TR>
 </TABLE><P>Hence, we can now define more accurately the notion of <B>species
 expression</B> used for both inheritance and parametrisation. It is either
 a simple species name or the application of a parametrised species to
@@ -3968,7 +3958,8 @@ method <TT>m0</TT> and use it in another <B>defined method</B> <TT>m1</TT>.</P><
 </TABLE><P>In another species <TT>S1</TT>, it is also possible to <B>declare</B> a
 method <TT>m1</TT> and use it in another <B>defined method</B> <TT>m0</TT>.
 <FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S1</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S0</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S1</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S0</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m1</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m0</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
@@ -3976,7 +3967,8 @@ method <TT>m1</TT> and use it in another <B>defined method</B> <TT>m0</TT>.
 consider a third species <TT>S2</TT> inheriting from both <TT>S0</TT> and
 <TT>S1</TT>.
 <FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S2</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S0</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>S1</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S2</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S0</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>S1</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>The inheritance mechanism will take each method <B>definition</B> from
@@ -4329,7 +4321,8 @@ rather than an identifier &#X201C;<TT>equal</TT>&#X201D;.</P><P>For example:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(** In a setoid, we can test the equality (note for logicians: this is</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   a congruence). *)</FONT></EM></FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inherits</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2><EM><FONT SIZE=2>(** @mathml &lt;eq/&gt; *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>equal_transitive</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
@@ -4461,7 +4454,7 @@ was provided <I>n</I><SUB>2</SUB>.-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Parameterised species expected <I>n</I><SUB>1</SUB> arguments but
 was provided <I>n</I><SUB>2</SUB>.</H2><!--SEC END --><P>
 <EM>Description</EM>: A species expression (used in species parameter
-expression or <TT>inherits</TT> clause) applies a species with <I>n</I><SUB>1</SUB>
+expression or <TT>inherit</TT> clause) applies a species with <I>n</I><SUB>1</SUB>
 argument(s) although its definition declared it as using <I>n</I><SUB>2</SUB>
 argument(s).</P><P><EM>Hints</EM>: None.</P><!--TOC section Non-logical let must not bind &#X2019;<I>ident</I>&#X2019; to a property.-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Non-logical let must not bind &#X2019;<I>ident</I>&#X2019; to a property.</H2><!--SEC END --><P>
@@ -4899,14 +4892,13 @@ Methods, Verification and Validation (ISoLA)</EM>, pages 45&#X2013;52. IEEE CS P
 Nov. 2006.</DD><DT CLASS="dt-thebibliography"><A NAME="zenon0.4.1"><FONT COLOR=purple>[9]</FONT></A></DT><DD CLASS="dd-thebibliography">
 D. Doligez.
 Zenon, version 0.4.1.
-http://focal.inria.fr/zenon/, 2006.</DD><DT CLASS="dt-thebibliography"><A NAME="traps"><FONT COLOR=purple>[10]</FONT></A></DT><DD CLASS="dd-thebibliography">
-E.Jaeger and T.Hardin.
-A few remarks about developing secure systems in b.
-In IEEE, editor, <EM>HASE 2008</EM>, 2008.
-.</DD><DT CLASS="dt-thebibliography"><A NAME="HardinRiobooTSI04"><FONT COLOR=purple>[11]</FONT></A></DT><DD CLASS="dd-thebibliography">
+http://focal.inria.fr/zenon/, 2006.</DD><DT CLASS="dt-thebibliography"><A NAME="HardinRiobooTSI04"><FONT COLOR=purple>[10]</FONT></A></DT><DD CLASS="dd-thebibliography">
 T. Hardin and R. Rioboo.
 Les objets des mathématiques.
-<EM>RSTI - L&#X2019;objet</EM>, 2004.</DD><DT CLASS="dt-thebibliography"><A NAME="jias06"><FONT COLOR=purple>[12]</FONT></A></DT><DD CLASS="dd-thebibliography">
+<EM>RSTI - L&#X2019;objet</EM>, 2004.</DD><DT CLASS="dt-thebibliography"><A NAME="traps"><FONT COLOR=purple>[11]</FONT></A></DT><DD CLASS="dd-thebibliography">
+É. Jaeger and T. Hardin.
+A few remarks about formal development of secure systems.
+In <EM>HASE</EM>, pages 165&#X2013;174. IEEE Computer Society, 2008.</DD><DT CLASS="dt-thebibliography"><A NAME="jias06"><FONT COLOR=purple>[12]</FONT></A></DT><DD CLASS="dd-thebibliography">
 M. Jaume and C. Morisset.
 A formal approach to implement access control.
 <EM>Journal of Information Assurance and Security</EM>, 2:137&#X2013;148,

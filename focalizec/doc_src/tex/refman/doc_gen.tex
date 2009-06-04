@@ -1,4 +1,4 @@
-% $Id: doc_gen.tex,v 1.6 2009-01-26 12:46:21 hardin Exp $
+% $Id: doc_gen.tex,v 1.7 2009-06-04 15:36:06 doligez Exp $
 When invoked with the {\tt $-$focalize-doc} option, the command
 {\tt focalizec} generates an extra file (with the ``.fcd'' suffix)
 containing ``documentation'' information extracted from the compiled
@@ -102,7 +102,8 @@ For example:
 \begin{lstlisting}
 (** In a setoid, we can test the equality (note for logicians: this is
    a congruence). *)
-species Setoid inherits Basic_object =
+species Setoid =
+  inherit Basic_object;
   (** @mathml <eq/> *)
   signature equal : Self -> Self -> bool ;
   property equal_transitive : all x y z in Self,

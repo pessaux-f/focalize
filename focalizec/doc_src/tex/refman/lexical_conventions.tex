@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.20 2009-06-04 15:11:07 jaeger Exp $
+% $Id: lexical_conventions.tex,v 1.21 2009-06-04 15:36:06 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -768,7 +768,7 @@ outside species and collections) is visible all along the compilation unit
 after its apparition.
 If a toplevel-definition is required by another compilation unit, you can
 reference it by referencing the external compilation unit
-(with a {\tt use or a {\tt open} command) and then
+(with a {\tt use} or a {\tt open} command) and then
 {\bf qualifying} its name, i.e. making explicit the
 compilation unit's name before the definition's name using the '\#'
 character as delimiter. Examples:
@@ -792,14 +792,14 @@ instance:
 {\scriptsize
 \begin{lstlisting}
 use "basics";;
-species S inherits basics#Basic_object = ... end ;;
+species S = inherit basics#Basic_object; ... end ;;
 \end{lstlisting}
 }
 can be transformed with no explicit qualification into:
 {\scriptsize
 \begin{lstlisting}
 open "basics";;
-species S inherits Basic_object = ... end ;;
+species S = inherit Basic_object; ... end ;;
 \end{lstlisting}
 }
 
@@ -811,7 +811,7 @@ the following program: {\scriptsize
 (* Redefine my basic object, containing nothing. *)
 species Basic_object = end ;;
 open "basics";;
-species S inherits Basic_object = ... end ;;
+species S = inherit Basic_object; ... end ;;
 \end{lstlisting}
 }
 the species {\tt S} inherits from the last {\tt Basic\_object} in the
@@ -824,7 +824,7 @@ to recover the first definition by using the ``empty'' qualification
 (* Redefine my basic object, containing nothing. *)
 species Basic_object = end ;;
 open "basics";;
-species S inherits #Basic_object = ... end ;;
+species S = inherit #Basic_object; ... end ;;
 \end{lstlisting}
 }
 
@@ -844,7 +844,7 @@ otherwise:
    else end ex external
    false function
    hypothesis
-   if in inherits internal implements is
+   if in inherit internal implement is
    let lexicographic local logical
    match measure
    not notation

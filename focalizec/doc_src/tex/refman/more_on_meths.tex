@@ -1,4 +1,4 @@
-% $Id: more_on_meths.tex,v 1.11 2009-01-26 12:46:21 hardin Exp $
+% $Id: more_on_meths.tex,v 1.12 2009-06-04 15:36:06 doligez Exp $
 
 %%%%%%%%%%%
 \subsection{More about methods definition}
@@ -23,7 +23,8 @@ In another species {\tt S1}, it is also possible to {\bf declare} a
 method {\tt m1} and use it in another {\bf defined method} {\tt m0}.
 {\scriptsize
 \begin{lstlisting}
-species S1 inherits S0 =
+species S1 =
+  inherit S0;
   signature m1 : Self ;
   let m0 = x ;
 end ;;
@@ -35,7 +36,8 @@ consider a third species {\tt S2} inheriting from both {\tt S0} and
 {\tt S1}.
 {\scriptsize
 \begin{lstlisting}
-species S2 inherits S0, S1 =
+species S2 =
+  inherit S0, S1;
   ...
 end ;;
 \end{lstlisting}

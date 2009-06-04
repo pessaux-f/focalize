@@ -1,4 +1,4 @@
-% $Id: glimpse.tex,v 1.8 2009-06-04 15:11:07 jaeger Exp $
+% $Id: glimpse.tex,v 1.9 2009-06-04 15:36:06 doligez Exp $
 \def\bbbn{{\rm I\!N}} % [EJ] Sinon il y a \mathbb{N} qui fait ça bien aussi...
 \label{glimpse}
 Before entering the precise description of \focal\ we give an
@@ -245,7 +245,8 @@ operation.
 
 {\scriptsize
 \begin{lstlisting}
-species Monoid inherits Setoid =
+species Monoid =
+  inherit Setoid;
   signature ( * ) : Self -> Self -> Self ;
   signature one : Self ;
   let element = one * one ;
@@ -263,7 +264,9 @@ implementation by explicitly defining {\tt element}.
 Multiple inheritance is available in \focal. For sake of simplicity,
 the above example uses simple inheritance. In case of inheriting a
 {\em method} from several parents, the order of parents in the
-{\tt inherits} clause serves to determine the chosen {\em method} (only the latest definition of any method appearing several times in the list of inherited species is retained).
+{\tt inherit} clause serves to determine the chosen {\em method} (only
+the latest definition of any method appearing several times in the
+list of inherited species is retained).
 
 The {\em type} of a {\em  species} built using inheritance is defined
 like for other {\em species}, the {\em method} types retained inside
@@ -330,12 +333,13 @@ To go on with our example, a product of setoids has two components, hence a
 {\em species} for products of setoids has two
 {\em collection parameters}. It is itself a setoid (that is, a ``thing'' with an equality), a fact which is
 simply recorded via the inheritance mechanism:
-{\tt inherits Setoid} gives to {\tt Setoid\_product} all the methods
+{\tt inherit Setoid} gives to {\tt Setoid\_product} all the methods
 of {\tt Setoid}.
 
 {\scriptsize
 \begin{lstlisting}
-species Setoid_product (A is Setoid, B is Setoid) inherits Setoid =
+species Setoid_product (A is Setoid, B is Setoid) =
+  inherit Setoid;
 
   signature fst : Self -> A ;
   signature snd : Self -> B ;
@@ -467,7 +471,7 @@ string, we could get a related collection by:
 
 {\scriptsize
 \begin{lstlisting}
-collection MachineNativeIntColl implements MachineNativeInt ;;
+collection MachineNativeIntColl = implement MachineNativeInt end ;;
 \end{lstlisting}
 }
 
@@ -477,8 +481,9 @@ could extract from the {\em species} {\tt Modulo\_work} the following
 
 {\scriptsize
 \begin{lstlisting}
-collection Modulo_8_work implements Modulo_work
-   (MachineNativeIntColl, MachineNativeIntColl!from_string (``8'') ;;
+collection Modulo_8_work = implement Modulo_work
+   (MachineNativeIntColl, MachineNativeIntColl!from_string (``8'')
+end;;
 \end{lstlisting}
 }
 

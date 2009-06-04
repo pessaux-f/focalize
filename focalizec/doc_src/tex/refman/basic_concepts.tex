@@ -1,4 +1,4 @@
-% $Id: basic_concepts.tex,v 1.14 2009-01-26 12:46:21 hardin Exp $
+% $Id: basic_concepts.tex,v 1.15 2009-06-04 15:36:06 doligez Exp $
 
 As stated in section \ref{glimpse}, the \focal\ language is designed
 to build an application step by step, going from very abstract
@@ -185,7 +185,8 @@ end ;;
 
     {\scriptsize
       \begin{lstlisting}
-species IntStack2 inherits IntStack =
+species IntStack2 =
+  inherit IntStack;
   proof of push_returns_non_empty = ... ;
 end ;;
       \end{lstlisting}
@@ -299,7 +300,8 @@ Note that creating a collection from it  is the
 only way to turn methods of a complete species into executable
 code. This point is emphasised by the syntax:
 
-{\tt collection} {\em name-collection} {\tt implements} {\em name-species}
+{\tt collection} {\em name-collection} = {\tt implement} {\em
+name-species} {\tt end}
 
 The interface of a collection is the one of the
 complete species it implements. The interface $I_1$ of a collection
@@ -324,7 +326,7 @@ species Full =
   let print (x in Self) = print_int (x) ;
 end ;;
 
-collection MyFull_Instance implements Full ;;
+collection MyFull_Instance = implement Full end ;;
 
 let v = Full.create_random ;;
 Full.print (v) ;;

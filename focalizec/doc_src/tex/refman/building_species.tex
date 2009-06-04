@@ -1,4 +1,4 @@
-% $Id: building_species.tex,v 1.11 2009-01-26 12:46:21 hardin Exp $
+% $Id: building_species.tex,v 1.12 2009-06-04 15:36:06 doligez Exp $
 
 
 
@@ -328,7 +328,8 @@ species IntCouple =
   ...
 end ;;
 
-species OrderedIntCouple inherits (IntCouple) =
+species OrderedIntCouple =
+  inherit IntCouple;
   let create (x in int, y in int) =
     if x < y then (x, y) else (y, x) ;
 
@@ -344,7 +345,7 @@ end ;;
 \index{inheritance!multiple}
 {\bf Multiple inheritance}, i.e. inheriting from several species is
 allowed by specifying several species separated by comma in the
-{\tt inherits} clause. The inheriting species inherits of all the
+{\tt inherit} clause. The inheriting species inherits of all the
 methods of inherited species. In case of a same name appears in
 several inherited species, the compiler proceeds as follows. 
 
@@ -365,8 +366,8 @@ species S1 =
 representation = int ; .. end ;;
 species S2 =
 representation = bool; ... end;;
-species S3 inherits S1, S2 = ... end;;
-species S4 inherits S0, S1 = ... end;;
+species S3 = inherit S1, S2; ... end;;
+species S4 = inherit S0, S1; ... end;;
 \end{lstlisting}
 }
 
@@ -376,14 +377,14 @@ then signatures must be identical, properties must be identical. If
 some of these methods have already received definitions, if they have
 the same type, then the definition which is retained for the
 inheriting species is the one coming from the rightmost defined parent
-in the {\tt inherits} clause. For instance below, if species {\tt A},
+in the {\tt inherit} clause. For instance below, if species {\tt A},
 {\tt B} 
 and {\tt C} provide a method {\tt m} which is defined in {\tt A} and
 {\tt B} but only declared in {\tt C}, then {\tt B!m} is the one which
 is inherited.
 {\scriptsize
 \begin{lstlisting}
-species Foo inherits A, B, C, D =
+species Foo = inherit A, B, C, D;
   ... m (...) ... ;
 end ;;
 \end{lstlisting}
@@ -413,7 +414,8 @@ species List (Elem is ...) =
   let concat (l1 in Self, l2 in Self) = ... ;
 end ;;
 
-species ListUnique (UElem is ...) inherits List (UElem) =
+species ListUnique (UElem is ...) =
+  inherit List (UElem);
   let add (e in UElem, l in Self) =
     ... (* Ensure the element e is not already present. *) ;
   let concat (l1 in Self, l2 in Self) =
@@ -486,14 +488,14 @@ Going on, we can  inherit
 from species that are referenced only by their name, like in:
 {\scriptsize
 \begin{lstlisting}
-species OrderedIntCouple inherits (IntCouple) = ... ;;
+species OrderedIntCouple = inherit IntCouple; ... ;;
 \end{lstlisting}
 }
 
 And finally, we mix the two possibilities, building a species by
 inheritance of a parametrised species, like in: {\scriptsize
 \begin{lstlisting}
-species ListUnique (UElem is ...) inherits List (UElem) = ... ;;
+species ListUnique (UElem is ...) = inherit List (UElem); ... ;;
 \end{lstlisting}
 }
 
