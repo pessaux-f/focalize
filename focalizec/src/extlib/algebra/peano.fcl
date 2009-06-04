@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.8 2009-05-25 12:35:58 doligez Exp $ *)
+(* $Id: peano.fcl,v 1.9 2009-06-04 14:45:23 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -93,8 +93,8 @@ species Peano_enumeration_system =
     proof = by property !equal_reflexive;
 
   proof of successor_is_injective =
-    <1>0 prove all x y in Self, (P_succ(x) = P_succ(y)) -> (x = y)
-         by type peano ;
+    <1>0 prove all x y in peano, (P_succ(x) = P_succ(y)) -> (x = y)
+         by type peano
 (*
          assumed {* should be injectivity of constructor, needs Coq *}
 *)
@@ -109,9 +109,9 @@ species Peano_enumeration_system =
               (* [rr]: time limit!   *)
               (* by step <2>1, <1>0 property !equal_very_reflexive *)
               (* [rr]: exhausted! *)
-              (* by step <2>1, <1>0 property !equal_reflexive *)
-              property equal_reflexive
-              assumed {*  *}
+              by step <2>1, <1>0 property !equal_reflexive
+(*               property equal_reflexive *)
+(*               assumed {*  *} *)
 (*               coq proof *)
 (*               property !equal_reflexive *)
 (*               {* apply coq_builtins.magic_prove. Qed. *} *)
