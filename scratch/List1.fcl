@@ -1,0 +1,24 @@
+use "basics" ;;
+
+species Superset =
+
+ signature ( = ) : Self -> Self -> basics#bool ;
+
+end ;;
+
+type mylist('a) = | Emp | Ins ('a, mylist('a)) ;;
+
+-- type mylist ('a) = | Emp | Ins ('a * mylist('a)) ;;
+
+species List(Val is Superset) =
+
+ representation = #mylist(Val) ;
+
+ let is_empty(l in Self) =
+  match l with
+  | #Emp -> true
+  | #Ins(vb, lb) -> false ; -- coqc "Error: The constructor Ins expects 1 argument"
+
+end ;;
+
+-- erreur coqc : 

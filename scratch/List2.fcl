@@ -1,0 +1,35 @@
+open "basics" ;;
+
+species Superset =
+
+ signature ( = ) : Self -> Self -> basics#bool ;
+
+end ;;
+
+species Foo(Val is Superset) =
+
+ representation = list(Val) ;
+
+ let is_empty(l in Self) =
+  match l with
+  | [ ] -> true -- OK
+--  | ( [] ) -> true -- Unbound sum type constructor '[]'.
+--  | [] -> true -- Unbound sum type constructor '[]'.
+--  | #[] -> true -- Unbound sum type constructor '[]'.
+--  | basics#[] -> true -- OK
+  | _ -> false
+  ;
+
+ let is_at_head(v in Val, l in Self) =
+  match l with
+  | h :: _ -> Val!( = )(h, v)
+  | _ -> false
+  ;
+
+ let rec is_member(v in Val, l in Self) =
+  match l with
+  | h :: t -> if Val!( = )(h, v) then true else is_member(v, t)
+  | _ -> false
+  ;
+
+end ;;
