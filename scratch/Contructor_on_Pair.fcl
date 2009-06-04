@@ -1,0 +1,43 @@
+open "basics" ;;
+
+(*====================================================================*)
+
+type t1 = | T1 (bool * int) ;;
+
+-- let testT1_1(x) = match x with | T1 (a) -> true ;;
+-- Types basics#bool and basics#bool * basics#int are not compatible.
+
+-- let testT1_2(x) = match x with | T1 (a, b) -> true ;;
+-- Passe focalizec... mais pas coq :
+-- Error: The constructor T1 expects 1 argument
+
+(*====================================================================*)
+
+type t2 = | T2 ( (bool * int) ) ;;
+
+let testT2_1(x) = match x with | T2 (a) -> true ;;
+
+-- let testT2_1_1(x) = match x with | T2 (a) -> (match a with (b, c) -> true) ;;
+-- Syntax error
+
+-- let testT2_2(x) = match x with | T2 (a, b) -> true ;;
+-- Types (basics#bool * basics#int) * '_a and (basics#bool * basics#int) are not compatible.
+
+-- let testT2_3(x) = match x with | T2 ( (a, b) ) -> true ;;
+-- Types (basics#bool * basics#int) * '_a and (basics#bool * basics#int) are not compatible.
+
+-- let testT2_4(x) = match x with | T2 (a,b) -> true ;;
+-- Syntax error
+
+(*====================================================================*)
+
+type t3 = | T3 (bool, int) ;;
+
+-- let testT3_1(x) = match x with | T3 (a) -> true ;;
+-- Types basics#bool and basics#bool * basics#int are not compatible.
+
+-- let testT3_2(x) = match x with | T3 (a, b) -> true ;;
+-- Passe focalizec... mais pas coq :
+-- Error: The constructor T3 expects 1 argument
+
+(*====================================================================*)
