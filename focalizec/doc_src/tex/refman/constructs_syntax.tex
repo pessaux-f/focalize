@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.43 2009-03-25 17:30:18 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.44 2009-06-04 14:40:45 pessaux Exp $
 
 
 \section{Language constructs and syntax}
@@ -306,6 +306,19 @@ Error: Types
 \end{verbatim}
 \noindent because {\tt Cstr} expects 1 tuple argument and not 3
 arguments.
+
+\medskip
+{\scriptsize
+\begin{lstlisting}
+let fct_t1 (x) =
+  match x with
+   | Cstr ((a, b, c)) -> ()
+;;
+\end{lstlisting}
+}
+\noindent is accepted since it makes explicit that the pattern matches
+the unique argument of {\tt Cstr} that is a tuple and by the way
+de-structurates this tuple.
 
 \medskip
 {\scriptsize

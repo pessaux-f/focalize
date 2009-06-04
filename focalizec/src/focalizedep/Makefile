@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.6 2009-06-04 14:40:45 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -23,6 +23,7 @@ CAML_INCLUDES = -I ../basement -I ../parser
 LOCAL_BYT_OBJS = directive_lexer.cmo make_depend.cmo
 
 BYT_OBJS =\
+	../basement/date.cmo\
 	../basement/installation.cmo\
 	../basement/configuration.cmo\
 	../basement/files.cmo\

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.20 2009-05-16 17:53:00 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.21 2009-06-04 14:40:45 pessaux Exp $ *)
 
 (**
 
@@ -78,7 +78,7 @@ species Ensembles_finis (A is Setoid) =
    *)
   let est_element (x in A, e in Self) = !sous_ensemble (!singleton (x), e);
 
-  let equal (x, y) = and_b (!sous_ensemble (x, y), !sous_ensemble (y, x));
+  let equal (x, y) = !sous_ensemble (x, y) && !sous_ensemble (y, x) ;
 
   let leq (x, y) = !sous_ensemble (x, y);
 
@@ -334,7 +334,7 @@ species Liste (A is Setoid) =
   let rec bien_formee (l in Self) in bool =
     match l with
     | basics#[] -> true
-    | a :: l -> and_b (not_b (!est_element (a, l)), !bien_formee (l));
+    | a :: l -> ~~ (!est_element (a, l) && !bien_formee (l)) ;
 
   let vide in Self = [ ];
 
@@ -392,7 +392,7 @@ species Liste (A is Setoid) =
   let rec sous_ensemble (e1 in Self, e2 in Self) in bool =
     match e1 with
     | basics#[] -> true
-    | x :: l -> and_b (!est_element (x, e2), !sous_ensemble (l, e2));
+    | x :: l -> !est_element (x, e2) && !sous_ensemble (l, e2) ;
 
   proof of sous_ensemble_spec =
     assumed {* Zenon does not handle recursive functions yet *};
@@ -1524,7 +1524,7 @@ species Liste_triee (A is Ordered_set) =
       | x :: l ->
           (match l with
            | basics#[] -> true
-           | y :: _underscore -> and_b (A!lt (x, y), !est_triee (l)))
+           | y :: _underscore -> A!lt (x, y) && !est_triee (l))
    termination proof = order 0 on l
    assumed
      {* Bidon en attendant qu'on gère vraiment

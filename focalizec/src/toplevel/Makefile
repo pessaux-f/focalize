@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.52 2009-05-05 16:33:27 pessaux Exp $
+# $Id: Makefile,v 1.53 2009-06-04 14:40:45 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -24,6 +24,7 @@ CAML_INCLUDES = -I ../basement -I ../parser -I ../typing\
 LOCAL_BYT_OBJS = focalizec.cmo exc_wrapper.cmo
 
 BYT_OBJS =\
+	../basement/date.cmo\
 	../basement/installation.cmo\
 	../basement/configuration.cmo\
 	../basement/handy.cmo\
@@ -91,7 +92,9 @@ $(EXE_NAME).bin: $(BIN_OBJS)
 	$(LN) $(EXE_NAME).bin $(EXE_NAME)
 
 fodump: fodump.cmo
-	$(CAML_BYT) ../basement/installation.cmo\
+	$(CAML_BYT) \
+	../basement/date.cmo\
+	../basement/installation.cmo\
 	../basement/configuration.cmo\
 	../basement/handy.cmo\
 	../basement/location.cmo\

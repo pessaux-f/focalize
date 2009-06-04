@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.33 2009-05-28 08:43:26 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.34 2009-06-04 14:40:45 pessaux Exp $ *)
 
 exception No_input_file;;
 
@@ -25,7 +25,7 @@ let focalize_short_version =
 ;;
 
 let focalize_full_version =
-  Printf.sprintf "%s %s" focalize_short_version "alpha"
+  Printf.sprintf "%s %s (%s)" focalize_short_version "alpha" Date.t
 ;;
 
 let print_focalize_version v =

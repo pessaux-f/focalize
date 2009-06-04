@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ml_builtins.ml,v 1.9 2008-12-17 12:12:16 pessaux Exp $ *)
+(* $Id: ml_builtins.ml,v 1.10 2009-06-04 14:40:45 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module contains the external primitives bound to FoCaLize
@@ -46,7 +46,6 @@ let bi__int_geq (x : int) (y : int) = x >= y ;;
 let bi__int_gt (x : int) (y : int) = x > y ;;
 let bi__syntactic_equal x y = x = y ;;
 let bi__physical_equal x y = x == y ;;
-let bi__pred x = x - 1 ;;
 let bi__int_opposite i = - i ;;
 let bi__int_plus x y = x + y ;;
 let bi__int_minus x y = x - y ;;

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: make_depend.ml,v 1.6 2009-03-02 10:19:30 weis Exp $ *)
+(* $Id: make_depend.ml,v 1.7 2009-06-04 14:40:45 pessaux Exp $ *)
 
 
 type dep_kind =
@@ -64,21 +64,21 @@ let process_one_file fname =
     match Directive_lexer.start lexbuf with
      | Directive_lexer.D_end -> continue := false
      | Directive_lexer.D_use_open mod_name ->
-	 (begin
-	 match Files.get_path_from_lib_paths (mod_name ^ ".fcl") with
-	  | None -> ()
-	  | Some p ->
+         (begin
+         match Files.get_path_from_lib_paths (mod_name ^ ".fcl") with
+          | None -> ()
+          | Some p ->
               let unit = Filename.concat p mod_name in
-	      comp_units := CompUnitSet.add (unit, DK_use_open) !comp_units
-	 end)
+              comp_units := CompUnitSet.add (unit, DK_use_open) !comp_units
+         end)
      | Directive_lexer.D_coq_require mod_name ->
-	 (begin
-	 match Files.get_path_from_lib_paths (mod_name ^ ".fcl") with
-	  | None -> ()
-	  | Some p ->
+         (begin
+         match Files.get_path_from_lib_paths (mod_name ^ ".fcl") with
+          | None -> ()
+          | Some p ->
               let unit = Filename.concat p mod_name in
               comp_units := CompUnitSet.add (unit, DK_coq_require) !comp_units
-	 end)
+         end)
   done ;
   close_in in_hd ;
   let basename = Filename.chop_suffix (Filename.basename fname) ".fcl" in
@@ -145,8 +145,8 @@ let main () =
   try
     Arg.parse
       [ ("-I",
-	 Arg.String (fun path -> Files.add_lib_path path),
-	 " adds the specified path to the path list where to search for \
+         Arg.String (fun path -> Files.add_lib_path path),
+         " adds the specified path to the path list where to search for \
            compiled\n\tinterfaces.") ]
       (fun n -> filenames := n :: !filenames)
       "Usage: focalizec <files>" ;

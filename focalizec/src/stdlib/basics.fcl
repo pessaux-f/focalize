@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.60 2009-05-25 12:35:58 doligez Exp $ *)
+(* $Id: basics.fcl,v 1.61 2009-06-04 14:40:45 pessaux Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -75,11 +75,11 @@ type bool =
 
 and True =
   | caml -> {* true *}
-  | coq -> {* True *}
+  | coq -> {* true *}
 
 and False =
   | caml -> {* false *}
-  | coq -> {* False *}
+  | coq -> {* false *}
 ;;
 
 (** Note that is it impossible to alias the type of propositions [prop__t] to
@@ -142,11 +142,6 @@ let ( |<>| ) =
   | coq -> {* coq_builtins.bi__xor_b *}
 ;;
 
-(* For compatibility only: should be removed ? *)
-let and_b = ( && );;
-let or_b = ( || );;
-let not_b = ( ~~ );;
-let xor_b = ( |<>| );;
 
 (** {7 Operations on pairs} *)
 let pair (x, y) = (x, y);;
@@ -191,7 +186,6 @@ let ( =0x ) =
 
 let int_eq = ( =0x );;
 
-(* FIXME should work
 let ( <0x ) =
   internal int -> int -> bool
   external
@@ -200,18 +194,8 @@ let ( <0x ) =
 ;;
 
 let int_lt = ( <0x );;
-*)
 
-let int_lt =
-  internal int -> int -> bool
-  external
-  | caml -> {* Ml_builtins.bi__int_lt *}
-  | coq -> {* coq_builtins.bi__int_lt *}
-;;
 
-let ( <0x ) = int_lt;;
-
-(* FIXME should work
 let ( <=0x ) =
   internal int -> int -> bool
   external
@@ -221,18 +205,7 @@ let ( <=0x ) =
 
 let int_leq = ( <=0x );;
 
-and does not. *)
 
-let int_leq =
-  internal int -> int -> bool
-  external
-  | caml -> {* Ml_builtins.bi__int_leq *}
-  | coq -> {* coq_builtins.bi__int_leq *}
-;;
-
-let ( <=0x ) = int_leq;;
-
-(* FIXME should work
 let ( >=0x ) =
   internal int -> int -> bool
   external
@@ -242,18 +215,7 @@ let ( >=0x ) =
 
 let int_geq = ( >=0x );;
 
-and does not. *)
 
-let int_geq =
-  internal int -> int -> bool
-  external
-  | caml -> {* Ml_builtins.bi__int_geq *}
-  | coq -> {* coq_builtins.bi__int_geq *}
-;;
-
-let ( >=0x ) = int_geq;;
-
-(* FIXME should work
 let ( >0x ) =
   internal  int -> int -> bool
   external
@@ -263,20 +225,7 @@ let ( >0x ) =
 
 let int_gt = ( >0x );;
 
-and does not. *)
-
-let int_gt =
-  internal  int -> int -> bool
-  external
-  | caml -> {* Ml_builtins.bi__int_gt *}
-  | coq -> {* coq_builtins.bi__int_gt *}
-;;
-
-let ( >0x ) = int_gt;;
-
 (** {8 Arithmetic operations for integers} *)
-
-(* FIXME should work
 
 let ( + ) =
   internal int -> int -> int
@@ -286,17 +235,6 @@ let ( + ) =
 ;;
 
 let int_plus = ( + );;
-
-and does not. *)
-
-let int_plus =
-  internal int -> int -> int
-  external
-  | caml -> {* Ml_builtins.bi__int_plus *}
-  | coq -> {* coq_builtins.bi__int_plus *}
-;;
-
-let ( + ) = int_plus;;
 
 let ( - ) =
   internal int -> int -> int
@@ -343,23 +281,9 @@ let ( % ) =
 
 let int_mod = ( % );;
 
-(* FIXME should work
-let succ (x in int) in int = x + 1;;
-*)
+let succ (x in int) in int = x + 1 ;;
 
-let succ (x in int) in int = int_plus (x, 1);;
-
-let pred =
-  internal int -> int
-  external
-  | caml -> {* pred *}
-  | coq -> {*  coq_builtins.bi__int_pred *}
-;;
-
-(* FIXME should work
-let pred (x in int) in int = x - 1
-;;
-*)
+let pred (x in int) in int = x - 1 ;;
 
 let int_max =
   internal int -> int -> int
@@ -384,24 +308,6 @@ let int_abs =
 
 (** {7 Polymorphic equalities} *)
 
-(** {8 Physical identity} *)
-
-(** A polymorphic predicate to test identity of objects
- (two objects are considered identical if and only if they are the
-  same object, e.g. the two objects are stored at the same address in the
-  computer memory). *)
-
-let physical_equal =
-  internal 'a -> 'a -> bool
-  external
-  | caml -> {* Ml_builtins.bi__physical_equal *}
-  | coq -> {* coq_builtins.bi__syntactic_equal __var_a *}
-    (* Wrong, but don't know how to do it better. *)
-;;
-
-let ( == ) = physical_equal
-;;
-
 (** {8 Syntactical equality} *)
 
 (** A polymorphic predicate to test equality of obects
@@ -409,8 +315,6 @@ let ( == ) = physical_equal
     equivalent, i.e. if and only if they have the same
     semantical meaning, e.g. two character strings with the same character
     contents). *)
-
-(* FIXME should work
 
 let ( = ) =
   internal 'a -> 'a -> bool
@@ -421,16 +325,6 @@ let ( = ) =
 
 let syntactic_equal = ( = );;
 
-and does not. *)
-
-let syntactic_equal =
-  internal 'a -> 'a -> bool
-  external
-  | caml -> {* Ml_builtins.bi__syntactic_equal *}
-  | coq -> {* coq_builtins.bi__syntactic_equal __var_a *}
-;;
-
-let ( = ) = syntactic_equal;;
 
 (** {7 Basic printing operations} *)
 let print_int =
@@ -491,10 +385,10 @@ theorem beq_trans :
 (** {8 Integer comparisons fundamental properties} *)
 
 theorem int_le_not_gt :
-  all x y in int, int_leq (x, y) -> ~ (int_gt (x, y))
+  all x y in int, (x <=0x y) -> ~ (x >0x y)
   proof =
     coq proof {*
-      intros x y; unfold int_leq, int_gt in |- *.
+      intros x y; unfold _lt__equal_0x, _gt_0x  in |- *.
       unfold bi__int_leq , bi__int_gt.
       elim (Z_le_dec x y).
       intros H.
@@ -514,7 +408,8 @@ theorem int_lt_le_trans :
   proof =
     coq proof {*
       intros x y z.
-      unfold int_lt, int_leq, bi__int_lt, bi__int_leq in |- *.
+      unfold int_lt, _lt_0x, int_leq, _lt__equal_0x,
+             bi__int_lt, bi__int_leq in |- *.
       elim (Z_lt_dec x y).
       elim (Z_le_dec y z).
       intros Hle Hlt foo bar; clear foo bar.
@@ -538,7 +433,7 @@ theorem int_le_antisymm:
   proof =
     coq proof {*
       intros x y.
-      unfold int_leq, bi__int_leq in |- *.
+      unfold int_leq, _lt__equal_0x, bi__int_leq in |- *.
       elim (Z_le_dec x y); elim (Z_le_dec y x).
       intros H1 H2.
       intros b c; clear b c.
@@ -557,7 +452,7 @@ theorem int_le_trans:
   all x y z in int,  #int_leq(x, y) -> #int_leq (y, z) -> #int_leq(x, z)
   proof =
     coq proof {*
-      unfold int_leq, bi__int_leq in |- *; intros x y z H1 H2.
+      unfold int_leq, _lt__equal_0x, bi__int_leq in |- *; intros x y z H1 H2.
       apply dec_IsTrue. cut (x <= y)%Z. cut (y <= z)%Z.
       eauto with zarith.
       eapply IsTrue_dec. apply H2.
@@ -591,7 +486,8 @@ theorem int_lt_le_S:
   all x y in int, #int_lt (x, y) -> #int_leq (#int_plus (x, 1), y)
   proof =
     coq proof {*
-      unfold int_lt, int_leq, int_plus in |- *; intros x y Hlt;
+      unfold int_lt, _lt_0x, int_leq, _lt__equal_0x,
+        int_plus in |- *; intros x y Hlt;
       unfold bi__int_lt, bi__int_leq, bi__int_plus;
       apply dec_IsTrue; fold (Zsucc x) in |- *; apply Zlt_le_succ;
       trivial. exact (IsTrue_dec Hlt).
