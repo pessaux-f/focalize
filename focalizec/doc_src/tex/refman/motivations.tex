@@ -1,4 +1,4 @@
-% $Id: motivations.tex,v 1.7 2009-01-21 20:49:27 weis Exp $
+% $Id: motivations.tex,v 1.8 2009-06-04 15:11:07 jaeger Exp $
 
 
 \subsection*{Motivations}
@@ -22,42 +22,42 @@ confidence to users, but remaining easy to use by well-trained
 engineers.
 
 To ease developing high integrity systems with numerous software
-components, an Integrated Development Environment (IDE) should provide
+components, an IDE should provide
 tools to formally express specifications, to describe design and
 coding and to ensure that specification requirements are met by the
-corresponding code. This is not enough. First, standards of critical systems
+corresponding code. But this is not enough. First, standards of critical systems
 ask for pertinent documentation which has to be maintained along all the revisions
 during the system life cycle. Second, the evaluation conformance
-process of software is by nature a sceptical analysis. Thus, any proof
+process of software is by nature a skeptical analysis. Thus, any proof
 of code correctness must be easily redone at request and traceability
 must be eased. Third, design
 and coding are difficult tasks. Research in software engineering has
 demonstrated the help provided by some object-oriented
 features as inheritance, late binding and early research works on
 programming languages have pointed out the importance of abstraction
-mechanism such as modularity to help invariant maintaining. There are
+mechanisms such as modularity to help invariant preservation. There are
 a lot of other points which should also be considered when designing
 an IDE for safe and/or secure systems to ensure conformance with high
-Evaluation Assurance or Safety Integrity Levels (EAL-5,7 or SIL 3,4)
+Evaluation Assurance or Safety Integrity Levels (EAL-5 to 7 or SIL 3 and 4)
 and to ease the evaluation process according to various standards
 (e.g. IEC61508, CC, ...): handling of non-functional contents of
 specification, handling of dysfunctional behaviors and vulnerabilities
-from the true beginning of development and fault avoidance, fault
+from the true beginning of development as well as fault avoidance and fault
 detection by validation testing, vulnerability and safety analysis.
 
 
 \subsection*{Initial application testbed}
 
- When the {\foc} project was launched by Hardin and Rioboo,
-only one specific domain was considered, the one of Computer
-Algebra. Algorithms used in this domain can be rather intricated and
+ When the {\foc} project was launched by T. Hardin and R. Rioboo,
+only the specific domain of Computer Algebra was initially considered.
+Algorithms used in this domain can be rather intricated and
 difficult to test and this is not rare that computer algebra systems
 issue a bad result, due to semantical flaws, compiler anomalies,
 etc. Thus the idea was to design a language allowing to specify the
 mathematics underlying these algorithms and to go step by step to
 different kinds of implementations according to the specifities of the
 problem under consideration\footnote{For example Computer Algebra
-Libraries use several different representations of polynomials
+Libraries use different representations of polynomials
 according to the treatment to be done}. The first step was to design
 the semantics of such a language, trying to fit to several
 requirements: easing the expression of mathematical statements, clear
@@ -68,12 +68,12 @@ efficiency and confidence in the whole development (mechanised proofs,
 ..).  After an initial phase of conceptual design, the {\foc}
 semantics was submitted to a double test. On one hand, this semantics
 was specified in {\coq} and in a categorical model of type theories by
-S. Boulm\'e (see his thesis\cite{BoulmePhD00}), a point which
-enlightened the borders of this approach, regarding the logical
-background. On the other hand, before designing the syntax, it was
-needed to study the development style in such a
-language. R. Rioboo~\cite{ThRRCalculemus,HardinRiobooTSI04} used the
-{\ocaml} language to try different solutions which are recorded in
+S. Boulm\'e (see his thesis \cite{BoulmePhD00}), a point which
+enlightened the borders of this approach, regarding the logical % [EJ] pas compris "border" -> "limits" ?
+background. On the other hand, as a preliminary step before designing the syntax,
+a strudy of the typical development style was conducted.
+R. Rioboo~\cite{ThRRCalculemus,HardinRiobooTSI04} used the
+{\ocaml} language to try different solutions, recorded in
 ~\cite{HardinRiobooTSI04}.
 
 \subsection*{Initial {\oldfocal} design}
@@ -81,17 +81,17 @@ language. R. Rioboo~\cite{ThRRCalculemus,HardinRiobooTSI04} used the
 Then the time came to design the syntax of the language and the compiler. To
 overcome inconsistencies risks, an original dependency analysis was
 incorporated into the compiler (V. Prevosto
-thesis\cite{PrevostoPhD03,TPHOL2002,PrevostoJAR02}) and the correction of the
+thesis \cite{PrevostoPhD03,TPHOL2002,PrevostoJAR02}) and the correction of the
 compiler (mostly written by V. Prevosto) against {\oldfocal}'s semantics is
 proved (by hand) \cite{TLCA2005}, a point which
 brings a satisfactory confidence in the language's correctness. Then
-Rioboo~\cite{ } began the development of a huge computer algebra
-library, which  offers  full specification
+R. Rioboo \cite{ } began the development of a huge Computer Algebra % [EJ] Citation manquante
+library, offering full specification
 and implementation of usual algebraic structures up to multivariate
-polynomial rings with complex algorithms, first as a way to
-extensively test the language and (quite satisfactory)
-efficiency  of the produced code and then to provide a standard library
-of mathematical backgrounds. And D. Doligez\cite{ZenonBDD} started the
+polynomial rings with complex algorithms, to
+extensively test the language and the
+efficiency  of the produced code, aswell as to provide a standard library
+of mathematical backgrounds. D. Doligez \cite{ZenonBDD} started the
 development of {\zenon}, an automatic prover based on tableaux method,
 which takes a {\oldfocal} statement and tries to build a proof of it and,
 when succeeds,  issues a {\coq} term. More  recently, M. Carlier and
@@ -101,29 +101,43 @@ test tool for {\oldfocal}.
 {\oldfocal} has already been used to develop huge examples such as  the
 standard library and the computer algebra library. The library
 dedicated to the algebra of access control models, developed by
-M. Jaume and C. Morisset\cite{jias06,fcsarspa06,MorissetPhd},
+M. Jaume and C. Morisset \cite{jias06,fcsarspa06,MorissetPhd},
 is another huge example, which borrows implementations of orderings,
 lattices and boolean algebras from the computer algebra library.
 {\oldfocal} was also very successfully used to formalize airport security
 regulations, a work by D. Delahaye, J.-F. Etienne, C.  Dubois,
 V. Donzeau-Gouge ~\cite{EDEMOI-All,EDEMOI-Model,EDEMOI-Proof}. This
-last work led to the development of a translator\cite{Focal-UML}
+last work led to the development of a translator \cite{Focal-UML}
 from {\oldfocal} to UML for documentation purposes.
 
 \subsection*{The {\focalize} system}
 
-The {\focalize} development effort started in 2006: it was clearly a
+The {\focalize} development started in 2006, as a
 continuation of the {\foc} and {\oldfocal} efforts. The new system was rewritten
 from scratch. A new language and syntax was designed and carefully
 implemented, with in mind ease of use, expressivity, and programmer
-friendyness. The addition of powerful data structure definitions together
-with the corresponding pattern matching facility, lead to new expressing
+friendlyness. The addition of powerful data structure definitions -- together
+with the corresponding pattern matching facilities -- leads to new expressive
 power.
 
 The {\zenon} automatic theorem prover was also integrated in the
 compiler and natively interfaced within the {\focalize} language. New
-developments for recursive functions support is on the way (in particular for
+developments for a better support of recursive functions is on the way (in particular for
 termination proofs).
+
+% [EJ] Suite sortie de l'historique et replacee plus bas
+
+
+\subsection*{The {\focalize} system in short}
+
+The {\focalize} system provides means for the developers to formally express
+their specifications and to go step by step (in an incremental approach) to
+design and implementation while proving that such an implementation
+meets its specification or design requirements. The {\focalize} language offers
+high level mechanisms such as multiple inheritance, late binding, redefinition,
+parametrization, etc.  Confidence in proofs submitted by developers or
+automatically done relies on formal proof verification. {\focalize} also
+provides some automation of documentation production and management.
 
 A formal specification can be built by declaring names of functions
 and values and introducing
@@ -134,20 +148,12 @@ meets the specification or design requirements. Thus, developing in
 and code, completely done within {\focalize}. Taking the global development
 in consideration within the same environment brings some conciseness,
 helps documentation and reviewing.
-Thus a {\focalize} development is organised as a hierarchy that may have
+
+A {\focalize} development is organised as a hierarchy that may have
 several roots. The upper levels of the hierarchy are built along the
 specification stage while the lower ones correspond to
 implementation and each  node of the hierarchy corresponds to a progress
 toward a complete implementation.
-
-The {\focalize} system provides means for the developers to formally express
-their specifications and to go step by step (in an incremental approach) to
-design and implementation while proving that such an implementation
-meets its specification or design requirements. The {\focalize} language offers
-high level mechanisms such as inheritance, late binding, redefinition,
-parametrization, etc.  Confidence in proofs submitted by developers or
-automatically done relies on formal proof verification. {\focalize} also
-provides some automation of documentation production and management.
 
 We would like to mention several works about safety and/or security
 concerns within {\focalize} and specially the definition of a safety life
@@ -155,15 +161,13 @@ cycle by P. Ayrault, T. Hardin and F. Pessaux \cite{TTSS08} and the
 study of some traps within formal methods by E. Jaeger and
 T. Hardin\cite{traps}.
 
-\subsection*{The {\focalize} system in short}
-
 {\focalize} can be seen as an IDE still in development, which
 gives a positive solution to the three requirements identified above:
 
 \begin{enumerate}
 \item pertinent documentation is maintained within the system being written,
       and its extraction is an automatic part of the compilation process,
-\item proofs are written using a high level proof language, so that proofs
+\item proofs are produced using an automated proved which can be guided using a high level proof language, so that proofs
       are easier to write and their verification is automatic and reliable,
 \item the framework provides powerful abstraction mechanisms to facilitate
       design and development; however, these mechanisms are carefully ruled:
@@ -171,7 +175,7 @@ gives a positive solution to the three requirements identified above:
       further development can inadvertantly break the invariants or
       invalidate the proofs; indeed, the compiler ensures that if a theorem
       was based on assumptions that are now violated by the new development,
-      then the theorem is out of reach of the programmer.
+      then the theorem is out of reach of the programmer and the properties have to be proven again.
 \end{enumerate}
 
 

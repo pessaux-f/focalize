@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.19 2009-04-03 15:50:36 doligez Exp $
+% $Id: lexical_conventions.tex,v 1.20 2009-06-04 15:11:07 jaeger Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -24,13 +24,13 @@ literals (provided the {\tt *} character is escaped) and can be nested. They
 are discarded during the compilation process. Example:
 {\scriptsize
 \begin{lstlisting}
-(* Discarded comment. *)
+(* Discarded comment *)
 species S =
   ...
-  let m (x in Self) = (* Another discarded comment. *)
+  let m (x in Self) = (* Another discarded comment *)
   ...
 end ;;
-(* Another discarded comment at end of file. *)
+(* Another discarded comment at end of file *)
 \end{lstlisting}
 }
 
@@ -39,13 +39,18 @@ Comments spanning on a single line start by the two characters
 Example:
 {\scriptsize
 \begin{lstlisting}
--- Discarded uni-line comment.
+-- Discarded uni-line comment
 species S =
-  let m (x in Self) = -- Another uni-line comment.
+  let m (x in Self) = -- Another uni-line comment
   ...
 end ;;
 \end{lstlisting}
 }
+
+Note that double quotes (symbol $"$) should not appear in comments, and that
+a spanning comment should not start with uniline comment mark. A uniline
+comment should also always be terminated by a carriage return (an unclosed
+uniline comment cannot end a file).
 
 %%%%%%%%%%%
 \subsection{Annotations}
@@ -67,11 +72,11 @@ For instance, the {\focal} development environment provides the {\focdoc}
 automatic production tool that uses annotations to automatically generate
 documentation.
 Several annotations can be put in sequence for the same construct. We call
-such a sequence an {\bf annotations block}\index{annotation!block}.
+such a sequence an {\bf annotation block}\index{annotation!block}.
 Using embedded tags in annotations allows third-party tools to easily find
 out annotations that are meaningful to them, and safely ignore others.
 For more information, consult
-\ref{documentation-generation}.
+\ref{documentation-generation}. % [EJ] Reference incorrecte apparemment
 Example:
 {\scriptsize
 \begin{lstlisting}
@@ -103,11 +108,11 @@ conceptual categorization of names that we use when we write or read ordinary
 English texts. We routinely distinguish between:
 \begin{citemize}
 \item a word only made of lowercase characters, that is supposed to be an
-  ordinary noun, such as "table", "ball", or a verb as in "is", or an
-  adjective as in "green",
+  ordinary noun, such as ``table'', ``ball'', or a verb as in ``is'', or an
+  adjective as in ``green'',
 \item a word starting with an uppercase letter, that is supposed to be a name,
-  maybe a family or christian name, as in "Kennedy" or "David", or a location
-  name as in "London".
+  maybe a family or christian name, as in ``Kennedy'' or ``David'', or a location
+  name as in ``London''.
 \end{citemize}
 
 We use this distinctive look of words as a useful hint to help understanding
@@ -184,7 +189,7 @@ In {\focal}, all the binary infix operators have the precedence they have in mat
 \index{category of identifiers}
 The category of an identifier answers to the question ``is this identifier a
 possible name for this kind of concept ?''.
-In programming languages category are often strict, meaning that the category
+In programming languages categories are often strict, meaning that the category
 exactly states which concept attaches to the identifier.
 
 For {\focal} these categories are
@@ -192,7 +197,7 @@ For {\focal} these categories are
 \item {\em lowercase}: the identifier starts with a lowercase letter and
   designates a simple entity of the language. It may name some of
   the language expressions, a function name, a function parameter or bound
-  variable name, a method name; a type name, or a record field label name.
+  variable name, a method name, a type name, or a record field label name.
 
 \item {\em uppercase}: the identifier starts with an uppercase letter and
   designates a more complex entity in the language. It may name a sum type
@@ -201,6 +206,8 @@ For {\focal} these categories are
 
 We distinguish identifiers using their first ``meaningful'' character:
 the first character that is not an underscore.
+% [EJ] FAUX si j'en crois la suite, __a est lowercase, mais __A n'est pas
+% uppercase d'apres la definition de uident ci-dessous !
 
 \subsubsection{Nature of identifiers}
 \index{nature of identifiers}
@@ -211,7 +218,7 @@ In {\focal} identifiers are either:
 \item {\em symbolic}: the identifier contains characters that are not
   letters. {\tt +}, {\tt :=}, {\tt ->}, {\tt +float} are symbolic
 
-\item {\em alphanumeric}: the identifier contains letters, digits and
+\item {\em alphanumeric}: the identifier only contains letters, digits and
   underscores. {\tt x}, {\tt \_1}, {\tt Some}, {\tt Basic\_object} are
   alphanumeric.
 \end{citemize}
@@ -250,6 +257,11 @@ and labels of records.
 % uident & ::= & upper\ \{\ letter \mid digit \mid \terminal{\_} \}* & \\
 % ident & ::= & lident \mid uident
 % \end{syntax}
+
+% [EJ] Je continue mon commentaire : si cela commence par un _ c'est lowercase,
+% i.e. lident. Du coup on peut considerablement simplifier cette presentation
+% en notant lower := a..z | _ et lident := lower {letter | figit | _}*
+
 \vspace{0.2cm}
 
 A regular identifier is a sequence of letters, digits, and {\tt \_} (the
@@ -258,6 +270,7 @@ underscore character), starting with a letter or an underscore.
 The identifier is lowercase if its first letter is lowercase.
 
 The identifier is uppercase if its first letter is uppercase.
+% [EJ] Toujours pas coherent avec ce qui precede
 
 Letters contain at least the 52 lowercase and uppercase
 letters from the standard ASCII set. In an identifier, all characters
@@ -330,6 +343,11 @@ Prefix & Infix \\
 Hence, in the above examples, {\tt +}, {\tt ++} and {\tt =\_mod\_5} will be
 infix operators and {\tt \tilde+zero} will be a prefix one.
 
+Note that some of these symbols, such as {\tt :}, are considered as uppercase
+identifiers, and others, such as {\tt +}, as lowercase identifiers. The consequence
+is that for example a notation starting with a {\tt :} can be used as a constructor
+name for a union type, but not as a method name.
+
 \subsubsection{Defining an infix operator}
 \index{defining operators}
 \index{defining an infix operator}
@@ -340,7 +358,7 @@ these operators: it means that the programmer may freely define and use them
 as ordinary prefix/infix operators instead of only writing prefix function
 names and regular function application. For instance, if you do not like the
 {\focal} predefined \verb"^" operator to concatenate strings, you can define your
-own infix synonym for \verb"^", say {tt ++}, using:
+own infix synonym for \verb"^", say {\tt ++}, using:
 
 {\scriptsize
 \begin{lstlisting}
@@ -373,8 +391,8 @@ prefix form notation to define an infix or prefix operator.
 When a prefix or infix operator has been defined, it is still possible
 to use it as a regular identifier using its prefix form notation.
 For instance, you can use the prefix form of operator {\tt ++}
-to apply it in a prefix position as a simple regular function (with a
-strange name admittedly!):
+to apply it in a prefix position as a simple regular function: % (with a
+%strange name admittedly!):
 
 {\scriptsize
 \begin{lstlisting}
@@ -382,9 +400,9 @@ strange name admittedly!):
 \end{lstlisting}
 }
 
-{\bf Attention}: a common error while defining an operator is to forget
-the spaces around the operator. This is particularly confusing, if you
-type the {\tt *} operator without spaces around the operator: you
+{\bf Warning!} A common error while defining an operator is to forget
+the blanks around the operator. This is particularly confusing, if you
+type the {\tt *} operator without blanks around the operator: you
 write the lexical entity {\tt (*)} which is the beginning (or the end)
 of a comment!
 
@@ -438,6 +456,7 @@ spaces inside or to extend the notion of operator identifiers.
     They are delimited by the same delimitor characters and contain
     symbolic characters.
 \end{itemize}
+% [EJ] Certes, mais ``equal is reflexive'' c'est uppercase ou lowercase ?
 
 The first meaningful character at the beginning of a delimited
 ident/symbol is used to find its associated token.
@@ -534,7 +553,7 @@ prefixes:
     Digits are [0-9] [A-F] [a-f].
 \end{itemize}
 Here are various examples of integers in various bases:
-{\tt -0x1Ff}, {\tt 0B01001}, {\tt +Oo347}.
+{\tt -0x1Ff}, {\tt 0B01001}, {\tt +Oo347}, {\tt -OxFF\_FF}.
 
 %%%%%%%%%%%%
 \subsection{String literals}
@@ -587,13 +606,7 @@ table below:
   \hline
   \terminal{\backslash'} & {\tt'}              & Single quote. \\
   \hline
-  \terminal{\backslash*} & *              & Since comments cannot appear inside
-                                  strings, to insert one of the
-                                  sequence ``(*'', ``*)'', ``\{*'',
-                                  ``*\}'', ``[*'', or ``*]'',
-                                  use this escape sequence
-                                  combined with the six following
-                                  ones. \\
+  \terminal{\backslash*} & *              & Allows e.g. for insertion of ``(*'' in a string \\
   \hline
   \terminal{\backslash(} & ( & \multirow{6}{*}{See comment above for \terminal{\backslash*}} \\
   \cline{1-2}
@@ -733,7 +746,7 @@ depth of the bullet and the second part stands for its name. Example:
       ...
       prove ...
    <2>1 prove ... by ...
-   <2>9 qed by step <2>1 property ...
+   <2>f qed by step <2>1 property ...
  <1>2 conclude
 \end{lstlisting}
 }
@@ -747,14 +760,16 @@ depth of the bullet and the second part stands for its name. Example:
 Name qualification is done according to the
 compilation unit status.
 
-As precisely described in section (\ref{toplevel-def}),
+As precisely described in section (\ref{toplevel-def}), % [EJ] Reference incorrecte
 toplevel-definitions include species, collections, type definitions
 (and their constitutive elements like constructors, record fields),
 toplevel-theorems and toplevel-functions.  Any toplevel-definition (thus
 outside species and collections) is visible all along the compilation unit
 after its apparition.
 If a toplevel-definition is required by another compilation unit, you can
-reference it by {\bf qualifying} its name, i.e. making explicit the
+reference it by referencing the external compilation unit
+(with a {\tt use or a {\tt open} command) and then
+{\bf qualifying} its name, i.e. making explicit the
 compilation unit's name before the definition's name using the '\#'
 character as delimiter. Examples:
 
@@ -776,6 +791,7 @@ instance:
 
 {\scriptsize
 \begin{lstlisting}
+use "basics";;
 species S inherits basics#Basic_object = ... end ;;
 \end{lstlisting}
 }
@@ -841,3 +857,11 @@ otherwise:
    use
    with
 \end{verbatim}
+
+% [EJ] Attention, certains de ces mots cles ne sont pas documentes... local par exemple
+
+Keywords of \coq or \ocaml are also reserved (For example {\tt Set}),
+and may cause problems at later stages of the \focal compilation.
+
+Some symbols (such as {\tt :}) are also reserved, and cannot be used to name methods.
+It is still possible to use such symbols as first character of a symbolic identifier.

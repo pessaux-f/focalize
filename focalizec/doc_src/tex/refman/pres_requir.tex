@@ -1,4 +1,4 @@
-% $Id: pres_requir.tex,v 1.9 2009-01-23 10:43:38 weis Exp $
+% $Id: pres_requir.tex,v 1.10 2009-06-04 15:11:07 jaeger Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Required software}
@@ -22,12 +22,15 @@ related website.
     your {\focal} programs.
 \end{itemize}
 
+Note that some distributions of {\focal} includes these tools and are
+automatically installed during the \focal installation process.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Optional software}
 \label{optional-software}
 The {\focal} compiler can generate dependencies graphs from compiled
 source code. It generates them in the format suitable to be processed
-and displayed by the {\dotty} tools suit of the ``Graphwiz'' package. If
+and displayed by the {\dotty} tools suite of the ``Graphwiz'' package. If
 you plan to examine these graphs, you also need to install this
 software from \verb+http://www.graphviz.org/+.
 
@@ -81,9 +84,9 @@ systems and is described in the following section
 source code of the development environment. You must first deflate the
 archive (a directory will be created) by:
 \begin{center}
-{\tt tar xvzf focalize-x.x.x.tgz}
+{\tt tar xvzf focalize-x.y.z.tgz}
 \end{center}
-Next, go in the sources directory:
+Where $x.y.z$ is the version number. Next, go in the sources directory:
 \begin{center}
 {\tt cd focalize-x.x.x/}
 \end{center}

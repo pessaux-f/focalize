@@ -1,4 +1,4 @@
-% $Id: output.tex,v 1.8 2009-02-05 13:13:27 pessaux Exp $
+% $Id: output.tex,v 1.9 2009-06-04 15:11:07 jaeger Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Compilation process and outputs}
@@ -8,12 +8,12 @@ containing source code for toplevel-definitions, species,
 collections. Visibility rules, described in section
 \ref{qualified-name}, are defined according to compilation units status.
 From a compilation unit, the compiler issues several files described
-on the following.
+thereafter.
 
 %%%%%%%%%%%%%%%%%%%%
 \subsection{Outputs}
 A {\focal} development contains both
-``computational code'' (i.e. code performing operations that lead to
+computational code (i.e. code performing operations leading to
 an effect, a result) and logical properties.
 
 \smallskip
@@ -51,7 +51,7 @@ details.
 
 %%%%%%%%%%%%%%%%%%%%
 \subsection{Compiling a source}
-Compiling a \focal\ program involves several steps that are
+Compiling a \focal\ program involves several steps (numbered here 1, 2, 3 and 4) that are
 automatically handled by the \focalizec command. Using the command
 line options, it is possible to tune the code generations steps as
 described in \ref{compiler-options}.
@@ -104,7 +104,7 @@ ocamlc -c -I /usr/local/lib/focalize -I mylibs
       {\tt zvtov -new source.zv}
     \end{center}
     For more about the {\zenon} options, consult section
-    \ref{zenon_options}.
+    \ref{zenon_options}. % [EJ] Reference incorrecte apparemment
 
   \item{\bf {\coq} code compilation}. This step takes the generated
     {\tt .v} code and compiles it with {\coq}. This is done like any
