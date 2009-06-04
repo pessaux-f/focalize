@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.21 2009-06-04 14:40:45 pessaux Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.22 2009-06-04 14:48:41 pessaux Exp $ *)
 
 (**
 
@@ -224,7 +224,7 @@ species Ensembles_finis (A is Setoid) =
       <2>f qed
         by property !sous_ensemble_vide, !include_card, !vide_card,
                     int_lt_irrefl, !incl_card, int_le_antisymm
-           definition of equal, basics#( <0x )
+           definition of equal, basics#int_lt
            step <2>1
     <1>f conclude
   ;

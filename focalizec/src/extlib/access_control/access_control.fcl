@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: access_control.fcl,v 1.12 2009-05-16 17:53:00 weis Exp $ *)
+(* $Id: access_control.fcl,v 1.13 2009-06-04 14:48:41 pessaux Exp $ *)
 
 (**
    @title Implementation of access control models
@@ -1020,7 +1020,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 
   (** RBAC transition function *)
   let tau_rbac (r1 in Rr, st1 in Self) =
-     if or_b (Rr!is_get (r1), Rr!is_rel (r1))
+     if Rr!is_get (r1) || Rr!is_rel (r1)
      then tau_rbac_acc (r1, st1)
      else tau_rbac_adm (r1, st1);
 
