@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.87 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.88 2009-06-05 10:29:39 rr Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -49,7 +49,8 @@ FOCALIZE_SRC = basics.fcl\
 	sets_orders.fcl\
 	wellfounded.fcl\
 	sums.fcl\
-	quotients.fcl
+	quotients.fcl\
+	fix.fcl
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)

@@ -1,0 +1,562 @@
+(**
+
+   @title Various fix points
+   A first attempt to describe fix points in a abstract way.
+   @author Renaud Rioboo
+
+*)
+
+use "basics";;
+open "basics";;
+
+use "sets";;
+open "sets";;
+
+(**
+   An attempt to build on top of sums and products.
+
+   Many theories have a notion least fix point.
+   Another meaning of same is that of recursive definition or
+   recursive types which are implicit in type theory.
+
+   This species is an attempt to provide abstract functionalities of 
+   the set X which verifies X = A + B.X with . denoting product.
+
+   An example of that could be given for any two subsets A and B
+   of a free monoid when X is the solution B*.A
+   where * denotes the Kleene star, 
+         . is language concatenation and 
+         + is language union.
+
+   In this approach we make the distinction between linar equations we have
+   outlined and algebraic equations such that X = A + B.X + C.X^2 
+   for any given sets A, B and C.
+
+   This disctintion is common in naive mathematics with the construction of 
+   rational numbers where X = A/(1-B) is the only solution 
+   for any two numbers A and B when B is not equal to 1. 
+
+   Also for Cauchy Reals this gives sense to the equation 
+   for any A and B being Cauchy when B < 1 since one can prove that
+   the sequence 1 + ... B^n + ... is Cauchy.
+   
+   This justifies the terminology rational in language theory which leads to
+   the concept of automata and gives sense to the Kleene star operation.
+
+   For more information on these aspects I remember a book 
+   by Berstel and Reutenauer about rational series ...
+
+   Non linear equations are traditionally more complicated
+   in naive mathematics and lead to the notion of algebraically closed field.
+
+   In language theory there also is a distinction between rational and
+   algeraic languages satisfying an algebraic equation and
+   these leads to the concept of grammar.
+
+   Of course anyone knows that 
+   there are algebraic numbers which are not rationals and that
+   there are algebraic languages which are not rationals.
+
+   We will try here to follow and explicit this approach
+   with a provable point of view with the intuition that
+   rational languages are commonly implemented as generalized lists and
+   algebraic languages are commonly implemented as generalized trees.
+
+ *)
+species Intention = inherit Basic_object; end;;
+
+(**
+   This models the weakest fix point of X = A + B*X
+*)
+
+species Linear_fix_point(A is Basic_object, B is Basic_object) =
+  inherit Intention;
+  (*  We would like to write
+     inherits abstract_sum(a, (abstract_product(b, self) -> self))
+     since (a*b) -> c and a -> (b -> c) should be the same.
+     roughly abstract_sum(a, abstract_product(b, self))
+  *)
+  (** base embedding  *)
+  signature base: A -> Self;
+  (** an effective way to check base case *)
+  signature base_case: Self -> bool;
+  property base_has_case: all x in A, !base_case(!base(x));
+
+  (** inductive embedding *)
+  signature inductive: B -> Self -> Self;
+  (** an effective way to check inductive case *)
+  signature inductive_case: Self -> bool;
+  property inductive_has_case: all x in B, all y in Self,
+    !inductive_case(!inductive(x, y));
+
+  (**
+     Every element is either base or inductive case, 
+     this is implicit when using variants.
+   *)
+  property case_complete: all x in Self,
+    !base_case(x) \/ !inductive_case(x);
+
+  (**
+     First and second case are mutually exclusive,
+     again implicit with variants
+   *)
+  property case_exclusive: all x in Self,
+    ~(!base_case(x) /\ !inductive_case(x));
+
+  theorem case_equiv: all x in Self,
+    (!base_case(x) <-> ~(!inductive_case(x)))
+    proof = by property !case_exclusive, !case_complete;
+
+end;;
+
+(* collection empty_set implements basic_object = *)
+(*   (\** Any meaning for that ? *\) *)
+(*   rep = unit; *)
+(*   let print(_x) = #foc_error("nothing to print"); *)
+(*   let parse(_x) = (); *)
+(* end *)
+
+(** *)
+species Linear_fixed_set(A is Setoid, B is Setoid) =
+  inherit Setoid,
+          Linear_fix_point(A, B);
+
+  (** this is a (partial) function which is intended to reverse base *)
+  signature base_term: Self -> A;
+
+  (** base constructor defines an `injection' *)
+  property base_reverse: all x in A,
+    A!equal(!base_term(!base(x)), x);
+
+  (**
+     this is a (partial) function which is intended to reverse recursive case
+   *)
+  signature inductive_first_term: Self -> B;
+
+  (**
+     These functionalities come from the fact that there exists
+     an injection from b*self to self which is the canonical injection from
+     a+(b*self) to self. We thus factor it by stating that there are two
+     reverse functions to the inductive signature.
+
+     This is an important property stating that inductive admits a left
+     inverse which resumes to state that it is an injection without writing
+     the injection property.
+   *)
+
+   property inductive_reverse_first: all x in B, all y in Self,
+    B!equal(!inductive_first_term(!inductive(x, y)), x);
+
+  (**
+     This is the second inverse of the inductive signature.
+
+     This is a (partial) function which is intended to reverse recursive case
+   *)
+  signature inductive_second_term: Self -> Self;
+  
+  (** This should enable to prove basic properties *)
+  let rec equal(x, y) =
+     if !base_case(x)
+     then
+       if !base_case(y)
+       then A!equal(!base_term(x), !base_term(y))
+       else false
+     else
+       if !base_case(y)
+       then false
+       else (* both inductive cases *)
+	 if B!equal(!inductive_first_term(x), !inductive_first_term(y))
+	 then !equal(!inductive_second_term(x), !inductive_second_term(y))
+	 else false
+  ;
+
+  (** base constructor has functional property *)
+  theorem base_substitution_rule: all x_1 x_2 in A,
+    A!equal(x_1, x_2) -> !equal(!base(x_1), !base(x_2))
+    proof =
+      <1>1 assume x_1 in A, assume x_2 in A,
+           assume H: A!equal(x_1, x_2),
+           prove !equal(!base(x_1), !base(x_2))
+           <2>1 prove !base_case(!base(x_1))
+                by property !base_has_case
+           <2>2 prove !base_case(!base(x_2))
+                by property !base_has_case
+           <2>3 prove A!equal(!base_term(!base(x_1)), x_1)
+                by property !base_reverse
+           <2>4 prove A!equal(!base_term(!base(x_2)), x_2)
+                by property !base_reverse
+           <2>5 prove A!equal(!base_term(!base(x_1)), !base_term(!base(x_2)))
+                by step <2>3, <2>4
+                   hypothesis H 
+                   property A!equal_symmetric, A!equal_transitive
+           <2>f qed by step <2>1, <2>2, <2>5 
+                        definition of equal
+      <1>f conclude;
+
+  
+   (**
+     Such definitions are usually ill-formed in Mathematics but
+     Recursive functions, Type, or Category Theories provides sense to this.
+    *)
+    property inductive_reverse_second: all x in B, all y in Self,
+    !equal(!inductive_second_term(!inductive(x, y)), y);
+
+   (** Equality and reversion prove substitution rule  *)
+    theorem inductive_left_substitution_rule: all x_1 x_2 in B, all y in Self,
+      B!equal(x_1, x_2) -> !equal(!inductive(x_1, y), !inductive(x_2, y))
+      proof =
+      <1>1 assume x_1 in B, assume x_2 in B, assume y in Self,
+           assume H: B!equal(x_1, x_2),
+           prove !equal(!inductive(x_1, y), !inductive(x_2, y))
+           <2>1 prove !inductive_case(!inductive(x_1, y))
+                   /\ !inductive_case(!inductive(x_2, y))
+                by property !inductive_has_case
+           <2>2 prove B!equal(!inductive_first_term(!inductive(x_1, y)),
+			      !inductive_first_term(!inductive(x_2, y)))
+                <3>1 prove B!equal(!inductive_first_term(!inductive(x_1, y)),
+				   x_1)
+                     by property !inductive_reverse_first
+                <3>2 prove B!equal(!inductive_first_term(!inductive(x_2, y)),
+				   x_2)
+                     by property !inductive_reverse_first
+                <3>f qed by hypothesis H
+                            step <3>1, <3>2
+                            property B!equal_symmetric, B!equal_transitive
+           <2>3 prove !equal(!inductive_second_term(!inductive(x_1, y)),
+			     !inductive_second_term(!inductive(x_2, y)))
+                <3>1 prove !equal(!inductive_second_term(!inductive(x_1, y)),
+				  y)
+                     by property !inductive_reverse_second
+                <3>2 prove !equal(!inductive_second_term(!inductive(x_2, y)),
+				  y)
+                     by property !inductive_reverse_second
+                <3>f qed by step <3>1, <3>2
+                            property !equal_symmetric, !equal_transitive
+           <2>f qed
+                by step <2>1, <2>2, <2>3
+                   property !case_exclusive
+                   definition of equal
+      <1>f conclude;
+
+  (**
+     Strict injection, we build an arbitrary number of different terms.
+     Some form foir the axiom of infinity.
+   *)
+  property inductive_strictly_injects: all x in B, all y in Self,
+    ~(!equal(!inductive(x, y), y));
+
+  (** This is usually an axiom for recursive types  *)
+  theorem inductive_right_substitution_rule: all x in B, all y_1 y_2 in Self,
+    !equal(y_1, y_2) -> !equal(!inductive(x, y_1), !inductive(x, y_2))
+     proof =
+       <1>1 assume x in B, assume y_1 in Self, assume y_2 in Self,
+            assume H: !equal(y_1, y_2),
+            prove !equal(!inductive(x, y_1), !inductive(x, y_2))
+            <2>1 prove !inductive_case(!inductive(x, y_1))
+                    /\ !inductive_case(!inductive(x, y_2))
+                 by property !inductive_has_case
+            <2>2 prove B!equal(!inductive_first_term(!inductive(x, y_1)),
+			       !inductive_first_term(!inductive(x, y_2)))
+                 <3>1 prove B!equal(!inductive_first_term(!inductive(x, y_1)),
+				    x)
+                      by property !inductive_reverse_first
+                 <3>2 prove B!equal(!inductive_first_term(!inductive(x, y_2)),
+				    x)
+                      by property !inductive_reverse_first
+                 <3>f qed by step <3>1, <3>2
+                      property B!equal_reflexive, 
+                               B!equal_symmetric, 
+                               B!equal_transitive
+            <2>3 prove !equal(!inductive_second_term(!inductive(x, y_1)),
+			      !inductive_second_term(!inductive(x, y_2)))
+                 <3>1 prove !equal(!inductive_second_term(!inductive(x, y_1)),
+				   y_1)
+                      by property !inductive_reverse_second
+                 <3>2 prove !equal(!inductive_second_term(!inductive(x, y_2)),
+				   y_2)
+                      by property !inductive_reverse_second   
+                 <3>f qed by hypothesis H
+                             step  <3>1, <3>2
+                             property !equal_symmetric, !equal_transitive
+            <2>f qed by step <2>1, <2>2, <2>3
+                        property !case_exclusive 
+                        definition of equal
+        <1>2 conclude;
+
+   theorem inductive_substitution_rule: all x_1 x_2 in B, all y_1 y_2 in Self,
+    B!equal(x_1, x_2) -> !equal(y_1, y_2) ->
+        !equal(!inductive(x_1, y_1), !inductive(x_2, y_2))
+     proof =
+     by property !inductive_left_substitution_rule, 
+                 !inductive_right_substitution_rule,
+                 !equal_transitive;
+
+  (** Arbitrarily select base as sample *)
+  let element = !base(A!element);
+
+  (** Wow! Nice theorem, chose another name for your's *)
+  theorem element_is_same: !equal(!element, !element)
+    proof = by property !base_has_case, A!equal_reflexive
+               definition of element, equal;
+
+  (** Not to be used later, just a tease *)
+  theorem structural_equal_inductive: all x y in Self,
+    !inductive_case(x) -> !inductive_case(y) ->
+      B!equal(!inductive_first_term(x), !inductive_first_term(y)) ->
+	!equal(!inductive_second_term(x), !inductive_second_term(y)) ->
+	  !equal(x, y)
+    proof = by property !case_exclusive definition of equal;
+
+
+  (** 
+     We need some way to state generalities depending on propostions.
+     In type theories, functions and inductive types acheive the goal.
+     Here we only embed this.
+     Reflecting to the underlying proof language must be done by hand.
+   *)
+  logical let inductive_property(p in Self -> prop) =
+    (all x in Self, base_case(x) -> p(x)) ->
+     (all x in Self, !inductive_case(x) -> p(!inductive_second_term(x)) -> p(x))
+    ->
+    (all x in Self, p(x));
+        
+  (** 
+     A general induction scheme.
+     Can sparsely be used in FoCaLiZe because Zenon prover is first order only.
+   *)
+  property inductive_scheme: all p in Self -> prop, inductive_property(p);
+
+  logical let reflexive_prop(x) = !equal(x, x);
+
+  (* 
+    [rr]: Though this may sound stupid to a naive reader, 
+          we have two important things:
+           - Zenon is able to apply name substitutions to complete our proofs
+           - Coq proof is made trivial because of higher order. 
+   *)
+  property inductive_reflexivity: inductive_property(!reflexive_prop);
+
+
+  proof of equal_reflexive =
+    <1>1 prove all x in Self, !reflexive_prop(x)
+         <2>1 assume x in Self,
+              assume B: !base_case(x),
+              prove !reflexive_prop(x)
+              by hypothesis B
+                 property A!equal_reflexive 
+                 definition of equal, reflexive_prop
+         <2>2 assume x in Self, 
+              assume I: !inductive_case(x),
+              assume R: !reflexive_prop(!inductive_second_term(x)),
+              prove reflexive_prop(x)
+              (** we prove under induction hypothesis R *)
+              <3>1 prove !equal(x, x)
+		   <4>1 prove B!equal(!inductive_first_term(x),
+				      !inductive_first_term(x))
+                         by property B!equal_reflexive
+                   <4>f qed by hypothesis I, R
+                               step <4>1
+                               property !case_exclusive 
+                               definition of equal, reflexive_prop
+	      <3>f qed by step <3>1 definition of reflexive_prop
+         <2>f qed by step <2>1, <2>2
+                     definition of inductive_property
+                     (* the automagic *)
+                     property !inductive_reflexivity
+    <1>f qed by step <1>1 definition of reflexive_prop;
+
+
+(*   letprop symmetry_prop(x) = all y in self,  *)
+(*      !equal(x, y) -> !equal(y, x); *)
+
+(*   letprop symmetry_premise_prop(x) = *)
+(*      !symmetry_prop(!inductive_second_term(x)) -> !symmetry_prop(x); *)
+
+(*   property symmetry_prop_induction_scheme: all x in self, *)
+(*     !inductive_case(x) ->  !symmetry_premise_prop(x) -> !symmetry_prop(x) ; *)
+
+(*   proof of equal_symmetric = *)
+(*     <1>1 assume x in self *)
+(*          prove (all y in self, !equal(x, y) -> !equal(y, x)) *)
+(*          <2>1 assume B: !base_case(x) *)
+(*                      y in self *)
+(*                      H: !equal(x, y) *)
+(*               prove !equal(y, x) *)
+(*               <3>1 prove !base_case(y) by <2>:H, <2>:B def !equal *)
+(*               <3>2 prove a!equal(!base_term(y), !base_term(x)) *)
+(*                    <4>1 prove a!equal(!base_term(x), !base_term(y)) *)
+(*                         by <2>:H, <2>:B, <3>1 def !equal *)
+(* 		   <4>f qed by <4>1, a!equal_symmetric *)
+(*               <3>f qed by <2>:B, <3>1, <3>2 def !equal *)
+(*          <2>2 assume I: !inductive_case(x) *)
+(*               prove (all y in self,  !equal(x, y) -> !equal(y, x)) *)
+(*               <3>1 prove !symmetry_premise_prop(x) *)
+(*                    <4>1 assume P:!symmetry_prop(!inductive_second_term(x)) *)
+(*                         prove !symmetry_prop(x) *)
+(*                         <5>1 assume y in self *)
+(*                                 H: !equal(x, y) *)
+(*                             prove !equal(y, x) *)
+(*                             <6>0 prove !inductive_case(y) *)
+(*                                  by <5>:H, <2>:I,  *)
+(*                                     !case_complete, !case_exclusive  *)
+(*                                  def !equal *)
+(*                             <6>1 prove b!equal(!inductive_first_term(y), *)
+(* 					       !inductive_first_term(x)) *)
+(*                                  by <5>:H, <2>:I, !case_exclusive , *)
+(*                                     b!equal_symmetric *)
+(*                                  def !equal *)
+(*                             <6>2 prove !equal(!inductive_second_term(y), *)
+(* 					      !inductive_second_term(x)) *)
+(*                                  <7>1 prove !equal(!inductive_second_term(x), *)
+(* 						   !inductive_second_term(y)) *)
+(*                                       by <5>:H, <2>:I, !case_exclusive *)
+(*                                       def !equal *)
+(*                                  <7>f qed by <7>1, <4>:P def !symmetry_prop *)
+(*                             <6>f qed by <2>:I, <6>0, <6>1, <6>2, *)
+(* 				     !structural_equal_inductive *)
+(*                         <5>f qed by <5>1 def !symmetry_prop *)
+(*                    <4>f qed by <4>1 def !symmetry_premise_prop *)
+(*               <3>f qed by <3>1, <2>:I, !symmetry_prop_induction_scheme  *)
+(*                        def !symmetry_prop *)
+(*          <2>f qed by <2>1, <2>2, !case_complete *)
+(*     <1>f qed; *)
+
+
+(*   letprop transitivity_prop(x) = all y z in self,  *)
+(*      !equal(x, y) -> !equal(y, z) -> !equal(x, z); *)
+
+(*   letprop transitivity_premise_prop(x) = *)
+(*      !transitivity_prop(!inductive_second_term(x)) -> !transitivity_prop(x); *)
+
+(*   property transitivity_prop_induction_scheme: all x in self, *)
+(*     !inductive_case(x) ->  !transitivity_premise_prop(x) -> !transitivity_prop(x) ; *)
+
+(*   proof of equal_transitive = *)
+(*     <1>1 assume x in self *)
+(*          prove (all y in self, all z in self, *)
+(*                   !equal(x, y) -> !equal(y, z) -> !equal(x, z)) *)
+(*          <2>1 assume B: !base_case(x) *)
+(*                      y z in self *)
+(*                      H_xy: !equal(x, y) *)
+(*                      H_yz: !equal(y, z) *)
+(*               prove !equal(x, z) *)
+(*               assumed *)
+(*          <2>2 assume I: !inductive_case(x) *)
+(*               prove (all y in self, all z in self, *)
+(*                         !equal(x, y) -> !equal(y, z) -> !equal(x, z)) *)
+(*               <3>1 prove !transitivity_premise_prop(x) *)
+(*                    <4>1 assume P: !transitivity_prop(!inductive_second_term(x)) *)
+(*                         prove !transitivity_prop(x) *)
+(*                         <5>1 assume y z in self *)
+(*                                     H_xy: !equal(x, y) *)
+(*                                     H_yz: !equal(y, z) *)
+(*                              prove !equal(x, z) *)
+(*                              assumed *)
+(*                         <5>f qed by <5>1 def !transitivity_prop *)
+(*                    <4>f qed by <4>1 def !transitivity_premise_prop *)
+(*               <3>f qed by <3>1, <2>:I, !transitivity_prop_induction_scheme *)
+(*                        def !transitivity_prop *)
+(*          <2>f qed by <2>1, <2>2, !case_complete *)
+(*     <1>f qed; *)
+
+end
+;;
+
+(** concrete container for fixpoints *)
+type variant_fix_point('a, 'b) =
+  | VBase('a)
+  | VInductive('b, variant_fix_point('a, 'b))
+;;
+
+species Linear_fix_point_by_variants(A is Basic_object, B is Basic_object) =
+  inherit Linear_fix_point(A, B);
+
+  representation = variant_fix_point(A, B);
+
+  let base(t) = VBase(t);
+  let inductive(t_1, t_2) = VInductive(t_1, t_2);
+
+  let base_case(t) = match t with
+    | VBase(_t) -> true
+    | VInductive(_t_1, _t_2) -> false
+  ;
+
+  let inductive_case(t) = match t with
+    | VBase(_t) -> false
+    | VInductive(_t_1, _t_2) -> true
+  ;
+
+  proof of case_exclusive =
+    coq proof
+    definition of base_case, inductive_case
+    {* intros; unfold base_case, inductive_case;
+       destruct x; simpl; tauto; simpl; tauto. Qed. *};
+
+  proof of case_complete =
+    coq proof
+    definition of base_case, inductive_case
+    {* intros; unfold base_case, inductive_case; destruct x;
+      simpl; [left | right]; auto. Qed. *};
+    
+
+  proof of base_has_case=
+    coq proof
+    definition of base_case, base
+    {* intros; unfold base_case, base;
+       exact I. Qed. *};
+
+
+  proof of inductive_has_case=
+    coq proof
+    definition of inductive_case, inductive
+    {* intros; unfold inductive_case, inductive;
+       exact I. Qed. *};
+
+end;;
+
+species Linear_fix_set_by_variants(A is Setoid, B is Setoid) =
+  inherit Linear_fixed_set(A, B), Linear_fix_point_by_variants(A, B);
+  
+
+  let base_term(t) = match t with
+    | VBase(t) -> t
+    | VInductive(_t_1, _t_2) -> A!element
+  ;
+
+
+  let inductive_first_term(t) = match t with
+    | VBase(_t) -> B!element
+    | VInductive(t, _t_2) -> t
+  ;
+
+  let inductive_second_term(t) = match t with
+    | VBase(_t) -> Self!element
+    | VInductive(_t_1, t) -> t
+  ;
+
+
+
+  proof of inductive_scheme =
+   coq proof
+   definition of inductive_property, 
+                 inductive_case, 
+                 inductive_second_term, 
+                 base_case
+   {* intros A B Rep.
+      unfold Rep. intros element p.
+      unfold Linear_fixed_set.inductive_property.
+      unfold Linear_fix_point_by_variants.base_case.
+      unfold Linear_fix_point_by_variants.inductive_case.
+      unfold inductive_second_term.
+      intros. induction x.
+      apply H. unfold Is_true. tauto.
+      apply H0. unfold Is_true. tauto.
+      apply IHx. Qed. *};
+
+  proof of inductive_reflexivity =
+   coq proof
+   property inductive_scheme
+   definition of inductive_property
+   {* intros. apply abst_inductive_scheme. Qed.*};
+
+end;;
