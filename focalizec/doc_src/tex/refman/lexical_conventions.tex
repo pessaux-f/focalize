@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.21 2009-06-04 15:36:06 doligez Exp $
+% $Id: lexical_conventions.tex,v 1.22 2009-06-05 13:41:07 pessaux Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -76,7 +76,7 @@ such a sequence an {\bf annotation block}\index{annotation!block}.
 Using embedded tags in annotations allows third-party tools to easily find
 out annotations that are meaningful to them, and safely ignore others.
 For more information, consult
-\ref{documentation-generation}. % [EJ] Reference incorrecte apparemment
+\ref{documentation-generation}.
 Example:
 {\scriptsize
 \begin{lstlisting}
@@ -206,8 +206,6 @@ For {\focal} these categories are
 
 We distinguish identifiers using their first ``meaningful'' character:
 the first character that is not an underscore.
-% [EJ] FAUX si j'en crois la suite, __a est lowercase, mais __A n'est pas
-% uppercase d'apres la definition de uident ci-dessous !
 
 \subsubsection{Nature of identifiers}
 \index{nature of identifiers}
@@ -238,39 +236,22 @@ and labels of records.
 \sep
 \nt{letter} \is \nt{lower} \orelse \nt{upper}
 \sep
-\nt{lident} \is \paren{ \nt{lower} \orelse \tok{\_} }
+\nt{lident} \is \rep{ \tok{\_}} \nt{lower}
                 \rep{ \nt{letter} \orelse \nt{digit} \orelse \tok{\_} }
 \sep
-\nt{uident} \is \nt{upper}
+\nt{uident} \is \rep{ \tok{\_}} \nt{upper}
                 \rep{ \nt{letter} \orelse \nt{digit} \orelse \tok{\_} }
 \sep
 \nt{ident} \is \nt{lident} \orelse \nt{uident}
 \end{syn}
-% \begin{syntax}
-% \syntaxclass{Basic identifiers:}
-% digit & ::= & \terminal{0} \ldots \terminal{9} & \\
-% lower & ::= & \terminal{a} \ldots \terminal{z} & \\
-% upper & ::= & \terminal{A} \ldots \terminal{Z} & \\
-% letter & ::= & lower \mid upper & \\
-% lident & ::= & \{\ lower \mid \terminal{\_} \}
-%             \{ letter \mid digit \mid \terminal{\_} \}* & \\
-% uident & ::= & upper\ \{\ letter \mid digit \mid \terminal{\_} \}* & \\
-% ident & ::= & lident \mid uident
-% \end{syntax}
-
-% [EJ] Je continue mon commentaire : si cela commence par un _ c'est lowercase,
-% i.e. lident. Du coup on peut considerablement simplifier cette presentation
-% en notant lower := a..z | _ et lident := lower {letter | figit | _}*
-
 \vspace{0.2cm}
 
 A regular identifier is a sequence of letters, digits, and {\tt \_} (the
 underscore character), starting with a letter or an underscore.
 
-The identifier is lowercase if its first letter is lowercase.
+The identifier is lowercase if its first ``meaningful'' letter is lowercase.
 
-The identifier is uppercase if its first letter is uppercase.
-% [EJ] Toujours pas coherent avec ce qui precede
+The identifier is uppercase if its first ``meaningful'' letter is uppercase.
 
 Letters contain at least the 52 lowercase and uppercase
 letters from the standard ASCII set. In an identifier, all characters
@@ -459,7 +440,9 @@ spaces inside or to extend the notion of operator identifiers.
 % [EJ] Certes, mais ``equal is reflexive'' c'est uppercase ou lowercase ?
 
 The first meaningful character at the beginning of a delimited
-ident/symbol is used to find its associated token.
+ident is usd to determine if it is considered as upper or lower
+ident. In the same way, first meaningful character at the beginning of a
+delimited symbol is used to find its associated /token.
 
 %%%%%%%%%%%
 \subsection{Species and collection names}
@@ -760,7 +743,7 @@ depth of the bullet and the second part stands for its name. Example:
 Name qualification is done according to the
 compilation unit status.
 
-As precisely described in section (\ref{toplevel-def}), % [EJ] Reference incorrecte
+As precisely described in section (\ref{toplevel-def}),
 toplevel-definitions include species, collections, type definitions
 (and their constitutive elements like constructors, record fields),
 toplevel-theorems and toplevel-functions.  Any toplevel-definition (thus

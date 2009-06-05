@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.46 2009-06-04 15:32:08 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.47 2009-06-05 13:41:07 pessaux Exp $
 
 
 \section{Language constructs and syntax}
@@ -57,8 +57,8 @@ data-types.
      \nt{lident}
 \alt \nt{uident}
 \alt \tok{Self}
-\alt \tok{'}\nt{lident}
-\alt \nt{uident} \tok{(} \repsep{\nt{type-exp}}{\tok{,}} \tok{)} % [EJ] TRES TRES LOUCHE A QUOI CA SERT?
+\alt \tok{'}\hspace{-0.15cm}\nt{lident}
+\alt \nt{lident} \tok{(} \repsep{\nt{type-exp}}{\tok{,}} \tok{)}
 \alt \nt{type-exp} \tok{->} \nt{type-exp}
 \alt \tok{(} \repsep{\nt{type-exp}}{\tok{*}} \tok{)}
 \alt \tok{(} \nt{type-exp} \tok{)}
@@ -247,8 +247,7 @@ constructor has {\bf parameter}.
 \index{tuple!as sum type value constructor arg}
 \medskip
 An important attention must be taken for constructors having
-``several'' arguments. \focalize % [EJ] Probleme de separateur, utiliser \xspace!
-provides 2 different
+``several'' arguments. \focalize\ provides 2 different
 (``type-incompatible'') ways to make a value constructor carrying
 several values.
 \begin{itemize}
@@ -844,9 +843,9 @@ introduce a basic or extended identifier and {\bf binds} it to the
 value of the expression stated in the definition.  There are three
 ways to introduce and directly bind an identifier:
 \begin{itemize}
-  \item By a {\tt let-in} construct,
-  \item By a toplevel-definition ({\tt let} or {\tt theorem}),
-  \item by a method definition  ({\tt let}), % [EJ] Pourquoi au top-level un theorem binde-t-il, mais pas dans une espece? Est-ce une forme de logical let?
+  \item by a {\tt let-in} construct,
+  \item by a toplevel-{\tt let}-definition,
+  \item by a method definition ({\tt let}).
  \end{itemize}
  Each of these cases will
 be described in their related section.
@@ -927,12 +926,11 @@ species S =
   let n (y in ...) =
     ...
     let m = ... in
-    (* Want to call the *method* "m" with argument "m" !!! *)
-    !m (n) ;
+    (* Want to call the *method* "m" with argument the local "m" !!! *)
+    !m (m) ;
 end ;;
 \end{lstlisting}
 }
-% [EJ] L'exemple me semble faux, a corriger
 
 Hence, the name resolution mechanism allows to omit the ``!'' but
 making it explicit can help for conflicts resolution. Moreover, when
@@ -1100,7 +1098,7 @@ addition of these 2 parameters. Then the body of the {\tt let-in}
 construct applies {\tt f} to 2 effective arguments {\tt 6} and {\tt
   7} (we obviously expect the result of this {\em application} to be
 $13$).  (Function application is explained below in
-\ref{application-expression}). % [EJ] Reference incorrecte
+\ref{function-application}).
 
 It is possible to provide a type constraint to precise the type of the
 return value of a function, or the type of the {\tt let}-bound
@@ -1404,7 +1402,7 @@ type t =
   | C (int, int)
 ;;
 ...
-let e = ... in
+let e = A ;;
 let x =
   match e with
    | A -> 0
@@ -1414,7 +1412,7 @@ let x =
    | C (_, y) -> y
 ;;
 \end{lstlisting}
-} % [EJ] Ne marche pas, bien sur, mais je ne sais pas comment corriger
+}
 This example shows different cases following the structure of the type
 {\tt t}. Note the use of the ``catch-all'' pattern
 inside  patterns. In fact, the ``catch-all'' pattern acts like
@@ -1695,9 +1693,17 @@ theorem int_plus_minus: all x y z in int,
 \focal\ provides 3 directives that are not expressions. This means
 that they do not lead to values or computation.
 
-% [EJ] Il faudrait un peu de detail sur la recherche dans le PATH
-% Supposons que je fasse un use "u", focalizec cherche le fichier
-% u.fo, mais quid si il y en a plusieurs?
+All these directives deal with searching for files in the available
+search paths. The path of the compilation unit is never specified
+since it is always searched first. Hence, the file will be searched
+first in the local directory, then in the stardard library directory
+and finally in the library search path specified with the {\tt -I}
+option (c.f. \ref{compiler-options}).
+
+Note that if several files at different locations have the same name,
+the directives will use the first fiound in the search path set in the
+compilation command-line.
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{The {\tt use} directive}
@@ -1710,14 +1716,10 @@ declared with a directive {\tt use}. In other terms,
 ``using'' a compilation units allows to access its entities from the
 current compilation unit.
 
-Note that if several files at different locations have the same name,
-the {\tt  use} directive will use the first find in the library path
-of the compiler.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{The {\tt open} directive}
 \index{directive!open}
-
 
 This directive is followed by the name of the file to open between
 double quotes without the ``.fcl'' extension. As previously introduced
@@ -1742,11 +1744,6 @@ open "sets";;
 \end{lstlisting}
 }This directive loads the definitions of the compilation unit
 ``sets.fo'' in the current name resolution (scoping) environment.
-
-
-The path of the compilation unit is never specified. The file
-will be searched in the library search path specified with the
-{\tt -I} option (c.f. \ref{compiler-options}).
 
 
 

@@ -1,4 +1,4 @@
-% $Id: glimpse.tex,v 1.9 2009-06-04 15:36:06 doligez Exp $
+% $Id: glimpse.tex,v 1.10 2009-06-05 13:41:07 pessaux Exp $
 \def\bbbn{{\rm I\!N}} % [EJ] Sinon il y a \mathbb{N} qui fait ça bien aussi...
 \label{glimpse}
 Before entering the precise description of \focal\ we give an
@@ -22,10 +22,9 @@ requirements) and their proofs.
 We now describe each of these ``things'', called {\em methods}.
 
 \begin{itemize}
-  \item The %{\em method} introduced by the keyword [EJ] J'essaye d'alleger
+  \item The
     {\tt representation} gives the data representation of entities
     manipulated by the {\em species}. It is a type
-    %{\em representation} (or the representation type when emphasising
     defined by a type expression. 
     The {\em representation} definition may be deferred,
     meaning that the real structure of the data-type the {\em species}
@@ -177,7 +176,7 @@ types of the species. If the {\tt representation} is still a type
 variable say $\alpha$, then the {\em species} type is prefixed with an
 existential binder $\exists \alpha$. This binder will be eliminated as
 soon as the {\tt representation} will be instantiated (defined) and
-must be eliminated to obtain runnable code. % [EJ] Cette explication est-elle utile ici ?
+must be eliminated to obtain runnable code.
 
 \bigskip
 
@@ -188,9 +187,9 @@ is permanent.
 \bigskip
 
 {\bf Warning} {\em  No special construction
-is given to denote interfaces in the concrete syntax, they are
-simply denoted by the name of the species underlying them.} Do not
-confuse a species and its interface. % [EJ] Pas super clair...
+is given to denote the interface of a species in the concrete syntax,
+it is simply denoted by the name of the species.} Do not
+confuse a species and its interface.
 
 \bigskip
 
@@ -519,7 +518,7 @@ the developer and will finally be sent to the formal proof assistant
 It can be written in \focal's proof language, a hierarchical proof
 language that allows to give hints and directions for a proof. This
 language will be sent to an external theorem prover,
-\zenon \cite{Zenon,zenon0.4.1} developed by D. Doligez. This prover is % [EJ] Reference incorrecte
+\zenon \cite{ZenonBDD,zenon0.4.1} developed by D. Doligez. This prover is
 a first order theorem prover based on the tableau method incorporating
 implementation novelties such as sharing.  \zenon\ will attempt, from
 these hints, to automatically generate the proof and exhibit a \coq\

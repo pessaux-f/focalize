@@ -543,7 +543,8 @@ only address data type and operations, among these &#X201C;things&#X201D; we als
 find the declaration (specification) of these operations, the
 properties (which may represent 
 requirements) and their proofs. </P><P>We now describe each of these &#X201C;things&#X201D;, called <EM>methods</EM>.</P><UL CLASS="itemize"><LI CLASS="li-itemize">
-The <TT>representation</TT> gives the data representation of entities
+The
+<TT>representation</TT> gives the data representation of entities
 manipulated by the <EM>species</EM>. It is a type
 defined by a type expression. 
 The <EM>representation</EM> definition may be deferred,
@@ -657,15 +658,15 @@ types of the species. If the <TT>representation</TT> is still a type
 variable say &#X3B1;, then the <EM>species</EM> type is prefixed with an
 existential binder &#X2203; &#X3B1;. This binder will be eliminated as
 soon as the <TT>representation</TT> will be instantiated (defined) and
-must be eliminated to obtain runnable code. </P><P><BR>
+must be eliminated to obtain runnable code.</P><P><BR>
 <BR>
 </P><P>The <EM>interface</EM> of a species is obtained by abstracting the <EM>representation</EM> type in the <EM>species type</EM>; this abstraction
 is permanent.</P><P><BR>
 <BR>
 </P><P><B>Warning</B> <EM>No special construction
-is given to denote interfaces in the concrete syntax, they are
-simply denoted by the name of the species underlying them.</EM> Do not
-confuse a species and its interface. </P><P><BR>
+is given to denote the interface of a species in the concrete syntax,
+it is simply denoted by the name of the species.</EM> Do not
+confuse a species and its interface.</P><P><BR>
 <BR>
 </P><P>The <EM>species type</EM> remain totally implicit in the concrete syntax, being
 just used as a step to build <EM>species interface</EM>. It is used
@@ -885,7 +886,8 @@ the developer and will finally be sent to the formal proof assistant
 <EM>property</EM> is consistent. Writing a proof can be done in several ways.</P><P>It can be written in <FONT COLOR=purple>FoCaLize</FONT>&#X2019;s proof language, a hierarchical proof
 language that allows to give hints and directions for a proof. This
 language will be sent to an external theorem prover,
-<FONT COLOR=purple>Zenon</FONT>[<A HREF="#Zenon"></A>, <A HREF="#zenon0.4.1">9</A>] developed by D. Doligez. This prover is a first order theorem prover based on the tableau method incorporating
+<FONT COLOR=purple>Zenon</FONT>[<A HREF="#ZenonBDD">2</A>, <A HREF="#zenon0.4.1">9</A>] developed by D. Doligez. This prover is
+a first order theorem prover based on the tableau method incorporating
 implementation novelties such as sharing. <FONT COLOR=purple>Zenon</FONT> will attempt, from
 these hints, to automatically generate the proof and exhibit a <FONT COLOR=purple>Coq</FONT>
 term suitable for verification by <FONT COLOR=purple>Coq</FONT>. Basic hints given by the
@@ -1282,7 +1284,8 @@ such a sequence an <B>annotation block</B><A NAME="@default9"></A>.
 Using embedded tags in annotations allows third-party tools to easily find
 out annotations that are meaningful to them, and safely ignore others.
 For more information, consult
-<A HREF="#documentation-generation">??</A>. Example:
+<A HREF="#documentation-generation">8</A>.
+Example:
 <FONT SIZE=2>
 </FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(** Annotation for the automatic documentation processor.</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    Documentation for species S. *)</FONT></EM></FONT><FONT SIZE=2>
@@ -1373,8 +1376,7 @@ variable name, a method name, a type name, or a record field label name.</DD><DT
 designates a more complex entity in the language. It may name a sum type
 constructor name, a module name, a species or a collection name.
 </DD></DL><P>We distinguish identifiers using their first &#X201C;meaningful&#X201D; character:
-the first character that is not an underscore.
-</P><!--TOC subsubsection Nature of identifiers-->
+the first character that is not an underscore.</P><!--TOC subsubsection Nature of identifiers-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc34">3.1.4.6</A>  Nature of identifiers</H4><!--SEC END --><P>
 <A NAME="@default16"></A></P><P>In <FONT COLOR=purple>FoCaLize</FONT> identifiers are either:</P><DL CLASS="list"><DT CLASS="dt-list">
 0pt 5pt
@@ -1402,22 +1404,22 @@ and labels of records.</P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="lident"><I><FONT COLOR=maroon>lident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> ( <A HREF="#lower"><I><FONT COLOR=maroon>lower</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> )
-{ <A HREF="#letter"><I><FONT COLOR=maroon>letter</FONT></I></A> &#X2223;  <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
+<A NAME="lident"><I><FONT COLOR=maroon>lident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> { <TT><FONT COLOR=blue>_</FONT></TT>}<SUP>*</SUP> <A HREF="#lower"><I><FONT COLOR=maroon>lower</FONT></I></A>
+ { <A HREF="#letter"><I><FONT COLOR=maroon>letter</FONT></I></A> &#X2223;  <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
-<A NAME="uident"><I><FONT COLOR=maroon>uident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <A HREF="#upper"><I><FONT COLOR=maroon>upper</FONT></I></A>
+<A NAME="uident"><I><FONT COLOR=maroon>uident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> { <TT><FONT COLOR=blue>_</FONT></TT>}<SUP>*</SUP> <A HREF="#upper"><I><FONT COLOR=maroon>upper</FONT></I></A>
  { <A HREF="#letter"><I><FONT COLOR=maroon>letter</FONT></I></A> &#X2223;  <A HREF="#digit"><I><FONT COLOR=maroon>digit</FONT></I></A> &#X2223;  <TT><FONT COLOR=blue>_</FONT></TT> }<SUP>*</SUP>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD></TR>
 <TR><TD ALIGN=right NOWRAP>
 <A NAME="ident"><I><FONT COLOR=maroon>ident</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> &#X2223;  <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A></TD></TR>
 </TABLE></TD></TR>
-</TABLE><P><BR>
+</TABLE><P>
+<BR>
 </P><P>A regular identifier is a sequence of letters, digits, and <TT>_</TT> (the
-underscore character), starting with a letter or an underscore.</P><P>The identifier is lowercase if its first letter is lowercase.</P><P>The identifier is uppercase if its first letter is uppercase.
-</P><P>Letters contain at least the 52 lowercase and uppercase
+underscore character), starting with a letter or an underscore.</P><P>The identifier is lowercase if its first &#X201C;meaningful&#X201D; letter is lowercase.</P><P>The identifier is uppercase if its first &#X201C;meaningful&#X201D; letter is uppercase.</P><P>Letters contain at least the 52 lowercase and uppercase
 letters from the standard ASCII set. In an identifier, all characters
 are meaningful.
 Examples: <TT>foo</TT>, <TT>bar</TT>, <TT>_20</TT>,
@@ -1538,7 +1540,9 @@ characters, the delimited identifiers can have spaces. For example:
 They are delimited by the same delimitor characters and contain
 symbolic characters.
 </LI></UL><P>The first meaningful character at the beginning of a delimited
-ident/symbol is used to find its associated token.</P><!--TOC subsection Species and collection names-->
+ident is usd to determine if it is considered as upper or lower
+ident. In the same way, first meaningful character at the beginning of a
+delimited symbol is used to find its associated /token.</P><!--TOC subsection Species and collection names-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc40">3.1.6</A>  Species and collection names</H3><!--SEC END --><P>
 <A NAME="@default27"></A> Species, collection
 names and collection parameters are uppercase identifiers.</P><!--TOC subsection Integer literals-->
@@ -1771,7 +1775,8 @@ depth of the bullet and the second part stands for its name. Example:
 <A NAME="qualified-name"></A>
 <A NAME="@default29"></A> <A NAME="@default30"></A>
 <A NAME="@default31"></A></P><P>Name qualification is done according to the
-compilation unit status.</P><P>As precisely described in section (<A HREF="#toplevel-def">??</A>), toplevel-definitions include species, collections, type definitions
+compilation unit status.</P><P>As precisely described in section (<A HREF="#toplevel-def">4.1.1</A>),
+toplevel-definitions include species, collections, type definitions
 (and their constitutive elements like constructors, record fields),
 toplevel-theorems and toplevel-functions. Any toplevel-definition (thus
 outside species and collections) is visible all along the compilation unit
@@ -1899,7 +1904,8 @@ data-types.
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>&#X2019;</FONT></TT><A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#uident"><I><FONT COLOR=maroon>uident</FONT></I></A> <TT><FONT COLOR=blue>(</FONT></TT>  {<A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>  </TD></TR>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A> <TT><FONT COLOR=blue>(</FONT></TT>  {<A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
+ </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A> <TT><FONT COLOR=blue>-&gt;</FONT></TT>  <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>(</FONT></TT> {<A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>}(<TT><FONT COLOR=blue>*</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>)</FONT></TT>
@@ -2007,7 +2013,7 @@ written on the card. Some values of type <TT>card</TT> are: <TT>King</TT>,
 constructor has <B>parameter</B>.</P><P><A NAME="@default41"></A>
 <BR>
 An important attention must be taken for constructors having
-&#X201C;several&#X201D; arguments. <FONT COLOR=purple>FoCaLize</FONT>provides 2 different
+&#X201C;several&#X201D; arguments. <FONT COLOR=purple>FoCaLize</FONT> provides 2 different
 (&#X201C;type-incompatible&#X201D;) ways to make a value constructor carrying
 several values.
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
@@ -2411,9 +2417,10 @@ introduce a basic or extended identifier and <B>binds</B> it to the
 value of the expression stated in the definition. There are three
 ways to introduce and directly bind an identifier:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
-By a <TT>let-in</TT> construct,
-</LI><LI CLASS="li-itemize">By a toplevel-definition (<TT>let</TT> or <TT>theorem</TT>),
-</LI><LI CLASS="li-itemize">by a method definition (<TT>let</TT>), </LI></UL><P>
+by a <TT>let-in</TT> construct,
+</LI><LI CLASS="li-itemize">by a toplevel-<TT>let</TT>-definition,
+</LI><LI CLASS="li-itemize">by a method definition (<TT>let</TT>).
+</LI></UL><P>
 Each of these cases will
 be described in their related section.</P><P>There are two ways to introduce basic identifiers as parameters:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
@@ -2473,8 +2480,8 @@ identifier hides a method of the species at hand: <FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>n</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> ...) =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> = ... </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>    </FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Want to call the *method* "m" with argument "m" !!! *)</FONT></EM></FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>    !</FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>n</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>    </FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Want to call the *method* "m" with argument the local "m" !!! *)</FONT></EM></FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>    !</FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>m</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>Hence, the name resolution mechanism allows to omit the &#X201C;!&#X201D; but
 making it explicit can help for conflicts resolution. Moreover, when
@@ -2587,7 +2594,7 @@ parameters <TT>x</TT> and <TT>y</TT>, and the body of <TT>f</TT> is the
 addition of these 2 parameters. Then the body of the <TT>let-in</TT>
 construct applies <TT>f</TT> to 2 effective arguments <TT>6</TT> and <TT>7</TT> (we obviously expect the result of this <EM>application</EM> to be
 13). (Function application is explained below in
-<A HREF="#application-expression">??</A>). </P><P>It is possible to provide a type constraint to precise the type of the
+<A HREF="#function-application">3.2.4.8</A>).</P><P>It is possible to provide a type constraint to precise the type of the
 return value of a function, or the type of the <TT>let</TT>-bound
 variable or parameters:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> + </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> (6, 7)</FONT></TD></TR>
@@ -2779,7 +2786,7 @@ to &#X201C;match&#X201D; on any sum type structure. For example: <FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>C</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>...</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>e</FONT><FONT SIZE=2> = ... </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>e</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>A</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>match</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>e</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>with</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>A</FONT><FONT SIZE=2> -&gt; 0</FONT><FONT SIZE=2>
@@ -2788,7 +2795,8 @@ to &#X201C;match&#X201D; on any sum type structure. For example: <FONT SIZE=2>
 </FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>C</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, 10) -&gt; 5</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   | </FONT><FONT SIZE=2>C</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>_</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) -&gt; </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
-</TABLE><P> This example shows different cases following the structure of the type
+</TABLE><P>
+This example shows different cases following the structure of the type
 <TT>t</TT>. Note the use of the &#X201C;catch-all&#X201D; pattern
 inside patterns. In fact, the &#X201C;catch-all&#X201D; pattern acts like
 a variable unused in the rightmost part of the
@@ -3000,7 +3008,14 @@ introduced by the <TT>theorem</TT> keyword. These definitions must be ended by a
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc70">3.2.6</A>  Files and uses directives</H3><!--SEC END --><P>
 <A NAME="file directive"></A>
 <FONT COLOR=purple>FoCaLize</FONT> provides 3 directives that are not expressions. This means
-that they do not lead to values or computation.</P><!--TOC subsubsection The <TT>use</TT> directive-->
+that they do not lead to values or computation.</P><P>All these directives deal with searching for files in the available
+search paths. The path of the compilation unit is never specified
+since it is always searched first. Hence, the file will be searched
+first in the local directory, then in the stardard library directory
+and finally in the library search path specified with the <TT>-I</TT>
+option (c.f. <A HREF="#compiler-options">7</A>).</P><P>Note that if several files at different locations have the same name,
+the directives will use the first fiound in the search path set in the
+compilation command-line.</P><!--TOC subsubsection The <TT>use</TT> directive-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc71">3.2.6.1</A>  The <TT>use</TT> directive</H4><!--SEC END --><P>
 <A NAME="@default71"></A>
 This directive is followed by the name of the file to open between
@@ -3009,9 +3024,7 @@ Before being allowed to use the qualified notation for an identifier,
 (i.e. the &#X201C;<TT>#</TT>&#X201D;-notation), the qualifying compilation must be
 declared with a directive <TT>use</TT>. In other terms,
 &#X201C;using&#X201D; a compilation units allows to access its entities from the
-current compilation unit.</P><P>Note that if several files at different locations have the same name,
-the <TT>use</TT> directive will use the first find in the library path
-of the compiler.</P><!--TOC subsubsection The <TT>open</TT> directive-->
+current compilation unit.</P><!--TOC subsubsection The <TT>open</TT> directive-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc72">3.2.6.2</A>  The <TT>open</TT> directive</H4><!--SEC END --><P>
 <A NAME="@default72"></A></P><P>This directive is followed by the name of the file to open between
 double quotes without the &#X201C;.fcl&#X201D; extension. As previously introduced
@@ -3027,9 +3040,7 @@ notation without compilation unit name.</P><P>Note that the <TT>open</TT> direct
 directive. This means that it is not useful to add a <TT>use</TT>
 together with an <TT>open</TT> directive.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>open</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"sets"</FONT></FONT><FONT SIZE=2>;;</FONT></TD></TR>
 </TABLE><P>This directive loads the definitions of the compilation unit
-&#X201C;sets.fo&#X201D; in the current name resolution (scoping) environment.</P><P>The path of the compilation unit is never specified. The file
-will be searched in the library search path specified with the
-<TT>-I</TT> option (c.f. <A HREF="#compiler-options">7</A>).</P><!--TOC subsubsection The <TT>coq_require</TT> directive-->
+&#X201C;sets.fo&#X201D; in the current name resolution (scoping) environment.</P><!--TOC subsubsection The <TT>coq_require</TT> directive-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc73">3.2.6.3</A>  The <TT>coq_require</TT> directive</H4><!--SEC END --><P>
 <A NAME="@default73"></A>
 Some source files of a development may be directly written in <FONT COLOR=purple>Coq</FONT> to
@@ -3276,7 +3287,7 @@ To ensure that this part can be read independently of the section
 <A HREF="#glimpse">1</A>, we duplicate some explanations.</P><!--TOC section Basic concepts-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc80">4.1</A>  Basic concepts</H2><!--SEC END --><!--TOC subsection Top-level Definitions-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc81">4.1.1</A>  Top-level Definitions</H3><!--SEC END --><P>
-<A NAME="topleve-def"></A>
+<A NAME="toplevel-def"></A>
 <A NAME="@default77"></A>
 We call <B>toplevel-definition</B> (just one word) a definition which
 appears outside species and collections. Such definitions can only be:
@@ -4194,7 +4205,7 @@ unpredictable results.</LI><LI CLASS="li-itemize">* <B>&#X2212;</B><B>i</B>. Pri
 the compiled source file. Result is sent to the standard output.</LI><LI CLASS="li-itemize">* <B>&#X2212;</B><B>I</B> <EM>directory name</EM>. Adds the specified
 directory to the path list where to search for 
 compilation units. Several &#X2212;I options can be used. The search order is
-in the standard library directory first (unless the
+in the local directory, then in the standard library directory (unless the
 &#X2212;no-stdlib-path option is used, see below), then in the
 directories specified by the &#X2212;I options in their apparition
 order on the command line.</LI><LI CLASS="li-itemize">* <B>&#X2212;</B><B>impose-termination-proof</B>. Make termination proofs
@@ -4252,6 +4263,7 @@ installation directories then exits.</LI><LI CLASS="li-itemize">* <B>&#X2212;</B
 line options (i.e. this documentation) on the standard output.
 </LI></UL><!--TOC chapter Documentation generation-->
 <H1 CLASS="chapter"><!--SEC ANCHOR --><A NAME="htoc107">Chapter 8</A>  Documentation generation</H1><!--SEC END --><P>
+<A NAME="documentation-generation"></A>
 When invoked with the <TT>-</TT><TT>focalize-doc</TT> option, the command
 <TT>focalizec</TT> generates an extra file (with the &#X201C;.fcd&#X201D; suffix)
 containing &#X201C;documentation&#X201D; information extracted from the compiled
