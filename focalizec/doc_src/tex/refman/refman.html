@@ -2633,11 +2633,11 @@ the section <A HREF="#recursive-function">6</A> especially dedicated to
 (non-mutually) recursive function definitions.</P><!--TOC subsubsection <TT>logical let</TT>-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc60">3.2.4.5</A>  <TT>logical let</TT></H4><!--SEC END --><P>
 As seen above, the <TT>let-in</TT> construct is used to bind
-computational expressions. We would sometimes also like to have parameterised logical
-expressions, i.e. a kind of functions returning a logical proposition.
-For example we may want, for a certain value of <I>x</I> and <I>y</I>, to use the statement
-&#X201C;<I>x</I>&lt;<I>y</I> and <I>x</I>+<I>y</I> &lt; 10&#X201D; (which holds or not) to build more complex
-logical expressions.</P><P>To allow functional bindings in logical expressions <FONT COLOR=purple>FoCaLize</FONT> provide
+computational expressions. We would sometimes also like to have
+parameterised logical expressions, i.e. a kind of functions returning
+a logical proposition. For example we may want, for a certain value
+of <I>x</I> and <I>y</I>, to use the statement &#X201C;<I>x</I>&lt;<I>y</I> and <I>x</I>+<I>y</I> &lt; 10&#X201D; (which
+holds or not) to build more complex logical expressions.</P><P>To allow functional bindings in logical expressions <FONT COLOR=purple>FoCaLize</FONT> provide
 the <TT>logical let</TT> construct. It serves to introduce a
 parameterised logical expression, which can be applied to effective
 arguments to obtain a logical proposition. Our example would be
@@ -3076,9 +3076,10 @@ Logical expressions are those used to write first order logic
 formulas.
 </P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-<TT><FONT COLOR=blue>all</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A> <TT><FONT COLOR=blue>,</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
+<TT><FONT COLOR=blue>all</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>}<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT>  <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
+<TT><FONT COLOR=blue>,</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
  </TD></TR>
-<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>ex</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>}(<TT><FONT COLOR=blue>,</FONT></TT>)<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT> <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
+<TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <TT><FONT COLOR=blue>ex</FONT></TT> {<A HREF="#lident"><I><FONT COLOR=maroon>lident</FONT></I></A>}<SUP>+</SUP> <TT><FONT COLOR=blue>in</FONT></TT>  <A HREF="#type-exp"><I><FONT COLOR=maroon>type-exp</FONT></I></A>
 <TT><FONT COLOR=blue>,</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>
  </TD></TR>
 <TR><TD ALIGN=right NOWRAP>&nbsp;</TD><TD ALIGN=center NOWRAP>&#X2223;</TD><TD ALIGN=left NOWRAP> <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A> <TT><FONT COLOR=blue>-&gt;</FONT></TT>  <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>

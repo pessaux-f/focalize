@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.47 2009-06-05 13:41:07 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.48 2009-06-05 14:37:32 pessaux Exp $
 
 
 \section{Language constructs and syntax}
@@ -1179,11 +1179,11 @@ the section \ref{recursive-function} especially dedicated to
 
 \subsubsection{{\tt logical let}}
 As seen above, the {\tt let-in} construct is used to bind
-computational expressions. We would sometimes also like to have parameterised logical
-expressions, i.e. a kind of functions returning a logical proposition.
-For example we may want,  for a certain value of $x$ and $y$, to use the statement
-``$x<y$ and $x+y < 10$'' (which holds or not) to build more complex
-logical expressions.
+computational expressions. We would sometimes also like to have
+parameterised logical expressions, i.e. a kind of functions returning
+a logical proposition. For example we may want,  for a certain value
+of $x$ and $y$, to use the statement ``$x<y$ and $x+y < 10$'' (which
+holds or not) to build more complex logical expressions.
 
 % A first attempt is to use the logical expression $x < y /\backslash
 % x+y<10$ where $x$ and $y$ are considered as fresh (free)
@@ -1798,9 +1798,9 @@ Logical expressions are those used to write first order logic
 formulas.
 \begin{syn}
 \nt{logical-exp} \is
-     \tok{all} \repsep{\nt{lident}}{\tok{,}} \tok{in} \nt{type-exp} % [EJ] Semble louche, comment doit-on parser {lident}(,)+ ? On ne repete que la , ? La , doit toujours apparaitre meme apres le dernier lident ? Je signale aussi qu'on ecrit all x y in Self et pas all x,y in Self ! Je suggere donc plutot {lident}+
+     \tok{all} \reps{\nt{lident}} \tok{in} \nt{type-exp}
      \tok{,} \nt{logical-exp}
-\alt \tok{ex} \repsep{\nt{lident}}{\tok{,}} \tok{in} \nt{type-exp}
+\alt \tok{ex} \reps{\nt{lident}} \tok{in} \nt{type-exp}
      \tok{,} \nt{logical-exp}
 \alt \nt{logical-exp} \tok{->} \nt{logical-exp}
 \alt \nt{logical-exp} \tok{<->} \nt{logical-exp}
@@ -1811,25 +1811,6 @@ formulas.
 \alt \tok{(} \nt{logical-exp} \tok{)}
 \end{syn}
 
-% \begin{syntax}
-% \syntaxclass{Logical expressions:}
-% logical\_expr & := & \terminal{all}\ lident\ [,lident]*
-%           \ \terminal{in} \ type\_expr & Universal quantification \\
-%               & \mid & \terminal{ex}\ lident\ [,lident]*
-%           \ \terminal{in} \ type\_expr & Existential quantification \\
-%               & \mid & logical\_expr\ \terminal{-}\/\terminal{>}
-%                    \ logical\_expr & Implication \\
-%               & \mid & logical\_expr\ \terminal{<}\/\terminal{-}\/\terminal{>}
-%                    \ logical\_expr & Equivalence \\
-%               & \mid & logical\_expr\ \terminal{/\setminus} \ logical\_expr &
-%                               Conjunction \\
-%               & \mid & logical\_expr\ \terminal{\setminus/} \ logical\_expr &
-%                               Disjunction \\
-%               & \mid & \terminal{\sim}\ logical\_expr & Negation \\
-%               & \mid & expr & Arbitrary \focal\ expression (atom) \\
-%               & \mid & \terminal{(} logical\_expr \terminal{)} &
-%                               Parenthesised logical expression
-% \end{syntax}
 
  Logical expressions contain the usual logical connectors ``imply''
 ($\Rightarrow$), ``and'' ($\wedge$), ``or'' ($\vee$), ``there exists''
