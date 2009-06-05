@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.141 2009-06-05 12:04:37 weis Exp $ *)
+(* $Id: parser.mly,v 1.142 2009-06-05 13:57:49 weis Exp $ *)
 
 open Parsetree;;
 
@@ -276,8 +276,6 @@ let mk_proof_label (s1, s2) =
 
 /* Precedences and associativities. */
 
-/* Binary operators. */
-
 %nonassoc IN
 %nonassoc SEMI_SEMI_OP             /* expr (e OP e) with OP starting with ";;" */
 /* %nonassoc below_SEMI */
@@ -287,14 +285,19 @@ let mk_proof_label (s1, s2) =
 /* %nonassoc below_WITH */
 /* %nonassoc FUNCTION WITH */      /* below BAR  (match ... with ...) */
 %nonassoc prec_quantifier
+
+/* Binary operators for PROP. */
+
 %nonassoc LT_DASH_GT LT_DASH_GT_OP
        /* expr (e OP e) with OP being "<->" or starting with "<->" */
 %right    DISJUNCTION              /* logical_expr (le \/ le \/ le) */
 %right    CONJUNCTION              /* logical_expr (le /\ le /\ le) */
 %nonassoc NEGATION                 /* logical_expr (~ le) */
+
 %right    AND                      /* let ... and ... */
 /* %nonassoc THEN */               /* below ELSE (if ... then ...) */
 %nonassoc ELSE                     /* (if ... then ... else ...) */
+
 %right    BACKSLASH_OP             /* expr (e OP e OP e) with OP starting with '\\' */
 %nonassoc LT_DASH_OP               /* below COLON_OP */
        /* expr (e OP e) with OP starting with "<-" */
@@ -308,24 +311,35 @@ let mk_proof_label (s1, s2) =
 %right    DASH_GT DASH_GT_OP
        /* type_expr (t -> t -> t) */
        /* expr (e OP e OP e) wih OP starting with "->" e2) */
+
+/* Binary operators for BOOL. */
 %right    BAR_OP                   /* expr (e || e || e) */
 %right    AMPER_OP                 /* expr (e && e && e) */
-%nonassoc TILDA_OP                 /* expr (~| e) */
+
+/* Comparison binary operators. */
 /* %nonassoc below_EQ */
 %left     EQUAL EQ_OP BANG_EQUAL_OP TILDA_EQUAL_OP LT_OP GT_OP
        /* expr (e OP e OP e) with OP respectively: */
        /* being '=', starting with '=', '<', or '>' */
+
+/* Concatenation operators. */
 %right    AT_OP HAT_OP
        /* expr (e OP e OP e) with OP starting with '@' or '^' */
+
+/* Other infix operators. */
 %right    ILIDENT
        /* expr (e OP e OP e) with OP being a user defined lowercase ident. */
 %right    COLON_COLON COLON_COLON_OP IUIDENT
        /* expr (e OP e OP e) with OP being "::", or starting with "::" */
+
+/* Arithmetic binary operators. */
 %left     PLUS_OP DASH_OP
        /* expr (e OP e OP OP e) with OP starting with '+' or '-' */
 %left     STAR_OP SLASH_OP PERCENT_OP
        /* expr (e OP e OP e) with OP starting with '*', '/', or '%' */
 
+/* Unary arithmetic and boolean operators. */
+%nonassoc TILDA_OP                 /* ~| expr ~~ expr */
 %nonassoc prec_unary_minus         /* unary DASH_OP e.g. DASH_OP is '-' */
 
 /* Unary prefix operators. */
@@ -337,6 +351,7 @@ let mk_proof_label (s1, s2) =
 %nonassoc DOLLAR_OP                /* expr OP e with OP starting with '$' */
 %nonassoc BANG_OP                  /* expr OP e with OP starting with '!' */
 
+/* Exponentioation arithmetic operators. */
 %right    STAR_STAR_OP
        /* expr (e OP e OP e) with OP starting with "**" */
 
