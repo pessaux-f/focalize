@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: additive_law.fcl,v 1.10 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: additive_law.fcl,v 1.11 2009-06-05 13:59:13 weis Exp $ *)
 
 (** The FoCaLize library does not intend to model binary laws which are not
    associative, thus some mathematical notions such as magmas (groupoids) are
@@ -730,14 +730,14 @@ species Ordered_additive_group =
       the set of positive elements *)
   signature sign : Self -> int;
 
-  let leq (x, y) = basics#int_leq (!sign (!minus(x, y)), 0);
+  let leq (x, y) = !sign (!minus (x, y)) <=0x 0;
 
   proof of total_order = assumed {* Because todo *};
   -- proof of lt_is_not_leq = assumed {* Because todo *};
 
   let max (x, y) = if !lt (x, y) then y else x;
   let min (x, y) = if !lt (x, y) then x else y;
-  let is_zero (x) = basics#int_eq (Self!sign (x), 0);
+  let is_zero (x) = Self!sign (x) =0x 0;
 
   proof of order_compatible_with_cancellation = assumed {* Because todo *};
  (* NdV: 9 Feb 2004: the proof below is rejected as incomplete by Coq.

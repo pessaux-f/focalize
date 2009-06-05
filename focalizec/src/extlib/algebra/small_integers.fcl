@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: small_integers.fcl,v 1.9 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: small_integers.fcl,v 1.10 2009-06-05 13:59:13 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -58,22 +58,22 @@ species Basic_small_nats =
   representation = int;
 
   let zero in Self = 0;
-  let is_zero (x in Self) =  x = 0;
+  let is_zero (x in Self) = x = 0;
   let one in Self = 1;
   (** We check overflow by testing signs @mathml <plus/> *)
   let plus (m in Self, n in Self) in Self  =
-     let r = int_plus (m, n) in
-     if int_leq (m, 0) then
-       if int_leq (n, 0) then
+     let r = m + n in
+     if m <=0x 0 then
+       if n <=0x 0 then
          (* sum of negative is negative *)
-         if int_leq (r, 0) then r
+         if r <=0x 0 then r
          else focalize_error ("small integer Overflow")
        else (* negative and positive don't produce overflow *)
          r
      else (* x > 0 *)
-       if int_gt (n, 0) then
+       if n >0x 0 then
          (* sum of positive is positive *)
-         if int_gt (r, 0) then r
+         if r >0x 0 then r
          else focalize_error ("small integer Overflow")
        else (* positive and negative don't produce overflow *)
          r
@@ -82,24 +82,24 @@ species Basic_small_nats =
       This is incomplete !
       @mathml <mult/> *)
   let mult (m in Self, n in Self) in Self =
-     let r = int_mult (m, n) in
-     if int_leq (m, 0) then
-       if int_leq (n, 0) then
+     let r = m * n in
+     if m <0x 0 then
+       if n <=0x 0 then
          (* product of negatives is positive *)
-         if int_geq (r, 0) then r
+         if r >=0x 0 then r
          else focalize_error ("small integer Overflow")
        else
          (* product of negative and positive is negative *)
-         if int_leq (r, 0) then r
+         if r <=0x 0 then r
          else focalize_error ("small integer Overflow")
      else (* x > 0 *)
-       if int_gt (n, 0) then
+       if n >0x 0 then
          (* sum of positives is positive *)
-         if int_gt (r, 0) then r
+         if r >0x 0 then r
          else focalize_error ("small integer Overflow")
        else
          (* product of positive and negative is negative *)
-         if int_leq (r, 0) then r
+         if r <=0x 0 then r
          else focalize_error ("small integer Overflow")
      ;
 
@@ -108,41 +108,34 @@ species Basic_small_nats =
   proof of equal_symmetric = by definition of equal;
   proof of equal_transitive = by definition of equal;
 --  proof of equal_from_leq = assumed {* Because toto *};
-  let is_one (x in Self ) = x = 1;
-  let leq (x in Self, y in Self )= int_leq (x, y);
+  let is_one (x in Self) = x = 1;
+  let leq (x in Self, y in Self) = x <=0x y;
   (* declared in basic_object *)
-  let parse (x) = int_of_string(x);
-  let print (x) = string_of_int(x);
+  let parse (x) = int_of_string (x);
+  let print (x) = string_of_int (x);
   let quo_rem (m in Self, n in Self) in quo_rem_result (Self) =
-    if (n = 0)
+    if n = 0
     then focalize_error ("Small Numbers: division by zero")
-    else weak_structures#cr_qrr (int_div (m, n), int_mod (m, n));
+    else weak_structures#cr_qrr (m / n, m % n);
 
   logical let euclidean_ordering (n in Self, m in Self) =
-    if int_gt (n, 0) then
-      if int_gt (m, 0)
-      then int_lt (n, m)
-      else int_lt (n, int_opp (m))
+    if n >0x 0 then
+      if m <0x 0 then n <0x m else n <0x ~0x m
     else
-      if int_gt (m, 0)
-      then int_lt (int_opp (n), m)
-      else int_lt (int_opp (n), int_opp (m));
+      if m >0x 0 then ~0x n <0x m else ~0x n <0x ~0x m;
 
 end
 ;;
-
 
 species Basic_small_ints =
 
   inherit Basic_small_nats;
 
-  let opposite (x in Self) in Self = int_minus (0, x);
-(*   let minus (x in Self, y in Self) in Self = #int_minus (x, y);  *)
+  let opposite (x in Self) in Self = 0 - x;
   let sign (x in Self) =
-    if int_lt (x, 0) then -1
+    if x <0x 0 then -1
     else
-     if int_gt (x, 0) then 1
-     else 0;
+     if x >0x 0 then 1 else 0;
 
 end
 ;;
@@ -157,12 +150,12 @@ species Small_naturals =
   let seed (x) = randoms#random_seed (x);
   let to_int (n in Self) in int = n;
   let of_int (n in int) in Self =
-     if int_lt (n, 0)
+     if n <0x 0
      then !failed ("small_naturals!of_int: naturals are positive")
      else n;
   let minus (n, m) =
-     let r = int_minus (n, m) in
-     if int_lt (r, 0) then
+     let r = n - m in
+     if r <0x 0 then
        !failed ("small_naturals!minus: can't substract")
      else r;
 

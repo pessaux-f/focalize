@@ -11,12 +11,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: wellfounded.fcl,v 1.9 2009-05-25 12:35:58 doligez Exp $ *)
+(* $Id: wellfounded.fcl,v 1.10 2009-06-05 13:59:13 weis Exp $ *)
 
-(* Definition (import) of the notion of wellfoundedness.
-   Since this notion is not defineable in FoCaLize, this library is a veritable
-   toolbox for reasoning with it inside FoCaLize without resorting to low level
-   Coq proofs. *)
+(* Definition (import) of the notion of wellfoundedness.  Since this notion
+   is not defineable in FoCaLize, this library is a toolbox for reasoning
+   with wellfoundedness inside FoCaLize, without resorting to low level Coq
+   proofs. *)
 
 use "basics";;
 use "sets_orders";;
@@ -55,8 +55,8 @@ end
 ;;
 
 (** Well founded order over integers *)
-let int_wf (x in int, y in int) in bool =
-  int_lt (int_abs (x), int_abs (y)) ;;
+let int_wf (x in int, y in int) in bool = abs0x (x) <0x abs0x (y)
+;;
 
 species RelativeIntegers =
 
@@ -65,16 +65,16 @@ species RelativeIntegers =
   representation = int;
 
   let element = 0;
-  let equal = int_eq;
+  let equal = ( =0x );
 
   proof of equal_reflexive = assumed {* *} ;
   proof of equal_transitive = assumed {* *} ;
 
   signature lowerbound: Self;
 
-  let leq (x, y) = int_leq (lowerbound, y) && int_leq (x, y) ;
+  let leq (x, y) = lowerbound <=0x y && x <=0x y;
 
-  let lt (x, y) = int_leq (lowerbound, y) && int_lt (x, y) ;
+  let lt (x, y) = lowerbound <0x y && x <0x y;
 
   proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
 end

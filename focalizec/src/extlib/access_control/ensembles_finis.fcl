@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.22 2009-06-04 14:48:41 pessaux Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.23 2009-06-05 13:59:13 weis Exp $ *)
 
 (**
 
@@ -198,13 +198,13 @@ species Ensembles_finis (A is Setoid) =
 
   (** Si un ensemble est inclus dans un autre, il a moins d'élément que lui.*)
   property incl_card : all e1 e2 in Self,
-   !sous_ensemble (e1, e2) -> int_leq (!cardinal (e1), !cardinal (e2));
+   !sous_ensemble (e1, e2) -> !cardinal (e1) <=0x !cardinal (e2);
 
   (** Si un ensemble est strictement inclus dans un autre, il a strictement
       moins d'éléments que lui. *)
   property include_card : all e1 e2 in Self,
    !sous_ensemble (e1, e2) -> ~ (!sous_ensemble (e2, e1)) ->
-     int_lt (!cardinal (e1), !cardinal (e2));
+     !cardinal (e1) <0x !cardinal (e2);
 
   (** Si deux ensembles sont égaux, ils ont même cardinal. *)
   theorem card_congruence: all e1 e2 in Self,
@@ -219,30 +219,29 @@ species Ensembles_finis (A is Setoid) =
     proof =
     <1>1 assume e in Self,
          prove !cardinal (e) = 0 <-> !equal (e, !vide)
-      <2>1 prove int_leq (0, !cardinal (e))
+      <2>1 prove 0 <=0x !cardinal (e)
         assumed {* arithmetic 0 =< x *}
       <2>f qed
         by property !sous_ensemble_vide, !include_card, !vide_card,
                     int_lt_irrefl, !incl_card, int_le_antisymm
-           definition of equal, basics#int_lt
+           definition of equal, ( <0x )
            step <2>1
     <1>f conclude
   ;
 
   (** Le cardinal de l'union est au plus la somme des cardinaux. *)
   property union_card : all e1 e2 in Self,
-   int_leq (!cardinal (!union (e1, e2)), !cardinal (e1) + !cardinal (e2));
+   !cardinal (!union (e1, e2)) <=0x !cardinal (e1) + !cardinal (e2);
 
   (** Le cardinal de l'intersection est au plus le plus petit des cardinaux. *)
   property inter_card : all e1 e2 in Self,
-   int_leq (!cardinal (!inter (e1, e2)),
-            int_min (!cardinal (e1), !cardinal (e2)));
+   !cardinal (!inter (e1, e2)) <=0x min0x (!cardinal (e1), !cardinal (e2));
 
   (** Relation entre les cardinaux de deux ensemble et ceux de leur union
      et de leur intersection. *)
   property somme_card: all e1 e2 in Self,
   !cardinal (!union (e1, e2)) + !cardinal (!inter (e1, e2)) =
-   !cardinal (e1) + !cardinal (e2);
+  !cardinal (e1) + !cardinal (e2);
 
   (** Relation entre le cardinal de la différence et ceux des ensembles de
      départ quand le second est inclus dans l'autre. *)
@@ -265,8 +264,6 @@ species Ensembles_finis (A is Setoid) =
 
 end
 ;;
-
-
 
 (****************************************************************************)
 
@@ -1317,7 +1314,7 @@ theorem bien_formee_inter:
 
    theorem ajoute_element_card:
    all x in A, all e in Self,
-   int_leq (!cardinal (e), !cardinal (!ajoute_element (x, e)))
+   !cardinal (e) <=0x !cardinal (!ajoute_element (x, e))
    proof =
      assumed {* old proof needs to be translated *};
 (*
@@ -1336,7 +1333,7 @@ theorem bien_formee_inter:
   il n'y a plus qu'à conclure avec remove_element_card. *)
    theorem ajoute_element_card2:
      all x in A, all e in Self,
-     int_leq (!cardinal (!ajoute_element (x, e)), !cardinal (e) + 1)
+     !cardinal (!ajoute_element (x, e)) <=0x !cardinal (e) + 1
    proof =
      assumed {* old proof needs to be translated *};
 (*
@@ -2071,8 +2068,8 @@ species Entiers_concrets =
   representation = int;
 
   let element = 1;
-  let equal = int_eq;
-  let leq = int_leq;
+  let equal = ( =0x );
+  let leq = ( <=0x );
 
   let print = string_of_int;
   let parse = int_of_string;

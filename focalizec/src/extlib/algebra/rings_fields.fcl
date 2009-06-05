@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.11 2009-05-25 12:35:58 doligez Exp $ *)
+(* $Id: rings_fields.fcl,v 1.12 2009-06-05 13:59:13 weis Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
@@ -25,6 +25,7 @@ use "weak_structures";;
 open "additive_law";;
 open "multiplicative_law";;
 open "weak_structures";;
+open "basics";;
 
 (** Rings are additive groups and multiplicative monoids *)
 species Ring =
@@ -140,7 +141,7 @@ species Ordered_ring =
   property mult_compat_with_order: all x y z in Self,
     !leq (!zero, x) -> !leq (y, z) -> !leq (!mult (x, y), !mult (x, z));
 
-  let abs (x) = if basics#int_lt (!sign (x), 0) then !opposite (x) else x;
+  let abs (x) = if !sign (x) <0x 0 then !opposite (x) else x;
 
 end
 ;;
