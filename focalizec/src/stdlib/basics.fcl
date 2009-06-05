@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.62 2009-06-04 15:23:46 doligez Exp $ *)
+(* $Id: basics.fcl,v 1.63 2009-06-05 13:58:39 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -142,7 +142,6 @@ let ( |<>| ) =
   | coq -> {* coq_builtins.bi__xor_b *}
 ;;
 
-
 (** {7 Operations on pairs} *)
 let pair (x, y) = (x, y);;
 
@@ -184,17 +183,12 @@ let ( =0x ) =
   | coq -> {* coq_builtins.bi__int_eq *}
 ;;
 
-let int_eq = ( =0x );;
-
 let ( <0x ) =
   internal int -> int -> bool
   external
   | caml -> {* Ml_builtins.bi__int_lt *}
   | coq -> {* coq_builtins.bi__int_lt *}
 ;;
-
-let int_lt = ( <0x );;
-
 
 let ( <=0x ) =
   internal int -> int -> bool
@@ -203,9 +197,6 @@ let ( <=0x ) =
   | coq -> {* coq_builtins.bi__int_leq *}
 ;;
 
-let int_leq = ( <=0x );;
-
-
 let ( >=0x ) =
   internal int -> int -> bool
   external
@@ -213,17 +204,12 @@ let ( >=0x ) =
   | coq -> {* coq_builtins.bi__int_geq *}
 ;;
 
-let int_geq = ( >=0x );;
-
-
 let ( >0x ) =
   internal  int -> int -> bool
   external
   | caml -> {* Ml_builtins.bi__int_gt *}
   | coq -> {* coq_builtins.bi__int_gt *}
 ;;
-
-let int_gt = ( >0x );;
 
 (** {8 Arithmetic operations for integers} *)
 
@@ -234,16 +220,12 @@ let ( + ) =
   | coq -> {* coq_builtins.bi__int_plus *}
 ;;
 
-let int_plus = ( + );;
-
 let ( - ) =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_minus *}
   | coq -> {* coq_builtins.bi__int_minus *}
 ;;
-
-let int_minus = ( - );;
 
 let ( ~0x ) =
   internal int -> int
@@ -252,8 +234,6 @@ let ( ~0x ) =
   | coq -> {* coq_builtins.bi__int_opposite *}
 ;;
 
-let int_opp = ( ~0x );;
-
 let ( * ) =
   internal int -> int -> int
   external
@@ -261,8 +241,7 @@ let ( * ) =
   | coq -> {* coq_builtins.bi__int_mult *}
 ;;
 
-let int_mult = ( * );;
-
+(** Euclidian division quotient. *)
 let ( / ) =
   internal int -> int -> int
   external
@@ -270,8 +249,7 @@ let ( / ) =
   | coq -> {* coq_builtins.bi__int_div *}
 ;;
 
-let int_div = ( / );;
-
+(** Euclidian division rest. *)
 let ( % ) =
   internal int -> int -> int
   external
@@ -279,27 +257,30 @@ let ( % ) =
   | coq -> {* coq_builtins.bi__int_mod *}
 ;;
 
-let int_mod = ( % );;
+(** Successor. *)
+let succ0x (x in int) in int = x + 1
+;;
 
-let succ (x in int) in int = x + 1 ;;
+(** Predecessor. *)
+let pred0x (x in int) in int = x - 1
+;;
 
-let pred (x in int) in int = x - 1 ;;
-
-let int_max =
+let max0x =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_max *}
   | coq -> {* coq_builtins.bi__int_max *}
 ;;
 
-let int_min =
+let min0x =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_min *}
   | coq -> {* coq_builtins.bi__int_min *}
 ;;
 
-let int_abs =
+(** Absolute value for integers. *)
+let abs0x =
   internal int -> int
   external
   | caml -> {* Ml_builtins.bi__int_abs *}
@@ -404,11 +385,11 @@ theorem int_le_not_gt :
 ;;
 
 theorem int_lt_le_trans :
-  all x y z in int, int_lt (x, y) -> int_leq (y, z) -> int_lt (x, z)
+  all x y z in int,  x <0x y -> y <=0x z -> x <0x z
   proof =
     coq proof {*
       intros x y z.
-      unfold int_lt, _lt_0x, int_leq, _lt__equal_0x,
+      unfold _lt_0x, _lt__equal_0x,
              bi__int_lt, bi__int_leq in |- *.
       elim (Z_lt_dec x y).
       elim (Z_le_dec y z).
@@ -429,11 +410,11 @@ theorem int_le_refl :
 ;;
 
 theorem int_le_antisymm:
-  all x y in int, int_leq (x, y) -> int_leq (y, x) -> x = y
+  all x y in int, x <=0x y -> y <=0x x -> x = y
   proof =
     coq proof {*
       intros x y.
-      unfold int_leq, _lt__equal_0x, bi__int_leq in |- *.
+      unfold _lt__equal_0x, bi__int_leq in |- *.
       elim (Z_le_dec x y); elim (Z_le_dec y x).
       intros H1 H2.
       intros b c; clear b c.
@@ -449,10 +430,10 @@ theorem int_le_antisymm:
 ;;
 
 theorem int_le_trans:
-  all x y z in int,  #int_leq(x, y) -> #int_leq (y, z) -> #int_leq(x, z)
+  all x y z in int, x <=0x y -> y <=0x z -> x <=0x z
   proof =
     coq proof {*
-      unfold int_leq, _lt__equal_0x, bi__int_leq in |- *; intros x y z H1 H2.
+      unfold _lt__equal_0x, bi__int_leq in |- *; intros x y z H1 H2.
       apply dec_IsTrue. cut (x <= y)%Z. cut (y <= z)%Z.
       eauto with zarith.
       eapply IsTrue_dec. apply H2.
@@ -472,7 +453,7 @@ theorem int_0_plus:
   all x y in int, x = 0 -> x + y = y
   proof =
     coq proof {*
-      unfold int_plus, bi__int_plus in |- *; intros x y Hxz;
+      unfold bi__int_plus in |- *; intros x y Hxz;
       unfold _equal_, syntactic_equal;
       apply EQ_syntactic_equal; replace x with 0%Z; eauto with zarith.
       symmetry  in |- *.
@@ -483,10 +464,10 @@ theorem int_0_plus:
 ;;
 
 theorem int_lt_le_S:
-  all x y in int, #int_lt (x, y) -> #int_leq (x + 1, y)
+  all x y in int, x <0x y -> x + 1 <=0x y
   proof =
     coq proof {*
-      unfold int_lt, _lt_0x, int_leq, _lt__equal_0x,
+      unfold _lt_0x, _lt__equal_0x,
         _plus_ in |- *; intros x y Hlt;
       unfold bi__int_lt, bi__int_leq, bi__int_plus;
       apply dec_IsTrue; fold (Zsucc x) in |- *; apply Zlt_le_succ;
@@ -499,7 +480,7 @@ theorem int_plus_assoc:
   all x y z in int, (x + y) + z = x + (y + z)
   proof =
     coq proof {*
-      unfold int_plus in |- *; intros x y z;
+      intros x y z;
       unfold _equal_, syntactic_equal;
       apply EQ_syntactic_equal; auto with zarith.
       Qed.
@@ -510,7 +491,7 @@ theorem int_plus_commute:
   all x y  in int, x + y = y + x
   proof =
     coq proof {*
-      unfold int_plus in |- *; intros x y;
+      intros x y;
       unfold _equal_, syntactic_equal;
       apply EQ_syntactic_equal;
       auto with zarith.
@@ -523,7 +504,7 @@ theorem int_plus_plus:
   x = y -> z = t -> x + z = y + t
   proof =
     coq proof {*
-      unfold int_plus in |- *; intros x y z t H1 H2;
+      intros x y z t H1 H2;
       unfold _equal_;
       apply EQ_syntactic_equal; replace y with x. replace t with z. reflexivity.
       apply decidable. apply Z_eq_dec. assumption.
@@ -533,12 +514,10 @@ theorem int_plus_plus:
 ;;
 
 theorem int_le_plus_plus:
-  all x y z t in int,
-  #int_leq (x, y) -> #int_leq (z, t) ->
-  #int_leq (x + z, y + t)
+  all x y z t in int, x <=0x y -> z <=0x t -> x + z <=0x y + t
   proof =
     coq proof {*
-      unfold _plus_, int_leq, _lt__equal_0x in |- *; intros x y z t H1 H2;
+      unfold _plus_, _lt__equal_0x in |- *; intros x y z t H1 H2;
       unfold bi__int_leq, bi__int_plus, bi__int_plus;
       apply dec_IsTrue; apply Zplus_le_compat;
       [ exact (IsTrue_dec H1) | exact (IsTrue_dec H2) ].
@@ -547,12 +526,11 @@ theorem int_le_plus_plus:
 ;;
 
 theorem int_min_le:
-  all x y z in int,
-  (#int_leq (z, x) /\ #int_leq (z, y)) -> #int_leq (z, #int_min (x, y))
+  all x y z in int, (z <=0x x /\ z <=0x y) -> z <=0x min0x (x, y)
   proof =
     coq proof {*
       intros x y z H; elim H; intros H1 H2; clear H;
-      unfold int_min in |- *;
+      unfold min0x in |- *;
       unfold bi__int_min;
       elim (Z_lt_dec x y);
       intros H; trivial.
@@ -560,20 +538,18 @@ theorem int_min_le:
     *}
 ;;
 
-(*** ??? ********* *)
 theorem int_min_le2:
-  all x y z in int,
-  #int_leq (z, #int_min (x, y)) -> (#int_leq (z, x) /\ #int_leq (z, y))
+  all x y z in int, z <=0x min0x (x, y) -> (z <=0x x /\ z <=0x y)
   proof =
     coq proof {*
-      intros x y z; unfold int_min in |- *.
+      intros x y z; unfold min0x in |- *.
       unfold bi__int_min.
       case (Z_lt_dec x y); intros H1 H2; split; trivial.
       apply int_le_trans with x; trivial.
-      unfold int_leq, _lt__equal_0x, bi__int_leq;
+      unfold _lt__equal_0x, bi__int_leq;
       apply dec_IsTrue; apply Zlt_le_weak; trivial.
       apply int_le_trans with y; trivial.
-      unfold int_leq, _lt__equal_0x, bi__int_leq; apply dec_IsTrue.
+      unfold _lt__equal_0x, bi__int_leq; apply dec_IsTrue.
       elim (Zle_or_lt y x); trivial.   intros Habs; absurd (x < y)%Z; trivial.
       Qed.
     *}
@@ -583,7 +559,7 @@ theorem int_plus_minus: all x y z in int,
   x + y = z -> (y = z - x)
   proof =
     coq proof {*
-      intros x y z; unfold int_plus, int_minus, syntactic_equal in |- *;
+      intros x y z; unfold syntactic_equal in |- *;
       intros H;
       unfold bi__int_minus, _equal_, syntactic_equal;
       apply EQ_syntactic_equal; apply Zplus_minus_eq;
@@ -597,7 +573,7 @@ theorem int_minus_plus:
   x - y = z -> x = y + z
   proof =
     coq proof {*
-      intros x y z; unfold int_plus, int_minus, syntactic_equal in |- *;
+      intros x y z; unfold syntactic_equal in |- *;
       intros H;
       unfold bi__int_minus, _equal_, syntactic_equal;
       apply EQ_syntactic_equal; rewrite <- (Zplus_minus y x);
