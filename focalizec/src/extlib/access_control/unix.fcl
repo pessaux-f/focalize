@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: unix.fcl,v 1.13 2009-05-16 17:53:00 weis Exp $ *)
+(* $Id: unix.fcl,v 1.14 2009-06-05 08:36:55 pessaux Exp $ *)
 
 (**
    @title Implementation of the Unix model
@@ -38,7 +38,7 @@ species S_set_of (A is Setoid) =
   let rec for_all (l, p) =
      match l with
      | [] -> true
-     | h :: t -> and_b (p (h), for_all (t, p));
+     | h :: t -> p (h) && for_all (t, p);
 
   let print (l) =
     let rec aux (ls) =
@@ -140,12 +140,9 @@ species S_access
   let get_m (a) = snd (snd (a));
 
   let equal (a1, a2) =
-    and_b
-      (and_b
-        (S_sub!equal (get_s (a1), get_s (a2)),
-         S_obj!equal (get_o (a1), get_o (a2))),
-        S_acc_mod!equal (get_m (a1), get_m (a2))
-      );
+     S_sub!equal (get_s (a1), get_s (a2)) &&
+     S_obj!equal (get_o (a1), get_o (a2)) &&
+     S_acc_mod!equal (get_m (a1), get_m (a2)) ;
 
   let element = create (S_sub!element, S_obj!element, S_acc_mod!element);
 
@@ -293,32 +290,13 @@ species S_requests_unix
   let is_rel(rg) = Sgr!equal (Sgr!rel, get_gr (rg));
 
   let equal (rg1, rg2) =
-    and_b
-      (and_b
-         (and_b
-            (Sgr!equal
-               (get_gr (rg1), get_gr (rg2)),
-             and_b
-               (S!equal
-                  (get_s (rg1), get_s (rg2)),
-                O!equal
-                  (get_o (rg1), get_o (rg2))
-               )
-            ),
-          M!equal
-            (get_m (rg1), get_m (rg2))
-         ),
-       and_b
-         (G!equal
-            (get_g (rg1), get_g (rg2)),
-          and_b
-            (Z!equal
-               (get_z (rg1), get_z (rg2)),
-             S!equal
-               (get_s2 (rg1), get_s2 (rg2))
-            )
-         )
-      );
+    Sgr!equal (get_gr (rg1), get_gr (rg2)) &&
+    S!equal (get_s (rg1), get_s (rg2)) &&
+    O!equal (get_o (rg1), get_o (rg2)) &&
+    M!equal (get_m (rg1), get_m (rg2)) &&
+    G!equal (get_g (rg1), get_g (rg2)) &&
+    Z!equal (get_z (rg1), get_z (rg2)) &&
+    S!equal (get_s2 (rg1), get_s2 (rg2)) ;
 
   let is_active (rg) = Sgr!equal (Sgr!active, get_gr (rg));
 
@@ -329,22 +307,13 @@ species S_requests_unix
   let is_rm_right (rg) = Sgr!equal (Sgr!m_right, get_gr (rg));
 
   let is_d_p (rg) =
-    and_b
-      (or_b
-         (is_add_right (rg), is_rm_right(rg)),
-       Z!equal (get_z (rg), Z!d_p));
+    (is_add_right (rg) || is_rm_right(rg)) &&  Z!equal (get_z (rg), Z!d_p) ;
 
   let is_d_g (rg) =
-    and_b
-      (or_b
-         (is_add_right (rg), is_rm_right (rg)),
-       Z!equal (get_z (rg), Z!d_g));
+    (is_add_right (rg) || is_rm_right (rg)) && Z!equal (get_z (rg), Z!d_g) ;
 
   let is_d_o (rg) =
-    and_b
-      (or_b
-          (is_add_right (rg), is_rm_right (rg)),
-       Z!equal (get_z (rg), Z!d_o));
+    (is_add_right (rg) || is_rm_right (rg)) && Z!equal (get_z (rg), Z!d_o) ;
 
   let is_chown (rg) = Sgr!equal (Sgr!chown, get_gr (rg));
 
@@ -371,12 +340,12 @@ species S_requests_unix
     ">";
 
   let print_adm (rg) =
-    if or_b (is_active (rg), is_inactive (rg)) then
+    if is_active (rg) || is_inactive (rg) then
       "<" ^ Sgr!print (get_gr (rg)) ^
       ", " ^ S!print (get_s (rg)) ^
       ", " ^ G!print (get_g (rg)) ^
       ">"
-    else if or_b (is_add_right (rg), is_rm_right (rg)) then
+    else if is_add_right (rg) || is_rm_right (rg) then
       "<" ^ Sgr!print (get_gr (rg)) ^
       ", " ^ S!print (get_s (rg)) ^
       ", " ^ O!print (get_o (rg)) ^
@@ -980,31 +949,25 @@ let fp_ex (o in C_objects) in C_subjects =
 ;;
 
 let fs_ex (s in C_subjects) in C_set_of_groups =
-  if or_b (C_subjects!equal (s, alice),
-           C_subjects!equal (s, bob))
-  then C_set_of_groups!singleton (C_groups!rsa)
-  else if or_b (C_subjects!equal (s, pierre),
-                C_subjects!equal (s, marie))
-  then C_set_of_groups!singleton (C_groups!curry)
+  if C_subjects!equal (s, alice) || C_subjects!equal (s, bob) then
+    C_set_of_groups!singleton (C_groups!rsa)
+  else if C_subjects!equal (s, pierre) || C_subjects!equal (s, marie) then
+    C_set_of_groups!singleton (C_groups!curry)
   else C_set_of_groups!singleton (C_groups!element)
 ;;
 
 let fg_ex (o in C_objects) in C_groups =
-  if or_b (or_b (C_objects!equal (o, rapport_pdf),
-                 C_objects!equal (o, media_java)),
-           C_objects!equal (o, projet_tex))
+  if C_objects!equal (o, rapport_pdf) || C_objects!equal (o, media_java)
+     || C_objects!equal (o, projet_tex)
   then C_groups!curry
-  else if or_b (C_objects!equal (o, tp1_ml),
-                C_objects!equal (o, hachage_c))
-  then C_groups!rsa
+  else if C_objects!equal (o, tp1_ml) || C_objects!equal (o, hachage_c) then
+    C_groups!rsa
   else C_groups!element
 ;;
 
 let fd_p_ex (o in C_objects) in C_set_of_mode =
-  if or_b (or_b (or_b (C_objects!equal (o, rapport_pdf),
-                       C_objects!equal (o, media_java)),
-                 C_objects!equal (o, tp1_ml)),
-           C_objects!equal (o, hachage_c))
+  if C_objects!equal (o, rapport_pdf) || C_objects!equal (o, media_java)
+     || C_objects!equal (o, tp1_ml) || C_objects!equal (o, hachage_c)
   then C_set_of_mode!ajoute_element
     (C_access_mode!read,
      C_set_of_mode!ajoute_element
@@ -1019,23 +982,20 @@ let fd_p_ex (o in C_objects) in C_set_of_mode =
 let fd_g_ex (o in C_objects) in C_set_of_mode =
   if C_objects!equal (o, rapport_pdf)
   then C_set_of_mode!singleton (C_access_mode!read)
-  else if or_b (C_objects!equal (o, media_java),
-                C_objects!equal (o, tp1_ml))
-  then C_set_of_mode!union
+  else if C_objects!equal (o, media_java) || C_objects!equal (o, tp1_ml) then
+    C_set_of_mode!union
     (C_set_of_mode!singleton (C_access_mode!read),
      C_set_of_mode!singleton (C_access_mode!execute))
-  else if or_b (C_objects!equal (o, hachage_c),
-                C_objects!equal (o, projet_tex))
-  then C_set_of_mode!union
-    (C_set_of_mode!singleton (C_access_mode!read),
-     C_set_of_mode!singleton (C_access_mode!write))
+  else if C_objects!equal (o, hachage_c) || C_objects!equal (o, projet_tex) then
+    C_set_of_mode!union
+      (C_set_of_mode!singleton (C_access_mode!read),
+       C_set_of_mode!singleton (C_access_mode!write))
   else C_set_of_mode!singleton (C_access_mode!element)
 ;;
 
 let fd_o_ex (o in C_objects) in C_set_of_mode =
-  if or_b (or_b (C_objects!equal (o, rapport_pdf),
-                 C_objects!equal (o, media_java)),
-           C_objects!equal (o, tp1_ml))
+  if C_objects!equal (o, rapport_pdf) || C_objects!equal (o, media_java)
+     || C_objects!equal (o, tp1_ml)
   then C_set_of_mode!singleton (C_access_mode!read)
   else if C_objects!equal (o, hachage_c)
   then C_set_of_mode!union
