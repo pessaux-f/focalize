@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: access_control.fcl,v 1.13 2009-06-04 14:48:41 pessaux Exp $ *)
+(* $Id: access_control.fcl,v 1.14 2009-06-05 08:21:11 pessaux Exp $ *)
 
 (**
    @title Implementation of access control models
@@ -423,8 +423,8 @@ species Models_blp (Rh is Rho_blp,
            if S_a!for_all (lambda (st1),
                           function a1 ->
                             let o2 = A!get_o (a1) in
-                            or_b (M!different (M!write, A!get_m (a1)),
-                                  or_b (O!equal (o1, o2),
+                            ( || ) (M!different (M!write, A!get_m (a1)),
+                                  ( || ) (O!equal (o1, o2),
                                         (Rh!order_inf (f_o (st1, o1),
                                                        f_o (st1, o2))))))
            then (D!yes, add (st1, A!create (s1, o1, M!read)))
@@ -435,8 +435,8 @@ species Models_blp (Rh is Rho_blp,
            if S_a!for_all (lambda (st1),
                           function a1 ->
                             let o2 = A!get_o (a1) in
-                            or_b (M!different (M!read, A!get_m (a1)),
-                                  or_b (O!equal (o1, o2),
+                            ( || ) (M!different (M!read, A!get_m (a1)),
+                                  ( || ) (O!equal (o1, o2),
                                         (Rh!order_inf (f_o (st1, o2),
                                                        f_o (st1, o1))))))
            then (D!yes, add (st1, A!create (s1, o1, M!write)))
@@ -3541,15 +3541,15 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let op = R!get_o (r1) in
      let mp = R!get_m (r1) in
      if R!is_get (r1) then
-       if(or_b (or_b (or_b (and_b (S!equal (f_p (st, op), sp),
+       if(( || ) (( || ) (( || ) (( && ) (S!equal (f_p (st, op), sp),
                                    S_m!est_element (mp, f_d_p (st, op))),
-                            (and_b (and_b ((not_b (S!equal (f_p (st, op),
+                            (( && ) (( && ) ((( ~~ ) (S!equal (f_p (st, op),
                                                             sp))),
                                            S_g!est_element (f_g (st, op),
                                                             f_s (st, sp))),
                                     (S_m!est_element (mp, f_d_g (st, op)))))),
-                      (and_b (and_b (not_b (S!equal (f_p (st, op), sp)),
-                                     not_b (S_g!est_element (f_g (st, op),
+                      (( && ) (( && ) (( ~~ ) (S!equal (f_p (st, op), sp)),
+                                     ( ~~ ) (S_g!est_element (f_g (st, op),
                                                              f_s (st, sp)))),
                               (S_m!est_element (mp, f_d_o (st, op)))))),
                 su (st, sp)))
@@ -3565,14 +3565,14 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (not_b (S!equal (sp, f_p (st, od))),
-                   (and_b (and_b (and_b (S_g!est_element (f_g (st, od),
+     ( ~~ ) (( && ) (( ~~ ) (S!equal (sp, f_p (st, od))),
+                   (( && ) (( && ) (( && ) (S_g!est_element (f_g (st, od),
                                                           f_s (st, sp)),
-                                         not_b (S_m!est_element (md,
+                                         ( ~~ ) (S_m!est_element (md,
                                                                  f_d_o (st,
                                                                        od)))),
                                   G!equal (f_g (st, od), ga)),
-                           not_b (su (st, sp))))));
+                           ( ~~ ) (su (st, sp))))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3582,9 +3582,9 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (A!equal (A!create (sp, od, md),
+     ( ~~ ) (( && ) (A!equal (A!create (sp, od, md),
                             A!create (sa, oa, ma)),
-                   not_b (su (st, sp))));
+                   ( ~~ ) (su (st, sp))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3594,12 +3594,12 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (and_b (and_b (and_b (O!equal (od, oa),
+     ( ~~ ) (( && ) (( && ) (( && ) (( && ) (O!equal (od, oa),
                                         M!equal (md, ma)),
                                  S_g!est_element (f_g (st, od), f_s (st,
                                                                      sp))),
                           S_m!est_element (md, f_d_g (st, od))),
-                   not_b (su (st, sp))));
+                   ( ~~ ) (su (st, sp))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3609,12 +3609,12 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (and_b (and_b (and_b (O!equal (od, oa),
+     ( ~~ ) (( && ) (( && ) (( && ) (( && ) (O!equal (od, oa),
                                         M!equal (md, ma)),
-                                 not_b (S_g!est_element (f_g (st, od),
+                                 ( ~~ ) (S_g!est_element (f_g (st, od),
                                                          f_s (st, sp)))),
-                          not_b (S!equal (sp, f_p(st, od)))),
-                   not_b (su (st, sp))));
+                          ( ~~ ) (S!equal (sp, f_p(st, od)))),
+                   ( ~~ ) (su (st, sp))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3624,23 +3624,23 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b
-        (and_b (O!equal (od, oa),
-                and_b
-                (and_b
-                 (or_b (and_b
-                        (and_b
+     ( ~~ )
+        (( && ) (O!equal (od, oa),
+                ( && )
+                (( && )
+                 (( || ) (( && )
+                        (( && )
                          (S!equal (f_p (st, oa), sp),
                           S_m!est_element(md, f_d_p (st, oa))),
-                         or_b (and_b (not_b (S_m!est_element (md,
+                         ( || ) (( && ) (( ~~ ) (S_m!est_element (md,
                                                               f_d_g (st, oa))),
-                                      not_b (S_g!est_element (f_g (st, oa),
+                                      ( ~~ ) (S_g!est_element (f_g (st, oa),
                                                               f_s (st, sp)))),
-                               not_b (S_m!est_element (md, f_d_o (st, oa))))),
-                        and_b (S!equal (sp, s2a),
-                               not_b (S_m!est_element (md, f_d_p (st, oa))))),
-                  not_b (su (st, sp))),
-                 not_b (su (st, s2a)))));
+                               ( ~~ ) (S_m!est_element (md, f_d_o (st, oa))))),
+                        ( && ) (S!equal (sp, s2a),
+                               ( ~~ ) (S_m!est_element (md, f_d_p (st, oa))))),
+                  ( ~~ ) (su (st, sp))),
+                 ( ~~ ) (su (st, s2a)))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3650,24 +3650,24 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b
-        (and_b
-         (and_b
+     ( ~~ )
+        (( && )
+         (( && )
           (O!equal (oa, od),
-           (or_b
-            (and_b
-             (and_b
-              (and_b (not_b (S!equal (sp, f_p (st, oa))),
+           (( || )
+            (( && )
+             (( && )
+              (( && ) (( ~~ ) (S!equal (sp, f_p (st, oa))),
                       S_g!est_element (f_g (st, od),
                                        f_s (st, sp))),
-               not_b (S_g!est_element (ga, f_s (st, sp)))),
-              not_b (S_m!est_element (md, f_d_o (st, od)))),
-             and_b (and_b (and_b (not_b (S!equal (sp, f_p (st, oa))),
-                                  not_b (S_g!est_element (f_g (st, oa),
+               ( ~~ ) (S_g!est_element (ga, f_s (st, sp)))),
+              ( ~~ ) (S_m!est_element (md, f_d_o (st, od)))),
+             ( && ) (( && ) (( && ) (( ~~ ) (S!equal (sp, f_p (st, oa))),
+                                  ( ~~ ) (S_g!est_element (f_g (st, oa),
                                                           f_s (st, sp)))),
                            S_g!est_element (ga, f_s (st, sp))),
-                    not_b (S_m!est_element (md, f_d_g (st, od))))))),
-          not_b (su (st, sp))));
+                    ( ~~ ) (S_m!est_element (md, f_d_g (st, od))))))),
+          ( ~~ ) (su (st, sp))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3677,14 +3677,14 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (and_b (and_b (and_b (and_b (S!equal (sp, s2a),
-                                               not_b (S!equal (s2a,
+     ( ~~ ) (( && ) (( && ) (( && ) (( && ) (( && ) (S!equal (sp, s2a),
+                                               ( ~~ ) (S!equal (s2a,
                                                                f_p(st, od)))),
                                         G!equal (f_g (st, od), ga)),
-                                 not_b (S_g!est_element (f_g (st, od),
+                                 ( ~~ ) (S_g!est_element (f_g (st, od),
                                                          f_s (st, s2a)))),
-                          not_b (S_m!est_element (md, f_d_g (st, od)))),
-                   not_b (su (st, sp))));
+                          ( ~~ ) (S_m!est_element (md, f_d_g (st, od)))),
+                   ( ~~ ) (su (st, sp))));
 
   (**
      Returns true if the given access ac satisfies the conditions needed to
@@ -3694,11 +3694,11 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      let sp = A!get_s (ac) in
      let od = A!get_o (ac) in
      let md = A!get_m (ac) in
-     not_b (and_b (and_b (and_b (and_b (S!equal (sp, s2a),
+     ( ~~ ) (( && ) (( && ) (( && ) (( && ) (S!equal (sp, s2a),
                                         S_m!est_element (md, f_d_g (st, od))),
                                  G!equal (f_g (st, od), ga)),
-                          not_b (S_m!est_element (md, f_d_o (st, od)))),
-                   not_b (su (st, sp))));
+                          ( ~~ ) (S_m!est_element (md, f_d_o (st, od)))),
+                   ( ~~ ) (su (st, sp))));
 
   (** Unix administrative transition function *)
   let tau_unix_adm (r1 in R, st in Self) =
@@ -3713,7 +3713,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        (* <-active,s,g> *)
        let sp = R!get_s (r1) in
        let sg = R!get_g (r1) in
-       if and_b (and_b (su (st, sp),
+       if ( && ) (( && ) (su (st, sp),
                         ag (st, sg)),
                  S_a!for_all (lambda (st),
                              predicate_inactive (st, sg)))
@@ -3724,7 +3724,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let so = R!get_o (r1) in
        let sm = R!get_m (r1) in
        (* same condition for all the requests <+right,...> *)
-       if or_b (S!equal (ss, f_p (st, so)), su (st, ss)) then
+       if ( || ) (S!equal (ss, f_p (st, so)), su (st, ss)) then
          if R!is_d_p (r1) then
            (* <+right,s,o,a,DP> *)
            (D!yes, add_d_p (st, so, sm))
@@ -3741,7 +3741,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let sm = R!get_m (r1) in
        if R!is_d_p (r1) then
          (* <-right,s,o,a,DP> *)
-         if and_b (or_b (S!equal (ss, f_p (st, so)),
+         if ( && ) (( || ) (S!equal (ss, f_p (st, so)),
                          su (st, ss)),
                    S_a!for_all (lambda (st),
                                predicate_right_d_p (st, ss, so, sm)))
@@ -3749,13 +3749,13 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
          else (D!no, st)
        else if R!is_d_g (r1) then
          (* <-right,s,o,a,DG> *)
-         if and_b (or_b (S!equal (ss, f_p (st, so)),
+         if ( && ) (( || ) (S!equal (ss, f_p (st, so)),
                          su (st, ss)),
                    S_a!for_all (lambda (st),
                                predicate_right_d_g (st, so, sm)))
          then (D!yes, rm_d_g (st, so, sm))
          else (D!no, st)
-       else if and_b (or_b (S!equal (ss, f_p (st, so)),
+       else if ( && ) (( || ) (S!equal (ss, f_p (st, so)),
                             su (st, ss)),
                       S_a!for_all (lambda (st),
                                   predicate_right_d_o (st, so, sm)))
@@ -3767,7 +3767,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let ss = R!get_s (r1) in
        let so = R!get_o (r1) in
        let ss2 = R!get_s2 (r1) in
-       if and_b (su (st, ss),
+       if ( && ) (su (st, ss),
                  S_a!for_all (lambda (st), predicate_chown (st, so, ss2)))
        then (D!yes, chown (st, so, ss2))
        else (D!no, st)
@@ -3776,7 +3776,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let ss = R!get_s (r1) in
        let so = R!get_o (r1) in
        let sg = R!get_g (r1) in
-       if and_b (su (st, ss),
+       if ( && ) (su (st, ss),
                  S_a!for_all (lambda (st),
                              predicate_chgrp (st, so, sg)))
        then (D!yes, chgrp (st, so, sg))
@@ -3786,7 +3786,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let ss2 = R!get_s2 (r1) in
        let sg = R!get_g (r1) in
        (* <+group,s1,s2,g> *)
-       if and_b (su (st, ss),
+       if ( && ) (su (st, ss),
                  S_a!for_all (lambda (st),
                              predicate_pls_grp (st, sg, ss2)))
        then (D!yes, add_g_s (st, ss2, sg))
@@ -3796,7 +3796,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
        let ss2 = R!get_s2 (r1) in
        let sg = R!get_g (r1) in
        (* <-group,s1,s2,g> *)
-       if and_b (and_b (su (st, ss),
+       if ( && ) (( && ) (su (st, ss),
                         S_a!for_all (lambda (st),
                                     predicate_mns_grp (st, sg, ss2))),
                  S_g!est_element (sg, f_s (st, ss2)))
@@ -3806,7 +3806,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
 
   (** Unix transition function *)
   let tau_unix (r1 in R, st in Self) =
-     if or_b (R!is_get (r1), R!is_rel (r1))
+     if ( || ) (R!is_get (r1), R!is_rel (r1))
      then tau_unix_acc (r1, st)
      else tau_unix_adm (r1, st);
 
@@ -4029,7 +4029,7 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
        let c1 = R!get_c (r1) in
        let o1 = R!get_o (r1) in
        let m1 = R!get_m (r1) in
-       if and_b (not_b (uc (st1, c1)), owner (st1, o1, s1))
+       if ( && ) (( ~~ ) (uc (st1, c1)), owner (st1, o1, s1))
        then (D!yes, add_uc (add_w (add_t (st1, o1, m1, c1), s1, c1), c1))
        else (D!no, st1)
      else if R!is_remove (r1) then
@@ -4050,7 +4050,7 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
 
   (** Tickets transition function *)
   let tau_ticket (r1 in R, st1 in Self) =
-     if or_b (R!is_get (r1), R!is_rel (r1))
+     if ( || ) (R!is_get (r1), R!is_rel (r1))
      then tau_ticket_acc (r1, st1)
      else tau_ticket_adm (r1, st1);
 
