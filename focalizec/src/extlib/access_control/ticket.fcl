@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ticket.fcl,v 1.15 2009-06-05 08:29:06 pessaux Exp $ *)
+(* $Id: ticket.fcl,v 1.16 2009-06-05 09:59:20 habib Exp $ *)
 
 (**
    @title Implementation of the Tickets model
@@ -159,8 +159,8 @@ species S_access (S_sub is S_subjects,
   let get_m (a) = snd (snd (a));
 
   let equal (a1, a2) =
-     S_sub!equal (get_s (a1), get_s (a2)) &&
-     S_obj!equal (get_o (a1), get_o (a2)) &&
+     S_sub!equal (get_s (a1), get_s (a2)) && 
+     S_obj!equal (get_o (a1), get_o (a2)) && 
      S_acc_mod!equal (get_m (a1), get_m (a2));
 
   let element = create (S_sub!element, S_obj!element, S_acc_mod!element);
@@ -314,18 +314,19 @@ species S_requests_ticket (S is S_subjects, O is S_objects,
     Sgr!equal (Sgr!remove, get_gr (rg));
 
   let equal (rg1 in Self, rg2 in Self) in bool =
-    Sgr!equal (get_gr (rg1), get_gr (rg2)) &&
-    S!equal (get_s (rg1), get_s (rg2)) &&
-    C!equal (get_c (rg1), get_c (rg2)) &&
-    O!equal (get_o (rg1), get_o (rg2)) &&
-    M!equal (get_m (rg1), get_m (rg2)) &&
-    S!equal (get_s2 (rg1), get_s2 (rg2));
+     Sgr!equal (get_gr (rg1), get_gr (rg2)) && 
+     S!equal (get_s (rg1), get_s (rg2)) && 
+     C!equal (get_c (rg1), get_c (rg2)) && 
+     O!equal (get_o (rg1), get_o (rg2)) && 
+     M!equal (get_m (rg1), get_m (rg2)) && 
+     S!equal (get_s2 (rg1), get_s2 (rg2));
 
   let element =
     create (Sgr!get, S!element, C!element, O!element, M!element, S!element);
 
   let print (rg) =
-    if Sgr!equal (Sgr!get, get_gr (rg)) || Sgr!equal (Sgr!rel, get_gr (rg)) then
+    if Sgr!equal (Sgr!get, get_gr (rg)) || 
+       Sgr!equal (Sgr!rel, get_gr (rg)) then
       "<" ^ Sgr!print (get_gr (rg)) ^
       "," ^ S!print (get_s (rg)) ^
       "," ^ O!print (get_o (rg)) ^
@@ -439,7 +440,8 @@ species S_models_ticket (S_c is S_tickets,
       match l with
       | [] -> false
       | h :: t ->
-        if S_sub!equal (s, fst (h)) && S_c!equal (c, snd (h)) then true
+        if S_sub!equal (s, fst (h)) && S_c!equal (c, snd (h))
+        then true
         else aux (t) in
     aux (fst (snd (snd (snd (st)))));
 
@@ -449,7 +451,7 @@ species S_models_ticket (S_c is S_tickets,
       | [] -> false
       | h :: t ->
         if S_obj!equal (o, fst (fst (h))) &&
-           S_acc_mod!equal (m, snd (fst (h))) &&
+           S_acc_mod!equal (m, snd (fst (h))) && 
            S_c!equal (c, snd (h))
         then true
         else aux (t) in
@@ -460,7 +462,8 @@ species S_models_ticket (S_c is S_tickets,
       match l with
       | [] -> false
       | h :: t ->
-        if S_obj!equal (o, fst (h)) && S_sub!equal (s, snd (h)) then true
+        if S_obj!equal (o, fst (h)) && S_sub!equal (s, snd (h))
+        then true
         else aux (t) in
     aux (snd (snd (snd (snd (st)))));
 
@@ -473,7 +476,9 @@ species S_models_ticket (S_c is S_tickets,
       match l with
       | [] -> false
       | h :: t ->
-         if fuc (h) && fw (h) && ft (h) then true else aux (t) in
+        if fuc (h) && fw (h) && ft (h)
+        then true
+        else aux (t) in
     aux (S_c!tickets_list);
 
   let map_ticket (st in Self, c in S_c) =
@@ -555,8 +560,8 @@ species S_models_ticket (S_c is S_tickets,
                       (f,
                        snd (snd (snd (upsilon (st))))))))
     | h :: t ->
-      if S_sub!equal (s, fst (h)) && S_c!equal (c, snd (h)) then
-        rm_w_aux (f, t, st, s, c)
+      if S_sub!equal (s, fst (h)) && S_c!equal (c, snd (h))
+      then rm_w_aux (f, t, st, s, c)
       else rm_w_aux (h :: f, t, st, s, c);
 
   let rm_w (st in Self, s in S_sub, c in S_c) in Self =
@@ -590,9 +595,10 @@ species S_models_ticket (S_c is S_tickets,
                       (fst (snd (snd (upsilon (st)))),
                        snd (snd (snd (upsilon (st))))))))
     | h :: t ->
-      if S_obj!equal (o, fst (fst (h))) && S_acc_mod!equal (m, snd (fst (h)))
-         && S_c!equal (c, snd (h)) then
-        rm_t_aux (f, t, st, o, m, c)
+      if S_obj!equal (o, fst (fst (h))) && 
+         S_acc_mod!equal (m, snd (fst (h))) && 
+	 S_c!equal (c, snd (h))
+      then rm_t_aux (f, t, st, o, m, c)
       else rm_t_aux (h :: f, t, st, o, m, c);
 
   let rm_t (st in Self, o in S_obj, m in S_acc_mod, c in S_c) in Self =

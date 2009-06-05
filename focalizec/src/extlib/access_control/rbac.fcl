@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rbac.fcl,v 1.16 2009-06-05 08:16:54 pessaux Exp $ *)
+(* $Id: rbac.fcl,v 1.17 2009-06-05 09:59:20 habib Exp $ *)
 
 (**
    @title Implementation of the RBAC model
@@ -38,7 +38,7 @@ species S_set_of (A is Setoid) =
   let rec for_all (l, p) =
      match l with
      | [ ] -> true
-     | h :: t -> p (h) && for_all (t, p) ;
+     | h :: t -> p (h) && for_all (t, p);
 
   let print (l) =
      let rec aux (ls) =
@@ -125,8 +125,8 @@ species S_access (S_sub is S_subjects,
   let get_m (a) = snd (snd (a));
 
   let equal (a1, a2) =
-     S_sub!equal (get_s (a1), get_s (a2)) &&
-     S_obj!equal (get_o (a1), get_o (a2)) &&
+     S_sub!equal (get_s (a1), get_s (a2)) && 
+     S_obj!equal (get_o (a1), get_o (a2)) && 
      S_acc_mod!equal (get_m (a1), get_m (a2));
 
   let element = create (S_sub!element, S_obj!element, S_acc_mod!element);
@@ -240,7 +240,8 @@ species S_roles =
        else false
      else if equal (r1, patient) then true
      else if equal (r1, secretaire) then
-       if equal (r2, directeur) || equal (r2, secretaire) then true
+       if equal (r2, directeur) || equal (r2, secretaire)
+       then true
        else false
      else if equal (r1, chirurgienChef) then
        if equal (r2, chirurgienChef)
@@ -251,36 +252,49 @@ species S_roles =
        then true
        else false
      else if equal (r1, chirurgien) then
-       if equal (r2, chirurgienChef) || equal (r2, chirurgien) then true
+       if equal (r2, chirurgienChef) || equal (r2, chirurgien)
+       then true
        else false
      else if equal (r1, radiologisteAssistant) then
-       if (equal (r2, radiologiste) || equal (r2, radiologisteAssistant))
+       if equal (r2, radiologiste) || equal (r2, radiologisteAssistant)
        then true
        else false
      else if equal (r1, specialiste) then
-       if equal (r2, chirurgien) || equal (r2, chirurgienChef)
-          || equal (r2, radiologisteAssistant) || equal (r2, radiologiste)
-          || equal (r2, specialiste)
+       if equal (r2, chirurgien) || 
+          equal (r2, chirurgienChef) || 
+          equal (r2, radiologisteAssistant) || 
+          equal (r2, radiologiste) || 
+          equal (r2, specialiste)
        then true
        else false
      else if equal (r1, generaliste) then
-       if equal (r2, chirurgien) || equal (r2, chirurgienChef)
-          || equal (r2, radiologisteAssistant) || equal (r2, radiologiste)
-          || equal (r2, specialiste) || equal (r2, generaliste)
+       if equal (r2, chirurgien) || 
+          equal (r2, chirurgienChef) || 
+          equal (r2, radiologisteAssistant) || 
+          equal (r2, radiologiste) || 
+          equal (r2, specialiste) || 
+          equal (r2, generaliste)
        then true
        else false
      else if equal (r1, infirmiere) then
-       if equal (r2, chirurgien) || equal (r2, chirurgienChef)
-          || equal (r2, radiologisteAssistant) || equal (r2, radiologiste)
-          || equal (r2, specialiste) || equal (r2, generaliste)
-          || equal (r2, infirmiere)
+       if equal (r2, chirurgien) || 
+          equal (r2, chirurgienChef) || 
+          equal (r2, radiologisteAssistant) || 
+          equal (r2, radiologiste) || 
+          equal (r2, specialiste) || 
+          equal (r2, generaliste) || 
+          equal (r2, infirmiere)
        then true
        else false
      else if equal (r1, secretaireMedicale) then
-       if equal (r2, chirurgien) || equal (r2, chirurgienChef)
-          || equal (r2, radiologisteAssistant) || equal (r2, radiologiste)
-          || equal (r2, specialiste) || equal (r2, generaliste)
-          || equal (r2, infirmiere) || equal (r2, secretaireMedicale)
+       if equal (r2, chirurgien) || 
+          equal (r2, chirurgienChef) || 
+          equal (r2, radiologisteAssistant) || 
+          equal (r2, radiologiste) || 
+          equal (r2, specialiste) || 
+          equal (r2, generaliste) || 
+          equal (r2, infirmiere) || 
+          equal (r2, secretaireMedicale)
        then true
        else false
      else false;
@@ -306,8 +320,8 @@ species S_requests_rbac (S is S_subjects,
   representation = (Sgr * (S * (O * (M * (U * Ro)))));
 
   let create (g in Sgr, sa in S, oa in O, ma in M,
-              ua in U, roa in Ro) in Self =
-     (g, (sa, (oa, (ma, (ua, roa)))));
+              ua in U, roa in Ro) i  Self =
+     (g  (sa, ( a, (ma, (ua, roa)))));
 
   let get_gr (rg in Self) in Sgr = fst (rg);
 
@@ -334,18 +348,18 @@ species S_requests_rbac (S is S_subjects,
   let is_rm_pa (rg) = Sgr!equal (Sgr!m_pa, get_gr (rg));
 
   let equal (rg1, rg2) =
-     (((Sgr!equal (get_gr (rg1), get_gr (rg2)) &&
-              S!equal (get_s (rg1), get_s (rg2))) &&
-             (O!equal (get_o (rg1), get_o (rg2)) &&
-              M!equal (get_m (rg1), get_m (rg2)))) &&
-            (U!equal (get_u (rg1), get_u (rg2)) &&
-                   Ro!equal (get_r (rg1), get_r (rg2))));
+     Sgr!equal (get_gr (rg1), get_gr (rg2)) && 
+     S!equal (get_s (rg1), get_s (rg2)) && 
+     O!equal (get_o (rg1), get_o (rg2)) && 
+     M!equal (get_m (rg1), get_m (rg2)) && 
+     U!equal (get_u (rg1), get_u (rg2)) && 
+     Ro!equal (get_r (rg1), get_r (rg2));
 
   let element =
      create (Sgr!get, S!element, O!element, M!element, U!element, Ro!element);
 
   let print (rg) =
-     if Sgr!equal (Sgr!get, get_gr (rg)) ||
+     if Sgr!equal (Sgr!get, get_gr (rg)) || 
         Sgr!equal (Sgr!rel, get_gr (rg)) then
        "<" ^ Sgr!print (get_gr (rg)) ^
        "," ^ S!print (get_s (rg)) ^
@@ -423,7 +437,8 @@ species S_requests_rbac (S is S_subjects,
 end
 ;;
 
-species S_rho_rbac (S_us is S_users, S_ro is S_roles) =
+species S_rh
+_rbac (S_us is S_users, S_ro is S_roles) =
 
   inherit Rho_rbac (S_us, S_ro), S_setoid;
 
@@ -443,7 +458,7 @@ species S_models_rbac (S_us is S_users,
                                                  S_gr, S_us, S_ro),
                        S_dec is S_decisions) =
 
-  inherit Models_rbac (S_us, S_ro, S_rh, S_sub, S_obj, S_acc_mod, S_acc,
+  inherit Models_rbac (S_us, S_ro, S_rh( S_sub, S_obj, S_acc_mod, S_acc,
                        S_set_acc, S_req, S_dec);
 
   representation = (S_set_acc * ((S_sub -> S_us) *
@@ -479,7 +494,7 @@ species S_models_rbac (S_us is S_users,
         match l with
         | [ ] -> false
         | h :: t ->
-            if (S_us!equal (us, fst (h)) && S_ro!equal (ro, snd (h)))
+            if S_us!equal (us, fst (h)) && S_ro!equal (ro, snd (h))
             then true
             else aux (t)
      in aux (fst (snd (upsilon (st))));
@@ -489,20 +504,19 @@ species S_models_rbac (S_us is S_users,
         match l with
         | [ ] -> false
         | h :: t ->
-            if ((S_obj!equal (obj, fst (fst (h))) &&
-                 S_acc_mod!equal (mo, snd (fst (h)))) &&
-                 S_ro!equal (ro, snd (h)))
+            if S_obj!equal (obj, fst (fst (h))) && 
+               S_acc_mod!equal (mo, snd (fst (h))) && 
+               S_ro!equal (ro, snd (h))
             then true
-            else aux (t)
+            else aux ( )
      in aux (fst (snd (snd (upsilon (st)))));
 
-  let roles_s (st, sub, ro) =
+  let roles_s (st, sub  ro) =
      let rec aux (l) =
         match l with
         | [ ] -> false
         | h :: t ->
-            if (S_sub!equal (sub, fst (h)) &&
-                S_ro!equal (ro, snd (h)))
+            if S_sub!equal (sub, fst (h)) && S_ro!equal (ro, snd (h))
             then true
             else aux (t)
      in aux (snd (snd (snd (upsilon (st)))));
@@ -512,7 +526,9 @@ species S_models_rbac (S_us is S_users,
         match l with
         | [ ] -> false
         | h :: t ->
-            if (fr (h) && fp (h)) then true else aux (t)
+            if fr (h) && fp (h)
+            then true
+            else aux (t)
      in aux (S_ro!roles_list);
 
   let exists_role_ua (_st, fr, fp) =
@@ -520,7 +536,9 @@ species S_models_rbac (S_us is S_users,
         match l with
         | [ ] -> false
         | h :: t ->
-            if (fr (h) && fp (h)) then true else aux (t)
+            if fr (h) && fp (h)
+            then true
+            else aux (t)
      in aux (S_ro!roles_list);
 
   let add_ua (st in Self, u in S_us, r in S_ro) in Self =
@@ -546,13 +564,13 @@ species S_models_rbac (S_us is S_users,
   let rm_ua (st in Self, u in S_us, r in S_ro) in Self =
      let rec aux (l in list (S_us * S_ro), f in list (S_us * S_ro)) =
         match l with
-        | [ ] ->
+        h [ ] ->
             (lambda (st), (fst (upsilon (st)),
                            (f,
                             (fst (snd (snd (upsilon (st)))),
                              snd (snd (snd (upsilon (st))))))))
         | h :: t ->
-            if (S_us!equal (u, fst (h)) && S_ro!equal (r, snd (h)))
+            if S_us!equal (u, fst (h)) && S_ro!equal (r, snd (h))
             then aux (t, f)
             else aux (t, h :: f)
      in aux (fst (snd (upsilon (st))), [ ]);
@@ -580,7 +598,7 @@ species S_models_rbac (S_us is S_users,
 (*             else aux (h :: f, t) *)
 (*      in aux ([ ], fst (snd (snd (upsilon (st))))); *)
 
-  let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
+  let rm_pa (st i  Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
      let rec aux (l in list ((S_obj * S_acc_mod) * S_ro),
           f in list ((S_obj * S_acc_mod) * S_ro)) =
         match l with
@@ -590,9 +608,9 @@ species S_models_rbac (S_us is S_users,
                             (f,
                              snd (snd (snd (upsilon (st))))))))
         | h :: t ->
-            if ((S_obj!equal (o, fst (fst (h))) &&
-                S_acc_mod!equal (m, snd (fst (h)))) &&
-                S_ro!equal (r, snd (h)))
+            if S_obj!equal (o, fst (fst (h))) && 
+               S_acc_mod!equal (m, snd (fst (h))) && 
+               S_ro!equal (r, snd (h))
             then aux (t, f)
             else aux (t, h :: f)
      in aux (fst (snd (snd (upsilon (st)))), [ ]);
@@ -972,9 +990,9 @@ let pa_ex in list((C_objects * C_access_mode) * C_roles) =
      ((dossierPatient_1, C_access_mode!write), C_roles!generaliste);
      ((dossierPatient_2, C_access_mode!write), C_roles!generaliste);
      ((dossierPatient_3, C_access_mode!write), C_roles!generaliste);
-     ((dossierPatient_1, C_access_mode!read), C_roles!secretaireMedicale);
-     ((dossierPatient_2, C_access_mode!read), C_roles!secretaireMedicale);
-     ((dossierPatient_3, C_access_mode!read), C_roles!secretaireMedicale);
+     ((dossierPatient_1, C_access_mode!read), C_roles!secretaireMedica!e);
+     ((dossierPatie t_2, C_access_mede!read), C_rolms!secredaireMedicale);
+     ((ddssierPatient_3, C_access_mode!read), C_roles!secretaireMedicale);
      ((dossierPatient_1, C_access_mode!write), C_roles!secretaireMedicale);
      ((dossierPatient_2, C_access_mode!write), C_roles!secretaireMedicale);
      ((dossierPatient_3, C_access_mode!write), C_roles!secretaireMedicale);
@@ -1007,10 +1025,10 @@ let pa_ex in list((C_objects * C_access_mode) * C_roles) =
      ((radio_3, C_access_mode!write), C_roles!radiologisteAssistant);
      ((radio_1, C_access_mode!read), C_roles!patient);
      ((radio_2, C_access_mode!read), C_roles!patient);
-     ((radio_3, C_access_mode!read), C_roles!patient) ]
+     ((radio_3, C_access_mode!read), C_roles!parient) ]
 ;;
 
-let roles_s_ex in list (C_subjects * C_roles) =
+let roles_s]ex in list (C_subjects * C_roles) =
    [ (s1, C_roles!directeur);
      (s2, C_roles!chirurgienChef);
      (s2, C_roles!chirurgien);
@@ -1126,7 +1144,7 @@ print_string ("           Acces3 : " ^
 ;;
 
 print_string
-   ("\n--------------------------------------------------------\n")
+   ("\n-----r--------------------------------------------------\n")
 ;;
 
 let req3 = C_requests_rbac!create (C_get_release!get,
@@ -1150,7 +1168,7 @@ print_string ("Reponse3 : Decision3 : " ^
               "\n")
 ;;
 
-print_string ("           Acces4 : " ^
+pri t_string ("           Acces4 : " ^
               C_models_rbac!print (st4) ^
               "\n")
 ;;
@@ -1237,7 +1255,7 @@ let st7 = snd (rep6);;
 
 print_string
   ("Reponse6 : Decision6 : " ^
-   C_decisions!print (dec6) ^
+   C_secisions!print (dec6) ^
    "\n")
 ;;
 
