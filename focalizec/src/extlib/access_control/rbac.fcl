@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rbac.fcl,v 1.18 2009-06-05 10:29:06 habib Exp $ *)
+(* $Id: rbac.fcl,v 1.19 2009-06-05 10:46:44 habib Exp $ *)
 
 (**
    @title Implementation of the RBAC model
@@ -321,7 +321,7 @@ species S_requests_rbac (S is S_subjects,
 
   let create (g in Sgr, sa in S, oa in O, ma in M,
               ua in U, roa in Ro) in Self =
-     (g (sa, (oa, (ma, (ua, roa)))));
+     (g, (sa, (oa, (ma, (ua, roa)))));
 
   let get_gr (rg in Self) in Sgr = fst (rg);
 
@@ -437,8 +437,7 @@ species S_requests_rbac (S is S_subjects,
 end
 ;;
 
-species S_rh
-_rbac (S_us is S_users, S_ro is S_roles) =
+species S_rho_rbac (S_us is S_users, S_ro is S_roles) =
 
   inherit Rho_rbac (S_us, S_ro), S_setoid;
 
@@ -458,7 +457,7 @@ species S_models_rbac (S_us is S_users,
                                                  S_gr, S_us, S_ro),
                        S_dec is S_decisions) =
 
-  inherit Models_rbac (S_us, S_ro, S_rh( S_sub, S_obj, S_acc_mod, S_acc,
+  inherit Models_rbac (S_us, S_ro, S_rh, S_sub, S_obj, S_acc_mod, S_acc,
                        S_set_acc, S_req, S_dec);
 
   representation = (S_set_acc * ((S_sub -> S_us) *
@@ -508,10 +507,10 @@ species S_models_rbac (S_us is S_users,
                S_acc_mod!equal (mo, snd (fst (h))) && 
                S_ro!equal (ro, snd (h))
             then true
-            else aux ( )
+            else aux (t)
      in aux (fst (snd (snd (upsilon (st)))));
 
-  let roles_s (st, sub  ro) =
+  let roles_s (st, sub, ro) =
      let rec aux (l) =
         match l with
         | [ ] -> false
@@ -564,7 +563,7 @@ species S_models_rbac (S_us is S_users,
   let rm_ua (st in Self, u in S_us, r in S_ro) in Self =
      let rec aux (l in list (S_us * S_ro), f in list (S_us * S_ro)) =
         match l with
-        h [ ] ->
+        | [ ] ->
             (lambda (st), (fst (upsilon (st)),
                            (f,
                             (fst (snd (snd (upsilon (st)))),
@@ -598,7 +597,7 @@ species S_models_rbac (S_us is S_users,
 (*             else aux (h :: f, t) *)
 (*      in aux ([ ], fst (snd (snd (upsilon (st))))); *)
 
-  let rm_pa (st i  Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
+  let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
      let rec aux (l in list ((S_obj * S_acc_mod) * S_ro),
           f in list ((S_obj * S_acc_mod) * S_ro)) =
         match l with
@@ -990,9 +989,9 @@ let pa_ex in list((C_objects * C_access_mode) * C_roles) =
      ((dossierPatient_1, C_access_mode!write), C_roles!generaliste);
      ((dossierPatient_2, C_access_mode!write), C_roles!generaliste);
      ((dossierPatient_3, C_access_mode!write), C_roles!generaliste);
-     ((dossierPatient_1, C_access_mode!read), C_roles!secretaireMedica!e);
-     ((dossierPatie t_2, C_access_mede!read), C_rolms!secredaireMedicale);
-     ((ddssierPatient_3, C_access_mode!read), C_roles!secretaireMedicale);
+     ((dossierPatient_1, C_access_mode!read), C_roles!secretaireMedicale);
+     ((dossierPatient_2, C_access_mode!read), C_roles!secretaireMedicale);
+     ((dossierPatient_3, C_access_mode!read), C_roles!secretaireMedicale);
      ((dossierPatient_1, C_access_mode!write), C_roles!secretaireMedicale);
      ((dossierPatient_2, C_access_mode!write), C_roles!secretaireMedicale);
      ((dossierPatient_3, C_access_mode!write), C_roles!secretaireMedicale);
@@ -1025,10 +1024,10 @@ let pa_ex in list((C_objects * C_access_mode) * C_roles) =
      ((radio_3, C_access_mode!write), C_roles!radiologisteAssistant);
      ((radio_1, C_access_mode!read), C_roles!patient);
      ((radio_2, C_access_mode!read), C_roles!patient);
-     ((radio_3, C_access_mode!read), C_roles!parient) ]
+     ((radio_3, C_access_mode!read), C_roles!patient) ]
 ;;
 
-let roles_s]ex in list (C_subjects * C_roles) =
+let roles_s_ex in list (C_subjects * C_roles) =
    [ (s1, C_roles!directeur);
      (s2, C_roles!chirurgienChef);
      (s2, C_roles!chirurgien);
@@ -1144,7 +1143,7 @@ print_string ("           Acces3 : " ^
 ;;
 
 print_string
-   ("\n-----r--------------------------------------------------\n")
+   ("\n--------------------------------------------------------\n")
 ;;
 
 let req3 = C_requests_rbac!create (C_get_release!get,
@@ -1168,7 +1167,7 @@ print_string ("Reponse3 : Decision3 : " ^
               "\n")
 ;;
 
-pri t_string ("           Acces4 : " ^
+print_string ("           Acces4 : " ^
               C_models_rbac!print (st4) ^
               "\n")
 ;;
@@ -1255,7 +1254,7 @@ let st7 = snd (rep6);;
 
 print_string
   ("Reponse6 : Decision6 : " ^
-   C_secisions!print (dec6) ^
+   C_decisions!print (dec6) ^
    "\n")
 ;;
 
