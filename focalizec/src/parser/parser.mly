@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.140 2009-05-25 11:05:27 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.141 2009-06-05 12:04:37 weis Exp $ *)
 
 open Parsetree;;
 
@@ -192,6 +192,8 @@ let mk_proof_label (s1, s2) =
 %token UNDERSCORE
 %token EQUAL
 %token <string> EQ_OP
+%token <string> TILDA_EQUAL_OP
+%token <string> BANG_EQUAL_OP
 %token <string> LT_OP
 %token <string> GT_OP
 %token SEMI
@@ -310,7 +312,7 @@ let mk_proof_label (s1, s2) =
 %right    AMPER_OP                 /* expr (e && e && e) */
 %nonassoc TILDA_OP                 /* expr (~| e) */
 /* %nonassoc below_EQ */
-%left     EQUAL EQ_OP LT_OP GT_OP
+%left     EQUAL EQ_OP BANG_EQUAL_OP TILDA_EQUAL_OP LT_OP GT_OP
        /* expr (e OP e OP e) with OP respectively: */
        /* being '=', starting with '=', '<', or '>' */
 %right    AT_OP HAT_OP
@@ -1204,6 +1206,10 @@ expr:
   | expr EQUAL expr
     { mk_infix_application $1 "=" $3 }
     | expr EQ_OP expr
+      { mk_infix_application $1 $2 $3 }
+    | expr BANG_EQUAL_OP expr
+      { mk_infix_application $1 $2 $3 }
+    | expr TILDA_EQUAL_OP expr
       { mk_infix_application $1 $2 $3 }
     | expr LT_OP expr
       { mk_infix_application $1 $2 $3 }

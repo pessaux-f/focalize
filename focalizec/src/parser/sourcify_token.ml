@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.13 2009-05-14 15:52:35 weis Exp $ *)
+(* $Id: sourcify_token.ml,v 1.14 2009-06-05 12:04:37 weis Exp $ *)
 
 open Parser;;
 
@@ -67,10 +67,12 @@ let token ppf = function
   | SHARP_OP s -> Format.fprintf ppf "%s %s" "SHARP_OP" s
   | BANG -> Format.fprintf ppf "%s" "BANG"
   | BANG_OP s -> Format.fprintf ppf "%s %s" "BANG_OP" s
+  | BANG_EQUAL_OP s -> Format.fprintf ppf "%s %s" "BANG_EQUAL_OP" s
   | BAR -> Format.fprintf ppf "%s" "BAR"
   | BAR_OP s -> Format.fprintf ppf "%s %s" "BAR_OP" s
   | AMPER_OP s -> Format.fprintf ppf "%s %s" "AMPER_OP" s
   | TILDA_OP s -> Format.fprintf ppf "%s %s" "TILDA_OP" s
+  | TILDA_EQUAL_OP s -> Format.fprintf ppf "%s %s" "TILDA_EQUAL_OP" s
   | UNDERSCORE -> Format.fprintf ppf "%s" "UNDERSCORE"
   | EQUAL -> Format.fprintf ppf "%s" "EQUAL"
   | EQ_OP s -> Format.fprintf ppf "%s %s" "EQ_OP" s

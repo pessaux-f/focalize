@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.84 2009-05-14 15:46:13 weis Exp $ *)
+(* $Id: lexer.mll,v 1.85 2009-06-05 12:04:37 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -182,6 +182,11 @@ let token_of_lowercase_prefix_symbol s =
   | '~' ->
     begin match length_s, length_meaningful with
     | 1, 1 -> NEGATION
+    | _, n when n > 1 ->
+      begin match s.[i + 1] with
+      | '=' -> TILDA_EQUAL_OP s
+      | _ -> TILDA_OP s
+      end
     | _, _ -> TILDA_OP s
     end
   | '?' -> QUESTION_OP s
@@ -189,6 +194,11 @@ let token_of_lowercase_prefix_symbol s =
   | '!' ->
     begin match length_s, length_meaningful with
     | 1, 1 -> BANG
+    | _, n when n > 1 ->
+      begin match s.[i + 1] with
+      | '=' -> BANG_EQUAL_OP s
+      | _ -> BANG_OP s
+      end
     | _, _ -> BANG_OP s
     end
   | '#' ->
