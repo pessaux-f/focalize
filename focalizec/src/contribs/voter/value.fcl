@@ -1,5 +1,5 @@
 (* 
- *@version $Revision: 1.4 $ $Date: 2009-06-04 16:17:33 $
+ *@version $Revision: 1.5 $ $Date: 2009-06-04 22:50:14 $
  *)
 
 use "basics";;
@@ -11,11 +11,13 @@ open "sets_orders";;
 open "gen_value";;
 
 (** Common species for value and tolerance *)
-species Gen_value inherits Setoid =
+species Gen_value =
+inherit Setoid ;
 end ;;
 
 (** Common species for value and tolerance *)
-species Gen_value_tol inherits Gen_value =
+species Gen_value_tol = 
+inherit Gen_value ;
   signature plus : Self -> Self -> Self;
   signature geq : Self -> Self -> bool;  
   signature pos : Self -> bool;  
@@ -23,7 +25,9 @@ end ;;
 
 (** Common species defining the exported operations used by the voter.
  This permits to hide (thrue inheritance) the real value species used *)
-species Value inherits Setoid =
+species Value = 
+inherit Setoid ;
+
   (** Operator: Egality between 2 values *)
   signature equal_value : Self -> Self -> bool;
 
@@ -41,8 +45,8 @@ end ;;
 (** General type of values to vote. tol parameter represents the
 tolerance under which two value of the species are considerate as
 equal *)
-species Sp_value_tol( T is Gen_value_tol, tol in T) 
- inherits Value=
+species Sp_value_tol( T is Gen_value_tol, tol in T) = 
+inherit Value ;
   representation = T;
  
   (** Operator: Egality between 2 values *)
@@ -66,8 +70,8 @@ species Sp_value_tol( T is Gen_value_tol, tol in T)
 
 end ;;
 
-species Imp_value_tol( T is Gen_value_tol, tol in T) inherits 
-  Sp_value_tol(T, tol) =
+species Imp_value_tol( T is Gen_value_tol, tol in T) = 
+inherit  Sp_value_tol(T, tol) ;
 
   let equal_value(x in Self, y in Self) in bool = 
     if T!geq( x, y) then
@@ -131,7 +135,9 @@ proof of equal_value_symmetric = assumed {* Syntax error !! *};
 end ;;
 
 
-species Imp_value( T is Gen_value) inherits Value =
+species Imp_value( T is Gen_value) = 
+inherit Value ;
+
 representation = T;
 
   let equal_value(x in Self, y in Self) in bool = T!equal(x, y);
@@ -158,7 +164,9 @@ proof of equal_value_reflexive =
 end ;;
 
 
-species Int_value inherits Gen_value_tol =
+species Int_value = 
+inherit Gen_value_tol ;
+
 representation = int;
 
   let equal(x in Self, y in Self) in bool = 
@@ -191,7 +199,9 @@ assumed  {* Focalize *};
 
 end ;;
 
-species Bool_value inherits Gen_value =
+species Bool_value =
+inherit Gen_value ;
+
 representation = bool;
 
   let equal(x in Self, y in Self) in bool = 
@@ -222,11 +232,13 @@ assumed  {* Focalize *};
 end ;;
 
 
-collection Coll_int_value implements Int_value ;;
+collection Coll_int_value =
+implement Int_value 
+end;;
 
 
-species Spe_int_imp_value_tol2 inherits 
-  Imp_value_tol(Coll_int_value, Coll_int_value!of_int(2)) =
+species Spe_int_imp_value_tol2 =
+inherit Imp_value_tol(Coll_int_value, Coll_int_value!of_int(2)) ;
 
  proof of tol_is_positive = 
 assumed  {* Syntax error *};
@@ -241,11 +253,19 @@ end ;;
 
 
 
-collection Coll_int_imp_value_tol implements Spe_int_imp_value_tol2 ;;
+collection Coll_int_imp_value_tol =
+implement Spe_int_imp_value_tol2 
+end;;
 
-collection Coll_int_imp_value implements Imp_value(Coll_int_value) ;;
+collection Coll_int_imp_value =
+implement Imp_value(Coll_int_value) 
+end;;
 
-collection Coll_bool_value implements Bool_value ;;
+collection Coll_bool_value =
+implement Bool_value 
+end;;
 
-collection Coll_bool_imp_value implements Imp_value(Coll_bool_value) ;;
+collection Coll_bool_imp_value =
+implement Imp_value(Coll_bool_value) 
+end;;
 

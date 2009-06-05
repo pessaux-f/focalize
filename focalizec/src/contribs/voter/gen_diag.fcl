@@ -1,5 +1,5 @@
 (* 
- *@version $Revision: 1.1 $ $Date: 2009-06-04 16:17:33 $
+ *@version $Revision: 1.2 $ $Date: 2009-06-04 22:50:14 $
  *)
 
 use "basics";;
@@ -9,7 +9,8 @@ open "basics";;
 open "sets_orders";;
 
 
-species Gen_diag inherits Setoid =
+species Gen_diag =
+inherit Setoid ;
 
 (* Returned value is valid *)
 signature valid : Self -> bool;

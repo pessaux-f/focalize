@@ -76,7 +76,8 @@ all x y in Self,
 end;;
 
 
-species Imp_peano inherits Peano =
+species Imp_peano =
+inherit Peano ;
 
 representation = int;
 
@@ -138,11 +139,14 @@ assumed {* to do *}
 
 end;;
 
-collection Coll_peano implements Imp_peano;;
+collection Coll_peano =
+implement Imp_peano
+end;;
 
 
 (* Arithmetic on peano axioms with common operations plus, diff, inf, ... *)
-species Peano_Arith inherits Peano =
+species Peano_Arith =
+inherit Peano ;
 
 signature plus : Self -> Self -> Self;
 

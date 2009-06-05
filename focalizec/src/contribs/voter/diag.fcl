@@ -1,5 +1,5 @@
 (* 
- *@version $Revision: 1.1 $ $Date: 2009-06-04 16:17:33 $
+ *@version $Revision: 1.2 $ $Date: 2009-06-04 22:50:14 $
  *)
 
 use "basics";;
@@ -18,8 +18,8 @@ open "pair";;
 
 
 
-species Diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) 
-inherits Gen_diag, Sp_pair(C, E) =
+species Diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) = 
+inherit Gen_diag, Sp_pair(C, E) ;
 
   (* no_match implies returned value is invalid *)
   property no_match_is_invalid:
@@ -47,15 +47,15 @@ inherits Gen_diag, Sp_pair(C, E) =
 
  end;;
 
-species Imp_diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) 
-inherits Diag_2oo3(E, C), Imp_pair(C, E) =
+species Imp_diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) =
+inherit Diag_2oo3(E, C), Imp_pair(C, E) ;
 
 
   (* all other diag returned valid value *)
   let valid(x in Self) in bool = 
-     or_b(E!equal(prj_b(x), E!range_match),
-	  or_b(E!equal(prj_b(x), E!partial_match),
-               E!equal(prj_b(x), E!perfect_match)))
+     E!equal(prj_b(x), E!range_match) ||
+     E!equal(prj_b(x), E!partial_match) ||
+     E!equal(prj_b(x), E!perfect_match)
 ;
 
   proof of no_match_is_invalid =

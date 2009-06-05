@@ -1,5 +1,5 @@
 (* 
- *@version $Revision: 1.3 $ $Date: 2009-06-04 16:17:33 $
+ *@version $Revision: 1.4 $ $Date: 2009-06-04 22:50:14 $
  *)
 
 use "basics";;
@@ -11,7 +11,8 @@ open "sets_orders";;
 open "peano";;
 
 (** Type somme : Numero du capteur de la sortie voteur *)
-species Sp_capteur inherits Setoid =
+species Sp_capteur =
+inherit Setoid ;
  
   (** Définition du type somme *)
   (** Capteur associé de l'entrée 1 *)
@@ -39,7 +40,8 @@ species Sp_capteur inherits Setoid =
 end ;;
 
 
-species Imp_capteur(P is Peano) inherits Sp_capteur =	
+species Imp_capteur(P is Peano) =
+inherit Sp_capteur ;
 
 representation = P;
 
@@ -85,4 +87,6 @@ let print(x in Self) in string =
 
 end ;;
 
-collection Coll_capteur implements Imp_capteur(Coll_peano) ;;
+collection Coll_capteur =
+implement Imp_capteur(Coll_peano) 
+end;;

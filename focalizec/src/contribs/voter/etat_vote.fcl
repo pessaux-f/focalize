@@ -1,5 +1,5 @@
 (* 
- *@version $Revision: 1.3 $ $Date: 2009-06-04 16:17:33 $
+ *@version $Revision: 1.4 $ $Date: 2009-06-04 22:50:14 $
  *)
 
 use "basics";;
@@ -14,7 +14,8 @@ open "peano";;
 
 
 (** Type somme : Etats possibles de la sortie voteur *)
-species Sp_etat_vote inherits Setoid =
+species Sp_etat_vote = 
+inherit Setoid ;
  
   (** The 3 values are inconsistant *)
   signature no_match : Self; 
@@ -49,7 +50,8 @@ species Sp_etat_vote inherits Setoid =
 
 end ;;
 
-species Imp_etat_vote(P is Peano) inherits Sp_etat_vote =	
+species Imp_etat_vote(P is Peano) = 
+inherit Sp_etat_vote ;	
 
 representation = P;
 
@@ -113,4 +115,6 @@ let print(x in Self) in string =
 end ;;
 
 
-collection Coll_etat_vote implements Imp_etat_vote(Coll_peano) ;;
+collection Coll_etat_vote =
+implement Imp_etat_vote(Coll_peano) 
+end;;

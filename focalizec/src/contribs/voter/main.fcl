@@ -15,17 +15,23 @@ open "diag";;
 open "vote";;
 
 
-collection Coll_diag implements Imp_diag_2oo3(Coll_etat_vote, Coll_capteur) ;;
+collection Coll_diag =
+implement Imp_diag_2oo3(Coll_etat_vote, Coll_capteur) 
+end;;
 
-species Sp_int_imp_vote_tol inherits 
-  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_int_imp_value_tol, Coll_diag) =
+species Sp_int_imp_vote_tol = 
+inherit 
+  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_int_imp_value_tol, Coll_diag) ;
+
   proof of equal_value_is_symmetric = 
     by property Coll_int_imp_value_tol!equal_value_symmetric;
   proof of equal_value_is_reflexive = 
     by property Coll_int_imp_value_tol!equal_value_reflexive;
 end ;;
 
-collection Coll_int_imp_vote_tol implements Sp_int_imp_vote_tol ;;
+collection Coll_int_imp_vote_tol =
+implement Sp_int_imp_vote_tol 
+end;;
 
 (* Pour les entiers avec tolérance *)
 let p_int_tol(x) = Coll_int_imp_value_tol!parse(x);;
@@ -128,15 +134,19 @@ let va34 = "7";;
 
 
 
-species Sp_int_imp_vote inherits 
-  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_int_imp_value, Coll_diag) =
+species Sp_int_imp_vote =
+inherit 
+  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_int_imp_value, Coll_diag) ;
+
   proof of equal_value_is_symmetric = 
     by property Coll_int_imp_value!equal_value_symmetric;
   proof of equal_value_is_reflexive = 
     by property Coll_int_imp_value!equal_value_reflexive;
 end ;;
 
-collection Coll_int_imp_vote implements Sp_int_imp_vote ;;
+collection Coll_int_imp_vote =
+implement Sp_int_imp_vote 
+end;;
 
 (* Pour les entiers sans tolérance *)
 let p_int(x) = Coll_int_imp_value!parse(x);;
@@ -233,15 +243,19 @@ let vb34 = "7";;
 
 
 
-species Sp_bool_imp_vote inherits 
-  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_bool_imp_value, Coll_diag) =
+species Sp_bool_imp_vote =
+inherit 
+  Imp_vote(Coll_etat_vote, Coll_capteur, Coll_bool_imp_value, Coll_diag);
+
   proof of equal_value_is_symmetric = 
     by property Coll_bool_imp_value!equal_value_symmetric;
   proof of equal_value_is_reflexive = 
     by property Coll_bool_imp_value!equal_value_reflexive;
 end ;;
 
-collection Coll_bool_imp_vote implements Sp_bool_imp_vote ;;
+collection Coll_bool_imp_vote =
+implement Sp_bool_imp_vote 
+end;;
 
 (* Pour les booléens *)
 let p_bool(x) = Coll_bool_imp_value!parse(x);;

@@ -1,6 +1,6 @@
 
 (* 
- *@version $Revision: 1.4 $ $Date: 2009-06-04 16:17:33 $
+ *@version $Revision: 1.5 $ $Date: 2009-06-04 22:50:14 $
  *)
 
 use "basics";;
@@ -24,8 +24,8 @@ open "gen_vote";;
 
 (** the 2oo3 voter *)
 species Voteur(E is Sp_etat_vote, C is Sp_capteur, V is Value, 
-	       P is Diag_2oo3(E, C)) 
-  inherits Gen_voter(V, P) =
+	       P is Diag_2oo3(E, C)) =
+inherit Gen_voter(V, P) ;
 
 (* Shortcut to extract sensor from diagnosis *)
 let sensor(diag in P) in C =
@@ -480,8 +480,8 @@ end ;;
 
 
 species Imp_vote(E is Sp_etat_vote, C is Sp_capteur, V is Value,
-		 P is Diag_2oo3(E, C)) 
-  inherits Voteur(E, C, V, P) =
+		 P is Diag_2oo3(E, C)) = 
+inherit Voteur(E, C, V, P) ;
 
 (* il faut bien mettre quelque chose !!!*)
 representation = unit;

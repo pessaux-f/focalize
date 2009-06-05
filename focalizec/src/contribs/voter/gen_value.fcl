@@ -1,5 +1,5 @@
 (* 
- *@version $Revision: 1.1 $ $Date: 2009-06-04 16:17:33 $
+ *@version $Revision: 1.2 $ $Date: 2009-06-04 22:50:14 $
  *)
 
 use "basics";;
@@ -11,7 +11,8 @@ open "sets_orders";;
 
 (** Common species defining the exported operations used by the voter.
  This permits to hide (thrue inheritance) the real value species used *)
-species Value inherits Setoid =
+species Value =
+inherit Setoid ;
   (** Operator: Egality between 2 values *)
   signature equal_value : Self -> Self -> bool;
 

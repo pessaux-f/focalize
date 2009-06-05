@@ -4,7 +4,8 @@ use "sets_orders" ;;
 open "basics" ;;
 open "sets_orders" ;;
 
-species Sp_pair (S1 is Setoid, S2 is Setoid) inherits Setoid =
+species Sp_pair (S1 is Setoid, S2 is Setoid) = 
+inherit Setoid;
 
 signature constr : S1 -> S2 -> Self;
 (* first projection *)
@@ -69,7 +70,8 @@ all n1 n3 n5 in S1, all n2 n4 n6 in S2,
 end ;;
 
 
-species Imp_pair (S1 is Setoid, S2 is Setoid) inherits Sp_pair(S1, S2) =
+species Imp_pair (S1 is Setoid, S2 is Setoid) =
+inherit Sp_pair(S1, S2);
 
 representation = S1 * S2;
 
