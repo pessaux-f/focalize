@@ -1,7 +1,5 @@
 use "basics";;
-
 open "basics";;
-
 
 (* Module implémentant les Axiomes de Peano *)
 species Peano =
@@ -95,7 +93,7 @@ let s(x in Self) in Self =
 ;
 *)
 
-let s(x in Self) in Self = basics#succ(x);
+let s (x in Self) in Self = basics#succ0x(x);
 
 (* Proof of Peano properties *)
 proof of equal_reflexive =
