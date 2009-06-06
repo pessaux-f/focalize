@@ -3,6 +3,9 @@
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            William Bartlett                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
 (*                                                                     *)
 (*                      ENSIIE - LIP6  -  INRIA Rocquencourt           *)
 (*                                                                     *)
@@ -11,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: wellfounded.fcl,v 1.10 2009-06-05 13:59:13 weis Exp $ *)
+(* $Id: wellfounded.fcl,v 1.11 2009-06-06 16:56:56 weis Exp $ *)
 
 (* Definition (import) of the notion of wellfoundedness.  Since this notion
    is not defineable in FoCaLize, this library is a toolbox for reasoning
@@ -42,6 +45,7 @@ species PartialWellOrder =
   ;
 
   property wellfounded_lt: wellfounded (lt);
+
 end
 ;;
 
@@ -77,6 +81,7 @@ species RelativeIntegers =
   let lt (x, y) = lowerbound <0x y && x <0x y;
 
   proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
+
 end
 ;;
 
@@ -90,6 +95,7 @@ species InverseImage (A is PartialWellOrder) =
     lt (x, y) -> A!lt (meazure (x), meazure (y));
 
   proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
+
 end
 ;;
 
@@ -117,6 +123,7 @@ species CartesianProduct (A is Basic_object, B is Basic_object) =
 
   let fst (x in Self) = match x with | (a , _) -> a ;
   let snd (x in Self) = match x with | (_ , b) -> b ;
+
 end
 ;;
 
@@ -130,6 +137,7 @@ species LexicographicProduct (A is PartialWellOrder, B is PartialWellOrder) =
         A!lt (xA, yA) || (A!equal (xA, yA) && B!lt (xB, yB)) ;
 
   proof of wellfounded_lt = assumed {* *} ;
+
 end
 ;;
 
@@ -146,5 +154,6 @@ species RelationalProduct
     && B!lt (C!snd (x), C!snd (y)) ;
 
   proof of compatibility_lt_Alt_meazure = assumed {* *} ;
+
 end
 ;;

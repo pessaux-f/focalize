@@ -6,6 +6,7 @@
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  -  INRIA Rocquencourt           *)
 (*                                                                     *)
 (*  Copyright 2007, 2008 LIP6 and INRIA                                *)
@@ -13,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lattices.fcl,v 1.6 2009-05-16 10:26:59 weis Exp $ *)
+(* $Id: lattices.fcl,v 1.7 2009-06-06 16:56:56 weis Exp $ *)
 
 use "sets";;
 open "sets";;
