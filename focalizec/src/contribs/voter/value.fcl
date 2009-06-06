@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: value.fcl,v 1.8 2009-06-06 13:02:04 ayrault Exp $ *)
+(* $Id: value.fcl,v 1.9 2009-06-06 15:22:06 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -26,21 +26,29 @@ open "gen_value";;
 
 (** Common species for value and tolerance *)
 species Gen_value =
-inherit Setoid ;
-end ;;
+
+  inherit Setoid;
+
+end
+;;
 
 (** Common species for value and tolerance *)
-species Gen_value_tol = 
-inherit Gen_value ;
+species Gen_value_tol =
+
+  inherit Gen_value;
+
   signature plus : Self -> Self -> Self;
-  signature geq : Self -> Self -> bool;  
-  signature pos : Self -> bool;  
-end ;;
+  signature geq : Self -> Self -> bool;
+  signature pos : Self -> bool;
+
+end
+;;
 
 (** Common species defining the exported operations used by the voter.
  This permits to hide (thrue inheritance) the real value species used *)
-species Value = 
-inherit Setoid ;
+species Value =
+
+  inherit Setoid;
 
   (** Operator: Egality between 2 values *)
   signature equal_value : Self -> Self -> bool;
@@ -48,214 +56,219 @@ inherit Setoid ;
   (* Property needed for voter proving *)
   (** Equal_value is symmetric *)
   property equal_value_symmetric:
-   all a b in Self, !equal_value(a, b) -> !equal_value(b, a);
+   all a b in Self, !equal_value (a, b) -> !equal_value (b, a);
 
   (** Equal_value is reflexive *)
   property equal_value_reflexive:
-   all a in Self, !equal_value(a, a);
+   all a in Self, !equal_value (a, a);
 
-end ;;
+end
+;;
 
 (** General type of values to vote. tol parameter represents the
 tolerance under which two value of the species are considerate as
 equal *)
-species Sp_value_tol( T is Gen_value_tol, tol in T) = 
-inherit Value ;
+species Sp_value_tol (T is Gen_value_tol, tol in T) =
+
+  inherit Value;
   representation = T;
- 
+
   (** Operator: Egality between 2 values *)
   signature equal_value : Self -> Self -> bool;
 
-  (** DÃ©finition de l'Ã©galitÃ© entre valeurs *)
-  (* Connaissant, abs(a): *)
-  (*   a > 0 ->  abs(a) = a *)
-  (*   not( a > 0) -> abs(a) = -a   *)
-  (* Definition abstraite de l'Ã©galitÃ© *)
-  (* !equal_value(a,b) -> abs(a-b) <= tol *)
-  (* DÃ©finition plus concrÃ¨te de l'Ã©galitÃ© *)
-  (*  a > b ->  !equal_value(a,b) -> a - b <= tol *)
-  (*  not( a > b) -> !equal_value(a,b) -> b - a <= tol *)
-  (* DÃ©finition implementatoire de l'Ã©galitÃ© *)
-  (*  a > b -> !equal_value(a,b) -> b + tol >= a *)
-  (*  not( a > b) -> !equal_value(a,b) -> a + tol >= b *)
-  
+  (** Définition de l'égalité entre valeurs *)
+  (* Connaissant, abs (a): *)
+  (*   a > 0 ->  abs (a) = a *)
+  (*   not (a > 0) -> abs (a) = -a   *)
+  (* Definition abstraite de l'égalité *)
+  (* !equal_value (a,b) -> abs (a-b) <= tol *)
+  (* Définition plus concrÃ¨te de l'égalité *)
+  (*  a > b ->  !equal_value (a,b) -> a - b <= tol *)
+  (*  not (a > b) -> !equal_value (a,b) -> b - a <= tol *)
+  (* Définition implementatoire de l'égalité *)
+  (*  a > b -> !equal_value (a,b) -> b + tol >= a *)
+  (*  not (a > b) -> !equal_value (a,b) -> a + tol >= b *)
+
   property tol_is_positive:
-  T!pos(tol);
+  T!pos (tol);
 
-end ;;
+end
+;;
 
-species Imp_value_tol( T is Gen_value_tol, tol in T) = 
-inherit  Sp_value_tol(T, tol) ;
+species Imp_value_tol (T is Gen_value_tol, tol in T) =
 
-  let equal_value(x in Self, y in Self) in bool = 
-    if T!geq( x, y) then
-      T!geq( T!plus(y, tol), x)
+  inherit Sp_value_tol (T, tol);
+
+  let equal_value (x in Self, y in Self) in bool =
+    if T!geq (x, y) then
+      T!geq (T!plus (y, tol), x)
     else
-      T!geq( T!plus(x, tol), y)
+      T!geq (T!plus (x, tol), y)
   ;
 
-  let equal(x in Self, y in Self) in bool = 
-     T!equal(x, y);
+  let equal (x in Self, y in Self) in bool = T!equal (x, y);
 
   let element = T!element;
 
-proof of equal_transitive = 
-  by property T!equal_transitive definition of equal;
+  proof of equal_transitive =
+    by property T!equal_transitive definition of equal;
 
-proof of equal_symmetric = 
-  by property T!equal_symmetric definition of equal;
+  proof of equal_symmetric =
+    by property T!equal_symmetric definition of equal;
 
-proof of equal_reflexive = 
-  by property T!equal_reflexive definition of equal;
+  proof of equal_reflexive =
+    by property T!equal_reflexive definition of equal;
 
-proof of equal_value_reflexive = 
-<1>1 assume x in Self,
-  prove
-  T!geq( T!plus(x, tol), x)
-  assumed {* Todo *}
-<1>0 qed by step <1>1 definition of equal_value
-;
+  proof of equal_value_reflexive =
+  <1>1 assume x in Self,
+    prove
+    T!geq (T!plus (x, tol), x)
+    assumed {* Todo *}
+  <1>0 qed by step <1>1 definition of equal_value
+  ;
 
-proof of equal_value_symmetric =  assumed {* Error Coq!! *}; 
-(*
-<1>1 
-  assume x in Self,
-  assume y in Self,
-  assume H1: equal_value(x, y),
-  prove
-   !equal_value(y, x)
-   <2>1 
-      assume x in Self,
-      assume y in Self,
-      assume H3: T!geq(x, y),
-      prove
-      equal_value(y, x)
-      assumed {* Todo *}
-   <2>2 
-      assume x in Self,
-      assume y in Self,
-      assume H4: ~~(T!geq(x, y)),
-      prove
-      equal_value(y, x)
-      assumed {* Todo *}
-   <2>0 conclude
-<1>0 conclude
-;
-*)
+  proof of equal_value_symmetric = assumed {* Error Coq !! *};
+  (*
+  <1>1
+    assume x in Self,
+    assume y in Self,
+    assume H1: equal_value (x, y),
+    prove
+     !equal_value (y, x)
+     <2>1
+        assume x in Self,
+        assume y in Self,
+        assume H3: T!geq (x, y),
+        prove
+        equal_value (y, x)
+        assumed {* Todo *}
+     <2>2
+        assume x in Self,
+        assume y in Self,
+        assume H4: ~~ (T!geq (x, y)),
+        prove
+        equal_value (y, x)
+        assumed {* Todo *}
+     <2>0 conclude
+  <1>0 conclude
+  ;
+  *)
 
-  let parse(x) = T!parse(x);
-  let print(x) = T!print(x);
+  let parse (x) = T!parse (x);
+  let print (x) = T!print (x);
 
-end ;;
+end
+;;
 
 
-species Imp_value( T is Gen_value) = 
-inherit Value ;
+species Imp_value (T is Gen_value) =
 
-representation = T;
+  inherit Value;
 
-  let equal_value(x in Self, y in Self) in bool = T!equal(x, y);
-  let equal(x in Self, y in Self) in bool = T!equal(x, y);
+  representation = T;
+
+  let equal_value (x in Self, y in Self) in bool = T!equal (x, y);
+  let equal (x in Self, y in Self) in bool = T!equal (x, y);
   let element = T!element;
 
-proof of equal_transitive = 
- by property T!equal_transitive definition of equal;
+  proof of equal_transitive =
+    by property T!equal_transitive definition of equal;
 
-proof of equal_symmetric = 
- by property T!equal_symmetric definition of equal;
+  proof of equal_symmetric =
+    by property T!equal_symmetric definition of equal;
 
-proof of equal_reflexive = 
- by property T!equal_reflexive definition of equal;
+  proof of equal_reflexive =
+    by property T!equal_reflexive definition of equal;
 
-  let parse(x) = T!parse(x);
-  let print(x) = T!print(x);
+  let parse (x) = T!parse (x);
+  let print (x) = T!print (x);
 
-proof of equal_value_symmetric = 
- by property T!equal_symmetric definition of equal_value;
-proof of equal_value_reflexive = 
- by property T!equal_reflexive definition of equal_value;
+  proof of equal_value_symmetric =
+    by property T!equal_symmetric definition of equal_value;
+  proof of equal_value_reflexive =
+    by property T!equal_reflexive definition of equal_value;
 
-end ;;
+end
+;;
 
 
-species Int_value = 
-inherit Gen_value_tol ;
+species Int_value =
 
-representation = int;
+  inherit Gen_value_tol;
 
-  let equal(x in Self, y in Self) in bool = 
-     basics#syntactic_equal(x, y);
+  representation = int;
+
+  let equal (x in Self, y in Self) in bool =
+    basics#syntactic_equal (x, y);
   let element = 1;
 
-  proof of equal_transitive = 
-  by property basics#beq_trans definition of equal; 
-
-  proof of equal_symmetric = 
-  by property basics#beq_symm definition of equal;
-
-  proof of equal_reflexive = 
-  by property basics#beq_refl definition of equal; 
-
-  let parse(x) = basics#int_of_string(x);
-  let print(x) =  basics#string_of_int(x);
-
-  let of_int(n in int) in Self = n;
-
-  let plus(n1 in Self, n2 in Self) in Self =
-    n1 + n2;
-
-  let geq(n1 in Self, n2 in Self) in bool =
-    (n1 >=0x n2);
-
-  let pos(n in Self) in bool =
-    (n >0x 0);
-
-end ;;
-
-species Bool_value =
-inherit Gen_value ;
-
-representation = bool;
-
-  let equal(x in Self, y in Self) in bool = 
-     basics#syntactic_equal(x, y);
-  let element = true;
-
-  proof of equal_transitive = 
+  proof of equal_transitive =
   by property basics#beq_trans definition of equal;
 
-  proof of equal_symmetric = 
+  proof of equal_symmetric =
   by property basics#beq_symm definition of equal;
 
-  proof of equal_reflexive = 
+  proof of equal_reflexive =
   by property basics#beq_refl definition of equal;
 
-  let parse(x) = if basics#syntactic_equal(x,  "True") then
-                   true
-                 else
-                   false;
+  let parse (x) = basics#int_of_string (x);
+  let print (x) =  basics#string_of_int (x);
 
-  let print(x) =  if !equal(x, true) then
-                     "True"
-                  else
-                     "False";
-  let of_bool(b in bool) in Self = b;
+  let of_int (n in int) in Self = n;
 
-end ;;
+  let plus (n1 in Self, n2 in Self) in Self = n1 + n2;
 
+  let geq (n1 in Self, n2 in Self) in bool = n1 >=0x n2;
+
+  let pos (n in Self) in bool = n >0x 0;
+
+end
+;;
+
+species Bool_value =
+
+  inherit Gen_value;
+
+  representation = bool;
+
+  let equal (x in Self, y in Self) in bool =
+     basics#syntactic_equal (x, y);
+  let element = true;
+
+  proof of equal_transitive =
+  by property basics#beq_trans definition of equal;
+
+  proof of equal_symmetric =
+  by property basics#beq_symm definition of equal;
+
+  proof of equal_reflexive =
+  by property basics#beq_refl definition of equal;
+
+  let parse (x) =
+    if basics#syntactic_equal (x,  "True") then true else false;
+
+  let print (x) = if !equal (x, true) then "True" else "False";
+
+  let of_bool (b in bool) in Self = b;
+
+end
+;;
 
 collection Coll_int_value =
-implement Int_value ;
-end;;
 
+  implement Int_value;
+
+end
+;;
 
 species Spe_int_imp_value_tol2 =
-inherit Imp_value_tol(Coll_int_value, Coll_int_value!of_int(2)) ;
 
- proof of tol_is_positive = 
-  <1>1 
-  prove 
-  Coll_int_value!pos(Coll_int_value!of_int(2))
+  inherit Imp_value_tol (Coll_int_value, Coll_int_value!of_int (2));
+
+  proof of tol_is_positive =
+  <1>1
+  prove
+  Coll_int_value!pos (Coll_int_value!of_int (2))
   assumed {* By definition *}
 
   <1>f conclude
@@ -263,21 +276,30 @@ inherit Imp_value_tol(Coll_int_value, Coll_int_value!of_int(2)) ;
 
 end ;;
 
-
-
 collection Coll_int_imp_value_tol =
-implement Spe_int_imp_value_tol2 ;
-end;;
+
+  implement Spe_int_imp_value_tol2;
+
+end
+;;
 
 collection Coll_int_imp_value =
-implement Imp_value(Coll_int_value) ;
-end;;
+
+  implement Imp_value (Coll_int_value);
+
+end
+;;
 
 collection Coll_bool_value =
-implement Bool_value ; 
-end;;
+
+  implement Bool_value;
+
+end
+;;
 
 collection Coll_bool_imp_value =
-implement Imp_value(Coll_bool_value) ;
-end;;
 
+  implement Imp_value (Coll_bool_value);
+
+end
+;;
