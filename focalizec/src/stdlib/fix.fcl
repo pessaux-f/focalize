@@ -1,3 +1,23 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Renaud Rioboo                                            *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 - 2009 LIP6 and INRIA                               *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: fix.fcl,v 1.2 2009-06-06 16:50:23 weis Exp $ *)
+
+(** {3 Fix points for focalize programming} *)
+
 (**
 
    @title Various fix points
@@ -70,12 +90,14 @@ species Intention = inherit Basic_object; end;;
 *)
 
 species Linear_fix_point(A is Basic_object, B is Basic_object) =
+
   inherit Intention;
   (*  We would like to write
      inherits abstract_sum(a, (abstract_product(b, self) -> self))
      since (a*b) -> c and a -> (b -> c) should be the same.
      roughly abstract_sum(a, abstract_product(b, self))
   *)
+
   (** base embedding  *)
   signature base: A -> Self;
   (** an effective way to check base case *)
@@ -118,6 +140,7 @@ end;;
 
 (** *)
 species Linear_fixed_set(A is Setoid, B is Setoid) =
+
   inherit Setoid,
           Linear_fix_point(A, B);
 
@@ -469,6 +492,7 @@ type variant_fix_point('a, 'b) =
 ;;
 
 species Linear_fix_point_by_variants(A is Basic_object, B is Basic_object) =
+
   inherit Linear_fix_point(A, B);
 
   representation = variant_fix_point(A, B);
@@ -515,6 +539,7 @@ species Linear_fix_point_by_variants(A is Basic_object, B is Basic_object) =
 end;;
 
 species Linear_fix_set_by_variants(A is Setoid, B is Setoid) =
+
   inherit Linear_fixed_set(A, B), Linear_fix_point_by_variants(A, B);
   
 
