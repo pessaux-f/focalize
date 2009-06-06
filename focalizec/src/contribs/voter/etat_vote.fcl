@@ -1,6 +1,20 @@
-(* 
- *@version $Revision: 1.4 $ $Date: 2009-06-04 22:50:14 $
- *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Philippe Ayrault                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 - 2009 LIP6 and INRIA                               *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: etat_vote.fcl,v 1.5 2009-06-06 13:02:04 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -116,5 +130,5 @@ end ;;
 
 
 collection Coll_etat_vote =
-implement Imp_etat_vote(Coll_peano) 
+implement Imp_etat_vote(Coll_peano) ;
 end;;

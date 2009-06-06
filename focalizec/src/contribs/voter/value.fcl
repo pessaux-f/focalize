@@ -1,6 +1,20 @@
-(* 
- *@version $Revision: 1.7 $ $Date: 2009-06-06 12:30:56 $
- *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Philippe Ayrault                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 - 2009 LIP6 and INRIA                               *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: value.fcl,v 1.8 2009-06-06 13:02:04 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;

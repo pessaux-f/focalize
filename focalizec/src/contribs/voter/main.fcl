@@ -16,7 +16,7 @@ open "vote";;
 
 
 collection Coll_diag =
-implement Imp_diag_2oo3(Coll_etat_vote, Coll_capteur) 
+implement Imp_diag_2oo3(Coll_etat_vote, Coll_capteur) ;
 end;;
 
 species Sp_int_imp_vote_tol = 
@@ -30,7 +30,7 @@ inherit
 end ;;
 
 collection Coll_int_imp_vote_tol =
-implement Sp_int_imp_vote_tol 
+implement Sp_int_imp_vote_tol ;
 end;;
 
 (* Pour les entiers avec tolérance *)
@@ -145,7 +145,7 @@ inherit
 end ;;
 
 collection Coll_int_imp_vote =
-implement Sp_int_imp_vote 
+implement Sp_int_imp_vote ;
 end;;
 
 (* Pour les entiers sans tolérance *)
@@ -254,7 +254,7 @@ inherit
 end ;;
 
 collection Coll_bool_imp_vote =
-implement Sp_bool_imp_vote 
+implement Sp_bool_imp_vote ;
 end;;
 
 (* Pour les booléens *)

@@ -1,6 +1,20 @@
-(* 
- *@version $Revision: 1.4 $ $Date: 2009-06-04 22:50:14 $
- *)
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Philippe Ayrault                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 - 2009 LIP6 and INRIA                               *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: num_capteur.fcl,v 1.5 2009-06-06 13:02:04 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -88,5 +102,5 @@ let print(x in Self) in string =
 end ;;
 
 collection Coll_capteur =
-implement Imp_capteur(Coll_peano) 
+implement Imp_capteur(Coll_peano) ;
 end;;
