@@ -1,5 +1,5 @@
 (* 
- *@version $Revision: 1.6 $ $Date: 2009-06-06 12:10:15 $
+ *@version $Revision: 1.7 $ $Date: 2009-06-06 12:30:56 $
  *)
 
 use "basics";;
@@ -102,7 +102,8 @@ proof of equal_value_reflexive =
 <1>0 qed by step <1>1 definition of equal_value
 ;
 
-proof of equal_value_symmetric = (* assumed {* Error Coq!! *}; *) 
+proof of equal_value_symmetric =  assumed {* Error Coq!! *}; 
+(*
 <1>1 
   assume x in Self,
   assume y in Self,
@@ -126,6 +127,7 @@ proof of equal_value_symmetric = (* assumed {* Error Coq!! *}; *)
    <2>0 conclude
 <1>0 conclude
 ;
+*)
 
   let parse(x) = T!parse(x);
   let print(x) = T!print(x);
@@ -229,7 +231,7 @@ end ;;
 
 
 collection Coll_int_value =
-implement Int_value 
+implement Int_value ;
 end;;
 
 
@@ -250,18 +252,18 @@ end ;;
 
 
 collection Coll_int_imp_value_tol =
-implement Spe_int_imp_value_tol2 
+implement Spe_int_imp_value_tol2 ;
 end;;
 
 collection Coll_int_imp_value =
-implement Imp_value(Coll_int_value) 
+implement Imp_value(Coll_int_value) ;
 end;;
 
 collection Coll_bool_value =
-implement Bool_value 
+implement Bool_value ; 
 end;;
 
 collection Coll_bool_imp_value =
-implement Imp_value(Coll_bool_value) 
+implement Imp_value(Coll_bool_value) ;
 end;;
 
