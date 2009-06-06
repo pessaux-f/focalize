@@ -1,5 +1,5 @@
 (* 
- *@version $Revision: 1.5 $ $Date: 2009-06-04 22:50:14 $
+ *@version $Revision: 1.6 $ $Date: 2009-06-06 12:10:15 $
  *)
 
 use "basics";;
@@ -102,8 +102,7 @@ proof of equal_value_reflexive =
 <1>0 qed by step <1>1 definition of equal_value
 ;
 
-proof of equal_value_symmetric = assumed {* Syntax error !! *};
-(*
+proof of equal_value_symmetric = (* assumed {* Error Coq!! *}; *) 
 <1>1 
   assume x in Self,
   assume y in Self,
@@ -120,14 +119,13 @@ proof of equal_value_symmetric = assumed {* Syntax error !! *};
    <2>2 
       assume x in Self,
       assume y in Self,
-      assume H4: not(T!geq(x, y)),
+      assume H4: ~~(T!geq(x, y)),
       prove
       equal_value(y, x)
       assumed {* Todo *}
-   <2>0 qed
-<1>0 qed
+   <2>0 conclude
+<1>0 conclude
 ;
-*)
 
   let parse(x) = T!parse(x);
   let print(x) = T!print(x);
@@ -173,15 +171,14 @@ representation = int;
      basics#syntactic_equal(x, y);
   let element = 1;
 
-proof of equal_transitive = 
-assumed  {* Focalize *};
-(*by #beq_trans def !equal; *)
-proof of equal_symmetric = 
-assumed  {* Focalize *};
-(* by #beq_symm def !equal; *)
-proof of equal_reflexive = 
-assumed  {* Focalize *};
-(*by #beq_refl def !equal; *)
+  proof of equal_transitive = 
+  by property basics#beq_trans definition of equal; 
+
+  proof of equal_symmetric = 
+  by property basics#beq_symm definition of equal;
+
+  proof of equal_reflexive = 
+  by property basics#beq_refl definition of equal; 
 
   let parse(x) = basics#int_of_string(x);
   let print(x) =  basics#string_of_int(x);
@@ -189,13 +186,13 @@ assumed  {* Focalize *};
   let of_int(n in int) in Self = n;
 
   let plus(n1 in Self, n2 in Self) in Self =
-    basics#int_plus(n1, n2);
+    n1 + n2;
 
   let geq(n1 in Self, n2 in Self) in bool =
-    basics#int_geq(n1, n2);
+    (n1 >=0x n2);
 
   let pos(n in Self) in bool =
-    basics#int_gt(n, 0);
+    (n >0x 0);
 
 end ;;
 
@@ -208,15 +205,14 @@ representation = bool;
      basics#syntactic_equal(x, y);
   let element = true;
 
-proof of equal_transitive = 
-assumed  {* Focalize *};
-(* by #beq_trans def !equal; *)
-proof of equal_symmetric = 
-assumed  {* Focalize *};
-(* by #beq_symm def !equal; *)
-proof of equal_reflexive = 
-assumed  {* Focalize *};
-(* by #beq_refl def !equal; *)
+  proof of equal_transitive = 
+  by property basics#beq_trans definition of equal;
+
+  proof of equal_symmetric = 
+  by property basics#beq_symm definition of equal;
+
+  proof of equal_reflexive = 
+  by property basics#beq_refl definition of equal;
 
   let parse(x) = if basics#syntactic_equal(x,  "True") then
                    true
@@ -241,14 +237,14 @@ species Spe_int_imp_value_tol2 =
 inherit Imp_value_tol(Coll_int_value, Coll_int_value!of_int(2)) ;
 
  proof of tol_is_positive = 
-assumed  {* Syntax error *};
-(*
   <1>1 
   prove 
   Coll_int_value!pos(Coll_int_value!of_int(2))
-  assumed {* Todo *}
-  <1>0 qed by step <1>1;
-*)
+  assumed {* By definition *}
+
+  <1>f conclude
+;
+
 end ;;
 
 
