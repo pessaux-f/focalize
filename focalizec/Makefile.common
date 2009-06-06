@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.31 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile.common,v 1.32 2009-06-06 16:42:33 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -57,6 +57,7 @@ unconfigure::
 	$(RM) .config_var .depend .done_*
 
 distclean:: clean
+	$(RM) .\#*
 
 depend::
 	$(CAML_DEP) *.mli *.ml > ./.depend
