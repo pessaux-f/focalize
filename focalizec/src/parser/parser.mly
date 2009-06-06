@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.142 2009-06-05 13:57:49 weis Exp $ *)
+(* $Id: parser.mly,v 1.143 2009-06-06 09:31:20 weis Exp $ *)
 
 open Parsetree;;
 
@@ -723,8 +723,16 @@ representation_type_comma_list:
 /**** COLLECTION DEFINITION ****/
 
 define_collection:
-  | opt_doc COLLECTION collection_vname EQUAL IMPLEMENT species_expr END
-    { mk_doc $1 { cd_name = $3; cd_body = $6; } }
+  | opt_doc
+    COLLECTION collection_vname EQUAL
+      define_collection_body
+    END
+    { mk_doc $1 { cd_name = $3; cd_body = $5; } }
+;
+
+define_collection_body:
+  | IMPLEMENT species_expr SEMI
+    { $2 }
 ;
 
 /**** FUNCTION & VALUES DEFINITION ****/
