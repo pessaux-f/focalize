@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.10 2009-06-06 13:01:36 ayrault Exp $
+# $Id: Makefile,v 1.11 2009-06-06 16:35:29 weis Exp $
 
 # Makefile for algebra structures implementations
 
@@ -49,15 +49,15 @@ COQ_INCLUDES =\
   -I $(UTILSLIB_DIR)
 
 FOCALIZE_SRC =\
-	etat_vote.fcl \
-	num_capteur.fcl \
-	gen_value.fcl \
-	value.fcl \
-	gen_diag.fcl \
-	diag.fcl \
-	gen_vote.fcl \
-	vote.fcl \
-	main.fcl
+  etat_vote.fcl \
+  num_capteur.fcl \
+  gen_value.fcl \
+  value.fcl \
+  gen_diag.fcl \
+  diag.fcl \
+  gen_vote.fcl \
+  vote.fcl \
+  main.fcl
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 
@@ -94,7 +94,7 @@ STD_BIN_OBJS =\
   weak_structures_externals.cmx weak_structures.cmx\
   rings_fields.cmx
 
-BIN_EXE = build.x
+BIN_EXE = build.bin
 
 include $(ROOT_DIR)/Makefile.common
 
@@ -112,7 +112,7 @@ bin:: \
   $(FOCALIZE_MLS) $(FOCALIZE_ZVS)\
   $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
-$(BIN_EXE): byt
+$(BIN_EXE): byt bin
 	$(CAML_BIN_COMPILER) -o $@ \
            -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)\
             $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
@@ -157,12 +157,9 @@ uninstall::
 
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) && \
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) && \
-	$(RM) *.annot *.glob && \
 	$(RM) $(BIN_EXE)
 
-
-#build.x: bin
+#build.bin: bin
 #	$(CAML_BIN_COMPILER) -o $@ \
 #           -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR) \
 #            $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
