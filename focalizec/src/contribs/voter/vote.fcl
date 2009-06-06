@@ -14,10 +14,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: vote.fcl,v 1.6 2009-06-06 13:02:04 ayrault Exp $ *)
+(* $Id: vote.fcl,v 1.7 2009-06-06 15:35:42 weis Exp $ *)
 
 use "basics";;
-use "sets_orders";; 
+use "sets_orders";;
 use "value";;
 use "etat_vote";;
 use "num_capteur";;
@@ -34,543 +34,548 @@ open "diag";;
 open "pair";;
 open "gen_vote";;
 
-
 (** the 2oo3 voter *)
-species Voteur(E is Sp_etat_vote, C is Sp_capteur, V is Value, 
-	       P is Diag_2oo3(E, C)) =
-inherit Gen_voter(V, P) ;
+species
+  Voteur
+    (E is Sp_etat_vote, C is Sp_capteur, V is Value, P is Diag_2oo3 (E, C)) =
 
-(* Shortcut to extract sensor from diagnosis *)
-let sensor(diag in P) in C =
-  P!prj_a(diag)
-;
+  inherit Gen_voter (V, P);
 
-(* Shortcut to extract state from diagnosis *)
-let state(diag in P) in E =
-  P!prj_b(diag)
-;
+  (* Shortcut to extract sensor from diagnosis *)
+  let sensor (diag in P) in C =
+    P!prj_a (diag)
+  ;
 
-(* Functional definition of the majority vote                *)
-(* Vote with 3 equivalent values returns a perfect_match and *)
-(* the value of the first sensor.                            *)
-property vote_perfect :
+  (* Shortcut to extract state from diagnosis *)
+  let state (diag in P) in E =
+    P!prj_b (diag)
+  ;
+
+  (* Functional definition of the majority vote                *)
+  (* Vote with 3 equivalent values returns a perfect_match and *)
+  (* the value of the first sensor.                            *)
+  property vote_perfect :
+    all v1 v2 v3 in V,
+      (V!equal_value (v1, v2) /\
+       V!equal_value (v2, v3) /\
+       V!equal_value (v1, v3))
+      ->
+      ((value (voter (v1, v2, v3)) = v1) /\
+       (diag (voter (v1, v2, v3)) = P!constr (C!capt_1, E!perfect_match)))
+  ;
+
+  (* Vote with One input is consistent with the two others which are mutually *)
+  (* inconsistent.Returns a range_match with the faulty sensor and one of the *)
+  (* 2 consistent values.                                                     *)
+  property vote_match_c1 :
+    all v1 v2 v3 in V,
+      (~ V!equal_value (v1, v2) /\
+       ~ V!equal_value (v1, v3) /\
+       V!equal_value (v2, v3))
+      ->
+      ((value (voter (v1, v2, v3)) = v2) /\
+       (diag (voter (v1, v2, v3)) = P!constr (C!capt_1, E!range_match)))
+  ;
+
+  property vote_match_c2 :
+    all v1 v2 v3 in V,
+      (~ V!equal_value (v1, v2) /\
+       V!equal_value (v1, v3) /\
+       ~ V!equal_value (v2, v3))
+      ->
+      ((value (voter (v1, v2, v3)) = v3) /\
+       (diag (voter (v1, v2, v3)) = P!constr (C!capt_2, E!range_match)))
+  ;
+
+  property vote_match_c3 :
+    all v1 v2 v3 in V,
+      (V!equal_value (v1, v2) /\
+       ~ V!equal_value (v1, v3) /\
+       ~ V!equal_value (v2, v3))
+      ->
+      ((value (voter (v1, v2, v3)) = v1) /\
+       (diag (voter (v1, v2, v3)) = P!constr (C!capt_3, E!range_match)))
+  ;
+
+  (* Vote with 2 values different from the 2 other but one is consistent *)
+  (* returns a partial_match with the healthy sensor and its the value   *)
+  property vote_partial_c1 :
+    all v1 v2 v3 in V,
+      (V!equal_value (v1, v2) /\
+       V!equal_value (v1, v3) /\
+       ~ V!equal_value (v2, v3)) ->
+      ((value (voter (v1, v2, v3)) = v1) /\
+       (diag (voter (v1, v2, v3)) = P!constr (C!capt_1, E!partial_match)))
+  ;
+
+  property vote_partial_c2 :
+    all v1 v2 v3 in V,
+      (V!equal_value (v1, v2) /\
+       ~ V!equal_value (v1, v3) /\
+       V!equal_value (v2, v3)) ->
+      ((value (voter (v1, v2, v3)) = v2) /\
+       (diag (voter (v1, v2, v3)) = P!constr (C!capt_2, E!partial_match)))
+  ;
+
+  property vote_partial_c3 :
+    all v1 v2 v3 in V,
+      (~ V!equal_value (v1, v2) /\
+       V!equal_value (v1, v3) /\
+       V!equal_value (v2, v3)) ->
+      ((value (voter (v1, v2, v3)) = v3) /\
+       (diag (voter (v1, v2, v3)) = P!constr (C!capt_3, E!partial_match)))
+  ;
+
+  (* Vote with 3 inconstent values returns a no_match. sensor has *)
+  (* no sense here                                                *)
+  property vote_no_match :
+    all v1 v2 v3 in V,
+      (~ V!equal_value (v1, v2) /\
+       ~ V!equal_value (v1, v3) /\
+       ~ V!equal_value (v2, v3)) ->
+      (diag (voter (v1, v2, v3)) = P!constr (C!capt_1, E!no_match))
+  ;
+
+  (* Contraintes exportées vers les espéces passées en paramètre *)
+  property equal_value_is_symmetric :
+    all v1 v2 in V,
+      V!equal_value (v1, v2) -> V!equal_value (v2, v1);
+
+  property equal_value_is_reflexive:
+    all v1 in V, V!equal_value (v1, v1);
+
+  (* Propriétés du voteur *)
+  (* Le voteur ne doit retourner qu'un des quatre Ã©tats *)
+  theorem t1 :
   all v1 v2 v3 in V,
-   (V!equal_value(v1, v2) /\
-    V!equal_value(v2, v3) /\
-    V!equal_value(v1, v3))
-  ->
-  ((value(voter( v1, v2, v3)) = v1) /\
-   (diag(voter( v1, v2, v3)) = P!constr(C!capt_1, E!perfect_match)))
-;
+    E!equal (state (diag (voter (v1, v2, v3))), E!no_match) \/
+    E!equal (state (diag (voter (v1, v2, v3))), E!range_match) \/
+    E!equal (state (diag (voter (v1, v2, v3))), E!partial_match) \/
+    E!equal (state (diag (voter (v1, v2, v3))), E!perfect_match)
+  proof = by  property E!all_value;
 
-(* Vote with One input is consistent with the two others which are mutually *)
-(* inconsistent.Returns a range_match with the faulty sensor and one of the *)
-(* 2 consistent values.                                                     *)
-property vote_match_c1 : 
-  all v1 v2 v3 in V,
-   (~ V!equal_value(v1, v2) /\
-    ~ V!equal_value(v1, v3) /\
-    V!equal_value(v2, v3))
-  ->
-  ((value(voter( v1, v2, v3)) = v2) /\
-   (diag(voter( v1, v2, v3)) = P!constr(C!capt_1, E!range_match)))
-;
+  (* le voteur ne doit retourner qu'un des trois numÃ©ros de capteur *)
+  theorem t2 : all v1 v2 v3 in V,
+    C!equal (sensor (diag (voter (v1, v2, v3))), C!capt_1) \/
+    C!equal (sensor (diag (voter (v1, v2, v3))), C!capt_2) \/
+    C!equal (sensor (diag (voter (v1, v2, v3))), C!capt_3)
+  proof = by property C!all_value;
 
-property vote_match_c2 : 
-  all v1 v2 v3 in V,
-   (~ V!equal_value(v1, v2) /\
-    V!equal_value(v1, v3) /\
-    ~ V!equal_value(v2, v3)) 
-  ->
-  ((value(voter( v1, v2, v3)) = v3) /\
-   (diag(voter( v1, v2, v3)) = P!constr(C!capt_2, E!range_match)))
-;
+  proof of voter_returns_an_input_value =
+  <1>1
+    assume va in V,
+    assume vb in V,
+    assume vc in V,
+    prove
+       ((value (voter (va, vb, vc)) = va)
+     \/ (value (voter (va, vb, vc)) = vb)
+     \/ (value (voter (va, vb, vc)) = vc)
+     \/ (~ (P!valid (diag (voter (va, vb, vc))))))
 
-property vote_match_c3 : 
-  all v1 v2 v3 in V,
-   (V!equal_value(v1, v2) /\
-    ~ V!equal_value(v1, v3) /\
-    ~ V!equal_value(v2, v3))
-  ->
-  ((value(voter( v1, v2, v3)) = v1) /\
-   (diag(voter( v1, v2, v3)) = P!constr(C!capt_3, E!range_match)))
-;
+    <2>1
+      assume H1: V!equal_value (va, vb),
+      prove
+       ((value (voter (va, vb, vc)) = va)
+     \/ (value (voter (va, vb, vc)) = vb)
+     \/ (value (voter (va, vb, vc)) = vc)
+     \/ (~ (P!valid (diag (voter (va, vb, vc))))))
 
-(* Vote with 2 values different from the 2 other but one is consistent *)
-(* returns a partial_match with the healthy sensor and its the value   *)
-property vote_partial_c1 : 
-  all v1 v2 v3 in V,
-  (V!equal_value(v1, v2) /\
-   V!equal_value(v1, v3) /\
-   ~ V!equal_value(v2, v3)) ->
-  ((value(voter( v1, v2, v3)) = v1) /\
-   (diag(voter( v1, v2, v3)) = P!constr(C!capt_1, E!partial_match)))
-;
+       <3>1 assume H11: V!equal_value (vb, vc),
+       prove
+         ((value (voter (va, vb, vc)) = va)
+       \/ (value (voter (va, vb, vc)) = vb)
+       \/ (value (voter (va, vb, vc)) = vc))
 
-property vote_partial_c2 : 
-  all v1 v2 v3 in V,
-  (V!equal_value(v1, v2) /\
-   ~ V!equal_value(v1, v3) /\
-   V!equal_value(v2, v3)) ->
-  ((value(voter( v1, v2, v3)) = v2) /\
-   (diag(voter( v1, v2, v3)) = P!constr(C!capt_2, E!partial_match)))
-;
+         <4>1 assume H111: V!equal_value (va, vc),
+         prove (value (voter (va, vb, vc)) = va)
+         by hypothesis H1, H11, H111 property vote_perfect
+         <4>2 assume H112: ~ (V!equal_value (va, vc)),
+         prove (value (voter (va, vb, vc)) = vb)
+         by hypothesis H1, H11, H112 property vote_partial_c2
+         <4>f conclude
 
-property vote_partial_c3 : 
-  all v1 v2 v3 in V,
-  (~ V!equal_value(v1, v2) /\
-   V!equal_value(v1, v3) /\
-   V!equal_value(v2, v3)) ->
-  ((value(voter( v1, v2, v3)) = v3) /\
-   (diag(voter( v1, v2, v3)) = P!constr(C!capt_3, E!partial_match)))
-;
+       <3>2 assume H12: ~ (V!equal_value (vb, vc)),
+       prove
+         ((value (voter (va, vb, vc)) = va)
+       \/ (value (voter (va, vb, vc)) = vb)
+       \/ (value (voter (va, vb, vc)) = vc))
 
-(* Vote with 3 inconstent values returns a no_match. sensor has *)
-(* no sense here                                                *)
-property vote_no_match : 
-  all v1 v2 v3 in V,
-  (~ V!equal_value(v1, v2) /\
-   ~ V!equal_value(v1, v3) /\
-   ~ V!equal_value(v2, v3)) ->
-   (diag(voter( v1, v2, v3)) = P!constr(C!capt_1, E!no_match))
-;
-
-(* Contraintes exportées vers les espéces passées en paramètre *)
-property equal_value_is_symmetric :
-  all v1 v2 in V,
-  V!equal_value(v1, v2) -> V!equal_value(v2, v1);
-
-property equal_value_is_reflexive:
-   all v1 in V, V!equal_value(v1, v1);
-
-(* Propriétés du voteur *)
-(* Le voteur ne doit retourner qu'un des quatre Ã©tats *)
-theorem t1 :
-all v1 v2 v3 in V,
-      (  E!equal(state(diag(voter( v1, v2, v3))), E!no_match)
-      \/ E!equal(state(diag(voter( v1, v2, v3))), E!range_match)
-      \/ E!equal(state(diag(voter( v1, v2, v3))), E!partial_match)
-      \/ E!equal(state(diag(voter( v1, v2, v3))), E!perfect_match) )
-proof = by  property E!all_value;
-
-(* le voteur ne doit retourner qu'un des trois numÃ©ros de capteur *)
-theorem t2 : all v1 v2 v3 in V,
-       ( C!equal(sensor(diag(voter( v1, v2, v3))), C!capt_1)
-      \/ C!equal(sensor(diag(voter( v1, v2, v3))), C!capt_2) 
-      \/ C!equal(sensor(diag(voter( v1, v2, v3))), C!capt_3) )
-proof = by property C!all_value;
-
-proof of voter_returns_an_input_value =
-<1>1 
-  assume va in V,
-  assume vb in V,
-  assume vc in V,
-  prove  
-     ((value(voter(va, vb, vc)) = va)
-   \/ (value(voter(va, vb, vc)) = vb)
-   \/ (value(voter(va, vb, vc)) = vc)
-   \/ (~(P!valid(diag(voter(va, vb, vc))))))
-
-  <2>1 
-    assume H1: V!equal_value(va, vb),
-    prove  
-     ((value(voter(va, vb, vc)) = va)
-   \/ (value(voter(va, vb, vc)) = vb)
-   \/ (value(voter(va, vb, vc)) = vc)
-   \/ (~(P!valid(diag(voter(va, vb, vc))))))
-
-     <3>1 assume H11: V!equal_value(vb, vc),
-     prove 
-       ((value(voter(va, vb, vc)) = va)
-     \/ (value(voter(va, vb, vc)) = vb)
-     \/ (value(voter(va, vb, vc)) = vc))
-
-       <4>1 assume H111: V!equal_value(va, vc),
-       prove (value(voter(va, vb, vc)) = va)
-       by hypothesis H1, H11, H111 property vote_perfect
-       <4>2 assume H112: ~(V!equal_value(va, vc)),
-       prove (value(voter(va, vb, vc)) = vb)
-       by hypothesis H1, H11, H112 property vote_partial_c2
-       <4>f conclude
-
-     <3>2 assume H12: ~(V!equal_value(vb, vc)),
-     prove 
-       ((value(voter(va, vb, vc)) = va)
-     \/ (value(voter(va, vb, vc)) = vb)
-     \/ (value(voter(va, vb, vc)) = vc))
-
-       <4>1 assume H121: V!equal_value(va, vc),
-       prove (value(voter(va, vb, vc)) = va)
-       by hypothesis H1, H12, H121 property vote_partial_c1
-       <4>2 assume H122: ~(V!equal_value(va, vc)),
-       prove (value(voter(va, vb, vc)) = va)
-       by hypothesis H1, H12, H122 property vote_match_c3
-       <4>f conclude
-
-   <3>f conclude 
-
-   <2>2 
-    assume H2: ~(V!equal_value(va, vb)),
-    prove  
-      ((value(voter(va, vb, vc)) = va)
-    \/ (value(voter(va, vb, vc)) = vb)
-    \/ (value(voter(va, vb, vc)) = vc)
-    \/ (~(P!valid(diag(voter(va, vb, vc)))))) 
-
-     <3>1 assume H21: V!equal_value(vb, vc),
-     prove 
-       ((value(voter(va, vb, vc)) = va)
-     \/ (value(voter(va, vb, vc)) = vb)
-     \/ (value(voter(va, vb, vc)) = vc))
-
-       <4>1 assume H211: V!equal_value(va, vc),
-       prove (value(voter(va, vb, vc)) = vc)
-       by hypothesis H2, H21, H211 property vote_partial_c3
-       <4>2 assume H212: ~(V!equal_value(va, vc)),
-       prove (value(voter(va, vb, vc)) = vb)
-       by hypothesis H2, H21, H212 property vote_match_c1
-       <4>f conclude
-
-     <3>2 assume H22: ~(V!equal_value(vb, vc)),
-     prove 
-       ((value(voter(va, vb, vc)) = va)
-     \/ (value(voter(va, vb, vc)) = vb)
-     \/ (value(voter(va, vb, vc)) = vc)
-     \/ (~(P!valid(diag(voter(va, vb, vc))))))
-       <4>1 assume H221: V!equal_value(va, vc),
-       prove (value(voter(va, vb, vc)) = vc)
-       by hypothesis H2, H22, H221 property vote_match_c2
-       <4>2 assume H222: ~(V!equal_value(va, vc)),
-       prove (~(P!valid(diag(voter(va, vb, vc)))))
-         <5>1 prove (diag(voter( va, vb, vc)) = P!constr(C!capt_1, E!no_match))
-         by hypothesis H2, H22, H222 property vote_no_match
-         <5>2 prove (E!equal(state(diag(voter( va, vb, vc))), E!no_match))
-	 by step <5>1 definition of state property P!prj_b_is_snd_of_pair
-	 <5>f qed by step <5>2 definition of state 
-                  property P!no_match_is_invalid
-       <4>f conclude
+         <4>1 assume H121: V!equal_value (va, vc),
+         prove (value (voter (va, vb, vc)) = va)
+         by hypothesis H1, H12, H121 property vote_partial_c1
+         <4>2 assume H122: ~ (V!equal_value (va, vc)),
+         prove (value (voter (va, vb, vc)) = va)
+         by hypothesis H1, H12, H122 property vote_match_c3
+         <4>f conclude
 
      <3>f conclude
 
-   <2>f conclude
+     <2>2
+      assume H2: ~ (V!equal_value (va, vb)),
+      prove
+        ((value (voter (va, vb, vc)) = va)
+      \/ (value (voter (va, vb, vc)) = vb)
+      \/ (value (voter (va, vb, vc)) = vc)
+      \/ (~ (P!valid (diag (voter (va, vb, vc))))))
 
-<1>f conclude ;
+       <3>1 assume H21: V!equal_value (vb, vc),
+       prove
+         ((value (voter (va, vb, vc)) = va)
+       \/ (value (voter (va, vb, vc)) = vb)
+       \/ (value (voter (va, vb, vc)) = vc))
 
-
-
-(* Proof by case on the consistency between inputs *)
-proof of voter_independant_from_order_v1_v2 =
-<1>1 
-  assume va in V,
-  assume vb in V,
-  assume vc in V,
-  prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-      /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-
-  <2>1
-    assume H1: V!equal_value(va, vb),
-    prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-        /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-
-    <3>1
-      assume H11: V!equal_value(va, vc),
-      prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-          /\ compatible(voter(va, vb, vc), voter(vc, va, vb))) 
-
-      <4>1
-        assume H111: V!equal_value(vb, vc),
-        prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-            /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-         
-        <5>1 prove (value(voter( va, vb, vc)) = va)
-        by hypothesis H1, H11, H111 
-           property vote_perfect
-        <5>2 prove (value(voter( vb, va, vc)) = vb)
-        by hypothesis H1, H11, H111 
-           property vote_perfect, equal_value_is_symmetric
-        <5>3 prove (value(voter( vc, va, vb)) = vc)
-        by hypothesis H1, H11, H111 
-           property vote_perfect, equal_value_is_symmetric
-	<5>f
-        qed by step <5>1, <5>2, <5>3 
-               definition of compatible 
-               hypothesis H1, H11
-
-      <4>2
-        assume H112: ~(V!equal_value(vb, vc)),
-        prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-            /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-
-          <5>1 prove (value(voter( va, vb, vc)) = va)
-          by hypothesis H1, H11, H112  property vote_partial_c1
-          <5>2 prove (value(voter( vb, va, vc)) = va)
-          by hypothesis H1, H11, H112  
-             property vote_partial_c2, equal_value_is_symmetric
-          <5>3 prove (value(voter( vc, va, vb)) = va)
-          by hypothesis H1, H11, H112  
-             property vote_partial_c2, equal_value_is_symmetric
-         <5>f qed by step <5>1, <5>2, <5>3 
-             property  V!equal_value_reflexive
-             definition of compatible
-        
-      <4>f conclude
-
-    <3>2
-      assume H12: ~(V!equal_value(va, vc)),
-      prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-          /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-
-      <4>1
-        assume H121: V!equal_value(vb, vc),
-        prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-            /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-        <5>1 prove (value(voter( va, vb, vc)) = vb)
-        by hypothesis H1, H12, H121  property vote_partial_c2
-        <5>2 prove (value(voter( vb, va, vc)) = vb)
-        by hypothesis H1, H12, H121  
-           property vote_partial_c1, equal_value_is_symmetric
-        <5>3 prove (value(voter( vc, va, vb)) = vb)
-        by hypothesis H1, H12, H121  
-           property vote_partial_c3, equal_value_is_symmetric
-        <5>f qed by step <5>1, <5>2, <5>3 
-             property V!equal_value_reflexive
-	     definition of compatible
-
-      <4>2
-        assume H122: ~(V!equal_value(vb, vc)),
-        prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-            /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-        <5>1 prove (value(voter( va, vb, vc)) = va)
-        by hypothesis H1, H12, H122  
-           property vote_match_c3, equal_value_is_symmetric
-        <5>2 prove (value(voter( vb, va, vc)) = vb)
-        by hypothesis H1, H12, H122  
-           property vote_match_c3, equal_value_is_symmetric
-        <5>3 prove (value(voter( vc, va, vb)) = va)
-        by hypothesis H1, H12, H122  
-           property vote_match_c1, equal_value_is_symmetric
-        <5>f qed by step <5>1, <5>2, <5>3 
-             hypothesis H1
-             property V!equal_value_reflexive
-             definition of compatible
-
-      <4>f conclude
-
-    <3>f conclude
-
-  <2>2
-    assume H2: ~(V!equal_value(va, vb)),
-    prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-        /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-
-    <3>1 assume H21: (V!equal_value(va, vc)),
-      prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-          /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-
-      <4>1 assume H211: (V!equal_value(vb, vc)),
-      prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-          /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-      
-       <5>1 prove ~(V!equal_value(vb, va))
-         <6>1 prove V!equal_value(vb, va) -> V!equal_value(va, vb)
-          by property V!equal_value_symmetric
-         <6>f qed by step <6>1 hypothesis H2
-
-       <5>2 prove (value(voter(va, vb, vc)) = vc)
+         <4>1 assume H211: V!equal_value (va, vc),
+         prove (value (voter (va, vb, vc)) = vc)
          by hypothesis H2, H21, H211 property vote_partial_c3
-       <5>3 prove (value(voter(vb, va, vc)) = vc)
-         by hypothesis H21, H211 step <5>1 property vote_partial_c3
-       <5>4 prove (value(voter(vc, va, vb)) = vc)
-         by hypothesis H2, H21, H211 
-            property vote_partial_c1, equal_value_is_symmetric 
-       <5>f qed by step  <5>2, <5>3, <5>4 
-            property V!equal_value_reflexive 
-            definition of compatible
+         <4>2 assume H212: ~ (V!equal_value (va, vc)),
+         prove (value (voter (va, vb, vc)) = vb)
+         by hypothesis H2, H21, H212 property vote_match_c1
+         <4>f conclude
 
-      <4>2 assume H212: ~(V!equal_value(vb, vc)),
-      prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-          /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-       <5>1 prove ~(V!equal_value(vb, va))
-         <6>1 prove V!equal_value(vb, va) -> V!equal_value(va, vb)
-          by property V!equal_value_symmetric
-         <6>f qed by step <6>1 hypothesis H2
-       <5>2 prove (value(voter(va, vb, vc)) = vc)
-         by hypothesis H2, H21, H212 property vote_match_c2
-       <5>3 prove (value(voter(vb, va, vc)) = va)
-         by hypothesis H21, H212 step <5>1 property vote_match_c1
-       <5>4 prove ~(V!equal_value(vc, vb))
-         <6>1 prove V!equal_value(vc, vb) -> V!equal_value(vb, vc)
-          by property V!equal_value_symmetric
-         <6>f qed by step <6>1 hypothesis H212
-       <5>5 prove (value(voter(vc, va, vb)) = vc)
-         by hypothesis H2, H21 step <5>4 
-            property vote_match_c3, equal_value_is_symmetric
-       <5>f qed by step <5>2, <5>3, <5>5 hypothesis H21
-            property equal_value_is_symmetric, V!equal_value_reflexive 
-            definition of compatible
-    
-      <4>f conclude      
+       <3>2 assume H22: ~ (V!equal_value (vb, vc)),
+       prove
+         ((value (voter (va, vb, vc)) = va)
+       \/ (value (voter (va, vb, vc)) = vb)
+       \/ (value (voter (va, vb, vc)) = vc)
+       \/ (~ (P!valid (diag (voter (va, vb, vc))))))
+         <4>1 assume H221: V!equal_value (va, vc),
+         prove (value (voter (va, vb, vc)) = vc)
+         by hypothesis H2, H22, H221 property vote_match_c2
+         <4>2 assume H222: ~ (V!equal_value (va, vc)),
+         prove (~ (P!valid (diag (voter (va, vb, vc)))))
+           <5>1 prove (diag (voter (va, vb, vc)) = P!constr (C!capt_1, E!no_match))
+           by hypothesis H2, H22, H222 property vote_no_match
+           <5>2 prove (E!equal (state (diag (voter (va, vb, vc))), E!no_match))
+           by step <5>1 definition of state property P!prj_b_is_snd_of_pair
+           <5>f qed by step <5>2 definition of state
+                    property P!no_match_is_invalid
+         <4>f conclude
 
-    <3>2 assume H22: ~(V!equal_value(va, vc)),
-      prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-          /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
+       <3>f conclude
 
-      <4>1 assume H221: (V!equal_value(vb, vc)),
-      prove (compatible(voter(va, vb, vc), voter(vb, va, vc))      
-          /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
+     <2>f conclude
 
-       <5>1 prove ~(V!equal_value(vb, va))
-         <6>1 prove V!equal_value(vb, va) -> V!equal_value(va, vb)
-          by property V!equal_value_symmetric
-         <6>f qed by step <6>1 hypothesis H2
-       <5>2 prove (value(voter(va, vb, vc)) = vb)
-         by hypothesis H2, H22, H221 property vote_match_c1
-       <5>3 prove (value(voter(vb, va, vc)) = vc)
-         by hypothesis H22, H221 step <5>1 property vote_match_c2
-       <5>4 prove ~(V!equal_value(vc, va))
-         <6>1 prove V!equal_value(vc, va) -> V!equal_value(va, vc)
-          by property V!equal_value_symmetric
-         <6>f qed by step <6>1 hypothesis H22
-       <5>5 prove (value(voter(vc, va, vb)) = vb)
-         by hypothesis H2, H221 step <5>4 
-            property vote_match_c2, equal_value_is_symmetric
-       <5>f qed by step <5>2, <5>3, <5>5 hypothesis H221 
-            property V!equal_value_reflexive 
-            definition of compatible
-
-      <4>2 assume H222: ~(V!equal_value(vb, vc)),
-      prove (compatible(voter(va, vb, vc), voter(vb, va, vc))
-          /\ compatible(voter(va, vb, vc), voter(vc, va, vb)))
-
-        <5>1 prove ~(V!equal_value(vb, va))
-         <6>1 prove V!equal_value(vb, va) -> V!equal_value(va, vb)
-          by property V!equal_value_symmetric
-         <6>f qed by step <6>1 hypothesis H2
-        <5>2 prove ~(V!equal_value(vc, va))
-         <6>1 prove V!equal_value(vc, va) -> V!equal_value(va, vc)
-          by property V!equal_value_symmetric
-         <6>f qed by step <6>1 hypothesis H22
-        <5>3 prove ~(V!equal_value(vc, vb))
-         <6>1 prove V!equal_value(vc, vb) -> V!equal_value(vb, vc)
-          by property V!equal_value_symmetric
-         <6>f qed by step <6>1 hypothesis H222
-
-        <5>4 prove (diag(voter( va, vb, vc)) = P!constr(C!capt_1, E!no_match))
-        by hypothesis H2, H22, H222 property vote_no_match
-        <5>5 prove (E!equal(P!prj_b(diag(voter( va, vb, vc))), E!no_match))
-        by step <5>4 property P!prj_b_is_snd_of_pair
-        <5>51 prove ~(P!valid(diag(voter( va, vb, vc)))) 
-	by step <5>5 property P!no_match_is_invalid
-
-        <5>6 prove (diag(voter( vb, va, vc)) = P!constr(C!capt_1, E!no_match))
-        by hypothesis H22, H222 step <5>1 property vote_no_match
-        <5>7 prove (E!equal(P!prj_b(diag(voter( vb, va, vc))), E!no_match))
-        by step <5>6 property P!prj_b_is_snd_of_pair
-        <5>71 prove ~(P!valid(diag(voter( vb, va, vc)))) 
-	by step <5>7 property P!no_match_is_invalid
-
-        <5>8 prove (diag(voter( vc, va, vb)) = P!constr(C!capt_1, E!no_match))
-        by hypothesis H2 step <5>2, <5>3 property vote_no_match
-        <5>9 prove (E!equal(P!prj_b(diag(voter( vc, va, vb))), E!no_match))
-        by step <5>8 property P!prj_b_is_snd_of_pair
-        <5>91 prove ~(P!valid(diag(voter( vc, va, vb)))) 
-	by step <5>9 property P!no_match_is_invalid
-
-        <5>f qed by step <5>51, <5>71, <5>91 
-            definition of compatible
-
-      <4>f conclude      
-
-    <3>f conclude
-
-  <2>f conclude
-
-<1>f conclude
-;
-
-end ;;
+  <1>f conclude;
 
 
 
-species Imp_vote(E is Sp_etat_vote, C is Sp_capteur, V is Value,
-		 P is Diag_2oo3(E, C)) = 
-inherit Voteur(E, C, V, P) ;
+  (* Proof by case on the consistency between inputs *)
+  proof of voter_independant_from_order_v1_v2 =
+  <1>1
+    assume va in V,
+    assume vb in V,
+    assume vc in V,
+    prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+        /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
-(* il faut bien mettre quelque chose !!!*)
-representation = unit;
+    <2>1
+      assume H1: V!equal_value (va, vb),
+      prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+          /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
-let voter( v1 in V, v2 in V, v3 in V) in V * P =
-  let c1 = V!equal_value( v1, v2) in
-  let c2 = V!equal_value( v1, v3) in
-  let c3 = V!equal_value( v2, v3) in
-  if c1 then
-    if c2 then
-      if c3 then
-        (v1, P!constr(C!capt_1, E!perfect_match))
+      <3>1
+        assume H11: V!equal_value (va, vc),
+        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+
+        <4>1
+          assume H111: V!equal_value (vb, vc),
+          prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+              /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+
+          <5>1 prove (value (voter (va, vb, vc)) = va)
+          by hypothesis H1, H11, H111
+             property vote_perfect
+          <5>2 prove (value (voter (vb, va, vc)) = vb)
+          by hypothesis H1, H11, H111
+             property vote_perfect, equal_value_is_symmetric
+          <5>3 prove (value (voter (vc, va, vb)) = vc)
+          by hypothesis H1, H11, H111
+             property vote_perfect, equal_value_is_symmetric
+          <5>f
+          qed by step <5>1, <5>2, <5>3
+                 definition of compatible
+                 hypothesis H1, H11
+
+        <4>2
+          assume H112: ~ (V!equal_value (vb, vc)),
+          prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+              /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+
+            <5>1 prove (value (voter (va, vb, vc)) = va)
+            by hypothesis H1, H11, H112  property vote_partial_c1
+            <5>2 prove (value (voter (vb, va, vc)) = va)
+            by hypothesis H1, H11, H112
+               property vote_partial_c2, equal_value_is_symmetric
+            <5>3 prove (value (voter (vc, va, vb)) = va)
+            by hypothesis H1, H11, H112
+               property vote_partial_c2, equal_value_is_symmetric
+           <5>f qed by step <5>1, <5>2, <5>3
+               property  V!equal_value_reflexive
+               definition of compatible
+
+        <4>f conclude
+
+      <3>2
+        assume H12: ~ (V!equal_value (va, vc)),
+        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+
+        <4>1
+          assume H121: V!equal_value (vb, vc),
+          prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+              /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+          <5>1 prove (value (voter (va, vb, vc)) = vb)
+          by hypothesis H1, H12, H121  property vote_partial_c2
+          <5>2 prove (value (voter (vb, va, vc)) = vb)
+          by hypothesis H1, H12, H121
+             property vote_partial_c1, equal_value_is_symmetric
+          <5>3 prove (value (voter (vc, va, vb)) = vb)
+          by hypothesis H1, H12, H121
+             property vote_partial_c3, equal_value_is_symmetric
+          <5>f qed by step <5>1, <5>2, <5>3
+               property V!equal_value_reflexive
+               definition of compatible
+
+        <4>2
+          assume H122: ~ (V!equal_value (vb, vc)),
+          prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+              /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+          <5>1 prove (value (voter (va, vb, vc)) = va)
+          by hypothesis H1, H12, H122
+             property vote_match_c3, equal_value_is_symmetric
+          <5>2 prove (value (voter (vb, va, vc)) = vb)
+          by hypothesis H1, H12, H122
+             property vote_match_c3, equal_value_is_symmetric
+          <5>3 prove (value (voter (vc, va, vb)) = va)
+          by hypothesis H1, H12, H122
+             property vote_match_c1, equal_value_is_symmetric
+          <5>f qed by step <5>1, <5>2, <5>3
+               hypothesis H1
+               property V!equal_value_reflexive
+               definition of compatible
+
+        <4>f conclude
+
+      <3>f conclude
+
+    <2>2
+      assume H2: ~ (V!equal_value (va, vb)),
+      prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+          /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+
+      <3>1 assume H21: (V!equal_value (va, vc)),
+        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+
+        <4>1 assume H211: (V!equal_value (vb, vc)),
+        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+
+         <5>1 prove ~ (V!equal_value (vb, va))
+           <6>1 prove V!equal_value (vb, va) -> V!equal_value (va, vb)
+            by property V!equal_value_symmetric
+           <6>f qed by step <6>1 hypothesis H2
+
+         <5>2 prove (value (voter (va, vb, vc)) = vc)
+           by hypothesis H2, H21, H211 property vote_partial_c3
+         <5>3 prove (value (voter (vb, va, vc)) = vc)
+           by hypothesis H21, H211 step <5>1 property vote_partial_c3
+         <5>4 prove (value (voter (vc, va, vb)) = vc)
+           by hypothesis H2, H21, H211
+              property vote_partial_c1, equal_value_is_symmetric
+         <5>f qed by step  <5>2, <5>3, <5>4
+              property V!equal_value_reflexive
+              definition of compatible
+
+        <4>2 assume H212: ~ (V!equal_value (vb, vc)),
+        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+         <5>1 prove ~ (V!equal_value (vb, va))
+           <6>1 prove V!equal_value (vb, va) -> V!equal_value (va, vb)
+            by property V!equal_value_symmetric
+           <6>f qed by step <6>1 hypothesis H2
+         <5>2 prove (value (voter (va, vb, vc)) = vc)
+           by hypothesis H2, H21, H212 property vote_match_c2
+         <5>3 prove (value (voter (vb, va, vc)) = va)
+           by hypothesis H21, H212 step <5>1 property vote_match_c1
+         <5>4 prove ~ (V!equal_value (vc, vb))
+           <6>1 prove V!equal_value (vc, vb) -> V!equal_value (vb, vc)
+            by property V!equal_value_symmetric
+           <6>f qed by step <6>1 hypothesis H212
+         <5>5 prove (value (voter (vc, va, vb)) = vc)
+           by hypothesis H2, H21 step <5>4
+              property vote_match_c3, equal_value_is_symmetric
+         <5>f qed by step <5>2, <5>3, <5>5 hypothesis H21
+              property equal_value_is_symmetric, V!equal_value_reflexive
+              definition of compatible
+
+        <4>f conclude
+
+      <3>2 assume H22: ~ (V!equal_value (va, vc)),
+        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+
+        <4>1 assume H221: (V!equal_value (vb, vc)),
+        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+
+         <5>1 prove ~ (V!equal_value (vb, va))
+           <6>1 prove V!equal_value (vb, va) -> V!equal_value (va, vb)
+            by property V!equal_value_symmetric
+           <6>f qed by step <6>1 hypothesis H2
+         <5>2 prove (value (voter (va, vb, vc)) = vb)
+           by hypothesis H2, H22, H221 property vote_match_c1
+         <5>3 prove (value (voter (vb, va, vc)) = vc)
+           by hypothesis H22, H221 step <5>1 property vote_match_c2
+         <5>4 prove ~ (V!equal_value (vc, va))
+           <6>1 prove V!equal_value (vc, va) -> V!equal_value (va, vc)
+            by property V!equal_value_symmetric
+           <6>f qed by step <6>1 hypothesis H22
+         <5>5 prove (value (voter (vc, va, vb)) = vb)
+           by hypothesis H2, H221 step <5>4
+              property vote_match_c2, equal_value_is_symmetric
+         <5>f qed by step <5>2, <5>3, <5>5 hypothesis H221
+              property V!equal_value_reflexive
+              definition of compatible
+
+        <4>2 assume H222: ~ (V!equal_value (vb, vc)),
+        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
+            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+
+          <5>1 prove ~ (V!equal_value (vb, va))
+           <6>1 prove V!equal_value (vb, va) -> V!equal_value (va, vb)
+            by property V!equal_value_symmetric
+           <6>f qed by step <6>1 hypothesis H2
+          <5>2 prove ~ (V!equal_value (vc, va))
+           <6>1 prove V!equal_value (vc, va) -> V!equal_value (va, vc)
+            by property V!equal_value_symmetric
+           <6>f qed by step <6>1 hypothesis H22
+          <5>3 prove ~ (V!equal_value (vc, vb))
+           <6>1 prove V!equal_value (vc, vb) -> V!equal_value (vb, vc)
+            by property V!equal_value_symmetric
+           <6>f qed by step <6>1 hypothesis H222
+
+          <5>4 prove (diag (voter (va, vb, vc)) = P!constr (C!capt_1, E!no_match))
+          by hypothesis H2, H22, H222 property vote_no_match
+          <5>5 prove (E!equal (P!prj_b (diag (voter (va, vb, vc))), E!no_match))
+          by step <5>4 property P!prj_b_is_snd_of_pair
+          <5>51 prove ~ (P!valid (diag (voter (va, vb, vc))))
+          by step <5>5 property P!no_match_is_invalid
+
+          <5>6 prove (diag (voter (vb, va, vc)) = P!constr (C!capt_1, E!no_match))
+          by hypothesis H22, H222 step <5>1 property vote_no_match
+          <5>7 prove (E!equal (P!prj_b (diag (voter (vb, va, vc))), E!no_match))
+          by step <5>6 property P!prj_b_is_snd_of_pair
+          <5>71 prove ~ (P!valid (diag (voter (vb, va, vc))))
+          by step <5>7 property P!no_match_is_invalid
+
+          <5>8 prove (diag (voter (vc, va, vb)) = P!constr (C!capt_1, E!no_match))
+          by hypothesis H2 step <5>2, <5>3 property vote_no_match
+          <5>9 prove (E!equal (P!prj_b (diag (voter (vc, va, vb))), E!no_match))
+          by step <5>8 property P!prj_b_is_snd_of_pair
+          <5>91 prove ~ (P!valid (diag (voter (vc, va, vb))))
+          by step <5>9 property P!no_match_is_invalid
+
+          <5>f qed by step <5>51, <5>71, <5>91
+              definition of compatible
+
+        <4>f conclude
+
+      <3>f conclude
+
+    <2>f conclude
+
+  <1>f conclude
+  ;
+
+end
+;;
+
+
+
+species
+  Imp_vote
+    (E is Sp_etat_vote, C is Sp_capteur, V is Value, P is Diag_2oo3 (E, C)) =
+
+  inherit Voteur (E, C, V, P);
+
+  (* il faut bien mettre quelque chose !!!*)
+  representation = unit;
+
+  let voter (v1 in V, v2 in V, v3 in V) in V * P =
+    let c1 = V!equal_value (v1, v2) in
+    let c2 = V!equal_value (v1, v3) in
+    let c3 = V!equal_value (v2, v3) in
+    if c1 then
+      if c2 then
+        if c3 then
+          (v1, P!constr (C!capt_1, E!perfect_match))
+        else
+          (v1, P!constr (C!capt_1, E!partial_match))
       else
-        (v1, P!constr(C!capt_1, E!partial_match))
+        if c3 then
+          (v2, P!constr (C!capt_2, E!partial_match))
+        else
+          (v1, P!constr (C!capt_3, E!range_match))
     else
-      if c3 then
-        (v2, P!constr(C!capt_2, E!partial_match))
-      else
-        (v1, P!constr(C!capt_3, E!range_match))
-  else
-    if c2 then
-      if c3 then 
-        (v3, P!constr(C!capt_3, E!partial_match))
-      else
-        (v3, P!constr(C!capt_2, E!range_match))
-   else
-     if c3 then
-       (v2, P!constr(C!capt_1, E!range_match))
+      if c2 then
+        if c3 then
+          (v3, P!constr (C!capt_3, E!partial_match))
+        else
+          (v3, P!constr (C!capt_2, E!range_match))
      else
-       (v1, P!constr(C!capt_1, E!no_match))
-;
+       if c3 then
+         (v2, P!constr (C!capt_1, E!range_match))
+       else
+         (v1, P!constr (C!capt_1, E!no_match))
+  ;
 
-proof of vote_perfect  = 
-  by property V!equal_reflexive, P!equal_reflexive 
-     definition of voter, diag, value
-;
+  proof of vote_perfect  =
+    by property V!equal_reflexive, P!equal_reflexive
+       definition of voter, diag, value
+  ;
 
 
-proof of vote_match_c1 =
-  by property V!equal_reflexive, P!equal_reflexive 
-     definition of voter, diag, value
-;
+  proof of vote_match_c1 =
+    by property V!equal_reflexive, P!equal_reflexive
+       definition of voter, diag, value
+  ;
 
-proof of vote_match_c2 =
-  by property V!equal_reflexive, P!equal_reflexive 
-     definition of voter, diag, value
-;
+  proof of vote_match_c2 =
+    by property V!equal_reflexive, P!equal_reflexive
+       definition of voter, diag, value
+  ;
 
-proof of vote_match_c3 =
-  by property V!equal_reflexive, P!equal_reflexive 
-     definition of voter, diag, value
-;
+  proof of vote_match_c3 =
+    by property V!equal_reflexive, P!equal_reflexive
+       definition of voter, diag, value
+  ;
 
-proof of vote_partial_c1 = 
-  by property V!equal_reflexive, P!equal_reflexive 
-     definition of voter, diag, value
-;
+  proof of vote_partial_c1 =
+    by property V!equal_reflexive, P!equal_reflexive
+       definition of voter, diag, value
+  ;
 
-proof of vote_partial_c2 = 
-  by property V!equal_reflexive, P!equal_reflexive 
-     definition of voter, diag, value
-;
+  proof of vote_partial_c2 =
+    by property V!equal_reflexive, P!equal_reflexive
+       definition of voter, diag, value
+  ;
 
-proof of vote_partial_c3 =
-  by property V!equal_reflexive, P!equal_reflexive 
-     definition of voter, diag, value
-;
+  proof of vote_partial_c3 =
+    by property V!equal_reflexive, P!equal_reflexive
+       definition of voter, diag, value
+  ;
 
-proof of vote_no_match = 
-  by property V!equal_reflexive, P!equal_reflexive 
-     definition of voter, diag, value
-;
+  proof of vote_no_match =
+    by property V!equal_reflexive, P!equal_reflexive
+       definition of voter, diag, value
+  ;
 
-proof of voter_returns_an_input_value =
-  by property V!equal_reflexive 
-     definition of voter, value
-;
+  proof of voter_returns_an_input_value =
+    by property V!equal_reflexive
+       definition of voter, value
+  ;
 
-end ;;
+end
+;;
