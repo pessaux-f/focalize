@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.11 2009-06-06 16:35:29 weis Exp $
+# $Id: Makefile,v 1.12 2009-06-06 20:23:51 ayrault Exp $
 
 # Makefile for algebra structures implementations
 
@@ -117,38 +117,38 @@ $(BIN_EXE): byt bin
            -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)\
             $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
 install::
-	@$(MKDIR) $(LIB_INSTALL_DIR) && \
+	$(MKDIR) $(LIB_INSTALL_DIR) && \
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then \
 	  echo "Installing (FoCaLize) compiled certified libs." && \
-	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/ \
+	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then \
 	  echo "Installing (FoCaLize) compiled non-certified libs." && \
-	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/ \
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/ \
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/ \
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/ \
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/ \
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/ \
+	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/; \
 	fi && \
 	if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/ \
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/; \
 	fi && \
 	if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/ \
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/; \
 	fi && \
 	if [ "$(EXTERNAL_VOS)" != "" ] ; then \
-	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/ \
+	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/; \
 	fi
 
 uninstall::
