@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.11 2009-06-05 13:59:13 weis Exp $ *)
+(* $Id: big_integers.fcl,v 1.12 2009-06-06 16:43:18 weis Exp $ *)
 
 use "basics";;
 
@@ -378,7 +378,7 @@ end
 
 collection Foc_basic_integers =
 
-  implement Base_big_int
+  implement Base_big_int;
 
 end
 ;;
@@ -439,7 +439,7 @@ end
 
 collection Foc_big_integers =
 
-  implement Integers_big_int
+  implement Integers_big_int;
 
 end
 ;;

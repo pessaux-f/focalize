@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: quotients.fcl,v 1.9 2009-05-16 10:26:59 weis Exp $ *)
+(* $Id: quotients.fcl,v 1.10 2009-06-06 16:44:25 weis Exp $ *)
 
 (**
    @title Quotient Structures
@@ -257,7 +257,7 @@ end
 ;;
 
 collection Un_singleton =
-  implement Singleton
+  implement Singleton;
 end
 ;;
 
@@ -276,7 +276,7 @@ end
 ;;
 
 collection Trivial_projection =
-  implement Projection_over_sample (Un_singleton)
+  implement Projection_over_sample (Un_singleton);
 end;;
 
 species Trivial_quotient_final =
@@ -292,7 +292,7 @@ end
 ;;
 
 collection Trivial_quotient =
-  implement Trivial_quotient_final
+  implement Trivial_quotient_final;
 end
 ;;
 

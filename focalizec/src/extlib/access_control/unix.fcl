@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: unix.fcl,v 1.15 2009-06-05 09:59:20 habib Exp $ *)
+(* $Id: unix.fcl,v 1.16 2009-06-06 16:43:43 weis Exp $ *)
 
 (**
    @title Implementation of the Unix model
@@ -140,8 +140,8 @@ species S_access
   let get_m (a) = snd (snd (a));
 
   let equal (a1, a2) =
-     S_sub!equal (get_s (a1), get_s (a2)) && 
-     S_obj!equal (get_o (a1), get_o (a2)) && 
+     S_sub!equal (get_s (a1), get_s (a2)) &&
+     S_obj!equal (get_o (a1), get_o (a2)) &&
      S_acc_mod!equal (get_m (a1), get_m (a2));
 
   let element = create (S_sub!element, S_obj!element, S_acc_mod!element);
@@ -290,12 +290,12 @@ species S_requests_unix
   let is_rel(rg) = Sgr!equal (Sgr!rel, get_gr (rg));
 
   let equal (rg1, rg2) =
-     Sgr!equal (get_gr (rg1), get_gr (rg2)) && 
-     S!equal (get_s (rg1), get_s (rg2)) && 
-     O!equal (get_o (rg1), get_o (rg2)) && 
-     M!equal (get_m (rg1), get_m (rg2)) && 
-     G!equal (get_g (rg1), get_g (rg2)) && 
-     Z!equal (get_z (rg1), get_z (rg2)) && 
+     Sgr!equal (get_gr (rg1), get_gr (rg2)) &&
+     S!equal (get_s (rg1), get_s (rg2)) &&
+     O!equal (get_o (rg1), get_o (rg2)) &&
+     M!equal (get_m (rg1), get_m (rg2)) &&
+     G!equal (get_g (rg1), get_g (rg2)) &&
+     Z!equal (get_z (rg1), get_z (rg2)) &&
      S!equal (get_s2 (rg1), get_s2 (rg2));
 
   let is_active (rg) = Sgr!equal (Sgr!active, get_gr (rg));
@@ -797,84 +797,84 @@ end
 
 collection C_subjects =
 
-  implement S_subjects
+  implement S_subjects;
 
 end
 ;;
 
 collection C_objects =
 
-  implement S_objects
+  implement S_objects;
 
 end
 ;;
 
 collection C_access_mode =
 
-  implement S_access_mode
+  implement S_access_mode;
 
 end
 ;;
 
 collection C_access =
 
-  implement S_access (C_subjects, C_objects, C_access_mode)
+  implement S_access (C_subjects, C_objects, C_access_mode);
 
 end
 ;;
 
 collection C_set_of_access =
 
-  implement S_set_of (C_access)
+  implement S_set_of (C_access);
 
 end
 ;;
 
 collection C_set_of_mode =
 
-  implement S_set_of (C_access_mode)
+  implement S_set_of (C_access_mode);
 
 end
 ;;
 
 collection C_decisions =
 
-  implement S_decisions
+  implement S_decisions;
 
 end
 ;;
 
 collection C_get_release =
 
-  implement S_get_release
+  implement S_get_release;
 
 end
 ;;
 
 collection C_groups =
 
-  implement S_groups
+  implement S_groups;
 
 end
 ;;
 
 collection C_set_of_groups =
 
-  implement S_set_of (C_groups)
+  implement S_set_of (C_groups);
 
 end
 ;;
 
 collection C_rho_unix =
 
-  implement S_rho_unix (C_groups)
+  implement S_rho_unix (C_groups);
 
 end
 ;;
 
 collection C_rights =
 
-  implement S_rights
+  implement S_rights;
 
 end
 ;;
@@ -884,7 +884,7 @@ collection C_requests_unix =
   implement
     S_requests_unix
       (C_subjects, C_objects, C_access_mode,
-       C_get_release, C_groups, C_rights)
+       C_get_release, C_groups, C_rights);
 
 end
 ;;
@@ -898,7 +898,7 @@ collection C_models_unix =
        C_access, C_set_of_access,
        C_set_of_mode, C_set_of_groups,
        C_rights, C_get_release,
-       C_requests_unix, C_decisions)
+       C_requests_unix, C_decisions);
 
 end
 ;;
@@ -957,8 +957,8 @@ let fs_ex (s in C_subjects) in C_set_of_groups =
 ;;
 
 let fg_ex (o in C_objects) in C_groups =
-  if C_objects!equal (o, rapport_pdf) || 
-     C_objects!equal (o, media_java) || 
+  if C_objects!equal (o, rapport_pdf) ||
+     C_objects!equal (o, media_java) ||
      C_objects!equal (o, projet_tex)
   then C_groups!curry
   else if C_objects!equal (o, tp1_ml) || C_objects!equal (o, hachage_c)
@@ -967,9 +967,9 @@ let fg_ex (o in C_objects) in C_groups =
 ;;
 
 let fd_p_ex (o in C_objects) in C_set_of_mode =
-  if C_objects!equal (o, rapport_pdf) || 
-     C_objects!equal (o, media_java) || 
-     C_objects!equal (o, tp1_ml) || 
+  if C_objects!equal (o, rapport_pdf) ||
+     C_objects!equal (o, media_java) ||
+     C_objects!equal (o, tp1_ml) ||
      C_objects!equal (o, hachage_c)
   then C_set_of_mode!ajoute_element
     (C_access_mode!read,
@@ -997,8 +997,8 @@ let fd_g_ex (o in C_objects) in C_set_of_mode =
 ;;
 
 let fd_o_ex (o in C_objects) in C_set_of_mode =
-  if C_objects!equal (o, rapport_pdf) || 
-     C_objects!equal (o, media_java) || 
+  if C_objects!equal (o, rapport_pdf) ||
+     C_objects!equal (o, media_java) ||
      C_objects!equal (o, tp1_ml)
   then C_set_of_mode!singleton (C_access_mode!read)
   else if C_objects!equal (o, hachage_c)

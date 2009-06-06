@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.9 2009-06-04 14:45:23 rr Exp $ *)
+(* $Id: peano.fcl,v 1.10 2009-06-06 16:43:18 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -277,7 +277,7 @@ end
 
 collection Peano_dumb_coll =
 
-  implement Peano_dumb
+  implement Peano_dumb;
 
 end
 ;;
@@ -379,6 +379,6 @@ end
 
 (*
  collection Peano_coll =
-     implement Peano_order
+     implement Peano_order;
  end
 ;; *)

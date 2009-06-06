@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: hru.fcl,v 1.21 2009-06-05 09:59:20 habib Exp $ *)
+(* $Id: hru.fcl,v 1.22 2009-06-06 16:43:43 weis Exp $ *)
 
 (**
    @title Implementation of the HRU model
@@ -322,49 +322,49 @@ end
 
 collection C_subjects =
 
-  implement S_subjects
+  implement S_subjects;
 
 end
 ;;
 
 collection C_objects =
 
-  implement S_objects
+  implement S_objects;
 
 end
 ;;
 
 collection C_access_mode =
 
-  implement S_access_mode
+  implement S_access_mode;
 
 end
 ;;
 
 collection C_access =
 
-  implement S_access (C_subjects, C_objects, C_access_mode)
+  implement S_access (C_subjects, C_objects, C_access_mode);
 
 end
 ;;
 
 collection C_set_of_access =
 
-  implement S_set_of(C_access)
+  implement S_set_of(C_access);
 
 end
 ;;
 
 collection C_decisions =
 
-  implement S_decisions
+  implement S_decisions;
 
 end
 ;;
 
 collection C_get_release =
 
-  implement S_get_release
+  implement S_get_release;
 
 end
 ;;
@@ -376,77 +376,77 @@ collection C_requests_gal =
       (C_subjects,
        C_objects,
        C_access_mode,
-       C_get_release)
+       C_get_release);
 
 end
 ;;
 
 collection C_rho =
 
-  implement S_rho
+  implement S_rho;
 
 end
 ;;
 
 collection C_couple_s_m =
 
-  implement S_couple (C_subjects, C_access_mode)
+  implement S_couple (C_subjects, C_access_mode);
 
 end
 ;;
 
 collection C_couple_o_m =
 
-  implement S_couple (C_objects, C_access_mode)
+  implement S_couple (C_objects, C_access_mode);
 
 end
 ;;
 
 collection C_set_of_s =
 
-  implement S_set_of (C_subjects)
+  implement S_set_of (C_subjects);
 
 end
 ;;
 
 collection C_set_of_o =
 
-  implement S_set_of (C_objects)
+  implement S_set_of (C_objects);
 
 end
 ;;
 
 collection C_set_of_couple_s_m =
 
-  implement S_set_of (C_couple_s_m)
+  implement S_set_of (C_couple_s_m);
 
 end
 ;;
 
 collection C_set_of_couple_o_m =
 
-  implement S_set_of (C_couple_o_m)
+  implement S_set_of (C_couple_o_m);
 
 end
 ;;
 
 collection C_couple_o_s_s_m =
 
-  implement S_couple (C_objects, C_set_of_couple_s_m)
+  implement S_couple (C_objects, C_set_of_couple_s_m);
 
 end
 ;;
 
 collection C_set_of_c_o_s_s_m =
 
-  implement S_set_of (C_couple_o_s_s_m)
+  implement S_set_of (C_couple_o_s_s_m);
 
 end
 ;;
 
 collection C_states =
 
-  implement S_couple (C_set_of_access, C_set_of_c_o_s_s_m)
+  implement S_couple (C_set_of_access, C_set_of_c_o_s_s_m);
 
 end
 ;;
@@ -620,7 +620,7 @@ collection C_model_acl =
        C_decisions,
        C_couple_s_m, C_set_of_couple_s_m,
        C_couple_o_s_s_m,
-       C_set_of_c_o_s_s_m, C_states)
+       C_set_of_c_o_s_s_m, C_states);
 
 end
 ;;
@@ -835,7 +835,7 @@ collection C_model_capabilities =
        C_access, C_set_of_access,
        C_get_release, C_requests_gal,
        C_decisions,
-       C_couple_o_m, C_set_of_couple_o_m)
+       C_couple_o_m, C_set_of_couple_o_m);
 
 end
 ;;

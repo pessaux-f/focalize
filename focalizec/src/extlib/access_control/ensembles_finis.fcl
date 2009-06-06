@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.23 2009-06-05 13:59:13 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.24 2009-06-06 16:43:43 weis Exp $ *)
 
 (**
 
@@ -2088,14 +2088,14 @@ end
 
 collection Entiers =
 
-  implement Entiers_concrets
+  implement Entiers_concrets;
 
 end
 ;;
 
 collection Ensemble_entiers =
 
-  implement Liste_triee (Entiers)
+  implement Liste_triee (Entiers);
 
 end
 ;;
