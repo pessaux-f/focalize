@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2009-06-04 16:17:33 ayrault Exp $
+# $Id: Makefile,v 1.10 2009-06-06 13:01:36 ayrault Exp $
 
 # Makefile for algebra structures implementations
 
@@ -162,7 +162,7 @@ clean::
 	$(RM) $(BIN_EXE)
 
 
-build.x: bin
-	$(CAML_BIN_COMPILER) -o $@ \
-           -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR) \
-            $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
+#build.x: bin
+#	$(CAML_BIN_COMPILER) -o $@ \
+#           -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR) \
+#            $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
