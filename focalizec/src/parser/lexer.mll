@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.85 2009-06-05 12:04:37 weis Exp $ *)
+(* $Id: lexer.mll,v 1.86 2009-06-06 18:26:15 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -1135,9 +1135,11 @@ rule token = parse
      | start_lowercase_prefix_symbol
      | start_uppercase_infix_symbol
      | start_uppercase_prefix_symbol
-    )
+    as starter)
     { reset_delimited_ident_buffer ();
-      store_delimited_ident_char (Lexing.lexeme_char lexbuf 2);
+      for i = 0 to String.length starter do
+        store_delimited_ident_char starter.[i];
+      done;
       delimited_ident_start_pos :=
         Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
       delimited_ident lexbuf;
@@ -1334,8 +1336,8 @@ and uniline_comment = parse
           (Comment_in_uniline_comment,
            lexbuf.lex_start_p,
            lexbuf.lex_curr_p)) }
-  | '\\' newline whites
-    { incr_line_num lexbuf;
+  | '\\' newline (whites as spaces)
+    { incr_escaped_line_num lexbuf spaces;
       uniline_comment lexbuf }
   | newline
     { incr_line_num lexbuf }
@@ -1363,8 +1365,8 @@ and comment = parse
       | _ :: l ->
         comment_start_pos := l;
         comment lexbuf }
-  | '\\' newline whites
-    { incr_line_num lexbuf;
+  | '\\' newline (whites as spaces)
+    { incr_escaped_line_num lexbuf spaces;
       comment lexbuf }
   | newline
     { incr_line_num lexbuf;
@@ -1450,7 +1452,7 @@ and documentation = parse
         raise (Error (Unterminated_documentation, start_pos, end_pos))
       | _ -> assert false }
   | '\\' newline (whites as spaces)
-    { incr_line_num lexbuf;
+    { incr_escaped_line_num lexbuf spaces;
       for i = 0 to String.length spaces do
         store_documentation_char (Lexing.lexeme_char lexbuf i);
       done;
@@ -1476,7 +1478,7 @@ and external_code = parse
         raise (Error (Unterminated_external_code, start_pos, end_pos))
       | _ -> assert false }
   | '\\' newline (whites as spaces)
-    { incr_line_num lexbuf;
+    { incr_escaped_line_num lexbuf spaces;
       for i = 0 to String.length spaces do
         store_external_code_char (Lexing.lexeme_char lexbuf i);
       done;
