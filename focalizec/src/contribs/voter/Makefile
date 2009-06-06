@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.12 2009-06-06 20:23:51 ayrault Exp $
+# $Id: Makefile,v 1.13 2009-06-06 20:37:28 ayrault Exp $
 
 # Makefile for algebra structures implementations
 
@@ -117,7 +117,7 @@ $(BIN_EXE): byt bin
            -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)\
             $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
 install::
-	$(MKDIR) $(LIB_INSTALL_DIR) && \
+	@$(MKDIR) $(LIB_INSTALL_DIR) && \
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then \
 	  echo "Installing (FoCaLize) compiled certified libs." && \
 	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/; \
