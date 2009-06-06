@@ -10,3 +10,5 @@
 *.coz
 .depend
 odoc
+*.byt
+*.bin
