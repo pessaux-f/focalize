@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.15 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.16 2009-06-06 12:11:01 ayrault Exp $
 
 ROOT_DIR = ../..
 
@@ -21,8 +21,8 @@ include $(ROOT_DIR)/Makefile.config
 
 # Fill here to add a new directory for a new contribution
 SUB_DIRS =\
-  utils
-#  voter\
+  utils \
+  voter
 #  automata
 
 include $(ROOT_DIR)/Makefile.common
