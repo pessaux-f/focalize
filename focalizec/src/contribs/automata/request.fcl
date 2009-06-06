@@ -14,11 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: request.fcl,v 1.2 2009-05-15 23:31:48 weis Exp $ *)
-
-(* 
- *@version $Revision: 1.2 $ $Date: 2009-05-15 23:31:48 $
- *)
+(* $Id: request.fcl,v 1.3 2009-06-06 14:51:08 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -29,282 +25,297 @@ open "sets_orders";;
 open "gen_def";;
 
 
-species Requests inherits Gen_request =
 (* Definition of the automata's requests using a sum type *)
-signature normal_switched : Self;
-signature reverse_switched : Self;
-signature moving : Self;
-signature inconsistent : Self;
-signature moving_time_out : Self;
+species Requests =
 
-property diff_normal_switched_reverse_switched:
- ~ equal(normal_switched, reverse_switched)
-;
+  inherit Gen_request;
 
-property diff_normal_switched_moving:
- ~ equal(normal_switched, moving)
-;
+  signature normal_switched : Self;
+  signature reverse_switched : Self;
+  signature moving : Self;
+  signature inconsistent : Self;
+  signature moving_time_out : Self;
 
-property diff_normal_switched_inconsistent:
- ~ equal(normal_switched, inconsistent)
-;
+  property diff_normal_switched_reverse_switched:
+   ~ equal(normal_switched, reverse_switched)
+  ;
 
-property diff_normal_switched_moving_time_out:
- ~ equal(normal_switched, moving_time_out)
-;
+  property diff_normal_switched_moving:
+   ~ equal(normal_switched, moving)
+  ;
 
-property diff_reverse_switched_moving:
- ~ equal(reverse_switched, moving)
-;
+  property diff_normal_switched_inconsistent:
+   ~ equal(normal_switched, inconsistent)
+  ;
 
-property diff_reverse_switched_inconsistent:
- ~ equal(reverse_switched, inconsistent)
-;
+  property diff_normal_switched_moving_time_out:
+   ~ equal(normal_switched, moving_time_out)
+  ;
 
-property diff_reverse_switched_moving_time_out:
- ~ equal(reverse_switched, moving_time_out)
-;
+  property diff_reverse_switched_moving:
+   ~ equal(reverse_switched, moving)
+  ;
 
-property diff_moving_inconsistent:
- ~ equal(moving, inconsistent)
-;
+  property diff_reverse_switched_inconsistent:
+   ~ equal(reverse_switched, inconsistent)
+  ;
 
-property diff_moving_moving_time_out:
- ~ equal(moving, moving_time_out)
-;
+  property diff_reverse_switched_moving_time_out:
+   ~ equal(reverse_switched, moving_time_out)
+  ;
 
-property diff_inconsistent_moving_time_out:
- ~ equal(inconsistent, moving_time_out)
-;
+  property diff_moving_inconsistent:
+   ~ equal(moving, inconsistent)
+  ;
+
+  property diff_moving_moving_time_out:
+   ~ equal(moving, moving_time_out)
+  ;
+
+  property diff_inconsistent_moving_time_out:
+   ~ equal(inconsistent, moving_time_out)
+  ;
 
 end
 ;;
 
-species Imp_requests inherits Requests =
 (* Definition of the automata's requests using a sum type *)
-representation = int;
-let normal_switched = 0;            (* sig_N = 1, sig_R = 0 *)
-let reverse_switched = 1;           (* sig_N = 0, sig_R = 1 *)
-let moving = 2;                     (* sig_N = 0, sig_R = 0 *)
-let inconsistent = 3;               (* sig_N = 1, sig_R = 1 *)
-let moving_time_out = 4;
+species Imp_requests =
 
-let equal(x in Self, y in Self) in bool = 
-   x =0x y;
-let element = 1;
+  inherit Requests;
 
-proof of equal_transitive = assumed {* type polymorphe *}; 
-(* by definition of equal; *)
-proof of equal_symmetric = assumed {* type polymorphe *};
-(* by property basics#beq_symm definition of equal; *)
-proof of equal_reflexive = assumed {* type polymorphe *};
-(* by property basics#beq_refl definition of equal; *)
-   
+  representation = int;
 
-let set(i in int) in Self =
-   if !equal(i, 0) then
-     !normal_switched
-   else if  !equal(i, 1) then
-     !reverse_switched
-   else if  !equal(i, 2) then
-     !moving
-   else if  !equal(i, 3) then
-     !inconsistent
-   else if  !equal(i, 4) then
-     !moving_time_out
-   else
-     (* by default !!! *)
-     !inconsistent
-;
+  let normal_switched = 0;            (* sig_N = 1, sig_R = 0 *)
+  let reverse_switched = 1;           (* sig_N = 0, sig_R = 1 *)
+  let moving = 2;                     (* sig_N = 0, sig_R = 0 *)
+  let inconsistent = 3;               (* sig_N = 1, sig_R = 1 *)
+  let moving_time_out = 4;
+
+  let equal(x in Self, y in Self) in bool = x =0x y;
+  let element = 1;
+
+  proof of equal_transitive = assumed {* type polymorphe *};
+  (* by definition of equal; *)
+  proof of equal_symmetric = assumed {* type polymorphe *};
+  (* by property basics#beq_symm definition of equal; *)
+  proof of equal_reflexive = assumed {* type polymorphe *};
+  (* by property basics#beq_refl definition of equal; *)
 
 
-let parse(x) = basics#int_of_string(x);
-let print(x) =  basics#string_of_int(x);
+  let set(i in int) in Self =
+     if !equal(i, 0) then
+       !normal_switched
+     else if  !equal(i, 1) then
+       !reverse_switched
+     else if  !equal(i, 2) then
+       !moving
+     else if  !equal(i, 3) then
+       !inconsistent
+     else if  !equal(i, 4) then
+       !moving_time_out
+     else
+       (* by default !!! *)
+       !inconsistent
+  ;
 
-proof of diff_normal_switched_reverse_switched = 
-(*
-by definition of normal_switched, reverse_switched, equal, basics#int_eq
-*)
-coq proof 
-  definition of normal_switched, reverse_switched, equal
-  {*
-    intros; unfold equal, basics.int_eq, normal_switched, reverse_switched.
-    auto.
-    Qed.
-  *}
-;
 
-proof of diff_normal_switched_moving = 
-  coq proof 
-  definition of normal_switched, moving, equal
-  {*
-    intros; unfold equal, basics.int_eq, normal_switched, moving.
-    auto.
-    Qed.
-  *}
-;
+  let parse(x) = basics#int_of_string(x);
+  let print(x) =  basics#string_of_int(x);
 
-proof of diff_normal_switched_inconsistent = 
-  coq proof 
-  definition of normal_switched, inconsistent, equal
-  {*
-    intros; unfold equal, basics.int_eq, normal_switched, inconsistent.
-    auto.
-    Qed.
-  *}
-;
+  proof of diff_normal_switched_reverse_switched =
+  (*
+  by definition of normal_switched, reverse_switched, equal,( =0x )
+  *)
+  coq proof
+    definition of normal_switched, reverse_switched, equal
+    {*
+      intros; unfold equal, basics._equal_0x, normal_switched, reverse_switched.
+      auto.
+      Qed.
+    *}
+  ;
 
-proof of diff_normal_switched_moving_time_out = assumed {* See below *};
-proof of diff_reverse_switched_moving = assumed {* See below *};
-proof of diff_reverse_switched_inconsistent = assumed {* See below *};
-proof of diff_reverse_switched_moving_time_out = assumed {* See below *};
-proof of diff_moving_inconsistent = assumed {* See below *};
-proof of diff_moving_moving_time_out = assumed {* See below *};
-proof of diff_inconsistent_moving_time_out = assumed {* See below *};
+  proof of diff_normal_switched_moving =
+    coq proof
+    definition of normal_switched, moving, equal
+    {*
+      intros; unfold equal, basics._equal_0x, normal_switched, moving.
+      auto.
+      Qed.
+    *}
+  ;
+
+  proof of diff_normal_switched_inconsistent =
+    coq proof
+    definition of normal_switched, inconsistent, equal
+    {*
+      intros; unfold equal, basics._equal_0x, normal_switched, inconsistent.
+      auto.
+      Qed.
+    *}
+  ;
+
+  proof of diff_normal_switched_moving_time_out = assumed {* See below *};
+  proof of diff_reverse_switched_moving = assumed {* See below *};
+  proof of diff_reverse_switched_inconsistent = assumed {* See below *};
+  proof of diff_reverse_switched_moving_time_out = assumed {* See below *};
+  proof of diff_moving_inconsistent = assumed {* See below *};
+  proof of diff_moving_moving_time_out = assumed {* See below *};
+  proof of diff_inconsistent_moving_time_out = assumed {* See below *};
 
 end
 ;;
 
 collection Coll_requests =
-  implement Imp_requests
-end
-;;
 
-species Ports inherits Gen_port =
-(* Definition of the automata's ports using a sum type *)
-
-signature empty : Self;
-
-signature port_in1 : Self;
-signature port_in2 : Self;
-signature port_in3 : Self;
-
-signature port_out1 : Self;
-signature port_out2 : Self;
-
-property diff_empty_port_in1:
- ~ equal(empty, port_in1)
-;
-
-property diff_empty_port_in2:
- ~ equal(empty, port_in2)
-;
-
-property diff_empty_port_in3:
- ~ equal(empty, port_in3)
-;
-
-property diff_empty_port_out1:
- ~ equal(empty, port_out1)
-;
-
-property diff_empty_port_out2:
- ~ equal(empty, port_out2)
-;
-
-property diff_port_in1_port_in2:
- ~ equal(port_in1, port_in2)
-;
-
-property diff_port_in1_port_in3:
- ~ equal(port_in1, port_in3)
-;
-
-property diff_port_in1_port_out1:
- ~ equal(port_in1, port_out1)
-;
-
-property diff_port_in1_port_out2:
- ~ equal(port_in1, port_out2)
-;
-
-property diff_port_in2_port_in3:
- ~ equal(port_in2, port_in3)
-;
-
-property diff_port_in2_port_out1:
- ~ equal(port_in2, port_out1)
-;
-
-property diff_port_in2_port_out2:
- ~ equal(port_in2, port_out2)
-;
-
-property diff_port_in3_port_out1:
- ~ equal(port_in3, port_out1)
-;
-
-property diff_port_in3_port_out2:
- ~ equal(port_in3, port_out2)
-;
-
-property diff_port_out1_port_out2:
- ~ equal(port_out1, port_out2)
-;
-
-property disj:
-all p in Self,
- equal(p, empty) \/ 
- equal(p, port_in1) \/ 
- equal(p, port_in2) \/ 
- equal(p, port_in3) \/ 
- equal(p, port_out1) \/ 
- equal(p, port_out2) 
-;
+  implement Imp_requests;
 
 end
 ;;
 
-species Imp_ports inherits Ports =
 (* Definition of the automata's ports using a sum type *)
-representation = int;
-let empty = 0;
+species Ports =
 
-let port_in1 = 1;
-let port_in2 = 2;
-let port_in3 = 3;
+  inherit Gen_port;
 
-let port_out1 = 11;
-let port_out2 = 12;
+  signature empty : Self;
 
-let equal(x in Self, y in Self) in bool = 
-   basics#int_eq(x, y);
-let element = 1;
+  signature port_in1 : Self;
+  signature port_in2 : Self;
+  signature port_in3 : Self;
+
+  signature port_out1 : Self;
+  signature port_out2 : Self;
+
+  property diff_empty_port_in1:
+   ~ equal(empty, port_in1)
+  ;
+
+  property diff_empty_port_in2:
+   ~ equal(empty, port_in2)
+  ;
+
+  property diff_empty_port_in3:
+   ~ equal(empty, port_in3)
+  ;
+
+  property diff_empty_port_out1:
+   ~ equal(empty, port_out1)
+  ;
+
+  property diff_empty_port_out2:
+   ~ equal(empty, port_out2)
+  ;
+
+  property diff_port_in1_port_in2:
+   ~ equal(port_in1, port_in2)
+  ;
+
+  property diff_port_in1_port_in3:
+   ~ equal(port_in1, port_in3)
+  ;
+
+  property diff_port_in1_port_out1:
+   ~ equal(port_in1, port_out1)
+  ;
+
+  property diff_port_in1_port_out2:
+   ~ equal(port_in1, port_out2)
+  ;
+
+  property diff_port_in2_port_in3:
+   ~ equal(port_in2, port_in3)
+  ;
+
+  property diff_port_in2_port_out1:
+   ~ equal(port_in2, port_out1)
+  ;
+
+  property diff_port_in2_port_out2:
+   ~ equal(port_in2, port_out2)
+  ;
+
+  property diff_port_in3_port_out1:
+   ~ equal(port_in3, port_out1)
+  ;
+
+  property diff_port_in3_port_out2:
+   ~ equal(port_in3, port_out2)
+  ;
+
+  property diff_port_out1_port_out2:
+   ~ equal(port_out1, port_out2)
+  ;
+
+  property disj:
+  all p in Self,
+   equal(p, empty) \/
+   equal(p, port_in1) \/
+   equal(p, port_in2) \/
+   equal(p, port_in3) \/
+   equal(p, port_out1) \/
+   equal(p, port_out2)
+  ;
+
+end
+;;
+
+(* Definition of the automata's ports using a sum type *)
+species Imp_ports =
+
+  inherit Ports;
+
+  representation = int;
+
+  let empty = 0;
+
+  let port_in1 = 1;
+  let port_in2 = 2;
+  let port_in3 = 3;
+
+  let port_out1 = 11;
+  let port_out2 = 12;
+
+  let equal(x in Self, y in Self) in bool = x =0x y;
+  let element = 1;
 
 
-proof of equal_transitive = assumed {* type polymorphe *};
-(* by property basics#beq_trans definition of equal; *)
-proof of equal_symmetric = assumed {* type polymorphe *};
-(* by property basics#beq_symm definition of equal; *)
-proof of equal_reflexive = assumed {* type polymorphe *};
-(* by property basics#beq_refl definition of equal; *)
-   
+  proof of equal_transitive = assumed {* type polymorphe *};
+  (* by property basics#beq_trans definition of equal; *)
+  proof of equal_symmetric = assumed {* type polymorphe *};
+  (* by property basics#beq_symm definition of equal; *)
+  proof of equal_reflexive = assumed {* type polymorphe *};
+  (* by property basics#beq_refl definition of equal; *)
 
-let parse(x) = basics#int_of_string(x);
-let print(x) =  basics#string_of_int(x);
 
-proof of diff_empty_port_in1 = assumed {* See below *};
-proof of diff_empty_port_in2 = assumed {* See below *};
-proof of diff_empty_port_in3 = assumed {* See below *};
-proof of diff_empty_port_out1 = assumed {* See below *};
-proof of diff_empty_port_out2 = assumed {* See below *};
-proof of diff_port_in1_port_in2 = assumed {* See below *};
-proof of diff_port_in1_port_in3 = assumed {* See below *};
-proof of diff_port_in1_port_out1 = assumed {* See below *};
-proof of diff_port_in1_port_out2 = assumed {* See below *};
-proof of diff_port_in2_port_in3 = assumed {* See below *};
-proof of diff_port_in2_port_out1 = assumed {* See below *};
-proof of diff_port_in2_port_out2 = assumed {* See below *};
-proof of diff_port_in3_port_out1 = assumed {* See below *};
-proof of diff_port_in3_port_out2 = assumed {* See below *};
-proof of diff_port_out1_port_out2 = assumed {* See below *};
-proof of disj = assumed {* See below *};
+  let parse(x) = basics#int_of_string(x);
+  let print(x) =  basics#string_of_int(x);
+
+  proof of diff_empty_port_in1 = assumed {* See below *};
+  proof of diff_empty_port_in2 = assumed {* See below *};
+  proof of diff_empty_port_in3 = assumed {* See below *};
+  proof of diff_empty_port_out1 = assumed {* See below *};
+  proof of diff_empty_port_out2 = assumed {* See below *};
+  proof of diff_port_in1_port_in2 = assumed {* See below *};
+  proof of diff_port_in1_port_in3 = assumed {* See below *};
+  proof of diff_port_in1_port_out1 = assumed {* See below *};
+  proof of diff_port_in1_port_out2 = assumed {* See below *};
+  proof of diff_port_in2_port_in3 = assumed {* See below *};
+  proof of diff_port_in2_port_out1 = assumed {* See below *};
+  proof of diff_port_in2_port_out2 = assumed {* See below *};
+  proof of diff_port_in3_port_out1 = assumed {* See below *};
+  proof of diff_port_in3_port_out2 = assumed {* See below *};
+  proof of diff_port_out1_port_out2 = assumed {* See below *};
+  proof of disj = assumed {* See below *};
 
 end
 ;;
 
 collection Coll_ports =
-  implement Imp_ports
+
+  implement Imp_ports;
+
 end
 ;;
 

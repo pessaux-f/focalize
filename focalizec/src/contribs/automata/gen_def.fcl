@@ -14,11 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_def.fcl,v 1.2 2009-05-15 23:31:48 weis Exp $ *)
-
-(* 
- *@version $Revision: 1.2 $ $Date: 2009-05-15 23:31:48 $
- *)
+(* $Id: gen_def.fcl,v 1.3 2009-06-06 14:51:08 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -27,24 +23,36 @@ open "basics";;
 open "sets_orders";;
 
 (* Definition of the states *)
-species Gen_state inherits Setoid =
+species Gen_state =
 
-signature get : Self -> int;
+  inherit Setoid;
 
-signature empty : Self;
+  signature get : Self -> int;
 
-end;;
+  signature empty : Self;
+
+end
+;;
 
 (* Definition of the requests *)
-species Gen_request inherits Setoid =
-signature set : int -> Self;
-end;;
+species Gen_request =
+
+ inherit Setoid;
+
+ signature set : int -> Self;
+
+end
+;;
 
 (* Definition of the ports *)
-species Gen_port inherits Setoid =
-end;;
+species Gen_port =
 
-(* 
+  inherit Setoid;
+
+end
+;;
+
+(*
 Species : Automata
 Parameter:
   - St : generic state
@@ -73,43 +81,44 @@ this species defines the basics functions of an automata:
 *)
 species Automata(St is Gen_state, Req is Gen_request, Po is Gen_port) =
 
-signature init_state : Self;
-signature tau : Self -> Req -> Self * Po;
-signature entry : Po -> Self;
+  signature init_state : Self;
+  signature tau : Self -> Req -> Self * Po;
+  signature entry : Po -> Self;
 
-signature get_state : Self -> St;
+  signature get_state : Self -> St;
 
-signature equal : Self -> Self -> bool;
+  signature equal : Self -> Self -> bool;
 
-let tau_p1( i in (Self * Po)) in Self = basics#fst(i);
-let tau_p2( i in (Self * Po)) in Po = basics#snd(i);
-let constr_tau( p1 in Self, p2 in Po) in (Self * Po) = basics#pair(p1, p2);
+  let tau_p1( i in (Self * Po)) in Self = basics#fst(i);
+  let tau_p2( i in (Self * Po)) in Po = basics#snd(i);
+  let constr_tau( p1 in Self, p2 in Po) in (Self * Po) = (p1, p2);
 
-theorem self_is_fst_tau:
-  all s in Self, all p in Po,
-    tau_p1( constr_tau(s, p)) = s
-proof = assumed {* To do *}
-;
+  theorem self_is_fst_tau:
+    all s in Self, all p in Po,
+      tau_p1( constr_tau(s, p)) = s
+  proof = assumed {* To do *}
+  ;
 
-theorem po_is_snd_tau:
-  all s in Self, all p in Po,
-    tau_p2( !constr_tau(s, p)) = p
-proof = assumed {* To do *}
-;
+  theorem po_is_snd_tau:
+    all s in Self, all p in Po,
+      tau_p2( !constr_tau(s, p)) = p
+  proof = assumed {* To do *}
+  ;
 
-(* equal is a equivalence relation between internal state *)
-property equal_reflexive:
-  all x in Self,
-    !equal(x, x)
-;
-property equal_symmetric:
-  all x y in Self,
-    !equal(x, y) -> !equal(y, x)
-;
-property equal_transitive:
-  all x y z in Self,
-    !equal(x, y) -> !equal(y, z) -> !equal(x, z)
-;
+  (* equal is a equivalence relation between internal state *)
+  property equal_reflexive:
+    all x in Self,
+      !equal(x, x)
+  ;
+  property equal_symmetric:
+    all x y in Self,
+      !equal(x, y) -> !equal(y, x)
+  ;
+  property equal_transitive:
+    all x y z in Self,
+      !equal(x, y) -> !equal(y, z) -> !equal(x, z)
+  ;
 
-end;;
+end
+;;
 
