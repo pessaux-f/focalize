@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: num_capteur.fcl,v 1.5 2009-06-06 13:02:04 ayrault Exp $ *)
+(* $Id: num_capteur.fcl,v 1.6 2009-06-06 15:08:26 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -26,81 +26,83 @@ open "peano";;
 
 (** Type somme : Numero du capteur de la sortie voteur *)
 species Sp_capteur =
-inherit Setoid ;
- 
-  (** DÃ©finition du type somme *)
-  (** Capteur associÃ© de l'entrÃ©e 1 *)
-  signature capt_1 : Self; 
-  (** Capteur associÃ© de l'entrÃ©e 2 *)
+
+  inherit Setoid;
+
+  (** Définition du type somme *)
+  (** Capteur associé de l'entrée 1 *)
+  signature capt_1 : Self;
+  (** Capteur associé de l'entrée 2 *)
   signature capt_2 : Self;
-  (** Capteur associÃ© de l'entrÃ©e 3 *)
+  (** Capteur associé de l'entrée 3 *)
   signature capt_3 : Self;
 
   (** Each value of the species is inside the sum type *)
   property all_value:
     all e in Self,
-      (  !equal(e, !capt_1)
-      \/ !equal(e, !capt_2)
-      \/ !equal(e, !capt_3));
-  
+      !equal (e, !capt_1) \/
+      !equal (e, !capt_2) \/
+      !equal (e, !capt_3);
+
   (** Each field of the sum type are different from the other one *)
   property all_field_different_0_1:
-    ~(!equal( !capt_1, !capt_2));
+    ~ (!equal (!capt_1, !capt_2));
   property all_field_different_0_2:
-    ~(!equal( !capt_1, !capt_3));
+    ~ (!equal (!capt_1, !capt_3));
   property all_field_different_1_2:
-    ~(!equal( !capt_2, !capt_3));
+    ~ (!equal (!capt_2, !capt_3));
 
-end ;;
+end
+;;
 
 
-species Imp_capteur(P is Peano) =
-inherit Sp_capteur ;
+species Imp_capteur (P is Peano) =
 
-representation = P;
+  inherit Sp_capteur;
 
-let capt_1 in Self = P!zero;
-let capt_2 in Self = P!s(!capt_1);
-let capt_3 in Self = P!s(!capt_2);
+  representation = P;
 
-let equal(x in Self, y in Self) in bool = 
-   P!equal(x, y);
-let element = capt_1;
+  let capt_1 in Self = P!zero;
+  let capt_2 in Self = P!s (!capt_1);
+  let capt_3 in Self = P!s (!capt_2);
 
-proof of equal_transitive = 
- by property P!equal_transitive definition of equal; 
-proof of equal_symmetric = 
- by property P!equal_symmetric definition of equal;
-proof of equal_reflexive = 
- by property P!equal_reflexive definition of equal;
+  let equal (x in Self, y in Self) in bool = P!equal (x, y);
+  let element = capt_1;
 
-proof of all_field_different_0_1 = 
- by definition of capt_1, capt_2, equal
- property P!zero_is_not_successor
-;
+  proof of equal_transitive =
+    by property P!equal_transitive definition of equal;
+  proof of equal_symmetric =
+    by property P!equal_symmetric definition of equal;
+  proof of equal_reflexive =
+    by property P!equal_reflexive definition of equal;
 
-proof of all_field_different_0_2 = 
- by definition of capt_1, capt_3, equal
- property P!zero_is_not_successor
-;
+  proof of all_field_different_0_1 =
+    by definition of capt_1, capt_2, equal
+    property P!zero_is_not_successor
+  ;
 
-proof of all_field_different_1_2 =
- by definition of capt_1, capt_2, capt_3, equal
- property P!zero_is_not_successor, P!succ_is_an_injection
-;
+  proof of all_field_different_0_2 =
+    by definition of capt_1, capt_3, equal
+    property P!zero_is_not_successor
+  ;
 
-proof of all_value = assumed {* By construction *};
+  proof of all_field_different_1_2 =
+    by definition of capt_1, capt_2, capt_3, equal
+    property P!zero_is_not_successor, P!succ_is_an_injection
+  ;
 
-let print(x in Self) in string =  
-                if !equal(x, !capt_1) then
-                  "capt_1"
-                else if !equal(x, !capt_2) then
-                  "capt_2"
-                else 
-                  "capt_3";
+  proof of all_value = assumed {* By construction *};
 
-end ;;
+  let print (x in Self) in string =
+    if !equal (x, !capt_1) then "capt_1" else
+    if !equal (x, !capt_2) then "capt_2" else "capt_3";
+
+end
+;;
 
 collection Coll_capteur =
-implement Imp_capteur(Coll_peano) ;
-end;;
+
+  implement Imp_capteur (Coll_peano);
+
+end
+;;

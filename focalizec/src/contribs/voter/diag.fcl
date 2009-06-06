@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: diag.fcl,v 1.3 2009-06-06 13:02:04 ayrault Exp $ *)
+(* $Id: diag.fcl,v 1.4 2009-06-06 14:57:36 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -30,66 +30,69 @@ open "etat_vote";;
 open "num_capteur";;
 open "pair";;
 
+species Diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) =
 
-
-species Diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) = 
-inherit Gen_diag, Sp_pair(C, E) ;
+  inherit Gen_diag, Sp_pair(C, E);
 
   (* no_match implies returned value is invalid *)
   property no_match_is_invalid:
-  all x in Self, 
+  all x in Self,
     E!equal(prj_b(x),  E!no_match) -> ~(valid(x))
   ;
 
   (* range_match implies returned value is valid *)
   property range_match_is_valid:
-  all x in Self, 
+  all x in Self,
     E!equal(prj_b(x),  E!range_match) -> valid(x)
   ;
 
   (* partial_match implies returned value is valid *)
   property partial_match_is_valid:
-  all x in Self, 
+  all x in Self,
     E!equal(prj_b(x),  E!partial_match) -> valid(x)
   ;
 
   (* perfect_match implies returned value is valid *)
   property perfect_match_is_valid:
-  all x in Self, 
+  all x in Self,
     E!equal(prj_b(x),  E!perfect_match) -> valid(x)
   ;
 
- end;;
+ end
+;;
 
 species Imp_diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) =
-inherit Diag_2oo3(E, C), Imp_pair(C, E) ;
+
+  inherit Diag_2oo3(E, C), Imp_pair(C, E);
 
 
   (* all other diag returned valid value *)
-  let valid(x in Self) in bool = 
+  let valid(x in Self) in bool =
      E!equal(prj_b(x), E!range_match) ||
      E!equal(prj_b(x), E!partial_match) ||
      E!equal(prj_b(x), E!perfect_match)
-;
+  ;
 
   proof of no_match_is_invalid =
-  <1>1 assume x in Self,
-    assume H1 : E!equal(prj_b(x),  E!no_match),
-    prove ~(valid(x)) 
-    by hypothesis H1 
-       property E!equal_transitive, E!equal_symmetric, 
-       E!all_field_different_0_1, E!all_field_different_0_2, 
+  <1>1
+  assume x in Self,
+  assume H1 : E!equal(prj_b(x),  E!no_match),
+  prove ~(valid(x))
+    by hypothesis H1
+       property E!equal_transitive, E!equal_symmetric,
+       E!all_field_different_0_1, E!all_field_different_0_2,
        E!all_field_different_0_3
        definition of valid
-  <1>f conclude ;
+  <1>f conclude  ;
 
   proof of range_match_is_valid =
-  by definition of valid ;
+  by definition of valid;
 
   proof of partial_match_is_valid =
-  by definition of valid ;
- 
+  by definition of valid;
+
   proof of perfect_match_is_valid =
-  by definition of valid ;
- 
-end;;
+  by definition of valid;
+
+end
+;;
