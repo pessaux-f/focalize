@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.16 2009-06-06 22:27:50 weis Exp $
+# $Id: Makefile.common,v 1.17 2009-06-06 22:34:02 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -37,7 +37,7 @@ odoc:: $(BYT_OBJS)
 
 clean::
 	@$(RM) *.cm* *.o *.a *.annot *.out *.bin *.byt
-	$(RM) *.vo *.fo *~ .*~ log *.mangled *.coz *.pfc *.fcd && \
+	$(RM) *.vo *.fo *~ .*~ log *.mangled *.coz *.pfc *.fcd
 	if test -d tests; then \
 	  for i in tests; do \
 	    echo "--> $$i ..." >&2; \
@@ -77,6 +77,7 @@ tests::
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .v .vo
 .SUFFIXES: .tex .dvi .ps .pdf .idx
+.SUFFIXES: .fcd .xml
 .SUFFIXES: .shtml .html .htm
 
 .ml.cmo:
@@ -122,5 +123,10 @@ tests::
 	$(HTMLC) -s $<
 .html.htm:
 	$(HTMLC) -c $<
+
+.fcl.fcd:
+	$(FOCALIZEC) -focalize-doc $<
+.fcd.xml:
+	$(XSLTPROC) $(FD2HTML) $< | $(XSLTPROC) $(MMLC2P) - > $@
 
 include .depend
