@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.86 2009-06-06 18:26:15 weis Exp $ *)
+(* $Id: lexer.mll,v 1.87 2009-06-07 20:53:39 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -609,7 +609,7 @@ let incr_line_num lexbuf =
 ;;
 
 (** Add one to the current line counter of the file being lexed,
-    knowing that [spaces] chars are skipped at the begeinning of the next
+    knowing that [spaces] chars are skipped at the beginning of the next
     line. *)
 let incr_escaped_line_num lexbuf spaces =
   update_loc lexbuf None 1 false (String.length spaces)
@@ -624,8 +624,11 @@ let newline = ( '\n' | '\r' | "\r\n" )
 (** ASCII 010 is newline or ['\n'], ASCII 013 is carriage return or ['\r']. *)
 let blank = [ '\032' '\009' '\012' ]
 (** ASCII 32 is space, ASCII 9 is tab, ASCII 12 is CTRL-L *)
-let whites = [ ' ' '\t' ]*
+let white = [ ' ' '\t' ]
+let whites = white*
 (** Any number of space and tabs (including 0). *)
+
+let space_separator = newline | blank
 
 (** {7 Classification of characters for numbers} *)
 
@@ -1073,7 +1076,11 @@ let uppercase_prefix_symbol =
 
 (** {3 Annotation tags} *)
 
-let annotation_tag = "{@" [^ '}']* '}'
+(** 3 Annotation tags *)
+
+let annotation_tag =
+    decimal_digit
+  | "{@" [^ '}']* '}'
 
 (** {3 The main lexer. *)
 
@@ -1135,9 +1142,9 @@ rule token = parse
      | start_lowercase_prefix_symbol
      | start_uppercase_infix_symbol
      | start_uppercase_prefix_symbol
-    as starter)
+     as starter)
     { reset_delimited_ident_buffer ();
-      for i = 0 to String.length starter do
+      for i = 0 to String.length starter - 1 do
         store_delimited_ident_char starter.[i];
       done;
       delimited_ident_start_pos :=
@@ -1160,8 +1167,9 @@ rule token = parse
     { comment_start_pos := [ lexbuf.lex_start_p, lexbuf.lex_curr_p ];
       comment lexbuf;
       token lexbuf }
-  | "(**" blank (annotation_tag? as tag)
-    { reset_documentation_buffer ();
+  | "(**"
+    { let tag = annotation_tag lexbuf in
+      reset_documentation_buffer ();
       documentation_start_pos :=
         Some (lexbuf.lex_start_p, lexbuf.lex_curr_p);
       documentation lexbuf;
@@ -1169,10 +1177,9 @@ rule token = parse
       | Some (start_pos, _) -> lexbuf.lex_start_p <- start_pos
       | _ -> assert false end;
       begin match tag with
-      | "@0" ->
+      | "0" ->
         DOCUMENTATION_HEADER (tag, get_stored_documentation ())
-      | "@1" | "@2" | "@3" | "@4" | "@5"
-      | "@6" | "@7" | "@8" | "@9" ->
+      | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ->
         DOCUMENTATION_TITLE (tag, get_stored_documentation ())
       | tag ->
         DOCUMENTATION (tag, get_stored_documentation ()) end }
@@ -1273,6 +1280,14 @@ rule token = parse
               lexbuf.lex_start_p,
               lexbuf.lex_curr_p)) }
 
+and annotation_tag = parse
+  | white+ (decimal_digit as d) white+
+    { String.make 1 d }
+  | white* '{' white* ([^ '}']* as tag) white* '}'
+    { tag }
+  | _
+    { "" }
+
   (* Special sub lexer for delimited idents *)
 and delimited_ident = parse
   | "\'\'"
@@ -1280,8 +1295,8 @@ and delimited_ident = parse
   | escaped_character
     { store_delimited_ident_char (char_for_character (Lexing.lexeme_char lexbuf 1));
       delimited_ident lexbuf }
-  | '\\' newline (whites as space)
-    { incr_escaped_line_num lexbuf space;
+  | '\\' newline (whites as spaces)
+    { incr_escaped_line_num lexbuf spaces;
       delimited_ident lexbuf }
   | escaped_decimal_code
     { store_delimited_ident_char (char_for_decimal_code lexbuf 1);
@@ -1453,7 +1468,7 @@ and documentation = parse
       | _ -> assert false }
   | '\\' newline (whites as spaces)
     { incr_escaped_line_num lexbuf spaces;
-      for i = 0 to String.length spaces do
+      for i = 0 to String.length spaces - 1 do
         store_documentation_char (Lexing.lexeme_char lexbuf i);
       done;
       documentation lexbuf }
@@ -1479,7 +1494,7 @@ and external_code = parse
       | _ -> assert false }
   | '\\' newline (whites as spaces)
     { incr_escaped_line_num lexbuf spaces;
-      for i = 0 to String.length spaces do
+      for i = 0 to String.length spaces - 1 do
         store_external_code_char (Lexing.lexeme_char lexbuf i);
       done;
       external_code lexbuf }
