@@ -2,13 +2,14 @@
 *.annot
 *.zv
 *.pfc
+*.fcd
 *.v
 *.vo
 *.fo
 *.mangled
 *.coz
-.depend
 *.xml
+.depend
 additive_law.ml
 array_foc.ml
 basics.ml
