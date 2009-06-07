@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.40 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.41 2009-06-06 22:48:43 weis Exp $
 
 # Makefile for algebra structures implementations
 
@@ -42,24 +42,24 @@ CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
 COQ_INCLUDES = -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 
 FOCALIZE_SRC =\
-	constants.fcl\
-	additive_law.fcl\
-	multiplicative_law.fcl\
-	weak_structures.fcl\
-	rings_fields.fcl\
-	randoms.fcl\
-	integers.fcl\
-	arrays.fcl\
-	product_structures.fcl\
-	quotient_structures.fcl
+  constants.fcl\
+  additive_law.fcl\
+  multiplicative_law.fcl\
+  weak_structures.fcl\
+  rings_fields.fcl\
+  randoms.fcl\
+  integers.fcl\
+  arrays.fcl\
+  product_structures.fcl\
+  quotient_structures.fcl
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
 FOCALIZE_SRC_UNSAFE =\
-	iterators.fcl\
-	small_integers.fcl\
-	big_integers.fcl
-#	parse_poly.fcl polys_abstract.fcl polys_concrete finite_fields fractions finite_factorize
+  iterators.fcl\
+  small_integers.fcl\
+  big_integers.fcl
+# parse_poly.fcl polys_abstract.fcl polys_concrete finite_fields fractions finite_factorize
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 FOCALIZE_FOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fo)
@@ -91,38 +91,37 @@ FOCALIZE_DOCS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fcd)
 FOCALIZE_MML = $(FOCALIZE_DOCS:.fcd=.xml)
 FOCALIZE_MML_UNSAFE = $(FOCALIZE_DOCS_UNSAFE:.fcd=.xml)
 
-
 EXTERNAL_BYT_OBJS =\
-	weak_structures_externals.cmo\
-	randoms_externals.cmo
+  weak_structures_externals.cmo\
+  randoms_externals.cmo
 EXTERNAL_CMIS =$(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 
 EXTERNAL_VOS =\
-	weak_structures_externals.vo\
-	randoms_externals.vo arrays_externals.vo
+  weak_structures_externals.vo\
+  randoms_externals.vo arrays_externals.vo
 
 include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
 focalizedoc:: \
-	$(FOCALIZE_MML) $(FOCALIZE_MML_UNSAFE)
+  $(FOCALIZE_MML) $(FOCALIZE_MML_UNSAFE)
 
 byt:: \
-      $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
-      $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
-      $(FOCALIZE_ZVS)\
-      $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
-      $(FOCALIZE_VS) $(FOCALIZE_VOS)
+  $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
+  $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
+  $(FOCALIZE_ZVS)\
+  $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
+  $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 bin:: \
-      $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
-      $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
-      $(FOCALIZE_ZVS)\
-      $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
-      $(FOCALIZE_VS) $(FOCALIZE_VOS)
+  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
+  $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
+  $(FOCALIZE_ZVS)\
+  $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
+  $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install::
 	@$(MKDIR) $(LIB_INSTALL_DIR) && \
@@ -175,16 +174,7 @@ uninstall::
 
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
 	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
-	$(RM) $(FOCALIZE_BYT_OBJS_UNSAFE) $(FOCALIZE_BIN_OBJS_UNSAFE) $(FOCALIZE_VOS_UNSAFE)
-	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
-	$(RM) $(EXTERNAL_CMIS) $(FOCALIZE_CMIS_UNSAFE) $(FOCALIZE_CMIS)
-	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
-	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
-	$(RM) big_integers.o parse_poly.o polys_abstract.o
-	$(RM) *.annot *.glob *.fcd
-
 
 # Do not yet compile in Coq
 iterators.ml: iterators.fcl
@@ -193,11 +183,6 @@ small_integers.ml: small_integers.fcl
 	$(FOCALIZEC) -no-coq-code $<
 big_integers.ml: big_integers.fcl
 	$(FOCALIZEC) -no-coq-code $<
-# End temporary
-
-# Were not compiled to Coq in the previous FoCaL compiler...
-#big_integers.ml: big_integers.fcl
-#	$(FOCALIZEC) -no-coq-code $<
 parse_poly.ml: parse_poly.fcl
 	$(FOCALIZEC) -no-coq-code $<
 polys_abstract.ml: polys_abstract.fcl
