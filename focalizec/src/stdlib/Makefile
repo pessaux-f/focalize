@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.88 2009-06-05 10:29:39 rr Exp $
+# $Id: Makefile,v 1.89 2009-06-06 22:35:39 weis Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -39,18 +39,19 @@ FOCALIZE_COMP_FLAGS = -no-stdlib-path
 # From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 # COQ_INCLUDES = -I $(ZENON_LIB_DIR)
 
-FOCALIZE_SRC = basics.fcl\
-	sets.fcl\
-	products.fcl\
-	lattices.fcl\
-	orders.fcl\
-	strict_orders.fcl\
-	orders_and_lattices.fcl\
-	sets_orders.fcl\
-	wellfounded.fcl\
-	sums.fcl\
-	quotients.fcl\
-	fix.fcl
+FOCALIZE_SRC =\
+  basics.fcl\
+  sets.fcl\
+  products.fcl\
+  lattices.fcl\
+  orders.fcl\
+  strict_orders.fcl\
+  orders_and_lattices.fcl\
+  sets_orders.fcl\
+  wellfounded.fcl\
+  sums.fcl\
+  quotients.fcl\
+  fix.fcl
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
@@ -65,32 +66,26 @@ FOCALIZE_VS = $(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
 
 FOCALIZE_DOCS = $(FOCALIZE_SRC:.fcl=.fcd)
-FOCALIZE_DOCS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.fcd)
 
 FOCALIZE_MML = $(FOCALIZE_DOCS:.fcd=.xml)
-FOCALIZE_MML_UNSAFE = $(FOCALIZE_DOCS_UNSAFE:.fcd=.xml)
 
 EXTERNAL_BYT_OBJS =\
   ml_builtins.cmo sets_externals.cmo sets_orders_externals.cmo
-#  weak_structures_externals.cmo
-#  random_foc_externals.cmo
 
 EXTERNAL_CMIS = $(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 EXTERNAL_BIN_OBJS = $(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 EXTERNAL_CMIS = $(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_VOS =\
-	coq_builtins.vo\
-	wellfounded_externals.vo
-#	weak_structures_externals.vo
-#	random_foc_externals.vo array_foc_externals.vo
+  coq_builtins.vo\
+  wellfounded_externals.vo
 
 include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
 focalizedoc:: \
-	$(FOCALIZE_MML) $(FOCALIZE_MML_UNSAFE)
+	$(FOCALIZE_MML)
 
 byt:: \
       $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
@@ -153,14 +148,5 @@ uninstall:
 	 $(RM) $(PROJECT_NAME_FULL) $(PROJECT_NAME))
 
 clean::
-	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) && \
-	$(RM) $(FOCALIZE_VS) $(FOCALIZE_VOS) && \
-	$(RM) $(FOCALIZE_CMIS) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) && \
-        $(RM) $(EXTERNAL_VOS) && \
-	$(RM) $(EXTERNAL_CMIS) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) && \
-	$(RM) *.annot *.glob *.fcd
-
-depend::
-
-#depend:: $(FOCALIZE_VS)
-#	coqdep $@ >>.depend
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) && \
+	$(RM) $(FOCALIZE_VS)
