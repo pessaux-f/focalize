@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.12 2009-06-06 16:43:18 weis Exp $ *)
+(* $Id: big_integers.fcl,v 1.13 2009-06-06 22:48:28 weis Exp $ *)
 
 use "basics";;
 
@@ -351,7 +351,7 @@ species Base_big_int =
 
   let one = #unit_big_int;
   let zero = #zero_big_int;
-  let is_zero (m)= #eq_big_int (m, #zero_big_int);
+  let is_zero (m) = #eq_big_int (m, #zero_big_int);
 
   proof of is_zero_spec = by definition of is_zero, zero, equal;
 
