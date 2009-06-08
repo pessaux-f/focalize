@@ -1,0 +1,163 @@
+
+open "basics" ;;
+open "sets" ;;
+open "products" ;;
+
+species States inherits Setoid =
+end ;;
+
+species Actions inherits Setoid =
+end ;;
+
+species Transitions (S is States, A is Actions) 
+  inherits Setoid =
+(* extrait les composants d'une transition *)
+  signature t_from : Self -> S ;
+  signature t_to : Self -> S ;
+  signature etiquette : Self -> A ;
+
+(* il n'existe pas deux transitions differentes 
+   de meme origine de meme but et de meme etiquette *)
+  property canonical_equal : all t1 t2 in Self,
+    (S!equal(!t_from(t1), !t_from(t2))
+     /\ S!equal(!t_to(t1), !t_to(t2))
+     /\ A!equal(!etiquette(t1), !etiquette(t2)))
+    -> !equal(t1, t2) ;
+
+(* constructeur *)
+  signature mk_transition : S -> A -> S -> Self ;
+end ;;
+
+species Automata (S is States, A is Actions,
+		  T is Transitions(S, A))
+  inherits Setoid =
+(* extrait l'etat initial/ l'etat courant *)
+  signature initial_state : Self -> S ;
+  signature current_state : Self -> S ;
+
+(* verifie que l'etat/la transition
+   appartient a l'automate entre en parametre *)
+  signature is_state_of : Self -> S -> bool ;
+  signature is_transition_of : Self -> T -> bool ;
+
+(* l'etat initial/l'etat courant
+   appartient toujours a l'automate *)
+  property init_valid : all auto in Self,
+    is_state_of(auto, initial_state(auto)) ;
+  property current_valid : all auto in Self,
+    is_state_of(auto, current_state(auto)) ;
+
+(* fonction de transition *)
+  signature transition_fonction : Self -> T -> Self ;
+
+  property transition_spec1 : all auto in Self, all t in T,
+    S!equal(T!t_from(t), !current_state(auto))
+    -> S!equal(T!t_to(t), !current_state(transition_fonction(auto, t))) ;
+
+  property transition_spec2 : all auto in Self, all t in T,
+    S!equal(!initial_state(auto), !initial_state(!transition_fonction(auto, t)))
+    /\ (all s in S, !is_state_of(auto, s) 
+      -> !is_state_of(!transition_fonction(auto, t), s))
+    /\ (all ti in T, !is_transition_of(auto, ti)
+      -> !is_transition_of(!transition_fonction(auto, t), ti)) ;
+
+  signature is_reachable_from : S -> S -> bool ;
+
+  property reachable_transitive : all s1 s2 s3 in S,
+    (!is_reachable_from(s1, s2) /\ !is_reachable_from(s2, s3))
+    -> !is_reachable_from(s1, s3) ;
+
+  property init_reachable : all auto in Self,
+    !is_reachable_from(!initial_state(auto), !initial_state(auto)) ;
+  property current_reachable : all auto in Self,
+    !is_reachable_from(!initial_state(auto), !current_state(auto)) ;
+  property reachable_after_transition : all auto in Self, all t in T,
+    !is_reachable_from(!initial_state(auto), !current_state(auto))
+    -> !is_reachable_from(!initial_state(auto),
+			  !current_state(!transition_fonction(auto, t))) ;
+
+(* systeme de transition deterministe : pour tout s, pour tout a,
+   il existe au plus une transition t 
+   d'origine s et d'etiquette a *)
+  property deterministic : all auto in Self, 
+    all s in S, all a in A,
+      ex t in T, 
+	!is_transition_of(auto, t)
+	/\ (!is_state_of(auto, s) -> S!equal(T!t_from(t), s))
+	/\ A!equal(T!etiquette(t), a)
+	/\ (all t2 in T, (!is_transition_of(auto, t2)
+			  /\ (!is_state_of(auto, s) -> S!equal(T!t_from(t2), s))
+			  /\ (A!equal(T!etiquette(t2), a)))
+	  -> T!equal(t, t2)) ;
+  
+(* systeme de transition complet : pour tout s, pour tout a,
+   il existe au moins une transition t
+   d'origine s et d'etiquette a *)
+  property complete : all auto in Self, 
+    all s in S, all a in A,
+      ex t in T, 
+	!is_transition_of(auto, t)
+	/\ (!is_state_of(auto, s) -> S!equal(T!t_from(t), s))
+	/\ A!equal(T!etiquette(t), a) ;
+  
+(* constructeur *)
+  signature mk_automaton_1state : S -> Self ;
+
+  property mk_automaton_1state_spec : all s in S,
+    S!equal(initial_state(mk_automaton_1state(s)), s)
+    /\ S!equal(current_state(mk_automaton_1state(s)), s) ;
+end ;;
+  
+species Concrete_states inherits States =  
+  signature powered_on : Self ;
+  signature initialized_gen : Self ;
+  signature initialized_keys : Self ;
+  signature csp_entered : Self ;
+  signature self_tested : Self  ;
+  signature error : Self ;
+  signature crypted : Self ;
+end ;;
+
+species Concrete_actions inherits Actions =
+  signature initialize : Self ;
+  signature initialize_keys : Self ;
+  signature enter_csp : Self ;
+  signature crypt : Self ;
+  signature test_ok : Self ;
+  signature test_ko : Self ;
+end ;;
+
+species Concrete_transitions (CS is Concrete_states, CA is Concrete_actions)
+  inherits Transitions(CS, CA) =
+
+  let trans1 = !mk_transition(CS!powered_on, CA!initialize, 
+			      CS!initialized_gen) ;
+
+  let trans2 = !mk_transition(CS!initialized_gen, CA!initialize_keys, 
+			       CS!initialized_keys) ;
+  let trans3 = !mk_transition(CS!initialized_gen, CA!enter_csp, 
+			       CS!csp_entered) ;
+
+  let trans4 = !mk_transition(CS!initialized_keys, CA!crypt, 
+			       CS!self_tested) ;
+
+  let trans5 = !mk_transition(CS!csp_entered, CA!crypt, 
+			       CS!self_tested) ;
+
+  let trans6 = !mk_transition(CS!self_tested, CA!test_ok, 
+			       CS!crypted) ;
+  let trans7 = !mk_transition(CS!self_tested, CA!test_ko, 
+			       CS!error) ;
+  
+  let trans8 = !mk_transition(CS!crypted, CA!initialize, 
+			       CS!initialized_gen) ;
+
+  let trans9 = !mk_transition(CS!error, CA!initialize, 
+			       CS!initialized_gen) ;
+end ;;
+
+species Concrete_automata (CS is Concrete_states, CA is Concrete_actions,
+			   CT is Concrete_transitions(CS, CA))
+  inherits Automata(CS, CA, CT) =
+  let automaton = !mk_automaton_1state(CS!powered_on) ;
+end ;;

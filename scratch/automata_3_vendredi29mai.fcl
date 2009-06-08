@@ -1,0 +1,279 @@
+
+open "basics" ;;
+open "sets" ;;
+open "products" ;;
+
+(* =====DEBUT DU CODE GENERIQUE===== *)
+
+species Alphabets inherits Setoid =
+(* une lettre de l'alphabet correspond a une action
+   un mot correspond a une sequence d'actions autorisees *)
+end ;;
+
+species Words (A is Alphabets) inherits Setoid =
+(* constructeur *)
+  signature constr_word : A -> Self ;
+(* construit le mot vide *)
+  signature empty_word : Self ;
+(* ajoute une lettre a un mot *)
+  signature add_letter : Self -> A -> Self ;
+end ;;
+
+species States inherits Setoid =
+(* constructeur *)
+  signature constr_state : char -> Self ;
+
+(* renvoie true si l'etat est initial *)
+  signature is_init : Self -> bool ;
+(* l'etat initial est unique *)
+  property unicity_init : all s1 s2 in Self,
+    (is_init(s1) /\ is_init(s2))
+    -> !equal(s1, s2) ;
+
+(* renvoie true si l'etat est final *)
+  signature is_final : Self -> bool ;
+end ;;
+  
+species Transitions (A is Alphabets, S is States) inherits Setoid =
+(* Transitions est disjoint de States *)
+
+(* renvoie l'etat d'origine de la transition *)
+  signature t_from : Self -> S ;
+(* renvoie l'etat d'arrivee de la transition *)
+  signature t_to : Self -> S ;
+(* renvoie l'etiquette de la transition *)
+  signature etiquette : Self -> A ;
+(* il n'existe pas deux transitions differentes 
+   de meme origine de meme but et de meme etiquette *)
+  property canonical_equal : all t1 t2 in Self,
+    (S!equal(!t_from(t1), !t_from(t2))
+  /\ S!equal(!t_to(t1), !t_to(t2))
+  /\ A!equal(!etiquette(t1), !etiquette(t2)))
+    -> !equal(t1, t2) ;
+
+(* renvoie la transition ayant l'etiquette
+   entree en parametre *)
+  signature has_etiquette : A -> Self ;
+end ;;
+  
+species Paths (A is Alphabets, 
+	       W is Words(A),
+	       S is States, 
+	       T is Transitions(A, S)) 
+  inherits Setoid =
+(* un chemin est une suite de transitions *)
+
+(* constructeur *)
+  signature constr_path : T -> Self ;
+(* construit le chemin vide *)
+  signature empty_path : Self ;
+(* ajoute une transition a un chemin *)
+  signature add_transition : Self -> T -> Self ;
+
+(* renvoie true si le chemin est vide *)
+  signature is_empty : Self -> bool ;
+(* renvoie true si
+   la transition est la premiere du chemin *)
+  signature is_first : Self -> T -> bool ;
+(* renvoie true si
+   la transition est la derniere du chemin *)
+  signature is_last : Self -> T -> bool ;
+(* renvoie true si la premiere transition 
+   est juste avant la deuxieme sur ce chemin *)
+  signature is_before : Self -> T -> T -> bool ;
+
+(* renvoie l'etat d'origine du chemin *)
+  signature p_origin : Self -> S ;
+(* renvoie l'etat d'arrivee du chemin *)
+  signature p_end : Self -> S ;
+  
+(* un chemin est une suite non vide de transitions, tel que *)
+(* beta(t_i) = alpha(t_i+1) 
+   pour i compris entre 1 et n-1 *)
+  property path_spec : all p in Self, all t1 t2 in T,
+    ~(!is_empty(p))
+    /\ (!is_last(p, t1)
+	\/ (!is_before(p, t1, t2)    
+    -> T!t_to(t1) = T!t_from(t2))) ;
+  
+(* alpha(t_1) = origine du chemin *)
+  property path_origin : all p in Self, all t in T,
+    ~(!is_empty(p))
+    /\ (!is_first(p, t) -> !p_origin(p) = T!t_from(t)) ;
+  
+(* beta(t_n) = but du chemin *)
+  property path_end : all p in Self, all t in T,
+    ~(!is_empty(p))
+    /\ (!is_last(p, t) -> !p_end(p) = T!t_to(t)) ;
+
+(* renvoie la trace du chemin entre en parametre *)
+  signature trace_from_p : Self -> W ;
+
+(* la trace d'un chemin vide est le mot vide *)
+  property empty_path_trace : all p in Self,
+    !is_empty(p) -> W!equal(trace_from_p(p), W!empty_word) ;
+(* la trace d'un chemin a une transition
+   est l'etiquette de cette transition *)
+  property constr_path_trace : all t in T,
+    W!equal(!trace_from_p(!constr_path(t)), 
+	    W!constr_word(T!etiquette(t))) ;
+(* ajouter une transition a un chemin
+   revient a ajouter une action a la trace *)
+  property add_transition_trace : all p in Self, all t in T,
+    W!equal(!trace_from_p(!add_transition(p, t)),
+	    W!add_letter(trace_from_p(p), T!etiquette(t))) ;
+
+(* renvoie true si l'etat appartient a la trace *)
+  signature is_in_trace : W -> A -> bool ;
+end ;;
+
+(* =====FIN DU CODE GENERIQUE===== *)
+
+species Paths_wf (A is Alphabets, 
+		  W is Words(A), 
+		  S is States, 
+		  T is Transitions(A, S))
+  inherits Paths(A, W, S, T) =
+(* renvoie l'etat actuel *)
+  signature present_state : S ;
+(* renvoie la trace entre les deux etats entres en parametres *)
+  signature trace_from_s : S -> S -> W ;
+
+(* renvoie true si l'ajout de la transition est possible *)
+  signature add_transition_possible : Self -> T -> bool ;
+end ;;
+  
+species Rules (A is Alphabets, 
+	       W is Words(A),
+	       S is States, 
+	       T is Transitions(A, S),    
+	       P is Paths_wf(A, W, S, T))
+  inherits Setoid =
+(* renvoient true si la deuxieme action
+   appartient a l'ensemble ei 
+   donne par la regle se rapportant
+   a la premiere action *)
+  signature is_e1 : A -> A -> bool ;
+  signature is_e2 : A -> A -> bool ;
+  signature is_e3 : A -> A -> bool ;
+(* Remarque : pas de e4 ni e5 :
+   on ne considere que des evenements reussis 
+   dans un premier temps *)
+(* renvoie le nombre de refus maximum 
+   toleres pour cette action *)
+  signature is_nlim : A -> int ;
+
+(* indice maximum au-dela duquel
+   on peut trouver tous les elements de e1
+   et aucun element de e2, correspondants a a *)
+  signature state_start_verif : A -> S ;
+
+(* renvoie l'etat suivant la transition
+   etiquetee par l'action entree en parametre *)
+(* utilise pour construire 
+   la trace de alpha_i+1 a alpha_n *)
+  signature state_after : A -> S ;
+(* trace_from_s(
+   T!t_to(T!has_etiquette(a)),
+   present_state
+   )*)
+
+(* fonction de transition
+   LOGICAL LET? *)
+  property transition_fonction :
+    all p in P, all t in T, all a1 a2 ai a3 in A, 
+    (
+     (!is_e1(T!etiquette(t), a1) -> P!is_in_trace(P!trace_from_p(p), a1))
+     /\
+     (!is_e2(T!etiquette(t), a2) -> ~ P!is_in_trace(P!trace_from_s(state_start_verif(T!etiquette(t)), P!present_state), a2))
+     /\
+     (P!is_in_trace(P!trace_from_p(p), ai) ->
+       (
+	(!is_e3(ai, a3) -> P!is_in_trace(P!trace_from_s(state_after(ai), P!present_state), a3))
+	\/ !is_e3(a3, T!etiquette(t))
+       ))
+    )
+      ->
+	P!add_transition_possible(p, t) ;
+end ;;
+  
+(* =====DEBUT INSTANCIATION===== *)
+species Concrete_alphabets inherits Alphabets =
+  representation = int ;
+  
+  let equal(a1, a2) = a1 = a2 ;
+  proof of equal_reflexive = by definition of equal ;
+  proof of equal_symmetric = by definition of equal ;
+  proof of equal_transitive = by definition of equal ;
+end ;;
+
+collection Real_alphabets implements Concrete_alphabets ;;
+
+species Concrete_words (CA is Concrete_alphabets) 
+  inherits Words(CA) =
+  representation = list(int) ;
+
+  let constr_word(ca in CA) = [a] ;
+  let empty_word = [] ;
+  let add_letter(s in Self, ca in CA) = a :: s ;
+end ;;
+
+species Concrete_states inherits States =
+  representation = string ;
+
+  let constr_state(str in string) = str ;
+  let is_init(s in Self) = s == "init" ;
+  let is_final(s in Self) = s == "final" ;
+end ;;
+
+species Concrete_transitions (CA is Concrete_alphabets,
+			      CS is Concrete_states)
+  inherits Transitions =
+  representation = (CS * CA * CS) ;
+
+(* utilise cartesian product *)
+  let t_from(s in Self) = first(s) ;
+  let t_to(s in Self) = second(second(s)) ;
+  let etiquette(s in Self) = first(second(s)) ;
+  (*let has_etiquette(a in CA) = if ;*)
+end ;;
+
+species Concrete_paths (CA is Concrete_alphabets, 
+			CW is Concrete_words(CA), 
+			CS is Concrete_states, 
+			CT is Concrete_transitions(CA, CS))
+  inherits Paths_wf(CA, CW, CS, CT) =
+  representation = list(Concrete_transitions) ;
+  
+  let constr_path(ct in CT) = [ct] ;
+  let empty_path = [] ;
+  let add_transition(s in Self, ct in CT) = ct :: s ;
+  let is_empty(s in Self) = s == [] ;
+  let is_first(s in Self, ct in CT) =
+     match List.rev s with 
+     | [] -> false
+     | h :: t -> h == ct ;
+  let is_last(s in Self, ct in CT) =
+     match s with 
+     | [] -> false
+     | h :: t -> h == ct ;
+  let is_before(s in Self, ct1 in CT, ct2 in CT) = 
+     match s with
+     | [] -> false
+     | h :: t -> if h == ct2 
+     then match t with 
+     | [] -> false
+     | hh :: tt -> hh == ct1
+     else is_before(t, ct1, ct2) ;
+  let p_origin(s in Self) = 
+     match List.rev s with 
+     | [] -> ""
+     | h :: t -> h ;
+  let p_end(s in Self) =
+     match s with 
+     | [] -> ""
+     | h :: t -> h ;
+  (*let trace_from_p(s in Self)*)
+     end ;;
+  
+  
