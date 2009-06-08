@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: miscHelpers.mli,v 1.5 2008-11-29 23:23:18 weis Exp $ *)
+(* $Id: miscHelpers.mli,v 1.6 2009-06-08 15:35:39 pessaux Exp $ *)
 
 val bind_parameters_to_types_from_type_scheme :
   self_manifest: Types.type_simple option -> Types.type_scheme option ->
@@ -21,4 +21,3 @@ val bind_parameters_to_types_from_type_scheme :
   (((Parsetree.vname * Types.type_simple option) list) *
     (Types.type_simple option) *
     (Types.type_simple list))
-;;

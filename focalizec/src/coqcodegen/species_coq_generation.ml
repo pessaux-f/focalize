@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.175 2009-05-28 08:43:26 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.176 2009-06-08 15:35:39 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3022,21 +3022,21 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
 
 
-(* Generates the definition of a recursive function using "fix" instead of
+(* Generates the definition of a recursive function using "Fixpoint" instead of
    "Function" but use fake proofs everywhere. *)
-let generate_defined_recursive_let_definition ctx _print_ctx _env
-    _generated_fields _from name params scheme body _opt_term_pr ai =
-  let _out_fmter = ctx.Context.scc_out_fmter in
+let generate_defined_recursive_let_definition ctx print_ctx env
+    generated_fields from name params scheme body ai =
+  let out_fmter = ctx.Context.scc_out_fmter in
   match body with
    | Parsetree.BB_logical _ ->
        failwith "recursive logical : TODO"  (* [Unsure] *)
-   | Parsetree.BB_computational _body_expr ->
+   | Parsetree.BB_computational body_expr ->
        let _species_name = snd (ctx.Context.scc_current_species) in
        (* Extend the context with the mapping between these recursive
           functions and their extra arguments. Since we are in Coq, we
           need to take care of the logical definitions and of the
           explicite types abstraction management. *)
-       let _ctx' = {
+       let ctx' = {
          ctx with
            Context.scc_lambda_lift_params_mapping =
              [(name,
@@ -3052,15 +3052,77 @@ let generate_defined_recursive_let_definition ctx _print_ctx _env
            ~self_manifest: None (Some scheme) params in
        (* Just remove the option that must always be Some since we provided
           a scheme. *)
-       let _params_with_type =
+       let params_with_type =
          List.map
            (fun (n, opt_ty) ->
              match opt_ty with None -> assert false | Some t -> (n, t))
            params_with_type in
-       let _return_ty =
+       let return_ty =
          match return_ty_opt with None -> assert false | Some t -> t in
-       (* Generate the magic order. *)
-   failwith"    ..."
+       (* Now, generate the prelude of the only method introduced by
+          "let rec". *)
+       Format.fprintf out_fmter "@[<2>Fixpoint %a@ "
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       let (abstracted_methods, new_ctx, new_print_ctx) =
+         generate_field_definifion_prelude
+           ~in_section: false ctx' print_ctx env ai.Abstractions.ai_min_coq_env
+           ai.Abstractions.ai_used_species_parameter_tys
+           ai.Abstractions.ai_dependencies_from_params generated_fields in
+       (* We are printing each parameter's type. These types in fact belong to
+          a same type scheme. Hence, they may share variables together.
+          For this reason, we first purge the printing variable mapping and
+          after, activate its persistence between each parameter printing. *)
+       Types.purge_type_simple_to_coq_variable_mapping () ;
+       List.iter
+         (fun (param_vname, param_ty) ->
+            Format.fprintf out_fmter "@ (%a : %a)"
+              Parsetree_utils.pp_vname_with_operators_expanded param_vname
+              (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
+              param_ty)
+         params_with_type ;
+       (* Generate the { struct } clause. Since only functions are recursive,
+          there is *)
+       let first_arg_name =
+         (match params_with_type with
+          | [] -> assert false
+          | (n, _) :: _ -> n) in
+       Format.fprintf out_fmter "@ { struct %a }@ "
+         Parsetree_utils.pp_vname_with_operators_expanded first_arg_name ;
+       (* Now, we print the ending type of the method. *)
+       Format.fprintf out_fmter " :@ %a@ "
+         (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
+         return_ty ;
+       (* Now we don't need anymore the sharing. Hence, clean it. This should
+          not be useful because the other guys usign printing should manage this
+          themselves (as we did just above by cleaning before activating the
+          sharing), but anyway, it is safer an not costly. So... *)
+       Types.purge_type_simple_to_coq_variable_mapping () ;
+       (* The ":=" token before the function's body. *)
+       Format.fprintf out_fmter ":=@ " ;
+       (* Now, generate the body of the function.
+          We specify here that we must apply recursive calls to the
+          extra arguments due to lambda-liftings becausen disabling this
+          is only used if we want to generate the code with the "Function"
+          construct of Coq. So, we just "forget" to put [name] as argument
+          [~in_recursive_let_section_of]. *)
+       Species_record_type_generation.generate_expr
+         new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
+         ~self_methods_status: Species_record_type_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_generation.RMS_regular
+         env body_expr ;
+       (* Done... Then, final carriage return. *)
+       Format.fprintf out_fmter ".@]@\n" ;
+       let compiled = {
+         Misc_common.cfm_is_logical = false ;
+         Misc_common.cfm_from_species = from ;
+         Misc_common.cfm_method_name = name ;
+         Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
+         Misc_common.cfm_used_species_parameter_tys =
+           ai.Abstractions.ai_used_species_parameter_tys ;
+         Misc_common.cfm_dependencies_from_parameters =
+           ai.Abstractions.ai_dependencies_from_params ;
+         Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
+       Misc_common.CSF_let_rec [compiled]
 ;;
 
 
@@ -3082,18 +3144,17 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
          (* If we are asked to generate code using the Coq "Function"
             construct, so we do, else we we use "fix" and do not provide any
             real proofs for termination: instead, we use magic stuffs. *)
-(* Hidden to commit fixes performed before I finish recursive functions.
-         if Configuration.get_tmp_use_Function_for_recursive_functions () then
-*)
+(* Hidden to commit fixes performed before I finish recursive functions. *)
+         if not (Configuration.get_tmp_use_Function_for_recursive_functions ()) then
+(* *)
            generate_defined_recursive_let_definition_With_Function
              ctx print_ctx env ~self_manifest generated_fields from name
              params scheme body opt_term_pr ai
-(* Hidden to commit fixes performed before I finish recursive functions.
+(* Hidden to commit fixes performed before I finish recursive functions. *)
          else
            generate_defined_recursive_let_definition
-             ctx print_ctx env generated_fields from name params scheme body
-             opt_term_pr ai
-*)
+             ctx print_ctx env generated_fields from name params scheme body ai
+(* *)
          end)
         else
          (begin

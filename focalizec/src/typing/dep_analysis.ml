@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.65 2009-05-06 20:06:49 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.66 2009-06-08 15:35:39 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -28,7 +28,7 @@
 (* *********************************************************************** *)
 
 
-(* For debugging purpose only.
+(* For debugging purpose only. *)
 let debug_print_dependencies_from_parameters l =
   List.iter
     (fun (species_param, methods) ->
@@ -91,7 +91,7 @@ let debug_print_dependencies_from_parameters3 l =
       Format.eprintf "@.")
     l
 ;;
-*)
+(**)
 
 
 

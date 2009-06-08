@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.10 2009-06-06 16:43:18 weis Exp $ *)
+(* $Id: peano.fcl,v 1.11 2009-06-08 15:35:39 pessaux Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -94,7 +94,7 @@ species Peano_enumeration_system =
 
   proof of successor_is_injective =
     <1>0 prove all x y in peano, (P_succ(x) = P_succ(y)) -> (x = y)
-         by type peano
+         assumed {* by type peano *}
 (*
          assumed {* should be injectivity of constructor, needs Coq *}
 *)

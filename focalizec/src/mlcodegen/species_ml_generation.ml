@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.96 2009-06-04 10:10:02 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.97 2009-06-08 15:35:39 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -913,17 +913,16 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
 (* Format.formatter -> compiled_species_fields list ->                     *)
 (*  (Parsetree.vname * Parsetree_utils.DepNameSet.t) list                  *)
 (** {b Descr} : Dumps as OCaml code the parameters required to the
-         collection generator in order to make them bound in the
-         collection generator's body. These parameters come from
-         the methods of the species parameters that some of our methods
-         depend on. This means that a closed species with no species
-         parameters will have NO extra parameters in its collection
-         generator.
+    collection generator in order to make them bound in the collection
+    generator's body. These parameters come from the methods of the
+    species parameters that some of our methods depend on. This means
+    that a closed species with no species parameters will have NO extra
+    parameters in its collection generator.
 
-         This function must UNIQUELY find the names of all the extra
-         parameters the methods will need to make them arguments of the
-         collection generator and record then in a precise order that must
-         be made public for the guys who want to instanciate the collection.
+    This function must UNIQUELY find the names of all the extra parameters
+    the methods will need to make them arguments of the collection
+    generator and record then in a precise order that must be made public
+    for the guys who want to instanciate the collection.
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
@@ -934,7 +933,7 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
      will lead to parameters of the collection generator. *)
   let species_params_and_methods = ref [] in
   (* ************************************************************************ *)
-  (** {b Descr} :  Local function to process only one [compiled_field_memory].
+  (** {b Descr} : Local function to process only one [compiled_field_memory].
          Handy to factorize the code in both the cases of [CSF_let] and
          [CSF_let_rec]. This function effectivly accumulates by side effect
          for each species parameter the set of methods we depend on.

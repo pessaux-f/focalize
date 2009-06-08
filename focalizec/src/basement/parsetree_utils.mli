@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.mli,v 1.26 2009-05-05 16:33:27 pessaux Exp $ *)
+(* $Id: parsetree_utils.mli,v 1.27 2009-06-08 15:35:39 pessaux Exp $ *)
 
 val name_of_vname : Parsetree.vname -> string
 (** Extracts the inner string name of the [vname] variable name. *)
@@ -157,3 +157,5 @@ val unqualified_vname_of_constructor_ident :
   Parsetree.constructor_ident -> Parsetree.vname
 
 val unqualified_vname_of_expr_ident : Parsetree.expr_ident -> Parsetree.vname
+
+val get_local_vname_from_expr_desc : Parsetree.expr_desc -> Parsetree.vname

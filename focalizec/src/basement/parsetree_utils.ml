@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.32 2009-06-04 15:32:08 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.33 2009-06-08 15:35:39 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -424,4 +424,21 @@ let make_concatenated_name_with_operators_expanded_from_qualified_vname =
   | Parsetree.Vname vname -> vname_as_string_with_operators_expanded vname
   | Parsetree.Qualified (mod_name, vname) ->
       mod_name ^ "." ^ (vname_as_string_with_operators_expanded vname)
+;;
+
+
+
+(* *********************************************************************** *)
+(** {b Descr} : Check if an [expr_desc] has the form of a local identifier
+    and if yes, returns the [vname] representing this identifier. If no,
+    raises [Not_found].
+    Note that the check is independent of parentheses.
+
+    {b Exported} : Yes.                                                    *)
+(* *********************************************************************** *)
+let rec get_local_vname_from_expr_desc = function
+  | Parsetree.E_var ({ Parsetree.ast_desc = Parsetree.EI_local vname }) -> vname
+  | Parsetree.E_paren expr ->
+      get_local_vname_from_expr_desc expr.Parsetree.ast_desc
+  | _ -> raise Not_found
 ;;

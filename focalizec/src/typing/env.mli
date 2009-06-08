@@ -9,13 +9,20 @@ exception Unbound_closed_species of (Parsetree.vname * Location.t)
 exception Rebound_type of (Parsetree.vname * Location.t)
 exception Rebound_species of (Parsetree.vname * Location.t)
 
+type substitution_kind =
+  | SK_collection_by_collection of
+      (Types.type_collection *
+       Types.substitution_by_replacement_collection_kind)
+  | SK_ident_by_expression of
+      (Types.fname * Parsetree.vname * Parsetree.expr_desc)
+
+val debug_substitution : substitution_kind list -> unit
 
 type from_history = {
   fh_initial_apparition : Parsetree.qualified_species ;
   fh_inherited_along :
     (Parsetree.qualified_species * Parsetree_utils.simple_species_expr *
-    ((Types.type_collection * Types.substitution_by_replacement_collection_kind)
-       list))
+    (substitution_kind list))
       list
 }
 

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.75 2009-06-04 10:10:02 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.76 2009-06-08 15:35:39 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -110,7 +110,7 @@ let make_empty_param_deps species_parameters_names =
       - [pvname]: The formal species parameter name.
 
     {b Rem} : Raises [Not_found] if the substitution replace a parameter by
-    "Sefl".
+    "Self".
 
     {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
@@ -120,22 +120,29 @@ let apply_substitutions_list_on_formal_param_vname pmodname pvname substs =
   let pvname_as_string = Parsetree_utils.name_of_vname pvname in
   let substed_pvname_as_string =
     List.fold_left
-      (fun accu_vname ((c1_mod_name, c1_spe_name), c2) ->
-        match c2 with
-         | Types.SBRCK_coll (_, x) ->
-             (* By construction, the compilation unit name of c2 should always
-                be the current compilation unit. *)
-             if c1_mod_name = pmodname && c1_spe_name = accu_vname then x
-             else accu_vname
-         | Types.SBRCK_self ->
-             if c1_mod_name = pmodname && c1_spe_name = accu_vname then
-               (* Substituting a formal collection parameter make the dependency
-                  on the parameter disepear. In effect, in this case, instead of
-                  depending on the collection parameter carrier, we depend on
-                  OUR carrier. And this is caught by the minimal Coq typing
-                  environment. So this parameter purely disapears. *)
-               raise Not_found
-             else accu_vname)
+      (fun accu_vname -> function
+        | Env.SK_ident_by_expression (_, _, _) ->
+            (* We only deal with collection parameters. *)
+            accu_vname
+        | Env.SK_collection_by_collection ((c1_mod_name, c1_spe_name), c2) ->
+            (begin
+            match c2 with
+             | Types.SBRCK_coll (_, x) ->
+                 (* By construction, the compilation unit name of c2 should
+                    always be the current compilation unit. *)
+                 if c1_mod_name = pmodname && c1_spe_name = accu_vname then x
+                 else accu_vname
+             | Types.SBRCK_self ->
+                 if c1_mod_name = pmodname && c1_spe_name = accu_vname then
+                   (* Substituting a formal collection parameter make the
+                      dependency on the parameter disepear. In effect, in this
+                      case, instead of depending on the collection parameter
+                      carrier, we depend on OUR carrier. And this is caught by
+                      the minimal Coq typing environment. So this parameter
+                      purely disapears. *)
+                   raise Not_found
+                 else accu_vname
+            end))
       pvname_as_string
       substs in
   (* Since during the substitutions we used [string]s we must finally convert
@@ -1818,6 +1825,37 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
 
 
 
+(* [Unsure] Not efficient: we examine the species parameter at each turn ! *)
+let rec find_subst_of spe_param = function
+  | [] -> raise Not_found
+  | h :: q ->
+      (begin
+      match h with
+       | Env.SK_collection_by_collection (c1, _) ->
+           (begin
+           match spe_param with
+            | Env.TypeInformation.SPAR_in (_, _, _) ->
+                (* Substitution of a collection is not for "IN" parameters. *)
+                find_subst_of spe_param q
+            | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
+                if prm_ty_col = c1 then h else find_subst_of spe_param q
+           end)
+       | Env.SK_ident_by_expression (_, entp_name, _) ->
+           (begin
+           match spe_param with
+            | Env.TypeInformation.SPAR_in (in_name, _, _) ->
+                if in_name = entp_name then h else find_subst_of spe_param q
+            | Env.TypeInformation.SPAR_is (_, _, _, _, _) ->
+                (* Substitution of an expression identifier is not for "IS"
+                   parameters. *)
+                find_subst_of spe_param q
+           end)
+      end)
+;;
+  
+
+
+
 let remap_dependencies_on_params_for_field env ctx from name
     non_mapped_used_species_parameter_tys non_mapped_deps =
   (* We first check if the method was inherited. Only if it is the case then
@@ -1958,75 +1996,110 @@ let remap_dependencies_on_params_for_field env ctx from name
                parameter. The stuff we search is then the bucket in
                [non_mapped_deps] having the same name than what was used during
                substitution to replace [inh_spe_param]. *)
-            let formal_instanciation =
-              Handy.list_assoc_custom_eq
-                (fun ty_col_to_replace param ->
-                  (* [ty_col_to_replace] is the type collection mentionned
-                     to be replace in the substitution. *)
-                  (* [param] is the formal collection parameter in the
-                     inherited species. *)
-                  match param with
-                   | Env.TypeInformation.SPAR_in (_, _, _) ->
-                       (* We do not deal here with "IN" parameters. *)
-                       false
-                   | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
-                       prm_ty_col = ty_col_to_replace)
-                inh_spe_param substs in
-            (* Now we know that the currently processed formal argument was
-               instanciated by the substitution [formal_instanciation]. *)
-            let effective_instanciater =
-              (match formal_instanciation with
-               | Types.SBRCK_self ->
-                   (* Instanciation was not done by a species parameter. Make
-                      so that we go in the exception handler that handles the
-                      case where instanciation was done by a toplevel species
-                      or collection. In effect, as well as the dependency on
-                      the parameter's carrier disappeared, it's the same thing
-                      about its methods that are now methods of "Self" and
-                      these methods of "Self" are taken into account by the
-                      minimal Coq typing environment. *)
-                   raise Not_found
-               | Types.SBRCK_coll tc -> tc) in
-            (* Must recover the list of methods of [effective_instanciater] i.e.
-               in the current species dependencies information to pick
-               inside. *)
-            let (param_of_instanciater,
-                 (Env.ODFP_methods_list meths_of_instanciater)) =
-              Handy.list_find_custom_eq
-                (fun ty_col (param, _) ->
-                  match param with
-                   | Env.TypeInformation.SPAR_in (_, _, _) ->
-                       (* We do not deal here with "IN" parameters. *)
-                       false
-                   | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
-                       prm_ty_col = ty_col)
-                effective_instanciater non_mapped_deps in
-            (* We now must pick in [meths_of_instanciater] the methods having
-               the same name in the inherited dependencies information and put
-               them according the same layout than in the inherited dependencies
-               information. We will finaly reconstruct a bucket for
-               [param_of_instanciater] with this new list. *)
-            let new_meths =
-              List.fold_right
-                (fun (meth_name_in_inherited, _) accu ->
-                  (* Let's find the same method name in the current species and
-                     current collection parameter dependencies information. *)
-                  try
-                    let m =
-                      List.find
-                        (fun (n, _) ->
-                          n = meth_name_in_inherited)
-                        meths_of_instanciater in
-                    m :: accu
-                  with Not_found ->
-                      (* The method appearing in the "inherited" dependencies
-                         is not present in the species that inherits. This can
-                         arise for instance when computing mapping for "partial"
-                         dependencies used for the record type. So, in this
-                         case, just ignore the method. *)
-                      accu)
-                inh_ordered_meths [] in
-            Some (param_of_instanciater, (Env.ODFP_methods_list new_meths))
+            let instantiating_subst = find_subst_of inh_spe_param substs in
+            (match instantiating_subst with
+             | Env.SK_collection_by_collection (_, Types.SBRCK_self) ->
+                 (* Instanciation was not done by a species parameter. Make so
+                    that we go in the exception handler that handles the case
+                    where instanciation was done by a toplevel species or
+                    collection. In effect, as well as the dependency on the
+                    parameter's carrier disappeared, it's the same thing about
+                    its methods that are now methods of "Self" and these
+                    methods of "Self" are taken into account by the minimal
+                    Coq typing environment. *)
+                 raise Not_found
+             | Env.SK_collection_by_collection
+                 (_, Types.SBRCK_coll effective_instanciater) ->
+                 (* Now we know that the currently processed formal argument was
+                    instanciated by the rightmost part of the substitution
+                    [instantiating_subst].
+                    We must recover the list of methods of
+                    [effective_instanciater] i.e. in the current species
+                    dependencies information to pick inside. *)
+                   let (param_of_instanciater,
+                        (Env.ODFP_methods_list meths_of_instanciater)) =
+                     Handy.list_find_custom_eq
+                       (fun ty_col (param, _) ->
+                         match param with
+                          | Env.TypeInformation.SPAR_in (_, _, _) ->
+                              (* We do not deal here with "IN" parameters. *)
+                              false
+                          | Env.TypeInformation.SPAR_is
+                                (prm_ty_col, _, _, _, _) ->
+                              prm_ty_col = ty_col)
+                       effective_instanciater non_mapped_deps in
+                   (* We now must pick in [meths_of_instanciater] the methods
+                      having the same name in the inherited dependencies
+                      information and put them according the same layout than
+                      in the inherited dependencies information. We will finaly
+                      reconstruct a bucket for [param_of_instanciater] with
+                      this new list. *)
+                   let new_meths =
+                     List.fold_right
+                       (fun (meth_name_in_inherited, _) accu ->
+                         (* Let's find the same method name in the current
+                            species and current collection parameter
+                            dependencies information. *)
+                         try
+                           let m =
+                             List.find
+                               (fun (n, _) -> n = meth_name_in_inherited)
+                               meths_of_instanciater in
+                           m :: accu
+                         with Not_found ->
+                           (* The method appearing in the "inherited"
+                              dependencies is not present in the species that
+                              inherits. This can arise for instance when
+                              computing mapping for "partial" dependencies used
+                              for the record type. So, in this case, just
+                              ignore the method. *)
+                           accu)
+                       inh_ordered_meths [] in
+                   Some
+                     (param_of_instanciater, (Env.ODFP_methods_list new_meths))
+             | Env.SK_ident_by_expression (_, _, expr_desc) ->
+                 (* We must be in the case of a "IN" parameter. So we know that
+                    during inheritance, the "IN" parameter of the inherited
+                    species has been instantiated by the expression [expr_desc].
+                    We must check if this expression is an identifier that
+                    represent an entity parameter of the inheriting species.
+                    If so, then we must pick in our species the dependency
+                    information for this entity parameter and map it on the
+                    one computed for the inherited species.
+                    We try to extract from the instantiation expression the
+                    [vname] (if some) that could be an entity parameter. If
+                    this fails, we jump in the handler dealing with
+                    instantiations that are not done with parameters. *)
+                 let expr_identifier =
+                   Parsetree_utils.get_local_vname_from_expr_desc expr_desc in
+                 (* Now, we wonder if this identifier belongs to our (i.e. the
+                    inheriting species) entity parameters. *)
+                 let (param_of_instanciater,
+                      (Env.ODFP_methods_list meths_of_instanciater)) =
+                   Handy.list_find_custom_eq
+                     (fun possible_entity_pname (param, _) ->
+                       match param with
+                        | Env.TypeInformation.SPAR_in (n, _, _) ->
+                            n = possible_entity_pname
+                        | Env.TypeInformation.SPAR_is (_, _, _, _, _) ->
+                            (* We do not deal here with "IS" parameters. *)
+                            false)
+                     expr_identifier non_mapped_deps in
+                 (* Right, we found that the identifier is really one of our
+                    entity parameters.
+                    Since we are in the case of an entity parameter, if there
+                    is a dependency, there will be only 1 method in the list,
+                    wearing the same name than the entity parameter itself.
+                    Hence, if [inh_ordered_meths] is not empty, we just
+                    reconstruct a bucket for [param_of_instanciater] with
+                    exactly the list od dependencies computed in our species. *)
+                 let new_meths =
+                   (match inh_ordered_meths with
+                    | [] -> []
+                    | [ _ ] -> meths_of_instanciater
+                    | _ -> assert false) in
+                 Some
+                   (param_of_instanciater, (Env.ODFP_methods_list new_meths)))
           with Not_found ->
             (* If we didn't find the collection used to instanciate among the
                species parameters that's because the instanciation was done

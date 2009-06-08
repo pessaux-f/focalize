@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.15 2009-06-04 14:40:45 pessaux Exp $
+# $Id: Makefile,v 1.16 2009-06-08 15:35:39 pessaux Exp $
 
 ROOT_DIR = ../..
 
@@ -30,6 +30,6 @@ installation.ml:
 	   echo "Please, run configure first."; \
 	fi
 
-.PHONY: date.ml
+# .PHONY: date.ml
 date.ml:
 	@echo "let t = \"`date`\";;" > date.ml

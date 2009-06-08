@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.181 2009-05-25 11:03:22 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.182 2009-06-08 15:35:39 pessaux Exp $ *)
 
 
 
@@ -2500,7 +2500,14 @@ let apply_substitutions_reversed_list_on_type reversed_substs ty =
   (* ATTENTION Do not fold left otherwise substitutions will be performed in
      reverse order. *)
   List.fold_right
-    (fun (c1, c2) accu_type -> Types.subst_type_simple c1 c2 accu_type)
+    (fun subst accu_type ->
+      match subst with
+       | Env.SK_collection_by_collection (c1, c2) ->
+	   Types.subst_type_simple c1 c2 accu_type
+       | Env.SK_ident_by_expression (_, _, _) ->
+	   (* Nothing to do since ML types never contain expressions and
+	      expressions identifiers. *)
+	   accu_type)
     reversed_substs
     ty
 ;;
@@ -2512,11 +2519,17 @@ let apply_substitutions_reversed_list_on_fields
   (* ATTENTION Do not fold left otherwise substitutions will be performed in
      reverse order. *)
   List.fold_right
-    (fun (c1, c2) accu_fields ->
+    (fun subst accu_fields ->
       List.map
         (fun field ->
-          SubstColl.subst_species_field
-            ~current_unit (SubstColl.SRCK_coll c1) c2 field)
+          match subst with
+           | Env.SK_collection_by_collection (c1, c2) ->
+               SubstColl.subst_species_field
+                 ~current_unit (SubstColl.SRCK_coll c1) c2 field
+           | Env.SK_ident_by_expression
+	         (param_unit, param_name_c1, expr_desc_c2) ->
+	       SubstExpr.subst_species_field
+                 ~param_unit param_name_c1 expr_desc_c2 field)
         accu_fields)
     reversed_substs
     fields
@@ -2608,7 +2621,16 @@ let apply_species_arguments ctx env base_spe_descr params =
                       ~param_unit: (fst f_ty)
                       f_name e_param_expr.Parsetree.ast_desc)
                    accu_meths in
-               (substd_meths, accu_substs, accu_self_must_be)
+               (* Since thay are local to a species, there will never be
+		  confusion if 2 species have a same "IN" parameter name. And
+                  finally, since in a species, there is no "IN" parameters
+                  wearing the same name, no risk of confusion. *)
+               let new_substs =
+                 (Env.SK_ident_by_expression
+                    (ctx.current_unit, f_name,
+                     e_param_expr.Parsetree.ast_desc)) ::
+                    accu_substs in
+               (substd_meths, new_substs, accu_self_must_be)
                end)
            | Env.TypeInformation.SPAR_is ((f_module, f_name), _, c1_ty, _, _) ->
                (begin
@@ -2655,7 +2677,9 @@ let apply_species_arguments ctx env base_spe_descr params =
                            (SubstColl.SRCK_coll c1) (Types.SBRCK_coll c2))
                         accu_meths in
                     let new_substs =
-                      (c1, (Types.SBRCK_coll c2)) :: accu_substs in
+                      (Env.SK_collection_by_collection
+                         (c1, (Types.SBRCK_coll c2))) ::
+                        accu_substs in
                     (substd_meths, new_substs, accu_self_must_be)
                 | TSPA_self ->
                     (* Record the type in the AST node. *)
@@ -2675,7 +2699,10 @@ let apply_species_arguments ctx env base_spe_descr params =
                            ~current_unit: ctx.current_unit
                            (SubstColl.SRCK_coll c1) Types.SBRCK_self)
                         accu_meths in
-                    let new_substs = (c1, Types.SBRCK_self) :: accu_substs in
+                    let new_substs =
+                      (Env.SK_collection_by_collection
+                         (c1, Types.SBRCK_self)) ::
+                        accu_substs in
                     (substd_meths, new_substs, new_self_must_be)
                end)
           end) in

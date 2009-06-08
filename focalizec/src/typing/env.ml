@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.130 2009-05-05 16:33:27 pessaux Exp $ *)
+(* $Id: env.ml,v 1.131 2009-06-08 15:35:39 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -188,6 +188,54 @@ let env_from_only_absolute_bindings generic_env =
 
 
 
+(* ************************************************************************ *)
+(* {b Descr} : Allows to make the difference between the substitution of a 
+    collection parameter and an entity parameter.
+    We could not directly make a sum type in types.ml to represent the
+    3 kinds of substitutions because we would have a cyclic dependency
+    between types.ml and parsetree.mli.
+    And in fact, since espressions do not appear in ML types, substitutions
+    performed on them will never involve expressions.
+
+   {b Exported} : Yes.                                                      *)
+(* ************************************************************************ *)
+type substitution_kind =
+  | SK_collection_by_collection of
+      (Types.type_collection *
+       Types.substitution_by_replacement_collection_kind)
+  | SK_ident_by_expression of
+      (Types.fname *   (** Compilation unit hosting the species havin this
+                           formal entity parameter. *)
+       Parsetree.vname *  (** The entity parameter's name. *)
+       Parsetree.expr_desc)  (** The expression by what the entity parameter
+                                 must be replaced. *)
+;;
+
+
+
+
+
+(* For debugging purpose. *)
+let debug_substitution substs =
+  Format.eprintf "[ " ;
+  List.iter
+    (function
+      | SK_collection_by_collection (ty_coll, subst_by_replacement_kind) ->
+          (begin
+          Format.eprintf "%a <- " Types.pp_type_collection ty_coll ;
+          match subst_by_replacement_kind with
+           | Types.SBRCK_coll by_ty_coll ->
+               Format.eprintf "%a; " Types.pp_type_collection by_ty_coll
+           | Types.SBRCK_self -> Format.eprintf "Self; "
+          end)
+      | SK_ident_by_expression (id_fname, id_name, _) ->
+          Format.eprintf "%s#%a <- ..." id_fname Sourcify.pp_vname id_name)
+    substs ;
+  Format.eprintf "]@."
+;;
+
+
+
 (* ***************************************************************** *)
 (** {b Descr} : Describes from where a method comes, keeping all the
     inheritance steps in memory.
@@ -221,8 +269,7 @@ type from_history = {
           ones done during the inheritance expression. The substitutions are in
           the right order for application. This means that the first to perform
           is in head of the list. *)
-       ((Types.type_collection *
-           Types.substitution_by_replacement_collection_kind) list))
+       (substitution_kind list))
       list
 } ;;
 
