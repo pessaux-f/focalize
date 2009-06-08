@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sums.fcl,v 1.15 2009-05-25 12:35:58 doligez Exp $ *)
+(* $Id: sums.fcl,v 1.16 2009-06-08 07:17:37 pessaux Exp $ *)
 
 (**
 
@@ -563,7 +563,7 @@ end;;
 
 (* (\** A concrete species to specify strict disjoint unions *\) *)
 (* species disjoint_variant_sum(a is setoid) = *)
-(**)
+(* *)
 (*   inherit disjoint_sum(a, a), variant_sum(a, a); *)
 (* end *)
 (* ;; *)
