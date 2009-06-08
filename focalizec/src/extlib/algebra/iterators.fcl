@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: iterators.fcl,v 1.13 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: iterators.fcl,v 1.14 2009-06-08 07:56:09 pessaux Exp $ *)
 
 (** Basic techniques to iterate a process including very simple numbers. *)
 
@@ -104,7 +104,7 @@ species Dichotomic_system =
   (*[rr]: to be moved on integers *)
   let start = !zero;
 
-  (** 1 is the successor of 0 *)
+  (** Tells that 1 is the successor of 0 *)
   property one_successes_zero: !equal (!successor (!zero), !one);
 
   (** multiplication by two *)
