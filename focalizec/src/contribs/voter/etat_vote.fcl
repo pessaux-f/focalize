@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: etat_vote.fcl,v 1.6 2009-06-06 15:01:37 weis Exp $ *)
+(* $Id: etat_vote.fcl,v 1.7 2009-06-08 16:16:35 pessaux Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -34,11 +34,12 @@ species Sp_etat_vote =
 
   (** The 3 values are inconsistant *)
   signature no_match : Self;
-  (** 1 value is consistant with the two other which are mutually inconsistant *)
+  (** Tells that 1 value is consistant with the two other which are mutually
+      inconsistant. *)
   signature range_match : Self;
-  (** 2 value are consistant but the third is inconsistant *)
+  (** Tells that 2 values are consistant but the third is inconsistant. *)
   signature partial_match : Self;
-  (** 3 values are consistant *)
+  (** Tells that 3 values are consistant. *)
   signature perfect_match : Self;
 
   (** Each value of the species is inside the sum type *)
