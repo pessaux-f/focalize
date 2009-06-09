@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.19 2009-03-23 15:37:57 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.20 2009-06-09 13:36:22 pessaux Exp $ *)
 
 
 type self_methods_status =
@@ -36,7 +36,7 @@ val make_Self_cc_binding_species_param :
     (Types.type_collection * (string * Types.collection_carrier_mapping_info))
 
 val generate_method_lambda_lifted_arguments :
-  Format.formatter -> Parsetree.vname list ->
+  only_for_Self_meths: bool -> Format.formatter -> Parsetree.vname list ->
     (Env.TypeInformation.species_param *
      Env.ordered_methods_from_params) list ->
        Parsetree.vname list -> unit

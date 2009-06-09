@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.15 2009-03-23 15:37:57 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.16 2009-06-09 13:36:22 pessaux Exp $ *)
 
 
 
@@ -479,7 +479,8 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
            Format.fprintf out_fmter "(%a_wforder"
              Parsetree_utils.pp_vname_with_operators_expanded fun_name ;
            Species_record_type_generation.generate_method_lambda_lifted_arguments
-             out_fmter ai sorted_deps_from_params abstracted_methods ;
+             ~only_for_Self_meths: false out_fmter ai sorted_deps_from_params
+             abstracted_methods ;
            Format.fprintf out_fmter ")@ ") ;
       (* Now, generate the arguments to provide to the order. *)
       generate_exprs_as_tuple ctx env rec_args ;

@@ -11,41 +11,77 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.78 2009-06-04 15:32:08 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.79 2009-06-09 13:36:22 pessaux Exp $ *)
 
 
 
-let generate_method_lambda_lifted_arguments out_fmter
+(* ************************************************************************* *)
+(* only_for_Self: bool -> Format.formatter -> Parsetree.vname list ->        *)
+(*  (Env.TypeInformation.species_param *                                     *)
+(*   Env.ordered_methods_from_params) list ->                                *)
+(*     Parsetree.vname list -> unit                                          *)
+(** {b Args} :
+      - [~only_for_Self_meths] : This serves to the bug fix #211. In effect,
+        this bug report shown the need in a Zenon proof to instantiate the
+        species parameters while creating the "Let"s needed in the Section.
+        Otherwise, the generated code would assume that the extra arguments
+        due to species parameters of the inherited are still parameters of
+        the inheriting species, hence generating unbound "_p_XXX"s.
+        Because this fix involved [generate_def_dependency_equivalence], we
+        made the check in that function. And that function calls us to
+        generate lambda-liftings. Then, if
+        [generate_def_dependency_equivalence] already generated the
+        abstractions related to species parameters, we do not need to do them
+        using our "_p_XXX" scheme. So, if this flag is true, then we only
+        generate lambda-liftings for methods of "Self" and nothing for
+        species parameters carriers and methods.
+
+        Note: The present function is used in various locations, where it is
+        not clear if the bug fix #211 should also be applied. In other words,
+        this function is used in other locations where generating
+        lambda-liftings by our "_p_XXX" scheme seems to work. So to prevent
+        breaking anything, at this locations, we let the code behaving like
+        before, and passing [false] to call us. May be a deeper investigation
+        is needed to understand if at these other locations, the same
+        principle should be applied. If another bug similar to #211 arises,
+        we should remind to have a look here.
+
+    {b Exported} : Yes.                                                      *)
+(* ************************************************************************* *)
+let generate_method_lambda_lifted_arguments ~only_for_Self_meths out_fmter
     used_species_parameter_tys sorted_deps_from_params abstracted_methods =
-  (* We first instanciate the parameters corresponding to the carriers types of
-     species parameters and appearing in the method's type *)
-  List.iter
-    (fun n ->
-      Format.fprintf out_fmter "@ _p_%a_T"
-        Parsetree_utils.pp_vname_with_operators_expanded n)
-    used_species_parameter_tys ;
-  (* Now apply the abstracted methods from the species params we depend on. *)
-  List.iter
-    (fun (sparam, (Env.ODFP_methods_list meths)) ->
-      (* Recover the species parameter's name. *)
-      let species_param_name =
-        match sparam with
-         | Env.TypeInformation.SPAR_in (n, _, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
-             Parsetree.Vuident n in
-      (* Each abstracted method will be named like "_p_", followed by the
-         species parameter name, followed by "_", followed by the method's
-         name.
-         We don't care here about whether the species parameters is "in" or
-         "is". *)
-      let prefix =
-        "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
-      List.iter
-        (fun (meth, _) ->
-          Format.fprintf out_fmter "@ %s%a"
-            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-        meths)
-    sorted_deps_from_params ;
+  if not only_for_Self_meths then
+    (begin
+    (* We first instanciate the parameters corresponding to the carriers types
+       of species parameters and appearing in the method's type *)
+    List.iter
+      (fun n ->
+        Format.fprintf out_fmter "@ _p_%a_T"
+          Parsetree_utils.pp_vname_with_operators_expanded n)
+      used_species_parameter_tys ;
+    (* Now apply the abstracted methods from the species params we depend on. *)
+    List.iter
+      (fun (sparam, (Env.ODFP_methods_list meths)) ->
+        (* Recover the species parameter's name. *)
+        let species_param_name =
+          match sparam with
+           | Env.TypeInformation.SPAR_in (n, _, _) -> n
+           | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
+               Parsetree.Vuident n in
+        (* Each abstracted method will be named like "_p_", followed by the
+           species parameter name, followed by "_", followed by the method's
+           name.
+           We don't care here about whether the species parameters is "in" or
+           "is". *)
+        let prefix =
+          "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
+        List.iter
+          (fun (meth, _) ->
+            Format.fprintf out_fmter "@ %s%a"
+              prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+          meths)
+      sorted_deps_from_params
+    end) ;
   (* And finally, apply to the methods from ourselves we depend on. *)
   List.iter
     (fun n ->
