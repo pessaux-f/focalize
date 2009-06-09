@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: fix.fcl,v 1.2 2009-06-06 16:50:23 weis Exp $ *)
+(* $Id: fix.fcl,v 1.3 2009-06-09 15:47:31 rr Exp $ *)
 
 (** {3 Fix points for focalize programming} *)
 
@@ -222,7 +222,7 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
      Recursive functions, Type, or Category Theories provides sense to this.
     *)
     property inductive_reverse_second: all x in B, all y in Self,
-    !equal(!inductive_second_term(!inductive(x, y)), y);
+      !equal(!inductive_second_term(!inductive(x, y)), y);
 
    (** Equality and reversion prove substitution rule  *)
     theorem inductive_left_substitution_rule: all x_1 x_2 in B, all y in Self,
@@ -333,7 +333,7 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
 
   (** 
      We need some way to state generalities depending on propostions.
-     In type theories, functions and inductive types acheive the goal.
+     In types based theories, functions and inductive types acheive the goal.
      Here we only embed this.
      Reflecting to the underlying proof language must be done by hand.
    *)
@@ -389,98 +389,133 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
     <1>f qed by step <1>1 definition of reflexive_prop;
 
 
-(*   letprop symmetry_prop(x) = all y in self,  *)
-(*      !equal(x, y) -> !equal(y, x); *)
+  logical let symmetry_prop(x) = all y in Self,
+     !equal(x, y) -> !equal(y, x);
 
-(*   letprop symmetry_premise_prop(x) = *)
-(*      !symmetry_prop(!inductive_second_term(x)) -> !symmetry_prop(x); *)
+  property inductive_symmetry: inductive_property(!symmetry_prop);
 
-(*   property symmetry_prop_induction_scheme: all x in self, *)
-(*     !inductive_case(x) ->  !symmetry_premise_prop(x) -> !symmetry_prop(x) ; *)
-
-(*   proof of equal_symmetric = *)
-(*     <1>1 assume x in self *)
-(*          prove (all y in self, !equal(x, y) -> !equal(y, x)) *)
-(*          <2>1 assume B: !base_case(x) *)
-(*                      y in self *)
-(*                      H: !equal(x, y) *)
-(*               prove !equal(y, x) *)
-(*               <3>1 prove !base_case(y) by <2>:H, <2>:B def !equal *)
-(*               <3>2 prove a!equal(!base_term(y), !base_term(x)) *)
-(*                    <4>1 prove a!equal(!base_term(x), !base_term(y)) *)
-(*                         by <2>:H, <2>:B, <3>1 def !equal *)
-(* 		   <4>f qed by <4>1, a!equal_symmetric *)
-(*               <3>f qed by <2>:B, <3>1, <3>2 def !equal *)
-(*          <2>2 assume I: !inductive_case(x) *)
-(*               prove (all y in self,  !equal(x, y) -> !equal(y, x)) *)
-(*               <3>1 prove !symmetry_premise_prop(x) *)
-(*                    <4>1 assume P:!symmetry_prop(!inductive_second_term(x)) *)
-(*                         prove !symmetry_prop(x) *)
-(*                         <5>1 assume y in self *)
-(*                                 H: !equal(x, y) *)
-(*                             prove !equal(y, x) *)
-(*                             <6>0 prove !inductive_case(y) *)
-(*                                  by <5>:H, <2>:I,  *)
-(*                                     !case_complete, !case_exclusive  *)
-(*                                  def !equal *)
-(*                             <6>1 prove b!equal(!inductive_first_term(y), *)
-(* 					       !inductive_first_term(x)) *)
-(*                                  by <5>:H, <2>:I, !case_exclusive , *)
-(*                                     b!equal_symmetric *)
-(*                                  def !equal *)
-(*                             <6>2 prove !equal(!inductive_second_term(y), *)
-(* 					      !inductive_second_term(x)) *)
-(*                                  <7>1 prove !equal(!inductive_second_term(x), *)
-(* 						   !inductive_second_term(y)) *)
-(*                                       by <5>:H, <2>:I, !case_exclusive *)
-(*                                       def !equal *)
-(*                                  <7>f qed by <7>1, <4>:P def !symmetry_prop *)
-(*                             <6>f qed by <2>:I, <6>0, <6>1, <6>2, *)
-(* 				     !structural_equal_inductive *)
-(*                         <5>f qed by <5>1 def !symmetry_prop *)
-(*                    <4>f qed by <4>1 def !symmetry_premise_prop *)
-(*               <3>f qed by <3>1, <2>:I, !symmetry_prop_induction_scheme  *)
-(*                        def !symmetry_prop *)
-(*          <2>f qed by <2>1, <2>2, !case_complete *)
-(*     <1>f qed; *)
+  proof of equal_symmetric =
+    <1>1 prove all x in Self, !symmetry_prop(x)
+         <2>1 assume x in Self, assume y in Self,
+              assume B: !base_case(x),
+              assume H: !equal(x, y),
+              prove !equal(y, x)
+              by hypothesis H, B
+                 definition of equal
+                 property A!equal_symmetric
+         <2>2 assume x in Self, assume y in Self,
+              assume I: !inductive_case(x),
+              assume H: !equal(x, y),
+              assume R: symmetry_prop(!inductive_second_term(x)),
+              prove !equal(y, x)
+              <3>1 prove B!equal(inductive_first_term(y),
+				 inductive_first_term(x))
+                   <4>1 prove B!equal(inductive_first_term(x),
+				      inductive_first_term(y))
+                        by hypothesis I, H
+                           property case_exclusive, case_complete
+                           definition of equal
+                   <4>f qed by step <4>1 property B!equal_symmetric
+              <3>2 prove !equal(inductive_second_term(y),
+				inductive_second_term(x))
+                   <4>1 prove !equal(inductive_second_term(x),
+				     inductive_second_term(y))
+                        by hypothesis H, I
+                           property case_exclusive, case_complete
+                           definition of equal
+                   <4>f qed by step <4>1 
+                               hypothesis R
+                               definition of symmetry_prop, inductive_property
+              <3>3 prove ~(!base_case(y))
+                   by hypothesis H, I
+                      definition of equal 
+                      property !case_exclusive, !case_complete
+              <3>f qed by step <3>1, <3>2, <3>3
+                          hypothesis H
+                          definition of equal
+         <2>f qed by step <2>1, <2>2
+                     definition of inductive_property, symmetry_prop
+                     property inductive_symmetry
+    <1>f qed by step <1>1 definition of symmetry_prop;
 
 
-(*   letprop transitivity_prop(x) = all y z in self,  *)
-(*      !equal(x, y) -> !equal(y, z) -> !equal(x, z); *)
+  logical let transitivity_prop(x) = all y z in Self,
+    !equal(x, y) -> !equal(y, z) -> !equal(x, z);
 
-(*   letprop transitivity_premise_prop(x) = *)
-(*      !transitivity_prop(!inductive_second_term(x)) -> !transitivity_prop(x); *)
+  property inductive_transitivity: !inductive_property(!transitivity_prop);
 
-(*   property transitivity_prop_induction_scheme: all x in self, *)
-(*     !inductive_case(x) ->  !transitivity_premise_prop(x) -> !transitivity_prop(x) ; *)
 
-(*   proof of equal_transitive = *)
-(*     <1>1 assume x in self *)
-(*          prove (all y in self, all z in self, *)
-(*                   !equal(x, y) -> !equal(y, z) -> !equal(x, z)) *)
-(*          <2>1 assume B: !base_case(x) *)
-(*                      y z in self *)
-(*                      H_xy: !equal(x, y) *)
-(*                      H_yz: !equal(y, z) *)
-(*               prove !equal(x, z) *)
-(*               assumed *)
-(*          <2>2 assume I: !inductive_case(x) *)
-(*               prove (all y in self, all z in self, *)
-(*                         !equal(x, y) -> !equal(y, z) -> !equal(x, z)) *)
-(*               <3>1 prove !transitivity_premise_prop(x) *)
-(*                    <4>1 assume P: !transitivity_prop(!inductive_second_term(x)) *)
-(*                         prove !transitivity_prop(x) *)
-(*                         <5>1 assume y z in self *)
-(*                                     H_xy: !equal(x, y) *)
-(*                                     H_yz: !equal(y, z) *)
-(*                              prove !equal(x, z) *)
-(*                              assumed *)
-(*                         <5>f qed by <5>1 def !transitivity_prop *)
-(*                    <4>f qed by <4>1 def !transitivity_premise_prop *)
-(*               <3>f qed by <3>1, <2>:I, !transitivity_prop_induction_scheme *)
-(*                        def !transitivity_prop *)
-(*          <2>f qed by <2>1, <2>2, !case_complete *)
-(*     <1>f qed; *)
+  proof of equal_transitive =
+   <1>1 prove all x in Self, !transitivity_prop(x)
+        <2>1 assume x in Self,
+             assume B: base_case(x),
+             prove !transitivity_prop(x)
+             <3>1 assume y in Self, assume z in Self,
+                  assume H_xy: !equal(x, y),
+                  assume H_yz: !equal(y, z),
+                  prove !equal(x, z)
+                  by hypothesis B, H_xy, H_yz
+                     definition of equal
+                     property A!equal_transitive
+             <3>f qed by step <3>1 definition of transitivity_prop
+        <2>2 assume x in Self,
+             assume I: !inductive_case(x),
+             assume R: !transitivity_prop(!inductive_second_term(x)),
+             prove !transitivity_prop(x)
+             <3>1 assume y in Self, assume z in Self,
+                  assume H_xy: !equal(x, y),
+                  assume H_yz: !equal(y, z),
+                  prove !equal(x, z)
+                  <4>a prove !inductive_case(y)
+                       by hypothesis H_xy, I
+                          definition of equal
+                          property !case_complete, !case_exclusive
+                  <4>b prove !inductive_case(z)
+                       by hypothesis H_yz
+                          step <4>a
+                          definition of equal
+                          property !case_complete, !case_exclusive
+                  <4>1 prove B!equal(!inductive_first_term(x),
+				     !inductive_first_term(z))
+                       <5>1 prove B!equal(!inductive_first_term(x),
+					  !inductive_first_term(y))
+                            by hypothesis H_xy, I
+                               definition of equal
+                               property !case_complete, !case_exclusive
+                       <5>2 prove B!equal(!inductive_first_term(y),
+					  !inductive_first_term(z))
+                            by hypothesis H_yz
+                               step <4>a
+                               definition of equal
+                               property !case_complete, !case_exclusive
+                       <5>f qed by step <5>1, <5>2
+                                   property B!equal_transitive
+                  <4>2 prove !equal(!inductive_second_term(x),
+				    !inductive_second_term(z))
+                       <5>1 prove !equal(!inductive_second_term(x),
+					 !inductive_second_term(y))
+                            by hypothesis H_xy, I
+                               definition of equal
+                               property case_exclusive, case_complete  
+                       <5>2 prove !equal(!inductive_second_term(y),
+					 !inductive_second_term(z))
+                            by hypothesis H_yz
+                               step <4>a
+                               definition of equal
+                               property case_exclusive, case_complete  
+                       <5>f qed by step <5>1, <5>2
+                                   hypothesis R
+                                   definition of transitivity_prop
+                  <4>f qed by step <4>1, <4>2, <4>b
+                              hypothesis I
+                              definition of equal
+                              property case_complete, case_exclusive
+             <3>f qed by step <3>1 definition of transitivity_prop
+        <2>f qed by step <2>1, <2>2
+                    definition of inductive_property
+                    property !inductive_transitivity
+   <1>f qed by step <1>1 definition of transitivity_prop;
+
 
 end
 ;;
@@ -491,6 +526,7 @@ type variant_fix_point('a, 'b) =
   | VInductive('b, variant_fix_point('a, 'b))
 ;;
 
+(** Mapping of abstract specifications into concrete types *)
 species Linear_fix_point_by_variants(A is Basic_object, B is Basic_object) =
 
   inherit Linear_fix_point(A, B);
@@ -561,6 +597,12 @@ species Linear_fix_set_by_variants(A is Setoid, B is Setoid) =
 
 
 
+  (** 
+     This one is tedious because we need to manually 
+     unfold every definition which uses the concrete type 
+     before applying normal induction 
+   *)
+
   proof of inductive_scheme =
    coq proof
    definition of inductive_property, 
@@ -568,7 +610,8 @@ species Linear_fix_set_by_variants(A is Setoid, B is Setoid) =
                  inductive_second_term, 
                  base_case
    {* intros A B Rep.
-      unfold Rep. intros element p.
+      unfold Rep.
+      intros element p.
       unfold Linear_fixed_set.inductive_property.
       unfold Linear_fix_point_by_variants.base_case.
       unfold Linear_fix_point_by_variants.inductive_case.
@@ -579,9 +622,21 @@ species Linear_fix_set_by_variants(A is Setoid, B is Setoid) =
       apply IHx. Qed. *};
 
   proof of inductive_reflexivity =
+    coq proof
+    property inductive_scheme
+    definition of inductive_property
+    {* intros. apply abst_inductive_scheme. Qed.*};
+
+  proof of inductive_symmetry =
+    coq proof
+    property inductive_scheme
+    definition of inductive_property
+    {* intros. apply abst_inductive_scheme. Qed. *};  
+
+ proof of inductive_transitivity =
    coq proof
    property inductive_scheme
    definition of inductive_property
-   {* intros. apply abst_inductive_scheme. Qed.*};
+   {* intros. apply abst_inductive_scheme. Qed. *};  
 
 end;;
