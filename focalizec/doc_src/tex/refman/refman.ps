@@ -1,7 +1,7 @@
 %!PS-Adobe-2.0
 %%Creator: dvips(k) 5.96.1 Copyright 2007 Radical Eye Software
 %%Title: refman.dvi
-%%CreationDate: Fri Jun  5 16:36:45 2009
+%%CreationDate: Wed Jun 10 15:06:22 2009
 %%Pages: 99
 %%PageOrder: Ascend
 %%BoundingBox: 0 0 595 842
@@ -13,7 +13,7 @@
 %DVIPSWebPage: (www.radicaleye.com)
 %DVIPSCommandLine: dvips refman.dvi
 %DVIPSParameters: dpi=600
-%DVIPSSource:  TeX output 2009.06.05:1636
+%DVIPSSource:  TeX output 2009.06.10:1506
 %%BeginProcSet: tex.pro 0 0
 %!
 /TeXDict 300 dict def TeXDict begin/N{def}def/B{bind def}N/S{exch}N/X{S
@@ -7407,41 +7407,42 @@ Fs(system)j(r)n(ejects)h(functions)e(and)g(pr)n(operties)i(ha)n(ving)0
 2851 y(def-dependencies)d(on)g(the)g(r)n(epr)n(esentation)p
 FD(.)141 2989 y(There)f(remains)g(the)g(case)h(of)e(theorems.)30
 b(This)21 b(case)h(is)g(the)f(most)h(comple)o(x)g(since)h(it)e(can)h
-(lead)g(to)g(def-dependencies)0 3102 y(in)27 b(proofs.)42
-b(F)o(or)27 b(the)h(same)f(reasons)j(than)e(for)g(properties,)i(the)e
-Ft(F)m(oCaLiz)o(e)d Fs(system)j(r)n(ejects)h(theor)n(ems)g(which)d
-(state-)0 3215 y(ments)d(ha)n(v)o(e)g(def-dependencies)h(on)e(the)h(r)n
-(epr)n(esentation)p FD(.)32 b(Other)23 b(def-dependencies)29
-b(are)24 b(accepted.)31 b(These)24 b(depen-)0 3328 y(dencies)31
-b(must)f(be)f(introduced)k(by)c(the)h(statement)h(of)e(the)h(proof)g
-(\(with)g(a)f(syntax)i(gi)n(v)o(en)f(in)f(section)i Fs(??)q
-FD(\).)46 b(No)n(w)-6 b(,)29 b(what)0 3440 y(does)g(mean)e(for)h(a)g
-(theorem)h(to)e(def-depend)k(on)d(a)f(method)i(?)41 b(This)28
-b(basically)i(means)e(that)h(to)e(mak)o(e)h(the)g(proof)h(of)f(the)0
-3553 y(theorem)e(statement,)g(one)e(must)h(use)g(not)f(only)i(the)e
-(declaration)k(of)c(a)g(method,)i(b)n(ut)f(also)g(its)f(de\002nition,)i
-(its)f(body)-6 b(.)32 b(This)0 3666 y(is)23 b(a)g(needed)j(and)e(po)n
-(werful)g(feature.)0 3912 y Fs(4.4.2.3)92 b(Erasing)24
-b(during)e(inheritance)0 4086 y FD(As)31 b(a)h(consequence)j(of)d
-(def-dependencies)37 b(and)c(late-binding,)k(if)31 b(a)h(method)h(is)f
-(rede\002ned,)j(all)d(the)g(proofs)h(of)f(theo-)0 4199
-y(rems)26 b(ha)n(ving)j(def-dependencies)i(on)c(these)g(methods)h(are)e
-(erased.)39 b(This)26 b(means)h(that)g(since)g(the)g(body)g(of)g(the)f
-(method)0 4312 y(changed,)31 b(may)c(be)h(the)g(proof)g(is)g(not)g
-(correct)h(an)o(ymore)g(and)f(must)g(be)f(done)i(again.)42
-b(In)27 b(practice,)k(it)c(can)h(happen)i(that)0 4425
-y(the)f(proof)h(still)g(holds,)h(b)n(ut)e(the)g(compiler)h(can')n(t)g
-(ensure)h(this,)f(hence)g(will)f(turn)g(the)g(theorem)h(into)g(a)e
-(property)j(in)e(the)0 4538 y(species)22 b(where)f(the)f
-(rede\002nition)j(occurred.)29 b(The)20 b(de)n(v)o(eloper)j(will)c
-(then)i(ha)n(v)o(e)g(to)g(pro)o(vide)g(a)f(ne)n(w)g(proof)h(of)f(the)h
-(inherited)0 4651 y(theorem)29 b(thanks)g(to)f(the)g
-Fr(proof)52 b(of)26 b FD(\002eld.)41 b(F)o(or)27 b(e)o(xample,)i(an)o
-(y)f(sorting)h(list)f(algorithm)i(must)d(satisfy)j(the)e(in)l(v)n
-(ariant)0 4764 y(that)f(its)f(result)i(is)e(a)g(sorted)i(list)e(with)h
-(the)f(same)h(elements)g(as)g(its)f(ef)n(fecti)n(v)o(e)i(ar)n(gument)g
-(b)n(ut)f(the)f(proof)i(that)f(indeed)h(this)0 4877 y(requirement)g(is)
-e(satis\002ed)h(depends)h(on)e(the)g(dif)n(ferent)i(possible)f
+(lead)g(to)g(def-dependencies)0 3102 y(in)j(proofs.)35
+b(F)o(or)25 b(the)g(same)h(reasons)h(as)e(for)g(properties,)j(the)e
+Ft(F)m(oCaLiz)o(e)c FD(system)k(rejects)h(theorems)f(whose)g
+(statements)0 3215 y(ha)n(v)o(e)32 b(def-dependencies)38
+b(on)31 b(the)i(representation.)57 b(Other)32 b(def-dependencies)37
+b(are)32 b(accepted.)56 b(These)32 b(dependencies)0 3328
+y(must)24 b(be)g(introduced)i(by)e(the)g(statement)i(of)d(the)i(proof)f
+(\(with)g(a)g(syntax)h(gi)n(v)o(en)f(in)g(section)i Fs(??)q
+FD(\).)i(No)n(w)-6 b(,)23 b(what)g(does)i(mean)0 3440
+y(for)32 b(a)g(theorem)h(to)f(def-depend)k(on)c(a)g(method)h(?)54
+b(This)32 b(basically)j(means)e(that)f(to)g(mak)o(e)h(the)f(proof)i(of)
+e(the)g(theorem)0 3553 y(statement,)k(one)d(must)f(use)h(not)g(only)g
+(the)g(declaration)i(of)e(a)e(method,)36 b(b)n(ut)d(also)g(its)f
+(de\002nition,)k(its)d(body)-6 b(.)56 b(This)32 b(is)h(a)0
+3666 y(needed)25 b(and)f(po)n(werful)h(feature.)0 3912
+y Fs(4.4.2.3)92 b(Erasing)24 b(during)e(inheritance)0
+4086 y FD(As)31 b(a)h(consequence)j(of)d(def-dependencies)37
+b(and)c(late-binding,)k(if)31 b(a)h(method)h(is)f(rede\002ned,)j(all)d
+(the)g(proofs)h(of)f(theo-)0 4199 y(rems)26 b(ha)n(ving)j
+(def-dependencies)i(on)c(these)g(methods)h(are)e(erased.)39
+b(This)26 b(means)h(that)g(since)g(the)g(body)g(of)g(the)f(method)0
+4312 y(changed,)31 b(may)c(be)h(the)g(proof)g(is)g(not)g(correct)h(an)o
+(ymore)g(and)f(must)g(be)f(done)i(again.)42 b(In)27 b(practice,)k(it)c
+(can)h(happen)i(that)0 4425 y(the)f(proof)h(still)g(holds,)h(b)n(ut)e
+(the)g(compiler)h(can')n(t)g(ensure)h(this,)f(hence)g(will)f(turn)g
+(the)g(theorem)h(into)g(a)e(property)j(in)e(the)0 4538
+y(species)22 b(where)f(the)f(rede\002nition)j(occurred.)29
+b(The)20 b(de)n(v)o(eloper)j(will)c(then)i(ha)n(v)o(e)g(to)g(pro)o
+(vide)g(a)f(ne)n(w)g(proof)h(of)f(the)h(inherited)0 4651
+y(theorem)29 b(thanks)g(to)f(the)g Fr(proof)52 b(of)26
+b FD(\002eld.)41 b(F)o(or)27 b(e)o(xample,)i(an)o(y)f(sorting)h(list)f
+(algorithm)i(must)d(satisfy)j(the)e(in)l(v)n(ariant)0
+4764 y(that)f(its)f(result)i(is)e(a)g(sorted)i(list)e(with)h(the)f
+(same)h(elements)g(as)g(its)f(ef)n(fecti)n(v)o(e)i(ar)n(gument)g(b)n
+(ut)f(the)f(proof)i(that)f(indeed)h(this)0 4877 y(requirement)g(is)e
+(satis\002ed)h(depends)h(on)e(the)g(dif)n(ferent)i(possible)f
 (implementations)j(of)25 b(sort.)36 b(It)26 b(is)g(perhaps)h(possible)h
 (to)0 4990 y(decompose)c(this)e(proof)h(into)g(dif)n(ferent)g(lemmas)f
 (to)g(minimize)g(erasing)i(by)e(rede\002nition,)i(some)e(lemmas)g
@@ -11492,67 +11493,67 @@ Black 0 3029 a([21])p Black 47 w(V)-12 b(.)25 b(Pre)n(v)n(osto)i(and)g
 (2003.)p Black 1905 5656 a(97)p Black eop end
 %%Page: 98 98
 TeXDict begin 98 97 bop Black Black Black 0 861 a FH(Index)p
-Black 0 1387 a FD(;;,)23 b(59)0 1581 y(annotation,)j(25)166
-1694 y(block,)e(26)0 1889 y(bang)g(character)l(,)i(64)0
-2002 y(blank,)e(25)0 2196 y(cate)o(gory)h(of)f(identi\002ers,)h(27)0
-2309 y(collection,)h(61)166 2422 y(parameter)l(,)f(62)0
-2535 y(comment,)f(25)0 2647 y(compilation)i(unit,)e(22)0
-2760 y(compiler)h(option,)g(76)0 2955 y(de\002ning)g(a)e(pre\002x)h
-(operator)l(,)h(29)0 3068 y(de\002ning)g(an)e(in\002x)h(operator)l(,)h
-(29)0 3181 y(de\002ning)g(operators,)g(29)0 3293 y(dependenc)o(y)-6
-b(,)26 b(68)166 3406 y(decl,)e(68)166 3519 y(def,)g(69)249
-3632 y(on)g(representation,)j(69,)d(70)0 3745 y(directi)n(v)o(e)166
-3858 y(coq)p 301 3858 28 4 v 34 w(require,)h(53)166 3971
-y(open,)f(34,)g(44,)f(53)166 4084 y(use,)h(53)0 4197
-y(documentation,)j(25)0 4391 y(erasing,)e(69)0 4504 y(e)o(xpression,)h
-(41)166 4617 y(application,)g(50)166 4730 y(constant,)f(43)166
-4843 y(identi\002er)l(,)g(43)166 4956 y(if,)e(48)166
-5068 y(let-in,)h(45)166 5181 y(literal,)h(43)166 5294
-y(logical,)g(54)166 5407 y(match,)f(48)p Black Black
-2261 1387 a(operator)l(,)i(50)2261 1500 y(record,)f(51)2344
-1613 y(clone,)g(51)2344 1726 y(\002eld,)e(51)2261 1839
-y(sum)h(type)g(constructor)l(,)j(43)2261 1952 y(type,)d(36)2095
-2148 y(\002eld,)f(59)2095 2261 y(\002xity)h(of)f(identi\002ers,)j(27)
-2095 2373 y(function,)g(59)2261 2486 y(recursi)n(v)o(e,)f(75)2095
-2599 y(functional)i(v)n(alue,)d(43,)f(50)2095 2795 y(identi\002er)l(,)i
-(26,)f(43)2261 2908 y(delimited,)h(30)2261 3021 y(e)o(xtended,)h(30)
-2261 3134 y(operator)l(,)g(28)2095 3247 y(identi\002er)f(binding,)h(45)
-2095 3360 y(if,)d(48)2095 3473 y(in\002x)h(identi\002er)l(,)h(27)2095
-3586 y(in\002x)f(in)f(pre\002x)h(position,)h(29)2095
-3698 y(inheritance,)i(65)2261 3811 y(multiple,)e(66)2261
-3924 y(parametrised)i(by)c Fr(Self)p FD(,)e(67)2261 4037
-y(parametrised)27 b(species,)e(66)2095 4150 y(installation,)i(21)2095
-4263 y(interf)o(ace,)f(61)2261 4376 y(compatibility)-6
-b(,)27 b(63)2095 4572 y(late-binding,)g(68)2095 4685
-y(let-in,)e(45)2095 4798 y(le)o(xical)g(con)l(v)o(entions,)i(25)2095
-4911 y(linking)f(\002les,)d(23)2095 5107 y(match,)h(48)2095
-5219 y(method,)g(59)2261 5332 y(quali\002cation,)i(44,)e(64)p
+Black 0 1387 a FD(;;,)23 b(56)0 1581 y(annotation,)j(22)166
+1694 y(block,)e(23)0 1889 y(bang)g(character)l(,)i(61)0
+2002 y(blank,)e(22)0 2196 y(cate)o(gory)h(of)f(identi\002ers,)h(24)0
+2309 y(collection,)h(58)166 2422 y(parameter)l(,)f(59)0
+2535 y(comment,)f(22)0 2647 y(compilation)i(unit,)e(19)0
+2760 y(compiler)h(option,)g(73)0 2955 y(de\002ning)g(a)e(pre\002x)h
+(operator)l(,)h(26)0 3068 y(de\002ning)g(an)e(in\002x)h(operator)l(,)h
+(26)0 3181 y(de\002ning)g(operators,)g(26)0 3293 y(dependenc)o(y)-6
+b(,)26 b(65)166 3406 y(decl,)e(65)166 3519 y(def,)g(66)249
+3632 y(on)g(representation,)j(66,)d(67)0 3745 y(directi)n(v)o(e)166
+3858 y(coq)p 301 3858 28 4 v 34 w(require,)h(50)166 3971
+y(open,)f(31,)g(41,)f(50)166 4084 y(use,)h(50)0 4197
+y(documentation,)j(22)0 4391 y(erasing,)e(66)0 4504 y(e)o(xpression,)h
+(38)166 4617 y(application,)g(47)166 4730 y(constant,)f(40)166
+4843 y(identi\002er)l(,)g(40)166 4956 y(if,)e(45)166
+5068 y(let-in,)h(42)166 5181 y(literal,)h(40)166 5294
+y(logical,)g(51)166 5407 y(match,)f(45)p Black Black
+2261 1387 a(operator)l(,)i(47)2261 1500 y(record,)f(48)2344
+1613 y(clone,)g(48)2344 1726 y(\002eld,)e(48)2261 1839
+y(sum)h(type)g(constructor)l(,)j(40)2261 1952 y(type,)d(33)2095
+2148 y(\002eld,)f(56)2095 2261 y(\002xity)h(of)f(identi\002ers,)j(24)
+2095 2373 y(function,)g(56)2261 2486 y(recursi)n(v)o(e,)f(72)2095
+2599 y(functional)i(v)n(alue,)d(40,)f(47)2095 2795 y(identi\002er)l(,)i
+(23,)f(40)2261 2908 y(delimited,)h(27)2261 3021 y(e)o(xtended,)h(27)
+2261 3134 y(operator)l(,)g(25)2095 3247 y(identi\002er)f(binding,)h(42)
+2095 3360 y(if,)d(45)2095 3473 y(in\002x)h(identi\002er)l(,)h(24)2095
+3586 y(in\002x)f(in)f(pre\002x)h(position,)h(26)2095
+3698 y(inheritance,)i(62)2261 3811 y(multiple,)e(63)2261
+3924 y(parametrised)i(by)c Fr(Self)p FD(,)e(64)2261 4037
+y(parametrised)27 b(species,)e(63)2095 4150 y(installation,)i(18)2095
+4263 y(interf)o(ace,)f(58)2261 4376 y(compatibility)-6
+b(,)27 b(60)2095 4572 y(late-binding,)g(65)2095 4685
+y(let-in,)e(42)2095 4798 y(le)o(xical)g(con)l(v)o(entions,)i(22)2095
+4911 y(linking)f(\002les,)d(20)2095 5107 y(match,)h(45)2095
+5219 y(method,)g(56)2261 5332 y(quali\002cation,)i(41,)e(61)p
 Black 1905 5656 a(98)p Black eop end
 %%Page: 99 99
 TeXDict begin 99 98 bop Black Black 0 399 a FD(name)166
-511 y(quali\002cation,)26 b(33,)d(44)166 624 y(resolution,)j(33,)d(44,)
-h(64)0 737 y(nature)h(of)e(identi\002ers,)i(28)0 932
-y(operator)l(,)h(28)0 1127 y(parameter)166 1240 y(collection,)g(62)166
-1353 y(entity)-6 b(,)25 b(64)0 1466 y(parametrisation,)i(60,)c(62)0
-1579 y(pattern)i(matching,)g(48)0 1692 y(polymorphism,)h(60,)d(62)0
-1805 y(precedence)k(of)c(identi\002ers,)i(27)0 1918 y(pre\002x)f(form)f
-(notation,)j(29)0 2030 y(pre\002x)e(identi\002er)l(,)h(27)0
-2143 y(proof,)f(22)166 2256 y(delayed,)h(60)166 2369
-y(step)f(b)n(ullet,)h(33)0 2482 y(property)-6 b(,)26
-b(54,)d(60)0 2677 y(quali\002ed)i(name,)e(33)0 2872 y(recursion,)j(75)0
-2985 y(re)o(gular)f(identi\002ers,)g(28)0 3098 y(representation,)i(59)
-166 3211 y(declared,)e(59)166 3324 y(de\002ned,)f(59)0
-3519 y(scoping,)h(44,)f(64)0 3631 y(signature,)i(59)0
-3744 y(species,)f(59)166 3857 y(complete,)g(60)166 3970
-y(e)o(xpression,)h(67)166 4083 y(name,)d(30)0 4196 y(sum)g(type,)h(37)0
-4391 y(theorem,)g(54,)g(60)0 4504 y(tople)n(v)o(el,)h(58)0
-4617 y(tuple,)f(36)166 4730 y(as)f(sum)h(type)g(v)n(alue)g(constructor)
-j(ar)n(g,)d(37)0 4843 y(type)166 4956 y(compatible,)h(40)166
-5068 y(de\002nition,)g(36)249 5181 y(alias,)f(36)249
-5294 y(record,)h(39)249 5407 y(sum,)e(37)p Black Black
-2261 399 a(dependent,)j(63,)e(66)2261 511 y(e)o(xpression,)i(36)2261
-624 y(recursi)n(v)o(e,)f(38)2095 820 y(v)n(alue)g(constructor)l(,)h(37)
-2095 1016 y(well-formation,)g(70)p Black 1905 5656 a(99)p
+511 y(quali\002cation,)26 b(30,)d(41)166 624 y(resolution,)j(30,)d(41,)
+h(61)0 737 y(nature)h(of)e(identi\002ers,)i(25)0 932
+y(operator)l(,)h(25)0 1127 y(parameter)166 1240 y(collection,)g(59)166
+1353 y(entity)-6 b(,)25 b(61)0 1466 y(parametrisation,)i(57,)c(59)0
+1579 y(pattern)i(matching,)g(45)0 1692 y(polymorphism,)h(57,)d(59)0
+1805 y(precedence)k(of)c(identi\002ers,)i(24)0 1918 y(pre\002x)f(form)f
+(notation,)j(26)0 2030 y(pre\002x)e(identi\002er)l(,)h(24)0
+2143 y(proof,)f(19)166 2256 y(delayed,)h(57)166 2369
+y(step)f(b)n(ullet,)h(30)0 2482 y(property)-6 b(,)26
+b(51,)d(57)0 2677 y(quali\002ed)i(name,)e(30)0 2872 y(recursion,)j(72)0
+2985 y(re)o(gular)f(identi\002ers,)g(25)0 3098 y(representation,)i(56)
+166 3211 y(declared,)e(56)166 3324 y(de\002ned,)f(56)0
+3519 y(scoping,)h(41,)f(61)0 3631 y(signature,)i(56)0
+3744 y(species,)f(56)166 3857 y(complete,)g(57)166 3970
+y(e)o(xpression,)h(64)166 4083 y(name,)d(27)0 4196 y(sum)g(type,)h(34)0
+4391 y(theorem,)g(51,)g(57)0 4504 y(tople)n(v)o(el,)h(55)0
+4617 y(tuple,)f(33)166 4730 y(as)f(sum)h(type)g(v)n(alue)g(constructor)
+j(ar)n(g,)d(34)0 4843 y(type)166 4956 y(compatible,)h(37)166
+5068 y(de\002nition,)g(33)249 5181 y(alias,)f(33)249
+5294 y(record,)h(36)249 5407 y(sum,)e(34)p Black Black
+2261 399 a(dependent,)j(60,)e(63)2261 511 y(e)o(xpression,)i(33)2261
+624 y(recursi)n(v)o(e,)f(35)2095 820 y(v)n(alue)g(constructor)l(,)h(34)
+2095 1016 y(well-formation,)g(67)p Black 1905 5656 a(99)p
 Black eop end
 %%Trailer
 
