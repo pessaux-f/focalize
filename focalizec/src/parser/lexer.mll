@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.87 2009-06-07 20:53:39 weis Exp $ *)
+(* $Id: lexer.mll,v 1.88 2009-06-10 08:45:56 doligez Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -621,9 +621,9 @@ let incr_escaped_line_num lexbuf spaces =
 
 (** {6 Classifying characters} *)
 let newline = ( '\n' | '\r' | "\r\n" )
-(** ASCII 010 is newline or ['\n'], ASCII 013 is carriage return or ['\r']. *)
+(** ASCII 010 is linefeed or ['\n'], ASCII 013 is carriage return or ['\r']. *)
 let blank = [ '\032' '\009' '\012' ]
-(** ASCII 32 is space, ASCII 9 is tab, ASCII 12 is CTRL-L *)
+(** ASCII 32 is space, ASCII 9 is tab or ['\t'], ASCII 12 is formfeed *)
 let white = [ ' ' '\t' ]
 let whites = white*
 (** Any number of space and tabs (including 0). *)
@@ -1285,6 +1285,8 @@ and annotation_tag = parse
     { String.make 1 d }
   | white* '{' white* ([^ '}']* as tag) white* '}'
     { tag }
+  | newline
+    { incr_line_num lexbuf; "" }
   | _
     { "" }
 
