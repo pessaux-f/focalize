@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: vote.fcl,v 1.8 2009-06-10 21:17:04 ayrault Exp $ *)
+(* $Id: vote.fcl,v 1.9 2009-06-10 21:58:23 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -135,14 +135,6 @@ species
        ~ V!consistency_rule (v2, v3)) ->
       (diag (voter (v1, v2, v3)) = P!constr (C!capt_1, E!no_match))
   ;
-
-  (* Contraintes exportées vers les espéces passées en paramètre *)
-  property consistency_rule_is_symmetric :
-    all v1 v2 in V,
-      V!consistency_rule (v1, v2) -> V!consistency_rule (v2, v1);
-
-  property consistency_rule_is_reflexive:
-    all v1 in V, V!consistency_rule (v1, v1);
 
   (* Propriétés du voteur *)
   (* Le voteur ne doit retourner qu'un des quatre Ã©tats *)

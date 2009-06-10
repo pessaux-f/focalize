@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_vote.fcl,v 1.5 2009-06-10 21:17:04 ayrault Exp $ *)
+(* $Id: gen_vote.fcl,v 1.6 2009-06-10 21:58:23 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -61,12 +61,15 @@ species Gen_voter (V is Gen_value, S is Gen_diag) =
   all v1 v2 v3 in V,
     compatible (voter (v1, v2, v3), voter (v2, v1, v3)) /\
     compatible (voter (v1, v2, v3), voter (v3, v1, v2))
-  (* /\
-    compatible (voter (v1, v2, v3), voter (v2, v3, v1)) /\
-    compatible (voter (v1, v2, v3), voter (v3, v1, v2)) /\
-    compatible (voter (v1, v2, v3), voter (v3, v2, v1))
-  *)
-  ;
+   ;
+
+  (* Contraintes exportées vers les espéces passées en paramètre *)
+  property consistency_rule_is_symmetric :
+    all v1 v2 in V,
+      V!consistency_rule (v1, v2) -> V!consistency_rule (v2, v1);
+
+  property consistency_rule_is_reflexive:
+    all v1 in V, V!consistency_rule (v1, v1);
 
 end
 ;;
