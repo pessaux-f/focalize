@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.34 2009-06-10 12:24:48 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.35 2009-06-10 17:57:06 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -33,15 +33,19 @@ exception Logical_methods_only_inside_species of Location.t ;;
 
 
 
+(** {b Descr} : Generates code for a toplevel recursive function. Currently,
+    toplevel recursive functions are always generated with "Fixpoint" even
+    if they are flagged "rec" instead of "recstruct". *)
 let toplevel_let_def_compile ctx env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     raise
       (Logical_methods_only_inside_species let_def.Parsetree.ast_loc) ;
   let out_fmter = ctx.Context.scc_out_fmter in
+  (* Currently, toplevel recursive functions are generated with "Fixpoint". *)
   let is_rec =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
      | Parsetree.RF_no_rec -> false
-     | Parsetree.RF_rec -> true) in
+     | Parsetree.RF_rec | Parsetree.RF_structural -> true) in
   let in_recursive_let_section_of =
     if is_rec then
       List.map
@@ -62,7 +66,7 @@ let toplevel_let_def_compile ctx env let_def =
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
      | [one_bnd] ->
-         Species_record_type_generation.let_binding_compile
+         Species_record_type_generation.let_in_binding_compile
            ctx ~local_idents: [] ~in_recursive_let_section_of
            (* Or whatever since "Self" does not exist anymore. *)
            ~self_methods_status: Species_record_type_generation.SMS_from_record
@@ -71,7 +75,7 @@ let toplevel_let_def_compile ctx env let_def =
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
-             (Species_record_type_generation.let_binding_compile
+             (Species_record_type_generation.let_in_binding_compile
                 ctx ~local_idents: [] ~in_recursive_let_section_of
                 (* Or whatever since "Self" does not exist anymore. *)
                 ~self_methods_status:
@@ -83,7 +87,7 @@ let toplevel_let_def_compile ctx env let_def =
            (fun binding ->
              Format.fprintf out_fmter "@]@\n@[<2>with " ;
              accu_env :=
-               Species_record_type_generation.let_binding_compile
+               Species_record_type_generation.let_in_binding_compile
                  ctx ~local_idents: [] ~in_recursive_let_section_of
                  (* Or whatever since "Self" does not exist anymore. *)
                  ~self_methods_status:

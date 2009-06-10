@@ -66,6 +66,10 @@ module TypeInformation :
       ldf_recursive : Parsetree.rec_flag ;
       ldf_logical : Parsetree.logical_flag }
 
+    type let_rec_kind =
+      | LRK_rec
+      | LRK_structural
+
     type sig_field_info =
       (from_history * Parsetree.vname * Types.type_scheme)
 
@@ -97,7 +101,7 @@ module TypeInformation :
     and species_field =
       | SF_sig of sig_field_info
       | SF_let of let_field_info
-      | SF_let_rec of let_field_info list
+      | SF_let_rec of (let_rec_kind * let_field_info list)
       | SF_theorem of theorem_field_info
       | SF_property of property_field_info
 

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.54 2009-05-05 13:49:09 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.55 2009-06-10 17:57:06 pessaux Exp $ *)
 
 (** {2 The Focalize abstract syntax tree} *)
 
@@ -335,7 +335,7 @@ and pat_desc =
 
 (** {6 Various flags for let definitions} *)
 
-type rec_flag = | RF_no_rec | RF_rec;;
+type rec_flag = | RF_no_rec | RF_rec | RF_structural ;;
 
 type logical_flag = | LF_no_logical | LF_logical;;
 

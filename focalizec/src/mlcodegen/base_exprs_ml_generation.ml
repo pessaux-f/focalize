@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.37 2009-03-20 14:39:56 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.38 2009-06-10 17:57:06 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -457,7 +457,8 @@ and let_def_compile ctx ~local_idents env let_def bound_schemes =
     Format.fprintf out_fmter "@[<2>let%s@ "
       (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
        | Parsetree.RF_no_rec -> ""
-       | Parsetree.RF_rec -> " rec"   (* NON-breakable space in front. *)) ;
+       | Parsetree.RF_rec | Parsetree.RF_structural ->
+           " rec"   (* NON-breakable space in front. *)) ;
     (* Now generate each bound definition. *)
     (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, bound_schemes)
     with

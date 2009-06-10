@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.74 2009-06-06 09:31:20 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.75 2009-06-10 17:57:06 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -403,6 +403,7 @@ let pp_logical_flag ppf = function
 let pp_rec_flag ppf = function
   | Parsetree.RF_no_rec -> ()
   | Parsetree.RF_rec -> Format.fprintf ppf "rec@ "
+  | Parsetree.RF_structural -> Format.fprintf ppf "recstruct@ "
 ;;
 
 (* *********************************************************************** *)

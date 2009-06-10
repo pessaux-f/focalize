@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.35 2009-06-10 12:39:36 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.36 2009-06-10 17:57:06 pessaux Exp $ *)
 
 exception No_input_file;;
 
@@ -52,18 +52,6 @@ let (get_experimental, set_experimental) =
   ((fun () -> !experimental),
    (fun () -> experimental := true))
 ;;
-
-(** {b Descr}: Allows to run the code generation that uses Function but that
-    doesn't currently work since the Coq "Function" construct crash. If this
-    option is not used, then for the momment we use "fix" and do not provide
-    any real proofs for termination: instead, we use magic stuffs. *)
-let (get_tmp_use_Function_for_recursive_functions,
-     set_tmp_use_Function_for_recursive_functions) =
-  let use_Function = ref false in
-  ((fun () -> !use_Function),
-   (fun () -> use_Function := true))
-;;
-
 
 let (get_impose_termination_proof, set_impose_termination_proof) =
   let impose_termination_proof = ref false in

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.76 2009-06-08 15:35:39 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.77 2009-06-10 17:57:06 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -740,7 +740,8 @@ type internal_field_abstraction_info =
   | IFAI_let of
       (Env.TypeInformation.let_field_info * internal_abstraction_info)
   | IFAI_let_rec of
-      (Env.TypeInformation.let_field_info * internal_abstraction_info) list
+      (Env.TypeInformation.let_rec_kind *
+       (Env.TypeInformation.let_field_info * internal_abstraction_info) list)
   | IFAI_theorem of
       (Env.TypeInformation.theorem_field_info * internal_abstraction_info)
   | IFAI_property of
@@ -753,7 +754,9 @@ type internal_field_abstraction_info =
 type field_abstraction_info =
   | FAI_sig of (Env.TypeInformation.sig_field_info * abstraction_info)
   | FAI_let of (Env.TypeInformation.let_field_info * abstraction_info)
-  | FAI_let_rec of (Env.TypeInformation.let_field_info * abstraction_info) list
+  | FAI_let_rec of
+      (Env.TypeInformation.let_rec_kind *
+       (Env.TypeInformation.let_field_info * abstraction_info) list)
   | FAI_theorem of (Env.TypeInformation.theorem_field_info * abstraction_info)
   | FAI_property of (Env.TypeInformation.property_field_info * abstraction_info)
 ;;
@@ -774,7 +777,7 @@ let find_field_abstraction_by_name name abstractions =
          | IFAI_theorem ((_, n, _, _, _, _) , abstraction_info)
          | IFAI_property ((_, n, _, _, _), abstraction_info) ->
              if n = name then Some abstraction_info else rec_find q
-         | IFAI_let_rec l ->
+         | IFAI_let_rec (_, l) ->
              (begin
              try
                let (_, abstraction_info) =
@@ -1594,7 +1597,7 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  dependencies_from_params_via_didou ;
                iai_min_coq_env = min_coq_env } in
              (IFAI_let (li, abstr_info)) :: abstractions_accu
-         | Env.TypeInformation.SF_let_rec l ->
+         | Env.TypeInformation.SF_let_rec (rec_kind, l) ->
              let deps_infos =
                List.map
                  (fun ((_, name, _, sch, body, opt_term_pr, _, _) as li) ->
@@ -1674,7 +1677,7 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                      iai_min_coq_env = min_coq_env } in
                    (li, abstr_info))
                  l in
-             (IFAI_let_rec deps_infos) :: abstractions_accu
+             (IFAI_let_rec (rec_kind, deps_infos)) :: abstractions_accu
          | Env.TypeInformation.SF_theorem
              ((_, name, _, logical_expr, proof, _) as ti) ->
                (* ATTENTION, the [dependencies_from_params_in_bodies] is not
@@ -2230,7 +2233,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
               mapped_for_record_ty_deps_from_params ;
             ai_min_coq_env = iai.iai_min_coq_env } in
           FAI_let (let_field_info, abstraction_info)
-      | IFAI_let_rec internal_infos ->
+      | IFAI_let_rec (rec_kind, internal_infos) ->
           let abstraction_infos =
             List.map
               (fun (let_field_info, iai) ->
@@ -2281,7 +2284,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                   ai_min_coq_env = iai.iai_min_coq_env } in
                 (let_field_info, abstraction_info))
               internal_infos in
-          FAI_let_rec abstraction_infos
+          FAI_let_rec (rec_kind, abstraction_infos)
       | IFAI_theorem (theorem_field_info, iai) ->
           let all_deps_from_params =
             merge_abstraction_infos

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.178 2009-06-10 12:24:48 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.179 2009-06-10 17:57:06 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3139,7 +3139,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
 
 
 let generate_recursive_let_definition ctx print_ctx env ~self_manifest
-    generated_fields l =
+    generated_fields rec_kind l =
   match l with
    | [] ->
        (* A "let", then a fortiori "let rec" construct *)
@@ -3153,20 +3153,19 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
        then
          (begin
          (* If we are asked to generate code using the Coq "Function"
-            construct, so we do, else we we use "fix" and do not provide any
-            real proofs for termination: instead, we use magic stuffs. *)
-(* Hidden to commit fixes performed before I finish recursive functions. *)
-         if not (Configuration.get_tmp_use_Function_for_recursive_functions ()) 
-         then
-(* *)
-           generate_defined_recursive_let_definition_With_Function
-             ctx print_ctx env ~self_manifest generated_fields from name
-             params scheme body opt_term_pr ai
-(* Hidden to commit fixes performed before I finish recursive functions. *)
-         else
-           generate_defined_recursive_let_definition
-             ctx print_ctx env generated_fields from name params scheme body ai
-(* *)
+            construct, so we do, else we we use "Fixpoint" and do not need to
+            provide any proof for termination. *)
+         match rec_kind with
+          | Env.TypeInformation.LRK_rec ->
+              (* General recursive function, so use "Function". *)
+              generate_defined_recursive_let_definition_With_Function
+                ctx print_ctx env ~self_manifest generated_fields from name
+                params scheme body opt_term_pr ai
+          | Env.TypeInformation.LRK_structural ->
+              (* Recursive structural function, so use "Fixpoint." *)
+              generate_defined_recursive_let_definition
+                ctx print_ctx env generated_fields from name params scheme body
+                ai
          end)
         else
          (begin
@@ -3260,9 +3259,9 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
           abstraction_info.Abstractions.ai_dependencies_from_params ;
         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_let compiled_field
-  | Abstractions.FAI_let_rec l ->
+  | Abstractions.FAI_let_rec (rec_kind, l) ->
       generate_recursive_let_definition
-        ctx print_ctx env ~self_manifest generated_fields l
+        ctx print_ctx env ~self_manifest generated_fields rec_kind l
   | Abstractions.FAI_theorem ((from, name, _, logical_expr, pr, _),
                               abstraction_info) ->
       let coq_min_typ_env_names =
@@ -3379,7 +3378,7 @@ let make_meths_type_kinds species_fields =
        | Env.TypeInformation.SF_sig (_, n, sch)
        | Env.TypeInformation.SF_let (_, n, _, sch, _, _, _, _) ->
            (n, (Env.MTK_computational sch)) :: accu
-       | Env.TypeInformation.SF_let_rec l ->
+       | Env.TypeInformation.SF_let_rec (_, l) ->
            List.fold_right
              (fun (_, n, _, sch, _, _, _, _) accu' ->
                (n, (Env.MTK_computational sch)) :: accu')
@@ -4421,7 +4420,7 @@ let make_collection_effective_record ctx env implemented_species_name
             ctx env formals_to_effectives
             record_type_args_instanciations2 ;
           Format.fprintf out_fmter ")@]"
-      | Env.TypeInformation.SF_let_rec l ->
+      | Env.TypeInformation.SF_let_rec (_, l) ->
           List.iter
             (fun (_, n, _, _, _, _, _, _) ->
               Format.fprintf out_fmter "@ t.@[<1>(" ;

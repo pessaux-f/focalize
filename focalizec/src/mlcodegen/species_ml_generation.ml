@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.97 2009-06-08 15:35:39 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.98 2009-06-10 17:57:06 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -244,7 +244,7 @@ let generate_record_type ctx species_descr =
               end)
             end)
           end)
-      | Env.TypeInformation.SF_let_rec l ->
+      | Env.TypeInformation.SF_let_rec (_, l) ->
           List.iter
             (fun (from, n, _, sch, _, _, _, _) ->
               let ty = Types.specialize sch in
@@ -570,7 +570,7 @@ let generate_methods ctx env ~self_manifest field =
               Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
             Misc_common.CSF_let compiled_field
        end)
-   | Abstractions.FAI_let_rec l ->
+   | Abstractions.FAI_let_rec (_, l) ->
        (begin
        match l with
         | [] ->
@@ -1632,7 +1632,7 @@ let collection_compile env ~current_unit out_fmter collection_def
               Format.fprintf out_fmter ".%a ;@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
               end)
-        | Env.TypeInformation.SF_let_rec l ->
+        | Env.TypeInformation.SF_let_rec (_, l) ->
             List.iter
               (fun (_, n, _, _, _, _, _, flags) ->
                 (* Generate only if not a logical let ! *)

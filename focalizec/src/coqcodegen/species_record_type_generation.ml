@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.80 2009-06-10 12:24:48 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.81 2009-06-10 17:57:06 pessaux Exp $ *)
 
 
 
@@ -530,7 +530,7 @@ END of changed by Damien. *)
 
 
 
-let rec let_binding_compile ctx ~in_recursive_let_section_of
+let rec let_in_binding_compile ctx ~in_recursive_let_section_of
     ~local_idents ~self_methods_status ~recursive_methods_status ~is_rec
     ~toplevel env bd =
   (* Create once for all the flag used to insert the let-bound idents in the
@@ -667,7 +667,8 @@ let rec let_binding_compile ctx ~in_recursive_let_section_of
 
 
 
-
+(** {b Descr} : Starts compiling local recursive functions. Currently, they
+    are always compiled with the "fix" (lowercase !) construct of Coq. *)
 and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
       ~self_methods_status ~recursive_methods_status env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
@@ -676,12 +677,12 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
   let is_rec =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
      | Parsetree.RF_no_rec -> false
-     | Parsetree.RF_rec -> true) in
+     | Parsetree.RF_rec | Parsetree.RF_structural -> true) in
   (* Generates the binder ("fix" or non-"fix"). *)
   Format.fprintf out_fmter "@[<2>let%s@ "
     (match is_rec with
      | false -> ""
-     | true ->
+     | true -> 
          (* [Unsure] We don't known now how to compile several local mutually
             recursive functions. *)
          if (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings) > 1
@@ -694,14 +695,14 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
      | [one_bnd] ->
-         let_binding_compile
+         let_in_binding_compile
            ctx ~in_recursive_let_section_of ~local_idents
            ~self_methods_status ~recursive_methods_status ~toplevel: false
            ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
-             (let_binding_compile
+             (let_in_binding_compile
                 ctx ~in_recursive_let_section_of ~local_idents
                 ~self_methods_status ~recursive_methods_status ~toplevel: false
                 ~is_rec env first_bnd) in
@@ -711,7 +712,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
                 "let in" definitions. *)
              Format.fprintf out_fmter "@ in@]@\n@[<2>let " ;
              accu_env :=
-               let_binding_compile
+               let_in_binding_compile
                  ctx ~in_recursive_let_section_of ~local_idents
                  ~self_methods_status ~recursive_methods_status ~is_rec
                  ~toplevel: false !accu_env binding)
@@ -956,7 +957,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          (* IMHO : not really useful, but... doesn't hurt... *)
          Types.purge_type_simple_to_coq_variable_mapping () ;
          (* Now, print the polymorphic extra args. We use the same trick than
-            in [let_binding_compile]. Consult comment over there... *)
+            in [let_in_binding_compile]. Consult comment over there... *)
          List.iter
            (fun var ->
               Format.fprintf out_fmter "forall %a : Set,@ "
@@ -1340,7 +1341,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
           Format.fprintf out_fmter "@]@\n"
           end)
         end)
-    | Env.TypeInformation.SF_let_rec l ->
+    | Env.TypeInformation.SF_let_rec (_, l) ->
         List.iter
           (fun (from, n, _, sch, _, _, _, _) ->
             let ty = Types.specialize sch in

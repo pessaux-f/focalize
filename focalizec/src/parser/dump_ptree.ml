@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.41 2009-05-05 13:49:09 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.42 2009-06-10 17:57:06 pessaux Exp $ *)
 
 
 
@@ -344,6 +344,7 @@ let pp_constant = pp_ast pp_constant_desc
 let pp_rec_flag ppf = function
   | Parsetree.RF_no_rec -> Format.fprintf ppf "RF_no_rec"
   | Parsetree.RF_rec -> Format.fprintf ppf "RF_rec"
+  | Parsetree.RF_structural -> Format.fprintf ppf "RF_structural"
 ;;
 
 

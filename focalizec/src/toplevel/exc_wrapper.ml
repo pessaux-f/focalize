@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.83 2009-06-10 12:24:48 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.84 2009-06-10 17:57:06 pessaux Exp $ *)
 
 let header ppf =
   Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
@@ -358,6 +358,11 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname name
         Handy.pp_reset_effects
+  | Infer.Wrong_recursion_kind_while_fusion at ->
+       Format.fprintf ppf
+        "%a:@\n@[Inheritance@ tries@ to@ merge@ recursive@ functions@ \
+        having@ different@ recursion@ scheme.@]@."
+        Location.pp_location at
   | Infer.Wrong_type_by_inheritance (at, name, ty1, ty2, from1, from2) ->
       Format.fprintf ppf
         "%a:@\n@[%tMethod@ '%t%a%t'@ was@ found@ with@ incompatible@ \

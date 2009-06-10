@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.44 2009-05-28 08:43:26 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.45 2009-06-10 17:57:06 pessaux Exp $ *)
 
 
 exception Bad_file_suffix of string ;;
@@ -249,9 +249,6 @@ let main () =
        Arg.String Configuration.set_pretty_print,
        " pretty-prints the parse tree of the focalize file as a focalize\n\
          source into the argument file.") ;
-      ("-I-do-no-want-to-use-this-option",
-       Arg.Unit Configuration.set_tmp_use_Function_for_recursive_functions,
-       " Do not use if you don't know what it does: dev team reserved.") ;
       ("-raw-ast-dump",
        Arg.Unit Configuration.set_raw_ast_dump,
        " (undocumented) prints on stderr the raw AST structure \
@@ -263,13 +260,13 @@ let main () =
       ("-stop-before-coq",
        Arg.Unit Configuration.set_stop_before_coq,
        " when Coq code generation is activated, stops the compilation process \
-	 before passing the generated file to Coq. The produced file is \
-	 ended by the suffix \".v\".") ;
+         before passing the generated file to Coq. The produced file is \
+         ended by the suffix \".v\".") ;
       ("-stop-before-zenon",
        Arg.Unit Configuration.set_stop_before_zenon,
        " when Coq code generation is activated, stops the compilation process \
-	 before passing the generated file to Zenon. The produced file is \
-	 ended by the suffix \".zv\".") ;
+         before passing the generated file to Zenon. The produced file is \
+         ended by the suffix \".zv\".") ;
       ("-verbose",
        Arg.Unit Configuration.set_verbose,
        " be verbose.") ;

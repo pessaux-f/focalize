@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.132 2009-06-10 12:24:48 pessaux Exp $ *)
+(* $Id: env.ml,v 1.133 2009-06-10 17:57:06 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -461,6 +461,9 @@ module TypeInformation = struct
                                              definition. *)
     }
 
+  type let_rec_kind =
+    | LRK_rec
+    | LRK_structural
 
   (* *********************************************************************** *)
   (** {b Descr} : Type of information recorded in the typing environment for
@@ -591,10 +594,11 @@ module TypeInformation = struct
   and species_field =
     | SF_sig of sig_field_info   (** Field is a "signature". *)
     | SF_let of let_field_info   (** Field is a "let" bound definition. *)
-    | SF_let_rec of let_field_info list   (** The list of information similar
-                                              to what can be found for a
-                                              [SF_let], but for each mutually
-                                              recursive bound identifier. *)
+    | SF_let_rec of
+        (let_rec_kind *
+         let_field_info list)   (** The list of information similar to what
+                                    can be found for a [SF_let], but for each
+                                    mutually recursive bound identifier. *)
     | SF_theorem of theorem_field_info    (** Field is a theorem. *)
     | SF_property of property_field_info  (** Field is a property. *)
 
@@ -820,15 +824,20 @@ module TypeInformation = struct
               Sourcify.pp_qualified_species from.fh_initial_apparition ;
             Format.fprintf ppf "let %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-        | SF_let_rec rec_bounds ->
+        | SF_let_rec (rec_kind, rec_bounds) ->
             (begin
             match rec_bounds with
              | [] -> assert false  (* Empty let rec is non sense ! *)
              | (from, vname, _, ty_scheme, _, _, _, _) :: rem ->
                  Format.fprintf ppf "(* From species %a. *)@\n"
                    Sourcify.pp_qualified_species from.fh_initial_apparition ;
-                 Format.fprintf ppf "let rec %a : %a@\n"
-                   Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme;
+                 let rec_token =
+                   match rec_kind with
+                    | LRK_structural -> "recstruct"
+                    | LRK_rec -> "rec" in
+                 Format.fprintf ppf "let %s %a : %a@\n"
+                   rec_token
+                   Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme ;
                  List.iter
                    (fun (local_from, v, _, s, _, _, _, _) ->
                      Format.fprintf ppf
@@ -2054,10 +2063,11 @@ module TypingEMAccess = struct
            | TypeInformation.SF_sig (_, v, s)
            | TypeInformation.SF_let (_, v, _, s, _, _, _, _) ->
                [(v, (BO_absolute s))] @ accu
-           | TypeInformation.SF_let_rec l ->
+           | TypeInformation.SF_let_rec (_, l) ->
                let l' =
                  List.map
-                   (fun (_, v, _, s, _, _, _, _) -> (v, (BO_absolute s))) l in
+                   (fun (_, v, _, s, _, _, _, _) ->
+		     (v, (BO_absolute s))) l in
                l' @ accu)
         []
         spec_info.TypeInformation.spe_sig_methods in
