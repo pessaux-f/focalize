@@ -8,6 +8,8 @@ exception Unbound_closed_species of (Parsetree.vname * Location.t)
 
 exception Rebound_type of (Parsetree.vname * Location.t)
 exception Rebound_species of (Parsetree.vname * Location.t)
+exception Rebound_toplevel_let of (Parsetree.vname * Location.t)
+
 
 type substitution_kind =
   | SK_collection_by_collection of
@@ -230,7 +232,8 @@ module ScopingEnv :
     val pervasives : unit -> t
 
     val add_value :
-      Parsetree.vname -> ScopeInformation.value_binding_info -> t -> t
+      toplevel: Location.t option -> Parsetree.vname ->
+        ScopeInformation.value_binding_info -> t -> t
     val find_value :
       loc: Location.t -> current_unit: Types.fname ->
         current_species_name: string option -> Parsetree.expr_ident -> t ->
@@ -269,7 +272,9 @@ module TypingEnv :
     val empty : unit -> t
     val pervasives : unit -> t
 
-    val add_value : Parsetree.vname -> Types.type_scheme -> t -> t
+    val add_value :
+      toplevel: Location.t option -> Parsetree.vname -> Types.type_scheme ->
+        t -> t
     val find_value :
       loc: Location.t -> current_unit: Types.fname ->
         current_species_name:string option -> Parsetree.expr_ident -> t ->
@@ -348,7 +353,8 @@ module CoqGenEnv :
       Parsetree.ident -> t -> CoqGenInformation.species_binding_info
 
     val add_value :
-      Parsetree.vname -> CoqGenInformation.value_mapping_info -> t -> t
+      toplevel: Location.t option -> Parsetree.vname ->
+        CoqGenInformation.value_mapping_info -> t -> t
     val find_value :
       loc: Location.t ->
       current_unit: Types.fname -> current_species_name:string option ->

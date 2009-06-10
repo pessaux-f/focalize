@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.83 2009-05-05 16:33:27 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.84 2009-06-10 12:24:48 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1207,20 +1207,23 @@ and scope_hyps ctx env hyps =
                let scoped_type_expr = scope_type_expr ctx accu_env type_expr in
                let env' =
                  Env.ScopingEnv.add_value
-                   vname Env.ScopeInformation.SBI_local accu_env in
+                   ~toplevel: None vname Env.ScopeInformation.SBI_local
+                   accu_env in
                ((Parsetree.H_variable (vname, scoped_type_expr)), env')
            | Parsetree.H_hypothesis (vname, logical_expr) ->
                let scoped_logical_expr =
                  scope_logical_expr ctx accu_env logical_expr in
                let env' =
                  Env.ScopingEnv.add_value
-                   vname Env.ScopeInformation.SBI_local accu_env in
+                   ~toplevel: None vname Env.ScopeInformation.SBI_local
+                   accu_env in
                ((Parsetree.H_hypothesis (vname, scoped_logical_expr)), env')
            | Parsetree.H_notation (vname, expr) ->
                let scoped_expr = scope_expr ctx accu_env expr in
                let env' =
                  Env.ScopingEnv.add_value
-                   vname Env.ScopeInformation.SBI_local accu_env in
+                   ~toplevel: None vname Env.ScopeInformation.SBI_local
+                   accu_env in
                ((Parsetree.H_notation (vname, scoped_expr)), env')
           end) in
         (accu_env',
@@ -1304,7 +1307,8 @@ and scope_expr ctx env expr =
            List.fold_left
              (fun accu_env vname ->
                Env.ScopingEnv.add_value
-         vname Env.ScopeInformation.SBI_local accu_env)
+                 ~toplevel: None vname Env.ScopeInformation.SBI_local
+                 accu_env)
              env
              vnames in
          let scoped_body = scope_expr ctx env' body in
@@ -1440,12 +1444,14 @@ and scope_pattern ctx env pattern =
      | Parsetree.P_wild -> (pattern.Parsetree.ast_desc, env)
      | Parsetree.P_var vname ->
          let env' =
-           Env.ScopingEnv.add_value vname Env.ScopeInformation.SBI_local env in
+           Env.ScopingEnv.add_value
+             ~toplevel: None vname Env.ScopeInformation.SBI_local env in
          (pattern.Parsetree.ast_desc, env')
      | Parsetree.P_as  (p, vname) ->
          let (scoped_p, env') = scope_pattern ctx env p in
          let env'' =
-           Env.ScopingEnv.add_value vname Env.ScopeInformation.SBI_local env' in
+           Env.ScopingEnv.add_value
+             ~toplevel: None vname Env.ScopeInformation.SBI_local env' in
          ((Parsetree.P_as (scoped_p, vname)), env'')
      | Parsetree.P_constr  (cstr, pats) ->
          (* Ensure that the mentionned hosting compilation unit of the
@@ -1639,6 +1645,10 @@ and scope_termination_proof ctx env params_env tp =
 (* ************************************************************************* *)
 and scope_let_definition ~toplevel_let ctx env let_def =
   let let_def_descr = let_def.Parsetree.ast_desc in
+  (* Create once for all the flag used to insert the let-bound idents in the
+     environment. *)
+  let toplevel_loc =
+    if toplevel_let then Some let_def.Parsetree.ast_loc else None in
   (* If the let-definition is at toplevel, then we will scope the idents as
      SBI_file to represent the fact they are ... at toplevel of the current
      compilation unit. Otherwise, the let-definition is not at toplevel and
@@ -1652,7 +1662,9 @@ and scope_let_definition ~toplevel_let ctx env let_def =
     List.fold_left
       (fun accu_env (param_vname, _) ->
         Env.ScopingEnv.add_value
-          param_vname Env.ScopeInformation.SBI_local accu_env)
+          (* [~toplevel_let] = None because parameters are not at toplevel. *)
+          ~toplevel: None param_vname Env.ScopeInformation.SBI_local
+          accu_env)
       in_env
       bnd.Parsetree.ast_desc.Parsetree.b_params in
   (* We create the extended environment with the identifiers bound by the
@@ -1662,8 +1674,8 @@ and scope_let_definition ~toplevel_let ctx env let_def =
     List.fold_left
       (fun accu_env let_binding ->
         Env.ScopingEnv.add_value
-          let_binding.Parsetree.ast_desc.Parsetree.b_name
-          bind_locality
+          ~toplevel: toplevel_loc
+          let_binding.Parsetree.ast_desc.Parsetree.b_name bind_locality
           accu_env)
       env
       let_def_descr.Parsetree.ld_bindings in
@@ -1800,7 +1812,7 @@ and scope_logical_expr ctx env logical_expr =
            List.fold_left
              (fun accu_env vname ->
               Env.ScopingEnv.add_value
-               vname Env.ScopeInformation.SBI_local accu_env)
+                ~toplevel: None vname Env.ScopeInformation.SBI_local accu_env)
              env
              vnames in
          let scoped_p = scope_logical_expr ctx env' p in
@@ -1814,7 +1826,7 @@ and scope_logical_expr ctx env logical_expr =
            List.fold_left
              (fun accu_env vname ->
               Env.ScopingEnv.add_value
-              vname Env.ScopeInformation.SBI_local accu_env)
+              ~toplevel: None vname Env.ScopeInformation.SBI_local accu_env)
              env
              vnames in
          let scoped_p = scope_logical_expr ctx env' p in
@@ -1983,8 +1995,8 @@ let scope_termination_proof_def ctx env termination_proof_def =
      (see documentation on [scope_termination_proof]). *)
   let env_with_params =
     let add_argument env (name, _) =
-      Env.ScopingEnv.add_value name
-        Env.ScopeInformation.SBI_local env in
+      Env.ScopingEnv.add_value
+        ~toplevel: None name Env.ScopeInformation.SBI_local env in
     let add_arguments env profile =
       List.fold_left add_argument env
         profile.Parsetree.ast_desc.Parsetree.tpp_params in
@@ -2082,8 +2094,8 @@ let rec scope_species_fields ctx env = function
         List.fold_left
           (fun accu_env method_name ->
             Env.ScopingEnv.add_value
-              method_name (Env.ScopeInformation.SBI_method_of_self)
-              accu_env)
+              ~toplevel: None method_name
+              Env.ScopeInformation.SBI_method_of_self accu_env)
           env names in
       let (rem_scoped_fields, rem_method_names) =
         scope_species_fields ctx env' rem in
@@ -2285,7 +2297,8 @@ let scope_species_params_types ctx env params =
                value that will get scoped as local. *)
             let accu_env' =
               Env.ScopingEnv.add_value
-               param_name Env.ScopeInformation.SBI_local accu_env in
+               ~toplevel: None param_name Env.ScopeInformation.SBI_local
+                accu_env in
             let scoped_param_kind = {
               param_kind with
                 Parsetree.ast_desc = Parsetree.SPT_in scoped_ident } in
@@ -2385,7 +2398,8 @@ let scope_species_def ctx env species_def =
            [find_value] taking care of changing to [SBI_method_of_coll] when
            required. *)
         Env.ScopingEnv.add_value
-          meth_vname Env.ScopeInformation.SBI_method_of_self accu_env)
+          ~toplevel: None meth_vname Env.ScopeInformation.SBI_method_of_self
+          accu_env)
       env_with_params
       inherited_methods in
   (* And now the fields in the environment we just built. *)
@@ -2521,6 +2535,7 @@ let scope_phrase ctx env phrase =
          let (scoped_theo, name) = scope_theorem_def ctx env theo_def in
          let env' =
            Env.ScopingEnv.add_value
+             ~toplevel: (Some theo_def.Parsetree.ast_loc)
              name (Env.ScopeInformation.SBI_file ctx.current_unit) env in
          ((Parsetree.Ph_theorem scoped_theo), env', ctx)
      | Parsetree.Ph_expr expr_def ->

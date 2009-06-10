@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.177 2009-06-09 13:36:22 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.178 2009-06-10 12:24:48 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3418,7 +3418,8 @@ let extend_env_for_species_def ~current_species env species_descr =
       (fun accu_env (m_name, _) ->
         (* Methods are trivially not toplevel bound idents. *)
         Env.CoqGenEnv.add_value
-          m_name (0, Env.CoqGenInformation.VB_non_toplevel) accu_env)
+          ~toplevel: None m_name (0, Env.CoqGenInformation.VB_non_toplevel)
+          accu_env)
       env
       species_methods_names in
   (* Now, add the species's parameters in the environment. And do not

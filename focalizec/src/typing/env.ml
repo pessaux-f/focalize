@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.131 2009-06-08 15:35:39 pessaux Exp $ *)
+(* $Id: env.ml,v 1.132 2009-06-10 12:24:48 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -46,6 +46,7 @@ exception Unbound_closed_species of (Parsetree.vname * Location.t) ;;
 
 exception Rebound_type of (Parsetree.vname * Location.t) ;;
 exception Rebound_species of (Parsetree.vname * Location.t) ;;
+exception Rebound_toplevel_let of (Parsetree.vname * Location.t) ;;
 
 
 
@@ -1631,14 +1632,27 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
 
   (* ******************************************************************** *)
-  (* Parsetree.vname -> EMAccess.value_bound_data -> t -> t               *)
-  (** {b Descr} : Return an environment extended with a binding between a
-      value [ident] and the argument [data].
+  (* toplevel: Location.t option -> Parsetree.vname ->                    *)
+  (*   EMAccess.value_bound_data ->                                       *)
+  (*   t -> t                                                             *)
+  (** {b Descr} : Returns an environment extended with a binding between
+      a value [ident] and the argument [data].
       The initial environment is passed as last argument.
 
       {b Exported} : Yes.                                                 *)
   (* ******************************************************************** *)
-  let add_value ident data (env : t) =
+  let add_value ~toplevel ident data (env : t) =
+    (* We disallow toplevel let-definitions to have the same name. So if we
+       are told we are in the case of toplevel definition (i.e. if we are
+       given a location that may be used to raise the error giving where it
+       arises), we perform the non-existence verification. *)
+    (match toplevel with
+     | Some loc ->
+         if List.exists
+             (function (n, (BO_absolute _)) -> n = ident | _ -> false)
+             env.values then
+           raise (Rebound_toplevel_let (ident, loc))
+     | None -> ()) ;
     ({ env with values = (ident, BO_absolute data) :: env.values } : t)
 
 
@@ -1886,7 +1900,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
     if List.exists
         (function (n, (BO_absolute _)) -> n = tyname | _ -> false)
         env.types then
-      raise (Rebound_type (tyname, loc));
+      raise (Rebound_type (tyname, loc)) ;
     ({ env with types = (tyname, BO_absolute data) :: env.types } : t)
 
 

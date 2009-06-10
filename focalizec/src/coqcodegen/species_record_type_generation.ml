@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.79 2009-06-09 13:36:22 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.80 2009-06-10 12:24:48 pessaux Exp $ *)
 
 
 
@@ -533,6 +533,9 @@ END of changed by Damien. *)
 let rec let_binding_compile ctx ~in_recursive_let_section_of
     ~local_idents ~self_methods_status ~recursive_methods_status ~is_rec
     ~toplevel env bd =
+  (* Create once for all the flag used to insert the let-bound idents in the
+     environment. *)
+  let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
@@ -590,7 +593,7 @@ let rec let_binding_compile ctx ~in_recursive_let_section_of
   let env' =
     if is_rec then
       Env.CoqGenEnv.add_value
-        bd.Parsetree.ast_desc.Parsetree.b_name
+        ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
         (nb_polymorphic_args, value_body) env
     else env in
   (* Now, generate each of the real function's parameter with its type. *)
@@ -659,7 +662,7 @@ let rec let_binding_compile ctx ~in_recursive_let_section_of
   (* Finally, we record, even if it was already done in [env'] the number of
      extra arguments due to polymorphism the current bound identifier has. *)
   Env.CoqGenEnv.add_value
-    bd.Parsetree.ast_desc.Parsetree.b_name
+    ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
     (nb_polymorphic_args, value_body) env
 
 
@@ -996,7 +999,8 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          let env' =
            List.fold_left
              (fun accu_env vname ->
-               Env.CoqGenEnv.add_value vname
+               Env.CoqGenEnv.add_value
+                 ~toplevel: None vname
                  (0, Env.CoqGenInformation.VB_non_toplevel) accu_env)
              env
              vnames in

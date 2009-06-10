@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.33 2009-05-05 16:33:27 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.34 2009-06-10 12:24:48 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -219,6 +219,7 @@ let toplevel_compile env ~current_unit out_fmter = function
            theorem_def.Parsetree.ast_desc.Parsetree.th_stmt) in
       (* Return the extended environmenent. *)
       Env.CoqGenEnv.add_value
+        ~toplevel: (Some theorem_def.Parsetree.ast_loc)
         theorem_def.Parsetree.ast_desc.Parsetree.th_name env_binding env
   | Infer.PCM_expr expr ->
       (* We compile toplevel expressions as "Check" orders under Coq. *)

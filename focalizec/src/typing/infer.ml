@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.183 2009-06-10 07:02:18 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.184 2009-06-10 12:24:48 pessaux Exp $ *)
 
 
 
@@ -1041,7 +1041,8 @@ let rec typecheck_expr ctx env initial_expr =
              (fun accu_env arg_name arg_ty ->
                (* Do not generalize argument types ! No Mu-rule yet ! *)
                Env.TypingEnv.add_value
-         arg_name (Types.trivial_scheme arg_ty) accu_env)
+                 ~toplevel: None arg_name (Types.trivial_scheme arg_ty)
+                 accu_env)
              env arg_vnames args_ty in
          (* Now, typecheck the body i nthe new environment. *)
          let ty_body = typecheck_expr ctx extended_env e_body in
@@ -1139,7 +1140,8 @@ let rec typecheck_expr ctx env initial_expr =
              let env' =
                List.fold_left
                  (fun accu_env (id, ty_scheme) ->
-                  Env.TypingEnv.add_value id ty_scheme accu_env)
+                   Env.TypingEnv.add_value
+                     ~toplevel: None id ty_scheme accu_env)
                  env bnds in
              (* Infer the type of the match clause's body. *)
              let clause_ty = typecheck_expr ctx env' expr in
@@ -1174,7 +1176,7 @@ let rec typecheck_expr ctx env initial_expr =
          let env' =
            List.fold_left
              (fun accu_env (id, ty_scheme, _) ->
-               Env.TypingEnv.add_value id ty_scheme accu_env)
+               Env.TypingEnv.add_value ~toplevel: None id ty_scheme accu_env)
              env bindings in
          typecheck_expr ctx env' in_expr
      | Parsetree.E_record fields -> typeckeck_record_expr ctx env fields None
@@ -1296,6 +1298,10 @@ and typeckeck_record_expr ctx env fields opt_with_expr =
     {b Exported} : No.                                                        *)
 (* ************************************************************************** *)
 and typecheck_let_definition ~is_a_field ctx env let_def =
+  (* Create once for all the flag used to insert the let-bound idents in the
+     environment. *)
+  let toplevel_loc =
+     if is_a_field then None else Some let_def.Parsetree.ast_loc in
   (* A [let_definition] doesn't really has a type. Record in the AST node. *)
   let_def.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
   let let_def_descr = let_def.Parsetree.ast_desc in
@@ -1348,7 +1354,7 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
           (* No generalisation (polymorphism) of the function inside its body
              (that's would be Mu-rule). *)
           let scheme = Types.trivial_scheme ty in
-          Env.TypingEnv.add_value vname scheme accu_env)
+          Env.TypingEnv.add_value ~toplevel: toplevel_loc vname scheme accu_env)
         env pre_env_info in
   (* Now typecheck each def's body. *)
   let tmp_env_bindings =
@@ -1401,7 +1407,9 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
           List.fold_left2
             (fun accu_env (arg_name, _) arg_ty ->
               Env.TypingEnv.add_value
-                arg_name (Types.trivial_scheme arg_ty) accu_env)
+                (* [~toplevel_let] = None because parameters are not at
+                   toplevel. *)
+                ~toplevel: None arg_name (Types.trivial_scheme arg_ty) accu_env)
                 env'
             binding_desc.Parsetree.b_params
             args_tys in
@@ -1535,7 +1543,7 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
          let env' =
            List.fold_left
              (fun accu_env th_name ->
-               Env.TypingEnv.add_value th_name scheme accu_env)
+               Env.TypingEnv.add_value ~toplevel: None th_name scheme accu_env)
              env vnames in
          (* Fix the type scheme in the [t_expr]. But ATTENTION, generalize the
             scheme ! In effect, the scheme used to put in the environment is
@@ -1712,7 +1720,7 @@ and typecheck_statement ctx env statement =
            the complete environment that will be used to typecheck the
            conclusion of the statement. *)
         let scheme = Types.generalize ty in
-        Env.TypingEnv.add_value name scheme accu_env)
+        Env.TypingEnv.add_value ~toplevel: None name scheme accu_env)
       env
       statement.Parsetree.ast_desc.Parsetree.s_hyps in
   (* Now, typecheck the conclusion, if some, in the extended environment. *)
@@ -1967,7 +1975,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                let scheme = Types.trivial_scheme ty in
                let env' =
                  Env.TypingEnv.add_value
-                   sig_def_descr.Parsetree.sig_name scheme env in
+                   ~toplevel: None sig_def_descr.Parsetree.sig_name scheme
+                   env in
                let field_info =
                  Env.TypeInformation.SF_sig
                    ((Env.intitial_inheritance_history current_species),
@@ -1993,7 +2002,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                let env' =
                  List.fold_left
                    (fun accu_env (id, ty_scheme, _) ->
-                      Env.TypingEnv.add_value id ty_scheme accu_env)
+                      Env.TypingEnv.add_value
+                        ~toplevel: None id ty_scheme accu_env)
                    env bindings in
                (* Build the record now to put it later in the environment. *)
                let let_def_flags = {
@@ -2102,6 +2112,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                let scheme = Types.trivial_scheme ty in
                let env' =
                  Env.TypingEnv.add_value
+                   ~toplevel: None
                    property_def.Parsetree.ast_desc.Parsetree.prd_name
                    scheme env in
                (* Recover if a def-dependency or a decl-dependency on "rep"
@@ -2143,6 +2154,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                (* Extend the environment. *)
                let env' =
                  Env.TypingEnv.add_value
+                  ~toplevel: None
                   theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
                (* Recover if a def-dependency or a decl-dependency on "rep"
                   was/were found for this binding. *)
@@ -2172,12 +2184,12 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                   We record the non-relevance of the type in the AST node. *)
                proof_def.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
                (* Type-cheking of the proof may induce def/decl dependency on
-		  "rep" ! *)
+                  "rep" ! *)
                Types.reset_deps_on_rep () ;
                typecheck_proof ctx env proof_def_desc.Parsetree.pd_proof ;
                let dep_on_rep = {
-		 Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
-		 Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()} in
+                 Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
+                 Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()} in
                (* No relevant type information to record in the AST node. *)
                field.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
                (* No extension there. *)
@@ -2193,14 +2205,14 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                   (typecheck_termination_proof_profile ctx env accu_fields)
                   desc.Parsetree.tpd_profiles ;
                (* Type-cheking of the proof may induce def/decl dependency on
-		  "rep" ! *)
+                  "rep" ! *)
                Types.reset_deps_on_rep () ;
                (* Typecheck the inner proof. *)
                typecheck_termination_proof
                   ctx env desc.Parsetree.tpd_termination_proof ;
                let dep_on_rep = {
-		 Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
-		 Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()} in
+                 Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
+                 Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()} in
                (* No relevant type information to record in the AST node. *)
                field.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
                (* No extension there. *)
@@ -2514,11 +2526,11 @@ let apply_substitutions_reversed_list_on_type reversed_substs ty =
     (fun subst accu_type ->
       match subst with
        | Env.SK_collection_by_collection (c1, c2) ->
-	   Types.subst_type_simple c1 c2 accu_type
+           Types.subst_type_simple c1 c2 accu_type
        | Env.SK_ident_by_expression (_, _, _) ->
-	   (* Nothing to do since ML types never contain expressions and
-	      expressions identifiers. *)
-	   accu_type)
+           (* Nothing to do since ML types never contain expressions and
+              expressions identifiers. *)
+           accu_type)
     reversed_substs
     ty
 ;;
@@ -2538,8 +2550,8 @@ let apply_substitutions_reversed_list_on_fields
                SubstColl.subst_species_field
                  ~current_unit (SubstColl.SRCK_coll c1) c2 field
            | Env.SK_ident_by_expression
-	         (param_unit, param_name_c1, expr_desc_c2) ->
-	       SubstExpr.subst_species_field
+                 (param_unit, param_name_c1, expr_desc_c2) ->
+               SubstExpr.subst_species_field
                  ~param_unit param_name_c1 expr_desc_c2 field)
         accu_fields)
     reversed_substs
@@ -2633,7 +2645,7 @@ let apply_species_arguments ctx env base_spe_descr params =
                       f_name e_param_expr.Parsetree.ast_desc)
                    accu_meths in
                (* Since thay are local to a species, there will never be
-		  confusion if 2 species have a same "IN" parameter name. And
+                  confusion if 2 species have a same "IN" parameter name. And
                   finally, since in a species, there is no "IN" parameters
                   wearing the same name, no risk of confusion. *)
                let new_substs =
@@ -2850,7 +2862,8 @@ let typecheck_species_def_params ctx env species_params =
              (* Extend the environment with the parameter bound to its type. *)
              let accu_env' =
                Env.TypingEnv.add_value
-                 param_vname (Types.generalize param_carrier_ty) accu_env in
+                 ~toplevel: None param_vname
+                 (Types.generalize param_carrier_ty) accu_env in
              (* And now, build the species type of the application. *)
              let (accu_env'', rem_spe_params, rem_accu_self_must_be) =
                rec_typecheck_params accu_env' accu_self_must_be rem in
@@ -3044,7 +3057,8 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
              | Env.TypeInformation.SF_let
                  (_, meth_name, _, meth_scheme, _, _, _, _) ->
                let e =
-                 Env.TypingEnv.add_value meth_name meth_scheme accu_env in
+                 Env.TypingEnv.add_value
+                   ~toplevel: None  meth_name meth_scheme accu_env in
                (* Now check if we inherited a [rep]. *)
                let m_name_as_str = Parsetree_utils.name_of_vname meth_name in
                let manifest =
@@ -3080,17 +3094,21 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
                    (fun internal_accu_env
                         (_, meth_name, _, meth_scheme, _, _, _, _) ->
                     Env.TypingEnv.add_value
-                      meth_name meth_scheme internal_accu_env)
+                      ~toplevel: None meth_name meth_scheme internal_accu_env)
                    accu_env
                    l in
                (e, accu_ctx)
              | Env.TypeInformation.SF_theorem  (_, theo_name, _, _, _, _) ->
                  let t_sch = Types.trivial_scheme (Types.type_prop ()) in
-                 let e = Env.TypingEnv.add_value theo_name t_sch accu_env in
+                 let e =
+                   Env.TypingEnv.add_value
+                     ~toplevel: None theo_name t_sch accu_env in
                  (e, accu_ctx)
              | Env.TypeInformation.SF_property (_, prop_name, _, _, _) ->
                  let prop_sch = Types.trivial_scheme (Types.type_prop ()) in
-                 let e = Env.TypingEnv.add_value prop_name prop_sch accu_env in
+                 let e =
+                   Env.TypingEnv.add_value
+                     ~toplevel: None prop_name prop_sch accu_env in
                  (e, accu_ctx))
           (current_env, current_ctx)
           inh_species_methods in
@@ -3153,8 +3171,8 @@ let collapse_proof_in_non_inherited (proof_of, pr_deps_on_rep) ~current_species
            if name_of_proof_of = name then
              (begin
              assert (from.Env.fh_initial_apparition = current_species) ;
-	     (* We first merge the found dependencies on "rep" for the proof
-		and the property. *)
+             (* We first merge the found dependencies on "rep" for the proof
+                and the property. *)
              let deps_rep' = {
                Env.TypeInformation.dor_def =
                  pr_deps_on_rep.Env.TypeInformation.dor_def ||
@@ -3219,14 +3237,14 @@ let rec collapse_proof_in_inherited (proof_of, pr_deps_on_rep) ~current_species
              if name_of_proof_of = name then
                (begin
                (* We first merge the found dependencies on "rep" for the proof
-		  and the property. *)
+                  and the property. *)
                let deps_rep' = {
-		 Env.TypeInformation.dor_def =
-		   pr_deps_on_rep.Env.TypeInformation.dor_def ||
-		   deps_rep.Env.TypeInformation.dor_def ;
-		 Env.TypeInformation.dor_decl =
-		   pr_deps_on_rep.Env.TypeInformation.dor_decl ||
-		   deps_rep.Env.TypeInformation.dor_decl } in
+                 Env.TypeInformation.dor_def =
+                   pr_deps_on_rep.Env.TypeInformation.dor_def ||
+                   deps_rep.Env.TypeInformation.dor_def ;
+                 Env.TypeInformation.dor_decl =
+                   pr_deps_on_rep.Env.TypeInformation.dor_decl ||
+                   deps_rep.Env.TypeInformation.dor_decl } in
                (* We found the property related to the proof. Change this
                   property into a theorem. Since the addition of this proof
                   leads to an effective definition of the theorem, and this
@@ -3238,7 +3256,7 @@ let rec collapse_proof_in_inherited (proof_of, pr_deps_on_rep) ~current_species
                  Env.TypeInformation.SF_theorem
                    ((Env.intitial_inheritance_history current_species), name,
                     sch, logical_expr, proof_of.Parsetree.pd_proof,
-		    deps_rep') in
+                    deps_rep') in
                if Configuration.get_verbose () then
                  Format.eprintf
                    "Merging property '%a' from '%a' and proof from '%a'\
@@ -5054,7 +5072,9 @@ let typecheck_phrase ctx env phrase =
                Format.printf "val %a in %a@\n"
                  Sourcify.pp_vname id Types.pp_type_scheme ty_scheme;
              (* Extend the environment with the current binding. *)
-             Env.TypingEnv.add_value id ty_scheme accu_env)
+             Env.TypingEnv.add_value
+               ~toplevel: (Some let_def.Parsetree.ast_loc) id ty_scheme
+               accu_env)
            env envt_bindings in
        (* Just recover the type scheme of each bound identifier. *)
        let bound_schemes = List.map (fun (_, sc, _) -> sc) envt_bindings in
@@ -5074,6 +5094,7 @@ let typecheck_phrase ctx env phrase =
        let scheme = Types.trivial_scheme (Types.type_prop ()) in
        let env' =
          Env.TypingEnv.add_value
+           ~toplevel: (Some theorem_def.Parsetree.ast_loc)
            theorem_def.Parsetree.ast_desc.Parsetree.th_name scheme env in
        (* Interface printing stuff. *)
        if Configuration.get_do_interface_output () then
