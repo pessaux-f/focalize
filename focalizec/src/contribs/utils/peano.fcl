@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.8 2009-06-06 11:59:13 weis Exp $ *)
+(* $Id: peano.fcl,v 1.9 2009-06-10 21:17:45 ayrault Exp $ *)
 
 use "basics";;
 open "basics";;
@@ -79,6 +79,11 @@ species Peano =
       . for every natural number n,
           if p(n) is true, then p(s(n)) is true,
             then p(n) is true for every natural number n. *)
+  logical let induction(p) =
+    p(zero) ->
+     (all n in Self, p(n) -> p(s(n))) ->
+       (all n in Self, p(n))
+  ;
 
 end
 ;;
