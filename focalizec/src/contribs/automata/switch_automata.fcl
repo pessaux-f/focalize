@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: switch_automata.fcl,v 1.8 2009-06-06 14:51:08 weis Exp $ *)
+(* $Id: switch_automata.fcl,v 1.9 2009-06-10 08:46:25 doligez Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -44,7 +44,7 @@ species State_aut1 =
   (* Property all states are different *)
 
   theorem diff_moving_normal:
-  !equal (moving, normal)
+  ~ !equal (moving, normal)
 
   proof = assumed {* To do *}
   ;
@@ -302,9 +302,9 @@ species
 
      by property st_is_fst_fst_tau
 
-    <2>0 qed by step <2>1, <2>2
+    <2>0 qed by step <2>1, <2>2 property Po!empty, Aut2!init_state
 
-  <1>0 conclude
+  <1>0 qed by step <1>1 property St1!equal_reflexive
   ;
 
 
@@ -358,9 +358,9 @@ species
   prove !equal (!constr_self (s1, a2), !constr_self (s1, a3))
 
     <2>1 prove St1!equal (!st_aut1 (!constr_self (s1, a2)), s1)
-    by property !st_is_fst_self
+    by property !st_is_fst_self, St1!equal_reflexive
     <2>2 prove St1!equal (s1, !st_aut1 (!constr_self (s1, a3)))
-    by property St1!equal_symmetric, !st_is_fst_self
+    by property St1!equal_symmetric, St1!equal_reflexive, st_is_fst_self
     <2>0 qed
     by step <2>1, <2>2
        property St1!equal_transitive
