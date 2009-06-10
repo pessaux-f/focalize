@@ -14,10 +14,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main.fcl,v 1.3 2009-05-15 23:46:21 weis Exp $ *)
+(* $Id: main.fcl,v 1.4 2009-06-10 12:23:56 pessaux Exp $ *)
 
 (*
- *@version $Revision: 1.3 $ $Date: 2009-05-15 23:46:21 $
+ *@version $Revision: 1.4 $ $Date: 2009-06-10 12:23:56 $
  *)
 use "basics";;
 use "sets_orders";;
@@ -91,53 +91,53 @@ let state_5 =
 basics#print_string("moving             -> ");;
 #print_state( #state_5 );;
 
-let state_6 =
+let state_6_1 =
     Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_5, Coll_requests!set(4)));;
 basics#print_string("time_out_moving    -> ");;
-#print_state( #state_6 );;
+#print_state( #state_6_1 );;
 
 let state_6 =
-    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_6, Coll_requests!set(0)));;
+    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_6_1, Coll_requests!set(0)));;
 basics#print_string("normal_switched    -> ");;
 #print_state( #state_6 );;
 
 
-let state_7 =
+let state_7_1 =
     Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_6, Coll_requests!set(2)));;
 basics#print_string("moving             -> ");;
-#print_state( #state_7 );;
+#print_state( #state_7_1 );;
 
-let state_7 =
-    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7, Coll_requests!set(1)));;
+let state_7_2 =
+    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7_1, Coll_requests!set(1)));;
 basics#print_string("reverse_switched   -> ");;
-#print_state( #state_7 );;
+#print_state( #state_7_2 );;
 
-let state_7 =
-    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7, Coll_requests!set(2)));;
+let state_7_3 =
+    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7_2, Coll_requests!set(2)));;
 basics#print_string("moving             -> ");;
-#print_state( #state_7 );;
+#print_state( #state_7_3 );;
 
-let state_7 =
-    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7, Coll_requests!set(0)));;
+let state_7_4 =
+    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7_3, Coll_requests!set(0)));;
 basics#print_string("normal_switched    -> ");;
-#print_state( #state_7 );;
+#print_state( #state_7_4 );;
 
-let state_7 =
-    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7, Coll_requests!set(2)));;
+let state_7_5 =
+    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7_4, Coll_requests!set(2)));;
 basics#print_string("moving             -> ");;
-#print_state( #state_7 );;
+#print_state( #state_7_5 );;
 
-let state_7 =
-    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7, Coll_requests!set(1)));;
+let state_7_6 =
+    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7_5, Coll_requests!set(1)));;
 basics#print_string("reverse_switched   -> ");;
-#print_state( #state_7 );;
+#print_state( #state_7_6 );;
 
-let state_7 =
-    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7, Coll_requests!set(2)));;
+let state_7_7 =
+    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7_6, Coll_requests!set(2)));;
 basics#print_string("moving             -> ");;
-#print_state( #state_7 );;
+#print_state( #state_7_7 );;
 
-let state_7 =
-    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7, Coll_requests!set(0)));;
+let state_7_8 =
+    Coll_switch_automata!tau_p1(Coll_switch_automata!tau(#state_7_7, Coll_requests!set(0)));;
 basics#print_string("normal_switched    -> ");;
-#print_state( #state_7 );;
+#print_state( #state_7_8 );;
