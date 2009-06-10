@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.182 2009-06-08 15:35:39 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.183 2009-06-10 07:02:18 pessaux Exp $ *)
 
 
 
@@ -2108,8 +2108,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                   was/were found for this binding. *)
                let dep_on_rep = {
                  Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
-                 Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()
-                 } in
+                 Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()} in
                let field_info =
                  Env.TypeInformation.SF_property
                    ((Env.intitial_inheritance_history current_species),
@@ -2172,11 +2171,17 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                   the typechecking of a proof does not returns any type.
                   We record the non-relevance of the type in the AST node. *)
                proof_def.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
+               (* Type-cheking of the proof may induce def/decl dependency on
+		  "rep" ! *)
+               Types.reset_deps_on_rep () ;
                typecheck_proof ctx env proof_def_desc.Parsetree.pd_proof ;
+               let dep_on_rep = {
+		 Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
+		 Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()} in
                (* No relevant type information to record in the AST node. *)
                field.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
                (* No extension there. *)
-               (accu_fields, ctx, env, accu_proofs @ [proof_def],
+               (accu_fields, ctx, env, accu_proofs @ [(proof_def, dep_on_rep)],
                 accu_term_proofs)
                end)
            | Parsetree.SF_termination_proof termination_proof_def ->
@@ -2187,14 +2192,20 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                List.iter
                   (typecheck_termination_proof_profile ctx env accu_fields)
                   desc.Parsetree.tpd_profiles ;
+               (* Type-cheking of the proof may induce def/decl dependency on
+		  "rep" ! *)
+               Types.reset_deps_on_rep () ;
                (* Typecheck the inner proof. *)
                typecheck_termination_proof
                   ctx env desc.Parsetree.tpd_termination_proof ;
+               let dep_on_rep = {
+		 Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
+		 Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()} in
                (* No relevant type information to record in the AST node. *)
                field.Parsetree.ast_type <- Parsetree.ANTI_non_relevant ;
                (* No extension there. *)
                (accu_fields, ctx, env, accu_proofs,
-                accu_term_proofs @ [termination_proof_def])
+                accu_term_proofs @ [(termination_proof_def, dep_on_rep)])
                end)
           end) in
         let (final_accu_fields, final_ctx, final_accu_proofs,
@@ -3121,7 +3132,8 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
 
    {b Exported} : No.                                                       *)
 (* ************************************************************************ *)
-let collapse_proof_in_non_inherited proof_of ~current_species fields =
+let collapse_proof_in_non_inherited (proof_of, pr_deps_on_rep) ~current_species
+    fields =
   let name_of_proof_of = proof_of.Parsetree.pd_name in
   let rec rec_find = function
     | [] -> ([], false)
@@ -3141,6 +3153,15 @@ let collapse_proof_in_non_inherited proof_of ~current_species fields =
            if name_of_proof_of = name then
              (begin
              assert (from.Env.fh_initial_apparition = current_species) ;
+	     (* We first merge the found dependencies on "rep" for the proof
+		and the property. *)
+             let deps_rep' = {
+               Env.TypeInformation.dor_def =
+                 pr_deps_on_rep.Env.TypeInformation.dor_def ||
+                 deps_rep.Env.TypeInformation.dor_def ;
+               Env.TypeInformation.dor_decl =
+                 pr_deps_on_rep.Env.TypeInformation.dor_decl ||
+                 deps_rep.Env.TypeInformation.dor_decl } in
              (* We found the property related to the proof. Change this
                 property into a theorem. Since it's a definition, and this
                 definition comes from the current species (i.e. not via
@@ -3150,7 +3171,7 @@ let collapse_proof_in_non_inherited proof_of ~current_species fields =
              let new_field =
                Env.TypeInformation.SF_theorem
                  ((Env.intitial_inheritance_history current_species), name,
-                  sch, logical_expr, proof_of.Parsetree.pd_proof, deps_rep) in
+                  sch, logical_expr, proof_of.Parsetree.pd_proof, deps_rep') in
              if Configuration.get_verbose () then
                Format.eprintf
                  "Merging property '%a' from '%a' and proof from '%a'\
@@ -3177,7 +3198,8 @@ let collapse_proof_in_non_inherited proof_of ~current_species fields =
 (** {B Descr} : Same than [collapse_proof_in_non_inherited] but instead of
     re-inserting the changed field in the fields list, return the list
     without the field and the changed field aside. *)
-let rec collapse_proof_in_inherited proof_of ~current_species fields =
+let rec collapse_proof_in_inherited (proof_of, pr_deps_on_rep) ~current_species
+    fields =
   let name_of_proof_of = proof_of.Parsetree.pd_name in
   let rec rec_find = function
     | [] -> ([], None)
@@ -3196,6 +3218,15 @@ let rec collapse_proof_in_inherited proof_of ~current_species fields =
              (begin
              if name_of_proof_of = name then
                (begin
+               (* We first merge the found dependencies on "rep" for the proof
+		  and the property. *)
+               let deps_rep' = {
+		 Env.TypeInformation.dor_def =
+		   pr_deps_on_rep.Env.TypeInformation.dor_def ||
+		   deps_rep.Env.TypeInformation.dor_def ;
+		 Env.TypeInformation.dor_decl =
+		   pr_deps_on_rep.Env.TypeInformation.dor_decl ||
+		   deps_rep.Env.TypeInformation.dor_decl } in
                (* We found the property related to the proof. Change this
                   property into a theorem. Since the addition of this proof
                   leads to an effective definition of the theorem, and this
@@ -3206,7 +3237,8 @@ let rec collapse_proof_in_inherited proof_of ~current_species fields =
                let new_field =
                  Env.TypeInformation.SF_theorem
                    ((Env.intitial_inheritance_history current_species), name,
-                    sch, logical_expr, proof_of.Parsetree.pd_proof, deps_rep) in
+                    sch, logical_expr, proof_of.Parsetree.pd_proof,
+		    deps_rep') in
                if Configuration.get_verbose () then
                  Format.eprintf
                    "Merging property '%a' from '%a' and proof from '%a'\
@@ -3265,12 +3297,13 @@ let collapse_proofs_of ~current_species found_proofs_of
   let revd_methods_info = List.rev methods_info in
   let (revd_collapsed_inherited_methods, revd_collapsed_current_methods) =
     List.fold_left
-      (fun (accu_inherited, accu_current) found_proof_of ->
+      (fun (accu_inherited, accu_current) (found_proof_of, pr_desp_rep) ->
         (* First, try on the "most recent" methods, i.e. the current *)
         (* inheritance level's ones.                                 *)
         let (collapsed_current, was_collapsed) =
           collapse_proof_in_non_inherited
-            ~current_species found_proof_of.Parsetree.ast_desc accu_current in
+            ~current_species (found_proof_of.Parsetree.ast_desc, pr_desp_rep)
+            accu_current in
         if was_collapsed then (accu_inherited, collapsed_current)
         else
           (begin
@@ -3278,7 +3311,8 @@ let collapse_proofs_of ~current_species found_proofs_of
                inherited ones. *)
             let (collapsed_inherited, collapsed_option) =
               collapse_proof_in_inherited
-                ~current_species found_proof_of.Parsetree.ast_desc
+                ~current_species
+                (found_proof_of.Parsetree.ast_desc, pr_desp_rep)
                 accu_inherited in
             match collapsed_option with
              | None ->
@@ -4227,11 +4261,11 @@ type please_compile_me =
 let ensure_no_proof_of_doubles proofs_of =
   let rec rec_ensure = function
     | [] -> ()
-    | h :: q ->
+    | (h, _) :: q ->
         let h_name = h.Parsetree.ast_desc.Parsetree.pd_name in
         (* Search in the remaining "proof of"s. *)
         List.iter
-          (fun p ->
+          (fun (p, _) ->
             
             if p.Parsetree.ast_desc.Parsetree.pd_name = h_name then
               raise
