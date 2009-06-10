@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.14 2009-06-06 22:38:52 weis Exp $
+# $Id: Makefile,v 1.15 2009-06-10 21:17:04 ayrault Exp $
 
 # Makefile for algebra structures implementations
 
@@ -51,6 +51,7 @@ COQ_INCLUDES =\
 FOCALIZE_SRC =\
   etat_vote.fcl \
   num_capteur.fcl \
+  basic_type.fcl \
   gen_value.fcl \
   value.fcl \
   gen_diag.fcl \

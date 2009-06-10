@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_value.fcl,v 1.4 2009-06-06 15:03:21 weis Exp $ *)
+(* $Id: gen_value.fcl,v 1.5 2009-06-10 21:17:04 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -24,21 +24,21 @@ open "sets_orders";;
 
 (** Common species defining the exported operations used by the voter.
     This permits to hide (thrue inheritance) the real value species used *)
-species Value =
+species Gen_value =
 
   inherit Setoid;
 
-  (** Operator: Egality between 2 values *)
-  signature equal_value : Self -> Self -> bool;
+  (** Operator: Consistency rule between 2 values *)
+  signature consistency_rule : Self -> Self -> bool;
 
   (* Property needed for voter proving *)
-  (** Equal_value is symmetric *)
-  property equal_value_symmetric:
-    all a b in Self, !equal_value (a, b) -> !equal_value (b, a);
+  (** Consistency rule is symmetric *)
+  property consistency_rule_symmetric:
+    all a b in Self, consistency_rule (a, b) -> consistency_rule (b, a);
 
   (** Equal_value is reflexive *)
-  property equal_value_reflexive:
-    all a in Self, !equal_value (a, a);
+  property consistency_rule_reflexive:
+    all a in Self, consistency_rule (a, a);
 
 end
 ;;

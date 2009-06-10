@@ -14,21 +14,21 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_vote.fcl,v 1.4 2009-06-06 15:05:18 weis Exp $ *)
+(* $Id: gen_vote.fcl,v 1.5 2009-06-10 21:17:04 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;
-use "value";;
+use "gen_value";;
 use "gen_diag";;
 
 open "basics";;
 open "sets_orders";;
-open "value";;
+open "gen_value";;
 open "gen_diag";;
 
 
 (* Generic voter *)
-species Gen_voter (V is Value, S is Gen_diag) =
+species Gen_voter (V is Gen_value, S is Gen_diag) =
 
   (* Main function of a voter *)
   signature voter : V -> V -> V -> (V * S);
@@ -43,7 +43,7 @@ species Gen_voter (V is Value, S is Gen_diag) =
   (*  - the returned values are consistent regarding to the consistency law *)
   (*  - the returned states are not valid (ie. values not comparable)        *)
   logical let compatible (s1, s2) =
-    V!equal_value (value (s1), value (s2)) ||
+    V!consistency_rule (value (s1), value (s2)) ||
     (~~ (S!valid (diag (s1))) &&  ~~ (S!valid (diag (s2))))
   ;
 

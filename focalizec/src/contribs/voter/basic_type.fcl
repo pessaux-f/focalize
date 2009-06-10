@@ -1,0 +1,122 @@
+
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Philippe Ayrault                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 - 2009 LIP6 and INRIA                               *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: basic_type.fcl,v 1.1 2009-06-10 21:17:04 ayrault Exp $ *)
+
+use "basics";;
+use "sets_orders";;
+
+open "basics";;
+open "sets_orders";;
+
+
+(** Common species for basic type *)
+species Gen_basic_type =
+
+  inherit Setoid;
+
+end
+;;
+
+(** Common species for basic type with tolerance *)
+species Gen_basic_type_tol =
+
+  inherit Gen_basic_type;
+
+  signature plus : Self -> Self -> Self;
+  signature geq : Self -> Self -> bool;
+  signature pos : Self -> bool;
+
+end
+;;
+
+species Int_value =
+
+  inherit Gen_basic_type_tol;
+
+  representation = int;
+
+  let equal (x in Self, y in Self) in bool =
+    basics#syntactic_equal (x, y);
+  let element = 1;
+
+  proof of equal_transitive =
+  by property basics#beq_trans definition of equal;
+
+  proof of equal_symmetric =
+  by property basics#beq_symm definition of equal;
+
+  proof of equal_reflexive =
+  by property basics#beq_refl definition of equal;
+
+  let parse (x) = basics#int_of_string (x);
+  let print (x) =  basics#string_of_int (x);
+
+  let of_int (n in int) in Self = n;
+
+  let plus (n1 in Self, n2 in Self) in Self = n1 + n2;
+
+  let geq (n1 in Self, n2 in Self) in bool = n1 >=0x n2;
+
+  let pos (n in Self) in bool = n >0x 0;
+
+end
+;;
+
+collection Coll_int_value =
+
+  implement Int_value;
+
+end
+;;
+
+species Bool_value =
+
+  inherit Gen_basic_type;
+
+  representation = bool;
+
+  let equal (x in Self, y in Self) in bool =
+     basics#syntactic_equal (x, y);
+  let element = true;
+
+  proof of equal_transitive =
+  by property basics#beq_trans definition of equal;
+
+  proof of equal_symmetric =
+  by property basics#beq_symm definition of equal;
+
+  proof of equal_reflexive =
+  by property basics#beq_refl definition of equal;
+
+  let parse (x) =
+    if basics#syntactic_equal (x,  "True") then true else false;
+
+  let print (x) = if !equal (x, true) then "True" else "False";
+
+  let of_bool (b in bool) in Self = b;
+
+end
+;;
+
+
+collection Coll_bool_value =
+
+  implement Bool_value;
+
+end
+;;

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: num_capteur.fcl,v 1.6 2009-06-06 15:08:26 weis Exp $ *)
+(* $Id: num_capteur.fcl,v 1.7 2009-06-10 21:17:04 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -95,7 +95,8 @@ species Imp_capteur (P is Peano) =
 
   let print (x in Self) in string =
     if !equal (x, !capt_1) then "capt_1" else
-    if !equal (x, !capt_2) then "capt_2" else "capt_3";
+    if !equal (x, !capt_2) then "capt_2" else 
+    if !equal (x, !capt_3) then "capt_3" else "Erreur capteur";
 
 end
 ;;
