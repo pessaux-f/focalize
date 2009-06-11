@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.15 2009-06-10 21:17:04 ayrault Exp $
+# $Id: Makefile,v 1.16 2009-06-11 07:36:07 ayrault Exp $
 
 # Makefile for algebra structures implementations
 
@@ -53,7 +53,9 @@ FOCALIZE_SRC =\
   num_capteur.fcl \
   basic_type.fcl \
   gen_value.fcl \
+  valid_meas.fcl \
   value.fcl \
+  value_with_valid.fcl \
   gen_diag.fcl \
   diag.fcl \
   gen_vote.fcl \

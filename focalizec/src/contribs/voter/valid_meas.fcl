@@ -1,0 +1,98 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLize compiler                            *)
+(*                                                                     *)
+(*            Philippe Ayrault                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6  -  INRIA Rocquencourt           *)
+(*                                                                     *)
+(*  Copyright 2007 - 2009 LIP6 and INRIA                               *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: valid_meas.fcl,v 1.1 2009-06-11 07:36:07 ayrault Exp $ *)
+
+use "basics";;
+use "sets_orders";;
+use "peano";;
+use "gen_value";;
+use "basic_type";;
+use "pair";;
+
+open "basics";;
+open "sets_orders";;
+open "peano";;
+open "gen_value";;
+open "basic_type";;
+open "pair";;
+
+(** Type somme : etat de validité *)
+species Sp_valid_meas =
+
+  inherit Setoid;
+
+  (** Définition du type somme *)
+  (** Valid measure *)
+  signature  valid : Self;
+  (** Invalid measure *)
+  signature invalid : Self;
+
+  (** Each value of the species is inside the sum type *)
+  property all_value:
+    all e in Self,
+      !equal (e, valid) \/
+      !equal (e, invalid);
+
+  (** Each field of the sum type are different from the other one *)
+  property all_field_different_0_1:
+    ~ (!equal (valid, invalid));
+
+end
+;;
+
+
+species Imp_valid_meas (P is Peano) =
+
+  inherit Sp_valid_meas;
+
+  representation = P;
+
+  let valid in Self = P!zero;
+  let invalid in Self = P!s (valid);
+
+  let equal (x in Self, y in Self) in bool = P!equal (x, y);
+  let element = invalid;
+
+  proof of equal_transitive =
+    by property P!equal_transitive definition of equal;
+  proof of equal_symmetric =
+    by property P!equal_symmetric definition of equal;
+  proof of equal_reflexive =
+    by property P!equal_reflexive definition of equal;
+
+  proof of all_field_different_0_1 =
+    by definition of valid, invalid, equal
+    property P!zero_is_not_successor
+  ;
+
+  proof of all_value = assumed {* By construction *};
+
+  let print (x in Self) in string =
+    if !equal (x, valid) then "valid measure" else
+    if !equal (x, invalid) then "invalid measure" else "Erreur capteur";
+
+end
+;;
+
+collection Coll_valid_meas =
+
+  implement Imp_valid_meas (Coll_peano);
+
+end
+;;
+
+
