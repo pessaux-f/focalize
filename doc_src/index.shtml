@@ -2,7 +2,7 @@
 $(PROJECT_NAME_TEXT)
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.6 2009-06-12 08:04:31 habib Exp $ -->
+<!-- \$Id: index.shtml,v 1.7 2009-06-12 10:36:29 habib Exp $ -->
 
 <div id="container">
 <div id="header">
@@ -55,7 +55,7 @@ $(PROJECT_NAME_TEXT).
 <p>
 
 A new release of the $(PROJECT_NAME_TEXT) environment, 
-<code>focalize 0.2</code>, will be available in the coming days.
+<code>focalize 0.2.0</code>, will be available in the coming days.
 
 </p>
 </div>
