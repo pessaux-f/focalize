@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.24 2009-06-06 16:43:43 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.25 2009-06-12 07:38:48 weis Exp $ *)
 
 (**
 
@@ -333,14 +333,14 @@ species Liste (A is Setoid) =
     | basics#[] -> true
     | a :: l -> ~~ (!est_element (a, l) && !bien_formee (l)) ;
 
-  let vide in Self = [ ];
+  let vide in Self = [];
 
   let singleton (x in A) in Self = [x];
 
   let est_element (x in A, e in Self) in basics#bool =
     let rec aux (l) =
       match l with
-      | basics#[] -> false
+      | [] -> false
       | y :: l -> if A!equal (x, y) then true else aux (l) in
     aux (e);
 
@@ -351,8 +351,8 @@ species Liste (A is Setoid) =
       <1>1 assume x in A,
            assume y in A,
            assume h3: A!equal (x, y),
-           assume h4: !est_element (x, basics#[]),
-           prove !est_element (y, basics#[])
+           assume h4: !est_element (x, []),
+           prove !est_element (y, [])
         by hypothesis h4 definition of est_element
       <1>2 assume a in A,
            assume s1 in Self,
@@ -388,7 +388,7 @@ species Liste (A is Setoid) =
 
   let rec sous_ensemble (e1 in Self, e2 in Self) in bool =
     match e1 with
-    | basics#[] -> true
+    | [] -> true
     | x :: l -> !est_element (x, e2) && !sous_ensemble (l, e2) ;
 
   proof of sous_ensemble_spec =
@@ -616,7 +616,7 @@ species Liste (A is Setoid) =
   let remove_element (x in A, l in Self) in Self =
     let rec aux (l, x) =
       match l with
-      | basics#[] -> [ ]
+      | [] -> []
       | y :: l ->
         if A!equal (x, y) then l
         else y :: aux (l, x)
@@ -626,14 +626,14 @@ species Liste (A is Setoid) =
   let diff (e1 in Self, e2 in Self) =
     let rec aux (l, accu) =
       match l with
-      | basics#[] -> accu
+      | [] -> accu
       | x :: l -> aux (l, !remove_element (x, accu)) in
     aux (e2, e1);
 
   let raw_cardinal (l in Self) in int =
     let rec aux (l, x) =
       match l with
-      | basics#[] -> x
+      | [] -> x
       | _underscore :: l -> aux (l, x + 1) in
     aux (l, 0);
 
@@ -769,7 +769,7 @@ species Liste (A is Setoid) =
 
   let rec union (e1 in Self, e2 in Self) =
     match e1 with
-    | basics#[] -> e2
+    | [] -> e2
     | x :: l -> !union (l, !ajoute_element (x, e2));
 
   theorem bien_formee_union:
@@ -854,7 +854,7 @@ species Liste (A is Setoid) =
   let inter (e1 in Self, e2 in Self) =
     let rec aux (e, accu in Self) =
       match e with
-      | basics#[] -> accu
+      | [] -> accu
       | x :: l ->
         if !est_element (x, e2)
         then aux (l, !ajoute_element (x, accu))
@@ -1517,10 +1517,10 @@ species Liste_triee (A is Ordered_set) =
        chaque élément est strictement plus petit que le suivant. *)
    let rec est_triee (l in Self) in bool =
      match l with
-      | basics#[] -> true
+      | [] -> true
       | x :: l ->
           (match l with
-           | basics#[] -> true
+           | [] -> true
            | y :: _underscore -> A!lt (x, y) && !est_triee (l))
    termination proof = order 0 on l
    assumed
@@ -1566,7 +1566,7 @@ species Liste_triee (A is Ordered_set) =
 
    let rec ajoute_element (x in A, l in Self) =
      match l with
-      | basics#[] -> [x]
+      | [] -> [x]
       | y :: l1 ->
           if A!lt (x, y) then x :: l
           else
@@ -1802,7 +1802,7 @@ species Liste_triee (A is Ordered_set) =
 
   let raw_min (e in Self) =
     match e with
-    | basics#[] -> A!element
+    | [] -> A!element
     | x :: _underscore -> x;
 
   theorem raw_min_spec:
