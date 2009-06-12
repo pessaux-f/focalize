@@ -2,7 +2,7 @@
 $(PROJECT_NAME_TEXT)
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.5 2009-04-13 19:56:47 weis Exp $ -->
+<!-- \$Id: index.shtml,v 1.6 2009-06-12 08:04:31 habib Exp $ -->
 
 <div id="container">
 <div id="header">
@@ -37,12 +37,29 @@ $(PROJECT_NAME_TEXT)
 
 <div id="content">
 
-<p>Welcome to the $(PROJECT_NAME_TEXT) website. This site offers information
+<p>
+
+Welcome to the $(PROJECT_NAME_TEXT) website. This site offers information
 about $(PROJECT_NAME_TEXT), some documentation about the language and its
 compiler, some training opportunities, and of course, the latest release of
-$(PROJECT_NAME_TEXT).</p>
+$(PROJECT_NAME_TEXT).
+
+</p>
 
 </div>
+
+<div class="spacer"></div>
+
+<div id="main">
+<h3>New release of the $(PROJECT_NAME_TEXT) environment soon<h3>
+<p>
+
+A new release of the $(PROJECT_NAME_TEXT) environment, 
+<code>focalize 0.2</code>, will be available in the coming days.
+
+</p>
+</div>
+
 
 <div class="spacer"></div>
 
@@ -78,21 +95,30 @@ free to contact us.
 <div id="main">
 <h3>SSURF ANR project<h3>
 
-<p>The SSURF (Safety and Security UndeR Focal) ANR project has
+<p>
+
+The SSURF (Safety and Security UndeR Focal) ANR project has
 started. This project consists in :
 
 <ul>
-  <li>Analyze and define the features required for an IDE in
-      order to reach high levels of security.</li>
-  <li>Define a generic framework in which many access control policies
-      can be expressed.</li>
+  <li>
+    Analyze and define the features required for an IDE in
+    order to reach high levels of security.
+  </li>
+  <li>
+    Define a generic framework in which many access control policies
+    can be expressed.
+  </li>
 </ul>
 
 </p>
 
-<p>Further information (in french) can be found
-<a href="http://www-spi.lip6.fr/~jaume/ssurf.html">here.</a></p>
+<p>
 
+Further information (in french) can be found
+<a href="http://www-spi.lip6.fr/~jaume/ssurf.html">here.</a>
+
+</p>
 </div>
 
 <div class="spacer"></div>
