@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.145 2009-06-12 07:42:23 weis Exp $ *)
+(* $Id: parser.mly,v 1.146 2009-06-12 07:45:29 weis Exp $ *)
 
 open Parsetree;;
 
@@ -1256,9 +1256,11 @@ expr:
   | expr AT_OP expr
     { mk_infix_application $1 $2 $3 }
 
+  | expr IUIDENT expr
+    { mk (E_constr (mk_global_constructor_ident None (Vuident $2), [ $1; $3 ])) }
+
   | expr COLON_COLON expr
     { mk (E_constr (mk_cons (), [ $1; $3 ])) }
-
   | expr COLON_COLON_OP expr
     { mk_infix_application $1 $2 $3 }
 
