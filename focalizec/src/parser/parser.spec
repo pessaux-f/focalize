@@ -12,14 +12,36 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: parser.spec,v 1.18 2008-10-17 10:23:27 weis Exp $
+# $Id: parser.spec,v 1.19 2009-06-12 07:42:23 weis Exp $
 
 High level specification of the Focalize lexer
 ==============================================
 
 Could be use as a set of drafts for the documentation.
 
-07/05/08: Irrefutable patterns and sccess to component of tuples.
+12/06/09: Getting rid of mk_cons mk_nil
+=======================================
+There is no reason why to hard wire the scope of constructors [] and :: to
+file "basics" from within the parser. This should be treated the same as all
+other value constructors, in particular redefinable by the user.
+
+We had:
+
+  | pattern COLON_COLON pattern
+    { mk (P_constr (mk_cons (), [ $1; $3 ])) }
+  | pattern IUIDENT pattern
+    { mk (P_constr (mk_global_constructor_ident None (Vuident $2), [ $1; $3 ])) }
+
+this should no read
+
+  | pattern COLON_COLON pattern
+    { mk (P_constr (mk_global_constructor_ident None (Vuident "::"), [ $1; $3 ])) }
+  | pattern IUIDENT pattern
+    { mk (P_constr (mk_global_constructor_ident None (Vuident $2), [ $1; $3 ])) }
+
+
+
+07/05/08: Irrefutable patterns and access to component of tuples.
 =================================================================
 
 We would like to bind a tuple to an expression in one let.

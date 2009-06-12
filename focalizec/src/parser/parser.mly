@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.144 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.145 2009-06-12 07:42:23 weis Exp $ *)
 
 open Parsetree;;
 
@@ -109,10 +109,12 @@ let mk_prefix_application s e1 =
 ;;
 
 let mk_cons () =
-  mk_global_constructor_ident (Some (Some "basics")) (Vuident "::")
+  mk_global_constructor_ident None (Vuident "::")
+(*  mk_global_constructor_ident (Some (Some "basics")) (Vuident "::")*)
 ;;
 let mk_nil () =
-  mk_global_constructor_ident (Some (Some "basics")) (Vuident "[]")
+  mk_global_constructor_ident None (Vuident "[]")
+(*  mk_global_constructor_ident (Some (Some "basics")) (Vuident "[]")*)
 ;;
 
 let mk_proof_label (s1, s2) =
@@ -1256,6 +1258,7 @@ expr:
 
   | expr COLON_COLON expr
     { mk (E_constr (mk_cons (), [ $1; $3 ])) }
+
   | expr COLON_COLON_OP expr
     { mk_infix_application $1 $2 $3 }
 
