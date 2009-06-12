@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.146 2009-06-12 07:45:29 weis Exp $ *)
+(* $Id: parser.mly,v 1.147 2009-06-12 08:24:18 weis Exp $ *)
 
 open Parsetree;;
 
@@ -72,10 +72,14 @@ let mk_label_ident opt_qual vname =
 ;;
 
 (* Same process and remarks than for record type field labels. *)
-let mk_global_constructor_ident opt_qual vname =
+let mk_constructor_ident opt_qual vname =
   match opt_qual with
   | None -> mk (CI (mk (I_local vname)))
   | Some qual -> mk (CI (mk_global_ident qual vname))
+;;
+
+let mk_local_constructor_ident vname =
+  mk_constructor_ident None vname
 ;;
 
 let mk_local_expr_ident vname =
@@ -108,14 +112,8 @@ let mk_prefix_application s e1 =
   mk (E_app (mk_local_expr_var (Vpident s), [ e1 ]))
 ;;
 
-let mk_cons () =
-  mk_global_constructor_ident None (Vuident "::")
-(*  mk_global_constructor_ident (Some (Some "basics")) (Vuident "::")*)
-;;
-let mk_nil () =
-  mk_global_constructor_ident None (Vuident "[]")
-(*  mk_global_constructor_ident (Some (Some "basics")) (Vuident "[]")*)
-;;
+let mk_cons () = mk_local_constructor_ident (Vuident "::");;
+let mk_nil () = mk_local_constructor_ident (Vuident "[]");;
 
 let mk_proof_label (s1, s2) =
   try int_of_string s1, s2 with
@@ -1114,14 +1112,14 @@ constructor_ref:
     {
      (* Here we pass the optional qualification None to say that there is
         no qualification at all. I.e. there is no # notation. *)
-     mk_global_constructor_ident None $1
+     mk_local_constructor_ident $1
     }
   | opt_lident SHARP constructor_vname
     {
      (* Here, we pass the optional qualification Some to say that there is a
         # notation. And if the effective qualifier is None, that because we
         are in the case of "#foo". *)
-     mk_global_constructor_ident (Some $1) $3
+     mk_constructor_ident (Some $1) $3
     }
 ;
 
@@ -1257,7 +1255,7 @@ expr:
     { mk_infix_application $1 $2 $3 }
 
   | expr IUIDENT expr
-    { mk (E_constr (mk_global_constructor_ident None (Vuident $2), [ $1; $3 ])) }
+    { mk (E_constr (mk_local_constructor_ident (Vuident $2), [ $1; $3 ])) }
 
   | expr COLON_COLON expr
     { mk (E_constr (mk_cons (), [ $1; $3 ])) }
@@ -1413,7 +1411,7 @@ pattern:
   | pattern COLON_COLON pattern
     { mk (P_constr (mk_cons (), [ $1; $3 ])) }
   | pattern IUIDENT pattern
-    { mk (P_constr (mk_global_constructor_ident None (Vuident $2), [ $1; $3 ])) }
+    { mk (P_constr (mk_local_constructor_ident (Vuident $2), [ $1; $3 ])) }
   | LBRACE pattern_record_field_list RBRACE
     { mk (P_record $2) }
   | pattern AS RLIDENT

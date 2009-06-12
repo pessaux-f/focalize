@@ -12,15 +12,18 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: parser.spec,v 1.19 2009-06-12 07:42:23 weis Exp $
+# $Id: parser.spec,v 1.20 2009-06-12 08:24:18 weis Exp $
 
 High level specification of the Focalize lexer
 ==============================================
 
 Could be use as a set of drafts for the documentation.
 
-12/06/09: Getting rid of mk_cons mk_nil
-=======================================
+12/06/09: Consistent renaming for constructor reference AST building
+functions.
+
+12/06/09: Getting rid of mk_cons mk_nil peculiarities
+=====================================================
 There is no reason why to hard wire the scope of constructors [] and :: to
 file "basics" from within the parser. This should be treated the same as all
 other value constructors, in particular redefinable by the user.
@@ -32,7 +35,7 @@ We had:
   | pattern IUIDENT pattern
     { mk (P_constr (mk_global_constructor_ident None (Vuident $2), [ $1; $3 ])) }
 
-this should no read
+this should now read
 
   | pattern COLON_COLON pattern
     { mk (P_constr (mk_global_constructor_ident None (Vuident "::"), [ $1; $3 ])) }
