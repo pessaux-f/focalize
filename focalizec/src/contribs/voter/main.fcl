@@ -14,13 +14,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main.fcl,v 1.10 2009-06-10 21:17:04 ayrault Exp $ *)
+(* $Id: main.fcl,v 1.11 2009-06-14 12:57:24 ayrault Exp $ *)
 
 use "basics";;
 use "pair";;
 use "etat_vote";;
 use "num_capteur";;
 use "value";;
+use "value_with_valid";;
 use "diag";;
 use "vote";;
 
@@ -28,6 +29,7 @@ open "pair";;
 open "etat_vote";;
 open "num_capteur";;
 open "value";;
+open "value_with_valid";;
 open "diag";;
 open "vote";;
 
@@ -411,3 +413,103 @@ let va37 = "False";;
   basics#print_string (#voter_etat_bool (#va17, #va27, #va37));;
   basics#print_string (")\n");;
 
+ (* Pour les valeur avec validite *)
+species Sp_int_value_with_value_imp_vote =
+  inherit
+    Imp_vote (Coll_etat_vote, Coll_capteur, Coll_int_value_with_valid, Coll_diag);
+
+  proof of consistency_rule_is_symmetric =
+    by property Coll_int_value_with_valid!consistency_rule_symmetric;
+  proof of consistency_rule_is_reflexive =
+    by property Coll_int_value_with_valid!consistency_rule_reflexive;
+end
+;;
+
+collection Coll_int_value_with_valid_imp_vote =
+
+  implement Sp_int_value_with_value_imp_vote;
+
+end
+;;
+
+let p_val (x, y) = Coll_int_value_with_valid!parse2 (x, y);;
+
+let voter_value_int_value_with_valid (v1, v2, v3) =
+  let s =
+    Coll_int_value_with_valid_imp_vote!value (
+      Coll_int_value_with_valid_imp_vote!voter (v1, v2, v3)) in
+  Coll_int_value_with_valid!print (s);;
+
+let voter_etat_int_value_with_valid (v1, v2, v3) =
+  let s =
+    Coll_int_value_with_valid_imp_vote!diag (
+      Coll_int_value_with_valid_imp_vote!voter (v1, v2, v3)) in
+  Coll_etat_vote!print (Coll_int_value_with_valid_imp_vote!state (s));;
+
+let voter_val_int_value_with_valid (v1, v2, v3) =
+  let s =
+    Coll_int_value_with_valid_imp_vote!diag (
+      Coll_int_value_with_valid_imp_vote!voter (v1, v2, v3)) in
+  Coll_capteur!print (Coll_int_value_with_valid_imp_vote!sensor (s));;
+
+let va113 = "23";;
+let va123 = "45";;
+let va133 = "23";;
+let vali = "valid";;
+let invali = "invalid";;
+
+let p_parse2 (x, y) = Coll_int_value_with_valid!parse2 (x, y);;
+
+  basics#print_string ("Voteur entier avec validité\n");;
+
+  basics#print_string ("v1 : ");;
+  basics#print_string (Coll_int_value_with_valid!print 
+                         (#p_parse2 (#va113, #vali)));;
+  basics#print_string (", v2 : ");;
+  basics#print_string (Coll_int_value_with_valid!print 
+                         (#p_parse2 (#va123, #vali)));;
+  basics#print_string (", v3 : ");;
+  basics#print_string (Coll_int_value_with_valid!print 
+                         (#p_parse2 (#va133, #vali)));;
+  basics#print_string (" --> val : ");;
+  basics#print_string (#voter_value_int_value_with_valid (#p_parse2 (#va113, #vali), #p_parse2 (#va123, #vali), #p_parse2 (#va133, #vali)));;
+  basics#print_string (" , diag : (");;
+  basics#print_string (#voter_val_int_value_with_valid (#p_parse2 (#va113, #vali), #p_parse2 (#va123, #vali), #p_parse2 (#va133, #vali)));;
+  basics#print_string (", ");;
+  basics#print_string (#voter_etat_int_value_with_valid (#p_parse2 (#va113, #vali), #p_parse2 (#va123, #vali), #p_parse2 (#va133, #vali)));;
+  basics#print_string (")\n");;
+
+
+  basics#print_string ("v1 : ");;
+  basics#print_string (Coll_int_value_with_valid!print 
+                         (#p_parse2 (#va113, #invali)));;
+  basics#print_string (", v2 : ");;
+  basics#print_string (Coll_int_value_with_valid!print 
+                         (#p_parse2 (#va123, #vali)));;
+  basics#print_string (", v3 : ");;
+  basics#print_string (Coll_int_value_with_valid!print 
+                         (#p_parse2 (#va133, #vali)));;
+  basics#print_string (" --> val : ");;
+  basics#print_string (#voter_value_int_value_with_valid (#p_parse2 (#va113, #invali), #p_parse2 (#va123, #vali), #p_parse2 (#va133, #vali)));;
+  basics#print_string (" , diag : (");;
+  basics#print_string (#voter_val_int_value_with_valid (#p_parse2 (#va113, #invali), #p_parse2 (#va123, #vali), #p_parse2 (#va133, #vali)));;
+  basics#print_string (", ");;
+  basics#print_string (#voter_etat_int_value_with_valid (#p_parse2 (#va113, #invali), #p_parse2 (#va123, #vali), #p_parse2 (#va133, #vali)));;
+  basics#print_string (")\n");;
+
+  basics#print_string ("v1 : ");;
+  basics#print_string (Coll_int_value_with_valid!print 
+                         (#p_parse2 (#va113, #invali)));;
+  basics#print_string (", v2 : ");;
+  basics#print_string (Coll_int_value_with_valid!print 
+                         (#p_parse2 (#va123, #invali)));;
+  basics#print_string (", v3 : ");;
+  basics#print_string (Coll_int_value_with_valid!print 
+                         (#p_parse2 (#va133, #vali)));;
+  basics#print_string (" --> val : ");;
+  basics#print_string (#voter_value_int_value_with_valid (#p_parse2 (#va113, #invali), #p_parse2 (#va123, #vali), #p_parse2 (#va133, #vali)));;
+  basics#print_string (" , diag : (");;
+  basics#print_string (#voter_val_int_value_with_valid (#p_parse2 (#va113, #invali), #p_parse2 (#va123, #vali), #p_parse2 (#va133, #vali)));;
+  basics#print_string (", ");;
+  basics#print_string (#voter_etat_int_value_with_valid (#p_parse2 (#va113, #invali), #p_parse2 (#va123, #vali), #p_parse2 (#va133, #vali)));;
+  basics#print_string (")\n");;

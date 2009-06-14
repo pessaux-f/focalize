@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_vote.fcl,v 1.6 2009-06-10 21:58:23 ayrault Exp $ *)
+(* $Id: gen_vote.fcl,v 1.7 2009-06-14 12:57:24 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -43,8 +43,9 @@ species Gen_voter (V is Gen_value, S is Gen_diag) =
   (*  - the returned values are consistent regarding to the consistency law *)
   (*  - the returned states are not valid (ie. values not comparable)        *)
   logical let compatible (s1, s2) =
-    V!consistency_rule (value (s1), value (s2)) ||
-    (~~ (S!valid (diag (s1))) &&  ~~ (S!valid (diag (s2))))
+    (S!valid (diag (s1)) /\  S!valid (diag (s2)) /\  
+       V!consistency_rule (value (s1), value (s2))) \/
+    (~ (S!valid (diag (s1))) /\  ~ (S!valid (diag (s2))))
   ;
 
   (* voter does not invent value *)

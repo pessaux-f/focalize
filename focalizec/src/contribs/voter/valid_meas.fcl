@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: valid_meas.fcl,v 1.1 2009-06-11 07:36:07 ayrault Exp $ *)
+(* $Id: valid_meas.fcl,v 1.2 2009-06-14 12:57:24 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -81,9 +81,15 @@ species Imp_valid_meas (P is Peano) =
 
   proof of all_value = assumed {* By construction *};
 
+
+  let parse(x in string) in Self =
+    if x = "valid" then valid else
+    if x = "invalid" then invalid else
+    focalize_error( "Erreur parse valid_meas" );
+    
   let print (x in Self) in string =
-    if !equal (x, valid) then "valid measure" else
-    if !equal (x, invalid) then "invalid measure" else "Erreur capteur";
+    if equal (x, valid) then "valid measure" else
+    if equal (x, invalid) then "invalid measure" else "Erreur capteur";
 
 end
 ;;

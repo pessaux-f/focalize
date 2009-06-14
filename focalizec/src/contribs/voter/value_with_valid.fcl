@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: value_with_valid.fcl,v 1.1 2009-06-11 07:36:07 ayrault Exp $ *)
+(* $Id: value_with_valid.fcl,v 1.2 2009-06-14 12:57:24 ayrault Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -40,16 +40,19 @@ species Imp_value_with_valid( T is Gen_basic_type, V is Sp_valid_meas) =
   inherit  Sp_value_with_valid( T, V), Imp_pair(T, V);
 
   let consistency_rule( x in Self, y in Self) in bool =
-    if V!equal(prj_b(x), V!valid) then
+     if V!equal(prj_b(x), V!valid) then
       if V!equal(prj_b(y), V!valid) then
         T!equal (prj_a(x), prj_a(y))
       else
         false
     else
-     false
-  ;
+      if V!equal(prj_b(y), V!valid) then
+        false
+      else
+        true
+; 
 
-  let parse (x) = element;
+  let parse2 (x, y) = constr(T!parse(x), V!parse(y));
 
   let print (x) = 
     let a = "( " in
@@ -63,45 +66,7 @@ species Imp_value_with_valid( T is Gen_basic_type, V is Sp_valid_meas) =
     by property T!equal_symmetric definition of consistency_rule;
 
   proof of consistency_rule_reflexive =
-  assumed {* To complete *}
-(*
-  <1>1
-    assume x in Self,
-    assume y in Self,
-    assume H1: consistency_rule (x, y),
-    prove
-     consistency_rule (y, x)
-     <2>1 assume H11: V!equal(prj_b(x), V!valid),
-     prove
-     consistency_rule (y, x)
-      <3>1 assume H0:T!equal (prj_a(x), prj_a(y)),
-      prove 
-      T!equal (prj_a(y), prj_a(x))
-      by property T!equal_reflexive hypothesis H0
-      
-      <3>2 assume H111: V!equal(prj_b(y), V!valid),
-      prove
-      consistency_rule (y, x)
-      by step <3>1 hypothesis H1, H11, H111 
-         definition of consistency_rule
-
-      <3>3 assume H112: ~ (V!equal(prj_b(y), V!valid)),
-      prove
-      consistency_rule (y, x)
-      by  hypothesis H1, H11, H112 definition of consistency_rule
-
-      <3>f conclude
-
-     <2>2 assume H12: ~(V!equal(prj_b(x), V!valid)),
-     prove
-     consistency_rule (y, x)
-     by  hypothesis H1, H12 definition of consistency_rule
-     
-     <2>f conclude
-
- <1>f conclude
-*)
-;
+    by property T!equal_reflexive definition of consistency_rule;
 
 end;;
 
