@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.133 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: env.ml,v 1.134 2009-06-15 09:19:36 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -2067,7 +2067,7 @@ module TypingEMAccess = struct
                let l' =
                  List.map
                    (fun (_, v, _, s, _, _, _, _) ->
-		     (v, (BO_absolute s))) l in
+                     (v, (BO_absolute s))) l in
                l' @ accu)
         []
         spec_info.TypeInformation.spe_sig_methods in
@@ -2249,7 +2249,6 @@ let inspect_fo_structure ppf fo =
 
 
 
-(* For debug purpose.
 let print_field_for_debug = function
   | TypeInformation.SF_sig (_, n, sch) ->
       Format.eprintf "signature %a : %a@." Sourcify.pp_vname n
@@ -2260,7 +2259,7 @@ let print_field_for_debug = function
       Format.eprintf ": %a " Types.pp_type_scheme sch ;
       Format.eprintf "= %a@." Sourcify.pp_binding_body body ;
       Format.eprintf "@."
-  | TypeInformation.SF_let_rec l ->
+  | TypeInformation.SF_let_rec (_, l) ->
       List.iter
         (fun (_, n, args, sch, body, _, _, _) ->
           Format.eprintf "let rec %a " Sourcify.pp_vname n ;
@@ -2274,4 +2273,4 @@ let print_field_for_debug = function
   | TypeInformation.SF_property (_, n, _, _, _) ->
       Format.eprintf "Property %a@." Sourcify.pp_vname n
 ;;
-*)
+

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.185 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.186 2009-06-15 09:19:36 pessaux Exp $ *)
 
 
 
@@ -3146,13 +3146,14 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
 (* ************************************************************************ *)
 (* Parsetree.proof_def_desc -> current_species:Parsetree.qualified_vname -> *)
 (*   Env.TypeInformation.species_field list ->                              *)
-(*     (Env.TypeInformation.species_field list * bool)                      *)
+(*     (Env.TypeInformation.species_field list * (Env.from_history option)) *)
 (* {b Descr} : Searches in the list the first SF_property or SF_theorem
    field whose name is equal to the [proof_of]'s name, then convert
    this property field into a theorem fields by adding the [pd_proof] field
    of the [proof_of].
    Then return the initial [fields] list with this field transformed inside
-   and a boolean telling if a change finally occured.
+   and an option telling if a change finally occured and if yes, we get a
+   [Some] containing the [from_history] of the theorem.
    This process is used to make Parsetree.SF_proof diseaper, merging their
    proof in the related property definition in order to create an equivalent
    theorem instead. It also serves to merge proof re-done of a theorem
@@ -3172,7 +3173,7 @@ let collapse_proof_in_non_inherited (proof_of, pr_deps_on_rep) ~current_species
     fields =
   let name_of_proof_of = proof_of.Parsetree.pd_name in
   let rec rec_find = function
-    | [] -> ([], false)
+    | [] -> ([], None)
     | field :: rem ->
         (begin
         match field with
@@ -3215,8 +3216,9 @@ let collapse_proof_in_non_inherited (proof_of, pr_deps_on_rep) ~current_species
                  Sourcify.pp_vname name
                  Sourcify.pp_qualified_species from.Env.fh_initial_apparition
                  Sourcify.pp_qualified_species current_species ;
-                (* Stop the search now. Say that a change actually occured. *)
-             (new_field :: rem, true)
+                (* Stop the search now. Say that a change actually occured by
+                   telling "Some" of the [from_history] of the theorem. *)
+             (new_field :: rem, (Some (name, from)))
              end)
            else
              (begin
@@ -3282,8 +3284,11 @@ let rec collapse_proof_in_inherited (proof_of, pr_deps_on_rep) ~current_species
                    Sourcify.pp_vname name
                    Sourcify.pp_qualified_species from.Env.fh_initial_apparition
                    Sourcify.pp_qualified_species current_species ;
+               (* Save the initial provenance of the property before we
+                  collapsed it and its prooof. *)
+               let from_before_collapse = (name, from) in
                (* Stop the search now. Say that a change actually occured. *)
-               (rem, (Some new_field))
+               (rem, (Some (new_field, from_before_collapse)))
                end)
              else
                (begin
@@ -3303,15 +3308,19 @@ let rec collapse_proof_in_inherited (proof_of, pr_deps_on_rep) ~current_species
 (*  Env.TypeInformation.species_field list ->                               *)
 (*    Env.TypeInformation.species_field list ->                             *)
 (*      (Env.TypeInformation.species_field list *                           *)
-(*       Env.TypeInformation.species_field list)                            *)
+(*       Env.TypeInformation.species_field list *                           *)
+(*       ((Parsetree.vname * Env.from_history) list))                       *)
 (* {b Descr} : Tries to find among [methods], property fields whose proofs
    are separately given in the list of proofs [found_proofs_of].
    Each time the search succeeds, the property and the related proof are
    merged in a new theorem field, hence discarding the property fields.
    Because this process is performed before the normalization pass, we
-   still require to have 2 separate lists of methods:
+   still require to have 3 separate lists of methods:
      - the inherited ones,
      - those defined at the current inheritance level.
+     - the assoc list giing for each theorem what was it initial
+       [from_history] of the property before the collapsing turned it into
+       a theorem.
    For this reason, the search will be done first on the methods defined at
    the current inheritance level (in order to find the "most recent") and
    only if the search failed, we will try it again on the inherited methods.
@@ -3327,6 +3336,12 @@ let rec collapse_proof_in_inherited (proof_of, pr_deps_on_rep) ~current_species
 (* ************************************************************************ *)
 let collapse_proofs_of ~current_species found_proofs_of
       inherited_methods_infos methods_info =
+  (* A bit dirty, we could reminf this without a reference, but I get bored
+     to have a third accumulator int the [fold_left] below... In this list, we
+     will record for each theorem, the [from_history] of the property it was
+     before collapsing. If there was non collapsing, then the theorem was
+     already a theorem, then we remind if [from_history] however. *)
+  let original_properties_from_histories = ref [] in
   (* We must first reverse the lists of methods so that the collapse
      procedure will find first the most recent methods. *)
   let revd_inherited_methods_infos = List.rev inherited_methods_infos in
@@ -3340,39 +3355,52 @@ let collapse_proofs_of ~current_species found_proofs_of
           collapse_proof_in_non_inherited
             ~current_species (found_proof_of.Parsetree.ast_desc, pr_desp_rep)
             accu_current in
-        if was_collapsed then (accu_inherited, collapsed_current)
-        else
-          (begin
-            (* No collapse in the current level's methods, then try on the
-               inherited ones. *)
-            let (collapsed_inherited, collapsed_option) =
-              collapse_proof_in_inherited
-                ~current_species
-                (found_proof_of.Parsetree.ast_desc, pr_desp_rep)
-                accu_inherited in
-            match collapsed_option with
-             | None ->
-                 (* No collapse at all ! This means that we have a proof not
-                    related to an existing property. This is an error. *)
-                 raise
-                   (Proof_of_unknown_property
-                      (found_proof_of.Parsetree.ast_loc,
-                       current_species,
-                       found_proof_of.Parsetree.ast_desc.Parsetree.pd_name))
-             | Some fresh_theorem ->
-                 (* Transfer the inherited field that had no proof to the
-                    non-inherited fields list since it received its proof now,
-                    i.e. in the non-inherited fields !
-                    Note that now, in [collapsed_inherited] the collapsed
-                    field has now disapeared. *)
-                 (collapsed_inherited, (fresh_theorem :: accu_current))
-           end))
+        match was_collapsed with
+         | Some theo_from ->
+             (begin
+             (* Collapsing without inheritance. Hence we the [from_history]. *)
+             original_properties_from_histories :=
+               theo_from :: !original_properties_from_histories ;
+             (accu_inherited, collapsed_current)
+             end)
+         | None ->
+             (begin
+             (* No collapse in the current level's methods, then try on the
+                inherited ones. *)
+             let (collapsed_inherited, collapsed_option) =
+               collapse_proof_in_inherited
+                 ~current_species
+                 (found_proof_of.Parsetree.ast_desc, pr_desp_rep)
+                 accu_inherited in
+             match collapsed_option with
+              | None ->
+                  (* No collapse at all ! This means that we have a proof not
+                     related to an existing property. This is an error. *)
+                  raise
+                    (Proof_of_unknown_property
+                       (found_proof_of.Parsetree.ast_loc,
+                        current_species,
+                        found_proof_of.Parsetree.ast_desc.Parsetree.pd_name))
+              | Some (fresh_theorem, from_before_collapse) ->
+                  (* Collapsing with inheritance. Hence we record the
+                     [from_history]. *)
+                  original_properties_from_histories :=
+                    from_before_collapse ::
+                    !original_properties_from_histories ;
+                  (* Transfer the inherited field that had no proof to the
+                     non-inherited fields list since it received its proof now,
+                     i.e. in the non-inherited fields !
+                     Note that now, in [collapsed_inherited] the collapsed
+                     field has now disapeared. *)
+                  (collapsed_inherited, (fresh_theorem :: accu_current))
+             end))
       (revd_inherited_methods_infos, revd_methods_info)
       found_proofs_of in
   (* And then, reverse again the result to get again the initial and correct
      order. *)
   (List.rev revd_collapsed_inherited_methods,
-   List.rev revd_collapsed_current_methods)
+   List.rev revd_collapsed_current_methods,
+   !original_properties_from_histories)
 ;;
 
 
@@ -4251,6 +4279,236 @@ let detect_polymorphic_method ~loc = function
 
 
 
+(* ******************************************************************** *)
+(** {b Descr} : Search the [from_history] of the field [name] among the
+    list of fields [fields]. Also return a boolean telling if the found
+    field is defined (opposed to declared).
+    This function must be called on a list in normal form, hence having
+    no double methods.
+    Attention, if the name is "rep" and if the carrier is not defined,
+    this function will raise [Not_found].
+
+    {b Exported} : No.                                                  *)
+(* ******************************************************************** *)
+let find_field_history_and_if_defined_by_name name fields =
+  let rec rec_search = function
+    | [] -> raise Not_found
+    | h :: q ->
+        (begin
+        match h with
+         | Env.TypeInformation.SF_let (from, n, _, _, _, _, _, _)
+         | Env.TypeInformation.SF_theorem (from, n, _, _, _, _) ->
+             (* let and theorem are "defined" -> true. *)
+             if n = name then (from, true) else rec_search q
+         | Env.TypeInformation.SF_sig (from, n, _) ->
+             if n = name then
+               (* Be careful, if the signature is "rep", then it is DEFINED ! *)
+               let defined_p = n = (Parsetree.Vlident "rep") in
+               (from, defined_p)
+             else rec_search q
+         | Env.TypeInformation.SF_property (from, n, _, _, _) ->
+             (* property is only "declared" -> false. *)
+             if n = name then (from, false) else rec_search q
+         | Env.TypeInformation.SF_let_rec (_, l) ->
+             (begin
+             try
+               let (from, _, _, _, _, _, _, _) =
+                 List.find (fun (_, n, _, _, _, _, _, _) -> n = name) l in
+               (* let rec is "defined" -> true. *)
+               (from, true)
+             with Not_found -> rec_search q
+             end)
+        end) in
+  (* Let's do the job... *)
+  rec_search fields
+;;
+
+
+
+(* ******************************************************************** *)
+(* Parsetree.qualified_species list list -> Parsetree.qualified_species *)
+(* ******************************************************************** *)
+let find_longuest_common_prefix found_inherited_alongs =
+  (* Local function that compute the common part of 2 paths. *)
+  let rec follow old_path new_path =
+    match (old_path, new_path) with
+     | (_, []) | ([], _) -> []
+     | ((h1 :: q1), (h2 :: q2)) ->
+         if h1 = h2 then h1 :: (follow q1 q2) else [] in
+  match found_inherited_alongs with
+   | [] ->
+       (* Since the processed species is assumed to inherits something, we
+          should never arrive here. *)
+       assert false
+   | h :: q ->
+       (* Accumulates the computation of the common part of each path. *)
+       let found_common_path =
+         List.fold_left (fun accu path -> follow accu path) h q in
+       (* Now, we must get the deepest species of the path, i.e. the oldest
+          common one to all the processed paths. *)
+       (try Handy.list_last_elem found_common_path
+       with Not_found -> assert false)
+;;
+
+
+
+(* ********************************************************************** *)
+(** {b Descr} : Check if a proof could be done earlier because it has
+    dependencies on methods that are all inherited.
+    We have as input the list of "proof of" we found. Since "proof of"'s
+    are not allowed to exists without related property, and since they
+    are incrementally collapsed together, if we found "proof of"'s at
+    this inheritance level that's because the SF_proof was present in the
+    species at the *current* inheritance level. So we are sure that in
+    the fields list of the species we will find the related theorem.
+    For each theorem, wearing th esame name than the proof, we will search
+    in the dependency graph the node representing this theorem (it is
+    mandatory it exists as stated above.
+    From this node, we will check if its dependency children were already
+    defined/declared (according to the kind decl/def of the dependency)
+    before the current species.
+    Note that in case of dependency on "rep", since it is always declared
+    even if there is no related signature, we must handle it in a special
+    way. In effect, in case of decl-dependency on "rep", we must signal
+    that the proof could be done earlier ... only if the species inherits.
+    In other words, only if there is a previous level where "rep" was
+    already implicitly declared. This prevent from signaling that a proof
+    could be done earlier when a guy writes a property and a proof
+    separatly but in the same species that doesn't inherit and that the
+    proof only has a decl-dependency on "rep". In effect, in this case,
+    there is no other dependency on methods than "rep", and since "rep"
+    is always declared, we would say, "rep" is already declared, to the
+    proof could be done before ! But in fact, there is no "before".
+
+    {b Exported} : No.                                                    *)
+(* ********************************************************************** *)
+let check_if_proof_could_be_done_earlier ~current_species ~inherits_p proof_of
+    fields original_properties_from_histories species_depgraph_nodes =
+  (* Recover the name of the theorem the proof ... proves. *)
+  let th_name = proof_of.Parsetree.ast_desc.Parsetree.pd_name in
+  (* The list of inheritance paths found for each dependency. We will search
+     for a longuest common prefix inside to determine in which species all
+     id the sooner available to make the proof.
+     By default, to handle the case where there is no dependencies or if there
+     is only a decl-dependency on the carrier, the earliest point where the
+     proof can be done is directly when the property is stated. So, we
+     initialize the list of path with the history of the property related to
+     this proof. *)
+  let seed =
+    (try
+      let fr = List.assoc th_name original_properties_from_histories in
+      (List.map (fun (s, _, _) -> s) fr.Env.fh_inherited_along) @
+      [fr.Env.fh_initial_apparition]
+    with
+    | Not_found ->
+        (* Since we forbid "proof of" not related to a property, obviously each
+           proof must have been collapsed, hence we must find a theorem with the
+           same name than th proof in the assoc list. *)
+        assert false) in
+  let found_inherited_alongs =
+    ref ([seed] : Parsetree.qualified_species list list) in
+  (* Now, recover the theorem dependency graph's node. *)
+  let th_node = 
+    (try
+      List.find
+        (fun node -> node.DepGraphData.nn_name = th_name) species_depgraph_nodes
+    with Not_found -> assert false) in
+  (* Now, for each dependency child, we check if it is inherited. *)
+  let may_be =
+    List.for_all
+      (fun (child_node, dependency_kind) ->
+        try
+          let (from, defined_p) =
+            find_field_history_and_if_defined_by_name
+              child_node.DepGraphData.nn_name fields in
+          (* Depending on the dependency kind, we must check is the method needs
+             to be defined or simply declared. *)
+          match dependency_kind with
+           | DepGraphData.DK_decl _ ->
+               (* Since the dependency is only a decl, no matter if the method
+                  we depend on is defined or declared. We must just check if
+                  the method we depend on is inherited. *)
+               let tmp = current_species <> from.Env.fh_initial_apparition in
+               if tmp then
+                 (begin
+                 let full_path =
+                   (List.map (fun (s, _, _) -> s) from.Env.fh_inherited_along) @
+                   [from.Env.fh_initial_apparition] in
+                 found_inherited_alongs :=
+                   full_path :: !found_inherited_alongs ;
+                 tmp
+                 end)
+               else false
+           | DepGraphData.DK_def _ ->
+               (* Since the dependency is only a def, we require to have the
+                  method we depend on to be DEFINED ! Declared is not
+                  sufficient. We also must check if the method we depend on is
+                  inherited. *)
+               let tmp =
+                 (current_species <> from.Env.fh_initial_apparition) &&
+                 defined_p in
+               if tmp then
+                 (begin
+                 let full_path =
+                   (List.map (fun (s, _, _) -> s) from.Env.fh_inherited_along) @
+                   [from.Env.fh_initial_apparition] in
+                 found_inherited_alongs :=
+                   full_path :: !found_inherited_alongs ;
+                 tmp
+                 end)
+               else false
+        with Not_found ->
+          (begin
+          (* Handle the special case of "rep" that is always declared even if
+             there is no related field in the AST. *)
+          if child_node.DepGraphData.nn_name = Parsetree.Vlident "rep" then
+            match dependency_kind with
+             | DepGraphData.DK_decl _ ->
+                 (* If the dependency is a decl, then we must signal that the
+                    proof could be done earlier only if there is a "before".
+                    Hence, only if the species inherits. *)
+                 inherits_p
+             | DepGraphData.DK_def _ ->
+                 (* Since we didn't find "rep", this means that it is not
+                    defined, hence since the dependency is a def, the proof
+                    can't anyway be done. Normaly, the dependency calculus
+                    should prevent us from falling in this case. *)
+                 false
+          else assert false
+          end))
+      th_node.DepGraphData.nn_children in
+  if may_be then
+    (begin
+    let where = find_longuest_common_prefix !found_inherited_alongs in
+    (* Since all the methods have the same initial species in head of the path,
+       that is the current species, we must ensure that we are not telling that
+       the proof could be done earlier ... "in the current species" ! *)
+    if where <> current_species then
+      Format.eprintf
+        "@[%tWarning:%tIn@ species@ '%t%s#%a%t',@ proof@ of@ '%t%a%t'@ could@ \
+        be@ done@ earlier@ in@ '%t%s#%a%t'@."
+        Handy.pp_set_bold Handy.pp_reset_effects
+        Handy.pp_set_underlined
+        (fst current_species) Sourcify.pp_vname (snd current_species)
+        Handy.pp_reset_effects
+        Handy.pp_set_underlined Sourcify.pp_vname th_name Handy.pp_reset_effects
+        Handy.pp_set_underlined
+        (fst where) Sourcify.pp_vname (snd where)
+        Handy.pp_reset_effects
+     end)
+;;
+
+(*
+Il reste le cas où il n'y a pas de dépendances. Dans ce cas, on n'a pas de
+path dans la liste et il faut donner le niveau d'apparition de la property.
+Il reste le cas où on n'a qu'une decl-dep sur rep et là, on n'a pas de path
+dans la liste et il faut donner le niveau d'apparition de la property.
+
+Mais ceci interfère avec le cas où l'on n'a pas de path dans ls liste car
+les dépendances sont toutes au même niveau que la proof et dans ce cas, on
+ne doit pas lever le warning.
+*)
+
 (* ******************************************************************* *)
 (** {b Descr} : Helper-type to record the various information from the
     typechecking pass needed to go to the code generation pass.
@@ -4369,7 +4627,8 @@ let typecheck_species_def ctx env species_def =
   ensure_no_proof_of_doubles found_proofs_of ;
   (* We first collapse "proof-of"s with their related property to lead to a
      theorem. *)
-  let (collapsed_inherited_methods_infos, collapsed_methods_info) =
+  let (collapsed_inherited_methods_infos, collapsed_methods_info,
+      original_properties_from_histories) =
     collapse_proofs_of
       ~current_species found_proofs_of inherited_methods_infos methods_info in
   if Configuration.get_verbose () then
@@ -4412,6 +4671,16 @@ let typecheck_species_def ctx env species_def =
   let species_dep_graph =
     Dep_analysis.build_dependencies_graph_for_fields
       ~current_species reordered_normalized_methods in
+  (* Check the warning telling that a proof could be done earlier. *)
+  let inherits_p =
+    species_def_desc.Parsetree.sd_inherits.Parsetree.ast_desc <> [] in
+  List.iter
+    (fun (proof_of, _) ->
+      check_if_proof_could_be_done_earlier
+        ~current_species ~inherits_p proof_of
+        reordered_normalized_methods original_properties_from_histories
+        species_dep_graph)
+    found_proofs_of ;
   (* If asked, generate the dotty output of the dependencies. *)
   (match Configuration.get_dotty_dependencies () with
    | None -> ()

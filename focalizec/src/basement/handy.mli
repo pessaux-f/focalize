@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.mli,v 1.21 2009-02-04 12:26:51 pessaux Exp $ *)
+(* $Id: handy.mli,v 1.22 2009-06-15 09:19:36 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -37,6 +37,7 @@ val pp_generic_n_times :
 
 
 (** List tools. *)
+val list_last_elem : 'a list -> 'a
 
 val list_assoc_custom_eq : ('a -> 'b -> bool) -> 'b -> ('a * 'c) list -> 'c
 

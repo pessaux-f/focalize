@@ -407,6 +407,6 @@ val make_fo_file :
 
 val inspect_fo_structure : Format.formatter -> fo_file_structure -> unit
 
-(* For debug purpose.
+(* For debug purpose. *)
 val print_field_for_debug : TypeInformation.species_field -> unit
-*)
+

@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.67 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.68 2009-06-15 09:19:36 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1105,7 +1105,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
             l
       | Env.TypeInformation.SF_theorem (_, n, _, prop, body, deps_on_rep) ->
           let ty = Types.type_prop () in
-          local_build_for_one_theo_property n ty prop (Some body) deps_on_rep
+          local_build_for_one_theo_property n ty prop (Some body) deps_on_rep ;
       | Env.TypeInformation.SF_property (_, n, _, prop, deps_on_rep) ->
           let ty = Types.type_prop () in
           local_build_for_one_theo_property n ty prop None deps_on_rep)
