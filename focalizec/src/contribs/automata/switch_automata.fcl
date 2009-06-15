@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: switch_automata.fcl,v 1.10 2009-06-10 08:56:25 doligez Exp $ *)
+(* $Id: switch_automata.fcl,v 1.11 2009-06-15 15:20:35 pessaux Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -404,7 +404,7 @@ species Imp2_switch_automata =
 
   proof =
   <1>1
-   -- assume a2 in Coll_state_aut2,
+   assume a2 in Coll_state_aut2,
    assume s1 in Self,
    assume r in Coll_requests,
    assume H1: Coll_state_aut1!equal (st_aut1 (tau_p1 (tau (s1, r))),

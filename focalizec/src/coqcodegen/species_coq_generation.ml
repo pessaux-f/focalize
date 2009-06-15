@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.179 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.180 2009-06-15 15:20:35 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1975,16 +1975,18 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
             (* Always end by the obligation of well-formation of the order. *)
             Format.fprintf out_fmter "@ (well_founded __term_order)") ;
        Format.fprintf out_fmter ".@]@\n" ;
-       (* Enforce Hypothesis to be used to prevent Coq from removing it. *)
+       (* Enforce Hypothesis and Variables to be used to prevent Coq from
+          removing it. *)
        List.iter
          (fun h ->
            match h.Parsetree.ast_desc with
-            | Parsetree.H_variable (_, _) | Parsetree.H_notation (_, _) -> ()
-            | Parsetree.H_hypothesis (hn, _) ->
+            | Parsetree.H_notation (_, _) -> ()
+            | Parsetree.H_variable (n, _)
+            | Parsetree.H_hypothesis (n, _) ->
                 Format.fprintf out_fmter
                   "@[<2>assert (__force_use_%a :=@ %a).@]@\n"
-             Parsetree_utils.pp_vname_with_operators_expanded hn
-             Parsetree_utils.pp_vname_with_operators_expanded hn)
+             Parsetree_utils.pp_vname_with_operators_expanded n
+             Parsetree_utils.pp_vname_with_operators_expanded n)
          available_hyps ;
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter
