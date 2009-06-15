@@ -1,4 +1,4 @@
-% $Id: ocamlcodegen.tex,v 1.1 2009-06-03 13:41:26 pessaux Exp $
+% $Id: ocamlcodegen.tex,v 1.2 2009-06-15 12:52:23 pessaux Exp $
 
 The code generation starts from the {\tt Infer.please\_compile\_me}
 structure returned by the type-checking pass. It will examine each
@@ -66,7 +66,188 @@ If the carrier is defined, then before the record definition, we
 generate the type definition ``{\tt me\_as\_carrier}'' that shown the
 constraints due to the {\tt representation} definition
 (c.f. {ocaml-tydef-for-defined-repr}). This is done by the function
-{\tt generate\_rep\_constraint\_in\_record\_type].
+{\tt generate\_rep\_constraint\_in\_record\_type}.
 
+\medskip
+Next, we must start the generation of the record type itself. Be
+careful that it will have at least one type parameter (the one
+representing our carrier and named {\tt 'me\_as\_carrier}). It can
+have several parameters if the species has species parameters. So, we
+start generating the {\tt 'me\_as\_carrier}, and we use the collection
+carriers mapping to generate the other type parameters corresponding
+to the carriers of the species parameters.
+
+\medskip
+Now comes the point where we must generate the record fields. The
+first weird thing is that we must extend the collections carrier mapping
+with ourselve known. This is required when {\tt representation} is defined. 
+Hence, if we refer to our {\tt representation} (i.e.
+{\tt me\_as\_carrier}), not to {\tt Self}, I mean to a type-collection
+that is ``(our compilation unit, our species name)'' (that is the case
+when creating a collection where {\tt Self} gets especially abstracted
+to ``(our compilation unit, our species name)'', we  will be known and
+we wont get the fully qualified type name, otherwise this would lead
+to a dependency with ourselve in term of \ocaml\ module.
+
+Indeed, we now may refer to our carrier explicitely here in the scope
+of a collection (not species, really collection)  because there is no
+more late binding: here when one say ``me'', it's not anymore ``what I
+will be finally'' because we are already ``finally''. Before, as long
+a species is not a collection, it always refers to itself's type as
+``{\tt 'me\_as\_carrier}'' because late binding prevents known until
+the last moment who ``we will be''. But because now it's the end of
+the species specification, we know really ``who we are'' and
+``{\tt 'me\_as\_carrier}'' is definitely replaced by ``who we really
+are'' : ``{\tt me\_as\_carrier}''.
+
+We can now iterate through the list of fields of the species, to
+create the record's fields. We take care to not generate {\tt let}
+fields whose type involves {\tt prop} since they can only be created
+by {\tt logical let} that are discarded in \ocaml. We also skip
+theorem and property fields.
+
+\medskip
+Once done, we close the record definition.
+
+
+\subsubsection{Abstraction computation}
+As previously explained, each back-end triggers the computation of
+abstractions (i.e. things -- carriers, methods -- to abstract due to
+dependencies). From this computation we get the list of fields of the
+species with the information explaining what to $\lambda$-lift.
+
+
+\subsubsection{Definitions' code generation}
+We then iterate code generation on each field, depending on its kind.
+Signatures, properties and theorem are purely discarded in \ocaml\
+since they have no mapping and no use.
+
+It then remains the {\tt let}-definitions. The generation consists in
+2 parts: the generation of the extra parameters due to $\lambda$-lifts
+and the translation of the function's body into \ocaml. This last part
+is quite straightforward, so we will take more time on the first one.
+
+The first thing is that only methods defined in the current species
+must be generated. Inherited methods {\bf are not} generated again.
+So we start generating the the {\tt let} and name of the
+function.
+
+\medskip
+Next come the $\lambda$-lifts that abstract according to the species's
+parameters the current method depends on. We process each species
+parameter. For each of them, aach abstracted method will be named like
+``{\tt \_p\_}'', followed by the species parameter name, followed by
+``{\tt \_}'', followed by the method's name. We don't care here about
+whether the species parameters is {\tt in} or {\tt IS}.
+
+\medskip
+Next come the extra arguments due to methods of ourselves we depend
+on. They are always present in the species under the name
+``{\tt abst\_...}''. These $\lambda$-lifts are only done for methods
+that are in the minimal coq environment because they computational and
+only declared.
+
+\medskip
+Next come the parameters of the {\tt let}-binding with their type. We
+ignore the result type of the {\tt let} if it's a function because we
+never print the type constraint on the result of the {\tt let}. We
+only print them in the arguments of the {\tt let}-bound identifier.
+We also ignore the variables used to instanciate the polymorphic ones
+of the scheme because in \ocaml\ polymorphism is not explicit.   
+Note by the way thet we do not have anymore information about
+{\tt Self}'s structure...
+
+Becareful that while printing the type of the function's arguments,
+since they belong to a same type scheme they may share variables
+together. For this reason, we first purge the printing variable
+mapping and after, activate its persistence between each parameter
+printing. This allows the type pretty-print function to ``remember''
+the variables already seen and print the same name if it see one of
+them again. And this, until we release the persistence.
+
+\medskip
+Finally, we can dump the code corresponding to the translation of the
+function's body. The only tricky part is to generate code for
+identifiers because we must take care of wether the identifier
+represents a local variable, an entity parameter, a method of
+{\tt Self}, a toplevel identifier or a collection parameter's method.
+We must also be able to detect occurrences of recursive calls to be
+sure that at application time, we will really provide the arguments
+for the $\lambda$-lifts.
+
+\subsubsection{If the species is complete}
+\ldots then we must manage the fact that a collection generator must
+be created. The generator is created from the list of compiled fields.
+The idea is to make a function that will be parametrised by all the
+dependencies from species parameters and returning a value of the
+species record type.
+
+\medskip
+The generic name of the collection generator:
+``{\tt collection\_create}''. Be careful, if the collection generator
+has no extra parameter then the ``{`\tt collection\_create}'' will not
+be a function but directly the record representing the species. In
+this case, if some fields of this record are polymorphic, \ocaml\
+won't generalize because it is unsound to generalise a value that is
+expansive (and record values are expansives). So, to ensure this won't
+arise, we always add one {\tt unit} argument to the generator. We
+could add it only if there is no argument to the generator, but it is
+pretty boring and we prefer just to {\bf K}eep {\bf I}t {\bf S}imple
+and {\bf S}tupid \smiley.
+
+\medskip
+After the name of the generator, we must generate the parameters the
+collection generator needs to build the each of the current species's
+local function (functions corresponding to the actual method stored in
+the collection record). These parameters of the generator come from
+the abstraction of methods coming from our species parameters we
+depend on. By the way, we want to recover the list of species
+parameters linked together with their methods we need to instanciate
+in order to apply the collection generator. To do so, we first build
+by side effect the list for each species parameter of the methods we
+depend on (using the dependency information previously computed). Then
+we simply dump this list, using the naming scheme ``{\tt \_p\_''} +
+the species parameter name + ``{\tt \_}'' + the called method
+name. Since that also this way species parameters methods are called
+in the bodies of the local functions of {\tt Self} (see below), this
+will really lead to bind this abstracted identifiers in these bodies.
+
+\medskip
+At this point comes the moment to generate the local functions that
+will be used to fill the record value. We then iterate on the list of
+compiled fields of the species, skipping the {\tt logical let}s, to
+find the method generator of the field and apply it to all it
+needs. ``All it needs'' means stuff abstracted because of dependencies
+on species parameters and things abstracted because of dependencies on
+other methods of ourselves.
+
+To get the method generator, we must check at which inheritance level
+it is, in other words in which species its code was defined. To do so,
+since we know that the species is complete, we just need to look in
+the {\tt from\_history} of the field and the generator is defined in
+the {\tt fh\_initial\_apparition} (since by construction, we record
+the first declaration is no definition or the definition of a method
+here, and subsequent apparition due to inheritance are recorded
+somewhere else).
+
+We first start by abstractions for species parameters. Depending on if
+the method generator is inherited or directly defined in the current
+species, we have 2 behaviours.
+
+In the simples case, it is defined in the current species and we just
+need to apply the method generator to each of the extra arguments
+induced by the various lambda-lifting we previously performed for
+species parameters: here we will not use them to $\lambda$-lift them
+this time, but to apply them ! The name used for application is formed
+according to the same scheme we used at $\lambda$-lifting time:
+``{\tt \_p\_}'' + the species parameter name + ``{\tt \_}'' + the
+called method name.
+
+However, if the method is inherited, the things are more complex. We
+must apply the method generator to each of the extra arguments induced
+by the various lambda-lifting we previously in the species from which
+we inherit, i.e. where the method was defined. During the inheritance,
+parameters have been instanciated. We must track these instanciations
+to know to what apply the method generator.
 
 \subsection{Collection generation}
