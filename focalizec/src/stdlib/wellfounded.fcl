@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: wellfounded.fcl,v 1.11 2009-06-06 16:56:56 weis Exp $ *)
+(* $Id: wellfounded.fcl,v 1.12 2009-06-16 10:09:31 rr Exp $ *)
 
 (* Definition (import) of the notion of wellfoundedness.  Since this notion
    is not defineable in FoCaLize, this library is a toolbox for reasoning
@@ -37,14 +37,22 @@ species PartialWellOrder =
    * note: this is an import of Coq's notion of wellfoundedness
    * which is based on the accessibility predicate.
    *)
+(*   logical let wellfounded = *)
+(*     internal (Self -> Self -> bool) -> prop *)
+(*     external *)
+(*     | caml -> {* () *} *)
+(*     | coq -> {* wellfounded_externals.wellfounded abst_T *} *)
+(*   ; *)
+
   logical let wellfounded =
     internal (Self -> Self -> bool) -> prop
     external
     | caml -> {* () *}
-    | coq -> {* wellfounded_externals.wellfounded abst_T *}
+    | coq -> {* fun (r: abst_T -> abst_T -> bool) => 
+                 well_founded (fun (x y: abst_T) => Is_true (r x y)) *}
   ;
 
-  property wellfounded_lt: wellfounded (lt);
+  property wellfounded_lt: wellfounded(!lt);
 
 end
 ;;
@@ -58,6 +66,12 @@ species WellOrder =
 end
 ;;
 
+(* 
+  [rr]: this looks highly experimental! 
+        Nothing is proved. 
+        Do not use beyond this point.
+*)
+
 (** Well founded order over integers *)
 let int_wf (x in int, y in int) in bool = abs0x (x) <0x abs0x (y)
 ;;
@@ -69,10 +83,12 @@ species RelativeIntegers =
   representation = int;
 
   let element = 0;
-  let equal = ( =0x );
 
-  proof of equal_reflexive = assumed {* *} ;
-  proof of equal_transitive = assumed {* *} ;
+  let equal(x, y)= (x = y);
+
+  proof of equal_reflexive = by definition of equal ;
+  proof of equal_symmetric = by definition of equal ;
+  proof of equal_transitive = by definition of equal ;
 
   signature lowerbound: Self;
 
@@ -112,6 +128,7 @@ end
 ;;
 
 
+(* [rr]: this is redundant with products.fcl *)
 
 species CartesianProduct (A is Basic_object, B is Basic_object) =
 
@@ -127,6 +144,7 @@ species CartesianProduct (A is Basic_object, B is Basic_object) =
 end
 ;;
 
+(* [rr]: different orderings are defined generically for polynomials *)
 species LexicographicProduct (A is PartialWellOrder, B is PartialWellOrder) =
 
   inherit CartesianProduct (A, B), PartialWellOrder;
