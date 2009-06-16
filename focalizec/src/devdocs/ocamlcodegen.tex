@@ -1,4 +1,4 @@
-% $Id: ocamlcodegen.tex,v 1.3 2009-06-16 10:58:08 pessaux Exp $
+% $Id: ocamlcodegen.tex,v 1.4 2009-06-16 12:25:23 pessaux Exp $
 
 The code generation starts from the {\tt Infer.please\_compile\_me}
 structure returned by the type-checking pass. It will examine each
@@ -17,9 +17,9 @@ the definitions of the related module in the environment (exactly like
 for the other passes).
 
 
-\subsection{Species generation}
+\section{Species generation}
 
-\subsubsection{The collection carrier mapping}
+\subsection{The collection carrier mapping}
 To be able to properly map the species parameters' carriers to
 type variables in the generated code, we start by creating a
 ``collection carrier mapping''. This mapping is the correspondance
@@ -51,7 +51,7 @@ structures that will be always passed to the compilation
 functions. This way, grouping all in one unique argument makes the
 code clearer.
 
-\subsubsection{The record type}
+\subsection{The record type}
 As described in \label{code-gen-model}, a species starts by a record
 type definition. This record contains one field per method. This type
 is named ``{\tt me\_as\_species}'' to reflect the point that it
@@ -110,14 +110,14 @@ theorem and property fields.
 Once done, we close the record definition.
 
 
-\subsubsection{Abstraction computation}
+\subsection{Abstraction computation}
 As previously explained, each back-end triggers the computation of
 abstractions (i.e. things -- carriers, methods -- to abstract due to
 dependencies). From this computation we get the list of fields of the
 species with the information explaining what to $\lambda$-lift.
 
 
-\subsubsection{Definitions' code generation}
+\subsection{Definitions' code generation}
 We then iterate code generation on each field, depending on its kind.
 Signatures, properties and theorem are purely discarded in \ocaml\
 since they have no mapping and no use.
@@ -175,7 +175,7 @@ We must also be able to detect occurrences of recursive calls to be
 sure that at application time, we will really provide the arguments
 for the $\lambda$-lifts.
 
-\subsubsection{If the species is complete}
+\subsection{If the species is complete}
 \ldots then we must manage the fact that a collection generator must
 be created. The generator is created from the list of compiled fields.
 The idea is to make a function that will be parametrised by all the
@@ -250,4 +250,71 @@ we inherit, i.e. where the method was defined. During the inheritance,
 parameters have been instanciated. We must track these instanciations
 to know to what apply the method generator.
 
-\subsection{Collection generation}
+
+\subsubsection{Following parameters instantiations}
+This work is performed by
+{\tt species\_ml\_generation.instanciate\_parameter\_through\_inheritance}.
+We search to instanciate the parameters ({\tt is} and {\tt in}) of the
+method generator of one {\tt field\_memory} (i.e. the data-structure that
+represents what we know about a method that was previously
+generated). The parameters we deal with are those coming from the
+$\lambda$-lifts we did to abstract dependencies of the method
+described by the {\tt field\_memory] on species parameters of the species
+where this method is {\bf defined}.
+Hence we deal with the species parameters of the species where the
+method was {\bf defined} ! It must be clear that we do not matter of
+the parameters of the species who inherited !!! We want to trace by
+what the parameters of the original hosting species were instanciated
+along the inheritance.
+
+So we want to generate the \ocaml\ code that enumerates the arguments to
+apply to the method generator. These arguments are the methods coming
+from species parameters on which the current method has dependencies
+on. The locations from where these methods come depend on the
+instanciations that have be done during inheritance.
+
+This function trace these instanciations to figure out exactly from
+ where these methods come. Process sketch follows:
+\begin{enumerate}
+\item Find at the point (i.e. the species) where the method generator
+ of the {\tt field\_memory} was defined, the species parameters that
+ were existing at this point. 
+\item Find the dependencies the original method had on these (its) species
+    parameters.
+\item For each of these parameters, we must trace by what it was
+    instanciated along the inheritance history, (starting from oldest
+    species where the method appeared to most recent) and then generate
+    the corresponding \ocaml\ code.
+    \begin{enumerate}
+    \item Find the index of the parameter in the species's signature
+    from where the method was {\bf really} defined (not the one where
+    it is inherited).
+    \item Follow instanciations that have been done on the parameter
+    from past to now along the inheritance history.
+    \item If it is a {\tt in} parameter then we must generate the code
+    corresponding to the \focal\ expression that instanciated the
+    parameter. This expression is built by applying
+    effective-to-formal arguments substitutions.
+    \item If it is a IS parameter, then we must generate for each
+    method we have dependencies on, the \ocaml\ code accessing the
+    \ocaml\ code of the method inside its module structure (if
+    instanciation is done by a toplevel species/collection) or
+    directly use an existing collection generator parameter (if
+    instanciation is done by a parameter of the species where the
+    method is found inherited, i.e. the species we are currently
+    compiling).
+    \end{enumerate}
+\end{enumerate}
+
+
+\subsubsection{Ending the collection henerator}
+Finally, we must apply the method generator to each of the extra
+arguments induced by the methods of our inheritance tree we depend on
+and that were only declared when the method generator was
+created. These methods leaded to ``local'' functions defined above (by
+the same process we describe here). Hence, for each  method only
+declared of ourselves we depend on, its name is ``{\tt local\_}'' +
+the method's name. 
+
+
+\section{Collection generation}

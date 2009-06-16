@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.98 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.99 2009-06-16 12:25:23 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1109,9 +1109,9 @@ let generate_collection_generator ctx env compiled_species_fields =
       instanciate_parameter_through_inheritance ctx env field_memory
       end) ;
     (* Now, apply the method generator to each of the extra arguments induced
-       by the various lambda-lifting we previously performed.
-       Second, the methods of our inheritance tree we depend on and that are
-       only declared. These methods leaded to "local" functions defined above.
+       the methods of our inheritance tree we depend on and that were
+       only declared when the method generator was created. These methods
+       leaded to "local" functions defined above.
        Hence, for each  method only declared of ourselves we depend on, its
        name is "local_" + the method's name. *)
     List.iter
