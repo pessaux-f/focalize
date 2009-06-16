@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.21 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.22 2009-06-16 10:08:19 weis Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -103,7 +103,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       (* No local idents in the scope because we are at toplevel. *)
       Base_exprs_ml_generation.let_def_compile
         ctx ~local_idents: [] env let_def bound_schemes;
-      Format.fprintf out_fmter "@\n;;@\n";
+      Format.fprintf out_fmter "@.;;@.";
       env
   | Infer.PCM_theorem _ -> env  (* Theorems do not lead to OCaml code. *)
   | Infer.PCM_expr expr ->
@@ -120,7 +120,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       (* No local idents in the scope because we are at toplevel. *)
       Base_exprs_ml_generation.generate_expr ctx env ~local_idents: [] expr;
       (* Generate the final double-semis. *)
-      Format.fprintf out_fmter "@;;@\n";
+      Format.fprintf out_fmter "@.;;@.";
       env
 ;;
 
@@ -163,7 +163,10 @@ let root_compile ~current_unit ~out_file_name stuff =
          stuff. Because we don't want these errors to hide the real initial
          problem that made the code generation impossible, we first process
          here I/O errors, then will be raise again the initial error. *)
-      Format.eprintf "Error@ while@ trying@ to@ keep@ trace@ of@ the@ partially@ generated@ OCaml@ code:@ %s.@\nInitial@ error@ follows.@."
+      Format.eprintf
+        "Error@ while@ trying@ to@ keep@ trace@ of@ the@ \
+         partially@ generated@ OCaml@ code:@ %s.@.\
+         Initial@ error@ follows.@."
         (Printexc.to_string second_error)
       end)
     end);
