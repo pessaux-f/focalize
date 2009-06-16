@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.134 2009-06-15 09:19:36 pessaux Exp $ *)
+(* $Id: env.ml,v 1.135 2009-06-16 10:58:08 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -41,7 +41,7 @@ exception Unbound_identifier of (Parsetree.vname * Location.t) ;;
 exception Unbound_type of (Parsetree.vname * Location.t) ;;
 exception Unbound_module of (Types.fname * Location.t) ;;
 exception Unbound_species of (Parsetree.vname * Location.t) ;;
-exception Unbound_closed_species of (Parsetree.vname * Location.t) ;;
+exception Unbound_collection of (Parsetree.vname * Location.t) ;;
 
 
 exception Rebound_type of (Parsetree.vname * Location.t) ;;
@@ -1947,13 +1947,12 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
   and find_type_vname ~loc ~allow_opened vname (env : t) =
     try env_list_assoc ~allow_opened vname env.types with
     | Not_found ->
-        (* Since when a species is not complete, we don't insert its carrier
-           as a type constructor, tryign to use a non-closed species name as
-           type will lead to an "Unbound type". This message is a bit unclear
-           for the user who will however see his species and won't think that
-           it's because it is not closed that he is not allowed to use it's
-           carrier.
-           So, to generate a clearer errot message, we try to search a species
+        (* Since a species, even not complete, we don't insert its carrier
+           as a type constructor, trying to use a species name as type will
+           lead to an "Unbound type". This message is a bit unclear for the
+           user who will however see his species and won't think that it's
+           because it is not closed that he is not allowed to use it's carrier.
+           So, to generate a clearer error message, we try to search a species
            with this constructor name. If we don't find any, then we leave the
            initial error message. If we find some, we raise an error telling
            that the species whose carrier is used as type is not closed, hence
@@ -1961,7 +1960,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
         (try ignore (find_species_vname ~loc ~allow_opened vname env) with
         | _ ->  raise (Unbound_type (vname, loc))) ;
         (* If we found a species with this name, issue the better message. *)
-        raise (Unbound_closed_species (vname, loc))
+        raise (Unbound_collection (vname, loc))
 end
 ;;
 

@@ -4,7 +4,7 @@ exception Unbound_identifier of (Parsetree.vname * Location.t)
 exception Unbound_type of (Parsetree.vname * Location.t)
 exception Unbound_module of (Types.fname * Location.t)
 exception Unbound_species of (Parsetree.vname * Location.t)
-exception Unbound_closed_species of (Parsetree.vname * Location.t)
+exception Unbound_collection of (Parsetree.vname * Location.t)
 
 exception Rebound_type of (Parsetree.vname * Location.t)
 exception Rebound_species of (Parsetree.vname * Location.t)

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.187 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: infer.ml,v 1.188 2009-06-16 10:58:08 pessaux Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -4502,16 +4502,7 @@ let check_if_proof_could_be_done_earlier ~current_species ~inherits_p proof_of
      end)
 ;;
 
-(*
-Il reste le cas où il n'y a pas de dépendances. Dans ce cas, on n'a pas de
-path dans la liste et il faut donner le niveau d'apparition de la property.
-Il reste le cas où on n'a qu'une decl-dep sur rep et là, on n'a pas de path
-dans la liste et il faut donner le niveau d'apparition de la property.
 
-Mais ceci interfère avec le cas où l'on n'a pas de path dans ls liste car
-les dépendances sont toutes au même niveau que la proof et dans ce cas, on
-ne doit pas lever le warning.
-*)
 
 (* ******************************************************************* *)
 (** {b Descr} : Helper-type to record the various information from the
@@ -4526,9 +4517,9 @@ type please_compile_me =
   | PCM_open of (Location.t * Parsetree.module_name)
   | PCM_coq_require of
       (** Coq modules to open due to external definitions. This allow to make
-         external Coq files where these definitions lie visible in Coq, without
-         having to search in the whole FoCaL source file for [external_expr]s
-         that imply a reference to a module in the string they contain. *)
+          external Coq files where these definitions lie visible in Coq, without
+          having to search in the whole FoCaL source file for [external_expr]s
+          that imply a reference to a module in the string they contain. *)
       Parsetree.module_name
   | PCM_species of
       ((** The species expression. *)
@@ -4720,49 +4711,30 @@ let typecheck_species_def ctx env species_def =
     Env.TypingEnv.add_species
       ~loc: species_def.Parsetree.ast_loc
       species_def_desc.Parsetree.sd_name species_description env in
-  (* Now, extend the environment with a type that is the species. *)
-  Types.begin_definition ();
+  (* We don't insert a type constructor that represents the species carrier
+     even if the species is fully defined.
+     This especially avoid such things:
+       species A =
+         signature f : int
+       end ;;
+       species B =
+         signature b : A -> A
+       end ;;
+     If we generate the code for this, in ocaml we won't have any type
+     definition for "me_as_carrier" in "A". And in "B", "g" will have the
+     type "A.me_as_carrier -> A.me_as_carrier" where "A.me_as_carrier" is
+     unbound. This is moral since "A" doesn't have a carrier. If it really has
+     a carrier OCaml code will compile since it doesn't really make use of the
+     type. However, Coq complains since the "effective_collection" doesn't
+     exist. *)
+  (* Record the type in the AST node. *)
+  Types.begin_definition () ;
   let species_carrier_type =
     Types.type_rep_species
       ~species_module: ctx'.current_unit
       ~species_name:
         (Parsetree_utils.name_of_vname species_def_desc.Parsetree.sd_name) in
-  Types.end_definition ();
-  (* We only insert a type constructor that represents the species carrier
-     if the species is fully defined. That is, if it really has a carrier.
-     This especially avoid such things:
-       species A =
-         signature f : int
-       end
-;;
-       species B =
-         signature b : A -> A
-       end
-;;
-     If we generate the code for this, in ocaml we won't have any type
-     definition for "me_as_carrier" in "A". And in "B", "g" will have the
-     type "A.me_as_carrier -> A.me_as_carrier" where "A.me_as_carrier" is
-     unbound. This is moral since "A" doesn't have a carrier. *)
-  (* [Unsure] At doc writing stage, I now wonder if the point that the species
-     must have a method "representation" would be in fact sufficient... *)
-  let full_env =
-    if is_closed then
-      (begin
-      let species_as_type_description = {
-        Env.TypeInformation.type_loc = Location.none;
-        Env.TypeInformation.type_kind = Env.TypeInformation.TK_abstract;
-        Env.TypeInformation.type_identity =
-          Types.generalize species_carrier_type;
-        (* Nevers parameters for a species's carrier type ! *)
-        Env.TypeInformation.type_params = [];
-        Env.TypeInformation.type_arity = 0 } in
-      Env.TypingEnv.add_type
-        ~loc: species_def.Parsetree.ast_loc
-        species_def_desc.Parsetree.sd_name species_as_type_description
-        env_with_species
-      end)
-    else env_with_species in
-  (* Record the type in the AST node. *)
+  Types.end_definition () ;
   species_def.Parsetree.ast_type <- Parsetree.ANTI_type species_carrier_type;
   if Configuration.get_verbose () then
     Format.eprintf "Species '%a' accepted.@."
@@ -4775,7 +4747,7 @@ let typecheck_species_def ctx env species_def =
       Env.TypeInformation.pp_species_description species_description
     end);
   (PCM_species (species_def, species_description, species_dep_graph),
-   species_carrier_type, full_env)
+   species_carrier_type, env_with_species)
 ;;
 
 

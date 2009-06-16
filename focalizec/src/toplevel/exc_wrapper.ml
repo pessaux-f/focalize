@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.84 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.85 2009-06-16 10:58:08 pessaux Exp $ *)
 
 let header ppf =
   Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
@@ -142,10 +142,10 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname sname
         Handy.pp_reset_effects
-  | Env.Unbound_closed_species (sname, at) ->
+  | Env.Unbound_collection (sname, at) ->
       Format.fprintf ppf
-        "%a:@\n@[%tSpecies@ '%t%a%t'@ is@ neither@ fully@ defined@ nor@ a@ \
-        collection.@ Its@ carrier@ can't@ be@ used@ in@ type@ expressions.@]@."
+        "%a:@\n@[%tSpecies@ '%t%a%t'@ is@ not@ a@ collection.@ Its@ carrier@ \
+        can't@ be@ used@ in@ type@ expressions.@]@."
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname sname
         Handy.pp_reset_effects

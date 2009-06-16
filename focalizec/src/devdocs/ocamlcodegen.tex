@@ -1,4 +1,4 @@
-% $Id: ocamlcodegen.tex,v 1.2 2009-06-15 12:52:23 pessaux Exp $
+% $Id: ocamlcodegen.tex,v 1.3 2009-06-16 10:58:08 pessaux Exp $
 
 The code generation starts from the {\tt Infer.please\_compile\_me}
 structure returned by the type-checking pass. It will examine each
@@ -65,8 +65,8 @@ species) will be really living as a collection.
 If the carrier is defined, then before the record definition, we
 generate the type definition ``{\tt me\_as\_carrier}'' that shown the
 constraints due to the {\tt representation} definition
-(c.f. {ocaml-tydef-for-defined-repr}). This is done by the function
-{\tt generate\_rep\_constraint\_in\_record\_type}.
+(c.f. \ref{ocaml-tydef-for-defined-repr}). This is done by the
+function {\tt generate\_rep\_constraint\_in\_record\_type}.
 
 \medskip
 Next, we must start the generation of the record type itself. Be
