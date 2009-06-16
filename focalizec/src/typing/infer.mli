@@ -1,9 +1,11 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -11,8 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-
-(* $Id: infer.mli,v 1.38 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.39 2009-06-16 09:36:43 weis Exp $ *)
 
 exception Wrong_recursion_kind_while_fusion of Location.t
 exception Wrong_type_by_inheritance of
@@ -58,7 +59,7 @@ exception Invalid_parameter_in_delayed_proof_termination of
 exception No_mix_between_logical_defs of (Location.t * Parsetree.vname)
 
 type please_compile_me =
-  | PCM_documentation_title
+  | PCM_annotation_title
   | PCM_use of (Location.t * Parsetree.module_name)
   | PCM_open of (Location.t * Parsetree.module_name)
   | PCM_coq_require of Parsetree.module_name

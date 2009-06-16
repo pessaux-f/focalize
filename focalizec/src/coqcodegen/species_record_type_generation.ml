@@ -1,9 +1,11 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -11,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.81 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.82 2009-06-16 09:36:43 weis Exp $ *)
 
 
 
@@ -546,7 +548,7 @@ let rec let_in_binding_compile ctx ~in_recursive_let_section_of
   (* Recover the type scheme of the bound ident. *)
   let def_scheme =
     (match bd.Parsetree.ast_type with
-     | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
+     | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
      | Parsetree.ANTI_type _ -> assert false
      | Parsetree.ANTI_scheme s -> s) in
   (* We do not have anymore information about "Self"'s structure... *)
@@ -748,7 +750,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          (* Get the type of the function. *)
          let fun_ty =
            (match expression.Parsetree.ast_type with
-            | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
+            | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
             | Parsetree.ANTI_scheme _ -> assert false
             | Parsetree.ANTI_type t -> t) in
          Format.fprintf out_fmter "@[<2>(fun " ;
@@ -947,7 +949,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          let scheme =
            (match ty_expr.Parsetree.ast_type with
             | Parsetree.ANTI_none
-            | Parsetree.ANTI_non_relevant
+            | Parsetree.ANTI_irrelevant
             | Parsetree.ANTI_type _ -> assert false
             | Parsetree.ANTI_scheme s -> s) in
          let (ty, generalized_instanciated_vars) =
@@ -1044,7 +1046,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
            (match expr.Parsetree.ast_type with
             | Parsetree.ANTI_type ty -> Types.is_bool_type ty
             | Parsetree.ANTI_none
-            | Parsetree.ANTI_non_relevant
+            | Parsetree.ANTI_irrelevant
             | Parsetree.ANTI_scheme _ ->
                 (* Note that expression never has a type scheme, but only a
                    type. *)

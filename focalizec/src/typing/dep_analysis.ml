@@ -1,9 +1,11 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -11,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.68 2009-06-15 09:19:36 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.69 2009-06-16 09:36:43 weis Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -35,18 +37,18 @@ let debug_print_dependencies_from_parameters l =
       (match species_param with
        | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _, _, _) ->
            Format.eprintf "From IS-parameter '%s#%s', methods: "
-             mod_name spe_name ;
+             mod_name spe_name;
        | Env.TypeInformation.SPAR_in (n, _, _) ->
            Format.eprintf "From IN-parameter '%a', methods: "
-             Sourcify.pp_vname n) ;
+             Sourcify.pp_vname n);
       Parsetree_utils.ParamDepSet.iter
-        (fun (n, k) -> Format.eprintf "\t%a: " Sourcify.pp_vname n ;
+        (fun (n, k) -> Format.eprintf "\t%a: " Sourcify.pp_vname n;
           match k with
            | Parsetree_utils.DETK_computational t ->
                Format.eprintf "%a@." Types.pp_type_simple t
            | Parsetree_utils.DETK_logical e ->
                Format.eprintf "%a@." Sourcify.pp_logical_expr e)
-        methods ;
+        methods;
       Format.eprintf "@.")
     l
 ;;
@@ -57,19 +59,19 @@ let debug_print_dependencies_from_parameters2 l =
       (match species_param with
        | Env.TypeInformation.SPAR_is ((mod_name, spe_name), _, _, _, _) ->
            Format.eprintf "From IS-parameter '%s#%s', methods: "
-             mod_name spe_name ;
+             mod_name spe_name;
        | Env.TypeInformation.SPAR_in (n, _, _) ->
            Format.eprintf "From IN-parameter '%a', methods: "
-             Sourcify.pp_vname n) ;
+             Sourcify.pp_vname n);
       List.iter
         (fun (n, k) ->
-          Format.eprintf "%a " Sourcify.pp_vname n ;
+          Format.eprintf "%a " Sourcify.pp_vname n;
           match k with
            | Parsetree_utils.DETK_computational t ->
                Format.eprintf "%a@." Types.pp_type_simple t
            | Parsetree_utils.DETK_logical e ->
                Format.eprintf "%a@." Sourcify.pp_logical_expr e)
-        methods ;
+        methods;
       Format.eprintf "@.")
     l
 ;;
@@ -78,16 +80,16 @@ let debug_print_dependencies_from_parameters3 l =
   List.iter
     (fun (param_name, (Env.ODFP_methods_list methods)) ->
       Format.eprintf "From parameter '%a', methods: "
-        Sourcify.pp_vname param_name ;
+        Sourcify.pp_vname param_name;
       List.iter
         (fun (n, k) ->
-          Format.eprintf "%a " Sourcify.pp_vname n ;
+          Format.eprintf "%a " Sourcify.pp_vname n;
           match k with
            | Parsetree_utils.DETK_computational t ->
                Format.eprintf "%a@." Types.pp_type_simple t
            | Parsetree_utils.DETK_logical e ->
                Format.eprintf "%a@." Sourcify.pp_logical_expr e)
-        methods ;
+        methods;
       Format.eprintf "@.")
     l
 ;;
@@ -117,7 +119,7 @@ let rec expr_decl_dependencies ~current_species expression =
        let ident_ty =
          (match ident.Parsetree.ast_type with
           | Parsetree.ANTI_none
-          | Parsetree.ANTI_non_relevant
+          | Parsetree.ANTI_irrelevant
           | Parsetree.ANTI_scheme  _ -> assert false
           | Parsetree.ANTI_type t -> t) in
         match ident.Parsetree.ast_desc with
@@ -265,7 +267,7 @@ let ident_in_fact_dependencies ~current_species ident =
   let ident_ty =
     (match ident.Parsetree.ast_type with
      | Parsetree.ANTI_none
-     | Parsetree.ANTI_non_relevant -> assert false
+     | Parsetree.ANTI_irrelevant -> assert false
      | Parsetree.ANTI_scheme sch -> Types.specialize sch
      | Parsetree.ANTI_type t -> t) in
   match ident.Parsetree.ast_desc with
@@ -451,7 +453,7 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 
 let termination_proof_decl_n_def_dependencies ~current_species t_proof =
   match t_proof.Parsetree.ast_desc with
-   | Parsetree.TP_structural _ -> 
+   | Parsetree.TP_structural _ ->
        (Parsetree_utils.SelfDepSet.empty,
         Parsetree_utils.SelfDepSet.empty)
    | Parsetree.TP_lexicographic facts ->
@@ -691,7 +693,8 @@ let ordered_names_list_of_fields fields =
        | Env.TypeInformation.SF_let_rec (_, l) ->
            List.fold_right
              (fun (_, n, _, sch, _, _, _, _) accu' ->
-               let ty = Types.specialize sch in (n, ty) :: accu')
+               let ty = Types.specialize sch in
+               (n, ty) :: accu')
              l accu)
     fields
     []
@@ -775,7 +778,7 @@ let union_y_clock_x_etc ~current_species x_name fields =
     Prevosto's Pdh, section 3.5, page 32, definition 16.
     Does take into account dependencies on the carrier (they must be
     handled appart).
-     
+
 
     {b Rem} : MUST be called only with a [name] sig, let or let-rec
     bound !
@@ -865,9 +868,9 @@ let find_or_create tree_nodes (name, ty) =
   try List.find (fun node -> node.DepGraphData.nn_name = name) !tree_nodes
   with Not_found ->
     let new_node = {
-      DepGraphData.nn_name = name ;
-      DepGraphData.nn_type = ty ; DepGraphData.nn_children = [] } in
-    tree_nodes := new_node :: !tree_nodes ;
+      DepGraphData.nn_name = name;
+      DepGraphData.nn_type = ty; DepGraphData.nn_children = [] } in
+    tree_nodes := new_node :: !tree_nodes;
     new_node
 ;;
 
@@ -912,7 +915,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
           edge n_node.DepGraphData.nn_children
-      end) ;
+      end);
     (* Find the names decl-dependencies for the current name. *)
     let n_decl_deps_names =
       in_species_decl_dependencies_for_one_function_name
@@ -932,7 +935,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
     n_node.DepGraphData.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_deps_nodes n_node.DepGraphData.nn_children ;
+        n_deps_nodes n_node.DepGraphData.nn_children;
     (* We now process termination proof aside.
        Find the names decl-dependencies for the current name in the
        termination proof. *)
@@ -966,12 +969,12 @@ let build_dependencies_graph_for_fields ~current_species fields =
           n_node.DepGraphData.nn_children <-
             Handy.list_concat_uniq_custom_eq
               (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-              n_term_decl_nodes n_node.DepGraphData.nn_children ;
+              n_term_decl_nodes n_node.DepGraphData.nn_children;
           n_node.DepGraphData.nn_children <-
             Handy.list_concat_uniq_custom_eq
               (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
               n_term_def_nodes n_node.DepGraphData.nn_children
-    end) ;
+    end);
     (* Now, check if there is a def-dependency on "rep". *)
     if dep_on_rep.Env.TypeInformation.dor_def then
       (begin
@@ -1019,7 +1022,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
           edge n_node.DepGraphData.nn_children
-      end) ;
+      end);
     (* Find the names decl and defs dependencies for the current name. *)
     let (n_decl_deps_names_from_type,
          n_decl_deps_names_from_body,
@@ -1046,7 +1049,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
     n_node.DepGraphData.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_decl_deps_nodes n_node.DepGraphData.nn_children ;
+        n_decl_deps_nodes n_node.DepGraphData.nn_children;
     (* Now, find the def-dependencies nodes for these names. *)
     let n_def_deps_nodes =
       Parsetree_utils.SelfDepSet.fold
@@ -1061,7 +1064,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
     n_node.DepGraphData.nn_children <-
       Handy.list_concat_uniq_custom_eq
         (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
-        n_def_deps_nodes n_node.DepGraphData.nn_children ;
+        n_def_deps_nodes n_node.DepGraphData.nn_children;
     (* Now, check if there is a def-dependency on "rep". *)
     if dep_on_rep.Env.TypeInformation.dor_def then
       (begin
@@ -1090,7 +1093,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
             (begin
             let ty = Types.specialize sch in
             tree_nodes :=
-              { DepGraphData.nn_name = n ; DepGraphData.nn_type = ty ;
+              { DepGraphData.nn_name = n; DepGraphData.nn_type = ty;
                 DepGraphData.nn_children = [] } :: !tree_nodes
             end)
       | Env.TypeInformation.SF_let (_, n, _, sch, b, _, deps_on_rep, _) ->
@@ -1105,11 +1108,11 @@ let build_dependencies_graph_for_fields ~current_species fields =
             l
       | Env.TypeInformation.SF_theorem (_, n, _, prop, body, deps_on_rep) ->
           let ty = Types.type_prop () in
-          local_build_for_one_theo_property n ty prop (Some body) deps_on_rep ;
+          local_build_for_one_theo_property n ty prop (Some body) deps_on_rep;
       | Env.TypeInformation.SF_property (_, n, _, prop, deps_on_rep) ->
           let ty = Types.type_prop () in
           local_build_for_one_theo_property n ty prop None deps_on_rep)
-    fields ;
+    fields;
   (* Return the list of nodes of the graph. *)
   !tree_nodes
 ;;
@@ -1146,16 +1149,16 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
 \"def dep (in term proof)\" -> \"def dep (in term proof)\" [style=dotted,color=yellow,fontsize=10];
 \"decl dep (in type)\" -> \"decl dep (in type)\" [color=red,fontsize=10];
 \"decl dep (in body)\" -> \"decl dep (in body)\" [color=pink,fontsize=10];
-\"decl dep (in term proof)\" -> \"decl dep (in term proof)\" [color=purple,fontsize=10];\n" ;
+\"decl dep (in term proof)\" -> \"decl dep (in term proof)\" [color=purple,fontsize=10];\n";
   (* Outputs all the nodes of the graph. *)
   List.iter
     (fun { DepGraphData.nn_name = n } ->
       Printf.fprintf out_hd "\"%s\" [shape=box,fontsize=10];\n"
         (Parsetree_utils.name_of_vname n))
-    tree_nodes ;
+    tree_nodes;
   (* Outputs all the edges between the nodes. *)
   List.iter
-    (fun { DepGraphData.nn_name = n ; DepGraphData.nn_children = children } ->
+    (fun { DepGraphData.nn_name = n; DepGraphData.nn_children = children } ->
       List.iter
         (fun ({ DepGraphData.nn_name = child_name }, decl_kind) ->
           (* Just make a different style depending on the kind of dependency. *)
@@ -1174,9 +1177,9 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
             (Parsetree_utils.name_of_vname n)
             (Parsetree_utils.name_of_vname child_name) style color)
         children)
-    tree_nodes ;
+    tree_nodes;
   (* Finally, outputs the trailer of the dotty file. *)
-  Printf.fprintf out_hd " \n}\n" ;
+  Printf.fprintf out_hd " \n}\n";
   close_out out_hd
 ;;
 
@@ -1213,10 +1216,10 @@ let node_out_degree node =
     (fun (n, _) ->
       if not (List.mem n.DepGraphData.nn_name !seen) then
         (begin
-        seen := n.DepGraphData.nn_name :: !seen ;
+        seen := n.DepGraphData.nn_name :: !seen;
         incr count
         end))
-    node.DepGraphData.nn_children ;
+    node.DepGraphData.nn_children;
   !count
 ;;
 
@@ -1257,7 +1260,7 @@ let ___compute_names_reordering dep_graph_nodes =
       let nb_distict_children = node_out_degree name_node in
       out_degree :=
         NameNodeMap.add name_node (ref nb_distict_children) !out_degree)
-    dep_graph_nodes ;
+    dep_graph_nodes;
   (* The working list... *)
   let c_queue = Queue.create () in
   (* Initialization with nodes having a out degree equal to 0.*)
@@ -1265,10 +1268,10 @@ let ___compute_names_reordering dep_graph_nodes =
     (fun node degree ->
       if !degree = 0 then
         begin
-        Queue.push node c_queue ;
+        Queue.push node c_queue;
         out_degree := NameNodeMap.remove node !out_degree
         end)
-    !out_degree ;
+    !out_degree;
   (* The list with the newly ordered fields names. We build it reversed for
      sake of efficiency. We will need to reverse it at the end. *)
   let revd_order_list = ref ([] : Parsetree.vname list) in
@@ -1278,7 +1281,7 @@ let ___compute_names_reordering dep_graph_nodes =
     while true do
       let j = Queue.take c_queue in
       (* [j] can now be output. *)
-      revd_order_list := j.DepGraphData.nn_name :: !revd_order_list ;
+      revd_order_list := j.DepGraphData.nn_name :: !revd_order_list;
       (* Search all parents, i, of  j to decrement their out degree. *)
       NameNodeMap.iter
         (fun i i_out_degree ->
@@ -1291,12 +1294,12 @@ let ___compute_names_reordering dep_graph_nodes =
             (begin
             (* The node [j] appears in [i]'s childrens, hence [i] is right a
                parent of [j]. *)
-            decr i_out_degree ;
+            decr i_out_degree;
             if !i_out_degree = 0 then
               (begin
               (* This parent is now of degree 0, it can now be processed
                  because all its children have already been. *)
-              Queue.push i c_queue ;
+              Queue.push i c_queue;
               out_degree := NameNodeMap.remove i !out_degree
               end)
             end))
@@ -1423,7 +1426,7 @@ let is_reachable start_node end_node =
         path'
       else
         (begin
-        seen := current_node :: !seen ;
+        seen := current_node :: !seen;
         (* The [end_node] was not found in the children, then search in the
            children. *)
         find_on_children path' current_node.DepGraphData.nn_children
@@ -1482,11 +1485,11 @@ let left_triangle dep_graph_nodes x1 x2 fields =
              | found_path ->
                  (* That's a bit casual a programming fashion, but it works..
                     This allows to easily return the error reason... *)
-                 bad_formed := Some (yn_node, y1_node, found_path) ;
+                 bad_formed := Some (yn_node, y1_node, found_path);
                  true)
           x2_arrow)
       x1_arrow in
-  ignore (check ()) ;
+  ignore (check ());
   (* Oooooh, cheater ! *)
   !bad_formed
 ;;
@@ -1554,7 +1557,7 @@ let erase_field field =
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
           Sourcify.pp_vname vname
-          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
+          Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
       []  (* No explicit "rep" means ... no "rep". *)
       end)
     else [field]
@@ -1562,7 +1565,7 @@ let erase_field field =
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
           Sourcify.pp_vname vname
-          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
+          Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
       (* Turn the "let" into a "sig". *)
       [Env.TypeInformation.SF_sig (from, vname, sch)]
   | Env.TypeInformation.SF_let_rec (_, l) ->
@@ -1572,14 +1575,14 @@ let erase_field field =
           if Configuration.get_verbose () then
             Format.eprintf "Erasing field '%a' coming from '%a'.@."
               Sourcify.pp_vname n
-              Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
+              Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
           Env.TypeInformation.SF_sig (from, n, sch))
         l
   | Env.TypeInformation.SF_theorem (from, n, num_ty_vars, prop, _, deps_rep) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
           Sourcify.pp_vname n
-          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
+          Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
       (* Turn the "theorem" into a "property".
          Hence, destroys any def-dependency on the carrier ! *)
 (* [Unsure] Recalculer ces dépendances ? Je pense que le plus safe serait
@@ -1681,24 +1684,24 @@ let erase_fields_in_context ~current_species context fields =
                        List.map (fun (_, n, _, _, _, _, _, _) -> n) flds in
                      (from, ns)) in
               (* Print field(s) name(s) to erase. *)
-              Format.eprintf "Field(s): " ;
+              Format.eprintf "Field(s): ";
               List.iter
                 (fun n -> Format.eprintf "'%a' " Sourcify.pp_vname n)
-                erase_names ;
+                erase_names;
               Format.eprintf  "from '%a' must be erased in context: "
                 Sourcify.pp_qualified_species
-                erase_from.Env.fh_initial_apparition ;
+                erase_from.Env.fh_initial_apparition;
               (* Print the context in which the fields must be erased. *)
               Parsetree_utils.SelfDepSet.iter
                 (fun (n, _) -> Format.eprintf "%a, " Sourcify.pp_vname n)
-                rec_context ;
-              Format.eprintf "@." ;
-              Format.eprintf "since intersection with context is non-empty: " ;
+                rec_context;
+              Format.eprintf "@.";
+              Format.eprintf "since intersection with context is non-empty: ";
               Parsetree_utils.SelfDepSet.iter
-                (fun (n, _) -> Format.eprintf "%a, " Sourcify.pp_vname n) 
-                (Parsetree_utils.SelfDepSet.inter def_deps rec_context) ;
-              Format.eprintf ".@." ;
-              end) ;
+                (fun (n, _) -> Format.eprintf "%a, " Sourcify.pp_vname n)
+                (Parsetree_utils.SelfDepSet.inter def_deps rec_context);
+              Format.eprintf ".@.";
+              end);
             (* Now, really process erasing. *)
             let erased_m_field = erase_field m_field in
             (* Extent the erasing context with names of the current field. *)

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.75 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.76 2009-06-16 09:36:43 weis Exp $ *)
 
 open Parsetree;;
 
@@ -63,25 +63,25 @@ let pp_node_labels sep ppf =
 (* pp_ast :                                                            *)
 (*   (Format.formatter -> 'a -> unit) ->                               *)
 (*     Format.formatter -> ('a, string) Parsetree.ast -> unit          *)
-(** {b Descr} : Wrapper to apply pretty-printing only on the 'ast_doc'
+(** {b Descr} : Wrapper to apply pretty-printing only on the 'ast_annot'
     and 'ast_desc' fields of a ast. Ignores all other fields.
 
     {b Rem} : Not exported ouside this module.                         *)
 (* ******************************************************************* *)
 let pp_ast desc_printer_fct ppf ast =
-  let print_doc_elem ppf de =
+  let print_annot_elem ppf ae =
     Format.fprintf ppf "(** %s%s *)@ "
-      (match de.Parsetree.de_tag with
+      (match ae.Parsetree.ae_tag with
        | "" -> ""
        | tag -> Printf.sprintf "{@%s}" tag)
-      de.Parsetree.de_desc in
-  let print_doc_elems ppf des =
-      List.iter (fun d -> Format.fprintf ppf "%a@ " print_doc_elem d) des in
-  let print_documentation = function
+      ae.Parsetree.ae_desc in
+  let print_annot_elems ppf aes =
+      List.iter (fun d -> Format.fprintf ppf "%a@ " print_annot_elem d) aes in
+  let print_annotation = function
     | [] -> ()
-    | docs -> Format.fprintf ppf "@[<v>%a@]" print_doc_elems docs in
-  (* First, print the documentation if some exists. *)
-  print_documentation ast.Parsetree.ast_doc;
+    | docs -> Format.fprintf ppf "@[<v>%a@]" print_annot_elems docs in
+  (* First, print the annotation if some exists. *)
+  print_annotation ast.Parsetree.ast_annot;
   (* Then, print the code itself. *)
   Format.fprintf ppf "%a" desc_printer_fct ast.Parsetree.ast_desc
 ;;
@@ -791,8 +791,8 @@ and pp_enforced_dependency ppf = pp_ast pp_enforced_dependency_desc ppf
 and pp_proof_desc ppf = function
   | Parsetree.Pf_assumed (enf_deps, reason) ->
       Format.fprintf ppf "@[<2>%a"
-        (pp_enforced_dependencies " ") enf_deps ;
-      if enf_deps <> [] then Format.fprintf ppf " " ;
+        (pp_enforced_dependencies " ") enf_deps;
+      if enf_deps <> [] then Format.fprintf ppf " ";
       Format.fprintf ppf "assumed@ {*%s*}@]" reason
   | Parsetree.Pf_auto [] ->
       Format.fprintf ppf "@[<2>conclude@]"
@@ -800,8 +800,8 @@ and pp_proof_desc ppf = function
       Format.fprintf ppf "@[<2>by %a@]" (pp_facts "") facts
   | Parsetree.Pf_coq (enf_deps, s) ->
       Format.fprintf ppf "@[<2>%a"
-        (pp_enforced_dependencies " ") enf_deps ;
-      if enf_deps <> [] then Format.fprintf ppf " " ;
+        (pp_enforced_dependencies " ") enf_deps;
+      if enf_deps <> [] then Format.fprintf ppf " ";
       Format.fprintf ppf "coq proof@ {*%s*}@]" s
   | Parsetree.Pf_node proof_nodes ->
       Format.fprintf ppf "%a" (pp_proof_nodes "") proof_nodes
@@ -1097,7 +1097,7 @@ let pp_type_def ppf = pp_ast pp_type_def_desc ppf;;
 
 
 let pp_phrase_desc ppf = function
-  | Parsetree.Ph_documentation_title -> ()
+  | Parsetree.Ph_annotation_title -> ()
   | Parsetree.Ph_use fname ->
       Format.fprintf ppf "@[<2>use@ \"%s\";;@]" fname
   | Parsetree.Ph_open fname ->
@@ -1153,14 +1153,14 @@ let pp_simple_species_expr_as_effective_parameter ppf = function
 
 (** Stuff for printing [Parsetree_utils.simple_species_expr] *)
 let pp_simple_species_expr ppf sse =
-  Format.fprintf ppf "@[<2>%a" pp_ident sse.Parsetree_utils.sse_name ;
+  Format.fprintf ppf "@[<2>%a" pp_ident sse.Parsetree_utils.sse_name;
   if sse.Parsetree_utils.sse_effective_args <> [] then
     (begin
     Format.fprintf ppf "@ (%a)"
       (Handy.pp_generic_separated_list
          "," pp_simple_species_expr_as_effective_parameter)
       sse.Parsetree_utils.sse_effective_args
-    end) ;
+    end);
   Format.fprintf ppf "@]"
 ;;
 

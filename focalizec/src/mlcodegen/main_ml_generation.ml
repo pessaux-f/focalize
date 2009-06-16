@@ -1,9 +1,11 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -11,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.20 2009-04-02 15:10:54 weis Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.21 2009-06-16 09:36:43 weis Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -40,7 +42,7 @@
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
 let toplevel_compile env ~current_unit out_fmter = function
-  | Infer.PCM_documentation_title -> env
+  | Infer.PCM_annotation_title -> env
   | Infer.PCM_use (_, _) -> env
   | Infer.PCM_open (phrase_loc, fname) ->
       (* One must "open" the ml code generation environment of this module and
@@ -61,7 +63,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         species_binding_info env
   | Infer.PCM_collection (coll_def, coll_descr, dep_graph) ->
       Species_ml_generation.collection_compile
-        env ~current_unit out_fmter coll_def coll_descr dep_graph ;
+        env ~current_unit out_fmter coll_def coll_descr dep_graph;
       (* Collections don't have parameters or any remaining abstraction.
          Moreover, since we can never inherit of a collection, just forget all
          methods information, it will never be used.
@@ -74,25 +76,25 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
-        Context.rcc_current_unit = current_unit ;
+        Context.rcc_current_unit = current_unit;
         (* Not under a species, hence no species parameter. *)
-        Context.rcc_species_parameters_names = [] ;
+        Context.rcc_species_parameters_names = [];
         (* Not under a species, hence empty carriers mapping. *)
-        Context.rcc_collections_carrier_mapping = [] ;
+        Context.rcc_collections_carrier_mapping = [];
         (* Not in the context of generating a method's body code, then empty. *)
-        Context.rcc_lambda_lift_params_mapping = [] ;
+        Context.rcc_lambda_lift_params_mapping = [];
         Context.rcc_out_fmter = out_fmter } in
       Type_ml_generation.type_def_compile ctx env type_def_name type_descr
   | Infer.PCM_let_def (let_def, def_schemes) ->
       (* Create the initial context for compiling the let-definition. *)
       let ctx = {
-        Context.rcc_current_unit = current_unit ;
+        Context.rcc_current_unit = current_unit;
         (* Not under a species, hence no species parameter. *)
-        Context.rcc_species_parameters_names = [] ;
+        Context.rcc_species_parameters_names = [];
         (* Not under a species, hence empty carriers mapping. *)
-        Context.rcc_collections_carrier_mapping = [] ;
+        Context.rcc_collections_carrier_mapping = [];
         (* Not in the context of generating a method's body code, so, empty. *)
-        Context.rcc_lambda_lift_params_mapping = [] ;
+        Context.rcc_lambda_lift_params_mapping = [];
         Context.rcc_out_fmter = out_fmter } in
       (* We have the schemes under the hand. Then we will be able to annotate
          the parameters of the toplevel let-bound idents with type
@@ -100,25 +102,25 @@ let toplevel_compile env ~current_unit out_fmter = function
       let bound_schemes = List.map (fun sch -> Some sch) def_schemes in
       (* No local idents in the scope because we are at toplevel. *)
       Base_exprs_ml_generation.let_def_compile
-        ctx ~local_idents: [] env let_def bound_schemes ;
-      Format.fprintf out_fmter "@\n;;@\n" ;
+        ctx ~local_idents: [] env let_def bound_schemes;
+      Format.fprintf out_fmter "@\n;;@\n";
       env
   | Infer.PCM_theorem _ -> env  (* Theorems do not lead to OCaml code. *)
   | Infer.PCM_expr expr ->
       let ctx = {
-        Context.rcc_current_unit = current_unit ;
+        Context.rcc_current_unit = current_unit;
         (* Not under a species, hence no species parameter. *)
-        Context.rcc_species_parameters_names = [] ;
+        Context.rcc_species_parameters_names = [];
         (* Not under a species, hence empty carriers mapping. *)
-        Context.rcc_collections_carrier_mapping = [] ;
+        Context.rcc_collections_carrier_mapping = [];
         (* Not in the context of generating a method's body code, so, empty. *)
-        Context.rcc_lambda_lift_params_mapping = [] ;
+        Context.rcc_lambda_lift_params_mapping = [];
         Context.rcc_out_fmter = out_fmter
       } in
       (* No local idents in the scope because we are at toplevel. *)
-      Base_exprs_ml_generation.generate_expr ctx env ~local_idents: [] expr ;
+      Base_exprs_ml_generation.generate_expr ctx env ~local_idents: [] expr;
       (* Generate the final double-semis. *)
-      Format.fprintf out_fmter "@ ;;@\n" ;
+      Format.fprintf out_fmter "@;;@\n";
       env
 ;;
 
@@ -126,7 +128,7 @@ let toplevel_compile env ~current_unit out_fmter = function
 
 let root_compile ~current_unit ~out_file_name stuff =
   if Configuration.get_verbose () then
-    Format.eprintf "Starting OCaml code generation.@." ;
+    Format.eprintf "Starting OCaml code generation.@.";
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.MlGenEnv.empty ()) in
@@ -136,15 +138,15 @@ let root_compile ~current_unit ~out_file_name stuff =
         let new_env =
           toplevel_compile !global_env ~current_unit out_fmter data in
         global_env := new_env)
-      stuff ;
+      stuff;
     (* Flush the pretty-printer. *)
-    Format.fprintf out_fmter "@?" ;
-    close_out out_hd ;
+    Format.fprintf out_fmter "@?";
+    close_out out_hd;
     !global_env
   with whatever ->
     (* In any error case, flush the pretty-printer and close the outfile. *)
-    Format.fprintf out_fmter "@?" ;
-    close_out out_hd ;
+    Format.fprintf out_fmter "@?";
+    close_out out_hd;
     (begin
     try
       (* And rename it to prevent an incorrecty OCaml source file from
@@ -153,8 +155,8 @@ let root_compile ~current_unit ~out_file_name stuff =
       let trace_filename = out_file_name ^ ".mangled" in
       (* If the file of trace already exists, then first *)
       (* discard it to prevent OS file I/O errors.       *)
-      if Sys.file_exists trace_filename then Sys.remove trace_filename ;
-      Sys.rename out_file_name trace_filename ;
+      if Sys.file_exists trace_filename then Sys.remove trace_filename;
+      Sys.rename out_file_name trace_filename;
     with second_error ->
       (begin
       (* Here we want to catch errors that can arise during the trace file
@@ -164,7 +166,7 @@ let root_compile ~current_unit ~out_file_name stuff =
       Format.eprintf "Error@ while@ trying@ to@ keep@ trace@ of@ the@ partially@ generated@ OCaml@ code:@ %s.@\nInitial@ error@ follows.@."
         (Printexc.to_string second_error)
       end)
-    end) ;
+    end);
     (* Re-reaise the initial error. *)
     raise whatever
 ;;

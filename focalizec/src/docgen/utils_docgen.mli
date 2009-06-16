@@ -1,9 +1,11 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
+(*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
-(*            François Pessaux                                         *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -11,9 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: utils_docgen.mli,v 1.1 2009-01-13 14:34:09 pessaux Exp $ *)
-
-
+(* $Id: utils_docgen.mli,v 1.2 2009-06-16 09:36:43 weis Exp $ *)
 
 val xmlify_string : string -> string
 
@@ -23,11 +23,11 @@ val get_in_file_and_name_from_ident :
   current_unit: Parsetree.module_name ->
     Parsetree.ident -> (Parsetree.module_name * Parsetree.vname)
 
-val find_documentation_of_method :
-  Parsetree.vname -> Parsetree.species_field list -> Parsetree.documentation
+val find_annotation_of_method :
+  Parsetree.vname -> Parsetree.species_field list -> Parsetree.annotation
 
-val extract_tagged_info_from_documentation :
-  Parsetree.doc_elem list ->
+val extract_tagged_info_from_annotation :
+  Parsetree.annot_elem list ->
     (string option * string option * string option * string option *
      string option * string option)
 

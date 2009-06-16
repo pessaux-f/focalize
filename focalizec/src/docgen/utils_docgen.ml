@@ -1,9 +1,11 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
+(*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
-(*            François Pessaux                                         *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -11,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: utils_docgen.ml,v 1.3 2009-01-22 10:36:01 weis Exp $ *)
+(* $Id: utils_docgen.ml,v 1.4 2009-06-16 09:36:43 weis Exp $ *)
 
 
 
@@ -32,9 +34,9 @@ let xmlify_string s =
      | '<' -> result := !result ^ "&lt;"
      | '>' -> result := !result ^ "&gt;"
      | '&' -> result := !result ^ "&amp;"
-     | _ -> result := !result ^ (String.make 1 s.[!i])) ;
+     | _ -> result := !result ^ (String.make 1 s.[!i]));
     incr i
-  done ;
+  done;
   !result
 ;;
 
@@ -72,7 +74,7 @@ let get_in_file_and_name_from_ident ~current_unit ident =
 
     {b Rem}: Exported outside this module.                                  *)
 (* ************************************************************************ *)
-let find_documentation_of_method meth_name species_def_fields =
+let find_annotation_of_method meth_name species_def_fields =
   (* Local function to perform search among the [binding]s of a [SF_let] in
      order to find if a binding has the searched name. *)
   let rec find_in_bindings = function
@@ -95,11 +97,11 @@ let find_documentation_of_method meth_name species_def_fields =
         match h.Parsetree.ast_desc with
          | Parsetree.SF_rep rep_type_def ->
              if meth_name = (Parsetree.Vlident "rep") then
-               rep_type_def.Parsetree.ast_doc
+               rep_type_def.Parsetree.ast_annot
              else rec_find q
          | Parsetree.SF_sig sig_def ->
              if sig_def.Parsetree.ast_desc.Parsetree.sig_name = meth_name then
-               sig_def.Parsetree.ast_doc
+               sig_def.Parsetree.ast_annot
              else rec_find q
          | Parsetree.SF_let let_def ->
              (begin
@@ -111,22 +113,22 @@ let find_documentation_of_method meth_name species_def_fields =
                 again... *)
              if find_in_bindings
                  let_def.Parsetree.ast_desc.Parsetree.ld_bindings then
-               let_def.Parsetree.ast_doc
+               let_def.Parsetree.ast_annot
              else rec_find q
              end)
          | Parsetree.SF_property property_def ->
              if property_def.Parsetree.ast_desc.Parsetree.prd_name = meth_name
              then
-               property_def.Parsetree.ast_doc
+               property_def.Parsetree.ast_annot
              else rec_find q
          | Parsetree.SF_theorem theorem_def ->
              if theorem_def.Parsetree.ast_desc.Parsetree.th_name = meth_name
              then
-               theorem_def.Parsetree.ast_doc
+               theorem_def.Parsetree.ast_annot
              else rec_find q
          | Parsetree.SF_proof proof_def ->
              if proof_def.Parsetree.ast_desc.Parsetree.pd_name = meth_name then
-               proof_def.Parsetree.ast_doc
+               proof_def.Parsetree.ast_annot
              else rec_find q
          | Parsetree.SF_termination_proof term_proof_def ->
              let found_among_profiles =
@@ -135,7 +137,7 @@ let find_documentation_of_method meth_name species_def_fields =
                    profile.Parsetree.ast_desc.Parsetree.tpp_name = n)
                  meth_name
                  term_proof_def.Parsetree.ast_desc.Parsetree.tpd_profiles in
-             if found_among_profiles then h.Parsetree.ast_doc
+             if found_among_profiles then h.Parsetree.ast_annot
              else rec_find q
         end) in
   (* ********************** *)
@@ -146,7 +148,7 @@ let find_documentation_of_method meth_name species_def_fields =
 
 
 (* ************************************************************************** *)
-(* Parsetree.doc_elem list ->                                                 *)
+(* Parsetree.annot_elem list ->                                                 *)
 (*   ((string option * string option * string option *                        *)
 (*    (string option * string option * string option))                        *)
 (** {b Descr}: Searches the string related to all documentation tags known in
@@ -156,7 +158,7 @@ let find_documentation_of_method meth_name species_def_fields =
 
     {b Rem}: Exported outside this module.                                    *)
 (* ************************************************************************** *)
-let extract_tagged_info_from_documentation doc_elems =
+let extract_tagged_info_from_annotation annot_elems =
   let found_title = ref None in
   let found_author = ref None in
   let found_description = ref None in
@@ -166,7 +168,7 @@ let extract_tagged_info_from_documentation doc_elems =
   (* A local function to search the tags in an AST node. *)
   List.iter
     (function
-     | { Parsetree.de_tag = ("" | "FoCaLize"); Parsetree.de_desc = s } ->
+     | { Parsetree.ae_tag = ("" | "FoCaLize"); Parsetree.ae_desc = s } ->
        let lexbuf = Lexing.from_string s in
        let continue = ref true in
        (* We lex ther string until we reach its end, i.e. until we get a
@@ -201,7 +203,7 @@ let extract_tagged_info_from_documentation doc_elems =
        done
      (* Not our stuff. *)
      | _ -> ())
-    doc_elems ;
+    annot_elems;
   (!found_title, !found_author, !found_description, !found_mathml,
    !found_latex, !found_untagged)
 ;;
@@ -226,7 +228,7 @@ let find_title_author_and_description ast_root =
   (* Do the job on the top node of the AST. We lex the documentation and
      look at the informations we found inside. *)
   let (found_title, found_author, found_description, _, _, _) =
-    extract_tagged_info_from_documentation ast_root.Parsetree.ast_doc in
+    extract_tagged_info_from_annotation ast_root.Parsetree.ast_annot in
   (* Then do the same thing on the AST node of the first definition of the
      source file. *)
   match ast_root.Parsetree.ast_desc with
@@ -237,7 +239,7 @@ let find_title_author_and_description ast_root =
        (found_title, found_author, found_description)
    | Parsetree.File (first :: _) ->
        let (found_title', found_author', found_description', _, _, _) =
-         extract_tagged_info_from_documentation first.Parsetree.ast_doc in
+         extract_tagged_info_from_annotation first.Parsetree.ast_annot in
        (* Now, just return what we found, always prefering the items found
           in the first AST node. *)
        let final_title =

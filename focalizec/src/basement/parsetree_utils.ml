@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.33 2009-06-08 15:35:39 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.34 2009-06-16 09:36:42 weis Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -303,7 +303,7 @@ type simple_species_expr = {
 (** {b Descr} : Creates a fake [Parsetree.ident] from a
     [Parsetree.qualified_species] in order to be able to lookup in an
     environment. The ident is "fake" in the sense it has no location no
-    documentation an no type. Then it must only b used when these fields
+    annotation and no type. Then it must only be used when these fields
     are non-relevant.
 
     {b Rem} : Exported outside this module.                              *)
@@ -316,7 +316,7 @@ let make_pseudo_species_ident ~current_unit (species_mod, species_name) =
       Parsetree.I_global (Parsetree.Qualified (species_mod, species_name)) in
   { Parsetree.ast_loc = Location.none ;
     Parsetree.ast_desc = ident_desc ;
-    Parsetree.ast_doc = [] ;
+    Parsetree.ast_annot = [] ;
     Parsetree.ast_type = Parsetree.ANTI_none }
 ;;
 

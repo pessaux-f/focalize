@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.23 2009-05-28 08:43:26 pessaux Exp $ *)
+(* $Id: misc_common.ml,v 1.24 2009-06-16 09:36:42 weis Exp $ *)
 
 
 
@@ -323,9 +323,9 @@ let follow_instanciations_for_in_param ctx env original_param_name
       Parsetree.E_var {
         Parsetree.ast_loc = Location.none ;
         Parsetree.ast_desc = Parsetree.EI_local original_param_name ;
-        Parsetree.ast_doc = [] ;
+        Parsetree.ast_annot = [] ;
         Parsetree.ast_type = Parsetree.ANTI_none } ;
-    Parsetree.ast_doc = [] ;
+    Parsetree.ast_annot = [] ;
     Parsetree.ast_type = Parsetree.ANTI_none } in
   rec_follow
     original_param_unit [(original_param_name, original_param_index)]

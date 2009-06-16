@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
@@ -8,12 +8,12 @@
 (*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.84 2009-06-10 12:24:48 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.85 2009-06-16 09:36:43 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -89,7 +89,7 @@ exception Module_not_specified_as_used of
 
     {b Exported} : Yes.                                                    *)
 (* *********************************************************************** *)
-exception Self_cant_parameterize_itself of Location.t ;;
+exception Self_cant_parameterize_itself of Location.t;;
 
 
 
@@ -104,7 +104,7 @@ exception Self_cant_parameterize_itself of Location.t ;;
 
     {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
-exception Is_parameter_only_coll_ident of Location.t ;;
+exception Is_parameter_only_coll_ident of Location.t;;
 
 
 
@@ -148,7 +148,7 @@ exception Invalid_external_binding_identifier of
 
     {b Exported} : Yes.                                                    *)
 (* *********************************************************************** *)
-exception Invalid_external_binding_number of Location.t ;;
+exception Invalid_external_binding_number of Location.t;;
 
 
 
@@ -220,13 +220,14 @@ exception Ambiguous_logical_expression_and of
 (* ********************************************************************** *)
 type scoping_context = {
   (** The name of the currently analysed compilation unit. *)
-  current_unit : Types.fname ;
+  current_unit : Types.fname;
   (** The optional name of the currently analysed species. *)
-  current_species : string option ;
+  current_species : string option;
   (** The list of "use"-d (or open-ed since "open" implies "use") modules.
       Not file with paths and extension : just module name (ex: "basics"). *)
   used_modules : Types.fname list
-} ;;
+}
+;;
 
 
 
@@ -464,7 +465,7 @@ let (extend_env_with_implicit_gen_vars_from_type_exprs,
        {b Exported} : No.                                                   *)
    (* ********************************************************************* *)
    (fun env type_expressions ->
-     seen_vars := [] ;
+     seen_vars := [];
      List.fold_left
        (fun env_accu ty_expr -> rec_extend_texpr ty_expr env_accu)
        env
@@ -521,7 +522,7 @@ let rec scope_type_expr ctx env ty_expr =
          (begin
          (* Ensure that the mentionned hosting compilation unit of the
             constructor was mentionned to be "used" or "opened". *)
-         ensure_ident_allowed_qualified ctx ident ;
+         ensure_ident_allowed_qualified ctx ident;
          let hosting_info =
            Env.ScopingEnv.find_type
              ~loc: ident.Parsetree.ast_loc
@@ -547,7 +548,7 @@ let rec scope_type_expr ctx env ty_expr =
          (begin
          (* Ensure that the mentionned hosting compilation unit if the
             constructor was mentionned to be "used" or "opened". *)
-         ensure_ident_allowed_qualified ctx ident ;
+         ensure_ident_allowed_qualified ctx ident;
          let hosting_info =
            Env.ScopingEnv.find_type
              ~loc: ident.Parsetree.ast_loc
@@ -695,7 +696,7 @@ let rec scope_rep_type_def ctx env rep_type_def =
          (begin
          (* Ensure that the mentionned hosting compilation unit if the
             constructor was mentionned to be "used" or "opened". *)
-         ensure_ident_allowed_qualified ctx ident ;
+         ensure_ident_allowed_qualified ctx ident;
          let hosting_info =
            Env.ScopingEnv.find_type
              ~loc: ident.Parsetree.ast_loc
@@ -721,7 +722,7 @@ let rec scope_rep_type_def ctx env rep_type_def =
          (begin
          (* Ensure that the mentionned hosting compilation unit if the
             constructor was mentionned to be "used" or "opened". *)
-         ensure_ident_allowed_qualified ctx ident ;
+         ensure_ident_allowed_qualified ctx ident;
          let hosting_info =
            Env.ScopingEnv.find_type
              ~loc: ident.Parsetree.ast_loc
@@ -854,7 +855,7 @@ let scope_external_type_def_body ctx env_with_params env tdef_body =
      by the internal representation of the type definition. *)
   verify_external_binding
     ~type_def_body_loc: tdef_body.Parsetree.ast_loc
-    tdef_body_desc.Parsetree.etdb_bindings.Parsetree.ast_desc bound_names ;
+    tdef_body_desc.Parsetree.etdb_bindings.Parsetree.ast_desc bound_names;
   let scoped_tdef_body_desc = {
     Parsetree.etdb_internal = etdb_internal';
     Parsetree.etdb_external = tdef_body_desc.Parsetree.etdb_external;
@@ -1016,10 +1017,10 @@ let can_be_scoped_as_local_p ctx env ~loc vname =
   (* We embedd the [vname] inside a dummy [ident] in order to lookup. *)
   let fake_ident = {
     (* Must be a local ident of the function. *)
-    Parsetree.ast_desc = Parsetree.EI_local vname ;
+    Parsetree.ast_desc = Parsetree.EI_local vname;
     (* Roughly correction as a location, even is not exact. *)
-    Parsetree.ast_loc = loc ;
-    Parsetree.ast_doc = [] ;
+    Parsetree.ast_loc = loc;
+    Parsetree.ast_annot = [];
     Parsetree.ast_type = Parsetree.ANTI_none } in
   let hosting_info =
       Env.ScopingEnv.find_value
@@ -1054,7 +1055,7 @@ let scope_enforced_deps ctx env enforced_deps =
              (fun ident ->
                (* Ensure that the mentionned hosting compilation unit of the
                   expr_ident was mentionned to be "used" or "opened". *)
-               ensure_expr_ident_allowed_qualified ctx ident ;
+               ensure_expr_ident_allowed_qualified ctx ident;
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
@@ -1076,7 +1077,7 @@ let scope_enforced_deps ctx env enforced_deps =
              (fun ident ->
                (* Ensure that the mentionned hosting compilation unit of the
                   expr_ident was mentionned to be "used" or "opened". *)
-               ensure_expr_ident_allowed_qualified ctx ident ;
+               ensure_expr_ident_allowed_qualified ctx ident;
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
@@ -1112,7 +1113,7 @@ let rec scope_fact ctx env fact =
              (fun ident ->
                (* Ensure that the mentionned hosting compilation unit of the
                   expr_ident was mentionned to be "used" or "opened". *)
-               ensure_expr_ident_allowed_qualified ctx ident ;
+               ensure_expr_ident_allowed_qualified ctx ident;
                let scope_info =
                  Env.ScopingEnv.find_value
                    ~loc: ident.Parsetree.ast_loc
@@ -1134,7 +1135,7 @@ let rec scope_fact ctx env fact =
              (fun ident ->
                (* Ensure that the mentionned hosting compilation unit of the
                   expr_ident was mentionned to be "used" or "opened". *)
-               ensure_expr_ident_allowed_qualified ctx ident ;
+               ensure_expr_ident_allowed_qualified ctx ident;
                let basic_vname =
                  Parsetree_utils.unqualified_vname_of_expr_ident ident in
                let scope_info =
@@ -1161,7 +1162,7 @@ let rec scope_fact ctx env fact =
              (fun ident ->
                (* Ensure that the mentionned hosting compilation unit of the
                   ident was mentionned to be "used" or "opened". *)
-               ensure_ident_allowed_qualified ctx ident ;
+               ensure_ident_allowed_qualified ctx ident;
                let hosting_info =
                  Env.ScopingEnv.find_type
                    ~loc: ident.Parsetree.ast_loc
@@ -1317,7 +1318,7 @@ and scope_expr ctx env expr =
          (begin
          (* Ensure that the mentionned hosting compilation unit of the
             expr_ident was mentionned to be "used" or "opened". *)
-         ensure_expr_ident_allowed_qualified ctx ident ;
+         ensure_expr_ident_allowed_qualified ctx ident;
          (* Here, we will finally use our environment in order to determine
             the effective scope of the [ident]. *)
          let hosting_info =
@@ -1350,7 +1351,7 @@ and scope_expr ctx env expr =
          let Parsetree.CI global_ident = cstr_ident.Parsetree.ast_desc in
          (* Ensure that the mentionned hosting compilation unit if the
             constructor was mentionned to be "used" or "opened". *)
-         ensure_ident_allowed_qualified ctx global_ident ;
+         ensure_ident_allowed_qualified ctx global_ident;
          let scoped_global_ident = {
            global_ident with
              Parsetree.ast_desc =
@@ -1392,7 +1393,7 @@ and scope_expr ctx env expr =
                (* Ensure that the mentionned hosting compilation unit of the
                   record label was mentionned to be "used" or "opened". *)
                let Parsetree.LI lbl_glob_ident = label.Parsetree.ast_desc in
-               ensure_ident_allowed_qualified ctx lbl_glob_ident ;
+               ensure_ident_allowed_qualified ctx lbl_glob_ident;
                (label, (scope_expr ctx env bound_expr)))
              labels_exprs in
          Parsetree.E_record scoped_labels_exprs
@@ -1400,7 +1401,7 @@ and scope_expr ctx env expr =
          (* Ensure that the mentionned hosting compilation unit of the
             record label was mentionned to be "used" or "opened". *)
          let Parsetree.LI lbl_glob_ident = label.Parsetree.ast_desc in
-         ensure_ident_allowed_qualified ctx lbl_glob_ident ;
+         ensure_ident_allowed_qualified ctx lbl_glob_ident;
          let e' = scope_expr ctx env e in
          Parsetree.E_record_access (e', label)
      | Parsetree.E_record_with (e, labels_exprs) ->
@@ -1411,7 +1412,7 @@ and scope_expr ctx env expr =
                (* Ensure that the mentionned hosting compilation unit of the
                   record label was mentionned to be "used" or "opened". *)
                let Parsetree.LI lbl_glob_ident = label.Parsetree.ast_desc in
-               ensure_ident_allowed_qualified ctx lbl_glob_ident ;
+               ensure_ident_allowed_qualified ctx lbl_glob_ident;
                (label, (scope_expr ctx env bound_expr)))
              labels_exprs in
          Parsetree.E_record_with (scoped_e, scoped_labels_exprs)
@@ -1457,7 +1458,7 @@ and scope_pattern ctx env pattern =
          (* Ensure that the mentionned hosting compilation unit of the
             sum constructor was mentionned to be "used" or "opened". *)
          let Parsetree.CI glob_ident = cstr.Parsetree.ast_desc in
-         ensure_ident_allowed_qualified ctx glob_ident ;
+         ensure_ident_allowed_qualified ctx glob_ident;
          let cstr_host_module =
            Env.ScopingEnv.find_constructor
              ~loc: cstr.Parsetree.ast_loc
@@ -1492,7 +1493,7 @@ and scope_pattern ctx env pattern =
                (* Ensure that the mentionned hosting compilation unit of the
                   record label was mentionned to be "used" or "opened". *)
                let Parsetree.LI lbl_glob_ident = lab.Parsetree.ast_desc in
-               ensure_ident_allowed_qualified ctx lbl_glob_ident ;
+               ensure_ident_allowed_qualified ctx lbl_glob_ident;
                let (scoped_pat, accu_env') = scope_pattern ctx accu_env pat in
                (((lab, scoped_pat) :: accu_lab_pats), accu_env'))
              labs_n_pats
@@ -1570,7 +1571,7 @@ and scope_termination_proof ctx env params_env tp =
                     ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
                raise
                  (Structural_termination_only_on_fun_arg
-                    (tp.Parsetree.ast_loc, arg_name)) ;
+                    (tp.Parsetree.ast_loc, arg_name));
              let scoped_arg_ty =
                match arg_type with
                 | None -> None
@@ -1591,7 +1592,7 @@ and scope_termination_proof ctx env params_env tp =
                     ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
                raise
                  (Structural_termination_only_on_fun_arg
-                    (tp.Parsetree.ast_loc, arg_name)) ;
+                    (tp.Parsetree.ast_loc, arg_name));
              let scoped_arg_ty =
                match arg_type with
                 | None -> None
@@ -1754,8 +1755,8 @@ and scope_let_definition ~toplevel_let ctx env let_def =
            Some (scope_type_expr ctx env_with_ty_constraints_variables tye)) in
     let new_binding_desc =
       { let_binding_descr with
-          Parsetree.b_params = scoped_b_params ;
-          Parsetree.b_type = scoped_b_type ;
+          Parsetree.b_params = scoped_b_params;
+          Parsetree.b_type = scoped_b_type;
           Parsetree.b_body = scoped_body } in
     { let_binding with Parsetree.ast_desc = new_binding_desc } in
   let scoped_bindings =
@@ -1775,7 +1776,7 @@ and scope_let_definition ~toplevel_let ctx env let_def =
      environment. *)
   let scoped_let_def_desc = {
     let_def_descr with
-      Parsetree.ld_bindings = scoped_bindings ;
+      Parsetree.ld_bindings = scoped_bindings;
       Parsetree.ld_termination_proof = scoped_termination_proof } in
   let scoped_let_def = {
     let_def with Parsetree.ast_desc = scoped_let_def_desc } in
@@ -1846,14 +1847,14 @@ and scope_logical_expr ctx env logical_expr =
               raise
                 (Ambiguous_logical_expression_or
                   (0, logical_expr.Parsetree.ast_loc))
-          | _ -> ()) ;
+          | _ -> ());
          (match p2.Parsetree.ast_desc with
           | Parsetree.Pr_imply (_, _)
           | Parsetree.Pr_equiv (_, _) ->
               raise
                 (Ambiguous_logical_expression_or
                   (1, logical_expr.Parsetree.ast_loc))
-          | _ -> ()) ;
+          | _ -> ());
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_or (scoped_p1, scoped_p2)
@@ -1868,14 +1869,14 @@ and scope_logical_expr ctx env logical_expr =
               raise
                 (Ambiguous_logical_expression_and
                   (0, logical_expr.Parsetree.ast_loc))
-          | _ -> ()) ;
+          | _ -> ());
          (match p2.Parsetree.ast_desc with
           | Parsetree.Pr_imply (_, _)
           | Parsetree.Pr_equiv (_, _) ->
               raise
                 (Ambiguous_logical_expression_and
                   (1, logical_expr.Parsetree.ast_loc))
-          | _ -> ()) ;
+          | _ -> ());
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_and (scoped_p1, scoped_p2)
@@ -1900,7 +1901,7 @@ let scope_sig_def ctx env sig_def =
     sig_def with
       Parsetree.ast_desc = {
         sig_def.Parsetree.ast_desc with
-           Parsetree.sig_name = sig_def_descr.Parsetree.sig_name ;
+           Parsetree.sig_name = sig_def_descr.Parsetree.sig_name;
            Parsetree.sig_type = scoped_type }
   } in
   (scoped_sig_def, sig_def_descr.Parsetree.sig_name)
@@ -1943,10 +1944,10 @@ let scope_termination_proof_profile ctx env profile =
   (* One must first search the function name in the environment. We embedd the
      [vname] inside a dummy [ident] in order to lookup. *)
   let fake_ident = {
-    Parsetree.ast_desc = Parsetree.EI_local profile_desc.Parsetree.tpp_name ;
+    Parsetree.ast_desc = Parsetree.EI_local profile_desc.Parsetree.tpp_name;
     (* Roughly correction as a location, even is not exact. *)
-    Parsetree.ast_loc = profile.Parsetree.ast_loc ;
-    Parsetree.ast_doc = [] ;
+    Parsetree.ast_loc = profile.Parsetree.ast_loc;
+    Parsetree.ast_annot = [];
     Parsetree.ast_type = Parsetree.ANTI_none } in
   let hosting_info =
     Env.ScopingEnv.find_value
@@ -2008,7 +2009,7 @@ let scope_termination_proof_def ctx env termination_proof_def =
     desc.Parsetree.tpd_termination_proof in
   { termination_proof_def with
       Parsetree.ast_desc = {
-        Parsetree.tpd_profiles = scoped_term_proof_profiles ;
+        Parsetree.tpd_profiles = scoped_term_proof_profiles;
         Parsetree.tpd_termination_proof = scoped_termination_proof }
   }
 ;;
@@ -2112,7 +2113,7 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
       let Parsetree.CI glob_ident = cstr_expr.Parsetree.ast_desc in
       (* Ensure that the mentionned hosting compilation unit of the species was
          mentionned to be "used" or "opened". *)
-      ensure_ident_allowed_qualified ctx glob_ident ;
+      ensure_ident_allowed_qualified ctx glob_ident;
       let species_info =
         Env.ScopingEnv.find_species
           ~loc: glob_ident.Parsetree.ast_loc
@@ -2222,8 +2223,8 @@ let rec scope_species_expr ctx env species_expr =
 
 (* ********************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t ->                                 *)
-(*   (Parsetree.species_expr list) Parsetree.ast_doc ->                   *)
-(*     ((Parsetree.species_expr list) ast_doc * Parsetree.vname list)     *)
+(*   (Parsetree.species_expr list) Parsetree.ast_annot ->                   *)
+(*     ((Parsetree.species_expr list) ast_annot * Parsetree.vname list)     *)
 (** {b Descr} : Scopes the inheritance specification of a species. This
     specification  is a list of species expressions. By the way, returns
     the list of methods inherited from this tree.
@@ -2319,11 +2320,11 @@ let scope_species_params_types ctx env params =
                 ~loc: spec_expr.Parsetree.ast_loc
                 param_name
                 { Env.ScopeInformation.spbi_scope =
-                    Env.ScopeInformation.SPBI_parameter ;
+                    Env.ScopeInformation.SPBI_parameter;
                   (* Because parameters are indeed COLLECTION parameters (i.e.
                      are intended to be finally instanciated to a collection),
                      they have no ... parameters, them. *)
-                  Env.ScopeInformation.spbi_params_kind = [] ;
+                  Env.ScopeInformation.spbi_params_kind = [];
                   Env.ScopeInformation.spbi_methods = species_methods }
                 accu_env in
             (* Now, extend the environment with the name of the carrier type
@@ -2488,7 +2489,7 @@ let scope_collection_def ctx env coll_def =
 let scope_phrase ctx env phrase =
   let (new_desc, new_env, new_ctx) =
     (match phrase.Parsetree.ast_desc with
-     | Parsetree.Ph_documentation_title ->
+     | Parsetree.Ph_annotation_title ->
          (phrase.Parsetree.ast_desc, env, ctx)
      | Parsetree.Ph_use fname ->
          (* Allow this module to be used. *)
@@ -2573,8 +2574,8 @@ let scope_file current_unit file =
    | Parsetree.File phrases ->
        (* Initial context with no "use"-d modules. *)
        let global_ctx =
-         ref { current_unit = current_unit ;
-               current_species = None ;
+         ref { current_unit = current_unit;
+               current_species = None;
                used_modules = [] } in
        (* Scoping of a file starts with the empty scoping environment. *)
        let global_env = ref (Env.ScopingEnv.pervasives ()) in

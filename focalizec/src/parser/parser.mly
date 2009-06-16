@@ -1,7 +1,7 @@
 %{
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.147 2009-06-12 08:24:18 weis Exp $ *)
+(* $Id: parser.mly,v 1.148 2009-06-16 09:36:43 weis Exp $ *)
 
 open Parsetree;;
 
@@ -24,22 +24,22 @@ let mk_loc () = {
 }
 ;;
 
-let mk_doc_elem (tag, desc) = {
-  de_loc = mk_loc ();
-  de_desc = desc;
-  de_tag = tag;
+let mk_annot_elem (tag, desc) = {
+  ae_loc = mk_loc ();
+  ae_desc = desc;
+  ae_tag = tag;
 }
 ;;
 
-let mk_doc doc desc = {
+let mk_annot doc desc = {
   ast_loc = mk_loc ();
   ast_desc = desc;
-  ast_doc = doc;
+  ast_annot = doc;
   ast_type = Parsetree.ANTI_none;
 }
 ;;
 
-let mk d = mk_doc [] d;;
+let mk d = mk_annot [] d;;
 
 let mk_local_ident vname = mk (I_local vname);;
 
@@ -145,9 +145,9 @@ let mk_proof_label (s1, s2) =
 %token <char> CHAR
 
 /* Special tokens */
-%token <string * string> DOCUMENTATION
-%token <string * string> DOCUMENTATION_HEADER
-%token <string * string> DOCUMENTATION_TITLE
+%token <string * string> ANNOTATION
+%token <string * string> ANNOTATION_HEADER
+%token <string * string> ANNOTATION_TITLE
 %token <string * string> PROOF_LABEL
 %token <string> EXTERNAL_CODE
 
@@ -374,8 +374,8 @@ let mk_proof_label (s1, s2) =
 %%
 
 file:
-  | DOCUMENTATION_HEADER phrases
-    { mk_doc [mk_doc_elem $1] (File $2) }
+  | ANNOTATION_HEADER phrases
+    { mk_annot [mk_annot_elem $1] (File $2) }
   | phrases
     { mk (File $1) }
 ;
@@ -388,8 +388,8 @@ phrases:
 ;
 
 phrase:
-  | DOCUMENTATION_TITLE
-    { mk_doc [mk_doc_elem $1] Ph_documentation_title }
+  | ANNOTATION_TITLE
+    { mk_annot [mk_annot_elem $1] Ph_annotation_title }
   | define_let SEMI_SEMI
     { mk (Ph_let $1) }
   | define_logical SEMI_SEMI
@@ -402,14 +402,14 @@ phrase:
     { mk (Ph_species $1) }
   | define_collection SEMI_SEMI
     { mk (Ph_collection $1) }
-  | opt_doc OPEN STRING SEMI_SEMI
-    { mk_doc $1 (Ph_open $3) }
-  | opt_doc USE STRING SEMI_SEMI
-    { mk_doc $1 (Ph_use $3) }
-  | opt_doc COQ_REQUIRE STRING SEMI_SEMI
-    { mk_doc $1 (Ph_coq_require $3) }
-  | opt_doc expr SEMI_SEMI
-    { mk_doc $1 (Ph_expr $2) }
+  | opt_annot OPEN STRING SEMI_SEMI
+    { mk_annot $1 (Ph_open $3) }
+  | opt_annot USE STRING SEMI_SEMI
+    { mk_annot $1 (Ph_use $3) }
+  | opt_annot COQ_REQUIRE STRING SEMI_SEMI
+    { mk_annot $1 (Ph_coq_require $3) }
+  | opt_annot expr SEMI_SEMI
+    { mk_annot $1 (Ph_expr $2) }
 ;
 
 external_language:
@@ -441,8 +441,8 @@ external_expr:
 /**** TYPE DEFINITION ****/
 
 define_type:
-  | opt_doc TYPE type_vname define_type_params EQUAL define_type_body
-    { mk_doc $1 {td_name = $3; td_params = $4; td_body = $6; } }
+  | opt_annot TYPE type_vname define_type_params EQUAL define_type_body
+    { mk_annot $1 {td_name = $3; td_params = $4; td_body = $6; } }
 ;
 
 define_type_params:
@@ -459,14 +459,14 @@ define_type_param_comma_list:
 ;
 
 define_type_body:
-  | opt_doc ABSTRACT define_type_body_private
-    { mk_doc $1 (TDB_abstract $3) }
-  | opt_doc PRIVATE define_type_body_private
-    { mk_doc $1 (TDB_private $3) }
-  | opt_doc RELATIONAL define_type_body_private
-    { mk_doc $1 (TDB_relational $3) }
-  | opt_doc PUBLIC define_type_body_contents
-    { mk_doc $1 (TDB_public $3) }
+  | opt_annot ABSTRACT define_type_body_private
+    { mk_annot $1 (TDB_abstract $3) }
+  | opt_annot PRIVATE define_type_body_private
+    { mk_annot $1 (TDB_private $3) }
+  | opt_annot RELATIONAL define_type_body_private
+    { mk_annot $1 (TDB_relational $3) }
+  | opt_annot PUBLIC define_type_body_contents
+    { mk_annot $1 (TDB_public $3) }
   | define_type_body_contents
     { mk (TDB_public $1) }
 ;
@@ -478,18 +478,18 @@ define_type_body_private:
 ;
 
 define_type_body_contents:
-  | opt_doc define_type_body_regular
-    { mk_doc $1 (TDBS_regular $2) }
-  | opt_doc define_type_body_external
-    { mk_doc $1 (TDBS_external $2) }
+  | opt_annot define_type_body_regular
+    { mk_annot $1 (TDBS_regular $2) }
+  | opt_annot define_type_body_external
+    { mk_annot $1 (TDBS_external $2) }
 ;
 
 define_type_body_external:
   | INTERNAL define_type_body_regular_opt
-    opt_doc EXTERNAL external_expr_clause_list following_external_bindings
+    opt_annot EXTERNAL external_expr_clause_list following_external_bindings
     { mk {
         etdb_internal = $2;
-        etdb_external = mk_doc $3 $5;
+        etdb_external = mk_annot $3 $5;
         etdb_bindings = mk $6;
       }
     }
@@ -553,12 +553,12 @@ define_record_field_list:
 /**** SPECIES ****/
 
 define_species:
-  | opt_doc
+  | opt_annot
     SPECIES species_vname define_species_params EQUAL
       define_species_body
     END
     { let (inherits, fields) = $6 in
-      mk_doc $1 {
+      mk_annot $1 {
         sd_name = $3;
         sd_params = $4;
         sd_inherits = inherits;
@@ -595,8 +595,8 @@ define_species_body:
 ;
 
 define_species_inherits_list:
-  | opt_doc INHERIT species_expr_list
-    { mk_doc $1 $3}
+  | opt_annot INHERIT species_expr_list
+    { mk_annot $1 $3}
 ;
 
 species_expr_list:
@@ -662,18 +662,18 @@ termination_proof_profile:
 ;
 
 define_termination_proof:
-  | opt_doc TERMINATION PROOF OF termination_proof_profiles EQUAL termination_proof
-    { mk_doc $1 {tpd_profiles = List.rev $5; tpd_termination_proof = $7; } }
+  | opt_annot TERMINATION PROOF OF termination_proof_profiles EQUAL termination_proof
+    { mk_annot $1 {tpd_profiles = List.rev $5; tpd_termination_proof = $7; } }
 ;
 
 define_proof:
-  | opt_doc PROOF OF property_vname EQUAL proof
-    { mk_doc $1 { pd_name = $4; pd_proof = $6; } }
+  | opt_annot PROOF OF property_vname EQUAL proof
+    { mk_annot $1 { pd_name = $4; pd_proof = $6; } }
 ;
 
 define_representation:
-  | opt_doc REPRESENTATION EQUAL representation_type
-    { mk_doc $1 $4 }
+  | opt_annot REPRESENTATION EQUAL representation_type
+    { mk_annot $1 $4 }
 ;
 
 /**** REPRESENTATION TYPE EXPRESSIONS ****/
@@ -724,11 +724,11 @@ representation_type_comma_list:
 /**** COLLECTION DEFINITION ****/
 
 define_collection:
-  | opt_doc
+  | opt_annot
     COLLECTION collection_vname EQUAL
       define_collection_body
     END
-    { mk_doc $1 { cd_name = $3; cd_body = $5; } }
+    { mk_annot $1 { cd_name = $3; cd_body = $5; } }
 ;
 
 define_collection_body:
@@ -769,8 +769,8 @@ let_binding:
 ;
 
 define_let:
-  | opt_doc let_binding
-    { mk_doc $1 ($2.ast_desc) }
+  | opt_annot let_binding
+    { mk_annot $1 ($2.ast_desc) }
 ;
 
 logical_binding:
@@ -779,8 +779,8 @@ logical_binding:
 ;
 
 define_logical:
-  | opt_doc logical_binding
-    { mk_doc $1 $2.ast_desc }
+  | opt_annot logical_binding
+    { mk_annot $1 $2.ast_desc }
 ;
 
 /** Since logical let is followed by a logical_expr, and since logical_expr
@@ -843,14 +843,14 @@ opt_termination_proof:
 ;
 
 termination_proof:
-  | opt_doc STRUCTURAL bound_vname
-    { mk_doc $1 (TP_structural $3) }
-  | opt_doc LEXICOGRAPHIC fact_list
-    { mk_doc $1 (TP_lexicographic $3) }
-  | opt_doc MEASURE expr ON param_list proof
-    { mk_doc $1 (TP_measure ($3, $5, $6)) }
-  | opt_doc ORDER expr ON param_list proof
-    { mk_doc $1 (TP_order ($3, $5, $6)) }
+  | opt_annot STRUCTURAL bound_vname
+    { mk_annot $1 (TP_structural $3) }
+  | opt_annot LEXICOGRAPHIC fact_list
+    { mk_annot $1 (TP_lexicographic $3) }
+  | opt_annot MEASURE expr ON param_list proof
+    { mk_annot $1 (TP_measure ($3, $5, $6)) }
+  | opt_annot ORDER expr ON param_list proof
+    { mk_annot $1 (TP_order ($3, $5, $6)) }
 ;
 
 param_list:
@@ -877,18 +877,18 @@ signature_binding:
 ;
 
 define_signature:
-  | opt_doc signature_binding
-    { mk_doc $1 $2 }
+  | opt_annot signature_binding
+    { mk_annot $1 $2 }
 ;
 
 define_property:
-  | opt_doc PROPERTY property_vname COLON logical_expr
-    { mk_doc $1 { prd_name = $3; prd_logical_expr = $5; } }
+  | opt_annot PROPERTY property_vname COLON logical_expr
+    { mk_annot $1 { prd_name = $3; prd_logical_expr = $5; } }
 ;
 
 define_theorem:
-  | opt_doc opt_local THEOREM theorem_vname COLON logical_expr PROOF EQUAL proof
-    { mk_doc $1 {
+  | opt_annot opt_local THEOREM theorem_vname COLON logical_expr PROOF EQUAL proof
+    { mk_annot $1 {
         th_name = $4;
         th_local = $2;
         th_stmt = $6;
@@ -926,14 +926,14 @@ in_type_expr:
 /**** PROOFS ****/
 
 proof:
-  | opt_doc CONCLUDE
-    { mk_doc $1 (Pf_auto []) }
-  | opt_doc enforced_dependencies ASSUMED EXTERNAL_CODE
-    { mk_doc $1 (Pf_assumed ($2, $4)) }
-  | opt_doc COQ PROOF enforced_dependencies EXTERNAL_CODE
-    { mk_doc $1 (Pf_coq ($4, $5)) }
-  | opt_doc BY fact_list
-    { mk_doc $1 (Pf_auto $3) }
+  | opt_annot CONCLUDE
+    { mk_annot $1 (Pf_auto []) }
+  | opt_annot enforced_dependencies ASSUMED EXTERNAL_CODE
+    { mk_annot $1 (Pf_assumed ($2, $4)) }
+  | opt_annot COQ PROOF enforced_dependencies EXTERNAL_CODE
+    { mk_annot $1 (Pf_coq ($4, $5)) }
+  | opt_annot BY fact_list
+    { mk_annot $1 (Pf_auto $3) }
   | proof_node_list
     { mk (Pf_node $1) }
 ;
@@ -946,15 +946,15 @@ proof_node_list:
 ;
 
 proof_node:
-  | opt_doc PROOF_LABEL statement proof
-    { mk_doc $1 (PN_sub (mk_proof_label $2, $3, $4)) }
+  | opt_annot PROOF_LABEL statement proof
+    { mk_annot $1 (PN_sub (mk_proof_label $2, $3, $4)) }
 ;
 
 proof_node_qed:
-  | opt_doc PROOF_LABEL QED proof
-    { mk_doc $1 (PN_qed (mk_proof_label $2, $4)) }
-  | opt_doc PROOF_LABEL opt_doc CONCLUDE
-    { mk_doc $1 (PN_qed (mk_proof_label $2, mk_doc $3 (Pf_auto []))) }
+  | opt_annot PROOF_LABEL QED proof
+    { mk_annot $1 (PN_qed (mk_proof_label $2, $4)) }
+  | opt_annot PROOF_LABEL opt_annot CONCLUDE
+    { mk_annot $1 (PN_qed (mk_proof_label $2, mk_annot $3 (Pf_auto []))) }
 ;
 
 fact_list:
@@ -1456,10 +1456,10 @@ opt_semi:
     { () }
 ;
 
-opt_doc:
+opt_annot:
   | { [] }
-  | DOCUMENTATION opt_doc
-    { mk_doc_elem $1 :: $2 }
+  | ANNOTATION opt_annot
+    { mk_annot_elem $1 :: $2 }
 ;
 
 following_binding_list:

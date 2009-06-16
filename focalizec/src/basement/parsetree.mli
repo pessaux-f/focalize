@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -13,9 +13,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.55 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.56 2009-06-16 09:36:42 weis Exp $ *)
 
-(** {2 The Focalize abstract syntax tree} *)
+(** {2 The FoCaLiZe abstract syntax tree} *)
 
 (** The parse tree, or shallow abstract syntax.
    Disambiguation has not yet been done.
@@ -27,8 +27,9 @@
    - "ast" means Abstract Syntax Tree,
    - "loc" means location (a way to find the file and the place in the file
    where a given syntax tree has been read),
-   - "desc" means description (generally speaking a type or a field of a
-   record type),
+   - "desc" means description (the semantical classification of the node;
+      generally speaking it is a field of a record and it contains a value of
+      another (sum) type that lists the complete set of classification),
    - "def" means definition as in "type_def" for ``type definition'',
    - "expr" means expression as in "type_expr" for ``type expression'',
    - "param" means parameter.
@@ -36,71 +37,88 @@
 
 (** {3 The generic polymorphic type of AST nodes} *)
 
-(** {6 Parsed documentation} *)
+(** {6 Parsed comments} *)
 
-(** AST support for documentation of programs:
-    documentation elements are special lexems that can appear in specified
-    nodes according to the grammar of the language. Roughly speaking,
-    documentation nodes appear in each ``important'' node, before the keyword
-    that introduces the construct.
-    A documentation is a list of such documentation elements.
-    The contents of documentation elements is free style, provided that the
-    documentation element is a legal language comment (hence, the usual end of
-    comment marker of the language cannot appear in a documentation element).
-    Note that an empty list of documentation elements stands for no
-    documentation at all.
-    Documentation elements can be used by specific extra compiler passes that
-    can parse the documentation related to the pass at hand and just ignore
-    the rest of the documentation. *)
-type documentation = doc_elem list
-and doc_elem = {
-  de_loc : Location.t;
-  de_desc : string; (** The contents of the documentation. *)
-  de_tag : string; (** The tag to designate which processor is concerned. *)
+(** AST supports annotation (including documentation) for programs.
+
+    Annotation elements are particular (parenthesized) comments of the
+    language, so that they can be safely ignored by the compiler.
+
+    An annotation is a list of such annotation elements.
+
+    Although similar to lists of comments of the language, annotations are
+    indeed parsed: they may not appear anywhere in the program but only in
+    specified places as specified by the grammar of the language.
+
+    Roughly speaking, annotation nodes are allowed in each ``important''
+    construct, before the keyword that introduces the construct.
+    The contents of annotation elements is free style, provided that the
+    annotation element is also a legal language comment (hence, the usual end
+    of comment marker of the language cannot appear in an annotation element).
+
+    Annotations are handy to drive extra compiler processing passes that can
+    parse the annotation elements to process the program accordingly.
+    The FoCaLiZe automatic documentation processor works axactly that way to
+    produce documentation from annotated programs. More sophisticated
+    processors may produce new programs that may be fed back to the compiler.
+
+    Note that an empty list of annotation elements stands for no
+    annotation at all. *)
+type annotation = annot_elem list
+and annot_elem = {
+  ae_loc : Location.t;
+  ae_desc : string; (** The contents of the annotation. *)
+  ae_tag : string; (** The tag to designate which processor is concerned. *)
 }
 ;;
 
 (** {6 Type information provision in the AST} *)
 
-(** Tag telling the kind of type-checking information is available in the AST
-    node. Because we want to keep the same AST structure all along the
-    compilation process, since initially types are not infered, and then, since
-    once infered the type information can be either really a type, or a type
-    scheme, or non relevant, we must be able to have several way to represent
-    the type information of an AST node. *)
-type ast_node_type_information =
-   | ANTI_non_relevant   (** The node has no meaningful type information.
-			     However, it was processed by the type-checker. *)
-   | ANTI_none      (** The node was not yet processed by the type-checker.
-		        Clearly, after the type-checking pass, no AST node
-			should remain with this tag in the [ast_type] field of
-			the node ! *)
-   | ANTI_type of Types.type_simple  (** The type information is a type. Mostly
-					 used to label expressions. *)
-   | ANTI_scheme of Types.type_scheme (** The type information is a type scheme.
-					  Mostly used to label definitions. *)
+(** Description of the type-checking information available in AST nodes.
+
+    For simplicity, we keep the same AST structure during the entire
+    compilation process. The parser builds the initial abstract syntax tree
+    with the minimum information; each successive pass of the compiler then
+    enriches its tree argument with the information it collects. In
+    particular, the type checker decorates the tree with type information
+    annotations. The type [ast_node_type_information] classifies the type
+    information stored in the AST nodes. *)
+
+ type ast_node_type_information =
+   | ANTI_none
+     (** The node has not yet been visited by the type-checker. *)
+   | ANTI_irrelevant
+     (** The node has been visited by the type-checker but there is no
+     meaningful type information to provide here. *)
+   | ANTI_type of Types.type_simple
+     (** The type information is a type. *)
+   | ANTI_scheme of Types.type_scheme
+     (** The type information is a type scheme. *)
+
+(** Note: after the type-checking pass, no AST node should still have the
+    [Anti_none] kind of type information. *)
 ;;
 
 (** {6 The polymorphic AST data structure} *)
 
-(** A polymorphic AST node contains the mandatory information for all AST
-    nodes: the location of the node, the documentation for the node, the type
+(** The polymorphic AST node contains the mandatory information for all AST
+    nodes: the location of the node, the annotation for the node, the type
     of the node, and a description for the node which is left unspecified as a
     polymorphic type variable at this level of description.
     The polymorphic type variable gives us provision for any kind of
     description type for the nodes: either sum type, record type, or
-    abbreviation type; we also accept any visibility for the node desciption
+    abbreviation type; we also accept any visibility for the node description
     type, being it either public, private, or abstract. *)
 
 type 'a ast = {
-   (** The location in the source of the AST node. *)
    ast_loc : Location.t;
-   (** The description of the node. *)
+   (** The location in the source of the AST node. *)
    ast_desc : 'a;
-   (** The support for documentation. *)
-   ast_doc : documentation;
-   (** The type of the node. *)
+   (** The description of the node. *)
+   ast_annot : annotation;
+   (** The support for annotation. *)
    mutable ast_type : ast_node_type_information;
+   (** The type information of the node. *)
 }
 ;;
 
@@ -110,19 +128,19 @@ type 'a ast = {
 
 type module_name = Types.fname
 (** The type of ``module'' names.
-  Since there are no modules in Focalize yet, modules are just files and
+  Since there are no modules in FoCaLiZe yet, modules are just files and
   module names are just file base names without their ".fcl" extension. *)
 ;;
 
 type vname =
-   | Vlident of string (** Lowercase ident. *)
-   | Vuident of string (** Capitalized ident. *)
-   | Vpident of string (** Prefix operator ident. *)
-   | Viident of string (** Infix operator ident. *)
+   | Vlident of string (** Lowercase (prefix) alphanumeric ident. *)
+   | Vuident of string (** Capitalized (prefix) alphanumeric ident. *)
+   | Vpident of string (** Prefix operator (symbolic) ident. *)
+   | Viident of string (** Infix operator (symbolic) ident. *)
    | Vqident of string (** "Quote" ident for type variables. *)
 (** The type of variables classified by their respective lexical category,
   which can be regular identifiers (lowercase or capitalized), infix, or
-  prefix identifiers. *)
+  prefix symbolic identifiers. *)
 ;;
 
 type qualified_species = module_name * vname
@@ -455,8 +473,8 @@ and termination_proof_desc =
     (** Gives an order [expr], a list of arguments to compare,
        a proof that:
        - the order is well founded,
-       - each recursive call decreases for the order applied to the listed
-         arguments.
+       - each recursive call decreases for the order applied to the arguments
+         listed.
        Those two proofs (or more) are collected into a single proof as a
        conjunction. *)
   | TP_order of expr * param_list * proof
@@ -509,8 +527,10 @@ and termination_proof_def_desc = {
 }
 and termination_proof_profile = termination_proof_profile_desc ast
 and termination_proof_profile_desc = {
-  tpp_name : vname;       (** The function's name. *)
-  tpp_params : param_list;  (** The function's parameters. *)
+  (** The function's name. *)
+  tpp_name : vname;
+  (** The function's parameters. *)
+  tpp_params : param_list;
 }
 ;;
 
@@ -569,7 +589,7 @@ type expr_def = expr
 
 type phrase = phrase_desc ast
 and phrase_desc =
-  | Ph_documentation_title
+  | Ph_annotation_title
   | Ph_use of Types.fname
   | Ph_open of Types.fname
   | Ph_coq_require of Types.fname

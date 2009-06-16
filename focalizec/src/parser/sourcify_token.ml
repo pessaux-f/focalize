@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.16 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: sourcify_token.ml,v 1.17 2009-06-16 09:36:43 weis Exp $ *)
 
 open Parser;;
 
@@ -32,12 +32,12 @@ let token ppf = function
   | BOOL s -> Format.fprintf ppf "%s %s" "BOOL" s
   | STRING s -> Format.fprintf ppf "%s %s" "STRING" s
   | CHAR c -> Format.fprintf ppf "%s %c" "CHAR" c
-  | DOCUMENTATION (tag, s) ->
-    Format.fprintf ppf "%s (**%s%s*)" "DOCUMENTATION" tag s
-  | DOCUMENTATION_TITLE (tag, s) ->
-    Format.fprintf ppf "%s (**%s%s*)" "DOCUMENTATION_TITLE" tag s
-  | DOCUMENTATION_HEADER (tag, s) ->
-    Format.fprintf ppf "(**%s (%s%s*)" "DOCUMENTATION_HEADER" tag s
+  | ANNOTATION (tag, s) ->
+    Format.fprintf ppf "%s (**%s%s*)" "ANNOTATION" tag s
+  | ANNOTATION_TITLE (tag, s) ->
+    Format.fprintf ppf "%s (**%s%s*)" "ANNOTATION_TITLE" tag s
+  | ANNOTATION_HEADER (tag, s) ->
+    Format.fprintf ppf "(**%s (%s%s*)" "ANNOTATION_HEADER" tag s
   | PROOF_LABEL (s1, s2) -> Format.fprintf ppf "%s %s %s" "PROOF_LABEL" s1 s2
   | EXTERNAL_CODE s -> Format.fprintf ppf "%s %s" "EXTERNAL_CODE" s
   | BACKSLASH_OP s -> Format.fprintf ppf "%s %s" "BACKSLASH_OP" s

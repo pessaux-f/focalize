@@ -1,9 +1,11 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -11,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.31 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: substColl.ml,v 1.32 2009-06-16 09:36:43 weis Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -51,7 +53,7 @@ type substitution_replaced_collection_kind =
 (* ******************************************************************* *)
 let subst_ast_node_type_information c1 c2 = function
   | Parsetree.ANTI_none -> Parsetree.ANTI_none
-  | Parsetree.ANTI_non_relevant -> Parsetree.ANTI_non_relevant
+  | Parsetree.ANTI_irrelevant -> Parsetree.ANTI_irrelevant
   | Parsetree.ANTI_type ty ->
       (begin
       match c1 with
@@ -102,7 +104,7 @@ let subst_ident c1 c2 ident =
        (* We are asked to replace "Self"...
           Since an ident is not Self, nothing to do. *)
        Parsetree.TE_ident { ident with Parsetree.ast_type = new_type }
-   | SRCK_coll (c1_mod, c1_name) -> 
+   | SRCK_coll (c1_mod, c1_name) ->
        (begin
        match ident.Parsetree.ast_desc with
         | Parsetree.I_local _ ->
@@ -119,7 +121,7 @@ let subst_ident c1 c2 ident =
               match c2 with
                | Types.SBRCK_coll (c2_mod, c2_name) ->
                    Parsetree.TE_ident
-                     { ident with Parsetree.ast_type = new_type ;
+                     { ident with Parsetree.ast_type = new_type;
                        Parsetree.ast_desc =
                          Parsetree.I_global
                            (Parsetree.Qualified
@@ -195,7 +197,7 @@ let subst_expr_ident ~current_unit c1 c2 ident =
   (* Substitute in the AST node type. *)
   let new_type =
     subst_ast_node_type_information c1 c2 ident.Parsetree.ast_type in
-  { ident with Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type }
+  { ident with Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type }
 ;;
 
 
@@ -214,7 +216,7 @@ let subst_enforced_dependency ~current_unit c1 c2 enf_dep =
   let new_type =
     subst_ast_node_type_information c1 c2 enf_dep.Parsetree.ast_type in
   (* And finally, make a new AST node. *)
-  { enf_dep with Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type }
+  { enf_dep with Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type }
 ;;
 
 
@@ -237,7 +239,7 @@ let subst_fact ~current_unit c1 c2 fact =
   (* Substitute in the AST node type. *)
   let new_type =
     subst_ast_node_type_information c1 c2 fact.Parsetree.ast_type in
-  { fact with Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type }
+  { fact with Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type }
 ;;
 
 
@@ -286,7 +288,7 @@ let subst_pattern c1 c2 pattern =
       subst_ast_node_type_information c1 c2 pat.Parsetree.ast_type in
     (* And finally, make a new AST node. *)
     { pat with
-        Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type } in
+        Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type } in
   (* Now, do the job. *)
   rec_subst pattern
 ;;
@@ -315,7 +317,7 @@ let subst_type_expr c1 c2 type_expression =
                    because by construction, species types have no parameters.
                    If that's not the case, then there's something wrong in the
                    compiler. *)
-                if tys' <> [] then assert false ;
+                if tys' <> [] then assert false;
                 ident'
             | _ ->
                 (* The function [subst_ident] can't return something else. *)
@@ -335,9 +337,9 @@ let subst_type_expr c1 c2 type_expression =
                          (Parsetree.Qualified
                             (c2_mod, (Parsetree.Vuident c2_name))) in
                      let new_ident = {
-                       Parsetree.ast_loc = Location.none ;
-                       Parsetree.ast_desc = new_ident_desc ;
-                       Parsetree.ast_doc = [] ;
+                       Parsetree.ast_loc = Location.none;
+                       Parsetree.ast_desc = new_ident_desc;
+                       Parsetree.ast_annot = [];
                        Parsetree.ast_type =
                          Parsetree.ANTI_type
                            (Types.type_rep_species
@@ -471,7 +473,7 @@ and subst_let_binding ~current_unit c1 c2 binding =
     { binding with
         (* Substitute in the AST node type. *)
         Parsetree.ast_type =
-          subst_ast_node_type_information c1 c2 binding.Parsetree.ast_type ;
+          subst_ast_node_type_information c1 c2 binding.Parsetree.ast_type;
         Parsetree.ast_desc = desc' }
 
 
@@ -487,7 +489,7 @@ and subst_let_definition ~current_unit c1 c2 let_def =
   { let_def with
      (* Substitute in the AST node type. *)
       Parsetree.ast_type =
-        subst_ast_node_type_information c1 c2 let_def.Parsetree.ast_type ;
+        subst_ast_node_type_information c1 c2 let_def.Parsetree.ast_type;
       Parsetree.ast_desc = desc' }
 
 
@@ -569,7 +571,7 @@ and subst_proof ~current_unit c1 c2 proof =
   let new_type =
     subst_ast_node_type_information c1 c2 proof.Parsetree.ast_type in
   (* And finally, make a new AST node. *)
-  { proof with Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type }
+  { proof with Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type }
 
 
 
@@ -583,9 +585,9 @@ and subst_statement ~current_unit c1 c2 statement =
   (* Substitute in the AST node type. *)
   let new_type =
     subst_ast_node_type_information c1 c2 statement.Parsetree.ast_type in
-  let new_desc = { Parsetree.s_hyps = hyps' ; Parsetree.s_concl = concl' } in
+  let new_desc = { Parsetree.s_hyps = hyps'; Parsetree.s_concl = concl' } in
   (* And finally, make a new AST node. *)
-  { statement with Parsetree.ast_desc = new_desc ;
+  { statement with Parsetree.ast_desc = new_desc;
     Parsetree.ast_type = new_type }
 
 
@@ -606,7 +608,7 @@ and subst_hyp ~current_unit c1 c2 hyp =
   let new_type =
     subst_ast_node_type_information c1 c2 hyp.Parsetree.ast_type in
   (* And finally, make a new AST node. *)
-  { hyp with Parsetree.ast_desc = new_desc ; Parsetree.ast_type = new_type }
+  { hyp with Parsetree.ast_desc = new_desc; Parsetree.ast_type = new_type }
 
 
 
@@ -624,7 +626,7 @@ and subst_proof_node ~current_unit c1 c2 proof_node =
   let new_type =
     subst_ast_node_type_information c1 c2 proof_node.Parsetree.ast_type in
   (* And finally, make a new AST node. *)
-  { proof_node with Parsetree.ast_desc = new_desc ;
+  { proof_node with Parsetree.ast_desc = new_desc;
     Parsetree.ast_type = new_type }
 ;;
 
@@ -649,7 +651,7 @@ let subst_termination_proof ~current_unit c1 c2 proof =
   let new_type =
     subst_ast_node_type_information c1 c2 proof.Parsetree.ast_type in
   (* And finally, make a new AST node. *)
-  { proof with Parsetree.ast_desc = new_desc ;
+  { proof with Parsetree.ast_desc = new_desc;
     Parsetree.ast_type = new_type }
 ;;
 
@@ -667,7 +669,7 @@ let subst_binding_body ~current_unit c1 c2 = function
 let subst_species_field ~current_unit c1 c2 = function
   | Env.TypeInformation.SF_sig (from, vname, scheme) ->
       (begin
-      Types.begin_definition () ;
+      Types.begin_definition ();
       let ty = Types.specialize scheme in
       let ty' =
         (match c1 with
@@ -683,14 +685,14 @@ let subst_species_field ~current_unit c1 c2 = function
                   Types.copy_type_simple_but_variables
                     ~and_abstract: (Some c2_ty) ty
              end) in
-      Types.end_definition () ;
+      Types.end_definition ();
       let scheme' = Types.generalize ty' in
       Env.TypeInformation.SF_sig (from, vname, scheme')
       end)
   | Env.TypeInformation.SF_let
       (from, vname, params_names, scheme, body, opt_proof, dep, log_flag) ->
       (begin
-      Types.begin_definition () ;
+      Types.begin_definition ();
       let ty = Types.specialize scheme in
       let ty' =
         (match c1 with
@@ -706,7 +708,7 @@ let subst_species_field ~current_unit c1 c2 = function
                   Types.copy_type_simple_but_variables
                     ~and_abstract: (Some c2_ty) ty
              end) in
-      Types.end_definition () ;
+      Types.end_definition ();
       let scheme' = Types.generalize ty' in
       let body' = subst_binding_body ~current_unit c1 c2 body in
       let opt_proof' =
@@ -739,7 +741,7 @@ let subst_species_field ~current_unit c1 c2 = function
                         Types.copy_type_simple_but_variables
                           ~and_abstract: (Some c2_ty) ty
                    end) in
-            Types.end_definition () ;
+            Types.end_definition ();
             let scheme' = Types.generalize ty' in
             let body' = subst_binding_body ~current_unit c1 c2 body in
             let opt_proof' =

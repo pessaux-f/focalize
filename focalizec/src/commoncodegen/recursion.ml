@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            William Bartlett                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.16 2008-12-23 13:43:21 pessaux Exp $ *)
+(* $Id: recursion.ml,v 1.17 2009-06-16 09:36:42 weis Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -23,11 +23,9 @@
   the generation of proof obligations.
  *)
 
-exception NestedRecursiveCalls of Parsetree.vname * Location.t ;;
-exception PartialRecursiveCall of Parsetree.vname * Location.t ;;
-exception MutualRecursion of (Parsetree.vname * Parsetree.vname) ;;
-
-
+exception NestedRecursiveCalls of Parsetree.vname * Location.t;;
+exception PartialRecursiveCall of Parsetree.vname * Location.t;;
+exception MutualRecursion of (Parsetree.vname * Parsetree.vname);;
 
 (**
   Useful for storing bindings that were made between one point of a program
@@ -43,8 +41,6 @@ type binding =
       (** The expression was tested and has the given truth value. *)
       Parsetree.expr * bool
 ;;
-
-
 
 (**
   {b Descr} : Tests whether a given function applied to given arguments
@@ -82,7 +78,7 @@ let is_recursive_call function_name argument_list expr_list fexpr =
 
 
 
-type typed_vname = (Parsetree.vname * Types.type_simple) ;;
+type typed_vname = (Parsetree.vname * Types.type_simple);;
 
 
 
@@ -120,7 +116,7 @@ let rec list_recursive_calls function_name argument_list bindings expr =
        (* Get the type of the function. *)
        let fun_ty =
          (match expr.Parsetree.ast_type with
-          | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
+          | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
           | Parsetree.ANTI_scheme _ -> assert false
           | Parsetree.ANTI_type t -> t) in
        let fake_scheme = Types.trivial_scheme fun_ty in
@@ -357,7 +353,7 @@ let rec get_smaller_variables variables bindings =
        variable is added to the set that contains the latter, and each
        variable that is structurally smaller than a variable in either set is
        added to the [structural_set].
- 
+
        Btw: this function also removes all other variables encountered that
        do not fit in either category as they may mask variables from either
        set.                                                                   *)

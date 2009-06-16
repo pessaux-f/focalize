@@ -1,9 +1,11 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -11,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.28 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.29 2009-06-16 09:36:43 weis Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -108,7 +110,7 @@ let param_deps_ident ~current_species (param_coll_name, param_coll_meths)
   let ident_ty =
     (match ident.Parsetree.ast_type with
      | Parsetree.ANTI_none
-     | Parsetree.ANTI_non_relevant
+     | Parsetree.ANTI_irrelevant
      | Parsetree.ANTI_scheme  _ -> assert false
      | Parsetree.ANTI_type t -> t) in
   match ident.Parsetree.ast_desc with
@@ -294,7 +296,7 @@ and __param_deps_logical_expr ~current_species
   (* **************** *)
   (* Now, do the job. *)
   rec_deps start_local_idents proposition
- ;;
+;;
 
 
 
@@ -305,7 +307,7 @@ let param_deps_enforced_deps_in_proof ~current_species
    | Parsetree.Ed_property expr_idents ->
        List.fold_left
          (fun accu_deps ident ->
-           let deps = 
+           let deps =
              param_deps_ident
                ~current_species (param_coll_name, param_coll_meths) [] ident in
            Parsetree_utils.ParamDepSet.union deps accu_deps)
@@ -321,13 +323,13 @@ let param_deps_fact ~current_species (param_coll_name, param_coll_meths) fact =
    | Parsetree.F_property expr_idents ->
        List.fold_left
          (fun accu_deps ident ->
-           let deps = 
+           let deps =
              param_deps_ident
                ~current_species (param_coll_name, param_coll_meths) [] ident in
            Parsetree_utils.ParamDepSet.union deps accu_deps)
          Parsetree_utils.ParamDepSet.empty
          expr_idents
-   | Parsetree.F_hypothesis _ | Parsetree.F_node _ | Parsetree.F_type _ -> 
+   | Parsetree.F_hypothesis _ | Parsetree.F_node _ | Parsetree.F_type _ ->
        Parsetree_utils.ParamDepSet.empty
 ;;
 

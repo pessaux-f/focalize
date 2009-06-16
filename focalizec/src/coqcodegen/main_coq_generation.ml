@@ -1,9 +1,11 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -11,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.35 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.36 2009-06-16 09:36:42 weis Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -20,7 +22,7 @@
 
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
-exception Logical_methods_only_inside_species of Location.t ;;
+exception Logical_methods_only_inside_species of Location.t;;
 
 
 
@@ -39,7 +41,7 @@ exception Logical_methods_only_inside_species of Location.t ;;
 let toplevel_let_def_compile ctx env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     raise
-      (Logical_methods_only_inside_species let_def.Parsetree.ast_loc) ;
+      (Logical_methods_only_inside_species let_def.Parsetree.ast_loc);
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Currently, toplevel recursive functions are generated with "Fixpoint". *)
   let is_rec =
@@ -55,7 +57,7 @@ let toplevel_let_def_compile ctx env let_def =
   (* Generates the binder ("Let" or "Fixpoint"). *)
   (match is_rec with
    | false -> Format.fprintf out_fmter "@[<2>Let@ "
-   | true -> Format.fprintf out_fmter "@[<2>Fixpoint@ ") ;
+   | true -> Format.fprintf out_fmter "@[<2>Fixpoint@ ");
   (* Now generate each bound definition. Remark that there is no local idents
      in the scope because we are at toplevel. In the same way, because we are
      not under the scope of a species, the way "Self" must be printed is
@@ -85,7 +87,7 @@ let toplevel_let_def_compile ctx env let_def =
                 ~toplevel: true ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
-             Format.fprintf out_fmter "@]@\n@[<2>with " ;
+             Format.fprintf out_fmter "@]@\n@[<2>with ";
              accu_env :=
                Species_record_type_generation.let_in_binding_compile
                  ctx ~local_idents: [] ~in_recursive_let_section_of
@@ -95,9 +97,9 @@ let toplevel_let_def_compile ctx env let_def =
                  ~recursive_methods_status:
                    Species_record_type_generation.RMS_regular
                  ~toplevel: true ~is_rec !accu_env binding)
-           next_bnds ;
+           next_bnds;
          !accu_env) in
-  Format.fprintf out_fmter "@]" ;
+  Format.fprintf out_fmter "@]";
   env'
 ;;
 
@@ -118,19 +120,19 @@ let toplevel_let_def_compile ctx env let_def =
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
 let toplevel_compile env ~current_unit out_fmter = function
-  | Infer.PCM_documentation_title -> env
+  | Infer.PCM_annotation_title -> env
   | Infer.PCM_use (_, modname) ->
       (* One must let known that the module is required. *)
-      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname ;
+      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname;
       env
   | Infer.PCM_open (phrase_loc, modname) ->
       (* One must "open" the coq code generation environment of this module
          and return the environment extended with these "opened" bindings.
          We must also generate a "Require" for this Coq module. *)
-      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname ;
+      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname;
       Env.coqgen_open_module ~loc: phrase_loc modname env
   | Infer.PCM_coq_require fname ->
-      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" fname ;
+      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" fname;
       env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
       let spe_binding_info =
@@ -158,13 +160,13 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_type (type_def_name, type_descr) ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
-        Context.rcc_current_unit = current_unit ;
+        Context.rcc_current_unit = current_unit;
         (* Not under a species, hence no species parameter. *)
-        Context.rcc_species_parameters_names = [] ;
+        Context.rcc_species_parameters_names = [];
         (* Not under a species, hence empty carriers mapping. *)
-        Context.rcc_collections_carrier_mapping = [] ;
+        Context.rcc_collections_carrier_mapping = [];
         (* Not in the context of generating a method's body code, then empty. *)
-        Context.rcc_lambda_lift_params_mapping = [] ;
+        Context.rcc_lambda_lift_params_mapping = [];
         Context.rcc_out_fmter = out_fmter } in
       (* Since we are on the definition of the type, this type doesn't already
          exists normally. Hence, we want the code generation to enrich the
@@ -178,39 +180,39 @@ let toplevel_compile env ~current_unit out_fmter = function
          sufficient, but via [let_binding_compile], the function
          [toplevel_let_def_compile] needs a "full". So... *)
       let ctx = {
-        Context.scc_current_unit = current_unit ;
+        Context.scc_current_unit = current_unit;
         (* Dummy, since not under a species. *)
-        Context.scc_current_species = ("(**)", (Parsetree.Vuident "(**)")) ;
+        Context.scc_current_species = ("(**)", (Parsetree.Vuident "(**)"));
         (* Not under a species, hence no species parameter. *)
-        Context.scc_species_parameters_names = [] ;
+        Context.scc_species_parameters_names = [];
         (* Not under a species, hence empty carriers mapping. *)
-        Context.scc_collections_carrier_mapping = [] ;
+        Context.scc_collections_carrier_mapping = [];
         (* Not in the context of generating a method's body code, then empty. *)
-        Context.scc_lambda_lift_params_mapping = [] ;
+        Context.scc_lambda_lift_params_mapping = [];
         (* Empty, since not under a species. *)
-        Context.scc_dependency_graph_nodes = [] ;
+        Context.scc_dependency_graph_nodes = [];
         Context.scc_out_fmter = out_fmter } in
       let env' = toplevel_let_def_compile ctx env let_def in
-      Format.fprintf out_fmter ".@\n@\n" ;
+      Format.fprintf out_fmter ".@\n@\n";
       env'
   | Infer.PCM_theorem (theorem_def, found_type_variables) ->
       let ctx = {
-        Context.scc_current_unit = current_unit ;
+        Context.scc_current_unit = current_unit;
         (* Dummy, since not under a species. *)
-        Context.scc_current_species = ("(**)", (Parsetree.Vuident "(**)")) ;
+        Context.scc_current_species = ("(**)", (Parsetree.Vuident "(**)"));
         (* Not under a species, hence no species parameter. *)
-        Context.scc_species_parameters_names = [] ;
+        Context.scc_species_parameters_names = [];
         (* Not under a species, hence empty carriers mapping. *)
-        Context.scc_collections_carrier_mapping = [] ;
+        Context.scc_collections_carrier_mapping = [];
         (* Not in the context of generating a method's body code, then empty. *)
-        Context.scc_lambda_lift_params_mapping = [] ;
+        Context.scc_lambda_lift_params_mapping = [];
         (* Empty, since not under a species. *)
-        Context.scc_dependency_graph_nodes = [] ;
+        Context.scc_dependency_graph_nodes = [];
         Context.scc_out_fmter = out_fmter } in
       let _ =
         Species_coq_generation.toplevel_theorem_compile ctx env theorem_def in
       (* Be careful, the ending . is generated by the proof code. *)
-      Format.fprintf out_fmter "@\n@\n" ;
+      Format.fprintf out_fmter "@\n@\n";
       (* Must now extend the value environment. Since the theorem is toplevel,
          it has to dependencies, so we ignore the returned value of
          [toplevel_theorem_compile].
@@ -227,35 +229,35 @@ let toplevel_compile env ~current_unit out_fmter = function
         theorem_def.Parsetree.ast_desc.Parsetree.th_name env_binding env
   | Infer.PCM_expr expr ->
       (* We compile toplevel expressions as "Check" orders under Coq. *)
-      Format.fprintf out_fmter "@[<1>Check@ (" ;
+      Format.fprintf out_fmter "@[<1>Check@ (";
       let ctx = {
-        Context.scc_current_unit = current_unit ;
+        Context.scc_current_unit = current_unit;
         (* Dummy, since not under a species. *)
-        Context.scc_current_species = ("(**)", (Parsetree.Vuident "(**)")) ;
+        Context.scc_current_species = ("(**)", (Parsetree.Vuident "(**)"));
         (* Not under a species, hence no species parameter. *)
-        Context.scc_species_parameters_names = [] ;
+        Context.scc_species_parameters_names = [];
         (* Not under a species, hence empty carriers mapping. *)
-        Context.scc_collections_carrier_mapping = [] ;
+        Context.scc_collections_carrier_mapping = [];
         (* Not in the context of generating a method's body code, then empty. *)
-        Context.scc_lambda_lift_params_mapping = [] ;
+        Context.scc_lambda_lift_params_mapping = [];
         (* Empty, since not under a species. *)
-        Context.scc_dependency_graph_nodes = [] ;
+        Context.scc_dependency_graph_nodes = [];
         Context.scc_out_fmter = out_fmter } in
       Species_record_type_generation.generate_expr
         ctx ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_generation.SMS_from_record
         ~recursive_methods_status: Species_record_type_generation.RMS_regular
-        env expr ;
-      Format.fprintf out_fmter ").@]@\n@\n" ;
+        env expr;
+      Format.fprintf out_fmter ").@]@\n@\n";
       (* Nothing to extend the environment. *)
       env
- ;;
+;;
 
 
 
 let root_compile ~current_unit ~out_file_name stuff =
   if Configuration.get_verbose () then
-    Format.eprintf "Starting Coq code generation.@." ;
+    Format.eprintf "Starting Coq code generation.@.";
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.CoqGenEnv.empty ()) in
@@ -270,27 +272,27 @@ let root_compile ~current_unit ~out_file_name stuff =
      Require Export String.@\n\
      Require Export List.@\n\
      Require Export Recdef.@\n\
-     Require Export coq_builtins.@\n@\n" ;
+     Require Export coq_builtins.@\n@\n";
   if Configuration.get_experimental () then
     Format.fprintf out_fmter
       "(* Below: to prevent Function to apply heuristics that would@\n\
           the expected aim in recursive functions termination proofs. *)@\n@\n\
-       Set Function_raw_tcc.@\n@\n" ;
+       Set Function_raw_tcc.@\n@\n";
   try
     List.iter
       (fun data ->
         let new_env =
           toplevel_compile !global_env ~current_unit out_fmter data in
         global_env := new_env)
-      stuff ;
+      stuff;
     (* Flush the pretty-printer. *)
-    Format.fprintf out_fmter "@?" ;
-    close_out out_hd ;
+    Format.fprintf out_fmter "@?";
+    close_out out_hd;
     !global_env
   with whatever ->
     (* In any error case, flush the pretty-printer and close the outfile. *)
-    Format.fprintf out_fmter "@?" ;
-    close_out out_hd ;
+    Format.fprintf out_fmter "@?";
+    close_out out_hd;
     (begin
     try
       (* And rename it to prevent an incorrecty Coq source file from
@@ -299,8 +301,8 @@ let root_compile ~current_unit ~out_file_name stuff =
       let trace_filename = out_file_name ^ ".mangled" in
       (* If the file of trace already exists, then first discard it to prevent
          OS file I/O errors. *)
-      if Sys.file_exists trace_filename then Sys.remove trace_filename ;
-      Sys.rename out_file_name trace_filename ;
+      if Sys.file_exists trace_filename then Sys.remove trace_filename;
+      Sys.rename out_file_name trace_filename;
     with second_error ->
       (begin
       (* Here we want to catch errors that can arise during the trace file
@@ -312,7 +314,7 @@ let root_compile ~current_unit ~out_file_name stuff =
          generated@ Coq@ code:@ %s.@\nInitial@ error@ follows.@."
         (Printexc.to_string second_error)
       end)
-    end) ;
+    end);
     (* Re-reaise the initial error. *)
     raise whatever
 ;;

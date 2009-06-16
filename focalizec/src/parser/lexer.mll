@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.89 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: lexer.mll,v 1.90 2009-06-16 09:36:43 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -1163,7 +1163,7 @@ rule token = parse
 
   (* Documentation *)
   | "(***)"
-    { DOCUMENTATION ("", "") }
+    { ANNOTATION ("", "") }
   | "(***"
     { comment_start_pos := [ lexbuf.lex_start_p, lexbuf.lex_curr_p ];
       comment lexbuf;
@@ -1179,11 +1179,11 @@ rule token = parse
       | _ -> assert false end;
       begin match tag with
       | "0" ->
-        DOCUMENTATION_HEADER (tag, get_stored_documentation ())
+        ANNOTATION_HEADER (tag, get_stored_documentation ())
       | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" ->
-        DOCUMENTATION_TITLE (tag, get_stored_documentation ())
+        ANNOTATION_TITLE (tag, get_stored_documentation ())
       | tag ->
-        DOCUMENTATION (tag, get_stored_documentation ()) end }
+        ANNOTATION (tag, get_stored_documentation ()) end }
 
   (* External code *)
   | "{*"

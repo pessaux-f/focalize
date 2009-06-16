@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
@@ -8,23 +8,19 @@
 (*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.42 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.43 2009-06-16 09:36:43 weis Exp $ *)
 
-
-
-let pp_documentation ppf doc =
+let pp_annotation ppf doc =
   List.iter
-    (fun { Parsetree.de_tag = tag; Parsetree.de_desc = d } ->
-       Format.fprintf ppf "DOC: {@@%s}, %s@\n" tag d)
+    (fun { Parsetree.ae_tag = tag; Parsetree.ae_desc = d } ->
+       Format.fprintf ppf "ANNOT: {@@%s}, %s@\n" tag d)
     doc
 ;;
-
-
 
 (* *********************************************************************** *)
 (* pp_position : Format.formatter -> Lexing.position -> unit               *)
@@ -37,8 +33,6 @@ let pp_position ppf pos =
     pos.Lexing.pos_fname pos.Lexing.pos_lnum
     pos.Lexing.pos_bol pos.Lexing.pos_cnum
 ;;
-
-
 
 (* *********************************************************************** *)
 (* pp_location : Format.formatter -> Parsetree.location -> unit            *)
@@ -82,7 +76,7 @@ let pp_qvname ppf = function
 
     {b Rem} : Not exported ouside this module.                         *)
 (* ******************************************************************* *)
-let pp_vnames ppf = Handy.pp_generic_separated_list "," pp_vname ppf ;;
+let pp_vnames ppf = Handy.pp_generic_separated_list "," pp_vname ppf;;
 
 
 
@@ -117,7 +111,7 @@ let pp_node_labels ppf =
 let pp_ast desc_printer_fct ppf ast =
   Format.fprintf ppf "%a@\n%a@\n%a"
     pp_location ast.Parsetree.ast_loc
-    pp_documentation ast.Parsetree.ast_doc
+    pp_annotation ast.Parsetree.ast_annot
     desc_printer_fct ast.Parsetree.ast_desc
 ;;
 
@@ -918,7 +912,7 @@ let pp_collection_def_desc ppf cdd =
 
     {b Exported} : No.                                                *)
 (* ****************************************************************** *)
-let pp_collection_def ppf = pp_ast pp_collection_def_desc ppf ;;
+let pp_collection_def ppf = pp_ast pp_collection_def_desc ppf;;
 
 
 
@@ -1021,7 +1015,7 @@ let pp_type_def ppf = pp_ast pp_type_def_desc ppf;;
 
 
 let pp_phrase_desc ppf = function
-  | Parsetree.Ph_documentation_title -> Format.fprintf ppf "Ph_documentation_title"
+  | Parsetree.Ph_annotation_title -> Format.fprintf ppf "Ph_annotation_title"
   | Parsetree.Ph_use fname -> Format.fprintf ppf "@[<2>Ph_use@ (%s)@]@ " fname
   | Parsetree.Ph_open fname -> Format.fprintf ppf "@[<2>Ph_open@ (%s)@]@ " fname
   | Parsetree.Ph_coq_require fname ->

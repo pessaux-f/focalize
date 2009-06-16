@@ -1,9 +1,11 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -11,9 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.16 2009-06-09 13:36:22 pessaux Exp $ *)
-
-
+(* $Id: rec_let_gen.ml,v 1.17 2009-06-16 09:36:42 weis Exp $ *)
 
 let is_recursive_call ctx ~local_idents recursive_name expr_ident =
   match expr_ident.Parsetree.ast_desc with
@@ -68,8 +68,8 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
                let tupled_args_desc = Parsetree.E_tuple args' in
                [ { Parsetree.ast_loc = Location.none ;
                    Parsetree.ast_desc = tupled_args_desc ;
-                   Parsetree.ast_doc = [] ;
-                   Parsetree.ast_type = Parsetree.ANTI_non_relevant } ]
+                   Parsetree.ast_annot = [] ;
+                   Parsetree.ast_type = Parsetree.ANTI_irrelevant } ]
                end)
              else args' in
            ((Parsetree.E_app (e', args'')), false)
@@ -254,7 +254,7 @@ let generate_binding_let ctx print_ctx env binding =
       (* Recover the type scheme of the bound ident. *)
       let def_scheme =
         (match binding.Parsetree.ast_type with
-         | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
+         | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
          | Parsetree.ANTI_type _ -> assert false
          | Parsetree.ANTI_scheme s -> s) in
       (* We do not have anymore information about "Self"'s structure... *)
@@ -352,7 +352,7 @@ let generate_variables_quantifications out_fmter print_ctx vars bindings =
           (* Generate a forall to bind the identifier. *)
           let scheme =
             (match binding.Parsetree.ast_type with
-             | Parsetree.ANTI_none | Parsetree.ANTI_non_relevant
+             | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
              | Parsetree.ANTI_type _ -> assert false
              | Parsetree.ANTI_scheme s -> s) in
           let ty = Types.specialize scheme in
@@ -400,8 +400,8 @@ let generate_exprs_as_tuple ctx env exprs =
        let fake_tuple = {
          Parsetree.ast_loc = Location.none ;
          Parsetree.ast_desc = fake_tuple_desc ;
-         Parsetree.ast_doc = [] ;
-         Parsetree.ast_type = Parsetree.ANTI_non_relevant } in
+         Parsetree.ast_annot = [] ;
+         Parsetree.ast_type = Parsetree.ANTI_irrelevant } in
            Species_record_type_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
