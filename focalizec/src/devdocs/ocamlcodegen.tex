@@ -1,4 +1,4 @@
-% $Id: ocamlcodegen.tex,v 1.4 2009-06-16 12:25:23 pessaux Exp $
+% $Id: ocamlcodegen.tex,v 1.5 2009-06-16 13:24:00 pessaux Exp $
 
 The code generation starts from the {\tt Infer.please\_compile\_me}
 structure returned by the type-checking pass. It will examine each
@@ -314,7 +314,28 @@ and that were only declared when the method generator was
 created. These methods leaded to ``local'' functions defined above (by
 the same process we describe here). Hence, for each  method only
 declared of ourselves we depend on, its name is ``{\tt local\_}'' +
-the method's name. 
+the method's name. Since we are in \ocaml, we obviously skip the logical
+methods.
+
+We were at the point of generating the ``local'' functions
+corresponding to our methods. This is now done, and we only have to
+create now the record value representing the collection returned by
+the collection generator. To do this, we only assign each record
+fields corresponding to the current species's method the corresponding
+``local'' function we defined just above. Remind that the record
+field's is simply the method's name. The local function corresponding
+to the method is ``{\tt local\_}'' + the method's name.
+
+
+\subsection{Ending the code of a species}
+We ar enow done with the process handling the case a species is fully
+defined, hence has a collection generator. We just now need to create
+the data that will be recorded in the \ocaml\ code generation
+environment. Remember that while creating the collection generator, we
+returned the list of arguments it need. This info will be part of what
+is stored in the environment. We also build the list of the
+{\tt compiled\_field\_memory}'s of the methods and the information
+about the species parameters.
 
 
 \section{Collection generation}
