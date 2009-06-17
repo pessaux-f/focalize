@@ -1,4 +1,4 @@
-% $Id: cadavers.tex,v 1.7 2009-05-28 08:43:26 pessaux Exp $
+% $Id: cadavers.tex,v 1.8 2009-06-17 10:17:21 pessaux Exp $
 \label{cadavers}
 Here is the holly section of things that are not yet done and for
 which we know there is still something to do. Currently, most of them
@@ -125,6 +125,24 @@ species S (A is B) =
 end ;;
 
 species C inherits S (Self) = end ;;
+\end{lstlisting}
+}
+or
+\noindent
+{\footnotesize
+\begin{lstlisting}
+species Basic_object =
+  let print = "" ;
+end ;;
+
+species One (A is Basic_object) =
+  representation = A;
+  let b = 1 ;
+end;;
+
+species Two =
+  inherit One (Self);
+end;;
 \end{lstlisting}
 }
 \item Species parametrised by {\tt Self} are currently handled by
