@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.17 2009-06-16 09:36:42 weis Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.18 2009-06-17 09:56:30 pessaux Exp $ *)
 
 let is_recursive_call ctx ~local_idents recursive_name expr_ident =
   match expr_ident.Parsetree.ast_desc with
@@ -222,8 +222,12 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
 let generate_binding_match ctx env expr pattern =
   let out_fmter = ctx.Context.scc_out_fmter in
   let local_idents = Parsetree_utils.get_local_idents_from_pattern pattern in
-  (* Now, generate "pattern = expr". *)
-  Species_record_type_generation.generate_pattern ctx env pattern ;
+  (* Now, generate "pattern = expr". But attention !!! We print something like
+     a pattern, but not a pattern ! Since we are not in the case of a pattern
+     in a match, we must apply the possible polymorphic arguments of the sum
+     value constructors! So, force the extra "_"s to be printed. *)
+  Species_record_type_generation.generate_pattern
+    ~force_polymorphic_explicit_args: true ctx env pattern ;
   Format.fprintf out_fmter " =@ " ;
   Species_record_type_generation.generate_expr
     ctx ~in_recursive_let_section_of: [] ~local_idents

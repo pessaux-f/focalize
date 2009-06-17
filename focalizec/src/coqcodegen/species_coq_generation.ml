@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.181 2009-06-16 09:36:42 weis Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.182 2009-06-17 09:56:30 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2927,7 +2927,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
           the final "well_founded __term_order" to this big conjunction. *)
        Rec_let_gen.generate_termination_lemmas
          new_ctx new_print_ctx env ~explicit_order: None recursive_calls;
-       (* Alway end by the obligation of well-formation of the order. *)
+       (* Always end by the obligation of well-formation of the order. *)
        Format.fprintf out_fmter "@ (well_founded __term_order).@]@\n@\n";
        (* Generate the recursive uncurryed function *)
        Format.fprintf out_fmter

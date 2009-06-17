@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.25 2009-06-12 07:38:48 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.26 2009-06-17 09:56:30 pessaux Exp $ *)
 
 (**
 
@@ -331,7 +331,7 @@ species Liste (A is Setoid) =
   let rec bien_formee (l in Self) in bool =
     match l with
     | basics#[] -> true
-    | a :: l -> ~~ (!est_element (a, l) && !bien_formee (l)) ;
+    | a :: q -> ~~ (!est_element (a, q) && !bien_formee (q)) ;
 
   let vide in Self = [];
 
@@ -341,7 +341,7 @@ species Liste (A is Setoid) =
     let rec aux (l) =
       match l with
       | [] -> false
-      | y :: l -> if A!equal (x, y) then true else aux (l) in
+      | y :: q -> if A!equal (x, y) then true else aux (q) in
     aux (e);
 
   theorem equal_congr_est_element :

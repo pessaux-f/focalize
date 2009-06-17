@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.21 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.22 2009-06-17 09:56:30 pessaux Exp $ *)
 
 
 type self_methods_status =
@@ -42,7 +42,8 @@ val generate_method_lambda_lifted_arguments :
        Parsetree.vname list -> unit
 
 val generate_pattern :
-  Context.species_compil_context -> Env.CoqGenEnv.t -> Parsetree.pattern -> unit
+  force_polymorphic_explicit_args: bool -> Context.species_compil_context ->
+    Env.CoqGenEnv.t -> Parsetree.pattern -> unit
 
 val generate_expr :
   Context.species_compil_context ->

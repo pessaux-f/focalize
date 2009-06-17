@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.82 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.83 2009-06-17 09:56:30 pessaux Exp $ *)
 
 
 
@@ -477,7 +477,30 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
 
 
 
-let generate_pattern ctx env pattern =
+(* ************************************************************************** *)
+(* force_polymorphic_explicit_args: bool -> Context.species_compil_context -> *)
+(*   Env.CoqGenEnv.t -> Parsetree.pattern -> unit                             *)
+(** {b Descr} : Emits coq code for a pattern. Attention, this function can
+    also be used to generate code from a pettern but not in the context of
+    generating a pattern in the target code (see description of
+    [~force_polymorphic_explicit_args]).
+
+    {b Args} :
+      - [~force_polymorphic_explicit_args]: Normally, when generating sum value
+        constructors as pattern we must never add the "_" denoting the
+        polymorphism if the contructor belongs to a parametrized type. The
+        only exception is when we generate the recursive functions termination
+        lemmas with [Rec_let_gen.generate_binding_match].
+        In effect, in this case, we must generate the hypotheses induced by
+        conditions (hence also match) and separate them by ->. And in this
+        case, we do not re-generate a real pattern-matching, but an expression.
+        And in expression, polymorphic arguments must be explicitely writen
+        with some "_"s. Moreover, this means that we must disable the implicit
+        arguments by prefixing the constructor by "@".
+
+    {b Exported} : Yes                                                        *)
+(* ************************************************************************** *)
+let generate_pattern ~force_polymorphic_explicit_args ctx env pattern =
   let out_fmter = ctx.Context.scc_out_fmter in
   let rec rec_gen_pat pat =
     match pat.Parsetree.ast_desc with
@@ -493,7 +516,18 @@ let generate_pattern ctx env pattern =
      | Parsetree.P_wild -> Format.fprintf out_fmter "_"
      | Parsetree.P_constr (ident, pats) ->
          (begin
-         ignore(generate_constructor_ident_for_method_generator ctx env ident) ;
+         (* Disallow implicit arguments if needed. *)
+         if force_polymorphic_explicit_args then Format.fprintf out_fmter "@@" ;
+         let nb_poly_args =
+           generate_constructor_ident_for_method_generator ctx env ident in
+         (* If we must force the apparition of polymorphic extra arguments... *)
+         if force_polymorphic_explicit_args then
+           (begin
+           (* Add the "_"'s due to polymorphism of the constructor. *)
+           for i = 0 to nb_poly_args - 1 do
+             Format.fprintf out_fmter "@ _"
+           done
+           end) ;
          (* In "match" patterns, extra arguments of the constructor due to
             polymorphism never appear in Coq syntax. *)
 (* Changed by Damien: constructors are curried in Coq *)
@@ -841,7 +875,8 @@ END of changed by Damien *)
              (* My indentation style: indent of 4 between *)
              (* the pattern and its related processing.   *)
              Format.fprintf out_fmter "@\n@[<4>| " ;
-             generate_pattern ctx env pattern ;
+             generate_pattern
+               ~force_polymorphic_explicit_args: false ctx env pattern ;
              Format.fprintf out_fmter " =>@\n" ;
              (* Here, each name of the pattern may mask a "in"-parameter. *)
              let loc_idents' =
