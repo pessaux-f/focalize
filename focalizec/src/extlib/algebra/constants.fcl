@@ -14,14 +14,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: constants.fcl,v 1.6 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: constants.fcl,v 1.7 2009-06-17 11:37:35 rr Exp $ *)
 
 (* for bool *)
-use "basics";;
 open "basics";;
 
 (* for equality *)
-use "sets";;
 open "sets";;
 
 (**
@@ -39,9 +37,12 @@ species Setoid_with_zero =
 
   (** sample element can be definbed to zero *)
   let element = Self!zero;
+
   (** A unary function which checks to zero *)
   let is_zero(x) = !equal(x, !zero);
 
+
+  (** To me the two following should define equality from zero check *)
   theorem is_zero_spec: all x in Self,
     !is_zero(x) <-> (!equal (x, !zero) \/ !equal (!zero, x))
     proof = by definition of is_zero
@@ -72,3 +73,11 @@ species Setoid_with_one =
 
 end
 ;;
+
+open "orders";;
+
+(** In the future we hope we can ban Setoid and describe mathematical sets *)
+
+species Ordered_set_with_zero =
+  inherit Setoid_with_zero, Ordered_set;
+end;;
