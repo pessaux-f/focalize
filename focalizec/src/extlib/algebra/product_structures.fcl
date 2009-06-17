@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: product_structures.fcl,v 1.9 2009-05-25 12:35:58 doligez Exp $ *)
+(* $Id: product_structures.fcl,v 1.10 2009-06-17 11:37:57 rr Exp $ *)
 
 (** Cartesian product of two structures, common orderings. *)
 
@@ -67,8 +67,6 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
     <1>f conclude
     ;
 
-  proof of zero_is_neutral = assumed {* Because todo *};
-  proof of plus_is_associative = assumed {* Because todo *};
   proof of plus_right_substitution_rule =
     <1>0 assume a1 in M1,
          assume b1 in M1,
@@ -90,13 +88,15 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
          assume H: !equal (b, c),
          prove !equal (!plus (a, b), !plus (a, c))
          <2>1 prove  M1!equal (!first (b), !first (c))
-              by hypothesis H definition of equal
+              by hypothesis H property !equal_spec
          <2>2 prove  M2!equal (!second (b), !second (c))
-              by hypothesis H definition of equal
+              by hypothesis H property !equal_spec
          <2>f qed by step <2>1, <2>2, <1>0 definition of plus
     <1>f conclude
     ;
 
+  proof of zero_is_neutral = assumed {* Because todo *};
+  proof of plus_is_associative = assumed {* Because todo *};
 end
 ;;
 
@@ -106,12 +106,12 @@ species Product_regular_additive_monoid
 
   inherit Regular_additive_monoid, Product_additive_monoid (M1, M2);
 
-  let is_zero (a) =
-    let a1 = !first (a) in
-    let a2 = !second (a) in
-    M1!is_zero (a1) && M2!is_zero (a2);
+(*   let is_zero (a) = *)
+(*     let a1 = !first (a) in *)
+(*     let a2 = !second (a) in *)
+(*     M1!is_zero (a1) && M2!is_zero (a2); *)
 
-  proof of is_zero_spec = assumed {* Because todo *};
+(*   proof of is_zero_spec = assumed {* Because todo *}; *)
 
   let minus (a, b) =
     let a1 = !first (a) in
