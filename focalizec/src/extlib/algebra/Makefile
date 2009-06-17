@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.41 2009-06-06 22:48:43 weis Exp $
+# $Id: Makefile,v 1.42 2009-06-17 11:39:23 rr Exp $
 
 # Makefile for algebra structures implementations
 
@@ -36,6 +36,8 @@ FOCALIZE_COMP_FLAGS = -stop-before-coq -no-stdlib-path -I $(STDLIB_DIR)
 #From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
 CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
+
+ZVTOV_COMP_FLAGS = -script -zenon $(ZENON_COMPILER) -new
 
 # From Makefile.config
 # ZENON_LIB_DIR
@@ -182,10 +184,6 @@ iterators.ml: iterators.fcl
 small_integers.ml: small_integers.fcl
 	$(FOCALIZEC) -no-coq-code $<
 big_integers.ml: big_integers.fcl
-	$(FOCALIZEC) -no-coq-code $<
-parse_poly.ml: parse_poly.fcl
-	$(FOCALIZEC) -no-coq-code $<
-polys_abstract.ml: polys_abstract.fcl
 	$(FOCALIZEC) -no-coq-code $<
 #End temporary
 
