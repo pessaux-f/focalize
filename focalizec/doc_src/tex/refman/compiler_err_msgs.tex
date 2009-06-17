@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.35 2009-06-04 15:36:06 doligez Exp $
+% $Id: compiler_err_msgs.tex,v 1.36 2009-06-17 13:29:04 pessaux Exp $
 
 
 
@@ -278,6 +278,18 @@ hosted in another source file).
 
 
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Species '$name$' is not a collection. Its carrier can't be used in type expressions.}
+{\em Description}: A type expression makes reference to the carrier of
+either a collection that doesn't exist or a species (which is not a
+collection).
+
+{\em Hints}: The common confusion is to consider that a complete species
+is like a collection. However, only carriers of collections are allowed
+in type expressions. Ensure you didn't make reference to a species instead
+of an effective collection.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Type name '$name$' already bound in the current scope.}
@@ -478,7 +490,7 @@ the current defined species.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{A  "is"  parameter can only be  instantiated by an identifier of a collection.}
+\section*{A  "is"  parameter can only be instantiated by an identifier of a collection.}
 
 {\em Description}: In a species expression, a parametrised species by
 an entity parameter ({\tt is}-parameter) is provided an effective
@@ -576,8 +588,8 @@ writing it code or by inheritance, according to your program model.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species '$sname$' cannot be turned into a collection. Method
-  '$fname$' does not have a termination proof.}
+\section*{Species '$sname$' cannot be turned into a collection.
+  Method '$fname$' does not have a termination proof.}
 
 {\em Description}: A collection is built  out of a completely defined species
 (c.f. \ref{collection}), i.e. a species where {\bf all} the methods
@@ -588,12 +600,32 @@ species $sname$ doesn't have its termination proof.
 
 This error message only arises if the {\tt -impose-termination-proof}
 option is used on the command line. Otherwise, it is turned into a
-warning and the compiler will automatically generate an assumed
+{\bf warning} and the compiler will automatically generate an assumed
 proof.
 
 {\em Hints}: Add an effective termination proof to the function or do
 not invoke the {\tt -impose-termination-proof} option when compiling
 the source file.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Warning: In species '$sname_1$', proof of '$pname$' could be done
+  earlier in '$sname_2$'.}
+
+{\em Description}: This message is only a {\bf warning}. It states
+that the property $pname$ whose proof was done in the species
+$sname_1$ could be proved earlier in the inheritance (mor eaccurately,
+in the species $sname_2$ from which $sname_1$ inherits) because all
+the material used in the proof was already available in the species
+$sname_2$. This espacially means that all the methods the proof
+{\bf def}-depends on were alrady {\bf defined}, and all the methods
+the proof {\bf decl}-depends on were already {\bf declared}.
+
+{\em Hints}: Move the proof of the property directly in the species
+$sname_2$. If the property is also hosted in $sname_2$, then it can
+directly be turned into a theorem, merging the 2 fields {\tt property}
+and {\tt proof of}.
 
 
 
