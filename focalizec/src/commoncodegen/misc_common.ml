@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: misc_common.ml,v 1.24 2009-06-16 09:36:42 weis Exp $ *)
+(* $Id: misc_common.ml,v 1.25 2009-06-17 11:06:15 pessaux Exp $ *)
 
 
 
@@ -119,12 +119,12 @@ let get_implements_effectives species_params_exprs species_formals_info =
                    | Parsetree.I_global qvn -> qvn) in
                 CEA_collection_name_for_is effective_species_name
             | _ ->
-                (* Collections expressions used as parameters of an      *)
-                (* "implements" clause should always be represented by   *)
-                (* a sum-type value and because these collections are    *)
-                (* not parametrized, this value should have no argument. *)
-                (* If it's not the case here, then we missed something   *)
-                (* before during the analyses !                          *)
+                (* Collections expressions used as parameters of an
+                   "implements" clause should always be represented by a
+                   sum-type value and because these collections are not
+                   parametrized, this value should have no argument.
+                   If it's not the case here, then we missed something before
+                   during the analyses ! *)
                 assert false
            end)
        | Env.ScopeInformation.SPK_in ->
@@ -138,9 +138,9 @@ let get_implements_effectives species_params_exprs species_formals_info =
 
 (** {b Descr} : Helper that ... *)
 let find_entity_params_with_position params =
-  (* Let's implement this imperative way to spare 1 argument on the stack. *)
-  (* This is the counter used to report the positions of arguments in the  *)
-  (* species signature. Always counting from 0.                            *)
+  (* Let's implement this imperative way to spare 1 argument on the stack.
+     This is the counter used to report the positions of arguments in the
+     species signature. Always counting from 0. *)
   let cnt = ref 0 in
   (* We build the list in reverse order for sake of efficiency. *)
   let rec rec_find accu = function
@@ -150,7 +150,7 @@ let find_entity_params_with_position params =
           (match h with
            | Env.TypeInformation.SPAR_in (n, _, _) -> (n, !cnt) :: accu
            | Env.TypeInformation.SPAR_is ((_, _), _, _, _, _) -> accu) in
-        incr cnt ;  (* Always pdate the position for next parameter. *)
+        incr cnt ;  (* Always update the position for next parameter. *)
         rec_find accu' q in
   (* Now really do the job. *)
   (List.rev (rec_find [] params))
@@ -217,18 +217,18 @@ let follow_instanciations_for_in_param ctx env original_param_name
     | [] -> accu_instanciated_expr
     | inheritance_step :: rem_steps ->
         let (step_species, step_inheritance_expr, _) = inheritance_step in
-        (* Here, we know that the method appears in a species that inherited. *)
-        (* We have this species's name and the species expression used during *)
-        (* inheritance.                                                       *)
-        (* We must look at the effective expression used at the index to      *)
-        (* replace each occurrence of the entity parameters by this effective *)
-        (* expression.                                                        *)
+        (* Here, we know that the method appears in a species that inherited.
+           We have this species's name and the species expression used during
+           inheritance.
+           We must look at the effective expression used at the index to
+           replace each occurrence of the entity parameters by this effective
+           expression. *)
         if Configuration.get_verbose () then
           Format.eprintf "This method flows in the derivated species: %a@."
             Sourcify.pp_qualified_species step_species ;
-        (* Process all the substitution to do on each parameter. ATTENTION *)
-        (* Do not fold left otherwise substitutions will be performed in   *)
-        (* reverse order.                                                  *)
+        (* Process all the substitution to do on each parameter. ATTENTION
+           Do not fold left otherwise substitutions will be performed in
+           reverse order. *)
         let new_instanciation_expr =
           List.fold_right
             (fun (param_name, param_index) accu_expr ->
@@ -259,19 +259,19 @@ let follow_instanciations_for_in_param ctx env original_param_name
           Format.eprintf "@[<2>Instanciation expression after substitutions \
             of effective arguments: %a@]@."
             Sourcify.pp_expr new_instanciation_expr ;
-        (* Now we must check the current level species's entity parameters *)
-        (* and note their name and positions to try to instanciate them    *)
-        (* at the next level.                                              *)
-        (* First, get the species info of the current level. If it's the *)
-        (* current_species we are analysing, then it won't be in the     *)
-        (* environment. So we first test this before.                    *)
+        (* Now we must check the current level species's entity parameters
+           and note their name and positions to try to instanciate them at the
+           next level.
+           First, get the species info of the current level. If it's the
+           current_species we are analysing, then it won't be in the
+           environment. So we first test this before. *)
         let curr_level_species_params =
           if step_species = ctx.Context.scc_current_species then
             current_species_parameters
           else
             (begin
-            (* This ident is temporary and created *)
-            (* just to lookup in the environment.  *)
+            (* This ident is temporary and created just to lookup in the
+               environment. *)
             let curr_level_species_ident =
               Parsetree_utils.make_pseudo_species_ident
                 ~current_unit step_species in
@@ -307,16 +307,16 @@ let follow_instanciations_for_in_param ctx env original_param_name
                 Sourcify.pp_vname vn pos)
             new_params_to_later_instanciate
           end) ;
-        (* Finally we must go upward in the inheritance to look for    *)
-        (* further possible instanciations of these entity parameters. *)
+        (* Finally we must go upward in the inheritance to look for further
+           possible instanciations of these entity parameters. *)
         let new_params_unit = (fst step_species) in
         rec_follow
           new_params_unit new_params_to_later_instanciate
           new_instanciation_expr rem_steps in
   (* ***************************** *)
   (* Now, let's really do the job. *)
-  (* We must walk the inheritance steps in reverse order *)
-  (* since it is built with most recent steps in head.   *)
+  (* We must walk the inheritance steps in reverse order since it is built
+     with most recent steps in head. *)
   let fake_original_expr = {
     Parsetree.ast_loc = Location.none ;
     Parsetree.ast_desc =
@@ -433,12 +433,12 @@ let follow_instanciations_for_is_param ctx env original_param_index
           (List.nth current_species_parameters param_index)
     | inheritance_step :: rem_steps ->
         let (step_species, step_inheritance_expr, _) = inheritance_step in
-        (* Here, we know that the method appears in a species that inherited. *)
-        (* We have this species's name and the species expression used during *)
-        (* inheritance.                                                       *)
-        (* We must look at the effective expression used at the index to see  *)
-        (* if it's a toplevel collection, toplevel closed species or a        *)
-        (* species parameter of our level.                                    *)
+        (* Here, we know that the method appears in a species that inherited.
+           We have this species's name and the species expression used during
+           inheritance.
+           We must look at the effective expression used at the index to see
+           if it's a toplevel collection, toplevel closed species or a species
+           parameter of our level. *)
         if Configuration.get_verbose () then
           Format.eprintf "This method flows in the derivated species: %a@."
             Sourcify.pp_qualified_species step_species ;
@@ -451,16 +451,16 @@ let follow_instanciations_for_is_param ctx env original_param_index
             derivated species:@ %a@."
             Sourcify.pp_simple_species_expr_as_effective_parameter
             effective_arg_during_inher ;
-        (* First, get the species info of the current level. If it's the *)
-        (* current_species we are analysing, then it won't be in the     *)
-        (* environment. So we first test this before.                    *)
+        (* First, get the species info of the current level. If it's the
+           current_species we are analysing, then it won't be in the
+           environment. So we first test this before. *)
         let curr_level_species_params =
           if step_species = ctx.Context.scc_current_species then
             current_species_parameters
           else
             (begin
-            (* This ident is temporary and created *)
-            (* just to lookup in the environment.  *)
+            (* This ident is temporary and created just to lookup in the
+               environment. *)
             let curr_level_species_ident =
               Parsetree_utils.make_pseudo_species_ident
                 ~current_unit step_species in
@@ -480,22 +480,22 @@ let follow_instanciations_for_is_param ctx env original_param_index
             end) in
         (* Now, really check if its a species parameter. *)
         match effective_arg_during_inher with
-         | Parsetree_utils.SPE_Self -> failwith "Euhhhh2 ?"  (* [Unsure] *)
+         | Parsetree_utils.SPE_Self -> failwith "Instantiation of collection parameter by Self - Configuration currently not available."  (* [Unsure] *)
          | Parsetree_utils.SPE_Expr_entity _ -> assert false
          | Parsetree_utils.SPE_Species (effective_qual_vname, provenance) ->
              (begin
              let (effective_mod, effective_name_as_string) =
                (match effective_qual_vname with
                 | Parsetree.Vname _ ->
-                    (* During scoping and typing, everything should *)
-                    (* have been explicitely qualified !            *)
+                    (* During scoping and typing, everything should have been
+                       explicitely qualified ! *)
                     assert false
                 | Parsetree.Qualified (x, y) ->
                     (x, Parsetree_utils.name_of_vname y)) in
              match provenance with
               | Types.SCK_species_parameter ->
-                  (* The instanciation is done by a one *)
-                  (* of our species parameters.         *)
+                  (* The instanciation is done by a one of our species
+                     parameters. *)
                   let index_of_instancier =
                     Handy.list_first_index
                       (function
@@ -505,11 +505,11 @@ let follow_instanciations_for_is_param ctx env original_param_index
                               (effective_mod = formal_mod) &&
                               (effective_name_as_string = formal_name))
                       curr_level_species_params in
-                      (* We must instanciate by the abstraction corresponding *)
-                      (* to our parameter and continue waking up along the    *)
-                      (* inheritance history.                                 *)
-                      (* So we first get the index of this parameter in the   *)
-                      (* current level species.                               *)
+                      (* We must instanciate by the abstraction corresponding
+                         to our parameter and continue waking up along the
+                         inheritance history.
+                         So we first get the index of this parameter in the
+                         current level species. *)
                       if Configuration.get_verbose () then
                         Format.eprintf
                           "Instanciation by the species %dth species \
@@ -519,10 +519,10 @@ let follow_instanciations_for_is_param ctx env original_param_index
                       rec_follow index_of_instancier rem_steps
               | Types.SCK_toplevel_collection ->
                   (begin
-                  (* The instanciation is done by a toplevel collection. In *)
-                  (* this case, no need from now to continue walking up     *)
-                  (* along the inheritance history, there won't be anymore  *)
-                  (* instanciations.                                        *)
+                  (* The instanciation is done by a toplevel collection. In
+                     this case, no need from now to continue walking up
+                     along the inheritance history, there won't be anymore
+                     instanciations. *)
                   if Configuration.get_verbose () then
                     Format.eprintf
                       "Final instanciation by toplevel collection.@." ;
