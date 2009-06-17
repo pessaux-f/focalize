@@ -394,7 +394,7 @@ end;;
 
 collection Security_objects = 
 
-  implement Concrete_objects
+  implement Concrete_objects;
 
 end;;
 
@@ -439,7 +439,7 @@ end;;
 
 collection Security_actions = 
 
-  implement Concrete_actions
+  implement Concrete_actions;
 
 end;;
 
@@ -464,7 +464,7 @@ end;;
 
 collection Security_users = 
 
-  implement Singleton
+  implement Singleton;
 
 end;;
 
