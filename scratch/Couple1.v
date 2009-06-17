@@ -1,3 +1,11 @@
+(*
+Fixpoint myfun3 (a : nat) (b : nat) { struct a } :=
+  if eq_nat_dec a 0 then b
+  else
+    if eq_nat_dec a 1 then myfun3 (a - 1) b
+    else myfun3 (a - 2) b.
+*)
+
 Require Import Bool.
 Require Export Arith.
 

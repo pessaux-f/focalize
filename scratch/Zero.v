@@ -1,7 +1,6 @@
 (*
-let rec myfun x :=
-  if x = 0 then 0
-  else myfun (x -1)
+Fixpoint myfun (x : nat) { struct x } :=
+  if x = 0 then 0 else myfun (x - 1)
 ;;
 *)
 

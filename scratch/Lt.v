@@ -1,5 +1,5 @@
 (*
-Fixpoint lt (x : peano__t) (y : peano__t) :=
+Fixpoint lt (x : peano__t) (y : peano__t) { struct y } :=
   match x with
    | P_zero => 
        match y with 

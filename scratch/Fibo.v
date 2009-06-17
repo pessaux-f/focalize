@@ -1,5 +1,5 @@
 (*
-Fixpoint fib (n :nat) :=
+Fixpoint fib (n :nat) { struct n } :=
   match n with
    | 0 => 1
    | S m =>
