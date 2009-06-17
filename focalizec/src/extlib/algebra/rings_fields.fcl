@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.12 2009-06-05 13:59:13 weis Exp $ *)
+(* $Id: rings_fields.fcl,v 1.13 2009-06-17 11:52:22 rr Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
@@ -25,7 +25,6 @@ use "weak_structures";;
 open "additive_law";;
 open "multiplicative_law";;
 open "weak_structures";;
-open "basics";;
 
 (** Rings are additive groups and multiplicative monoids *)
 species Ring =
@@ -34,11 +33,11 @@ species Ring =
 
   let zero = Self!minus (Self!one, Self!one);
 
-  proof of zero_is_neutral =
-    definition of zero
-    property one_is_left_neutral, one_is_right_neutral,
-      mult_left_distributes_on_plus
-    assumed {* Todo *};
+(*   proof of zero_is_neutral = *)
+(*     definition of zero *)
+(*     property one_is_left_neutral, one_is_right_neutral, *)
+(*       mult_left_distributes_on_plus *)
+(*     assumed {* Todo *}; *)
 
   proof of zero_left_absorbes =
   <1>1 assume x in Self,
