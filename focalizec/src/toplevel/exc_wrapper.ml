@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.85 2009-06-16 10:58:08 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.86 2009-06-17 13:47:24 pessaux Exp $ *)
 
 let header ppf =
   Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
@@ -322,13 +322,16 @@ let print_focalize_exception ppf = function
           Location.pp_location at header
           Types.pp_type_collection c1 Types.pp_type_collection c2
           Sourcify.pp_vname field Types.pp_type_name ty_name ar1 ar2
-  | Infer.Not_subspecies_missing_field (c1, c2, field, at) ->
+  | Infer.Not_subspecies_missing_field (c1, c2, field, from, at) ->
       Format.fprintf ppf
         "%a:@\n@[%tCollection@ '%a'@ is@ not@ a@ subspecies@ of@ '%a'.@ \
-         Field@ '%a'@ is@ not@ present@ in@ '%a'.@]@."
+         Field@ '%a'@ initially@ coming@ from@ '%a' is@ not@ present@ in@ \
+         '%a'.@]@."
         Location.pp_location at header
         Types.pp_type_collection c1 Types.pp_type_collection c2
-        Sourcify.pp_vname field Types.pp_type_collection c1
+        Sourcify.pp_vname field
+        Sourcify.pp_qualified_species from.Env.fh_initial_apparition
+        Types.pp_type_collection c1
   | Infer.Parameterized_species_arity_mismatch msg ->
       Format.fprintf ppf
         "@[%tParameterised@ species@ is@ applied@ to@ %s@ arguments.@]@."

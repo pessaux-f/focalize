@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.188 2009-06-16 10:58:08 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.189 2009-06-17 13:47:24 pessaux Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -279,6 +279,8 @@ exception Not_subspecies_missing_field of
    (** The collection name that should be an overspecies of the one above. *)
    Types.type_collection *
    Parsetree.vname *     (** Field name that was not found. *)
+   Env.from_history *    (** The hostory of the missing field in the species
+                             that imposes the signature. *)
    Location.t)           (** Related location when the error occured. *)
 ;;
 
@@ -2470,25 +2472,26 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
     List.fold_right
       (fun field accu ->
         match field with
-        | Env.TypeInformation.SF_sig (_, v, sc)
-        | Env.TypeInformation.SF_let (_, v, _, sc, _, _, _, _) ->
-            (v, sc) :: accu
+        | Env.TypeInformation.SF_sig (from, v, sc)
+        | Env.TypeInformation.SF_let (from, v, _, sc, _, _, _, _) ->
+            (v, sc, from) :: accu
         | Env.TypeInformation.SF_let_rec (_, l) ->
-            let l' = List.map (fun (_, v, _, sc, _, _, _, _) -> (v, sc)) l in
+            let l' =
+              List.map (fun (from, v, _, sc, _, _, _, _) -> (v, sc, from)) l in
             l' @ accu
-        | Env.TypeInformation.SF_theorem (_, v, _, _, _, _)
-        | Env.TypeInformation.SF_property (_, v, _, _, _) ->
+        | Env.TypeInformation.SF_theorem (from, v, _, _, _, _)
+        | Env.TypeInformation.SF_property (from, v, _, _, _) ->
             let sc = Types.trivial_scheme (Types.type_prop ()) in
-            (v, sc) :: accu)
+            (v, sc, from) :: accu)
       fields [] in
   let flat_s1 = local_flat_fields s1 in
   let flat_s2 = local_flat_fields s2 in
   (* Check that for all (v, sc) in s2, ex (v, sc') in s1 and sc = sc'. *)
   List.iter
-    (fun (v2, sc2) ->
+    (fun (v2, sc2, from) ->
       let found =
         List.exists
-          (fun (v1, sc1) ->
+          (fun (v1, sc1, _) ->
             if v1 = v2 then
               (begin
                Types.begin_definition ();
@@ -2531,7 +2534,7 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
       if not found then
         raise
           (Not_subspecies_missing_field
-             (name_should_be_sub_spe, name_should_be_over_spe, v2, loc)))
+             (name_should_be_sub_spe, name_should_be_over_spe, v2, from, loc)))
       flat_s2
 ;;
 

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.mli,v 1.39 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: infer.mli,v 1.40 2009-06-17 13:47:24 pessaux Exp $ *)
 
 exception Wrong_recursion_kind_while_fusion of Location.t
 exception Wrong_type_by_inheritance of
@@ -49,7 +49,7 @@ exception Not_subspecies_arity_mismatch of
    Types.type_name * int * int * Location.t)
 exception Not_subspecies_missing_field of
   (Types.type_collection * Types.type_collection * Parsetree.vname *
-   Location.t)
+   Env.from_history * Location.t)
 exception Collection_not_fully_defined of
   (Parsetree.qualified_species * Parsetree.vname)
 exception Scheme_contains_type_vars of
