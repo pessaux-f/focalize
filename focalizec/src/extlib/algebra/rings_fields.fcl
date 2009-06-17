@@ -14,14 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.13 2009-06-17 11:52:22 rr Exp $ *)
+(* $Id: rings_fields.fcl,v 1.14 2009-06-17 12:01:58 rr Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
-use "basics";;
-use "additive_law";;
-use "multiplicative_law";;
-use "weak_structures";;
+open "basics";;
 open "additive_law";;
 open "multiplicative_law";;
 open "weak_structures";;
