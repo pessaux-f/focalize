@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.86 2009-06-17 13:47:24 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.87 2009-06-19 10:42:52 pessaux Exp $ *)
 
 let header ppf =
   Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
@@ -336,23 +336,21 @@ let print_focalize_exception ppf = function
       Format.fprintf ppf
         "@[%tParameterised@ species@ is@ applied@ to@ %s@ arguments.@]@."
         header msg
-  | Infer.Collection_not_fully_defined_missing_term_proof
-        (coll_name, field_name) ->
-      Format.eprintf
-        "@[%tSpecies@ '%t%a%t'@ cannot@ be@ turned@ into@ a@ collection.@ \
-        Field@ '%t%a%t'@ does@ not@ have@ a@ termination@ proof.@]@."
-        header
-        Handy.pp_set_underlined Sourcify.pp_qualified_species coll_name
-        Handy.pp_reset_effects
-        Handy.pp_set_underlined Sourcify.pp_vname field_name
-        Handy.pp_reset_effects
-  | Infer.Collection_not_fully_defined (coll_name, field_name) ->
+  | Infer.Collection_not_fully_defined (coll_name, fields_names) ->
       Format.fprintf ppf
         "@[%tSpecies@ '%a'@ cannot@ be@ turned@ into@ a@ collection.@ \
-         Field@ '%a'@ is@ not@ defined.@]@."
+         Following@ field(s)@ is(are)@ not@ defined:@\n"
         header
-        Sourcify.pp_qualified_species coll_name
-        Sourcify.pp_vname field_name
+        Sourcify.pp_qualified_species coll_name ;
+      List.iter
+        (function
+	  | Infer.NDMK_prototype field_name ->
+              Format.fprintf ppf "\t%a@\n" Sourcify.pp_vname field_name
+	  | Infer.NDMK_termination_proof fct_name ->
+	      Format.fprintf ppf "\t%a@ (missing@ termination@ proof)@\n"
+		Sourcify.pp_vname fct_name)
+        fields_names ;
+      Format.fprintf ppf"@]@."
   | Infer.Invalid_parameter_in_delayed_proof_termination (at, name) ->
       Format.fprintf ppf
         "%a:@\n@[%tIn@ the@ delayed@ termination@ proof,@ parameter@ \

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.mli,v 1.40 2009-06-17 13:47:24 pessaux Exp $ *)
+(* $Id: infer.mli,v 1.41 2009-06-19 10:42:53 pessaux Exp $ *)
 
 exception Wrong_recursion_kind_while_fusion of Location.t
 exception Wrong_type_by_inheritance of
@@ -22,8 +22,6 @@ exception Wrong_type_by_inheritance of
 exception Logical_statements_mismatch of
   (Parsetree.vname * Parsetree.qualified_species *
    Location.t * Parsetree.qualified_species * Location.t)
-exception Collection_not_fully_defined_missing_term_proof of
-  (Parsetree.qualified_species * Parsetree.vname)
 exception Proof_of_multiply_defined of
   (Location.t * Parsetree.vname * Location.t)
 exception Proof_of_unknown_property of
@@ -50,8 +48,13 @@ exception Not_subspecies_arity_mismatch of
 exception Not_subspecies_missing_field of
   (Types.type_collection * Types.type_collection * Parsetree.vname *
    Env.from_history * Location.t)
+
+type non_defined_method =
+  | NDMK_prototype of Parsetree.vname
+  | NDMK_termination_proof of Parsetree.vname
+
 exception Collection_not_fully_defined of
-  (Parsetree.qualified_species * Parsetree.vname)
+  (Parsetree.qualified_species * (non_defined_method list))
 exception Scheme_contains_type_vars of
   (Parsetree.vname * Types.type_scheme * Location.t)
 exception Invalid_parameter_in_delayed_proof_termination of

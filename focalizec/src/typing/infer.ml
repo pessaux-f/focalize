@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.189 2009-06-17 13:47:24 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.190 2009-06-19 10:42:52 pessaux Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -65,19 +65,6 @@ exception Logical_statements_mismatch of
    Location.t *   (** Source location of the first apparition. *)
    Parsetree.qualified_species *  (** Second hosting species. *)
    Location.t)  (** Source location of the second apparition. *)
-;;
-
-
-
-(* ****************************************************************** *)
-(** {b Descr} : Exception used to inform that a species is not fully
-    defined because a recursive function doesn't have any termination
-    proof.
-
-    {b Exported} : Yes.                                               *)
-(* ****************************************************************** *)
-exception Collection_not_fully_defined_missing_term_proof of
-  (Parsetree.qualified_species * Parsetree.vname)
 ;;
 
 
@@ -299,6 +286,20 @@ exception Parameterized_species_arity_mismatch of
 
 
 
+(* ************************************************************************* *)
+(** {b Descr} : Describes if a species can't be turned into a collection
+    because a method is non-defined since it is a signature/property/missing
+    "rep" or if it it due to a missing termination proof.
+
+    {b Exported} : Yes.                                                      *)
+(* ************************************************************************* *)
+type non_defined_method =
+  | NDMK_prototype of Parsetree.vname
+  | NDMK_termination_proof of Parsetree.vname
+;;
+
+
+
 (* *********************************************************************** *)
 (** {b Descr} : During collection creation, it appears that the collection
     can't be created because at leat one field is only declared and not
@@ -308,7 +309,8 @@ exception Parameterized_species_arity_mismatch of
 (* *********************************************************************** *)
 exception Collection_not_fully_defined of
   (Parsetree.qualified_species *  (** The incompletely defined species. *)
-   Parsetree.vname)      (** The name of the field missing an implementation. *)
+   (non_defined_method list))      (** The names and reasons of the fields
+                                       missing an implementation. *)
 ;;
 
 
@@ -4164,6 +4166,15 @@ let ensure_collection_completely_defined ctx fields =
   (* Let just make a reference for checking the presence pf "rep" instead of
      passing a boolean flag. This way, the function keeps terminal. *)
   let rep_found = ref false in
+  (* Because we want to have the warning about recursive functions without
+     termination proof, we can't raise an exception ass soon as we find a
+     method not defined because if the recursive function is after this non
+     defined method, it won't be examined because of the exception raising.
+     So, we force to examine all the fields of the species (a bit longuer,
+     but anyway we must do this, so doing it here saves another descent on
+     the list of methods). To remind if all the methods other than "rep" are
+     defined, we use this list that records the non-defined methods. *)
+  let non_defined_methods = ref [] in
   let rec rec_ensure = function
     | [] -> ()
     | field :: rem_fields ->
@@ -4175,8 +4186,10 @@ let ensure_collection_completely_defined ctx fields =
            (begin
              match ctx.current_species with
              | None -> assert false
-             | Some curr_spec ->
-               raise (Collection_not_fully_defined (curr_spec, vname))
+             | Some _ ->
+                 (* Signature, hence non-defined ! *)
+                 non_defined_methods :=
+                   (NDMK_prototype vname) :: !non_defined_methods
             end)
         | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _) -> ()
         | Env.TypeInformation.SF_let_rec (_, l) ->
@@ -4192,10 +4205,14 @@ let ensure_collection_completely_defined ctx fields =
                    | None -> assert false
                    | Some curr_spec ->
                        if Configuration.get_impose_termination_proof () then
-                         raise
-                           (Collection_not_fully_defined_missing_term_proof
-                              (curr_spec, vname))
+                         non_defined_methods :=
+                           (NDMK_termination_proof vname)
+                           :: !non_defined_methods
                        else
+                         (begin
+                         (* Since just a warning, it's not a reason of
+                            non-definition. Then, nothing to add into the
+                            list. *)
                          Format.eprintf
                            "@[%tWarning:%t Species@ '%t%a%t'@ should@ not@ \
                            be@ turned@ into@ a@ collection.@ Field@ \
@@ -4208,6 +4225,7 @@ let ensure_collection_completely_defined ctx fields =
                            Handy.pp_set_underlined
                            Sourcify.pp_vname vname
                            Handy.pp_reset_effects
+                         end)
                   end))
               l
         | Env.TypeInformation.SF_theorem (_, _, _, _, _, _) -> ()
@@ -4216,21 +4234,28 @@ let ensure_collection_completely_defined ctx fields =
             (* A property does not have proof. So, it is not fully defined. *)
             match ctx.current_species with
              | None -> assert false
-             | Some curr_spec ->
-                 raise (Collection_not_fully_defined (curr_spec, vname))
+             | Some _ ->
+                 non_defined_methods :=
+                   (NDMK_prototype vname) :: !non_defined_methods
            end)
        end);
       rec_ensure rem_fields in
   (* Now do the job... *)
-  rec_ensure fields;
+  rec_ensure fields ;
   (* Finally, ckeck if the carrier "rep" was actually found. *)
   if not !rep_found then
-    (begin
-      match ctx.current_species with
-      | None -> assert false
-      | Some curr_spec ->
-        raise
-          (Collection_not_fully_defined (curr_spec, (Parsetree.Vlident "rep")))
+    non_defined_methods :=
+      (NDMK_prototype (Parsetree.Vlident "rep")) :: !non_defined_methods ;
+  match !non_defined_methods with
+   | [] -> ()   (* Right, all was defined. *)
+   | any ->
+       (begin
+       match ctx.current_species with
+        | None -> assert false
+        | Some curr_spec ->
+            (* There was at least one missing defined method. Raise the error
+               telling the names of non-defined methods. *)
+            raise (Collection_not_fully_defined (curr_spec, any))
      end)
 ;;
 

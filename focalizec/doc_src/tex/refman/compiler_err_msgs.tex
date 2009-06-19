@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.36 2009-06-17 13:29:04 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.37 2009-06-19 10:42:52 pessaux Exp $
 
 
 
@@ -573,37 +573,27 @@ number $n$ of effective arguments.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species '$sname$' cannot be turned into a collection. Method
-  '$fname$' is not defined.}
+\section*{Species '$sname$' cannot be turned into a collection. Following
+ field(s) is(are) not defined: ...}
 
 {\em Description}: A collection is built  out of a  completely defined species
 (c.f. \ref{collection}), i.e. a species where {\bf all} the methods
 are {\bf defined} and not only declared. In the species $sname$, the
-method $mname$ is only declared, hence the species is not complete and
-no collection can be extracted from it.
+listed methods are only declared (or missing a termination proof in case of
+recursive functions and usage of the {\tt -impose-termination-proof}).
+Hence the species is not complete and no collection can be extracted
+from it.
+
+Note that missing termination is by default only a {\bf warning} and
+is turned into an error by using the {\tt -impose-termination-proof}
+option on the command line. In effect, the notion of to ``be defined''
+applies to recursive functions which must have a termination proof
+provided in addition to their computational body.
 
 {\em Hints}: Add an effective definition of the method, either by
 writing it code or by inheritance, according to your program model.
 
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{Species '$sname$' cannot be turned into a collection.
-  Method '$fname$' does not have a termination proof.}
-
-{\em Description}: A collection is built  out of a completely defined species
-(c.f. \ref{collection}), i.e. a species where {\bf all} the methods
-are {\bf defined} and in particular proofs of properties are
-done. This also applies to recursive functions which must have a
-termination proof provided. The recursive function $fname$ of the
-species $sname$ doesn't have its termination proof.
-
-This error message only arises if the {\tt -impose-termination-proof}
-option is used on the command line. Otherwise, it is turned into a
-{\bf warning} and the compiler will automatically generate an assumed
-proof.
-
-{\em Hints}: Add an effective termination proof to the function or do
+Add an effective termination proof to the function or do
 not invoke the {\tt -impose-termination-proof} option when compiling
 the source file.
 
