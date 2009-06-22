@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.148 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: parser.mly,v 1.149 2009-06-22 12:13:20 weis Exp $ *)
 
 open Parsetree;;
 
@@ -31,10 +31,10 @@ let mk_annot_elem (tag, desc) = {
 }
 ;;
 
-let mk_annot doc desc = {
+let mk_annot annot desc = {
   ast_loc = mk_loc ();
   ast_desc = desc;
-  ast_annot = doc;
+  ast_annot = annot;
   ast_type = Parsetree.ANTI_none;
 }
 ;;
