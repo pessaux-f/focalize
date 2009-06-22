@@ -1,0 +1,199 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaL compiler                               *)
+(*            Renaud Rioboo                                            *)
+(*            Virgile Prevosto                                         *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id:  *)
+
+(**                                                                      
+ @title Abstract polynomials
+ @author the FoC Project
+ some polynomials for FoC
+*)
+
+open "basics";;
+-- open "orders";;
+open "constants";;
+-- open "iterators";;
+open "additive_law";;
+-- open "weak_structures";;
+open "rings_fields";;
+open "integers";;
+
+(** specifications for the monoid of formal sums of products of elements of 
+    a monoid m whose elements are coefficients and an ordered lattice i of
+    formal exponents of some variable 
+    an element of i is often called a monomial *)
+species Formal_indexed_sum (M is Additive_group, 
+      	       	       	    I is Ordered_set_with_zero) =
+   inherit Additive_group;
+
+   (** canonical injections *)
+   signature monomial: M -> I -> Self;
+
+   property monomial_is_additive: all x y in M, all i in I,
+     !equal(!plus(!monomial(x, i), !monomial(y, i)),
+	    !monomial(M!plus(x, y), i));
+
+   let lift(x) = !monomial(x, I!zero);
+   theorem lift_is_additive: all x y in M,
+     !equal(!plus(!lift(x), !lift(y)),
+	    !lift(M!plus(x, y)))
+      proof = by property !monomial_is_additive definition of lift;
+
+   signature degree: Self -> I;
+   (** degrees form an additive valuation *)
+   property degree_is_additive: all p q r in Self,
+    ~ (!is_zero (p)) -> ~ (!is_zero (q)) ->
+     !equal (r, !plus (p, q)) -> ~ (!is_zero (r)) ->
+       (I!leq (!degree (r), !degree (p))
+         /\
+        I!leq (!degree (r), !degree (q)));
+   let is_constant(p) =
+      if is_zero(p) then true
+      else I!is_zero(!degree(p));
+
+   (**
+    any sum p can be written as 
+      monomial (leading_coefficient (p), degree (p)) + reductum (p)
+    *)
+   (* returns the coefficient of highest degree *)
+   signature leading_coefficient: Self -> M;
+
+   property leading_coefficient_is_non_null: all p in Self,
+     M!is_zero (!leading_coefficient (p)) -> !is_zero (p);
+
+   signature reductum: Self -> Self;
+
+   property reductum_has_smaller_degree: all p in Self,
+   ~ (!is_zero (p)) -> ~ (!is_zero (!reductum (p))) -> 
+        I!lt (!degree (!reductum (p)), !degree (p)) ;
+
+   property reductum_of_zero_is_zero: !equal (!reductum (!zero), !zero);
+
+   property monomial_is_non_null: all c in M, all d in I,
+    M!is_zero (c) -> !is_zero (!monomial (c, d)) ;
+
+   property monomial_has_degree: all c in M, all d in I,
+     ~ (M!is_zero (c)) -> I!equal (!degree (!monomial (c, d)), d);
+
+   property reductum_is_reductum: all p in Self, all c in M, all d in I,
+    ~ (!is_zero (p)) -> M!equal (c, !leading_coefficient (p)) ->
+      I!equal (d, !degree (p)) -> 
+       !equal (p, !plus (!monomial (c, d), !reductum (p)));
+
+   property monomial_has_coefficient: all c in M, all d in I,
+     (~ (M!is_zero (c))) -> M!equal (!leading_coefficient (!monomial (c, d)), c);
+
+   (** returns the coefficient of a given degree *)
+   let rec coefficient (p in Self, n in I) in M =
+      let d = !degree (p) in
+      if I!lt (d, n)
+      then M!zero
+      else
+        if I!lt (n, d)
+        then !coefficient (!reductum (p), n)
+        else !leading_coefficient (p) ;
+
+   (** tail suppresses terms with degree bigger or equal than d *)
+   let rec tail (p, d) =
+      if !is_zero (p)
+     then p
+     else
+       let dp = !degree (p) in
+       if I!lt (dp, d)
+       then p
+       else !tail (!reductum (p), d) ;
+
+   theorem leading_coefficient_is_tail_with_degree: all p in Self,
+     !equal (!reductum (p), !tail (p, !degree (p)))
+     proof = assumed {* *};
+
+   theorem tail_has_smaller_degree: all p q in Self, all d in I,
+     !equal (p, !tail (q, d)) -> 
+       ~  (!is_zero (q)) ->  I!lt (!degree (q), d)
+    proof = assumed {* *};
+
+(*    (\** returns the number of monomials *\) *)
+(*    let rec number_of_monomials (p) = *)
+(*      if !is_zero (p) *)
+(*      then 0 *)
+(*      else #succ (!number_of_monomials (!reductum (p))); *)
+
+end;;
+
+(* type spol_res a b c = caml spol_res; ;;  *)
+(* let cr_sr (pc in 'a, pe in 'b, qc in 'a, qe in 'b, r in 'c)  *)
+(*   in spol_res ('a,  'b, 'c) = caml cr_sr;; *)
+(* let pre_coef (x in spol_res ('a, 'b, 'c)) in 'a = caml pc;; *)
+(* let pre_exp  (x in spol_res ('a, 'b, 'c)) in 'b = caml pe;; *)
+(* let quo_coef (x in spol_res ('a, 'b, 'c)) in 'a = caml qc;; *)
+(* let quo_exp (x in spol_res ('a, 'b, 'c)) in 'b = caml qe;; *)
+(* let red (x in spol_res ('a, 'b, 'c)) in 'c = caml r;; *)
+
+(** Specifications for polynomials over a commutative ring *)
+species Formal_polynomials_commutative_ring
+  (R is Commutative_ring, D is Monomial_ordering) =
+    inherit Commutative_algebra (R), Formal_indexed_sum (R, D);
+
+    (** *)
+    signature generator: D -> Self;
+    (** to print a polynomial giving a variable name *)
+    signature output: Self -> string -> string;
+    let monomial (v, d) =
+       !module_mult (v, !generator (d));
+
+    theorem monomial_spec: all v in R, all d in D,
+      !equal (!monomial (v, d), !module_mult (v, !generator (d)))
+      proof = by property !equal_reflexive definition of monomial ;
+
+    let fmecg (p in Self, c in R, delta in D, q in Self) in Self =
+      !plus (p, !mult (!monomial (c, delta), q));
+
+    theorem fmecg_combines : all p q in Self, all c in R, all delta in D,
+      !equal (!fmecg (p, c, delta, q),
+              !plus (p, !mult (!monomial (c, delta), q)))
+      proof = by property !equal_reflexive definition of fmecg;
+
+end;;
+
+
+(**
+   Polynomials over an integral domain are integral
+ *)
+
+species Formal_polynomials_integral_domain
+    (R is Integral_domain, D is Monomial_ordering) =
+
+    inherit Integral_domain,
+            Torsion_free_algebra(R),
+            Formal_polynomials_commutative_ring(R, D)
+    ;
+
+end;;
+
+(**
+   Polynomials over a gcd domain are gcd domains
+ *)
+
+species Formal_polynomials_gcd_domain
+    (R is Integral_domain, D is Monomial_ordering) =
+
+    inherit Gcd_domain,
+            Formal_polynomials_commutative_ring(R, D)
+    ;
+
+end;;
+
+
+
