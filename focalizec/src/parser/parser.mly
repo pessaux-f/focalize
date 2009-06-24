@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.150 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: parser.mly,v 1.151 2009-06-24 20:15:48 weis Exp $ *)
 
 open Parsetree;;
 
@@ -815,29 +815,20 @@ binding:
         b_body = Parsetree.BB_computational (mk (E_external $6));
       }
     }
-  | bound_vname IN type_expr EQUAL logical_expr
+  | bound_vname in_type_expr EQUAL logical_expr
     { mk {
         b_name = $1;
         b_params = [];
-        b_type = Some $3;
-        b_body = Parsetree.BB_logical $5;
+        b_type = Some $2;
+        b_body = Parsetree.BB_logical $4;
       }
     }
-  | bound_vname LPAREN param_list RPAREN EQUAL logical_expr
+  | bound_vname LPAREN param_list RPAREN in_type_expr_opt EQUAL logical_expr
     { mk {
         b_name = $1;
         b_params = $3;
-        b_type = None;
-        b_body = Parsetree.BB_logical $6;
-      }
-    }
-  | bound_vname LPAREN param_list RPAREN IN type_expr
-    EQUAL logical_expr
-    { mk {
-        b_name = $1;
-        b_params = $3;
-        b_type = Some $6;
-        b_body = Parsetree.BB_logical $8;
+        b_type = $5;
+        b_body = Parsetree.BB_logical $7;
       }
     }
 ;
@@ -869,8 +860,8 @@ param_list:
 param:
   | bound_vname
     { ($1, None) }
-  | bound_vname IN type_expr
-    { ($1, Some $3) }
+  | bound_vname in_type_expr
+    { ($1, Some $2) }
 ;
 
 /**** PROPERTIES & THEOREM DEFINITION ****/
@@ -927,6 +918,12 @@ logical_expr:
 in_type_expr:
   | IN type_expr
     { $2 }
+;
+
+in_type_expr_opt:
+  | { None }
+  | IN type_expr
+    { Some $2 }
 ;
 
 /**** PROOFS ****/
@@ -1048,8 +1045,8 @@ statement:
 ;
 
 hypothesis:
-  | ASSUME bound_vname IN type_expr
-    { mk (H_variable ($2, $4)) }
+  | ASSUME bound_vname in_type_expr
+    { mk (H_variable ($2, $3)) }
   | ASSUME proof_hypothesis COLON logical_expr
     { mk (H_hypothesis ($2, $4)) }
   | NOTATION proof_hypothesis EQUAL expr
@@ -1058,7 +1055,7 @@ hypothesis:
 
 hypothesis_list:
   | hypothesis COMMA
-    { [$1] }
+    { [ $1 ] }
   | hypothesis COMMA hypothesis_list
     { $1 :: $3 }
 ;
