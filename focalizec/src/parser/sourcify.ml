@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.77 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.78 2009-06-24 21:07:37 weis Exp $ *)
 
 open Parsetree;;
 
@@ -1028,11 +1028,15 @@ let pp_external_binding ppf eb =
   let (vname, external_expr) = eb.Parsetree.ast_desc in
   Format.fprintf ppf "%a =@ %a" pp_vname vname pp_external_expr external_expr
 ;;
-let pp_external_bindings ppf ebs =
-  List.iter
-    (fun binding ->
-      Format.fprintf ppf "@[<2>and %a@]@ " pp_external_binding binding)
-    ebs.Parsetree.ast_desc
+let pp_external_bindings ppf ebds =
+  match ebds.Parsetree.ast_desc with
+  | [] -> ()
+  | eb :: ebs ->
+    Format.fprintf ppf "@[<2>with %a@]@ " pp_external_binding eb;
+    List.iter
+      (fun eb ->
+        Format.fprintf ppf "@[<2>and %a@]@ " pp_external_binding eb)
+      ebs (*.Parsetree.ast_desc*)
 ;;
 
 
