@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.32 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: substColl.ml,v 1.33 2009-06-24 10:31:25 weis Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -429,6 +429,7 @@ let rec subst_expr ~current_unit c1 c2 expression =
              List.map (fun (name, expr) -> (name, (rec_subst expr))) fields in
            Parsetree.E_record_with (with_expr', fields')
        | Parsetree.E_tuple exprs -> Parsetree.E_tuple (List.map rec_subst exprs)
+       | Parsetree.E_sequence exprs -> Parsetree.E_sequence (List.map rec_subst exprs)
        | Parsetree.E_external _ ->
            (* Because this is in fact just a string, nowhere to substitute . *)
            initial_expr.Parsetree.ast_desc

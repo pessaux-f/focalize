@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.43 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: dump_ptree.ml,v 1.44 2009-06-24 10:31:25 weis Exp $ *)
 
 let pp_annotation ppf doc =
   List.iter
@@ -870,6 +870,8 @@ and pp_expr_desc ppf = function
         label_exprs
   | Parsetree.E_tuple exprs ->
       Format.fprintf ppf "@[<2>E_tuple@ ([@ %a@ ])@]" pp_exprs exprs
+  | Parsetree.E_sequence exprs ->
+      Format.fprintf ppf "@[<2>E_sequence@ ([@ %a@ ])@]" pp_exprs exprs
   | Parsetree.E_external external_expr ->
       Format.fprintf ppf "@[<2>E_external@ (%a)@]"
         pp_external_expr external_expr

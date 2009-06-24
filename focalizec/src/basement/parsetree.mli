@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.56 2009-06-16 09:36:42 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.57 2009-06-24 10:31:25 weis Exp $ *)
 
 (** {2 The FoCaLiZe abstract syntax tree} *)
 
@@ -375,6 +375,7 @@ and expr_desc =
   | E_record_with of expr * (label_ident * expr) list
   | E_tuple of expr list
   | E_external of external_expr
+  | E_sequence of expr list
   | E_paren of expr
 
 and let_def = let_def_desc ast

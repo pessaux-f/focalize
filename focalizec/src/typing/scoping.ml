@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.85 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: scoping.ml,v 1.86 2009-06-24 10:31:25 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1419,6 +1419,10 @@ and scope_expr ctx env expr =
      | Parsetree.E_tuple exprs ->
          let exprs' = List.map (scope_expr ctx env) exprs in
          let scoped_expr = Parsetree.E_tuple exprs' in
+         scoped_expr
+     | Parsetree.E_sequence exprs ->
+         let exprs' = List.map (scope_expr ctx env) exprs in
+         let scoped_expr = Parsetree.E_sequence exprs' in
          scoped_expr
      | Parsetree.E_external _ ->
          (* Nothing to scope since it's only strings. *)

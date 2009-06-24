@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.69 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: dep_analysis.ml,v 1.70 2009-06-24 10:31:25 weis Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -205,6 +205,12 @@ let rec expr_decl_dependencies ~current_species expression =
            e_deps
            labels_exprs
      | Parsetree.E_tuple exprs ->
+         List.fold_left
+           (fun accu_deps e ->
+             Parsetree_utils.SelfDepSet.union (rec_depend e) accu_deps)
+           Parsetree_utils.SelfDepSet.empty
+           exprs
+     | Parsetree.E_sequence exprs ->
          List.fold_left
            (fun accu_deps e ->
              Parsetree_utils.SelfDepSet.union (rec_depend e) accu_deps)

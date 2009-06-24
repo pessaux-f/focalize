@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.78 2009-06-16 09:36:42 weis Exp $ *)
+(* $Id: abstractions.ml,v 1.79 2009-06-24 10:31:25 weis Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -241,6 +241,13 @@ and get_species_types_in_type_annots_of_expr expr =
          es
    | Parsetree.E_constr (_, es)
    | Parsetree.E_tuple es ->
+       List.fold_left
+         (fun accu e ->
+           Types.SpeciesCarrierTypeSet.union accu
+             (get_species_types_in_type_annots_of_expr e))
+         Types.SpeciesCarrierTypeSet.empty
+         es
+   | Parsetree.E_sequence es ->
        List.fold_left
          (fun accu e ->
            Types.SpeciesCarrierTypeSet.union accu

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.149 2009-06-22 12:13:20 weis Exp $ *)
+(* $Id: parser.mly,v 1.150 2009-06-24 10:31:25 weis Exp $ *)
 
 open Parsetree;;
 
@@ -114,6 +114,12 @@ let mk_prefix_application s e1 =
 
 let mk_cons () = mk_local_constructor_ident (Vuident "::");;
 let mk_nil () = mk_local_constructor_ident (Vuident "[]");;
+
+let rec mk_list es =
+  match es with
+  | [] -> mk (E_constr (mk_nil (), []))
+  | e :: es -> mk (E_constr (mk_cons (), [ e; mk_list es ]))
+;;
 
 let mk_proof_label (s1, s2) =
   try int_of_string s1, s2 with
@@ -1181,9 +1187,11 @@ simple_expr:
   | LBRACE simple_expr WITH record_field_list RBRACE
     { mk (E_record_with ($2, $4)) }
   | LBRACKET expr_semi_list RBRACKET
-    { $2 }
+    { mk_list $2 }
   | LPAREN expr COMMA expr_comma_list RPAREN
     { mk (E_tuple ($2 :: $4)) }
+  | BEGIN expr_semi_list END
+    { mk (E_sequence $2) }
   | LPAREN expr RPAREN
     { mk (E_paren $2) }
 ;
@@ -1299,11 +1307,11 @@ expr:
 ;
 
 expr_semi_list:
-  | { mk (E_constr (mk_nil (), [])) }
+  | { [] }
   | expr
-    { mk (E_constr (mk_cons (), [ $1; mk (E_constr (mk_nil (), [])) ])) }
+    { [ $1 ] }
   | expr SEMI expr_semi_list
-    { mk (E_constr (mk_cons (), [ $1; $3 ])) }
+    { $1 :: $3 }
 ;
 
 expr_comma_list:

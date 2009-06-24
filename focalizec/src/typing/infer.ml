@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.190 2009-06-19 10:42:52 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.191 2009-06-24 10:31:25 weis Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -1218,6 +1218,20 @@ let rec typecheck_expr ctx env initial_expr =
          assert (exprs <> []);  (* Just in case. O-ary tuple is non-sense ! *)
          let tys = List.map (typecheck_expr ctx env) exprs in
          Types.type_tuple tys
+     | Parsetree.E_sequence exprs ->
+         let rec typecheck_sequence = function
+         | [] -> Types.type_unit ()
+         | [expr] -> typecheck_expr ctx env expr
+         | expr :: exprs ->
+           let ty_expr = typecheck_expr ctx env expr in
+           (* Ensure the condition is a boolean. *)
+           ignore
+             (Types.unify
+                ~loc: initial_expr.Parsetree.ast_loc
+                ~self_manifest: ctx.self_manifest
+                ty_expr (Types.type_unit ()));
+           typecheck_sequence exprs in
+         typecheck_sequence exprs
      | Parsetree.E_external ext_expr -> typecheck_external_expr ext_expr
      | Parsetree.E_paren expr -> typecheck_expr ctx env expr) in
   (* Store the type information in the expression's node. *)

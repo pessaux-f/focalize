@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.38 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.39 2009-06-24 10:31:25 weis Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -520,7 +520,7 @@ and generate_expr ctx ~local_idents env initial_expression =
          Format.fprintf out_fmter "@[<2>(" ;
          rec_generate loc_idents expr ;
          Format.fprintf out_fmter "@ " ;
-         rec_generate_exprs_list ~comma: false loc_idents exprs ;
+         rec_generate_exprs_list "" loc_idents exprs ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_expr, exprs) ->
          (begin
@@ -533,7 +533,7 @@ and generate_expr ctx ~local_idents env initial_expression =
           | _ ->
               (* If argument(s), enclose by parens to possibly make a tuple. *)
               Format.fprintf out_fmter "@ @[<1>(" ;
-              rec_generate_exprs_list ~comma: true loc_idents exprs ;
+              rec_generate_exprs_list "," loc_idents exprs ;
               (* Don't forget to close the parenthesis opened to surround the
                  whole value. *)
               Format.fprintf out_fmter ")@])"
@@ -619,8 +619,17 @@ and generate_expr ctx ~local_idents env initial_expression =
           | [one] -> rec_generate loc_idents one
           | _ ->
               Format.fprintf out_fmter "@[<1>(" ;
-              rec_generate_exprs_list ~comma: true loc_idents exprs ;
+              rec_generate_exprs_list "," loc_idents exprs ;
               Format.fprintf out_fmter ")@]"
+         end)
+     | Parsetree.E_sequence exprs ->
+         (begin
+         match exprs with
+          | [] -> Format.fprintf out_fmter "()"
+          | _ ->
+              Format.fprintf out_fmter "@[<2>begin@ " ;
+              rec_generate_exprs_list ";" loc_idents exprs ;
+              Format.fprintf out_fmter "@ end@]"
          end)
      | Parsetree.E_external external_expr ->
          (begin
@@ -644,14 +653,13 @@ and generate_expr ctx ~local_idents env initial_expression =
 
 
 
-  and rec_generate_exprs_list ~comma loc_idents = function
+  and rec_generate_exprs_list comma loc_idents = function
     | [] -> ()
     | [last] -> rec_generate loc_idents last
     | h :: q ->
         rec_generate loc_idents h ;
-        if comma then Format.fprintf out_fmter ",@ "
-        else Format.fprintf out_fmter "@ " ;
-        rec_generate_exprs_list ~comma loc_idents q
+        Format.fprintf out_fmter "%s@ " comma;
+        rec_generate_exprs_list comma loc_idents q
 
 
   and rec_generate_record_field_exprs_list loc_idents = function

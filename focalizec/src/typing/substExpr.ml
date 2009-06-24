@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substExpr.ml,v 1.22 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: substExpr.ml,v 1.23 2009-06-24 10:31:25 weis Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -167,6 +167,8 @@ let rec __subst_expr ~param_unit ~bound_variables name_x by_expr expression =
            Parsetree.E_record_with (with_expr', fields')
        | Parsetree.E_tuple exprs ->
            Parsetree.E_tuple (List.map (rec_subst rec_bound_vars) exprs)
+       | Parsetree.E_sequence exprs ->
+           Parsetree.E_sequence (List.map (rec_subst rec_bound_vars) exprs)
        | Parsetree.E_external _ ->
            (* Because this is in fact just a string, nowhere to substitute . *)
            initial_expr.Parsetree.ast_desc

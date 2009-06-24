@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.76 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.77 2009-06-24 10:31:25 weis Exp $ *)
 
 open Parsetree;;
 
@@ -239,8 +239,8 @@ let expr_desc_fixitude = function
       | Parsetree.EI_method (None, vname) -> fixitude_of_vname vname
       | Parsetree.EI_method (Some _, _) -> Fixitude_applic
       end
-  | E_paren _ | E_external _ | E_tuple _ | E_record_with (_, _)
-  | E_record_access (_, _) | E_record _
+  | E_paren _ | E_external _ | E_tuple _ | E_sequence _
+  | E_record_with (_, _) | E_record_access (_, _) | E_record _
   | E_let (_, _) | E_if (_, _, _) | E_match (_, _)
   | E_constr (_, _) | E_app (_, _)
   | E_fun (_, _) | E_const _ | E_self -> Fixitude_applic
@@ -970,6 +970,8 @@ and pp_expr_desc ppf = function
         label_exprs
   | Parsetree.E_tuple exprs ->
       Format.fprintf ppf "@[<1>(%a)@]" (pp_exprs ",") exprs
+  | Parsetree.E_sequence exprs ->
+      Format.fprintf ppf "@[<2>begin@ %a@ end@]" (pp_exprs ";") exprs
   | Parsetree.E_external external_expr ->
       Format.fprintf ppf "@[<2>external@ %a@]"
         pp_external_expr external_expr

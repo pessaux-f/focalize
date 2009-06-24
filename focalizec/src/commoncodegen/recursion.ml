@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.17 2009-06-16 09:36:42 weis Exp $ *)
+(* $Id: recursion.ml,v 1.18 2009-06-24 10:31:25 weis Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -243,7 +243,8 @@ let rec list_recursive_calls function_name argument_list bindings expr =
        List.concat
          ((list_recursive_calls function_name argument_list bindings expr) ::
           (List.map list_recursive_calls_in_record_item label_expr_list))
-   | Parsetree.E_tuple expr_list ->
+   | Parsetree.E_tuple expr_list
+   | Parsetree.E_sequence expr_list ->
        List.concat
          (List.map
             (list_recursive_calls function_name argument_list bindings)

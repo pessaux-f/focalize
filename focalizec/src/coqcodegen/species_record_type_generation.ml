@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.83 2009-06-17 09:56:30 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.84 2009-06-24 10:31:25 weis Exp $ *)
 
 
 
@@ -919,6 +919,12 @@ END of changed by Damien *)
               rec_generate_exprs_list ~comma: true loc_idents env exprs ;
               Format.fprintf out_fmter ")@]"
          end)
+     | Parsetree.E_sequence exprs ->
+         let rec loop ppf = function
+          | [] -> ()
+          | [one] -> rec_generate_expr loc_idents env one
+          | _ :: exprs -> loop ppf exprs in
+         Format.fprintf out_fmter "@[<1>(%a)@]" loop exprs
      | Parsetree.E_external ext_expr ->
          (begin
          try

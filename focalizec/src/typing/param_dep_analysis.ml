@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.29 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.30 2009-06-24 10:31:25 weis Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -258,6 +258,13 @@ let rec __param_deps_expr ~current_species (param_coll_name, param_coll_meths)
           labs_exprs
     | Parsetree.E_constr (_, exprs)
     | Parsetree.E_tuple exprs ->
+        List.fold_left
+          (fun accu_deps e ->
+            Parsetree_utils.ParamDepSet.union
+              accu_deps (rec_deps local_idents e))
+          Parsetree_utils.ParamDepSet.empty
+          exprs
+    | Parsetree.E_sequence exprs ->
         List.fold_left
           (fun accu_deps e ->
             Parsetree_utils.ParamDepSet.union

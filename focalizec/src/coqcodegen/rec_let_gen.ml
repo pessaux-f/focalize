@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.18 2009-06-17 09:56:30 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.19 2009-06-24 10:31:25 weis Exp $ *)
 
 let is_recursive_call ctx ~local_idents recursive_name expr_ident =
   match expr_ident.Parsetree.ast_desc with
@@ -141,6 +141,15 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
                  e')
                exprs in
            ((Parsetree.E_tuple exprs'), false)
+       | Parsetree.E_sequence exprs ->
+           let exprs' =
+             List.map
+               (fun e ->
+                 let (e', rec_found) = rec_transform_expr e in
+                 if rec_found then failwith "Sequence too complex" ;
+                 e')
+               exprs in
+           ((Parsetree.E_sequence exprs'), false)
        | Parsetree.E_paren e ->
            let (e', rec_found) = rec_transform_expr e in
            ((Parsetree.E_paren e'), rec_found) in
