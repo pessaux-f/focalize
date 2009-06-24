@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.63 2009-06-05 13:58:39 weis Exp $ *)
+(* $Id: basics.fcl,v 1.64 2009-06-24 21:08:33 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -39,7 +39,7 @@ type unit =
   | caml -> {* unit *}
   | coq -> {* coq_builtins.bi__unit *}  (* FoCaLize's Coq definition of builtin. *)
 
-and () =
+with () =
   | caml -> {* () *}
   | coq -> {* coq_builtins.Void *}
 ;;
@@ -73,7 +73,7 @@ type bool =
   | caml -> {* bool *}
   | coq -> {* bool *}  (* Builtin of Coq *)
 
-and True =
+with True =
   | caml -> {* true *}
   | coq -> {* true *}
 
@@ -82,8 +82,8 @@ and False =
   | coq -> {* false *}
 ;;
 
-(** Note that is it impossible to alias the type of propositions [prop__t] to
-   Coq [Prop] here, since "prop" is a keyword of FoCaLize, hence this makes a
+(** Note that it is impossible to alias the type of propositions [prop__t] to
+   Coq [Prop] here, since "prop" is a keyword in FoCaLiZe, hence this makes a
    crude syntax error. However, "Prop" is not available for OCaml programs, so
    we can safely hard-define it in coq_builtins.v. *)
 
@@ -95,7 +95,7 @@ type list ('a) =
   | caml -> {* 'a list *}
   | coq -> {* (list __var_a) *} (* From the List module. *)
 
-and [] =
+with [] =
   | caml -> {* [] *}
   | coq -> {* List.nil *}
 
@@ -305,7 +305,6 @@ let ( = ) =
 ;;
 
 let syntactic_equal = ( = );;
-
 
 (** {7 Basic printing operations} *)
 let print_int =
