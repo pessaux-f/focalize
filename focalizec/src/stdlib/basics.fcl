@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.64 2009-06-24 21:08:33 weis Exp $ *)
+(* $Id: basics.fcl,v 1.65 2009-06-24 22:29:32 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -258,11 +258,11 @@ let ( % ) =
 ;;
 
 (** Successor. *)
-let succ0x (x in int) in int = x + 1
+let succ0x (x : int) : int = x + 1
 ;;
 
 (** Predecessor. *)
-let pred0x (x in int) in int = x - 1
+let pred0x (x : int) : int = x - 1
 ;;
 
 let max0x =
@@ -351,21 +351,21 @@ let print_string =
 (** The polymorphic syntactic equality is an equivalence relation. *)
 
 theorem beq_refl :
-  all x in 'a, x = x
+  all x : 'a, x = x
   proof = coq proof {* apply syntactic_equal_refl. Qed. *} ;;
 
 theorem beq_symm :
-  all x y in 'a, x = y -> y = x
+  all x y : 'a, x = y -> y = x
   proof = coq proof {* apply syntactic_equal_sym. Qed. *} ;;
 
 theorem beq_trans :
-  all x y z in 'a, x = y -> y = z -> x = z
+  all x y z : 'a, x = y -> y = z -> x = z
   proof = coq proof {* apply syntactic_equal_trans. Qed. *} ;;
 
 (** {8 Integer comparisons fundamental properties} *)
 
 theorem int_le_not_gt :
-  all x y in int, (x <=0x y) -> ~ (x >0x y)
+  all x y : int, (x <=0x y) -> ~ (x >0x y)
   proof =
     coq proof {*
       intros x y; unfold _lt__equal_0x, _gt_0x  in |- *.
@@ -384,7 +384,7 @@ theorem int_le_not_gt :
 ;;
 
 theorem int_lt_le_trans :
-  all x y z in int,  x <0x y -> y <=0x z -> x <0x z
+  all x y z : int,  x <0x y -> y <=0x z -> x <0x z
   proof =
     coq proof {*
       intros x y z.
@@ -404,12 +404,12 @@ theorem int_lt_le_trans :
 ;;
 
 theorem int_le_refl :
-  all x y in int, x = y -> x <=0x y
+  all x y : int, x = y -> x <=0x y
   proof = assumed {* Import trusted external code. *}
 ;;
 
 theorem int_le_antisymm:
-  all x y in int, x <=0x y -> y <=0x x -> x = y
+  all x y : int, x <=0x y -> y <=0x x -> x = y
   proof =
     coq proof {*
       intros x y.
@@ -429,7 +429,7 @@ theorem int_le_antisymm:
 ;;
 
 theorem int_le_trans:
-  all x y z in int, x <=0x y -> y <=0x z -> x <=0x z
+  all x y z : int, x <=0x y -> y <=0x z -> x <=0x z
   proof =
     coq proof {*
       unfold _lt__equal_0x, bi__int_leq in |- *; intros x y z H1 H2.
@@ -442,14 +442,14 @@ theorem int_le_trans:
 ;;
 
 theorem int_lt_irrefl :
-  all x y in int, x <0x y -> ~ x = y
+  all x y : int, x <0x y -> ~ x = y
   proof = assumed {* Import trusted external code. *}
 ;;
 
 (** {7 Theorems for integer operations} *)
 
 theorem int_0_plus:
-  all x y in int, x = 0 -> x + y = y
+  all x y : int, x = 0 -> x + y = y
   proof =
     coq proof {*
       unfold bi__int_plus in |- *; intros x y Hxz;
@@ -463,7 +463,7 @@ theorem int_0_plus:
 ;;
 
 theorem int_lt_le_S:
-  all x y in int, x <0x y -> x + 1 <=0x y
+  all x y : int, x <0x y -> x + 1 <=0x y
   proof =
     coq proof {*
       unfold _lt_0x, _lt__equal_0x,
@@ -476,7 +476,7 @@ theorem int_lt_le_S:
 ;;
 
 theorem int_plus_assoc:
-  all x y z in int, (x + y) + z = x + (y + z)
+  all x y z : int, (x + y) + z = x + (y + z)
   proof =
     coq proof {*
       intros x y z;
@@ -487,7 +487,7 @@ theorem int_plus_assoc:
 ;;
 
 theorem int_plus_commute:
-  all x y  in int, x + y = y + x
+  all x y  : int, x + y = y + x
   proof =
     coq proof {*
       intros x y;
@@ -499,7 +499,7 @@ theorem int_plus_commute:
 ;;
 
 theorem int_plus_plus:
-  all x y z t in int,
+  all x y z t : int,
   x = y -> z = t -> x + z = y + t
   proof =
     coq proof {*
@@ -513,7 +513,7 @@ theorem int_plus_plus:
 ;;
 
 theorem int_le_plus_plus:
-  all x y z t in int, x <=0x y -> z <=0x t -> x + z <=0x y + t
+  all x y z t : int, x <=0x y -> z <=0x t -> x + z <=0x y + t
   proof =
     coq proof {*
       unfold _plus_, _lt__equal_0x in |- *; intros x y z t H1 H2;
@@ -525,7 +525,7 @@ theorem int_le_plus_plus:
 ;;
 
 theorem int_min_le:
-  all x y z in int, (z <=0x x /\ z <=0x y) -> z <=0x min0x (x, y)
+  all x y z : int, (z <=0x x /\ z <=0x y) -> z <=0x min0x (x, y)
   proof =
     coq proof {*
       intros x y z H; elim H; intros H1 H2; clear H;
@@ -538,7 +538,7 @@ theorem int_min_le:
 ;;
 
 theorem int_min_le2:
-  all x y z in int, z <=0x min0x (x, y) -> (z <=0x x /\ z <=0x y)
+  all x y z : int, z <=0x min0x (x, y) -> (z <=0x x /\ z <=0x y)
   proof =
     coq proof {*
       intros x y z; unfold min0x in |- *.
@@ -554,7 +554,7 @@ theorem int_min_le2:
     *}
 ;;
 
-theorem int_plus_minus: all x y z in int,
+theorem int_plus_minus: all x y z : int,
   x + y = z -> (y = z - x)
   proof =
     coq proof {*
@@ -568,7 +568,7 @@ theorem int_plus_minus: all x y z in int,
 ;;
 
 theorem int_minus_plus:
-  all x y z in int,
+  all x y z : int,
   x - y = z -> x = y + z
   proof =
     coq proof {*
@@ -588,9 +588,9 @@ theorem int_minus_plus:
 
 species Basic_object =
   (* Generic print function. *)
-  let print (_x in Self) = "<abst>" ;
+  let print (_x : Self) = "<abst>" ;
   (* Generic parse function. *)
-  let parse (_x in string) in Self = #focalize_error ("not parsable") ;
+  let parse (_x : string) : Self = #focalize_error ("not parsable") ;
 end
 ;;
 

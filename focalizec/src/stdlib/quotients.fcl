@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: quotients.fcl,v 1.11 2009-06-06 16:56:56 weis Exp $ *)
+(* $Id: quotients.fcl,v 1.12 2009-06-24 22:29:32 weis Exp $ *)
 
 (**
    @title Quotient Structures
@@ -39,7 +39,7 @@ species Represented_by (S is Basic_object) =
   representation = S;
 
   (** An element of Self is encoded by an element of S. *)
-  let to_rep (x in Self) in S = x;
+  let to_rep (x : Self) : S = x;
 
   (** One should be able to describe which values of s correspond to some
      abstract Self. *)
@@ -54,19 +54,19 @@ species Represented_by (S is Basic_object) =
     !represents_some_self (!to_rep (x))
   ;
 
-  theorem correct_rep_spec : all x in Self,
+  theorem correct_rep_spec : all x : Self,
      !correct_representation (x) <-> !represents_some_self (!to_rep (x))
      proof = by definition of correct_representation
   ;
 
   (** Combining to_rep and from_rep gives identity. *)
-  property to_rep_reverses : all x in Self, !equal (!from_rep (!to_rep (x)), x);
+  property to_rep_reverses : all x : Self, !equal (!from_rep (!to_rep (x)), x);
 
   (** Since we provide an injection to s from_rep is a surjection. *)
-  theorem from_rep_is_surjective : all x in Self, ex y in S,
+  theorem from_rep_is_surjective : all x : Self, ex y : S,
     !equal (!from_rep (y), x)
   proof =
-   <1>1 assume x in Self,
+   <1>1 assume x : Self,
         prove !equal (!from_rep (x), x)
         by property to_rep_reverses
         definition of to_rep
@@ -74,7 +74,7 @@ species Represented_by (S is Basic_object) =
   ;
 
   (** Every element of Self should verify an invariant. *)
-  property correct_invariant : all x in Self, !correct_representation (x);
+  property correct_invariant : all x : Self, !correct_representation (x);
 
   (** By default we print the concrete data. *)
   let print (x) = S!print (!to_rep (x));
@@ -96,14 +96,14 @@ species Equivalence_relation (S is Setoid) =
      will be denoted as infix congruence
   *)
   signature equiv: S -> S -> prop;
-  property equiv_symmetric: all x y in S,
+  property equiv_symmetric: all x y : S,
     !equiv (x, y) -> !equiv (y, x);
-  property equiv_transitive: all x y z in S,
+  property equiv_transitive: all x y z : S,
     !equiv (x, y) -> !equiv (y, z) -> !equiv (x, z);
   (** compatibility with equality *)
-  property equal_refines_equiv: all x y in S,
+  property equal_refines_equiv: all x y : S,
      S!equal (x, y) -> !equiv (x, y);
-  theorem equiv_reflexive: all x in S, !equiv (x, x)
+  theorem equiv_reflexive: all x : S, !equiv (x, x)
     proof = by property !equal_refines_equiv, S!equal_reflexive;
 end
 ;;
@@ -117,7 +117,7 @@ species Setoid_morphism (S is Setoid, T is Setoid) =
   signature morph: S -> T;
 
   (** it should be compatible with equality *)
-  property morph_substitution_rule: all x y in S,
+  property morph_substitution_rule: all x y : S,
     S!equal (x, y) -> T!equal (!morph (x), !morph (y));
 
   (** we define an equivalence relation *)
@@ -148,7 +148,7 @@ species Represented_by_setoid (S is Setoid) =
   inherit Represented_by (S);
 
   (** equality in self is equality in s *)
-  let equal (x in Self, y in Self) = S!equal (x, y);
+  let equal (x : Self, y : Self) = S!equal (x, y);
 
   proof of equal_reflexive =
     by property S!equal_reflexive
@@ -168,13 +168,13 @@ species Represented_by_setoid (S is Setoid) =
   logical let represents_some_self (x) = S!equal (!from_rep (x), x);
 (*   letprop represents_some_self (x) = s!equal (!from_rep (x), x); *)
 
-  theorem to_rep_is_injective: all e_1 e_2 in Self,
+  theorem to_rep_is_injective: all e_1 e_2 : Self,
     S!equal (!to_rep (e_1), !to_rep (e_2)) -> !equal (e_1, e_2)
   proof =
     by definition of equal, to_rep;
 
   proof of to_rep_reverses =
-    <1>1 assume x in Self,
+    <1>1 assume x : Self,
          prove S!equal (!from_rep (!to_rep (x)), x)
          <2>1 prove S!equal (!from_rep (x), x)
               <3>1 prove !correct_representation (x)
@@ -196,11 +196,11 @@ species Projections (S is Setoid) =
   inherit Setoid_morphism (S, S);
 
   signature reduce: S -> S;
-  property reduce_substitution_rule: all x y in S,
+  property reduce_substitution_rule: all x y : S,
      S!equal (x, y) -> S!equal (!reduce (x), !reduce (y));
 
   (** a projection is idempotent with respect to functional composition *)
-  property reduce_is_projection :  all x in S,
+  property reduce_is_projection :  all x : S,
     S!equal (!reduce (x), !reduce (!reduce (x)));
 
   let morph (x) = !reduce (x);
@@ -225,7 +225,7 @@ species Quotient_set (S is Setoid,
   (** We produce elements by projecting them  *)
   let from_rep (x) = Proj!reduce (x);
 
-  let element in Self = Proj!reduce (S!element);
+  let element : Self = Proj!reduce (S!element);
 
   (** we state that we create reduced elements *)
   theorem sample_is_reduced: !correct_representation (!element)

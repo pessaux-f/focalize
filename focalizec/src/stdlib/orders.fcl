@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: orders.fcl,v 1.11 2009-05-25 12:35:58 doligez Exp $ *)
+(* $Id: orders.fcl,v 1.12 2009-06-24 22:29:32 weis Exp $ *)
 
 use "basics";;
 use "sets";;
@@ -30,13 +30,13 @@ species Pre_order =
       @mathml <leq/> *)
   signature leq : Self -> Self -> bool;
 
-  property leq_extends_equal: all x y in Self,
+  property leq_extends_equal: all x y : Self,
     !equal (x, y) -> !leq (x, y);
 
-  theorem leq_reflexive : all x in Self, !leq (x, x)
+  theorem leq_reflexive : all x : Self, !leq (x, x)
     proof = by property !leq_extends_equal, !equal_reflexive;
 
-  property leq_transitive : all x y z in Self,
+  property leq_transitive : all x y z : Self,
     !leq (x, y) -> !leq (y, z) -> !leq (x, z);
 
   (** we may reverse inequalities by simply changing notations, sometimes
@@ -45,20 +45,20 @@ species Pre_order =
   let geq (x, y)= !leq (y, x);
 
   (** A characteristic property *)
-  theorem geq_is_leq : all x y in Self,
+  theorem geq_is_leq : all x y : Self,
     !geq (x, y) <-> !leq (y, x)
     proof = by definition of geq
   ;
 
-  theorem geq_reflexive : all x in Self, !geq (x, x)
+  theorem geq_reflexive : all x : Self, !geq (x, x)
     proof = by property leq_reflexive, geq_is_leq
   ;
 
-  theorem geq_extends_equal : all x y in Self, !equal (x, y) -> !geq (x, y)
+  theorem geq_extends_equal : all x y : Self, !equal (x, y) -> !geq (x, y)
     proof = by property !leq_extends_equal, !equal_symmetric, !geq_is_leq
   ;
 
-  theorem geq_transitive : all x y z in Self,
+  theorem geq_transitive : all x y z : Self,
     !geq (x, y) -> !geq (y, z) -> !geq (x, z)
     proof = by property !leq_transitive, !geq_is_leq
   ;
@@ -71,18 +71,18 @@ species Pre_order =
 
 (*   let lt (x, y) = and_b (!leq (x, y), not_b (!leq (y, x))); *)
 
-(*   theorem lt_spec: all x y in Self, *)
+(*   theorem lt_spec: all x y : Self, *)
 (*     !lt (x, y) <-> (!leq (x, y) /\ ~ (leq (y, x))) *)
 (*       proof: by definition of lt; *)
 
-(*   theorem lt_is_irreflexive: all x in Self, ~ (!lt (x, x)) *)
+(*   theorem lt_is_irreflexive: all x : Self, ~ (!lt (x, x)) *)
 (*     proof: by property !lt_spec, !leq_reflexive, !leq_transitive; *)
 
-(*   theorem lt_is_transitive: all x y z in Self, *)
+(*   theorem lt_is_transitive: all x y z : Self, *)
 (*     !lt (x, y) -> !lt (y, z) -> !lt (x, z) *)
 (*     proof: by property !lt_spec, !leq_transitive; *)
 
-(*   theorem lt_is_asymetric: all x y in Self, *)
+(*   theorem lt_is_asymetric: all x y : Self, *)
 (*     !lt (x, y) -> ~ (!lt (y, x)) *)
 (*     proof: by property !lt_spec; *)
 
@@ -92,33 +92,33 @@ species Pre_order =
   let lt (x, y) = !leq (x, y) && !different (x, y);
 
   (** some results about strict and large inequalities *)
-  theorem lt_is_leq_and_different : all x y in Self,
+  theorem lt_is_leq_and_different : all x y : Self,
     !lt (x, y) <-> (!leq (x, y) /\ !different (x, y))
     proof =
       by definition of lt
     ;
 
-  theorem lt_is_irreflexive: all x in Self, ~ (!lt (x, x))
+  theorem lt_is_irreflexive: all x : Self, ~ (!lt (x, x))
     proof = by property !lt_is_leq_and_different, !different_is_irreflexive;
 
-  theorem lt_refines_leq: all x y in Self,
+  theorem lt_refines_leq: all x y : Self,
     !lt (x, y) -> !leq (x, y)
     proof = by property lt_is_leq_and_different;
 
-  theorem lt_refines_different: all x y in Self,
+  theorem lt_refines_different: all x y : Self,
     !lt (x, y) -> !different (x, y)
     proof = by property lt_is_leq_and_different;
 
   let gt (x, y) = !lt (y, x);
 
-  theorem gt_is_lt: all x y in Self,
+  theorem gt_is_lt: all x y : Self,
     !gt (x, y) <-> !lt (y, x)
     proof = by definition of gt;
 
-  theorem gt_is_irreflexive: all x in Self, ~ (gt (x, x))
+  theorem gt_is_irreflexive: all x : Self, ~ (gt (x, x))
     proof = by property gt_is_lt, !lt_is_irreflexive;
 
-  theorem gt_refines_different: all x y in Self,
+  theorem gt_refines_different: all x y : Self,
     !gt (x, y) -> !different (x, y)
     proof =
       by property gt_is_lt, !lt_refines_different, !different_is_symmetric;
@@ -135,7 +135,7 @@ species Total_pre_order =
   inherit Pre_order;
 
   (** a total order is a complete relation *)
-  property total_order : all x y in Self, Self!leq (x, y) \/ Self!leq (y, x);
+  property total_order : all x y : Self, Self!leq (x, y) \/ Self!leq (y, x);
 
 
 end
@@ -146,28 +146,28 @@ species Partial_order =
 
   inherit Pre_order;
 
-  property leq_antisymmetric :  all x y in Self,
+  property leq_antisymmetric :  all x y : Self,
     !leq (x, y) -> !leq (y, x) -> !equal (x, y)
   ;
 
-  theorem lt_is_asymetric: all x y in Self,
+  theorem lt_is_asymetric: all x y : Self,
     !lt (x, y) -> ~ (!lt (y, x))
     proof =
       by property !lt_is_leq_and_different,
                   !leq_antisymmetric,
                   !same_is_not_different;
 
-  theorem lt_is_transitive: all x y z in Self,
+  theorem lt_is_transitive: all x y z : Self,
     !lt (x, y) -> !lt (y, z) -> !lt (x, z)
     proof =
-    <1>1 assume x in Self, assume y in Self, assume z in Self,
-         assume H_xy : !lt (x, y), assume H_yz: !lt (y, z),
+    <1>1 assume x : Self, y : Self, z : Self,
+         hypothesis H_xy : !lt (x, y), hypothesis H_yz: !lt (y, z),
          prove !lt (x, z)
          <2>1 prove !leq (x, z)
               by hypothesis H_xy, H_yz
                  property !lt_is_leq_and_different, !leq_transitive
          <2>2 prove !different (x, z)
-              <3>1 assume F: !equal (z, x),
+              <3>1 assume hypothesis F : !equal (z, x),
                    prove false
                    <4>1 prove !leq (z, x)
                         by hypothesis F
@@ -193,17 +193,17 @@ species Partial_order =
     <1>f conclude
   ;
 
-  theorem geq_antisymmetric : all x y in Self,
+  theorem geq_antisymmetric : all x y : Self,
     !geq (x, y) -> !geq (y, x) -> !equal (x, y)
     proof = by property leq_antisymmetric, geq_is_leq
   ;
 
-  theorem gt_is_asymetric: all x y in Self,
+  theorem gt_is_asymetric: all x y : Self,
     !gt (x, y) -> ~ (!gt (y, x))
     proof = by property !gt_is_lt, !lt_is_asymetric;
 
 
-  theorem gt_is_transitive: all x y z in Self,
+  theorem gt_is_transitive: all x y z : Self,
     !gt (x, y) -> !gt (y, z) -> !gt (x, z)
     proof = by property !gt_is_lt, !lt_is_transitive;
 
@@ -220,7 +220,7 @@ species Ordered_set =
 
   let equal (x, y) = Self!leq (x, y) && Self!leq (y, x);
 
-  theorem equal_from_leq: all x y in Self,
+  theorem equal_from_leq: all x y : Self,
     !equal (x, y) <-> (!leq (x, y) /\ !leq (y, x))
     proof = by definition of equal;
 

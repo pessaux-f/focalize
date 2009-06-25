@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: strict_orders.fcl,v 1.10 2009-06-06 16:56:56 weis Exp $ *)
+(* $Id: strict_orders.fcl,v 1.11 2009-06-24 22:29:32 weis Exp $ *)
 
 use "basics";;
 use "sets";;
@@ -38,17 +38,17 @@ open "sets";;
 
   signature lt: Self -> Self -> bool;
 
-  property lt_is_irreflexive: all x in Self, ~(!lt(x, x));
+  property lt_is_irreflexive: all x : Self, ~(!lt(x, x));
 
-  property lt_is_transitive: all x y z in Self,
+  property lt_is_transitive: all x y z : Self,
     !lt(x, y) -> !lt(y, z) -> !lt(x, z);
 
-  theorem lt_is_asymetric: all x y in Self, !lt(x, y) -> ~(!lt(y, x))
+  theorem lt_is_asymetric: all x y : Self, !lt(x, y) -> ~(!lt(y, x))
     proof =
-      <1>1 assume x in Self, assume y in Self,
-           assume H: !lt(x, y),
+      <1>1 assume x : Self, y : Self,
+           hypothesis H: !lt(x, y),
            prove ~(!lt(y, x))
-           <2>1 assume F: !lt(y, x),
+           <2>1 assume hypothesis F: !lt(y, x),
                 prove !lt(x, x) by hypothesis H, F property !lt_is_transitive
            <2>f qed by step <2>1 property !lt_is_irreflexive
       <1>f conclude
@@ -60,38 +60,38 @@ open "sets";;
 
   let gt(x, y) = !lt(y, x);
 
-  theorem gt_is_lt: all x y in Self,
+  theorem gt_is_lt: all x y : Self,
     !gt(x, y) <-> !lt(y, x)
     proof = by definition of gt;
 
-  theorem gt_is_irreflexive: all x in Self, ~(gt(x, x))
+  theorem gt_is_irreflexive: all x : Self, ~(gt(x, x))
     proof = by property gt_is_lt, !lt_is_irreflexive;
 
   (** Large ordering is defined from strict ordering *)
   let leq(x, y) = !lt(x, y) || syntactic_equal(x, y);
 
-  theorem lt_refines_leq: all x y in Self, !lt(x, y) -> !leq(x, y)
+  theorem lt_refines_leq: all x y : Self, !lt(x, y) -> !leq(x, y)
     proof = by definition of leq;
 
-  theorem leq_reflexive : all x in Self, !leq(x, x)
+  theorem leq_reflexive : all x : Self, !leq(x, x)
     proof = by definition of leq;
 
-  theorem leq_antisymmetric: all x y in Self,
+  theorem leq_antisymmetric: all x y : Self,
     !leq(x, y) -> !leq(y, x) -> !equal(x, y)
     proof =
-      <1>1 assume x in Self, assume y in Self,
-           assume H_xy: !leq(x, y), assume H_yx: !leq(y, x),
+      <1>1 assume x : Self, y : Self,
+           hypothesis H_xy : !leq(x, y), hypothesis  H_yx: !leq(y, x),
            prove !equal(x, y)
-           <2>1 assume HH_xy: !lt(x, y) /\ !lt(y, x),
+           <2>1 assume hypothesis HH_xy : !lt(x, y) /\ !lt(y, x),
                 prove !equal(x, y)
                 by hypothesis HH_xy
                    property !lt_is_transitive, !lt_is_irreflexive
-           <2>2 assume HH_xy: !lt(x, y) /\ syntactic_equal(y, x),
+           <2>2 assume hypothesis HH_xy: !lt(x, y) /\ syntactic_equal(y, x),
                 prove !equal(x, y)
                 by hypothesis HH_xy property !equal_reflexive, !equal_symmetric
-           <2>3 assume HH_xy: syntactic_equal(x, y) /\ !lt(y, x),
+           <2>3 assume hypothesis HH_xy: syntactic_equal(x, y) /\ !lt(y, x),
                 prove !equal(x, y) by hypothesis HH_xy property equal_reflexive
-           <2>4 assume HH_xy: syntactic_equal(x, y) /\ syntactic_equal(y, x),
+           <2>4 assume hypothesis HH_xy: syntactic_equal(x, y) /\ syntactic_equal(y, x),
                 prove !equal(x, y) by hypothesis HH_xy property !equal_reflexive
            <2>5 qed by step <2>1, <2>2, <2>3, <2>4
                        hypothesis H_xy, H_yx
@@ -99,22 +99,22 @@ open "sets";;
       <1>f conclude
   ;
 
-  theorem leq_transitive: all x y z in Self,
+  theorem leq_transitive: all x y z : Self,
     !leq(x, y) -> !leq(y, z) -> !leq(x, z)
     proof =
-      <1>1 assume x in Self, assume y in Self, assume z in Self,
-           assume H_xy: !leq(x, y), assume H_yz: !leq(y, z),
+      <1>1 assume x : Self, y : Self, z : Self,
+           hypothesis  H_xy: !leq(x, y), hypothesis  H_yz: !leq(y, z),
            prove !leq(x, z)
-           <2>1 assume H: (!lt(x, y) /\ !lt(y, z)),
+           <2>1 assume hypothesis  H: (!lt(x, y) /\ !lt(y, z)),
                 prove !lt(x, z)
                 by hypothesis H property !lt_is_transitive
-           <2>2 assume H: (!lt(x, y) /\ syntactic_equal(y, z)),
+           <2>2 assume hypothesis  H: (!lt(x, y) /\ syntactic_equal(y, z)),
                 prove !lt(x, z)
                 by hypothesis H
-           <2>3 assume H: (syntactic_equal(x, y) /\ !lt(y, z)),
+           <2>3 assume hypothesis  H: (syntactic_equal(x, y) /\ !lt(y, z)),
                 prove !lt(x, z)
                 by hypothesis H
-           <2>4 assume H: (syntactic_equal(x, y) /\ syntactic_equal(y, z)),
+           <2>4 assume hypothesis  H: (syntactic_equal(x, y) /\ syntactic_equal(y, z)),
                 prove !equal(x, z)
                 by hypothesis H property !equal_transitive, !equal_reflexive
            <2>f qed by step <2>1, <2>2, <2>3, <2>4
@@ -153,7 +153,7 @@ species Syntactical_setoid =
 
   inherit Setoid;
 
-  property equal_is_syntactic: all x y in Self, !equal(x, y ) -> x = y;
+  property equal_is_syntactic: all x y : Self, !equal(x, y ) -> x = y;
 
   proof of equal_symmetric = by property !equal_reflexive, !equal_is_syntactic;
 
@@ -168,12 +168,12 @@ species Strictly_ordered_set =
 
   inherit Syntactical_setoid, Strict_order;
 
-  theorem leq_from_lt: all x y in Self,
+  theorem leq_from_lt: all x y : Self,
     !leq(x, y) <-> (!lt(x, y) \/ syntactic_equal(x, y))
     proof = by definition of leq;
 
   (** An ordering is total if the &leq; relation is complete *)
-  property total_order: all x y in Self,
+  property total_order: all x y : Self,
     !leq(x, y) \/ leq(y, x);
 
   proof of different_is_complete =
@@ -184,16 +184,16 @@ species Strictly_ordered_set =
   ;
   proof of same_is_not_different = by property different_is_not_same;
 
-  theorem different_is_syntactic: all x y in Self, ~(x = y) -> different(x, y)
+  theorem different_is_syntactic: all x y : Self, ~(x = y) -> different(x, y)
     proof =
-    <1>1 assume x in Self, assume y in Self,
-         assume D_xy: ~(x = y),
+    <1>1 assume x : Self, y : Self,
+         hypothesis  D_xy: ~(x = y),
          prove !different(x, y)
-         <3>1 assume L_xy: !leq(x, y),
+         <3>1 assume hypothesis  L_xy: !leq(x, y),
               prove !lt(x, y)
               by hypothesis D_xy, L_xy
                  property leq_from_lt, lt_is_irreflexive
-         <3>2 assume L_yx: !leq(y, x),
+         <3>2 assume hypothesis  L_yx: !leq(y, x),
               prove !lt(y, x)
               by hypothesis L_yx, D_xy
                  property leq_from_lt, lt_is_irreflexive
