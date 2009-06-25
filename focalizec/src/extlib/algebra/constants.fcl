@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: constants.fcl,v 1.7 2009-06-17 11:37:35 rr Exp $ *)
+(* $Id: constants.fcl,v 1.8 2009-06-25 09:47:53 weis Exp $ *)
 
 (* for bool *)
 open "basics";;
@@ -43,7 +43,7 @@ species Setoid_with_zero =
 
 
   (** To me the two following should define equality from zero check *)
-  theorem is_zero_spec: all x in Self,
+  theorem is_zero_spec: all x : Self,
     !is_zero(x) <-> (!equal (x, !zero) \/ !equal (!zero, x))
     proof = by definition of is_zero
                property !equal_reflexive, !equal_symmetric;
@@ -67,7 +67,7 @@ species Setoid_with_one =
   let is_one (x) = Self!equal (x, !one);
   let element = Self!one;
 
-  theorem is_one_spec: all x in Self,
+  theorem is_one_spec: all x : Self,
     !is_one(x) <-> (!equal (x, !one) \/ !equal (!one, x))
     proof = by definition of is_one property !equal_reflexive, !equal_symmetric;
 

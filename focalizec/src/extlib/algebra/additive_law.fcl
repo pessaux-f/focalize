@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: additive_law.fcl,v 1.11 2009-06-05 13:59:13 weis Exp $ *)
+(* $Id: additive_law.fcl,v 1.12 2009-06-25 09:47:53 weis Exp $ *)
 
 (** The FoCaLize library does not intend to model binary laws which are not
    associative, thus some mathematical notions such as magmas (groupoids) are
@@ -49,13 +49,13 @@ species Zero_check_set =
   (**
      An element satisfying the check should be equal to 0
    *)
-  property is_zero_checks_to_zero: all x in Self,
+  property is_zero_checks_to_zero: all x : Self,
    (!is_zero (x)) -> ( !equal (x, Self!zero) /\ !equal (Self!zero, x));
 
-  property is_zero_substitution_rule: all x y in Self,
+  property is_zero_substitution_rule: all x y : Self,
     !is_zero (x) -> (!equal (x, y) \/ !equal (y, x)) -> !is_zero (y);
 
-  theorem equals_zero_is_zero_check : all x in Self,
+  theorem equals_zero_is_zero_check : all x : Self,
    (!equal (!zero, x) \/ !equal (x, !zero)) -> !is_zero (x)
      proof =
        by property zero_checks_to_zero, is_zero_substitution_rule
@@ -77,23 +77,23 @@ species Additive_semi_group =
 
 
   (** We state that additive laws are commutative *)
-  property plus_commutes : all x y in Self,
+  property plus_commutes : all x y : Self,
     !equal (!plus (x, y), !plus (y, x));
 
-  property plus_is_associative : all x y z in Self,
+  property plus_is_associative : all x y z : Self,
     !equal (!plus (x, !plus (y, z)), !plus (!plus (x, y), z));
 
   (** Compatibility with equality *)
-  property plus_right_substitution_rule : all x y z in Self,
+  property plus_right_substitution_rule : all x y z : Self,
      !equal (x, y) -> (!equal (!plus (z, x), !plus (z, y)));
 
-  theorem plus_left_substitution_rule : all x y z in Self,
+  theorem plus_left_substitution_rule : all x y z : Self,
     !equal (x, y) -> (!equal (!plus (x, z), !plus (y, z)))
     proof =
      by property plus_commutes,
        plus_right_substitution_rule, equal_transitive;
 
-  theorem plus_substitution_rule: all x1 x2 y1 y2 in Self,
+  theorem plus_substitution_rule: all x1 x2 y1 y2 : Self,
     !equal (x1, x2) -> !equal (y1, y2) ->
       !equal (!plus (x1, y1), !plus (x2, y2))
     proof =
@@ -113,14 +113,14 @@ species Additive_monoid =
   *)
   signature plus : Self -> Self -> Self;
 
-  property zero_is_neutral : all x in Self,
+  property zero_is_neutral : all x : Self,
     !equal (!plus (x, !zero), x) /\ !equal (!plus (!zero, x), x);
 
-  theorem zero_is_unique : all o in Self,
-   (all x in Self, !equal (x, !plus (x, o))) -> !equal (o, !zero)
+  theorem zero_is_unique : all o : Self,
+   (all x : Self, !equal (x, !plus (x, o))) -> !equal (o, !zero)
    proof =
-          <1>1 assume o in Self,
-               assume H1: all x in Self, !equal (x, !plus (x, o)),
+          <1>1 assume o : Self,
+               hypothesis H1: all x : Self, !equal (x, !plus (x, o)),
                prove !equal (o, !zero)
               <2>1 prove !equal (!zero, !plus (!zero, o))
                  by hypothesis H1
@@ -140,18 +140,18 @@ species Cancellative_additive_semi_group =
   inherit Additive_semi_group;
 
   (** Left cancellation *)
-  property plus_is_left_regular : all x y z in Self,
+  property plus_is_left_regular : all x y z : Self,
     !equal (!plus (x, y), !plus (x, z)) -> !equal (y, z);
 
   (** Right cancellation *)
-  theorem plus_is_right_regular : all x y z in Self,
+  theorem plus_is_right_regular : all x y z : Self,
     !equal (!plus (x, z), !plus (y, z)) -> !equal (x, y)
     proof =
       by property plus_is_left_regular, plus_commutes, equal_transitive
   ;
 
   (** The cancellation property *)
-  theorem plus_is_regular: all x y z in Self,
+  theorem plus_is_regular: all x y z : Self,
     ((!equal (!plus (x, y), !plus (x, z)) -> !equal (y, z))
      /\
      (!equal (!plus (x, z), !plus (y, z)) -> !equal (x, y)))
@@ -190,7 +190,7 @@ species Zero_check_additive_monoid =
      this is an attempt to define some form of compatibility between
      0, zero check and plus
    *)
-  property is_zero_defines_neutral: all x y o in Self,
+  property is_zero_defines_neutral: all x y o : Self,
     !is_zero (o) -> !equal (x, y) ->
       ( !equal (x, !plus (o, y)) /\
         !equal (!plus (o, x), y) /\
@@ -202,7 +202,7 @@ species Zero_check_additive_monoid =
   (** [rr] Tue Oct 26 20:03:49 CEST 2004
      New property attempting to reduce equality chains
      *)
-  property zero_simplifies: all x y in Self,
+  property zero_simplifies: all x y : Self,
     (!equal (!plus (x, !zero), y) \/
      !equal (x, !plus (!zero, y)) \/
      !equal (x, !plus (y, !zero)) \/
@@ -210,7 +210,7 @@ species Zero_check_additive_monoid =
        -> !equal (x, y);
 
   proof of equal_reflexive =
-    <1>1 assume x in Self,
+    <1>1 assume x : Self,
          prove !equal (x, x)
          <2>1 prove !equal (!plus (!zero, !plus (x, !zero)),
                             !plus (!plus (!zero, x), !zero))
@@ -226,13 +226,12 @@ species Zero_check_additive_monoid =
    (* [rr]: to do *)
    assumed {* Because todo *};
 
-  theorem is_zero_defines_unique: all x y in Self,
+  theorem is_zero_defines_unique: all x y : Self,
     (!is_zero (x) /\ !is_zero (y)) -> !equal(x, y)
     proof =
-      <1>1 assume x in Self,
-           assume y in Self,
-           assume H1: !is_zero (x),
-           assume H2: !is_zero (y),
+      <1>1 assume x : Self, y : Self,
+           hypothesis H1: !is_zero (x),
+           hypothesis H2: !is_zero (y),
            prove !equal (x, y)
            <2>1 prove !equal (x, !zero)
                 by hypothesis H1 property is_zero_checks_to_zero
@@ -243,7 +242,7 @@ species Zero_check_additive_monoid =
   ;
 
   proof of zero_is_neutral =
-    <1>1 assume x in Self,
+    <1>1 assume x : Self,
          prove !equal (!plus (x, !zero), x) /\ !equal (!plus (!zero, x), x)
          <2>0 prove !equal (x, x) by property equal_reflexive
          <2>1 prove !equal (!plus (x, !zero), x)
@@ -277,13 +276,12 @@ species Zero_check_additive_monoid =
   ;
 
   (** this also looks trivial *)
-  theorem is_zero_is_addditive: all x y in Self,
+  theorem is_zero_is_addditive: all x y : Self,
     !is_zero (x) -> !is_zero (y) -> !is_zero (!plus (x, y))
     proof =
-      <1>1 assume x in Self,
-           assume y in Self,
-           assume Zx: !is_zero (x),
-           assume Zy: !is_zero (y),
+      <1>1 assume x : Self, y : Self,
+           hypothesis Zx: !is_zero (x),
+           hypothesis Zy: !is_zero (y),
            prove !equal (!zero, !plus (x, y))
            <2>1 prove !equal (x, !zero)
                 by hypothesis Zx
@@ -313,14 +311,14 @@ species Regular_additive_semi_group =
      from these properties we should be able to prove basic
      properties of equality
    *)
-  property minus_is_well_defined: all x y z in Self,
+  property minus_is_well_defined: all x y z : Self,
     !equal (x, !plus (z, y)) ->
       (!equal (!minus (x, y), z) /\ !equal (!minus (x, z), y));
 
-  property minus_left_substitution_rule: all x y z in Self,
+  property minus_left_substitution_rule: all x y z : Self,
     !equal (x, y) -> !equal (!minus (x, z), !minus (y, z));
 
-  property minus_right_substitution_rule: all x y z in Self,
+  property minus_right_substitution_rule: all x y z : Self,
       !equal (y, z) -> !equal (!minus (x, y), !minus (x, z));
 
 end
@@ -333,10 +331,10 @@ species Regular_additive_monoid =
   inherit Regular_additive_semi_group, Cancellative_additive_monoid,
                               Partial_set;
 
-  theorem zero_is_right_neutral_for_minus: all x in Self,
+  theorem zero_is_right_neutral_for_minus: all x : Self,
     !equal (!minus (x, !zero), x)
     proof =
-      <1>1 assume x in Self,
+      <1>1 assume x : Self,
            prove !equal (!minus(x, !zero), x)
            <2>1 prove !equal (x, !plus (x, !zero))
                 by property zero_is_neutral, equal_symmetric
@@ -364,17 +362,17 @@ species Additive_monoid_with_infimum =
   inherit Meet_semi_lattice_with_min, Cancellative_additive_monoid;
 
   (** absorption law *)
-  property inf_absorbes_add : all  x y in Self,
+  property inf_absorbes_add : all  x y : Self,
     !order_inf (x, !plus (x, y));
 
   (** distributivity of plus over infimum *)
-  property add_left_distributes_on_inf: all x y z in Self,
+  property add_left_distributes_on_inf: all x y z : Self,
     !equal (!plus (x, !inf (y, z)), !inf (!plus (x, y), !plus (x, z)));
 
-  property add_right_distributes_on_inf: all x y z in Self,
+  property add_right_distributes_on_inf: all x y z : Self,
     !equal (!plus (!inf (x, y), z), !inf (!plus (x, z), !plus (y, z)));
 
-  theorem add_distributes_on_inf: all x y z in Self,
+  theorem add_distributes_on_inf: all x y z : Self,
     !equal (!plus (x, !inf (y, z)), !inf (!plus (x, y), !plus (x, z)))
       /\
     !equal (!plus (!inf (x, y), z), !inf (!plus (x, z), !plus (y, z)))
@@ -396,7 +394,7 @@ species Additive_monoid_with_infimum =
      is absorbant for the other.
    *)
   proof of min_right_absorbes =
-    <1>1 assume x in Self,
+    <1>1 assume x : Self,
          prove !order_inf (!min, x)
          <2>1 prove !order_inf (!zero, !plus (!zero, x))
               by property inf_absorbes_add
@@ -408,11 +406,11 @@ species Additive_monoid_with_infimum =
          <2>f qed by step <2>3
                      property min_spec, order_inf_is_reflexive,
                        order_inf_is_transitive
-    <1>2 assume x in Self,
+    <1>2 assume x : Self,
          prove !equal (!inf (!min, x), !min)
       by step <1>1 property equal_symmetric
       definition of order_inf
-    <1>3 assume x in Self,
+    <1>3 assume x : Self,
          prove !equal (!inf (x, !min), !min)
       by step <1>2 property equal_transitive, inf_commutes
     <1>9 conclude
@@ -430,17 +428,17 @@ species Additive_monoid_with_supremum =
   inherit Join_semi_lattice_with_min, Cancellative_additive_monoid;
 
   (** absorption law *)
-  property sup_absorbes_add: all x y in Self,
+  property sup_absorbes_add: all x y : Self,
     !order_sup (!plus (x, y), x);
 
   (** distributivity of plus over supremum *)
-  property add_left_distributes_on_sup: all x y z in Self,
+  property add_left_distributes_on_sup: all x y z : Self,
     !equal (!plus (x, !sup (y, z)), !sup (!plus (x, y), !plus (x, z)));
 
-  property add_right_distributes_on_sup: all x y z in Self,
+  property add_right_distributes_on_sup: all x y z : Self,
     !equal (!plus (!sup (x, y), z), !sup (!plus (x, z), !plus (y, z)));
 
-  theorem add_distributes_on_sup: all x y z in Self,
+  theorem add_distributes_on_sup: all x y z : Self,
     !equal(!plus (x, !sup(y, z)), !sup (!plus (x, y), !plus (x, z)))
       /\
     !equal(!plus (!sup (x, y), z), !sup (!plus (x, z), !plus (y, z)))
@@ -458,7 +456,7 @@ species Additive_monoid_with_supremum =
   ;
 
   proof of min_is_right_neutral =
-    <1>1 assume x in Self,
+    <1>1 assume x : Self,
          prove !equal (!sup (x, !min), x)
          <2>1 prove !equal (x, !plus (!min, x))
               by property zero_is_neutral, equal_symmetric,
@@ -485,11 +483,11 @@ species Ordered_additive_monoid =
   inherit Cancellative_additive_monoid, Ordered_set;
 
   (** adding an element keeps the ordering *)
-  property order_compatible_with_plus : all x y z in Self,
+  property order_compatible_with_plus : all x y z : Self,
     !leq (x, y) -> !leq (!plus (x, z), !plus (y, z));
 
   (** compatibility between + and &lt; *)
-  property order_compatible_with_cancellation: all x y z in Self,
+  property order_compatible_with_cancellation: all x y z : Self,
     !leq (!plus (x, z), !plus (y, z)) -> !leq (x, y);
 
 end
@@ -508,13 +506,13 @@ species Monomial_ordering =
           Ordered_additive_monoid;
 
   (** adding always increase order *)
-  theorem leq_absorbes_add: all x y in Self,
+  theorem leq_absorbes_add: all x y : Self,
     !leq (x, !plus (x, y))
     proof =
       by property leq_refines_order_inf, inf_absorbes_add
   ;
 
-  theorem geq_absorbes_add: all x y in Self, !geq (!plus (x, y), x)
+  theorem geq_absorbes_add: all x y : Self, !geq (!plus (x, y), x)
    proof = by property sup_absorbes_add, geq_refines_order_sup
   ;
 
@@ -535,14 +533,12 @@ species Additive_group =
  (** @mathml <minus/> *)
   signature opposite : Self -> Self;
 
-  property opposite_is_opposite: all x in Self,
+  property opposite_is_opposite: all x : Self,
    !equal (!plus (x, !opposite (x)), !zero);
 
   proof of plus_is_left_regular =
-    <1>1 assume x  in Self,
-         assume y  in Self,
-         assume z in Self,
-         assume H: !equal (!plus (x, y), !plus (x, z)),
+    <1>1 assume x  : Self, y  : Self, z : Self,
+         hypothesis H: !equal (!plus (x, y), !plus (x, z)),
          prove !equal (y, z)
          <2>1 prove !equal(!plus (!opposite (x), !plus (x, y)),
                            !plus (!opposite (x), !plus (x, z)))
@@ -574,12 +570,11 @@ species Additive_group =
   ;
 
 
-  theorem opposite_is_unique: all z in Self, all x in Self,
+  theorem opposite_is_unique: all z : Self, all x : Self,
      !equal (!plus (x, z), !zero) -> !equal (z, !opposite (x))
     proof =
-      <1>1 assume x in Self,
-           assume z in Self,
-           assume H: !equal (!plus(x, z), !zero),
+      <1>1 assume x : Self, z : Self,
+           hypothesis H: !equal (!plus(x, z), !zero),
            prove !equal (z, !opposite (x))
            <2>1 prove !equal (!opposite (x), z)
                 <3>1 prove !equal (!plus (x, !opposite (x)),
@@ -602,11 +597,10 @@ species Additive_group =
       <1>f qed by step <1>1 property opposite_is_unique, equal_symmetric
   ;
 
-  theorem opposite_is_additive: all x y in Self,
+  theorem opposite_is_additive: all x y : Self,
     !equal (!opposite (!plus (x, y)), !plus (!opposite (x), !opposite (y)))
     proof =
-     <1>1 assume x in Self,
-          assume y in Self,
+     <1>1 assume x : Self, y : Self,
           prove !equal (!plus (!plus (x, y),
                                !plus (!opposite (x), !opposite (y))),
                         !zero)
@@ -640,12 +634,11 @@ species Additive_group =
      <1>f qed by step <1>1 property opposite_is_unique, equal_symmetric
   ;
 
-  theorem opposite_substitution_rule: all x y in Self,
+  theorem opposite_substitution_rule: all x y : Self,
     !equal (x, y) -> !equal (!opposite (x), !opposite (y))
     proof =
-     <1>1 assume x in Self,
-          assume y in Self,
-          assume H: !equal (x, y),
+     <1>1 assume x : Self, y : Self,
+          hypothesis H: !equal (x, y),
           prove !equal(!plus(x, !opposite(y)), !zero)
           <2>1 prove !equal (!plus (x, !opposite (y)),
                              !plus (y, !opposite (y)))
@@ -660,11 +653,10 @@ species Additive_group =
   let minus(x, y) = !plus (x, !opposite (y));
 
   (** minus defines a subtraction *)
-  theorem minus_left_substracts: all x y in Self,
+  theorem minus_left_substracts: all x y : Self,
     !equal(x, !minus (!plus(x, y), y))
     proof =
-      <1>1 assume x in Self,
-           assume y in Self,
+      <1>1 assume x : Self, y : Self,
            prove !equal (x, !plus (!plus (x, y), !opposite (y)))
            <2>1 prove !equal (!plus (x, !plus (y, !opposite (y))),
                               !plus (!plus (x, y), !opposite (y)))
@@ -681,11 +673,10 @@ species Additive_group =
       <1>f qed by step <1>1 definition of minus
   ;
 
-  theorem minus_right_substracts: all x y in Self,
+  theorem minus_right_substracts: all x y : Self,
     !equal (!plus (x, !minus (y, x)), y)
     proof =
-      <1>1 assume x in Self,
-           assume y in Self,
+      <1>1 assume x : Self, y : Self,
            prove !equal (!plus (x, !plus (y, !opposite (x))), y)
            <2>1 prove !equal (!plus(x, !plus(y, !opposite(x))),
                               !plus (x, !plus (!opposite (x), y)))
@@ -702,13 +693,13 @@ species Additive_group =
       <1>f qed by step <1>1 definition of minus
   ;
 
-  theorem minus_left_substitution_rule: all x y z in Self,
+  theorem minus_left_substitution_rule: all x y z : Self,
     !equal (x, y) -> !equal (!minus (x, z), !minus (y, z))
     proof =
       by property plus_left_substitution_rule definition of minus
   ;
 
-  theorem minus_right_substitution_rule: all x y z in Self,
+  theorem minus_right_substitution_rule: all x y z : Self,
     !equal (y, z) -> !equal (!minus (x, y), !minus (x, z))
     proof =
       by property plus_right_substitution_rule, opposite_substitution_rule

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: weak_structures.fcl,v 1.11 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: weak_structures.fcl,v 1.12 2009-06-25 09:55:37 weis Exp $ *)
 
 (** We define here some weak notions such as rings with no subtraction. *)
 
@@ -63,16 +63,16 @@ species Semi_ring =
 
   inherit Unitary_additive_monoid, Monoid;
 
-  property mult_left_distributes_on_plus: all x y z in Self,
+  property mult_left_distributes_on_plus: all x y z : Self,
     !equal (!mult (x, !plus (y, z)), !plus (!mult (x, y), !mult (x, z)));
 
-  property mult_right_distributes_on_plus: all x y z in Self,
+  property mult_right_distributes_on_plus: all x y z : Self,
     !equal (!mult (!plus (x, y), z), !plus (!mult (x, z), !mult (y, z)));
 
-  property zero_left_absorbes: all x in Self,
+  property zero_left_absorbes: all x : Self,
     !equal (!mult (!zero, x), !zero);
 
-  property zero_right_absorbes: all x in Self,
+  property zero_right_absorbes: all x : Self,
     !equal (!mult (x, !zero), !zero);
 
 end
@@ -91,29 +91,29 @@ species Left_semi_module (A is Semi_ring) =
   signature mult : A -> Self -> Self;
 
   (** compatibility with equality *)
-  property mult_left_substitution_rule : all a b in A, all x in Self,
+  property mult_left_substitution_rule : all a b : A, all x : Self,
     A!equal (a, b) -> (!equal (!mult (a, x), !mult (b, x)));
 
   (** note that !plus and a!plus are commutative ! *)
-  property mult_right_distributes_on_plus : all x y in A, all z in Self,
+  property mult_right_distributes_on_plus : all x y : A, all z : Self,
     !equal (!mult (A!plus (x, y), z), !plus (!mult (x, z), !mult (y, z)));
 
 
-  property mult_left_distributes_on_plus: all x in A, all y z in Self,
+  property mult_left_distributes_on_plus: all x : A, all y z : Self,
     !equal (!mult (x, !plus (y, z)), !plus (!mult (x, y), !mult (x, z)));
 
-  property one_is_left_neutral: all x in Self, !equal (!mult (A!one, x), x);
+  property one_is_left_neutral: all x : Self, !equal (!mult (A!one, x), x);
 
   (** (b.(c.x)=(b.c).x *)
-  property mult_assoc: all b c in A, all x in Self,
+  property mult_assoc: all b c : A, all x : Self,
     !equal (!mult (b, !mult (c, x)), !mult (A!mult (b, c), x));
 
 (* [rr] : not true on general semi modules *)
 (*
-  property zero_left_absorbes: all x in self,
+  property zero_left_absorbes: all x : self,
     !equal (!mult (a!zero,x),!zero);
 
-  property zero_right_absorbes: all x in a,
+  property zero_right_absorbes: all x : a,
     !equal (!mult (x,!zero),!zero);
 *)
 
@@ -125,10 +125,10 @@ species Left_regular_semi_module (A is Semi_ring) =
   inherit Regular_additive_monoid,
           Left_semi_module (A);
 
-  theorem zero_left_absorbes: all x in Self,
+  theorem zero_left_absorbes: all x : Self,
     !equal (!mult (A!zero, x), !zero)
     proof =
-    <1>1 assume x in Self,
+    <1>1 assume x : Self,
          prove !equal (!mult (A!zero, x), !zero)
       <2>2 prove !equal (!mult (A!plus (A!zero, A!one), x), x)
            by property A!zero_is_neutral, !mult_left_substitution_rule,
@@ -163,9 +163,7 @@ species Commutative_semi_ring =
      by property one_is_left_neutral, mult_commutes, equal_transitive;
 
    proof of mult_right_distributes_on_plus =
-     <1>1 assume x in Self,
-          assume y in Self,
-          assume z in Self,
+     <1>1 assume x : Self, y : Self, z : Self,
           prove !equal (!mult (!plus (x, y), z),
                        !plus (!mult (x, z), !mult (y, z)))
           <2>1 prove !equal (!mult (!plus (x, y), z),
@@ -199,13 +197,13 @@ species Semi_algebra (R is Commutative_semi_ring) =
   signature module_mult : R -> Self -> Self;
   let lift (x) = Self!module_mult (x, Self!one);
   property lift_one : !equal (!lift (R!one), !one);
-  property lift_additive: all x y in R,
+  property lift_additive: all x y : R,
     !equal (!plus (!lift (x), !lift (y)), !lift (R!plus (x, y)));
-  property module_mult_compat: all x in R, all y in Self,
+  property module_mult_compat: all x : R, all y : Self,
     !equal (!module_mult (x, y), !mult (!lift (x), y));
-  property lift_in_center: all x in R, all y in Self,
+  property lift_in_center: all x : R, all y : Self,
     !equal (!mult (!lift (x), y), !mult (y, !lift (x)));
-  theorem lift_is_ring_morphism: all x y a b in R,
+  theorem lift_is_ring_morphism: all x y a b : R,
      !equal (!lift (R!plus (R!mult (a, x), R!mult (b, y))),
              !plus (!mult (!lift (a), !lift (x)),
                     !mult (!lift (b), !lift (y))))
@@ -238,23 +236,23 @@ species Torsion_free_semi_module (R is Semi_ring) =
   signature exquo : Self -> R-> partiel (Self);
 
   (** external division *)
-  property exquo_divides: all x y in Self, all a in R,
+  property exquo_divides: all x y : Self, all a : R,
     (basics#is_failed (!exquo (x, a)))
     \/
     (!equal
      (y, basics#non_failed (!exquo (x, a))) -> !equal (x, !mult (a, y)));
 
   (** ax=ay implies x=y.  *)
-   property mult_is_left_regular: all x in R, all y z in Self,
+   property mult_is_left_regular: all x : R, all y z : Self,
     !equal (!mult (x, y), !mult (x, z)) ->
       ~ (R!equal (x, R!zero)) -> !equal (y, z);
 
 
-(*   property mult_is_regular: all x in r, all y z in self, *)
+(*   property mult_is_regular: all x : r, all y z : self, *)
 (*     ~ (r!equal (x,r!zero)) -> !equal (!mult (x,y),!mult (x,z)) -> !equal (y,z); *)
 
   (** ax=0 -&gt; x=0 or a=0.*)
-  property mult_is_integral: all x in Self, all a in R,
+  property mult_is_integral: all x : Self, all a : R,
     !equal (!mult (a, x), Self!zero) ->
       (R!equal (a, R!zero) \/ !equal (x, Self!zero));
 
@@ -274,7 +272,7 @@ species Integral_semi_ring =
 
 (*   proof of is_zero_spec = by property !equal_symmetric definition of is_zero; *)
 
-  theorem divides_is_additive: all x y z in Self,
+  theorem divides_is_additive: all x y z : Self,
     !divides (x, y) -> !divides (x, z) -> !divides (x, !plus (y, z))
   (* [rr]: should be a property *)
   proof = assumed {* *};
@@ -291,23 +289,23 @@ species Torsion_free_semi_algebra (R is Integral_semi_ring) =
   inherit Commutative_semi_algebra (R);
 
   signature module_exquo : Self -> R -> partiel (Self);
-  property module_exquo_divides: all a in R, all x y in Self,
+  property module_exquo_divides: all a : R, all x y : Self,
     basics#is_failed (!module_exquo (x, a))
       \/
     (!equal (y, basics#non_failed (!module_exquo (x, a))) ->
       !equal (!module_mult (a, y), x));
  (** ax=ay implies x=y.  *)
-  property module_mult_is_regular: all x in R, all y z in Self,
+  property module_mult_is_regular: all x : R, all y z : Self,
    ~ (R!equal (x, R!zero)) ->
      !equal (!module_mult (x, y), !module_mult (x, z)) -> !equal (y, z);
 
  (** ax=0 -&gt; x=0 or a=0.*)
-  property module_mult_is_integral: all x in Self, all a in R,
+  property module_mult_is_integral: all x : Self, all a : R,
    !equal (!module_mult (a, x), Self!zero) ->
      (R!equal (a, R!zero) \/ !equal (x, Self!zero));
 
   let module_recip (a) = Self!module_exquo (Self!one, a);
-  theorem module_recip_is_inverse: all a in R,
+  theorem module_recip_is_inverse: all a : R,
     basics#is_failed (!module_recip (a))
     \/
     !is_one (!mult (!lift (a), basics#non_failed (!module_recip (a))))
@@ -323,7 +321,7 @@ species Division_semi_module (R is Semi_ring) =
   inherit Left_semi_module (R);
 
   signature div : Self -> R -> Self;
-  property div_divides : all x y in Self, all z in R,
+  property div_divides : all x y : Self, all z : R,
    !equal (y, !div (x, z)) -> !equal (x, !mult (z, y));
 
 end
@@ -346,13 +344,13 @@ species Factorial_semi_module (R is Integral_semi_ring) =
   inherit Torsion_free_semi_module (R);
 
   signature gcd : Self -> R -> R;
-  property gcd_divides: all x in Self, all y z in R,
+  property gcd_divides: all x : Self, all y z : R,
     R!equal (z, !gcd (x, y)) ->
       (~ (basics#is_failed (!exquo (x, z)))
       /\
       ~ (basics#is_failed (R!exquo (y, z))));
 
-  property divisor_is_multiple_of_gcd: all x in Self, all y d in R,
+  property divisor_is_multiple_of_gcd: all x : Self, all y d : R,
     ~ (basics#is_failed (!exquo (x, d))) ->
       ~ (basics#is_failed (R!exquo (y, d))) ->
         ~ (basics#is_failed (R!exquo (d, !gcd (x, y))));
@@ -421,31 +419,31 @@ species Euclidean_semi_ring =
   signature euclidean_ordering : Self -> Self -> prop;
 
   property euclidean_order_is_antisymmetric:
-    all x y in Self,
+    all x y : Self,
       !is_zero (x) \/ !is_zero (y) \/
       (!euclidean_ordering (x, y) -> ~ (!euclidean_ordering (y, x)));
   property euclidean_ordering_is_transitive:
-    all x y z in Self,
+    all x y z : Self,
       ~ (!is_zero (x)) -> ~ (!is_zero (y)) -> ~ (!is_zero (z)) ->
         !euclidean_ordering (x, y) -> !euclidean_ordering (y, z) ->
           !euclidean_ordering (x, z);
-  property euclidean_ordering_is_irreflexive: all x in Self,
+  property euclidean_ordering_is_irreflexive: all x : Self,
     (!is_zero (x)) \/ ~ (!euclidean_ordering (x, x));
 
-  theorem euclidean_relation: all x y in Self,
+  theorem euclidean_relation: all x y : Self,
     !is_zero (y)
     \/
     !equal (x, !plus (!mult (!quotient (x, y), y), !remainder (x, y)))
     proof = assumed {* Because todo *};
 
-  property remainder_is_smaller: all x y z in Self,
+  property remainder_is_smaller: all x y z : Self,
     !is_zero (y)
     \/
     (!equal (z, !remainder (x, y)) ->
       (!is_zero (z) \/ !euclidean_ordering (z, y)));
 
    (** Unicity of Euclidean relation *)
-   theorem euclidean_characterisation: all a b q r in Self,
+   theorem euclidean_characterisation: all a b q r : Self,
      !equal(a, !plus (!mult (b, q), r)) ->
          (~ (!is_zero (b))) ->
           (!is_zero (r) \/ !euclidean_ordering (r, b)) ->
@@ -453,12 +451,12 @@ species Euclidean_semi_ring =
      (* [rr]: this should be a property *)
      proof = assumed {* *};
 
-   theorem zero_remainder_divides: all x y in Self,
+   theorem zero_remainder_divides: all x y : Self,
      ~ (!is_zero (y)) -> !is_zero (!remainder (x, y)) -> !divides (y, x)
      proof =
-       <1>1 assume x in Self, assume y in Self,
-            assume H_0: ~ (!is_zero (y)),
-            assume H_r: !is_zero (!remainder (x, y)),
+       <1>1 assume x : Self, y : Self,
+            hypothesis H_0: ~ (!is_zero (y)),
+            hypothesis H_r: !is_zero (!remainder (x, y)),
             prove !divides (y, x)
             <2>1 prove !equal (x, !mult (!quotient (x, y), y))
                  <3>1 prove !equal (x,
@@ -485,20 +483,20 @@ species Euclidean_semi_ring =
     ;
 
    (** Units are extremal *)
-   theorem one_is_euclidean_minimal: all x in Self,
+   theorem one_is_euclidean_minimal: all x : Self,
      ~ (!is_zero (x)) -> !euclidean_ordering (!one, x)
      proof = assumed {* *};
 
-   theorem remainder_left_substitution_rule: all x y z in Self,
+   theorem remainder_left_substitution_rule: all x y z : Self,
      !equal (x, y) -> ~ (!is_zero (z)) ->
        !equal (!remainder (x, z), !remainder (y, z))
      proof = assumed {* Needs check *};
 
-   theorem zero_remainder_is_zero: all x in Self,
+   theorem zero_remainder_is_zero: all x : Self,
      !is_zero (x) \/ !is_zero (!remainder (!zero, x))
      proof =
-     <1>1 assume x in Self,
-          assume H: ~ (!is_zero (x)),
+     <1>1 assume x : Self,
+          hypothesis H: ~ (!is_zero (x)),
           prove !is_zero (!remainder (!zero, x))
           <2>1 prove !equal (!zero, !plus (!mult (x, !zero), !zero))
                <3>1 prove !equal (!mult (x, !zero), !zero)
