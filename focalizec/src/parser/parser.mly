@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.152 2009-06-24 20:54:31 weis Exp $ *)
+(* $Id: parser.mly,v 1.153 2009-06-24 22:28:27 weis Exp $ *)
 
 open Parsetree;;
 
@@ -508,8 +508,8 @@ following_external_binding_list:
 ;
 
 external_binding:
-  | external_value_vname EQUAL external_expr
-    { mk ($1, $3) }
+  | opt_annot external_value_vname EQUAL external_expr
+    { mk_annot $1 ($2, $4) }
 ;
 
 external_binding_list:
@@ -873,8 +873,8 @@ param:
 /**** PROPERTIES & THEOREM DEFINITION ****/
 
 signature_binding:
-  | SIGNATURE bound_vname COLON type_expr
-    { { sig_name = $2; sig_type = $4; sig_logical = LF_no_logical; } }
+  | SIGNATURE bound_vname in_type_expr
+    { { sig_name = $2; sig_type = $3; sig_logical = LF_no_logical; } }
   | LOGICAL signature_binding
     { { $2 with sig_logical = LF_logical; } }
 ;
@@ -885,17 +885,17 @@ define_signature:
 ;
 
 define_property:
-  | opt_annot PROPERTY property_vname COLON logical_expr
-    { mk_annot $1 { prd_name = $3; prd_logical_expr = $5; } }
+  | opt_annot PROPERTY property_vname in_logical_expr
+    { mk_annot $1 { prd_name = $3; prd_logical_expr = $4; } }
 ;
 
 define_theorem:
-  | opt_annot opt_local THEOREM theorem_vname COLON logical_expr PROOF EQUAL proof
+  | opt_annot opt_local THEOREM theorem_vname in_logical_expr PROOF EQUAL proof
     { mk_annot $1 {
         th_name = $4;
         th_local = $2;
-        th_stmt = $6;
-        th_proof = $9;
+        th_stmt = $5;
+        th_proof = $8;
       }
     }
 ;
@@ -922,14 +922,14 @@ logical_expr:
 ;
 
 in_type_expr:
-  | IN type_expr
+  | COLON type_expr
     { $2 }
 ;
 
 in_type_expr_opt:
   | { None }
-  | IN type_expr
-    { Some $2 }
+  | in_type_expr
+    { Some $1 }
 ;
 
 /**** PROOFS ****/
@@ -1046,17 +1046,22 @@ opt_logical_expr:
 statement:
   | PROVE logical_expr
     { mk { s_hyps = []; s_concl = Some $2; } }
-  | hypothesis_list opt_logical_expr
-    { mk { s_hyps = $1; s_concl = $2; } }
+  | ASSUME hypothesis_list opt_logical_expr
+    { mk { s_hyps = $2; s_concl = $3; } }
 ;
 
 hypothesis:
-  | ASSUME bound_vname in_type_expr
-    { mk (H_variable ($2, $3)) }
-  | ASSUME proof_hypothesis COLON logical_expr
-    { mk (H_hypothesis ($2, $4)) }
+  | bound_vname in_type_expr
+    { mk (H_variable ($1, $2)) }
+  | HYPOTHESIS proof_hypothesis in_logical_expr
+    { mk (H_hypothesis ($2, $3)) }
   | NOTATION proof_hypothesis EQUAL expr
     { mk (H_notation ($2, $4)) }
+;
+
+in_logical_expr:
+  | COLON logical_expr
+    { $2 }
 ;
 
 hypothesis_list:
