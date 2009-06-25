@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: product_structures.fcl,v 1.10 2009-06-17 11:37:57 rr Exp $ *)
+(* $Id: product_structures.fcl,v 1.11 2009-06-25 10:00:02 weis Exp $ *)
 
 (** Cartesian product of two structures, common orderings. *)
 
@@ -52,13 +52,9 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
     !pair (M1!plus (a1, b1), M2!plus (a2, b2));
 
   proof of plus_commutes =
-    <1>1 assume a in Self,
-         assume b in Self,
+    <1>1 assume a : Self, b : Self,
          prove !equal (!plus (a, b), !plus (b, a))
-         <2>1 assume a1 in M1,
-              assume a2 in M2,
-              assume b1 in M1,
-              assume b2 in M2,
+         <2>1 assume a1 : M1, a2 : M2, b1 : M1, b2 : M2,
               prove !equal (!pair (M1!plus (a1, b1), M2!plus (a2, b2)),
                             !pair (M1!plus (b1, a1), M2!plus (b2, a2)))
               by property M1!plus_commutes, M2!plus_commutes,
@@ -68,12 +64,12 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
     ;
 
   proof of plus_right_substitution_rule =
-    <1>0 assume a1 in M1,
-         assume b1 in M1,
-         assume c1 in M1,
-         assume a2 in M2,
-         assume b2 in M2,
-         assume c2 in M2,
+    <1>0 assume a1 : M1,
+         assume b1 : M1,
+         assume c1 : M1,
+         assume a2 : M2,
+         assume b2 : M2,
+         assume c2 : M2,
          assume H1: M1!equal (b1, c1),
          assume H2: M2!equal (b2, c2),
          prove !equal (!pair (M1!plus (a1, b1), M2!plus (a2, b2)),
@@ -82,9 +78,9 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
             property M1!plus_right_substitution_rule,
                      M2!plus_right_substitution_rule,
                      !pair_substitution_rule
-    <1>1 assume a in Self,
-         assume b in Self,
-         assume c in Self,
+    <1>1 assume a : Self,
+         assume b : Self,
+         assume c : Self,
          assume H: !equal (b, c),
          prove !equal (!plus (a, b), !plus (a, c))
          <2>1 prove  M1!equal (!first (b), !first (c))
@@ -233,8 +229,8 @@ end
 species Lexicographic_product_additive_monoid_named
           (M1 is Monomial_ordering,
            M2 is Monomial_ordering,
-           V1 in string,
-           V2 in string) =
+           V1 : string,
+           V2 : string) =
 
   inherit Lexicographic_product_additive_monoid (M1, M2);
 

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.14 2009-06-17 12:01:58 rr Exp $ *)
+(* $Id: rings_fields.fcl,v 1.15 2009-06-25 09:57:45 weis Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
@@ -37,7 +37,7 @@ species Ring =
 (*     assumed {* Todo *}; *)
 
   proof of zero_left_absorbes =
-  <1>1 assume x in Self,
+  <1>1 assume x : Self,
        prove !equal (!mult (!zero, x), !zero)
    <2>2 prove !equal (!mult (!plus (!zero, !one), x), x)
         by property zero_is_neutral, mult_left_substitution_rule,
@@ -57,7 +57,7 @@ species Ring =
   ;
 
   proof of zero_right_absorbes =
-  <1>1 assume x in Self,
+  <1>1 assume x : Self,
        prove !equal (!mult (x, !zero), !zero)
    <2>0 prove !equal (!mult (x, !plus (!zero, !one)), x)
      <3>1 prove !equal (!plus (!zero, !one), !one)
@@ -114,7 +114,7 @@ species Module (R is Ring) =
 
   inherit Left_semi_module (R), Additive_group;
 
-  theorem zero_left_absorbes: all x in Self,
+  theorem zero_left_absorbes: all x : Self,
     !equal (!mult (R!zero, x), !zero)
     proof = assumed {* Because todo *};
 
@@ -134,7 +134,7 @@ species Ordered_ring =
 
   inherit Ordered_additive_group, Commutative_ring;
 
-  property mult_compat_with_order: all x y z in Self,
+  property mult_compat_with_order: all x y z : Self,
     !leq (!zero, x) -> !leq (y, z) -> !leq (!mult (x, y), !mult (x, z));
 
   let abs (x) = if !sign (x) <0x 0 then !opposite (x) else x;
@@ -172,7 +172,7 @@ species Integral_domain =
           Torsion_free_semi_module (Self);
 
   (* Ajout de BIBIN Lazar *)
-  let unit_canonical (x in Self) in Self = x;
+  let unit_canonical (x : Self) : Self = x;
   (* ax = ay => x=y ou a=0 <-> a(x-y)=0 *)
 
   proof of mult_is_left_regular = assumed {* Because todo *};
@@ -194,7 +194,7 @@ species Torsion_free_algebra (R is Integral_domain) =
 
   inherit Torsion_free_semi_algebra (R), Algebra (R), Ring;
 
-  property lift_is_injective: all a in R,
+  property lift_is_injective: all a : R,
    !is_zero (!lift (a)) -> R!is_zero (a);
 
   (* see argument in torsion free modules *)
@@ -246,7 +246,7 @@ species Euclidean_domain =
   let bezout (p, q) =
     Self!bez_aux (p, Self!one, Self!zero, q, Self!zero, Self!one);
 
-  theorem bezout_relation: all x y in Self, all b in bezout_res (Self),
+  theorem bezout_relation: all x y : Self, all b : bezout_res (Self),
     !equal
       (weak_structures#gcd (!bezout (x, y)),
        !plus
@@ -263,7 +263,7 @@ species Skew_field =
 
   inherit Ring, Division_monoid;
 
-  property div_is_complete: all x y in Self,
+  property div_is_complete: all x y : Self,
    !is_zero (y) \/ !equal (x, !mult (y, !div (x, y)));
 
   proof of div_divides =

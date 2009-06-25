@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.12 2009-05-25 12:35:58 doligez Exp $ *)
+(* $Id: integers.fcl,v 1.13 2009-06-25 09:58:55 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -61,11 +61,11 @@ species Enumeration_system =
   signature successor : Self -> Self;
 
   (** Compatibility with equality *)
-  property successor_substitution_rule: all x y in Self,
+  property successor_substitution_rule: all x y : Self,
    !equal (x, y) -> !equal (!successor(x), !successor(y));
 
   (** Injectivity of successor is a Peano axiom *)
-  property successor_is_injective : all x y in Self,
+  property successor_is_injective : all x y : Self,
      !equal (!successor(x), !successor(y)) -> !equal (x, y);
 
   (**
@@ -73,7 +73,7 @@ species Enumeration_system =
      This makes sense because predecessor is injective.
    *)
   signature predecessor : Self -> Self;
-  property predecessor_reverses_successor : all x y in Self,
+  property predecessor_reverses_successor : all x y : Self,
      !equal (x, !successor (y)) ->
        !equal (y, !predecessor (x));
 
@@ -90,18 +90,18 @@ species Enumerated_system =
    inherit Enumeration_system, Partial_set;
 
   (** Zero is not a successor is a Peano axiom *)
-  property successor_is_non_trivial: all n in Self,
+  property successor_is_non_trivial: all n : Self,
     ~ (!equal (!successor (n), !start));
 
   (** Weak injectivity of predecessor is a Peano axiom *)
-  property predecessor_is_injective: all n m in Self,
+  property predecessor_is_injective: all n m : Self,
     ~ (!equal (n, !start)) -> ~ (!equal (m, !start)) ->
       !equal (!predecessor (n), !predecessor (m)) -> !equal (m, n);
 
   (** An induction principle for natural numbers *)
-  theorem enumerated_induction: all p in (Self -> prop),
-    p (!start) -> (all n in Self, p (n) -> p (!successor (n)))
-      -> (all n in Self, p (n))
+  theorem enumerated_induction: all p : (Self -> prop),
+    p (!start) -> (all n : Self, p (n) -> p (!successor (n)))
+      -> (all n : Self, p (n))
     proof = assumed {* Because todo *};
 
 end
@@ -118,11 +118,11 @@ species Ordered_Enumeration_system =
 
   (** Properties which state that the ordering
      is induced by the successor function *)
-  property successor_defines_bigger: all x in Self,
+  property successor_defines_bigger: all x : Self,
     !lt (x, !successor (x));
-  property start_is_min: all x in Self,
+  property start_is_min: all x : Self,
     !equal (x, !start) \/ !lt (!start, x);
-  property successor_defines_infimum: all x y in Self,
+  property successor_defines_infimum: all x y : Self,
     !leq (x, y) -> ~ (!equal (x, y)) -> !leq (!successor (x), y);
 
   (* [rr]:
@@ -154,7 +154,7 @@ species Number_system =
 
   (** multiplication by two is just adding twice *)
 (*   let mult2 (x) = !plus (x, x); *)
-(*   theorem mult2_spec: all x in Self, *)
+(*   theorem mult2_spec: all x : Self, *)
 (*     !equal(!mult2(x), !plus(x, x)) *)
 (*     proof = by property !equal_reflexive definition of mult2; *)
 
@@ -232,11 +232,11 @@ species Integer_system =
   (** the predecessor is a total function *)
   let predecessor (n) = !minus (n, !one);
   (** some properties are common between integers and naturals *)
-  theorem predecessor_is_injective: all x y in Self,
+  theorem predecessor_is_injective: all x y : Self,
     !equal (!successor (x), !successor (y)) -> !equal (x, y)
     proof = assumed {* Because todo *};
 
-  theorem predecessor_reverses_successor: all x y in Self,
+  theorem predecessor_reverses_successor: all x y : Self,
     !equal (x, !successor (y)) -> !equal (y, !predecessor (x))
     proof = assumed {* Because temporarily unvailable in new version *};
 (*    proof = by !opposite_is_opposite, !opposite_substitution_rule, *)
