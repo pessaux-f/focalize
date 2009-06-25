@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.78 2009-06-24 21:07:37 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.79 2009-06-24 22:29:03 weis Exp $ *)
 
 open Parsetree;;
 
@@ -843,20 +843,23 @@ and proof_node ppf = pp_ast pp_proof_node_desc ppf
 
 
 and pp_statement_desc ppf stmt =
-  Format.fprintf ppf "%a@ %a"
-    (pp_hyps "") stmt.Parsetree.s_hyps
-    (Handy.pp_generic_option "prove " pp_logical_expr)
-    stmt.Parsetree.s_concl
+  match stmt.Parsetree.s_hyps, stmt.Parsetree.s_concl with
+  | [], Some logical_expr ->
+    Format.fprintf ppf "prove %a" pp_logical_expr logical_expr
+  | hyps, concl ->
+    Format.fprintf ppf "assume %a@ %a"
+      (pp_hyps "") hyps
+      (Handy.pp_generic_option "prove " pp_logical_expr) concl
 and pp_statement ppf = pp_ast pp_statement_desc ppf
 
 
 
 and pp_hyp_desc ppf = function
   | Parsetree.H_variable (vname, te) ->
-      Format.fprintf ppf "@[<2>assume %a in@ %a,@ @]"
+      Format.fprintf ppf "@[<2>%a :@ %a,@ @]"
         pp_vname vname pp_type_expr te
   | Parsetree.H_hypothesis (vname, prop) ->
-      Format.fprintf ppf "@[<2>assume %a :@ %a,@ @]"
+      Format.fprintf ppf "@[<2>hypothesis %a :@ %a,@ @]"
         pp_vname vname pp_logical_expr prop
   | Parsetree.H_notation (vname, expr) ->
       Format.fprintf ppf "@[<2>notation %a =@ %a,@ @]"
@@ -868,11 +871,11 @@ and pp_hyp ppf = pp_ast pp_hyp_desc ppf
 
 and pp_logical_expr_desc ppf = function
   | Parsetree.Pr_forall (vnames, type_expr_opt, prop) ->
-      Format.fprintf ppf "@[<2>all@ %a@ in@ %a,@ %a@]"
+      Format.fprintf ppf "@[<2>all@ %a@ :@ %a,@ %a@]"
         (pp_vnames "") vnames pp_type_expr type_expr_opt
         pp_logical_expr prop
   | Parsetree.Pr_exists (vnames, type_expr_opt, prop) ->
-      Format.fprintf ppf "@[<2>ex@ %a@ in@ %a,@ %a@]"
+      Format.fprintf ppf "@[<2>ex@ %a@ :@ %a,@ %a@]"
         (pp_vnames "") vnames pp_type_expr type_expr_opt
         pp_logical_expr prop
   | Parsetree.Pr_imply (p1, p2) ->
