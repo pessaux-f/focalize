@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: small_integers.fcl,v 1.14 2009-06-25 10:14:38 weis Exp $ *)
+(* $Id: small_integers.fcl,v 1.13 2009-06-25 10:12:31 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -122,7 +122,7 @@ species Basic_small_nats =
     if n >0x 0 then
       if m >0x 0 then n <0x m else n <0x (~0x m)
     else
-      if m >0x 0 then (~0x n) <0x m else (~0x n) <0x (~0x m);
+      if m >0x 0 then ( ~0x n) <0x m else (~0x n) <0x (~0x m);
 end
 ;;
 
