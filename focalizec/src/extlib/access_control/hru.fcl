@@ -13,20 +13,16 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: hru.fcl,v 1.22 2009-06-06 16:43:43 weis Exp $ *)
+(* $Id: hru.fcl,v 1.23 2009-06-25 10:25:37 habib Exp $ *)
 
 (**
    @title Implementation of the HRU model
    @author Florian Brecht, Andrea-Diane Kadja
  *)
 
-use "basics";;
 open "basics";;
-use "sets_orders";;
 open "sets_orders";;
-use "ensembles_finis";;
 open "ensembles_finis";;
-use "access_control";;
 open "access_control";;
 
 (** HRU implementation *)
@@ -35,16 +31,16 @@ species S_set_of (A is Setoid) =
 
   inherit Set_of (A), Liste (A);
 
-  let create (l in list (A)) in Self = l;
+  let create (l : list (A)) : Self = l;
 
-  let support (l in Self) in list (A) = l;
+  let support (l : Self) : list (A) = l;
 
-  let head (l in Self) in A =
+  let head (l : Self) : A =
      match l with
      | [] -> A!element
      | h :: _underscore -> h;
 
-  let tail (l in Self) in Self =
+  let tail (l : Self) : Self =
      match l with
      | [] -> vide
      | _underscore:: t -> t;
@@ -77,7 +73,7 @@ species S_setoid =
 
   representation = int * string;
 
-  let create (n in int, s in string) in Self = (n, s);
+  let create (n : int, s : string) : Self = (n, s);
 
   let equal (s1, s2) =  fst (s1) = fst (s2);
 
@@ -101,11 +97,11 @@ species S_subjects =
 
   inherit Subjects, S_setoid;
 
-  let therese in Self = (1, "Therese");
+  let therese : Self = (1, "Therese");
 
-  let mathieu in Self = (2, "Mathieu");
+  let mathieu : Self = (2, "Mathieu");
 
-  let charles in Self = (3, "Charles");
+  let charles : Self = (3, "Charles");
 
 end
 ;;
@@ -114,11 +110,11 @@ species S_objects =
 
   inherit Objects, S_setoid;
 
-  let ssurf in Self = (1, "ssurf");
+  let ssurf : Self = (1, "ssurf");
 
-  let focal_pas_a_pas in Self = (2, "focal_pas_a_pas");
+  let focal_pas_a_pas : Self = (2, "focal_pas_a_pas");
 
-  let photos_de_vacances in Self = (3, "photos_de_vacances");
+  let photos_de_vacances : Self = (3, "photos_de_vacances");
 
 end
 ;;
@@ -203,9 +199,9 @@ species S_get_release =
 
   inherit S_setoid;
 
-  let get in Self = (1, "+");
+  let get : Self = (1, "+");
 
-  let rel in Self = (2, "-");
+  let rel : Self = (2, "-");
 
 end
 ;;
@@ -219,10 +215,10 @@ species S_requests_gal (S is S_subjects,
 
   representation = (Sgr * (S * (O * M)));
 
-  let create (g in Sgr, sa in S, oa in O, ma in M) in Self =
+  let create (g : Sgr, sa : S, oa : O, ma : M) : Self =
      (g, (sa, (oa, ma)));
 
-  let get_gr (rg in Self) in Sgr = fst (rg);
+  let get_gr (rg : Self) : Sgr = fst (rg);
 
   let get_s (rg) = fst (snd (rg));
 
@@ -302,7 +298,7 @@ species S_couple (A is Setoid, B is Setoid) =
 
   let element = (A!element, B!element);
 
-  let print (c in Self) in string =
+  let print (c : Self) : string =
      "( " ^ A!print(first (c)) ^ " , " ^ B!print(second (c)) ^ " )";
 
   proof of equal_reflexive = by property A!equal_reflexive,
@@ -524,11 +520,11 @@ species S_model_acl (Rh is Rho,
 
   representation = S_a * (A -> bool);
 
-  let create (s_ac in S_a) in Self = (s_ac, fd);
+  let create (s_ac : S_a) : Self = (s_ac, fd);
 
   let lambda (st) = fst (st);
 
-  let upsilon (st in Self) = snd (st);
+  let upsilon (st : Self) = snd (st);
 
   let add (st, ac) =
      (S_a!union (lambda (st), S_a!singleton (ac)), upsilon (st));
@@ -549,7 +545,7 @@ species S_model_acl (Rh is Rho,
          S_s_m!create ([ C!create (S!mathieu, M!write) ])) ]);
 
 (*   let acl (ob) = *)
-(*      let rec aux_acl (l in S_c_o_s_s_m) in S_s_m = *)
+(*      let rec aux_acl (l : S_c_o_s_s_m) : S_s_m = *)
 (*         if S_c_o_s_s_m!equal (l, S_c_o_s_s_m!vide) *)
 (*         then S_s_m!vide *)
 (*         else if O!equal (ob, C_o_s_s_m!first (S_c_o_s_s_m!head (l))) *)
@@ -557,7 +553,7 @@ species S_model_acl (Rh is Rho,
 (*         else aux_acl (S_c_o_s_s_m!tail (l)) *)
 (*      in aux_acl (liste_acl); *)
 
-  let rec aux_acl (l in S_c_o_s_s_m, ob) in S_s_m =
+  let rec aux_acl (l : S_c_o_s_s_m, ob) : S_s_m =
      if S_c_o_s_s_m!equal (l, S_c_o_s_s_m!vide)
      then S_s_m!vide
      else if O!equal (ob, C_o_s_s_m!first (S_c_o_s_s_m!head (l)))
@@ -572,7 +568,7 @@ species S_model_acl (Rh is Rho,
 
   let element = (S_a!vide, (function _a -> false));
 
-  let print (st in Self) in string = S_a!print (lambda (st));
+  let print (st : Self) : string = S_a!print (lambda (st));
 
   proof of equal_reflexive =
     by property S_a!equal_reflexive
@@ -757,11 +753,11 @@ species S_model_capabilities (Rh is Rho, S is S_subjects, O is S_objects,
 
   representation = S_a * (A -> bool);
 
-  let create (s_ac in S_a) in Self =  (s_ac, fd);
+  let create (s_ac : S_a) : Self =  (s_ac, fd);
 
   let lambda (st) = fst (st);
 
-  let upsilon (st in Self) = snd (st);
+  let upsilon (st : Self) = snd (st);
 
   let add (st, ac) =
      (S_a!union (lambda (st), S_a!singleton (ac)), upsilon (st));
@@ -769,7 +765,7 @@ species S_model_capabilities (Rh is Rho, S is S_subjects, O is S_objects,
   let del (st, ac) =
      (S_a!diff (lambda (st), S_a!singleton (ac)), upsilon (st));
 
-  let cap (suj) in S_o_m =
+  let cap (suj) : S_o_m =
      if S!equal (suj, S!mathieu)
      then S_o_m!create ([ C!create (O!ssurf, M!read);
                           C!create (O!ssurf, M!write);
@@ -781,7 +777,7 @@ species S_model_capabilities (Rh is Rho, S is S_subjects, O is S_objects,
      then S_o_m!create ([ C!create (O!ssurf, M!read) ])
      else S_o_m!vide;
 
-  let capa (_sujet in S) in S_o_m = S_o_m!vide;
+  let capa (_sujet : S) : S_o_m = S_o_m!vide;
 
   let capabilities (sujet) = cap (sujet);
 
@@ -789,7 +785,7 @@ species S_model_capabilities (Rh is Rho, S is S_subjects, O is S_objects,
 
   let element = (S_a!vide, (function _a -> false));
 
-  let print (c in Self) in string = S_a!print (lambda (c));
+  let print (c : Self) : string = S_a!print (lambda (c));
 
   proof of equal_reflexive =
     by property S_a!equal_reflexive

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: access_control.fcl,v 1.15 2009-06-05 09:59:20 habib Exp $ *)
+(* $Id: access_control.fcl,v 1.16 2009-06-25 10:25:37 habib Exp $ *)
 
 (**
    @title Implementation of access control models
@@ -22,11 +22,8 @@
    @author Charles Morisset, Francois Pessaux, Diane Pipon
  *)
 
-use "basics";;
 open "basics";;
-use "sets_orders";;
 open "sets_orders";;
-use "ensembles_finis";;
 open "ensembles_finis";;
 
 (** Framework *)
@@ -44,14 +41,14 @@ species Set_of (A is Setoid) =
      then x belongs to set2
    *)
   property equal_prop :
-    all set1 set2 in Self, all x in A,
+    all set1 set2 : Self, all x : A,
       equal (set1, set2) ->
         est_element (x, set1) ->
           est_element (x, set2);
 
   (** If x1 belongs to the singleton {x2} then x1 = x2 *)
   property singleton_prop :
-    all x1 x2 in A,
+    all x1 x2 : A,
       est_element (x1, singleton (x2)) ->
         A!equal (x1, x2);
 
@@ -113,7 +110,7 @@ species Access (S is Subjects, O is Objects, M is Access_mode) =
      then s1 = s2 and o1 = o2 and m1 = m2
    *)
   property access_equal :
-    all s1 s2 in S, all o1 o2 in O, all m1 m2 in M,
+    all s1 s2 : S, all o1 o2 : O, all m1 m2 : M,
       equal (create (s1, o1, m1), create (s2, o2, m2)) ->
         (S!equal (s1, s2) /\ O!equal (o1, o2) /\ M!equal (m1, m2));
 
@@ -138,12 +135,12 @@ species States (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
      If two states are equal then they have the same set of current accesses
    *)
   property lambda_prop :
-    all st1 st2 in Self,
+    all st1 st2 : Self,
       equal (st1, st2) ->
         S_a!equal (lambda (st1), lambda (st2));
 
   property add_prop :
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M,
       equal (add (st1, A!create (s1, o1, m1)), st2) ->
         S_a!equal (lambda (st2),
                    S_a!union (lambda (st1),
@@ -154,13 +151,13 @@ species States (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
      (s1,o1,m1) &isin; &Lambda;(st2)
    *)
   property add_mem :
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M,
       equal (add (st1, A!create (s1, o1, m1)), st2) ->
         S_a!est_element (A!create (s1, o1, m1), lambda (st2));
 
   (** a1 &isin; &Lambda;(st1) \ {(s1,o1,m1)} &rarr; a1 &isin; &Lambda;(st1) *)
   property del_prop :
-    all st1 in Self, all a1 in A, all s1 in S, all o1 in O, all m1 in M,
+    all st1 : Self, all a1 : A, all s1 : S, all o1 : O, all m1 : M,
       S_a!est_element (a1, lambda (del (st1, A!create (s1, o1, m1)))) ->
         S_a!est_element (a1, lambda (st1));
 
@@ -169,7 +166,7 @@ species States (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
      {(s1,o1,m1)} &notin; &Lambda;(st2)
    *)
   property del_mem :
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M,
       equal(del (st1, A!create (s1, o1, m1)), st2) ->
         ~ S_a!est_element (A!create (s1, o1, m1), lambda (st2));
 
@@ -189,7 +186,7 @@ species Policy (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
      predicate then st2 satisfies the security predicate
    *)
   property secure_state :
-    all st1 st2 in Self,
+    all st1 st2 : Self,
       equal (st1, st2) ->
         omega (st1) ->
           omega (st2);
@@ -216,7 +213,7 @@ species Decisions =
 
   (** A decision is either yes or no *)
   property yes_is_not_no :
-    all x in Self,
+    all x : Self,
       ~ (equal (x, yes) /\ equal(x, no));
 
 end;;
@@ -252,13 +249,13 @@ species Models (Rh is Rho, S is Subjects, O is Objects, M is Access_mode,
 
   (** (d1,st1) = (d2,st2) &rarr; d1 = d2 *)
   property left_substitution :
-    all d1 d2 in D, all st1 st2 in Self,
+    all d1 d2 : D, all st1 st2 : Self,
     (d1, st1) = (d2, st2) ->
       D!equal (d1, d2);
 
   (** (d1,st1) = (d2,st2) &rarr; st1 = st2 *)
   property right_substitution :
-    all d1 d2 in D, all st1 st2 in Self,
+    all d1 d2 : D, all st1 st2 : Self,
     (d1, st1) = (d2, st2) ->
       equal (st1, st2);
 
@@ -300,11 +297,11 @@ species Requests_gal(S is Subjects, O is Objects, M is Access_mode) =
      A request is either a "get an access" or a "release an access" request
    *)
   property get_or_rel :
-    all x in Self,
+    all x : Self,
       is_get (x) \/ is_rel (x);
 
   property get_is_not_rel :
-    all x in Self,
+    all x : Self,
       ~ (is_get (x) /\ is_rel (x));
 
 end;;
@@ -371,8 +368,8 @@ species Policy_blp (Rh is Rho_blp,
     Policy (Rh, S, O, M, A, S_a);
 
   (** (s,o,read) &isin; &Lambda;(st) &rarr; f_o(o) &le; f_s(s) *)
-  logical let mac (st in Self) =
-     all a1 in A,
+  logical let mac (st : Self) =
+     all a1 : A,
        S_a!est_element (a1, lambda (st)) ->
          M!equal (A!get_m (a1), M!read) ->
            Rh!order_inf (f_o (st, A!get_o (a1)),
@@ -383,8 +380,8 @@ species Policy_blp (Rh is Rho_blp,
      (s,o2,write) &isin; &Lambda;(st) &rarr;
      f_o(o1) &le; f_o(o2)
    *)
-  logical let mac_star (st in Self) =
-     all a1 a2 in A,
+  logical let mac_star (st : Self) =
+     all a1 a2 : A,
        S_a!est_element (a1, lambda (st)) ->
          S_a!est_element (a2, lambda (st)) ->
            M!equal (A!get_m (a1), M!read) ->
@@ -396,7 +393,7 @@ species Policy_blp (Rh is Rho_blp,
      The BLP security predicate is the conjunction of the properties
      mac and mac_star
    *)
-  logical let omega (st in Self) =
+  logical let omega (st : Self) =
      mac (st) /\ mac_star (st);
 
 end;;
@@ -414,7 +411,7 @@ species Models_blp (Rh is Rho_blp,
     Models (Rh, S, O, M, A, S_a, R, D);
 
   (** BLP transition function *)
-  let tau_blp (r1 in R, st1 in Self) =
+  let tau_blp (r1 : R, st1 : Self) =
      let s1 = R!get_s (r1) in
      let o1 = R!get_o (r1) in
      if R!is_get (r1) then
@@ -539,15 +536,15 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      then they have the same relation UA
    *)
   property add_access_ua :
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
-      all ro1 in Ro,
+    all st1 st2 : Self, all s1 s2 : S, all o1 : O, all m1 : M,
+      all ro1 : Ro,
         equal (st2, add (st1, A!create (s1, o1, m1))) ->
           ua (st1, user (st1, s2), ro1) ->
             ua (st2, user (st2, s2), ro1);
 
   property del_access_ua :
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
-      all ro1 in Ro,
+    all st1 st2 : Self, all s1 s2 : S, all o1 : O, all m1 : M,
+      all ro1 : Ro,
         equal (st2, del (st1, A!create (s1, o1, m1))) ->
           ua (st1, user (st1, s2), ro1) ->
             ua (st2, user (st2, s2), ro1);
@@ -557,15 +554,15 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      then they have the same relation PA
    *)
   property add_access_pa :
-    all st1 st2 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M,
-      all ro1 in Ro,
+    all st1 st2 : Self, all s1 : S, all o1 o2 : O, all m1 m2 : M,
+      all ro1 : Ro,
         equal (st2, add (st1, A!create (s1, o1, m1))) ->
           pa (st1, o2, m2, ro1) ->
             pa (st2, o2, m2, ro1);
 
   property del_access_pa :
-    all st1 st2 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M,
-      all ro1 in Ro,
+    all st1 st2 : Self, all s1 : S, all o1 o2 : O, all m1 m2 : M,
+      all ro1 : Ro,
         equal (st2, del (st1, A!create (s1, o1, m1))) ->
           pa (st1, o2, m2, ro1) ->
             pa (st2, o2, m2, ro1);
@@ -575,29 +572,29 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      then they have the "same" function roles
    *)
   property add_access_roles_s_1 :
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
-      all ro1 in Ro,
+    all st1 st2 : Self, all s1 s2 : S, all o1 : O, all m1 : M,
+      all ro1 : Ro,
         equal (st2, add (st1, A!create (s1, o1, m1))) ->
           roles_s (st1, s2, ro1) ->
             roles_s (st2, s2, ro1);
 
   property add_access_roles_s_2 :
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
-      all ro1 in Ro,
+    all st1 st2 : Self, all s1 s2 : S, all o1 : O, all m1 : M,
+      all ro1 : Ro,
         equal (st2, add (st1, A!create (s1, o1, m1))) ->
           roles_s (st2, s2, ro1) ->
             roles_s (st1, s2, ro1);
 
   property del_access_roles_s_1 :
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
-      all ro1 in Ro,
+    all st1 st2 : Self, all s1 s2 : S, all o1 : O, all m1 : M,
+      all ro1 : Ro,
         equal (st2, del (st1, A!create (s1, o1, m1))) ->
           roles_s (st1, s2, ro1) ->
             roles_s (st2, s2, ro1);
 
   property del_access_roles_s_2 :
-    all st1 st2 in Self, all s1 s2 in S, all o1 in O, all m1 in M,
-      all ro1 in Ro,
+    all st1 st2 : Self, all s1 s2 : S, all o1 : O, all m1 : M,
+      all ro1 : Ro,
         equal (st2, del (st1, A!create (s1, o1, m1))) ->
           roles_s (st2, s2, ro1) ->
             roles_s (st1, s2, ro1);
@@ -607,12 +604,12 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      then they have the same current accesses
    *)
   property add_ua_access :
-    all st1 st2 in Self, all u1 in U, all ro1 in Ro,
+    all st1 st2 : Self, all u1 : U, all ro1 : Ro,
       equal (st2, add_ua (st1, u1, ro1)) ->
         S_a!equal (lambda (st1), lambda (st2));
 
   property rm_ua_access :
-    all st1 st2 in Self, all u1 in U, all ro1 in Ro,
+    all st1 st2 : Self, all u1 : U, all ro1 : Ro,
       equal (st2, rm_ua (st1, u1, ro1)) ->
         S_a!equal (lambda(st1), lambda (st2));
 
@@ -621,12 +618,12 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      then they have the same current accesses
    *)
   property add_pa_access :
-    all st1 st2 in Self, all o1 in O, all m1 in M, all ro1 in Ro,
+    all st1 st2 : Self, all o1 : O, all m1 : M, all ro1 : Ro,
       equal (st2, add_pa (st1, o1, m1, ro1)) ->
         S_a!equal (lambda (st1), lambda (st2));
 
   property rm_pa_access :
-    all st1 st2 in Self, all o1 in O, all m1 in M, all ro1 in Ro,
+    all st1 st2 : Self, all o1 : O, all m1 : M, all ro1 : Ro,
       equal (st2, rm_pa (st1, o1, m1, ro1)) ->
         S_a!equal (lambda (st1), lambda (st2));
 
@@ -637,7 +634,7 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      state st2's relation UA
    *)
   property add_ua_ua :
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all u1 : U, all ro1 ro2 : Ro,
       equal (st2, add_ua (st1, u1, ro1)) ->
         ua (st1, user (st1, s1), ro2) ->
           ua (st2, user (st2, s1), ro2);
@@ -649,7 +646,7 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      state st1's relation UA
    *)
   property rm_ua_ua :
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all u1 : U, all ro1 ro2 : Ro,
       equal (st2, rm_ua (st1, u1, ro1)) ->
         ua (st2, user (st2, s1), ro2) ->
           ua (st1, user (st1, s1), ro2);
@@ -658,15 +655,15 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      then they have the same relation PA
    *)
   property add_ua_pa :
-    all st1 st2 in Self, all o1 in O, all m1 in M, all u1 in U,
-      all ro1 ro2 in Ro,
+    all st1 st2 : Self, all o1 : O, all m1 : M, all u1 : U,
+      all ro1 ro2 : Ro,
         equal (st2, add_ua (st1, u1, ro1)) ->
           pa (st1, o1, m1, ro2) ->
             pa (st2, o1, m1, ro2);
 
   property rm_ua_pa :
-    all st1 st2 in Self, all o1 in O, all m1 in M, all u1 in U,
-      all ro1 ro2 in Ro,
+    all st1 st2 : Self, all o1 : O, all m1 : M, all u1 : U,
+      all ro1 ro2 : Ro,
         equal (st2, rm_ua (st1, u1, ro1)) ->
           pa (st1, o1, m1, ro2) ->
             pa (st2, o1, m1, ro2);
@@ -676,25 +673,25 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      then they have the "same" function roles
    *)
   property add_ua_roles_s_1 :
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all u1 : U, all ro1 ro2 : Ro,
       equal (st2, add_ua (st1, u1, ro1)) ->
         roles_s (st1, s1, ro2) ->
           roles_s (st2, s1, ro2);
 
   property add_ua_roles_s_2 :
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all u1 : U, all ro1 ro2 : Ro,
       equal (st2, add_ua (st1, u1, ro1)) ->
         roles_s (st2, s1, ro2) ->
           roles_s (st1, s1, ro2);
 
   property rm_ua_roles_s_1 :
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all u1 : U, all ro1 ro2 : Ro,
       equal (st2, rm_ua (st1, u1, ro1)) ->
         roles_s (st1, s1, ro2) ->
           roles_s (st2, s1, ro2);
 
   property rm_ua_roles_s_2 :
-    all st1 st2 in Self, all s1 in S, all u1 in U, all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all u1 : U, all ro1 ro2 : Ro,
       equal (st2, rm_ua (st1, u1, ro1)) ->
         roles_s (st2, s1, ro2) ->
           roles_s (st1, s1, ro2);
@@ -704,15 +701,15 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      then they have the same relation UA
    *)
   property add_pa_ua :
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
-      all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M,
+      all ro1 ro2 : Ro,
         equal (st2, add_pa (st1, o1, m1, ro1)) ->
           ua (st1, user (st1, s1), ro2) ->
             ua (st2, user (st2, s1), ro2);
 
   property rm_pa_ua :
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
-      all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M,
+      all ro1 ro2 : Ro,
         equal (st2, rm_pa (st1, o1, m1, ro1)) ->
           ua (st1, user (st1, s1), ro2) ->
             ua (st2, user (st2, s1), ro2);
@@ -724,7 +721,7 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      state st2's relation PA
    *)
   property add_pa_pa :
-    all st1 st2 in Self, all o1 o2 in O, all m1 m2 in M, all ro1 ro2 in Ro,
+    all st1 st2 : Self, all o1 o2 : O, all m1 m2 : M, all ro1 ro2 : Ro,
       equal (st2, add_pa (st1, o1, m1, ro1)) ->
         pa (st1, o2, m2, ro2) ->
           pa (st2, o2, m2, ro2);
@@ -736,7 +733,7 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      state st1's relation PA
    *)
   property rm_pa_pa :
-    all st1 st2 in Self, all o1 o2 in O, all m1 m2 in M, all ro1 ro2 in Ro,
+    all st1 st2 : Self, all o1 o2 : O, all m1 m2 : M, all ro1 ro2 : Ro,
       equal (st2, rm_pa (st1, o1, m1, ro1)) ->
         pa (st2, o2, m2, ro2) ->
           pa (st1, o2, m2, ro2);
@@ -746,29 +743,29 @@ species States_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      then they have the "same" function roles
    *)
   property add_pa_roles_s_1 :
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
-      all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M,
+      all ro1 ro2 : Ro,
         equal (st2, add_pa (st1, o1, m1, ro1)) ->
           roles_s (st1, s1, ro2) ->
             roles_s (st2, s1, ro2);
 
   property add_pa_roles_s_2 :
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
-      all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M,
+      all ro1 ro2 : Ro,
         equal (st2, add_pa (st1, o1, m1, ro1)) ->
           roles_s (st2, s1, ro2) ->
             roles_s (st1, s1, ro2);
 
   property rm_pa_roles_s_1 :
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
-      all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M,
+      all ro1 ro2 : Ro,
         equal (st2, rm_pa (st1, o1, m1, ro1)) ->
           roles_s (st1, s1, ro2) ->
             roles_s (st2, s1, ro2);
 
   property rm_pa_roles_s_2 :
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
-      all ro1 ro2 in Ro,
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M,
+      all ro1 ro2 : Ro,
         equal (st2, rm_pa (st1, o1, m1, ro1)) ->
           roles_s (st2, s1, ro2) ->
             roles_s (st1, s1, ro2);
@@ -785,29 +782,29 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
     Policy (Rh, S, O, M, A, S_a);
 
   (** The set of authorized roles for a given subject  *)
-  logical let er (st in Self, sp in S, r1 in Ro) =
-     ex r2 in Ro,
+  logical let er (st : Self, sp : S, r1 : Ro) =
+     ex r2 : Ro,
        Ro!leq (r1, r2) /\ ua (st, user (st, sp), r2);
 
   (** The set of authorized permissions for a given subject  *)
-  logical let ep (st in Self, sp in S, op in O, mo in M) =
-     ex r1 r2 in Ro,
+  logical let ep (st : Self, sp : S, op : O, mo : M) =
+     ex r1 r2 : Ro,
        roles_s (st, sp, r1) /\ Ro!leq (r2, r1) /\ pa (st, op, mo, r2);
 
   (**
      If a role r has been activated by a subject sp
      then r belongs to sp's authorized roles
    *)
-  logical let roles_er (st in Self) =
-     all sp in S, all r in Ro,
+  logical let roles_er (st : Self) =
+     all sp : S, all r : Ro,
        roles_s (st, sp, r) ->
          er (st, sp, r);
   (**
      If the access (sp,op,mo) belongs to the current accesses of state
      then the permission (op,mo) belongs to sp's authorized permissions
    *)
-  logical let perm_ep (st in Self) =
-     all sp in S, all op in O, all mo in M,
+  logical let perm_ep (st : Self) =
+     all sp : S, all op : O, all mo : M,
        S_a!est_element (A!create (sp, op, mo), lambda (st)) ->
          ep (st, sp, op, mo);
 
@@ -815,7 +812,7 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      The RBAC security predicate is the conjunction of the properties
      roles_er and perm_ep
    *)
-  logical let omega (st in Self) =
+  logical let omega (st : Self) =
      roles_er (st) /\ perm_ep (st);
 
   (**
@@ -823,7 +820,7 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      for s1 then the permission (o2,m2) is authorized for s2
    *)
   property ep_equal :
-    all st in Self, all s1 s2 in S, all o1 o2 in O, all m1 m2 in M,
+    all st : Self, all s1 s2 : S, all o1 o2 : O, all m1 m2 : M,
       S!equal (s1, s2) ->
         O!equal (o1, o2) ->
           M!equal (m1, m2) ->
@@ -832,25 +829,25 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
 
   (** Specification of the function exists_role *)
   property exists_role_spec :
-    all st in Self, all sp in S, all op in O, all mo in M,
+    all st : Self, all sp : S, all op : O, all mo : M,
       exists_role (st, roles_s (st, sp), pa (st, op, mo)) ->
-        ex ro1 ro2 in Ro,
+        ex ro1 ro2 : Ro,
           roles_s (st, sp, ro1) /\
           Ro!equal (ro2, ro1) /\
           pa (st, op, mo, ro2);
 
   (** Specification of the function exists_role_ua *)
   property exists_role_ua_spec :
-    all st in Self, all sp in S,
+    all st : Self, all sp : S,
       exists_role_ua (st, roles_s (st, sp), ua (st, user (st, sp))) ->
-        ex ro1 ro2 in Ro,
+        ex ro1 ro2 : Ro,
           roles_s (st, sp, ro1) /\
           Ro!equal (ro2, ro1) /\
           ua (st, user (st, sp), ro2);
 
   (** If the predicate exists_role is true then the property ep is satisfied *)
   theorem exists_role_ep :
-    all st in Self, all sp in S, all op in O, all mo in M,
+    all st : Self, all sp : S, all op : O, all mo : M,
       exists_role (st, roles_s (st, sp), pa (st, op, mo)) ->
         ep (st, sp, op, mo)
     proof =
@@ -858,9 +855,9 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
          definition of ep;
 
 (*   theorem exists_role_er :  *)
-(*     all st in Self, all sp in S,  *)
+(*     all st : Self, all sp : S,  *)
 (*       exists_role_ua (st, roles_s (st, sp), ua (st, user (st, sp))) ->  *)
-(*      ex rop in Ro,  *)
+(*      ex rop : Ro,  *)
 (*        ua (st, user (st, sp), rop) ->  *)
 (*          roles_s (st, sp, rop) ->  *)
 (*            er (st, sp, rop) *)
@@ -921,17 +918,17 @@ species Requests_adm_rbac (S is Subjects, O is Objects, M is Access_mode,
      "+ua" or a "-ua" or a "+pa" or a "-pa" request
    *)
   property add_ua_then_not_rm_ua :
-    all req in Self,
+    all req : Self,
       is_rm_ua (req) ->
         ~ is_add_ua (req);
 
   property add_pa_then_not_ua :
-    all req in Self,
+    all req : Self,
       is_add_pa (req) ->
         ((~ is_add_ua (req)) /\ (~ is_rm_ua (req)));
 
   property rm_pa_then_not_add_pa_ua :
-    all req in Self,
+    all req : Self,
       is_rm_pa (req) ->
         ((~ is_add_pa (req)) /\ (~ is_add_ua (req)) /\ (~ is_rm_ua (req)));
 
@@ -964,7 +961,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
     Models (Rh, S, O, M, A, S_a, Rr, D);
 
   (** RBAC transition function on accesses *)
-  let tau_rbac_acc (r1 in Rr, st1 in Self) =
+  let tau_rbac_acc (r1 : Rr, st1 : Self) =
      let s1 = Rr!get_s (r1) in
      let o1 = Rr!get_o (r1) in
      let m1 = Rr!get_m (r1) in
@@ -991,7 +988,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                   pa (rm_pa (st1, o1, m1, ro1), op, mp));
 
   (** RBAC administrative transition function *)
-  let tau_rbac_adm (r1 in Rr, st1 in Self) =
+  let tau_rbac_adm (r1 : Rr, st1 : Self) =
      if Rr!is_add_ua (r1) then
        let u1 = Rr!get_u (r1) in
        let ro1 = Rr!get_r (r1) in
@@ -1017,28 +1014,28 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      else (D!no, st1);
 
   (** RBAC transition function *)
-  let tau_rbac (r1 in Rr, st1 in Self) =
+  let tau_rbac (r1 : Rr, st1 : Self) =
      if Rr!is_get (r1) || Rr!is_rel (r1)
      then tau_rbac_acc (r1, st1)
      else tau_rbac_adm (r1, st1);
 
   (** Problem ro1 ro2 *)
   property for_all_spec_ua_1 :
-    all st1 st2 in Self, all u1 u2 in U, all ro1 ro2 in Ro,
+    all st1 st2 : Self, all u1 u2 : U, all ro1 ro2 : Ro,
       S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) ->
         equal (st2, rm_ua (st1, u2, ro2)) ->
           S_a!for_all (lambda(st2), iter_ua (st2, u1, ro1));
 
   (** Problem ro1 ro2 *)
   property for_all_spec_ua_2 :
-    all st1 in Self, all u1 u2 in U, all ro1 ro2 in Ro,
+    all st1 : Self, all u1 u2 : U, all ro1 ro2 : Ro,
       S_a!for_all (lambda (st1), iter_ua (st1, u1, ro1)) ->
         ua (st1, u2, ro2);
 
   (** Specification of the function iter_pa *)
   property iter_pa_spec :
-    all st1 in Self, all s1 in S, all o1 o2 in O, all m1 m2 in M,
-      all ro1 in Ro,
+    all st1 : Self, all s1 : S, all o1 o2 : O, all m1 m2 : M,
+      all ro1 : Ro,
         S_a!for_all (lambda (st1), iter_pa (st1, o1, m1, ro1)) ->
           S_a!est_element (A!create (s1, o2, m2), lambda (st1)) ->
             exists_role (rm_pa (st1, o1, m1, ro1),
@@ -1050,40 +1047,35 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
      is true for st1 then it is also true for st2
    *)
   property equal_exists_role :
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M,
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M,
       equal (st1, st2) ->
         exists_role (st1, roles_s (st1, s1), pa (st1, o1, m1)) ->
           exists_role (st2, roles_s (st2, s1), pa (st2, o1, m1));
 
   theorem tau_rbac_acc_secure :
-    all st1 st2 in Self, all r1 in Rr, all d1 in D,
+    all st1 st2 : Self, all r1 : Rr, all d1 : D,
       tau_rbac_acc (r1, st1) = (d1, st2) ->
         omega (st1) ->
           omega(st2)
     proof =
-      <1>1 assume st1 in Self,
-           assume st2 in Self,
-           assume r1 in Rr,
-           assume d1 in D,
-           assume H1: tau_rbac_acc (r1, st1) = (d1, st2),
-           assume H2: omega (st1),
+      <1>1 assume st1 : Self, st2 : Self, r1 : Rr, d1 : D,
+                  hypothesis H1: tau_rbac_acc (r1, st1) = (d1, st2),
+                  hypothesis H2: omega (st1),
            prove omega (st2)
-        <2>2 assume H3: Rr!is_get (r1),
+        <2>2 assume hypothesis H3: Rr!is_get (r1),
              prove omega (st2)
-          <3>1 assume H7: exists_role (st1,
-                                       roles_s (st1, Rr!get_s (r1)),
-                                       pa (st1,
-                                           Rr!get_o (r1),
-                                           Rr!get_m (r1))),
+          <3>1 assume hypothesis H7: exists_role (st1,
+						  roles_s (st1, Rr!get_s (r1)),
+						  pa (st1, 
+						      Rr!get_o (r1), 
+						      Rr!get_m (r1))),
                prove omega (st2)
             <4>1 prove roles_er (st2)
-              <5>1 assume s1 in S,
-                   assume ro1 in Ro,
-                   assume H5: roles_s (st2, s1, ro1),
+              <5>1 assume s1 : S, ro1 : Ro,
+                          hypothesis H5: roles_s (st2, s1, ro1),
                    prove er (st2, s1, ro1)
                 <6>1 prove er (st1, s1, ro1)
-                  <7>1 (* assume s1 in S, *)
-                       (* assume ro1 in Ro, *)
+                  <7>1 (* assume s1 : S, ro1 : Ro, *)
                        prove roles_s (st1, s1, ro1) ->
                              er (st1, s1, ro1)
                        by hypothesis H2
@@ -1101,7 +1093,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                             property add_access_roles_s_2
                   <7>f qed
                        by step <7>1, <7>2
-                <6>2 assume ro2 in Ro,
+                <6>2 assume ro2 : Ro,
                      prove ua (st1, user (st1, s1), ro2) ->
                            ua (st2, user (st2, s1), ro2)
                   <7>1 prove equal (st2, add (st1, A!create (Rr!get_s (r1),
@@ -1120,11 +1112,11 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                    by step <5>1
                       definition of roles_er
             <4>2 prove perm_ep (st2)
-              <5>1 assume s1 in S,
-                   assume o1 in O,
-                   assume m1 in M,
-                   assume H6: S_a!est_element (A!create (s1, o1, m1),
-                                               lambda (st2)),
+              <5>1 assume s1 : S, o1 : O, m1 : M,
+			  hypothesis H6: S_a!est_element (A!create (s1, 
+								    o1, 
+								    m1),
+							  lambda (st2)),
                    prove ep (st2, s1, o1, m1)
                 <6>1 prove ep (st1, s1, o1, m1)
                   <7>1 prove S_a!equal (lambda (st2),
@@ -1186,12 +1178,13 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                              ep (st1, s1, o1, m1)
                        by hypothesis H2
                           definition of omega, perm_ep
-                  <7>3 assume H10: S_a!est_element
-                                       (A!create (s1, o1, m1),
-                                        S_a!singleton
-                                            (A!create (Rr!get_s (r1),
-                                                       Rr!get_o (r1),
-                                                       Rr!get_m (r1)))),
+                  <7>3 assume hypothesis H10: S_a!est_element 
+			                         (A!create (s1, o1, m1),
+						  S_a!singleton
+						     (A!create 
+						       (Rr!get_s (r1),
+							Rr!get_o (r1),
+							Rr!get_m (r1)))),
                         prove ep (st1, s1, o1, m1)
                     <8>1 prove ep(st1,
                                   Rr!get_s (r1),
@@ -1247,7 +1240,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                   <7>f qed
                        by step <7>1, <7>2, <7>3, <7>4, <7>5
                           hypothesis H6
-                <6>2 assume ro1 in Ro,
+                <6>2 assume ro1 : Ro,
                      prove roles_s (st1, s1, ro1) ->
                            roles_s (st2, s1, ro1)
                   <7>1 prove equal (st2, add (st1, A!create (Rr!get_s (r1),
@@ -1259,7 +1252,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                   <7>f qed
                        by step <7>1
                           property add_access_roles_s_1
-                <6>3 assume ro2 in Ro,
+                <6>3 assume ro2 : Ro,
                      prove pa (st1, o1, m1, ro2) ->
                            pa (st2, o1, m1, ro2)
                   <7>1 prove equal (st2, add (st1, A!create (Rr!get_s (r1),
@@ -1280,11 +1273,12 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
             <4>f qed
                  by step <4>1, <4>2
                     definition of omega
-          <3>2 assume H8: ~ exists_role (st1,
-                                         roles_s (st1, Rr!get_s (r1)),
-                                         pa(st1,
-                                            Rr!get_o (r1),
-                                            Rr!get_m (r1))),
+          <3>2 assume hypothesis H8: ~ exists_role (st1,
+						    roles_s (st1, 
+							     Rr!get_s (r1)),
+						    pa(st1,
+						       Rr!get_o (r1),
+						       Rr!get_m (r1))),
                prove omega (st2)
             <4>1 prove equal (st1 , st2)
               <5>1 prove Rr!is_get (r1) ->
@@ -1320,16 +1314,14 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                     property secure_state
           <3>f qed
                by step <3>1, <3>2
-        <2>3 assume H4: Rr!is_rel (r1),
+        <2>3 assume hypothesis H4: Rr!is_rel (r1),
              prove omega (st2)
           <3>1 prove roles_er (st2)
-            <4>2 assume s1 in S,
-                 assume ro1 in Ro,
-                 assume H5: roles_s (st2, s1, ro1),
+            <4>2 assume s1 : S, ro1 : Ro,
+                        hypothesis H5: roles_s (st2, s1, ro1),
                  prove er (st2, s1, ro1)
               <5>1 prove er (st1, s1, ro1)
-                <6>1 (* assume s1 in S, *)
-                     (* assume ro1 in Ro, *)
+                <6>1 (* assume s1 : S, ro1 : Ro, *)
                      prove roles_s (st1, s1, ro1) ->
                            er (st1, s1, ro1)
                      by hypothesis H2
@@ -1349,7 +1341,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                           property del_access_roles_s_2
                 <6>f qed
                      by step <6>1, <6>2
-              <5>2 assume ro2 in Ro,
+              <5>2 assume ro2 : Ro,
                    prove ua (st1, user (st1, s1), ro2) ->
                          ua (st2, user (st2, s1), ro2)
                 <6>1 prove equal (st2, del (st1, A!create (Rr!get_s (r1),
@@ -1370,16 +1362,12 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                  by step <4>2
                     definition of roles_er
           <3>2 prove perm_ep (st2)
-            <4>1 assume s1 in S,
-                 assume o1 in O,
-                 assume m1 in M,
-                 assume H6: S_a!est_element (A!create (s1, o1, m1),
-                                             lambda (st2)),
+            <4>1 assume s1 : S, o1 : O, m1 : M,
+                        hypothesis H6: S_a!est_element (A!create (s1, o1, m1),
+							lambda (st2)),
                  prove ep (st2, s1, o1, m1)
               <5>1 prove ep(st1, s1, o1, m1)
-                <6>1 (* assume s1 in S, *)
-                     (* assume o1 in O, *)
-                     (* assume m1 in M, *)
+                <6>1 (* assume s1 : S, o1 : O, m1 : M, *)
                      prove S_a!est_element (A!create (s1, o1, m1),
                                             lambda (st1)) ->
                            ep (st1, s1, o1, m1)
@@ -1398,7 +1386,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                                      right_substitution,
                                      Rr!get_is_not_rel
                             definition of tau_rbac_acc
-                    <8>2 assume acc in A,
+                    <8>2 assume acc : A,
                          prove S_a!est_element
                                    (acc,
                                     lambda
@@ -1408,7 +1396,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                                                        Rr!get_m (r1))))) ->
                                S_a!est_element (acc, lambda (st1))
                          by property del_prop
-                    <8>3 assume acc in A,
+                    <8>3 assume acc : A,
                          prove S_a!est_element (acc, lambda (st2)) ->
                                S_a!est_element (acc, lambda (st1))
                          by step <8>1, <8>2
@@ -1422,7 +1410,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                           property S_a!sous_ensemble_spec
                 <6>f qed
                      by step <6>1, <6>2
-              <5>2 assume ro1 in Ro,
+              <5>2 assume ro1 : Ro,
                    prove roles_s (st1, s1, ro1) ->
                          roles_s (st2, s1, ro1)
                 <6>1 prove equal (st2, del (st1, A!create (Rr!get_s (r1),
@@ -1436,7 +1424,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                 <6>f qed
                      by step <6>1
                         property del_access_roles_s_1
-              <5>3 assume ro2 in Ro,
+              <5>3 assume ro2 : Ro,
                    prove pa (st1, o1, m1, ro2) ->
                          pa (st2, o1, m1, ro2)
                 <6>1 prove equal (st2, del (st1, A!create (Rr!get_s (r1),
@@ -1466,27 +1454,26 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
  ;
 
   theorem tau_rbac_acc_r_correct :
-    all st1 st2 in Self, all r1 in Rr, all d1 in D,
+    all st1 st2 : Self, all r1 : Rr, all d1 : D,
       tau_rbac_acc (r1, st1) = (d1, st2) ->
         D!equal (d1, D!yes) ->
           sem_req (r1, st2)
     proof =
-      <1>1 assume st1 in Self,
-           assume st2 in Self,
-           assume r1 in Rr,
-           assume d1 in D,
-           assume H1: tau_rbac_acc (r1, st1) = (d1, st2),
+      <1>1 assume st1 : Self, st2 : Self, r1 : Rr, d1 : D,
+                  hypothesis H1: tau_rbac_acc (r1, st1) = (d1, st2),
            prove D!equal (d1, D!yes) ->
                  sem_req (r1, st2)
-        <2>2 assume H3: Rr!is_get (r1),
+        <2>2 assume hypothesis H3: Rr!is_get (r1),
              prove D!equal (d1, D!yes) ->
                    sem_req (r1, st2)
-          <3>1 assume H7: exists_role(st1,
-                                      roles_s (st1, Rr!get_s (r1)),
-                                      pa (st1, Rr!get_o (r1), Rr!get_m (r1))),
+          <3>1 assume hypothesis H7: exists_role(st1,
+						 roles_s (st1, Rr!get_s (r1)),
+						 pa (st1, 
+						     Rr!get_o (r1), 
+						     Rr!get_m (r1))),
                prove D!equal (d1, D!yes) ->
                      sem_req (r1, st2)
-            <4>1 assume H7b: D!equal (d1, D!yes),
+            <4>1 assume hypothesis H7b: D!equal (d1, D!yes),
                  prove sem_req (r1, st2)
               <5>1 prove sem_req_get (r1, st2)
                 <6>1 prove Rr!is_get (r1) ->
@@ -1570,11 +1557,12 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                       definition of sem_req
             <4>f qed
                  by step <4>1
-          <3>2 assume H8: ~ exists_role (st1,
-                                         roles_s (st1, Rr!get_s (r1)),
-                                         pa(st1,
-                                            Rr!get_o (r1),
-                                            Rr!get_m (r1))),
+          <3>2 assume hypothesis H8: ~ exists_role (st1,
+						    roles_s (st1, 
+							     Rr!get_s (r1)),
+						    pa(st1,
+						       Rr!get_o (r1),
+						       Rr!get_m (r1))),
                prove D!equal (d1, D!yes) ->
                      sem_req (r1, st2)
             <4>1 prove ~ D!equal (d1, D!yes)
@@ -1612,10 +1600,10 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                  by step <4>1
           <3>f qed
                by step <3>1, <3>2
-        <2>3 assume H4: Rr!is_rel (r1),
+        <2>3 assume hypothesis H4: Rr!is_rel (r1),
              prove D!equal (d1, D!yes) ->
                    sem_req (r1, st2)
-          <3>1 assume H4b: D!equal (d1, D!yes),
+          <3>1 assume hypothesis H4b: D!equal (d1, D!yes),
                prove sem_req (r1, st2)
             <4>1 prove sem_req_get (r1, st2)
               <5>1 prove Rr!is_get (r1) ->
@@ -1689,26 +1677,23 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
  ;
 
   theorem tau_rbac_acc_r_correct_bis :
-    all st1 st2 in Self, all r1 in Rr, all d1 in D,
+    all st1 st2 : Self, all r1 : Rr, all d1 : D,
       tau_rbac_acc (r1, st1) = (d1, st2) ->
         D!equal (d1, D!no) ->
           equal (st1, st2)
     proof =
-      <1>1 assume st1 in Self,
-           assume st2 in Self,
-           assume r1 in Rr,
-           assume d1 in D,
-           assume H1: tau_rbac_acc (r1, st1) = (d1, st2),
+      <1>1 assume st1 : Self, st2 : Self, r1 : Rr, d1 : D,
+                  hypothesis H1: tau_rbac_acc (r1, st1) = (d1, st2),
            prove D!equal (d1, D!no) ->
                  equal (st1, st2)
-        <2>2 assume H3: Rr!is_get (r1),
+        <2>2 assume hypothesis H3: Rr!is_get (r1),
              prove D!equal (d1, D!no) ->
                    equal (st1, st2)
-          <3>1 assume H7: exists_role (st1,
-                                       roles_s (st1, Rr!get_s (r1)),
-                                       pa (st1,
-                                           Rr!get_o (r1),
-                                           Rr!get_m (r1))),
+          <3>1 assume hypothesis H7: exists_role (st1,
+						  roles_s (st1, Rr!get_s (r1)),
+						  pa (st1,
+						      Rr!get_o (r1),
+						      Rr!get_m (r1))),
                prove D!equal (d1, D!no) ->
                      equal (st1, st2)
             <4>1 prove ~ D!equal (d1, D!no)
@@ -1756,14 +1741,15 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                       property D!yes_is_not_no
             <4>f qed
                  by step <4>1
-          <3>2 assume H8: ~ exists_role (st1,
-                                         roles_s (st1, Rr!get_s(r1)),
-                                         pa (st1,
-                                             Rr!get_o (r1),
-                                             Rr!get_m (r1))),
+          <3>2 assume hypothesis H8: ~ exists_role (st1,
+						    roles_s (st1, 
+							     Rr!get_s(r1)),
+						    pa (st1,
+							Rr!get_o (r1),
+							Rr!get_m (r1))),
                prove D!equal (d1, D!no) ->
                      equal (st1, st2)
-            <4>1 assume H2: D!equal (d1, D!no),
+            <4>1 assume hypothesis H2: D!equal (d1, D!no),
                  prove equal (st1, st2)
               <5>1 prove Rr!is_get (r1) ->
                          (~ exists_role (st1,
@@ -1796,7 +1782,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                  by step <4>1
           <3>f qed
                by step <3>1, <3>2
-        <2>3 assume H4: Rr!is_rel (r1),
+        <2>3 assume hypothesis H4: Rr!is_rel (r1),
              prove D!equal (d1, D!no) ->
                    equal (st1, st2)
           <3>1 prove ~ D!equal (d1, D!no)
@@ -1836,28 +1822,23 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
  ;
 
   theorem tau_rbac_adm_secure :
-    all st1 st2 in Self, all r1 in Rr, all d1 in D,
+    all st1 st2 : Self, all r1 : Rr, all d1 : D,
       tau_rbac_adm (r1, st1) = (d1, st2) ->
         omega (st1) ->
           omega (st2)
     proof =
-      <1>1 assume st1 in Self,
-           assume st2 in Self,
-           assume r1 in Rr,
-           assume d1 in D,
-           assume H1: tau_rbac_adm (r1, st1) = (d1, st2),
-           assume H2: omega (st1),
+      <1>1 assume st1 : Self, st2 : Self, r1 : Rr, d1 : D,
+                  hypothesis H1: tau_rbac_adm (r1, st1) = (d1, st2),
+                  hypothesis H2: omega (st1),
            prove omega (st2)
-        <2>1 assume H3: Rr!is_add_ua (r1),
+        <2>1 assume hypothesis H3: Rr!is_add_ua (r1),
              prove omega (st2)
           <3>1 prove roles_er (st2)
-            <4>2 assume s1 in S,
-                 assume ro1 in Ro,
-                 assume H31: roles_s (st2, s1, ro1),
+            <4>2 assume s1 : S, ro1 : Ro,
+                        hypothesis H31: roles_s (st2, s1, ro1),
                  prove er (st2, s1, ro1)
               <5>1 prove er(st1, s1, ro1)
-                <6>1 (* assume s1 in S, *)
-                     (* assume ro1 in Ro, *)
+                <6>1 (* assume s1 : S, ro1 : Ro, *)
                      prove roles_s (st1, s1, ro1) ->
                            er (st1, s1, ro1)
                      by hypothesis H2
@@ -1874,7 +1855,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                           property add_ua_roles_s_2
                 <6>f qed
                      by step <6>1, <6>2
-              <5>2 assume ro2 in Ro,
+              <5>2 assume ro2 : Ro,
                    prove ua (st1, user (st1, s1), ro2) ->
                          ua (st2, user (st2, s1), ro2)
                 <6>1 prove equal (st2,
@@ -1892,16 +1873,12 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                  by step <4>2
                     definition of roles_er
           <3>2 prove perm_ep (st2)
-            <4>1 assume s1 in S,
-                 assume o1 in O,
-                 assume m1 in M,
-                 assume H32: S_a!est_element (A!create (s1, o1, m1),
-                                              lambda (st2)),
+            <4>1 assume s1 : S, o1 : O, m1 : M,
+                        hypothesis H32: S_a!est_element (A!create (s1, o1, m1),
+							 lambda (st2)),
                  prove ep (st2, s1, o1, m1)
               <5>1 prove ep (st1, s1, o1, m1)
-                <6>1 (* assume s1 in S, *)
-                     (* assume o1 in O, *)
-                     (* assume m1 in M, *)
+                <6>1 (* assume s1 : S, o1 : O, m1 : M, *)
                      prove S_a!est_element (A!create (s1, o1, m1),
                                             lambda (st1)) ->
                            ep (st1, s1, o1, m1)
@@ -1926,7 +1903,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                           property S_a!equal_prop
                 <6>f qed
                      by step <6>1, <6>2
-              <5>2 assume ro1 in Ro,
+              <5>2 assume ro1 : Ro,
                    prove roles_s (st1, s1, ro1) ->
                          roles_s (st2, s1, ro1)
                 <6>1 prove equal (st2,
@@ -1937,7 +1914,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                 <6>f qed
                      by step <6>1
                         property add_ua_roles_s_1
-              <5>3 assume ro2 in Ro,
+              <5>3 assume ro2 : Ro,
                    prove pa (st1, o1, m1, ro2) ->
                          pa (st2, o1, m1, ro2)
                 <6>1 prove equal (st2,
@@ -1957,20 +1934,19 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
           <3>f qed
                by step <3>1, <3>2
                   definition of omega
-        <2>2 assume H4: Rr!is_rm_ua (r1),
+        <2>2 assume hypothesis H4: Rr!is_rm_ua (r1),
              prove omega (st2)
-          <3>1 assume H41: S_a!for_all (lambda (st1), iter_ua (st1,
-                                                              Rr!get_u (r1),
-                                                              Rr!get_r (r1))),
+          <3>1 assume hypothesis H41: S_a!for_all (lambda (st1), 
+						   iter_ua (st1,
+							    Rr!get_u (r1),
+                                                            Rr!get_r (r1))),
                prove omega (st2)
             <4>1 prove roles_er (st2)
-              <5>1 assume s1 in S,
-                   assume ro1 in Ro,
-                   assume H44: roles_s (st2, s1, ro1),
+              <5>1 assume s1 : S, ro1 : Ro,
+                          hypothesis H44: roles_s (st2, s1, ro1),
                    prove er (st2, s1, ro1)
                 <6>1 prove er (st1, s1, ro1)
-                  <7>1 (* assume s1 in S, *)
-                       (* assume ro1 in Ro, *)
+                  <7>1 (* assume s1 : S, ro1 : Ro, *)
                        prove roles_s (st1, s1, ro1) ->
                              er (st1, s1, ro1)
                        by hypothesis H2
@@ -1989,7 +1965,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                          property rm_ua_roles_s_2
                   <7>f qed
                        by step <7>1, <7>2
-               <6>2 assume ro2 in Ro,
+               <6>2 assume ro2 : Ro,
                     prove ua (st2, user (st2, s1), ro2)
                  <7>1 prove S_a!for_all (lambda (st2), iter_ua (st2,
                                                                Rr!get_u (r1),
@@ -2015,16 +1991,14 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                    by step <5>1
                       definition of roles_er
             <4>2 prove perm_ep (st2)
-              <5>1 assume s1 in S,
-                   assume o1 in O,
-                   assume m1 in M,
-                   assume H43: S_a!est_element (A!create (s1, o1, m1),
-                                                lambda (st2)),
+              <5>1 assume s1 : S, o1 : O, m1 : M,
+			  hypothesis H43: S_a!est_element (A!create (s1, 
+								     o1, 
+								     m1),
+							   lambda (st2)),
                    prove ep (st2, s1, o1, m1)
                 <6>1 prove ep(st1, s1, o1, m1)
-                  <7>1 (* assume s1 in S, *)
-                       (* assume o1 in O, *)
-                       (* assume m1 in M, *)
+                  <7>1 (* assume s1 : S, o1 : O, m1 : M, *)
                        prove S_a!est_element (A!create (s1, o1, m1),
                                               lambda (st1)) ->
                              ep (st1, s1, o1, m1)
@@ -2051,7 +2025,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                             property S_a!equal_prop
                   <7>f qed
                        by step <7>1, <7>2
-                <6>2 assume ro1 in Ro,
+                <6>2 assume ro1 : Ro,
                      prove roles_s (st1, s1, ro1) ->
                            roles_s (st2, s1, ro1)
                   <7>1 prove equal (st2, rm_ua(st1,
@@ -2065,7 +2039,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                   <7>f qed
                        by step <7>1
                           property rm_ua_roles_s_1
-                <6>3 assume ro2 in Ro,
+                <6>3 assume ro2 : Ro,
                      prove pa (st1, o1, m1, ro2) ->
                            pa (st2, o1, m1, ro2)
                   <7>1 prove equal (st2, rm_ua (st1,
@@ -2088,10 +2062,11 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
             <4>f qed
                  by step <4>1, <4>2
                     definition of omega
-          <3>2 assume H42: ~ (S_a!for_all (lambda (st1),
-                                          iter_ua (st1,
-                                                   Rr!get_u (r1),
-                                                   Rr!get_r (r1)))),
+          <3>2 assume hypothesis H42: ~ (S_a!for_all 
+					    (lambda (st1),
+					     iter_ua (st1,
+						      Rr!get_u (r1),
+						      Rr!get_r (r1)))),
                prove omega (st2)
             <4>1 prove equal (st1 , st2)
               <5>1 prove (~ Rr!is_add_ua (r1)) ->
@@ -2134,16 +2109,14 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                     property secure_state
           <3>f qed
                by step <3>1, <3>2
-        <2>3 assume H5: Rr!is_add_pa (r1),
+        <2>3 assume hypothesis H5: Rr!is_add_pa (r1),
              prove omega (st2)
           <3>1 prove roles_er (st2)
-            <4>2 assume s1 in S,
-                 assume ro1 in Ro,
-                 assume H51: roles_s (st2, s1, ro1),
+            <4>2 assume s1 : S, ro1 : Ro,
+                        hypothesis H51: roles_s (st2, s1, ro1),
                  prove er (st2, s1, ro1)
               <5>1 prove er(st1, s1, ro1)
-                <6>1 (* assume s1 in S, *)
-                     (* assume ro1 in Ro, *)
+                <6>1 (* assume s1 : S, ro1 : Ro, *)
                      prove roles_s (st1, s1, ro1) ->
                            er (st1, s1, ro1)
                      by hypothesis H2
@@ -2164,7 +2137,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                           property add_pa_roles_s_2
                 <6>f qed
                      by step <6>1, <6>2
-              <5>2 assume ro2 in Ro,
+              <5>2 assume ro2 : Ro,
                    prove ua (st1, user (st1, s1), ro2) ->
                          ua (st2, user (st2, s1), ro2)
                 <6>1 prove equal (st2, add_pa (st1,
@@ -2186,16 +2159,12 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                  by step <4>2
                     definition of roles_er
           <3>2 prove perm_ep (st2)
-            <4>1 assume s1 in S,
-                 assume o1 in O,
-                 assume m1 in M,
-                 assume H52: S_a!est_element (A!create (s1, o1, m1),
-                                              lambda (st2)),
+            <4>1 assume s1 : S, o1 : O, m1 : M,
+                        hypothesis H52: S_a!est_element (A!create (s1, o1, m1),
+							 lambda (st2)),
                  prove ep (st2, s1, o1, m1)
               <5>1 prove ep (st1, s1, o1, m1)
-                <6>1 (* assume s1 in S, *)
-                     (* assume o1 in O, *)
-                     (* assume m1 in M, *)
+                <6>1 (* assume s1 : S, o1 : O, m1 : M, *)
                      prove S_a!est_element (A!create (s1, o1, m1),
                                             lambda(st1)) ->
                            ep (st1, s1, o1, m1)
@@ -2222,7 +2191,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                           property S_a!equal_prop
                 <6>f qed
                      by step <6>1, <6>2
-              <5>2 assume ro1 in Ro,
+              <5>2 assume ro1 : Ro,
                    prove roles_s (st1, s1, ro1) ->
                          roles_s (st2, s1, ro1)
                 <6>1 prove equal (st2, add_pa (st1,
@@ -2237,7 +2206,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                 <6>f qed
                      by step <6>1
                         property add_pa_roles_s_1
-              <5>3 assume ro2 in Ro,
+              <5>3 assume ro2 : Ro,
                    prove pa (st1, o1, m1, ro2) ->
                          pa (st2, o1, m1, ro2)
                 <6>1 prove equal (st2, add_pa (st1,
@@ -2261,21 +2230,20 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
           <3>f qed
                by step <3>1, <3>2
                   definition of omega
-        <2>4 assume H6: Rr!is_rm_pa (r1),
+        <2>4 assume hypothesis H6: Rr!is_rm_pa (r1),
              prove omega (st2)
-          <3>1 assume H61: S_a!for_all (lambda (st1), iter_pa (st1,
-                                                              Rr!get_o (r1),
-                                                              Rr!get_m (r1),
-                                                              Rr!get_r (r1))),
+          <3>1 assume hypothesis H61: S_a!for_all (lambda (st1), 
+						   iter_pa (st1,
+							    Rr!get_o (r1),
+                                                            Rr!get_m (r1),
+                                                            Rr!get_r (r1))),
                prove omega (st2)
             <4>1 prove roles_er (st2)
-              <5>1 assume s1 in S,
-                   assume ro1 in Ro,
-                   assume H62: roles_s (st2, s1, ro1),
+              <5>1 assume s1 : S, ro1 : Ro,
+		          hypothesis H62: roles_s (st2, s1, ro1),
                    prove er (st2, s1, ro1)
                 <6>1 prove er (st1, s1, ro1)
-                  <7>1 (* assume s1 in S, *)
-                       (* assume ro1 in Ro, *)
+                  <7>1 (* assume s1 : S, ro1 : Ro, *)
                        prove roles_s (st1, s1, ro1) ->
                              er (st1, s1, ro1)
                        by hypothesis H2
@@ -2296,7 +2264,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                             property rm_pa_roles_s_2
                   <7>f qed
                        by step <7>1, <7>2
-                <6>2 assume ro2 in Ro,
+                <6>2 assume ro2 : Ro,
                      prove ua (st1, user (st1, s1), ro2) ->
                            ua (st2, user (st2, s1), ro2)
                   <7>1 prove equal (st2, rm_pa (st1,
@@ -2318,11 +2286,11 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                    by step <5>1
                       definition of roles_er
             <4>2 prove perm_ep (st2)
-              <5>1 assume s1 in S,
-                   assume o1 in O,
-                   assume m1 in M,
-                   assume H63: S_a!est_element (A!create (s1, o1, m1),
-                                                lambda (st2)),
+              <5>1 assume s1 : S, o1 : O, m1 : M,
+			  hypothesis H63: S_a!est_element (A!create (s1, 
+								     o1, 
+								     m1),
+							   lambda (st2)),
                    prove ep (st2, s1, o1, m1)
                 <6>1 prove exists_role(st2,
                                        roles_s (st2, s1),
@@ -2377,11 +2345,12 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
             <4>f qed
                  by step <4>1, <4>2
                     definition of omega
-          <3>2 assume H62: ~ (S_a!for_all (lambda (st1),
-                                          iter_pa (st1,
-                                                   Rr!get_o (r1),
-                                                   Rr!get_m (r1),
-                                                   Rr!get_r (r1)))),
+          <3>2 assume hypothesis H62: ~ (S_a!for_all 
+					    (lambda (st1),
+					     iter_pa (st1,
+						      Rr!get_o (r1),
+						      Rr!get_m (r1),
+						      Rr!get_r (r1)))),
                prove omega (st2)
             <4>1 prove equal (st1 , st2)
               <5>1 prove (~ Rr!is_add_ua (r1)) ->
@@ -2430,10 +2399,10 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                     property secure_state
           <3>f qed
                by step <3>1, <3>2
-        <2>5 assume H7: (~ Rr!is_add_ua (r1)) /\
-                        (~ Rr!is_rm_ua (r1)) /\
-                        (~ Rr!is_add_pa (r1)) /\
-                        (~ Rr!is_rm_pa (r1)),
+        <2>5 assume hypothesis H7: (~ Rr!is_add_ua (r1)) /\
+                                   (~ Rr!is_rm_ua (r1)) /\
+                                   (~ Rr!is_add_pa (r1)) /\
+                                   (~ Rr!is_rm_pa (r1)),
              prove omega (st2)
           <3>1 prove equal (st1, st2)
             <4>1 prove ((~ Rr!is_add_ua (r1)) /\
@@ -2463,7 +2432,7 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
  ;
 
   theorem tau_rbac_secure :
-    all st1 st2 in Self, all r1 in Rr, all d1 in D,
+    all st1 st2 : Self, all r1 : Rr, all d1 : D,
       tau_rbac (r1, st1) = (d1, st2) ->
         omega (st1) ->
           omega(st2)
@@ -2505,7 +2474,7 @@ species Policy_hru (Rh is Rho,
      then a2 is authorized
    *)
   property fd_access :
-    all a1 a2 in A,
+    all a1 a2 : A,
       A!equal (a1, a2) ->
         fd (a1) ->
           fd (a2);
@@ -2513,8 +2482,8 @@ species Policy_hru (Rh is Rho,
      The HRU security predicate : if an access belongs to the current
      accesses of a state then it is authorized
    *)
-  logical let omega (st in Self) =
-     all s1 in S, all o1 in O, all m1 in M,
+  logical let omega (st : Self) =
+     all s1 : S, all o1 : O, all m1 : M,
        S_a!est_element (A!create (s1, o1, m1), lambda (st)) ->
          fd (A!create (s1, o1, m1));
 
@@ -2533,7 +2502,7 @@ species Model_hru (Rh is Rho,
     Models (Rh, S, O, M, A, S_a, R, D);
 
   (** HRU transition function *)
-  let tau_hru (r1 in R, st in Self) =
+  let tau_hru (r1 : R, st : Self) =
      if R!is_get (r1) then
        if fd (A!create (R!get_s (r1), R!get_o (r1), R!get_m (r1)))
        then (D!yes, add (st,
@@ -2544,34 +2513,22 @@ species Model_hru (Rh is Rho,
                       A!create (R!get_s (r1), R!get_o (r1), R!get_m(r1))));
 
   theorem tau_hru_secure :
-    all st1 st2 in Self, all r1 in R, all d1 in D,
+    all st1 st2 : Self, all r1 : R, all d1 : D,
       tau_hru (r1, st1) = (d1, st2) ->
         omega (st1) ->
           omega (st2)
     proof =
-      <1>1 assume st1 in Self,
-           assume st2 in Self,
-           assume r1 in R,
-           assume d1 in D,
-           assume H1: tau_hru (r1, st1) = (d1, st2),
-           assume H2: omega (st1),
+      <1>1 assume st1 : Self, st2 : Self, r1 : R, d1 : D,
+                  hypothesis H1: tau_hru (r1, st1) = (d1, st2),
+                  hypothesis H2: omega (st1),
            prove omega (st2)
-        <2>2 assume H3: R!is_get (r1),
+        <2>2 assume hypothesis H3: R!is_get (r1),
              prove omega (st2)
-(*           <3>1 prove fd (A!create (R!get_s (r1), *)
-(*                                 R!get_o (r1), *)
-(*                                 R!get_m (r1))) *)
-(*                      \/  *)
-(*                      ~ fd (A!create (R!get_s (r1), *)
-(*                                   R!get_o (r1), *)
-(*                                   R!get_m (r1))) *)
-          <3>2 assume H31: fd (A!create (R!get_s (r1),
-                                         R!get_o (r1),
-                                         R!get_m (r1))),
+          <3>2 assume hypothesis H31: fd (A!create (R!get_s (r1),
+						    R!get_o (r1),
+						    R!get_m (r1))),
                prove omega (st2)
-            <4>1 assume s2 in S,
-                 assume o2 in O,
-                 assume m2 in M,
+            <4>1 assume s2 : S, o2 : O, m2 : M,
                  prove S_a!est_element (A!create (s2, o2, m2),
                                         lambda (st2)) ->
                        fd (A!create (s2, o2, m2))
@@ -2669,9 +2626,9 @@ species Model_hru (Rh is Rho,
             <4>f qed
                  by step <4>1
                     definition of omega
-          <3>3 assume H32: ~ fd (A!create (R!get_s (r1),
-                                            R!get_o (r1),
-                                            R!get_m (r1))),
+          <3>3 assume hypothesis H32: ~ fd (A!create (R!get_s (r1),
+						      R!get_o (r1),
+						      R!get_m (r1))),
                prove omega (st2)
             <4>1 prove equal (st1, st2)
               <5>1 prove R!is_get (r1) ->
@@ -2702,13 +2659,10 @@ species Model_hru (Rh is Rho,
                     hypothesis H2
                     property secure_state
           <3>f qed
-(*                by step <3>1, <3>2, <3>3 *)
                by step <3>2, <3>3
-        <2>3 assume H4: R!is_rel (r1),
+        <2>3 assume hypothesis H4: R!is_rel (r1),
              prove omega (st2)
-          <3>6 assume s2 in S,
-               assume o2 in O,
-               assume m2 in M,
+          <3>6 assume s2 : S, o2 : O, m2 : M,
                prove S_a!est_element (A!create(s2, o2, m2),
                                       lambda (st2)) ->
                      fd (A!create (s2, o2, m2))
@@ -2721,7 +2675,7 @@ species Model_hru (Rh is Rho,
                       property (* beq_symm, *)
                                R!get_is_not_rel, right_substitution
                       definition of tau_hru
-              <5>2 assume acc in A,
+              <5>2 assume acc : A,
                    prove S_a!est_element
                              (acc,
                               lambda (del(st1,
@@ -2730,7 +2684,7 @@ species Model_hru (Rh is Rho,
                                                    R!get_m (r1))))) ->
                          S_a!est_element (acc, lambda (st1))
                    by property del_prop
-              <5>3 assume acc in A,
+              <5>3 assume acc : A,
                    prove S_a!est_element (acc, lambda (st2)) ->
                          S_a!est_element (acc, lambda (st1))
                    by step <5>1, <5>2
@@ -2756,33 +2710,24 @@ species Model_hru (Rh is Rho,
  ;
 
   theorem tau_hru_correct :
-    all st1 st2 in Self, all r1 in R, all d1 in D,
+    all st1 st2 : Self, all r1 : R, all d1 : D,
       tau_hru (r1, st1) = (d1, st2) ->
         D!equal (d1, D!yes) ->
           sem_req (r1, st2)
     proof =
-      <1>1 assume st1 in Self,
-           assume st2 in Self,
-           assume r1 in R,
-           assume d1 in D,
-           assume H1: tau_hru (r1, st1) = (d1, st2),
+      <1>1 assume st1 : Self, st2 : Self, r1 : R, d1 : D,
+                  hypothesis H1: tau_hru (r1, st1) = (d1, st2),
            prove D!equal (d1, D!yes) ->
                  sem_req (r1, st2)
-        <2>2 assume H3: R!is_get (r1),
+        <2>2 assume hypothesis H3: R!is_get (r1),
              prove D!equal (d1, D!yes) ->
                    sem_req (r1, st2)
-(*           <3>1 prove fd (A!create (R!get_s (r1), *)
-(*                                 R!get_o (r1), *)
-(*                                 R!get_m (r1))) *)
-(*                      \/ ~ (fd (A!create (R!get_s (r1), *)
-(*                                       R!get_o (r1), *)
-(*                                       R!get_m (r1)))) *)
-          <3>2 assume H31: fd (A!create (R!get_s (r1),
-                                         R!get_o (r1),
-                                         R!get_m (r1))),
+          <3>2 assume hypothesis H31: fd (A!create (R!get_s (r1),
+						    R!get_o (r1),
+						    R!get_m (r1))),
                prove D!equal (d1, D!yes) ->
                      sem_req (r1, st2)
-            <4>1 assume H2: D!equal (d1, D!yes),
+            <4>1 assume hypothesis H2: D!equal (d1, D!yes),
                  prove sem_req (r1, st2)
               <5>1 prove sem_req_get (r1, st2)
                 <6>1 prove R!is_get (r1) ->
@@ -2861,9 +2806,9 @@ species Model_hru (Rh is Rho,
                        definition of sem_req
              <4>f qed
                   by step <4>1
-           <3>3 assume H32: ~ fd (A!create (R!get_s (r1),
-                                            R!get_o (r1),
-                                            R!get_m (r1))),
+           <3>3 assume hypothesis H32: ~ fd (A!create (R!get_s (r1),
+						       R!get_o (r1),
+						       R!get_m (r1))),
                 prove D!equal (d1, D!yes) ->
                       sem_req (r1, st2)
              <4>1 prove ~ D!equal (d1, D!yes)
@@ -2896,12 +2841,11 @@ species Model_hru (Rh is Rho,
              <4>f qed
                   by step <4>1
            <3>f qed
-(*                 by step <3>1, <3>2, <3>3 *)
                 by step <3>2, <3>3
-         <2>3 assume H4: R!is_rel (r1),
+         <2>3 assume hypothesis H4: R!is_rel (r1),
               prove D!equal (d1, D!yes) ->
                     sem_req (r1, st2)
-           <3>1 assume H2bis: D!equal (d1, D!yes),
+           <3>1 assume hypothesis H2bis: D!equal (d1, D!yes),
                 prove sem_req (r1, st2)
              <4>1 prove sem_req_get (r1, st2)
                <5>1 prove R!is_get (r1) ->
@@ -2976,30 +2920,21 @@ species Model_hru (Rh is Rho,
  ;
 
   theorem tau_hru_correct_bis :
-    all st1 st2 in Self, all r1 in R, all d1 in D,
+    all st1 st2 : Self, all r1 : R, all d1 : D,
       tau_hru (r1, st1) = (d1, st2) ->
         D!equal (d1, D!no) ->
           equal (st1, st2)
     proof =
-      <1>1 assume st1 in Self,
-           assume st2 in Self,
-           assume r1 in R,
-           assume d1 in D,
-           assume H1: tau_hru (r1, st1) = (d1, st2),
+      <1>1 assume st1 : Self, st2 : Self, r1 : R, d1 : D,
+                  hypothesis H1: tau_hru (r1, st1) = (d1, st2),
            prove D!equal (d1, D!no) ->
                  equal (st1, st2)
-        <2>2 assume H3: R!is_get (r1),
+        <2>2 assume hypothesis H3: R!is_get (r1),
              prove D!equal (d1, D!no) ->
                    equal (st1, st2)
-(*           <3>1 prove fd (A!create (R!get_s (r1), *)
-(*                                 R!get_o (r1), *)
-(*                                 R!get_m (r1))) *)
-(*                      \/ ~ fd (A!create (R!get_s (r1), *)
-(*                                      R!get_o (r1), *)
-(*                                      R!get_m (r1))) *)
-          <3>2 assume H31: fd (A!create (R!get_s (r1),
-                                         R!get_o (r1),
-                                         R!get_m (r1))),
+          <3>2 assume hypothesis H31: fd (A!create (R!get_s (r1),
+						    R!get_o (r1),
+						    R!get_m (r1))),
                prove D!equal (d1, D!no) ->
                      equal (st1, st2)
             <4>1 prove ~ D!equal (d1, D!no)
@@ -3043,12 +2978,12 @@ species Model_hru (Rh is Rho,
                       property D!yes_is_not_no
             <4>f qed
                  by step <4>1
-          <3>3 assume H32: ~ fd (A!create (R!get_s (r1),
-                                           R!get_o (r1),
-                                           R!get_m (r1))),
+          <3>3 assume hypothesis H32: ~ fd (A!create (R!get_s (r1),
+						      R!get_o (r1),
+						      R!get_m (r1))),
                prove D!equal (d1, D!no) ->
                      equal (st1, st2)
-            <4>1 assume H2: D!equal (d1, D!no),
+            <4>1 assume hypothesis H2: D!equal (d1, D!no),
                  prove equal (st1, st2)
               <5>1 prove R!is_get (r1) ->
                          (~ fd (A!create (R!get_s (r1),
@@ -3076,9 +3011,8 @@ species Model_hru (Rh is Rho,
             <4>f qed
                  by step <4>1
           <3>f qed
-(*                by step <3>1, <3>2, <3>3 *)
                by step <3>2, <3>3
-        <2>3 assume  H4: R!is_rel (r1),
+        <2>3 assume hypothesis H4: R!is_rel (r1),
              prove D!equal (d1, D!no) ->
                    equal (st1, st2)
           <3>1 prove ~ D!equal (d1, D!no)
@@ -3352,21 +3286,21 @@ species Policy_unix (G is Groups, Rh is Rho_unix (G),
     Policy (Rh, S, O, M, A, S_a);
 
   (** f_p(op) = sp &and; mp &isin; f_d_p(op) *)
-  logical let owner_access (st in Self) =
-     all sp in S, all op in O, all mp in M,
+  logical let owner_access (st : Self) =
+     all sp : S, all op : O, all mp : M,
        S!equal (f_p (st, op), sp) /\
        S_m!est_element (mp, f_d_p (st, op));
 
   (** f_p(op) &ne; sp &and; f_g(op) &isin; f_s(sp) &and; mp &isin; f_d_g(op) *)
-  logical let group_access (st in Self) =
-     all sp in S, all op in O, all mp in M,
+  logical let group_access (st : Self) =
+     all sp : S, all op : O, all mp : M,
      (~ S!equal (f_p (st, op), sp)) /\
      S_g!est_element (f_g (st, op), f_s (st, sp)) /\
      S_m!est_element (mp, f_d_g (st, op));
 
   (** f_p(op) &ne; sp &and; f_g(op) &notin; f_s(sp) &and; mp &isin; f_d_o(op) *)
-  logical let others_access (st in Self) =
-     all sp in S, all op in O, all mp in M,
+  logical let others_access (st : Self) =
+     all sp : S, all op : O, all mp : M,
      (~ S!equal (f_p (st, op), sp)) /\
      (~ S_g!est_element (f_g (st, op), f_s (st, sp))) /\
      S_m!est_element (mp, f_d_o (st, op));
@@ -3378,8 +3312,8 @@ species Policy_unix (G is Groups, Rh is Rho_unix (G),
      thanks to the others' rights (others_access) or
      because sp is a super-user
    *)
-  logical let omega (st in Self) =
-     all sp in S, all op in O, all mp in M,
+  logical let omega (st : Self) =
+     all sp : S, all op : O, all mp : M,
        S_a!est_element (A!create (sp, op, mp), lambda (st)) ->
          (owner_access (st) \/
           group_access (st) \/
@@ -3534,7 +3468,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
     Models (Rh, S, O, M, A, S_a, R, D);
 
   (** Unix transition function on accesses *)
-  let tau_unix_acc (r1 in R, st in Self) =
+  let tau_unix_acc (r1 : R, st : Self) =
      let sp = R!get_s (r1) in
      let op = R!get_o (r1) in
      let mp = R!get_m (r1) in
@@ -3685,7 +3619,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
             ~~ (su (st, sp)));
 
   (** Unix administrative transition function *)
-  let tau_unix_adm (r1 in R, st in Self) =
+  let tau_unix_adm (r1 : R, st : Self) =
      if R!is_active (r1) then
        (* <+active,s,g> *)
        let sp = R!get_s (r1) in
@@ -3779,7 +3713,7 @@ species Models_unix (G is Groups, Rh is Rho_unix (G),
      else (D!no, st);
 
   (** Unix transition function *)
-  let tau_unix (r1 in R, st in Self) =
+  let tau_unix (r1 : R, st : Self) =
      if R!is_get (r1) || R!is_rel (r1)
      then tau_unix_acc (r1, st)
      else tau_unix_adm (r1, st);
@@ -3899,9 +3833,9 @@ species Policy_ticket (C is Tickets, Rh is Rho_ticket (C),
      If an access (sp,op,mo) belongs to the current accesses of a state
      then there exists a ticket ct such that ct belongs to W(sp) and T(op,mo)
    *)
-  logical let omega (st in Self) =
-     all sp in S, all op in O, all mo in M,
-       ex ct in C,
+  logical let omega (st : Self) =
+     all sp : S, all op : O, all mo : M,
+       ex ct : C,
          S_a!est_element (A!create (sp, op, mo), lambda (st)) ->
            (w (st, sp, ct) /\ t (st, op, mo, ct));
 
@@ -3975,7 +3909,7 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
     Models (Rh, S, O, M, A, S_a, R, D);
 
   (** Tickets transition function on accesses *)
-  let tau_ticket_acc (r1 in R, st1 in Self) =
+  let tau_ticket_acc (r1 : R, st1 : Self) =
      let s1 = R!get_s (r1) in
      let o1 = R!get_o (r1) in
      let m1 = R!get_m (r1) in
@@ -3997,7 +3931,7 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
      exists_ticket (stp, uc (stp), w (stp, sp), t (stp, op, mp));
 
   (** Tickets administrative transition function *)
-  let tau_ticket_adm (r1 in R, st1 in Self) =
+  let tau_ticket_adm (r1 : R, st1 : Self) =
      if R!is_generate (r1) then
        let s1 = R!get_s (r1) in
        let c1 = R!get_c (r1) in
@@ -4023,7 +3957,7 @@ species Models_ticket (C is Tickets, Rh is Rho_ticket (C),
      else (D!no, st1);
 
   (** Tickets transition function *)
-  let tau_ticket (r1 in R, st1 in Self) =
+  let tau_ticket (r1 : R, st1 : Self) =
      if R!is_get (r1) || R!is_rel (r1)
      then tau_ticket_acc (r1, st1)
      else tau_ticket_adm (r1, st1);

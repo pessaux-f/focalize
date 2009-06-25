@@ -13,20 +13,16 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rbac.fcl,v 1.20 2009-06-06 16:43:43 weis Exp $ *)
+(* $Id: rbac.fcl,v 1.21 2009-06-25 10:25:37 habib Exp $ *)
 
 (**
    @title Implementation of the RBAC model
    @author Lionel Habib
  *)
 
-use "basics";;
 open "basics";;
-use "sets_orders";;
 open "sets_orders";;
-use "ensembles_finis";;
 open "ensembles_finis";;
-use "access_control";;
 open "access_control";;
 
 (** RBAC implementation *)
@@ -63,7 +59,7 @@ species S_setoid =
 
   representation = int * string;
 
-  let create (n in int, s in string) in Self = (n, s);
+  let create (n : int, s : string) : Self = (n, s);
 
   let equal (s1, s2) =  fst (s1) = fst (s2);
 
@@ -177,17 +173,17 @@ species S_get_release =
 
   inherit S_setoid;
 
-  let get in Self = (1, "+");
+  let get : Self = (1, "+");
 
-  let rel in Self = (2, "-");
+  let rel : Self = (2, "-");
 
-  let p_ua in Self = (3, "+ua");
+  let p_ua : Self = (3, "+ua");
 
-  let m_ua in Self = (4, "-ua");
+  let m_ua : Self = (4, "-ua");
 
-  let p_pa in Self = (5, "+pa");
+  let p_pa : Self = (5, "+pa");
 
-  let m_pa in Self = (6, "-pa");
+  let m_pa : Self = (6, "-pa");
 
 end
 ;;
@@ -203,29 +199,29 @@ species S_roles =
 
   inherit Roles, S_setoid;
 
-  let directeur in Self = (1, "directeur");
+  let directeur : Self = (1, "directeur");
 
-  let secretaire in Self = (2, "secretaire");
+  let secretaire : Self = (2, "secretaire");
 
-  let chirurgienChef in Self = (3, "chirurgienChef");
+  let chirurgienChef : Self = (3, "chirurgienChef");
 
-  let chirurgien in Self = (4, "chirurgien");
+  let chirurgien : Self = (4, "chirurgien");
 
-  let radiologiste in Self = (5, "radiologiste");
+  let radiologiste : Self = (5, "radiologiste");
 
-  let radiologisteAssistant in Self = (6, "radiologisteAssistant");
+  let radiologisteAssistant : Self = (6, "radiologisteAssistant");
 
-  let specialiste in Self = (7, "specialiste");
+  let specialiste : Self = (7, "specialiste");
 
-  let generaliste in Self = (8, "generaliste");
+  let generaliste : Self = (8, "generaliste");
 
-  let infirmiere in Self = (9, "infirmiere");
+  let infirmiere : Self = (9, "infirmiere");
 
-  let secretaireMedicale in Self = (10, "secretaireMedicale");
+  let secretaireMedicale : Self = (10, "secretaireMedicale");
 
-  let patient in Self = (11, "patient");
+  let patient : Self = (11, "patient");
 
-  let roles_list in list(Self) =
+  let roles_list : list(Self) =
      [ directeur; secretaire;
        chirurgienChef; chirurgien;
        radiologiste; radiologisteAssistant;
@@ -319,11 +315,11 @@ species S_requests_rbac (S is S_subjects,
 
   representation = (Sgr * (S * (O * (M * (U * Ro)))));
 
-  let create (g in Sgr, sa in S, oa in O, ma in M,
-              ua in U, roa in Ro) in Self =
+  let create (g : Sgr, sa : S, oa : O, ma : M,
+              ua : U, roa : Ro) : Self =
      (g, (sa, (oa, (ma, (ua, roa)))));
 
-  let get_gr (rg in Self) in Sgr = fst (rg);
+  let get_gr (rg : Self) : Sgr = fst (rg);
 
   let get_s (rg) = fst (snd (rg));
 
@@ -465,16 +461,16 @@ species S_models_rbac (S_us is S_users,
                                   (list ((S_obj * S_acc_mod) * S_ro) *
                                    list (S_sub * S_ro)))));
 
-  let create (s in S_set_acc,
-              ur in (S_sub -> S_us),
-              u in list (S_us * S_ro),
-              p in list ((S_obj * S_acc_mod) * S_ro),
-              r in list (S_sub * S_ro)) in Self =
+  let create (s : S_set_acc,
+              ur : (S_sub -> S_us),
+              u : list (S_us * S_ro),
+              p : list ((S_obj * S_acc_mod) * S_ro),
+              r : list (S_sub * S_ro)) : Self =
      (s, (ur, (u, (p, r))));
 
   let lambda (st) = fst (st);
 
-  let upsilon (st in Self) in ((S_sub -> S_us) *
+  let upsilon (st : Self) : ((S_sub -> S_us) *
                                (list (S_us * S_ro) *
                                 (list ((S_obj * S_acc_mod) * S_ro) *
                                  list (S_sub * S_ro)))) =
@@ -540,14 +536,14 @@ species S_models_rbac (S_us is S_users,
             else aux (t)
      in aux (S_ro!roles_list);
 
-  let add_ua (st in Self, u in S_us, r in S_ro) in Self =
+  let add_ua (st : Self, u : S_us, r : S_ro) : Self =
      (lambda (st), (fst (upsilon (st)),
                     ((u, r) :: fst (snd (upsilon (st))),
                      (fst (snd (snd (upsilon (st)))),
                       snd (snd (snd (upsilon (st))))))));
 
-(*   let rm_ua (st in Self, u in S_us, r in S_ro) in Self = *)
-(*      let rec aux (f in list (S_us * S_ro), l in list (S_us * S_ro)) = *)
+(*   let rm_ua (st : Self, u : S_us, r : S_ro) : Self = *)
+(*      let rec aux (f : list (S_us * S_ro), l : list (S_us * S_ro)) = *)
 (*         match l with *)
 (*         | [ ] -> *)
 (*             (lambda (st), (fst (upsilon (st)), *)
@@ -560,8 +556,8 @@ species S_models_rbac (S_us is S_users,
 (*             else aux (h :: f, t) *)
 (*      in aux ([ ], fst (snd (upsilon (st)))); *)
 
-  let rm_ua (st in Self, u in S_us, r in S_ro) in Self =
-     let rec aux (l in list (S_us * S_ro), f in list (S_us * S_ro)) =
+  let rm_ua (st : Self, u : S_us, r : S_ro) : Self =
+     let rec aux (l : list (S_us * S_ro), f : list (S_us * S_ro)) =
         match l with
         | [ ] ->
             (lambda (st), (fst (upsilon (st)),
@@ -574,15 +570,15 @@ species S_models_rbac (S_us is S_users,
             else aux (t, h :: f)
      in aux (fst (snd (upsilon (st))), [ ]);
 
-  let add_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
+  let add_pa (st : Self, o : S_obj, m : S_acc_mod, r : S_ro) : Self =
      (lambda (st), (fst (upsilon (st)),
                     (fst (snd (upsilon (st))),
                      (((o, m), r) :: fst (snd (snd (upsilon (st)))),
                       snd (snd (snd (upsilon (st))))))));
 
-(*   let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self = *)
-(*      let rec aux (f in list ((S_obj * S_acc_mod) * S_ro), *)
-(*           l in list ((S_obj * S_acc_mod) * S_ro)) = *)
+(*   let rm_pa (st : Self, o : S_obj, m : S_acc_mod, r : S_ro) : Self = *)
+(*      let rec aux (f : list ((S_obj * S_acc_mod) * S_ro), *)
+(*           l : list ((S_obj * S_acc_mod) * S_ro)) = *)
 (*         match l with *)
 (*         | [ ] -> *)
 (*             (lambda (st), (fst (upsilon (st)), *)
@@ -597,9 +593,9 @@ species S_models_rbac (S_us is S_users,
 (*             else aux (h :: f, t) *)
 (*      in aux ([ ], fst (snd (snd (upsilon (st))))); *)
 
-  let rm_pa (st in Self, o in S_obj, m in S_acc_mod, r in S_ro) in Self =
-     let rec aux (l in list ((S_obj * S_acc_mod) * S_ro),
-          f in list ((S_obj * S_acc_mod) * S_ro)) =
+  let rm_pa (st : Self, o : S_obj, m : S_acc_mod, r : S_ro) : Self =
+     let rec aux (l : list ((S_obj * S_acc_mod) * S_ro),
+          f : list ((S_obj * S_acc_mod) * S_ro)) =
         match l with
         | [ ] ->
             (lambda (st), (fst (upsilon (st)),
@@ -619,8 +615,8 @@ species S_models_rbac (S_us is S_users,
   let element =
      create (S_set_acc!vide, (function _su -> S_us!element), [ ], [ ], [ ]);
 
-  let print_ua (l in list (S_us * S_ro)) in string =
-     let rec aux (ls in list (S_us * S_ro)) =
+  let print_ua (l : list (S_us * S_ro)) : string =
+     let rec aux (ls : list (S_us * S_ro)) =
         match ls with
         | [ ] -> "]"
         | h :: t ->
@@ -636,8 +632,8 @@ species S_models_rbac (S_us is S_users,
                 aux (t)
      in "[" ^ aux (l);
 
-  let print_pa (l in list ((S_obj * S_acc_mod) * S_ro)) in string =
-     let rec aux (ls in list((S_obj * S_acc_mod) * S_ro)) =
+  let print_pa (l : list ((S_obj * S_acc_mod) * S_ro)) : string =
+     let rec aux (ls : list((S_obj * S_acc_mod) * S_ro)) =
         match ls with
         | [ ] -> "]"
         | h :: t ->
@@ -655,7 +651,7 @@ species S_models_rbac (S_us is S_users,
                 aux (t)
      in "[" ^ aux (l);
 
-  let print (st) in string =
+  let print (st) : string =
      "(" ^ S_set_acc!print (lambda (st)) ^
      ",\n                    " ^
      print_ua (fst (snd (upsilon (st)))) ^
@@ -938,7 +934,7 @@ let isabel = C_users!create (9, "isabel");;
 
 let john = C_users!create (10, "john");;
 
-let user_ex (s in C_subjects) in C_users =
+let user_ex (s : C_subjects) : C_users =
    if C_subjects!equal (s, s1) then alice
    else if C_subjects!equal (s, s2) then bob
    else if C_subjects!equal (s, s3) then charly
@@ -954,7 +950,7 @@ let user_ex (s in C_subjects) in C_users =
    else C_users!element
 ;;
 
-let ua_ex in list (C_users * C_roles) =
+let ua_ex : list (C_users * C_roles) =
    [ (alice, C_roles!directeur);
      (bob, C_roles!chirurgienChef);
      (charly, C_roles!radiologiste);
@@ -967,7 +963,7 @@ let ua_ex in list (C_users * C_roles) =
      (john, C_roles!radiologisteAssistant) ]
 ;;
 
-let pa_ex in list((C_objects * C_access_mode) * C_roles) =
+let pa_ex : list((C_objects * C_access_mode) * C_roles) =
    [ ((dossierMedecin_1, C_access_mode!read), C_roles!directeur);
      ((dossierMedecin_2, C_access_mode!read), C_roles!directeur);
      ((dossierMedecin_3, C_access_mode!read), C_roles!directeur);
@@ -1027,7 +1023,7 @@ let pa_ex in list((C_objects * C_access_mode) * C_roles) =
      ((radio_3, C_access_mode!read), C_roles!patient) ]
 ;;
 
-let roles_s_ex in list (C_subjects * C_roles) =
+let roles_s_ex : list (C_subjects * C_roles) =
    [ (s1, C_roles!directeur);
      (s2, C_roles!chirurgienChef);
      (s2, C_roles!chirurgien);

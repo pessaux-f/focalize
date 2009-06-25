@@ -13,20 +13,16 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: unix.fcl,v 1.16 2009-06-06 16:43:43 weis Exp $ *)
+(* $Id: unix.fcl,v 1.17 2009-06-25 10:25:37 habib Exp $ *)
 
 (**
    @title Implementation of the Unix model
    @author Melanie Jacquel, Diane Pipon
  *)
 
-use "basics";;
 open "basics";;
-use "sets_orders";;
 open "sets_orders";;
-use "ensembles_finis";;
 open "ensembles_finis";;
-use "access_control";;
 open "access_control";;
 
 (** Unix implementation *)
@@ -75,7 +71,7 @@ species S_setoid =
 
   representation = int * string;
 
-  let create (n in int, s in string) in Self = (n, s);
+  let create (n : int, s : string) : Self = (n, s);
 
   let equal (s1, s2) =  fst (s1) = fst (s2);
 
@@ -117,7 +113,7 @@ species S_access_mode =
 
   let write = (2,  "w");
 
-  let execute in Self = (3,  "x");
+  let execute : Self = (3,  "x");
 
 end
 ;;
@@ -195,25 +191,25 @@ species S_get_release =
 
   inherit S_setoid;
 
-  let get in Self = (1, "+");
+  let get : Self = (1, "+");
 
-  let rel in Self = (2, "-");
+  let rel : Self = (2, "-");
 
-  let active in Self = (3, "+active");
+  let active : Self = (3, "+active");
 
-  let inactive in Self = (4, "-active");
+  let inactive : Self = (4, "-active");
 
-  let p_right  in Self = (5, "+droit");
+  let p_right  : Self = (5, "+droit");
 
-  let m_right  in Self = (6, "-droit");
+  let m_right  : Self = (6, "-droit");
 
-  let chown in Self = (7, "+chown");
+  let chown : Self = (7, "+chown");
 
-  let chgrp in Self = (8, "+chgrp");
+  let chgrp : Self = (8, "+chgrp");
 
-  let p_group in Self = (9, "+group");
+  let p_group : Self = (9, "+group");
 
-  let m_group in Self = (10, "-group");
+  let m_group : Self = (10, "-group");
 
 end
 ;;
@@ -222,13 +218,13 @@ species S_groups =
 
   inherit Groups, S_setoid;
 
-  let curry in Self = (1, "curry ");
+  let curry : Self = (1, "curry ");
 
-  let rsa in Self = (2, "rsa   ");
+  let rsa : Self = (2, "rsa   ");
 
-  let bidule in Self = (3, "bidule");
+  let bidule : Self = (3, "bidule");
 
-  let truc in Self = (4, "truc  ");
+  let truc : Self = (4, "truc  ");
 
 end
 ;;
@@ -261,17 +257,10 @@ species S_requests_unix
 
   representation = (Sgr * (S * (O * (M * (G * (Z * S))))));
 
-  let create
-        (rda in Sgr,
-         sa in S,
-         oa in O,
-         ma in M,
-         ga in G,
-         za in Z,
-         sa2 in S) in Self =
-    (rda, (sa, (oa, (ma, (ga, (za, sa2))))));
+  let create (rda : Sgr, sa : S, oa : O, ma : M, ga : G, za : Z, sa2 : S) : 
+      Self = (rda, (sa, (oa, (ma, (ga, (za, sa2))))));
 
-  let get_gr (rg in Self) in Sgr = fst (rg);
+  let get_gr (rg : Self) : Sgr = fst (rg);
 
   let get_s (rg) = fst (snd (rg));
 
@@ -442,21 +431,21 @@ species S_models_unix
             (S_obj -> S_set_mod))))))))); (* f_d_o *)
 
   let create
-    (s in S_set_acc,
-     a in list (S_grp),
-     sup in list (S_sub),
-     fp in (S_obj -> S_sub),
-     fg in (S_obj -> S_grp),
-     fs in (S_sub -> S_set_grp),
-     fdp in (S_obj -> S_set_mod),
-     fdg in (S_obj -> S_set_mod),
-     fdo in (S_obj -> S_set_mod)) in Self =
+    (s : S_set_acc,
+     a : list (S_grp),
+     sup : list (S_sub),
+     fp : (S_obj -> S_sub),
+     fg : (S_obj -> S_grp),
+     fs : (S_sub -> S_set_grp),
+     fdp : (S_obj -> S_set_mod),
+     fdg : (S_obj -> S_set_mod),
+     fdo : (S_obj -> S_set_mod)) : Self =
     (s, (a, (sup, (fp, (fg, (fs, (fdp, (fdg, fdo))))))));
 
   let lambda (st) = fst (st);
 
-  let upsilon (st in Self)
-      in (list (S_grp) * (* ag *)
+  let upsilon (st : Self)
+      : (list (S_grp) * (* ag *)
           (list (S_sub) * (* su *)
            ((S_obj -> S_sub) * (* f_p *)
              ((S_obj -> S_grp) * (* f_g *)
@@ -740,7 +729,7 @@ species S_models_unix
       | h :: t -> S_grp!print (h) ^ ", " ^ aux (t) in
     "[" ^ aux (fst (upsilon (st))) ^ "]\n";
 
-  let print_right (set_mod, r in S_acc_mod) =
+  let print_right (set_mod, r : S_acc_mod) =
     if S_set_mod!est_element (r, set_mod)
     then S_acc_mod!print (r)
     else "-";
@@ -933,13 +922,13 @@ let hachage_c = C_objects!create (4, "hachage.c  ")
 let projet_tex = C_objects!create (5, "projet.tex ")
 ;;
 
-let ag_ex in list (C_groups)= [ C_groups!curry; C_groups!rsa ]
+let ag_ex : list (C_groups)= [ C_groups!curry; C_groups!rsa ]
 ;;
 
-let su_ex in list (C_subjects)= [ steeve ]
+let su_ex : list (C_subjects)= [ steeve ]
 ;;
 
-let fp_ex (o in C_objects) in C_subjects =
+let fp_ex (o : C_objects) : C_subjects =
   if C_objects!equal (o, rapport_pdf) then pierre
   else if C_objects!equal (o, tp1_ml) then alice
   else if C_objects!equal (o, media_java) then marie
@@ -948,7 +937,7 @@ let fp_ex (o in C_objects) in C_subjects =
   else C_subjects!element
 ;;
 
-let fs_ex (s in C_subjects) in C_set_of_groups =
+let fs_ex (s : C_subjects) : C_set_of_groups =
   if C_subjects!equal (s, alice) || C_subjects!equal (s, bob)
   then C_set_of_groups!singleton (C_groups!rsa)
   else if C_subjects!equal (s, pierre) || C_subjects!equal (s, marie)
@@ -956,7 +945,7 @@ let fs_ex (s in C_subjects) in C_set_of_groups =
   else C_set_of_groups!singleton (C_groups!element)
 ;;
 
-let fg_ex (o in C_objects) in C_groups =
+let fg_ex (o : C_objects) : C_groups =
   if C_objects!equal (o, rapport_pdf) ||
      C_objects!equal (o, media_java) ||
      C_objects!equal (o, projet_tex)
@@ -966,7 +955,7 @@ let fg_ex (o in C_objects) in C_groups =
   else C_groups!element
 ;;
 
-let fd_p_ex (o in C_objects) in C_set_of_mode =
+let fd_p_ex (o : C_objects) : C_set_of_mode =
   if C_objects!equal (o, rapport_pdf) ||
      C_objects!equal (o, media_java) ||
      C_objects!equal (o, tp1_ml) ||
@@ -982,7 +971,7 @@ let fd_p_ex (o in C_objects) in C_set_of_mode =
   else C_set_of_mode!singleton (C_access_mode!element)
 ;;
 
-let fd_g_ex (o in C_objects) in C_set_of_mode =
+let fd_g_ex (o : C_objects) : C_set_of_mode =
   if C_objects!equal (o, rapport_pdf)
   then C_set_of_mode!singleton (C_access_mode!read)
   else if C_objects!equal (o, media_java) || C_objects!equal (o, tp1_ml)
@@ -996,7 +985,7 @@ let fd_g_ex (o in C_objects) in C_set_of_mode =
   else C_set_of_mode!singleton (C_access_mode!element)
 ;;
 
-let fd_o_ex (o in C_objects) in C_set_of_mode =
+let fd_o_ex (o : C_objects) : C_set_of_mode =
   if C_objects!equal (o, rapport_pdf) ||
      C_objects!equal (o, media_java) ||
      C_objects!equal (o, tp1_ml)
@@ -1036,7 +1025,7 @@ let list_obj = [
 ]
 ;;
 
-let print_ls_all (s in string, st in C_models_unix) =
+let print_ls_all (s : string, st : C_models_unix) =
   let rec aux (ls) =
     match ls with
     | [] -> ""
