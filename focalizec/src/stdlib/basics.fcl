@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.65 2009-06-24 22:29:32 weis Exp $ *)
+(* $Id: basics.fcl,v 1.66 2009-06-25 17:38:00 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -174,7 +174,7 @@ let ( <^ ) =
 
 (** {7 Operations on integers} *)
 
-(** {9 Comparisons on integers} *)
+(** {8 Comparisons on integers} *)
 
 let ( =0x ) =
   internal int -> int -> bool
@@ -265,6 +265,7 @@ let succ0x (x : int) : int = x + 1
 let pred0x (x : int) : int = x - 1
 ;;
 
+(** Maximum and minimum of two integer values. *)
 let max0x =
   internal int -> int -> int
   external
@@ -285,6 +286,21 @@ let abs0x =
   external
   | caml -> {* Ml_builtins.bi__int_abs *}
   | coq -> {* coq_builtins.bi__int_abs *}
+;;
+
+(** String convertions for integers. *)
+let string_of_int =
+  internal int -> string
+  external
+  | caml -> {* Ml_builtins.bi__string_of_int *}
+  | coq -> {* fun (x : int__t) => coq_builtins.___a_string *}
+;;
+
+let int_of_string =
+  internal string -> int
+  external
+  | caml -> {* Ml_builtins.bi__int_of_string *}
+  | coq -> {* fun (x : string__t) => 42 *}
 ;;
 
 (** {7 Polymorphic equalities} *)
@@ -310,35 +326,21 @@ let syntactic_equal = ( = );;
 let print_int =
   internal int -> unit
   external
-  | caml -> {* Ml_builtins.bi__int_print *}
+  | caml -> {* Ml_builtins.bi__print_int *}
   | coq -> {* fun (x : int__t) => coq_builtins.Void *}
 ;;
 
 let print_newline =
   internal unit -> unit
   external
-  | caml -> {* Ml_builtins.bi__int_print *}
+  | caml -> {* Ml_builtins.bi__print_newline *}
   | coq -> {* fun (x : unit__t) => coq_builtins.Void *}
-;;
-
-let string_of_int =
-  internal int -> string
-  external
-  | caml -> {* Ml_builtins.bi__string_of_int *}
-  | coq -> {* fun (x : int__t) => coq_builtins.___a_string *}
-;;
-
-let int_of_string =
-  internal string -> int
-  external
-  | caml -> {* Ml_builtins.bi__int_of_string *}
-  | coq -> {* fun (x : string__t) => 42 *}
 ;;
 
 let print_string =
   internal string -> unit
   external
-  | caml -> {* Ml_builtins.bi__string_print *}
+  | caml -> {* Ml_builtins.bi__print_string *}
   | coq -> {* fun (x : string__t) => coq_builtins.Void *}
 ;;
 
