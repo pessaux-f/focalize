@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: iterators.fcl,v 1.14 2009-06-08 07:56:09 pessaux Exp $ *)
+(* $Id: iterators.fcl,v 1.15 2009-06-25 10:11:49 weis Exp $ *)
 
 (** Basic techniques to iterate a process including very simple numbers. *)
 
@@ -36,7 +36,7 @@ species Binop (S is Setoid) =
 
   signature binop : S -> S -> S;
 
-  property binop_substitution_rule: all x_1 x_2 y_1 y_2 in S,
+  property binop_substitution_rule: all x_1 x_2 y_1 y_2 : S,
     S!equal (x_1, x_2) -> S!equal (y_1, y_2) ->
       S!equal (!binop (x_1, y_1), !binop (x_2, y_2));
 
@@ -49,24 +49,24 @@ end
  *)
 
 species Iteration (Nat is Ordered_Enumerated_system, S is Setoid,
-                   F_binary is Binop(S), zero in S) =
+                   F_binary is Binop (S), zero in S) =
   representation = unit;
-  let rec iterate (x in S, n in Nat) in S =
+  let rec iterate (x : S, n : Nat) : S =
     if Nat!equal (n, Nat!start) then zero
     else F_binary!binop (x, !iterate (x, Nat!predecessor (n)))
     termination proof = order Nat!lt on n
       assumed {* *};
 
-  theorem iterate_spec_base: all x in S,
+  theorem iterate_spec_base: all x : S,
     S!equal (!iterate (x, Nat!start), zero)
     proof = by property S!equal_reflexive, Nat!equal_reflexive
                definition of iterate;
 
-(*    theorem iterate_spec_ind: all x in S, all n in Nat, *)
+(*    theorem iterate_spec_ind: all x : S, all n : Nat, *)
 (*      S!equal (!iterate (x, Nat!successor (n)), *)
 (*              F_binary!binop (x, !iterate (x, n))) *)
 (*      proof =  *)
-(*        <1>1 assume x in S, assume n in Nat, *)
+(*        <1>1 assume x : S, assume n : Nat, *)
 (*             prove S!equal (!iterate (x,  Nat!successor (n)), *)
 (*           F_binary!binop (x, !iterate (x, n))) *)
 (*             <2>1 prove Nat!equal (Nat!predecessor (Nat!successor (n)), n) *)
@@ -110,51 +110,51 @@ species Dichotomic_system =
   (** multiplication by two *)
   signature mult2 : Self -> Self;
   (** compatibility with equality *)
-  property mult2_substitution_rule: all n m in Self,
+  property mult2_substitution_rule: all n m : Self,
    !equal (n, m) -> !equal (!mult2 (n), !mult2 (m));
 
   property zero_fixes_mult2: !equal (!mult2 (!zero), !zero);
-  property mult2_is_injective: all n m in Self,
+  property mult2_is_injective: all n m : Self,
    !equal (!mult2 (n), !mult2 (m)) -> !equal (n, m);
 
   (* we can check if an element is even *)
   signature is_even : Self -> bool;
-  property is_even_substitution_rule: all n m in Self,
+  property is_even_substitution_rule: all n m : Self,
    !is_even (n) -> !equal (n, m) -> !is_even (m);
   (* [rr]: this may be a theorem *)
   property zero_is_even: !is_even (!zero);
 
   (* we can check if an element is odd *)
   signature is_odd : Self -> bool;
-  property is_odd_substitution_rule: all n m in Self,
+  property is_odd_substitution_rule: all n m : Self,
    !is_odd (n) -> !equal (n, m) -> !is_odd (m);
   (* [rr]: this may be a theorem *)
   property one_is_odd: !is_odd (!one);
   (* any number is odd or even *)
-  property even_odd_complete: all n in Self, !is_odd (n) \/ !is_even (n);
+  property even_odd_complete: all n : Self, !is_odd (n) \/ !is_even (n);
 
-  property mult2_produces_even: all n in Self, !is_even (!mult2 (n));
+  property mult2_produces_even: all n : Self, !is_even (!mult2 (n));
   (** division by two almost inverses multiplication by two *)
   signature div2 : Self -> Self;
-  property div2_inverses_even: all n in Self,
+  property div2_inverses_even: all n : Self,
    !is_even (n) -> !equal (!mult2 (!div2 (n)), n);
-  property div2_inverses_odd: all n in Self,
+  property div2_inverses_odd: all n : Self,
    !is_odd (n) -> !equal (!successor (!mult2 (!div2 (n))), n);
 
-  property successor_of_odd_is_even: all n in Self,
+  property successor_of_odd_is_even: all n : Self,
    !is_odd (n) -> !is_even (!successor (n));
-  property successor_of_even_is_odd: all n in Self,
+  property successor_of_even_is_odd: all n : Self,
    !is_even (n) -> !is_odd (!successor (n));
 
-  theorem zero_images_by_div2: all n in Self, !equal (!div2 (n), !zero) ->
+  theorem zero_images_by_div2: all n : Self, !equal (!div2 (n), !zero) ->
    (!equal (n, !zero) \/ !equal (n, !one))
   proof = assumed {* Because todo *};
 
 (*    (\** an induction principle for dichotomy *\)  *)
-(*   theorem dichotomic_principle: all p in (Self -> Prop), *)
+(*   theorem dichotomic_principle: all p : (Self -> Prop), *)
 (*     p (!zero) -> *)
-(*       (all n in Self, (p(n) -> (p (!mult2 (n)) /\ p (!successor (!mult2 (n)))))) -> *)
-(*          (all n in Self, p (n)) *)
+(*       (all n : Self, (p(n) -> (p (!mult2 (n)) /\ p (!successor (!mult2 (n)))))) -> *)
+(*          (all n : Self, p (n)) *)
 (*     proof = assumed {* Because todo *} *)
 (*     ; *)
 
@@ -178,7 +178,7 @@ species Dichotomy (Nat is Dichotomic_system,
   representation = unit;
 
    (** f (x,f (...f (x,stop))) *)
-  let rec dichot (x in S, n in Nat) in S =
+  let rec dichot (x : S, n : Nat) : S =
      let n_2 = Nat!div2 (n) in
      if Nat!equal (n_2, Nat!zero)
      then

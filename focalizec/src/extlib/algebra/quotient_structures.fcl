@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: quotient_structures.fcl,v 1.5 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: quotient_structures.fcl,v 1.6 2009-06-25 10:11:49 weis Exp $ *)
 
 (**
    @title Quotient algebraic structures
@@ -54,13 +54,13 @@ species Additive_congruence (G is Additive_group) =
   inherit Equivalence_relation (G);
 
   (** additive compatibity *)
-  property plus_preserves_equiv: all x1 x2 y1 y2 in G,
+  property plus_preserves_equiv: all x1 x2 y1 y2 : G,
     !equiv (x1, x2) ->
       !equiv (y1, y2) ->
         !equiv (G!plus (x1, y1), G!plus (x2, y2));
 
   (** opposite compatibity *)
-  property opposite_preserves_equiv: all x1 x2 in G,
+  property opposite_preserves_equiv: all x1 x2 : G,
     !equiv (x1, x2) -> !equiv (G!opposite (x1), G!opposite (x2));
 
 end
@@ -78,14 +78,14 @@ species Additive_projections (G is Additive_group) =
   inherit Additive_congruence (G), Projections (G);
 
   (** additive compatibility *)
-  property additive_compatibility : all x y in G,
+  property additive_compatibility : all x y : G,
     G!equal (!reduce (G!plus (!reduce (x), !reduce (y))), !reduce (G!plus (x, y)));
 
   (** the equivalence relation is compatible with addition *)
   proof of plus_preserves_equiv =
-    <1>1 assume x1 in G, assume x2 in G, assume y1 in G, assume y2 in G,
-         assume Hx: !equiv (x1, x2),
-         assume Hy: !equiv (y1, y2),
+    <1>1 assume x1 : G, x2 : G, y1 : G, y2 : G,
+         hypothesis Hx: !equiv (x1, x2),
+         hypothesis Hy: !equiv (y1, y2),
          prove !equiv (G!plus (x1, y1), G!plus (x2, y2))
             <2>1 prove G!equal (!reduce (G!plus (x1, y1)), !reduce (G!plus (x2, y2)))
                  <3>1 prove
@@ -119,13 +119,13 @@ species Additive_projections (G is Additive_group) =
 
 
   (** opposite compatibility *)
-  property opposite_compatibility: all x in G,
+  property opposite_compatibility: all x : G,
     G!equal (!reduce (G!opposite (!reduce (x))), !reduce (G!opposite (x)));
 
   (** the equivalence relation is compatibile with opposite *)
   proof of opposite_preserves_equiv =
-   <1>1 assume x1 in G, assume x2 in G,
-        assume H: !equiv (x1, x2),
+   <1>1 assume x1 : G, x2 : G,
+        hypothesis H: !equiv (x1, x2),
         prove G!equal (!reduce (G!opposite (x1)), !reduce (G!opposite (x2)))
         <2>1 prove G!equal (!reduce (x1), !reduce (x2))
              by hypothesis H definition of equiv, morph
@@ -163,13 +163,13 @@ species Linear_projections (G is Additive_group) =
   inherit Additive_projections (G);
 
   (** the image by the projection is a submonoid *)
-  property reduce_is_additive: all x y in G,
+  property reduce_is_additive: all x y : G,
     G!equal (G!plus (!reduce (x), !reduce (y)),
             !reduce (G!plus (x, y)));
 
   (** This is conservative extension of the former *)
   proof of additive_compatibility =
-    <1>1 assume x in G, assume y in G,
+    <1>1 assume x : G, y : G,
          prove G!equal (!reduce (G!plus (!reduce (x), !reduce (y))),
        !reduce (G!plus (x, y)))
          <2>1 prove G!equal (G!plus (!reduce (x), !reduce (y)),
@@ -190,11 +190,11 @@ species Linear_projections (G is Additive_group) =
   ;
 
   (** The image by the projection is it's mirror *)
-  property reduce_preserves_opposite: all x in G,
+  property reduce_preserves_opposite: all x : G,
     G!equal (G!opposite (!reduce (x)), !reduce (G!opposite (x)));
 
   proof of opposite_compatibility =
-    <1>1 assume x in G,
+    <1>1 assume x : G,
          prove G!equal (!reduce (G!opposite (!reduce (x))),
                !reduce (G!opposite (x)))
          <2>1 prove G!equal (G!opposite (!reduce (x)), !reduce (G!opposite (x)))
@@ -227,7 +227,7 @@ species Quotient_group
           (* Definition from quotient_set take precedence *)
           Quotient_set (G, Proj);
 
-  let zero in Self = G!zero;
+  let zero : Self = G!zero;
 
   theorem zero_is_reduced: !correct_representation (!zero)
   proof =
@@ -245,9 +245,9 @@ species Quotient_group
     <1>2 qed by step <1>1 definition of to_rep, correct_representation
   ;
 
-  let plus (x in Self, y in Self) in Self = Proj!reduce (G!plus (x, y));
+  let plus (x : Self, y : Self) : Self = Proj!reduce (G!plus (x, y));
 
-  theorem plus_preserves_invariant: all x y in Self,
+  theorem plus_preserves_invariant: all x y : Self,
     !correct_representation (x) -> !correct_representation (y) ->
        !correct_representation (!plus (x, y))
     (* the sketch of the proof is simple:
@@ -258,11 +258,11 @@ species Quotient_group
     *)
     proof =
     (* this needs to be local since statement depends on rep *)
-    <1>1 prove all x in Self,
+    <1>1 prove all x : Self,
                  (* this is the invariant we use *)
                  !correct_representation (x) -> G!equal (Proj!reduce (x), x)
-         <2>1 assume x in Self,
-              assume H: !correct_representation (x),
+         <2>1 assume x : Self,
+              hypothesis H: !correct_representation (x),
               prove G!equal (Proj!reduce (x), x)
               <3>1 prove !represents_some_self (x)
                    by hypothesis H
@@ -272,11 +272,11 @@ species Quotient_group
               <3>f qed by step <3>2 definition of from_rep
          <2>f conclude
     (* this needs to be local since statement depends on rep *)
-    <1>2 prove all x in G,
+    <1>2 prove all x : G,
                  (* this is the invariant we use *)
                  G!equal (Proj!reduce (x), x) -> !correct_representation (x)
-         <2>1 assume x in G,
-              assume H: G!equal (Proj!reduce (x), x),
+         <2>1 assume x : G,
+              hypothesis H: G!equal (Proj!reduce (x), x),
               prove !correct_representation (x)
               <3>1 prove !represents_some_self (x)
                    by hypothesis H
@@ -285,7 +285,7 @@ species Quotient_group
                           definition of to_rep, correct_representation
          <2>f conclude
     (* this is where we do our work *)
-    <1>3 assume x in Self, assume y in Self,
+    <1>3 assume x : Self, y : Self,
          prove G!equal (Proj!reduce (!plus (x, y)), !plus (x, y))
          <2>1 prove G!equal (Proj!reduce (Proj!reduce (G!plus (x, y))),
             Proj!reduce (G!plus (x, y)))
@@ -298,8 +298,8 @@ species Quotient_group
    ;
 
   proof of plus_left_substitution_rule =
-    <1>1 assume x in Self, assume y in Self, assume z in Self,
-         assume H: !equal (x, y),
+    <1>1 assume x : Self, y : Self, z : Self,
+         hypothesis H: !equal (x, y),
          prove !equal (!plus (x, z), !plus (y, z))
          <2>1 prove G!equal (!plus (x, z), !plus (y, z))
               <3>1 prove G!equal (Proj!reduce (G!plus (x, z)),
@@ -318,12 +318,12 @@ species Quotient_group
     by property !plus_left_substitution_rule, !plus_commutes, !equal_transitive
   ;
 
-  theorem zero_is_left_neutral: all x in Self, !equal (!plus (!zero, x), x)
+  theorem zero_is_left_neutral: all x : Self, !equal (!plus (!zero, x), x)
     proof =
-    <1>1 prove all x in Self,
+    <1>1 prove all x : Self,
                  !correct_representation (x) -> G!equal (Proj!reduce (x), x)
-         <2>1 assume x in Self,
-              assume H: !correct_representation (x),
+         <2>1 assume x : Self,
+              hypothesis H: !correct_representation (x),
               prove G!equal (Proj!reduce (x), x)
               <3>1 prove !represents_some_self (x)
                    by hypothesis H
@@ -332,7 +332,7 @@ species Quotient_group
                    by step <3>1 definition of represents_some_self
               <3>f qed by step <3>2 definition of from_rep
          <2>f conclude
-    <1>2 assume x in Self,
+    <1>2 assume x : Self,
          prove G!equal (!plus (!zero, x), x)
          <2>1 prove !correct_representation (x)
               (* this is the invariant *)
@@ -383,7 +383,7 @@ species Quotient_group
 
   (* [rr]: this one is a little boring *)
   proof of plus_is_associative =
-    <1>2 assume x in Self, assume y in Self, assume z in Self,
+    <1>2 assume x : Self, y : Self, z : Self,
           prove G!equal (Proj!reduce (G!plus (x, Proj!reduce (G!plus (y, z)))),
         Proj!reduce (G!plus (Proj!reduce (G!plus (x, y)), z)))
           <2>1 prove G!equal (G!plus (x, G!plus (y, z)),
@@ -596,7 +596,7 @@ species Quotient_group
 
   proof of plus_commutes =
     (* does not depend on the invariant *)
-    <1>1 assume x in Self, assume y in Self,
+    <1>1 assume x : Self, y : Self,
          prove !equal (!plus (x, y), !plus (y, x))
          <2>1 prove G!equal (!plus (x, y), !plus (y, x))
               <3>1 prove G!equal (Proj!reduce (G!plus (x, y)),
@@ -610,14 +610,14 @@ species Quotient_group
     <1>2 conclude
   ;
 
-  let opposite (x in Self) in Self = Proj!reduce (G!opposite (x));
-  theorem opposite_preserves_invariant: all x in Self,
+  let opposite (x : Self) : Self = Proj!reduce (G!opposite (x));
+  theorem opposite_preserves_invariant: all x : Self,
     !correct_representation (x) -> !correct_representation (!opposite (x))
     proof =
-      <1>1 prove all x in G,
+      <1>1 prove all x : G,
                  G!equal (Proj!reduce (x), x) -> !correct_representation (x)
-           <2>1 assume x in G,
-                assume H: G!equal (Proj!reduce (x), x),
+           <2>1 assume x : G,
+                hypothesis H: G!equal (Proj!reduce (x), x),
                 prove !correct_representation (x)
                 <3>1 prove !represents_some_self (x)
                      by hypothesis H
@@ -625,7 +625,7 @@ species Quotient_group
                 <3>2 qed by step <3>1
                             definition of to_rep, correct_representation
            <2>f conclude
-      <1>2 assume x in Self,
+      <1>2 assume x : Self,
            prove G!equal (Proj!reduce (!opposite (x)), !opposite (x))
            <2>1 prove G!equal (Proj!reduce (Proj!reduce (G!opposite (x))),
               Proj!reduce (G!opposite (x)))
@@ -636,10 +636,10 @@ species Quotient_group
 
 
   proof of opposite_is_opposite =
-    <1>1 prove all x in Self,
+    <1>1 prove all x : Self,
                  !correct_representation (x) -> G!equal (Proj!reduce (x), x)
-         <2>1 assume x in Self,
-              assume H: !correct_representation (x),
+         <2>1 assume x : Self,
+              hypothesis H: !correct_representation (x),
               prove G!equal (Proj!reduce (x), x)
               <3>1 prove !represents_some_self (x)
                    by hypothesis H definition of to_rep, correct_representation
@@ -647,7 +647,7 @@ species Quotient_group
                    by step <3>1 definition of represents_some_self
               <3>f qed by step <3>2 definition of from_rep
          <2>f conclude
-    <1>3 assume x in Self,
+    <1>3 assume x : Self,
          prove !equal (!plus (x, !opposite (x)), !zero)
          (* use the invariant on x *)
          <2>1 prove G!equal (Proj!reduce (x), x)
@@ -704,25 +704,25 @@ species Reduced_group (G is Additive_group, Proj is Linear_projections (G)) =
   let plus (x, y) = G!plus (x, y);
 
   proof of plus_left_substitution_rule =
-    <1>1 assume x in Self, assume y in Self, assume z in Self,
-         assume H: G!equal (x, y),
+    <1>1 assume x : Self, y : Self, z : Self,
+         hypothesis H: G!equal (x, y),
          prove G!equal (G!plus (x, z), G!plus (y, z))
          by hypothesis H property G!plus_left_substitution_rule
     <1>2 qed by step <1>1 definition of equal, plus
   ;
 
   proof of plus_preserves_invariant =
-    <1>0 prove all x in Self,
+    <1>0 prove all x : Self,
          !correct_representation (x) -> G!equal (Proj!reduce (x), x)
          by definition of correct_representation, to_rep,
                           represents_some_self, from_rep
-    <1>1 prove all x in Self,
+    <1>1 prove all x : Self,
          G!equal (Proj!reduce (x), x) -> !correct_representation (x)
          by definition of correct_representation, to_rep,
                           represents_some_self, from_rep
-    <1>2 assume x in Self, assume y in Self,
-         assume Hx: !correct_representation (x),
-         assume Hy: !correct_representation (y),
+    <1>2 assume x : Self, y : Self,
+         hypothesis Hx: !correct_representation (x),
+         hypothesis Hy: !correct_representation (y),
          prove !correct_representation (G!plus (x, y))
          <2>1 prove G!equal (x, Proj!reduce (x))
               by hypothesis Hx step <1>0 property G!equal_symmetric
@@ -742,7 +742,7 @@ species Reduced_group (G is Additive_group, Proj is Linear_projections (G)) =
   ;
 
   proof of zero_is_left_neutral =
-    <1>1 assume x in Self,
+    <1>1 assume x : Self,
          prove G!equal (G!plus (G!zero, x), x)
          by property G!zero_is_neutral
     <1>2 qed by step <1>1 definition of equal, plus, zero
@@ -760,7 +760,7 @@ species Reduced_group (G is Additive_group, Proj is Linear_projections (G)) =
   let opposite (x) = G!opposite (x);
 
   proof of opposite_is_opposite =
-    <1>1 assume x in Self,
+    <1>1 assume x : Self,
          prove G!equal (G!plus (x, G!opposite (x)), G!zero)
          by property G!opposite_is_opposite, G!is_zero_spec,
                      G!equal_reflexive, G!equal_symmetric, G!equal_transitive
@@ -769,18 +769,18 @@ species Reduced_group (G is Additive_group, Proj is Linear_projections (G)) =
   ;
 
   proof of opposite_preserves_invariant =
-    <1>0 prove all x in Self,
+    <1>0 prove all x : Self,
          !correct_representation (x) -> G!equal (Proj!reduce (x), x)
          by definition of correct_representation, to_rep,
                           represents_some_self, from_rep
-    <1>1 prove all x in Self,
+    <1>1 prove all x : Self,
          G!equal (Proj!reduce (x), x) -> !correct_representation (x)
          by definition of correct_representation, to_rep,
                           represents_some_self, from_rep
-    <1>2 prove all x in Self,
+    <1>2 prove all x : Self,
             !correct_representation (x) -> !correct_representation (!opposite (x))
-         <2>1 assume x in Self,
-              assume H: !correct_representation (x),
+         <2>1 assume x : Self,
+              hypothesis H: !correct_representation (x),
               prove G!equal (Proj!reduce (G!opposite (x)),
             G!opposite (x))
               <3>1 prove G!equal (Proj!reduce (x), x)
@@ -811,7 +811,7 @@ species Projector_along_ideal (R is Commutative_ring) =
   inherit Additive_projections (R);
 
   (** multiplicative compatibility *)
-  property reduce_preserves_multiplication : all x y in R,
+  property reduce_preserves_multiplication : all x y : R,
     R!equal (!reduce (R!mult (x, y)), !reduce (R!mult (!reduce (x), !reduce (y))));
 
   property reduce_preserves_one : R!equal (!reduce (R!one), R!one);
@@ -846,14 +846,14 @@ species Quotient_ring
 
   inherit Commutative_ring, Quotient_group (R, Proj);
 
-  let one in Self = R!one;
+  let one : Self = R!one;
 
   theorem one_is_reduced: !correct_representation (!one)
     proof =
-    <1>1 prove all x in R,
+    <1>1 prove all x : R,
                  R!equal (Proj!reduce (x), x) -> !correct_representation (x)
-         <2>1 assume x in R,
-              assume H: R!equal (Proj!reduce (x), x),
+         <2>1 assume x : R,
+              hypothesis H: R!equal (Proj!reduce (x), x),
               prove !correct_representation (x)
               <3>1 prove !represents_some_self (x)
                    by hypothesis H
@@ -865,18 +865,18 @@ species Quotient_ring
     <1>3 qed by step <1>1, <1>2 definition of one
   ;
 
-  let is_one (x in Self) = R!is_one (x);
-  let mult (x in Self, y in Self) in Self = Proj!reduce (R!mult (x, y));
+  let is_one (x : Self) = R!is_one (x);
+  let mult (x : Self, y : Self) : Self = Proj!reduce (R!mult (x, y));
 
-  theorem mult_preserves_invariant: all x y in Self,
+  theorem mult_preserves_invariant: all x y : Self,
     !correct_representation (x) -> !correct_representation (y) ->
       !correct_representation (!mult (x, y))
     proof =
     (* this needs to be local since statement depends on rep *)
-    <1>1 prove all x in Self,
+    <1>1 prove all x : Self,
                  !correct_representation (x) -> R!equal (Proj!reduce (x), x)
-         <2>1 assume x in Self,
-              assume H: !correct_representation (x),
+         <2>1 assume x : Self,
+              hypothesis H: !correct_representation (x),
               prove R!equal (Proj!reduce (x), x)
               <3>1 prove !represents_some_self (x)
                    by hypothesis H definition of to_rep, correct_representation
@@ -885,10 +885,10 @@ species Quotient_ring
               <3>f qed by step <3>2 definition of from_rep
          <2>f conclude
     (* this needs to be local since statement depends on rep *)
-    <1>2 prove all x in R,
+    <1>2 prove all x : R,
                  R!equal (Proj!reduce (x), x) -> !correct_representation (x)
-         <2>1 assume x in R,
-              assume H: R!equal (Proj!reduce (x), x),
+         <2>1 assume x : R,
+              hypothesis H: R!equal (Proj!reduce (x), x),
               prove !correct_representation (x)
               <3>1 prove !represents_some_self (x)
                    by hypothesis H
@@ -896,7 +896,7 @@ species Quotient_ring
               <3>2 qed by step <3>1 definition of to_rep, correct_representation
          <2>f conclude
     (* this is where we do our work *)
-    <1>3 assume x in Self, assume y in Self,
+    <1>3 assume x : Self, y : Self,
          prove R!equal (Proj!reduce (!mult (x, y)), !mult (x, y))
          <2>1 prove R!equal (Proj!reduce (Proj!reduce (R!mult (x, y))),
             Proj!reduce (R!mult (x, y)))
@@ -931,10 +931,10 @@ species Quotient_ring
 
   proof of one_is_left_neutral =
     (* this needs to be local since statement depends on rep *)
-    <1>1 prove all x in Self,
+    <1>1 prove all x : Self,
                  !correct_representation (x) -> R!equal (Proj!reduce (x), x)
-         <2>1 assume x in Self,
-              assume H: !correct_representation (x),
+         <2>1 assume x : Self,
+              hypothesis H: !correct_representation (x),
               prove R!equal (Proj!reduce (x), x)
               <3>1 prove !represents_some_self (x)
                    by hypothesis H definition of to_rep, correct_representation
@@ -943,10 +943,10 @@ species Quotient_ring
               <3>f qed by step <3>2 definition of from_rep
          <2>f conclude
     (* this needs to be local since statement depends on rep *)
-    <1>2 prove all x in R,
+    <1>2 prove all x : R,
                  R!equal (Proj!reduce (x), x) -> !correct_representation (x)
-         <2>1 assume x in R,
-              assume H: R!equal (Proj!reduce (x), x),
+         <2>1 assume x : R,
+              hypothesis H: R!equal (Proj!reduce (x), x),
               prove !correct_representation (x)
               <3>1 prove !represents_some_self (x)
                    by hypothesis H
@@ -954,7 +954,7 @@ species Quotient_ring
               <3>2 qed by step <3>1 definition of to_rep, correct_representation
          <2>f conclude
     (* this is where we do our work *)
-    <1>3 assume x in Self,
+    <1>3 assume x : Self,
          prove !equal (!mult (!one, x), x)
          <2>1 prove !equal (Proj!reduce (R!mult (R!one, x)), x)
               <3>1 prove R!equal (Proj!reduce (R!mult (R!one, x)), x)
@@ -1012,8 +1012,8 @@ species Projector_along_principal_ideal (R is Euclidean_domain) =
   let reduce (x) = R!remainder (x, !ideal_generator);
 
   proof of reduce_substitution_rule =
-    <1>1 assume x in R, assume y in R,
-         assume H: R!equal (x, y),
+    <1>1 assume x : R, y : R,
+         hypothesis H: R!equal (x, y),
          prove R!equal (R!remainder (x, !ideal_generator),
                R!remainder (y, !ideal_generator))
          by hypothesis H
@@ -1031,7 +1031,7 @@ species Projector_along_principal_ideal (R is Euclidean_domain) =
 
 
   proof of reduce_is_projection =
-     <1>1 assume x in R,
+     <1>1 assume x : R,
           prove R!equal (R!remainder (R!remainder (x, !ideal_generator),
             !ideal_generator),
         R!remainder (x, !ideal_generator))
@@ -1061,7 +1061,7 @@ species Projector_along_principal_ideal (R is Euclidean_domain) =
   ;
 
   proof of additive_compatibility =
-     <1>1 assume x in R, assume y in R,
+     <1>1 assume x : R, y : R,
           prove R!equal (R!remainder (R!plus (R!remainder (x, !ideal_generator),
            R!remainder (y, !ideal_generator)),
             !ideal_generator),
@@ -1070,7 +1070,7 @@ species Projector_along_principal_ideal (R is Euclidean_domain) =
      <1>2 qed by step <1>1 definition of reduce;
 
   proof of opposite_compatibility =
-     <1>1 assume x in R,
+     <1>1 assume x : R,
           prove R!equal (R!remainder (R!opposite (R!remainder (x,
            !ideal_generator)),
             !ideal_generator),
@@ -1079,7 +1079,7 @@ species Projector_along_principal_ideal (R is Euclidean_domain) =
      <1>f qed by step <1>1 definition of reduce;
 
   proof of reduce_preserves_multiplication =
-     <1>1 assume x in R, assume y in R,
+     <1>1 assume x : R, y : R,
           prove R!equal (R!remainder (R!mult (R!remainder (x, !ideal_generator),
            R!remainder (y, !ideal_generator)),
             !ideal_generator),
@@ -1174,7 +1174,7 @@ species Modular_field
   proof of mult_is_integral = assumed {* *};
 
   (** we define inversion and divison from inversion *)
-  let inv (x in Self) in Self =
+  let inv (x : Self) : Self =
     let res = R!bezout (x, Proj!ideal_generator) in
     let g = weak_structures#gcd (res) in
     let c1 = weak_structures#coef1 (res) in

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: product_structures.fcl,v 1.11 2009-06-25 10:00:02 weis Exp $ *)
+(* $Id: product_structures.fcl,v 1.12 2009-06-25 10:11:49 weis Exp $ *)
 
 (** Cartesian product of two structures, common orderings. *)
 
@@ -64,24 +64,18 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
     ;
 
   proof of plus_right_substitution_rule =
-    <1>0 assume a1 : M1,
-         assume b1 : M1,
-         assume c1 : M1,
-         assume a2 : M2,
-         assume b2 : M2,
-         assume c2 : M2,
-         assume H1: M1!equal (b1, c1),
-         assume H2: M2!equal (b2, c2),
+    <1>0 assume a1 : M1, b1 : M1, c1 : M1,
+                a2 : M2, b2 : M2, c2 : M2,
+         hypothesis H1: M1!equal (b1, c1),
+         hypothesis H2: M2!equal (b2, c2),
          prove !equal (!pair (M1!plus (a1, b1), M2!plus (a2, b2)),
                        !pair (M1!plus (a1, c1), M2!plus (a2, c2)))
          by hypothesis H1, H2
             property M1!plus_right_substitution_rule,
                      M2!plus_right_substitution_rule,
                      !pair_substitution_rule
-    <1>1 assume a : Self,
-         assume b : Self,
-         assume c : Self,
-         assume H: !equal (b, c),
+    <1>1 assume a : Self, b : Self, c : Self,
+         hypothesis H: !equal (b, c),
          prove !equal (!plus (a, b), !plus (a, c))
          <2>1 prove  M1!equal (!first (b), !first (c))
               by hypothesis H property !equal_spec
