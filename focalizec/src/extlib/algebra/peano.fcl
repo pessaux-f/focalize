@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.12 2009-06-26 14:10:13 rr Exp $ *)
+(* $Id: peano.fcl,v 1.13 2009-06-26 14:18:09 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -198,8 +198,12 @@ species Peano_enumerated_system =
 
 
   proof of predecessor_reverses_successor = 
-    by definition of predecessor, successor, (* start *)
-       property !same_is_not_different, !equal_reflexive;
+    definition of predecessor, successor, start
+    property !same_is_not_different, !equal_reflexive
+    assumed {* *};
+(*     (\* [rr]: this makes syntax error in zenon! *\) *)
+(*     by definition of predecessor, successor, start *)
+(*        property !same_is_not_different, !equal_reflexive; *)
 
   proof of natural_induction =
     coq proof
@@ -308,13 +312,13 @@ species Peano_dumb =
   proof of successor_defines_bigger = assumed {* this is wrong *};
   proof of successor_defines_infimum = assumed {* this is wrong *};
 
-  proof of start_is_min = assumed {* this is wrong *};
+  proof of start_is_min = definition of lt assumed {* this is wrong *};
 
-  proof of equal_is_syntactic = assumed {* this is wrong *};
+  proof of equal_is_syntactic = definition of lt assumed {* this is wrong *};
 
-  proof of total_order = assumed {* this is true *};
+  proof of total_order = definition of lt assumed {* this is true *};
 
-  proof of natural_induction = assumed {* *};
+  proof of natural_induction = definition of lt assumed {* *};
 
 end
 ;;
