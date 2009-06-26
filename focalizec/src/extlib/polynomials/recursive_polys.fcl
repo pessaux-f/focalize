@@ -63,11 +63,11 @@ species Recursive_indexed_bag(E is Setoid_with_zero,
   representation = recursive_representation(E, I);
 
   (* [rr]: once equality d_eq is abstracted there is no recursivity *)
-  let my_equal(d_eq in (distributed_representation(Self, I) 
+  let my_equal(d_eq : (distributed_representation(Self, I) 
                          -> distributed_representation(Self, I) 
                              -> bool),
-	       x in Self,
-	       y in Self) =
+	       x : Self,
+	       y : Self) =
     match x with
     | Base(xb) ->
 	(match y with
@@ -90,9 +90,9 @@ species Recursive_indexed_bag(E is Setoid_with_zero,
 
   let equal(x, y) = !r_eq(x, y);
 
-  let zero in Self = Base(E!zero);
+  let zero : Self = Base(E!zero);
 
-  let is_zero(x in Self) = match x with
+  let is_zero(x : Self) = match x with
   | Base(m) -> E!is_zero(m)
   | Composed(_, _) -> false;
 
@@ -185,14 +185,14 @@ species Recursive_indexed_sum(M is Additive_group,
      Thus the code involves no direct recursion.
      Code is fully typed for safety reasons.
    *)
-  let my_plus(pol_plus in  
+  let my_plus(pol_plus :  
                 distributed_representation(Self, D) ->  
                   distributed_representation(Self, D) ->  
                      distributed_representation(Self, D),
-	       pol_lift in Self ->  distributed_representation(Self, D),
-	       pol_const in  distributed_representation(Self, D) -> bool, 
-               pol_lc in  distributed_representation(Self, D) -> Self, 
-               x in Self, y in Self) in Self =
+	       pol_lift : Self ->  distributed_representation(Self, D),
+	       pol_const :  distributed_representation(Self, D) -> bool, 
+               pol_lc :  distributed_representation(Self, D) -> Self, 
+               x : Self, y : Self) : Self =
     match x with
     | Base(xb) -> 
 	(match y with
@@ -269,7 +269,7 @@ end;;
 (*         if the degree of up is strictly positive  *)
 (*         then Composed(s,ul,p) is a valid rep *)
 (*     *\) *)
-(*    sig generator in string -> v -> self; *)
+(*    sig generator : string -> v -> self; *)
 (*   (\* added to facilitate syntax extensions for parsing polynomials *\)  *)
 (*   let ring_parse = r!parse; *)
 (*   let degre_parse = v!parse;   *)
@@ -330,7 +330,7 @@ end;;
 (*    proof of equal_symmetric = assumed; *)
 (*    proof of equal_transitive = assumed; *)
 
-(*    local let rec up_mult(a,p) in self =  *)
+(*    local let rec up_mult(a,p) : self =  *)
 (*      match p with *)
 (*       | #Base(b) -> #Base(r!mult(a,b)) *)
 (*       | #Composed(s,p) -> *)
@@ -338,7 +338,7 @@ end;;
 (*         #Composed(s,#map(mul_mon,p)) *)
 (*      end; *)
 
-(*    local let rec map_quo(p in self,b,lres) =  *)
+(*    local let rec map_quo(p : self,b,lres) =  *)
 (*     match p with *)
 (*      | #Base(a) ->  *)
 (*        match lres with  *)
@@ -378,7 +378,7 @@ end;;
 (*    proof of lift_is_injective = assumed; *)
 (*    proof of module_exquo_divides = assumed ; *)
 
-(*    let generator(s,d) in self =  *)
+(*    let generator(s,d) : self =  *)
 (*       if v!is_zero(d)  *)
 (*       then #Base(r!one) *)
 (*       else #Composed(s,#Cons(#crp(#Base(r!one),d),#Nil)); *)
@@ -387,12 +387,12 @@ end;;
 (*        updom is  (\*distributed_polynomials_com_ring(self,v)*\) *)
 (*                 formal_polynomials_commutative_ring(self,v)= *)
 (*                 distributed_polynomials_com_ring(self,v) *)
-(*    and print(p in self) =  *)
+(*    and print(p : self) =  *)
 (*       match p with *)
 (*        | #Base(n) -> r!print(n) *)
 (*        | #Composed(s,p) -> #sc(#sc("(",self!updom!output(p,s)),")") *)
 (*       end *)
-(*    and univariate(p in self, var) in self!updom =  *)
+(*    and univariate(p : self, var) : self!updom =  *)
 (*       match p with *)
 (*        | #Base(n) -> !updom!lift(p) *)
 (*        | #Composed(s,pp) ->  *)
@@ -540,7 +540,7 @@ end;;
 (*     nat!lt(!degree(p),!degree(q)); *)
 
 
-(*   sig fmecg in self -> r -> nat -> self -> self; *)
+(*   sig fmecg : self -> r -> nat -> self -> self; *)
 
 (*    (\* Ajout de BIBIN Lazar *\) *)
 (*    let unit_canonical(p) =  *)

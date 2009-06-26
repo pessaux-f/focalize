@@ -11,7 +11,7 @@ species Formal_univariate_polynomials_commutative_ring
   inherit Formal_polynomials_commutative_ring (R, N);
 
 (*   (\** a derivation rule *\) *)
-(*   let differentiate in self -> self = *)
+(*   let differentiate : self -> self = *)
 (*     let pred (n) = nat!predecessor (n) in *)
 (*     let lc (p) = self!leading_coefficient (p) in *)
 (*     let reductum (p) = self!reductum (p) in *)
@@ -37,15 +37,10 @@ species Formal_univariate_polynomials_commutative_ring
 
 end;;
 
-(* species Sparse_univarioate_polynomials_commutative_ring (R, N) = *)
-(*   inherit Formal_polynomials_commutative_ring; *)
-
-(* end;; *)
-
 (* type pdiv_res b = caml pdiv_res; ;; *)
-(* let cr_pr (x in 'b, y in 'b) in pdiv_res ('b) = caml cr_pr;; *)
-(* let pdiv_quo (x in pdiv_res ('b)) in 'b = caml pq;; *)
-(* let pdiv_res (x in pdiv_res ('b)) in 'b = caml pr;; *)
+(* let cr_pr (x : 'b, y : 'b) : pdiv_res ('b) = caml cr_pr;; *)
+(* let pdiv_quo (x : pdiv_res ('b)) : 'b = caml pq;; *)
+(* let pdiv_res (x : pdiv_res ('b)) : 'b = caml pr;; *)
 
 -- open "iterators";;
 (** Univariate abstract polynomials over an integral domain *)
@@ -54,18 +49,18 @@ species Formal_univariate_polynomials_integral_domain
   inherit Formal_polynomials_integral_domain(R, N),
           Formal_univariate_polynomials_commutative_ring(R, N);
 (*   (\** pseudo division of two polynomials*\) *)
-(*   sig pseudo_divide in self -> self -> pdiv_res (self); *)
+(*   sig pseudo_divide : self -> self -> pdiv_res (self); *)
 
 (*   (\*[rr]:   try to lift next 3 to dichotomy *\) *)
 (*   local let pow (c, n) = *)
 (*     let dicho = monoid_as_power (nat, r) in *)
 (*     dicho!expt (c, n); *)
 
-(*   local theorem pow_0: all c in r, *)
+(*   local theorem pow_0: all c : r, *)
 (*     r!equal (r!one, !pow (c, nat!zero)) *)
 (*     proof = assumed; *)
 
-(*   local theorem pow_ind: all c in r, all n in nat, *)
+(*   local theorem pow_ind: all c : r, all n : nat, *)
 (*     r!equal (!pow (c, nat!successor (n)), r!mult (c, !pow (c, n))) *)
 (*     proof = assumed; *)
 
@@ -86,7 +81,7 @@ species Formal_univariate_polynomials_integral_domain
     and we have
      lc (Q)^ (|P| -|Q| + 1) P = pquo (p, q) Q + prem (P, Q)
    *)
-  property pseudo_divide_relation: all p q in Self,
+  property pseudo_divide_relation: all p q : Self,
     !is_zero (q)
       \/
     !equal (!plus (!mult (!pseudo_quotient (p, q),
@@ -97,7 +92,7 @@ species Formal_univariate_polynomials_integral_domain
 						       !degree (q)))),
 			p));
 		 
-  property pseudo_remainder_has_lower_degree: all p q r in Self,
+  property pseudo_remainder_has_lower_degree: all p q r : Self,
     ~(!is_zero (q)) -> !equal (r, !pseudo_remainder (p, q)) ->
        ~(!is_zero (r)) -> N!lt (!degree (r), !degree (q))
     ;
@@ -110,7 +105,7 @@ end;;
 (* *\) *)
 (* species algebre_indexee_karatsuba *)
 (*     (r is commutative_ring, *)
-(*      int_coll is small_naturals,i in int_coll) *)
+(*      int_coll is small_naturals,i : int_coll) *)
 (*   inherits formal_univariate_polynomials_com_ring(r,int_coll), *)
 (*            distributed_polynomials_com_ring(r,int_coll) = *)
 
@@ -128,10 +123,10 @@ end;;
          
 (*      (\* coupe le polymome en p en deux : p1 et p2 tels que p = p1 + X^d.p2*\)  *)
 (*      (\* np1 : nbre de monome de p1; dp1 : degre de p1                     *\) *)
-(*      let coupe (p in self, d) =  *)
+(*      let coupe (p : self, d) =  *)
 (*        let ilt = int_coll!lt in *)
 (*        let iminus  = int_coll!minus in *)
-(*        let rec coupe (p1 in self, p2 in self) = *)
+(*        let rec coupe (p1 : self, p2 : self) = *)
 (*          match p1 with *)
 (*            |#Nil -> #crp(#Nil, #rev(p2)) *)
 (*            |#Cons(hp1, tp1) -> *)
@@ -149,7 +144,7 @@ end;;
 (*      let iun  = int_coll!one in *)
      
 (*      (\* [rr]: ca a l' air bien foireux, il faudrait revoir *\) *)
-(*      let rec kara(p in self, q in self) in self =  *)
+(*      let rec kara(p : self, q : self) : self =  *)
 (*       (\* match p with *)
 (*        |#Nil -> #Nil *)
 (*        |#Cons(hp, tp) ->  *)
@@ -430,7 +425,7 @@ end;;
 (* 	else next_non_def(alpha,psi,smdiv(smmult(alpha,def_0),psi),pred(delta)) *)
 (*      in next_non_def(alpha,psi,def_0,delta) ; *)
 (* (\* *)
-(*   let next_def(p in pol,q in pol,alpha,psi,delta) in pol= *)
+(*   let next_def(p : pol,q : pol,alpha,psi,delta) : pol= *)
 (*      let smdiv (p,a) = let res = pol!module_exquo(p,a) in *)
 (*        if #is_failed(res) then #foc_error("smdiv") else #non_failed(res) in *)
 (*      let prem(p,q) = pol!pseudo_reste(p,q) in  *)
@@ -438,7 +433,7 @@ end;;
 (* *\) *)
 
 (*   (\** prem(p,q)/(alpha psi^delta) Loos method *\) *)
-(*   let next_defective(p in pol,q in pol,alpha,psi,delta) =  *)
+(*   let next_defective(p : pol,q : pol,alpha,psi,delta) =  *)
 (*      let rmult (x,y) = r!mult(x,y) in *)
 (*      let rexpt =  *)
 (*        let pow = monoid_as_power(int_coll, r) in *)
@@ -542,7 +537,7 @@ end;;
 
 
 (*   (\** Loos 1982 algorithm *\) *)
-(*   let resultant(p in pol ,q in pol ) = *)
+(*   let resultant(p : pol ,q : pol ) = *)
 (*      let degree(p) = pol!degree(p) in *)
 (*      let lc(p) = pol!leading_coefficient(p) in *)
 (*      let un = r!one in *)
@@ -586,7 +581,7 @@ end;;
 (*       pol is formal_univariate_polynomials_com_ring(r,nat), *)
 (* (\*      pol is algebre_indexee(r*degs), *\) *)
 (*       r1 is commutative_ring, *)
-(*       lift in r -> r1) *)
+(*       lift : r -> r1) *)
 (*   inherits basic_object = *)
 (*   rep = unit ; *)
 

@@ -43,17 +43,17 @@ species Indexed_bag(I is Ordered_set_with_zero, E is Setoid_with_zero) =
   
   let zero = Null;
 
-  let monomial(x in E, d in I) in Self= 
+  let monomial(x : E, d : I) : Self= 
     if E!is_zero(x)
     then Null
     else NonNull(x, d, Null);
 
-  let leading_coefficient(x in Self) = match x with
+  let leading_coefficient(x : Self) = match x with
     | Null -> E!zero
     | NonNull(m, _, _) -> m;
 
   (** Usually degree is not specified on 0 *)
-  let degree(x in Self) = match x with
+  let degree(x : Self) = match x with
     | Null -> I!zero
     | NonNull(_, d, _) -> d;
 
@@ -97,8 +97,8 @@ species Indexed_sum(I is Monomial_ordering, M is Additive_group) =
 (*     match a with  *)
 (*       #Nil -> "" *)
 (*     | #Cons(mon, l) ->  *)
-(*        let other = self!p(l) in  	 *)
-(*        let coef in m = #first(mon) in let dg in i = #scnd(mon) in *)
+(*        let other = self!p(l) :  	 *)
+(*        let coef : m = #first(mon) in let dg : i = #scnd(mon) in *)
 (*        let print_mon = *)
 (* 	  #sc(m!print(coef), *)
 (* 	      #sc("* x**", *)
@@ -142,7 +142,7 @@ species Distributed_polynomials_commmutative_ring
   inherit Formal_polynomials_commutative_ring(R, D),
           Indexed_sum(D, R);
 
-   let rec monomial_multiply(c in R, d in D, p in Self) in Self = match p with
+   let rec monomial_multiply(c : R, d : D, p : Self) : Self = match p with
      | Null -> Null
      | NonNull(cp, dp, pp) ->
 	 let r = R!mult(c, cp) in
@@ -182,10 +182,10 @@ species Distributed_polynomials_commmutative_ring
 (*         self!fmecg(r,c,d,p) *)
 (*      in lists_foc#fold_right(f,ql,#Nil); *)
     
-(*   local let rec i_output(liste in self, *)
-(* 			 coef in r, *)
-(* 			 deg in d, *)
-(* 			 v_name in string) in string =  *)
+(*   local let rec i_output(liste : self, *)
+(* 			 coef : r, *)
+(* 			 deg : d, *)
+(* 			 v_name : string) : string =  *)
 (*     let p_name = *)
 (*        if #base_eq(v_name, "") *)
 (*        then "" *)
@@ -209,7 +209,7 @@ species Distributed_polynomials_commmutative_ring
 (* 					  v_name))))))) *)
 (*     end; *)
 
-(*   let output (x in self,c in string)= *)
+(*   let output (x : self,c : string)= *)
 (*       match x with *)
 (*         #Nil -> "0" *)
 (*       | #Cons(a,l) ->  *)
@@ -234,8 +234,8 @@ species Distributed_polynomials_commmutative_ring
 (*   proof of module_mult_compat = assumed ; *)
 (*   (\** fmecg : f multiply exponent coefficient g **\)   *)
 (*   (\** fmecg(P, a, n, Q) = P + aX^n Q            **\) *)
-(*   let fmecg in (self -> r -> d -> self -> self ) = *)
-(*      (\* (p in self,a,n,q in self) in self = *\) *)
+(*   let fmecg : (self -> r -> d -> self -> self ) = *)
+(*      (\* (p : self,a,n,q : self) : self = *\) *)
 (*      let rm(x,y) = r!mult(x,y) in *)
 (*      let rp(x,y) = r!plus(x,y) in *)
 (*      let is_zero(x) = r!is_zero(x) in *)
@@ -372,7 +372,7 @@ species Distributed_polynomials_integral_domain
 (*           in #map(foo,p); *)
 
    (** assumes c <> 0*) 
-   let rec monomial_multiply(c in R, d in D, p in Self) in Self = match p with
+   let rec monomial_multiply(c : R, d : D, p : Self) : Self = match p with
      | Null -> Null
      | NonNull(cp, dp, pp) ->
 	 NonNull(R!mult(c, cp), D!plus(d, dp), monomial_multiply(c, d, pp));
@@ -392,7 +392,7 @@ species Distributed_polynomials_integral_domain
 (*      let is_zero(x) = rng!is_zero(x) in *)
 (*      let opp(p) = rng!opposite(p) in *)
 (*      (\* let int_minus(x,y) = non_failed(int_coll.minus(x,y)) in *\) *)
-(*      let rec e_quo(p in self,cq,dq,q in self ,res in self) in partiel(self) = *)
+(*      let rec e_quo(p : self,cq,dq,q : self ,res : self) : partiel(self) = *)
 (*        let dp = degree(p) in *)
 (*        let cp = lc(p) in *)
 (*        if is_zero(cp) then *)
