@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.11 2009-06-08 15:35:39 pessaux Exp $ *)
+(* $Id: peano.fcl,v 1.12 2009-06-26 14:10:13 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -52,11 +52,11 @@ species Enumeration_system =
   signature successor : Self -> Self;
 
   (** Compatibility with equality *)
-  property successor_substitution_rule: all x y in Self,
+  property successor_substitution_rule: all x y : Self,
    !equal (x, y) -> !equal (!successor(x), !successor(y));
 
   (** Injectivity of successor is a Peano axiom *)
-  property successor_is_injective: all x y in Self,
+  property successor_is_injective: all x y : Self,
      !equal (!successor(x), !successor(y)) -> !equal (x, y);
 
 end
@@ -80,6 +80,11 @@ species Peano_enumeration_system =
 
   representation = peano;
 
+  let equal(x, y) = (x = y);
+  proof of equal_reflexive = by definition of equal;
+  proof of equal_is_syntactic = by definition of equal;
+
+  let start = P_zero;
   let successor(x) = P_succ(x);
 
   (**
@@ -89,39 +94,30 @@ species Peano_enumeration_system =
    by definition of successor
       property equal_reflexive, equal_is_syntactic;
 
-  theorem equal_very_reflexive: all x y in Self, (x = y) -> !equal(x, y)
-    proof = by property !equal_reflexive;
+(*   theorem equal_very_reflexive: all x y in Self, (x = y) -> !equal(x, y) *)
+(*     proof = by property !equal_reflexive; *)
 
   proof of successor_is_injective =
-    <1>0 prove all x y in peano, (P_succ(x) = P_succ(y)) -> (x = y)
-         assumed {* by type peano *}
-(*
-         assumed {* should be injectivity of constructor, needs Coq *}
-*)
-    <1>1 assume x in Self, assume y in Self,
-         assume H: !equal(!successor(x), !successor(y)),
+    <1>0 prove all x y : peano, (P_succ(x) = P_succ(y)) -> (x = y)
+         by type peano
+    <1>1 assume x : Self, y : Self,
+         hypothesis H: !equal(!successor(x), !successor(y)),
          prove !equal(x, y)
          <2>1 prove P_succ(x) = P_succ(y)
               by hypothesis H
                  definition of successor
                  property equal_is_syntactic
          <2>f qed
-              (* [rr]: time limit!   *)
-              (* by step <2>1, <1>0 property !equal_very_reflexive *)
-              (* [rr]: exhausted! *)
               by step <2>1, <1>0 property !equal_reflexive
-(*               property equal_reflexive *)
-(*               assumed {*  *} *)
-(*               coq proof *)
-(*               property !equal_reflexive *)
-(*               {* apply coq_builtins.magic_prove. Qed. *} *)
     <1>f conclude;
-(*          qed assumed {* __A_1_LEMMA not found *}; *)
 
 
 end
 ;;
 
+collection Peano_enumeration = 
+  implement Peano_enumeration_system;
+end;;
 
 (**
    An abstract enumeration system is a system that could be obtained
@@ -132,7 +128,7 @@ species Enumerated_system =
   inherit Enumeration_system, Partial_set;
 
   (** Zero is not a successor is a Peano axiom *)
-  property successor_is_non_trivial: all n in Self,
+  property successor_is_non_trivial: all n : Self,
     !different(!successor (n), !start);
 
   (**
@@ -140,23 +136,23 @@ species Enumerated_system =
      This makes sense because predecessor is injective.
    *)
   signature predecessor : Self -> Self;
-  property predecessor_reverses_successor : all x y in Self,
+  property predecessor_reverses_successor : all x y : Self,
      !different(y, !start) ->
        !equal (x, !predecessor(y)) ->
          !equal (y, !successor(x));
 
   (** Weak injectivity of predecessor is a Peano axiom *)
-  theorem predecessor_is_injective: all n m in Self,
+  theorem predecessor_is_injective: all n m : Self,
     !different(n, !start) -> !different (m, !start) ->
       !equal (!predecessor (n), !predecessor (m)) -> !equal (n, m)
     proof =
-    <1>1 assume x in Self, assume y in Self,
-         assume H_x: !different(x, !start),
-         assume H_y: !different(y, !start),
+    <1>1 assume x : Self, y : Self, px : Self, py : Self,
+         hypothesis H_x: !different(x, !start),
+         hypothesis H_y: !different(y, !start),
          (* sort of let *)
-         assume px in Self, assume Px: px = !predecessor(x),
-         assume py in Self, assume Py: py = !predecessor(y),
-         assume H: !equal(!predecessor(x), !predecessor(y)),
+         hypothesis Px: px = !predecessor(x),
+         hypothesis Py: py = !predecessor(y),
+         hypothesis H: !equal(!predecessor(x), !predecessor(y)),
          prove !equal(x, y)
          <2>1 prove !equal(px, py)
               by hypothesis H, Px, Py
@@ -175,12 +171,58 @@ species Enumerated_system =
 
 
   (** An induction principle for natural numbers *)
-  logical let enumerated_induction(p in (Self -> bool)) =
-    p (!start) -> (all n in Self, p (n) -> p (!successor (n)))
-      -> (all n in Self, p (n));
+  logical let enumerated_induction(p : (Self -> bool)) =
+    p (!start) -> (all n : Self, p (n) -> p (!successor (n)))
+      -> (all n : Self, p (n));
+
+  property natural_induction: all p : Self -> bool, enumerated_induction(p);
 
 end
 ;;
+
+species Peano_enumerated_system =
+  inherit Peano_enumeration_system,
+          Enumerated_system;
+
+  proof of successor_is_non_trivial =
+    assumed {*
+    by definition of successor, start
+       type peano
+       property !same_is_not_different, !equal_reflexive *}
+    ;
+
+  let predecessor(x) = match x with
+  | P_zero -> !failed("no predecessor")
+  | P_succ(x) -> x
+  ;
+
+
+  proof of predecessor_reverses_successor = 
+    by definition of predecessor, successor, (* start *)
+       property !same_is_not_different, !equal_reflexive;
+
+  proof of natural_induction =
+    coq proof
+    definition of start, successor, enumerated_induction
+    {* 
+     intro Rep.
+     unfold Enumerated_system.enumerated_induction.
+     unfold Is_true.
+     unfold Peano_enumeration_system.start.
+     unfold Peano_enumeration_system.successor.
+     intro p.
+     intro H.
+     induction n.
+     auto.
+     apply H0.
+     auto.
+     Qed. *};
+
+end;;
+
+collection Peano_enumerated = 
+  implement Peano_enumerated_system;
+end;;
 
 (**
   Here we state properties for a total ordering over an enumeration.
@@ -193,7 +235,7 @@ species Ordered_Enumeration_system =
 
 
   (** The ordering is compatible with the successor function *)
-  property successor_defines_bigger: all x in Self,
+  property successor_defines_bigger: all x : Self,
     !lt (x, !successor (x));
 
 end
@@ -204,11 +246,11 @@ species Ordered_Enumerated_system =
   inherit Enumerated_system, Ordered_Enumeration_system;
 
   (** a lower bound for the ordering *)
-  property start_is_min: all x in Self,
+  property start_is_min: all x : Self,
     !leq(!start, x);
 
   (** the successor defines the weakest possible element *)
-  property successor_defines_infimum: all x y in Self,
+  property successor_defines_infimum: all x y : Self,
     !lt(x, y) -> !leq (!successor (x), y);
 
   (* [rr]:
@@ -229,17 +271,17 @@ species Peano_base =
     | P_succ(x) -> x;
 
   proof of predecessor_reverses_successor =
-    <1>1 assume x in Self, assume y in Self,
-         assume H_y: !different(x, !start),
-         assume H_xy: !equal(y, !predecessor(x)),
+    <1>1 assume x : Self, y : Self,
+         hypothesis H_y: !different(x, !start),
+         hypothesis H_xy: !equal(y, !predecessor(x)),
          prove !equal(x, !successor(y))
          assumed {* To do *}
     <1>f conclude;
 
   proof of successor_is_non_trivial =
-    <1>0 prove all x in Self, ~(P_succ(x) = P_zero)
+    <1>0 prove all x : Self, ~(P_succ(x) = P_zero)
          assumed {* should be exclusivity of constructors needs Coq *}
-    <1>1 assume x in Self,
+    <1>1 assume x : Self,
          prove !different(!successor(x), !start)
          <2>1 prove ~(P_succ(x) = P_zero)
               assumed {* by step <1>0 *}
@@ -271,6 +313,8 @@ species Peano_dumb =
   proof of equal_is_syntactic = assumed {* this is wrong *};
 
   proof of total_order = assumed {* this is true *};
+
+  proof of natural_induction = assumed {* *};
 
 end
 ;;
@@ -323,14 +367,14 @@ species Peano_order =
   proof of lt_is_irreflexive =
     <1>0 prove ~(!lt(P_zero, P_zero))
          definition of lt assumed {* base case *}
-    <1>1 prove all x in Self, ~(!lt(x, x)) -> ~(!lt(P_succ(x), P_succ(x)))
-         <2>1 assume x in Self,
-              assume H_x: !lt(P_succ(x), P_succ(x)),
+    <1>1 prove all x : Self, ~(!lt(x, x)) -> ~(!lt(P_succ(x), P_succ(x)))
+         <2>1 assume x : Self,
+              hypothesis H_x: !lt(P_succ(x), P_succ(x)),
               prove !lt(x, x)
               definition of lt
               assumed {* inductive step *}
          <2>f conclude
-    <1>2 prove (all x in Self, ~(!lt(x, x)))
+    <1>2 prove (all x : Self, ~(!lt(x, x)))
          (* definition of enumerated_induction *)
          assumed {* induction principle *}
     <1>f qed assumed {* by step <1>2 *};
@@ -360,11 +404,11 @@ species Peano_order =
 
   proof of start_is_min =
     (* transparent theorem reveals representation!*)
-    <1>0 prove  all x in Self, !lt(P_zero, x) \/ (x = P_zero)
+    <1>0 prove  all x : Self, !lt(P_zero, x) \/ (x = P_zero)
          definition of lt
          assumed {* should apply some form of discrimination *}
     (* transparent theorem !*)
-    <1>1 prove all x in Self, !leq(P_zero, x)
+    <1>1 prove all x : Self, !leq(P_zero, x)
          property leq_from_lt
          (* step <1>0 *)
          assumed {* direct consequence of <1>0 *}
