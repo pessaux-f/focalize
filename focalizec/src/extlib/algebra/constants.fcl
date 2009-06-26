@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: constants.fcl,v 1.8 2009-06-25 09:47:53 weis Exp $ *)
+(* $Id: constants.fcl,v 1.9 2009-06-26 13:53:16 rr Exp $ *)
 
 (* for bool *)
 open "basics";;
@@ -76,7 +76,10 @@ end
 
 open "orders";;
 
-(** In the future we hope we can ban Setoid and describe mathematical sets *)
+(**
+   In the future we hope we can ban Setoid and describe mathematical sets.
+   It is a habit to use orderings and some form of zero element.
+ *)
 
 species Ordered_set_with_zero =
   inherit Setoid_with_zero, Ordered_set;
