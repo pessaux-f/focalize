@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: switch_recovery_reverse_automata.fcl,v 1.6 2009-06-06 14:51:08 weis Exp $ *)
+(* $Id: switch_recovery_reverse_automata.fcl,v 1.7 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -92,17 +92,17 @@ species Imp_state_aut3 =
   let rec_rev_normal = 33;
   let rec_rev_nor_moving = 34;
 
-  let equal (x in Self, y in Self) in bool = x =0x y;
+  let equal (x : Self, y : Self) : bool = x =0x y;
   let element = 1;
 
-  proof of equal_transitive = assumed {* type polymorphe *};
+  proof of equal_transitive = assumed (* type polymorphe *);
   (* by property basics#beq_trans definition of equal; *)
-  proof of equal_symmetric = assumed {* type polymorphe *};
+  proof of equal_symmetric = assumed (* type polymorphe *);
   (* by property basics#beq_symm definition of equal; *)
-  proof of equal_reflexive = assumed {* type polymorphe *};
+  proof of equal_reflexive = assumed (* type polymorphe *);
   (* by property basics#beq_refl definition of equal; *)
 
-  let get (s in Self) in int = s
+  let get (s : Self) : int = s
   ;
 
   let parse (x) = basics#int_of_string (x);
@@ -116,16 +116,16 @@ species Imp_state_aut3 =
     focalize_error ("State_aut3 : Unknown state")
   ;
 
-  proof of diff_empty_rec_reverse = assumed {* see below *};
-  proof of diff_empty_rec_rev_moving = assumed {* see below *};
-  proof of diff_empty_rec_rev_normal = assumed {* see below *};
-  proof of diff_empty_rec_rev_nor_moving = assumed {* see below *};
-  proof of diff_rec_reverse_rec_rev_moving = assumed {* see below *};
-  proof of diff_rec_reverse_rec_rev_normal = assumed {* see below *};
-  proof of diff_rec_reverse_rec_rev_nor_moving = assumed {* see below *};
-  proof of diff_rec_rev_moving_rec_rev_normal = assumed {* see below *};
-  proof of diff_rec_rev_moving_rec_rev_nor_moving = assumed {* see below *};
-  proof of diff_rec_rev_normal_rec_rev_nor_moving = assumed {* see below *};
+  proof of diff_empty_rec_reverse = assumed (* see below *);
+  proof of diff_empty_rec_rev_moving = assumed (* see below *);
+  proof of diff_empty_rec_rev_normal = assumed (* see below *);
+  proof of diff_empty_rec_rev_nor_moving = assumed (* see below *);
+  proof of diff_rec_reverse_rec_rev_moving = assumed (* see below *);
+  proof of diff_rec_reverse_rec_rev_normal = assumed (* see below *);
+  proof of diff_rec_reverse_rec_rev_nor_moving = assumed (* see below *);
+  proof of diff_rec_rev_moving_rec_rev_normal = assumed (* see below *);
+  proof of diff_rec_rev_moving_rec_rev_nor_moving = assumed (* see below *);
+  proof of diff_rec_rev_normal_rec_rev_nor_moving = assumed (* see below *);
 
 end;;
 
@@ -157,12 +157,12 @@ inherit Switch_recovery_reverse_automata (St, Req, Po);
 
 let init_state = St!empty;
 
-let entry (p in Po) =
+let entry (p : Po) =
   if Po!equal (p, Po!port_in1) then St!rec_reverse else
   focalize_error ("unknown port")
 ;
 
-let tau (s in Self, r in  Req) in (Self * Po) =
+let tau (s : Self, r :  Req) : (Self * Po) =
   if !equal (s, St!rec_reverse) then
     if Req!equal (r, Req!moving) then
       !constr_tau (St!rec_rev_moving, Po!empty)
@@ -197,9 +197,9 @@ let tau (s in Self, r in  Req) in (Self * Po) =
     !constr_tau (St!empty, Po!empty)
 ;
 
-let get_state (x in Self) = x;
+let get_state (x : Self) = x;
 
-let equal (x in Self, y in Self) in bool = St!equal (x, y);
+let equal (x : Self, y : Self) : bool = St!equal (x, y);
 
 proof of equal_reflexive =
   by property St!equal_reflexive
@@ -216,19 +216,20 @@ proof of equal_transitive =
 
 theorem port_out1_is_when_reverse_switch:
 (*
-all s s1 in Self, all r in Req, all po in Po,
+all s s1 : Self, all r : Req, all po : Po,
 tau (s, r) = (s1, po) ->
 Po!equal (po, Po!port_out1) ->
   Req!equal (r, Req!reverse_switched)
 *)
-all s in Self, all r in Req,
+all s : Self, all r : Req,
   Po!equal (tau_p2 (tau (s, r)), Po!port_out1) ->
   Req!equal (r, Req!reverse_switched)
 proof =
 <1>1
-  assume s in Self,
-  assume r in Req,
-  assume H1:Po!equal (tau_p2 (tau (s, r)), Po!port_out1),
+  assume
+    s : Self, r : Req,
+  hypothesis
+    H1:Po!equal (tau_p2 (tau (s, r)), Po!port_out1),
   prove Req!equal (r, Req!reverse_switched)
    <2>1 prove  ~ Po!equal (Po!port_out2, Po!port_out1)
    by property Po!diff_port_out1_port_out2, Po!equal_symmetric

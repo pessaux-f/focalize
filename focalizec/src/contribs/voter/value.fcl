@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: value.fcl,v 1.11 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: value.fcl,v 1.12 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -82,11 +82,11 @@ species Imp_value_tol (T is Gen_basic_type_tol, tol in T) =
   <1>1 assume x : Self,
     prove
     T!geq (T!plus (x, tol), x)
-    assumed {* Todo *}
+    assumed (* Todo *)
   <1>0 qed by step <1>1 definition of consistency_rule
   ;
 
-  proof of consistency_rule_symmetric = assumed {* Error Coq !! *};
+  proof of consistency_rule_symmetric = assumed (* Error Coq !! *);
 (*
 <1>1
     assume
@@ -160,7 +160,7 @@ species Spe_int_imp_value_tol2 =
   <1>1
   prove
   Coll_int_value!pos (Coll_int_value!of_int (2))
-  assumed {* By definition *}
+  assumed (* By definition *)
 
   <1>f conclude
 ;

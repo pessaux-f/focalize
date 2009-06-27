@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: multiplicative_law.fcl,v 1.10 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: multiplicative_law.fcl,v 1.11 2009-06-27 01:29:03 weis Exp $ *)
 
 (** Common properties of multiplicative laws. *)
 
@@ -302,10 +302,10 @@ species Regular_monoid =
   logical let divides (x, y) = ~~ is_failed (!exquo (y, x));
   proof of divides_extends_equal =
     definition of divides
-    assumed {* To do. *};
+    assumed (* To do. *);
 
-  proof of divides_transitive = assumed {* Because todo *};
-  proof of divides_reverses_mult = assumed {* Because todo *};
+  proof of divides_transitive = assumed (* Because todo *);
+  proof of divides_reverses_mult = assumed (* Because todo *);
 
 end
 ;;

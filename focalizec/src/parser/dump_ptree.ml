@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.44 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: dump_ptree.ml,v 1.45 2009-06-27 01:29:03 weis Exp $ *)
 
 let pp_annotation ppf doc =
   List.iter
@@ -715,9 +715,9 @@ and pp_enforced_dependency ppf = pp_ast pp_enforced_dependency_desc ppf
 
 
 and pp_proof_desc ppf = function
-  | Parsetree.Pf_assumed (enf_deps, reason) ->
-      Format.fprintf ppf "@[<2>Pf_assumed (%a, {* %s *})@]"
-        pp_enforced_dependencies enf_deps reason
+  | Parsetree.Pf_assumed enf_deps ->
+      Format.fprintf ppf "@[<2>Pf_assumed (%a)@]"
+        pp_enforced_dependencies enf_deps
   | Parsetree.Pf_auto facts ->
       Format.fprintf ppf "@[<2>Pf_auto@ ([@ %a@ ])@]" pp_facts facts
   | Parsetree.Pf_coq (enf_deps, s) ->

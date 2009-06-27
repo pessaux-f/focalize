@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: etat_vote.fcl,v 1.9 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: etat_vote.fcl,v 1.10 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -50,7 +50,7 @@ species Sp_etat_vote =
       \/ !equal (e, !partial_match)
       \/ !equal (e, !perfect_match))
   proof =
-  assumed {* By construction *};
+  assumed (* By construction *);
 
 
   (** Each field of the sum type are different from the other one *)

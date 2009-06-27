@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: switch_recovery_automata.fcl,v 1.6 2009-06-06 14:51:08 weis Exp $ *)
+(* $Id: switch_recovery_automata.fcl,v 1.7 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -57,17 +57,17 @@ species Imp_state_aut2 =
   let recovery_reverse = 30;
   let recovery_normal = 40;
 
-  let equal(x in Self, y in Self) in bool = x =0x y;
+  let equal(x : Self, y : Self) : bool = x =0x y;
   let element = 1;
 
-  proof of equal_transitive = assumed {* type polymorphe *};
+  proof of equal_transitive = assumed (* type polymorphe *);
   (* by property basics#beq_trans definition of equal; *)
-  proof of equal_symmetric = assumed {* type polymorphe *};
+  proof of equal_symmetric = assumed (* type polymorphe *);
   (* by property basics#beq_symm definition of equal; *)
-  proof of equal_reflexive = assumed {* type polymorphe *};
+  proof of equal_reflexive = assumed (* type polymorphe *);
   (* by property basics#beq_refl definition of equal; *)
 
-  let get(s in Self) in int = s
+  let get(s : Self) : int = s
   ;
 
   let parse(x) = basics#int_of_string(x);
@@ -128,21 +128,21 @@ species
 
   inherit Switch_recovery_automata(St, Req, Po, St3, Aut3, St4, Aut4);
 
-  let st_aut_p1( i in Self) in St = basics#fst(i);
-  let st_aut_p2( i in Self) in Aut3 = basics#fst(basics#snd(i));
-  let st_aut_p3( i in Self) in Aut4 = basics#snd(basics#snd(i));
-  let constr_self( s1 in St, a3 in Aut3, a4 in Aut4) in Self =
+  let st_aut_p1( i : Self) : St = basics#fst(i);
+  let st_aut_p2( i : Self) : Aut3 = basics#fst(basics#snd(i));
+  let st_aut_p3( i : Self) : Aut4 = basics#snd(basics#snd(i));
+  let constr_self( s1 : St, a3 : Aut3, a4 : Aut4) : Self =
      basics#pair(s1, basics#pair(a3, a4));
 
   theorem st_is_fst_self:
-    all st1 in St, all a3 in Aut3, all a4 in Aut4,
+    all st1 : St, all a3 : Aut3, all a4 : Aut4,
       st_aut_p1( constr_self( st1, a3, a4)) = st1
   proof =
     by definition of st_aut_p1, constr_self
   ;
 
   theorem aut3_is_snd_self:
-    all st1 in St, all a3 in Aut3, all a4 in Aut4,
+    all st1 : St, all a3 : Aut3, all a4 : Aut4,
       st_aut_p2( constr_self( st1, a3, a4)) = a3
   proof =
   (*
@@ -152,126 +152,22 @@ species
   qed.
   *}
   *)
-   assumed {* Voir Damien *}
+   assumed (* Voir Damien *)
   (*
     by definition of st_aut_p2, constr_self
   *)
   ;
 
   theorem aut4_is_trd_self:
-    all st1 in St, all a3 in Aut3, all a4 in Aut4,
+    all st1 : St, all a3 : Aut3, all a4 : Aut4,
       st_aut_p3( constr_self( st1, a3, a4)) = a4
   proof =
-  assumed {* Voir Damien *}
-  (*
-    by definition of st_aut_p3, constr_self
-  *)
-  ;
-
-  let init_state = !constr_self(St!empty, Aut3!init_state, Aut4!init_state);
-
-  let entry(p in Po) =
-    if Po!equal(p, Po!port_in1)then
-      !constr_self(St!recovery_reverse, Aut3!entry(p), Aut4!init_state)
-    else if Po!equal(p, Po!port_in2) then
-      !constr_self(St!unknown, Aut3!init_state, Aut4!init_state)
-    else if Po!equal(p, Po!port_in3) then
-      !constr_self(St!recovery_normal, Aut3!init_state, Aut4!entry(p))
-    else
-      !constr_self(St!empty, Aut3!init_state, Aut4!init_state)
-  ;
-
-  let tau( s in Self, r in  Req) in (Self * Po) =
-  if St!equal(!st_aut_p1(s), St!unknown) then
-     if Req!equal(r, Req!reverse_switched) then
-      !constr_tau(!constr_self(St!recovery_reverse,
-                               Aut3!entry(Po!port_in1),
-                               Aut4!init_state),
-                  Po!empty)
-     else if Req!equal(r, Req!normal_switched) then
-      !constr_tau(!constr_self(St!recovery_normal,
-                               Aut3!init_state,
-                               Aut4!entry(Po!port_in1)),
-                  Po!empty)
-     else
-      !constr_tau(!constr_self(St!unknown,
-                               Aut3!init_state,
-                               Aut4!init_state),
-                  Po!empty)
-
-  else if St!equal(!st_aut_p1(s), St!recovery_reverse) then
-    let a = Aut3!tau(!st_aut_p2(s), r) in
-    if Po!equal(Aut3!tau_p2(a), Po!port_out1) then
-     !constr_tau(!constr_self(St!empty,
-                              Aut3!init_state,
-                              Aut4!init_state),
-                 Po!port_out1)
-    else if Po!equal(Aut3!tau_p2(a), Po!port_out2) then
-     !constr_tau(!constr_self(St!unknown,
-                              Aut3!init_state,
-                              Aut4!init_state),
-                 Po!empty)
-    else !constr_tau(!constr_self(St!recovery_reverse,
-                                  Aut3!tau_p1(a),
-                                  Aut4!init_state),
-                     Po!empty)
-
-  else if St!equal(!st_aut_p1(s), St!recovery_normal) then
-    let a = Aut4!tau(!st_aut_p3(s), r) in
-    if Po!equal(Aut4!tau_p2(a), Po!port_out1) then
-     !constr_tau(!constr_self(St!empty,
-                              Aut3!init_state,
-                              Aut4!init_state),
-                 Po!port_out2)
-    else if Po!equal(Aut4!tau_p2(a), Po!port_out2) then
-     !constr_tau(!constr_self(St!unknown,
-                              Aut3!init_state,
-                              Aut4!init_state),
-                 Po!empty)
-    else !constr_tau(!constr_self(St!recovery_normal,
-                                  Aut3!init_state,
-                                  Aut4!tau_p1(a)),
-                     Po!empty)
-
-  else
-   !constr_tau(!constr_self(St!empty,
-                               Aut3!init_state,
-                               Aut4!init_state),
-                Po!empty)
-  ;
-
-
-  let get_state(x in Self) = !st_aut_p1(x);
-
-  let equal(x in Self, y in Self) in bool =
-     St!equal(!st_aut_p1(x), !st_aut_p1(y))
-  ;
-
-  proof of equal_reflexive =
-    by property St!equal_reflexive
-    definition of equal
-  ;
-  proof of equal_symmetric =
-    by property St!equal_symmetric
-    definition of equal
-  ;
-  proof of equal_transitive =
-    by property St!equal_transitive
-    definition of equal
-  ;
-
-  theorem equal_only_on_p1:
-    all s1 in St, all a31 a32 in Aut3, all a41 a42 in Aut4,
-    !equal(!constr_self(s1, a31, a41), !constr_self(s1, a32, a42))
-  proof =
-  assumed {* Voir Damien *}
+  assumed (* Voir Damien *)
   (*
     <1>1
-    assume s1 in St,
-    assume a31 in Aut3,
-    assume a32 in Aut3,
-    assume a41 in Aut4,
-    assume a42 in Aut4,
+    assume s1 : St,
+    assume a31 a32 : Aut3,
+    assume a41 a42 : Aut4,
     prove !equal(!constr_self(s1, a31, a41), !constr_self(s1, a32, a42))
       <2>1 prove st_aut_p1(!constr_self(s1, a31, a41)) = s1
       by property st_is_fst_self
@@ -299,14 +195,13 @@ species Imp2_switch_recovery_automata =
        Coll_switch_recovery_normal_automata);
 
   theorem port_out1_is_when_reverse_switch:
-  all s in Self, all r in Coll_requests,
+  all s : Self, all r : Coll_requests,
   Coll_ports!equal(tau_p2(tau(s, r)), Coll_ports!port_out1) ->
     Coll_requests!equal(r, Coll_requests!reverse_switched)
   proof =
   <1>1
-    assume s in Self,
-    assume r in Coll_requests,
-    assume H1:Coll_ports!equal(tau_p2(tau(s, r)), Coll_ports!port_out1),
+    assume s : Self, r : Coll_requests,
+    hypothesis H1:Coll_ports!equal(tau_p2(tau(s, r)), Coll_ports!port_out1),
     prove Coll_requests!equal(r, Coll_requests!reverse_switched)
      <2>1 prove  ~ Coll_ports!equal(Coll_ports!port_out2, Coll_ports!port_out1)
      by property Coll_ports!diff_port_out1_port_out2, Coll_ports!equal_symmetric

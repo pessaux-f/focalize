@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.191 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: infer.ml,v 1.192 2009-06-27 01:29:03 weis Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -1677,7 +1677,7 @@ and typecheck_proof ctx env proof =
   (* No relevant type information to insert in the AST node. *)
   proof.Parsetree.ast_type <- Parsetree.ANTI_irrelevant;
   match proof.Parsetree.ast_desc with
-  | Parsetree.Pf_assumed (enf_deps, _) | Parsetree.Pf_coq (enf_deps, _) ->
+  | Parsetree.Pf_assumed enf_deps | Parsetree.Pf_coq (enf_deps, _) ->
       (begin
       List.iter
         (fun enforced_dep ->

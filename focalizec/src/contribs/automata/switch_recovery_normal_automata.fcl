@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: switch_recovery_normal_automata.fcl,v 1.6 2009-06-06 14:51:08 weis Exp $ *)
+(* $Id: switch_recovery_normal_automata.fcl,v 1.7 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -53,17 +53,17 @@ species Imp_state_aut4 =
   let rec_nor_reverse = 43;
   let rec_nor_rev_moving = 44;
 
-  let equal(x in Self, y in Self) in bool = x =0x y;
+  let equal (x : Self, y : Self) : bool = x =0x y;
   let element = 1;
 
-  proof of equal_transitive = assumed {* Type polymorphe *};
+  proof of equal_transitive = assumed (* Type polymorphe *);
   (* by property basics#beq_trans definition of equal; *)
-  proof of equal_symmetric = assumed {* Type polymorphe *};
+  proof of equal_symmetric = assumed (* Type polymorphe *);
   (* by property basics#beq_symm definition of equal; *)
-  proof of equal_reflexive = assumed {* Type polymorphe *};
+  proof of equal_reflexive = assumed (* Type polymorphe *);
   (* by property basics#beq_refl definition of equal; *)
 
-  let get(s in Self) in int = s
+  let get(s : Self) : int = s
   ;
 
   let parse(x) = basics#int_of_string(x);
@@ -112,11 +112,11 @@ species
 
   let init_state = St!empty;
 
-  let entry(p in Po) =
+  let entry(p : Po) =
     if Po!equal(p, Po!port_in1)then St!rec_normal else St!empty
   ;
 
-  let tau( s in Self, r in  Req) in (Self * Po) =
+  let tau( s : Self, r :  Req) : (Self * Po) =
   if !equal(s, St!rec_normal) then
     if Req!equal(r, Req!moving) then
       !constr_tau(St!rec_nor_moving, Po!empty)
@@ -150,9 +150,9 @@ species
   else
     !constr_tau(St!empty, Po!empty)
   ;
-  let get_state( x in Self) = x;
+  let get_state( x : Self) = x;
 
-  let equal(x in Self, y in Self) in bool =
+  let equal(x : Self, y : Self) : bool =
      St!equal(x, y)
   ;
 
@@ -170,14 +170,13 @@ species
   ;
 
   theorem port_out1_is_when_normal_switch:
-  all s in Self, all r in Req,
+  all s : Self, all r : Req,
   Po!equal(tau_p2(tau(s, r)), Po!port_out1) ->
     Req!equal(r, Req!normal_switched)
   proof =
   <1>1
-    assume s in Self,
-    assume r in Req,
-    assume H1:Po!equal(tau_p2(tau(s, r)), Po!port_out1),
+    assume s : Self, r : Req,
+    hypothesis H1:Po!equal(tau_p2(tau(s, r)), Po!port_out1),
     prove Req!equal(r, Req!normal_switched)
      <2>1 prove  ~ Po!equal(Po!port_out2, Po!port_out1)
      by property Po!diff_port_out1_port_out2, Po!equal_symmetric

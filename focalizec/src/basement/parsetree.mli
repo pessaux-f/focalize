@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.57 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.58 2009-06-27 01:29:02 weis Exp $ *)
 
 (** {2 The FoCaLiZe abstract syntax tree} *)
 
@@ -447,7 +447,7 @@ and enforced_dependency_desc =
 
 and proof = proof_desc ast
 and proof_desc =
-  | Pf_assumed of enforced_dependency list * external_code
+  | Pf_assumed of enforced_dependency list
   | Pf_auto of fact list
   | Pf_coq of enforced_dependency list * external_code
   | Pf_node of proof_node list

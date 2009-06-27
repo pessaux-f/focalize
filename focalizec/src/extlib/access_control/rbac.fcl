@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLie compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rbac.fcl,v 1.21 2009-06-25 10:25:37 habib Exp $ *)
+(* $Id: rbac.fcl,v 1.22 2009-06-27 01:29:03 weis Exp $ *)
 
 (**
    @title Implementation of the RBAC model
@@ -46,9 +46,9 @@ species S_set_of (A is Setoid) =
             | _underscore -> A!print (h) ^ ",\n                     " ^ aux (t)
      in "[" ^ aux (l);
 
-  proof of equal_prop = assumed {* Because todo *};
+  proof of equal_prop = assumed (* Because todo *);
 
-  proof of singleton_prop = assumed {* Because todo *};
+  proof of singleton_prop = assumed (* Because todo *);
 
 end
 ;;
@@ -151,7 +151,7 @@ species S_access (S_sub is S_subjects,
                 S_acc_mod!equal_transitive
        definition of equal;
 
-  proof of access_equal = assumed {* Because todo *};
+  proof of access_equal = assumed (* Because todo *);
 
 end
 ;;
@@ -164,7 +164,7 @@ species S_decisions =
 
   let no = (2, "no");
 
-  proof of yes_is_not_no = assumed {* Because todo *};
+  proof of yes_is_not_no = assumed (* Because todo *);
 
 end
 ;;
@@ -295,11 +295,11 @@ species S_roles =
        else false
      else false;
 
-  proof of leq_reflexive = assumed {* Because todo *};
+  proof of leq_reflexive = assumed (* Because todo *);
 
-  proof of leq_antisymmetric = assumed {* Because todo *};
+  proof of leq_antisymmetric = assumed (* Because todo *);
 
-  proof of leq_transitive = assumed {* Because todo *};
+  proof of leq_transitive = assumed (* Because todo *);
 
 end
 ;;
@@ -420,15 +420,15 @@ species S_requests_rbac (S is S_subjects,
         definition of equal
   ;
 
-  proof of get_or_rel = assumed {* Because todo *};
+  proof of get_or_rel = assumed (* Because todo *);
 
-  proof of get_is_not_rel = assumed {* Because todo *};
+  proof of get_is_not_rel = assumed (* Because todo *);
 
-  proof of add_ua_then_not_rm_ua = assumed {* Because todo *};
+  proof of add_ua_then_not_rm_ua = assumed (* Because todo *);
 
-  proof of add_pa_then_not_ua = assumed {* Because todo *};
+  proof of add_pa_then_not_ua = assumed (* Because todo *);
 
-  proof of rm_pa_then_not_add_pa_ua = assumed {* Because todo *};
+  proof of rm_pa_then_not_add_pa_ua = assumed (* Because todo *);
 
 end
 ;;
@@ -677,93 +677,93 @@ species S_models_rbac (S_us is S_users,
   proof of lambda_prop = by definition of equal
   ;
 
-  proof of add_prop = assumed {* Because todo *};
+  proof of add_prop = assumed (* Because todo *);
 
-  proof of add_mem = assumed {* Because todo *};
+  proof of add_mem = assumed (* Because todo *);
 
-  proof of del_prop = assumed {* Because todo *};
+  proof of del_prop = assumed (* Because todo *);
 
-  proof of del_mem = assumed {* Because todo *};
+  proof of del_mem = assumed (* Because todo *);
 
-  (*proof of union_spec = assumed {* Because todo *};*)
+  (*proof of union_spec = assumed (* Because todo *);*)
 
-  (*proof of sous_ensemble_spec = assumed {* Because todo *};*)
+  (*proof of sous_ensemble_spec = assumed (* Because todo *);*)
 
-  proof of add_access_ua = assumed {* Because todo *};
+  proof of add_access_ua = assumed (* Because todo *);
 
-  proof of del_access_ua = assumed {* Because todo *};
+  proof of del_access_ua = assumed (* Because todo *);
 
-  proof of add_access_pa = assumed {* Because todo *};
+  proof of add_access_pa = assumed (* Because todo *);
 
-  proof of del_access_pa = assumed {* Because todo *};
+  proof of del_access_pa = assumed (* Because todo *);
 
-  proof of add_access_roles_s_1 = assumed {* Because todo *};
+  proof of add_access_roles_s_1 = assumed (* Because todo *);
 
-  proof of add_access_roles_s_2 = assumed {* Because todo *};
+  proof of add_access_roles_s_2 = assumed (* Because todo *);
 
-  proof of del_access_roles_s_1 = assumed {* Because todo *};
+  proof of del_access_roles_s_1 = assumed (* Because todo *);
 
-  proof of del_access_roles_s_2 = assumed {* Because todo *};
+  proof of del_access_roles_s_2 = assumed (* Because todo *);
 
-  proof of add_ua_access = assumed {* Because todo *};
+  proof of add_ua_access = assumed (* Because todo *);
 
-  proof of rm_ua_access = assumed {* Because todo *};
+  proof of rm_ua_access = assumed (* Because todo *);
 
-  proof of add_pa_access = assumed {* Because todo *};
+  proof of add_pa_access = assumed (* Because todo *);
 
-  proof of rm_pa_access = assumed {* Because todo *};
+  proof of rm_pa_access = assumed (* Because todo *);
 
-  proof of add_ua_ua = assumed {* Because todo *};
+  proof of add_ua_ua = assumed (* Because todo *);
 
-  proof of add_ua_pa = assumed {* Because todo *};
+  proof of add_ua_pa = assumed (* Because todo *);
 
-  proof of add_ua_roles_s_1 = assumed {* Because todo *};
+  proof of add_ua_roles_s_1 = assumed (* Because todo *);
 
-  proof of add_ua_roles_s_2 = assumed {* Because todo *};
+  proof of add_ua_roles_s_2 = assumed (* Because todo *);
 
-  proof of rm_ua_ua = assumed {* Because todo *};
+  proof of rm_ua_ua = assumed (* Because todo *);
 
-  proof of rm_ua_pa = assumed {* Because todo *};
+  proof of rm_ua_pa = assumed (* Because todo *);
 
-  proof of rm_ua_roles_s_1 = assumed {* Because todo *};
+  proof of rm_ua_roles_s_1 = assumed (* Because todo *);
 
-  proof of rm_ua_roles_s_2 = assumed {* Because todo *};
+  proof of rm_ua_roles_s_2 = assumed (* Because todo *);
 
-  proof of add_pa_ua = assumed {* Because todo *};
+  proof of add_pa_ua = assumed (* Because todo *);
 
-  proof of add_pa_pa = assumed {* Because todo *};
+  proof of add_pa_pa = assumed (* Because todo *);
 
-  proof of add_pa_roles_s_1 = assumed {* Because todo *};
+  proof of add_pa_roles_s_1 = assumed (* Because todo *);
 
-  proof of add_pa_roles_s_2 = assumed {* Because todo *};
+  proof of add_pa_roles_s_2 = assumed (* Because todo *);
 
-  proof of rm_pa_ua = assumed {* Because todo *};
+  proof of rm_pa_ua = assumed (* Because todo *);
 
-  proof of rm_pa_pa = assumed {* Because todo *};
+  proof of rm_pa_pa = assumed (* Because todo *);
 
-  proof of rm_pa_roles_s_1 = assumed {* Because todo *};
+  proof of rm_pa_roles_s_1 = assumed (* Because todo *);
 
-  proof of rm_pa_roles_s_2 = assumed {* Because todo *};
+  proof of rm_pa_roles_s_2 = assumed (* Because todo *);
 
-  proof of secure_state = assumed {* Because todo *};
+  proof of secure_state = assumed (* Because todo *);
 
-  proof of ep_equal = assumed {* Because todo *};
+  proof of ep_equal = assumed (* Because todo *);
 
-  proof of for_all_spec_ua_1 = assumed {* Because todo *};
+  proof of for_all_spec_ua_1 = assumed (* Because todo *);
 
-  proof of for_all_spec_ua_2 = assumed {* Because todo *};
+  proof of for_all_spec_ua_2 = assumed (* Because todo *);
 
-  proof of iter_pa_spec = assumed {* Because todo *};
+  proof of iter_pa_spec = assumed (* Because todo *);
 
-  proof of exists_role_spec = assumed {* Because todo *};
+  proof of exists_role_spec = assumed (* Because todo *);
 
-  proof of exists_role_ua_spec = assumed {* Because todo *};
+  proof of exists_role_ua_spec = assumed (* Because todo *);
 
-  proof of equal_exists_role = assumed {* Because todo *};
+  proof of equal_exists_role = assumed (* Because todo *);
 
-  proof of left_substitution = assumed {* Because todo *};
+  proof of left_substitution = assumed (* Because todo *);
 
-  proof of right_substitution = assumed {* Because todo *};
+  proof of right_substitution = assumed (* Because todo *);
 
 end
 ;;

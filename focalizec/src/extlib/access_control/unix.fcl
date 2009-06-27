@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: unix.fcl,v 1.17 2009-06-25 10:25:37 habib Exp $ *)
+(* $Id: unix.fcl,v 1.18 2009-06-27 01:29:03 weis Exp $ *)
 
 (**
    @title Implementation of the Unix model
@@ -58,9 +58,9 @@ species S_set_of (A is Setoid) =
            | _underscore -> A!print (h) ^ "" ^ aux (t) in
     "[" ^ aux (l);
 
-  proof of equal_prop = assumed {* Because todo *};
+  proof of equal_prop = assumed (* Because todo *);
 
-  proof of singleton_prop = assumed {* Because todo *};
+  proof of singleton_prop = assumed (* Because todo *);
 
 end
 ;;
@@ -169,7 +169,7 @@ species S_access
        definition of equal
   ;
 
-  proof of access_equal = assumed {* Because todo *};
+  proof of access_equal = assumed (* Because todo *);
 
 end
 ;;
@@ -182,7 +182,7 @@ species S_decisions =
 
   let no = (2, "no");
 
-  proof of yes_is_not_no = assumed {* Because todo *};
+  proof of yes_is_not_no = assumed (* Because todo *);
 
 end
 ;;
@@ -257,7 +257,7 @@ species S_requests_unix
 
   representation = (Sgr * (S * (O * (M * (G * (Z * S))))));
 
-  let create (rda : Sgr, sa : S, oa : O, ma : M, ga : G, za : Z, sa2 : S) : 
+  let create (rda : Sgr, sa : S, oa : O, ma : M, ga : G, za : Z, sa2 : S) :
       Self = (rda, (sa, (oa, (ma, (ga, (za, sa2))))));
 
   let get_gr (rg : Self) : Sgr = fst (rg);
@@ -390,9 +390,9 @@ species S_requests_unix
        definition of equal
   ;
 
-  proof of get_or_rel = assumed {* Because todo *};
+  proof of get_or_rel = assumed (* Because todo *);
 
-  proof of get_is_not_rel = assumed {* Because todo *};
+  proof of get_is_not_rel = assumed (* Because todo *);
 
 end
 ;;
@@ -765,21 +765,21 @@ species S_models_unix
   proof of lambda_prop = by definition of equal
   ;
 
-  proof of secure_state = assumed {* Because todo *};
+  proof of secure_state = assumed (* Because todo *);
 
-  proof of right_substitution = assumed {* Because todo *};
+  proof of right_substitution = assumed (* Because todo *);
 
-  proof of left_substitution = assumed {* Because todo *};
+  proof of left_substitution = assumed (* Because todo *);
 
-  proof of del_mem = assumed {* Because todo *};
+  proof of del_mem = assumed (* Because todo *);
 
-  proof of del_prop = assumed {* Because todo *};
+  proof of del_prop = assumed (* Because todo *);
 
-  (*proof of del_prop_bis = assumed {* Because todo *};*)
+  (*proof of del_prop_bis = assumed (* Because todo *);*)
 
-  proof of add_mem = assumed {* Because todo *};
+  proof of add_mem = assumed (* Because todo *);
 
-  proof of add_prop = assumed {* Because todo *};
+  proof of add_prop = assumed (* Because todo *);
 
 end
 ;;

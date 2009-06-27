@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.182 2009-06-17 09:56:30 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.183 2009-06-27 01:29:02 weis Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1940,7 +1940,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
     proof =
   let out_fmter = ctx.Context.scc_out_fmter in
   match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed (enforced_deps, reason) ->
+   | Parsetree.Pf_assumed enforced_deps ->
        (* [Unsure] Bad place to make the check. This should be made in
           something like "abstration.ml". Ensure that the *)
        ensure_enforced_dependencies_by_definition_are_definitions
@@ -1992,8 +1992,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
              Parsetree_utils.pp_vname_with_operators_expanded n)
          available_hyps;
        (* Proof is assumed, then simply use "magic_prove". *)
-       Format.fprintf out_fmter
-         "(* Proof assumed because \"%s\". *)@\n" reason;
+       Format.fprintf out_fmter "(* Proof was flagged as assumed. *)@\n";
        Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\nQed.@\n"
    | Parsetree.Pf_coq (enforced_deps, script) ->
        (* [Unsure] Bad place to make the check. This should be made in
@@ -2427,10 +2426,9 @@ let generate_defined_theorem ctx print_ctx env min_coq_env ~self_manifest
   Format.fprintf out_fmter ".@]@\n";
   (* End the proof matter. *)
   (match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed (_, reason) ->
+   | Parsetree.Pf_assumed _ ->
        (* Proof assumed, then simply use "magic_prove". *)
-       Format.fprintf out_fmter
-         "(* Proof assumed because \"%s\". *)@\n" reason;
+       Format.fprintf out_fmter "(* Proof was flagged as assumed *)@\n";
        Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\nQed.@\n"
    | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
        (* Proof done by Zenon. Apply the temporary theorem. *)
@@ -2818,10 +2816,10 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
         | Parsetree.TP_measure (_, _, proof)
         | Parsetree.TP_order (_, _, proof) ->
             (match proof.Parsetree.ast_desc with
-             | Parsetree.Pf_assumed (_, reason) ->
+             | Parsetree.Pf_assumed _ ->
                  (* Proof assumed, then simply use "magic_prove". *)
                  Format.fprintf out_fmter
-                   "(* Proof assumed because \"%s\". *)@\n" reason;
+                   "(* Proof was flagged as assumed. *)@\n";
                  Format.fprintf out_fmter
                    "apply coq_builtins.magic_prove.@\nQed."
              | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->

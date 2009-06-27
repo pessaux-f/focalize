@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: request.fcl,v 1.3 2009-06-06 14:51:08 weis Exp $ *)
+(* $Id: request.fcl,v 1.4 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -37,43 +37,43 @@ species Requests =
   signature moving_time_out : Self;
 
   property diff_normal_switched_reverse_switched:
-   ~ equal(normal_switched, reverse_switched)
+   ~ equal (normal_switched, reverse_switched)
   ;
 
   property diff_normal_switched_moving:
-   ~ equal(normal_switched, moving)
+   ~ equal (normal_switched, moving)
   ;
 
   property diff_normal_switched_inconsistent:
-   ~ equal(normal_switched, inconsistent)
+   ~ equal (normal_switched, inconsistent)
   ;
 
   property diff_normal_switched_moving_time_out:
-   ~ equal(normal_switched, moving_time_out)
+   ~ equal (normal_switched, moving_time_out)
   ;
 
   property diff_reverse_switched_moving:
-   ~ equal(reverse_switched, moving)
+   ~ equal (reverse_switched, moving)
   ;
 
   property diff_reverse_switched_inconsistent:
-   ~ equal(reverse_switched, inconsistent)
+   ~ equal (reverse_switched, inconsistent)
   ;
 
   property diff_reverse_switched_moving_time_out:
-   ~ equal(reverse_switched, moving_time_out)
+   ~ equal (reverse_switched, moving_time_out)
   ;
 
   property diff_moving_inconsistent:
-   ~ equal(moving, inconsistent)
+   ~ equal (moving, inconsistent)
   ;
 
   property diff_moving_moving_time_out:
-   ~ equal(moving, moving_time_out)
+   ~ equal (moving, moving_time_out)
   ;
 
   property diff_inconsistent_moving_time_out:
-   ~ equal(inconsistent, moving_time_out)
+   ~ equal (inconsistent, moving_time_out)
   ;
 
 end
@@ -92,27 +92,27 @@ species Imp_requests =
   let inconsistent = 3;               (* sig_N = 1, sig_R = 1 *)
   let moving_time_out = 4;
 
-  let equal(x in Self, y in Self) in bool = x =0x y;
+  let equal (x : Self, y : Self) : bool = x =0x y;
   let element = 1;
 
-  proof of equal_transitive = assumed {* type polymorphe *};
+  proof of equal_transitive = assumed (* type polymorphe *);
   (* by definition of equal; *)
-  proof of equal_symmetric = assumed {* type polymorphe *};
+  proof of equal_symmetric = assumed (* type polymorphe *);
   (* by property basics#beq_symm definition of equal; *)
-  proof of equal_reflexive = assumed {* type polymorphe *};
+  proof of equal_reflexive = assumed (* type polymorphe *);
   (* by property basics#beq_refl definition of equal; *)
 
 
-  let set(i in int) in Self =
-     if !equal(i, 0) then
+  let set(i : int) : Self =
+     if !equal (i, 0) then
        !normal_switched
-     else if  !equal(i, 1) then
+     else if  !equal (i, 1) then
        !reverse_switched
-     else if  !equal(i, 2) then
+     else if  !equal (i, 2) then
        !moving
-     else if  !equal(i, 3) then
+     else if  !equal (i, 3) then
        !inconsistent
-     else if  !equal(i, 4) then
+     else if  !equal (i, 4) then
        !moving_time_out
      else
        (* by default !!! *)
@@ -156,13 +156,13 @@ species Imp_requests =
     *}
   ;
 
-  proof of diff_normal_switched_moving_time_out = assumed {* See below *};
-  proof of diff_reverse_switched_moving = assumed {* See below *};
-  proof of diff_reverse_switched_inconsistent = assumed {* See below *};
-  proof of diff_reverse_switched_moving_time_out = assumed {* See below *};
-  proof of diff_moving_inconsistent = assumed {* See below *};
-  proof of diff_moving_moving_time_out = assumed {* See below *};
-  proof of diff_inconsistent_moving_time_out = assumed {* See below *};
+  proof of diff_normal_switched_moving_time_out = assumed (* See below *);
+  proof of diff_reverse_switched_moving = assumed (* See below *);
+  proof of diff_reverse_switched_inconsistent = assumed (* See below *);
+  proof of diff_reverse_switched_moving_time_out = assumed (* See below *);
+  proof of diff_moving_inconsistent = assumed (* See below *);
+  proof of diff_moving_moving_time_out = assumed (* See below *);
+  proof of diff_inconsistent_moving_time_out = assumed (* See below *);
 
 end
 ;;
@@ -189,73 +189,73 @@ species Ports =
   signature port_out2 : Self;
 
   property diff_empty_port_in1:
-   ~ equal(empty, port_in1)
+   ~ equal (empty, port_in1)
   ;
 
   property diff_empty_port_in2:
-   ~ equal(empty, port_in2)
+   ~ equal (empty, port_in2)
   ;
 
   property diff_empty_port_in3:
-   ~ equal(empty, port_in3)
+   ~ equal (empty, port_in3)
   ;
 
   property diff_empty_port_out1:
-   ~ equal(empty, port_out1)
+   ~ equal (empty, port_out1)
   ;
 
   property diff_empty_port_out2:
-   ~ equal(empty, port_out2)
+   ~ equal (empty, port_out2)
   ;
 
   property diff_port_in1_port_in2:
-   ~ equal(port_in1, port_in2)
+   ~ equal (port_in1, port_in2)
   ;
 
   property diff_port_in1_port_in3:
-   ~ equal(port_in1, port_in3)
+   ~ equal (port_in1, port_in3)
   ;
 
   property diff_port_in1_port_out1:
-   ~ equal(port_in1, port_out1)
+   ~ equal (port_in1, port_out1)
   ;
 
   property diff_port_in1_port_out2:
-   ~ equal(port_in1, port_out2)
+   ~ equal (port_in1, port_out2)
   ;
 
   property diff_port_in2_port_in3:
-   ~ equal(port_in2, port_in3)
+   ~ equal (port_in2, port_in3)
   ;
 
   property diff_port_in2_port_out1:
-   ~ equal(port_in2, port_out1)
+   ~ equal (port_in2, port_out1)
   ;
 
   property diff_port_in2_port_out2:
-   ~ equal(port_in2, port_out2)
+   ~ equal (port_in2, port_out2)
   ;
 
   property diff_port_in3_port_out1:
-   ~ equal(port_in3, port_out1)
+   ~ equal (port_in3, port_out1)
   ;
 
   property diff_port_in3_port_out2:
-   ~ equal(port_in3, port_out2)
+   ~ equal (port_in3, port_out2)
   ;
 
   property diff_port_out1_port_out2:
-   ~ equal(port_out1, port_out2)
+   ~ equal (port_out1, port_out2)
   ;
 
   property disj:
-  all p in Self,
-   equal(p, empty) \/
-   equal(p, port_in1) \/
-   equal(p, port_in2) \/
-   equal(p, port_in3) \/
-   equal(p, port_out1) \/
-   equal(p, port_out2)
+  all p : Self,
+   equal (p, empty) \/
+   equal (p, port_in1) \/
+   equal (p, port_in2) \/
+   equal (p, port_in3) \/
+   equal (p, port_out1) \/
+   equal (p, port_out2)
   ;
 
 end
@@ -277,37 +277,37 @@ species Imp_ports =
   let port_out1 = 11;
   let port_out2 = 12;
 
-  let equal(x in Self, y in Self) in bool = x =0x y;
+  let equal (x : Self, y : Self) : bool = x =0x y;
   let element = 1;
 
 
-  proof of equal_transitive = assumed {* type polymorphe *};
+  proof of equal_transitive = assumed (* type polymorphe *);
   (* by property basics#beq_trans definition of equal; *)
-  proof of equal_symmetric = assumed {* type polymorphe *};
+  proof of equal_symmetric = assumed (* type polymorphe *);
   (* by property basics#beq_symm definition of equal; *)
-  proof of equal_reflexive = assumed {* type polymorphe *};
+  proof of equal_reflexive = assumed (* type polymorphe *);
   (* by property basics#beq_refl definition of equal; *)
 
 
   let parse(x) = basics#int_of_string(x);
   let print(x) =  basics#string_of_int(x);
 
-  proof of diff_empty_port_in1 = assumed {* See below *};
-  proof of diff_empty_port_in2 = assumed {* See below *};
-  proof of diff_empty_port_in3 = assumed {* See below *};
-  proof of diff_empty_port_out1 = assumed {* See below *};
-  proof of diff_empty_port_out2 = assumed {* See below *};
-  proof of diff_port_in1_port_in2 = assumed {* See below *};
-  proof of diff_port_in1_port_in3 = assumed {* See below *};
-  proof of diff_port_in1_port_out1 = assumed {* See below *};
-  proof of diff_port_in1_port_out2 = assumed {* See below *};
-  proof of diff_port_in2_port_in3 = assumed {* See below *};
-  proof of diff_port_in2_port_out1 = assumed {* See below *};
-  proof of diff_port_in2_port_out2 = assumed {* See below *};
-  proof of diff_port_in3_port_out1 = assumed {* See below *};
-  proof of diff_port_in3_port_out2 = assumed {* See below *};
-  proof of diff_port_out1_port_out2 = assumed {* See below *};
-  proof of disj = assumed {* See below *};
+  proof of diff_empty_port_in1 = assumed (* See below *);
+  proof of diff_empty_port_in2 = assumed (* See below *);
+  proof of diff_empty_port_in3 = assumed (* See below *);
+  proof of diff_empty_port_out1 = assumed (* See below *);
+  proof of diff_empty_port_out2 = assumed (* See below *);
+  proof of diff_port_in1_port_in2 = assumed (* See below *);
+  proof of diff_port_in1_port_in3 = assumed (* See below *);
+  proof of diff_port_in1_port_out1 = assumed (* See below *);
+  proof of diff_port_in1_port_out2 = assumed (* See below *);
+  proof of diff_port_in2_port_in3 = assumed (* See below *);
+  proof of diff_port_in2_port_out1 = assumed (* See below *);
+  proof of diff_port_in2_port_out2 = assumed (* See below *);
+  proof of diff_port_in3_port_out1 = assumed (* See below *);
+  proof of diff_port_in3_port_out2 = assumed (* See below *);
+  proof of diff_port_out1_port_out2 = assumed (* See below *);
+  proof of disj = assumed (* See below *);
 
 end
 ;;

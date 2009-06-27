@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: quotient_structures.fcl,v 1.6 2009-06-25 10:11:49 weis Exp $ *)
+(* $Id: quotient_structures.fcl,v 1.7 2009-06-27 01:29:03 weis Exp $ *)
 
 (**
    @title Quotient algebraic structures
@@ -916,7 +916,7 @@ species Quotient_ring
   (* [rr]: this one might be boring *)
   proof of mult_assoc =
  (*     definition of mult equal; *)
-    assumed {* *}
+    assumed (* *)
  (*     by r!mult_assoc, *)
  (*        r!mult_left_substitution_rule, r!mult_right_substitution_rule, *)
  (*        proj!reduce_preserves_multiplication, *)
@@ -977,7 +977,7 @@ species Quotient_ring
   ;
 
   (* [rr]: this one might be boring *)
-  proof of mult_left_distributes_on_plus = assumed {* *};
+  proof of mult_left_distributes_on_plus = assumed (* *);
 
 end
 ;;
@@ -1044,7 +1044,7 @@ species Projector_along_principal_ideal (R is Euclidean_domain) =
               !ideal_generator))),
               R!remainder (R!remainder (x, !ideal_generator),
           !ideal_generator)))
-               assumed {* *}
+               assumed (* *)
           <2>2 prove (R!is_zero (R!remainder (R!remainder (x, !ideal_generator),
             !ideal_generator))
                       \/
@@ -1052,7 +1052,7 @@ species Projector_along_principal_ideal (R is Euclidean_domain) =
                         (R!remainder (R!remainder (x, !ideal_generator),
              !ideal_generator),
                          !ideal_generator))
-               assumed {* *}
+               assumed (* *)
           <2>f qed by step <2>1, <2>2
                       property !non_null_generator, R!euclidean_characterisation
      <1>2 qed by step <1>1
@@ -1066,7 +1066,7 @@ species Projector_along_principal_ideal (R is Euclidean_domain) =
            R!remainder (y, !ideal_generator)),
             !ideal_generator),
         R!remainder (R!plus (x, y), !ideal_generator))
-          assumed {* *}
+          assumed (* *)
      <1>2 qed by step <1>1 definition of reduce;
 
   proof of opposite_compatibility =
@@ -1075,7 +1075,7 @@ species Projector_along_principal_ideal (R is Euclidean_domain) =
            !ideal_generator)),
             !ideal_generator),
         R!remainder (R!opposite (x), !ideal_generator))
-          assumed {* *}
+          assumed (* *)
      <1>f qed by step <1>1 definition of reduce;
 
   proof of reduce_preserves_multiplication =
@@ -1084,7 +1084,7 @@ species Projector_along_principal_ideal (R is Euclidean_domain) =
            R!remainder (y, !ideal_generator)),
             !ideal_generator),
         R!remainder (R!mult (x, y), !ideal_generator))
-          assumed {* *}
+          assumed (* *)
      <1>2 qed by step <1>1
                  property R!equal_symmetric
                  definition of reduce;
@@ -1171,7 +1171,7 @@ species Modular_field
   inherit Field, Modular_ring (R, Proj);
 
   (** n is assumed to be prime *)
-  proof of mult_is_integral = assumed {* *};
+  proof of mult_is_integral = assumed (* *);
 
   (** we define inversion and divison from inversion *)
   let inv (x : Self) : Self =
@@ -1185,9 +1185,9 @@ species Modular_field
 
   let div (x, y) = !mult (x, !inv (y));
 
-  proof of div_is_complete = assumed {* *};
+  proof of div_is_complete = assumed (* *);
 
-  proof of inv_substitution_rule = assumed {* *};
+  proof of inv_substitution_rule = assumed (* *);
 
 end
 ;;

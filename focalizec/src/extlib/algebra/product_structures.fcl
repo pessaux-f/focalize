@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: product_structures.fcl,v 1.12 2009-06-25 10:11:49 weis Exp $ *)
+(* $Id: product_structures.fcl,v 1.13 2009-06-27 01:29:03 weis Exp $ *)
 
 (** Cartesian product of two structures, common orderings. *)
 
@@ -85,8 +85,8 @@ species Product_additive_monoid (M1 is Additive_monoid, M2 is Additive_monoid) =
     <1>f conclude
     ;
 
-  proof of zero_is_neutral = assumed {* Because todo *};
-  proof of plus_is_associative = assumed {* Because todo *};
+  proof of zero_is_neutral = assumed (* Because todo *);
+  proof of plus_is_associative = assumed (* Because todo *);
 end
 ;;
 
@@ -101,7 +101,7 @@ species Product_regular_additive_monoid
 (*     let a2 = !second (a) in *)
 (*     M1!is_zero (a1) && M2!is_zero (a2); *)
 
-(*   proof of is_zero_spec = assumed {* Because todo *}; *)
+(*   proof of is_zero_spec = assumed (* Because todo *); *)
 
   let minus (a, b) =
     let a1 = !first (a) in
@@ -110,10 +110,10 @@ species Product_regular_additive_monoid
     let b2 = !second (b) in
     (M1!minus (a1, b1), M2!minus (a2, b2));
 
-  proof of plus_is_left_regular = assumed {* Because todo *};
-  proof of minus_is_well_defined = assumed {* Because todo *};
-  proof of minus_right_substitution_rule = assumed {* Because todo *};
-  proof of minus_left_substitution_rule = assumed {* Because todo *};
+  proof of plus_is_left_regular = assumed (* Because todo *);
+  proof of minus_is_well_defined = assumed (* Because todo *);
+  proof of minus_right_substitution_rule = assumed (* Because todo *);
+  proof of minus_left_substitution_rule = assumed (* Because todo *);
 
 end
 ;;
@@ -133,13 +133,13 @@ species Product_additive_monoid_with_infimum
    let b2 = !second (b) in
    (M1!inf (a1, b1), M2!inf (a2, b2));
 
-  proof of inf_absorbes_add = assumed {* Because todo *};
-  proof of inf_commutes = assumed {* Because todo *};
-  proof of inf_is_associative = assumed {* Because todo *};
-  proof of add_right_distributes_on_inf = assumed {* Because todo *};
-  proof of add_left_distributes_on_inf = assumed {* Because todo *};
-  proof of inf_idempotent = assumed {* Because todo *};
-  proof of inf_left_substitution_rule = assumed {* Because todo *};
+  proof of inf_absorbes_add = assumed (* Because todo *);
+  proof of inf_commutes = assumed (* Because todo *);
+  proof of inf_is_associative = assumed (* Because todo *);
+  proof of add_right_distributes_on_inf = assumed (* Because todo *);
+  proof of add_left_distributes_on_inf = assumed (* Because todo *);
+  proof of inf_idempotent = assumed (* Because todo *);
+  proof of inf_left_substitution_rule = assumed (* Because todo *);
 
   let output (a, v1, v2) =
     let a1 = !first (a) in
@@ -166,13 +166,13 @@ species Product_additive_monoid_with_supremum
    let b2 = !second (b) in
    (M1!sup (a1, b1), M2!sup (a2, b2));
 
-  proof of sup_commutes = assumed {* Because todo *};
-  proof of sup_absorbes_add = assumed {* Because todo *};
-  proof of sup_is_associative = assumed {* Because todo *};
-  proof of add_right_distributes_on_sup = assumed {* Because todo *};
-  proof of add_left_distributes_on_sup = assumed {* Because todo *};
-  proof of sup_idempotent = assumed {* Because todo *};
-  proof of sup_left_substitution_rule = assumed {* Because todo *};
+  proof of sup_commutes = assumed (* Because todo *);
+  proof of sup_absorbes_add = assumed (* Because todo *);
+  proof of sup_is_associative = assumed (* Because todo *);
+  proof of add_right_distributes_on_sup = assumed (* Because todo *);
+  proof of add_left_distributes_on_sup = assumed (* Because todo *);
+  proof of sup_idempotent = assumed (* Because todo *);
+  proof of sup_left_substitution_rule = assumed (* Because todo *);
 
   let output(a, v1, v2) =
    let a1 = !first (a) in
@@ -203,15 +203,15 @@ species Lexicographic_product_additive_monoid
     let b2 = !second (b) in
     M1!lt (a1, b1) || (M1!equal (a1, b1) && M2!leq (a2, b2));
 
-  proof of order_compatible_with_cancellation = assumed {* Because todo *};
-  proof of order_compatible_with_plus = assumed {* Because todo *};
-  proof of leq_reflexive = assumed {* Because todo *};
-  proof of leq_antisymmetric = assumed {* Because todo *};
-  proof of leq_transitive = assumed {* Because todo *};
-  proof of leq_refines_order_inf = assumed {* Because todo *};
-  proof of geq_refines_order_sup = assumed {* Because todo *};
+  proof of order_compatible_with_cancellation = assumed (* Because todo *);
+  proof of order_compatible_with_plus = assumed (* Because todo *);
+  proof of leq_reflexive = assumed (* Because todo *);
+  proof of leq_antisymmetric = assumed (* Because todo *);
+  proof of leq_transitive = assumed (* Because todo *);
+  proof of leq_refines_order_inf = assumed (* Because todo *);
+  proof of geq_refines_order_sup = assumed (* Because todo *);
   (* NdV: added 9 Feb 2004. see species total_order for more details. *)
-  proof of total_order = assumed {* Because todo *};
+  proof of total_order = assumed (* Because todo *);
   -- proof of lt_is_not_leq = assumed {* Because todo *};
 
 end
@@ -252,15 +252,15 @@ species Reverse_lexicographic_product_additive_monoid
     let b2 = !second (b) in
     M2!lt (a2, b2) || (M2!equal (a2, b2) && M1!leq (a1, b1));
 
-  proof of order_compatible_with_cancellation = assumed {* Because todo *};
-  proof of order_compatible_with_plus = assumed {* Because todo *};
-  proof of leq_reflexive = assumed {* Because todo *};
-  proof of leq_antisymmetric = assumed {* Because todo *};
-  proof of leq_transitive = assumed {* Because todo *};
-  proof of leq_refines_order_inf = assumed {* Because todo *};
-  proof of geq_refines_order_sup = assumed {* Because todo *};
+  proof of order_compatible_with_cancellation = assumed (* Because todo *);
+  proof of order_compatible_with_plus = assumed (* Because todo *);
+  proof of leq_reflexive = assumed (* Because todo *);
+  proof of leq_antisymmetric = assumed (* Because todo *);
+  proof of leq_transitive = assumed (* Because todo *);
+  proof of leq_refines_order_inf = assumed (* Because todo *);
+  proof of geq_refines_order_sup = assumed (* Because todo *);
   (* NdV: added 9 Feb 2004. see species total_order for more details. *)
-  proof of total_order = assumed {* Because todo *};
+  proof of total_order = assumed (* Because todo *);
   (* [rr]: this requires checking why proof invalidates *)
   -- proof of lt_is_not_leq = assumed {* Because todo *};
 end

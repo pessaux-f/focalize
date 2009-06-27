@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: switch_automata.fcl,v 1.11 2009-06-15 15:20:35 pessaux Exp $ *)
+(* $Id: switch_automata.fcl,v 1.12 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -46,37 +46,37 @@ species State_aut1 =
   theorem diff_moving_normal:
   ~ !equal (moving, normal)
 
-  proof = assumed {* To do *}
+  proof = assumed (* To do *)
   ;
 
   theorem diff_moving_reverse:
   !equal (moving, reverse)
 
-  proof = assumed {* To do *}
+  proof = assumed (* To do *)
   ;
 
   theorem diff_moving_uncontroled:
   !equal (moving, uncontroled)
 
-  proof = assumed {* To do *}
+  proof = assumed (* To do *)
   ;
 
   theorem diff_normal_reverse:
   !equal (normal, reverse)
 
-  proof = assumed {* To do *}
+  proof = assumed (* To do *)
   ;
 
   theorem diff_normal_uncontroled:
   !equal (normal, uncontroled)
 
-  proof = assumed {* To do *}
+  proof = assumed (* To do *)
   ;
 
   theorem diff_reverse_uncontroled:
   !equal (reverse, uncontroled)
 
-  proof = assumed {* To do *}
+  proof = assumed (* To do *)
   ;
 
 end
@@ -100,11 +100,11 @@ species Imp_state_aut1 =
 
   let element = 1;
 
-  proof of equal_transitive = assumed {* type polymorphe *};
+  proof of equal_transitive = assumed (* type polymorphe *);
   (* by property basics#beq_trans definition of equal; *)
-  proof of equal_symmetric = assumed {* type polymorphe *};
+  proof of equal_symmetric = assumed (* type polymorphe *);
   (* by property basics#beq_symm definition of equal; *)
-  proof of equal_reflexive = assumed {* type polymorphe *};
+  proof of equal_reflexive = assumed (* type polymorphe *);
   (* by property basics#beq_refl definition of equal; *)
 
   let get (s in Self) in int = s
@@ -174,13 +174,13 @@ species
     all st in St1, all a2 in Aut2,
     st_aut1 (constr_self (st, a2)) = st
 
-  proof = assumed {* To do *}
+  proof = assumed (* To do *)
   ;
   theorem aut2_is_snd_self:
     all st in St1, all a2 in Aut2,
     st_aut2 (constr_self (st, a2)) = a2
 
-  proof = assumed {* To do *}
+  proof = assumed (* To do *)
   ;
 
   theorem st_is_fst_fst_tau:
@@ -322,7 +322,7 @@ species
           Req!reverse_switched))),
     St1!reverse)
 
-  proof = assumed {* To do *}
+  proof = assumed (* To do *)
   ;
 
   let get_state (x in Self) = !st_aut1 (x);
@@ -390,7 +390,7 @@ species Imp2_switch_automata =
   Coll_state_aut1!equal (
     st_aut1 (tau_p1 (constr_tau (constr_self (s1, a2), po))), s1)
 
-  proof = assumed {* To do *};
+  proof = assumed (* To do *);
 
 
   theorem safe_normal:
@@ -410,7 +410,7 @@ species Imp2_switch_automata =
    assume H1: Coll_state_aut1!equal (st_aut1 (tau_p1 (tau (s1, r))),
                                      Coll_state_aut1!normal),
    prove Coll_requests!equal (r, Coll_requests!normal_switched)
-   <2>1 qed assumed {* To do *}
+   <2>1 qed assumed (* To do *)
 
   <1>f conclude
   ;

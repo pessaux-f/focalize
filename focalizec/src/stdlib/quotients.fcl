@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: quotients.fcl,v 1.12 2009-06-24 22:29:32 weis Exp $ *)
+(* $Id: quotients.fcl,v 1.13 2009-06-27 01:29:03 weis Exp $ *)
 
 (**
    @title Quotient Structures
@@ -288,7 +288,7 @@ species Trivial_quotient_final =
   (** the only signature returning a value of self preserves the invariant  *)
   proof of correct_invariant =
     property sample_is_reduced
-    assumed {* *};
+    assumed;
 end
 ;;
 

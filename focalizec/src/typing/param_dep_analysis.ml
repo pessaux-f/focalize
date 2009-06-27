@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.30 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.31 2009-06-27 01:29:03 weis Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -402,7 +402,7 @@ let rec param_deps_proof_node ~current_species
 and param_deps_proof ~current_species (param_coll_name, param_coll_meths)
     proof =
   match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed (enforced_deps, _)
+   | Parsetree.Pf_assumed enforced_deps
    | Parsetree.Pf_coq (enforced_deps, _) ->
        List.fold_left
          (fun accu_deps enf_dep ->

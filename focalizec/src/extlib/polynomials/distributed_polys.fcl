@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: distributed_polys.fcl,v 1.3 2009-06-26 23:43:21 weis Exp $ *)
+(* $Id: distributed_polys.fcl,v 1.4 2009-06-27 01:29:03 weis Exp $ *)
 
 (**
   @title Distributed polynomials
@@ -93,13 +93,13 @@ species Indexed_bag (I is Ordered_set_with_zero, E is Setoid_with_zero) =
 
   proof of equal_reflexive =
     property I!equal_reflexive, E!equal_reflexive
-    assumed {* type distributed_representation; should soon work with Zenon*};
+    assumed (* type distributed_representation; should soon work with Zenon*);
   proof of equal_symmetric =
     property I!equal_symmetric, E!equal_symmetric
-    assumed {* type distributed_representation; should soon work with Zenon*};
+    assumed (* type distributed_representation; should soon work with Zenon*);
   proof of equal_transitive =
     property I!equal_transitive, E!equal_transitive
-    assumed {* type distributed_representation; should soon work with Zenon*};
+    assumed (* type distributed_representation; should soon work with Zenon*);
 
 end;;
 

@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: valid_meas.fcl,v 1.3 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: valid_meas.fcl,v 1.4 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -79,7 +79,7 @@ species Imp_valid_meas (P is Peano) =
     property P!zero_is_not_successor
   ;
 
-  proof of all_value = assumed {* By construction *};
+  proof of all_value = assumed (* By construction *);
 
 
   let parse(x : string) : Self =

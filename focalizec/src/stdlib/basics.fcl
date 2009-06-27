@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.66 2009-06-25 17:38:00 weis Exp $ *)
+(* $Id: basics.fcl,v 1.67 2009-06-27 01:29:03 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -407,7 +407,7 @@ theorem int_lt_le_trans :
 
 theorem int_le_refl :
   all x y : int, x = y -> x <=0x y
-  proof = assumed {* Import trusted external code. *}
+  proof = assumed (* Import trusted external code. *)
 ;;
 
 theorem int_le_antisymm:
@@ -445,7 +445,7 @@ theorem int_le_trans:
 
 theorem int_lt_irrefl :
   all x y : int, x <0x y -> ~ x = y
-  proof = assumed {* Import trusted external code. *}
+  proof = assumed (* Import trusted external code. *)
 ;;
 
 (** {7 Theorems for integer operations} *)

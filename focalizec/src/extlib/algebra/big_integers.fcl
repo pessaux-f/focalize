@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: big_integers.fcl,v 1.13 2009-06-06 22:48:28 weis Exp $ *)
+(* $Id: big_integers.fcl,v 1.14 2009-06-27 01:29:03 weis Exp $ *)
 
 use "basics";;
 
@@ -23,7 +23,7 @@ use "basics";;
 type big_int =
   internal
   external
-  | caml -> {*  Big_int.big_int *}
+  | caml -> {* Big_int.big_int *}
   | coq -> {* (* [Unsure] *) *}
 ;;
 
@@ -357,17 +357,17 @@ species Base_big_int =
 
   let plus (m, n) = #add_big_int (m, n);
 
-  proof of zero_is_neutral= assumed {* Because todo *};
-  proof of plus_is_left_regular = assumed {* Because todo *};
-  proof of plus_is_associative = assumed {* Because todo *};
-  proof of plus_commutes = assumed {* Because todo *};
-  proof of plus_right_substitution_rule = assumed {* Because todo *};
+  proof of zero_is_neutral= assumed (* Because todo *);
+  proof of plus_is_left_regular = assumed (* Because todo *);
+  proof of plus_is_associative = assumed (* Because todo *);
+  proof of plus_commutes = assumed (* Because todo *);
+  proof of plus_right_substitution_rule = assumed (* Because todo *);
 
   let equal (m, n) =  #eq_big_int (m, n);
 
-  proof of equal_symmetric = assumed {* Because todo *};
-  proof of equal_reflexive = assumed {* Because todo *};
-  proof of equal_transitive = assumed {* Because todo *};
+  proof of equal_symmetric = assumed (* Because todo *);
+  proof of equal_reflexive = assumed (* Because todo *);
+  proof of equal_transitive = assumed (* Because todo *);
 
   let of_int (n) = #big_int_of_int (n);
   let print = #string_of_big_int;
@@ -389,22 +389,22 @@ open "basics";;
 species Integers_big_int =
   inherit integers#Integer_system, Base_big_int;
 
-  proof of one_is_left_neutral = assumed {* Because todo *};
+  proof of one_is_left_neutral = assumed (* Because todo *);
 
   let mult (m, n) = #mult_big_int (m, n);
 
-  proof of mult_is_integral = assumed {* Because todo *};
-  proof of mult_assoc = assumed {* Because todo *};
-  proof of mult_commutes = assumed {* Because todo *};
-  proof of mult_left_distributes_on_plus = assumed {* Because todo *};
+  proof of mult_is_integral = assumed (* Because todo *);
+  proof of mult_assoc = assumed (* Because todo *);
+  proof of mult_commutes = assumed (* Because todo *);
+  proof of mult_left_distributes_on_plus = assumed (* Because todo *);
   (*[rr]: needs check *)
-  proof of mult_right_distributes_on_plus = assumed {* Because toto *};
-  proof of mult_left_substitution_rule = assumed {* Because todo *};
+  proof of mult_right_distributes_on_plus = assumed (* Because toto *);
+  proof of mult_left_substitution_rule = assumed (* Because todo *);
 
   let sign (x) = #sign_big_int (x);
 
-  proof of order_compatible_with_plus = assumed {* Because todo *};
-  proof of mult_compat_with_order = assumed {* Because todo *};
+  proof of order_compatible_with_plus = assumed (* Because todo *);
+  proof of mult_compat_with_order = assumed (* Because todo *);
 
   let quo_rem (m, n) =
     let nn = n in
@@ -418,21 +418,21 @@ species Integers_big_int =
 
   let opposite (x) = #minus_big_int (x);
 
-  proof of opposite_is_opposite = assumed {* Because todo *};
+  proof of opposite_is_opposite = assumed (* Because todo *);
 
   logical let euclidean_ordering (x, y) =
-    if !sign(x) <0x 0 then
+    if !sign (x) <0x 0 then
       if #sign_big_int (y) <0x 0 then !lt (x, y)
       else !lt (x, !opposite (y))
     else
       if #sign_big_int (y) <0x 0 then !lt (x, !opposite (y))
       else !lt (x, y);
 
-  proof of euclidean_ordering_is_irreflexive = assumed {* Because todo *};
-  proof of euclidean_order_is_antisymmetric = assumed {* Because todo *};
-  proof of euclidean_ordering_is_transitive = assumed {* Because todo *};
-  proof of remainder_is_smaller = assumed {* Because todo *};
-  proof of equal_from_leq = assumed {* Because broken by equal redefinition.*};
+  proof of euclidean_ordering_is_irreflexive = assumed (* Because todo *);
+  proof of euclidean_order_is_antisymmetric = assumed (* Because todo *);
+  proof of euclidean_ordering_is_transitive = assumed (* Because todo *);
+  proof of remainder_is_smaller = assumed (* Because todo *);
+  proof of equal_from_leq = assumed (* Because broken by equal redefinition.*);
 
 end
 ;;

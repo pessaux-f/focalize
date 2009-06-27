@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.79 2009-06-24 22:29:03 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.80 2009-06-27 01:29:03 weis Exp $ *)
 
 open Parsetree;;
 
@@ -789,11 +789,11 @@ and pp_enforced_dependency ppf = pp_ast pp_enforced_dependency_desc ppf
 
 
 and pp_proof_desc ppf = function
-  | Parsetree.Pf_assumed (enf_deps, reason) ->
+  | Parsetree.Pf_assumed enf_deps ->
       Format.fprintf ppf "@[<2>%a"
         (pp_enforced_dependencies " ") enf_deps;
       if enf_deps <> [] then Format.fprintf ppf " ";
-      Format.fprintf ppf "assumed@ {*%s*}@]" reason
+      Format.fprintf ppf "assumed@]"
   | Parsetree.Pf_auto [] ->
       Format.fprintf ppf "@[<2>conclude@]"
   | Parsetree.Pf_auto facts ->
@@ -847,7 +847,7 @@ and pp_statement_desc ppf stmt =
   | [], Some logical_expr ->
     Format.fprintf ppf "prove %a" pp_logical_expr logical_expr
   | hyps, concl ->
-    Format.fprintf ppf "assume %a@ %a"
+    Format.fprintf ppf "%a@ %a"
       (pp_hyps "") hyps
       (Handy.pp_generic_option "prove " pp_logical_expr) concl
 and pp_statement ppf = pp_ast pp_statement_desc ppf
@@ -856,7 +856,7 @@ and pp_statement ppf = pp_ast pp_statement_desc ppf
 
 and pp_hyp_desc ppf = function
   | Parsetree.H_variable (vname, te) ->
-      Format.fprintf ppf "@[<2>%a :@ %a,@ @]"
+      Format.fprintf ppf "@[<2>assume %a :@ %a,@ @]"
         pp_vname vname pp_type_expr te
   | Parsetree.H_hypothesis (vname, prop) ->
       Format.fprintf ppf "@[<2>hypothesis %a :@ %a,@ @]"

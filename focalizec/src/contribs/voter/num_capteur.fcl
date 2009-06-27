@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: num_capteur.fcl,v 1.8 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: num_capteur.fcl,v 1.9 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -91,7 +91,7 @@ species Imp_capteur (P is Peano) =
     property P!zero_is_not_successor, P!succ_is_an_injection
   ;
 
-  proof of all_value = assumed {* By construction *};
+  proof of all_value = assumed (* By construction *);
 
   let print (x : Self) : string =
     if !equal (x, !capt_1) then "capt_1" else

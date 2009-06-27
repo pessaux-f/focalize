@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.154 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: parser.mly,v 1.155 2009-06-27 01:29:03 weis Exp $ *)
 
 open Parsetree;;
 
@@ -937,8 +937,8 @@ in_type_expr_opt:
 proof:
   | opt_annot CONCLUDE
     { mk_annot $1 (Pf_auto []) }
-  | opt_annot enforced_dependencies ASSUMED EXTERNAL_CODE
-    { mk_annot $1 (Pf_assumed ($2, $4)) }
+  | opt_annot enforced_dependencies ASSUMED
+    { mk_annot $1 (Pf_assumed $2) }
   | opt_annot COQ PROOF enforced_dependencies EXTERNAL_CODE
     { mk_annot $1 (Pf_coq ($4, $5)) }
   | opt_annot BY fact_list

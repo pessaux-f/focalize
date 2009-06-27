@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: integers.fcl,v 1.13 2009-06-25 09:58:55 weis Exp $ *)
+(* $Id: integers.fcl,v 1.14 2009-06-27 01:29:03 weis Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -102,7 +102,7 @@ species Enumerated_system =
   theorem enumerated_induction: all p : (Self -> prop),
     p (!start) -> (all n : Self, p (n) -> p (!successor (n)))
       -> (all n : Self, p (n))
-    proof = assumed {* Because todo *};
+    proof = assumed (* Because todo *);
 
 end
 ;;
@@ -158,12 +158,12 @@ species Number_system =
 (*     !equal(!mult2(x), !plus(x, x)) *)
 (*     proof = by property !equal_reflexive definition of mult2; *)
 
-(*   proof of mult2_substitution_rule = assumed {* Because todo *}; *)
-(*   proof of mult2_is_injective = assumed {* Because todo *}; *)
-(*   proof of mult2_produces_even = assumed {* Because todo *}; *)
+(*   proof of mult2_substitution_rule = assumed (* Because todo *); *)
+(*   proof of mult2_is_injective = assumed (* Because todo *); *)
+(*   proof of mult2_produces_even = assumed (* Because todo *); *)
 
-(*   proof of zero_is_even = assumed {* Because todo *}; *)
-(*   proof of zero_fixes_mult2 = assumed {* Because todo *}; *)
+(*   proof of zero_is_even = assumed (* Because todo *); *)
+(*   proof of zero_fixes_mult2 = assumed (* Because todo *); *)
 
   let start = !zero;
 
@@ -208,11 +208,11 @@ species Natural_number_system =
            Number_system,
            Enumerated_system;
 
-  proof of successor_is_non_trivial = assumed {* Because todo *};
+  proof of successor_is_non_trivial = assumed (* Because todo *);
   (** the predecessor is a partial operation *)
   let predecessor (n) = !minus (n, !one);
-  proof of predecessor_is_injective = assumed {* Because todo *};
-  proof of predecessor_reverses_successor = assumed {* Because todo *};
+  proof of predecessor_is_injective = assumed (* Because todo *);
+  proof of predecessor_reverses_successor = assumed (* Because todo *);
 
   (** used throughout the library *)
   signature random : Self -> Self;
@@ -234,11 +234,11 @@ species Integer_system =
   (** some properties are common between integers and naturals *)
   theorem predecessor_is_injective: all x y : Self,
     !equal (!successor (x), !successor (y)) -> !equal (x, y)
-    proof = assumed {* Because todo *};
+    proof = assumed (* Because todo *);
 
   theorem predecessor_reverses_successor: all x y : Self,
     !equal (x, !successor (y)) -> !equal (y, !predecessor (x))
-    proof = assumed {* Because temporarily unvailable in new version *};
+    proof = assumed (* Because temporarily unvailable in new version *);
 (*    proof = by !opposite_is_opposite, !opposite_substitution_rule, *)
 (*              !equal_reflexive, !equal_symmetric, !equal_transitive *)
 (*          def !minus, !predecessor; *)

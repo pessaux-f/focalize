@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursive_polys.fcl,v 1.3 2009-06-26 23:43:21 weis Exp $ *)
+(* $Id: recursive_polys.fcl,v 1.4 2009-06-27 01:29:03 weis Exp $ *)
 
 open "basics";;
 
@@ -30,7 +30,7 @@ type recursive_representation('r, 'd) =
   | Base ('r)
              (* [rr] note that string do not really compile to Coq *)
   | Composed
-      (string, 
+      (string,
        distributed_representation
          (recursive_representation ('r, 'd), 'd))
 ;;
@@ -38,55 +38,55 @@ type recursive_representation('r, 'd) =
 (** Unfolding of polynomial equality *)
 let distr_eq (i_eq, e_eq) =
   let rec equal (x, y) = match x with
-    | Null -> 
+    | Null ->
         (match y with
-	| Null -> true
-	| NonNull (_, _, _) -> false)
+        | Null -> true
+        | NonNull (_, _, _) -> false)
     | NonNull (cx, dx, xx) ->
-	(match y with
-	| Null -> false
-	| NonNull (cy, dy, yy) ->
-	  if e_eq (cx, cy)
-	  then
-	    if i_eq (dx, dy)
-	    then
-	      equal (xx, yy)
-	    else false
-	  else false)
+        (match y with
+        | Null -> false
+        | NonNull (cy, dy, yy) ->
+          if e_eq (cx, cy)
+          then
+            if i_eq (dx, dy)
+            then
+              equal (xx, yy)
+            else false
+          else false)
    in function x -> function y -> equal (x, y)
 ;;
 
 (**
-   I am not the sure of the correct name, 
+   I am not the sure of the correct name,
    nor if it has some sense in the literature.
  *)
 species Recursive_indexed_bag (E is Setoid_with_zero,
-			      I is Ordered_set_with_zero) =
+              I is Ordered_set_with_zero) =
   representation = recursive_representation (E, I);
 
   (* [rr]: once equality d_eq is abstracted there is no recursivity *)
-  let my_equal (d_eq : (distributed_representation (Self, I) 
-                         -> distributed_representation (Self, I) 
+  let my_equal (d_eq : (distributed_representation (Self, I)
+                         -> distributed_representation (Self, I)
                              -> bool),
-	       x : Self,
-	       y : Self) =
+               x : Self,
+               y : Self) =
     match x with
     | Base (xb) ->
-	(match y with
-	| Base (yb) -> E!equal (xb, yb)
-	| Composed (_, _) -> false)
+        (match y with
+        | Base (yb) -> E!equal (xb, yb)
+        | Composed (_, _) -> false)
     | Composed (sx, xx) ->
-	(match y with
-	| Base (_) -> false
-	| Composed (sy, yy) ->
-	    if (sx <^ sy)
-	    then false
-	    else
-	      if (sy <^ sx)
-	      then false
-	      else d_eq (xx, yy));
+        (match y with
+        | Base (_) -> false
+        | Composed (sy, yy) ->
+            if (sx <^ sy)
+            then false
+            else
+              if (sy <^ sx)
+              then false
+              else d_eq (xx, yy));
 
-  let rec 
+  let rec
       r_eq (x, y) = !my_equal (d_eq, x, y)
   and d_eq (x, y) = distr_eq (I!equal, !r_eq) (x, y);
 
@@ -104,7 +104,7 @@ end;;
 (**
    Unfolding of constant check for distributed polynomials.
    A polynomial is constant if is zero or if its degree it zero.
-   Note that here the representation of distributed polynomials 
+   Note that here the representation of distributed polynomials
    is transparent.
  *)
 let distr_is_constant (i_is_0) =
@@ -124,7 +124,7 @@ let distr_lc (m_zero)=
   in function x -> leading_coefficient (x)
 ;;
 
-(** 
+(**
    Unfolding definition of injection of ring elements
    into elements of distributed polynomials over the ring.
  *)
@@ -144,7 +144,7 @@ let distr_lift (m_is_0, i_zero) =
    Unfolding of distributed polynomials addition.
    Simple abstraction of method calls!
  *)
-let distr_plus (ilt, mplus, m_is_0) = 
+let distr_plus (ilt, mplus, m_is_0) =
    (* [rr]: We believe unfolding is necessary for termination *)
    let rec my_plus (s_1, s_2) =
    (* This should translate into a fix point*)
@@ -173,12 +173,12 @@ let distr_plus (ilt, mplus, m_is_0) =
 
 open "additive_law";;
 
-(** 
+(**
    The free commutative monoid over an ordered alphabet (string) of variables
  *)
 
-species Recursive_indexed_sum (M is Additive_group, 
-			      D is Ordered_set_with_zero) =
+species Recursive_indexed_sum (M is Additive_group,
+              D is Ordered_set_with_zero) =
   inherit Additive_group, Recursive_indexed_bag (M, D);
 
   (**
@@ -187,25 +187,25 @@ species Recursive_indexed_sum (M is Additive_group,
      Thus the code involves no direct recursion.
      Code is fully typed for safety reasons.
    *)
-  let my_plus (pol_plus :  
-                distributed_representation (Self, D) ->  
-                  distributed_representation (Self, D) ->  
+  let my_plus (pol_plus :
+                distributed_representation (Self, D) ->
+                  distributed_representation (Self, D) ->
                      distributed_representation (Self, D),
-	       pol_lift : Self ->  distributed_representation (Self, D),
-	       pol_const :  distributed_representation (Self, D) -> bool, 
-               pol_lc :  distributed_representation (Self, D) -> Self, 
+               pol_lift : Self ->  distributed_representation (Self, D),
+               pol_const :  distributed_representation (Self, D) -> bool,
+               pol_lc :  distributed_representation (Self, D) -> Self,
                x : Self, y : Self) : Self =
     match x with
-    | Base (xb) -> 
-	(match y with
-	| Base (yb) -> Base (M!plus (xb, yb))
-	| Composed (sy, yy) ->
-	    Composed (sy, pol_plus (pol_lift (x), yy)))
+    | Base (xb) ->
+        (match y with
+        | Base (yb) -> Base (M!plus (xb, yb))
+        | Composed (sy, yy) ->
+            Composed (sy, pol_plus (pol_lift (x), yy)))
     | Composed (sx, xx) ->
       (match y with
       | Base (_) -> Composed (sx, pol_plus (xx, pol_lift (y)))
       | Composed (sy, yy) ->
-	  if (sx <^ sy)
+          if (sx <^ sy)
           then Composed (sy, pol_plus (pol_lift (x), yy))
           else
             if (sy <^ sx)
@@ -241,7 +241,7 @@ species Recursive_indexed_sum (M is Additive_group,
 (*     and d_plus = distr_plus (D!lt, i_plus, !is_zero) *)
 (*     and d_lift = distr_lift (!is_zero, D!zero) *)
 (*     and d_const = distr_is_constant *)
- (*     and d_lc = distr_lc (!zero) *)
+(*     and d_lc = distr_lc (!zero) *)
 (*     in function x -> function y -> i_plus (x, y); *)
 
 end;;
@@ -290,7 +290,7 @@ end;;
 
 (*   (\* from V. Ruffie. see algebre_polynomiale for more details. *\) *)
 (*     let read_var (s) = *)
- (*       !generator (s, v!parse ("1")); *)
+(*       !generator (s, v!parse ("1")); *)
 
 (*     let read_monomial (s, d) = *)
 (*       !generator (s, d); *)
@@ -316,7 +316,7 @@ end;;
 (*    proof of module_mult_is_integral = assumed; *)
 (*    proof of plus_is_right_regular = assumed; *)
 (*    proof of plus_is_left_regular = assumed; *)
-    
+
 (*    let zero = #Base (r!zero) ; *)
 (*    let is_zero (p) =  *)
 (*     match p with *)
@@ -362,7 +362,7 @@ end;;
 (*             then #Failed *)
 (*             else  *)
 (*               let lres = #Cons (#crp (#non_failed (res), d), lres) in *)
- (*               let pp = #Composed (s, lp) in *)
+(*               let pp = #Composed (s, lp) in *)
 (*               self!map_quo (pp, b, lres) *)
 (*        end *)
 (*     end; *)
@@ -385,7 +385,7 @@ end;;
 (*       then #Base (r!one) *)
 (*       else #Composed (s, #Cons (#crp (#Base (r!one), d), #Nil)); *)
 
- (*    let rec  *)
+(*    let rec  *)
 (*        updom is  (\*distributed_polynomials_com_ring (self, v)*\) *)
 (*                 formal_polynomials_commutative_ring (self, v)= *)
 (*                 distributed_polynomials_com_ring (self, v) *)
@@ -571,36 +571,36 @@ end;;
 (*       let lcv = lc (v) in *)
 (*       let redv = reductum (v) in *)
 (*       let rec boucle (u) =  *)
-(* 	let m = degree (u) *)
-(* 	in *)
+(*         let m = degree (u) *)
+(*         in *)
 (*           let difff = dminus (m, dv) in *)
 (*             if #is_failed (difff) then *)
 (*               #cr_qrr (zero , u) *)
-(*       	    else *)
-(* 	      let diff = #non_failed (difff)  in *)
-(* 	      let q = rdivise (lc (u), lcv)  in *)
-(* 	      let qrres = *)
-(* 	        boucle (fmecg (reductum (u), opposite (q), diff, redv)) *)
-(*   	      in *)
-(* 	        #cr_qrr (splus (#quot (qrres), monomial (q, diff)), #rema (qrres)) *)
+(*                   else *)
+(*               let diff = #non_failed (difff)  in *)
+(*               let q = rdivise (lc (u), lcv)  in *)
+(*               let qrres = *)
+(*                 boucle (fmecg (reductum (u), opposite (q), diff, redv)) *)
+(*                 in *)
+(*                 #cr_qrr (splus (#quot (qrres), monomial (q, diff)), #rema (qrres)) *)
 (*         in *)
-(* 	  boucle (u) *)
+(*           boucle (u) *)
 (*       in *)
-(* 	if is_zero (v) then  *)
-(* 	  #divisionParZero ( "DivisionParZero" ) *)
-(* 	else *)
-(* 	  let dv = degree (v) in *)
-(* 	    if is_min (dv) then *)
-(* 	      let quo = fmecg *)
-(* 			   (zero, *)
-(* 			   inv (lc (v)), *)
-(* 			   nat!zero, *)
-(* 			   u *)
-(* 			  ) *)
-(* 	      in *)
-(* 		#cr_qrr (quo, zero)  *)
-(* 	    else	     *)
-(* 	      qrem (u, v); *)
+(*         if is_zero (v) then  *)
+(*           #divisionParZero ( "DivisionParZero" ) *)
+(*         else *)
+(*           let dv = degree (v) in *)
+(*             if is_min (dv) then *)
+(*               let quo = fmecg *)
+(*            (zero, *)
+(*            inv (lc (v)), *)
+(*            nat!zero, *)
+(*            u *)
+(*           ) *)
+(*               in *)
+(*         #cr_qrr (quo, zero)  *)
+(*             else             *)
+(*               qrem (u, v); *)
 (*   proof of remainder_is_smaller = assumed; *)
 (*   proof of euclidean_order_is_non_reflexive = assumed; *)
 (*   proof of euclidean_ordering_is_transitive = assumed; *)

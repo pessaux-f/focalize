@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.86 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: scoping.ml,v 1.87 2009-06-27 01:29:03 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1274,10 +1274,10 @@ and scope_proof_node ctx env node =
 and scope_proof ctx env proof =
   let new_desc =
     (match proof.Parsetree.ast_desc with
-     | Parsetree.Pf_assumed (enf_deps, reason) ->
+     | Parsetree.Pf_assumed enf_deps ->
          let scoped_enforced_deps =
            List.map (scope_enforced_deps ctx env) enf_deps in
-         Parsetree.Pf_assumed (scoped_enforced_deps, reason)
+         Parsetree.Pf_assumed scoped_enforced_deps
      | Parsetree.Pf_coq (enf_deps, script) ->
          let scoped_enforced_deps =
            List.map (scope_enforced_deps ctx env) enf_deps in

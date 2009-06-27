@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: wellfounded.fcl,v 1.13 2009-06-24 22:29:32 weis Exp $ *)
+(* $Id: wellfounded.fcl,v 1.14 2009-06-27 01:29:03 weis Exp $ *)
 
 (* Definition (import) of the notion of wellfoundedness.  Since this notion
    is not defineable in FoCaLize, this library is a toolbox for reasoning
@@ -96,7 +96,7 @@ species RelativeIntegers =
 
   let lt (x, y) = lowerbound <0x y && x <0x y;
 
-  proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
+  proof of wellfounded_lt = assumed (* TODO import proof from Coq. *);
 
 end
 ;;
@@ -110,7 +110,7 @@ species InverseImage (A is PartialWellOrder) =
   property compatibility_lt_Alt_meazure: all x y : Self,
     lt (x, y) -> A!lt (meazure (x), meazure (y));
 
-  proof of wellfounded_lt = assumed {* TODO import proof from Coq. *} ;
+  proof of wellfounded_lt = assumed (* TODO import proof from Coq. *);
 
 end
 ;;
@@ -124,6 +124,7 @@ species Subrelation (A is PartialWellOrder) =
   representation = A;
 
   let meazure (x : Self) : A = x;
+
 end
 ;;
 
@@ -154,7 +155,7 @@ species LexicographicProduct (A is PartialWellOrder, B is PartialWellOrder) =
     | ((xA, xB), (yA, yB)) ->
         A!lt (xA, yA) || (A!equal (xA, yA) && B!lt (xB, yB)) ;
 
-  proof of wellfounded_lt = assumed {* *} ;
+  proof of wellfounded_lt = assumed;
 
 end
 ;;
@@ -171,7 +172,7 @@ species RelationalProduct
     A!lt (C!fst (x), C!fst (y)) &&
     B!lt (C!snd (x), C!snd (y)) ;
 
-  proof of compatibility_lt_Alt_meazure = assumed {* *} ;
+  proof of compatibility_lt_Alt_meazure = assumed;
 
 end
 ;;

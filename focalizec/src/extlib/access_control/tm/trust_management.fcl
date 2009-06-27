@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: trust_management.fcl,v 1.3 2009-05-16 19:41:35 weis Exp $ *)
+(* $Id: trust_management.fcl,v 1.4 2009-06-27 01:29:03 weis Exp $ *)
 
 use "basics";;
 open "basics";;

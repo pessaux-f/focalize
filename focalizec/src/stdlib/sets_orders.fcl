@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets_orders.fcl,v 1.29 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: sets_orders.fcl,v 1.30 2009-06-27 01:29:03 weis Exp $ *)
 
 (**
  @title FoCaLize team. Basic algebra.
@@ -116,7 +116,7 @@ species Anti_setoid =
   theorem equal_transitive : all x y z : Self,
     !equal (x, y) -> !equal (y, z) -> !equal (x, z)
     proof =
-      assumed {* *};
+      assumed;
 (*      by property !different_is_complete, !different_is_symmetric, *)
 (*                        !different_is_irreflexive, !same_is_not_different ; *)
 

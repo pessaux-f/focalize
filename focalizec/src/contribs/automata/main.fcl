@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,10 +14,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main.fcl,v 1.4 2009-06-10 12:23:56 pessaux Exp $ *)
+(* $Id: main.fcl,v 1.5 2009-06-27 01:29:02 weis Exp $ *)
 
 (*
- *@version $Revision: 1.4 $ $Date: 2009-06-10 12:23:56 $
+ *@version $Revision: 1.5 $ $Date: 2009-06-27 01:29:02 $
  *)
 use "basics";;
 use "sets_orders";;

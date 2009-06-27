@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: polys_abstract.fcl,v 1.3 2009-06-26 23:43:21 weis Exp $ *)
+(* $Id: polys_abstract.fcl,v 1.4 2009-06-27 01:29:03 weis Exp $ *)
 
 (**
  @title Abstract polynomials
@@ -119,12 +119,12 @@ species Formal_indexed_sum (M is Additive_group,
 
    theorem leading_coefficient_is_tail_with_degree: all p : Self,
      !equal (!reductum (p), !tail (p, !degree (p)))
-     proof = assumed {* *};
+     proof = assumed (* *);
 
    theorem tail_has_smaller_degree: all p q : Self, all d : I,
      !equal (p, !tail (q, d)) ->
        ~  (!is_zero (q)) ->  I!lt (!degree (q), d)
-    proof = assumed {* *};
+    proof = assumed (* *);
 
 (*    (\** returns the number of monomials *\) *)
 (*    let rec number_of_monomials (p) = *)

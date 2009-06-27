@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: pair.fcl,v 1.8 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: pair.fcl,v 1.9 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics" ;;
 use "sets_orders" ;;
@@ -117,25 +117,25 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
 
   (* Properties assumed on OCaml properties *)
   proof of unicite_1 =
-  assumed {* Assumed on OCaml properties *}
+  assumed (* Assumed on OCaml properties *)
   ;
 
   proof of unicite_2 =
-  assumed {* Assumed on OCaml properties *}
+  assumed (* Assumed on OCaml properties *)
   ;
 
   proof of  prj_a_is_first_of_pair =
-  assumed {* Assumed on OCaml properties *}
+  assumed (* Assumed on OCaml properties *)
   ;
 
   proof of prj_b_is_snd_of_pair =
-  assumed {* Assumed on OCaml properties *}
+  assumed (* Assumed on OCaml properties *)
   ;
 
   (* Proof of pair properties *)
   proof of def_equal =
   (* by property and_b_prop definition of prj_a, prj_b, equal *)
-  assumed {* ??? *}
+  assumed (* ??? *)
   ;
 
   proof of def_equal1 =

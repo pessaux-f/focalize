@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.33 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: substColl.ml,v 1.34 2009-06-27 01:29:03 weis Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -549,12 +549,12 @@ and subst_logical_expr ~current_unit c1 c2 initial_logical_expr =
 and subst_proof ~current_unit c1 c2 proof =
   let new_desc =
     (match proof.Parsetree.ast_desc with
-     | Parsetree.Pf_assumed (enforced_dependencies, external_code) ->
+     | Parsetree.Pf_assumed enforced_dependencies ->
          let enforced_dependencies' =
            List.map
              (subst_enforced_dependency ~current_unit c1 c2)
              enforced_dependencies in
-         Parsetree.Pf_assumed (enforced_dependencies', external_code)
+         Parsetree.Pf_assumed enforced_dependencies'
      | Parsetree.Pf_auto facts ->
          let facts' = List.map (subst_fact ~current_unit c1 c2) facts in
          Parsetree.Pf_auto facts'

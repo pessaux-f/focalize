@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: additive_law.fcl,v 1.13 2009-06-26 13:52:19 rr Exp $ *)
+(* $Id: additive_law.fcl,v 1.14 2009-06-27 01:29:03 weis Exp $ *)
 
 (** The FoCaLize library does not intend to model binary laws which are not
    associative, thus some mathematical notions such as magmas (groupoids) are
@@ -224,7 +224,7 @@ species Zero_check_additive_monoid =
 
   proof of is_zero_substitution_rule =
    (* [rr]: to do *)
-   assumed {* Because todo *};
+   assumed (* Because todo *);
 
   theorem is_zero_defines_unique: all x y : Self,
     (!is_zero (x) /\ !is_zero (y)) -> !equal(x, y)
@@ -563,7 +563,7 @@ species Additive_group =
                  property equal_transitive
          <2>8 prove !equal (!plus (!opposite (x), !plus (x, z)), z)
               (* [rr]: same as above *)
-              assumed {* Because todo *}
+              assumed (* Because todo *)
          <2>f qed by step <2>1, <2>7, <2>8
                    property equal_transitive, equal_symmetric
     <1>2 conclude
@@ -723,14 +723,14 @@ species Ordered_additive_group =
 
   let leq (x, y) = !sign (!minus (x, y)) <=0x 0;
 
-  proof of total_order = assumed {* Because todo *};
-  -- proof of lt_is_not_leq = assumed {* Because todo *};
+  proof of total_order = assumed (* Because todo *);
+  -- proof of lt_is_not_leq = assumed;
 
   let max (x, y) = if !lt (x, y) then y else x;
   let min (x, y) = if !lt (x, y) then x else y;
   let is_zero (x) = Self!sign (x) =0x 0;
 
-  proof of order_compatible_with_cancellation = assumed {* Because todo *};
+  proof of order_compatible_with_cancellation = assumed (* Because todo *);
  (* NdV: 9 Feb 2004: the proof below is rejected as incomplete by Coq.
     I feel that we have to introduce congruence property over opposite to
     achieve the proof. *)
@@ -740,7 +740,7 @@ species Ordered_additive_group =
       property opposite_is_opposite
       definition of leq minus, is_zero
     *)
-      assumed {* Because todo *};
+      assumed (* Because todo *);
     (*
       definition of minus_substracts, plus_compat_with_order
     {*
@@ -760,12 +760,12 @@ species Ordered_additive_group =
     *};
    *)
 
-  proof of leq_transitive = assumed {* Because todo *};
+  proof of leq_transitive = assumed (* Because todo *);
 
   (* [rr]: again, looks wrong to me : x <= y => x-y <= 0, y <= x => y-x <= 0*)
    proof of leq_antisymmetric =
   (*   definition of minus_substracts, plus_compat_with_order *)
-     assumed {* Because todo *};
+     assumed (* Because todo *);
   (*
    definition of equal
    {*

@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.15 2009-06-25 09:57:45 weis Exp $ *)
+(* $Id: rings_fields.fcl,v 1.16 2009-06-27 01:29:03 weis Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
@@ -34,7 +34,7 @@ species Ring =
 (*     definition of zero *)
 (*     property one_is_left_neutral, one_is_right_neutral, *)
 (*       mult_left_distributes_on_plus *)
-(*     assumed {* Todo *}; *)
+(*     assumed (* Todo *); *)
 
   proof of zero_left_absorbes =
   <1>1 assume x : Self,
@@ -89,7 +89,7 @@ species Ring =
         by <2>1, !one_is_right_neutral, !plus_left_substitution_rule,
            !equal_transitive, !equal_symmetric
         *)
-        assumed {* Because todo *}
+        assumed (* Because todo *)
    <2>8 prove !equal (!plus (!mult (x, !zero), !zero), !zero)
        by step <2>4, <2>7
        property plus_right_substitution_rule, equal_transitive, equal_symmetric
@@ -116,7 +116,7 @@ species Module (R is Ring) =
 
   theorem zero_left_absorbes: all x : Self,
     !equal (!mult (R!zero, x), !zero)
-    proof = assumed {* Because todo *};
+    proof = assumed (* Because todo *);
 
 end
 ;;
@@ -151,7 +151,7 @@ species Algebra(R is Commutative_ring) =
     let under_minus_un = R!opposite (R!one) in
       Self!module_mult (under_minus_un, x);
 
-  proof of opposite_is_opposite = assumed {* Because todo *};
+  proof of opposite_is_opposite = assumed (* Because todo *);
 
 end
 ;;
@@ -175,7 +175,7 @@ species Integral_domain =
   let unit_canonical (x : Self) : Self = x;
   (* ax = ay => x=y ou a=0 <-> a(x-y)=0 *)
 
-  proof of mult_is_left_regular = assumed {* Because todo *};
+  proof of mult_is_left_regular = assumed (* Because todo *);
 
 end
 ;;
@@ -198,7 +198,7 @@ species Torsion_free_algebra (R is Integral_domain) =
    !is_zero (!lift (a)) -> R!is_zero (a);
 
   (* see argument in torsion free modules *)
-  proof of module_mult_is_regular = assumed {* Because todo *};
+  proof of module_mult_is_regular = assumed (* Because todo *);
 
 end
 ;;
@@ -252,7 +252,7 @@ species Euclidean_domain =
        !plus
           (!mult (weak_structures#coef1 (!bezout (x, y)), x),
            !mult (weak_structures#coef2 (!bezout (x, y)), y)))
-  proof = assumed {* Because todo *};
+  proof = assumed (* Because todo *);
 
 end
 ;;
@@ -268,7 +268,7 @@ species Skew_field =
 
   proof of div_divides =
     property div_is_complete
-    assumed {* Because todo *};
+    assumed (* Because todo *);
 
 end
 ;;
@@ -278,7 +278,7 @@ species Vector_space (F is Skew_field) =
   inherit Division_module (F);
 
   let opposite (x) = Self!mult (F!opposite (F!one), x);
-  proof of opposite_is_opposite = assumed {* Because todo *};
+  proof of opposite_is_opposite = assumed (* Because todo *);
 
 end
 ;;
@@ -297,11 +297,11 @@ species Field =
 
   proof of gcd_divides =
     definition of gcd
-    assumed {* Todo *};
+    assumed (* Todo *);
 
   proof of divisor_is_multiple_of_gcd =
     definition of gcd
-    assumed {* Because todo *};
+    assumed (* Because todo *);
 
   let exquo (x, y) =
     if Self!is_zero(y) then basics#Failed
@@ -309,7 +309,7 @@ species Field =
 
   proof of exquo_divides =
     definition of exquo
-    assumed {* Because todo *};
+    assumed (* Because todo *);
 
 end
 ;;

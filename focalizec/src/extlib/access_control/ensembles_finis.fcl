@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.29 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.30 2009-06-27 01:29:02 weis Exp $ *)
 
 (**
 
@@ -218,7 +218,7 @@ species Ensembles_finis (A is Setoid) =
     <1>1 assume e : Self,
          prove !cardinal (e) = 0 <-> !equal (e, !vide)
       <2>1 prove 0 <=0x !cardinal (e)
-        assumed {* arithmetic 0 =< x *}
+        assumed (* arithmetic 0 =< x *)
       <2>f qed
         by property !sous_ensemble_vide, !include_card, !vide_card,
                     int_lt_irrefl, !incl_card, int_le_antisymm
@@ -383,7 +383,7 @@ species Liste (A is Setoid) =
     | x :: l -> !est_element (x, e2) && !sous_ensemble (l, e2) ;
 
   proof of sous_ensemble_spec =
-    assumed {* Zenon does not handle recursive functions yet *};
+    assumed (* Zenon does not handle recursive functions yet *);
 (*
     (* [Unsure - à laisser ?]
         def : est_element sous_ensemble; decl : equal_congr_est_element; *)
@@ -432,7 +432,7 @@ species Liste (A is Setoid) =
 
   theorem bien_formee_vide: !bien_formee (!vide)
     proof =
-      assumed {* Zenon does not handle recursive definitions yet *};
+      assumed (* Zenon does not handle recursive definitions yet *);
 (*
       by definition of vide, bien_formee
    ;
@@ -444,7 +444,7 @@ species Liste (A is Setoid) =
 *)
 
   proof of vide_spec =
-    assumed {* old proof needs to be translated *};
+    assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        def : est_element vide; *)
@@ -454,7 +454,7 @@ species Liste (A is Setoid) =
 *)
 
   proof of singleton_spec =
-    assumed {* old proof needs to be translated *};
+    assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        def : est_element singleton; *)
@@ -472,7 +472,7 @@ species Liste (A is Setoid) =
   theorem bien_formee_singleton:
     all x : A, !bien_formee (!singleton (x))
     proof =
-      assumed {* old proof needs to be translated *};
+      assumed (* old proof needs to be translated *);
 (*
       (* [Unsure - à laisser ?]
          def : bien_formee singleton vide;
@@ -491,7 +491,7 @@ species Liste (A is Setoid) =
 
 
   proof of est_element_spec =
-    assumed {* old proof needs to be translated *};
+    assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        decl :sous_ensemble_spec singleton_spec equal_congr_est_element; *)
@@ -517,7 +517,7 @@ species Liste (A is Setoid) =
 
 
   proof of ajoute_spec =
-    assumed {* old proof needs to be translated *};
+    assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        def : ajoute_element est_element;
@@ -585,7 +585,7 @@ species Liste (A is Setoid) =
     all x : A, all l : Self,
       !bien_formee (l)-> !bien_formee (!ajoute_element (x, l))
   proof =
-    assumed {* old proof needs to be translated *};
+    assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        def : bien_formee ajoute_element; *)
@@ -663,7 +663,7 @@ species Liste (A is Setoid) =
      all x : A, all l : Self,
      ~ (!est_element (x, l)) -> !bien_formee (l) -> !bien_formee (!cons (x, l))
      proof =
-       assumed {* old proof needs to be translated *};
+       assumed (* old proof needs to be translated *);
 (*
        (* [Unsure - à laisser ?]
           def: bien_formee; *)
@@ -682,7 +682,7 @@ species Liste (A is Setoid) =
      !bien_formee (!cons (x, l)) ->
      (!bien_formee (l) /\ ~ (!est_element (x, l)))
      proof =
-       assumed {* old proof needs to be translated *};
+       assumed (* old proof needs to be translated *);
 (*
        (* [Unsure - à laisser ?]
           def: bien_formee cons; *)
@@ -696,7 +696,7 @@ species Liste (A is Setoid) =
      all x y : A, all l : Self,
      !est_element (y, !cons (x, l)) -> ~ (A!equal (x, y)) -> !est_element (y, l)
      proof =
-       assumed {* need to handle fix operator *};
+       assumed (* need to handle fix operator *);
 (*
         (* [Unsure - à laisser ?]
            def: cons est_element; *)
@@ -713,7 +713,7 @@ species Liste (A is Setoid) =
   local theorem cons_elem2:
     all x : A, all l : Self, !est_element (x, !cons (x, l))
     proof =
-      assumed {* need to handle fix operator *};
+      assumed (* need to handle fix operator *);
 (*
       (* [Unsure - à laisser ?]
          def: est_element cons; *)
@@ -728,7 +728,7 @@ species Liste (A is Setoid) =
     all x y : A, all l : Self,
     !est_element (y, l) -> !est_element (y, !cons (x, l))
     proof =
-      assumed {* need to handle fix operator *};
+      assumed (* need to handle fix operator *);
 (*
       (* [Unsure - à laisser ?]
          def: cons est_element; *)
@@ -743,7 +743,7 @@ species Liste (A is Setoid) =
     ~ (!est_element (x, e1)) -> !sous_ensemble (e1, !cons (x, e2)) ->
       !sous_ensemble(e1, e2)
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
       (* [Unsure - à laisser ?]
          decl: cons_elem sous_ensemble_spec equal_congr_est_element; *)
@@ -767,7 +767,7 @@ species Liste (A is Setoid) =
     all e1 e2 : Self,
     !bien_formee (e1) -> !bien_formee (e2) -> !bien_formee (!union (e1, e2))
     proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
       (* [Unsure - à laisser ?]
          def: union bien_formee;
@@ -786,7 +786,7 @@ species Liste (A is Setoid) =
 *)
 
   proof of union_spec =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        def : est_element union;
@@ -853,7 +853,7 @@ species Liste (A is Setoid) =
     aux (!vide, e1);
 
    proof of inter_spec =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def : inter cons vide;
@@ -935,14 +935,14 @@ theorem bien_formee_inter:
   proof =
     (* [Unsure - à laisser ?]
        def : bien_formee; *)
-    assumed {* Because temporarily unvailable in new version *};
+    assumed (* Because temporarily unvailable in new version *);
 
    theorem remove_element_spec:
      all x y : A, all e : Self,
      !est_element (y, e) ->
        (A!equal (x, y) \/ !est_element (y, !remove_element (x, e)))
      proof =
-       assumed {* old proof needs translation *};
+       assumed (* old proof needs translation *);
 (*
        (* [Unsure - à laisser ?]
           def : remove_element cons vide;
@@ -997,24 +997,24 @@ theorem bien_formee_inter:
          def : remove_element cons vide;
          decl : equal_congr_est_element  cons_elem2
          cons_elem3; *)
-      assumed {* Because temporarily unvailable in new version *};
+      assumed (* Because temporarily unvailable in new version *);
 
 
   theorem bien_formee_remove_element:
     all x : A, all e : Self,
     !bien_formee (e)-> !bien_formee (!remove_element (x, e))
-    proof = assumed {* Because todo *};
+    proof = assumed (* Because todo *);
 
 
   theorem bien_formee_diff:
     all e1 e2 : Self,
     !bien_formee (e1) -> !bien_formee (e2) -> !bien_formee (!diff (e1, e2))
-    proof = assumed {* Because todo *};
+    proof = assumed (* Because todo *);
 
-  proof of diff_spec = assumed {* Because todo *};
+  proof of diff_spec = assumed (* Because todo *);
 
   proof of vide_card =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        def: vide cardinal raw_cardinal;
@@ -1029,7 +1029,7 @@ theorem bien_formee_inter:
 *)
 
   proof of singleton_card =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        def: singleton cardinal raw_cardinal;
@@ -1048,7 +1048,7 @@ theorem bien_formee_inter:
    all x : A, all e : Self,
    !cardinal (!cons (x, e)) = !cardinal (e) + 1
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: cons cardinal raw_cardinal; *)
@@ -1077,7 +1077,7 @@ theorem bien_formee_inter:
     !est_element (x, e) ->
     !cardinal (e) = !cardinal (!remove_element (x, e)) + 1
     proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
       (* [Unsure - à laisser ?]
          def: remove_element cardinal raw_cardinal vide cons;
@@ -1116,7 +1116,7 @@ theorem bien_formee_inter:
 *)
 
    proof of incl_card =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: cardinal sous_ensemble raw_cardinal cons vide;
@@ -1236,7 +1236,7 @@ theorem bien_formee_inter:
    all e1 e2 : Self, ~ (!sous_ensemble (e1, e2)) <->
    ex x : A, !est_element (x, e1) /\ ~ (!est_element (x, e2))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: sous_ensemble cons vide;
@@ -1273,7 +1273,7 @@ theorem bien_formee_inter:
 *)
 
    proof of include_card =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         decl: incl_card sous_ensemble_spec remove_element_spec remove_element_card
@@ -1307,7 +1307,7 @@ theorem bien_formee_inter:
    all x : A, all e : Self,
    !cardinal (e) <=0x !cardinal (!ajoute_element (x, e))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         decl: ajoute_spec sous_ensemble_spec incl_card; *)
@@ -1326,7 +1326,7 @@ theorem bien_formee_inter:
      all x : A, all e : Self,
      !cardinal (!ajoute_element (x, e)) <=0x !cardinal (e) + 1
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         decl: ajoute_spec sous_ensemble_spec incl_card
@@ -1352,7 +1352,7 @@ theorem bien_formee_inter:
 *)
 
    proof of union_card =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: union cons vide;
@@ -1379,7 +1379,7 @@ theorem bien_formee_inter:
 *)
 
    proof of inter_card =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         decl: incl_card inter_spec sous_ensemble_spec; *)
@@ -1395,7 +1395,7 @@ theorem bien_formee_inter:
 *)
 
    proof of diff_card =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: diff cons vide cardinal;
@@ -1441,7 +1441,7 @@ theorem bien_formee_inter:
 *)
 
    proof of somme_card =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         decl: diff_card sous_ensemble_spec extensional
@@ -1515,15 +1515,15 @@ species Liste_triee (A is Ordered_set) =
            | y :: _underscore -> A!lt (x, y) && !est_triee (l))
    termination proof = order 0 on l
    assumed
-     {* Bidon en attendant qu'on gère vraiment
-        les preuves de terminaison. *};
+     (* Bidon en attendant qu'on gère vraiment
+        les preuves de terminaison. *);
 
 
    (** le nouvel invariant implique celui de l'espèce parent (non duplication).*)
    theorem invariant_subsumption:
      all l : Self, !est_triee (l) -> !bien_formee (l)
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: est_triee bien_formee vide cons;
@@ -1565,12 +1565,12 @@ species Liste_triee (A is Ordered_set) =
             else y :: (!ajoute_element (x, l1))
        termination proof = order 0 on l
        assumed
-         {* Bidon en attendant qu'on gère vraiment
-            les preuves de terminaison. *};
+         (* Bidon en attendant qu'on gère vraiment
+            les preuves de terminaison. *);
 
    theorem invariant1: !est_triee (!vide)
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: est_triee vide; *)
@@ -1583,7 +1583,7 @@ species Liste_triee (A is Ordered_set) =
 
    theorem invariant2 : all x : A, !est_triee (!singleton (x))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: est_triee singleton; *)
@@ -1600,7 +1600,7 @@ species Liste_triee (A is Ordered_set) =
     all x : A, all l : Self,
     !est_element (x, !cons (x, l))
   proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        def: cons est_element; *)
@@ -1620,7 +1620,7 @@ species Liste_triee (A is Ordered_set) =
     all x : A, all l : Self,
     ~ (!equal (!cons (x, l), !vide))
   proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        decl: cons_element vide_spec2; *)
@@ -1636,7 +1636,7 @@ species Liste_triee (A is Ordered_set) =
     all x : A, all l : Self,
     !est_triee (l) -> A!lt (x, !min (l)) -> !est_triee (!cons (x, l))
   proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        def: cons est_triee vide;
@@ -1663,7 +1663,7 @@ species Liste_triee (A is Ordered_set) =
      all x : A, all l : Self, !est_triee (!cons(x, l)) ->
      A!equal (x, !min (!cons (x, l)))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: cons min raw_min; *)
@@ -1680,7 +1680,7 @@ species Liste_triee (A is Ordered_set) =
      (~ (!cardinal (l) = 0)) ->
      !est_triee (!cons (x, l)) -> (!est_triee (l) /\ A!lt (x, !min (l)))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: cons vide est_triee min raw_min;
@@ -1711,7 +1711,7 @@ species Liste_triee (A is Ordered_set) =
    local theorem cons_triee:
      all x : A, all l : Self, !est_triee (!cons (x, l)) -> !est_triee (l)
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def:est_triee cons; *)
@@ -1729,7 +1729,7 @@ species Liste_triee (A is Ordered_set) =
     all x y : A, all e : Self,
     !est_element (y, !cons (x, e)) <-> (A!equal (x, y) \/ !est_element (y, e))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: cons est_element; *)
@@ -1752,7 +1752,7 @@ species Liste_triee (A is Ordered_set) =
 *)
 
    proof of ajoute_spec =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: ajoute_element cons;
@@ -1802,7 +1802,7 @@ species Liste_triee (A is Ordered_set) =
         (!est_element (!raw_min (e), e) /\
           (all x : A, !est_element (x, e) -> A!leq (!raw_min (e), x)))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: raw_min est_triee cons vide;
@@ -1848,7 +1848,7 @@ species Liste_triee (A is Ordered_set) =
       focalize_error ("liste non triee.");
 
   proof of min_spec =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
     (* [Unsure - à laisser ?]
        def: min;
@@ -1867,7 +1867,7 @@ species Liste_triee (A is Ordered_set) =
    theorem invariant3: all s : Self, all x : A,
      !est_triee (s) -> !est_triee (!ajoute_element (x, s))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: est_triee ajoute_element cons;
@@ -1948,7 +1948,7 @@ species Liste_triee (A is Ordered_set) =
    theorem invariant4 : all s1 s2 : Self,
      (!est_triee (s1) -> !est_triee (s2) -> !est_triee (!union (s1, s2)))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: union;
@@ -1963,7 +1963,7 @@ species Liste_triee (A is Ordered_set) =
    theorem invariant5 : all s1 s2 : Self,
      (!est_triee (s1) -> !est_triee (s2) -> !est_triee (!inter (s1, s2)))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: inter;
@@ -1977,14 +1977,14 @@ species Liste_triee (A is Ordered_set) =
      *};
 *)
 
-   proof of bien_formee_ajoute = assumed {* Because todo *};
+   proof of bien_formee_ajoute = assumed (* Because todo *);
 
 
    theorem invariant6:
      all x : A, all s : Self,
        !est_triee (s) -> !est_triee (!remove_element (x, s))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: est_triee remove_element cons;
@@ -2032,7 +2032,7 @@ species Liste_triee (A is Ordered_set) =
    theorem invariant7: all s1 s2 : Self,
      !est_triee (s1) -> !est_triee (s2) -> !est_triee (!diff (s1, s2))
    proof =
-     assumed {* old proof needs to be translated *};
+     assumed (* old proof needs to be translated *);
 (*
      (* [Unsure - à laisser ?]
         def: diff cons;
@@ -2065,15 +2065,15 @@ species Entiers_concrets =
   let print = string_of_int;
   let parse = int_of_string;
 
-  proof of equal_reflexive = assumed {* Because todo *};
-  proof of equal_symmetric = assumed {* Because todo *};
-  proof of equal_transitive = assumed {* Because todo *};
+  proof of equal_reflexive = assumed (* Because todo *);
+  proof of equal_symmetric = assumed (* Because todo *);
+  proof of equal_transitive = assumed (* Because todo *);
 
-  proof of leq_reflexive = assumed {* Because todo *};
-  proof of leq_antisymmetric= assumed {* Because todo *};
-  proof of leq_transitive = assumed {* Because todo *};
-  proof of total_order = assumed {* Because todo *};
-  proof of lt_is_not_leq = assumed {* Because todo *};
+  proof of leq_reflexive = assumed (* Because todo *);
+  proof of leq_antisymmetric= assumed (* Because todo *);
+  proof of leq_transitive = assumed (* Because todo *);
+  proof of total_order = assumed (* Because todo *);
+  proof of lt_is_not_leq = assumed (* Because todo *);
 end
 ;;
 
@@ -2124,26 +2124,26 @@ let print_endline (s) = print_string (s ^ "\n");;
 (* sinon le compilo ne les voit pas *)
 theorem spec_pair : all x : ('a * 'b),
   x = basics#pair (basics#fst (x), basics#snd (x))
-  proof : assumed {* Using trusted external code. *};;
+  proof : assumed (* Using trusted external code. *);;
 
 theorem spec_pair_subst : all x1 x2 : 'a, all y1 y2 : 'b,
   (x1 = x2 /\ y1 = y2) -> (basics#pair (x1, y1) = basics#pair(x2, y2))
-  proof : assumed {* Using trusted external code. *};;
+  proof : assumed (* Using trusted external code. *);;
 
 theorem spec_fst : all x : 'a, all y : 'b,
   x = basics#fst (basics#pair (x, y))
-  proof : assumed {* Using trusted external code. *};;
+  proof : assumed (* Using trusted external code. *);;
 
 theorem spec_fst_subst : all x y : ('a * 'b),
   x = y -> basics#fst (x) = basics#fst (y)
-  proof = assumed {* Using trusted external code. *};;
+  proof = assumed (* Using trusted external code. *);;
 
 theorem spec_snd : all x : 'a, all y : 'b,
   y = basics#snd (basics#pair (x, y))
-  proof = assumed {* Using trusted external code. *};;
+  proof = assumed (* Using trusted external code. *);;
 
 theorem spec_snd_subst : all x y : ('a * 'b),
   x = y -> basics#snd(x) = basics#snd(y)
-  proof = assumed {* Using trusted external code. *};;
+  proof = assumed (* Using trusted external code. *);;
 
 ******************* *)

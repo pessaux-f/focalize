@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.70 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: dep_analysis.ml,v 1.71 2009-06-27 01:29:03 weis Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -386,7 +386,7 @@ let statement_decl_dependencies ~current_species stmt =
 
 let rec proof_decl_n_def_dependencies ~current_species proof =
   match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed (enf_deps, _)
+   | Parsetree.Pf_assumed enf_deps
    | Parsetree.Pf_coq (enf_deps, _) ->
        List.fold_left
          (fun (accu_decl, accu_def) dep ->

@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Renaud Rioboo                                            *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: iterators.fcl,v 1.15 2009-06-25 10:11:49 weis Exp $ *)
+(* $Id: iterators.fcl,v 1.16 2009-06-27 01:29:03 weis Exp $ *)
 
 (** Basic techniques to iterate a process including very simple numbers. *)
 
@@ -55,7 +55,7 @@ species Iteration (Nat is Ordered_Enumerated_system, S is Setoid,
     if Nat!equal (n, Nat!start) then zero
     else F_binary!binop (x, !iterate (x, Nat!predecessor (n)))
     termination proof = order Nat!lt on n
-      assumed {* *};
+      assumed (* *);
 
   theorem iterate_spec_base: all x : S,
     S!equal (!iterate (x, Nat!start), zero)
@@ -78,7 +78,7 @@ species Iteration (Nat is Ordered_Enumerated_system, S is Setoid,
 (*                  by property Nat!successor_is_non_trivial *)
 (*             <2>3 prove S!equal (F_binary!binop (x, !iterate (x, Nat!predecessor (Nat!successor (n)))), *)
 (*                F_binary!binop (x, !iterate (x, n))) *)
-(*                  assumed {* *} *)
+(*                  assumed (* *) *)
 (*             <2>4 prove S!equal (!iterate (x, Nat!successor (n)), *)
 (*                F_binary!binop (x,  *)
 (*                                               !iterate (x, Nat!predecessor (Nat!successor (n))))) *)
@@ -148,14 +148,14 @@ species Dichotomic_system =
 
   theorem zero_images_by_div2: all n : Self, !equal (!div2 (n), !zero) ->
    (!equal (n, !zero) \/ !equal (n, !one))
-  proof = assumed {* Because todo *};
+  proof = assumed (* Because todo *);
 
 (*    (\** an induction principle for dichotomy *\)  *)
 (*   theorem dichotomic_principle: all p : (Self -> Prop), *)
 (*     p (!zero) -> *)
 (*       (all n : Self, (p(n) -> (p (!mult2 (n)) /\ p (!successor (!mult2 (n)))))) -> *)
 (*          (all n : Self, p (n)) *)
-(*     proof = assumed {* Because todo *} *)
+(*     proof = assumed (* Because todo *) *)
 (*     ; *)
 
 end

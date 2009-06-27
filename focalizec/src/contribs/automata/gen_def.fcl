@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            Philippe Ayrault                                         *)
 (*            François Pessaux                                         *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_def.fcl,v 1.3 2009-06-06 14:51:08 weis Exp $ *)
+(* $Id: gen_def.fcl,v 1.4 2009-06-27 01:29:02 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -89,36 +89,35 @@ species Automata(St is Gen_state, Req is Gen_request, Po is Gen_port) =
 
   signature equal : Self -> Self -> bool;
 
-  let tau_p1( i in (Self * Po)) in Self = basics#fst(i);
-  let tau_p2( i in (Self * Po)) in Po = basics#snd(i);
-  let constr_tau( p1 in Self, p2 in Po) in (Self * Po) = (p1, p2);
+  let tau_p1 (i : (Self * Po)) : Self = basics#fst (i);
+  let tau_p2 (i : (Self * Po)) : Po = basics#snd (i);
+  let constr_tau (p1 : Self, p2 : Po) : (Self * Po) = (p1, p2);
 
   theorem self_is_fst_tau:
-    all s in Self, all p in Po,
-      tau_p1( constr_tau(s, p)) = s
-  proof = assumed {* To do *}
+    all s : Self, all p : Po,
+      tau_p1 (constr_tau(s, p)) = s
+  proof = assumed (* To do *)
   ;
 
   theorem po_is_snd_tau:
-    all s in Self, all p in Po,
-      tau_p2( !constr_tau(s, p)) = p
-  proof = assumed {* To do *}
+    all s : Self, all p : Po,
+      tau_p2 (!constr_tau(s, p)) = p
+  proof = assumed (* To do *)
   ;
 
   (* equal is a equivalence relation between internal state *)
   property equal_reflexive:
-    all x in Self,
-      !equal(x, x)
+    all x : Self,
+      !equal (x, x)
   ;
   property equal_symmetric:
-    all x y in Self,
-      !equal(x, y) -> !equal(y, x)
+    all x y : Self,
+      !equal (x, y) -> !equal (y, x)
   ;
   property equal_transitive:
-    all x y z in Self,
-      !equal(x, y) -> !equal(y, z) -> !equal(x, z)
+    all x y z : Self,
+      !equal (x, y) -> !equal (y, z) -> !equal (x, z)
   ;
 
 end
 ;;
-

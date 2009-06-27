@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ticket.fcl,v 1.18 2009-06-25 10:25:37 habib Exp $ *)
+(* $Id: ticket.fcl,v 1.19 2009-06-27 01:29:03 weis Exp $ *)
 
 (**
    @title Implementation of the Tickets model
@@ -25,7 +25,7 @@ open "sets_orders";;
 open "ensembles_finis";;
 open "access_control";;
 
-(** Tickets implementation  *)
+(** Tickets implementation *)
 
 species S_set_of (A is Setoid) =
 
@@ -48,9 +48,9 @@ species S_set_of (A is Setoid) =
           aux (t) in
   "[" ^ aux (l);
 
-  proof of equal_prop = assumed {* Because todo *};
+  proof of equal_prop = assumed (* Because todo *);
 
-  proof of singleton_prop = assumed {* Because todo *};
+  proof of singleton_prop = assumed (* Because todo *);
 
 end
 ;;
@@ -155,8 +155,8 @@ species S_access (S_sub is S_subjects,
   let get_m (a) = snd (snd (a));
 
   let equal (a1, a2) =
-     S_sub!equal (get_s (a1), get_s (a2)) && 
-     S_obj!equal (get_o (a1), get_o (a2)) && 
+     S_sub!equal (get_s (a1), get_s (a2)) &&
+     S_obj!equal (get_o (a1), get_o (a2)) &&
      S_acc_mod!equal (get_m (a1), get_m (a2));
 
   let element = create (S_sub!element, S_obj!element, S_acc_mod!element);
@@ -188,7 +188,7 @@ species S_access (S_sub is S_subjects,
        definition of equal
   ;
 
-  proof of access_equal = assumed {* Because todo *};
+  proof of access_equal = assumed (* Because todo *);
 
 end
 ;;
@@ -201,7 +201,7 @@ species S_decisions =
 
   let no = (2, "no");
 
-  proof of yes_is_not_no = assumed {* Because todo *};
+  proof of yes_is_not_no = assumed (* Because todo *);
 
 end
 ;;
@@ -305,18 +305,18 @@ species S_requests_ticket (S is S_subjects, O is S_objects,
     Sgr!equal (Sgr!remove, get_gr (rg));
 
   let equal (rg1 : Self, rg2 : Self) : bool =
-     Sgr!equal (get_gr (rg1), get_gr (rg2)) && 
-     S!equal (get_s (rg1), get_s (rg2)) && 
-     C!equal (get_c (rg1), get_c (rg2)) && 
-     O!equal (get_o (rg1), get_o (rg2)) && 
-     M!equal (get_m (rg1), get_m (rg2)) && 
+     Sgr!equal (get_gr (rg1), get_gr (rg2)) &&
+     S!equal (get_s (rg1), get_s (rg2)) &&
+     C!equal (get_c (rg1), get_c (rg2)) &&
+     O!equal (get_o (rg1), get_o (rg2)) &&
+     M!equal (get_m (rg1), get_m (rg2)) &&
      S!equal (get_s2 (rg1), get_s2 (rg2));
 
   let element =
     create (Sgr!get, S!element, C!element, O!element, M!element, S!element);
 
   let print (rg) =
-    if Sgr!equal (Sgr!get, get_gr (rg)) || 
+    if Sgr!equal (Sgr!get, get_gr (rg)) ||
        Sgr!equal (Sgr!rel, get_gr (rg)) then
       "<" ^ Sgr!print (get_gr (rg)) ^
       "," ^ S!print (get_s (rg)) ^
@@ -372,9 +372,9 @@ species S_requests_ticket (S is S_subjects, O is S_objects,
        definition of equal
   ;
 
-  proof of get_or_rel = assumed {* Because todo *};
+  proof of get_or_rel = assumed (* Because todo *);
 
-  proof of get_is_not_rel = assumed {* Because todo *};
+  proof of get_is_not_rel = assumed (* Because todo *);
 
 end
 ;;
@@ -442,7 +442,7 @@ species S_models_ticket (S_c is S_tickets,
       | [] -> false
       | h :: t ->
         if S_obj!equal (o, fst (fst (h))) &&
-           S_acc_mod!equal (m, snd (fst (h))) && 
+           S_acc_mod!equal (m, snd (fst (h))) &&
            S_c!equal (c, snd (h))
         then true
         else aux (t) in
@@ -586,9 +586,9 @@ species S_models_ticket (S_c is S_tickets,
                       (fst (snd (snd (upsilon (st)))),
                        snd (snd (snd (upsilon (st))))))))
     | h :: t ->
-      if S_obj!equal (o, fst (fst (h))) && 
-         S_acc_mod!equal (m, snd (fst (h))) && 
-	 S_c!equal (c, snd (h))
+      if S_obj!equal (o, fst (fst (h))) &&
+         S_acc_mod!equal (m, snd (fst (h))) &&
+         S_c!equal (c, snd (h))
       then rm_t_aux (f, t, st, o, m, c)
       else rm_t_aux (h :: f, t, st, o, m, c);
 
@@ -695,21 +695,21 @@ species S_models_ticket (S_c is S_tickets,
   proof of lambda_prop = by definition of equal
   ;
 
-  proof of secure_state = assumed {* Because todo *};
+  proof of secure_state = assumed (* Because todo *);
 
-  proof of right_substitution = assumed {* Because todo *};
+  proof of right_substitution = assumed (* Because todo *);
 
-  proof of left_substitution = assumed {* Because todo *};
+  proof of left_substitution = assumed (* Because todo *);
 
-  proof of del_mem = assumed {* Because todo *};
+  proof of del_mem = assumed (* Because todo *);
 
-  proof of del_prop = assumed {* Because todo *};
+  proof of del_prop = assumed (* Because todo *);
 
-  (*proof of del_prop_bis = assumed {* Because todo *};*)
+  (*proof of del_prop_bis = assumed (* Because todo *);*)
 
-  proof of add_mem = assumed {* Because todo *};
+  proof of add_mem = assumed (* Because todo *);
 
-  proof of add_prop = assumed {* Because todo *};
+  proof of add_prop = assumed (* Because todo *);
 
 end
 ;;
