@@ -1,11 +1,12 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
 (*            Renaud Rioboo                                            *)
-(*            Virgile Prevosto                                         *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
+(*                                                                     *)
 (*                               LIP6   -  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
@@ -13,9 +14,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id:  *)
+(* $Id: polys_abstract.fcl,v 1.3 2009-06-26 23:43:21 weis Exp $ *)
 
-(**                                                                      
+(**
  @title Abstract polynomials
  @author the FoC Project
  some polynomials for FoC
@@ -30,25 +31,26 @@ open "additive_law";;
 open "rings_fields";;
 open "integers";;
 
-(** specifications for the monoid of formal sums of products of elements of 
+(** specifications for the monoid of formal sums of products of elements of
     a monoid m whose elements are coefficients and an ordered lattice i of
-    formal exponents of some variable 
+    formal exponents of some variable
     an element of i is often called a monomial *)
-species Formal_indexed_sum (M is Additive_group, 
-      	       	       	    I is Ordered_set_with_zero) =
+species Formal_indexed_sum (M is Additive_group,
+                            I is Ordered_set_with_zero) =
+
    inherit Additive_group;
 
    (** canonical injections *)
    signature monomial: M -> I -> Self;
 
    property monomial_is_additive: all x y : M, all i : I,
-     !equal(!plus(!monomial(x, i), !monomial(y, i)),
-	    !monomial(M!plus(x, y), i));
+     !equal (!plus (!monomial (x, i), !monomial (y, i)),
+            !monomial (M!plus (x, y), i));
 
-   let lift(x) = !monomial(x, I!zero);
+   let lift (x) = !monomial (x, I!zero);
    theorem lift_is_additive: all x y : M,
-     !equal(!plus(!lift(x), !lift(y)),
-	    !lift(M!plus(x, y)))
+     !equal (!plus (!lift (x), !lift (y)),
+            !lift (M!plus (x, y)))
       proof = by property !monomial_is_additive definition of lift;
 
    signature degree: Self -> I;
@@ -59,12 +61,12 @@ species Formal_indexed_sum (M is Additive_group,
        (I!leq (!degree (r), !degree (p))
          /\
         I!leq (!degree (r), !degree (q)));
-   let is_constant(p) =
-      if is_zero(p) then true
-      else I!is_zero(!degree(p));
+   let is_constant (p) =
+      if is_zero (p) then true
+      else I!is_zero (!degree (p));
 
    (**
-    any sum p can be written as 
+    any sum p can be written as
       monomial (leading_coefficient (p), degree (p)) + reductum (p)
     *)
    (* returns the coefficient of highest degree *)
@@ -76,7 +78,7 @@ species Formal_indexed_sum (M is Additive_group,
    signature reductum: Self -> Self;
 
    property reductum_has_smaller_degree: all p : Self,
-   ~ (!is_zero (p)) -> ~ (!is_zero (!reductum (p))) -> 
+   ~ (!is_zero (p)) -> ~ (!is_zero (!reductum (p))) ->
         I!lt (!degree (!reductum (p)), !degree (p)) ;
 
    property reductum_of_zero_is_zero: !equal (!reductum (!zero), !zero);
@@ -89,7 +91,7 @@ species Formal_indexed_sum (M is Additive_group,
 
    property reductum_is_reductum: all p : Self, all c : M, all d : I,
     ~ (!is_zero (p)) -> M!equal (c, !leading_coefficient (p)) ->
-      I!equal (d, !degree (p)) -> 
+      I!equal (d, !degree (p)) ->
        !equal (p, !plus (!monomial (c, d), !reductum (p)));
 
    property monomial_has_coefficient: all c : M, all d : I,
@@ -120,7 +122,7 @@ species Formal_indexed_sum (M is Additive_group,
      proof = assumed {* *};
 
    theorem tail_has_smaller_degree: all p q : Self, all d : I,
-     !equal (p, !tail (q, d)) -> 
+     !equal (p, !tail (q, d)) ->
        ~  (!is_zero (q)) ->  I!lt (!degree (q), d)
     proof = assumed {* *};
 
@@ -130,7 +132,8 @@ species Formal_indexed_sum (M is Additive_group,
 (*      then 0 *)
 (*      else #succ (!number_of_monomials (!reductum (p))); *)
 
-end;;
+end
+;;
 
 (* type spol_res a b c = caml spol_res; ;;  *)
 (* let cr_sr (pc : 'a, pe : 'b, qc : 'a, qe : 'b, r : 'c)  *)
@@ -165,8 +168,8 @@ species Formal_polynomials_commutative_ring
               !plus (p, !mult (!monomial (c, delta), q)))
       proof = by property !equal_reflexive definition of fmecg;
 
-end;;
-
+end
+;;
 
 (**
    Polynomials over an integral domain are integral
@@ -176,11 +179,12 @@ species Formal_polynomials_integral_domain
     (R is Integral_domain, D is Monomial_ordering) =
 
     inherit Integral_domain,
-            Torsion_free_algebra(R),
-            Formal_polynomials_commutative_ring(R, D)
+            Torsion_free_algebra (R),
+            Formal_polynomials_commutative_ring (R, D)
     ;
 
-end;;
+end
+;;
 
 (**
    Polynomials over a gcd domain are gcd domains
@@ -190,10 +194,8 @@ species Formal_polynomials_gcd_domain
     (R is Integral_domain, D is Monomial_ordering) =
 
     inherit Gcd_domain,
-            Formal_polynomials_commutative_ring(R, D)
+            Formal_polynomials_commutative_ring (R, D)
     ;
 
-end;;
-
-
-
+end
+;;
