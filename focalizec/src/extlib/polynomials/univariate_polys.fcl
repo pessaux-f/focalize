@@ -1,3 +1,21 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
+(*            Renaud Rioboo                                            *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: univariate_polys.fcl,v 1.3 2009-06-26 23:48:21 weis Exp $ *)
+
 open "rings_fields";;
 open "integers";;
 open "polys_abstract";;
@@ -24,18 +42,19 @@ species Formal_univariate_polynomials_commutative_ring
 (*        fun d -> foo!of_nat (d) *)
 (*     in *)
 (*     let rec aux (res, p) = *)
-(* 	let deg = degree (p) in *)
-(* 	  if nat!is_min (deg) then *)
-(* 	    res *)
-(* 	  else *)
-(* 	    aux ( *)
-(*       	      plus ( mult ((coeff_of_deg (deg)), (monomial (lc (p), pred (deg)))), *)
-(*       	       	     res), *)
-(* 	      reductum (p)) *)
+(*         let deg = degree (p) in *)
+(*           if nat!is_min (deg) then *)
+(*             res *)
+(*           else *)
+(*             aux ( *)
+(*                     plus ( mult ((coeff_of_deg (deg)), (monomial (lc (p), pred (deg)))), *)
+(*                                   res), *)
+(*               reductum (p)) *)
 (*     in *)
 (*       aux (self!zero); *)
 
-end;;
+end
+;;
 
 (* type pdiv_res b = caml pdiv_res; ;; *)
 (* let cr_pr (x : 'b, y : 'b) : pdiv_res ('b) = caml cr_pr;; *)
@@ -85,19 +104,20 @@ species Formal_univariate_polynomials_integral_domain
     !is_zero (q)
       \/
     !equal (!plus (!mult (!pseudo_quotient (p, q),
-		       q),
-		   !pseudo_remainder (p, q)),
-	   !module_mult (!r_pow (!leading_coefficient (q),
-				 N!successor (N!minus (!degree (p),
-						       !degree (q)))),
-			p));
-		 
+               q),
+           !pseudo_remainder (p, q)),
+           !module_mult (!r_pow (!leading_coefficient (q),
+         N!successor (N!minus (!degree (p),
+               !degree (q)))),
+        p));
+
   property pseudo_remainder_has_lower_degree: all p q r : Self,
     ~(!is_zero (q)) -> !equal (r, !pseudo_remainder (p, q)) ->
        ~(!is_zero (r)) -> N!lt (!degree (r), !degree (q))
     ;
 
-end;;
+end
+;;
 
 (* (\**  *)
 (*    Karatsuba multiplication for univariate sparse polynomials. Needs check ! *)
@@ -120,7 +140,7 @@ end;;
 
 (*   (\* mult p par q avec l'algo de Karatsuba        *\) *)
 (*   let mult_karatsuba = *)
-         
+
 (*      (\* coupe le polymome en p en deux : p1 et p2 tels que p = p1 + X^d.p2*\)  *)
 (*      (\* np1 : nbre de monome de p1; dp1 : degre de p1                     *\) *)
 (*      let coupe (p : self, d) =  *)
@@ -138,11 +158,11 @@ end;;
 (*          end *)
 (*        in coupe (p, #Nil)   *)
 (*      in *)
-                
+
 (*      let isup  = int_coll!sup in *)
 (*      let iplus = int_coll!plus in *)
 (*      let iun  = int_coll!one in *)
-     
+
 (*      (\* [rr]: ca a l' air bien foireux, il faudrait revoir *\) *)
 (*      let rec kara(p : self, q : self) : self =  *)
 (*       (\* match p with *)
@@ -169,7 +189,7 @@ end;;
 (*                     *\) *)
 (*                    (\*#and_b(#int_lt(#length(p),!karatsuba_terme), *)
 (*                          #int_lt(#length(q),!karatsuba_terme))*\) *)
- 
+
 (*                  then !mult_naive(p, q)  *)
 (*                  else  *)
 (*                    let cp  = coupe(p, m) in *)
@@ -194,7 +214,7 @@ end;;
 (*      then  !mult_naive (p, q) *)
 (*      else !mult_karatsuba (p, q);            *)
 (* end *)
-  
+
 (* (\** usable naturals *\) *)
 (* (\* collection int_coll implements small_naturals_int = *\) *)
 (* (\* end *\) *)
@@ -243,10 +263,10 @@ end;;
 (*            #cr_pr (#Nil,p) *)
 (*        else *)
 (*          if int_eq(delta,int_zero) *)
-(* 	 then  *)
-(* 	  #cr_pr(#Cons(#crp(cp,int_zero),#Nil),  *)
-(*       	       	       	     splus(smmult(cq,reductum(p)),(smmult(opp(cp),q)))) *)
-(* 	 else *)
+(*          then  *)
+(*           #cr_pr(#Cons(#crp(cp,int_zero),#Nil),  *)
+(*                                                  splus(smmult(cq,reductum(p)),(smmult(opp(cp),q)))) *)
+(*          else *)
 (*        *\) *)
 (*        let cp = lc(p) in *)
 (*        let dp = degree(p) in *)
@@ -258,25 +278,25 @@ end;;
 (*          (\*                     *\) *)
 (*          (\* is always >= 0      *\) *)
 (*          (\*                     *\) *)
-(* 	   let pp = self!fmecg(smmult(cq,reductum(p)),opp(cp),delta,q) in *)
-(* 	   let res = p_div(pp, q , cq, dq) in *)
-(* 	   let a = #pdiv_quo(res) in  *)
-(*       	   let b = #pdiv_res(res) in *)
-(* 	   let ccq =  *)
-(*       	     rexpt(cq,int_minus(degree(p),  *)
+(*            let pp = self!fmecg(smmult(cq,reductum(p)),opp(cp),delta,q) in *)
+(*            let res = p_div(pp, q , cq, dq) in *)
+(*            let a = #pdiv_quo(res) in  *)
+(*                  let b = #pdiv_res(res) in *)
+(*            let ccq =  *)
+(*                    rexpt(cq,int_minus(degree(p),  *)
 (*                    int_max(int_plus(degree(pp),int_un),dq)))  *)
 (*            in *)
-(* 	     #cr_pr (#Cons(#crp(rmult(ccq,rmult( *)
-(*       	       	       	      rexpt(cq,int_minus(int_max(int_plus(degree(pp), *)
-(* 								  int_un),dq), *)
-(* 						 dq)),cp)), *)
-(* 			   delta), smmult(ccq,a)), *)
-(* 		  smmult(ccq,b)) *)
+(*              #cr_pr (#Cons(#crp(rmult(ccq,rmult( *)
+(*                                                   rexpt(cq,int_minus(int_max(int_plus(degree(pp), *)
+(*           int_un),dq), *)
+(*          dq)),cp)), *)
+(*            delta), smmult(ccq,a)), *)
+(*           smmult(ccq,b)) *)
 (*      in *)
 (*        match q with *)
 (*          | #Nil -> #foc_error(" q must be nonzero") *)
-(* 	 | #Cons(m,q) -> *)
-(* 	     let cq = #first(m) in let dq = #scnd(m) in p_div(p,q,cq,dq)  *)
+(*          | #Cons(m,q) -> *)
+(*              let cq = #first(m) in let dq = #scnd(m) in p_div(p,q,cq,dq)  *)
 (*        end; *)
 (*   proof of pseudo_divide_relation = assumed; *)
 (*   proof of pseudo_remainder_has_lower_degree = assumed; *)
@@ -285,14 +305,17 @@ end;;
 (** Univariate abstract polynomials over a gcd_domain *)
 species Formal_univariate_polynomials_gcd_domain
          (R is Gcd_domain,
-	  N is Natural_number_system) =
+          N is Natural_number_system) =
+
   inherit Formal_polynomials_gcd_domain(R, N),
           Formal_univariate_polynomials_integral_domain(R, N);
-end;;
+
+end
+;;
 
 
 (** Univariate abstract polynomials over a field *)
-species Formal_univariate_polynomials_field 
+species Formal_univariate_polynomials_field
      (K is Field,
       N is Natural_number_system) =
   inherit Euclidean_domain,
@@ -310,9 +333,9 @@ species Formal_univariate_polynomials_field
 (*       let diff = nat!minus (dp,dq) in *)
 (*       !inner_quo_rem (!fmecg (!reductum (p),cp,diff,q), *)
 (*                      lcq, *)
-(* 		     dq, *)
-(* 		     q, *)
-(* 		     !plus (!monomial (lcq, diff), res)); *)
+(*              dq, *)
+(*              q, *)
+(*              !plus (!monomial (lcq, diff), res)); *)
 
 
 (*   let quo_rem (p,q) = *)
@@ -341,7 +364,8 @@ species Formal_univariate_polynomials_field
 (*           !module_mult (r!inv (!leading_coefficient (g)), *)
 (*                        !reductum (g))); *)
 
-end;;
+end
+;;
 
 
 
@@ -356,7 +380,7 @@ end;;
 (*    (\* genere un polymome dense p de degre deg *\) *)
 (*      let _s = int_coll!seed(int_coll!zero) in *)
 (*      let rand_int = *)
-(* 	let dicho = unitary_additive_monoid_as_nat_semi_module(int_coll, r) in *)
+(*         let dicho = unitary_additive_monoid_as_nat_semi_module(int_coll, r) in *)
 (*         fun k -> dicho!of_nat(int_coll!random(k)) in *)
 (*      let randpos(k) = r!plus(rand_int(k), r!one) in *)
 (*          (\* genere un nbre compris entre 1 et k inclus *\) *)
@@ -366,7 +390,7 @@ end;;
 (*        else (\* let mono = afi!monomial(randpos(30000),  *)
 (*                                   int_coll!of_int(n)) in *\) *)
 (*             let mono = afi!monomial(randpos(int_coll!of_int(30000)), *)
-(* 				    int_coll!of_int(n)) in *)
+(*             int_coll!of_int(n)) in *)
 (*             let p = afi!plus(p, mono) in *)
 (*             boucle (#int_minus(n, 1), p) *)
 (*        in *)
@@ -378,23 +402,23 @@ end;;
 (*    (\* genere un polymome creux p de degre deg (contient ~n/10 terme)*\) *)
 (*      let _s = int_coll!seed(int_coll!zero) in *)
 (*      let rand_int = *)
-(* 	let dicho = unitary_additive_monoid_as_nat_semi_module(int_coll, r) in *)
+(*         let dicho = unitary_additive_monoid_as_nat_semi_module(int_coll, r) in *)
 (*         fun k -> dicho!of_nat(int_coll!random(k)) in *)
 (*      let randpos(k) = r!plus(rand_int(k), r!one) in *)
 (*      let rec boucle (n, i, p) =  *)
 (*         if #int_lt (i, n)  *)
 (*         then if #int_gt(#random_int(100), 10)  *)
-(*              then boucle (n, #int_plus(i, 1), p) 	 *)
+(*              then boucle (n, #int_plus(i, 1), p)          *)
 (*              else  (\* let mono = afi!monomial(randpos(30000),  *)
 (*                                   int_coll!of_int(n)) in *\) *)
 (*             let mono = afi!monomial(randpos(int_coll!of_int(30000)), *)
-(* 				    int_coll!of_int(i)) in *)
+(*             int_coll!of_int(i)) in *)
 (*                   let p = afi!plus(p, mono) in *)
 (*                   boucle (n, #int_plus(i, 1), p) *)
 (*         else p in *)
 (*      afi!plus(boucle (deg, 0, afi!zero), *)
 (*               afi!monomial( randpos(int_coll!of_int(30000)), *)
-(* 			    int_coll!of_int(deg)) *)
+(*             int_coll!of_int(deg)) *)
 (*              ); *)
 
 (* end *)
@@ -402,27 +426,27 @@ end;;
 (* (\** Resultant of univariate polynomials *\) *)
 (* (\* species resultant(r is integral_domain) *\) *)
 (* species resultant(r is integral_domain , *)
-(* 		  int_coll is small_naturals, *)
-(* 		  pol is algebre_univariee(r,int_coll)) *)
+(*           int_coll is small_naturals, *)
+(*           pol is algebre_univariee(r,int_coll)) *)
 (*   inherits basic_object = *)
 (*   rep = unit ; *)
 
 (*     (\** alpha^delta def0 psi^(delta-1), this is called Lazard Formula*\) *)
 (*   let next_non_defective(alpha,psi,def_0,delta) = *)
 (*      let int_minus(x,y) =  *)
-(* 	if int_coll!lt(x,y) then #foc_error("next_non_def") *)
-(* 	else int_coll!minus(x,y) in *)
+(*         if int_coll!lt(x,y) then #foc_error("next_non_def") *)
+(*         else int_coll!minus(x,y) in *)
 (*      let pred(x) = int_minus(x,int_coll!one) in *)
 (*      let int_zero = int_coll!zero in *)
 (*      let int_eq(x,y) = int_coll!equal(x,y) in  *)
 (*      let smmult(x,y) = pol!module_mult(x,y) in *)
 (*      let smdiv (p,a) = *)
-(* 	let res = pol!module_exquo(p,a) in *)
-(* 	if #is_failed(res) then #foc_error("") else #non_failed(res) in *)
+(*         let res = pol!module_exquo(p,a) in *)
+(*         if #is_failed(res) then #foc_error("") else #non_failed(res) in *)
 (*      let rec next_non_def(alpha,psi,def_0,delta) = *)
-(* 	if int_eq(delta,int_zero)  *)
-(* 	then def_0  *)
-(* 	else next_non_def(alpha,psi,smdiv(smmult(alpha,def_0),psi),pred(delta)) *)
+(*         if int_eq(delta,int_zero)  *)
+(*         then def_0  *)
+(*         else next_non_def(alpha,psi,smdiv(smmult(alpha,def_0),psi),pred(delta)) *)
 (*      in next_non_def(alpha,psi,def_0,delta) ; *)
 (* (\* *)
 (*   let next_def(p : pol,q : pol,alpha,psi,delta) : pol= *)
@@ -441,15 +465,15 @@ end;;
 (*      let prem(p,q) = #pdiv_res(pol!pseudo_divide(p,q)) in *)
 (*      (\* let prem(p,q) = pol!pseudo_reste(p,q) in *\) *)
 (*      let smdiv (p,a) = *)
-(* 	let res = pol!module_exquo(p,a) in *)
-(* 	if #is_failed(res)  *)
-(* 	then  *)
+(*         let res = pol!module_exquo(p,a) in *)
+(*         if #is_failed(res)  *)
+(*         then  *)
 (*           let _foo = #print_string(pol!print(p)) in *)
 (*           let _foo = #print_string("\nNot divisible by:\n") in *)
 (*           let _foo = #print_string(r!print(a)) in *)
 (*           let _foo = #print_string("\n") in *)
 (*           #foc_error("smdiv")  *)
-(* 	else #non_failed(res) in *)
+(*         else #non_failed(res) in *)
 (*      let r = prem(p,q) in *)
 (*      smdiv(r, rmult(alpha, rexpt(psi,delta))) ; *)
 
@@ -480,17 +504,17 @@ end;;
 (*      let rec gcd(p,q,alpha,psi,delta) =  *)
 (*        if int_eq(degree(q),int_zero) *)
 (*        then  *)
-(*       	if pol!is_zero(q)  *)
-(* 	then p *)
-(* 	else pol!one *)
+(*               if pol!is_zero(q)  *)
+(*         then p *)
+(*         else pol!one *)
 (*        else *)
 (*         let r = self!next_defective(p,q,alpha,psi,delta) in *)
-(* 	let alpha = lc(q) in *)
-(* 	let psi =  *)
-(* 	  if int_eq(delta,int_zero)  *)
-(* 	  then psi *)
-(* 	  else self!next_psi(alpha,psi,lc(q),pred(delta)) in *)
-(* 	gcd(q,r,alpha,psi,int_minus(degree(q),degree(r))) *)
+(*         let alpha = lc(q) in *)
+(*         let psi =  *)
+(*           if int_eq(delta,int_zero)  *)
+(*           then psi *)
+(*           else self!next_psi(alpha,psi,lc(q),pred(delta)) in *)
+(*         gcd(q,r,alpha,psi,int_minus(degree(q),degree(r))) *)
 (*      in *)
 (*        if int_lt(degree(p),degree(q))  *)
 (*        then gcd(q,p,r!one,r!one,int_minus(degree(q),degree(p))) *)
@@ -524,16 +548,16 @@ end;;
 (*           #array_set(v,0,self!next_non_defective(lc(q),psi,q,pred(delta))) in v *)
 (*        else *)
 (*          let r = self!next_defective(p,q,alpha,psi,delta) in *)
-(* 	 let alpha=lc(q) in *)
-(* 	 let qq = self!next_non_defective(alpha,psi,q,pred(delta)) in *)
-(* 	 gcd(q,r,alpha,lc(qq),int_minus(degree(p),degree(q)),  *)
-(* 	      let _foo = #array_set(v,int_coll!to_int(degree(q)),qq) in v) *)
+(*          let alpha=lc(q) in *)
+(*          let qq = self!next_non_defective(alpha,psi,q,pred(delta)) in *)
+(*          gcd(q,r,alpha,lc(qq),int_minus(degree(p),degree(q)),  *)
+(*               let _foo = #array_set(v,int_coll!to_int(degree(q)),qq) in v) *)
 (*      in if int_coll!leq(degree(p),degree(q))  *)
-(*        	then #foc_error("")  *)
-(*       	else gcd(p,q,un,un,int_minus(degree(p),degree(q)), *)
-(* 	          let v = #array_create(int_coll!to_int(succ(degree(p))), *)
-(* 					pol!zero) in  *)
-(* 		  let _foo = #array_set(v,int_coll!to_int(degree(p)),p) in v ); *)
+(*                then #foc_error("")  *)
+(*               else gcd(p,q,un,un,int_minus(degree(p),degree(q)), *)
+(*                   let v = #array_create(int_coll!to_int(succ(degree(p))), *)
+(*         pol!zero) in  *)
+(*           let _foo = #array_set(v,int_coll!to_int(degree(p)),p) in v ); *)
 
 
 (*   (\** Loos 1982 algorithm *\) *)
@@ -561,12 +585,12 @@ end;;
 (*          self!next_psi(lc(q),psi,lc(q),pred(degree(p))) *)
 (*        else *)
 (*          let r = self!next_defective(p,q,alpha,psi,delta) in *)
-(* 	 let alpha= lc(q) in *)
-(* 	 let psi =  *)
-(*       	   if int_eq(delta,int_zero) *)
-(* 	   then psi *)
-(* 	   else self!next_psi(alpha,psi,lc(q),pred(delta)) in *)
-(* 	 gcd(q,r,alpha,psi,int_minus(degree(q),degree(r)))  *)
+(*          let alpha= lc(q) in *)
+(*          let psi =  *)
+(*                  if int_eq(delta,int_zero) *)
+(*            then psi *)
+(*            else self!next_psi(alpha,psi,lc(q),pred(delta)) in *)
+(*          gcd(q,r,alpha,psi,int_minus(degree(q),degree(r)))  *)
 (*      in *)
 (*        if int_lt(degree(p),degree(q)) *)
 (*        then gcd(q,p,un,un,int_minus(degree(q),degree(p))) *)
