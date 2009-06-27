@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.28 2009-06-25 11:52:05 habib Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.29 2009-06-26 22:59:57 weis Exp $ *)
 
 (**
 
@@ -346,24 +346,20 @@ species Liste (A is Setoid) =
     all s : Self, all x y : A,
       A!equal (x, y) -> !est_element (x, s) -> !est_element (y, s)
     proof =
-      <1>1 assume x : A, y : A,
-                  hypothesis h3: A!equal (x, y),
-                  hypothesis h4: !est_element (x, []),
+      <1>1 assume x y : A,
+           hypothesis h3: A!equal (x, y), h4: !est_element (x, []),
            prove !est_element (y, [])
         by hypothesis h4 definition of est_element
       <1>2 assume a : A, s1 : Self,
-                  hypothesis hrec: all x y : A,
-                                     A!equal (x, y) ->
-				       !est_element (x, s1) ->
-					 !est_element (y, s1),
-		  x : A, y : A,
-		  hypothesis h3: A!equal (x, y),
-		  hypothesis h4: !est_element (x, a :: s1),
+           hypothesis hrec: all x y : A,
+               A!equal (x, y) -> !est_element (x, s1) -> !est_element (y, s1),
+           assume x y : A,
+           hypothesis h3: A!equal (x, y), h4: !est_element (x, a :: s1),
            prove !est_element (y, a :: s1)
-        <2>1 assume hypothesis h5: !est_element (x, s1),
+        <2>1 hypothesis h5: !est_element (x, s1),
              prove !est_element (y, s1)
           by hypothesis hrec, h3, h5
-        <2>2 assume hypothesis h5: A!equal (x, a),
+        <2>2 hypothesis h5: A!equal (x, a),
              prove A!equal (y, a)
           by hypothesis h3, h5
              property A!equal_symmetric, A!equal_transitive

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_value.fcl,v 1.5 2009-06-10 21:17:04 ayrault Exp $ *)
+(* $Id: gen_value.fcl,v 1.6 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -34,11 +34,11 @@ species Gen_value =
   (* Property needed for voter proving *)
   (** Consistency rule is symmetric *)
   property consistency_rule_symmetric:
-    all a b in Self, consistency_rule (a, b) -> consistency_rule (b, a);
+    all a b : Self, consistency_rule (a, b) -> consistency_rule (b, a);
 
   (** Equal_value is reflexive *)
   property consistency_rule_reflexive:
-    all a in Self, consistency_rule (a, a);
+    all a : Self, consistency_rule (a, a);
 
 end
 ;;

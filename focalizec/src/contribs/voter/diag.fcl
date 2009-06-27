@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: diag.fcl,v 1.4 2009-06-06 14:57:36 weis Exp $ *)
+(* $Id: diag.fcl,v 1.5 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -32,30 +32,30 @@ open "pair";;
 
 species Diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) =
 
-  inherit Gen_diag, Sp_pair(C, E);
+  inherit Gen_diag, Sp_pair (C, E);
 
   (* no_match implies returned value is invalid *)
   property no_match_is_invalid:
-  all x in Self,
-    E!equal(prj_b(x),  E!no_match) -> ~(valid(x))
+  all x : Self,
+    E!equal (prj_b (x), E!no_match) -> ~(valid (x))
   ;
 
   (* range_match implies returned value is valid *)
   property range_match_is_valid:
-  all x in Self,
-    E!equal(prj_b(x),  E!range_match) -> valid(x)
+  all x : Self,
+    E!equal (prj_b (x), E!range_match) -> valid (x)
   ;
 
   (* partial_match implies returned value is valid *)
   property partial_match_is_valid:
-  all x in Self,
-    E!equal(prj_b(x),  E!partial_match) -> valid(x)
+  all x : Self,
+    E!equal (prj_b (x), E!partial_match) -> valid (x)
   ;
 
   (* perfect_match implies returned value is valid *)
   property perfect_match_is_valid:
-  all x in Self,
-    E!equal(prj_b(x),  E!perfect_match) -> valid(x)
+  all x : Self,
+    E!equal (prj_b (x), E!perfect_match) -> valid (x)
   ;
 
  end
@@ -63,21 +63,23 @@ species Diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) =
 
 species Imp_diag_2oo3( E is Sp_etat_vote, C is Sp_capteur) =
 
-  inherit Diag_2oo3(E, C), Imp_pair(C, E);
+  inherit Diag_2oo3(E, C), Imp_pair (C, E);
 
 
   (* all other diag returned valid value *)
-  let valid(x in Self) in bool =
-     E!equal(prj_b(x), E!range_match) ||
-     E!equal(prj_b(x), E!partial_match) ||
-     E!equal(prj_b(x), E!perfect_match)
+  let valid (x : Self) : bool =
+     E!equal (prj_b (x), E!range_match) ||
+     E!equal (prj_b (x), E!partial_match) ||
+     E!equal (prj_b (x), E!perfect_match)
   ;
 
   proof of no_match_is_invalid =
   <1>1
-  assume x in Self,
-  assume H1 : E!equal(prj_b(x),  E!no_match),
-  prove ~(valid(x))
+  assume
+    x : Self,
+  hypothesis
+    H1 : E!equal (prj_b (x), E!no_match),
+  prove ~(valid (x))
     by hypothesis H1
        property E!equal_transitive, E!equal_symmetric,
        E!all_field_different_0_1, E!all_field_different_0_2,

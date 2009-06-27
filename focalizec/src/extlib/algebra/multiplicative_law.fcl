@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: multiplicative_law.fcl,v 1.9 2009-06-25 09:52:35 weis Exp $ *)
+(* $Id: multiplicative_law.fcl,v 1.10 2009-06-26 22:59:57 weis Exp $ *)
 
 (** Common properties of multiplicative laws. *)
 
@@ -122,7 +122,7 @@ species Commutative_monoid =
 
   (** *)
   proof of mult_right_substitution_rule =
-    <1>1 assume x : Self, y_1 : Self, y_2 : Self,
+    <1>1 assume x y_1 y_2 : Self,
          hypothesis H: !equal (y_1, y_2),
          prove !equal (!mult (x, y_1), !mult (x, y_2))
          <2>1 prove !equal (!mult (x, y_1), !mult (y_1, x))
@@ -329,9 +329,8 @@ species Division_monoid =
     !equal (x_1, x_2) -> ~ (!equal (y, !zero)) ->
        !equal (!div (x_1, y), !div (x_2, y))
     proof =
-    <1>1 assume x_1 : Self, x_2 : Self, y : Self,
-         hypothesis H_x: !equal (x_1, x_2),
-         hypothesis H_y: ~(!equal (y, !zero)),
+    <1>1 assume x_1 x_2 y : Self,
+         hypothesis H_x : !equal (x_1, x_2), H_y : ~(!equal (y, !zero)),
          prove !equal (!div (x_1, y), !div (x_2, y))
          <2>1 prove !equal (!mult (!div (x_1, y), y), x_1)
               by property div_divides hypothesis H_y
@@ -351,9 +350,8 @@ species Division_monoid =
        !equal (!div (x, y_1), !div (x, y_2))
     (* [rr]: to do ! *)
     proof =
-      <1>1 assume x : Self, y_1 : Self, y_2 : Self,
-           hypothesis H_y: !equal (y_1, y_2),
-           hypothesis H_0: ~(!equal (y_1, !zero)),
+      <1>1 assume x y_1 y_2 : Self,
+           hypothesis H_y : !equal (y_1, y_2), H_0 : ~(!equal (y_1, !zero)),
             prove !equal (!div (x, y_1), !div (x, y_2))
             <2>1 prove !equal (!mult (!div (x, y_1), y_1), x)
                  by property div_divides hypothesis H_0
@@ -382,7 +380,7 @@ species Division_monoid =
   theorem div_really_divides: all x y : Self,
     !equal (y, !zero) \/ !divides (!div (x, y), x)
     proof =
-     <1>1 assume x : Self, y : Self,
+     <1>1 assume x y : Self,
           hypothesis H: !different(y, !zero),
           prove !divides (!div (x, y), x)
           <2>1 prove !equal (!mult (!div (x, y), y), x)
@@ -398,13 +396,13 @@ species Division_monoid =
     !equal (y, !zero) ||  ~~ !equal (x, !zero);
 
   proof of divides_extends_equal =
-  <1>1 assume x : Self, y : Self,
+  <1>1 assume x y : Self,
        hypothesis H: !equal (x, y),
           prove !divides (x, y)
-          <2>1 assume hypothesis H_0: !equal (y, !zero),
+          <2>1 hypothesis H_0: !equal (y, !zero),
                 prove !divides (x, y)
                 by hypothesis H_0 definition of divides
-          <2>2 assume hypothesis H_1: !different (y, !zero),
+          <2>2 hypothesis H_1: !different (y, !zero),
                prove !divides (x, y)
                <3>1 prove ~ (!equal (x, !zero))
                     by hypothesis H, H_1
@@ -416,16 +414,16 @@ species Division_monoid =
 
 
   proof of divides_reverses_mult =
-    <1>1 assume x : Self, y : Self,
+    <1>1 assume x y : Self,
          prove !divides (x, !mult (x, y))
-         <2>1 assume hypothesis H_0: !equal (x, !zero),
+         <2>1 hypothesis H_0: !equal (x, !zero),
               prove !divides (x, !mult (x, y))
               <3>1 prove !equal (!mult (x, y), !zero)
                    by hypothesis H_0
                    property !zero_absorbes, !equal_transitive,
                       !mult_left_substitution_rule
               <3>f qed by step <3>1 definition of divides
-         <2>2 assume hypothesis H_1: !different (x, !zero),
+         <2>2 hypothesis H_1: !different (x, !zero),
               prove !divides (x, !mult (x, y))
               by hypothesis H_1 property !same_is_not_different
                  definition of divides

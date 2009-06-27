@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_diag.fcl,v 1.3 2009-06-06 13:02:04 ayrault Exp $ *)
+(* $Id: gen_diag.fcl,v 1.4 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -22,12 +22,12 @@ use "sets_orders";;
 open "basics";;
 open "sets_orders";;
 
-
 species Gen_diag =
-inherit Setoid ;
 
-(* Returned value is valid *)
-signature valid : Self -> bool;
+  inherit Setoid ;
+
+  (* Returned value is valid *)
+  signature valid : Self -> bool;
 
 end;;
 

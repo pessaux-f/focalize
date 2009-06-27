@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: value.fcl,v 1.10 2009-06-10 21:17:04 ayrault Exp $ *)
+(* $Id: value.fcl,v 1.11 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -58,14 +58,14 @@ species Imp_value_tol (T is Gen_basic_type_tol, tol in T) =
 
   inherit Sp_value_tol (T, tol);
 
-  let consistency_rule (x in Self, y in Self) in bool =
+  let consistency_rule (x : Self, y : Self) : bool =
     if T!geq (x, y) then
       T!geq (T!plus (y, tol), x)
     else
       T!geq (T!plus (x, tol), y)
   ;
 
-  let equal (x in Self, y in Self) in bool = T!equal (x, y);
+  let equal (x : Self, y : Self) : bool = T!equal (x, y);
 
   let element = T!element;
 
@@ -79,7 +79,7 @@ species Imp_value_tol (T is Gen_basic_type_tol, tol in T) =
     by property T!equal_reflexive definition of equal;
 
   proof of consistency_rule_reflexive =
-  <1>1 assume x in Self,
+  <1>1 assume x : Self,
     prove
     T!geq (T!plus (x, tol), x)
     assumed {* Todo *}
@@ -87,20 +87,21 @@ species Imp_value_tol (T is Gen_basic_type_tol, tol in T) =
   ;
 
   proof of consistency_rule_symmetric = assumed {* Error Coq !! *};
-(*  
+(*
 <1>1
-    assume x in Self,
-    assume y in Self,
-    assume H1: consistency_rule (x, y),
+    assume
+      x y : Self,
+    hypothesis
+      H1: consistency_rule (x, y),
     prove
      !consistency_rule (y, x)
      <2>1
-        assume H3: T!geq (x, y),
+        hypothesis H3: T!geq (x, y),
         prove
         consistency_rule (y, x)
         assumed {* Todo *}
      <2>2
-        assume H4: ~~ (T!geq (x, y)),
+        hypothesis H4: ~~ (T!geq (x, y)),
         prove
         consistency_rule (y, x)
         assumed {* Todo *}
@@ -126,8 +127,8 @@ species Imp_value (T is Gen_basic_type) =
 
   representation = T;
 
-  let consistency_rule (x in Self, y in Self) in bool = T!equal (x, y);
-  let equal (x in Self, y in Self) in bool = T!equal (x, y);
+  let consistency_rule (x : Self, y : Self) : bool = T!equal (x, y);
+  let equal (x : Self, y : Self) : bool = T!equal (x, y);
   let element = T!element;
 
   proof of equal_transitive =

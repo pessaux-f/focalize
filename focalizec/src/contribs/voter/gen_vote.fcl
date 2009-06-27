@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_vote.fcl,v 1.7 2009-06-14 12:57:24 ayrault Exp $ *)
+(* $Id: gen_vote.fcl,v 1.8 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -34,23 +34,23 @@ species Gen_voter (V is Gen_value, S is Gen_diag) =
   signature voter : V -> V -> V -> (V * S);
 
   (* Shortcut to extract the value *)
-  let value (p in V * S) in V = basics#fst (p);
+  let value (p : V * S) : V = basics#fst (p);
 
   (* Shortcut to extract the diagnostics *)
-  let diag (p in V * S) in S = basics#snd (p);
+  let diag (p : V * S) : S = basics#snd (p);
 
   (* 2 outputs are compatible if :   *)
   (*  - the returned values are consistent regarding to the consistency law *)
   (*  - the returned states are not valid (ie. values not comparable)        *)
   logical let compatible (s1, s2) =
-    (S!valid (diag (s1)) /\  S!valid (diag (s2)) /\  
+    (S!valid (diag (s1)) /\  S!valid (diag (s2)) /\
        V!consistency_rule (value (s1), value (s2))) \/
     (~ (S!valid (diag (s1))) /\  ~ (S!valid (diag (s2))))
   ;
 
   (* voter does not invent value *)
   property voter_returns_an_input_value:
-  all v1 v2 v3 in V,
+  all v1 v2 v3 : V,
     (value (voter (v1, v2, v3)) = v1) \/
     (value (voter (v1, v2, v3)) = v2) \/
     (value (voter (v1, v2, v3)) = v3) \/
@@ -59,18 +59,18 @@ species Gen_voter (V is Gen_value, S is Gen_diag) =
 
   (* Returned value is independant from order of input values *)
   property voter_independant_from_order_v1_v2:
-  all v1 v2 v3 in V,
+  all v1 v2 v3 : V,
     compatible (voter (v1, v2, v3), voter (v2, v1, v3)) /\
     compatible (voter (v1, v2, v3), voter (v3, v1, v2))
    ;
 
   (* Contraintes exportées vers les espéces passées en paramètre *)
   property consistency_rule_is_symmetric :
-    all v1 v2 in V,
+    all v1 v2 : V,
       V!consistency_rule (v1, v2) -> V!consistency_rule (v2, v1);
 
   property consistency_rule_is_reflexive:
-    all v1 in V, V!consistency_rule (v1, v1);
+    all v1 : V, V!consistency_rule (v1, v1);
 
 end
 ;;

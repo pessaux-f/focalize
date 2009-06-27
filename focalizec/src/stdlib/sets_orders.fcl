@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets_orders.fcl,v 1.28 2009-06-24 22:29:32 weis Exp $ *)
+(* $Id: sets_orders.fcl,v 1.29 2009-06-26 22:59:57 weis Exp $ *)
 
 (**
  @title FoCaLize team. Basic algebra.
@@ -1172,14 +1172,14 @@ species Ordered_set_as_meet_semi_lattice =
   proof of inf_commutes =
    <1>1 assume x : Self, y : Self,
         prove !equal (!inf (x, y), !inf (y, x))
-        <2>1 assume hypothesis Hxy : !leq (x, y),
+        <2>1 hypothesis Hxy : !leq (x, y),
              prove !equal (!inf (x, y), !inf (y, x))
              <3>1 prove !equal (x, !inf (x, y))
                   by hypothesis Hxy
                      property equal_reflexive
                      definition of inf
              <3>2 prove !equal (x, !inf (y, x))
-                  <4>1 assume hypothesis Hyx : !leq (y, x),
+                  <4>1 hypothesis Hyx : !leq (y, x),
                        prove !equal (x, !inf (y, x))
                        <5>1 prove !equal (x, y)
                             by hypothesis Hxy, Hyx
@@ -1191,7 +1191,7 @@ species Ordered_set_as_meet_semi_lattice =
                         <5>f qed
                              by step <5>1, <5>2
                                 property equal_transitive
-                  <4>2 assume hypothesis H : ~ (!leq (y, x)),
+                  <4>2 hypothesis H : ~ (!leq (y, x)),
                         prove !equal (x, !inf (y, x))
                         by hypothesis H
                            property equal_reflexive
@@ -1200,7 +1200,7 @@ species Ordered_set_as_meet_semi_lattice =
              <3>f qed
                 by step <3>1, <3>2
                    property equal_symmetric, equal_transitive
-        <2>2 assume hypothesis Hyx : !leq (y, x),
+        <2>2 hypothesis Hyx : !leq (y, x),
              prove !equal (!inf (x, y), !inf (y, x))
              (* [rr]: could do as <2>1 above, but zenon is wiser *)
              by hypothesis Hyx
@@ -1288,7 +1288,7 @@ species Ordered_set_as_lattice =
   proof of sup_absorbes_inf =
     <1>1 assume x : Self, y : Self,
          prove !equal (x, !inf (x, !sup (x, y)))
-         <2>1 assume hypothesis H : !leq (x, y),
+         <2>1 hypothesis H : !leq (x, y),
               prove !equal (x, !inf (x, !sup (x, y)))
               <3>1 prove !equal (y, !sup (x, y))
                    <4>1 prove !geq (y, x)
@@ -1314,7 +1314,7 @@ species Ordered_set_as_lattice =
               <3>f qed
                  by step <3>3, <3>2
                     property equal_symmetric, equal_transitive
-         <2>2 assume hypothesis H : !leq (y, x),
+         <2>2 hypothesis H : !leq (y, x),
               prove !equal (x, !inf (x, !sup (x, y)))
               <3>1 prove !geq (x, y)
                    by hypothesis H
@@ -1342,7 +1342,7 @@ species Ordered_set_as_lattice =
    proof of inf_absorbes_sup =
     <1>1 assume x : Self, y : Self,
          prove !equal (x, !sup (x, !inf (x, y)))
-         <2>1 assume hypothesis H : !leq (x, y),
+         <2>1 hypothesis H : !leq (x, y),
               prove !equal (x, !sup (x, !inf (x, y)))
               <3>1 prove !equal (x, !inf (x, y))
                    by hypothesis H property equal_reflexive definition of inf
@@ -1353,7 +1353,7 @@ species Ordered_set_as_lattice =
               <3>f qed by step <3>2
                           property sup_idempotent, equal_reflexive,
                           equal_symmetric, equal_transitive
-         <2>2 assume hypothesis H : !leq (y, x),
+         <2>2 hypothesis H : !leq (y, x),
               prove !equal (x, !sup (x, !inf (x, y)))
               <3>2 prove !equal (!sup (x, y), !sup (x, !inf (x, y)))
                    <4>1 prove !equal (y, !inf (y, x))

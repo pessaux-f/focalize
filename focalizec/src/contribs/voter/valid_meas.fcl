@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: valid_meas.fcl,v 1.2 2009-06-14 12:57:24 ayrault Exp $ *)
+(* $Id: valid_meas.fcl,v 1.3 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -43,7 +43,7 @@ species Sp_valid_meas =
 
   (** Each value of the species is inside the sum type *)
   property all_value:
-    all e in Self,
+    all e : Self,
       !equal (e, valid) \/
       !equal (e, invalid);
 
@@ -61,10 +61,10 @@ species Imp_valid_meas (P is Peano) =
 
   representation = P;
 
-  let valid in Self = P!zero;
-  let invalid in Self = P!s (valid);
+  let valid : Self = P!zero;
+  let invalid : Self = P!s (valid);
 
-  let equal (x in Self, y in Self) in bool = P!equal (x, y);
+  let equal (x : Self, y : Self) : bool = P!equal (x, y);
   let element = invalid;
 
   proof of equal_transitive =
@@ -82,12 +82,12 @@ species Imp_valid_meas (P is Peano) =
   proof of all_value = assumed {* By construction *};
 
 
-  let parse(x in string) in Self =
+  let parse(x : string) : Self =
     if x = "valid" then valid else
     if x = "invalid" then invalid else
     focalize_error( "Erreur parse valid_meas" );
-    
-  let print (x in Self) in string =
+
+  let print (x : Self) : string =
     if equal (x, valid) then "valid measure" else
     if equal (x, invalid) then "invalid measure" else "Erreur capteur";
 

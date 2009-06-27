@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: vote.fcl,v 1.10 2009-06-14 12:57:24 ayrault Exp $ *)
+(* $Id: vote.fcl,v 1.11 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -42,12 +42,12 @@ species
   inherit Gen_voter (V, P);
 
   (* Shortcut to extract sensor from diagnosis *)
-  let sensor (diag in P) in C =
+  let sensor (diag : P) : C =
     P!prj_a (diag)
   ;
 
   (* Shortcut to extract state from diagnosis *)
-  let state (diag in P) in E =
+  let state (diag : P) : E =
     P!prj_b (diag)
   ;
 
@@ -55,7 +55,7 @@ species
   (* Vote with 3 equivalent values returns a perfect_match and *)
   (* the value of the first sensor.                            *)
   property vote_perfect :
-    all v1 v2 v3 in V,
+    all v1 v2 v3 : V,
       (V!consistency_rule (v1, v2) /\
        V!consistency_rule (v2, v3) /\
        V!consistency_rule (v1, v3))
@@ -68,7 +68,7 @@ species
   (* inconsistent.Returns a range_match with the faulty sensor and one of the *)
   (* 2 consistent values.                                                     *)
   property vote_match_c1 :
-    all v1 v2 v3 in V,
+    all v1 v2 v3 : V,
       (~ V!consistency_rule (v1, v2) /\
        ~ V!consistency_rule (v1, v3) /\
        V!consistency_rule (v2, v3))
@@ -76,9 +76,9 @@ species
       ((value (voter (v1, v2, v3)) = v2) /\
        (diag (voter (v1, v2, v3)) = P!constr (C!capt_1, E!range_match)))
   ;
-   
+
   property vote_match_c2 :
-    all v1 v2 v3 in V,
+    all v1 v2 v3 : V,
       (~ V!consistency_rule (v1, v2) /\
        V!consistency_rule (v1, v3) /\
        ~ V!consistency_rule (v2, v3))
@@ -88,7 +88,7 @@ species
   ;
 
   property vote_match_c3 :
-    all v1 v2 v3 in V,
+    all v1 v2 v3 : V,
       (V!consistency_rule (v1, v2) /\
        ~ V!consistency_rule (v1, v3) /\
        ~ V!consistency_rule (v2, v3))
@@ -100,7 +100,7 @@ species
   (* Vote with 2 values different from the 2 other but one is consistent *)
   (* returns a partial_match with the healthy sensor and its the value   *)
   property vote_partial_c1 :
-    all v1 v2 v3 in V,
+    all v1 v2 v3 : V,
       (V!consistency_rule (v1, v2) /\
        V!consistency_rule (v1, v3) /\
        ~ V!consistency_rule (v2, v3)) ->
@@ -109,7 +109,7 @@ species
   ;
 
   property vote_partial_c2 :
-    all v1 v2 v3 in V,
+    all v1 v2 v3 : V,
       (V!consistency_rule (v1, v2) /\
        ~ V!consistency_rule (v1, v3) /\
        V!consistency_rule (v2, v3)) ->
@@ -118,7 +118,7 @@ species
   ;
 
   property vote_partial_c3 :
-    all v1 v2 v3 in V,
+    all v1 v2 v3 : V,
       (~ V!consistency_rule (v1, v2) /\
        V!consistency_rule (v1, v3) /\
        V!consistency_rule (v2, v3)) ->
@@ -129,7 +129,7 @@ species
   (* Vote with 3 inconstent values returns a no_match. sensor has *)
   (* no sense here                                                *)
   property vote_no_match :
-    all v1 v2 v3 in V,
+    all v1 v2 v3 : V,
       (~ V!consistency_rule (v1, v2) /\
        ~ V!consistency_rule (v1, v3) /\
        ~ V!consistency_rule (v2, v3)) ->
@@ -139,7 +139,7 @@ species
   (* Propriétés du voteur *)
   (* Le voteur ne doit retourner qu'un des quatre Ã©tats *)
   theorem t1 :
-  all v1 v2 v3 in V,
+  all v1 v2 v3 : V,
     E!equal (state (diag (voter (v1, v2, v3))), E!no_match) \/
     E!equal (state (diag (voter (v1, v2, v3))), E!range_match) \/
     E!equal (state (diag (voter (v1, v2, v3))), E!partial_match) \/
@@ -147,7 +147,7 @@ species
   proof = by  property E!all_value;
 
   (* le voteur ne doit retourner qu'un des trois numÃ©ros de capteur *)
-  theorem t2 : all v1 v2 v3 in V,
+  theorem t2 : all v1 v2 v3 : V,
     C!equal (sensor (diag (voter (v1, v2, v3))), C!capt_1) \/
     C!equal (sensor (diag (voter (v1, v2, v3))), C!capt_2) \/
     C!equal (sensor (diag (voter (v1, v2, v3))), C!capt_3)
@@ -155,9 +155,8 @@ species
 
   proof of voter_returns_an_input_value =
   <1>1
-    assume va in V,
-    assume vb in V,
-    assume vc in V,
+    assume
+      va vb vc : V,
     prove
        ((value (voter (va, vb, vc)) = va)
      \/ (value (voter (va, vb, vc)) = vb)
@@ -165,37 +164,49 @@ species
      \/ (~ (P!valid (diag (voter (va, vb, vc))))))
 
     <2>1
-      assume H1: V!consistency_rule (va, vb),
+      hypothesis
+        H1: V!consistency_rule (va, vb),
       prove
        ((value (voter (va, vb, vc)) = va)
      \/ (value (voter (va, vb, vc)) = vb)
      \/ (value (voter (va, vb, vc)) = vc)
      \/ (~ (P!valid (diag (voter (va, vb, vc))))))
 
-       <3>1 assume H11: V!consistency_rule (vb, vc),
+       <3>1
+       hypothesis
+         H11: V!consistency_rule (vb, vc),
        prove
          ((value (voter (va, vb, vc)) = va)
        \/ (value (voter (va, vb, vc)) = vb)
        \/ (value (voter (va, vb, vc)) = vc))
 
-         <4>1 assume H111: V!consistency_rule (va, vc),
+         <4>1
+         hypothesis
+           H111: V!consistency_rule (va, vc),
          prove (value (voter (va, vb, vc)) = va)
          by hypothesis H1, H11, H111 property vote_perfect
-         <4>2 assume H112: ~ (V!consistency_rule (va, vc)),
+         <4>2
+         hypothesis H112: ~ (V!consistency_rule (va, vc)),
          prove (value (voter (va, vb, vc)) = vb)
          by hypothesis H1, H11, H112 property vote_partial_c2
          <4>f conclude
 
-       <3>2 assume H12: ~ (V!consistency_rule (vb, vc)),
+       <3>2
+       hypothesis
+         H12: ~ (V!consistency_rule (vb, vc)),
        prove
          ((value (voter (va, vb, vc)) = va)
        \/ (value (voter (va, vb, vc)) = vb)
        \/ (value (voter (va, vb, vc)) = vc))
 
-         <4>1 assume H121: V!consistency_rule (va, vc),
+         <4>1
+         hypothesis
+           H121: V!consistency_rule (va, vc),
          prove (value (voter (va, vb, vc)) = va)
          by hypothesis H1, H12, H121 property vote_partial_c1
-         <4>2 assume H122: ~ (V!consistency_rule (va, vc)),
+         <4>2
+         hypothesis
+           H122: ~ (V!consistency_rule (va, vc)),
          prove (value (voter (va, vb, vc)) = va)
          by hypothesis H1, H12, H122 property vote_match_c3
          <4>f conclude
@@ -203,37 +214,50 @@ species
      <3>f conclude
 
      <2>2
-      assume H2: ~ (V!consistency_rule (va, vb)),
+      hypothesis
+        H2: ~ (V!consistency_rule (va, vb)),
       prove
         ((value (voter (va, vb, vc)) = va)
       \/ (value (voter (va, vb, vc)) = vb)
       \/ (value (voter (va, vb, vc)) = vc)
       \/ (~ (P!valid (diag (voter (va, vb, vc))))))
 
-       <3>1 assume H21: V!consistency_rule (vb, vc),
+       <3>1
+       hypothesis
+         H21: V!consistency_rule (vb, vc),
        prove
          ((value (voter (va, vb, vc)) = va)
        \/ (value (voter (va, vb, vc)) = vb)
        \/ (value (voter (va, vb, vc)) = vc))
 
-         <4>1 assume H211: V!consistency_rule (va, vc),
+         <4>1
+         hypothesis
+           H211: V!consistency_rule (va, vc),
          prove (value (voter (va, vb, vc)) = vc)
          by hypothesis H2, H21, H211 property vote_partial_c3
-         <4>2 assume H212: ~ (V!consistency_rule (va, vc)),
+         <4>2
+         hypothesis
+           H212: ~ (V!consistency_rule (va, vc)),
          prove (value (voter (va, vb, vc)) = vb)
          by hypothesis H2, H21, H212 property vote_match_c1
          <4>f conclude
 
-       <3>2 assume H22: ~ (V!consistency_rule (vb, vc)),
+       <3>2
+       hypothesis
+         H22: ~ (V!consistency_rule (vb, vc)),
        prove
          ((value (voter (va, vb, vc)) = va)
        \/ (value (voter (va, vb, vc)) = vb)
        \/ (value (voter (va, vb, vc)) = vc)
        \/ (~ (P!valid (diag (voter (va, vb, vc))))))
-         <4>1 assume H221: V!consistency_rule (va, vc),
+         <4>1
+         hypothesis
+           H221: V!consistency_rule (va, vc),
          prove (value (voter (va, vb, vc)) = vc)
          by hypothesis H2, H22, H221 property vote_match_c2
-         <4>2 assume H222: ~ (V!consistency_rule (va, vc)),
+         <4>2
+         hypothesis
+           H222: ~ (V!consistency_rule (va, vc)),
          prove (~ (P!valid (diag (voter (va, vb, vc)))))
            <5>1 prove (diag (voter (va, vb, vc)) = P!constr (C!capt_1, E!no_match))
            by hypothesis H2, H22, H222 property vote_no_match
@@ -254,26 +278,30 @@ species
   (* Proof by case on the consistency between inputs *)
   proof of voter_independant_from_order_v1_v2 =
   <1>1
-    assume va in V,
-    assume vb in V,
-    assume vc in V,
-    prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-        /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+    assume
+      va vb vc : V,
+    prove
+      (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+       compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
     <2>1
-      assume H1: V!consistency_rule (va, vb),
-      prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-          /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+      hypothesis
+         H1: V!consistency_rule (va, vb),
+      prove
+         (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+          compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
       <3>1
-        assume H11: V!consistency_rule (va, vc),
-        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+        hypothesis H11: V!consistency_rule (va, vc),
+        prove
+          (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+           compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
         <4>1
-          assume H111: V!consistency_rule (vb, vc),
-          prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-              /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+          hypothesis H111: V!consistency_rule (vb, vc),
+          prove
+            (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+             compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
           <5>1 prove (value (voter (va, vb, vc)) = va)
           by hypothesis H1, H11, H111
@@ -285,35 +313,37 @@ species
           by hypothesis H1, H11, H111
              property vote_perfect, consistency_rule_is_symmetric
 
-          <5>4 prove 
+          <5>4 prove
             (diag (voter (va, vb, vc)) = P!constr (C!capt_1, E!perfect_match))
           by hypothesis H1, H11, H111 property vote_perfect
           <5>5 prove (P!valid (diag (voter (va, vb, vc))))
           by step <5>4 property P!perfect_match_is_valid, P!prj_b_is_snd_of_pair
-        
-          <5>6 prove 
+
+          <5>6 prove
             (diag (voter (vb, va, vc)) = P!constr (C!capt_1, E!perfect_match))
-          by hypothesis H1, H11, H111 
+          by hypothesis H1, H11, H111
           property vote_perfect, consistency_rule_is_symmetric
           <5>7 prove (P!valid (diag (voter (vb, va, vc))))
           by step <5>6 property P!perfect_match_is_valid, P!prj_b_is_snd_of_pair
-          
-          <5>8 prove 
+
+          <5>8 prove
             (diag (voter (vc, va, vb)) = P!constr (C!capt_1, E!perfect_match))
-          by hypothesis H1, H11, H111 
+          by hypothesis H1, H11, H111
           property vote_perfect, consistency_rule_is_symmetric
           <5>9 prove (P!valid (diag (voter (vc, va, vb))))
           by step <5>8 property P!perfect_match_is_valid, P!prj_b_is_snd_of_pair
- 
+
           <5>f
           qed by step <5>1, <5>2, <5>3, <5>5, <5>7, <5>9
                  definition of compatible
                  hypothesis H1, H11
 
         <4>2
-          assume H112: ~ (V!consistency_rule (vb, vc)),
-          prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-              /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+          hypothesis
+            H112: ~ (V!consistency_rule (vb, vc)),
+          prove
+            (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+             compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
             <5>1 prove (value (voter (va, vb, vc)) = va)
             by hypothesis H1, H11, H112  property vote_partial_c1
@@ -324,22 +354,22 @@ species
             by hypothesis H1, H11, H112
                property vote_partial_c2, consistency_rule_is_symmetric
 
-            <5>4 prove 
+            <5>4 prove
              (diag (voter (va, vb, vc)) = P!constr (C!capt_1, E!partial_match))
             by hypothesis H1, H11, H112 property vote_partial_c1
             <5>5 prove (P!valid (diag (voter (va, vb, vc))))
             by step <5>4 property P!partial_match_is_valid, P!prj_b_is_snd_of_pair
-        
-            <5>6 prove 
+
+            <5>6 prove
             (diag (voter (vb, va, vc)) = P!constr (C!capt_2, E!partial_match))
-            by hypothesis H1, H11, H112 
+            by hypothesis H1, H11, H112
             property vote_partial_c2, consistency_rule_is_symmetric
             <5>7 prove (P!valid (diag (voter (vb, va, vc))))
             by step <5>6 property P!partial_match_is_valid, P!prj_b_is_snd_of_pair
-          
-            <5>8 prove 
+
+            <5>8 prove
             (diag (voter (vc, va, vb)) = P!constr (C!capt_2, E!partial_match))
-            by hypothesis H1, H11, H112 
+            by hypothesis H1, H11, H112
             property vote_partial_c2, consistency_rule_is_symmetric
             <5>9 prove (P!valid (diag (voter (vc, va, vb))))
             by step <5>8 property P!partial_match_is_valid, P!prj_b_is_snd_of_pair
@@ -351,14 +381,18 @@ species
         <4>f conclude
 
       <3>2
-        assume H12: ~ (V!consistency_rule (va, vc)),
-        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+        hypothesis
+          H12: ~ (V!consistency_rule (va, vc)),
+        prove
+          (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+           compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
         <4>1
-          assume H121: V!consistency_rule (vb, vc),
-          prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-              /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+          hypothesis
+            H121: V!consistency_rule (vb, vc),
+          prove
+            (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+             compatible (voter (va, vb, vc), voter (vc, va, vb)))
           <5>1 prove (value (voter (va, vb, vc)) = vb)
           by hypothesis H1, H12, H121  property vote_partial_c2
           <5>2 prove (value (voter (vb, va, vc)) = vb)
@@ -368,33 +402,35 @@ species
           by hypothesis H1, H12, H121
              property vote_partial_c3, consistency_rule_is_symmetric
 
-          <5>4 prove 
+          <5>4 prove
           (diag (voter (va, vb, vc)) = P!constr (C!capt_2, E!partial_match))
           by hypothesis H1, H12, H121 property vote_partial_c2
           <5>5 prove (P!valid (diag (voter (va, vb, vc))))
             by step <5>4 property P!partial_match_is_valid, P!prj_b_is_snd_of_pair
-        
-          <5>6 prove 
+
+          <5>6 prove
           (diag (voter (vb, va, vc)) = P!constr (C!capt_1, E!partial_match))
-           by hypothesis H1, H12, H121 
+           by hypothesis H1, H12, H121
            property vote_partial_c1, consistency_rule_is_symmetric
            <5>7 prove (P!valid (diag (voter (vb, va, vc))))
            by step <5>6 property P!partial_match_is_valid, P!prj_b_is_snd_of_pair
-          
-          <5>8 prove 
+
+          <5>8 prove
           (diag (voter (vc, va, vb)) = P!constr (C!capt_3, E!partial_match))
-           by hypothesis H1, H12, H121 
+           by hypothesis H1, H12, H121
            property vote_partial_c3, consistency_rule_is_symmetric
           <5>9 prove (P!valid (diag (voter (vc, va, vb))))
            by step <5>8 property P!partial_match_is_valid, P!prj_b_is_snd_of_pair
           <5>f qed by step <5>1, <5>2, <5>3, <5>5, <5>7, <5>9
              property V!consistency_rule_reflexive
              definition of compatible
- 
+
         <4>2
-          assume H122: ~ (V!consistency_rule (vb, vc)),
-          prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-              /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+          hypothesis
+            H122: ~ (V!consistency_rule (vb, vc)),
+          prove
+            (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+             compatible (voter (va, vb, vc), voter (vc, va, vb)))
           <5>1 prove (value (voter (va, vb, vc)) = va)
           by hypothesis H1, H12, H122
              property vote_match_c3, consistency_rule_is_symmetric
@@ -405,23 +441,23 @@ species
           by hypothesis H1, H12, H122
              property vote_match_c1, consistency_rule_is_symmetric
 
-          <5>4 prove 
+          <5>4 prove
           (diag (voter (va, vb, vc)) = P!constr (C!capt_3, E!range_match))
-          by hypothesis H1, H12, H122 
+          by hypothesis H1, H12, H122
           property vote_match_c3, consistency_rule_is_symmetric
           <5>5 prove (P!valid (diag (voter (va, vb, vc))))
             by step <5>4 property P!range_match_is_valid, P!prj_b_is_snd_of_pair
-        
-          <5>6 prove 
+
+          <5>6 prove
           (diag (voter (vb, va, vc)) = P!constr (C!capt_3, E!range_match))
-           by hypothesis H1, H12, H122 
+           by hypothesis H1, H12, H122
            property vote_match_c3, consistency_rule_is_symmetric
            <5>7 prove (P!valid (diag (voter (vb, va, vc))))
            by step <5>6 property P!range_match_is_valid, P!prj_b_is_snd_of_pair
-          
-          <5>8 prove 
+
+          <5>8 prove
           (diag (voter (vc, va, vb)) = P!constr (C!capt_1, E!range_match))
-           by hypothesis H1, H12, H122 
+           by hypothesis H1, H12, H122
            property vote_match_c1, consistency_rule_is_symmetric
           <5>9 prove (P!valid (diag (voter (vc, va, vb))))
            by step <5>8 property P!range_match_is_valid, P!prj_b_is_snd_of_pair
@@ -436,17 +472,22 @@ species
       <3>f conclude
 
     <2>2
-      assume H2: ~ (V!consistency_rule (va, vb)),
-      prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-          /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+      hypothesis
+        H2: ~ (V!consistency_rule (va, vb)),
+      prove
+        (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+         compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
-      <3>1 assume H21: (V!consistency_rule (va, vc)),
+      <3>1 hypothesis H21: (V!consistency_rule (va, vc)),
         prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
             /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
-        <4>1 assume H211: (V!consistency_rule (vb, vc)),
-        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+        <4>1
+        hypothesis
+          H211: (V!consistency_rule (vb, vc)),
+        prove
+          (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+           compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
          <5>1 prove ~ (V!consistency_rule (vb, va))
            <6>1 prove V!consistency_rule (vb, va) -> V!consistency_rule (va, vb)
@@ -460,21 +501,21 @@ species
          <5>4 prove (value (voter (vc, va, vb)) = vc)
            by hypothesis H2, H21, H211
               property vote_partial_c1, consistency_rule_is_symmetric
-         <5>5 prove 
+         <5>5 prove
           (diag (voter (va, vb, vc)) = P!constr (C!capt_3, E!partial_match))
           by hypothesis H2, H21, H211 property vote_partial_c3
          <5>6 prove (P!valid (diag (voter (va, vb, vc))))
            by step <5>5 property P!partial_match_is_valid, P!prj_b_is_snd_of_pair
-        
-         <5>7 prove 
+
+         <5>7 prove
          (diag (voter (vb, va, vc)) = P!constr (C!capt_3, E!partial_match))
           by hypothesis H21, H211 step <5>1 property vote_partial_c3
          <5>8 prove (P!valid (diag (voter (vb, va, vc))))
           by step <5>7 property P!partial_match_is_valid, P!prj_b_is_snd_of_pair
-          
-         <5>9 prove 
+
+         <5>9 prove
          (diag (voter (vc, va, vb)) = P!constr (C!capt_1, E!partial_match))
-          by hypothesis H2, H21, H211 
+          by hypothesis H2, H21, H211
           property vote_partial_c1, consistency_rule_is_symmetric
          <5>10 prove (P!valid (diag (voter (vc, va, vb))))
           by step <5>9 property P!partial_match_is_valid, P!prj_b_is_snd_of_pair
@@ -483,9 +524,12 @@ species
            property V!consistency_rule_reflexive
            definition of compatible
 
-        <4>2 assume H212: ~ (V!consistency_rule (vb, vc)),
-        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+        <4>2
+        hypothesis
+          H212: ~ (V!consistency_rule (vb, vc)),
+        prove
+          (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+           compatible (voter (va, vb, vc), voter (vc, va, vb)))
          <5>1 prove ~ (V!consistency_rule (vb, va))
            <6>1 prove V!consistency_rule (vb, va) -> V!consistency_rule (va, vb)
             by property V!consistency_rule_symmetric
@@ -502,19 +546,19 @@ species
            by hypothesis H2, H21 step <5>4
               property vote_match_c3, consistency_rule_is_symmetric
 
-         <5>6 prove 
+         <5>6 prove
           (diag (voter (va, vb, vc)) = P!constr (C!capt_2, E!range_match))
            by hypothesis H2, H21, H212 property vote_match_c2
          <5>7 prove (P!valid (diag (voter (va, vb, vc))))
            by step <5>6 property P!range_match_is_valid, P!prj_b_is_snd_of_pair
-        
-         <5>8 prove 
+
+         <5>8 prove
          (diag (voter (vb, va, vc)) = P!constr (C!capt_1, E!range_match))
           by hypothesis H21, H212 step <5>1 property vote_match_c1
          <5>9 prove (P!valid (diag (voter (vb, va, vc))))
           by step <5>8 property P!range_match_is_valid, P!prj_b_is_snd_of_pair
-          
-         <5>10 prove 
+
+         <5>10 prove
          (diag (voter (vc, va, vb)) = P!constr (C!capt_3, E!range_match))
           by hypothesis H2, H21 step <5>4
           property vote_match_c3, consistency_rule_is_symmetric
@@ -522,20 +566,26 @@ species
           by step <5>10 property P!range_match_is_valid, P!prj_b_is_snd_of_pair
 
 
-         <5>f qed by step <5>2, <5>3, <5>5, <5>7, <5>9, <5>11 
+         <5>f qed by step <5>2, <5>3, <5>5, <5>7, <5>9, <5>11
          hypothesis H21
          property consistency_rule_is_symmetric, V!consistency_rule_reflexive
          definition of compatible
 
         <4>f conclude
 
-      <3>2 assume H22: ~ (V!consistency_rule (va, vc)),
-        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+      <3>2
+        hypothesis
+          H22: ~ (V!consistency_rule (va, vc)),
+        prove
+          (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+           compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
-        <4>1 assume H221: (V!consistency_rule (vb, vc)),
-        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+        <4>1
+        hypothesis
+          H221: (V!consistency_rule (vb, vc)),
+        prove
+          (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+           compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
          <5>1 prove ~ (V!consistency_rule (vb, va))
            <6>1 prove V!consistency_rule (vb, va) -> V!consistency_rule (va, vb)
@@ -553,19 +603,19 @@ species
            by hypothesis H2, H221 step <5>4
               property vote_match_c2, consistency_rule_is_symmetric
 
-         <5>6 prove 
+         <5>6 prove
           (diag (voter (va, vb, vc)) = P!constr (C!capt_1, E!range_match))
            by hypothesis H2, H22, H221 property vote_match_c1
          <5>7 prove (P!valid (diag (voter (va, vb, vc))))
            by step <5>6 property P!range_match_is_valid, P!prj_b_is_snd_of_pair
-        
-         <5>8 prove 
+
+         <5>8 prove
          (diag (voter (vb, va, vc)) = P!constr (C!capt_2, E!range_match))
           by hypothesis H22, H221 step <5>1 property vote_match_c2
          <5>9 prove (P!valid (diag (voter (vb, va, vc))))
           by step <5>8 property P!range_match_is_valid, P!prj_b_is_snd_of_pair
-          
-         <5>10 prove 
+
+         <5>10 prove
          (diag (voter (vc, va, vb)) = P!constr (C!capt_2, E!range_match))
           by hypothesis H2, H221 step <5>4
           property vote_match_c2, consistency_rule_is_symmetric
@@ -577,9 +627,12 @@ species
               property V!consistency_rule_reflexive
               definition of compatible
 
-        <4>2 assume H222: ~ (V!consistency_rule (vb, vc)),
-        prove (compatible (voter (va, vb, vc), voter (vb, va, vc))
-            /\ compatible (voter (va, vb, vc), voter (vc, va, vb)))
+        <4>2
+        hypothesis
+          H222: ~ (V!consistency_rule (vb, vc)),
+        prove
+          (compatible (voter (va, vb, vc), voter (vb, va, vc)) /\
+           compatible (voter (va, vb, vc), voter (vc, va, vb)))
 
           <5>1 prove ~ (V!consistency_rule (vb, va))
            <6>1 prove V!consistency_rule (vb, va) -> V!consistency_rule (va, vb)
@@ -630,8 +683,6 @@ species
 end
 ;;
 
-
-
 species
   Imp_vote
     (E is Sp_etat_vote, C is Sp_capteur, V is Gen_value, P is Diag_2oo3 (E, C)) =
@@ -641,7 +692,7 @@ species
   (* il faut bien mettre quelque chose !!!*)
   representation = unit;
 
-  let voter (v1 in V, v2 in V, v3 in V) in V * P =
+  let voter (v1 : V, v2 : V, v3 : V) : V * P =
     let c1 = V!consistency_rule (v1, v2) in
     let c2 = V!consistency_rule (v1, v3) in
     let c3 = V!consistency_rule (v2, v3) in

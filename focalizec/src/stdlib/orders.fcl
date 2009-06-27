@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: orders.fcl,v 1.12 2009-06-24 22:29:32 weis Exp $ *)
+(* $Id: orders.fcl,v 1.13 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets";;
@@ -167,7 +167,7 @@ species Partial_order =
               by hypothesis H_xy, H_yz
                  property !lt_is_leq_and_different, !leq_transitive
          <2>2 prove !different (x, z)
-              <3>1 assume hypothesis F : !equal (z, x),
+              <3>1 hypothesis F : !equal (z, x),
                    prove false
                    <4>1 prove !leq (z, x)
                         by hypothesis F

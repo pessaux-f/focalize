@@ -15,7 +15,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basic_type.fcl,v 1.1 2009-06-10 21:17:04 ayrault Exp $ *)
+(* $Id: basic_type.fcl,v 1.2 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -50,7 +50,7 @@ species Int_value =
 
   representation = int;
 
-  let equal (x in Self, y in Self) in bool =
+  let equal (x : Self, y : Self) : bool =
     basics#syntactic_equal (x, y);
   let element = 1;
 
@@ -66,13 +66,13 @@ species Int_value =
   let parse (x) = basics#int_of_string (x);
   let print (x) =  basics#string_of_int (x);
 
-  let of_int (n in int) in Self = n;
+  let of_int (n : int) : Self = n;
 
-  let plus (n1 in Self, n2 in Self) in Self = n1 + n2;
+  let plus (n1 : Self, n2 : Self) : Self = n1 + n2;
 
-  let geq (n1 in Self, n2 in Self) in bool = n1 >=0x n2;
+  let geq (n1 : Self, n2 : Self) : bool = n1 >=0x n2;
 
-  let pos (n in Self) in bool = n >0x 0;
+  let pos (n : Self) : bool = n >0x 0;
 
 end
 ;;
@@ -90,7 +90,7 @@ species Bool_value =
 
   representation = bool;
 
-  let equal (x in Self, y in Self) in bool =
+  let equal (x : Self, y : Self) : bool =
      basics#syntactic_equal (x, y);
   let element = true;
 
@@ -108,7 +108,7 @@ species Bool_value =
 
   let print (x) = if !equal (x, true) then "True" else "False";
 
-  let of_bool (b in bool) in Self = b;
+  let of_bool (b : bool) : Self = b;
 
 end
 ;;

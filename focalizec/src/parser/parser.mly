@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.153 2009-06-24 22:28:27 weis Exp $ *)
+(* $Id: parser.mly,v 1.154 2009-06-26 22:59:57 weis Exp $ *)
 
 open Parsetree;;
 
@@ -1037,37 +1037,72 @@ proof_hypothesis_list:
     { $1 :: $3 }
 ;
 
+statement:
+  | PROVE logical_expr
+    { mk { s_hyps = []; s_concl = Some $2; } }
+  | hypothesis_list opt_logical_expr
+    { mk { s_hyps = $1; s_concl = $2; } }
+;
+
 opt_logical_expr:
   | { None }
   | PROVE logical_expr
     { Some $2 }
 ;
 
-statement:
-  | PROVE logical_expr
-    { mk { s_hyps = []; s_concl = Some $2; } }
-  | ASSUME hypothesis_list opt_logical_expr
-    { mk { s_hyps = $2; s_concl = $3; } }
+hypothesis_list:
+  | hypothesis
+    { $1 }
+  | hypothesis hypothesis_list
+    { $1 @ $2 }
 ;
 
 hypothesis:
-  | bound_vname in_type_expr
-    { mk (H_variable ($1, $2)) }
-  | HYPOTHESIS proof_hypothesis in_logical_expr
-    { mk (H_hypothesis ($2, $3)) }
-  | NOTATION proof_hypothesis EQUAL expr
-    { mk (H_notation ($2, $4)) }
+  | ASSUME bound_vname_list_in_type_expr_list
+    { $2 }
+  | HYPOTHESIS hypothesis_definition_list
+    { $2 }
+  | NOTATION notation_definition_list
+    { $2 }
 ;
+
+bound_vname_list_in_type_expr_list:
+  | bound_vname_list_in_type_expr COMMA
+    { $1 }
+  | bound_vname_list_in_type_expr COMMA bound_vname_list_in_type_expr_list
+    { $1 @ $3 }
+;
+
+bound_vname_list_in_type_expr:
+  | bound_vname_list in_type_expr
+    { List.map (fun bv -> mk (H_variable (bv, $2))) $1 }
+;
+
+hypothesis_definition_list :
+  | hypothesis_definition COMMA
+    { [ $1 ] }
+  | hypothesis_definition COMMA hypothesis_definition_list
+    { $1 :: $3 }
+;
+
+hypothesis_definition :
+  | proof_hypothesis in_logical_expr
+    { mk (H_hypothesis ($1, $2)) }
 
 in_logical_expr:
   | COLON logical_expr
     { $2 }
 ;
 
-hypothesis_list:
-  | hypothesis COMMA
+notation_definition:
+  | proof_hypothesis EQUAL expr
+    { mk (H_notation ($1, $3)) }
+;
+
+notation_definition_list :
+  | notation_definition COMMA
     { [ $1 ] }
-  | hypothesis COMMA hypothesis_list
+  | notation_definition COMMA notation_definition_list
     { $1 :: $3 }
 ;
 

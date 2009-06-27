@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: strict_orders.fcl,v 1.11 2009-06-24 22:29:32 weis Exp $ *)
+(* $Id: strict_orders.fcl,v 1.12 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets";;
@@ -48,7 +48,7 @@ open "sets";;
       <1>1 assume x : Self, y : Self,
            hypothesis H: !lt(x, y),
            prove ~(!lt(y, x))
-           <2>1 assume hypothesis F: !lt(y, x),
+           <2>1 hypothesis F: !lt(y, x),
                 prove !lt(x, x) by hypothesis H, F property !lt_is_transitive
            <2>f qed by step <2>1 property !lt_is_irreflexive
       <1>f conclude
@@ -82,16 +82,16 @@ open "sets";;
       <1>1 assume x : Self, y : Self,
            hypothesis H_xy : !leq(x, y), hypothesis  H_yx: !leq(y, x),
            prove !equal(x, y)
-           <2>1 assume hypothesis HH_xy : !lt(x, y) /\ !lt(y, x),
+           <2>1 hypothesis HH_xy : !lt(x, y) /\ !lt(y, x),
                 prove !equal(x, y)
                 by hypothesis HH_xy
                    property !lt_is_transitive, !lt_is_irreflexive
-           <2>2 assume hypothesis HH_xy: !lt(x, y) /\ syntactic_equal(y, x),
+           <2>2 hypothesis HH_xy: !lt(x, y) /\ syntactic_equal(y, x),
                 prove !equal(x, y)
                 by hypothesis HH_xy property !equal_reflexive, !equal_symmetric
-           <2>3 assume hypothesis HH_xy: syntactic_equal(x, y) /\ !lt(y, x),
+           <2>3 hypothesis HH_xy: syntactic_equal(x, y) /\ !lt(y, x),
                 prove !equal(x, y) by hypothesis HH_xy property equal_reflexive
-           <2>4 assume hypothesis HH_xy: syntactic_equal(x, y) /\ syntactic_equal(y, x),
+           <2>4 hypothesis HH_xy: syntactic_equal(x, y) /\ syntactic_equal(y, x),
                 prove !equal(x, y) by hypothesis HH_xy property !equal_reflexive
            <2>5 qed by step <2>1, <2>2, <2>3, <2>4
                        hypothesis H_xy, H_yx
@@ -105,16 +105,16 @@ open "sets";;
       <1>1 assume x : Self, y : Self, z : Self,
            hypothesis  H_xy: !leq(x, y), hypothesis  H_yz: !leq(y, z),
            prove !leq(x, z)
-           <2>1 assume hypothesis  H: (!lt(x, y) /\ !lt(y, z)),
+           <2>1 hypothesis  H: (!lt(x, y) /\ !lt(y, z)),
                 prove !lt(x, z)
                 by hypothesis H property !lt_is_transitive
-           <2>2 assume hypothesis  H: (!lt(x, y) /\ syntactic_equal(y, z)),
+           <2>2 hypothesis  H: (!lt(x, y) /\ syntactic_equal(y, z)),
                 prove !lt(x, z)
                 by hypothesis H
-           <2>3 assume hypothesis  H: (syntactic_equal(x, y) /\ !lt(y, z)),
+           <2>3 hypothesis  H: (syntactic_equal(x, y) /\ !lt(y, z)),
                 prove !lt(x, z)
                 by hypothesis H
-           <2>4 assume hypothesis  H: (syntactic_equal(x, y) /\ syntactic_equal(y, z)),
+           <2>4 hypothesis  H: (syntactic_equal(x, y) /\ syntactic_equal(y, z)),
                 prove !equal(x, z)
                 by hypothesis H property !equal_transitive, !equal_reflexive
            <2>f qed by step <2>1, <2>2, <2>3, <2>4
@@ -189,11 +189,11 @@ species Strictly_ordered_set =
     <1>1 assume x : Self, y : Self,
          hypothesis  D_xy: ~(x = y),
          prove !different(x, y)
-         <3>1 assume hypothesis  L_xy: !leq(x, y),
+         <3>1 hypothesis  L_xy: !leq(x, y),
               prove !lt(x, y)
               by hypothesis D_xy, L_xy
                  property leq_from_lt, lt_is_irreflexive
-         <3>2 assume hypothesis  L_yx: !leq(y, x),
+         <3>2 hypothesis  L_yx: !leq(y, x),
               prove !lt(y, x)
               by hypothesis L_yx, D_xy
                  property leq_from_lt, lt_is_irreflexive

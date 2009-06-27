@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: etat_vote.fcl,v 1.8 2009-06-10 21:17:04 ayrault Exp $ *)
+(* $Id: etat_vote.fcl,v 1.9 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -44,7 +44,7 @@ species Sp_etat_vote =
 
   (** Each value of the species is inside the sum type *)
   theorem all_value:
-    all e in Self,
+    all e : Self,
       (  !equal (e, !no_match)
       \/ !equal (e, !range_match)
       \/ !equal (e, !partial_match)
@@ -81,7 +81,7 @@ species Imp_etat_vote (P is Peano) =
   let partial_match = P!s (range_match);
   let perfect_match = P!s (partial_match);
 
-  let equal (x in Self, y in Self) in bool =
+  let equal (x : Self, y : Self) : bool =
      P!equal (x, y);
   let element = no_match;
 
@@ -122,7 +122,7 @@ species Imp_etat_vote (P is Peano) =
     property P!zero_is_not_successor, P!succ_is_an_injection
   ;
 
-  let print (x in Self) in string =
+  let print (x : Self) : string =
     if !equal (x, !no_match) then "no_match" else
     if !equal (x, !range_match) then "range_match" else
     if !equal (x, !partial_match) then "partial_match" else

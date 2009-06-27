@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: num_capteur.fcl,v 1.7 2009-06-10 21:17:04 ayrault Exp $ *)
+(* $Id: num_capteur.fcl,v 1.8 2009-06-26 22:59:57 weis Exp $ *)
 
 use "basics";;
 use "sets_orders";;
@@ -39,7 +39,7 @@ species Sp_capteur =
 
   (** Each value of the species is inside the sum type *)
   property all_value:
-    all e in Self,
+    all e : Self,
       !equal (e, !capt_1) \/
       !equal (e, !capt_2) \/
       !equal (e, !capt_3);
@@ -62,11 +62,11 @@ species Imp_capteur (P is Peano) =
 
   representation = P;
 
-  let capt_1 in Self = P!zero;
-  let capt_2 in Self = P!s (!capt_1);
-  let capt_3 in Self = P!s (!capt_2);
+  let capt_1 : Self = P!zero;
+  let capt_2 : Self = P!s (!capt_1);
+  let capt_3 : Self = P!s (!capt_2);
 
-  let equal (x in Self, y in Self) in bool = P!equal (x, y);
+  let equal (x : Self, y : Self) : bool = P!equal (x, y);
   let element = capt_1;
 
   proof of equal_transitive =
@@ -93,9 +93,9 @@ species Imp_capteur (P is Peano) =
 
   proof of all_value = assumed {* By construction *};
 
-  let print (x in Self) in string =
+  let print (x : Self) : string =
     if !equal (x, !capt_1) then "capt_1" else
-    if !equal (x, !capt_2) then "capt_2" else 
+    if !equal (x, !capt_2) then "capt_2" else
     if !equal (x, !capt_3) then "capt_3" else "Erreur capteur";
 
 end
