@@ -18,7 +18,7 @@ species Set_of (A is Setoid) =
      then x belongs to set2
    *)
   theorem equal_prop : 
-    all set1 set2 in Self, all x in A, 
+    all set1 set2 : Self, all x : A, 
       equal (set1, set2) -> 
         est_element (x, set1) -> 
           est_element (x, set2) 
@@ -27,7 +27,7 @@ species Set_of (A is Setoid) =
 
   (** If x1 belongs to the singleton {x2} then x1 = x2 *)
   theorem singleton_prop : 
-    all x1 x2 in A, 
+    all x1 x2 : A, 
       est_element (x1, singleton (x2)) -> 
         A!equal (x1, x2) 
   proof = by property singleton_spec, A!equal_symmetric;
@@ -84,7 +84,7 @@ species Access (S is Subjects, O is Objects, M is Access_modes) =
      then s1 = s2 and o1 = o2 and m1 = m2
    *)
   property access_equal : 
-    all s1 s2 in S, all o1 o2 in O, all m1 m2 in M, 
+    all s1 s2 : S, all o1 o2 : O, all m1 m2 : M, 
       equal (create (s1, o1, m1), create (s2, o2, m2)) -> 
         (S!equal (s1, s2) /\ O!equal (o1, o2) /\ M!equal (m1, m2));
 
@@ -110,7 +110,7 @@ species Policy (Rh is Rho, St is States) =
      predicate then st2 satisfies the security predicate
    *)
   property secure_state : 
-    all st1 st2 in St, 
+    all st1 st2 : St, 
       St!equal (st1, st2) -> 
         omega (st1) -> 
           omega (st2);
@@ -140,7 +140,7 @@ species Decisions =
 
   (** A decision is either yes or no *)
   property yes_is_not_no : 
-    all x in Self, 
+    all x : Self, 
       ~ (equal (x, yes) /\ equal(x, no));
 
 end;;
@@ -176,14 +176,14 @@ species Models (Rh is Rho, St is States, R is Requests,
   signature tau : R -> St -> C;
 
   (** Infix alias to the Cartesian_product equal function *)
-  let ( =_c ) (c1 in C, c2 in C) in bool = C!equal (c1, c2);
+  let ( =_c ) (c1 : C, c2 : C) : bool = C!equal (c1, c2);
 
   (**
      Correctness of the transition function tau with regards to the security 
      predicate omega
    *)
   property tau_secure : 
-    all st1 st2 in St, all r1 in R, all d1 in D, 
+    all st1 st2 : St, all r1 : R, all d1 : D, 
       tau (r1, st1) =_c C!pair (d1, st2) -> 
 	Po!omega (st1) -> 
 	  Po!omega (st2);
@@ -193,20 +193,20 @@ species Models (Rh is Rho, St is States, R is Requests,
      of requests
    *)
   property tau_r_correct : 
-    all st1 st2 in St, all r1 in R, all d1 in D, 
+    all st1 st2 : St, all r1 : R, all d1 : D, 
       tau (r1, st1) =_c C!pair (d1, st2) -> 
         D!equal (d1, D!yes) -> 
           Se!sem_req (st1, r1, st2);
 
 (*   (\** (d1,st1) = (d2,st2) &rarr; d1 = d2 *\) *)
 (*   property left_substitution :  *)
-(*     all d1 d2 in D, all st1 st2 in St,  *)
+(*     all d1 d2 : D, all st1 st2 : St,  *)
 (*     (d1, st1) = (d2, st2) ->  *)
 (*       D!equal (d1, d2); *)
 
 (*   (\** (d1,st1) = (d2,st2) &rarr; st1 = st2 *\) *)
 (*   property right_substitution :  *)
-(*     all d1 d2 in D, all st1 st2 in Self,  *)
+(*     all d1 d2 : D, all st1 st2 : Self,  *)
 (*     (d1, st1) = (d2, st2) ->  *)
 (*       equal (st1, st2); *)
 
@@ -244,12 +244,12 @@ species States_gal (S is Subjects, O is Objects, M is Access_modes_gal,
      If two states are equal then they have the same set of current accesses
    *)
   property lambda_prop : 
-    all st1 st2 in Self, 
+    all st1 st2 : Self, 
       equal (st1, st2) -> 
         S_a!equal (lambda (st1), lambda (st2));
 
   property add_prop : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M, 
       equal (add (st1, A!create (s1, o1, m1)), st2) -> 
         S_a!equal (lambda (st2), 
                    S_a!union (lambda (st1), 
@@ -260,13 +260,13 @@ species States_gal (S is Subjects, O is Objects, M is Access_modes_gal,
      (s1,o1,m1) &isin; &Lambda;(st2)
    *)
   property add_mem : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M, 
       equal (add (st1, A!create (s1, o1, m1)), st2) -> 
         S_a!est_element (A!create (s1, o1, m1), lambda (st2));
 
   (** a1 &isin; &Lambda;(st1) \ {(s1,o1,m1)} &rarr; a1 &isin; &Lambda;(st1) *)
   property del_prop : 
-    all st1 in Self, all a1 in A, all s1 in S, all o1 in O, all m1 in M, 
+    all st1 : Self, all a1 : A, all s1 : S, all o1 : O, all m1 : M, 
       S_a!est_element (a1, lambda (del (st1, A!create (s1, o1, m1)))) -> 
         S_a!est_element (a1, lambda (st1));
 
@@ -275,7 +275,7 @@ species States_gal (S is Subjects, O is Objects, M is Access_modes_gal,
      {(s1,o1,m1)} &notin; &Lambda;(st2)
    *)
   property del_mem : 
-    all st1 st2 in Self, all s1 in S, all o1 in O, all m1 in M, 
+    all st1 st2 : Self, all s1 : S, all o1 : O, all m1 : M, 
       equal(del (st1, A!create (s1, o1, m1)), st2) -> 
         ~ S_a!est_element (A!create (s1, o1, m1), lambda (st2));
 
@@ -317,11 +317,11 @@ species Requests_gal(S is Subjects, O is Objects, M is Access_modes_gal) =
      A request is either a "get an access" or a "release an access" request
    *)  
   property get_or_rel : 
-    all x in Self, 
+    all x : Self, 
       is_get (x) \/ is_rel (x);
 
   property get_is_not_rel : 
-    all x in Self, 
+    all x : Self, 
       ~ (is_get (x) /\ is_rel (x));
 
 end;;
@@ -452,7 +452,7 @@ species Singleton =
 
   let equal (x, y) = true;
 
-  let element = basics#();
+  let element = ();
 
   proof of equal_reflexive = by definition of equal;
 
@@ -472,9 +472,9 @@ species Access_wf =
 
   inherit Access (Security_users, Security_objects, Security_actions);
 
-  let get_s (acc in Self) = Security_users!element;
+  let get_s (acc : Self) = Security_users!element;
   
-  let access_create (o in Security_objects, a in Security_actions) = 
+  let access_create (o : Security_objects, a : Security_actions) = 
      create (Security_users!element, o, a);
 
 end;;
@@ -554,11 +554,11 @@ species Policy_wf (Rh is Rho, A is Security_actions, E is Events (A),
      H!event_done (E!a2e_yes (Security_actions!chiffrer)) -> 
        H!event_done (E!a2e_yes (Security_actions!initialiser));
 
-(*   logical let init_key_before_crypt (s_1 in H, s_2 in H, *)
-(* 				     a_1 in Security_actions, *)
-(* 				     a_2 in Security_actions, *)
-(* 				     o_1 in Security_objects, *)
-(* 				     o_2 in Security_objects) = *)
+(*   logical let init_key_before_crypt (s_1 : H, s_2 : H, *)
+(* 				     a_1 : Security_actions, *)
+(* 				     a_2 : Security_actions, *)
+(* 				     o_1 : Security_objects, *)
+(* 				     o_2 : Security_objects) = *)
 (*      ((Security_objects!get_o(s_1) = Security_objects!a_chiffrer) /\ *)
 (*       (Security_actions!get_a(s_1) = Security_actions!chiffrer)) ->  *)
 (*       ((Security_objects!get_o(s_2) = Security_objects!fonctions_secu) /\ *)
@@ -572,18 +572,18 @@ species Policy_wf (Rh is Rho, A is Security_actions, E is Events (A),
   
 (*   logical let a_normale (a) = *)
 (*      perform (a) = yes -> *)
-(*        all e in f_e1 (a), e in [alpha_1 alpha_i-1] *)
-(* 	 /\ all e in f_e2 (a), not (e in [alpha_k alpha_i-1]) *)
+(*        all e : f_e1 (a), e : [alpha_1 alpha_i-1] *)
+(* 	 /\ all e : f_e2 (a), not (e : [alpha_k alpha_i-1]) *)
 (* 	   /\ ( f_e4 (a) = vide *)
 (*      \/ ex k <= n, *)
-(*      all j in [i+1 k], alpha_j in (a_barre \/ a_barre_barre \/ events_e3) *)
+(*      all j : [i+1 k], alpha_j : (a_barre \/ a_barre_barre \/ events_e3) *)
 (*  ; *)
 
 (*   logical let a_fail (a) = *)
 (*      perform (a) = fail -> *)
 (*        f_e4 (a) = vide *)
 (*      \/ ex k <= n, *)
-(*      all j in [i+1 k], alpha_j in (a_barre \/ a_barre_barre \/ events_e4) *)
+(*      all j : [i+1 k], alpha_j : (a_barre \/ a_barre_barre \/ events_e4) *)
 (*  ; *)
 
 (*   logical let a_no (a) = *)
@@ -608,11 +608,11 @@ species Decisions_wf =
   signature fail : Self;
 
   property yes_is_not_fail :
-    all x in Self,
+    all x : Self,
       ~ (equal (x, yes) /\ equal (x, fail));
 
   property no_is_not_fail :
-    all x in Self,
+    all x : Self,
       ~ (equal (x, no) /\ equal (x, fail));
 
 end;;
