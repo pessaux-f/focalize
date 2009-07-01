@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: peano.fcl,v 1.13 2009-06-26 14:18:09 rr Exp $ *)
+(* $Id: peano.fcl,v 1.14 2009-07-01 10:27:29 rr Exp $ *)
 
 (** We want here to provide abstract definitions for what is usually called
    integers. That is natural numbers, and integers. The problem is that. *)
@@ -185,10 +185,11 @@ species Peano_enumerated_system =
           Enumerated_system;
 
   proof of successor_is_non_trivial =
-    assumed {*
-    by definition of successor, start
-       type peano
-       property !same_is_not_different, !equal_reflexive *}
+    assumed (* should work *)
+
+(*     by definition of successor, start *)
+(*        type peano *)
+(*        property !same_is_not_different, !equal_reflexive *)
     ;
 
   let predecessor(x) = match x with
@@ -200,7 +201,7 @@ species Peano_enumerated_system =
   proof of predecessor_reverses_successor = 
     definition of predecessor, successor, start
     property !same_is_not_different, !equal_reflexive
-    assumed {* *};
+    assumed (* *);
 (*     (\* [rr]: this makes syntax error in zenon! *\) *)
 (*     by definition of predecessor, successor, start *)
 (*        property !same_is_not_different, !equal_reflexive; *)
@@ -279,20 +280,20 @@ species Peano_base =
          hypothesis H_y: !different(x, !start),
          hypothesis H_xy: !equal(y, !predecessor(x)),
          prove !equal(x, !successor(y))
-         assumed {* To do *}
+         assumed (* To do *)
     <1>f conclude;
 
   proof of successor_is_non_trivial =
     <1>0 prove all x : Self, ~(P_succ(x) = P_zero)
-         assumed {* should be exclusivity of constructors needs Coq *}
+         assumed (* should be exclusivity of constructors needs Coq *)
     <1>1 assume x : Self,
          prove !different(!successor(x), !start)
          <2>1 prove ~(P_succ(x) = P_zero)
-              assumed {* by step <1>0 *}
+              assumed (* by step <1>0 *)
          <2>2 prove ~(!successor(x) = !start)
               (* by step <2>1  *)
               definition of successor, start
-              assumed {* *}
+              assumed (* *)
          <2>f qed by step <2>2 property !different_is_syntactic
     <1>f qed by step <1>1 ;
 
@@ -309,16 +310,16 @@ species Peano_dumb =
   proof of lt_is_irreflexive = by definition of lt;
   proof of lt_is_transitive = by definition of lt;
 
-  proof of successor_defines_bigger = assumed {* this is wrong *};
-  proof of successor_defines_infimum = assumed {* this is wrong *};
+  proof of successor_defines_bigger = assumed (* this is wrong *);
+  proof of successor_defines_infimum = assumed (* this is wrong *);
 
-  proof of start_is_min = definition of lt assumed {* this is wrong *};
+  proof of start_is_min = definition of lt assumed (* this is wrong *);
 
-  proof of equal_is_syntactic = definition of lt assumed {* this is wrong *};
+  proof of equal_is_syntactic = definition of lt assumed (* this is wrong *);
 
-  proof of total_order = definition of lt assumed {* this is true *};
+  proof of total_order = definition of lt assumed (* this is true *);
 
-  proof of natural_induction = definition of lt assumed {* *};
+  proof of natural_induction = definition of lt assumed (* *);
 
 end
 ;;
@@ -365,26 +366,26 @@ species Peano_order =
           | P_succ(y_1) -> !lt(x_1, y_1))
     termination proof =
        order my_order on x, y
-       assumed {* *}
+       assumed (* *)
     ;
 
   proof of lt_is_irreflexive =
     <1>0 prove ~(!lt(P_zero, P_zero))
-         definition of lt assumed {* base case *}
+         definition of lt assumed (* base case *)
     <1>1 prove all x : Self, ~(!lt(x, x)) -> ~(!lt(P_succ(x), P_succ(x)))
          <2>1 assume x : Self,
               hypothesis H_x: !lt(P_succ(x), P_succ(x)),
               prove !lt(x, x)
               definition of lt
-              assumed {* inductive step *}
+              assumed (* inductive step *)
          <2>f conclude
     <1>2 prove (all x : Self, ~(!lt(x, x)))
          (* definition of enumerated_induction *)
-         assumed {* induction principle *}
-    <1>f qed assumed {* by step <1>2 *};
+         assumed (* induction principle *)
+    <1>f qed assumed (* by step <1>2 *);
 
   proof of total_order =
-    definition of lt assumed {* *};
+    definition of lt assumed (* *);
 
 (*   proof of lt_is_transitive = *)
 (*     definition of lt assumed {* *}; *)
@@ -410,16 +411,16 @@ species Peano_order =
     (* transparent theorem reveals representation!*)
     <1>0 prove  all x : Self, !lt(P_zero, x) \/ (x = P_zero)
          definition of lt
-         assumed {* should apply some form of discrimination *}
+         assumed (* should apply some form of discrimination *)
     (* transparent theorem !*)
     <1>1 prove all x : Self, !leq(P_zero, x)
          property leq_from_lt
          (* step <1>0 *)
-         assumed {* direct consequence of <1>0 *}
+         assumed (* direct consequence of <1>0 *)
     <1>f qed
          definition of start
          (* step <1>1 *)
-         assumed {* direct consequence of <1>1 *}
+         assumed (* direct consequence of <1>1 *)
  ;
 
 end
