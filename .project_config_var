@@ -1,6 +1,6 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
@@ -13,16 +13,16 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: .project_config_var,v 1.5 2009-04-03 15:50:36 doligez Exp $
+# $Id: .project_config_var,v 1.6 2009-07-02 08:00:44 weis Exp $
 
-# The configuration variables specific to FoCaLize.
+# The configuration variables specific to FoCaLiZe.
 
 set_project_id () {
 
   # Fix the name and version of the software
   PROJECT_NAME=focalize
 
-  PROJECT_NAME_TEXT=FoCaLize
+  PROJECT_NAME_TEXT=FoCaLiZe
 
   PROJECT_WEB_SERVER=focalize.inria.fr
   PROJECT_WEB_SITE_DIR=/home/www/focalize
@@ -30,7 +30,7 @@ set_project_id () {
   PROJECT_FIRST_YEAR=2005
 
   VERSION_NUMBER_MAIN=0
-  VERSION_NUMBER_SUB=1
+  VERSION_NUMBER_SUB=2
   VERSION_NUMBER_PATCH=0
 
   # The list of external tools for the project.
@@ -44,7 +44,7 @@ set_project_id () {
 
   # The list of tools specifically provided by the project
   # (not one of the stand alone internal projects).
-  PROJECT_DELIVERABLES="focalizec focalizedep"
+  PROJECT_DELIVERABLES="${FOCALIZEC_NAME} ${FOCALIZEDEP_NAME}"
 
   # The manual extension for the man page of the project
   PROJECT_MAN_EXT=1
@@ -77,9 +77,9 @@ set_intrinsic_defaults () {
   DEFAULT_USE_TOOLS_PREFIX_DIRECTORY=true
   DEFAULT_TOOLS_PREFIX=$HOME/pkg
   
-  # Do we use a 'full project name' private sub directory
-  # inside the ${TOOLS_PREFIX} directory for the installation
-  # of the tools (external and internal tools) of the project ?
+  # Do we use a 'full project name' private sub directory inside the
+  # ${TOOLS_PREFIX} directory for the installation of the external/internal
+  # tools of the project ?
   DEFAULT_USE_PROJECT_SUB_DIRECTORY=true
 
   # Intrinsic defaults for Caml
