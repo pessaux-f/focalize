@@ -1,6 +1,6 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.11 2009-04-13 20:47:52 weis Exp $
+# $Id: Makefile.distribution,v 1.12 2009-07-02 07:59:09 weis Exp $
 
 ROOT_DIR=.
 
@@ -104,8 +104,8 @@ PROJECT_RELEASE_EXCLUDE_FILE_LIST=\
 # This is the list of private directory/files.
 PROJECT_RELEASE_REMOVE_FILE_LIST=\
   ".configure_distribution .distribution_var.in .distribution_var\
-  focalizec/TAGS\
-  focalizec/src/attic"
+  ${FOCALIZEC_NAME}/TAGS\
+  ${FOCALIZEC_NAME}/src/attic"
 
 # Definition of the Web site for the project.
 # Where is the Web site to generate for the application
@@ -145,10 +145,10 @@ package: clean all project_test project_examples documentation release
 distclean:: clean clean_configure_distribution
 
 .PHONY: clean_documentation clean_release clean_release_directory clean_tarball
-.PHONY: clean_ftp clean_web_site clean_announce clean_test_release
+.PHONY: clean_ftp_site clean_web_site clean_announce clean_test_release
 clean clean-all:: clean_documentation\
   clean_release_directory clean_tarball\
-  clean_ftp clean_web_site\
+  clean_ftp_site clean_web_site\
   clean_test_release\
   clean_announce
 
@@ -408,7 +408,7 @@ distclean_test_release_tarball: clean_test_release_tarball
 	$(RM) $(TEST_RELEASE_PREFIX)/* && \
 	$(RM) $(TEST_RELEASE_TOOLS_PREFIX)/*
 
-# An entry to brutally remove old FoCaLize installed stuff.
+# An entry to brutally remove old FoCaLiZe installed stuff.
 # We suppose:
 # - /usr/local as configuration prefix
 # - $(HOME)/pkg or $(HOME)/release as configuration tools prefix.
@@ -434,7 +434,7 @@ new-balls:
 #	done
 #
 # When a release is to be completed, and preferably before branching, you must
-# consolidate the version number of every component of FoCaLize.
+# consolidate the version number of every component of FoCaLiZe.
 # For each component, this means to edit the file .project_config_var to verify
 # that this file indicates the correct current version of the tool.
 #
@@ -442,5 +442,5 @@ new-balls:
 # - ./.project_config_var (the version for FoCaLize is in this file)
 # - zenon/.project_config_var (the version for zenon is in the file versionnum.ml)
 # - zvtov/.project_config_var (the version for zvtov is in the file version.ml)
-# - focalizec/.project_config_var
-#   (the version for focalizec is in the file src/basement/configuration.ml)
+# - ${FOCALIZEC_NAME}/.project_config_var
+#   (the version for ${FOCALIZEC_NAME} is in the file src/basement/configuration.ml)
