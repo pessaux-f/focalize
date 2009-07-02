@@ -1,0 +1,310 @@
+(*============================================================================*)
+(* FoCaLize Tutorial : Implementing Sets - Lists                              *)
+(*============================================================================*)
+(* File: list.fcl / Created: June 2009 / Mod: June 2009                       *)
+(* Lang: FoCaLize, version 0.2.0 (June 2009) / Dep: basics superset           *)
+(* By Eric Jaeger - UPMC/LIP6 & SGDN/DCSSI                                    *)
+(*============================================================================*)
+
+(**
+@title FoCaLize Tutorial : Implementing Sets - Lists
+@author The FoCaLize Team
+@description Basic lists definitions (for educational purposes only)
+*)
+
+use "basics" ;;
+open "superset" ;;
+
+(* Abstract Co-Lists =========================================================*)
+(* Possibly infinite lists of elements from a superset                        *)
+
+species CoList(Val is Superset) =
+
+ signature nil : Self ;
+ signature cons : Val -> Self -> Self ;
+ signature isnil : Self -> basics#bool ;
+ signature head : Self -> Val ;
+ signature tail : Self -> Self ;
+
+ property isnil_nil : all l : Self, isnil(l) <-> basics#( = )(l, nil) ;
+ property isnil_cons : all v : Val, all l : Self, ~ isnil(cons(v, l)) ;
+ property head_cons : all v : Val, all l : Self,
+                      basics#( = )(head(cons(v, l)), v) ;
+ property tail_cons : all v : Val, all l : Self,
+                      basics#( = )(tail(cons(v, l)), l) ;
+ property list_dec : all l : Self,
+                     ~ isnil(l) -> basics#( = )(l, cons(head(l), tail(l))) ;
+
+ theorem cons_left : all l1 l2 : Self, all v1 v2 : Val,
+                     basics#( = )(cons(v1, l1), cons(v2, l2)) ->
+                     basics#( = )(v1, v2)
+  proof = <1>1 assume t1 t2 : Self, h1 h2 : Val,
+               hypothesis Heq : basics#( = )(cons(h1, t1), cons(h2, t2)),
+               prove basics#( = )(h1, h2)
+           <2>1 prove basics#( = )(head(cons(h1, t1)), head(cons(h2, t2)))
+                by hypothesis Heq
+           <2>2 prove basics#( = )(h1, head(cons(h2, t2)))
+                by step <2>1 property head_cons
+           <2>f qed by step <2>2 property head_cons
+          <1>f qed by step <1>1 ;
+
+ theorem cons_right : all l1 l2 : Self, all v1 v2 : Val,
+                      basics#( = )(cons(v1, l1), cons(v2, l2)) ->
+                      basics#( = )(l1, l2)
+  proof = <1>1 assume l1 l2 : Self, v1 v2 : Val,
+               hypothesis Heq : basics#( = )(cons(v1, l1), cons(v2, l2)),
+               prove basics#( = )(l1, l2)
+           <2>1 prove basics#( = )(tail(cons(v1, l1)), tail(cons(v2, l2)))
+                by hypothesis Heq
+           <2>2 prove basics#( = )(l1, tail(cons(v2, l2)))
+                by step <2>1 property tail_cons
+           <2>f qed by step <2>2 property tail_cons
+          <1>f qed by step <1>1 ;
+
+end ;;
+
+(* Finite Lists ==============================================================*)
+(* Finite lists of elements from a superset                                   *)
+
+species FiniteList(Val is Superset) =
+
+ inherit CoList(Val) ;
+
+ property finite :
+  all f : (Self -> basics#bool),
+  f(nil) ->
+  (all l : Self, f(l) -> all v : Val, f(cons(v, l))) ->
+  all l : Self, f(l) ;
+
+ signature mem : Val -> Self -> basics#bool ;
+ property mem_nil : all v : Val, ~ mem(v, nil) ;
+ property mem_cons : all v h : Val, all t : Self,
+                     mem(v, cons(h, t)) <-> Val!( = )(v, h) \/ mem(v, t) ;
+
+ signature del : Self -> Val -> Self ;
+ property mem_del : all v w : Val, all l : Self,
+                    mem(v, del(l, w)) <-> ~ Val!( = )(v, w) /\ mem(v, l) ;
+
+end ;;
+
+(* Enumerable Lists ==========================================================*)
+(* Finite lists of elements from a superset which can be enumerated           *)
+
+species EnumList(Val is Superset) =
+
+ inherit FiniteList(Val) ;
+
+ let rec mem(v : Val, l : Self) =
+  if isnil(l)
+  then false
+  else (if Val!( = )(v, head(l)) then true else mem(v, tail(l))) ;
+ (* TODO : Termination Proof *)
+
+ proof of mem_nil = by definition of mem property isnil_nil ;
+
+ proof of mem_cons =
+  <1>1 assume v h : Val, t : Self, hypothesis H : Val!( = )(v, h),
+       prove mem(v, cons(h, t))
+   <2>1 prove Val!( = )(v, head(cons(h, t)))
+        by property head_cons hypothesis H
+   <2>f qed by definition of mem property isnil_cons step <2>1
+  <1>2 assume v h : Val, t : Self, hypothesis H : mem(v, t),
+       prove mem(v, cons(h, t))
+   <2>1 prove mem(v, tail(cons(h, t)))
+        by property tail_cons hypothesis H
+   <2>f qed by step <2>1 definition of mem property isnil_cons
+  <1>3 assume v h : Val, t : Self, hypothesis H : mem(v, cons(h, t)),
+       prove Val!( = )(v, h) \/ mem(v, t)
+   <2>1 hypothesis H2 : ~ Val!( = )(v, h),
+        prove mem(v, tail(cons(h, t)))
+        by hypothesis H, H2 definition of mem property isnil_cons, head_cons
+   <2>f qed by step <2>1 property tail_cons
+  <1>f conclude ;
+
+ let rec del(l : Self, v : Val) =
+  if isnil(l)
+  then nil
+  else if Val!( = )(v, head(l))
+       then del(tail(l), v)
+       else cons(head(l) , del(tail(l), v)) ;
+ (* TODO : Termination Proof *)
+
+ logical let mdm_(v : Val, w : Val, l : Self) =
+  mem(v, del(l, w)) -> mem(v, l) ;
+ (* Introduced purely as syntactic sugar for the proof of mem_del_mem *)
+
+ theorem mem_del_mem : all v w : Val, all l : Self, mdm_(v, w, l)
+  proof = <1>1 assume v w : Val,
+               prove mdm_(v, w, nil)
+               by definition of mdm_, del property isnil_nil
+          <1>2 assume v w : Val, t : Self, hypothesis Hind : mdm_(v, w, t),
+               assume h : Val,
+               prove mdm_(v, w, cons(h, t))
+           <2>1 hypothesis H1 : mem(v, del(cons(h, t), w)),
+                prove mem(v, cons(h, t))
+            <3>1 hypothesis H2 : Val!( = )(v, h),
+                 prove mem(v, cons(h, t))
+                 by property mem_cons hypothesis H2
+            <3>2 hypothesis H2 : ~ Val!( = )(v, h), H3 : Val!( = )(w, h),
+                 prove mem(v, cons(h, t))
+             <4>1 prove ~ isnil(cons(h, t))
+                  by property isnil_cons
+             <4>2 prove Val!( = )(w, head(cons(h, t)))
+                  by property head_cons hypothesis H3
+             <4>3 prove mem(v, del(tail(cons(h, t)), w))
+                  by definition of del step <4>1, <4>2 hypothesis H1
+             <4>4 prove mem(v, del(t, w))
+                  by step <4>3 property tail_cons
+             <4>f qed by step <4>4 hypothesis Hind definition of mdm_
+                         property mem_cons
+            <3>3 hypothesis H2 : ~ Val!( = )(v, h), H3 : ~ Val!( = )(w, h),
+                 prove mem(v, cons(h, t))
+             <4>1 prove ~ isnil(cons(h, t))
+                  by property isnil_cons
+             <4>2 prove ~ Val!( = )(w, head(cons(h, t)))
+                  by property head_cons hypothesis H3
+             <4>3 prove mem(v, cons(head(cons(h, t)), del(tail(cons(h, t)), w)))
+                  by definition of del step <4>1, <4>2 hypothesis H1
+             <4>4 prove mem(v, cons(h, del(t, w)))
+                  by step <4>3 property head_cons, tail_cons
+             <4>5 prove mem(v, del(t, w))
+                  by step <4>4 property mem_cons hypothesis H2
+             <4>f qed by step <4>5 hypothesis Hind definition of mdm_
+                         property mem_cons
+            <3>f conclude
+           <2>f qed by step <2>1 definition of mdm_
+          <1>3 assume v w : Val,
+               prove mdm_(v, w, nil)->
+                     (all t : Self, mdm_(v, w, t) ->
+                      all h : Val, mdm_(v, w, cons(h, t))) ->
+                     all l : Self, mdm_(v, w, l)
+               assumed (* Standard induction principle *)
+          <1>f conclude ;
+
+ logical let mde_(v : Val, w : Val, l : Self) =
+  mem(v, del(l, w)) -> ~ Val!( = )(v, w) ;
+ (* Introduced purely as syntactic sugar for the proof of mem_del_mem *)
+
+ theorem mem_del_eq : all v w : Val, all l : Self, mde_(v, w, l)
+ proof = <1>1 assume v w : Val,
+              prove mde_(v, w, nil)
+              by definition of mde_, del property isnil_nil, mem_nil
+         <1>2 assume v w : Val, t : Self, hypothesis Hind : mde_(v, w, t),
+              assume h : Val,
+              prove mde_(v, w, cons(h, t))
+          <2>1 hypothesis H1 : mem(v, del(cons(h, t), w)),
+               prove ~ Val!( = )(v, w)
+           <3>1 hypothesis H2 : Val!( = )(w, h),
+                prove ~ Val!( = )(v, w)
+            <4>1 prove mem(v, del(t, w))
+             <5>1 prove ~ isnil(cons(h, t))
+                 by property isnil_cons
+             <5>2 prove Val!( = )(w, head(cons(h, t)))
+                  by property head_cons hypothesis H2
+             <5>3 prove mem(v, del(tail(cons(h, t)), w))
+                  by hypothesis H1 definition of del step <5>1, <5>2
+             <5>f qed by step <5>3 property tail_cons
+            <4>f qed by step <4>1 hypothesis Hind definition of mde_
+           <3>2 hypothesis H2 : ~ Val!( = )(w, h),
+                prove ~ Val!( = )(v, w)
+            <4>1 hypothesis H3 : Val!( = )(v, h),
+                 prove ~ Val!( = )(v, w)
+                 by hypothesis H2, H3 property Val!eq_symm, Val!eq_tran
+            <4>2 hypothesis H3 : ~ Val!( = )(v, h),
+                 prove ~ Val!( = )(v, w)
+             <5>1 prove ~ isnil(cons(h, t))
+                  by property isnil_cons
+             <5>2 prove ~ Val!( = )(w, head(cons(h, t)))
+                  by property head_cons hypothesis H2
+             <5>3 prove mem(v, cons(head(cons(h, t)), del(tail(cons(h, t)), w)))
+                  by hypothesis H1 definition of del step <5>1, <5>2
+             <5>4 prove mem(v, cons(h, del(t, w)))
+                  by step <5>3 property head_cons, tail_cons
+             <5>5 prove mem(v, del(t, w))
+                  by step <5>4 property mem_cons hypothesis H3
+             <5>f qed by step <5>5 hypothesis Hind definition of mde_
+            <4>f conclude
+           <3>f conclude
+          <2>f qed by definition of mde_ step <2>1
+         <1>3 assume v w : Val,
+              prove mde_(v, w, nil) ->
+                    (all t : Self, mde_(v, w, t) ->
+                     all h : Val, mde_(v, w, cons(h, t))) ->
+                    all l : Self, mde_(v, w, l)
+              assumed (* Standard induction principle *)
+         <1>f conclude ;
+
+ theorem mem_del_inv : all v w : Val, ~ Val!( = )(v, w) ->
+                       all l : Self, mem(v, l) -> mem(v, del(l, w))
+  proof = assumed (* TODO - Note the adapted form to ease induction *) ;
+
+ proof of mem_del = by property mem_del_mem, mem_del_eq, mem_del_inv
+                       definition of mdm_, mde_ ;
+
+end ;;
+
+(* Inductive Lists ===========================================================*)
+(* Inductive lists of elements from a superset                                *)
+
+type mylist('a) = | FNil | FCons ('a, mylist('a)) ;;
+
+species IndList(Val is SupersetWitness) =
+
+ inherit FiniteList(Val) ;
+
+ representation = mylist(Val) ;
+
+ let nil = #FNil ;
+ let cons(h : Val, t : Self) = #FCons(h, t) ;
+ let isnil(l : Self) = match l with | #FNil -> true | _ -> false ;
+ let head(l : Self) = match l with | #FCons(h, _) -> h | _ -> Val!witness ;
+ let tail(l : Self) = match l with | #FCons(_, t) -> t | _ -> #FNil ;
+
+ proof of finite =  coq proof definition of nil, cons
+                    {* Proof.
+                        intros.
+                        unfold abst_cons, abst_nil, cons, nil in *.
+                        induction l.
+                         trivial.
+                        apply H0; apply IHl.
+                       Qed. *} ;
+
+ proof of isnil_nil = assumed
+                      (* by type mylist definition of nil, isnil *) ;
+
+ proof of isnil_cons = assumed
+                       (* by type mylist definition of cons, isnil *) ;
+
+ proof of head_cons = assumed
+                      (* by type mylist definition of cons, head *) ;
+
+ proof of tail_cons = assumed
+                      (* by type mylist definition of cons, tail *) ;
+
+ proof of list_dec = assumed
+                     (* by type mylist
+                           definition of isnil, nil, cons, head, tail *) ;
+
+ let mem(v : Val, l : Self) =
+  let recstruct mem_(l : Self) =
+   match l with
+   | #FNil -> false
+   | #FCons(h, t) -> if Val!( = )(v, h) then true else mem_(t)
+  in mem_(l) ;
+
+ proof of mem_nil = assumed (* TODO *) ;
+
+ proof of mem_cons = assumed (* TODO *) ;
+
+ let recstruct del(l : Self, v : Val) =
+  match l with
+  | #FNil -> #FNil
+  | #FCons(h, t) -> if Val!( = )(v, h)
+                    then del(t, v)
+                    else #FCons(h, del(t, v)) ;
+
+ proof of mem_del =  assumed (* TODO *) ;
+
+end ;;
+
+(*============================================================================*)

@@ -1,0 +1,233 @@
+(*============================================================================*)
+(* FoCaLize Tutorial : Implementing Sets - Subsets as Lists                   *)
+(*============================================================================*)
+(* File: main.fcl / Created: June 2009 / Mod: June 2009                       *)
+(* Lang: FoCaLize, version 0.2.0 (June 2009)                                  *)
+(* Dep: basics superset subset mylist                                         *)
+(* By Eric Jaeger - UPMC/LIP6 & SGDN/DCSSI                                    *)
+(*============================================================================*)
+
+(**
+@title FoCaLize Tutorial : Implementing Sets - Subsets as Lists
+@author The FoCaLize Team
+@description Implementation stage, including collections
+             (for educational purposes only)
+*)
+
+use "basics" ;;
+open "superset" ;;
+open "subset" ;;
+open "mylist" ;;
+
+(* Integers ==================================================================*)
+
+species Int =
+
+ inherit PrintParseSuperset ;
+
+ representation = basics#int ;
+
+ let ( = )(x : Self, y : Self) = basics#( = )(x, y) ;
+ proof of eq_refl = by definition of ( = ) ;
+ proof of eq_symm = by definition of ( = ) ;
+ proof of eq_tran = by definition of ( = ) ;
+
+ let witness = 0 ;
+
+ let print(s : Self) = basics#print_int(s) ;
+
+ let parse(s : basics#string) = basics#int_of_string(s) ;
+
+end ;;
+
+collection Int_Coll =
+
+ implement Int;
+
+end ;;
+
+(* Lists of Integers =========================================================*)
+
+collection IntList_Coll =
+
+ implement IndList(Int_Coll) ;
+
+end ;;
+
+(* Subset of Integers ========================================================*)
+
+species ListSubset(Val is PrintParseSuperset, Sup is IndList(Val)) =
+
+ inherit ExtSubset(Val), PrintParseSuperset ;
+
+ representation = Sup ;
+
+ let ( << )(v : Val, s : Self) = Sup!mem(v, s) ;
+
+ let empty = Sup!nil ;
+ proof of mem_empty = by definition of ( << ), empty property Sup!mem_nil ;
+
+ let ( + )(s : Self, v : Val) = if v << s then s else Sup!cons(v, s) ;
+
+ proof of mem_insert =
+  <1>1 assume v1  v2 : Val, s : Self, hypothesis H1 : v1 << s + v2,
+       prove Val!( = )(v1, v2) \/ v1 << s
+       by definition of ( << ), ( + )
+          property Sup!mem_cons hypothesis H1
+  <1>2 assume v1 v2 : Val, s : Self, hypothesis H1 : Val!( = )(v1, v2),
+       prove v1 << s + v2
+       assumed (* TODO *)
+  <1>3 assume v1 v2 : Val, s : Self, hypothesis H1 : v1 << s,
+       prove v1 << s + v2
+       assumed (* TODO *)
+  <1>f conclude ;
+
+ let ( - )(s : Self, v : Val) = Sup!del(s, v) ;
+
+ proof of mem_remove = assumed (* TODO *) ;
+
+ proof of mem_congr = assumed (* TODO *) ;
+
+ let rec ( <: )(s1 : Self, s2 : Self) =
+  if Sup!isnil(s1)
+  then true
+  else if Sup!head(s1) << s2
+       then Sup!tail(s1) <: s2
+       else false ;
+ (* TODO : Termination Proof *)
+
+ proof of mem_incl = assumed (* TODO *) ;
+
+ let rec ( = )(s1 : Self, s2 : Self) =
+  if Sup!isnil(s1)
+  then Sup!isnil(s2)
+  else let h1 = Sup!head(s1) and h2 = Sup!head(s2) in
+       if basics#( && )(h1 << s2, h2 << s1)
+       then ((s1 - h1) - h2) = ((s2 - h1) - h2)
+       else false ;
+ (* TODO : Termination Proof *)
+
+ proof of eq_incl = assumed (* TODO *) ;
+
+ let print(s : Self) =
+  let x = basics#print_string("{") in
+  let rec print_(s : Self)=
+   if Sup!isnil(s)
+   then basics#print_string("}")
+   else let y = Val!print(Sup!head(s)) in print_(s - Sup!head(s))
+  in print_(s) ;
+
+ let parse(s : basics#string) = empty; (* MOD *)
+
+ let witness = empty ; (* MOD *)
+
+end ;;
+
+collection IntSubset_Coll =
+
+ implement ListSubset(Int_Coll, IntList_Coll) ;
+
+end ;;
+
+(* Lists of Subsets of Integers ==============================================*)
+
+collection IntSubsetList_Coll =
+
+ implement IndList(IntSubset_Coll) ;
+
+end ;;
+
+(* Subset of Subsets of Integers =============================================*)
+
+collection IntSubset2_Coll =
+
+ implement ListSubset(IntSubset_Coll, IntSubsetList_Coll) ;
+
+end ;;
+
+(* Main ======================================================================*)
+
+basics#print_string("\n") ;;
+basics#print_string("Subsets of Integers :\n") ;;
+basics#print_string("---------------------\n") ;;
+
+let subset1 = IntSubset_Coll!empty ;;
+basics#print_string("Creating empty set : ") ;;
+IntSubset_Coll!print(subset1) ;;
+basics#print_string("\n") ;;
+
+let subset2 = IntSubset_Coll!( + )(subset1, Int_Coll!parse("1")) ;;
+basics#print_string("Inserting 1 : ") ;;
+IntSubset_Coll!print(subset2) ;;
+basics#print_string("\n") ;;
+
+let subset3 = IntSubset_Coll!( + )(subset2, Int_Coll!parse("2")) ;;
+basics#print_string("Inserting 2 : ") ;;
+IntSubset_Coll!print(subset3) ;;
+basics#print_string("\n") ;;
+
+let subset4 = IntSubset_Coll!( + )(subset3, Int_Coll!parse("3")) ;;
+basics#print_string("Inserting 3 : ") ;;
+IntSubset_Coll!print(subset4) ;;
+basics#print_string("\n") ;;
+
+let subset5 = IntSubset_Coll!( + )(subset4, Int_Coll!parse("2")) ;;
+basics#print_string("Inserting 2 : ") ;;
+IntSubset_Coll!print(subset5) ;;
+basics#print_string("\n") ;;
+
+let subset6 = IntSubset_Coll!( - )(subset5, Int_Coll!parse("2")) ;;
+basics#print_string("Removing 2 : ") ;;
+IntSubset_Coll!print(subset6) ;;
+basics#print_string("\n") ;;
+
+let subset7 = IntSubset_Coll!( - )(subset6, Int_Coll!parse("3")) ;;
+basics#print_string("Removing 3 : ") ;;
+IntSubset_Coll!print(subset7) ;;
+basics#print_string("\n") ;;
+
+basics#print_string("\n") ;;
+basics#print_string("Subsets of Subsets of Integers :\n") ;;
+basics#print_string("--------------------------------\n") ;;
+
+let power1 = IntSubset2_Coll!empty ;;
+basics#print_string("Creating empty set : ") ;;
+IntSubset2_Coll!print(power1) ;;
+basics#print_string("\n") ;;
+
+let power2 = IntSubset2_Coll!( + )(power1, subset1) ;;
+basics#print_string("Inserting {} : ") ;;
+IntSubset2_Coll!print(power2) ;;
+basics#print_string("\n") ;;
+
+let power3 = IntSubset2_Coll!( + )(power2, subset2) ;;
+basics#print_string("Inserting {1} : ") ;;
+IntSubset2_Coll!print(power3) ;;
+basics#print_string("\n") ;;
+
+let power4 = IntSubset2_Coll!( + )(power3, subset3) ;;
+basics#print_string("Inserting {21} : ") ;;
+IntSubset2_Coll!print(power4) ;;
+basics#print_string("\n") ;;
+
+let power5 = IntSubset2_Coll!( - )(power4, subset2) ;;
+basics#print_string("Removing {1} : ") ;;
+IntSubset2_Coll!print(power5) ;;
+basics#print_string("\n") ;;
+
+let subset8 =
+ IntSubset_Coll!( + )
+  (IntSubset_Coll!( + )(IntSubset_Coll!empty, Int_Coll!parse("2")),
+   Int_Coll!parse("1"));;
+basics#print_string("Creating {12} : ") ;;
+IntSubset_Coll!print(subset8) ;;
+basics#print_string("\n") ;;
+
+let power6 = IntSubset2_Coll!( + )(power5, subset8) ;;
+basics#print_string("Inserting {12} : ") ;;
+IntSubset2_Coll!print(power6) ;;
+basics#print_string("\n") ;;
+
+basics#print_string("\n") ;;
+
+(*============================================================================*)
