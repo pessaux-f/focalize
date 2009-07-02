@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.53 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.54 2009-07-02 07:59:51 weis Exp $
 
 ROOT_DIR = .
 
@@ -408,14 +408,14 @@ clean_focalizedep:
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
-clean_internal_tools: clean_zenon clean_zvtov clean_focalizec clean_focalizedep
+clean_internal_tools: clean_focalizedep clean_focalizec clean_zvtov clean_zenon 
 
 distclean_internal_tools:
 	@$(RM) .done_build_internal_tools && \
+	$(RM) .done_build_focalizedep && \
+	$(RM) .done_build_focalizec && \
 	$(RM) .done_build_zvtov && \
 	$(RM) .done_build_zenon && \
-	$(RM) .done_build_focalizec && \
-	$(RM) .done_build_focalizedep && \
 	for i in $(INTERNAL_TOOLS); do \
 	  $(RM) .done_build_$$i && \
 	  $(TOUCH) $$i/.config_var; \
@@ -444,7 +444,7 @@ clean_external_tools: clean_internal_tools
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
-distclean_external_tools: distclean_internal_tools clean_install_external_tools_sources
+distclean_external_tools: clean_install_external_tools_sources
 	@$(RM) .done_build_external_coq_tool && \
 	$(RM) .done_build_external_camlp5_tool && \
 	$(RM) .done_build_external_caml_tool && \
@@ -465,4 +465,4 @@ distclean_distribution:
 	  $(MAKE) -f Makefile.distribution distclean; \
 	fi
 
-distclean:: distclean_external_tools distclean_distribution unconfigure
+distclean:: distclean_internal_tools distclean_external_tools distclean_distribution unconfigure
