@@ -13,13 +13,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.5 2009-07-06 09:19:24 habib Exp $
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
 
-SUB_DIRS = refman
+SUB_DIRS = refman tutorial
 
 include $(ROOT_DIR)/Makefile.common
 
