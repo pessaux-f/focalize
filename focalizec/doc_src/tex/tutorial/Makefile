@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2009-07-06 08:05:35 habib Exp $
+# $Id: Makefile,v 1.2 2009-07-06 09:25:14 habib Exp $
 
 ROOT_DIR = ../../..
 
@@ -43,8 +43,6 @@ docdir:: $(DOC_OBJS)
 
 tutorial.dvi: $(TEX_FILES)
 	$(LATEX) tutorial.tex
-	makeindex tutorial
-	bibtex tutorial
 	$(LATEX) tutorial.tex && latex tutorial.tex
 
 tutorial.pdf: tutorial.dvi
