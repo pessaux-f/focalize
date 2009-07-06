@@ -2,7 +2,7 @@
 Documentation
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.2 2009-03-02 10:19:30 weis Exp $ -->
+<!-- \$Id: index.shtml,v 1.3 2009-07-06 08:43:28 habib Exp $ -->
 
 <div id="container">
 <div id="header">
@@ -16,6 +16,7 @@ Documentation
 <div class="spacer"></div>
 
 <div id="main">
+
 <h3>The manual for the lastest release<h3>
 
 <p>The reference manual for the $(PROJECT_NAME) language and system:
@@ -33,6 +34,28 @@ Documentation
  <li><a href="$(PROJECT_NAME_FULL)_refman.dvi">$(PROJECT_NAME_FULL)_refman.dvi</a>,
  size
 <!--#fsize file="$(PROJECT_NAME_FULL)_refman.dvi" sizefmt="abbrev"-->,
+ (in DVI format).
+ </li>
+</ul>
+</p>
+
+<h3>Tutorial: Implementing Sets<h3>
+
+<p>A tutorial for the $(PROJECT_NAME) language and system:
+<ul>
+ <li><a href="$(PROJECT_NAME_FULL)_tutorial.ps">$(PROJECT_NAME_FULL)_tutorial.ps</a>,
+ size
+<!--#fsize file="$(PROJECT_NAME_FULL)_tutorial.ps" sizefmt="abbrev"-->,
+ (in PS format).
+ </li>
+ <li><a href="$(PROJECT_NAME_FULL)_tutorial.pdf">$(PROJECT_NAME_FULL)_tutorial.pdf</a>,
+ size
+<!--#fsize file="$(PROJECT_NAME_FULL)_tutorial.pdf" sizefmt="abbrev"-->,
+ (in PDF format).
+ </li>
+ <li><a href="$(PROJECT_NAME_FULL)_tutorial.dvi">$(PROJECT_NAME_FULL)_tutorial.dvi</a>,
+ size
+<!--#fsize file="$(PROJECT_NAME_FULL)_tutorial.dvi" sizefmt="abbrev"-->,
  (in DVI format).
  </li>
 </ul>
