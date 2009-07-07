@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.54 2009-07-02 07:59:51 weis Exp $
+# $Id: Makefile,v 1.55 2009-07-07 11:31:41 doligez Exp $
 
 ROOT_DIR = .
 
@@ -352,6 +352,7 @@ docdir:: doc
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
+.PHONY: clean_zenon
 clean_zenon:
 	@$(RM) .done_build_internal_tools && \
 	$(RM) .done_build_zenon && \
@@ -367,6 +368,7 @@ clean_zenon:
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
+.PHONY: clean_zvtov
 clean_zvtov:
 	@$(RM) .done_build_internal_tools && \
 	$(RM) .done_build_zvtov && \
@@ -382,6 +384,7 @@ clean_zvtov:
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
+.PHONY: clean_focalizec
 clean_focalizec:
 	@$(RM) .done_build_internal_tools && \
 	$(RM) .done_build_focalizec && \
@@ -397,6 +400,7 @@ clean_focalizec:
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
+.PHONY: clean_focalizedep
 clean_focalizedep:
 	@$(RM) .done_build_internal_tools && \
 	$(RM) .done_build_focalizedep && \
@@ -408,8 +412,10 @@ clean_focalizedep:
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
-clean_internal_tools: clean_focalizedep clean_focalizec clean_zvtov clean_zenon 
+.PHONY: clean_internal_tools
+clean_internal_tools: clean_focalizedep clean_focalizec clean_zvtov clean_zenon
 
+.PHONY: distclean_internal_tools
 distclean_internal_tools:
 	@$(RM) .done_build_internal_tools && \
 	$(RM) .done_build_focalizedep && \
@@ -417,17 +423,17 @@ distclean_internal_tools:
 	$(RM) .done_build_zvtov && \
 	$(RM) .done_build_zenon && \
 	for i in $(INTERNAL_TOOLS); do \
-	  $(RM) .done_build_$$i && \
-	  $(TOUCH) $$i/.config_var; \
+	  $(RM) .done_build_$$i; \
 	done && \
 	for i in $(INTERNAL_TOOLS_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
-	  ($(CD) $$i && $(MAKE) distclean); \
+	  ($(CD) $$i && touch .config_var && $(MAKE) distclean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
+.PHONY: clean_external_tools
 clean_external_tools: clean_internal_tools
 	@$(RM) .done_build_external_tools && \
 	$(RM) .done_build_external_coq_tool && \
@@ -444,6 +450,7 @@ clean_external_tools: clean_internal_tools
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
+.PHONY: distclean_external_tools
 distclean_external_tools: clean_install_external_tools_sources
 	@$(RM) .done_build_external_coq_tool && \
 	$(RM) .done_build_external_camlp5_tool && \
@@ -460,9 +467,11 @@ distclean_external_tools: clean_install_external_tools_sources
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
+.PHONY: distclean_distribution
 distclean_distribution:
 	if test -r Makefile.distribution; then \
 	  $(MAKE) -f Makefile.distribution distclean; \
 	fi
 
+.PHONY: distclean
 distclean:: distclean_internal_tools distclean_external_tools distclean_distribution unconfigure

@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.12 2009-07-02 07:59:09 weis Exp $
+# $Id: Makefile.distribution,v 1.13 2009-07-07 11:31:41 doligez Exp $
 
 ROOT_DIR=.
 
@@ -170,7 +170,7 @@ clean_documentation:
 	@$(RM) .done_build_documentation && \
 	 for i in $(INTERNAL_TOOLS_DIRS) $(WEB_SITE_SRC_DIR); do \
 	   echo "--> $$i ..." >&2 && \
-	   ($(CD) $$i && $(MAKE) clean); \
+	   ($(CD) $$i && touch .config_var && $(MAKE) clean); \
 	   err=$$?; \
 	   echo "<-- $$i [$$err]" >&2 && \
 	   case $$err in 0);; *) exit $$err;; esac; \
