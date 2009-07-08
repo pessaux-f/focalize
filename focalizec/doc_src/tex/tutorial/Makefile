@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2009-07-06 09:52:25 habib Exp $
+# $Id: Makefile,v 1.4 2009-07-07 22:35:51 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -57,6 +57,7 @@ tutorial.ps: tutorial.dvi
 
 clean::
 	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc
+	$(RM) tutorial*.gif tutorial.image.tex
 	$(RM) $(DOC_OBJS)
 
 distclean:: clean

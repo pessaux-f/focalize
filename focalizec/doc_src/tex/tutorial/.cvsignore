@@ -1,0 +1,16 @@
+.depend
+*.aux
+*.idx
+*.log
+*.bbl
+*.blg
+*.ilg
+*.ind
+*.toc
+*.haux
+*.hind
+*.htoc
+odoc
+tutorial.html
+tutorial.image.tex
+tutorial*.gif
