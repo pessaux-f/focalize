@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.24 2009-07-06 08:00:11 habib Exp $
+# $Id: Makefile,v 1.25 2009-07-07 22:35:01 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -49,7 +49,7 @@ refman.dvi: $(TEX_FILES)
 	$(LATEX) refman.tex
 	makeindex refman
 	bibtex refman
-	$(LATEX) refman.tex && latex refman.tex
+	$(LATEX) refman.tex && $(LATEX) refman.tex
 
 refman.pdf: refman.dvi
 	dvipdf refman.dvi
