@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.39 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.40 2009-08-11 18:50:04 carlier Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -37,9 +37,14 @@
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
 let generate_constant out_fmter constant =
+  let protect_negative i =
+       if String.length i > 0 && i.[0] = '-' then
+         Format.fprintf out_fmter "(%s)" i
+       else
+         Format.fprintf out_fmter "%s" i in
   match constant.Parsetree.ast_desc with
-   | Parsetree.C_int i -> Format.fprintf out_fmter "%s" i
-   | Parsetree.C_float fl -> Format.fprintf out_fmter "%s" fl
+   | Parsetree.C_int i -> protect_negative i
+   | Parsetree.C_float fl -> protect_negative fl
    | Parsetree.C_bool b -> Format.fprintf out_fmter "%s" b
    | Parsetree.C_string s ->
        Format.fprintf out_fmter "\"%s\"" (String.escaped s)
