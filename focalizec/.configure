@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: .configure,v 1.12 2009-05-22 13:37:59 weis Exp $
+#  $Id: .configure,v 1.13 2009-08-15 17:43:36 weis Exp $
 
 # The file .config_var has been built by configure. We load it.
 . ./.config_var_for_shell
@@ -25,6 +25,7 @@ SUB_DIRS="src/basement src/parser src/typing \
   src/toplevel src/focalizedep \
   doc_src doc_src/tex doc_src/html doc_src/man \
   doc_src/tex/refman \
+  doc_src/tex/tutorial \
   src/stdlib \
   src/extlib src/extlib/algebra src/extlib/access_control \
   src/contribs \
@@ -54,5 +55,5 @@ echo "let zenon_libdir = \"$ZENON_LIB_DIR\" ;;" >> $INSTALL_ML
 echo "(* End of generated source file. *)" >> $INSTALL_ML
 chmod a-w $INSTALL_ML
 
-# Building dependancy files
+# Building dependency files
 make depend
