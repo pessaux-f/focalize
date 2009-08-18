@@ -1,8 +1,8 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
-#            FranÃ§ois Pessaux                                          #
+#            François Pessaux                                          #
 #            Pierre Weis                                               #
 #            Damien Doligez                                            #
 #                                                                      #
@@ -13,25 +13,24 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: README,v 1.3 2009-03-02 10:19:30 weis Exp $
+# $Id: README,v 1.4 2009-08-18 09:31:41 weis Exp $
 
-The FoCaLize project attempts to provide a programming environment in
-which one can design and develop certified programs.
+The FoCaLiZe project attempts to provide a programming environment in which
+one can design and develop certified programs.
 
-The environment is based on a functional language with some
-object-oriented features. That way, programmers can write the formal
-specifications and the proofs of their code within the same
-setting. In FoCaLize, the proof development is computer  assisted via
-the Zenon proof finder; Zenon dramatically leverage the aamount of
-details to include in the proofs. In the end, all the proofs are
-formally machine checked using the trusty Coq proof checker. 
+The environment is based on a functional language with some object-oriented
+features. That way, programmers can write the formal specifications and the
+proofs of their code within the same setting. In FoCaLiZe, the proof
+development is computer assisted via the Zenon proof finder; Zenon
+dramatically leverage the amount of details to include in the proofs. In the
+end, all the proofs are formally machine checked using the trusty Coq proof
+checker.
 
-Thanks to its inheritance and refinement mechanisms, FoCaLize
-encourages incremental refinements of the specification until
-efficient executable code is obtained (via a translation to Objective
-Caml).
- 
-As a real sized testbed, FoCaLize features a library for mathematical
+Thanks to its inheritance and refinement mechanisms, FoCaLiZe encourages
+incremental refinements of the specification until efficient executable code
+is obtained (via a translation to Objective Caml).
+
+As a real sized testbed, FoCaLiZe features a library for mathematical
 structures, up to multivariate polynomial rings; this algebraic
-infrastructure is equipped with complex algorithms that perform
-on par with the best CAS in existence. 
+infrastructure is equipped with complex algorithms that perform on par with
+the best CAS in existence.
