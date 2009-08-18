@@ -1,117 +1,120 @@
-% $Id: glimpse.tex,v 1.10 2009-06-05 13:41:07 pessaux Exp $
+% $Id: glimpse.tex,v 1.11 2009-08-18 17:38:59 weis Exp $
 \def\bbbn{{\rm I\!N}} % [EJ] Sinon il y a \mathbb{N} qui fait ça bien aussi...
 \label{glimpse}
-Before entering the precise description of \focal\ we give an
-informal 
-presentation of its main features, to help further reading of the
-reference manual. Every construction or feature of \focal\ is
+Before entering the precise description of {\focal}, we give an
+informal presentation of its main features, to help further reading of the
+reference manual. Every construction or feature that we sketch here is
 entirely and precisely described in the following chapters.
 
 \section{The Basic Brick}
 
-The primitive entity of a \focal\ development is the
+The primitive entity of a {\focal} development is the
 {\em species}. It can be viewed as a record grouping ``things'' related
-to a same concept. Like in most modular design systems (i.e. objected 
-oriented, algebraic abstract types) the idea is to group a data
-structure with the operations to process it. Since in \focal\ we don't
-only address data type and operations, among these ``things'' we also
-find the declaration (specification)  of these operations,  the
-properties (which may represent 
-requirements) and their proofs. 
+to the same concept. Like in most modular design systems (i.e. objected
+oriented, algebraic abstract types), the idea is to group a data
+structure with the operations that operate on it. Since in {\focal} we don't
+only address data type and operations, these ``things'' also
+comprise the declaration (or specification) of the operations,  their
+stated properties (which represent the requirements for the operations), and the
+proofs of these properties.
 
-We now describe each of these ``things'', called {\em methods}.
+We now informely describe each of these ``things'', called the {\em methods}
+of the species.
 
 \begin{itemize}
   \item The
-    {\tt representation} gives the data representation of entities
+    {\tt representation} gives the data representation of the entities
     manipulated by the {\em species}. It is a type
-    defined by a type expression. 
+    defined by a type expression.
     The {\em representation} definition may be deferred,
-    meaning that the real structure of the data-type the {\em species}
-    embeds does not  need to be known at this point. In this case, it is
-    simply a type variable.  However, to obtain an
+    which means that the structure of the embedded data-type
+    does not  need to be known at this point. In this case, it is
+    simply a type variable.  However, to finally obtain an
     implementation,  the {\em representation}
-     has to be defined later either by setting {\tt representation = exp} where
-     {\tt  exp} is a type expression or by inheritance (see below).
-     Type expressions in \focal\ are roughly ML-like types (variables,
-     basic types, inductive types, record types).
+    has to be defined at some point, either by setting
+    {\tt representation = type\_exp} where {\tt  type\_exp} is a type
+    expression or by inheritance (see below).
+    Type expressions in {\focal} are roughly speaking the ML type expressions (variables,
+    basic types, inductive types, record types).
 %     {\em species representation types}, denoted by keyword {\tt Self}
 %     inside the species and by  the name of their {\em species}
 %     outside of them.
 
-    Each {\em species} has a unique {\em representation}.  This
+    Each {\em species} has a unique {\em representation}. This
     is not a restriction compared to other languages where
     programs/objects/modules can own several private variables
-    representing the internal state, hence the data structure of the
-    manipulated entities by the program/object/module. In such a case,
-    the {\em representation} is simply the tuple grouping all these
-    variables that were disseminated all along the
+    representing the internal state, since the variables define some part of
+    the data structure of the entities manipulated by the
+    program/object/module.
+    The equivalent {\focal} {\em representation} is simply a tuple grouping
+    in one place all these variables that were disseminated in the entire
     program/object/module.
 
 
   \item Declarations are composed of the keyword {\tt signature}
     followed by a name and a type. They announce a {\em method} to
-    be defined later (the type is given but not yet the
-    implementation).
+    be defined later (the type of the method is given but the implementation
+    is still omitted).
 %    for specification or design purposes since declared names may be
 %    used  to define others {\em methods} while
-    Declaration can however be used in definition of other methods: the type provided by
-    the {\em signature} allows \focal\ to ensure
-    that the method is used in contexts compatible with this
-    type. The late-binding and the collection mechanisms, further
-    introduced, ensure that the definition of the method will be
-    effectively known when needed.
+    Once a method is declared, this method can be used in the text following
+    the declaration, in particular in the definition of other methods:
+    indeed, the type provided by the {\em signature} allows the {\focal} compiler to check
+    that the method is consistently used in all contexts with a type compatible with the
+    declared type. Furthermore, the late-binding and the collection mechanisms
+    introduced below, ensure that the definition of the method is
+    known when the method is effectively invoked.
 
   \item Definitions are composed of the keyword {\tt let}, followed
-    by a name, a type (optional) and an expression. They serve to introduce
+    by a name, an optional type, and an expression. They serve to introduce
     constants or functions, i.e. computational operations. The core
     language used to implement them is roughly ML-like expressions
     (let-binding, pattern matching, conditional, higher order
     functions, \ldots) with the addition of a construction to call a
-    {\em method} from a given {\em species}.  Mutually recursive
+    {\em method} from a given {\em species}. Mutually recursive
     definitions are introduced by {\tt let rec}.
 
 
 
-  \item Statements are composed of the keyword {\tt property}
-    followed by a name and a first-order
-    formula. A {\em property} may serve to express requirements
-    (i.e. facts that the system must hold to conform to the Statement
-    of Work) and then can be viewed as a
-    specification purpose {\em method}, like {\em signature}s were for
-    {\tt let}-{\em method}s. They induce a proof obligation to be discharged at some point
-    in the development. A {\em property} may also be used to express
-    some ``quality'' information of the system (soundness,
-    correctness, ..) also submitted to a proof obligation.  Formulae % [EJ] Pas compris quality information
-    are written with usual logical connectors, universal and
-    existential quantifications over a \focal\ type, and name of {\em
-      methods} known within the {\em species}' context. For instance,
-    a {\em property} telling that for any vehicle, if the speed is non-null, then doors
-    can't be opened could look like:
+  \item Property statements are composed of the keyword {\tt property}
+    followed by the name of the property and its definition, a first-order formula.
+    A {\em property} may serve to express requirements
+    (i.e. a fact that the system must hold to conform to the Statement
+    of Work) and in this case we can view the property as a
+    specification purpose {\em method}, like a {\em signature} was for
+    {\tt let}-{\em method}s. A property induces a {\em proof obligation} to
+    be discharged at some point in the development. A {\em property} may also
+    be used to express some ``quality'' information of the system (soundness,
+    correctness, \ldots) also submitted to a proof obligation.
+    The formulae % [EJ] Pas compris quality information
+    are written with the usual logical connectors, universal and
+    existential quantifications over a {\focal} type, and cite the name of
+    any {\em method} known within the {\em species}' context. For instance,
+    a {\em property} telling that for any vehicle, if the speed is non-null,
+    then the doors cannot be opened could look like:
     \begin{center}
     {\tt all m in Self, !speed(m) <> Speed!zero -> \tilde doors\_open(m)}
     \end{center}
-   In the same way as {\em signatures}, a yet to be proved {\em property}
-    can be used
-    as an hypothesis in
-    proof of other properties or theorems.  \focal\ late binding and collection mechanisms  ensure
+    In the same way as {\em signatures}, a yet to be proved {\em property}
+    can be used as an hypothesis in the proof of other properties or
+    theorems.
+    Once more, the {\focal} late binding and collection mechanisms ensure
     that the proof of a {\em property} will be ultimately done.
 
   \item Theorems ({\tt theorem}) made of a  name, a statement and a
-    proof are  {\em properties} together  with the formal proof that their
+    proof are {\em properties} packed with the formal proof that their
     statement holds in the context of the {\em species}. The proof
-    accompanying the statement will be processed by \focal\, {\zenon} and
-    ultimately checked with the theorem prover \coq.
+    accompanying the statement will be processed by {\focal}, {\zenon} and
+    ultimately checked with the {\coq} theorem prover.
 
 \end{itemize}
 
-Regarding properties and theorems, note that
-    like in any formal development, the difficulty may be more to
-    express a true, interesting and meaningful
-    statement, than to prove it. For instance, claiming that a piece of software is
-    ``formally proved'' because it respects a safety requirement
-      is meaningless
-    if the statement of this requirement is trivially true (see \cite{traps} for examples).
+Regarding properties and theorems, note that like in any formal development,
+the difficulty may be more to express a true, interesting and meaningful
+statement, than to prove it. For instance, claiming that a piece of software
+is ``formally proved'' because it respects a safety requirement is
+meaningless if the statement of this requirement is trivially true
+(see \cite{traps} for examples).
 %      system\_ok}. This is obviously a non-sense since the text of the
 %    property is trivial and does not link {\tt system\_ok} with the
 %    rest of the software (see \cite{traps} for less trivial examples).
@@ -120,9 +123,8 @@ Let's illustrate these notions on an example that we incrementally
 extend. We want to model some simple algebraic structures. Let's start
 with the description of a ``setoid'' representing the data structure of
 ``things'' belonging to a set, which can be submitted to an
-equality test and
-exhibited (i.e. one can get a witness of existence of one of these
-``things'').
+equality test and exhibited (i.e. one can get a witness of existence of one
+of these ``things'').
 
 {\scriptsize
 \begin{lstlisting}
@@ -142,46 +144,56 @@ end ;;
 }
 
 In this {\em species},  the {\em representation} is not explicitly
-given (the keyword {\tt representation} is not used) , since we don't need to set
-it to be able to express functions and properties our ``setoid''
-requires. However, we can refer to it via {\tt Self}
-(in this case a type variable). In the same way, we specify a {\em signature} for the
-equality (operator {\tt =}). We introduce the three properties  that
-an equality (an equivalence relation) must conform to.
+given (the keyword {\tt representation} is not used), since we don't need to set
+it to the express functions and properties that a ``setoid''
+requires. However, we can refer to the representation via {\tt Self}
+(in this case a type variable). In the same way, we just specify a {\em
+signature} for the equality (operator {\tt =}). We introduce the three
+properties that the equality must have (exactly the properties of an equivalence
+relation).
 
 We complete the example by the definition of
-the function {\tt different} which use the name {\tt =}
-({\tt basics\#not\_b} stands for the
-the boolean negation function defined in the \focal\
-source file {\tt basics.fcl}). It is possible right now to prove that
+the function {\tt different} which uses the (not yet defined) {\tt =} method,
+and the predefined boolean negation {\tt basics\#not\_b}.
+
+Not only we can define {\tt different} out of a not yet defined method {\tt
+=}, we can also prove a property of {\tt different} based on
+the not yet proved properties of {\tt =}! Indeed we prove that
 {\tt different} is irreflexive, under the hypothesis that {\tt =} is an
 equivalence relation (i.e. that any implementation of {\tt =} used by
-{\tt different} will satisfy these properties). 
+{\tt different} will satisfy these properties).
+
+Note: {\tt basics\#not\_b} stands for the function {\tt not\_b} defined in
+the {\focal} {\tt basics} development (which is in the source file {\tt
+basics.fcl} of the standard library).
 
 \bigskip
 
-It is possible to use {\em methods} only declared before they get a
-real {\em definition} thanks to the {\em late-binding} feature
-provided by \focal. In the same idea,  redefining a {\em method} is
-allowed in \focal\,
-the last version being always kept as the effective {\em definition}
-inside the species.
+In {\focal}, the {\em late-binding} feature makes it possible to use {\em
+methods} as soon as they have been declared and way before they get a
+real {\em definition}. Similarly, {\focal} allows arbitrary {\em method}
+redefinition: the effective {\em definition} of the method
+inside a species is guarrantied to be the last version of the successive
+definitions of the method.
 
 \section{Type of Species, Interfaces and Collections}
 \label{species-type}
 \label{species-interface}
-The {\em type} of a {\em species} is obtained by removing definitions
-and proofs. Thus, it is a kind of record type, made of all the method
+The {\em type} of a {\em species} is obtained by removing all the definitions
+and proofs. Thus, it is somoe kind of record type, made of all the method
 types of the species. If the {\tt representation} is still a type
 variable say $\alpha$, then the {\em species} type is prefixed with an
-existential binder $\exists \alpha$. This binder will be eliminated as
-soon as the {\tt representation} will be instantiated (defined) and
-must be eliminated to obtain runnable code.
+existential binder $\exists \alpha$. This binder is eliminated as
+soon as the {\tt representation} is known.
+Technically, the existancial type variable is instantiated when the
+representation type is defined; furthermore, the compiler checks that
+all existancial type variables have been eliminated before the generation of
+runnable code.
 
 \bigskip
 
 The {\em interface} of a species is obtained by abstracting the {\em
-  representation} type in the {\em species type}; this abstraction
+representation} type in the {\em species type}; this abstraction
 is permanent.
 
 \bigskip
@@ -193,50 +205,55 @@ confuse a species and its interface.
 
 \bigskip
 
- The {\em
-  species type} remain totally implicit in the concrete syntax, being
-just used as a step to build {\em species interface}. It is used
-during inheritance resolution.  
+The {\em species type} remain totally implicit in the concrete syntax, being
+just used as a step to build the {\em species interface}. It is used
+during inheritance resolution.
 
- Interfaces can be ordered by inclusion, a point providing a very
-simple notion of subtyping. This point will be further commented. 
+Interfaces can be ordered by inclusion, a point providing a very
+simple notion of subtyping. This point will be further commented.
 
 
-A species is said to be {\em complete} when the representation and all declarations have
-received a definition and all properties have received a proof.
+A species is said to be {\em complete} when the representation and all the
+declarations have received a definition and all the properties have received
+a proof.
 
-When {\em complete}, a species can be submitted to an abstraction
-process of its representation to create a {\em collection}. Thus the
-{\em interface} of the collection is just the {\em interface} of the
-complete species underlying it. A collection can hence be seen as an
-abstract data type, only usable through the methods of its interface,
-but having the guarantee that all declarations are defined and all statements are proved.
+When {\em complete}, a species can be submitted to an abstraction process of
+its representation to create a {\em collection}. Put it the other way round:
+a collection abstracts a complete species. Thus, the {\em interface} of a
+collection is the {\em interface} of the abstracted complete species. Thus, a
+collection is a kind of abstract data type, only usable through
+the methods of its interface, with the addional guarantee that all the
+declarations have been defined and all the statements have been proved.
 
 
 \section{Combining Bricks by Inheritance}
 
-A \focal\ development is organised as a hierarchy which may have
+A {\focal} development is organised as a hierarchy which may have
 several roots. Usually the upper levels of the hierarchy are built
 during the specification stage while the lower ones correspond to
 implementations. Each node of the hierarchy, i.e. each {\em species},
-is a progress towards a complete implementation. On the previous  
+is a progress towards a complete implementation. On the previous
 example, putting aside {\tt different},  we typically presented a kind of
 {\em species} for ``specification'' since it expresses only
 {\em signatures} of functions to be later implemented and properties
 to be later proved.
 
-We can now create a new {\em species} by
-{\bf inheriting} of a previously defined one. We can make this new species more
-``complex'' by adding new operations and properties, or we can make it more concrete
-by providing definitions to {\em signatures} and proofs
-to {\em properties}, without adding new features.
+We can now create a new {\em species} by {\bf inheritance} of an already
+defined one. We can make this new species more ``complex'' by adding new
+operations and properties, or we can make it more concrete by providing
+definitions to {\em signatures} and proofs to {\em properties}, without
+adding new features.
 
-Hence, in \focal\ inheritance serves two kinds of evolutions. In the
-first case the evolution aims making a {\em species} with more
-operations while keeping those of its parents (possibly redefining some of
-them if required). In the second case, the {\em species} only tends to be closer
-to a ``runnable'' implementation, providing explicit definitions to
-{\em methods} that were previously only declared.
+Hence, the {\focal} inheritance notion serves two kinds of evolutions in the
+development process. The first kind of evolution is {\em additional
+complexity}: the inheritance makes more complex {\em species} out of simpler
+ones; the new species gets more operations than its parents
+(keeping the ancestors operations or possibly redefining some of them, if
+required).
+The second kind of inheritance is {\em refinement}: the new
+species has less and less still unknown parts; it tends to the status of a ``runnable''
+implementation, providing explicit definitions to the {\em methods} that were
+previously only declared.
 
 Continuing our example, we want to extend our model to represent
 ``things'' with a multiplication and a neutral element for this
@@ -253,40 +270,41 @@ end ;;
 \end{lstlisting}
 }
 
-{\em Monoid} are ``things'' that are {\em Setoids} but also have an operation {\tt *} and a specific value called {\em one};  besides the new {\em methods} we also gave a definition
-to {\tt element}, saying it is the application of the method {\tt *}
-to {\tt one} twice, both of them being only {\em declared}. Here, we
-used the inheritance in both the presented ways: making a more complex
-entity by adding {\em methods} and getting closer to the
+{\em Monoid} are ``things'' that are {\em Setoids} but also have an operation
+{\tt *} and a specific value called {\em one}; besides the new {\em methods}
+we also gave a definition to {\tt element}, saying it is the application of
+the method {\tt *} to {\tt one} twice, both of them being only {\em
+declared}. Here, we used the inheritance in both the presented ways: making a
+more complex entity by adding {\em methods} and getting closer to the
 implementation by explicitly defining {\tt element}.
 
-Multiple inheritance is available in \focal. For sake of simplicity,
-the above example uses simple inheritance. In case of inheriting a
-{\em method} from several parents, the order of parents in the
+{\focal} provides multiple inheritance. For sake of simplicity,
+the above example uses simple inheritance. When inheriting the same
+{\em method} from more than one parent, the order of parents apparition in the
 {\tt inherit} clause serves to determine the chosen {\em method} (only
 the latest definition of any method appearing several times in the
 list of inherited species is retained).
 
 The {\em type} of a {\em  species} built using inheritance is defined
-like for other {\em species}, the {\em method} types retained inside
-it being those of the {\em methods} present in the {\em species} after
-inheritance resolution.
+like for other {\em species}, the {\em method} types being those of the {\em
+methods} appearing in the {\em species} after inheritance resolution.
 
 A strong constraint in inheritance is that the type of inherited,
-and/or redefined {\em methods} must not change.  This is required to
-ensure consistency of the \focal\ model, hence of the developed
+and/or redefined {\em methods} cannot change.  This is required to
+ensure consistency of the {\focal} model, hence of the developed
 software. More precisely, if the representation is given by a type
 expression containing some type variables, then it can be more defined
 by instanciation of these variables. In the same way, two signatures
-have compatible types if they have a common unifier, thus, roughly
-speaking if they are compatible ML-like types. For example, if the
-representation was not yet defined, thus being still a type variable,
+have compatible types if they have a common unifier; thus, roughly
+speaking, if they are compatible as ML-like types. For example, if the
+representation was not yet defined (thus being still a type variable),
 it can be defined by {\tt int}. And if a species $S$ inherits from
 $S_1$ and $S2$ a method called $m$, there is no type clash if $S_1 !m$
-and $S_2!m$ can be unified, then the method $S!m$ has the most general
-unifier of these two types as its own type.  
+and $S_2!m$ can be unified, then the method $S!m$ is addigned the most general
+unifier of these two types.
 
-In a nutshell, if a species {\em B} inherits from a species {\em A}, the intuition is that any instance of {\em B} is also an instance of {\em A}.
+In a nutshell, if a species {\em B} inherits from a species {\em A}, the
+intuition is that any instance of {\em B} is also an instance of {\em A}.
 
 \section{Combining Bricks by Parameterisation}
 
@@ -298,7 +316,7 @@ new structure, using the previous {\em species} as the ``ingredient''.
 Indeed, the structure of a product is not similar to any of its component,
 but is build using the structures of its components. A product
 can be seen as {\em parameterised} by its two components.
-Following this idea, \focal\ allows two flavors of parameterisation.
+Following this idea, {\focal} allows two flavors of parameterisation.
 
 \subsection{Parameterisation by Collection}
 
@@ -322,7 +340,7 @@ theorem} stated in $I$ can be safely used as an hypothesis.
 done via the ``bang'' notation:
 {\tt !meth} or\break{}{\tt Self!meth} for a {\em method} of the current
 {\em species} (and in this case, even simpler: {\tt meth}, since the
-\focal\ compiler will resolve scoping issues). To call
+{\focal} compiler will resolve scoping issues). To call
 {\em collection parameters}'s {\em method}, the same notation is used:
 {\tt A!element} stands for the {\em method} {\tt element} of the
 {\em collection parameter} {\tt A}.
@@ -363,14 +381,14 @@ and {\tt B}. We also add a definition for {\tt =} of {\tt Setoid\_product},
 relying on the methods {\tt =} of {\tt A} and {\tt B}
 (which are not yet defined), and we prove that {\tt =} of {\tt Setoid\_product} is
 indeed reflexive, upon the hypothesis made on {\tt A!( = )}
-and {\tt B!( = )}.  The part of \focal\ used to write proofs will be
+and {\tt B!( = )}.  The part of {\focal} used to write proofs will be
 shortly presented later, in section \ref{focal-proof-language}.
 
-Such a species can be refined with {\tt representation = A * B}, indicating that 
+Such a species can be refined with {\tt representation = A * B}, indicating that
 the representation of the product is the
 Cartesian Product of the representation of the two parameters. In
-{\tt A * B},  {\tt *} is the \focal\ type  constructor of pairs, {\tt
-  A} denotes indeed 
+{\tt A * B},  {\tt *} is the {\focal} type  constructor of pairs, {\tt
+  A} denotes indeed
 the representation of the  first {\em collection parameter}, and {\tt B}
 the one of  of the second {\em collection parameter}.
 
@@ -384,7 +402,7 @@ Setoid\_product}, which both inherits of and is parameterised by it.
 Why {\em collection parameters} and not simply {\em species
   parameters}? There are two reasons. First, effective parameters must
   provide definitions/proofs for all the methods of the required
-  interface: this is the contract. Thus, effective parameters must 
+  interface: this is the contract. Thus, effective parameters must
   be {\em complete} species. Then,  we do not want the parameterisation
   to introduce dependencies
 on the parameters' {\em representation} definitions. For example, it is
@@ -392,7 +410,7 @@ on the parameters' {\em representation} definitions. For example, it is
   is {\tt bool} then {\tt A*B} is a list of boolean values''. This would
 dramatically restrict possibilities to instantiate parameters since
 assumptions on the {\em representation},  possibly used in the
-parameterised {\em species} to write its own {\em methods}, 
+parameterised {\em species} to write its own {\em methods},
 could prevent {\em collections} having the right set of {\em methods} but
 a different  representation  to be used as
 effective parameters. Such a behaviour would make parameterisation too
@@ -417,7 +435,7 @@ methods acting on it. We call
 those {\em entity parameters}, their introduction rests upon
 the introduction  of a {\em collection parameter} and they  denote a
 {\em value} having the type of the {\em  representation} of this
-{\em collection  parameter}.  
+{\em collection  parameter}.
 
 Let us first have a {\em species} representing natural numbers:
 
@@ -488,10 +506,10 @@ end;;
 
 As seen by this example, a species can be applied to effective
 parameters by giving their values with the usual syntax of parameter
-passing. 
+passing.
 
 As said before, to ensure modularity and abstraction, the
-{\em representation} of a 
+{\em representation} of a
 {\em collection} is hidden (as well as the definitions). This means that any software component
 dealing with a {\em collection} will only be able to manipulate it
 through the operations ({\em methods}) its interface provides. This
@@ -502,7 +520,7 @@ of the {\em collection}.
 \section{Properties,  Theorems and  Proofs}
 \label{focal-proof-language}
 
-\focal\ aims not only to write programs, it intends to encompass both
+{\focal} aims not only to write programs, it intends to encompass both
 the executable model (i.e. program) and properties this model must
 satisfy. For this reason, ``special'' {\em methods} deal with logic
 instead of purely behavioural aspects of the system: {\em theorems},
@@ -515,7 +533,7 @@ the developer and will finally be sent to the formal proof assistant
 \coq\ who will automatically check that the demonstration of the
 {\em property} is consistent. Writing a proof can be done in several ways.
 
-It can be written in \focal's proof language, a hierarchical proof
+It can be written in {\focal}'s proof language, a hierarchical proof
 language that allows to give hints and directions for a proof. This
 language will be sent to an external theorem prover,
 \zenon \cite{ZenonBDD,zenon0.4.1} developed by D. Doligez. This prover is
@@ -560,7 +578,7 @@ developer: {\bf it searches the proof itself}, the developer does not
 have to elaborate it formally ``from scratch''.
 
 Like any automatic theorem prover, \zenon\ may fail finding a
-demonstration. In this case, \focal\ allows to write verbatim
+demonstration. In this case, {\focal} allows to write verbatim
 \coq\ proofs. In this case, the proof is not anymore automated, but
 this leaves the full power of expression of \coq\ to the developer.
 
@@ -569,8 +587,8 @@ telling that the proof is not given but that the property must be
 admitted. Obviously, a really safe development should not make usage of
 this feature since it bypasses the formal verification of
 software's model. However, such a functionality remains needed for various
-reasons. For example, a development may be linked with external code; 
-properties of the \focal\ code may depends on properties of the external
+reasons. For example, a development may be linked with external code;
+properties of the {\focal} code may depends on properties of the external
 code that have to be stated (for example using the documentation of this
 code) but also assumed.
 % [EJ] L'utilisateur saura quand utiliser assumed, mais l'exemple donne me semble
@@ -580,25 +598,25 @@ code) but also assumed.
 
 \section{Around the Language}
 
-In the previous sections, we presented \focal\ through its programming
+In the previous sections, we presented {\focal} through its programming
 model and shortly its syntax. We especially investigated the various
-entities making a \focal\ program. We now address what becomes a
-\focal\ program once compiled. We recall that \focal\ supports the
+entities making a {\focal} program. We now address what becomes a
+{\focal} program once compiled. We recall that {\focal} supports the
 redefinition of functions, which permits for example  to specialise
 code to a specific representation (for example, there
 exists a generic implementation of integer addition modulo {\tt n} but
 it can be redefined in arithmetics modulo {\tt 2} if boolean values
 are used to represent the two values). It is also a very convenient
-tool to maintain software. 
+tool to maintain software.
 
 \subsection{Consistency of the Software}
 
-All along the \focal\ development cycle, the compiler
+All along the {\focal} development cycle, the compiler
 keeps trace of dependencies between {\em species},
 {\em methods}, and {\em proofs} \ldots to ensure that the consequences of any modification
 will be managed consistently and propagated to those depending of it.
 
-\focal\ deals with two types of dependencies:
+{\focal} deals with two types of dependencies:
 \begin{itemize}
 \item The {\bf decl}-dependency: a {\em method} $A$ decl-depends on a
   {\em method} $B$, if the {\bf declaration} of $B$ is required to
@@ -622,7 +640,7 @@ modularisation of the proofs.
 
 \subsection{Code Generation}
 
-\focal\ currently compiles programs toward two languages, \ocaml\ to
+{\focal} currently compiles programs toward two languages, \ocaml\ to
 get an executable piece of software, and \coq\ to have a formal model
 of the program, with theorems and proofs.
 
@@ -633,13 +651,13 @@ code.
 Conversely, in \coq, all the {\em methods} are compiled,
 i.e. ``computational'' {\em methods} and logical {\em methods} with
 their proofs. This allows \coq\ to check the entire consistence of
-the system developed in \focal.
+the system developed in {\focal}.
 
 
 \def\focaltest{FocalTest}
 
 \subsection{Tests}
-\focal\ incorporates a tool named {\em \focaltest}
+{\focal} incorporates a tool named {\em \focaltest}
 \cite{CarlierDuboisLNCS2008} for Integration/Validation testing. It
 allows to confront automatically a property of the specification with
 an implementation. It generates automatically test cases, executes
@@ -675,24 +693,24 @@ always coherent with respect to its implementation.
 
 This tool uses its own XML format that contains information coming not
 only from structured comments (that are parsed and kept in the
-program's abstract syntax tree) and \focal\ concrete syntax but also
+program's abstract syntax tree) and {\focal} concrete syntax but also
 from type inference and dependency analysis. From this XML
 representation and thanks to some XSLT stylesheets, it is possible to
 generate HTML files or \LaTeX{} files. Although this documentation is
 not the complete safety case, it can helpfully contribute to its
 elaboration. In the same way, it is possible to produce UML
 models~\cite{Focal-UML} as means to provide a graphical documentation
-for \focal{} specifications. The use of graphical notations appears
+for {\focal} specifications. The use of graphical notations appears
 quite useful when interacting with end-users, as these tend to be more
 intuitive and are easier to grasp than their formal (or textual)
 counterparts. This transformation is based on a formal schema and
-captures every aspect of the \focal{} language, so that it has been
+captures every aspect of the {\focal} language, so that it has been
 possible to prove the soundness of this transformation (semantic
 preservation).
 
-\focal's architecture is designed to easily plug third-parties
+{\focal}'s architecture is designed to easily plug third-parties
 analyses that can use the internal structures elaborated by the
 compiler from the source code. This allows, for example, to make
 dedicated documentation tools for custom purposes, just exploiting
-information stored in the \focal\ program's abstract syntax tree, or
+information stored in the {\focal} program's abstract syntax tree, or
 extra information possibly added by extra processes, analyses.
