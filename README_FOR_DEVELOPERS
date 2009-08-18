@@ -1,6 +1,6 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
@@ -13,19 +13,20 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.7 2009-03-24 10:52:21 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.8 2009-08-18 10:01:32 weis Exp $
 
 # The name of the file says why and for who it was written :)
 
-<H2>How to use the Focalize Makefile</H2>
+<H2>How to use the FoCaLiZe Makefile</H2>
 
   <H3>Cleaning</H3>
 
   Two main targets: clean and distclean.
 
      <OL>
-       <LI>clean: cleans (internal tools), i.e. zenon zvtov and focalizec.
-           You should launch <code>make</code> to rebuild internal tools.
+       <LI>clean: cleans the internal tools, i.e. zenon, zvtov, focalizec and
+           focalizedep.
+           You should launch <code>make</code> to rebuild the internal tools.
        <LI>distclean: cleans every thing (internal and external tools).
            You should reconfigure the software and recompile everything
            afterwards.
@@ -49,18 +50,19 @@
   <H3>Making</H3>
 
   <P>
-  Two main targets: "default" (got via <code>make</code>) and install (got via <code>make</code> install).
+  Two main targets: "default" (got via <code>make</code>) and install (got
+  via <code>make</code> install).
 
   <OL>
     <LI>default: build the internal tools.
-    <LI>install: install focalizec and its documentation.
+    <LI>install: install FoCaLiZe its tools and documentation.
   </OL>
   </P>
 
-<H2>How to get the current branch release for focalize</H2>
+<H2>How to get the current branch release for FoCaLiZe</H2>
 
 <PRE>
-# Go to the focalize sources directory
+# Go to the FoCaLiZe sources directory
 cd ~/src/focalize
 
 # Create a distribution sub directory to check out the distribution branch.
@@ -72,6 +74,17 @@ cd distribution
 
 cvs -d weis@modulogic.inria.fr:/home/cvs \
  co -r branch_focalize_release_0_1_rc0 -d focalize.0.1.rc0 focalize
+
+# You also need the htmlc batch editor, which is in the Caml bazar.
+# The simplest way to get it is
+cd ~/src
+cvs -d :pserver:anoncvs@camlcvs.inria.fr:/caml co bazar-ocaml
+
+# Then go to the htmlc directory and 
+cd ~/src/bazar-ocaml/htmlc
+./configure
+make
+make install
 
 # Configure and compile it
 cd focalize.0.1.rc0
@@ -97,7 +110,7 @@ cvs -d weis@modulogic.inria.fr:/home/cvs \
 </PRE>
 </P>
 
-<H2>How to use the Focalize <code>doc_src</code> Makefile</H2>
+<H2>How to use the FoCaLiZe <code>doc_src</code> Makefile</H2>
 
   <P>The <code>doc_src</code> directory contains the Web site of the project.
   </P>
@@ -136,7 +149,9 @@ cvs -d weis@modulogic.inria.fr:/home/cvs \
   to define it while launching <code>make</code>, using:
   <br />
 <pre>
-  make PROJECT_WEB_TARGET_DIR='serverloginname@$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)' install
+make \
+  PROJECT_WEB_TARGET_DIR='serverloginname@$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)' \
+  install
 </pre>
   (where <code>$(PROJECT_WEB_SERVER)</code> and
   <code>$(PROJECT_WEB_SITE_DIR)</code> are variables you should write
@@ -149,3 +164,69 @@ cvs -d weis@modulogic.inria.fr:/home/cvs \
   <P>The target "clean" removes the compiled <code>.html</code> files
   from the <code>doc_src</code> hirearchy.
   </P>
+
+<H2>How to add a new directory to the FoCaLiZe hierarchy</H2>
+
+<P>Configuration and compilation is automatic in FoCaLiZe: there is a list of
+sub-directories that are visited to perform the necessary tasks. If you add a
+new directory you should add it to this list. The list is in a file named
+<CODE>.configure</CODE> in the top directory of the main directory of the sub
+hierarchy where you add the new directory. The file <CODE>.configure</CODE>
+starts with a dot since there is nothing to change or read here for the
+FoCaLiZe users: this is developpers only business. As an example, the
+<CODE>.configure</CODE> file in the directory <CODE>focalizec</CODE> is
+something like this:
+
+<PRE>
+#!/bin/sh
+
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+...
+
+# The file .config_var has been built by configure. We load it.
+. ./.config_var_for_shell
+
+SUB_DIRS="\
+  src/basement src/parser src/typing \
+  src/docgen src/commoncodegen src/mlcodegen src/coqcodegen \
+  src/toplevel src/focalizedep \
+  doc_src \
+  doc_src/tex doc_src/html doc_src/man \
+  doc_src/tex/refman \
+  doc_src/tex/tutorial \
+  src/stdlib \
+  src/extlib src/extlib/algebra src/extlib/access_control \
+  src/contribs \
+  src/contribs/automata src/contribs/utils src/contribs/voter \
+"
+
+# Touching .depend files to oblige make to redo dependencies
+touch .depend
+
+...
+</PRE>
+<P>You must add the new directory in the list <CODE>SUB_DIRS</CODE> at its
+proper place in the list. Note also, that you must also add all the sub
+directories of the new directory if any.
+
+<H2>How to release</H2>
+
+<P>When a release is to be completed, and preferably before branching, you must
+consolidate the version number of every component of FoCaLiZe.
+<BR>For each component, this means to edit the file
+<CODE>.project_config_var</CODE> to verify that this file indicates the
+correct current version of the tool.
+
+<P>For the entire FoCaLiZe system, it means to edit and verify the following files:
+<OL>
+  <LI><CODE>./.project_config_var</CODE> (the version for FoCaLiZe is in this file)
+  <LI><CODE>zenon/.project_config_var</CODE> (the version for zenon is in the
+      file <CODE>versionnum.ml</CODE>)
+  <LI><CODE>zvtov/.project_config_var</CODE> (the version for zvtov is in the
+      file <CODE>version.ml</CODE>)
+  <LI><CODE>${FOCALIZEC_NAME}/.project_config_var</CODE> (the version for
+      <CODE>${FOCALIZEC_NAME}</CODE> is in the file
+      <CODE>src/basement/configuration.ml</CODE>)
+</OL>
