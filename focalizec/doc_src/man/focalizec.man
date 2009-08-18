@@ -1,5 +1,5 @@
 .\"                                      Hey, EMACS: -*- nroff -*-
-.\" \$Id: focalizec.man,v 1.8 2009-02-09 17:06:27 pessaux Exp $
+.\" \$Id: focalizec.man,v 1.9 2009-08-18 15:32:31 weis Exp $
 .\"
 .\"
 .\" First parameter, NAME, should be all caps
@@ -60,7 +60,7 @@ is specially devoted to this task.
 
 Hence the generation process is the following:
     file.fcl --
-.B focalizec
+.B $focalizec
 --> file.ml and/or file.zv
     file.ml --
 .B ocaml/ocamlopt ...
@@ -225,4 +225,4 @@ Laboratoire d'Informatique de l'université Paris 6,
 Institut National de Recherche en Informatique et en Automatique ($(this_year))
 
 \"  LocalWords:  UE OCaml Coq fo Caml pre zv Zenon zvtov fcl ocaml ocamlopt vo
-\"  LocalWords:  coqc TP dirname graphviz deps focalize emacs
+\"  LocalWords:  coqc TP dirname graphviz deps $focal $focalizec $focalizedep emacs
