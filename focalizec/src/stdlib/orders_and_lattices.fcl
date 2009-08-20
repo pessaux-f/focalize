@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: orders_and_lattices.fcl,v 1.9 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: orders_and_lattices.fcl,v 1.10 2009-08-20 12:08:03 doligez Exp $ *)
 
 use "lattices";;
 use "orders";;
@@ -70,9 +70,11 @@ species Partially_ordered_set_as_meet_semi_lattice =
     <1>f conclude
   ;
 
-  (** details left as an exercice for the reader *)
   proof of inf_commutes =
-    by property leq_defines_infimum, leq_antisymmetric, inf_is_smaller
+    <1>1 assume x : Self, y : Self,
+         prove !leq (!inf (x, y), !inf (y, x))
+      by property leq_defines_infimum, inf_is_smaller
+    <1>2 qed by step <1>1 property leq_antisymmetric
   ;
 
   (** associativity is always tricky *)
@@ -157,9 +159,11 @@ species Partially_ordered_set_as_join_semi_lattice =
     <1>f conclude
   ;
 
-  (** details left as exercice for the reader *)
   proof of sup_commutes =
-    by property geq_defines_supremum, geq_antisymmetric, sup_is_bigger
+    <1>1 assume x : Self, y : Self,
+         prove !geq (!sup (x, y), !sup (y, x))
+       by property geq_defines_supremum, sup_is_bigger
+    <1>2 qed by step <1>1 property geq_antisymmetric
   ;
 
   (** associativity is always tricky *)

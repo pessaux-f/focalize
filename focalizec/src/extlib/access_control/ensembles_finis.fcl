@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.30 2009-06-27 01:29:02 weis Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.31 2009-08-20 12:08:03 doligez Exp $ *)
 
 (**
 
@@ -368,6 +368,9 @@ species Liste (A is Setoid) =
              step <2>1, <2>2
              definition of est_element
       <1>f qed
+(*
+        by step <1>1, <1>2 type Self
+*)
         coq proof {*
           Proof.
           induction s.
