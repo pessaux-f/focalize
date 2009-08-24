@@ -1,5 +1,5 @@
 (*  Copyright 2005 INRIA  *)
-(*  $Id: options.ml,v 1.11 2008-11-24 15:27:44 doligez Exp $  *)
+(*  $Id: options.ml,v 1.12 2009-08-24 12:15:00 doligez Exp $  *)
 
 open Arg;;
 open Misc;;
@@ -10,8 +10,10 @@ let print_version () =
 ;;
 
 let options = ref [
-  "-cime",  Arg.Set with_cime,
+  "-cime", Arg.Set with_cime,
         "    invoke Cime to treat equational problems";
+  "-continue", Arg.Clear stop_on_failure,
+            " continue after failed proofs and keep .v file";
   "-debug", Arg.Set keep_temp_files,
          "   do not remove temporary files";
   "-new", Arg.Unit (fun () -> Misc.focal_ext := "focal"),

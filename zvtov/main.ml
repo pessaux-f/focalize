@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: main.ml,v 1.18 2008-10-23 13:06:47 doligez Exp $  *)
+(*  $Id: main.ml,v 1.19 2009-08-24 12:15:00 doligez Exp $  *)
 
 open Misc;;
 open Printf;;
@@ -56,4 +56,5 @@ try main () with
 | Misc.Error msg -> eprintf "Error: %s\n" msg; cleanup_and_exit 5;
 | Sys_error msg -> eprintf "%s\n" msg; cleanup_and_exit 3;
 | Sys.Break -> Cache.close (); eprintf "interrupt\n"; cleanup_and_exit 4;
+| Misc.Zenon_failed -> cleanup_and_exit 6;
 ;;

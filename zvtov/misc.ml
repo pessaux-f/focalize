@@ -1,10 +1,12 @@
 (*  Copyright 2006 INRIA  *)
-(*  $Id: misc.ml,v 1.6 2008-12-09 09:59:34 doligez Exp $  *)
+(*  $Id: misc.ml,v 1.7 2009-08-24 12:15:00 doligez Exp $  *)
 
 exception Error of string;;
+exception Zenon_failed;;
 let error msg = raise (Error msg);;
 
 let with_cime = ref false;;
+let stop_on_failure = ref true;;
 let keep_temp_files = ref false;;
 let with_cache = ref true;;
 let progress_level = ref 1;;

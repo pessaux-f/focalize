@@ -1,5 +1,5 @@
 (*  Copyright 2004 INRIA  *)
-(*  $Id: invoke.ml,v 1.30 2008-10-23 13:06:47 doligez Exp $  *)
+(*  $Id: invoke.ml,v 1.31 2009-08-24 12:15:00 doligez Exp $  *)
 
 open Misc;;
 open Printf;;
@@ -187,6 +187,10 @@ let zenon_loc file (_: string * string) data loc oc =
       if Sys.file_exists tmp_err then copy_file tmp_err stderr;
       Printf.eprintf "### proof failed\n";
       flush stderr;
+      if !stop_on_failure then begin
+        cleanup ();
+        raise Zenon_failed;
+      end;
       output_placeholder oc data;
     end;
     cleanup ();
