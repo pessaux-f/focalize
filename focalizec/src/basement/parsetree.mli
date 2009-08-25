@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.58 2009-06-27 01:29:02 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.59 2009-08-25 06:57:50 weis Exp $ *)
 
 (** {2 The FoCaLiZe abstract syntax tree} *)
 
@@ -418,8 +418,11 @@ and logical_expr_desc =
 
 and hyp = hyp_desc ast
 and hyp_desc =
+    (** assume n : nat *)
   | H_variable of vname * type_expr
+    (** hypothesis H : n > 0 *)
   | H_hypothesis of vname * logical_expr
+    (** notation n2 = n * n *)
   | H_notation of vname * expr
 
 and statement = statement_desc ast
