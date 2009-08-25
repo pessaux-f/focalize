@@ -1,4 +1,4 @@
-% $Id: basic_concepts.tex,v 1.17 2009-08-25 08:55:47 weis Exp $
+% $Id: basic_concepts.tex,v 1.18 2009-08-25 12:30:58 weis Exp $
 
 As stated in section \ref{glimpse}, the {\focal} language is designed
 to build an application step by step, going from very abstract
@@ -280,7 +280,7 @@ always possible when dealing with proofs and properties. Such
 problematic species are rejected by {\focal} and will be described
 later in \ref{dependencies}.
 
- An interface has a {\bf  name}, {\em which is the name of the underlying
+An interface has a {\bf  name}, {\em which is the name of the underlying
 species}. There should be no confusion between species names and
 interface names as interface names are only used to declare formal
 collection parameters (see section \ref{collection-parameter}) and to
@@ -293,15 +293,15 @@ apply methods of collection parameters.
 \index{collection}
 
 A {\bf collection} is a kind of ``grey box'', built from a {\em
-  complete} species by abstraction of the representation. A collection
+complete} species by abstraction of the representation. A collection
 has exactly the same sequence of methods than the complete species
 underlying it, apart the representation which is hidden.
-Note that creating a collection from it  is the
+Note that creating a collection from it is the
 only way to turn methods of a complete species into executable
 code. This point is emphasised by the syntax:
 
 {\tt collection} {\em name-collection} = {\tt implement} {\em
-name-species} {\tt end}
+name-species} {\tt ;} {\tt end}
 
 The interface of a collection is the one of the
 complete species it implements. The interface $I_1$ of a collection
@@ -326,7 +326,9 @@ species Full =
   let print (x in Self) = print_int (x) ;
 end ;;
 
-collection MyFull_Instance = implement Full end ;;
+collection MyFull_Instance =
+  implement Full;
+end ;;
 
 let v = Full.create_random ;;
 Full.print (v) ;;

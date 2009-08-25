@@ -1,4 +1,4 @@
-% $Id: glimpse.tex,v 1.12 2009-08-25 08:55:47 weis Exp $
+% $Id: glimpse.tex,v 1.13 2009-08-25 12:30:58 weis Exp $
 \def\bbbn{{\rm I\!N}} % [EJ] Sinon il y a \mathbb{N} qui fait ça bien aussi...
 \label{glimpse}
 Before entering the precise description of {\focal}, we give an
@@ -325,18 +325,17 @@ We first introduce the {\em collection parameters}. They are
 {\em methods} to define its own ones.
 
 
- A {\em collection parameter} is given a name $C$ and a (species) interface
+A {\em collection parameter} is given a name $C$ and a (species) interface
 $I$.  The name $C$ serves to call the {\em methods} declared in
-$I$. Intuitively, $C$ will at some stage be implemented by a collection $CE$ whose
-interface contains the methods of the interface $I$.
-Moreover, the collection and late-binding mechanisms
-ensure that all methods appearing in $I$ are indeed implemented
-(defined for functions, proved for properties) in $CE$. Thus, no
-runtime error, due to linkage of libraries, can occur and any {\em
-property} or {\em
-theorem} stated in $I$ can be safely used as an hypothesis.
+$I$. Intuitively, $C$ will at some stage be implemented by a collection $CE$
+whose interface contains the methods of the interface $I$.  Moreover, the
+collection and late-binding mechanisms ensure that all methods appearing in
+$I$ are indeed implemented (defined for functions, proved for properties) in
+$CE$. Thus, no runtime error, due to linkage of libraries, can occur and any
+{\em property} or {\em theorem} stated in $I$ can be safely used as an
+hypothesis.
 
- Calling a {\em species}'s {\em method} is
+Calling a {\em species}'s {\em method} is
 done via the ``bang'' notation:
 {\tt !meth} or\break{}{\tt Self!meth} for a {\em method} of the current
 {\em species} (and in this case, even simpler: {\tt meth}, since the
@@ -347,11 +346,10 @@ done via the ``bang'' notation:
 
 
 To go on with our example, a product of setoids has two components, hence a
-{\em species} for products of setoids has two
-{\em collection parameters}. It is itself a setoid (that is, a ``thing'' with an equality), a fact which is
-simply recorded via the inheritance mechanism:
-{\tt inherit Setoid} gives to {\tt Setoid\_product} all the methods
-of {\tt Setoid}.
+{\em species} for products of setoids has two {\em collection parameters}. It
+is itself a setoid (that is, a ``thing'' with an equality), a fact which is
+simply recorded via the inheritance mechanism: {\tt inherit Setoid} gives to
+{\tt Setoid\_product} all the methods of {\tt Setoid}.
 
 {\scriptsize
 \begin{lstlisting}
@@ -384,13 +382,12 @@ indeed reflexive, upon the hypothesis made on {\tt A!( = )}
 and {\tt B!( = )}.  The part of {\focal} used to write proofs will be
 shortly presented later, in section \ref{focal-proof-language}.
 
-Such a species can be refined with {\tt representation = A * B}, indicating that
-the representation of the product is the
-Cartesian Product of the representation of the two parameters. In
-{\tt A * B},  {\tt *} is the {\focal} type  constructor of pairs, {\tt
-  A} denotes indeed
-the representation of the  first {\em collection parameter}, and {\tt B}
-the one of  of the second {\em collection parameter}.
+Such a species can be refined with {\tt representation = A * B}, indicating
+that the representation of the product is the Cartesian Product of the
+representation of the two parameters. In {\tt A * B}, {\tt *} is the {\focal}
+type  constructor of pairs, {\tt A} denotes indeed the representation of the
+first {\em collection parameter}, and {\tt B} the one of of the second {\em
+collection parameter}.
 
 This way, the {\em species} {\tt Setoid\_product} builds its {\em
 methods} relying on those of its {\em collection parameters}. Note the
@@ -399,168 +396,185 @@ Setoid\_product}, which both inherits of and is parameterised by it.
 
 \bigskip
 
-Why {\em collection parameters} and not simply {\em species
-  parameters}? There are two reasons. First, effective parameters must
-  provide definitions/proofs for all the methods of the required
-  interface: this is the contract. Thus, effective parameters must
-  be {\em complete} species. Then,  we do not want the parameterisation
-  to introduce dependencies
-on the parameters' {\em representation} definitions. For example, it is
-  impossible to express `` if {\tt A!representation} is {\tt int} and {\tt B!representation}
-  is {\tt bool} then {\tt A*B} is a list of boolean values''. This would
-dramatically restrict possibilities to instantiate parameters since
-assumptions on the {\em representation},  possibly used in the
-parameterised {\em species} to write its own {\em methods},
-could prevent {\em collections} having the right set of {\em methods} but
-a different  representation  to be used as
-effective parameters. Such a behaviour would make parameterisation too
-weak to be usable. We choose to always hide  the {\em representation} of a
-{\em collection parameter}  to the parameterised
-hosting {\em species}. Hence the introduction of the  notion of
-{\em collection}, obtained by abstracting the representation from a
-complete species.
+Why {\em collection parameters} and not simply {\em species parameters}?
+There are two reasons. First, effective parameters must provide
+definitions/proofs for all the methods of the required interface: this is the
+contract. Thus, effective parameters must be {\em complete} species. Then, we
+do not want the parameterisation to introduce dependencies on the parameters'
+{\em representation} definitions. For example, it is impossible to express ``
+if {\tt A!representation} is {\tt int} and {\tt B!representation} is {\tt
+bool} then {\tt A * B} is a list of boolean values''. This would dramatically
+restrict the possibilities to instantiate parameters since assumptions on the
+{\em representation}, possibly used in the parameterised {\em species} to
+write its own {\em methods}, could prevent {\em collections} having the right
+set of {\em methods} but a different representation to be used as effective
+parameters. Such a behaviour would make parameterisation too weak to be
+usable. We choose to always hide the {\em representation} of a {\em
+collection parameter} to the parameterised hosting {\em species}. Hence the
+introduction of the notion of {\em collection}, obtained by abstracting the
+representation from a complete species.
 
 \subsection{Parameterisation by Entity (Value)}
 
-Let us imagine we want to make a {\em species} working on natural numbers
-modulo a certain value.  In the expression
-$5 {\tt\ modulo\ } 2\ is\ 1$, both $5$ and $2$
-are natural numbers. To be sure that the {\em species} will
-consistently work with the same modulo, this last one must be embedded
-in the {\em species}. However, the {\em species} itself doesn't rely
-on a particular value of the modulo. Hence this value is clearly a
-{\bf parameter} of the species, but a parameter in which we are
-interested by its {\bf value}, not only by its {\em representation} and the
-methods acting on it. We call
-those {\em entity parameters}, their introduction rests upon
-the introduction  of a {\em collection parameter} and they  denote a
-{\em value} having the type of the {\em  representation} of this
-{\em collection  parameter}.
+Let us imagine we want to make a {\em species} to implement arithmetic on
+natural numbers modulo a certain value. In the expression $5 {\tt\ modulo\ }
+2\ is\ 1$, both $5$ and $2$ are natural numbers. To be sure that the {\em
+species} will consistently work with the same modulo, this last one must be
+embedded in the {\em species}. However, the {\em species} itself doesn't rely
+on a particular value of the modulo. Hence this value is clearly a {\bf
+parameter} of the species, but a parameter for which need its {\bf value},
+not only by its {\em representation} and the methods acting on it. Such a
+parameter is named an {\em entity parameter}. Being a value, an entity
+parameter belongs to some collection, and this collection must also be declared as a {\em
+collection parameter} of the species. An entity parameter denotes a
+{\em value} having the type of the {\em representation} of its associated
+{\em collection parameter}.
 
-Let us first have a {\em species} representing natural numbers:
+As an exemple, let us define a collection {\tt Modulo_n}. We first define a
+{\em species} to represent natural numbers:
 
 {\scriptsize
 \begin{lstlisting}
-species IntModel =
+species NatModel =
   signature one : Self ;
   signature inc : Self -> Self ;
   signature modulo : Self -> Self -> Self ;
 end ;;
 \end{lstlisting}
 }
-Note that {\tt IntModel} can be later implemented in various ways,
-using Peano's integers, machine integers, arbitrary-precision
-arithmetic (as well as things that are not really integers, our specification being too simplistic)\ldots
 
-We now build our {\em species} ``working modulo \ldots'', embedding
-the value of this modulo:
+Note that {\tt NatModel} can be later implemented in various ways, using
+Peano's integers, machine integers, arbitrary-precision arithmetic (as well
+as things that are not really integers, our specification being too
+simplistic)\ldots
+
+The {\em species} ``working modulo n\ldots'' now embeds the value of {\tt n}
+as an element of a collection for {\tt NatModel}:
 {\scriptsize
 \begin{lstlisting}
-species Modulo_work (Naturals is IntModel, n in Naturals) =
-  let job1 (x in Naturals) in ... =
+species Modulo_n (Naturals is NatModel, n in Naturals) =
+  let job1 (x : Naturals) =
     ... Naturals!modulo (x, n) ... ;
-  let job2 (x in Naturals, ...) in ... =
+  let job2 (x : Naturals, ...) =
     ... ... Naturals!modulo (x, n) ... ... ;
 end ;;
 \end{lstlisting}
 }
 Using the {\em entity parameter} {\tt n}, we ensure that the
-{\em species} {\tt Modulo\_work} works for {\em any} value of the
+{\em species} {\tt Modulo\_n} works for {\em any} value of the
 modulo, but will always use the {\em same} value {\tt n} of the modulo
 everywhere inside the {\em species}.
 
 
 \section{The Final Brick}
 
-As briefly introduced in \ref{species-interface}, a {\em species}
-needs to be complete to lead to executable code for its functions
-and checkable proofs for its theorems. When a {\em species} is
-complete, it can be turned into a {\em collection}. Hence, a {\em collection}
-represents the final stage of the inheritance tree of a {\em species}
-and leads to an effective data representation  with
-executable functions processing it.
+As briefly introduced in \ref{species-interface}, a {\em species} needs to be
+complete to lead to executable code for its functions and checkable proofs
+for its theorems. When a {\em species} is complete, it can be turned into a
+{\em collection}. Hence, a {\em collection} represents the final stage of the
+inheritance tree of a {\em species} and leads to an effective data
+representation with executable functions processing it.
 
-For instance, providing that the previous
-{\em species} {\tt IntModel} has been refined into a fully-defined species
-{\tt MachineNativeInt} through inheritances steps, with a {\em method}
-{\tt from\_string} allowing to create the natural representation of a
-string, we could get a related collection by:
+For instance, providing that the previous {\em species} {\tt NatModel} has
+been refined into a fully-defined species {\tt MachineNativeInt} through
+inheritances steps, with a {\em method} {\tt from\_string} allowing to create
+the natural representation of a string, we could get a related collection by:
 
 {\scriptsize
 \begin{lstlisting}
-collection MachineNativeIntColl = implement MachineNativeInt end ;;
+collection MachineNativeIntegers =
+  implement MachineNativeInt;
+end ;;
 \end{lstlisting}
 }
 
-Next, to get a {\em collection} implementing arithmetic modulo 8, we
-could extract from the {\em species} {\tt Modulo\_work} the following
-{\em collection}:
+Next, to get a {\em collection} implementing arithmetic modulo $8$, we
+can define a {\em collection} for the {\em species} {\tt Modulo\_n}:
 
 {\scriptsize
 \begin{lstlisting}
-collection Modulo_8_work = implement Modulo_work
-   (MachineNativeIntColl, MachineNativeIntColl!from_string (``8'')
+collection Modulo_8 =
+  implement Modulo_n
+    (MachineNativeIntegers, MachineNativeIntegers!from_string ("8");
 end;;
 \end{lstlisting}
 }
 
-As seen by this example, a species can be applied to effective
-parameters by giving their values with the usual syntax of parameter
-passing.
+As exemplify here, a species is applied to effective parameters by giving
+their values with the same syntax as for parameter passing.
 
-As said before, to ensure modularity and abstraction, the
-{\em representation} of a
-{\em collection} is hidden (as well as the definitions). This means that any software component
-dealing with a {\em collection} will only be able to manipulate it
-through the operations ({\em methods}) its interface provides. This
-point is especially important since it prevents other software
-components from possibly breaking invariants required by the internals
-of the {\em collection}.
+As said before, to ensure modularity and abstraction, the {\em
+representation} of a {\em collection} is hidden (as well as its
+definitions). It means that any software component using a {\em collection}
+will only be able to manipulate its values through the operations ({\em
+methods}) that the collection provides via its interface.  As a corollary, no
+other software component can possibly break the invariants required by the
+internals of a {\em collection}.
 
-\section{Properties,  Theorems and  Proofs}
+\section{Properties, Theorems and  Proofs}
 \label{focal-proof-language}
 
-{\focal} aims not only to write programs, it intends to encompass both
-the executable model (i.e. program) and properties this model must
-satisfy. For this reason, ``special'' {\em methods} deal with logic
-instead of purely behavioural aspects of the system: {\em theorems},
-{\em properties} and {\em proofs}.
+{\focal} not only provides a way to write programs, it also intends to
+encompass both the executable model (i.e. program) and the properties that
+this model must satisfy. For this reason, some ``special'' fields of the
+species only deal with logic instead of specifying purely behavioural aspects
+of the program: those logical aspects are {\em theorems}, {\em properties}
+and {\em proofs}.
 
-Stating a {\em property} indicates that a {\em proof} that it
-{\bf holds} will be given at some stage of the development. For {\em
-theorems}, the {\em proof} is
-directly provided with the statement. Such proofs must be done by
-the developer and will finally be sent to the formal proof assistant
-{\coq} who will automatically check that the demonstration of the
-{\em property} is consistent. Writing a proof can be done in several ways.
+Stating a {\em property} declares that a {\em proof} that the property {\bf
+holds} will be given at some stage of the development. The {\em theorems} are
+properties for which the {\em proof} is given with the statement. All the proofs must be
+done by the developer; the compiler ultimately send them to the {\coq} proof assistant
+for verification: all the demonstrations made in {\focal} are automatically
+machine checked for consistency by {\coq}.
 
-It can be written in {\focal}'s proof language, a hierarchical proof
-language that allows to give hints and directions for a proof. This
-language will be sent to an external theorem prover,
-{\zenon} \cite{ZenonBDD,zenon0.4.1} developed by D. Doligez. This prover is
+{\focal} provides several ways to write proofs. The normal and encouraged way
+is to use the {\focal}'s proof language to write the proofs.  The {\focal}'s
+proof language (or {\em FPL} for short), is a hierarchical proof language
+especially designed to give an easy way to vary the grain of the proof, from
+rough sketch to fully detailed proof. As in the usual mathematical activity,
+the idea is to provide hints and direction for a proof and let the reader
+complete the details. Well, don't panic: you will not have to complete the
+proofs of all the {\focal} development you may ever read or write! The proofs
+in {\focal} do not require a human being to read them and complete their
+numerous omitted details! The {\focal} system delegates this burden to a
+companion program: the {\zenon} proof finder.
+
+From the hints given in the {\focal} development, {\zenon} attempts to
+generate a complete proof and exhibit a {\coq} proof term suitable for
+verification. So far so good! But what happens if {\zenon} fails to find the
+(complete) proof ? Well, you can consider this failure as a hint that the
+given proof was too sketchy: you have to develop it a bit, for instance by
+stating and proving some intermediate lemmas or by detailing the proof path!
+Once again, this is rather natural and not so far from normal mathematical
+activity.
+
+{\zenon} \cite{ZenonBDD,zenon0.4.1} is developed by D. Doligez. It is
 a first order theorem prover based on the tableau method incorporating
-implementation novelties such as sharing.  {\zenon} will attempt, from
-these hints, to automatically generate the proof and exhibit a {\coq}
-term suitable for verification by {\coq}. Basic hints given by the
-developer to {\zenon} are: ``prove by definition of a {\em method}''
-(i.e. looking inside its body) and ``prove by {\em property}''
-(i.e. using the logical statement of a {\em theorem} or {\em property}).
-Surrounding this hints mechanism, the language allows to build the
-proof by stating assumptions (that must obviously be demonstrated
-next) that can be used to prove lemmas or parts for the whole
-property. We show below an example of such demonstration.
+implementation novelties such as sharing.
+
+The {\focal} programmer gives basic hints to {\zenon} such as: ``prove by definition
+of this {\em method}'' (i.e. look inside the body of the method) or ``prove
+by this {\em property}'' (i.e. use the logical statement of a {\em theorem}
+or {\em property} already proven). This hint mechanism is embedded into the
+entire FPL description of the proof into steps stating assumptions (that must
+obviously be demonstrated afterwards) in order to prove some lemmas or parts of
+the property at hand.
+
+We now give such a demonstration.
 
 {\scriptsize
 \begin{lstlisting}
-  theorem order_inf_is_infimum: all x y i in Self,
+  theorem order_inf_is_infimum : all x y i : Self,
     !order_inf(i, x) -> !order_inf(i, y) ->
       !order_inf(i, !inf(x, y))
     proof =
-      <1>1 assume x in Self, assume y in Self,
-           assume i in Self, assume H1: !order_inf(i, x),
-           assume H2: !order_inf(i, y),
-           prove !order_inf(i, !inf(x, y))
-        <2>1 prove !equal(i, !inf(!inf(i, x), y))
+      <1>1 assume
+             x : Self, y : Self, i : Self,
+             hypothesis H1 : !order_inf (i, x),
+             hypothesis H2 : !order_inf (i, y),
+           prove !order_inf (i, !inf (x, y))
+        <2>1 prove !equal (i, !inf (!inf (i, x), y))
           by hypothesis H1, H2
              property inf_left_substitution_rule,
                equal_symmetric, equal_transitive
@@ -574,24 +588,28 @@ property. We show below an example of such demonstration.
 \end{lstlisting}
 }
 
-The important point is that {\zenon} works for the
-developer: {\bf it searches the proof itself}, the developer does not
-have to elaborate it formally ``from scratch''.
+The important point is that {\zenon} works for the developer: {\bf it
+searches and completes the proof} for the developer that no more have to
+elaborate the proof completely formally ``from scratch''.
 
-Like any automatic theorem prover, {\zenon} may fail finding a
-demonstration. In this case, {\focal} allows to write verbatim
-{\coq} proofs. In this case, the proof is not anymore automated, but
-this leaves the full power of expression of {\coq} to the developer.
+Like all other automatic theorem prover, {\zenon} may fail to find a
+demonstration. In this case, {\focal} allows the developer to write verbatim {\coq}
+proofs. Comfort of automation is lost in favor of an increase in expressive power:
+the entire {\coq} vernacular language is now available to the developer to
+write the proof.
 
-Finally, the {\tt assumed} keyword is the ultimate proof backdoor,
-telling that the proof is not given but that the property must be
-admitted. Obviously, a really safe development should not make usage of
-this feature since it bypasses the formal verification of
-software's model. However, such a functionality remains needed for various
-reasons. For example, a development may be linked with external code;
-properties of the {\focal} code may depends on properties of the external
-code that have to be stated (for example using the documentation of this
-code) but also assumed.
+Finally, the {\tt assumed} keyword is the ultimate proof backdoor: the proof
+is not given and the property is admitted. Obviously, a safe development
+should not make a liberal usage of this feature, since {\tt assumed} bypasses
+the formal verification of the software's model. However, such a functionality
+remains needed for various reasons. For example, a development may be linked
+with external code; the properties of the {\focal} code now depends on properties
+of the external code; to continue the development as safely as possible, it
+is necessary to carefully state the properties that are assumed for the
+external code and go on providing properties and proofs about the program:
+those proofs will give valuable confidence, even if they only hold if the set
+of assumptions for the external code is valid.
+
 % [EJ] L'utilisateur saura quand utiliser assumed, mais l'exemple donne me semble
 % inapproprie. En effet, l'exemple x+1>x est justement faux pour les entiers
 % machine, et il ne devrait pas etre admis de maniere generique. Ce sera sans doute
@@ -599,23 +617,22 @@ code) but also assumed.
 
 \section{Around the Language}
 
-In the previous sections, we presented {\focal} through its programming
-model and shortly its syntax. We especially investigated the various
-entities making a {\focal} program. We now address what becomes a
-{\focal} program once compiled. We recall that {\focal} supports the
-redefinition of functions, which permits for example  to specialise
-code to a specific representation (for example, there
-exists a generic implementation of integer addition modulo {\tt n} but
-it can be redefined in arithmetics modulo {\tt 2} if boolean values
-are used to represent the two values). It is also a very convenient
-tool to maintain software.
+In the previous sections, we presented {\focal} through its programming model
+and shortly its syntax. We especially investigated the various entities
+making a {\focal} program. We now address what becomes a {\focal} program
+once compiled. We recall that {\focal} supports the redefinition of
+functions, which permits for example to specialise the code to a specific
+representation of data (for example, there exists a generic implementation of
+integer addition modulo {\tt n} but this implementation can be redefined in
+arithmetics modulo {\tt 2}, if boolean values are used to represent the two
+values). {\focal) is also a very convenient tool to maintain software.
 
 \subsection{Consistency of the Software}
 
-All along the {\focal} development cycle, the compiler
-keeps trace of dependencies between {\em species},
-{\em methods}, and {\em proofs} \ldots to ensure that the consequences of any modification
-will be managed consistently and propagated to those depending of it.
+All along the {\focal} development cycle, the compiler keeps trace of
+dependencies between {\em species}, {\em methods}, and {\em proofs} \ldots to
+ensure that all the modifications are consistently propagated to any place
+that needs to be changed.
 
 {\focal} deals with two types of dependencies:
 \begin{itemize}
@@ -629,30 +646,28 @@ will be managed consistently and propagated to those depending of it.
   $A$).
 \end{itemize}
 
-The redefinition of a function may invalidate the proofs that use
-properties of the body of the redefined function.  All the proofs
-which truly depend of the definition are then invalidated by the compiler
-and must be done again in the context updated with the new
-definition. Thus the main difficulty is to choose the best level in
-the hierarchy to do a proof. In \cite{PrevostoJaume2003}, Prevosto and
-Jaume propose a \emph{coding style} to minimise the number of proofs
-to be redone in the case of a redefinition, by a certain kind of
-modularisation of the proofs.
+The redefinition of a function may invalidate the proofs that use the
+properties of the body of the function. All the proofs which truly depend of
+the definition are then invalidated by the compiler and must be done again in
+the updated context where the function gets the new definition. Thus, choose
+the proper level in the hierarchy to do a proff is a major practical
+difficulty. In \cite{PrevostoJaume2003}, Prevosto and Jaume propose
+a \emph{coding style} to minimise the number of proofs to be redone in case
+of redefinition, by using a certain kind of modularisation for the proofs.
 
 \subsection{Code Generation}
 
 {\focal} currently compiles programs toward two languages, {\ocaml} to
-get an executable piece of software, and {\coq} to have a formal model
-of the program, with theorems and proofs.
+get an executable standalone, and {\coq} to have a formal model
+of the program, with theorems and proofs entirely machine checked.
 
-In {\ocaml} code generation, all
-the logical aspects are discarded since they do not lead to executable
-code.
+In the {\ocaml} code generation, all the logical aspects are discarded since
+they do not lead to executable code.
 
-Conversely, in {\coq}, all the {\em methods} are compiled,
-i.e. ``computational'' {\em methods} and logical {\em methods} with
-their proofs. This allows {\coq} to check the entire consistence of
-the system developed in {\focal}.
+In contrast, in {\coq}, all the {\em methods} are compiled,
+i.e. ``computational'' {\em methods} and logical {\em methods} with their
+proofs. This allows {\coq} to check the entire consistence of the system
+developed in {\focal}.
 
 
 \def\focaltest{FocalTest}
@@ -660,58 +675,55 @@ the system developed in {\focal}.
 \subsection{Tests}
 {\focal} incorporates a tool named {\em \focaltest}
 \cite{CarlierDuboisLNCS2008} for Integration/Validation testing. It
-allows to confront automatically a property of the specification with
-an implementation. It generates automatically test cases, executes
-them and produces a test report as an XML document. The property under
-test is used to generate the test case but also as an
-oracle. When a test case fails, it means that a counterexample of the
-property has been found: the implementation does not match the property.
-Note that this indentifies a problem in the code or in the specification.
+allows to confront automatically a property of the specification with an
+implementation. It automatically generates test cases, executes them and
+produces a test report as an XML document. The property under test is used to
+generate the test case but also as an oracle. When a test case fails, it
+means that a counterexample of the property has been found: the
+implementation does not match the property. This surely points out an
+inconsistency, due to a problem in the code or in the specification.
 
 The tool {\em \focaltest} automatically produces the test environment and
 the drivers to conduct the tests.  It benefits from the inheritance
 mechanism to isolate the testing harness from the components written
 by the programmer.
 
-The testable properties are required to be broken down into a
-precondition and a conclusion, both executable. The current version of
-{\em \focaltest} proposes a pure random test cases generation: a test case
-is generated, if it satisfies the pre-condition then the verdict of the test case
-is obtained by executing the post-condition, else the test case is rejected.
-It can be
-an expensive process for some kind of preconditions. To overcome this
-drawback, a constraint based generation is under development: it
-allows to produce directly test cases for which the precondition is
-satisfied.
+The testable properties are required to be broken down into a precondition
+and a conclusion, both executable. The current version of {\em \focaltest}
+proposes a pure random test cases generation: a test case is generated, if it
+satisfies the pre-condition then the verdict of the test case is obtained by
+executing the post-condition.  For some form of preconditions the test
+generation process can be computationally challenging. To overcome this
+drawback, a constraint based generation is under development: it would allow
+to directly produce test cases that satisfy the precondition.
 
 
 
 \subsection{Documentation}
 
-The tool called \focdoc\ \cite{MaarekCalculemus03} automatically
-generates documentation, thus the documentation of a component is
-always coherent with respect to its implementation.
+The {\focdoc} tool \cite{MaarekCalculemus03} is a documentation generator.
+The documentation is automatically extracted from the {\focal} source, hence
+the documentation of a component is always in par with its implementation.
 
-This tool uses its own XML format that contains information coming not
-only from structured comments (that are parsed and kept in the
-program's abstract syntax tree) and {\focal} concrete syntax but also
-from type inference and dependency analysis. From this XML
-representation and thanks to some XSLT stylesheets, it is possible to
-generate HTML files or \LaTeX{} files. Although this documentation is
-not the complete safety case, it can helpfully contribute to its
-elaboration. In the same way, it is possible to produce UML
-models~\cite{Focal-UML} as means to provide a graphical documentation
-for {\focal} specifications. The use of graphical notations appears
-quite useful when interacting with end-users, as these tend to be more
-intuitive and are easier to grasp than their formal (or textual)
-counterparts. This transformation is based on a formal schema and
-captures every aspect of the {\focal} language, so that it has been
-possible to prove the soundness of this transformation (semantic
-preservation).
+{\focdoc} uses its own XML format that contains information coming not only
+from programmer added structured comments (that are parsed and kept in the
+program's abstract syntax tree) and from the {\focal} concrete syntax but
+also from the results of the type inference and dependency analysis. From
+this XML representation and thanks to some XSLT stylesheets, {\focdoc}
+generated a bunch of HTML or {\LaTeX} files. The generated documentation
+cannot be considered as a complete safety case; however, it can helpfully
+contribute to the elaboration of the safety case. In the same way, it is
+possible to produce UML models~\cite{Focal-UML} as means to provide a
+graphical documentation for the {\focal} specifications. The use of graphical
+notations appears quite useful when interacting with end-users, as these tend
+to be more intuitive and are easier to grasp than their formal (or textual)
+counterparts. This transformation is based on a formal schema and captures
+every aspect of the {\focal} language, so that it has been possible to prove
+the soundness of this transformation (semantic preservation).
 
-{\focal}'s architecture is designed to easily plug third-parties
-analyses that can use the internal structures elaborated by the
-compiler from the source code. This allows, for example, to make
-dedicated documentation tools for custom purposes, just exploiting
-information stored in the {\focal} program's abstract syntax tree, or
-extra information possibly added by extra processes, analyses.
+The {\focal} compiler's architecture is designed to easily plug third-parties
+analyses that can benefit from the internal structures elaborated by the
+compiler from the source code. This allows, for instance, to make dedicated
+documentation tools for custom purposes, just exploiting the information
+stored in the {\focal} program's abstract syntax tree, or the extra
+information added by some external processes or specialized analyses.

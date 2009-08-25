@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaLize compiler                            *)
+(*                        FoCaLiZe compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.87 2009-06-19 10:42:52 pessaux Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.88 2009-08-25 12:30:58 weis Exp $ *)
 
 let header ppf =
   Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
@@ -51,7 +51,7 @@ let print_focalize_exception ppf = function
       Format.fprintf ppf "@[%tSystem@ error -@ %s.@]@." header m
   | Configuration.No_input_file ->
       Format.fprintf ppf
-        "@[%tNo@ input@ file.@ FoCaLize@ is@ cowardly@ giving@ up...@]@."
+        "@[%tNo@ input@ file.@ focalizec@ is@ cowardly@ giving@ up...@]@."
         header
   (* *********************** *)
   (* Lexing / parsing stage. *)

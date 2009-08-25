@@ -1,4 +1,4 @@
-% $Id: building_species.tex,v 1.15 2009-08-25 08:55:47 weis Exp $
+% $Id: building_species.tex,v 1.16 2009-08-25 12:30:58 weis Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -248,19 +248,23 @@ InterfaceForInts} as interface.
 
  {\scriptsize
 \begin{lstlisting}
-collection AddMod42 implements AddModN
-  (ACollImplentingInts, ACollImplentingInts!from_int (42)) ;;
+collection AddMod42 =
+  implement
+    AddModN
+      (ACollImplentingInts,
+       ACollImplentingInts!from_int (42));
+end ;;
 \end{lstlisting}
 }
 
 
 \smallskip
 
- Currently, entity parameters must live ``{\tt in}'' a
-collection. It is not allowed to specify an entity parameter living in
-a basic type like {\tt int}, {\tt string}, {\tt bool}\ldots This
-especially means that these basic types must be embedded in a
-collection if we want to use  their values  as  entity parameters.
+Currently, entity parameters must live ``{\tt in}'' a collection. It is not
+allowed to specify an entity parameter living in a basic type like {\tt int},
+{\tt string}, {\tt bool}\ldots This especially means that these basic types
+must be embedded in a collection if we want to use their values as entity
+parameters.
 
 
 

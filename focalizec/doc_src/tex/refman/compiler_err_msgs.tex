@@ -1,4 +1,4 @@
-% $Id: compiler_err_msgs.tex,v 1.38 2009-08-25 08:55:47 weis Exp $
+% $Id: compiler_err_msgs.tex,v 1.39 2009-08-25 12:30:58 weis Exp $
 
 
 
@@ -523,11 +523,10 @@ found.
 \section*{Collection '$s_1$' is not compatible with '$s_2$'. In method
   '$fname$', type $t_1$ occurs in $t_2$ and would lead to a cycle.}
 
-{\em Description}: During collection parameter instantiation, the
-interface of the
-provided collection  $s_1$ is not compatible with the interface $s_2$, since type compatibility check detected a cyclic
-type. This means that the type $t_1$ is a sub-part of itself via the
-type $t_2$.
+{\em Description}: During collection parameter instantiation, the interface
+of the provided collection $s_1$ is not compatible with the interface $s_2$,
+since type compatibility check detected a cyclic type. This means that the
+type $t_1$ is a sub-part of itself via the type $t_2$.
 
 {\em Hints}: None.
 
@@ -538,11 +537,10 @@ type $t_2$.
   '$fname$', the type constructor '$tname$' is used with the different
   arities $n_1$ and $n_2$.}
 
-{\em Description}:  During collection parameter instantiation, the
-interface of the
-provided collection  $s_1$ is not compatible with the interface $s_2$, since the type constructor (not sum type constructor)
-$tname$ is used with an improper number of arguments $n_1$ versus
-$n_2$.
+{\em Description}: During collection parameter instantiation, the interface
+of the provided collection $s_1$ is not compatible with the interface $s_2$,
+since the type constructor (not sum type constructor) $tname$ is used with an
+improper number of arguments $n_1$ versus $n_2$.
 
 {\em Hints}: None.
 
@@ -552,11 +550,10 @@ $n_2$.
 \section*{Collection  '$s_1$' is not compatible with  '$s_2$'.  Method '$name$'
   is not present in '$s_1$'.}
 
-{\em Description}:  During collection parameter instantiation, the
-interface of the
-provided collection  $s_1$ is not compatible with the interface $s_2$,
-because it doesn't have a signature containing at
-least $s_2$'s methods and especially not the method $name$.
+{\em Description}: During collection parameter instantiation, the interface
+of the provided collection $s_1$ is not compatible with the interface $s_2$,
+because it doesn't have a signature containing at least $s_2$'s methods and
+especially not the method $name$.
 
 {\em Hints}: None.
 
@@ -577,7 +574,7 @@ number $n$ of effective arguments.
  field(s) is(are) not defined: ...}
 
 {\em Description}: A collection is built  out of a  completely defined species
-(c.f. \ref{collection}), i.e. a species where {\bf all} the methods
+(cf. \ref{collection}), i.e. a species where {\bf all} the methods
 are {\bf defined} and not only declared. In the species $sname$, the
 listed methods are only declared (or missing a termination proof in case of
 recursive functions and usage of the {\tt -impose-termination-proof}).
