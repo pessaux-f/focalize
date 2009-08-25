@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.49 2009-08-25 08:55:47 weis Exp $
+% $Id: constructs_syntax.tex,v 1.50 2009-08-25 12:38:07 weis Exp $
 
 
 \section{Language constructs and syntax}
@@ -567,7 +567,7 @@ data structure that the species manages. Hence, it is a kind of {\bf
   definition}. This means that a representation does not introduce a
 new type, it only ``assigns'' to the representation a {\bf type
   expression} defining the type of the manipulated entities of the
-species. Moreover, like for any other methods (c.f. section
+species. Moreover, like for any other methods (cf. section
 \ref{no-polymorphism-for-methods}), {\em the representation must not
   be a polymorphic type}. Thus its definition cannot
 contain type variables (but may contain collection parameter
@@ -970,7 +970,7 @@ let twice(( + ), x, y, z) = (x + y) + z ;;
 \end{lstlisting}
 
 To get an identifier from an operator, its symbol
-(c.f. \ref{extended-identifiers}) must be delimited by spaces and enclosed
+(cf. \ref{extended-identifiers}) must be delimited by spaces and enclosed
 into matching parentheses.
 For example: {\tt (\ + )} is the regular identifier corresponding to the
 infix symbol {\tt +}.
@@ -1425,7 +1425,7 @@ variables into ``{\tt \_}''s.
 
 \smallskip
 Patterns also allow to match record values
-(c.f. \ref{record-expression}), i.e. to match on values of the fields:
+(cf. \ref{record-expression}), i.e. to match on values of the fields:
 {\scriptsize
 \begin{lstlisting}
 type t = { name : string ; birth : int } ;;
@@ -1623,7 +1623,7 @@ identifier, but this implies that these expressions use previously
 written definitions.
 
 \medskip
-As   further explained  in (c.f. \ref{species-intro}) species are made
+As further explained  in (cf. \ref{species-intro}) species are made
 of methods. Some methods contain expressions (functions, properties,
 theorems). Function-methods are introduced by the {\tt let} keyword,
 using the same syntax (hence expressions) that the {\tt let-in}
@@ -1698,7 +1698,7 @@ search paths. The path of the compilation unit is never specified
 since it is always searched first. Hence, the file will be searched
 first in the local directory, then in the stardard library directory
 and finally in the library search path specified with the {\tt -I}
-option (c.f. \ref{compiler-options}).
+option (cf. \ref{compiler-options}).
 
 Note that if several files at different locations have the same name,
 the directives will use the first fiound in the search path set in the
@@ -1723,7 +1723,7 @@ current compilation unit.
 
 This directive is followed by the name of the file to open between
 double quotes without the ``.fcl'' extension. As previously introduced
-(c.f. \ref{identifier-scoping-and-open} and \ref{qualified-name}) the
+(cf. \ref{identifier-scoping-and-open} and \ref{qualified-name}) the
 {\tt open} directive loads in the current name resolution (scoping)
 environment the definitions of the compilation unit named in the {\tt
   open} directive. This prevents the user from having to explicitly

@@ -758,12 +758,13 @@ Following this idea, <FONT COLOR=purple>FoCaLiZe</FONT> allows two flavors of pa
 <EM>collections</EM> that the hosting species may use through their
 <EM>methods</EM> to define its own ones.</P><P>A <EM>collection parameter</EM> is given a name <I>C</I> and a (species) interface
 <I>I</I>. The name <I>C</I> serves to call the <EM>methods</EM> declared in
-<I>I</I>. Intuitively, <I>C</I> will at some stage be implemented by a collection <I>CE</I> whose
-interface contains the methods of the interface <I>I</I>.
-Moreover, the collection and late-binding mechanisms
-ensure that all methods appearing in <I>I</I> are indeed implemented
-(defined for functions, proved for properties) in <I>CE</I>. Thus, no
-runtime error, due to linkage of libraries, can occur and any <EM>property</EM> or <EM>theorem</EM> stated in <I>I</I> can be safely used as an hypothesis.</P><P>Calling a <EM>species</EM>&#X2019;s <EM>method</EM> is
+<I>I</I>. Intuitively, <I>C</I> will at some stage be implemented by a collection <I>CE</I>
+whose interface contains the methods of the interface <I>I</I>. Moreover, the
+collection and late-binding mechanisms ensure that all methods appearing in
+<I>I</I> are indeed implemented (defined for functions, proved for properties) in
+<I>CE</I>. Thus, no runtime error, due to linkage of libraries, can occur and any
+<EM>property</EM> or <EM>theorem</EM> stated in <I>I</I> can be safely used as an
+hypothesis.</P><P>Calling a <EM>species</EM>&#X2019;s <EM>method</EM> is
 done via the &#X201C;bang&#X201D; notation:
 <TT>!meth</TT> or<BR>
 <TT>Self!meth</TT> for a <EM>method</EM> of the current
@@ -772,11 +773,10 @@ done via the &#X201C;bang&#X201D; notation:
 <EM>collection parameters</EM>&#X2019;s <EM>method</EM>, the same notation is used:
 <TT>A!element</TT> stands for the <EM>method</EM> <TT>element</TT> of the
 <EM>collection parameter</EM> <TT>A</TT>.</P><P>To go on with our example, a product of setoids has two components, hence a
-<EM>species</EM> for products of setoids has two
-<EM>collection parameters</EM>. It is itself a setoid (that is, a &#X201C;thing&#X201D; with an equality), a fact which is
-simply recorded via the inheritance mechanism:
-<TT>inherit Setoid</TT> gives to <TT>Setoid_product</TT> all the methods
-of <TT>Setoid</TT>.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid_product</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>A</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
+<EM>species</EM> for products of setoids has two <EM>collection parameters</EM>. It
+is itself a setoid (that is, a &#X201C;thing&#X201D; with an equality), a fact which is
+simply recorded via the inheritance mechanism: <TT>inherit Setoid</TT> gives to
+<TT>Setoid_product</TT> all the methods of <TT>Setoid</TT>.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid_product</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>A</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>B</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Setoid</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>fst</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>A</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
@@ -800,128 +800,127 @@ relying on the methods <TT>=</TT> of <TT>A</TT> and <TT>B</TT>
 (which are not yet defined), and we prove that <TT>=</TT> of <TT>Setoid_product</TT> is
 indeed reflexive, upon the hypothesis made on <TT>A!( = )</TT>
 and <TT>B!( = )</TT>. The part of <FONT COLOR=purple>FoCaLiZe</FONT> used to write proofs will be
-shortly presented later, in section <A HREF="#focal-proof-language">1.6</A>.</P><P>Such a species can be refined with <TT>representation = A * B</TT>, indicating that
-the representation of the product is the
-Cartesian Product of the representation of the two parameters. In
-<TT>A * B</TT>, <TT>*</TT> is the <FONT COLOR=purple>FoCaLiZe</FONT> type  constructor of pairs, <TT>A</TT> denotes indeed
-the representation of the first <EM>collection parameter</EM>, and <TT>B</TT>
-the one of of the second <EM>collection parameter</EM>.</P><P>This way, the <EM>species</EM> <TT>Setoid_product</TT> builds its <EM>methods</EM> relying on those of its <EM>collection parameters</EM>. Note the
+shortly presented later, in section <A HREF="#focal-proof-language">1.6</A>.</P><P>Such a species can be refined with <TT>representation = A * B</TT>, indicating
+that the representation of the product is the Cartesian Product of the
+representation of the two parameters. In <TT>A * B</TT>, <TT>*</TT> is the <FONT COLOR=purple>FoCaLiZe</FONT>
+type  constructor of pairs, <TT>A</TT> denotes indeed the representation of the
+first <EM>collection parameter</EM>, and <TT>B</TT> the one of of the second <EM>collection parameter</EM>.</P><P>This way, the <EM>species</EM> <TT>Setoid_product</TT> builds its <EM>methods</EM> relying on those of its <EM>collection parameters</EM>. Note the
 two different uses of <TT>Setoid</TT> in our <EM>species</EM> <TT>Setoid_product</TT>, which both inherits of and is parameterised by it.</P><P><BR>
 <BR>
-</P><P>Why <EM>collection parameters</EM> and not simply <EM>species
-parameters</EM>? There are two reasons. First, effective parameters must
-provide definitions/proofs for all the methods of the required
-interface: this is the contract. Thus, effective parameters must
-be <EM>complete</EM> species. Then, we do not want the parameterisation
-to introduce dependencies
-on the parameters&#X2019; <EM>representation</EM> definitions. For example, it is
-impossible to express &#X201C; if <TT>A!representation</TT> is <TT>int</TT> and <TT>B!representation</TT>
-is <TT>bool</TT> then <TT>A*B</TT> is a list of boolean values&#X201D;. This would
-dramatically restrict possibilities to instantiate parameters since
-assumptions on the <EM>representation</EM>, possibly used in the
-parameterised <EM>species</EM> to write its own <EM>methods</EM>,
-could prevent <EM>collections</EM> having the right set of <EM>methods</EM> but
-a different representation to be used as
-effective parameters. Such a behaviour would make parameterisation too
-weak to be usable. We choose to always hide the <EM>representation</EM> of a
-<EM>collection parameter</EM> to the parameterised
-hosting <EM>species</EM>. Hence the introduction of the notion of
-<EM>collection</EM>, obtained by abstracting the representation from a
-complete species.</P><!--TOC subsection Parameterisation by Entity (Value)-->
-<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc7">1.4.2</A>  Parameterisation by Entity (Value)</H3><!--SEC END --><P>Let us imagine we want to make a <EM>species</EM> working on natural numbers
-modulo a certain value. In the expression
-5 <TT> <I>modulo</I> </TT> 2 <I>is</I> 1, both 5 and 2
-are natural numbers. To be sure that the <EM>species</EM> will
-consistently work with the same modulo, this last one must be embedded
-in the <EM>species</EM>. However, the <EM>species</EM> itself doesn&#X2019;t rely
-on a particular value of the modulo. Hence this value is clearly a
-<B>parameter</B> of the species, but a parameter in which we are
-interested by its <B>value</B>, not only by its <EM>representation</EM> and the
-methods acting on it. We call
-those <EM>entity parameters</EM>, their introduction rests upon
-the introduction of a <EM>collection parameter</EM> and they denote a
-<EM>value</EM> having the type of the <EM>representation</EM> of this
-<EM>collection parameter</EM>.</P><P>Let us first have a <EM>species</EM> representing natural numbers:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntModel</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</P><P>Why <EM>collection parameters</EM> and not simply <EM>species parameters</EM>?
+There are two reasons. First, effective parameters must provide
+definitions/proofs for all the methods of the required interface: this is the
+contract. Thus, effective parameters must be <EM>complete</EM> species. Then, we
+do not want the parameterisation to introduce dependencies on the parameters&#X2019;
+<EM>representation</EM> definitions. For example, it is impossible to express &#X201C;
+if <TT>A!representation</TT> is <TT>int</TT> and <TT>B!representation</TT> is <TT>bool</TT> then <TT>A * B</TT> is a list of boolean values&#X201D;. This would dramatically
+restrict the possibilities to instantiate parameters since assumptions on the
+<EM>representation</EM>, possibly used in the parameterised <EM>species</EM> to
+write its own <EM>methods</EM>, could prevent <EM>collections</EM> having the right
+set of <EM>methods</EM> but a different representation to be used as effective
+parameters. Such a behaviour would make parameterisation too weak to be
+usable. We choose to always hide the <EM>representation</EM> of a <EM>collection parameter</EM> to the parameterised hosting <EM>species</EM>. Hence the
+introduction of the notion of <EM>collection</EM>, obtained by abstracting the
+representation from a complete species.</P><!--TOC subsection Parameterisation by Entity (Value)-->
+<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc7">1.4.2</A>  Parameterisation by Entity (Value)</H3><!--SEC END --><P>Let us imagine we want to make a <EM>species</EM> to implement arithmetic on
+natural numbers modulo a certain value. In the expression 5 <TT> <I>modulo</I> </TT>
+2 <I>is</I> 1, both 5 and 2 are natural numbers. To be sure that the <EM>species</EM> will consistently work with the same modulo, this last one must be
+embedded in the <EM>species</EM>. However, the <EM>species</EM> itself doesn&#X2019;t rely
+on a particular value of the modulo. Hence this value is clearly a <B>parameter</B> of the species, but a parameter for which need its <B>value</B>,
+not only by its <EM>representation</EM> and the methods acting on it. Such a
+parameter is named an <EM>entity parameter</EM>. Being a value, an entity
+parameter belongs to some collection, and this collection must also be declared as a <EM>collection parameter</EM> of the species. An entity parameter denotes a
+<EM>value</EM> having the type of the <EM>representation</EM> of its associated
+<EM>collection parameter</EM>.</P><P>As an exemple, let us define a collection <TT>Modulo_n</TT>. We first define a
+<EM>species</EM> to represent natural numbers:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>NatModel</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>one</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inc</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>signature</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>modulo</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
-</TABLE><P>
-Note that <TT>IntModel</TT> can be later implemented in various ways,
-using Peano&#X2019;s integers, machine integers, arbitrary-precision
-arithmetic (as well as things that are not really integers, our specification being too simplistic)&#X2026;</P><P>We now build our <EM>species</EM> &#X201C;working modulo &#X2026;&#X201D;, embedding
-the value of this modulo:
+</TABLE><P>Note that <TT>NatModel</TT> can be later implemented in various ways, using
+Peano&#X2019;s integers, machine integers, arbitrary-precision arithmetic (as well
+as things that are not really integers, our specification being too
+simplistic)&#X2026;</P><P>The <EM>species</EM> &#X201C;working modulo n&#X2026;&#X201D; now embeds the value of <TT>n</TT>
+as an element of a collection for <TT>NatModel</TT>:
 <FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_work</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>IntModel</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>n</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>job1</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2>) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> ... =</FONT><FONT SIZE=2>
+</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_n</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>NatModel</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>n</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>job1</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2>) =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    ... </FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>modulo</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>n</FONT><FONT SIZE=2>) ... ;</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>job2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2>, ...) </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> ... =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>job2</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2>, ...) =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    ... ... </FONT><FONT SIZE=2>Naturals</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>modulo</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>n</FONT><FONT SIZE=2>) ... ... ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>
 Using the <EM>entity parameter</EM> <TT>n</TT>, we ensure that the
-<EM>species</EM> <TT>Modulo_work</TT> works for <EM>any</EM> value of the
+<EM>species</EM> <TT>Modulo_n</TT> works for <EM>any</EM> value of the
 modulo, but will always use the <EM>same</EM> value <TT>n</TT> of the modulo
 everywhere inside the <EM>species</EM>.</P><!--TOC section The Final Brick-->
-<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc8">1.5</A>  The Final Brick</H2><!--SEC END --><P>As briefly introduced in <A HREF="#species-interface">1.2</A>, a <EM>species</EM>
-needs to be complete to lead to executable code for its functions
-and checkable proofs for its theorems. When a <EM>species</EM> is
-complete, it can be turned into a <EM>collection</EM>. Hence, a <EM>collection</EM>
-represents the final stage of the inheritance tree of a <EM>species</EM>
-and leads to an effective data representation with
-executable functions processing it.</P><P>For instance, providing that the previous
-<EM>species</EM> <TT>IntModel</TT> has been refined into a fully-defined species
-<TT>MachineNativeInt</TT> through inheritances steps, with a <EM>method</EM>
-<TT>from_string</TT> allowing to create the natural representation of a
-string, we could get a related collection by:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MachineNativeIntColl</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>implement</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MachineNativeInt</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc8">1.5</A>  The Final Brick</H2><!--SEC END --><P>As briefly introduced in <A HREF="#species-interface">1.2</A>, a <EM>species</EM> needs to be
+complete to lead to executable code for its functions and checkable proofs
+for its theorems. When a <EM>species</EM> is complete, it can be turned into a
+<EM>collection</EM>. Hence, a <EM>collection</EM> represents the final stage of the
+inheritance tree of a <EM>species</EM> and leads to an effective data
+representation with executable functions processing it.</P><P>For instance, providing that the previous <EM>species</EM> <TT>NatModel</TT> has
+been refined into a fully-defined species <TT>MachineNativeInt</TT> through
+inheritances steps, with a <EM>method</EM> <TT>from_string</TT> allowing to create
+the natural representation of a string, we could get a related collection by:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MachineNativeIntegers</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>implement</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MachineNativeInt</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>Next, to get a <EM>collection</EM> implementing arithmetic modulo 8, we
-could extract from the <EM>species</EM> <TT>Modulo_work</TT> the following
-<EM>collection</EM>:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_8_work</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>implement</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_work</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>   (</FONT><FONT SIZE=2>MachineNativeIntColl</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>MachineNativeIntColl</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>from_string</FONT><FONT SIZE=2> (``8'')</FONT><FONT SIZE=2>
+can define a <EM>collection</EM> for the <EM>species</EM> <TT>Modulo_n</TT>:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_8</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>implement</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Modulo_n</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>    (</FONT><FONT SIZE=2>MachineNativeIntegers</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>MachineNativeIntegers</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>from_string</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2><FONT SIZE=2>"8"</FONT></FONT><FONT SIZE=2>);</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2>;;</FONT></TD></TR>
-</TABLE><P>As seen by this example, a species can be applied to effective
-parameters by giving their values with the usual syntax of parameter
-passing.</P><P>As said before, to ensure modularity and abstraction, the
-<EM>representation</EM> of a
-<EM>collection</EM> is hidden (as well as the definitions). This means that any software component
-dealing with a <EM>collection</EM> will only be able to manipulate it
-through the operations (<EM>methods</EM>) its interface provides. This
-point is especially important since it prevents other software
-components from possibly breaking invariants required by the internals
-of the <EM>collection</EM>.</P><!--TOC section Properties, Theorems and Proofs-->
+</TABLE><P>As exemplify here, a species is applied to effective parameters by giving
+their values with the same syntax as for parameter passing.</P><P>As said before, to ensure modularity and abstraction, the <EM>representation</EM> of a <EM>collection</EM> is hidden (as well as its
+definitions). It means that any software component using a <EM>collection</EM>
+will only be able to manipulate its values through the operations (<EM>methods</EM>) that the collection provides via its interface. As a corollary, no
+other software component can possibly break the invariants required by the
+internals of a <EM>collection</EM>.</P><!--TOC section Properties, Theorems and Proofs-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc9">1.6</A>  Properties, Theorems and Proofs</H2><!--SEC END --><P>
-<A NAME="focal-proof-language"></A></P><P><FONT COLOR=purple>FoCaLiZe</FONT> aims not only to write programs, it intends to encompass both
-the executable model (i.e. program) and properties this model must
-satisfy. For this reason, &#X201C;special&#X201D; <EM>methods</EM> deal with logic
-instead of purely behavioural aspects of the system: <EM>theorems</EM>,
-<EM>properties</EM> and <EM>proofs</EM>.</P><P>Stating a <EM>property</EM> indicates that a <EM>proof</EM> that it
-<B>holds</B> will be given at some stage of the development. For <EM>theorems</EM>, the <EM>proof</EM> is
-directly provided with the statement. Such proofs must be done by
-the developer and will finally be sent to the formal proof assistant
-<FONT COLOR=purple>Coq</FONT> who will automatically check that the demonstration of the
-<EM>property</EM> is consistent. Writing a proof can be done in several ways.</P><P>It can be written in <FONT COLOR=purple>FoCaLiZe</FONT>&#X2019;s proof language, a hierarchical proof
-language that allows to give hints and directions for a proof. This
-language will be sent to an external theorem prover,
-<FONT COLOR=purple>Zenon</FONT> [<A HREF="#ZenonBDD">2</A>, <A HREF="#zenon0.4.1">9</A>] developed by D. Doligez. This prover is
+<A NAME="focal-proof-language"></A></P><P><FONT COLOR=purple>FoCaLiZe</FONT> not only provides a way to write programs, it also intends to
+encompass both the executable model (i.e. program) and the properties that
+this model must satisfy. For this reason, some &#X201C;special&#X201D; fields of the
+species only deal with logic instead of specifying purely behavioural aspects
+of the program: those logical aspects are <EM>theorems</EM>, <EM>properties</EM>
+and <EM>proofs</EM>.</P><P>Stating a <EM>property</EM> declares that a <EM>proof</EM> that the property <B>holds</B> will be given at some stage of the development. The <EM>theorems</EM> are
+properties for which the <EM>proof</EM> is given with the statement. All the proofs must be
+done by the developer; the compiler ultimately send them to the <FONT COLOR=purple>Coq</FONT> proof assistant
+for verification: all the demonstrations made in <FONT COLOR=purple>FoCaLiZe</FONT> are automatically
+machine checked for consistency by <FONT COLOR=purple>Coq</FONT>.</P><P><FONT COLOR=purple>FoCaLiZe</FONT> provides several ways to write proofs. The normal and encouraged way
+is to use the <FONT COLOR=purple>FoCaLiZe</FONT>&#X2019;s proof language to write the proofs. The <FONT COLOR=purple>FoCaLiZe</FONT>&#X2019;s
+proof language (or <EM>FPL</EM> for short), is a hierarchical proof language
+especially designed to give an easy way to vary the grain of the proof, from
+rough sketch to fully detailed proof. As in the usual mathematical activity,
+the idea is to provide hints and direction for a proof and let the reader
+complete the details. Well, don&#X2019;t panic: you will not have to complete the
+proofs of all the <FONT COLOR=purple>FoCaLiZe</FONT> development you may ever read or write! The proofs
+in <FONT COLOR=purple>FoCaLiZe</FONT> do not require a human being to read them and complete their
+numerous omitted details! The <FONT COLOR=purple>FoCaLiZe</FONT> system delegates this burden to a
+companion program: the <FONT COLOR=purple>Zenon</FONT> proof finder.</P><P>From the hints given in the <FONT COLOR=purple>FoCaLiZe</FONT> development, <FONT COLOR=purple>Zenon</FONT> attempts to
+generate a complete proof and exhibit a <FONT COLOR=purple>Coq</FONT> proof term suitable for
+verification. So far so good! But what happens if <FONT COLOR=purple>Zenon</FONT> fails to find the
+(complete) proof ? Well, you can consider this failure as a hint that the
+given proof was too sketchy: you have to develop it a bit, for instance by
+stating and proving some intermediate lemmas or by detailing the proof path!
+Once again, this is rather natural and not so far from normal mathematical
+activity.</P><P><FONT COLOR=purple>Zenon</FONT> [<A HREF="#ZenonBDD">2</A>, <A HREF="#zenon0.4.1">9</A>] is developed by D. Doligez. It is
 a first order theorem prover based on the tableau method incorporating
-implementation novelties such as sharing. <FONT COLOR=purple>Zenon</FONT> will attempt, from
-these hints, to automatically generate the proof and exhibit a <FONT COLOR=purple>Coq</FONT>
-term suitable for verification by <FONT COLOR=purple>Coq</FONT>. Basic hints given by the
-developer to <FONT COLOR=purple>Zenon</FONT> are: &#X201C;prove by definition of a <EM>method</EM>&#X201D;
-(i.e. looking inside its body) and &#X201C;prove by <EM>property</EM>&#X201D;
-(i.e. using the logical statement of a <EM>theorem</EM> or <EM>property</EM>).
-Surrounding this hints mechanism, the language allows to build the
-proof by stating assumptions (that must obviously be demonstrated
-next) that can be used to prove lemmas or parts for the whole
-property. We show below an example of such demonstration.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>  </FONT><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>order_inf_is_infimum</FONT><FONT SIZE=2>: </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>i</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
+implementation novelties such as sharing.</P><P>The <FONT COLOR=purple>FoCaLiZe</FONT> programmer gives basic hints to <FONT COLOR=purple>Zenon</FONT> such as: &#X201C;prove by definition
+of this <EM>method</EM>&#X201D; (i.e. look inside the body of the method) or &#X201C;prove
+by this <EM>property</EM>&#X201D; (i.e. use the logical statement of a <EM>theorem</EM>
+or <EM>property</EM> already proven). This hint mechanism is embedded into the
+entire FPL description of the proof into steps stating assumptions (that must
+obviously be demonstrated afterwards) in order to prove some lemmas or parts of
+the property at hand.</P><P>We now give such a demonstration.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>  </FONT><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>order_inf_is_infimum</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>i</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) -&gt; !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) -&gt;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>      !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, !</FONT><FONT SIZE=2>inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    </FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>      &lt;1&gt;1 </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>           </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>i</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>H1</FONT><FONT SIZE=2>: !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>),</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>           </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>H2</FONT><FONT SIZE=2>: !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>),</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>           </FONT><FONT SIZE=2>prove</FONT><FONT SIZE=2> !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, !</FONT><FONT SIZE=2>inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>        &lt;2&gt;1 </FONT><FONT SIZE=2>prove</FONT><FONT SIZE=2> !</FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, !</FONT><FONT SIZE=2>inf</FONT><FONT SIZE=2>(!</FONT><FONT SIZE=2>inf</FONT><FONT SIZE=2>(</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>), </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>      &lt;1&gt;1 </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>             </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>i</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>             </FONT><FONT SIZE=2>hypothesis</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>H1</FONT><FONT SIZE=2> : !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>),</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>             </FONT><FONT SIZE=2>hypothesis</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>H2</FONT><FONT SIZE=2> : !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>),</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>           </FONT><FONT SIZE=2>prove</FONT><FONT SIZE=2> !</FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, !</FONT><FONT SIZE=2>inf</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>        &lt;2&gt;1 </FONT><FONT SIZE=2>prove</FONT><FONT SIZE=2> !</FONT><FONT SIZE=2>equal</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, !</FONT><FONT SIZE=2>inf</FONT><FONT SIZE=2> (!</FONT><FONT SIZE=2>inf</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>i</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>), </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>))</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>          </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>hypothesis</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>H1</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>H2</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>             </FONT><FONT SIZE=2>property</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>inf_left_substitution_rule</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>               </FONT><FONT SIZE=2>equal_symmetric</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>equal_transitive</FONT><FONT SIZE=2>
@@ -932,35 +931,36 @@ property. We show below an example of such demonstration.</P><TABLE CLASS="lstfr
 </FONT><FONT SIZE=2>             </FONT><FONT SIZE=2>definition</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>of</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>order_inf</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>      &lt;1&gt;</FONT><FONT SIZE=2>f</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>conclude</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    ;</FONT></TD></TR>
-</TABLE><P>The important point is that <FONT COLOR=purple>Zenon</FONT> works for the
-developer: <B>it searches the proof itself</B>, the developer does not
-have to elaborate it formally &#X201C;from scratch&#X201D;.</P><P>Like any automatic theorem prover, <FONT COLOR=purple>Zenon</FONT> may fail finding a
-demonstration. In this case, <FONT COLOR=purple>FoCaLiZe</FONT> allows to write verbatim
-<FONT COLOR=purple>Coq</FONT> proofs. In this case, the proof is not anymore automated, but
-this leaves the full power of expression of <FONT COLOR=purple>Coq</FONT> to the developer.</P><P>Finally, the <TT>assumed</TT> keyword is the ultimate proof backdoor,
-telling that the proof is not given but that the property must be
-admitted. Obviously, a really safe development should not make usage of
-this feature since it bypasses the formal verification of
-software&#X2019;s model. However, such a functionality remains needed for various
-reasons. For example, a development may be linked with external code;
-properties of the <FONT COLOR=purple>FoCaLiZe</FONT> code may depends on properties of the external
-code that have to be stated (for example using the documentation of this
-code) but also assumed.
-</P><!--TOC section Around the Language-->
-<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc10">1.7</A>  Around the Language</H2><!--SEC END --><P>In the previous sections, we presented <FONT COLOR=purple>FoCaLiZe</FONT> through its programming
-model and shortly its syntax. We especially investigated the various
-entities making a <FONT COLOR=purple>FoCaLiZe</FONT> program. We now address what becomes a
-<FONT COLOR=purple>FoCaLiZe</FONT> program once compiled. We recall that <FONT COLOR=purple>FoCaLiZe</FONT> supports the
-redefinition of functions, which permits for example to specialise
-code to a specific representation (for example, there
-exists a generic implementation of integer addition modulo <TT>n</TT> but
-it can be redefined in arithmetics modulo <TT>2</TT> if boolean values
-are used to represent the two values). It is also a very convenient
-tool to maintain software.</P><!--TOC subsection Consistency of the Software-->
-<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc11">1.7.1</A>  Consistency of the Software</H3><!--SEC END --><P>All along the <FONT COLOR=purple>FoCaLiZe</FONT> development cycle, the compiler
-keeps trace of dependencies between <EM>species</EM>,
-<EM>methods</EM>, and <EM>proofs</EM> &#X2026;to ensure that the consequences of any modification
-will be managed consistently and propagated to those depending of it.</P><P><FONT COLOR=purple>FoCaLiZe</FONT> deals with two types of dependencies:
+</TABLE><P>The important point is that <FONT COLOR=purple>Zenon</FONT> works for the developer: <B>it
+searches and completes the proof</B> for the developer that no more have to
+elaborate the proof completely formally &#X201C;from scratch&#X201D;.</P><P>Like all other automatic theorem prover, <FONT COLOR=purple>Zenon</FONT> may fail to find a
+demonstration. In this case, <FONT COLOR=purple>FoCaLiZe</FONT> allows the developer to write verbatim <FONT COLOR=purple>Coq</FONT>
+proofs. Comfort of automation is lost in favor of an increase in expressive power:
+the entire <FONT COLOR=purple>Coq</FONT> vernacular language is now available to the developer to
+write the proof.</P><P>Finally, the <TT>assumed</TT> keyword is the ultimate proof backdoor: the proof
+is not given and the property is admitted. Obviously, a safe development
+should not make a liberal usage of this feature, since <TT>assumed</TT> bypasses
+the formal verification of the software&#X2019;s model. However, such a functionality
+remains needed for various reasons. For example, a development may be linked
+with external code; the properties of the <FONT COLOR=purple>FoCaLiZe</FONT> code now depends on properties
+of the external code; to continue the development as safely as possible, it
+is necessary to carefully state the properties that are assumed for the
+external code and go on providing properties and proofs about the program:
+those proofs will give valuable confidence, even if they only hold if the set
+of assumptions for the external code is valid.</P><!--TOC section Around the Language-->
+<H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc10">1.7</A>  Around the Language</H2><!--SEC END --><P>In the previous sections, we presented <FONT COLOR=purple>FoCaLiZe</FONT> through its programming model
+and shortly its syntax. We especially investigated the various entities
+making a <FONT COLOR=purple>FoCaLiZe</FONT> program. We now address what becomes a <FONT COLOR=purple>FoCaLiZe</FONT> program
+once compiled. We recall that <FONT COLOR=purple>FoCaLiZe</FONT> supports the redefinition of
+functions, which permits for example to specialise the code to a specific
+representation of data (for example, there exists a generic implementation of
+integer addition modulo <TT>n</TT> but this implementation can be redefined in
+arithmetics modulo <TT>2</TT>, if boolean values are used to represent the two
+values). <FONT COLOR=purple>FoCaLiZe</FONT>) is also a very convenient tool to maintain software.</P><!--TOC subsection Consistency of the Software-->
+<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc11">1.7.1</A>  Consistency of the Software</H3><!--SEC END --><P>All along the <FONT COLOR=purple>FoCaLiZe</FONT> development cycle, the compiler keeps trace of
+dependencies between <EM>species</EM>, <EM>methods</EM>, and <EM>proofs</EM> &#X2026;to
+ensure that all the modifications are consistently propagated to any place
+that needs to be changed.</P><P><FONT COLOR=purple>FoCaLiZe</FONT> deals with two types of dependencies:
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
 The <B>decl</B>-dependency: a <EM>method</EM> <I>A</I> decl-depends on a
 <EM>method</EM> <I>B</I>, if the <B>declaration</B> of <I>B</I> is required to
@@ -970,68 +970,63 @@ state <I>A</I>.
 <B>definition</B> of <I>B</I> is required to state <I>A</I> (and more
 especially, to prove the property stated by the <EM>theorem</EM>
 <I>A</I>).
-</LI></UL><P>The redefinition of a function may invalidate the proofs that use
-properties of the body of the redefined function. All the proofs
-which truly depend of the definition are then invalidated by the compiler
-and must be done again in the context updated with the new
-definition. Thus the main difficulty is to choose the best level in
-the hierarchy to do a proof. In [<A HREF="#PrevostoJaume2003">21</A>], Prevosto and
-Jaume propose a <EM>coding style</EM> to minimise the number of proofs
-to be redone in the case of a redefinition, by a certain kind of
-modularisation of the proofs.</P><!--TOC subsection Code Generation-->
+</LI></UL><P>The redefinition of a function may invalidate the proofs that use the
+properties of the body of the function. All the proofs which truly depend of
+the definition are then invalidated by the compiler and must be done again in
+the updated context where the function gets the new definition. Thus, choose
+the proper level in the hierarchy to do a proff is a major practical
+difficulty. In [<A HREF="#PrevostoJaume2003">21</A>], Prevosto and Jaume propose
+a <EM>coding style</EM> to minimise the number of proofs to be redone in case
+of redefinition, by using a certain kind of modularisation for the proofs.</P><!--TOC subsection Code Generation-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc12">1.7.2</A>  Code Generation</H3><!--SEC END --><P><FONT COLOR=purple>FoCaLiZe</FONT> currently compiles programs toward two languages, <FONT COLOR=purple>OCaml</FONT> to
-get an executable piece of software, and <FONT COLOR=purple>Coq</FONT> to have a formal model
-of the program, with theorems and proofs.</P><P>In <FONT COLOR=purple>OCaml</FONT> code generation, all
-the logical aspects are discarded since they do not lead to executable
-code.</P><P>Conversely, in <FONT COLOR=purple>Coq</FONT>, all the <EM>methods</EM> are compiled,
-i.e. &#X201C;computational&#X201D; <EM>methods</EM> and logical <EM>methods</EM> with
-their proofs. This allows <FONT COLOR=purple>Coq</FONT> to check the entire consistence of
-the system developed in <FONT COLOR=purple>FoCaLiZe</FONT>.</P><!--TOC subsection Tests-->
+get an executable standalone, and <FONT COLOR=purple>Coq</FONT> to have a formal model
+of the program, with theorems and proofs entirely machine checked.</P><P>In the <FONT COLOR=purple>OCaml</FONT> code generation, all the logical aspects are discarded since
+they do not lead to executable code.</P><P>In contrast, in <FONT COLOR=purple>Coq</FONT>, all the <EM>methods</EM> are compiled,
+i.e. &#X201C;computational&#X201D; <EM>methods</EM> and logical <EM>methods</EM> with their
+proofs. This allows <FONT COLOR=purple>Coq</FONT> to check the entire consistence of the system
+developed in <FONT COLOR=purple>FoCaLiZe</FONT>.</P><!--TOC subsection Tests-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc13">1.7.3</A>  Tests</H3><!--SEC END --><P>
 <FONT COLOR=purple>FoCaLiZe</FONT> incorporates a tool named <EM>FocalTest</EM>
 [<A HREF="#CarlierDuboisLNCS2008">15</A>] for Integration/Validation testing. It
-allows to confront automatically a property of the specification with
-an implementation. It generates automatically test cases, executes
-them and produces a test report as an XML document. The property under
-test is used to generate the test case but also as an
-oracle. When a test case fails, it means that a counterexample of the
-property has been found: the implementation does not match the property.
-Note that this indentifies a problem in the code or in the specification.</P><P>The tool <EM>FocalTest</EM> automatically produces the test environment and
+allows to confront automatically a property of the specification with an
+implementation. It automatically generates test cases, executes them and
+produces a test report as an XML document. The property under test is used to
+generate the test case but also as an oracle. When a test case fails, it
+means that a counterexample of the property has been found: the
+implementation does not match the property. This surely points out an
+inconsistency, due to a problem in the code or in the specification.</P><P>The tool <EM>FocalTest</EM> automatically produces the test environment and
 the drivers to conduct the tests. It benefits from the inheritance
 mechanism to isolate the testing harness from the components written
-by the programmer.</P><P>The testable properties are required to be broken down into a
-precondition and a conclusion, both executable. The current version of
-<EM>FocalTest</EM> proposes a pure random test cases generation: a test case
-is generated, if it satisfies the pre-condition then the verdict of the test case
-is obtained by executing the post-condition, else the test case is rejected.
-It can be
-an expensive process for some kind of preconditions. To overcome this
-drawback, a constraint based generation is under development: it
-allows to produce directly test cases for which the precondition is
-satisfied.</P><!--TOC subsection Documentation-->
-<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc14">1.7.4</A>  Documentation</H3><!--SEC END --><P>The tool called <FONT COLOR=purple>FoCaLiZeDoc</FONT> [<A HREF="#MaarekCalculemus03">14</A>] automatically
-generates documentation, thus the documentation of a component is
-always coherent with respect to its implementation.</P><P>This tool uses its own XML format that contains information coming not
-only from structured comments (that are parsed and kept in the
-program&#X2019;s abstract syntax tree) and <FONT COLOR=purple>FoCaLiZe</FONT> concrete syntax but also
-from type inference and dependency analysis. From this XML
-representation and thanks to some XSLT stylesheets, it is possible to
-generate HTML files or L<sup>A</sup>T<sub>E</sub>X files. Although this documentation is
-not the complete safety case, it can helpfully contribute to its
-elaboration. In the same way, it is possible to produce UML
-models [<A HREF="#Focal-UML">5</A>] as means to provide a graphical documentation
-for <FONT COLOR=purple>FoCaLiZe</FONT> specifications. The use of graphical notations appears
-quite useful when interacting with end-users, as these tend to be more
-intuitive and are easier to grasp than their formal (or textual)
-counterparts. This transformation is based on a formal schema and
-captures every aspect of the <FONT COLOR=purple>FoCaLiZe</FONT> language, so that it has been
-possible to prove the soundness of this transformation (semantic
-preservation).</P><P><FONT COLOR=purple>FoCaLiZe</FONT>&#X2019;s architecture is designed to easily plug third-parties
-analyses that can use the internal structures elaborated by the
-compiler from the source code. This allows, for example, to make
-dedicated documentation tools for custom purposes, just exploiting
-information stored in the <FONT COLOR=purple>FoCaLiZe</FONT> program&#X2019;s abstract syntax tree, or
-extra information possibly added by extra processes, analyses.
+by the programmer.</P><P>The testable properties are required to be broken down into a precondition
+and a conclusion, both executable. The current version of <EM>FocalTest</EM>
+proposes a pure random test cases generation: a test case is generated, if it
+satisfies the pre-condition then the verdict of the test case is obtained by
+executing the post-condition. For some form of preconditions the test
+generation process can be computationally challenging. To overcome this
+drawback, a constraint based generation is under development: it would allow
+to directly produce test cases that satisfy the precondition.</P><!--TOC subsection Documentation-->
+<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc14">1.7.4</A>  Documentation</H3><!--SEC END --><P>The <FONT COLOR=purple>FoCaLiZeDoc</FONT> tool [<A HREF="#MaarekCalculemus03">14</A>] is a documentation generator.
+The documentation is automatically extracted from the <FONT COLOR=purple>FoCaLiZe</FONT> source, hence
+the documentation of a component is always in par with its implementation.</P><P><FONT COLOR=purple>FoCaLiZeDoc</FONT> uses its own XML format that contains information coming not only
+from programmer added structured comments (that are parsed and kept in the
+program&#X2019;s abstract syntax tree) and from the <FONT COLOR=purple>FoCaLiZe</FONT> concrete syntax but
+also from the results of the type inference and dependency analysis. From
+this XML representation and thanks to some XSLT stylesheets, <FONT COLOR=purple>FoCaLiZeDoc</FONT>
+generated a bunch of HTML or L<sup>A</sup>T<sub>E</sub>X files. The generated documentation
+cannot be considered as a complete safety case; however, it can helpfully
+contribute to the elaboration of the safety case. In the same way, it is
+possible to produce UML models [<A HREF="#Focal-UML">5</A>] as means to provide a
+graphical documentation for the <FONT COLOR=purple>FoCaLiZe</FONT> specifications. The use of graphical
+notations appears quite useful when interacting with end-users, as these tend
+to be more intuitive and are easier to grasp than their formal (or textual)
+counterparts. This transformation is based on a formal schema and captures
+every aspect of the <FONT COLOR=purple>FoCaLiZe</FONT> language, so that it has been possible to prove
+the soundness of this transformation (semantic preservation).</P><P>The <FONT COLOR=purple>FoCaLiZe</FONT> compiler&#X2019;s architecture is designed to easily plug third-parties
+analyses that can benefit from the internal structures elaborated by the
+compiler from the source code. This allows, for instance, to make dedicated
+documentation tools for custom purposes, just exploiting the information
+stored in the <FONT COLOR=purple>FoCaLiZe</FONT> program&#X2019;s abstract syntax tree, or the extra
+information added by some external processes or specialized analyses.
 </P><!--TOC chapter Installing and Compiling-->
 <H1 CLASS="chapter"><!--SEC ANCHOR --><A NAME="htoc15">Chapter 2</A>  Installing and Compiling</H1><!--SEC END --><!--TOC section Required software-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc16">2.1</A>  Required software</H2><!--SEC END --><P>
@@ -3478,7 +3473,7 @@ has exactly the same sequence of methods than the complete species
 underlying it, apart the representation which is hidden.
 Note that creating a collection from it is the
 only way to turn methods of a complete species into executable
-code. This point is emphasised by the syntax:</P><P><TT>collection</TT> <EM>name-collection</EM> = <TT>implement</TT> <EM>name-species</EM> <TT>end</TT></P><P>The interface of a collection is the one of the
+code. This point is emphasised by the syntax:</P><P><TT>collection</TT> <EM>name-collection</EM> = <TT>implement</TT> <EM>name-species</EM> <TT>;</TT> <TT>end</TT></P><P>The interface of a collection is the one of the
 complete species it implements. The interface <I>I</I><SUB>1</SUB> of a collection
 <I>C</I><SUB>1</SUB> is <EM>compatible</EM> with an interface <I>I</I><SUB>2</SUB> if <I>I</I><SUB>1</SUB> contains
 all the components of <I>I</I><SUB>2</SUB>.</P><P><BR>
@@ -3493,7 +3488,9 @@ only be manipulated by the methods of the <EM>implemented</EM> species.</P><TABL
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>print</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>print_int</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>) ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MyFull_Instance</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>implement</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Full</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>MyFull_Instance</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>implement</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Full</FONT><FONT SIZE=2>;</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>v</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>Full</FONT><FONT SIZE=2>.</FONT><FONT SIZE=2>create_random</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>Full</FONT><FONT SIZE=2>.</FONT><FONT SIZE=2>print</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>v</FONT><FONT SIZE=2>) ;;</FONT><FONT SIZE=2>
@@ -3688,14 +3685,18 @@ value. For instance, assuming that the species <TT>AddModN</TT> is
 complete and have a method <TT>from_int</TT> able to create a value of
 the representation from an integer, we can create a collection
 implementing addition modulo 42. We also assume that we have a
-collection <TT>ACollImplentingInts</TT> having at least <TT>InterfaceForInts</TT> as interface.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>AddMod42</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>implements</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>AddModN</FONT><FONT SIZE=2>
-</FONT><FONT SIZE=2>  (</FONT><FONT SIZE=2>ACollImplentingInts</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>ACollImplentingInts</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>from_int</FONT><FONT SIZE=2> (42)) ;;</FONT></TD></TR>
+collection <TT>ACollImplentingInts</TT> having at least <TT>InterfaceForInts</TT> as interface.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>collection</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>AddMod42</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>implement</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>    </FONT><FONT SIZE=2>AddModN</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>      (</FONT><FONT SIZE=2>ACollImplentingInts</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>       </FONT><FONT SIZE=2>ACollImplentingInts</FONT><FONT SIZE=2>!</FONT><FONT SIZE=2>from_int</FONT><FONT SIZE=2> (42));</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P><BR>
-</P><P>Currently, entity parameters must live &#X201C;<TT>in</TT>&#X201D; a
-collection. It is not allowed to specify an entity parameter living in
-a basic type like <TT>int</TT>, <TT>string</TT>, <TT>bool</TT>&#X2026;This
-especially means that these basic types must be embedded in a
-collection if we want to use their values as entity parameters.</P><!--TOC section Inheritance and its mechanisms-->
+</P><P>Currently, entity parameters must live &#X201C;<TT>in</TT>&#X201D; a collection. It is not
+allowed to specify an entity parameter living in a basic type like <TT>int</TT>,
+<TT>string</TT>, <TT>bool</TT>&#X2026;This especially means that these basic types
+must be embedded in a collection if we want to use their values as entity
+parameters.</P><!--TOC section Inheritance and its mechanisms-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc89">4.3</A>  Inheritance and its mechanisms</H2><!--SEC END --><P>We now address the second mechanism to build complex species
 based on existing ones. It will cover the notion of <EM>inheritance</EM>
 and its related feature, the <EM>late-binding</EM>.</P><!--TOC subsection Inheritance-->
@@ -4668,33 +4669,30 @@ is reported with the two types <I>t</I><SUB>1</SUB> and <I>t</I><SUB>2</SUB> exp
 found.</P><P><EM>Hints</EM>: None.</P><!--TOC section Collection &#X2019;<I>s</I><SUB>1</SUB>&#X2019; is not compatible with &#X2019;<I>s</I><SUB>2</SUB>&#X2019;. In method
 &#X2019;<I>fname</I>&#X2019;, type <I>t</I><SUB>1</SUB> occurs in <I>t</I><SUB>2</SUB> and would lead to a cycle.-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Collection &#X2019;<I>s</I><SUB>1</SUB>&#X2019; is not compatible with &#X2019;<I>s</I><SUB>2</SUB>&#X2019;. In method
-&#X2019;<I>fname</I>&#X2019;, type <I>t</I><SUB>1</SUB> occurs in <I>t</I><SUB>2</SUB> and would lead to a cycle.</H2><!--SEC END --><P><EM>Description</EM>: During collection parameter instantiation, the
-interface of the
-provided collection <I>s</I><SUB>1</SUB> is not compatible with the interface <I>s</I><SUB>2</SUB>, since type compatibility check detected a cyclic
-type. This means that the type <I>t</I><SUB>1</SUB> is a sub-part of itself via the
-type <I>t</I><SUB>2</SUB>.</P><P><EM>Hints</EM>: None.</P><!--TOC section Collection &#X2019;<I>s</I><SUB>1</SUB>&#X2019; is not compatible with &#X2019;<I>s</I><SUB>2</SUB>&#X2019;. In method
+&#X2019;<I>fname</I>&#X2019;, type <I>t</I><SUB>1</SUB> occurs in <I>t</I><SUB>2</SUB> and would lead to a cycle.</H2><!--SEC END --><P><EM>Description</EM>: During collection parameter instantiation, the interface
+of the provided collection <I>s</I><SUB>1</SUB> is not compatible with the interface <I>s</I><SUB>2</SUB>,
+since type compatibility check detected a cyclic type. This means that the
+type <I>t</I><SUB>1</SUB> is a sub-part of itself via the type <I>t</I><SUB>2</SUB>.</P><P><EM>Hints</EM>: None.</P><!--TOC section Collection &#X2019;<I>s</I><SUB>1</SUB>&#X2019; is not compatible with &#X2019;<I>s</I><SUB>2</SUB>&#X2019;. In method
 &#X2019;<I>fname</I>&#X2019;, the type constructor &#X2019;<I>tname</I>&#X2019; is used with the different
 arities <I>n</I><SUB>1</SUB> and <I>n</I><SUB>2</SUB>.-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Collection &#X2019;<I>s</I><SUB>1</SUB>&#X2019; is not compatible with &#X2019;<I>s</I><SUB>2</SUB>&#X2019;. In method
 &#X2019;<I>fname</I>&#X2019;, the type constructor &#X2019;<I>tname</I>&#X2019; is used with the different
-arities <I>n</I><SUB>1</SUB> and <I>n</I><SUB>2</SUB>.</H2><!--SEC END --><P><EM>Description</EM>: During collection parameter instantiation, the
-interface of the
-provided collection <I>s</I><SUB>1</SUB> is not compatible with the interface <I>s</I><SUB>2</SUB>, since the type constructor (not sum type constructor)
-<I>tname</I> is used with an improper number of arguments <I>n</I><SUB>1</SUB> versus
-<I>n</I><SUB>2</SUB>.</P><P><EM>Hints</EM>: None.</P><!--TOC section Collection &#X2019;<I>s</I><SUB>1</SUB>&#X2019; is not compatible with &#X2019;<I>s</I><SUB>2</SUB>&#X2019;. Method &#X2019;<I>name</I>&#X2019;
+arities <I>n</I><SUB>1</SUB> and <I>n</I><SUB>2</SUB>.</H2><!--SEC END --><P><EM>Description</EM>: During collection parameter instantiation, the interface
+of the provided collection <I>s</I><SUB>1</SUB> is not compatible with the interface <I>s</I><SUB>2</SUB>,
+since the type constructor (not sum type constructor) <I>tname</I> is used with an
+improper number of arguments <I>n</I><SUB>1</SUB> versus <I>n</I><SUB>2</SUB>.</P><P><EM>Hints</EM>: None.</P><!--TOC section Collection &#X2019;<I>s</I><SUB>1</SUB>&#X2019; is not compatible with &#X2019;<I>s</I><SUB>2</SUB>&#X2019;. Method &#X2019;<I>name</I>&#X2019;
 is not present in &#X2019;<I>s</I><SUB>1</SUB>&#X2019;.-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Collection &#X2019;<I>s</I><SUB>1</SUB>&#X2019; is not compatible with &#X2019;<I>s</I><SUB>2</SUB>&#X2019;. Method &#X2019;<I>name</I>&#X2019;
-is not present in &#X2019;<I>s</I><SUB>1</SUB>&#X2019;.</H2><!--SEC END --><P><EM>Description</EM>: During collection parameter instantiation, the
-interface of the
-provided collection <I>s</I><SUB>1</SUB> is not compatible with the interface <I>s</I><SUB>2</SUB>,
-because it doesn&#X2019;t have a signature containing at
-least <I>s</I><SUB>2</SUB>&#X2019;s methods and especially not the method <I>name</I>.</P><P><EM>Hints</EM>: None.</P><!--TOC section Parameterised species is applied to <I>n</I> arguments.-->
+is not present in &#X2019;<I>s</I><SUB>1</SUB>&#X2019;.</H2><!--SEC END --><P><EM>Description</EM>: During collection parameter instantiation, the interface
+of the provided collection <I>s</I><SUB>1</SUB> is not compatible with the interface <I>s</I><SUB>2</SUB>,
+because it doesn&#X2019;t have a signature containing at least <I>s</I><SUB>2</SUB>&#X2019;s methods and
+especially not the method <I>name</I>.</P><P><EM>Hints</EM>: None.</P><!--TOC section Parameterised species is applied to <I>n</I> arguments.-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Parameterised species is applied to <I>n</I> arguments.</H2><!--SEC END --><P><EM>Description</EM>: A parameterised species is applied to a wrong
 number <I>n</I> of effective arguments.</P><P><EM>Hints</EM>: None.</P><!--TOC section Species &#X2019;<I>sname</I>&#X2019; cannot be turned into a collection. Following
 field(s) is(are) not defined: ...-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Species &#X2019;<I>sname</I>&#X2019; cannot be turned into a collection. Following
 field(s) is(are) not defined: ...</H2><!--SEC END --><P><EM>Description</EM>: A collection is built out of a completely defined species
-(c.f. <A HREF="#collection">4.1.5</A>), i.e. a species where <B>all</B> the methods
+(cf. <A HREF="#collection">4.1.5</A>), i.e. a species where <B>all</B> the methods
 are <B>defined</B> and not only declared. In the species <I>sname</I>, the
 listed methods are only declared (or missing a termination proof in case of
 recursive functions and usage of the <TT>-impose-termination-proof</TT>).
