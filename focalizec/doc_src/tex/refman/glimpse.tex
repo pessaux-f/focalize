@@ -1,4 +1,4 @@
-% $Id: glimpse.tex,v 1.14 2009-08-25 12:38:07 weis Exp $
+% $Id: glimpse.tex,v 1.15 2009-08-25 12:41:06 weis Exp $
 \def\bbbn{{\rm I\!N}} % [EJ] Sinon il y a \mathbb{N} qui fait ça bien aussi...
 \label{glimpse}
 Before entering the precise description of {\focal}, we give an
@@ -625,7 +625,8 @@ functions, which permits for example to specialise the code to a specific
 representation of data (for example, there exists a generic implementation of
 integer addition modulo {\tt n} but this implementation can be redefined in
 arithmetics modulo {\tt 2}, if boolean values are used to represent the two
-values). {\focal) is also a very convenient tool to maintain software.
+values). In summary, {\focal} is also a very convenient tool to maintain
+software.
 
 \subsection{Consistency of the Software}
 
@@ -696,7 +697,6 @@ executing the post-condition.  For some form of preconditions the test
 generation process can be computationally challenging. To overcome this
 drawback, a constraint based generation is under development: it would allow
 to directly produce test cases that satisfy the precondition.
-
 
 
 \subsection{Documentation}
