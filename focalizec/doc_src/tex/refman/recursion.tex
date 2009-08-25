@@ -5,18 +5,18 @@ are still working on the point: recursive functions are planed to be
 fully supported as soon as possible, in addition with new material to
 help writing the required termination proofs.
 
-In the current state \focalize\ provides 2 ways to write recursive
+In the current state {\focal} provides 2 ways to write recursive
 functions depending on whether they involve a structural or general
 recursion. The difference in the generated code only affects the
-\coq\ code. Recursive structural functions are compiled to the
-construct {\tt Fixpoint} of \coq, hence avoiding the user to provide a
+{\coq} code. Recursive structural functions are compiled to the
+construct {\tt Fixpoint} of {\coq}, hence avoiding the user to provide a
 termination proof. Functions that are not recursive structural are
-currently compiled to the {\tt Function} construct of \coq. Currently,
+currently compiled to the {\tt Function} construct of {\coq}. Currently,
 the termination proof that should be provided by the user is ignored
 and turned assumed.
 
 Recursive structural functions are introduced by the {\tt let recstruct}
 whereas general recursive functions are introduced by {\tt let rec}.
 
-Mutually recursive functions are currently not supported for \coq\
+Mutually recursive functions are currently not supported for {\coq}
 code generation.

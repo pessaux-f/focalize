@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.48 2009-06-05 14:37:32 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.49 2009-08-25 08:55:47 weis Exp $
 
 
 \section{Language constructs and syntax}
@@ -24,7 +24,7 @@ directive or by qualifying the type name as described in section
 \subsubsection{Type constructors}
 A {\bf type constructor} is, roughly speaking, a type name.
 
-\focal\ provides the basic built-in
+{\focal} provides the basic built-in
 types (constructors):
 \begin{itemize}
   \item {\tt int} for signed machine integers,
@@ -36,7 +36,7 @@ types (constructors):
   \item {\tt char} for characters literals,
   \item {\tt string} for strings literals.
 \end{itemize}
-Note that these types are translated to \ocaml types; for example
+Note that these types are translated to {\ocaml} types; for example
 {\tt int} on 32-bits architecture encode values between $-2^{30}$
 and $+2^{30}-1$.
 
@@ -97,7 +97,7 @@ returning a function with $n-1$ arguments. Hence,
 and returning a boolean.
 
 \index{tuple}
-\focal\ provides native tuples (generalisation of pairs). The type of
+{\focal} provides native tuples (generalisation of pairs). The type of
 a tuple is the type of each of its components separated by a *
 character and surrounded by parentheses. Hence,
 {\tt (int * bool * string) } is the type of triplets whose first
@@ -114,7 +114,7 @@ changing their semantics.
 A type {\bf definition} introduces  a new type
  constructor (the name of the type), which becomes available to build
 new type expressions. Hence, defining a type is the
-way to give a name to a new type structure. \focal\ proposes 3 kinds
+way to give a name to a new type structure. {\focal} proposes 3 kinds
 of type definitions: aliases, sum types and record types.
 
 \vspace{0.5cm}\noindent {\bf Aliases}
@@ -247,7 +247,7 @@ constructor has {\bf parameter}.
 \index{tuple!as sum type value constructor arg}
 \medskip
 An important attention must be taken for constructors having
-``several'' arguments. \focalize\ provides 2 different
+``several'' arguments. {\focal} provides 2 different
 (``type-incompatible'') ways to make a value constructor carrying
 several values.
 \begin{itemize}
@@ -609,7 +609,7 @@ evaluated into a {\bf value} of a certain {\bf type}. Hence values and
 types are not at the same level. Types serve to classify values into
 categories.  Although proofs may contain expressions, we describe them
 in Sec. \ref{making-proofs}. Indeed proofs are not expressions, they do
-not lead to \focal\ values thus live at another level.
+not lead to {\focal} values thus live at another level.
 
 \vspace{0.2cm}
 \begin{syn}
@@ -875,7 +875,7 @@ $exp$. This is basically the principle of the so-called {\bf eager} or
 Remember that identifiers forms differ depending on the syntactic
 class of entity they refer to, capitalized identifiers being used for
 species and collections.  To evaluate an identifier expression, the
-\focal\ compiler tries to find its definition from the current scoping
+{\focal} compiler tries to find its definition from the current scoping
 context.  \index{name!resolution} \index{name!qualification}
 \index{scoping} It searches for the closest (latest) definition with this name,
 starting by the parameters present in the current definition
@@ -942,7 +942,7 @@ As the grammar shows, name qualification by compilation unit and
 hosting species can be freely mixed. We can build identifiers like
 {\tt my\_file\#My\_species!my\_method} to refer to the method
 {\tt my\_method} hosted in the species {\tt My\_species} located in
-the \focal\ source file ``my\_file.fcl''. These disambiguation
+the {\focal} source file ``my\_file.fcl''. These disambiguation
 methods are indeed orthogonal.
 
 
@@ -954,7 +954,7 @@ Finally, infix/postfix operators can be used as regular
 identifiers. Usually, an operator is syntactically used according to
 it prefix or infix nature. For instance, the binary {\tt +} operator
 is used between its arguments as in {\tt x + 4}, the unary operator {\tt
-  \tilde} is used before its argument as in {\tt \tilde x}. \focal\ allows to
+  \tilde} is used before its argument as in {\tt \tilde x}. {\focal} allows to
 refer to those operators as regular identifiers (for instance as function
 parameters).
 This allows to use operators as any other identifiers, and
@@ -998,7 +998,7 @@ analyzer.
 % I'm not sure that this is true. I don't want to find a counter example
 % though.
 % In fact we do not need a counterexample:
-% addind spaces is not a good practice: it is mandatory! In focalize,
+% addind spaces is not a good practice: it is mandatory! In {\focal},
 % (+) never means the prefix version of + !!
 
 
@@ -1168,9 +1168,9 @@ and odd (y) =
 \end{lstlisting}
 }
 
-{\large {\bf Warning:}} in the current version of \focal\ mutually
-recursive functions cannot be compiled into \coq\ code. Only
-\ocaml\ code generation is available. Moreover, for \coq, recursive
+{\large {\bf Warning:}} in the current version of {\focal} mutually
+recursive functions cannot be compiled into {\coq} code. Only
+{\ocaml} code generation is available. Moreover, for \coq, recursive
 functions imply termination proofs. This last point will be covered in
 the section \ref{recursive-function} especially dedicated to
 (non-mutually) recursive function definitions.
@@ -1209,7 +1209,7 @@ holds or not) to build more complex logical expressions.
 % statement that holds.
 
 
-To allow functional bindings in logical expressions \focal\ provide
+To allow functional bindings in logical expressions {\focal} provide
 the {\tt logical let} construct. It serves to introduce a
 parameterised logical expression,  which can be applied to effective
 arguments to obtain a logical proposition.  Our example would be
@@ -1418,8 +1418,8 @@ This example shows different cases following the structure of the type
 inside  patterns. In fact, the ``catch-all'' pattern acts like
 a variable  unused in the rightmost part of the
 case. It is however preferable to use ``{\tt \_}'' instead of a
-variable since \ocaml\ generates warning for unused variables and the
-generated \ocaml\ code generated by \focal\ will not change unused
+variable since {\ocaml} generates warning for unused variables and the
+generated {\ocaml} code generated by {\focal} will not change unused
 variables into ``{\tt \_}''s.
 
 
@@ -1563,7 +1563,7 @@ let v2 = {
 ...
 \end{lstlisting}
 }
-Instead of manually copy the unchanged fields, \focal\ provides a way
+Instead of manually copy the unchanged fields, {\focal} provides a way
 to clone a record value, that is to create a {\bf new}, a {\bf fresh}
 value from an existing one,  only by specifying the fields whose values
 differ from the old record value:
@@ -1690,7 +1690,7 @@ theorem int_plus_minus: all x y z in int,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Files and uses directives}
 \label{file directive}
-\focal\ provides 3 directives that are not expressions. This means
+{\focal} provides 3 directives that are not expressions. This means
 that they do not lead to values or computation.
 
 All these directives deal with searching for files in the available
@@ -1751,15 +1751,15 @@ open "sets";;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{The {\tt coq\_require} directive}
 \index{directive!coq\_require}
-Some source files of a development may be directly written in \coq\ to
+Some source files of a development may be directly written in {\coq} to
 provide external definitions (detailed further in
 \ref{interfacing-other-languages}) to import and use in the % [EJ] Reference bizarre, 9.0.5, structure a revoir
-\focal\ source code. In this case, the \coq\ code generated for the
-\focal\ source code must be aware of the need to import the external
-definitions from the manually written \coq\ file. For this reason, the
-\focal\ source must explicitly indicate by the {\tt coq\_require}
+{\focal} source code. In this case, the {\coq} code generated for the
+{\focal} source code must be aware of the need to import the external
+definitions from the manually written {\coq} file. For this reason, the
+{\focal} source must explicitly indicate by the {\tt coq\_require}
 directive that it makes references to definitions hosted in this
-\coq\ source file. For example, the file ``wellfounded.fcl'' of the
+{\coq} source file. For example, the file ``wellfounded.fcl'' of the
 standard library needs ``wellfounded\_externals.vo'' (the compiled version of
 ``wellfounded\_externals.v'') and signals this
 fact in its early lines of code:
@@ -1816,7 +1816,7 @@ formulas.
 ($\Rightarrow$), ``and'' ($\wedge$), ``or'' ($\vee$), ``there exists''
 ($\exists$), ``for all'' ($\forall$), ``is equivalent''
 ($\Leftrightarrow$) and ``not'' ($\neg$). Moreover, logical
-expressions embed the \focal\ expressions used in computational
+expressions embed the {\focal} expressions used in computational
 methods (i.e. identifiers, conditionals, application, \ldots). This
 allows to have connected propositions using the previously defined
 functions and species methods.
@@ -1863,7 +1863,7 @@ logical expression being its statement. See the example given in
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Proofs}
 \label{proof-short-intro}
-\focal\ currently provides 3 ways to write proofs. We only give here a
+{\focal} currently provides 3 ways to write proofs. We only give here a
 simple description of these 3 means without going deeply in the
 technical mechanisms since this problem will be especially addressed
 in section \ref{making-proofs} and \ref{coq-proofs}. % [EJ] Seconde reference mal formee (9.0.6)
@@ -1890,7 +1890,7 @@ end ;;
 sake of information, justification, traceability of the proof
 absence. Although such a proof can introduce inconsistencies if the
 ``theorem'' is not a tautology and thus decrease confidence in the
-correctness of the \focal\ program, there are several cases where
+correctness of the {\focal} program, there are several cases where
 using this keyword may help.
   \begin{itemize}
       \item The first case is simply that the developer doesn't know
@@ -1899,13 +1899,13 @@ using this keyword may help.
         compile to get the executable code.
 
       \item Second case deals with import of external code, i.e. code
-        not written in \focal\ and considered as external. In this
-        case, since the imported code does not fit the \focal\ model
+        not written in {\focal} and considered as external. In this
+        case, since the imported code does not fit the {\focal} model
         and more accurately, does not have formal properties, it is
-        impossible to make any proof on \focal's side based on the
+        impossible to make any proof on {\focal}'s side based on the
         structure of this code and its non-existing implementation
-        properties. In other terms, things coming outside \focal\
-        universe can not be modeled by \focal. The developer can only
+        properties. In other terms, things coming outside {\focal}
+        universe can not be modeled by {\focal}. The developer can only
         import them providing a binding is given and must trust them.
 
       \item Last case addresses ``well-known'' mathematical properties
@@ -1959,17 +1959,17 @@ In any case,  we advice the reader to use
 the test tool (or another mean) to comfort the confidence in the
 statement of the theorem, when such statement is admitted.
 
-\item {\bf Write an automated proof script}.  \focal\ provides a
-  syntax, the \focal\ Proof Language, to split proofs into steps that
-  may be proved by the \zenon\ theorem prover. Without entering deeply
+\item {\bf Write an automated proof script}.  {\focal} provides a
+  syntax, the {\focal} Proof Language, to split proofs into steps that
+  may be proved by the {\zenon} theorem prover. Without entering deeply
   into the syntax further described in chapter \ref{making-proofs},
   the main features are the following. The user may state hypotheses,
   demonstrate subgoals that will serve as lemmas for a higher level
   goal and may give hints about definitions or declarations of
-  methods. Then \zenon\ tries to automatically guess a proof of this
+  methods. Then {\zenon} tries to automatically guess a proof of this
   goal, then tries to prove those lemmas, hence building a proof tree
   until the top goal (i.e. the theorem) is proved. Here is an
-  example of such proof.
+  example of such a proof.
 
  {\scriptsize
 \begin{lstlisting}
@@ -1990,22 +1990,22 @@ statement of the theorem, when such statement is admitted.
 \end{lstlisting}
 }
 
-  \item {\bf Write a \coq\ script} This way is the most difficult
-     since it means to directly write \coq\ code. It
-    requires the understanding of both \coq\ and the mapping the
-    \focal\ compiler does to generate \coq\ code from \focal\ source
+  \item {\bf Write a {\coq} script} This way is the most difficult
+     since it means to directly write {\coq} code. It
+    requires the understanding of both {\coq} and the mapping the
+    {\focal} compiler does to generate {\coq} code from {\focal} source
     code. The section \ref{focal-coq-mapping} describes % [EJ] Reference mal formee
-     how \focal\ definitions are mapped onto
-    \coq\ names.
+     how {\focal} definitions are mapped onto
+    {\coq} names.
 
-The \coq\ script is introduced by the keywords
-    {\tt coq proof} and surrounded by {\tt \{*} and {\tt *\}}.
+The {\coq} script is introduced by the keywords {\tt coq proof} and
+surrounded by {\tt \{*} and {\tt *\}}.
 % But,
-%     anyway, such a way to make proofs require some skills in \coq\ and we try
-%     as far as possible to provide, in the \focal\ framework, enough
+%     anyway, such a way to make proofs require some skills in {\coq} and we try
+%     as far as possible to provide, in the {\focal} framework, enough
 %     powerful tools to prevent the user to directly deal with
-%     \coq\ proofs.
- Below follows an example of such proof.
+%     {\coq} proofs.
+Below follows an example of such a proof.
 {\scriptsize
 \begin{lstlisting}
 theorem int_minus_plus: all x y z in int,
@@ -2030,8 +2030,7 @@ theorem int_minus_plus: all x y z in int,
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{Theorems}
-Now we know how to write a logical statement and
-how
+Now we know how to write a logical statement and how
 to write a proof, the structure of a theorem appears simple since it
 contains both the statement and the proof inside the same
 construct. The theorem is introduced by the keyword {\tt theorem} and
@@ -2065,7 +2064,7 @@ species Meet_semi_lattice inherits Setoid =
 end ;;
 \end{lstlisting}
 }
-The kind of proof used here is written in \focal\ Proof Language and
+The kind of proof used here is written in {\focal} Proof Language and
 must not be a matter of understanding at this point since this
 particular point will be addressed with more details in chapter
 \ref{making-proofs}.

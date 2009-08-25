@@ -1,4 +1,4 @@
-% $Id: output.tex,v 1.9 2009-06-04 15:11:07 jaeger Exp $
+% $Id: output.tex,v 1.10 2009-08-25 08:55:47 weis Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Compilation process and outputs}
@@ -51,13 +51,13 @@ details.
 
 %%%%%%%%%%%%%%%%%%%%
 \subsection{Compiling a source}
-Compiling a \focal\ program involves several steps (numbered here 1, 2, 3 and 4) that are
-automatically handled by the \focalizec command. Using the command
+Compiling a {\focal} program involves several steps (numbered here 1, 2, 3 and 4) that are
+automatically handled by the {\focalizec} command. Using the command
 line options, it is possible to tune the code generations steps as
 described in \ref{compiler-options}.
 
 \begin{enumerate}
-  \item {\bf \focal\ source compilation}. This step takes the {\focal}
+  \item {\bf {\focal} source compilation}. This step takes the {\focal}
     source code and generates the {\ocaml} and/or ``pre-''{\coq} code.
     You can disable the code generation for one of these languages
     (see page \ref{compiler-options}), or both, in this case, no code is
@@ -67,9 +67,9 @@ described in \ref{compiler-options}.
     generated file for it, hence no need to address its related
     compilation process described below.
 
-    Assuming you generate code for both \ocaml\ and \coq\, you will get
+    Assuming you generate code for both \ocaml\ and {\coq}, you will get
     two generated files: {\tt source.ml} (the \ocaml\ code) and
-    {\tt source.zv} (the ``pre-''\coq\ code).
+    {\tt source.zv} (the ``pre-''{\coq} code).
 
   \item {\bf {\ocaml} code compilation}. This step takes the generated
     {\ocaml} code (it is an {\ocaml} source file) and compile it. This
@@ -111,7 +111,7 @@ ocamlc -c -I /usr/local/lib/focalize -I mylibs
     regular {\coq} compilation. The only difference is that the search
     path containing the {\focal} installation path and your own used
     extra {\focal} source files directories are automatically passed
-    to the \coq\ compiler.
+    to the {\coq} compiler.
     \begin{verbatim}
 coqc -I /usr/local/lib/focalize -I mylibs
   -I myotherlibs source.v

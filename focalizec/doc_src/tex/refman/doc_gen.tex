@@ -1,7 +1,7 @@
-% $Id: doc_gen.tex,v 1.8 2009-06-05 13:41:07 pessaux Exp $
+% $Id: doc_gen.tex,v 1.9 2009-08-25 08:55:47 weis Exp $
 \label{documentation-generation}
 When invoked with the {\tt $-$focalize-doc} option, the command
-{\tt focalizec} generates an extra file (with the ``.fcd'' suffix)
+{\focalizec} generates an extra file (with the ``.fcd'' suffix)
 containing ``documentation'' information extracted from the compiled
 source file.
 
@@ -12,14 +12,14 @@ definition/inheritance locations. It also contains the special comments
 previously called {\bf annotations} (c.f \ref{annotation}) and that
 were kept during the compilation process. Moreover, these annotations
 can contain special tags used by the documentation generator of
-\focal.
+{\focal}.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Special tags}
-\focal's documentation system currently supports 5 kinds of
+{\focal}'s documentation system currently supports 5 kinds of
 tags. They impact the content of the final generated document,
 either in its content or in the way information is displayed depending
 on the output format. These tags start with the ``@'' character and
@@ -57,7 +57,9 @@ For example:
 {\scriptsize
 \begin{lstlisting}
 (***********************************************************************)
-(*                        FoCaL compiler                               *)
+(*                                                                     *)
+(*                        FoCaLiZe Compiler                            *)
+(*                                                                     *)
 (*  Copyright 2007 LIP6 and INRIA                                      *)
 (*  Distributed only by permission.                                    *)
 (***********************************************************************)
@@ -125,7 +127,7 @@ displayed by an HTML browser.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Transforming the generated documentation file}
 The generated documentation file is a plain ASCII text containing some
-XML compliant with \focal's DTD
+XML compliant with {\focal}'s DTD
 ({\tt focalize/focalizec/src/docgen/focdoc.dtd}). Like for any XML
 files processing is performed thank to the command \xsltproc\ with
 XSL stylesheets (``.xsl'' files).

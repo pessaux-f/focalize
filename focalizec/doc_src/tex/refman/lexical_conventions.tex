@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.22 2009-06-05 13:41:07 pessaux Exp $
+% $Id: lexical_conventions.tex,v 1.23 2009-08-25 08:55:47 weis Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -125,7 +125,7 @@ meaningful: "my table is green"; the same nonsense arises as well if you
 replace "Paris" by another name: "my Kennedy is green".
 
 Natural languages are far more complicated than computer languages, but
-{\focalize} uses the same kind of tricks: the ``look'' of words helps a lot to
+{\focal} uses the same kind of tricks: the ``look'' of words helps a lot to
 understand what the words are designating and how they can be used.
 
 \subsubsection{Conceptual properties of names}
@@ -674,7 +674,7 @@ quotes. Available escape sequences are summarised in the table above
 \sep
 \nt{float-literal} \is \opt{\nt{sign}} \nt{unsigned-float-literal}
 \end{syn}
-  
+
 % \begin{syntax}
 % \syntaxclass{Float literals:}
 %                  decimal\_literal & ::= & sign?\ unsigned\_decimal\_literal & \\
@@ -843,8 +843,8 @@ otherwise:
 
 % [EJ] Attention, certains de ces mots cles ne sont pas documentes... local par exemple
 
-Keywords of \coq or \ocaml are also reserved (For example {\tt Set}),
-and may cause problems at later stages of the \focal compilation.
+Keywords of {\coq} or {\ocaml} are also reserved (For example {\tt Set}),
+and may cause problems at later stages of the {\focal} compilation.
 
 Some symbols (such as {\tt :}) are also reserved, and cannot be used to name methods.
 It is still possible to use such symbols as first character of a symbolic identifier.

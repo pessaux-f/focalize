@@ -1,15 +1,15 @@
-% $Id: compiler_err_msgs.tex,v 1.37 2009-06-19 10:42:52 pessaux Exp $
+% $Id: compiler_err_msgs.tex,v 1.38 2009-08-25 08:55:47 weis Exp $
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Unable to find file '$name$' in the search path.}
 
-{\em Description}: The source file made reference to a \focal\
-compilation unit 
+{\em Description}: The source file made reference to a {\focal}
+compilation unit
 $name$ (by the {\tt open} or {\tt use} directives, or by explicit
 qualification with the ``\#'' notation) but the related
-\focal\ file was not found in the current libraries search
+{\focal} file was not found in the current libraries search
 path.
 
 {\em Hints}: Locate in which directory the missing  file is
@@ -21,21 +21,21 @@ compiler option.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Invalid or corrupted compilation unit '$name$'. May be it
   was compiled with another version of the compiler.}
-{\em Description}: The source file made reference to a \focal\
+{\em Description}: The source file made reference to a {\focal}
 compilation unit
 $name$ (by the {\tt open} or {\tt use} directives, or by explicit
 qualification with the ``\#'' notation but the related
-\focal\  file was found with an incorrect format.
+{\focal}  file was found with an incorrect format.
 
 {\em Hints}: May be the compilation unit was compiled with another
-version of \focal\ or was mangled and you must compile it again with
+version of {\focal} or was mangled and you must compile it again with
 your current version.
 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Invalid file extension for '$name$'.}
-{\em Description}: The \focal\ compiler expects compilation units to be
+{\em Description}: The {\focal} compiler expects compilation units to be
 ended by the suffix ``.fcl'', ``.ml'', ``.mli'', ``.zv''or ``.v''. If
 the submitted input file doesn't end by one of these suffixes, this
 error message arises with the name, $name$ of the involved file.
@@ -50,7 +50,7 @@ submitted input file name is the correct one.
 {\em Description}: During the compilation process an error related to
 the operating system occurred (I/O error, permission error, file-system
 error, \ldots). The original message $sysmsg$ of the system explaining
-the problem follows the \focal's message.
+the problem follows the {\focal}'s message.
 
 {\em Hints}: Consult the original message of the system and get an
 appropriate solution depending on this message.
@@ -59,8 +59,8 @@ appropriate solution depending on this message.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Invalid OCaml compiler kind "$string$" for option -ocaml-comp-mode. Must be "byt", "bin" or "both".}
-{\em Description}: By default, if some \ocaml\ code was generated, the
-\focal\ compiler sends the generated code to the \ocaml\ compiler. The
+{\em Description}: By default, if some {\ocaml} code was generated, the
+{\focal} compiler sends the generated code to the {\ocaml} compiler. The
 default compilation mode is bytecode production. It is possible to
 select the native code production using the option {\tt -ocaml-comp-mode}
 followed by the string ``bin'' or to select both code production modes
@@ -74,8 +74,8 @@ the present error message.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{No input file. FoCaL is cowardly and gives up...}
-{\em Description}: The \focal\ compiler needs one input file to
+\section*{No input file. {\focalizec} is cowardly giving up...}
+{\em Description}: The {\focal} compiler needs one input file to
 compile. If none is supplied, this error message arises.
 
 {\em Hints}: Add the input source file to compile on the command
@@ -87,7 +87,7 @@ line.
 \section*{Lexical error $str$}
 {\em Description}: In the currently submitted source file, a sequence
 of characters is not recognised as legal according to the
-\focal\ programming language legal words structure. The involved
+{\focal} programming language legal words structure. The involved
 character $str$ follows in the error message.
 
 {\em Hints}: Change the source code at the indicated location.
@@ -97,7 +97,7 @@ character $str$ follows in the error message.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Syntax error}
 {\em Description}: In the currently submitted source file, a phrase of
-the program doesn't follow \focal's syntax.
+the program doesn't follow {\focal}'s syntax.
 
 {\em Hints}: Change the source code at the indicated location. It
 sometimes happens that the location gets fuzzy due to the parsing
@@ -333,7 +333,7 @@ case, ensure that you are not trying to make assumptions on the type
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Type $t_1$ occurs in $t_2$ and would lead to a cycle.}
-{\em Description}: The \focal\ type system does not allow cyclic
+{\em Description}: The {\focal} type system does not allow cyclic
 types. This especially means that a type expression must not be a
 sub-part of itself to prevent cycles.
 
@@ -368,12 +368,12 @@ arguments although this constructor needs none.
 
 {\em Description}: As presented in \ref{no-polymorphism-for-methods},
 species methods cannot be polymorphic. The method $name$ has a
- type scheme shown by $sch$  which is polymorphic. 
+ type scheme shown by $sch$  which is polymorphic.
 
 {\em Hints}:  You may explicitly add type
 annotations (constraints) on the arguments or/and return type of your
 method definition. If you need some kind of such polymorphism, use the
-collection parameter mechanism. 
+collection parameter mechanism.
 
 
 
@@ -524,7 +524,7 @@ found.
   '$fname$', type $t_1$ occurs in $t_2$ and would lead to a cycle.}
 
 {\em Description}: During collection parameter instantiation, the
-interface of the 
+interface of the
 provided collection  $s_1$ is not compatible with the interface $s_2$, since type compatibility check detected a cyclic
 type. This means that the type $t_1$ is a sub-part of itself via the
 type $t_2$.
@@ -539,7 +539,7 @@ type $t_2$.
   arities $n_1$ and $n_2$.}
 
 {\em Description}:  During collection parameter instantiation, the
-interface of the 
+interface of the
 provided collection  $s_1$ is not compatible with the interface $s_2$, since the type constructor (not sum type constructor)
 $tname$ is used with an improper number of arguments $n_1$ versus
 $n_2$.
@@ -553,7 +553,7 @@ $n_2$.
   is not present in '$s_1$'.}
 
 {\em Description}:  During collection parameter instantiation, the
-interface of the 
+interface of the
 provided collection  $s_1$ is not compatible with the interface $s_2$,
 because it doesn't have a signature containing at
 least $s_2$'s methods and especially not the method $name$.
@@ -666,7 +666,7 @@ x \odot z$
 or
 $\forall x, y, z \in S, (x \odot y \wedge y \odot z) \Rightarrow
 x \odot z$.
-\focal\ does not try to establish the equality of these two
+{\focal} does not try to establish the equality of these two
 expressions. It only compares syntactically the statements modulo
 variables renaming (i.e. $\alpha$-conversion) and non-significant
 parentheses.
@@ -710,7 +710,7 @@ implicit final path $m_n \rightarrow m_1$.
   '$name$'.}
 
 {\em Description}: The external value definition allowing to link
-\focal\ code to foreign languages doesn't specify how to map the value
+{\focal} code to foreign languages doesn't specify how to map the value
 identifier $name$ in the language $lang$.
 
 {\em Hints}: Supply a binding for this language in the external
@@ -723,7 +723,7 @@ definition.
   '$name$'.}
 
 {\em Description}: The external type definition allowing to link
-\focal\ code to foreign languages doesn't specify how to map the type
+{\focal} code to foreign languages doesn't specify how to map the type
 identifier $name$ in the language $lang$.
 
 {\em Hints}: Supply a binding for this language in the external
@@ -736,7 +736,7 @@ definition.
   constructor '$name$'.}
 
 {\em Description}: The external sum type definition allowing to link
-\focal\ code to foreign languages doesn't specify how to map the sum
+{\focal} code to foreign languages doesn't specify how to map the sum
 type constructor $name$ in the language $lang$.
 
 {\em Hints}: Supply a binding for this language in the external
@@ -749,7 +749,7 @@ definition.
   '$name$'.}
 
 {\em Description}: The external record type definition allowing to
-link \focal\ code to foreign languages doesn't specify how to map the
+link {\focal} code to foreign languages doesn't specify how to map the
 record field $name$ in the language $lang$.
 
 {\em Hints}: Supply a binding for this language in the external
@@ -762,9 +762,9 @@ definition.
   file '$file$'. Compilation unit may have been compiled without OCaml code
   generation enabled.}
 
-{\em Description}: The \focal\ compilation unit file $file$.fcl was compiled but
-the object file doesn't contain information about \ocaml\ code
-generation. The \focal\ compiler allows to disable the \ocaml\ code
+{\em Description}: The {\focal} compilation unit file $file$.fcl was compiled but
+the object file doesn't contain information about {\ocaml} code
+generation. The {\focal} compiler allows to disable the {\ocaml} code
 production by the {\tt --no-ocaml-code} option. May be this option was used.
 
 {\em Hints}: Invoke the compiler on the source file $file$.fcl without
@@ -786,9 +786,9 @@ the {\tt --no-ocaml-code} option.
   '$file$'. Compilation unit may have been compiled without Coq code
   generation enabled.}
 
-{\em Description}: The \focal\ compilation unit $file$.fcl was
-compiled but the object file doesn't contain information about \coq\
-code generation. The \focal\ compiler allows to disable the \coq\ code
+{\em Description}: The {\focal} compilation unit $file$.fcl was
+compiled but the object file doesn't contain information about {\coq}
+code generation. The {\focal} compiler allows to disable the {\coq} code
 production by the {\tt --no-coq-code} option. May be this option was
 used.
 
@@ -805,7 +805,7 @@ the {\tt --no-coq-code} option.
 method $name$ of a species parameter. Since species parameters are
 always abstracted, {\bf definitions} (i.e. ``bodies'') of their methods
 are {\bf not} available in the parametrised species. For this reason,
-it is impossible to provide this definition to \zenon.
+it is impossible to provide this definition to {\zenon}.
 
 {\em Hints}: None.
 
@@ -818,7 +818,7 @@ it is impossible to provide this definition to \zenon.
 {\em Description}: The current proof tries to used the definition of a
 method $name$ {\bf only declared} in the current species. Since the
 definition is not available, it is impossible to provide it to
-\zenon.
+{\zenon}.
 
 {\em Hints}: None.
 
@@ -830,7 +830,7 @@ definition is not available, it is impossible to provide it to
 
 {\em Description}: The current proof tries to used a local variable
 $name$, i.e. an identifier not representing a method, hence
-meaningless for \zenon.
+meaningless for {\zenon}.
 
 {\em Hints}: None.
 
@@ -842,7 +842,7 @@ meaningless for \zenon.
 
 {\em Description}: The current proof tries to used a local variable
 $name$, i.e. an identifier not representing a method, hence
-meaningless for \zenon.
+meaningless for {\zenon}.
 
 {\em Hints}: None.
 
@@ -872,15 +872,15 @@ proof step that was not found in the current proof tree.
   generation. At least functions '$name_1$' and '$name_2$' are
   involved in a mutual recursion.}
 
-{\em Description}: The current version of \focal\ does not yet handle
-\coq\ code generation for mutual recursive functions. At least the two
+{\em Description}: The current version of {\focal} does not yet handle
+{\coq} code generation for mutual recursive functions. At least the two
 functions $name_1$ and $name_2$ were found as mutually recursive but
 may be the recursion involves more functions. It is then impossible to
-produce \coq\ source code.
+produce {\coq} source code.
 
 
-{\em Hints}: Until this feature is available in \focal\, do not try to
-generate the \coq\ code for the source file containing these functions
+{\em Hints}: Until this feature is available in {\focal}, do not try to
+generate the {\coq} code for the source file containing these functions
 by using the {\tt --no-coq-code} option.
 
 
@@ -888,8 +888,8 @@ by using the {\tt --no-coq-code} option.
 \section*{Recursive call to '$name$' contains nested recursion.}
 
 {\em Description}: The function contains a recursive call to $name$
-inside a recursive call. The current version of \focal\ doesn't
-support the \coq\ code generation for nested recursive calls.
+inside a recursive call. The current version of {\focal} doesn't
+support the {\coq} code generation for nested recursive calls.
 
 {\em Hints}: Try to rewrite your function with the nested call
 performed before the outer recursive call. For instance:
@@ -944,8 +944,8 @@ let rec f (x) =
 
 {\em Description}: An error was raised and not expected during a
 normal execution of the compiler. This is a failure of the compiler
-and must be fixed by the \focal\ development team. The error message
+and must be fixed by the {\focal} development team. The error message
 display the internal reason of the failure and must be reported to the
-\focal\ development team.
+{\focal} development team.
 
 {\em Hints}: \verb+http://focal.inria.fr/+, link ``Bug tracking''.

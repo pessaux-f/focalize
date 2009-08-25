@@ -1,4 +1,4 @@
-% $Id: motivations.tex,v 1.9 2009-06-05 13:41:07 pessaux Exp $
+% $Id: motivations.tex,v 1.10 2009-08-25 08:55:47 weis Exp $
 
 
 \subsection*{Motivations}
@@ -110,9 +110,9 @@ V. Donzeau-Gouge ~\cite{EDEMOI-All,EDEMOI-Model,EDEMOI-Proof}. This
 last work led to the development of a translator \cite{Focal-UML}
 from {\oldfocal} to UML for documentation purposes.
 
-\subsection*{The {\focalize} system}
+\subsection*{The {\focal} system}
 
-The {\focalize} development started in 2006, as a
+The {\focal} development started in 2006, as a
 continuation of the {\foc} and {\oldfocal} efforts. The new system was rewritten
 from scratch. A new language and syntax was designed and carefully
 implemented, with in mind ease of use, expressivity, and programmer
@@ -121,21 +121,21 @@ with the corresponding pattern matching facilities -- leads to new expressive
 power.
 
 The {\zenon} automatic theorem prover was also integrated in the
-compiler and natively interfaced within the {\focalize} language. New
+compiler and natively interfaced within the {\focal} language. New
 developments for a better support of recursive functions is on the way (in particular for
 termination proofs).
 
 
 
-\subsection*{The {\focalize} system in short}
+\subsection*{The {\focal} system in short}
 
-The {\focalize} system provides means for the developers to formally express
+The {\focal} system provides means for the developers to formally express
 their specifications and to go step by step (in an incremental approach) to
 design and implementation while proving that such an implementation
-meets its specification or design requirements. The {\focalize} language offers
+meets its specification or design requirements. The {\focal} language offers
 high level mechanisms such as multiple inheritance, late binding, redefinition,
 parametrization, etc.  Confidence in proofs submitted by developers or
-automatically done relies on formal proof verification. {\focalize} also
+automatically done relies on formal proof verification. {\focal} also
 provides some automation of documentation production and management.
 
 A formal specification can be built by declaring names of functions
@@ -143,24 +143,24 @@ and values and introducing
 properties. Then, design and implementation can incrementally be done
 by adding definitions of functions and proving that the implementation
 meets the specification or design requirements. Thus, developing in
-{\focalize} is a kind of refinement process from  formal model to design
-and code, completely done within {\focalize}. Taking the global development
+{\focal} is a kind of refinement process from  formal model to design
+and code, completely done within {\focal}. Taking the global development
 in consideration within the same environment brings some conciseness,
 helps documentation and reviewing.
 
-A {\focalize} development is organised as a hierarchy that may have
+A {\focal} development is organised as a hierarchy that may have
 several roots. The upper levels of the hierarchy are built along the
 specification stage while the lower ones correspond to
 implementation and each  node of the hierarchy corresponds to a progress
 toward a complete implementation.
 
 We would like to mention several works about safety and/or security
-concerns within {\focalize} and specially the definition of a safety life
+concerns within {\focal} and specially the definition of a safety life
 cycle by P. Ayrault, T. Hardin and F. Pessaux \cite{TTSS08} and the
 study of some traps within formal methods by E. Jaeger and
 T. Hardin\cite{traps}.
 
-{\focalize} can be seen as an IDE still in development, which
+{\focal} can be seen as an IDE still in development, which
 gives a positive solution to the three requirements identified above:
 
 \begin{enumerate}

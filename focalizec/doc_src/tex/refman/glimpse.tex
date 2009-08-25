@@ -1,4 +1,4 @@
-% $Id: glimpse.tex,v 1.11 2009-08-18 17:38:59 weis Exp $
+% $Id: glimpse.tex,v 1.12 2009-08-25 08:55:47 weis Exp $
 \def\bbbn{{\rm I\!N}} % [EJ] Sinon il y a \mathbb{N} qui fait ça bien aussi...
 \label{glimpse}
 Before entering the precise description of {\focal}, we give an
@@ -527,21 +527,22 @@ instead of purely behavioural aspects of the system: {\em theorems},
 {\em properties} and {\em proofs}.
 
 Stating a {\em property} indicates that a {\em proof} that it
-{\bf holds} will be given at some stage of the development. For {\em theorems}, the {\em proof} is
+{\bf holds} will be given at some stage of the development. For {\em
+theorems}, the {\em proof} is
 directly provided with the statement. Such proofs must be done by
 the developer and will finally be sent to the formal proof assistant
-\coq\ who will automatically check that the demonstration of the
+{\coq} who will automatically check that the demonstration of the
 {\em property} is consistent. Writing a proof can be done in several ways.
 
 It can be written in {\focal}'s proof language, a hierarchical proof
 language that allows to give hints and directions for a proof. This
 language will be sent to an external theorem prover,
-\zenon \cite{ZenonBDD,zenon0.4.1} developed by D. Doligez. This prover is
+{\zenon} \cite{ZenonBDD,zenon0.4.1} developed by D. Doligez. This prover is
 a first order theorem prover based on the tableau method incorporating
-implementation novelties such as sharing.  \zenon\ will attempt, from
-these hints, to automatically generate the proof and exhibit a \coq\
-term suitable for verification by \coq. Basic hints given by the
-developer to \zenon\ are: ``prove by definition of a {\em method}''
+implementation novelties such as sharing.  {\zenon} will attempt, from
+these hints, to automatically generate the proof and exhibit a {\coq}
+term suitable for verification by {\coq}. Basic hints given by the
+developer to {\zenon} are: ``prove by definition of a {\em method}''
 (i.e. looking inside its body) and ``prove by {\em property}''
 (i.e. using the logical statement of a {\em theorem} or {\em property}).
 Surrounding this hints mechanism, the language allows to build the
@@ -573,14 +574,14 @@ property. We show below an example of such demonstration.
 \end{lstlisting}
 }
 
-The important point is that \zenon\ works for the
+The important point is that {\zenon} works for the
 developer: {\bf it searches the proof itself}, the developer does not
 have to elaborate it formally ``from scratch''.
 
-Like any automatic theorem prover, \zenon\ may fail finding a
+Like any automatic theorem prover, {\zenon} may fail finding a
 demonstration. In this case, {\focal} allows to write verbatim
-\coq\ proofs. In this case, the proof is not anymore automated, but
-this leaves the full power of expression of \coq\ to the developer.
+{\coq} proofs. In this case, the proof is not anymore automated, but
+this leaves the full power of expression of {\coq} to the developer.
 
 Finally, the {\tt assumed} keyword is the ultimate proof backdoor,
 telling that the proof is not given but that the property must be
@@ -640,17 +641,17 @@ modularisation of the proofs.
 
 \subsection{Code Generation}
 
-{\focal} currently compiles programs toward two languages, \ocaml\ to
-get an executable piece of software, and \coq\ to have a formal model
+{\focal} currently compiles programs toward two languages, {\ocaml} to
+get an executable piece of software, and {\coq} to have a formal model
 of the program, with theorems and proofs.
 
-In \ocaml\ code generation, all
+In {\ocaml} code generation, all
 the logical aspects are discarded since they do not lead to executable
 code.
 
-Conversely, in \coq, all the {\em methods} are compiled,
+Conversely, in {\coq}, all the {\em methods} are compiled,
 i.e. ``computational'' {\em methods} and logical {\em methods} with
-their proofs. This allows \coq\ to check the entire consistence of
+their proofs. This allows {\coq} to check the entire consistence of
 the system developed in {\focal}.
 
 

@@ -1,15 +1,15 @@
-% $Id: basic_concepts.tex,v 1.16 2009-06-05 13:41:07 pessaux Exp $
+% $Id: basic_concepts.tex,v 1.17 2009-08-25 08:55:47 weis Exp $
 
-As stated in section \ref{glimpse}, the \focal\ language is designed
+As stated in section \ref{glimpse}, the {\focal} language is designed
 to build an application step by step, going from very abstract
 specifications to the concrete implementation through a hierarchy of
 structures. At first sight  species seem quite similar to
 classes in an Object-Oriented context.  {\em However, despite of
-inheritance and late-binding features, \focal\ is definitively not an
+inheritance and late-binding features, {\focal} is definitively not an
 Object-Oriented language as C++, Java, etc.  are.}
 
  In the following we  focus on the basic concepts underlying a
-\focal\ development, that is:
+{\focal} development, that is:
 \begin{itemize}
 \item Top-level definitions
   \item Species
@@ -29,10 +29,10 @@ To ensure that this part can be read independently of the section
 We call {\bf toplevel-definition} (just one word) a definition which
 appears outside species and collections. Such definitions can only be:
 \begin{itemize}
-  \item Species 
+  \item Species
   \item collections,
   \item type definitions,
-  \item general theorems (not depending on a species) 
+  \item general theorems (not depending on a species)
   \item general functions (not depending on a species),
   \item expressions to be directly evaluated (but there is no way to
     bind their value to an identifier).
@@ -45,7 +45,7 @@ Any toplevel-definition is terminated by a double semi-character
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Species}
 \label{species-intro}
-{\bf Species} \index{species} are the nodes of the \focal\
+{\bf Species} \index{species} are the nodes of the {\focal}
 hierarchy. A species is a sequence of {\bf methods} \index{method} or
 {\bf fields}\index{field}, each one being terminated by a semi
 character (``;'')\index{;;}. Hence, a basic species looks like:
@@ -88,29 +88,29 @@ In the context of a species, the representation is denoted by {\tt Self}.
 %       \begin{lstlisting}
 % species IntCouple =
 %   representation = (int * int) ;
-% let element = (1,1); 
-% let increment (x,y) : self -> self  = (x+1, y+1);  
+% let element = (1,1);
+% let increment (x,y) : self -> self  = (x+1, y+1);
 % end ;;
 %       \end{lstlisting}
 %     }
 Note that a representation is never a polymorphic type. When it is
 only declared, it is a type variable, which can receive only one
 instantiation. In other words, this type variable is not universally
-quantified, as are the type variables of polymorphic types. 
+quantified, as are the type variables of polymorphic types.
 
 \item {\bf Signatures}\index{signature}. They introduce names of
   constants and functions, uniquely providing their type as a type
   expression. A signature
   begins with the keyword {\tt signature} followed by the introduced
   name followed by {\tt :} followed by a type expression. For
-  instance: 
+  instance:
 {\scriptsize
       \begin{lstlisting}
  species IntStack =
    signature push : int -> Self -> Self ;
  end ;;
       \end{lstlisting}
-    } 
+    }
 
   As we saw above, {\tt Self} represents the representation (thus a
   type) of the current species. Hence an operation pushing an integer
@@ -153,7 +153,7 @@ end ;;
     this point later in detail in section \ref{late-binding}.
 
     \smallskip
-    Although \focal\ is a functional language, function application
+    Although {\focal} is a functional language, function application
     must always be total. This means that any function call must be
     provided all the effective arguments of the function. As
     previously
@@ -162,7 +162,7 @@ end ;;
     separated and enclosed by parentheses.
 
   \medskip
-\item {\bf Properties}\index{property}. They are first order 
+\item {\bf Properties}\index{property}. They are first order
   formulae containing names already introduced. When stating a
   property, the proof that it holds is not yet provided (but will have
   to be ultimately  provided). A property can be viewed as a declaration.
@@ -214,7 +214,7 @@ end ;;
 
 \label{no-polymorphism-for-methods}
 One important restriction on the type of the methods is that it cannot
-be polymorphic\index{polymorphism}. However, \focal\ provides another
+be polymorphic\index{polymorphism}. However, {\focal} provides another
 mechanism to circumvent this restriction, the
 parametrisation\index{parametrisation} as explained further
 (c.f. \ref{parametrisation}).
@@ -240,8 +240,8 @@ case, if the representation is also defined, then the obtained species
 is trivially complete.
 
 The important point for a species to be complete is that it can be
-turned into effective executable \ocaml\ code and effective checkable
-\coq\ code, since all the components are known.
+turned into effective executable {\ocaml} code and effective checkable
+{\coq} code, since all the components are known.
 
 \medskip
 {\bf Important}: Although we said that only a complete species can
@@ -277,7 +277,7 @@ into properties.
 
 While this abstraction is easy within programming languages, it is not
 always possible when dealing with proofs and properties. Such
-problematic species are rejected by \focal\ and will be described
+problematic species are rejected by {\focal} and will be described
 later in \ref{dependencies}.
 
  An interface has a {\bf  name}, {\em which is the name of the underlying
@@ -295,7 +295,7 @@ apply methods of collection parameters.
 A {\bf collection} is a kind of ``grey box'', built from a {\em
   complete} species by abstraction of the representation. A collection
 has exactly the same sequence of methods than the complete species
-underlying it, apart the representation which is hidden. 
+underlying it, apart the representation which is hidden.
 Note that creating a collection from it  is the
 only way to turn methods of a complete species into executable
 code. This point is emphasised by the syntax:
@@ -335,11 +335,11 @@ Full.print (dv) ;;
 \end{lstlisting}
 }
 
-In this example, we define a complete species {\tt Full}. Then 
+In this example, we define a complete species {\tt Full}. Then
 we  create the collection
 {\tt MyFull\_Instance}. And we use methods of this collection to
 create entities of this collection. We print the result of the
-evaluation of the top-level definitions of {\tt v} and {\tt dv}. 
+evaluation of the top-level definitions of {\tt v} and {\tt dv}.
 
 \smallskip
 
@@ -350,7 +350,7 @@ impossible to ensure a type equivalence.}
 \smallskip
 As a conclusion, collections are the only way to get something that
 can be executed since they are the terminal items of a
-\focal\ development hierarchy. Since they are ``terminal'', this also
+{\focal} development hierarchy. Since they are ``terminal'', this also
 means that no method can be added to a collection. Moreover, a
 collection may not be used to create a new species by inheritance (as
 explained in the next section).
