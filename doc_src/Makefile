@@ -1,6 +1,6 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2009-04-13 19:56:47 weis Exp $
+# $Id: Makefile,v 1.4 2009-08-26 16:41:43 weis Exp $
 
 ROOT_DIR = ..
 
@@ -24,12 +24,12 @@ SUB_DIRS = contacts documentation download resources
 HTMLC_INCLUDES = -I $(ROOT_DIR)/doc_src/Includes \
   -env $(ROOT_DIR)/.config_var_for_shell -env project.env
 
-SOURCES=index.shtml
-BYT_OBJS=$(SOURCES:.shtml=.html)
+SOURCES = index.shtml
+BYT_OBJS = $(SOURCES:.shtml=.html)
 
 include $(ROOT_DIR)/Makefile.common
 
-PROJECT_WEB_TARGET_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
+PROJECT_WEB_TARGET_DIR = $(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
 
 byt clean distclean install uninstall::
 	@for i in $(SUB_DIRS); do \
