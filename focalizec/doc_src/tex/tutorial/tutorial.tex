@@ -154,11 +154,13 @@
  but also of associated properties that have to be satisfied, as in the following example
  describing a commutative binary operation $f$ over a set $\mathbb{S}$ with a left neutral
  element:
- \[\small\begin{array}{lllll}
+ \begin{small}
+ \[\begin{array}{lllll}
  f:\mathbb{S}\!\to\!\mathbb{S}\!\to\!\mathbb{S} & \quad &
  \forall\:x\:y,\:f(x,y)\!=\!f(y,x) & \quad &
  \forall\:x,\:f(Z,x)\!=\!x
  \end{array}\]
+ \end{small}
  The left part is frequently encountered in classical, non-formal languages, under the names
  signature, interface, prototype or specification. The two properties on the right part, on the
  other hand, are less usual; in a formal method, they do not represent comments or assertions
@@ -748,7 +750,8 @@ a hierarchical vision of the deductive proof. In such a tree the goal is at the 
 using deduction rules we progress toward trivial subgoals at the top of the tree, possibly
 branching (for example, to prove $A\!\land\!B$ one may provide a proof of $A$ and a proof of
 $B$). We got something like:
-\[\small\begin{array}{c}
+\begin{small}
+\[\begin{array}{c}
 \begin{array}{c}
 ?\\\hline
 s\!:\!Self, v\:w\!:\!\fid{Val}, v\!\in\!s, v\!=\!w\vdash w\!\in\!s
@@ -774,6 +777,7 @@ s\!:\!Self, v\!:\!\fid{Val}, v\!\in\!s\vdash
 v\!\in\!s\Rightarrow s\!+\!v\!\subseteq\!s
 \end{array}
 \end{array}\]
+\end{small}
 This identifies the difficulty preventing the derivation of the proof by \zenon, as something
 is missing in the left branch, the subgoal denoted by the interrogation mark. Indeed, this
 subgoal has no reason to be valid: \code{=} is an equivalence relation, but nothing enforces
@@ -808,7 +812,8 @@ We can also try to prove the following property:
 \zenon does not succeeds\footnote{Remember that actual results depend upon the computer and
 the parameters of \zenon.}, but in this case it is apparently not because of missing
 information as a proof by hand appears possible:
-\[\small\begin{array}{c}
+\begin{small}
+\[\begin{array}{c}
 \begin{array}{c}
 \text{Assuming }w\!=\!v\text{ is absurd}\\\hline
 s\!:\!Self, v\:w\!:\!\fid{Val}, v\!\not\in\!s, w\!\in\!s\vdash w\!\not=\!v
@@ -835,6 +840,7 @@ s\!:\!Self, v\!:\!\fid{Val}, v\!\not\in\!s\vdash
 v\!\not\in\!s\Rightarrow s\!\subseteq\!s\!-\!v
 \end{array}
 \end{array}\]
+\end{small}
 It is likely to be a problem of complexity, and human guidance is required.
 
 Two main approaches are possible in \foc to prove non-trivial properties using \zenon. The
@@ -1172,10 +1178,12 @@ manageable by \zenon; in such a case, a proof in \coq is required, as illustrate
 
 Why does the property \code{induction} prove that lists are finite? Let's first define the
 finiteness predicate $\fid{finite}$ by two axioms:
-\[\small\begin{array}{c}
+\begin{small}
+\[\begin{array}{c}
 \fid{finite}(\fid{nil}) \quad \quad \quad \quad
 \forall\:t,\:\fid{finite}(t)\Rightarrow \forall\:h,\:\fid{finite}(\fid{cons}(h,t))
 \end{array}\]
+\end{small}
 The first claims that the empty list is finite, and the second that if a list is finite, then
 it is still finite after having added an element to it. It is then possible to prove the
 theorem $\forall\:l,\:\fid{finite}(l)$ by applying \code{induction}.
@@ -2252,13 +2260,15 @@ function to check its structure.
 \newpage\section{Inheritance Graph}
 
 Inheritance in our development is as follows:
-\[\small\xymatrix{
+\begin{small}
+\[\xymatrix{
 \fid{CoList}\ar@{=>}[d] & \fid{Superset}\ar@{=>}[d] & \fid{Subset}\ar@{=>}[d]\ar@{=>}[dr] &\\
 \fid{FiniteList}\ar@{=>}[d] & \fid{SupersetWitness}\ar@{=>}[d]\ar@{=>}[r] & \fid{ExtSubset}\ar@{=>}[d] & \fid{\underline{FunSubset}} \\
 \fid{EnumList}\ar@{=>}[d] & \fid{PrintParseSuperset}\ar@{=>}[d]\ar@{=>}[r] & \fid{\underline{ListSubset}}\ar@{=>}[d]&\\
 \fid{\underline{IndList}}\ar@{=>}[d] & \fid{\underline{Int}}\ar@{=>}[d] & \fid{\fbox{IntSubset\_Coll}} \\
 \fid{\fbox{IntList\_Coll}} & \fid{\fbox{Int\_Coll}} & \\
 }\]
+\end{small}
 If $B$ inherits of $A$ then an arrow is drawn from $A$ to $B$. Complete species are
 underlined, and collections are boxed. Note that parametrisation is not represented here to
 avoid over-complexification.
