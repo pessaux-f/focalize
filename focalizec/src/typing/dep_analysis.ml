@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.71 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: dep_analysis.ml,v 1.72 2009-08-27 14:14:52 doligez Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -278,13 +278,14 @@ let ident_in_fact_dependencies ~current_species ident =
      | Parsetree.ANTI_type t -> t) in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local _ ->
-       (* Because scoping pass already renamed all the identfiers that
+       (* Because scoping pass already renamed all the identifiers that
           "looked like" local identifiers into "method identifiers" if they
           indeed denoted methods, we can safely consider that remaining
           "local identifiers" are really local and introduce no dependency.
           Furthermore, there is no reason to get here real local identifier
           unless the user put an erroneous fact. *)
-       failwith "To investigate: may be erroneous fact in the proof."
+       (* failwith "To investigate: may be erroneous fact in the proof." *)
+       Parsetree_utils.SelfDepSet.empty
    | Parsetree.EI_global _ ->
        (* Since dependencies are computed inside A species architecture,
           invocation of a global stuff does not involve dependency because it

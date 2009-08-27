@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.183 2009-06-27 01:29:02 weis Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.184 2009-08-27 14:14:52 doligez Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1108,13 +1108,36 @@ let ensure_enforced_dependencies_by_definition_are_definitions min_coq_env
 
 
 let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
-    generated_fields by_def_expr_ident =
+    generated_fields available_hyps by_def_expr_ident =
   let out_fmter = ctx.Context.scc_out_fmter in
   match by_def_expr_ident.Parsetree.ast_desc with
-   | Parsetree.EI_local _ ->
-       raise
-         (Attempt_proof_by_def_of_local_ident
-            (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
+   | Parsetree.EI_local vname ->
+       let rec lookup x l =
+         match l with
+         | {Parsetree.ast_desc =
+              Parsetree.H_notation (((Parsetree.Vuident id
+                                    | Parsetree.Vlident id) as y), body)} :: _
+           when x = y -> (id, body)
+         | _ :: t -> lookup x t
+         | [] -> raise
+                   (Attempt_proof_by_def_of_local_ident
+                      (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
+       in
+       let (id, body) = lookup vname available_hyps in
+       Format.fprintf out_fmter
+         "(* For notation used via \"by definition of %a\". *)@\n"
+         Sourcify.pp_expr_ident by_def_expr_ident;
+       Format.fprintf out_fmter "@[<2>Definition %s :=" id;
+       Species_record_type_generation.generate_expr
+         ctx ~local_idents: [] ~in_recursive_let_section_of: []
+         ~self_methods_status:
+           Species_record_type_generation.SMS_abstracted env
+         ~recursive_methods_status:
+           Species_record_type_generation.RMS_regular
+         body;
+       (* Done... Then, final carriage return. *)
+       Format.fprintf out_fmter ".@]@\n"
+
    | Parsetree.EI_global qvname ->
        (begin
        (* The stuff is in fact a toplevel definition, not a species method. We
@@ -1700,7 +1723,8 @@ let zenonify_fact ctx print_ctx env min_coq_env ~self_manifest
        (* Syntax: "by definition ...". This leads to a Coq Definition. *)
        List.iter
          (zenonify_by_definition
-           ctx print_ctx env min_coq_env ~self_manifest generated_fields)
+           ctx print_ctx env min_coq_env ~self_manifest generated_fields
+           available_hyps)
          expr_idents
    | Parsetree.F_property expr_idents ->
        (* Syntax: "by property ...". This leads to a Coq Parameter. *)
@@ -2101,7 +2125,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
           "inline" the Definitions' bodies (in fact, for Hypothesis, since we
           have no body, only declaration, the inlining has no effect since they
           don't have method generator). If the list of facts is empty, this
-          implicitely means "by all the previous steps of THIS proof level",
+          implicitly means "by all the previous steps of THIS proof level",
           i.e. by the [PN_sub]s of the closest [Pf_node] hosting us. And the
           closest [Pf_node] hosting us is in our parent proof. *)
        let real_facts =
