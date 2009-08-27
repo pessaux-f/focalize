@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.24 2009-08-27 08:58:18 weis Exp $
+% $Id: lexical_conventions.tex,v 1.25 2009-08-27 16:15:41 doligez Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -191,8 +191,8 @@ must be written ?''.
 \item an {\em infix} is written {\em between} its arguments, as $+$ in
  $x\; +\; y$ or $mod$ in $x\; mod \;3$.
 \item a {\em mix-fix} is written {\em among} its arguments, as
-  $if\; \ldots then\; \ldots else\; \ldots$ in
-  $if\ c\; then\; 1\; else\; 2 $.
+  {\em if ... then ... else ...} in
+  {\em if\ c then 1 else 2}.
 \end{citemize}
 
 In {\focal}, all the ordinary identifiers are prefix and all the binary
@@ -403,13 +403,13 @@ are lowercase infix starters;
 are lowercase prefix starters;
 {\tt :, `}
 are uppercase infix starters;
-{\tt (, [, {}
+{\tt (, [, \{}
 are uppercase prefix starters.
 
 For instance, {\tt +} and {\tt @++} are lowercase infix identifiers.
 Since its starter is {\tt :}, {\tt ::} is an uppercase infix identifier; hence,
 as any other uppercase identifier, {\tt ::} could designate a
-value constructor name for a union type. Similarly {\tt \[\]} is an uppercase prefix identifier that also
+value constructor name for a union type. Similarly {\tt []} is an uppercase prefix identifier that also
 could designate a value constructor.
 On the contrary, no notation starting with a {\tt :} can designate a method name.
 
