@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.23 2009-08-25 08:55:47 weis Exp $
+% $Id: lexical_conventions.tex,v 1.24 2009-08-27 08:58:18 weis Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -14,43 +14,74 @@ literals and keywords that would otherwise be confused as one single
 identifier, literal or keyword.
 
 %%%%%%%%%%%
+\subsection{Escaped characters}
+\index{escaped character}
+
+
+
+%%%%%%%%%%%
 \subsection{Comments}
 \index{comment}
-Comments (possibly spanning) on several lines are introduced by the
-two characters {\tt (*}, with no intervening blanks, and terminated by
-the characters {\tt *)}, with no intervening blanks. Comments are
-treated as blanks. Comments can occur inside string or character
-literals (provided the {\tt *} character is escaped) and can be nested. They
-are discarded during the compilation process. Example:
+
+Comments are treated as blanks and discarded during the compilation process.
+{\focal} features two kinds of comments, {\em uni-line comments} introduced by
+{\tt --} and {\em general comments} enclosed between {\tt (*} and {\tt *)}.
+
+Note: The three character sequences {\tt (*}, {\tt *)}, and {\tt --} are
+named {\em comment delimiters}.
+Due to their particular lexical role the comment delimiters must be escaped in
+other regular tokens, in particular string and character literals.
+
+\subsubsection{General comments}
+
+The two characters {\tt (*}, with no intervening blanks, start a {\em
+general comment}; the two characters {\tt *)}, with no intervening blanks,
+close a general comment. General comments may span on any number of lines and
+may be arbitrarily nested. In addition, any legal {\focal} program may be
+commented out via a general comment.
+
+Note: Almost arbitrary text can be written inside a general comment, therefore
+general comments are used to add explanations in the code to help the reader.
+
+Example:
 {\scriptsize
 \begin{lstlisting}
-(* Discarded comment *)
+(* The main species of the development: S.
+   S contains only one method, m, since m is general enough to perform the
+   entire work under any circumstance. *)
 species S =
   ...
-  let m (x in Self) = (* Another discarded comment *)
+  let m (x in Self) = (* Another useful comment *)
   ...
-end ;;
+end
+;;
 (* Another discarded comment at end of file *)
 \end{lstlisting}
 }
 
-Comments spanning on a single line start by the two characters
-{\tt --} and end with the end-of-line character.
+\subsubsection{Uni-line comments}
+
+The two characters {\tt --}, with no intervening blanks, start a {\em uni-line
+comment}; a uni-line comment always spreads to the end of the line.
+
+Note: No general comment marker may appear in a uni-line comment.
+
 Example:
 {\scriptsize
 \begin{lstlisting}
 -- Discarded uni-line comment
 species S =
-  let m (x in Self) = -- Another uni-line comment
+  let m (x in Self) = -- The powerful m method.
   ...
-end ;;
+end
+;;
 \end{lstlisting}
 }
 
 Note that double quotes (symbol $"$) should not appear in comments, and that
-a spanning comment should not start with uniline comment mark. A uniline
+a spanning comment should not start with uni-line comment mark. A uni-line
 comment should also always be terminated by a carriage return (an unclosed
-uniline comment cannot end a file).
+uni-line comment cannot end a file).
 
 %%%%%%%%%%%
 \subsection{Annotations}
@@ -66,7 +97,7 @@ In particular, a {\bf source file cannot end by an annotation}.
 
 Unlike comments, annotations are kept during the compilation process
 and recorded in the compilation information (``{\tt .fo}'' files). Annotations can
-be processed later on by external tools that could analyze them to
+be processed later on by external tools that could analyse them to
 produce a new {\focal} source code accordingly.
 For instance, the {\focal} development environment provides the {\focdoc}
 automatic production tool that uses annotations to automatically generate
@@ -104,14 +135,14 @@ identifier can designate.
 \subsubsection{Introduction}
 
 Sorting words to find out which kind of meaning they may have is a very common
-conceptual categorization of names that we use when we write or read ordinary
+conceptual categorisation of names that we use when we write or read ordinary
 English texts. We routinely distinguish between:
 \begin{citemize}
 \item a word only made of lowercase characters, that is supposed to be an
   ordinary noun, such as ``table'', ``ball'', or a verb as in ``is'', or an
   adjective as in ``green'',
 \item a word starting with an uppercase letter, that is supposed to be a name,
-  maybe a family or christian name, as in ``Kennedy'' or ``David'', or a location
+  maybe a family or Christian name, as in ``Kennedy'' or ``David'', or a location
   name as in ``London''.
 \end{citemize}
 
@@ -141,8 +172,8 @@ understand what the words are designating and how they can be used.
 \end{citemize}
 
 Those concepts are compositional, i.e. all these concepts are independent
-from one another. Put is another way: for any fixity, precedence, category and nature,
-there exist identifiers with this exact properties.
+from one another. Put is another way: for any fixity, precedence, category
+and nature, there exist identifiers with this exact set of properties.
 
 We further explain those concepts below.
 
@@ -159,13 +190,13 @@ must be written ?''.
  $sin\; x$ or $-$ in $- y$,
 \item an {\em infix} is written {\em between} its arguments, as $+$ in
  $x\; +\; y$ or $mod$ in $x\; mod \;3$.
-\item a {\em mixfix} is written {\em among} its arguments, as
+\item a {\em mix-fix} is written {\em among} its arguments, as
   $if\; \ldots then\; \ldots else\; \ldots$ in
   $if\ c\; then\; 1\; else\; 2 $.
 \end{citemize}
 
-In {\focal}, as in maths, ordinary identifiers are always prefix and binary operators are
-always infix.
+In {\focal}, all the ordinary identifiers are prefix and all the binary
+arithmetics operators are infix as they are in mathematics.
 
 \subsubsection{Precedence of identifiers}
 \index{precedence of identifiers}
@@ -182,9 +213,9 @@ conventions:
       nor $2\; *\; (3\; ^{(4\; +\; 5)})$ which is $39366$.
 \end{citemize}
 
-In {\focal}, all the binary infix operators have the precedence they have in maths.
+In {\focal}, all the binary infix operators have the precedence they have in mathematics.
 
-\subsubsection{Categorization of identifiers}
+\subsubsection{Categorisation of identifiers}
 
 \index{category of identifiers}
 The category of an identifier answers to the question ``is this identifier a
@@ -192,20 +223,38 @@ possible name for this kind of concept ?''.
 In programming languages categories are often strict, meaning that the category
 exactly states which concept attaches to the identifier.
 
-For {\focal} these categories are
-\begin{citemize}
-\item {\em lowercase}: the identifier starts with a lowercase letter and
-  designates a simple entity of the language. It may name some of
-  the language expressions, a function name, a function parameter or bound
-  variable name, a method name, a type name, or a record field label name.
+For {\focal} there are two categories of identifiers, the {\em lowercase} and
+the {\em uppercase} identifiers.
 
-\item {\em uppercase}: the identifier starts with an uppercase letter and
-  designates a more complex entity in the language. It may name a sum type
-  constructor name, a module name, a species or a collection name.
+\begin{citemize}
+
+\item a {\em lowercase identifier} designates a simple entity of the
+  language. It may name some of the language expressions, a function name, a
+  function parameter or bound variable name, a method name, a type name, or a
+  record field label name.
+
+\item an {\em uppercase identifier} designates a more complex entity in the
+  language. It may name a sum type constructor name, a module name, a species
+  or a collection name.
+
 \end{citemize}
 
-We distinguish identifiers using their first ``meaningful'' character:
-the first character that is not an underscore.
+Roughly speaking, the first letter of an identifier fixes its category:
+if the first letter is lowercase the identifier is lowercase, and conversely
+if an identifier starts with an uppercase letter it is indeed an uppercase identifier.
+
+More precisely, we classify identifiers by looking at their
+{\em starter character}: the starter character is the first character of the identifier
+that is not an underscore. Considering underscores as some sort of spacing
+marks into names, the starter character is the first ``meaningful'' character
+of the identifier,
+
+Recall that the category of identifiers is orthogonal to the rest of their
+properties. For instance, the fixity of an identifier does not tell if the
+identifier is lowercase or not. Put it another way: as stated above, {\tt +}
+is infix but this does not say if {\tt +} is a lowercase or uppercase
+identifier! (In fact {\tt +} is lowercase, since as stated below its {\tt
+  '+'} starter character is a lowercase symbolic character.)
 
 \subsubsection{Nature of identifiers}
 \index{nature of identifiers}
@@ -214,18 +263,27 @@ In {\focal} identifiers are either:
 
 \begin{citemize}
 \item {\em symbolic}: the identifier contains characters that are not
-  letters. {\tt +}, {\tt :=}, {\tt ->}, {\tt +float} are symbolic
+  letters. {\tt +}, {\tt :=}, {\tt ->}, {\tt +float} are symbolic.
 
 \item {\em alphanumeric}: the identifier only contains letters, digits and
   underscores. {\tt x}, {\tt \_1}, {\tt Some}, {\tt Basic\_object} are
   alphanumeric.
 \end{citemize}
 
-\subsubsection{Regular identifiers}
-\index{regular identifiers}
+\subsubsection{Alphanumeric identifiers}
+\index{regular identifier}
+\index{alphanumeric identifier}
 
-Regular lower case identifiers are used to designate the names of variables, functions,
-and labels of records.
+An alphanumeric identifier is a sequence of letters, digits, and
+{\tt \_} (the underscore character).
+Letters contain at least the 52 lowercase and uppercase letters from the
+standard ASCII set. In an identifier, all characters are meaningful.
+
+{\bf Alphanumeric lowercase identifiers} designate the names of variables, functions,
+types. and labels of records.
+
+{\bf Alphanumeric uppercase identifiers} designate the names of constructors, species,
+and collections.
 
 \begin{syn}
 \nt{digit} \is \tok{0} \ldots \tok{9}
@@ -246,18 +304,27 @@ and labels of records.
 \end{syn}
 \vspace{0.2cm}
 
-A regular identifier is a sequence of letters, digits, and {\tt \_} (the
-underscore character), starting with a letter or an underscore.
+Roughly speaking, an alphanumeric lowercase identifier is a sequence of
+letters, digits, and {\tt \_} (the underscore character), starting with a
+lowercase alphanumeric letter (a lowercase letter, a digit, or an
+underscore).
 
-The identifier is lowercase if its first ``meaningful'' letter is lowercase.
+More precisely, an alphanumeric identifier is lowercase if its starter
+character (or first ``meaningful'' letter) is lowercase.
 
-The identifier is uppercase if its first ``meaningful'' letter is uppercase.
-
-Letters contain at least the 52 lowercase and uppercase
-letters from the standard ASCII set. In an identifier, all characters
-are meaningful.
 Examples: {\tt foo}, {\tt bar}, {\tt \_20},
-{\tt \_\_\_gee\_42}.
+{\tt \_\_\_gee\_42} are lowercase alphanumeric identifiers;
+{\tt foo}, {\tt bar}, {\tt \_20},
+
+Roughly speaking, an alphanumeric uppercase identifier is a sequence of
+letters, digits, and {\tt \_} (the underscore character), starting with an
+uppercase letter.
+
+More precisely, an alphanumeric identifier is uppercase if its starter
+character (or first ``meaningful'' letter) is uppercase.
+
+Examples: {\tt Some}, {\tt None}, {\tt \_One\_}, {\tt Basic\_object},
+{\tt \_\_\_GEE\_42} are uppercase alphanumeric identifiers.
 
 \subsubsection{Infix/prefix operators}
 \index{identifier!operator}\index{operator}
@@ -321,13 +388,30 @@ Prefix & Infix \\
 %           op & ::= & infix\_op \mid prefix\_op
 % \end{syntax}
 
-Hence, in the above examples, {\tt +}, {\tt ++} and {\tt =\_mod\_5} will be
-infix operators and {\tt \tilde+zero} will be a prefix one.
+Hence, {\tt +}, {\tt ++} and {\tt =\_mod\_5} are infix symbolic operators and
+{\tt \tilde+zero} is a prefix symbolic one.
 
-Note that some of these symbols, such as {\tt :}, are considered as uppercase
-identifiers, and others, such as {\tt +}, as lowercase identifiers. The consequence
-is that for example a notation starting with a {\tt :} can be used as a constructor
-name for a union type, but not as a method name.
+Note that symbolic character starters are classified into disjoint sets of uppercase
+and lowercase characters.
+\begin{verbatim}
+  | '*'
+  | '+' | '-'
+  | '/' | '%' | '&' | '|' | '<' | '=' | '>' | '@' | '^' | '\\'
+\end{verbatim}
+are lowercase infix starters;
+{\tt ~, ?, \$}
+are lowercase prefix starters;
+{\tt :, `}
+are uppercase infix starters;
+{\tt (, [, {}
+are uppercase prefix starters.
+
+For instance, {\tt +} and {\tt @++} are lowercase infix identifiers.
+Since its starter is {\tt :}, {\tt ::} is an uppercase infix identifier; hence,
+as any other uppercase identifier, {\tt ::} could designate a
+value constructor name for a union type. Similarly {\tt \[\]} is an uppercase prefix identifier that also
+could designate a value constructor.
+On the contrary, no notation starting with a {\tt :} can designate a method name.
 
 \subsubsection{Defining an infix operator}
 \index{defining operators}
@@ -377,7 +461,7 @@ to apply it in a prefix position as a simple regular function: % (with a
 
 {\scriptsize
 \begin{lstlisting}
-... ( ++ ) ("Hello", " world!") ;
+( ++ ) ("Hello", " world!") ;
 \end{lstlisting}
 }
 
@@ -387,7 +471,7 @@ type the {\tt *} operator without blanks around the operator: you
 write the lexical entity {\tt (*)} which is the beginning (or the end)
 of a comment!
 
-The {\focal} notion of symbolic identifiers go largely beyond simple
+The {\focal} notion of symbolic identifiers goes largely beyond simple
 infix operators. Symbolic identifiers let you assign sophisticated names
 to your functions and operators.
 For instance, instead of creating a function to check if integer {\tt x}
@@ -429,20 +513,23 @@ spaces inside or to extend the notion of operator identifiers.
 \begin{itemize}
   \item {\bf Delimited alphanumerical identifiers}.
     \index{identifier!delimited}
-    They start by two characters {\tt `} (backquote) and end by two
-    characters {\tt '} (quote). In addition to usual alpha-numerical
+    They start by two {\tt `} (backquote) characters and end by two
+    {\tt '} (quote) characters. In addition to usual alpha-numerical
     characters, the delimited identifiers can have spaces. For example:
     {\tt ``equal is reflexive''}, {\tt ``fermat conjecture''}.
   \item {\bf Delimited symbolic identifiers}.
-    They are delimited by the same delimitor characters and contain
+    They are delimited by the same delimiter characters and contain
     symbolic characters.
 \end{itemize}
 % [EJ] Certes, mais ``equal is reflexive'' c'est uppercase ou lowercase ?
 
-The first meaningful character at the beginning of a delimited
-ident is usd to determine if it is considered as upper or lower
-ident. In the same way, first meaningful character at the beginning of a
-delimited symbol is used to find its associated /token.
+As usual, the first meaningful character at the beginning of a delimited
+identifier rules out its conceptual properties. For instance,
+{\tt ``equal is reflexive''} has {\tt e} as its first meaningful character; hence
+{\tt ``equal is reflexive''} is alphanumeric, prefix, lowercase, and has the
+same precedence as any other regular function.
+Similarly, {\tt ``+ for matrices''} starting with the {\tt +} symbol is
+symbolic, infix, lowercase, and has the same precedence as the {\tt +} operator.
 
 %%%%%%%%%%%
 \subsection{Species and collection names}
@@ -556,7 +643,7 @@ Here are various examples of integers in various bases:
 \alt \tok{\textvisiblespace} \orelse \tok{"} \orelse \tok{'} \orelse \tok{*}
      \orelse \tok{\backslash} \orelse \tok{`} \orelse \tok{-}
 \alt \tok{(} \orelse \tok{)} \orelse \tok{[} \orelse \tok{]}
-     \orelse \tok{\{} \orelse \tok{\}}
+     \orelse \tok{\{} \orelse \tok{\}} \orelse \tok{\%}
 \alt \nt{digit} \nt{digit} \nt{digit}
 \alt \nt{hexadecimal-digit} \nt{hexadecimal-digit}
 \end{syn}

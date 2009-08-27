@@ -10,7 +10,7 @@
 %    syntax definitions (environment 'syntax')
 %   - References are introduced everywhere else
 %
-% For pure typesetting effect without links (eg. to typeset 'e' as 'expr') 
+% For pure typesetting effect without links (eg. to typeset 'e' as 'expr')
 % use the \nt command (eg. \nt{e}).
 % In syntax definitions, the tool 'transf' translates @word@ into \nt{word}.
 %
@@ -21,11 +21,11 @@
 % the command \stx@silent{'expr'}
 \newif\ifspace
 \def\addspace{\ifspace\;\spacefalse\fi}
-\ifhtml
-\newcommand{\tok}[1]{\texttt{\blue#1}}
-\else
-\newcommand{\tok}[1]{\texttt{#1}}
-\fi
+%\ifhtml
+%\newcommand{\tok}[1]{\texttt{\blue#1}}
+%\else
+%\newcommand{\tok}[1]{\texttt{#1}}
+%\fi
 %%% warnings
 \def\stx@warning#1#2{\@ifundefined{stx@#1@silent}{\hva@warn{#2}}{}}
 \def\stx@silent#1{\def\csname stx@#1@silent\endcsname{}}

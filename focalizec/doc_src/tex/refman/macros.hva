@@ -131,4 +131,3 @@
 %\newenvironment{links}
 %{\setenvclass{itemize}{ftoc2}\setenvclass{li-itemize}{li-links}\itemize}
 %{\enditemize}
-
