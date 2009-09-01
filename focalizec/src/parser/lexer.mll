@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.90 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: lexer.mll,v 1.91 2009-09-01 09:36:53 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -1417,6 +1417,9 @@ and string = parse
       string lexbuf }
   | escaped_hexadecimal_code
     { store_string_char (char_for_hexadecimal_code lexbuf 2);
+      string lexbuf }
+  | "\\%"
+    { store_string_char '%';
       string lexbuf }
   | '\\' _
     { raise
