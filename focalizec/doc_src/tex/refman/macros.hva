@@ -1,16 +1,23 @@
+\def\month{August}
+\def\year{2009}
+\def{\focalversion}{{\sf 0.1.5}}
+
+\def{\focalversiondate}{{\sf {\month} {\year}}}
+
+\newenvironment{citemize}{\begin{list}{$\bullet$}{\itemsep 0pt \topsep 5pt}}{\end{list}}
+
 \def\bbbn{{\rm I\!N}}
 
 \def\url#1{{#1}}
 \def\email#1{{\tt#1}}
 \def{\ocaml}{{\sf OCaml}}
 \def{\moca}{{\sf Moca}}
-\def{\focal}{{\sf FoCaLize}}
-\def{\focalversion}{{\sf 1.0.0}}
-\def{\focalversiondate}{{\sf January 2009}}
+\def{\focal}{{\sf FoCaLiZe}}
 \def{\coq}{{\sf Coq}}
 \def{\cime}{{\sf CiME}}
 \def{\zenon}{{\sf Zenon}}
-\def{\focdoc}{{\sf FoCaLizeDoc}}
+\def\zvtov{{\sf zvtov}}
+\def{\focdoc}{{\sf FoCaLiZeDoc}}
 \def{\dotty}{{\sf dotty}}
 \def{\graphviz}{{\sf graphviz}}
 \def{\emacs}{{\sf emacs}}
@@ -19,7 +26,7 @@
 \def{\terminal}[1]{{\bf {\color{red}#1}}}
 \def\foc{{\sf Foc}}
 \def\oldfocal{{\sf Focal}}
-\def\focalize{{\sf FoCaLize}}
+\def\focalizec{{\sf focalizec}}
 
 \renewcommand{\@bodyargs}{TEXT=black BGCOLOR=white}
 \let\RequirePackage\usepackage
@@ -28,7 +35,6 @@
 
 \def{\vfill}{}
 \def\number{}
-\def\year{2009}
 
 \def\vfil{}
 \def\hfill{\hspace*{4ex}}
