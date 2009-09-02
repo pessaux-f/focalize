@@ -1,4 +1,4 @@
-% $Id: output.tex,v 1.10 2009-08-25 08:55:47 weis Exp $
+% $Id: output.tex,v 1.11 2009-09-02 17:14:52 weis Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Compilation process and outputs}
@@ -57,7 +57,7 @@ line options, it is possible to tune the code generations steps as
 described in \ref{compiler-options}.
 
 \begin{enumerate}
-  \item {\bf {\focal} source compilation}. This step takes the {\focal}
+  \item {\bf {\focal} source compilation}. This step reads the {\focal}
     source code and generates the {\ocaml} and/or ``pre-''{\coq} code.
     You can disable the code generation for one of these languages
     (see page \ref{compiler-options}), or both, in this case, no code is
@@ -76,8 +76,8 @@ described in \ref{compiler-options}.
     is done like any regular {\ocaml} compilation, the only difference
     is that the search path containing the {\focal} installation path
     and your own used extra {\focal} source files directories are
-    automatically passed to the \ocaml\ compiler. Hence this steps
-    acts like a manual invocation:
+    automatically passed to the \ocaml\ compiler.
+    This step acts like the direct invocation:
     \begin{verbatim}
 ocamlc -c -I /usr/local/lib/focalize -I mylibs
    -I myotherlibs source.ml
@@ -89,22 +89,23 @@ ocamlc -c -I /usr/local/lib/focalize -I mylibs
     the object files are {\tt .cmx} files instead of {\tt .cmo}.
     ones.
 
-  \item {\bf ``Pre-''{\coq} code compilation}. This step takes the
-    generated {\tt .zv} file and attempts to produce a real {\coq}
-    {\tt .v} source file by replacing proofs written in {\focal} Proof
-    Language by some effective {\coq} proofs found by the {\zenon}
-    theorem prover. Note that if {\zenon} fails in finding a proof, a
-    hole will remain in the final {\coq} {\tt .v} file. Such a hole
-    appears as the text ``{\tt TO\_BE\_DONE\_MANUALLY.}'' in place of
-    the effective proof. In this case, {\coq} will obviously fail
-    in compiling the file, so the user must do the proof by hand or
-    modify his original {\focal} source file to get a working proof.
-    This step acts like a manual invocation:
+  \item {\bf ``Pre-''{\coq} code compilation}. This step reads the
+    generated {\tt .zv} file and produces a real {\coq}
+    {\tt .v} source file. The proofs written in the {\focal} Proof
+    Language are replaced by the effective {\coq} proofs found by the {\zenon}
+    theorem prover. Note that if {\zenon} fails to find a proof, a
+    {\em hole} appears in the final {\coq} {\tt .v} file:
+    the text ``{\tt TO\_BE\_DONE\_MANUALLY.}'' is written in place of
+    an effective proof. The {\coq} compiler then obviously fails
+    to compile the file, and the user must modify his original {\focal}
+    source file to provide a tractable proof script for {\zenon} or insert a direct
+    {\coq} proof either in the {\focal} or in the generated {\coq} source file.
+    This step acts like the direct invocation:
     \begin{center}
       {\tt zvtov -new source.zv}
     \end{center}
-    For more about the {\zenon} options, consult section
-    \ref{zenon_options}. % [EJ] Reference incorrecte apparemment
+    For more about the {\zenon} options, consult the section
+    \ref{zenon-options}.
 
   \item{\bf {\coq} code compilation}. This step takes the generated
     {\tt .v} code and compiles it with {\coq}. This is done like any
@@ -112,6 +113,7 @@ ocamlc -c -I /usr/local/lib/focalize -I mylibs
     path containing the {\focal} installation path and your own used
     extra {\focal} source files directories are automatically passed
     to the {\coq} compiler.
+    This step acts like the direct invocation:
     \begin{verbatim}
 coqc -I /usr/local/lib/focalize -I mylibs
   -I myotherlibs source.v

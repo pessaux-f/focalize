@@ -1,15 +1,17 @@
-% $Id: proofs.tex,v 1.20 2009-08-25 06:59:39 weis Exp $
+% $Id: proofs.tex,v 1.21 2009-09-02 17:14:52 weis Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of theorems}
+
 As presented in \ref{proof-short-intro}, {\focal} proposes 3 ways to
 make proof of properties. We will only deal here with proofs written
-in the {\focal} Proof Language. As a reminder, proofs written as
-direct {\coq} scripts will be addressed in \ref{coq-proofs}. And the
+in the {\focal} Proof Language. As a reminder, the proofs written as
+direct {\coq} scripts will be addressed in \ref{coq-proofs}; the
 last kind of proof, by \terminal{assumed} doesn't need anymore description
 since it consists in bypassing the formal proof mechanism.
 
 The syntax of proofs is as follows.
+\label{zenon-and-dependencies}
 \begin{syn}
 \nt{proof} \is
      \rep{\nt{proof-step}} \nt{qed-step}
@@ -18,6 +20,30 @@ The syntax of proofs is as follows.
 \alt \tok{coq~proof} \nt{enforced-dependencies} \nt{external-code}
 \alt \nt{enforced-dependencies} \tok{assumed} \nt{external-code}
 \end{syn}
+
+\begin{syn}
+\nt{enforced-dependencies} \is
+     \rep{\nt{enforced-dependency}}
+\end{syn}
+
+\begin{syn}
+\nt{enforced-dependency} \is
+\alt \tok{definition} \tok{of} \reps{\nt{definition-name}}
+\alt \tok{property}  \reps{\nt{property-name}}
+\end{syn}
+
+%enforced_dependencies:
+%  | { [ ] }
+%  | enforced_dependency enforced_dependencies
+%    { $1 :: $2 }
+%;
+
+%enforced_dependency:
+%  | DEFINITION OF definition_ident_comma_list
+%    { mk (Ed_definition $3) }
+%  | PROPERTY property_ident_comma_list
+%    { mk (Ed_property ($2)) }
+%;
 
 %\begin{syntax}
 %\syntaxclass{Proofs:}
@@ -218,3 +244,8 @@ of the proof to name different steps.
 
 The scope of an assumption is the proof of the step where this
 assumption appears.
+
+\subsection{{\zenon} options}
+\label{zenon-options}
+The list of {\zenon} options and their meaning is given by typing:
+{\tt zenon -h}.

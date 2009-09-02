@@ -1,4 +1,4 @@
-% $Id: refman.tex,v 1.60 2009-08-27 08:58:19 weis Exp $
+% $Id: refman.tex,v 1.61 2009-09-02 17:14:52 weis Exp $
 
 \documentclass[11pt]{report}
 \usepackage[english]{babel}
@@ -73,7 +73,7 @@ listed in the following, who designed, defined, compiled, studied,  extended,
 used and debugged the preceding versions. They were helped by many
 students who had a summer internship under their supervision. They
 would like to thank all these students and more generally all the
-persons who brought some contribution to {\focal}. }
+persons who brought some contribution to {\focal}.}
 
 \vspace*{2cm}
 
@@ -82,16 +82,24 @@ persons who brought some contribution to {\focal}. }
 \mbox{} \vspace*{2cm}
 \end{center}
 
-{\large Philippe Ayrault (SPI-LIP6), William Bartlett (CPR-CEDRIC), Julien
-Blond (SPI-LIP6), Sylvain Boulm\'e (SPI-LIP6), Matthieu Carlier
-(CPR-CEDRIC),  Damien Doligez (GALLIUM-INRIA), David Delahaye
-(CPR-CEDRIC), Catherine Dubois (CPR-CEDRIC), Jean-Fr\'ed\'eric Etienne
-(CPR-CEDRIC), St\'ephane Fechter (SPI-LIP6), Eric Jaeger (SPI-LIP6), Mathieu Jaume (SPI-LIP6), % [EJ] Avec un effort colossal de debugging de la doc ;-)
-Lionel Habib (SPI-LIP6), Th\'er\`ese Hardin (SPI-LIP6), Charles
-Morisset (SPI-LIP6), Ivan Noyer (SPI-LIP6), Fran\c{c}ois Pessaux
-(SPI-LIP6), Virgile Prevosto (SPI-LIP6), Renaud Rioboo (CPR-CEDRC),
-Lien Tran (SPI-LIP6), V\'eronique Vigui\'e Donzeau-Gouge (CPR-CNAM),
-Pierre Weis (ESTIME-INRIA)}
+{\large
+Philippe Ayrault (SPI-LIP6),
+William Bartlett (CPR-CEDRIC), Julien Blond (SPI-LIP6),
+Sylvain Boulm\'e (SPI-LIP6),
+Matthieu Carlier (CPR-CEDRIC),
+David Delahaye (CPR-CEDRIC), Damien Doligez (GALLIUM-INRIA), Catherine Dubois (CPR-CEDRIC),
+Jean-Fr\'ed\'eric Etienne (CPR-CEDRIC),
+St\'ephane Fechter (SPI-LIP6),
+Lionel Habib (SPI-LIP6), Th\'er\`ese Hardin (SPI-LIP6),
+Eric Jaeger (SPI-LIP6), Mathieu Jaume (SPI-LIP6),
+Charles Morisset (SPI-LIP6),
+Ivan Noyer (SPI-LIP6),
+Fran\c{c}ois Pessaux (SPI-LIP6), Virgile Prevosto (SPI-LIP6),
+Renaud Rioboo (CPR-CEDRC),
+Lien Tran (SPI-LIP6),
+V\'eronique Vigui\'e Donzeau-Gouge (CPR-CNAM),
+Pierre Weis (ESTIME-INRIA)
+}
 
 \bigskip
 
@@ -100,29 +108,33 @@ Pierre Weis (ESTIME-INRIA)}
 \mbox{} \vspace*{2cm}
 \end{center}
 
-{\em SPI (Semantics, Proofs and Implementations) is a team of LIP6,
+{\em
+SPI (Semantics, Proofs and Implementations) is a team of LIP6,
 (Laboratoire d'Infor\-matique de Paris 6) of UPMC (Pierre and Marie Curie
 University)\footnote{UPMC-LIP6,
 104 avenue du Pr\'esident Kennedy, Paris 75016, France,
-\email{Firstname.Lastname@lip6.fr}}.}
+\email{Firstname.Lastname@lip6.fr}}.
+}
 
 \bigskip
 
-{\em CPR (Conception et Programmation Raisonn\'ees) is a team of CEDRIC
+{\em
+CPR (Conception et Programmation Raisonn\'ees) is a team of CEDRIC
 (Centre d'Etudes et de Recherches du CNAM) of CNAM (Conservatoire National
 des Arts et M\'etiers)\footnote{CNAM-CEDRIC,
 292 rue Saint Martin, 75003, Paris, France,
 \email{Firstname.Lastname@cnam.fr}} and ENSIIE (Ecole Nationale d'Informatique pour
 l'Industrie et l'Entreprise)\footnote{ENSIIE-CEDRIC,
 1 Square de la R\'esistance, 91025 Evry Cedex, France,
-\email{Lastname@ensiie.fr}}. }
+\email{Lastname@ensiie.fr}}.
+}
 
 \bigskip
 
 {\em
 ESTIME and GALLIUM are teams of INRIA Rocquencourt\footnote{INRIA,
-  Bat 8. Domaine de Voluceau, Rocquencourt, BP 105, F-78153 Le
-  Chesnay, France, \email{Firstname.Lastname@inria.fr}}
+Bat 8. Domaine de Voluceau, Rocquencourt, BP 105, F-78153 Le Chesnay, France,
+\email{Firstname.Lastname@inria.fr}}.
 }
 
 \bigskip
@@ -138,7 +150,7 @@ The {\foc} project was first partially supported by LIP6 (Projet Foc, LIP6
 1997) then by the Ministry of Research (Action Modulogic).
 The {\oldfocal} research team was then partially supported by the French SSURF ANR project
 ANR-06-SETI-016 (Safety and Security UndeR Focal). The project also
-benefited of strong collaborations with EDEMOI ANR project and with
+benefited of strong collaborations with the EDEMOI ANR project and with the
 BERTIN and SAFERIVER companies.
 
 The {\focal} language and compiler development effort started around 2005.
@@ -190,6 +202,7 @@ its semantics extensions.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{The {\focal} Proof Language}
 \label{making-proofs}
+\index{proof!language}
 \input{proofs.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -200,26 +213,33 @@ its semantics extensions.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Compiler options}
+\label{compiler-options}
+\index{compiler!options}
 \input{compiler_opts.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Documentation generation}
+\label{documentation-generation}
+\index{documentation!generation}
 \input{doc_gen.tex}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Hacking deeper}
 \subsection{Interfacing {\focal} with other languages}
 \label{interfacing-other-languages}
+\index{foreign-language-interface}
 
 \subsection{Dealing with hand-written {\coq} proofs}
 \label{coq-proofs}
 \label{focal-coq-mapping}
+\index{{\focal}-to-coq-mapping}
 % mapping des noms
 % modèle du code généré en coq et en caml ??
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \chapter{Compiler error messages}
-\label{compiler-error-mesgs}
+\label{compiler-error-messages}
+\index{compiler-error-messages}
 \input{compiler_err_msgs}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

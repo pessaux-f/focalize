@@ -10,13 +10,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.25 2009-07-07 22:35:01 weis Exp $
+# $Id: Makefile,v 1.26 2009-09-02 17:14:52 weis Exp $
 
 ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-TEX_FILES = macros.tex syntaxdef.sty \
+TEX_FILES = macros.tex syntaxdef.sty\
   basic_concepts.tex lexical_conventions.tex motivations.tex\
   proofs.tex building_species.tex macros.tex output.tex refman.tex\
   compiler_opts.tex more_on_meths.tex pres_requir.tex\
@@ -46,9 +46,9 @@ docdir:: $(DOC_OBJS)
 	$(CP) $(DOC_OBJS) $(DOCDIR_DIR)/
 
 refman.dvi: $(TEX_FILES)
-	$(LATEX) refman.tex
-	makeindex refman
-	bibtex refman
+	$(LATEX) refman.tex && \
+	makeindex refman && \
+	bibtex refman && \
 	$(LATEX) refman.tex && $(LATEX) refman.tex
 
 refman.pdf: refman.dvi

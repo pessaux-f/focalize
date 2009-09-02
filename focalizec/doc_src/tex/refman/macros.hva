@@ -1,8 +1,8 @@
 \def\month{August}
 \def\year{2009}
-\def{\focalversion}{{\sf 0.1.5}}
+\def\focalversion{\sf 0.1.5}
 
-\def{\focalversiondate}{{\sf {\month} {\year}}}
+\def\focalversiondate{\sf {\month} {\year}}
 
 \newenvironment{citemize}{\begin{list}{$\bullet$}{\itemsep 0pt \topsep 5pt}}{\end{list}}
 
