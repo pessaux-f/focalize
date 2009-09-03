@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.38 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.39 2009-09-03 12:09:01 doligez Exp $
 
 ROOT_DIR = .
 
@@ -48,6 +48,15 @@ byt bin::
         done
 
 lib:
+	@for i in $(LIB_DIRS); do \
+	  echo "--> $$i ..." >&2 && \
+	  ($(CD) $$i && $(MAKE) $@); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+        done
+
+cleanlib:
 	@for i in $(LIB_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \

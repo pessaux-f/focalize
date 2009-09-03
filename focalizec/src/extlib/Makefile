@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.21 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.22 2009-09-03 12:09:01 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -43,6 +43,8 @@ clean::
 	  echo "<-- $$i [$$err]" && \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
+
+cleanlib: clean
 
 doc::
 	@for i in $(SUB_DIRS); do \

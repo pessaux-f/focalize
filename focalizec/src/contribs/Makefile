@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.16 2009-06-06 12:11:01 ayrault Exp $
+# $Id: Makefile,v 1.17 2009-09-03 12:09:01 doligez Exp $
 
 ROOT_DIR = ../..
 
@@ -37,3 +37,5 @@ byt bin clean doc install uninstall depend::
 	  echo "<-- $$i [$$err]" && \
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
+
+cleanlib: clean

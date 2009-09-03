@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.89 2009-06-06 22:35:39 weis Exp $
+# $Id: Makefile,v 1.90 2009-09-03 12:09:01 doligez Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -150,3 +150,5 @@ uninstall:
 clean::
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) && \
 	$(RM) $(FOCALIZE_VS)
+
+cleanlib: clean
