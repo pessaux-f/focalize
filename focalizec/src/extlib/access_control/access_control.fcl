@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: access_control.fcl,v 1.18 2009-08-24 12:16:13 doligez Exp $ *)
+(* $Id: access_control.fcl,v 1.19 2009-09-03 12:09:59 doligez Exp $ *)
 
 (**
    @title Implementation of access control models
@@ -1193,21 +1193,21 @@ species Models_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
                                   Rr!get_m (r1))
                          by hypothesis H7
                             property exists_role_ep
-                    <8>2 prove S!equal (s1, Rr!get_s (r1))
+                    <8>2 prove S!equal (Rr!get_s (r1), s1)
                          by hypothesis H10
-                            property S_a!singleton_prop, A!access_equal
-                    <8>3 prove O!equal (o1, Rr!get_o (r1))
+                            property S_a!singleton_prop, A!access_equal,
+                                     S!equal_symmetric
+                    <8>3 prove O!equal (Rr!get_o (r1), o1)
                          by hypothesis H10
-                            property S_a!singleton_prop, A!access_equal
-                    <8>4 prove M!equal (m1, Rr!get_m (r1))
+                            property S_a!singleton_prop, A!access_equal,
+                                     O!equal_symmetric
+                    <8>4 prove M!equal (Rr!get_m (r1), m1)
                          by hypothesis H10
-                            property S_a!singleton_prop, A!access_equal
+                            property S_a!singleton_prop, A!access_equal,
+                                     M!equal_symmetric
                     <8>f qed
                          by step <8>1, <8>2, <8>3, <8>4
-                            property ep_equal,
-                                     S!equal_symmetric,
-                                     O!equal_symmetric,
-                                     M!equal_symmetric
+                            property ep_equal
                   <7>4 prove S_a!est_element (A!create (s1, o1, m1),
                                               lambda (st2)) ->
                              S_a!est_element
