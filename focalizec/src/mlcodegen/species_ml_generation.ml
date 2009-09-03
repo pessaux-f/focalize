@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.99 2009-06-16 12:25:23 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.100 2009-09-03 12:09:32 doligez Exp $ *)
 
 
 (* *************************************************************** *)
@@ -192,7 +192,14 @@ let generate_record_type ctx species_descr =
     Format.fprintf out_fmter "'me_as_carrier)@] "
     end) ;
   (* The name of the type. *)
-  Format.fprintf out_fmter "me_as_species = {@\n" ;
+
+  let has_fields = ref false in
+  let init_fields () =
+    if not !has_fields then Format.fprintf out_fmter "{@\n";
+    has_fields := true;
+  in
+
+  Format.fprintf out_fmter "me_as_species = " ;
   (* We now extend the collections_carrier_mapping with ourselve known.
      This is required when "rep" is defined.
      Hence, if we refer to our "rep" (i.e. "me_as_carrier"), not to Self, I
@@ -232,6 +239,7 @@ let generate_record_type ctx species_descr =
                OCaml. *)
             if not (Types.refers_to_prop_p ty) then
               (begin
+              init_fields ();
               Format.fprintf out_fmter "(* From species %a. *)@\n"
                 Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
               (* Since we are printing a whole type scheme, it is stand-alone
@@ -253,6 +261,7 @@ let generate_record_type ctx species_descr =
                  in OCaml. *)
               if not (Types.refers_to_prop_p ty) then
                 (begin
+                init_fields ();
                 Format.fprintf out_fmter "(* From species %a. *)@\n"
                   Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
                 (* Since we are printing a whole type scheme, it is stand-alone
@@ -270,7 +279,10 @@ let generate_record_type ctx species_descr =
              translation. *)
           ())
     species_descr.Env.TypeInformation.spe_sig_methods ;
-  Format.fprintf out_fmter "@]}@\n"
+  if !has_fields then
+    Format.fprintf out_fmter "@]}@\n"
+  else
+    Format.fprintf out_fmter "unit@]@\n"
 ;;
 
 
@@ -908,7 +920,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
 ;;
 
 
-    
+
 (* *********************************************************************** *)
 (* Format.formatter -> compiled_species_fields list ->                     *)
 (*  (Parsetree.vname * Parsetree_utils.DepNameSet.t) list                  *)
@@ -1175,7 +1187,11 @@ let generate_collection_generator ctx env compiled_species_fields =
      name.
      The local function corresponding to the method is "local_" + the method's
      name. *)
-  Format.fprintf ctx.Context.scc_out_fmter "@[<2>{ " ;
+  let has_fields = ref false in
+  let init_fields () =
+    if not !has_fields then Format.fprintf ctx.Context.scc_out_fmter "@[<2>{ ";
+    has_fields := true;
+  in
   List.iter
       (function
       | Misc_common.CSF_sig _ | Misc_common.CSF_property _
@@ -1183,26 +1199,33 @@ let generate_collection_generator ctx env compiled_species_fields =
       | Misc_common.CSF_let field_memory ->
           (* We only generate the field in OCaml if it is not a logical
              method. *)
-          if not field_memory.Misc_common.cfm_is_logical then
+          if not field_memory.Misc_common.cfm_is_logical then begin
+            init_fields ();
             Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
               Parsetree_utils.pp_vname_with_operators_expanded
               field_memory.Misc_common.cfm_method_name
               Parsetree_utils.pp_vname_with_operators_expanded
               field_memory.Misc_common.cfm_method_name
+          end
       | Misc_common.CSF_let_rec l ->
           List.iter
             (fun field_memory ->
               (* Same than above. *)
-              if not field_memory.Misc_common.cfm_is_logical then
+              if not field_memory.Misc_common.cfm_is_logical then begin
+                init_fields ();
                 Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
                   Parsetree_utils.pp_vname_with_operators_expanded
                   field_memory.Misc_common.cfm_method_name
                   Parsetree_utils.pp_vname_with_operators_expanded
-                  field_memory.Misc_common.cfm_method_name)
+                  field_memory.Misc_common.cfm_method_name
+              end)
             l)
     compiled_species_fields ;
   (* Close the record expression. *)
-  Format.fprintf ctx.Context.scc_out_fmter "@ }@]@\n" ;
+  if !has_fields then
+    Format.fprintf ctx.Context.scc_out_fmter "@ }@]@\n"
+  else
+    Format.fprintf ctx.Context.scc_out_fmter "()@\n";
   (* Close the pretty-print box of the "let collection_create ... =". *)
   Format.fprintf ctx.Context.scc_out_fmter "@]@\n" ;
   extra_args_from_spe_params
@@ -1611,7 +1634,11 @@ let collection_compile env ~current_unit out_fmter collection_def
        our collection, borrowing each field from the temporary value obtained
        above. This way, our collection will have ITS own record fields names,
        preventing the need to use those coming from the it implements. *)
-    Format.fprintf out_fmter "@[<2>{@ " ;
+    let has_fields = ref false in
+    let init_fields () =
+      if not !has_fields then Format.fprintf out_fmter "@[<2>{@ " ;
+      has_fields := true;
+    in
     (* Make the record value borrowing every fields from the temporary value
        generated by the collection generator. Remind that logical let ARE NOT
        generated in OCaml, hence must not appear in the final record value ! *)
@@ -1625,6 +1652,7 @@ let collection_compile env ~current_unit out_fmter collection_def
             if flags.Env.TypeInformation.ldf_logical =
                Parsetree.LF_no_logical then
               (begin
+              init_fields ();
               Format.fprintf out_fmter "%a =@ t."
                 Parsetree_utils.pp_vname_with_operators_expanded n ;
               print_implemented_species_as_ocaml_module
@@ -1639,6 +1667,7 @@ let collection_compile env ~current_unit out_fmter collection_def
                 if flags.Env.TypeInformation.ldf_logical =
                    Parsetree.LF_no_logical then
                   (begin
+                  init_fields ();
                   Format.fprintf out_fmter "%a =@ t."
                     Parsetree_utils.pp_vname_with_operators_expanded n ;
                   print_implemented_species_as_ocaml_module
@@ -1649,9 +1678,12 @@ let collection_compile env ~current_unit out_fmter collection_def
               l)
       collection_descr.Env.TypeInformation.spe_sig_methods ;
     (* End the definition of the value representing the effective instance. *)
-    Format.fprintf out_fmter "@ }@]@]@\n" ;
+    if !has_fields then
+      Format.fprintf out_fmter "@ }@]"
+    else
+      Format.fprintf out_fmter "()";
     (* End the module representing the collection. *)
-    Format.fprintf out_fmter "end ;;@]@\n@."
+    Format.fprintf out_fmter "@]@\nend ;;@]@\n@."
   with Not_found ->
     (* Don't see why the species could not be present in the environment. The
        only case would be to make a collection from a collection since
