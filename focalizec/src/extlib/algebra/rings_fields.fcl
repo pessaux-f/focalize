@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rings_fields.fcl,v 1.16 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: rings_fields.fcl,v 1.17 2009-09-07 13:16:08 rr Exp $ *)
 
 (** Definitions for Rings, Modules, Algebras and Fields. *)
 
@@ -22,6 +22,17 @@ open "basics";;
 open "additive_law";;
 open "multiplicative_law";;
 open "weak_structures";;
+
+(** 
+   Pseudo rings, Non unital Rings or Rngs
+*)
+
+species Rng =
+
+  inherit Additive_group, Semi_rng;
+
+end
+;;
 
 (** Rings are additive groups and multiplicative monoids *)
 species Ring =
@@ -35,6 +46,7 @@ species Ring =
 (*     property one_is_left_neutral, one_is_right_neutral, *)
 (*       mult_left_distributes_on_plus *)
 (*     assumed (* Todo *); *)
+
 
   proof of zero_left_absorbes =
   <1>1 assume x : Self,
@@ -142,16 +154,29 @@ species Ordered_ring =
 end
 ;;
 
-(** R-algebras are both R-modules and rings *)
-species Algebra(R is Commutative_ring) =
 
-  inherit Ring, Semi_algebra(R);
+(** 
+
+A pseudo algebra is like an ordinary algebra but without multiplicative unity
+
+*)
+species Pseudo_algebra(R is Commutative_ring) =
+
+  inherit Rng, Sem_algebra(R);
 
   let opposite (x) =
     let under_minus_un = R!opposite (R!one) in
       Self!module_mult (under_minus_un, x);
 
   proof of opposite_is_opposite = assumed (* Because todo *);
+
+end
+;;
+
+(** R-algebras are both R-modules and rings *)
+species Algebra(R is Commutative_ring) =
+
+  inherit Ring, Semi_algebra(R), Pseudo_algebra(R);
 
 end
 ;;

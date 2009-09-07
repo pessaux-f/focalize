@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: weak_structures.fcl,v 1.13 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: weak_structures.fcl,v 1.14 2009-09-07 13:16:08 rr Exp $ *)
 
 (** We define here some weak notions such as rings with no subtraction. *)
 
@@ -58,10 +58,11 @@ end
 (* end
 ;; *)
 
-(** A semi ring has +,*,1,0 is sometimes called a rig *)
-species Semi_ring =
+(** An Rng is malso called a pseudo ring *)
 
-  inherit Unitary_additive_monoid, Monoid;
+species Semi_rng =
+
+  inherit Additive_monoid, Semi_group;
 
   property mult_left_distributes_on_plus: all x y z : Self,
     !equal (!mult (x, !plus (y, z)), !plus (!mult (x, y), !mult (x, z)));
@@ -74,6 +75,14 @@ species Semi_ring =
 
   property zero_right_absorbes: all x : Self,
     !equal (!mult (x, !zero), !zero);
+
+end
+;;
+
+(** A semi ring has +,*,1,0 is sometimes called a rig *)
+species Semi_ring =
+
+  inherit Unitary_additive_monoid, Monoid, Semi_rng;
 
 end
 ;;
@@ -189,25 +198,46 @@ species Commutative_semi_ring =
 end
 ;;
 
+species Sem_algebra(R is Commutative_semi_ring)=
 
-species Semi_algebra (R is Commutative_semi_ring) =
+  inherit Semi_rng;
 
-  inherit Semi_ring;
+  signature lift: R -> Self ;
 
-  signature module_mult : R -> Self -> Self;
-  let lift (x) = Self!module_mult (x, Self!one);
-  property lift_one : !equal (!lift (R!one), !one);
   property lift_additive: all x y : R,
     !equal (!plus (!lift (x), !lift (y)), !lift (R!plus (x, y)));
+
+  property lift_multiplicative: all x y : R,
+    !equal(!mult(!lift(x), !lift(y)),
+	   !lift(R!mult(x, y)));
+
+  signature module_mult : R -> Self -> Self;
+
   property module_mult_compat: all x : R, all y : Self,
     !equal (!module_mult (x, y), !mult (!lift (x), y));
+
+  proof of lift_multiplicative =
+   property module_mult_compat
+   assumed (* todo *);
+
   property lift_in_center: all x : R, all y : Self,
     !equal (!mult (!lift (x), y), !mult (y, !lift (x)));
+
   theorem lift_is_ring_morphism: all x y a b : R,
      !equal (!lift (R!plus (R!mult (a, x), R!mult (b, y))),
              !plus (!mult (!lift (a), !lift (x)),
                     !mult (!lift (b), !lift (y))))
      proof = assumed (* Because todo *);
+
+end
+;;
+
+species Semi_algebra (R is Commutative_semi_ring) =
+
+  inherit Semi_ring, Sem_algebra(R);
+
+  let lift (x) = Self!module_mult (x, Self!one);
+  property lift_one : !equal (!lift (R!one), !one);
 
 end
 ;;
