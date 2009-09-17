@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE stock SYSTEM "essai.dtd">
+<stock>
+  <produit>
+    <nom> Livre </nom>
+    <prix monnaie="Francs"> 50 </prix>
+    <comment> Un article très recherché </comment>
+  </produit>
+  <produit>
+    <nom> CD </nom><prix monnaie="Euros"> 23 </prix>
+  </produit>
+</stock>

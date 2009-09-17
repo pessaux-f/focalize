@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE plan_route SYSTEM "plan_route.dtd">
+<plan_route>
+<gare>
+ <nom>Marseille Saint Charles</nom>
+  <evenement>
+   <depart>
+    <heure>16.17</heure>
+    <type_train class="ter">TER</type_train>
+    <numero_train>234</numero_train>
+    <route>Arles 17.02, Nîmes 17.28
+     <destination>Montpellier 17.55</destination>
+    </route>
+   </depart>
+  </evenement>
+  <evenement>
+   <arrivee>
+    <heure>16.44</heure>
+    <type_train class="ic">IC</type_train>
+    <numero_train>20392</numero_train>
+    <route><demarrage>Miramas à 17.24</demarrage>
+     Arles 09.16, Arles 17.41, Tarascon 17.52, Nîmes 18.08, Lunel 18.28, Montpellier 18.42
+    </route>
+   </arrivee>
+  </evenement>
+  <evenement>
+   <depart>
+    <heure>17.03</heure>
+    <type_train classe="ic">IC</type_train>
+    <numero_train>58483</numero_train>
+    <route>Arles 17.59, Avignon-Centre 18.20
+     <destination>Lyon-Part-Dieu à 20.43</destination>
+    </route>
+   </depart>
+  </evenement>
+  <evenement>
+   <arrivee>
+    <heure>18.38</heure>
+    <type_train class="tgv">TGV</type_train>
+    <numero_train>23</numero_train>
+    <route><demarrage>Nîmes 19.40</demarrage>
+     Montpellier 20.07
+    </route>
+   </arrivee>
+  </evenement>
+ </gare>
+</plan_route>

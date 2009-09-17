@@ -1,0 +1,55 @@
+<?xml version='1.99999' encoding="toto-99" standalone="yes"?>
+<!DOCTYPE root SYSTEM "test.dtd">
+<CDDefinition>
+<Name> log </Name>
+
+<Description> 
+This symbol represents a binary log function; the first argument is
+the base, to which the second argument is log'ed.
+It is defined in Abramowitz and Stegun, Handbook of Mathematical
+Functions, section 4.1
+</Description>
+<CMP>
+  a^b = c implies log_a c = b
+</CMP>
+<FMP>
+  <OMOBJ>
+    <OMA>
+      <OMS cd="logic1" name="implies"/>
+      <OMA>
+        <OMS cd="relation1" name="eq"/>
+
+        <OMA>
+          <OMS cd="arith1" name="power"/>
+          <OMV name="a"/>
+          <OMV name="b"/>
+        </OMA>
+        <OMV name="c"/>
+      </OMA>
+      <OMA>
+        <OMS cd="relation1" name="eq"/>
+
+        <OMA>
+          <OMS cd="transc1" name="log"/>
+          <OMV name="a"/>
+          <OMV name="c"/>
+        </OMA>
+        <OMV name="b"/>
+      </OMA>
+    </OMA>
+  </OMOBJ>
+
+</FMP>
+
+<Example>
+log 100 to base 10 (which is 2).
+<OMOBJ>
+  <OMA>
+    <OMS cd="transc1" name="log"/>
+    <OMF dec="10"/>
+    <OMF dec="100"/>
+  </OMA>
+</OMOBJ>
+</Example>
+
+</CDDefinition>
