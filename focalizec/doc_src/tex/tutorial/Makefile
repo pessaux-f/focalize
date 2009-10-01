@@ -1,6 +1,6 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #                               LIP6  --  INRIA Rocquencourt           #
@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2009-10-01 07:06:20 weis Exp $
+# $Id: Makefile,v 1.6 2009-10-01 08:25:30 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -45,15 +45,9 @@ docdir:: $(DOC_OBJS)
 	$(CP) $(DOC_OBJS) $(DOCDIR_DIR)/
 
 tutorial.dvi: $(TEX_FILES)
+	$(LATEX) tutorial.tex && \
+	$(LATEX) tutorial.tex && \
 	$(LATEX) tutorial.tex
-	$(LATEX) tutorial.tex
-	$(LATEX) tutorial.tex
-
-#tutorial.pdf: tutorial.dvi
-#	$(DVIPDF) tutorial.dvi
-
-#tutorial.ps: tutorial.dvi
-#	$(DVIPS) tutorial.dvi -o $@
 
 tutorial.html: tutorial.dvi ${HVA_FILES}
 	$(HEVEA) -fix ${HVA_FILES} tutorial.tex
@@ -64,7 +58,7 @@ clean::
 	$(RM) tutorial*.gif tutorial.image.tex
 	$(RM) $(DOC_OBJS)
 
-distclean:: clean
+distclean::
 	$(RM) $(DOCDIR_DIR)
 
 install:
