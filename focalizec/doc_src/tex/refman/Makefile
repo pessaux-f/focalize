@@ -1,6 +1,6 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #                               LIP6  --  INRIA Rocquencourt           #
@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.26 2009-09-02 17:14:52 weis Exp $
+# $Id: Makefile,v 1.27 2009-10-01 08:15:07 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -51,21 +51,21 @@ refman.dvi: $(TEX_FILES)
 	bibtex refman && \
 	$(LATEX) refman.tex && $(LATEX) refman.tex
 
-refman.pdf: refman.dvi
-	dvipdf refman.dvi
+#refman.pdf: refman.dvi
+#	dvipdf refman.dvi
 
 refman.html: refman.dvi ${HVA_FILES}
 	$(HEVEA) -fix ${HVA_FILES} refman.tex
 
-refman.ps: refman.dvi
-	dvips refman.dvi
+#refman.ps: refman.dvi
+#	dvips refman.dvi
 
 clean::
 	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc
 	$(RM) refman*.gif refman.image.tex
 	$(RM) $(DOC_OBJS)
 
-distclean:: clean
+distclean::
 	$(RM) $(DOCDIR_DIR)
 
 install:
