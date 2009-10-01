@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.36 2009-10-01 08:03:44 weis Exp $
+# $Id: Makefile.common,v 1.37 2009-10-01 08:22:57 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -117,8 +117,8 @@ tests::
 
 # Tex/LaTeX rules
 .tex.dvi:
-	$(LATEX) $<
-	$(MAKE) $(<:.tex=.idx)
+	$(LATEX) $< && \
+	$(MAKE) $(<:.tex=.idx) && \
 	$(LATEX) $<
 .tex.idx:
 	$(MAKEINDEX) $(<:.tex=.idx)
