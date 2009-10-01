@@ -1,6 +1,6 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.35 2009-10-01 07:28:04 weis Exp $
+# $Id: Makefile.common,v 1.36 2009-10-01 08:03:44 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -132,5 +132,7 @@ tests::
 	$(HTMLC) -s $<
 .html.htm:
 	$(HTMLC) -c $<
+.html.dvi:
+	$(HEVEA) -fix ${HVA_FILES} $<
 
 include .depend
