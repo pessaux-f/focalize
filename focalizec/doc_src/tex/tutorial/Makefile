@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2009-07-07 22:35:51 weis Exp $
+# $Id: Makefile,v 1.5 2009-10-01 07:06:20 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -26,6 +26,9 @@ TEXINPUT = /usr/share/texmf/tex/latex//:$(TEXINPUTS)
 LATEX = TEXINPUTS=$(TEXINPUT); latex
 HEVEA = TEXINPUTS=$(TEXINPUT); hevea
 IMAGEN = imagen -extra "ppmquant 255"
+
+DVIPS = dvips
+DVIPDF = dvipdf
 
 include $(ROOT_DIR)/Makefile.common
 
@@ -46,17 +49,18 @@ tutorial.dvi: $(TEX_FILES)
 	$(LATEX) tutorial.tex
 	$(LATEX) tutorial.tex
 
-tutorial.pdf: tutorial.dvi
-	dvipdf tutorial.dvi
+#tutorial.pdf: tutorial.dvi
+#	$(DVIPDF) tutorial.dvi
+
+#tutorial.ps: tutorial.dvi
+#	$(DVIPS) tutorial.dvi -o $@
 
 tutorial.html: tutorial.dvi ${HVA_FILES}
 	$(HEVEA) -fix ${HVA_FILES} tutorial.tex
 
-tutorial.ps: tutorial.dvi
-	dvips tutorial.dvi
-
 clean::
 	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc
+	$(RM) *.haux *.htoc
 	$(RM) tutorial*.gif tutorial.image.tex
 	$(RM) $(DOC_OBJS)
 
