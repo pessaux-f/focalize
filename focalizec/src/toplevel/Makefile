@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.54 2009-06-10 12:39:36 pessaux Exp $
+# $Id: Makefile,v 1.55 2009-10-20 15:58:18 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -24,53 +24,53 @@ CAML_INCLUDES = -I ../basement -I ../parser -I ../typing\
 LOCAL_BYT_OBJS = focalizec.cmo exc_wrapper.cmo
 
 BYT_OBJS =\
-	../basement/installation.cmo\
-	../basement/configuration.cmo\
-	../basement/handy.cmo\
-	../basement/location.cmo\
-	../basement/types.cmo\
-	../basement/files.cmo\
-	../basement/parsetree_utils.cmo\
-	../basement/miscHelpers.cmo\
+	../basement/installation.cmo \
+	../basement/configuration.cmo \
+	../basement/handy.cmo \
+	../basement/location.cmo \
+	../basement/types.cmo \
+	../basement/files.cmo \
+	../basement/parsetree_utils.cmo \
+	../basement/miscHelpers.cmo \
 	\
-	../parser/lexer.cmo\
-	../parser/parser.cmo\
-	../parser/parse_file.cmo\
-	../parser/dump_ptree.cmo\
-	../parser/sourcify.cmo\
+	../parser/lexer.cmo \
+	../parser/parser.cmo \
+	../parser/parse_file.cmo \
+	../parser/dump_ptree.cmo \
+	../parser/sourcify.cmo \
 	\
-	../typing/env.cmo\
-	../typing/scoping.cmo\
-	../typing/substExpr.cmo\
-	../typing/substColl.cmo\
-	../typing/ast_equal.cmo\
-	../typing/dep_analysis.cmo\
-	../typing/param_dep_analysis.cmo\
-	../typing/infer.cmo\
+	../typing/env.cmo \
+	../typing/scoping.cmo \
+	../typing/substExpr.cmo \
+	../typing/substColl.cmo \
+	../typing/ast_equal.cmo \
+	../typing/dep_analysis.cmo \
+	../typing/param_dep_analysis.cmo \
+	../typing/infer.cmo \
 	\
-	../docgen/doc_lexer.cmo\
-	../docgen/utils_docgen.cmo\
-	../docgen/env_docgen.cmo\
-	../docgen/main_docgen.cmo\
+	../docgen/doc_lexer.cmo \
+	../docgen/utils_docgen.cmo \
+	../docgen/env_docgen.cmo \
+	../docgen/main_docgen.cmo \
 	\
-	../commoncodegen/visUniverse.cmo\
-	../commoncodegen/minEnv.cmo\
-	../commoncodegen/abstractions.cmo\
-	../commoncodegen/misc_common.cmo\
-	../commoncodegen/externals_generation_errs.cmo\
-	../commoncodegen/recursion.cmo\
+	../commoncodegen/visUniverse.cmo \
+	../commoncodegen/minEnv.cmo \
+	../commoncodegen/abstractions.cmo \
+	../commoncodegen/misc_common.cmo \
+	../commoncodegen/externals_generation_errs.cmo \
+	../commoncodegen/recursion.cmo \
 	\
-	../mlcodegen/misc_ml_generation.cmo\
-        ../mlcodegen/type_ml_generation.cmo\
-        ../mlcodegen/base_exprs_ml_generation.cmo\
-	../mlcodegen/species_ml_generation.cmo\
-	../mlcodegen/main_ml_generation.cmo\
+	../mlcodegen/misc_ml_generation.cmo \
+        ../mlcodegen/type_ml_generation.cmo \
+        ../mlcodegen/base_exprs_ml_generation.cmo \
+	../mlcodegen/species_ml_generation.cmo \
+	../mlcodegen/main_ml_generation.cmo \
 	\
-	../coqcodegen/species_record_type_generation.cmo\
-	../coqcodegen/rec_let_gen.cmo\
-	../coqcodegen/type_coq_generation.cmo\
-	../coqcodegen/species_coq_generation.cmo\
-	../coqcodegen/main_coq_generation.cmo\
+	../coqcodegen/species_record_type_generation.cmo \
+	../coqcodegen/rec_let_gen.cmo \
+	../coqcodegen/type_coq_generation.cmo \
+	../coqcodegen/species_coq_generation.cmo \
+	../coqcodegen/main_coq_generation.cmo \
 	$(LOCAL_BYT_OBJS)
 
 EXE_NAME = $(PROJECT_NAME)
@@ -92,22 +92,22 @@ $(EXE_NAME).bin: $(BIN_OBJS)
 
 fodump: fodump.cmo
 	$(CAML_BYT) \
-	../basement/installation.cmo\
-	../basement/configuration.cmo\
-	../basement/handy.cmo\
-	../basement/location.cmo\
-	../basement/types.cmo\
-	../basement/files.cmo\
-	../basement/parsetree_utils.cmo\
-	../basement/miscHelpers.cmo\
+	../basement/installation.cmo \
+	../basement/configuration.cmo \
+	../basement/handy.cmo \
+	../basement/location.cmo \
+	../basement/types.cmo \
+	../basement/files.cmo \
+	../basement/parsetree_utils.cmo \
+	../basement/miscHelpers.cmo \
 	\
-	../parser/lexer.cmo\
-	../parser/parser.cmo\
-	../parser/parse_file.cmo\
-	../parser/dump_ptree.cmo\
-	../parser/sourcify.cmo\
+	../parser/lexer.cmo \
+	../parser/parser.cmo \
+	../parser/parse_file.cmo \
+	../parser/dump_ptree.cmo \
+	../parser/sourcify.cmo \
 	\
-	../typing/env.cmo\
+	../typing/env.cmo \
 	fodump.cmo -o fodump
 
 install::
