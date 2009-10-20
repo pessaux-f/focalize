@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.21 2009-10-01 08:20:45 weis Exp $
+# $Id: Makefile.common,v 1.22 2009-10-20 14:15:02 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -36,7 +36,7 @@ odoc:: $(BYT_OBJS)
 	$(CAML_DOC) $(CAML_INCLUDES) -html -d odoc $(BYT_OBJS:.cmo=.ml)
 
 clean::
-	@$(RM) *.cm* *.o *.a *.annot *.out *.bin *.byt
+	@$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 	$(RM) *.vo *.fo *~ .*~ log *.mangled *.coz *.pfc *.fcd
 	if test -d tests; then \
 	  for i in tests; do \
