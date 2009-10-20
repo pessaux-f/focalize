@@ -1,5 +1,5 @@
 open Rewrite_prop;;
-open Random_rep;;
+(* open Random_rep;; *)
 
 open To_strings;;
 open Own_prop;;
