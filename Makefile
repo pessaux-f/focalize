@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.55 2009-07-07 11:31:41 doligez Exp $
+# $Id: Makefile,v 1.56 2009-10-20 12:41:33 weis Exp $
 
 ROOT_DIR = .
 
@@ -474,4 +474,5 @@ distclean_distribution:
 	fi
 
 .PHONY: distclean
-distclean:: distclean_internal_tools distclean_external_tools distclean_distribution unconfigure
+distclean:: distclean_internal_tools distclean_external_tools \
+  distclean_distribution unconfigure
