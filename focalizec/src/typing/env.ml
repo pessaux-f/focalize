@@ -12,11 +12,11 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.135 2009-06-16 10:58:08 pessaux Exp $ *)
+(* $Id: env.ml,v 1.136 2009-10-20 14:17:56 carlier Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
-    Environnments are used for both scoping and typing. Because then share
+    Environnments are used for both scoping and typing. Because they share
     a similar structure, we want to factorize their code.
     After scoping and typing, a persistent datastructure needs to be dumped
     on the disk ("compiled information" for "use" and "open" directives).
@@ -28,7 +28,7 @@
         - The structure of scoping information used in scoping environments.
         - The structure od typing information used in typing environments.
         - The shared [find_module] function allowing to retrieve on the disk
-          The persistent datastructure related to de "module" name.
+          The persistent datastructure related to "module" name.
         - The scoping environment primitives.
         - The typing environment primitives.                                  *)
 (* ************************************************************************** *)
@@ -146,6 +146,7 @@ let debug_env_list_assoc ~allow_opened searched list =
 
     {b Exported} : Abstract.                                             *)
 (* ********************************************************************* *)
+
 type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
   constructors : (Parsetree.constructor_name * ('constrs binding_origin)) list;
   labels : (Parsetree.vname * ('labels binding_origin)) list;
@@ -1227,11 +1228,11 @@ let (scope_find_module, type_find_module,
                      only [BO_absolute] bindings.
         - env : The environment to extend.
 
-      {b Rem} : Not exported outside this moddule.                        *)
+      {b Rem} : Not exported outside this module.                         *)
   (* ******************************************************************** *)
   let internal_extend_env from_fname loaded_env env =
     (* Local function to tranform [BO_absolute] into [BO_opened]. Note that
-       loaded environments should never contain [BO_opened] taggged bindings. *)
+       loaded environments should never contain [BO_opened] tagged bindings. *)
     let absolute_to_opened l =
       List.map
         (function
@@ -1776,6 +1777,14 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
       {b Rem} : Not exported outside this module.                       *)
   (* ****************************************************************** *)
   and find_value_vname ~loc ~allow_opened vname (env : t) =
+(*
+    List.iter (fun t -> match fst(t) with
+   | Parsetree.Vlident s -> print_string (s ^ "\n") 
+   | Parsetree.Vuident s -> print_string (s ^ "\n")
+   | Parsetree.Vpident s -> print_string (s ^ "\n")
+   | Parsetree.Viident s -> print_string (s ^ "\n")
+   | Parsetree.Vqident s -> print_string (s ^ "\n") ) env.values;
+*)
     try (*debug_env_list_assoc*) env_list_assoc ~allow_opened vname env.values
     with Not_found -> raise (Unbound_identifier (vname, loc))
 
@@ -1945,6 +1954,38 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
       {b Rem} : Not exported outside this module.                     *)
   (* **************************************************************** *)
   and find_type_vname ~loc ~allow_opened vname (env : t) =
+    (*
+    print_string "Types : ";
+    List.iter (fun (x,_) -> match x with | Parsetree.Vlident s |
+    Parsetree.Vuident s | Parsetree.Vpident s |
+    Parsetree.Viident s | Parsetree.Vqident s -> print_string s) env.types;
+    print_string "\n";
+    print_string "constructors : ";
+    List.iter (fun (x,_) -> match x with | Parsetree.Vlident s |
+    Parsetree.Vuident s | Parsetree.Vpident s |
+    Parsetree.Viident s | Parsetree.Vqident s -> print_string s)
+    env.constructors;
+    print_string "\n";
+    print_string "values : ";
+    List.iter (fun (x,_) -> match x with | Parsetree.Vlident s |
+    Parsetree.Vuident s | Parsetree.Vpident s |
+    Parsetree.Viident s | Parsetree.Vqident s -> print_string s)
+    env.values;
+    print_string "\n";
+    print_string "labels : ";
+    List.iter (fun (x,_) -> match x with | Parsetree.Vlident s |
+    Parsetree.Vuident s | Parsetree.Vpident s |
+    Parsetree.Viident s | Parsetree.Vqident s -> print_string s)
+    env.labels;
+    print_string "\n";
+    print_string "species : ";
+    List.iter (fun (x,_) -> match x with | Parsetree.Vlident s |
+    Parsetree.Vuident s | Parsetree.Vpident s |
+    Parsetree.Viident s | Parsetree.Vqident s -> print_string s)
+    env.species;
+    print_string "\n";
+    if (env.types = []) then print_string "no types" else ();
+    *)
     try env_list_assoc ~allow_opened vname env.types with
     | Not_found ->
         (* Since a species, even not complete, we don't insert its carrier
@@ -1961,6 +2002,13 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
         | _ ->  raise (Unbound_type (vname, loc))) ;
         (* If we found a species with this name, issue the better message. *)
         raise (Unbound_collection (vname, loc))
+
+  (* Added for FocalTest *)
+  let get_t : t -> (EMAccess.constructor_bound_data, EMAccess.label_bound_data,
+                    EMAccess.type_bound_data, EMAccess.value_bound_data,
+                    EMAccess.species_bound_data) generic_env =
+                      fun t -> t;;
+  (*   *)
 end
 ;;
 
@@ -2080,6 +2128,17 @@ module TypingEMAccess = struct
 end
 ;;
 module TypingEnv = Make (TypingEMAccess) ;;
+
+(* for focaltest : *)
+let get_species_list t =
+  List.map fst t.species;;
+
+let get_constructor_list t =
+  List.map fst t.constructors;;
+
+let get_type_list t =
+  List.map fst t.types;;
+(* *************** *)
 
 
 

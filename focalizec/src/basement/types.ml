@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.80 2009-04-28 16:56:10 pessaux Exp $ *)
+(* $Id: types.ml,v 1.81 2009-10-20 14:17:56 carlier Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -48,7 +48,7 @@ type type_name =
 
 
 (* ************************************* *)
-(** {b Descr] Record field (label) name.
+(** {b Descr} Record field (label) name.
 
     {b Exported} : Yes                   *)
 (* ************************************* *)
@@ -282,7 +282,7 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
     This allows to record in a type constructor both the constructor name
     and the hosting file where this constructor was defined.
 
-    {Exported} : Yes.                                                     *)
+    {b Exported} : Yes.                                                   *)
 (* ********************************************************************** *)
 let make_type_constructor hosting_module constructor_name =
   (hosting_module, constructor_name)
@@ -1184,7 +1184,7 @@ type species_collection_kind =
    of species parameter.
    It can either be a "IS" parameter.
    Otherwise, it is a "IN" parameter. For Coq, we hence need to know if
-   the type of this parmeter is built from another of our species
+   the type of this parameter is built from another of our species
    parameters of from a toplevel species/collection.
 
    {b Rem} : Exported outside this module.                                *)
@@ -1862,3 +1862,31 @@ let rec type_simple_to_local_type ty =
 
 
 let type_scheme_to_local_type ts = type_simple_to_local_type ts.ts_body ;;
+
+(* for focaltest : *)
+let extract_type_simple 
+        (fvar : unit -> 'a)
+        (farrow : type_simple -> type_simple -> 'a)
+        (ftuple : type_simple list -> 'a)
+        (fsum : type_simple list -> 'a)
+        (fconstruct : string -> string -> type_simple list -> 'a)
+        (frep : unit -> 'a)
+        (fspecrep : fname -> collection_name -> 'a) ts =
+         let ts = repr ts in
+         match ts with
+         | ST_var _ -> fvar ()
+         | ST_arrow ((t1,t2)) -> farrow t1 t2
+         | ST_tuple(t_l) -> ftuple t_l
+         | ST_sum_arguments(t_l) -> fsum t_l
+         | ST_construct((t, t_l)) -> fconstruct (fst t) (snd t) t_l
+         | ST_self_rep -> frep ()
+         | ST_species_rep((fn, cn)) -> fspecrep fn cn;;
+
+let extract_snd_type_scheme t = t.ts_body;;
+let nb_variable_type_scheme t = List.length t.ts_vars;;
+let type_variable_eq t1 t2 =
+  match t1, t2 with
+  | ST_var e2, ST_var e1 -> Some (e1 == e2)
+  | _, _ -> None;;
+
+(* *************** *)

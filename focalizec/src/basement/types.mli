@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.46 2009-03-25 12:43:15 pessaux Exp $ *)
+(* $Id: types.mli,v 1.47 2009-10-20 14:17:56 carlier Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string;;
@@ -209,3 +209,19 @@ type local_type =
 (** *)
 val type_simple_to_local_type : type_simple -> local_type;;
 val type_scheme_to_local_type : type_scheme -> local_type;;
+
+
+(* for focaltest : *)
+val extract_type_simple :
+        (unit -> 'a) ->
+        (type_simple -> type_simple -> 'a) ->
+        (type_simple list -> 'a) ->
+        (type_simple list -> 'a) ->
+        (string -> string -> type_simple list -> 'a) ->
+        (unit -> 'a) ->
+        (fname -> collection_name -> 'a) -> type_simple ->  'a
+
+val extract_snd_type_scheme : type_scheme -> type_simple;;
+val nb_variable_type_scheme : type_scheme -> int;;
+val type_variable_eq : type_simple -> type_simple -> bool option;;
+(* *************** *)

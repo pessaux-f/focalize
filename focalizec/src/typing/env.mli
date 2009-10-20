@@ -269,6 +269,28 @@ module ScopingEnv :
       t -> ScopeInformation.species_binding_info
   end
 
+type 'a binding_origin =
+    (** The binding comes from the current compilation unit. *)
+  | BO_absolute of 'a
+    (** The binding was inserted by a "open" directive of the file in
+        argument. *)
+  | BO_opened of (Types.fname * 'a)
+;;
+
+type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
+  constructors : (Parsetree.constructor_name * ('constrs binding_origin)) list;
+  labels : (Parsetree.vname * ('labels binding_origin)) list;
+  types : (Parsetree.vname * ('types binding_origin)) list;
+  (** [idents] Contains functions methods and more generally any let-bound
+      identifiers. *)
+  values : (Parsetree.vname * ('values binding_origin)) list;
+  (** [species] Contains both species and collections. *)
+  species : (Parsetree.vname * ('species binding_origin)) list
+}
+;;
+
+
+
 
 module TypingEnv :
   sig
@@ -311,8 +333,15 @@ module TypingEnv :
     val find_species :
         loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
           t -> TypeInformation.species_description
+
   end
 
+
+(* For focaltest : *)
+val get_species_list : TypingEnv.t -> Parsetree.vname list;;
+val get_constructor_list : TypingEnv.t -> Parsetree.constructor_name list;;
+val get_type_list : TypingEnv.t -> Parsetree.vname list;;
+(* *************** *)
 
 module MlGenEnv :
   sig
