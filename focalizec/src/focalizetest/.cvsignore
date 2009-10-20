@@ -1,0 +1,9 @@
+*.cm*
+*.annot
+*.o
+.depend
+odoc
+log
+a.out
+focalizedep.byt
+focalizedep.bin
