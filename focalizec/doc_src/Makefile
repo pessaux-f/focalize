@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2009-10-20 14:17:56 carlier Exp $
+# $Id: Makefile,v 1.5 2009-10-27 16:20:04 carlier Exp $
 
 ROOT_DIR = ..
 
@@ -33,12 +33,10 @@ all clean distclean doc docdir depend::
         done
 
 install uninstall::
-	echo Hello World
-
-#@for i in $(SUB_DIRS); do \
-#  echo "--> $$i ..."; \
-#  ($(CD) $$i && $(MAKE) $@); \
-#  err=$$?; \
-#  echo "<-- $$i [$$err]"; \
-#  case $$err in 0);; *) exit $$err;; esac; \
-#      done
+	@for i in $(SUB_DIRS); do \
+	  echo "--> $$i ..."; \
+	  ($(CD) $$i && $(MAKE) $@); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]"; \
+	  case $$err in 0);; *) exit $$err;; esac; \
+        done
