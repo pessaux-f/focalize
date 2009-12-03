@@ -12,12 +12,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.45 2009-06-10 17:57:06 pessaux Exp $ *)
-
+(* $Id: focalizec.ml,v 1.46 2009-12-03 16:11:08 weis Exp $ *)
 
 exception Bad_file_suffix of string ;;
-
-
 
 let compile_fcl input_file_name =
   (* First, let's lex and parse the input source file.
@@ -162,36 +159,39 @@ let dispatch_compilation files =
       let suffix =
         String.lowercase (Files.get_file_name_suffix input_file_name) in
       match suffix with
-       | "fcl" ->
-           let input_file_no_suffix = Filename.chop_extension input_file_name in
-           (* First, .fcl -> .ml and/or .v. *)
-           compile_fcl input_file_name ;
-           if Configuration.get_generate_ocaml () then
-             (begin
-             (* If a .ml file was generated, let's compile it. *)
-             compile_ml (input_file_no_suffix ^ ".ml") ;
-             end) ;
-           if Configuration.get_generate_coq () then
-             (begin
-             if not (Configuration.get_stop_before_zenon ()) then
-               (begin
-               (* If a .zv file was generated, let's compile it. *)
-               compile_zv (input_file_no_suffix ^ ".zv") ;
-               if not (Configuration.get_stop_before_coq ()) then
-                 (begin
-                 (* Finally, pass it to Coq. *)
-                 compile_coq (input_file_no_suffix ^ ".v")
-                 end) ;
-               end) ;
-             end) ;
-       | "ml" | "mli" -> compile_ml input_file_name
-       | "zv" ->
-           compile_zv input_file_name ;
-           (* Finally, pass it to Coq. *)
-           let input_file_no_suffix = Filename.chop_extension input_file_name in
-           compile_coq (input_file_no_suffix ^ ".v")
-       | "v" -> compile_coq input_file_name
-       | _ -> raise (Bad_file_suffix input_file_name))
+      | "fcl" ->
+          let input_file_no_suffix =
+            Filename.chop_extension input_file_name in
+          (* First, .fcl -> .ml and/or .v. *)
+          compile_fcl input_file_name ;
+          if Configuration.get_generate_ocaml () then
+            (begin
+            (* If a .ml file was generated, let's compile it. *)
+            compile_ml (input_file_no_suffix ^ ".ml") ;
+            end) ;
+          if Configuration.get_generate_coq () then
+            (begin
+            if not (Configuration.get_stop_before_zenon ()) then
+              (begin
+              (* If a .zv file was generated, let's compile it. *)
+              compile_zv (input_file_no_suffix ^ ".zv") ;
+              if not (Configuration.get_stop_before_coq ()) then
+                (begin
+                (* Finally, pass it to Coq. *)
+                compile_coq (input_file_no_suffix ^ ".v")
+                end) ;
+              end) ;
+            end) ;
+      | "ml" | "mli" -> compile_ml input_file_name
+      | "zv" ->
+          compile_zv input_file_name ;
+          (* Finally, pass it to Coq. *)
+          let input_file_no_suffix =
+            Filename.chop_extension input_file_name in
+          compile_coq (input_file_no_suffix ^ ".v")
+      | "v" -> compile_coq input_file_name
+      | _ -> raise (Bad_file_suffix input_file_name)
+    )
     files
 ;;
 
