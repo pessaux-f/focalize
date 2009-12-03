@@ -6,6 +6,7 @@
 *.vo
 *.ml
 *.fo
+*.fcd
 *.mangled
 *.coz
 .depend
