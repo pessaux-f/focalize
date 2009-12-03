@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.67 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: basics.fcl,v 1.68 2009-12-03 15:36:08 doligez Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -93,7 +93,7 @@ type list ('a) =
   | ( :: ) ('a, list ('a))
   external
   | caml -> {* 'a list *}
-  | coq -> {* (list __var_a) *} (* From the List module. *)
+  | coq -> {* (List.list __var_a) *}
 
 with [] =
   | caml -> {* [] *}
