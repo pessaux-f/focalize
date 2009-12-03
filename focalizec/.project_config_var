@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: .project_config_var,v 1.5 2009-04-03 15:50:36 doligez Exp $
+# $Id: .project_config_var,v 1.6 2009-12-03 14:38:27 weis Exp $
 
 # The configuration variables specific to FoCaLize.
 
@@ -30,8 +30,8 @@ set_project_id () {
   PROJECT_FIRST_YEAR=2006
 
   VERSION_NUMBER_MAIN=0
-  VERSION_NUMBER_SUB=1
-  VERSION_NUMBER_PATCH=2
+  VERSION_NUMBER_SUB=6
+  VERSION_NUMBER_PATCH=0
 
   # The list of external tools for the project.
   # (Also defined in ./Makefile.config if any.)
