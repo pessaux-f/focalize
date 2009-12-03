@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2009-10-01 08:25:30 weis Exp $
+# $Id: Makefile,v 1.7 2009-12-03 17:01:13 habib Exp $
 
 ROOT_DIR = ../../..
 
@@ -19,6 +19,10 @@ include $(ROOT_DIR)/Makefile.config
 TEX_FILES = tutorial.tex
 
 HVA_FILES = tutorial.hva
+
+FCL_FILES = superset.fcl subset.fcl mylist.fcl main.fcl
+
+FCL_OBJS = $(FCL_FILES:.fcl=.cmo)
 
 DOC_OBJS = tutorial.dvi tutorial.ps tutorial.pdf tutorial.html
 
@@ -30,15 +34,19 @@ IMAGEN = imagen -extra "ppmquant 255"
 DVIPS = dvips
 DVIPDF = dvipdf
 
-include $(ROOT_DIR)/Makefile.common
-
 # DOCDIR_DIR is the directory doc that this Makefile must populate.
 DOCDIR_DIR=$(DOC_ROOT_DIR)/tex/tutorial
 
 # DOC_TGT_DIR is the target directory for the installation of the documentation
 DOC_TGT_DIR:=$(DOC_DIR)/tex/$(PROJECT_NAME_FULL)/tutorial
 
-all doc docdir:: $(DOC_OBJS)
+include $(ROOT_DIR)/Makefile.common
+
+FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
+
+all doc docdir:: byt $(DOC_OBJS)
+
+byt:: $(FCL_OBJS)
 
 docdir:: $(DOC_OBJS)
 	$(MKDIR) $(DOCDIR_DIR) && \
