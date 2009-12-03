@@ -1,0 +1,11 @@
+*.cm*
+*.annot
+*.zv
+*.pfc
+*.fcd
+*.v
+*.vo
+*.fo
+*.mangled
+*.xml
+.depend
