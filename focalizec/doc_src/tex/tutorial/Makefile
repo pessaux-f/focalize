@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2009-12-04 09:14:37 weis Exp $
+# $Id: Makefile,v 1.10 2009-12-04 11:15:51 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -61,6 +61,8 @@ DOC_TGT_DIR:=$(DOC_DIR)/tex/$(PROJECT_NAME_FULL)/tutorial
 
 FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
 FOCALIZE_COMP_FLAGS = -I $(ROOT_DIR)/src/stdlib
+CAML_INCLUDES = -I $(ROOT_DIR)/src/stdlib
+CAML_COMP_FLAGS = -w Ae -dtypes
 
 all doc docdir:: byt $(DOC_OBJS)
 
