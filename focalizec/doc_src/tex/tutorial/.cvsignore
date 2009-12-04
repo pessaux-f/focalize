@@ -16,3 +16,4 @@ tutorial.image.tex
 tutorial*.gif
 *.ml *.zv *.v *.pfc
 *.fo *.vo *.cm*
+*.annot
