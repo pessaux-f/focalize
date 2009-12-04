@@ -1,3 +1,8 @@
+# Focalize 0.6.0
+- Update Caml to 3.11.1
+- Update Camlp5 to 5.12
+- Use Coq8.1pl4
+
 # Focalize 0.2.0
 - Lexing
   Comments starting with a line (more than 3) * characters are accepted.
@@ -10,4 +15,4 @@ Initial distribution
 # Focalize 0.1.rc0
 First release candidate.
 
-$Id: CHANGES,v 1.1 2009-02-13 13:15:30 weis Exp $
+$Id: CHANGES,v 1.2 2009-12-04 09:24:16 weis Exp $
