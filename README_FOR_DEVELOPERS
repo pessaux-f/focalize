@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.8 2009-08-18 10:01:32 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.9 2009-12-04 11:00:40 weis Exp $
 
 # The name of the file says why and for who it was written :)
 
@@ -230,3 +230,47 @@ correct current version of the tool.
       <CODE>${FOCALIZEC_NAME}</CODE> is in the file
       <CODE>src/basement/configuration.ml</CODE>)
 </OL>
+
+<P>The Release documentation has to be recompiled witht the new version
+numbers. You need to
+<UL>
+ <LI>edit the version files:
+    <OL>
+     <LI>
+       <CODE>.project_config_var</CODE> (change the bindings of variables
+       <CODE>VERSION_NUMBER_MAIN</CODE>,
+       <CODE>VERSION_NUMBER_SUB</CODE>, and
+       <CODE>VERSION_NUMBER_PATCH</CODE>
+       ).
+
+     <LI><CODE>$ROOT_DIR/focalizec/doc_src/man/focalizec.env</CODE> (
+       change the definition
+       <CODE>let focalizec_version = "0.6.0";;</CODE>
+       ).
+
+     <LI><CODE>$ROOT_DIR/focalizec/doc_src/tex/refman/macros.tex</CODE> (
+       change the definitions
+       <CODE>\def\month{December}</CODE>
+       <CODE>\def\year{2009}</CODE>
+       <CODE>\def\focalversion{\sf 0.6.0}</CODE>
+       ).
+
+     <LI><CODE>$ROOT_DIR/focalizec/doc_src/tex/refman/macros.hva</CODE> (
+       change the definitions
+       <CODE>\def\month{December}</CODE>
+       <CODE>\def\year{2009}</CODE>
+       <CODE>\def\focalversion{\sf 0.6.0}</CODE>
+       ).
+
+     <LI><CODE>$ROOT_DIR/focalizec/doc_src/tex/tutorial/macros.tex</CODE> (
+       change the definitions
+       <CODE>\def\month{December}</CODE>
+       <CODE>\def\year{2009}</CODE>
+       <CODE>\def\focalversion{\sf 0.6.0}</CODE>
+       ).     
+    </OL>
+ <LI><CODE>make docdir</CODE>
+ <LI>cvs commit -m 'New release X.X.X.'
+</UL>
+
+<P>Who said «This version handling stuff cannot be simpler ?»

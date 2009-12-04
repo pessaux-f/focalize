@@ -38,35 +38,7 @@
 %----------------------------------------------------------------------------------------------
 % Macros
 %----------------------------------------------------------------------------------------------
-
-\newcommand{\foc}
-{{\sc{FoCaLize}}\xspace}
-
-\newcommand{\zenon}
-{{\sc{Zenon}}\xspace}
-
-\newcommand{\ocaml}
-{{\sc{OCaml}}\xspace}
-
-\newcommand{\unix}
-{{\sc{Unix}}\xspace}
-
-\newcommand{\coq}
-{{\sc{Coq}}\xspace}
-
-\newcommand{\fpl}
-{{\sc{Fpl}}\xspace}
-
-\newcommand{\NAT}
-{\mathbb{N}}
-
-\newcommand{\REL}
-{\mathbb{Z}}
-
-\newcommand{\fid}[1]
-{\ensuremath{\textrm{\emph{#1}}}}
-
-\newcommand{\code}[1]{\lstinline£#1£}
+\input{macros.tex}
 
 %----------------------------------------------------------------------------------------------
 % Table of Contents
@@ -85,8 +57,8 @@
  \subsection{Content}
  \label{foreword_content}
 
- This document is a short tutorial for \foc, version 0.6.0 released in December
- 2009\footnote{\foc can be downloaded from $\fid{http://focalize.inria.fr}$.}.
+ This document is a short tutorial for \foc, version {\focalizeversion} released in \month
+ \year\footnote{\foc can be downloaded from $\fid{http://focalize.inria.fr}$.}.
  It describes a full but simple
  development using the main features of the \foc language, from the specification to the
  implementation, including proofs of correction.
