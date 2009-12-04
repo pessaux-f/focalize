@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2009-12-03 17:01:13 habib Exp $
+# $Id: Makefile,v 1.8 2009-12-04 08:35:18 weis Exp $
 
 ROOT_DIR = ../../..
 
@@ -43,6 +43,7 @@ DOC_TGT_DIR:=$(DOC_DIR)/tex/$(PROJECT_NAME_FULL)/tutorial
 include $(ROOT_DIR)/Makefile.common
 
 FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
+FOCALIZE_COMP_FLAGS = -I $(ROOT_DIR)/src/stdlib
 
 all doc docdir:: byt $(DOC_OBJS)
 
