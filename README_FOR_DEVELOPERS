@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.9 2009-12-04 11:00:40 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.10 2009-12-08 13:19:25 weis Exp $
 
 # The name of the file says why and for who it was written :)
 
@@ -70,24 +70,25 @@ mkdir distribution
 cd distribution
 
 # Checkout a fresh distribution branch.
-# (Change the name "weis" by your own login name on our CVS server modulogic.inria.fr)
+# (Change the name "weis" by your own login name on our CVS server
+# modulogic.inria.fr)
 
 cvs -d weis@modulogic.inria.fr:/home/cvs \
  co -r branch_focalize_release_0_1_rc0 -d focalize.0.1.rc0 focalize
 
 # You also need the htmlc batch editor, which is in the Caml bazar.
-# The simplest way to get it is
-cd ~/src
-cvs -d :pserver:anoncvs@camlcvs.inria.fr:/caml co bazar-ocaml
+# The simplest way to get htmlc is
+   cd ~/src
+   cvs -d :pserver:anoncvs@camlcvs.inria.fr:/caml co bazar-ocaml
 
-# Then go to the htmlc directory and 
-cd ~/src/bazar-ocaml/htmlc
-./configure
-make
-make install
+   # Then go to the htmlc directory and 
+   cd ~/src/bazar-ocaml/htmlc
+   ./configure
+   make
+   make install
 
-# Configure and compile it
-cd focalize.0.1.rc0
+# Configure the FoCaLiZe and compile it
+cd focalize.0.6
 ./configure
 make
 
@@ -126,8 +127,8 @@ cvs -d weis@modulogic.inria.fr:/home/cvs \
   generator (from bazar-ocaml).
   </P>
 
-  <P>Warning: <code>.html</code> files are made read-only by <code>htmlc</code> as
-  they are generated, and thus must not be edited! Only
+  <P>Warning: <code>.html</code> files are made read-only by
+  <code>htmlc</code> as they are generated, and thus must not be edited! Only
   <code>.shtml</code> files can be edited.
   </P>
 
@@ -219,9 +220,11 @@ consolidate the version number of every component of FoCaLiZe.
 <CODE>.project_config_var</CODE> to verify that this file indicates the
 correct current version of the tool.
 
-<P>For the entire FoCaLiZe system, it means to edit and verify the following files:
+<P>For the entire FoCaLiZe system, it means to edit and verify the following
+files:
 <OL>
-  <LI><CODE>./.project_config_var</CODE> (the version for FoCaLiZe is in this file)
+  <LI><CODE>./.project_config_var</CODE> (the version for FoCaLiZe is in this
+  file)
   <LI><CODE>zenon/.project_config_var</CODE> (the version for zenon is in the
       file <CODE>versionnum.ml</CODE>)
   <LI><CODE>zvtov/.project_config_var</CODE> (the version for zvtov is in the
