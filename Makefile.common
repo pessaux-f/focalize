@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.24 2009-12-08 15:16:02 weis Exp $
+# $Id: Makefile.common,v 1.25 2009-12-08 15:24:39 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -58,7 +58,7 @@ unconfigure::
 	$(RM) .config_var .depend .done_*
 
 distclean:: clean
-	$(RM) .\#*
+	$(RM) .\#* *.pfc
 
 depend::
 	$(CAML_DEP) *.mli *.ml > ./.depend
@@ -75,7 +75,7 @@ tests::
 	  done; \
 	fi
 
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .v .vo
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .pfc .v .vo
 .SUFFIXES: .fcd .xml
 .SUFFIXES: .tex .dvi .ps .pdf .idx
 .SUFFIXES: .shtml .html .htm
