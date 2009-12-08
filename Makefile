@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.56 2009-10-20 12:41:33 weis Exp $
+# $Id: Makefile,v 1.57 2009-12-08 17:10:12 weis Exp $
 
 ROOT_DIR = .
 
@@ -50,13 +50,14 @@ include $(ROOT_DIR)/Makefile.common
 all:: build_external_tools build_internal_tools
 
 # The ./configure make file target for external tools.
-# External tools configuration in fact means their compilation and installation.
+# External tools ``configuration'' in fact means their compilation and
+# installation.
 configure_external_tools: .done_build_external_tools
 
 configure_internal_tools: .done_configure_internal_tools
 
 .done_configure_internal_tools: .config_var
-	$(TOUCH) focalizec/.depend focalizec/src/focalizedep/.depend && \
+	@$(TOUCH) focalizec/.depend focalizec/src/focalizedep/.depend && \
 	$(TOUCH) .done_configure_internal_tools
 
 # If we have to rebuild .config_var
@@ -75,17 +76,17 @@ magic_configure_external_tools: \
 install_external_tools_sources: .done_install_external_tools_sources
 
 .done_install_external_tools_sources: .done_install_external_$(COQ_NAME)_tool_sources
-	$(TOUCH) .done_install_external_tools_sources
+	@$(TOUCH) .done_install_external_tools_sources
 
 clean_install_external_tools_sources:
-	$(RM) .done_install_external_tools_sources
-	$(RM) .done_install_external_$(COQ_NAME)_tool_sources
-	$(RM) .done_install_external_$(CAMLP5_NAME)_tool_sources
+	@$(RM) .done_install_external_tools_sources  && \
+	$(RM) .done_install_external_$(COQ_NAME)_tool_sources  && \
+	$(RM) .done_install_external_$(CAMLP5_NAME)_tool_sources  && \
 	$(RM) .done_install_external_$(CAML_NAME)_tool_sources
 
 .done_magic_install_external_tools_sources: \
   .done_magic_install_external_$(COQ_NAME)_tool_sources
-	$(TOUCH) .done_install_external_tools_sources
+	@$(TOUCH) .done_install_external_tools_sources  && \
 	$(TOUCH) .done_magic_install_external_tools_sources
 
 # Caml sources
@@ -103,7 +104,7 @@ install_external_$(CAML_NAME)_tool_sources: \
 	$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources
 
 .done_magic_install_external_$(CAML_NAME)_tool_sources:
-	$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources
+	@$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources && \
 	$(TOUCH) .done_magic_install_external_$(CAML_NAME)_tool_sources
 
 # CamlP5 sources
@@ -123,7 +124,7 @@ install_external_$(CAMLP5_NAME)_tool_sources: \
 
 .done_magic_install_external_$(CAMLP5_NAME)_tool_sources: \
   .done_magic_install_external_$(CAML_NAME)_tool_sources
-	$(TOUCH) .done_install_external_$(CAMLP5_NAME)_tool_sources
+	@$(TOUCH) .done_install_external_$(CAMLP5_NAME)_tool_sources && \
 	$(TOUCH) .done_magic_install_external_$(CAMLP5_NAME)_tool_sources
 
 # Coq sources
@@ -143,7 +144,7 @@ install_external_$(COQ_NAME)_tool_sources: \
 
 .done_magic_install_external_$(COQ_NAME)_tool_sources: \
   .done_magic_install_external_$(CAMLP5_NAME)_tool_sources
-	$(TOUCH) .done_install_external_$(COQ_NAME)_tool_sources
+	@$(TOUCH) .done_install_external_$(COQ_NAME)_tool_sources && \
 	$(TOUCH) .done_magic_install_external_$(COQ_NAME)_tool_sources
 
 #
@@ -169,15 +170,16 @@ build_external_tools: .done_build_external_tools
 .done_build_external_tools: \
   .done_install_external_tools_sources\
   .done_build_external_coq_tool
-	$(TOUCH) .done_build_external_tools
+	@$(TOUCH) .done_build_external_tools
 
 .done_magic_build_external_tools:: .done_install_external_tools_sources
-	$(TOUCH) .done_install_external_tools_sources
+	@$(TOUCH) .done_install_external_tools_sources
 .done_magic_build_external_tools:: .done_magic_build_external_coq_tool
-	$(TOUCH) .done_build_external_tools && \
+	@$(TOUCH) .done_build_external_tools && \
 	$(TOUCH) .done_magic_build_external_tools
 
-.done_build_external_caml_tool: .done_install_external_$(CAML_NAME)_tool_sources
+.done_build_external_caml_tool: \
+  .done_install_external_$(CAML_NAME)_tool_sources
 	@for i in $(ABSOLUTE_CAML_SRC_DIR); do \
 	  echo "--> $$i..." >&2 && \
 	  ($(CD) $(ABSOLUTE_CAML_SRC_DIR) && \
@@ -190,8 +192,9 @@ build_external_tools: .done_build_external_tools
 	done && \
 	$(TOUCH) .done_build_external_caml_tool
 
-.done_magic_build_external_caml_tool: .done_magic_install_external_$(CAML_NAME)_tool_sources
-	$(TOUCH) .done_build_external_caml_tool && \
+.done_magic_build_external_caml_tool: \
+  .done_magic_install_external_$(CAML_NAME)_tool_sources
+	@$(TOUCH) .done_build_external_caml_tool && \
 	$(TOUCH) .done_magic_build_external_caml_tool
 
 .done_build_external_camlp5_tool: .done_build_external_caml_tool
@@ -209,7 +212,7 @@ build_external_tools: .done_build_external_tools
 	$(TOUCH) .done_build_external_camlp5_tool
 
 .done_magic_build_external_camlp5_tool: .done_magic_build_external_caml_tool
-	$(TOUCH) .done_build_external_camlp5_tool
+	@$(TOUCH) .done_build_external_camlp5_tool && \
 	$(TOUCH) .done_magic_build_external_camlp5_tool
 
 .done_build_external_coq_tool: .done_build_external_camlp5_tool
@@ -226,7 +229,7 @@ build_external_tools: .done_build_external_tools
 	$(TOUCH) .done_build_external_coq_tool
 
 .done_magic_build_external_coq_tool: .done_magic_build_external_camlp5_tool
-	$(TOUCH) .done_build_external_coq_tool && \
+	@$(TOUCH) .done_build_external_coq_tool && \
 	$(TOUCH) .done_magic_build_external_coq_tool
 
 #
@@ -236,9 +239,9 @@ build_internal_tools: .done_build_internal_tools
 .done_build_internal_tools: \
   .done_build_external_tools\
   .done_build_focalizedep
-	$(TOUCH) .done_build_internal_tools && \
-	echo && \
-        echo "Done. Now, please invoke: make install"
+	@$(TOUCH) .done_build_internal_tools && \
+	 echo && \
+         echo "Done. Now, please invoke: make install"
 
 
 $(ZENON_EXES): .done_build_zenon
@@ -469,7 +472,7 @@ distclean_external_tools: clean_install_external_tools_sources
 
 .PHONY: distclean_distribution
 distclean_distribution:
-	if test -r Makefile.distribution; then \
+	@if test -r Makefile.distribution; then \
 	  $(MAKE) -f Makefile.distribution distclean; \
 	fi
 
