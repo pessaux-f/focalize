@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.17 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.18 2009-12-08 15:16:02 weis Exp $
 
 ROOT_DIR = ..
 
@@ -23,7 +23,7 @@ all:: $(EXTERNAL_TOOLS_DIRS)
 
 $(ABSOLUTE_CAML_SRC_DIR):
 	@for i in $(CAML_TAR_BALLS); do \
-	  echo "--> $$i ..."; \
+	  echo "--> $$i ..." && \
 	  ($(CD) $(ROOT_DIR) && $(TARX) $(TAR_BALLS_DIR_NAME)/$$i); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \
@@ -32,7 +32,7 @@ $(ABSOLUTE_CAML_SRC_DIR):
 
 $(ABSOLUTE_CAMLP5_SRC_DIR):
 	@for i in $(CAMLP5_TAR_BALLS); do \
-	  echo "--> $$i ..."; \
+	  echo "--> $$i ..." && \
 	  ($(CD) $(ROOT_DIR) && $(TARX) $(TAR_BALLS_DIR_NAME)/$$i); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \
@@ -41,6 +41,7 @@ $(ABSOLUTE_CAMLP5_SRC_DIR):
 
 $(ABSOLUTE_COQ_SRC_DIR):
 	@for i in $(COQ_TAR_BALLS); do \
+	  echo "--> $$i ..." && \
 	  ($(CD) $(ROOT_DIR) && $(TARX) $(TAR_BALLS_DIR_NAME)/$$i); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]"; \
@@ -61,5 +62,8 @@ $(COQ_PATCH_TAR_BALL): $(COQ_SRC_DIR_NAME)
 
 include $(ROOT_DIR)/Makefile.common
 
-distclean clean uninstall::
+distclean uninstall::
 	($(RM) $(EXTERNAL_TOOLS_DIRS))
+
+clean::
+	$(RM) $(CAML_SRC_DIR_NAME) $(CAMLP5_SRC_DIR_NAME) $(COQ_SRC_DIR_NAME)

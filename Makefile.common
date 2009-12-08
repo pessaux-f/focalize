@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.23 2009-12-04 09:17:56 weis Exp $
+# $Id: Makefile.common,v 1.24 2009-12-08 15:16:02 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -37,7 +37,7 @@ odoc:: $(BYT_OBJS)
 
 clean::
 	@$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
-	$(RM) *.vo *.fo *~ .*~ log *.mangled *.coz *.pfc *.fcd
+	$(RM) *.vo *.fo *~ .*~ log *.mangled *.coz *.fcd
 	if test -d tests; then \
 	  for i in tests; do \
 	    echo "--> $$i ..." >&2; \
