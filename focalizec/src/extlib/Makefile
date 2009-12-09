@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.22 2009-09-03 12:09:01 doligez Exp $
+# $Id: Makefile,v 1.23 2009-12-09 12:03:36 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -21,6 +21,7 @@ include $(ROOT_DIR)/Makefile.config
 
 # Fill here to add a new directory for a new library
 SUB_DIRS = algebra access_control
+# polynomials (PW: Commented out since does not compile yet (as of 0.6.0).)
 
 include $(ROOT_DIR)/Makefile.common
 
@@ -44,6 +45,15 @@ clean::
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
+distclean::
+	@for i in $(SUB_DIRS); do \
+	  echo "--> $$i ..." && \
+	  ($(CD) $$i && $(MAKE) distclean); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+        done
+
 cleanlib: clean
 
 doc::
@@ -55,10 +65,19 @@ doc::
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
-install uninstall::
+install::
 	@for i in $(SUB_DIRS); do \
 	  echo "--> $$i ..." && \
 	  ($(CD) $$i && $(MAKE) install); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+	done
+
+uninstall::
+	@for i in $(SUB_DIRS); do \
+	  echo "--> $$i ..." && \
+	  ($(CD) $$i && $(MAKE) uninstall); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" && \
 	  case $$err in 0);; *) exit $$err;; esac; \
