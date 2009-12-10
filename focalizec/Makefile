@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.40 2009-10-20 14:23:39 weis Exp $
+# $Id: Makefile,v 1.41 2009-12-10 09:10:26 carlier Exp $
 
 ROOT_DIR = .
 
@@ -29,7 +29,7 @@ DOC_DIRS = doc_src
 
 SUB_DIRS = $(COMPILER_DIRS) $(LIB_DIRS) $(DOC_DIRS)
 
-COMPILER_INSTALL_DIRS = src/toplevel src/focalizedep $(LIB_DIRS)
+COMPILER_INSTALL_DIRS = src/toplevel src/focalizedep src/focalizetest $(LIB_DIRS)
 
 include $(ROOT_DIR)/Makefile.common
 
