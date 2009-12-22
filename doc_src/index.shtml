@@ -2,7 +2,7 @@
 $(PROJECT_NAME_TEXT)
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.8 2009-12-03 16:03:44 habib Exp $ -->
+<!-- \$Id: index.shtml,v 1.9 2009-12-22 15:29:51 habib Exp $ -->
 
 <div id="container">
 <div id="header">
@@ -38,12 +38,10 @@ $(PROJECT_NAME_TEXT)
 <div id="content">
 
 <p>
-
 Welcome to the $(PROJECT_NAME_TEXT) website. This site offers information
 about $(PROJECT_NAME_TEXT), some documentation about the language and its
 compiler, some training opportunities, and of course, the latest release of
 $(PROJECT_NAME_TEXT).
-
 </p>
 
 </div>
@@ -51,13 +49,64 @@ $(PROJECT_NAME_TEXT).
 <div class="spacer"></div>
 
 <div id="main">
-<h3>New release of the $(PROJECT_NAME_TEXT) environment soon<h3>
+
+<h3>Overview<h3>
+
 <p>
-
-A new release of the $(PROJECT_NAME_TEXT) environment, 
-<code>focalize 0.6.0</code>, will be available in the coming days.
-
+The $(PROJECT_NAME_TEXT) project aims at providing a programming
+environment to develop certified programs. The environment is based on
+a functional programming language with object-oriented features. The
+language allows the programmer to write formal specifications and
+proofs of the program in a unified and consistent setting. 
 </p>
+
+<p>
+From a $(PROJECT_NAME_TEXT) source code development, the
+$(FOCALIZEC_NAME) compiler produces three source files: 
+<ul>
+<li>
+a source file for the $(COQ_NAME) proof assistant to check the proofs, 
+</li>
+<li>
+a source file for the $(CAML_NAME) compiler to build the executable program, 
+</li>
+<li>
+a source file that contains the documentation extracted from the
+development sources.
+</li>
+</ul>
+</p>
+
+<p>
+Thanks to built-in inheritance mechanisms, the language allows to
+refine a development from the coarse-grain specification to the fully
+defined executable program.
+</p>
+
+<p>
+The $(PROJECT_NAME_TEXT) distribution includes a library of 
+mathematical algebraic structures up to multivariate polynomial
+rings, a library of security policies and various examples contributed
+by $(PROJECT_NAME_TEXT) users. The resulting libraries are noticeably
+efficent; for instance, the complex algorithms of the algebraic library
+provide runtime performances comparable to the best Computer
+Algebra Systems available.
+</p>
+
+</div>
+
+<div class="spacer"></div>
+
+<div id="main">
+
+<h3>New release of the $(PROJECT_NAME_TEXT) environment soon<h3>
+
+<p>
+A new release of the $(PROJECT_NAME_TEXT) environment, 
+<code>$(PROJECT_NAME) $(VERSION_NUMBER_FULL)</code>, 
+will be available in the coming days.
+</p>
+
 </div>
 
 

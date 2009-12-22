@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.78 2009-12-08 15:16:02 weis Exp $
+# $Id: configure,v 1.79 2009-12-22 15:29:51 habib Exp $
 
 ########################################################################
 #
@@ -1270,6 +1270,7 @@ build_config_file () {
       -e "s,@TOOLS_PROJECT_DOC_DIR@,$TOOLS_PROJECT_DOC_DIR," \
       -e "s,@TOOLS_PROJECT_MAN_DIR@,$TOOLS_PROJECT_MAN_DIR," \
   \
+      -e "s,@CAML_NAME@,$CAML_NAME," \
       -e "s,@CAML_PREFIX@,$CAML_PREFIX," \
       -e "s,@CAML_BIN_DIR@,$CAML_BIN_DIR," \
       -e "s,@CAML_LIB_DIR@,$CAML_LIB_DIR," \
@@ -1284,6 +1285,7 @@ build_config_file () {
   \
       -e "s,@CAMLP5_LIB_DIR@,$CAMLP5_LIB_DIR," \
   \
+      -e "s,@COQ_NAME@,$COQ_NAME," \
       -e "s,@COQ_PREFIX@,$COQ_PREFIX," \
       -e "s,@COQ_LIB_DIR@,$COQ_LIB_DIR," \
       -e "s,@COQ_CAML_DIR@,$COQ_CAML_DIR," \
@@ -1292,6 +1294,7 @@ build_config_file () {
       -e "s,@COQ_RC@,$COQ_RC," \
       -e "s,@COQ_MAKE@,$COQ_MAKE," \
   \
+      -e "s,@ZENON_NAME@,$ZENON_NAME," \
       -e "s,@ZENON_PREFIX@,$ZENON_PREFIX," \
       -e "s,@ZENON_LIB_DIR@,$ZENON_LIB_DIR," \
       -e "s,@ZENON_COMPILER@,$ZENON_COMPILER," \
@@ -1301,6 +1304,7 @@ build_config_file () {
       -e "s,@GS@,$GS," \
       -e "s,@DVIPDF@,$DVIPDF," \
   \
+      -e "s,@ZVTOV_NAME@,$ZVTOV_NAME," \
       -e "s,@ZVTOV_PREFIX@,$ZVTOV_PREFIX," \
       -e "s,@ZVTOV_LIB_DIR@,$ZVTOV_LIB_DIR," \
       -e "s,@ZVTOV_COMPILER@,$ZVTOV_COMPILER," \
@@ -1310,10 +1314,12 @@ build_config_file () {
       -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
       -e "s,@XMLRPC_MODULE@,$XMLRPC_MODULE," \
   \
+      -e "s,@FOCALIZEC_NAME@,$FOCALIZEC_NAME," \
       -e "s,@FOCALIZEC_PREFIX@,$FOCALIZEC_PREFIX," \
       -e "s,@FOCALIZEC_LIB_DIR@,$FOCALIZEC_LIB_DIR," \
       -e "s,@FOCALIZEC_COMPILER@,$FOCALIZEC_COMPILER," \
   \
+      -e "s,@FOCALIZEDEP_NAME@,$FOCALIZEDEP_NAME," \
       -e "s,@FOCALIZEDEP_PREFIX@,$FOCALIZEDEP_PREFIX," \
       -e "s,@FOCALIZEDEP_LIB_DIR@,$FOCALIZEDEP_LIB_DIR," \
       -e "s,@FOCALIZEDEP_COMPILER@,$FOCALIZEDEP_COMPILER," \
