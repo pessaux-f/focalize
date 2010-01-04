@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.58 2010-01-04 17:22:49 weis Exp $
+# $Id: Makefile,v 1.59 2010-01-04 17:43:14 weis Exp $
 
 ROOT_DIR = .
 
@@ -59,6 +59,9 @@ configure_internal_tools: .done_configure_internal_tools
 .done_configure_internal_tools: .config_var
 	@$(TOUCH) focalizec/.depend focalizec/src/focalizedep/.depend && \
 	$(TOUCH) .done_configure_internal_tools
+
+distclean_configure:
+	$(RM) .config_var_for_shell
 
 # If we have to rebuild .config_var
 .config_var:
