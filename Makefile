@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.57 2009-12-08 17:10:12 weis Exp $
+# $Id: Makefile,v 1.58 2010-01-04 17:22:49 weis Exp $
 
 ROOT_DIR = .
 
@@ -167,6 +167,7 @@ install_external_$(COQ_NAME)_tool_sources: \
 # directories, $PREFIX/bin, $PREFIX/lib, etc.
 # The prefix directory $PREFIX is defined at the project configuration time.
 build_external_tools: .done_build_external_tools
+
 .done_build_external_tools: \
   .done_install_external_tools_sources\
   .done_build_external_coq_tool
@@ -174,6 +175,7 @@ build_external_tools: .done_build_external_tools
 
 .done_magic_build_external_tools:: .done_install_external_tools_sources
 	@$(TOUCH) .done_install_external_tools_sources
+
 .done_magic_build_external_tools:: .done_magic_build_external_coq_tool
 	@$(TOUCH) .done_build_external_tools && \
 	$(TOUCH) .done_magic_build_external_tools
@@ -236,6 +238,7 @@ build_external_tools: .done_build_external_tools
 # Internal tools
 #
 build_internal_tools: .done_build_internal_tools
+
 .done_build_internal_tools: \
   .done_build_external_tools\
   .done_build_focalizedep
@@ -245,6 +248,7 @@ build_internal_tools: .done_build_internal_tools
 
 
 $(ZENON_EXES): .done_build_zenon
+
 .done_build_zenon: .done_build_external_tools
 	@for i in $(ABSOLUTE_ZENON_SRC_DIR); do \
 	  echo "--> $$i ..." >&2 && \
@@ -258,6 +262,7 @@ $(ZENON_EXES): .done_build_zenon
 	$(TOUCH) .done_build_zenon
 
 $(ZVTOV_EXES): .done_build_zvtov
+
 .done_build_zvtov : .done_build_zenon
 	@for i in $(ABSOLUTE_ZVTOV_SRC_DIR); do \
 	  echo "--> $$i ..." >&2 && \
@@ -271,6 +276,7 @@ $(ZVTOV_EXES): .done_build_zvtov
 	$(TOUCH) .done_build_zvtov
 
 $(FOCALIZEC_EXES): .done_build_focalizec
+
 .done_build_focalizec: .done_build_zvtov
 	@for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
 	  echo "--> $$i ..." >&2 && \
@@ -283,6 +289,7 @@ $(FOCALIZEC_EXES): .done_build_focalizec
 	$(TOUCH) .done_build_focalizec
 
 $(FOCALIZEDEP_EXES): .done_build_focalizedep
+
 .done_build_focalizedep: .done_build_focalizec
 	@for i in $(ABSOLUTE_FOCALIZEDEP_SRC_DIR); do \
 	  echo "--> $$i ..." >&2 && \
