@@ -1,0 +1,106 @@
+Les fichiers utilisés dans le tutorial compilent bien avec focalizec, mais le
+vernaculaire coq produit déplaît à Coq qui échoue :(
+
+Pour pouvoir continuer à compiler le système, j'ai supprimé le fichier qui
+bugue des fichiers à compiler. Aussi, pour mettre le bug en évidence, il faut
+légèrement modifier le fichier Makefile du répertoire
+$ pwd
+/home/deby/weis/src/focalize/focalizec/doc_src/tex/tutorial
+
+Changer la ligne:
+
+FOCALIZE_SRC = superset.fcl subset.fcl mylist.fcl #main.fcl
+
+soit en retirant le caractère '#', soit en remplaçant cette ligne par la
+ligne sans dièse suivante:
+
+FOCALIZE_SRC = superset.fcl subset.fcl mylist.fcl main.fcl
+
+Puis, simplement taper:
+
+$ make
+../../../src/toplevel/focalizec -I ../../../src/stdlib superset.fcl
+Invoking ocamlc...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/ocamlc -I /usr/local/lib/focalizec-0.6.0 -I ../../../src/stdlib -c superset.ml
+Invoking zvtov...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/zvtov -zenon /home/deby/weis/pkg/focalize-0.6.0/bin/zenon -new superset.zv
+Invoking coqc...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/coqc  -I /usr/local/lib/focalizec-0.6.0 -I ../../../src/stdlib  -I /home/deby/weis/pkg/focalize-0.6.0/lib/zenon superset.v
+../../../src/toplevel/focalizec -I ../../../src/stdlib subset.fcl
+Invoking ocamlc...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/ocamlc -I /usr/local/lib/focalizec-0.6.0 -I ../../../src/stdlib -c subset.ml
+Invoking zvtov...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/zvtov -zenon /home/deby/weis/pkg/focalize-0.6.0/bin/zenon -new subset.zv
+66  (cached)52  (cached)55  (cached)68  (cached)73  (cached)70  (cached)82  (cached)84  (cached)85  (cached)86  (cached)87  (cached)88  (cached)59  (cached)63  (cached)96  (cached)97  (cached)101  (cached)103  (cached)104  (cached)105  (cached)106  (cached)58  (cached)60  (cached)Invoking coqc...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/coqc  -I /usr/local/lib/focalizec-0.6.0 -I ../../../src/stdlib  -I /home/deby/weis/pkg/focalize-0.6.0/lib/zenon subset.v
+../../../src/toplevel/focalizec -I ../../../src/stdlib mylist.fcl
+[1mWarning:[0m Species '[4mmylist#EnumList[0m' should not be turned into a
+collection. Field '[4mdel[0m' does not have a termination proof. Proof is
+assumed.
+[1mWarning:[0m Species '[4mmylist#EnumList[0m' should not be turned into a
+collection. Field '[4mmem[0m' does not have a termination proof. Proof is
+assumed.
+[1mWarning:[0m Species '[4mmylist#IndList[0m' should not be turned into a
+collection. Field '[4mdel[0m' does not have a termination proof. Proof is
+assumed.
+Invoking ocamlc...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/ocamlc -I /usr/local/lib/focalizec-0.6.0 -I ../../../src/stdlib -c mylist.ml
+Invoking zvtov...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/zvtov -zenon /home/deby/weis/pkg/focalize-0.6.0/bin/zenon -new mylist.zv
+45  (cached)47  (cached)48  (cached)49  (cached)58  (cached)60  (cached)61  (cached)62  (cached)103  (cached)109  (cached)110  (cached)114  (cached)115  (cached)120  (cached)121  (cached)122  (cached)191  (cached)201  (cached)203  (cached)205  (cached)206  (cached)207  (cached)212  (cached)216  (cached)218  (cached)220  (cached)222  (cached)224  (cached)225  (cached)226  (cached)227  (cached)228  (cached)235  (cached)139  (cached)147  (cached)151  (cached)153  (cached)155  (cached)157  (cached)158  (cached)163  (cached)165  (cached)167  (cached)169  (cached)171  (cached)172  (cached)174  (cached)175  (cached)182  (cached)241  (cached)Invoking coqc...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/coqc  -I /usr/local/lib/focalizec-0.6.0 -I ../../../src/stdlib  -I /home/deby/weis/pkg/focalize-0.6.0/lib/zenon mylist.v
+../../../src/toplevel/focalizec -I ../../../src/stdlib main.fcl
+[1mWarning:[0m Species '[4mmain#IntList_Coll[0m' should not be turned into a
+collection. Field '[4mdel[0m' does not have a termination proof. Proof is
+assumed.
+[1mWarning:[0m Species '[4mmain#ListSubset[0m' should not be turned into a
+collection. Field '[4m<:[0m' does not have a termination proof. Proof is
+assumed.
+[1mWarning:[0m Species '[4mmain#ListSubset[0m' should not be turned into a
+collection. Field '[4m=[0m' does not have a termination proof. Proof is
+assumed.
+[1mWarning:[0m Species '[4mmain#IntSubset_Coll[0m' should not be turned into
+a collection. Field '[4m<:[0m' does not have a termination proof. Proof is
+assumed.
+[1mWarning:[0m Species '[4mmain#IntSubset_Coll[0m' should not be turned into
+a collection. Field '[4m=[0m' does not have a termination proof. Proof is
+assumed.
+[1mWarning:[0m Species '[4mmain#IntSubsetList_Coll[0m' should not be turned
+into a collection. Field '[4mdel[0m' does not have a termination proof. Proof
+is assumed.
+[1mWarning:[0m Species '[4mmain#IntSubset2_Coll[0m' should not be turned into
+a collection. Field '[4m<:[0m' does not have a termination proof. Proof is
+assumed.
+[1mWarning:[0m Species '[4mmain#IntSubset2_Coll[0m' should not be turned into
+a collection. Field '[4m=[0m' does not have a termination proof. Proof is
+assumed.
+Invoking ocamlc...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/ocamlc -I /usr/local/lib/focalizec-0.6.0 -I ../../../src/stdlib -c main.ml
+File "main.ml", line 133, characters 17-18:
+Warning Y: unused variable y.
+File "main.ml", line 129, characters 31-32:
+Warning Y: unused variable x.
+Invoking zvtov...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/zvtov -zenon /home/deby/weis/pkg/focalize-0.6.0/bin/zenon -new main.zv
+31  (cached)32  (cached)33  (cached)68  (cached)75  (cached)83  (cached)Invoking coqc...
+>> /home/deby/weis/pkg/focalize-0.6.0/bin/coqc  -I /usr/local/lib/focalizec-0.6.0 -I ../../../src/stdlib  -I /home/deby/weis/pkg/focalize-0.6.0/lib/zenon main.v
+Error while reading ./main.v :
+File "./main.v", line 529, characters 8-270
+Error:
+Recursive definition of print_ is ill-formed.
+In environment
+_p_Val_T : Set
+_p_Sup_T : Set
+_p_Val_print : _p_Val_T -> basics.unit__t
+_p_Sup_head : _p_Sup_T -> _p_Val_T
+_p_Sup_isnil : _p_Sup_T -> basics.bool__t
+abst_T := _p_Sup_T : Set
+abst__dash_ : abst_T -> _p_Val_T -> abst_T
+s : abst_T
+x := (basics.print_string ___a_string:basics.unit__t) : basics.unit__t
+print_ : abst_T -> basics.unit__t
+Recursive definition on "abst_T" which should be an inductive type
+*** Error code 1
+
+Stop.
+make: stopped in /home/deby/weis/src/focalize/focalizec/doc_src/tex/tutorial
