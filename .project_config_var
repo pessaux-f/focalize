@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: .project_config_var,v 1.7 2009-12-03 14:38:27 weis Exp $
+# $Id: .project_config_var,v 1.8 2010-01-06 11:53:46 weis Exp $
 
 # The configuration variables specific to FoCaLiZe.
 
@@ -68,21 +68,27 @@ set_intrinsic_defaults () {
 
   # External tools
   # Do we use statically known external tools ?
+  # If false, we just call external tools as found in the runtime PATH.
   DEFAULT_STATIC_EXTERNAL=true
   # Do we make external tools ?
   DEFAULT_MAKE_EXTERNAL=true
+  # Do we perform a fake make for external tools ?
   DEFAULT_MAGIC_MAKE_EXTERNAL=false
 
-  # Do we use a tools specific prefix directory for the project ?
+  # Do we use an external tools specific prefix directory for the project ?
+  # If true, external tools will be installed in TOOLS_PREFIX as defined
+  # after the configuration phase.
   DEFAULT_USE_TOOLS_PREFIX_DIRECTORY=true
-  DEFAULT_TOOLS_PREFIX=$HOME/pkg
+  # The default tools specific prefix directory.
+  DEFAULT_TOOLS_PREFIX="$DEFAULT_PREFIX"
+  # Was DEFAULT_TOOLS_PREFIX=$HOME/pkg
   
   # Do we use a 'full project name' private sub directory inside the
   # ${TOOLS_PREFIX} directory for the installation of the external/internal
   # tools of the project ?
   DEFAULT_USE_PROJECT_SUB_DIRECTORY=true
 
-  # Intrinsic defaults for Caml
+  # Intrinsic default flags for Caml compilation.
   DEFAULT_BYT_DEBUG_FLAGS="-g -dtypes"
   DEFAULT_BIN_DEBUG_FLAGS="-dtypes"
 
