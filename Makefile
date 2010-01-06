@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.61 2010-01-06 15:42:18 weis Exp $
+# $Id: Makefile,v 1.62 2010-01-06 22:49:29 weis Exp $
 
 ROOT_DIR = .
 
@@ -87,8 +87,13 @@ configure_deliverables: .done_configure_deliverables
 .config_var:
 	./configure
 
+# Dist cleaning configuration.
+# Warning: after running this target, you must run configure again to be able
+# to use this Makefile! (Since included file ./.config_var has been removed.)
 distclean_configure:
-	$(RM) .config_var_for_shell
+	$(RM) .config_var $(RM) .config_var_for_shell .done_configure_external_tools
+	# Just for developpers, but harmless for users.
+	$(RM) .distribution_var
 
 .PHONY: magic_configure_external_tools
 magic_configure_external_tools: \
