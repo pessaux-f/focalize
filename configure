@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.82 2010-01-06 16:48:15 weis Exp $
+# $Id: configure,v 1.83 2010-01-06 22:47:31 weis Exp $
 
 ########################################################################
 #
@@ -1458,6 +1458,8 @@ main () {
     then :
     else prefix_main
   fi &&
+  # We do check at configuration time that we will be able to install and compile
+  # the project afterwards.
   check_installation_dirs &&
   build_configuration_variables &&
   touch_depends &&
