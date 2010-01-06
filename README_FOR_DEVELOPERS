@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.10 2009-12-08 13:19:25 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.11 2010-01-06 14:19:57 weis Exp $
 
 # The name of the file says why and for who it was written :)
 
@@ -39,11 +39,12 @@
 
   <P>Other cleaning targets:
   <UL>
-    <LI>clean_internal_tools: performs clean_zenon clean_zvtov clean_focalizec
+    <LI>clean_internal_tools: performs clean_zenon clean_zvtov
+    <LI>clean_deliverables: clean_focalizec clean_focalizedep
     <LI>clean_external_tools: clean external tools (Ocaml, CamlP5, Coq),
         (then clean internal_tools for consistency).
-    <LI>clean_zenon clean_zvtov clean_focalizec: specific targets for cleaning
-        internal tools.
+    <LI>clean_zenon clean_zvtov clean_focalizec clean_focalizedep: specific
+        targets for cleaning internal tools and deliverables.
   </UL>
   </P>
 
@@ -234,7 +235,7 @@ files:
       <CODE>src/basement/configuration.ml</CODE>)
 </OL>
 
-<P>The Release documentation has to be recompiled witht the new version
+<P>The Release documentation has to be recompiled with the new version
 numbers. You need to
 <UL>
  <LI>edit the version files:
@@ -276,4 +277,4 @@ numbers. You need to
  <LI>cvs commit -m 'New release X.X.X.'
 </UL>
 
-<P>Who said «This version handling stuff cannot be simpler ?»
+<P>Who said «This version handling stuff could be simpler!?»

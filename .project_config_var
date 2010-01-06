@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: .project_config_var,v 1.8 2010-01-06 11:53:46 weis Exp $
+# $Id: .project_config_var,v 1.9 2010-01-06 14:19:57 weis Exp $
 
 # The configuration variables specific to FoCaLiZe.
 
@@ -35,12 +35,14 @@ set_project_id () {
 
   # The list of external tools for the project.
   # (Also defined in ./Makefile.config if any.)
-  TOOLS_EXTERNAL="ocaml camlp5 coq"
+  EXTERNAL_TOOLS="ocaml camlp5 coq"
+
+    
 
   # The list of internal tools for the project. Those are likely to be
   # stand alone projects inside the main project: its sub-projects.
   # (Also defined in ./Makefile.config if any.)
-  TOOLS_INTERNAL="zenon zvtov"
+  INTERNAL_TOOLS="zenon zvtov"
 
   # The list of tools specifically provided by the project
   # (not one of the stand alone internal projects).
