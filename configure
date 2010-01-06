@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.81 2010-01-06 15:42:18 weis Exp $
+# $Id: configure,v 1.82 2010-01-06 16:48:15 weis Exp $
 
 ########################################################################
 #
@@ -427,6 +427,8 @@ set_intrinsic () {
     fi
   fi
 
+  if test -z "${STATIC_DELIVERABLES}"; then
+    STATIC_DELIVERABLES="${DEFAULT_STATIC_DELIVERABLES}"; fi
 }
 
 # Setting (or defining) default variables that depend upon ${DEFAULT_PREFIX}.
@@ -596,22 +598,22 @@ set_tools_prefix_defaults () {
   # Defaults for Focalizec.
   DEFAULT_FOCALIZEC_PREFIX="${DEFAULT_PREFIX}"
   DEFAULT_FOCALIZEC_BIN_DIR="${DEFAULT_FOCALIZEC_PREFIX}/bin"
-  DEFAULT_FOCALIZEC_LIB_DIR="${DEFAULT_FOCALIZEC_PREFIX}/lib/${FOCALIZEC_NAME}"
+  DEFAULT_FOCALIZEC_LIB_DIR="${DEFAULT_FOCALIZEC_PREFIX}/lib/${FOCALIZEC_NAME_FULL}"
+  DEFAULT_FOCALIZEC_COMPILER="${DEFAULT_FOCALIZEC_BIN_DIR}/${FOCALIZEC_NAME_FULL}";
 
-  if ${DEFAULT_STATIC_EXTERNAL}; then
-    DEFAULT_FOCALIZEC_COMPILER="${DEFAULT_FOCALIZEC_BIN_DIR}/${FOCALIZEC_NAME}";
-  else
+  if ! ${DEFAULT_STATIC_DELIVERABLES}; then
+    DEFAULT_FOCALIZEC_LIB_DIR="${DEFAULT_FOCALIZEC_PREFIX}/lib/${FOCALIZEC_NAME}";
     DEFAULT_FOCALIZEC_COMPILER="${FOCALIZEC_NAME}";
   fi
 
   # Defaults for Focalizedep.
   DEFAULT_FOCALIZEDEP_PREFIX="${DEFAULT_PREFIX}"
   DEFAULT_FOCALIZEDEP_BIN_DIR="${DEFAULT_FOCALIZEDEP_PREFIX}/bin"
-  DEFAULT_FOCALIZEDEP_LIB_DIR="${DEFAULT_FOCALIZEDEP_PREFIX}/lib/${FOCALIZEDEP_NAME}"
+  DEFAULT_FOCALIZEDEP_LIB_DIR="${DEFAULT_FOCALIZEDEP_PREFIX}/lib/${FOCALIZEDEP_NAME_FULL}"
+  DEFAULT_FOCALIZEDEP_COMPILER="${DEFAULT_FOCALIZEDEP_BIN_DIR}/${FOCALIZEDEP_NAME_FULL}";
 
-  if ${DEFAULT_STATIC_EXTERNAL}; then
-    DEFAULT_FOCALIZEDEP_COMPILER="${DEFAULT_FOCALIZEDEP_BIN_DIR}/${FOCALIZEDEP_NAME}";
-  else
+  if ! ${DEFAULT_STATIC_DELIVERABLES}; then
+    DEFAULT_FOCALIZEDEP_LIB_DIR="${DEFAULT_FOCALIZEDEP_PREFIX}/lib/${FOCALIZEDEP_NAME}";
     DEFAULT_FOCALIZEDEP_COMPILER="${FOCALIZEDEP_NAME}";
   fi
 
@@ -653,7 +655,6 @@ set_tools_prefix () {
   if test -z "${CAML_PREFIX}"; then
     CAML_PREFIX="${TOOLS_PROJECT_DIR}";
   fi
-
   if test -z "${CAML_LIB_DIR}"; then
     CAML_LIB_DIR="${CAML_PREFIX}/lib/ocaml";
   fi
@@ -770,34 +771,60 @@ set_tools_prefix () {
   fi
 
   # Settings for Focalizec.
+
   if test -z "${FOCALIZEC_PREFIX}"; then
     FOCALIZEC_PREFIX="${PREFIX}";
-  fi
-
-  if test -z "${FOCALIZEC_BIN_DIR}"; then
-    FOCALIZEC_BIN_DIR="${FOCALIZEC_PREFIX}/bin";
   fi
   if test -z "${FOCALIZEC_LIB_DIR}"; then
     FOCALIZEC_LIB_DIR="${FOCALIZEC_PREFIX}/lib/${FOCALIZEC_NAME}";
   fi
-  if test -z "${FOCALIZEC_COMPILER}"; then
-    FOCALIZEC_COMPILER="${FOCALIZEC_BIN_DIR}/${FOCALIZEC_NAME}";
+  if test -z "${FOCALIZEC_BIN_DIR}"; then
+    FOCALIZEC_BIN_DIR="${FOCALIZEC_PREFIX}/bin";
+    if ${STATIC_DELIVERABLES}; then
+      FOCALIZEC_COMPILER="${FOCALIZEC_BIN_DIR}/${FOCALIZEC_NAME_FULL}";
+    else
+      FOCALIZEC_COMPILER="${FOCALIZEC_BIN_DIR}/${FOCALIZEC_NAME}";
+    fi;
+  else
+    if ${STATIC_DELIVERABLES}; then
+      if test -z "${FOCALIZEC_COMPILER}"; then
+        FOCALIZEC_COMPILER="${FOCALIZEC_BIN_DIR}/focalizec";
+      fi;
+    else
+      abort_configuration \
+       "Cannot use option focalizec_bin_dir when not in static_deliverables mode.";
+      abort_remedy \
+       "Choose static_deliverables mode or remove focalizec_bin_dir option.";
+    fi;
   fi
 
   # Settings for Focalizedep.
+
   if test -z "${FOCALIZEDEP_PREFIX}"; then
     FOCALIZEDEP_PREFIX="${PREFIX}";
-  fi
-
-  if test -z "${FOCALIZEDEP_BIN_DIR}"; then
-    FOCALIZEDEP_BIN_DIR="${FOCALIZEDEP_PREFIX}/bin";
   fi
   if test -z "${FOCALIZEDEP_LIB_DIR}"; then
     FOCALIZEDEP_LIB_DIR="${FOCALIZEDEP_PREFIX}/lib/${FOCALIZEDEP_NAME}";
   fi
-  if test -z "${FOCALIZEDEP_COMPILER}"; then
-    FOCALIZEDEP_COMPILER="${FOCALIZEDEP_BIN_DIR}/${FOCALIZEDEP_NAME}";
-  fi
+  if test -z "${FOCALIZEDEP_BIN_DIR}"; then
+    FOCALIZEDEP_BIN_DIR="${FOCALIZEDEP_PREFIX}/bin";
+    if ${STATIC_DELIVERABLES}; then
+      FOCALIZEDEP_COMPILER="${FOCALIZEDEP_BIN_DIR}/${FOCALIZEDEP_NAME_FULL}";
+    else
+      FOCALIZEDEP_COMPILER="${FOCALIZEDEP_BIN_DIR}/${FOCALIZEDEP_NAME}";
+    fi;
+  else
+    if ${STATIC_DELIVERABLES}; then
+      if test -z "${FOCALIZEDEP_COMPILER}"; then
+        FOCALIZEDEP_COMPILER="${FOCALIZEDEP_BIN_DIR}/focalizedep";
+      fi;
+    else
+      abort_configuration \
+       "Cannot use option focalizedep_bin_dir when not in static_deliverables mode.";
+      abort_remedy \
+       "Choose static_deliverables mode or remove focalizedep_bin_dir option.";
+    fi;
+  fi;
 
 }
 
@@ -1157,6 +1184,9 @@ case ${argc} in
       -static_external | --static_external)
        STATIC_EXTERNAL=$2;
        shift 2;;
+      -static_deliverables | --static_deliverables)
+       STATIC_DELIVERABLES=$2;
+       shift 2;;
       -use_tools_prefix_directory | --use_tools_prefix_directory)
        USE_TOOLS_PREFIX_DIRECTORY=$2;
        shift 2;;
@@ -1336,12 +1366,15 @@ build_config_file () {
       -e "s,@XMLRPC_LINK@,$XMLRPC_LINK," \
       -e "s,@XMLRPC_MODULE@,$XMLRPC_MODULE," \
   \
+      -e "s,@STATIC_DELIVERABLES@,$STATIC_DELIVERABLES," \
       -e "s,@FOCALIZEC_NAME@,$FOCALIZEC_NAME," \
+      -e "s,@FOCALIZEC_NAME_FULL@,$FOCALIZEC_NAME_FULL," \
       -e "s,@FOCALIZEC_PREFIX@,$FOCALIZEC_PREFIX," \
       -e "s,@FOCALIZEC_LIB_DIR@,$FOCALIZEC_LIB_DIR," \
       -e "s,@FOCALIZEC_COMPILER@,$FOCALIZEC_COMPILER," \
   \
       -e "s,@FOCALIZEDEP_NAME@,$FOCALIZEDEP_NAME," \
+      -e "s,@FOCALIZEDEP_NAME_FULL@,$FOCALIZEDEP_NAME_FULL," \
       -e "s,@FOCALIZEDEP_PREFIX@,$FOCALIZEDEP_PREFIX," \
       -e "s,@FOCALIZEDEP_LIB_DIR@,$FOCALIZEDEP_LIB_DIR," \
       -e "s,@FOCALIZEDEP_COMPILER@,$FOCALIZEDEP_COMPILER," \

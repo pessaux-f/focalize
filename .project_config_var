@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: .project_config_var,v 1.10 2010-01-06 15:42:18 weis Exp $
+# $Id: .project_config_var,v 1.11 2010-01-06 16:48:15 weis Exp $
 
 # The seed source file for the project.
 # It contains the names of basic entities necessary to define, configure,
@@ -38,8 +38,15 @@ set_project_id () {
   VERSION_NUMBER_SUB=6
   VERSION_NUMBER_PATCH=0
 
+  VERSION_NUMBER_FULL="${VERSION_NUMBER_MAIN}.${VERSION_NUMBER_SUB}.${VERSION_NUMBER_PATCH}"
+
+  PROJECT_NAME_FULL="${PROJECT_NAME}-${VERSION_NUMBER_FULL}"
+
   # The list of external tools for the project.
   # (Also defined in ./Makefile.config if any.)
+  # Do we use statically known external tools ?
+  # If false, we just call external tools as found in the runtime PATH.
+  DEFAULT_STATIC_EXTERNAL=true
   CAML_NAME="ocaml"
   CAMLP5_NAME="camlp5"
   COQ_NAME="coq"
@@ -54,8 +61,13 @@ set_project_id () {
 
   # The list of tools specifically provided by the project
   # (not one of the stand alone internal projects).
+  DEFAULT_STATIC_DELIVERABLES=true
   FOCALIZEC_NAME="focalizec"
+  FOCALIZEC_NAME_FULL="${FOCALIZEC_NAME}-${VERSION_NUMBER_FULL}"
+
   FOCALIZEDEP_NAME="focalizedep"
+  FOCALIZEDEP_NAME_FULL="${FOCALIZEDEP_NAME}-${VERSION_NUMBER_FULL}"
+
   DELIVERABLES="${FOCALIZEC_NAME} ${FOCALIZEDEP_NAME}"
 
   # The manual extension for the man page of the project
@@ -79,9 +91,6 @@ set_intrinsic_defaults () {
   DEFAULT_PREFIX="/usr/local"
 
   # External tools
-  # Do we use statically known external tools ?
-  # If false, we just call external tools as found in the runtime PATH.
-  DEFAULT_STATIC_EXTERNAL=true
   # Do we make external tools ?
   DEFAULT_MAKE_EXTERNAL=true
   # Do we perform a fake make for external tools ?
