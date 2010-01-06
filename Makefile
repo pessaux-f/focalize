@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.60 2010-01-06 14:19:57 weis Exp $
+# $Id: Makefile,v 1.61 2010-01-06 15:42:18 weis Exp $
 
 ROOT_DIR = .
 
@@ -24,16 +24,16 @@ include $(ROOT_DIR)/Makefile.config
 # TAR_BALLS_DIR = $(ROOT_DIR)/$(TAR_BALLS_DIR_NAME)
 ## TAR_BALLS_DIR_NAME = tarballs
 #
-# EXTERNAL_TOOLS_DIRS = \
+# TOOLS_EXTERNAL_DIRS = \
 #  $(ABSOLUTE_CAML_SRC_DIR) $(ABSOLUTE_CAMLP5_SRC_DIR) $(ABSOLUTE_COQ_SRC_DIR)
 #
-# INTERNAL_TOOLS_DIRS = $(ZENON_SRC_DIR) $(ZVTOV_SRC_DIR)
+# TOOLS_INTERNAL_DIRS = $(ZENON_SRC_DIR) $(ZVTOV_SRC_DIR)
 # DELIVERABLES_DIRS = $(FOCALIZEC_SRC_DIR) $(FOCALIZEDEP_SRC_DIR)
 #
 # DOC_ROOT_DIR=$(ROOT_DIR)/doc
 
 ALL_SUB_DIRS = \
- $(EXTERNAL_TOOLS_DIRS) $(INTERNAL_TOOLS_DIRS) $(DELIVERABLES_DIRS)
+ $(TOOLS_EXTERNAL_DIRS) $(TOOLS_INTERNAL_DIRS) $(DELIVERABLES_DIRS)
 
 DOCDIR_DIR = $(DOC_ROOT_DIR)
 
@@ -377,7 +377,7 @@ install::
 	$(TOUCH) .done_install_focalizedep
 
 uninstall doc odoc docdir depend::
-	@for i in $(INTERNAL_TOOLS_DIRS); do \
+	@for i in $(TOOLS_INTERNAL_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
@@ -390,7 +390,7 @@ distclean::
 
 docdir:: doc
 	@$(MKDIR) $(DOCDIR_DIR) && \
-	for i in $(INTERNAL_TOOLS_DIRS); do \
+	for i in $(TOOLS_INTERNAL_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  $(MKDIR) $(DOCDIR_DIR)/$$i && \
 	  ($(CD) $$i && $(MAKE) $@) && \
@@ -440,10 +440,10 @@ clean_zenon:
 .PHONY: distclean_internal_tools
 distclean_internal_tools:
 	@$(RM) .done_build_internal_tools && \
-	for i in $(INTERNAL_TOOLS); do \
+	for i in $(TOOLS_INTERNAL); do \
 	  $(RM) .done_build_$$i; \
 	done && \
-	for i in $(INTERNAL_TOOLS_DIRS); do \
+	for i in $(TOOLS_INTERNAL_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && touch .config_var && $(MAKE) distclean); \
 	  err=$$?; \
@@ -531,7 +531,7 @@ distclean_external_tools: clean_install_external_tools_sources
 	$(RM) .done_build_external_camlp5_tool && \
 	$(RM) .done_build_external_caml_tool && \
 	$(RM) .done_build_external_tools && \
-	for i in $(EXTERNAL_TOOLS); do \
+	for i in $(TOOLS_EXTERNAL); do \
 	  $(RM) .done_build_external_$$i_tool; \
 	done && \
 	for i in $(TAR_BALLS_DIR); do \

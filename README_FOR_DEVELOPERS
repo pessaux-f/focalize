@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.11 2010-01-06 14:19:57 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.12 2010-01-06 15:42:18 weis Exp $
 
 # The name of the file says why and for who it was written :)
 
@@ -59,6 +59,29 @@
     <LI>install: install FoCaLiZe its tools and documentation.
   </OL>
   </P>
+
+<H2>The internals of configuration</H2>
+
+<P>The initial mandatory data to configure and compile are written by hand in the file
+<CODE>.project_config_var</CODE> in the root directory of the distribution.
+ It defines two sub-routines set_project_id and set_intrinsic_defaults.
+
+<P>The <CODE>configure</CODE> script loads <CODE>.project_config_var</CODE> and runs the
+two procedures to define the set of shell variables.
+
+<P>After various validity checks and argument treatment,
+the final part of <CODE>configure</CODE> records all the variables into the file
+<CODE>./.config_var</CODE> by sed-editing the template file
+<CODE>./.config_var.in</CODE>.
+
+<P>All the Makefiles in the project always starts by loading the
+<CODE>./.config_var.in</CODE> file to define the mandatory variables. (Hence
+<CODE>.config_var</CODE> is in fact a valid Makefile.)
+
+<P><CODE>configure</CODE> also creates the file
+<CODE>./.config_var_for_shell</CODE> which has a slightly different quotation
+strategy, more suitable for script shells.  (Hence
+<CODE>.config_var_for_shell</CODE> is a valid shell script.)
 
 <H2>How to get the current branch release for FoCaLiZe</H2>
 

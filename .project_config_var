@@ -13,7 +13,12 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: .project_config_var,v 1.9 2010-01-06 14:19:57 weis Exp $
+# $Id: .project_config_var,v 1.10 2010-01-06 15:42:18 weis Exp $
+
+# The seed source file for the project.
+# It contains the names of basic entities necessary to define, configure,
+# build, and distribute the entire project. Normally all the variables
+# defined here are never redefined.
 
 # The configuration variables specific to FoCaLiZe.
 
@@ -35,18 +40,23 @@ set_project_id () {
 
   # The list of external tools for the project.
   # (Also defined in ./Makefile.config if any.)
-  EXTERNAL_TOOLS="ocaml camlp5 coq"
-
-    
+  CAML_NAME="ocaml"
+  CAMLP5_NAME="camlp5"
+  COQ_NAME="coq"
+  TOOLS_EXTERNAL="${CAML_NAME} ${CAMLP5_NAME} ${COQ_NAME}"
 
   # The list of internal tools for the project. Those are likely to be
   # stand alone projects inside the main project: its sub-projects.
   # (Also defined in ./Makefile.config if any.)
-  INTERNAL_TOOLS="zenon zvtov"
+  ZENON_NAME="zenon"
+  ZVTOV_NAME="zvtov"
+  TOOLS_INTERNAL="${ZENON_NAME} ${ZVTOV_NAME}"
 
   # The list of tools specifically provided by the project
   # (not one of the stand alone internal projects).
-  PROJECT_DELIVERABLES="${FOCALIZEC_NAME} ${FOCALIZEDEP_NAME}"
+  FOCALIZEC_NAME="focalizec"
+  FOCALIZEDEP_NAME="focalizedep"
+  DELIVERABLES="${FOCALIZEC_NAME} ${FOCALIZEDEP_NAME}"
 
   # The manual extension for the man page of the project
   PROJECT_MAN_EXT=1
