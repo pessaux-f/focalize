@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.62 2010-01-06 22:49:29 weis Exp $
+# $Id: Makefile,v 1.63 2010-01-07 11:35:34 weis Exp $
 
 ROOT_DIR = .
 
@@ -77,10 +77,10 @@ configure_deliverables: .done_configure_deliverables
 	$(TOUCH) .done_configure_external_tools
 
 .done_configure_internal_tools: .done_configure_external_tools
-	@$(TOUCH) focalizec/.depend focalizec/src/focalizedep/.depend && \
 	$(TOUCH) .done_configure_internal_tools
 
 .done_configure_deliverables: .done_configure_internal_tools
+	@$(TOUCH) focalizec/.depend focalizec/src/focalizedep/.depend && \
 	$(TOUCH) .done_configure_deliverables
 
 # If we have to rebuild .config_var
@@ -90,8 +90,7 @@ configure_deliverables: .done_configure_deliverables
 # Dist cleaning configuration.
 # Warning: after running this target, you must run configure again to be able
 # to use this Makefile! (Since included file ./.config_var has been removed.)
-distclean_configure:
-	$(RM) .config_var $(RM) .config_var_for_shell .done_configure_external_tools
+unconfigure::
 	# Just for developpers, but harmless for users.
 	$(RM) .distribution_var
 
@@ -553,8 +552,7 @@ distclean_distribution:
 	  $(MAKE) -f Makefile.distribution distclean; \
 	fi
 
-.PHONY: distclean
+#.PHONY: distclean
 distclean:: \
-  distclean_internal_tools distclean_external_tools \
-  distclean_deliverables \
+  distclean_external_tools distclean_internal_tools distclean_deliverables \
   distclean_distribution unconfigure
