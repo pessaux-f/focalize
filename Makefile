@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.63 2010-01-07 11:35:34 weis Exp $
+# $Id: Makefile,v 1.64 2010-01-07 16:04:44 weis Exp $
 
 ROOT_DIR = .
 
@@ -65,23 +65,111 @@ include $(ROOT_DIR)/Makefile.common
 all:: build_external_tools build_internal_tools build_deliverables
 
 # The ./configure make file target for external tools.
-# External tools ``configuration'' in fact means their compilation and
-# installation.
+
+# External tools configuration in fact means installing their sources anf
+# configuing them.
 configure_external_tools: .done_configure_external_tools
 
-configure_internal_tools: .done_configure_internal_tools
-
-configure_deliverables: .done_configure_deliverables
-
-.done_configure_external_tools: .config_var
+.done_configure_external_tools: .done_configure_external_coq_tool
 	$(TOUCH) .done_configure_external_tools
 
-.done_configure_internal_tools: .done_configure_external_tools
+.done_configure_external_coq_tool: .done_configure_external_camlp5_tool
+
+.done_configure_external_camlp5_tool: .done_configure_external_caml_tool
+
+# Configuring Caml
+.done_configure_external_caml_tool: \
+  .done_install_external_$(CAML_NAME)_tool_sources
+	@for i in $(ABSOLUTE_CAML_SRC_DIR); do \
+	  echo "--> Configuring $$i..." >&2 && \
+	  ($(CD) $(ABSOLUTE_CAML_SRC_DIR) && \
+	   ./configure $(CAML_CONFIGURE_OPTIONS)); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+	done && \
+	$(TOUCH) .done_configure_external_caml_tool
+
+# Configuring Camlp5
+.done_configure_external_camlp5_tool: \
+  .done_install_external_$(CAMLP5_NAME)_tool_sources \
+  .done_configure_external_caml_tool
+	@for i in $(ABSOLUTE_CAMLP5_SRC_DIR); do \
+	  echo "--> Configuring $$i..." >&2 && \
+	  ($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR) && \
+	   ./configure $(CAMLP5_CONFIGURE_OPTIONS)); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+	done && \
+	$(TOUCH) .done_configure_external_camlp5_tool
+
+# Coq
+.done_configure_external_coq_tool: \
+  .done_install_external_$(COQ_NAME)_tool_sources \
+  .done_configure_external_camlp5_tool
+	@for i in $(ABSOLUTE_COQ_SRC_DIR); do \
+	  echo "--> Configuring $$i..." >&2 && \
+	  ($(CD) $(ABSOLUTE_COQ_SRC_DIR) && \
+	   ./configure $(COQ_CONFIGURE_OPTIONS)); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+	done && \
+	$(TOUCH) .done_configure_external_coq_tool
+
+# Internal tools configuration
+configure_internal_tools: .done_configure_internal_tools
+
+.done_configure_internal_tools: \
+  .done_configure_external_tools \
+  .done_configure_zenon \
+  .done_configure_zvtov
 	$(TOUCH) .done_configure_internal_tools
 
-.done_configure_deliverables: .done_configure_internal_tools
-	@$(TOUCH) focalizec/.depend focalizec/src/focalizedep/.depend && \
-	$(TOUCH) .done_configure_deliverables
+.done_configure_zenon: .done_configure_external_tools
+	@for i in $(ABSOLUTE_ZENON_SRC_DIR); do \
+	  echo "--> Configuring $$i ..." >&2 && \
+	  ($(CD) $$i && ./configure $(ZENON_CONFIGURE_OPTIONS)); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+	done && \
+	$(TOUCH) .done_configure_zenon
+
+.done_configure_zvtov : .done_configure_zenon
+	@for i in $(ABSOLUTE_ZVTOV_SRC_DIR); do \
+	  echo "--> Configuring $$i ..." >&2 && \
+	  ($(CD) $$i && ./configure $(ZVTOV_CONFIGURE_OPTIONS)); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+	done && \
+	$(TOUCH) .done_configure_zvtov
+
+# Deliverables configuration
+configure_deliverables: .done_configure_deliverables
+
+.done_configure_deliverables: \
+  .done_configure_internal_tools \
+  .done_configure_focalizec \
+  .done_configure_focalizedep
+	@$(TOUCH) .done_configure_deliverables
+
+.done_configure_focalizec: .done_configure_internal_tools
+	$(TOUCH) focalizec/.depend focalizec/src/focalizedep/.depend && \
+	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
+	  echo "--> Configuring $$i ..." >&2 && \
+	  ($(CD) $$i && ./configure $(FOCALIZEC_CONFIGURE_OPTIONS)); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+	done && \
+	$(TOUCH) .done_configure_focalizec
+
+.done_configure_focalizedep: \
+  .done_configure_internal_tools .done_configure_focalizec
+	@$(TOUCH) .done_configure_focalizedep
 
 # If we have to rebuild .config_var
 .config_var:
@@ -109,10 +197,15 @@ install_external_tools_sources: .done_install_external_tools_sources
 	@$(TOUCH) .done_install_external_tools_sources
 
 clean_install_external_tools_sources:
-	@$(RM) .done_install_external_tools_sources  && \
+	@for i in \
+	  $(ABSOLUTE_COQ_SRC_DIR) $(ABSOLUTE_CAMLP5_SRC_DIR) $(ABSOLUTE_CAML_SRC_DIR); do \
+	  echo "--> Cleaning $$i ..." >&2 && \
+	  $(RM) $$i; \
+	done && \
 	$(RM) .done_install_external_$(COQ_NAME)_tool_sources  && \
 	$(RM) .done_install_external_$(CAMLP5_NAME)_tool_sources  && \
-	$(RM) .done_install_external_$(CAML_NAME)_tool_sources
+	$(RM) .done_install_external_$(CAML_NAME)_tool_sources && \
+	$(RM) .done_install_external_tools_sources
 
 .done_magic_install_external_tools_sources: \
   .done_magic_install_external_$(COQ_NAME)_tool_sources
@@ -199,7 +292,7 @@ install_external_$(COQ_NAME)_tool_sources: \
 build_external_tools: .done_build_external_tools
 
 .done_build_external_tools: \
-  .done_install_external_tools_sources \
+  .done_configure_external_tools_sources \
   .done_build_external_caml_tool \
   .done_build_external_camlp5_tool \
   .done_build_external_coq_tool
@@ -209,9 +302,8 @@ build_external_tools: .done_build_external_tools
 .done_build_external_caml_tool: \
   .done_install_external_$(CAML_NAME)_tool_sources
 	@for i in $(ABSOLUTE_CAML_SRC_DIR); do \
-	  echo "--> $$i..." >&2 && \
+	  echo "--> Building $$i..." >&2 && \
 	  ($(CD) $(ABSOLUTE_CAML_SRC_DIR) && \
-	   ./configure $(CAML_CONFIGURE_OPTIONS) && \
 	   $(MAKE) $(CAML_MAKE_ALL_TARGET) && \
 	   $(MAKE) install); \
 	  err=$$?; \
@@ -223,10 +315,9 @@ build_external_tools: .done_build_external_tools
 # Camlp5
 .done_build_external_camlp5_tool: .done_build_external_caml_tool
 	@for i in $(ABSOLUTE_CAMLP5_SRC_DIR); do \
-	  echo "--> $$i..." >&2 && \
+	  echo "--> Building $$i..." >&2 && \
 	  ($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR) && \
 	   PATH=$(TOOLS_PROJECT_DIR)/bin:$$PATH && \
-	   ./configure $(CAMLP5_CONFIGURE_OPTIONS) && \
 	   $(MAKE) $(CAMLP5_MAKE_ALL_TARGET) && \
 	   $(MAKE) install); \
 	  err=$$?; \
@@ -238,9 +329,8 @@ build_external_tools: .done_build_external_tools
 # Coq
 .done_build_external_coq_tool: .done_build_external_camlp5_tool
 	@for i in $(ABSOLUTE_COQ_SRC_DIR); do \
-	  echo "--> $$i..." >&2 && \
+	  echo "--> Building $$i..." >&2 && \
 	  ($(CD) $(ABSOLUTE_COQ_SRC_DIR) && \
-	   ./configure $(COQ_CONFIGURE_OPTIONS) && \
 	   $(COQ_MAKE) $(COQ_MAKE_ALL_TARGET) && \
 	   $(COQ_MAKE) install); \
 	  err=$$?; \
@@ -250,14 +340,13 @@ build_external_tools: .done_build_external_tools
 	$(TOUCH) .done_build_external_coq_tool
 
 # Magic external builds
-.done_magic_build_external_tools:: .done_install_external_tools_sources
-	@$(TOUCH) .done_install_external_tools_sources
-.done_magic_build_external_tools:: .done_magic_build_external_coq_tool
+.done_magic_build_external_tools: \
+  .done_install_external_tools_sources \
+  .done_magic_build_external_coq_tool
 	@$(TOUCH) .done_build_external_tools && \
 	$(TOUCH) .done_magic_build_external_tools
 
-.done_magic_build_external_caml_tool: \
-  .done_magic_install_external_$(CAML_NAME)_tool_sources
+.done_magic_build_external_caml_tool: .done_install_external_tools_sources
 	@$(TOUCH) .done_build_external_caml_tool && \
 	$(TOUCH) .done_magic_build_external_caml_tool
 
@@ -284,9 +373,8 @@ $(ZENON_EXES): .done_build_zenon
 
 .done_build_zenon: .done_build_external_tools
 	@for i in $(ABSOLUTE_ZENON_SRC_DIR); do \
-	  echo "--> $$i ..." >&2 && \
-	  ($(CD) $$i && ./configure $(ZENON_CONFIGURE_OPTIONS) && \
-	   $(MAKE) $(ZENON_MAKE_ALL_tARGET) && \
+	  echo "--> Building $$i ..." >&2 && \
+	  ($(CD) $$i && $(MAKE) $(ZENON_MAKE_ALL_tARGET) && \
 	   $(MAKE) install); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
@@ -299,9 +387,8 @@ $(ZVTOV_EXES): .done_build_zvtov
 
 .done_build_zvtov : .done_build_zenon
 	@for i in $(ABSOLUTE_ZVTOV_SRC_DIR); do \
-	  echo "--> $$i ..." >&2 && \
-	  ($(CD) $$i && ./configure $(ZVTOV_CONFIGURE_OPTIONS) && \
-	   $(MAKE) $(ZVTOV_MAKE_ALL_TARGET) && \
+	  echo "--> Building $$i ..." >&2 && \
+	  ($(CD) $$i && $(MAKE) $(ZVTOV_MAKE_ALL_TARGET) && \
            $(MAKE) install); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
@@ -314,17 +401,15 @@ $(ZVTOV_EXES): .done_build_zvtov
 #
 
 build_deliverables: .done_build_deliverables
-.done_build_deliverables: \
-  .done_build_focalizec .done_build_focalizedep
+.done_build_deliverables: .done_build_focalizec .done_build_focalizedep
 	$(TOUCH) .done_build_deliverables
 
 # The focalize compiler
 $(FOCALIZEC_EXES): .done_build_focalizec
 .done_build_focalizec: .done_build_internal_tools
 	@for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
-	  echo "--> $$i ..." >&2 && \
-	  ($(CD) $$i && ./configure $(FOCALIZEC_CONFIGURE_OPTIONS) && \
-	   $(MAKE) $(FOCALIZEC_MAKE_ALL_TARGET)); \
+	  echo "--> Building $$i ..." >&2 && \
+	  ($(CD) $$i && $(MAKE) $(FOCALIZEC_MAKE_ALL_TARGET)); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \
@@ -336,7 +421,7 @@ $(FOCALIZEDEP_EXES): .done_build_focalizedep
 
 .done_build_focalizedep: .done_build_focalizec
 	@for i in $(ABSOLUTE_FOCALIZEDEP_SRC_DIR); do \
-	  echo "--> $$i ..." >&2 && \
+	  echo "--> Building $$i ..." >&2 && \
 	  ($(CD) $$i && \
 	   $(MAKE) $(FOCALIZEDEP_MAKE_ALL_TARGET)); \
 	  err=$$?; \
@@ -357,7 +442,6 @@ $(FOCALIZEDEP_EXES): .done_build_focalizedep
 # Another prerequisite is that the ``all'' target indeed does nothing if
 # nothing has to be done (not even rebuild the same executable or copy it to
 # a selected place).
-#
 
 clean:: clean_internal_tools clean_deliverables
 
@@ -371,7 +455,7 @@ install::
 	  exit 2; \
 	fi && \
 	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
-	  echo "--> $$i ..." >&2 && \
+	  echo "--> Installing $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
@@ -418,7 +502,7 @@ clean_zvtov:
 	  $(TOUCH) $$i/.config_var; \
 	done && \
 	for i in $(ZVTOV_NAME); do \
-	  echo "--> $$i ..." >&2 && \
+	  echo "--> Cleaning $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) clean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
@@ -434,7 +518,7 @@ clean_zenon:
 	  $(TOUCH) $$i/.config_var; \
 	done && \
 	for i in $(ZENON_NAME); do \
-	  echo "--> $$i ..." >&2 && \
+	  echo "--> Cleaning $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) clean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
@@ -448,7 +532,7 @@ distclean_internal_tools:
 	  $(RM) .done_build_$$i; \
 	done && \
 	for i in $(TOOLS_INTERNAL_DIRS); do \
-	  echo "--> $$i ..." >&2 && \
+	  echo "--> Dist Cleaning $$i ..." >&2 && \
 	  ($(CD) $$i && touch .config_var && $(MAKE) distclean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
@@ -467,7 +551,7 @@ clean_focalizec:
 	  $(TOUCH) $$i/.config_var; \
 	done && \
 	for i in $(FOCALIZEC_NAME); do \
-	  echo "--> $$i ..." >&2 && \
+	  echo "--> Cleaning $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) clean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
@@ -479,7 +563,7 @@ clean_focalizedep:
 	@$(RM) .done_build_deliverables \
 	$(RM) .done_build_focalizedep && \
 	for i in $(FOCALIZEDEP_NAME); do \
-	  echo "--> $$i ..." >&2 && \
+	  echo "--> Cleaning $$i ..." >&2 && \
 	  ($(CD) $(ABSOLUTE_FOCALIZEC_SRC_DIR)/src/$$i && $(MAKE) clean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
@@ -494,7 +578,7 @@ distclean_deliverables:
 	  $(RM) .done_build_$$i; \
 	done && \
 	for i in $(DELIVERABLES_DIRS); do \
-	  echo "--> $$i ..." >&2 && \
+	  echo "--> Dist Cleaning $$i ..." >&2 && \
 	  ($(CD) $$i && touch .config_var && $(MAKE) distclean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
@@ -504,7 +588,7 @@ distclean_deliverables:
 #.PHONY: clean_external_tools
 clean_caml: clean_camlp5 clean_coq
 	$(RM) .done_build_external_caml_tool && \
-	echo "--> Caml ..." >&2 && \
+	echo "--> Cleaning Caml ..." >&2 && \
 	($(CD) $(ABSOLUTE_CAML_SRC_DIR) && $(MAKE) clean); \
 	err=$$?; \
 	echo "<-- Caml [$$err]" >&2 && \
@@ -512,7 +596,7 @@ clean_caml: clean_camlp5 clean_coq
 
 clean_camlp5: clean_coq
 	$(RM) .done_build_external_camlp5_tool && \
-	echo "--> Camlp5 ..." >&2 && \
+	echo "--> Cleaning Camlp5 ..." >&2 && \
 	($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR) && $(MAKE) clean); \
 	err=$$?; \
 	echo "<-- Camlp5 [$$err]" >&2 && \
@@ -520,7 +604,7 @@ clean_camlp5: clean_coq
 
 clean_coq: clean_internal_tools
 	$(RM) .done_build_external_coq_tool && \
-	echo "--> Coq ..." >&2 && \
+	echo "--> Cleaning Coq ..." >&2 && \
 	($(CD) $(ABSOLUTE_COQ_SRC_DIR) && $(MAKE) clean); \
 	err=$$?; \
 	echo "<-- Coq [$$err]" >&2 && \
@@ -539,7 +623,7 @@ distclean_external_tools: clean_install_external_tools_sources
 	  $(RM) .done_build_external_$$i_tool; \
 	done && \
 	for i in $(TAR_BALLS_DIR); do \
-	  echo "--> $$i ..." >&2 && \
+	  echo "--> Dist cleaning $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) distclean); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
