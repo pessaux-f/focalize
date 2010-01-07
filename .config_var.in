@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA
-#  $Id: .config_var.in,v 1.39 2010-01-06 16:48:15 weis Exp $
+#  $Id: .config_var.in,v 1.40 2010-01-07 11:37:56 weis Exp $
 
 #
 # (0) The project identity card.
@@ -116,7 +116,7 @@ XMLRPC_MODULE=@XMLRPC_MODULE@
 # (4) The project deliverables settings.
 #
 
-STATIC_DELIVERABLES="@STATIC_DELIVERABLES@"
+STATIC_DELIVERABLES=@STATIC_DELIVERABLES@
 # (4.0) Focalizec settings.
 FOCALIZEC_NAME="@FOCALIZEC_NAME@"
 FOCALIZEC_NAME_FULL="@FOCALIZEC_NAME_FULL@"
