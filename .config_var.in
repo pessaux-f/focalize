@@ -1,5 +1,5 @@
 #  Copyright 2008 LIP6 and INRIA
-#  $Id: .config_var.in,v 1.40 2010-01-07 11:37:56 weis Exp $
+#  $Id: .config_var.in,v 1.41 2010-01-07 16:03:49 weis Exp $
 
 #
 # (0) The project identity card.
@@ -134,7 +134,7 @@ FOCALIZEDEP_COMPILER="@FOCALIZEDEP_COMPILER@"
 #
 # (5) The completely external commands and tools
 #
-# (not installed with the project). 
+# (not installed with the project).
 #
 
 # (5.0) External tools for zenon
