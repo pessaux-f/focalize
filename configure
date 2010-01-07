@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.83 2010-01-06 22:47:31 weis Exp $
+# $Id: configure,v 1.84 2010-01-07 00:05:04 weis Exp $
 
 ########################################################################
 #
@@ -67,7 +67,7 @@ abort_configuration_not_writable_tools_prefix_directory () {
   abort_configuration \
     "You cannot install EXTERNAL tools in the directory $1 that is not writable for you.";
   abort_remedy \
-    "Enhance you priviledges or set the \"-tools_prefix\" option to a writable directory.";
+    "Enhance your priviledges or set the \"-tools_prefix\" option to a writable directory.";
   echo "Try for instance:";
   echo "./configure -tools_prefix ~/pkg";
   echo "to install the external tools in your home directory.";
@@ -306,7 +306,7 @@ set_command_defaults () {
 # have been processed.
 #
 # For variables in group (1), intrinsic defaults, are project dependent:
-# they are all initially defined in file ./.project_config_var.
+# they are all initially defined in the file ./.project_config_var.
 # Their associated setting procedure is ``set_intrinsic_defaults''.
 #
 # For variables in group (2) and (3), intrinsic defaults are defined
@@ -425,10 +425,11 @@ set_intrinsic () {
         XMLRPC_LINK="${DEFAULT_XMLRPC_LINK}"
       fi
     fi
-  fi
+  fi;
 
   if test -z "${STATIC_DELIVERABLES}"; then
-    STATIC_DELIVERABLES="${DEFAULT_STATIC_DELIVERABLES}"; fi
+    STATIC_DELIVERABLES="${DEFAULT_STATIC_DELIVERABLES}";
+  fi;
 }
 
 # Setting (or defining) default variables that depend upon ${DEFAULT_PREFIX}.
@@ -488,18 +489,21 @@ set_tools_prefix_defaults () {
 
   # General defaults for the installation of the external tools
   # of the project.
-  # The default setting is:
-  # DEFAULT_TOOLS_PREFIX=${LIB_DIR}
-  #   Typically, this gives DEFAULT_TOOLS_PREFIX=/usr/local/lib
-  # (Once was DEFAULT_TOOLS_PREFIX=~/pkg)
+  # The default setting for DEFAULT_TOOLS_PREFIX should have been set in the
+  # project id card. It is usually: 
+  #   DEFAULT_TOOLS_PREFIX=~/pkg
+  #
   # If we were asked to use TOOLS_PREFIX_DIRECTORY (the normal case)
-  #   then DEFAULT_TOOLS_PREFIX is set to LIB_DIR
-  #   otherwise DEFAULT_TOOLS_PREFIX is set to DEFAULT_PREFIX.
+  #   then if DEFAULT_TOOLS_PREFIX is unbound we set it to DEFAULT_LIB_DIR
+  #   otherwise
+  #        if DEFAULT_TOOLS_PREFIX is unbound we set it to DEFAULT_PREFIX.
   if ${DEFAULT_USE_TOOLS_PREFIX_DIRECTORY}; then
-    DEFAULT_TOOLS_PREFIX="${DEFAULT_LIB_DIR}";
+    if -z ${DEFAULT_TOOLS_PREFIX}; then DEFAULT_TOOLS_PREFIX="${DEFAULT_LIB_DIR}";
+    fi;
   else
-    DEFAULT_TOOLS_PREFIX="${DEFAULT_PREFIX}";
-  fi
+    if -z ${DEFAULT_TOOLS_PREFIX}; then DEFAULT_TOOLS_PREFIX="${DEFAULT_PREFIX}";
+    fi;
+  fi;
 
   # Debug echo "Default tools prefix is now " ${DEFAULT_TOOLS_PREFIX};
 
@@ -615,7 +619,7 @@ set_tools_prefix_defaults () {
   if ! ${DEFAULT_STATIC_DELIVERABLES}; then
     DEFAULT_FOCALIZEDEP_LIB_DIR="${DEFAULT_FOCALIZEDEP_PREFIX}/lib/${FOCALIZEDEP_NAME}";
     DEFAULT_FOCALIZEDEP_COMPILER="${FOCALIZEDEP_NAME}";
-  fi
+  fi;
 
 }
 
@@ -796,7 +800,7 @@ set_tools_prefix () {
       abort_remedy \
        "Choose static_deliverables mode or remove focalizec_bin_dir option.";
     fi;
-  fi
+  fi;
 
   # Settings for Focalizedep.
 
@@ -1234,7 +1238,7 @@ case ${argc} in
          echo \
           "is set to \"${PREFIX}\"" >&2 && \
          PREFIX_GIVEN=true;
-#         prefix_main;
+         #prefix_main;
        else
          option="$@";
          shift;
@@ -1458,8 +1462,8 @@ main () {
     then :
     else prefix_main
   fi &&
-  # We do check at configuration time that we will be able to install and compile
-  # the project afterwards.
+  # We do check at configuration time that we will be able to build and install
+  # the mandatory tools that must compile the project afterwards.
   check_installation_dirs &&
   build_configuration_variables &&
   touch_depends &&
