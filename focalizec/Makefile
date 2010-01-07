@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.41 2009-12-10 09:10:26 carlier Exp $
+# $Id: Makefile,v 1.42 2010-01-07 16:56:35 weis Exp $
 
 ROOT_DIR = .
 
@@ -74,7 +74,7 @@ odoc:: lib
 	  case $$err in 0);; *) exit $$err;; esac; \
         done
 
-clean doc docdir depend::
+clean distclean doc docdir depend::
 	@for i in $(SUB_DIRS); do \
 	  if test -d $$i; then \
 	    echo "--> $$i ..." >&2 && \
@@ -103,3 +103,18 @@ install::
 
 uninstall::
 	$(RM) $(PROJECT_LIB_INSTALL_DIR)
+
+# We need to to finish distclean by unconfiguring this directory;
+# so we unconfigure all the SUB_DIRS before unconfiguring here with the
+# generic target of Makefile.common.
+distclean::
+	@for i in $(SUB_DIRS); do \
+	  if test -d $$i; then \
+	    echo "--> $$i ..." >&2 && \
+	    ($(CD) $$i && $(MAKE) unconfigure); \
+	    err=$$?; \
+	    echo "<-- $$i [$$err]" >&2 && \
+	    case $$err in 0);; *) exit $$err;; esac; \
+	  fi \
+        done; \
+	$(MAKE) unconfigure
