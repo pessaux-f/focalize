@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.64 2010-01-07 16:04:44 weis Exp $
+# $Id: Makefile,v 1.65 2010-01-07 16:55:20 weis Exp $
 
 ROOT_DIR = .
 
@@ -71,7 +71,7 @@ all:: build_external_tools build_internal_tools build_deliverables
 configure_external_tools: .done_configure_external_tools
 
 .done_configure_external_tools: .done_configure_external_coq_tool
-	$(TOUCH) .done_configure_external_tools
+	@$(TOUCH) .done_configure_external_tools
 
 .done_configure_external_coq_tool: .done_configure_external_camlp5_tool
 
@@ -125,7 +125,7 @@ configure_internal_tools: .done_configure_internal_tools
   .done_configure_external_tools \
   .done_configure_zenon \
   .done_configure_zvtov
-	$(TOUCH) .done_configure_internal_tools
+	@$(TOUCH) .done_configure_internal_tools
 
 .done_configure_zenon: .done_configure_external_tools
 	@for i in $(ABSOLUTE_ZENON_SRC_DIR); do \
@@ -157,7 +157,7 @@ configure_deliverables: .done_configure_deliverables
 	@$(TOUCH) .done_configure_deliverables
 
 .done_configure_focalizec: .done_configure_internal_tools
-	$(TOUCH) focalizec/.depend focalizec/src/focalizedep/.depend && \
+	@$(TOUCH) focalizec/.depend focalizec/src/focalizedep/.depend && \
 	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
 	  echo "--> Configuring $$i ..." >&2 && \
 	  ($(CD) $$i && ./configure $(FOCALIZEC_CONFIGURE_OPTIONS)); \
@@ -173,14 +173,14 @@ configure_deliverables: .done_configure_deliverables
 
 # If we have to rebuild .config_var
 .config_var:
-	./configure
+	@./configure
 
 # Dist cleaning configuration.
 # Warning: after running this target, you must run configure again to be able
 # to use this Makefile! (Since included file ./.config_var has been removed.)
 unconfigure::
 	# Just for developpers, but harmless for users.
-	$(RM) .distribution_var
+	@$(RM) .distribution_var
 
 .PHONY: magic_configure_external_tools
 magic_configure_external_tools: \
@@ -402,7 +402,7 @@ $(ZVTOV_EXES): .done_build_zvtov
 
 build_deliverables: .done_build_deliverables
 .done_build_deliverables: .done_build_focalizec .done_build_focalizedep
-	$(TOUCH) .done_build_deliverables
+	@$(TOUCH) .done_build_deliverables
 
 # The focalize compiler
 $(FOCALIZEC_EXES): .done_build_focalizec
@@ -587,7 +587,7 @@ distclean_deliverables:
 
 #.PHONY: clean_external_tools
 clean_caml: clean_camlp5 clean_coq
-	$(RM) .done_build_external_caml_tool && \
+	@$(RM) .done_build_external_caml_tool && \
 	echo "--> Cleaning Caml ..." >&2 && \
 	($(CD) $(ABSOLUTE_CAML_SRC_DIR) && $(MAKE) clean); \
 	err=$$?; \
@@ -595,7 +595,7 @@ clean_caml: clean_camlp5 clean_coq
 	case $$err in 0);; *) exit $$err;; esac;
 
 clean_camlp5: clean_coq
-	$(RM) .done_build_external_camlp5_tool && \
+	@$(RM) .done_build_external_camlp5_tool && \
 	echo "--> Cleaning Camlp5 ..." >&2 && \
 	($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR) && $(MAKE) clean); \
 	err=$$?; \
@@ -603,7 +603,7 @@ clean_camlp5: clean_coq
 	case $$err in 0);; *) exit $$err;; esac;
 
 clean_coq: clean_internal_tools
-	$(RM) .done_build_external_coq_tool && \
+	@$(RM) .done_build_external_coq_tool && \
 	echo "--> Cleaning Coq ..." >&2 && \
 	($(CD) $(ABSOLUTE_COQ_SRC_DIR) && $(MAKE) clean); \
 	err=$$?; \
