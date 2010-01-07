@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.66 2010-01-07 17:00:23 weis Exp $
+# $Id: Makefile,v 1.67 2010-01-07 22:39:35 weis Exp $
 
 ROOT_DIR = .
 
@@ -40,7 +40,7 @@ DOCDIR_DIR = $(DOC_ROOT_DIR)
 include $(ROOT_DIR)/Makefile.common
 
 .PHONY: \
-  configure_external_tools configure_internal_tools configure_deliverables
+  configure configure_external_tools configure_internal_tools configure_deliverables
 
 .PHONY: \
   clean_external_tools clean_internal_tools clean_deliverables
@@ -65,9 +65,15 @@ include $(ROOT_DIR)/Makefile.common
 all:: build_external_tools build_internal_tools build_deliverables
 
 # The ./configure make file target for external tools.
+configure: .done_configure
+.done_configure: \
+  .done_configure_external_tools \
+  .done_configure_internal_tools \
+  .done_configure_deliverables
+	@$(TOUCH) .done_configure
 
-# External tools configuration in fact means installing their sources anf
-# configuing them.
+# External tools configuration in fact means installing their sources and
+# configuring them.
 configure_external_tools: .done_configure_external_tools
 
 .done_configure_external_tools: .done_configure_external_coq_tool
@@ -90,14 +96,15 @@ configure_external_tools: .done_configure_external_tools
 	done && \
 	$(TOUCH) .done_configure_external_caml_tool
 
-# Configuring Camlp5
+# Configuring Camlp5: we cannot perform the configuration before having our
+# caml compiler properly installed (see below the building target for camlp5
+# .done_build_external_camlp5_tool). 
 .done_configure_external_camlp5_tool: \
   .done_install_external_$(CAMLP5_NAME)_tool_sources \
   .done_configure_external_caml_tool
 	@for i in $(ABSOLUTE_CAMLP5_SRC_DIR); do \
 	  echo "--> Configuring $$i..." >&2 && \
-	  ($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR) && \
-	   ./configure $(CAMLP5_CONFIGURE_OPTIONS)); \
+	  ($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR)); \
 	  err=$$?; \
 	  echo "<-- $$i [$$err]" >&2 && \
 	  case $$err in 0);; *) exit $$err;; esac; \
@@ -182,11 +189,6 @@ unconfigure::
 	# Just for developpers, but harmless for users.
 	@$(RM) .distribution_var
 
-.PHONY: magic_configure_external_tools
-magic_configure_external_tools: \
-  .done_magic_install_external_tools_sources\
-  .done_magic_build_external_tools
-
 #
 # Installing external tools sources.
 #
@@ -207,11 +209,6 @@ clean_install_external_tools_sources:
 	$(RM) .done_install_external_$(CAML_NAME)_tool_sources && \
 	$(RM) .done_install_external_tools_sources
 
-.done_magic_install_external_tools_sources: \
-  .done_magic_install_external_$(COQ_NAME)_tool_sources
-	@$(TOUCH) .done_install_external_tools_sources  && \
-	$(TOUCH) .done_magic_install_external_tools_sources
-
 # Caml sources
 install_external_$(CAML_NAME)_tool_sources: \
    .done_install_external_$(CAML_NAME)_tool_sources
@@ -225,10 +222,6 @@ install_external_$(CAML_NAME)_tool_sources: \
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done && \
 	$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources
-
-.done_magic_install_external_$(CAML_NAME)_tool_sources:
-	@$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources && \
-	$(TOUCH) .done_magic_install_external_$(CAML_NAME)_tool_sources
 
 # CamlP5 sources
 install_external_$(CAMLP5_NAME)_tool_sources: \
@@ -245,11 +238,6 @@ install_external_$(CAMLP5_NAME)_tool_sources: \
 	done && \
 	$(TOUCH) .done_install_external_$(CAMLP5_NAME)_tool_sources
 
-.done_magic_install_external_$(CAMLP5_NAME)_tool_sources: \
-  .done_magic_install_external_$(CAML_NAME)_tool_sources
-	@$(TOUCH) .done_install_external_$(CAMLP5_NAME)_tool_sources && \
-	$(TOUCH) .done_magic_install_external_$(CAMLP5_NAME)_tool_sources
-
 # Coq sources
 install_external_$(COQ_NAME)_tool_sources: \
   .done_install_external_$(COQ_NAME)_tool_sources
@@ -265,18 +253,13 @@ install_external_$(COQ_NAME)_tool_sources: \
 	done && \
 	$(TOUCH) .done_install_external_$(COQ_NAME)_tool_sources
 
-.done_magic_install_external_$(COQ_NAME)_tool_sources: \
-  .done_magic_install_external_$(CAMLP5_NAME)_tool_sources
-	@$(TOUCH) .done_install_external_$(COQ_NAME)_tool_sources && \
-	$(TOUCH) .done_magic_install_external_$(COQ_NAME)_tool_sources
-
 #
 # Building external tools.
 #
 # We need to configure, build then install in a row, since
-# - the caml compiler should be installed to configure camlp5,
+# - the caml compiler should be installed to configure camlp5;
 # - the caml compiler should be up and running to compile camlp5;
-# - the caml compiler AND camlp5 should be installed to configure coq,
+# - the caml compiler AND camlp5 should be installed to configure coq;
 # - the caml compiler AND camlp5 should be up and running to compile coq.
 # - all external tools should be installed and up and running to compile
 #   and install the FoCaLize internal tools zenon and zvtov;
@@ -312,12 +295,18 @@ build_external_tools: .done_build_external_tools
 	done && \
 	$(TOUCH) .done_build_external_caml_tool
 
-# Camlp5
+# Camlp5: we need to configure here after Caml compiler has been installed,
+# since the camlp5 configuration does not provide an option to tell which
+# caml compiler we need (it just calls ocamlc -v and ocamlc -where and record
+# the answer from whichever caml compiler found in the search path). Too bad
+# for us: we really need to install our caml compiler before configuring
+# Camlp5, unless we modify completely camlp5 configuration procedure...
 .done_build_external_camlp5_tool: .done_build_external_caml_tool
 	@for i in $(ABSOLUTE_CAMLP5_SRC_DIR); do \
 	  echo "--> Building $$i..." >&2 && \
 	  ($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR) && \
 	   PATH=$(TOOLS_PROJECT_DIR)/bin:$$PATH && \
+	   ./configure $(CAMLP5_CONFIGURE_OPTIONS) && \
 	   $(MAKE) $(CAMLP5_MAKE_ALL_TARGET) && \
 	   $(MAKE) install); \
 	  err=$$?; \
@@ -338,25 +327,6 @@ build_external_tools: .done_build_external_tools
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done && \
 	$(TOUCH) .done_build_external_coq_tool
-
-# Magic external builds
-.done_magic_build_external_tools: \
-  .done_install_external_tools_sources \
-  .done_magic_build_external_coq_tool
-	@$(TOUCH) .done_build_external_tools && \
-	$(TOUCH) .done_magic_build_external_tools
-
-.done_magic_build_external_caml_tool: .done_install_external_tools_sources
-	@$(TOUCH) .done_build_external_caml_tool && \
-	$(TOUCH) .done_magic_build_external_caml_tool
-
-.done_magic_build_external_camlp5_tool: .done_magic_build_external_caml_tool
-	@$(TOUCH) .done_build_external_camlp5_tool && \
-	$(TOUCH) .done_magic_build_external_camlp5_tool
-
-.done_magic_build_external_coq_tool: .done_magic_build_external_camlp5_tool
-	@$(TOUCH) .done_build_external_coq_tool && \
-	$(TOUCH) .done_magic_build_external_coq_tool
 
 #
 # Internal tools
