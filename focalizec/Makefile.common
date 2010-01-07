@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.41 2010-01-04 17:43:14 weis Exp $
+# $Id: Makefile.common,v 1.42 2010-01-07 11:37:24 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -57,7 +57,7 @@ clean::
 unconfigure::
 	$(RM) .config_var .config_var_for_shell .depend .done_*
 
-distclean:: clean unconfigure
+distclean:: clean
 	$(RM) .\#*
 
 depend::
