@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: .configure,v 1.15 2010-01-06 11:53:46 weis Exp $
+#  $Id: .configure,v 1.16 2010-01-07 16:56:09 weis Exp $
 
 # The file .config_var has been built by configure. We load it.
 . ./.config_var_for_shell
@@ -56,4 +56,4 @@ echo "(* End of generated source file. *)" >> $INSTALL_ML
 chmod a-w $INSTALL_ML
 
 # Building dependency files
-make depend
+#make depend
