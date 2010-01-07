@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.65 2010-01-07 16:55:20 weis Exp $
+# $Id: Makefile,v 1.66 2010-01-07 17:00:23 weis Exp $
 
 ROOT_DIR = .
 
@@ -292,7 +292,7 @@ install_external_$(COQ_NAME)_tool_sources: \
 build_external_tools: .done_build_external_tools
 
 .done_build_external_tools: \
-  .done_configure_external_tools_sources \
+  .done_configure_external_tools \
   .done_build_external_caml_tool \
   .done_build_external_camlp5_tool \
   .done_build_external_coq_tool
