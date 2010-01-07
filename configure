@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.86 2010-01-07 22:39:35 weis Exp $
+# $Id: configure,v 1.87 2010-01-07 22:52:48 weis Exp $
 
 ########################################################################
 #
@@ -1448,7 +1448,7 @@ main () {
   continue_configure &&
   summarize_configuration &&
   # Call the Makefile to go on configuring external tools.
-  if ${CONFIGURE_WITH_MAKE}; then make configure &&
+  if ${CONFIGURE_WITH_MAKE}; then make configure; fi &&
  echo &&
  echo "Done. Now, please invoke: make"
 }
