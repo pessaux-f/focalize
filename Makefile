@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.67 2010-01-07 22:39:35 weis Exp $
+# $Id: Makefile,v 1.68 2010-01-08 00:01:50 weis Exp $
 
 ROOT_DIR = .
 
@@ -448,7 +448,7 @@ distclean::
 
 docdir:: doc
 	@$(MKDIR) $(DOCDIR_DIR) && \
-	for i in $(TOOLS_INTERNAL_DIRS); do \
+	for i in $(TOOLS_INTERNAL_DIRS) $(DELIVERABLES_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  $(MKDIR) $(DOCDIR_DIR)/$$i && \
 	  ($(CD) $$i && $(MAKE) $@) && \
