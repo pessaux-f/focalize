@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: distributed_polys.fcl,v 1.4 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: distributed_polys.fcl,v 1.5 2010-01-12 15:54:35 rr Exp $ *)
 
 (**
   @title Distributed polynomials
@@ -83,9 +83,9 @@ species Indexed_bag (I is Ordered_set_with_zero, E is Setoid_with_zero) =
         (match y with
         | Null -> false
         | NonNull (cy, dy, yy) ->
-          if E!equal (cx, cy)
+          if I!equal (dx, dy)
           then
-            if I!equal (dx, dy)
+            if E!equal (cx, cy)
             then
               !equal (xx, yy)
             else false

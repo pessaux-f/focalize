@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursive_polys.fcl,v 1.4 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: recursive_polys.fcl,v 1.5 2010-01-12 15:54:35 rr Exp $ *)
 
 open "basics";;
 
@@ -46,9 +46,9 @@ let distr_eq (i_eq, e_eq) =
         (match y with
         | Null -> false
         | NonNull (cy, dy, yy) ->
-          if e_eq (cx, cy)
+          if i_eq (dx, dy)
           then
-            if i_eq (dx, dy)
+            if e_eq (cx, cy)
             then
               equal (xx, yy)
             else false
@@ -71,33 +71,32 @@ species Recursive_indexed_bag (E is Setoid_with_zero,
                x : Self,
                y : Self) =
     match x with
-    | Base (xb) ->
-        (match y with
-        | Base (yb) -> E!equal (xb, yb)
-        | Composed (_, _) -> false)
-    | Composed (sx, xx) ->
-        (match y with
-        | Base (_) -> false
-        | Composed (sy, yy) ->
-            if (sx <^ sy)
-            then false
-            else
-              if (sy <^ sx)
-              then false
-              else d_eq (xx, yy));
+    | Base(xb) ->
+	(match y with
+	| Base(yb) -> E!equal(xb, yb)
+	| Composed(_, _) -> false)
+    | Composed(sx, xx) ->
+	(match y with
+	| Base(_) -> false
+	| Composed(sy, yy) ->
+	    if (sx <^ sy)
+	    then false
+	    else
+	      if (sy <^ sx)
+	      then false
+	      else d_eq(xx, yy));
 
-  let rec
-      r_eq (x, y) = !my_equal (d_eq, x, y)
-  and d_eq (x, y) = distr_eq (I!equal, !r_eq) (x, y);
+  let rec 
+      r_eq(x: Self, y: Self) = my_equal(d_eq, x, y)
+  and d_eq(x_d, y_d) = distr_eq(I!equal, r_eq)(x_d, y_d);
 
-  let equal (x, y) = !r_eq (x, y);
+  let equal(p, q) = r_eq(p, q);
 
-  let zero : Self = Base (E!zero);
+  let zero : Self = Base(E!zero);
 
-  let is_zero (x : Self) = match x with
-  | Base (m) -> E!is_zero (m)
-  | Composed (_, _) -> false;
-
+  let is_zero(x : Self) = match x with
+  | Base(m) -> E!is_zero(m)
+  | Composed(_, _) -> false;
 
 end;;
 
@@ -216,23 +215,23 @@ species Recursive_indexed_sum (M is Additive_group,
               then pol_lc (r)
               else Composed (sx, r));
 
-  (**
-     This kind of recursion does not compile to Coq.
-     We simply instanciate parameters which reveal the recursion.
-     Code is hardly readable because of curryfication!
-   *)
-  let rec r_plus (x, y) = !my_plus (d_plus, d_lift, d_const, d_lc, x, y)
-      (* [rr]: latter recurses because of !r_plus next *)
-  and d_plus (p, q) = distr_plus (D!lt, !r_plus, !is_zero) (p, q)
-      (* [rr]: next not really recursive !is_zero should live  *)
-  and d_lift (x) = distr_lift (!is_zero, D!zero) (x)
-      (* [rr]: though trivial next definition is necessary for termination *)
-  and d_const (p) = distr_is_constant (D!is_zero) (p)
-      (* [rr]: though trivial next definition is necessary for termination *)
-  and d_lc (p) = distr_lc (!zero) (p);
+(*   (\** *)
+(*      This kind of recursion does not compile to Coq. *)
+(*      We simply instanciate parameters which reveal the recursion. *)
+(*      Code is hardly readable because of curryfication! *)
+(*    *\) *)
+(*   let rec r_plus (x, y) = !my_plus (d_plus, d_lift, d_const, d_lc, x, y) *)
+(*       (\* [rr]: latter recurses because of !r_plus next *\) *)
+(*   and d_plus (p, q) = distr_plus (D!lt, !r_plus, !is_zero) (p, q) *)
+(*       (\* [rr]: next not really recursive !is_zero should live  *\) *)
+(*   and d_lift (x) = distr_lift (!is_zero, D!zero) (x) *)
+(*       (\* [rr]: though trivial next definition is necessary for termination *\) *)
+(*   and d_const (p) = distr_is_constant (D!is_zero) (p) *)
+(*       (\* [rr]: though trivial next definition is necessary for termination *\) *)
+(*   and d_lc (p) = distr_lc (!zero) (p); *)
 
-  (** Now addition is simple *)
-  let plus (x, y) = !r_plus (x, y);
+(*   (\** Now addition is simple *\) *)
+(*   let plus (x, y) = !r_plus (x, y); *)
 
 
 (*   (\* [rr]: This one fails with TODO local recursive definitions *\) *)
