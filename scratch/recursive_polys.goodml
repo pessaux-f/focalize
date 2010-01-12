@@ -1,0 +1,405 @@
+type ('a, 'b) _focty_recursive_representation = 
+  | Base of ('a)
+  | Composed of
+  (Basics._focty_string * (('a, 'b) _focty_recursive_representation, 'b)
+     Distributed_polys._focty_distributed_representation)
+ ;;
+let distr_eq (i_eq : 'a -> 'b -> Basics._focty_bool)
+  (e_eq : 'c -> 'd -> Basics._focty_bool) =
+  let rec equal x y =
+    match x with
+     | Distributed_polys.Null ->
+         (begin
+         match y with
+          | Distributed_polys.Null ->
+              (begin
+              true
+              end)
+          | Distributed_polys.NonNull (_, _, _) ->
+              (begin
+              false
+              end)
+         end)
+     | Distributed_polys.NonNull (cx, dx,
+         xx) ->
+         (begin
+         match y with
+          | Distributed_polys.Null ->
+              (begin
+              false
+              end)
+          | Distributed_polys.NonNull (cy, dy,
+              yy) ->
+              (begin
+              if (i_eq dx dy)
+                then if (e_eq cx cy) then (equal xx yy) else false else false
+              end)
+         end)
+  in
+  (fun x -> (fun y -> (equal x y)))
+;;
+module Recursive_indexed_bag =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('e0_as_carrier, 'i1_as_carrier) me_as_carrier =
+    ('e0_as_carrier, 'i1_as_carrier) _focty_recursive_representation
+  type ('e0_as_carrier, 'i1_as_carrier, 'me_as_carrier) me_as_species = {
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    is_zero : 'me_as_carrier -> Basics._focty_bool ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    my_equal : (('me_as_carrier, 'i1_as_carrier)
+                  Distributed_polys._focty_distributed_representation ->
+                  ('me_as_carrier, 'i1_as_carrier)
+                    Distributed_polys._focty_distributed_representation ->
+                    Basics._focty_bool)
+                 -> 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    zero : 'me_as_carrier ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    r_eq : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    d_eq : ('me_as_carrier, 'i1_as_carrier)
+             Distributed_polys._focty_distributed_representation ->
+             ('me_as_carrier, 'i1_as_carrier)
+               Distributed_polys._focty_distributed_representation ->
+               Basics._focty_bool ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    equal : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    }
+  let is_zero _p_E_is_zero (x : 'me_as_carrier) =
+    match x with
+     | Base (m) ->
+         (begin
+         (_p_E_is_zero m)
+         end)
+     | Composed (_, _) ->
+         (begin
+         false
+         end)
+  let my_equal _p_E_equal
+    (d_eq : ('me_as_carrier, 'i1_as_carrier)
+              Distributed_polys._focty_distributed_representation ->
+              ('me_as_carrier, 'i1_as_carrier)
+                Distributed_polys._focty_distributed_representation ->
+                Basics._focty_bool)
+    (x : 'me_as_carrier) (y : 'me_as_carrier) =
+    match x with
+     | Base (xb) ->
+         (begin
+         match y with
+          | Base (yb) ->
+              (begin
+              (_p_E_equal xb yb)
+              end)
+          | Composed (_, _) ->
+              (begin
+              false
+              end)
+         end)
+     | Composed (sx,
+         xx) ->
+         (begin
+         match y with
+          | Base (_) ->
+              (begin
+              false
+              end)
+          | Composed (sy,
+              yy) ->
+              (begin
+              if (Basics._lt__hat_ sx sy) then false
+                else if (Basics._lt__hat_ sy sx) then false else (d_eq xx yy)
+              end)
+         end)
+  let zero _p_E_zero = (Base (_p_E_zero))
+  let rec r_eq _p_I_equal abst_my_equal (x : 'me_as_carrier) (y : 'me_as_carrier) =
+    (abst_my_equal (d_eq _p_I_equal abst_my_equal) x y)
+  and d_eq _p_I_equal abst_my_equal (x_d : ('me_as_carrier, 'i1_as_carrier)
+    Distributed_polys._focty_distributed_representation)
+    (y_d : ('me_as_carrier, 'i1_as_carrier)
+    Distributed_polys._focty_distributed_representation) =
+    ((distr_eq _p_I_equal (r_eq _p_I_equal abst_my_equal)) x_d y_d)
+  let equal abst_r_eq (p : 'me_as_carrier) (q : 'me_as_carrier) =
+    (abst_r_eq p q)
+  (* Fully defined 'Recursive_indexed_bag' species's collection generator. *)
+  let collection_create () _p_I_equal _p_E_equal _p_E_zero _p_E_is_zero =
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    let local_is_zero = is_zero _p_E_is_zero in
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    let local_my_equal = my_equal _p_E_equal in
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    let local_zero = zero _p_E_zero in
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    let local_r_eq = r_eq _p_I_equal local_my_equal in
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    let local_d_eq = d_eq _p_I_equal local_my_equal in
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    let local_equal = equal local_r_eq in
+    { is_zero = local_is_zero ;
+      my_equal = local_my_equal ;
+      zero = local_zero ;
+      r_eq = local_r_eq ;
+      d_eq = local_d_eq ;
+      equal = local_equal ;
+       }
+    
+  end ;;
+
+let distr_is_constant (i_is_0 : 'a -> Basics._focty_bool) =
+  let is_constant x =
+    match x with
+     | Distributed_polys.Null ->
+         (begin
+         true
+         end)
+     | Distributed_polys.NonNull (_, d, _) ->
+         (begin
+         (i_is_0 d)
+         end)
+  in
+  (fun x -> (is_constant x))
+;;
+let distr_lc (m_zero : 'a) =
+  let leading_coefficient x =
+    match x with
+     | Distributed_polys.Null ->
+         (begin
+         m_zero
+         end)
+     | Distributed_polys.NonNull (m, _, _) ->
+         (begin
+         m
+         end)
+  in
+  (fun x -> (leading_coefficient x))
+;;
+let distr_lift (m_is_0 : 'a -> Basics._focty_bool) (i_zero : 'b) =
+  let my_lift x =
+    if (m_is_0 x) then Distributed_polys.Null else (Distributed_polys.NonNull
+      (x, i_zero, Distributed_polys.Null))
+  in
+  (fun x -> (my_lift x))
+;;
+let distr_plus (ilt : 'a -> 'a -> Basics._focty_bool)
+  (mplus : 'b -> 'b -> 'b) (m_is_0 : 'b -> Basics._focty_bool) =
+  let rec my_plus s_1 s_2 =
+    match s_1 with
+     | Distributed_polys.Null ->
+         (begin
+         s_2
+         end)
+     | Distributed_polys.NonNull (m1, d1,
+         ss_1) ->
+         (begin
+         match s_2 with
+          | Distributed_polys.Null ->
+              (begin
+              s_1
+              end)
+          | Distributed_polys.NonNull (m2, d2,
+              ss_2) ->
+              (begin
+              if (ilt d1 d2) then (Distributed_polys.NonNull
+                (m2, d2, (my_plus s_1 ss_2)))
+                else if (ilt d2 d1) then (Distributed_polys.NonNull
+                       (m1, d1, (my_plus ss_1 s_2)))
+                       else let m = (mplus m1 m2)
+                       in
+                       if (m_is_0 m) then (my_plus ss_1 ss_2)
+                         else (Distributed_polys.NonNull
+                         (m, d1, (my_plus ss_1 ss_2)))
+              end)
+         end)
+  in
+  (fun x -> (fun y -> (my_plus x y)))
+;;
+module Recursive_indexed_sum =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('m0_as_carrier, 'd1_as_carrier) me_as_carrier =
+    ('m0_as_carrier, 'd1_as_carrier) _focty_recursive_representation
+  type ('m0_as_carrier, 'd1_as_carrier, 'me_as_carrier) me_as_species = {
+    (* From species additive_law#Additive_group. *)
+    opposite : 'me_as_carrier -> 'me_as_carrier ;
+    (* From species additive_law#Additive_monoid. *)
+    plus : 'me_as_carrier -> 'me_as_carrier -> 'me_as_carrier ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    is_zero : 'me_as_carrier -> Basics._focty_bool ;
+    (* From species additive_law#Additive_group. *)
+    minus : 'me_as_carrier -> 'me_as_carrier -> 'me_as_carrier ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    my_equal : (('me_as_carrier, 'd1_as_carrier)
+                  Distributed_polys._focty_distributed_representation ->
+                  ('me_as_carrier, 'd1_as_carrier)
+                    Distributed_polys._focty_distributed_representation ->
+                    Basics._focty_bool)
+                 -> 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species recursive_polys#Recursive_indexed_sum. *)
+    my_plus : (('me_as_carrier, 'd1_as_carrier)
+                 Distributed_polys._focty_distributed_representation ->
+                 ('me_as_carrier, 'd1_as_carrier)
+                   Distributed_polys._focty_distributed_representation ->
+                   ('me_as_carrier, 'd1_as_carrier)
+                   Distributed_polys._focty_distributed_representation)
+                ->
+                ('me_as_carrier -> ('me_as_carrier, 'd1_as_carrier)
+                   Distributed_polys._focty_distributed_representation)
+                  ->
+                  (('me_as_carrier, 'd1_as_carrier)
+                     Distributed_polys._focty_distributed_representation ->
+                     Basics._focty_bool)
+                    ->
+                    (('me_as_carrier, 'd1_as_carrier)
+                       Distributed_polys._focty_distributed_representation ->
+                       'me_as_carrier)
+                      -> 'me_as_carrier -> 'me_as_carrier -> 'me_as_carrier ;
+    (* From species basics#Basic_object. *)
+    parse : Basics._focty_string -> 'me_as_carrier ;
+    (* From species basics#Basic_object. *)
+    print : 'me_as_carrier -> Basics._focty_string ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    zero : 'me_as_carrier ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    r_eq : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    d_eq : ('me_as_carrier, 'd1_as_carrier)
+             Distributed_polys._focty_distributed_representation ->
+             ('me_as_carrier, 'd1_as_carrier)
+               Distributed_polys._focty_distributed_representation ->
+               Basics._focty_bool ;
+    (* From species constants#Setoid_with_zero. *)
+    element : 'me_as_carrier ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    equal : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species sets#Setoid. *)
+    different : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    }
+  let my_plus _p_M_plus
+    (pol_plus : ('me_as_carrier, 'd1_as_carrier)
+                  Distributed_polys._focty_distributed_representation ->
+                  ('me_as_carrier, 'd1_as_carrier)
+                    Distributed_polys._focty_distributed_representation ->
+                    ('me_as_carrier, 'd1_as_carrier)
+                    Distributed_polys._focty_distributed_representation)
+    (pol_lift : 'me_as_carrier -> ('me_as_carrier, 'd1_as_carrier)
+                  Distributed_polys._focty_distributed_representation)
+    (pol_const : ('me_as_carrier, 'd1_as_carrier)
+                   Distributed_polys._focty_distributed_representation ->
+                   Basics._focty_bool)
+    (pol_lc : ('me_as_carrier, 'd1_as_carrier)
+                Distributed_polys._focty_distributed_representation ->
+                'me_as_carrier)
+    (x : 'me_as_carrier) (y : 'me_as_carrier) =
+    match x with
+     | Base (xb) ->
+         (begin
+         match y with
+          | Base (yb) ->
+              (begin
+              (Base ((_p_M_plus xb yb)))
+              end)
+          | Composed (sy, yy) ->
+              (begin
+              (Composed (sy, (pol_plus (pol_lift x) yy)))
+              end)
+         end)
+     | Composed (sx,
+         xx) ->
+         (begin
+         match y with
+          | Base (_) ->
+              (begin
+              (Composed (sx, (pol_plus xx (pol_lift y))))
+              end)
+          | Composed (sy,
+              yy) ->
+              (begin
+              if (Basics._lt__hat_ sx sy) then (Composed
+                (sy, (pol_plus (pol_lift x) yy)))
+                else if (Basics._lt__hat_ sy sx) then (Composed
+                       (sx, (pol_plus xx (pol_lift y))))
+                       else let r = (pol_plus xx yy)
+                       in
+                       if (pol_const r) then (pol_lc r) else (Composed
+                         (sx, r))
+              end)
+         end)
+  end ;;
+
+let distr_m_mult =  () 
+;;
+let distr_mult =  () 
+;;
+module Recursive_polynomials_commutative_ring =
+  struct
+  (* Carrier's structure explicitly given by "rep". *)
+  type ('r0_as_carrier, 'd1_as_carrier) me_as_carrier =
+    ('r0_as_carrier, 'd1_as_carrier) _focty_recursive_representation
+  type ('r0_as_carrier, 'd1_as_carrier, 'me_as_carrier) me_as_species = {
+    (* From species weak_structures#Sem_algebra. *)
+    module_mult : 'r0_as_carrier -> 'me_as_carrier -> 'me_as_carrier ;
+    (* From species weak_structures#Left_semi_module. *)
+    mult : 'me_as_carrier -> 'me_as_carrier -> 'me_as_carrier ;
+    (* From species constants#Setoid_with_one. *)
+    one : 'me_as_carrier ;
+    (* From species additive_law#Additive_monoid. *)
+    plus : 'me_as_carrier -> 'me_as_carrier -> 'me_as_carrier ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    is_zero : 'me_as_carrier -> Basics._focty_bool ;
+    (* From species weak_structures#Semi_algebra. *)
+    lift : 'r0_as_carrier -> 'me_as_carrier ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    my_equal : (('me_as_carrier, 'd1_as_carrier)
+                  Distributed_polys._focty_distributed_representation ->
+                  ('me_as_carrier, 'd1_as_carrier)
+                    Distributed_polys._focty_distributed_representation ->
+                    Basics._focty_bool)
+                 -> 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species recursive_polys#Recursive_indexed_sum. *)
+    my_plus : (('me_as_carrier, 'd1_as_carrier)
+                 Distributed_polys._focty_distributed_representation ->
+                 ('me_as_carrier, 'd1_as_carrier)
+                   Distributed_polys._focty_distributed_representation ->
+                   ('me_as_carrier, 'd1_as_carrier)
+                   Distributed_polys._focty_distributed_representation)
+                ->
+                ('me_as_carrier -> ('me_as_carrier, 'd1_as_carrier)
+                   Distributed_polys._focty_distributed_representation)
+                  ->
+                  (('me_as_carrier, 'd1_as_carrier)
+                     Distributed_polys._focty_distributed_representation ->
+                     Basics._focty_bool)
+                    ->
+                    (('me_as_carrier, 'd1_as_carrier)
+                       Distributed_polys._focty_distributed_representation ->
+                       'me_as_carrier)
+                      -> 'me_as_carrier -> 'me_as_carrier -> 'me_as_carrier ;
+    (* From species rings_fields#Pseudo_algebra. *)
+    opposite : 'me_as_carrier -> 'me_as_carrier ;
+    (* From species basics#Basic_object. *)
+    parse : Basics._focty_string -> 'me_as_carrier ;
+    (* From species basics#Basic_object. *)
+    print : 'me_as_carrier -> Basics._focty_string ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    zero : 'me_as_carrier ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    r_eq : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    d_eq : ('me_as_carrier, 'd1_as_carrier)
+             Distributed_polys._focty_distributed_representation ->
+             ('me_as_carrier, 'd1_as_carrier)
+               Distributed_polys._focty_distributed_representation ->
+               Basics._focty_bool ;
+    (* From species additive_law#Additive_group. *)
+    minus : 'me_as_carrier -> 'me_as_carrier -> 'me_as_carrier ;
+    (* From species constants#Setoid_with_zero. *)
+    element : 'me_as_carrier ;
+    (* From species recursive_polys#Recursive_indexed_bag. *)
+    equal : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species sets#Setoid. *)
+    different : 'me_as_carrier -> 'me_as_carrier -> Basics._focty_bool ;
+    (* From species constants#Setoid_with_one. *)
+    is_one : 'me_as_carrier -> Basics._focty_bool ;
+    }
+  end ;;
+
