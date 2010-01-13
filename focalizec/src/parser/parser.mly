@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.155 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: parser.mly,v 1.156 2010-01-13 13:37:05 weis Exp $ *)
 
 open Parsetree;;
 
@@ -266,7 +266,6 @@ let mk_proof_label (s1, s2) =
 %token PUBLIC
 %token QED
 %token REC
-%token RECSTRUCT
 %token RELATIONAL
 %token REPRESENTATION
 %token SELF
@@ -763,15 +762,6 @@ let_binding:
   | opt_local LET REC binding following_binding_list opt_termination_proof
     { mk {
        ld_rec = RF_rec;
-       ld_logical = LF_no_logical;
-       ld_local = $1;
-       ld_bindings = $4 :: $5;
-       ld_termination_proof = $6;
-      }
-    }
-| opt_local LET RECSTRUCT binding following_binding_list opt_termination_proof
-    { mk {
-       ld_rec = RF_structural;
        ld_logical = LF_no_logical;
        ld_local = $1;
        ld_bindings = $4 :: $5;

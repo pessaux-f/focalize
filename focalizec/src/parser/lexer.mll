@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.91 2009-09-01 09:36:53 weis Exp $ *)
+(* $Id: lexer.mll,v 1.92 2010-01-13 13:37:05 weis Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -140,7 +140,6 @@ List.iter
   "public", PUBLIC;
   "qed", QED;
   "rec", REC;
-  "recstruct", RECSTRUCT;
   "relational", RELATIONAL;
   "representation", REPRESENTATION;
   "Self", SELF;
