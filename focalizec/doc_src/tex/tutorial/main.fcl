@@ -109,13 +109,12 @@ species ListSubset(Val is PrintParseSuperset, Sup is IndList(Val)) =
 
  proof of eq_incl = assumed (* TODO *) ;
 
- let print(s : Self) =
-  let x = basics#print_string("{") in
-  let rec print_(s : Self)=
-   if Sup!isnil(s)
-   then basics#print_string("}")
-   else let y = Val!print(Sup!head(s)) in print_(s - Sup!head(s))
-  in print_(s) ;
+ let rec print_(s : Self) =
+  if Sup!isnil(s)
+  then basics#print_string("}")
+  else let y = Val!print(Sup!head(s)) in print_(s - Sup!head(s)) ;
+
+ let print(s : Self) = let x = basics#print_string("{") in print_(s) ;
 
  let parse(s : basics#string) = empty; (* MOD *)
 
