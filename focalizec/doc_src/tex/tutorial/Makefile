@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.11 2009-12-08 15:16:02 weis Exp $
+# $Id: Makefile,v 1.12 2010-01-14 15:32:43 habib Exp $
 
 ROOT_DIR = ../../..
 
@@ -20,7 +20,7 @@ TEX_FILES = tutorial.tex
 
 HVA_FILES = tutorial.hva
 
-FOCALIZE_SRC = superset.fcl subset.fcl mylist.fcl # main.fcl
+FOCALIZE_SRC = superset.fcl subset.fcl mylist.fcl main.fcl
 
 FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
 FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
