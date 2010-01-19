@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.184 2009-08-27 14:14:52 doligez Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.185 2010-01-19 13:45:05 weis Exp $ *)
 
 
 (* *************************************************************** *)
@@ -461,7 +461,7 @@ let find_method_type_kind_by_name vname coll_meths =
     temporary theorem for Zenon purpose. In this case, instead of abstracting
     dependencies by adding extra arguments to the current definition, we
     generate Variable, Let and Hypothesis.*)
-let generate_field_definifion_prelude ~in_section ctx print_ctx env min_coq_env
+let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
     used_species_parameter_tys dependencies_from_params generated_fields =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the parameters from the species parameters' types we use.
@@ -792,7 +792,7 @@ let generate_defined_non_recursive_method ctx print_ctx env min_coq_env
      By the way, we get updated in the [new_print_ctx] the way "Self" must be
      printed. *)
   let (abstracted_methods, new_ctx, new_print_ctx) =
-    generate_field_definifion_prelude
+    generate_field_definition_prelude
       ~in_section: false ctx print_ctx env min_coq_env
       used_species_parameter_tys dependencies_from_params generated_fields in
   (* We now generate the postlude of the method, i.e the sequence of real
@@ -2292,7 +2292,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
        abstractions that are performed by extra parameters by Variable, Let
        or Hypothesis. *)
     ignore
-      (generate_field_definifion_prelude
+      (generate_field_definition_prelude
          ~in_section: true ctx print_ctx env min_coq_env
          used_species_parameter_tys dependencies_from_params
          generated_fields) in
@@ -2312,7 +2312,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
           created extra args. The trailing "_T" will be automatically added
           by the type printing routine.
           In fact, thsi process is already done by the function
-          [generate_field_definifion_prelude] but we don't remind it. So we need
+          [generate_field_definition_prelude] but we don't remind it. So we need
           to do it again. That's not efficient, but it's not a big deal. *)
        let cc_mapping_extension =
          List.map
@@ -2435,7 +2435,7 @@ let generate_defined_theorem ctx print_ctx env min_coq_env ~self_manifest
   (* Generate the prelude of the method, i.e the sequence of parameters and
      their types induced by the various lamda-liftings. *)
   let (abstracted_methods, new_ctx, _) =
-    generate_field_definifion_prelude
+    generate_field_definition_prelude
       ~in_section: false ctx print_ctx env min_coq_env
       used_species_parameter_tys dependencies_from_params generated_fields in
   Format.fprintf out_fmter ":@ ";
@@ -2641,7 +2641,7 @@ let generate_termination_order_With_Function ctx print_ctx env name
     Parsetree_utils.pp_vname_with_operators_expanded name;
   (* Generate the lambda-lifts for our dependencies. *)
   let (_, ctx, print_ctx) =
-    generate_field_definifion_prelude
+    generate_field_definition_prelude
       ~in_section: false ctx print_ctx env ai.Abstractions.ai_min_coq_env
       ai.Abstractions.ai_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
@@ -2804,7 +2804,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
     Parsetree_utils.pp_vname_with_operators_expanded name;
   (* Generate the lambda-lifts for our dependencies. *)
   let (abstracted_methods, new_ctx, new_print_ctx) =
-    generate_field_definifion_prelude
+    generate_field_definition_prelude
       ~in_section: false ctx print_ctx env ai.Abstractions.ai_min_coq_env
       ai.Abstractions.ai_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
@@ -2923,7 +2923,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        (* Now, generate the prelude of the only method introduced by
           "let rec". *)
        let (abstracted_methods, new_ctx, new_print_ctx) =
-         generate_field_definifion_prelude
+         generate_field_definition_prelude
            ~in_section: true ctx' print_ctx env ai.Abstractions.ai_min_coq_env
            ai.Abstractions.ai_used_species_parameter_tys
            ai.Abstractions.ai_dependencies_from_params generated_fields in
@@ -3027,7 +3027,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        Format.fprintf out_fmter "@[<2>Definition %a"
          Parsetree_utils.pp_vname_with_operators_expanded name;
        ignore
-         (generate_field_definifion_prelude
+         (generate_field_definition_prelude
             ~in_section: false new_ctx new_print_ctx env
             ai.Abstractions.ai_min_coq_env
             ai.Abstractions.ai_used_species_parameter_tys
@@ -3102,7 +3102,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        Format.fprintf out_fmter "@[<2>Fixpoint %a@ "
          Parsetree_utils.pp_vname_with_operators_expanded name;
        let (abstracted_methods, new_ctx, new_print_ctx) =
-         generate_field_definifion_prelude
+         generate_field_definition_prelude
            ~in_section: false ctx' print_ctx env ai.Abstractions.ai_min_coq_env
            ai.Abstractions.ai_used_species_parameter_tys
            ai.Abstractions.ai_dependencies_from_params generated_fields in
