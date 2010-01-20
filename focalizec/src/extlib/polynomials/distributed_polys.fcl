@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: distributed_polys.fcl,v 1.5 2010-01-12 15:54:35 rr Exp $ *)
+(* $Id: distributed_polys.fcl,v 1.6 2010-01-20 11:04:15 rr Exp $ *)
 
 (**
   @title Distributed polynomials
@@ -43,7 +43,7 @@ open "constants";;
    nor if it has some sense in the literature.
    This is a kind of finite support functions from I to E.
  *)
-species Indexed_bag (I is Ordered_set_with_zero, E is Setoid_with_zero) =
+species Indexed_set (I is Ordered_set_with_zero, E is Setoid_with_zero) =
   inherit Setoid_with_zero;
   (**
      [rr]:
@@ -92,8 +92,16 @@ species Indexed_bag (I is Ordered_set_with_zero, E is Setoid_with_zero) =
           else false);
 
   proof of equal_reflexive =
-    property I!equal_reflexive, E!equal_reflexive
-    assumed (* type distributed_representation; should soon work with Zenon*);
+    <1>1 prove equal(Null, Null) 
+         by type distributed_representation definition of equal
+    <1>2 prove all x: Self, all cx: E, all dx: I,
+            equal(x, x) -> equal(NonNull(cx, dx, x), NonNull(cx, dx, x))
+         assumed
+    <1>3 prove all x: distributed_representation(E, I), !equal(x, x)
+         by step <1>1, <1>2 type distributed_representation
+    <1>f conclude;
+
+(*     assumed (\* type distributed_representation; should soon work with Zenon*\); *)
   proof of equal_symmetric =
     property I!equal_symmetric, E!equal_symmetric
     assumed (* type distributed_representation; should soon work with Zenon*);
@@ -107,7 +115,7 @@ open "rings_fields";;
 
 (** The free commutative monoid generated my monomials (m, i) *)
 species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
-  inherit Formal_indexed_sum (M, I), Indexed_bag (I, M);
+  inherit Formal_indexed_sum (M, I), Indexed_set (I, M);
 
 
 (*   local let rec p (a) = *)
