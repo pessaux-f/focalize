@@ -9,5 +9,4 @@
 *.mangled
 *.coz
 *.xml
-.depend
 odoc

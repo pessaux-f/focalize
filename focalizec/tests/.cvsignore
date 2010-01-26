@@ -5,5 +5,4 @@
 *.mangled
 *.v
 *.vo
-.depend
 odoc

@@ -2,5 +2,4 @@
 *.annot
 *.o
 *.annot
-.depend
 odoc

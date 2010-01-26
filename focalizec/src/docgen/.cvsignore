@@ -1,7 +1,6 @@
 *.cm*
 *.annot
 *.o
-.depend
 doc_lexer.ml
 odoc
 

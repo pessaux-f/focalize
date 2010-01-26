@@ -2,6 +2,5 @@
 *.annot
 *.v
 *.annot
-.depend
 .cvsignore
 odoc

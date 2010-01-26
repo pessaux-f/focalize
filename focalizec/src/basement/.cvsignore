@@ -1,6 +1,5 @@
 *.cm*
 *.annot
 *.o
-.depend
 odoc
 installation.ml

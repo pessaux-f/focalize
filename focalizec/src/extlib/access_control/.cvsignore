@@ -9,5 +9,4 @@
 *.fcd
 *.mangled
 *.coz
-.depend
 odoc

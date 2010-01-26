@@ -1,7 +1,6 @@
 *.cm*
 *.o
 *.annot
-.depend
 odoc
 focalizec.byt
 focalizec.bin

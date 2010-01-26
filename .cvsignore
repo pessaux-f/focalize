@@ -1,7 +1,6 @@
 .config_var
 .config_var_for_shell
 .distribution_var
-.depend
 .done*
 .announce_text
 coq-*

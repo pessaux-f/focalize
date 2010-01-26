@@ -9,7 +9,6 @@
 *.mangled
 *.coz
 *.xml
-.depend
 additive_law.ml
 array_foc.ml
 basics.ml

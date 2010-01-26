@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.68 2010-01-08 00:01:50 weis Exp $
+# $Id: Makefile,v 1.69 2010-01-26 14:16:54 weis Exp $
 
 ROOT_DIR = .
 
@@ -443,7 +443,8 @@ uninstall doc odoc docdir depend::
 	  case $$err in 0);; *) exit $$err;; esac; \
 	done
 
-distclean::
+.PHONY: distclean_doc_dir
+distclean_doc_dir:
 	$(RM) $(DOCDIR_DIR)
 
 docdir:: doc
@@ -609,4 +610,4 @@ distclean_distribution:
 #.PHONY: distclean
 distclean:: \
   distclean_external_tools distclean_internal_tools distclean_deliverables \
-  distclean_distribution unconfigure
+  distclean_distribution distclean_doc_dir unconfigure

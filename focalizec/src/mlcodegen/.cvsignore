@@ -1,5 +1,4 @@
 *.cm*
 *.annot
 *.o
-.depend
 odoc
