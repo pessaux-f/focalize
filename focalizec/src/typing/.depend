@@ -1,0 +1,60 @@
+ast_equal.cmi: ../basement/parsetree.cmi 
+depGraphData.cmi: ../basement/types.cmi ../basement/parsetree.cmi 
+dep_analysis.cmi: ../basement/types.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi env.cmi depGraphData.cmi 
+env.cmi: ../basement/types.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi ../basement/location.cmi depGraphData.cmi 
+infer.cmi: ../basement/types.cmi ../basement/parsetree.cmi \
+    ../basement/location.cmi env.cmi depGraphData.cmi 
+param_dep_analysis.cmi: ../basement/types.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi env.cmi 
+scoping.cmi: ../basement/types.cmi ../basement/parsetree.cmi \
+    ../basement/location.cmi env.cmi 
+substColl.cmi: ../basement/types.cmi ../basement/parsetree.cmi env.cmi 
+substExpr.cmi: ../basement/types.cmi ../basement/parsetree.cmi env.cmi 
+ast_equal.cmo: ../basement/parsetree.cmi ast_equal.cmi 
+ast_equal.cmx: ../basement/parsetree.cmi ast_equal.cmi 
+dep_analysis.cmo: ../basement/types.cmi ../parser/sourcify.cmi \
+    ../basement/parsetree_utils.cmi ../basement/parsetree.cmi \
+    ../basement/handy.cmi env.cmi depGraphData.cmi \
+    ../basement/configuration.cmi dep_analysis.cmi 
+dep_analysis.cmx: ../basement/types.cmx ../parser/sourcify.cmx \
+    ../basement/parsetree_utils.cmx ../basement/parsetree.cmi \
+    ../basement/handy.cmx env.cmx depGraphData.cmi \
+    ../basement/configuration.cmx dep_analysis.cmi 
+env.cmo: ../basement/types.cmi ../parser/sourcify.cmi \
+    ../basement/parsetree_utils.cmi ../basement/parsetree.cmi \
+    ../basement/location.cmi ../basement/handy.cmi ../basement/files.cmi \
+    depGraphData.cmi env.cmi 
+env.cmx: ../basement/types.cmx ../parser/sourcify.cmx \
+    ../basement/parsetree_utils.cmx ../basement/parsetree.cmi \
+    ../basement/location.cmx ../basement/handy.cmx ../basement/files.cmx \
+    depGraphData.cmi env.cmi 
+infer.cmo: ../basement/types.cmi substExpr.cmi substColl.cmi \
+    ../parser/sourcify.cmi scoping.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi ../basement/miscHelpers.cmi \
+    ../basement/location.cmi ../basement/handy.cmi env.cmi dep_analysis.cmi \
+    depGraphData.cmi ../basement/configuration.cmi ast_equal.cmi infer.cmi 
+infer.cmx: ../basement/types.cmx substExpr.cmx substColl.cmx \
+    ../parser/sourcify.cmx scoping.cmx ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi ../basement/miscHelpers.cmx \
+    ../basement/location.cmx ../basement/handy.cmx env.cmx dep_analysis.cmx \
+    depGraphData.cmi ../basement/configuration.cmx ast_equal.cmx infer.cmi 
+param_dep_analysis.cmo: ../basement/types.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi env.cmi param_dep_analysis.cmi 
+param_dep_analysis.cmx: ../basement/types.cmx ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi env.cmx param_dep_analysis.cmi 
+scoping.cmo: ../basement/types.cmi ../parser/sourcify.cmi \
+    ../basement/parsetree_utils.cmi ../basement/parsetree.cmi \
+    ../basement/location.cmi ../basement/handy.cmi env.cmi \
+    ../basement/configuration.cmi scoping.cmi 
+scoping.cmx: ../basement/types.cmx ../parser/sourcify.cmx \
+    ../basement/parsetree_utils.cmx ../basement/parsetree.cmi \
+    ../basement/location.cmx ../basement/handy.cmx env.cmx \
+    ../basement/configuration.cmx scoping.cmi 
+substColl.cmo: ../basement/types.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi ../basement/location.cmi env.cmi substColl.cmi 
+substColl.cmx: ../basement/types.cmx ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi ../basement/location.cmx env.cmx substColl.cmi 
+substExpr.cmo: ../basement/parsetree.cmi env.cmi substExpr.cmi 
+substExpr.cmx: ../basement/parsetree.cmi env.cmx substExpr.cmi 

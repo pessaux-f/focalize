@@ -1,0 +1,55 @@
+base_exprs_ml_generation.cmi: ../basement/types.cmi ../basement/parsetree.cmi \
+    ../typing/env.cmi ../commoncodegen/context.cmi 
+main_ml_generation.cmi: ../basement/types.cmi ../typing/infer.cmi \
+    ../typing/env.cmi 
+misc_ml_generation.cmi: ../basement/parsetree.cmi 
+species_ml_generation.cmi: ../basement/types.cmi ../basement/parsetree.cmi \
+    ../typing/env.cmi ../typing/depGraphData.cmi 
+type_ml_generation.cmi: ../basement/parsetree.cmi ../typing/env.cmi \
+    ../commoncodegen/context.cmi 
+base_exprs_ml_generation.cmo: ../basement/types.cmi \
+    ../basement/parsetree_utils.cmi ../basement/parsetree.cmi \
+    misc_ml_generation.cmi ../basement/miscHelpers.cmi \
+    ../commoncodegen/externals_generation_errs.cmi ../typing/env.cmi \
+    ../commoncodegen/context.cmi base_exprs_ml_generation.cmi 
+base_exprs_ml_generation.cmx: ../basement/types.cmx \
+    ../basement/parsetree_utils.cmx ../basement/parsetree.cmi \
+    misc_ml_generation.cmx ../basement/miscHelpers.cmx \
+    ../commoncodegen/externals_generation_errs.cmx ../typing/env.cmx \
+    ../commoncodegen/context.cmi base_exprs_ml_generation.cmi 
+main_ml_generation.cmo: type_ml_generation.cmi species_ml_generation.cmi \
+    ../basement/parsetree.cmi ../typing/infer.cmi ../typing/env.cmi \
+    ../commoncodegen/context.cmi ../basement/configuration.cmi \
+    base_exprs_ml_generation.cmi main_ml_generation.cmi 
+main_ml_generation.cmx: type_ml_generation.cmx species_ml_generation.cmx \
+    ../basement/parsetree.cmi ../typing/infer.cmx ../typing/env.cmx \
+    ../commoncodegen/context.cmi ../basement/configuration.cmx \
+    base_exprs_ml_generation.cmx main_ml_generation.cmi 
+misc_ml_generation.cmo: ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi misc_ml_generation.cmi 
+misc_ml_generation.cmx: ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi misc_ml_generation.cmi 
+species_ml_generation.cmo: ../basement/types.cmi ../parser/sourcify.cmi \
+    ../basement/parsetree_utils.cmi ../basement/parsetree.cmi \
+    ../commoncodegen/misc_common.cmi ../basement/miscHelpers.cmi \
+    ../commoncodegen/minEnv.cmi ../basement/location.cmi \
+    ../basement/handy.cmi ../typing/env.cmi ../typing/dep_analysis.cmi \
+    ../commoncodegen/context.cmi ../basement/configuration.cmi \
+    base_exprs_ml_generation.cmi ../commoncodegen/abstractions.cmi \
+    species_ml_generation.cmi 
+species_ml_generation.cmx: ../basement/types.cmx ../parser/sourcify.cmx \
+    ../basement/parsetree_utils.cmx ../basement/parsetree.cmi \
+    ../commoncodegen/misc_common.cmx ../basement/miscHelpers.cmx \
+    ../commoncodegen/minEnv.cmx ../basement/location.cmx \
+    ../basement/handy.cmx ../typing/env.cmx ../typing/dep_analysis.cmx \
+    ../commoncodegen/context.cmi ../basement/configuration.cmx \
+    base_exprs_ml_generation.cmx ../commoncodegen/abstractions.cmx \
+    species_ml_generation.cmi 
+type_ml_generation.cmo: ../basement/types.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi ../basement/location.cmi \
+    ../commoncodegen/externals_generation_errs.cmi ../typing/env.cmi \
+    ../commoncodegen/context.cmi type_ml_generation.cmi 
+type_ml_generation.cmx: ../basement/types.cmx ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi ../basement/location.cmx \
+    ../commoncodegen/externals_generation_errs.cmx ../typing/env.cmx \
+    ../commoncodegen/context.cmi type_ml_generation.cmi 

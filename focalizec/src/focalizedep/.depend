@@ -1,0 +1,6 @@
+directive_lexer.cmo: ../basement/parsetree.cmi 
+directive_lexer.cmx: ../basement/parsetree.cmi 
+make_depend.cmo: ../basement/parsetree.cmi ../basement/files.cmi \
+    directive_lexer.cmo 
+make_depend.cmx: ../basement/parsetree.cmi ../basement/files.cmx \
+    directive_lexer.cmx 

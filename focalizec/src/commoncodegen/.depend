@@ -1,0 +1,53 @@
+abstractions.cmi: ../basement/parsetree_utils.cmi ../basement/parsetree.cmi \
+    minEnv.cmi ../typing/env.cmi context.cmi 
+context.cmi: ../basement/types.cmi ../basement/parsetree.cmi \
+    ../typing/env.cmi ../typing/depGraphData.cmi 
+externals_generation_errs.cmi: ../basement/parsetree.cmi \
+    ../basement/location.cmi 
+minEnv.cmi: visUniverse.cmi ../basement/types.cmi ../basement/parsetree.cmi \
+    ../typing/env.cmi 
+misc_common.cmi: ../basement/types.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi ../typing/env.cmi context.cmi abstractions.cmi 
+recursion.cmi: ../basement/types.cmi ../basement/parsetree.cmi \
+    ../basement/location.cmi 
+visUniverse.cmi: ../basement/parsetree.cmi ../typing/depGraphData.cmi 
+abstractions.cmo: visUniverse.cmi ../basement/types.cmi \
+    ../typing/substColl.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi ../typing/param_dep_analysis.cmi minEnv.cmi \
+    ../basement/location.cmi ../basement/handy.cmi ../typing/env.cmi \
+    ../typing/dep_analysis.cmi ../typing/depGraphData.cmi context.cmi \
+    abstractions.cmi 
+abstractions.cmx: visUniverse.cmx ../basement/types.cmx \
+    ../typing/substColl.cmx ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi ../typing/param_dep_analysis.cmx minEnv.cmx \
+    ../basement/location.cmx ../basement/handy.cmx ../typing/env.cmx \
+    ../typing/dep_analysis.cmx ../typing/depGraphData.cmi context.cmi \
+    abstractions.cmi 
+externals_generation_errs.cmo: ../basement/parsetree.cmi \
+    ../basement/location.cmi externals_generation_errs.cmi 
+externals_generation_errs.cmx: ../basement/parsetree.cmi \
+    ../basement/location.cmx externals_generation_errs.cmi 
+minEnv.cmo: visUniverse.cmi ../basement/types.cmi ../basement/parsetree.cmi \
+    ../typing/env.cmi minEnv.cmi 
+minEnv.cmx: visUniverse.cmx ../basement/types.cmx ../basement/parsetree.cmi \
+    ../typing/env.cmx minEnv.cmi 
+misc_common.cmo: ../basement/types.cmi ../typing/substExpr.cmi \
+    ../parser/sourcify.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi minEnv.cmi ../basement/location.cmi \
+    ../basement/handy.cmi ../typing/env.cmi context.cmi \
+    ../basement/configuration.cmi abstractions.cmi misc_common.cmi 
+misc_common.cmx: ../basement/types.cmx ../typing/substExpr.cmx \
+    ../parser/sourcify.cmx ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi minEnv.cmx ../basement/location.cmx \
+    ../basement/handy.cmx ../typing/env.cmx context.cmi \
+    ../basement/configuration.cmx abstractions.cmx misc_common.cmi 
+recursion.cmo: ../basement/types.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi ../basement/miscHelpers.cmi \
+    ../basement/location.cmi ../basement/handy.cmi recursion.cmi 
+recursion.cmx: ../basement/types.cmx ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi ../basement/miscHelpers.cmx \
+    ../basement/location.cmx ../basement/handy.cmx recursion.cmi 
+visUniverse.cmo: ../basement/parsetree_utils.cmi ../basement/parsetree.cmi \
+    ../typing/depGraphData.cmi visUniverse.cmi 
+visUniverse.cmx: ../basement/parsetree_utils.cmx ../basement/parsetree.cmi \
+    ../typing/depGraphData.cmi visUniverse.cmi 
