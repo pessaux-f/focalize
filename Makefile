@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.69 2010-01-26 14:16:54 weis Exp $
+# $Id: Makefile,v 1.70 2010-01-26 17:08:35 weis Exp $
 
 ROOT_DIR = .
 
@@ -76,7 +76,7 @@ configure: .done_configure
 # configuring them.
 configure_external_tools: .done_configure_external_tools
 
-.done_configure_external_tools: .done_configure_external_coq_tool
+.done_configure_external_tools: .done_configure_external_caml_tool
 	@$(TOUCH) .done_configure_external_tools
 
 .done_configure_external_coq_tool: .done_configure_external_camlp5_tool
@@ -98,7 +98,7 @@ configure_external_tools: .done_configure_external_tools
 
 # Configuring Camlp5: we cannot perform the configuration before having our
 # caml compiler properly installed (see below the building target for camlp5
-# .done_build_external_camlp5_tool). 
+# .done_build_external_camlp5_tool).
 .done_configure_external_camlp5_tool: \
   .done_install_external_$(CAMLP5_NAME)_tool_sources \
   .done_configure_external_caml_tool
@@ -164,8 +164,7 @@ configure_deliverables: .done_configure_deliverables
 	@$(TOUCH) .done_configure_deliverables
 
 .done_configure_focalizec: .done_configure_internal_tools
-	@$(TOUCH) focalizec/.depend focalizec/src/focalizedep/.depend && \
-	for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
+	@for i in $(ABSOLUTE_FOCALIZEC_SRC_DIR); do \
 	  echo "--> Configuring $$i ..." >&2 && \
 	  ($(CD) $$i && ./configure $(FOCALIZEC_CONFIGURE_OPTIONS)); \
 	  err=$$?; \
@@ -301,7 +300,9 @@ build_external_tools: .done_build_external_tools
 # the answer from whichever caml compiler found in the search path). Too bad
 # for us: we really need to install our caml compiler before configuring
 # Camlp5, unless we modify completely camlp5 configuration procedure...
-.done_build_external_camlp5_tool: .done_build_external_caml_tool
+.done_build_external_camlp5_tool:\
+   .done_build_external_caml_tool \
+   .done_configure_external_camlp5_tool
 	@for i in $(ABSOLUTE_CAMLP5_SRC_DIR); do \
 	  echo "--> Building $$i..." >&2 && \
 	  ($(CD) $(ABSOLUTE_CAMLP5_SRC_DIR) && \
@@ -316,7 +317,9 @@ build_external_tools: .done_build_external_tools
 	$(TOUCH) .done_build_external_camlp5_tool
 
 # Coq
-.done_build_external_coq_tool: .done_build_external_camlp5_tool
+.done_build_external_coq_tool:\
+   .done_build_external_camlp5_tool \
+   .done_configure_external_coq_tool
 	@for i in $(ABSOLUTE_COQ_SRC_DIR); do \
 	  echo "--> Building $$i..." >&2 && \
 	  ($(CD) $(ABSOLUTE_COQ_SRC_DIR) && \
