@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.70 2010-01-26 17:08:35 weis Exp $
+# $Id: Makefile,v 1.71 2010-01-26 17:17:11 weis Exp $
 
 ROOT_DIR = .
 
@@ -28,6 +28,7 @@ include $(ROOT_DIR)/Makefile.config
 #  $(ABSOLUTE_CAML_SRC_DIR) $(ABSOLUTE_CAMLP5_SRC_DIR) $(ABSOLUTE_COQ_SRC_DIR)
 #
 # TOOLS_INTERNAL_DIRS = $(ZENON_SRC_DIR) $(ZVTOV_SRC_DIR)
+# DELIVERABLES = $(FOCALIZEC_NAME) $(FOCALIZEDEP_NAME)
 # DELIVERABLES_DIRS = $(FOCALIZEC_SRC_DIR) $(FOCALIZEDEP_SRC_DIR)
 #
 # DOC_ROOT_DIR=$(ROOT_DIR)/doc
@@ -551,7 +552,7 @@ distclean_deliverables:
 	for i in $(DELIVERABLES); do \
 	  $(RM) .done_build_$$i; \
 	done && \
-	for i in $(DELIVERABLES_DIRS); do \
+	for i in $(REV_DELIVERABLES_DIRS); do \
 	  echo "--> Dist Cleaning $$i ..." >&2 && \
 	  ($(CD) $$i && touch .config_var && $(MAKE) distclean); \
 	  err=$$?; \
