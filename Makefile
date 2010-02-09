@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.71 2010-01-26 17:17:11 weis Exp $
+# $Id: Makefile,v 1.72 2010-02-09 21:09:27 weis Exp $
 
 ROOT_DIR = .
 
@@ -438,7 +438,7 @@ install::
 	$(TOUCH) .done_install_focalizec && \
 	$(TOUCH) .done_install_focalizedep
 
-uninstall doc odoc docdir depend::
+uninstall doc odoc depend::
 	@for i in $(TOOLS_INTERNAL_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  ($(CD) $$i && $(MAKE) $@); \
@@ -451,8 +451,8 @@ uninstall doc odoc docdir depend::
 distclean_doc_dir:
 	$(RM) $(DOCDIR_DIR)
 
-docdir:: doc
-	@$(MKDIR) $(DOCDIR_DIR) && \
+docdir::
+	$(MKDIR) $(DOCDIR_DIR) && \
 	for i in $(TOOLS_INTERNAL_DIRS) $(DELIVERABLES_DIRS); do \
 	  echo "--> $$i ..." >&2 && \
 	  $(MKDIR) $(DOCDIR_DIR)/$$i && \
