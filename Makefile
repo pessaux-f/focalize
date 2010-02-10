@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.72 2010-02-09 21:09:27 weis Exp $
+# $Id: Makefile,v 1.73 2010-02-10 09:55:03 weis Exp $
 
 ROOT_DIR = .
 
@@ -21,8 +21,8 @@ include $(ROOT_DIR)/Makefile.config
 
 # Defined in Makefile.config:
 #
+# TAR_BALLS_DIR_NAME = tarballs
 # TAR_BALLS_DIR = $(ROOT_DIR)/$(TAR_BALLS_DIR_NAME)
-## TAR_BALLS_DIR_NAME = tarballs
 #
 # TOOLS_EXTERNAL_DIRS = \
 #  $(ABSOLUTE_CAML_SRC_DIR) $(ABSOLUTE_CAMLP5_SRC_DIR) $(ABSOLUTE_COQ_SRC_DIR)
@@ -52,8 +52,6 @@ include $(ROOT_DIR)/Makefile.common
 .PHONY: \
   install_external_tools install_internal_tools install_deliverables
 
-.PHONY: install_external_tools_sources
-
 #.PHONY: clean_external_tools
 .PHONY: clean_caml clean_camlp5 clean_coq
 
@@ -77,7 +75,9 @@ configure: .done_configure
 # configuring them.
 configure_external_tools: .done_configure_external_tools
 
-.done_configure_external_tools: .done_configure_external_caml_tool
+.done_configure_external_tools: \
+  .done_install_external_tools_sources \
+  .done_configure_external_caml_tool
 	@$(TOUCH) .done_configure_external_tools
 
 .done_configure_external_coq_tool: .done_configure_external_camlp5_tool
@@ -193,6 +193,7 @@ unconfigure::
 # Installing external tools sources.
 #
 .PHONY: install_external_tools_sources clean_install_external_tools_sources
+
 install_external_tools_sources: .done_install_external_tools_sources
 
 .done_install_external_tools_sources: .done_install_external_$(COQ_NAME)_tool_sources
@@ -200,7 +201,7 @@ install_external_tools_sources: .done_install_external_tools_sources
 
 clean_install_external_tools_sources:
 	@for i in \
-	  $(ABSOLUTE_COQ_SRC_DIR) $(ABSOLUTE_CAMLP5_SRC_DIR) $(ABSOLUTE_CAML_SRC_DIR); do \
+	  $(TOOLS_EXTERNAL_DIRS); do \
 	  echo "--> Cleaning $$i ..." >&2 && \
 	  $(RM) $$i; \
 	done && \
@@ -209,7 +210,7 @@ clean_install_external_tools_sources:
 	$(RM) .done_install_external_$(CAML_NAME)_tool_sources && \
 	$(RM) .done_install_external_tools_sources
 
-# Caml sources
+# Installing Caml sources
 install_external_$(CAML_NAME)_tool_sources: \
    .done_install_external_$(CAML_NAME)_tool_sources
 
@@ -223,7 +224,7 @@ install_external_$(CAML_NAME)_tool_sources: \
 	done && \
 	$(TOUCH) .done_install_external_$(CAML_NAME)_tool_sources
 
-# CamlP5 sources
+# Installing CamlP5 sources
 install_external_$(CAMLP5_NAME)_tool_sources: \
   .done_install_external_$(CAMLP5_NAME)_tool_sources
 
@@ -238,7 +239,7 @@ install_external_$(CAMLP5_NAME)_tool_sources: \
 	done && \
 	$(TOUCH) .done_install_external_$(CAMLP5_NAME)_tool_sources
 
-# Coq sources
+# Installing Coq sources
 install_external_$(COQ_NAME)_tool_sources: \
   .done_install_external_$(COQ_NAME)_tool_sources
 
