@@ -2,7 +2,7 @@
 
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
@@ -15,10 +15,10 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: .configure_distribution,v 1.1 2009-02-10 09:49:59 weis Exp $
+# $Id: .configure_distribution,v 1.2 2010-02-10 09:54:19 weis Exp $
 
 # The configuration script to collect various shell variables
-# for the project distribution
+# for the project distribution.
 
 PROJECT_CVS_ROOT=`cat ./CVS/Root`
 PROJECT_CVS_REPOSITORY=`cat ./CVS/Repository`
