@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.81 2009-10-20 14:17:56 carlier Exp $ *)
+(* $Id: types.ml,v 1.82 2010-02-11 16:47:40 doligez Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -1449,7 +1449,7 @@ type coq_print_context = {
 
 
 
-let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
+let (pp_type_simple_to_coq, pp_type_simple_args_to_coq, pp_type_scheme_to_coq,
      purge_type_simple_to_coq_variable_mapping) =
   (* ************************************************************** *)
   (* ((type_simple * string) list) ref                              *)
@@ -1528,7 +1528,7 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
         Format.fprintf ppf "@[<2>%a@]"
           (rec_pp_to_coq_sum_arguments ctx 3) tys ;
-        if prio >= 3 then Format.fprintf ppf ")@]" 
+        if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
@@ -1640,17 +1640,31 @@ let (pp_type_simple_to_coq, pp_type_scheme_to_coq,
         Format.fprintf ppf "%a@ -> %a"
           (rec_pp_to_coq ctx prio) ty1
           (rec_pp_to_coq_sum_arguments ctx prio)
-          (ty2 :: rem) in
+          (ty2 :: rem)
 
 
 
-  (* ************************************************** *)
+  and rec_pp_to_coq_args ctx ppf t n =
+    match repr t with
+    | ST_construct (_, arg_tys) ->
+       Format.fprintf ppf " %a" (Handy.pp_generic_separated_list ""
+                                  (rec_pp_to_coq ctx 0)) arg_tys
+    | _ ->
+       for i = 0 to n - 1 do
+         Format.fprintf ppf "@ _";
+       done
+
+
+  in
+ (* ************************************************** *)
   (* Now, the real definition of the printing functions *)
   ((* pp_type_simple_to_coq *)
    (fun ctx ~reuse_mapping ppf ty ->
      (* Only reset the variable mapping if we were not told the opposite. *)
      if not reuse_mapping then reset_type_variables_mapping_to_coq () ;
     rec_pp_to_coq ctx 0 ppf ty),
+   (* pp_type_simple_args_to_coq *)
+   (fun ctx ppf ty n -> rec_pp_to_coq_args ctx ppf ty n),
    (* pp_type_scheme_to_coq *)
    (fun ctx ppf the_scheme ->
      reset_type_variables_mapping_to_coq () ;

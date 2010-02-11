@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.19 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.20 2010-02-11 16:47:40 doligez Exp $ *)
 
 let is_recursive_call ctx ~local_idents recursive_name expr_ident =
   match expr_ident.Parsetree.ast_desc with
@@ -228,7 +228,7 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
 
 
 
-let generate_binding_match ctx env expr pattern =
+let generate_binding_match ctx print_ctx env expr pattern =
   let out_fmter = ctx.Context.scc_out_fmter in
   let local_idents = Parsetree_utils.get_local_idents_from_pattern pattern in
   (* Now, generate "pattern = expr". But attention !!! We print something like
@@ -236,7 +236,7 @@ let generate_binding_match ctx env expr pattern =
      in a match, we must apply the possible polymorphic arguments of the sum
      value constructors! So, force the extra "_"s to be printed. *)
   Species_record_type_generation.generate_pattern
-    ~force_polymorphic_explicit_args: true ctx env pattern ;
+    ~force_polymorphic_explicit_args: true ctx print_ctx env pattern ;
   Format.fprintf out_fmter " =@ " ;
   Species_record_type_generation.generate_expr
     ctx ~in_recursive_let_section_of: [] ~local_idents
@@ -465,7 +465,7 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
               (* Induces "forall variables of the pattern, pattern = expr".
                  [Unsure] Alpha-conv des vars du pattern !!!!!!! *)
               Format.fprintf out_fmter "(" ;
-              generate_binding_match ctx env expr pattern ;
+              generate_binding_match ctx print_ctx env expr pattern ;
               Format.fprintf out_fmter ") ->@ " ;
           | Recursion.B_condition (expr, bool_val) ->
               (* Induces "Is_true (expr)" if [bool_val] is true, else

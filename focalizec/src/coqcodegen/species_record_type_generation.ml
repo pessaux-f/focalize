@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.84 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.85 2010-02-11 16:47:40 doligez Exp $ *)
 
 
 
@@ -465,8 +465,8 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
          (* Now directly generate the name the constructor is mapped onto. *)
          Format.fprintf ctx.Context.scc_out_fmter "%s" coq_binding
          end)) ;
-    (* Always returns the number of "_" that must be printed after the
-       constructor. *)
+    (* Always returns the number of type arguments that must be printed
+       after the constructor. *)
     mapping_info.Env.CoqGenInformation.cmi_num_polymorphics_extra_args
   with _ ->
     (* Since in Coq all the constructors must be inserted in the generation
@@ -500,7 +500,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
 
     {b Exported} : Yes                                                        *)
 (* ************************************************************************** *)
-let generate_pattern ~force_polymorphic_explicit_args ctx env pattern =
+let generate_pattern ~force_polymorphic_explicit_args ctx coqctx env pattern =
   let out_fmter = ctx.Context.scc_out_fmter in
   let rec rec_gen_pat pat =
     match pat.Parsetree.ast_desc with
@@ -515,30 +515,24 @@ let generate_pattern ~force_polymorphic_explicit_args ctx env pattern =
            Parsetree_utils.pp_vname_with_operators_expanded name
      | Parsetree.P_wild -> Format.fprintf out_fmter "_"
      | Parsetree.P_constr (ident, pats) ->
-         (begin
          (* Disallow implicit arguments if needed. *)
          if force_polymorphic_explicit_args then Format.fprintf out_fmter "@@" ;
-         let nb_poly_args =
-           generate_constructor_ident_for_method_generator ctx env ident in
+         let extras =
+           generate_constructor_ident_for_method_generator ctx env ident
+         in
          (* If we must force the apparition of polymorphic extra arguments... *)
          if force_polymorphic_explicit_args then
            (begin
-           (* Add the "_"'s due to polymorphism of the constructor. *)
-           for i = 0 to nb_poly_args - 1 do
-             Format.fprintf out_fmter "@ _"
-           done
+             (* Add the type arguments of the constructor. *)
+             match pat.Parsetree.ast_type with
+             | Parsetree.ANTI_type t ->
+                 Types.pp_type_simple_args_to_coq coqctx out_fmter t extras
+             | _ -> assert false
            end) ;
          (* In "match" patterns, extra arguments of the constructor due to
             polymorphism never appear in Coq syntax. *)
-(* Changed by Damien: constructors are curried in Coq *)
          Format.fprintf out_fmter "@ " ;
          rec_generate_pats_list ~comma: false pats ;
-(* old version:
-         if pats <> [] then Format.fprintf out_fmter "@ (@[<1>" ;
-         rec_generate_pats_list ~comma: true pats ;
-         if pats <> [] then Format.fprintf out_fmter ")@]"
-END of changed by Damien. *)
-         end)
      | Parsetree.P_record _labs_pats ->
          Format.eprintf "generate_pattern P_record TODO@."
      | Parsetree.P_tuple pats ->
@@ -718,7 +712,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
   Format.fprintf out_fmter "@[<2>let%s@ "
     (match is_rec with
      | false -> ""
-     | true -> 
+     | true ->
          (* [Unsure] We don't known now how to compile several local mutually
             recursive functions. *)
          if (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings) > 1
@@ -842,29 +836,23 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          rec_generate_exprs_list ~comma: false loc_idents env args ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_ident, args) ->
-         (begin
          Format.fprintf out_fmter "@[<1>(@@" ;
-         let nb_poly_args =
-           generate_constructor_ident_for_method_generator ctx env cstr_ident in
-         (* Add the "_"'s due to polymorphism of the constructor. *)
-         for i = 0 to nb_poly_args - 1 do
-           Format.fprintf out_fmter "@ _"
-         done ;
+         let extras =
+           generate_constructor_ident_for_method_generator ctx env cstr_ident
+         in
+         (* Add the type arguments of the constructor. *)
+         begin match expression.Parsetree.ast_type with
+         | Parsetree.ANTI_type t ->
+             Types.pp_type_simple_args_to_coq print_ctx out_fmter t extras
+         | _ -> assert false
+         end;
          begin match args with
           | [] -> ()
           | _ ->
-(* changed by Damien: in Coq, constructors are curried, not tupled *)
               Format.fprintf out_fmter "@ " ;
               rec_generate_exprs_list ~comma: false loc_idents env args ;
-(* old version
-              (* If argument(s), enclose by parens to possibly make a tuple. *)
-              Format.fprintf out_fmter "@ @[<1>(" ;
-              rec_generate_exprs_list ~comma: true loc_idents env args ;
-              Format.fprintf out_fmter ")@]" ;
-END of changed by Damien *)
          end;
          Format.fprintf out_fmter ")@]" ;
-         end)
      | Parsetree.E_match (expr, pats_exprs) ->
          (begin
          Format.fprintf out_fmter "@[<1>match " ;
@@ -876,7 +864,7 @@ END of changed by Damien *)
              (* the pattern and its related processing.   *)
              Format.fprintf out_fmter "@\n@[<4>| " ;
              generate_pattern
-               ~force_polymorphic_explicit_args: false ctx env pattern ;
+               ~force_polymorphic_explicit_args: false ctx print_ctx env pattern;
              Format.fprintf out_fmter " =>@\n" ;
              (* Here, each name of the pattern may mask a "in"-parameter. *)
              let loc_idents' =

@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2010-01-12 15:54:35 rr Exp $
+# $Id: Makefile,v 1.3 2010-02-11 16:47:40 doligez Exp $
 
 # Makefile for algebra structures implementations
 
@@ -37,7 +37,7 @@ FOCALIZE_COMP_FLAGS = -stop-before-coq -no-stdlib-path -I $(STDLIB_DIR) -I $(ROO
 
 CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(STDLIB_DIR) -I $(ROOT_DIR)/src/extlib/algebra
 
-ZVTOV_COMP_FLAGS = -script -zenon $(ZENON_COMPILER) -new
+ZVTOV_COMP_FLAGS = -zenon $(ZENON_COMPILER) -new
 
 # From Makefile.config
 # ZENON_LIB_DIR

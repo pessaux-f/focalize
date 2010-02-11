@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.47 2009-10-20 14:17:56 carlier Exp $ *)
+(* $Id: types.mli,v 1.48 2010-02-11 16:47:40 doligez Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string;;
@@ -155,6 +155,8 @@ type coq_print_context = {
 val pp_type_simple_to_coq :
   coq_print_context -> reuse_mapping: bool ->
   Format.formatter -> type_simple -> unit;;
+val pp_type_simple_args_to_coq :
+  coq_print_context -> Format.formatter -> type_simple -> int -> unit;;
 val pp_type_scheme_to_coq :
   coq_print_context -> Format.formatter -> type_scheme -> unit;;
 
