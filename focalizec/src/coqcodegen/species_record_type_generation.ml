@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.85 2010-02-11 16:47:40 doligez Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.86 2010-02-16 17:21:01 doligez Exp $ *)
 
 
 
@@ -876,13 +876,13 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          Format.fprintf out_fmter "@\nend@]"
          end)
      | Parsetree.E_if (expr1, expr2, expr3) ->
-         Format.fprintf out_fmter "@[<2>if@ " ;
+         Format.fprintf out_fmter "@[<2>(if@ " ;
          rec_generate_expr loc_idents env expr1 ;
          Format.fprintf out_fmter "@ @[<2>then@ @]" ;
          rec_generate_expr loc_idents env expr2 ;
          Format.fprintf out_fmter "@ @[<2>else@ @]" ;
          rec_generate_expr loc_idents env expr3 ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.E_let (let_def, in_expr) ->
          let env' =
            let_in_def_compile
