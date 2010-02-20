@@ -1,4 +1,5 @@
 # Focalize 0.6.0
+- Inductive proof on data structures.
 - Update Caml to 3.11.1
 - Update Camlp5 to 5.12
 - Use Coq8.1pl4
@@ -15,4 +16,4 @@ Initial distribution
 # Focalize 0.1.rc0
 First release candidate.
 
-$Id: CHANGES,v 1.2 2009-12-04 09:24:16 weis Exp $
+$Id: CHANGES,v 1.3 2010-02-20 11:16:20 weis Exp $
