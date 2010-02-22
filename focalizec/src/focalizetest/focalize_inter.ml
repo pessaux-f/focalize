@@ -230,12 +230,12 @@ let focalize_get_species_list m =
 
 Gets the definition of the species [s] in module [m].
 *)
-let focalize_get_species ((m, s) : species_name) =
+let focalize_get_species ((ms, s) : species_name) =
   try
-    let m = open_module m in
+    let m = open_module ms in
   Env.TypingEnv.find_species ~loc:locnone ~current_unit:"" (get_uident s) (m)
   with
-  | Env.Unbound_species(_,_) -> raise (Species_dont_exists s);;
+  | Env.Unbound_species(_,_) -> raise (Species_dont_exists (ms ^ "#" ^ s));;
 
 module ET = Env.TypeInformation;;
 
@@ -683,7 +683,7 @@ let rec typ_of_foctyp =
     | TE_app(n,t_l) ->
         let m, s = convert_ident_no n.ast_desc in
         TPrm(m, s, List.map (fun e -> typ_of_foctyp e.ast_desc) t_l)
-    | TE_self -> TAtom(Some focbasics, "Self")
+    | TE_self -> TAtom(None, "Self")
         (**)
     | TE_prop  -> raise (Cant_convert_typ "Prop")
     | TE_paren t -> typ_of_foctyp t.ast_desc

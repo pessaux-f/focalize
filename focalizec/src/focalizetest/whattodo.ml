@@ -107,6 +107,14 @@ let get_input_lexbuf () = !input_lexbuf;;
 
 (* ********************************* *)
 
+let int_size = ref 65536;; 
+
+let set_int_size n = int_size := n;;
+
+let get_int_size () = !int_size;;
+
+(* ********************************* *)
+
 let get_use_report () = !use_report;;
 
 let set_use_report s = use_report := Some s;;
@@ -134,6 +142,14 @@ let prolog_opt = ref "meta";;
 let set_prolog_opt s = prolog_opt := s;;
 
 let get_prolog_opt () = !prolog_opt;;
+
+let mcdc_number = ref 0;;
+
+let set_mcdc_number n = mcdc_number := n;;
+
+let get_mcdc_number () = !mcdc_number;;
+
+(* ********************************* *)
 
 (* ********************************* *)
 

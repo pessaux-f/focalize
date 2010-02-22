@@ -46,7 +46,7 @@ let rec get_vars =
   let rec aux expr = 
   match expr with
   | FVarloc(FVInt v, e1, e2)
-  | FIfte(v,e1, e2) -> add_elem (v, TAtom(Some focbasics, foctint)) (merge_list (aux e1) (aux e2))
+  | FIfte(v,e1, e2) -> add_elem (v, TAtom(Some focbasics, foctbool)) (merge_list (aux e1) (aux e2))
   | FMeth(_,_s,l) -> List.fold_left (fun s e -> merge_list (aux_args e) s) [] l
             (** a function is applied to a list of string/integer name/value *)
   | FBasic(_, l) -> List.fold_left (fun s e -> merge_list (aux_args e) s) [] l
@@ -282,7 +282,7 @@ let rec add_let l e2 =
 open Own_expr;;
 open Own_types;;
 
-let prolog_of_precond tc _vars sat (_unsat : string) p =
+let prolog_of_precond tc _vars sat p =
  let expr = Expr_prolog.minifoc_expr_of_myexpr p in
  Prolog_comment (string_of_myexpr p)::
  prolog_term_of_minifoc tc (Context_test.empty_path) expr sat ;;
@@ -389,6 +389,8 @@ let create_goal tc vars (elem : elementaire) name i : prolog_clause * prolog_cla
   let goal_name = Fresh_variable.prolog_pgm_name name i in
   let state_name = Fresh_variable.prolog_pgm_state_name name i in
   let precond = get_precond elem in
+  let precond_truth = List.map (fun e -> let nv = Fresh_variable.new_prolog_var () in prolog_of_precond tc vars nv e, nv) precond in
+  let truth_vars = snd (List.split precond_truth) in
   let set_domains = variables_map_esc
                       (fun var ->
 (*                         print_string ("\nforall(" ^ get_variable_name var ^
@@ -407,21 +409,37 @@ let create_goal tc vars (elem : elementaire) name i : prolog_clause * prolog_cla
                           prolog_fun (Whattodo.get_prolog_opt ()) []
                          ];
   ] @
-  list_insert (prolog_fun "fin_env" [prolog_var env_variable]) (List.flatten
-  (List.map (prolog_of_precond tc vars sat unsat) precond)) @ [prolog_fun "fin_env"
-  [prolog_var env_variable];
-   prolog_fun "label_and_write"
-              [prolog_list (variables_map_esc (fun e -> prolog_var
-              (Fresh_variable.get_from_existing (get_variable_name e))) vars);
-               prolog_int (Whattodo.get_number_of_test ());
-               prolog_var (Fresh_variable.prolog_pgm_res name i);
-               prolog_var (env_variable);
-               prolog_var name;
-               prolog_int 1;
-               match Whattodo.get_prolog_stat_file () with
-               | None -> prolog_fun "none" []
-               | Some e -> prolog_fun "some" [prolog_var e]
-              ]])
+  List.flatten (fst (List.split precond_truth)) @
+  [prolog_fun "fin_env" [prolog_var env_variable]] @
+  (if Whattodo.get_mcdc_number () = 0 then
+     list_insert (prolog_fun "fin_env" [prolog_var env_variable])
+                 (List.map (fun e -> prolog_fun "#=" [prolog_var e; prolog_int 1]) truth_vars) @
+     [prolog_fun "label_and_write"
+                 [prolog_list (variables_map_esc (fun e -> prolog_var (Fresh_variable.get_from_existing (get_variable_name e))) vars);
+                  prolog_int (Whattodo.get_number_of_test ());
+                  prolog_var (Fresh_variable.prolog_pgm_res name i);
+                  prolog_var (env_variable);
+                  prolog_var name;
+                  prolog_int 1;
+                  match Whattodo.get_prolog_stat_file () with
+                  | None ->   prolog_fun "none" []
+                  | Some e -> prolog_fun "some" [prolog_var e]
+                 ]]
+  else
+     [prolog_fun "label_and_write_mcdc"
+                 [prolog_list (variables_map_esc (fun e -> prolog_var (Fresh_variable.get_from_existing (get_variable_name e))) vars);
+                  prolog_int (Whattodo.get_mcdc_number ());
+                  prolog_list (List.map prolog_var truth_vars);
+                  prolog_var (Fresh_variable.prolog_pgm_res name i);
+                  prolog_var (env_variable);
+                  prolog_var name;
+                  prolog_int 1;
+                  match Whattodo.get_prolog_stat_file () with
+                  | None ->   prolog_fun "none" []
+                  | Some e -> prolog_fun "some" [prolog_var e]
+                 ]]
+
+  ))
   ,(
     Some(prolog_fun state_name []),
     [prolog_fun "save_program" [prolog_fun goal_name []; prolog_fun goal_name

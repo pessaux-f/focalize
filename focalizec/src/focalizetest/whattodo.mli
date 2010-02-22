@@ -84,6 +84,20 @@ val get_use_report : unit -> string option
 (** [get_use_report s] gets the name of the report reinjected for non regression
 test. *)
 
+val set_mcdc_number : int -> unit
+(** [set_mcdc_number n] sets the number of time we want to apply MC/DC to the
+precondition. For n = 0, don't apply MC/DC. *)
+
+val get_mcdc_number : unit -> int
+(** [get_mcdc_number ()] gets the number of time we want to apply MC/DC to the
+precondition. *)
+
+val set_int_size : int -> unit
+(** [set_int_size] sets the size of a random integer. The integer is \[- n/2;(n/2 - 1)\]  *)
+
+val get_int_size : unit -> int
+(** [get_int_size ()] returns the size of random generated int *)
+
 val set_use_prolog : bool -> unit;;
 (** [get_use_prolog ()]
 Do we use prolog for searching for test case ?

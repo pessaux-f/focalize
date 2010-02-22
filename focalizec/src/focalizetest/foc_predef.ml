@@ -58,7 +58,6 @@ printed out report.  *)
 let top_preambule =
   (List.map parse_foc_topexpr
   ["let get_time in @UNIT -> @FLOAT = caml import get_time";
-   "let put_time in @FLOAT -> @FLOAT -> @STRING -> @BOOL -> @UNIT = caml import put_time";
    "let rand_int in @INT -> @INT = caml import rand_int";
    "let rand_int_good in @INT -> @INT = caml import rand_int_good";
    "let rand_bool in @INT -> @BOOL = caml import rand_bool";
@@ -68,13 +67,14 @@ let top_preambule =
     " ^ fst result_ok ^ ";
     " ^ fst result_ko ^ ";
     " ^ fst result_raise ^ "(@STRING);";
+   "let put_time in @STRING -> @FLOAT -> @FLOAT -> @STRING -> (@LIST(@LIST(@RESULT)) * @INT) -> @UNIT = caml import put_time";
    "type VERDICT =
-    " ^ fst verdict_precond_ok ^ "(@RESULT, @LIST(@RESULT));
-    " ^ fst verdict_precond_ko ^ "(@RESULT, @LIST(@RESULT));";
-   "let get_verdict(x in @VERDICT) in @VERDICT -> @BOOL * (@RESULT * @LIST(@RESULT)) =
+    " ^ fst verdict_precond_ok ^ "(@BOOL, @LIST(@RESULT));
+    " ^ fst verdict_precond_ko ^ ";";
+   "let get_verdict(x in @VERDICT) in @VERDICT -> @BOOL * (@BOOL * @LIST(@RESULT)) =
       match x with
-      | " ^ fst verdict_precond_ok ^ "(r,s) -> @CRP(#True, @CRP(r,s))
-      | " ^ fst verdict_precond_ko ^ "(r,s) -> @CRP(#False, @CRP(r,s))";
+      | " ^ fst verdict_precond_ok ^ "(r, s) -> @CRP(@TRUE, @CRP(r, s))
+      | " ^ fst verdict_precond_ko ^ " -> @CRP(@FALSE, @CRP(@FALSE, @NIL))";
    "let seq in 'a -> 'b -> 'a = caml import seq";
    "let flush_stdout in @UNIT -> @UNIT = caml import flush_stdout";
    "let print_close_file in (@STRING -> @UNIT) * (@UNIT -> @UNIT) =
@@ -121,7 +121,84 @@ let top_preambule =
                    #" ^ fst result_ok ^ ", l_verdict) in
             @CRP(verdict, l_verdict)";
    "let call_prolog in @STRING -> @STRING -> unit = caml import call_prolog";
-   "let call_prolog2 in @STRING -> @STRING -> @STRING -> @STRING -> @STRING -> unit = caml import call_prolog2"
+   "let call_prolog2 in @STRING -> @STRING -> @STRING -> @STRING -> @STRING -> unit = caml import call_prolog2";
+   "let list_in = 
+      let rec list_in =
+       fun n in (@INT) -> fun l in (@LIST(@INT)) ->
+       match l with
+       | @NIL -> @FALSE
+       | @CONS(e,r) ->
+         if @INT_EQUAL(e,n) then
+           @TRUE
+         else             
+           list_in(n,r) in
+      list_in";
+  "let list_append =
+       let rec aux =
+         fun l1 in (@LIST('a)) -> fun l2 in (@LIST('a)) ->
+         match l1 with
+         | @NIL -> l2
+         | @CONS(e,r) ->
+           @CONS(e, aux(r, l2)) in
+   aux";
+  "let list_del_one = 
+    let rec list_del_one =
+       fun n in (@INT) -> fun l in (@LIST(@INT)) ->
+       match l with
+       | @NIL -> @NIL
+       | @CONS(e,r) ->
+         if @INT_EQUAL(e,n) then
+           r
+         else             
+           @CONS(e,list_del_one(n, r)) in
+      list_del_one";
+   "let list_int =
+        let rec list_int =
+           fun n in (@INT) ->
+             if @INT_EQUAL(n, @PRED(0)) then
+               @NIL
+             else
+               @CONS(n, #list_int(@PRED(n))) in
+       list_int";
+   "let list_one_mcdc =
+      fun n in (@INT) ->
+       let rec list_mcdc_aux =
+          fun m in (@INT) ->
+            if @INT_EQUAL(m, 0) then
+               @NIL
+            else
+              list_append(#list_int(n), list_mcdc_aux(@PRED(m))) in
+      list_mcdc_aux(n)";
+   "let list_n_mcdc =
+      fun n in (@INT) -> fun m in (@INT) ->
+       let rec list_n_mcdc_aux = fun n in (@INT) ->
+         if @INT_LEQ(n, 0) then
+           @NIL
+         else 
+           list_append(list_int(m), list_n_mcdc_aux(@PRED(n))) in
+      list_n_mcdc_aux(n)";
+   "let list_nb_false = fun l in (@LIST(@RESULT)) ->
+         list_fold_left(fun s in (@INT) -> fun e in (@RESULT) ->
+           if #result_ok(e) then s else @SUCC(s), 0, l)";
+   "let list_occur =
+      let rec list_nth =
+        fun l in (@LIST(@RESULT)) -> fun n in (@INT) ->
+        match l with
+        | @NIL -> @PRED(0)
+        | @CONS(e,r) ->
+            if #result_ok(e) then
+               list_nth(r, @SUCC(n))
+            else
+              n in
+    fun l in (@LIST(@RESULT)) ->
+      let n = list_nb_false(l) in
+      if @INT_EQUAL(n, 0) then
+        0
+      else
+        if @INT_EQUAL(n, 1) then
+          list_nth(l, 1)
+        else
+          @PRED(0)"
   ]) @ 
    (* The species which calculate the coverage *)
   [create_toplevel_spec(
@@ -291,7 +368,8 @@ set. *)
 let top_import xml : import =
   "toplevel",
   ["init_rand","Random.init (int_of_float (Unix.time ()))";
-   "rand_int","fun n -> (Random.int 21) - 10";
+   (let n = string_of_int (get_int_size ()) in
+   "rand_int","fun n -> (Random.int " ^ n ^") - (" ^ n ^ " / 2)");
    "rand_int_good","fun n -> Random.int n";
    "rand_float","fun n -> Random.float 10.0";
    "rand_unit","fun n -> ()";
@@ -356,25 +434,16 @@ let top_import xml : import =
                       Unix.putenv \"TRAILSTKSIZE\" \"" ^ string_of_int (Whattodo.get_trailstk ()) ^ "M\";
                       Unix.putenv \"PROLOGMAXSIZE\" \"" ^ string_of_int (Whattodo.get_prologmax ()) ^"M\";
                       Unix.system (\"sicstus -l \" ^ n ^ \" --goal \" ^ s ^ \".\");
-                      let d = (Unix.times ()).Unix.tms_cutime in
- print_float d;
- print_newline ();
-                      let truc = Unix.system (\"sicstus -r \" ^ s2) in
-                      let f = (Unix.times ()).Unix.tms_cutime in
- print_float f;
- print_newline ();
-                      let fic = open_out_gen [Open_append; Open_creat] 0o600 \"stats\" in
-                      output_string fic (\"sicstus(\" ^ yy ^ \", \" ^ 
-                                             string_of_int (int_of_float ((f -.  d) *. 1000.0)) ^ \", \" ^
-                                             t ^ \").\n\");
-                      close_out fic";
+                      Unix.system (\"sicstus -r \" ^ s2)";
    "get_time", "fun () -> (Unix.times ()).Unix.tms_utime";
-   "put_time", "fun d f s b ->
+   "put_time", "fun meth d f s ok_nb ->
      let fic = open_out_gen [Open_append; Open_creat] 0o600 \"stats\" in
-                 let timeout = if b then \"timeout\" else \"ok\" in
-                 output_string fic (\"random(\" ^ s ^ \", \" ^ 
+                 let nb_ok = List.length (fst ok_nb) in
+                 let nb_gen = snd ok_nb in
+                 output_string fic (meth ^ \"(\" ^ s ^ \", \" ^ 
                                              string_of_int (int_of_float ((f -.  d) *. 1000.0)) ^ \", \" ^
-                                             timeout ^ \").\n\");
+                                             string_of_int nb_ok ^ \", \" ^
+                                             string_of_int nb_gen ^ \").\n\");
                  close_out fic";
    "split_cons",
    "fun s ->

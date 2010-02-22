@@ -55,15 +55,21 @@ let rec string_of_typ =
 (* Types' type :  *)
 let rec string_of_ttyp t =
   match t with
-  | TAtom(_, s) -> let s = if s = "Self" then focself else s in "TAtom(" ^ s ^ ")"
+  | TAtom(None, s) -> let s = if s = "Self" then focself else s in "TAtom(None, " ^ s ^ ")"
+  | TAtom(Some m, s) -> let s = if s = "Self" then focself else s in "TAtom("^ m ^ ", " ^ s ^ ")"
   | TSpecPrm(s) -> "TSpecPrm(" ^ s ^ ")"
   | TFct(t1,t2) -> "TFct(" ^ string_of_ttyp t1 ^ "," ^ string_of_ttyp t2 ^ ")"
   | TProd(t1,t2) -> "TProd(" ^ string_of_ttyp t1 ^ "," ^ string_of_ttyp t2 ^ ")"
-  | TPrm(m, s, t_l) ->
+  | TPrm(None, s, t_l) ->
       if t_l = [] then
-        string_of_ttyp (TAtom(m, s))
+        string_of_ttyp (TAtom(None, s))
       else
-        "TPrm(" ^ s ^ "(" ^ to_args string_of_ttyp t_l ^ "))";;
+        "TPrm(" ^ s ^ "(" ^ to_args string_of_ttyp t_l ^ "))"
+  | TPrm(Some m, s, t_l) ->
+      if t_l = [] then
+        string_of_ttyp (TAtom(Some m, s))
+      else
+        "TPrm(" ^ m ^ ", " ^ s ^ "(" ^ to_args string_of_ttyp t_l ^ "))";;
 
 (** Transforms a constructor to a string in OCaml syntax like.
 For debugging purpose only.
@@ -110,8 +116,7 @@ let rec depends =
 
 let is_in tt t =
   let l = depends t in
-  (*List.map (fun e -> print_string (string_of_ttyp e)) l; *)
-  List.mem tt l;;
+  List.mem tt (t::l);;
 
 (* flatten_prod: typ -> typ list *)
 (** flatten_type t

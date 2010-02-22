@@ -129,7 +129,7 @@ let ast_parse_one_res_prolog (name : string) =
       
 let ast_test_from_prolog i (name : string) _prolog_pgm =
   parse_foc_meth
-     ("let " ^ test_from_prolog i ^ " in @BOOL = 
+     ("let " ^ test_from_prolog i ^ " in @BOOL * @LIST(@LIST(@RESULT)) = 
        fun n in ( @UNIT) ->
          #call_prolog2(\"" ^ get_file_output_prolog name ^ "\",
                       \"" ^ prolog_pgm_state_name name i ^ "\", " ^
@@ -143,7 +143,7 @@ let ast_test_from_prolog i (name : string) _prolog_pgm =
              | @NIL ->
                  (#print_string(\"\\n\");
                   " ^ top_xml_coll_name ^ "!xml_close_elementaire(res, 1, nb);
-                  b
+                  @CRP(b, res)
                  )
              | @CONS(cur,r) -> 
                  (let pval = !" ^ pre_cond_string i ^ "(cur) in
@@ -203,20 +203,28 @@ let ast_variables_to_list_string vars i =
 
 let ast_test_submit _e vars i =
 (*   let vars_call = to_args (fun (n,_) -> n) (variables_to_list vars) in *)
+  let mcdc = if get_mcdc_number () = 0 then "@FALSE" else "@TRUE" in
+  let vars_tuple = string_of_myexpr (variables_to_tuple vars) in
   let def =
-    "let " ^ submit_test i ^ foc_argsdef_of_variables vars ^ " in
-  " ^ verdict_type ^ "  =
-       let pval = !" ^ pre_cond_string i ^ "(" ^ string_of_myexpr (variables_to_tuple vars) ^ ") in 
-       if #result_ok(@FST(pval)) then
+    "let " ^ submit_test i ^ foc_argsdef_of_variables vars ^ " in @LIST(@INT) * " ^ verdict_type ^ "  =
+       fun requirement ->
+       let pval = !" ^ pre_cond_string i ^ "(" ^ vars_tuple ^ ") in 
+       let test_number = list_occur(@SND(pval)) in
+       let test_accepted =
+         if " ^ mcdc ^ " then
+           list_in(test_number, requirement)
+         else
+           #result_ok(@FST(pval)) in
+       if test_accepted then
          " ^ top_xml_coll_name ^ "!xml_open_test(@VUNIT);
-         let lval = !" ^ get_variables_string i ^ "(" ^
-                              string_of_myexpr (variables_to_tuple vars) ^ ") in
-         let cval = !" ^ conclu_string i ^ "(" ^ string_of_myexpr (variables_to_tuple vars) ^ ") in
+         let lval = !" ^ get_variables_string i ^ "(" ^ vars_tuple ^ ") in
+         let cval = !" ^ conclu_string i ^ "(" ^ vars_tuple ^ ") in
          " ^ top_xml_coll_name ^ "!xml_result_test(lval, pval, cval);
          " ^ top_xml_coll_name ^ "!xml_close_test(@VUNIT);
-         #" ^ fst verdict_precond_ok ^ "(@FST(cval),@SND(cval))
+         @CRP(#list_del_one(test_number, requirement),
+              #" ^ fst verdict_precond_ok ^ "(#result_ok(@FST(cval)), @SND(cval)))
        else
-         #" ^ fst verdict_precond_ko ^ "(@FST(pval),@SND(pval))" in
+         @CRP(requirement, #" ^ fst verdict_precond_ko ^ ")" in
   parse_foc_meth def;;
 
 
@@ -227,6 +235,8 @@ let rec ast_random_var lvar =
   match lvar with
   | [] -> ""
   | (e,t)::r -> 
+      print_string (string_of_ttyp t);
+      print_newline ();
       let meth_name = random_meth (string_of_ttyp t) in
       "let " ^ e ^ "= !" ^ meth_name ^ "(" ^ string_of_int (get_size_value_test ()) ^ ") in\n" ^
         ast_random_var r ;;
@@ -254,36 +264,41 @@ let ast_test_elem_i =
       [] -> "@NIL"
     | (e,t)::r -> "@CONS(" ^ get_print_var t ^ "(" ^ e ^ "), " ^ print_vars r ^ ")"  in
   fun (x : elementaire) lvar  elem_num ->
+    let test_elem_i = test_elem elem_num in
+    let mcdc = if get_mcdc_number () = 0 then "@FALSE" else "@TRUE" in
+    let nb_conclu = string_of_int (List.length (list_of_conclusion (get_conclusion x))) in
     parse_foc_meth
-    (" let rec " ^ test_elem elem_num ^ " in @BOOL =
-      fun n in ( @INT ) -> fun b in ( @BOOL ) -> 
+    (" let rec " ^ test_elem_i ^ " in @BOOL * (@LIST(@LIST(@RESULT)) * @INT ) =
+      fun n in ( @INT ) -> fun requirement in (@LIST(@INT)) -> fun b in ( @BOOL ) -> 
       fun j_t in (@LIST(@LIST(@RESULT))) -> fun nb_try in ( @INT ) ->
-        if @INT_EQUAL(n , 0) then
+        fun nb_consec_fail in (@INT) ->
+        if @OR(@AND(@NOT(" ^ mcdc ^ "), @INT_EQUAL(n , 0)),
+               @AND(     " ^ mcdc ^ " , @STRUCT_EQUAL(requirement, @NIL))) then
           (
             let saute_ligne = #print_string(\"\\n\") in
-             " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t, " ^
-          string_of_int (List.length (list_of_conclusion (get_conclusion x)))  ^ ", nb_try); b)
+             " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t, " ^ nb_conclu ^ ", nb_try);
+          @CRP(b, @CRP(j_t, nb_try)))
         else 
-          " ^ ast_random_var (variables_to_list lvar ) ^ " 
-            let result = !" ^ submit_test elem_num ^ foc_argscall_of_variables lvar ^ " in
-            let result = #get_verdict(result) in
-            let value = @SND(result) in 
-              match @FST(result) with
-              | @TRUE -> 
-                  let rien = #print_string(\"*\") in
-                  let rien = #flush_stdout(@VUNIT) in
-                  !" ^ test_elem elem_num ^
-              "(@PRED(n),@AND(#result_ok(@FST(value)), b),
-                  @CONS(@SND(value),j_t), @SUCC(nb_try))
-              | @FALSE ->
-                  if  @AND( @STRUCT_EQUAL(j_t,@NIL) , @INT_GT(nb_try,100000000)) then
+          " ^ ast_random_var (variables_to_list lvar ) ^ (* Lot of let binding *) "  
+            let req_res = !" ^ submit_test elem_num ^ foc_argscall_of_variables lvar ^ "(requirement) in
+              match @SND(req_res) with
+              | " ^ fst verdict_precond_ok ^ "(test_pass, nj_t) -> 
+                 (#print_string(\"*\");
+                  #flush_stdout(@VUNIT);
+                  !" ^ test_elem_i ^ "( @PRED(n),
+                                        @FST(req_res),
+                                        @AND(test_pass, b),
+                                        @CONS(nj_t, j_t),
+                                        @SUCC(nb_try), 0 )
+                 )
+              | " ^ fst verdict_precond_ko ^ " -> 
+                  if  @INT_GEQ(nb_consec_fail, 10000000) then
                     (" ^ top_xml_coll_name ^ "!xml_timeout(@VUNIT);
-          " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t, " ^
-          string_of_int (List.length (list_of_conclusion (get_conclusion x)))  ^ ", nb_try); 
-                     @FALSE
-                  )
+          " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t, " ^ nb_conclu ^ ", nb_try); 
+                     @CRP(@FALSE, @CRP(j_t, nb_try))
+                    )
                   else
-                  !" ^ test_elem elem_num ^ "(n,b,j_t, @SUCC(nb_try))"
+                  !" ^ test_elem_i ^ "(n,requirement, b,j_t, @SUCC(nb_try), @SUCC(nb_consec_fail))"
     );;
 
 (** ast_call_test_elem i
@@ -309,31 +324,59 @@ let ast_rapport_test_elem (selem : elementaire) vs name i =
                expr_of_caml_list (List.map (fun e -> MString (xml_string_of_expr e)) (get_conclusion selem))
               ]
             ] in
+    let do_mcdc, mcdc_n = get_mcdc_number () != 0, get_mcdc_number () in
+    let mcdc_size = List.length (list_of_precond (get_precond selem)) in
     meth_create (rapport_test i) (TAtom(Some "basics", foctbool))
                 (expr_fun "n" (TAtom(Some "basics", foctint))
                   (expr_fun "sicstus" (TAtom(Some "basics", foctbool))
                    (expr_seq
                      (expr_meth top_xml_coll_name "xml_print_elementaire" [forme_elem])
                      (expr_if (expr_var "sicstus")
-                              (expr_meth "Self" (test_from_prolog i) [expr_basic focunit [] ]) 
+                              (parse_foc_expr
+                               ("let avant = #get_time(@VUNIT) in
+                                let res = !" ^ test_from_prolog i ^ "(@VUNIT) in
+                                (#put_time(\"" ^ get_prolog_opt () ^ "\",
+                                          avant,
+                                          #get_time(@VUNIT),
+                                          \"" ^ name ^ "\", @CRP(@SND(res), 0));
+                                 @FST(res)
+                                )")
+                              )
                               (expr_let_notyp "avant"  (expr_basic (prefix "get_time") [expr_basic focunit []])
+                              (expr_let_notyp "mcdc" (if do_mcdc then expr_basic
+                              (prefix "list_n_mcdc") [expr_int mcdc_n; expr_int mcdc_size] else expr_glob focnil)
                               (expr_let_notyp "res" (expr_meth "Self" (test_elem i)
-                                               [expr_var "n";expr_glob foctrue; expr_glob
-                                                focnil; expr_int 0])
+                                                [expr_var "n"; expr_var "mcdc"; expr_glob foctrue; expr_glob
+                                                focnil; expr_int 0; expr_int 0])
                               (expr_seq (expr_basic (prefix "put_time")
-                                                    [expr_var "avant";
+                                                    [expr_string "random"; 
+                                                     expr_var "avant";
                                                      expr_basic (prefix "get_time") [expr_basic focunit []];
                                                      expr_string name;
-                                                     expr_basic foctrue []
-                                                                ])
-                               (expr_var "res") (use_seq_function ())
+                                                     expr_basic focsnd [expr_var "res"]
+                                                    ])
+                              (expr_basic focfst [expr_var "res"]) (use_seq_function ())
                               )
-                              ))) (use_seq_function ())
+                              )))) (use_seq_function ())
                      
                    )
                   )
                 )
                 false;;
+
+(*
+let rapport_test i = fun n in (@int) ->
+    fun sicstus in (@BOOL) ->
+      top_xml_coll_name!xml_print_elementaire(forme_elem);
+      if sicstus then
+        Self!test_from_prolog i(#Null)
+      else
+        let avant = #get_time(#Null) in
+        let mcdc = if do_mcdc then #list_n_mcdc(mcdc_n) else #Nil in
+        let res = Self!test_elem i(n, mcdc, #True, #Null, 0, 0) in
+        #put_time(avant, #get_time(#Null), name, res);
+        #fst(res)
+*)
 
 
 (* Create the entry point of the species, The method is named "test_prop" and
@@ -378,19 +421,21 @@ let ast_meth_test_all_elem p_name p_forme nb_var nb_elems =
 
 
 (* Create the methods testing an elementary forms.
-It takes the elementary forms, the number of the ef, the actual variables on
-which the elementary form hold, the same variables renamed (to avoid variable's
-capture) and the association list (typ, function printing this type). *)
+It takes the elementary forms, the number of the elementary forms, the actual
+variables on which the elementary form hold, the same variables renamed (to
+avoid variable's capture) and the association list (typ, function printing this
+type). *)
 let ast_test_elem name (prolog_pgm,elem) number actual_vars renamed_vars =
     (* methods testing the elem_numth elementary property (elem) *)
-    [ast_test_pre_cond     (map_elementaire_ren prefix_var actual_vars elem) renamed_vars number;
-     ast_test_conclu       (map_elementaire_ren prefix_var actual_vars elem) renamed_vars number;
-     ast_variables_to_list_string actual_vars number;
-     ast_test_from_prolog number name prolog_pgm;
-     ast_test_submit       elem actual_vars number;
-     ast_test_elem_i       elem renamed_vars number;
-     ast_rapport_test_elem elem actual_vars name number;
-    ];;
+  [
+   ast_test_pre_cond (map_elementaire_ren prefix_var actual_vars elem) renamed_vars number;
+   ast_test_conclu (map_elementaire_ren prefix_var actual_vars elem) renamed_vars number;
+   ast_variables_to_list_string actual_vars number;
+   ast_test_from_prolog number name prolog_pgm;
+   ast_test_submit elem actual_vars number;
+   ast_test_elem_i elem renamed_vars number;
+   ast_rapport_test_elem elem actual_vars name number
+       ];;
 
 let ast_species_test (name, actual_vars, cel) property_statement
                      (species_under_test : species_name)
@@ -421,7 +466,7 @@ let ast_species_test (name, actual_vars, cel) property_statement
                            ) in
     spec_create (snd (Species_harness.spec_harness_harness species_test))
                 params
-                [Species_harness.spec_harness species_under_test,List.map get_name_prm params]
+                [Species_harness.spec_harness species_under_test, List.map get_name_prm params]
                 None
                 (ast_parse_one_res_prolog property_statement rename_vars :: test_elems)
 
@@ -520,25 +565,29 @@ let ast_test_elem_i_reinject =
         | @NIL ->
            (let saute_ligne = #print_string(\"\\n\") in
              " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t, " ^
-          string_of_int (List.length (list_of_conclusion (get_conclusion x)))  ^ ", nb_try); b)
+          string_of_int (List.length (list_of_conclusion (get_conclusion x)))  ^ ", nb_try);
+             @CRP(b, nb_try)
+           )
         | @CONS(h,tail) ->
           " ^ ast_bind_var (variables_to_list lvar ) ^ " 
-            let result = !" ^ submit_test elem_num ^ foc_argscall_of_variables lvar ^ " in
+            let result = !" ^ submit_test elem_num ^ foc_argscall_of_variables lvar ^ "(@NIL) in
             let result = #get_verdict(result) in
             let value = @SND(result) in 
               match @FST(result) with
               | @TRUE -> 
                   let rien = #print_string(\"*\") in
                   let rien = #flush_stdout(@VUNIT) in
-                  !" ^ test_elem_reinject elem_num ^
-              "(tail,@AND(#result_ok(@FST(value)), b),
-                  @CONS(@SND(value),j_t), @SUCC(nb_try))
+                  !" ^ test_elem_reinject elem_num ^ "
+                          (tail,
+                           @AND(#result_ok(@FST(value)), b),
+                           @CONS(@SND(value),j_t), @SUCC(nb_try)
+                          )
               | @FALSE ->
-                  if  @AND( @STRUCT_EQUAL(j_t,@NIL) , @INT_GT(nb_try,100000000)) then
+                  if @INT_GT(nb_try,10000000) then
                     (" ^ top_xml_coll_name ^ "!xml_timeout(@VUNIT);
           " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t, " ^
           string_of_int (List.length (list_of_conclusion (get_conclusion x)))  ^ ", nb_try); 
-                     @FALSE
+                     @CRP(@FALSE, nb_try)
                   )
                   else
                   !" ^ test_elem_reinject elem_num ^ "(tail,b,j_t, @SUCC(nb_try))"

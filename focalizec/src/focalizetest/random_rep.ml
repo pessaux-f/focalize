@@ -42,7 +42,7 @@ let rec depends =
         List.fold_left (fun s e -> aux e s) [typ] types_inside
     | typ -> aux typ [];;
 
-(* The predefintion *)
+(* The predefinition *)
 
 (*
 let predefined_random_fml =
@@ -451,7 +451,7 @@ let rec ast_random_type l_param typ =
           [parse_foc_meth ("let " ^ meth_name ^ " in " ^ string_of_typ typ ^ " =
                              fun n in (@INT) ->
                                @CRP(!" ^ m1 ^ "(n),!" ^ m2 ^ "(n))")]
-    | TPrm(m, name,_)  ->
+    | TPrm(m, name, _)  ->
         let cons = Focalize_inter.get_concrete_def typ in
         let (cons_fin,cons_nfin) =
           let list_or f l = List.fold_left (fun s e -> s || f e) false l in
@@ -462,10 +462,10 @@ let rec ast_random_type l_param typ =
         in
         let meth_name = (random_meth (string_of_ttyp typ)) in
         let random_choice = expr_app (expr_glob (Prefix(None, "rand_int_good"))) [MInt 5] in
-        let condthen =  expr_app (expr_glob focintequal) [expr_var "value";MInt 0] in
+        let condthen =  expr_app (expr_glob focintequal) [expr_var "value"; MInt 0] in
         let choisi_cons_nfin = ast_random_cons cons_nfin name in
  (*       let choisi_cons_fin  = ast_random_cons cons_fin name in *)
-        let thenbranch = if cons_nfin = [] then failwith ("Le type" ^ name ^ " est co_inductif") else choisi_cons_nfin in
+        let thenbranch = if cons_nfin = [] then failwith ("Le type " ^ name ^ " est co_inductif") else choisi_cons_nfin in
         let elsebranch = if cons_fin = [] then None else Some (ast_random_cons cons_fin name) in
         let corpus =
           match elsebranch with
@@ -750,8 +750,6 @@ let ast_random l_param typ_list rep =
   let l = TAtom(Some "basics", foctint)::
           List.filter (function | TAtom(_,"int") -> false | _ -> true) l in
   let typ_list = List.fold_right (fun e s-> depends e ++ s) l [] in
-  List.iter (fun e -> print_string (string_of_typ e ^ " ")) typ_list;
-  print_newline ();
 (*   List.iter (fun e -> print_string (string_of_typ e ^ " ")) typ_list; *)
   let meths1 = ast_gen_print_types_rep rep in
   let meths2 = ast_gen_print_types l_param typ_list in

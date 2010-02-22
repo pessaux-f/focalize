@@ -33,7 +33,7 @@ let rec xml_string_of_typ t =
 let special_xml =
   ["&", "&amp;";
    "<", "&lt;";
-   ">", "&lt;"
+   ">", "&gt;"
   ];;
 let safe_replace s = string_assoc s special_xml;;
 

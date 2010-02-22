@@ -125,7 +125,7 @@ let rec variables_to_tuple : variables -> Own_expr.myexpr =
 
 let foc_argsdef_of_variables (vars : variables) : string =
     if vars = [] then
-      "(unused_var in UNIT)"
+      "(_unused_var in UNIT)"
     else
       to_args foc_string_of_variable vars;;
 let foc_argscall_of_variables (vars : variables) : string =

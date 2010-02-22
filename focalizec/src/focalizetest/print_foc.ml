@@ -163,10 +163,12 @@ let rec print_myexpr : (string * string) list -> myexpr -> unit =
             print_myexpr l_caml e;
             print_string ")";
             print_string "(";
+            open_box 0;
             print_myexpr l_caml (fst e1);
             List.iter (fun (e,_) -> print_string ",";print_space ();
             print_myexpr l_caml e) r;
-            print_string ")"
+            print_string ")";
+            close_box ();
     | MApp  (MGlob_id(Infix s),e1::e2::[]) ->
             print_string "(";
             print_myexpr l_caml (fst e1);
@@ -178,10 +180,12 @@ let rec print_myexpr : (string * string) list -> myexpr -> unit =
     | MApp  (e,e1::r) ->
             print_myexpr l_caml e;
             print_string "(";
+            open_box 0;
             print_myexpr l_caml (fst e1);
             List.iter (fun (e,_) -> print_string ",";print_space ();
             print_myexpr l_caml e) r;
-            print_string ")"
+            print_string ")";
+            close_box ()
     | MMeth (None, s) ->
             print_string "!";
             print_string s;

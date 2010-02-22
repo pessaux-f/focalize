@@ -295,6 +295,10 @@ let parse_args () = Arg.parse
                  " Which option for solving (meta|naive|noback)";
       "-v", Arg.Unit (fun () -> set_verbose_mode true),
                  " Verbose mode";
+      "-mcdc", Arg.Int set_mcdc_number,
+                 "n Set number of times we want to apply MC/DC on the precondition";
+      "-int", Arg.Int set_int_size,
+                  "n Set the size of integer. The generated interval is [-n/2; n/2 - 1]";
       "-S", Arg.Int set_size_value_test,
                  "size Set size of element we want to generate";
       "-t", Arg.Int set_number_of_test,
@@ -306,7 +310,7 @@ let parse_args () = Arg.parse
       "-r", Arg.String set_use_report,
                  "report Use this test report as test case set"; 
       "--let", Arg.Unit set_let,
-                 " Use a \"let unused = e1 in e2\" style for simulate sequence of instructions in the .fcl file";
+                 " Use a \"let _unused = e1 in e2\" style for simulate sequence of instructions in the .fcl file";
       "-funtop",Arg.String (fun s -> ignore (externfun (Some (Toplevel s)))),
                  "topf Set the random rep function to a toplevel function";
       "-funspec",Arg.String (fun s -> ignore (externfun (Some (Species s)))),

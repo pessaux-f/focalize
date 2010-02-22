@@ -30,16 +30,20 @@ val focbasics : string
 (** The basics modules. *)
 
 val focequal : ident
-(** The focal structural equality function's name. *)
+(** The focal "structural equality" function's name. *)
 
 val focintequal : ident
-(** The focal int equal function's name. *)
+(** The focal int "equal" function's name. *)
 
 val focintgt : ident
-(** The focal int greater than function's name. *)
+(** The focal int "greater than" function's name. *)
+
+val focintgeq : ident
+(** The focal int "greater or equal than" function's name. *)
 
 val focintleq : ident
-(** The focal int greater than function's name. *)
+(** The focal int "less or equal than" function's name. *)
+
 val foccrp : ident
 (** The focal couple constructor. *)
 

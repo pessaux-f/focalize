@@ -21,6 +21,7 @@ let focbasics = "basics";;
 let focequal = Infix "=";;
 let focintequal = Infix "=0x";;
 let focintgt = Infix ">0x";; 
+let focintgeq = Infix ">=0x";; 
 let focintleq = Infix "<=0x";; 
 
 let focaddint = Infix "+";;

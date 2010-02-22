@@ -58,7 +58,7 @@ let expr_seq t1 t2 b =
 (*    Focal has the same evaluate strategy than Ocaml (ie: right to left) *)
     expr_app (expr_glob (Prefix(None, "seq"))) [t2;t1]
   else
-    expr_let_notyp "unused_var" t1 t2;;
+    expr_let_notyp "_unused_var" t1 t2;;
 
 let positif e = e;;
 let negatif e = expr_app (expr_glob focnot) [e];;

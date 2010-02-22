@@ -105,6 +105,7 @@ let ident_of_uident s i =
   | "NIL" -> focnil
   | "CONS" -> foccons
   | "OR" -> focor
+  | "NOT" -> focnot
   | "AND" -> focand
   | "PRED" -> focpred
   | "SUCC" -> focsucc
@@ -112,6 +113,8 @@ let ident_of_uident s i =
   | "SND" -> focsnd
   | "INT_EQUAL" -> focintequal
   | "INT_GT" -> focintgt
+  | "INT_GEQ" -> focintgeq
+  | "INT_LEQ" -> focintleq
   | "SC" -> focstringconcat
   | "CRP" -> foccrp
   | "STRUCT_EQUAL" -> focequal
@@ -387,6 +390,8 @@ expr_type_def:
    {($1,$3)::$6} 
 | UIDENT LPAREN l_type_focal RPAREN SEMICOLON 
    {[$1,$3]}
+| UIDENT SEMICOLON 
+   {[$1,[]]}
 ;
 
 
@@ -509,6 +514,7 @@ pattern:
 meth_focal:
 | LET IDENT IN type_focal EQ expr_focal     {meth_create $2 $4 $6 false}
 | LET REC IDENT IN type_focal EQ expr_focal {meth_create $3 $5 $7 true}
+| LET REC IDENT               EQ expr_focal { print_message 4 Syntax }
 | LET IDENT LPAREN list_var RPAREN IN type_focal EQ expr_focal
                                             {meth_create $2 $7 ($4 $9) false}
 | LET IDENT LPAREN RPAREN IN type_focal EQ expr_focal
