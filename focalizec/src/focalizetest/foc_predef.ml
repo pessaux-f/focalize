@@ -58,6 +58,7 @@ printed out report.  *)
 let top_preambule =
   (List.map parse_foc_topexpr
   ["let get_time in @UNIT -> @FLOAT = caml import get_time";
+   "let get_tag in @UNIT -> @STRING = caml import get_tag";
    "let rand_int in @INT -> @INT = caml import rand_int";
    "let rand_int_good in @INT -> @INT = caml import rand_int_good";
    "let rand_bool in @INT -> @BOOL = caml import rand_bool";
@@ -121,7 +122,7 @@ let top_preambule =
                    #" ^ fst result_ok ^ ", l_verdict) in
             @CRP(verdict, l_verdict)";
    "let call_prolog in @STRING -> @STRING -> unit = caml import call_prolog";
-   "let call_prolog2 in @STRING -> @STRING -> @STRING -> @STRING -> @STRING -> unit = caml import call_prolog2";
+   "let call_prolog2 in @STRING -> @STRING -> @STRING -> @STRING -> @STRING -> float * float = caml import call_prolog2";
    "let list_in = 
       let rec list_in =
        fun n in (@INT) -> fun l in (@LIST(@INT)) ->
@@ -376,6 +377,8 @@ let top_import xml : import =
    "rand_string","fun n -> \"string\"";
    "rand_char","fun n -> char_of_int (Random.int 256)";
    "rand_bool","fun n -> (Random.int 2) = 0";
+   "get_tag","fun () -> try Sys.argv.(1) with
+                        | _ -> \"\"";
    "rand_big_int",
                 "fun n ->
                    let zero = Char.code '0' in
@@ -434,12 +437,15 @@ let top_import xml : import =
                       Unix.putenv \"TRAILSTKSIZE\" \"" ^ string_of_int (Whattodo.get_trailstk ()) ^ "M\";
                       Unix.putenv \"PROLOGMAXSIZE\" \"" ^ string_of_int (Whattodo.get_prologmax ()) ^"M\";
                       Unix.system (\"sicstus -l \" ^ n ^ \" --goal \" ^ s ^ \".\");
-                      Unix.system (\"sicstus -r \" ^ s2)";
+                      let deb = (Unix.times ()).Unix.tms_cutime in
+                      Unix.system (\"sicstus -r \" ^ s2);
+                      deb, (Unix.times ()).Unix.tms_cutime";
    "get_time", "fun () -> (Unix.times ()).Unix.tms_utime";
    "put_time", "fun meth d f s ok_nb ->
      let fic = open_out_gen [Open_append; Open_creat] 0o600 \"stats\" in
                  let nb_ok = List.length (fst ok_nb) in
                  let nb_gen = snd ok_nb in
+                 let meth = meth ^ get_tag () in
                  output_string fic (meth ^ \"(\" ^ s ^ \", \" ^ 
                                              string_of_int (int_of_float ((f -.  d) *. 1000.0)) ^ \", \" ^
                                              string_of_int nb_ok ^ \", \" ^

@@ -129,13 +129,13 @@ let ast_parse_one_res_prolog (name : string) =
       
 let ast_test_from_prolog i (name : string) _prolog_pgm =
   parse_foc_meth
-     ("let " ^ test_from_prolog i ^ " in @BOOL * @LIST(@LIST(@RESULT)) = 
+     ("let " ^ test_from_prolog i ^ " in (@BOOL * @LIST(@LIST(@RESULT))) * (float * float) = 
        fun n in ( @UNIT) ->
-         #call_prolog2(\"" ^ get_file_output_prolog name ^ "\",
-                      \"" ^ prolog_pgm_state_name name i ^ "\", " ^
-                      "\"" ^ prolog_pgm_name name i ^ "\", " ^
-                      "\"" ^ name ^ "\", " ^
-                      "\"" ^ get_prolog_opt () ^ "\");
+         let d_f = #call_prolog2(\"" ^ get_file_output_prolog name ^ "\",
+                                 \"" ^ prolog_pgm_state_name name i ^ "\", " ^
+                                 "\"" ^ prolog_pgm_name name i ^ "\", " ^
+                                 "\"" ^ name ^ "\", " ^
+                                 "\"" ^ get_prolog_opt () ^ "\") in
          let lines = #get_all_lines(\"" ^ prolog_pgm_res name i ^ "\") in
          let l = !" ^ prolog_pgm_get_res name ^ "(lines) in
            let rec aux = fun l -> fun b -> fun res -> fun nb ->
@@ -157,7 +157,7 @@ let ast_test_from_prolog i (name : string) _prolog_pgm =
                       @CONS(@SND(cval), res),
                       @SUCC(nb))
                  ) in
-                  aux(l, @TRUE, @NIL, 0)");;
+                 @CRP(aux(l, @TRUE, @NIL, 0), d_f)");;
 
 (* idem with conclusion *)
 let ast_test_conclu =
@@ -333,13 +333,13 @@ let ast_rapport_test_elem (selem : elementaire) vs name i =
                      (expr_meth top_xml_coll_name "xml_print_elementaire" [forme_elem])
                      (expr_if (expr_var "sicstus")
                               (parse_foc_expr
-                               ("let avant = #get_time(@VUNIT) in
-                                let res = !" ^ test_from_prolog i ^ "(@VUNIT) in
+                               ("
+                                let res_d_f = !" ^ test_from_prolog i ^ "(@VUNIT) in
                                 (#put_time(\"" ^ get_prolog_opt () ^ "\",
-                                          avant,
-                                          #get_time(@VUNIT),
-                                          \"" ^ name ^ "\", @CRP(@SND(res), 0));
-                                 @FST(res)
+                                          @FST(@SND(res_d_f)),
+                                          @SND(@SND(res_d_f)),
+                                          \"" ^ name ^ "\", @CRP(@SND(@FST(res_d_f)), 0));
+                                 @FST(@FST(res_d_f))
                                 )")
                               )
                               (expr_let_notyp "avant"  (expr_basic (prefix "get_time") [expr_basic focunit []])
