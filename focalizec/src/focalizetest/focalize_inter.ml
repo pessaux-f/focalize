@@ -906,9 +906,10 @@ let get_prop_def species prop =
 let rec add_meth_params p t e =
   match p, t with
   | p::r, TFct(t1,t2) ->
-      MFun(p, Some t1, add_meth_params r t2 e)
+      let expr, typ_final = add_meth_params r t2 e in 
+      MFun(p, Some t1, expr), typ_final
   | [], _ ->
-      e
+      e, t
   | _, _ -> failwith "add_meth_params: no enough types";;
 
 let get_meth_def sn meth =
@@ -984,13 +985,13 @@ let foctyp_of_typ _ = failwith "foctyp_of_typ: Not yet implemented"
 let is_complete _ = failwith "is_complete: Not yet implemented" 
 
 let get_meth_def_split sn m =
-  let def = get_meth_def sn m in
+  let def,typ = get_meth_def sn m in
 (*   print_string (dbg_string_myexpr def); *)
 (*   print_newline (); *)
   let rec aux s =
     match s with
     | MFun(x, t, e) -> 
-        let (args, e) = aux e in
-        (x, t)::args, e
-    | _ -> [], s in
+        let (args, e_t) = aux e in
+        (x, t)::args, e_t
+    | _ -> [], (s, typ) in
   aux def;;

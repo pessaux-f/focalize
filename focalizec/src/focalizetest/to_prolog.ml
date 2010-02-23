@@ -262,15 +262,17 @@ and
 
 ;;
 
-let prolog_pgm_of_minifoc_function tc cp _cur_spec n (prm,minifoc_body) : prolog_clause =
+let prolog_pgm_of_minifoc_function tc cp _cur_spec n (prm, (minifoc_body, typ)) : prolog_clause =
   let res_var = Fresh_variable.new_prolog_var () in
   let prolog_head_args =
     prolog_var res_var::
       List.map (fun (e, _t) -> prolog_var (Fresh_variable.get_from_existing e)) prm in
   let prolog_m = prolog_predicate cp n in
   let prolog_head = prolog_fun prolog_m (prolog_head_args @ [prolog_var env_variable]) in
+  let prolog_ret_type = prolog_fun "set_type" [prolog_var res_var;
+                                               prolog_of_typ (expand_self tc cp typ)] in
   let prolog_body = prolog_term_of_minifoc tc cp minifoc_body res_var in
-    Some (prolog_head), prolog_body;;
+    Some (prolog_head), prolog_ret_type :: prolog_body;;
 
 let rec add_let l e2 =
   match l with
@@ -301,10 +303,10 @@ let prolog_from_prop species prop_name =
 
 let get_args_minifoc sn f =
 (*   print_string (":: " ^ f ^ "\n"); *)
-  let args, def = get_meth_def_split sn f in
+  let args, (def, typ) = get_meth_def_split sn f in
 (*   print_string (dbg_string_myexpr def); *)
 (*   print_string "\n"; *)
-  args, minifoc_expr_of_myexpr def;;
+  args, (minifoc_expr_of_myexpr def, typ);;
 
 (** [get_meth_dep spec meth]
 
@@ -312,11 +314,7 @@ let get_args_minifoc sn f =
 *)
 let get_meth_dep (tc : test_context) (cp : context_path)
                  meth : (context_path * string) list = 
-(*
-                   print_string (string_of_cp cp) ;
-                   print_newline ();
-*)
-  let _args, def = get_args_minifoc (species_of_cp tc cp) meth in
+  let _args, (def, _typ) = get_args_minifoc (species_of_cp tc cp) meth in
   get_meths_of_expr cp def;;
 
 

@@ -130,7 +130,7 @@ example).
 @raise Cant_convert_texpr if the proposition contains a focal expression
 that can't be converted. Mostly a type error in the proposition. *)
 
-val get_meth_def : Own_expr.species_name -> string -> Own_expr.myexpr
+val get_meth_def : Own_expr.species_name -> string -> Own_expr.myexpr * Own_types.typ 
 (** [get_meth_def spec meth] returns the property  named [prop] defined in the
 species [meth].
 
@@ -231,4 +231,4 @@ val get_parameters_number : Own_expr.species_name -> string -> int
 val is_constructor : Own_basics.ident -> bool
 
 val get_meth_def_split : Own_expr.species_name -> string -> (string *
-Own_types.typ option) list * Own_expr.myexpr
+Own_types.typ option) list * (Own_expr.myexpr * Own_types.typ)
