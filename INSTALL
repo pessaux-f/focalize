@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: INSTALL,v 1.11 2010-01-06 11:53:46 weis Exp $
+#  $Id: INSTALL,v 1.12 2010-03-02 16:17:13 weis Exp $
 
 Compile and install with:
   ./configure
@@ -30,12 +30,12 @@ If you want to run the script interactively, use:
 
 ./configure -interactive
 
-If you already know what you are doing, you can fix the tools installation
-directory with:
+If you already know what you are doing, you can fix the external tools
+installation directory with:
 
-./configure -tools_prefix ~/pkg
+./configure -tools_prefix <directory>
 
-or fix the tools and project installation directories with:
+or independently fix the tools and project installation directories with:
 
 ./configure -tools_prefix <directory> -prefix <directory>
 
@@ -60,20 +60,22 @@ Contacts:
 Installation in brief:
 ======================
 
-The FoCaLiZe installation is a two steps process, it needs two places where
-to permanently install files:
+The FoCaLiZe installation is a three steps process: configuration, building (run "make") and installation of executables and
+documentation (run "make install").
 
-(1) a directory writable during the configuration phase,
+The installation process needs two places where to permanently install files:
+
+(1) a directory writable during the configuration and building phase,
 
 (2) a directory writable during the installation phase.
 
-Directory (1) is typically /usr/local (hence writable for root only).
-Directory (2) is typically /usr/local (hence, writable for root only).
+Directory (1) is typically ~/pkg (hence writable by you).
+Directory (2) is typically /usr/local (hence only writable by root).
 
 Directory (1) is the argument of the -tools_prefix option of configure.
 Directory (2) is the argument of the -prefix option of configure.
 
-In directory (1), the configuration phase builds and installs three external
+In directory (1), the building phase builds and installs three external
 systems: Objective Caml, CamlP5 and the Coq system. Internal tools, zenon and
 zvtov, will also install there.
 
@@ -86,9 +88,14 @@ Details on installation:
 ========================
 
 The software will compile and install in three tasks in turn:
- (1) Installation of mandatory external tools: Ocaml, Camlp5, Coq.
- (2) Installation of mandatory internal tools: zenon, zvtov.
-     Compilation of the compiler focalizec and its libraries.
+
+ (1) Configuration.
+
+ (2) - Compilation and installation of mandatory externals tools:
+       Ocaml, Camlp5, and Coq.
+     - Compilation and installation of internal tools: zenon and zvtov.
+     - Compilation of the compiler focalizec and its libraries.
+
  (3) Installation of the compiler: focalizec.
 
 The command "./configure ~/pkg" performs task (1).
@@ -98,11 +105,12 @@ libraries, and the documentation.
 
 External and internal tools are installed in the file system in a directory
 private to the actual version of the focalizec compiler. Default directory is
-<directory>/focalize-0.1.rc0/, where <directory> is fixed when calling
-"./configure <directory>". For instance, if you want to install tools in
-sub-directory pkg of your home directory, configure using:
+sub directory "focalize-0.6.0" in the directory "~/pkg"; you can change this
+behavior during step 1, by calling "./configure <directory>".
+For instance, if you want to install the external tools in the directory
+"/usr/local/focalize-0.6.0", configure using:
 
-./configure ~/pkg
+./configure "/usr/local"
 
 After installation:
 ===================
@@ -111,7 +119,7 @@ For checking the proofs with coqc, you need to add this to your $HOME/.coqrc fil
   Add LoadPath $TOOLS_INSTALL_DIR/lib/zenon.
 
 The default $TOOLS_INSTALL_DIR is "/usr/local/lib/focalize-0.6.0"; If you specified
-an alternate --tools_installation_prefix when configuring FoCaLize, you need
+an alternate --tools_installation_prefix when configuring FoCaLiZe, you need
 to adjust these paths accordingly.
 
 Optional prerequisites:
