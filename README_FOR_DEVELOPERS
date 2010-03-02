@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.13 2010-01-06 22:48:48 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.14 2010-03-02 14:28:43 weis Exp $
 
 # The name of the file says why and for who it was written :)
 
@@ -62,35 +62,37 @@
 
 <H2>The internals of configuration</H2>
 
-<P>The initial mandatory data to configure and compile are written by hand in the file
-<CODE>.project_config_var</CODE> in the root directory of the distribution.
- It defines two sub-routines set_project_id and set_intrinsic_defaults.
+<P>The initial mandatory data to configure and compile are written by hand in
+the shell script file <CODE>.project_config_var</CODE> in the root directory
+of the distribution. This script defines two sub-routines set_project_id and
+set_intrinsic_defaults.
 
-<P>The <CODE>configure</CODE> script loads <CODE>.project_config_var</CODE> and runs the
-two procedures to define the set of shell variables.
+<P>The <CODE>configure</CODE> shell script loads
+<CODE>.project_config_var</CODE> and runs the two procedures to define the
+set of shell variables.
 
-<P>After various validity checks and argument treatment,
-the final part of <CODE>configure</CODE> records all the variables into the file
-<CODE>./.config_var</CODE> by sed-editing the template file
-<CODE>./.config_var.in</CODE>.
+<P>After various validity checks and argument treatment, the final part of
+the <CODE>configure</CODE> script records all the configuration variables
+into the file <CODE>./.config_var</CODE>, via sed-edition of the template
+file <CODE>./.config_var.in</CODE>.
 
 <P>All the Makefiles in the project always starts by loading the
-<CODE>./.config_var.in</CODE> file to define the mandatory variables. (Hence
+<CODE>./.config_var</CODE> file to define the mandatory variables. (Hence
 <CODE>.config_var</CODE> is in fact a valid Makefile.)
 
 <P><CODE>configure</CODE> also creates the file
 <CODE>./.config_var_for_shell</CODE> which has a slightly different quotation
-strategy, more suitable for script shells.  (Hence
+strategy, more suitable for script shells. (Hence
 <CODE>.config_var_for_shell</CODE> is a valid shell script.)
 
 <H2>The building phase</H2>
 
-<P>The building phase must compile the FoCaLiZe compiler and its associated
-dependency compiler (<CODE>focalizec</CODE> and <CODE>focalizedep</CODE>). To
-attain this goal, we MUST have the suitable Caml compiler to compile it; we also
-need the suitable Coq compiler (<CODE>coqc</CODE>) and the mandatory internal
-tools Zenon and <CODE>zvtov</CODE> in order to compile and certify the FoCaLiZe
-libraries.
+<P>The building phase must compile the FoCaLiZe compiler
+(<CODE>focalizec</CODE>) and its associated dependency compiler
+(<CODE>focalizedep</CODE>). To achieve this goal, we MUST have the suitable
+Caml compiler to compile it; we also need the suitable Coq compiler
+(<CODE>coqc</CODE>) and the mandatory internal tools Zenon and
+<CODE>zvtov</CODE> in order to compile and certify the FoCaLiZe libraries.
 
 So, the necessary building sequence is as follows:
 <UL>
@@ -118,11 +120,12 @@ not satisfactory, since it prevents sharing the tools by all the users). The
 only undesirable alternative is to run the building phase with root
 priviledges (which is now considered by many as a major security flaw).
 
-<P> If you plan to solve these problems, keep in mind those facts:
+<P> If you plan to solve these problems, please go ahead, but keep in mind
+the following facts:
 
-<BR>focalizec generates Caml code which is more or less specific to a Caml
-compiler (not that critical in practice, since the generated code tends to be
-fairly portable as far as Caml version is concerned); but
+<BR>focalizec generates Caml code which is more or less specific to a given
+Caml compiler (not that critical in practice, since the generated code tends
+to be fairly portable as far as Caml version is concerned); but
 
 <BR>focalizec do also generate some interface code for a specific
 zenon/zvtov pair;
@@ -149,7 +152,7 @@ cd distribution
 # modulogic.inria.fr)
 
 cvs -d weis@modulogic.inria.fr:/home/cvs \
- co -r branch_focalize_release_0_1_rc0 -d focalize.0.1.rc0 focalize
+ co -r branch_focalize_release_0_6_0 -d focalize.0.6.0 focalize
 
 # You also need the htmlc batch editor, which is in the Caml bazar.
 # The simplest way to get htmlc is
@@ -163,7 +166,7 @@ cvs -d weis@modulogic.inria.fr:/home/cvs \
    make install
 
 # Configure the FoCaLiZe and compile it
-cd focalize.0.6
+cd focalize.0.6.0
 ./configure
 make
 
@@ -258,7 +261,7 @@ something like this:
 
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 ...
 
 # The file .config_var has been built by configure. We load it.
@@ -283,6 +286,7 @@ touch .depend
 
 ...
 </PRE>
+
 <P>You must add the new directory in the list <CODE>SUB_DIRS</CODE> at its
 proper place in the list. Note also, that you must also add all the sub
 directories of the new directory if any.
