@@ -1,0 +1,13 @@
+# $Id: TODO,v 1.1 2010-03-23 15:02:08 weis Exp $
+
+(0) Solve the problem of infixes used with module annotation in an infix
+position. 
+
+(1) Add new data type kinds, such as private and/or abstract data type (even
+if I don't really understand the necessity of abstract representation for
+species).
+
+(2) Create options for focalize
+focalize -coq => coq -I ...
+focalize -caml => ocamlc -I ...
+focalize -man => man -M dir
