@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.73 2010-02-10 09:55:03 weis Exp $
+# $Id: Makefile,v 1.74 2010-03-23 16:39:45 weis Exp $
 
 ROOT_DIR = .
 
@@ -377,7 +377,8 @@ $(ZVTOV_EXES): .done_build_zvtov
 
 build_deliverables: .done_build_deliverables
 .done_build_deliverables: .done_build_focalizec .done_build_focalizedep
-	@$(TOUCH) .done_build_deliverables
+	@$(TOUCH) .done_build_deliverables && \
+	echo "Now please invoke make install..." >&2
 
 # The focalize compiler
 $(FOCALIZEC_EXES): .done_build_focalizec
