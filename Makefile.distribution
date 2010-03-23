@@ -13,15 +13,16 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.14 2009-12-04 14:54:56 weis Exp $
+# $Id: Makefile.distribution,v 1.15 2010-03-23 14:12:47 weis Exp $
 
 ROOT_DIR=.
 
 # Just for the $(PROJECT) maintainers, a Makefile to distribute the
 # software.
-# This Makefile includes some of the toplevel make files of the application that is
-# supposed to define at list:
-# PROJECT (the name of the system to distribute, e.g. Moca)
+
+# This Makefile includes some of the toplevel make files of the application
+# that is supposed to define at list: PROJECT (the name of the system to
+# distribute, e.g. Moca).
 
 # Usage:
 # - you must set the variables WEB_SITE_DIR and FTP_SITE_DIR below,
