@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.15 2010-03-23 14:12:47 weis Exp $
+# $Id: Makefile.distribution,v 1.16 2010-03-23 16:56:21 weis Exp $
 
 ROOT_DIR=.
 
@@ -173,24 +173,29 @@ clean_documentation:
 # Recompile the tests
 .PHONY: project_test
 project_test:
-	echo >&2 && echo >&2 && \
-	echo "Compiling tests" >&2 && \
-	echo >&2 && echo >&2 && \
-	(cd test && $(MAKE) all) && \
-	echo >&2 && echo >&2 && \
-	echo "Tests compiled" >&2 && \
-	echo >&2 && echo >&2
+	@if test -e tests; then; \
+	  echo >&2 && echo >&2 && \
+	  echo "Compiling tests" >&2 && \
+	  echo >&2 && echo >&2 && \
+	  (cd test && $(MAKE) all) && \
+	  echo >&2 && echo >&2 && \
+	  echo "Tests compiled" >&2 && \
+	  echo >&2 && \
+	  echo >&2; \
+	fi
 
 # Create the examples directory && copy the example files.
 .PHONY: project_examples
 project_examples:
-	echo >&2 && echo >&2 && \
-	echo "Populating the examples directory." >&2 && \
-	echo >&2 && echo >&2 && \
-	(cd test && $(MAKE) examplesdir) && \
-	echo >&2 && echo >&2 && \
-	echo "Examples directory populated." >&2 && \
-	echo >&2 && echo >&2
+	@if test -e test; then; \
+	  echo >&2 && echo >&2 && \
+	  echo "Populating the examples directory." >&2 && \
+	  echo >&2 && echo >&2 && \
+	  (cd test && $(MAKE) examplesdir) && \
+	  echo >&2 && echo >&2 && \
+	  echo "Examples directory populated." >&2 && \
+	  echo >&2 && echo >&2 \
+	fi
 
 # Clean the old release directory.
 # Check out a brand new version there.
