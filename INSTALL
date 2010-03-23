@@ -1,6 +1,6 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
@@ -13,20 +13,58 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: INSTALL,v 1.12 2010-03-02 16:17:13 weis Exp $
+#  $Id: INSTALL,v 1.13 2010-03-23 14:56:17 weis Exp $
 
-Compile and install with:
+(0) Installation:
+=================
+
+The installation of the FoCaLiZe system requires the installation of some
+tools external to FoCaLiZe with versions carefully chosen to fit with the
+FoCaLiZe system.
+
+These tools must be installed in your home directory, for various reasons out
+of scope of this installation short notice.
+
+The default directory for the installation of external tools is the directory
+pkg in your home directory.
+
+Thus, if the directory pkg does not exist yet, please create it by typing:
+
+  mkdir ~/pkg
+
+Now, you are ready to compile and install FoCaLiZe, using the standard stanza:
   ./configure
   make
   make install
 
-Since the configuration step requires the compilation of Objective Caml,
-Camp5, and Coq, expect this step to take some time!
+Since the second step needs a lot of compilation, expect it to take some time
+(up to one hour or so for a reasonably modern machine). 
+
+If you want to tune the installation process or inderstand how it runs, you
+may have a look below 
+
+(1) Administrativia:
+====================
+
+Licence: New BSD Licence (see the file LICENSE for details)
+-------
+
+Contacts:
+---------
+- Web site: http://focalize.inria.fr/
+- Discussion: focalize-users@inria.fr
+- Bug reports for installation: Pierre.Weis@inria.fr
+- Bug reports for the compiler: http://focalize.inria.fr/
+  (Find and click on the ``Bug Tracking'' link)
+- Contact developers: focalize-devel@inria.fr
+
+(2) In case of trouble:
+=======================
 
 If the default configuration settings do not please you, you may use more
 suitable configuration options.
 
-If you want to run the script interactively, use:
+If you want to run the configuration script interactively, use:
 
 ./configure -interactive
 
@@ -45,20 +83,8 @@ For even finer configuration, get more information from the script with:
 
 or see below to understand the configuration process.
 
-Licence: New BSD Licence (see the file LICENSE for details)
-=======
-
-Contacts:
-========
-- Web site: http://focalize.inria.fr/
-- Discussion: focalize-users@inria.fr
-- Bug reports for installation: Pierre.Weis@inria.fr
-- Bug reports for the compiler: http://focalize.inria.fr/
-  (Find and click on the ``Bug Tracking'' link)
-- Contact developers: focalize-devel@inria.fr
-
-Installation in brief:
-======================
+(3) The installation process in brief:
+======================================
 
 The FoCaLiZe installation is a three steps process: configuration, building (run "make") and installation of executables and
 documentation (run "make install").
@@ -84,8 +110,8 @@ library and documentation.
 
 All the tools in directory (1) and (2) are mandatory to use the FoCaLize system.
 
-Details on installation:
-========================
+(4) Some details on the installation process:
+=============================================
 
 The software will compile and install in three tasks in turn:
 
@@ -112,8 +138,9 @@ For instance, if you want to install the external tools in the directory
 
 ./configure "/usr/local"
 
-After installation:
-===================
+(5) After the installation:
+===========================
+
 For checking the proofs with coqc, you need to add this to your $HOME/.coqrc file:
   Add LoadPath $TOOLS_INSTALL_DIR/lib.
   Add LoadPath $TOOLS_INSTALL_DIR/lib/zenon.
@@ -122,7 +149,8 @@ The default $TOOLS_INSTALL_DIR is "/usr/local/lib/focalize-0.6.0"; If you specif
 an alternate --tools_installation_prefix when configuring FoCaLiZe, you need
 to adjust these paths accordingly.
 
-Optional prerequisites:
-=======================
+(6) Optional prerequisites:
+===========================
+
  - ImageMagick (optional)
  - Ghostscript (optional)
