@@ -126,6 +126,11 @@ let predefined_print_meth = (* définition des fonctions importées *)
                     (TFct(TAtom(Some "basics", foctint),TAtom(Some "basics", foctstring)))
                     (expr_glob focprintint)
                     false;
+       foctbool,
+          parse_foc_meth ("let " ^ print_meth (string_of_ttyp 
+                                                (TAtom(Some "basics",
+                                                foctbool))) ^ " in @STRING =
+                             fun b in (@BOOL) -> if b then \"true\" else \"false\"");
        foctunit, meth_create
                     (print_meth (string_of_ttyp (TAtom(Some "basics", foctunit))))
                     (TAtom(Some "basics", foctstring))
@@ -149,6 +154,11 @@ let predefined_reinject_value_meth = (* définition des fonctions importées *)
                     (TAtom(Some "basics", foctunit))
                     (expr_fun "n" (TAtom(Some "basics", foctunit)) (expr_var "n"))
                     false;
+       foctbool,
+          parse_foc_meth ("let " ^ reinject_value_meth (string_of_ttyp 
+                                                (TAtom(Some "basics",
+                                                foctbool))) ^ " in @BOOL =
+                             fun b in (@BOOL) -> b");
        "big_int", meth_create
                     (reinject_value_meth (string_of_ttyp (TAtom(Some "basics", "big_int"))))
                     (TAtom(Some "basics", "big_int"))
@@ -166,6 +176,12 @@ let predefined_print_xml_meth = (* définition des fonctions importées *)
                                       expr_string "</exprint>"]])
                     )
                     false;
+       foctbool,
+          parse_foc_meth ("let " ^ print_xml_meth (string_of_ttyp 
+                                                (TAtom(Some "basics",
+                                                foctbool))) ^ " in @STRING =
+                             fun b in (@BOOL) -> if b then
+                               \"<exprbool>true</exprbool>\" else \"<exprbool>false</exprbool>\"");
        foctunit, meth_create
                     (print_meth (string_of_ttyp (TAtom(Some "basics", foctunit))))
                     (TAtom(Some "basics", foctstring))
@@ -184,6 +200,11 @@ let predefined_parse_meth = (* définition des fonctions importées *)
                     (TFct(TAtom(Some "basics", foctstring),TAtom(Some "basics", foctint)))
                     (expr_glob focparseint)
                     false;
+       foctbool,
+          parse_foc_meth ("let " ^ parse_meth (string_of_ttyp 
+                                                (TAtom(Some "basics",
+                                                foctbool))) ^ " in @BOOL =
+                             fun b in (@STRING) -> if @STRUCT_EQUAL(b, \"true\") then true else false");
 		 ];;
 
 (* separate the elements of a constructor.
@@ -277,12 +298,12 @@ let rec ast_parse_one_cons ((n,l) : Own_types.constructor) e err =
                  | @CONS(" ^ a i ^ ",args) -> " ^ aux n r (i+1) ([e,i] @ cumul) in
     aux n l 1 [] in
   match l with
-  | [] -> "if @STRUCT_EQUAL(cons, \"" ^ String.uncapitalize (ident_name n) ^ "\") then
+  | [] -> "if @STRUCT_EQUAL(cons, \"" ^ atom_of_cons_name (ident_name n) ^ "\") then
                    " ^ string_for_parser_of_ident n ^ "
              else
                " ^ e
   | _ ->
-            "if @STRUCT_EQUAL(cons, \"" ^ String.uncapitalize (ident_name n) ^ "\") then 
+            "if @STRUCT_EQUAL(cons, \"" ^ atom_of_cons_name (ident_name n) ^ "\") then 
                "  ^ aux n l ^ "
              else 
                " ^ e;;
@@ -744,12 +765,30 @@ let ast_gen_print_types_rep rep =
  string list -> Own_types.typ -> (string * string list) * Own_expr.methods list * string 
 *)
 
+let rec parcours aetevisite avisiter fajout =
+  match avisiter with
+  | [] -> []
+  | e::r ->
+      if List.mem e aetevisite then
+        parcours aetevisite r fajout
+      else
+        begin
+          let voisins = depends e in
+          let resteavisiter = fajout r voisins in
+          let nouveauvisite = e::aetevisite in
+          e::parcours nouveauvisite resteavisiter fajout
+        end;;
+
+let tri_topologique l =
+  parcours [] l (fun l1 l2 -> l2 @ l1);;
+
 let ast_random l_param typ_list rep =
   let l = (List.map (fun e -> TSpecPrm e) l_param @ 
           (typ_list @ [rep])) ++ [] in
   let l = TAtom(Some "basics", foctint)::
           List.filter (function | TAtom(_,"int") -> false | _ -> true) l in
   let typ_list = List.fold_right (fun e s-> depends e ++ s) l [] in
+  let typ_list = tri_topologique typ_list in
 (*   List.iter (fun e -> print_string (string_of_typ e ^ " ")) typ_list; *)
   let meths1 = ast_gen_print_types_rep rep in
   let meths2 = ast_gen_print_types l_param typ_list in

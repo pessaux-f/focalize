@@ -130,3 +130,15 @@ let rec flatten_prod_right =
   function
   | TProd(e1,e2) -> e1::flatten_prod e2
   | typ -> [typ];;
+
+
+let rec get_arity typ =
+  match typ with
+  | TAtom(_) -> 0
+  | TSpecPrm(_) -> 0
+  | TFct(_, t2) -> get_arity t2 + 1
+  | TProd(_, _) -> 0
+  | TPrm(_, _, _) -> 0;;
+
+
+

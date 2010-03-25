@@ -107,8 +107,7 @@ let ast_parse_one_res_prolog (name : string) =
     | (e,t)::l -> "match l with
                 | @NIL -> " ^ err ^ "
                 | @CONS(" ^ e ^ ",l) ->
-                   let " ^ e ^ " = !" ^ parse_meth (string_of_ttyp t) ^ "(" ^ e ^
-                   ") in " ^  
+                   let " ^ e ^ " = !" ^ parse_meth (string_of_ttyp t) ^ "(" ^ e ^ ") in " ^  
           decompose_one  l err (i+1) vars in
   fun vars -> 
   let vsl = variables_to_list vars in
@@ -723,7 +722,7 @@ let ast_testprop_reinject (p : Own_xml.report_property)
                           (species,params,coll_implements) =
    let (n,prop_stat, elem_l) = p in
 (*    let liste_elem = List.map (fun ((_,e),_) -> e) elem_l in *)
-   let vs = fst (fst (List.hd elem_l)) in (* TODO: Raise an exception ourself *)
+   let vs = try  fst (fst (List.hd elem_l)) with | Not_found -> failwith "Internal_error :~" in (* TODO: Raise an exception ourself *)
 (*    let ce_l = List.map (fun () -> ()) [] in *)
    let species_test = spec_test_name species in
    let species_teste_prop = ast_species_test_reinject

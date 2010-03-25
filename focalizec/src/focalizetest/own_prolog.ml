@@ -38,6 +38,32 @@ let prolog_equal e1 e2 =
 let prolog_clause head body : prolog_clause =
   head, body;;
 
+
+let rec get_vars p =
+  match p with
+  | Prolog_int _
+  | Prolog_comment _ -> []
+  | Prolog_fun(_, t_l) 
+  | Prolog_conjunction(t_l) 
+  | Prolog_list(t_l) -> get_vars_list t_l
+  | Prolog_var(x) -> [x]
+and get_vars_list t_l =
+  List.fold_left (fun s e -> get_vars e @ s) [] t_l;;
+
+let get_singleton =
+  let rec sup_doublons l =
+    match l with
+    | [] -> []
+    | e::r ->
+        if List.mem e r then
+          sup_doublons (List.filter ((<>) e) r)
+        else
+          e::sup_doublons r in
+  fun (h,p) ->
+  let vars = get_vars_list (match h with | Some f -> f::p | None -> p) in
+  sup_doublons vars;;
+
+
 (* We should add all the functions that construct equality over termes, match,
  * ite etc... *)
 

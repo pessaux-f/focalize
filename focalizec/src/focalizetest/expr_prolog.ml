@@ -3,6 +3,7 @@ open Own_basics;;
 
 type minifoc_var =
   | FVInt of string (** An integer variable *)
+  | FVFun of string * Own_types.typ (** A functional variable *)
   | FVHer of string * Own_types.typ;;  (** An Herbrand variable *)
 
 type minifoc_arg =
@@ -13,6 +14,8 @@ type minifoc_arg =
 (* My expressions *)
 type minifoc_expr =
   | FIfte of string * minifoc_expr * minifoc_expr
+  | FMethVar of string * Own_types.typ * minifoc_arg list
+  | FFun      of (string * Own_types.typ) list * minifoc_expr
   | FMeth of string * string * minifoc_arg list
             (** a function is applied to a list of string/integer name/value *)
   | FBasic of string * minifoc_arg list (** same as [FMeth] *)
@@ -26,6 +29,7 @@ type minifoc_function = string * string list * minifoc_expr;;
 let rec dbg_string_minifoc_var a =
   match a with
   | FVHer(v,t) -> "(" ^ v ^ ", " ^ Own_types.string_of_typ t ^ ")"
+  | FVFun(v, t) -> "(" ^ v  ^ ", " ^ Own_types.string_of_typ t ^ ")"
   | FVInt v -> v
 ;;
 
@@ -44,6 +48,10 @@ let rec dbg_string_minifoc_expr e =
       s1 ^ "!" ^ s2 ^ "(" ^
             List.fold_right (fun e s -> dbg_string_minifoc_arg e
       ^ "," ^ s)  ml "" ^ ")"
+  | FMethVar(var, _, ml) ->
+      var ^ "(" ^
+            List.fold_right (fun e s -> dbg_string_minifoc_arg e
+      ^ "," ^ s)  ml "" ^ ")"
   |FBasic(s2, ml) ->
       "#" ^ s2 ^ "(" ^
             List.fold_right (fun e s -> dbg_string_minifoc_arg e
@@ -53,7 +61,13 @@ let rec dbg_string_minifoc_expr e =
       dbg_string_minifoc_expr e1 ^ " in " ^
       dbg_string_minifoc_expr e2
   | FValue m -> dbg_string_minifoc_arg m
-  | _ -> failwith "not string_of_minifoc_expr";;
+  | FFun(l,e) ->
+      List.fold_right (fun (v,t) s -> "fun (" ^ v ^ " : " ^ Own_types.string_of_typ t ^ ") -> " ^ s) l (dbg_string_minifoc_expr e)
+  | FMatch(var, c_args_expr_l) ->
+      "match " ^ var  ^ " with " ^
+      List.fold_right (fun (c,_args,expr) s -> "| " ^ c ^ " -> " ^
+      dbg_string_minifoc_expr expr ^ s) c_args_expr_l ""
+(*   | _ -> "azerty" (*  failwith "not string_of_minifoc_expr";; *) *)
 
 
 exception To_minifoc of string;;
@@ -76,13 +90,12 @@ let rec minifoc_expr_of_myexpr e =
         FVarloc(v_t,
                 f e',
                 add_let r e (lv @ [FVar v_t]) f) in
-  let rec aux (m : string) (s : string) (a : string) e =
-    let aux_ = aux m s a in
+  let rec aux e =
     match e with
     | MIfte(e1, e2, e3) ->
         let v = Fresh_variable.new_prolog_var () in
-        FVarloc(FVHer(v, Own_types.TAtom(None, "bool")), aux_ e1,
-                FIfte(v,aux_ e2, aux_ e3))
+        FVarloc(FVHer(v, Own_types.TAtom(None, "bool")), aux e1,
+                FIfte(v,aux e2, aux e3))
     | MVarloc(b, (x, t_o), e1, e2) ->
         if b then
           raise (To_minifoc "Recursive definition inside function")
@@ -91,7 +104,7 @@ let rec minifoc_expr_of_myexpr e =
             match t_o with
             | None -> raise (To_minifoc "Lack of type information in AST")
             | Some t ->
-                FVarloc(FVHer(x, t),aux_ e1, aux_ e2)
+                FVarloc(FVHer(x, t), aux e1, aux e2)
           end
     | MInt i -> FValue(FInt i)
     | MVar(x, Some t) -> FValue(FVar(FVHer(x, t)))
@@ -104,20 +117,28 @@ let rec minifoc_expr_of_myexpr e =
     | MMatch((e1, Some t), l) ->
         let v = Fresh_variable.new_prolog_var () in
         let l_pat =
-          List.map (convert_pattern aux_) l in
-        FVarloc(FVHer(v, t), aux_ e1,
+          List.map (convert_pattern aux) l in
+        FVarloc(FVHer(v, t), aux e1,
                 FMatch(v, l_pat))
-    | MFun(_x, _t, _e) ->
-        raise (To_minifoc "Can't convert high order function")
+    | MFun(_, _, _) ->
+        let rec aux_fun e =
+          match e with
+          | MFun(_, None, _) -> raise (To_minifoc "Lack of type information MFun")
+          | MFun(x, Some t, e) ->
+              let l, e = aux_fun e in
+              (x, t)::l, e
+          | _ -> [], e in
+        let l_args, e = aux_fun e in
+            FFun(l_args, aux e)
         (* function call *)
     | MMeth(Some c, f) ->
         FMeth(c, f, [])
     | MMeth(None, f) ->
         FMeth(focself, f, [])
-    | MApp(MMeth(None, f), l) ->
-        add_let l (fun lv -> FMeth(focself, f, lv)) [] aux_
-    | MApp(MMeth(Some c, f), l) ->
-        add_let l (fun lv -> FMeth(c, f, lv)) [] aux_
+    | MApp(MMeth(None, f), _, l) ->
+        add_let l (fun lv -> FMeth(focself, f, lv)) [] aux
+    | MApp(MMeth(Some c, f), _, l) ->
+        add_let l (fun lv -> FMeth(c, f, lv)) [] aux
         (* ************* *)
         (*  global call  *)
     | MGlob_id(i) ->
@@ -125,17 +146,24 @@ let rec minifoc_expr_of_myexpr e =
           FValue(FConstruct(String.uncapitalize (ident_name i), []))
         else
           FBasic(ident_name i, [])
-    | MApp(MGlob_id(i), l) ->
+    | MApp(MGlob_id(i), _, l) ->
         let func = 
           fun lv ->
             if Focalize_inter.is_constructor i then
               FValue(FConstruct(String.uncapitalize (ident_name i), lv))
             else
               FBasic(ident_name i, lv) in
-        add_let l func [] aux_
-    | MApp(r, _l) -> raise (To_minifoc ("Application too sophisticated" ^
-    dbg_string_myexpr r))
+        add_let l func [] aux
+    | MApp(MVar(_, Some _t), None, _) -> raise (To_minifoc "Lack of type information MApp")
+    | MApp(MVar(f, Some t), Some _, l) -> 
+        add_let l (fun lv -> FMethVar(f, t, lv)) [] aux
+    | MApp(_, None, _) -> raise (To_minifoc "Lack of type information MApp")
+    | MApp(e, Some t, l) ->
+        let v = Fresh_variable.new_prolog_var () in
+        FVarloc(FVFun(v, t), aux e,
+                add_let l (fun lv -> FMethVar(v, t, lv)) [] aux
+                )
         in
-    aux "r" "r" "r" e;;
+    aux e;;
 
 

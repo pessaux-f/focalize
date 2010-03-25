@@ -229,13 +229,20 @@ val ( @-@ ) : ('a * 'b) list -> ('a * 'b) list -> ('a * 'b) list
 val list_create : (unit -> 'a) -> int -> 'a list
 (** Create a list of length [n] *)
 
-val string_assoc : string -> (string * string) list -> string
+val string_assoc : string -> (char * string) list -> string
 
 val string_of_bool : bool -> string
 
 val ident_letter_name : ident -> string
+val string_letter_name : string -> string
 (** get the ident symbol where all specal character (':', '(', etc) are replace
 by sequence of letter/underscore.
+*)
+
+val atom_of_cons_name : string -> string
+(** [atom_of_cons_name n] takes a constructor name and transform it in a
+sequence of lettre only (i.e. ':' gives "colon"). The result is prolog atom
+compliant.
 *)
 
 val string_of_option : ('a -> string) -> 'a option -> string

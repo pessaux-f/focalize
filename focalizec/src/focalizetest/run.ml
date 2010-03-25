@@ -194,8 +194,11 @@ let generate =
       else
        prerr_string ("Not processing " ^ file ^ ": only one file could be processed at a time.")
     with
-      | Property_dont_exists p ->
+      | Property_doesnt_exists p ->
           prerr_string ("The property " ^ p ^ " doesn't exist at all\n");
+          exit 18
+      | Function_doesnt_exists p ->
+          prerr_string ("The function " ^ p ^ " doesn't exist at all\n");
           exit 18
       | Species_dont_exists s ->
           prerr_string ("The species " ^ s ^ " doesn't exist at all\n");

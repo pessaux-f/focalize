@@ -1357,14 +1357,14 @@ let yyact = [|
     let _3 = (Parsing.peek_val __caml_parser_env 1 : 'l_expr_focal) in
     Obj.repr(
 # 472 "own_parser.mly"
-( MApp(_1, _3) )
+( MApp(_1, None, _3) )
 # 1362 "own_parser.ml"
                : Own_expr.myexpr))
 ; (fun __caml_parser_env ->
     let _1 = (Parsing.peek_val __caml_parser_env 2 : Own_expr.myexpr) in
     Obj.repr(
 # 474 "own_parser.mly"
-( MApp(_1, []) )
+( MApp(_1, None, []) )
 # 1369 "own_parser.ml"
                : Own_expr.myexpr))
 ; (fun __caml_parser_env ->

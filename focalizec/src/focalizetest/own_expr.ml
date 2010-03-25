@@ -17,7 +17,7 @@ let create_species_name m s = (m,s : species_name);;
 (* My expressions *)
 type myexpr =
   | MIfte of myexpr * myexpr * myexpr
-  | MApp of myexpr * ((myexpr * typ) list)
+  | MApp of myexpr * typ option * ((myexpr * typ) list)
   | MMeth of string option * string
   | MFun of string * typ option * myexpr
   | MVar of string * typ option
@@ -32,17 +32,17 @@ type myexpr =
 
 (* some convenient constructors *)
 
-let expr_meth sn meth l = MApp( MMeth(Some sn,meth),
+let expr_meth sn meth l = MApp( MMeth(Some sn,meth), None,
                              List.map (fun e -> e, Own_types.TAtom(None, "unit")) l);;
-let expr_meth2 sn meth l = MApp( MMeth(Some sn, meth),l);;
-let expr_basic meth l = MApp( MGlob_id(meth),
+let expr_meth2 sn meth l = MApp( MMeth(Some sn, meth), None, l);;
+let expr_basic meth l = MApp( MGlob_id(meth), None,
                              List.map (fun e -> e, Own_types.TAtom(None, "unit")) l);;
-let expr_basic2 meth l = MApp( MGlob_id(meth), l );;
+let expr_basic2 meth l = MApp( MGlob_id(meth), None, l);;
 let expr_string s = MString s;;
 let expr_match e t c = MMatch((e, Some t),c);;
 let expr_match_notyp e c = MMatch((e, None),c);;
-let expr_app e l = MApp(e, List.map (fun e -> e , Own_types.TAtom(None, "unit")) l);;
-let expr_app2 e l = MApp(e, l);;
+let expr_app e l = MApp(e, None, List.map (fun e -> e , Own_types.TAtom(None, "unit")) l);;
+let expr_app2 e l = MApp(e, None, l);;
 let expr_int i = MInt i;;
 let expr_fun s typ e = MFun(s, Some typ, e);;
 let expr_fun_notyp s e = MFun(s,None,e);;
@@ -105,7 +105,7 @@ let rec string_of_myexpr =
                                     aux e2 ^
                                 " else " ^
                                     aux e3 
-        | MApp (e1,l1) -> aux e1 ^ (if l1 =[] then "" else to_args 
+        | MApp (e1, _, l1) -> aux e1 ^ (if l1 =[] then "" else to_args 
                                         (fun (e, _t) -> aux e) l1)
         | MMeth (sn, f) -> (string_of_string_option sn) ^ "!" ^ f
         | MCaml_def s -> "caml " ^ s
@@ -136,6 +136,7 @@ let dbg_string_ident s =
   | Prefix(Some e, s) -> "Prefix(Some(" ^ e ^ "), " ^ s  ^ ")"
   | Infix s -> "Infix(" ^ s ^ ")"
 ;;
+
 (** Convert a term of type myexpr to a string *)
 let rec dbg_string_myexpr =
       let rec aux e  =
@@ -160,10 +161,11 @@ let rec dbg_string_myexpr =
                                     aux e2 ^
                                 ", " ^
                                     aux e3  ^ ")"
-        | MApp (e1,l1) -> 
-            "Mapp(" ^
+        | MApp (e1,_, l1) -> 
+            "MApp(" ^
             aux e1 ^ ", " ^ (if l1 =[] then "" else to_args 
-                                        (fun (e, _t) -> aux e) l1) ^ ")"
+                                        (fun (e, _t) -> aux e ^ " : " ^
+                                        string_of_typ _t) l1) ^ ")"
         | MMeth (sn, f) ->
             "MMeth(" ^
             (string_of_string_option sn) ^ ", " ^ f ^ ")"

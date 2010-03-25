@@ -30,7 +30,7 @@ let coll_harness ((m,s) : species_name) =
 
 let coll_harness_harness s = Fresh_variable.get_from_existing_prefix s "Harness__coll_";;
 
-let new_param_name () = Fresh_variable.new_var_prefix "p";;
+let new_param_name () = Fresh_variable.new_var_prefix "P";;
 
 let parameters_list_of_parameters_list p_l expect_list =
   let rec aux p_l expect_list assoc i =

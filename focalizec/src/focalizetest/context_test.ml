@@ -163,8 +163,8 @@ let species_of_cp (tc : test_context) (cp : context_path) =
     | [] -> spec
     | e::r ->
         let n = Focalize_inter.get_parameters_number spec e in
-        let coll = List.nth args n in
-        let n_e, n_l = goto_coll l coll in
+        let coll = try List.nth args n with | Not_found -> "Internal Error :p" in
+        let n_e, n_l = try goto_coll l coll with | Not_found -> failwith "Internal error :D" in
         match n_e with
         | BC_Coll(n_e) -> aux r n_l n_e
         | BC_Ent(_) -> failwith "species_of_cp: context-path poins to a entity" in

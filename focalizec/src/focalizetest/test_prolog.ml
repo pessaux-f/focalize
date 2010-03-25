@@ -5,14 +5,6 @@ open Own_basics;;
 (* A type in prolog is represented as a tuple of [type name] * [constructor list]
 *)
 
-let prolog_of_cons_name n =
-  let n1 = String.copy n in
-  if n1 = "" then
-    failwith "Un constructeur a pour nom une chaine vide ???"
-  else
-    n1.[0] <- Char.lowercase (n1.[0]);
-    n1;;
-
 let rec prolog_args_of_constructor_typ =
   let rec aux t =
     match t with
@@ -31,13 +23,7 @@ let rec prolog_args_of_constructor_typ =
 
 
 let prolog_type_of_constructor ((n,t) : constructor) =
-(*
-  match t with
-  | None ->
-      prolog_fun (prolog_of_cons_name n) []
-  | Some t ->
-*)
-      prolog_fun (prolog_of_cons_name (ident_letter_name n)) (prolog_args_of_constructor_typ t);;
+      prolog_fun (atom_of_cons_name (ident_name n)) (prolog_args_of_constructor_typ t);;
 
 
 let prolog_type_of_typedef ((n,b_l) : typ_definition) =
@@ -64,5 +50,6 @@ let import_all_types () =
     prolog_list (
     prolog_fun "def" [prolog_fun "pair" [prolog_fun "a" []; prolog_fun "b" []];
                       prolog_list [prolog_fun "pair" [prolog_fun "a" []; prolog_fun "b" []]]]::
+   (prolog_fun "def" [prolog_fun "fun" [prolog_int 1; prolog_int 1; prolog_int 1; prolog_int 1]; prolog_list [] ])::
                  List.map prolog_type_of_typedef all_types) in
   prolog_clause None [(prolog_fun "set_type_env" [l_types; prolog_var "_rien"])];;

@@ -196,9 +196,9 @@ let xml_specname_to_specname m s =
     (get_xml_def s "name")
 
 let special_xml =
-  ["&lt;", "<";
-   "&gt;", ">";
-   "&amp;", "&"];;
+  ['<', "&lt;";
+   '>', "&gt;";
+   '&', "&amp"];;
 let safe_replace s = string_assoc s special_xml;;
 
 let rec xml_ident_to_ident x =

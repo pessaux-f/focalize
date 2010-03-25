@@ -469,9 +469,9 @@ expr_focal:
     { MApp(MMeth(MId $1, $3) , $5) }
 */
 | expr_focal LPAREN l_expr_focal RPAREN
-{ MApp($1, $3) }
+{ MApp($1, None, $3) }
 | expr_focal LPAREN RPAREN
-{ MApp($1, []) }
+{ MApp($1, None, []) }
 | STRING {MString $1}
 | error { print_message 1 Syntax }
 | LEXERROR   {print_message 1 Invalidchar}

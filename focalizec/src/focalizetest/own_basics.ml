@@ -167,6 +167,16 @@ let list_create f n =
   aux n [];;
 
 let replace pat dest s =
+  let tmp = ref "" in
+  String.iter (fun e ->
+                if e = pat then
+                  tmp := !tmp ^ dest
+                else
+                  tmp := !tmp ^ String.make 1 e
+              ) s;
+  !tmp;;
+
+  (*
   let rec comp pat ip lp s i ls =
     if ip >= lp then
       true
@@ -189,6 +199,7 @@ let replace pat dest s =
       else
         String.make 1 (s.[i]) ^ aux s (i+1) in
   aux s 0;;
+*)
 
 let rec string_assoc s l =
   match l with
@@ -205,15 +216,26 @@ let string_of_bool b =
   if b then "true" else "false";;
 
 let to_prolog_assoc =
-  [":","foctest_double_dot";
-   "[","foctest_lbracket";
-   "]","foctest_rbracket";
-   ")","foctest_rparen";
-   "(","foctest_lparen"];;
+  [':',"foctest_colon";
+   '[',"foctest_lbracket";
+   ']',"foctest_rbracket";
+   ')',"foctest_rparen";
+   '(',"foctest_lparen"];;
+
+let string_letter_name s =
+  string_assoc s to_prolog_assoc;;
 
 let ident_letter_name s =
   let s = ident_name s in
   string_assoc s to_prolog_assoc;;
+
+let atom_of_cons_name n =
+  let n1 = (string_letter_name n) in
+  if n1 = "" then
+    failwith "Un constructeur a pour nom une chaine vide ???"
+  else
+    n1.[0] <- Char.lowercase (n1.[0]);
+    n1;;
 
 let string_of_option f t =
   match t with

@@ -9,8 +9,8 @@ val pretty_print_list_double_newline :
 val priority_list : (string * int) list
 val separator_prior : int
 val is_infix : string -> bool
-val print_prolog_term : int -> Format.formatter -> Own_prolog.prolog_term -> unit
-val print_prolog_terms_comma :
+val print_prolog_term : int -> string list -> Format.formatter -> Own_prolog.prolog_term -> unit
+val print_prolog_terms_comma : string  list ->
   Format.formatter -> Own_prolog.prolog_term list -> unit
 val print_prolog_clause : Format.formatter -> Own_prolog.prolog_clause -> unit
 val print_prolog_clause_list :

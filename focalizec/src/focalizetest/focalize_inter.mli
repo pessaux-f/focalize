@@ -26,8 +26,11 @@ exception Type_dont_exists of string;;
 exception Species_dont_exists of string
 (** Raised when a species was not found. *)
 
-exception Property_dont_exists of string
+exception Property_doesnt_exists of string
 (** Raised when a property was not found. *)
+
+exception Function_doesnt_exists of string
+(** Raised when a function is not found. *)
 
 exception Bad_parameters of string
 (** Raised when a bad parameters is met. *)

@@ -5,7 +5,7 @@ open Own_expr;;
 
 (*
 let rec meth_to_string m =
-        let args_to_string arg = match arg with
+  let args_to_string arg = match arg with
         | [] -> ""
         | e::r -> "(" ^ (List.fold_left (fun seed e -> seed ^
                                                       "," ^

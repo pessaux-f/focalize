@@ -10,7 +10,7 @@ let rename_expr_assoc assoc =
   let rec aux l_bound expr =
       match expr with
       | MIfte(b,e1,e2) -> MIfte(aux l_bound b,aux l_bound e1,aux l_bound e2)
-      | MApp(e1,e_l) ->
+      | MApp(e1, _t , e_l) ->
           expr_app (aux l_bound e1) (List.map (fun (e,_t) -> aux l_bound e) e_l)
       | MMeth(_e, _m) -> expr
       | MMatch((e, t), c_l) -> MMatch((aux l_bound e, t),
@@ -102,7 +102,7 @@ let string_of_variables : variables -> string =
     | [] -> ""
     | (s,t)::r -> "(" ^ s ^ aux t r;;
 
-let variables_get_type (vs : variables) (v : string) = List.assoc v vs;;
+let variables_get_type (vs : variables) (v : string) = try List.assoc v vs with | Not_found -> failwith "Internal Error :|";;
 
 let variables_is_null (v : variables) = v = variables_null;;
 let create_variables (v : variable) : variables = [v];;

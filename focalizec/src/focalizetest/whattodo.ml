@@ -172,31 +172,31 @@ let set_prolog_stat_file o = prolog_stat_file := o;;
 let get_prolog_stat_file () = !prolog_stat_file;;
 
 
-let globalstk = ref 5;;
+let globalstk = ref 0;;
 
 let set_globalstk t =
   globalstk := t;;
 let get_globalstk () = !globalstk;;
 
-let localstk = ref 5;;
+let localstk = ref 0;;
 
 let set_localstk t =
   localstk := t;;
 let get_localstk () = !localstk;;
 
-let choicestk = ref 5;;
+let choicestk = ref 0;;
 
 let set_choicestk t =
   choicestk := t;;
 let get_choicestk () = !choicestk;;
 
-let trailstk = ref 5;;
+let trailstk = ref 0;;
 
 let set_trailstk t =
   trailstk := t;;
 let get_trailstk () = !trailstk;;
 
-let prologmax = ref 500;;
+let prologmax = ref 0;;
 
 let set_prologmax t =
   prologmax := t;;

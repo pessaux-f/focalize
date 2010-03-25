@@ -17,7 +17,7 @@ val string_of_species_name : species_name -> string;;
 
 type myexpr =
     MIfte of myexpr * myexpr * myexpr (** If then else. *)
-  | MApp of myexpr * (myexpr * Own_types.typ) list      (** Application. *)
+  | MApp of myexpr * Own_types.typ option * ((myexpr * Own_types.typ) list) (** Application. *)
   | MMeth of string option * string          (** Method reference. *)  
   | MFun of string * Own_types.typ option * myexpr (** Function definition. *)
   | MVar of string * Own_types.typ option   (** Identifier reference. *)

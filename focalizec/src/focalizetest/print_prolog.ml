@@ -84,60 +84,64 @@ let prior_of f =
   Not_found -> -1;;
 
 (** Print a prolog term. *)
-let rec print_prolog_term last_prior output_formatter t =
+let rec print_prolog_term last_prior singleton output_formatter t =
   match t with
   | Prolog_comment s -> 
-      fprintf output_formatter "@[/* %s */ @]" s
+      fprintf output_formatter "@[/* %s */ @]\n" s
   | Prolog_fun(s,([arg1;arg2] as t_l)) ->
       if is_infix s then
         (let curr_prior = prior_of s in
          let par = last_prior < curr_prior in
          fprintf output_formatter "@[%s%a@ %s@ %a%s@]"
                  (if par then "(" else "")
-                 (print_prolog_term curr_prior) arg1 
+                 (print_prolog_term curr_prior singleton) arg1 
                  s
-                 (print_prolog_term curr_prior) arg2
+                 (print_prolog_term curr_prior singleton) arg2
                  (if par then ")" else "")
         )
       else
         fprintf output_formatter "@[%s(@[%a@])@]"
-                s print_prolog_terms_comma t_l
+                s (print_prolog_terms_comma singleton) t_l
   | Prolog_fun(s,[]) ->
       fprintf output_formatter "%s" s
   | Prolog_fun(s,t_l) -> 
       fprintf output_formatter "@[%s(@[<hv>%a@])@]"
-              s print_prolog_terms_comma t_l
+              s (print_prolog_terms_comma singleton) t_l
   | Prolog_var(x) ->
-      fprintf output_formatter "%s" x
+      if List.mem x singleton then
+        fprintf output_formatter "%s" ("_" ^ x)
+      else
+        fprintf output_formatter "%s" x
   | Prolog_conjunction l ->
       let curr_prior = prior_of "," in
       let par = last_prior <= curr_prior in
       fprintf output_formatter "@[%s%a%s@]"
               (if par then "(" else "")
-              print_prolog_terms_comma l
+              (print_prolog_terms_comma singleton) l
               (if par then ")" else "")
   | Prolog_int i ->
       fprintf output_formatter "%d" i
   | Prolog_list l ->
       fprintf output_formatter "[@[<hv>%a@]]"
-          print_prolog_terms_comma l
+          (print_prolog_terms_comma singleton) l
 (** Print a list a prolog terms separate by commas. *)
-and print_prolog_terms_comma output_formatter l =
+and print_prolog_terms_comma singleton output_formatter l =
   pretty_print_list_sep_comma output_formatter
                                  l
-                                 (print_prolog_term separator_prior)
+                                 (print_prolog_term separator_prior singleton)
                                  prolog_is_comment;;
 
 (** Print a prolog clause. *)
 let print_prolog_clause output_formatter ((h,b) : prolog_clause) =
+  let singleton = get_singleton (h,b) in
   match h with
   | None ->
       fprintf output_formatter "@[<hov 2>:-@ @[%a.@]@]@\n"
-              print_prolog_terms_comma b
+                               (print_prolog_terms_comma []) b
   | Some h -> 
       fprintf output_formatter "@[<hov 2>%a@ :-@ @[%a.@]@]@\n"
-              (print_prolog_term (prior_of ":-")) h
-               print_prolog_terms_comma b;;
+                   (print_prolog_term (prior_of ":-") singleton) h
+                   (print_prolog_terms_comma singleton) b;;
 
 (** Print a list a prolog clause separate by commas. *)
 let print_prolog_clause_list output_formatter l =

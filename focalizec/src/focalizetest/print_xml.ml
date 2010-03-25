@@ -31,9 +31,9 @@ let rec xml_string_of_typ t =
       ;;
 
 let special_xml =
-  ["&", "&amp;";
-   "<", "&lt;";
-   ">", "&gt;"
+  ['&', "&amp;";
+   '<', "&lt;";
+   '>', "&gt;"
   ];;
 let safe_replace s = string_assoc s special_xml;;
 
@@ -54,7 +54,7 @@ let rec xml_string_of_expr e =
         "<then>" ^ xml_string_of_expr t ^ "</then>" ^
         "<else>" ^ xml_string_of_expr e ^ "</else>" ^
       "</exprif>"
-  | MApp(e,e_l) ->
+  | MApp(e, _, e_l) ->
       "<exprapp>" ^
         "<appleft>" ^ xml_string_of_expr e ^ "</appleft>" ^
         List.fold_right (fun (e,_) s -> "<appright>" ^ xml_string_of_expr e ^ "</appright>" ^ s) 
@@ -185,14 +185,14 @@ let top_xml_meths () =
      fun nb_try in (@INT) ->
        #print_file(\"<stats>\\n\");
        #print_file(\"<conclucoverage>\\n\");
-       #print_file(\"<nb_reach>\\n\");
+       #print_file(\"<nb_reach>\");
        #print_file(#string_of_int(Coll_coverage!coverage_conclu(l)));
        #print_file(\"</nb_reach>\\n\");
-       #print_file(\"<nb_total>\\n\");
+       #print_file(\"<nb_total>\");
        #print_file(#string_of_int(nb));
        #print_file(\"</nb_total>\\n\");
        #print_file(\"</conclucoverage>\\n\");
-       #print_file(\"<nb_generated>\\n\");
+       #print_file(\"<nb_generated>\");
        #print_file(#string_of_int(nb_try));
        #print_file(\"</nb_generated>\\n\");
        #print_file(\"</stats>\\n\");

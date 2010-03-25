@@ -363,6 +363,17 @@ set. *)
 
 
 
+let setenv_sicstus () =
+  let aux s i =
+    if i = 0 then
+      ""
+    else
+      "Unix.putenv \"" ^ s ^ "\" \"" ^ string_of_int i ^ "M\";" in
+    aux "GLOBALSTKSIZE" (Whattodo.get_globalstk ()) ^
+    aux "LOCALSTKSIZE" (Whattodo.get_localstk ())     ^
+    aux "CHOICESTKSIZE" (Whattodo.get_choicestk ())   ^
+    aux "TRAILSTKSIZE" (Whattodo.get_trailstk ())     ^
+    aux "PROLOGMAXSIZE" (Whattodo.get_prologmax ())
 
 (** [top_import xml] takes a xml file name [xml] and return the default import
  section concerning this xml file. *)
@@ -417,12 +428,8 @@ let top_import xml : import =
    "catch_raise","fun f -> try false,(f (),\"\") with | " ^ focexception ^ " s -> true,(false,s)";
    "flush_stdout", "fun () -> Pervasives.flush stdout";
    "call_prolog", "fun n -> fun s -> 
-                      Unix.putenv \"GLOBALSTKSIZE\" \"" ^ string_of_int (Whattodo.get_globalstk ()) ^ "M\";
-                      Unix.putenv \"LOCALSTKSIZE\" \"" ^ string_of_int (Whattodo.get_localstk ()) ^ "M\";
-                      Unix.putenv \"CHOICESTKSIZE\" \"" ^ string_of_int (Whattodo.get_choicestk ()) ^ "M\";
-                      Unix.putenv \"TRAILSTKSIZE\" \"" ^ string_of_int (Whattodo.get_trailstk ()) ^ "M\";
-                      Unix.putenv \"PROLOGMAXSIZE\" \"" ^ string_of_int (Whattodo.get_prologmax ()) ^"M\";
-                      match Unix.system (\"sicstus -l \" ^ n ^ \" --goal \" ^ s
+                      " ^ setenv_sicstus () ^
+                     "match Unix.system (\"sicstus -l \" ^ n ^ \" --goal \" ^ s
                       ^ \".\") with
                       | Unix.WEXITED i -> print_string (\"sicstus returns with code : \" ^
                                                   (string_of_int i) ^ \"\n\")
@@ -430,13 +437,9 @@ let top_import xml : import =
                                                   (string_of_int i) ^ \"\n\")
                       | Unix.WSTOPPED i -> print_string (\"sicstus was stopped by signal : \" ^
                                                   (string_of_int i) ^ \"\n\")";
-   "call_prolog2", "fun n -> fun s -> fun s2 -> fun yy -> fun t ->
-                      Unix.putenv \"GLOBALSTKSIZE\" \"" ^ string_of_int (Whattodo.get_globalstk ()) ^ "M\";
-                      Unix.putenv \"LOCALSTKSIZE\" \"" ^ string_of_int (Whattodo.get_localstk ()) ^ "M\";
-                      Unix.putenv \"CHOICESTKSIZE\" \"" ^ string_of_int (Whattodo.get_choicestk ()) ^ "M\";
-                      Unix.putenv \"TRAILSTKSIZE\" \"" ^ string_of_int (Whattodo.get_trailstk ()) ^ "M\";
-                      Unix.putenv \"PROLOGMAXSIZE\" \"" ^ string_of_int (Whattodo.get_prologmax ()) ^"M\";
-                      Unix.system (\"sicstus -l \" ^ n ^ \" --goal \" ^ s ^ \".\");
+   "call_prolog2", "fun n -> fun s -> fun s2 -> fun yy -> fun t -> " ^
+                          setenv_sicstus () ^
+                     "Unix.system (\"sicstus -l \" ^ n ^ \" --goal \" ^ s ^ \".\");
                       let deb = (Unix.times ()).Unix.tms_cutime in
                       Unix.system (\"sicstus -r \" ^ s2);
                       deb, (Unix.times ()).Unix.tms_cutime";

@@ -9,6 +9,8 @@ open To_strings;;
 
 exception No_module_opened;;
 
+let print_debug s = print_string ("focalize_inter : " ^ s ^ "\n");;
+
 type focalize_type = Parsetree.type_expr_desc;;
 
 type focalize_expr = Parsetree.expr;;
@@ -40,7 +42,8 @@ exception Bad_parameters_numbers of int * int
 exception Cant_convert_typ of string;;
 exception Cant_convert_texpr;;
 
-exception Property_dont_exists of string;;
+exception Property_doesnt_exists of string;;
+exception Function_doesnt_exists of string;;
 exception Species_dont_exists of string;;
 exception Rep_not_defined of string;;
 
@@ -317,7 +320,8 @@ let get_parameters_number species a =
             else
              aux r (n + 1)
         ) in
-  aux spec.ET.spe_sig_params 0;;
+ try aux spec.ET.spe_sig_params 0 with
+ | Not_found -> failwith "Internal error :)";;
 
 (** raise Err_types.Def_err(_) *)
 let get_parameters species =
@@ -692,10 +696,18 @@ let rec pattern_of_tpattern p =
   let aux p =
     match p.ast_desc with
     | P_var(Vlident s) -> Some s
+    | P_var(_) -> failwith("Hahah")
     | P_wild -> None 
-    | _ -> failwith "Bad pattern" in
+    | P_as(_, _) -> failwith "Bad pattern : P_as"
+    | P_constr(_, _) -> failwith "Bad pattern : P_constr" 
+    | P_const _ -> failwith "Bad pattern : P_const" 
+    | P_record _ -> failwith "Bad pattern: P_record" 
+    | P_tuple _ -> failwith "Bad pattern: P_tuple" 
+    | P_paren _ -> failwith "Bad pattern: P_paren" 
+    in
   match p.ast_desc with
-  | P_tuple _ | P_record _
+  | P_tuple _  -> failwith "Bad pattern: P_tuple"
+  | P_record _
   | P_wild | P_as(_,_)
   | P_const _ | P_var _ ->
       failwith "Bad pattern"
@@ -738,42 +750,40 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
     List.fold_left (fun s -> (function None -> s | Some t -> t::s)) l s_o in
   let get_typ t =
     match t.ast_type with
-    | ANTI_type t -> typ_of_type_simple t
+    | ANTI_type t -> let t = typ_of_type_simple t in t
     | _ -> failwith "myexpr_of_texpr: get_typ" in
   let split_function_typ t =
-    match t.ast_type with
-    | ANTI_type t ->
-        let fnone = failwith "myexpr_of_texpr: Not a functional type" in
-        let farrow t1 t2 = (t1, t2) in
-        Types.extract_type_simple fnone farrow fnone fnone fnone fnone fnone t
-    | _ -> failwith "myexpr_of_texpr: Not a functional type" in
+    match t with
+    | TFct(t1, t2) -> (t1, t2)
+    | _ -> failwith "myexpr_of_texpr: Not a functional type (2)" in
   let expr_typ bv e =
     myexpr_of_texpr m_name bv e,
     match e.ast_type with
     | ANTI_irrelevant 
     | ANTI_none -> failwith "myexpr_of_texpr: we require a type information"
-    | ANTI_type t -> typ_of_type_simple t
-    | ANTI_scheme t -> typ_of_type_scheme t  in
+    | ANTI_type t -> let t = typ_of_type_simple t in t
+    | ANTI_scheme t -> typ_of_type_scheme t in
   let rec aux bv expr : Own_expr.myexpr =
   match expr.ast_desc with
   | E_constr(s, e_l) ->
       let n = match s.ast_desc with CI i -> i in
-        let id =
+      let id =
         match n.ast_desc with
         | I_global (Vname v) 
         | I_local v -> MGlob_id (convert_vname v)
         | I_global (Qualified(m, v)) ->
-            MGlob_id(convert_vname_m (Some m) v)
-                 in
-        if e_l = [] then
-          id
-        else
-          MApp(id, List.map (expr_typ bv) e_l)
+            MGlob_id(convert_vname_m (Some m) v) in
+      if e_l = [] then
+        id
+      else
+        let args = List.map (expr_typ bv) e_l in 
+        let res = MApp(id, None (* Some (get_typ s) *), args) in
+          res
   | E_const({ast_desc = C_bool s}) ->
-    (match s with
-    | "true" -> expr_glob foctrue
-    | "false" -> expr_glob focfalse
-    | _ -> failwith "myexpr_of_texpr: bad bool"
+    ( match s with
+     | "true" -> expr_glob foctrue
+     | "false" -> expr_glob focfalse
+     | _ -> failwith "myexpr_of_texpr: bad bool"
     )
   | E_const({ast_desc = C_int r}) -> MInt (int_of_string r)
   | E_const({ast_desc = C_string s}) -> MString s
@@ -783,13 +793,17 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
           if List.mem (extract_vname vn) bv then
             expr_var_typ (extract_vname vn) (get_typ x)
           else
-            MMeth(None, extract_vname vn)
+            let n = extract_vname vn in
+(*             print_debug ("nom de la variable :  " ^ n ^ "\n"); *)
+            MVar(n, Some (get_typ x))
       | EI_global qn ->
          (match qn with
           | Vname vn -> MGlob_id(convert_vname vn)
           | Qualified(m,vn) -> MGlob_id(convert_vname_m (Some m) vn)
          )
       | EI_method (qno,vn) ->
+(*           let n = extract_vname vn in *)
+(*           print_debug ("nom de la methode :  " ^ n ^ "\n"); *)
          (match qno with
           | None -> MMeth(None, extract_vname vn)
           | Some(Vname vn2) ->
@@ -805,17 +819,14 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
      )
   | E_fun([], e) ->
       aux bv e
-  | E_fun(e::r, t) ->
-         let (t1,t2) = split_function_typ t in
-         MFun(extract_vname e,
-              Some (typ_of_type_simple t1),
-              aux (extract_vname e::bv)
-                  {ast_loc = locnone;
-                   ast_desc = E_fun(r,t); 
-                   ast_annot = [];
-                   ast_type = ANTI_type t2
-                  }
-             )
+  | E_fun(l, e') ->
+    let rec decompose_fun l t =
+      match l with
+      | [] -> aux bv e'
+      | e::r ->
+        let (t1,t2) = split_function_typ t in
+        MFun(extract_vname e, Some t1, decompose_fun r t2) in
+    decompose_fun l (get_typ expr)
  (* | TCase(e,l) -> MMatch(myexpr_of_texpr e *)
   (*
   | TVarloc(s,expr1,expr2) ->
@@ -826,19 +837,33 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
             aux bv e1,
             aux bv e2)
   | E_app(m,args) ->
-      MApp(aux bv m, List.map (expr_typ bv) args)
+     let args = List.map (expr_typ bv) args in 
+     let res = MApp(aux bv m, Some (get_typ m), args) in
+     res
   (*| TMeth(s,meth),_ -> MMeth(myexpr_of_texpr s, meth) *)
   | E_sequence _ -> failwith "myexpr_of_texpr: sequence"
   | E_record _ -> failwith "myexpr_of_texpr: record"
   | E_record_access _ -> failwith "myexpr_of_texpr: record_access"
   | E_record_with _ -> failwith "myexpr_of_texpr: record_with"
-  | E_tuple([e1;e2]) -> expr_of_caml_couple (aux bv) (aux bv) (e1,e2)
+  | E_tuple([e1;e2]) -> MApp(expr_glob foccrp, None, [expr_typ bv e1; expr_typ bv e2])
   | E_tuple(_) -> failwith "myexpr_of_texpr: e_tuple"
   | E_external(_) -> failwith "myexpr_of_texpr: e_external"
   | E_paren(e) -> aux bv e
   | E_let(e1,e2) ->
-      let e1' = (List.hd e1.ast_desc.ld_bindings).ast_desc in
-      if e1'.b_params <> [] then failwith "myexpr_of_texpr: E_let" else ();
+      let e1' = try(List.hd e1.ast_desc.ld_bindings).ast_desc with | Not_found -> failwith "Internal Error :/" in
+      (* Take into account of parameters *)
+      let add_params =
+        if e1'.b_params = [] then
+          (fun e -> e)
+        else
+          List.fold_right (fun e s ->
+                             match e with
+                             | vn, Some t -> (fun e -> MFun(extract_vname vn,
+                                                            Some(typ_of_foctyp t.ast_desc), s e))
+                             | vn, None -> failwith ("myexpr_of_texpr : E_let
+                             lack of type" ^ extract_vname vn))
+                          e1'.b_params (fun e -> e)
+      in
       let x = extract_vname e1'.b_name in
       let _x_t = e1'.b_type in
       let e1',tttt = match e1'.b_body with
@@ -846,16 +871,18 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
                | BB_computational e -> aux bv e, get_ast_type e in
 (*       let tttt = get_ast_type e1 in *)
       (if tttt = None then failwith (string_of_myexpr e1'));
-      MVarloc(false,(x, tttt), e1', aux (x::bv) e2)
+      MVarloc(false,(x, tttt), add_params e1', aux (x::bv) e2)
   | E_match(e,l) ->
       let tttt = get_ast_type e in
-      MMatch((aux bv e, tttt),
-             List.map
-               (fun (p,e) ->
-                 let a,b = pattern_of_tpattern p in
-                  a,b,aux (add_s_o b bv) e
-               ) l
-            )
+      let res = MMatch((aux bv e, tttt),
+                       List.map
+                         (fun (p,e) ->
+                            let a,b = pattern_of_tpattern p in
+                              a,b,aux (add_s_o b bv) e
+                         ) l
+                      ) in
+(*       print_debug (dbg_string_myexpr res); *)
+        res
                        (***)
   | _ -> raise Cant_convert_texpr in
     aux bv texpr;;
@@ -888,7 +915,7 @@ let get_prop_def species prop =
   let rec search_prop nn l =
     match l with
     | [] ->
-        raise (Property_dont_exists prop)
+        raise (Property_doesnt_exists prop)
     | (ET.SF_theorem((_,n,l,p,_,_)))::r 
     | (ET.SF_property((_,n,l,p,_)))::r ->
         if extract_vname n = nn then
@@ -916,10 +943,10 @@ let get_meth_def sn meth =
   let rec search_meth nn l =
     match l with
     | [] ->
-        raise (Property_dont_exists meth)
+        raise (Function_doesnt_exists meth)
     | ET.SF_let_rec((t, tt::p))::r ->
         (try search_meth nn [ET.SF_let tt] with
-         | Property_dont_exists _ ->
+         | Function_doesnt_exists _ ->
              search_meth nn (ET.SF_let_rec((t, p))::r)
         )
     | ET.SF_let((_,n,n_l, m, b, _, _, _))::r ->
@@ -929,7 +956,8 @@ let get_meth_def sn meth =
           | BB_logical _ -> failwith "get_meth_def: logical"
           | BB_computational e ->
               let n_l = List.map extract_vname n_l in
-              add_meth_params n_l type_parms (myexpr_of_texpr (fst sn) n_l e)
+              let def = myexpr_of_texpr (fst sn) n_l e in
+              add_meth_params n_l type_parms def
         else
           search_meth nn r
     | ET.SF_let_rec((_, []))::r
@@ -952,23 +980,16 @@ let is_concrete_type typ =
         try ignore (aux s (open_module m)); true with
         | Env.Unbound_type(_vn, _) -> false
       end
-  | _ -> print_string (string_of_typ typ ^ "Not a concrete typ\n") ; false;;
+  | _ -> print_debug (string_of_typ typ ^ "Not a concrete typ\n") ; false;;
 
-(*print_string (string_of_int (get_parameters_number "S2" "T"));; *)
-(*print_string (string_of_ttyp (get_rep "Y"));; *)
-
-(*
-let (+) f g = fun x -> f(g x);;
-print_string (to_args string_of_parameters_expect (get_parameters "Y"));;
-*)
 
 let get_type_kind tk =
   match tk with
-  | ET.TK_abstract -> print_string "Type abstrait"
-  | ET.TK_external(yuio,_) -> (List.iter (fun t -> match fst(t) with EL_external t -> print_string t |
-  _ -> ()) yuio.ast_desc); print_string "Type importé"
-  | ET.TK_variant _ -> print_string "type avec arguments"
-  | ET.TK_record _ -> print_string "Type enregistrement"
+  | ET.TK_abstract -> print_debug "Type abstrait"
+  | ET.TK_external(yuio,_) -> (List.iter (fun t -> match fst(t) with EL_external t -> print_debug t |
+  _ -> ()) yuio.ast_desc); print_debug "Type importé"
+  | ET.TK_variant _ -> print_debug "type avec arguments"
+  | ET.TK_record _ -> print_debug "Type enregistrement"
 ;;
 
 (* Initialize the environnement *)
@@ -986,8 +1007,7 @@ let is_complete _ = failwith "is_complete: Not yet implemented"
 
 let get_meth_def_split sn m =
   let def,typ = get_meth_def sn m in
-(*   print_string (dbg_string_myexpr def); *)
-(*   print_newline (); *)
+(*   print_debug (dbg_string_myexpr def); *)
   let rec aux s =
     match s with
     | MFun(x, t, e) -> 

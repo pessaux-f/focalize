@@ -56,3 +56,4 @@ val flatten_prod_right : typ -> typ list
 
 flatten_prod (int * int * float) gives [\[int; int; float\]]. *)
 
+val get_arity : typ -> int

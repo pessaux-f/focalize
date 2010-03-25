@@ -30,7 +30,7 @@ let get_from_existing s =
 let get_from_existing_prefix s p =
   p ^ (try List.assoc s !var_assoc with
        | Not_found ->
-           let name = new_seed () in
+           let name = "Aux_" ^ new_seed () in
              add_var s name);;
 
 let new_capitalize () =
