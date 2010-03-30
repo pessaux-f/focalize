@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.59 2009-08-25 06:57:50 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.60 2010-03-30 12:33:15 weis Exp $ *)
 
 (** {2 The FoCaLiZe abstract syntax tree} *)
 
@@ -84,7 +84,7 @@ and annot_elem = {
     annotations. The type [ast_node_type_information] classifies the type
     information stored in the AST nodes. *)
 
- type ast_node_type_information =
+type ast_node_type_information =
    | ANTI_none
      (** The node has not yet been visited by the type-checker. *)
    | ANTI_irrelevant
