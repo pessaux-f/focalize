@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: INSTALL,v 1.13 2010-03-23 14:56:17 weis Exp $
+#  $Id: INSTALL,v 1.14 2010-05-06 14:21:01 weis Exp $
 
 (0) Installation:
 =================
@@ -41,7 +41,7 @@ Since the second step needs a lot of compilation, expect it to take some time
 (up to one hour or so for a reasonably modern machine). 
 
 If you want to tune the installation process or inderstand how it runs, you
-may have a look below 
+may have a look below.
 
 (1) Administrativia:
 ====================
