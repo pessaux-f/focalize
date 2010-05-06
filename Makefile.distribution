@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.17 2010-03-24 10:22:15 weis Exp $
+# $Id: Makefile.distribution,v 1.18 2010-05-06 15:52:18 weis Exp $
 
 ROOT_DIR=.
 
@@ -173,7 +173,7 @@ clean_documentation:
 # Recompile the tests
 .PHONY: project_test
 project_test:
-	@if test -d tests; then; \
+	if test -d "./test"; then \
 	  echo >&2 && echo >&2 && \
 	  echo "Compiling tests" >&2 && \
 	  echo >&2 && echo >&2 && \
@@ -181,20 +181,20 @@ project_test:
 	  echo >&2 && echo >&2 && \
 	  echo "Tests compiled" >&2 && \
 	  echo >&2 && \
-	  echo >&2 \
+	  echo >&2; \
 	fi
 
 # Create the examples directory && copy the example files.
 .PHONY: project_examples
 project_examples:
-	@if test -d test; then; \
+	@if test -d "./test"; then \
 	  echo >&2 && echo >&2 && \
 	  echo "Populating the examples directory." >&2 && \
 	  echo >&2 && echo >&2 && \
 	  (cd test && $(MAKE) examplesdir) && \
 	  echo >&2 && echo >&2 && \
 	  echo "Examples directory populated." >&2 && \
-	  echo >&2 && echo >&2 \
+	  echo >&2 && echo >&2; \
 	fi
 
 # Clean the old release directory.
