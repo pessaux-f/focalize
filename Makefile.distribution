@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.18 2010-05-06 15:52:18 weis Exp $
+# $Id: Makefile.distribution,v 1.19 2010-05-06 17:33:48 weis Exp $
 
 ROOT_DIR=.
 
@@ -296,7 +296,7 @@ install_web_site: .done_install_web_site
 clean_install_web_site:
 	$(RM) .done_install_web_site
 
- .done_install_web_site: .done_install_tarball .done_build_web_site
+.done_install_web_site: .done_install_tarball .done_build_web_site
 	($(CD) $(WEB_SITE_SRC_DIR); $(MAKE) install) && \
 	$(TOUCH) .done_install_web_site
 
