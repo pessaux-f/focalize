@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.distribution,v 1.19 2010-05-06 17:33:48 weis Exp $
+# $Id: Makefile.distribution,v 1.20 2010-05-07 10:38:24 weis Exp $
 
 ROOT_DIR=.
 
@@ -209,7 +209,7 @@ build_release: .done_build_release
 .done_build_release:\
    .done_build_documentation .done_build_release_directory\
    .done_build_tarball\
-   .done_build_web_site .done_build_ftp_site
+   .done_build_web_site #.done_build_ftp_site
 	$(TOUCH) ./.done_build_release
 
 clean_build_release:
@@ -301,50 +301,51 @@ clean_install_web_site:
 	$(TOUCH) .done_install_web_site
 
 # Build the FTP site
-FTP_SITE_SRC_DIR=$(ROOT_DIR)/ftp_src
-FTP_SITE_URL=ftp://$(PROJECT_FTP_SERVER)
-FTP_SITE_DIR=$(PROJECT_FTP_SERVER):$(PROJECT_FTP_SITE_DIR)
-FTP_SITE_DOWNLOAD_DIR=$(FTP_SITE_DIR)/download
-FTP_SITE_DOWNLOAD_URL = $(FTP_SITE_URL)/download
+#PROJECT_FTP_SERVER=yquem.inria.fr
+#FTP_SITE_SRC_DIR=$(ROOT_DIR)/ftp_src
+#FTP_SITE_URL=ftp://$(PROJECT_FTP_SERVER)
+#FTP_SITE_DIR=$(PROJECT_FTP_SERVER):$(PROJECT_FTP_SITE_DIR)
+#FTP_SITE_DOWNLOAD_DIR=$(FTP_SITE_DIR)/download
+#FTP_SITE_DOWNLOAD_URL = $(FTP_SITE_URL)/download
 
 # When the ftp site for the project is accessible via NFS.
-FTP_SITE_DIR_MOUNT_POINT=/net/yquem/infosystems/www/bazaar/$(PROJECT_NAME)
-FTP_SITE_DIR_MOUNT_POINT=/net/yquem/infosystems/ftp/bazaar/$(PROJECT_NAME)
-FTP_SITE_DIR_MOUNT_POINT2=/net/pauillac/infosystems/ftp/cristal/caml-light/bazar-ocaml/$(PROJECT_NAME)
+#FTP_SITE_DIR_MOUNT_POINT=/net/yquem/infosystems/www/bazaar/$(PROJECT_NAME)
+#FTP_SITE_DIR_MOUNT_POINT=/net/yquem/infosystems/ftp/bazaar/$(PROJECT_NAME)
+#FTP_SITE_DIR_MOUNT_POINT2=/net/pauillac/infosystems/ftp/cristal/caml-light/bazar-ocaml/$(PROJECT_NAME)
 
-.PHONY: build_ftp_site clean_build_ftp_site
-build_ftp_site: .done_build_ftp_site
-clean_build_ftp_site:
-	$(RM) .done_build_ftp_site && \
-	$(RM) $(FTP_SITE_SRC_DIR)
+#.PHONY: build_ftp_site clean_build_ftp_site
+#build_ftp_site: .done_build_ftp_site
+#clean_build_ftp_site:
+#	$(RM) .done_build_ftp_site && \
+#	$(RM) $(FTP_SITE_SRC_DIR)
 
-.PHONY: distclean_build_ftp_site
-distclean:: distclean_build_ftp_site
-distclean_build_ftp_site:
-	$(RM) .done_build_ftp_site && \
-	$(RM) $(FTP_SITE_SRC_DIR)
+#.PHONY: distclean_build_ftp_site
+#distclean:: distclean_build_ftp_site
+#distclean_build_ftp_site:
+#	$(RM) .done_build_ftp_site && \
+#	$(RM) $(FTP_SITE_SRC_DIR)
 
 # Copy the legalease to $(FTP_SITE_DIR)
 # Build the archive.
-.done_build_ftp_site: .done_build_tarball
-	$(MKDIR) $(FTP_SITE_SRC_DIR) && \
-	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/README $(FTP_SITE_SRC_DIR) && \
-	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/LICENSE $(FTP_SITE_SRC_DIR) && \
-	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/AUTHORS $(FTP_SITE_SRC_DIR) && \
-	($(CD) release && \
-	  $(TARC) $(PROJECT_ARCHIVE_NAME) $(PROJECT_RELEASE_DIR_NAME) && \
-	  $(MV) $(PROJECT_ARCHIVE_NAME) $(FTP_SITE_SRC_DIR)) && \
-	$(TOUCH) .done_build_ftp_site
+#.done_build_ftp_site: .done_build_tarball
+#	$(MKDIR) $(FTP_SITE_SRC_DIR) && \
+#	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/README $(FTP_SITE_SRC_DIR) && \
+#	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/LICENSE $(FTP_SITE_SRC_DIR) && \
+#	$(CP) release/$(PROJECT_RELEASE_DIR_NAME)/AUTHORS $(FTP_SITE_SRC_DIR) && \
+#	($(CD) release && \
+#	  $(TARC) $(PROJECT_ARCHIVE_NAME) $(PROJECT_RELEASE_DIR_NAME) && \
+#	  $(MV) $(PROJECT_ARCHIVE_NAME) $(FTP_SITE_SRC_DIR)) && \
+#	$(TOUCH) .done_build_ftp_site
 
 # Move the ftp stuff in the proper ftp site
-.PHONY: install_ftp_site clean_install_ftp_site
-install_ftp_site: .done_build_ftp_site .done_install_ftp_site
-clean_install_ftp_site:
-	$(RM) .done_install_ftp_site
+#.PHONY: install_ftp_site clean_install_ftp_site
+#install_ftp_site: .done_build_ftp_site .done_install_ftp_site
+#clean_install_ftp_site:
+#	$(RM) .done_install_ftp_site
 
-.done_install_ftp_site:
-	$(CP) $(FTP_SITE_SRC_DIR) $(FTP_SITE_DIR)/ && \
-	$(TOUCH) .done_install_ftp_site
+#.done_install_ftp_site:
+#	$(CP) $(FTP_SITE_SRC_DIR) $(FTP_SITE_DIR)/ && \
+#	$(TOUCH) .done_install_ftp_site
 
 # Build the FTP2 site
 # Copy the FTP site to $(FTP_SITE_DIR2)
@@ -358,15 +359,15 @@ install_release: .done_install_release
 
 .done_install_release:\
    .done_install_tarball\
-   .done_install_web_site .done_install_ftp_site
+   .done_install_web_site #.done_install_ftp_site
 	$(TOUCH) ./.done_install_release
 
 clean_install_release:
 	$(RM) .done_install_release
 	$(RM) release
 
-clean clean-all:: clean_install_ftp_site clean_install_web_site\
-  clean_install_release
+clean clean-all:: clean_install_web_site\
+  clean_install_release #clean_install_ftp_site
 
 # Tagging the version.
 #
