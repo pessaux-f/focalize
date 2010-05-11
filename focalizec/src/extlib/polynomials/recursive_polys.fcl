@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursive_polys.fcl,v 1.5 2010-01-12 15:54:35 rr Exp $ *)
+(* $Id: recursive_polys.fcl,v 1.6 2010-05-11 14:46:10 rr Exp $ *)
 
 open "basics";;
 
@@ -60,12 +60,15 @@ let distr_eq (i_eq, e_eq) =
    I am not the sure of the correct name,
    nor if it has some sense in the literature.
  *)
-species Recursive_indexed_bag (E is Setoid_with_zero,
-              I is Ordered_set_with_zero) =
+species Recursive_indexed_set (E is Setoid_with_zero,
+              I is Ordered_set_with_zero) = 
+
+  inherit Setoid_with_zero;
+
   representation = recursive_representation (E, I);
 
-  (* [rr]: once equality d_eq is abstracted there is no recursivity *)
-  let my_equal (d_eq : (distributed_representation (Self, I)
+  (* [rr]: once equality up_eq is abstracted there is no recursivity *)
+  let my_equal (up_eq : (distributed_representation (Self, I)
                          -> distributed_representation (Self, I)
                              -> bool),
                x : Self,
@@ -84,19 +87,20 @@ species Recursive_indexed_bag (E is Setoid_with_zero,
 	    else
 	      if (sy <^ sx)
 	      then false
-	      else d_eq(xx, yy));
+	      else up_eq(xx, yy));
 
-  let rec 
-      r_eq(x: Self, y: Self) = my_equal(d_eq, x, y)
-  and d_eq(x_d, y_d) = distr_eq(I!equal, r_eq)(x_d, y_d);
+  let equal =
+     let rec 
+         r_eq(x: Self, y: Self) = my_equal(d_eq, x, y)
+     and d_eq(x_d, y_d) = distr_eq(I!equal, r_eq)(x_d, y_d)
+     in function p -> function q -> r_eq(p, q);
 
-  let equal(p, q) = r_eq(p, q);
 
   let zero : Self = Base(E!zero);
 
-  let is_zero(x : Self) = match x with
-  | Base(m) -> E!is_zero(m)
-  | Composed(_, _) -> false;
+(*   let is_zero(x : Self) = match x with *)
+(*   | Base(m) -> E!is_zero(m) *)
+(*   | Composed(_, _) -> false; *)
 
 end;;
 
@@ -178,82 +182,188 @@ open "additive_law";;
 
 species Recursive_indexed_sum (M is Additive_group,
               D is Ordered_set_with_zero) =
-  inherit Additive_group, Recursive_indexed_bag (M, D);
+  inherit Additive_group, Recursive_indexed_set (M, D);
 
   (**
      Abstraction for the effective code we use.
-     One can note that funcalls (pol_plus) do the work.
+     One can note that funcalls (up_plus) do the work.
      Thus the code involves no direct recursion.
      Code is fully typed for safety reasons.
    *)
-  let my_plus (pol_plus :
+  let my_plus (up_plus :
                 distributed_representation (Self, D) ->
                   distributed_representation (Self, D) ->
                      distributed_representation (Self, D),
-               pol_lift : Self ->  distributed_representation (Self, D),
-               pol_const :  distributed_representation (Self, D) -> bool,
-               pol_lc :  distributed_representation (Self, D) -> Self,
+               up_lift : Self ->  distributed_representation (Self, D),
+               up_const :  distributed_representation (Self, D) -> bool,
+               up_lc :  distributed_representation (Self, D) -> Self,
                x : Self, y : Self) : Self =
     match x with
     | Base (xb) ->
         (match y with
         | Base (yb) -> Base (M!plus (xb, yb))
         | Composed (sy, yy) ->
-            Composed (sy, pol_plus (pol_lift (x), yy)))
+            Composed (sy, up_plus (up_lift (x), yy)))
     | Composed (sx, xx) ->
       (match y with
-      | Base (_) -> Composed (sx, pol_plus (xx, pol_lift (y)))
+      | Base (_) -> Composed (sx, up_plus (xx, up_lift (y)))
       | Composed (sy, yy) ->
           if (sx <^ sy)
-          then Composed (sy, pol_plus (pol_lift (x), yy))
+          then Composed (sy, up_plus (up_lift (x), yy))
           else
             if (sy <^ sx)
-            then Composed (sx, pol_plus (xx, pol_lift (y)))
+            then Composed (sx, up_plus (xx, up_lift (y)))
             else
-              let r = pol_plus (xx, yy) in
-              if pol_const (r)
-              then pol_lc (r)
+              let r = up_plus (xx, yy) in
+              if up_const (r)
+              then up_lc (r)
               else Composed (sx, r));
 
-(*   (\** *)
-(*      This kind of recursion does not compile to Coq. *)
-(*      We simply instanciate parameters which reveal the recursion. *)
-(*      Code is hardly readable because of curryfication! *)
-(*    *\) *)
-(*   let rec r_plus (x, y) = !my_plus (d_plus, d_lift, d_const, d_lc, x, y) *)
-(*       (\* [rr]: latter recurses because of !r_plus next *\) *)
-(*   and d_plus (p, q) = distr_plus (D!lt, !r_plus, !is_zero) (p, q) *)
-(*       (\* [rr]: next not really recursive !is_zero should live  *\) *)
-(*   and d_lift (x) = distr_lift (!is_zero, D!zero) (x) *)
-(*       (\* [rr]: though trivial next definition is necessary for termination *\) *)
-(*   and d_const (p) = distr_is_constant (D!is_zero) (p) *)
-(*       (\* [rr]: though trivial next definition is necessary for termination *\) *)
-(*   and d_lc (p) = distr_lc (!zero) (p); *)
-
-(*   (\** Now addition is simple *\) *)
-(*   let plus (x, y) = !r_plus (x, y); *)
-
-
-(*   (\* [rr]: This one fails with TODO local recursive definitions *\) *)
-(*   let plus = *)
-(*     let rec i_plus = !my_plus (d_plus, d_lift, d_const, d_lc) *)
-(*     and d_plus = distr_plus (D!lt, i_plus, !is_zero) *)
-(*     and d_lift = distr_lift (!is_zero, D!zero) *)
-(*     and d_const = distr_is_constant *)
-(*     and d_lc = distr_lc (!zero) *)
-(*     in function x -> function y -> i_plus (x, y); *)
+  (**
+     This kind of recursion does not compile to Coq.
+     We simply instanciate parameters which reveal the recursion.
+     Code is hardly readable because of curryfication!
+   *)
+  let plus =
+    let rec r_plus (x, y) = !my_plus (d_plus, d_lift, d_const, d_lc) (x, y)
+      (* [rr]: latter recurses because of !r_plus next *)
+    and d_plus (p, q) = distr_plus (D!lt, r_plus, !is_zero) (p, q)
+      (* [rr]: next not really recursive !is_zero should live  *)
+    and d_lift (x) = distr_lift (!is_zero, D!zero) (x)
+      (* [rr]: though trivial next definition is necessary for termination *)
+    and d_const (p) = distr_is_constant (D!is_zero) (p)
+      (* [rr]: though trivial next definition is necessary for termination *)
+    and d_lc (p) = distr_lc (!zero) (p)
+      (* [rr]: Now addition is simple *)
+    in function x -> function y -> r_plus(x, y);
 
 end;;
 
-let distr_m_mult = ();;
+let distr_mon_mult (r_mult, r_is_0, d_plus) =
+   let rec monomial_mult (c, d, p) = 
+      match p with
+      | Null -> Null
+      | NonNull(cp, dp, pp) ->
+	  let r = r_mult(c, cp) in
+	  if r_is_0(r)
+	  then monomial_mult(c, d, pp)
+	  else NonNull(r, d_plus(d, dp), monomial_mult(c, d, pp))
+   in function c -> function d -> function p -> monomial_mult(c, d, p)
+;;
 
-let distr_mult = ();;
+
+
+(**
+
+   Lambda lifted version of multiplication by a scalar.
+
+ *)
+
+
+let distr_mult(p_plus, mon_mult) =
+   let rec p_mult(p, q) =
+     match p with
+     | Null -> Null
+     | NonNull(cp, dp, pp) ->
+	 p_plus(mon_mult(cp, dp, q), p_mult(pp, q))
+   in function p -> function q -> p_mult(p, q)
+;;
 
 open "rings_fields";;
 species Recursive_polynomials_commutative_ring
       (R is Commutative_ring, D is Monomial_ordering) =
   inherit Commutative_algebra (R), Recursive_indexed_sum (R, D);
 
+  (**
+     Multiplication by a scalar is a sort of of map on the data structure
+   *)
+  let module_mult =
+    let rec up_mult(r, p) =
+      match p with
+      | Base(rp) -> Base(R!mult(r, rp))
+      | Composed(s, pp) ->
+        let res = distr_r_mult(r, pp) in
+        if distr_is_constant(D!is_zero)(res)
+        then distr_lc(Self!zero)(res)
+        else Composed(s, res)
+    and distr_r_mult(r, p) =
+          match p with
+          | Null -> Null
+          | NonNull(cp, dp, pp) ->
+            let c = up_mult(r, cp) in
+            if !is_zero(c)
+            then distr_r_mult(r, pp)
+            else NonNull(c, dp, distr_r_mult(r, pp))
+    in function r -> function p -> up_mult(r, p);
+
+
+  let my_mult(p_mult : ( distributed_representation(Self, D) ->
+                           distributed_representation(Self, D) ->
+                             distributed_representation(Self, D)),
+              p_lift : Self ->  distributed_representation (Self, D),
+              p_is_const: ( distributed_representation(Self, D) -> bool ),
+              p_lc: (distributed_representation(Self, D) -> Self),
+              x: Self,
+              y: Self) =
+     match x with
+     | Base(xb) ->
+       (match y with
+        | Base(yb) -> Base(R!mult(xb, yb))
+        | Composed(vy, py) ->
+          let pr = p_mult(p_lift(x), py) in
+          if p_is_const(pr)
+          then p_lc(pr)
+          else Composed(vy, pr))
+     | Composed(vx, px) ->
+       (match y with
+        | Base(_) -> 
+          let pr = p_mult(px, p_lift(y)) in
+          if p_is_const(pr)
+          then p_lc(pr)
+          else Composed(vx, pr)
+        | Composed(vy, py) ->
+          if (vx <^ vy)
+          then 
+            let pr = p_mult(p_lift(x), py) in
+            if p_is_const(pr)
+            then p_lc(pr)
+            else Composed(vx, pr)
+          else
+            if (vy <^ vx)
+            then
+              let pr = p_mult(px, p_lift(y)) in
+              if p_is_const(pr)
+              then p_lc(pr)
+              else Composed(vy, pr)
+            else
+              let pr = p_mult(px, py) in
+              if p_is_const(pr)
+              then p_lc(pr)
+              else Composed(vy, pr))
+  ;
+
+  (** Recursion is because of r_mult below *)
+
+  let mult =
+   let rec r_mult(p, q) = my_mult(p_mult, p_lift, p_is_const, p_lc)(p, q)
+    and p_mult(p, q) = distr_mult(p_plus, p_mon_mult) (p, q)
+    and p_plus(p, q) = distr_plus (D!lt, !plus, !is_zero) (p, q)
+    and p_mon_mult(p, q) = distr_mon_mult(r_mult, !is_zero, D!plus)(p, q)
+    and p_lift (x) = distr_lift (!is_zero, D!zero) (x)
+      (* [rr]: though trivial next definition is necessary for termination *)
+    and p_is_const (p) = distr_is_constant (D!is_zero) (p)
+      (* [rr]: though trivial next definition is necessary for termination *)
+    and p_lc (p) = distr_lc (!zero) (p)
+      (* [rr]: Now multiplication is simple *)
+   in function x -> function y -> r_mult(x, y);
+
+end;;
+
+species Recursive_polynomials_Domain
+      (R is Integral_domain, D is Monomial_ordering) =
+  inherit Torsion_free_algebra (R), 
+          Integral_domain, 
+          Recursive_polynomials_commutative_ring (R, D);
 
 end;;
 
