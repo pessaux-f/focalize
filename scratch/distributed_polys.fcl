@@ -1,0 +1,492 @@
+(***********************************************************************)
+(*                                                                     *)
+(*                        FoCaLiZe compiler                            *)
+(*                                                                     *)
+(*            Renaud Rioboo                                            *)
+(*            François Pessaux                                         *)
+(*            Pierre Weis                                              *)
+(*            Damien Doligez                                           *)
+(*                                                                     *)
+(*                               LIP6   -  INRIA Rocquencourt          *)
+(*                                                                     *)
+(*  Copyright 2007 LIP6 and INRIA                                      *)
+(*  Distributed only by permission.                                    *)
+(*                                                                     *)
+(***********************************************************************)
+
+(* $Id: distributed_polys.fcl,v 1.1 2010-05-11 14:39:17 rr Exp $ *)
+
+(**
+  @title Distributed polynomials
+  @author The FoCaLiZe Project
+
+   Distributed polynomials over arbitrary rings
+        with arbitrary orderings on the variables
+*)
+
+
+(** will be the carrier for a polynomial rinbg 
+   with coefficients using carrier 'r and degree 'd *)
+type distributed_representation ('r, 'd) =
+  | Null
+  | NonNull ('r, 'd, distributed_representation ('r, 'd))
+;;
+
+(* (\**  *)
+(*        index_sum is the finite sums of direct products. *)
+(* *\)  *)
+
+open "additive_law";;
+open "polys_abstract";;
+open "constants";;
+
+(**
+   I am not the sure of the correct name,
+   nor if it has some sense in the literature.
+   This is a kind of finite support functions from I to E.
+ *)
+species Indexed_set (I is Ordered_set_with_zero, E is Setoid_with_zero) =
+  inherit Setoid_with_zero;
+  (**
+     [rr]:
+     in order to further verify invariants, we need to state that
+        the empty list is a valid rep
+     and
+        if y is a valid rep,
+        if t is non null in m and
+        if d is bigger than the degree of y
+        then #Cons ((t*d), y) is a valid rep
+
+   *)
+  representation = distributed_representation (E, I);
+
+  (** the zero polynomial *)
+  let zero = Null;
+
+  (** a family of embeddings from E to Self *)
+  let monomial (x : E, d : I) : Self=
+    if E!is_zero (x)
+    then Null
+    else NonNull (x, d, Null);
+
+  (** the leading coefficient of a polynomial is 0 on 0 *)
+  let leading_coefficient (x : Self) = match x with
+    | Null -> E!zero
+    | NonNull (m, _, _) -> m;
+
+  (** Usually degree is not specified on 0 *)
+  let degree (x : Self) = match x with
+    | Null -> I!zero
+    | NonNull (_, d, _) -> d;
+
+  (** Equality is recursion of equalities in E and I *)
+  let rec equal (x, y) = match x with
+    | Null ->
+        (match y with
+        | Null -> true
+        | NonNull (_, _, _) -> false)
+    | NonNull (cx, dx, xx) ->
+        (match y with
+        | Null -> false
+        | NonNull (cy, dy, yy) ->
+          (* check degrees first for efficiency reasons *)
+          if I!equal (dx, dy)
+          then
+            if E!equal (cx, cy)
+            then
+              !equal (xx, yy)
+            else false
+          else false);
+
+  proof of equal_reflexive =
+    <1>1 prove equal(Null, Null) 
+        by type distributed_representation definition of equal
+    <1>2 prove all x: Self, all cx: E, all dx: I,
+            equal(x, x) -> equal(NonNull(cx, dx, x), NonNull(cx, dx, x))
+         by definition of equal 
+            type distributed_representation
+            property E!equal_reflexive, I!equal_reflexive
+    <1>3 prove all x: distributed_representation(E, I), !equal(x, x)
+         by step <1>1, <1>2 type distributed_representation
+    <1>f conclude;
+
+  proof of equal_symmetric =
+    property I!equal_symmetric, E!equal_symmetric
+    assumed (* type distributed_representation; should soon work with Zenon*);
+
+  proof of equal_transitive =
+    property I!equal_transitive, E!equal_transitive
+    assumed (* type distributed_representation; should soon work with Zenon*);
+
+  let reductum(p: Self): Self = match p with
+  | Null -> Null
+  | NonNull(_, _, r) -> r
+  ;
+
+end;;
+
+open "rings_fields";;
+
+(** The free commutative monoid generated my monomials (m, i) *)
+species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
+  inherit Formal_indexed_sum (M, I), Indexed_set (I, M);
+
+  proof of monomial_is_additive = assumed;
+  proof of leading_coefficient_is_non_null = assumed;
+  proof of degree_is_additive = assumed;
+  proof of reductum_has_smaller_degree = assumed;
+  proof of reductum_of_zero_is_zero = 
+    by definition of zero, reductum 
+       type distributed_representation
+       property equal_reflexive
+    ;
+  proof of monomial_has_degree = assumed;
+  proof of reductum_is_reductum = assumed;
+  proof of monomial_has_coefficient = assumed;
+
+
+
+(*   local let rec p (a) = *)
+(*     match a with  *)
+(*       #Nil -> "" *)
+(*     | #Cons (mon, l) ->  *)
+(*        let other = self!p (l) :           *)
+(*        let coef : m = #first (mon) in let dg : i = #scnd (mon) in *)
+(*        let print_mon = *)
+(*           #sc (m!print (coef), *)
+(*               #sc ("* x**", *)
+(*           i!print (dg))) *)
+(*        in      *)
+(*        if #base_eq (l, #Nil) then print_mon else *)
+(*          #sc ("(", #sc (print_mon, #sc ("+", other ))) *)
+(*     end; *)
+(*   let print (a) = self!p (a); *)
+
+  (** Addition is structural *)
+  let rec plus (s_1, s_2) =
+    match s_1 with
+    | Null -> s_2
+    | NonNull (m1, d1, ss_1) ->
+        match s_2 with
+        | Null -> s_1
+        | NonNull (m2, d2, ss_2) ->
+           if I!lt (d1, d2)
+           then (* d1 < d2*)
+             NonNull (m2, d2, !plus (s_1, ss_2))
+           else
+             if I!lt (d2, d1)
+             then
+               NonNull (m1, d1, !plus (ss_1, s_2))
+             else
+              let m = M!plus (m1, m2) in
+              if M!is_zero (m)
+              then !plus (ss_1, ss_2)
+              else NonNull (m, d1, !plus (ss_1, ss_2))
+  ;
+
+  proof of plus_commutes = assumed ;
+  proof of plus_is_associative = assumed;
+  proof of plus_right_substitution_rule = assumed;
+  proof of zero_is_neutral =
+   <1>1 prove all x: Self, !equal(!plus(!zero, x), x)
+        by definition of zero, plus
+           property equal_reflexive
+           type distributed_representation
+   <1>2 prove all x: Self, !equal(!plus(x, !zero), x)
+        by step <1>1 property !plus_commutes, equal_transitive
+   <1>f conclude;
+  proof of opposite_is_opposite = assumed;
+
+end;;
+
+(**
+  Polynomials over a commutative ring in distributed representation
+               Needs translation
+*)
+species Distributed_polynomials_commutative_ring
+    (R is Commutative_ring, D is Monomial_ordering) =
+  inherit Formal_polynomials_commutative_ring (R, D),
+          Indexed_sum (D, R);
+
+   (** returns cX^d p *)
+   let rec monomial_multiply (c : R, d : D, p : Self) : Self = match p with
+     | Null -> Null
+     | NonNull (cp, dp, pp) ->
+         let r = R!mult (c, cp) in
+         if R!is_zero (r)
+         then !monomial_multiply (c, d, pp)
+         else NonNull (r, D!plus (d, dp), monomial_multiply (c, d, pp));
+
+
+   let module_mult (c, p) = !monomial_multiply (c, D!zero, p);
+
+   let rec mult (p, q) = match p with
+     | Null -> Null
+     | NonNull (cp, dp, pp) ->
+         !plus (!monomial_multiply (cp, dp, q),
+               !mult (pp, q));
+
+(*            parse_poly_uni (r, d) *)
+(*  (\* from V. Ruffie, to let every implementation of algebre_indexee recognize *)
+(*     polynomials written `a la Maple` *)
+(*  *\) *)
+(*   let read_monomial (d) = *)
+(*      !generator (d); *)
+
+(*   let read_cst (c)= *)
+(*      !lift (c); *)
+
+(*   let read_deg (s)= *)
+(*      d!parse (s); *)
+
+(*   let read_coeff (s)= *)
+(*      r!parse (s); *)
+
+(*   local let map_times (p, ql) = *)
+(*      let f (x, r) =  *)
+(*               let c = #first (x) in  *)
+(*               let d = #scnd (x) in  *)
+(*         self!fmecg (r, c, d, p) *)
+(*      in lists_foc#fold_right (f, ql, #Nil); *)
+
+(*   local let rec i_output (liste : self, *)
+(*          coef : r, *)
+(*          deg : d, *)
+(*          v_name : string) : string =  *)
+(*     let p_name = *)
+(*        if #base_eq (v_name, "") *)
+(*        then "" *)
+(*        else #sc (v_name, "**") *)
+(*     in *)
+(*     match liste with *)
+(*     | #Nil ->   *)
+(*         #sc (r!print (coef), *)
+(*             #sc ("*", *)
+(*         #sc (p_name, d!print (deg)))) *)
+(*     | #Cons (a, l) ->  *)
+(*         #sc ("(" , *)
+(*             #sc (r!print (coef), *)
+(*         #sc ("*", *)
+(*             #sc (p_name, *)
+(*         #sc (d!print (deg), *)
+(*             #sc (")+", *)
+(*         !i_output (l, *)
+(*           #first (a), *)
+(*           #scnd (a), *)
+(*           v_name))))))) *)
+(*     end; *)
+
+(*   let output (x : self, c : string)= *)
+(*       match x with *)
+(*         #Nil -> "0" *)
+(*       | #Cons (a, l) ->  *)
+(*         !i_output (l, #first (a), #scnd (a), c) *)
+(*       end; *)
+(*   let print (x) = self!output (x, "_?"); *)
+(*   let generator (n) =  *)
+(*      let under_un = r!one in *)
+(*      #Cons (#crp (under_un, n), #Nil); *)
+
+(*   proof of plus_is_left_regular =assumed; *)
+
+(*   let one = #Cons (#crp (r!one, d!zero), #Nil); *)
+
+(*   let module_mult = fun rr ->  *)
+(*     let rm (x, y) = r!mult (x, y) in *)
+(*     let pol_map (f, p) = self!map_under (f, p) in *)
+(*     let cstm (x) = rm (rr, x) in  *)
+(*     fun p -> pol_map (cstm, p); *)
+(*   proof of lift_additive = assumed ; *)
+(*   proof of lift_one = assumed ; *)
+(*   proof of module_mult_compat = assumed ; *)
+(*   (\** fmecg : f multiply exponent coefficient g **\)   *)
+(*   (\** fmecg (P, a, n, Q) = P + aX^n Q            **\) *)
+(*   let fmecg : (self -> r -> d -> self -> self ) = *)
+(*      (\* (p : self, a, n, q : self) : self = *\) *)
+(*      let rm (x, y) = r!mult (x, y) in *)
+(*      let rp (x, y) = r!plus (x, y) in *)
+(*      let is_zero (x) = r!is_zero (x) in *)
+(*      let dpl (x, y) = d!plus (x, y) in *)
+(*      let dlt (x, y) = d!lt (x, y) in *)
+(*      let rec f_map (p, a, n, q) = *)
+(*        match q with *)
+(*          #Nil -> p *)
+(*        | #Cons (x, qq) -> *)
+(*            let cq = #first (x) in let dq = #scnd (x) in *)
+(*            let dqn = dpl (n, dq) in (\*dqn degre de aX^n Q*\) *)
+(*            match p with *)
+(*              #Nil ->  *)
+(*                let res = rm (a, cq) in *)
+(*                if is_zero (res) then  *)
+(*                  f_map (#Nil, a, n, qq) else *)
+(*                  #Cons (#crp (res, dqn), f_map (#Nil, a, n, qq)) *)
+(*            |#Cons (y, pp) -> *)
+(*                let cp = #first (y) in let dp = #scnd (y) in *)
+(*                if dlt (dqn, dp) then *)
+(*                  #Cons (y, f_map (pp, a, n, q)) *)
+(*                else *)
+(*                  if dlt (dp, dqn)  *)
+(*                  then  *)
+(*            let res = rm (a, cq) in *)
+(*                    if is_zero (res) then f_map (p, a, n, qq) *)
+(*                    else #Cons (#crp (res, dqn), f_map (p, a, n, qq)) *)
+(*                  else  *)
+(*            let res = rp (cp, rm (a, cq)) in *)
+(*                    if is_zero (res) then f_map (pp, a, n, qq) *)
+(*                    else #Cons (#crp (res, dp), f_map (pp, a, n, qq)) *)
+(*            end *)
+(*        end *)
+(*      in  *)
+(*      fun p -> fun a -> fun n -> fun q -> f_map (p, a, n, q); *)
+
+(*      proof of fmecg_combines = assumed; *)
+
+(*      let mult_naive (p, q) = *)
+(*         if d!lt (!degree (p), !degree (q))  *)
+(*           (\*#int_lt (#length (q), #length (p))*\) *)
+(*         then self!map_times (p, q) *)
+(*         else self!map_times (q, p); *)
+
+(*      let mult (p, q) = !mult_naive (p, q); *)
+(*      proof of one_is_left_neutral = assumed; *)
+(*      proof of mult_assoc = assumed ; *)
+(*      proof of mult_commutes = assumed ; *)
+(*      proof of mult_left_distributes_on_plus = assumed ; *)
+(*      proof of mult_left_substitution_rule = assumed; *)
+(*      proof of mult_right_substitution_rule = assumed; *)
+
+(*      let spol (p, q) =  *)
+(*        let degree (p) = self!degree (p) in *)
+(*        let sup (a, b) = d!sup (a, b) in *)
+(*        let mm (a, p) = self!module_mult (a, p) in *)
+(*        let dmin (a, b) = d!minus (a, b) in *)
+(*        let dpl (a, b) = d!plus (a, b) in *)
+(*        let opposite (a) = r!opposite (a) in *)
+(*        let lc (q) = self!leading_coefficient (q) in *)
+(*        let red (q) = self!reductum (q) in *)
+(*        let fmecg = self!fmecg in         *)
+(*        let dp = degree (p) in *)
+(*        let dq = degree (q) in *)
+(*        let m = sup (dp, dq) in *)
+(*        let ddp = dmin (m, dp) in *)
+(*        let ddq = dmin (m, dq) in *)
+(*        let foo (x) =  *)
+(*           let c = #first (x) in  *)
+(*           let d = #scnd (x) in  *)
+(*           #crp (c, dpl (d, ddp))  *)
+(*        in *)
+(*          fmecg (#map (foo, mm (lc (q), red (p))), opposite (lc (p)), ddq, red (q)); *)
+
+(* to be finished *)
+
+end;;
+
+(**
+  Distributed polynomials over an integral domain, needs translation
+*)
+species Distributed_polynomials_integral_domain
+  (R is Integral_domain, D is Monomial_ordering) =
+  inherit Formal_polynomials_integral_domain (R, D),
+          Distributed_polynomials_commutative_ring (R, D);
+(*     local let rec add_shift (pp, a, n, qq) =  *)
+(*       let rm (x, y) = rng!mult (x, y) in *)
+(*       let rp (x, y) = rng!plus (x, y) in *)
+(*       let dpl (x, y) = deg!plus (x, y) in *)
+(*       let dlt (x, y) = deg!lt (x, y) in *)
+(*       let deq (x, y) = deg!equal (x, y) in *)
+(*       let is_zero (x) = rng!is_zero (x) in *)
+(*       match pp with *)
+(*       | #Nil ->  *)
+(*                 let foo (x) = let v = #first (x) in let d = #scnd (x) in *)
+(*           #crp (rm (a, v), dpl (d, n))  in #map (foo, qq) *)
+(*       | #Cons (x, p) -> *)
+(*           match qq with  *)
+(*           | #Nil -> pp *)
+(*           | #Cons (y, q) -> *)
+(*               let vp = #first (x) in let dp = #scnd (x) in *)
+(*               let vq = #first (y) in let dq = #scnd (y) in *)
+(*               let dd = dpl (n, dq) in *)
+(*               if deq (dd, dp)  *)
+(*               then *)
+(*                 let vv = rp (vp, rm (a, vq)) in *)
+(*           if is_zero (vv)  *)
+(*           then self!add_shift (p, a, n, q)  *)
+(*           else #Cons (#crp(vv, dd), self!add_shift (p, a, n, q)) *)
+(*               else *)
+(*                 if dlt (dp, dd) *)
+(*         then #Cons (#crp (rm (a, vq), dd), self!add_shift (pp, a, n, q)) *)
+(*         else #Cons (x, self!add_shift (p, a, n, qq)) *)
+(*           end *)
+(*       end; *)
+(*    local let rec map_quo (pp in self , r, res in self) = *)
+(*      let rd (a, b) = rng!exquo (a, b) in *)
+(*      match pp with *)
+(*        #Nil -> #Unfailed (#rev (res)) *)
+(*      | #Cons (x, p) -> *)
+(*          let v = #first (x) in let d = #scnd (x) in *)
+(*          match rd (v, r) with *)
+(*          | #Failed -> #Failed *)
+(*          | #Unfailed (nv) -> self!map_quo (p, r, #Cons (#crp (nv, d), res)) *)
+(*          end *)
+(*      end; *)
+(*    let module_mult (r, p) = *)
+(*      let is_zero (r) = rng!is_zero (r) in *)
+(*      let rm (a, b) = rng!mult (a, b) in *)
+(*      if is_zero (r)  *)
+(*      then #Nil  *)
+(*      else let foo (x) = let c = #first (x) in let d = #scnd (x) in  *)
+(*                        #crp (rm (r, c), d) *)
+(*           in #map (foo, p); *)
+
+   (** assumes c <> 0*)
+   let rec monomial_multiply (c : R, d : D, p : Self) : Self = match p with
+     | Null -> Null
+     | NonNull (cp, dp, pp) ->
+         NonNull (R!mult (c, cp), D!plus (d, dp), monomial_multiply (c, d, pp));
+
+(*    let module_exquo (p, r) =  *)
+(*      if rng!is_zero (r) then #Failed else self!map_quo (p, r, #Nil); *)
+
+(*    proof of lift_is_injective = assumed ; *)
+(*    proof of module_exquo_divides = assumed ; *)
+(*    proof of mult_is_integral = assumed ; *)
+(*    proof of module_mult_is_integral = assumed ; *)
+(*    let fmecg = self!add_shift; *)
+(*    let exquo = *)
+(*      let degree (p) = self!degree (p) in *)
+(*      let lc (p) = self!leading_coefficient (p) in *)
+(*      let rdiv (a, b) = rng!exquo (a, b) in *)
+(*      let is_zero (x) = rng!is_zero (x) in *)
+(*      let opp (p) = rng!opposite (p) in *)
+(*      (\* let int_minus (x, y) = non_failed (int_coll.minus (x, y)) in *\) *)
+(*      let rec e_quo (p : self, cq, dq, q : self , res : self) : partiel (self) = *)
+(*        let dp = degree (p) in *)
+(*        let cp = lc (p) in *)
+(*        if is_zero (cp) then *)
+(*          #Unfailed (#rev (res))  *)
+(*        else *)
+(*          if deg!lt (dp, dq) then #Failed *)
+(*          else *)
+(*            let delta = deg!minus (dp, dq) in *)
+(*              let co = rdiv (cp, cq) in *)
+(*              if #is_failed (co) then #Failed *)
+(*              else  *)
+(*                let cco = #non_failed (co) in *)
+(*                let r = self!fmecg (self!reductum (p), opp (cco), delta, q) in *)
+(*                e_quo (r, cq, dq, q, #Cons (#crp (cco, delta), res)) in *)
+(*      fun p -> fun q  -> *)
+(*        match q with *)
+(*         | #Nil -> #Failed *)
+(*         | #Cons (m, q) ->  *)
+(*           let cq = #first (m) in let dq = #scnd (m) in e_quo (p, cq, dq, q, #Nil) *)
+(*        end ; *)
+(*    proof of exquo_divides = assumed; *)
+end;;
+
+species Distributed_polynomials_Domain
+      (R is Integral_domain, D is Monomial_ordering) =
+  inherit Torsion_free_algebra (R), 
+          Integral_domain, 
+          Distributed_polynomials_commutative_ring (R, D);
+
+end;;
