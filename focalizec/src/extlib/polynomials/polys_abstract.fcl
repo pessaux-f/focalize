@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: polys_abstract.fcl,v 1.4 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: polys_abstract.fcl,v 1.5 2010-05-11 14:36:52 rr Exp $ *)
 
 (**
  @title Abstract polynomials
@@ -43,6 +43,7 @@ species Formal_indexed_sum (M is Additive_group,
    (** canonical injections *)
    signature monomial: M -> I -> Self;
 
+   (** additive morphisms in each degree *)
    property monomial_is_additive: all x y : M, all i : I,
      !equal (!plus (!monomial (x, i), !monomial (y, i)),
             !monomial (M!plus (x, y), i));
@@ -117,6 +118,7 @@ species Formal_indexed_sum (M is Additive_group,
        then p
        else !tail (!reductum (p), d) ;
 
+   (* [rr] here we need a form of abstract induction *)
    theorem leading_coefficient_is_tail_with_degree: all p : Self,
      !equal (!reductum (p), !tail (p, !degree (p)))
      proof = assumed (* *);
@@ -172,7 +174,7 @@ end
 ;;
 
 (**
-   Polynomials over an integral domain are integral
+   Polynomials over an integral domain form an integral domain.
  *)
 
 species Formal_polynomials_integral_domain
@@ -194,6 +196,7 @@ species Formal_polynomials_gcd_domain
     (R is Integral_domain, D is Monomial_ordering) =
 
     inherit Gcd_domain,
+            (* [rr] the proof is not obvious and needs reflexion *)
             Formal_polynomials_commutative_ring (R, D)
     ;
 

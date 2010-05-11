@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2010-02-11 16:47:40 doligez Exp $
+# $Id: Makefile,v 1.4 2010-05-11 14:36:52 rr Exp $
 
 # Makefile for algebra structures implementations
 
@@ -176,3 +176,6 @@ clean::
 
 recursive_polys.ml: recursive_polys.fcl
 	$(FOCALIZEC) -no-coq-code $<
+
+recursive_polys.fcd: recursive_polys.fcl
+	$(FOCALIZEC) -focalize-doc -no-coq-code $<
