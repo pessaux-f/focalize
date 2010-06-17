@@ -1,6 +1,7 @@
-  Copyright (c) 2007-2009, Institut National de Recherche en
+  Copyright (c) 2007-2010, Institut National de Recherche en
   Informatique et en Automatique (INRIA), LIP6 (Laboratoire d'Informatique de
-  Paris 6)
+  Paris 6), ENSIIE (Ecole Nationale Superieure d'Informatique pour l'Industrie
+  et l'Entreprise)
 
 All rights reserved.
 
@@ -16,9 +17,9 @@ met:
     documentation and/or other materials provided with the
     distribution.
 
-  * Neither the name of INRIA nor the names of its contributors may
-    be used to endorse or promote products derived from this software
-    without specific prior written permission.
+  * Neither the name of INRIA, LIP6, ENSIIE nor the names of their
+    contributors may be used to endorse or promote products derived
+    from this software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
@@ -32,4 +33,4 @@ THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-$Id: LICENSE,v 1.4 2009-04-03 15:50:36 doligez Exp $
+$Id: LICENSE,v 1.5 2010-06-17 10:42:12 doligez Exp $
