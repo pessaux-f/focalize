@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.11 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.12 2010-07-19 13:25:13 carlier Exp $
 
 ROOT_DIR=../..
 
@@ -35,7 +35,7 @@ PACKAGE=focalizec
 PACKAGE_DEP=focalizedep
 
 # The list of source files
-MAN_FILES=$(PACKAGE).man $(PACKAGE_DEP).man
+MAN_FILES=$(PACKAGE).man $(PACKAGE_DEP).man focalizetest.man
 
 ######## This part should automatically handle the generation of
 ######## object files

@@ -1,0 +1,136 @@
+.\"                                      Hey, EMACS: -*- nroff -*-
+.\" \$Id: focalizetest.man,v 1.1 2010-07-19 13:25:13 carlier Exp $
+.\"
+.\"
+.\" First parameter, NAME, should be all caps
+.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
+.\" other parameters are allowed: see man(7), man(1)
+.TH $(uppercase $focalizetest) 1 "$(the_short_date)"
+.\" Please adjust this date whenever revising the manpage.
+.\"
+.\" Some roff macros, for reference:
+.\" .nh        disable hyphenation
+.\" .hy        enable hyphenation
+.\" .ad l      left justify
+.\" .ad b      justify to both left and right margins
+.\" .nf        disable filling
+.\" .fi        enable filling
+.\" .br        insert line break
+.\" .sp <n>    insert n+1 empty lines
+.\" for manpage-specific macros, see man(7)
+.SH NAME
+.B $(focalizetest)
+\-\- the $(focal) testing tool
+.UR http://$(focal).inria.fr/
+(http://$(focal).inria.fr/)
+.UE
+
+.SH VERSION
+$(capitalize $focalizetest) version $package_version
+.SH SYNOPSIS
+.B $focalizetest
+.RI [ options ]\ [ source\ file ]
+.SH DESCRIPTION
+The 
+.B $focalizetest
+testing tool permits to test a property in a complete species. It takes a
+source file as input (and the species under test with the name of the property
+to test) and generates a $(focal) source containing test harness. This files
+could be compiled into an executable which generates random/constraint solving
+test cases, executes its and generates a xml test report. 
+
+.SH OPTIONS
+Options are :
+.TP
+.B -s \<spec_directive\>
+Specify the test context. \<spec_directive\> follows the grammar:
+
+  \<spec_directive\> ::= let \<aux_spec\> = \<module\>#\<species\>(\<aux_spec\>, ..., \<aux_spec\>) in \<spec_directive\>
+                     | \<module\>#\<species\>(\<aux_spec, ..., \<aux_spec\>)
+
+  \<aux_spec\> is a lower case identifier.
+  \<module\> is a module name and \<species\> should be a complete species of
+\<module\> (the module name is mandatory)
+
+A correct context test doesn't contains references to \<aux_spec\> not
+bounded previously. For example, "let s1 = Basics#Integers in Basics#ring(s1)"
+is correct because "s1" is defined as the species Integers of Basics module.
+The two following example are incorrect: "Basics#ring(Basics#Integers)" (we
+should defined an auxiliary species), "Basics#ring(s1)" (s1 is not defined).
+
+In the three above examples, the properties to test should be defined in Ring.
+.TP
+.B -p \<props\>
+Take the list of property to test \<props\>. This is a list of property name
+separate by commas.
+.TP
+.B -o \<outfile\>
+Name of the $(focal) file to generate (test harness file).
+.TP
+.B -sicstus
+Generate an harness which generate the test cases by using constraint solving
+technics. $focalizetest generates a .prolog* file by property to test.
+.TP
+.B -mcdc \<n\>
+Number of MC/DC compliant test cases (desactivate
+.B -t
+option).
+.TP
+.B -int \<n\>
+generates integers values inside [-n/2,n/2[.
+.TP
+.B -t \<n\>
+Number of searched test cases (desactivate
+.B -mcdc
+option).
+.TP
+.B -stat \<filename\>
+file where sicstus prolog should store statistical values (time of generation
+for each property).
+.TP
+.B --seq --let
+Not documented.
+.TP
+.B -r \<xml_file\>
+Rerun an already generated test report.
+.TP
+.B \-\-help
+Display this list of options.
+
+.SH COPYRIGHT
+This program is free software, distributed under the licence found in
+the LICENSE file in the root directory of the distribution.
+
+.SH SEE ALSO
+.B zenon
+(1)
+.B zvtov
+(1)
+.B $focalizedep
+(1)
+.B ocamlc
+(1)
+.B ocamlopt
+(1)
+.B coqc
+(1)
+
+The
+.B $focal
+user's manual (http://$(focal).inria.fr/eng.htm)
+(french version at http://$(focal).inria.fr/fra.htm).
+
+.SH AUTHORS
+Matthieu Carlier <Matthieu.Carlier@irisa.fr>
+François Pessaux <François.Pessaux@lip6.fr>
+Pierre Weis <Pierre.Weis@inria.fr>
+.P
+This manual page was written for
+.B $package
+version 0.0.1.
+.P
+Laboratoire d'Informatique de l'université Paris 6,
+Institut National de Recherche en Informatique et en Automatique ($(this_year))
+
+\"  LocalWords:  UE OCaml Coq fo Caml pre zv Zenon zvtov fcl ocaml ocamlopt vo
+\"  LocalWords:  coqc TP dirname graphviz deps $focal $focalizec $focalizedep $focalizetest emacs
