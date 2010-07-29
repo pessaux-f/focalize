@@ -1,6 +1,6 @@
 #**********************************************************************#
 #                                                                      #
-#                        FoCaLize compiler                             #
+#                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
 #            Pierre Weis                                               #
@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.23 2009-12-09 12:03:36 weis Exp $
+# $Id: Makefile,v 1.24 2010-07-29 08:21:13 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -21,7 +21,7 @@ include $(ROOT_DIR)/Makefile.config
 
 # Fill here to add a new directory for a new library
 SUB_DIRS = algebra access_control
-# polynomials (PW: Commented out since does not compile yet (as of 0.6.0).)
+# polynomials (PW: Commented out since does not compile yet (as of 0.6.0 version).)
 
 include $(ROOT_DIR)/Makefile.common
 
