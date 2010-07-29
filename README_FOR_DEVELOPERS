@@ -13,9 +13,26 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: README_FOR_DEVELOPERS,v 1.14 2010-03-02 14:28:43 weis Exp $
+#  $Id: README_FOR_DEVELOPERS,v 1.15 2010-07-29 08:03:22 weis Exp $
 
 # The name of the file says why and for who it was written :)
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN"
+ "http://www.w3.org/TR/REC-html40/loose.dtd">
+
+<HTML>
+
+<HEAD>
+<META name="GENERATOR" content="Htmlc $htmlc_version"/>
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"/>
+
+<TITLE>
+Read me for developers
+</TITLE>
+
+</HEAD>
+
+<BODY BGCOLOR="#FFFFFF">
 
 <H2>How to use the FoCaLiZe Makefile</H2>
 
@@ -120,7 +137,7 @@ not satisfactory, since it prevents sharing the tools by all the users). The
 only undesirable alternative is to run the building phase with root
 priviledges (which is now considered by many as a major security flaw).
 
-<P> If you plan to solve these problems, please go ahead, but keep in mind
+<P>If you plan to solve these problems, please go ahead, but keep in mind
 the following facts:
 
 <BR>focalizec generates Caml code which is more or less specific to a given
@@ -222,7 +239,7 @@ cvs -d weis@modulogic.inria.fr:/home/cvs \
   </OL>
   </P>
 
-  <P> Note:
+  <P>Note:
   by default "scp" uses your local machine login name to contact the http
   server. Thus, if your login name on the server is different then you need
   to define it while launching <code>make</code>, using:
@@ -356,3 +373,6 @@ numbers. You need to
 </UL>
 
 <P>Who said «This version handling stuff could be simpler!?»
+
+</BODY>
+</HTML>
