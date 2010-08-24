@@ -389,7 +389,7 @@ let ast_meth_test_all_elem p_name p_forme nb_var nb_elems =
                 (expr_fun "n" (TAtom(Some "basics", foctint))
                    (expr_seq
                    (expr_meth top_xml_coll_name "xml_print_property"
-                                           [expr_string (p_name) ;
+                                           [expr_string p_name;
                                             expr_string (Print_xml.safe_replace p_forme)]
                    )
                    (expr_seq
@@ -448,7 +448,7 @@ let ast_species_test (name, actual_vars, cel) property_statement
       let rename_vars = variables_map (variable_ren prefix_var) actual_vars in 
       (* If there is no variables, one test case is sufficient *)
       let test_all_elem = ast_meth_test_all_elem name
-                                                 (property_statement)
+                                                 property_statement
                                                  (variables_nb actual_vars)
                                                  (List.length cel) in
       let test_elems = snd (List.fold_left (fun (i,seed) e ->
@@ -656,8 +656,8 @@ let ast_meth_test_all_elem_reinject p_name p_forme nb_var nb_elems =
                 (expr_fun "n" (TAtom(Some "basics", foctint))
                    (expr_seq
                    (expr_meth top_xml_coll_name "xml_print_property"
-                                           [expr_string (p_name) ;
-                                            expr_string (p_forme)]
+                                           [expr_string p_name ;
+                                            expr_string p_forme]
                    )
                    (expr_seq
                      (expr_app
@@ -742,7 +742,7 @@ let ast_testprop_list nfs_l tc harness =
   let rec aux l c s =
     match l with
     | [] -> c,s
-    | (nfs,stat)::r ->
+    | (nfs, stat)::r ->
         let name = get_norm_name nfs in
         let vars = get_norm_variables nfs in
         let elems = get_norm_elems nfs in

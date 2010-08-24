@@ -33,7 +33,8 @@ let rec xml_string_of_typ t =
 let special_xml =
   ['&', "&amp;";
    '<', "&lt;";
-   '>', "&gt;"
+   '>', "&gt;";
+   '*', "&times;"
   ];;
 let safe_replace s = string_assoc s special_xml;;
 
@@ -133,6 +134,7 @@ let top_xml_meths () =
        fun x in (@UNIT) -> #print_file(\"\\n\")";
    "let xml_print_header in @UNIT = fun t in (@UNIT) ->
       #print_file(\"<?xml version=\\\"1.0\\\" encoding=\\\"utf-8\\\" ?>\\n\");
+      #print_file(\"<!DOCTYPE xsl:stylesheet [ <!ENTITY times \\\"&#215;\\\" > ]>\");
       #print_file( \"<?xml-stylesheet type=\\\"text/xsl\\\" href=\\\"test_report.xslt\\\" ?>\");
       !xml_print_newline(@VUNIT)";
       (* * prints the property * *)

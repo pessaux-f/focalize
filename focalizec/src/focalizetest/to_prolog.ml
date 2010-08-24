@@ -161,6 +161,7 @@ let basics_result = (* used otherwise *)
    "*",(fun l v -> equal_op v "*" l);
    "-",(fun l v -> equal_op v "-" l);
    "/",(fun l v -> equal_op v "/" l);
+   "%",(fun l v -> prolog_fun "int_mod" (prolog_var v ::l));
    "&&",(fun l v -> prolog_fun "and_b" (prolog_var v ::l));
    "||",(fun l v -> prolog_fun "or_b" (prolog_var v ::l));
    "~~",(fun l v -> prolog_fun "not_b" (prolog_var v ::l));
@@ -355,6 +356,8 @@ let prolog_pgm_of_minifoc_function tc
 (*   print_newline (); *)
 (*   print_string
  *   "***********************************************************\n"; *)
+print_string n;
+print_newline ();
   let var_clos = Fresh_variable.get_from_existing n in
   let l_closure = 
         prolog_fun "closure_defs" [prolog_var var_clos;
@@ -540,7 +543,7 @@ let create_goal tc vars (elem : elementaire) name i arity_list : prolog_clause *
                   prolog_int (Whattodo.get_number_of_test ());
                   prolog_fun (Fresh_variable.prolog_pgm_res name i) [];
                   prolog_var (env_variable);
-                  prolog_var name;
+                  prolog_fun name [];
                   prolog_int 1;
                   match Whattodo.get_prolog_stat_file () with
                   | None ->   prolog_fun "none" []

@@ -198,7 +198,10 @@ let xml_specname_to_specname m s =
 let special_xml =
   ['<', "&lt;";
    '>', "&gt;";
-   '&', "&amp"];;
+   '&', "&amp;";
+   '*', "&times;"
+(*    '*', "&lowast;" *)
+  ];;
 let safe_replace s = string_assoc s special_xml;;
 
 let rec xml_ident_to_ident x =

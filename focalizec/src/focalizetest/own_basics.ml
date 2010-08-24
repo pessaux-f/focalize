@@ -23,6 +23,7 @@ let focintequal = Infix "=0x";;
 let focintgt = Infix ">0x";; 
 let focintgeq = Infix ">=0x";; 
 let focintleq = Infix "<=0x";; 
+(* let focintmod = Prefix "int_mod";; *)
 
 let focaddint = Infix "+";;
 let focstringconcat = Infix "^";;
