@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.46 2009-12-03 16:11:08 weis Exp $ *)
+(* $Id: focalizec.ml,v 1.47 2011-02-28 13:45:51 tollitte Exp $ *)
 
 exception Bad_file_suffix of string ;;
 
@@ -53,6 +53,8 @@ let compile_fcl input_file_name =
   (* Typechecks the AST. *)
   let (typing_toplevel_env, stuff_to_compile) =
     Infer.typecheck_file ~current_unit scoped_ast in
+  (* Verify pattern matching soundness. *)
+  List.iter (Match_analysis.verify_matchings typing_toplevel_env) stuff_to_compile ;
   (* Generate the documentation if requested. *)
   if Configuration.get_focalize_doc () then
     Main_docgen.gen_doc_please_compile_me

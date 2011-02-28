@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.88 2009-08-25 12:30:58 weis Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.89 2011-02-28 13:45:51 tollitte Exp $ *)
 
 let header ppf =
   Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
@@ -549,6 +549,16 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname function_name
         Handy.pp_reset_effects
+  (* ********************************* *)
+  (* Pattern matching analysis errors. *)
+  | Match_analysis.Match_not_exhaustive at ->
+       Format.fprintf ppf
+        "%a:@\n@[Pattern@ matching@ not@ exhaustive.@]@."
+        Location.pp_location at
+  | Match_analysis.Match_useless_case at ->
+       Format.fprintf ppf
+        "%a:@\n@[Useless@ case@ in@ pattern@ matching.@]@."
+        Location.pp_location at
   (* ********************** *)
   (* The ultimate firewall. *)
   | x ->

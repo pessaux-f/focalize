@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.55 2009-10-20 15:58:18 weis Exp $
+# $Id: Makefile,v 1.56 2011-02-28 13:45:51 tollitte Exp $
 
 ROOT_DIR = ../..
 
@@ -47,6 +47,7 @@ BYT_OBJS =\
 	../typing/dep_analysis.cmo \
 	../typing/param_dep_analysis.cmo \
 	../typing/infer.cmo \
+  ../typing/match_analysis.cmo \
 	\
 	../docgen/doc_lexer.cmo \
 	../docgen/utils_docgen.cmo \
