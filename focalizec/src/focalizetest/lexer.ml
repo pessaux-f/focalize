@@ -2057,73 +2057,73 @@ let rec lexe_string lexbuf =
 and __ocaml_lex_lexe_string_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 25 "lexer.mll"
+# 26 "lexer.mll"
                    ( lexe_string lexbuf )
 # 2063 "lexer.ml"
 
   | 1 ->
-# 26 "lexer.mll"
+# 27 "lexer.mll"
              ( DIESE )
 # 2068 "lexer.ml"
 
   | 2 ->
-# 27 "lexer.mll"
+# 28 "lexer.mll"
              ( BANG )
 # 2073 "lexer.ml"
 
   | 3 ->
-# 28 "lexer.mll"
+# 29 "lexer.mll"
              ( LPAREN )
 # 2078 "lexer.ml"
 
   | 4 ->
-# 29 "lexer.mll"
+# 30 "lexer.mll"
              ( RPAREN )
 # 2083 "lexer.ml"
 
   | 5 ->
-# 30 "lexer.mll"
+# 31 "lexer.mll"
                              (let l = Lexing.lexeme lexbuf in
                           STRING((String.sub l 1 (String.length l - 2))) )
 # 2089 "lexer.ml"
 
   | 6 ->
-# 32 "lexer.mll"
+# 33 "lexer.mll"
              ( COMMA )
 # 2094 "lexer.ml"
 
   | 7 ->
-# 33 "lexer.mll"
+# 34 "lexer.mll"
               ( FUN )
 # 2099 "lexer.ml"
 
   | 8 ->
-# 34 "lexer.mll"
+# 35 "lexer.mll"
              ( ARROW )
 # 2104 "lexer.ml"
 
   | 9 ->
-# 36 "lexer.mll"
+# 37 "lexer.mll"
              ( IDENT(Lexing.lexeme lexbuf) )
 # 2109 "lexer.ml"
 
   | 10 ->
-# 38 "lexer.mll"
+# 39 "lexer.mll"
              ( INT(int_of_string (Lexing.lexeme lexbuf)) )
 # 2114 "lexer.ml"
 
   | 11 ->
-# 39 "lexer.mll"
+# 40 "lexer.mll"
              ( EOF )
 # 2119 "lexer.ml"
 
   | 12 ->
-# 40 "lexer.mll"
+# 41 "lexer.mll"
              ( prerr_string "Error, \\n is not allowed in term.\n"; exit 10; )
 # 2124 "lexer.ml"
 
   | 13 ->
-# 41 "lexer.mll"
+# 42 "lexer.mll"
              ( LEXERROR(Lexing.lexeme lexbuf) )
 # 2129 "lexer.ml"
 
@@ -2134,68 +2134,68 @@ and lexe_file lexbuf =
 and __ocaml_lex_lexe_file_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 43 "lexer.mll"
+# 44 "lexer.mll"
                         ( lexe_file lexbuf )
 # 2140 "lexer.ml"
 
   | 1 ->
-# 44 "lexer.mll"
+# 45 "lexer.mll"
              ( DIESE )
 # 2145 "lexer.ml"
 
   | 2 ->
-# 45 "lexer.mll"
+# 46 "lexer.mll"
              ( BANG )
 # 2150 "lexer.ml"
 
   | 3 ->
-# 46 "lexer.mll"
+# 47 "lexer.mll"
              ( LPAREN )
 # 2155 "lexer.ml"
 
   | 4 ->
-# 47 "lexer.mll"
+# 48 "lexer.mll"
              ( RPAREN )
 # 2160 "lexer.ml"
 
   | 5 ->
-# 48 "lexer.mll"
+# 49 "lexer.mll"
                              (let l = Lexing.lexeme lexbuf in
                           STRING((String.sub l 1 (String.length l - 2))) )
 # 2166 "lexer.ml"
 
   | 6 ->
-# 50 "lexer.mll"
+# 51 "lexer.mll"
              ( COMMA )
 # 2171 "lexer.ml"
 
   | 7 ->
-# 51 "lexer.mll"
+# 52 "lexer.mll"
               ( FUN )
 # 2176 "lexer.ml"
 
   | 8 ->
-# 52 "lexer.mll"
+# 53 "lexer.mll"
              ( ARROW )
 # 2181 "lexer.ml"
 
   | 9 ->
-# 54 "lexer.mll"
+# 55 "lexer.mll"
              ( IDENT(Lexing.lexeme lexbuf) )
 # 2186 "lexer.ml"
 
   | 10 ->
-# 56 "lexer.mll"
+# 57 "lexer.mll"
              ( INT(int_of_string (Lexing.lexeme lexbuf)) )
 # 2191 "lexer.ml"
 
   | 11 ->
-# 57 "lexer.mll"
+# 58 "lexer.mll"
              ( EOF )
 # 2196 "lexer.ml"
 
   | 12 ->
-# 58 "lexer.mll"
+# 59 "lexer.mll"
              ( LEXERROR(Lexing.lexeme lexbuf) )
 # 2201 "lexer.ml"
 
@@ -2206,184 +2206,184 @@ and lexe_focal lexbuf =
 and __ocaml_lex_lexe_focal_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 60 "lexer.mll"
+# 61 "lexer.mll"
                ( lexe_focal lexbuf )
 # 2212 "lexer.ml"
 
   | 1 ->
-# 61 "lexer.mll"
+# 62 "lexer.mll"
             ( incr_linenum lexbuf ; lexe_focal lexbuf )
 # 2217 "lexer.ml"
 
   | 2 ->
-# 62 "lexer.mll"
+# 63 "lexer.mll"
           ( LET )
 # 2222 "lexer.ml"
 
   | 3 ->
-# 63 "lexer.mll"
+# 64 "lexer.mll"
          ( IF )
 # 2227 "lexer.ml"
 
   | 4 ->
-# 64 "lexer.mll"
+# 65 "lexer.mll"
            ( THEN )
 # 2232 "lexer.ml"
 
   | 5 ->
-# 65 "lexer.mll"
+# 66 "lexer.mll"
            ( ELSE )
 # 2237 "lexer.ml"
 
   | 6 ->
-# 66 "lexer.mll"
+# 67 "lexer.mll"
           ( REC )
 # 2242 "lexer.ml"
 
   | 7 ->
-# 67 "lexer.mll"
+# 68 "lexer.mll"
             ( MATCH )
 # 2247 "lexer.ml"
 
   | 8 ->
-# 68 "lexer.mll"
+# 69 "lexer.mll"
            ( WITH )
 # 2252 "lexer.ml"
 
   | 9 ->
-# 69 "lexer.mll"
+# 70 "lexer.mll"
           ( FUN )
 # 2257 "lexer.ml"
 
   | 10 ->
-# 70 "lexer.mll"
+# 71 "lexer.mll"
            ( TYPE )
 # 2262 "lexer.ml"
 
   | 11 ->
-# 71 "lexer.mll"
+# 72 "lexer.mll"
            ( CAML )
 # 2267 "lexer.ml"
 
   | 12 ->
-# 72 "lexer.mll"
+# 73 "lexer.mll"
              ( IMPORT )
 # 2272 "lexer.ml"
 
   | 13 ->
-# 73 "lexer.mll"
+# 74 "lexer.mll"
          ( ARROW )
 # 2277 "lexer.ml"
 
   | 14 ->
-# 74 "lexer.mll"
+# 75 "lexer.mll"
         ( EQ )
 # 2282 "lexer.ml"
 
   | 15 ->
-# 75 "lexer.mll"
+# 76 "lexer.mll"
          ( AS )
 # 2287 "lexer.ml"
 
   | 16 ->
-# 76 "lexer.mll"
+# 77 "lexer.mll"
         ( PIPE )
 # 2292 "lexer.ml"
 
   | 17 ->
-# 77 "lexer.mll"
+# 78 "lexer.mll"
          ( IN )
 # 2297 "lexer.ml"
 
   | 18 ->
-# 78 "lexer.mll"
+# 79 "lexer.mll"
          ( LPAREN )
 # 2302 "lexer.ml"
 
   | 19 ->
-# 79 "lexer.mll"
+# 80 "lexer.mll"
          ( SEMICOLON )
 # 2307 "lexer.ml"
 
   | 20 ->
-# 80 "lexer.mll"
+# 81 "lexer.mll"
          ( COMMA )
 # 2312 "lexer.ml"
 
   | 21 ->
-# 81 "lexer.mll"
+# 82 "lexer.mll"
          ( RPAREN )
 # 2317 "lexer.ml"
 
   | 22 ->
-# 82 "lexer.mll"
+# 83 "lexer.mll"
          ( BANG )
 # 2322 "lexer.ml"
 
   | 23 ->
-# 83 "lexer.mll"
+# 84 "lexer.mll"
          ( UNDERSCORE )
 # 2327 "lexer.ml"
 
   | 24 ->
-# 84 "lexer.mll"
+# 85 "lexer.mll"
          ( STAR )
 # 2332 "lexer.ml"
 
   | 25 ->
-# 85 "lexer.mll"
+# 86 "lexer.mll"
          ( DIESE )
 # 2337 "lexer.ml"
 
   | 26 ->
-# 86 "lexer.mll"
+# 87 "lexer.mll"
          ( ARO )
 # 2342 "lexer.ml"
 
   | 27 ->
-# 87 "lexer.mll"
+# 88 "lexer.mll"
                          (let l = Lexing.lexeme lexbuf in
                           STRING((String.sub l 1 (String.length l - 2))) )
 # 2348 "lexer.ml"
 
   | 28 ->
-# 89 "lexer.mll"
+# 90 "lexer.mll"
                                                        ( VAR(Lexing.lexeme lexbuf) )
 # 2353 "lexer.ml"
 
   | 29 ->
-# 91 "lexer.mll"
+# 92 "lexer.mll"
                        ( UIDENT(Lexing.lexeme lexbuf) )
 # 2358 "lexer.ml"
 
   | 30 ->
-# 92 "lexer.mll"
+# 93 "lexer.mll"
                  (let l = Lexing.lexeme lexbuf in
                   IIDENT(String.sub l 1 (String.length l - 2)) )
 # 2364 "lexer.ml"
 
   | 31 ->
-# 94 "lexer.mll"
+# 95 "lexer.mll"
            (PIDENT(Lexing.lexeme lexbuf) )
 # 2369 "lexer.ml"
 
   | 32 ->
-# 96 "lexer.mll"
+# 97 "lexer.mll"
                        ( IDENT(Lexing.lexeme lexbuf) )
 # 2374 "lexer.ml"
 
   | 33 ->
-# 98 "lexer.mll"
+# 99 "lexer.mll"
                        ( INT(int_of_string(Lexing.lexeme lexbuf)) )
 # 2379 "lexer.ml"
 
   | 34 ->
-# 99 "lexer.mll"
+# 100 "lexer.mll"
           ( EOF )
 # 2384 "lexer.ml"
 
   | 35 ->
-# 100 "lexer.mll"
+# 101 "lexer.mll"
          ( LEXERROR(Lexing.lexeme lexbuf) )
 # 2389 "lexer.ml"
 
@@ -2394,57 +2394,57 @@ and lexe_type lexbuf =
 and __ocaml_lex_lexe_type_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 102 "lexer.mll"
+# 103 "lexer.mll"
          ( LPAREN )
 # 2400 "lexer.ml"
 
   | 1 ->
-# 103 "lexer.mll"
+# 104 "lexer.mll"
          ( RPAREN )
 # 2405 "lexer.ml"
 
   | 2 ->
-# 104 "lexer.mll"
+# 105 "lexer.mll"
          ( ARROW )
 # 2410 "lexer.ml"
 
   | 3 ->
-# 105 "lexer.mll"
+# 106 "lexer.mll"
         ( ARO )
 # 2415 "lexer.ml"
 
   | 4 ->
-# 106 "lexer.mll"
+# 107 "lexer.mll"
          ( COMMA )
 # 2420 "lexer.ml"
 
   | 5 ->
-# 107 "lexer.mll"
+# 108 "lexer.mll"
          ( STAR )
 # 2425 "lexer.ml"
 
   | 6 ->
-# 109 "lexer.mll"
+# 110 "lexer.mll"
                        ( UIDENT(Lexing.lexeme lexbuf) )
 # 2430 "lexer.ml"
 
   | 7 ->
-# 111 "lexer.mll"
+# 112 "lexer.mll"
                         ( VAR(Lexing.lexeme lexbuf) )
 # 2435 "lexer.ml"
 
   | 8 ->
-# 113 "lexer.mll"
+# 114 "lexer.mll"
                        ( IDENT(Lexing.lexeme lexbuf) )
 # 2440 "lexer.ml"
 
   | 9 ->
-# 114 "lexer.mll"
+# 115 "lexer.mll"
          ( LEXERROR(Lexing.lexeme lexbuf) )
 # 2445 "lexer.ml"
 
   | 10 ->
-# 115 "lexer.mll"
+# 116 "lexer.mll"
           ( EOF )
 # 2450 "lexer.ml"
 
@@ -2455,32 +2455,32 @@ and tmp_lexe_xml lexbuf =
 and __ocaml_lex_tmp_lexe_xml_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 135 "lexer.mll"
+# 136 "lexer.mll"
             (tmp_lexe_xml lexbuf )
 # 2461 "lexer.ml"
 
   | 1 ->
-# 136 "lexer.mll"
+# 137 "lexer.mll"
             (incr_linenum lexbuf ; tmp_lexe_xml lexbuf )
 # 2466 "lexer.ml"
 
   | 2 ->
-# 137 "lexer.mll"
+# 138 "lexer.mll"
             (tmp_lexe_xml_header lexbuf)
 # 2471 "lexer.ml"
 
   | 3 ->
-# 138 "lexer.mll"
+# 139 "lexer.mll"
             (tmp_lexe_xml_in_tag lexbuf )
 # 2476 "lexer.ml"
 
   | 4 ->
-# 139 "lexer.mll"
+# 140 "lexer.mll"
             (tmp_lexe_xml_between_tag lexbuf)
 # 2481 "lexer.ml"
 
   | 5 ->
-# 140 "lexer.mll"
+# 141 "lexer.mll"
             (LEXERROR(Lexing.lexeme lexbuf) )
 # 2486 "lexer.ml"
 
@@ -2491,27 +2491,27 @@ and tmp_lexe_xml_between_tag lexbuf =
 and __ocaml_lex_tmp_lexe_xml_between_tag_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 142 "lexer.mll"
+# 143 "lexer.mll"
                    (tmp_lexe_xml_in_tag lexbuf )
 # 2497 "lexer.ml"
 
   | 1 ->
-# 143 "lexer.mll"
+# 144 "lexer.mll"
         ( incr_linenum lexbuf ; tmp_lexe_xml_between_tag lexbuf )
 # 2502 "lexer.ml"
 
   | 2 ->
 let
-# 144 "lexer.mll"
+# 145 "lexer.mll"
                                 ident
 # 2508 "lexer.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_curr_pos in
-# 144 "lexer.mll"
+# 145 "lexer.mll"
                                       (XML_IDENT(ident) )
 # 2512 "lexer.ml"
 
   | 3 ->
-# 145 "lexer.mll"
+# 146 "lexer.mll"
          (LEXERROR(Lexing.lexeme lexbuf) )
 # 2517 "lexer.ml"
 
@@ -2522,42 +2522,42 @@ and tmp_lexe_xml_in_tag lexbuf =
 and __ocaml_lex_tmp_lexe_xml_in_tag_rec lexbuf __ocaml_lex_state =
   match Lexing.new_engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 147 "lexer.mll"
+# 148 "lexer.mll"
                    (tmp_lexe_xml_in_tag lexbuf )
 # 2528 "lexer.ml"
 
   | 1 ->
-# 148 "lexer.mll"
+# 149 "lexer.mll"
         ( incr_linenum lexbuf ; tmp_lexe_xml_in_tag lexbuf )
 # 2533 "lexer.ml"
 
   | 2 ->
-# 149 "lexer.mll"
+# 150 "lexer.mll"
                                              (BTAG_IDENT(Lexing.lexeme lexbuf) )
 # 2538 "lexer.ml"
 
   | 3 ->
 let
-# 150 "lexer.mll"
+# 151 "lexer.mll"
                                                     ident
 # 2544 "lexer.ml"
 = Lexing.sub_lexeme lexbuf (lexbuf.Lexing.lex_start_pos + 1) lexbuf.Lexing.lex_curr_pos in
-# 150 "lexer.mll"
+# 151 "lexer.mll"
                                                            (ETAG_IDENT(ident) )
 # 2548 "lexer.ml"
 
   | 4 ->
 let
-# 151 "lexer.mll"
+# 152 "lexer.mll"
                                                   ident
 # 2554 "lexer.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos lexbuf.Lexing.lex_mem.(0) in
-# 151 "lexer.mll"
+# 152 "lexer.mll"
                                                                   (BETAG_IDENT(ident) )
 # 2558 "lexer.ml"
 
   | 5 ->
-# 152 "lexer.mll"
+# 153 "lexer.mll"
          (LEXERROR(Lexing.lexeme lexbuf) )
 # 2563 "lexer.ml"
 
@@ -2569,11 +2569,11 @@ and __ocaml_lex_tmp_lexe_xml_header_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
 let
-# 154 "lexer.mll"
+# 155 "lexer.mll"
            ident
 # 2575 "lexer.ml"
 = Lexing.sub_lexeme lexbuf lexbuf.Lexing.lex_start_pos (lexbuf.Lexing.lex_curr_pos + -2) in
-# 154 "lexer.mll"
+# 155 "lexer.mll"
                       ( XML_HEADER(ident))
 # 2579 "lexer.ml"
 
@@ -2584,72 +2584,72 @@ and lexe_test_context lexbuf =
 and __ocaml_lex_lexe_test_context_rec lexbuf __ocaml_lex_state =
   match Lexing.engine __ocaml_lex_tables __ocaml_lex_state lexbuf with
       | 0 ->
-# 156 "lexer.mll"
+# 157 "lexer.mll"
                        ( lexe_test_context lexbuf )
 # 2590 "lexer.ml"
 
   | 1 ->
-# 157 "lexer.mll"
+# 158 "lexer.mll"
           ( LET )
 # 2595 "lexer.ml"
 
   | 2 ->
-# 158 "lexer.mll"
+# 159 "lexer.mll"
          ( IN )
 # 2600 "lexer.ml"
 
   | 3 ->
-# 159 "lexer.mll"
+# 160 "lexer.mll"
         ( EQ )
 # 2605 "lexer.ml"
 
   | 4 ->
-# 160 "lexer.mll"
+# 161 "lexer.mll"
         ( LPAREN )
 # 2610 "lexer.ml"
 
   | 5 ->
-# 162 "lexer.mll"
+# 163 "lexer.mll"
              ( INT(int_of_string (Lexing.lexeme lexbuf)) )
 # 2615 "lexer.ml"
 
   | 6 ->
-# 163 "lexer.mll"
+# 164 "lexer.mll"
         ( RPAREN )
 # 2620 "lexer.ml"
 
   | 7 ->
-# 164 "lexer.mll"
+# 165 "lexer.mll"
          ( BANG )
 # 2625 "lexer.ml"
 
   | 8 ->
-# 165 "lexer.mll"
+# 166 "lexer.mll"
          ( DIESE )
 # 2630 "lexer.ml"
 
   | 9 ->
-# 166 "lexer.mll"
+# 167 "lexer.mll"
         ( COMMA )
 # 2635 "lexer.ml"
 
   | 10 ->
-# 167 "lexer.mll"
+# 168 "lexer.mll"
            (IDENT (Lexing.lexeme lexbuf) )
 # 2640 "lexer.ml"
 
   | 11 ->
-# 168 "lexer.mll"
+# 169 "lexer.mll"
            (UIDENT (Lexing.lexeme lexbuf) )
 # 2645 "lexer.ml"
 
   | 12 ->
-# 169 "lexer.mll"
+# 170 "lexer.mll"
          ( EOF )
 # 2650 "lexer.ml"
 
   | 13 ->
-# 170 "lexer.mll"
+# 171 "lexer.mll"
          (LEXERROR(Lexing.lexeme lexbuf) )
 # 2655 "lexer.ml"
 

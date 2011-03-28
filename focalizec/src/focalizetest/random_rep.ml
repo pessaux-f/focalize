@@ -24,7 +24,15 @@ let rec depends =
       cumul
     else
       match typ with
-      | TAtom _ -> [typ] ++ cumul
+      | TAtom (m, t) -> 
+        (try 
+        let types_inside = List.fold_left
+                             (fun s (_,t) -> t ++ s)
+                             [] (Focalize_inter.get_concrete_def (TPrm(m,t, []))) in
+        List.fold_left (fun s e -> aux e s) ([typ]++cumul) types_inside
+        with
+        | Focalize_inter.Not_a_concrete_type -> [typ] ++ cumul
+        )
       | TSpecPrm _ -> [typ] ++ cumul
       | TProd(t1,t2)
       | TFct(t1,t2) -> aux t1 (aux t2 ([typ] ++ cumul))
@@ -765,31 +773,46 @@ let ast_gen_print_types_rep rep =
  string list -> Own_types.typ -> (string * string list) * Own_expr.methods list * string 
 *)
 
-let rec parcours aetevisite avisiter fajout =
-  match avisiter with
+(* Reverse the depends relation *)
+let rec successors n all =
+  match all with
   | [] -> []
   | e::r ->
-      if List.mem e aetevisite then
-        parcours aetevisite r fajout
+      if List.mem n (List.filter (fun ee -> ee <> e) (depends e)) then
+        e::successors n r
       else
-        begin
-          let voisins = depends e in
-          let resteavisiter = fajout r voisins in
-          let nouveauvisite = e::aetevisite in
-          e::parcours nouveauvisite resteavisiter fajout
-        end;;
+        successors n r
+
+let tsort edges seed =
+   let rec sort path visited =
+   function
+     []  -> visited
+    | n::nodes ->
+      if List.mem n path then
+       (let p_t t = print_string (string_of_typ t) in
+        let p_s = print_string in
+        List.iter (fun e -> p_t e; p_s ": "; List.iter (fun t -> p_t t; p_s " ") (depends e); p_s "\n") edges;
+        failwith "Warning: cyclic dependences between types"
+       )
+      else
+        let v' =
+          if List.mem n visited then
+            visited
+          else
+            n :: sort (n::path) visited (successors n edges) in
+        sort path v' nodes in
+  sort [] [] seed;;
 
 let tri_topologique l =
-  parcours [] l (fun l1 l2 -> l2 @ l1);;
+  tsort l l;;
 
 let ast_random l_param typ_list rep =
   let l = (List.map (fun e -> TSpecPrm e) l_param @ 
           (typ_list @ [rep])) ++ [] in
-  let l = TAtom(Some "basics", foctint)::
-          List.filter (function | TAtom(_,"int") -> false | _ -> true) l in
   let typ_list = List.fold_right (fun e s-> depends e ++ s) l [] in
+  let typ_list = List.filter (function | TAtom(_,"int") -> false | _ -> true) typ_list in
   let typ_list = tri_topologique typ_list in
-(*   List.iter (fun e -> print_string (string_of_typ e ^ " ")) typ_list; *)
+  let typ_list = TAtom(Some "basics", foctint)::typ_list in
   let meths1 = ast_gen_print_types_rep rep in
   let meths2 = ast_gen_print_types l_param typ_list in
 (*   ast_of_external rep :: *)

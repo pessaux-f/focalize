@@ -331,12 +331,12 @@ and
 let prolog_pgm_of_minifoc_function tc
                                    cp
                                    _cur_spec
-                                   n
-                                   (prm, (minifoc_body, _))
+                                   name
+                                   (prm, (minifoc_body, ret_type))
                                    arity_list : prolog_clause =
   let res_var = Fresh_variable.new_prolog_var () in
   let prolog_args = List.map (fun (e, _t) -> prolog_var (Fresh_variable.get_from_existing e)) prm in
-  let prolog_m = prolog_predicate cp n in
+  let prolog_m = prolog_predicate cp name in
   let _prolog_head =
     prolog_fun prolog_m
                [prolog_var res_var;
@@ -345,7 +345,9 @@ let prolog_pgm_of_minifoc_function tc
                 prolog_var env_variable
                ] in
   let to_set = get_vars minifoc_body in
-  let set_types = List.map (fun (v,typ) -> prolog_fun "set_type"
+  let set_types = (prolog_fun "set_type" [prolog_var res_var; prolog_of_typ
+  (expand_self tc cp ret_type)])::
+                  List.map (fun (v,typ) -> prolog_fun "set_type"
                                        [prolog_var (Fresh_variable.get_from_existing v);
                                         prolog_of_typ (expand_self tc cp typ)]) to_set in
 
@@ -356,9 +358,7 @@ let prolog_pgm_of_minifoc_function tc
 (*   print_newline (); *)
 (*   print_string
  *   "***********************************************************\n"; *)
-print_string n;
-print_newline ();
-  let var_clos = Fresh_variable.get_from_existing n in
+  let var_clos = Fresh_variable.get_from_existing name in
   let l_closure = 
         prolog_fun "closure_defs" [prolog_var var_clos;
                                    prolog_fun prolog_m []; (* nom de la fonction *)
@@ -408,6 +408,12 @@ let prolog_from_prop species prop_name =
   (ml, l_precond);;
 *)
 
+(** [get_args_minifoc sn f]
+ 
+ From a species name [sn] and a function name [f], returns a 3-tuple [args,
+ (def, t)] where [args] are the formal argument of [f], [def] the definition of
+ [f] and [typ] the type of value returned by [f].
+*)
 let get_args_minifoc sn f =
   let args, (def, typ) = get_meth_def_split sn f in
   let pdef = minifoc_expr_of_myexpr def in
@@ -459,14 +465,14 @@ let create_needing_meths (tc : test_context)
                                       get_meth_dep_closure tc (get_meths_of_expr empty_path e) s)
                                      []  (List.flatten preconds) in
        (* Get the arguments of all functions and species name *)
-  let aux_list = List.map (fun (cp, n) ->
-                  let cur_spec = species_of_cp tc cp in
-(*                   print_string (string_of_cp cp); *)
-(*                   print_string n; *)
-(*                   print_newline (); *)
-                  let args = get_args_minifoc cur_spec n in
-                    (cur_spec, (cp, n), args), ((cp, n), List.length (fst args))
-                 ) meth_needed in
+  let aux_list =
+     List.map (fun (cp, n) ->
+                let cur_spec = species_of_cp tc cp in
+(*                print_string (string_of_cp cp); *)
+(*                print_string n; *)
+(*                print_newline (); *)
+                let args = get_args_minifoc cur_spec n in
+                  (cur_spec, (cp, n), args), ((cp, n), List.length (fst args))) meth_needed in
   let aux_list, arity_list = List.split aux_list in
        (* and finally get the corresponding clause *)
   let clauses = List.map (function (cur_spec, (cp,n), args)  ->

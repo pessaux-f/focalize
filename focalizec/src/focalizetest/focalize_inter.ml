@@ -1006,7 +1006,7 @@ let foctyp_of_typ _ = failwith "foctyp_of_typ: Not yet implemented"
 let is_complete _ = failwith "is_complete: Not yet implemented" 
 
 let get_meth_def_split sn m =
-  let def,typ = get_meth_def sn m in
+  let def, typ = get_meth_def sn m in (* Get the definition and the type of m *)
 (*   print_debug (dbg_string_myexpr def); *)
   let rec aux s =
     match s with

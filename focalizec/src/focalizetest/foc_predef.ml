@@ -69,6 +69,7 @@ let top_preambule =
     " ^ fst result_ko ^ ";
     " ^ fst result_raise ^ "(@STRING);";
    "let put_time in @STRING -> @FLOAT -> @FLOAT -> @STRING -> (@LIST(@LIST(@RESULT)) * @INT) -> @UNIT = caml import put_time";
+   "let compute_time in (@FLOAT * @FLOAT) -> @INT = caml import compute_time";
    "type VERDICT =
     " ^ fst verdict_precond_ok ^ "(@BOOL, @LIST(@RESULT));
     " ^ fst verdict_precond_ko ^ ";";
@@ -444,6 +445,7 @@ let top_import xml : import =
                       Unix.system (\"sicstus -r \" ^ s2);
                       deb, (Unix.times ()).Unix.tms_cutime";
    "get_time", "fun () -> (Unix.times ()).Unix.tms_utime";
+   "compute_time", "fun d_f -> int_of_float ((snd d_f -. fst d_f) *. 1000.0)";
    "put_time", "fun meth d f s ok_nb ->
      let fic = open_out_gen [Open_append; Open_creat] 0o600 \"stats\" in
                  let nb_ok = List.length (fst ok_nb) in

@@ -141,7 +141,7 @@ let ast_test_from_prolog i (name : string) _prolog_pgm =
              match l with
              | @NIL ->
                  (#print_string(\"\\n\");
-                  " ^ top_xml_coll_name ^ "!xml_close_elementaire(res, 1, nb);
+                  " ^ top_xml_coll_name ^ "!xml_close_elementaire(res, 1, nb, compute_time(d_f), \"constraint\");
                   @CRP(b, res)
                  )
              | @CONS(cur,r) -> 
@@ -267,16 +267,26 @@ let ast_test_elem_i =
     let mcdc = if get_mcdc_number () = 0 then "@FALSE" else "@TRUE" in
     let nb_conclu = string_of_int (List.length (list_of_conclusion (get_conclusion x))) in
     parse_foc_meth
-    (" let rec " ^ test_elem_i ^ " in @BOOL * (@LIST(@LIST(@RESULT)) * @INT ) =
-      fun n in ( @INT ) -> fun requirement in (@LIST(@INT)) -> fun b in ( @BOOL ) -> 
-      fun j_t in (@LIST(@LIST(@RESULT))) -> fun nb_try in ( @INT ) ->
-        fun nb_consec_fail in (@INT) ->
+    (" let rec " ^ test_elem_i ^ " in (@BOOL * (@LIST(@LIST(@RESULT)) * @INT )) * @FLOAT =
+      fun n              in (@INT) ->
+      fun requirement    in (@LIST(@INT)) ->
+      fun b              in (@BOOL) -> 
+      fun j_t            in (@LIST(@LIST(@RESULT))) ->
+      fun nb_try         in (@INT) ->
+      fun nb_consec_fail in (@INT) ->
+      fun deb in (@FLOAT) ->
         if @OR(@AND(@NOT(" ^ mcdc ^ "), @INT_EQUAL(n , 0)),
                @AND(     " ^ mcdc ^ " , @STRUCT_EQUAL(requirement, @NIL))) then
           (
+            let fin = #get_time(@VUNIT) in
             let saute_ligne = #print_string(\"\\n\") in
-             " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t, " ^ nb_conclu ^ ", nb_try);
-          @CRP(b, @CRP(j_t, nb_try)))
+             " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t,
+                                                             " ^ nb_conclu ^ ",
+                                                             nb_try,
+                                                             compute_time(@CRP(deb,fin)),
+                                                             \"random\");
+              @CRP(@CRP(b, @CRP(j_t, nb_try)), fin)
+          )
         else 
           " ^ ast_random_var (variables_to_list lvar ) ^ (* Lot of let binding *) "  
             let req_res = !" ^ submit_test elem_num ^ foc_argscall_of_variables lvar ^ "(requirement) in
@@ -288,16 +298,21 @@ let ast_test_elem_i =
                                         @FST(req_res),
                                         @AND(test_pass, b),
                                         @CONS(nj_t, j_t),
-                                        @SUCC(nb_try), 0 )
+                                        @SUCC(nb_try), 0, deb)
                  )
               | " ^ fst verdict_precond_ko ^ " -> 
                   if  @INT_GEQ(nb_consec_fail, 10000000) then
                     (" ^ top_xml_coll_name ^ "!xml_timeout(@VUNIT);
-          " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t, " ^ nb_conclu ^ ", nb_try); 
-                     @CRP(@FALSE, @CRP(j_t, nb_try))
+                     let fin = #get_time(@VUNIT) in
+                     " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t,
+                                                                     " ^ nb_conclu ^ ",
+                                                                     nb_try,
+                                                                     compute_time(@CRP(deb,fin)),
+                                                                     \"random\"); 
+                     @CRP(@CRP(@FALSE, @CRP(j_t, nb_try)), fin)
                     )
                   else
-                  !" ^ test_elem_i ^ "(n,requirement, b,j_t, @SUCC(nb_try), @SUCC(nb_consec_fail))"
+                  !" ^ test_elem_i ^ "(n,requirement, b,j_t, @SUCC(nb_try), @SUCC(nb_consec_fail), deb)"
     );;
 
 (** ast_call_test_elem i
@@ -341,22 +356,24 @@ let ast_rapport_test_elem (selem : elementaire) vs name i =
                                  @FST(@FST(res_d_f))
                                 )")
                               )
-                              (expr_let_notyp "avant"  (expr_basic (prefix "get_time") [expr_basic focunit []])
+                              (expr_let_notyp "deb"  (expr_basic (prefix "get_time") [expr_basic focunit []])
                               (expr_let_notyp "mcdc" (if do_mcdc then expr_basic
                               (prefix "list_n_mcdc") [expr_int mcdc_n; expr_int mcdc_size] else expr_glob focnil)
-                              (expr_let_notyp "res" (expr_meth "Self" (test_elem i)
+                              (expr_let_notyp "res_fin" (expr_meth "Self" (test_elem i)
                                                 [expr_var "n"; expr_var "mcdc"; expr_glob foctrue; expr_glob
-                                                focnil; expr_int 0; expr_int 0])
+                                                focnil; expr_int 0; expr_int 0; expr_var "deb"])
+                              (expr_let_notyp "fin" (expr_basic focsnd [expr_var "res_fin"])
+                              (expr_let_notyp "res" (expr_basic focfst [expr_var "res_fin"])
                               (expr_seq (expr_basic (prefix "put_time")
                                                     [expr_string "random"; 
-                                                     expr_var "avant";
-                                                     expr_basic (prefix "get_time") [expr_basic focunit []];
+                                                     expr_var "deb";
+                                                     expr_var "fin";
                                                      expr_string name;
                                                      expr_basic focsnd [expr_var "res"]
                                                     ])
                               (expr_basic focfst [expr_var "res"]) (use_seq_function ())
                               )
-                              )))) (use_seq_function ())
+                              )))))) (use_seq_function ())
                      
                    )
                   )
@@ -564,7 +581,10 @@ let ast_test_elem_i_reinject =
         | @NIL ->
            (let saute_ligne = #print_string(\"\\n\") in
              " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t, " ^
-          string_of_int (List.length (list_of_conclusion (get_conclusion x)))  ^ ", nb_try);
+                                                             string_of_int (List.length (list_of_conclusion (get_conclusion x)))  ^ ",
+                                                             nb_try,
+                                                             0,
+                                                             \"replay\");
              @CRP(b, nb_try)
            )
         | @CONS(h,tail) ->
@@ -585,7 +605,9 @@ let ast_test_elem_i_reinject =
                   if @INT_GT(nb_try,10000000) then
                     (" ^ top_xml_coll_name ^ "!xml_timeout(@VUNIT);
           " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t, " ^
-          string_of_int (List.length (list_of_conclusion (get_conclusion x)))  ^ ", nb_try); 
+                                                          string_of_int (List.length (list_of_conclusion (get_conclusion x)))  ^ ",
+                                                          nb_try,
+                                                          0, \"replay\"); 
                      @CRP(@FALSE, nb_try)
                   )
                   else

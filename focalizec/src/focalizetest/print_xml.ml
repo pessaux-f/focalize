@@ -185,6 +185,8 @@ let top_xml_meths () =
      fun l in (@LIST(@LIST(@RESULT))) ->
      fun nb in (@INT) ->
      fun nb_try in (@INT) ->
+     fun times in (@INT) ->
+     fun meth in (@STRING) ->
        #print_file(\"<stats>\\n\");
        #print_file(\"<conclucoverage>\\n\");
        #print_file(\"<nb_reach>\");
@@ -197,6 +199,12 @@ let top_xml_meths () =
        #print_file(\"<nb_generated>\");
        #print_file(#string_of_int(nb_try));
        #print_file(\"</nb_generated>\\n\");
+       #print_file(\"<times>\");
+       #print_file(#string_of_int(times));
+       #print_file(\"</times>\\n\");
+       #print_file(\"<method>\");
+       #print_file(meth);
+       #print_file(\"</method>\\n\");
        #print_file(\"</stats>\\n\");
        #print_file(\"</elementaire>\\n\")";
          (* * * * * * * * * * * * * * * * *)
