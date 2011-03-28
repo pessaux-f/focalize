@@ -1,0 +1,14 @@
+Makefile.spec :
+    tests lexicographic_product_additive_monoid with small_naturals for both
+    instances parameters.
+
+Makefile.parameters :
+    tests lexicographic_product_additive_monoid with parameters :
+     - parameter total_degree_reverse_lexicographic_ordering(small_naturals)
+     - small_naturals
+
+The both Makefile use actually the definitions
+- lexicographic_product_additive_monoid_print,
+- lexicographic_product_additive_monoid_print2
+- total_degree_reverse_lexicographic_ordering_print
+which modify the print function of the species for better pretty printing.

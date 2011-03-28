@@ -1,0 +1,33 @@
+uses small_integers;;
+open small_integers;;
+
+uses products_foc;;
+open products_foc;;
+
+
+(* These species redefine the method 'print'  *) 
+
+species lexicographic_product_additive_monoid_print(p1 is monomial_ordering,
+                     p2 is monomial_ordering) inherits
+        lexicographic_product_additive_monoid(p1,p2) = 
+
+  let print(x) = #sc(#sc("(",!output(x,"a","b")),")") ;
+
+end
+
+
+species total_degree_reverse_lexicographic_ordering_print
+                   (p1 is monomial_ordering) inherits
+               total_degree_reverse_lexicographic_ordering(p1) =
+
+  let print(x) = #sc(#sc("(",!output(x,"b","c")),")") ;
+end
+
+
+species lexicographic_product_additive_monoid_print2(p1 is monomial_ordering,
+                    p2 is total_degree_reverse_lexicographic_ordering_print(p1),
+                    p3 is monomial_ordering) inherits
+                    lexicographic_product_additive_monoid(p2,p3) =
+  let print(x) = #sc(#sc("(",!output(x,"a","d")),")") ;
+end
+

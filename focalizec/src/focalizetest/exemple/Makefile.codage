@@ -1,0 +1,90 @@
+# Here a Makefile for testing a property in the library written by charles
+# Morisset.
+# Copy this file to the cvs' directory articles/JFLA06/TSI06/codage and
+# type :
+#
+# focc presentation.foc
+# focc util.foc
+# focc frame.foc
+# focc access_control.foc
+# focc collection_blp.foc
+# focc main_blp.foc
+# ocamldep *.ml > .depend
+# make FOC_LIBDIR=`focc -where` CAML_LIBDIR=`ocamlc -where`
+# make -f Makefile.codage
+#
+# If you're lucky, you will not have to type the focc's command.
+#
+# To clean :
+# - make -f Makefile.codage clean    : delete .foc .fml .ml .mli .cm{i,o] .zv files
+# - make -f Makefile.codage cleanall : delete all intermediates files
+# - make -f Makefile.codage cleanxml : delete xml test report
+
+OCAMLC=ocamlc
+FOCC=focc
+FOCALLIB=$(shell $(FOCC) -where)
+FOCTEST=../../../../focal/tools/test_focal/foctest
+
+
+NUMBER_OF_CASE_TEST=500
+PROPERTIES=order_inf_is_infimum order_sup_is_supremum spec_term sup_absorbes_inf \
+           inf_absorbes_sup sup_is_associative sup_commutes theo3 theo4 theo5 theo6 \
+           first_spec scnd_spec
+SPECIES_TEST='s_my_n_s_blp(s_my_need_to_know,set_need_to_know_list,s_my_classification)'
+
+# DO NOT EDIT THIS LINE AND BELOW
+XMLFILE=$(patsubst %,test_%.xml,$(PROPERTIES))
+EXEC=$(patsubst %,test_%,$(PROPERTIES))
+
+OBJS=caml_basics.cmo openmath.cmo basics0.cmo sets_orders.cmo iterators.cmo multiplicative_law.cmo \
+     logics.cmo array_foc.cmo additive_law.cmo weak_structures.cmo rings_fields.cmo products_foc.cmo \
+     presentation.cmo util.cmo frame.cmo access_control.cmo collection_blp.cmo
+
+all: $(XMLFILE)
+
+define dependexec 
+$(1): $(1).cmo
+	$(OCAMLC) -o $(1) -I $(FOCALLIB) unix.cma $(OBJS) $(1).cmo
+
+$(1).xml:$(1)
+	@echo test de $(1)...
+	@./$(1)
+
+$(1).foc:
+	$(FOCTEST) -o $(1).foc -t $(NUMBER_OF_CASE_TEST) -S 1000000 -s $(SPECIES_TEST)  -p $(patsubst test_%,%,$(1)) collection_blp
+endef
+
+$(foreach exec,$(EXEC),$(eval $(call dependexec ,$(exec))))
+
+
+clean:
+	rm -f $(patsubst %,%.cmo,$(EXEC))
+	rm -f $(patsubst %,%.cmi,$(EXEC))
+	rm -f $(patsubst %,%.mli,$(EXEC))
+	rm -f $(patsubst %,%.fml,$(EXEC))
+	rm -f $(patsubst %,%.foc,$(EXEC))
+	rm -f $(patsubst %,%.ml,$(EXEC))
+	rm -f $(patsubst %,%.fo,$(EXEC))
+	rm -f $(patsubst %,%.zv,$(EXEC))
+
+cleanall: clean
+	rm -f $(patsubst %,%,$(EXEC))
+	@echo To delete the .xml and .html test report, type make -f Makefile.codage cleanxml
+
+cleanxml:
+	rm -f $(patsubst %,%.xml,$(EXEC))
+
+realclean:cleanall
+
+.DEFAULT_GOAL := all
+.PHONY:all clean cleanall realclean
+
+%.ml %.mli:%.foc
+	$(FOCC) $<
+
+%.cmo:%.ml %.cmi
+	$(OCAMLC) -w y -c -I $(FOCALLIB) $<
+
+%.cmi:%.mli
+	$(OCAMLC) -c -I $(FOCALLIB) $<
+

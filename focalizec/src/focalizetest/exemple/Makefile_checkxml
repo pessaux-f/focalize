@@ -1,0 +1,8 @@
+
+all:
+	find . -name "*.xml" -print0 | xargs -0 -n 1  mono ./ValidateXSD.exe xml/test_report.xsd 
+
+
+
+.PHONY:all
+

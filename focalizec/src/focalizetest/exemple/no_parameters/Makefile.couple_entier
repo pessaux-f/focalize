@@ -1,0 +1,14 @@
+SPECIES="couple\#Groupe_couple_entier"
+LIBRARY=couple
+FOCTEST_OPTS=
+PROPERTIES='plus_no_constant_is_non_constant'
+NUMBER_OF_TEST=100
+SIZE_OF_ELEM=10
+XMLFILE=couple_entier.xml
+
+CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo  sets.cmo
+
+OCAML_OBJ= unix.cma
+XSLTPATH=../xml
+
+include ../Makefile.test

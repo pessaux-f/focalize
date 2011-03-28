@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:complexType name="trapport">
+    <xs:sequence>
+      <xs:element name="context_test" type="tcontext_test" minOccurs="1" maxOccurs="1" />
+      <xs:element name="propriete" type="tpropriete" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+  <!-- Définition d'un contexte de test -->
+  <xs:complexType name="tcontext_test">
+    <xs:sequence>
+      <xs:element name="collections" type="tcollections" minOccurs="0" maxOccurs="1" />
+      <xs:element name="species" type="tspecdef" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tcollections">
+    <xs:sequence>
+      <xs:element name="collection" type="tcollection" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tcollection">
+    <xs:sequence>
+      <xs:element name="paramname" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="species" type="tspecdef" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- Définition d'une espèce sous test -->
+  <xs:complexType name="tspecdef">
+    <xs:sequence>
+      <xs:element name="module" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="specparameters" type="tspecparameters" minOccurs="0" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tspecparameters">
+    <xs:sequence>
+      <xs:element name="specparameter" type="xs:string" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!--
+  <xs:complexType name="tspecparameter">
+    <xs:choice>
+      <xs:element name="paramcoll" type="tparamcoll" minOccurs="1" maxOccurs="1" />
+      <xs:element name="parament" type="tparament" minOccurs="1" maxOccurs="1" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="tparamcoll">
+    <xs:sequence>
+      <xs:element name="pcollname" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="pcollvalue" type="xs:string" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tparament">
+    <xs:sequence>
+      <xs:element name="pentname" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="pentvalue" type="tfocexpr" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+  -->
+  <!-- ********************* -->
+  <!-- Propriété principales -->
+  <xs:complexType name="tpropriete">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="forme" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="elementaire" type="telementaire" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!--
+  <xs:complexType name="tpropforme">
+    <xs:sequence>
+      <xs:element name="variables" type="tvariables" minOccurs="0" maxOccurs="1" />
+      <xs:element name="statement" type="xs:string" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+  -->
+  <!-- ********************* -->
+  <!-- Le rapport de test d'une forme elementaire est la donnee d'un
+  nom, d'une propriete (sous forme variables, precondition conclusion), et les jeux de test  -->
+  <xs:complexType name="telementaire">
+    <xs:sequence>
+      <xs:element name="forme" type="tforme" minOccurs="1" maxOccurs="1" />
+      <xs:element name="test" type="ttest" minOccurs="0" maxOccurs="unbounded" /> <!-- WARNING THE TWO LINES ARE EXCLUSIVE EACH OTHERS -->
+      <xs:element name="timeout" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="stats" type="tstats" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- DEFINITION DE CE QUE SONT LES STATISTIQUES ISSUES DU TEST D'UNE PROPRIÉTÉ ÉLEMENTAIRE -->	
+  <xs:complexType name="tstats">
+    <xs:sequence>
+      <xs:element name="conclucoverage" type="tconclucoverage" minOccurs="1" maxOccurs="1" />
+      <xs:element name="nb_generated" type="xs:int" minOccurs="1" maxOccurs="1" />
+      <xs:element name="times" type="xs:int" minOccurs="0" maxOccurs="1" />
+      <xs:element name="method" type="xs:string" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <!-- DEFINITION DE CE QU'EST LA CONVERTURE DE LA CONCLUSION ET STATS -->	
+  <xs:complexType name="tconclucoverage">
+    <xs:sequence>
+      <xs:element name="nb_reach" type="xs:int" minOccurs="1" maxOccurs="1" />
+      <xs:element name="nb_total" type="xs:int" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+
+  <!--   DEFINITION DE CE QU'EST UNE PROPRIETE -->	
+  <xs:complexType name="tforme">
+    <xs:sequence>
+      <xs:element name="variables" type="tvariables" minOccurs="0" maxOccurs="1" />
+      <xs:element name="preconditions" type="tpreconditions" minOccurs="0" maxOccurs="1" />
+      <xs:element name="conclusions" type="tconclusions" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tvariables">
+    <xs:sequence>
+      <xs:element name="variable" type="tvariable" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tvariable">
+    <xs:sequence>
+      <xs:element name="varname" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="vartype" type="tvartype" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tpreconditions">
+    <xs:sequence>
+      <xs:element name="focexpr" type="tfocexpr" minOccurs="0" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tconclusions">
+    <xs:sequence>
+      <xs:element name="focexpr" type="tfocexpr" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!-- ######################################### -->	
+
+  <!-- DEFINITION DE CE QU'EST UN JEU DE TEST -->
+  <xs:complexType name="ttest">
+    <xs:sequence>
+      <xs:element name="value" type="tvalue" minOccurs="0" maxOccurs="unbounded" />
+      <xs:element name="preconds" type="tpreconds" minOccurs="0" maxOccurs="1" />
+      <xs:element name="conclus" type="tconclus" minOccurs="1" maxOccurs="1" />
+      <xs:element name="resultat" type="tokkoresultat" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tvalue">
+    <xs:sequence>
+      <xs:element name="valstring" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="valexpr" type="tfocexpr" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tpreconds">
+    <xs:choice>
+      <xs:element name="precond" type="tokkoresultat" minOccurs="1" maxOccurs="unbounded" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="tconclus">
+    <xs:choice>
+      <xs:element name="conclu" type="tokkoresultat" minOccurs="1" maxOccurs="unbounded" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="tokkoresultat">
+    <xs:choice>
+      <xs:element name="ok" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="ko" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="raise" type="xs:string" minOccurs="1" maxOccurs="1" />
+    </xs:choice>
+  </xs:complexType>
+
+  <!--######################################## -->
+
+  <!-- Xml Focal type definition  -->
+  <xs:complexType name="tvartype">
+    <xs:choice>
+      <xs:element name="typeatom"    type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="typeprmatom" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="typefct"     type="tdoubletype" minOccurs="1" maxOccurs="1" />
+      <xs:element name="typeprod"    type="tdoubletype" minOccurs="1" maxOccurs="1" />
+      <xs:element name="typeprm"     type="ttypeprm" minOccurs="1" maxOccurs="1" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="ttypeprm">
+    <xs:sequence>
+      <xs:element name="prmname"  type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="prmlist" type="tvartype" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="tdoubletype">
+    <xs:sequence>
+      <xs:element name="left"  type="tvartype" minOccurs="1" maxOccurs="1" />
+      <xs:element name="right" type="tvartype" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!--######################################## -->
+
+  <!-- Xml Focal expressions definition  -->
+  <xs:complexType name="tfocexpr">
+    <xs:choice>
+      <xs:element name="exprif"       type="texprif"     minOccurs="1" maxOccurs="1" /> 
+      <xs:element name="exprapp"      type="texprapp"    minOccurs="1" maxOccurs="1" />
+      <xs:element name="exprfun"      type="texprfun"    minOccurs="1" maxOccurs="1" />
+      <xs:element name="exprvar"      type="tvariable"    minOccurs="1" maxOccurs="1" />
+      <xs:element name="exprint"      type="xs:int"      minOccurs="1" maxOccurs="1" />
+      <xs:element name="exprstring"   type="xs:string"   minOccurs="1" maxOccurs="1" />
+      <xs:element name="exprcaml_def" type="xs:string"   minOccurs="1" maxOccurs="1" />
+      <xs:element name="exprmeth"     type="texprmeth"   minOccurs="1" maxOccurs="1" />
+      <xs:element name="exprmatch"    type="texprmatch"  minOccurs="1" maxOccurs="1" />
+      <xs:element name="exprlet"      type="texprlet"    minOccurs="1" maxOccurs="1" />
+      <xs:element name="exprglobid"   type="texprglobid" minOccurs="1" maxOccurs="1" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="texprglobid">
+    <xs:choice>
+      <xs:element name="prefix" type="tprefix" minOccurs="1" maxOccurs="1" />
+      <xs:element name="infix" type="xs:string" minOccurs="1" maxOccurs="1" />
+    </xs:choice>
+  </xs:complexType>
+
+  <xs:complexType name="tprefix">
+    <xs:sequence>
+      <xs:element name="module" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="texprlet">
+    <xs:sequence>
+      <xs:element name="letvar"     type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="letvarexpr" type="tfocexpr"  minOccurs="1" maxOccurs="1" />
+      <xs:element name="letexpr"    type="tfocexpr"  minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="texprmatch">
+    <xs:sequence>
+      <xs:element name="matchval" type="tfocexpr"  minOccurs="1" maxOccurs="1" />
+      <xs:element name="exprpattern" type="texprpattern" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="texprpattern">
+    <xs:sequence>
+      <xs:element name="patroot" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="patappl" type="xs:string" minOccurs="1" maxOccurs="unbounded" />
+      <xs:element name="patexpr" type="tfocexpr"  minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="texprmeth">
+    <xs:sequence>
+      <xs:element name="collname" type="xs:string" minOccurs="0" maxOccurs="1" />
+      <xs:element name="methname" type="xs:string" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="texprfun">
+    <xs:sequence>
+      <xs:element name="funvar" type="xs:string" minOccurs="1" maxOccurs="1" />
+      <xs:element name="funtype" type="tvartype" minOccurs="1" maxOccurs="1" />
+      <xs:element name="funexpr" type="tfocexpr" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="texprapp">
+    <xs:sequence>
+      <xs:element name="appleft"  type="tfocexpr" minOccurs="1" maxOccurs="1" />
+      <xs:element name="appright" type="tfocexpr" minOccurs="1" maxOccurs="unbounded" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="texprif">
+    <xs:sequence>
+      <xs:element name="cond" type="tfocexpr" minOccurs="1" maxOccurs="1" />
+      <xs:element name="then" type="tfocexpr" minOccurs="1" maxOccurs="1" />
+      <xs:element name="else" type="tfocexpr" minOccurs="1" maxOccurs="1" />
+    </xs:sequence>
+  </xs:complexType>
+
+  <!--######################################## -->
+
+  <xs:element name="rapport" type="trapport" />
+
+</xs:schema>

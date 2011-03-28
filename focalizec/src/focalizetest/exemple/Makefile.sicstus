@@ -1,0 +1,94 @@
+# A generic Makefile
+
+FOCC=focc
+FOCAL_LIB=$(shell $(FOCC) -where)
+FOCTEST=../../foctest
+OCAMLC=ocamlc
+
+FOCCOPTS= -w a
+OCAMLOPTS= -w a -I $(FOCAL_LIB)
+# The file to generate 
+
+###
+EXEC=$(patsubst %.xml,%,$(XMLFILE))
+ADDITIONAL_FO_OBJ=$(patsubst %,%.fo,$(ADDITIONAL_LIBRARY))
+ADDITIONAL_ML_OBJ=$(patsubst %,%.cmo,$(ADDITIONAL_LIBRARY))
+ADDITIONAL_ML_INT=$(patsubst %,%.cmi,$(ADDITIONAL_LIBRARY))
+
+all: $(EXEC).html
+
+$(EXEC).html:$(EXEC).xml
+	cp $(XSLTPATH)/test_report.css . 
+	xsltproc $(XSLTPATH)/test_report.xslt $(EXEC).xml >$(EXEC).html
+
+
+$(EXEC).ml $(EXEC).mli: $(EXEC).foc
+	$(FOCC) $(FOCCOPTS) $<
+
+$(EXEC): $(EXEC).cmo $(ADDITIONAL_ML_OBJ)
+	$(OCAMLC) -o $@ $(OCAMLOPTS) $(OCAML_OBJ) $(CMO_TO_LINK) $(ADDITIONAL_ML_OBJ) $(LIBRARY).cmo $<
+
+$(EXEC).cmi:$(EXEC).mli
+	$(OCAMLC) -c $(OCAMLOPTS) $(wildcard $(LIBRARY).cmo) $<
+
+$(EXEC).cmo:$(EXEC).ml $(EXEC).cmi
+	$(OCAMLC) -w y -w v -c $(OCAMLOPTS) $(wildcard $(LIBRARY).cmo) $<
+
+$(EXEC).xml:$(EXEC)
+	./$(EXEC)
+
+ifeq '$(wildcard $(LIBRARY).foc)' '$(LIBRARY).foc'
+
+$(LIBRARY).fo $(LIBRARY).ml $(LIBRARY).mli:$(LIBRARY).foc $(ADDITIONAL_FO_OBJ)
+	$(FOCC) $(FOCCOPTS) $<
+
+$(LIBRARY).cmi:$(LIBRARY).mli $(ADDITIONAL_ML_INT)
+	$(OCAMLC) -c $(OCAMLOPTS) $<
+
+$(LIBRARY).cmo:$(LIBRARY).ml $(ADDITIONAL_ML_INT) $(LIBRARY).cmi
+	$(OCAMLC) -c $(OCAMLOPTS) $<
+
+ADDITIONALCLEAN=$(LIBRARY).{fo,ml,mli,cmo,cmi,zv}
+
+$(EXEC).foc: $(LIBRARY).cmo $(LIBRARY).fo
+	$(FOCTEST) -o $(EXEC) -t $(NUMBER_OF_TEST) -S $(SIZE_OF_ELEM) -s $(SPECIES) -sicstus -p $(PROPERTIES) $(FOCTEST_OPTS) $(LIBRARY)
+
+else
+
+$(EXEC).foc:
+	$(FOCTEST) -o $(EXEC) -t $(NUMBER_OF_TEST) -S $(SIZE_OF_ELEM) -s $(SPECIES) -p $(PROPERTIES) $(FOCTEST_OPTS) $(LIBRARY)
+
+endif
+
+
+define one_lib
+$(1).fo: $(1).foc
+	$(FOCC) $(FOCCOPTS) $(1).foc
+
+$(1).cmi: $(1).mli
+	$(OCAMLC) -c $(OCAMLOPTS) $(1).mli
+
+$(1).cmo: $(1).ml $(1).cmi
+	$(OCAMLC) -c $(OCAMLOPTS) $(1).ml
+
+endef
+
+$(foreach libs,$(ADDITIONAL_LIBRARY),$(eval $(call one_lib,$(libs))))
+
+clean:
+	rm -f $(EXEC).{foc,fml,fo,ml,mli,cmo,cmi,zv} $(ADDITIONALCLEAN)
+	rm -f $(foreach libs,$(ADDITIONAL_LIBRARY), $(libs).{fo,ml,mli,cmo,cmi,zv}) 
+
+realclean: cleanall
+
+cleanall: clean
+	rm -f $(EXEC)
+	@echo To delete .xml and .html test report, please type: make cleanxml.
+
+cleanxml:
+	rm -f $(EXEC).{xml,html}
+	rm -f test_report.css
+
+.DEFAULT_GOAL := all
+.PHONY: all clean cleanall realclean cleanxml
+

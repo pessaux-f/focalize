@@ -1,0 +1,332 @@
+open "basics";;
+
+(** Species of list of length i *)
+species List_i =
+
+  let equal(x : Self, y : Self) = (x = y);
+
+  signature print : Self -> string;
+  signature length : int;
+  signature to_list : Self -> list(int);
+  signature is_in : int -> Self -> bool;
+  signature plus : Self -> Self -> Self;
+  signature mult_int : Self -> int -> Self;
+  signature minus : Self -> Self -> Self;
+  signature elem_length : Self -> int;
+  signature hd : Self -> int;
+  signature sorted : int -> Self -> bool;
+  signature sorted_rev : int -> Self -> bool;
+  signature sort : Self -> Self;
+  signature insert_elem : int -> Self -> int * Self;
+
+  let well_formed(x : Self) : bool = (!elem_length(x) =0x !length); 
+
+  theorem always_well_formed :
+    all x : Self, !well_formed(x)
+    proof =
+      assumed;
+
+
+(*  theorem same_elem :
+    (* Trop long a tester aleatoirement *)
+    all x : Self, all y : int, !is_in(y, x) -> !is_in(y, !sort(x))
+    proof =
+      assumed;
+*)
+end;;
+
+(* Type of list of length n + 1 are built from a list of length n *)
+species List_cons(P is List_i) =
+  inherit List_i ;
+
+  representation = int * P;
+
+  let length = P!length + 1;
+
+  let hd(x : Self) : int =
+    let h = basics#fst(x) in
+    let t = basics#snd(x) in
+      h + P!hd(t);
+
+  let tl(x : Self) : P =
+    basics#snd(x);
+
+  let cons(x : int, y : P) : Self =
+    let e = P!hd(y) in
+      (x - e, y);
+
+  let to_list (x : Self) =
+     !hd(x)::P!to_list(!tl(x));
+
+  let print(x) =
+    basics#string_of_int(!hd(x)) ^ "::" ^ P!print(!tl(x));
+
+  let elem_length(x : Self) =
+    let t = basics#snd(x) in
+      1 + P!elem_length(t);
+
+  let to_self (x : int * P) : Self = !cons(basics#fst(x), basics#snd(x));
+        (* sort a list *)
+
+  let sort(x : Self) : Self = 
+    !to_self(P!insert_elem(!hd(x), P!sort(!tl(x))));
+
+  let plus(x : Self, y : Self) : Self =
+    let a1 = !hd(x) in
+    let a2 = !tl(x) in
+    let b1 = !hd(y) in
+    let b2 = !tl(y) in
+      basics#pair(a1 + b1, P!plus(a2, b2));
+(*    let (a1, a2) = x in
+    let (b1, b2) = y in
+      (a1+b1, P!plus(a2, b2));
+*)
+  let minus(x : Self, y : Self) : Self =
+    let a1 = basics#fst(x) in
+    let a2 = basics#snd(x) in
+    let b1 = basics#fst(y) in
+    let b2 = basics#snd(y) in
+      basics#pair(a1 - b1, P!minus(a2, b2));
+
+  let mult_int(x : Self, c : int) : Self =
+    let a1 = basics#fst(x) in
+    let a2 = basics#snd(x) in
+      basics#pair(a1 * c, P!mult_int(a2, c));
+
+  let sorted(x : int, y : Self) =
+    let h = !hd(y) in
+    let t = !tl(y) in
+    (x <=0x h && P!sorted(h, t));
+
+  let sorted_rev(x : int, y : Self) =
+    let h = !hd(y) in
+    let t = !tl(y) in
+    (x >0x h && P!sorted_rev(h, t));
+
+  let is_in(x : int, y : Self) =
+    (!hd(y) =0x x || P!is_in(x, !tl(y)));
+
+  (* Insert an element in a sorted list *)   
+  let insert_elem (e : int, x : Self) : int * Self =
+    let fst = !hd(x) in
+    if e >0x fst then
+      let paire = P!insert_elem(e, !tl(x)) in
+      let ep = basics#fst(paire) in
+      let tp = basics#snd(paire) in
+      if ep >0x fst then 
+        basics#pair(fst, !cons(ep, tp))
+      else
+        basics#pair(ep, !cons(fst, tp))
+    else
+      basics#pair(e, x);
+
+
+  theorem cons_hd :
+    all x : Self, !equal(x, !cons(!hd(x), !tl(x)))
+    proof =
+      assumed;
+  
+  theorem cons_hd2 :
+    all l : P, all e : int,
+      e =0x !hd(!cons(e, l))
+    proof =
+      assumed;
+
+  theorem sort_correct :
+    all x : Self, P!sorted(!hd(!sort(x)), !tl(!sort(x)))
+    proof =
+      assumed;
+
+  theorem insert_two_first :
+    all x : Self, all y : int,
+      basics#fst(!insert_elem(y, x)) <=0x
+      !hd( basics#snd (!insert_elem(y, x)) ) 
+    proof =
+      assumed;
+
+  theorem insert_correct :
+    all x : P, all y : int,
+      !is_in(y, !to_self(P!insert_elem(y, x)))
+    proof =
+      assumed;
+
+  theorem same_elem :
+     all x : P, all y : int, !is_in(y,
+                                  !sort(
+                                  !to_self(P!insert_elem(y, x))
+                                       )
+                                     )
+    proof =
+      assumed;
+
+  theorem plus_sort_stable :
+    all x y : Self,
+       P!sorted(!hd(!plus(!sort(x), !sort(y))),
+               !tl(!plus(!sort(x), !sort(y))))
+    proof =
+      assumed;
+
+  theorem plus_dual_minus :
+    all x y : Self,
+       !equal(x, !minus(!plus(x, y), y)) &&
+       !equal(x, !plus(!minus(x, y), y))
+    proof =
+      assumed;
+
+  let mun : int = (-1);
+
+  theorem commute_minus_is_opposite :
+    all x y : Self, all z : int,
+       !equal(!minus(x, y), !mult_int(!minus(y, x), !mun))
+    proof =
+      assumed;
+
+  theorem mult_minus_one_revs_sort :
+    all y : Self,
+      P!sorted_rev(!hd(!mult_int(!sort(y), !mun)),
+                  !tl(!mult_int(!sort(y), !mun))
+                 )
+      (* equiv: *)
+  (*  all x : Self, all y : int, all z : P,
+        !sorted(x) -> #int_eq(y, hd(x)) -> P!equal(z, tl(x) ->
+              !sorted_rev(y, ) *)
+    proof =
+      assumed;
+
+end;;
+
+(** Type of empty list *)
+species List_null =
+  inherit List_i;
+
+  representation = int;
+
+  let length = 0;
+ 
+  let elem_length(x : Self) = 0;
+  let plus(x : Self, y : Self) : Self = 0;
+  let minus(x : Self, y : Self) : Self = 0;
+  let mult_int(x : Self, y : int) : Self = 0;
+  let hd(x : Self) = 0;
+  let sorted(x, y) = true;
+  let sorted_rev(x, y) = true;
+  let sort(x : Self) : Self = 0;
+  let insert_elem(x : int, y : Self) = (x, 0);
+  let is_in(x : int, y : Self) = false;
+
+  let to_list (x : Self) : list(int) = [];
+  let print(x : Self) = "[]";
+
+end;;
+
+
+
+species List_0 =
+  inherit List_null;
+end;;
+
+species List_1(P is List_0) =
+  inherit List_cons(P);
+end;;
+
+collection Coll_list_0 =
+  implement List_0;
+end;;
+
+collection Coll_list_1 =
+  implement List_1(Coll_list_0);
+end;;
+
+species List_2(P0 is List_0,
+               P1 is List_1(P0)
+              ) =
+ inherit List_cons(P1);
+end;;
+
+species List_3(P0 is List_0,
+               P1 is List_1(P0),
+               P2 is List_2(P0, P1)
+              ) =
+ inherit List_cons(P2);
+end;;
+
+species List_4(P0 is List_0,
+               P1 is List_1(P0),
+               P2 is List_2(P0, P1),
+               P3 is List_3(P0, P1, P2)
+              ) =
+ inherit List_cons(P3);
+end;;
+
+species List_5(P0 is List_0,
+               P1 is List_1(P0),
+               P2 is List_2(P0, P1),
+               P3 is List_3(P0, P1, P2),
+               P4 is List_4(P0, P1, P2, P3)
+              ) =
+ inherit List_cons(P4);
+end;;
+
+species List_6(P0 is List_0,
+               P1 is List_1(P0),
+               P2 is List_2(P0, P1),
+               P3 is List_3(P0, P1, P2),
+               P4 is List_4(P0, P1, P2, P3),
+               P5 is List_5(P0, P1, P2, P3, P4)
+              ) =
+ inherit List_cons(P5);
+end;;
+
+species List_7(P0 is List_0,
+               P1 is List_1(P0),
+               P2 is List_2(P0, P1),
+               P3 is List_3(P0, P1, P2),
+               P4 is List_4(P0, P1, P2, P3), 
+               P5 is List_5(P0, P1, P2, P3, P4),
+               P6 is List_6(P0, P1, P2, P3, P4, P5)
+              ) =
+ inherit List_cons(P6);
+end;;
+
+species List_8(P0 is List_0,
+               P1 is List_1(P0),
+               P2 is List_2(P0, P1),
+               P3 is List_3(P0, P1, P2),
+               P4 is List_4(P0, P1, P2, P3),
+               P5 is List_5(P0, P1, P2, P3, P4),
+               P6 is List_6(P0, P1, P2, P3, P4, P5),
+               P7 is List_7(P0, P1, P2, P3, P4, P5, P6)
+              ) =
+ inherit List_cons(P7);
+end;;
+
+              
+species List_9(P0 is List_0,
+               P1 is List_1(P0),
+               P2 is List_2(P0, P1),
+               P3 is List_3(P0, P1, P2),
+               P4 is List_4(P0, P1, P2, P3),
+               P5 is List_5(P0, P1, P2, P3, P4),
+               P6 is List_6(P0, P1, P2, P3, P4, P5),
+               P7 is List_7(P0, P1, P2, P3, P4, P5, P6),
+               P8 is List_8(P0, P1, P2, P3, P4, P5, P6, P7)
+              ) =
+ inherit List_cons(P8);
+end;;
+              
+species List_10(P0 is List_0,
+               P1 is List_1(P0),
+               P2 is List_2(P0, P1),
+               P3 is List_3(P0, P1, P2),
+               P4 is List_4(P0, P1, P2, P3),
+               P5 is List_5(P0, P1, P2, P3, P4),
+               P6 is List_6(P0, P1, P2, P3, P4, P5),
+               P7 is List_7(P0, P1, P2, P3, P4, P5, P6),
+               P8 is List_8(P0, P1, P2, P3, P4, P5, P6, P7),
+               P9 is List_9(P0, P1, P2, P3, P4, P5, P6, P7, P8)
+              ) =
+ inherit List_cons(P9);
+end;;
+              
+              
+              

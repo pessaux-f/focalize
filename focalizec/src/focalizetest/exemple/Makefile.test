@@ -1,0 +1,95 @@
+# A generic Makefile
+
+FOCC=focalizec
+FOCAL_LIB=$(shell $(FOCC) -where | cut -d ' ' -f 2)
+
+FOCTEST=../../focalizetest
+OCAMLC=$(HOME)/.local/pkg/focalize-0.6.0/bin/ocamlc
+
+FOCCOPTS="-no-coq-code"
+OCAMLOPTS= -w a -I $(FOCAL_LIB)
+# The file to generate 
+
+###
+EXEC=$(patsubst %.xml,%,$(XMLFILE))
+ADDITIONAL_FO_OBJ=$(patsubst %,%.fo,$(ADDITIONAL_LIBRARY))
+ADDITIONAL_ML_OBJ=$(patsubst %,%.cmo,$(ADDITIONAL_LIBRARY))
+ADDITIONAL_ML_INT=$(patsubst %,%.cmi,$(ADDITIONAL_LIBRARY))
+
+all: $(EXEC).html
+
+bin: $(EXEC)
+
+harness: $(EXEC).fcl
+
+$(EXEC).html:$(EXEC).xml
+	cp $(XSLTPATH)/test_report.css . 
+	/Users/carlier/.local/bin/xsltproc $(XSLTPATH)/test_report.xslt $(EXEC).xml >$(EXEC).html
+
+
+# When we have the .fo file, the .cmo are in the directory 
+$(EXEC): $(EXEC).fo $(ADDITIONAL_ML_OBJ)
+	$(OCAMLC) -o $@ $(OCAMLOPTS) $(OCAML_OBJ) $(CMO_TO_LINK) $(ADDITIONAL_ML_OBJ) $(LIBRARY).cmo \
+		              $(patsubst %.fo,%.cmo,$<)
+
+$(EXEC).fo : $(EXEC).fcl
+	$(FOCC) $(FOCCOPTS) $<
+
+#$(EXEC).cmo:$(EXEC).ml $(EXEC).cmi
+#	$(OCAMLC) -w y -w v -c $(OCAMLOPTS) $(wildcard $(LIBRARY).cmo) $<
+
+$(EXEC).xml:$(EXEC)
+	./$(EXEC)
+
+ifeq '$(REINJECT)' ''
+ FOCTEST_CONTEXT=-t $(NUMBER_OF_TEST) -S $(SIZE_OF_ELEM) -s $(SPECIES) -p $(PROPERTIES)
+else
+ FOCTEST_CONTEXT=-r $(REINJECT)
+endif
+
+ifeq '$(wildcard $(LIBRARY).fcl)' '$(LIBRARY).fcl'
+
+$(LIBRARY).fo:$(LIBRARY).fcl $(ADDITIONAL_FO_OBJ)
+	$(FOCC) $(FOCCOPTS) $<
+
+ADDITIONALCLEAN=$(LIBRARY).{fo,ml,mli,cmo,cmi,zv,pfc,v,vo}
+
+$(EXEC).fcl: $(LIBRARY).fo
+	$(FOCTEST) -o $(EXEC) $(FOCTEST_CONTEXT) $(FOCTEST_OPTS) $(LIBRARY)
+
+else
+
+$(EXEC).fcl:
+	$(FOCTEST) -o $(EXEC) $(FOCTEST_CONTEXT) $(FOCTEST_OPTS) $(LIBRARY)
+
+endif
+
+
+define one_lib
+$(1).fo: $(1).fcl
+	$(FOCC) $(FOCCOPTS) $(1).fcl
+
+endef
+
+$(foreach libs,$(ADDITIONAL_LIBRARY),$(eval $(call one_lib,$(libs))))
+
+clean:
+	rm -f prolog*.sav
+	rm -f $(EXEC).{fcl,fml,fo,ml,mli,cmo,cmi,zv} $(ADDITIONALCLEAN)
+	rm -f $(foreach libs,$(ADDITIONAL_LIBRARY), $(libs).{fo,ml,mli,cmo,cmi,zv}) 
+
+realclean: cleanall
+
+cleanall: clean
+	rm -f $(EXEC)
+	rm -f $(EXEC).prolog_*
+	rm -f prolog*res
+	@echo To delete .xml and .html test report, please type: make cleanxml.
+
+cleanxml:
+	rm -f $(EXEC).{xml,html}
+	rm -f test_report.css
+
+.DEFAULT_GOAL := all
+.PHONY: all clean cleanall realclean cleanxml bin harness
+

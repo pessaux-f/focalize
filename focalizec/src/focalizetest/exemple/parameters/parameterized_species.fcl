@@ -1,0 +1,181 @@
+use "basics";;
+open "basics";;
+
+species Int =
+  representation = int;
+
+  let of_int(x : int) : Self = x;
+  let to_int(x : Self) : int = x;
+
+end;;
+
+collection CInt =
+  implement Int;
+end;;
+
+species A =
+  representation = int;
+
+  let print(x : Self) = basics#string_of_int(x);
+
+  let equal(x : Self, y : Self) = (x =0x y);
+end;;
+
+collection Coll_a =
+  implement A;
+end;;
+
+species B (O1 is A) =
+  representation = O1;
+
+  let print(x : Self) = O1!print(x);
+
+  let equal (a : Self, b : Self) : bool = O1!equal(a, b);
+end;;
+
+collection Coll_b =
+  implement B(Coll_a);
+end;;
+
+species C (Y1 is A, Y2 is B(Y1)) =
+  representation = Y1 * Y2;
+ 
+  let print (x : Self) =
+    "(" ^ Y1!print(basics#fst(x)) ^ "," ^ Y2!print(basics#snd(x)) ^ ")";
+
+  let equal (a : Self, b : Self) = 
+   Y1!equal(basics#fst(a), basics#fst(b)) && 
+          Y2!equal(basics#snd(a), basics#snd(b));
+
+  theorem equal_commutes :
+    all x y : Self, !equal(x, y) -> !equal(y, x)
+      proof =
+        assumed;
+      
+end;;
+
+collection Coll_c =
+  implement C(Coll_a, Coll_b);
+end;;
+
+species D (W1 is A, W2 is B(W1), W3 is C(W1, W2)) =
+  representation = W3;
+
+  let print (x : Self) = W3!print(x);
+
+  let equal (a : Self, b : Self) =
+          W3!equal(a, b);
+
+  theorem equal_commutes :
+    all x y : Self,
+       !equal(x, y) -> (!equal(y, x) /\ !equal(x, y))
+     proof =
+      assumed;
+        
+end;;
+
+(***************************)
+
+species Modulo(S is Int, r1 in S) =
+  representation = int;
+
+  let base : Self = S!to_int(r1);
+  let zero : Self = 0;
+
+  let rec normalize (x : Self) : Self =
+      if x <0x 0 then
+        !normalize(x + !base)
+      else
+        x % !base;
+
+  let from_int(x : int) : Self = !normalize(x);
+  let to_int(x : Self) : int = x;
+
+  let plus(x : Self, y : Self) : Self = !normalize(x + y);
+  let mult(x : Self, y : Self) : Self = !normalize(x * y);
+
+  let print (x : Self) = basics#string_of_int(!normalize(x));
+
+  let equal (a : Self, b : Self) =
+    (!normalize(a) =0x !normalize(b));
+
+  (* the programmer is a bad mathematician !! *)         
+  theorem right_cancel_law :
+    all x y z : Self,
+       ~~(!equal(z, !zero)) -> !equal(!mult(x, z), !mult(y, z)) ->
+             !equal(x, y)
+     proof = (* this is obviously false *)
+       assumed;
+   (* here a proof :  
+       if r1 = a * b and we take k != k'  then 
+        (k*a)*b == (k'*a)*b  holds ( 0 = 0 )
+        but k != k' by assumption !!
+    *)
+end;;
+
+let rec gcd(x : int, y : int) : int =
+  if x = 0 then
+    y
+  else if y = 0 then
+    x
+  else
+    let max = if x >0x y then x else y in
+    let min = if x >0x y then y else x in
+    #gcd(max % min, min) ;;
+(* An example of species parameterized by an entity parameters and a collection
+   parameters *)
+species Modulo2(I is Int, m1 in I, m2 in I, M3 is Modulo(I, m1), M4 is Modulo(I, m2)) =
+  representation = M3 * M4;
+
+  let base_un = I!to_int(m1);
+  let base_deux = I!to_int(m2);
+  let gcd = #gcd(!base_un, !base_deux);
+
+  let exists(x : Self) : bool =
+    if (M3!to_int(M3!normalize(basics#fst(x))) = M4!to_int(M4!normalize(basics#snd(x)))) then
+           true
+    else
+      (M3!to_int(M3!normalize(basics#fst(x))) - M4!to_int(M4!normalize(basics#snd(x))))
+                                     % !gcd 
+                                  = 0;
+
+  let rec eucli_etend(a : int, b : int, p : int, q : int, r : int, s : int) = 
+    if ~~(b =0x 0) then
+      let quo = a / b in
+        !eucli_etend(b, a % b, r, s, p - (quo * r), q - (quo * s))
+    else
+      basics#pair(p, q);
+
+
+  let to_int(x : Self) : int =
+    let tuple = !eucli_etend(base_un, base_deux, 1, 0, 0, 1) in
+    let p = basics#fst(tuple) in
+    let q = basics#snd(tuple) in
+    let m3 = M3!to_int(M3!normalize(basics#fst(x))) in
+    let m4 = M4!to_int(M4!normalize(basics#snd(x))) in
+    let diff = m4 - m3 in
+       (diff / !gcd) * (p * base_un) + m3;
+
+  let from_int(x : int) : Self =
+    basics#pair(M3!from_int(x), M4!from_int(x));
+
+  let plus (x : Self, y : Self) : Self =
+    basics#pair(M3!plus(basics#fst(x), basics#fst(y)), M4!plus(basics#snd(x) , basics#snd (y)));
+
+  let mult (x : Self, y : Self) : Self =
+    basics#pair(M3!mult(basics#fst(x), basics#fst(y)), M4!mult(basics#snd(x) , basics#snd (y)));
+
+  let print(x : Self) : string =
+    "(" ^ M3!print(basics#fst(x)) ^ "," ^ M4!print(basics#snd(x)) ^ ")";
+
+  let equal (x : Self, y : Self) : bool =
+    M3!equal(basics#fst(x), basics#fst(y)) &&
+           M4!equal(basics#snd(x) , basics#snd (y)); 
+
+  theorem to_int_correct :
+     all x : Self,
+     !exists(x) -> !equal( !from_int(!to_int(x)), x)
+     proof =
+       assumed;
+
+end;;

@@ -1,0 +1,390 @@
+use "sets_orders";;
+open "sets_orders";;
+open "basics";;
+
+use "length";;
+open "length";;
+
+type triangle_type =
+| Equilateral
+| Isosceles
+| Scalene
+| Error
+;;
+
+type edge_name =
+| A
+| B
+| C
+;;
+
+
+let rec sup_elem(e, l) =
+  match l with
+ | [] -> (false, l)
+ | ee ::r ->
+     if e = ee then
+       (true, r)
+     else
+       let crp = #sup_elem(e, r) in
+       let b = basics#fst(crp) in
+       let ll = basics#snd(crp) in
+       (b, ee::ll);;
+
+let rec permute(l1, l2) =
+  match l1 with
+  | [] -> l2 = [] 
+  | e::r ->
+      let crp = #sup_elem(e, l2) in
+      let b = basics#fst(crp) in
+      let l2 = basics#snd(crp) in
+      if b then
+        #permute(r, l2)
+      else
+        false;;
+
+let parse_triplet : string -> bool * (int * (int * int)) = 
+  external | caml ->
+  {*
+let rec number c = (Char.code c >= Char.code '0' && Char.code c <= Char.code '9') in
+let rec pow n m = if m = 0 then 1 else n * pow n (m - 1) in 
+let int_of_char c = Char.code c - Char.code '0' in
+let rec numbers s i max =
+   if i < max && number s.[i] then
+     let (l, n) = numbers s (i+1) max in
+     let g = int_of_char s.[i] in 
+      (l+1, g * (pow 10 l) + n)
+   else
+      (0, 0) in
+fun s ->
+  let l = String.length s in
+  if l > 0 && s.[0] = '(' then
+      let (l1, n1) = numbers s 1 l in
+      if l1 = 0 then
+        (false, (1, (1, 1)))
+      else
+        let c = l1 + 1 in
+          if c < l && s.[c] = ',' then
+             let (l2, n2) = numbers s (c + 1) l in
+               if l2 = 0 then
+                 (false, (1, (1, 1)))
+               else
+                 let c = c + 1 + l2 in
+                   if c < l && s.[c] = ',' then
+                     let (l3, n3) = numbers s (c + 1) l in
+                       if l2 = 0 then
+                         (false, (1, (1, 1)))
+                       else
+                         let c = c + 1 + l3 in
+                           if c < l && s.[c] = ')' then
+                             ( c + 1 = l , (n1, (n2, n3)))
+                           else
+                     (false, (1, (1, 1)))
+                   else
+                     (false, (1, (1, 1)))
+          else
+            (false, (1, (1, 1)))
+  else
+    (false, (1, (1, 1)))
+    *};;
+
+species Triangle_spec(Edge is Length_spec) =
+(*   rep; *)
+
+ (* The required methods : *) 
+  signature triangle_type : Self -> triangle_type;
+  signature first : Self -> Edge;
+  signature scnd  : Self -> Edge;
+  signature thrd  : Self -> Edge;
+  signature equal  : Self -> Self -> bool;
+  signature parse  : string -> Self;
+  signature print  : Self -> string;
+  signature length  : Self -> edge_name -> Edge;
+  signature create_triangle : Edge -> Edge -> Edge -> Self;
+  signature organize : Self -> Self;
+ (***************************)
+
+  let min(t : Self) =
+    if Edge!lt(!first(t), !scnd(t)) then
+      Edge!min(!first(t), !thrd(t))
+    else
+      Edge!min(!scnd(t), !thrd(t));
+
+  let med(t : Self) =
+    if Edge!lt(!first(t), !scnd(t)) then
+      if Edge!lt(!first(t), !thrd(t)) then
+        Edge!min(!scnd(t), !thrd(t))
+      else
+        Edge!max(!first(t), !thrd(t))
+    else
+      if Edge!lt(!scnd(t), !thrd(t)) then
+        Edge!min(!first(t), !thrd(t))
+      else
+        Edge!max(!scnd(t), !thrd(t));
+
+  let max(t : Self) =
+    if Edge!lt(!first(t), !scnd(t)) then
+      Edge!max(!scnd(t), !thrd(t))
+    else
+      Edge!max(!first(t), !thrd(t));
+
+  (***** The properties ******)
+
+  theorem min_is_min :
+      all e1 e2 e3 : Edge,
+      Edge!leq(!min(!create_triangle(e1, e2, e3)), e1) /\
+      Edge!leq(!min(!create_triangle(e1, e2, e3)), e2) /\
+      Edge!leq(!min(!create_triangle(e1, e2, e3)), e3)
+    proof = assumed; 
+
+  theorem med_is_med :
+      all e1 e2 e3 : Edge,
+      Edge!leq(!min(!create_triangle(e1, e2, e3)), !med(!create_triangle(e1, e2, e3)))
+                                  /\
+      Edge!leq(!med(!create_triangle(e1, e2, e3)), !max(!create_triangle(e1, e2, e3)))
+    proof = assumed; 
+
+  theorem max_is_max :
+      all e1 e2 e3 : Edge,
+      Edge!leq(e1, !max(!create_triangle(e1, e2, e3))) /\
+      Edge!leq(e2, !max(!create_triangle(e1, e2, e3))) /\
+      Edge!leq(e3, !max(!create_triangle(e1, e2, e3))) 
+    proof = assumed; 
+
+  theorem min_med_max_give_an_edge :
+      all e1 e2 e3 : Edge,
+      (Edge!equal(!min(!create_triangle(e1, e2, e3)), e1) \/
+      Edge!equal(!min(!create_triangle(e1, e2, e3)), e2) \/
+      Edge!equal(!min(!create_triangle(e1, e2, e3)), e3)) /\
+      (Edge!equal(!med(!create_triangle(e1, e2, e3)), e1) \/
+      Edge!equal(!med(!create_triangle(e1, e2, e3)), e2) \/
+      Edge!equal(!med(!create_triangle(e1, e2, e3)), e3)) /\
+      (Edge!equal(!max(!create_triangle(e1, e2, e3)), e1) \/
+      Edge!equal(!max(!create_triangle(e1, e2, e3)), e2) \/
+      Edge!equal(!max(!create_triangle(e1, e2, e3)), e3))
+    proof = assumed; 
+
+ (* The constructor is sound via accessor : *)
+  theorem create_triangle_correct :
+      all e1 e2 e3 : Edge,
+      Edge!equal(!first(!create_triangle(e1, e2, e3)), e1) /\
+      Edge!equal(!scnd (!create_triangle(e1, e2, e3)), e2) /\
+      Edge!equal(!thrd (!create_triangle(e1, e2, e3)), e3) 
+    proof =
+      assumed;
+
+ (* The accessors are sound each others : *)
+  theorem length_tsf_correct :
+      all t : Self,
+        Edge!equal(!first(t), !length(t, #A)) /\ 
+        Edge!equal(!scnd(t), !length(t, #B)) /\ 
+        Edge!equal(!thrd(t), !length(t, #C))
+    proof =
+      assumed;
+
+  (* print and parse interact well : *)
+  theorem parse_print_correct :
+      all t : Self, !equal(!parse(!print(t)), t)
+    proof =
+      assumed;
+
+  (* organize returns a ordered triplet : *)
+  theorem organize_sort :
+      all t : Self,
+      Edge!leq(!first(!organize(t)), !scnd(!organize(t))) /\
+      Edge!leq(!scnd(!organize(t)), !thrd(!organize(t)))
+    proof =
+      assumed;
+  
+  (* organize returns a permutation : *)
+  theorem organize_permute :
+      all t : Self, #permute(!first(t)::!scnd(t)::!thrd(t)::[],
+                              !first(!organize(t))::
+                              !scnd(!organize(t))::
+                              !thrd(!organize(t))::[])
+    proof =
+      assumed;
+
+
+  (* triangle returns all possible triangle type : *)
+  theorem triangle_type_complete :
+    all t : Self, !triangle_type(t) = #Equilateral \/
+                   !triangle_type(t) = #Isosceles \/
+                   !triangle_type(t) = #Scalene \/
+                   !triangle_type(t) = #Error
+    proof =
+      assumed;
+
+  theorem triangle_type_correct_equi :
+    all t : Self,
+    !triangle_type(t) = #Equilateral -> 
+      (Edge!equal(!first(t), !scnd(t)) /\
+       Edge!equal(!first(t), !thrd(t)) /\
+       Edge!equal(!scnd (t), !thrd(t)) /\
+       Edge!gt(!thrd (t), Edge!zero)
+      )
+    proof =
+      assumed;
+
+  theorem triangle_type_correct_iso :
+    all t : Self,
+    !triangle_type(t) = #Isosceles -> 
+     ((Edge!equal(!first(t), !scnd(t)) \/
+       Edge!equal(!scnd (t), !thrd(t)) \/
+       Edge!equal(!first(t), !thrd(t)))
+                           /\
+      (~~(Edge!equal(!first(t), !thrd(t))) \/
+       ~~(Edge!equal(!first(t), !scnd(t))) \/
+       ~~(Edge!equal(!first(t), !scnd(t))))
+      /\
+       Edge!gt(!first(t), Edge!zero) /\
+       Edge!gt(!scnd (t), Edge!zero) /\ 
+       Edge!gt(!thrd (t), Edge!zero)
+      /\
+       Edge!gt(Edge!add(!min(t), !med(t)), !max(t))
+     )
+   proof = assumed;
+
+  theorem triangle_type_correct_scal :
+    all t : Self,
+    !triangle_type(t) = #Scalene -> 
+      (~~(Edge!equal(!first(t), !scnd(t))) /\ 
+       ~~(Edge!equal(!first(t), !thrd(t))) /\
+       ~~(Edge!equal(!first(t), !scnd(t))) /\
+       Edge!gt(!first(t), Edge!zero) /\
+       Edge!gt(!scnd(t), Edge!zero) /\ 
+       Edge!gt(!thrd(t), Edge!zero) /\
+       Edge!lt(!max(t), Edge!add(!min(t), !med(t)))
+      )
+    proof = assumed;
+
+  theorem triangle_type_correct_err :
+    all t : Self,
+    !triangle_type(t) = #Error -> 
+      (Edge!leq(!first(t), Edge!zero) \/ 
+       Edge!leq(!scnd(t), Edge!zero) \/ 
+       Edge!leq(!thrd(t), Edge!zero) \/ 
+       Edge!geq(!first(t), Edge!add(!scnd(t), !thrd(t))) \/
+       Edge!geq(!scnd(t), Edge!add(!first(t), !thrd(t))) \/ 
+       Edge!geq(!thrd(t), Edge!add(!first(t), !scnd(t)))) 
+    proof = assumed;
+
+  theorem equal_reflexive :
+      all t : Self, !equal(t, t)
+    proof = assumed;
+
+  theorem equal_symmetric :
+      all t1 t2 : Self, !equal(t1, t2) -> !equal(t2, t1)
+    proof = assumed;
+
+  theorem equal_transitive :
+      all t1 t2 t3 : Self,
+        !equal(t1, t2) -> !equal(t2, t3) -> !equal(t1, t3)
+    proof = assumed;
+
+  theorem equal_refines_base_eq :
+      all t1 t2 : Self,
+        (t1 = t2) -> !equal(t1, t2)
+    proof =
+      assumed;
+
+end;;
+
+species Triangle_imp(Edge is Length_imp_int) =
+  inherit Setoid;
+
+  representation = Edge * (Edge * Edge);
+
+  let create_triangle(x : Edge, y : Edge, z : Edge) : Self = (x, (y, z));
+
+  let element : Self = !create_triangle(Edge!zero, Edge!zero, Edge!zero);
+
+  let parse(s : string) : Self =
+    let crp = #parse_triplet(s) in
+    let b = basics#fst(crp) in
+    let t = basics#snd(crp) in
+    if b then
+      let x = basics#fst(t) in
+      let y = basics#fst(basics#snd(t)) in
+      let z = basics#snd(basics#snd(t)) in
+      !create_triangle(Edge!from_int(x), Edge!from_int(y), Edge!from_int(z))
+    else
+      basics#focalize_error("parse(not a parsable string " ^ s ^ ")");
+
+  (* some accessor *)
+  let first(x : Self) : Edge = basics#fst(x); 
+  let scnd(x : Self) : Edge = basics#fst(basics#snd(x));
+  let thrd(x : Self) : Edge = basics#snd(basics#snd(x));
+
+  let print(x) = "(" ^ Edge!print(!first(x)) ^ ", " ^
+                       Edge!print(!scnd(x))  ^ ", " ^
+                       Edge!print(!thrd(x))  ^
+                 ")";
+
+  let length(y : Self, e : edge_name) =
+    match e with
+    | #A -> !first(y)
+    | #B -> !scnd(y)
+    | #C -> !thrd(y);
+
+  (* return the ordered triplet of length *)
+  let organize(x : Self) =
+     let a = !first(x) in
+     let b = !scnd(x) in
+     let c = !thrd(x) in
+     if Edge!leq(a, b) then
+       if Edge!leq(b, c) then
+         !create_triangle(a, b, c)
+       else if Edge!leq(a, c) then
+         !create_triangle(a, c, b)
+       else
+         !create_triangle(c, a, b)
+     else
+       if Edge!leq(a, c) then
+         !create_triangle(b, a, c)
+       else if Edge!leq(b, c) then
+         !create_triangle(b, c, a)
+       else
+         !create_triangle(c, b, a);
+
+  (* Test if two triangles are identical *)
+  let equal(x : Self, y : Self) = !organize(x) = !organize(y);
+
+  let equal_length(x : Self, e1 : edge_name, e2 : edge_name) =
+    Edge!equal(!length(x, e1), !length(x, e2));
+
+  let is_triangle(u : Self) : bool =
+    let x = basics#fst(u) in
+    let y = basics#fst(basics#snd(u)) in
+    let z = basics#snd(basics#snd(u)) in
+      Edge!lt(Edge!zero, x) &&
+      Edge!lt(Edge!zero, y) &&
+      Edge!lt(Edge!zero, z) &&
+      Edge!lt(z, Edge!add(x, y)) &&
+      Edge!lt(x, Edge!add(y, z)) &&
+      Edge!lt(y, Edge!add(x, z));
+
+  let triangle_type(u : Self) : triangle_type =
+    let x = basics#fst(u) in
+    let y = basics#fst(basics#snd(u)) in
+    let z = basics#snd(basics#snd(u)) in
+    if !is_triangle(u) then
+      if Edge!equal(x, y) then
+        if Edge!equal(y, z) then #Equilateral else #Isosceles
+      else if Edge!equal(y, z) then
+        #Isosceles
+      else
+        if Edge!equal(x, z) then #Isosceles else #Scalene
+    else
+      #Error;
+
+end;;
+
+species Triangle(Edge is Length_int) =
+  inherit Triangle_imp(Edge), Triangle_spec(Edge);
+end;;
+
+collection Triangle_coll =
+  implement Triangle(Length_int_coll);
+end;;
+

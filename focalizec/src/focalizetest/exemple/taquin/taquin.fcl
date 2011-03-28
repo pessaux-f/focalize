@@ -1,0 +1,323 @@
+open "basics";;
+
+species Int =
+  representation = int;
+
+  let of_int(x : int) : Self = x;
+  let to_int(x : Self) : int = x;
+
+end;;
+
+collection CInt =
+  implement Int;
+end;;
+
+let mrand_int : int -> int =
+  external | caml ->
+    {* fun i -> Random.int(i) *};;
+
+species Square =
+
+  (* The value at pos x y in the beginning of a play *)
+  signature init : int -> int -> int -> int -> Self;
+
+  signature print : Self -> string;
+
+end;;
+
+species Board(I is Int, sx in I, sy in I, S is Square) =
+
+  (* A list of line *)
+  representation = list(list(S));
+
+  let rec print_a_line(l : list(S)) =
+    match l with
+    | [] -> ""
+    | e::r ->
+        S!print(e) ^ !print_a_line(r);
+
+  let rec print(l : Self) =
+    match l with
+    | [] -> ""
+    | e::r -> !print_a_line(e) ^ "\n" ^ !print(r);
+
+  (* Access to the value of on the board *)
+  let rec cget_line(e : list(S), posx : int) : S =
+    match e with
+    | [] -> basics#focalize_error("Square not exists")
+    | e::r ->
+        if posx = 1 then
+          e
+        else
+          !cget_line(r, posx - 1);
+
+  let rec cget(x : Self, posx : int, posy : int) : S =
+    match x with
+    | [] -> basics#focalize_error("Square not exists")
+    | e::r ->
+        if posy = 1 then
+           !cget_line(e, posx)
+          else
+            !cget(r, posx, posy - 1);
+
+  (* Set a value on the board *)
+  let rec cset_line(e : list(S), v : S, posx : int) : list(S) =
+    match e with
+    | [] -> []
+    | e::r ->
+        if posx = 1 then
+          v::r
+        else
+          e::!cset_line(r, v, posx - 1);
+
+  let rec cset(x : Self, v : S, posx : int, posy : int) : Self =
+    match x with
+    | [] -> [] 
+    | e::r ->
+        if posy = 1 then
+          !cset_line(e, v, posx)::r
+        else
+          e::!cset(r, v, posx, posy - 1);
+
+  let init(x : unit) : Self =
+     let rec init_line(x, y) =
+       if x >0x I!to_int(sx) then
+         [] 
+       else
+ S!init(x, y, I!to_int(sx), I!to_int(sy))::init_line(x + 1, y) in
+     let rec init_column(y) =
+       if y >0x I!to_int(sy) then
+         []
+       else
+         init_line(1, y)::init_column(y + 1) in
+     init_column(1);
+
+  let random(x : int) : Self = [];
+
+end;;
+
+species Taquin_square =
+  inherit Square;
+
+  representation = int;
+
+  let init(x : int, y : int, sx : int, sy : int) : Self =
+    if x = sx && y = sy then
+      -1
+    else
+      x + ((y - 1) * sx);
+
+  let print (x : Self) : string =
+    let s = 
+      if x = -1 then
+        "  "
+      else
+        if x <=0x 9 then
+          " " ^ basics#string_of_int(x)
+        else
+          basics#string_of_int(x) in
+    " " ^ s;
+
+  let is_blank (x : Self) : bool =
+    x = (-1);
+
+  let good_place (s : Self, sx : int, sy : int) : int * int =
+    if s = (-1) then
+      basics#pair(sx, sy)
+    else
+      let px = (((s - 1)  % sx) + 1) in
+      let py = (((s - px) / sx) + 1) in
+      basics#pair(px, py);
+
+  let random(x : int) : Self = 1;
+
+end;;
+
+species Taquin (I is Int, size in I, Sq is Taquin_square, B is Board(I, size, size, Sq)) =
+  representation = (int * int) * B;
+
+  let size = I!to_int(size);
+
+  (* Some convenient accessors *)
+  let get_board(x : Self) : B =
+    basics#snd(x);
+
+  let get_blank_pos_x(x : Self) : int =
+    basics#fst(basics#fst(x));
+
+  let get_blank_pos_y(x : Self) : int =
+    basics#snd(basics#fst(x));
+
+  let print(l : Self) = B!print(!get_board(l));
+
+  (* The movements over the box *)
+
+  let left(s : Self) : Self =
+    let x = !get_blank_pos_x(s) in
+    let y = !get_blank_pos_y(s) in
+    let bb = !get_board(s) in
+    if x =0x 1 then
+      s
+    else
+      let in_blank = B!cget(bb, x, y) in
+      let new_blank = B!cget(bb, x - 1, y) in
+        basics#pair(basics#pair(x - 1, y) ,  B!cset(B!cset(bb, new_blank, x , y ), in_blank, x - 1, y));
+
+
+  let right(ss : Self) : Self =
+    let x = !get_blank_pos_x(ss) in
+    let y = !get_blank_pos_y(ss) in
+    let bb = !get_board(ss) in
+    if x >=0x !size then
+      ss
+    else
+      let in_blank = B!cget(bb, x, y) in
+      let new_blank = B!cget(bb, x + 1, y) in
+      basics#pair(basics#pair(x + 1, y) ,  B!cset(B!cset(bb, new_blank, x , y ), in_blank, x + 1, y));
+
+
+  let up(ss : Self) : Self =
+    let x = !get_blank_pos_x(ss) in
+    let y = !get_blank_pos_y(ss) in
+    let bb = !get_board(ss) in
+    if y <=0x 1 then
+      ss
+    else
+      let in_blank = B!cget(bb, x, y) in
+      let new_blank = B!cget(bb, x, y - 1) in
+      basics#pair(basics#pair(x, y - 1) ,  B!cset(B!cset(bb, new_blank, x , y ), in_blank, x, y - 1));
+
+
+  let down(ss : Self) : Self =
+    let x = !get_blank_pos_x(ss) in
+    let y = !get_blank_pos_y(ss) in
+    let bb = !get_board(ss) in
+    if y >=0x !size then
+      ss
+    else
+      let in_blank = B!cget(bb, x, y) in
+      let new_blank = B!cget(bb, x, y + 1) in
+      basics#pair(basics#pair(x, y + 1) ,  B!cset(B!cset(bb, new_blank, x , y ), in_blank, x, y + 1));
+
+  (* Gives us a new board *)
+
+  let init(x : unit) : Self =
+    basics#pair(basics#pair(!size, !size), B!init(()));
+
+  (* Takes a measure upon the board *) 
+  let solution_distance_parity (x : Self) =
+    let suiv(pos : int * int) =
+      let x = basics#fst(pos) in
+      let y = basics#snd(pos) in
+      if x = !size then
+        if y = !size then
+          (0, 0)
+        else
+          (x, y + 1)
+      else
+        (x + 1, y) in
+    let rec aux(t : B, pos : int * int, c : int) =
+      if pos = (0, 0) then
+        c
+      else
+        let x = basics#fst(pos) in
+        let y = basics#snd(pos) in
+        let s = B!cget(t, x, y) in
+        let pos2 = Sq!good_place(s, !size, !size) in
+        if pos2 = pos then
+          aux(t, suiv(pos), c)
+        else
+          let pair = Sq!good_place(s, !size, !size) in
+          let x2 = basics#fst(pair) in
+          let y2 = basics#snd(pair) in
+          let s2 = B!cget(t, x2, y2) in
+          aux(B!cset(B!cset(t, s, x2, y2), s2, x, y), suiv(pos), c + 1)
+      in
+        (aux(!get_board(x), (1, 1), 0) % 2);
+
+  let id(x : list(int)) = x;
+  (* The coffee property *)
+  theorem feasibility :
+      all x : Self, all y : list(int),
+      !solution_distance_parity (let x = x in x) = 0
+(*    and
+      !id(match y with | [] -> [] | #Cons(e, r) -> [] end) = [] *)
+    proof =
+      assumed;
+
+  (* Some functions the user thinks are a good random init *)
+
+  let random (x : int) : Self =
+    let aux1(x : Self, p : int) : Self =
+      if p = 0 then
+        !left(x)
+      else if p = 1 then
+        !right(x) 
+      else if p = 2 then
+        !up(x)
+      else
+        !down(x) in
+    let rec aux2 (x : Self, p : int) : Self =
+      if p = 0 then
+        x
+      else
+        aux2(aux1(x, #mrand_int(4)), p - 1) in
+    aux2(!init(()), x);
+
+end;;
+
+collection Coll_taquin_square =
+  implement Taquin_square;
+end;;
+
+collection B_type =
+  implement Board(CInt, CInt!of_int(3), CInt!of_int(3), Coll_taquin_square);
+end;;
+
+collection Taquin_type =
+  implement Taquin(CInt, CInt!of_int(3), Coll_taquin_square, B_type);
+end;;
+
+species Interloop =
+  representation = Taquin_type;
+
+  let print_output : string -> unit =
+    external | caml ->
+            {* fun s -> print_string s; Pervasives.flush stdout *};
+
+  let readline : unit -> string =
+    external | caml ->
+                {* fun () -> Scanf.scanf "%s\n" (fun x -> x) *};
+
+  let traite_commande (x : Self, cmd : string) : Self =
+    if cmd = "up" then
+      Taquin_type!up(x)
+    else
+    if cmd = "down" then
+      Taquin_type!down(x)
+    else
+    if cmd = "left" then
+      Taquin_type!left(x)
+    else
+    if cmd = "right" then
+      Taquin_type!right(x)
+    else
+      let tmp = !print_output("Command : up | down | left | right\n") in
+      x;
+
+  let rec boucle(x : Self) : unit =
+    let rien_du_tout = !print_output(Taquin_type!print(x)) in
+    let tmp = !print_output("? ") in
+    let cmd = !readline (()) in
+    let new_x = !traite_commande(x, cmd) in
+      !boucle(new_x);
+
+  let init(x : unit) : Self = Taquin_type!random(30);
+
+end;;
+
+collection Top_coll =
+  implement Interloop;
+end;;
+
+(* top_coll!boucle(top_coll!init(#Null));; *)

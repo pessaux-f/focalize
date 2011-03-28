@@ -1,0 +1,172 @@
+use "basics";; 
+open "basics";; 
+
+type couple('t) =
+| Zero 
+| Tuple('t, 't)
+;;
+
+
+species Groupe_couple_entier =
+
+  representation = couple(int);
+
+  let append(a : string, b : string) = a ^ b;
+
+  let print(t) =
+    match t with
+    | #Zero -> "zero"
+    | #Tuple(a, b) ->
+          !append( !append("(", basics#string_of_int(a)) ,
+                   !append (", ",   !append(basics#string_of_int(b), ")"))
+          );
+
+  let plus(t1 : Self, t2 : Self) =
+    match t1 with
+    | #Zero -> t2
+    | #Tuple(a, b) ->
+        (match t2 with
+        | #Zero -> t1
+        | #Tuple(c, d) -> #Tuple(a + c , b + d)
+        );
+  
+  let well_formed(t : Self) = 
+    match t with
+    | #Zero -> true
+    | #Tuple(a, b) -> 
+        if (a =0x 0) && (b =0x 0) then
+          false
+        else
+          true;
+
+  let constant(t : Self) =
+    match t with
+    | #Zero -> true
+    | #Tuple(a, b) -> (a =0x b);
+
+  theorem plus_no_constant_is_non_constant :
+     all x y : Self, ~~(!constant(x)) -> ~~(!constant(!plus(x, y)))
+  proof =
+     assumed;
+
+end;;
+
+species Groupe_couple_list_int =
+  inherit Basic_object;
+  representation = couple(list(int));
+
+  let append(a : string, b : string) = a ^ b;
+
+  let equal (t1, t2) = 
+    match t1 with
+    | #Zero ->
+        (match t2 with
+        | #Zero -> true
+        | #Tuple(a, b) -> false
+        )
+    | #Tuple(a, b) ->
+        (match t2 with
+        | #Zero -> false
+        | #Tuple(c, d) -> (a =0x c) && (b =0x d)
+        );
+
+
+  let rec print_list (l) =
+     match l with
+     | [] -> ""
+     | a::l ->
+         (match l with
+         | [] -> basics#string_of_int(a)
+         | b::l -> !append(!append(basics#string_of_int(a), ";"), !print_list(l))
+         );
+
+  let print_all_list (l) = !append("[", !append(!print_list(l), "]"));
+
+  let print (t) =
+    match t with
+    | #Zero -> "zero"
+    | #Tuple(a, b) ->
+        !append( !append("(", !print_all_list(a)) ,
+        !append(", ",   !append(!print_all_list(b), ")"))
+        );
+
+
+  let rec list_append (l1 : list(int), l2) =
+     match l2 with
+     | [] -> l1
+     | a::l -> !list_append(a::l1, l);
+  
+  let plus (t1 : Self, t2 : Self) =
+      match t1 with
+      | #Zero -> t2
+      | #Tuple(a, b) ->
+           (match t2 with
+            | #Zero -> t1
+            | #Tuple(c, d) -> #Tuple(!list_append(a, c) , !list_append(b, d))
+           );
+
+  let rec list_somme (t) =
+    match t with
+    | [] -> 0
+    | a::l -> a + !list_somme(l);
+
+  let convert (t : Self) =
+    match t with
+    | #Zero -> #Zero
+    | #Tuple(a, b) -> #Tuple(!list_somme(a), !list_somme(b));
+
+  let plus_convert (t1, t2) =
+    match t1 with
+    | #Zero -> t2
+    | #Tuple(a, b) ->
+        (match t2 with
+        | #Zero -> t1
+        | #Tuple(c, d) -> #Tuple(a + c, b + d)
+        );
+
+  let well_balanced (t : Self) =
+    match t with
+    | #Zero -> true
+    | #Tuple(a, b) -> (!list_somme(a) =0x !list_somme(b));
+
+  let rev (t : Self) = 
+    match t with
+    | #Zero -> #Zero
+    | #Tuple(a, b) -> #Tuple(b, a);
+
+  let rec lin (x, l) =
+   match l with
+   | [] -> false
+   | e::r -> 
+       if (x =0x e) then
+         true
+       else
+         !lin(x, r);
+
+  let rec incl(l1, l2) = 
+   match l1 with
+   | [] -> true
+   | e::r ->
+       if !lin(e, l2) then
+         !incl(r, l2)
+       else
+         false;
+
+  let rec well_incl(t : Self) =
+    match t with
+    | #Zero -> true
+    | #Tuple(a, b) -> !incl(a, b);
+
+  theorem plus_is_monotone :
+     all x y : Self, ( !well_balanced(x) /\ !well_balanced(y) ) -> !well_balanced(!plus(x, y))
+  proof =
+     assumed;
+
+  theorem thm_plus_convert :
+     all x y : Self,
+       !equal(!convert(!plus(x, y)), !plus_convert(!convert(x), !convert(y)))
+  proof =
+     assumed;
+
+end;;
+

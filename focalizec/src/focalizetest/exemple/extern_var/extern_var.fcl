@@ -1,0 +1,53 @@
+open "basics";;
+(*
+type t1 a =
+  C1 in a -> t1(a);
+  F in t1(a);
+;;
+
+type t2 =
+  C2 in t1(t2) -> t2;
+  F2 in t2;
+;;
+*)
+species A =
+  representation = int;
+
+  let print(i : Self) : string = basics#string_of_int(i);
+
+  let of_bool(b : bool) : Self =
+    if b then 1 else 0;
+
+end;;
+
+
+species B(P is A) =
+  representation = list(P);
+
+  let rec length(x : Self) : int =
+    match x with
+    | [] -> 0
+    | h::r -> basics#succ0x(!length(r));
+
+  let rec of_bool_list(x : list(bool)) : Self =
+    match x with
+    | [] -> []
+    | b::r -> P!of_bool(b)::!of_bool_list(r);
+
+  let rec list_length(l : list(bool)) : int =
+    match l with
+    | [] -> 0
+    | a::z -> !list_length(z) + 1;
+
+  let print : Self -> string = function s -> "abs";
+
+  theorem list_length_correct :
+      all y : list(bool),
+        !length(!of_bool_list(y)) =0x !list_length(y)
+    proof =
+      assumed;
+
+end;;
+
+
+

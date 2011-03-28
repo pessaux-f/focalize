@@ -1,0 +1,20 @@
+
+SPECIES= "let m1 = 45 in \
+ let m2 = parameterized_species\#Modulo(m1) in \
+ let m3 = \#int_div(\#int_plus(\#int_mult(25,55),66),25) in \
+ let m4 = parameterized_species\#Modulo(m3) in \
+   parameterized_species\#Modulo2(m1, m3, m2, m4)" 
+
+LIBRARY=parameterized_species
+FOCTEST_OPTS=
+PROPERTIES='to_int_correct'
+NUMBER_OF_TEST=100
+SIZE_OF_ELEM=2000000
+XMLFILE=prm_to_int_correct.xml
+
+CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo  sets.cmo
+
+OCAML_OBJ= unix.cma
+XSLTPATH=../xml
+
+include ../Makefile.test

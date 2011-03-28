@@ -1,0 +1,6 @@
+import for toplevel
+list_length = {* fun l -> List.length l *};
+end import
+
+import for interloop
+end import

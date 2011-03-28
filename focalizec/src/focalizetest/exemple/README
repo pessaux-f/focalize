@@ -1,0 +1,26 @@
+Here are the examples for the tools foctest.
+Each examples create an executable. To create an xml file containing the test
+report, execute it.
+
+The directory no_parameters contains some examples testing a non-parameterized
+species. For buiding it type : make
+
+The directory parameters contains some examples testing a parameterized
+species.
+
+The directory lexicographic_product_additive_monoid contains an example testing
+some properties from the species lexicographic_product_additive_monoid in
+standard library with small_integers as instances of twice parameters.
+
+The directory small_naturals contains an example testing some properties from
+the species small_naturals.
+
+All examples can be built by typing make. Type make html to create html test
+report.
+
+The xml directory contains an example of test report, its also contains the
+.xslt converter file, the .xsd xml's checker file and the .css style's sheet
+file.
+
+Make.codage* are two Makefile for testing the library written by Charles
+Morisset.

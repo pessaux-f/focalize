@@ -1,0 +1,163 @@
+
+body {
+background-color  : rgb(186,211,255);
+}
+
+.csspropriete {
+border : solid black;
+border-width : 1px;
+margin-bottom : 5px;
+padding-left : 5px;
+padding-bottom : 10px;
+}
+
+/* Le nom de l'espèce sous test */
+.cssspeciestable {
+margin-left : auto;
+margin-right : auto;
+}
+
+.cssspecies {
+vertical-align : top;
+text-align : right;
+font-size: xx-large ;
+font-weight: bold;
+}
+
+.csscollectionname {
+vertical-align : top;
+text-align : left;
+font-size: xx-large ;
+font-weight: bold;
+}
+
+/* ****************************** */
+
+.cssname {
+text-align : center;
+}
+
+.cssforme {
+text-align : center;
+}
+
+.csselementaire {
+text-align : center;
+}
+
+/* Les formes elementaires  */
+
+.cssformeelementaire {
+margin-left : auto;
+margin-right : auto;
+/* text-align: left; */
+border-collapse: collapse;
+}
+
+.csselemforall{
+text-align: right;
+font-size: large ;
+font-weight: bold;
+}
+
+.csselemprecondition{
+text-align: right;
+font-size: large ;
+font-weight: bold;
+}
+
+.csselementail{
+text-align: center;
+font-size: large ;
+font-weight: bold;
+}
+
+.csselemconclusion{
+text-align: left;
+font-size: large ;
+font-weight: bold;
+/*border : solid black;
+border-width : 1px;*/
+}
+/* ********************** */ 
+
+
+
+
+.csstitreposition {
+font-weight : bold;
+}
+
+.csstitreresultat {
+}
+
+.csspreconsep {
+/*  background-color : black; */
+  padding:1px;
+}
+
+.csstitrevalue {
+}
+
+.csstitreconclusion {
+}
+
+.csstestlegend{
+margin-left : auto;
+margin-right : auto;
+text-align : left;
+font-size: large ;
+}
+
+.csstests {
+margin-left : auto;
+margin-right : auto;
+
+border : solid black;
+border-width : 1px;
+border-collapse: collapse;
+}
+
+.csstests  td {
+text-align : center;
+border : solid black;
+border-width : 1px;
+padding-left : 2px;
+padding-right : 2px;
+}
+
+.csstests  th {
+text-align : center;
+border : solid black;
+border-width : 1px;
+
+padding-left : 5px;
+padding-right : 5px;
+}
+
+.cssvalue {
+}
+
+.cssresultatOK {
+color : rgb(0,150,0);
+}
+
+.cssresultatKO {
+color : rgb(255,0,0);
+}
+
+.cssnum {
+font-weight : bold;
+}
+
+.cssstats {
+  background-color : silver;
+  border : solid black;
+  border-width : 1px;
+  width: 300px;
+  text-align : left;
+  align : center;
+ margin-left: auto;
+   margin-right: auto;
+}
+

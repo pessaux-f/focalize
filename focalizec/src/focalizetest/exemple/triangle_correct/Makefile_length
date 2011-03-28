@@ -1,0 +1,29 @@
+SPECIES = "length\#Length_int"
+ADDITIONAL_LIBRARY=
+LIBRARY = length
+PROPERTIES =  'min_is_min, \
+							 max_is_max, \
+							 min_correct, \
+							 max_correct, \
+							 zero_neutral, \
+               add_assoc, \
+               add_commutes, \
+							 leq_reflexive, \
+							 leq_transitive, \
+							 leq_antisym, \
+							 equal_reflexive, \
+							 equal_symmetric, \
+							 equal_transitive, \
+							 equal_refines_base_eq, \
+							 parse_print_correct '
+
+NUMBER_OF_TEST=10
+SIZE_OF_ELEM=$(shell expr 10)
+XMLFILE = test_report_length.xml
+
+CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo  sets.cmo
+							
+OCAML_OBJ= unix.cma nums.cma
+XSLTPATH=../xml
+
+include ../Makefile.test

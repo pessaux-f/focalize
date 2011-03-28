@@ -1,0 +1,37 @@
+SPECIES = "fichier\#Order_sup"
+LIBRARY = fichier
+
+#bst_ok, 
+PROPERTIES = 'bst_ok'
+#' \
+              ho_sorted_l, ho_sorted_r, \
+              ho_sum_list_l, ho_sum_list_r'
+
+#         'map_succ_ok, map_in'
+
+
+#              'f2_com, \
+							 duplicate_ok, \
+							 map_succ_ok, \
+							 fold_left_sum_ok, \
+               big_function_ok, \
+							 f_not_def_ok, \
+							 match_1_ok, \
+							 apply_ok_1, \
+							 test_order_ok, \
+							 apply_ok_2, \
+               test_sum_list_f'
+
+NUMBER_OF_TEST=10
+SIZE_OF_ELEM=$(shell expr 10)
+#SIZE_OF_ELEM=$(shell expr 500)
+XMLFILE=test_report_fichier_naive.xml
+
+FOCTEST_OPTS=-sicstus -sicstus-path ~/travail/cvs/focalize/focalizec/src/focalizetest/files_others/sicstus -sicstus-opt naive
+
+CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo sets_orders_externals.cmo sets_orders.cmo sets.cmo
+
+OCAML_OBJ= unix.cma nums.cma
+XSLTPATH=../xml
+
+include ../Makefile.test

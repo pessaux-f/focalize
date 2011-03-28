@@ -1,0 +1,17 @@
+SPECIES=
+"let i = 50 in \
+   Modulo( i )"
+
+LIBRARY=parameterized_species
+FOCTEST_OPTS=
+PROPERTIES='right_cancel_law'
+NUMBER_OF_TEST=1000
+SIZE_OF_ELEM=50
+XMLFILE=prm_right_cancel_law.xml
+
+CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo  sets.cmo
+
+OCAML_OBJ= unix.cma
+XSLTPATH=../xml
+
+include ../Makefile.test
