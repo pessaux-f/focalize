@@ -1,0 +1,15 @@
+?- use_module(library(clpfd)).
+?- use_module(library(fdbg)).
+?- load_files(basics).
+?- load_files(autres).
+?- load_files(types).
+?- load_files(ctr_ite).
+?- load_files(termes).
+?- load_files(ctr_match).
+?- load_files(ctr_apply).
+?- load_files(functions_db_assoc).
+?- load_files(functions_db_assert).
+?- load_files(functions_db).
+?- load_files(labeling).
+?- load_files(verrue_model).
+?- load_files(debug).

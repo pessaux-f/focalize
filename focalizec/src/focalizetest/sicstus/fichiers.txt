@@ -1,0 +1,12 @@
+all.pl :
+
+contient les commandes pour charger tout l'environnement.
+
+autres.pl:
+
+contient les fonctions génériques (call_rec, append, création d'atome) et les fonctions de gestion de
+l'environnement.
+ 
+basics.pl:
+
+contient l'ensemble des fonctions prédéfinies de Focal.
