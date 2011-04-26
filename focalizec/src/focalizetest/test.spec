@@ -11,7 +11,7 @@
 #  Distributed only by permission.                                     #
 #                                                                      #
 #**********************************************************************#
-# $Id: test.spec,v 1.2 2011-04-19 15:37:47 rr Exp $
+# $Id: test.spec,v 1.3 2011-04-26 15:33:28 maarek Exp $
 
 
 High level specification of the Focalize testbed technology
@@ -147,3 +147,77 @@ testing Triangle_test =
 
 end
 ;;
+
+
+
+2011/04/26:
+===========
+
+Three alternative extensions of the Parsetree type with a testing_def
+type to integrate the testing instructions at the toplevel of the
+language. Here, we name "context" the let bindings and collection
+definitions required by the testing and unused elsewhere in the code.
+
+type testing_expr = testing_expr_desc ast
+and testing_expr_desc = {
+    ...
+  }
+;;
+
+type testing_def = testing_def_desc ast
+and testing_def_desc = {
+  tstd_name : vname;
+  tstd_body : testing_expr;
+}
+;;
+
+
+1. Having a context AST field containing the context phrases. This
+   solution breaks the separation between language levels and forces
+   most operations on phrase level of the AST to call operations on
+   top level and vice versa.
+
+type testing_expr =
+  {
+    tst_context : phrase list;
+    tst_properties : ...;
+    tst_parameters : ...;
+  }
+
+...
+  | Ph_testing of testing_def
+
+2. Having two lists (a list of let bindings and a list of collection
+   definitions) representing the context. This solution does not take
+   into account the fact that a testing context is only composed of
+   toplevel instructions discarded in the main compilation path. The
+   solution therefore requires to duplicate iterations on phrases for
+   dealing specifically with let bindings and collection definitions.
+
+type testing_expr =
+  {
+    tst_bindings : let_def list;
+    tst_collections: collection_def list;
+    tst_properties : ...;
+    tst_parameters : ...;
+  }
+
+...
+  | Ph_testing of testing_def
+
+3. (this is the solution chosen for now) Having two separate arguments
+   for testing phrases. The first one being the testing instructions,
+   the second one being a list of phrases representing the
+   context. The first argument resides at the phrase level the second
+   at the toplevel. The type definitions of phrase and phrase_desc
+   need to be recursive as well as the operations on them but there is
+   no need for inter-level recursion.
+
+type testing_expr =
+  {
+    tst_properties : ...;
+    tst_parameters : ...;
+  }
+
+...
+  | Ph_testing of testing_def * phrase list
