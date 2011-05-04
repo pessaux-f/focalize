@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.36 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: main_docgen.ml,v 1.37 2011-05-04 09:22:47 maarek Exp $ *)
 
 
 
@@ -826,6 +826,16 @@ let gen_doc_collection out_fmt env ~current_unit coll_def coll_descr =
 ;;
 
 
+let gen_doc_testing out_fmt env ~current_unit:_current_unit testing_def _testing_context =
+(* TODO TESTING: for now we only print the name of the testing, in the
+  future we should make a link to or embed the testing report if
+   generated. *)
+  (* foc:collection. *)
+  Format.fprintf out_fmt "@[<h 2><foc:testing>@\n";
+  Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
+    Utils_docgen.pp_xml_vname testing_def.Parsetree.ast_desc.Parsetree.tstd_name;
+  Format.fprintf out_fmt "@]</foc:collection>@\n@\n";
+  env
 
 
 let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
@@ -966,6 +976,8 @@ let gen_doc_pcm out_fmt env ~current_unit = function
       gen_doc_species out_fmt env ~current_unit species_def species_descr
   | Infer.PCM_collection (coll_def, col_descr, _) ->
       gen_doc_collection out_fmt env ~current_unit coll_def col_descr
+  | Infer.PCM_testing (testing_def, testing_context) ->
+      gen_doc_testing out_fmt env ~current_unit testing_def testing_context
 ;;
 
 

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.mli,v 1.22 2009-06-15 09:19:36 pessaux Exp $ *)
+(* $Id: handy.mli,v 1.23 2011-05-04 09:22:47 maarek Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -23,6 +23,10 @@ val pp_generic_separated_list :
   (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
 
 val pp_generic_newlined_list :
+  (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
+
+val pp_generic_separated_newlined_list :
+  string ->
   (Format.formatter -> 'a -> unit) -> Format.formatter -> 'a list -> unit
 
 val pp_generic_explicit_option :

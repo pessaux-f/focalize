@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.18 2010-01-13 13:37:05 weis Exp $ *)
+(* $Id: sourcify_token.ml,v 1.19 2011-05-04 09:22:46 maarek Exp $ *)
 
 open Parser;;
 
@@ -132,6 +132,7 @@ let token ppf = function
   | OPEN -> Format.fprintf ppf "%s" "OPEN"
   | OR -> Format.fprintf ppf "%s" "OR"
   | ORDER -> Format.fprintf ppf "%s" "ORDER"
+  | PARAMETERS -> Format.fprintf ppf "%s" "PARAMETERS"
   | PRIVATE -> Format.fprintf ppf "%s" "PRIVATE"
   | PROOF -> Format.fprintf ppf "%s" "PROOF"
   | PROP -> Format.fprintf ppf "%s" "PROP"
@@ -148,6 +149,7 @@ let token ppf = function
   | STEP -> Format.fprintf ppf "%s" "STEP"
   | STRUCTURAL -> Format.fprintf ppf "%s" "STRUCTURAL"
   | TERMINATION -> Format.fprintf ppf "%s" "TERMINATION"
+  | TESTING -> Format.fprintf ppf "%s" "TESTING"
   | THEN -> Format.fprintf ppf "%s" "THEN"
   | THEOREM -> Format.fprintf ppf "%s" "THEOREM"
   | TYPE -> Format.fprintf ppf "%s" "TYPE"

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.156 2010-01-13 13:37:05 weis Exp $ *)
+(* $Id: parser.mly,v 1.157 2011-05-04 09:22:46 maarek Exp $ *)
 
 open Parsetree;;
 
@@ -258,6 +258,7 @@ let mk_proof_label (s1, s2) =
 %token OPEN
 %token OR
 %token ORDER
+%token PARAMETERS
 %token PRIVATE
 %token PROOF
 %token PROP
@@ -274,6 +275,7 @@ let mk_proof_label (s1, s2) =
 %token STEP
 %token STRUCTURAL
 %token TERMINATION
+%token TESTING
 %token THEN
 %token THEOREM
 %token TYPE
@@ -407,6 +409,8 @@ phrase:
     { mk (Ph_species $1) }
   | define_collection SEMI_SEMI
     { mk (Ph_collection $1) }
+  | define_testing SEMI_SEMI
+    { mk (Ph_testing ((fst $1),(snd $1))) }
   | opt_annot OPEN STRING SEMI_SEMI
     { mk_annot $1 (Ph_open $3) }
   | opt_annot USE STRING SEMI_SEMI
@@ -745,6 +749,68 @@ define_collection:
 define_collection_body:
   | IMPLEMENT species_expr SEMI
     { $2 }
+;
+
+/**** TESTING DEFINITION ****/
+
+define_testing:
+  | opt_annot
+    TESTING collection_vname EQUAL
+      define_testing_body
+    END
+    { (* Testing information, testing context *)
+     (mk_annot $1 { tstd_name = $3; tstd_body = (fst $5); }),
+      (snd $5) }
+;
+
+define_testing_body:
+  | define_let_semi_list
+    define_collection_semi_list
+    define_property_semi_list
+    TESTING COLON
+    property_ident_comma_list
+    PARAMETERS COLON
+    define_let_semi_list
+      {
+
+       (* TODO TESTING: shall we allow property/theorem declarations
+       inside a testing body? Such declarations should be considered
+       as an extention of the definition of the collection being
+       tested. They should be considered Assumed. We could have a
+       dedicated field tst_property_defs. Otherwise, shall we use
+       Ph_theorem?  *)
+
+       (* Testing information, testing context *)
+        (mk { tst_property_defs = $3;
+              tst_properties = $6;
+              tst_parameters = $9; }),
+        ((List.map (fun ld -> mk (Ph_let ld)) $1)
+         @ (List.map (fun cd -> mk (Ph_collection cd)) $2))
+      }
+;
+
+define_let_semi_list:
+  | { [] }
+  | define_let
+    { [ $1 ] }
+  | define_let SEMI define_let_semi_list
+    { $1 :: $3 }
+;
+
+define_collection_semi_list:
+  | { [] }
+  | define_collection
+    { [ $1 ] }
+  | define_collection SEMI define_collection_semi_list
+    { $1 :: $3 }
+;
+
+define_property_semi_list:
+  | { [] }
+  | define_property
+    { [ $1 ] }
+  | define_property SEMI define_property_semi_list
+    { $1 :: $3 }
 ;
 
 /**** FUNCTION & VALUES DEFINITION ****/

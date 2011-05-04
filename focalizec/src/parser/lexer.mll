@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.92 2010-01-13 13:37:05 weis Exp $ *)
+(* $Id: lexer.mll,v 1.93 2011-05-04 09:22:46 maarek Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -132,6 +132,7 @@ List.iter
   "on", ON;
   "or", OR;
   "order", ORDER;
+  "parameters", PARAMETERS;
   "private", PRIVATE;
   "proof", PROOF;
   "prop", PROP;
@@ -148,6 +149,7 @@ List.iter
   "step", STEP;
   "structural", STRUCTURAL;
   "termination", TERMINATION;
+  "testing", TESTING;
   "then", THEN;
   "theorem", THEOREM;
   "true", BOOL "true";

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.45 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: dump_ptree.ml,v 1.46 2011-05-04 09:22:46 maarek Exp $ *)
 
 let pp_annotation ppf doc =
   List.iter
@@ -620,7 +620,11 @@ and pp_property_def_desc ppf pdd =
     pp_vname pdd.Parsetree.prd_name
     pp_logical_expr pdd.Parsetree.prd_logical_expr
 and pp_property_def ppf = pp_ast pp_property_def_desc ppf
+and pp_property_defs ppf =
+  Handy.pp_generic_separated_list "," pp_property_def ppf
 
+and pp_properties ppf =
+  Handy.pp_generic_separated_list "," pp_expr_ident ppf
 
 
 and pp_species_field_desc ppf = function
@@ -652,7 +656,8 @@ and pp_let_def_desc ppf ldd =
     pp_local_flag ldd.Parsetree.ld_local
     pp_bindings ldd.Parsetree.ld_bindings
 and pp_let_def ppf = pp_ast pp_let_def_desc ppf
-
+and pp_let_defs ppf =
+  Handy.pp_generic_separated_list "," pp_let_def ppf
 
 
 and pp_binding_body ppf = function
@@ -675,7 +680,6 @@ and pp_binding_desc ppf bd =
     pp_binding_body bd.Parsetree.b_body
 and pp_bindings ppf = Handy.pp_generic_separated_list "," pp_binding ppf
 and pp_binding ppf = pp_ast pp_binding_desc ppf
-
 
 
 and pp_theorem_def_desc ppf tdd =
@@ -915,6 +919,52 @@ let pp_collection_def_desc ppf cdd =
     {b Exported} : No.                                                *)
 (* ****************************************************************** *)
 let pp_collection_def ppf = pp_ast pp_collection_def_desc ppf;;
+let pp_collection_defs ppf = 
+  Handy.pp_generic_separated_list "," pp_collection_def ppf;;
+
+
+(* **************************************************************** *)
+(*          Format.formatter -> Parsetree.testing_expr_desc -> unit *)
+(** {b Descr} : Pretty prints a [testing_expr_desc] value as a
+              Caml-like structure.
+
+    {b Rem} : Not exported ouside this module.                      *)
+(* **************************************************************** *)
+let pp_testing_expr_desc ppf tsted =
+  Format.fprintf ppf "@[<2>{@ %a;@ [@ %a@ ];@ %a@ }@]"
+    pp_property_defs tsted.Parsetree.tst_property_defs
+    pp_properties tsted.Parsetree.tst_properties
+    pp_let_defs tsted.Parsetree.tst_parameters
+;;
+(* *********************************************************** *)
+(*          Format.formatter -> Parsetree.testing_expr -> unit *)
+(** {b Descr} : Pretty prints a [testing_expr] value as a
+              Caml-like structure.
+
+    {b Rem} : Not exported ouside this module.                 *)
+(* *********************************************************** *)
+let pp_testing_expr ppf = pp_ast pp_testing_expr_desc ppf
+;;
+
+(* ************************************************************************** *)
+(* Format.formatter -> Parsetree.testing_def_desc -> unit                  *)
+(** {b Descr} : Pretty prints a [testing_def_desc] value as a Caml-like
+    structure.
+
+    {b Rem} : Not exported ouside this module.                                *)
+(* ************************************************************************** *)
+let pp_testing_def_desc ppf tstdd =
+  Format.fprintf ppf "{@ %a;@ %a@ }"
+    pp_vname tstdd.Parsetree.tstd_name pp_testing_expr tstdd.Parsetree.tstd_body
+;;
+(* ****************************************************************** *)
+(* Format.formatter -> Parsetree.testing_def -> unit               *)
+(** {b Descr} : Pretty prints a [testing_def] value as a Caml-like
+    structure.
+
+    {b Exported} : No.                                                *)
+(* ****************************************************************** *)
+let pp_testing_def ppf = pp_ast pp_testing_def_desc ppf;;
 
 
 
@@ -1016,7 +1066,7 @@ let pp_type_def ppf = pp_ast pp_type_def_desc ppf;;
 
 
 
-let pp_phrase_desc ppf = function
+let rec pp_phrase_desc ppf = function
   | Parsetree.Ph_annotation_title -> Format.fprintf ppf "Ph_annotation_title"
   | Parsetree.Ph_use fname -> Format.fprintf ppf "@[<2>Ph_use@ (%s)@]@ " fname
   | Parsetree.Ph_open fname -> Format.fprintf ppf "@[<2>Ph_open@ (%s)@]@ " fname
@@ -1027,6 +1077,10 @@ let pp_phrase_desc ppf = function
   | Parsetree.Ph_collection collection_def ->
       Format.fprintf ppf "@[<2>Ph_coll@ (%a)@]@ "
         pp_collection_def collection_def
+  | Parsetree.Ph_testing (testing_def, testing_context) ->
+      Format.fprintf ppf "@[<2>Ph_testing@ (%a,@ %a)@]@ "
+        pp_testing_def testing_def
+        pp_phrases testing_context
   | Parsetree.Ph_type type_def ->
       Format.fprintf ppf "@[<2>Ph_type@ (%a)@]@ " pp_type_def type_def
   | Parsetree.Ph_let let_def ->
@@ -1035,9 +1089,9 @@ let pp_phrase_desc ppf = function
       Format.fprintf ppf "@[<2>Ph_theorem@ (%a)@]@ " pp_theorem_def theorem_def
   | Parsetree.Ph_expr expr ->
       Format.fprintf ppf "@[<2>Ph_expr@ (%a)@]@ " pp_expr expr
+and pp_phrase ppf = pp_ast pp_phrase_desc ppf
+and pp_phrases ppf = Handy.pp_generic_separated_list "," pp_phrase ppf
 ;;
-let pp_phrase ppf = pp_ast pp_phrase_desc ppf;;
-let pp_phrases ppf = Handy.pp_generic_separated_list "," pp_phrase ppf;;
 
 
 

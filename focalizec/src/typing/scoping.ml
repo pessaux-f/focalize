@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.87 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: scoping.ml,v 1.88 2011-05-04 09:22:47 maarek Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -2488,9 +2488,98 @@ let scope_collection_def ctx env coll_def =
   (scoped_coll_def, final_env)
 ;;
 
+(* *************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> vname -> Parsetree.phrase list ->    *)
+(*   (Parsetree.testing_def_desc * Env.ScopingEnv.t)                  *)
+(** {b Descr} : Scopes a testing definition. Returns the scoped
+    definition and the initial environment extended with a binding
+    for the collections inside. This second returned value might be
+   useful to offer a common typing environement to all testing
+   definitions
+
+    {b Exported} : No.                                             *)
+(* *************************************************************** *)
+let rec scope_testing ctx env ((testing_def: Parsetree.testing_def_desc Parsetree.ast),testing_context) =
+  let testing_def_desc = testing_def.Parsetree.ast_desc in
+  let testing_name = testing_def_desc.Parsetree.tstd_name in
+  let testing_expr = testing_def_desc.Parsetree.tstd_body in
+  let testing_expr_desc = testing_expr.Parsetree.ast_desc in
+  if Configuration.get_verbose () then
+    Format.eprintf "Scoping testing '%a'.@."
+      Sourcify.pp_vname testing_name;
+
+  (* We first deal with the context
+     the testing defines. We treat it as a sequence of toplevel phrases.  *)
+  let (scoped_testing_context,env') =
+    let current_ctx = ref ctx in
+    let current_env = ref env in
+    let scoped_testing_context =
+      List.map
+        (fun phrase ->
+          let (phrase', env', ctx') =
+            scope_phrase !current_ctx !current_env phrase in
+          current_env := env';
+          current_ctx := ctx';
+          (* Return the scoped phrase. *)
+          phrase')
+        testing_context in
+    scoped_testing_context, !current_env
+  in
+
+  (* We then test whether collection testing_name is among the
+     collections defined in the testing definition. *)
+  let loc = testing_def.Parsetree.ast_loc in
+  (* We embedd the [vname] inside a dummy [ident] in order to lookup. *)
+  let fake_ident = {
+    Parsetree.ast_desc = Parsetree.I_local testing_name;
+    Parsetree.ast_loc = loc;
+    Parsetree.ast_annot = [];
+    Parsetree.ast_type = Parsetree.ANTI_none } in
+
+  let _ident_scope_info =
+    Env.ScopingEnv.find_species
+      ~loc
+      ~current_unit: ctx.current_unit fake_ident env' in
+
+  (* We then deal with the list of properties being tested
+     (the list of existing properties and the properties/theorems
+     declared within the testing definition). The scoping is done in the
+     context of the tested collection. *)
+  let _ctx_tested_coll = { ctx with
+               current_species =
+               Some
+                 (Parsetree_utils.name_of_vname
+                    testing_name) } in
+  let scoped_property_defs = 
+    (* TESTING TODO : for now, we do not look into the property definitions. *)
+    (* scope_property_def
+       ctx_tested_coll
+       env'
+       testing_expr.Parsetree.tst_properties in *)
+   testing_expr_desc.Parsetree.tst_property_defs in
+  let scoped_properties = 
+    (* TESTING TODO : for now, we do not look into the property list. *)
+   testing_expr_desc.Parsetree.tst_properties in
+   let scoped_testing_expr_desc : Parsetree.testing_expr_desc = {
+     Parsetree.tst_property_defs = scoped_property_defs;
+     Parsetree.tst_properties = scoped_properties;
+     (* TESTING TODO : for now, we do not look into the parameters. *)
+     Parsetree.tst_parameters = testing_expr_desc.Parsetree.tst_parameters }
+   in
+   let scoped_testing_expr =
+     { testing_expr with Parsetree.ast_desc = scoped_testing_expr_desc } in
+   let scoped_testing_def_desc =
+     { testing_def_desc with Parsetree.tstd_body = scoped_testing_expr } in
+   let scoped_testing_def =
+     { testing_def with Parsetree.ast_desc = scoped_testing_def_desc } in
+  (* Here, the returned environment does not include the properties
+     defined within the testing definition. *)
+  ((scoped_testing_def,scoped_testing_context), env')
 
 
-let scope_phrase ctx env phrase =
+
+
+and scope_phrase ctx env phrase =
   let (new_desc, new_env, new_ctx) =
     (match phrase.Parsetree.ast_desc with
      | Parsetree.Ph_annotation_title ->
@@ -2527,6 +2616,23 @@ let scope_phrase ctx env phrase =
          let (scoped_collection_def, env') =
            scope_collection_def ctx' env collection_def in
          ((Parsetree.Ph_collection scoped_collection_def), env', ctx)
+     | Parsetree.Ph_testing (testing_def,testing_context) ->
+         let ctx' =
+           (* Contrary to species and collection definitions, we do not
+              update the current_species in the context as
+              testing_def.Parsetree.ast_desc.Parsetree.tstd_name
+              is later defined within the testing definition. *)
+           ctx  in
+         let ((scoped_testing_def,scoped_testing_context), _env') =
+           (* This second argument is not used in the current version
+              but might be useful in the future to offer a common
+              typing environnement for all testing definitions. *)
+           scope_testing ctx' env (testing_def,testing_context) in
+         (* Here we do not change the environement as the testing
+            definition is not meant to be accessed outside its
+            definition. *)
+         ((Parsetree.Ph_testing
+             (scoped_testing_def,scoped_testing_context)), env, ctx)
      | Parsetree.Ph_type type_def ->
          let (scoped_ty_def, env') = scope_type_def ctx env type_def in
          ((Parsetree.Ph_type scoped_ty_def), env', ctx)

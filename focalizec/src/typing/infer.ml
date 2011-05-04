@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.192 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: infer.ml,v 1.193 2011-05-04 09:22:46 maarek Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -4582,6 +4582,7 @@ type please_compile_me =
        Env.TypeInformation.species_description *
          (** The depency graph of the collection's methods. *)
          (DepGraphData.name_node list))
+  | PCM_testing of (Parsetree.testing_def * please_compile_me list)
   | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description)
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
   | PCM_theorem of
@@ -5328,7 +5329,7 @@ let typecheck_collection_def ctx env coll_def =
 
     {b Exported} : No.                                                *)
 (* ****************************************************************** *)
-let typecheck_phrase ctx env phrase =
+let rec typecheck_phrase ctx env phrase =
   match phrase.Parsetree.ast_desc with
    | Parsetree.Ph_annotation_title ->
        (PCM_annotation_title, env)
@@ -5362,6 +5363,23 @@ let typecheck_phrase ctx env phrase =
        (* Store the type information in the phrase's node. *)
        phrase.Parsetree.ast_type <- Parsetree.ANTI_type ty;
        (compil_info, env')
+   | Parsetree.Ph_testing (testing_def,testing_context) ->
+       let current_env = ref env in
+       let compil_info_list =
+         (* FIXME testing: shall we use the same context ctx? *)
+         List.map
+           (fun phrase ->
+             let (stuff_to_compile, new_current_env) =
+               typecheck_phrase ctx !current_env phrase in
+             current_env := new_current_env;
+             stuff_to_compile)
+           testing_context in
+       (* Here we do not return the extended environement
+          current_env as it pertinent only for the testing parts. *)
+       (* TESTING TODO : for now, we do not look into the properties
+          defined and the parameters from [testing_def]. *)
+       let compil_info = PCM_testing (testing_def, compil_info_list) in
+       (compil_info, env)
    | Parsetree.Ph_type type_def ->
        let (env', ty_descr) = typecheck_type_def ctx env type_def in
        (* Interface printing stuff must be bone inside. *)

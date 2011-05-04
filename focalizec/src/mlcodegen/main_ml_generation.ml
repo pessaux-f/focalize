@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_ml_generation.ml,v 1.22 2009-06-16 10:08:19 weis Exp $ *)
+(* $Id: main_ml_generation.ml,v 1.23 2011-05-04 09:22:47 maarek Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -73,7 +73,13 @@ let toplevel_compile env ~current_unit out_fmter = function
         ~loc: coll_def.Parsetree.ast_loc
         coll_def.Parsetree.ast_desc.Parsetree.cd_name
         ([], [], None, Env.COS_collection) env
-  | Infer.PCM_type (type_def_name, type_descr) ->
+  | Infer.PCM_testing (_, _) ->
+      (* Testing definition are discarded at code generation. When
+         testing is activated, testing instructions are compiled
+         separatly. *)
+      env
+  | Infer.PCM_type (type_def_name, type_descr)
+      ->
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
         Context.rcc_current_unit = current_unit;

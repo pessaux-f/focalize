@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.21 2009-06-15 09:19:36 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.22 2011-05-04 09:22:47 maarek Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -51,7 +51,29 @@ let rec pp_generic_newlined_list printer_fct ppf = function
   | [last] -> printer_fct ppf last
   |  h :: q ->
       Format.fprintf ppf "%a@\n%a"
-        printer_fct h (pp_generic_newlined_list printer_fct) q
+        printer_fct h
+        (pp_generic_newlined_list printer_fct) q
+;;
+
+
+
+(* ***************************************************************** *)
+(*  string -> (Format.formatter -> 'a -> unit) -> Format.formatter ->  *)
+(*    'a list -> unit                                                *)
+(** {b Descr} : Pretty prints a list of items thanks to the provided
+              printing function, separating each item by by the
+              specified string argument [separator] and a newline.
+
+    {b Rem} : Exported ouside this module.                           *)
+(* ***************************************************************** *)
+let rec pp_generic_separated_newlined_list separator printer_fct ppf = function
+  | [] -> ()
+  | [last] -> printer_fct ppf last
+  |  h :: q ->
+      Format.fprintf ppf "%a@,%s@\n%a"
+        printer_fct h
+        separator
+        (pp_generic_separated_newlined_list separator printer_fct) q
 ;;
 
 

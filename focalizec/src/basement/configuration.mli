@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.25 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.26 2011-05-04 09:22:47 maarek Exp $ *)
 
 (** {3 The internal configuration of the FoCaLize compiler} *)
 
@@ -71,6 +71,15 @@ val unset_generate_coq : unit -> unit;;
 
 val get_fancy_ansi : unit -> bool;;
 val unset_fancy_ansi : unit -> unit;;
+
+val get_generate_coq : unit -> bool;;
+val unset_generate_coq : unit -> unit;;
+
+val get_generate_tests : unit -> bool;;
+val unset_generate_tests : unit -> unit;;
+
+val get_perform_tests : unit -> bool;;
+val unset_perform_tests : unit -> unit;;
 
 val get_use_default_lib : unit -> bool;;
 val unset_use_default_lib : unit -> unit;;

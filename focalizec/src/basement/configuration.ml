@@ -13,14 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.40 2009-12-03 16:11:08 weis Exp $ *)
+(* $Id: configuration.ml,v 1.41 2011-05-04 09:22:47 maarek Exp $ *)
 
 exception No_input_file;;
 
 let focalize_version_number = (0, 6, 0)
 ;;
 
-let version_date = "$Date: 2009-12-03 16:11:08 $"
+let version_date = "$Date: 2011-05-04 09:22:47 $"
 ;;
 
 let focalize_short_version =
@@ -135,6 +135,18 @@ let (get_fancy_ansi, unset_fancy_ansi) =
   let fancy_ansi = ref true in
   (fun () -> !fancy_ansi),
   (fun () -> fancy_ansi := false)
+;;
+
+let (get_generate_tests, unset_generate_tests) =
+  let generate_tests = ref true in
+  (fun () -> !generate_tests),
+  (fun () -> generate_tests := false)
+;;
+
+let (get_perform_tests, unset_perform_tests) =
+  let perform_tests = ref true in
+  (fun () -> !perform_tests),
+  (fun () -> perform_tests := false)
 ;;
 
 let (get_use_default_lib, unset_use_default_lib) =

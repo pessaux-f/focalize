@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.47 2011-02-28 13:45:51 tollitte Exp $ *)
+(* $Id: focalizec.ml,v 1.48 2011-05-04 09:22:47 maarek Exp $ *)
 
 exception Bad_file_suffix of string ;;
 
@@ -238,6 +238,12 @@ let main () =
       ("-no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
        " disables the OCaml code generation.") ;
+      ("-no-test-code",
+       Arg.Unit Configuration.unset_perform_tests,
+       " disables the test code generation.") ;
+      ("-no-tests",
+       Arg.Unit Configuration.unset_perform_tests,
+       " disables the tests.") ;
       ("-no-stdlib-path",
        Arg.Unit Configuration.unset_use_default_lib,
        " does not include by default the standard library installation\n\t\
