@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.45 2011-05-06 10:20:53 weis Exp $
+# $Id: Makefile.common,v 1.46 2011-05-06 10:37:16 maarek Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -73,6 +73,8 @@ tests::
 	    echo "<-- $$i [$$err]" >&2; \
 	    case $$err in 0);; *) exit $$err;; esac; \
 	  done; \
+	else \
+	  echo "No directory tests to perform tests"; \
 	fi
 
 .SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .pfc .v .vo
