@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.29 2010-03-24 10:23:13 weis Exp $
+# $Id: Makefile.common,v 1.30 2011-05-06 10:20:53 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -41,9 +41,9 @@ clean::
 	if test -d tests; then \
 	  for i in tests; do \
 	    echo "--> $$i ..." >&2 && \
-	    ($(CD) $$i && $(MAKE) clean) && \
+	    ($(CD) $$i && $(MAKE) $@); \
 	    err=$$?; \
-	    echo "<-- $$i [$$err]" >&2 && \
+	    echo "<-- $$i [$$err]" >&2; \
 	    case $$err in 0);; *) exit $$err;; esac; \
 	  done; \
 	fi && \
@@ -68,9 +68,9 @@ tests::
 	if test -d tests; then \
 	  for i in tests; do \
 	    echo "--> $$i ..." >&2 && \
-	    ($(CD) $$i && $(MAKE) all) && \
+	    ($(CD) $$i && $(MAKE) all); \
 	    err=$$?; \
-	    echo "<-- $$i [$$err]" >&2 && \
+	    echo "<-- $$i [$$err]" >&2; \
 	    case $$err in 0);; *) exit $$err;; esac; \
 	  done; \
 	fi
