@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.48 2011-05-04 09:22:47 maarek Exp $ *)
+(* $Id: focalizec.ml,v 1.49 2011-05-06 18:02:50 maarek Exp $ *)
 
 exception Bad_file_suffix of string ;;
 
@@ -219,7 +219,7 @@ let main () =
        " prints the source file interface.") ;
       ("-I",
        Arg.String (fun path -> Files.add_lib_path path),
-       " adds the specified path to the path list where to search for \
+       " <dir> adds the specified <dir> to the path list where to search for \
          compiled\n\tinterfaces.") ;
       ("-impose-termination-proof",
        Arg.Unit Configuration.set_impose_termination_proof,
@@ -255,8 +255,8 @@ let main () =
          for bytecode and native code compilation.") ;
       ("-pretty",
        Arg.String Configuration.set_pretty_print,
-       " pretty-prints the parse tree of the focalize file as a focalize\n\
-         source into the argument file.") ;
+       " <output> pretty-prints the parse tree of the focalize file as a focalize\n\
+         source into the <output> file.") ;
       ("-raw-ast-dump",
        Arg.Unit Configuration.set_raw_ast_dump,
        " (undocumented) prints on stderr the raw AST structure \
