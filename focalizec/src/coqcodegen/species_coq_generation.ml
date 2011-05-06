@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.185 2010-01-19 13:45:05 weis Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.186 2011-05-06 18:04:27 maarek Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2532,14 +2532,14 @@ let print_types_as_tuple_if_several print_ctx out_fmter types =
 
 (* ************************************************************** *)
 (* ('a * 'b) list -> ('a * 'c) list -> ('a * bool) list           *)
-(** {Descr}: Find the variables that must be kept in the pattern
+(** {b Descr}: Find the variables that must be kept in the pattern
     representing the tuple of a recursive function's arguments
     the termination order, applies on them. For each variable of
     the function (i.e. those in the list [fun_params_n_tys]) we
     make a couple in the result with this variable's name and the
     boolean value telling if the variable appears in the pattern.
 
-    {Rem} : Not exported outside this module.                     *)
+    {b Rem} : Not exported outside this module.                     *)
 (* ************************************************************** *)
 let pattern_from_used_variables fun_params_n_tys vars_used_by_order =
   let rec rec_find = function
@@ -2564,7 +2564,7 @@ let pattern_from_used_variables fun_params_n_tys vars_used_by_order =
     function.
     Returns the list of generated idents as [Vlident]s.
 
-    {Rem} : Not exported outside this module.                               *)
+    {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************ *)
 let print_pattern_for_order out_fmter ~var_suffix description =
   let rec rec_print = function
