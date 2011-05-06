@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.46 2011-05-04 09:22:46 maarek Exp $ *)
+(* $Id: dump_ptree.ml,v 1.47 2011-05-06 18:01:39 maarek Exp $ *)
 
 let pp_annotation ppf doc =
   List.iter
@@ -384,7 +384,7 @@ let rec pp_pat_desc ppf = function
       Format.fprintf ppf "@[<2>P_as@ (%a,@ %a)@]" pp_pattern pat pp_vname vname
   | Parsetree.P_wild -> Format.fprintf ppf "P_wild"
   | Parsetree.P_constr (ident, pats) ->
-      Format.fprintf ppf "@[<2>P_app@ (%a,@ %a)@]"
+      Format.fprintf ppf "@[<2>P_constr@ (%a,@ %a)@]"
         pp_constructor_ident ident pp_patterns pats
   | Parsetree.P_record lab_pat_lst ->
       Format.fprintf ppf "@[<2>P_record@ ([@ %a@ ])@]"

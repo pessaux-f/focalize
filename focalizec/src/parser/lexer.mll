@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.93 2011-05-04 09:22:46 maarek Exp $ *)
+(* $Id: lexer.mll,v 1.94 2011-05-06 18:01:39 maarek Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -1084,7 +1084,7 @@ let annotation_tag =
     decimal_digit
   | "{@" [^ '}']* '}'
 
-(** {3 The main lexer. *)
+(** {3 The main lexer} *)
 
 rule token = parse
   | newline
@@ -1252,13 +1252,13 @@ rule token = parse
      context where the parser expects a regular identifier (binding a name in
      a pattern or a let definition for instance), you can use a symbol via
      its parenthesized version. *)
-  | "(" [' ']+ (lowercase_prefix_symbol as inner) [' ']+ ")"
+  | '(' [' ']+ (lowercase_prefix_symbol as inner) [' ']+ ')'
     { token_of_paren_lowercase_prefix_symbol inner }
-  | "(" [' ']+ (lowercase_infix_symbol as inner) [' ']+ ")"
+  | '(' [' ']+ (lowercase_infix_symbol as inner) [' ']+ ')'
     { token_of_paren_lowercase_infix_symbol inner }
-  | "(" [' ']+ (uppercase_prefix_symbol as inner) [' ']+ ")"
+  | '(' [' ']+ (uppercase_prefix_symbol as inner) [' ']+ ')'
     { token_of_paren_uppercase_prefix_symbol inner }
-  | "(" [' ']+ (uppercase_infix_symbol as inner) [' ']+ ")"
+  | '(' [' ']+ (uppercase_infix_symbol as inner) [' ']+ ')'
     { token_of_paren_uppercase_infix_symbol inner }
 
   (* Usual simple tokens *)

@@ -13,13 +13,69 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.82 2011-05-06 11:16:24 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.83 2011-05-06 18:01:39 maarek Exp $ *)
 
 open Parsetree;;
+
+(** {b Desc} : Describe wether an [expr_desc] must appears in infix or
+    prefix position as the functionnal part in an applicative expression.
+    If the [expr_desc] is not an identifier expression, then is it
+    considered as having an unspecified "fixitude".
+
+    {b Exported} : No.                                                    *)
+(* ********************************************************************** *)
+type expr_desc_fixitude =
+  | Fixitude_prefix    (** The functionnal expression is a prefix identifier. *)
+  | Fixitude_infix     (** The functionnal expression is an infix identifier. *)
+  | Fixitude_applic    (** The functionnal expression is not an identifier or
+                           is neither infix nor prefix. *)
+;;
 
 let pp_vname ppf = function
   | Parsetree.Vlident s | Parsetree.Vuident s | Parsetree.Vpident s
   | Parsetree.Viident s | Parsetree.Vqident s -> Format.fprintf ppf "%s" s
+;;
+
+let pp_constr_name ppf = function
+  | Parsetree.Vuident vname ->
+      let l = String.length vname in
+      let fixitude =
+        if l < 2 then Fixitude_applic else
+        begin
+          match vname.[0] with
+          | ':' | '`' when vname.[l - 1] = vname.[0] -> Fixitude_infix
+          | _ -> Fixitude_applic
+        end in
+      begin
+        match fixitude with
+        | Fixitude_prefix
+        | Fixitude_applic -> Format.fprintf ppf "%s" vname
+        | Fixitude_infix -> Format.fprintf ppf "( %s )" vname
+      end
+  | Parsetree.Viident s | Parsetree.Vlident s | Parsetree.Vpident s
+  | Parsetree.Vqident s ->
+      Format.eprintf "Constructor with wrong ident %s@." s;
+      assert false 
+;;
+
+let pp_bound_vname ppf = function
+  | Parsetree.Vuident _
+  | Parsetree.Vqident _ -> assert false
+  | Parsetree.Vlident vname -> Format.fprintf ppf "%s" vname
+  | Parsetree.Viident vname | Parsetree.Vpident vname -> Format.fprintf ppf "( %s )" vname
+;;
+
+let pp_expr_vname ppf = function
+  | Parsetree.Vqident _ -> assert false
+  | Parsetree.Vuident vname
+  | Parsetree.Vlident vname -> Format.fprintf ppf "%s" vname
+  | Parsetree.Viident vname | Parsetree.Vpident vname -> Format.fprintf ppf "( %s )" vname
+;;
+
+let pp_method_vname ppf = function
+  | Parsetree.Vqident _ | Parsetree.Vuident _ -> assert false
+  | Parsetree.Vlident vname -> Format.fprintf ppf "%s" vname
+  | Parsetree.Viident vname | Parsetree.Vpident vname -> Format.fprintf ppf "( %s )" vname
 ;;
 
 let pp_vnames sep ppf = Handy.pp_generic_separated_list sep pp_vname ppf
@@ -33,12 +89,17 @@ let pp_node_labels sep ppf =
 ;;
 
 let pp_ast desc_printer_fct ppf ast =
+  let pp_contents ppf = function
+    | "" -> ()
+    | contents -> Format.fprintf ppf "%s" contents in
   let print_annot_elem ppf ae =
-    Format.fprintf ppf "(** %s%s *)@ "
-      (match ae.Parsetree.ae_tag with
-       | "" -> ""
-       | tag -> Printf.sprintf "{@%s}" tag)
-      ae.Parsetree.ae_desc in
+    let contents = ae.Parsetree.ae_desc in
+    match ae.Parsetree.ae_tag with
+       | "" -> Format.fprintf ppf "(** %a*)@ " pp_contents contents
+       | ("0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9" as tag) ->
+           Format.fprintf ppf "(** %s %a*)@ " tag pp_contents contents
+       | tag -> Format.fprintf ppf "(** {%s}%a*)@ "  tag pp_contents contents
+  in
   let print_annot_elems ppf aes =
       List.iter (fun d -> Format.fprintf ppf "%a@ " print_annot_elem d) aes in
   let print_annotation = function
@@ -80,6 +141,18 @@ let pp_label_ident_desc ppf = function
 let pp_label_ident ppf = pp_ast pp_label_ident_desc ppf;;
 
 let pp_expr_ident_desc ppf = function
+  | Parsetree.EI_local vname -> Format.fprintf ppf "%a" pp_expr_vname vname
+  | Parsetree.EI_global qvname ->
+    Format.fprintf ppf "%a" pp_qvname qvname
+  | Parsetree.EI_method (None, vname) ->
+    Format.fprintf ppf "!%a" pp_method_vname vname
+  | Parsetree.EI_method (Some coll_qvname, vname) ->
+    Format.fprintf ppf "%a!%a" pp_qvname coll_qvname pp_method_vname vname
+;;
+let pp_expr_ident ppf = pp_ast pp_expr_ident_desc ppf
+;;
+
+let pp_infix_ident_desc ppf = function
   | Parsetree.EI_local vname -> Format.fprintf ppf "%a" pp_vname vname
   | Parsetree.EI_global qvname ->
     Format.fprintf ppf "%a" pp_qvname qvname
@@ -88,8 +161,7 @@ let pp_expr_ident_desc ppf = function
   | Parsetree.EI_method (Some coll_qvname, vname) ->
     Format.fprintf ppf "%a!%a" pp_qvname coll_qvname pp_vname vname
 ;;
-
-let pp_expr_ident ppf = pp_ast pp_expr_ident_desc ppf
+let pp_infix_ident ppf = pp_ast pp_infix_ident_desc ppf
 ;;
 
 let pp_expr_idents sep ppf =
@@ -102,19 +174,6 @@ let pp_constructor_ident_desc ppf (Parsetree.CI ident) =
 let pp_constructor_ident ppf = pp_ast pp_constructor_ident_desc ppf
 ;;
 
-(** {b Desc} : Describe wether an [expr_desc] must appears in infix of
-    prefix position as the functionnal part in an applicative expression.
-    If the [expr_desc] is not an identifier expression, then is it
-    considered as having an unspecified "fixitude".
-
-    {b Exported} : No.                                                    *)
-(* ********************************************************************** *)
-type expr_desc_fixitude =
-  | Fixitude_prefix    (** The functionnal expression is a prefix identifier. *)
-  | Fixitude_infix     (** The functionnal expression is an infix identifier. *)
-  | Fixitude_applic    (** The functionnal expression is not an identifier or
-                           is neither infix nor prefix. *)
-;;
 
 (* ************************************************************************* *)
 (* Parsetree.expr_desc -> expr_desc_fixitude                                 *)
@@ -134,8 +193,15 @@ let expr_desc_fixitude = function
       let fixitude_of_vname = function
         | Parsetree.Vpident _ -> Fixitude_prefix
         | Parsetree.Viident _ -> Fixitude_infix
+        | Parsetree.Vuident vname ->
+            let l = String.length vname in
+            if l < 2 then Fixitude_applic else
+            begin
+              match vname.[0] with
+              | ':' | '`' when vname.[l - 1] = vname.[0] -> Fixitude_infix
+              | _ -> Fixitude_applic
+            end
         | Parsetree.Vlident _
-        | Parsetree.Vuident _
         | Parsetree.Vqident _ -> Fixitude_applic in
       begin match id.Parsetree.ast_desc with
       | Parsetree.EI_local vname -> fixitude_of_vname vname
@@ -161,7 +227,7 @@ let rec pp_rep_type_def_desc ppf = function
       Format.fprintf ppf "%a@[<2>@ (%a)@]"
         pp_ident ident (pp_rep_type_defs ",") rtds
   | Parsetree.RTE_prod rtds ->
-      Format.fprintf ppf "@[<2>(%a)@]" (pp_rep_type_defs "*") rtds
+      Format.fprintf ppf "@[<2>%a@]" (pp_rep_type_defs "*") rtds
   | Parsetree.RTE_paren rtd -> Format.fprintf ppf "(%a)" pp_rep_type_def rtd
 
 and pp_rep_type_defs sep ppf =
@@ -181,7 +247,7 @@ let rec pp_type_expr_desc prio ppf = function
       Format.fprintf ppf "%a@[<2>@ (%a)@]"
         pp_ident ident (pp_type_exprs_with_prio 0 ",") tes
   | Parsetree.TE_prod (tes) ->
-      Format.fprintf ppf "@[<2>(%a)@]" (pp_type_exprs_with_prio 0 " *") tes
+      Format.fprintf ppf "@[<2>%a@]" (pp_type_exprs_with_prio 0 " *") tes
   | Parsetree.TE_self -> Format.fprintf ppf "Self"
   | Parsetree.TE_prop -> Format.fprintf ppf "prop"
   | Parsetree.TE_paren te ->
@@ -301,10 +367,14 @@ let rec pp_pat_desc ppf = function
                pp_label_ident label pp_pattern pat))
         lab_pat_lst
   | Parsetree.P_tuple pats ->
-      Format.fprintf ppf "@[<2>(%a)@]" (pp_patterns ",") pats
+      Format.fprintf ppf "@[<2>%a@]" (pp_patterns ",") pats
   | Parsetree.P_paren pat -> Format.fprintf ppf "@[<1>(%a)@]" pp_pattern pat
 
-and pp_patterns sep ppf = Handy.pp_generic_separated_list sep pp_pattern ppf
+and pp_patterns sep ppf = function
+  | [] -> ()
+  | pats ->
+      Format.fprintf ppf "(%a)"
+        (Handy.pp_generic_separated_list sep pp_pattern) pats
 and pp_pattern ppf = pp_ast pp_pat_desc ppf
 ;;
 
@@ -314,7 +384,7 @@ let pp_external_language ppf = function
   | Parsetree.EL_external s -> Format.fprintf ppf "%s@ " s
 ;;
 
-let pp_external_expression ppf eexpr = Format.fprintf ppf "\"%s\"" eexpr
+let pp_external_expression ppf eexpr = Format.fprintf ppf "{*%s*}" eexpr
 ;;
 
 let pp_external_expr_desc ppf lst =
@@ -463,7 +533,7 @@ and pp_binding_body ppf = function
   | Parsetree.BB_computational expr -> pp_expr ppf expr
 
 and pp_binding_desc ppf bd =
-  Format.fprintf ppf "%a" pp_vname bd.Parsetree.b_name;
+  Format.fprintf ppf "%a" pp_bound_vname bd.Parsetree.b_name;
   (* Prints the parameters only if some. *)
   if bd.Parsetree.b_params <> [] then
     (begin
@@ -525,10 +595,10 @@ and pp_proof_desc ppf = function
   | Parsetree.Pf_auto facts ->
       Format.fprintf ppf "@[<2>by %a@]" (pp_facts "") facts
   | Parsetree.Pf_coq (enf_deps, s) ->
-      Format.fprintf ppf "@[<2>%a"
+      Format.fprintf ppf "@[<2>coq proof@ %a"
         (pp_enforced_dependencies " ") enf_deps;
       if enf_deps <> [] then Format.fprintf ppf " ";
-      Format.fprintf ppf "coq proof@ {*%s*}@]" s
+      Format.fprintf ppf "@ {*%s*}@]" s
   | Parsetree.Pf_node proof_nodes ->
       Format.fprintf ppf "%a" (pp_proof_nodes "") proof_nodes
 and pp_proof ppf = pp_ast pp_proof_desc ppf
@@ -595,10 +665,10 @@ and pp_logical_expr_desc ppf = function
         (pp_vnames "") vnames pp_type_expr type_expr_opt
         pp_logical_expr prop
   | Parsetree.Pr_imply (p1, p2) ->
-      Format.fprintf ppf "@[<2>%a@ ->@ (%a)@]"
+      Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
         pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_or (p1, p2) ->
-      Format.fprintf ppf "@[<2>(%a@ \\/@ %a)@]"
+      Format.fprintf ppf "@[<2>%a@ \\/@ %a@]"
         pp_logical_expr p1 pp_logical_expr p2
   | Parsetree.Pr_and (p1, p2) ->
       Format.fprintf ppf "@[<2>%a@ /\\@ %a@]"
@@ -620,6 +690,15 @@ and pp_expr_desc ppf = function
       Format.fprintf ppf "@[<2>function %a ->@ %a@]"
         (pp_vnames "") vnames pp_expr expr
   | Parsetree.E_var id -> Format.fprintf ppf "%a" pp_expr_ident id
+  | Parsetree.E_app ({ ast_desc = Parsetree.E_var id; ast_loc = _; ast_annot = _; ast_type = _ } as expr, [left; right]) ->
+      let fixitude = expr_desc_fixitude expr.Parsetree.ast_desc in
+      if fixitude = Fixitude_infix
+      then
+        Format.fprintf ppf "@[<2>%a@ %a@ %a@]"
+          pp_expr left pp_infix_ident id pp_expr right
+      else
+        Format.fprintf ppf "@[<2>%a@ (%a,@ %a)@]"
+          pp_expr expr pp_expr left pp_expr right
   | Parsetree.E_app (expr, exprs) ->
       (begin
       (* Especially handle the case where the functionnal expression is *)
@@ -731,10 +810,10 @@ let pp_tmp_TD_union ppf l =
     (Handy.pp_generic_separated_list
        "|"
        (fun local_ppf (constr_name, type_exprs) ->
-         Format.fprintf local_ppf "%a" pp_vname constr_name;
+         Format.fprintf local_ppf "%a" pp_constr_name constr_name;
          (* Print constructor's arguments if some. *)
          if type_exprs <> [] then
-           Format.fprintf ppf " (@[<1>%a@])" (pp_type_exprs " *") type_exprs))
+           Format.fprintf ppf " (@[<1>%a@])" (pp_type_exprs ",") type_exprs))
     l
 ;;
 
@@ -756,7 +835,7 @@ let pp_regular_type_def_body ppf =
 
 let pp_external_binding ppf eb =
   let (vname, external_expr) = eb.Parsetree.ast_desc in
-  Format.fprintf ppf "%a =@ %a" pp_vname vname pp_external_expr external_expr
+  Format.fprintf ppf "%a =@ %a" pp_constr_name vname pp_external_expr external_expr
 ;;
 let pp_external_bindings ppf ebds =
   match ebds.Parsetree.ast_desc with
@@ -802,7 +881,7 @@ let pp_type_def_body_desc ppf = function
       Format.fprintf ppf "@[<2>private@ ([@ %a@ ])@]"
         pp_type_def_body_simple tydef_body_simple
   | Parsetree.TDB_public tydef_body_simple ->
-      Format.fprintf ppf "@[<2>public@ ([@ %a@ ])@]"
+      Format.fprintf ppf "@[<2>public@ %a@ @]"
         pp_type_def_body_simple tydef_body_simple
   | Parsetree.TDB_relational tydef_body_simple ->
       Format.fprintf ppf "@[<2>relational@ ([@ %a@ ])@]"
