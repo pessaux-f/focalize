@@ -12,23 +12,21 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2011-05-06 18:01:39 maarek Exp $
+# $Id: Makefile,v 1.3 2011-05-09 15:41:01 maarek Exp $
 
 ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-HERE_DIR=src/parser/tests
-PRETTY_DIR=$(ROOT_DIR)/$(HERE_DIR)
 SRC_DIR=$(ROOT_DIR)/src
 EXTLIB_SUBDIRS =\
  access_control\
  polynomials\
- algebra\
+# algebra\
 
 include $(ROOT_DIR)/Makefile.common
 
-.PHONY: stdlib tests
+.PHONY: stdlib extlib tests
 tests:: all
 
 
@@ -37,8 +35,8 @@ tests:: all
 all:: stdlib
 
 stdlib:
-	mkdir -p stdlib &&\
-	($(CD) $(SRC_DIR)/stdlib &&\
+	mkdir -p stdlib && \
+	($(CD) $(SRC_DIR)/stdlib && \
 	for f in *.fcl; do\
 	  ../toplevel/focalizec -no-ocaml-code -no-coq-code \
 	  -pretty ../parser/tests/stdlib/$$f \
@@ -50,27 +48,24 @@ stdlib:
 	  exit 1;\
 	done;\
 	)
-#extlib:
-#	
 
-
-
-	# ($(CD) $(ROOT_DIR) && \
-	# pwd;\
-	# for d in $(TEST_DIRS); do \
-	#   mkdir -p $(PRETTY_DIR)/$$d && \
-	#   ($(CD) $$d &&
-	#   for f in $(SRC_DIR)/$$d/*.fcl; do \
-	#      src/toplevel/$(FOCALIZEC) -no-ocaml-code -no-coq-code \
-	#        -pretty $(PRETTY_DIR)/$$d/$$f \
-	#        $$f && \
-	#      src/toplevel/$(FOCALIZEC) -no-ocaml-code -no-coq-code \
-        #        -pretty $(PRETTY_DIR)/$$d/$$f.pretty \
-	#        $(PRETTY_DIR)/$$d/$$f && \
-	#      cmp $(PRETTY_DIR)/$$d/$$f $(PRETTY_DIR)/$$d/$$f.pretty ||\
-	#      exit 1;\
-	#   done;\
-	# done;\
-	# )
-
-
+extlib:
+	mkdir -p extlib && \
+	for d in $(EXTLIB_SUBDIRS); do\
+	  mkdir -p extlib/$$d && \
+	  ($(CD) $(SRC_DIR)/extlib/$$d && \
+	  for f in *.fcl; do\
+	    echo "$$d/$$f -> $$d/$$f" && \
+	    ../../toplevel/focalizec -I ../algebra -no-ocaml-code -no-coq-code \
+	    -pretty ../../parser/tests/extlib/$$d/$$f \
+	    $$f && \
+	    echo "$$d/$$f -> $$d/$$f -> $$d/$$f" && \
+	    ../../toplevel/focalizec -I ../algebra -no-ocaml-code -no-coq-code \
+	    -pretty ../../parser/tests/extlib/$$d/$$f.pretty \
+	    ../../parser/tests/extlib/$$d/$$f && \
+	    echo "$$d/$$f -> $$d/$$f = $$d/$$f" && \
+	    cmp ../../parser/tests/extlib/$$d/$$f ../../parser/tests/extlib/$$d/$$f.pretty ||\
+	    exit 1;\
+	  done;\
+	  )\
+	done;

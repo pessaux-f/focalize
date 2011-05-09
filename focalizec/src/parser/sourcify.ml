@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.83 2011-05-06 18:01:39 maarek Exp $ *)
+(* $Id: sourcify.ml,v 1.84 2011-05-09 15:41:01 maarek Exp $ *)
 
 open Parsetree;;
 
@@ -175,6 +175,29 @@ let pp_constructor_ident ppf = pp_ast pp_constructor_ident_desc ppf
 ;;
 
 
+let vname_fixitude vname = match vname with
+| Parsetree.Vpident _ -> Fixitude_prefix
+| Parsetree.Viident _ -> Fixitude_infix
+| Parsetree.Vuident vname ->
+    let l = String.length vname in
+    if l < 2 then Fixitude_applic else
+    begin
+      match vname.[0] with
+      | ':' | '`' when vname.[l - 1] = vname.[0] -> Fixitude_infix
+      | _ -> Fixitude_applic
+    end
+| Parsetree.Vlident _
+| Parsetree.Vqident _ -> Fixitude_applic
+;;
+
+let ident_fixitude (ident:Parsetree.ident) =
+  let vname = match ident.Parsetree.ast_desc with
+  | I_local vname
+  | I_global (Vname vname)
+  | I_global (Qualified (_, vname)) -> vname in
+  vname_fixitude vname
+;;
+
 (* ************************************************************************* *)
 (* Parsetree.expr_desc -> expr_desc_fixitude                                 *)
 (** {b Descr} : Checks wether an [expr_desc] is a legal binary or unary
@@ -190,25 +213,12 @@ let pp_constructor_ident ppf = pp_ast pp_constructor_ident_desc ppf
 let expr_desc_fixitude = function
   | Parsetree.E_var id ->
       (* Discriminate according to the lexical tag. *)
-      let fixitude_of_vname = function
-        | Parsetree.Vpident _ -> Fixitude_prefix
-        | Parsetree.Viident _ -> Fixitude_infix
-        | Parsetree.Vuident vname ->
-            let l = String.length vname in
-            if l < 2 then Fixitude_applic else
-            begin
-              match vname.[0] with
-              | ':' | '`' when vname.[l - 1] = vname.[0] -> Fixitude_infix
-              | _ -> Fixitude_applic
-            end
-        | Parsetree.Vlident _
-        | Parsetree.Vqident _ -> Fixitude_applic in
       begin match id.Parsetree.ast_desc with
-      | Parsetree.EI_local vname -> fixitude_of_vname vname
-      | Parsetree.EI_global (Parsetree.Vname vname) -> fixitude_of_vname vname
+      | Parsetree.EI_local vname -> vname_fixitude vname
+      | Parsetree.EI_global (Parsetree.Vname vname) -> vname_fixitude vname
       | Parsetree.EI_global (Parsetree.Qualified (_, _)) ->
           Fixitude_applic  (* So can't be printed as a syntactic operator. *)
-      | Parsetree.EI_method (None, vname) -> fixitude_of_vname vname
+      | Parsetree.EI_method (None, vname) -> vname_fixitude vname
       | Parsetree.EI_method (Some _, _) -> Fixitude_applic
       end
   | E_paren _ | E_external _ | E_tuple _ | E_sequence _
@@ -234,6 +244,13 @@ and pp_rep_type_defs sep ppf =
   Handy.pp_generic_separated_list sep pp_rep_type_def ppf
 
 and pp_rep_type_def ppf = pp_ast pp_rep_type_def_desc ppf
+;;
+
+let pp_rep_type_def_representation =
+  pp_ast 
+    (fun ppf rep_type_def ->
+      Format.fprintf ppf "@[<2>representation@ =@ %a@]"
+        pp_rep_type_def_desc rep_type_def)
 ;;
 
 let rec pp_type_expr_desc prio ppf = function
@@ -305,7 +322,7 @@ and pp_type_expr ppf = pp_ast (pp_type_expr_desc 0) ppf
 let pp_constant_desc ppf = function
   | Parsetree.C_int s | Parsetree.C_float s | Parsetree.C_bool s ->
       Format.fprintf ppf "%s" s
-  | Parsetree.C_string s -> Format.fprintf ppf "\"%s\"" s
+  | Parsetree.C_string s -> Format.fprintf ppf "\"%s\"" (String.escaped s)
   | Parsetree.C_char c ->
       let tmp_s = " " in
       tmp_s.[0] <- c;
@@ -355,6 +372,21 @@ let rec pp_pat_desc ppf = function
   | Parsetree.P_as (pat, vname) ->
       Format.fprintf ppf "%a@ as@ %a" pp_pattern pat pp_vname vname
   | Parsetree.P_wild -> Format.fprintf ppf "_"
+  | Parsetree.P_constr (constr_ident, [pat_left; pat_right]) ->
+      let ident = match constr_ident.ast_desc with
+      | CI ident -> ident in
+      let fixitude = ident_fixitude ident in
+      if fixitude = Fixitude_infix
+      then
+        Format.fprintf ppf "@[<2>%a@ %a@ %a@]"
+          pp_pattern pat_left
+          pp_constructor_ident constr_ident
+          pp_pattern pat_right
+      else
+        Format.fprintf ppf "@[<2>%a@ (%a,@ %a)@]"
+          pp_constructor_ident constr_ident
+          pp_pattern pat_left
+          pp_pattern pat_right
   | Parsetree.P_constr (ident, pats) ->
       Format.fprintf ppf "@[<2>%a@ %a@]"
         pp_constructor_ident ident (pp_patterns ",") pats
@@ -487,8 +519,7 @@ and pp_properties ppf =
 
 and pp_species_field_desc ppf = function
   | Parsetree.SF_rep rep_type_def ->
-      Format.fprintf ppf "@[<2>representation@ =@ %a@;;@]"
-        pp_rep_type_def rep_type_def
+      Format.fprintf ppf "%a@;;@]" pp_rep_type_def_representation rep_type_def
   | Parsetree.SF_sig sig_def ->
       Format.fprintf ppf "%a@;;" pp_sig_def sig_def
   | Parsetree.SF_let let_def ->
@@ -554,9 +585,9 @@ and pp_binding_desc ppf bd =
 and pp_binding ppf = pp_ast pp_binding_desc ppf
 
 and pp_theorem_def_desc ppf tdd =
-  Format.fprintf ppf "@[<2>theorem %a :@ %a@ %a@ proof =@ %a@]"
-    pp_vname tdd.Parsetree.th_name
+  Format.fprintf ppf "@[<2>%atheorem %a :@ %a@ proof =@ %a@]"
     pp_local_flag tdd.Parsetree.th_local
+    pp_vname tdd.Parsetree.th_name
     pp_logical_expr tdd.Parsetree.th_stmt
     pp_proof tdd.Parsetree.th_proof
 and pp_theorem_def ppf = pp_ast pp_theorem_def_desc ppf
@@ -571,7 +602,7 @@ and pp_fact_desc ppf = function
   | Parsetree.F_node node_labels ->
       Format.fprintf ppf "step %a" (pp_node_labels ",") node_labels
   | Parsetree.F_type type_idents ->
-      Format.fprintf ppf "step %a" (pp_idents ",") type_idents
+      Format.fprintf ppf "type %a" (pp_idents ",") type_idents
 and pp_facts sep ppf = Handy.pp_generic_separated_list sep pp_fact ppf
 and pp_fact ppf = pp_ast pp_fact_desc ppf
 
@@ -727,8 +758,19 @@ and pp_expr_desc ppf = function
            Format.fprintf ppf "@[<2>%a@ (%a)@]"
              pp_expr expr (pp_exprs ",") exprs
       end)
-  | Parsetree.E_constr (cstr_expr, exprs) ->
-      Format.fprintf ppf "@[<2>%a" pp_constructor_ident cstr_expr;
+  | Parsetree.E_constr (constr_ident, [expr_left; expr_right]) ->
+      let ident = match constr_ident.ast_desc with
+      | CI ident -> ident in
+      let fixitude = ident_fixitude ident in
+      if fixitude = Fixitude_infix
+      then
+        Format.fprintf ppf "@[<2>%a@ %a@ %a@]"
+          pp_expr expr_left pp_constructor_ident constr_ident pp_expr expr_right
+      else
+        Format.fprintf ppf "@[<2>%a@ (%a,@ %a)@]"
+          pp_constructor_ident constr_ident pp_expr expr_left pp_expr expr_right
+  | Parsetree.E_constr (constr_ident, exprs) ->
+      Format.fprintf ppf "@[<2>%a" pp_constructor_ident constr_ident;
       if exprs <> [] then Format.fprintf ppf "@ (%a)" (pp_exprs ",") exprs;
       Format.fprintf ppf "@]"
   | Parsetree.E_match (expr, pat_exprs) ->

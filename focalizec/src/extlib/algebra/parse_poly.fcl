@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parse_poly.fcl,v 1.3 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: parse_poly.fcl,v 1.4 2011-05-09 15:41:01 maarek Exp $ *)
 
 (**
    @author Violaine Ruffie
@@ -46,7 +46,7 @@ end
 
 species Parse_poly_uni (Coeff is Basic_object, Deg is Basic_object) =
 
-  inherits Basic_object;
+  inherit Basic_object;
 
   signature read_monomial : Deg -> Self;
 

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: polys_abstract.fcl,v 1.6 2009-05-16 13:21:27 weis Exp $ *)
+(* $Id: polys_abstract.fcl,v 1.7 2011-05-09 15:41:01 maarek Exp $ *)
 
 (**
  @title Abstract polynomials
@@ -49,7 +49,7 @@ species Formal_indexed_sum (M is Set_with_zero,
 
   signature degree: Self -> I;
   (** degrees form an additive valuation *)
-  property degree_is_additive: all p q r in Self,
+  property degree_is_additive: all p q r : Self,
    ~ (!is_zero (p)) -> ~ (!is_zero (q)) ->
     !equal (r, !plus (p, q)) -> ~ (!is_zero (r)) ->
       (I!leq (!degree (r), !degree (p))
@@ -62,12 +62,12 @@ species Formal_indexed_sum (M is Set_with_zero,
   (* returns the coefficient of highest degree *)
   signature leading_coefficient: Self -> M;
 
-  property leading_coefficient_is_non_null: all p in Self,
+  property leading_coefficient_is_non_null: all p : Self,
     M!is_zero (!leading_coefficient (p)) -> !is_zero (p);
 
   signature reductum: Self -> Self;
 
-  property reductum_has_smaller_degree: all p in Self,
+  property reductum_has_smaller_degree: all p : Self,
   ~ (!is_zero (p)) -> ~ (!is_zero (!reductum (p))) ->
        I!lt (!degree (!reductum (p)), !degree (p)) ;
 
@@ -76,22 +76,22 @@ species Formal_indexed_sum (M is Set_with_zero,
   (* returns an element with coefficient and given degree *)
   signature monomial: M -> I -> Self ;
 
-  property monomial_is_non_null: all c in M, all d in I,
+  property monomial_is_non_null: all c : M, all d : I,
    M!is_zero (c) -> !is_zero (!monomial (c, d)) ;
 
-  property monomial_has_degree: all c in M, all d in I,
+  property monomial_has_degree: all c : M, all d : I,
     ~ (M!is_zero (c)) -> I!equal (!degree (!monomial (c, d)), d);
 
-  property reductum_is_reductum: all p in Self, all c in M, all d in I,
+  property reductum_is_reductum: all p : Self, all c : M, all d : I,
    ~ (!is_zero (p)) -> M!equal (c, !leading_coefficient (p)) ->
      I!equal (d, !degree (p)) ->
       !equal (p, !plus (!monomial (c, d), !reductum (p)));
 
-  property monomial_has_coefficient: all c in M, all d in I,
+  property monomial_has_coefficient: all c : M, all d : I,
     (~ (M!is_zero (c))) -> M!equal (!leading_coefficient (!monomial (c, d)), c);
 
   (** returns the coefficient of a given degree *)
-  let rec coefficient (p in Self, n in I) in M =
+  let rec coefficient (p : Self, n : I) : M =
       let d = !degree (p) in
      if I!lt (d, n)
      then M!zero
@@ -117,14 +117,14 @@ species Formal_indexed_sum (M is Set_with_zero,
       then p
       else !tail (!reductum (p), d) ;
 
-  theorem leading_coefficient_is_tail_with_degree: all p in Self,
+  theorem leading_coefficient_is_tail_with_degree: all p : Self,
     !equal (!reductum (p), !tail (p, !degree (p)))
-    proof = assumed {* *};
+    proof = assumed (* *);
 
-  theorem tail_has_smaller_degree: all p q in Self, all d in I,
+  theorem tail_has_smaller_degree: all p q : Self, all d : I,
     !equal (p, !tail (q, d)) ->
       ~  (!is_zero (q)) ->  I!lt (!degree (q), d)
-   proof = assumed {* *};
+   proof = assumed (* *);
 
 (*    (\** returns the number of monomials *\) *)
 (*    let rec number_of_monomials (p) = *)
@@ -155,18 +155,18 @@ species Formal_polynomials_commutative_ring
   let monomial (v, d) =
      !module_mult (v, !generator (d));
 
-  theorem monomial_spec: all v in R, all d in D,
+  theorem monomial_spec: all v : R, all d : D,
     !equal (!monomial (v, d), !module_mult (v, !generator (d)))
     proof = by property !equal_reflexive definition of monomial ;
 
-  let fmecg (p in Self, c in R, delta in D, q in Self) in Self =
+  let fmecg (p : Self, c : R, delta : D, q : Self) : Self =
     if R!is_zero (c)
     then p
     else !plus (p, !mult (!monomial (c, delta), q));
-  theorem fmecg_combines : all p q in Self, all c in R, all delta in D,
+  theorem fmecg_combines : all p q : Self, all c : R, all delta : D,
     !equal (!fmecg (p, c, delta, q),
            !plus (p, !mult (!monomial (c, delta), q)))
-    proof = assumed {* [rr]: todo *};
+    proof = assumed (* [rr]: todo *);;
 
 end
 ;;
