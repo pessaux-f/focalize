@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.91 2011-05-25 13:40:46 maarek Exp $
+# $Id: Makefile,v 1.92 2011-05-25 15:52:27 maarek Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -47,7 +47,6 @@ FOCALIZE_SRC =\
   orders.fcl\
   strict_orders.fcl\
   orders_and_lattices.fcl\
-  sets_orders.fcl\
   wellfounded.fcl\
   sums.fcl\
   quotients.fcl\
