@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.42 2010-01-07 16:56:35 weis Exp $
+# $Id: Makefile,v 1.43 2011-05-25 06:35:22 maarek Exp $
 
 ROOT_DIR = .
 
@@ -21,7 +21,7 @@ include $(ROOT_DIR)/Makefile.config
 
 COMPILER_DIRS = src/basement src/parser src/typing\
   src/docgen src/commoncodegen src/mlcodegen src/coqcodegen\
-  src/toplevel src/focalizedep src/focalizetest
+  src/testing src/toplevel src/focalizedep
 
 LIB_DIRS = src/stdlib src/extlib src/contribs
 
@@ -118,3 +118,13 @@ distclean::
 	  fi \
         done; \
 	$(MAKE) unconfigure
+
+
+test_all: tests
+	@for i in $(COMPILER_DIRS); do \
+	  echo "--> $$i ..." >&2 && \
+	  ($(CD) $$i && $(MAKE) tests); \
+	  err=$$?; \
+	  echo "<-- $$i [$$err]" >&2 && \
+	  case $$err in 0);; *) exit $$err;; esac; \
+        done

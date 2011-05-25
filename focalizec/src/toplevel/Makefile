@@ -12,14 +12,21 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.56 2011-02-28 13:45:51 tollitte Exp $
+# $Id: Makefile,v 1.57 2011-05-25 06:35:22 maarek Exp $
 
 ROOT_DIR = ../..
 
 include $(ROOT_DIR)/Makefile.config
 
-CAML_INCLUDES = -I ../basement -I ../parser -I ../typing\
-	-I ../commoncodegen -I ../docgen -I ../mlcodegen -I ../coqcodegen
+CAML_INCLUDES =\
+	-I ../basement\
+	-I ../parser\
+	-I ../typing\
+	-I ../commoncodegen\
+	-I ../docgen\
+	-I ../mlcodegen\
+	-I ../coqcodegen\
+	-I ../testing\
 
 LOCAL_BYT_OBJS = focalizec.cmo exc_wrapper.cmo
 
@@ -47,7 +54,7 @@ BYT_OBJS =\
 	../typing/dep_analysis.cmo \
 	../typing/param_dep_analysis.cmo \
 	../typing/infer.cmo \
-  ../typing/match_analysis.cmo \
+	../typing/match_analysis.cmo \
 	\
 	../docgen/doc_lexer.cmo \
 	../docgen/utils_docgen.cmo \
@@ -72,6 +79,8 @@ BYT_OBJS =\
 	../coqcodegen/type_coq_generation.cmo \
 	../coqcodegen/species_coq_generation.cmo \
 	../coqcodegen/main_coq_generation.cmo \
+	\
+	../testing/testing.cmo \
 	$(LOCAL_BYT_OBJS)
 
 EXE_NAME = $(PROJECT_NAME)

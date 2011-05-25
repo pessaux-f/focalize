@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.34 2009-06-16 09:36:42 weis Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.35 2011-05-25 06:35:22 maarek Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -441,4 +441,20 @@ let rec get_local_vname_from_expr_desc = function
   | Parsetree.E_paren expr ->
       get_local_vname_from_expr_desc expr.Parsetree.ast_desc
   | _ -> raise Not_found
+;;
+
+
+
+(** Creates an AST node out of some annotations and an expression. *)
+let make_annot annot desc = {
+  Parsetree.ast_loc = Location.none;
+  Parsetree.ast_desc = desc;
+  Parsetree.ast_annot = annot;
+  Parsetree.ast_type = Parsetree.ANTI_none;
+}
+;;
+
+(** Creates an AST node out of an expression. *)
+let make_ast desc =
+  make_annot [] desc
 ;;
