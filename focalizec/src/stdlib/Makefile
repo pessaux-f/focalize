@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.90 2009-09-03 12:09:01 doligez Exp $
+# $Id: Makefile,v 1.91 2011-05-25 13:40:46 maarek Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -78,6 +78,7 @@ EXTERNAL_CMIS = $(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_VOS =\
   coq_builtins.vo\
+  sets_externals.vo\
   wellfounded_externals.vo
 
 include $(ROOT_DIR)/Makefile.common

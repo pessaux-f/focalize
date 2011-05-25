@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: wellfounded.fcl,v 1.14 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: wellfounded.fcl,v 1.15 2011-05-25 13:40:46 maarek Exp $ *)
 
 (* Definition (import) of the notion of wellfoundedness.  Since this notion
    is not defineable in FoCaLize, this library is a toolbox for reasoning
@@ -22,10 +22,18 @@
    proofs. *)
 
 use "basics";;
-use "sets_orders";;
+use "orders";;
 open "basics";;
-open "sets_orders";;
+open "orders";;
 coq_require "wellfounded_externals";;
+
+
+let well_wrapper =
+  internal ('a -> 'a -> bool) -> prop
+  external
+    | caml -> {* () *}
+    | coq -> {* (fun f =>  well_founded (fun x y => Is_true (f x y))) *}
+;;
 
 species PartialWellOrder =
 
@@ -44,12 +52,8 @@ species PartialWellOrder =
 (*     | coq -> {* wellfounded_externals.wellfounded abst_T *} *)
 (*   ; *)
 
-  logical let wellfounded =
-    internal (Self -> Self -> bool) -> prop
-    external
-    | caml -> {* () *}
-    | coq -> {* fun (r: abst_T -> abst_T -> bool) =>
-                 well_founded (fun (x y: abst_T) => Is_true (r x y)) *}
+  logical let wellfounded (f : Self -> Self -> bool) =
+    well_wrapper (f)
   ;
 
   property wellfounded_lt: wellfounded(!lt);
