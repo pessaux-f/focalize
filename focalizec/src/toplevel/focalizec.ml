@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.50 2011-05-25 06:35:22 maarek Exp $ *)
+(* $Id: focalizec.ml,v 1.51 2011-05-25 10:10:23 maarek Exp $ *)
 
 exception Bad_file_suffix of string ;;
 
@@ -195,13 +195,16 @@ let dispatch_compilation files =
                 end) ;
               end) ;
             end) ;
+          let tests_file_no_suffix =
+            Testing.add_tests_suffix input_file_no_suffix in
+          let tests_file_fcl = tests_file_no_suffix ^ ".fcl" in
+          let tests_file_ml = tests_file_no_suffix ^ ".ml" in
           if Configuration.get_generate_tests ()
-              && Configuration.get_perform_tests () then
+              && Configuration.get_perform_tests ()
+              && Sys.file_exists tests_file_fcl then
             (begin
-              let tests_file_no_suffix =
-                Testing.add_tests_suffix input_file_no_suffix in
-              compile_fcl (tests_file_no_suffix ^ ".fcl") ;
-              compile_ml (tests_file_no_suffix ^ ".ml") ;
+              compile_fcl tests_file_fcl ;
+              compile_ml tests_file_ml ;
             end) ;
       | "ml" | "mli" -> compile_ml input_file_name
       | "zv" ->
