@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rbac.fcl,v 1.22 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: rbac.fcl,v 1.23 2011-05-25 15:50:59 maarek Exp $ *)
 
 (**
    @title Implementation of the RBAC model
@@ -21,7 +21,8 @@
  *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 open "ensembles_finis";;
 open "access_control";;
 
@@ -294,6 +295,8 @@ species S_roles =
        then true
        else false
      else false;
+
+  proof of leq_extends_equal = assumed ;
 
   proof of leq_reflexive = assumed (* Because todo *);
 

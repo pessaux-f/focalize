@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: unix.fcl,v 1.18 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: unix.fcl,v 1.19 2011-05-25 15:50:59 maarek Exp $ *)
 
 (**
    @title Implementation of the Unix model
@@ -21,7 +21,8 @@
  *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 open "ensembles_finis";;
 open "access_control";;
 

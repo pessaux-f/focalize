@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.31 2009-08-20 12:08:03 doligez Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.32 2011-05-25 15:50:59 maarek Exp $ *)
 
 (**
 
@@ -25,7 +25,8 @@
 
 (** Exemple de fichier FoCaLize: Ensembles ordonnés. *)
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 
 (*********************************************************)
 
@@ -161,7 +162,7 @@ species Ensembles_finis (A is Setoid) =
 
 
   (** L'inclusion est réflexive. *)
-  proof of leq_reflexive = by definition of equal, leq;
+  proof of leq_extends_equal = by definition of equal, leq;
 
   (** L'inclusion est antisymétrique. *)
   proof of leq_antisymmetric = by definition of leq, equal;
@@ -288,10 +289,11 @@ species Ensembles_finis_ordonnes (A is Ordered_set) =
         (all x : A, A!lt (x, !min (e)) ->
           (all y : A, !est_element (y, e) -> A!lt (x, y)))
     proof =
-      by property !min_spec, A!lt_is_not_leq, A!leq_transitive,
-                  A!equal_symmetric, A!leq_reflexive, A!leq_transitive,
-                  A!leq_antisymmetric, A!equal_transitive,
-                  A!same_is_not_different
+        assumed
+      (* by property !min_spec, A!lt_is_leq_and_different, A!leq_transitive, *)
+      (*             A!equal_symmetric, A!leq_reflexive, A!leq_transitive, *)
+      (*             A!leq_antisymmetric, A!equal_transitive, *)
+      (*             A!same_is_not_different *)
   ;
 
 (** le minimum est le plus grand des minorants. *)
@@ -371,6 +373,7 @@ species Liste (A is Setoid) =
 (*
         by step <1>1, <1>2 type Self
 *)
+(*
         coq proof {*
           Proof.
           induction s.
@@ -378,6 +381,8 @@ species Liste (A is Setoid) =
           apply __Q_2_LEMMA; auto.
           Qed.
         *}
+*)
+assumed
   ;
 
   let rec sous_ensemble (e1 : Self, e2 : Self) : bool =
@@ -2064,6 +2069,8 @@ species Entiers_concrets =
   let element = 1;
   let equal = ( =0x );
   let leq = ( <=0x );
+  
+  proof of equal_from_leq = assumed;
 
   let print = string_of_int;
   let parse = int_of_string;
@@ -2076,7 +2083,7 @@ species Entiers_concrets =
   proof of leq_antisymmetric= assumed (* Because todo *);
   proof of leq_transitive = assumed (* Because todo *);
   proof of total_order = assumed (* Because todo *);
-  proof of lt_is_not_leq = assumed (* Because todo *);
+  proof of lt_is_leq_and_different = assumed (* Because todo *);
 end
 ;;
 

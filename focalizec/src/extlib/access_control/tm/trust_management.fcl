@@ -13,13 +13,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: trust_management.fcl,v 1.4 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: trust_management.fcl,v 1.5 2011-05-25 15:50:59 maarek Exp $ *)
 
-use "basics";;
 open "basics";;
-use "sets_orders";;
-open "sets_orders";;
-use "ensembles_finis";;
+open "sets";;
+open "orders";;
 open "ensembles_finis";;
 
 (*****************************************************************************)

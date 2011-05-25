@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: polys_abstract.fcl,v 1.7 2011-05-09 15:41:01 maarek Exp $ *)
+(* $Id: polys_abstract.fcl,v 1.8 2011-05-25 15:50:59 maarek Exp $ *)
 
 (**
  @title Abstract polynomials
@@ -166,7 +166,7 @@ species Formal_polynomials_commutative_ring
   theorem fmecg_combines : all p q : Self, all c : R, all delta : D,
     !equal (!fmecg (p, c, delta, q),
            !plus (p, !mult (!monomial (c, delta), q)))
-    proof = assumed (* [rr]: todo *);;
+    proof = assumed (* [rr]: todo *);
 
 end
 ;;

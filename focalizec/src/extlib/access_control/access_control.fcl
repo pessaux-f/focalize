@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: access_control.fcl,v 1.19 2009-09-03 12:09:59 doligez Exp $ *)
+(* $Id: access_control.fcl,v 1.20 2011-05-25 15:50:59 maarek Exp $ *)
 
 (**
    @title Implementation of access control models
@@ -23,7 +23,9 @@
  *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
+open "lattices";;
 open "ensembles_finis";;
 
 (** Framework *)
@@ -853,7 +855,7 @@ species Policy_rbac (U is Users, Ro is Roles, Rh is Rho_rbac (U, Ro),
       exists_role (st, roles_s (st, sp), pa (st, op, mo)) ->
         ep (st, sp, op, mo)
     proof =
-      by property Ro!leq_reflexive, exists_role_spec
+      by property Ro!leq_extends_equal, exists_role_spec
          definition of ep;
 
 (*   theorem exists_role_er :  *)

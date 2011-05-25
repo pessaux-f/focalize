@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: hru.fcl,v 1.24 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: hru.fcl,v 1.25 2011-05-25 15:50:59 maarek Exp $ *)
 
 (**
    @title Implementation of the HRU model
@@ -21,7 +21,8 @@
  *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 open "ensembles_finis";;
 open "access_control";;
 
