@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.51 2011-05-25 10:10:23 maarek Exp $ *)
+(* $Id: focalizec.ml,v 1.52 2011-05-25 14:14:28 maarek Exp $ *)
 
 exception Bad_file_suffix of string ;;
 
@@ -85,12 +85,14 @@ let compile_fcl input_file_name =
      testings of testings). *)
   if Configuration.get_generate_tests ()
       && Testing.contains_testing_intructions scoped_ast then
-    let output_file_name =
-      (Testing.add_tests_suffix
-         (Filename.chop_extension input_file_name))
-      ^ ".fcl" in
-    Testing.gen_tests
-      ~current_unit ~output_file_name scoped_ast ;
+    (begin
+      let output_file_name =
+        (Testing.add_tests_suffix
+           (Filename.chop_extension input_file_name))
+        ^ ".fcl" in
+      Testing.gen_tests
+        ~current_unit ~output_file_name scoped_ast ;
+    end) ;
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
     ~source_filename: input_file_name
