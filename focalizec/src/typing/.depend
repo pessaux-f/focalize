@@ -6,6 +6,7 @@ env.cmi: ../basement/types.cmi ../basement/parsetree_utils.cmi \
     ../basement/parsetree.cmi ../basement/location.cmi depGraphData.cmi 
 infer.cmi: ../basement/types.cmi ../basement/parsetree.cmi \
     ../basement/location.cmi env.cmi depGraphData.cmi 
+match_analysis.cmi: ../basement/location.cmi infer.cmi env.cmi 
 param_dep_analysis.cmi: ../basement/types.cmi ../basement/parsetree_utils.cmi \
     ../basement/parsetree.cmi env.cmi 
 scoping.cmi: ../basement/types.cmi ../basement/parsetree.cmi \
@@ -40,6 +41,12 @@ infer.cmx: ../basement/types.cmx substExpr.cmx substColl.cmx \
     ../basement/parsetree.cmi ../basement/miscHelpers.cmx \
     ../basement/location.cmx ../basement/handy.cmx env.cmx dep_analysis.cmx \
     depGraphData.cmi ../basement/configuration.cmx ast_equal.cmx infer.cmi 
+match_analysis.cmo: ../basement/types.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi ../basement/location.cmi infer.cmi env.cmi \
+    match_analysis.cmi 
+match_analysis.cmx: ../basement/types.cmx ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi ../basement/location.cmx infer.cmx env.cmx \
+    match_analysis.cmi 
 param_dep_analysis.cmo: ../basement/types.cmi ../basement/parsetree_utils.cmi \
     ../basement/parsetree.cmi env.cmi param_dep_analysis.cmi 
 param_dep_analysis.cmx: ../basement/types.cmx ../basement/parsetree_utils.cmx \
