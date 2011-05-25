@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sets.fcl,v 1.14 2011-05-25 13:40:46 maarek Exp $ *)
+(* $Id: sets.fcl,v 1.15 2011-05-25 14:43:16 maarek Exp $ *)
 
 (**
    @title Basic sets operations.
@@ -22,7 +22,6 @@
    Basic Set operations
  *)
 
-use "basics";;
 open "basics";;
 coq_require "sets_externals";;
 

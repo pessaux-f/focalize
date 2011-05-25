@@ -14,9 +14,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lattices.fcl,v 1.8 2009-06-24 22:29:32 weis Exp $ *)
+(* $Id: lattices.fcl,v 1.9 2011-05-25 14:43:16 maarek Exp $ *)
 
-use "sets";;
 open "sets";;
 
 (** In a meet semi lattice we have an operation inducing an ordering (&lt;=). *)

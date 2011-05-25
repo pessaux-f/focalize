@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products.fcl,v 1.13 2009-06-24 22:29:32 weis Exp $ *)
+(* $Id: products.fcl,v 1.14 2011-05-25 14:43:16 maarek Exp $ *)
 
 (**
 
@@ -27,8 +27,6 @@
 *)
 
 (* [rr]: strictly speaking we only equal and thus sets but no orders *)
-use "basics";;
-use "sets";;
 open "basics";;
 open "sets";;
 

@@ -14,10 +14,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: strict_orders.fcl,v 1.12 2009-06-26 22:59:57 weis Exp $ *)
+(* $Id: strict_orders.fcl,v 1.13 2011-05-25 14:43:16 maarek Exp $ *)
 
-use "basics";;
-use "sets";;
 open "basics";;
 open "sets";;
 

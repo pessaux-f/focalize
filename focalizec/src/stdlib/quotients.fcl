@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: quotients.fcl,v 1.13 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: quotients.fcl,v 1.14 2011-05-25 14:43:16 maarek Exp $ *)
 
 (**
    @title Quotient Structures
@@ -22,8 +22,6 @@
 
 *)
 
-use "basics";;
-use "sets";;
 open "basics";;
 open "sets";;
 

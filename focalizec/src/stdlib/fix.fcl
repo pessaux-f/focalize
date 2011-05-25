@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: fix.fcl,v 1.4 2009-06-24 22:29:32 weis Exp $ *)
+(* $Id: fix.fcl,v 1.5 2011-05-25 14:43:16 maarek Exp $ *)
 
 (** {3 Fix points for focalize programming} *)
 
@@ -26,10 +26,8 @@
 
 *)
 
-use "basics";;
 open "basics";;
 
-use "sets";;
 open "sets";;
 
 (**

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sums.fcl,v 1.17 2009-06-24 22:29:32 weis Exp $ *)
+(* $Id: sums.fcl,v 1.18 2011-05-25 14:43:16 maarek Exp $ *)
 
 (**
 
@@ -27,8 +27,6 @@
 *)
 
 (* [rr]: strictly speakin we only equal and thus sets but no orders *)
-use "basics";;
-use "sets";;
 open "sets";;
 open "basics";;
 

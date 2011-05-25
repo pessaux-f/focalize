@@ -14,15 +14,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: wellfounded.fcl,v 1.15 2011-05-25 13:40:46 maarek Exp $ *)
+(* $Id: wellfounded.fcl,v 1.16 2011-05-25 14:43:16 maarek Exp $ *)
 
 (* Definition (import) of the notion of wellfoundedness.  Since this notion
    is not defineable in FoCaLize, this library is a toolbox for reasoning
    with wellfoundedness inside FoCaLize, without resorting to low level Coq
    proofs. *)
 
-use "basics";;
-use "orders";;
 open "basics";;
 open "orders";;
 coq_require "wellfounded_externals";;

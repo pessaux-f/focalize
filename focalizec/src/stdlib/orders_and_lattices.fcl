@@ -14,10 +14,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: orders_and_lattices.fcl,v 1.10 2009-08-20 12:08:03 doligez Exp $ *)
+(* $Id: orders_and_lattices.fcl,v 1.11 2011-05-25 14:43:16 maarek Exp $ *)
 
-use "lattices";;
-use "orders";;
 open "lattices";;
 open "orders";;
 
