@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.158 2011-05-26 10:20:45 weis Exp $ *)
+(* $Id: parser.mly,v 1.159 2011-05-26 12:15:12 weis Exp $ *)
 
 open Parsetree;;
 
@@ -430,20 +430,20 @@ external_language:
     { EL_external $1 }
 ;
 
-external_expr_clause:
+external_val_translation:
   | external_language DASH_GT EXTERNAL_CODE
     { ($1, $3) }
 ;
 
-external_expr_clause_list:
-  | BAR external_expr_clause
+external_val_translation_list:
+  | BAR external_val_translation
     { [ $2 ] }
-  | BAR external_expr_clause external_expr_clause_list
+  | BAR external_val_translation external_val_translation_list
     { $2 :: $3 }
 ;
 
-external_expr:
-  | external_expr_clause_list
+external_val:
+  | external_val_translation_list
     { mk $1 }
 ;
 
@@ -496,7 +496,7 @@ define_type_body_contents:
 define_type_body_external:
   | INTERNAL define_type_body_regular_opt
     opt_annot
-    EXTERNAL external_expr_clause_list
+    EXTERNAL external_val
     following_external_binding_list
     { mk {
         etdb_internal = $2;
@@ -513,7 +513,7 @@ following_external_binding_list:
 ;
 
 external_binding:
-  | opt_annot external_value_vname EQUAL external_expr
+  | opt_annot external_value_vname EQUAL external_val
     { mk_annot $1 ($2, $4) }
 ;
 
@@ -871,7 +871,7 @@ binding:
         b_body = Parsetree.BB_logical $3;
       }
     }
-  | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_expr
+  | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_val
     { mk {
         b_name = $1;
         b_params = [];
@@ -1403,7 +1403,7 @@ expr:
     { mk_prefix_application $1 $2 }
 
   /* External expressions. */
-/*  | EXTERNAL external_expr */
+/*  | EXTERNAL external_val */
 /*    { mk (E_external $2) } */
 ;
 
