@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.84 2011-05-09 15:41:01 maarek Exp $ *)
+(* $Id: sourcify.ml,v 1.85 2011-05-26 16:08:09 maarek Exp $ *)
 
 open Parsetree;;
 
@@ -511,8 +511,6 @@ and pp_property_def_desc ppf pdd =
     pp_vname pdd.Parsetree.prd_name
     pp_logical_expr pdd.Parsetree.prd_logical_expr
 and pp_property_def ppf = pp_ast pp_property_def_desc ppf
-and pp_property_defs ppf =
-  Handy.pp_generic_separated_list ";" pp_property_def ppf
 
 and pp_properties ppf =
   Handy.pp_generic_separated_list "," pp_expr_ident ppf
@@ -825,26 +823,42 @@ let pp_collection_def_desc ppf cdd =
 ;;
 let pp_collection_def ppf = pp_ast pp_collection_def_desc ppf
 ;;
-let pp_collection_defs ppf =
-  Handy.pp_generic_separated_list ";" pp_collection_def ppf
+
+let pp_testing_context_phrase_desc ppf = function
+  | Parsetree.TstCtxPh_collection collection_def ->
+      Format.fprintf ppf "%a;"
+        pp_collection_def collection_def
+  | Parsetree.TstCtxPh_let let_def ->
+      Format.fprintf ppf "%a;"
+        pp_let_def let_def
+  | Parsetree.TstCtxPh_property property_def ->
+      Format.fprintf ppf "%a;"
+        pp_property_def property_def
+;;
+
+let pp_testing_context_phrase ppf =
+  pp_ast pp_testing_context_phrase_desc ppf
+;;
+
+let pp_testing_context ppf =
+  Handy.pp_generic_newlined_list pp_testing_context_phrase ppf
 ;;
 
 let pp_testing_expr ppf tste =
   let tsted = tste.Parsetree.ast_desc in
   Format.fprintf ppf "@[<2>%a@]@;@[<2>testing@ :@;%a@]@;@[<2>parameters@ :@;%a@]@ "
-    pp_property_defs tsted.Parsetree.tst_property_defs
+    pp_testing_context tsted.Parsetree.tst_context
     pp_properties tsted.Parsetree.tst_properties
     pp_let_defs tsted.Parsetree.tst_parameters
 ;;
 
-let pp_testing_def_desc (pp_context,testing_context) ppf tstdd =
-  Format.fprintf ppf "@[<2>testing@ %a =@ %a@ %a@ end@;@]@ "
+let pp_testing_def_desc ppf tstdd =
+  Format.fprintf ppf "@[<2>testing@ %a =@ %a@ end@;@]@ "
     pp_vname tstdd.Parsetree.tstd_name
-    pp_context testing_context
     pp_testing_expr tstdd.Parsetree.tstd_body
 ;;
-let pp_testing_def ppf (ast,pp_context,testing_context) =
-  pp_ast (fun ppf tstdd -> pp_testing_def_desc (pp_context,testing_context) ppf tstdd) ppf ast
+let pp_testing_def ppf =
+  pp_ast pp_testing_def_desc ppf
 ;;
 
 let pp_tmp_TD_union ppf l =
@@ -957,12 +971,9 @@ let rec pp_phrase_desc ppf = function
       Format.fprintf ppf "%a;;" pp_species_def s_def
   | Parsetree.Ph_collection collection_def ->
       Format.fprintf ppf "%a;;" pp_collection_def collection_def
-  | Parsetree.Ph_testing (testing_def,testing_context) ->
+  | Parsetree.Ph_testing testing_def ->
       Format.fprintf ppf "%a;;"
-        pp_testing_def
-        (testing_def,
-         (fun ppf testing_context -> pp_phrases ppf testing_context),
-        testing_context)
+        pp_testing_def testing_def
   | Parsetree.Ph_type type_def ->
       Format.fprintf ppf "%a;;" pp_type_def type_def
   | Parsetree.Ph_let let_def -> Format.fprintf ppf "%a;;" pp_let_def let_def

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.mli,v 1.42 2011-05-04 09:22:47 maarek Exp $ *)
+(* $Id: infer.mli,v 1.43 2011-05-26 16:08:09 maarek Exp $ *)
 
 exception Wrong_recursion_kind_while_fusion of Location.t
 exception Wrong_type_by_inheritance of
@@ -72,7 +72,7 @@ type please_compile_me =
   | PCM_collection of
       (Parsetree.collection_def * Env.TypeInformation.species_description *
        (DepGraphData.name_node list))
-  | PCM_testing of (Parsetree.testing_def * please_compile_me list)
+  | PCM_testing of Parsetree.testing_def
   | PCM_type of (Parsetree.vname * Env.TypeInformation.type_description)
   | PCM_let_def of (Parsetree.let_def * (Types.type_scheme list))
   | PCM_theorem of

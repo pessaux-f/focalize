@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.160 2011-05-26 15:17:20 maarek Exp $ *)
+(* $Id: parser.mly,v 1.161 2011-05-26 16:08:09 maarek Exp $ *)
 
 open Parsetree;;
 
@@ -410,7 +410,7 @@ phrase:
   | define_collection SEMI_SEMI
     { mk (Ph_collection $1) }
   | define_testing SEMI_SEMI
-    { mk (Ph_testing ((fst $1),(snd $1))) }
+    { mk (Ph_testing $1) }
   | opt_annot OPEN STRING SEMI_SEMI
     { mk_annot $1 (Ph_open $3) }
   | opt_annot USE STRING SEMI_SEMI
@@ -761,33 +761,40 @@ define_testing:
       define_testing_body
     END
     { (* Testing information, testing context *)
-     (mk_annot $1 { tstd_name = $3; tstd_body = (fst $5); }),
-      (snd $5) }
+      mk_annot $1 { tstd_name = $3; tstd_body = $5; }
+    }
 ;
 
+testing_context_phrase:
+  | define_let SEMI
+    { mk (TstCtxPh_let $1) }
+  | define_property SEMI
+    {
+       (* TODO TESTING: shall we allow property/theorem declarations
+       inside a testing body? Such declarations should be considered
+       as an extention of the definition of the collection being
+       tested. They should be considered Assumed. We could have a
+       dedicated field tst_property_defs. *)
+     mk (TstCtxPh_property $1) }
+  | define_collection SEMI
+    { mk (TstCtxPh_collection $1) }
+
+testing_context:
+  | { [] }
+  | testing_context_phrase testing_context
+    { $1 :: $2 }
+
 define_testing_body:
-  | define_let_semi_list
-    define_collection_semi_list
-    define_property_semi_list
+  | testing_context
     TESTING COLON
     property_ident_comma_list
     PARAMETERS COLON
     define_let_semi_list
       {
-
-       (* TODO TESTING: shall we allow property/theorem declarations
-       inside a testing body? Such declarations should be considered
-       as an extention of the definition of the collection being
-       tested. They should be considered Assumed. We could have a
-       dedicated field tst_property_defs. Otherwise, shall we use
-       Ph_theorem?  *)
-
        (* Testing information, testing context *)
-        (mk { tst_property_defs = $3;
-              tst_properties = $6;
-              tst_parameters = $9; }),
-        ((List.map (fun ld -> mk (Ph_let ld)) $1)
-         @ (List.map (fun cd -> mk (Ph_collection cd)) $2))
+       mk { tst_context = $1;
+            tst_properties = $4;
+            tst_parameters = $7; }
       }
 ;
 
@@ -796,22 +803,6 @@ define_let_semi_list:
   | define_let
     { [ $1 ] }
   | define_let SEMI define_let_semi_list
-    { $1 :: $3 }
-;
-
-define_collection_semi_list:
-  | { [] }
-  | define_collection
-    { [ $1 ] }
-  | define_collection SEMI define_collection_semi_list
-    { $1 :: $3 }
-;
-
-define_property_semi_list:
-  | { [] }
-  | define_property
-    { [ $1 ] }
-  | define_property SEMI define_property_semi_list
     { $1 :: $3 }
 ;
 

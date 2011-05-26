@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.61 2011-05-04 09:22:47 maarek Exp $ *)
+(* $Id: parsetree.mli,v 1.62 2011-05-26 16:08:09 maarek Exp $ *)
 
 (** {2 The FoCaLiZe abstract syntax tree} *)
 
@@ -588,9 +588,17 @@ and collection_def_desc = {
 
 (** {3 Testing definitions} *)
 
+type testing_context_phrase = testing_context_phrase_desc ast
+and testing_context_phrase_desc =
+  | TstCtxPh_collection of collection_def
+  | TstCtxPh_let of let_def
+  | TstCtxPh_property of property_def
+and testing_context = testing_context_phrase list
+;;
+
 type testing_expr = testing_expr_desc ast
 and testing_expr_desc = {
-    tst_property_defs : property_def list;
+    tst_context : testing_context;
     tst_properties : expr_ident list;
     tst_parameters : let_def list;
   }
@@ -616,7 +624,7 @@ and phrase_desc =
   | Ph_coq_require of Types.fname
   | Ph_species of species_def
   | Ph_collection of collection_def
-  | Ph_testing of testing_def * phrase list
+  | Ph_testing of testing_def
   | Ph_type of type_def
   | Ph_let of let_def
   | Ph_theorem of theorem_def

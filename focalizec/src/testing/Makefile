@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2011-05-25 06:35:22 maarek Exp $
+# $Id: Makefile,v 1.2 2011-05-26 16:08:09 maarek Exp $
 
 ROOT_DIR = ../..
 
@@ -23,3 +23,4 @@ CAML_INCLUDES = -I ../basement -I ../parser
 BYT_OBJS = testing.cmo
 
 include $(ROOT_DIR)/Makefile.common
+

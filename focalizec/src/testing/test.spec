@@ -11,7 +11,7 @@
 #  Distributed only by permission.                                     #
 #                                                                      #
 #**********************************************************************#
-# $Id: test.spec,v 1.3 2011-04-26 15:33:28 maarek Exp $
+# $Id: test.spec,v 1.1 2011-05-26 16:08:09 maarek Exp $
 
 
 High level specification of the Focalize testbed technology
@@ -221,3 +221,59 @@ type testing_expr =
 
 ...
   | Ph_testing of testing_def * phrase list
+
+
+2011/05/25:
+===========
+
+The previous solution is not suitable because it creates a gap between
+the internal representation AST and the reality of a testing
+instruction. The new types representing a testing instruction is as
+follows:
+
+type testing_context_phrase = testing_context_phrase_desc ast
+and testing_context_phrase_desc =
+  | TstCtxPh_collection of collection_def
+  | TstCtxPh_let of let_def
+  | TstCtxPh_property of property_def
+and testing_context = testing_context_phrase list
+;;
+
+type testing_expr = testing_expr_desc ast
+and testing_expr_desc = {
+    tst_context : testing_context;
+    tst_properties : expr_ident list;
+    tst_parameters : let_def list;
+  }
+;;
+
+2011/05/26:
+===========
+
+Where to insert the generation of testing collections?
+
+The current compilation process is as follows:
+ 1. compile_fcl
+    a. parse
+    b. dump_ast if requested 
+    c. sourcify if requested
+    d. scoping
+    e. type checking (outputs interface on the fly if requested)
+    f. pattern matching
+    g. generating doc
+    h. generating ml
+    i. generating coq
+    j. generating .fo
+ 2. compile_ml
+ 3. compile_coq
+
+The testing collections (Ph_collection items) will be produced if
+requested from the testing instructions (Ph_testing). These generated
+items will lead to extra code in the ml produce (only). We could have
+a scoping and typing of the testing instructions (mostly done). We
+could then generate the testing collections and scope/type them extra
+elements in the file (we would need to recover the scoping/typing
+context not to perform it on the whole file again). We could perform
+the coq generation on the original ast and the ml generation on the
+new one.
+

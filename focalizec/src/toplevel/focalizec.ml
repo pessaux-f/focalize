@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.52 2011-05-25 14:14:28 maarek Exp $ *)
+(* $Id: focalizec.ml,v 1.53 2011-05-26 16:08:09 maarek Exp $ *)
 
 exception Bad_file_suffix of string ;;
 
@@ -83,16 +83,16 @@ let compile_fcl input_file_name =
   (* Generate tests if requested and if testing instructions
      are contained in the file (this avoids the creation of
      testings of testings). *)
-  if Configuration.get_generate_tests ()
-      && Testing.contains_testing_intructions scoped_ast then
-    (begin
-      let output_file_name =
-        (Testing.add_tests_suffix
-           (Filename.chop_extension input_file_name))
-        ^ ".fcl" in
-      Testing.gen_tests
-        ~current_unit ~output_file_name scoped_ast ;
-    end) ;
+  (* if Configuration.get_generate_tests () *)
+  (*     && Testing.contains_testing_intructions scoped_ast then *)
+  (*   (begin *)
+  (*     let output_file_name = *)
+  (*       (Testing.add_tests_suffix *)
+  (*          (Filename.chop_extension input_file_name)) *)
+  (*       ^ ".fcl" in *)
+  (*     Testing.gen_tests *)
+  (*       ~current_unit ~output_file_name scoped_ast ; *)
+  (*   end) ; *)
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
     ~source_filename: input_file_name
@@ -197,17 +197,17 @@ let dispatch_compilation files =
                 end) ;
               end) ;
             end) ;
-          let tests_file_no_suffix =
-            Testing.add_tests_suffix input_file_no_suffix in
-          let tests_file_fcl = tests_file_no_suffix ^ ".fcl" in
-          let tests_file_ml = tests_file_no_suffix ^ ".ml" in
-          if Configuration.get_generate_tests ()
-              && Configuration.get_perform_tests ()
-              && Sys.file_exists tests_file_fcl then
-            (begin
-              compile_fcl tests_file_fcl ;
-              compile_ml tests_file_ml ;
-            end) ;
+          (* let tests_file_no_suffix = *)
+          (*   Testing.add_tests_suffix input_file_no_suffix in *)
+          (* let tests_file_fcl = tests_file_no_suffix ^ ".fcl" in *)
+          (* let tests_file_ml = tests_file_no_suffix ^ ".ml" in *)
+          (* if Configuration.get_generate_tests () *)
+          (*     && Configuration.get_perform_tests () *)
+          (*     && Sys.file_exists tests_file_fcl then *)
+          (*   (begin *)
+          (*     compile_fcl tests_file_fcl ; *)
+          (*     compile_ml tests_file_ml ; *)
+          (*   end) ; *)
       | "ml" | "mli" -> compile_ml input_file_name
       | "zv" ->
           compile_zv input_file_name ;

@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.5 2011-05-26 16:08:09 maarek Exp $
 
 ROOT_DIR=../../..
 
@@ -22,7 +22,7 @@ SRC_DIR=$(ROOT_DIR)/src
 EXTLIB_SUBDIRS=\
  access_control\
  polynomials\
-# algebra\
+ algebra\
 
 include $(ROOT_DIR)/Makefile.common
 

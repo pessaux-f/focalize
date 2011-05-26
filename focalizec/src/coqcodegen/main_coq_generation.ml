@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.37 2011-05-04 09:22:47 maarek Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.38 2011-05-26 16:08:09 maarek Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -157,7 +157,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         ~loc: collection_def.Parsetree.ast_loc
         collection_def.Parsetree.ast_desc.Parsetree.cd_name
         ([], collection_methods, None, Env.COS_collection) env
-  | Infer.PCM_testing (_, _) ->
+  | Infer.PCM_testing _ ->
       (* Testing definition are discarded at code generation. When
          testing is activated, testing instructions are compiled
          separatly. *)
