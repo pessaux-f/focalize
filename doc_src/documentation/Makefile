@@ -13,11 +13,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2009-07-06 08:29:42 habib Exp $
+# $Id: Makefile,v 1.5 2011-05-26 10:24:15 weis Exp $
 
-ROOT_DIR = ../..
+ROOT_DIR=../..
 
-THIS_DIR = documentation
+THIS_DIR=documentation
 
 include $(ROOT_DIR)/Makefile.config
 
@@ -45,7 +45,7 @@ TUTORIAL_OBJS=\
 
 # The Unix manual pages.
 MAN_PAGES_OBJS=\
- focalizec.$(PROJECT_MAN_EXT) \
+ focalizec.$(PROJECT_MAN_EXT)\
  focalizedep.$(PROJECT_MAN_EXT)
 
 HTMLC_INCLUDES =\
@@ -61,45 +61,45 @@ BYT_OBJS=$(SOURCES:.shtml=.html)
 # compilers associated to the rules (DVIPS, DVIPDF, and so on).
 include $(ROOT_DIR)/Makefile.common
 
-DOC_OBJS=$(BYT_OBJS) $(MAN_PAGES_OBJS) $(REFERENCE_MANUAL_OBJS) \
+DOC_OBJS=$(BYT_OBJS) $(MAN_PAGES_OBJS) $(REFERENCE_MANUAL_OBJS)\
  $(TUTORIAL_OBJS)
 
-all:: .done_copy_documentation
+all: .done_copy_documentation
 
-clean::
+clean:
 	$(RM) .done_copy_man_pages
 .done_copy_man_pages: $(DOC_SRC_DIR)/man/focalizec.$(PROJECT_MAN_EXT)\
  $(DOC_SRC_DIR)/man/focalizedep.$(PROJECT_MAN_EXT)
-	$(CP) $(DOC_SRC_DIR)/man/focalizec.$(PROJECT_MAN_EXT) focalizec.$(PROJECT_MAN_EXT) && \
+	$(CP) $(DOC_SRC_DIR)/man/focalizec.$(PROJECT_MAN_EXT) focalizec.$(PROJECT_MAN_EXT) &&\
 	$(CP) $(DOC_SRC_DIR)/man/focalizedep.$(PROJECT_MAN_EXT) focalizedep.$(PROJECT_MAN_EXT)
 	$(TOUCH) .done_copy_man_pages
 
 # Generate the copies of the reference manual and the tutorial to put them 
 # on the Web site afterwards.
-clean::
+clean:
 	$(RM) .done_copy_documentation
-.done_copy_documentation: .done_copy_man_pages $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi \
+.done_copy_documentation: .done_copy_man_pages $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi\
  $(TUTORIAL_SRC_DIR)/tutorial.dvi
-	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi $(REFERENCE_MANUAL_NAME).dvi && \
-	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.ps $(REFERENCE_MANUAL_NAME).ps && \
-	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.pdf $(REFERENCE_MANUAL_NAME).pdf && \
-	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.html $(REFERENCE_MANUAL_NAME).html && \
-	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.dvi $(TUTORIAL_NAME).dvi && \
-	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.ps $(TUTORIAL_NAME).ps && \
-	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.pdf $(TUTORIAL_NAME).pdf && \
-	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.html $(TUTORIAL_NAME).html && \
+	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi $(REFERENCE_MANUAL_NAME).dvi &&\
+	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.ps $(REFERENCE_MANUAL_NAME).ps &&\
+	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.pdf $(REFERENCE_MANUAL_NAME).pdf &&\
+	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.html $(REFERENCE_MANUAL_NAME).html &&\
+	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.dvi $(TUTORIAL_NAME).dvi &&\
+	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.ps $(TUTORIAL_NAME).ps &&\
+	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.pdf $(TUTORIAL_NAME).pdf &&\
+	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.html $(TUTORIAL_NAME).html &&\
 	$(TOUCH) .done_copy_documentation
 
-clean::
+clean:
 	$(RM) $(DOC_OBJS)
 
-install::
-	$(CHMODGRW) $(DOC_OBJS) && \
+install:
+	$(CHMODGRW) $(DOC_OBJS) &&\
 	$(SCP) $(DOC_OBJS) $(PROJECT_WEB_TARGET_DIR)/$(THIS_DIR)/
 
 
-uninstall::
-	$(SSH) $(PROJECT_WEB_SERVER) \
+uninstall:
+	$(SSH) $(PROJECT_WEB_SERVER)\
 	  $(CD) $(PROJECT_WEB_SITE_DIR)/$(THIS_DIR)/\; $(RM) $(DOC_OBJS)
 
 # We need the copies of the various formats of the refman in order

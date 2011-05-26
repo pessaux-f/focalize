@@ -13,16 +13,17 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2009-03-02 10:19:30 weis Exp $
+# $Id: Makefile,v 1.3 2011-05-26 10:24:15 weis Exp $
 
-ROOT_DIR = ../..
+ROOT_DIR=../..
 
-THIS_DIR = resources
+THIS_DIR=resources
 
 include $(ROOT_DIR)/Makefile.config
 
-HTMLC_INCLUDES = -I $(ROOT_DIR)/doc_src/Includes \
-  -env $(ROOT_DIR)/.config_var_for_shell -env project.env
+HTMLC_INCLUDES=\
+ -I $(ROOT_DIR)/doc_src/Includes\
+ -env $(ROOT_DIR)/.config_var_for_shell -env project.env
 
 SOURCES=index.shtml
 BYT_OBJS=$(SOURCES:.shtml=.html)
@@ -31,10 +32,10 @@ include $(ROOT_DIR)/Makefile.common
 
 PROJECT_WEB_TARGET_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
 
-clean::
+clean:
 	$(RM) $(BYT_OBJS)
 
-install::
+install:
 	$(CHMODGRW) $(BYT_OBJS)
 	$(SCP) $(BYT_OBJS) $(PROJECT_WEB_TARGET_DIR)/$(THIS_DIR)/
 	$(RM) $(BYT_OBJS)
