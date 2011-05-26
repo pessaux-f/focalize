@@ -18,10 +18,6 @@ sets.cmo: sets_externals.cmo basics.cmo
 sets.cmx: sets_externals.cmx basics.cmx 
 sets_externals.cmo: ml_builtins.cmo 
 sets_externals.cmx: ml_builtins.cmx 
-sets_orders.cmo: sets_orders_externals.cmo basics.cmo 
-sets_orders.cmx: sets_orders_externals.cmx basics.cmx 
-sets_orders_externals.cmo: ml_builtins.cmo 
-sets_orders_externals.cmx: ml_builtins.cmx 
 strict_orders.cmo: basics.cmo 
 strict_orders.cmx: basics.cmx 
 sums.cmo: sets.cmo basics.cmo 

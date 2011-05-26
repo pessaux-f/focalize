@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.93 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.94 2011-05-26 16:15:52 maarek Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -69,7 +69,7 @@ FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 FOCALIZE_MML=$(FOCALIZE_DOCS:.fcd=.xml)
 
 EXTERNAL_BYT_OBJS=\
- ml_builtins.cmo sets_externals.cmo sets_orders_externals.cmo
+ ml_builtins.cmo sets_externals.cmo
 
 EXTERNAL_CMIS=$(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 EXTERNAL_BIN_OBJS=$(EXTERNAL_BYT_OBJS:.cmo=.cmx)
