@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.157 2011-05-04 09:22:46 maarek Exp $ *)
+(* $Id: parser.mly,v 1.158 2011-05-26 10:20:45 weis Exp $ *)
 
 open Parsetree;;
 
@@ -495,7 +495,9 @@ define_type_body_contents:
 
 define_type_body_external:
   | INTERNAL define_type_body_regular_opt
-    opt_annot EXTERNAL external_expr_clause_list following_external_binding_list
+    opt_annot
+    EXTERNAL external_expr_clause_list
+    following_external_binding_list
     { mk {
         etdb_internal = $2;
         etdb_external = mk_annot $3 $5;
@@ -1401,8 +1403,8 @@ expr:
     { mk_prefix_application $1 $2 }
 
   /* External expressions. */
-  | EXTERNAL external_expr
-    { mk (E_external $2) }
+/*  | EXTERNAL external_expr */
+/*    { mk (E_external $2) } */
 ;
 
 expr_semi_list:
