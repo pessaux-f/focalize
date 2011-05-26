@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.44 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.45 2011-05-26 15:17:20 maarek Exp $
 
 ROOT_DIR=.
 
@@ -87,7 +87,7 @@ clean-local distclean doc docdir depend:
 	    err=$$?;\
 	    echo "<-- $$i [$$err]" >&2 &&\
 	    case $$err in 0);; *) exit $$err;; esac;\
-	  fi\
+	  fi;\
 	done
 
 install uninstall:
@@ -98,7 +98,7 @@ install uninstall:
 	    err=$$?;\
 	    echo "<-- $$i [$$err]" >&2 &&\
 	    case $$err in 0);; *) exit $$err;; esac;\
-	  fi\
+	  fi;\
 	done
 
 install-local:
@@ -120,7 +120,7 @@ distclean-local:
 	    err=$$?;\
 	    echo "<-- $$i [$$err]" >&2 &&\
 	    case $$err in 0);; *) exit $$err;; esac;\
-	  fi\
+	  fi;\
 	done;\
 	$(MAKE) unconfigure
 

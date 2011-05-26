@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.32 2011-05-26 10:24:15 weis Exp $
+# $Id: Makefile.common,v 1.33 2011-05-26 15:17:20 maarek Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -72,7 +72,7 @@ distclean: distclean-local
 
 install-local:
 
-install: install-local:
+install: install-local
 
 uninstall-local:
 

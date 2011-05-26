@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.75 2011-05-26 10:24:15 weis Exp $
+# $Id: Makefile,v 1.76 2011-05-26 15:17:20 maarek Exp $
 
 ROOT_DIR=.
 
@@ -522,7 +522,7 @@ clean_deliverables: clean_focalizedep clean_focalizec
 
 .PHONY: clean_focalizec
 clean_focalizec:
-	@$(RM) .done_build_deliverables\
+	@$(RM) .done_build_deliverables &&\
 	$(RM) .done_build_focalizec &&\
 	for i in $(FOCALIZEC_NAME); do\
 	  $(RM) .done_build_$$i &&\

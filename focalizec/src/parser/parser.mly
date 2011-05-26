@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.159 2011-05-26 12:15:12 weis Exp $ *)
+(* $Id: parser.mly,v 1.160 2011-05-26 15:17:20 maarek Exp $ *)
 
 open Parsetree;;
 
@@ -498,9 +498,9 @@ define_type_body_external:
     opt_annot
     EXTERNAL external_val
     following_external_binding_list
-    { mk {
+    { mk_annot $3 {
         etdb_internal = $2;
-        etdb_external = mk_annot $3 $5;
+        etdb_external = $5;
         etdb_bindings = mk $6;
       }
     }
