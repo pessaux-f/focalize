@@ -14,13 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_diag.fcl,v 1.4 2009-06-26 22:59:57 weis Exp $ *)
-
-use "basics";;
-use "sets_orders";;
+(* $Id: gen_diag.fcl,v 1.5 2011-05-26 15:54:26 maarek Exp $ *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 
 species Gen_diag =
 

@@ -14,16 +14,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main.fcl,v 1.11 2009-06-14 12:57:24 ayrault Exp $ *)
+(* $Id: main.fcl,v 1.12 2011-05-26 15:54:26 maarek Exp $ *)
 
 use "basics";;
-use "pair";;
-use "etat_vote";;
-use "num_capteur";;
-use "value";;
-use "value_with_valid";;
-use "diag";;
-use "vote";;
 
 open "pair";;
 open "etat_vote";;

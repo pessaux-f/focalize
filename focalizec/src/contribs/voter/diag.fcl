@@ -14,17 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: diag.fcl,v 1.5 2009-06-26 22:59:57 weis Exp $ *)
-
-use "basics";;
-use "sets_orders";;
-use "gen_diag";;
-use "etat_vote";;
-use "num_capteur";;
-use "pair";;
+(* $Id: diag.fcl,v 1.6 2011-05-26 15:54:26 maarek Exp $ *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 open "gen_diag";;
 open "etat_vote";;
 open "num_capteur";;

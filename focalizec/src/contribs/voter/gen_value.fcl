@@ -14,13 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_value.fcl,v 1.6 2009-06-26 22:59:57 weis Exp $ *)
-
-use "basics";;
-use "sets_orders";;
+(* $Id: gen_value.fcl,v 1.7 2011-05-26 15:54:26 maarek Exp $ *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 
 (** Common species defining the exported operations used by the voter.
     This permits to hide (thrue inheritance) the real value species used *)

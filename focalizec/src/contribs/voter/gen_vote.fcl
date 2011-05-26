@@ -14,15 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_vote.fcl,v 1.8 2009-06-26 22:59:57 weis Exp $ *)
-
-use "basics";;
-use "sets_orders";;
-use "gen_value";;
-use "gen_diag";;
+(* $Id: gen_vote.fcl,v 1.9 2011-05-26 15:54:26 maarek Exp $ *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 open "gen_value";;
 open "gen_diag";;
 

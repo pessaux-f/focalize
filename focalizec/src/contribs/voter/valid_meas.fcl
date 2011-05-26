@@ -14,17 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: valid_meas.fcl,v 1.4 2009-06-27 01:29:02 weis Exp $ *)
-
-use "basics";;
-use "sets_orders";;
-use "peano";;
-use "gen_value";;
-use "basic_type";;
-use "pair";;
+(* $Id: valid_meas.fcl,v 1.5 2011-05-26 15:54:26 maarek Exp $ *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 open "peano";;
 open "gen_value";;
 open "basic_type";;

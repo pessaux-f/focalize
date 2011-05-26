@@ -14,15 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: value.fcl,v 1.12 2009-06-27 01:29:02 weis Exp $ *)
-
-use "basics";;
-use "sets_orders";;
-use "gen_value";;
-use "basic_type";;
+(* $Id: value.fcl,v 1.13 2011-05-26 15:54:26 maarek Exp $ *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 open "gen_value";;
 open "basic_type";;
 

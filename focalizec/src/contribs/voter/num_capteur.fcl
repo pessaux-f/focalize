@@ -14,14 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: num_capteur.fcl,v 1.9 2009-06-27 01:29:02 weis Exp $ *)
-
-use "basics";;
-use "sets_orders";;
-use "peano";;
+(* $Id: num_capteur.fcl,v 1.10 2011-05-26 15:54:26 maarek Exp $ *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 open "peano";;
 
 (** Type somme : Numero du capteur de la sortie voteur *)

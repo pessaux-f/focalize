@@ -14,17 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: value_with_valid.fcl,v 1.3 2009-06-26 22:59:57 weis Exp $ *)
-
-use "basics";;
-use "sets_orders";;
-use "valid_meas";;
-use "gen_value";;
-use "basic_type";;
-use "pair";;
+(* $Id: value_with_valid.fcl,v 1.4 2011-05-26 15:54:26 maarek Exp $ *)
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
+open "orders";;
 open "valid_meas";;
 open "gen_value";;
 open "basic_type";;

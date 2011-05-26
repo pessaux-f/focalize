@@ -14,13 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: pair.fcl,v 1.9 2009-06-27 01:29:02 weis Exp $ *)
-
-use "basics" ;;
-use "sets_orders" ;;
+(* $Id: pair.fcl,v 1.10 2011-05-26 15:54:26 maarek Exp $ *)
 
 open "basics" ;;
-open "sets_orders" ;;
+open "sets";;
+open "orders" ;;
 
 species Sp_pair (S1 is Setoid, S2 is Setoid) =
 

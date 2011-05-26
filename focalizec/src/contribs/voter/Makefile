@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.17 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.18 2011-05-26 15:54:26 maarek Exp $
 
 # Makefile for algebra structures implementations
 
@@ -91,7 +91,6 @@ STD_BIN_OBJS=\
  constants.cmx orders.cmx\
  lattices.cmx\
  sets_externals.cmx sets.cmx\
- sets_orders_externals.cmx sets_orders.cmx\
  multiplicative_law.cmx additive_law.cmx\
  integers.cmx iterators.cmx\
  weak_structures_externals.cmx weak_structures.cmx\
