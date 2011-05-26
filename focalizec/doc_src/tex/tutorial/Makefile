@@ -10,48 +10,48 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.12 2010-01-14 15:32:43 habib Exp $
+# $Id: Makefile,v 1.13 2011-05-26 10:21:32 weis Exp $
 
-ROOT_DIR = ../../..
+ROOT_DIR=../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-TEX_FILES = tutorial.tex
+TEX_FILES=tutorial.tex
 
-HVA_FILES = tutorial.hva
+HVA_FILES=tutorial.hva
 
-FOCALIZE_SRC = superset.fcl subset.fcl mylist.fcl main.fcl
+FOCALIZE_SRC=superset.fcl subset.fcl mylist.fcl main.fcl
 
-FOCALIZE_FOS = $(FOCALIZE_SRC:.fcl=.fo)
-FOCALIZE_MLS = $(FOCALIZE_SRC:.fcl=.ml)
+FOCALIZE_FOS=$(FOCALIZE_SRC:.fcl=.fo)
+FOCALIZE_MLS=$(FOCALIZE_SRC:.fcl=.ml)
 
-FOCALIZE_CMIS = $(FOCALIZE_SRC:.fcl=.cmi)
+FOCALIZE_CMIS=$(FOCALIZE_SRC:.fcl=.cmi)
 
-FOCALIZE_BYT_OBJS = $(FOCALIZE_MLS:.ml=.cmo)
-FOCALIZE_BIN_OBJS = $(FOCALIZE_BYT_OBJS:.cmo=.cmx)
+FOCALIZE_BYT_OBJS=$(FOCALIZE_MLS:.ml=.cmo)
+FOCALIZE_BIN_OBJS=$(FOCALIZE_BYT_OBJS:.cmo=.cmx)
 
-FOCALIZE_ZVS = $(FOCALIZE_SRC:.fcl=.zv)
-FOCALIZE_VS = $(FOCALIZE_ZVS:.zv=.v)
-FOCALIZE_VOS = $(FOCALIZE_VS:.v=.vo)
+FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
+FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
+FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
 
-FOCALIZE_DOCS = $(FOCALIZE_SRC:.fcl=.fcd)
+FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 
-FOCALIZE_XML = $(FOCALIZE_DOCS:.fcd=.xml)
+FOCALIZE_XML=$(FOCALIZE_DOCS:.fcd=.xml)
 
-DOC_OBJS = tutorial.dvi tutorial.ps tutorial.pdf tutorial.html
+DOC_OBJS=tutorial.dvi tutorial.ps tutorial.pdf tutorial.html
 
 # Defining defaults from Makefile.common
 include $(ROOT_DIR)/Makefile.common
 # Now overwriting defaults for this directory purposes.
 
 # Already defined in Makefile.common
-#DVIPS = dvips
-#DVIPDF = dvipdf
+#DVIPS=dvips
+#DVIPDF=dvipdf
 
-TEXINPUT = /usr/share/texmf/tex/latex//:$(TEXINPUTS)
-LATEX = TEXINPUTS=$(TEXINPUT); latex
-HEVEA = TEXINPUTS=$(TEXINPUT); hevea
-IMAGEN = imagen -extra "ppmquant 255"
+TEXINPUT=/usr/share/texmf/tex/latex//:$(TEXINPUTS)
+LATEX=TEXINPUTS=$(TEXINPUT); latex
+HEVEA=TEXINPUTS=$(TEXINPUT); hevea
+IMAGEN=imagen -extra "ppmquant 255"
 
 # DOCDIR_DIR is the directory doc that this Makefile must populate.
 DOCDIR_DIR=$(DOC_ROOT_DIR)/tex/tutorial
@@ -59,43 +59,43 @@ DOCDIR_DIR=$(DOC_ROOT_DIR)/tex/tutorial
 # DOC_TGT_DIR is the target directory for the installation of the documentation
 DOC_TGT_DIR:=$(DOC_DIR)/tex/$(PROJECT_NAME_FULL)/tutorial
 
-FOCALIZE_COMPILER = $(ROOT_DIR)/src/toplevel/focalizec
-FOCALIZE_COMP_FLAGS = -I $(ROOT_DIR)/src/stdlib
-CAML_INCLUDES = -I $(ROOT_DIR)/src/stdlib
-CAML_COMP_FLAGS = -w Ae -dtypes
+FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
+FOCALIZE_COMP_FLAGS=-I $(ROOT_DIR)/src/stdlib
+CAML_INCLUDES=-I $(ROOT_DIR)/src/stdlib
+CAML_COMP_FLAGS=-w Ae -dtypes
 
-all doc docdir:: byt $(DOC_OBJS)
+all doc docdir: byt $(DOC_OBJS)
 
-byt:: $(FOCALIZE_BYT_OBJS)
+byt: $(FOCALIZE_BYT_OBJS)
 
-clean::
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) && \
+clean-local: clean-generated
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) &&\
 	$(RM) $(FOCALIZE_VS)
 
-docdir:: $(DOC_OBJS)
-	$(MKDIR) $(DOCDIR_DIR) && \
+docdir-local: $(DOC_OBJS)
+	$(MKDIR) $(DOCDIR_DIR) &&\
 	$(CP) $(DOC_OBJS) $(DOCDIR_DIR)/
 
 tutorial.dvi: $(TEX_FILES)
-	$(LATEX) tutorial.tex && \
-	$(LATEX) tutorial.tex && \
+	$(LATEX) tutorial.tex &&\
+	$(LATEX) tutorial.tex &&\
 	$(LATEX) tutorial.tex
 
 tutorial.html: tutorial.dvi ${HVA_FILES}
 	$(HEVEA) -fix ${HVA_FILES} tutorial.tex
 
-clean::
+clean-generated:
 	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc
 	$(RM) *.haux *.htoc
 	$(RM) tutorial*.gif tutorial.image.tex
 	$(RM) $(DOC_OBJS)
 
-distclean::
+distclean-local:
 	$(RM) $(DOCDIR_DIR)
 
-install:
-	$(MKDIR) $(DOC_TGT_DIR) && \
+install-local:
+	$(MKDIR) $(DOC_TGT_DIR) &&\
 	$(CP) $(DOC_OBJS) $(DOC_TGT_DIR)
 
-uninstall:
+uninstall-local:
 	$(RM) $(DOC_TGT_DIR)

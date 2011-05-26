@@ -10,25 +10,26 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2009-04-10 14:57:06 pessaux Exp $
+# $Id: Makefile,v 1.2 2011-05-26 10:21:32 weis Exp $
 
-ROOT_DIR = ../../..
+ROOT_DIR=../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-TEX_FILES = codegen_model.tex macros.tex compiler_src_architecture.tex\
-	legacy.tex phd_changes.tex environments.tex lexing_parsing.tex\
-	scoping.tex mathpartir.sty
+TEX_FILES=\
+ codegen_model.tex macros.tex compiler_src_architecture.tex\
+ legacy.tex phd_changes.tex environments.tex lexing_parsing.tex\
+ scoping.tex mathpartir.sty
 
-DOC_OBJS = legacy.dvi legacy.ps legacy.pdf
+DOC_OBJS=legacy.dvi legacy.ps legacy.pdf
 
-TEXINPUT = /usr/share/texmf/tex/latex//:$(TEXINPUTS)
-LATEX = TEXINPUTS=$(TEXINPUT); latex
+TEXINPUT=/usr/share/texmf/tex/latex//:$(TEXINPUTS)
+LATEX=TEXINPUTS=$(TEXINPUT); latex
 
 include $(ROOT_DIR)/Makefile.common
 
 
-all:: $(DOC_OBJS)
+all: $(DOC_OBJS)
 
 legacy.dvi: $(TEX_FILES)
 	$(LATEX) legacy.tex
@@ -41,6 +42,6 @@ legacy.pdf: legacy.dvi
 legacy.ps: legacy.dvi
 	dvips legacy.dvi
 
-clean::
+clean:
 	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc
 	$(RM) $(DOC_OBJS)

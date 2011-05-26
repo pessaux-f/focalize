@@ -13,81 +13,81 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.24 2010-07-29 08:21:13 weis Exp $
+# $Id: Makefile,v 1.25 2011-05-26 10:21:32 weis Exp $
 
-ROOT_DIR = ../..
+ROOT_DIR=../..
 
 include $(ROOT_DIR)/Makefile.config
 
 # Fill here to add a new directory for a new library
-SUB_DIRS = algebra access_control
+SUB_DIRS=algebra access_control
 # polynomials (PW: Commented out since does not compile yet (as of 0.6.0 version).)
 
 include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
-byt bin::
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..." && \
-	  ($(CD) $$i && $(MAKE) all); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" && \
-	  case $$err in 0);; *) exit $$err;; esac; \
-        done
+byt bin:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." &&\
+	  ($(CD) $$i && $(MAKE) all);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done
 
-clean::
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..." && \
-	  ($(CD) $$i && $(MAKE) clean); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" && \
-	  case $$err in 0);; *) exit $$err;; esac; \
-        done
+clean-local:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." &&\
+	  ($(CD) $$i && $(MAKE) clean);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done
 
-distclean::
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..." && \
-	  ($(CD) $$i && $(MAKE) distclean); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" && \
-	  case $$err in 0);; *) exit $$err;; esac; \
-        done
+distclean-local:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." &&\
+	  ($(CD) $$i && $(MAKE) distclean);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done
 
 cleanlib: clean
 
-doc::
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..." && \
-	  ($(CD) $$i && $(MAKE) doc); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" && \
-	  case $$err in 0);; *) exit $$err;; esac; \
+doc:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." &&\
+	  ($(CD) $$i && $(MAKE) doc);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
 	done
 
-install::
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..." && \
-	  ($(CD) $$i && $(MAKE) install); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" && \
-	  case $$err in 0);; *) exit $$err;; esac; \
+install-local:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." &&\
+	  ($(CD) $$i && $(MAKE) install);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
 	done
 
-uninstall::
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..." && \
-	  ($(CD) $$i && $(MAKE) uninstall); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" && \
-	  case $$err in 0);; *) exit $$err;; esac; \
+uninstall-local:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." &&\
+	  ($(CD) $$i && $(MAKE) uninstall);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
 	done
 
-depend::
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..." && \
-	  ($(CD) $$i && $(MAKE) depend); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" && \
-	  case $$err in 0);; *) exit $$err;; esac; \
+depend:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." &&\
+	  ($(CD) $$i && $(MAKE) depend);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
 	done

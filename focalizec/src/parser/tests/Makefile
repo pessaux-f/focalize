@@ -12,14 +12,14 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2011-05-09 15:41:01 maarek Exp $
+# $Id: Makefile,v 1.4 2011-05-26 10:21:32 weis Exp $
 
-ROOT_DIR = ../../..
+ROOT_DIR=../../..
 
 include $(ROOT_DIR)/Makefile.config
 
 SRC_DIR=$(ROOT_DIR)/src
-EXTLIB_SUBDIRS =\
+EXTLIB_SUBDIRS=\
  access_control\
  polynomials\
 # algebra\
@@ -27,44 +27,46 @@ EXTLIB_SUBDIRS =\
 include $(ROOT_DIR)/Makefile.common
 
 .PHONY: stdlib extlib tests
-tests:: all
 
+tests: all
 
-
-
-all:: stdlib
+all: stdlib
 
 stdlib:
-	mkdir -p stdlib && \
-	($(CD) $(SRC_DIR)/stdlib && \
+	mkdir -p stdlib &&\
+	($(CD) $(SRC_DIR)/stdlib &&\
 	for f in *.fcl; do\
-	  ../toplevel/focalizec -no-ocaml-code -no-coq-code \
-	  -pretty ../parser/tests/stdlib/$$f \
-	  $$f && \
-	  ../toplevel/focalizec -no-ocaml-code -no-coq-code \
-	  -pretty ../parser/tests/stdlib/$$f.pretty \
-	  ../parser/tests/stdlib/$$f && \
-	  cmp ../parser/tests/stdlib/$$f ../parser/tests/stdlib/$$f.pretty ||\
-	  exit 1;\
+	  ../toplevel/focalizec -no-ocaml-code -no-coq-code\
+	    -pretty ../parser/tests/stdlib/$$f\
+	    $$f &&\
+	  ../toplevel/focalizec -no-ocaml-code -no-coq-code\
+	    -pretty ../parser/tests/stdlib/$$f.pretty\
+	    ../parser/tests/stdlib/$$f &&\
+	  cmp ../parser/tests/stdlib/$$f \
+	      ../parser/tests/stdlib/$$f.pretty ||\
+	    exit 1;\
 	done;\
 	)
 
 extlib:
-	mkdir -p extlib && \
+	mkdir -p extlib &&\
 	for d in $(EXTLIB_SUBDIRS); do\
-	  mkdir -p extlib/$$d && \
-	  ($(CD) $(SRC_DIR)/extlib/$$d && \
+	  mkdir -p extlib/$$d &&\
+	  ($(CD) $(SRC_DIR)/extlib/$$d &&\
 	  for f in *.fcl; do\
-	    echo "$$d/$$f -> $$d/$$f" && \
-	    ../../toplevel/focalizec -I ../algebra -no-ocaml-code -no-coq-code \
-	    -pretty ../../parser/tests/extlib/$$d/$$f \
-	    $$f && \
-	    echo "$$d/$$f -> $$d/$$f -> $$d/$$f" && \
-	    ../../toplevel/focalizec -I ../algebra -no-ocaml-code -no-coq-code \
-	    -pretty ../../parser/tests/extlib/$$d/$$f.pretty \
-	    ../../parser/tests/extlib/$$d/$$f && \
-	    echo "$$d/$$f -> $$d/$$f = $$d/$$f" && \
-	    cmp ../../parser/tests/extlib/$$d/$$f ../../parser/tests/extlib/$$d/$$f.pretty ||\
+	    echo "$$d/$$f -> $$d/$$f" &&\
+	    ../../toplevel/focalizec -I ../algebra\
+	      -no-ocaml-code -no-coq-code -pretty\
+	      ../../parser/tests/extlib/$$d/$$f\
+	      $$f &&\
+	    echo "$$d/$$f -> $$d/$$f -> $$d/$$f" &&\
+	    ../../toplevel/focalizec -I ../algebra -no-ocaml-code\
+	      -no-coq-code -pretty \
+	      ../../parser/tests/extlib/$$d/$$f.pretty\
+	      ../../parser/tests/extlib/$$d/$$f &&\
+	    echo "$$d/$$f -> $$d/$$f=$$d/$$f" &&\
+	    cmp ../../parser/tests/extlib/$$d/$$f \
+	        ../../parser/tests/extlib/$$d/$$f.pretty ||\
 	    exit 1;\
 	  done;\
 	  )\

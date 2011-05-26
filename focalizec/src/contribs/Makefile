@@ -13,29 +13,29 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.17 2009-09-03 12:09:01 doligez Exp $
+# $Id: Makefile,v 1.18 2011-05-26 10:21:32 weis Exp $
 
-ROOT_DIR = ../..
+ROOT_DIR=../..
 
 include $(ROOT_DIR)/Makefile.config
 
 # Fill here to add a new directory for a new contribution
-SUB_DIRS =\
-  utils \
-  voter
-#  automata
+SUB_DIRS=\
+ utils\
+ voter
+# automata
 
 include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
-byt bin clean doc install uninstall depend::
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..." && \
-	  ($(CD) $$i && $(MAKE) $@); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]" && \
-	  case $$err in 0);; *) exit $$err;; esac; \
-        done
+byt bin clean-local doc install-local uninstall-local depend:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." &&\
+	  ($(CD) $$i && $(MAKE) $@);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done
 
 cleanlib: clean

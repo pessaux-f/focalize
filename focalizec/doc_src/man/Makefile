@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.12 2010-07-19 13:25:13 carlier Exp $
+# $Id: Makefile,v 1.13 2011-05-26 10:21:32 weis Exp $
 
 ROOT_DIR=../..
 
@@ -48,30 +48,30 @@ MAN_OBJS:=$(MAN_FILES:.man=.$(PROJECT_MAN_EXT))
 all doc: $(MAN_OBJS)
 
 docdir: $(MAN_OBJS)
-	$(MKDIR) $(DOCDIR_DIR) && \
+	$(MKDIR) $(DOCDIR_DIR) &&\
 	$(CP) $(MAN_OBJS) $(DOCDIR_DIR)/
 
 visu: $(MAN_OBJS)
 	nroff -man $(PACKAGE).$(PROJECT_MAN_EXT) | more
 	nroff -man $(PACKAGE_DEP).$(PROJECT_MAN_EXT) | more
 
-clean::
+clean-local:
 	$(RM) $(MAN_OBJS) *~
 #	cd Includes; $(RM) *~
 
-distclean:: clean
+distclean-local:
 	$(RM) $(DOCDIR_DIR)
 
-install:
-	$(MKDIR) $(MAN_DIR) && \
+install-local:
+	$(MKDIR) $(MAN_DIR) &&\
 	$(CP) $(MAN_OBJS) $(MAN_DIR)/
 
-uninstall:
-	@for i in $(MAN_OBJS); do \
-	  $(RM) $(MAN_DIR)/$$i; \
+uninstall-local:
+	@for i in $(MAN_OBJS); do\
+	  $(RM) $(MAN_DIR)/$$i;\
 	done
 
-depend::
+depend:
 
 .SUFFIXES:
 .SUFFIXES: .man .1

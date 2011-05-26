@@ -12,21 +12,21 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2008-12-12 08:01:04 weis Exp $
+# $Id: Makefile,v 1.8 2011-05-26 10:21:32 weis Exp $
 
-ROOT_DIR = ../../..
+ROOT_DIR=../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-TEST_FILES = sets_orders.foc
+TEST_FILES=sets_orders.foc
 
-CHECK_FILE = $(ROOT_DIR)/toplevel/focalizec
+CHECK_FILE=$(ROOT_DIR)/toplevel/focalizec
 
 include $(ROOT_DIR)/Makefile.common
 
-tests:: all
+tests: all
 
-all::
-	for i in $(TEST_FILES); do \
-	   $(CHECK_FILE) $$i; \
+all:
+	for i in $(TEST_FILES); do\
+	   $(CHECK_FILE) $$i;\
 	done

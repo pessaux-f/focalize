@@ -12,13 +12,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.25 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.26 2011-05-26 10:21:32 weis Exp $
 
-ROOT_DIR = ..
+ROOT_DIR=..
 
-CHECK_FILE = $(ROOT_DIR)/src/toplevel/focalizec
+CHECK_FILE=$(ROOT_DIR)/src/toplevel/focalizec
 
-OK_TEST_FILES = \
+OK_TEST_FILES=\
  ok__baby_toy.fcl \
  ok__definition_72_rule_PRM.fcl \
  ok__in_example.fcl \
@@ -34,13 +34,13 @@ OK_TEST_FILES = \
  ok__torture_params.fcl
  #ok__coll_outside.fcl
 
-KO_TEST_FILES = \
-	ko__bad_self_use.fcl \
-	ko__param_toy.fcl \
-	ko__test_error.fcl \
-	ko__test_rec.fcl
+KO_TEST_FILES=\
+ ko__bad_self_use.fcl \
+ ko__param_toy.fcl \
+ ko__test_error.fcl \
+ ko__test_rec.fcl
 
-all:: $(CHECK_FILE) ok_all ko_all
+all: $(CHECK_FILE) ok_all ko_all
 
 ok_all: $(OK_TEST_FILES)
 	# Compile from Focalize to OCaml.
@@ -69,7 +69,7 @@ ko_all: $(KO_TEST_FILES)
 	  $(CHECK_FILE) -I ../lib $$i; \
 	done
 
-clean::
+clean:
 	$(RM) $(OK_TEST_FILES:.fcl=.v) $(KO_TEST_FILES:.fcl=.v)
 	$(RM) $(OK_TEST_FILES:.fcl=.ml) $(KO_TEST_FILES:.fcl=.ml)
 	$(RM) *.annot *.glob *.pfc *.zv *~

@@ -13,30 +13,30 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2009-10-27 16:20:04 carlier Exp $
+# $Id: Makefile,v 1.6 2011-05-26 10:21:32 weis Exp $
 
-ROOT_DIR = ..
+ROOT_DIR=..
 
 include $(ROOT_DIR)/Makefile.config
 
-SUB_DIRS = html man tex
+SUB_DIRS=html man tex
 
 include $(ROOT_DIR)/Makefile.common
 
-all clean distclean doc docdir depend::
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) $@); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
-	  case $$err in 0);; *) exit $$err;; esac; \
-        done
+all clean-local distclean-local doc docdir depend:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ...";\
+	  ($(CD) $$i && $(MAKE) $@);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]";\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done
 
-install uninstall::
-	@for i in $(SUB_DIRS); do \
-	  echo "--> $$i ..."; \
-	  ($(CD) $$i && $(MAKE) $@); \
-	  err=$$?; \
-	  echo "<-- $$i [$$err]"; \
-	  case $$err in 0);; *) exit $$err;; esac; \
-        done
+install-local uninstall-local:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ...";\
+	  ($(CD) $$i && $(MAKE) $@);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]";\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done

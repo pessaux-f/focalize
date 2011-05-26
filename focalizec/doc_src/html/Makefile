@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.6 2009-04-03 15:50:36 doligez Exp $
+# $Id: Makefile,v 1.7 2011-05-26 10:21:32 weis Exp $
 
 ROOT_DIR=../..
 
@@ -49,22 +49,22 @@ all doc: $(HTML_OBJS)
 visu: $(HTML_OBJS)
 	dillo $(PACKAGE).htm
 
-clean::
+clean-local:
 	$(RM) $(HTML_OBJS) *~
 	cd Includes; $(RM) *~
 
-distclean:: clean
+distclean-local:
 	$(RM) $(DOCDIR_DIR)/html
 
 docdir: $(HTML_OBJS)
-	$(MKDIR) $(DOCDIR_DIR) && \
-	if ! test -z $(HTML_OBJS); then \
-	  $(CP) $(HTML_OBJS) $(DOCDIR_DIR)/; \
+	$(MKDIR) $(DOCDIR_DIR) &&\
+	if ! test -z $(HTML_OBJS); then\
+	  $(CP) $(HTML_OBJS) $(DOCDIR_DIR)/;\
 	fi
 
 install:
 
-depend::
+depend:
 
 .SUFFIXES:
 .SUFFIXES: .html .htm
