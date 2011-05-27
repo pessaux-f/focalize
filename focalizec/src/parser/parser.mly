@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.162 2011-05-27 09:41:13 weis Exp $ *)
+(* $Id: parser.mly,v 1.163 2011-05-27 15:04:12 weis Exp $ *)
 
 open Parsetree;;
 
@@ -365,7 +365,7 @@ let mk_proof_label (s1, s2) =
 
 /* Predefined precedences to resolve conflicts. */
 %nonassoc prec_constant_constructor /* cf. simple_expr (C versus C x) */
-                                   /* above AS BAR COLON_COLON COMMA */
+                                    /* above AS BAR COLON_COLON COMMA */
 %nonassoc below_SHARP
 %nonassoc SHARP_OP                 /* simple_expr lident # RUIDENT */
 %nonassoc DOT                      /* simple_expr (simple_expr . label) */
@@ -862,14 +862,6 @@ binding:
         b_body = Parsetree.BB_logical $3;
       }
     }
-/*  | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_val */
-/*     { mk { */
-/*         b_name = $1; */
-/*         b_params = []; */
-/*         b_type = NoneSome $4; */
-/*         b_body = Parsetree.BB_computational (mk (E_external $6)); */
-/*       } */
-/*     } */
   | bound_vname in_type_expr EQUAL logical_expr
     { mk {
         b_name = $1;
