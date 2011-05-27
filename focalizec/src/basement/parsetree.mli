@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.62 2011-05-26 16:08:09 maarek Exp $ *)
+(* $Id: parsetree.mli,v 1.63 2011-05-27 09:39:08 weis Exp $ *)
 
 (** {2 The FoCaLiZe abstract syntax tree} *)
 
@@ -251,11 +251,11 @@ type external_language =
 
 (** {6 External expressions} *)
 
-(** An external expression is a list that binds an external language name
+(** An external translation is a list that binds an external language name
     to an expression in this language.*)
 
-type external_expr = external_expr_desc ast
-and external_expr_desc =
+type external_translation = external_translation_desc ast
+and external_translation_desc =
     (external_language * external_code) list
 
 and external_code = string
@@ -263,18 +263,17 @@ and external_code = string
     as unstructured strings of bytes. *)
 ;;
 
-(** {6 External bindings. *)
+(** {6 External mappings. *)
 
-(** An external binding binds a name of the language to an external
+(** An external mapping binds a name of the language to an external
     expression. *)
 
-type external_bindings = external_bindings_desc ast
-and external_bindings_desc = external_binding list
+type external_mapping = external_mapping_desc ast
+and external_mapping_desc = external_binding list
 (** External bindings are just lists of external bindings. *)
 
 and external_binding = external_binding_desc ast
-and external_binding_desc = vname * external_expr
-(** An external binding binds a name to an external expression. *)
+and external_binding_desc = vname * external_translation
 ;;
 
 (** {3 Type definitions} *)
@@ -309,11 +308,11 @@ and external_type_def_body_desc = {
   (** The internal view of the externally defined type. *)
   etdb_internal : regular_type_def_body option;
   (** The external view of the externally defined type. *)
-  etdb_external : external_expr;
+  etdb_external : external_translation;
   (** The external mapping of constructors or labels of the externally
       defined type. *)
-  etdb_bindings : external_bindings;
- }
+  etdb_mapping : external_mapping;
+}
 
 (** {6 Regular (internal) type definitions} *)
 and regular_type_def_body = regular_type_def_body_desc ast
@@ -353,11 +352,18 @@ and pat_desc =
 
 (** {6 Various flags for let definitions} *)
 
-type rec_flag = | RF_no_rec | RF_rec | RF_structural ;;
+type rec_flag = | RF_no_rec | RF_rec | RF_structural;;
 
 type logical_flag = | LF_no_logical | LF_logical;;
 
 type local_flag = | LF_no_local | LF_local;;
+
+type external_expr = external_expr_desc ast
+and external_expr_desc = {
+  ee_internal : type_expr;
+  ee_external : external_translation;
+}
+;;
 
 type expr = expr_desc ast
 and expr_desc =
