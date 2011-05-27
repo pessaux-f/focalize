@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.161 2011-05-26 16:08:09 maarek Exp $ *)
+(* $Id: parser.mly,v 1.162 2011-05-27 09:41:13 weis Exp $ *)
 
 open Parsetree;;
 
@@ -497,16 +497,16 @@ define_type_body_external:
   | INTERNAL define_type_body_regular_opt
     opt_annot
     EXTERNAL external_val
-    following_external_binding_list
+    external_mapping
     { mk_annot $3 {
         etdb_internal = $2;
         etdb_external = $5;
-        etdb_bindings = mk $6;
+        etdb_mapping = mk $6;
       }
     }
 ;
 
-following_external_binding_list:
+external_mapping:
   | { [] }
   | WITH external_binding external_binding_list
     { $2 :: $3 }
@@ -862,14 +862,14 @@ binding:
         b_body = Parsetree.BB_logical $3;
       }
     }
-  | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_val
-    { mk {
-        b_name = $1;
-        b_params = [];
-        b_type = Some $4;
-        b_body = Parsetree.BB_computational (mk (E_external $6));
-      }
-    }
+/*  | bound_vname EQUAL INTERNAL type_expr EXTERNAL external_val */
+/*     { mk { */
+/*         b_name = $1; */
+/*         b_params = []; */
+/*         b_type = NoneSome $4; */
+/*         b_body = Parsetree.BB_computational (mk (E_external $6)); */
+/*       } */
+/*     } */
   | bound_vname in_type_expr EQUAL logical_expr
     { mk {
         b_name = $1;
@@ -1394,8 +1394,13 @@ expr:
     { mk_prefix_application $1 $2 }
 
   /* External expressions. */
-/*  | EXTERNAL external_val */
-/*    { mk (E_external $2) } */
+  |  INTERNAL ext_expr
+    { mk (E_external $2) }
+;
+
+ext_expr:
+  | type_expr EXTERNAL external_val
+    { mk { ee_internal = $1; ee_external = $3; } }
 ;
 
 expr_semi_list:
