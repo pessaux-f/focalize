@@ -9,7 +9,7 @@
 #                                                                     #
 #*********************************************************************#
 
-# $Id: Makefile,v 1.7 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.8 2011-05-27 07:33:41 weis Exp $
 
 ROOT_DIR=../..
 
@@ -34,15 +34,13 @@ HTMLC=htmlc -I Includes -env focalizec.env
 HTML_FILES=
 #$(PACKAGE).htm
 
-include $(ROOT_DIR)/Makefile.config
-
 ######## This part should automatically handle the generation of
 ######## object files
 
 # The list of object files
 HTML_OBJS=$(HTML_FILES:.html=.htm)
 
-.PHONY: all doc visu clean docdir install
+.PHONY: doc visu docdir
 
 all doc: $(HTML_OBJS)
 
@@ -62,7 +60,7 @@ docdir: $(HTML_OBJS)
 	  $(CP) $(HTML_OBJS) $(DOCDIR_DIR)/;\
 	fi
 
-install:
+install-local:
 
 depend:
 

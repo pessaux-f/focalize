@@ -12,20 +12,20 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.17 2009-06-10 12:39:36 pessaux Exp $
+# $Id: Makefile,v 1.18 2011-05-27 07:33:41 weis Exp $
 
-ROOT_DIR = ../..
+ROOT_DIR=../..
 
 include $(ROOT_DIR)/Makefile.config
 
-BYT_OBJS =\
-  installation.cmo configuration.cmo handy.cmo \
-  location.cmo types.cmo \
-  files.cmo parsetree_utils.cmo miscHelpers.cmo
+BYT_OBJS=\
+ installation.cmo configuration.cmo handy.cmo\
+ location.cmo types.cmo\
+ files.cmo parsetree_utils.cmo miscHelpers.cmo
 
 include $(ROOT_DIR)/Makefile.common
 
 installation.ml:
-	@if test ! -L $@ ; then \
-	   echo "Please, run configure first."; \
+	@if test ! -L $@ ; then\
+	   echo "Please, run configure first.";\
 	fi

@@ -13,13 +13,13 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.18 2009-12-08 15:16:02 weis Exp $
+# $Id: Makefile,v 1.19 2011-05-27 07:33:41 weis Exp $
 
-ROOT_DIR = ..
+ROOT_DIR=..
 
 include $(ROOT_DIR)/Makefile.config
 
-all:: $(EXTERNAL_TOOLS_DIRS)
+all: $(EXTERNAL_TOOLS_DIRS)
 
 $(ABSOLUTE_CAML_SRC_DIR):
 	@for i in $(CAML_TAR_BALLS); do \
@@ -62,8 +62,8 @@ $(COQ_PATCH_TAR_BALL): $(COQ_SRC_DIR_NAME)
 
 include $(ROOT_DIR)/Makefile.common
 
-distclean uninstall::
+distclean-local uninstall-local:
 	($(RM) $(EXTERNAL_TOOLS_DIRS))
 
-clean::
+clean-local:
 	$(RM) $(CAML_SRC_DIR_NAME) $(CAMLP5_SRC_DIR_NAME) $(COQ_SRC_DIR_NAME)

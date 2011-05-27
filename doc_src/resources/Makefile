@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2011-05-26 10:24:15 weis Exp $
+# $Id: Makefile,v 1.4 2011-05-27 07:33:41 weis Exp $
 
 ROOT_DIR=../..
 
@@ -32,10 +32,10 @@ include $(ROOT_DIR)/Makefile.common
 
 PROJECT_WEB_TARGET_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
 
-clean:
+clean-local:
 	$(RM) $(BYT_OBJS)
 
-install:
+install-local:
 	$(CHMODGRW) $(BYT_OBJS)
 	$(SCP) $(BYT_OBJS) $(PROJECT_WEB_TARGET_DIR)/$(THIS_DIR)/
 	$(RM) $(BYT_OBJS)

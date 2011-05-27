@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2011-05-26 10:24:15 weis Exp $
+# $Id: Makefile,v 1.6 2011-05-27 07:33:41 weis Exp $
 
 ROOT_DIR=../..
 
@@ -66,18 +66,19 @@ DOC_OBJS=$(BYT_OBJS) $(MAN_PAGES_OBJS) $(REFERENCE_MANUAL_OBJS)\
 
 all: .done_copy_documentation
 
-clean:
+clean-local:
 	$(RM) .done_copy_man_pages
+	$(RM) .done_copy_documentation
+	$(RM) $(DOC_OBJS)
+
 .done_copy_man_pages: $(DOC_SRC_DIR)/man/focalizec.$(PROJECT_MAN_EXT)\
  $(DOC_SRC_DIR)/man/focalizedep.$(PROJECT_MAN_EXT)
 	$(CP) $(DOC_SRC_DIR)/man/focalizec.$(PROJECT_MAN_EXT) focalizec.$(PROJECT_MAN_EXT) &&\
 	$(CP) $(DOC_SRC_DIR)/man/focalizedep.$(PROJECT_MAN_EXT) focalizedep.$(PROJECT_MAN_EXT)
 	$(TOUCH) .done_copy_man_pages
 
-# Generate the copies of the reference manual and the tutorial to put them 
+# Generate the copies of the reference manual and the tutorial to put them
 # on the Web site afterwards.
-clean:
-	$(RM) .done_copy_documentation
 .done_copy_documentation: .done_copy_man_pages $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi\
  $(TUTORIAL_SRC_DIR)/tutorial.dvi
 	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi $(REFERENCE_MANUAL_NAME).dvi &&\
@@ -90,15 +91,12 @@ clean:
 	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.html $(TUTORIAL_NAME).html &&\
 	$(TOUCH) .done_copy_documentation
 
-clean:
-	$(RM) $(DOC_OBJS)
-
-install:
+install-local:
 	$(CHMODGRW) $(DOC_OBJS) &&\
 	$(SCP) $(DOC_OBJS) $(PROJECT_WEB_TARGET_DIR)/$(THIS_DIR)/
 
 
-uninstall:
+uninstall-local:
 	$(SSH) $(PROJECT_WEB_SERVER)\
 	  $(CD) $(PROJECT_WEB_SITE_DIR)/$(THIS_DIR)/\; $(RM) $(DOC_OBJS)
 
