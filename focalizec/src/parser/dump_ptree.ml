@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.48 2011-05-26 16:08:09 maarek Exp $ *)
+(* $Id: dump_ptree.ml,v 1.49 2011-05-27 09:41:59 weis Exp $ *)
 
 let pp_annotation ppf doc =
   List.iter
@@ -439,7 +439,7 @@ let pp_external_language ppf = function
 
     {b Rem} : Not exported ouside this module.             *)
 (* ******************************************************* *)
-let pp_external_code ppf eexpr = Format.fprintf ppf "%s" eexpr;;
+let pp_external_code ppf ecode = Format.fprintf ppf "%s" ecode;;
 
 
 
@@ -450,14 +450,26 @@ let pp_external_code ppf eexpr = Format.fprintf ppf "%s" eexpr;;
 
     {b Rem} : Not exported ouside this module.                  *)
 (* ************************************************************ *)
-let external_expr_desc ppf lst =
+let pp_external_translation_desc ppf trans =
   Format.fprintf ppf "[@ %a@ ]"
     (Handy.pp_generic_separated_list
        ","
-       (fun local_ppf (ext_lang, ext_expr) ->
-         Format.fprintf local_ppf "(%a,@ %a)"
-           pp_external_language ext_lang pp_external_code ext_expr))
-    lst
+       (fun ppf (ext_lang, ext_code) ->
+         Format.fprintf ppf "(%a,@ %a)"
+           pp_external_language ext_lang
+           pp_external_code ext_code))
+    trans
+;;
+
+let pp_external_translation = pp_ast pp_external_translation_desc
+;;
+
+let external_expr_desc ppf = function
+  | { Parsetree.ee_internal = ty;
+      Parsetree.ee_external = etrans; } ->
+    Format.fprintf ppf "@[<2>{@ %a;@ %a;@ }@]"
+      pp_type_expr ty
+      pp_external_translation etrans
 ;;
 (* ***************************************************************** *)
 (* Format.formatter -> Parsetree.external_expr -> unit               *)
@@ -995,22 +1007,22 @@ let pp_regular_type_def_body ppf =
 
 
 let pp_external_binding ppf eb =
-  let (vname, external_expr) = eb.Parsetree.ast_desc in
+  let (vname, external_trans) = eb.Parsetree.ast_desc in
   Format.fprintf ppf "@[(%a,@ %a)@]"
-    pp_vname vname pp_external_expr external_expr
+    pp_vname vname pp_external_translation external_trans
 ;;
-let pp_external_bindings ppf ebs =
+let pp_external_mapping ppf emap =
   Format.fprintf ppf "%a"
     (Handy.pp_generic_separated_list ";" pp_external_binding)
-    ebs.Parsetree.ast_desc
+    emap.Parsetree.ast_desc
 ;;
 
 let pp_external_type_def_body_desc ppf ex_tydef_body =
   Format.fprintf ppf "{@[<2>%a;@ %a;@ %a@]@ }"
     (Handy.pp_generic_explicit_option pp_regular_type_def_body)
     ex_tydef_body.Parsetree.etdb_internal
-    pp_external_expr ex_tydef_body.Parsetree.etdb_external
-    pp_external_bindings ex_tydef_body.Parsetree.etdb_bindings
+    pp_external_translation ex_tydef_body.Parsetree.etdb_external
+    pp_external_mapping ex_tydef_body.Parsetree.etdb_mapping
 ;;
 let pp_external_type_def_body ppf =
   pp_ast pp_external_type_def_body_desc ppf

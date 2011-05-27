@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.85 2011-05-26 16:08:09 maarek Exp $ *)
+(* $Id: sourcify.ml,v 1.86 2011-05-27 09:41:59 weis Exp $ *)
 
 open Parsetree;;
 
@@ -416,20 +416,30 @@ let pp_external_language ppf = function
   | Parsetree.EL_external s -> Format.fprintf ppf "%s@ " s
 ;;
 
-let pp_external_expression ppf eexpr = Format.fprintf ppf "{*%s*}" eexpr
+let pp_external_code ppf ecode = Format.fprintf ppf "{*%s*}" ecode
 ;;
 
-let pp_external_expr_desc ppf lst =
+let pp_external_translation_desc ppf transl =
   Format.fprintf ppf "@[<2>@ |@ %a@ @]"
     (Handy.pp_generic_separated_list
        "|"
-       (fun local_ppf (ext_lang, ext_expr) ->
+       (fun local_ppf (ext_lang, ext_code) ->
          Format.fprintf local_ppf "%a@ ->@ %a@ "
-           pp_external_language ext_lang pp_external_expression ext_expr))
-    lst
+           pp_external_language ext_lang pp_external_code ext_code))
+    transl
 ;;
 
-let pp_external_expr ppf = pp_ast pp_external_expr_desc ppf;;
+let pp_external_translation ppf = pp_ast pp_external_translation_desc ppf;;
+
+let pp_external_expr_desc ppf = function
+  | { ee_internal = ty; ee_external = etrans; } ->
+    Format.fprintf ppf "@[<2>internal =@ %a@ external =@ %a;@]"
+      pp_type_expr ty
+      pp_external_translation etrans
+;;
+
+let pp_external_expr e_expr = pp_ast pp_external_expr_desc e_expr;;
+
 
 let rec pp_species_def_desc ppf def =
   Format.fprintf ppf "@[<2>species %a " pp_vname def.Parsetree.sd_name;
@@ -890,11 +900,11 @@ let pp_regular_type_def_body ppf =
 ;;
 
 let pp_external_binding ppf eb =
-  let (vname, external_expr) = eb.Parsetree.ast_desc in
-  Format.fprintf ppf "%a =@ %a" pp_constr_name vname pp_external_expr external_expr
+  let (vname, e_trans) = eb.Parsetree.ast_desc in
+  Format.fprintf ppf "%a =@ %a" pp_constr_name vname pp_external_translation e_trans
 ;;
-let pp_external_bindings ppf ebds =
-  match ebds.Parsetree.ast_desc with
+let pp_external_mapping ppf emap =
+  match emap.Parsetree.ast_desc with
   | [] -> ()
   | eb :: ebs ->
     Format.fprintf ppf "@[<2>with %a@]@ " pp_external_binding eb;
@@ -912,9 +922,9 @@ let pp_external_type_def_body_desc ppf ex_tydef_body =
        Format.fprintf ppf "@ %a@ "
          pp_regular_type_def_body regular_tydef_body);
   Format.fprintf ppf "external@ %a@ "
-    pp_external_expr ex_tydef_body.Parsetree.etdb_external;
+    pp_external_translation ex_tydef_body.Parsetree.etdb_external;
   Format.fprintf ppf "%a"
-    pp_external_bindings ex_tydef_body.Parsetree.etdb_bindings
+    pp_external_mapping ex_tydef_body.Parsetree.etdb_mapping
 ;;
 let pp_external_type_def_body ppf =
   pp_ast pp_external_type_def_body_desc ppf
