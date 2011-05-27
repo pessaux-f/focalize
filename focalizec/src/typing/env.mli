@@ -115,7 +115,7 @@ module TypeInformation :
     type constructor_arity = CA_zero | CA_some
     type constructor_description = {
       cstr_arity : constructor_arity ;
-      cstr_scheme : Types.type_scheme
+      cstr_scheme : Types.type_scheme ;
     }
     type field_mutability = FM_mutable | FM_immutable
     type label_description = {
@@ -123,8 +123,8 @@ module TypeInformation :
       field_scheme : Types.type_scheme
     }
     type type_kind =
-        TK_abstract
-      | TK_external of (Parsetree.external_expr * Parsetree.external_bindings)
+      | TK_abstract
+      | TK_external of (Parsetree.external_translation * Parsetree.external_mapping)
       | TK_variant of (Parsetree.constructor_name * constructor_arity *
                        Types.type_scheme) list
       | TK_record of

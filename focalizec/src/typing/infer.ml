@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.194 2011-05-26 16:08:09 maarek Exp $ *)
+(* $Id: infer.ml,v 1.195 2011-05-27 14:36:45 weis Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -5075,7 +5075,7 @@ let typecheck_external_type_def_body ctx env type_name params
      how to map this external type definition. *)
   external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_external.
     Parsetree.ast_type <- Parsetree.ANTI_irrelevant;
-  external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_bindings.
+  external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_mapping.
     Parsetree.ast_type <- Parsetree.ANTI_irrelevant;
   List.iter
     (fun ext_binding ->
@@ -5083,7 +5083,7 @@ let typecheck_external_type_def_body ctx env type_name params
       (* Propagate into the [external_expr] of the [external_binding]. *)
       let (_, ext_expr) = ext_binding.Parsetree.ast_desc in
       ext_expr.Parsetree.ast_type <- Parsetree.ANTI_irrelevant)
-    external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_bindings.
+    external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_mapping.
       Parsetree.ast_desc;
   (* We build the type's structure and the environment where this type's name
      is bound to this structure. *)
@@ -5111,7 +5111,7 @@ let typecheck_external_type_def_body ctx env type_name params
          Env.TypeInformation.type_kind =
            Env.TypeInformation.TK_external
              (external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_external,
-             external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_bindings);
+             external_type_def_body.Parsetree.ast_desc.Parsetree.etdb_mapping);
          Env.TypeInformation.type_identity = identity;
          Env.TypeInformation.type_params = params;
          Env.TypeInformation.type_arity = List.length params } in
@@ -5143,7 +5143,7 @@ let typecheck_external_type_def_body ctx env type_name params
                (external_type_def_body.Parsetree.ast_desc.
                  Parsetree.etdb_external,
                 external_type_def_body.Parsetree.ast_desc.
-                  Parsetree.etdb_bindings) } in
+                  Parsetree.etdb_mapping) } in
        let final_env =
          Env.TypingEnv.add_type
            ~loc: internal_repr.Parsetree.ast_loc type_name

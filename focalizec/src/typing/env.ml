@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: env.ml,v 1.136 2009-10-20 14:17:56 carlier Exp $ *)
+(* $Id: env.ml,v 1.137 2011-05-27 14:36:45 weis Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -724,10 +724,12 @@ module TypeInformation = struct
   type type_kind =
     | TK_abstract       (** Abstract types and type abbreviations. *)
     | TK_external of    (** Abstract types externally defined. *)
-        (Parsetree.external_expr *   (** On what to map the type constructor in
-                                         the external languages. *)
-         Parsetree.external_bindings)  (** On what to map the possible sum
-                                           constructors or field labels. *)
+        (Parsetree.external_translation *
+                        (** On what to map the type constructor in
+                            the external languages. *)
+         Parsetree.external_mapping)
+                        (** On what to map the type value
+                            constructors or field labels. *)
     | TK_variant of     (** Sum types. *)
         (Parsetree.constructor_name *   (** Name of sum contructor. *)
          constructor_arity *            (** Arity of sum contructor. *)

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.89 2011-05-26 16:08:09 maarek Exp $ *)
+(* $Id: scoping.ml,v 1.90 2011-05-27 14:36:45 weis Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -764,7 +764,7 @@ let rec scope_rep_type_def ctx env rep_type_def =
         the type definition's body. It will be used in case of error to
         point the user to the related location.
 
-      - [external_bindings] : The list of external bindings of the type
+      - [external_mapping] : The list of external bindings of the type
         definition we are verifying.
 
       - [bound_names] : The names of field labels or sum value constructors
@@ -775,35 +775,33 @@ let rec scope_rep_type_def ctx env rep_type_def =
 
     {b Exported} : No.                                                      *)
 (* ************************************************************************ *)
-let rec verify_external_binding ~type_def_body_loc external_bindings
-    bound_names =
-  match external_bindings with
-   | [] -> if bound_names <> [] then
-       raise (Invalid_external_binding_number type_def_body_loc)
-   | binding :: bindings ->
-       let rem_bound_names =
-         (match binding.Parsetree.ast_desc with
-          | (((Parsetree.Vlident _) as vname), _) ->
-              (* Lowercase ident must be mapped on a record field_name. *)
-              Handy.list_mem_n_remove vname bound_names
-          | (((Parsetree.Vuident _) as vname), _) ->
-              (* Capitalized ident must be mapped on a sum type constructor. *)
-              Handy.list_mem_n_remove vname bound_names
-          | (((Parsetree.Vpident _) as vname), _) ->
-              (* Prefix ident must be mapped on a sum type constructor. *)
-              Handy.list_mem_n_remove vname bound_names
-          | (((Parsetree.Viident _) as vname), _) ->
-              (* Infix ident must be mapped on a sum type constructor. *)
-              Handy.list_mem_n_remove vname bound_names
-          | (other, _) ->
-              raise
-                (Invalid_external_binding_identifier
-                   (binding.Parsetree.ast_loc, other))) in
-       (* Continue with the remaining bindings and the list of bound names in
-          which we suppressed the current binding name. *)
-       verify_external_binding ~type_def_body_loc bindings rem_bound_names
+let rec verify_external_mapping ~type_def_body_loc e_mapping bound_names =
+  match e_mapping with
+  | [] -> if bound_names <> [] then
+      raise (Invalid_external_binding_number type_def_body_loc)
+  | binding :: mapping ->
+      let rem_bound_names =
+        (match binding.Parsetree.ast_desc with
+         | (((Parsetree.Vlident _) as vname), _) ->
+             (* Lowercase ident must be mapped on a record field_name. *)
+             Handy.list_mem_n_remove vname bound_names
+         | (((Parsetree.Vuident _) as vname), _) ->
+             (* Capitalized ident must be mapped on a sum type constructor. *)
+             Handy.list_mem_n_remove vname bound_names
+         | (((Parsetree.Vpident _) as vname), _) ->
+             (* Prefix ident must be mapped on a sum type constructor. *)
+             Handy.list_mem_n_remove vname bound_names
+         | (((Parsetree.Viident _) as vname), _) ->
+             (* Infix ident must be mapped on a sum type constructor. *)
+             Handy.list_mem_n_remove vname bound_names
+         | (other, _) ->
+             raise
+               (Invalid_external_binding_identifier
+                  (binding.Parsetree.ast_loc, other))) in
+      (* Continue with the remaining mapping and the list of bound names in
+         which we suppressed the current binding name. *)
+      verify_external_mapping ~type_def_body_loc mapping rem_bound_names
 ;;
-
 
 
 (* ************************************************************************** *)
@@ -853,13 +851,13 @@ let scope_external_type_def_body ctx env_with_params env tdef_body =
      Now, the [etdb_bindings] may introduce the sum type constructors or the
      record type field names. Then they must correspond to the names introduced
      by the internal representation of the type definition. *)
-  verify_external_binding
+  verify_external_mapping
     ~type_def_body_loc: tdef_body.Parsetree.ast_loc
-    tdef_body_desc.Parsetree.etdb_bindings.Parsetree.ast_desc bound_names;
+    tdef_body_desc.Parsetree.etdb_mapping.Parsetree.ast_desc bound_names;
   let scoped_tdef_body_desc = {
     Parsetree.etdb_internal = etdb_internal';
     Parsetree.etdb_external = tdef_body_desc.Parsetree.etdb_external;
-    Parsetree.etdb_bindings = tdef_body_desc.Parsetree.etdb_bindings } in
+    Parsetree.etdb_mapping = tdef_body_desc.Parsetree.etdb_mapping } in
   ({ tdef_body with Parsetree.ast_desc = scoped_tdef_body_desc }, extended_env)
 ;;
 
