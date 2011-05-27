@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.14 2008-12-12 08:01:04 weis Exp $
+# $Id: Makefile,v 1.15 2011-05-27 14:31:53 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -22,5 +22,8 @@ CAML_INCLUDES = -I ../basement -I ../parser -I ../typing
 
 BYT_OBJS = visUniverse.cmo minEnv.cmo abstractions.cmo misc_common.cmo\
 	externals_generation_errs.cmo recursion.cmo
+
+depend-local:
+	$(CAML_DEP) *.mli *.ml > ./.depend
 
 include $(ROOT_DIR)/Makefile.common

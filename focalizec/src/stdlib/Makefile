@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.94 2011-05-26 16:15:52 maarek Exp $
+# $Id: Makefile,v 1.95 2011-05-27 14:31:53 weis Exp $
 
 # Makefile for the FoCaLize standard library
 
@@ -77,7 +77,7 @@ EXTERNAL_CMIS=$(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_VOS=\
  coq_builtins.vo\
-  sets_externals.vo\
+ sets_externals.vo\
  wellfounded_externals.vo
 
 include $(ROOT_DIR)/Makefile.common
@@ -152,3 +152,7 @@ clean-local:
 	$(RM) $(FOCALIZE_VS)
 
 cleanlib: clean
+
+depend-local:
+	$(CAML_DEP) *.mli *.ml > ./.depend
+	$(FOCALIZE_DEP) *.fcl >> ./.depend

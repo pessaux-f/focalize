@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.18 2011-05-27 07:33:41 weis Exp $
+# $Id: Makefile,v 1.19 2011-05-27 14:31:53 weis Exp $
 
 ROOT_DIR=../..
 
@@ -24,6 +24,9 @@ BYT_OBJS=\
  files.cmo parsetree_utils.cmo miscHelpers.cmo
 
 include $(ROOT_DIR)/Makefile.common
+
+depend-local:
+	$(CAML_DEP) $(BYT_OBJS:.cmo=.mli) $(BYT_OBJS:.cmo=.ml) > .depend
 
 installation.ml:
 	@if test ! -L $@ ; then\

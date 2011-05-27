@@ -13,13 +13,14 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.48 2011-05-26 15:17:20 maarek Exp $
+# $Id: Makefile.common,v 1.49 2011-05-27 14:33:41 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
 .PHONY: all byt bin
 .PHONY: clean unconfigure distclean install uninstall
-.PHONY: clean-local unconfigure-local distclean-local install-local uninstall-local
+.PHONY: clean-local clean-default unconfigure-local distclean-local
+.PHONY: install-local uninstall-local
 .PHONY: doc docdir odoc depend tests lib
 
 all: byt bin all-local
@@ -40,7 +41,9 @@ doc docdir odoc: $(BYT_OBJS)
 
 clean-local:
 
-clean: clean-local
+clean: clean-local clean-default
+
+clean-default:
 	@$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 	$(RM) *.vo *.fo *~ .*~ log *.mangled *.coz *.fcd
 	if test -d tests; then\
@@ -81,9 +84,13 @@ uninstall-local:
 
 uninstall: uninstall-local
 
+#depend-local:
+
+depend: depend-local
+
 #depend:
 #	$(CAML_DEP) *.mli *.ml > ./.depend
-#	$(FOCALIZE_DEP) *.fcl > ./.depend
+#	$(FOCALIZE_DEP) *.fcl >> ./.depend
 
 # Only on demand.
 tests:

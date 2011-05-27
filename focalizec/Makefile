@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.45 2011-05-26 15:17:20 maarek Exp $
+# $Id: Makefile,v 1.46 2011-05-27 14:33:41 weis Exp $
 
 ROOT_DIR=.
 
@@ -79,7 +79,7 @@ odoc: lib
 	  case $$err in 0);; *) exit $$err;; esac;\
 	done
 
-clean-local distclean doc docdir depend:
+clean-local clean distclean doc docdir depend:
 	@for i in $(SUB_DIRS); do\
 	  if test -d $$i; then\
 	    echo "--> $$i ..." >&2 &&\

@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.15 2011-05-25 13:02:58 weis Exp $
+# $Id: Makefile,v 1.16 2011-05-27 14:31:53 weis Exp $
 
 ROOT_DIR=../..
 
@@ -24,5 +24,8 @@ BYT_OBJS=\
  env.cmo scoping.cmo substExpr.cmo substColl.cmo ast_equal.cmo\
  dep_analysis.cmo param_dep_analysis.cmo\
  infer.cmo match_analysis.cmo
+
+depend-local:
+	$(CAML_DEP) $(BYT_OBJS:.cmo=.mli) $(BYT_OBJS:.cmo=.ml) > .depend
 
 include $(ROOT_DIR)/Makefile.common
