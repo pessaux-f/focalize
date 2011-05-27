@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.14 2011-05-27 14:31:53 weis Exp $
+# $Id: Makefile,v 1.15 2011-05-27 17:06:26 weis Exp $
 
 ROOT_DIR = ../..
 
@@ -25,7 +25,7 @@ BYT_OBJS = species_record_type_generation.cmo rec_let_gen.cmo\
 	 type_coq_generation.cmo species_coq_generation.cmo \
 	main_coq_generation.cmo
 
+include $(ROOT_DIR)/Makefile.common
+
 depend-local:
 	$(CAML_DEP) *.mli *.ml > ./.depend
-
-include $(ROOT_DIR)/Makefile.common

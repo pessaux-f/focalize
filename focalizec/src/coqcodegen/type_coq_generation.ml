@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.16 2009-05-05 16:33:27 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.17 2011-05-27 17:06:26 weis Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -54,25 +54,25 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
 (** [nb_extra_args] : the number of extra argument of type "Set" used to
      represent the polymorphism in case where the constructor belongs to a
      polymorphic type. *)
-let extend_coq_gen_env_with_type_external_bindings env nb_extra_args
-    external_bindings =
+let extend_coq_gen_env_with_type_external_mapping env nb_extra_args
+    external_mapping =
   let rec rec_extend rec_env = function
     | [] -> rec_env
     | binding :: rem_bindings ->
-        let (bound_name, bound_external_expr) = binding.Parsetree.ast_desc in
+        let (bound_name, external_translation) = binding.Parsetree.ast_desc in
         let rec_env' =
           (match bound_name with
            | Parsetree.Vlident _ ->
                (* Starting by a lowercase letter means record field name. *)
                Env.CoqGenEnv.add_label
-                 bound_name bound_external_expr.Parsetree.ast_desc rec_env
+                 bound_name external_translation.Parsetree.ast_desc rec_env
            | Parsetree.Vuident _ | Parsetree.Viident _ | Parsetree.Vpident _ ->
                (* Starting by an uppercase letter means sum constructor. *)
                let cstr_mapping_info = {
                  Env.CoqGenInformation.cmi_num_polymorphics_extra_args =
-                   nb_extra_args ;
-                 Env.CoqGenInformation.cmi_external_expr =
-                   Some bound_external_expr.Parsetree.ast_desc } in
+                   nb_extra_args;
+                 Env.CoqGenInformation.cmi_external_translation =
+                   Some external_translation.Parsetree.ast_desc } in
                Env.CoqGenEnv.add_constructor
                  bound_name cstr_mapping_info rec_env
            | _ ->
@@ -81,7 +81,7 @@ let extend_coq_gen_env_with_type_external_bindings env nb_extra_args
         rec_extend rec_env' rem_bindings in
   (* ********************** *)
   (* Now, let's do the job. *)
-  rec_extend env external_bindings.Parsetree.ast_desc
+  rec_extend env external_mapping.Parsetree.ast_desc
 ;;
 
 
@@ -114,8 +114,8 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.rcc_current_unit ;
-    Types.cpc_current_species = None ;
+    Types.cpc_current_unit = ctx.Context.rcc_current_unit;
+    Types.cpc_current_species = None;
     Types.cpc_collections_carrier_mapping =
       ctx.Context.rcc_collections_carrier_mapping } in
   (* Get a fresh instance of the type's identity scheme directly   *)
@@ -130,7 +130,7 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
   let instanciated_body =
     Types.specialize_with_args
       type_descr.Env.TypeInformation.type_identity type_def_params in
-  Types.purge_type_simple_to_coq_variable_mapping () ;
+  Types.purge_type_simple_to_coq_variable_mapping ();
   (* Compute the number of extra polymorphic-induced *)
   (* arguments to the constructor.                   *)
   let nb_extra_args = List.length type_def_params in
@@ -138,17 +138,17 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
   match type_descr.Env.TypeInformation.type_kind with
    | Env.TypeInformation.TK_abstract ->
        Format.fprintf out_fmter "@[<2>Definition %a__t@ "
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
-         print_ctx out_fmter type_def_params ;
+         print_ctx out_fmter type_def_params;
        (* Since types are toplevel, the way "Self" is printed is non *)
        (* relevant. Indeed, "Self" can only appear inside the scope  *)
        (* of a species, hence never at toplevel, hence we don't need *)
        (* to add any bindind in the [collection_carrier_mapping].    *)
        Format.fprintf out_fmter ":=@ %a.@]@\n"
          (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-         instanciated_body ;
+         instanciated_body;
        if record_in_env then
          (* Not an external type definition, so just add the type definition in
             the environment. *)
@@ -156,14 +156,14 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
            type_descr env
        else env
-   | Env.TypeInformation.TK_external (external_expr, external_bindings) ->
+   | Env.TypeInformation.TK_external (external_expr, external_mapping) ->
        (begin
        Format.fprintf out_fmter "@[<2>Definition %a__t@ "
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
-         print_ctx out_fmter type_def_params ;
-       Format.fprintf out_fmter ":=@ " ;
+         print_ctx out_fmter type_def_params;
+       Format.fprintf out_fmter ":=@ ";
        (* And now, bind the FoCaL identifier to the Coq one. *)
        (try
          let (_, coq_binding) =
@@ -178,18 +178,18 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
          (* We didn't find any correspondance for Coq. *)
          raise
            (Externals_generation_errs.No_external_type_def
-              ("Coq", type_def_name, external_expr.Parsetree.ast_loc))) ;
+              ("Coq", type_def_name, external_expr.Parsetree.ast_loc)));
        (* We build the extended code generation environment in which sum
           constructors or labels are recorded in order to be able to remind on
           what to map them when we will see them. *)
-       let env_with_external_bindings =
-         extend_coq_gen_env_with_type_external_bindings
-           env nb_extra_args external_bindings in
+       let env_with_external_mapping =
+         extend_coq_gen_env_with_type_external_mapping
+           env nb_extra_args external_mapping in
        if record_in_env then
          (* Finally add the type definition in the returned environment. *)
          Env.CoqGenEnv.add_type
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
-           type_descr env_with_external_bindings
+           type_descr env_with_external_mapping
        else env
        end)
    | Env.TypeInformation.TK_variant cstrs ->
@@ -227,27 +227,27 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
                assert false)
            cstrs in
        Format.fprintf out_fmter "@[<2>Inductive %a__t@ "
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* Print the parameter(s) stuff if any. Do it only now the unifications
           have been done with the sum constructors to be sure that thanks to
           unifications, "sames" variables will have the "same" name everywhere
           (i.e. in the the parameters enumeration of the type and in the sum
           constructors definitions). *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
-         print_ctx out_fmter type_def_params ;
-       Format.fprintf out_fmter ":@ Set :=@ " ;
+         print_ctx out_fmter type_def_params;
+       Format.fprintf out_fmter ":@ Set :=@ ";
        (* And finally really print the constructors definitions. *)
        List.iter
          (fun (sum_cstr_name, cstr_ty) ->
            (* The sum constructor name. *)
            Format.fprintf out_fmter "@\n| %a"
-             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
            (* The type of the constructor. *)
            Format.fprintf out_fmter " :@ (@[<1>%a@])"
              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
              cstr_ty)
-         sum_constructors_to_print ;
-       Format.fprintf out_fmter ".@]@\n@\n" ;
+         sum_constructors_to_print;
+       Format.fprintf out_fmter ".@]@\n@\n";
        if record_in_env then
          (begin
          (* Since any variant type constructors must be inserted in the
@@ -256,11 +256,11 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
          let env_with_value_constructors =
            List.fold_left
              (fun accu_env (sum_cstr_name, _) ->
-               Env.CoqGenEnv.add_constructor 
+               Env.CoqGenEnv.add_constructor
                  sum_cstr_name
                  { Env.CoqGenInformation.cmi_num_polymorphics_extra_args =
-                   nb_extra_args ;
-                   Env.CoqGenInformation.cmi_external_expr = None}
+                   nb_extra_args;
+                   Env.CoqGenInformation.cmi_external_translation = None}
                  accu_env)
              env
              sum_constructors_to_print in
@@ -299,12 +299,12 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
                assert false)
            fields in
        Format.fprintf out_fmter "@[<2>Record@ %a__t@ "
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
-         print_ctx out_fmter type_def_params ;
+         print_ctx out_fmter type_def_params;
        Format.fprintf out_fmter ":@ Type :=@\nmk_%a__t {@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* And finally really print the fields definitions. We just create a
           local handy function to print the trailing semi only if the
           processed field is not the last of the list (Coq syntax need). *)
@@ -315,17 +315,17 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
              if field_mut = Env.TypeInformation.FM_mutable then
                raise
                  (Mutable_record_fields_not_in_coq
-                    (type_descr.Env.TypeInformation.type_loc, field_name)) ;
+                    (type_descr.Env.TypeInformation.type_loc, field_name));
              Format.fprintf out_fmter "%a :@ %a"
                Parsetree_utils.pp_vname_with_operators_expanded field_name
                (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-               field_ty ;
-             if q <> [] then Format.fprintf out_fmter " ;" ;
-             Format.fprintf out_fmter "@\n" ;
+               field_ty;
+             if q <> [] then Format.fprintf out_fmter ";";
+             Format.fprintf out_fmter "@\n";
              local_print_fields q in
        (* Do the printing job... *)
-       local_print_fields record_fields_to_print ;
-       Format.fprintf out_fmter " }.@]@\n " ;
+       local_print_fields record_fields_to_print;
+       Format.fprintf out_fmter " }.@]@\n ";
        (* Not an external type definition, so just add the type definition in
           the environment. *)
        if record_in_env then

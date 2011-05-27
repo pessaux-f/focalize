@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.41 2011-05-27 15:35:24 weis Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.42 2011-05-27 17:06:26 weis Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -640,15 +640,15 @@ and generate_expr ctx ~local_idents env initial_expression =
           let e_translation =
             external_expr.Parsetree.ast_desc.Parsetree.ee_external in
           try
-            (* Simply a somewhat of verbatim stuff of the OCaml translation. *)
-            let (_, ocaml_code) =
+            (* Simply a somewhat verbatim output of the Caml translation. *)
+            let (_, caml_code) =
               List.find
                 (function
                  | (Parsetree.EL_Caml, _) -> true
                  | (Parsetree.EL_Coq, _)
                  | ((Parsetree.EL_external _), _) -> false)
                 e_translation.Parsetree.ast_desc in
-            Format.fprintf out_fmter "%s" ocaml_code
+            Format.fprintf out_fmter "%s" caml_code
           with Not_found ->
             (* No OCaml mapping found. *)
             raise

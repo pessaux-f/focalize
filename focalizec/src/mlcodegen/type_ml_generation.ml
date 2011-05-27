@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.14 2011-05-27 14:38:09 weis Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.15 2011-05-27 17:06:26 weis Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -162,14 +162,14 @@ let type_def_compile ctx env type_def_name type_descr =
         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
       (* And now, bind the FoCaLiZe identifier to the OCaml one. *)
       (try
-        let (_, ocaml_binding) =
+        let (_, ocaml_code) =
           List.find
             (function
              | (Parsetree.EL_Caml, _) -> true
              | (Parsetree.EL_Coq, _)
              | ((Parsetree.EL_external _), _) -> false)
             external_trans.Parsetree.ast_desc in
-        Format.fprintf out_fmter "%s@]@ ;;@\n" ocaml_binding
+        Format.fprintf out_fmter "%s@]@ ;;@\n" ocaml_code
        with Not_found ->
          (* We didn't find any correspondance for OCaml. *)
          raise

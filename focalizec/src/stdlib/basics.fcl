@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.68 2009-12-03 15:36:08 doligez Exp $ *)
+(* $Id: basics.fcl,v 1.69 2011-05-27 17:06:26 weis Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -39,7 +39,7 @@ type unit =
   | caml -> {* unit *}
   | coq -> {* coq_builtins.bi__unit *}  (* FoCaLize's Coq definition of builtin. *)
 
-with () =
+  with () =
   | caml -> {* () *}
   | coq -> {* coq_builtins.Void *}
 ;;
@@ -73,11 +73,11 @@ type bool =
   | caml -> {* bool *}
   | coq -> {* bool *}  (* Builtin of Coq *)
 
-with True =
+  with True =
   | caml -> {* true *}
   | coq -> {* true *}
 
-and False =
+  and False =
   | caml -> {* false *}
   | coq -> {* false *}
 ;;
@@ -95,23 +95,16 @@ type list ('a) =
   | caml -> {* 'a list *}
   | coq -> {* (List.list __var_a) *}
 
-with [] =
+  with [] =
   | caml -> {* [] *}
   | coq -> {* List.nil *}
 
-and ( :: ) =
+  and ( :: ) =
   | caml -> {* ( :: ) *}
   | coq -> {* List.cons *}
 ;;
 
 (** {6 Basic operations on basic types} *)
-
-let focalize_error =
-  internal string -> 'a
-  external
-  | caml -> {* Ml_builtins.bi__focalize_error *}
-  | coq -> {* coq_builtins.focalize_error *}
-;;
 
 (** {7 Operations on booleans} *)
 let ( && ) =
@@ -584,6 +577,13 @@ theorem int_minus_plus:
 ;;
 
 (** {3 Basic species definitions} *)
+
+let focalize_error =
+  internal string -> 'a
+  external
+  | caml -> {* Ml_builtins.bi__focalize_error *}
+  | coq -> {* coq_builtins.focalize_error *}
+;;
 
 (** A [Basic_object] value is a normal blurb on which we do some things.
     This is the root of the species' hierarchy. *)

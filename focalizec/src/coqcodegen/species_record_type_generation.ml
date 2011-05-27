@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.86 2010-02-16 17:21:01 doligez Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.87 2011-05-27 17:06:26 weis Exp $ *)
 
 
 
@@ -425,7 +425,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
       Env.CoqGenEnv.find_constructor
         ~loc: cstr_expr.Parsetree.ast_loc
         ~current_unit: ctx.Context.scc_current_unit cstr_expr env in
-    (match mapping_info.Env.CoqGenInformation.cmi_external_expr with
+    (match mapping_info.Env.CoqGenInformation.cmi_external_translation with
      | None ->
          (begin
          (* The constructor isn't coming from an external definition. *)
@@ -913,18 +913,20 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
           | [one] -> rec_generate_expr loc_idents env one
           | _ :: exprs -> loop ppf exprs in
          Format.fprintf out_fmter "@[<1>(%a)@]" loop exprs
-     | Parsetree.E_external ext_expr ->
+     | Parsetree.E_external external_expr ->
          (begin
+         let e_translation =
+           external_expr.Parsetree.ast_desc.Parsetree.ee_external in
          try
-           (* Simply a somewhat of verbatim stuff of the Coq translation. *)
-           let (_, coq_binding) =
+           (* Simply a somewhat verbatim output of the Coq translation. *)
+           let (_, coq_code) =
              List.find
                (function
                  | (Parsetree.EL_Coq, _) -> true
                  | (Parsetree.EL_Caml, _)
                  | ((Parsetree.EL_external _), _) -> false)
-               ext_expr.Parsetree.ast_desc in
-           Format.fprintf out_fmter "%s" coq_binding
+               e_translation.Parsetree.ast_desc in
+           Format.fprintf out_fmter "%s" coq_code
          with Not_found ->
            (* No Coq mapping found. *)
            raise
