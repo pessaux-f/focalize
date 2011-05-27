@@ -12,9 +12,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.26 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.27 2011-05-27 14:35:45 weis Exp $
 
 ROOT_DIR=..
+
+include $(ROOT_DIR)/Makefile.config
 
 CHECK_FILE=$(ROOT_DIR)/src/toplevel/focalizec
 
@@ -39,6 +41,8 @@ KO_TEST_FILES=\
  ko__param_toy.fcl \
  ko__test_error.fcl \
  ko__test_rec.fcl
+
+include $(ROOT_DIR)/Makefile.common
 
 all: $(CHECK_FILE) ok_all ko_all
 
