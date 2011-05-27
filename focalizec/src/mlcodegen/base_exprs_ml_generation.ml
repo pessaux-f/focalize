@@ -1,6 +1,6 @@
 (***********************************************************************)
 (*                                                                     *)
-(*                        FoCaL compiler                               *)
+(*                        FoCaLiZe compiler                            *)
 (*            François Pessaux                                         *)
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.40 2009-08-11 18:50:04 carlier Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.41 2011-05-27 15:35:24 weis Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -113,7 +113,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
          (begin
          (* Really a local identifier or a call to a recursive method. *)
          Format.fprintf out_fmter "%a"
-           Parsetree_utils.pp_vname_with_operators_expanded vname ;
+           Parsetree_utils.pp_vname_with_operators_expanded vname;
          (* Because this method can be recursive, we must apply it to  its
             extra parameters if it has some. *)
          try
@@ -320,32 +320,32 @@ let generate_pattern ctx env pattern =
          Format.fprintf out_fmter "%a"
            Parsetree_utils.pp_vname_with_operators_expanded name
      | Parsetree.P_as (p, name) ->
-         Format.fprintf out_fmter "(" ;
-         rec_gen_pat p ;
+         Format.fprintf out_fmter "(";
+         rec_gen_pat p;
          Format.fprintf out_fmter "as@ %a)"
            Parsetree_utils.pp_vname_with_operators_expanded name
      | Parsetree.P_wild -> Format.fprintf out_fmter "_"
      | Parsetree.P_constr (ident, pats) ->
          (begin
-         generate_constructor_ident_for_method_generator ctx env ident ;
+         generate_constructor_ident_for_method_generator ctx env ident;
          (* Discriminate on the number of arguments to know if parens are
             needed. *)
          match pats with
           | [] -> ()
           | _ ->
-              Format.fprintf out_fmter " (" ;
-              rec_generate_pats_list pats ;
+              Format.fprintf out_fmter " (";
+              rec_generate_pats_list pats;
               Format.fprintf out_fmter ")"
          end)
      | Parsetree.P_record _labs_pats ->
          Format.eprintf "generate_pattern P_record TODO@."
      | Parsetree.P_tuple pats ->
-         Format.fprintf out_fmter "(@[<1>" ;
-         rec_generate_pats_list pats ;
+         Format.fprintf out_fmter "(@[<1>";
+         rec_generate_pats_list pats;
          Format.fprintf out_fmter ")@]"
      | Parsetree.P_paren p ->
-         Format.fprintf out_fmter "(@[<1>" ;
-         rec_gen_pat p ;
+         Format.fprintf out_fmter "(@[<1>";
+         rec_gen_pat p;
          Format.fprintf out_fmter ")@]"
 
 
@@ -353,8 +353,8 @@ let generate_pattern ctx env pattern =
     | [] -> ()
     | [last] -> rec_gen_pat last
     | h :: q ->
-        rec_gen_pat h ;
-        Format.fprintf out_fmter ",@ " ;
+        rec_gen_pat h;
+        Format.fprintf out_fmter ",@ ";
         rec_generate_pats_list q in
   (* ********************** *)
   (* Now, let's do the job. *)
@@ -368,7 +368,7 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
   (* Generate the bound name. *)
   Format.fprintf out_fmter "%a"
     Parsetree_utils.pp_vname_with_operators_expanded
-    bd.Parsetree.ast_desc.Parsetree.b_name ;
+    bd.Parsetree.ast_desc.Parsetree.b_name;
   (* Generate the parameters if some, with their type constraints. *)
   let params_names = List.map fst bd.Parsetree.ast_desc.Parsetree.b_params in
   (* We ignore the result type of the "let" if it's a function because we never
@@ -385,7 +385,7 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
      same type scheme. Hence, they may share variables together.
      For this reason, we first purge the printing variable mapping and after,
      activate its persistence between each parameter printing. *)
-  Types.purge_type_simple_to_ml_variable_mapping () ;
+  Types.purge_type_simple_to_ml_variable_mapping ();
   List.iter
     (fun (param_vname, pot_param_ty) ->
       match pot_param_ty with
@@ -400,15 +400,15 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
        | None ->
            Format.fprintf out_fmter "@ %a"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname)
-    params_with_type ;
+    params_with_type;
   (* Now we don't need anymore the sharing. Hence, clean it. This should not
      be useful because the other guys usign printing should manage this
      themselves (as we did just above by cleaning before activating the
      sharing), but anyway, it is safer an not costly. So... *)
-  Types.purge_type_simple_to_ml_variable_mapping () ;
+  Types.purge_type_simple_to_ml_variable_mapping ();
   (* Output now the "=" sign ending the OCaml function's "header".
      With a NON-breakable space before to prevent uggly hyphenation ! *)
-  Format.fprintf out_fmter " =@ " ;
+  Format.fprintf out_fmter " =@ ";
   (* Here, each parameter name of the binding may mask a "in"-parameter. *)
   let local_idents' = params_names @ local_idents in
   (* Now, let's generate the bound body. *)
@@ -416,7 +416,6 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
    | Parsetree.BB_computational e ->
        generate_expr ctx ~local_idents: local_idents' env e
    | Parsetree.BB_logical _ -> assert false
-    
 
 
 
@@ -463,7 +462,7 @@ and let_def_compile ctx ~local_idents env let_def bound_schemes =
       (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
        | Parsetree.RF_no_rec -> ""
        | Parsetree.RF_rec | Parsetree.RF_structural ->
-           " rec"   (* NON-breakable space in front. *)) ;
+           " rec"   (* NON-breakable space in front. *));
     (* Now generate each bound definition. *)
     (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, bound_schemes)
     with
@@ -473,10 +472,10 @@ and let_def_compile ctx ~local_idents env let_def bound_schemes =
      | ([one_bnd], [one_scheme]) ->
          let_binding_compile ctx ~local_idents env one_bnd one_scheme
      | ((first_bnd :: next_bnds), (first_scheme :: next_schemes)) ->
-         let_binding_compile ctx ~local_idents env first_bnd first_scheme ;
+         let_binding_compile ctx ~local_idents env first_bnd first_scheme;
          List.iter2
            (fun binding scheme ->
-             Format.fprintf out_fmter "@]@\n@[<2>and " ;
+             Format.fprintf out_fmter "@]@\n@[<2>and ";
              let_binding_compile ctx ~local_idents env binding scheme)
            next_bnds
            next_schemes
@@ -485,7 +484,7 @@ and let_def_compile ctx ~local_idents env let_def bound_schemes =
             have a different number of bound identifiers and bound-identifiers'
             type schemes. If this arise, then we have a serious bug
             somewhere. *)
-         assert false) ;
+         assert false);
     Format.fprintf out_fmter "@]"
     end)
 
@@ -513,65 +512,65 @@ and generate_expr ctx ~local_idents env initial_expression =
            (fun n ->
              Format.fprintf out_fmter "@[<2>(fun@ %a@ ->@ "
                Parsetree_utils.pp_vname_with_operators_expanded n)
-           args_names ;
+           args_names;
          (* Here, the function parameter name may mask a "in"-parameter. *)
          let loc_idents' = args_names @ loc_idents in
-         rec_generate loc_idents' body ;
+         rec_generate loc_idents' body;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_var ident ->
          generate_expr_ident_for_method_generator
            ctx ~local_idents: loc_idents ident
      | Parsetree.E_app (expr, exprs) ->
-         Format.fprintf out_fmter "@[<2>(" ;
-         rec_generate loc_idents expr ;
-         Format.fprintf out_fmter "@ " ;
-         rec_generate_exprs_list "" loc_idents exprs ;
+         Format.fprintf out_fmter "@[<2>(";
+         rec_generate loc_idents expr;
+         Format.fprintf out_fmter "@ ";
+         rec_generate_exprs_list "" loc_idents exprs;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_expr, exprs) ->
          (begin
          (* If the constructor has parameters, we force the whole value to be
             surrounded by parentheses to prevent associativity problems. *)
-         if exprs <> [] then Format.fprintf out_fmter "(" ;
-         generate_constructor_ident_for_method_generator ctx env cstr_expr ;
+         if exprs <> [] then Format.fprintf out_fmter "(";
+         generate_constructor_ident_for_method_generator ctx env cstr_expr;
          match exprs with
           | [] -> ()
           | _ ->
               (* If argument(s), enclose by parens to possibly make a tuple. *)
-              Format.fprintf out_fmter "@ @[<1>(" ;
-              rec_generate_exprs_list "," loc_idents exprs ;
+              Format.fprintf out_fmter "@ @[<1>(";
+              rec_generate_exprs_list "," loc_idents exprs;
               (* Don't forget to close the parenthesis opened to surround the
                  whole value. *)
               Format.fprintf out_fmter ")@])"
          end)
      | Parsetree.E_match (matched_expr, pats_exprs) ->
          (begin
-         Format.fprintf out_fmter "@[<1>match " ;
-         rec_generate loc_idents matched_expr ;
-         Format.fprintf out_fmter " with" ;
+         Format.fprintf out_fmter "@[<1>match ";
+         rec_generate loc_idents matched_expr;
+         Format.fprintf out_fmter " with";
          List.iter
            (fun (pattern, expr) ->
              (* My indentation style: indent of 4 between the pattern and its
                 related processing. *)
-             Format.fprintf out_fmter "@\n@[<4>| " ;
-             generate_pattern ctx env pattern ;
+             Format.fprintf out_fmter "@\n@[<4>| ";
+             generate_pattern ctx env pattern;
              (* Enclose each match-case by begin/end to ensure no confusion. *)
-             Format.fprintf out_fmter " ->@\n(begin@\n" ;
+             Format.fprintf out_fmter " ->@\n(begin@\n";
              (* Here, each name of the pattern may mask a "in"-parameter. *)
              let loc_idents' =
                (Parsetree_utils.get_local_idents_from_pattern pattern) @
                loc_idents in
-             rec_generate loc_idents' expr ;
+             rec_generate loc_idents' expr;
              Format.fprintf out_fmter "@\nend)@]")
-           pats_exprs ;
+           pats_exprs;
          Format.fprintf out_fmter "@]"
          end)
      | Parsetree.E_if (expr1, expr2, expr3) ->
-         Format.fprintf out_fmter "@[<2>if@ " ;
-         rec_generate loc_idents expr1 ;
-         Format.fprintf out_fmter "@ @[<2>then@ @]" ;
-         rec_generate loc_idents expr2 ;
-         Format.fprintf out_fmter "@ @[<2>else@ @]" ;
-         rec_generate loc_idents expr3 ;
+         Format.fprintf out_fmter "@[<2>if@ ";
+         rec_generate loc_idents expr1;
+         Format.fprintf out_fmter "@ @[<2>then@ @]";
+         rec_generate loc_idents expr2;
+         Format.fprintf out_fmter "@ @[<2>else@ @]";
+         rec_generate loc_idents expr3;
          Format.fprintf out_fmter "@]"
      | Parsetree.E_let (let_def, in_expr) ->
          (* Here we do not have type contraints under the hand. So give-up
@@ -582,39 +581,39 @@ and generate_expr ctx ~local_idents env initial_expression =
              (fun _ -> None)
              let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
          let_def_compile
-           ctx ~local_idents: loc_idents env let_def bound_schemes ;
-         Format.fprintf out_fmter "@ in@\n" ;
+           ctx ~local_idents: loc_idents env let_def bound_schemes;
+         Format.fprintf out_fmter "@ in@\n";
          rec_generate loc_idents in_expr
      | Parsetree.E_record labs_exprs ->
          (begin
-         Format.fprintf out_fmter "@[<1>{@ " ;
-         rec_generate_record_field_exprs_list loc_idents labs_exprs ;
+         Format.fprintf out_fmter "@[<1>{@ ";
+         rec_generate_record_field_exprs_list loc_idents labs_exprs;
          Format.fprintf out_fmter "@ }@]"
          end)
      | Parsetree.E_record_access (expr, label_name) ->
          (begin
-         Format.fprintf out_fmter "@[<2>" ;
-         rec_generate loc_idents expr ;
-         Format.fprintf out_fmter ".@," ;
-         rec_generate_one_record_field_name label_name ;
-         Format.fprintf out_fmter "@]" ;
+         Format.fprintf out_fmter "@[<2>";
+         rec_generate loc_idents expr;
+         Format.fprintf out_fmter ".@,";
+         rec_generate_one_record_field_name label_name;
+         Format.fprintf out_fmter "@]";
          end)
      | Parsetree.E_record_with (expr, labs_exprs) ->
          (begin
          (* Because in OCaml the with construct only starts by an ident, we
             create a temporary ident to bind the expression to an ident. *)
-         Format.fprintf out_fmter "@[<2>let __foc_tmp_with_ =@ " ;
-         rec_generate loc_idents expr ;
-         Format.fprintf out_fmter "@ in@] " ;
+         Format.fprintf out_fmter "@[<2>let __foc_tmp_with_ =@ ";
+         rec_generate loc_idents expr;
+         Format.fprintf out_fmter "@ in@] ";
          (* Now really generate the "with"-construct. *)
-         Format.fprintf out_fmter "@[<2>{ __foc_tmp_with_ with@\n" ;
+         Format.fprintf out_fmter "@[<2>{ __foc_tmp_with_ with@\n";
          List.iter
            (fun (label_name, field_expr) ->
              Format.fprintf out_fmter "%a =@ "
-               Misc_ml_generation.pp_to_ocaml_label_ident label_name ;
-             rec_generate loc_idents field_expr ;
-             Format.fprintf out_fmter " ;")
-           labs_exprs ;
+               Misc_ml_generation.pp_to_ocaml_label_ident label_name;
+             rec_generate loc_idents field_expr;
+             Format.fprintf out_fmter ";")
+           labs_exprs;
          Format.fprintf out_fmter "@ }@]"
          end)
      | Parsetree.E_tuple exprs ->
@@ -623,8 +622,8 @@ and generate_expr ctx ~local_idents env initial_expression =
           | [] -> assert false
           | [one] -> rec_generate loc_idents one
           | _ ->
-              Format.fprintf out_fmter "@[<1>(" ;
-              rec_generate_exprs_list "," loc_idents exprs ;
+              Format.fprintf out_fmter "@[<1>(";
+              rec_generate_exprs_list "," loc_idents exprs;
               Format.fprintf out_fmter ")@]"
          end)
      | Parsetree.E_sequence exprs ->
@@ -632,28 +631,31 @@ and generate_expr ctx ~local_idents env initial_expression =
          match exprs with
           | [] -> Format.fprintf out_fmter "()"
           | _ ->
-              Format.fprintf out_fmter "@[<2>begin@ " ;
-              rec_generate_exprs_list ";" loc_idents exprs ;
+              Format.fprintf out_fmter "@[<2>begin@ ";
+              rec_generate_exprs_list ";" loc_idents exprs;
               Format.fprintf out_fmter "@ end@]"
          end)
      | Parsetree.E_external external_expr ->
          (begin
-         try
-           (* Simply a somewhat of verbatim stuff of the OCaml translation. *)
-           let (_, ocaml_binding) =
-             List.find
-               (function
+          let e_translation =
+            external_expr.Parsetree.ast_desc.Parsetree.ee_external in
+          try
+            (* Simply a somewhat of verbatim stuff of the OCaml translation. *)
+            let (_, ocaml_code) =
+              List.find
+                (function
                  | (Parsetree.EL_Caml, _) -> true
                  | (Parsetree.EL_Coq, _)
                  | ((Parsetree.EL_external _), _) -> false)
-               external_expr.Parsetree.ast_desc in
-           Format.fprintf out_fmter "%s" ocaml_binding
-         with Not_found ->
-           (* No OCaml mapping found. *)
-           raise
-             (Externals_generation_errs.No_external_value_def
-                ("OCaml", (Parsetree.Vlident "<expr>"), expr.Parsetree.ast_loc))
-         end)
+                e_translation.Parsetree.ast_desc in
+            Format.fprintf out_fmter "%s" ocaml_code
+          with Not_found ->
+            (* No OCaml mapping found. *)
+            raise
+              (Externals_generation_errs.No_external_value_def
+                 ("OCaml", (Parsetree.Vlident "<expr>"),
+                   expr.Parsetree.ast_loc))
+          end)
      | Parsetree.E_paren e -> rec_generate loc_idents e
 
 
@@ -662,7 +664,7 @@ and generate_expr ctx ~local_idents env initial_expression =
     | [] -> ()
     | [last] -> rec_generate loc_idents last
     | h :: q ->
-        rec_generate loc_idents h ;
+        rec_generate loc_idents h;
         Format.fprintf out_fmter "%s@ " comma;
         rec_generate_exprs_list comma loc_idents q
 
@@ -670,14 +672,14 @@ and generate_expr ctx ~local_idents env initial_expression =
   and rec_generate_record_field_exprs_list loc_idents = function
     | [] -> ()
     | [(label, last)] ->
-        rec_generate_one_record_field_name label ;
-        Format.fprintf out_fmter " =@ " ;
+        rec_generate_one_record_field_name label;
+        Format.fprintf out_fmter " =@ ";
         rec_generate loc_idents last
     | (h_label, h_expr) :: q ->
-        rec_generate_one_record_field_name h_label ;
-        Format.fprintf out_fmter " =@ " ;
-        rec_generate loc_idents h_expr ;
-        Format.fprintf out_fmter " ;@ " ;
+        rec_generate_one_record_field_name h_label;
+        Format.fprintf out_fmter " =@ ";
+        rec_generate loc_idents h_expr;
+        Format.fprintf out_fmter ";@ ";
         rec_generate_record_field_exprs_list loc_idents q
 
 
