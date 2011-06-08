@@ -1,0 +1,78 @@
+(** Labelled transition system *)
+
+open "basics";;
+open "sets";;
+
+
+species State =
+
+    inherit Setoid;
+
+    signature is_initial : Self -> bool;
+
+end;;
+
+
+species Label = inherit Setoid; end;;
+
+
+species System (S is State, L is Label) =
+
+    inherit Basic_object;
+
+    (** transition relation *)
+    signature delta : S -> L -> S -> bool;
+
+    property determinist :
+      all x y z : S, all l : L,
+      ( delta (x, l, y) /\ delta (x, l, z) ) -> S!equal (y, z);
+
+    property left_total :
+      all x : S, all l : L,
+      ex y : S, delta (x, l, y);
+
+    (* logical let rec is_descendant (y, x) = *)
+    (*   S!equal (y, x) \/ *)
+    (*   ex z : S, ex l : L, delta (x, l, z) /\ is_descendant (y, z); *)
+
+    (* logical let is_reachable (x) = *)
+    (*   ex y : S, S!is_initial (y) /\ is_descendant (x, y); *)
+
+end;;
+
+
+
+(* Tests *)
+
+species List (A is Setoid) =
+
+    inherit Setoid;
+
+    representation = list (A);
+
+    let element : Self = [];
+
+    let rec is_in (x : A, l : Self) : bool =
+      match l with
+        | [] -> false
+        | h :: t -> A!equal (h, x) || is_in (x, t);
+
+    let remove_rev (x : A, l : Self) : Self =
+      let rec aux (l : Self, acc : Self) : Self =
+        match l with
+          | [] -> acc
+          | h :: t ->
+              if A!equal (h, x) then aux (t, acc) else aux (t, h :: acc) in
+      aux (l, []);
+
+    let rec equal (l1 : Self, l2 : Self) : bool =
+      match (l1, l2) with
+        | ([], []) -> true
+        | ([], _) -> false
+        | (_, []) -> false
+        | (h1 :: t1, h2 :: t2) ->
+            is_in (h1, l2) && is_in (h2, l1) &&
+            equal (remove_rev (h1, remove_rev (h2, l1)),
+                   remove_rev (h1, remove_rev (h2, l2)));
+
+end;;

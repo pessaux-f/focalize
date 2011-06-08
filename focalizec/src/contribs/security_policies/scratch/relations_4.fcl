@@ -1,0 +1,415 @@
+(** Binary relation *)
+
+open "basics";;
+open "sets";;
+open "products";;
+open "ensembles_finis";;
+
+
+species Ensemble_fini (A is Setoid) =
+
+    inherit Ensembles_finis (A);
+
+    signature un_element : Self -> A;
+
+    (* property un_element_vide : Comment spécifier une erreur ? *)
+
+    property un_element_non_vide :
+      all s : Self,
+      ~ (equal (s, vide)) -> est_element (un_element (s), s);
+
+end;;
+
+
+
+(** A : domain, B : codomain *)
+species Relation_Global (A is Setoid, B is Setoid) =
+
+    inherit Partial_set;
+
+    signature relation : Self -> A -> B -> bool;
+
+    (* si non-fonctionnel évaluation à la création de la collection
+       or on veut pouvoir déclencher une erreur *)
+    signature empty : unit -> Self;
+    signature total : unit -> Self;
+    signature singleton_r : A -> B -> Self;
+
+    signature union_r : Self -> Self -> Self;
+    signature inter_r : Self -> Self -> Self;
+    signature diff_r : Self -> Self -> Self;
+
+    let ( =A ) = A!equal;
+    let ( =B ) = B!equal;
+
+    property equal_spec :
+      all r1 r2 : Self,
+      equal (r1, r2) <-> all a : A, all b : B,
+                         relation (r1, a, b) = relation (r2, a, b);
+
+    proof of equal_reflexive = by property equal_spec;
+    proof of equal_symmetric = by property equal_spec;
+    proof of equal_transitive = by property equal_spec;
+
+    logical let empty_spec_g =
+      all a : A, all b : B, all u : unit, ~ relation (empty (u), a, b);
+
+    logical let total_spec_g =
+      all a : A, all b : B, all u : unit, relation (total (u), a, b);
+
+    logical let singleton_r_spec_g =
+      all a1 a2 : A, all b1 b2 : B,
+      relation (singleton_r (a1, b1), a2, b2) <-> ( a1 =A a2 && b1 =B b2 );
+
+    logical let union_r_spec_g (r1, r2) =
+      all a : A, all b : B,
+      relation (union_r (r1, r2), a, b) <->
+      ( relation (r1, a, b) \/ relation (r2, a, b) );
+
+    logical let inter_r_spec_g (r1, r2) =
+      all a : A, all b : B,
+      relation (inter_r (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ relation (r2, a, b) );
+
+    logical let diff_r_spec_g (r1, r2) =
+      all a : A, all b : B,
+      relation (diff_r (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+
+    logical let is_left_unique (r) =
+      all a1 a2 : A, all b : B,
+      ( relation (r, a1, b) /\ relation (r, a2, b) ) -> a1 =A a2;
+
+    logical let is_right_unique (r) =
+      all a : A, all b1 b2 : B,
+      ( relation (r, a, b1) /\ relation (r, a, b2) ) -> b1 =B b2;
+
+    logical let is_left_total (r) =
+      all a : A, ex b : B, relation (r, a, b);
+
+    logical let is_right_total (r) =
+      all b : B, ex a : A, relation (r, a, b);
+
+    logical let left_unique_g = all r : Self, is_left_unique (r);
+    logical let right_unique_g = all r : Self, is_right_unique (r);
+    logical let left_total_g = all r : Self, is_left_total (r);
+    logical let right_total_g = all r : Self, is_right_total (r);
+
+end;;
+
+
+(* Relation *)
+
+species Relation (A is Setoid, B is Setoid) =
+
+    inherit Relation_Global (A, B);
+
+    property empty_spec : empty_spec_g;
+    property total_spec : total_spec_g;
+    property singleton_r_spec : singleton_r_spec_g;
+    property union_r_spec : all r1 r2 : Self, union_r_spec_g (r1, r2);
+    property inter_r_spec : all r1 r2 : Self, inter_r_spec_g (r1, r2);
+    property diff_r_spec : all r1 r2 : Self, diff_r_spec_g (r1, r2);
+
+end;;
+
+
+species Relation_Impl (A is Setoid, B is Setoid) =
+
+    inherit Relation (A, B);
+
+    representation = A -> B -> bool;
+
+    let make (f : A -> B -> bool) : Self = f;
+    let relation (r) = r;
+    let empty (u, a, b) = false;
+    let total (u, a, b) = true;
+    let singleton_r (a1, b1, a2, b2) = a1 =A a2 && b1 =B b2;
+    let union_r (r1, r2, a, b) = r1 (a, b) || r2 (a, b);
+    let inter_r (r1, r2, a, b) = r1 (a, b) && r2 (a, b);
+    let diff_r (r1, r2, a, b) = r1 (a, b) && ~~ r2 (a, b);
+
+    let equal (r1, r2) = false;         (* TODO : ??? *)
+    let element = empty (());
+
+    proof of equal_spec = assumed;
+    proof of empty_spec = assumed;
+    proof of total_spec = assumed;
+    proof of singleton_r_spec = assumed;
+    proof of union_r_spec = assumed;
+    proof of inter_r_spec = assumed;
+    proof of diff_r_spec = assumed;
+
+end;;
+
+
+species Finite_relation (A is Setoid, B is Setoid, P is Product_set (A, B)) =
+
+    inherit Relation (A, B), Ensemble_fini (P);
+
+    let relation (r, a, b) = est_element (P!pair (a, b), r);
+    let empty (u) = vide;
+    let total (u) = vide;               (* TODO : ??? *)
+    let singleton_r (a, b) = singleton (P!pair (a, b));
+    let union_r = union;
+    let inter_r = inter;
+    let diff_r = diff;
+
+    proof of equal_spec = assumed;      (* TODO *)
+    (* proof of equal_spec = by definition of equal, relation *)
+    (*                         property sous_ensemble_spec; *)
+
+    proof of empty_spec = assumed;      (* TODO *)
+    proof of total_spec = assumed;
+    proof of singleton_r_spec = assumed;
+    proof of union_r_spec = assumed;
+    proof of inter_r_spec = assumed;
+    proof of diff_r_spec = assumed;
+
+end;;
+
+
+(* Determinist Relation *)
+
+species Determinist_relation (A is Setoid, B is Setoid) =
+
+    inherit Relation_Global (A, B);
+
+    property right_unique : right_unique_g;
+
+
+    property empty_spec : empty_spec_g;
+
+    (* /!\ Si un seul élément dans B ??? *)
+    property total_spec : all u : unit, total (u) = empty (u); (* failed *)
+    
+    property singleton_r_spec : singleton_r_spec_g;
+    
+    property union_r_spec :
+      all r1 r2 : Self,
+      ( ( ex a : A, ex b1 b2 : B,
+          relation (r1, a, b1) /\ relation (r2, a, b2) /\ ~(b1 =B b2) ) /\
+        union_r (r1, r2) = empty (()) ) \/
+      union_r_spec_g (r1, r2);
+
+    property inter_r_spec : all r1 r2 : Self, inter_r_spec_g (r1, r2);
+    property diff_r_spec : all r1 r2 : Self, diff_r_spec_g (r1, r2);
+
+end;;
+
+
+species Determinist_relation_Impl (A is Setoid, B is Setoid) =
+
+    inherit Determinist_relation (A, B);
+
+    representation = A -> B -> bool;
+
+    let make (f : A -> B -> bool) : Self = f; (* TODO : ??? *)
+
+    property make_spec :
+      all r : A -> B -> bool,
+      ( ( ex a : A, ex b1 b2 : B,
+          r (a, b1) /\ r (a, b2) /\ ~(b1 =B b2) ) /\ make (r) = empty (()) ) \/
+      ( all a : A, all b : B, relation (make (r), a, b) = r (a, b) );
+
+    let relation (r) = r;
+    let empty (u, a, b) = false;
+    let total (u) = failed ("A total relation is not determinist");
+    let singleton_r (a1, b1, a2, b2) = a1 =A a2 && b1 =B b2;
+    let union_r (r1, r2, a, b) = r1 (a, b) || r2 (a, b); (* TODO : ??? *)
+    let inter_r (r1, r2, a, b) = r1 (a, b) && r2 (a, b);
+    let diff_r (r1, r2, a, b) = r1 (a, b) && ~~ r2 (a, b);
+
+    let equal (r1, r2) = false;         (* TODO : ??? *)
+    let element = empty (());
+
+    proof of right_unique = assumed;    (* TODO : ??? *)
+
+    proof of make_spec = assumed;       (* TODO *)
+    proof of equal_spec = assumed;
+    proof of empty_spec = assumed;
+    proof of total_spec = assumed;
+    proof of singleton_r_spec = assumed;
+    proof of union_r_spec = assumed;
+    proof of inter_r_spec = assumed;
+    proof of diff_r_spec = assumed;
+
+end;;
+
+(* /!\ On autorise les méthodes de Ensemble_fini qui ne respectent pas les
+       propriétés !!! *)
+species Finite_determinist_relation (A is Setoid, B is Setoid,
+                                     P is Product_set (A, B)) =
+
+    inherit Determinist_relation (A, B), Ensemble_fini (P);
+
+    let relation (r, a, b) = est_element (P!pair (a, b), r);
+    let empty (u) = vide;
+    let total (u) = failed ("A total relation is not determinist");
+    let singleton_r (a, b) = singleton (P!pair (a, b));
+
+    let rec exist_relation_a_not_b (r, p) =
+      if equal (r, vide) then false
+      else
+        let h = un_element (r) in
+        let q = diff (r, singleton (h)) in
+        ( P!first (h) =A P!first (p) && ~~(P!second (h) =B P!second (p)) ) ||
+        exist_relation_a_not_b (q, p);
+
+    let rec determinist_union (r1, r2) =
+      if equal (r1, vide) then true
+      else
+        let h = un_element (r1) in
+        let q = diff (r1, singleton (h)) in
+        ~~(exist_relation_a_not_b (r2, h)) && determinist_union (q, r2);
+
+    let union_r (r1, r2) =
+      if determinist_union (r1, r2) then union (r1, r2)
+      else failed ("Union is not determinist");
+
+    let inter_r = inter;
+    let diff_r = diff;
+
+    proof of right_unique = assumed;    (* TODO : par construction ? *)
+
+    proof of equal_spec = assumed;      (* TODO *)
+    (* proof of equal_spec = by definition of equal, relation *)
+    (*                         property sous_ensemble_spec; *)
+
+    proof of empty_spec = assumed;      (* TODO *)
+    proof of total_spec = assumed;
+    proof of singleton_spec = assumed;
+    proof of union_r_spec = assumed;
+    proof of inter_r_spec = assumed;
+    proof of diff_r_spec = assumed;
+
+end;;
+
+
+(* Left-total Relation *)
+
+species Left_total_relation (A is Setoid, B is Setoid) =
+
+    inherit Relation_Global (A, B);
+
+    property left_total : left_total_g;
+
+    property empty_spec : all u : unit, empty (u) = total (u); (* failed *)
+    property total_spec : total_spec_g;
+
+    (* /!\ Comment savoir si un seul élément dans A ???! *)
+    property singleton_r_spec :
+      all a : A, all b : B, singleton_r (a, b) = total (()); (* failed *)
+
+    property union_r_spec : all r1 r2 : Self, union_r_spec_g (r1, r2);
+    property inter_r_spec :
+      all r1 r2 : Self,
+      ( (ex a : A, ~( ex b : B, relation (r1, a, b) /\ relation (r2, a, b)) ) /\
+        inter_r (r1, r2) = total (()) ) \/
+      inter_r_spec_g (r1, r2);
+
+    property diff_r_spec :
+      all r1 r2 : Self,
+      ( (all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b)) /\
+        diff_r_spec_g (r1, r2) ) \/
+      diff_r (r1, r2) = total (());
+
+end;;
+
+
+(* /!\ On autorise les méthodes de Ensemble_fini qui ne respectent pas les
+       propriétés !!! *)
+species Finite_left_total_relation (A is Setoid, B is Setoid,
+                                    P is Product_set (A, B)) =
+
+    inherit Left_total_relation (A, B), Ensemble_fini (P);
+
+    let relation (r, a, b) = est_element (P!pair (a, b), r);
+    let empty (u) = failed ("An empty relation is not left-total");
+    let total (u) = vide;               (* TODO : ??? *)
+    let singleton_r (a, b) = failed ("A singleton is not determinist");
+
+      (* TODO *)
+
+    proof of left_total = assumed;     (* TODO : par construction ? *)
+
+    proof of equal_spec = assumed;      (* TODO *)
+    (* proof of equal_spec = by definition of equal, relation *)
+    (*                         property sous_ensemble_spec; *)
+
+    proof of empty_spec = assumed;      (* TODO *)
+    proof of total_spec = assumed;
+    proof of singleton_spec = assumed;
+    proof of union_r_spec = assumed;
+    proof of inter_r_spec = assumed;
+    proof of diff_r_spec = assumed;
+
+end;;
+
+
+
+
+
+(* Tests *)
+
+species A_Spec =
+
+  inherit Setoid;
+
+  representation = int;
+
+  let zero : Self = 0;
+  let one : Self = 1;
+  let two : Self = 2;
+
+  let value (a : Self) : int = a;
+
+  let element = zero;
+  let equal = ( =0x );
+  let print = string_of_int;
+
+  proof of equal_reflexive = assumed;
+  proof of equal_symmetric = assumed;
+  proof of equal_transitive = assumed;
+
+end;;
+
+type b_type = | A | B | C;;
+
+species B_Spec =
+
+  inherit Setoid;
+
+  representation = b_type;
+
+  let a : Self = A;
+  let b : Self = B;
+  let c : Self = C;
+
+  let element = A;
+  let equal (x, y) = x = y;
+  let print (x : Self) = match x with | A -> "a" | B -> "b" | C -> "c";
+
+  proof of equal_reflexive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_transitive = by definition of equal;
+
+end;;
+
+
+collection A = implement A_Spec; end;;
+collection B = implement B_Spec; end;;
+collection R = implement Determinist_relation_Impl (A, B); end;;
+
+(* left_total, right_total, right_unique *)
+let f (a, b) =
+  if A!value (a) <0x 32 then B!equal (b, B!a)
+  else if A!value (a) >0x 64 then B!equal (b, B!c)
+  else B!equal (b, B!b);;
+
+let r = R!make (f);;
+
+let r2 = R!empty (());;
+
+let r3 = R!total (());;

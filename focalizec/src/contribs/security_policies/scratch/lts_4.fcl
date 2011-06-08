@@ -1,0 +1,141 @@
+use "basics";;
+use "my_sets_orders";;
+use "products";;
+use "ensembles_finis";;
+open "basics";;
+open "my_sets_orders";;
+open "products";;
+open "ensembles_finis";;
+
+
+species Simple_Transition (State is Setoid) =
+
+    inherit Cartesian_product (State, State);
+
+end;;
+
+
+species Labelled_Transition (State is Setoid,
+                             Transition is Simple_Transition (State),
+                             Label is Setoid) =
+
+    inherit Cartesian_product (Transition, Label);
+
+    let transition (p, l, q) : Self = pair(Transition!pair(p, q), l);
+
+    let source (t) = Transition!first (first (t));
+    let destination (t) = Transition!second (first (t));
+    let label (t) = second (t);
+
+end;;
+
+
+species System (State is Setoid,
+                States is Ensembles_finis (State),
+                Label is Setoid,
+                Labels is Ensembles_finis (Label),
+                S_Transition is Simple_Transition (State),
+                Transition is Labelled_Transition (State, S_Transition, Label),
+                Transitions is Ensembles_finis (Transition),
+                Executions is Ensembles_finis (States)) =
+
+    inherit Basic_object;
+
+    signature system : States -> States -> Labels -> Transitions -> Self;
+
+    signature states : Self -> States;
+    signature initial_states : Self -> States;
+    signature labels : Self -> Labels;
+    signature transitions : Self -> Transitions;
+
+    signature reachables : Self -> States;
+    signature executions : Self -> Executions;
+
+    logical let in_s (x : State, s : Self) =
+      States!est_element (x, states (s));
+    logical let in_i (x : State, s : Self) =
+      States!est_element (x, initial_states (s));
+    logical let in_l (x : Label, s : Self) =
+      Labels!est_element (x, labels (s));
+    logical let in_t (x : Transition, s : Self) =
+      Transitions!est_element (x, transitions (s));
+    logical let in_r (x : State, s : Self) =
+      States!est_element (x, reachables (s));
+    logical let in_e (x : States, s : Self) =
+      Executions!est_element (x, executions (s));
+
+    logical let trans (p, l, q, s) = in_t (Transition!transition (p, l, q), s);
+
+    property initials_in_states :
+      all s : Self, States!sous_ensemble (initial_states (s), states (s));
+
+    property transitions_in_states_and_labels :
+      all s : Self, all p q : State, all l : Label,
+      trans (p, l, q, s) -> ( in_s (p, s) /\ in_l (l, s) /\ in_s (q, s) );
+
+    (* property transitions_in_states_and_labels_1 : *)
+    (*   all s : Self, all t : Transition, *)
+    (*   in_t (t, s) -> ( in_s (Transition!source (t), s) /\ *)
+    (*                    in_l (Transition!label (t), s) /\ *)
+    (*                    in_s (Transition!destination (t), s) ); *)
+
+    property determinist :
+      all s : Self, all x y z : State, all l : Label,
+      in_s (x, s) -> in_s (y, s) -> in_s (z, s) -> in_l (l, s) ->
+      ( trans (x, l, y, s) /\ trans (x, l, z, s) ) -> State!equal (y, z);
+
+    property left_total :
+      all s : Self, all x : State, all l : Label,
+      in_s (x, s) -> in_l (l, s) ->
+      ex y : State, in_s (y, s) /\ trans (x, l, y, s);
+
+    property reachables_spec :
+      all s : Self, all x : State,
+      in_r (x, s) <-> ( in_i (x, s) \/
+                        ex y : State, ex l : Label,
+                        ( in_r (y, s) /\ trans (y, l, x, s) ) );
+
+    theorem initials_in_reachables :
+      all s : Self, States!sous_ensemble (initial_states (s), reachables (s))
+    proof = assumed;                    (* TODO *)
+
+    theorem reachables_in_states :
+      all s : Self, States!sous_ensemble (reachables (s), states (s))
+    proof = assumed;                    (* TODO *)
+            (* by property reachables_spec, initials_in_states, *)
+            (*             transitions_in_states_and_labels; *)
+
+    theorem reachable_induction :
+      all s : Self, all x y : State, all l : Label,
+      in_r (x, s) -> trans (x, l, y, s) -> in_r (y, s)
+    proof = assumed;                    (* TODO *)
+
+    (* property executions_spec : *)
+    (*   all s : Self, all e : States, *)
+    (*   in_e (e, s) <-> ( (ex x : State, States!est_element (x, e) /\ in_i (x)) /\ *)
+          (* TODO : sequence, ordre important !! *)
+
+end;;
+
+
+
+
+(* Tests *)
+
+collection Simple_Transition_Coll =
+
+    implement Simple_Transition (Entiers);
+
+end;;
+
+collection Transition_Coll =
+
+    implement Labelled_Transition (Entiers, Simple_Transition_Coll, Entiers);
+
+end;;
+
+let t = Transition_Coll!transition (Entiers!parse ("1"), Entiers!parse ("8"), Entiers!parse ("2"));;
+print_string (Entiers!print (Transition_Coll!source (t)));;
+print_string (Entiers!print (Transition_Coll!label (t)));;
+print_string (Entiers!print (Transition_Coll!destination (t)));;
+print_string ("\n");;

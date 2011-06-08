@@ -1,0 +1,141 @@
+(** The HRU security model (Harrison, Ruzzo, Ullman model) *)
+
+open "basics";;
+open "sets";;
+open "lts";;
+
+
+species Subject = inherit Setoid; end;;
+
+species Object = inherit Setoid; end;;
+
+species Access_mode = inherit Setoid; end;;
+
+
+species State_ac (S is Subject, O is Object, A is Access_mode) =
+
+    inherit State;
+
+    signature alpha : Self -> S -> list (O * A);
+
+    signature add : Self -> S -> O -> A -> Self;
+    signature remove : Self -> S -> O -> A -> Self;
+
+    property is_initial_spec :
+      all x : Self,
+      is_initial (x) <-> all s : S, alpha (x, s) = [];
+
+    property add_spec :
+      all x : Self, all s s2 : S, all o : O, all a : A,
+      alpha (add (x, s, o, a), s2) =
+      if S!equal (s, s2) then (o, a) :: alpha (x, s2) else alpha (x, s2);
+
+    (* TODO : property remove_spec ??? *)
+
+    property equal_spec :
+      all x y : Self,
+      equal (x, y) <-> all s : S,
+                       alpha (x, s) = alpha (y, s);
+
+    proof of equal_reflexive = by property equal_spec;
+    proof of equal_symmetric = by property equal_spec;
+    proof of equal_transitive = by property equal_spec;
+
+end;;
+
+
+species State_ac_Impl (S is Subject, O is Object, A is Access_mode) =
+
+    inherit State_ac (S, O, A);
+
+    representation = S -> list (O * A);
+
+    let alpha (x) = x;
+
+    let add (x, s, o, a, s2) =
+      if S!equal (s, s2) then (o, a) :: alpha (x, s2) else alpha (x, s2);
+
+    let remove (x, s, o, a, s2) =
+      let rec aux (l) =
+        match l with
+          | [] -> []
+          | (o2, a2) :: t ->
+              if O!equal (o2, o) && A!equal (a2, a) then aux (t)
+              else (o2, a2) :: aux (t) in
+      if S!equal (s, s2) then aux (alpha (x, s2)) else alpha (x, s2);
+
+    let is_initial (x) = equal (x, element);
+
+    let equal (x, y) = false;           (* TODO : ??? *)
+    let element (s) = [];
+
+    proof of is_initial_spec = assumed;
+                               (* by property equal_spec *)
+                               (*    definition of is_initial, element; *)
+    proof of add_spec = assumed; (* by definition of equal, alpha; *)
+    proof of equal_spec = assumed;
+
+end;;
+
+
+type action = | Add | Release;;
+
+species Label_ac (S is Subject, O is Object, A is Access_mode) =
+
+    inherit Label;
+
+    signature make : action -> S -> O -> A -> Self;
+
+    signature value : Self -> (action * S * O * A);
+
+    property equal_spec :
+      all l1 l2 : Self,
+      equal (l1, l2) <-> value (l1) = value (l2);
+
+    proof of equal_reflexive = by property equal_spec;
+    proof of equal_symmetric = by property equal_spec;
+    proof of equal_transitive = by property equal_spec;
+
+end;;
+
+
+species Label_ac_Impl (S is Subject, O is Object, A is Access_mode) =
+
+    inherit Label_ac (S, O, A);
+
+    representation = (action * S * O * A);
+
+    let make (t, s, o, a) = (t, s, o, a);
+    let value (l) = l;
+
+    let equal (l1, l2) =
+      match (l1, l2) with | ((t1, s1, o1, a1), (t2, s2, o2, a2)) ->
+        t1 = t2 && S!equal (s1, s2) && O!equal (o1, o2) && A!equal (a1, a2);
+    let element = (Add, S!element, O!element, A!element);
+
+    proof of equal_spec = assumed; (* by definition of equal, value; *)
+
+end;;
+
+
+(* Pas des collections *)
+
+(* let delta_ac (x, l, y) = *)
+(*   match Label_ac!value (l) with *)
+(*     | (Add, s, o, a) -> State_ac!equal (y, State_ac!add (x, o, a)) *)
+(*     | (Release, s, o, a) -> State_ac!equal (y, State_ac!remove (x, o, a));; *)
+
+
+species System_ac (S is Subject, O is Object, A is Access_mode,
+                   St is State_ac (S, O, A), L is Label_ac (S, O, A)) =
+
+    inherit System (St, L);
+
+    property delta_spec :
+      all s : Self, all x y : St, all l : L,
+      delta (s, x, l, y) <->
+      match L!value (l) with
+        | (Add, s, o, a) -> St!equal (y, St!add (x, s, o, a))
+        | (Release, s, o, a) -> St!equal (y, St!remove (x, s, o, a));
+
+end;;

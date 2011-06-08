@@ -1,0 +1,360 @@
+(** The HRU security model (Harrison, Ruzzo, Ullman model) *)
+
+open "basics";;
+open "sets";;
+open "products";;
+open "finite_sets";;
+open "lts";;
+
+(** We define a system allowing to add or to release accesses
+    done by active entities, the subjects, over passive entities, the objects,
+    according to access modes (for exemple, read, write, etc). *)
+
+
+species Subject = inherit Finite_set; end;;
+
+species Object = inherit Finite_set; end;;
+
+species Access_mode = inherit Finite_set; end;;
+
+
+
+species State_ac (S is Subject, O is Object, A is Access_mode,
+                  OA is Product_set (O, A), POA is Finite_part (OA)) =
+
+  inherit State;
+
+  (** (o, a) belongs to alpha (x, s) means that s has an access over o
+      according to the access mode a in the state x of the system. *)
+  signature alpha : Self -> S -> POA;
+
+  signature add : Self -> S -> O -> A -> Self;
+  signature remove : Self -> S -> O -> A -> Self;
+
+  property is_initial_spec :
+    all x : Self,
+    is_initial (x) <-> all s : S, POA!equal (alpha (x, s), POA!empty);
+
+  property add_spec :
+    all x : Self, all s s2 : S, all o : O, all a : A,
+    if S!equal (s, s2)
+    then POA!equal (alpha (add (x, s, o, a), s2),
+                    POA!add (OA!pair (o, a), alpha (x, s2)))
+    else POA!equal (alpha (add (x, s, o, a), s2), alpha (x, s2));
+
+  property remove_spec :
+    all x : Self, all s s2 : S, all o : O, all a : A,
+    if S!equal (s, s2)
+    then POA!equal (alpha (add (x, s, o, a), s2),
+                    POA!remove (OA!pair (o, a), alpha (x, s2)))
+    else POA!equal (alpha (add (x, s, o, a), s2), alpha (x, s2));
+
+  property equal_spec :
+    all x y : Self,
+    equal (x, y) <-> all s : S, POA!equal (alpha (x, s), alpha (y, s));
+
+  proof of equal_reflexive = by property equal_spec, POA!equal_reflexive;
+  proof of equal_symmetric = by property equal_spec, POA!equal_symmetric;
+  proof of equal_transitive = by property equal_spec, POA!equal_transitive;
+
+end;;
+
+
+species State_ac_Impl (S is Subject, O is Object, A is Access_mode,
+                       OA is Product_set (O, A), POA is Finite_set (OA),
+                       SS is Finite_set (S), states in SS) =
+
+  inherit State_ac (S, O, A, OA, POA);
+
+  representation = S -> POA;
+
+  let s_as_vakue = SS!full;
+
+  let alpha (x) = x;
+
+  let add (x, s, o, a, s2) =
+    if S!equal (s, s2) then POA!add (OA!pair (o, a), alpha (x, s2))
+    else alpha (x, s2);
+
+  let remove (x, s, o, a, s2) =
+    if S!equal (s, s2) then POA!remove (OA!pair (o, a), alpha (x, s2))
+    else alpha (x, s2);
+
+  let is_initial (x) = equal (x, element);
+
+  local let rec equal_aux (s : SS, x : Self, y : Self) =
+    if SS!equal (s, SS!empty) then true
+    else
+      let h = SS!get_member (s) in
+      let q = SS!remove (h, s) in
+      POA!equal (alpha (x, h), alpha (y, h)) && equal_aux (q, x, y);
+  (* TODO : termination proof *)
+
+  let equal (x, y) = equal_aux (states, x, y);
+
+  let element (s) = POA!empty;
+
+  proof of is_initial_spec = assumed; (* TODO *)
+  proof of add_spec = assumed;
+  proof of remove_spec = assumed;
+  proof of equal_spec = assumed;
+
+end;;
+
+
+type action = | Add | Release;;
+
+species Action =
+
+  inherit Setoid;
+
+  representation = action;
+
+  let add : Self = Add;
+  let release : Self = Release;
+  let element = add;
+  let equal (a1, a2) = a1 = a2;
+  let print (a) = match a with | Add -> "+" | Release -> "-";
+  let parse (s) = if s = "+" then add else release;
+
+(* th add <> release th add || release*)
+
+  proof of equal_reflexive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_transitive = by definition of equal;
+
+end;;
+
+
+species Label_ac (X is Action, S is Subject, O is Object, A is Access_mode,
+                  OA is Product_set (O, A), SOA is Product_set (S, OA),
+                  XSOA is Product_set (X, SOA)) =
+
+  inherit Label;
+
+  signature value : Self -> XSOA;
+
+  let action (l) = XSOA!first (value (l));
+  let subject (l) = SOA!first (XSOA!second (value (l)));
+  let object_ac (l) = OA!first (SOA!second (XSOA!second (value (l))));
+  let access_mode (l) = OA!second (SOA!second (XSOA!second (value (l))));
+
+  property equal_spec :
+    all l1 l2 : Self,
+    equal (l1, l2) <-> XSOA!equal (value (l1), value (l2));
+
+  proof of equal_reflexive = by property equal_spec, XSOA!equal_reflexive;
+  proof of equal_symmetric = by property equal_spec, XSOA!equal_symmetric;
+  proof of equal_transitive = by property equal_spec, XSOA!equal_transitive;
+
+end;;
+
+
+species Label_ac_Impl (X is Action, S is Subject, O is Object, A is Access_mode,
+                       OA is Product_set (O, A), SOA is Product_set (S, OA),
+                       XSOA is Product_set (X, SOA)) =
+
+  inherit Label_ac (X, S, O, A, OA, SOA, XSOA);
+
+  representation = XSOA;
+
+  let make (x, s, o, a) : Self = XSOA!pair (x, SOA!pair (s, OA!pair (o, a)));
+  let value (l) = l;
+
+  let equal = XSOA!equal;
+  let element = XSOA!element;
+
+  proof of equal_spec = by property XSOA!equal_spec
+                           definition of equal, value;
+
+    (* th make_spec *)
+
+end;;
+
+
+species System_ac (X is Action, S is Subject, O is Object, A is Access_mode,
+                   OA is Product_set (O, A), POA is Finite_set (OA),
+                   SOA is Product_set (S, OA), XSOA is Product_set (X, SOA),
+                   St is State_ac (S, O, A, OA, POA),
+                   L is Label_ac (X, S, O, A, OA, SOA, XSOA)) =
+
+  inherit System (St, L);
+
+    (* th *)
+  property delta_spec :
+    all s : Self, all x y : St, all l : L,
+    delta (s, x, l, y) <->
+    ( ( X!equal (L!action (l), X!add) /\
+        St!equal (y, St!add (x, L!subject (l),
+                                L!object_ac (l),
+                                L!access_mode (l))) ) \/
+      ( X!equal (L!action (l), X!release) /\
+        St!equal (y, St!remove (x, L!subject (l),
+                                   L!object_ac (l),
+                                   L!access_mode (l))) ) );
+
+  let delta (s, x, l, y) =
+    ( ( X!equal (L!action (l), X!add) &&
+        St!equal (y, St!add (x, L!subject (l),
+                                L!object_ac (l),
+                                L!access_mode (l))) ) ||
+      ( X!equal (L!action (l), X!release) &&
+        St!equal (y, St!remove (x, L!subject (l),
+                                   L!object_ac (l),
+                                   L!access_mode (l))) ) );
+
+end;;
+
+
+species System_ac_Impl (X is Action, S is Subject, O is Object,
+                        A is Access_mode, OA is Product_set (O, A),
+                        POA is Finite_set (OA), SOA is Product_set (S, OA),
+                        XSOA is Product_set (X, SOA),
+                        St is State_ac (S, O, A, OA, POA),
+                        L is Label_ac (X, S, O, A, OA, SOA, XSOA)) =
+
+  inherit System_ac (X, S, O, A, OA, POA, SOA, XSOA, St, L);
+
+  representation = unit;
+
+end;;
+
+
+
+(** System with requests for transitions *)
+
+species Request_ac (X is Action, S is Subject, O is Object, A is Access_mode,
+                    OA is Product_set (O, A), SOA is Product_set (S, OA),
+                    XSOA is Product_set (X, SOA)) =
+
+  inherit Label_ac (X, S, O, A, OA, SOA, XSOA);
+
+end;;
+
+species Request_ac_Impl (X is Action, S is Subject, O is Object,
+                         A is Access_mode, OA is Product_set (O, A),
+                         SOA is Product_set (S, OA),
+                         XSOA is Product_set (X, SOA)) =
+
+  inherit Label_ac_Impl (X, S, O, A, OA, SOA, XSOA);
+
+end;;
+
+
+type answer = | Yes | No;;
+
+species Answer_ac =
+
+  inherit Setoid;
+
+  representation = answer;
+
+  let yes : Self = Yes;
+  let no : Self = No;
+  let element = no;
+  let equal (a1, a2) = a1 = a2;
+  let print (a) = match a with | Yes -> "yes" | No -> "no";
+  let parse (s) = if s = "yes" then yes else no;
+
+  proof of equal_reflexive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_transitive = by definition of equal;
+
+end;;
+
+
+species Label_request_ac (X is Action, S is Subject, O is Object,
+                          A is Access_mode, OA is Product_set (O, A),
+                          SOA is Product_set (S, OA),
+                          XSOA is Product_set (X, SOA),
+                          R is Request_ac (X, S, O, A, OA, SOA, XSOA),
+                          D is Answer_ac, RD is Product_set (R, D)) =
+
+  inherit Label;
+
+  signature value : Self -> RD;
+
+  let request (l) = RD!first (value (l));
+  let answer (l) = RD!second (value (l));
+
+  let action (l) = R!action (request (l));
+  let subject (l) = R!subject (request (l));
+  let object_ac (l) = R!object_ac (request (l));
+  let access_mode (l) = R!access_mode (request (l));
+
+  property equal_spec :
+    all l1 l2 : Self,
+    equal (l1, l2) <-> RD!equal (value (l1), value (l2));
+
+  proof of equal_reflexive = by property equal_spec, RD!equal_reflexive;
+  proof of equal_symmetric = by property equal_spec, RD!equal_symmetric;
+  proof of equal_transitive = by property equal_spec, RD!equal_transitive;
+
+end;;
+
+
+species Label_request_ac_Impl (X is Action, S is Subject, O is Object,
+                               A is Access_mode, OA is Product_set (O, A),
+                               SOA is Product_set (S, OA),
+                               XSOA is Product_set (X, SOA),
+                               R is Request_ac_Impl (X, S, O, A, OA, SOA, XSOA),
+                               D is Answer_ac, RD is Product_set (R, D)) =
+
+  inherit Label_request_ac (X, S, O, A, OA, SOA, XSOA, R, D, RD);
+
+  representation = RD;
+
+  let make (x, s, o, a, d) : Self = RD!pair (R!make (x, s, o, a), d);
+  let value (l) = l;
+
+  let equal = RD!equal;
+  let element = RD!element;
+
+  proof of equal_spec = by property RD!equal_spec
+                           definition of equal, value;
+
+end;;
+
+
+species System_request_ac (X is Action, S is Subject, O is Object,
+                           A is Access_mode, OA is Product_set (O, A),
+                           POA is Finite_set (OA), SOA is Product_set (S, OA),
+                           XSOA is Product_set (X, SOA),
+                           R is Request_ac_Impl (X, S, O, A, OA, SOA, XSOA),
+                           D is Answer_ac, RD is Product_set (R, D),
+                           St is State_ac (S, O, A, OA, POA),
+                           L is Label_request_ac (X, S, O, A, OA, SOA, XSOA,
+                                                  R, D, RD)) =
+
+  inherit System (St, L);
+
+  let delta (s, x, l, y) =
+    ( ( D!equal (L!answer (l), D!yes) && X!equal (L!action (l), X!add) &&
+        St!equal (y, St!add (x, L!subject (l),
+                                L!object_ac (l),
+                                L!access_mode (l))) ) ||
+      ( D!equal (L!answer (l), D!yes) && X!equal (L!action (l), X!release) &&
+        St!equal (y, St!remove (x, L!subject (l),
+                                   L!object_ac (l),
+                                   L!access_mode (l))) ) ||
+      ( D!equal (L!answer (l), D!no) && St!equal (y, x) ) );
+
+end;;
+
+
+species System_request_ac_Impl (X is Action, S is Subject, O is Object,
+                                A is Access_mode, OA is Product_set (O, A),
+                                POA is Finite_set (OA),
+                                SOA is Product_set (S, OA),
+                                XSOA is Product_set (X, SOA),
+                                R is Request_ac_Impl (X, S, O, A, OA, SOA, XSOA),
+                                D is Answer_ac, RD is Product_set (R, D),
+                                St is State_ac (S, O, A, OA, POA),
+                                L is Label_request_ac (X, S, O, A, OA, SOA, XSOA,
+                                                       R, D, RD)) =
+
+  inherit System_request_ac (X, S, O, A, OA, POA, SOA, XSOA, R, D, RD, St, L);
+
+  representation = unit;
+
+end;;

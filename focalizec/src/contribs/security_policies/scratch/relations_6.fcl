@@ -1,0 +1,989 @@
+open "basics";;
+open "sets";;
+open "products";;
+open "finite_sets";;
+
+
+(** Binary relation *)
+
+
+(** A : domain, B : codomain *)
+species Abstract_relation (A is Setoid, B is Setoid) =
+
+  inherit Partial_set;
+
+  signature relation : Self -> A -> B -> bool;
+
+
+  signature empty : unit -> Self;
+
+  (** Statement for the empty relation being element of Self *)
+  signature empty_belongs : prop;
+
+  signature total : unit -> Self;
+
+  (** Statement for the total relation being element of Self *)
+  signature total_belongs : prop;
+
+  signature singleton : A -> B -> Self;
+
+  (** Statement for the singleton relation being element of Self *)
+  signature singleton_belongs : A -> B -> prop;
+
+  signature union : Self -> Self -> Self;
+
+  (** Statement describing when union is a composition law *)
+  signature union_is_internal : Self -> Self -> prop;
+
+  signature inter : Self -> Self -> Self;
+
+  (** Statement describing when inter is a composition law *)
+  signature inter_is_internal : Self -> Self -> prop;
+
+  signature diff : Self -> Self -> Self;
+
+  (** Statement describing when diff is a composition law *)
+  signature diff_is_internal : Self -> Self -> prop;
+
+
+  (* ici ?? *)
+  logical let is_A_singleton = all a : A, A!equal (a, A!element);
+  logical let is_B_singleton = all b : B, B!equal (b, B!element);
+
+
+  property equal_spec :
+    all r1 r2 : Self,
+    equal (r1, r2) <-> all a : A, all b : B,
+                       relation (r1, a, b) = relation (r2, a, b);
+
+  proof of equal_reflexive = by property equal_spec;
+  proof of equal_symmetric = by property equal_spec;
+  proof of equal_transitive = by property equal_spec;
+
+  property empty_spec :
+    empty_belongs ->
+      all a : A, all b : B, ~ relation (empty (()), a, b);
+
+  property total_spec :
+    total_belongs ->
+      all a : A, all b : B, relation (total (()), a, b);
+
+  property singleton_spec :
+    all a1 : A, all b1 : B,
+    singleton_belongs (a1, b1) ->
+      all a2 : A, all b2 : B,
+      relation (singleton (a1, b1), a2, b2) <->
+      ( A!equal (a1, a2) && B!equal (b1, b2) );
+
+  property union_spec :
+    all r1 r2 : Self,
+    union_is_internal (r1, r2) ->
+      all a : A, all b : B,
+      relation (union (r1, r2), a, b) <->
+      ( relation (r1, a, b) \/ relation (r2, a, b) );
+
+  property inter_spec :
+    all r1 r2 : Self,
+    inter_is_internal (r1, r2) ->
+      all a : A, all b : B,
+      relation (inter (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ relation (r2, a, b) );
+
+  property diff_spec :
+    all r1 r2 : Self,
+    diff_is_internal (r1, r2) ->
+      all a : A, all b : B,
+      relation (diff (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+
+  logical let is_left_unique (r) =
+    all a1 a2 : A, all b : B,
+    ( relation (r, a1, b) /\ relation (r, a2, b) ) -> A!equal (a1, a2);
+
+  logical let is_right_unique (r) =
+    all a : A, all b1 b2 : B,
+    ( relation (r, a, b1) /\ relation (r, a, b2) ) -> B!equal (b1, b2);
+
+  logical let is_left_total (r) =
+    all a : A, ex b : B, relation (r, a, b);
+
+  logical let is_right_total (r) =
+    all b : B, ex a : A, relation (r, a, b);
+
+end;;
+
+
+species Relation (A is Setoid, B is Setoid) =
+
+  inherit Abstract_relation (A, B);
+
+  logical let empty_belongs = true;
+  logical let total_belongs = true;
+  logical let singleton_belongs (_a, _b) = true;
+  logical let union_is_internal (_r1, _r2) = true;
+  logical let inter_is_internal (_r1, _r2) = true;
+  logical let diff_is_internal (_r1, _r2) = true;
+
+end;;
+
+
+species Injective_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B), Abstract_relation (A, B);
+
+  property left_unique : all r : Self, is_left_unique (r);
+
+
+  logical let total_belongs = is_A_singleton;
+
+  logical let union_is_internal (r1, r2) =
+    all a1 a2 : A, all b : B,
+    ( relation (r1, a1, b) /\ relation (r2, a2, b) ) -> A!equal (a1, a2);
+
+
+  theorem left_unique_empty :
+    all r1 r2 : Self,
+    empty_belongs -> is_left_unique (empty (()))
+  proof = assumed;            (* TODO *)
+
+  theorem left_unique_total :
+    total_belongs -> is_left_unique (total (()))
+  proof = assumed;            (* TODO *)
+
+  theorem left_unique_singleton :
+    all a : A, all b : B,
+    singleton_belongs (a, b) -> is_left_unique (singleton (a, b))
+  proof = assumed;            (* TODO *)
+
+  theorem left_unique_union :
+    all r1 r2 : Self,
+    union_is_internal (r1, r2) -> is_left_unique (union (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem left_unique_inter :
+    all r1 r2 : Self,
+    inter_is_internal (r1, r2) -> is_left_unique (inter (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem left_unique_diff :
+    all r1 r2 : Self,
+    diff_is_internal (r1, r2) -> is_left_unique (diff (r1, r2))
+  proof = assumed;            (* TODO *)
+
+end;;
+
+
+species Determinist_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B), Abstract_relation (A, B);
+
+  property right_unique : all r : Self, is_right_unique (r);
+
+
+  logical let total_belongs = is_B_singleton;
+
+  logical let union_is_internal (r1, r2) =
+    all a : A, all b1 b2 : B,
+    ( relation (r1, a, b1) /\ relation (r2, a, b2) ) -> B!equal (b1, b2);
+
+
+  theorem right_unique_empty :
+    all r1 r2 : Self,
+    empty_belongs -> is_right_unique (empty (()))
+  proof = assumed;            (* TODO *)
+
+  theorem right_unique_total :
+    total_belongs -> is_right_unique (total (()))
+  proof = assumed;            (* TODO *)
+
+  theorem right_unique_singleton :
+    all a : A, all b : B,
+    singleton_belongs (a, b) -> is_right_unique (singleton (a, b))
+  proof = assumed;            (* TODO *)
+
+  theorem right_unique_union :
+    all r1 r2 : Self,
+    union_is_internal (r1, r2) -> is_right_unique (union (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem right_unique_inter :
+    all r1 r2 : Self,
+    inter_is_internal (r1, r2) -> is_right_unique (inter (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem right_unique_diff :
+    all r1 r2 : Self,
+    diff_is_internal (r1, r2) -> is_right_unique (diff (r1, r2))
+  proof = assumed;            (* TODO *)
+
+end;;
+
+
+species Left_total_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B), Abstract_relation (A, B);
+
+  property left_total : all r : Self, is_left_total (r);
+
+
+  logical let empty_belongs = false;
+
+  logical let singleton_belongs (_a, _b) = is_A_singleton;
+
+  logical let inter_is_internal (r1, r2) =
+    all a : A, ex b : B, relation (r1, a, b) /\ relation (r2, a, b);
+
+  logical let diff_is_internal (r1, r2) =
+    all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b);
+
+
+  theorem left_total_empty :
+    all r1 r2 : Self,
+    empty_belongs -> is_left_total (empty (()))
+  proof = assumed;            (* TODO *)
+
+  theorem left_total_total :
+    total_belongs -> is_left_total (total (()))
+  proof = assumed;            (* TODO *)
+
+  theorem left_total_singleton :
+    all a : A, all b : B,
+    singleton_belongs (a, b) -> is_left_total (singleton (a, b))
+  proof = assumed;            (* TODO *)
+
+  theorem left_total_union :
+    all r1 r2 : Self,
+    union_is_internal (r1, r2) -> is_left_total (union (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem left_total_inter :
+    all r1 r2 : Self,
+    inter_is_internal (r1, r2) -> is_left_total (inter (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem left_total_diff :
+    all r1 r2 : Self,
+    diff_is_internal (r1, r2) -> is_left_total (diff (r1, r2))
+  proof = assumed;            (* TODO *)
+
+end;;
+
+
+species Surjective_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B), Abstract_relation (A, B);
+
+  property right_total : all r : Self, is_right_total (r);
+
+
+  logical let empty_belongs = false;
+
+  logical let singleton_belongs (_a, _b) = is_B_singleton;
+
+  logical let inter_is_internal (r1, r2) =
+    all b : B, ex a : A, relation (r1, a, b) /\ relation (r2, a, b);
+
+  logical let diff_is_internal (r1, r2) =
+    all b : B, ex a : A, relation (r1, a, b) /\ ~ relation (r2, a, b);
+
+
+  theorem right_total_empty :
+    all r1 r2 : Self,
+    empty_belongs -> is_right_total (empty (()))
+  proof = assumed;            (* TODO *)
+
+  theorem right_total_total :
+    total_belongs -> is_right_total (total (()))
+  proof = assumed;            (* TODO *)
+
+  theorem right_total_singleton :
+    all a : A, all b : B,
+    singleton_belongs (a, b) -> is_right_total (singleton (a, b))
+  proof = assumed;            (* TODO *)
+
+  theorem right_total_union :
+    all r1 r2 : Self,
+    union_is_internal (r1, r2) -> is_right_total (union (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem right_total_inter :
+    all r1 r2 : Self,
+    inter_is_internal (r1, r2) -> is_right_total (inter (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem right_total_diff :
+    all r1 r2 : Self,
+    diff_is_internal (r1, r2) -> is_right_total (diff (r1, r2))
+  proof = assumed;            (* TODO *)
+
+end;;
+
+
+species Function (A is Setoid, B is Setoid) =
+
+  inherit Determinist_relation (A, B), Left_total_relation (A, B),
+          Abstract_relation (A, B);
+
+end;;
+
+
+species Injective_function (A is Setoid, B is Setoid) =
+
+  inherit Function (A, B), Injective_relation (A, B), Abstract_relation (A, B);
+
+  logical let total_belongs = is_A_singleton /\ is_B_singleton;
+
+  logical let union_is_internal (r1, r2) =
+    all a1 a2 : A, all b1 b2 : B,
+    (( relation (r1, a1, b1) /\ relation (r2, a2, b1) ) -> A!equal (a1, a2)) /\
+    (( relation (r1, a1, b1) /\ relation (r2, a1, b2) ) -> B!equal (b1, b2));
+
+end;;
+
+
+species Surjective_function (A is Setoid, B is Setoid) =
+
+  inherit Function (A, B), Surjective_relation (A, B), Abstract_relation (A, B);
+
+  logical let singleton_belongs (_a, _b) = is_A_singleton /\ is_B_singleton;
+
+  logical let inter_is_internal (r1, r2) =
+    ( all a : A, ex b : B, relation (r1, a, b) /\ relation (r2, a, b) ) /\
+    ( all b : B, ex a : A, relation (r1, a, b) /\ relation (r2, a, b) );
+
+  logical let diff_is_internal (r1, r2) =
+    ( all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b) ) /\
+    ( all b : B, ex a : A, relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+end;;
+
+
+species Bijection (A is Setoid, B is Setoid) =
+
+  inherit Injective_function (A, B), Surjective_function (A, B),
+          Abstract_relation (A, B);
+
+end;;
+
+
+
+
+(** Finites relations *)
+
+
+species Finite_relation (A is Finite_set, B is Finite_set) =
+
+  inherit Relation (A, B), Finite_set;
+
+end;;
+
+
+species Finite_abstract_relation_by_list (A is Finite_set, B is Finite_set) =
+
+  inherit Finite_relation (A, B);
+
+  representation = list (A * B);
+
+  local let rev_append =
+    let rec aux (l1, l2) =
+      match l1 with
+        | [] -> l2
+        | h :: t -> aux (t, h :: l2) in
+    function l1 -> function l2 -> aux (l1, l2);
+
+
+  let relation =
+    let rec aux (r, a, b) =
+      match r with
+        | [] -> false
+        | (a1, b1) :: t -> (A!equal (a1, a) && B!equal (b1, b)) ||
+                           aux (t, a, b) in
+    function r -> function a -> function b -> aux (r, a, b);
+
+
+  signature empty_belongs_impl : bool;
+  signature total_belongs_impl : bool;
+  signature singleton_belongs_impl : A -> B -> bool;
+  signature union_is_internal_impl : Self -> Self -> bool;
+  signature inter_is_internal_impl : Self -> Self -> bool;
+  signature diff_is_internal_impl : Self -> Self -> bool;
+
+  property empty_belongs_impl_correct :
+    empty_belongs_impl <-> empty_belongs;
+
+  property total_belongs_impl_correct :
+    total_belongs_impl <-> total_belongs;
+  
+  property singleton_belongs_impl_correct :
+    all a : A, all b : B,
+    singleton_belongs_impl (a, b) <-> singleton_belongs (a, b);
+  
+  property union_is_internal_impl_correct :
+    all r1 r2 : Self,
+    union_is_internal_impl (r1, r2) <-> union_is_internal (r1, r2);
+  
+  property inter_is_internal_impl_correct :
+    all r1 r2 : Self,
+    inter_is_internal_impl (r1, r2) <-> inter_is_internal (r1, r2);
+  
+  property diff_is_internal_impl_correct :
+    all r1 r2 : Self,
+    diff_is_internal_impl (r1, r2) <-> diff_is_internal (r1, r2);
+
+
+  let empty (_u) =
+    if empty_belongs_impl then [] else failed ("empty not belongs");
+
+  local let total_forced =
+    let rec aux_B (l_b : list (B), a : A, acc) =
+      match l_b with
+        | [] -> []
+        | h :: t -> aux_B (t, a, (a, h) :: acc) in
+    let rec aux_A (l_a : list (A), l_b : list (B), acc) =
+      match l_a with
+        | [] -> []
+        | h :: t -> aux_A (t, l_b, rev_append (aux_B (l_b, h, []), acc)) in
+    aux_A (A!all_to_list, B!all_to_list, []);
+
+  let total (_u) =
+    if total_belongs_impl then total_forced else failed ("total not belongs");
+
+  let singleton (a, b) =
+    if singleton_belongs_impl (a, b) then [(a, b)]
+    else failed ("singleton not belongs");
+
+  let union (r1, r2) =
+    if union_is_internal_impl (r1, r2) then rev_append (r1, r2)
+    else failed ("union not internal");
+
+  let inter =
+    let rec aux (r1, r2, acc) =
+      match r1 with
+        | [] -> acc
+        | (a, b) :: t -> if relation (r2, a, b)
+                         then aux (t, r2, (a, b) :: acc)
+                         else aux (t, r2, acc) in
+    function r1 -> function r2 ->
+      if inter_is_internal_impl (r1, r2) then aux (r1, r2, [])
+      else failed ("inter not internal");
+
+  let diff =
+    let rec aux (r1, r2, acc) =
+      match r1 with
+        | [] -> acc
+        | (a, b) :: t -> if relation (r2, a, b)
+                         then aux (t, r2, acc)
+                         else aux (t, r2, (a, b) :: acc) in
+    function r1 -> function r2 ->
+      if diff_is_internal_impl (r1, r2) then aux (r1, r2, [])
+      else failed ("diff not internal");
+
+  local let contains =
+    let rec aux (r2 : Self, r1 : Self) =
+      match r2 with
+        | [] -> true
+        | (a, b) :: t -> relation (r2, a, b) && aux (t, r1) in
+    function r1 -> function r2 -> aux (r2, r1);
+
+  let equal (r1, r2) = contains (r1, r2) && contains (r2, r1);
+
+  let all_to_list = [];         (* TODO *)
+
+
+  local let is_A_singleton_impl =
+    match A!all_to_list with | [_] -> true | _ -> false;
+
+  theorem is_A_singleton_impl_correct : is_A_singleton_impl <-> is_A_singleton
+    proof = assumed;            (* TODO *)
+
+  local let is_B_singleton_impl =
+    match B!all_to_list with | [_] -> true | _ -> false;
+
+  theorem is_B_singleton_impl_correct : is_B_singleton_impl <-> is_B_singleton
+    proof = assumed;            (* TODO *)
+
+  let print =
+    let rec aux (r) =
+      match r with
+        | [] -> "]"
+        | [(a, b)] ->  "(" ^ A!print (a) ^ ", " ^ B!print (b) ^ ")]"
+        | (a, b) :: t -> "(" ^ A!print (a) ^ ", " ^ B!print (b) ^ "); " ^
+                         aux (t) in
+    function r -> "[" ^ aux (r);
+
+  proof of empty_spec = assumed; (* TODO *)
+  proof of total_spec = assumed;
+  proof of singleton_spec = assumed;
+  proof of union_spec = assumed;
+  proof of inter_spec = assumed;
+  proof of diff_spec = assumed;
+  proof of equal_spec = assumed;
+  proof of all_in_all_to_list = assumed;
+
+end;;
+
+
+species Finite_relation_by_list (A is Finite_set, B is Finite_set) =
+
+  inherit Finite_abstract_relation_by_list (A, B);
+
+  (* /!\ Must be redifined first with a valid representation ! (for failed) *)
+  let element = [];
+
+  local let empty_belongs_impl = true;
+  local let total_belongs_impl = true;
+  local let singleton_belongs_impl (_a, _b) = true;
+  local let union_is_internal_impl (_r1, _r2) = true;
+  local let inter_is_internal_impl (_r1, _r2) = true;
+  local let diff_is_internal_impl (_r1, _r2) = true;
+
+  proof of empty_belongs_impl_correct =
+    by definition of empty_belongs, empty_belongs_impl;
+
+  proof of total_belongs_impl_correct =
+    by definition of total_belongs, total_belongs_impl;
+
+  proof of singleton_belongs_impl_correct =
+    by definition of singleton_belongs, singleton_belongs_impl;
+
+  proof of union_is_internal_impl_correct =
+    by definition of union_is_internal, union_is_internal_impl;
+
+  proof of inter_is_internal_impl_correct =
+    by definition of inter_is_internal, inter_is_internal_impl;
+
+  proof of diff_is_internal_impl_correct =
+    by definition of diff_is_internal, diff_is_internal_impl;
+
+end;;
+
+
+species Finite_injective_relation_by_list (A is Finite_set, B is Finite_set) =
+
+  inherit Finite_relation_by_list (A, B), Injective_relation (A, B),
+          Finite_abstract_relation_by_list (A, B);
+
+  local let total_belongs_impl = is_A_singleton_impl;
+
+  local let union_is_internal_aux_A =
+    let rec aux_A_bis (l_a : list (A), b : B, a : A, r2) =
+      match l_a with
+        | [] -> true
+        | h :: t -> if relation (r2, h, b)
+                    then A!equal (h, a) && aux_A_bis (t, b, a, r2)
+                    else aux_A_bis (t, b, a, r2) in
+    let rec aux_A (l_a_r : list (A), l_a : list (A), b : B, r1, r2) =
+      match l_a_r with
+        | [] -> true
+        | h :: t -> if relation (r1, h, b)
+                    then aux_A_bis (l_a, b, h, r2) && aux_A (t, l_a, b, r1, r2)
+                    else aux_A (t, l_a, b, r1, r2) in
+    let rec aux_B (l_b : list (B), l_a : list (A), r1, r2) =
+      match l_b with
+        | [] -> true
+        | h :: t -> aux_A (l_a, l_a, h, r1, r2) && aux_B (t, l_a, r1, r2) in
+    function r1 -> function r2 ->
+      aux_B (B!all_to_list, A!all_to_list, r1, r2);
+
+  local let union_is_internal_impl = union_is_internal_aux_A;
+
+
+  proof of total_belongs_impl_correct =
+    by property is_A_singleton_impl_correct
+       definition of total_belongs, total_belongs_impl;
+
+  proof of union_is_internal_impl_correct = assumed; (* TODO *)
+
+  proof of left_unique = assumed; (* ??? *)
+
+end;;
+
+
+species Finite_determinist_relation_by_list (A is Finite_set, B is Finite_set) =
+
+  inherit Finite_relation_by_list (A, B), Determinist_relation (A, B),
+          Finite_abstract_relation_by_list (A, B);
+
+  local let total_belongs_impl = is_B_singleton_impl;
+
+  local let union_is_internal_aux_B =
+    let rec aux_B_bis (l_b : list (B), a : A, b : B, r2) =
+      match l_b with
+        | [] -> true
+        | h :: t -> if relation (r2, a, h)
+                    then B!equal (h, b) && aux_B_bis (t, a, b, r2)
+                    else aux_B_bis (t, a, b, r2) in
+    let rec aux_B (l_b_r : list (B), l_b : list (B), a : A, r1, r2) =
+      match l_b_r with
+        | [] -> true
+        | h :: t -> if relation (r1, a, h)
+                    then aux_B_bis (l_b, a, h, r2) && aux_B (t, l_b, a, r1, r2)
+                    else aux_B (t, l_b, a, r1, r2) in
+    let rec aux_A (l_a : list (A), l_b : list (B), r1, r2) =
+      match l_a with
+        | [] -> true
+        | h :: t -> aux_B (l_b, l_b, h, r1, r2) && aux_A (t, l_b, r1, r2) in
+    function r1 -> function r2 ->
+      aux_A (A!all_to_list, B!all_to_list, r1, r2);
+
+  local let union_is_internal_impl = union_is_internal_aux_B;
+
+
+  proof of total_belongs_impl_correct =
+    by property is_B_singleton_impl_correct
+       definition of total_belongs, total_belongs_impl;
+
+  proof of union_is_internal_impl_correct = assumed; (* TODO *)
+
+  proof of right_unique = assumed; (* ??? *)
+
+end;;
+
+
+species Finite_left_total_relation_by_list (A is Finite_set, B is Finite_set) =
+
+  inherit Finite_relation_by_list (A, B), Left_total_relation (A, B),
+          Finite_abstract_relation_by_list (A, B);
+
+  let element = total_forced;
+
+  local let empty_belongs_impl = false;
+
+  local let singleton_belongs_impl (_a, _b) = is_A_singleton_impl;
+
+  local let inter_is_internal_aux_A =
+    let rec aux_B (l_b, a, r1, r2) =
+      match l_b with
+        | [] -> false
+        | h :: t -> ( relation (r1, a, h) && relation (r2, a, h) ) ||
+                    aux_B (t, a, r1, r2) in
+    let rec aux_A (l_a, l_b, r1, r2) =
+      match l_a with
+        | [] -> true
+        | h :: t -> aux_B (l_b, h, r1, r2) && aux_A (t, l_b, r1, r2) in
+    function r1 -> function r2 -> aux_A (A!all_to_list, B!all_to_list, r1, r2);
+
+  local let inter_is_internal_impl = inter_is_internal_aux_A;
+
+  local let diff_is_internal_aux_A =
+    let rec aux_B (l_b, a, r1, r2) =
+      match l_b with
+        | [] -> false
+        | h :: t -> ( relation (r1, a, h) && ~~ relation (r2, a, h) ) ||
+                    aux_B (t, a, r1, r2) in
+    let rec aux_A (l_a, l_b, r1, r2) =
+      match l_a with
+        | [] -> true
+        | h :: t -> aux_B (l_b, h, r1, r2) && aux_A (t, l_b, r1, r2) in
+    function r1 -> function r2 -> aux_A (A!all_to_list, B!all_to_list, r1, r2);
+
+  local let diff_is_internal_impl = diff_is_internal_aux_A;
+
+
+  proof of empty_belongs_impl_correct =
+    by definition of empty_belongs, empty_belongs_impl;
+
+  proof of singleton_belongs_impl_correct =
+    by property is_A_singleton_impl_correct
+       definition of singleton_belongs, singleton_belongs_impl;
+
+  proof of inter_is_internal_impl_correct = assumed; (* TODO *)
+  proof of diff_is_internal_impl_correct = assumed;
+
+  proof of left_total = assumed; (* ??? *)
+
+end;;
+
+
+species Finite_surjective_relation_by_list (A is Finite_set, B is Finite_set) =
+
+  inherit Finite_relation_by_list (A, B), Surjective_relation (A, B),
+          Finite_abstract_relation_by_list (A, B);
+
+  let element = total_forced;
+
+  local let empty_belongs_impl = false;
+
+  local let singleton_belongs_impl (_a, _b) = is_B_singleton_impl;
+
+  local let inter_is_internal_aux_B =
+    let rec aux_A (l_a, b, r1, r2) =
+      match l_a with
+        | [] -> false
+        | h :: t -> ( relation (r1, h, b) && relation (r2, h, b) ) ||
+                    aux_A (t, b, r1, r2) in
+    let rec aux_B (l_b, l_a, r1, r2) =
+      match l_b with
+        | [] -> true
+        | h :: t -> aux_A (l_a, h, r1, r2) && aux_B (t, l_a, r1, r2) in
+    function r1 -> function r2 -> aux_B (B!all_to_list, A!all_to_list, r1, r2);
+
+  local let inter_is_internal_impl = inter_is_internal_aux_B;
+
+  local let diff_is_internal_aux_B =
+    let rec aux_A (l_a, b, r1, r2) =
+      match l_a with
+        | [] -> false
+        | h :: t -> ( relation (r1, h, b) && ~~ relation (r2, h, b) ) ||
+                    aux_A (t, b, r1, r2) in
+    let rec aux_B (l_b, l_a, r1, r2) =
+      match l_b with
+        | [] -> true
+        | h :: t -> aux_A (l_a, h, r1, r2) && aux_B (t, l_a, r1, r2) in
+    function r1 -> function r2 -> aux_B (B!all_to_list, A!all_to_list, r1, r2);
+
+  local let diff_is_internal_impl = diff_is_internal_aux_B;
+
+
+  proof of empty_belongs_impl_correct =
+    by definition of empty_belongs, empty_belongs_impl;
+
+  proof of singleton_belongs_impl_correct =
+    by property is_B_singleton_impl_correct
+       definition of singleton_belongs, singleton_belongs_impl;
+
+  proof of inter_is_internal_impl_correct = assumed; (* TODO *)
+  proof of diff_is_internal_impl_correct = assumed;
+
+  proof of right_total = assumed; (* ??? *)
+
+end;;
+
+
+species Finite_function_by_list (A is Finite_set, B is Finite_set) =
+
+  inherit Finite_determinist_relation_by_list (A, B),
+          Finite_left_total_relation_by_list (A, B),
+          Function (A, B),
+          Finite_abstract_relation_by_list (A, B);
+
+  let element =
+    let rec aux (l : list (A), acc) =
+      match l with
+        | [] -> acc
+        | h :: t -> aux (t, (h, B!element) :: acc) in
+    aux (A!all_to_list, []);
+
+end;;
+
+
+species Finite_injective_function_by_list (A is Finite_set, B is Finite_set) =
+
+  inherit Finite_function_by_list (A, B),
+          Finite_injective_relation_by_list (A, B),
+          Injective_function (A, B),
+          Finite_abstract_relation_by_list (A, B);
+
+  let element = [];           (* /!\ wrong !! don't always exist... *)
+
+  local let total_belongs_impl = is_A_singleton_impl && is_B_singleton_impl;
+
+  local let union_is_internal_impl (r1, r2) =
+    union_is_internal_aux_A (r1, r2) && union_is_internal_aux_B (r1, r2);
+
+
+  proof of total_belongs_impl_correct =
+    by property is_A_singleton_impl_correct, is_B_singleton_impl_correct
+       definition of total_belongs, total_belongs_impl;
+
+  proof of union_is_internal_impl_correct = assumed;
+
+end;;
+
+
+species Finite_surjective_function_by_list (A is Finite_set, B is Finite_set) =
+
+  inherit Finite_function_by_list (A, B),
+          Finite_surjective_relation_by_list (A, B),
+          Surjective_function (A, B),
+          Finite_abstract_relation_by_list (A, B);
+
+  let element =
+    let rec aux_A (l_a : list (A), b : B, acc) =
+      match l_a with
+        | [] -> acc
+        | h :: t -> aux_A (t, b, (h, b) :: acc) in
+    let rec aux_B (l_b : list (B), l_a : list (A)) =
+      match l_b with
+        | [] -> focalize_error ("B should not be empty")
+        | [b] -> aux_A (l_a, b, [])
+        | h :: t -> (A!element, h) :: aux_B (t, l_a) in
+    aux_B (B!all_to_list, A!all_to_list);
+
+  local let singleton_belongs_impl (_a, _b) =
+    is_A_singleton_impl && is_B_singleton_impl;
+
+  local let inter_is_internal_impl (r1, r2) =
+    inter_is_internal_aux_A (r1, r2) && inter_is_internal_aux_B (r1, r2);
+
+  local let diff_is_internal_impl (r1, r2) =
+    diff_is_internal_aux_A (r1, r2) && diff_is_internal_aux_B (r1, r2);
+
+
+  proof of singleton_belongs_impl_correct =
+    by property is_A_singleton_impl_correct, is_B_singleton_impl_correct
+       definition of singleton_belongs, singleton_belongs_impl;
+
+  proof of inter_is_internal_impl_correct = assumed; (* TODO *)
+  proof of diff_is_internal_impl_correct = assumed;
+
+end;;
+
+
+species Finite_bijection_by_list (A is Finite_set, B is Finite_set) =
+
+  inherit Finite_injective_function_by_list (A, B),
+          Finite_surjective_function_by_list (A, B),
+          Bijection (A, B),
+          Finite_abstract_relation_by_list (A, B);
+
+  let element = [];           (* /!\ wrong !! don't always exist... *)
+
+end;;
+
+
+
+
+(** Single binary relation *)
+
+
+(* A : domain, B : codomain *)
+species Single_relation (A is Setoid, B is Setoid) =
+
+  inherit Basic_object;
+
+  (** There is a unique relation for the species. *)
+  signature relation : A -> B -> bool;
+
+
+  logical let is_left_unique =
+    all a1 a2 : A, all b : B,
+    ( relation (a1, b) /\ relation (a2, b) ) -> A!equal (a1, a2);
+
+  logical let is_right_unique =
+    all a : A, all b1 b2 : B,
+    ( relation (a, b1) /\ relation (a, b2) ) -> B!equal (b1, b2);
+
+  logical let is_left_total =
+    all a : A, ex b : B, relation (a, b);
+
+  logical let is_right_total =
+    all b : B, ex a : A, relation (a, b);
+
+end;;
+
+
+
+
+
+
+  (* Tests *)
+
+
+type subject = | S0 | S1 | S2 | S3 | S4 | S5 | S6 | S7;;
+
+species Subject_test =
+
+  inherit Finite_set;
+
+  representation = subject;
+
+  let s0 : Self = S0;
+  let s1 : Self = S1;
+  let s2 : Self = S2;
+  let s3 : Self = S3;
+  let s4 : Self = S4;
+  let s5 : Self = S5;
+  let s6 : Self = S6;
+  let s7 : Self = S7;
+
+  let all_to_list = [S0; S1; S2; S3; S4; S5; S6; S7];
+
+  let element = s0;
+  let equal (s_1, s_2) = s_1 = s_2;
+  let print (s) =
+    match s with
+      | S0 -> "s0" | S1 -> "s1" | S2 -> "s2" | S3 -> "s3"
+      | S4 -> "s4" | S5 -> "s5" | S6 -> "s6" | S7 -> "s7";
+
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
+
+  proof of all_in_all_to_list = assumed;
+
+end;;
+
+collection S = implement Subject_test; end;;
+
+
+type object = | O0 | O1 | O2 | O3 | O4 | O5 | O6 | O7;;
+
+species Object_test =
+
+  inherit Finite_set;
+
+  representation = object;
+
+  let o0 : Self = O0;
+  let o1 : Self = O1;
+  let o2 : Self = O2;
+  let o3 : Self = O3;
+  let o4 : Self = O4;
+  let o5 : Self = O5;
+  let o6 : Self = O6;
+  let o7 : Self = O7;
+
+  let all_to_list = [O0; O1; O2; O3; O4; O5; O6; O7];
+
+  let element = o0;
+  let equal (o_1, o_2) = o_1 = o_2;
+  let print (o) =
+    match o with
+      | O0 -> "o0" | O1 -> "o1" | O2 -> "o2" | O3 -> "o3"
+      | O4 -> "o4" | O5 -> "o5" | O6 -> "o6" | O7 -> "o7";
+
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
+
+  proof of all_in_all_to_list = assumed;
+
+end;;
+
+collection O = implement Object_test; end;;
+
+collection R = implement Finite_relation_by_list (S, O); end;;
+
+collection RI = implement Finite_injective_relation_by_list (S, O); end;;
+
+collection RD = implement Finite_determinist_relation_by_list (S, O); end;;
+
+collection RL = implement Finite_left_total_relation_by_list (S, O); end;;
+
+collection RS = implement Finite_surjective_relation_by_list (S, O); end;;
+
+collection F = implement Finite_function_by_list (S, O); end;;
+
+collection FI = implement Finite_injective_function_by_list (S, O); end;;
+
+collection FS = implement Finite_surjective_function_by_list (S, O); end;;
+
+collection FB = implement Finite_bijection_by_list (S, O); end;;
+
+
+let f = F!element;;
+print_string (F!print (f) ^ "\n");;
+
+let test (f, s, o) =
+  if F!relation (f, s, o)
+  then print_string ("OK\n") else print_string ("KO\n");;
+
+test (f, S!s3, O!o0);;
+test (f, S!s3, O!o3);;
+
+let f1 = F!union (f, F!total (()));;
+print_string (F!print (f1) ^ "\n");;
+
+test (f1, S!s3, O!o3);;

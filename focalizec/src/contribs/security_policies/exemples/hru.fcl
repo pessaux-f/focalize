@@ -1,0 +1,239 @@
+open "basics";;
+open "accesses";;
+open "p_policies";;
+
+
+(** The HRU security model (Harrison, Ruzzo, Ullman model) *)
+
+
+(** HRU policy *)
+
+
+species Target_ac (S is Subject, O is Object, A is Access_mode,
+                   Ac is Accesses (S, O, A)) =
+
+  inherit Target, Accesses (S, O, A);
+
+  signature accesses : Self -> Ac;
+
+  property accesses_preserves_alpha :
+    all t : Self, all s : S, all o : O, all a : A,
+    alpha (t, s, o, a) = Ac!alpha (accesses (t), s, o, a);
+
+end;;
+
+
+species Configuration_ac (S is Subject, O is Object, A is Access_mode,
+                          Ac is Accesses (S, O, A)) =
+
+  inherit Configuration, Accesses (S, O, A);
+
+  signature accesses : Self -> Ac;
+
+  property accesses_preserves_alpha :
+    all c : Self, all s : S, all o : O, all a : A,
+    alpha (c, s, o, a) = Ac!alpha (accesses (c), s, o, a);
+
+end;;
+
+
+species Target_ac_by_list (S is Subject, O is Object, A is Access_mode,
+                           Ac is Accesses (S, O, A)) =
+
+  inherit Finite_target, Target_ac (S, O, A, Ac), Accesses_by_list (S, O, A);
+
+  let accesses (t) =
+    let rec aux (t) =
+      match t with
+        | Empty -> Ac!empty
+        | Cons (s, o, a, l) -> Ac!add (aux (l), s, o, a) in
+    aux (t);
+
+  proof of accesses_preserves_alpha = assumed; (* TODO *)
+
+end;;
+
+
+species Configuration_ac_by_list (S is Subject, O is Object, A is Access_mode,
+                                  Ac is Accesses (S, O, A)) =
+
+  inherit Finite_configuration, Configuration_ac (S, O, A, Ac),
+          Accesses_by_list (S, O, A);
+
+  let accesses (c) =
+    let rec aux (c) =
+      match c with
+        | Empty -> Ac!empty
+        | Cons (s, o, a, l) -> Ac!add (aux (l), s, o, a) in
+    aux (c);
+
+  proof of accesses_preserves_alpha = assumed; (* TODO *)
+
+end;;
+
+
+
+(* Separer P_poly_ac (T_ac, C)  et _hru (T_ac, C_ac) *)
+species P_policy_ac (S is Subject, O is Object, A is Access_mode,
+                     Ac is Accesses (S, O, A),
+                     T is Target_ac (S, O, A, Ac),
+                     C is Configuration_ac (S, O, A, Ac)) =
+
+  inherit Finite_p_policy (T, C);
+
+  representation = unit;
+
+  let relation (t, c) =
+    Ac!is_contained (T!accesses (t), C!accesses (c));
+
+  theorem relation_is_is_contained :
+    all t : T, all c : C,
+    relation (t, c) <-> Ac!is_contained (T!accesses (t), C!accesses (c))
+  proof = by definition of relation;
+
+end;;
+
+
+
+
+
+(* Tests *)
+
+
+type subject = | S0 | S1 | S2 | S3 | S4 | S5 | S6 | S7;;
+
+species Subject_test =
+
+  inherit Subject;
+
+  representation = subject;
+
+  let s0 : Self = S0;
+  let s1 : Self = S1;
+  let s2 : Self = S2;
+  let s3 : Self = S3;
+  let s4 : Self = S4;
+  let s5 : Self = S5;
+  let s6 : Self = S6;
+  let s7 : Self = S7;
+
+  let all_to_list = [S0; S1; S2; S3; S4; S5; S6; S7];
+
+  let element = s0;
+  let equal (s_1, s_2) = s_1 = s_2;
+  let print (s) =
+    match s with
+      | S0 -> "s0" | S1 -> "s1" | S2 -> "s2" | S3 -> "s3"
+      | S4 -> "s4" | S5 -> "s5" | S6 -> "s6" | S7 -> "s7";
+
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
+
+  proof of all_in_all_to_list = assumed;
+
+end;;
+
+collection S = implement Subject_test; end;;
+
+
+type object = | O0 | O1 | O2 | O3 | O4 | O5 | O6 | O7;;
+
+species Object_test =
+
+  inherit Object;
+
+  representation = object;
+
+  let o0 : Self = O0;
+  let o1 : Self = O1;
+  let o2 : Self = O2;
+  let o3 : Self = O3;
+  let o4 : Self = O4;
+  let o5 : Self = O5;
+  let o6 : Self = O6;
+  let o7 : Self = O7;
+
+  let all_to_list = [O0; O1; O2; O3; O4; O5; O6; O7];
+
+  let element = o0;
+  let equal (o_1, o_2) = o_1 = o_2;
+  let print (o) =
+    match o with
+      | O0 -> "o0" | O1 -> "o1" | O2 -> "o2" | O3 -> "o3"
+      | O4 -> "o4" | O5 -> "o5" | O6 -> "o6" | O7 -> "o7";
+
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
+
+  proof of all_in_all_to_list = assumed;
+
+end;;
+
+collection O = implement Object_test; end;;
+
+
+type access_mode = | A0 | A1 | A2 | A3 | A4 | A5 | A6 | A7;;
+
+species Access_mode_test =
+
+  inherit Access_mode;
+
+  representation = access_mode;
+
+  let a0 : Self = A0;
+  let a1 : Self = A1;
+  let a2 : Self = A2;
+  let a3 : Self = A3;
+  let a4 : Self = A4;
+  let a5 : Self = A5;
+  let a6 : Self = A6;
+  let a7 : Self = A7;
+
+  let all_to_list = [A0; A1; A2; A3; A4; A5; A6; A7];
+
+  let element = a0;
+  let equal (a_1, a_2) = a_1 = a_2;
+  let print (a) =
+    match a with
+      | A0 -> "a0" | A1 -> "a1" | A2 -> "a2" | A3 -> "a3"
+      | A4 -> "a4" | A5 -> "a5" | A6 -> "a6" | A7 -> "a7";
+
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
+
+  proof of all_in_all_to_list = assumed;
+
+end;;
+
+collection A = implement Access_mode_test; end;;
+
+collection Ac = implement Accesses_by_list (S, O, A); end;;
+
+collection T = implement Target_ac_by_list (S, O, A, Ac); end;;
+
+collection C = implement Configuration_ac_by_list (S, O, A, Ac); end;;
+
+collection P = implement P_policy_ac (S, O, A, Ac, T, C); end;;
+
+
+let test_2 (t, c) =
+  let conf = "(" ^ T!print (t) ^ ", " ^ C!print (c) ^ ")" in
+  if P!relation (t, c)
+  then print_string (conf ^ "   OK\n")
+  else print_string (conf ^ "   KO\n");;
+
+
+let target_0 = T!empty;;
+let target_1 = T!add (target_0, S!s3, O!o5, A!a2);;
+
+let configuration_0 = C!empty;;
+let configuration_1 = C!add (configuration_0, S!s3, O!o5, A!a2);;
+
+test_2 (target_0, configuration_0);;
+test_2 (target_0, configuration_1);;
+test_2 (target_1, configuration_0);;
+test_2 (target_1, configuration_1);;
+

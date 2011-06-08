@@ -1,0 +1,85 @@
+open "sets";;
+
+
+species Label = inherit Setoid; end;;
+
+
+species System (L is Label) =
+
+    inherit Basic_object;
+
+    signature transition : Self -> Label -> Self;
+
+    signature is_initial : Self -> bool;
+
+end;;
+
+
+
+
+(* Tests *)
+
+(* Parity automate *)
+
+type parity = | Even | Odd;;
+
+species Parity_State =
+
+    inherit Setoid;
+
+    representation = parity;
+
+    let even : Self = Even;
+    let odd : Self = Odd;
+
+    let to_int (x : Self) = match x with | Even -> 0 | Odd -> 1;
+
+    let element = Even;
+    let equal (x, y) = x = y;
+    let print (x) = match x with | Even -> "even" | Odd -> "odd";
+
+    proof of equal_reflexive = by definition of equal;
+    proof of equal_symmetric = by definition of equal;
+    proof of equal_transitive = by definition of equal;
+
+end;;
+
+collection S = implement Parity_State; end;;
+
+
+species Parity_Label =
+
+    inherit Label;
+
+    representation = int;
+
+    let value (l : Self) : int = l;
+
+    let element = 0;
+    let equal = ( =0x );
+    let print = string_of_int;
+    let parse = int_of_string;
+
+    proof of equal_reflexive = assumed; (* by definition of equal; *)
+    proof of equal_symmetric = assumed; (* by definition of equal; *)
+    proof of equal_transitive = assumed; (* by definition of equal; *)
+
+end;;
+
+collection L = implement Parity_Label; end;;
+
+
+species Parity_System (L is Label) =
+
+    inherit System (L), Parity_State;
+
+    let is_initial (x) = equal (x, even);
+
+    let transition (x, l) =
+      match x with
+        | Even -> if L!value (l) % 2 = 0 then even else odd
+        | Odd  -> if L!value (l) % 2 = 0 then odd else even;
+
+end;;
+
+collection Parity_System_Impl = implement Parity_System (L); end;;

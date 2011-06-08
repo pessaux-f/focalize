@@ -1,0 +1,126 @@
+open "basics";;
+open "sets";;
+open "products";;
+
+
+(** Labelled transition system *)
+
+
+species State =
+
+  inherit Setoid;
+
+  signature is_initial : Self -> bool;
+
+end;;
+
+
+species Label = inherit Setoid; end;;
+
+
+(** Species of a transition system in all states S and labels L *)
+species Transition_system (S is State, L is Label) =
+
+  inherit Basic_object;
+
+  (** transition relation *)
+  signature delta : S -> L -> S -> bool;
+    
+  local let ( =S ) = S!equal;
+  local let ( =L ) = L!equal;
+
+  logical let is_determinist =
+    all x y z : S, all l : L,
+    ( delta (x, l, y) /\ delta (x, l, z) ) -> y =S z;
+
+  logical let is_complete =
+    all x : S, all l : L,
+    ex y : S, delta (x, l, y);
+
+  (* intuitive definition of "reachable" *)
+
+  (* logical let rec is_descendant (y, x) = *)
+  (*   y =S x \/ *)
+  (*   ex z : S, ex l : L, delta (x, l, z) /\ is_descendant (y, z); *)
+
+  (* logical let is_reachable (x) = *)
+  (*   ex y : S, S!is_initial (y) /\ is_descendant (x, y); *)
+
+  (** The list represents the sequence of transitions of the path in
+      reverse. *)
+  let is_path_from_init_to =
+    let rec aux (p, x) =
+      match p with
+        | [] -> S!is_initial (x)
+        | (y, l, z) :: q -> z =S x && delta (y, l, z) && aux (q, y) in
+    function p -> function x -> aux (p, x);
+
+  logical let is_reachable (x) =
+    ex p : list (S * L * S), is_path_from_init_to (p, x);
+
+end;;
+
+
+(** A system with "real" transitions (must be determinist and complete) *)
+species Operational_transition_system (S is State, L is Label) =
+
+  inherit Transition_system (S, L);
+
+  property determinist : is_determinist;
+  property complete : is_complete;
+
+  signature transition : S -> L -> S;
+
+  property transition_is_valid :
+    all x y : S, all l : L, transition (x, l) =S y <-> delta (x, l, y);
+
+  (** A multiple transition from state x with a list l of labels *)
+  let transition_iter =
+    let rec aux (l, x) =
+      match l with
+        | [] -> x
+        | h :: t -> aux (t, transition (x, h)) in
+    function x -> function l -> aux (l, x);
+
+end;;
+
+
+
+
+(** System with requests for transitions *)
+
+
+species Request = inherit Setoid; end;;
+
+species Answer = inherit Setoid; end;;
+
+
+species Label_request (R is Request, D is Answer) =
+
+  inherit Label, Cartesian_product (R, D);
+
+  let request (l : Self) = first (l);
+  let answer (l : Self) = second (l);
+
+  let print (l) =
+    "(" ^ R!print (request (l)) ^ ", " ^ D!print (answer (l)) ^ ")";
+
+end;;
+
+
+species Transition_system_request (R is Request, D is Answer,
+                                   S is State, L is Label_request (R, D)) =
+
+  inherit Transition_system (S, L);
+
+end;;
+
+
+species Operational_transition_system_request (R is Request, D is Answer,
+                                               S is State,
+                                               L is Label_request (R, D)) =
+
+  inherit Transition_system_request (R, D, S, L),
+          Operational_transition_system (S, L);
+
+end;;

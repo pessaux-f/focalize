@@ -1,0 +1,23 @@
+open "basics";;
+open "sets";;
+
+
+species Finite_set =
+
+  inherit Setoid;
+
+  (** All the members of the species. *)
+  signature all_to_list : list (Self);
+
+  local let in_list =
+    let rec aux (l, x) =
+      match l with
+        | [] -> false
+        | h :: q -> equal (h, x) || aux (q, x) in
+    function x -> function l -> aux (l, x);
+
+  property all_in_all_to_list :
+    all x : Self, in_list (x, all_to_list);
+
+end;;
+

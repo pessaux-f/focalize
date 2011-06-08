@@ -1,0 +1,96 @@
+(** Binary relation *)
+
+open "basics";;
+open "sets";;
+open "products";;
+open "ensembles_finis";;
+
+
+species Binary_relation (X is Setoid, Y is Setoid) =
+
+    inherit Product_set (X, Y);
+
+    (** constraint on the product *)
+    signature is_in : Self -> bool;
+
+end;;
+
+
+species Finite_binary_relation (X is Setoid, Y is Setoid,
+                                P is Product_set (X, Y)) =
+
+    inherit Binary_relation (X, Y), Ensembles_finis (P);
+
+ (* ??? *)
+
+end;;
+
+
+species Add_binary_relation (X is Setoid, Y is Setoid,
+                             R is Binary_relation (X, Y), r in R) =
+
+    inherit Binary_relation (X, Y);
+
+    (* probleme de type *)
+    let is_in (s : Self) = equal (s, r) || R!is_in (s);
+
+end;;
+
+
+
+(* Tests *)
+
+species Integer_Concrete =
+
+  inherit Setoid;
+
+  representation = int;
+
+  let element = 0;
+  let equal = ( =0x );
+
+  let leq (x : Self, y : Self) = x <=0x y;
+
+  let print = string_of_int;
+  let parse = int_of_string;
+
+  proof of equal_reflexive = assumed;
+  proof of equal_symmetric = assumed;
+  proof of equal_transitive = assumed;
+
+end;;
+
+collection Integer = implement Integer_Concrete; end;;
+
+species LEQ =
+
+    inherit Binary_relation (Integer, Integer);
+
+    representation = Integer * Integer;
+
+    let first (x) = match x with | (r, _) -> r;
+    let second (x) = match x with | (_, r) -> r;
+    let pair (x, y) = (x, y);
+
+    let is_in (x) = Integer!leq (first(x), second (x));
+
+    proof of pair_preserves_first = assumed;
+    proof of pair_preserves_second = assumed;
+
+end;;
+
+collection LEQ_Coll = implement LEQ; end;;
+
+
+let test (x, y) =
+  let p = LEQ_Coll!pair (Integer!parse (string_of_int (x)),
+                         Integer!parse (string_of_int (y))) in
+  let _0 = print_string ("(" ^ string_of_int (x) ^ ", " ^
+                         string_of_int (y) ^ ") ") in
+  let _1 = if LEQ_Coll!is_in (p) then print_string ("OK")
+           else print_string ("KO") in
+  print_string ("\n");;
+
+test (3, 5);;
+test (3, 2);;
+test (3, 3);;

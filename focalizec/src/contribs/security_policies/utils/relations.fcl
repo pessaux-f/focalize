@@ -1,0 +1,131 @@
+open "basics";;
+open "sets";;
+open "finite_sets";;
+
+
+(** Binary relation *)
+
+
+(** A : domain, B : codomain *)
+species Relation (A is Setoid, B is Setoid) =
+
+  inherit Basic_object;
+
+  signature relation : A -> B -> bool;
+
+
+  logical let is_empty = all a : A, all b : B, relation (a, b) = false;
+
+  logical let is_total = all a : A, all b : B, relation (a, b) = true;
+
+  logical let is_left_unique =
+    all a1 a2 : A, all b : B,
+    ( relation (a1, b) /\ relation (a2, b) ) -> A!equal (a1, a2);
+
+  logical let is_right_unique =
+    all a : A, all b1 b2 : B,
+    ( relation (a, b1) /\ relation (a, b2) ) -> B!equal (b1, b2);
+
+  logical let is_left_total =
+    all a : A, ex b : B, relation (a, b);
+
+  logical let is_right_total =
+    all b : B, ex a : A, relation (a, b);
+
+end;;
+
+
+species Injective_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property left_unique : is_left_unique;
+
+end;;
+
+
+species Determinist_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property right_unique : is_right_unique;
+
+end;;
+
+
+species Left_total_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property left_total : is_left_total;
+
+end;;
+
+
+species Surjective_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property right_total : is_right_total;
+
+end;;
+
+
+species Function (A is Setoid, B is Setoid) =
+  inherit Determinist_relation (A, B), Left_total_relation (A, B); end;;
+
+
+species Injective_function (A is Setoid, B is Setoid) =
+  inherit Function (A, B), Injective_relation (A, B); end;;
+
+
+species Surjective_function (A is Setoid, B is Setoid) =
+  inherit Function (A, B), Surjective_relation (A, B); end;;
+
+
+species Bijection (A is Setoid, B is Setoid) =
+  inherit Injective_function (A, B), Surjective_function (A, B); end;;
+
+
+
+
+(** Finites relations *)
+
+
+species Finite_relation (A is Finite_set, B is Finite_set) =
+
+  inherit Relation (A, B);
+
+end;;
+
+
+species Finite_injective_relation (A is Finite_set, B is Finite_set) =
+  inherit Injective_relation (A, B); end;;
+
+
+species Finite_determinist_relation (A is Finite_set, B is Finite_set) =
+  inherit Determinist_relation (A, B); end;;
+
+
+species Finite_left_total_relation (A is Finite_set, B is Finite_set) =
+  inherit Left_total_relation (A, B); end;;
+
+
+species Finite_surjective_relation (A is Finite_set, B is Finite_set) =
+  inherit Surjective_relation (A, B); end;;
+
+
+species Finite_function (A is Finite_set, B is Finite_set) =
+  inherit Function (A, B); end;;
+
+
+species Finite_injective_function (A is Finite_set, B is Finite_set) =
+  inherit Injective_function (A, B); end;;
+
+
+species Finite_surjective_function (A is Finite_set, B is Finite_set) =
+  inherit Surjective_function (A, B); end;;
+
+
+species Finite_bijection (A is Finite_set, B is Finite_set) =
+  inherit Bijection (A, B); end;;

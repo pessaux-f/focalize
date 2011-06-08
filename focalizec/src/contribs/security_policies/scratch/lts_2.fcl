@@ -1,0 +1,35 @@
+use "basics";;
+use "sets";;
+use "ensembles_finis";;
+open "basics";;
+open "sets";;
+open "ensembles_finis";;
+
+
+species System (State is Setoid,
+                States is Ensembles_finis (State),
+                Initial_States is Ensembles_finis (State),
+                Label is Setoid,
+                Labels is Ensembles_finis (Label)) =
+
+    inherit Basic_object;
+
+    signature states : States;
+    signature initial_states : Initial_States;
+    signature labels : Labels;
+    signature delta : State -> Label -> State;
+
+    property determinist :
+      all x y z : State, all l : Label,
+      States!est_element (x, states) -> States!est_element (y, states) ->
+      States!est_element (z, states) -> Labels!est_element (l, labels) ->
+        ( State!equal (delta (x, l), y) /\ State!equal (delta (x, l), z) ) ->
+        State!equal (y, z);
+
+    property left_total :
+      all x : State, all l : Label,
+      States!est_element (x, states) -> Labels!est_element (l, labels) ->
+        ex y : State, States!est_element (y, states) ->
+        State!equal (delta (x, l), y);
+
+end;;

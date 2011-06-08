@@ -1,0 +1,394 @@
+(** Binary relation *)
+
+open "basics";;
+open "sets";;
+open "products";;
+open "ensembles_finis";;
+
+
+(** A : domain, B : codomain *)
+species Relation (A is Setoid, B is Setoid) =
+
+  inherit Partial_set;
+
+  signature relation : Self -> A -> B -> bool;
+
+  signature empty : unit -> Self;
+  signature total : unit -> Self;
+  signature singleton : A -> B -> Self;
+
+  signature union : Self -> Self -> Self;
+  signature inter : Self -> Self -> Self;
+  signature diff : Self -> Self -> Self;
+
+  (* ici ?? *)
+  logical let is_A_singleton = all a : A, A!equal (a, A!element);
+  logical let is_B_singleton = all b : B, B!equal (b, B!element);
+
+  signature is_defined_empty : bool;
+  signature is_defined_total : bool;
+  signature is_defined_singleton : A -> B -> bool;
+  signature is_defined_union : Self -> Self -> bool;
+  signature is_defined_inter : Self -> Self -> bool;
+  signature is_defined_diff : Self -> Self -> bool;
+
+  property equal_spec :
+    all r1 r2 : Self,
+    equal (r1, r2) <-> all a : A, all b : B,
+                       relation (r1, a, b) = relation (r2, a, b);
+
+  proof of equal_reflexive = by property equal_spec;
+  proof of equal_symmetric = by property equal_spec;
+  proof of equal_transitive = by property equal_spec;
+
+  property empty_spec :
+    is_defined_empty ->
+      all a : A, all b : B, all u : unit, ~ relation (empty (u), a, b);
+
+  property total_spec :
+    is_defined_total ->
+      all a : A, all b : B, all u : unit, relation (total (u), a, b);
+
+  property singleton_spec :
+    all a1 : A, all b1 : B,
+    is_defined_singleton (a1, b1) ->
+      all a2 : A, all b2 : B,
+      relation (singleton (a1, b1), a2, b2) <->
+      ( A!equal (a1, a2) && B!equal (b1, b2) );
+
+  property union_spec :
+    all r1 r2 : Self,
+    is_defined_union (r1, r2) ->
+      all a : A, all b : B,
+      relation (union (r1, r2), a, b) <->
+      ( relation (r1, a, b) \/ relation (r2, a, b) );
+
+  property inter_spec :
+    all r1 r2 : Self,
+    is_defined_inter (r1, r2) ->
+      all a : A, all b : B,
+      relation (inter (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ relation (r2, a, b) );
+
+  property diff_spec :
+    all r1 r2 : Self,
+    is_defined_diff (r1, r2) ->
+      all a : A, all b : B,
+      relation (diff (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+
+  logical let is_left_unique (r) =
+    all a1 a2 : A, all b : B,
+    ( relation (r, a1, b) /\ relation (r, a2, b) ) -> A!equal (a1, a2);
+
+  logical let is_right_unique (r) =
+    all a : A, all b1 b2 : B,
+    ( relation (r, a, b1) /\ relation (r, a, b2) ) -> B!equal (b1, b2);
+
+  logical let is_left_total (r) =
+    all a : A, ex b : B, relation (r, a, b);
+
+  logical let is_right_total (r) =
+    all b : B, ex a : A, relation (r, a, b);
+
+end;;
+
+
+species Standard_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property is_defined_empty_spec : is_defined_empty = true;
+  property is_defined_total_spec : is_defined_total = true;
+  property is_defined_singleton_spec :
+    all a :A, all b : B, is_defined_singleton (a, b) = true;
+  property is_defined_union_spec :
+    all r1 r2 : Self, is_defined_union (r1, r2) = true;
+  property is_defined_inter_spec :
+    all r1 r2 : Self, is_defined_inter (r1, r2) = true;
+  property is_defined_diff_spec :
+    all r1 r2 : Self, is_defined_diff (r1, r2) = true;
+
+end;;
+
+
+species Injective_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property left_unique : all r : Self, is_left_unique (r);
+
+
+  property is_defined_empty_spec : is_defined_empty = true;
+
+  property is_defined_total_spec : is_defined_total <-> is_A_singleton;
+
+  property is_defined_singleton_spec :
+    all a :A, all b : B, is_defined_singleton (a, b) = true;
+
+  property is_defined_union_spec :
+    all r1 r2 : Self,
+    is_defined_union (r1, r2) <->
+      all a1 a2 : A, all b : B,
+      ( relation (r1, a1, b) /\ relation (r2, a2, b) ) -> A!equal (a1, a2);
+
+  property is_defined_inter_spec :
+    all r1 r2 : Self, is_defined_inter (r1, r2) = true;
+
+  property is_defined_diff_spec :
+    all r1 r2 : Self, is_defined_diff (r1, r2) = true;
+
+end;;
+
+
+species Determinist_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property right_unique : all r : Self, is_right_unique (r);
+
+
+  property is_defined_empty_spec : is_defined_empty = true;
+
+  property is_defined_total_spec : is_defined_total <-> is_B_singleton;
+
+  property is_defined_singleton_spec :
+    all a :A, all b : B, is_defined_singleton (a, b) = true;
+
+  property is_defined_union_spec :
+    all r1 r2 : Self,
+    is_defined_union (r1, r2) <->
+      all a : A, all b1 b2 : B,
+      ( relation (r1, a, b1) /\ relation (r2, a, b2) ) -> B!equal (b1, b2);
+
+  property is_defined_inter_spec :
+    all r1 r2 : Self, is_defined_inter (r1, r2) = true;
+
+  property is_defined_diff_spec :
+    all r1 r2 : Self, is_defined_diff (r1, r2) = true;
+
+end;;
+
+
+species Left_total_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property left_total : all r : Self, is_left_total (r);
+
+
+  property is_defined_empty_spec : is_defined_empty = false;
+
+  property is_defined_total_spec : is_defined_total = true;
+
+  property is_defined_singleton_spec :
+    all a : A, all b : B, is_defined_singleton (a, b) <-> is_A_singleton;
+
+  property is_defined_union_spec :
+    all r1 r2 : Self, is_defined_union (r1, r2) = true;
+
+  property is_defined_inter_spec :
+    all r1 r2 : Self,
+    is_defined_inter (r1, r2) <->
+      all a : A, ex b : B, relation (r1, a, b) /\ relation (r2, a, b);
+
+  property is_defined_diff_spec :
+    all r1 r2 : Self,
+    is_defined_diff (r1, r2) <->
+      all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b);
+
+end;;
+
+
+species Surjective_relation (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property right_total : all r : Self, is_right_total (r);
+
+
+  property is_defined_empty_spec : is_defined_empty = false;
+
+  property is_defined_total_spec : is_defined_total = true;
+
+  property is_defined_singleton_spec :
+    all a : A, all b : B, is_defined_singleton (a, b) <-> is_B_singleton;
+
+  property is_defined_union_spec :
+    all r1 r2 : Self, is_defined_union (r1, r2) = true;
+
+  property is_defined_inter_spec :
+    all r1 r2 : Self,
+    is_defined_inter (r1, r2) <->
+      all b : B, ex a : A, relation (r1, a, b) /\ relation (r2, a, b);
+
+  property is_defined_diff_spec :
+    all r1 r2 : Self,
+    is_defined_diff (r1, r2) <->
+      all b : B, ex a : A, relation (r1, a, b) /\ ~ relation (r2, a, b);
+
+end;;
+
+
+species Function (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property right_unique : all r : Self, is_right_unique (r);
+  property left_total : all r : Self, is_left_total (r);
+
+
+  property is_defined_empty_spec : is_defined_empty = false;
+
+  property is_defined_total_spec : is_defined_total <-> is_B_singleton;
+
+  property is_defined_singleton_spec :
+    all a :A, all b : B, is_defined_singleton (a, b) <-> is_A_singleton;
+
+  property is_defined_union_spec :
+    all r1 r2 : Self,
+    is_defined_union (r1, r2) <->
+      all a : A, all b1 b2 : B,
+      ( relation (r1, a, b1) /\ relation (r2, a, b2) ) -> B!equal (b1, b2);
+
+  property is_defined_inter_spec :
+    all r1 r2 : Self,
+    is_defined_inter (r1, r2) <->
+      all a : A, ex b : B, relation (r1, a, b) /\ relation (r2, a, b);
+
+  property is_defined_diff_spec :
+    all r1 r2 : Self,
+    is_defined_diff (r1, r2) <->
+      all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b);
+
+end;;
+
+
+species Injective_function (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property left_unique : all r : Self, is_left_unique (r);
+  property right_unique : all r : Self, is_right_unique (r);
+  property left_total : all r : Self, is_left_total (r);
+
+
+  property is_defined_empty_spec : is_defined_empty = false;
+
+  property is_defined_total_spec :
+    is_defined_total <-> is_A_singleton /\ is_B_singleton;
+
+  property is_defined_singleton_spec :
+    all a :A, all b : B, is_defined_singleton (a, b) <-> is_A_singleton;
+
+  property is_defined_union_spec :
+    all r1 r2 : Self,
+    is_defined_union (r1, r2) <->
+      all a1 a2 : A, all b1 b2 : B,
+      ((relation (r1, a1, b1) /\ relation (r2, a2, b1)) -> A!equal (a1, a2)) /\
+      ((relation (r1, a1, b1) /\ relation (r2, a1, b2)) -> B!equal (b1, b2));
+
+  property is_defined_inter_spec :
+    all r1 r2 : Self,
+    is_defined_inter (r1, r2) <->
+      all a : A, ex b : B, relation (r1, a, b) /\ relation (r2, a, b);
+
+  property is_defined_diff_spec :
+    all r1 r2 : Self,
+    is_defined_diff (r1, r2) <->
+      all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b);
+
+end;;
+
+
+species Surjective_function (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property right_unique : all r : Self, is_right_unique (r);
+  property left_total : all r : Self, is_left_total (r);
+  property right_total : all r : Self, is_right_total (r);
+
+
+  property is_defined_empty_spec : is_defined_empty = false;
+
+  property is_defined_total_spec : is_defined_total <-> is_B_singleton;
+
+  property is_defined_singleton_spec :
+    all a : A, all b : B,
+    is_defined_singleton (a, b) <-> is_A_singleton /\ is_B_singleton;
+
+  property is_defined_union_spec :
+    all r1 r2 : Self,
+    is_defined_union (r1, r2) <->
+      all a : A, all b1 b2 : B,
+      ( relation (r1, a, b1) /\ relation (r2, a, b2) ) -> B!equal (b1, b2);
+
+  property is_defined_inter_spec :
+    all r1 r2 : Self,
+    is_defined_inter (r1, r2) <->
+      ( all a : A, ex b : B, relation (r1, a, b) /\ relation (r2, a, b) ) /\
+      ( all b : B, ex a : A, relation (r1, a, b) /\ relation (r2, a, b) );
+
+  property is_defined_diff_spec :
+    all r1 r2 : Self,
+    is_defined_diff (r1, r2) <->
+      ( all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b) ) /\
+      ( all b : B, ex a : A, relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+end;;
+
+
+species Bijection (A is Setoid, B is Setoid) =
+
+  inherit Relation (A, B);
+
+  property left_unique : all r : Self, is_left_unique (r);
+  property right_unique : all r : Self, is_right_unique (r);
+  property left_total : all r : Self, is_left_total (r);
+  property right_total : all r : Self, is_right_total (r);
+
+  (* /!\ Comment construire une bijection si A et B non singletons ?? *)
+
+  property is_defined_empty_spec : is_defined_empty = false;
+
+  property is_defined_total_spec :
+    is_defined_total <-> is_A_singleton /\ is_B_singleton;
+
+  property is_defined_singleton_spec :
+    all a : A, all b : B,
+    is_defined_singleton (a, b) <-> is_A_singleton /\ is_B_singleton;
+
+  property is_defined_union_spec :
+    all r1 r2 : Self,
+    is_defined_union (r1, r2) <->
+      all a1 a2 : A, all b1 b2 : B,
+      ((relation (r1, a1, b1) /\ relation (r2, a2, b1)) -> A!equal (a1, a2)) /\
+      ((relation (r1, a1, b1) /\ relation (r2, a1, b2)) -> B!equal (b1, b2));
+
+  property is_defined_inter_spec :
+    all r1 r2 : Self,
+    is_defined_inter (r1, r2) <->
+      ( all a : A, ex b : B, relation (r1, a, b) /\ relation (r2, a, b) ) /\
+      ( all b : B, ex a : A, relation (r1, a, b) /\ relation (r2, a, b) );
+
+  property is_defined_diff_spec :
+    all r1 r2 : Self,
+    is_defined_diff (r1, r2) <->
+      ( all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b) ) /\
+      ( all b : B, ex a : A, relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+end;;
+
+
+(* species Standard_relation_by_list (A is Setoid, B is Setoid) = *)
+
+(*   inherit Standard_relation (A, B); *)
+
+(*   representation = list (A * B); *)
+
+(*   let empty (u) = []; *)
+
+(* end;; *)
+

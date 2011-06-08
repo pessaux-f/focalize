@@ -1,0 +1,215 @@
+(** Binary relation *)
+
+open "basics";;
+open "sets";;
+open "products";;
+open "finite_sets";;
+
+
+(** X : domain, Y : codomain, G : graph *)
+species Relation (X is Setoid, Y is Setoid,
+                  P is Cartesian_product (X, Y),
+                  G is Finite_set (P)) =
+
+    inherit Setoid;
+
+    representation = G;
+
+    let make (r : G) : Self = r;
+
+    let equal = G!equal;
+    let element = G!empty;
+    let print = G!print;
+
+    (** x is rel-related to y *)
+    let relation (r : Self, x, y) = G!is_member (P!pair (x, y), r);
+
+    let add (r : Self, x, y) = G!add (P!pair (x, y), r);
+
+    proof of equal_reflexive = by definition of equal
+                                  property G!equal_reflexive;
+    proof of equal_symmetric = by definition of equal
+                                  property G!equal_symmetric;
+    proof of equal_transitive = by definition of equal
+                                   property G!equal_transitive;
+
+end;;
+
+
+(** Uniqueness properties *)
+
+
+species Injective_relation (X is Setoid, Y is Setoid,
+                            P is Cartesian_product (X, Y),
+                            G is Finite_set (P)) =
+
+    inherit Relation (X, Y, P, G);
+
+    property left_unique :
+      all r : Self, all x z : X, all y : Y,
+      ( relation (r, x, y) /\ relation (r, z, y) ) -> X!equal (x, z);
+
+end;;
+
+
+species Determinist_relation (X is Setoid, Y is Setoid,
+                             P is Cartesian_product (X, Y),
+                             G is Finite_set (P)) =
+
+    inherit Relation (X, Y, P, G);
+
+    property right_unique :
+      all r : Self, all x : X, all y z : Y,
+      ( relation (r, x, y) /\ relation (r, x, z) ) -> Y!equal (y, z);
+
+end;;
+
+
+species One_to_one_relation (X is Setoid, Y is Setoid,
+                             P is Cartesian_product (X, Y),
+                             G is Finite_set (P)) =
+
+    inherit Injective_relation (X, Y, P, G), Functional_relation (X, Y, P, G);
+
+end;;
+
+
+(** Totality properties *)
+
+
+species Left_total_relation (X is Setoid, Y is Setoid,
+                             P is Cartesian_product (X, Y),
+                             G is Finite_set (P)) =
+
+    inherit Relation (X, Y, P, G);
+
+    property left_total :
+      all r : Self, all x : X,
+      ex y : Y, relation (r, x, y);
+
+end;;
+
+
+species Surjective_relation (X is Setoid, Y is Setoid,
+                             P is Cartesian_product (X, Y),
+                             G is Finite_set (P)) =
+
+    inherit Relation (X, Y, P, G);
+
+    property right_total :
+      all r : Self, all y : Y,
+      ex x : X, relation (r, x, y);
+
+end;;
+
+
+species Correspondence (X is Setoid, Y is Setoid,
+                        P is Cartesian_product (X, Y),
+                        G is Finite_set (P)) =
+
+    inherit Left_total_relation (X, Y, P, G), Surjective_relation (X, Y, P, G);
+
+end;;
+
+
+(** Uniqueness and totality properties *)
+
+
+species Function (X is Setoid, Y is Setoid,
+                  P is Cartesian_product (X, Y),
+                  G is Finite_set (P)) =
+
+    inherit Determinist_relation (X, Y, P, G), Left_total_relation (X, Y, P, G);
+
+end;;
+
+
+species Bijection (X is Setoid, Y is Setoid,
+                   P is Cartesian_product (X, Y),
+                   G is Finite_set (P)) =
+
+    inherit One_to_one_relation (X, Y, P, G), Correspondence (X, Y, P, G);
+
+end;;
+
+
+
+
+(* Tests *)
+
+
+species X_Spec =
+
+  inherit Setoid;
+
+  representation = int;
+
+  let zero : Self = 0;
+  let one : Self = 1;
+  let two : Self = 2;
+
+  let element = zero;
+  let equal = ( =0x );
+  let print = string_of_int;
+
+  proof of equal_reflexive = assumed;
+  proof of equal_symmetric = assumed;
+  proof of equal_transitive = assumed;
+
+end;;
+
+type y_type = | A | B | C;;
+
+species Y_Spec =
+
+  inherit Setoid;
+
+  representation = y_type;
+
+  let a : Self = A;
+  let b : Self = B;
+  let c : Self = C;
+
+  let element = A;
+  let equal (x, y) = x = y;
+  let print (x : Self) = match x with | A -> "a" | B -> "b" | C -> "c";
+
+  proof of equal_reflexive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_transitive = by definition of equal;
+
+end;;
+
+species Cartesian_product_Print (A is Setoid, B is Setoid) =
+
+    inherit Cartesian_product (A, B);
+
+    let print (x) =
+      "(" ^ A!print (first (x)) ^ ", " ^ B!print (second (x)) ^ ")";
+
+end;;
+
+
+collection X = implement X_Spec; end;;
+collection Y = implement Y_Spec; end;;
+collection P = implement Cartesian_product_Print (X, Y); end;;
+collection G = implement List (P); end;;
+
+species Test_Relation =
+
+    inherit Injective_relation (X, Y, P, G);
+
+    proof of left_unique = assumed;
+
+end;;
+
+collection R = implement Test_Relation; end;;
+
+let g1 = G!add (P!pair (X!zero, Y!a), G!empty);;
+let g = G!add (P!pair (X!one, Y!a), g1);;
+
+(* /!\ Pas d'erreur par ce que pas de preuve de left_unique ou par ce qu'il faut
+   vérifier qu'on reste injectif dans add ???? *)
+
+let r = R!make (g);;
+print_string (R!print (r) ^ "\n");;
