@@ -11,14 +11,21 @@ FINITE_SETS_OBJS = $(BASICS_OBJS) $(SETS_OBJS) utils/finite_sets.cmo
 LTS_OBJS = $(BASICS_OBJS) $(SETS_OBJS) products.cmo utils/lts.cmo
 LTS_MUTABLE_OBJS = $(BASICS_OBJS) $(SETS_OBJS) utils/lts_mutable.cmo
 RELATIONS_OBJS = $(FINITE_SETS_OBJS) utils/relations.cmo
-RELATIONS_MUTABLE_OBJS =\
-  $(FINITE_SETS_OBJS) products.cmo utils/relations_mutable.cmo
+RELATIONS_MUTABLE_OBJS = $(FINITE_SETS_OBJS) products.cmo\
+                         utils/relations_mutable.cmo
 P_POLICIES_OBJS = $(RELATIONS_OBJS) policies/p_policies.cmo
+SECURE_LTS_OBJS = $(P_POLICIES_OBJS) products.cmo utils/lts.cmo\
+                  policies/secure_lts.cmo
 ACCESSES_OBJS = $(FINITE_SETS_OBJS) exemples/accesses.cmo
-HRU_OBJS = $(P_POLICIES_OBJS) exemples/accesses.cmo exemples/hru.cmo
+ACCESS_SYSTEM_OBJS = $(ACCESSES_OBJS) products.cmo utils/lts.cmo\
+                     exemples/access_system.cmo
+ACCESS_P_POLICIES_OBJS = $(P_POLICIES_OBJS) exemples/accesses.cmo\
+                         exemples/access_p_policies.cmo
+HRU_OBJS = $(P_POLICIES_OBJS) exemples/accesses.cmo\
+           exemples/access_p_policies.cmo exemples/hru.cmo
 
 
-all: hru
+all: access_system lts_mutable relations_mutable hru secure_lts
 
 finite_sets: utils/finite_sets.cmo
 	$(OCAMLC) -I $(INCLUDES) -o test $(FINITE_SETS_OBJS)
@@ -38,11 +45,24 @@ relations_mutable: utils/finite_sets.cmo utils/relations_mutable.cmo
 p_policies: utils/finite_sets.cmo policies/p_policies.cmo
 	$(OCAMLC) -I $(INCLUDES) -o test $(P_POLICIES_OBJS)
 
+secure_lts: utils/finite_sets.cmo utils/lts.cmo policies/p_policies.cmo\
+            policies/secure_lts.cmo
+	$(OCAMLC) -I $(INCLUDES) -o test $(SECURE_LTS_OBJS)
+
 accesses: utils/finite_sets.cmo exemples/accesses.cmo
 	$(OCAMLC) -I $(INCLUDES) -o test $(ACCESSES_OBJS)
 
+access_system: utils/finite_sets.cmo utils/lts.cmo exemples/accesses.cmo\
+               exemples/access_system.cmo
+	$(OCAMLC) -I $(INCLUDES) -o test $(ACCESS_SYSTEM_OBJS)
+
+access_p_policies: utils/finite_sets.cmo utils/relations.cmo\
+                   policies/p_policies.cmo exemples/accesses.cmo\
+                   exemples/access_p_policies.cmo
+	$(OCAMLC) -I $(INCLUDES) -o test $(ACCESS_P_POLICIES_OBJS)
+
 hru: utils/finite_sets.cmo utils/relations.cmo policies/p_policies.cmo\
-     exemples/accesses.cmo exemples/hru.cmo
+     exemples/accesses.cmo exemples/access_p_policies.cmo exemples/hru.cmo
 	$(OCAMLC) -I $(INCLUDES) -o test $(HRU_OBJS)
 
 .fcl.cmo:

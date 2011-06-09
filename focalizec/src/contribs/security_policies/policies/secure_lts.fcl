@@ -1,0 +1,41 @@
+open "basics";;
+open "products";;
+open "lts";;
+open "p_policies";;
+
+
+species Secure_state (A is Target, C is Configuration, P is P_policy (A, C),
+                      S is State) =
+
+  inherit Product_set (S, C), State;
+
+  signature interpretation : S -> A;
+
+  let state = first;
+  let configuration = second;
+
+  let is_secure (x : Self) =
+    P!relation (interpretation (state (x)), configuration (x));
+
+  let is_initial  (x : Self) =
+    S!is_initial (state (x)) && is_secure (x);
+
+end;;
+
+
+species Secure_transition_system (A is Target, C is Configuration,
+                                  P is P_policy (A, C),
+                                  St is State, L is Label,
+                                  S is Transition_system (St, L),
+                                  Ss is Secure_state (A, C, P, St)) =
+
+  inherit Transition_system (Ss, L);
+
+  let delta (x : Ss, l : L, y : Ss) =
+    S!delta (Ss!state (x), l, Ss!state (y)) &&
+    ( ~~(Ss!is_secure (x)) || Ss!is_secure (y) );
+
+  theorem all_secure : all x : Ss, is_reachable (x) -> Ss!is_secure (x)
+  proof = assumed;              (* TODO *)
+
+end;;

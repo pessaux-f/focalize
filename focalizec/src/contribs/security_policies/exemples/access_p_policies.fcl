@@ -1,0 +1,47 @@
+open "basics";;
+open "accesses";;
+open "p_policies";;
+
+
+(** Property-based access security policies *)
+
+
+species Target_ac (S is Subject, O is Object, A is Access_mode,
+                   Ac is Accesses (S, O, A)) =
+
+  inherit Target, Accesses (S, O, A);
+
+  signature accesses : Self -> Ac;
+
+  property accesses_preserves_alpha :
+    all t : Self, all s : S, all o : O, all a : A,
+    alpha (t, s, o, a) = Ac!alpha (accesses (t), s, o, a);
+
+end;;
+
+
+species Target_ac_by_list (S is Subject, O is Object, A is Access_mode,
+                           Ac is Accesses (S, O, A)) =
+
+  inherit Finite_target, Target_ac (S, O, A, Ac), Accesses_by_list (S, O, A);
+
+  let accesses (t) =
+    let rec aux (t) =
+      match t with
+        | Empty -> Ac!empty
+        | Cons (s, o, a, l) -> Ac!add (aux (l), s, o, a) in
+    aux (t);
+
+  proof of accesses_preserves_alpha = assumed; (* TODO *)
+
+end;;
+
+
+species P_policy_ac (S is Subject, O is Object, A is Access_mode,
+                     Ac is Accesses (S, O, A),
+                     T is Target_ac (S, O, A, Ac),
+                     C is Configuration) =
+
+  inherit P_policy (T, C);
+
+end;;

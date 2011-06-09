@@ -50,7 +50,7 @@ species Accesses (S is Subject, O is Object, A is Access_mode) =
                               alpha (x, s, o, a) -> alpha (y, s, o, a) );
 
   theorem is_contained_reflexive : all x : Self, is_contained (x, x)
-    proof = by property is_contained_spec;
+  proof = by property is_contained_spec;
 
   theorem is_contained_antisymetric :
     all x y : Self,
@@ -303,5 +303,5 @@ let lenght =
 
 let l = Ac!all_to_list;;
 
-print_string (accesses_list_to_string (l) ^ "\n");;
-print_string (string_of_int (lenght (l)) ^ "\n");;
+(* print_string (accesses_list_to_string (l) ^ "\n");; *)
+(* print_string (string_of_int (lenght (l)) ^ "\n");; *)

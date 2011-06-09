@@ -13,7 +13,7 @@ species State_ac (S is Subject, O is Object, A is Access_mode) =
   let is_initial (x) = equal (x, empty);
 
   theorem initial_is_empty : all x : Self, is_initial (x) <-> equal (x, empty)
-    proof = by definition of is_initial;
+  proof = by definition of is_initial;
 
 end;;
 
@@ -117,9 +117,10 @@ species Transition_system_ac (S is Subject, O is Object, A is Access_mode,
 
     (* Doit marcher sinon report *)
   theorem determinist : is_determinist
-    proof = assumed;            (* TODO *)
+  proof = assumed;            (* TODO *)
+  
   theorem complete : is_complete
-    proof = assumed;
+  proof = assumed;
 
 end;;
 
@@ -171,10 +172,10 @@ species Answer_ac =
   let parse (s) = if s = "yes" then yes else no;
 
   theorem is_yes_or_no : all x : Self, equal (x, yes) \/ equal (x, no)
-    proof = by definition of yes, no, equal;
+  proof = by definition of yes, no, equal;
 
   theorem yes_is_not_not : ~ equal (yes, no)
-    proof = by definition of yes, no, equal;
+  proof = by definition of yes, no, equal;
 
   proof of equal_reflexive = by definition of equal;
   proof of equal_symmetric = by definition of equal;

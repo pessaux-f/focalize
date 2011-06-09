@@ -1,26 +1,13 @@
 open "basics";;
 open "accesses";;
 open "p_policies";;
+open "access_p_policies";;
 
 
 (** The HRU security model (Harrison, Ruzzo, Ullman model) *)
 
 
 (** HRU policy *)
-
-
-species Target_ac (S is Subject, O is Object, A is Access_mode,
-                   Ac is Accesses (S, O, A)) =
-
-  inherit Target, Accesses (S, O, A);
-
-  signature accesses : Self -> Ac;
-
-  property accesses_preserves_alpha :
-    all t : Self, all s : S, all o : O, all a : A,
-    alpha (t, s, o, a) = Ac!alpha (accesses (t), s, o, a);
-
-end;;
 
 
 species Configuration_ac (S is Subject, O is Object, A is Access_mode,
@@ -33,23 +20,6 @@ species Configuration_ac (S is Subject, O is Object, A is Access_mode,
   property accesses_preserves_alpha :
     all c : Self, all s : S, all o : O, all a : A,
     alpha (c, s, o, a) = Ac!alpha (accesses (c), s, o, a);
-
-end;;
-
-
-species Target_ac_by_list (S is Subject, O is Object, A is Access_mode,
-                           Ac is Accesses (S, O, A)) =
-
-  inherit Finite_target, Target_ac (S, O, A, Ac), Accesses_by_list (S, O, A);
-
-  let accesses (t) =
-    let rec aux (t) =
-      match t with
-        | Empty -> Ac!empty
-        | Cons (s, o, a, l) -> Ac!add (aux (l), s, o, a) in
-    aux (t);
-
-  proof of accesses_preserves_alpha = assumed; (* TODO *)
 
 end;;
 
@@ -73,13 +43,12 @@ end;;
 
 
 
-(* Separer P_poly_ac (T_ac, C)  et _hru (T_ac, C_ac) *)
-species P_policy_ac (S is Subject, O is Object, A is Access_mode,
-                     Ac is Accesses (S, O, A),
-                     T is Target_ac (S, O, A, Ac),
-                     C is Configuration_ac (S, O, A, Ac)) =
+species P_policy_hru (S is Subject, O is Object, A is Access_mode,
+                      Ac is Accesses (S, O, A),
+                      T is Target_ac (S, O, A, Ac),
+                      C is Configuration_ac (S, O, A, Ac)) =
 
-  inherit Finite_p_policy (T, C);
+  inherit P_policy_ac (S, O, A, Ac, T, C), Finite_p_policy (T, C);
 
   representation = unit;
 
@@ -216,7 +185,7 @@ collection T = implement Target_ac_by_list (S, O, A, Ac); end;;
 
 collection C = implement Configuration_ac_by_list (S, O, A, Ac); end;;
 
-collection P = implement P_policy_ac (S, O, A, Ac, T, C); end;;
+collection P = implement P_policy_hru (S, O, A, Ac, T, C); end;;
 
 
 let test_2 (t, c) =
