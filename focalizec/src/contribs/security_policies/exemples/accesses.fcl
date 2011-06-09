@@ -28,6 +28,9 @@ species Accesses (S is Subject, O is Object, A is Access_mode) =
 
   signature is_contained : Self -> Self -> bool;
 
+  signature to_list : Self -> list (S * O * A);
+  signature from_list : list (S * O * A) -> Self;
+
   property empty_spec :
     all s : S, all o : O, all a : A,
     ~ alpha (empty, s, o, a);
@@ -63,6 +66,23 @@ species Accesses (S is Subject, O is Object, A is Access_mode) =
     (is_contained (x, y) /\ is_contained (y, z)) -> is_contained (x, z)
   proof = by property is_contained_spec;
 
+  local let in_list_ac =
+    let rec aux (l, s, o, a) =
+      match l with
+        | [] -> false
+        | (s1, o1, a1) :: t ->
+            ( S!equal (s1, s) && O!equal (o1, o) && A!equal (a1, a) ) ||
+            aux (t, s, o, a) in
+    function s -> function o -> function a -> function l -> aux (l, s, o, a);
+
+  property alpha_to_list :
+    all x : Self, all s : S, all o : O, all a : A,
+    in_list_ac (s, o, a, to_list (x)) <-> alpha (x, s, o, a);
+
+  property alpha_from_list :
+    all l : list (S * O * A), all s : S, all o : O, all a : A,
+    in_list_ac (s, o, a, l) <-> alpha (from_list (l), s, o, a); 
+
   property equal_spec :
     all x y : Self,
     equal (x, y) <-> ( all s : S, all o : O, all a : A,
@@ -89,12 +109,13 @@ species Accesses_by_list (S is Subject, O is Object, A is Access_mode) =
   local let ( =O ) = O!equal;
   local let ( =A ) = A!equal;
 
-  let alpha (x, s, o, a) =
-    let rec aux (x) =
+  let alpha =
+    let rec aux (x, s, o, a) =
       match x with
         | Empty -> false
-        | Cons (s2, o2, a2, l) -> (s2 =S s && o2 =O o && a2 =A a) || aux (l) in
-    aux (x);
+        | Cons (s2, o2, a2, l) -> (s2 =S s && o2 =O o && a2 =A a) ||
+                                  aux (l, s, o, a) in
+    function x -> function s -> function o -> function a -> aux (x, s, o, a);
 
   let empty = Empty;
 
@@ -102,21 +123,36 @@ species Accesses_by_list (S is Subject, O is Object, A is Access_mode) =
   let add (x, s, o, a) = Cons (s, o, a, x);
 
   (* On enleve toutes les occurrences. *)
-  let release (x, s, o, a) =
-    let rec aux (x) =
+  let release =
+    let rec aux (x, s, o, a) =
       match x with
         | Empty -> Empty
         | Cons (s2, o2, a2, l) ->
-            if (s2 =S s && o2 =O o && a2 =A a) then aux (l)
-            else Cons (s2, o2, a2, aux (l)) in
-    aux (x);
+            if (s2 =S s && o2 =O o && a2 =A a) then aux (l, s, o, a)
+            else Cons (s2, o2, a2, aux (l, s, o, a)) in
+    function x -> function s -> function o -> function a -> aux (x, s, o, a);
 
-  let is_contained (x : Self, y : Self) =
-    let rec aux (x) =
+  let is_contained =
+    let rec aux (x : Self, y : Self) =
       match x with
         | Empty -> true
-        | Cons (s, o, a, l) -> alpha (y, s, o, a) && aux (l) in
-    aux (x);
+        | Cons (s, o, a, l) -> alpha (y, s, o, a) && aux (l, y) in
+    function x -> function y -> aux (x, y);
+
+  let to_list =
+    let rec aux (x : Self, acc) =
+      match x with
+        | Empty -> acc
+        | Cons (s, o, a, l) -> aux (l, (s, o, a) :: acc) in
+    function x -> aux (x, []);
+
+  let from_list =
+    let rec aux (l : list (S * O * A), acc : Self) =
+      match l with
+        | [] -> acc
+        | (s, o, a) :: t -> aux (t, Cons (s, o, a, acc)) in
+    function l -> aux (l, Empty);
+    
 
   let equal (x, y) = is_contained (x, y) && is_contained (y, x);
 
@@ -181,6 +217,8 @@ species Accesses_by_list (S is Subject, O is Object, A is Access_mode) =
   proof of add_spec = assumed;
   proof of release_spec = assumed;
   proof of is_contained_spec = assumed;
+  proof of alpha_to_list = assumed;
+  proof of alpha_from_list = assumed;
   proof of equal_spec = by property is_contained_spec, equal_from_is_contained;
   proof of all_in_all_to_list = assumed;
 

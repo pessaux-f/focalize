@@ -25,12 +25,12 @@ species Target_ac_by_list (S is Subject, O is Object, A is Access_mode,
 
   inherit Finite_target, Target_ac (S, O, A, Ac), Accesses_by_list (S, O, A);
 
-  let accesses (t) =
+  let accesses =
     let rec aux (t) =
       match t with
         | Empty -> Ac!empty
         | Cons (s, o, a, l) -> Ac!add (aux (l), s, o, a) in
-    aux (t);
+    function t -> aux (t);
 
   proof of accesses_preserves_alpha = assumed; (* TODO *)
 

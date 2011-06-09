@@ -21,11 +21,13 @@ ACCESS_SYSTEM_OBJS = $(ACCESSES_OBJS) products.cmo utils/lts.cmo\
                      exemples/access_system.cmo
 ACCESS_P_POLICIES_OBJS = $(P_POLICIES_OBJS) exemples/accesses.cmo\
                          exemples/access_p_policies.cmo
-HRU_OBJS = $(P_POLICIES_OBJS) exemples/accesses.cmo\
-           exemples/access_p_policies.cmo exemples/hru.cmo
+HRU_OBJS = $(P_POLICIES_OBJS) products.cmo utils/lts.cmo\
+           policies/secure_lts.cmo exemples/accesses.cmo\
+           exemples/access_p_policies.cmo exemples/access_system.cmo\
+           exemples/hru.cmo
 
 
-all: access_system lts_mutable relations_mutable hru secure_lts
+all: lts_mutable relations_mutable hru
 
 finite_sets: utils/finite_sets.cmo
 	$(OCAMLC) -I $(INCLUDES) -o test $(FINITE_SETS_OBJS)
@@ -34,7 +36,7 @@ lts: utils/lts.cmo
 	$(OCAMLC) -I $(INCLUDES) -o test $(LTS_OBJS)
 
 lts_mutable: utils/lts_mutable.cmo
-	$(OCAMLC) -I $(INCLUDES) -o test $(LTS_OBJS)
+	$(OCAMLC) -I $(INCLUDES) -o test $(LTS_MUTABLE_OBJS)
 
 relations: utils/finite_sets.cmo utils/relations.cmo
 	$(OCAMLC) -I $(INCLUDES) -o test $(RELATIONS_OBJS)
@@ -61,8 +63,10 @@ access_p_policies: utils/finite_sets.cmo utils/relations.cmo\
                    exemples/access_p_policies.cmo
 	$(OCAMLC) -I $(INCLUDES) -o test $(ACCESS_P_POLICIES_OBJS)
 
-hru: utils/finite_sets.cmo utils/relations.cmo policies/p_policies.cmo\
-     exemples/accesses.cmo exemples/access_p_policies.cmo exemples/hru.cmo
+hru: utils/finite_sets.cmo utils/relations.cmo utils/lts.cmo\
+     policies/p_policies.cmo policies/secure_lts.cmo\
+     exemples/accesses.cmo exemples/access_p_policies.cmo\
+     exemples/access_system.cmo exemples/hru.cmo
 	$(OCAMLC) -I $(INCLUDES) -o test $(HRU_OBJS)
 
 .fcl.cmo:

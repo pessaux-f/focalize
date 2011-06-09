@@ -2,6 +2,8 @@ open "basics";;
 open "accesses";;
 open "p_policies";;
 open "access_p_policies";;
+open "access_system";;
+open "secure_lts";;
 
 
 (** The HRU security model (Harrison, Ruzzo, Ullman model) *)
@@ -59,6 +61,39 @@ species P_policy_hru (S is Subject, O is Object, A is Access_mode,
     all t : T, all c : C,
     relation (t, c) <-> Ac!is_contained (T!accesses (t), C!accesses (c))
   proof = by definition of relation;
+
+end;;
+
+
+
+(** HRU secure system *)
+
+
+species Secure_state_hru
+  (S is Subject, O is Object, A is Access_mode,
+   Ac is Accesses (S, O, A),
+   T is Target_ac (S, O, A, Ac), C is Configuration_ac (S, O, A, Ac),
+   P is P_policy_hru (S, O, A, Ac, T, C),
+   St is State_ac (S, O, A)) =
+
+  inherit Secure_state (T, C, P, St);
+
+  (* ugly *)
+  let interpretation (x) = T!from_list (St!to_list (x));
+
+end;;
+
+
+species Secure_transition_system_hru
+  (S is Subject, O is Object, A is Access_mode,
+   Ac is Accesses (S, O, A),
+   T is Target_ac (S, O, A, Ac), C is Configuration_ac (S, O, A, Ac),
+   P is P_policy_hru (S, O, A, Ac, T, C),
+   St is State_ac (S, O, A), L is Label_ac (S, O, A),
+   Sys is Transition_system_ac (S, O, A, St, L),
+   Ss is Secure_state_hru (S, O, A, Ac, T, C, P, St)) =
+
+  inherit Secure_transition_system (T, C, P, St, L, Sys, Ss);
 
 end;;
 
