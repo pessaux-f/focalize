@@ -1,0 +1,168 @@
+open "basics";;
+open "sets";;
+
+species Length_spec =
+(*   representation; *)
+
+  signature add : Self -> Self -> Self;
+
+  signature leq : Self -> Self -> bool;
+  signature lt  : Self -> Self -> bool;
+  signature geq : Self -> Self -> bool;
+  signature gt  : Self -> Self -> bool;
+
+  signature min  : Self -> Self -> Self;
+  signature max  : Self -> Self -> Self;
+
+  signature zero : Self;
+
+  signature parse : string -> Self;
+  signature print : Self -> string;
+  signature equal : Self -> Self -> bool;
+
+  (* add is an addition *)
+
+  theorem zero_neutral :
+      all l : Self, !equal(!add(l, !zero), l) 
+    proof = assumed;
+
+  theorem add_assoc :
+      all l1 l2 l3 : Self, !equal (!add(l1, !add(l2, l3)), !add(!add(l1, l2), l3))
+    proof = assumed;
+
+  theorem add_commutes :
+      all l1 l2 : Self, !equal (!add(l1, l2), !add(l2, l1))
+    proof = assumed;
+
+  (* min and max are correct *)
+
+  theorem min_correct :
+      all x y : Self,
+        !equal(!min(x, y), x) \/ 
+        !equal(!min(x, y), y)
+    proof = assumed ;
+
+  theorem min_is_min :
+      all x y : Self,
+        !leq(!min(x, y), x) /\
+        !leq(!min(x, y), y)
+    proof = assumed ;
+
+  theorem max_correct :
+      all x y : Self,
+        !equal(!max(x, y), x) \/ 
+        !equal(!max(x, y), y)
+    proof = assumed ;
+
+  theorem max_is_max :
+      all x y : Self,
+        !leq(x, !max(x, y)) /\
+        !leq(y, !max(x, y))
+    proof = assumed ;
+
+  (* leq is an order *)
+
+  theorem leq_reflexive :
+      all l : Self, !leq(l, l)
+    proof = assumed;
+
+  theorem leq_transitive :
+      all l1 l2 l3 : Self, (!leq(l1, l2) /\ !leq(l2, l3)) -> !leq(l1, l3)
+    proof = assumed;
+  
+  theorem leq_antisym :
+      all l1 l2 : Self, (!leq(l1, l2) /\ ~(!equal(l1, l2))) -> ~(!leq(l2, l1))
+    proof = assumed;
+
+  (* Other Orders are compatibles with leq *)
+
+  theorem leq_lt_correct :
+      all l1 l2 : Self,
+      !leq(l1, l2) <-> (!lt(l1, l2) \/ !equal(l1, l2))
+    proof = assumed;
+
+  theorem leq_gt_correct :
+      all l1 l2 : Self,
+      !leq(l1, l2) <-> !gt(l2, l1) 
+    proof = assumed;
+
+  theorem geq_gt_correct :
+      all l1 l2 : Self,
+      (!leq(l1, l2) /\ ~(!equal(l1, l2))) <-> !geq(l2, l1)
+    proof = assumed;
+
+  (* ** *)
+
+  theorem equal_reflexive :
+      all l : Self, !equal(l, l)
+    proof = assumed;
+
+  theorem equal_symmetric :
+      all l1 l2 : Self, !equal(l1, l2) -> !equal(l2, l1)
+    proof = assumed;
+
+  theorem equal_transitive :
+      all l1 l2 l3 : Self, !equal(l1, l2) -> !equal(l2, l3) -> !equal(l1, l3)
+    proof = assumed;
+
+  theorem equal_refines_base_eq :
+      all l1 l2 : Self, l1 = l2 -> !equal(l1, l2)
+    proof = assumed;
+
+  (* print and parse interact well : *)
+  theorem parse_print_correct :
+      all l : Self, !equal(!parse(!print(l)), l)
+    proof = assumed;
+
+end;;
+
+species Length_imp_int =
+  inherit Setoid;
+  representation = int;
+
+  let add(x : Self, y : Self) : Self = x + y;
+
+  let leq(x : Self, y : Self) : bool = x <=0x y;
+  let lt (x : Self, y : Self) : bool = x <0x y;
+  let geq(x : Self, y : Self) : bool = x >=0x y;
+  let gt (x : Self, y : Self) : bool = x >0x y;
+
+  let zero : Self = 0;
+
+  (* The setoid methods *)
+  let equal(x : Self, y : Self) : bool = x =0x y;
+  let element = !zero;
+  let parse = basics#int_of_string;
+  let print : Self -> string = basics#string_of_int;
+
+  let from_int (x : int) : Self = x;
+  let to_int (x : Self) : Self = x;
+  
+  let min (x : Self, y : Self) : Self = min0x(x, y);
+  let max (x : Self, y : Self) : Self = max0x(x, y);
+end;;
+
+species Length_int = inherit Length_imp_int, Length_spec; end;;
+
+collection Length_int_coll = 
+  implement Length_int;
+end;;
+
+testing Length_int =
+
+(*
+  let ...
+  property ...
+  collection ...
+*)
+
+  testing :
+    min_is_min, max_is_max, min_correct, max_correct, zero_neutral,
+    add_assoc, add_commutes, leq_reflexive, leq_transitive, leq_antisym,
+    equal_reflexive, equal_symmetric, equal_transitive,
+    equal_refines_base_eq, parse_print_correct
+  parameters :
+    let number_of_test = 10;
+    let size_of_elem = 10;
+    let xmlfile = "test_report_length.xml";
+end;;
