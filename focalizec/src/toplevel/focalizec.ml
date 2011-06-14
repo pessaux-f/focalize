@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.54 2011-06-14 15:11:17 weis Exp $ *)
+(* $Id: focalizec.ml,v 1.55 2011-06-14 15:35:48 weis Exp $ *)
 
 exception Bad_file_suffix of string;;
 
@@ -47,7 +47,7 @@ let compile_fcl input_file_name =
        | s -> failwith (Printf.sprintf "Unknown plugin %s" s))
       (List.rev plug_ins) in
   let ast =
-    List.fold_left (fun ast f -> f ast) plug_in_funs ast in
+    List.fold_left (fun ast f -> f ast) ast plug_in_funs in
 
   (* Scopes AST. *)
   let (scoped_ast, scoping_toplevel_env) =

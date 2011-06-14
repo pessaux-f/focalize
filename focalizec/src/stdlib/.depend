@@ -1,4 +1,26 @@
+basics.cmo: ml_builtins.cmo 
+basics.cmx: ml_builtins.cmx 
+fix.cmo: basics.cmo 
+fix.cmx: basics.cmx 
+lattices.cmo: basics.cmo 
+lattices.cmx: basics.cmx 
 ml_builtins.cmo: 
 ml_builtins.cmx: 
+orders.cmo: basics.cmo 
+orders.cmx: basics.cmx 
+orders_and_lattices.cmo: basics.cmo 
+orders_and_lattices.cmx: basics.cmx 
+products.cmo: sets.cmo basics.cmo 
+products.cmx: sets.cmx basics.cmx 
+quotients.cmo: sets.cmo basics.cmo 
+quotients.cmx: sets.cmx basics.cmx 
+sets.cmo: sets_externals.cmo basics.cmo 
+sets.cmx: sets_externals.cmx basics.cmx 
 sets_externals.cmo: ml_builtins.cmo 
 sets_externals.cmx: ml_builtins.cmx 
+strict_orders.cmo: basics.cmo 
+strict_orders.cmx: basics.cmx 
+sums.cmo: sets.cmo basics.cmo 
+sums.cmx: sets.cmx basics.cmx 
+wellfounded.cmo: basics.cmo 
+wellfounded.cmx: basics.cmx 
