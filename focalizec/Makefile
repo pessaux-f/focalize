@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.47 2011-06-14 15:03:15 weis Exp $
+# $Id: Makefile,v 1.48 2011-06-14 16:19:48 weis Exp $
 
 ROOT_DIR=.
 
@@ -22,7 +22,8 @@ include $(ROOT_DIR)/Makefile.config
 COMPILER_DIRS=\
  src/basement src/parser src/typing\
  src/docgen src/commoncodegen src/mlcodegen src/coqcodegen\
- src/testing src/toplevel src/focalizedep
+ src/testing src/relation_extraction\
+ src/toplevel src/focalizedep
 
 LIB_DIRS=\
  src/stdlib src/extlib src/contribs
