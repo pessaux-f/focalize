@@ -11,7 +11,7 @@
 #  Distributed only by permission.                                     #
 #                                                                      #
 #**********************************************************************#
-# $Id: test.spec,v 1.1 2011-05-26 16:08:09 maarek Exp $
+# $Id: test.spec,v 1.2 2011-06-14 15:03:46 weis Exp $
 
 
 High level specification of the Focalize testbed technology
@@ -27,7 +27,7 @@ Test specification language should be written within program sources.
 Use dedicated annotations and syntax ? Orelse integrate within the compiler
 with a specific syntax for test as for the proof language.
 
-Let us assume Lenght_spec is a species:
+Let us assume Length_spec is a species:
 
 species Length_spec =
 (*   representation; *)
@@ -43,7 +43,7 @@ species Length_spec =
   (* add is an addition *)
 
   theorem zero_neutral :
-      all l : Self, !equal(!add(l, !zero), l) 
+      all l : Self, !equal(!add(l, !zero), l)
     proof = assumed;
 
 end;;
@@ -54,7 +54,7 @@ A sample test annotation for species Length_spec could ressemble
     collections :
       collection Length_test = implement Length_spec; end ;;
     theorems :
-    	    zero_neutral
+                zero_neutral
     report : "length.rprt"
     test parameters :
      random_seed = 0101111110;
@@ -62,7 +62,6 @@ A sample test annotation for species Length_spec could ressemble
      max_depth = 5;
      nb_bus_error = 41;
      ...
-
 *)
 
 
@@ -82,26 +81,26 @@ species Length_spec =
   (* add is an addition *)
 
   theorem zero_neutral :
-      all l : Self, !equal(!add(l, !zero), l) 
+      all l : Self, !equal(!add(l, !zero), l)
     proof = assumed;
 
-  test: 
-    collection Length_test = 
+  test:
+    collection Length_test =
       implement Length_spec;
       theorem zero_neutral, equal_symmetric;
       test parameters = {
          random_seed = 0101111110;
          int_inter = [-10; 50];
-     	 max_depth = 5;
-     	 nb_bus_error = 41;
-     	 report = "length.rprt";
+              max_depth = 5;
+              nb_bus_error = 41;
+              report = "length.rprt";
          }
 
 end;;
 
-or using meta annotations 
+or using meta annotations
 
-testing Length_test = 
+testing Length_test =
 
   collection Length_test = implement Length_spec;
 
@@ -129,13 +128,13 @@ A more complicated example could be
 testing Triangle_test =
   collection Length =
     implement Length_spec;
-  collection Triangle_test = 
+  collection Triangle_test =
     implement Triangle(Length);
 
   property min_is_min, med_is_med, max_is_max, min_med_max_give_an_edge,
       create_triangle_correct, length_tsf_correct, parse_print_correct,
       organize_sort, organize_permute, triangle_type_complete;
-  property triangle_type_correct_equi, triangle_type_correct_iso, 
+  property triangle_type_correct_equi, triangle_type_correct_iso,
       triangle_type_correct_scal, triangle_type_correct_err;
 
   parameters :
@@ -255,7 +254,7 @@ Where to insert the generation of testing collections?
 The current compilation process is as follows:
  1. compile_fcl
     a. parse
-    b. dump_ast if requested 
+    b. dump_ast if requested
     c. sourcify if requested
     d. scoping
     e. type checking (outputs interface on the fly if requested)
