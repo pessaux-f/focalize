@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.26 2011-05-04 09:22:47 maarek Exp $ *)
+(* $Id: configuration.mli,v 1.27 2011-06-14 15:00:26 weis Exp $ *)
 
 (** {3 The internal configuration of the FoCaLize compiler} *)
 
@@ -88,14 +88,18 @@ type ml_compiler =
   | OCamlByt
   | OCamlBin
   | OCamlBoth
+;;
 
-exception Invalid_OCaml_compiler of string
+exception Invalid_OCaml_compiler of string;;
 
-val set_ml_compiler : string -> unit
-val get_ml_compiler : unit -> ml_compiler
+val set_ml_compiler : string -> unit;;
+val get_ml_compiler : unit -> ml_compiler;;
 
-val set_stop_before_zenon : unit -> unit
-val get_stop_before_zenon : unit -> bool
+val set_stop_before_zenon : unit -> unit;;
+val get_stop_before_zenon : unit -> bool;;
 
-val set_stop_before_coq : unit -> unit
-val get_stop_before_coq : unit -> bool
+val set_stop_before_coq : unit -> unit;;
+val get_stop_before_coq : unit -> bool;;
+
+val require_plugin : string -> unit;;
+val get_plugins : unit -> string list;;

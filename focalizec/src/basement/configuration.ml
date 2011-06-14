@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.43 2011-05-27 14:34:26 weis Exp $ *)
+(* $Id: configuration.ml,v 1.44 2011-06-14 15:00:26 weis Exp $ *)
 
 exception No_input_file;;
 
@@ -26,7 +26,7 @@ type configuration = {
 let focalize_version_number = (0, 7, 0)
 ;;
 
-let version_date = "$Date: 2011-05-27 14:34:26 $"
+let version_date = "$Date: 2011-06-14 15:00:26 $"
 ;;
 
 let focalize_short_version =
@@ -185,9 +185,14 @@ let (set_stop_before_zenon, get_stop_before_zenon) =
   (fun () -> stop_before_zenon := true),
   (fun () -> !stop_before_zenon)
 ;;
-
 let (set_stop_before_coq, get_stop_before_coq) =
   let stop_before_coq = ref false in
   (fun () -> stop_before_coq := true),
   (fun () -> !stop_before_coq)
+;;
+
+let require_plugin, get_plugins =
+  let plugin_list = ref [] in
+  (fun s -> plugin_list := s :: !plugin_list),
+  (fun () -> !plugin_list)
 ;;
