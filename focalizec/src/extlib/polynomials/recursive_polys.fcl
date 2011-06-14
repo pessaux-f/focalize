@@ -14,11 +14,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursive_polys.fcl,v 1.6 2010-05-11 14:46:10 rr Exp $ *)
+(* $Id: recursive_polys.fcl,v 1.7 2011-06-14 13:12:32 rr Exp $ *)
 
 open "basics";;
 
-(** type distributed representation is defined there *)
+(** type distributed representation is defined in distributed_polys *)
 open "distributed_polys";;
 open "constants";;
 
@@ -54,6 +54,18 @@ let distr_eq (i_eq, e_eq) =
             else false
           else false)
    in function x -> function y -> equal (x, y)
+;;
+
+
+let distr_output(i_print, c_print) =
+   let rec my_out(p, c, d, v) = match p with
+   | Null -> c_print(c) ^ v ^ "**" ^ i_print(d)
+   | NonNull(cc, dd, pp) ->
+       c_print(c) ^ v ^ "**" ^ i_print(d) ^ "+"  ^
+       my_out(pp, cc, dd, v)
+   in function p -> function v -> match p with
+   | Null -> "0"
+   | NonNull(cp, dp, rp) -> my_out(rp, cp, dp, v)
 ;;
 
 (**
@@ -95,6 +107,18 @@ species Recursive_indexed_set (E is Setoid_with_zero,
      and d_eq(x_d, y_d) = distr_eq(I!equal, r_eq)(x_d, y_d)
      in function p -> function q -> r_eq(p, q);
 
+  proof of equal_reflexive = assumed;
+  proof of equal_symmetric = assumed;
+  proof of equal_transitive = assumed;
+
+  let print =
+    let rec my_print(x) = match x with
+    | Base(xx) -> E!print(xx)
+    | Composed(v, p) -> d_out(p, v)
+    and
+     d_out(p, v) = distr_output(I!print, my_print, p, v) 
+    in function x -> my_print(x);
+    
 
   let zero : Self = Base(E!zero);
 
@@ -104,9 +128,15 @@ species Recursive_indexed_set (E is Setoid_with_zero,
 
 end;;
 
+open "big_integers";;
+open "small_integers";;
+collection Foc_recursive_i_set =
+  implement Recursive_indexed_set(Foc_big_integers, Foc_small_naturals);
+end;;
+
 (**
    Unfolding of constant check for distributed polynomials.
-   A polynomial is constant if is zero or if its degree it zero.
+   A polynomial is constant if it is zero or if its degree is zero.
    Note that here the representation of distributed polynomials
    is transparent.
  *)
@@ -176,6 +206,16 @@ let distr_plus (ilt, mplus, m_is_0) =
 
 open "additive_law";;
 
+(*[rr]  a sort of map through coefficients *)
+let distr_opp(r_opp) =
+  let rec distr_opposite (p) = match p with
+  | Null -> Null
+  | NonNull(cp, dp, pp) ->
+      NonNull(r_opp(cp), dp, distr_opposite(pp))
+  in function p -> distr_opposite(p)
+;;
+
+
 (**
    The free commutative monoid over an ordered alphabet (string) of variables
  *)
@@ -183,6 +223,8 @@ open "additive_law";;
 species Recursive_indexed_sum (M is Additive_group,
               D is Ordered_set_with_zero) =
   inherit Additive_group, Recursive_indexed_set (M, D);
+
+  let zero = Base(M!zero);
 
   (**
      Abstraction for the effective code we use.
@@ -237,27 +279,46 @@ species Recursive_indexed_sum (M is Additive_group,
       (* [rr]: Now addition is simple *)
     in function x -> function y -> r_plus(x, y);
 
+  proof of zero_is_neutral = assumed;
+  proof of plus_commutes = assumed;
+  proof of plus_is_associative = assumed;
+  proof of plus_right_substitution_rule = assumed;
+
+  let opposite =
+    let rec d_opp(p: recursive_representation(M, D)): 
+             recursive_representation(M, D) =
+       match p with
+       | Base(c) -> Base(M!opposite(c))
+       | Composed(v, pp) -> Composed(v, r_opp(pp))
+    and r_opp(p) = distr_opp(d_opp)(p)
+    in function p -> d_opp(p);
+
+  proof of opposite_is_opposite = assumed;
 end;;
 
+collection Foc_recursive_i_sum =
+implement Recursive_indexed_sum(Foc_big_integers, Foc_small_naturals);
+end;;
+
+(**
+
+   Lambda lifted version of multiplication by a monomial.
+
+ *)
+
 let distr_mon_mult (r_mult, r_is_0, d_plus) =
-   let rec monomial_mult (c, d, p) = 
+   let rec monomial_mult (p, c, d) = 
       match p with
       | Null -> Null
       | NonNull(cp, dp, pp) ->
 	  let r = r_mult(c, cp) in
 	  if r_is_0(r)
-	  then monomial_mult(c, d, pp)
-	  else NonNull(r, d_plus(d, dp), monomial_mult(c, d, pp))
-   in function c -> function d -> function p -> monomial_mult(c, d, p)
+	  then monomial_mult(pp, c, d)
+	  else NonNull(r, d_plus(d, dp), monomial_mult(pp, c, d))
+   in function c -> function d -> function p -> monomial_mult(p, c, d)
 ;;
 
 
-
-(**
-
-   Lambda lifted version of multiplication by a scalar.
-
- *)
 
 
 let distr_mult(p_plus, mon_mult) =
@@ -274,27 +335,34 @@ species Recursive_polynomials_commutative_ring
       (R is Commutative_ring, D is Monomial_ordering) =
   inherit Commutative_algebra (R), Recursive_indexed_sum (R, D);
 
+  let one = Base(R!one);
+  proof of one_is_left_neutral = assumed;
+
   (**
      Multiplication by a scalar is a sort of of map on the data structure
    *)
   let module_mult =
-    let rec up_mult(r, p) =
+    let rec up_mult(p, r) =
       match p with
       | Base(rp) -> Base(R!mult(r, rp))
       | Composed(s, pp) ->
-        let res = distr_r_mult(r, pp) in
+        let res = distr_r_mult(pp, r) in
         if distr_is_constant(D!is_zero)(res)
         then distr_lc(Self!zero)(res)
         else Composed(s, res)
-    and distr_r_mult(r, p) =
+    and distr_r_mult(p, r) =
           match p with
           | Null -> Null
           | NonNull(cp, dp, pp) ->
-            let c = up_mult(r, cp) in
+            let c = up_mult(cp, r) in
             if !is_zero(c)
-            then distr_r_mult(r, pp)
-            else NonNull(c, dp, distr_r_mult(r, pp))
-    in function r -> function p -> up_mult(r, p);
+            then distr_r_mult(pp, r)
+            else NonNull(c, dp, distr_r_mult(pp, r))
+    in function r -> function p -> up_mult(p, r);
+
+  proof of lift_one = assumed;
+  proof of lift_additive = assumed;
+  proof of module_mult_compat = assumed;
 
 
   let my_mult(p_mult : ( distributed_representation(Self, D) ->
@@ -357,7 +425,55 @@ species Recursive_polynomials_commutative_ring
       (* [rr]: Now multiplication is simple *)
    in function x -> function y -> r_mult(x, y);
 
+  proof of mult_left_substitution_rule = assumed;
+  proof of mult_assoc = assumed;
+  proof of mult_commutes = assumed;
+  proof of mult_left_distributes_on_plus = assumed;
+
 end;;
+
+collection Foc_recursive_polys_comm_ring =
+implement Recursive_polynomials_commutative_ring(Foc_big_integers,
+						 Foc_small_naturals);
+
+end;;
+
+let distr_mod_exquo =
+let rec d_m_exquo( ( /_r ), p, c, res) = match p with
+| Null -> Unfailed(res)
+| NonNull(cp, dp, rp) ->
+    let r = cp /_r c in
+    if is_failed(r) then Failed
+    else d_m_exquo(( /_r ), rp, c, NonNull(non_failed(r), dp, res))
+in function ( /_r ) ->
+      function p ->
+	function c ->
+	  d_m_exquo(( /_r ), p, c, Null)
+;;
+
+
+let distr_exquo (( <_d ), ( -_d ), ( /_r ), d_sup) =
+   (*[rr]: exact quotient of p by cqX^dq+rq with |rq| < dq *)
+   let rec my_equo(p, cq, dq, rq) =
+      match p with
+      | Null -> Unfailed(Null)
+      | NonNull(cp, dp, rp) ->
+	  let s = d_sup(dp, dq) in
+	  if ( dp <_d s) then Failed
+	  else (* dp = s *)
+	    let delta = dp -_d dq in
+            let coeff = cp /_r cq in
+            if is_failed(coeff) then Failed
+	    else
+	      let res = my_equo(rp, cq, dq, rq) in
+	      if is_failed(res) then Failed
+	      else Unfailed(NonNull(non_failed(coeff), delta, non_failed(res)))
+   in function p -> function q ->
+     match q with
+     | Null -> Failed
+     | NonNull(cq, dq, rq) -> my_equo(p, cq, dq, rq)
+;;
+
 
 species Recursive_polynomials_Domain
       (R is Integral_domain, D is Monomial_ordering) =
@@ -365,8 +481,69 @@ species Recursive_polynomials_Domain
           Integral_domain, 
           Recursive_polynomials_commutative_ring (R, D);
 
+
+  proof of lift_is_injective = assumed ;
+  proof of mult_is_integral = assumed ;
+  proof of module_mult_is_integral = assumed ;
+
+  let module_exquo =
+     let rec d_equo(s_equo, p, c) =
+	distr_mod_exquo(s_equo, p, c)
+     and s_equo(x, c) = match x with
+     | Base(xx) ->
+	 let res = R!exquo(xx, c) in
+         if is_failed(res) then Failed
+	 else Unfailed(Base(non_failed(res)))
+     | Composed(v, p) ->
+         let res = d_equo(s_equo, p, c) in
+	 if is_failed(res) then Failed
+	 else Unfailed(Composed(v, non_failed(res)))
+     in function x -> function c -> s_equo(x, c)
+   ;
+  
+  (*[rr]: not the weakest idea opf how though *)
+  proof of module_exquo_divides = assumed ;
+
+
+  let my_exquo(p_quo, n_quo) =
+    let equo(p: Self, q:Self): partiel(Self) = match p with
+    | Base(p_n) ->
+	(match q with
+	| Base(q_n) -> let res = R!exquo(p_n, q_n) in
+	  if is_failed(res) then Failed else
+	  Unfailed(Base(non_failed(res)))
+	| Composed(_, _) -> Failed)
+    | Composed(v_p, pp) ->
+	(match q with
+	| Base(q_n) -> !module_exquo(p, q_n)
+	| Composed(v_q, qq) ->
+	    if (v_p <^ v_q) then Failed else
+	    if (v_q <^ v_p)
+	    then
+	      let res = n_quo(pp, q) in
+	      if is_failed(res) then Failed
+	      else Unfailed(Composed(v_p, non_failed(res)))
+	    else (* v_p = v_q *)
+              let res = p_quo(pp, qq) in
+	      if is_failed(res) then Failed
+	      else Unfailed(Composed(v_p, non_failed(res)))
+	       )
+    in function p -> function q -> equo(p, q);
+
+
+  let exquo =
+   let rec equo(x, y) = my_exquo(p_quo, m_quo, x, y)
+   and p_quo(p, q) = distr_exquo(D!lt, D!minus, equo, D!sup, p, q)
+   and m_quo(p, y) = distr_mod_exquo(equo, p, y)
+   in function x -> function y -> equo(x, y);
+
+  proof of exquo_divides = assumed ;
 end;;
 
+collection Foc_recursive_polys_domain =
+  implement Recursive_polynomials_Domain(Foc_big_integers,
+					 Foc_small_naturals);
+end;;
 
 (* species algebre_recursive(r is integral_domain, v is monomial_ordering) *)
 (*   inherits commutative_ring, torsion_free_algebra (r) = *)

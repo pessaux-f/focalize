@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: polys_abstract.fcl,v 1.5 2010-05-11 14:36:52 rr Exp $ *)
+(* $Id: polys_abstract.fcl,v 1.6 2011-06-14 13:12:32 rr Exp $ *)
 
 (**
  @title Abstract polynomials
@@ -53,6 +53,7 @@ species Formal_indexed_sum (M is Additive_group,
      !equal (!plus (!lift (x), !lift (y)),
             !lift (M!plus (x, y)))
       proof = by property !monomial_is_additive definition of lift;
+
 
    signature degree: Self -> I;
    (** degrees form an additive valuation *)
@@ -110,7 +111,7 @@ species Formal_indexed_sum (M is Additive_group,
 
    (** tail suppresses terms with degree bigger or equal than d *)
    let rec tail (p, d) =
-      if !is_zero (p)
+     if !is_zero (p)
      then p
      else
        let dp = !degree (p) in
@@ -126,7 +127,12 @@ species Formal_indexed_sum (M is Additive_group,
    theorem tail_has_smaller_degree: all p q : Self, all d : I,
      !equal (p, !tail (q, d)) ->
        ~  (!is_zero (q)) ->  I!lt (!degree (q), d)
-    proof = assumed (* *);
+     proof = assumed (* *);
+
+   (** to print a polynomial giving a variable name *)
+   signature output: Self -> string -> string;
+
+   let print(x) = output(x, "_?");
 
 (*    (\** returns the number of monomials *\) *)
 (*    let rec number_of_monomials (p) = *)
@@ -151,16 +157,10 @@ species Formal_polynomials_commutative_ring
   (R is Commutative_ring, D is Monomial_ordering) =
     inherit Commutative_algebra (R), Formal_indexed_sum (R, D);
 
-    (** *)
-    signature generator: D -> Self;
-    (** to print a polynomial giving a variable name *)
-    signature output: Self -> string -> string;
-    let monomial (v, d) =
-       !module_mult (v, !generator (d));
-
-    theorem monomial_spec: all v : R, all d : D,
-      !equal (!monomial (v, d), !module_mult (v, !generator (d)))
-      proof = by property !equal_reflexive definition of monomial ;
+    (** the dth generator of the algebra *)
+    let generator(d: D): Self = monomial(R!one, d);
+    theorem generator_spec: all d : D, equal(generator(d), monomial(R!one, d))
+      proof = by property equal_reflexive definition of generator;
 
     let fmecg (p : Self, c : R, delta : D, q : Self) : Self =
       !plus (p, !mult (!monomial (c, delta), q));
@@ -169,6 +169,14 @@ species Formal_polynomials_commutative_ring
       !equal (!fmecg (p, c, delta, q),
               !plus (p, !mult (!monomial (c, delta), q)))
       proof = by property !equal_reflexive definition of fmecg;
+
+    proof of lift_additive = by property lift_is_additive; 
+
+    let one = lift(R!one);
+    proof of lift_one = by property equal_reflexive definition of one;
+
+    (*[rr]: species Semi_agebra seems under specified? *)
+    proof of one_is_left_neutral = assumed ;
 
 end
 ;;
@@ -184,6 +192,7 @@ species Formal_polynomials_integral_domain
             Torsion_free_algebra (R),
             Formal_polynomials_commutative_ring (R, D)
     ;
+
 
 end
 ;;

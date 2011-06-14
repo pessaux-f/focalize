@@ -14,8 +14,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: univariate_polys.fcl,v 1.3 2009-06-26 23:48:21 weis Exp $ *)
+(* $Id: univariate_polys.fcl,v 1.4 2011-06-14 13:12:32 rr Exp $ *)
 
+open "basics";;
 open "rings_fields";;
 open "integers";;
 open "polys_abstract";;
@@ -56,10 +57,14 @@ species Formal_univariate_polynomials_commutative_ring
 end
 ;;
 
-(* type pdiv_res b = caml pdiv_res; ;; *)
-(* let cr_pr (x : 'b, y : 'b) : pdiv_res ('b) = caml cr_pr;; *)
-(* let pdiv_quo (x : pdiv_res ('b)) : 'b = caml pq;; *)
-(* let pdiv_res (x : pdiv_res ('b)) : 'b = caml pr;; *)
+(* Type pdiv_result ('a) = { *)
+(*  quotient : 'a ; *)
+(*  remainder : 'a *)
+(* } ;; *)
+
+(* let pdiv_quotient(res) = res.quotient;; *)
+(* let pdiv_remainder(res) = res.remainder;; *)
+
 
 -- open "iterators";;
 (** Univariate abstract polynomials over an integral domain *)
@@ -68,7 +73,7 @@ species Formal_univariate_polynomials_integral_domain
   inherit Formal_polynomials_integral_domain(R, N),
           Formal_univariate_polynomials_commutative_ring(R, N);
 (*   (\** pseudo division of two polynomials*\) *)
-(*   sig pseudo_divide : self -> self -> pdiv_res (self); *)
+(*   signature pseudo_divide: Self -> Self -> pdiv_result(Self); *)
 
 (*   (\*[rr]:   try to lift next 3 to dichotomy *\) *)
 (*   local let pow (c, n) = *)
@@ -98,26 +103,28 @@ species Formal_univariate_polynomials_integral_domain
   (**
     pseudo division is only defined for non null divisor
     and we have
-     lc (Q)^ (|P| -|Q| + 1) P = pquo (p, q) Q + prem (P, Q)
+     lc(Q)^ (|P|-|Q|+1) P = pquo(P, Q) Q + prem(P, Q)
    *)
   property pseudo_divide_relation: all p q : Self,
     !is_zero (q)
       \/
-    !equal (!plus (!mult (!pseudo_quotient (p, q),
-               q),
-           !pseudo_remainder (p, q)),
+    !equal (!plus (!mult (!pseudo_quotient (p, q), q),
+		   !pseudo_remainder (p, q)),
            !module_mult (!r_pow (!leading_coefficient (q),
-         N!successor (N!minus (!degree (p),
-               !degree (q)))),
-        p));
+				 N!successor (N!minus (!degree (p),
+						       !degree (q)))),
+			 p));
 
   property pseudo_remainder_has_lower_degree: all p q r : Self,
-    ~(!is_zero (q)) -> !equal (r, !pseudo_remainder (p, q)) ->
-       ~(!is_zero (r)) -> N!lt (!degree (r), !degree (q))
+    ~(!is_zero (q)) ->
+      (*[rr] sort of let *)
+      !equal(r,  !pseudo_remainder (p, q)) ->
+	~(!is_zero (r)) -> N!lt (!degree (r), !degree (q))
     ;
 
 end
 ;;
+
 
 (* (\**  *)
 (*    Karatsuba multiplication for univariate sparse polynomials. Needs check ! *)
@@ -219,11 +226,50 @@ end
 (* (\* collection int_coll implements small_naturals_int = *\) *)
 (* (\* end *\) *)
 
-(* (\** Univariate sparse polynomials for integral domains *\) *)
-(* species algebre_univariee (r is integral_domain, int_coll is small_naturals)  *)
-(*    inherits formal_univariate_polynomials_domain(r,int_coll), *)
-(*             distributed_polynomials_domain(r,int_coll) *)
-(*    = *)
+(*[rr] This does not go to Coq because small_integers are undafe *)
+open "small_integers" ;;
+
+(** Univariate sparse polynomials for integral domains *)
+species Algebre_univariee (R is Integral_domain) =
+  inherit Formal_univariate_polynomials_integral_domain(R, Foc_small_naturals),
+          Distributed_polynomials_integral_domain(R, Foc_small_naturals);
+
+  let pseudo_quotient(_p, _q) =
+    focalize_error("Algebre_univariee: pseudo_quotient: not implemented");
+
+  (*[rr]: this is a high level definition! Move to abstract? *)
+  let pseudo_remainder =
+    let ( <_i )(n, m) = Foc_small_naturals!lt(n, m) in
+    let ( -_i )(n, m) = Foc_small_naturals!minus(n, m) in
+    let r_opp(c) = R!opposite(c) in
+    (*[rr]: division of p by cqX^dq + rq *)
+    let rec my_prem(p, cq, dq, rq) =
+      let dp = degree(p) in
+      if (is_zero(p) || (dp <_i dq)) then p
+      else
+        let delta = dp -_i dq in
+(*         let cp = leading_coefficient(p) in *)
+        let one_step = fmecg(module_mult(cq, reductum(p)),
+			     r_opp(leading_coefficient(p)),
+			     delta,
+			     rq) in
+            (*[rr]: usually this is 0 *)
+        let dd = Foc_small_naturals!predecessor(dp -_i degree(one_step)) in
+        (*[rr]: try to keep result small during computations *)
+        let res = my_prem(one_step, cq, dq, rq)
+        in
+        (*[rr]: rearrange for pseudo division relation *)
+        module_mult(r_pow(cq, dd), res)
+    in function p -> function q -> my_prem(p,
+					   leading_coefficient(q),
+					   degree(q),
+					   reductum(q)
+					  );
+
+  proof of pseudo_remainder_has_lower_degree = assumed;
+  proof of pseudo_divide_relation = assumed;
+
+
 (*   local let r_expt = *)
 (*      let dicho = monoid_as_power(int_coll, r) in *)
 (*      fun x -> fun n -> dicho!expt(x,n); *)
@@ -300,7 +346,13 @@ end
 (*        end; *)
 (*   proof of pseudo_divide_relation = assumed; *)
 (*   proof of pseudo_remainder_has_lower_degree = assumed; *)
-(* end *)
+end
+;;
+
+open "big_integers";;
+collection Foc_Univ_Polys_Integers =
+  implement Algebre_univariee(Foc_big_integers);
+end;;
 
 (** Univariate abstract polynomials over a gcd_domain *)
 species Formal_univariate_polynomials_gcd_domain
@@ -423,31 +475,58 @@ end
 
 (* end *)
 
-(* (\** Resultant of univariate polynomials *\) *)
-(* (\* species resultant(r is integral_domain) *\) *)
-(* species resultant(r is integral_domain , *)
-(*           int_coll is small_naturals, *)
-(*           pol is algebre_univariee(r,int_coll)) *)
-(*   inherits basic_object = *)
-(*   rep = unit ; *)
+(** Resultant of univariate polynomials *)
+(* species resultant(r is integral_domain) *)
+species Resultant(R is Integral_domain,
+          Pol is Algebre_univariee(R)) =
+  inherit Basic_object; 
+  representation = unit ;
 
-(*     (\** alpha^delta def0 psi^(delta-1), this is called Lazard Formula*\) *)
-(*   let next_non_defective(alpha,psi,def_0,delta) = *)
-(*      let int_minus(x,y) =  *)
-(*         if int_coll!lt(x,y) then #foc_error("next_non_def") *)
-(*         else int_coll!minus(x,y) in *)
-(*      let pred(x) = int_minus(x,int_coll!one) in *)
-(*      let int_zero = int_coll!zero in *)
-(*      let int_eq(x,y) = int_coll!equal(x,y) in  *)
-(*      let smmult(x,y) = pol!module_mult(x,y) in *)
-(*      let smdiv (p,a) = *)
-(*         let res = pol!module_exquo(p,a) in *)
-(*         if #is_failed(res) then #foc_error("") else #non_failed(res) in *)
-(*      let rec next_non_def(alpha,psi,def_0,delta) = *)
-(*         if int_eq(delta,int_zero)  *)
-(*         then def_0  *)
-(*         else next_non_def(alpha,psi,smdiv(smmult(alpha,def_0),psi),pred(delta)) *)
-(*      in next_non_def(alpha,psi,def_0,delta) ; *)
+    (** (alpha^delta def0) / psi^(delta-1), this is called Lazard Formula*)
+  let next_non_defective =
+     let int_minus(x, y) =
+        if Foc_small_naturals!lt(x, y) then focalize_error("next_non_def")
+        else Foc_small_naturals!minus(x, y) in
+     let pred(x) = int_minus(x, Foc_small_naturals!one) in
+     let int_zero = Foc_small_naturals!zero in
+     let int_eq(x, y) = Foc_small_naturals!equal(x, y) in
+     let smmult(x, y) = Pol!module_mult(x, y) in
+     let smdiv (p, a) =
+        let res = Pol!module_exquo(p, a) in
+        if is_failed(res)
+	then focalize_error("next_non_def")
+	else non_failed(res) in
+     let rec next_non_def(alpha, psi, def_0, delta) =
+        if int_eq(delta, int_zero)
+        then def_0
+        else next_non_def(alpha,
+			  psi,
+			  smdiv(smmult(alpha, def_0), psi),
+			  pred(delta))
+     in function alpha -> function psi -> function def_0 -> function delta ->
+       next_non_def(alpha, psi, def_0, delta) ;
+
+     (** Again iterative definition for (alpha^delta psi0) psi^(delta-1) *)
+  let next_psi =
+    let int_minus(x, y) = Foc_small_naturals!minus(x, y) in
+    let pred(x) = int_minus(x, Foc_small_naturals!one) in
+    let int_zero = Foc_small_naturals!zero in
+    let int_eq(x, y) = Foc_small_naturals!equal(x, y) in
+    let rmult (x, y) = R!mult(x, y) in
+    let rdiv (a, b) =
+      let res = R!exquo(a, b) in
+       if is_failed(res)
+       then focalize_error("rdiv")
+       else non_failed(res) in
+    let rec next_psi(alpha, psi, psi0, delta) =
+      if int_eq(delta, int_zero)
+      then psi0
+      else next_psi(alpha, psi, (rdiv(rmult(alpha, psi0), psi)), pred(delta))
+    in function alpha -> function psi -> function psi0 -> function delta ->
+      next_psi(alpha, psi, psi0, delta) ;
+
+
+
 (* (\* *)
 (*   let next_def(p : pol,q : pol,alpha,psi,delta) : pol= *)
 (*      let smdiv (p,a) = let res = pol!module_exquo(p,a) in *)
@@ -456,41 +535,35 @@ end
 (*      smdiv(prem(p,q),r!mult(alpha,r!expt(psi,delta))) ; *)
 (* *\) *)
 
-(*   (\** prem(p,q)/(alpha psi^delta) Loos method *\) *)
-(*   let next_defective(p : pol,q : pol,alpha,psi,delta) =  *)
-(*      let rmult (x,y) = r!mult(x,y) in *)
-(*      let rexpt =  *)
-(*        let pow = monoid_as_power(int_coll, r) in *)
-(*        fun x -> fun n -> pow!expt(x,n) in *)
-(*      let prem(p,q) = #pdiv_res(pol!pseudo_divide(p,q)) in *)
-(*      (\* let prem(p,q) = pol!pseudo_reste(p,q) in *\) *)
-(*      let smdiv (p,a) = *)
-(*         let res = pol!module_exquo(p,a) in *)
-(*         if #is_failed(res)  *)
-(*         then  *)
-(*           let _foo = #print_string(pol!print(p)) in *)
-(*           let _foo = #print_string("\nNot divisible by:\n") in *)
-(*           let _foo = #print_string(r!print(a)) in *)
-(*           let _foo = #print_string("\n") in *)
-(*           #foc_error("smdiv")  *)
-(*         else #non_failed(res) in *)
-(*      let r = prem(p,q) in *)
-(*      smdiv(r, rmult(alpha, rexpt(psi,delta))) ; *)
-
-(*   let next_psi (alpha,psi,psi0,delta) = *)
-(*     let int_minus(x,y) = int_coll!minus(x,y) in *)
-(*     let pred(x) = int_minus(x,int_coll!one) in *)
-(*     let int_zero = int_coll!zero in *)
-(*     let int_eq(x,y) = int_coll!equal(x,y) in  *)
-(*     let rmult (x,y) = r!mult(x,y) in *)
-(*     let rdiv (a,b) =  *)
-(*       let res = r!exquo(a,b) in *)
-(*        if #is_failed(res) then #foc_error("rdiv") else #non_failed(res) in *)
-(*     let rec next_psi(alpha,psi,psi0,delta) = *)
-(*       if int_eq(delta,int_zero)  *)
-(*       then psi0  *)
-(*       else next_psi(alpha,psi,(rdiv(rmult(alpha,psi0),psi)), pred(delta)) *)
-(*     in next_psi(alpha,psi,psi0,delta) ; *)
+  (** prem(p,q)/(alpha psi^delta) Loos method *)
+  let next_defective =
+     let rmult(x, y) = R!mult(x, y) in
+     let rec rexpt(x, n) =
+       if Foc_small_naturals!is_zero(n)
+       then R!one
+       else rmult(x, rexpt(x, Foc_small_naturals!predecessor(n)))
+     in
+     let prem(p, q) = Pol!pseudo_remainder(p, q) in
+     let smdiv (p, a) =
+        let res = Pol!module_exquo(p, a) in
+        if is_failed(res)
+        then
+          focalize_error("smdiv")
+        else non_failed(res) 
+     in
+     function p ->
+       function q ->
+	 function alpha ->
+	   function psi ->
+	     function delta ->
+	       let r = prem(p, q) in
+	       let _foo = print_string(Foc_small_naturals!print(Pol!degree(p))) in
+	       let _foo= print_string(", ") in
+	       let _foo = print_string(Foc_small_naturals!print(Pol!degree(q))) in
+	       let _foo= print_string(", ") in
+	       let _foo = print_string(Foc_small_naturals!print(Pol!degree(r))) in
+               let _foo = print_string("\n") in
+	       smdiv(r, rmult(alpha, rexpt(psi, delta))) ;
 
 (*   let subres_pseudo_gcd(p,q) = *)
 (*      let degree(p) = pol!degree(p) in *)
@@ -560,8 +633,8 @@ end
 (*           let _foo = #array_set(v,int_coll!to_int(degree(p)),p) in v ); *)
 
 
-(*   (\** Loos 1982 algorithm *\) *)
-(*   let resultant(p : pol ,q : pol ) = *)
+  (** Loos 1982 algorithm *)
+  let resultant =
 (*      let degree(p) = pol!degree(p) in *)
 (*      let lc(p) = pol!leading_coefficient(p) in *)
 (*      let un = r!one in *)
@@ -579,35 +652,48 @@ end
 (*      let int_zero = int_coll!zero in *)
 (*      (\*let int_un = int_coll!one in*\) *)
 (*      (\*let succ(x) = int_coll!plus(x,int_coll!one) in*\) *)
-(*      let rec gcd (p,q,alpha,psi,delta) = *)
-(*        if int_eq(degree(q),int_zero)  *)
-(*        then *)
-(*          self!next_psi(lc(q),psi,lc(q),pred(degree(p))) *)
-(*        else *)
-(*          let r = self!next_defective(p,q,alpha,psi,delta) in *)
-(*          let alpha= lc(q) in *)
-(*          let psi =  *)
-(*                  if int_eq(delta,int_zero) *)
-(*            then psi *)
-(*            else self!next_psi(alpha,psi,lc(q),pred(delta)) in *)
-(*          gcd(q,r,alpha,psi,int_minus(degree(q),degree(r)))  *)
-(*      in *)
-(*        if int_lt(degree(p),degree(q)) *)
-(*        then gcd(q,p,un,un,int_minus(degree(q),degree(p))) *)
-(*        else gcd(p,q,un,un,int_minus(degree(p),degree(q))); *)
+     let ( =_n ) (x, y) = Foc_small_naturals!equal(x, y) in
+     let ( -_n ) (x, y) = Foc_small_naturals!minus(x, y) in 
+     let ( <_n ) (x, y) = Foc_small_naturals!lt(x, y) in
+     let int_zero = Foc_small_naturals!zero in
+     let pred(n) = Foc_small_naturals!predecessor(n) in
+     let lc(p) = Pol!leading_coefficient(p) in
+     let degree(p) = Pol!degree(p) in
+     let un = R!one in
+     let rec gcd (p, q, alpha, psi, delta) =
+       if (degree(q) =_n int_zero)
+       then
+         next_psi(lc(q), psi, lc(q), pred(degree(p)))
+       else
+         let r = next_defective(p, q, alpha, psi, delta) in
+         let alpha = lc(q) in
+         let psi =
+                 if (delta =_n int_zero)
+		 then let _foo = focalize_error("0 delta") in psi
+		 else next_psi(alpha, psi, lc(q), pred(delta)) in
+         gcd(q, r, alpha, psi, (degree(q) -_n degree(r)))
+     in function p -> function q ->
+       if (degree(p) <_n degree(q))
+       then gcd(q, p, un, un, (degree(q) -_n degree(p)))
+       else
+         if (degree(p) =_n int_zero)
+         then focalize_error("resultant: constant polynomials")
+	 else gcd(p, q, un, un, (degree(p) -_n degree(q)));
 
-(* end *)
+end;;
+
+collection Resultant_integer_univ_polys =
+  implement Resultant(Foc_big_integers, Foc_Univ_Polys_Integers);
+end;;
 
 (* (\** General form of Horner evaluation scheme uses two rings *\) *)
-(* species horner_eval *)
-(*      (r is commutative_ring, *)
-(*       nat is small_naturals, *)
-(*       pol is formal_univariate_polynomials_com_ring(r,nat), *)
-(* (\*      pol is algebre_indexee(r*degs), *\) *)
-(*       r1 is commutative_ring, *)
-(*       lift : r -> r1) *)
-(*   inherits basic_object = *)
-(*   rep = unit ; *)
+(* species Horner_eval *)
+(*      (R is Commutative_ring, *)
+(*       Pol is Formal_univariate_polynomials_com_ring(R), *)
+(*       R1 is Commutative_ring, *)
+(*       lift : R -> R1) = *)
+(*   inherit Basic_object; *)
+(*   representation = unit ; *)
 
 (*   local let r1_expt = let pow = monoid_as_power(nat, r1) in *)
 (*     fun x -> fun n -> pow!expt(x,n); *)
@@ -630,4 +716,4 @@ end
 (*                    v, *)
 (*                    pol!degree(p), *)
 (*                    lift(pol!leading_coefficient(p))) ; *)
-(* end *)
+(* end;; *)

@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.6 2011-06-14 13:12:32 rr Exp $
 
 # Makefile for algebra structures implementations
 
@@ -51,12 +51,12 @@ COQ_INCLUDES=\
 FOCALIZE_SRC=\
  parse_poly.fcl\
  polys_abstract.fcl\
- distributed_polys.fcl\
- univariate_polys.fcl
+ distributed_polys.fcl
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
 FOCALIZE_SRC_UNSAFE=\
+ univariate_polys.fcl\
  recursive_polys.fcl
 
 FOCALIZE_FOS=$(FOCALIZE_SRC:.fcl=.fo)
@@ -182,4 +182,10 @@ recursive_polys.ml: recursive_polys.fcl
 	$(FOCALIZEC) -no-coq-code $<
 
 recursive_polys.fcd: recursive_polys.fcl
+	$(FOCALIZEC) -focalize-doc -no-coq-code $<
+
+univariate_polys.ml: univariate_polys.fcl
+	$(FOCALIZEC) -no-coq-code $<
+
+univariate_polys.fcd: univariate_polys.fcl
 	$(FOCALIZEC) -focalize-doc -no-coq-code $<
