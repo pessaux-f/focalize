@@ -1,0 +1,16 @@
+pred.cmi: 
+foc2spec.cmi: pred.cmi ../basement/parsetree.cmi ../basement/location.cmi 
+focgen.cmi: pred.cmi ../basement/parsetree.cmi 
+rel_ext.cmi: ../basement/parsetree.cmi 
+pred.cmo: pred.cmi 
+pred.cmx: pred.cmi 
+foc2spec.cmo: pred.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi ../basement/location.cmi foc2spec.cmi 
+foc2spec.cmx: pred.cmx ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi ../basement/location.cmx foc2spec.cmi 
+focgen.cmo: pred.cmi ../basement/parsetree_utils.cmi \
+    ../basement/parsetree.cmi ../basement/location.cmi focgen.cmi 
+focgen.cmx: pred.cmx ../basement/parsetree_utils.cmx \
+    ../basement/parsetree.cmi ../basement/location.cmx focgen.cmi 
+rel_ext.cmo: pred.cmi focgen.cmi foc2spec.cmi rel_ext.cmi 
+rel_ext.cmx: pred.cmx focgen.cmx foc2spec.cmx rel_ext.cmi 
