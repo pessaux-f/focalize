@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.196 2011-06-14 12:37:29 maarek Exp $ *)
+(* $Id: infer.ml,v 1.197 2011-06-14 12:38:47 weis Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -1446,7 +1446,7 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
                 env'
             binding_desc.Parsetree.b_params
             args_tys in
-        (* Same hack thant above for the variables that must not be
+        (* Same hack as above for the variables that must not be
            generalised. *)
         if non_expansive then Types.begin_definition ();
         (* Guess the body's type. *)
