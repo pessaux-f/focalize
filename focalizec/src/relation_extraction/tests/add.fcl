@@ -1,0 +1,19 @@
+use "basics";;
+open "basics";;
+
+type nat = | Zero | Succ(nat);;
+
+species AddDef =
+  (** {Pred} add : add (I, I, I) with (addZ, addS) *)
+  signature add : nat -> nat -> nat -> bool;
+  property addZ : all n : nat, add(n, Zero, n);
+  property addS : all n m p : nat, add(n, m, p) -> add(n, Succ(m), Succ(p));
+end ;;
+
+
+species AddImp =
+  inherit AddDef;
+  (** {Pred} add12 : add (I, I, O) with (addZ, addS) *)
+  signature add12 : nat -> nat -> bool;
+end ;;
+
