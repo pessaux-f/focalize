@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.86 2011-05-27 09:41:59 weis Exp $ *)
+(* $Id: sourcify.ml,v 1.87 2011-06-14 12:37:29 maarek Exp $ *)
 
 open Parsetree;;
 
@@ -433,7 +433,7 @@ let pp_external_translation ppf = pp_ast pp_external_translation_desc ppf;;
 
 let pp_external_expr_desc ppf = function
   | { ee_internal = ty; ee_external = etrans; } ->
-    Format.fprintf ppf "@[<2>internal =@ %a@ external =@ %a;@]"
+    Format.fprintf ppf "@[<2>internal@ %a@ external@ %a@]"
       pp_type_expr ty
       pp_external_translation etrans
 ;;
@@ -819,7 +819,7 @@ and pp_expr_desc ppf = function
   | Parsetree.E_sequence exprs ->
       Format.fprintf ppf "@[<2>begin@ %a@ end@]" (pp_exprs ";") exprs
   | Parsetree.E_external external_expr ->
-      Format.fprintf ppf "@[<2>external@ %a@]"
+      Format.fprintf ppf "@[<2>%a@]"
         pp_external_expr external_expr
   | Parsetree.E_paren expr ->
       Format.fprintf ppf "@[<1>(%a)@]" pp_expr expr

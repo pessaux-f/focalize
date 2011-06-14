@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.195 2011-05-27 14:36:45 weis Exp $ *)
+(* $Id: infer.ml,v 1.196 2011-06-14 12:37:29 maarek Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -939,9 +939,12 @@ let rec typecheck_pattern ctx env pat_desc =
 
 
 (* Does not make any assumption. Crudely returns a fresh type variable. *)
-let typecheck_external_expr ext_expr =
-  let ty = Types.type_variable () in
-  (* A somewhat taste of magic obj... *)
+let typecheck_external_expr ctx env ext_expr =
+  let t_expr = ext_expr.Parsetree.ast_desc.Parsetree.ee_internal in
+  let vmap' = make_implicit_var_mapping_from_type_exprs [t_expr] in
+  let ctx_with_tv_vars_constraints = {
+    ctx with tyvars_mapping = vmap' @ ctx.tyvars_mapping } in
+  let ty = typecheck_type_expr ctx_with_tv_vars_constraints env t_expr in
   ext_expr.Parsetree.ast_type <- Parsetree.ANTI_type ty;
   ty
 ;;
@@ -1232,7 +1235,8 @@ let rec typecheck_expr ctx env initial_expr =
                 ty_expr (Types.type_unit ()));
            typecheck_sequence exprs in
          typecheck_sequence exprs
-     | Parsetree.E_external ext_expr -> typecheck_external_expr ext_expr
+     | Parsetree.E_external ext_expr ->
+         typecheck_external_expr ctx env ext_expr
      | Parsetree.E_paren expr -> typecheck_expr ctx env expr) in
   (* Store the type information in the expression's node. *)
   initial_expr.Parsetree.ast_type <- Parsetree.ANTI_type final_ty;

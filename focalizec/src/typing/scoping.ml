@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.90 2011-05-27 14:36:45 weis Exp $ *)
+(* $Id: scoping.ml,v 1.91 2011-06-14 12:37:29 maarek Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -1422,9 +1422,17 @@ and scope_expr ctx env expr =
          let exprs' = List.map (scope_expr ctx env) exprs in
          let scoped_expr = Parsetree.E_sequence exprs' in
          scoped_expr
-     | Parsetree.E_external _ ->
-         (* Nothing to scope since it's only strings. *)
-         expr.Parsetree.ast_desc
+     | Parsetree.E_external ee ->
+         let { Parsetree.ee_internal = ty_e; Parsetree.ee_external = e_t } =
+           ee.Parsetree.ast_desc in
+         let env_with_ty_constraints_variables =
+           extend_env_with_implicit_gen_vars_from_type_exprs env [ty_e] in
+         let scoped_ty_e =
+           scope_type_expr ctx env_with_ty_constraints_variables ty_e in
+         let scoped_ee = { ee with Parsetree.ast_desc =
+                           { Parsetree.ee_internal = scoped_ty_e;
+                             Parsetree.ee_external = e_t } } in
+         Parsetree.E_external scoped_ee
      | Parsetree.E_paren e ->
          let scoped_e = scope_expr ctx env e in
          Parsetree.E_paren scoped_e) in
