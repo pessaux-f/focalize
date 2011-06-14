@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.59 2011-05-27 14:31:53 weis Exp $
+# $Id: Makefile,v 1.60 2011-06-14 15:04:53 weis Exp $
 
 ROOT_DIR=../..
 
@@ -27,6 +27,7 @@ CAML_INCLUDES =\
  -I ../mlcodegen\
  -I ../coqcodegen\
  -I ../testing\
+ -I ../relation_extraction\
 
 LOCAL_BYT_OBJS=focalizec.cmo exc_wrapper.cmo
 
@@ -81,6 +82,12 @@ BYT_OBJS =\
  ../coqcodegen/main_coq_generation.cmo\
  \
  ../testing/testing.cmo\
+\
+ ../relation_extraction/pred.cmo\
+ ../relation_extraction/foc2spec.cmo\
+ ../relation_extraction/focgen.cmo\
+ ../relation_extraction/rel_ext.cmo\
+\
  $(LOCAL_BYT_OBJS)
 
 FODUMP_OBJS=\
