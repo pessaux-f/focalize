@@ -12,9 +12,9 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.53 2011-05-26 16:08:09 maarek Exp $ *)
+(* $Id: focalizec.ml,v 1.54 2011-06-14 15:11:17 weis Exp $ *)
 
-exception Bad_file_suffix of string ;;
+exception Bad_file_suffix of string;;
 
 let compile_fcl input_file_name =
   (* First, let's lex and parse the input source file.
@@ -24,20 +24,31 @@ let compile_fcl input_file_name =
     Filename.chop_extension (Filename.basename input_file_name) in
   (* Include the installation libraries directory in the search path. *)
   if Configuration.get_use_default_lib () then
-    Files.add_lib_path Installation.install_lib_dir ;
+    Files.add_lib_path Installation.install_lib_dir;
   (* Lex and parse the file. *)
   let ast = Parse_file.parse_file input_file_name in
   (* Hard-dump the AST if requested. *)
   if Configuration.get_raw_ast_dump () then
-    Dump_ptree.pp_file Format.err_formatter ast ;
+    Dump_ptree.pp_file Format.err_formatter ast;
   (* Pretty the AST as a new-focalize-syntax source if requested. *)
   (match Configuration.get_pretty_print () with
    | None -> ()
    | Some fname ->
        let out_hd = open_out_bin fname in
        let out_fmt = Format.formatter_of_out_channel out_hd in
-       Sourcify.pp_file out_fmt ast ;
-       close_out out_hd) ;
+       Sourcify.pp_file out_fmt ast;
+       close_out out_hd);
+
+  let plug_ins = Configuration.get_plugins () in
+  let plug_in_funs =
+    List.map
+      (function
+       | "relation_extraction" -> Rel_ext.extract
+       | s -> failwith (Printf.sprintf "Unknown plugin %s" s))
+      (List.rev plug_ins) in
+  let ast =
+    List.fold_left (fun ast f -> f ast) plug_in_funs ast in
+
   (* Scopes AST. *)
   let (scoped_ast, scoping_toplevel_env) =
     (let tmp = Scoping.scope_file current_unit ast in
@@ -47,18 +58,18 @@ let compile_fcl input_file_name =
      | Some fname ->
          let out_hd = open_out_bin fname in
          let out_fmt = Format.formatter_of_out_channel out_hd in
-         Sourcify.pp_file out_fmt (fst tmp) ;
-         close_out out_hd) ;
+         Sourcify.pp_file out_fmt (fst tmp);
+         close_out out_hd);
     tmp) in
   (* Typechecks the AST. *)
   let (typing_toplevel_env, stuff_to_compile) =
     Infer.typecheck_file ~current_unit scoped_ast in
   (* Verify pattern matching soundness. *)
-  List.iter (Match_analysis.verify_matchings typing_toplevel_env) stuff_to_compile ;
+  List.iter (Match_analysis.verify_matchings typing_toplevel_env) stuff_to_compile;
   (* Generate the documentation if requested. *)
   if Configuration.get_focalize_doc () then
     Main_docgen.gen_doc_please_compile_me
-      input_file_name scoped_ast stuff_to_compile ;
+      input_file_name scoped_ast stuff_to_compile;
   (* Now go to the OCaml code generation if requested. *)
   let mlgen_toplevel_env =
     if Configuration.get_generate_ocaml () then
@@ -91,8 +102,8 @@ let compile_fcl input_file_name =
   (*          (Filename.chop_extension input_file_name)) *)
   (*       ^ ".fcl" in *)
   (*     Testing.gen_tests *)
-  (*       ~current_unit ~output_file_name scoped_ast ; *)
-  (*   end) ; *)
+  (*       ~current_unit ~output_file_name scoped_ast; *)
+  (*   end); *)
   (* Now, generate the persistent interface file. *)
   Env.make_fo_file
     ~source_filename: input_file_name
@@ -112,25 +123,25 @@ let compile_ml input_file_name =
   match Configuration.get_ml_compiler () with
    | Configuration.OCamlByt ->
        let cmd = Installation.caml_byt_compiler ^ args in
-       Format.eprintf "Invoking ocamlc...@\n" ;
-       Format.eprintf ">> %s@." cmd ;
+       Format.eprintf "Invoking ocamlc...@\n";
+       Format.eprintf ">> %s@." cmd;
        let ret_code = Sys.command cmd in
        if ret_code <> 0 then exit ret_code
    | Configuration.OCamlBin ->
        let cmd = Installation.caml_bin_compiler ^ args in
-       Format.eprintf "Invoking ocamlopt...@\n" ;
-       Format.eprintf ">> %s@." cmd ;
+       Format.eprintf "Invoking ocamlopt...@\n";
+       Format.eprintf ">> %s@." cmd;
        let ret_code = Sys.command cmd in
        if ret_code <> 0 then exit ret_code
    | Configuration.OCamlBoth ->
        let cmd = Installation.caml_byt_compiler ^ args in
-       Format.eprintf "Invoking ocamlc...@\n" ;
-       Format.eprintf ">> %s@." cmd ;
+       Format.eprintf "Invoking ocamlc...@\n";
+       Format.eprintf ">> %s@." cmd;
        let ret_code = Sys.command cmd in
-       if ret_code <> 0 then exit ret_code ;
+       if ret_code <> 0 then exit ret_code;
        let cmd = Installation.caml_bin_compiler ^ args in
-       Format.eprintf "Invoking ocamlopt...@\n" ;
-       Format.eprintf ">> %s@." cmd ;
+       Format.eprintf "Invoking ocamlopt...@\n";
+       Format.eprintf ">> %s@." cmd;
        let ret_code = Sys.command cmd in
        if ret_code <> 0 then exit ret_code
 ;;
@@ -143,8 +154,8 @@ let compile_zv input_file_name =
       Installation.zvtov_compiler
       Installation.zenon_compiler
       input_file_name in
-  Format.eprintf "Invoking zvtov...@\n" ;
-  Format.eprintf ">> %s@." cmd ;
+  Format.eprintf "Invoking zvtov...@\n";
+  Format.eprintf ">> %s@." cmd;
   let ret_code = Sys.command cmd in
   if ret_code <> 0 then exit ret_code
 ;;
@@ -159,8 +170,8 @@ let compile_coq input_file_name =
   let cmd =
     Printf.sprintf "%s %s %s %s"
       Installation.coq_compiler includes for_zenon input_file_name in
-  Format.eprintf "Invoking coqc...@\n" ;
-  Format.eprintf ">> %s@." cmd ;
+  Format.eprintf "Invoking coqc...@\n";
+  Format.eprintf ">> %s@." cmd;
   let ret_code = Sys.command cmd in
   if ret_code <> 0 then exit ret_code
 ;;
@@ -178,25 +189,25 @@ let dispatch_compilation files =
           let input_file_no_suffix =
             Filename.chop_extension input_file_name in
           (* First, .fcl -> .ml and/or .v. *)
-          compile_fcl input_file_name ;
+          compile_fcl input_file_name;
           if Configuration.get_generate_ocaml () then
             (begin
             (* If a .ml file was generated, let's compile it. *)
-            compile_ml (input_file_no_suffix ^ ".ml") ;
-            end) ;
+            compile_ml (input_file_no_suffix ^ ".ml");
+            end);
           if Configuration.get_generate_coq () then
             (begin
             if not (Configuration.get_stop_before_zenon ()) then
               (begin
               (* If a .zv file was generated, let's compile it. *)
-              compile_zv (input_file_no_suffix ^ ".zv") ;
+              compile_zv (input_file_no_suffix ^ ".zv");
               if not (Configuration.get_stop_before_coq ()) then
                 (begin
                 (* Finally, pass it to Coq. *)
                 compile_coq (input_file_no_suffix ^ ".v")
-                end) ;
-              end) ;
-            end) ;
+                end);
+              end);
+            end);
           (* let tests_file_no_suffix = *)
           (*   Testing.add_tests_suffix input_file_no_suffix in *)
           (* let tests_file_fcl = tests_file_no_suffix ^ ".fcl" in *)
@@ -205,12 +216,12 @@ let dispatch_compilation files =
           (*     && Configuration.get_perform_tests () *)
           (*     && Sys.file_exists tests_file_fcl then *)
           (*   (begin *)
-          (*     compile_fcl tests_file_fcl ; *)
-          (*     compile_ml tests_file_ml ; *)
-          (*   end) ; *)
+          (*     compile_fcl tests_file_fcl; *)
+          (*     compile_ml tests_file_ml; *)
+          (*   end); *)
       | "ml" | "mli" -> compile_ml input_file_name
       | "zv" ->
-          compile_zv input_file_name ;
+          compile_zv input_file_name;
           (* Finally, pass it to Coq. *)
           let input_file_no_suffix =
             Filename.chop_extension input_file_name in
@@ -231,91 +242,95 @@ let main () =
     [ ("-dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
        " dumps species non-let-rec- dependencies as dotty\n\tfiles into the \
-         argument directory.") ;
+         argument directory.");
       ("--experimental",
        Arg.Unit Configuration.set_experimental,
-       " do not use. Fear it! For the development team only!") ;
+       " do not use. Fear it! For the development team only!");
       ("-focalize-doc",
        Arg.Unit Configuration.set_focalize_doc,
-       " generate documentation.") ;
+       " generate documentation.");
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
-       " prints the source file interface.") ;
+       " prints the source file interface.");
       ("-I",
        Arg.String (fun path -> Files.add_lib_path path),
        " <dir> adds the specified <dir> to the path list where to search for \
-         compiled\n\tinterfaces.") ;
+         compiled\n\tinterfaces.");
       ("-impose-termination-proof",
        Arg.Unit Configuration.set_impose_termination_proof,
        " makes termination proofs of recursive functions \n\
-         mandatory.") ;
+         mandatory.");
       ("-methods-history-to-text",
        Arg.String Configuration.set_methods_history_to_text,
        " dumps species' methods' inheritance history as plain text\n\tfiles \
-         into the argument directory.") ;
+         into the argument directory.");
       ("-no-ansi-escape",
        Arg.Unit Configuration.unset_fancy_ansi,
-       " disables ANSI escape sequences in the error messages.") ;
+       " disables ANSI escape sequences in the error messages.");
       ("-no-coq-code",
        Arg.Unit Configuration.unset_generate_coq,
-       " disables the Coq code generation.") ;
+       " disables the Coq code generation.");
       ("-no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
-       " disables the OCaml code generation.") ;
+       " disables the OCaml code generation.");
       ("-no-test-code",
        Arg.Unit Configuration.unset_perform_tests,
-       " disables the test code generation.") ;
+       " disables the test code generation.");
       ("-no-tests",
        Arg.Unit Configuration.unset_perform_tests,
-       " disables the tests.") ;
+       " disables the tests.");
       ("-no-stdlib-path",
        Arg.Unit Configuration.unset_use_default_lib,
        " does not include by default the standard library installation\n\t\
-         directory in the search path.") ;
+         directory in the search path.");
       ("-ocaml-comp-mode",
        Arg.String Configuration.set_ml_compiler,
        " specify the OCaml compiler mode. Can be \"byt\" for bytecode \
          compilation, \"bin\" for native code compilation, or \"both\" \
-         for bytecode and native code compilation.") ;
+         for bytecode and native code compilation.");
       ("-pretty",
        Arg.String Configuration.set_pretty_print,
        " <output> pretty-prints the parse tree of the focalize file as a focalize\n\
-         source into the <output> file.") ;
+         source into the <output> file.");
       ("-raw-ast-dump",
        Arg.Unit Configuration.set_raw_ast_dump,
        " (undocumented) prints on stderr the raw AST structure \
-         after\n\tthe parsing stage.") ;
+         after\n\tthe parsing stage.");
+      ("-require-plugin",
+       Arg.String Configuration.require_plugin,
+       " <plugin name> requires application of plugin <plugin name> on the focalize\n\
+         source file.");
       ("-scoped-pretty",
        Arg.String Configuration.set_pretty_scoped,
        " (undocumented) pretty-prints the parse tree of the focalize \
-         file\n\tonce scoped as a focalize source into the argument file.") ;
+         file\n\tonce scoped as a focalize source into the argument file.");
       ("-stop-before-coq",
        Arg.Unit Configuration.set_stop_before_coq,
        " when Coq code generation is activated, stops the compilation process \
          before passing the generated file to Coq. The produced file is \
-         ended by the suffix \".v\".") ;
+         ended by the suffix \".v\".");
       ("-stop-before-zenon",
        Arg.Unit Configuration.set_stop_before_zenon,
        " when Coq code generation is activated, stops the compilation process \
          before passing the generated file to Zenon. The produced file is \
-         ended by the suffix \".zv\".") ;
+         ended by the suffix \".zv\".");
       ("-verbose",
        Arg.Unit Configuration.set_verbose,
-       " be verbose.") ;
+       " be verbose.");
       ("-v", Arg.Unit Configuration.print_focalize_short_version,
-       " prints the focalize version then exit.") ;
+       " prints the focalize version then exit.");
       ("-version",
        Arg.Unit Configuration.print_focalize_full_version,
        " prints the full focalize version, sub-version and release date,\n\t\
-         then exit.") ;
+         then exit.");
        ("-where",
         Arg.Unit Configuration.print_install_dirs,
         " prints the binaries and libraries installation directories then \
           exit.")
      ]
     Configuration.add_input_file_name
-    "Usage: focalizec [options] <files>" ;
+    "Usage: focalizec [options] <files>";
   let file_names = Configuration.get_input_file_names () in
-  dispatch_compilation file_names ;
+  dispatch_compilation file_names;
   exit 0
 ;;
