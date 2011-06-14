@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: basics.fcl,v 1.69 2011-05-27 17:06:26 weis Exp $ *)
+(* $Id: basics.fcl,v 1.70 2011-06-14 13:37:06 rr Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -310,7 +310,7 @@ let ( = ) =
   internal 'a -> 'a -> bool
   external
   | caml -> {* Ml_builtins.bi__syntactic_equal *}
-  | coq -> {* coq_builtins.bi__syntactic_equal __var_a *}
+  | coq -> {* coq_builtins.bi__syntactic_equal _ *}
 ;;
 
 let syntactic_equal = ( = );;
