@@ -6,7 +6,8 @@ open "lts";;
 (** We define a system allowing to add or to release accesses. *)
 
 
-species State_ac (S is Subject, O is Object, A is Access_mode) =
+species State_ac (S is Subject, O is Object, A is Access_mode,
+                  Ac is Accesses (S, O, A)) =
 
   inherit State, Accesses (S, O, A);
 
@@ -15,12 +16,28 @@ species State_ac (S is Subject, O is Object, A is Access_mode) =
   theorem initial_is_empty : all x : Self, is_initial (x) <-> equal (x, empty)
   proof = by definition of is_initial;
 
+  signature accesses : Self -> Ac;
+
+  property accesses_preserves_alpha :
+    all t : Self, all s : S, all o : O, all a : A,
+    alpha (t, s, o, a) = Ac!alpha (accesses (t), s, o, a);
+
 end;;
 
 
-species State_ac_by_list (S is Subject, O is Object, A is Access_mode) =
+species State_ac_by_list (S is Subject, O is Object, A is Access_mode,
+                          Ac is Accesses (S, O, A)) =
 
-  inherit State_ac (S, O, A), Accesses_by_list (S, O, A);
+  inherit State_ac (S, O, A, Ac), Accesses_by_list (S, O, A);
+
+  let accesses =
+    let rec aux (x) =
+      match x with
+        | Empty -> Ac!empty
+        | Cons (s, o, a, l) -> Ac!add (aux (l), s, o, a) in
+    function x -> aux (x);
+
+  proof of accesses_preserves_alpha = assumed; (* TODO *)
 
 end;;
 
@@ -85,7 +102,8 @@ end;;
 
 
 species Transition_system_ac (S is Subject, O is Object, A is Access_mode,
-                              St is State_ac (S, O, A),
+                              Ac is Accesses (S, O, A),
+                              St is State_ac (S, O, A, Ac),
                               L is Label_ac (S, O, A)) =
 
   inherit Transition_system (St, L);
@@ -126,10 +144,10 @@ end;;
 
 
 species Operational_transition_system_ac
-  (S is Subject, O is Object, A is Access_mode,
-   St is State_ac (S, O, A), L is Label_ac (S, O, A)) =
+  (S is Subject, O is Object, A is Access_mode, Ac is Accesses (S, O, A),
+   St is State_ac (S, O, A, Ac), L is Label_ac (S, O, A)) =
 
-  inherit Transition_system_ac (S, O, A, St, L),
+  inherit Transition_system_ac (S, O, A, Ac, St, L),
           Operational_transition_system (St, L);
 
   let transition (x, l) =
@@ -185,9 +203,9 @@ end;;
 
 
 species Transition_system_request_ac
-  (S is Subject, O is Object, A is Access_mode,
+  (S is Subject, O is Object, A is Access_mode, Ac is Accesses (S, O, A),
    R is Request_ac (S, O, A), D is Answer_ac,
-   St is State_ac (S, O, A), L is Label_request (R, D)) =
+   St is State_ac (S, O, A, Ac), L is Label_request (R, D)) =
 
   inherit Transition_system_request (R, D, St, L);
 
@@ -250,6 +268,7 @@ species Subject_test =
   let s6 : Self = S6;
   let s7 : Self = S7;
 
+  let cardinal = 8;
   let all_to_list = [S0; S1; S2; S3; S4; S5; S6; S7];
 
   let element = s0;
@@ -287,6 +306,7 @@ species Object_test =
   let o6 : Self = O6;
   let o7 : Self = O7;
 
+  let cardinal = 8;
   let all_to_list = [O0; O1; O2; O3; O4; O5; O6; O7];
 
   let element = o0;
@@ -324,6 +344,7 @@ species Access_mode_test =
   let a6 : Self = A6;
   let a7 : Self = A7;
 
+  let cardinal = 8;
   let all_to_list = [A0; A1; A2; A3; A4; A5; A6; A7];
 
   let element = a0;
@@ -343,12 +364,14 @@ end;;
 
 collection A = implement Access_mode_test; end;;
 
-collection St = implement State_ac_by_list (S, O, A); end;;
+collection Ac = implement Accesses_by_list (S, O, A); end;;
+
+collection St = implement State_ac_by_list (S, O, A, Ac); end;;
 
 collection L = implement Label_ac (S, O, A); end;;
 
 collection LTS =
-  implement Operational_transition_system_ac (S, O, A, St, L); end;;
+  implement Operational_transition_system_ac (S, O, A, Ac, St, L); end;;
 
 let rec fold_left (l, f, z) =
   match l with

@@ -17,6 +17,12 @@ species Target_ac (S is Subject, O is Object, A is Access_mode,
     all t : Self, all s : S, all o : O, all a : A,
     alpha (t, s, o, a) = Ac!alpha (accesses (t), s, o, a);
 
+  signature from_accesses : Ac -> Self;
+
+  property from_accesses_preserves_alpha :
+    all ac : Ac, all s : S, all o : O, all a : A,
+    alpha (from_accesses (ac), s, o, a) = Ac!alpha (ac, s, o, a);
+
 end;;
 
 
@@ -33,6 +39,18 @@ species Target_ac_by_list (S is Subject, O is Object, A is Access_mode,
     function t -> aux (t);
 
   proof of accesses_preserves_alpha = assumed; (* TODO *)
+
+  local let rec aux_from_accesses (ac : Ac, acc : Self) =
+    if Ac!equal (ac, Ac!empty) then acc
+    else
+      let h = Ac!get_one (ac) in
+      match h with | (s, o, a) ->
+      let t = Ac!release (ac, s, o, a) in
+      aux_from_accesses (t, add (acc, s, o, a));
+
+  let from_accesses (ac) = aux_from_accesses (ac, empty);
+
+  proof of from_accesses_preserves_alpha = assumed; (* TODO *)
 
 end;;
 

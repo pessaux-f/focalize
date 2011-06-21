@@ -6,8 +6,12 @@ species Finite_set =
 
   inherit Setoid;
 
+  (** Number of members of the species *)
+  signature cardinal : int;
+
   (** All the members of the species. *)
   signature all_to_list : list (Self);
+
 
   local let in_list =
     let rec aux (l, x) =
