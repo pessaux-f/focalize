@@ -72,7 +72,7 @@ species Operational_transition_system (S is State, L is Label) =
   signature transition : S -> L -> S;
 
   property transition_is_valid :
-    all x y : S, all l : L, transition (x, l) =S y <-> delta (x, l, y);
+    all x y : S, all l : L, transition (x, l) =S y -> delta (x, l, y);
 
   (** A multiple transition from state x with a list l of labels *)
   let transition_iter =

@@ -4,38 +4,78 @@ open "lts";;
 open "p_policies";;
 
 
-species Secure_state (A is Target, C is Configuration, P is P_policy (A, C),
-                      S is State) =
 
-  (* ??? egalite uniquement sur S ??? *)
+(** A secure state has a normal state and can be secure or not. *)
+species Secure_state (S is State) =
 
-  inherit Product_set (S, C), State;
+  inherit State;
 
-  signature interpretation : S -> A;
+  (** Non-secure state *)
+  signature state : Self -> S;
 
-  let state = first;
-  let configuration = second;
+  signature is_secure : Self -> bool;
 
-  let is_secure (x : Self) =
-    P!relation (interpretation (state (x)), configuration (x));
+  (** Another secure state with the given non-secure state
+      (see Secured_state) *)
+  signature clone_configuration : Self -> S -> Self;
+
+  property clone_configuration_state :
+    all x : Self, all s : S, S!equal (state (clone_configuration (x, s)), s);
 
   let is_initial  (x : Self) =
     S!is_initial (state (x)) && is_secure (x);
 
+  theorem is_initial_spec :
+    all x : Self,
+    is_initial (x) <-> (S!is_initial (state (x)) /\ is_secure (x))
+  proof = by definition of is_initial;
+
 end;;
 
 
-species Secure_transition_system (A is Target, C is Configuration,
-                                  P is P_policy (A, C),
-                                  St is State, L is Label,
-                                  S is Transition_system (St, L),
-                                  Ss is Secure_state (A, C, P, St)) =
+(** A secured state has a normal state and a configuration.
+    A security policy determines the security state. *)
+species Secured_state (A is Target, C is Configuration, P is P_policy (A, C),
+                       S is State) =
+
+  inherit Product_set (S, C), Secure_state (S);
+
+  let state = first;
+  let configuration = second;
+
+  (** To apply the policy *)
+  signature interpretation : S -> A;
+
+  let is_secure (x : Self) =
+    P!secure (interpretation (state (x)), configuration (x));
+
+  (** Another secure state with the given non-secure state and the same
+      configuration *)
+  let clone_configuration (x, s) = pair (s, configuration (x));
+
+  proof of clone_configuration_state = assumed; (* TODO *)
+
+  theorem clone_configuration_configuration :
+    all x : Self, all s : S,
+    C!equal (configuration (clone_configuration (x, s)), configuration (x))
+  proof = assumed;              (* TODO *)
+
+end;;
+
+
+(** A system in which all reachable states are secure. *)
+species Secured_transition_system (St is State, L is Label,
+                                   Sys is Transition_system (St, L),
+                                   Ss is Secure_state (St)) =
+
+  (* ??? Secure_transition_system ??? *)
 
   inherit Transition_system (Ss, L);
 
+  (** If a state is reachable from a secure state, it must be secure. *)
   let delta (x : Ss, l : L, y : Ss) =
-    S!delta (Ss!state (x), l, Ss!state (y)) &&
-    ( ~~ (Ss!is_secure (x)) || Ss!is_secure (y) );
+    Sys!delta (Ss!state (x), l, Ss!state (y)) &&
+    ( ~~ Ss!is_secure (x) || Ss!is_secure (y) );
 
   theorem all_secure : all x : Ss, is_reachable (x) -> Ss!is_secure (x)
   proof = assumed;              (* TODO *)
@@ -44,41 +84,41 @@ end;;
 
 
 
-(** /!\ Operational_transition_system not inherited (not complete) *)
-species Secure_operational_transition_system
-  (A is Target, C is Configuration,
-   P is P_policy (A, C),
-   St is State, L is Label,
-   S is Operational_transition_system (St, L),
-   Ss is Secure_state (A, C, P, St)) =
+species Secured_operational_transition_system
+  (St is State, L is Label,
+   Sys is Operational_transition_system (St, L),
+   Ss is Secure_state (St)) =
 
-  inherit Secure_transition_system (A, C, P, St, L, S, Ss);
+  inherit Secured_transition_system (St, L, Sys, Ss),
+          Operational_transition_system (Ss, L);
+
+  (** For completeness, non secure transitions are redirected to
+      the same state. *)
+  let delta (x : Ss, l : L, y : Ss) =
+    if ~~ Ss!is_secure (x) || Ss!is_secure (y) then
+      Sys!delta (Ss!state (x), l, Ss!state (y))
+    else
+      Ss!equal (x, y);
 
   theorem determinist : is_determinist
   proof = assumed;              (* TODO *)
 
-    (* TODO *)
+  theorem complete : is_complete
+  proof = assumed;              (* TODO *)
 
-  (* let transition (x, l) = *)
-  (*   let y = S!transition (Ss!state (x), l) in *)
-  (*   if delta (x, l, y) then y else x; *)
+  (** Transition of the non secure system with the same configuration or,
+      if not secure transition, the same state *)
+  let transition (x, l) =
+    let s = Sys!transition (Ss!state (x), l) in
+    let y = Ss!clone_configuration (x, s) in
+    if delta (x, l, y) then y else x;
 
-  (* theorem delta_implies_transition : *)
-  (*   all x y : St, all l : L, *)
-  (*   delta (x, l, y) -> transition (x, l) =S y *)
-  (* proof = assumed;              (\* TODO *\) *)
+  proof of transition_is_valid = assumed;              (* TODO *)
 
-  (* theorem transition_diff_implies_delta : *)
-  (*   all x y : St, all l : L, *)
-  (*   (transition (x, l) =S y /\ ~ x =S y) -> delta (x, l, y) *)
-  (* proof = assumed;              (\* TODO *\) *)
-
-  (* (\** A multiple transition from state x with a list l of labels *\) *)
-  (* let transition_iter = *)
-  (*   let rec aux (l, x) = *)
-  (*     match l with *)
-  (*       | [] -> x *)
-  (*       | h :: t -> aux (t, transition (x, h)) in *)
-  (*   function x -> function l -> aux (l, x); *)
+  theorem delta_and_some_implies_transition :
+    all x y : Ss, all l : L,
+    (delta (x, l, y) /\ Ss!equal (x, y)) -> Ss!equal (transition (x, l), y)
+    (* \/ C!equal (Ss!configuration (x), Ss!configuration (y)) *)
+  proof = assumed;              (* TODO *)
 
 end;;

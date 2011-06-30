@@ -20,6 +20,8 @@ species P_policy (A is Target, C is Configuration) =
   (** Relation specifying secure targets according to configurations *)
   inherit Relation (A, C);
 
+  let secure = relation;
+
 end;;
 
 

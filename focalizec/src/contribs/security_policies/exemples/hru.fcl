@@ -1,4 +1,5 @@
 open "basics";;
+open "products";;
 open "accesses";;
 open "p_policies";;
 open "access_p_policies";;
@@ -69,29 +70,48 @@ end;;
 (** HRU secure system *)
 
 
-species Secure_state_hru
+species Secured_state_hru
   (S is Subject, O is Object, A is Access_mode, Ac is Accesses (S, O, A),
    T is Target_ac (S, O, A, Ac), C is Configuration_ac (S, O, A, Ac),
    P is P_policy_hru (S, O, A, Ac, T, C),
    St is State_ac (S, O, A, Ac)) =
 
-  inherit Secure_state (T, C, P, St);
+  inherit Cartesian_product (St, C), Secured_state (T, C, P, St);
 
   let interpretation (x) = T!from_accesses (St!accesses (x));
+
+  let print (x) = "(" ^ St!print (state (x)) ^ ", " ^
+                        C!print (configuration (x)) ^ ")";
 
 end;;
 
 
-species Secure_transition_system_hru
-  (S is Subject, O is Object, A is Access_mode,
-   Ac is Accesses (S, O, A),
+species Secured_transition_system_hru
+  (S is Subject, O is Object, A is Access_mode, Ac is Accesses (S, O, A),
    T is Target_ac (S, O, A, Ac), C is Configuration_ac (S, O, A, Ac),
    P is P_policy_hru (S, O, A, Ac, T, C),
    St is State_ac (S, O, A, Ac), L is Label_ac (S, O, A),
    Sys is Transition_system_ac (S, O, A, Ac, St, L),
-   Ss is Secure_state_hru (S, O, A, Ac, T, C, P, St)) =
+   Ss is Secured_state_hru (S, O, A, Ac, T, C, P, St)) =
 
-  inherit Secure_transition_system (T, C, P, St, L, Sys, Ss);
+  inherit Secured_transition_system (St, L, Sys, Ss);
+
+end;;
+
+
+
+species Secured_operational_transition_system_hru
+  (S is Subject, O is Object, A is Access_mode, Ac is Accesses (S, O, A),
+   T is Target_ac (S, O, A, Ac), C is Configuration_ac (S, O, A, Ac),
+   P is P_policy_hru (S, O, A, Ac, T, C),
+   St is State_ac (S, O, A, Ac), L is Label_ac (S, O, A),
+   Sys is Operational_transition_system_ac (S, O, A, Ac, St, L),
+   Ss is Secured_state_hru (S, O, A, Ac, T, C, P, St)) =
+
+  inherit Secured_transition_system_hru (S, O, A, Ac, T, C, P, St, L, Sys, Ss),
+          Secured_operational_transition_system (St, L, Sys, Ss);
+
+  representation = unit;
 
 end;;
 
@@ -224,21 +244,55 @@ collection C = implement Configuration_ac_by_list (S, O, A, Ac); end;;
 collection P = implement P_policy_hru (S, O, A, Ac, T, C); end;;
 
 
-let test_2 (t, c) =
-  let conf = "(" ^ T!print (t) ^ ", " ^ C!print (c) ^ ")" in
-  if P!relation (t, c)
-  then print_string (conf ^ "   OK\n")
-  else print_string (conf ^ "   KO\n");;
+(* let test_2 (t, c) = *)
+(*   let conf = "(" ^ T!print (t) ^ ", " ^ C!print (c) ^ ")" in *)
+(*   if P!relation (t, c) *)
+(*   then print_string (conf ^ "   OK\n") *)
+(*   else print_string (conf ^ "   KO\n");; *)
 
 
-let target_0 = T!empty;;
-let target_1 = T!add (target_0, S!s3, O!o5, A!a2);;
+(* let target_0 = T!empty;; *)
+(* let target_1 = T!add (target_0, S!s3, O!o5, A!a2);; *)
 
-let configuration_0 = C!empty;;
-let configuration_1 = C!add (configuration_0, S!s3, O!o5, A!a2);;
+(* let configuration_0 = C!empty;; *)
+(* let configuration_1 = C!add (configuration_0, S!s3, O!o5, A!a2);; *)
 
-test_2 (target_0, configuration_0);;
-test_2 (target_0, configuration_1);;
-test_2 (target_1, configuration_0);;
-test_2 (target_1, configuration_1);;
+(* test_2 (target_0, configuration_0);; *)
+(* test_2 (target_0, configuration_1);; *)
+(* test_2 (target_1, configuration_0);; *)
+(* test_2 (target_1, configuration_1);; *)
 
+
+
+collection St = implement State_ac_by_list (S, O, A, Ac); end;;
+
+collection L = implement Label_ac (S, O, A); end;;
+
+collection Sys_ac =
+  implement Operational_transition_system_ac (S, O, A, Ac, St, L); end;;
+
+
+collection Ss = implement Secured_state_hru (S, O, A, Ac, T, C, P, St); end;;
+
+collection Sys =
+  implement Secured_operational_transition_system_hru
+    (S, O, A, Ac, T, C, P, St, L, Sys_ac, Ss); end;;
+
+
+let c = C!add (C!empty, S!s0, O!o0, A!a0);;
+
+let st = Ss!pair (St!empty, c);;
+
+let st1 = Sys!transition (st, L!label (Add, S!s0, O!o0, A!a0));;
+
+let st2 = Sys!transition (st1, L!label (Release, S!s0, O!o0, A!a0));;
+
+let st3 = Sys!transition (st2, L!label (Release, S!s1, O!o1, A!a1));;
+
+let st4 = Sys!transition (st3, L!label (Add, S!s1, O!o1, A!a1));;
+
+print_string (Ss!print (st) ^ "\n");;
+print_string (Ss!print (st1) ^ "\n");;
+print_string (Ss!print (st2) ^ "\n");;
+print_string (Ss!print (st3) ^ "\n");;
+print_string (Ss!print (st4) ^ "\n");;

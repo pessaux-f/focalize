@@ -128,7 +128,6 @@ species Injective_relation (A is Setoid, B is Setoid) =
 
 
   theorem left_unique_empty :
-    all r1 r2 : Self,
     empty_belongs -> is_left_unique (empty (()))
   proof = assumed;            (* TODO *)
 
@@ -174,7 +173,6 @@ species Determinist_relation (A is Setoid, B is Setoid) =
 
 
   theorem right_unique_empty :
-    all r1 r2 : Self,
     empty_belongs -> is_right_unique (empty (()))
   proof = assumed;            (* TODO *)
 
@@ -224,7 +222,6 @@ species Left_total_relation (A is Setoid, B is Setoid) =
 
 
   theorem left_total_empty :
-    all r1 r2 : Self,
     empty_belongs -> is_left_total (empty (()))
   proof = assumed;            (* TODO *)
 
@@ -274,7 +271,6 @@ species Surjective_relation (A is Setoid, B is Setoid) =
 
 
   theorem right_total_empty :
-    all r1 r2 : Self,
     empty_belongs -> is_right_total (empty (()))
   proof = assumed;            (* TODO *)
 
@@ -323,6 +319,8 @@ species Injective_function (A is Setoid, B is Setoid) =
     (( relation (r1, a1, b1) /\ relation (r2, a2, b1) ) -> A!equal (a1, a2)) /\
     (( relation (r1, a1, b1) /\ relation (r2, a1, b2) ) -> B!equal (b1, b2));
 
+  (* Les preuves suivantes devraient etre cassees (??) *)
+
   (* proof of left_unique_complete = assumed; (\* TODO *\) *)
   (* proof of left_total_complete = assumed; *)
   (* proof of right_total_complete = assumed; *)
@@ -347,6 +345,8 @@ species Surjective_function (A is Setoid, B is Setoid) =
   logical let diff_is_internal (r1, r2) =
     ( all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b) ) /\
     ( all b : B, ex a : A, relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+  (* Les preuves suivantes devraient etre cassees (??) *)
 
   (* proof of left_unique_singleton = assumed; (\* TODO *\) *)
   (* proof of left_total_singleton = assumed; *)

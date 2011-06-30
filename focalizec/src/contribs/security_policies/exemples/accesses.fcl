@@ -141,13 +141,6 @@ species Accesses_by_list (S is Subject, O is Object, A is Access_mode) =
 
   let element = Empty;
 
-  local let rev_append =
-    let rec aux (l1, l2) =
-      match l1 with
-        | [] -> l2
-        | h :: t -> aux (t, h :: l2) in
-    function l1 -> function l2 -> aux (l1, l2);
-
   local let rev_append_soa =
     let rec aux (l1 : list_soa (S, O, A), l2 : list_soa (S, O, A)) =
       match l1 with
@@ -179,14 +172,23 @@ species Accesses_by_list (S is Subject, O is Object, A is Access_mode) =
 
   let cardinal = 3 ^0x (S!cardinal * O!cardinal * A!cardinal);
 
-  let all_to_list : list (Self)=
-    (* List of lists with elements of l2 and some of l1 *)
-    let rec aux (l1 : list_soa (S, O, A), l2 : list_soa (S, O, A)) =
-      match l1 with
-        | Empty -> [l2]
-        | Cons (s, o, a, t) -> rev_append (aux (t, l2),
-                                           aux (t, Cons (s, o, a, l2))) in
-    aux (accesses_list, Empty);
+  (* local let rev_append = *)
+  (*   let rec aux (l1, l2) = *)
+  (*     match l1 with *)
+  (*       | [] -> l2 *)
+  (*       | h :: t -> aux (t, h :: l2) in *)
+  (*   function l1 -> function l2 -> aux (l1, l2); *)
+
+  let all_to_list : list (Self) = []; (* /!\ wrong *)
+
+  (* good but not efficient *)
+    (* (\* List of lists with elements of l2 and some of l1 *\) *)
+    (* let rec aux (l1 : list_soa (S, O, A), l2 : list_soa (S, O, A)) = *)
+    (*   match l1 with *)
+    (*     | Empty -> [l2] *)
+    (*     | Cons (s, o, a, t) -> rev_append (aux (t, l2), *)
+    (*                                        aux (t, Cons (s, o, a, l2))) in *)
+    (* aux (accesses_list, Empty); *)
 
   let print (x) =
     let rec aux (x) =
@@ -216,117 +218,117 @@ end;;
   (* Tests *)
 
 
-type subject = | S0 | S1;;
+(* type subject = | S0 | S1;; *)
 
-species Subject_test =
+(* species Subject_test = *)
 
-  inherit Subject;
+(*   inherit Subject; *)
 
-  representation = subject;
+(*   representation = subject; *)
 
-  let s0 : Self = S0;
-  let s1 : Self = S1;
+(*   let s0 : Self = S0; *)
+(*   let s1 : Self = S1; *)
 
-  let cardinal = 2;
-  let all_to_list = [S0; S1];
+(*   let cardinal = 2; *)
+(*   let all_to_list = [S0; S1]; *)
 
-  let element = s0;
-  let equal (s_1, s_2) = s_1 = s_2;
-  let print (s) =
-    match s with
-      | S0 -> "s0" | S1 -> "s1";
+(*   let element = s0; *)
+(*   let equal (s_1, s_2) = s_1 = s_2; *)
+(*   let print (s) = *)
+(*     match s with *)
+(*       | S0 -> "s0" | S1 -> "s1"; *)
 
-  proof of equal_transitive = by definition of equal;
-  proof of equal_symmetric = by definition of equal;
-  proof of equal_reflexive = by definition of equal;
+(*   proof of equal_transitive = by definition of equal; *)
+(*   proof of equal_symmetric = by definition of equal; *)
+(*   proof of equal_reflexive = by definition of equal; *)
 
-  proof of all_in_all_to_list = assumed;
+(*   proof of all_in_all_to_list = assumed; *)
 
-end;;
+(* end;; *)
 
-collection S = implement Subject_test; end;;
-
-
-type object = | O0 | O1;;
-
-species Object_test =
-
-  inherit Object;
-
-  representation = object;
-
-  let o0 : Self = O0;
-  let o1 : Self = O1;
-
-  let cardinal = 2;
-  let all_to_list = [O0; O1];
-
-  let element = o0;
-  let equal (o_1, o_2) = o_1 = o_2;
-  let print (o) =
-    match o with
-      | O0 -> "o0" | O1 -> "o1";
-
-  proof of equal_transitive = by definition of equal;
-  proof of equal_symmetric = by definition of equal;
-  proof of equal_reflexive = by definition of equal;
-
-  proof of all_in_all_to_list = assumed;
-
-end;;
-
-collection O = implement Object_test; end;;
+(* collection S = implement Subject_test; end;; *)
 
 
-type access_mode = | A0 | A1;;
+(* type object = | O0 | O1;; *)
 
-species Access_mode_test =
+(* species Object_test = *)
 
-  inherit Access_mode;
+(*   inherit Object; *)
 
-  representation = access_mode;
+(*   representation = object; *)
 
-  let a0 : Self = A0;
-  let a1 : Self = A1;
+(*   let o0 : Self = O0; *)
+(*   let o1 : Self = O1; *)
 
-  let cardinal = 2;
-  let all_to_list = [A0; A1];
+(*   let cardinal = 2; *)
+(*   let all_to_list = [O0; O1]; *)
 
-  let element = a0;
-  let equal (a_1, a_2) = a_1 = a_2;
-  let print (a) =
-    match a with
-      | A0 -> "a0" | A1 -> "a1";
+(*   let element = o0; *)
+(*   let equal (o_1, o_2) = o_1 = o_2; *)
+(*   let print (o) = *)
+(*     match o with *)
+(*       | O0 -> "o0" | O1 -> "o1"; *)
 
-  proof of equal_transitive = by definition of equal;
-  proof of equal_symmetric = by definition of equal;
-  proof of equal_reflexive = by definition of equal;
+(*   proof of equal_transitive = by definition of equal; *)
+(*   proof of equal_symmetric = by definition of equal; *)
+(*   proof of equal_reflexive = by definition of equal; *)
 
-  proof of all_in_all_to_list = assumed;
+(*   proof of all_in_all_to_list = assumed; *)
 
-end;;
+(* end;; *)
 
-collection A = implement Access_mode_test; end;;
+(* collection O = implement Object_test; end;; *)
 
 
-collection Ac = implement Accesses_by_list (S, O, A); end;;
+(* type access_mode = | A0 | A1;; *)
 
-let accesses_list_to_string =
-  let rec aux (l) =
-    match l with
-      | [] -> "]"
-      | [ac] -> Ac!print (ac) ^ "]"
-      | ac :: t -> Ac!print (ac) ^ "; " ^ aux (t) in
-  function l -> "[" ^ aux (l);;
+(* species Access_mode_test = *)
 
-let lenght =
-  let rec aux (l, cpt) =
-    match l with
-      | [] -> cpt
-      | _h :: t -> aux (t, cpt + 1) in
-  function l -> aux (l, 0);;
+(*   inherit Access_mode; *)
 
-let l = Ac!all_to_list;;
+(*   representation = access_mode; *)
+
+(*   let a0 : Self = A0; *)
+(*   let a1 : Self = A1; *)
+
+(*   let cardinal = 2; *)
+(*   let all_to_list = [A0; A1]; *)
+
+(*   let element = a0; *)
+(*   let equal (a_1, a_2) = a_1 = a_2; *)
+(*   let print (a) = *)
+(*     match a with *)
+(*       | A0 -> "a0" | A1 -> "a1"; *)
+
+(*   proof of equal_transitive = by definition of equal; *)
+(*   proof of equal_symmetric = by definition of equal; *)
+(*   proof of equal_reflexive = by definition of equal; *)
+
+(*   proof of all_in_all_to_list = assumed; *)
+
+(* end;; *)
+
+(* collection A = implement Access_mode_test; end;; *)
+
+
+(* collection Ac = implement Accesses_by_list (S, O, A); end;; *)
+
+(* let accesses_list_to_string = *)
+(*   let rec aux (l) = *)
+(*     match l with *)
+(*       | [] -> "]" *)
+(*       | [ac] -> Ac!print (ac) ^ "]" *)
+(*       | ac :: t -> Ac!print (ac) ^ "; " ^ aux (t) in *)
+(*   function l -> "[" ^ aux (l);; *)
+
+(* let lenght = *)
+(*   let rec aux (l, cpt) = *)
+(*     match l with *)
+(*       | [] -> cpt *)
+(*       | _h :: t -> aux (t, cpt + 1) in *)
+(*   function l -> aux (l, 0);; *)
+
+(* let l = Ac!all_to_list;; *)
 
 (* print_string (accesses_list_to_string (l) ^ "\n");; *)
 (* print_string (string_of_int (lenght (l)) ^ "\n");; *)
