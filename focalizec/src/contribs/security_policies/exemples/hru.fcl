@@ -10,7 +10,7 @@ open "secure_system";;
 (** The HRU security model (Harrison, Ruzzo, Ullman model) *)
 
 
-(** HRU policy *)
+(** HRU configuration *)
 
 
 species Configuration_ac (S is Subject, O is Object, A is Access_mode,
@@ -44,6 +44,9 @@ species Configuration_ac_by_list (S is Subject, O is Object, A is Access_mode,
 
 end;;
 
+
+
+(** HRU policy *)
 
 
 species P_policy_hru (S is Subject, O is Object, A is Access_mode,

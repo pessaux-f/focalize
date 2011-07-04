@@ -1,0 +1,366 @@
+open "basics";;
+open "products";;
+open "accesses";;
+open "p_policies";;
+open "access_p_policies";;
+open "access_system";;
+open "secure_system";;
+
+
+(** The BLP security model (Bell, LaPadula) *)
+
+
+(** BLP configuration *)
+
+
+species Configuration_blp (S is Subject, O is Object) =
+
+  inherit Configuration;
+
+  (* subject security level *)
+  signature fs : Self -> S -> int;
+
+  (* object security level *)
+  signature fo : Self -> O -> int;
+
+end;;
+
+  (* TODO : Il doit y avoir plusieurs configurations ?? *)
+
+
+
+(** BLP policy *)
+
+
+species Access_mode_blp =
+
+  inherit Access_mode;
+
+  signature read : Self;
+  signature write : Self;
+
+end;;
+
+
+species P_policy_blp (S is Subject, O is Object, A is Access_mode_blp,
+                      Ac is Accesses (S, O, A),
+                      T is Target_ac (S, O, A, Ac),
+                      C is Configuration_blp (S, O)) =
+
+  inherit P_policy_ac (S, O, A, Ac, T, C);
+
+  representation = unit;
+
+  property relation_spec :
+    all t : T, all c : C,
+    relation (t, c) <->
+      all s : S, all o1 o2 : O,
+      (Ac!alpha (T!accesses (t), s, o1, A!read) ->
+         C!fs (c, s) >=0x C!fo (c, o1)) /\
+      ((Ac!alpha (T!accesses (t), s, o1, A!read) /\
+        Ac!alpha (T!accesses (t), s, o2, A!write)) ->
+         C!fo (c, o2) >=0x C!fo (c, o1));
+
+  let relation =
+    let rec auxO2 (l_o, s, o, t, c) =
+      match l_o with
+        | [] -> true
+        | o2 :: t_o ->
+            if Ac!alpha (T!accesses (t), s, o2, A!write) then
+              C!fo (c, o2) >=0x C!fo (c, o) && auxO2 (t_o, s, o, t, c)
+            else auxO2 (t_o, s, o, t, c) in
+    let rec auxO1 (l_o, s, l_o2, t, c) =
+      match l_o with
+        | [] -> true
+        | o :: t_o ->
+            if Ac!alpha (T!accesses (t), s, o, A!read) then
+              C!fs (c, s) >=0x C!fo (c, o) && auxO2 (l_o2, s, o, t, c) &&
+              auxO1 (t_o, s, l_o2, t, c)
+            else auxO1 (t_o, s, l_o2, t, c) in
+    let rec auxS (l_s, l_o, t, c) =
+      match l_s with
+        | [] -> true
+        | s :: t_s -> auxO1 (l_o, s, l_o, t, c) && auxS (t_s, l_o, t, c) in
+    function t -> function c -> auxS (S!all_to_list, O!all_to_list, t, c);
+
+  proof of relation_spec = assumed; (* TODO *)
+
+end;;
+
+
+
+(** BLP secure system *)
+
+
+species Secured_state_blp
+  (S is Subject, O is Object, A is Access_mode_blp, Ac is Accesses (S, O, A),
+   T is Target_ac (S, O, A, Ac), C is Configuration_blp (S, O),
+   P is P_policy_blp (S, O, A, Ac, T, C),
+   St is State_ac (S, O, A, Ac)) =
+
+  inherit Cartesian_product (St, C), Secured_state (T, C, P, St);
+
+  let interpretation (x) = T!from_accesses (St!accesses (x));
+
+  let print (x) = "(" ^ St!print (state (x)) ^ ", " ^
+                        C!print (configuration (x)) ^ ")";
+
+end;;
+
+
+species Secured_transition_system_blp
+  (S is Subject, O is Object, A is Access_mode_blp, Ac is Accesses (S, O, A),
+   T is Target_ac (S, O, A, Ac), C is Configuration_blp (S, O),
+   P is P_policy_blp (S, O, A, Ac, T, C),
+   St is State_ac (S, O, A, Ac), L is Label_ac (S, O, A),
+   Sys is Transition_system_ac (S, O, A, Ac, St, L),
+   Ss is Secured_state_blp (S, O, A, Ac, T, C, P, St)) =
+
+  inherit Secured_transition_system (St, L, Sys, Ss);
+
+end;;
+
+
+
+species Secured_operational_transition_system_blp
+  (S is Subject, O is Object, A is Access_mode_blp, Ac is Accesses (S, O, A),
+   T is Target_ac (S, O, A, Ac), C is Configuration_blp (S, O),
+   P is P_policy_blp (S, O, A, Ac, T, C),
+   St is State_ac (S, O, A, Ac), L is Label_ac (S, O, A),
+   Sys is Operational_transition_system_ac (S, O, A, Ac, St, L),
+   Ss is Secured_state_blp (S, O, A, Ac, T, C, P, St)) =
+
+  inherit Secured_transition_system_blp (S, O, A, Ac, T, C, P, St, L, Sys, Ss),
+          Secured_operational_transition_system (St, L, Sys, Ss);
+
+  representation = unit;
+
+end;;
+
+
+
+
+
+(* Tests *)
+
+
+type subject = | S0 | S1 | S2 | S3 | S4 | S5 | S6 | S7;;
+
+species Subject_test =
+
+  inherit Subject;
+
+  representation = subject;
+
+  let s0 : Self = S0;
+  let s1 : Self = S1;
+  let s2 : Self = S2;
+  let s3 : Self = S3;
+  let s4 : Self = S4;
+  let s5 : Self = S5;
+  let s6 : Self = S6;
+  let s7 : Self = S7;
+
+  let cardinal = 8;
+  let all_to_list = [S0; S1; S2; S3; S4; S5; S6; S7];
+
+  let element = s0;
+  let equal (s_1, s_2) = s_1 = s_2;
+  let print (s) =
+    match s with
+      | S0 -> "s0" | S1 -> "s1" | S2 -> "s2" | S3 -> "s3"
+      | S4 -> "s4" | S5 -> "s5" | S6 -> "s6" | S7 -> "s7";
+
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
+
+  proof of all_in_all_to_list = assumed;
+
+end;;
+
+collection S = implement Subject_test; end;;
+
+
+type object = | O0 | O1 | O2 | O3 | O4 | O5 | O6 | O7;;
+
+species Object_test =
+
+  inherit Object;
+
+  representation = object;
+
+  let o0 : Self = O0;
+  let o1 : Self = O1;
+  let o2 : Self = O2;
+  let o3 : Self = O3;
+  let o4 : Self = O4;
+  let o5 : Self = O5;
+  let o6 : Self = O6;
+  let o7 : Self = O7;
+
+  let cardinal = 8;
+  let all_to_list = [O0; O1; O2; O3; O4; O5; O6; O7];
+
+  let element = o0;
+  let equal (o_1, o_2) = o_1 = o_2;
+  let print (o) =
+    match o with
+      | O0 -> "o0" | O1 -> "o1" | O2 -> "o2" | O3 -> "o3"
+      | O4 -> "o4" | O5 -> "o5" | O6 -> "o6" | O7 -> "o7";
+
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
+
+  proof of all_in_all_to_list = assumed;
+
+end;;
+
+collection O = implement Object_test; end;;
+
+
+type access_mode = | A0 | A1 | A2 | A3 | A4 | A5 | A6 | A7;;
+
+species Access_mode_test =
+
+  inherit Access_mode_blp;
+
+  representation = access_mode;
+
+  let a0 : Self = A0;
+  let a1 : Self = A1;
+  let a2 : Self = A2;
+  let a3 : Self = A3;
+  let a4 : Self = A4;
+  let a5 : Self = A5;
+  let a6 : Self = A6;
+  let a7 : Self = A7;
+
+  let read = a0;
+  let write = a1;
+
+  let cardinal = 8;
+  let all_to_list = [A0; A1; A2; A3; A4; A5; A6; A7];
+
+  let element = a0;
+  let equal (a_1, a_2) = a_1 = a_2;
+  let print (a) =
+    match a with
+      | A0 -> "read" | A1 -> "write" | A2 -> "a2" | A3 -> "a3"
+      | A4 -> "a4" | A5 -> "a5" | A6 -> "a6" | A7 -> "a7";
+
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
+
+  proof of all_in_all_to_list = assumed;
+
+end;;
+
+collection A = implement Access_mode_test; end;;
+
+collection Ac = implement Accesses_by_list (S, O, A); end;;
+
+collection T = implement Target_ac_by_list (S, O, A, Ac); end;;
+
+
+species Configuration_blp_test (Sub is Subject_test, Obj is Object_test) =
+
+  inherit Configuration_blp (Sub, Obj);
+
+  representation = unit;
+
+  let fs (_c, s : Sub) =
+    if      Sub!equal (s, Sub!s0) then 0
+    else if Sub!equal (s, Sub!s1) then 1
+    else if Sub!equal (s, Sub!s2) then 2
+    else if Sub!equal (s, Sub!s3) then 3
+    else if Sub!equal (s, Sub!s4) then 4
+    else if Sub!equal (s, Sub!s5) then 5
+    else if Sub!equal (s, Sub!s6) then 6
+    else if Sub!equal (s, Sub!s7) then 7
+    else 0;
+
+  let fo (_c, o : Obj) =
+    if      Obj!equal (o, Obj!o0) then 0
+    else if Obj!equal (o, Obj!o1) then 1
+    else if Obj!equal (o, Obj!o2) then 2
+    else if Obj!equal (o, Obj!o3) then 3
+    else if Obj!equal (o, Obj!o4) then 4
+    else if Obj!equal (o, Obj!o5) then 5
+    else if Obj!equal (o, Obj!o6) then 6
+    else if Obj!equal (o, Obj!o7) then 7
+    else 0;
+
+  let element = ();
+  let equal (a, b) = a = b;
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
+  let print (_c) = "()";
+
+end;;
+
+collection C = implement Configuration_blp_test (S, O); end;;
+
+collection P = implement P_policy_blp (S, O, A, Ac, T, C); end;;
+
+
+let assert_secure (t, c, b) =
+  let conf = "(" ^ T!print (t) ^ ", " ^ C!print (c) ^ ")" in
+  let ass = if b then "secure" else "not secure" in
+  if (b && P!secure (t, c)) || (~~ b && ~~ P!secure (t, c))
+  then print_string (conf ^ " " ^ ass ^ "   OK\n")
+  else print_string (conf ^ " " ^ ass ^ "   KO\n");;
+
+
+let target_0 = T!empty;;
+let target_1 = T!add (target_0, S!s5, O!o3, A!read);;
+let target_2 = T!add (target_1, S!s3, O!o5, A!read);;
+let target_3 = T!add (target_1, S!s5, O!o5, A!write);;
+let target_4 = T!add (target_1, S!s5, O!o1, A!write);;
+
+let configuration_0 = C!element;;
+
+assert_secure (target_0, configuration_0, true);;
+assert_secure (target_1, configuration_0, true);;
+assert_secure (target_2, configuration_0, false);;
+assert_secure (target_3, configuration_0, true);;
+assert_secure (target_4, configuration_0, false);;
+
+
+
+collection St = implement State_ac_by_list (S, O, A, Ac); end;;
+
+collection L = implement Label_ac (S, O, A); end;;
+
+collection Sys_ac =
+  implement Operational_transition_system_ac (S, O, A, Ac, St, L); end;;
+
+
+collection Ss = implement Secured_state_blp (S, O, A, Ac, T, C, P, St); end;;
+
+collection Sys =
+  implement Secured_operational_transition_system_blp
+    (S, O, A, Ac, T, C, P, St, L, Sys_ac, Ss); end;;
+
+
+let print_trans (st, l) =
+  let st2 = Sys!transition (st, l) in
+  let _a = print_string (Ss!print (st) ^ " --[" ^ L!print (l) ^ "]--> " ^
+                         Ss!print (st2) ^ "\n") in
+  st2;;
+
+let c = C!element;;
+
+let st = Ss!pair (St!empty, c);;
+
+let st1 = print_trans (st, L!label (Add, S!s5, O!o3, A!read));;
+
+let st2 = print_trans (st1, L!label (Add, S!s3, O!o5, A!read));;
+
+let st3 = print_trans (st2, L!label (Add, S!s5, O!o5, A!write));;
+
+let st4 = print_trans (st3, L!label (Add, S!s5, O!o1, A!write));;
+
