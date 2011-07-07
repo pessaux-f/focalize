@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2011-06-21 01:46:31 szekely Exp $
+# $Id: Makefile,v 1.5 2011-07-07 16:01:16 szekely Exp $
 
 # Makefile for algebra structures implementations
 
@@ -64,9 +64,10 @@ FOCALIZE_SRC=\
  policies/p_policies.fcl\
  policies/secure_system.fcl\
  exemples/accesses.fcl\
- exemples/accesses_system.fcl\
- exemples/accesses_p_policies.fcl\
- exemples/hru.fcl
+ exemples/access_system.fcl\
+ exemples/access_p_policies.fcl\
+ exemples/hru.fcl\
+ exemples/blp.fcl
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
@@ -123,6 +124,7 @@ STD_BIN_OBJS=\
  basics.cmx\
  sets_externals.cmx\
  sets.cmx\
+ orders.cmx\
  products.cmx
 
 FINITE_SETS_DEPS=utils/finite_sets.cmx
@@ -134,11 +136,13 @@ P_POLICIES_DEPS=utils/finite_sets.cmx utils/relations.cmx\
  policies/p_policies.cmx
 SECURE_SYSTEM_DEPS=$(P_POLICIES_DEPS) utils/lts.cmx policies/secure_system.cmx
 ACCESSES_DEPS=utils/finite_sets.cmx exemples/accesses.cmx
-ACCESSES_SYSTEM_DEPS=$(ACCESSES_DEPS) utils/lts.cmx exemples/accesses_system.cmx
-ACCESSES_P_POLYCIES_DEPS=$(P_POLICIES_DEPS) exemples/accesses.cmx\
- exemples/accesses_p_policies.cmx
-HRU_DEPS=$(ACCESSES_P_POLYCIES_DEPS) utils/lts.cmx exemples/accesses_system.cmx\
+ACCESS_SYSTEM_DEPS=$(ACCESSES_DEPS) utils/lts.cmx exemples/access_system.cmx
+ACCESS_P_POLYCIES_DEPS=$(P_POLICIES_DEPS) exemples/accesses.cmx\
+ exemples/access_p_policies.cmx
+HRU_DEPS=$(ACCESS_P_POLYCIES_DEPS) utils/lts.cmx exemples/access_system.cmx\
  policies/secure_system.cmx exemples/hru.cmx
+BLP_DEPS=$(ACCESS_P_POLYCIES_DEPS) utils/lts.cmx exemples/access_system.cmx\
+ policies/secure_system.cmx exemples/blp.cmx
 
 CAML_COMPILE_CMD=$(CAML_BIN_COMPILER) -o $@ \
                    -I $(STDLIB_DIR) -I $(UTILSLIB_DIR)\
@@ -194,13 +198,16 @@ policies/secure_system.test: byt bin
 exemples/accesses.test: byt bin
 	$(CAML_COMPILE_CMD) $(ACCESSES_DEPS)
 
-exemples/accesses_system.test: byt bin
-	$(CAML_COMPILE_CMD) $(ACCESSES_SYSTEM_DEPS)
+exemples/access_system.test: byt bin
+	$(CAML_COMPILE_CMD) $(ACCESS_SYSTEM_DEPS)
 
-exemples/accesses_p_policies.test: byt bin
-	$(CAML_COMPILE_CMD) $(ACCESSES_P_POLYCIES_DEPS)
+exemples/access_p_policies.test: byt bin
+	$(CAML_COMPILE_CMD) $(ACCESS_P_POLYCIES_DEPS)
 
 exemples/hru.test: byt bin
+	$(CAML_COMPILE_CMD) $(HRU_DEPS)
+
+exemples/blp.test: byt bin
 	$(CAML_COMPILE_CMD) $(HRU_DEPS)
 
 install:
