@@ -1,0 +1,456 @@
+uses ordinaryPassengersEnv;;
+open ordinaryPassengersEnv;;
+uses a17property4_2;;
+open a17property4_2;;
+uses a17property4_7;;
+open a17property4_7;;
+
+
+species a17property4_4(obj is object,
+                        obj_set is finite_set(obj),
+                        do is dangerousObject,
+                        do_set is finite_set(do),
+                        wp is weapon,
+                        wp_set is finite_set(wp),
+                        eo is explosive, 
+                        eo_set is finite_set(eo),
+                        dd is dangerousDevice,
+                        dd_set is finite_set(dd),
+                        
+                        a_subject is airsideSubject(obj,obj_set),
+                        as_set is finite_set(a_subject),
+                        a_vehicle is airsideVehicle(obj,obj_set),
+                        av_set is finite_set(a_vehicle),
+                        
+                        c_baggage is cabinBaggage(obj,obj_set),
+                        cb_set is finite_set(c_baggage),
+                        c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                        cp_set is finite_set(c_person),
+                        seat_no is seat_number,
+                        seat_set is finite_set(seat_no),
+                        c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        c_pa_set is finite_set(c_passenger),
+                        h_baggage is holdBaggage(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                        hl_set is finite_set(h_baggage), 
+                        arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        arm_pa_set is finite_set(arm_passenger),
+                        a_pilot is pilot(obj,obj_set,c_baggage,cb_set,seat_no,seat_set),
+                        pilot_set is finite_set(a_pilot),
+                        a_carrier is airCarrier,
+                        d_aircraft is departingAircraft(obj,obj_set,wp,a_subject,as_set,c_baggage,cb_set,
+                                                        c_person,cp_set,seat_no,seat_set,
+                                                        c_passenger,h_baggage,hl_set,arm_passenger, 
+                                                        a_pilot,a_carrier),
+
+                        dep_ac_set is finite_set(d_aircraft),
+
+                        a_person is airsidePerson(obj, obj_set),
+                        ap_set is finite_set(a_person),
+
+                        u_person is unescortedPerson(obj, obj_set),
+                        up_set is finite_set(u_person),
+                        
+                        dsk_passenger is disembarkedPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dsk_pa_set is finite_set(dsk_passenger),
+                        
+                        dep_passenger is departingPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dep_pa_set is finite_set(dep_passenger),
+
+                        o_passenger is ordinaryPassenger
+                                     (obj, obj_set,wp, c_baggage,cb_set,seat_no,a_person),
+                        ord_pa_set is finite_set(o_passenger),
+                        
+                        og_passenger is originatingPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),
+                        og_pa_set is finite_set(og_passenger),
+
+                        tf_passenger is transferPassenger
+                                     (obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),
+                        tf_pa_set is finite_set(tf_passenger),
+
+                        ts_passenger is transitPassenger
+                                          (obj,obj_set, wp,c_baggage,cb_set,seat_no,a_person),     
+                        ts_pa_set is finite_set(ts_passenger),    
+
+                        sc_passenger is screenedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),
+                        sc_pa_set is finite_set(sc_passenger),
+                        
+                        arm_personnel is armedPersonnel(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        arm_pe_set is finite_set(arm_personnel),
+                        
+                        if_officer is inFlightOfficer(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        if_of_set is finite_set(if_officer),
+                        
+                        dis_passenger is disruptivePassenger(obj,obj_set,do,c_baggage,cb_set,seat_no),
+                        dis_pa_set is finite_set(dis_passenger),
+
+                        sra is securityRestrictedArea
+                                    (obj, obj_set,wp, a_subject, as_set, c_baggage, cb_set,
+                                     u_person,c_person,cp_set ,seat_no,seat_set,
+                                     c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier,
+                                     d_aircraft,dep_ac_set),
+
+                        sra_set is finite_set(sra), 
+
+                        wpToDo is dangerousObject_subtype(wp,do,wp_set,do_set), 
+                        eoToDo is dangerousObject_subtype(eo,do,eo_set,do_set),
+                        ddToDo is dangerousObject_subtype(dd,do,dd_set,do_set),
+                        doToObj is dangerousObjectToObject(do,obj,do_set,obj_set),
+                        apToAs is airsideSubject_subtype(obj,obj_set,a_person,a_subject,ap_set,as_set),
+                        cpToAp is airsideSubject_subtype(obj,obj_set,c_person,a_person,cp_set,ap_set),
+                        upToAp is airsideSubject_subtype(obj,obj_set,u_person,a_person,up_set,ap_set),
+                        avToAs is airsideSubject_subtype(obj,obj_set,a_vehicle,a_subject,av_set,as_set),
+                        piToUp is unescortedPerson_subtype (obj,obj_set,a_pilot,u_person,pilot_set,up_set),
+                        piToCp is cabinPerson_subtype (obj,obj_set,c_baggage,cb_set,a_pilot,c_person,pilot_set,cp_set),
+                        dskToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dsk_passenger,
+                                                          c_passenger,dsk_pa_set,c_pa_set), 
+                        depToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dep_passenger,
+                                                          c_passenger,dep_pa_set,c_pa_set),
+                        cpaToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,c_passenger,c_person,
+                                                       c_pa_set,cp_set),
+                        opToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                             o_passenger,dep_passenger,ord_pa_set,dep_pa_set),
+                        scToOp is ordinaryPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             sc_passenger,o_passenger,sc_pa_set,ord_pa_set),
+                        tsToOp is ordinaryPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             ts_passenger,o_passenger,ts_pa_set,ord_pa_set),
+                        tsToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                ts_passenger,dsk_passenger,ts_pa_set,dsk_pa_set),
+                        tfToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                tf_passenger,dsk_passenger,tf_pa_set,dsk_pa_set),
+                        ogToSc is screenedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             og_passenger,sc_passenger,og_pa_set,sc_pa_set),
+                        tfToSc is screenedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                                tf_passenger,sc_passenger,tf_pa_set,sc_pa_set),
+                        armToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                               arm_passenger,dep_passenger,arm_pa_set,dep_pa_set), 
+                        disToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                               dis_passenger,dep_passenger,dis_pa_set,dep_pa_set),
+                        apeToArm is armedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                           arm_personnel,arm_passenger,arm_pe_set,arm_pa_set),
+                        ifoToArm is armedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                           if_officer,arm_passenger,if_of_set,arm_pa_set))
+                        
+                    inherits 
+             
+            ordinaryPassengersEnv(obj,obj_set,do,do_set,wp,
+                           wp_set,eo,eo_set,dd,dd_set,
+                           a_subject,as_set,a_vehicle,av_set,
+                           c_baggage,cb_set,c_person, cp_set,seat_no,
+                           seat_set,c_passenger,c_pa_set,h_baggage,
+                           hl_set,arm_passenger, a_pilot,pilot_set,a_carrier,d_aircraft,dep_ac_set,
+                           a_person,ap_set,u_person,up_set,dsk_passenger,dsk_pa_set,dep_passenger,
+                           dep_pa_set,o_passenger,ord_pa_set,og_passenger,og_pa_set,tf_passenger,
+                           tf_pa_set,ts_passenger, ts_pa_set,sc_passenger,sc_pa_set,
+                           sra,sra_set, wpToDo,eoToDo,ddToDo,doToObj,
+                           apToAs,cpToAp,upToAp,avToAs,piToUp,piToCp,dskToCpa,depToCpa,cpaToCp,
+                           opToDep,scToOp,tsToOp,tsToDsk,tfToDsk,ogToSc,tfToSc),
+
+            a17property4_7(obj,obj_set,do,do_set,wp,
+                           wp_set,eo,eo_set,dd,dd_set,
+                           a_subject,as_set,a_vehicle,av_set,
+                           c_baggage,cb_set,c_person, cp_set,seat_no,
+                           seat_set,c_passenger,c_pa_set,h_baggage,
+                           hl_set,arm_passenger,arm_pa_set,
+                           a_pilot,pilot_set,a_carrier,d_aircraft,dep_ac_set,a_person,ap_set,
+                           u_person,up_set,dsk_passenger,dsk_pa_set,dep_passenger,dep_pa_set,
+                           tf_passenger,tf_pa_set,ts_passenger,ts_pa_set,arm_personnel,arm_pe_set,
+                           if_officer,if_of_set,
+                           dis_passenger,dis_pa_set,
+                           sra,sra_set, wpToDo,eoToDo,ddToDo,doToObj,
+                           apToAs,cpToAp,upToAp,avToAs,piToUp,piToCp,dskToCpa,depToCpa,cpaToCp,
+                           tsToDsk,tfToDsk,armToDep,disToDep,apeToArm,ifoToArm) = 
+
+(** Security Property : 4.4.1. Originating passengers and their cabin baggage 
+    must be screened prior to boarding an aircraft departing from a security 
+    restricted area. 
+*)
+
+letprop cabinBaggageScreenedOg(p in og_passenger) = 
+all cb in c_baggage, 
+   cb_set!member(cb,og_passenger!cabinBaggage(p)) ->
+      c_baggage!screened(cb);
+
+property property_4_4_1 : all p in og_passenger, all a in d_aircraft, 
+ all area in sra, all s in self, 
+   og_pa_set!member(p,!originatingPassengers(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+    dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+     cp_set!member(!ogToCp(p),d_aircraft!onboardPersons(a)) -> 
+       (og_passenger!screened(p) and !cabinBaggageScreenedOg(p));
+
+(** Security Property : 4.4.2. Transfer passengers and their cabin baggage 
+    must be screened prior to boarding an aircraft, unless it is established 
+    that they have been screened to an appropriate level at the point 
+    of origin. *)
+
+letprop cabinBaggageScreenedTf(p in tf_passenger) = 
+all cb in c_baggage, 
+   cb_set!member(cb,tf_passenger!cabinBaggage(p)) ->
+      c_baggage!screened(cb);
+
+property property_4_4_2 : all p in tf_passenger, all a in d_aircraft, 
+ all area in sra, all s in self, 
+   tf_pa_set!member(p,!transferPassengers(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+    dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+     cp_set!member(!tfToCp(p),d_aircraft!onboardPersons(a)) -> 
+       ((tf_passenger!screened(p) and !cabinBaggageScreenedTf(p)) 
+         or tf_passenger!secure_origin(p));
+
+(** Security Property : 4.4.3. Passengers and their cabin baggage which have 
+    been screened must be protected from unauthorized interference until 
+    they board their aircraft. If they are subjected to mixing or contact, 
+    they must be re-screened before boarding an aircraft. 
+
+    Unauthorized interference refers to any mixing or contact with 
+    other airside persons that have not been subjected to screening or any other 
+    appropriate control. As such, the interference predicate also concerns 
+    all airside persons that have not been granted access to security 
+    restricted areas. *)
+
+letprop cabinBaggageScreenedSc(p in sc_passenger) = 
+all cb in c_baggage, 
+   cb_set!member(cb,sc_passenger!cabinBaggage(p)) ->
+      c_baggage!screened(cb);
+
+letprop uncleaned_passenger (p in a_person, s in self) = 
+  ex x in sc_passenger, 
+    sc_pa_set!member(x,!screenedPassengers(s)) and
+    a_person!equal(!scToAp(x),p) and
+    not(sc_passenger!screened(x)) and 
+    not(!cabinBaggageScreenedSc(x));
+      
+letprop no_interference(p in sc_passenger, area in sra, s in self) =
+all x in a_person, 
+  ap_set!member(x,!airsidePersons(s)) ->
+   (not(sra!access_authorized(apToAs!to_super(x),area)) or 
+    !uncleaned_passenger(x,s)) -> 
+     not(sc_passenger!mixing_or_contact(x,p));    
+
+property property_4_4_3 : all p in sc_passenger, all a in d_aircraft, 
+ all area in sra, all s in self, 
+  sc_pa_set!member(p,!screenedPassengers(s)) ->
+   sra_set!member(area,!securityRestrictedAreas(s)) -> 
+    dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+       cp_set!member(!scToCp(p),d_aircraft!onboardPersons(a)) -> 
+       (!no_interference(p,area,s) or sc_passenger!reScreened(p)); 
+
+(* Security Property : 4.4.4. Transit passengers as well as cabin baggage 
+   must be protected from unauthorized interference at transit stops. 
+  
+   As defined in ordinaryPassengerEnv, all transit passengers are 
+   considered to be in security restricted areas. *) 
+
+letprop no_interferenceTs(p in ts_passenger, area in sra, s in self) =
+all x in a_person, 
+  ap_set!member(x,!airsidePersons(s)) ->
+   (not(sra!access_authorized(apToAs!to_super(x),area)) or 
+    !uncleaned_passenger(x,s)) -> 
+     not(ts_passenger!mixing_or_contact(x,p));  
+
+property property_4_4_4 : all p in ts_passenger, 
+ all area in sra, all s in self, 
+   ts_pa_set!member(p,!transitPassengers(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+    as_set!member(!tsToAs(p),sra!airsideSubjects_in_sra(area)) -> 
+      !no_interferenceTs(p,area,s);
+
+
+(** Security Property : 4.4a. Originating passengers on board aircraft are 
+    authorized and  do not have access to weapons in cabin. They also do 
+    not carry any other unauthorized dangerous objects. *)
+
+letprop objCarriedByOPassenger(o in obj, p in o_passenger) = 
+  obj_set!member(o,o_passenger!objects_carried(p)) or 
+   ex cb in c_baggage, 
+    cb_set!member(cb,o_passenger!cabinBaggage(p)) and
+    obj_set!member(o,c_baggage!get_objects(cb));
+
+letprop dangerousObjectWithOp(o in do, p in o_passenger, s in self) = 
+
+  !objCarriedByOPassenger(doToObj!to_super(o),p) -> 
+       (do!is_authorized(o) and 
+        not(do_set!member(o,wpToDo!to_super_set(!weapons(s)))));
+
+letprop inaccessible_weapon (o in do, p in o_passenger, s in self) = 
+  do_set!member(o,wpToDo!to_super_set(!weapons(s))) ->
+   (ex w in wp, 
+    wp_set!member(w,!weapons(s)) and
+    do!equal(wpToDo!to_super(w),o) and
+    o_passenger!no_access_to(w,p));
+
+letprop no_access_to_weaponOp(o in do, p in o_passenger, 
+                              a in d_aircraft, s in self) = 
+ all x in arm_passenger, 
+   arm_pa_set!member(x,!armedPassengers(s)) ->
+      obj_set!member(doToObj!to_super(o),d_aircraft!onboardObjects(a)) ->
+        cp_set!member(!armToCp(x),d_aircraft!onboardPersons(a)) ->
+          not(!objCarriedByArmPassenger(doToObj!to_super(o),x)) -> 
+            !inaccessible_weapon(o,p,s);
+
+letprop no_unauthorizedObjectOp(p in o_passenger, a in d_aircraft, 
+                             s in self) = 
+  all o in do, 
+    do_set!member(o,!dangerousObjects(s)) ->
+        (!dangerousObjectWithOp(o,p,s) and 
+         !no_access_to_weaponOp(o,p,a,s));
+
+
+letprop objCarriedByScPassenger(o in obj, p in sc_passenger) = 
+  obj_set!member(o,sc_passenger!objects_carried(p)) or 
+   ex cb in c_baggage, 
+    cb_set!member(cb,sc_passenger!cabinBaggage(p)) and
+    obj_set!member(o,c_baggage!get_objects(cb));
+
+letprop dangerousObjectWithSc(o in do, p in sc_passenger, s in self) = 
+
+  !objCarriedByScPassenger(doToObj!to_super(o),p) -> 
+       (do!is_authorized(o) and 
+        not(do_set!member(o,wpToDo!to_super_set(!weapons(s)))));
+
+property screened_passenger_const : all p in sc_passenger, all s in self,
+    sc_pa_set!member(p,!screenedPassengers(s)) ->
+       sc_passenger!screened(p) ->
+         all o in do, 
+            do_set!member(o,!dangerousObjects(s)) -> !dangerousObjectWithSc(o,p,s);
+               
+theorem property_4_4a : all p in og_passenger, all area in sra, 
+  all a in d_aircraft, all s in self, 
+  og_pa_set!member(p,!originatingPassengers(s)) -> 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+    dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+     cp_set!member(!ogToCp(p),d_aircraft!onboardPersons(a)) -> 
+       (d_aircraft!access_authorized(!ogToAs(p),a) and 
+        !no_unauthorizedObjectOp(!ogToOp(p),a,s))
+
+proof : axiom;
+
+
+(** Security Property : 4.4b. Transfer passengers on board aircraft are authorized and 
+    do not have access to weapons in cabin. They also do not carry any other 
+    unauthorized dangerous objects. *)
+
+theorem property_4_4b : all p in tf_passenger, all area in sra, 
+  all a in d_aircraft, all s in self, 
+  tf_pa_set!member(p,!transferPassengers(s)) -> 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+    dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+     cp_set!member(!tfToCp(p),d_aircraft!onboardPersons(a)) -> 
+       (d_aircraft!access_authorized(!tfToAs(p),a) and 
+        !no_unauthorizedObjectOp(!tfToOp(p),a,s))
+
+proof : axiom;
+
+(** Security Property : 4.4c. Transit passengers on board aircraft are authorized and 
+    do not have access to weapons in cabin. They also do not carry any other 
+    unauthorized dangerous objects.*)
+
+theorem property_4_4c : all p in ts_passenger, all area in sra, 
+  all a in d_aircraft, all s in self, 
+  ts_pa_set!member(p,!transitPassengers(s)) -> 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+    dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+     cp_set!member(!tsToCp(p),d_aircraft!onboardPersons(a)) -> 
+       (d_aircraft!access_authorized(!tsToAs(p),a) and 
+        !no_unauthorizedObjectOp(tsToOp!to_super(p),a,s))
+
+proof : axiom;
+
+(** Security Property : 4.4. Ordinary passengers on board aircraft are authorized and 
+    do not have access to weapons in cabin. They also do not carry any other 
+    unauthorized dangerous objects.*)
+
+theorem property_4_4 : all p in o_passenger, all area in sra, 
+  all a in d_aircraft, all s in self, 
+  ord_pa_set!member(p,!ordinaryPassengers(s)) -> 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+    dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+     cp_set!member(!opToCp(p),d_aircraft!onboardPersons(a)) -> 
+       (d_aircraft!access_authorized(!opToAs(p),a) and 
+        !no_unauthorizedObjectOp(p,a,s))
+
+proof :  
+<1>1 assume p in o_passenger
+            area in sra
+            a in d_aircraft
+            s in self
+     H1 : ord_pa_set!member(p,!ordinaryPassengers(s))
+     H2 : sra_set!member(area,!securityRestrictedAreas(s)) 
+     H3 : dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) 
+     H4 : cp_set!member(!opToCp(p),d_aircraft!onboardPersons(a)) 
+     
+     prove d_aircraft!access_authorized(!opToAs(p),a)
+           and !no_unauthorizedObjectOp(p,a,s)
+
+ <2>1 assume x in og_passenger
+             sp in sc_passenger
+
+      H5 : sc_pa_set!member(sp,!screenedPassengers(s)) 
+      H6 : og_pa_set!member(x,!originatingPassengers(s))
+      H7 : o_passenger!equal(scToOp!to_super(sp),p)
+      H8 : sc_passenger!equal(ogToSc!to_super(x),sp)
+
+      prove d_aircraft!access_authorized(!opToAs(p),a)
+            and !no_unauthorizedObjectOp(p,a,s)
+    
+      by <2>:H7, <2>:H8, <1>:H4, <2>:H6, <1>:H2, <1>:H3, scToOp!to_super_congruence, 
+         o_passenger!equal_transitive, !o_passenger_to_cperson2, cp_set!equal_member2,
+         !property_4_4a, scToOp!to_super_congruence, !cperson_to_a_subject2, 
+          d_aircraft!access_authorized_congruence, o_passenger!equal_congruence, 
+          o_passenger!equal_congruence2, o_passenger!equal_access_wp, 
+          obj_set!equal1, obj_set!subset2, cb_set!equal1, cb_set!subset2
+       
+       def !ogToAs, !ogToCp, !scToCp, !opToAs, !ogToOp, !objCarriedByOPassenger, 
+           !no_unauthorizedObjectOp, !dangerousObjectWithOp,
+           !inaccessible_weapon, !no_access_to_weaponOp
+
+ <2>2 assume x in tf_passenger 
+             sp in sc_passenger
+  
+      H5 : sc_pa_set!member(sp,!screenedPassengers(s))
+      H6 : tf_pa_set!member(x,!transferPassengers(s)) 
+      H7 : o_passenger!equal(scToOp!to_super(sp),p)
+      H8 : sc_passenger!equal(tfToSc!to_super(x),sp)
+    
+      prove d_aircraft!access_authorized(!opToAs(p),a)
+            and !no_unauthorizedObjectOp(p,a,s)
+
+      by <2>:H7, <2>:H8, <1>:H4, <2>:H6, <1>:H2, <1>:H3, scToOp!to_super_congruence, 
+         o_passenger!equal_transitive, !o_passenger_to_cperson2, cp_set!equal_member2,
+         !property_4_4b, scToOp!to_super_congruence, !cperson_to_a_subject2, 
+          d_aircraft!access_authorized_congruence, o_passenger!equal_congruence, 
+          o_passenger!equal_congruence2, o_passenger!equal_access_wp, 
+          obj_set!equal1, obj_set!subset2, cb_set!equal1, cb_set!subset2
+       
+       def !tfToAs, !tfToCp, !scToCp, !opToAs, !tfToOp, !objCarriedByOPassenger, 
+           !no_unauthorizedObjectOp, !dangerousObjectWithOp,
+           !inaccessible_weapon, !no_access_to_weaponOp
+
+ <2>3 assume x in ts_passenger 
+      H5 : ts_pa_set!member(x,!transitPassengers(s)) 
+      H6 : o_passenger!equal(tsToOp!to_super(x),p)
+
+      prove d_aircraft!access_authorized(!opToAs(p),a)
+            and !no_unauthorizedObjectOp(p,a,s)
+
+      by <1>:H4, <2>:H6, <2>:H5, <1>:H2, <1>:H3, !o_passenger_to_cperson2, cp_set!equal_member2,
+         !property_4_4c, !cperson_to_a_subject2, d_aircraft!access_authorized_congruence, 
+          o_passenger!equal_congruence, o_passenger!equal_congruence2, 
+          o_passenger!equal_access_wp, obj_set!equal1, obj_set!subset2, 
+          cb_set!equal1, cb_set!subset2
+       
+       def !tsToAs, !tsToCp, !opToAs, !objCarriedByOPassenger, 
+           !no_unauthorizedObjectOp, !dangerousObjectWithOp,
+           !inaccessible_weapon, !no_access_to_weaponOp
+
+ <2>4 qed by <1>:H1, <2>1, <2>2, <2>3, scToOp!to_super_set_const1, 
+          ord_pa_set!union1, tsToOp!to_super_set_const1, 
+          sc_pa_set!union1, ogToSc!to_super_set_const1, 
+          tfToSc!to_super_set_const1 def !ordinaryPassengers, 
+          !screenedPassengers
+
+<1>2 qed;
+
+end
+
+

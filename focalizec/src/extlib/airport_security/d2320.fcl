@@ -1,0 +1,839 @@
+uses d2320property3;;
+open d2320property3;;
+
+uses d2320property5;;
+open d2320property5;;
+
+uses d2320property4;;
+open d2320property4;;
+
+uses annex17;;
+open annex17;;
+
+species d2320
+(obj is object2320,
+                        obj_set is finite_set(obj),
+                        do is dangerousObject2320,
+                        do_set is finite_set(do),
+                        wp is weapon2320,
+                        wp_set is finite_set(wp),
+                        eo is explosive2320, 
+                        eo_set is finite_set(eo),
+                        dd is dangerousDevice2320,
+                        dd_set is finite_set(dd),
+                       
+                        a_subject is airsideSubject(obj,obj_set),
+                        as_set is finite_set(a_subject),
+                        a_vehicle is airsideVehicle2320(obj,obj_set),
+                        av_set is finite_set(a_vehicle),
+                        
+                        c_baggage is cabinBaggage2320(obj,obj_set),
+                        cb_set is finite_set(c_baggage),
+                        c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                        cp_set is finite_set(c_person),
+                        seat_no is seat_number,
+                        seat_set is finite_set(seat_no),
+                        c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        c_pa_set is finite_set(c_passenger),
+                        h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                        hl_set is finite_set(h_baggage), 
+                        arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        arm_pa_set is finite_set(arm_passenger), 
+                        photo is photograph,
+                        a_id is airportIdCard(photo),
+                        a_pilot is pilot2320(obj,obj_set,c_baggage,cb_set,seat_no,seat_set,photo,a_id),
+                        pilot_set is finite_set(a_pilot),
+                        a_carrier is airCarrier, 
+                        d_aircraft is departingAircraft(obj,obj_set,wp,a_subject,as_set,c_baggage,cb_set,
+                                                        c_person,cp_set,seat_no,seat_set,
+                                                        c_passenger,h_baggage,hl_set,arm_passenger, 
+                                                        a_pilot,a_carrier),
+
+                        dep_ac_set is finite_set(d_aircraft),
+
+                        a_person is airsidePerson(obj, obj_set),
+                        ap_set is finite_set(a_person),
+                        u_person is staff(obj, obj_set,photo,a_id),
+                        up_set is finite_set(u_person),
+                        
+                        dsk_passenger is disembarkedPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dsk_pa_set is finite_set(dsk_passenger),
+                        
+                        dep_passenger is departingPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dep_pa_set is finite_set(dep_passenger),
+
+                        o_passenger is ordinaryPassenger
+                                     (obj, obj_set, wp, c_baggage,cb_set,seat_no, a_person),
+                        ord_pa_set is finite_set(o_passenger),
+                        
+                        og_passenger is originatingPassenger2320(obj,obj_set,wp, c_baggage,
+                                      cb_set,seat_no,a_person),
+                        og_pa_set is finite_set(og_passenger),
+
+                        tf_passenger is transferPassenger2320
+                                     (obj,obj_set,wp, c_baggage,cb_set,seat_no,a_person),
+                        tf_pa_set is finite_set(tf_passenger),
+
+                        ts_passenger is transitPassenger
+                                          (obj,obj_set, wp, c_baggage,cb_set,seat_no,a_person),     
+                        ts_pa_set is finite_set(ts_passenger),    
+
+                        sc_passenger is screenedPassenger2320(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),
+                        sc_pa_set is finite_set(sc_passenger),
+                        
+                        arm_personnel is armedPersonnel(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        arm_pe_set is finite_set(arm_personnel),
+                        
+                        if_officer is inFlightOfficer(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        if_of_set is finite_set(if_officer),
+                        
+                        dis_passenger is disruptivePassenger(obj,obj_set,do,c_baggage,cb_set,seat_no),
+                        dis_pa_set is finite_set(dis_passenger),
+
+                        oh_baggage is originatingHoldBaggage2320(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                             c_passenger),
+                        oh_set is finite_set(oh_baggage),
+  	
+                        th_baggage is transferHoldBaggage2320(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                          c_passenger),
+                        th_set is finite_set(th_baggage),
+  
+                        sra is securityRestrictedArea
+                                    (obj, obj_set,wp, a_subject, as_set, c_baggage, cb_set,
+                                     u_person,c_person,cp_set ,seat_no,seat_set,
+                                     c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier,
+                                     d_aircraft,dep_ac_set),
+
+                        sra_set is finite_set(sra),
+
+                        wpToDo is dangerousObject_subtype2320(wp,do,wp_set,do_set), 
+                        eoToDo is dangerousObject_subtype2320(eo,do,eo_set,do_set),
+                        ddToDo is dangerousObject_subtype2320(dd,do,dd_set,do_set),
+                        doToObj is dangerousObjectToObject2320(do,obj,do_set,obj_set),
+                        apToAs is airsideSubject_subtype(obj,obj_set,a_person,a_subject,ap_set,as_set),
+                        cpToAp is airsideSubject_subtype(obj,obj_set,c_person,a_person,cp_set,ap_set),
+                        upToAp is airsideSubject_subtype(obj,obj_set,u_person,a_person,up_set,ap_set),
+                        avToAs is airsideSubject_subtype(obj,obj_set,a_vehicle,a_subject,av_set,as_set),
+                        piToUp is staff_subtype (obj,obj_set,photo,a_id,a_pilot,u_person,pilot_set,up_set),
+                        piToCp is cabinPerson_subtype (obj,obj_set,c_baggage,cb_set,a_pilot,c_person,pilot_set,cp_set),
+                        dskToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dsk_passenger,
+                                                          c_passenger,dsk_pa_set,c_pa_set), 
+                        depToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dep_passenger,
+                                                          c_passenger,dep_pa_set,c_pa_set),
+                        cpaToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,c_passenger,c_person,
+                                                       c_pa_set,cp_set),
+                        opToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                             o_passenger,dep_passenger,ord_pa_set,dep_pa_set), 
+                        scToOp is ordinaryPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             sc_passenger,o_passenger,sc_pa_set,ord_pa_set),
+                        tsToOp is ordinaryPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             ts_passenger,o_passenger,ts_pa_set,ord_pa_set),
+                        tsToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                ts_passenger,dsk_passenger,ts_pa_set,dsk_pa_set),
+                        tfToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                tf_passenger,dsk_passenger,tf_pa_set,dsk_pa_set),
+                        ogToSc is screenedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,og_passenger,sc_passenger,og_pa_set,sc_pa_set),
+                        tfToSc is screenedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                            tf_passenger,sc_passenger,tf_pa_set,sc_pa_set),
+                        armToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                               arm_passenger,dep_passenger,arm_pa_set,dep_pa_set), 
+                        disToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                               dis_passenger,dep_passenger,dis_pa_set,dep_pa_set),
+                        apeToArm is armedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                           arm_personnel,arm_passenger,arm_pe_set,arm_pa_set),
+                        ifoToArm is armedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                           if_officer,arm_passenger,if_of_set,arm_pa_set),
+                        ohToHl is holdBaggage_subtype(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger,
+                                                      oh_baggage,h_baggage,oh_set,hl_set),
+                        thToHl is holdBaggage_subtype(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger,
+                                                      th_baggage,h_baggage,th_set,hl_set))
+                 inherits
+                      d2320property4
+			  (obj,obj_set ,do ,do_set,
+			wp,wp_set,eo,eo_set,dd,dd_set,a_subject,as_set,a_vehicle,av_set,pa_vehicle,pav_set,v_pass,pass_vehicle,
+			pass_v_set,pv_pass,la_vehicle,lav_set,tv_pass,ta_vehicle,tav_set, c_baggage,
+			cb_set,c_person,cp_set,seat_no,seat_set,c_passenger,c_pa_set,h_baggage,hl_set,arm_passenger,arm_pa_set,photo,a_id,a_staff,staff_set,
+			a_pilot,pilot_set,f_crew,fc_set,a_carrier,d_aircraft,dep_ac_set,a_person,ap_set,dsk_passenger,
+			dsk_pa_set,dep_passenger,dep_pa_set,o_passenger,
+			ord_pa_set,og_passenger,og_pa_set,tf_passenger,tf_pa_set,ts_passenger,ts_pa_set,sc_passenger,sc_pa_set,sra,
+			sra_set,wpToDo,eoToDo,ddToDo,doToObj,apToAs,cpToAp,stToAp,avToAs,pavToAv,pavToAs,passToAv,
+			passToAs,pv_pass_set,v_pass_set,pvToVpass,tv_pass_set,tvToVpass,laToPV,laToAs,tvToPV,
+			taToAs,piToSt,piToCp,dskToCpa,depToCpa,cpaToCp,opToDep,
+			scToOp,tsToOp,tsToDsk,tfToDsk,ogToSc,tftoSc,arm_personnel,arm_pe_set,if_officer,
+			if_of_set,dis_passenger,dis_pa_set,fcToSt,armToDep,disToDep,apeToArm,ifoToArm),
+
+			   d2320property5(obj,obj_set,do,do_set,wp,
+                            wp_set,eo,eo_set,dd,dd_set,
+                            a_subject,as_set,a_vehicle,av_set,
+                            c_baggage,cb_set,c_person, cp_set,seat_no,
+                            seat_set,c_passenger,c_pa_set,h_baggage,
+                            hl_set,arm_passenger,arm_pa_set,photo,a_id,
+                            a_pilot,pilot_set,a_carrier,d_aircraft,dep_ac_set,a_person,ap_set,
+                            u_person,up_set,dsk_passenger,dsk_pa_set,dep_passenger,dep_pa_set,
+                            o_passenger,ord_pa_set,og_passenger, og_pa_set,tf_passenger,tf_pa_set,
+                            ts_passenger,ts_pa_set,sc_passenger,sc_pa_set,
+                            arm_personnel,arm_pe_set,if_officer,if_of_set,
+                            dis_passenger,dis_pa_set,oh_baggage,oh_set,th_baggage,th_set,
+                            sra,sra_set, wpToDo,eoToDo,ddToDo,doToObj,
+                            apToAs,cpToAp,upToAp,avToAs,piToUp,piToCp,dskToCpa,depToCpa,cpaToCp,
+                            opToDep,scToOp,tsToOp,tsToDsk,tfToDsk,ogToSc,tfToSc,
+                            armToDep,disToDep,apeToArm,ifoToArm,ohToHl,thToHl),
+
+                          d2320property3(obj,obj_set,do,do_set,wp,
+                            wp_set,eo,eo_set,dd,dd_set,
+                            a_subject,as_set,a_vehicle,av_set,
+                            c_baggage,cb_set,c_person, cp_set,seat_no,
+                            seat_set,c_passenger,c_pa_set,h_baggage,
+                            hl_set,arm_passenger,photo,a_id,
+                            a_pilot,pilot_set,a_carrier,d_aircraft,dep_ac_set,a_person,
+                            ap_set,a_staff,staff_set,
+                            dsk_passenger,dsk_pa_set,dep_passenger,dep_pa_set,tf_passenger,tf_pa_set,ts_passenger,
+                            ts_pa_set,o_aircraft,
+                            o_ac_set,ts_aircraft,ts_ac_set,sra,
+                            sra_set, wpToDo,eoToDo,ddToDo,doToObj,
+                            apToAs,cpToAp,stToAp,avToAs,piToSt,piToCp,dskToCpa,depToCpa,
+                            cpaToCp,tsToDsk,tfToDsk,oacToAc,tacToAc) =
+                        
+(*
+(** Security Property : 4.1. There are no unauthorized dangerous objects
+    on board aircraft engaged in civil aviation. *)
+
+theorem property4_1 : all a in d_aircraft, all area in sra, all s in self, 
+ sra_set!member(area,!securityRestrictedAreas(s)) ->
+  dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+    all o in do, 
+       do_set!member(o,!dangerousObjects(s)) ->
+       obj_set!member(doToObj!to_super(o), d_aircraft!onboardObjects(a)) ->
+          do!is_authorized(o)
+
+proof : 
+<1>1 assume a in d_aircraft 
+            area in sra
+            s in self
+            o in do
+
+    H1 : sra_set!member(area,!securityRestrictedAreas(s))
+    H2 : dep_ac_set!member(a,sra!departingAircraft_in_sra(area))
+    H3 : do_set!member(o,!dangerousObjects(s))
+    H4 : obj_set!member(doToObj!to_super(o), d_aircraft!onboardObjects(a))
+
+    prove do!is_authorized(o)
+
+<2>1 assume l in h_baggage 
+     H5 : hl_set!member(l,!loadedHoldBaggage(s)) and 
+     H6 : obj_set!member(doToObj!to_super(o),h_baggage!get_objects(l))
+ 
+     prove do!is_authorized(o)
+
+<2>2 assume p in c_person, 
+     H5 : cp_set!member(p,!onboardPersons(s))
+     H6 : obj_set!member(doToObj!to_super(o),c_person!objects_carried(p)) or 
+           (ex l in c_baggage, 
+              cb_set!member(l,c_person!cabinBaggage(p)) and 
+              obj_set!member(doToObj!to_super(o),c_baggage!get_objects(l)))
+     
+     prove do!is_authorized(o)
+
+<2>3 assume p in a_subject, 
+     H5 : d_aircraft!accessing_aircraft(p,s) 
+     H6 : obj_set!member(o,a_subject!objects_carried(p))
+
+     prove do!is_authorized(o)
+
+<2>4 assume
+     H5 : obj_set!member(doToObj!to_super(o),d_aircraft!initial_objects(a))
+
+     prove do!is_authorized(o)
+
+<2>5 qed by <2>1, <2>2, <2>3, <2>4,<1>:H4, d_aircraft!getObjectsInHold1, 
+            d_aircraft!getObjectsInCabin1, d_aircraft!objectsAccessingAircraft2, 
+            obj_set!union1, obj_set!subset2, d_aircraft!onboardObjects1
+
+<1>2 qed;
+
+(*
+(* Corresponds to Property 4.1 which states that weapons, explosives or any other 
+   dangerous objects should not be embarked unless their carriage or bearing is authorized *)
+
+
+(* From the definition given to onboardWeapons and the definition of screened attributed to 
+   hold luggage and oridnary passengers and the assumption done on obliged passengers, 
+   we can demonstrate the consistency of property 4.7.6 with respect to the 
+   security measures 4.2, 4.4, 4.5 and 4.7.   
+   
+   Property 4.7.6 which states that weapons, if not belong to In-Flight Security personnel, 
+   is authorized on board only if it has been determined that they are not loaded and 
+   that they are inaccessible during flight time *)
+
+
+letprop weapon_checked (o in wp) = 
+       not(wp!loaded(o)) and  
+           wp!inaccessible(o);
+
+(* Cabin crew do not have access to weapons during flight time, 
+   This statement is true since we made the assumption that once cabin crew have their 
+   identity checked before being granted access to security restricted areas, they are considered 
+   to be thrustworthy and therefore do not carry any weapon *)
+
+theorem weaponsCabinCrew_4_7_6 :  
+ all s in self, all a in ac, all o in wp,
+    ac_set!member(a,!departureAircrafts(s)) ->  
+     wp_set!member(o,!weaponsCabinCrew(a,s)) ->
+         wp!is_authorized(o) -> 
+            !weapon_checked(o)
+
+proof :
+
+<1>0 assume s in self 
+            a in ac 
+            o in wp
+     
+     H1  : ac_set!member(a,!departureAircrafts(s))
+     H2  : wp_set!member(o,!weaponsCabinCrew(a,s)) 
+     H3a : wp!is_authorized(o) 
+    
+     prove !weapon_checked(o)
+
+  <2>1 assume p in pilot
+              r in piemb 
+
+        H3 : wp_set!member(o,!weaponsPilot(a,s))
+        H4 : wp_set!member(o,pilot_set!get_weapons(
+                             piemb_set!embarkedPersons(a,!embarkedPilot(s))))
+
+        H5 : pilot_set!member(p,piemb_set!embarkedPersons(a,!embarkedPilot(s)))
+ 
+        H6 : wp_set!member(o,pilot!get_weapons(p))
+
+        H7 : piemb_set!member(r,!embarkedPilot(s))
+ 
+        H8 : ac!equal(piemb!aircraft(r),a) 
+        H9 : pilot!equal(piemb!cabinPerson(r),p)
+        H10: pilot_set!member(p,piemb_set!cabinPersons(!embarkedPilot(s)))
+      
+        prove !weapon_checked(o)
+              
+              by <2>:H6, <2>:H10, !invariant_pilot1, pilot_set!equal1, 
+                 pilot_set!subset2, pilot_set!union4, !assumption_pilot1, 
+                 wp_set!equal1, wp_set!subset2, wp_set!empty1
+
+  <2>2 assume l in c_luggage
+              p in pilot
+              r in piemb
+       
+        H3 : wp_set!member(o,!weaponsPilot(a,s))
+        H4 : wp_set!member(o,cl_set!get_weapons(
+                               pilot_set!get_cabinLuggages(
+                                 piemb_set!embarkedPersons(a,!embarkedPilot(s)))))
+
+        H5 : cl_set!member(l,pilot_set!get_cabinLuggages(
+                                 piemb_set!embarkedPersons(a,!embarkedPilot(s))))
+ 
+        H6 : wp_set!member(o,c_luggage!get_weapons(l))
+ 
+        H7 : pilot_set!member(p,piemb_set!embarkedPersons(a,!embarkedPilot(s)))
+        H8 : cl_set!member(l,pilot!get_cabinLuggages(p))
+
+        H9 : piemb_set!member(r,!embarkedPilot(s)) 
+        H10 : ac!equal(piemb!aircraft(r),a) 
+        H11 : pilot!equal(piemb!cabinPerson(r),p)
+        H12 : pilot_set!member(p,piemb_set!cabinPersons(!embarkedPilot(s)))
+
+        prove !weapon_checked(o)
+
+              by <2>:H6, <2>:H8, cl_set!get_weapons2,
+                 <2>:H12,!invariant_pilot1, pilot_set!equal1, 
+                 pilot_set!subset2, pilot_set!union4, !assumption_pilot1, 
+                 wp_set!equal1, wp_set!subset2, wp_set!empty1
+
+  <2>3 assume p in ccrew
+              r in crewemb 
+       
+        H3 : wp_set!member(o,!weaponsCrew(a,s))
+        H4 : wp_set!member(o,crew_set!get_weapons(
+                             crewemb_set!embarkedPersons(a,!embarkedCrew(s))))
+
+        H5 : crew_set!member(p,crewemb_set!embarkedPersons(a,!embarkedCrew(s)))
+ 
+        H6 : wp_set!member(o,ccrew!get_weapons(p))
+
+        H7 : crewemb_set!member(r,!embarkedCrew(s))
+ 
+        H8 : ac!equal(crewemb!aircraft(r),a) 
+        H9 : ccrew!equal(crewemb!cabinPerson(r),p)
+        H10: crew_set!member(p,crewemb_set!cabinPersons(!embarkedCrew(s)))
+      
+        prove !weapon_checked(o)
+
+              by <2>:H6, <2>:H10, !invariant_crew1, crew_set!equal1, 
+                 crew_set!subset2, crew_set!union4, !assumption_crew1, 
+                 wp_set!equal1, wp_set!subset2, wp_set!empty1
+
+  <2>4 assume l in c_luggage
+              p in ccrew
+              r in crewemb
+
+       H3 : wp_set!member(o,!weaponsCrew(a,s))
+       H4 : wp_set!member(o,cl_set!get_weapons(
+                               crew_set!get_cabinLuggages(
+                                 crewemb_set!embarkedPersons(a,!embarkedCrew(s)))))
+
+        H5 : cl_set!member(l,crew_set!get_cabinLuggages(
+                                 crewemb_set!embarkedPersons(a,!embarkedCrew(s))))
+ 
+        H6 : wp_set!member(o,c_luggage!get_weapons(l))
+ 
+        H7 : crew_set!member(p,crewemb_set!embarkedPersons(a,!embarkedCrew(s)))
+        H8 : cl_set!member(l,ccrew!get_cabinLuggages(p))
+
+        H9 : crewemb_set!member(r,!embarkedCrew(s)) 
+        H10 : ac!equal(crewemb!aircraft(r),a) 
+        H11 : ccrew!equal(crewemb!cabinPerson(r),p)
+        H12 : crew_set!member(p,crewemb_set!cabinPersons(!embarkedCrew(s)))
+
+        prove !weapon_checked(o)
+
+              by <2>:H6, <2>:H8, cl_set!get_weapons2, 
+                 <2>:H12, !invariant_crew1, crew_set!equal1, 
+                 crew_set!subset2, crew_set!union4, !assumption_crew1, 
+                 wp_set!equal1, wp_set!subset2, wp_set!empty1
+  
+  <2>5 qed by <2>1, <2>2, <2>3, <2>4, <1>:H2, wp_set!union1, 
+           pilot_set!get_weapons1, piemb_set!brd1, piemb_set!cab2,
+           cl_set!get_weapons1, pilot_set!get_cabinLuggages1,
+           crew_set!get_weapons1, crewemb_set!brd1,
+           crewemb_set!cab2, crew_set!get_cabinLuggages1 
+
+           def !weaponsCabinCrew, !weaponsPilot,
+               !weaponsCrew
+
+<1>2 qed;
+
+
+(* Ordinary Pass do not have access to weapons during flight time. This 
+   is guaranteed by the fact that screened passengers are considered not 
+   to carry any weapons. *)
+
+theorem weaponsOrdinaryPass_4_7_6 : 
+ all s in self, all a in ac, all o in wp,
+    ac_set!member(a,!departureAircrafts(s)) ->  
+     wp_set!member(o,!weaponsOrdinaryPass(a,s)) ->
+         wp!is_authorized(o) -> 
+           !weapon_checked(o)
+
+proof : 
+<1>1 assume a in ac
+            s in self
+            o in wp
+    
+     H1 : ac_set!member(a,!departureAircrafts(s))
+     H2 : wp_set!member(o,!weaponsOrdinaryPass(a,s))
+     H3a : wp!is_authorized(o)
+
+     prove !weapon_checked(o)
+
+<2>1 assume 
+      H3 : wp_set!member(o,!weaponsOpassengers(a,s))
+
+      prove !weapon_checked(o)
+
+ <3>1 assume p in op
+             r in opemb 
+      H4 : wp_set!member(o,op_set!get_weapons(
+                         opemb_set!embarkedPersons(a,!embarkedOriginating(s))))
+
+      H5 : op_set!member(p,opemb_set!embarkedPersons(a,!embarkedOriginating(s)))
+      H6 : wp_set!member(o,op!get_weapons(p))
+      H7 : opemb_set!member(r,!embarkedOriginating(s))
+      H8 : op!equal(opemb!cabinPerson(r),p)
+      H9 : ac!equal(opemb!aircraft(r),a)
+      H10 : op_set!member(p,opemb_set!cabinPersons(!embarkedOriginating(s)))
+
+      prove !weapon_checked(o)
+     
+   <4>1 assume 
+         H11 : op_set!member(p,!onboardOpassengers(s))
+         H12 : op_set!member(p,!originatingPassengers(s))
+         H13 : op!embarked(p)
+                  
+         prove !weapon_checked(o)
+               by <4>:H12, <4>:H13, <3>:H6, !property_4_4_1a,
+                  op!inv_screened, wp_set!equal1, wp_set!subset2, 
+                  wp_set!empty1
+
+   <4>2 qed by <4>1, <3>:H10, !invariant_OPEMB1, op_set!equal1,
+               op_set!subset2, !onboardOpassengers1
+
+ <3>2 assume p in op
+             r in opemb
+             l in c_luggage
+
+      H4 : wp_set!member(o,cl_set!get_weapons(
+                                   op_set!get_cabinLuggages(
+                                     opemb_set!embarkedPersons(a,!embarkedOriginating(s)))))
+ 
+      H5 : cl_set!member(l,op_set!get_cabinLuggages(
+                                     opemb_set!embarkedPersons(a,!embarkedOriginating(s))))
+ 
+      H6 : wp_set!member(o,c_luggage!get_weapons(l)) 
+      H7 : op_set!member(p,opemb_set!embarkedPersons(a,!embarkedOriginating(s)))
+      H8 : cl_set!member(l,op!get_cabinLuggages(p))
+      H9 : opemb_set!member(r,!embarkedOriginating(s))
+      H10 : op!equal(opemb!cabinPerson(r),p)
+      H11 : ac!equal(opemb!aircraft(r),a)
+      H12 : op_set!member(p,opemb_set!cabinPersons(!embarkedOriginating(s)))
+    
+      prove !weapon_checked(o)
+           
+   <4>1 assume 
+         H13 : op_set!member(p,!onboardOpassengers(s))
+         H14 : op_set!member(p,!originatingPassengers(s))
+         H15 : wp_set!member(o,cl_set!get_weapons(op!get_cabinLuggages(p)))
+         H16 : op!embarked(p)
+                  
+         prove !weapon_checked(o)
+               by <4>:H14, <4>:H16, <4>:H15, !property_4_4_1a,
+                  op!inv_screened, wp_set!equal1, wp_set!subset2, 
+                  wp_set!empty1
+
+   <4>2 qed by <4>1, <3>:H12, <3>:H6, <3>:H8, !invariant_OPEMB1, op_set!equal1,
+               op_set!subset2, !onboardOpassengers1, cl_set!get_weapons2
+
+ <3>3 qed by <3>1, <3>2, <2>:H3, wp_set!union1, op_set!get_weapons1, 
+             opemb_set!brd1, opemb_set!cab2, cl_set!get_weapons1, 
+             op_set!get_cabinLuggages1
+
+          def !weaponsOpassengers
+
+<2>2 assume
+      H3 : wp_set!member(o,!weaponsTfpassengers(a,s))
+      
+      prove !weapon_checked(o)
+      
+ <3>1 assume p in tfp
+             r in tfpemb 
+      H4 : wp_set!member(o,tfp_set!get_weapons(
+                         tfpemb_set!embarkedPersons(a,!embarkedTransfer(s))))
+
+      H5 : tfp_set!member(p,tfpemb_set!embarkedPersons(a,!embarkedTransfer(s)))
+      H6 : wp_set!member(o,tfp!get_weapons(p))
+      H7 : tfpemb_set!member(r,!embarkedTransfer(s))
+      H8 : tfp!equal(tfpemb!cabinPerson(r),p)
+      H9 : ac!equal(tfpemb!aircraft(r),a)
+      H10 : tfp_set!member(p,tfpemb_set!cabinPersons(!embarkedTransfer(s)))
+
+      prove !weapon_checked(o)
+     
+   <4>1 assume 
+         H11 : tfp_set!member(p,!onboardTfpassengers(s))
+         H12 : tfp_set!member(p,!transferPassengers(s))
+         H13 : tfp!embarked(p)
+                  
+         prove !weapon_checked(o)
+               by <4>:H12, <4>:H13, <3>:H6, !property_4_4_2a,
+                  tfp!inv_screened, !invariant_secureFlight,  
+                  wp_set!equal1, wp_set!subset2, wp_set!empty1
+                 
+                  def !screenedTf
+
+   <4>2 qed by <4>1, <3>:H10, !invariant_TFPEMB1, tfp_set!equal1,
+               tfp_set!subset2, !onboardTfpassengers1
+
+ <3>2 assume p in tfp
+             r in tfpemb
+             l in c_luggage
+
+      H4 : wp_set!member(o,cl_set!get_weapons(
+                                   tfp_set!get_cabinLuggages(
+                                     tfpemb_set!embarkedPersons(a,!embarkedTransfer(s)))))
+ 
+      H5 : cl_set!member(l,tfp_set!get_cabinLuggages(
+                                     tfpemb_set!embarkedPersons(a,!embarkedTransfer(s))))
+ 
+      H6 : wp_set!member(o,c_luggage!get_weapons(l)) 
+      H7 : tfp_set!member(p,tfpemb_set!embarkedPersons(a,!embarkedTransfer(s)))
+      H8 : cl_set!member(l,tfp!get_cabinLuggages(p))
+      H9 : tfpemb_set!member(r,!embarkedTransfer(s))
+      H10 : tfp!equal(tfpemb!cabinPerson(r),p)
+      H11 : ac!equal(tfpemb!aircraft(r),a)
+      H12 : tfp_set!member(p,tfpemb_set!cabinPersons(!embarkedTransfer(s)))
+    
+      prove !weapon_checked(o)
+           
+   <4>1 assume 
+         H13 : tfp_set!member(p,!onboardTfpassengers(s))
+         H14 : tfp_set!member(p,!transferPassengers(s))
+         H15 : wp_set!member(o,cl_set!get_weapons(tfp!get_cabinLuggages(p)))
+         H16 : tfp!embarked(p)
+                  
+         prove !weapon_checked(o)
+               by <4>:H14, <4>:H16, <4>:H15, !property_4_4_2a,
+                  tfp!inv_screened, !invariant_secureFlight, 
+                  wp_set!equal1, wp_set!subset2, wp_set!empty1
+
+                  def !screenedTf
+
+   <4>2 qed by <4>1, <3>:H12, <3>:H6, <3>:H8, !invariant_TFPEMB1, tfp_set!equal1,
+               tfp_set!subset2, !onboardTfpassengers1, cl_set!get_weapons2
+
+ <3>3 qed by <3>1, <3>2, <2>:H3, wp_set!union1, tfp_set!get_weapons1, 
+             tfpemb_set!brd1, tfpemb_set!cab2, cl_set!get_weapons1, 
+             tfp_set!get_cabinLuggages1
+
+          def !weaponsTfpassengers
+
+<2>3 assume
+      H3 : wp_set!member(o,!weaponsTspassengers(a,s))
+      
+      prove !weapon_checked(o)
+      
+
+ <3>1 assume p in tsp
+             r in tspemb 
+      H4 : wp_set!member(o,tsp_set!get_weapons(
+                         tspemb_set!embarkedPersons(a,!embarkedTransit(s))))
+
+      H5 : tsp_set!member(p,tspemb_set!embarkedPersons(a,!embarkedTransit(s)))
+      H6 : wp_set!member(o,tsp!get_weapons(p))
+      H7 : tspemb_set!member(r,!embarkedTransit(s))
+      H8 : tsp!equal(tspemb!cabinPerson(r),p)
+      H9 : ac!equal(tspemb!aircraft(r),a)
+      H10 : tsp_set!member(p,tspemb_set!cabinPersons(!embarkedTransit(s)))
+
+      prove !weapon_checked(o)
+     
+   <4>1 assume 
+         H11 : tsp_set!member(p,!onboardTspassengers(s))
+         H12 : tsp_set!member(p,!transitPassengers(s))
+         H13 : tsp!embarked(p)
+                  
+         prove !weapon_checked(o)
+               by <4>:H12, <4>:H13, <3>:H6, !assumption_TSP1,
+                  wp_set!equal1, wp_set!subset2, wp_set!empty1
+
+                  def !secureTransit
+
+   <4>2 qed by <4>1, <3>:H10, !invariant_TSPEMB1, tsp_set!equal1,
+               tsp_set!subset2, !onboardTspassengers1
+
+ <3>2 assume p in tsp
+             r in tspemb
+             l in c_luggage
+
+      H4 : wp_set!member(o,cl_set!get_weapons(
+                                   tsp_set!get_cabinLuggages(
+                                     tspemb_set!embarkedPersons(a,!embarkedTransit(s)))))
+ 
+      H5 : cl_set!member(l,tsp_set!get_cabinLuggages(
+                                     tspemb_set!embarkedPersons(a,!embarkedTransit(s))))
+ 
+      H6 : wp_set!member(o,c_luggage!get_weapons(l)) 
+      H7 : tsp_set!member(p,tspemb_set!embarkedPersons(a,!embarkedTransit(s)))
+      H8 : cl_set!member(l,tsp!get_cabinLuggages(p))
+      H9 : tspemb_set!member(r,!embarkedTransit(s))
+      H10 : tsp!equal(tspemb!cabinPerson(r),p)
+      H11 : ac!equal(tspemb!aircraft(r),a)
+      H12 : tsp_set!member(p,tspemb_set!cabinPersons(!embarkedTransit(s)))
+    
+      prove !weapon_checked(o)
+           
+   <4>1 assume 
+         H13 : tsp_set!member(p,!onboardTspassengers(s))
+         H14 : tsp_set!member(p,!transitPassengers(s))
+         H15 : wp_set!member(o,cl_set!get_weapons(tsp!get_cabinLuggages(p)))
+         H16 : tsp!embarked(p)
+                  
+         prove !weapon_checked(o)
+               by <4>:H14, <4>:H16, <4>:H15, !assumption_TSP1, 
+                  wp_set!equal1, wp_set!subset2, wp_set!empty1
+
+                  def!secureTransit
+
+   <4>2 qed by <4>1, <3>:H12, <3>:H6, <3>:H8, !invariant_TSPEMB1, tsp_set!equal1,
+               tsp_set!subset2, !onboardTspassengers1, cl_set!get_weapons2
+
+ <3>3 qed by <3>1, <3>2, <2>:H3, wp_set!union1, tsp_set!get_weapons1, 
+             tspemb_set!brd1, tspemb_set!cab2, cl_set!get_weapons1, 
+             tsp_set!get_cabinLuggages1
+
+          def !weaponsTspassengers
+
+<2>4 qed by <2>1,<2>2, <2>3, <1>:H2, wp_set!union1
+         def !weaponsOrdinaryPass
+
+<1>2 qed;
+
+
+
+(* Weapons carry in Hold luggage are authorized only if they are not loaded. *)
+
+theorem weaponsInHold_4_7_6 : 
+ all s in self, all a in ac, all o in wp,
+  ac_set!member(a,!departureAircrafts(s)) ->  
+     wp_set!member(o,!weaponsInHold(a,s)) ->
+         wp!is_authorized(o) -> 
+           !weapon_checked(o)
+
+proof : 
+
+<1>1 assume s in self
+            a in ac
+            o  in wp
+
+    H1 : ac_set!member(a,!departureAircrafts(s))
+    H2 : wp_set!member(o,!weaponsInHold(a,s))
+    H3a : wp!is_authorized(o)
+
+    prove !weapon_checked(o)
+    
+ <2>1 assume l in ol
+             r in olac
+
+      H3 :  wp_set!member(o, ol_set!get_weapons(
+                             olac_set!loadedLuggages(a,!loadedOriginating(s))))
+
+      H4 : ol_set!member(l, olac_set!loadedLuggages(a,!loadedOriginating(s)))
+      H5 : wp_set!member(o,ol!get_weapons(l))
+
+      prove !weapon_checked(o)
+             by <2>:H5, <1>:H3a,
+                ol!invariant_weapons1, ol!invariant_loaded1
+
+            def !weapon_checked
+
+ <2>2 assume l in tfl
+             r in tflac
+
+      H3 :  wp_set!member(o,tfl_set!get_weapons(
+                             tflac_set!loadedLuggages(a,!loadedTransfer(s))))
+      
+      H4 : tfl_set!member(l, tflac_set!loadedLuggages(a,!loadedTransfer(s)))
+      H5 : wp_set!member(o,tfl!get_weapons(l))
+
+      prove !weapon_checked(o)
+            by <2>:H5, <1>:H3a,
+               tfl!invariant_weapons1, tfl!invariant_loaded1
+
+             def !weapon_checked
+
+  <2>3 qed by <2>1, <2>2, <1>:H2, wp_set!union1, ol_set!get_weapons1,
+              tfl_set!get_weapons1
+        
+              def !weaponsInHold
+  
+<1>2 qed;
+*)
+
+(* Obliged passengers cannot have access to weapons during flight time. 
+   This statement is true since we made the assumption that 
+   obliged passengers do not carry any dangerous objects as they 
+   escorted by law enforcement officers and therefore have been 
+   subjected to appropriate control. *)
+
+theorem weaponsObliged_4_7_6 : 
+ all s in self, all a in ac, all o in wp,
+ ac_set!member(a,!departureAircrafts(s)) ->  
+     wp_set!member(o,!weaponsObliged(a,s)) ->
+         wp!is_authorized(o) -> 
+            !weapon_checked(o)
+
+proof : 
+
+<1>1 assume a in ac
+            s in self
+            o in wp
+     H1 :  ac_set!member(a,!departureAircrafts(s)) 
+     H2 :  wp_set!member(o,!weaponsObliged(a,s))
+     H3a :  wp!is_authorized(o)
+
+    prove  !weapon_checked(o)
+
+ <2>1 assume p in ogp
+             r in ogpemb
+
+       H3 : wp_set!member(o,ogp_set!get_weapons(
+                         ogpemb_set!embarkedPersons(a,!embarkedObliged(s)))) 
+      
+       H4 : ogp_set!member(p,ogpemb_set!embarkedPersons(a,!embarkedObliged(s)))
+       H5 : wp_set!member(o,ogp!get_weapons(p))
+       H6 : ogpemb_set!member(r,!embarkedObliged(s))
+       H7 : ac!equal(ogpemb!aircraft(r),a)
+       H8 : ogp!equal(ogpemb!cabinPerson(r),p)
+       H9 : ogp_set!member(p,ogpemb_set!cabinPersons(!embarkedObliged(s)))
+     
+     prove !weapon_checked(o)
+          
+  <3>1 assume 
+        H10 : ogp_set!member(p,!checkedObligedPassengers(s))
+        H11 : wp_set!member(o,ogp_set!get_weapons(!obligedPassengers(s)))
+        H12 : wp_set!member(o,wp_set!empty)
+
+        prove !weapon_checked(o)
+              by <3>:H12, wp_set!empty1
+              
+
+  <3>2 qed by <3>1, <2>:H9, ogp_set!union4, ogp_set!equal1, ogp_set!subset2,
+              !invariant_ObligedPassengers1, !checkedObligedPassengers1, <2>:H5,
+              ogp_set!get_weapons2, wp_set!equal1, wp_set!subset2, !assumption_OGP
+
+ <2>2 assume p in ogp
+             r in ogpemb
+             l in c_luggage
+
+       H3 : wp_set!member(o,cl_set!get_weapons(
+                         ogp_set!get_cabinLuggages(
+                           ogpemb_set!embarkedPersons(a,!embarkedObliged(s)))))
+      
+       H4 : cl_set!member(l,ogp_set!get_cabinLuggages(ogpemb_set!embarkedPersons(a,!embarkedObliged(s))))
+       H5 : wp_set!member(o,c_luggage!get_weapons(l))
+       H6 : ogp_set!member(p,ogpemb_set!embarkedPersons(a,!embarkedObliged(s)))
+       H7 : cl_set!member(l,ogp!get_cabinLuggages(p))
+       H8 : ogpemb_set!member(r,!embarkedObliged(s))
+       H9 : ac!equal(ogpemb!aircraft(r),a)
+       H10 : ogp!equal(ogpemb!cabinPerson(r),p)
+       H11 : ogp_set!member(p,ogpemb_set!cabinPersons(!embarkedObliged(s)))
+      
+       prove !weapon_checked(o)
+           
+  <3>1 assume 
+        H12 : ogp_set!member(p,!checkedObligedPassengers(s))
+        H13 : cl_set!member(l,ogp_set!get_cabinLuggages(!obligedPassengers(s)))
+        H14 : wp_set!member(o,cl_set!get_weapons(ogp_set!get_cabinLuggages(!obligedPassengers(s)))) 
+        H13 : wp_set!member(o,wp_set!empty) 
+
+        prove !weapon_checked(o)
+              by <3>:H13, wp_set!empty1
+
+  <3>2 qed by <3>1, <2>:H11, ogp_set!union4, ogp_set!equal1, ogp_set!subset2,
+              !invariant_ObligedPassengers1, !checkedObligedPassengers1, <2>:H5,
+              <2>:H7,ogp_set!get_cabinLuggages2, cl_set!get_weapons2,
+              wp_set!equal1, wp_set!subset2, !assumption_OGP 
+
+<2>3 qed by <2>1, <2>2, <1>:H2, wp_set!union1,
+            ogp_set!get_weapons1, ogpemb_set!brd1, ogpemb_set!cab2,
+            cl_set!get_weapons1, ogp_set!get_cabinLuggages1
+
+            def !weaponsObliged
+           
+<1>2 qed;
+      
+
+theorem consistency_4_7_6 : 
+    !property_4_7_6
+
+
+proof : by wp_set!union1,
+           !weaponsObliged_4_7_6,
+           !weaponsInHold_4_7_6,
+           !weaponsOrdinaryPass_4_7_6,
+           !weaponsCabinCrew_4_7_6
+            
+        def !property_4_7_6,
+            !onboardWeapons, 
+            !weaponsSpecialpass,
+            !weaponsArmPassengers,
+            !notBelongToArmedPassenger,
+            !weapon_checked;
+*)
+end
+

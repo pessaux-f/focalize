@@ -1,0 +1,194 @@
+uses airsideSubjects;;
+open airsideSubjects;;
+uses d2320subjects;;
+open d2320subjects;;
+uses conversionFunctions2320;;
+open conversionFunctions2320;;
+
+species airsideEnv2320(obj is object2320,
+                        obj_set is finite_set(obj),
+                        do is dangerousObject2320,
+                        do_set is finite_set(do),
+                        wp is weapon2320,
+                        wp_set is finite_set(wp),
+                        eo is explosive2320, 
+                        eo_set is finite_set(eo),
+                        dd is dangerousDevice2320,
+                        dd_set is finite_set(dd),
+                        
+                        a_subject is airsideSubject(obj,obj_set),
+                        as_set is finite_set(a_subject),
+                        a_vehicle is airsideVehicle2320(obj,obj_set),
+                        av_set is finite_set(a_vehicle),
+                        
+                        pa_vehicle is permanentAirsideVehicle(obj,obj_set),
+                        pav_set is finite_set(pa_vehicle), 
+                        
+                        v_pass is vehiclePass, 
+                        pass_vehicle is vehicleWithPass(obj,obj_set,v_pass),
+                        
+                        pass_v_set is finite_set(pass_vehicle),
+ 
+                        pv_pass is permanentPass,
+                        la_vehicle is landsideAirsideVehicle(obj,obj_set,pv_pass),
+                        lav_set is finite_set(la_vehicle),
+
+                        tv_pass is temporaryPass,
+                        ta_vehicle is temporaryVehicle(obj,obj_set,tv_pass),
+                        tav_set is finite_set(ta_vehicle),
+
+                        c_baggage is cabinBaggage2320(obj,obj_set),
+                        cb_set is finite_set(c_baggage),
+                        c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                        cp_set is finite_set(c_person),
+                        seat_no is seat_number,
+                        seat_set is finite_set(seat_no),
+                        c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        c_pa_set is finite_set(c_passenger),
+                        h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                        hl_set is finite_set(h_baggage),
+                        arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        photo is photograph,
+                        a_id is airportIdCard(photo),
+                        a_staff is staff (obj,obj_set,photo,a_id),
+                        staff_set is finite_set(a_staff),
+                        a_pilot is pilot2320(obj, obj_set,c_baggage,cb_set,
+                                             seat_no,seat_set, photo,a_id),
+                        pilot_set is finite_set(a_pilot),
+ 
+                        f_crew is flightCrew(obj, obj_set,c_baggage,cb_set,
+                                             photo,a_id),
+                        fc_set is finite_set(f_crew),
+                        a_carrier is airCarrier,
+                        d_aircraft is departingAircraft(obj,obj_set,wp,a_subject,as_set,c_baggage,cb_set,
+                                                        c_person,cp_set,seat_no,seat_set,
+                                                        c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier),
+                        dep_ac_set is finite_set(d_aircraft),
+                        a_person is airsidePerson(obj, obj_set),
+                        ap_set is finite_set(a_person),
+                        
+                        dsk_passenger is disembarkedPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dsk_pa_set is finite_set(dsk_passenger),
+ 
+                        dep_passenger is departingPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dep_pa_set is finite_set(dep_passenger),
+                        tf_passenger is transferPassenger2320(obj,obj_set,wp,
+                                                              c_baggage,cb_set,seat_no,a_person),
+                        
+                        tf_pa_set is finite_set(tf_passenger),
+
+                        ts_passenger is transitPassenger
+                                          (obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),     
+                        ts_pa_set is finite_set(ts_passenger),
+                        
+                        sra is securityRestrictedArea2320
+                                    (obj, obj_set,wp,a_subject, as_set, c_baggage, cb_set,
+                                     photo,a_id,a_staff,c_person,cp_set ,seat_no,seat_set,
+                                     c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier,
+                                     d_aircraft,dep_ac_set),
+
+                        sra_set is finite_set(sra), 
+
+                        wpToDo is dangerousObject_subtype2320(wp,do,wp_set,do_set),
+                        eoToDo is dangerousObject_subtype2320(eo,do,eo_set,do_set),
+                        ddToDo is dangerousObject_subtype2320(dd,do,dd_set,do_set),
+                        doToObj is dangerousObjectToObject2320(do,obj,do_set,obj_set),
+                        apToAs is airsideSubject_subtype(obj,obj_set,a_person,a_subject,ap_set,as_set),
+                        cpToAp is airsideSubject_subtype(obj,obj_set,c_person,a_person,cp_set,ap_set),
+                        stToAp is airsideSubject_subtype(obj,obj_set,a_staff,a_person,staff_set,ap_set),
+                        avToAs is airsideSubject_subtype(obj,obj_set,a_vehicle,a_subject,av_set,as_set),
+                        
+                        pavToAv is airsideVehicle2320_subtype(obj,obj_set,pa_vehicle,a_vehicle,pav_set,av_set),
+                        passToAv is airsideVehicle2320_subtype(obj,obj_set,pass_vehicle,a_vehicle,pass_v_set,av_set),
+                        pv_pass_set is finite_set(pv_pass),
+                        v_pass_set is finite_set(v_pass),
+                        pvToVpass is vehiclePass_subtype(pv_pass,v_pass,pv_pass_set,v_pass_set),
+                        tv_pass_set is finite_set(tv_pass),
+                        tvToVpass is vehiclePass_subtype(tv_pass,v_pass,tv_pass_set,v_pass_set),
+                        laToPV is vehicleWithPass_subtype(obj,obj_set,pv_pass,v_pass,pv_pass_set,v_pass_set,
+                                                          la_vehicle,pass_vehicle,lav_set,pass_v_set,pvToVpass),
+                        tvToPV is vehicleWithPass_subtype(obj,obj_set,tv_pass,v_pass,tv_pass_set,v_pass_set,
+                                                         ta_vehicle,pass_vehicle,tav_set,pass_v_set,tvToVpass),
+                        piToSt is staff_subtype(obj,obj_set,photo,a_id,a_pilot,a_staff,pilot_set,staff_set), 
+                        piToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,a_pilot,c_person,pilot_set,cp_set),
+                        dskToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dsk_passenger,c_passenger,
+                                                           dsk_pa_set,c_pa_set), 
+                        depToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dep_passenger,c_passenger,
+                                                           dep_pa_set,c_pa_set),
+                        cpaToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,c_passenger,c_person,
+                                                       c_pa_set,cp_set),
+                        tsToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                ts_passenger,dsk_passenger,ts_pa_set,dsk_pa_set),
+                        tfToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                tf_passenger,dsk_passenger,tf_pa_set,dsk_pa_set),
+                        fcToSt is staff_subtype(obj,obj_set,photo,a_id,f_crew,a_staff,fc_set,staff_set))
+ 
+            inherits airsideEnv(obj,obj_set,do,do_set,wp,
+                                wp_set,eo,eo_set,dd,dd_set,
+                                a_subject,as_set,a_vehicle,av_set,
+                                c_baggage,cb_set,c_person, cp_set,seat_no,
+                                seat_set,c_passenger,c_pa_set,h_baggage,
+                                hl_set,arm_passenger,a_pilot,pilot_set,a_carrier,
+                                d_aircraft,dep_ac_set,a_person,ap_set,a_staff,staff_set,dsk_passenger,
+                                dsk_pa_set, dep_passenger, dep_pa_set, tf_passenger,tf_pa_set,
+                                ts_passenger, ts_pa_set,sra,
+                                sra_set,wpToDo,eoToDo,ddToDo,doToObj,
+                                apToAs,cpToAp,stToAp,avToAs,piToSt,piToCp,dskToCpa,depToCpa,
+                                cpaToCp,tsToDsk,tfToDsk) =
+
+
+sig flightCrew in self -> fc_set;
+
+(** Domain property : all flight crew are instances of staff. *)
+
+property flightCrew_staff : all s in self, 
+     staff_set!subset(fcToSt!to_super_set(!flightCrew(s)),
+                      !unescortedPersons(s));
+
+(** Domain property : an airport identification card is associated to one and 
+    only one staff member. *)
+
+property staff_constraint : all x y in a_staff, all s in self, 
+  staff_set!member(x,!unescortedPersons(s)) ->  
+  staff_set!member(x,!unescortedPersons(s)) -> 
+  not(a_staff!equal(x,y)) ->
+    not(a_id!equal(a_staff!identity(x),a_staff!identity(y)));
+ 
+
+(** vehicles that may have access to security restricted areas *)
+
+sig permanentAirsideVehicles in self -> pav_set;
+
+property pAirsideVehicle_AirsideVehicle : all s in self, 
+   av_set!subset(pavToAv!to_super_set(!permanentAirsideVehicles(s)),
+                 !airsideVehicles(s));
+
+sig landsideAirsideVehicles in self -> lav_set;
+
+sig temporaryAirsideVehicles in self -> tav_set;
+
+let vehiclesWithPass (s in self) in pass_v_set = 
+   pass_v_set!union(laToPV!to_super_set(!landsideAirsideVehicles(s)),
+                    tvToPV!to_super_set(!temporaryAirsideVehicles(s)));
+
+
+property vehicleWithPass_AirsideVehicle : all s in self, 
+   av_set!subset(passToAv!to_super_set(!vehiclesWithPass(s)),
+                 !airsideVehicles(s));
+
+property landsideAirsideVehicles_vehicleWithPass : all s in self, 
+   pass_v_set!subset(laToPV!to_super_set(!landsideAirsideVehicles(s)),
+                    !vehiclesWithPass(s));
+
+property temporaryVehicles_vehicleWithPass : all s in self, 
+   pass_v_set!subset(tvToPV!to_super_set(!temporaryAirsideVehicles(s)),
+                    !vehiclesWithPass(s));
+
+
+(* Airside Vehicles *)
+let airsideVehicles (s in self) in av_set = 
+   av_set!union(pavToAv!to_super_set(!permanentAirsideVehicles(s)),
+                passToAv!to_super_set(!vehiclesWithPass(s)));
+
+
+end

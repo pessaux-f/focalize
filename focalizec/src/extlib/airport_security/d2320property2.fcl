@@ -1,0 +1,529 @@
+uses d2320subjects;;
+open d2320subjects;;
+uses a17property4_2;;
+open a17property4_2;;
+uses airsideEnv2320;;
+open airsideEnv2320;;
+uses a17subjects;;
+open a17subjects;;
+species d2320property2(obj is object2320,
+                        obj_set is finite_set(obj),
+                        do is dangerousObject2320,
+                        do_set is finite_set(do),
+                        wp is weapon2320,
+                        wp_set is finite_set(wp),
+                        eo is explosive2320, 
+                        eo_set is finite_set(eo),
+                        dd is dangerousDevice2320,
+                        dd_set is finite_set(dd),
+                        
+                        a_subject is airsideSubject(obj,obj_set),
+                        as_set is finite_set(a_subject),
+                        a_vehicle is airsideVehicle2320(obj,obj_set),
+                        av_set is finite_set(a_vehicle),
+                        
+                        pa_vehicle is permanentAirsideVehicle(obj,obj_set),
+                        pav_set is finite_set(pa_vehicle), 
+                        
+                        v_pass is vehiclePass, 
+                        pass_vehicle is vehicleWithPass(obj,obj_set,v_pass),
+                        
+                        pass_v_set is finite_set(pass_vehicle),
+ 
+                        pv_pass is permanentPass,
+                        la_vehicle is landsideAirsideVehicle(obj,obj_set,pv_pass),
+                        lav_set is finite_set(la_vehicle),
+
+                        tv_pass is temporaryPass,
+                        ta_vehicle is temporaryVehicle(obj,obj_set,tv_pass),
+                        tav_set is finite_set(ta_vehicle),
+
+                        c_baggage is cabinBaggage2320(obj,obj_set),
+                        cb_set is finite_set(c_baggage),
+                        c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                        cp_set is finite_set(c_person),
+                        seat_no is seat_number,
+                        seat_set is finite_set(seat_no),
+                        c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        c_pa_set is finite_set(c_passenger),
+                        h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                        hl_set is finite_set(h_baggage),
+                        arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        
+                        photo is photograph,
+                        a_id is airportIdCard(photo),
+                        a_staff is staff (obj,obj_set,photo,a_id),
+                        staff_set is finite_set(a_staff),
+                        a_pilot is pilot2320(obj, obj_set,c_baggage,cb_set,
+                                             seat_no,seat_set, photo,a_id),
+                        pilot_set is finite_set(a_pilot),
+                       
+                        f_crew is flightCrew(obj, obj_set,c_baggage,cb_set,
+                                             photo,a_id),
+                        fc_set is finite_set(f_crew),
+                        a_carrier is airCarrier,
+                        d_aircraft is departingAircraft(obj,obj_set,wp,a_subject,as_set,c_baggage,cb_set,
+                                                        c_person,cp_set,seat_no,seat_set,
+                                                        c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier),
+                        dep_ac_set is finite_set(d_aircraft),
+                        a_person is airsidePerson(obj, obj_set),
+                        ap_set is finite_set(a_person),
+                        
+                        dsk_passenger is disembarkedPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dsk_pa_set is finite_set(dsk_passenger),
+ 
+                        dep_passenger is departingPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dep_pa_set is finite_set(dep_passenger),
+                        
+                        tf_passenger is transferPassenger2320(obj,obj_set,wp,
+                                                              c_baggage,cb_set,seat_no,a_person),
+                        
+                        tf_pa_set is finite_set(tf_passenger),
+
+                        ts_passenger is transitPassenger
+                                          (obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),     
+                        ts_pa_set is finite_set(ts_passenger),
+                        
+                        sra is securityRestrictedArea2320
+                                    (obj, obj_set,wp,a_subject, as_set, c_baggage, cb_set,
+                                     photo,a_id,a_staff,c_person,cp_set ,seat_no,seat_set,
+                                     c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier,
+                                     d_aircraft,dep_ac_set),
+
+                        sra_set is finite_set(sra), 
+
+                        wpToDo is dangerousObject_subtype2320(wp,do,wp_set,do_set),
+                        eoToDo is dangerousObject_subtype2320(eo,do,eo_set,do_set),
+                        ddToDo is dangerousObject_subtype2320(dd,do,dd_set,do_set),
+                        doToObj is dangerousObjectToObject2320(do,obj,do_set,obj_set),
+                        apToAs is airsideSubject_subtype(obj,obj_set,a_person,a_subject,ap_set,as_set),
+                        cpToAp is airsideSubject_subtype(obj,obj_set,c_person,a_person,cp_set,ap_set),
+                        stToAp is airsideSubject_subtype(obj,obj_set,a_staff,a_person,staff_set,ap_set),
+                        avToAs is airsideSubject_subtype(obj,obj_set,a_vehicle,a_subject,av_set,as_set),
+                        
+                        pavToAv is airsideVehicle2320_subtype(obj,obj_set,pa_vehicle,a_vehicle,pav_set,av_set),
+                        pavToAs is airsideSubject_subtype(obj,obj_set,pa_vehicle,a_subject,pav_set,as_set),
+                        passToAv is airsideVehicle2320_subtype(obj,obj_set,pass_vehicle,a_vehicle,pass_v_set,av_set),
+                        passToAs is airsideSubject_subtype(obj,obj_set,pass_vehicle,a_subject,pass_v_set,as_set), 
+                        pv_pass_set is finite_set(pv_pass),
+                        v_pass_set is finite_set(v_pass),
+                        pvToVpass is vehiclePass_subtype(pv_pass,v_pass,pv_pass_set,v_pass_set),
+                        tv_pass_set is finite_set(tv_pass),
+                        tvToVpass is vehiclePass_subtype(tv_pass,v_pass,tv_pass_set,v_pass_set),
+                        laToPV is vehicleWithPass_subtype(obj,obj_set,pv_pass,v_pass,pv_pass_set,v_pass_set,
+                                                          la_vehicle,pass_vehicle,lav_set,pass_v_set,pvToVpass),
+                        laToAs is airsideSubject_subtype(obj,obj_set,la_vehicle,a_subject,lav_set,as_set),
+                        tvToPV is vehicleWithPass_subtype(obj,obj_set,tv_pass,v_pass,tv_pass_set,v_pass_set,
+                                                         ta_vehicle,pass_vehicle,tav_set,pass_v_set,tvToVpass), 
+                        taToAs is airsideSubject_subtype(obj,obj_set,ta_vehicle,a_subject,tav_set,as_set),
+                        piToSt is staff_subtype(obj,obj_set,photo,a_id,a_pilot,a_staff,pilot_set,staff_set), 
+                        piToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,a_pilot,c_person,pilot_set,cp_set),
+                        dskToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dsk_passenger,c_passenger,
+                                                           dsk_pa_set,c_pa_set), 
+                        depToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dep_passenger,c_passenger,
+                                                           dep_pa_set,c_pa_set),
+                        cpaToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,c_passenger,c_person,
+                                                       c_pa_set,cp_set),
+                        tsToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                ts_passenger,dsk_passenger,ts_pa_set,dsk_pa_set),
+                        tfToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                tf_passenger,dsk_passenger,tf_pa_set,dsk_pa_set), 
+                        fcToSt is staff_subtype(obj,obj_set,photo,a_id,f_crew,a_staff,fc_set,staff_set))
+
+       inherits a17property4_2(obj,obj_set,do,do_set,wp,
+                                wp_set,eo,eo_set,dd,dd_set,
+                                a_subject,as_set,a_vehicle,av_set,
+                                c_baggage,cb_set,c_person, cp_set,seat_no,
+                                seat_set,c_passenger,c_pa_set,h_baggage,
+                                hl_set,arm_passenger,a_pilot,pilot_set,a_carrier,
+                                d_aircraft,dep_ac_set,a_person,ap_set,a_staff,staff_set,
+                                dsk_passenger,dsk_pa_set,dep_passenger,dep_pa_set,tf_passenger,
+                                tf_pa_set,ts_passenger,ts_pa_set,sra,
+                                sra_set,wpToDo,eoToDo,ddToDo,doToObj,
+                                apToAs,cpToAp,stToAp,avToAs,piToSt,piToCp,dskToCpa,depToCpa,cpaToCp,tsToDsk,tfToDsk),
+
+               airsideEnv2320(obj,obj_set,do,do_set,wp,
+                              wp_set,eo,eo_set,dd,dd_set,
+                              a_subject,as_set,a_vehicle,av_set,
+                              pa_vehicle,pav_set,v_pass,pass_vehicle,pass_v_set,
+                              pv_pass, la_vehicle,lav_set,tv_pass,ta_vehicle,
+                              tav_set,
+                              c_baggage,cb_set,c_person, cp_set,seat_no,
+                              seat_set,c_passenger,c_pa_set,h_baggage,
+                              hl_set,arm_passenger,photo,a_id,a_staff,staff_set,
+                              a_pilot,pilot_set,f_crew,fc_set,a_carrier,
+                              d_aircraft,dep_ac_set,a_person,ap_set,dsk_passenger,dsk_pa_set,
+                              dep_passenger,dep_pa_set, tf_passenger,tf_pa_set,ts_passenger,ts_pa_set,sra,
+                              sra_set,wpToDo,eoToDo,ddToDo,doToObj,
+                              apToAs,cpToAp,stToAp,avToAs,
+                              pavToAv,passToAv, pv_pass_set,v_pass_set,pvToVpass,
+                              tv_pass_set,tvToVpass,laToPV,tvToPV,
+                              piToSt,piToCp,dskToCpa,depToCpa,cpaToCp,tsToDsk,tfToDsk,fcToSt)  =
+
+
+
+(** Security Property : 2.2.1(i). Access to security restricted areas shall be 
+    controlled to ensure that no unauthorized persons enter these areas 
+    and that no prohibited articles can be introduced into these areas.	
+
+    This security property appears to be more restrictive than Property 4.2.1 of Annex~17, 
+    as it states that the access controls should not only prevent unauthorized entry 
+    but also should ensure that no prohibited articles are introduced into 
+    security restricted areas. To properly formalize this security property, 
+ *)     
+
+property d2320_2_2_1i_a : all area in sra, all s in self,
+     sra_set!member(area,!securityRestrictedAreas(s)) ->  
+        sra!access_controlled(area);
+
+property d2320_2_2_1i_b : all area in sra, all s in self,
+  sra_set!member(area,!securityRestrictedAreas(s)) -> 
+   sra!access_controlled(area) -> 
+    ((all p in a_subject, 
+       as_set!member(p,sra!airsideSubjects_in_sra(area)) -> sra!access_authorized(p,area)) 
+     and
+     (all o in do, obj_set!member(doToObj!to_super(o),sra!objects_in_sra(area)) -> 
+          do!is_authorized(o)));
+
+(** Security Property : 2.2.1(ii). All staff requiring access to security restricted 
+    areas must be subjected to a minimum 5-year background check. The check must 
+    be repeated at regular intervals not exceeding 5 years. 
+*)
+
+property d2320_2_2_1ii : all p in a_staff, all area in sra, all s in self, 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+    sra!granted_access_to(p,area) -> 
+       (a_staff!backgroundChecked(p) and #int_leq(a_staff!backgroundInterval(p),5));
+
+
+(** Security Property : 2.2.1(iii). All staff requiring access to security restricted 
+    areas must also receive regular training in aviation security.
+ *)
+
+property d2320_2_2_1iii : all p in a_staff, all area in sra, all s in self, 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+    sra!granted_access_to(p,area) -> a_staff!trained(p);
+
+(** Security Property : 2.2.1(iv). Airport identification cards must be issued to 
+    all personnel working in the airport. The airport identification card must 
+    carry the name and photograph of the bearer and shall be valid for a 
+    limited period only. *)
+
+property d2320_2_2_1iv : all p in a_staff, all id in a_id, all s in self, 
+  staff_set!member(p,!unescortedPersons(s)) -> 
+   a_id!equal(a_staff!identity(p),id) -> 
+    (#base_eq (a_id!name(id), a_staff!name (p)) and 
+     a_staff!isPhotographOf(a_id!photograph(id),p) and 
+     a_id!valid(id));
+
+(** Security Property : 2.2.1(v). The airport identification card must be worn 
+in a visible place, at all times while its holder is on duty. *)
+
+property d2320_2_2_1v : all p in a_staff, all s in self, 
+  staff_set!member(p,!unescortedPersons(s)) -> 
+   a_staff!onDuty(p) -> a_staff!idVisible(p);
+
+
+(** domain constraint relative to Property 2.2.1(v) *)
+
+property sra_onDutyStaff : all p in a_staff, all area in sra, all s in self, 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+    as_set!member(!upToAs(p), sra!airsideSubjects_in_sra(area)) ->
+     a_staff!onDuty(p);
+
+(** Security Property 2.2.1(vi). Vehicles which need to be used airside shall 
+remain airside to the extent practicable.
+
+*)
+
+property d2320_2_2_1vi : all v in pa_vehicle, all s in self,
+    pav_set!member(v,!permanentAirsideVehicles(s)) -> 
+       ex area in sra,
+          sra_set!member(area,!securityRestrictedAreas(s)) and
+           as_set!member(pavToAs!to_super(v),sra!airsideSubjects_in_sra(area));
+
+
+(** Security Property 2.2.1(vii). Vehicles requiring to move between 
+    landside and airside areas must be issued with a pass fixed in a 
+    visible place. Other vehicles requiring airside access shall be 
+    admitted only after having been inspected and issued with a temporary pass. 
+    Vehicles on emergency missions may be exempted from these requirements. *)
+
+property d2320_2_2_1vii_a : all v in la_vehicle, all area in sra, all s in self, 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   lav_set!member(v,!landsideAirsideVehicles(s)) ->
+     not(la_vehicle!emergency(v)) -> 
+      sra!access_authorized(laToAs!to_super(v),area) ->
+        (not(#is_failed(la_vehicle!vehiclePass(v))) and 
+         la_vehicle!passVisible(v));
+
+property d2320_2_2_1vii_b : all v in ta_vehicle, all area in sra, all s in self, 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   tav_set!member(v,!temporaryAirsideVehicles(s)) ->
+     not(ta_vehicle!emergency(v)) -> 
+      sra!access_authorized(taToAs!to_super(v),area) ->
+        (not(#is_failed(ta_vehicle!vehiclePass(v))) and 
+         ta_vehicle!inspected(v));
+
+
+(** Security Property : 2.2.1(viii). Airport identification cards 
+   and vehicle passes shall be checked at security restricted area 
+   checkpoints.
+*)
+
+property d2320_2_2_1viii_a : all p in a_staff, all area in sra, all s in self, 
+   sra_set!member(area,!securityRestrictedAreas(s)) ->
+      sra!access_authorized(!upToAs(p),area) -> 
+         a_id!checked(a_staff!identity(p));
+
+property d2320_2_2_1viii_b : all v in pass_vehicle, all area in sra, all s in self, 
+   sra_set!member(area,!securityRestrictedAreas(s)) ->
+      sra!access_authorized(passToAs!to_super(v),area) -> 
+         not(#is_failed(pass_vehicle!vehiclePass(v))) ->
+             v_pass!checked(#non_failed(pass_vehicle!vehiclePass(v)));
+
+(** Security Property : 2.3(a). All staff, including flight crew, together 
+    with items carried must be screened before being allowed access into security 
+    restricted areas. The screening procedures must ensure that no prohibited 
+    article is carried and the methods used must be the same as for passengers 
+    and cabin baggage. *)
+
+property d2320_2_3a : all area in sra, all p in a_staff, all s in self,
+ sra_set!member(area,!securityRestrictedAreas(s)) -> 
+      sra!access_authorized(!upToAs(p),area) ->
+       (a_staff!handSearched(p) or 
+        a_staff!walkedThroughMetalDetection(p));
+  
+(** Security Property : 2.3(b) Vehicles and supplies being conveyed to security 
+    restricted areas shall be inspected on random basis. *)
+
+property d2320_2_3b : all v in a_vehicle, all area in sra, all s in self, 
+   sra_set!member(area,!securityRestrictedAreas(s)) ->
+      sra!access_authorized(avToAs!to_super(v),area) -> 
+        a_vehicle!randomInspection(v) -> 
+           a_vehicle!inspected(v);
+
+(** Refinement Theorem : for Property 4.2.1 of Annex 17 *)
+
+theorem refinement_4_2_1a :  
+ !d2320_2_2_1i_a  -> !property_4_2_1a
+
+proof : by def !d2320_2_2_1i_a, !property_4_2_1a;
+
+
+theorem refinement_4_2_1b : 
+!d2320_2_2_1i_b -> !property_4_2_1b
+
+proof : by def !d2320_2_2_1i_b, !property_4_2_1b;
+
+(** Refinement Theorem : for Property 4.2.6 by Property d2320_2_3 *)
+(*
+theorem refinement_4_2_6 :
+ !d2320_2_3a -> !property_4_2_6 
+*)
+
+
+
+(** Hidden Assumption : D2320_2_H1 vehicles on emergency mission are considered 
+to be secure. *)
+
+property hidden_assumption_d2320_2_H1 : all v in pass_vehicle, all area in sra, all s in self, 
+   sra_set!member(area,!securityRestrictedAreas(s)) ->
+    as_set!member(passToAs!to_super(v),sra!airsideSubjects_in_sra(area)) -> 
+     pass_vehicle!emergency(v) ->
+       all o in obj, obj_set!member(o,pass_vehicle!objects_carried(v)) ->
+                    !no_unauthorized_objects(o,s);             
+
+(** Hidden Assumption  : D2320_2_H2 permanent airside vehicles are considered 
+    to be secure. *)
+
+property hidden_assumption_d2320_2_H2 : all v in pa_vehicle, all s in self, 
+  pav_set!member(v,!permanentAirsideVehicles(s)) ->
+   all o in obj, obj_set!member(o,pa_vehicle!objects_carried(v)) ->
+                               !no_unauthorized_objects(o,s);
+
+(** Hidden Assumption : D2320_2_H3 vehicles requesting to move between landside 
+and airside are considered to be secure only when identity is verified and subjected 
+to random inspection *)
+
+property hidden_assumption_d2320_2_H3 : all v in la_vehicle, all area in sra, all s in self, 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   as_set!member(laToAs!to_super(v),sra!airsideSubjects_in_sra(area)) ->
+     not(la_vehicle!emergency(v)) ->
+      la_vehicle!identityVerified(v) ->
+       (la_vehicle!randomInspection(v)-> la_vehicle!inspected(v)) ->     
+          all o in obj, obj_set!member(o,la_vehicle!objects_carried(v)) ->
+                               !no_unauthorized_objects(o,s);
+	
+
+(** inv inspected *)
+
+property inv_inspected : all v in a_vehicle, all s in self,
+  av_set!member(v,!airsideVehicles(s)) ->
+    a_vehicle!inspected(v) ->
+      all o in obj, obj_set!member(o,a_vehicle!objects_carried(v)) ->
+         !no_unauthorized_objects(o,s);
+
+(* Partial Refinement Assumption : the identity of cabin person are 
+   considered to still be verified at the Doc~2320 level *)
+
+property partial_Assumption_D2320_H1 : all p in c_person, all area in sra,
+            all s in self, 
+      sra_set!member(area,!securityRestrictedAreas(s)) ->        
+        sra!access_authorized(!cpToAs(p),area) -> 
+           c_person!identityVerified(p);
+
+theorem refinement_assumption_4_2_H4 :
+!d2320_2_3b -> !d2320_2_2_1vii_b -> !hidden_assumption_d2320_2_H1 -> 
+   !hidden_assumption_d2320_2_H2 -> 
+     !hidden_assumption_d2320_2_H3 -> !hidden_assumption_4_2_H4
+
+proof : by !d2320_2_2_1i_b, av_set!union1, pass_v_set!union1
+        def !d2320_2_3b, !d2320_2_2_1vii_b, 
+            !hidden_assumption_d2320_2_H1, !hidden_assumption_d2320_2_H2,
+            !hidden_assumption_d2320_2_H3, !hidden_assumption_4_2_H4,
+            !vehiclesWithPass, !airsideVehicles;
+
+
+proof of property_4_2_3 = 
+<1>1 assume as in a_subject
+            area in sra
+            s in self
+      H1 : sra_set!member(area,!securityRestrictedAreas(s))        
+      H2 : sra!access_authorized(as,area) 
+      prove a_subject!identityVerified(as)
+
+ <2>1 assume ap in a_person
+       H3 : ap_set!member(ap,!airsidePersons(s))
+       H4 : a_subject!equal(apToAs!to_super(ap),as)
+      prove a_subject!identityVerified(as)
+ 
+  <3>1 assume p in a_staff
+        H5 : staff_set!member(p,!unescortedPersons(s))
+        H6 : a_person!equal(stToAp!to_super(p),ap)
+       prove a_subject!identityVerified(as)
+
+       by <1>:H2, <1>:H1, <2>:H4, apToAs!to_super_airsideSubject, stToAp!to_super_airsideSubject, 
+          #beq_subst, !d2320_2_2_1viii_a, a_staff!id_consistency,
+          <3>:H6, a_subject!equal_congruence, a_subject!equal_symmetric, 
+          apToAs!to_super_congruence,a_subject!equal_transitive, sra!access_authorized_congruence  
+          def !upToAs
+
+  <3>2 assume p in c_person
+        H5 : cp_set!member(p,!cabinPersons(s))
+        H6 : a_person!equal(cpToAp!to_super(p),ap)
+       prove a_subject!identityVerified(as)
+
+       by <1>:H2, <1>:H1, <2>:H4, apToAs!to_super_airsideSubject, cpToAp!to_super_airsideSubject, 
+          #beq_subst, !partial_Assumption_D2320_H1, 
+          <3>:H6, a_subject!equal_congruence, a_subject!equal_symmetric,
+          apToAs!to_super_congruence,a_subject!equal_transitive, sra!access_authorized_congruence 
+          def !cpToAs
+
+  <3>3 qed by <3>1,<3>2, ap_set!union1, <2>:H3,
+             cpToAp!to_super_set_const1, stToAp!to_super_set_const1
+             def !airsidePersons
+ 
+ <2>2 assume av in a_vehicle
+        H3 : av_set!member(av,!airsideVehicles(s))
+        H4 : a_subject!equal(avToAs!to_super(av),as)
+      prove  a_subject!identityVerified(as)
+
+ <2>3 qed by <2>1,<2>2, <1>:H1, <1>:H2, as_set!union1, !authorized_sra_const,
+             apToAs!to_super_set_const1, avToAs!to_super_set_const1
+             def !airsideSubjects 
+<1>2 qed; 
+
+
+
+(** Refinement Theorem : for Property 4.2.6 by Property d2320_2_3 *)
+(*
+theorem refinement_4_2_6 :
+ !d2320_2_3a -> !property_4_2_6 
+ 
+*)
+
+proof of property_4_2_6  =
+
+<1>1 assume area in sra
+            s in self 
+
+      H1 : sra_set!member(area,!securityRestrictedAreas(s))
+
+      prove #int_geq(staff_set!cardinal(!screenedUnescortedPersons(area,s)),
+            #int_div(#int_mult(!min_portion(s),
+                     staff_set!cardinal(!unescortedPersons_in_sra(area,s))),
+                     !upper)) 
+
+ <2>1 prove #int_geq(staff_set!cardinal(!unescortedPersons_in_sra(area,s)),
+           #int_div(#int_mult(!min_portion(s),
+                    staff_set!cardinal(!unescortedPersons_in_sra(area,s))),!upper))
+
+      by #int_portion, staff_set!cardinal3, !min_portion_const
+         def !upper, !lower
+
+ <2>2 prove #int_eq(staff_set!cardinal(!unescortedPersons_in_sra(area,s)),
+                    staff_set!cardinal(!screenedUnescortedPersons(area,s)))
+
+  <3>1 prove staff_set!subset(!unescortedPersons_in_sra(area,s),
+                             !screenedUnescortedPersons(area,s))
+
+   <4>1 assume p in a_staff
+        H2 : staff_set!member(p,!unescortedPersons_in_sra(area,s))
+        
+        prove as_set!member(!upToAs(p), sra!airsideSubjects_in_sra(area))
+        by <1>:H1, <4>:H2, !unescortedPersons_in_sra1
+   
+   <4>2 assume p in a_staff
+        H3 : staff_set!member(p,!unescortedPersons_in_sra(area,s))
+
+        prove sra!access_authorized(!upToAs(p),area)
+        by <1>:H1, <4>1, <4>:H3, !d2320_2_2_1i_a, !d2320_2_2_1i_b
+
+   <4>3 assume p in a_staff 
+        H4 : staff_set!member(p,!unescortedPersons_in_sra(area,s))
+
+        prove a_staff!screened(p)
+        by <1>:H1, <4>2, <4>:H4, !d2320_2_3a, a_staff!inv_screening
+
+   <4>4 qed by <1>:H1, <4>3, staff_set!subset5, !screenedUnescortedPerson2
+
+  <3>2 prove staff_set!subset(!screenedUnescortedPersons(area,s),
+                              !unescortedPersons_in_sra(area,s))
+
+       by <1>:H1, staff_set!subset5, !screenedUnescortedPerson1
+
+  <3>3 qed by <3>1, <3>2, staff_set!subset1, staff_set!cardinal_equal 
+
+ <2>3 qed by <2>1, <2>2, #int_eq_geq
+
+<1>2 qed;
+
+(** An example of conflicting security properties.
+    Property not_secure_staff has been specified on purpose to 
+    illustrate the methodology applied to detect contradictions. 
+ 
+property not_secure_staff : all p in a_staff, all area in sra, all s in self, 
+   sra_set!member(area,!securityRestrictedAreas(s)) -> 
+     as_set!member(!upToAs(p),sra!airsideSubjects_in_sra(area)) ->
+     a_staff!onDuty(p) -> not(a_staff!screened(p));
+
+sig zone1 in sra; 
+sig staff_jim in a_staff;
+sig cdg_airport in self;
+
+property fact1 : staff_set!member(!staff_jim,!unescortedPersons(!cdg_airport));
+
+property fact2 : sra_set!member(!zone1,!securityRestrictedAreas(!cdg_airport));
+
+property fact3 : as_set!member(!upToAs(!staff_jim),sra!airsideSubjects_in_sra(!zone1));
+
+theorem consistency_check : #False
+
+proof : by !fact1, !fact2, !fact3, !not_secure_staff, 
+           !sra_onDutyStaff, !d2320_2_2_1i_a, !d2320_2_2_1i_b,
+            !d2320_2_3a, !d2320_2_2_1ii, !d2320_2_2_1iii, 
+            a_staff!inv_screening;
+
+*)
+end

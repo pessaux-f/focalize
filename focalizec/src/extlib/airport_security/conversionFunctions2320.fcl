@@ -1,0 +1,148 @@
+uses conversionFunctions;;
+open conversionFunctions;;
+uses d2320subjects;;
+open d2320subjects;;
+
+
+species dangerousObjectToObject2320 (do is dangerousObject2320, 
+                                     obj is object2320, 
+                                     do_set is finite_set(do),
+                                     obj_set is finite_set(obj))
+      
+                      inherits dangerousObjectToObject 
+                                      (do,obj,do_set,obj_set) =  
+
+property congruence_metal : all d in do,
+    #base_eq(do!metal(d),obj!metal(!to_super(d))) and
+    #base_eq(do!ferrous(d),obj!ferrous(!to_super(d)));
+
+ 
+end
+
+species dangerousObject_subtype2320 (sub is dangerousObject2320, 
+                                     super is dangerousObject2320,
+                                     sub_set is finite_set(sub),
+                                     super_set is finite_set(super))
+
+      inherits  dangerousObject_subtype(sub,super,sub_set,super_set),
+                dangerousObjectToObject2320(sub,super,sub_set,super_set) =  
+ 
+end
+
+species airsideVehicle2320_subtype (obj is object2320, 
+                                obj_set is finite_set(obj),
+                                sub is airsideVehicle2320(obj,obj_set),
+                                super is airsideVehicle2320(obj,obj_set),
+                                sub_set is finite_set(sub),
+                                super_set is finite_set(super))
+
+       inherits airsideSubject_subtype(obj,obj_set,sub,super,sub_set,super_set) =
+
+property to_super_inspected : all sb in sub,
+  #base_eq(sub!randomInspection(sb),super!randomInspection(!to_super(sb))) and 
+  #base_eq(sub!inspected(sb),super!inspected(!to_super(sb)));
+
+end
+
+species vehiclePass_subtype (sub is vehiclePass,
+                             super is vehiclePass,
+                             sub_set is finite_set(sub),
+                             super_set is finite_set(super))
+ 
+                             inherits subtype(sub,super,sub_set,super_set) = 
+
+property to_super_checked : all sb in sub,  
+      #base_eq(sub!checked(sb),super!checked(!to_super(sb)));
+     
+end
+                                 
+species vehicleWithPass_subtype (obj is object2320, 
+                                 obj_set is finite_set(obj),
+                                 sub_id is vehiclePass,
+                                 super_id is vehiclePass,
+                                 sub_id_set is finite_set(sub_id),
+                                 super_id_set is finite_set(super_id),
+                                 sub is vehicleWithPass(obj,obj_set,sub_id),
+                                 super is vehicleWithPass(obj,obj_set,super_id),
+                                 sub_set is finite_set(sub),
+                                 super_set is finite_set(super),
+                                 idToId is vehiclePass_subtype(sub_id,super_id,sub_id_set,super_id_set))
+
+       inherits airsideVehicle2320_subtype(obj,obj_set,sub,super,sub_set,super_set) =
+
+property to_super_emergency : all sb in sub,  
+  #base_eq(sub!emergency(sb),super!emergency(!to_super(sb)));
+
+property to_super_pass1 : all sb in sub, 
+   #base_eq(#is_failed(sub!vehiclePass(sb)),
+            #is_failed(super!vehiclePass(!to_super(sb))));
+
+property to_super_pass2 : all sb in sub,
+     not(#is_failed(sub!vehiclePass(sb))) ->
+      not(#is_failed(super!vehiclePass(!to_super(sb)))) -> 
+       super_id!equal(idToId!to_super(#non_failed(sub!vehiclePass(sb))),
+                                      #non_failed(super!vehiclePass(!to_super(sb))));
+end
+
+species staff_subtype(obj is object2320, 
+                      obj_set is finite_set(obj),
+                      photo is photograph,
+                      a_id is airportIdCard(photo), 
+                      sub is staff(obj,obj_set,photo,a_id),
+                      super is staff(obj,obj_set,photo,a_id),
+                      sub_set is finite_set(sub),
+                      super_set is finite_set(super)) 
+
+               inherits unescortedPerson_subtype
+                                   (obj,obj_set,sub,super,sub_set,super_set) = 
+
+property to_super_staff : all sb in sub,
+   #int_eq(sub!backgroundInterval(sb),super!backgroundInterval(!to_super(sb))) and
+   a_id!equal(sub!identity(sb),super!identity(!to_super(sb))) and
+   #base_eq(sub!name(sb),super!name(!to_super(sb))) and
+   #base_eq(sub!trained(sb),super!trained(!to_super(sb))) and
+   #base_eq(sub!idVisible(sb),super!idVisible(!to_super(sb))) and 
+   #base_eq(sub!onDuty(sb),super!onDuty(!to_super(sb)));
+
+property to_super_staff2 : all sb in sub, all ph in photo,
+      #base_eq(sub!isPhotographOf(ph,sb),super!isPhotographOf(ph,!to_super(sb)));
+
+end
+species departingAircraft_subtype2320(obj is object2320, obj_set is finite_set(obj),
+                                  wp is weapon2320,
+                                  a_subject is airsideSubject(obj,obj_set), 
+                                  as_set is finite_set(a_subject),
+                                  c_baggage is cabinBaggage2320(obj,obj_set),
+                                  cb_set is finite_set(c_baggage),
+                                  c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                                  cp_set is finite_set(c_person),
+                                  seat_no is seat_number,
+                                  seat_set is finite_set(seat_no),
+                                  c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                                  h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                                  hl_set is finite_set(h_baggage),
+                                  arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                                  photo is photograph,
+				  a_id is airportIdCard(photo),
+				  a_pilot is pilot2320(obj,obj_set,c_baggage,cb_set,seat_no,seat_set, photo, a_id),
+                                  a_carrier is airCarrier,
+                                  sub is departingAircraft2320(obj,obj_set,wp,a_subject,as_set,c_baggage,
+                                                 cb_set,c_person,cp_set,seat_no,seat_set,
+                                                 c_passenger,h_baggage,hl_set,arm_passenger,photo,a_id,a_pilot,a_carrier),
+                                  super is departingAircraft2320(obj,obj_set,wp,a_subject,as_set,c_baggage,
+                                                 cb_set,c_person,cp_set,seat_no,seat_set,
+                                                 c_passenger,h_baggage,hl_set,arm_passenger,photo,a_id, a_pilot,a_carrier),
+                                  sub_set is finite_set(sub),
+                                  super_set is finite_set(super)) 
+
+                                  inherits departingAircraft_subtype(obj,obj_set,wp,a_subject,as_set,
+                                                      c_baggage,cb_set,c_person,cp_set,seat_no,seat_set,
+                                                      c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,
+                                                      a_carrier,sub,super,sub_set,super_set) = 
+
+property to_super_surveillance_access : all sb in sub,
+   #base_eq(sub!surveillance(sb),super!surveillance(!to_super(sb))) and
+   #base_eq(sub!access_controlled(sb),super!access_controlled(!to_super(sb)));
+
+
+end

@@ -1,0 +1,356 @@
+uses holdBaggageEnv;;
+open holdBaggageEnv;;
+uses a17subjects;;
+open a17subjects;;
+
+species a17property4_5(obj is object,
+                        obj_set is finite_set(obj),
+                        do is dangerousObject,
+                        do_set is finite_set(do),
+                        wp is weapon,
+                        wp_set is finite_set(wp),
+                        eo is explosive, 
+                        eo_set is finite_set(eo),
+                        dd is dangerousDevice,
+                        dd_set is finite_set(dd),
+                        
+                        a_subject is airsideSubject(obj,obj_set),
+                        as_set is finite_set(a_subject),
+                        a_vehicle is airsideVehicle(obj,obj_set),
+                        av_set is finite_set(a_vehicle),
+                        
+                        c_baggage is cabinBaggage(obj,obj_set),
+                        cb_set is finite_set(c_baggage),
+                        c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                        cp_set is finite_set(c_person),
+                        seat_no is seat_number,
+                        seat_set is finite_set(seat_no),
+                        c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        c_pa_set is finite_set(c_passenger),
+                        h_baggage is holdBaggage(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                        hl_set is finite_set(h_baggage), 
+                        arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        arm_pa_set is finite_set(arm_passenger),
+                        a_pilot is pilot(obj,obj_set,c_baggage,cb_set,seat_no,seat_set),
+                        pilot_set is finite_set(a_pilot),
+                        a_carrier is airCarrier,
+                        d_aircraft is departingAircraft(obj,obj_set,wp,a_subject,as_set,c_baggage,cb_set,
+                                                        c_person,cp_set,seat_no,seat_set,
+                                                        c_passenger,h_baggage,hl_set,arm_passenger, 
+                                                        a_pilot,a_carrier),
+
+                        dep_ac_set is finite_set(d_aircraft),
+
+                        a_person is airsidePerson(obj, obj_set),
+                        ap_set is finite_set(a_person),
+
+                        u_person is unescortedPerson(obj, obj_set),
+                        up_set is finite_set(u_person),
+                        
+                        dsk_passenger is disembarkedPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dsk_pa_set is finite_set(dsk_passenger),
+                        
+                        dep_passenger is departingPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dep_pa_set is finite_set(dep_passenger),
+
+                        o_passenger is ordinaryPassenger
+                                     (obj, obj_set, wp, c_baggage,cb_set,seat_no, a_person),
+                        ord_pa_set is finite_set(o_passenger),
+                        
+                        og_passenger is originatingPassenger(obj,obj_set,wp, c_baggage,
+                                      cb_set,seat_no,a_person),
+                        og_pa_set is finite_set(og_passenger),
+
+                        tf_passenger is transferPassenger
+                                     (obj,obj_set,wp, c_baggage,cb_set,seat_no,a_person),
+                        tf_pa_set is finite_set(tf_passenger),
+
+                        ts_passenger is transitPassenger
+                                          (obj,obj_set, wp, c_baggage,cb_set,seat_no,a_person),     
+                        ts_pa_set is finite_set(ts_passenger),    
+
+                        sc_passenger is screenedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),
+                        sc_pa_set is finite_set(sc_passenger),
+                        
+                        arm_personnel is armedPersonnel(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        arm_pe_set is finite_set(arm_personnel),
+                        
+                        if_officer is inFlightOfficer(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        if_of_set is finite_set(if_officer),
+                        
+                        dis_passenger is disruptivePassenger(obj,obj_set,do,c_baggage,cb_set,seat_no),
+                        dis_pa_set is finite_set(dis_passenger),
+
+                        oh_baggage is originatingHoldBaggage(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                             c_passenger),
+                        oh_set is finite_set(oh_baggage),
+  
+                        th_baggage is transferHoldBaggage(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                          c_passenger),
+                        th_set is finite_set(th_baggage),
+  
+                        sra is securityRestrictedArea
+                                    (obj, obj_set,wp, a_subject, as_set, c_baggage, cb_set,
+                                     u_person,c_person,cp_set ,seat_no,seat_set,
+                                     c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier,
+                                     d_aircraft,dep_ac_set),
+
+                        sra_set is finite_set(sra), 
+
+                        wpToDo is dangerousObject_subtype(wp,do,wp_set,do_set), 
+                        eoToDo is dangerousObject_subtype(eo,do,eo_set,do_set),
+                        ddToDo is dangerousObject_subtype(dd,do,dd_set,do_set),
+                        doToObj is dangerousObjectToObject(do,obj,do_set,obj_set),
+                        apToAs is airsideSubject_subtype(obj,obj_set,a_person,a_subject,ap_set,as_set),
+                        cpToAp is airsideSubject_subtype(obj,obj_set,c_person,a_person,cp_set,ap_set),
+                        upToAp is airsideSubject_subtype(obj,obj_set,u_person,a_person,up_set,ap_set),
+                        avToAs is airsideSubject_subtype(obj,obj_set,a_vehicle,a_subject,av_set,as_set),
+                        piToUp is unescortedPerson_subtype (obj,obj_set,a_pilot,u_person,pilot_set,up_set),
+                        piToCp is cabinPerson_subtype (obj,obj_set,c_baggage,cb_set,a_pilot,c_person,pilot_set,cp_set),
+                        dskToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dsk_passenger,
+                                                          c_passenger,dsk_pa_set,c_pa_set), 
+                        depToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dep_passenger,
+                                                          c_passenger,dep_pa_set,c_pa_set),
+                        cpaToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,c_passenger,c_person,
+                                                       c_pa_set,cp_set),
+                        opToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                             o_passenger,dep_passenger,ord_pa_set,dep_pa_set), 
+                        scToOp is ordinaryPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             sc_passenger,o_passenger,sc_pa_set,ord_pa_set),
+                        tsToOp is ordinaryPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             ts_passenger,o_passenger,ts_pa_set,ord_pa_set),
+                        tsToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                ts_passenger,dsk_passenger,ts_pa_set,dsk_pa_set),
+                        tfToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                tf_passenger,dsk_passenger,tf_pa_set,dsk_pa_set),
+                        ogToSc is screenedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,                                                                             og_passenger,sc_passenger,og_pa_set,sc_pa_set),
+                        tfToSc is screenedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                            tf_passenger,sc_passenger,tf_pa_set,sc_pa_set),
+                        armToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                               arm_passenger,dep_passenger,arm_pa_set,dep_pa_set), 
+                        disToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                               dis_passenger,dep_passenger,dis_pa_set,dep_pa_set),
+                        apeToArm is armedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                           arm_personnel,arm_passenger,arm_pe_set,arm_pa_set),
+                        ifoToArm is armedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                           if_officer,arm_passenger,if_of_set,arm_pa_set),
+                        ohToHl is holdBaggage_subtype(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger,
+                                                      oh_baggage,h_baggage,oh_set,hl_set),
+                        thToHl is holdBaggage_subtype(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger,
+                                                      th_baggage,h_baggage,th_set,hl_set))
+                
+                 inherits holdBaggageEnv
+                           (obj,obj_set,do,do_set,wp,
+                            wp_set,eo,eo_set,dd,dd_set,
+                            a_subject,as_set,a_vehicle,av_set,
+                            c_baggage,cb_set,c_person, cp_set,seat_no,
+                            seat_set,c_passenger,c_pa_set,h_baggage,
+                            hl_set,arm_passenger,arm_pa_set,
+                            a_pilot,pilot_set,a_carrier,d_aircraft,dep_ac_set,a_person,ap_set,
+                            u_person,up_set,dsk_passenger,dsk_pa_set,dep_passenger,dep_pa_set,
+                            o_passenger,ord_pa_set,og_passenger, og_pa_set,tf_passenger,tf_pa_set,
+                            ts_passenger,ts_pa_set,sc_passenger,sc_pa_set,
+                            arm_personnel,arm_pe_set,if_officer,if_of_set,
+                            dis_passenger,dis_pa_set,oh_baggage,oh_set,th_baggage,th_set,
+                            sra,sra_set, wpToDo,eoToDo,ddToDo,doToObj,
+                            apToAs,cpToAp,upToAp,avToAs,piToUp,piToCp,dskToCpa,depToCpa,cpaToCp,
+                            opToDep,scToOp,tsToOp,tsToDsk,tfToDsk,ogToSc,tfToSc,
+                            armToDep,disToDep,apeToArm,ifoToArm,ohToHl,thToHl) =  
+
+
+
+
+(** Security Property : 4.5.1. Originating hold baggage must be screened prior 
+    to being loaded into an aircraft departing from a security restricted area.
+*)
+
+property property_4_5_1 : all h in oh_baggage, all a in d_aircraft, 
+  all area in sra, all s in self, 
+   oh_set!member(h,!originatingHoldBaggage(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+     dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+       hl_set!member(ohToHl!to_super(h),d_aircraft!loadedHoldBaggage(a)) -> 
+        oh_baggage!screened(h);
+
+(** Security Property : 4.5.2. All items of hold baggage must be protected 
+    from unauthorized interference from the point they are screened or 
+    taken in custody of the carrier until departure of the aircraft on which 
+    they are loaded. 
+
+    Unlike passengers, At the Annex 17 level the notion of unauthorized 
+    interference for hold baggage is left abstract. As such, it 
+    is modeled only as a boolean predicate. 
+
+    In addition, to properly formalize this security property, we 
+    need to consider two specific cases: firstly, all hold baggage 
+    in sra must be protected from unauthorized interference, 
+    and secondly, hold baggage on departed aircraft 
+    cannot be subjected to unauthorized interference. *)
+
+letprop on_departed_aircraft(h in h_baggage, area in sra, s in self) = 
+  ex a in d_aircraft, 
+   dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) and 
+   hl_set!member(h,d_aircraft!loadedHoldBaggage(a)) and
+   d_aircraft!departed(a);
+
+property property_4_5_2 : all h in h_baggage, all area in sra, 
+  all s in self, 
+   sra_set!member(area,!securityRestrictedAreas(s)) -> 
+    hl_set!member(h,sra!holdBaggage_in_sra(area)) -> 
+      (not(h_baggage!interference(h)) or !on_departed_aircraft(h,area,s));  
+
+
+
+(** Security Property : 4.5.3. Air transport operators do not transport 
+    the baggage of passengers who are not on board the aircraft, unless 
+    that baggage is identified as unaccompanied and subjected to additional 
+    screening. 
+ 
+    Unaccompanied hold baggage are hold baggage whose owner is not on board 
+    and which is accepted for carriage. *)
+
+letprop accompanied(h in h_baggage, a in d_aircraft) = 
+   cp_set!member(cpaToCp!to_super(h_baggage!owner(h)),
+                 d_aircraft!onboardPersons(a));
+
+letprop unaccompanied(h in h_baggage, a in d_aircraft) = 
+ not(!accompanied(h,a)) and h_baggage!accepted_for_carriage(h);
+
+letprop accompanied_or_unaccompanied(h in h_baggage, a in d_aircraft) = 
+  !accompanied(h,a) or 
+  (!unaccompanied(h,a) and h_baggage!additional_screening(h));
+
+property property_4_5_3 : all h in h_baggage, all area in sra, 
+ all a in d_aircraft, all s in self,
+  sra_set!member(area,!securityRestrictedAreas(s)) -> 
+   dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+    hl_set!member(h,d_aircraft!loadedHoldBaggage(a)) ->
+     (d_aircraft!boarding_closed(a) and 
+      !accompanied_or_unaccompanied(h,a));
+
+(** Security Property : 4.5.4. Transfer hold baggage must be screened 
+    prior to being loaded into an aircraft, unless it is established that 
+    such hold baggage has been screened at the point of origin.
+*)
+
+property property_4_5_4 : all h in th_baggage, all a in d_aircraft, 
+  all area in sra, all s in self, 
+   th_set!member(h,!transferHoldBaggage(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+     dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+       hl_set!member(thToHl!to_super(h),d_aircraft!loadedHoldBaggage(a)) -> 
+         (th_baggage!screened(h) or th_baggage!secure_origin(h));
+
+(** Security Property : 4.5.5. Air transport operators only transport items 
+    of hold baggage that have been authorized for carriage. Authorization is 
+    granted only if an item of hold baggage has been identified as accompanied 
+    or unaccompanied and screened to the appropriate standard. *)
+
+letprop holdBaggageMeetsCriteria(h in h_baggage, a in d_aircraft) = 
+ (!accompanied(h,a) and h_baggage!screened(h)) or
+ (!unaccompanied(h,a) and h_baggage!additional_screening(h));
+
+property property_4_5_5 : all h in h_baggage, all area in sra, 
+ all a in d_aircraft, all s in self,
+  sra_set!member(area,!securityRestrictedAreas(s)) -> 
+   dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+    hl_set!member(h,d_aircraft!loadedHoldBaggage(a)) ->
+     d_aircraft!boarding_closed(a) -> 
+      !holdBaggageMeetsCriteria(h,a) ->
+        h_baggage!authorized_for_carriage(h);
+            
+
+(** Security Property : 4.5a. Originating hold baggage loaded into aircraft does 
+    not contain any unauthorized dangerous object *)
+
+letprop is_weapon_constHold (o in do, h in h_baggage, s in self) = 
+  do_set!member(o,wpToDo!to_super_set(!weapons(s))) ->
+   (h_baggage!inaccessible_in_cabin(h) and
+    (ex w in wp,  
+      wp_set!member(w,!weapons(s)) and
+      do!equal(wpToDo!to_super(w),o) and  
+      not(wp!loaded(w))));
+
+letprop no_unauthorizedObjHold (h in h_baggage, s in self) = 
+  all o in do, 
+     do_set!member(o,!dangerousObjects(s)) ->
+      obj_set!member(doToObj!to_super(o),h_baggage!get_objects(h)) ->
+        (do!is_authorized(o) and !is_weapon_constHold(o,h,s));
+
+theorem property_4_5a : all h in oh_baggage, all a in d_aircraft, all area in sra, 
+  all s in self,
+  oh_set!member(h,!originatingHoldBaggage(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+     dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+       hl_set!member(ohToHl!to_super(h),d_aircraft!loadedHoldBaggage(a)) -> 
+        !no_unauthorizedObjHold(ohToHl!to_super(h),s)
+
+proof : axiom;
+
+(** Security Property : 4.5b. Transfer hold baggage loaded into aircraft does 
+    not contain any unauthorized dangerous object *)
+
+theorem property_4_5b : all h in th_baggage, all a in d_aircraft, all area in sra, 
+  all s in self,
+  th_set!member(h,!transferHoldBaggage(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+     dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+       hl_set!member(thToHl!to_super(h),d_aircraft!loadedHoldBaggage(a)) -> 
+        !no_unauthorizedObjHold(thToHl!to_super(h),s)
+proof : axiom;
+
+
+
+(** Security Property : 4.5. Hold baggage loaded into aircraft does 
+    not contain any unauthorized dangerous object *)
+
+theorem property_4_5 : all h in h_baggage, all a in d_aircraft, all area in sra, 
+  all s in self,
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+     dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+       hl_set!member(h,d_aircraft!loadedHoldBaggage(a)) -> 
+        !no_unauthorizedObjHold(h,s)
+
+proof : 
+
+<1>1 assume h in h_baggage
+            a in d_aircraft
+            area in sra
+            s in self
+
+     H1 : sra_set!member(area,!securityRestrictedAreas(s))
+     H2 : dep_ac_set!member(a,sra!departingAircraft_in_sra(area))
+     H3 : hl_set!member(h,d_aircraft!loadedHoldBaggage(a))
+     
+     prove !no_unauthorizedObjHold(h,s)
+
+<2>1 assume oh in oh_baggage
+      H6 : oh_set!member(oh,!originatingHoldBaggage(s)) 
+      H7 : h_baggage!equal(ohToHl!to_super(oh),h)
+  
+      prove !no_unauthorizedObjHold(h,s)
+
+      by <2>:H6, <2>:H7, <1>:H1, <1>:H2, <1>:H3, hl_set!equal_member2, 
+         !property_4_5a, h_baggage!equal_baggage, obj_set!equal1, 
+          obj_set!subset2, h_baggage!equal_congruence, #beq_subst 
+          def !no_unauthorizedObjHold, !is_weapon_constHold
+      
+<2>2 assume th in th_baggage
+      H6 : th_set!member(th,!transferHoldBaggage(s)) 
+      H7 : h_baggage!equal(thToHl!to_super(th),h)
+
+     prove !no_unauthorizedObjHold(h,s)
+
+     by <2>:H6, <2>:H7, <1>:H1, <1>:H2, <1>:H3, hl_set!equal_member2, 
+         !property_4_5b, h_baggage!equal_baggage, obj_set!equal1, 
+          obj_set!subset2, h_baggage!equal_congruence, #beq_subst 
+          def !no_unauthorizedObjHold, !is_weapon_constHold
+
+<2>3 qed by <2>1, <2>2, <1>:H1, <1>:H2, <1>:H3, hl_set!subset2, !holdBaggage_in_sra,
+        !domain_restriction_holdBaggage, !allHoldBaggage_in_sra2, hl_set!equal1,
+         hl_set!union1, ohToHl!to_super_set_const1, thToHl!to_super_set_const1
+         def !holdBaggage 
+
+<1>3 qed;
+
+end

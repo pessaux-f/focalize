@@ -1,0 +1,430 @@
+(* $Id: a17property4_2.fcl,v 1.1 2011-08-02 16:11:08 delahaye Exp $ *)
+
+open "basics";;
+open "basic_sets";;
+open "a17subjects";;
+open "conversionFunctions";;
+open "airsideSubjects";;
+
+species A17property4_2(Obj is Object,
+                       Obj_set is Finite_set(Obj),
+                       Do is DangerousObject,
+                       Do_set is Finite_set(Do),
+                       Wp is Weapon,
+                       Wp_set is Finite_set(Wp),
+                       Eo is Explosive,
+                       Eo_set is Finite_set(Eo),
+                       Dd is DangerousDevice,
+                       Dd_set is Finite_set(Dd),
+                       A_subject is AirsideSubject(Obj, Obj_set),
+                       As_set is Finite_set(A_subject),
+                       A_vehicle is AirsideVehicle(Obj, Obj_set),
+                       Av_set is Finite_set(A_vehicle),
+                       C_baggage is CabinBaggage(Obj, Obj_set),
+                       Cb_set is Finite_set(C_baggage),
+                       C_person is CabinPerson(Obj, Obj_set, C_baggage,
+                         Cb_set),
+                       Cp_set is Finite_set(C_person),
+                       Seat_no is Seat_number,
+                       Seat_set is Finite_set(Seat_no),
+                       C_passenger is CabinPassenger(Obj, Obj_set, C_baggage,
+                         Cb_set, Seat_no),
+                       C_pa_set is Finite_set(C_passenger),
+                       H_baggage is HoldBaggage(Obj, Obj_set, C_baggage,
+                         Cb_set, Seat_no, C_passenger),
+                       Hl_set is Finite_set(H_baggage),
+                       Arm_passenger is ArmedPassenger(Obj, Obj_set, Wp,
+                         C_baggage, Cb_set, Seat_no),
+                       A_pilot is Pilot(Obj, Obj_set, C_baggage, Cb_set,
+                         Seat_no, Seat_set),
+                       Pi_set is Finite_set(A_pilot),
+                       A_carrier is AirCarrier,
+                       D_aircraft is DepartingAircraft(Obj, Obj_set, Wp,
+                         A_subject, As_set, C_baggage, Cb_set, C_person,
+                         Cp_set, Seat_no, Seat_set, C_passenger, H_baggage,
+                         Hl_set, Arm_passenger, A_pilot, A_carrier),
+                       Dep_ac_set is Finite_set(D_aircraft),
+                       A_person is AirsidePerson(Obj, Obj_set),
+                       Ap_set is Finite_set(A_person),
+                       U_person is UnescortedPerson(Obj, Obj_set),
+                       Up_set is Finite_set(U_person),
+                       Dsk_passenger is DisembarkedPassenger(Obj, Obj_set,
+                         C_baggage, Cb_set, Seat_no),
+                       Dsk_pa_set is Finite_set(Dsk_passenger),
+                       Dep_passenger is DepartingPassenger(Obj, Obj_set,
+                         C_baggage, Cb_set, Seat_no),
+                       Dep_pa_set is Finite_set(Dep_passenger),
+                       Tf_passenger is TransferPassenger(Obj, Obj_set, Wp,
+                         C_baggage, Cb_set, Seat_no, A_person),
+                       Tf_pa_set is Finite_set(Tf_passenger),
+                       Ts_passenger is TransitPassenger(Obj, Obj_set, Wp,
+                         C_baggage, Cb_set, Seat_no, A_person),
+                       Ts_pa_set is Finite_set(Ts_passenger),
+                       Sra is SecurityRestrictedArea(Obj, Obj_set, Wp,
+                         A_subject, As_set, C_baggage, Cb_set, U_person,
+                         C_person, Cp_set, Seat_no, Seat_set, C_passenger,
+                         H_baggage, Hl_set, Arm_passenger, A_pilot, A_carrier,
+                         D_aircraft, Dep_ac_set),
+                       Sra_set is Finite_set(Sra),
+                       WpToDo is DangerousObject_subtype(Wp, Do, Wp_set,
+                         Do_set),
+                       EoToDo is DangerousObject_subtype(Eo, Do, Eo_set,
+                         Do_set),
+                       DdToDo is DangerousObject_subtype(Dd, Do, Dd_set,
+                         Do_set),
+                       DoToObj is DangerousObjectToObject(Do, Obj, Do_set,
+                         Obj_set),
+                       ApToAs is AirsideSubject_subtype(Obj, Obj_set, A_person,
+                         A_subject, Ap_set, As_set),
+                       CpToAp is AirsideSubject_subtype(Obj, Obj_set, C_person,
+                         A_person, Cp_set, Ap_set),
+                       UpToAp is AirsideSubject_subtype(Obj, Obj_set, U_person,
+                         A_person, Up_set, Ap_set),
+                       AvToAs is AirsideSubject_subtype(Obj, Obj_set,
+                         A_vehicle, A_subject, Av_set, As_set),
+                       PiToUp is UnescortedPerson_subtype(Obj, Obj_set,
+                         A_pilot, U_person, Pi_set, Up_set),
+                       PiToCp is CabinPerson_subtype(Obj, Obj_set, C_baggage,
+                         Cb_set, A_pilot, C_person, Pi_set, Cp_set),
+                       DskToCpa is CabinPassenger_subtype(Obj, Obj_set,
+                         C_baggage, Cb_set, Seat_no, Dsk_passenger,
+                         C_passenger, Dsk_pa_set, C_pa_set),
+                       DepToCpa is CabinPassenger_subtype(Obj, Obj_set,
+                         C_baggage, Cb_set, Seat_no, Dep_passenger,
+                         C_passenger, Dep_pa_set, C_pa_set),
+                       CpaToCp is CabinPerson_subtype(Obj, Obj_set, C_baggage,
+                         Cb_set, C_passenger, C_person, C_pa_set, Cp_set),
+                       TsToDsk is DisembarkedPassenger_subtype(Obj, Obj_set,
+                         C_baggage, Cb_set, Seat_no, Ts_passenger,
+                         Dsk_passenger, Ts_pa_set, Dsk_pa_set),
+                       TfToDsk is DisembarkedPassenger_subtype(Obj, Obj_set,
+                         C_baggage, Cb_set, Seat_no, Tf_passenger,
+                         Dsk_passenger, Tf_pa_set, Dsk_pa_set)) =
+
+  inherit AirsideEnv(Obj, Obj_set, Do, Do_set, Wp, Wp_set, Eo, Eo_set, Dd,
+                     Dd_set, A_subject, As_set, A_vehicle, Av_set, C_baggage,
+                     Cb_set, C_person, Cp_set, Seat_no, Seat_set, C_passenger,
+                     C_pa_set, H_baggage, Hl_set, Arm_passenger, A_pilot,
+                     Pi_set, A_carrier, D_aircraft, Dep_ac_set, A_person,
+                     Ap_set, U_person, Up_set, Dsk_passenger, Dsk_pa_set,
+                     Dep_passenger, Dep_pa_set, Tf_passenger, Tf_pa_set,
+                     Ts_passenger, Ts_pa_set, Sra, Sra_set, WpToDo, EoToDo,
+                     DdToDo, DoToObj, ApToAs, CpToAp, UpToAp, AvToAs, PiToUp,
+                     PiToCp, DskToCpa, DepToCpa, CpaToCp, TsToDsk, TfToDsk);
+
+(** Security Property: 4.2.1. Access to security restricted areas must be
+    controlled in order to prevent unauthorized entry. 	
+
+    For this security property it is obvious that the concept of unauthorized
+    entry applies to persons or vehicles that may have access to security
+    restricted areas. As such, the security property is specified in two steps,
+    as follows: *)     
+
+property property_4_2_1a : all area : Sra, all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Sra!access_controlled(area);
+
+property property_4_2_1b : all area : Sra, all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Sra!access_controlled(area) ->
+  all p : A_subject,
+    As_set!member(p, Sra!airsideSubjects_in_sra(area)) ->
+    Sra!access_authorized(p, area);
+
+(** Security Property: 4.2.2. Security restricted areas should be established
+    at each airport serving civil aviation.
+
+    This is already considered in the domain environment through the
+    specification of the security restricted area "subject". Nevertheless, we
+    can still add the following restrictions to ensure that at least one
+    security restricted area is specified. *)
+
+property property_4_2_2 : all s : Self,
+  ~ (Sra_set!equal(!securityRestrictedAreas(s), Sra_set!empty));
+
+(** Security Property: 4.2.3. The identity of persons and vehicles must be 
+    verified at designated checkpoints before access is granted into security
+    restricted areas.
+
+    As can be seen, this security property is expressed in broad terms and thus
+    concerns any persons or vehicles that may have access to security
+    restricted areas. It is therefore specified for all airside subjects. *)
+
+property property_4_2_3 : all p : A_subject, all area : Sra, all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Sra!access_authorized(p, area) -> A_subject!identityVerified(p);
+
+(** Security Property: 4.2.4. Persons (other than passengers) allowed
+    unescorted access to security restricted areas must be subjected to
+    background checks prior to being granted access. *)
+
+property property_4_2_4a : all p : U_person, all area : Sra, all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Sra!access_authorized(!upToAs(p), area) -> Sra!granted_access_to(p, area);
+ 
+property property_4_2_4b : all p : U_person, all area : Sra, all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Sra!granted_access_to(p, area) -> U_person!backgroundChecked(p);
+
+(** Security Property: 4.2.5. The movement of persons and vehicles to and from
+    aircraft is supervised in security restricted areas in order to prevent
+    unauthorized access to aircraft.
+
+    Like Property 4.2.3, the application context of this security property
+    extends to all the different kinds of subjects that may access security
+    restricted areas. It is therefore specified with respect to the airside
+    subject given set. In addition, to properly cater for the notion of
+    authorized access to aircraft, this property is formalized in two steps, as
+    follows: *)
+    
+property property_4_2_5a : all p : A_subject, all area : Sra,
+  all a : D_aircraft, all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Dep_ac_set!member(a, Sra!departingAircraft_in_sra(area)) ->
+  As_set!member(p, Sra!airsideSubjects_in_sra(area)) ->
+  D_aircraft!movementSupervised(p, a);
+
+property property_4_2_5b : all p : A_subject, all area : Sra,
+  all a : D_aircraft, all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Dep_ac_set!member(a, Sra!departingAircraft_in_sra(area)) ->
+  D_aircraft!movementSupervised(p, a) ->
+  D_aircraft!accessing_aircraft(p, a) ->
+  D_aircraft!access_authorized(p, a);
+
+(** Security Property: 4.2.6. A minimum portion of persons (other than
+    passengers) being granted access to security restricted areas, together
+    with items carried, must be subjected to screening. *)
+
+signature min_portion : Self -> int;
+
+let lower : int = 0;
+let upper : int = 100;
+
+property min_portion_const : all s : Self,
+   (!lower <=0x !min_portion(s)) /\ (!min_portion(s) <=0x !upper);
+
+property property_4_2_6 : all area : Sra, all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Up_set!cardinal(!screenedUnescortedPersons(area, s)) >=0x
+  ((!min_portion(s) * Up_set!cardinal(!unescortedPersons_in_sra(area, s))) /
+   !upper);
+
+logical let no_unauthorized_objects (o : Obj, s : Self) =
+  Obj_set!member(o, DoToObj!to_super_set(!dangerousObjects(s))) ->
+  ex x : Do,
+    Do_set!member(x, !dangerousObjects(s)) /\
+    Obj!equal(DoToObj!to_super(x), o) /\ Do!is_authorized(x);
+
+(** Security Property: 4.2. Persons (other than passengers) and vehicles
+    accessing aircraft are authorized. The persons concerned are considered as
+    trustworthy and do not introduce any unauthorized dangerous objects on
+    board. *)
+
+(** Hidden Assumption: 4.2_H1. Unescorted persons can move to or from
+    departing aircraft if their identity is verified and had their background
+    checked. *)
+
+property hidden_assumption_4_2_H1 : all p : U_person, all a : D_aircraft,
+  all area : Sra, all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Dep_ac_set!member(a, Sra!departingAircraft_in_sra(area)) ->
+  U_person!identityVerified(p) -> U_person!backgroundChecked(p) ->
+  D_aircraft!accessing_aircraft(!upToAs(p), a);
+
+logical let trustworthy (p : U_person) =
+  (all area : Sra, all s : Self, 
+    Sra_set!member(area, !securityRestrictedAreas(s)) ->
+    Up_set!cardinal(!screenedUnescortedPersons(area, s)) >=0x
+    ((!min_portion(s) * Up_set!cardinal(!unescortedPersons_in_sra(area, s))) /
+     !upper)) /\ U_person!backgroundChecked(p);
+ 
+(** Hidden Assumption: 4.2_H2. If unescorted persons are trustworthy then they
+    are considered not to carry any unauthorized dangerous objects. *)
+
+property hidden_assumption_4_2_H2 : all area : Sra, all s : Self,
+  all p : U_person,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Up_set!member(p, !unescortedPersons_in_sra(area, s)) -> !trustworthy(p) ->
+  all o : Obj,
+    Obj_set!member(o, U_person!objects_carried(p)) ->
+    !no_unauthorized_objects(o, s);
+
+(** Hidden Assumption: 4.2_H3. Vehicles can move to or from departing aircraft
+    if their identity is verified. *)
+
+property hidden_assumption_4_2_H3 : all v : A_vehicle, all a : D_aircraft,
+  all area : Sra, all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Dep_ac_set!member(a, Sra!departingAircraft_in_sra(area)) ->
+  A_vehicle!identityVerified(v) ->
+  D_aircraft!accessing_aircraft(AvToAs!to_super(v), a);
+
+(** Hidden assumption: 4.2_H4. Airside vehicles are considered as trustworthy
+    and do not convey any unauthorized dangerous objects. *)
+
+property hidden_assumption_4_2_H4 : all v : A_vehicle, all area : Sra,
+  all s : Self,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  As_set!member(AvToAs!to_super(v), Sra!airsideSubjects_in_sra(area)) ->
+  A_vehicle!identityVerified(v) ->
+  all o : Obj,
+    Obj_set!member(o, A_vehicle!objects_carried(v)) ->
+    !no_unauthorized_objects(o, s);
+
+(** Security Property : 4.2. Persons (other than passengers) and vehicles
+    accessing aircraft are authorized. The persons concerned are considered as
+    trustworthy and do not introduce any unauthorized dangerous objects on
+    board. 
+
+    Correctness proof for Property 4.2. *)
+
+theorem property_4_2 : all p : A_subject, all a : D_aircraft, all area : Sra,
+  all s : Self, all o : Obj,
+  Sra_set!member(area, !securityRestrictedAreas(s)) ->
+  Dep_ac_set!member(a, Sra!departingAircraft_in_sra(area)) ->
+  !is_unescorted_person_vehicle(p, s) ->
+  Obj_set!member(o, A_subject!objects_carried(p)) ->
+  Obj_set!member(o, D_aircraft!onboardObjects(a)) ->
+  (D_aircraft!access_authorized(p, a) /\ !no_unauthorized_objects(o, s))
+proof =
+<1>1 assume p : A_subject, a : D_aircraft, area : Sra, s : Self, o : Obj,
+     hypothesis H1 : Sra_set!member(area, !securityRestrictedAreas(s)),
+     H2 : Dep_ac_set!member(a, Sra!departingAircraft_in_sra(area)),
+     H3 : !is_unescorted_person_vehicle(p, s),
+     H4 : Obj_set!member(o, A_subject!objects_carried(p)),
+     H5 : Obj_set!member(o, D_aircraft!onboardObjects(a)),
+     prove D_aircraft!access_authorized(p, a) /\ !no_unauthorized_objects(o, s)
+     <2>1 hypothesis
+          H6 : ~ (As_set!member(p, Sra!airsideSubjects_in_sra(area))),
+          prove D_aircraft!access_authorized(p, a) /\
+                !no_unauthorized_objects(o, s)
+          <3>1 prove ~ (D_aircraft!accessing_aircraft(p, a))
+               by hypothesis H1, H2, H6 property !airsideSubjects_in_sra
+          <3>2 qed by step <3>1 hypothesis H4, H1, H2, H5
+               property !aSubject_dAircraft_not_access
+     <2>2 hypothesis H6 : As_set!member(p, Sra!airsideSubjects_in_sra(area)),
+          prove D_aircraft!access_authorized(p, a) /\
+                !no_unauthorized_objects(o, s)
+          <3>1 assume up : U_person,
+               hypothesis H7 : Up_set!member(up, !unescortedPersons(s)),
+               H8 : A_subject!equal(!upToAs(up), p),
+               prove D_aircraft!access_authorized(p, a) /\
+                     !no_unauthorized_objects(o, s)
+               <4>1 prove U_person!identityVerified(up) /\
+                          D_aircraft!movementSupervised(!upToAs(up), a) /\
+                          U_person!backgroundChecked(up)
+                    assumed (* To do *)
+(* BUG ZENON
+                    by hypothesis H1, H2, H6, H8 property !property_4_2_1a,
+                    !property_4_2_1b, !property_4_2_3, !property_4_2_5a,
+                    UpToAp!to_super_airsideSubject,
+                    ApToAs!to_super_airsideSubject, A_subject!equal_symmetric,
+                    D_aircraft!movementSupervised_congruence,
+                    Sra!access_authorized_congruence, !property_4_2_4a,
+                    !property_4_2_4b, beq_symm, beq_subst
+                    definition of upToAs*)
+               <4>2 prove D_aircraft!access_authorized(!upToAs(up), a)
+                    by step <4>1 hypothesis H1, H2
+                    property !hidden_assumption_4_2_H1, !property_4_2_5b
+               <4>3 hypothesis
+                    H9 : Up_set!member(up, !unescortedPersons_in_sra(area, s)),
+                    H10 : !trustworthy(up),
+                    prove !no_unauthorized_objects(o, s)
+                    assumed (* To do *)
+(* BUG ZENON
+                    by hypothesis H1, H4, H8, H9, H10
+                    property !uperson_to_a_subject, A_subject!equal_symmetric,
+                    A_subject!equal_transitive, A_subject!equal_congruence,
+                    ApToAs!to_super_airsideSubject,
+                    UpToAp!to_super_airsideSubject, Obj_set!equal_transitive,
+                    Obj_set!equal1, Obj_set!subset2, !hidden_assumption_4_2_H2*)
+               <4>4 qed by step <4>1, <4>2, <4>3 hypothesis H1, H6, H8
+                    property As_set!equal_member2, !unescortedPersons_in_sra2,
+                    D_aircraft!access_authorized_congruence, !property_4_2_6
+                    definition of trustworthy
+          <3>2 assume v : A_vehicle,
+               hypothesis H7 : Av_set!member(v, !airsideVehicles(s)),
+               H8 : A_subject!equal(AvToAs!to_super(v), p),
+               prove D_aircraft!access_authorized(p, a) /\
+                     !no_unauthorized_objects(o, s)
+               <4>1 prove A_vehicle!identityVerified(v) /\
+                          D_aircraft!movementSupervised(AvToAs!to_super(v), a)
+                    assumed (* To do *)
+(*BUG ZENON
+                    by hypothesis H1, H2, H6, H8
+                    property !property_4_2_1a, !property_4_2_1b,
+                    !property_4_2_3, !property_4_2_5a,
+                    AvToAs!to_super_airsideSubject, A_subject!equal_symmetric,
+                    D_aircraft!movementSupervised_congruence,
+                    Sra!access_authorized_congruence, beq_symm, beq_subst*)
+               <4>2 prove D_aircraft!access_authorized(AvToAs!to_super(v), a)
+                    by step <4>1 hypothesis H1, H2
+                    property !hidden_assumption_4_2_H3, !property_4_2_5b
+               <4>3 prove !no_unauthorized_objects(o, s)
+                    by step <4>1 hypothesis H1, H4, H6, H8
+                    property !hidden_assumption_4_2_H4, As_set!equal_member2,
+                    A_subject!equal_congruence, Obj_set!equal_transitive,
+                    AvToAs!to_super_airsideSubject, Obj_set!equal1,
+                    Obj_set!subset2
+               <4>4 qed by step <4>2, <4>3 hypothesis H8
+                    property D_aircraft!access_authorized_congruence
+          <3>3 qed by step <3>1, <3>2 hypothesis H3
+               definition of is_unescorted_person_vehicle
+     <2>3 qed by step <2>1, <2>2
+<1>2 conclude;
+
+(* Consistency Theorem: this theorem checks whether there is no contradiction
+   or conflicting security properties in the part of the regulation dedicated
+   to access control. This verification is carried out w.r.t. the following
+   scenarios.
+ 
+signature u_person1 : U_person;
+signature vehicle1 : A_vehicle;
+signature aircraft1 : D_aircraft;
+signature object1 : Obj;
+signature object2 : Obj;
+
+property a17prop4_2_fact1 :
+  Up_set!member(!u_person1, !unescortedPersons(!my_airport));
+
+property a17prop4_2_fact2 :
+  As_set!member(!upToAs(!u_person1), Sra!airsideSubjects_in_sra(!zone1));
+
+property a17prop4_2_fact3 :
+  Av_set!member(!vehicle1, !airsideVehicles(!my_airport));
+
+property a17prop4_2_fact4 :
+  As_set!member(AvToAs!to_super(!vehicle1),
+                Sra!airsideSubjects_in_sra(!zone1));
+
+property a17prop4_2_fact5 :
+  Dep_ac_set!member(!aircraft1, Sra!departingAircraft_in_sra(!zone1));
+
+property a17prop4_2_fact6 :
+  Obj_set!member(!object1, U_person!objects_carried(!u_person1));
+
+property a17prop4_2_fact7 :
+  Obj_set!member(!object2, A_vehicle!objects_carried(!vehicle1));
+
+BUG ZENON
+theorem consistency_a17property2 : False
+proof = by property !a17prop4_2_fact1, !a17prop4_2_fact2, !a17prop4_2_fact3,
+        !a17prop4_2_fact4, !a17prop4_2_fact5, !a17prop4_2_fact6,
+        !a17prop4_2_fact7, !fact1, !property_4_2_1a, !property_4_2_1b,
+        !property_4_2_2, !property_4_2_3, !property_4_2_4a, !property_4_2_4b,
+        !property_4_2_5a, !property_4_2_5b, !property_4_2_6,
+        !hidden_assumption_4_2_H1, !hidden_assumption_4_2_H2,
+        !hidden_assumption_4_2_H3, !hidden_assumption_4_2_H4, !property_4_2,
+        !airsideSubjects_in_sra, !aSubject_dAircraft_not_access, 
+        UpToAp!to_super_airsideSubject, ApToAs!to_super_airsideSubject,
+        A_subject!equal_symmetric, D_aircraft!movementSupervised_congruence,
+        Sra!access_authorized_congruence, beq_symm, beq_subst,
+        !uperson_to_a_subject, A_subject!equal_transitive,
+        A_subject!equal_congruence, Obj_set!equal_transitive, Obj_set!equal1,
+        Obj_set!subset2, As_set!equal_member2, !unescortedPersons_in_sra2,
+        D_aircraft!access_authorized_congruence, AvToAs!to_super_airsideSubject
+        definition of upToAs, no_unauthorized_objects, trustworthy,
+        is_unescorted_person_vehicle;*)
+
+end;;

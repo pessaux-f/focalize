@@ -1,0 +1,489 @@
+uses d2320subjects;;
+open d2320subjects;;
+uses airsideEnv2320;;
+open airsideEnv2320;;
+uses ordinaryPassengersEnv;;
+open ordinaryPassengersEnv;;
+
+species ordinaryPassengersEnv2320
+            (obj is object2320,
+                        obj_set is finite_set(obj),
+                        do is dangerousObject2320,
+                        do_set is finite_set(do),
+                        wp is weapon2320,
+                        wp_set is finite_set(wp),
+                        eo is explosive2320, 
+                        eo_set is finite_set(eo),
+                        dd is dangerousDevice2320,
+                        dd_set is finite_set(dd),
+                        
+                        a_subject is airsideSubject(obj,obj_set),
+                        as_set is finite_set(a_subject),
+                        a_vehicle is airsideVehicle2320(obj,obj_set),
+                        av_set is finite_set(a_vehicle),
+                        
+                        pa_vehicle is permanentAirsideVehicle(obj,obj_set),
+                        pav_set is finite_set(pa_vehicle), 
+                        
+                        v_pass is vehiclePass, 
+                        pass_vehicle is vehicleWithPass(obj,obj_set,v_pass),
+                        
+                        pass_v_set is finite_set(pass_vehicle),
+ 
+                        pv_pass is permanentPass,
+                        la_vehicle is landsideAirsideVehicle(obj,obj_set,pv_pass),
+                        lav_set is finite_set(la_vehicle),
+
+                        tv_pass is temporaryPass,
+                        ta_vehicle is temporaryVehicle(obj,obj_set,tv_pass),
+                        tav_set is finite_set(ta_vehicle),
+
+                        c_baggage is cabinBaggage2320(obj,obj_set),
+                        cb_set is finite_set(c_baggage),
+                        c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                        cp_set is finite_set(c_person),
+                        seat_no is seat_number,
+                        seat_set is finite_set(seat_no),
+                        c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        c_pa_set is finite_set(c_passenger),
+                        h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                        hl_set is finite_set(h_baggage),
+                        arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        photo is photograph,
+                        a_id is airportIdCard(photo),
+                        a_staff is staff (obj,obj_set,photo,a_id),
+                        staff_set is finite_set(a_staff),
+                        a_pilot is pilot2320(obj, obj_set,c_baggage,cb_set,
+                                             seat_no,seat_set, photo,a_id),
+                        pilot_set is finite_set(a_pilot),
+ 
+                        f_crew is flightCrew(obj, obj_set,c_baggage,cb_set,
+                                             photo,a_id),
+                        fc_set is finite_set(f_crew),
+                        a_carrier is airCarrier,
+                        d_aircraft is departingAircraft(obj,obj_set,wp,a_subject,as_set,c_baggage,cb_set,
+                                                        c_person,cp_set,seat_no,seat_set,
+                                                        c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier),
+                        dep_ac_set is finite_set(d_aircraft),
+                        a_person is airsidePerson(obj, obj_set),
+                        ap_set is finite_set(a_person),
+                        
+                        dsk_passenger is disembarkedPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dsk_pa_set is finite_set(dsk_passenger),
+ 
+                        dep_passenger is departingPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dep_pa_set is finite_set(dep_passenger),
+
+                      	o_passenger is ordinaryPassenger
+                                     (obj, obj_set,wp,c_baggage,cb_set,seat_no,a_person),
+                        ord_pa_set is finite_set(o_passenger),
+                        
+                        og_passenger is originatingPassenger2320
+				    (obj,obj_set,wp,c_baggage, cb_set ,
+                                      seat_no,a_person),
+
+			og_pa_set is finite_set(og_passenger),
+
+			tf_passenger is transferPassenger2320(obj,obj_set,wp,
+                                                              c_baggage,cb_set,seat_no,a_person),
+                        
+                        tf_pa_set is finite_set(tf_passenger),
+
+                        ts_passenger is transitPassenger
+                                          (obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),     
+                        ts_pa_set is finite_set(ts_passenger),
+                        
+			sc_passenger is screenedPassenger2320(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),
+                        sc_pa_set is finite_set(sc_passenger),
+                        sra is securityRestrictedArea2320
+                                    (obj, obj_set,wp,a_subject, as_set, c_baggage, cb_set,
+                                     photo,a_id,a_staff,c_person,cp_set ,seat_no,seat_set,
+                                     c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier,
+                                     d_aircraft,dep_ac_set),
+
+                        sra_set is finite_set(sra), 
+
+                        wpToDo is dangerousObject_subtype2320(wp,do,wp_set,do_set),
+                        eoToDo is dangerousObject_subtype2320(eo,do,eo_set,do_set),
+                        ddToDo is dangerousObject_subtype2320(dd,do,dd_set,do_set),
+                        doToObj is dangerousObjectToObject2320(do,obj,do_set,obj_set),
+                        apToAs is airsideSubject_subtype(obj,obj_set,a_person,a_subject,ap_set,as_set),
+                        cpToAp is airsideSubject_subtype(obj,obj_set,c_person,a_person,cp_set,ap_set),
+                        stToAp is airsideSubject_subtype(obj,obj_set,a_staff,a_person,staff_set,ap_set),
+                        avToAs is airsideSubject_subtype(obj,obj_set,a_vehicle,a_subject,av_set,as_set),
+                        
+                        pavToAv is airsideVehicle2320_subtype(obj,obj_set,pa_vehicle,a_vehicle,pav_set,av_set),
+                        passToAv is airsideVehicle2320_subtype(obj,obj_set,pass_vehicle,a_vehicle,pass_v_set,av_set),
+                        pv_pass_set is finite_set(pv_pass),
+                        v_pass_set is finite_set(v_pass),
+                        pvToVpass is vehiclePass_subtype(pv_pass,v_pass,pv_pass_set,v_pass_set),
+                        tv_pass_set is finite_set(tv_pass),
+                        tvToVpass is vehiclePass_subtype(tv_pass,v_pass,tv_pass_set,v_pass_set),
+                        laToPV is vehicleWithPass_subtype(obj,obj_set,pv_pass,v_pass,pv_pass_set,v_pass_set,
+                                                          la_vehicle,pass_vehicle,lav_set,pass_v_set,pvToVpass),
+                        tvToPV is vehicleWithPass_subtype(obj,obj_set,tv_pass,v_pass,tv_pass_set,v_pass_set,
+                                                         ta_vehicle,pass_vehicle,tav_set,pass_v_set,tvToVpass),
+                        piToSt is staff_subtype(obj,obj_set,photo,a_id,a_pilot,a_staff,pilot_set,staff_set), 
+                        piToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,a_pilot,c_person,pilot_set,cp_set),
+                        dskToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dsk_passenger,c_passenger,
+                                                           dsk_pa_set,c_pa_set), 
+                        depToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dep_passenger,c_passenger,
+                                                           dep_pa_set,c_pa_set),
+                        cpaToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,c_passenger,c_person,
+                                                       c_pa_set,cp_set),
+ 			opToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                             o_passenger,dep_passenger,ord_pa_set,dep_pa_set),
+                        scToOp is ordinaryPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             sc_passenger,o_passenger,sc_pa_set,ord_pa_set),
+                        tsToOp is ordinaryPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             ts_passenger,o_passenger,ts_pa_set,ord_pa_set),
+                        tsToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                ts_passenger,dsk_passenger,ts_pa_set,dsk_pa_set),
+                        tfToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                tf_passenger,dsk_passenger,tf_pa_set,dsk_pa_set),
+                        ogToSc is screenedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person, 
+			       	  				og_passenger,sc_passenger,og_pa_set,sc_pa_set),
+                        tfToSc is screenedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                            tf_passenger,sc_passenger,tf_pa_set,sc_pa_set),
+ 
+                        fcToSt is staff_subtype(obj,obj_set,photo,a_id,f_crew,a_staff,fc_set,staff_set))
+
+     inherits airsideEnv2320(obj,obj_set,do,do_set,wp,
+                              wp_set,eo,eo_set,dd,dd_set,
+                              a_subject,as_set,a_vehicle,av_set,
+                              pa_vehicle,pav_set,v_pass,pass_vehicle,pass_v_set,
+                              pv_pass, la_vehicle,lav_set,tv_pass,ta_vehicle,
+                              tav_set,
+                              c_baggage,cb_set,c_person, cp_set,seat_no,
+                              seat_set,c_passenger,c_pa_set,h_baggage,
+                              hl_set,arm_passenger,photo,a_id,a_staff,staff_set,
+                              a_pilot,pilot_set,f_crew,fc_set,a_carrier,
+                              d_aircraft,dep_ac_set,a_person,ap_set,dsk_passenger,dsk_pa_set,
+                              dep_passenger,dep_pa_set, tf_passenger,tf_pa_set,ts_passenger,ts_pa_set,sra,
+                              sra_set,wpToDo,eoToDo,ddToDo,doToObj,
+                              apToAs,cpToAp,stToAp,avToAs,
+                              pavToAv,passToAv, pv_pass_set,v_pass_set,pvToVpass,
+                              tv_pass_set,tvToVpass,laToPV,tvToPV,
+                              piToSt,piToCp,dskToCpa,depToCpa,cpaToCp,tsToDsk,tfToDsk,fcToSt),
+ 
+			ordinaryPassengersEnv(obj,obj_set,do,do_set,wp,
+                           wp_set,eo,eo_set,dd,dd_set,
+                           a_subject,as_set,a_vehicle,av_set,
+                           c_baggage,cb_set,c_person, cp_set,seat_no,
+                           seat_set,c_passenger,c_pa_set,h_baggage,
+                           hl_set,arm_passenger, a_pilot,pilot_set,a_carrier,d_aircraft,dep_ac_set,
+                           a_person,ap_set,a_staff,staff_set,dsk_passenger,dsk_pa_set,dep_passenger,
+                           dep_pa_set,o_passenger,ord_pa_set,og_passenger,og_pa_set,tf_passenger,
+                           tf_pa_set,ts_passenger, ts_pa_set,sc_passenger,sc_pa_set,
+                           sra,sra_set, wpToDo,eoToDo,ddToDo,doToObj,
+                           apToAs,cpToAp,stToAp,avToAs,piToSt,piToCp,dskToCpa,depToCpa,cpaToCp,
+                           opToDep,scToOp,tsToOp,tsToDsk,tfToDsk,ogToSc,tfToSc) =
+                           
+theorem screenedPassenger_ordPassenger : 
+  all p in sc_passenger, all s in self,
+    sc_pa_set!member(p,!screenedPassengers(s)) -> 
+        ord_pa_set!member(scToOp!to_super(p),!ordinaryPassengers(s))
+
+proof :by ord_pa_set!union2, scToOp!to_super_set_const2
+        def !ordinaryPassengers;
+
+(** Domain Property: transit passengers are instances of ordinary passengers *)
+
+theorem transitPassenger_ordPassenger : 
+  all p in ts_passenger, all s in self,
+    ts_pa_set!member(p,!transitPassengers(s)) -> 
+        ord_pa_set!member(tsToOp!to_super(p),!ordinaryPassengers(s))
+
+proof :by ord_pa_set!union2, tsToOp!to_super_set_const2
+        def !ordinaryPassengers;
+
+
+(** Domain Property: ordinary passengers are instances of departing passengers *)
+
+property ordinaryPassenger_depPassenger : all s in self, 
+    dep_pa_set!subset(opToDep!to_super_set(!ordinaryPassengers(s)),
+                      !departingPassengers(s));
+
+(** Domain Property: departing passengers of a given aircraft are 
+    allocated with a unique seat number. *)
+
+property seat_no_depPassengers : all a in d_aircraft, 
+  all x y in dep_passenger, all s in self,
+   dep_ac_set!member(a,!departingAircraft(s)) ->
+    cp_set!member(!depToCp(x),d_aircraft!onboardPersons(a)) -> 
+     cp_set!member(!depToCp(y),d_aircraft!onboardPersons(a)) -> 
+      not(dep_passenger!equal(x,y)) ->
+        not(seat_no!equal(dep_passenger!seat_number(x),dep_passenger!seat_number(y)));
+
+(** conversion function from o_passenger to c_person *)
+
+let opToCp (p in o_passenger) in c_person = !depToCp(opToDep!to_super(p));
+
+(** Domain property : o_passenger to c_person conversion properties *)
+
+theorem o_passenger_to_cperson1 : all p in o_passenger,  
+  c_person!equal(!opToCp(p), !depToCp(opToDep!to_super(p)))
+
+proof : by c_person!equal_reflexive def !opToCp;
+
+theorem o_passenger_to_cperson2 : all x y in o_passenger,
+   o_passenger!equal(x,y) -> c_person!equal(!opToCp(x),!opToCp(y))
+
+proof : by opToDep!to_super_congruence, depToCpa!to_super_congruence, 
+        cpaToCp!to_super_congruence def !opToCp, !depToCp;
+
+(** conversion function from o_passenger set to c_person set *)
+
+let opToCp_set (p in ord_pa_set) in cp_set = !depToCp_set(opToDep!to_super_set(p));
+
+(** Domain property : o_passenger set to c_person set conversion properties *)
+
+theorem o_passenger_to_cperson_set : all p in ord_pa_set,  
+  cp_set!equal(!opToCp_set(p), !depToCp_set(opToDep!to_super_set(p)))
+
+proof : by cp_set!equal_reflexive def !opToCp_set;
+
+(** conversion function from o_passenger to a_subject *)
+
+let opToAs (p in o_passenger) in a_subject = !cpToAs(!opToCp(p));
+
+(** Domain property : o_passenger to a_subject conversion properties *)
+
+theorem o_passenger_to_asubject : all p in o_passenger,  
+  a_subject!equal(!opToAs(p), !cpToAs(!opToCp(p)))
+
+proof : by a_subject!equal_reflexive def !opToAs;
+
+theorem o_passenger_to_asubject2 : all x y in o_passenger,  
+  o_passenger!equal(x,y) -> a_subject!equal(!opToAs(x),!opToAs(y)) 
+
+proof : by !o_passenger_to_cperson2, !cperson_to_a_subject2 def !opToAs;
+
+(** conversion function from sc_passenger to c_person *)
+
+let scToCp (p in sc_passenger) in c_person = !opToCp(scToOp!to_super(p));
+
+(** Domain property : sc_passenger to c_person conversion properties *)
+
+theorem sc_passenger_to_cperson : all p in sc_passenger,  
+  c_person!equal(!scToCp(p), !opToCp(scToOp!to_super(p)))
+
+proof : by c_person!equal_reflexive def !scToCp;
+
+theorem sc_passenger_to_cperson2 : all x y in sc_passenger,  
+  sc_passenger!equal(x,y) -> c_person!equal(!scToCp(x),!scToCp(y))
+
+proof : by scToOp!to_super_congruence, !o_passenger_to_cperson2 def !scToCp;
+
+(** conversion function from sc_passenger set to c_person set *)
+
+let scToCp_set (p in sc_pa_set) in cp_set = !opToCp_set(scToOp!to_super_set(p));
+
+(** Domain property : sc_passenger set to c_person set conversion properties *)
+
+theorem sc_passenger_to_cperson_set : all p in sc_pa_set,  
+  cp_set!equal(!scToCp_set(p), !opToCp_set((scToOp!to_super_set(p))))
+
+proof : by cp_set!equal_reflexive def !scToCp_set;
+
+
+(** conversion function from sc_passenger to a_person *)
+
+let scToAp (p in sc_passenger) in a_person = cpToAp!to_super(!scToCp(p));
+
+(** Domain property : sc_passenger to a_person conversion properties *)
+
+theorem sc_passenger_to_aperson : all p in sc_passenger,  
+  a_person!equal(!scToAp(p), cpToAp!to_super(!scToCp(p)))
+
+proof : by a_person!equal_reflexive def !scToAp;
+
+theorem sc_passenger_to_aperson2 : all x y in sc_passenger,  
+  sc_passenger!equal(x,y) ->  a_person!equal(!scToAp(x),!scToAp(y))
+
+proof : by !sc_passenger_to_cperson2, cpToAp!to_super_congruence 
+        def !scToAp;
+
+(** conversion function from sc_passenger set  to a_person set *)
+
+let scToAp_set (p in sc_pa_set) in ap_set = cpToAp!to_super_set(!scToCp_set(p));
+
+(** Domain property : sc_passenger set to a_person set conversion properties *)
+
+theorem sc_passenger_to_aperson_set : all p in sc_pa_set,
+  ap_set!equal(!scToAp_set(p), cpToAp!to_super_set(!scToCp_set(p)))
+
+proof : by ap_set!equal_reflexive def !scToAp_set;
+
+
+(** conversion function from og_passenger to c_person *)
+
+let ogToCp (p in og_passenger) in c_person = !scToCp(ogToSc!to_super(p));
+
+(** Domain property : og_passenger to c_person conversion properties *)
+
+theorem og_passenger_to_cperson : all p in og_passenger,  
+  c_person!equal(!ogToCp(p), !scToCp(ogToSc!to_super(p)))
+
+proof : by c_person!equal_reflexive def !ogToCp;
+
+theorem og_passenger_to_cperson2 : all x y in og_passenger,  
+  og_passenger!equal(x,y) -> c_person!equal(!ogToCp(x),!ogToCp(y)) 
+
+proof : by ogToSc!to_super_congruence, !sc_passenger_to_cperson2 
+        def !ogToCp;
+
+(** conversion function from og_passenger to a_subject *)
+
+let ogToAs (p in og_passenger) in a_subject = !cpToAs(!ogToCp(p));
+
+(** Domain property : og_passenger to a_subject conversion properties *)
+
+theorem og_passenger_to_a_subject : all p in og_passenger,  
+  a_subject!equal(!ogToAs(p), !cpToAs(!ogToCp(p)))
+
+proof : by a_subject!equal_reflexive def !ogToAs;
+
+theorem og_passenger_to_a_subject2 : all x y in og_passenger,  
+  og_passenger!equal(x,y) -> a_subject!equal(!ogToAs(x), !ogToAs(y))
+
+proof : by !og_passenger_to_cperson2, !cperson_to_a_subject2 def !ogToAs;
+
+(** conversion function from og_passenger to o_passenger *)
+
+let ogToOp (p in og_passenger) in o_passenger = scToOp!to_super(ogToSc!to_super(p));
+
+(** Domain property : og_passenger to o_passenger conversion properties *)
+
+theorem og_passenger_to_opassenger : all p in og_passenger,  
+  o_passenger!equal(!ogToOp(p), scToOp!to_super(ogToSc!to_super(p)))
+
+proof : by o_passenger!equal_reflexive def !ogToOp;
+
+theorem og_passenger_to_opassenger2 : all x y in og_passenger,  
+  og_passenger!equal(x,y) -> o_passenger!equal(!ogToOp(x), !ogToOp(y))
+
+proof : by ogToSc!to_super_congruence, scToOp!to_super_congruence 
+        def !ogToOp;
+
+(** conversion function from tf_passenger to c_person *)
+
+let tfToCp (p in tf_passenger) in c_person = !scToCp(tfToSc!to_super(p));
+
+(** Domain property : tf_passenger to c_person conversion properties *)
+
+theorem tf_passenger_to_cperson : all p in tf_passenger,  
+  c_person!equal(!tfToCp(p), !scToCp(tfToSc!to_super(p)))
+
+proof : by c_person!equal_reflexive def !tfToCp;
+
+theorem tf_passenger_to_cperson2 : all x y in tf_passenger,  
+  tf_passenger!equal(x,y) -> c_person!equal(!tfToCp(x), !tfToCp(y))
+
+proof : by tfToSc!to_super_congruence, !sc_passenger_to_cperson2 
+        def !tfToCp;
+
+(** conversion function from tf_passenger to a_subject *)
+
+let tfToAs (p in tf_passenger) in a_subject = !cpToAs(!tfToCp(p));
+
+(** Domain property : tf_passenger to a_subject conversion properties *)
+
+theorem tf_passenger_to_a_subject : all p in tf_passenger,  
+  a_subject!equal(!tfToAs(p), !cpToAs(!tfToCp(p)))
+
+proof : by a_subject!equal_reflexive def !tfToAs;
+
+theorem tf_passenger_to_a_subject2 : all x y in tf_passenger,
+   tf_passenger!equal(x,y) -> a_subject!equal(!tfToAs(x), !tfToAs(y)) 
+
+proof : by !tf_passenger_to_cperson2, !cperson_to_a_subject2 def !tfToAs;
+
+(** conversion function from tf_passenger to o_passenger *)
+
+let tfToOp (p in tf_passenger) in o_passenger = scToOp!to_super(tfToSc!to_super(p));
+
+(** Domain property : tf_passenger to o_passenger conversion properties *)
+
+theorem tf_passenger_to_opassenger : all p in tf_passenger,  
+  o_passenger!equal(!tfToOp(p),  scToOp!to_super(tfToSc!to_super(p)))
+
+proof : by o_passenger!equal_reflexive def !tfToOp;
+
+theorem tf_passenger_to_opassenger2 : all x y in tf_passenger,
+   tf_passenger!equal(x,y) -> o_passenger!equal(!tfToOp(x),!tfToOp(y))
+
+proof : by tfToSc!to_super_congruence, scToOp!to_super_congruence
+        def !tfToOp;
+
+(** conversion function from dsk_passenger to c_person *)
+
+let dskToCp (p in dsk_passenger) in c_person = cpaToCp!to_super(dskToCpa!to_super(p));
+
+(** Domain property : dsk_passenger to c_person conversion properties *)
+
+theorem dsk_passenger_to_cperson : all p in dsk_passenger,  
+  c_person!equal(!dskToCp(p),  cpaToCp!to_super(dskToCpa!to_super(p)))
+
+proof : by c_person!equal_reflexive def !dskToCp;
+
+theorem dsk_passenger_to_cperson2 : all x y in dsk_passenger,  
+  dsk_passenger!equal(x,y) -> c_person!equal(!dskToCp(x),!dskToCp(y)) 
+
+proof : by dskToCpa!to_super_congruence, cpaToCp!to_super_congruence def !dskToCp;
+
+(** conversion function from ts_passenger to c_person *)
+
+let tsToCp (p in ts_passenger) in c_person = !opToCp(tsToOp!to_super(p));
+
+(** Domain property : ts_passenger to c_person conversion properties *)
+
+theorem ts_passenger_to_cperson : all p in ts_passenger,  
+  c_person!equal(!tsToCp(p), !opToCp(tsToOp!to_super(p)))
+
+proof : by c_person!equal_reflexive def !tsToCp;
+
+theorem ts_passenger_to_cperson2 : all x y in ts_passenger,  
+  ts_passenger!equal(x,y) -> c_person!equal(!tsToCp(x),!tsToCp(y))
+
+proof : by tsToOp!to_super_congruence, !o_passenger_to_cperson2 
+        def !tsToCp;
+
+(** conversion function from ts_passenger to a_subject *)
+
+let tsToAs (p in ts_passenger) in a_subject = !cpToAs(!tsToCp(p));
+
+(** Domain property : ts_passenger to a_subject conversion properties *)
+
+theorem ts_passenger_to_a_subject : all p in ts_passenger,  
+  a_subject!equal(!tsToAs(p), !cpToAs(!tsToCp(p)))
+
+proof : by a_subject!equal_reflexive def !tsToAs;
+
+theorem ts_passenger_to_a_subject2 : all x y in ts_passenger, 
+   ts_passenger!equal(x,y) -> a_subject!equal(!tsToAs(x), !tsToAs(y))
+
+proof : by !ts_passenger_to_cperson2, !cperson_to_a_subject2 
+        def !tsToAs;
+
+(** Domain Property : all transit passengers are in security restricted areas *)
+
+property transitPassenger_sra : all s in self, all p in ts_passenger, 
+  ts_pa_set!member(p,!transitPassengers(s)) ->
+   ex area in sra, 
+     sra_set!member(area,!securityRestrictedAreas(s)) and 
+     as_set!member(!tsToAs(p),sra!airsideSubjects_in_sra(area));
+
+
+(** Domain property : weapons inaccessible in cabin cannot be accessed by 
+    ordinary passengers on board  *)
+
+property ordinaryPassenger_inaccessible_wp : all s in self, 
+  all a in d_aircraft, all p in o_passenger, all o in wp,
+     dep_ac_set!member(a,!departingAircraft(s)) ->
+      cp_set!member(!opToCp(p),d_aircraft!onboardPersons(a)) ->
+        obj_set!member(!wpToObj(o),d_aircraft!onboardObjects(a)) ->
+          wp!inaccessible_in_cabin(o) -> 
+            o_passenger!no_access_to(o,p);
+
+end

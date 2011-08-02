@@ -1,0 +1,212 @@
+uses a17subjects;;
+open a17subjects;;
+uses d2320subjects;;
+open d2320subjects;;
+uses a17property4_5;;
+open a17property4_5;;
+uses conversionFunctions2320;;
+open conversionFunctions2320;;
+
+species d2320property5(obj is object2320,
+                        obj_set is finite_set(obj),
+                        do is dangerousObject2320,
+                        do_set is finite_set(do),
+                        wp is weapon2320,
+                        wp_set is finite_set(wp),
+                        eo is explosive2320, 
+                        eo_set is finite_set(eo),
+                        dd is dangerousDevice2320,
+                        dd_set is finite_set(dd),
+                       
+                        a_subject is airsideSubject(obj,obj_set),
+                        as_set is finite_set(a_subject),
+                        a_vehicle is airsideVehicle2320(obj,obj_set),
+                        av_set is finite_set(a_vehicle),
+                        
+                        c_baggage is cabinBaggage2320(obj,obj_set),
+                        cb_set is finite_set(c_baggage),
+                        c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                        cp_set is finite_set(c_person),
+                        seat_no is seat_number,
+                        seat_set is finite_set(seat_no),
+                        c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        c_pa_set is finite_set(c_passenger),
+                        h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                        hl_set is finite_set(h_baggage), 
+                        arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        arm_pa_set is finite_set(arm_passenger), 
+                        photo is photograph,
+                        a_id is airportIdCard(photo),
+                        a_pilot is pilot2320(obj,obj_set,c_baggage,cb_set,seat_no,seat_set,photo,a_id),
+                        pilot_set is finite_set(a_pilot),
+                        a_carrier is airCarrier, 
+                        d_aircraft is departingAircraft(obj,obj_set,wp,a_subject,as_set,c_baggage,cb_set,
+                                                        c_person,cp_set,seat_no,seat_set,
+                                                        c_passenger,h_baggage,hl_set,arm_passenger, 
+                                                        a_pilot,a_carrier),
+
+                        dep_ac_set is finite_set(d_aircraft),
+
+                        a_person is airsidePerson(obj, obj_set),
+                        ap_set is finite_set(a_person),
+                        u_person is staff(obj, obj_set,photo,a_id),
+                        up_set is finite_set(u_person),
+                        
+                        dsk_passenger is disembarkedPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dsk_pa_set is finite_set(dsk_passenger),
+                        
+                        dep_passenger is departingPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dep_pa_set is finite_set(dep_passenger),
+
+                        o_passenger is ordinaryPassenger
+                                     (obj, obj_set, wp, c_baggage,cb_set,seat_no, a_person),
+                        ord_pa_set is finite_set(o_passenger),
+                        
+                        og_passenger is originatingPassenger2320(obj,obj_set,wp, c_baggage,
+                                      cb_set,seat_no,a_person),
+                        og_pa_set is finite_set(og_passenger),
+
+                        tf_passenger is transferPassenger2320
+                                     (obj,obj_set,wp, c_baggage,cb_set,seat_no,a_person),
+                        tf_pa_set is finite_set(tf_passenger),
+
+                        ts_passenger is transitPassenger
+                                          (obj,obj_set, wp, c_baggage,cb_set,seat_no,a_person),     
+                        ts_pa_set is finite_set(ts_passenger),    
+
+                        sc_passenger is screenedPassenger2320(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),
+                        sc_pa_set is finite_set(sc_passenger),
+                        
+                        arm_personnel is armedPersonnel(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        arm_pe_set is finite_set(arm_personnel),
+                        
+                        if_officer is inFlightOfficer(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        if_of_set is finite_set(if_officer),
+                        
+                        dis_passenger is disruptivePassenger(obj,obj_set,do,c_baggage,cb_set,seat_no),
+                        dis_pa_set is finite_set(dis_passenger),
+
+                        oh_baggage is originatingHoldBaggage2320(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                             c_passenger),
+                        oh_set is finite_set(oh_baggage),
+  	
+                        th_baggage is transferHoldBaggage2320(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                          c_passenger),
+                        th_set is finite_set(th_baggage),
+  
+                        sra is securityRestrictedArea
+                                    (obj, obj_set,wp, a_subject, as_set, c_baggage, cb_set,
+                                     u_person,c_person,cp_set ,seat_no,seat_set,
+                                     c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier,
+                                     d_aircraft,dep_ac_set),
+
+                        sra_set is finite_set(sra),
+
+                        wpToDo is dangerousObject_subtype2320(wp,do,wp_set,do_set), 
+                        eoToDo is dangerousObject_subtype2320(eo,do,eo_set,do_set),
+                        ddToDo is dangerousObject_subtype2320(dd,do,dd_set,do_set),
+                        doToObj is dangerousObjectToObject2320(do,obj,do_set,obj_set),
+                        apToAs is airsideSubject_subtype(obj,obj_set,a_person,a_subject,ap_set,as_set),
+                        cpToAp is airsideSubject_subtype(obj,obj_set,c_person,a_person,cp_set,ap_set),
+                        upToAp is airsideSubject_subtype(obj,obj_set,u_person,a_person,up_set,ap_set),
+                        avToAs is airsideSubject_subtype(obj,obj_set,a_vehicle,a_subject,av_set,as_set),
+                        piToUp is staff_subtype (obj,obj_set,photo,a_id,a_pilot,u_person,pilot_set,up_set),
+                        piToCp is cabinPerson_subtype (obj,obj_set,c_baggage,cb_set,a_pilot,c_person,pilot_set,cp_set),
+                        dskToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dsk_passenger,
+                                                          c_passenger,dsk_pa_set,c_pa_set), 
+                        depToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dep_passenger,
+                                                          c_passenger,dep_pa_set,c_pa_set),
+                        cpaToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,c_passenger,c_person,
+                                                       c_pa_set,cp_set),
+                        opToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                             o_passenger,dep_passenger,ord_pa_set,dep_pa_set), 
+                        scToOp is ordinaryPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             sc_passenger,o_passenger,sc_pa_set,ord_pa_set),
+                        tsToOp is ordinaryPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                             ts_passenger,o_passenger,ts_pa_set,ord_pa_set),
+                        tsToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                ts_passenger,dsk_passenger,ts_pa_set,dsk_pa_set),
+                        tfToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                tf_passenger,dsk_passenger,tf_pa_set,dsk_pa_set),
+                        ogToSc is screenedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,og_passenger,sc_passenger,og_pa_set,sc_pa_set),
+                        tfToSc is screenedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person,
+                                                            tf_passenger,sc_passenger,tf_pa_set,sc_pa_set),
+                        armToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                               arm_passenger,dep_passenger,arm_pa_set,dep_pa_set), 
+                        disToDep is departingPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                               dis_passenger,dep_passenger,dis_pa_set,dep_pa_set),
+                        apeToArm is armedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                           arm_personnel,arm_passenger,arm_pe_set,arm_pa_set),
+                        ifoToArm is armedPassenger_subtype(obj,obj_set,wp,c_baggage,cb_set,seat_no,
+                                                           if_officer,arm_passenger,if_of_set,arm_pa_set),
+                        ohToHl is holdBaggage_subtype(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger,
+                                                      oh_baggage,h_baggage,oh_set,hl_set),
+                        thToHl is holdBaggage_subtype(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger,
+                                                      th_baggage,h_baggage,th_set,hl_set))
+                           
+               inherits 
+                 a17property4_5(obj,obj_set,do,do_set,wp,
+                            wp_set,eo,eo_set,dd,dd_set,
+                            a_subject,as_set,a_vehicle,av_set,
+                            c_baggage,cb_set,c_person, cp_set,seat_no,
+                            seat_set,c_passenger,c_pa_set,h_baggage,
+                            hl_set,arm_passenger,arm_pa_set,
+                            a_pilot,pilot_set,a_carrier,d_aircraft,dep_ac_set,a_person,ap_set,
+                            u_person,up_set,dsk_passenger,dsk_pa_set,dep_passenger,dep_pa_set,
+                            o_passenger,ord_pa_set,og_passenger, og_pa_set,tf_passenger,tf_pa_set,
+                            ts_passenger,ts_pa_set,sc_passenger,sc_pa_set,
+                            arm_personnel,arm_pe_set,if_officer,if_of_set,
+                            dis_passenger,dis_pa_set,oh_baggage,oh_set,th_baggage,th_set,
+                            sra,sra_set, wpToDo,eoToDo,ddToDo,doToObj,
+                            apToAs,cpToAp,upToAp,avToAs,piToUp,piToCp,dskToCpa,depToCpa,cpaToCp,
+                            opToDep,scToOp,tsToOp,tsToDsk,tfToDsk,ogToSc,tfToSc,
+                            armToDep,disToDep,apeToArm,ifoToArm,ohToHl,thToHl) = 
+
+
+property d2320_5_2_1 : all h in h_baggage, all area in sra, 
+  all a in d_aircraft, all s in self, 
+   sra_set!member(area,!securityRestrictedAreas(s)) -> 
+     dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+      hl_set!member(h,d_aircraft!loadedHoldBaggage(a)) ->
+       d_aircraft!boarding_closed(a) ->
+        !accompanied(h,a) ->
+          (h_baggage!handSearched(h) or
+           (h_baggage!xrayed(h) and (h_baggage!random(10) -> h_baggage!handSearched(h) or h_baggage!eds(h)))); 
+            
+           
+property d2320_5_2_2 : all h in h_baggage, all area in sra, 
+  all a in d_aircraft, all s in self, 
+   sra_set!member(area,!securityRestrictedAreas(s)) -> 
+     dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+      hl_set!member(h,d_aircraft!loadedHoldBaggage(a)) ->
+       d_aircraft!boarding_closed(a) ->
+        !unaccompanied(h,a) ->
+          (h_baggage!eds(h) or 
+           h_baggage!peds(h) or 
+           h_baggage!handSearchedTDE(h));
+
+property d2320_5_1_1d : all h in h_baggage, all area in sra,  
+  all a in d_aircraft, all s in self, 
+   sra_set!member(area,!securityRestrictedAreas(s)) -> 
+     dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+      hl_set!member(h,d_aircraft!loadedHoldBaggage(a)) ->
+       (d_aircraft!boarding_closed(a) and 
+        (!unaccompanied(h,a) or !accompanied(h,a)));
+
+theorem refinement_4_5_1 : 
+  !d2320_5_2_1 -> !d2320_5_2_2 -> !d2320_5_1_1d -> !property_4_5_1
+
+proof : by  h_baggage!inv_handSearchXray, h_baggage!inv_handSearchTDE_EDS, 
+            h_baggage!invariant_screenedH1, ohToHl!to_super_holdBaggage, 
+            #beq_symm, #beq_subst
+        def !d2320_5_2_1, !d2320_5_2_2, !d2320_5_1_1d, !property_4_5_1;  
+end
+
+(*
+property property_4_5_1 : all h in oh_baggage, all a in d_aircraft, 
+  all area in sra, all s in self, 
+   oh_set!member(h,!originatingHoldBaggage(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+     dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+       hl_set!member(ohToHl!to_super(h),d_aircraft!loadedHoldBaggage(a)) -> 
+        oh_baggage!screened(h);*)

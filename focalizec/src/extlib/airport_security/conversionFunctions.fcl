@@ -1,0 +1,326 @@
+(* $Id: conversionFunctions.fcl,v 1.1 2011-08-02 16:11:08 delahaye Exp $ *)
+
+open "basics";;
+open "sets_orders";;
+open "basic_sets";;
+open "a17subjects";;
+
+species Subtype (Sub is Setoid, Super is Setoid,
+                 Sub_set is Finite_set(Sub),
+                 Super_set is Finite_set(Super)) =
+
+representation = unit;
+
+signature to_super : Sub -> Super; 
+
+property to_super_congruence : all x y : Sub,
+  Sub!equal(x, y) -> Super!equal(!to_super(x), !to_super(y));
+
+signature to_super_set : Sub_set -> Super_set; 
+
+property to_super_set_congruence : all x y : Sub_set,
+  Sub_set!equal(x, y) -> Super_set!equal(!to_super_set(x), !to_super_set(y));
+
+property to_super_set_const1 : all x_set : Sub_set, all y : Super,
+  Super_set!member(y, !to_super_set(x_set)) ->
+                 (ex x : Sub,
+                     Sub_set!member(x, x_set) /\
+                     Super!equal(!to_super(x), y));
+
+property to_super_set_const2 : all x_set : Sub_set, all x : Sub,
+                  Sub_set!member(x, x_set) ->
+                        Super_set!member(!to_super(x), !to_super_set(x_set));
+
+end;;
+
+species DangerousObjectToObject (Do is DangerousObject, 
+                                 Obj is Object, 
+                                 Do_set is Finite_set(Do),
+                                 Obj_set is Finite_set(Obj)) =
+
+  inherit Subtype(Do, Obj, Do_set, Obj_set);
+
+property to_super_congruence2 : all d : Do,
+  Do!inaccessible_in_cabin(d) = Obj!inaccessible_in_cabin(!to_super(d));
+
+end;;
+
+species WeaponsToExplosive (Wp is Weapon, 
+                            Eo is Explosive, 
+                            Wp_set is Finite_set(Wp),
+                            Eo_set is Finite_set(Eo)) =
+
+  inherit DangerousObjectToObject(Wp, Eo, Wp_set, Eo_set);
+
+end;;
+
+species DangerousObject_subtype (Sub is DangerousObject, 
+                                 Super is DangerousObject,
+                                 Sub_set is Finite_set(Sub),
+                                 Super_set is Finite_set(Super)) =
+
+  inherit DangerousObjectToObject(Sub, Super, Sub_set, Super_set);
+
+property to_super_congruence3 : all sb : Sub,
+   Sub!is_authorized(sb) = Super!is_authorized(!to_super(sb));
+
+end;;
+
+species AirsideSubject_subtype(Obj is Object, Obj_set is Finite_set(Obj),
+                               Sub is AirsideSubject(Obj, Obj_set),
+                               Super is AirsideSubject(Obj, Obj_set),
+                               Sub_set is Finite_set(Sub),
+                               Super_set is Finite_set(Super)) =
+
+  inherit Subtype(Sub, Super, Sub_set, Super_set);
+
+property to_super_airsideSubject : all ap : Sub,
+  Sub!identityVerified(ap) = Super!identityVerified(!to_super(ap)) /\
+  Obj_set!equal(Sub!objects_carried(ap), Super!objects_carried(!to_super(ap)));
+
+end;;
+
+species CabinPerson_subtype(Obj is Object, 
+                            Obj_set is Finite_set(Obj),
+                            C_baggage is CabinBaggage(Obj, Obj_set),
+                            Cb_set is Finite_set(C_baggage),
+                            Sub is CabinPerson(Obj, Obj_set, C_baggage,
+                              Cb_set),
+                            Super is CabinPerson(Obj, Obj_set, C_baggage,
+                              Cb_set),
+                            Sub_set is Finite_set(Sub),
+                            Super_set is Finite_set(Super)) =
+
+  inherit AirsideSubject_subtype(Obj, Obj_set, Sub, Super, Sub_set, Super_set);
+
+property to_super_cabinPerson : all sb : Sub,
+  Cb_set!equal(Sub!cabinBaggage(sb), Super!cabinBaggage(!to_super(sb))) /\
+  Obj_set!equal(Sub!objects_worn(sb), Super!objects_worn(!to_super(sb)));
+
+end;;
+
+species CabinPassenger_subtype(Obj is Object,
+                               Obj_set is Finite_set(Obj),
+                               C_baggage is CabinBaggage(Obj, Obj_set),
+                               Cb_set is Finite_set(C_baggage),
+                               Seat_no is Seat_number,
+                               Sub is CabinPassenger(Obj, Obj_set, C_baggage,
+                                 Cb_set, Seat_no),
+                               Super is CabinPassenger(Obj, Obj_set, C_baggage,
+                                 Cb_set, Seat_no),
+                               Sub_set is Finite_set(Sub),
+                               Super_set is Finite_set(Super)) =
+
+  inherit CabinPerson_subtype(Obj, Obj_set, C_baggage, Cb_set, Sub, Super,
+                              Sub_set, Super_set);
+
+property to_super_cabinPassenger : all sb : Sub,
+  Seat_no!equal(Sub!seat_number(sb), Super!seat_number(!to_super(sb)));
+
+end;;
+
+species UnescortedPerson_subtype(Obj is Object,
+                                 Obj_set is Finite_set(Obj),
+                                 Sub is UnescortedPerson(Obj, Obj_set),
+                                 Super is UnescortedPerson(Obj, Obj_set),
+                                 Sub_set is Finite_set(Sub),
+                                 Super_set is Finite_set(Super)) =
+
+  inherit AirsideSubject_subtype(Obj, Obj_set, Sub, Super, Sub_set, Super_set);
+
+property to_super_unescortedPerson : all sb : Sub,
+  Sub!backgroundChecked(sb) = Super!backgroundChecked(!to_super(sb)) /\
+  Sub!screened(sb) = Super!screened(!to_super(sb));
+
+end;;
+
+species DepartingPassenger_subtype(Obj is Object, Obj_set is Finite_set(Obj),
+                                   C_baggage is CabinBaggage(Obj, Obj_set),
+                                   Cb_set is Finite_set(C_baggage),
+                                   Seat_no is Seat_number,
+                                   Sub is DepartingPassenger(Obj, Obj_set,
+                                     C_baggage, Cb_set, Seat_no),
+                                   Super is DepartingPassenger(Obj, Obj_set,
+                                     C_baggage, Cb_set, Seat_no),
+                                   Sub_set is Finite_set(Sub),
+                                   Super_set is Finite_set(Super)) =
+
+  inherit CabinPassenger_subtype(Obj, Obj_set, C_baggage, Cb_set, Seat_no, Sub,
+                                 Super, Sub_set, Super_set);
+
+end;;
+
+species DisembarkedPassenger_subtype(Obj is Object, Obj_set is Finite_set(Obj),
+                                     C_baggage is CabinBaggage(Obj, Obj_set),
+                                     Cb_set is Finite_set(C_baggage),
+                                     Seat_no is Seat_number,
+                                     Sub is DisembarkedPassenger(Obj, Obj_set,
+                                       C_baggage, Cb_set, Seat_no),
+                                     Super is DisembarkedPassenger(Obj,
+                                       Obj_set, C_baggage, Cb_set, Seat_no),
+                                     Sub_set is Finite_set(Sub),
+                                     Super_set is Finite_set(Super)) =
+                                         
+  inherit CabinPerson_subtype(Obj, Obj_set, C_baggage, Cb_set, Sub, Super,
+                              Sub_set, Super_set);
+
+property to_super_dskPassenger : all sb : Sub,
+  Seat_no!equal(Sub!seat_number(sb), Super!seat_number(!to_super(sb)));
+
+end;;
+
+species OrdinaryPassenger_subtype(Obj is Object, Obj_set is Finite_set(Obj),
+                                  Wp is Weapon,
+                                  C_baggage is CabinBaggage(Obj, Obj_set),
+                                  Cb_set is Finite_set(C_baggage),
+                                  Seat_no is Seat_number,
+                                  A_person is AirsidePerson(Obj, Obj_set),
+                                  Sub is OrdinaryPassenger(Obj, Obj_set, Wp,
+                                    C_baggage, Cb_set, Seat_no, A_person),
+                                  Super is OrdinaryPassenger(Obj, Obj_set, Wp,
+                                    C_baggage, Cb_set, Seat_no, A_person),
+                                  Sub_set is Finite_set(Sub),
+                                  Super_set is Finite_set(Super)) =
+
+  inherit DepartingPassenger_subtype(Obj, Obj_set, C_baggage, Cb_set, Seat_no,
+                                     Sub, Super, Sub_set, Super_set);
+
+property to_super_mixing : all sb : Sub, all p : A_person,
+  Sub!mixing_or_contact(p, sb) = Super!mixing_or_contact(p, !to_super(sb));
+
+property to_super_access_wp : all sb : Sub, all o : Wp,
+  Sub!no_access_to(o, sb) = Super!no_access_to(o, !to_super(sb));
+
+end;;
+
+species ScreenedPassenger_subtype(Obj is Object, Obj_set is Finite_set(Obj),
+                                  Wp is Weapon,
+                                  C_baggage is CabinBaggage(Obj, Obj_set),
+                                  Cb_set is Finite_set(C_baggage),
+                                  Seat_no is Seat_number,
+                                  A_person is AirsidePerson(Obj, Obj_set),
+                                  Sub is ScreenedPassenger(Obj, Obj_set, Wp,
+                                    C_baggage, Cb_set, Seat_no, A_person),
+                                  Super is ScreenedPassenger(Obj, Obj_set, Wp,
+                                    C_baggage, Cb_set, Seat_no, A_person),
+                                  Sub_set is Finite_set(Sub),
+                                  Super_set is Finite_set(Super)) =
+
+  inherit OrdinaryPassenger_subtype(Obj, Obj_set, Wp, C_baggage, Cb_set,
+                                    Seat_no, A_person, Sub, Super, Sub_set,
+                                    Super_set);
+
+property to_super_scrPassenger : all sb : Sub,
+  Sub!screened(sb) = Super!screened(!to_super(sb)) /\
+  Sub!reScreened(sb) = Super!reScreened(!to_super(sb));
+
+end;;
+
+species ArmedPassenger_subtype(Obj is Object, Obj_set is Finite_set(Obj),
+                               Wp is Weapon,
+                               C_baggage is CabinBaggage(Obj, Obj_set),
+                               Cb_set is Finite_set(C_baggage),
+                               Seat_no is Seat_number,
+                               Sub is ArmedPassenger(Obj, Obj_set, Wp,
+                                 C_baggage, Cb_set, Seat_no),
+                               Super is ArmedPassenger(Obj, Obj_set, Wp,
+                                 C_baggage, Cb_set, Seat_no),
+                               Sub_set is Finite_set(Sub),
+                               Super_set is Finite_set(Super)) =
+
+  inherit DepartingPassenger_subtype(Obj, Obj_set, C_baggage, Cb_set, Seat_no,
+                                     Sub, Super, Sub_set, Super_set);
+
+property to_super_authorization : all sb : Sub, all o : Wp,
+  Sub!has_authorization(o, sb) = Super!has_authorization(o, !to_super(sb));
+
+end;;
+
+species DepartingAircraft_subtype(Obj is Object, Obj_set is Finite_set(Obj),
+                                  Wp is Weapon,
+                                  A_subject is AirsideSubject(Obj, Obj_set),
+                                  As_set is Finite_set(A_subject),
+                                  C_baggage is CabinBaggage(Obj, Obj_set),
+                                  Cb_set is Finite_set(C_baggage),
+                                  C_person is CabinPerson(Obj, Obj_set,
+                                    C_baggage, Cb_set),
+                                  Cp_set is Finite_set(C_person),
+                                  Seat_no is Seat_number,
+                                  Seat_set is Finite_set(Seat_no),
+                                  C_passenger is CabinPassenger(Obj, Obj_set,
+                                    C_baggage, Cb_set, Seat_no),
+                                  H_baggage is HoldBaggage(Obj, Obj_set,
+                                    C_baggage, Cb_set, Seat_no, C_passenger),
+                                  Hl_set is Finite_set(H_baggage),
+                                  Arm_passenger is ArmedPassenger(Obj, Obj_set,
+                                    Wp, C_baggage, Cb_set, Seat_no),
+                                  A_pilot is Pilot(Obj, Obj_set, C_baggage,
+                                    Cb_set, Seat_no, Seat_set),
+                                  A_carrier is AirCarrier,
+                                  Sub is DepartingAircraft(Obj, Obj_set, Wp,
+                                    A_subject, As_set, C_baggage, Cb_set,
+                                    C_person, Cp_set, Seat_no, Seat_set,
+                                    C_passenger, H_baggage, Hl_set,
+                                    Arm_passenger, A_pilot, A_carrier),
+                                  Super is DepartingAircraft(Obj, Obj_set, Wp,
+                                    A_subject, As_set, C_baggage, Cb_set,
+                                    C_person, Cp_set, Seat_no, Seat_set,
+                                    C_passenger, H_baggage, Hl_set,
+                                    Arm_passenger, A_pilot, A_carrier),
+                                  Sub_set is Finite_set(Sub),
+                                  Super_set is Finite_set(Super)) =
+
+  inherit Subtype(Sub, Super, Sub_set, Super_set);
+
+property to_super_access_aircraft : all sb : Sub, all p : A_subject,
+  Sub!accessing_aircraft(p, sb) = Super!accessing_aircraft(p, !to_super(sb)) /\
+  Sub!access_authorized(p, sb) = Super!access_authorized(p, !to_super(sb)) /\
+  Sub!movementSupervised(p, sb) = Super!movementSupervised(p, !to_super(sb));
+
+property to_super_aircraft : all sb : Sub,
+  Cp_set!equal(Sub!onboardPersons(sb), Super!onboardPersons(!to_super(sb))) /\
+  Hl_set!equal(Sub!loadedHoldBaggage(sb),
+               Super!loadedHoldBaggage(!to_super(sb))) /\
+  Obj_set!equal(Sub!initial_objects(sb),
+                Super!initial_objects(!to_super(sb))) /\
+  Obj_set!equal(Sub!onboardObjects(sb), Super!onboardObjects(!to_super(sb))) /\
+  Sub!departed(sb) = Super!departed(!to_super(sb)) /\
+  Sub!boarding_closed(sb) = Super!boarding_closed(!to_super(sb)) /\
+  Sub!secControls_applied(sb) = Super!secControls_applied(!to_super(sb)) /\
+  A_pilot!equal(Sub!pilot_in_command(sb),
+                Super!pilot_in_command(!to_super(sb))) /\
+  A_carrier!equal(Sub!airCarrier(sb), Super!airCarrier(!to_super(sb)));
+
+property to_super_agreement : all sb : Sub, all p : Arm_passenger,
+  Sub!obtainedAgreement(p, sb) = Super!obtainedAgreement(p, !to_super(sb));
+
+end;;
+
+species HoldBaggage_subtype(Obj is Object,
+                            Obj_set is Finite_set(Obj),
+                            C_baggage is CabinBaggage(Obj, Obj_set),
+                            Cb_set is Finite_set(C_baggage),
+                            Seat_no is Seat_number,
+                            C_passenger is CabinPassenger(Obj, Obj_set,
+                              C_baggage, Cb_set, Seat_no),
+                            Sub is HoldBaggage(Obj, Obj_set, C_baggage, Cb_set,
+                              Seat_no, C_passenger),
+                            Super is HoldBaggage(Obj, Obj_set, C_baggage,
+                              Cb_set, Seat_no, C_passenger),
+                            Sub_set is Finite_set(Sub),
+                            Super_set is Finite_set(Super)) =
+
+  inherit Subtype(Sub, Super, Sub_set, Super_set);
+                             
+property to_super_holdBaggage : all sb : Sub,
+  Obj_set!equal(Sub!get_objects(sb), Super!get_objects(!to_super(sb))) /\
+  Sub!screened(sb) = Super!screened(!to_super(sb)) /\
+  C_passenger!equal(Sub!owner(sb), Super!owner(!to_super(sb))) /\
+  Sub!additional_screening(sb) = Super!additional_screening(!to_super(sb)) /\
+  Sub!authorized_for_carriage(sb) =
+    Super!authorized_for_carriage(!to_super(sb)) /\
+  Sub!inaccessible_in_cabin(sb) = Super!inaccessible_in_cabin(!to_super(sb)) /\
+  Sub!interference(sb) = Super!interference(!to_super(sb)) /\
+  Sub!accepted_for_carriage(sb) = Super!accepted_for_carriage(!to_super(sb));
+
+end;;

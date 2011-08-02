@@ -1,0 +1,525 @@
+uses a17subjects;;
+open a17subjects;;
+
+species object2320 inherits object = 
+
+sig metal in self -> bool;
+sig ferrous in self -> bool;
+
+property ferrous_constraint : all s in self, 
+    !ferrous(s) -> !metal(s);
+
+property equal_metal : all x y in self,
+   !equal(x,y) -> (#base_eq(!metal(x),!metal(y)) and
+                   #base_eq(!ferrous(x),!ferrous(y)));
+end
+
+species dangerousObject2320 
+             inherits object2320, 
+                      dangerousObject = 
+end
+
+species weapon2320 inherits dangerousObject2320, weapon = 
+
+end
+
+species explosive2320 inherits dangerousObject2320, explosive = 
+                  
+end
+
+species dangerousDevice2320 inherits dangerousObject2320, dangerousDevice = 
+                  
+end
+
+(* ---------------------------- airsidePerson -------------------------- *)
+
+species photograph inherits setoid = 
+
+end
+
+species airportIdCard (photo is photograph) inherits setoid = 
+
+sig photograph in self -> photo;
+sig name in self -> string;
+sig valid in self -> bool;
+sig checked in self -> bool;
+
+property equal_congruence : all x y in self,
+ !equal(x,y) -> 
+      (photo!equal(!photograph(x),!photograph(y)) and
+       #base_eq(!name(x),!name(y)) and
+       #base_eq(!valid(x),!valid(y)) and
+       #base_eq(!checked(x),!checked(y)));
+
+end
+
+species screenedPerson inherits setoid = 
+
+ sig screened in self -> bool;
+
+ sig handSearched in self -> bool;
+ sig randomSearch in self -> bool;
+
+ sig walkedThroughMetalDetection in self -> bool;
+
+
+ property congruence_search : all x y in self, 
+   !equal(x,y) -> (#base_eq(!handSearched(x),!handSearched(y)) and
+                  #base_eq(!randomSearch(x),!randomSearch(y)) and 
+                  #base_eq(!walkedThroughMetalDetection(x),!walkedThroughMetalDetection(y)));
+
+ property inv_screening : all s in self, 
+    (!handSearched(s) or !walkedThroughMetalDetection(s)) -> !screened(s);
+end 
+
+species staff (obj is object2320, 
+               obj_set is finite_set(obj),
+               photo is photograph,
+               a_id is airportIdCard(photo))
+
+                     inherits unescortedPerson(obj,obj_set),
+                              screenedPerson =
+
+(** represents the interval of years since the last background check. *)
+
+sig backgroundInterval in self -> int;
+
+
+sig identity in self -> a_id;
+sig name in self -> string;
+sig isPhotographOf in photo -> self -> bool;
+sig trained in self -> bool;
+sig idVisible in self -> bool;
+sig onDuty in self -> bool;
+sig service_provider in self -> bool;
+
+property congruence_staff : all x y in self, 
+  !equal(x,y) -> (#int_eq(!backgroundInterval(x),!backgroundInterval(y)) and
+                  #base_eq(!identity(x),!identity(y)) and
+                  #base_eq(!name(x),!name(y)) and
+                  #base_eq(!trained(x),!trained(y)) and 
+                  #base_eq(!idVisible(x),!idVisible(y)) and
+                  #base_eq(!onDuty(x),!onDuty(y)) and
+  		  #base_eq(!service_provider(x),!service_provider(y)));
+ 
+property isPhotographOf_congruence : all x y in self, all p in photo,
+   !equal(x,y) -> !isPhotographOf(p,x) -> !isPhotographOf(p,y);
+
+(** correlation between 'checked' attribute on Id and 'identityVerified' 
+    attribute obtained from the Annex~17 level.*)
+
+property id_consistency : all s in self,
+    a_id!checked(!identity(s)) -> !identityVerified(s);
+
+end
+
+species cabinBaggage2320(obj is object2320,
+                         obj_set is finite_set(obj)) inherits cabinBaggage(obj,obj_set) = 
+
+sig handSearched in self ->  bool;
+sig xrayed in self -> bool;
+sig xrayed_tip in self -> bool;
+sig handSearchedTDE in self -> bool;
+sig random in int -> bool;
+
+property inv_screening_tech : 
+  all s in self, 
+    (!handSearched(s) or !xrayed(s) or !xrayed_tip(s) or !handSearchedTDE(s)) -> !screened(s);
+
+property equal_congruence_scr : all h1 h2 in self,
+           !equal(h1,h2) -> 
+               (#base_eq(!handSearched(h1),!handSearched(h2)) and
+                #base_eq(!xrayed(h1),!xrayed(h2)) and
+  		#base_eq(!xrayed_tip(h1),!xrayed_tip(h2)) and
+		#base_eq(!handSearchedTDE(h1),!handSearchedTDE(h2)));
+
+end
+
+species flightCrew(obj is object2320,
+                   obj_set is finite_set(obj),
+                   c_baggage is cabinBaggage2320(obj,obj_set),
+                   cb_set is finite_set(c_baggage),
+                   photo is photograph,
+                   a_id is airportIdCard(photo))
+
+                    inherits cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                             staff(obj,obj_set,photo,a_id) = 
+
+end
+
+species pilot2320 (obj is object2320,
+                   obj_set is finite_set(obj),
+                   c_baggage is cabinBaggage2320(obj,obj_set),
+                   cb_set is finite_set(c_baggage),
+                   seat_no is seat_number,                
+                   seat_set is finite_set(seat_no),
+                   photo is photograph,
+                   a_id is airportIdCard(photo))
+               
+                    inherits pilot(obj,obj_set,c_baggage,cb_set,seat_no,seat_set), 
+                             staff(obj,obj_set,photo,a_id) = 
+
+end
+
+species vehiclePass inherits setoid = 
+
+sig checked in self -> bool;
+
+property equal_permanent : all x y in self, 
+   !equal(x,y) -> #base_eq(!checked(x), !checked(y));        
+
+end
+
+species permanentPass inherits vehiclePass = 
+
+end
+
+species temporaryPass inherits vehiclePass = 
+end
+
+
+species airsideVehicle2320 (obj is object2320, obj_set is finite_set(obj)) 
+                                          inherits airsideVehicle(obj,obj_set) = 
+
+sig randomInspection in self -> bool;
+sig inspected in self -> bool;
+
+property equal_inspected : all x y in self, 
+  !equal(x,y) -> (#base_eq(!randomInspection(x),!randomInspection(y)) and
+                  #base_eq(!inspected(x),!inspected(y)));
+end
+
+species permanentAirsideVehicle(obj is object2320, obj_set is finite_set(obj)) 
+
+                     inherits airsideVehicle2320(obj,obj_set) = 
+
+(** permanent airside vehicles are considered to have
+    their identity verified. *)
+
+property inv_identity : all s in self, 
+    !identityVerified(s);
+
+end
+
+
+species vehicleWithPass (obj is object2320, obj_set is finite_set(obj),
+                         id is vehiclePass) 
+  
+                      inherits airsideVehicle2320(obj,obj_set) = 
+
+sig emergency in self -> bool;
+sig vehiclePass in self -> partiel(id);
+
+property equal_vehiclePass1 : all x y in self, 
+   !equal(x,y) -> #base_eq(#is_failed(!vehiclePass(x)),
+                            #is_failed(!vehiclePass(y)));
+
+property equal_vehiclePass2 : all x y in self, 
+ !equal(x,y) -> 
+   not(#is_failed(!vehiclePass(x))) -> 
+    not(#is_failed(!vehiclePass(y))) -> 
+     id!equal(#non_failed(!vehiclePass(x)),
+              #non_failed(!vehiclePass(y)));
+
+property equal_emergency : all x y in self,
+  !equal(x,y) -> #base_eq(!emergency(x),!emergency(y));
+
+property pass_consistency : all s in self,
+    not(#is_failed(!vehiclePass(s))) -> 
+    id!checked(#non_failed(!vehiclePass(s))) -> !identityVerified(s);
+end
+
+species landsideAirsideVehicle(obj is object2320, obj_set is finite_set(obj),
+                              id is permanentPass) inherits vehicleWithPass(obj,obj_set,id) = 
+
+sig passVisible in self -> bool;
+
+property equal_passVisible : all x y in self, 
+   !equal(x,y) -> #base_eq(!passVisible(x),!passVisible(y));
+
+end
+
+species temporaryVehicle (obj is object2320, obj_set is finite_set(obj),
+                          id is temporaryPass) 
+                 
+                                  inherits vehicleWithPass(obj,obj_set,id) = 
+end
+
+
+species screenedPassenger2320(obj is object2320, obj_set is finite_set(obj),
+                               wp is weapon2320, 
+                               c_baggage is cabinBaggage2320(obj,obj_set),
+                               cb_set is finite_set(c_baggage),
+                               seat_no is seat_number,
+                               a_person is airsidePerson(obj,obj_set))
+
+                     inherits
+                           screenedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),
+                           screenedPerson =  
+
+end
+
+
+species transferPassenger2320(obj is object2320, 
+                              obj_set is finite_set(obj), 
+                              wp is weapon2320,  
+                              c_baggage is cabinBaggage2320(obj,obj_set),
+                              cb_set is finite_set(c_baggage),
+                              seat_no is seat_number, 
+                              a_person is airsidePerson(obj,obj_set))
+
+                             inherits transferPassenger
+                                        (obj,obj_set, wp, c_baggage,
+                                         cb_set,seat_no , a_person),
+                                      screenedPassenger2320(obj,obj_set,wp,
+                                                            c_baggage,cb_set,seat_no,a_person) =  
+                                
+
+end
+
+species originatingPassenger2320(obj is object2320, 
+                                 obj_set is finite_set(obj),
+                                 wp is weapon2320, 
+                                 c_baggage is cabinBaggage2320(obj,obj_set),
+                                 cb_set is finite_set(c_baggage),
+                                 seat_no is seat_number,
+                                 a_person is airsidePerson(obj,obj_set))
+
+                                inherits originatingPassenger
+                                        (obj,obj_set, wp, c_baggage,
+                                         cb_set,seat_no , a_person),
+
+                                 screenedPassenger2320(obj,obj_set,wp,
+                                                       c_baggage,cb_set,seat_no,a_person) = 
+
+end
+                                 
+
+species holdBaggage2320 (obj is object2320, obj_set is finite_set(obj),
+                         c_baggage is cabinBaggage2320(obj,obj_set),
+                         cb_set is finite_set(c_baggage),
+                         seat_no is seat_number,
+                         c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no))                                         
+                          
+                             inherits holdBaggage(obj,obj_set,c_baggage,cb_set,
+                                                  seat_no,c_passenger) =
+
+
+sig handSearched in self ->  bool;
+sig xrayed in self -> bool;
+sig peds in self -> bool;
+sig handSearchedTDE in self -> bool;
+sig random in int -> bool;
+sig eds in self -> bool;
+
+property inv_handSearchXray : 
+  all s in self, 
+    (!handSearched(s) or !xrayed(s)) -> !screened(s);
+
+property inv_handSearchTDE_EDS : 
+  all s in self, 
+    (!handSearchedTDE(s) or !eds(s) or !peds(s)) -> !additional_screening(s);
+
+property equal_screened2 : all h1 h2 in self,
+           !equal(h1,h2) -> 
+               (#base_eq(!handSearched(h1),!handSearched(h2)) and
+                #base_eq(!xrayed(h1),!xrayed(h2)));
+
+end
+
+
+species originatingHoldBaggage2320 (obj is object2320, obj_set is finite_set(obj),
+                                    wp is weapon2320,
+                                    c_baggage is cabinBaggage2320(obj,obj_set),
+                                    cb_set is finite_set(c_baggage),
+                                       seat_no is seat_number,
+                                     c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no))                                         
+                          
+                     inherits
+                       originatingHoldBaggage(obj,obj_set,wp,c_baggage,cb_set,seat_no,c_passenger),
+                       holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger) = 
+end
+
+species transferHoldBaggage2320 (obj is object2320, obj_set is finite_set(obj), wp is weapon2320,
+                         c_baggage is cabinBaggage2320(obj,obj_set),
+                         cb_set is finite_set(c_baggage),
+                         seat_no is seat_number,
+                         c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no))                                         
+                          
+                     inherits
+                       transferHoldBaggage(obj,obj_set,wp,c_baggage,cb_set,seat_no,c_passenger),
+                       holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger) = 
+end
+
+ species securityRestrictedArea2320(obj is object2320, obj_set is finite_set(obj),
+                                   wp is weapon2320,
+                                   as is airsideSubject(obj,obj_set),
+                                   as_set is finite_set(as), 
+                                   c_baggage is cabinBaggage2320(obj,obj_set),
+                                   cb_set is finite_set(c_baggage),
+                                   photo is photograph,
+                                   a_id is airportIdCard(photo),
+                                   a_staff is staff (obj,obj_set,photo,a_id),
+                                   c_person is cabinPerson(obj,obj_set,c_baggage,cb_set),
+                                   cp_set is finite_set(c_person),
+                                   seat_no is seat_number,
+                                   seat_set is finite_set(seat_no),
+                                   c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                                   h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                                   hl_set is finite_set(h_baggage),
+                                   arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                                   pi is pilot2320(obj, obj_set,c_baggage,cb_set,
+                                             seat_no,seat_set, photo,a_id),
+                                   a_carrier is airCarrier,
+                                   dep_ac is departingAircraft(obj,obj_set,wp,as,as_set,
+                                                               c_baggage,cb_set,c_person,cp_set,seat_no,
+                                                               seat_set,c_passenger,h_baggage,hl_set,arm_passenger,
+                                                               pi,a_carrier),
+                                   dep_ac_set is finite_set(dep_ac))
+
+               inherits securityRestrictedArea(obj, obj_set,wp, as, as_set, c_baggage, cb_set,
+                                               a_staff,c_person,cp_set ,seat_no,seat_set,
+                                               c_passenger,h_baggage,hl_set,arm_passenger,pi,
+                                                a_carrier,dep_ac,dep_ac_set) = 
+
+(** represents objects that are in security restricted areas, irrespective of those 
+    carried by passengers and personnel. *)
+
+sig objects_in_sra in self -> obj_set;
+
+property equal_objects : all x y in self, 
+  !equal(x,y) -> obj_set!equal(!objects_in_sra(x),!objects_in_sra(y));
+
+end
+
+species departingAircraft2320(obj is object2320, obj_set is finite_set(obj),wp is weapon2320,
+		 	as is airsideSubject(obj,obj_set), 
+                        as_set is finite_set(as),
+                        c_baggage is cabinBaggage2320(obj,obj_set),
+                        cb_set is finite_set(c_baggage),
+                        c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                        cp_set is finite_set(c_person),
+                        seat_no is seat_number,
+                        seat_set is finite_set(seat_no),
+                        c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                        hl_set is finite_set(h_baggage),
+                        arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+			photo is photograph,
+                        a_id is airportIdCard(photo),
+			pi is pilot2320 (obj, obj_set, c_baggage, cb_set, seat_no, seat_set,photo, a_id),
+                        a_carrier is airCarrier) 
+
+	inherits departingAircraft(obj, obj_set, wp, as, as_set, c_baggage, cb_set, 
+ 		 		   c_person, cp_set, seat_no, seat_set, c_passenger,
+                         	   h_baggage,hl_set,arm_passenger, pi, a_carrier)  = 
+
+sig surveillance in self -> bool;
+sig access_controlled in self -> bool;
+
+(** Domain property : if access to an aircraft is being controlled then, only authorized persons can have access 
+    to the aircraft. *)
+
+property controlled_authorized_inv : all s in self, all p in as,
+	 !access_controlled(s) -> !surveillance(s) -> !accessing_aircraft(p,s) -> !access_authorized(p,s);
+
+property movementSupervised_recon : all s in self, all p in as, 
+	 !access_controlled(s) -> !surveillance(s) -> !movementSupervised(p,s);
+
+property equal_surveillance : all x y in self, 
+	!equal(x,y) -> !surveillance(x) -> !surveillance(y);
+
+property equal_access_controlled : all x y in self,
+	 !equal(x,y) -> !access_controlled(x) -> !access_controlled(y);
+
+
+end 
+
+species originatingAircraft2320(obj is object2320, obj_set is finite_set(obj),
+                            wp is weapon2320,
+                            as is airsideSubject(obj,obj_set),
+                            as_set is finite_set(as),
+                            c_baggage is cabinBaggage2320(obj,obj_set),
+                            cb_set is finite_set(c_baggage),
+                            c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                            cp_set is finite_set(c_person),
+                            seat_no is seat_number,
+                            seat_set is finite_set(seat_no),
+                            c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                            h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                            hl_set is finite_set(h_baggage),
+                            arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                            photo is photograph,
+			    a_id is airportIdCard(photo),
+			    pi is pilot2320(obj, obj_set, c_baggage, cb_set, seat_no, seat_set, photo, a_id),
+                            a_carrier is airCarrier)
+                      
+                             inherits departingAircraft2320(obj,obj_set,wp,as,as_set,
+                                                        c_baggage,cb_set,c_person,cp_set,
+                                                        seat_no,seat_set,c_passenger,h_baggage,hl_set,
+                                                        arm_passenger,photo,a_id,pi,a_carrier),
+				      
+				      originatingAircraft(obj,obj_set,wp,as,as_set,
+                                                        c_baggage,cb_set,c_person,cp_set,
+                                                        seat_no,seat_set,c_passenger,h_baggage,hl_set,
+                                                        arm_passenger,pi,a_carrier)  = 
+
+
+(** Extracted from Property 3.2.3. These predicates incorporate a notion of time that cannot be expressed directly 
+    in focal. As such, we consider that originating aircraft brought in sra must had their cabin door closed, 
+    their air brigges/ventral stairs secured and no tamper evidence while they were not in sra. *) 
+
+sig cabin_doors_was_closed in self -> bool;
+sig air_bridge_ventral_stairs_was_secured in self -> bool;
+sig tamper_evidence_was_applied in self -> bool;
+
+property equal_cabin_doors : all x y in self, 
+	 !equal(x,y) -> !cabin_doors_was_closed(x) -> !cabin_doors_was_closed(y);
+
+property equal_air_bridge : all x y in self, 
+   	 !equal(x,y) -> !air_bridge_ventral_stairs_was_secured(x) ->
+	 	     	!air_bridge_ventral_stairs_was_secured(y);
+
+property equal_tamper : all x y in self, 
+	 !equal(x,y) -> !tamper_evidence_was_applied(x) ->
+	 	     	!tamper_evidence_was_applied(y); 
+end
+
+species transitAircraft2320(obj is object2320, obj_set is finite_set(obj),
+                        wp is weapon2320,
+                        as is airsideSubject(obj,obj_set),
+                        as_set is finite_set(as),
+                        c_baggage is cabinBaggage2320(obj,obj_set),
+                        cb_set is finite_set(c_baggage),
+                        c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                        cp_set is finite_set(c_person),
+                        seat_no is seat_number,
+                        seat_set is finite_set(seat_no),
+                        d_passenger is disembarkedPassenger
+                             (obj,obj_set,c_baggage,cb_set,seat_no),
+                        dp_set is finite_set(d_passenger),
+                        c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                        hl_set is finite_set(h_baggage),
+                        arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+ 			photo is photograph,
+			a_id is airportIdCard(photo),
+                        pi is pilot2320(obj,obj_set,c_baggage,cb_set,seat_no,seat_set,photo, a_id),
+                        a_carrier is airCarrier)
+ 
+                          inherits departingAircraft2320(obj,obj_set,wp,as,as_set,
+                                                     c_baggage,cb_set,c_person,cp_set,seat_no,seat_set,
+                                                     c_passenger,h_baggage,hl_set,arm_passenger,photo,a_id,pi,a_carrier),
+ 
+				   transitAircraft(obj,obj_set,wp,as,as_set,c_baggage,cb_set,
+						   c_person,cp_set,seat_no,seat_set,d_passenger,dp_set, c_passenger,
+						   h_baggage,hl_set,arm_passenger,pi,a_carrier) = 
+
+(** The notion of aircraft security check appears explicitly for transit aircraft only in 
+    d2320, unlike originating aircraft. *)
+sig aircraft_security_check in self -> bool;
+
+property equal_security_check : all x y in self,
+  !equal(x,y) -> !aircraft_security_check(x) -> !aircraft_security_check(y);
+
+end

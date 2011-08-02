@@ -1,0 +1,161 @@
+(* $Id: basic_sets.fcl,v 1.1 2011-08-02 16:11:08 delahaye Exp $ *)
+
+open "basics";;
+open "sets_orders";;
+
+species Finite_set (Param is Setoid) =
+
+  inherit Setoid;
+
+signature is_empty : Self -> bool;
+signature member : Param -> Self -> bool;
+signature singleton  : Param -> Self;
+signature union : Self -> Self -> Self;
+signature inter : Self -> Self -> Self;
+signature diff : Self -> Self -> Self;
+signature subset : Self -> Self -> bool;
+signature cardinal : Self -> int;
+signature empty : Self;
+signature for_all : (Param -> bool) -> Self -> bool;
+signature filter : (Param -> bool) -> Self -> Self;
+let element = !empty;
+
+let equal(x, y) = !subset(x, y) && !subset(y, x);
+
+property equal_member1 : all x y : Param, all s : Self,
+                        Param!equal(x, y) -> !member(x, s) -> !member(y, s);
+
+property equal_member2 : all x y : Param, all s : Self,
+                         Param!equal(x, y) -> !member(y, s) -> !member(x, s);
+
+property empty1 : all x : Param, ~ (!member(x, !empty));
+
+
+property singleton1 : all x y : Param,
+                       !member(y, !singleton(x)) -> Param!equal(x, y);
+
+property singleton2 : all x y : Param,
+                       Param!equal(x, y) -> !member(y, !singleton(x));
+
+property singleton3 : all x y : Param,
+                       ~ (!member(y, !singleton(x))) -> ~ (Param!equal(x, y)); 
+
+property singleton4 : all x y : Param,
+                        ~ (Param!equal(x, y)) -> ~ (!member(y, !singleton(x)));
+
+(* subset(x, y) is read as follows, x is a subset of y *)
+
+property subset1 : all x y : Self,
+                       !subset(x, y) -> !subset(y, x) -> !equal(x, y);
+
+property subset2 : all a b : Self, 
+                     !subset(a, b) -> all x : Param, !member(x, a) -> !member(x, b);
+
+property subset3 : all x : Self, !subset(x, x);
+
+property subset4 : all x y z : Self, 
+                     !subset(x, y) -> !subset(y, z) -> !subset(x, z);
+
+property subset5 : all a b : Self,
+                    (all x : Param, !member(x, a) -> !member(x, b)) -> 
+                              !subset(a, b);
+
+property subset6 : all a b : Self, 
+             !subset(a, b) -> 
+                    (all x : Param, !member(x, b) -> (!member(x, a) \/
+                                                      ~ (!member(x, a))));
+ 
+property union_singleton1 : all x y : Param, all s : Self, 
+                    !member(x, !union(s, !singleton(y))) -> 
+                        (Param!equal(y, x) \/ !member(x, s));
+
+property union_singleton2 : all x y : Param, all s : Self,
+                   (Param!equal(y, x) \/ !member(x, s)) ->
+                          !member(x, !union(s, !singleton(y)));
+
+property union_singleton3 : all x : Param, all s : Self,
+                             !member(x, s) -> 
+                                 !equal(!union(s, !singleton(x)), s);
+
+property subset_union : all a : Param, all x y : Self,
+                         !subset(x, y) -> !subset(x, !union(y, !singleton(a)));
+
+property union1 : all x : Param, all a b : Self,
+                    !member(x, !union(a, b)) -> (!member(x, a) \/ !member(x, b));
+
+property union2 : all x : Param, all a b : Self,
+                    (!member(x, a) \/ !member(x, b)) -> !member(x, !union(a, b));
+
+property union3 : all x : Param, all a b : Self,
+                    !member(x, a) -> !member(x, !union(a, b));
+
+property union4 : all x : Param, all a b : Self,
+                    !member(x, b) -> !member(x, !union(a, b)); 
+                           
+
+property inter1 : all x : Param, all a b : Self,
+                    !member(x, !inter(a, b)) -> (!member(x, a) /\ !member(x, b));
+
+property inter2 : all x : Param, all a b : Self,
+                   !member(x, a) -> !member(x, b) -> !member(x, !inter(a, b));
+
+property inter3 :  all a b : Self,  
+                    (all x : Param, !member(x, a) /\ ~ (!member(x, b))) 
+                                        -> !equal(!inter(a, b), !empty);
+ 
+(* diff(x, y) will produce the set x - y *)
+
+property diff1 : all x : Param, all s1 s2 : Self,
+                   !member(x, !diff(s1, s2)) -> !member(x, s1);
+
+property diff2 : all x : Param, all s1 s2 : Self,
+                   !member(x, !diff(s1, s2)) -> ~ (!member(x, s2));
+
+property diff3 : all x : Param, all s1 s2 : Self,
+                   !member(x, s1) -> ~ (!member(x, s2)) -> 
+                      !member(x, !diff(s1, s2));
+
+property for_all1 : all a : Param, all f : (Param -> bool), all s : Self, 
+                      (all x y : Param, Param!equal(x, y) -> f(x) -> f(y)) -> 
+                         !for_all(f, !union(s, !singleton(a))) -> 
+                                 (f(a) /\ !for_all(f, s));
+
+property for_all2 : all a : Param, all f : (Param -> bool), all s : Self,
+                     (all x y : Param, Param!equal(x, y) -> f(x) -> f(y)) -> 
+                        f(a) -> !for_all(f, s) -> 
+                               !for_all(f, !union(s, !singleton(a)));
+
+property for_all3 : all f : (Param -> bool), all s : Self,
+                    (all x y : Param, Param!equal(x, y) -> f(x) -> f(y)) -> 
+                      (all x : Param, !member(x, s) -> f(x)) -> !for_all(f, s);
+
+property for_all4 : all f : (Param -> bool), all s : Self,
+                   (all x y : Param, Param!equal(x, y) -> f(x) -> f(y)) ->  
+                       !for_all(f, s) -> 
+                          all x : Param, !member(x, s) -> f(x); 
+                       
+property filter1 : all f : (Param -> bool), all x : Param, all s : Self,
+                     (all x y : Param, Param!equal(x, y) -> f(x) -> f(y)) ->  
+                        !member(x, !filter(f, s)) -> (!member(x, s) /\ f(x)); 
+
+property filter2 : all f : (Param -> bool), all x : Param, all s : Self,
+                     (all x y : Param, Param!equal(x, y) -> f(x) -> f(y)) -> 
+                        !member(x, s) -> f(x) -> !member(x, !filter(f, s));
+
+property cardinal1 : !cardinal(!empty) =0x 0;
+
+property cardinal2 : all x : Param, all s : Self,
+  ~ (!member(x, s)) -> 
+  !cardinal(!union(s, !singleton(x))) =0x (!cardinal(s) + 1);
+
+property cardinal3 : all s : Self, !cardinal(s) >=0x 0;
+
+property cardinal_equal : all x y : Self, 
+    !equal(x, y) -> !cardinal(x) =0x !cardinal(y);
+
+(* theorems to be defined later *)
+
+	property equal1 : all x y : Self,
+                  !equal(x, y) -> (!subset(x, y) /\ !subset(y, x));
+
+end;;

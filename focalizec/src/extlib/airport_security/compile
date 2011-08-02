@@ -1,0 +1,64 @@
+LIBFOC=/usr/local/lib/focal
+FILES="basic_sets a17subjects a17relations conversionFunctions airsideSubjects
+\
+	aircraftEnv ordinaryPassengersEnv holdBaggageEnv specialPassengersEnv
+	a17property4_2 \
+	a17property4_3 a17property4_7 a17property4_4 a17property4_5  annex17\
+        d2320subjects conversionFunctions2320 airsideEnv2320 ordinaryPassengersEnv2320 \
+	d2320property2 d2320property3 d2320property4 d2320property5 doc2320"
+
+#TMP="a17subjects a17relations airsidePersons ordinaryPassengers baggages a17property4_2 a17property4_4 \
+     a17property4_5 a17property4_7 a17property4_1"
+
+OPTION="--param verbose 0 --novalid"
+PARAM1="--stringparam full-doc true"
+FOCDOC=/usr/share/focal/tools/FoCDoc:.
+
+case "$1" in 
+ "s" )
+      focc -proof -I $LIBFOC $2.foc
+      zvtov  -zopt "-x coqbool -ifocal -q -short -max-time 10m" $2.zv 
+      #coqc $2.v 
+    ;;
+
+ "f" ) 
+     #focc -focdoc -xsd -I $LIBFOC $2.foc
+     #xsltproc -path $FOCDOC -o $2.xhtml $OPTION focdoc2html.xsl $2.focdoc
+     #xsltproc -path $FOCDOC -o $2.xml mmlctop2_0.xsl $2.xhtml
+
+     xsltproc -path $FOCDOC -o $2.tex $PARAM1 focdoc2tex.xsl $2.focdoc
+
+     ;;
+
+ "i" )
+      inhgraph -ps -I $LIBFOC $2.foc
+     ;;
+
+ "d" ) 
+      depgraph -ps -I $LIBFOC $2.foc  
+    ;;
+
+ "t" )
+   for i in $TMP
+    do 
+     echo compiling $i...
+     ./compile s $i
+    done
+     ;;
+ "a" )
+ 
+   for i in $FILES
+    do
+     echo compiling $i ...
+     ./compile s $i
+    
+    done
+     ;;
+
+  * ) 
+   echo Syntax error : use the following compile options  
+   echo  s : to compile one file  e.g compile s basic_sets
+   echo  a : to compile all files e.g compile a
+esac
+
+exit 0

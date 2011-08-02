@@ -1,0 +1,738 @@
+uses a17subjects;;
+open a17subjects;;
+uses d2320subjects;;
+open d2320subjects;;
+uses a17property4_3;;
+open a17property4_3;;
+uses conversionFunctions2320;;
+open conversionFunctions2320;;
+
+species d2320property3(obj is object2320,
+                       obj_set is finite_set(obj),
+                       do is dangerousObject2320,
+                       do_set is finite_set(do),
+                       wp is weapon2320,
+                        wp_set is finite_set(wp),
+                        eo is explosive2320, 
+                        eo_set is finite_set(eo),
+                        dd is dangerousDevice2320,
+                        dd_set is finite_set(dd),
+                        
+                        a_subject is airsideSubject(obj,obj_set),
+                        as_set is finite_set(a_subject),
+                        a_vehicle is airsideVehicle2320(obj,obj_set),
+                        av_set is finite_set(a_vehicle),
+                        
+                        c_baggage is cabinBaggage2320(obj,obj_set),
+                        cb_set is finite_set(c_baggage),
+                        c_person is cabinPerson(obj,obj_set,c_baggage,cb_set), 
+                        cp_set is finite_set(c_person),
+                        seat_no is seat_number,
+                        seat_set is finite_set(seat_no),
+                        c_passenger is cabinPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        c_pa_set is finite_set(c_passenger),
+                        h_baggage is holdBaggage2320(obj,obj_set,c_baggage,cb_set,seat_no,c_passenger),
+                        hl_set is finite_set(h_baggage),
+                        arm_passenger is armedPassenger(obj,obj_set,wp,c_baggage,cb_set,seat_no),
+                        photo is photograph,
+			a_id is airportIdCard(photo),
+			a_pilot is pilot2320(obj,obj_set,c_baggage,cb_set,seat_no,seat_set, photo, a_id),
+                        pilot_set is finite_set(a_pilot),
+                        a_carrier is airCarrier,
+                        d_aircraft is departingAircraft2320(obj,obj_set,wp,a_subject,as_set,c_baggage,cb_set,
+                                                    c_person,cp_set,seat_no,seat_set,
+                                                    c_passenger,h_baggage,hl_set,arm_passenger,photo, a_id, 
+						    a_pilot,a_carrier),
+                        dep_ac_set is finite_set(d_aircraft),
+
+                        a_person is airsidePerson(obj, obj_set),
+                        ap_set is finite_set(a_person),
+
+                        a_staff is staff(obj, obj_set, photo, a_id),
+
+                        staff_set is finite_set(a_staff),
+
+                        dsk_passenger is disembarkedPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dsk_pa_set is finite_set(dsk_passenger),
+ 
+                        dep_passenger is departingPassenger(obj,obj_set,c_baggage,cb_set,seat_no),
+                        dep_pa_set is finite_set(dep_passenger),
+
+                        tf_passenger is transferPassenger2320
+                                     (obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),
+                        tf_pa_set is finite_set(tf_passenger),
+
+                        ts_passenger is transitPassenger
+                                          (obj,obj_set,wp,c_baggage,cb_set,seat_no,a_person),     
+                        ts_pa_set is finite_set(ts_passenger), 
+                        
+                        o_aircraft is originatingAircraft2320(obj,obj_set,wp,a_subject,as_set,
+                                                      c_baggage,cb_set,c_person,cp_set,seat_no,seat_set,
+                                                      c_passenger,h_baggage,hl_set,arm_passenger,photo,a_id,a_pilot,
+                                                      a_carrier),
+
+                        o_ac_set is finite_set(o_aircraft),
+
+                        ts_aircraft is transitAircraft2320(obj,obj_set,wp,a_subject,as_set,
+                                                      c_baggage,cb_set,c_person,cp_set,seat_no,seat_set,
+                                                      dsk_passenger,dsk_pa_set,
+                                                      c_passenger,h_baggage,hl_set,arm_passenger,photo,a_id,a_pilot,
+                                                      a_carrier),
+
+                        ts_ac_set is finite_set(ts_aircraft),
+                        
+                        sra is securityRestrictedArea2320
+                                    (obj, obj_set,wp, a_subject, as_set, c_baggage, cb_set,
+                                     photo,a_id,a_staff,c_person,cp_set ,seat_no,seat_set,
+                                     c_passenger,h_baggage,hl_set,arm_passenger,a_pilot,a_carrier,
+                                     d_aircraft,dep_ac_set),
+
+                        sra_set is finite_set(sra), 
+
+                        wpToDo is dangerousObject_subtype2320(wp,do,wp_set,do_set),
+                        eoToDo is dangerousObject_subtype2320(eo,do,eo_set,do_set),
+                        ddToDo is dangerousObject_subtype2320(dd,do,dd_set,do_set),
+                        doToObj is dangerousObjectToObject2320(do,obj,do_set,obj_set),
+                        apToAs is airsideSubject_subtype(obj,obj_set,a_person,a_subject,ap_set,as_set),
+                        cpToAp is airsideSubject_subtype(obj,obj_set,c_person,a_person,cp_set,ap_set),
+                        stToAp is airsideSubject_subtype(obj,obj_set,a_staff,a_person,staff_set,ap_set),
+                        avToAs is airsideSubject_subtype(obj,obj_set,a_vehicle,a_subject,av_set,as_set),
+                        piToSt is staff_subtype(obj,obj_set,photo,a_id,a_pilot,a_staff,pilot_set,staff_set),
+                        piToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,a_pilot,c_person,pilot_set,cp_set),
+                        dskToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dsk_passenger,
+                                                          c_passenger,dsk_pa_set,c_pa_set), 
+                        depToCpa is cabinPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,dep_passenger,
+                                                          c_passenger,dep_pa_set,c_pa_set),
+                        cpaToCp is cabinPerson_subtype(obj,obj_set,c_baggage,cb_set,c_passenger,c_person,
+                                                       c_pa_set,cp_set), 
+                        tsToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                ts_passenger,dsk_passenger,ts_pa_set,dsk_pa_set),
+                        tfToDsk is disembarkedPassenger_subtype(obj,obj_set,c_baggage,cb_set,seat_no,
+                                                                tf_passenger,dsk_passenger,tf_pa_set,dsk_pa_set),
+                        oacToAc is departingAircraft_subtype2320(obj,obj_set,wp,a_subject,as_set,
+                                                      c_baggage,cb_set,c_person,cp_set,seat_no,seat_set,
+                                                      c_passenger,h_baggage,hl_set,arm_passenger,photo,a_id,a_pilot,
+                                                      a_carrier,o_aircraft,d_aircraft,o_ac_set,dep_ac_set),
+                        tacToAc is departingAircraft_subtype2320(obj,obj_set,wp,a_subject,as_set,
+                                                      c_baggage,cb_set,c_person,cp_set,seat_no,seat_set,
+                                                      c_passenger,h_baggage,hl_set,arm_passenger,photo,a_id,a_pilot,
+                                                      a_carrier,ts_aircraft,d_aircraft,ts_ac_set,dep_ac_set)
+                        )                        
+                
+       inherits a17property4_3(obj,obj_set,do,do_set,wp,
+                            wp_set,eo,eo_set,dd,dd_set,
+                            a_subject,as_set,a_vehicle,av_set,
+                            c_baggage,cb_set,c_person, cp_set,seat_no,
+                            seat_set,c_passenger,c_pa_set,h_baggage,
+                            hl_set,arm_passenger,
+                            a_pilot,pilot_set,a_carrier,d_aircraft,dep_ac_set,a_person,
+                            ap_set,a_staff,staff_set,
+                            dsk_passenger,dsk_pa_set,dep_passenger,dep_pa_set,tf_passenger,tf_pa_set,ts_passenger,
+                            ts_pa_set,o_aircraft,
+                            o_ac_set,ts_aircraft,ts_ac_set,sra,
+                            sra_set, wpToDo,eoToDo,ddToDo,doToObj,
+                            apToAs,cpToAp,stToAp,avToAs,piToSt,piToCp,dskToCpa,depToCpa,
+                            cpaToCp,tsToDsk,tfToDsk,oacToAc,tacToAc) = 
+	
+(** Security Property : 3.1.1(a) Aircraft not in service must be subjected to aircraft 
+    security search immediately before or immediately after being taken into a security restricted 
+    area for a flight. 
+ 
+    Here, a reconciliation is performed between originating aircraft and the term Aircraft not in 
+    service being taken into SRA *)
+	   
+property d2320_3_1_1a : all a in o_aircraft, all area in sra, all s in self,
+    o_ac_set!member(a,!originatingAircraft(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+     dep_ac_set!member(oacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+        o_aircraft!aircraft_security_search(a);
+
+(** Refinement Theorem : for Property 4.3.1 of Annex 17 *)
+
+theorem refinement_4_3_1 : 
+	!d2320_3_1_1a -> !property_4_3_1
+
+proof : by def !d2320_3_1_1a, !property_4_3_1;
+
+
+(** Security Property : 3.1.1(b). Aircraft in service, during turn-around, or transit stops, must be 
+    subjected to an aircraft security check immediately after passenger disembarkation or as late as 
+    possible before passenger boarding and baggage loading as appropriate.
+
+    As for originating aircraft, the term aircraft in service during turn-around or transit stops 
+    is reconciled with the term transit aircraft.
+
+    This security property is decomposed into two sub-properties to explicitly specify that aircraft security 
+    check are mandatory for transit aircraft and that aircraft subjected to such check must fulfill 
+    certain conditions.
+*)
+
+property d2320_3_1_1b_1 : all a in ts_aircraft, all area in sra, all s in self,
+    ts_ac_set!member(a,!transitAircraft(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+     dep_ac_set!member(tacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+        ts_aircraft!aircraft_security_check(a);
+
+property d2320_3_1_1b_2 : all a in ts_aircraft, all area in sra, 
+    all p in dsk_passenger, all s in self, 
+    ts_ac_set!member(a,!transitAircraft(s)) ->
+    sra_set!member(area,!securityRestrictedAreas(s)) ->
+     dep_ac_set!member(tacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+        dsk_pa_set!member(p,ts_aircraft!disembarkedPassengers(a)) -> 
+	  ts_aircraft!aircraft_security_check(a) ->
+             not(!onboardTAircraft(!dskToAp(p),a));
+
+letprop no_item_left_by_dsk(a in ts_aircraft, s in self) = 
+ all p in dsk_passenger, all o in obj,
+  dsk_pa_set!member(p,ts_aircraft!disembarkedPassengers(a)) ->
+      !not_transfer_or_transit(p,s) -> 
+       obj_set!member(o,dsk_passenger!objects_carried(p)) -> 
+         not(obj_set!member(o,ts_aircraft!onboardObjects(a)));
+
+
+(** The notion of aircraft security check for transit aircraft is characterized 
+    by the fact that there are initially no dangerous object on board, that disembarked 
+    passengers do not leave items on board and that objects classified as weapons carried by 
+    unescorted persons (staff) are not accessible in cabin if left on board.   
+*) 
+
+property securityCheck_TAircraft : all a in ts_aircraft, all s in self, 
+  ts_ac_set!member(a,!transitAircraft(s)) ->
+  ts_aircraft!aircraft_security_check(a) ->
+    (!initial_cabin_secureTS(a,s) and
+     !initial_hold_secureTS(a,s) and 
+     !inaccessible_weapon_unescortedTS(a,s) and
+     !no_item_left_by_dsk(a,s));
+
+(** Refinement Theorem : for Property 4.3.2 of Annex 17 *)
+
+theorem refinement_4_3_2 : 
+	!d2320_3_1_1b_1 -> !property_4_3_2
+
+proof : by !securityCheck_TAircraft 
+      	   def !d2320_3_1_1b_1, !property_4_3_2 , !no_item_left_by_dsk;
+
+
+(** Security Property : 3.1.2. All aircraft security searches and aircraft security checks must 
+    be conducted once all service providers, other than those involved in the security function, 
+    have left the aircraft. Sterility must be maintained until and throughout the boarding process 
+    and pre-departure.
+ 
+    This security property is decomposed into four sub-properties to properly capture the notion of 
+    non interference and the conditions under which security searches or checks must be carried out, 
+    and also to make the distinction between originating aircraft and transit aircraft. 
+*)
+
+property d2320_3_1_2a : all a in o_aircraft, all area in sra, 
+   all p in a_staff, all s in self,  
+     o_ac_set!member(a,!originatingAircraft(s)) ->
+      staff_set!member(p,!unescortedPersons(s)) ->
+      a_staff!service_provider(p) ->
+       sra_set!member(area,!securityRestrictedAreas(s)) ->
+        dep_ac_set!member(oacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+          o_aircraft!aircraft_security_search(a) ->
+             not(!onboardOAircraft(stToAp!to_super(p),a));
+
+property d2320_3_1_2b : all a in ts_aircraft, all area in sra, 
+   all p in a_staff, all s in self,  
+     ts_ac_set!member(a,!transitAircraft(s)) ->
+      staff_set!member(p,!unescortedPersons(s)) ->
+      a_staff!service_provider(p) ->
+       sra_set!member(area,!securityRestrictedAreas(s)) ->
+        dep_ac_set!member(tacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+          ts_aircraft!aircraft_security_check(a) ->
+             not(!onboardTAircraft(stToAp!to_super(p),a));
+
+letprop sterilityOAC(a in o_aircraft, s in self) = 
+ o_aircraft!access_controlled(a) -> o_aircraft!surveillance(a) ->
+ all p in a_subject, all o in obj,  
+  as_set!member(p,!airsideSubjects(s)) ->
+   not(o_aircraft!access_authorized(p,a)) ->
+     obj_set!member(o,a_subject!objects_carried(p)) ->
+     not(obj_set!member(o,o_aircraft!onboardObjects(a)));
+
+property d2320_3_1_2c : all a in o_aircraft, all area in sra, all s in self, 
+ o_ac_set!member(a,!originatingAircraft(s)) ->
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   dep_ac_set!member(oacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+     o_aircraft!aircraft_security_search(a) ->
+      (!sterilityOAC(a,s) or o_aircraft!departed(a));
+
+letprop sterilityTAC(a in ts_aircraft, s in self) = 
+ ts_aircraft!access_controlled(a) -> 
+ ts_aircraft!surveillance(a) ->
+ all p in a_subject, all o in obj,  
+  as_set!member(p,!airsideSubjects(s)) ->
+   not(ts_aircraft!access_authorized(p,a)) ->
+     obj_set!member(o,a_subject!objects_carried(p)) ->
+     not(obj_set!member(o,ts_aircraft!onboardObjects(a)));
+
+property d2320_3_1_2d : all a in ts_aircraft, all area in sra, all s in self, 
+ ts_ac_set!member(a,!transitAircraft(s)) ->
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   dep_ac_set!member(tacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+     ts_aircraft!aircraft_security_check(a) ->
+      (!sterilityTAC(a,s) or ts_aircraft!departed(a));
+
+
+(** Security Property : 3.2.1.(a). Access to aircraft in service must be controlled 
+    from the start of the aircraft security check until departure
+    
+    This security property only concerns transit aircraft
+*)
+
+property d2320_3_2_1a : all a in ts_aircraft, all area in sra, all s in self, 
+ ts_ac_set!member(a,!transitAircraft(s)) ->
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   dep_ac_set!member(tacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+     ts_aircraft!aircraft_security_check(a) ->
+      (ts_aircraft!access_controlled(a) or ts_aircraft!departed(a));
+
+
+(** Security Property : 3.2.1.(b) Access to aircraft not in service, which have 
+    been searched and brought into a security restricted area, must be controlled 
+    from the start of the aircraft security search until departure.
+    
+    This security property only concerns originating aircraft
+*)
+
+property d2320_3_2_1b : all a in o_aircraft, all area in sra, all s in self, 
+ o_ac_set!member(a,!originatingAircraft(s)) ->
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   dep_ac_set!member(oacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+     o_aircraft!aircraft_security_search(a) ->
+      (o_aircraft!access_controlled(a) or o_aircraft!departed(a));
+
+
+(** Security Property : 3.2.2. Each aircraft in service must be placed under surveillance 
+    sufficient to detect unauthorized access.
+    
+    This security property concerns all departing aircraft in sra
+*)
+
+property d2320_3_2_2 : all a in d_aircraft, all area in sra, all s in self, 
+ dep_ac_set!member(a,!departingAircraft(s)) ->
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+     d_aircraft!surveillance(a);
+
+(** Refinement Theorem : for Property 4.3.4 of Annex 17 *)
+
+theorem refinement_4_3_4 : 
+	!d2320_3_1_2c -> !d2320_3_2_1b -> !d2320_3_2_2 -> !property_4_3_4
+
+proof : by !originatingAircraft_to_dep_aircraft, oacToAc!to_super_surveillance_access,
+      	   #beq_symm, #beq_subst, !d2320_3_1_1a
+      	   def !d2320_3_1_2c, !d2320_3_2_1b, !d2320_3_2_2, !property_4_3_4, 
+	       !no_interferenceOAC, !sterilityOAC;
+
+(** Security Property : 3.2.3(a) Cabin doors shall be closed for aircraft not in service 
+    This security property only concerns originating aircraft 
+*)
+
+property d2320_3_2_3a : all a in o_aircraft, all area in sra, all s in self, 
+ o_ac_set!member(a,!originatingAircraft(s)) ->
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   dep_ac_set!member(oacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+     o_aircraft!cabin_doors_was_closed(a); 
+
+(** Security Property : 3.2.3(b) air bridges and/or ventral stairs must be secured for aircraft not in service 
+    This security property only concerns originating aircraft 
+*)
+
+property d2320_3_2_3b : all a in o_aircraft, all area in sra, all s in self, 
+ o_ac_set!member(a,!originatingAircraft(s)) ->
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   dep_ac_set!member(oacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+     o_aircraft!air_bridge_ventral_stairs_was_secured(a);
+
+(** Security Property : 3.2.3(c) Tamper evidence must be applied to doors of aircraft not in service 
+    This security property only concerns originating aircraft 
+*)
+
+property d2320_3_2_3c : all a in o_aircraft, all area in sra, all s in self, 
+ o_ac_set!member(a,!originatingAircraft(s)) ->
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   dep_ac_set!member(oacToAc!to_super(a),sra!departingAircraft_in_sra(area)) ->
+     o_aircraft!tamper_evidence_was_applied(a);
+
+(** For originating aircraft, aircraft security search is no more a sufficient condition 
+    to determine whether objects initially on board the aircraft are secure. In fact, additional conditions 
+    are required as specified by properties 3.2.3a 3.2.3b and 3.2.3c   
+*) 
+
+property securitySearch_OAircraft2320 : all a in o_aircraft, all s in self, 
+ o_ac_set!member(a,!originatingAircraft(s)) ->
+   o_aircraft!aircraft_security_search(a) ->
+    ((o_aircraft!cabin_doors_was_closed(a) -> 
+    	o_aircraft!air_bridge_ventral_stairs_was_secured (a) ->
+	o_aircraft!tamper_evidence_was_applied(a) -> 
+	(!initial_cabin_secure(a,s) and !initial_hold_secure(a,s) and
+	 !initial_exterior_secure(a,s)))
+    and 
+     !inaccessible_weapon_unescorted(a,s));
+
+
+(** Security Property : 4.3. Irrespective of hold baggage being loaded and 
+    boarding passengers, there are no unauthorized dangerous objects on 
+    board departing aircraft.
+*)
+
+
+(** Hidden Assumption : 4.3_H2. disembarked passengers ending their journey cannot 
+    have access to originating aircraft departing from security restricted 
+    areas. keep *)
+
+(** Hidden Assumption : 4.3_H1. originating aircraft subjected only to aircraft 
+    security checks are considered not to have any unauthorized dangerous 
+    objects placed externally.  remove*)   
+
+(** Hidden Assumption : 4.3_H3. Transit aircraft must be protected from 
+unauthorized interference to prevent unauthorized access. remove *)
+
+(** Refinement Theorem : for Hidden Assumption 4.3_H3 of Annex 17 *)
+
+theorem refinement_assumption_4_3_H3 : 
+	!d2320_3_1_2d -> !d2320_3_2_1a -> !d2320_3_2_2 -> !hidden_assumption_4_3_H3
+
+proof : by !transitAircraft_to_dep_aircraft, tacToAc!to_super_surveillance_access,
+      	   #beq_symm, #beq_subst, !d2320_3_1_1b_1, !departed_taircraft_cperson, 
+	   !departed_taircraft_onboard, !departed_taircraft_avehicle, 
+	   !aSubject_dAircraft_not_access, a_subject!equal_congruence, 
+	   obj_set!equal1, obj_set!subset2, as_set!union1, dep_ac_set!equal_member2,
+           apToAs!to_super_set_const1, avToAs!to_super_set_const1,
+	   d_aircraft!access_authorized_congruence
+      	   def !d2320_3_1_2d, !d2320_3_2_1a, !d2320_3_2_2, !hidden_assumption_4_3_H3, 
+	       !airsideSubjects, !sterilityTAC;
+(*
+proof : 
+<1>1 assume a in ts_aircraft 
+     	    area in sra 
+  	    s in self 
+	    p in a_subject
+	    o in obj
+	    H1 : !d2320_3_1_2d 
+	    H2 : !d2320_3_2_1a 
+	    H3 : !d2320_3_2_2
+ 	    H4 : as_set!member(p,!airsideSubjects(s)) 
+	    H5 : ts_ac_set!member(a,!transitAircraft(s)) 
+	    H6 : sra_set!member(area,!securityRestrictedAreas(s)) 
+	    H7 : dep_ac_set!member(tacToAc!to_super(a),sra!departingAircraft_in_sra(area)) 
+       	    H8 : not(ts_aircraft!access_authorized(p,a)) 
+       	    H9 : obj_set!member(o,a_subject!objects_carried(p))
+ 
+            prove not(obj_set!member(o,ts_aircraft!onboardObjects(a)))
+
+  <2>1 assume
+	H10 : !sterilityTAC(a,s) 
+        H11 : ts_aircraft!aircraft_security_check(a)
+
+        prove not(obj_set!member(o,ts_aircraft!onboardObjects(a)))
+
+	<3>1 assume
+	     H13 : ts_aircraft!access_controlled(a)
+ 	      prove not(obj_set!member(o,ts_aircraft!onboardObjects(a)))
+
+	      by <3>:H13, <2>:H10, <1>:H3, <1>:H5, <1>:H6, <1>:H7, <1>:H4, <1>:H8, <1>:H9,
+	      	 !transitAircraft_to_dep_aircraft, tacToAc!to_super_surveillance_access,
+	   	  #beq_symm, #beq_subst
+	      	 def !d2320_3_2_2, !sterilityTAC
+
+	<3>2 assume 
+	    H13 : ts_aircraft!departed(a)
+	    
+	    <4>1 assume ap in a_person
+		 H14 : ap_set!member(ap,!airsidePersons(s))
+            	 H15 : a_subject!equal(apToAs!to_super(ap),p)
+
+	    	 prove not(obj_set!member(o,ts_aircraft!onboardObjects(a)))
+	   	
+		 by <1>:H5(*, <3>:H13, <4>:H14, <4>:H15, <1>:H8, <1>:H6, 
+		 <1>:H7, <1>:H9, !departed_taircraft_cperson,  a_subject!equal_congruence, 
+		 obj_set!equal1, obj_set!subset2, 
+		 !departed_taircraft_onboard, ts_aircraft!access_authorized_congruence,
+		 !aSubject_dAircraft_not_access*)
+	    
+	    <4>2 assume
+	    	 av in a_vehicle
+	    	 H14 : av_set!member(av,!airsideVehicles(s))
+           	 H15 : a_subject!equal(avToAs!to_super(av),p)
+ 
+		 prove not(obj_set!member(o,ts_aircraft!onboardObjects(a)))
+
+	    	 by <4>:H14, <4>:H15, <1>:H9, <1>:H7, <1>:H6, <1>:H5, <3>:H13, 
+		 !departed_taircraft_avehicle, a_subject!equal_congruence,
+		 !aSubject_dAircraft_not_access, obj_set!equal1, obj_set!subset2,
+		 tacToAc!to_super_access_aircraft, tacToAc!to_super_aircraft, 
+		 #beq_subst, #beq_symm
+	    
+	    <4>3 qed by <4>1, <4>2, as_set!union1,<1>:H4, 
+	    	     apToAs!to_super_set_const1, avToAs!to_super_set_const1
+		     def !airsideSubjects
+	    
+	    (*by <3>:H13, <1>:H5, <1>:H8, <1>:H6, <1>:H7, <1>:H9, <1>:H4, a_subject!equal_congruence, 
+	       !departed_taircraft_cperson, obj_set!equal1, obj_set!subset2, 
+	       as_set!union1, apToAs!to_super_set_const1, !aSubject_dAircraft_not_access,
+	       avToAs!to_super_set_const1, ts_aircraft!access_authorized_congruence,
+	       !departed_taircraft_onboard,!departed_taircraft_avehicle
+	       def !airsideSubjects*)
+
+	<3>3 qed by <3>1, <3>2, <1>:H2, <1>:H5, <1>:H6, <1>:H7, <2>:H11
+	     def !d2320_3_2_1a
+
+  <2>2 assume
+	H10 : ts_aircraft!departed(a)
+      
+	 prove not(obj_set!member(o,ts_aircraft!onboardObjects(a)))
+       	 by <2>:H10, !departed_taircraft_cperson
+
+  <2>3 qed by <2>1, <2>2, <1>:H5, <1>:H6, <1>:H7, <1>:H1, !d2320_3_1_1b_1 
+       	   def !d2320_3_1_2d
+
+<1>2 qed by <1>1 def !hidden_assumption_4_3_H3;*)
+         
+
+theorem property_4_3 : 
+  all a in d_aircraft, all area in sra, all s in self, all o in obj, 
+  sra_set!member(area,!securityRestrictedAreas(s)) ->
+   dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) ->
+    obj_set!member(o,d_aircraft!onboardObjects(a)) -> 
+       (!initial_objects_secure(o,a,s) and 
+        !no_unauthorized_access(o,a,s) and
+        !dsk_passengers_const(o,a,s))
+
+proof : 
+<1>1  assume a in d_aircraft area in sra 
+             s in self o in obj 
+      H1:  sra_set!member(area,!securityRestrictedAreas(s))
+      H2: dep_ac_set!member(a,sra!departingAircraft_in_sra(area)) 
+      H3: obj_set!member(o,d_aircraft!onboardObjects(a)) 
+       
+      prove (!initial_objects_secure(o,a,s) and 
+             !no_unauthorized_access(o,a,s) and
+             !dsk_passengers_const(o,a,s))
+  
+  <2>1 assume oa in o_aircraft
+       
+       H4 : o_ac_set!member(oa,!originatingAircraft(s)) 
+       H5 : d_aircraft!equal(oacToAc!to_super(oa),a)
+
+       prove (!initial_objects_secure(o,a,s) and 
+             !no_unauthorized_access(o,a,s) and
+             !dsk_passengers_const(o,a,s))
+
+  <3>1 assume as in a_subject
+        H6 : d_aircraft!accessing_aircraft(as,a)
+        prove o_aircraft!accessing_aircraft(as,oa)
+
+    <4>1 prove d_aircraft!accessing_aircraft(as,oacToAc!to_super(oa))
+         by <2>:H5,<3>:H6, d_aircraft!equal_symmetric,  
+             d_aircraft!equal_congruence2
+    <4>2 qed by <4>1, oacToAc!to_super_access_aircraft, #beq_symm, 
+         #beq_subst
+
+  <3>2 assume as in a_subject
+        H6 : o_aircraft!access_authorized(as,oa)
+       prove d_aircraft!access_authorized(as,a)
+          
+       by <2>:H5, <3>:H6, oacToAc!to_super_access_aircraft, 
+          d_aircraft!equal_congruence3, #beq_subst
+
+   <3>3 prove !initial_objects_secure(o,a,s)
+        
+    <4>1 assume d in do
+          H7 : do_set!member(d,!dangerousObjects(s)) 
+          H8 : obj!equal(doToObj!to_super(d),o) 
+          H9 : o_aircraft!aircraft_security_check(oa) 
+          H10 : obj_set!member(o,o_aircraft!initial_objects(oa)) 
+
+         prove do!is_authorized(d)
+               by <4>:H7, <4>:H8, <4>:H9, <4>:H10, <2>:H4, <1>:H1, 
+                  <1>:H2, <2>:H5, dep_ac_set!equal_member2,   
+                  !securityCheck_OAircraft, obj_set!equal_member2, 
+                  o_aircraft!initial_objects_const, 
+                  !hidden_assumption_4_3_H1
+                   def !initial_cabin_secure, !initial_hold_secure, 
+                       !initial_exterior_secure
+
+    <4>2 assume d in do
+          H7 : do_set!member(d,!dangerousObjects(s)) 
+          H8 : obj!equal(doToObj!to_super(d),o) 
+          H9 : o_aircraft!aircraft_security_search(oa)
+          H10 : obj_set!member(o,o_aircraft!initial_objects(oa))
+
+         prove do!is_authorized(d) 
+               by <4>:H7, <4>:H8, <4>:H9, <4>:H10, <2>:H4, 
+               !securitySearch_OAircraft, !securityCheck_OAircraft, 
+               obj_set!equal_member2, o_aircraft!initial_objects_const 
+               def !initial_cabin_secure, !initial_hold_secure, 
+                   !initial_exterior_secure
+         
+    <4>3 qed by <4>1, <4>2, d_aircraft!equal_congruence, 
+         oacToAc!to_super_aircraft, 
+         obj_set!equal1, obj_set!subset2, obj_set!equal_transitive,
+         !property_4_3_1, <1>:H1, <1>:H2, <2>:H4, <2>:H5, 
+         dep_ac_set!equal_member2 def !initial_objects_secure
+         
+   <3>4 prove !no_unauthorized_access(o,a,s)
+
+     <4>1 assume
+           H7: !no_interferenceOAC (oa,s)
+          prove !no_unauthorized_access(o,a,s)
+
+           by <3>2, <4>:H7, <1>:H3, <2>:H5,  
+               oacToAc!to_super_aircraft, d_aircraft!equal_congruence, 
+               obj_set!equal1, obj_set!subset2, obj_set!equal_transitive
+              def !no_interferenceOAC, !no_unauthorized_access
+
+     <4>2 assume 
+           H7 : o_aircraft!departed(oa)
+          prove !no_unauthorized_access(o,a,s) 
+
+      <5>1 assume as in a_subject
+                  p in a_person
+            H8 : ap_set!member(p,!airsidePersons(s))
+            H9 : a_subject!equal(apToAs!to_super(p),as)
+            H10 :  not(d_aircraft!access_authorized(as,a)) 
+
+            prove not(obj_set!member(o,a_subject!objects_carried(as)))             
+        
+            by <3>1, <3>2,<2>:H4, <4>:H7, <5>:H8, <5>:H9, <1>:H1, 
+               <1>:H2, <1>:H3, <5>:H10,
+               !departed_oaircraft_onboard, !aSubject_dAircraft_not_access, 
+               !departed_oaircraft_cperson, a_subject!equal_congruence, 
+                obj_set!equal1, obj_set!subset2,
+                d_aircraft!access_authorized_congruence   
+ 
+      <5>2 assume as in a_subject
+                  v in a_vehicle
+            H8 : av_set!member(v,!airsideVehicles(s))
+            H9 : a_subject!equal(avToAs!to_super(v),as) 
+            H10 : not(d_aircraft!access_authorized(as,a)) 
+            
+           prove not(obj_set!member(o,a_subject!objects_carried(as)))
+
+           by <3>1, <2>:H4, <4>:H7, <5>:H8, <5>:H9, <1>:H1, 
+              a_subject!equal_symmetric, <1>:H2, <1>:H3, 
+              d_aircraft!accessing_aircraft_congruence, 
+              !aSubject_dAircraft_not_access, !departed_oaircraft_avehicle
+               
+      <5>3 qed by <5>1, <5>2, as_set!union1, apToAs!to_super_set_const1, 
+                  avToAs!to_super_set_const1 def !airsideSubjects, 
+                  !no_unauthorized_access
+
+     <4>3 qed by <4>1, <4>2, <2>:H4, <2>:H5, <1>:H1,<1>:H2, 
+                 dep_ac_set!equal_member2,  !property_4_3_4, 
+                 !property_4_3_1       
+
+   <3>5 prove !dsk_passengers_const(o,a,s)
+      
+      <4>1 assume as in a_subject
+            H6 : d_aircraft!access_authorized(as,a)
+           prove o_aircraft!access_authorized(as,oa)
+
+         <5>1 prove d_aircraft!access_authorized(as,oacToAc!to_super(oa))
+              by <2>:H5, <4>:H6, d_aircraft!equal_symmetric, 
+              d_aircraft!equal_congruence3
+
+         <5>2 qed by <5>1, oacToAc!to_super_access_aircraft, 
+              #beq_symm, #beq_subst
+
+      <4>2 qed by <4>1, <2>:H4, <1>:H1, <3>2, <2>:H5, 
+           dep_ac_set!equal_member2, <1>:H2, !hidden_assumption_4_3_H2, <1>:H3, 
+           !departed_aircraft_not_authorized, !aSubject_dAircraft_not_access,
+           !dsk_passenger_object, obj_set!equal1, obj_set!subset2
+           def !dsk_passengers_const
+ 
+   <3>6 qed by <3>3, <3>4, <3>5
+  
+  <2>2 assume ta in ts_aircraft
+       
+       H4 : ts_ac_set!member(ta,!transitAircraft(s)) 
+       H5 : d_aircraft!equal(tacToAc!to_super(ta),a)
+        
+       prove (!initial_objects_secure(o,a,s) and 
+             !no_unauthorized_access(o,a,s) and
+             !dsk_passengers_const(o,a,s))
+
+   <3>1 prove !initial_objects_secure(o,a,s)
+        
+    <4>1 assume d in do
+          H7 : do_set!member(d,!dangerousObjects(s)) 
+          H8 : obj!equal(doToObj!to_super(d),o) 
+          H9 : obj_set!member(o,ts_aircraft!initial_objects(ta)) 
+
+         prove do!is_authorized(d)
+         by <2>:H4, <1>:H1, <1>:H2, <2>:H5, <4>:H7, <4>:H8, <4>:H9, 
+            dep_ac_set!equal_member2, obj_set!equal_member2, 
+            !hidden_assumption_4_3_H4, ts_aircraft!initial_objects_const
+            def !initial_cabin_secureTS, !initial_hold_secureTS,
+                !initial_exterior_secureTS
+
+    <4>2 qed by <4>1, d_aircraft!equal_congruence, 
+         tacToAc!to_super_aircraft, obj_set!equal1, obj_set!subset2, 
+         obj_set!equal_transitive, <2>:H5 def !initial_objects_secure
+         
+   <3>2 prove !no_unauthorized_access(o,a,s)
+     <4>1 assume p in a_subject
+           H7 : as_set!member(p,!airsideSubjects(s)) 
+           H8 : not(ts_aircraft!access_authorized(p,ta))
+ 
+          prove not(obj_set!member(o,a_subject!objects_carried(p)))
+ 
+          by !hidden_assumption_4_3_H3, <2>:H4, <2>:H5, <1>:H1, <1>:H2, 
+             <1>:H3, d_aircraft!equal_congruence, tacToAc!to_super_aircraft, 
+             obj_set!equal_transitive, obj_set!equal1, obj_set!subset2, 
+             <4>:H8, dep_ac_set!equal_member2  
+
+    <4>2 qed by <4>1, <2>:H5, d_aircraft!equal_congruence3,  
+             tacToAc!to_super_access_aircraft, #beq_subst 
+             def !no_unauthorized_access 
+                 
+   <3>3 prove !dsk_passengers_const(o,a,s)
+     
+     <4>1 assume dp in dsk_passenger
+           H7 : dsk_pa_set!member(dp,!disembarkedPassengers(s)) 
+           H8 : !not_transfer_or_transit(dp,s) 
+           H9 : dsk_pa_set!member(dp,ts_aircraft!disembarkedPassengers(ta)) 
+
+          prove not(obj_set!member(o,dsk_passenger!objects_carried(dp)))
+
+          by <2>:H4, <2>:H5, <1>:H1, <1>:H2, <1>:H3, <4>:H8, <4>:H9, 
+             d_aircraft!equal_congruence, tacToAc!to_super_aircraft, 
+             obj_set!equal_transitive, obj_set!equal1, 
+             obj_set!subset2, dep_ac_set!equal_member2, 
+             !property_4_3_2
+                 
+     <4>2 assume dp in dsk_passenger
+           H7 : dsk_pa_set!member(dp,!disembarkedPassengers(s)) 
+           H8 : !not_transfer_or_transit(dp,s) 
+           H9 : not(dsk_pa_set!member(dp,ts_aircraft!disembarkedPassengers(ta))) 
+
+          prove not(obj_set!member(o,dsk_passenger!objects_carried(dp)))
+
+      <5>1 prove not(d_aircraft!access_authorized(!dskToAs(dp),tacToAc!to_super(ta)))
+           by <2>:H4, <1>:H1, <1>:H2, <2>:H5, dep_ac_set!equal_member2, 
+              !hidden_assumption_4_3_H5, <4>:H9, <4>:H8, 
+              tacToAc!to_super_access_aircraft, #beq_symm, #beq_subst
+
+      <5>2 prove not(d_aircraft!accessing_aircraft(!dskToAs(dp),tacToAc!to_super(ta)))
+           by <5>1, <1>:H1, <1>:H2, <2>:H5, !departed_aircraft_not_authorized,
+               dep_ac_set!equal_member2
+ 
+      <5>3 qed by <5>2, <1>:H1, <1>:H2,  !aSubject_dAircraft_not_access,
+               dep_ac_set!equal_member2, !dsk_passenger_object, obj_set!equal1, 
+               obj_set!subset2, <2>:H5, <1>:H3, d_aircraft!equal_congruence 
+
+     <4>3 qed by <4>1, <4>2 def !dsk_passengers_const
+     
+   <3>4 qed by <3>1, <3>2, <3>3
+  
+  <2>3 qed by <2>1, <2>2, <1>:H1, <1>:H2, !sra_departingAircraft, 
+              dep_ac_set!union1, oacToAc!to_super_set_const1,
+              tacToAc!to_super_set_const1 def !departingAircraft
+<1>2 qed;
+
+              
+               
+end	
