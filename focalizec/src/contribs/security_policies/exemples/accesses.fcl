@@ -35,21 +35,21 @@ species Accesses (S is Subject, O is Object, A is Access_mode) =
     ~ alpha (empty, s, o, a);
 
   property add_spec :
-    all x : Self, all s s2 : S, all o : O, all a : A,
-    if S!equal (s, s2)
-    then alpha (add (x, s, o, a), s2, o, a)
-    else alpha (add (x, s, o, a), s2, o, a) = alpha (x, s2, o, a);
+    all x : Self, all s s2 : S, all o o2 : O, all a a2 : A,
+    if S!equal (s, s2) && O!equal (o, o2) && A!equal (a, a2)
+    then alpha (add (x, s, o, a), s2, o2, a2)
+    else alpha (add (x, s, o, a), s2, o2, a2) = alpha (x, s2, o2, a2);
 
   property release_spec :
-    all x : Self, all s s2 : S, all o : O, all a : A,
-    if S!equal (s, s2)
-    then ~~ alpha (release (x, s, o, a), s2, o, a)
-    else alpha (release (x, s, o, a), s2, o, a) = alpha (x, s2, o, a);
+    all x : Self, all s s2 : S, all o o2 : O, all a a2 : A,
+    if S!equal (s, s2) && O!equal (o, o2) && A!equal (a, a2)
+    then ~~ alpha (release (x, s, o, a), s2, o2, a2)
+    else alpha (release (x, s, o, a), s2, o2, a2) = alpha (x, s2, o2, a2);
 
   property is_contained_spec :
     all x y : Self,
-    is_contained (x, y) <-> (all s : S, all o : O, all a : A,
-                             alpha (x, s, o, a) -> alpha (y, s, o, a));
+    is_contained (x, y) <-> ( all s : S, all o : O, all a : A,
+                              alpha (x, s, o, a) -> alpha (y, s, o, a) );
 
   theorem is_contained_reflexive : all x : Self, is_contained (x, x)
   proof = by property is_contained_spec;

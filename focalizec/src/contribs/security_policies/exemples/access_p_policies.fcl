@@ -63,3 +63,27 @@ species P_policy_ac (S is Subject, O is Object, A is Access_mode,
   inherit P_policy (T, C);
 
 end;;
+
+
+
+(** Property-based access security policies with read and write accesses *)
+
+
+species Access_mode_rw =
+
+  inherit Access_mode;
+
+  signature read : Self;
+  signature write : Self;
+
+end;;
+
+
+species P_policy_ac_rw (S is Subject, O is Object, A is Access_mode_rw,
+                        Ac is Accesses (S, O, A),
+                        T is Target_ac (S, O, A, Ac),
+                        C is Configuration) =
+
+  inherit P_policy_ac (S, O, A, Ac, T, C);
+
+end;;

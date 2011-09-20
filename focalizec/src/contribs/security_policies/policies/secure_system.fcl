@@ -68,8 +68,6 @@ species Secured_transition_system (St is State, L is Label,
                                    Sys is Transition_system (St, L),
                                    Ss is Secure_state (St)) =
 
-  (* ??? Secure_transition_system ??? *)
-
   inherit Transition_system (Ss, L);
 
   (** If a state is reachable from a secure state, it must be secure. *)
@@ -100,11 +98,12 @@ species Secured_operational_transition_system
     else
       Ss!equal (x, y);
 
-  proof of all_secure = assumed;  (* TODO *)
+  (* la preuve sera cassee *)
+  (* proof of all_secure = assumed;  (\* TODO *\) *)
 
   proof of determinist = assumed; (* TODO *)
 
-  proof of full = assumed;	  (* TODO *)
+  proof of complete = assumed;	  (* TODO *)
 
   (** Transition of the non secure system with the same configuration or,
       if not secure transition, the same state *)
@@ -113,7 +112,7 @@ species Secured_operational_transition_system
     let y = Ss!clone_configuration (x, s) in
     if delta (x, l, y) then y else x;
 
-  proof of transition_is_valid = assumed;              (* TODO *)
+  proof of transition_is_valid = assumed; (* TODO *)
 
   theorem delta_and_some_implies_transition :
     all x y : Ss, all l : L,

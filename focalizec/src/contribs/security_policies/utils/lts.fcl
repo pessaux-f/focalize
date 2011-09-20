@@ -25,13 +25,11 @@ species Transition_system (S is State, L is Label) =
 
   (** transition relation *)
   signature delta : S -> L -> S -> bool;
-    
-  local let ( =S ) = S!equal;
-  local let ( =L ) = L!equal;
+
 
   logical let is_determinist =
     all x y z : S, all l : L,
-    ( delta (x, l, y) /\ delta (x, l, z) ) -> y =S z;
+    ( delta (x, l, y) /\ delta (x, l, z) ) -> S!equal (y, z);
 
   logical let is_complete =
     all x : S, all l : L,
@@ -52,7 +50,7 @@ species Transition_system (S is State, L is Label) =
     let rec aux (p, x) =
       match p with
         | [] -> S!is_initial (x)
-        | (y, l, z) :: q -> z =S x && delta (y, l, z) && aux (q, y) in
+        | (y, l, z) :: q -> S!equal (z, x) && delta (y, l, z) && aux (q, y) in
     function p -> function x -> aux (p, x);
 
   logical let is_reachable (x) =
@@ -72,7 +70,7 @@ species Operational_transition_system (S is State, L is Label) =
   signature transition : S -> L -> S;
 
   property transition_is_valid :
-    all x y : S, all l : L, transition (x, l) =S y -> delta (x, l, y);
+    all x y : S, all l : L, S!equal (transition (x, l), y) -> delta (x, l, y);
 
   (** A multiple transition from state x with a list l of labels *)
   let transition_iter =

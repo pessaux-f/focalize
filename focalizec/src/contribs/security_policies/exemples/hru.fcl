@@ -120,6 +120,47 @@ end;;
 
 
 
+(** HRU policy with read and write accesses *)
+
+
+species P_policy_hru_rw (S is Subject, O is Object, A is Access_mode_rw,
+                         Ac is Accesses (S, O, A),
+                         T is Target_ac (S, O, A, Ac),
+                         C is Configuration_ac (S, O, A, Ac)) =
+
+  inherit P_policy_hru (S, O, A, Ac, T, C);
+
+end;;
+
+
+species Secured_transition_system_hru_rw
+  (S is Subject, O is Object, A is Access_mode_rw, Ac is Accesses (S, O, A),
+   T is Target_ac (S, O, A, Ac), C is Configuration_ac (S, O, A, Ac),
+   P is P_policy_hru_rw (S, O, A, Ac, T, C),
+   St is State_ac (S, O, A, Ac), L is Label_ac (S, O, A),
+   Sys is Transition_system_ac (S, O, A, Ac, St, L),
+   Ss is Secured_state_hru (S, O, A, Ac, T, C, P, St)) =
+
+  inherit Secured_transition_system_hru (S, O, A, Ac, T, C, P, St, L, Sys, Ss);
+
+end;;
+
+
+species Secured_operational_transition_system_hru_rw
+  (S is Subject, O is Object, A is Access_mode_rw, Ac is Accesses (S, O, A),
+   T is Target_ac (S, O, A, Ac), C is Configuration_ac (S, O, A, Ac),
+   P is P_policy_hru_rw (S, O, A, Ac, T, C),
+   St is State_ac (S, O, A, Ac), L is Label_ac (S, O, A),
+   Sys is Operational_transition_system_ac (S, O, A, Ac, St, L),
+   Ss is Secured_state_hru (S, O, A, Ac, T, C, P, St)) =
+
+  inherit Secured_operational_transition_system_hru
+            (S, O, A, Ac, T, C, P, St, L, Sys, Ss);
+
+end;;
+
+
+
 
 
 (* Tests *)

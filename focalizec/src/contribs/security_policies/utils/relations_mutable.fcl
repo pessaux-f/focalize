@@ -19,10 +19,10 @@ species Relation (A is Setoid, B is Setoid) =
   (** Statement for the empty relation being element of Self *)
   logical let empty_belongs = true;
 
-  signature complete : unit -> Self;
+  signature full : unit -> Self;
 
-  (** Statement for the complete relation being element of Self *)
-  logical let complete_belongs = true;
+  (** Statement for the full relation being element of Self *)
+  logical let full_belongs = true;
 
   signature singleton : A -> B -> Self;
 
@@ -62,9 +62,9 @@ species Relation (A is Setoid, B is Setoid) =
     empty_belongs ->
       all a : A, all b : B, ~ relation (empty (()), a, b);
 
-  property complete_spec :
-    complete_belongs ->
-      all a : A, all b : B, relation (complete (()), a, b);
+  property full_spec :
+    full_belongs ->
+      all a : A, all b : B, relation (full (()), a, b);
 
   property singleton_spec :
     all a1 : A, all b1 : B,
@@ -120,7 +120,7 @@ species Injective_relation (A is Setoid, B is Setoid) =
 
 
   (** A can't be empty *)
-  logical let complete_belongs = is_A_singleton;
+  logical let full_belongs = is_A_singleton;
 
   logical let union_is_internal (r1, r2) =
     all a1 a2 : A, all b : B,
@@ -131,8 +131,8 @@ species Injective_relation (A is Setoid, B is Setoid) =
     empty_belongs -> is_left_unique (empty (()))
   proof = assumed;            (* TODO *)
 
-  theorem left_unique_complete :
-    complete_belongs -> is_left_unique (complete (()))
+  theorem left_unique_full :
+    full_belongs -> is_left_unique (full (()))
   proof = assumed;            (* TODO *)
 
   theorem left_unique_singleton :
@@ -165,7 +165,7 @@ species Determinist_relation (A is Setoid, B is Setoid) =
   property right_unique : all r : Self, is_right_unique (r);
 
 
-  logical let complete_belongs = is_B_singleton;
+  logical let full_belongs = is_B_singleton;
 
   logical let union_is_internal (r1, r2) =
     all a : A, all b1 b2 : B,
@@ -176,8 +176,8 @@ species Determinist_relation (A is Setoid, B is Setoid) =
     empty_belongs -> is_right_unique (empty (()))
   proof = assumed;            (* TODO *)
 
-  theorem right_unique_complete :
-    complete_belongs -> is_right_unique (complete (()))
+  theorem right_unique_full :
+    full_belongs -> is_right_unique (full (()))
   proof = assumed;            (* TODO *)
 
   theorem right_unique_singleton :
@@ -225,8 +225,8 @@ species Left_total_relation (A is Setoid, B is Setoid) =
     empty_belongs -> is_left_total (empty (()))
   proof = assumed;            (* TODO *)
 
-  theorem left_total_complete :
-    complete_belongs -> is_left_total (complete (()))
+  theorem left_total_full :
+    full_belongs -> is_left_total (full (()))
   proof = assumed;            (* TODO *)
 
   theorem left_total_singleton :
@@ -274,8 +274,8 @@ species Surjective_relation (A is Setoid, B is Setoid) =
     empty_belongs -> is_right_total (empty (()))
   proof = assumed;            (* TODO *)
 
-  theorem right_total_complete :
-    complete_belongs -> is_right_total (complete (()))
+  theorem right_total_full :
+    full_belongs -> is_right_total (full (()))
   proof = assumed;            (* TODO *)
 
   theorem right_total_singleton :
@@ -312,34 +312,23 @@ species Injective_function (A is Setoid, B is Setoid) =
 
   inherit Function (A, B), Injective_relation (A, B);
 
-  logical let complete_belongs = is_A_singleton /\ is_B_singleton;
+  logical let full_belongs = is_A_singleton /\ is_B_singleton;
 
   logical let union_is_internal (r1, r2) =
     all a1 a2 : A, all b1 b2 : B,
     (( relation (r1, a1, b1) /\ relation (r2, a2, b1) ) -> A!equal (a1, a2)) /\
     (( relation (r1, a1, b1) /\ relation (r2, a1, b2) ) -> B!equal (b1, b2));
 
-<<<<<<< relations_mutable.fcl
-  proof of left_unique_complete = assumed; (* TODO *)
-  proof of left_total_complete = assumed;
-  proof of right_total_complete = assumed;
+  (* Les preuves suivantes devraient etre cassees *)
 
-  proof of left_unique_union = assumed; (* TODO *)
-  proof of left_total_union = assumed;
-  proof of right_total_union = assumed;
-
-=======
-  (* Les preuves suivantes devraient etre cassees (??) *)
-
-  (* proof of left_unique_complete = assumed; (\* TODO *\) *)
-  (* proof of left_total_complete = assumed; *)
-  (* proof of right_total_complete = assumed; *)
+  (* proof of left_unique_full = assumed; (\* TODO *\) *)
+  (* proof of left_total_full = assumed; *)
+  (* proof of right_total_full = assumed; *)
 
   (* proof of left_unique_union = assumed; (\* TODO *\) *)
   (* proof of left_total_union = assumed; *)
   (* proof of right_total_union = assumed; *)
 
->>>>>>> 1.3
 end;;
 
 
@@ -357,17 +346,19 @@ species Surjective_function (A is Setoid, B is Setoid) =
     ( all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b) ) /\
     ( all b : B, ex a : A, relation (r1, a, b) /\ ~ relation (r2, a, b) );
 
-  proof of left_unique_singleton = assumed; (* TODO *)
-  proof of left_total_singleton = assumed;
-  proof of right_total_singleton = assumed;
+  (* Les preuves suivantes devraient etre cassees *)
 
-  proof of left_unique_inter = assumed; (* TODO *)
-  proof of left_total_inter = assumed;
-  proof of right_total_inter = assumed;
+  (* proof of left_unique_singleton = assumed; (\* TODO *\) *)
+  (* proof of left_total_singleton = assumed; *)
+  (* proof of right_total_singleton = assumed; *)
 
-  proof of left_unique_diff = assumed; (* TODO *)
-  proof of left_total_diff = assumed;
-  proof of right_total_diff = assumed;
+  (* proof of left_unique_inter = assumed; (\* TODO *\) *)
+  (* proof of left_total_inter = assumed; *)
+  (* proof of right_total_inter = assumed; *)
+
+  (* proof of left_unique_diff = assumed; (\* TODO *\) *)
+  (* proof of left_total_diff = assumed; *)
+  (* proof of right_total_diff = assumed; *)
 
 end;;
 
@@ -447,7 +438,7 @@ species Finite_relation_by_list (A is Finite_set, B is Finite_set) =
 
 
   local let empty_belongs_impl = true;
-  local let complete_belongs_impl = true;
+  local let full_belongs_impl = true;
   local let singleton_belongs_impl (_a : A, _b : B) = true;
   local let union_is_internal_impl (_r1 : Self, _r2 : Self) = true;
   local let inter_is_internal_impl (_r1 : Self, _r2 : Self) = true;
@@ -457,9 +448,9 @@ species Finite_relation_by_list (A is Finite_set, B is Finite_set) =
     empty_belongs_impl <-> empty_belongs
   proof = by definition of empty_belongs, empty_belongs_impl;
 
-  theorem complete_belongs_impl_correct :
-    complete_belongs_impl <-> complete_belongs
-  proof = by definition of complete_belongs, complete_belongs_impl;
+  theorem full_belongs_impl_correct :
+    full_belongs_impl <-> full_belongs
+  proof = by definition of full_belongs, full_belongs_impl;
   
   theorem singleton_belongs_impl_correct :
     all a : A, all b : B,
@@ -495,7 +486,7 @@ species Finite_relation_by_list (A is Finite_set, B is Finite_set) =
   let empty (_u) =
     if empty_belongs_impl then [] else failed ("empty not belongs");
 
-  local let complete_forced =
+  local let full_forced =
     let rec aux_B (l_b : list (B), a : A, acc) =
       match l_b with
         | [] -> acc
@@ -506,9 +497,9 @@ species Finite_relation_by_list (A is Finite_set, B is Finite_set) =
         | h :: t -> aux_A (t, l_b, rev_append (aux_B (l_b, h, []), acc)) in
     aux_A (A!all_to_list, B!all_to_list, []);
 
-  let complete (_u) =
-    if complete_belongs_impl then complete_forced
-    else failed ("complete not belongs");
+  let full (_u) =
+    if full_belongs_impl then full_forced
+    else failed ("full not belongs");
 
   let singleton (a, b) =
     if singleton_belongs_impl (a, b) then [(a, b)]
@@ -577,7 +568,7 @@ species Finite_relation_by_list (A is Finite_set, B is Finite_set) =
       match l1 with
         | [] -> [l2]
         | h :: t -> rev_append_2 (aux (t, l2), aux (t, h :: l2)) in
-    aux (complete_forced, []);
+    aux (full_forced, []);
 
   local let is_A_singleton_impl =
     match A!all_to_list with | [_] -> true | _ -> false;
@@ -603,7 +594,7 @@ species Finite_relation_by_list (A is Finite_set, B is Finite_set) =
   let print = print_relation;
 
   proof of empty_spec = assumed; (* TODO *)
-  proof of complete_spec = assumed;
+  proof of full_spec = assumed;
   proof of singleton_spec = assumed;
   proof of union_spec = assumed;
   proof of inter_spec = assumed;
@@ -618,7 +609,7 @@ species Finite_injective_relation_by_list (A is Finite_set, B is Finite_set) =
 
   inherit Finite_relation_by_list (A, B), Finite_injective_relation (A, B);
 
-  local let complete_belongs_impl = is_A_singleton_impl;
+  local let full_belongs_impl = is_A_singleton_impl;
 
   local let union_is_internal_aux_A =
     let rec aux_A_bis (l_a : list (A), b : B, a : A, r2) =
@@ -649,9 +640,9 @@ species Finite_injective_relation_by_list (A is Finite_set, B is Finite_set) =
   let print = print_relation;
 
 
-  proof of complete_belongs_impl_correct =
+  proof of full_belongs_impl_correct =
     by property is_A_singleton_impl_correct
-       definition of complete_belongs, complete_belongs_impl;
+       definition of full_belongs, full_belongs_impl;
 
   proof of union_is_internal_impl_correct = assumed; (* TODO *)
 
@@ -664,7 +655,7 @@ species Finite_determinist_relation_by_list (A is Finite_set, B is Finite_set) =
 
   inherit Finite_relation_by_list (A, B), Finite_determinist_relation (A, B);
 
-  local let complete_belongs_impl = is_B_singleton_impl;
+  local let full_belongs_impl = is_B_singleton_impl;
 
   local let union_is_internal_aux_B =
     let rec aux_B_bis (l_b : list (B), a : A, b : B, r2) =
@@ -695,9 +686,9 @@ species Finite_determinist_relation_by_list (A is Finite_set, B is Finite_set) =
   let print = print_relation;
 
 
-  proof of complete_belongs_impl_correct =
+  proof of full_belongs_impl_correct =
     by property is_B_singleton_impl_correct
-       definition of complete_belongs, complete_belongs_impl;
+       definition of full_belongs, full_belongs_impl;
 
   proof of union_is_internal_impl_correct = assumed; (* TODO *)
 
@@ -710,7 +701,7 @@ species Finite_left_total_relation_by_list (A is Finite_set, B is Finite_set) =
 
   inherit Finite_relation_by_list (A, B), Finite_left_total_relation (A, B);
 
-  let element = complete_forced;
+  let element = full_forced;
 
   local let empty_belongs_impl = false;
 
@@ -770,7 +761,7 @@ species Finite_surjective_relation_by_list (A is Finite_set, B is Finite_set) =
 
   inherit Finite_relation_by_list (A, B), Finite_surjective_relation (A, B);
 
-  let element = complete_forced;
+  let element = full_forced;
 
   local let empty_belongs_impl = false;
 
@@ -864,7 +855,7 @@ species Finite_injective_function_by_list (A is Finite_set, B is Finite_set) =
               | b :: t_b -> aux (t_a, t_b, (a, b) :: acc) in
     aux (A!all_to_list, B!all_to_list, []);
 
-  local let complete_belongs_impl = is_A_singleton_impl && is_B_singleton_impl;
+  local let full_belongs_impl = is_A_singleton_impl && is_B_singleton_impl;
 
   local let union_is_internal_impl (r1, r2) =
     union_is_internal_aux_A (r1, r2) && union_is_internal_aux_B (r1, r2);
@@ -876,9 +867,9 @@ species Finite_injective_function_by_list (A is Finite_set, B is Finite_set) =
   let print = print_relation;
 
 
-  proof of complete_belongs_impl_correct =
+  proof of full_belongs_impl_correct =
     by property is_A_singleton_impl_correct, is_B_singleton_impl_correct
-       definition of complete_belongs, complete_belongs_impl;
+       definition of full_belongs, full_belongs_impl;
 
   proof of union_is_internal_impl_correct = assumed;
 
@@ -1058,7 +1049,7 @@ let test (r, s, o) =
 test (r, S!s1, O!o0);;
 test (r, S!s1, O!o1);;
 
-let r1 = R!complete (());;
+let r1 = R!full (());;
 
 test (r1, S!s1, O!o1);;
 
@@ -1092,7 +1083,7 @@ let testF (f, s, o) =
 testF (f, S!s1, O!o0);;
 testF (f, S!s1, O!o1);;
 
-let f1 = F!complete (());;
+let f1 = F!full (());;
 
 testF (f1, S!s1, O!o1);;
 
@@ -1106,7 +1097,7 @@ let f3 = F!inter (f1, f);;
 testF (f3, S!s1, O!o0);;
 testF (f3, S!s1, O!o1);;
 
-print_string ("element = element inter complete   ");;
+print_string ("element = element inter full   ");;
   if F!equal (f, f3)
   then print_string ("OK\n") else print_string ("KO\n");;
 

@@ -34,23 +34,13 @@ end;;
 (** BLP policy *)
 
 
-species Access_mode_blp =
-
-  inherit Access_mode;
-
-  signature read : Self;
-  signature write : Self;
-
-end;;
-
-
-species P_policy_blp (S is Subject, O is Object, A is Access_mode_blp,
+species P_policy_blp (S is Subject, O is Object, A is Access_mode_rw,
                       Ac is Accesses (S, O, A),
                       L is Security_level,
                       T is Target_ac (S, O, A, Ac),
                       C is Configuration_blp (S, O, L)) =
 
-  inherit P_policy_ac (S, O, A, Ac, T, C);
+  inherit P_policy_ac_rw (S, O, A, Ac, T, C);
 
   representation = unit;
 
@@ -84,7 +74,7 @@ species P_policy_blp (S is Subject, O is Object, A is Access_mode_blp,
       match l_s with
         | [] -> true
         | s :: t_s -> auxO1 (l_o, s, l_o, t) && auxS (t_s, l_o, t) in
-    function t -> function c -> auxS (S!all_to_list, O!all_to_list, t);
+    function t -> function _c -> auxS (S!all_to_list, O!all_to_list, t);
 
   proof of relation_spec = assumed; (* TODO *)
 
@@ -96,7 +86,7 @@ end;;
 
 
 species Secured_state_blp
-  (S is Subject, O is Object, A is Access_mode_blp, Ac is Accesses (S, O, A),
+  (S is Subject, O is Object, A is Access_mode_rw, Ac is Accesses (S, O, A),
    L is Security_level,
    T is Target_ac (S, O, A, Ac), C is Configuration_blp (S, O, L),
    P is P_policy_blp (S, O, A, Ac, L, T, C),
@@ -113,7 +103,7 @@ end;;
 
 
 species Secured_transition_system_blp
-  (S is Subject, O is Object, A is Access_mode_blp, Ac is Accesses (S, O, A),
+  (S is Subject, O is Object, A is Access_mode_rw, Ac is Accesses (S, O, A),
    Lev is Security_level,
    T is Target_ac (S, O, A, Ac), C is Configuration_blp (S, O, Lev),
    P is P_policy_blp (S, O, A, Ac, Lev, T, C),
@@ -128,7 +118,7 @@ end;;
 
 
 species Secured_operational_transition_system_blp
-  (S is Subject, O is Object, A is Access_mode_blp, Ac is Accesses (S, O, A),
+  (S is Subject, O is Object, A is Access_mode_rw, Ac is Accesses (S, O, A),
    Lev is Security_level,
    T is Target_ac (S, O, A, Ac), C is Configuration_blp (S, O, Lev),
    P is P_policy_blp (S, O, A, Ac, Lev, T, C),
@@ -217,7 +207,7 @@ collection O = implement Object_test; end;;
 
 species Access_mode_test =
 
-  inherit Access_mode_blp;
+  inherit Access_mode_rw;
 
   representation = bool;
 

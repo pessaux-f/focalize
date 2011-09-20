@@ -16,7 +16,7 @@ species Relation (A is Setoid, B is Setoid) =
 
   logical let is_empty = all a : A, all b : B, relation (a, b) = false;
 
-  logical let is_complete = all a : A, all b : B, relation (a, b) = true;
+  logical let is_full = all a : A, all b : B, relation (a, b) = true;
 
   logical let is_left_unique =
     all a1 a2 : A, all b : B,

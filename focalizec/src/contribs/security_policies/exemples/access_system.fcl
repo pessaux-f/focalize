@@ -61,31 +61,24 @@ species Label_ac (S is Subject, O is Object, A is Access_mode) =
   local let ( =O ) = O!equal;
   local let ( =A ) = A!equal;
 
+  theorem label_spec :
+    all x : action, all s : S, all o : O, all a : A,
+    action (label (x, s, o, a)) = x     && subject (label (x, s, o, a)) =S s &&
+    object_ac (label (x, s, o, a)) =O o && access_mode (label (x, s, o, a)) =A a
+  proof = assumed;              (* TODO *)
+       (* by definition of label, action, subject, object_ac, access_mode; *)
+
   let element = (Add, S!element, O!element, A!element);
 
   let equal (l1 : Self, l2 : Self) =
-    action (l1) = action (l2) && subject (l1) =S subject (l2) &&
+    action (l1) = action (l2)        && subject (l1) =S subject (l2) &&
     object_ac (l1) =O object_ac (l2) && access_mode (l1) =A access_mode (l2);
-
-  local let print_action (x) = match x with | Add -> "+" | Release -> "-";
-
-  let print (l) = "<" ^ print_action (action (l)) ^ ", " ^
-                        S!print (subject (l)) ^ ", " ^
-                        O!print (object_ac (l)) ^ ", " ^
-                        A!print (access_mode (l)) ^ ">";
-
-  theorem label_spec :
-    all x : action, all s : S, all o : O, all a : A,
-    action (label (x, s, o, a)) = x && subject (label (x, s, o, a)) =S s &&
-    object_ac (label (x, s, o, a)) =O o && access_mode (label (x, s, o, a)) =A a
-  proof = assumed;              (* TODO *)
-          (* by definition of label, action, subject, object_ac, access_mode; *)
 
   theorem equal_spec :
     all l1 l2 : Self,
     equal (l1, l2) <->
-    action (l1) = action (l2) && subject (l1) =S subject (l2) &&
-    object_ac (l1) =O object_ac (l2) && access_mode (l1) =A access_mode (l2)
+    ( action (l1) = action (l2)        && subject (l1) =S subject (l2) &&
+      object_ac (l1) =O object_ac (l2) && access_mode (l1) =A access_mode (l2) )
   proof = by definition of equal;
 
   proof of equal_reflexive = by property equal_spec, S!equal_reflexive,
@@ -97,6 +90,13 @@ species Label_ac (S is Subject, O is Object, A is Access_mode) =
   proof of equal_transitive = by property equal_spec, S!equal_transitive,
                                           O!equal_transitive, A!equal_transitive
                                  definition of ( =S ), ( =O ), ( =A );
+
+  local let print_action (x) = match x with | Add -> "+" | Release -> "-";
+
+  let print (l) = "<" ^ print_action (action (l)) ^ ", " ^
+                        S!print (subject (l)) ^ ", " ^
+                        O!print (object_ac (l)) ^ ", " ^
+                        A!print (access_mode (l)) ^ ">";
 
 end;;
 
@@ -117,8 +117,8 @@ species Transition_system_ac (S is Subject, O is Object, A is Access_mode,
                                 L!access_mode (l))) ) ||
       ( L!action (l) = Release &&
         St!equal (y, St!release (x, L!subject (l),
-                                   L!object_ac (l),
-                                   L!access_mode (l))) ) );
+                                    L!object_ac (l),
+                                    L!access_mode (l))) ) );
 
   theorem delta_spec :
     all x y : St, all l : L,
@@ -129,16 +129,15 @@ species Transition_system_ac (S is Subject, O is Object, A is Access_mode,
                                 L!access_mode (l))) ) \/
       ( L!action (l) = Release /\
         St!equal (y, St!release (x, L!subject (l),
-                                   L!object_ac (l),
-                                   L!access_mode (l))) ) )
+                                    L!object_ac (l),
+                                    L!access_mode (l))) ) )
   proof = by definition of delta;
 
-    (* Doit marcher sinon report *)
   theorem determinist : is_determinist
-  proof = assumed;            (* TODO *)
+  proof = assumed;		(* TODO *)
   
   theorem complete : is_complete
-  proof = assumed;
+  proof = assumed;		(* TODO *)
 
 end;;
 
