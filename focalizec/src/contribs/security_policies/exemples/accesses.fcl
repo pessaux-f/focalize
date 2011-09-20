@@ -48,8 +48,8 @@ species Accesses (S is Subject, O is Object, A is Access_mode) =
 
   property is_contained_spec :
     all x y : Self,
-    is_contained (x, y) <-> ( all s : S, all o : O, all a : A,
-                              alpha (x, s, o, a) -> alpha (y, s, o, a) );
+    is_contained (x, y) <-> (all s : S, all o : O, all a : A,
+                             alpha (x, s, o, a) -> alpha (y, s, o, a));
 
   theorem is_contained_reflexive : all x : Self, is_contained (x, x)
   proof = by property is_contained_spec;
@@ -68,7 +68,7 @@ species Accesses (S is Subject, O is Object, A is Access_mode) =
   property get_one_is_in :
     all x : Self,
     ~ equal (x, empty) ->
-      match get_one (x) with | (s, o, a) -> ~~ equal (x, release (x, s, o, a));
+      match get_one (x) with | (s, o, a) -> alpha (x, s, o, a);
 
   property equal_spec :
     all x y : Self,

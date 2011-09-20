@@ -14,7 +14,10 @@ open "secure_system";;
 (** BLP configuration *)
 
 
-species Configuration_blp (S is Subject, O is Object, L is Pre_order) =
+species Security_level = inherit Pre_order; end;;
+
+
+species Configuration_blp (S is Subject, O is Object, L is Security_level) =
 
   inherit Configuration;
 
@@ -39,9 +42,6 @@ species Access_mode_blp =
   signature write : Self;
 
 end;;
-
-
-species Security_level = inherit Pre_order; end;;
 
 
 species P_policy_blp (S is Subject, O is Object, A is Access_mode_blp,

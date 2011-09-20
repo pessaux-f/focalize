@@ -100,11 +100,11 @@ species Secured_operational_transition_system
     else
       Ss!equal (x, y);
 
-  theorem determinist : is_determinist
-  proof = assumed;              (* TODO *)
+  proof of all_secure = assumed;  (* TODO *)
 
-  theorem complete : is_complete
-  proof = assumed;              (* TODO *)
+  proof of determinist = assumed; (* TODO *)
+
+  proof of full = assumed;	  (* TODO *)
 
   (** Transition of the non secure system with the same configuration or,
       if not secure transition, the same state *)

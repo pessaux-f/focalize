@@ -319,6 +319,16 @@ species Injective_function (A is Setoid, B is Setoid) =
     (( relation (r1, a1, b1) /\ relation (r2, a2, b1) ) -> A!equal (a1, a2)) /\
     (( relation (r1, a1, b1) /\ relation (r2, a1, b2) ) -> B!equal (b1, b2));
 
+<<<<<<< relations_mutable.fcl
+  proof of left_unique_complete = assumed; (* TODO *)
+  proof of left_total_complete = assumed;
+  proof of right_total_complete = assumed;
+
+  proof of left_unique_union = assumed; (* TODO *)
+  proof of left_total_union = assumed;
+  proof of right_total_union = assumed;
+
+=======
   (* Les preuves suivantes devraient etre cassees (??) *)
 
   (* proof of left_unique_complete = assumed; (\* TODO *\) *)
@@ -329,6 +339,7 @@ species Injective_function (A is Setoid, B is Setoid) =
   (* proof of left_total_union = assumed; *)
   (* proof of right_total_union = assumed; *)
 
+>>>>>>> 1.3
 end;;
 
 
@@ -346,19 +357,17 @@ species Surjective_function (A is Setoid, B is Setoid) =
     ( all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b) ) /\
     ( all b : B, ex a : A, relation (r1, a, b) /\ ~ relation (r2, a, b) );
 
-  (* Les preuves suivantes devraient etre cassees (??) *)
+  proof of left_unique_singleton = assumed; (* TODO *)
+  proof of left_total_singleton = assumed;
+  proof of right_total_singleton = assumed;
 
-  (* proof of left_unique_singleton = assumed; (\* TODO *\) *)
-  (* proof of left_total_singleton = assumed; *)
-  (* proof of right_total_singleton = assumed; *)
+  proof of left_unique_inter = assumed; (* TODO *)
+  proof of left_total_inter = assumed;
+  proof of right_total_inter = assumed;
 
-  (* proof of left_unique_inter = assumed; (\* TODO *\) *)
-  (* proof of left_total_inter = assumed; *)
-  (* proof of right_total_inter = assumed; *)
-
-  (* proof of left_unique_diff = assumed; (\* TODO *\) *)
-  (* proof of left_total_diff = assumed; *)
-  (* proof of right_total_diff = assumed; *)
+  proof of left_unique_diff = assumed; (* TODO *)
+  proof of left_total_diff = assumed;
+  proof of right_total_diff = assumed;
 
 end;;
 
