@@ -1,0 +1,63 @@
+open "basics";;
+open "products";;
+open "lts";;
+open "secure_system";;
+open "p_policies";;
+
+
+
+
+(** A secured state has a normal state and a configuration.
+    A security policy determines the security state. *)
+species Secured_state (A is Target, C is Configuration, P is P_policy (A, C),
+                       S is State) =
+
+  inherit Product_set (S, C), Secure_state (S);
+
+  let state = first;
+  let configuration = second;
+
+  (** To apply the policy *)
+  signature interpretation : S -> A;
+
+  let is_secure (x : Self) =
+    P!secure (interpretation (state (x)), configuration (x));
+
+end;;
+
+
+(** A system in which all reachable states are secure. *)
+species Secured_transition_system (St is State, L is Label,
+                                   Sys is Transition_system (St, L),
+                                   Ss is Secured_state (St)) =
+
+  inherit Secure_transition_system (St, L, Sys, Ss);
+
+end;;
+
+
+
+species Secured_operational_transition_system
+  (St is State, L is Label,
+   Sys is Operational_transition_system (St, L),
+   Ss is Secured_state (St)) =
+
+  inherit Secured_transition_system (St, L, Sys, Ss),
+          Secure_operational_transition_system (St, L, Sys, Ss);
+
+  (** Transition of the non secure system with the same configuration or,
+      if not secure transition, the same state *)
+  let transition (x, l) =
+    let s = Sys!transition (Ss!state (x), l) in
+    let y = Ss!pair (s, Ss!configuration (x)) in
+    if delta (x, l, y) then y else x;
+
+  proof of transition_is_valid = assumed; (* TODO *)
+
+  theorem delta_and_some_implies_transition :
+    all x y : Ss, all l : L,
+    (delta (x, l, y) /\ Ss!equal (x, y)) -> Ss!equal (transition (x, l), y)
+    (* \/ C!equal (Ss!configuration (x), Ss!configuration (y)) *)
+  proof = assumed;              (* TODO *)
+
+end;;
