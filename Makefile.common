@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.33 2011-05-26 15:17:20 maarek Exp $
+# $Id: Makefile.common,v 1.34 2011-12-02 17:56:57 weis Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -78,6 +78,7 @@ uninstall-local:
 
 uninstall: uninstall-local
 
+depend: depend-local
 #depend:
 #	$(CAML_DEP) *.mli *.ml > ./.depend
 #	$(FOCALIZE_DEP) *.fcl > ./.depend

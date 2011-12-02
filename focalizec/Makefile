@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.48 2011-06-14 16:19:48 weis Exp $
+# $Id: Makefile,v 1.49 2011-12-02 17:56:57 weis Exp $
 
 ROOT_DIR=.
 
@@ -126,7 +126,6 @@ distclean-local:
 	  fi;\
 	done;\
 	$(MAKE) unconfigure
-
 
 test_all-local: tests
 	@for i in $(COMPILER_DIRS); do\

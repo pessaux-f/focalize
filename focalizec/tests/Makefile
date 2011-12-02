@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.27 2011-05-27 14:35:45 weis Exp $
+# $Id: Makefile,v 1.28 2011-12-02 17:56:57 weis Exp $
 
 ROOT_DIR=..
 
@@ -44,7 +44,7 @@ KO_TEST_FILES=\
 
 include $(ROOT_DIR)/Makefile.common
 
-all: $(CHECK_FILE) ok_all ko_all
+all:: $(CHECK_FILE) ok_all ko_all
 
 ok_all: $(OK_TEST_FILES)
 	# Compile from Focalize to OCaml.
@@ -73,7 +73,7 @@ ko_all: $(KO_TEST_FILES)
 	  $(CHECK_FILE) -I ../lib $$i; \
 	done
 
-clean:
+clean-local:
 	$(RM) $(OK_TEST_FILES:.fcl=.v) $(KO_TEST_FILES:.fcl=.v)
 	$(RM) $(OK_TEST_FILES:.fcl=.ml) $(KO_TEST_FILES:.fcl=.ml)
 	$(RM) *.annot *.glob *.pfc *.zv *~
