@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2011-07-07 16:01:16 szekely Exp $
+# $Id: Makefile,v 1.6 2011-12-05 07:01:19 rr Exp $
 
 # Makefile for algebra structures implementations
 
@@ -57,9 +57,9 @@ COQ_INCLUDES=\
 
 FOCALIZE_SRC=\
  utils/finite_sets.fcl\
- utils/lts_mutable.fcl\
  utils/lts.fcl\
- utils/relations_mutable.fcl\
+ utils/lts_mutable.fcl\
+ utils/relations_mutables.fcl\
  utils/relations.fcl\
  policies/p_policies.fcl\
  policies/secure_system.fcl\
@@ -68,6 +68,7 @@ FOCALIZE_SRC=\
  exemples/access_p_policies.fcl\
  exemples/hru.fcl\
  exemples/blp.fcl
+
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
