@@ -1,0 +1,147 @@
+open "basics";;
+open "sets";;
+open "products";;
+
+
+(** Labeled transition system *)
+
+
+species State =
+
+  inherit Setoid;
+
+  signature is_initial : Self -> bool;
+
+end;;
+
+
+species Label = inherit Setoid; end;;
+
+
+(** Species of a transition system in all states S and labels L *)
+species Transition_system (S is State, L is Label) =
+
+  inherit Basic_object;
+
+  (** transition relation *)
+  signature delta : S -> L -> S -> bool;
+
+
+  logical let is_deterministic =
+    all x y z : S, all l : L,
+    ( delta (x, l, y) /\ delta (x, l, z) ) -> S!equal (y, z);
+
+  logical let is_complete =
+    all x : S, all l : L,
+    ex y : S, delta (x, l, y);
+
+  (* intuitive definition of "reachable" *)
+
+  (* logical let rec is_descendant (y, x) = *)
+  (*   S!equal(y, x) \/  *)
+  (*   ex z : S, ex l : L, delta (x, l, z) /\ is_descendant (y, z); *)
+
+  (* logical let is_reachable (x) = *)
+  (*   ex y : S, S!is_initial (y) /\ is_descendant (x, y); *)
+
+  (** The list represents the sequence of transitions of the path in
+      reverse order. *)
+  let is_path_from_init_to =
+    let rec aux (p, x) =
+      match p with
+        | [] -> S!is_initial (x)
+        | h :: q ->
+	    (match h with
+	    | (y, l, z) ->
+	      S!equal (z, x) && delta (y, l, z) && aux (q, y)
+	    ) in
+    function p -> function x -> aux (p, x);
+
+  logical let is_reachable (x) =
+    ex p : list (S * L * S), is_path_from_init_to (p, x);
+
+end;;
+
+
+(** A system with "real" transitions (must be determinist and complete) *)
+species Operational_transition_system (S is State, L is Label) =
+
+  inherit Transition_system (S, L);
+
+  signature transition : S -> L -> S;
+  property transition_equal_compat: all s_1 s_2: S, all l: L,
+    S!equal(s_1, s_2) -> S!equal(transition(s_1, l), transition(s_2, l));
+
+  let delta(s_1, l, s_2) = S!equal(transition(s_1, l), s_2);
+
+  (* this serves as specification if delta is redefined *)
+  theorem transition_is_valid: all x y: S, all l: L,
+    S!equal(transition(x, l), y) <-> delta(x, l, y)
+    proof = by definition of delta
+               property S!equal_reflexive;
+
+
+  theorem deterministic : is_deterministic
+    proof = by property transition_is_valid
+               definition of is_deterministic
+               property S!equal_reflexive, S!equal_symmetric,
+		        S!equal_transitive, transition_equal_compat
+  ;
+  
+  theorem complete : is_complete
+    proof = by definition of is_complete
+               property transition_is_valid, S!equal_reflexive
+  ;
+
+  (** A multiple transition from state x with a list l of labels *)
+  let transition_iter =
+    let rec aux (l, x) =
+      match l with
+        | [] -> x
+        | h :: t -> aux (t, transition (x, h)) in
+    function x -> function l -> aux (l, x);
+
+
+
+
+end;;
+
+
+
+
+(* (\** System with requests for transitions *\) *)
+
+(* species Request = inherit Setoid; end;; *)
+
+(* species Answer = inherit Setoid; end;; *)
+
+
+(* species Label_request (R is Request, D is Answer) = *)
+
+(*   inherit Label, Cartesian_product (R, D); *)
+
+(*   let request (l : Self) = first (l); *)
+(*   let answer (l : Self) = second (l); *)
+
+(*   let print (l) = *)
+(*     "(" ^ R!print (request (l)) ^ ", " ^ D!print (answer (l)) ^ ")"; *)
+
+(* end;; *)
+
+
+(* species Transition_system_request (R is Request, D is Answer, *)
+(*                                    S is State, L is Label_request (R, D)) = *)
+
+(*   inherit Transition_system (S, L); *)
+
+(* end;; *)
+
+
+(* species Operational_transition_system_request (R is Request, D is Answer, *)
+(*                                                S is State, *)
+(*                                                L is Label_request (R, D)) = *)
+
+(*   inherit Transition_system_request (R, D, S, L), *)
+(*           Operational_transition_system (S, L); *)
+
+(* end;; *)
