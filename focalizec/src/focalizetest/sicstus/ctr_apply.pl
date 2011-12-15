@@ -2,6 +2,29 @@
 
 % This file contains the predicate handling high-order features.
 
+:- multifile portray/1.
+
+portray(apply(R, F, Args, _Env)) :-
+  current_prolog_flag(debugger_print_options, Flags),
+  tuple_of_list(Args, Tuple),
+  format('~@ <~~> ~@(~@)', [write_term(R, Flags), write_term(F, Flags), write_term(Tuple, Flags)]).
+
+portray(f_structure(Name, Expected, Args, _FV)) :-
+  Args == [] ->
+    format('<~w/~w>', [Name, Expected])
+  ;
+    tuple_of_list(Args, Tuple),
+    format('<~w/~w(~w)>', [Name, Expected, Tuple]).
+
+
+portray(closure_defs(F, FName, NbExpect, Args, _FV)) :-
+  current_prolog_flag(debugger_print_options, Flags),
+  Args == [] ->
+    format('~@ <~~> <~w/~w>', [write_term(F, Flags), FName, NbExpect])
+  ;
+    tuple_of_list(Args, Tuple),
+    format('~@ <~~> <~w/~w(~w)>', [write_term(F, Flags), FName, NbExpect, Tuple]).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % fun_eq(F, Lambdas, Def).
 %
@@ -78,7 +101,7 @@ apply(R, F, L, Env) :-
 % applied argument and the list of free variables.
 
 closure_defs(F, Name, Expected, Args, FV) :-
-  F = (Name, Expected, Args, FV).
+  F = f_structure(Name, Expected, Args, FV).
 
 get_partial_list([], _).
 get_partial_list([X|R], [X|Pl]) :-

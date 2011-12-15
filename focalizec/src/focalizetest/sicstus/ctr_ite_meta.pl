@@ -17,6 +17,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 :- multifile clpfd:dispatch_global/4.
+:- multifile portray/1.
+
+portray(ite_indirection(X, LC1, LC2, _Vars, _VarDef, _Env, _Actions, _State)) :-
+  current_prolog_flag(debugger_print_options, Flags),
+  format("ite(~@, ~@, ~@)", [write_term(X, Flags), write_term(LC1, Flags), write_term(LC2, Flags)]).
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % ite/5
@@ -48,16 +54,17 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ite_meta(X,VarDef,LC1,LC2, Env) :-
-         get_awake(Env,Reveil),
-         type_envi(TEnv),
-         set_types_vardef(VarDef,TEnv), % Set the types of the variables
-         get_FD_vardef_list(VarDef, LVar),
-         get_var_vardef_list(VarDef, Vars),
-         add_dom([X|LVar],DOM), % awaking condition
-         State in 0..1, % bound means the constraint is disable 
-         clpfd:fd_global(ite_ctr(X, LC1, LC2, Vars, VarDef, Env),
-                         etat(State), % ite/5 devient une contrainte CLPFD
-                         [max(Reveil)|DOM]).
+  get_awake(Env,Reveil),
+  add_a_constraint(Env), % for counting meta constraints
+  type_envi(TEnv),
+  set_types_vardef(VarDef,TEnv), % Set the types of the variables
+  get_FD_vardef_list(VarDef, LVar),
+  get_var_vardef_list(VarDef, Vars),
+  add_dom([X|LVar],DOM), % awaking condition
+  State in 0..1, % bound means the constraint is disable 
+  clpfd:fd_global(ite_ctr(X, LC1, LC2, Vars, VarDef, Env),
+                  etat(State), % ite/5 devient une contrainte CLPFD
+                  [max(Reveil)|DOM]).
 
 clpfd:dispatch_global(ite_ctr(X, LC1, LC2, Vars, VarDef, Env),
                       etat(State), etat(State), Actions) :-
@@ -78,69 +85,83 @@ ite_indirection(X, LC1, LC2, Vars, VarDef, Env, Actions, State) :-
          %%%%% %%%%% Le reste code les contraintes gardées %%%%% %%%%%
             %%%%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%% %%%%%
 
-ite_solve(X,LC1, _LC2, _Vars, _VarDef, _ENV, _FA, Actions, _State) :-
-        (nonvar(X), (X > 0 ; X < 0)),                  % teste si la decision est connue (X != 0 ?)
-        !,
-        Actions = [exit,                               % alors la partie THEN doit être exécutée
-                   call(X #= 1),
-                   call(user:call_rec(LC1))].
+ite_solve(_X, _LC1, _LC2, _Vars, _VarDef, Env, _FA, Actions, _State) :-
+  \+(decr_k(Env)),           % We already activated too many constraint and the quota is reached /!\
+  !,
+  Actions = [].
 
-ite_solve(X, _LC1, LC2, _Vars, _VarDef, _ENV, _FA, Actions, _State) :-      
-        (X == 0),                                      % teste si la decision est connue (X == 0 ?)
-        !,
-        Actions = [exit,                               % alors la partie ELSE doit être exécutée
-                   call(X #= 0),
-                   call(user:call_rec(LC2))].
+% Forward ite resolution for X = true :
+ite_solve(X,LC1, _LC2, _Vars, _VarDef, Env, _FA, Actions, _State) :-
+  (nonvar(X), (X > 0 ; X < 0)),                  % teste si la decision est connue (X != 0 ?)
+  !,
+  remove_a_constraint(Env),
+  Actions = [exit,                               % alors la partie THEN doit être exécutée
+             call(X #= 1),
+             call(user:call_rec(LC1))].
+
+% Forward ite resolution for X = false :
+ite_solve(X, _LC1, LC2, _Vars, _VarDef, Env, _FA, Actions, _State) :-      
+  (X == 0),                                      % teste si la decision est connue (X == 0 ?)
+  !,
+  remove_a_constraint(Env),
+  Actions = [exit,                               % alors la partie ELSE doit être exécutée
+             call(X #= 0),
+             call(user:call_rec(LC2))].
 
 
             /* Pour les deux autres contraintes gardées il faut */
                      /* utiliser la politique de réveil */
 
+% This clause wonder if we want to execute backward rules
 ite_solve(_X,_LC1,_LC2, _Vars, _VarDef, Env, _FA, Actions, _State) :-
-  \+(use_back_rule(Env)),                           % pas de règle arrière
-  call_rec([true, true, true]),
+  \+((use_back_rule(Env))),      % We don't want backward rules     or
   !,
   Actions = [].                                     % alors la contrainte est suspendue
 
 
 
+% Backward ite resolution for X = true :
 ite_solve(X, LC1, LC2, _Vars, _VarDef, Env, [_,_AtomE], Actions, State) :-
-        \+((decr_k(Env),
-            call_rec([State = 0, X #= 0 ,call_rec(LC2)])
-            %% Pour l'union des domaines reduit %%%%%%%%%%%%%
-            %,set_atom(_AtomE, _Vars)                         %
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-           )),   % Test d'inconsistance de la partie ELSE
-        !,
-        Actions = [exit,                           % alors la partie THEN doit être executée
-                   call(X #= 1),
-                   call(user:call_rec(LC1))].
+  \+((decr_k(Env),
+      call_rec([State = 0, X #= 0 ,call_rec(LC2)])
+      %% Pour l'union des domaines reduit %%%%%%%%%%%%%
+      %,set_atom(_AtomE, _Vars)                         %
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     )),   % Test d'inconsistance de la partie ELSE
+  !,
+  remove_a_constraint(Env),
+  Actions = [exit,                           % alors la partie THEN doit être executée
+             call(X #= 1),
+             call(user:call_rec(LC1))].
 
-ite_solve(X, LC1, LC2, Vars, _VarDef, Env, [_AtomT,AtomE], Actions, State) :-
-        \+((decr_k(Env), 
-            call_rec([State = 0, X #= 1,call_rec(LC1)])
-            %% Pour l'union des domaines reduit %%%%%%%%%%%%%
-            %,set_atom(_AtomT, Vars)                           %
-            %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-          )),   % Test d'inconsistance de la partie THEN
-        !,
-        %% Pour l'union des domaines reduit %%%%%%%%%%%%%%%%%%%%%%%%%%%
-        %free_atoms([AtomE]), % Libère les atomes alloués jusqu'alors  %
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        Actions = [exit,                          % alors la partie ELSE doit être exécutée
-                   call(X #= 0),
-                   call(user:call_rec(LC2))].
+% Backward ite resolution for X = false :
+ite_solve(X, LC1, LC2, _Vars, _VarDef, Env, [_AtomT,_AtomE], Actions, State) :-
+  \+((decr_k(Env), 
+      call_rec([State = 0, X #= 1,call_rec(LC1)])
+      %% Pour l'union des domaines reduit %%%%%%%%%%%%%
+      %,set_atom(_AtomT, Vars)                           %
+      %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    )),   % Test d'inconsistance de la partie THEN
+  !,
+  %% Pour l'union des domaines reduit %%%%%%%%%%%%%%%%%%%%%%%%%%%
+  %free_atoms([AtomE]), % Libère les atomes alloués jusqu'alors  %
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  remove_a_constraint(Env),
+  Actions = [exit,                          % alors la partie ELSE doit être exécutée
+             call(X #= 0),
+             call(user:call_rec(LC2))].
 
+% Nothing has been deduce from semantic rules :
 ite_solve(_X,_LC1,_LC2, _Vars, _VarDef, _ENV, _Atoms, Actions, _State) :- 
-           % sinon, on suspend. Il est possible de faire ici une
-        !, % union des domaines calculés dans les tests d'inconsistances
-        %% Pour l'union des domaines reduit %%%%%%%%%%%%%
-        %get_and_free_atoms(Atoms, RedDoms),             %
-        %transposed(RedDoms, NVars),                     %
-        %antiunify_vardef_list(VarDef, NVars,Res),       %
-        %Actions = [call(user:equal_vardef_list(VarDef, Res))].
-        %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-        % À faire quand on ne fait pas l'union des domaines :
-        %free_atoms(Atoms),
-         Actions = [].
+  % sinon, on suspend. Il est possible de faire ici une
+  !, % union des domaines calculés dans les tests d'inconsistances
+  %% Pour l'union des domaines reduit %%%%%%%%%%%%%
+  %get_and_free_atoms(Atoms, RedDoms),             %
+  %transposed(RedDoms, NVars),                     %
+  %antiunify_vardef_list(VarDef, NVars,Res),       %
+  %Actions = [call(user:equal_vardef_list(VarDef, Res))].
+  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  % À faire quand on ne fait pas l'union des domaines :
+  %free_atoms(Atoms),
+  Actions = [].
 

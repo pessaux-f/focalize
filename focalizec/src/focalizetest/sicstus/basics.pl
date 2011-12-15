@@ -24,20 +24,20 @@ scnd(R, C) :-
 and_b_no(X, Y) :-
   when((nonvar(X); nonvar(Y)),
       ( X == 1 ->
-        Y #= 0
+        Y = 0
       ;
         ( Y == 1 ->
-          X #= 0
+          X = 0
         ; true
         )
       )).
 
 and_b_yes(X, Y) :-
-  X #= 1, Y #= 1.
+  X = 1, Y = 1.
 
 and_b(R, X, Y) :-
   when((nonvar(X), nonvar(Y)),
-       ((X == 1, Y == 1) -> R #=1;R#=0)),
+       ((X == 1, Y == 1) -> R =1;R=0)),
   when(nonvar(R),
        ( R == 1 ->
          and_b_yes(X,Y)
@@ -47,15 +47,15 @@ and_b(R, X, Y) :-
 
 /* Disjunction  */
 or_b_no(X, Y) :-
-  X #= 0, Y #= 0.
+  X = 0, Y = 0.
 
 or_b_yes(X, Y) :-
   when((nonvar(X); nonvar(Y)),
       ( X == 0 ->
-        Y #= 1
+        Y = 1
       ;
         ( Y == 0 ->
-          X #= 1
+          X = 1
         ; true
         )
       )).

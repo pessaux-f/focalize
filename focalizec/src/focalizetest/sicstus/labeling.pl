@@ -1,4 +1,5 @@
 % prolog program
+:- [library(random)].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Labeling avec choix de valeur (pseudo-) aléatoire
@@ -106,6 +107,7 @@ integer_list(L,L).
 % 
 % If the function encounters a variable that is not an integer, fail !
 
+/*
 label_only_ints([], _TEnv, Env) :- !, fin_env(Env).
 
 label_only_ints([H|T], TEnv, Env) :-
@@ -123,6 +125,28 @@ label_only_int(X, TEnv, Env) :-
     )
     )
  ).
+*/
+
+
+% For debugging, calculates the depth of a term :
+label_terms_dbg_depth_aux([], 0).
+label_terms_dbg_depth_aux([X|R], D) :-
+  label_terms_dbg_depth_aux(R, D1),
+  label_term_dbg_depth_aux(X, D2),
+  D is max(D1, D2).
+
+label_term_dbg_depth_aux(X, D) :-
+  var(X) -> D = 1;
+  (
+    X =.. [_|Xs],
+    label_terms_dbg_depth_aux(Xs, D1),
+    D is D1 + 1
+  ).
+
+label_term_dbg_depth(X) :-
+  label_term_dbg_depth_aux(X, D),
+  write('term is depth '),
+  write(D), nl.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % label_term(+X, LInt, +Max, +TEnv, +Env).
@@ -146,7 +170,7 @@ label_algebraic_aux(X, LInt, Max, TEnv, Env) :-
       ( get_atts(X, type(T)),
         args_from_cons_name(Vs, T, C, TEnv),
         X =.. [C|Vs],
-        fin_env(Env), fin_env(Env),
+        %fin_env(Env),  fin_env(Env),
         NMax is Max - 1,
         label_algebraics_aux(Vs, LInt, NMax, TEnv, Env)
       ; % if the first constructor is not the good one :
@@ -174,7 +198,8 @@ label_algebraic(X, Max, TEnv, Env) :-
   ( label_algebraic_aux(X, LInt, Max, TEnv, Env),
     fin_env(Env),
     my_labeling([random], LInt),
-    fin_env(Env)
+    %fin_env(Env),
+    true
   ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -186,8 +211,21 @@ label_algebraic(X, Max, TEnv, Env) :-
 
 label_algebraics(L, Env) :-
   type_envi(TEnv),
-  label_algebraics_aux(L, LInt, 10, TEnv, Env),
-  my_labeling([random], LInt).
+  label_algebraics_aux(L, LInt, 8, TEnv, Env),
+  my_labeling([random], LInt),
+  fin_env(Env),
+  fin_env(Env),
+  fin_env(Env),
+  fin_env(Env),
+  fin_env(Env),
+  fin_env(Env),
+  fin_env(Env),
+  fin_env(Env),
+  fin_env(Env),
+  get_nb_constraint(Env, Nb),
+  write('*'),
+  (Nb == 0 -> true; format('Warning: we have labelled all variables but it remains ~w unsolved constraint(s)~n', Nb)),
+  flush_output.
 
 % Auxiliary function for label_algebraics :
 label_algebraics_aux([X | L], LInt, Max, TEnv, Env) :-
@@ -198,7 +236,7 @@ label_algebraics_aux([X | L], LInt, Max, TEnv, Env) :-
   )
   ;
   ( label_algebraic_aux(X, LInt2, Max, TEnv, Env),
-    fin_env(Env), 
+    %fin_env(Env), 
     label_algebraics_aux(L, LInt3, Max, TEnv, Env),
     append(LInt2, LInt3, LInt)
   )

@@ -708,7 +708,8 @@ unifyD(R, X, Y) :-
         ( X == Y ->
           R = 1
         ;
-          when(ground(R), unifyD(R, X, Y)) 
+          when(ground(R), unifyD(R, X, Y)),
+          when((ground(X), ground(Y)), unifyD(R, X, Y))  % attempt /!\
         )
       )
     )

@@ -23,7 +23,10 @@
 :- use_module(library(atts)).
 
 :- attribute k/1, functions/1, awake/1, mymode/1, apply_method/1, nb_actif/1,
-             dom/1, type/1.
+             dom/1, type/1, exploring/1.
+
+set_exploring(Env, Bool) :-
+  put_atts(Env, exploring(Bool)).
 
 set_k(Env, N) :-
   put_atts(Env, k(N)).
@@ -41,6 +44,9 @@ set_apply_method(Env, Meth) :-
   put_atts(Env, apply_method(Meth)).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+get_exploring(Env) :-
+  get_atts(Env, exploring(1)).
 
 get_k(Env, N) :-
   get_atts(Env, k(N)).
@@ -74,6 +80,9 @@ get_apply_method(Env, Meth) :-
 % - naive : on utilise les version naive de ite et match
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+get_nb_constraint(Env, Nb) :-
+  get_atts(Env, nb_actif(Nb)).
+
 add_a_constraint(Env) :-
   get_atts(Env, nb_actif(N)),
   NpO is N + 1,
@@ -91,6 +100,7 @@ remove_a_constraint(Env) :-
   put_atts(Env, nb_actif(NmO)).
 
 init_env(Env) :-
+  set_exploring(Env, 0),
   set_k(Env, 2),
   empty_assoc(Vide),
   set_functions(Env, Vide),
@@ -101,6 +111,7 @@ init_env(Env) :-
   set_mode(Env, meta).
 
 init_env(Env, K):-
+  set_exploring(Env, 0),
   set_k(Env, K),
   empty_assoc(Vide),
   set_functions(Env, Vide),
@@ -111,6 +122,7 @@ init_env(Env, K):-
   set_mode(Env, meta).
 
 init_env(Env, K, Mode):-
+  set_exploring(Env, 0),
   set_k(Env, K),
   empty_assoc(Vide),
   set_functions(Env, Vide),
@@ -121,12 +133,13 @@ init_env(Env, K, Mode):-
   set_mode(Env, Mode).
 
 init_env(Env, K, Mode, Apply):-
+  set_exploring(Env, 0),
   set_k(Env, K),
   empty_assoc(Vide),
   set_functions(Env, Vide),
   Awake in 0..10000,
   set_awake(Env, Awake),
-  set_apply_method(Env, Apply),
+  set_apply_method(Env, assert),
   put_atts(Env, nb_actif(0)),
   set_mode(Env, Mode).
 
@@ -150,7 +163,8 @@ decr_k(Env):-
   get_k(Env, K),
   ( K > 0 ->
     KmO is K - 1,
-    set_k(Env, KmO)
+    set_k(Env, KmO),
+    set_exploring(Env, 1)
   ; fail
   ).
 
@@ -454,3 +468,11 @@ get_and_free_atoms([A|AL], [Arg|Args]) :-
   abolish(A),
   get_and_free_atoms(AL, Args).
 
+
+
+tuple_of_list([E], E) :- !.
+
+tuple_of_list([E|R], T1) :-
+  T1 =.. [',', E, T2],
+  tuple_of_list(R, T2).
+ 
