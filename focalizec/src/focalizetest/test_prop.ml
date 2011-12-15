@@ -89,7 +89,7 @@ let rec ast_unfold_args var_l reste =
 let ast_test_pre_cond =
   fun e args i ->
     let c = get_precond e in
-    let m = meth_create (pre_cond_string i)
+    let m = Unique (meth_create (pre_cond_string i)
                         (parse_type "@RESULT*@LIST(@RESULT)")
                            (expr_fun "__me" (variables_to_tuple_type args) (ast_unfold_args (variables_to_list args)
                                  (ast_bind_lazy_evaluation "v" 1 c
@@ -97,7 +97,7 @@ let ast_test_pre_cond =
                                               [ast_call_lazy_evaluation "v" 1 (1 +
                                                List.length c)]))
                            ))
-                         false in
+                         false) in
     m;;
 
 let ast_parse_one_res_prolog (name : string) =
@@ -112,6 +112,7 @@ let ast_parse_one_res_prolog (name : string) =
   fun vars -> 
   let vsl = variables_to_list vars in
   let err = "@FOC_ERROR(\"parse_error : " ^ prolog_pgm_get_res name ^ "\")" in
+   Unique (
   parse_foc_meth
      ("let " ^ prolog_pgm_get_res name ^ " in
             @LIST(@STRING) ->   @LIST(" ^ string_of_typ (variables_to_tuple_type vars) ^ ") =
@@ -124,10 +125,10 @@ let ast_parse_one_res_prolog (name : string) =
                        else
                        " ^ err ^ " in
         fun l in (@LIST(@STRING)) ->
-          #list_map(aux, l)");;
+          #list_map(aux, l)"));;
       
 let ast_test_from_prolog i (name : string) _prolog_pgm =
-  parse_foc_meth
+  Unique (parse_foc_meth
      ("let " ^ test_from_prolog i ^ " in (@BOOL * @LIST(@LIST(@RESULT))) * (float * float) = 
        fun n in ( @UNIT) ->
          let d_f = #call_prolog2(\"" ^ get_file_output_prolog name ^ "\",
@@ -156,13 +157,13 @@ let ast_test_from_prolog i (name : string) _prolog_pgm =
                       @CONS(@SND(cval), res),
                       @SUCC(nb))
                  ) in
-                 @CRP(aux(l, @TRUE, @NIL, 0), d_f)");;
+                 @CRP(aux(l, @TRUE, @NIL, 0), d_f)"));;
 
 (* idem with conclusion *)
 let ast_test_conclu =
   fun e args i ->
     let c = get_conclusion e in
-    let m = meth_create (conclu_string i)
+    let m = Unique (meth_create (conclu_string i)
                         (parse_type "@RESULT*@LIST(@RESULT)")
                            (expr_fun "__me" (variables_to_tuple_type args) (ast_unfold_args (variables_to_list args)
                                  (ast_bind_lazy_evaluation "v" 1 c
@@ -170,7 +171,7 @@ let ast_test_conclu =
                                               [ast_call_lazy_evaluation "v" 1 (1 +
                                                List.length c)]))
                            ))
-                         false in
+                         false) in
     m;;
 
 let ast_variables_to_list_string vars i =
@@ -190,7 +191,7 @@ let ast_variables_to_list_string vars i =
                                    ];
                               print_vars r 
                              ] in
-  meth_create (get_variables_string i)
+  Unique (meth_create (get_variables_string i)
               (parse_type ("@LIST(@STRING*@STRING)"))
               (expr_fun "__me" 
                 (variables_to_tuple_type vars)
@@ -198,7 +199,7 @@ let ast_variables_to_list_string vars i =
                  (variables_to_list vars)
                  (print_vars (variables_to_list vars)))
               )
-              true;;
+              true);;
 
 let ast_test_submit _e vars i =
 (*   let vars_call = to_args (fun (n,_) -> n) (variables_to_list vars) in *)
@@ -224,7 +225,7 @@ let ast_test_submit _e vars i =
               #" ^ fst verdict_precond_ok ^ "(#result_ok(@FST(cval)), @SND(cval)))
        else
          @CRP(requirement, #" ^ fst verdict_precond_ko ^ ")" in
-  parse_foc_meth def;;
+  Unique (parse_foc_meth def);;
 
 
 (* Test report *)
@@ -234,8 +235,8 @@ let rec ast_random_var lvar =
   match lvar with
   | [] -> ""
   | (e,t)::r -> 
-      print_string (string_of_ttyp t);
-      print_newline ();
+(*       print_string (string_of_ttyp t); *)
+(*       print_newline (); *)
       let meth_name = random_meth (string_of_ttyp t) in
       "let " ^ e ^ "= !" ^ meth_name ^ "(" ^ string_of_int (get_size_value_test ()) ^ ") in\n" ^
         ast_random_var r ;;
@@ -266,6 +267,7 @@ let ast_test_elem_i =
     let test_elem_i = test_elem elem_num in
     let mcdc = if get_mcdc_number () = 0 then "@FALSE" else "@TRUE" in
     let nb_conclu = string_of_int (List.length (list_of_conclusion (get_conclusion x))) in
+    Unique (
     parse_foc_meth
     (" let rec " ^ test_elem_i ^ " in (@BOOL * (@LIST(@LIST(@RESULT)) * @INT )) * @FLOAT =
       fun n              in (@INT) ->
@@ -279,7 +281,7 @@ let ast_test_elem_i =
                @AND(     " ^ mcdc ^ " , @STRUCT_EQUAL(requirement, @NIL))) then
           (
             let fin = #get_time(@VUNIT) in
-            let saute_ligne = #print_string(\"\\n\") in
+            let _saute_ligne = #print_string(\"\\n\") in
              " ^ top_xml_coll_name ^ "!xml_close_elementaire(j_t,
                                                              " ^ nb_conclu ^ ",
                                                              nb_try,
@@ -313,7 +315,7 @@ let ast_test_elem_i =
                     )
                   else
                   !" ^ test_elem_i ^ "(n,requirement, b,j_t, @SUCC(nb_try), @SUCC(nb_consec_fail), deb)"
-    );;
+    ));;
 
 (** ast_call_test_elem i
 calculate the conjunction of the i-first-elementary-form's report *)
@@ -327,7 +329,7 @@ let rec ast_call_test_elems i args =
       generate_call (i - 1) in
   conjonction_call (List.rev (generate_call i));;
 
-let ast_rapport_test_elem (selem : elementaire) vs name i =
+let ast_rapport_test_elem (s_u_t : Own_expr.species_name) (selem : elementaire) vs name i =
     let forme_elem =
       expr_app (expr_glob foccrp)
             [expr_of_caml_list (variables_map_esc
@@ -340,6 +342,7 @@ let ast_rapport_test_elem (selem : elementaire) vs name i =
             ] in
     let do_mcdc, mcdc_n = get_mcdc_number () != 0, get_mcdc_number () in
     let mcdc_size = List.length (list_of_precond (get_precond selem)) in
+    Unique (
     meth_create (rapport_test i) (TAtom(Some "basics", foctbool))
                 (expr_fun "n" (TAtom(Some "basics", foctint))
                   (expr_fun "sicstus" (TAtom(Some "basics", foctbool))
@@ -349,7 +352,7 @@ let ast_rapport_test_elem (selem : elementaire) vs name i =
                               (parse_foc_expr
                                ("
                                 let res_d_f = !" ^ test_from_prolog i ^ "(@VUNIT) in
-                                (#put_time(\"" ^ get_prolog_opt () ^ "\",
+                                (#put_time(\"s_" ^ snd s_u_t ^ "\", \"" ^ get_prolog_opt () ^ "\",
                                           @FST(@SND(res_d_f)),
                                           @SND(@SND(res_d_f)),
                                           \"" ^ name ^ "\", @CRP(@SND(@FST(res_d_f)), 0));
@@ -365,7 +368,8 @@ let ast_rapport_test_elem (selem : elementaire) vs name i =
                               (expr_let_notyp "fin" (expr_basic focsnd [expr_var "res_fin"])
                               (expr_let_notyp "res" (expr_basic focfst [expr_var "res_fin"])
                               (expr_seq (expr_basic (prefix "put_time")
-                                                    [expr_string "random"; 
+                                                    [expr_string ("s_" ^ (snd s_u_t)); 
+                                                     expr_string "random"; 
                                                      expr_var "deb";
                                                      expr_var "fin";
                                                      expr_string name;
@@ -378,7 +382,7 @@ let ast_rapport_test_elem (selem : elementaire) vs name i =
                    )
                   )
                 )
-                false;;
+                false);;
 
 (*
 let rapport_test i = fun n in (@int) ->
@@ -401,6 +405,7 @@ the original property contains no variables, create an unique test case. *)
 let ast_meth_test_all_elem p_name p_forme nb_var nb_elems =
   let nb_test_case = if nb_var = 0 then expr_int 1 else expr_var "n" in
   let scnd = expr_basic (if get_use_prolog () then foctrue else focfalse) [] in
+   Unique (
     meth_create "test_prop"
                 (TAtom(Some "basics", foctbool))
                 (expr_fun "n" (TAtom(Some "basics", foctint))
@@ -432,7 +437,8 @@ let ast_meth_test_all_elem p_name p_forme nb_var nb_elems =
                    (use_seq_function ()))
                    (use_seq_function ()))
                    )
-                false;;
+                false
+   );;
 (*****)
 
 
@@ -441,7 +447,7 @@ It takes the elementary forms, the number of the elementary forms, the actual
 variables on which the elementary form hold, the same variables renamed (to
 avoid variable's capture) and the association list (typ, function printing this
 type). *)
-let ast_test_elem name (prolog_pgm,elem) number actual_vars renamed_vars =
+let ast_test_elem s_u_t name (prolog_pgm,elem) number actual_vars renamed_vars =
     (* methods testing the elem_numth elementary property (elem) *)
   [
    ast_test_pre_cond (map_elementaire_ren prefix_var actual_vars elem) renamed_vars number;
@@ -450,7 +456,7 @@ let ast_test_elem name (prolog_pgm,elem) number actual_vars renamed_vars =
    ast_test_from_prolog number name prolog_pgm;
    ast_test_submit elem actual_vars number;
    ast_test_elem_i elem renamed_vars number;
-   ast_rapport_test_elem elem actual_vars name number
+   ast_rapport_test_elem s_u_t elem actual_vars name number
        ];;
 
 let ast_species_test (name, actual_vars, cel) property_statement
@@ -470,7 +476,8 @@ let ast_species_test (name, actual_vars, cel) property_statement
                                                  (List.length cel) in
       let test_elems = snd (List.fold_left (fun (i,seed) e ->
                                               i + 1,
-                                              (ast_test_elem name
+                                              (ast_test_elem species_under_test
+                                                             name
                                                              e
                                                              i
                                                              actual_vars
@@ -572,6 +579,7 @@ let ast_test_elem_i_reinject =
       [] -> "@NIL"
     | (e,t)::r -> "@CONS(" ^ get_print_var t ^ "(" ^ e ^ "), " ^ print_vars r ^ ")"  in
   fun x lvar elem_num ->
+    Unique (
     parse_foc_meth
     (" let rec " ^ test_elem_reinject elem_num ^ " in @BOOL =
         fun l in ( @LIST(" ^ string_of_typ (variables_to_tuple_type lvar)^ ")) ->
@@ -612,7 +620,7 @@ let ast_test_elem_i_reinject =
                   )
                   else
                   !" ^ test_elem_reinject elem_num ^ "(tail,b,j_t, @SUCC(nb_try))"
-    );;
+    ));;
 
 let ast_rapport_test_elem_reinject (selem : elementaire) (tcs : Own_xml.test_case list) vs i =
     let forme_elem =
@@ -642,6 +650,7 @@ let ast_rapport_test_elem_reinject (selem : elementaire) (tcs : Own_xml.test_cas
     let vs = variables_to_list vs in
     let jeux_de_test = 
       expr_of_caml_list (List.map (fun e -> my_tuples e vs) tcs) in
+    Unique (
     meth_create (rapport_test_reinject i) (TAtom(Some "basics", foctbool))
                 (expr_fun "n" (TAtom(Some "basics", foctint))
                   (expr_seq
@@ -651,7 +660,7 @@ let ast_rapport_test_elem_reinject (selem : elementaire) (tcs : Own_xml.test_cas
                         [jeux_de_test;expr_glob foctrue; expr_glob
                         focnil; expr_int 0]) (use_seq_function ()))
                    )
-                false;;
+                false);;
 
 
 (* Create the methods testing an elementary forms.
@@ -673,6 +682,7 @@ call the methods testing all elementary property, with some output message.  If
 the original property contains no variables, create an unique test case. *)
 let ast_meth_test_all_elem_reinject p_name p_forme nb_var nb_elems =
   let nb_test_case = if nb_var = 0 then expr_int 1 else expr_var "n" in
+   Unique (
     meth_create "test_prop"
                 (TAtom(Some "basics", foctbool))
                 (expr_fun "n" (TAtom(Some "basics", foctint))
@@ -704,7 +714,7 @@ let ast_meth_test_all_elem_reinject p_name p_forme nb_var nb_elems =
                    (use_seq_function ()))
                    (use_seq_function ()))
                    )
-                false;;
+                false);;
 (*****)
 
 

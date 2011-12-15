@@ -45,7 +45,7 @@ let print_import (n,l) =
   force_newline ();;
 
 let print_fml_file f fichier_fml =
-  set_margin 80;
+  set_margin 120;
   if not(f = "") then
     set_formatter_out_channel (open_out f)
   else

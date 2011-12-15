@@ -202,3 +202,8 @@ let set_prologmax t =
   prologmax := t;;
 let get_prologmax () = !prologmax;;
 
+let opens = (ref [] : string list ref);;
+
+let add_open m = (opens := m :: !opens);;
+let get_open () = !opens;;
+

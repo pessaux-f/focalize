@@ -110,9 +110,14 @@ let rec string_of_prop =
   let rec pts prec =
     fun p -> match p with
      | Pr_forall([],_,p) -> pts (-1) p.ast_desc
-     | Pr_forall(e::r,t,p) -> "all " ^ extract_vname e ^ " " ^  pts (-1) (Pr_forall(r,t,p))
+
+     | Pr_forall(e::r,t,p) -> "all " ^ extract_vname e ^ " " ^  pts (-1) (Pr_forall(r,t,p)) ^ ", "
+ (*      let rec f l =
+         match l with
+         | [] -> " : "
+*)
      | Pr_exists([],_,p) -> pts (-1) p.ast_desc
-     | Pr_exists(e::r,t,p) -> "exists " ^ extract_vname e ^ " " ^  pts (-1) (Pr_exists(r,t,p))
+     | Pr_exists(e::r,t,p) -> "exists " ^ extract_vname e ^ " " ^  pts (-1) (Pr_exists(r,t,p)) ^ ", "
      | Pr_and (p1,p2) ->
         (open_paren prec 4) ^
         (pts 4 p1.ast_desc) ^ " and " ^ (pts 4 p2.ast_desc) ^ 

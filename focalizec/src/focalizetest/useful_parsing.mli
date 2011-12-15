@@ -10,6 +10,6 @@ val parse_foc_expr : string -> Own_expr.myexpr
 val parse_type : string -> Own_types.typ
 (** [parse_type s] parses a strings [s] as a focal type. *)
 
-val parse_foc_meth : string -> Own_expr.methods
+val parse_foc_meth : string -> Own_expr.a_method
 (** [parse_foc_meth s] parses a string [s] as a focal method definition. *)
 

@@ -31,7 +31,7 @@ let rec depends =
                              [] (Focalize_inter.get_concrete_def (TPrm(m,t, []))) in
         List.fold_left (fun s e -> aux e s) ([typ]++cumul) types_inside
         with
-        | Focalize_inter.Not_a_concrete_type -> [typ] ++ cumul
+        | Focalize_inter.Not_a_concrete_type _t_o -> [typ] ++ cumul
         )
       | TSpecPrm _ -> [typ] ++ cumul
       | TProd(t1,t2)
@@ -125,7 +125,12 @@ let predefined_random_meth = (* définition des fonctions importées *)
                     (random_meth (string_of_ttyp (TAtom(Some "basics", foctfloat))))
                     (TAtom(Some "basics", foctfloat))
                     (expr_basic (Prefix(None, "rand_float")) [])
-                    false
+                    false;
+        foctstring, meth_create 
+                    (random_meth (string_of_ttyp (TAtom(Some "basics", foctstring))))
+                    (TAtom(Some "basics", foctstring))
+                    (expr_fun "n" (TAtom(Some "basics", foctint)) (expr_string "unavailable"))
+                    false;
 		 ];;
 
 let predefined_print_meth = (* définition des fonctions importées *)
@@ -148,6 +153,11 @@ let predefined_print_meth = (* définition des fonctions importées *)
                     (print_meth (string_of_ttyp (TAtom(Some "basics", "big_int"))))
                     (TAtom(Some "basics", foctstring))
                     (expr_fun "n" (TAtom(Some "basics", "big_int")) (expr_caml "print_big_int"))
+                    false;
+       foctstring, meth_create
+                    (print_meth (string_of_ttyp (TAtom(Some "basics", foctstring))))
+                    (TAtom(Some "basics", foctstring))
+                    (expr_fun "n" (TAtom(Some "basics", foctstring)) (MString "unavailable"))
                     false;
 		 ];;
 
@@ -172,6 +182,11 @@ let predefined_reinject_value_meth = (* définition des fonctions importées *)
                     (TAtom(Some "basics", "big_int"))
                     (expr_fun "n" (TAtom(Some "basics", "big_int")) (expr_var "n"))
                     false;
+       foctstring, meth_create
+                    (reinject_value_meth (string_of_ttyp (TAtom(Some "basics", foctstring))))
+                    (TAtom(Some "basics", foctstring))
+                    (expr_fun "n" (TAtom(Some "basics", foctstring)) (expr_var "n"))
+                    false;
 		 ];;
 
 let predefined_print_xml_meth = (* définition des fonctions importées *)
@@ -191,10 +206,16 @@ let predefined_print_xml_meth = (* définition des fonctions importées *)
                              fun b in (@BOOL) -> if b then
                                \"<exprbool>true</exprbool>\" else \"<exprbool>false</exprbool>\"");
        foctunit, meth_create
-                    (print_meth (string_of_ttyp (TAtom(Some "basics", foctunit))))
+                    (print_xml_meth (string_of_ttyp (TAtom(Some "basics", foctunit))))
                     (TAtom(Some "basics", foctstring))
                     (expr_fun "n" (TAtom(Some "basics", foctunit)) (MString "<exprglobid><prefix><name>()</name></prefix></exprglob_id>"))
                     false;
+       foctstring, meth_create
+                    (print_xml_meth (string_of_ttyp (TAtom(Some "basics", foctstring))))
+                    (TAtom(Some "basics", foctstring))
+                    (expr_fun "n" (TAtom(Some "basics", foctstring)) (MString "<exprglobid><prefix><name>unavailable</name></prefix></exprglob_id>"))
+                    false;
+                    
 (*       "big_int", meth_create
                     (print_meth (string_of_ttyp (TAtom(Some "basics", "big_int"))))
                     (TAtom "string")
@@ -213,6 +234,11 @@ let predefined_parse_meth = (* définition des fonctions importées *)
                                                 (TAtom(Some "basics",
                                                 foctbool))) ^ " in @BOOL =
                              fun b in (@STRING) -> if @STRUCT_EQUAL(b, \"true\") then true else false");
+       foctstring, meth_create
+                    (parse_meth (string_of_ttyp (TAtom(Some "basics", foctstring))))
+                    (TAtom(Some "basics", foctstring))
+                    (expr_fun "x" (TAtom(Some "basics", foctstring)) (expr_var "x"))
+                    false;
 		 ];;
 
 (* separate the elements of a constructor.
@@ -332,7 +358,7 @@ let ast_parse_cons (l : Own_types.constructor list) name _t =
 
 
 
-let rec ast_print_type l_param typ : Own_expr.methods list   =
+let rec ast_print_type l_param typ : Own_expr.a_method list   =
   match typ with
     | TProd(t1,t2) ->
         let n1 = print_meth (string_of_ttyp t1) in
@@ -346,11 +372,11 @@ let rec ast_print_type l_param typ : Own_expr.methods list   =
         begin try
           let l = Focalize_inter.get_concrete_def (TPrm(m, s, [])) in
           if l = [] then
-            raise Focalize_inter.Not_a_concrete_type
+            raise (Focalize_inter.Not_a_concrete_type None)
           else
             ast_print_type l_param (TPrm(m, s,[])) 
         with
-        | Focalize_inter.Not_a_concrete_type 
+        | Focalize_inter.Not_a_concrete_type _
         | Focalize_inter.Type_dont_exists _  ->
           begin try
             let meth = List.assoc s predefined_print_meth in
@@ -370,7 +396,7 @@ let rec ast_print_type l_param typ : Own_expr.methods list   =
     | TSpecPrm s ->
         let n = print_meth (string_of_ttyp typ) in
         [parse_foc_meth ("let " ^ n ^ "  in @STRING = fun x in (" ^ s ^ ") -> " ^ s ^ "!print(x)")]
-    | TFct (_,_) -> failwith "Random_rep.ast_print_type : Not yet implemented";;
+    | TFct (_,_) -> failwith "Random_rep.ast_print_type : functional type, not yet implemented";;
 
 (* ************************************************************************* *)
 (* ************************************************************************* *)
@@ -417,7 +443,7 @@ let rec ast_print_xml_cons ((n, param) : Own_types.constructor) =
 (* ************************************************************************* *)
 
 
-let rec ast_print_xml_type l_param typ : Own_expr.methods list   =
+let rec ast_print_xml_type l_param typ : Own_expr.a_method list   =
   match typ with
     | TProd(t1,t2) ->
         let n1 = print_xml_meth (string_of_ttyp t1) in
@@ -436,11 +462,11 @@ let rec ast_print_xml_type l_param typ : Own_expr.methods list   =
         begin try
           let l = Focalize_inter.get_concrete_def (TPrm(m, s, [])) in
           if l = [] then
-            raise Focalize_inter.Not_a_concrete_type
+            raise (Focalize_inter.Not_a_concrete_type None)
           else
             ast_print_xml_type l_param (TPrm(m, s,[])) 
         with
-        | Focalize_inter.Not_a_concrete_type 
+        | Focalize_inter.Not_a_concrete_type _
         | Focalize_inter.Type_dont_exists _  ->
           begin try
             let meth = List.assoc s predefined_print_xml_meth in
@@ -511,11 +537,11 @@ let rec ast_random_type l_param typ =
         begin try
           let l = Focalize_inter.get_concrete_def (TPrm(m, s, [])) in
           if l = [] then
-            raise Focalize_inter.Not_a_concrete_type
+            raise (Focalize_inter.Not_a_concrete_type None)
           else
             ast_random_type l_param (TPrm(m, s,[])) 
         with
-        | Focalize_inter.Not_a_concrete_type 
+        | Focalize_inter.Not_a_concrete_type _
         | Focalize_inter.Type_dont_exists _  ->
             begin try
               let func = List.assoc s predefined_random_meth in
@@ -574,11 +600,11 @@ let rec ast_parse_type l_param typ =
         begin try
           let l = Focalize_inter.get_concrete_def (TPrm(m, s, [])) in
           if l = [] then
-            raise Focalize_inter.Not_a_concrete_type
+            raise (Focalize_inter.Not_a_concrete_type None)
           else
             ast_parse_type l_param (TPrm(m, s,[])) 
         with
-        | Focalize_inter.Not_a_concrete_type 
+        | Focalize_inter.Not_a_concrete_type _
         | Focalize_inter.Type_dont_exists _  ->
             begin try
               let func = List.assoc s predefined_parse_meth in
@@ -586,7 +612,7 @@ let rec ast_parse_type l_param typ =
             with
             | Not_found -> (* It's probably a parameters of the species *)
                 List.iter (fun s -> print_string ("   " ^ s ^ "   ")) l_param;
-                failwith ("Error: Imported caml's type or collection unknowns, (non-subrep types are not yet supported): " ^ s) 
+                failwith ("Error: Imported caml's type or collection unknowns, (non-subrep types are not yet supported) for parse: " ^ s) 
             end (* try *)             
         end
     | TSpecPrm s ->
@@ -627,7 +653,7 @@ let meth_random_rep rep =
 (* ast_random_types l_t : returns all methods needed to create a random instance for all types l_t *)
 let ast_random_types l_param typ_l =
    List.fold_left (fun m t ->
-                     let n_m = ast_random_type l_param t in
+                       let n_m = (ast_random_type l_param t) in
                      meths_concat m n_m
                   )
                   []
@@ -684,7 +710,7 @@ let rec ast_reinject_value_cons ((n, param) : Own_types.constructor) =
 
 
 
-let rec ast_reinject_value_type l_param typ : Own_expr.methods list   =
+let rec ast_reinject_value_type l_param typ : Own_expr.a_method list   =
   match typ with
     | TProd(t1,t2) ->
         let n1 = reinject_value_meth (string_of_ttyp t1) in
@@ -698,11 +724,11 @@ let rec ast_reinject_value_type l_param typ : Own_expr.methods list   =
         begin try
           let l = Focalize_inter.get_concrete_def (TPrm(m, s, [])) in
           if l = [] then
-            raise Focalize_inter.Not_a_concrete_type
+            raise (Focalize_inter.Not_a_concrete_type None)
           else
             ast_reinject_value_type l_param (TPrm(m, s, [])) 
         with
-        | Focalize_inter.Not_a_concrete_type 
+        | Focalize_inter.Not_a_concrete_type _
         | Focalize_inter.Type_dont_exists _  ->
           begin try
             let meth = List.assoc s predefined_reinject_value_meth in
@@ -729,7 +755,7 @@ let rec ast_reinject_value_type l_param typ : Own_expr.methods list   =
 (** Takes the list of parameters, the list of type we want to handle.
  Returns the methods, the caml import section corresponding to the methods and
  the association list typ <-> (print, random) methods *)
-let ast_gen_print_types l_param typ_l =
+let ast_gen_print_types l_param typ_l : a_method list =
    List.fold_left
      (fun meths t ->
         let n_meths1 = ast_random_type l_param t in
@@ -737,7 +763,8 @@ let ast_gen_print_types l_param typ_l =
         let n_meths3 = ast_print_xml_type l_param t in
         let n_meths4 = ast_parse_type l_param t in
         let n_meths5 = ast_reinject_value_type l_param t in
-        meths @@ n_meths1 @@ n_meths2 @@ n_meths3 @@ n_meths4 @@ n_meths5
+         meths   @@  n_meths1 @@ n_meths2 @@
+           n_meths3 @@ n_meths4 @@ n_meths5 @@ [] 
      )
      []
      typ_l;;
@@ -767,7 +794,7 @@ let ast_gen_print_types_rep rep =
                  false;
   meth_create rv1 (TAtom(None, focself)) (expr_fun_notyp "n" (expr_meth focself rv2 [expr_var "n"]))
                  false
-                 ];;
+                 ] ;;
 
 (*
  string list -> Own_types.typ -> (string * string list) * Own_expr.methods list * string 
@@ -791,8 +818,13 @@ let tsort edges seed =
       if List.mem n path then
        (let p_t t = print_string (string_of_typ t) in
         let p_s = print_string in
-        List.iter (fun e -> p_t e; p_s ": "; List.iter (fun t -> p_t t; p_s " ") (depends e); p_s "\n") edges;
-        failwith "Warning: cyclic dependences between types"
+        List.iter (fun e -> p_s "Warning: "; p_t e; p_s " <- "; List.iter (fun t -> p_t t; p_s " ") (depends e); p_s "\n") edges;
+        print_string "Warning: cyclic dependencies between types\n";
+
+
+        let v' = visited in
+        sort path v' nodes 
+
        )
       else
         let v' =
@@ -813,9 +845,15 @@ let ast_random l_param typ_list rep =
   let typ_list = List.filter (function | TAtom(_,"int") -> false | _ -> true) typ_list in
   let typ_list = tri_topologique typ_list in
   let typ_list = TAtom(Some "basics", foctint)::typ_list in
+  let p_t t = print_string (string_of_typ t) in
+  List.iter (fun e -> p_t e; print_string " ") typ_list;
+  print_newline ();
   let meths1 = ast_gen_print_types_rep rep in
   let meths2 = ast_gen_print_types l_param typ_list in
 (*   ast_of_external rep :: *)
-  meths2 @@ meths1 ;;
+  [Multiple (meths2 @@ meths1)];;
+
+
+
 
 

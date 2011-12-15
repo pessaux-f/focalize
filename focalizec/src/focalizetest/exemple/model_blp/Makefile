@@ -12,15 +12,14 @@ SPECIES = " \
 
 LIBRARY = model
 
-PROPERTIES =  'prop2_false_omega'
+PROPERTIES = 'prop2_false_omega'
 
-NUMBER_OF_TEST=1
+NUMBER_OF_TEST=50
 #SIZE_OF_ELEM=$(shell expr 10)
 SIZE_OF_ELEM=$(shell expr 3)
 XMLFILE=test_report_fichier.xml
 
-FOCTEST_OPTS=-sicstus -sicstus-path \
-             ~/travail/cvs/focalize/focalizec/src/focalizetest/files_others/sicstus \
+FOCTEST_OPTS=-sicstus -sicstus-path ./sicstus \
              -sicstus-opt meta \
 
 #-sicstus-globalstk 256 \
@@ -28,7 +27,7 @@ FOCTEST_OPTS=-sicstus -sicstus-path \
 						 -sicstus-trailstk 256 \
              -sicstus-choicestk 256
 
-CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo sets_orders_externals.cmo sets_orders.cmo sets.cmo
+CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo sets.cmo
 
 OCAML_OBJ= unix.cma nums.cma
 XSLTPATH=../xml

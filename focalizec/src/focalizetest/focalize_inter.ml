@@ -9,22 +9,32 @@ open To_strings;;
 
 exception No_module_opened;;
 
-let print_debug s = print_string ("focalize_inter : " ^ s ^ "\n");;
+let print_debug _s =(*  print_string (_s);; *) ();;
+(*   print_string ("focalize_inter : " ^ _s);; *)
 
 type focalize_type = Parsetree.type_expr_desc;;
 
 type focalize_expr = Parsetree.expr;;
 
 type focalize_prop = Parsetree.logical_expr_desc;;
+type focalize_species = Env.TypeInformation.species_description;;
+type focalize_species_field = Env.TypeInformation.species_field;;
+type focalize_species_param = Env.TypeInformation.species_param;;
 
+type myfield = 
+  | Signature of string * Own_types.typ
+  | Definition of string * Parsetree.expr
+  | RecDef     of myfield list
+  | PropDef    of string * Own_prop.proposition
+  | Property   of string * Own_prop.proposition
+  | Theorem    of string * Own_prop.proposition;;
+
+let add_path = Files.add_lib_path;;
 
 let (set_env, get_env) =
-  let env : Env.TypingEnv.t option ref = ref None in
-  (fun m -> env := Some m),
-  (fun () -> match !env with
-             | None -> raise No_module_opened
-             | Some t -> t
-  );;
+  let env : Env.TypingEnv.t ref = ref (Env.TypingEnv.empty ()) in
+  (fun m -> env := m),
+  fun () -> !env;;
 
 let (set_module, get_module) =
   let modu : string option ref = ref None in
@@ -33,6 +43,7 @@ let (set_module, get_module) =
              | None -> raise No_module_opened
              | Some t -> t
   );;
+
 
 (* The definition of some exception raised inside this module *)
 
@@ -47,7 +58,7 @@ exception Function_doesnt_exists of string;;
 exception Species_dont_exists of string;;
 exception Rep_not_defined of string;;
 
-exception Not_a_concrete_type;;
+exception Not_a_concrete_type of typ option;;
 exception Not_a_property of string;;
 exception Not_defined of string * (string list);;
 
@@ -153,8 +164,8 @@ let extract_snd_ident i =
 
 (* Convertion of types *)
 
-let rec dump_type_simple =
-  let aux = dump_type_simple in
+let rec string_of_type_simple =
+  let aux = string_of_type_simple in
   let fvar () = "Var" in
   let farrow t1 t2 = aux t1 ^ " -> " ^ aux t2 in
   let ftuple l =
@@ -197,7 +208,7 @@ let split_constructor t =
   aux t;;
 
 let split_applied_type t =
-  let fnone _ = raise Not_a_concrete_type in
+  let fnone _ = raise (Not_a_concrete_type None) in
   let fconstruct m n t_l = (Types.make_type_constructor m n, t_l) in
   Types.extract_type_simple fnone fnone fnone fnone fconstruct fnone fnone t;;
 
@@ -210,13 +221,14 @@ let rec typ_of_type_scheme t =
 Open the module [m].
 *)
 
-let open_module (m : Parsetree.module_name) =
-  Env.type_open_module ~loc:Location.none m (Env.TypingEnv.empty ());;
+let open_module (_m : Parsetree.module_name) =
+(*   get_env ();; *)
+  Env.type_open_module ~loc:Location.none _m (Env.TypingEnv.empty ());; 
 
-let open_env (m : Parsetree.module_name) =
-  let mo = open_module m in
-  set_env mo;
-  set_module m;;
+let open_module_cumul (m : Parsetree.module_name) =
+  let env = get_env () in
+  let nenv = Env.type_open_module ~loc:Location.none m env in
+  set_env nenv;;
 
 (* ************************************************************************** *)
 (*                       Species manipulation functions                       *)
@@ -227,7 +239,7 @@ let open_env (m : Parsetree.module_name) =
 Gets the list of species defined in module [module].
 *)
 let focalize_get_species_list m =
-  Env.get_species_list m;;
+  List.map extract_vname (Env.get_species_list (open_module m));;
 
 (** focalize_get_species_def m s 
 
@@ -236,11 +248,15 @@ Gets the definition of the species [s] in module [m].
 let focalize_get_species ((ms, s) : species_name) =
   try
     let m = open_module ms in
-  Env.TypingEnv.find_species ~loc:locnone ~current_unit:"" (get_uident s) (m)
+      Env.TypingEnv.find_species ~loc:locnone ~current_unit:"" (get_uident s) (m)
   with
   | Env.Unbound_species(_,_) -> raise (Species_dont_exists (ms ^ "#" ^ s));;
 
 module ET = Env.TypeInformation;;
+
+let focalize_get_fields s =
+  s.ET.spe_sig_methods;;
+
 
 (** [focalize_get_functions_list sn]
 
@@ -462,9 +478,11 @@ let focalize_get_m_modules_dep m =
     match f with
     | [] -> l
     | e::r ->
-        get_fs r (focalize_get_s_modules_dep (m, extract_vname e) l) in
-  let l = focalize_get_species_list (open_module m) in
+        get_fs r (focalize_get_s_modules_dep (m, e) l) in
+  let l = focalize_get_species_list m in
   get_fs l [];;
+
+
 
 
 (******************************************************************************)
@@ -481,14 +499,14 @@ let focalize_get_all_open () =
         else
           local_merge current (e::news) olds r in
   let rec aux (news, olds) =
-  match news with
-  | [] -> olds
-  | e::r ->
-      if List.mem e olds then
-        aux (r, olds)
-      else
-        let l = focalize_get_m_modules_dep e in
-        aux (local_merge e r olds l) in
+    match news with
+    | [] -> olds
+    | e::r ->
+        if List.mem e olds then
+          aux (r, olds)
+        else
+          let l = focalize_get_m_modules_dep e in
+          aux (local_merge e r olds l) in
   aux ([get_module ()], []);;
 
 (******************************************************************************)
@@ -531,7 +549,8 @@ let get_constructors_of_a_type t =
     let fconstruct _ tn _args = (tn = t) in
       Types.extract_type_simple nok farrow nok nok fconstruct nok nok2 typ in
     let cons = focalize_get_all_constructors () in
-    List.filter (fun r -> is_ok (Types.specialize (snd r).ET.cstr_scheme)) cons;;
+    let pe = List.filter (fun r -> is_ok (Types.specialize (snd r).ET.cstr_scheme)) cons in
+    List.fold_left (fun s e -> if List.mem e s then s else e::s) [] pe;;
 
 (** Construct a generic type for a constructor of arity lenght of [i]
 Example :
@@ -564,7 +583,9 @@ let get_concrete_def : typ -> constructor list =
         let constructors = get_constructors_of_a_type s in
         begin
           match constructors with
-          | []   -> raise Not_a_concrete_type
+          | []   -> (* print_string ("No constructor for " ^ string_of_typ
+          concret ^ "\n"); *)
+                    raise(Not_a_concrete_type(Some concret))
           | (_,e)::_r ->
               let right =
                 let args = List.map type_simple_of_typ t_l in
@@ -592,7 +613,7 @@ let get_concrete_def : typ -> constructor list =
                 List.map typ_of_type_simple typs in
               List.map convert constructors
         end 
-    | _ -> raise Not_a_concrete_type;;
+    | _ -> raise (Not_a_concrete_type None);;
 
 let focalize_get_all_types () = 
   let qualify m e = Qualified(m,e) in
@@ -853,16 +874,12 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
       let e1' = try(List.hd e1.ast_desc.ld_bindings).ast_desc with | Not_found -> failwith "Internal Error :/" in
       (* Take into account of parameters *)
       let add_params =
-        if e1'.b_params = [] then
-          (fun e -> e)
-        else
           List.fold_right (fun e s ->
                              match e with
                              | vn, Some t -> (fun e -> MFun(extract_vname vn,
                                                             Some(typ_of_foctyp t.ast_desc), s e))
-                             | vn, None -> failwith ("myexpr_of_texpr : E_let
-                             lack of type" ^ extract_vname vn))
-                          e1'.b_params (fun e -> e)
+                             | vn, None -> failwith ("myexpr_of_texpr : E_let lack of type for " ^ extract_vname vn ^ " in local function " ^ extract_vname e1'.b_name)
+                          ) e1'.b_params (fun e -> e)
       in
       let x = extract_vname e1'.b_name in
       let _x_t = e1'.b_type in
@@ -911,7 +928,18 @@ let proposition_of_tprop m =
     | Pr_paren e -> aux l e.ast_desc in
   aux [];;
 
+type expr_or_logic =
+| FExpr of  myexpr
+| FLogic of proposition;;
+
+let expr_or_logic_of_body =
+  function
+  | Parsetree.BB_logical p -> FLogic (proposition_of_tprop "" p.ast_desc)
+  | Parsetree.BB_computational e -> FExpr (myexpr_of_texpr "" [] e);;
+
+
 let get_prop_def species prop =
+  Whattodo.print_verbose ("Getting prop : " ^ prop ^ "...\n");
   let rec search_prop nn l =
     match l with
     | [] ->
@@ -940,6 +968,7 @@ let rec add_meth_params p t e =
   | _, _ -> failwith "add_meth_params: no enough types";;
 
 let get_meth_def sn meth =
+  Whattodo.print_verbose ("Getting function : " ^ meth ^ "...\n");
   let rec search_meth nn l =
     match l with
     | [] ->
@@ -994,8 +1023,9 @@ let get_type_kind tk =
 
 (* Initialize the environnement *)
 let focalize_init m =
+  set_module m;
   Files.add_lib_path Installation.install_lib_dir;
-  open_env m
+  ignore (open_module_cumul m)
 ;;
 
 let get_rep = focalize_get_representation;;
@@ -1003,7 +1033,9 @@ let get_rep = focalize_get_representation;;
 let expr_for_prolog_of_texpr _ = failwith "expr_for_prolog_of_texpr: Not yet implemented" 
 let typ_of_const _ = failwith "typ_of_const: Not yet implemented" 
 let foctyp_of_typ _ = failwith "foctyp_of_typ: Not yet implemented" 
-let is_complete _ = failwith "is_complete: Not yet implemented" 
+let is_complete_def s = s.ET.spe_is_closed;;
+
+let is_complete m s = is_complete_def (focalize_get_species (m, s));;
 
 let get_meth_def_split sn m =
   let def, typ = get_meth_def sn m in (* Get the definition and the type of m *)
@@ -1015,3 +1047,62 @@ let get_meth_def_split sn m =
         (x, t)::args, e_t
     | _ -> [], (s, typ) in
   aux def;;
+
+
+
+let convert_field f =
+  match f with
+  | ET.SF_sig((_, name, typ)) ->
+      Signature(extract_vname name, typ_of_type_scheme typ)
+  | ET.SF_let((_, name, _, _, body, _, _, _)) ->
+      begin
+        match body with
+        | BB_logical l -> PropDef(extract_vname name, proposition_of_tprop "" l.ast_desc)
+        | BB_computational e -> Definition(extract_vname name, e)
+      end
+  | ET.SF_let_rec(l) ->
+     RecDef (List.map (fun ((_, name, _, _, body, _, _, _)) ->
+      begin
+        match body with
+        | BB_logical l -> PropDef(extract_vname name, proposition_of_tprop "" l.ast_desc)
+        | BB_computational e -> Definition(extract_vname name, e)
+      end) (snd l))
+  | ET.SF_theorem(_, name, _, body, _, _) ->
+      Theorem(extract_vname name, proposition_of_tprop "" body.ast_desc)
+  | ET.SF_property(_, name,_ ,body, _) ->
+      Property(extract_vname name, proposition_of_tprop "" body.ast_desc);;
+
+
+let is_collection spc =
+ match spc.ET.spe_kind with
+  | Types.SCK_toplevel_collection -> true
+  | Types.SCK_toplevel_species    -> false
+  | Types.SCK_species_parameter   -> false (* ? *)
+;;
+
+
+let focalize_get_params spec = spec.ET.spe_sig_params;; 
+
+let focalize_param_is_ent param =
+  match param with
+  |  ET.SPAR_in(_,(_,_),_) -> true
+  | ET.SPAR_is((_,_),_,_,_,_) -> false;;
+
+
+let focalize_get_param_name param =
+  match param with
+  |  ET.SPAR_in(v,(_,_),_) -> extract_vname v
+  | ET.SPAR_is((_,e),_,_,_,_) -> e;;
+
+let focalize_get_param_type param =
+  match param with
+  |  ET.SPAR_in(_,(_modul, v),_) ->(* (if modul = current then "" else modul ^
+  "." ) ^ *) v
+  | ET.SPAR_is((_,_),_,_, p ,_) -> extract_ident p.Parsetree_utils.sse_name.ast_desc;;
+
+  (*
+let get_param_col_type param =
+  match param with
+  |  ET.SPAR_in(v,(_,_),_) -> extract_vname v
+  | ET.SPAR_is((_,e),_,_,_,_) -> e
+  *)

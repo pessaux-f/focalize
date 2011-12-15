@@ -147,25 +147,26 @@ let basics_result = (* used otherwise *)
   let equal_op x op l = (* construct x #= op(l) *)
     prolog_fd_equal (prolog_var x) (prolog_fun op l) in
   ["focalize_error", (fun _l _v -> prolog_fun "fail" []);
-   "=0x",(fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#=" l]);
-   "<=0x",(fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#=<" l]);
-   ">0x",(fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#>" l]);
-   ">=0x",(fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#>=" l]);
-   "=",(fun l v -> prolog_fun "unifyD" (prolog_var v ::l));
-   "=",(fun l v -> prolog_fun "unifyD" (prolog_var v ::l));
-   "+",(fun l v -> equal_op v "+" l);
-   "True",(fun _ _ -> prolog_int 1);
-   "False",(fun _ _ -> prolog_int 0);
+   "~0x", (fun l v -> equal_op v "-" (prolog_int 0 :: l));
+   "=0x", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#=" l]);
+   "<=0x", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#=<" l]);
+   ">0x", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#>" l]);
+   ">=0x", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#>=" l]);
+   "=", (fun l v -> prolog_fun "unifyD" (prolog_var v ::l));
+   "=", (fun l v -> prolog_fun "unifyD" (prolog_var v ::l));
+   "+", (fun l v -> equal_op v "+" l);
+   "True", (fun _ _ -> prolog_int 1);
+   "False", (fun _ _ -> prolog_int 0);
    "succ0x", (fun l v -> prolog_fun "succ" (prolog_var v::l));
    "max0x", (fun l v -> prolog_fun "int_max" (prolog_var v ::l));
-   "*",(fun l v -> equal_op v "*" l);
-   "-",(fun l v -> equal_op v "-" l);
-   "/",(fun l v -> equal_op v "/" l);
-   "%",(fun l v -> prolog_fun "int_mod" (prolog_var v ::l));
-   "&&",(fun l v -> prolog_fun "and_b" (prolog_var v ::l));
-   "||",(fun l v -> prolog_fun "or_b" (prolog_var v ::l));
-   "~~",(fun l v -> prolog_fun "not_b" (prolog_var v ::l));
-   "<0x",(fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#<" l]);
+   "*", (fun l v -> equal_op v "*" l);
+   "-", (fun l v -> equal_op v "-" l);
+   "/", (fun l v -> equal_op v "/" l);
+   "%", (fun l v -> prolog_fun "int_mod" (prolog_var v ::l));
+   "&&", (fun l v -> prolog_fun "and_b" (prolog_var v ::l));
+   "||", (fun l v -> prolog_fun "or_b" (prolog_var v ::l));
+   "~~", (fun l v -> prolog_fun "not_b" (prolog_var v ::l));
+   "<0x", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#<" l]);
    "pair", (fun l v -> prolog_fun "pair" (prolog_var v::l));
    "snd", (fun l v -> prolog_fun "scnd" (prolog_var v::l));
    "fst", (fun l v -> prolog_fun "first" (prolog_var v::l))
@@ -277,7 +278,7 @@ and
       let ret_f =  Fresh_variable.new_prolog_var () in
       let f = res in (* ret is the new defined function *)
       let pbody = prolog_term_of_minifoc tc cp body ret_f arity_list in
-      let fv = list_fst_dels args (get_vars body) in
+      let fv = list_fst_dels args (minifoc_expr_fv body) in
       let fv_prolog =
         List.map (fun e ->
                     prolog_var (Fresh_variable.get_from_existing (fst e)) 
@@ -293,7 +294,7 @@ and
       ]
   (************************************)
   | FValue(v) -> [prolog_equal (prolog_var res) (prolog_of_focarg v)]
-  | FMatch(v,p_l) -> 
+  | FMatch((v,_t),p_l) -> 
       [prolog_fun "match" (prolog_list
       (* A supprimer (remplacer par []) *)
                                 (create_itematch_vars tc cp (flatten_no_doublon (List.map (fun (_,_,e) -> get_vars e) p_l)))
@@ -449,6 +450,7 @@ let load_functions_in_environment l : prolog_clause =
   let name = "f_" ^ Fresh_variable.get_from_existing "load_functions" in
   let ev = prolog_var env_variable in
   Some (prolog_fun name [ev]),
+  Prolog_fun("true", [])::
   List.map (fun (cp, n) ->
        let n = prolog_predicate cp n ^ "_add" in
        prolog_fun n [ev]) l;;
@@ -543,7 +545,7 @@ let create_goal tc vars (elem : elementaire) name i arity_list : prolog_clause *
   [prolog_fun "fin_env" [prolog_var env_variable]] @
   (if Whattodo.get_mcdc_number () = 0 then
      list_insert (prolog_fun "fin_env" [prolog_var env_variable])
-                 (List.map (fun e -> prolog_fun "#=" [prolog_var e; prolog_int 1]) truth_vars) @
+                 (List.map (fun e -> prolog_fun "=" [prolog_var e; prolog_int 1]) truth_vars) @
      [prolog_fun "label_and_write"
                  [prolog_list (variables_map_esc (fun e -> prolog_var (Fresh_variable.get_from_existing (get_variable_name e))) vars);
                   prolog_int (Whattodo.get_number_of_test ());
@@ -560,9 +562,9 @@ let create_goal tc vars (elem : elementaire) name i arity_list : prolog_clause *
                  [prolog_list (variables_map_esc (fun e -> prolog_var (Fresh_variable.get_from_existing (get_variable_name e))) vars);
                   prolog_int (Whattodo.get_mcdc_number ());
                   prolog_list (List.map prolog_var truth_vars);
-                  prolog_var (Fresh_variable.prolog_pgm_res name i);
+                  prolog_fun (Fresh_variable.prolog_pgm_res name i) [];
                   prolog_var (env_variable);
-                  prolog_var name;
+                  prolog_fun name [];
                   prolog_int 1;
                   match Whattodo.get_prolog_stat_file () with
                   | None ->   prolog_fun "none" []
@@ -570,10 +572,17 @@ let create_goal tc vars (elem : elementaire) name i arity_list : prolog_clause *
                  ]]
 
   ))
-  ,(
+  ,
+  let file = Fresh_variable.new_prolog_var () in
+  (
     Some(prolog_fun state_name []),
-    [prolog_fun "save_program" [prolog_fun goal_name []; prolog_fun goal_name
-    []];
+    [prolog_fun "save_program" [prolog_fun goal_name [];
+              prolog_fun ";" [prolog_fun goal_name [];
+              Prolog_conjunction([prolog_fun "open" [ prolog_fun (Fresh_variable.prolog_pgm_res name i) []; prolog_fun "write" []; prolog_fun file []];
+                                  prolog_fun "close" [prolog_fun file []];
+                                  prolog_fun "halt" []]) 
+                                          ]
+                               ];
     prolog_fun "halt" []
     ]);;
 (** [create_goal (vars, p_l)]

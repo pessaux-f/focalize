@@ -25,8 +25,9 @@ NUMBER_OF_TEST=10
 #SIZE_OF_ELEM=$(shell expr 10)
 SIZE_OF_ELEM=$(shell expr 3)
 XMLFILE=test_report_triangle.xml
+FOCTEST_OPTS=-L length
 
-CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo sets_orders_externals.cmo sets_orders.cmo sets.cmo
+CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo sets.cmo
 							
 OCAML_OBJ= unix.cma nums.cma
 XSLTPATH=../xml

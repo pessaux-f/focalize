@@ -23,7 +23,7 @@ module MyFormat :
         let indent = ref 0;;
         let file = ref stdout;;
         let sep = ref 0;;
-        let max = ref 80;;
+        let max = ref 120;;
 
         let set_formatter_out_channel f = file := f;;
 
@@ -246,6 +246,8 @@ let rec print_myexpr : (string * string) list -> myexpr -> unit =
     | MGlob_id s ->
         print_indent_symb s
     | MCaml_def s ->
+        print_string "internal 'a";
+        force_newline ();
         print_string "external | caml -> {*";
         print_space ();
         let s = try List.assoc s l_caml with 
@@ -341,13 +343,7 @@ let rec split_arg_def e =
                          (v,t)::lv,e
     | _ -> [],e;;
 
-let print_meth m l =
-  print_string "let ";
-  if m.methrec then
-   (print_space ();
-    print_string "rec";
-    print_space ();
-   );
+let print_a_meth_bind m l =
   print_string m.methname;
   let (args,e) = split_arg_def m.methdef in
   if not (args = []) then
@@ -364,9 +360,42 @@ let print_meth m l =
   open_box 2;
   force_newline ();
   print_myexpr l e;
-  print_string ";";
   close_box();
   force_newline ();;
+
+let print_meth m l =
+  match m with
+  | Unique m ->
+      print_string "let ";
+      if m.methrec then
+        (print_space ();
+        print_string "rec";
+        print_space ()
+        );
+      print_a_meth_bind m l;
+      print_string ";";
+  | Multiple ll ->
+      let rec aux ll =
+        match ll with
+        | [] -> ()
+        | [m] ->
+            print_a_meth_bind m l
+        | m::r ->
+            print_a_meth_bind m l;
+(*             print_space (); *)
+(*            print_string "and"; *)
+            print_string ";";
+            force_newline ();
+            print_string " let rec ";
+            print_space ();
+            aux r in
+      print_string "let";
+      print_space ();
+      print_string "rec";
+      print_space ();
+      print_space ();
+      aux ll;
+      print_string ";";;
 
 let print_spec spec l =
   print_string "species ";
@@ -411,10 +440,9 @@ let print_spec spec l =
     end;
     List.iter (fun e -> force_newline (); print_meth e l) spec.specdef;
   close_box ();
-  force_newline();
+  force_newline ();
   print_string "end;;";
-  force_newline();
-  force_newline();;
+  force_newline ();;
 
 let print_tlet n t e l_caml =
   print_string "let";
@@ -492,11 +520,15 @@ let print_toplevel_def_list ast fml =
     ) ast;;
 
 let print_foc_file f ast (fml : Own_expr.fichier_fml) =
-  set_margin 80;
+  set_margin 120;
   if not(f = "") then (* default is stdout *)
     set_formatter_out_channel (open_out f);
-  print_string "open \"basics\";;";
-  force_newline ();
+  List.iter (fun m ->
+              print_string "open \"";
+              print_string m;
+              print_string "\";;";
+              force_newline ()
+           ) ("basics" :: Whattodo.get_open ());
   List.iter print_uses ast.ficopenuse;
   force_newline ();
   print_toplevel_def_list ast.ficobjet fml;

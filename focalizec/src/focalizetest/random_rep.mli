@@ -31,7 +31,7 @@ It returns the imports definitions and the list of methods. *)
 
 (** {6 Basic type of focal} *)
 
-val predefined_random_meth : (string * Own_expr.methods) list
+val predefined_random_meth : (string * Own_expr.a_method) list
 (** The list of all predefined random methods. For [int], [float], [unit], [big_int] *) 
 
 (*
@@ -44,7 +44,7 @@ val predefined_random_fml : (string * (string * string)) list
 (* The caml import association list for predefined random function type. *)
 *)
 
-val predefined_print_meth : (string * Own_expr.methods) list
+val predefined_print_meth : (string * Own_expr.a_method) list
 (** The list of all predefined print methods. For [int], [float], [unit], [big_int] *) 
 
 (*
@@ -80,7 +80,7 @@ constructor in [cons_l] and construct a value over the constructor choiced.
 val ast_random_type :
   string list ->
   Own_types.typ ->
-    Own_expr.methods list
+    Own_expr.a_method list
 (** [ast_random_type l_param t] returns the list of method necessary to generate
 a random value of type [t] and the list needed imported function and the name of
 the method in the list that generate [t]. [l_param] is a list of collection [t]
@@ -90,10 +90,10 @@ can depends on.*)
 val ast_random_types :
   string list ->
   Own_types.typ list ->
-  Own_expr.methods list
+  Own_expr.a_method list
 (** Like [ast_random_types] but for a list of type *)
 
-val meth_random_rep : Own_types.typ -> Own_expr.methods
+val meth_random_rep : Own_types.typ -> Own_expr.a_method
 (** [meth_random_rep t] returns the method named {!Own_basics.meth_rnd}
 generating a value of type [t]. It only calls a function generating the value.
 The function should exists elsewhere. *)

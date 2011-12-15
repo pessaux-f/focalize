@@ -13,6 +13,7 @@ collection CInt =
 end;;
 
 let mrand_int : int -> int =
+  internal int -> int
   external | caml ->
     {* fun i -> Random.int(i) *};;
 
@@ -282,10 +283,12 @@ species Interloop =
   representation = Taquin_type;
 
   let print_output : string -> unit =
+    internal  string -> unit
     external | caml ->
             {* fun s -> print_string s; Pervasives.flush stdout *};
 
   let readline : unit -> string =
+    internal unit -> string
     external | caml ->
                 {* fun () -> Scanf.scanf "%s\n" (fun x -> x) *};
 

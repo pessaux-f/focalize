@@ -165,6 +165,7 @@ let generate =
        (first_call := false;
         let library_name = Filename.basename (remove_suffixe file) in
         (* load the environment *)
+          focalize_init "basics";
           focalize_init library_name;
                 (*******)
         let prop =
@@ -240,6 +241,7 @@ let generate =
       | Cant_instanciate_param(e,p) ->
           prerr_string ("The species expects (" ^ string_of_parameters_expect e ^
           ") but you provide " ^ string_of_parameters_instance_verbose p ^ "\n")
+      | Not_a_concrete_type (Some t) -> prerr_string ("Error definition of \"" ^ Own_types.string_of_typ t ^ "\" not found\n")
 
   end;;
 
@@ -282,6 +284,8 @@ let parse_args () = Arg.parse
                  "outfile Set output file (default a.out.fcl)";
       "-sicstus", Arg.Unit (fun () -> set_use_prolog true),
                  " We want to use sicstus";
+      "-no-sicstus", Arg.Unit (fun () -> set_use_prolog false),
+                 " We don't want to use sicstus";
       "-sicstus-globalstk", Arg.Int (fun i -> set_globalstk i),
                  " Size of the global stack in MB";
       "-sicstus-localstk", Arg.Int (fun i -> set_localstk i),
@@ -304,6 +308,10 @@ let parse_args () = Arg.parse
                   "n Set the size of integer. The generated interval is [-n/2; n/2 - 1]";
       "-S", Arg.Int set_size_value_test,
                  "size Set size of element we want to generate";
+      "-I", Arg.String Focalize_inter.add_path,
+                 "path Add path to list of searching path library";
+      "-L", Arg.String (fun s -> Whattodo.add_open s; Focalize_inter.open_module_cumul s),
+                 "module Add a \"open modules\" directive in the harness";
       "-t", Arg.Int set_number_of_test,
                  "number Set the number of test case";
       "-stat", Arg.String (fun e -> set_prolog_stat_file (Some e)),

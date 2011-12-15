@@ -19,7 +19,7 @@ type minifoc_expr =
   | FMeth of string * string * minifoc_arg list
             (** a function is applied to a list of string/integer name/value *)
   | FBasic of string * minifoc_arg list (** same as [FMeth] *)
-  | FMatch of string * (string * minifoc_arg list * minifoc_expr) list
+  | FMatch of (string * Own_types.typ) * (string * minifoc_arg list * minifoc_expr) list
                                (** pattern matching is only on variable name *)
   | FVarloc of minifoc_var * minifoc_expr * minifoc_expr (** a [let] expression *)
   | FValue of minifoc_arg;; (** the value of a variable or an integer *)
@@ -63,7 +63,7 @@ let rec dbg_string_minifoc_expr e =
   | FValue m -> dbg_string_minifoc_arg m
   | FFun(l,e) ->
       List.fold_right (fun (v,t) s -> "fun (" ^ v ^ " : " ^ Own_types.string_of_typ t ^ ") -> " ^ s) l (dbg_string_minifoc_expr e)
-  | FMatch(var, c_args_expr_l) ->
+  | FMatch((var, _t), c_args_expr_l) ->
       "match " ^ var  ^ " with " ^
       List.fold_right (fun (c,_args,expr) s -> "| " ^ c ^ " -> " ^
       dbg_string_minifoc_expr expr ^ s) c_args_expr_l ""
@@ -119,7 +119,7 @@ let rec minifoc_expr_of_myexpr e =
         let l_pat =
           List.map (convert_pattern aux) l in
         FVarloc(FVHer(v, t), aux e1,
-                FMatch(v, l_pat))
+                FMatch((v, t), l_pat))
     | MFun(_, _, _) ->
         let rec aux_fun e =
           match e with
@@ -147,6 +147,9 @@ let rec minifoc_expr_of_myexpr e =
         else
           FBasic(ident_name i, [])
     | MApp(MGlob_id(i), _, l) ->
+        if ident_name i = "focalize_error" then
+          FBasic("focalize_error", [])
+          else
         let func = 
           fun lv ->
             if Focalize_inter.is_constructor i then
@@ -166,4 +169,47 @@ let rec minifoc_expr_of_myexpr e =
         in
     aux e;;
 
+
+
+
+
+let list_del e l =
+  let rec aux l =
+    match l with
+    | [] -> []
+    | e'::r' -> if fst e' = e then r' else e'::aux r' in
+  aux l;;
+
+let list_fst_del (e, _) l = list_del e l;;
+
+let list_fst_dels l1 l2 =
+  List.fold_right list_fst_del l1 l2;;
+
+let rec minifoc_expr_fv =
+  let aux_args e =
+      match e with
+      | FVar (FVInt v) -> [v, Own_types.TAtom(Some focbasics, foctint)]
+      | FVar (FVHer(v, t)) -> [v, t]
+      | _ -> [] in
+  let rec aux expr = 
+  match expr with
+  | FFun(v_l, e1) -> list_fst_dels v_l (aux e1)
+  | FVarloc(FVFun(v,_), e1, e2) | FVarloc(FVHer(v,_), e1, e2) | FVarloc(FVInt v, e1, e2) ->
+      (aux e1 ++ list_del v (aux e2))
+  | FIfte(v,e1, e2) -> [(v, Own_types.TAtom(Some focbasics, foctbool))] ++ aux e1 ++ aux e2
+  | FMethVar(x, t, l) -> [x, t]++List.fold_left (fun s e -> (aux_args e) ++ s) [] l
+  | FMeth(_,_s,l) ->             List.fold_left (fun s e -> (aux_args e) ++ s) [] l
+  | FValue(FConstruct( _, l)) 
+  | FBasic(_, l) ->              List.fold_left (fun s e -> (aux_args e) ++ s) [] l
+  | FMatch(v_t,l) ->
+      let vars_bound l = List.flatten (List.map aux_args l) in
+      [v_t]++List.fold_left (fun s (_,l,e) -> s ++ list_fst_dels (vars_bound l) (aux e)) [] l
+  | FValue(FVar (FVHer(x, t)))
+  | FValue(FVar (FVFun(x, t))) ->
+      [x, t]
+  | FValue(FVar (FVInt t)) -> [t, Own_types.TAtom(Some focbasics, foctint)]
+  | FValue(FInt _) -> []
+       in
+  aux
+;; (* (** the value of a variable or an integer *) *)
 

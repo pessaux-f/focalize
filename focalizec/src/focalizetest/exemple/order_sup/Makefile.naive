@@ -27,9 +27,9 @@ SIZE_OF_ELEM=$(shell expr 10)
 #SIZE_OF_ELEM=$(shell expr 500)
 XMLFILE=test_report_fichier_naive.xml
 
-FOCTEST_OPTS=-sicstus -sicstus-path ~/travail/cvs/focalize/focalizec/src/focalizetest/files_others/sicstus -sicstus-opt naive
+FOCTEST_OPTS=-sicstus -sicstus-path ~/travail/cvs/focalize/focalizec/src/focalizetest/sicstus -sicstus-opt naive
 
-CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo sets_orders_externals.cmo sets_orders.cmo sets.cmo
+CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo sets.cmo
 
 OCAML_OBJ= unix.cma nums.cma
 XSLTPATH=../xml

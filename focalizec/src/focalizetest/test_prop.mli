@@ -113,6 +113,7 @@ elementary property [elem] with variable [var_l], [i] is the number of [elem].
 *)
 
 val ast_rapport_test_elem :
+  Own_expr.species_name ->
   Own_prop.elementaire -> Own_prop.variables -> string -> int -> Own_expr.methods
 (** [ast_rapport_test_elem e vs i] returns the method [rapport_test i] creating
 the test report for the elementary property [e]. *)

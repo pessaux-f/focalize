@@ -184,3 +184,6 @@ val set_prologmax : int -> unit
 val get_prologmax : unit -> int
 
 
+val add_open : string -> unit;;
+val get_open : unit -> string list;;
+

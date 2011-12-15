@@ -3,7 +3,7 @@
 exception No_module_opened;;
 (** Raised when the environnement were no initialized. *)
 
-exception Not_a_concrete_type;;
+exception Not_a_concrete_type of Own_types.typ option;;
 (** Raised when attempts to access the constructors of a non concrete type. *)
 
 exception Cant_convert_texpr
@@ -58,6 +58,12 @@ exception Foc_def_err of focal_error
 (** A binding exception for focal definition error. *)
 *)
 
+type focalize_species;;
+
+type focalize_species_field;;
+
+type focalize_species_param;;
+
 type focalize_type;;
 (** The abstract focalize types. *)
 
@@ -66,6 +72,14 @@ type focalize_expr;;
 
 type focalize_prop;;
 (** The abstract focalize propositions. *)
+
+type myfield = 
+  | Signature of string * Own_types.typ
+  | Definition of string * focalize_expr
+  | RecDef     of myfield list
+  | PropDef    of string * Own_prop.proposition
+  | Property   of string * Own_prop.proposition
+  | Theorem    of string * Own_prop.proposition;;
 
  (**/**)
 (** {6 Conversions between Focal type and own types} *)
@@ -163,7 +177,7 @@ val display_foc_def_err : string -> focal_error -> unit
 focal compiler. *) 
 *)
 
-val is_complete : string -> bool
+val is_complete : string -> string -> bool
 (** [is_complete species] returns [true] if the species names [species] is
 complete else its raise an exception.
 
@@ -217,6 +231,8 @@ val good_prms : (string * Own_expr.parameters_instance list) -> unit
 
 (* ********************** *)
 
+val add_path : string -> unit;;
+
 val get_all_types : unit -> (string * Own_types.typ_body) list
 (** Returns the list of all defined type in the Focal environnement *)
 
@@ -235,3 +251,31 @@ val is_constructor : Own_basics.ident -> bool
 
 val get_meth_def_split : Own_expr.species_name -> string -> (string *
 Own_types.typ option) list * (Own_expr.myexpr * Own_types.typ)
+
+
+
+val extract_vname : Parsetree.vname -> string;;
+
+type expr_or_logic =
+| FExpr of  Own_expr.myexpr
+| FLogic of Own_prop.proposition;;
+
+val expr_or_logic_of_body : Parsetree.binding_body -> expr_or_logic;;
+
+val focalize_get_species : string * string -> focalize_species;;
+val focalize_get_fields : focalize_species -> focalize_species_field list;;
+val convert_field : focalize_species_field -> myfield;;
+
+val focalize_get_species_list : string -> string list;;
+
+val is_complete_def : focalize_species -> bool;;
+val is_collection : focalize_species -> bool;;
+
+
+
+val focalize_get_params : focalize_species -> focalize_species_param list;;
+
+val focalize_get_param_name : focalize_species_param -> string;;
+val focalize_get_param_type : focalize_species_param -> string;;
+val focalize_param_is_ent : focalize_species_param -> bool;;
+val open_module_cumul : string -> unit;;

@@ -30,7 +30,7 @@ let prolog_fun_bin s t1 t2 = Prolog_fun(s,[t1;t2]);;
 let prolog_var x = Prolog_var(x);;
 
 let prolog_fd_equal e1 e2 =
-  prolog_fun "#=" [e1;e2];;
+  prolog_fun "#=" [e1;e2];; (* sicstus4 buggue avec #= *)
 
 let prolog_equal e1 e2 =
   prolog_fun "=" [e1;e2];;

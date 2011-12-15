@@ -278,8 +278,8 @@
   <!-- The variables values -->
 	<xsl:template match="value">
     <td class="cssvalue">
-      <!-- <xsl:value-of select="valstring" /> -->
-      <xsl:apply-templates select="valexpr" />
+      <xsl:value-of select="valstring" /> 
+      <!--      <xsl:apply-templates select="valexpr" /> -->
     </td>
 	</xsl:template>
   <!-- ******************** -->

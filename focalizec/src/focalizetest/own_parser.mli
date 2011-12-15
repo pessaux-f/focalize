@@ -54,7 +54,7 @@ val expr_focal :
 val type_focal :
   (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Own_types.typ
 val meth_focal :
-  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Own_expr.methods
+  (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Own_expr.a_method
 val expr_xml :
   (Lexing.lexbuf  -> token) -> Lexing.lexbuf -> Own_xml.xml_tree
 val test_context :

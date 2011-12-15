@@ -1014,8 +1014,8 @@ species S_models_blp(S_rh is S_rho_blp,
   theorem prop2_false_omega :
       all sigma : Self,
          !mac_fun(sigma) -> !mac_star_fun(sigma) ->
-(*           !correct_flows(sigma, !all_flow(sigma)) *)
-          (~~  !correct_flows(sigma, !all_flow(sigma)) -> true)
+          !correct_flows(sigma, !all_flow(sigma))
+(*           (~~  !correct_flows(sigma, !all_flow(sigma)) -> true) *)
     proof =
       assumed;
 

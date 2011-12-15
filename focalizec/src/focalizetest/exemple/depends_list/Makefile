@@ -28,7 +28,8 @@ NUMBER_OF_TEST=100
 SIZE_OF_ELEM=$(shell expr 1073741823 / 2)
 XMLFILE=test_report.xml
 
-CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo sets_orders_externals.cmo sets_orders.cmo sets.cmo
+CMO_TO_LINK = ml_builtins.cmo sets_externals.cmo basics.cmo sets.cmo
+#sets_orders_externals.cmo sets_orders.cmo sets.cmo
 
 OCAML_OBJ= unix.cma nums.cma
 XSLTPATH=../xml

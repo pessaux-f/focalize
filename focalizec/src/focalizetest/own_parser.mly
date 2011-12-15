@@ -209,7 +209,7 @@ let ident_of_uident s i =
 %type <Own_expr.species_test> expr_species
 %type <string list> properties_test
 %type <Own_expr.toplevel_def> topexpr_focal
-%type <Own_expr.methods> meth_focal
+%type <Own_expr.a_method> meth_focal
 %type <Own_expr.myexpr> expr_focal
 %type <Own_types.typ> type_focal
 %type <Context_test.test_context> test_context
@@ -450,8 +450,12 @@ expr_focal:
     { MGlob_id(ident_of_uident $2 2) }
 | DIESE UIDENT
     { MGlob_id(Prefix(None, $2)) }
+| DIESE LPAREN RPAREN
+    { MGlob_id(focunit) }
 | IDENT DIESE IDENT
     { MGlob_id(Prefix(Some $1, $3)) }
+| IDENT DIESE LPAREN RPAREN
+    { MGlob_id(focunit) }
 | CAML IMPORT IDENT
     { MCaml_def($3) }
 | MATCH expr_focal WITH l_case

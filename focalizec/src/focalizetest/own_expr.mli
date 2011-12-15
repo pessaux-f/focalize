@@ -149,23 +149,28 @@ val typ_get_print : Own_types.typ -> gen_print_typ list -> string
 
 (**  {6 Type of methods} *)                                   
 
-type methods = {
+type a_method = {
   methname : string;       (** Name of the method. *)
   methtyp : Own_types.typ; (** Type of the value returned by the method. *)
   methdef : myexpr;        (** Body of the method. *)
   methrec : bool;          (** Is the method recursive ? *)
 }
 
+type methods =
+  | Unique of a_method
+  | Multiple of a_method list
+;;
 
-val meth_create : string -> Own_types.typ -> myexpr -> bool -> methods
+
+val meth_create : string -> Own_types.typ -> myexpr -> bool -> a_method
 (** [meth_create n t expr rec] returns the method of name [n] which return a
 value of type [t], with body [expr] and with the recursive flag [rec] *)
 
-val meths_concat : methods list -> methods list -> methods list
+val meths_concat : a_method list -> a_method list -> a_method list
 (** Concats the two list of methods and delete all duplicates entries.
 It preserves the order. *)
 
-val ( @@ ) : methods list -> methods list -> methods list
+val ( @@ ) : a_method list -> a_method list -> a_method list
 (** Infix definition of [meths_concat]. *)
 
 

@@ -1,5 +1,5 @@
-use "sets_orders";;
-open "sets_orders";;
+use "sets";;
+open "sets";;
 open "basics";;
 
 use "length";;
@@ -43,6 +43,7 @@ let rec permute(l1, l2) =
         false;;
 
 let parse_triplet : string -> bool * (int * (int * int)) = 
+  internal 'a
   external | caml ->
   {*
 let rec number c = (Char.code c >= Char.code '0' && Char.code c <= Char.code '9') in

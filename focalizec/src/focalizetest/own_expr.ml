@@ -185,12 +185,17 @@ let rec dbg_string_myexpr =
 
 
 (* The type defining a method *)
-type methods =
+type a_method =
     {methname : string;
      methtyp  : typ;
      methdef  : myexpr;
      methrec  : bool
     };;
+
+type methods =
+  | Unique of a_method
+  | Multiple of a_method list
+;;
 
 (* For creating a method *)
 let meth_create s typ def is_rec =
@@ -202,6 +207,8 @@ let meths_concat m1 m2 =
     match m_l with
     | [] -> cumul
     | e::r ->
+ (*       let ext = function Unique x -> x | Multiple [] -> failwith "Houlala" |
+         Multiple (e::_) -> e in *)
         if List.exists (fun x -> x.methname = e.methname) cumul then
           aux cumul r
         else

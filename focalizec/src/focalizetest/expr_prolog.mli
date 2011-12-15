@@ -17,7 +17,7 @@ type minifoc_expr =
   | FMeth    of string * string * minifoc_arg list
             (** a function is applied to a list of string/integer name/value *)
   | FBasic   of string * minifoc_arg list (** same as [FMeth] *)
-  | FMatch   of string * (string * minifoc_arg list * minifoc_expr) list
+  | FMatch   of (string * Own_types.typ) * (string * minifoc_arg list * minifoc_expr) list
                                (** pattern matching is only on variable name *)
   | FVarloc  of minifoc_var * minifoc_expr * minifoc_expr (** a [let] expression *)
   | FValue   of minifoc_arg;; (** the value of a variable or an integer *)
@@ -31,3 +31,5 @@ val dbg_string_minifoc_var : minifoc_var -> string;;
 val dbg_string_minifoc_expr : minifoc_expr -> string;;
 
 val minifoc_expr_of_myexpr : Own_expr.myexpr -> minifoc_expr;;
+
+val minifoc_expr_fv : minifoc_expr -> (string * Own_types.typ) list;;

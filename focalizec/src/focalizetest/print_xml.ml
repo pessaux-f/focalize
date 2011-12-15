@@ -320,7 +320,7 @@ let top_xml_meths () =
 
 let top_xml_def () =
   [create_toplevel_spec(
-    spec_create top_xml_spec_name [] [] (Some (TAtom(None, foctunit))) (top_xml_meths ()) 
+    spec_create top_xml_spec_name [] [] (Some (TAtom(None, foctunit))) (List.map (fun x -> Unique x) (top_xml_meths ()))
              );
     let m = Whattodo.get_output_module () in
     create_toplevel_coll(coll_create top_xml_coll_name

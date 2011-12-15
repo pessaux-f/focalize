@@ -58,6 +58,7 @@ let parameters_list_of_parameters_list p_l expect_list =
 
 let harness_one_sch target_name (sch : species_context_harness) l_typ =
   let s_to_harn = sch_get_species sch in
+  print_string ("Harnessing : " ^ (snd s_to_harn) ^ "...\n");
   let user_prm = sch_get_parameters sch in
   let s_prm = get_parameters s_to_harn in
   let s_prm_name = List.map get_name_prmexp s_prm in
@@ -74,7 +75,7 @@ let harness_one_sch target_name (sch : species_context_harness) l_typ =
                                    | TAtom(_) as e when is_concrete_type e -> true
                                    | TAtom(Some "basics", "int")
                                    | TAtom(None, "int")-> true
-                                   | e -> print_string (string_of_typ e); false) l_typ in
+                                   | _e -> (* print_string (string_of_typ e); *) false) l_typ in
   (* Body of the new species *)
 (*             print_string "********\n"; *)
   let lvm = ast_random s_coll_prm_name l_typ (get_rep s_to_harn) in

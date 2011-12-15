@@ -30,18 +30,18 @@ let rec string_of_prop =
   let close_paren prec op_prec =
     if prec > op_prec then ")" else "" in
   let rec pts prec = function
-     | PUniv(s,t,(PUniv(_,_,_) as p)) ->
-         (if prec != (-1) then "all " else " ") ^
-         "(" ^ s ^ " : " ^ string_of_typ t ^ ")" ^ (pts (-1) p)
+     | PUniv(s,t,(PUniv(_,t',_) as p)) ->
+         (if prec != (-1) then "all (" else "") ^
+         s ^ (if t != t' then " : " ^ string_of_typ t ^ ") (" else " ") ^ (pts (-1) p)
      | PUniv(s,t,p) ->
-         (if prec != (-1) then "all " else " ") ^
-         "(" ^ s ^ " : " ^ string_of_typ t ^ ")" ^ (pts (-1) p)
+         (if prec != (-1) then "all (" else "") ^
+         s ^ " : " ^ string_of_typ t ^ ")" ^ ", " ^ (pts (-1) p)
      | PEx(s,_,(PEx(_,_,_) as p)) ->
-         (if prec != (-2) then "Exists " else " ") ^
+         (if prec != (-2) then "ex " else " ") ^
          s ^ ", " ^ (pts (-2) p)
      | PEx (s,_,p) ->
-         (if prec != (-2) then "Exists " else " ") ^
-         s ^ ", " ^ (pts (-1) p)
+         (if prec != (-2) then "ex " else " ") ^
+         s ^ ", " ^ (pts (-2) p)
      | PAnd (p1,p2) ->
         (open_paren prec 4) ^
         (pts 4 p1) ^ " and " ^ (pts 4 p2) ^ 

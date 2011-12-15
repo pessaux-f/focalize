@@ -3,11 +3,11 @@
 FOCC=focalizec
 FOCAL_LIB=$(shell $(FOCC) -where | cut -d ' ' -f 2)
 
-FOCTEST=../../focalizetest
-OCAMLC=$(HOME)/.local/pkg/focalize-0.6.0/bin/ocamlc
+FOCTEST=focalizetest
+OCAMLC=$(HOME)/pkg/focalize-0.7.0/bin/ocamlc
 
-FOCCOPTS="-no-coq-code"
-OCAMLOPTS= -w a -I $(FOCAL_LIB)
+FOCCOPTS="-no-coq-code" $(FOCALIZEC_FLAGS)
+OCAMLOPTS= -w a -I $(FOCAL_LIB) $(OCAMLC_FLAGS)
 # The file to generate 
 
 ###
