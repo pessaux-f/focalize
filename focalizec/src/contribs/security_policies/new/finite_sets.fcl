@@ -25,3 +25,54 @@ species Finite_set =
 
 end;;
 
+
+species Finite_parts(S is Setoid) =
+
+  inherit Setoid ;
+
+  signature cardinal: Self -> int;
+  signature empty : Self;
+  signature add : Self -> S -> Self;
+  signature belongs: S -> Self -> bool;
+  signature release : Self -> S -> Self;
+  signature to_list : Self -> list(S) ;
+  signature is_contained : Self -> Self -> bool;
+
+  property empty_spec :
+    all t: S, ~ belongs(t, empty);
+
+  property add_spec :
+    all x : Self, all t_1 t_2 : S,
+    belongs(t_1, add (x, t_2)) <->
+      S!equal(t_1, t_2) \/ belongs(t_2, x);
+
+  property release_spec :
+    all x : Self, all t_1 t_2 : S,
+    belongs(t_1, release(x, t_2)) <-> S!different (t_1, t_2) /\ belongs(t_1, x);
+
+  property is_contained_spec :
+    all x y : Self,
+    is_contained (x, y) <-> ( all t : S,
+                              belongs(t, x) -> belongs(t, y) );
+
+  theorem is_contained_reflexive : all x : Self, is_contained (x, x)
+  proof = by property is_contained_spec;
+
+  theorem is_contained_transitive :
+    all x y z : Self,
+    (is_contained (x, y) /\ is_contained (y, z)) -> is_contained (x, z)
+  proof = by property is_contained_spec;
+
+  let equal(x, y) = is_contained(x, y) && is_contained(y, x);
+
+  proof of equal_reflexive = by definition of equal 
+                                property is_contained_reflexive;
+  proof of equal_transitive = by definition of equal  
+                                property is_contained_transitive;
+  proof of equal_symmetric = by definition of equal;
+
+      
+end;;
+
+
+

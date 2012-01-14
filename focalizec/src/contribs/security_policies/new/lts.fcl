@@ -1,6 +1,6 @@
 open "basics";;
 open "sets";;
-open "products";;
+open "utils";;
 
 
 (** Labeled transition system *)
@@ -19,12 +19,17 @@ species Label = inherit Setoid; end;;
 
 
 (** Species of a transition system in all states S and labels L *)
-species Transition_system (S is State, L is Label) =
+species Transition_system (S is State, L is Label,
+                           SLS is Abstract_triple(S, L, S)) =
 
   inherit Basic_object;
 
   (** transition relation *)
   signature delta : S -> L -> S -> bool;
+
+  property delta_equal_compat: all x_1 x_2 y_1 y_2: S, all e:L,
+    S!equal(x_1, x_2) -> S!equal(y_1, y_2) -> 
+       (delta(x_1, e, y_1) <-> delta(x_2, e, y_2));
 
 
   logical let is_deterministic =
@@ -46,33 +51,50 @@ species Transition_system (S is State, L is Label) =
 
   (** The list represents the sequence of transitions of the path in
       reverse order. *)
-  let is_path_from_init_to =
-    let rec aux (p, x) =
+  let rec is_path_from_init_to(p, x) =
+    (* let rec aux (p, x) = *)
       match p with
         | [] -> S!is_initial (x)
         | h :: q ->
-	    (match h with
-	    | (y, l, z) ->
-	      S!equal (z, x) && delta (y, l, z) && aux (q, y)
-	    ) in
-    function p -> function x -> aux (p, x);
+	   S!equal (SLS!third(h), x) && 
+             delta (SLS!first(h), SLS!second(h), x) && 
+              is_path_from_init_to (q, SLS!first(h))
+  ;
+
+  theorem is_path_from_init_to_base: all x: S,
+    is_path_from_init_to([], x) <-> S!is_initial(x)
+    proof = by definition of is_path_from_init_to;
+
+  theorem is_path_from_init_to_ind: all x: S, all h: SLS, all q: list(SLS),
+     is_path_from_init_to((h :: q), x) <-> 
+       S!equal (SLS!third(h), x) /\ 
+         delta (SLS!first(h), SLS!second(h), x) /\
+           is_path_from_init_to (q, SLS!first(h))
+     proof = by definition of is_path_from_init_to;
 
   logical let is_reachable (x) =
-    ex p : list (S * L * S), is_path_from_init_to (p, x);
+    ex p : list (SLS), is_path_from_init_to (p, x);
 
 end;;
 
 
 (** A system with "real" transitions (must be determinist and complete) *)
-species Operational_transition_system (S is State, L is Label) =
+species Operational_transition_system (S is State, L is Label,
+                                       SLS is Abstract_triple(S, L, S)) =
 
-  inherit Transition_system (S, L);
+  inherit Transition_system (S, L, SLS);
 
   signature transition : S -> L -> S;
   property transition_equal_compat: all s_1 s_2: S, all l: L,
     S!equal(s_1, s_2) -> S!equal(transition(s_1, l), transition(s_2, l));
 
   let delta(s_1, l, s_2) = S!equal(transition(s_1, l), s_2);
+
+  proof of delta_equal_compat = 
+     by property transition_equal_compat,
+                 S!equal_reflexive, S!equal_transitive, S!equal_symmetric
+        definition of delta
+  ;
 
   (* this serves as specification if delta is redefined *)
   theorem transition_is_valid: all x y: S, all l: L,

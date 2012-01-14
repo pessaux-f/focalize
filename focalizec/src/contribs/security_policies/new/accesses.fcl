@@ -1,7 +1,7 @@
 open "basics";;
 open "sets";;
 open "finite_sets";;
-
+open "utils";;
 
 (** Accesses are done by active entities, the subjects, over passive entities,
     the objects, according to access modes (for exemple, read, write, etc). *)
@@ -13,247 +13,126 @@ species Object = inherit Finite_set; end;;
 
 species Access_mode = inherit Finite_set; end;;
 
+species Weak_accesses(S is Subject,
+		      O is Object,
+		      A is Access_mode,
+                      R is Ternary_relations(S, O, A))
 
-
-species Abstract_triple(A is Setoid, B is Setoid, C is Setoid) =
- inherit Setoid;
- representation = A * B * C ;
- let first (t: Self) = match t with | (x, _, _) -> x ;  
- let second (t: Self) = match t with | (_, y, _) -> y ;  
- let third (t:Self) = match t with | (_, _, z) -> z ;
- let make(a, b, c):Self = (a, b, c);
- theorem is_first : all a: A, all b: B, all c: C,
-   A!equal(first(make(a, b, c)), a)
-   proof = by definition of first, make
-              property equal_reflexive;
- theorem is_second : all a: A, all b: B, all c: C,
-   B!equal(second(make(a, b, c)), b)
-  proof = by definition of second, make ;
- theorem is_third : all a: A, all b: B, all c: C,
-   C!equal(third(make(a, b, c)), c)
-  proof = by definition of third, make ;
-end;;
-
-species Accesses(S is Subject, O is Object, A is Access_mode, 
-        SOA is Abstract_triple(S, O, A))=
-  inherit Finite_set;
-  signature alpha : Self -> SOA -> bool;
-  signature empty : Self;
-  signature add : Self -> SOA -> Self;
-  signature release : Self -> SOA -> Self;
-  signature to_list : Self -> list(SOA) ;
-  signature is_contained : Self -> Self -> bool;
-
-  property empty_spec :
-    all t : SOA, ~ alpha (empty, t);
-
-  property add_spec :
-    all x : Self, all t_1 t_2 : SOA,
-    alpha (add (x, t_1), t_2) <->
-      SOA!equal(t_1, t_2) \/ alpha(x, t_2);
-
+  inherit Setoid;
 
 end;;
 
+species Accesses(S is Subject,
+		 O is Object,
+		 A is Access_mode,
+                 R is Ternary_relations(S, O, A), 
+		 SOA is Abstract_triple(S, O, A),
+		 PSOA is Finite_parts(SOA))=
+             
+  inherit Weak_accesses(S, O, A, R);
 
-species Old_accesses (S is Subject, O is Object, A is Access_mode) =
+  representation = PSOA;
 
-  inherit Finite_set;
+  let as_part(p: Self): PSOA = p;
 
-  (** alpha (x, s, o, a) means that s has an access over o
-      according to the access mode a in the state x of the system. *)
-  signature alpha : Self -> S -> O -> A -> bool;
+  let relation(p, s, o, a) = PSOA!belongs(SOA!make(s, o, a) ,as_part(p))
 
-  signature empty : Self;
-  signature add : Self -> S -> O -> A -> Self;
-  signature release : Self -> S -> O -> A -> Self;
+  let alpha(x, s) = PSOA!belongs(s, as_part(x));
 
-  signature is_contained : Self -> Self -> bool;
+end;;
 
-  signature get_one : Self -> (S * O * A);
+(* type list_soa ('soa) = *)
+(*   | NEmpty *)
+(*   | NCons ('soa, list_soa ('soa));; *)
 
-  property empty_spec :
-    all s : S, all o : O, all a : A,
-    ~ alpha (empty, s, o, a);
+(* type old_list_soa ('s, 'o, 'a) = *)
+(*   | Empty *)
+(*   | Cons ('s, 'o, 'a, old_list_soa ('s, 'o, 'a));; *)
 
-  property add_spec :
-    all x : Self, all s s2 : S, all o o2 : O, all a a2 : A,
-    if S!equal (s, s2) && O!equal (o, o2) && A!equal (a, a2)
-    then alpha (add (x, s, o, a), s2, o2, a2)
-    else alpha (add (x, s, o, a), s2, o2, a2) = alpha (x, s2, o2, a2);
+(* let rec in_list(l, t, eq) = *)
+(*       match l with *)
+(*         | NEmpty -> false *)
+(*         | NCons (tt, ll) ->  *)
+(* 	    (\* (SOA!equal(t, tt)) || aux (ll, t) *\) *)
+(* 	    if eq(t, tt) *)
+(* 	    then true *)
+(* 	    else in_list(ll, t, eq) *)
+(* ;; *)
 
-  property release_spec :
-    all x : Self, all s s2 : S, all o o2 : O, all a a2 : A,
-    if S!equal (s, s2) && O!equal (o, o2) && A!equal (a, a2)
-    then ~~ alpha (release (x, s, o, a), s2, o2, a2)
-    else alpha (release (x, s, o, a), s2, o2, a2) = alpha (x, s2, o2, a2);
+species Accesses_by_list(S is Subject,
+			 O is Object,
+			 A is Access_mode,
+			 SOA is Abstract_triple(S, O, A),
+			 PSOA is Finite_parts(SOA)) =
 
-  property is_contained_spec :
-    all x y : Self,
-    is_contained (x, y) <-> ( all s : S, all o : O, all a : A,
-                              alpha (x, s, o, a) -> alpha (y, s, o, a) );
+   (* [rr]
+      On doit prouver empty_spec, add_spec, release_spec, is_contained_spec
+    *)
 
-  theorem is_contained_reflexive : all x : Self, is_contained (x, x)
-  proof = by property is_contained_spec;
+  inherit Accesses (S, O, A, SOA, PSOA);
 
-  theorem is_contained_antisymetric :
-    all x y : Self,
-    (is_contained (x, y) /\ is_contained (y, x)) -> equal (x, y)
-  proof = assumed;              (* TODO *)
-       (* by property is_contained_spec, equal_symmetric, equal_transitive; *)
+  (* representation = list_soa(SOA); *)
+  (* representation = list(SOA); *)
 
-  theorem is_contained_transitive :
-    all x y z : Self,
-    (is_contained (x, y) /\ is_contained (y, z)) -> is_contained (x, z)
-  proof = by property is_contained_spec;
+  (* let alpha = *)
+  (*   let rec aux (l, t) = *)
+  (*     match l with *)
+  (*       | [] -> false *)
+  (*       | h :: ll ->  *)
+  (* 	    (\* (SOA!equal(t, tt)) || aux (ll, t) *\) *)
+  (* 	    if SOA!equal(t, h) *)
+  (* 	    then true *)
+  (* 	    else aux(ll, t) *)
+  (*   in function l -> function t -> aux (l, t); *)
 
-  property get_one_is_in :
-    all x : Self,
-    ~ equal (x, empty) ->
-      match get_one (x) with | (s, o, a) -> alpha (x, s, o, a);
+  (* let empty: Self = []; *)
 
-  property equal_spec :
-    all x y : Self,
-    equal (x, y) <-> ( all s : S, all o : O, all a : A,
-                       alpha (x, s, o, a) <-> alpha (y, s, o, a) );
+  (* let add (x: Self, t: S): Self = t :: x; *)
 
-  proof of equal_reflexive = by property equal_spec;
-  proof of equal_symmetric = by property equal_spec;
-  proof of equal_transitive = by property equal_spec;
+  (* let release = *)
+  (*   let rec aux (x, t) = *)
+  (*     match x with *)
+  (*       | [] -> [] *)
+  (*       | h :: l -> *)
+  (*           if SOA!equal(t, h) then aux (l, t) *)
+  (*           else  h :: aux (l, t) in *)
+  (*   function x -> function t -> aux (x, t); *)
+
+  (* let is_contained = *)
+  (*   let rec aux (x : Self, y : Self) = *)
+  (*     match x with *)
+  (*       | [] -> true *)
+  (*       | h :: l -> *)
+  (* 	    alpha (y, h ) && aux (l, y) in *)
+  (*   function x -> function y -> aux (x, y); *)
 
 end;;
 
 
-type list_soa ('s, 'o, 'a) =
-  | Empty
-  | Cons ('s, 'o, 'a, list_soa ('s, 'o, 'a));;
+(** Property-based access security policies with read and write accesses *)
 
-species Accesses_by_list (S is Subject, O is Object, A is Access_mode) =
 
-  inherit Old_accesses (S, O, A);
+species Access_mode_rw =
 
-  representation = list_soa (S, O, A);
-
-  local let ( =S ) = S!equal;
-  local let ( =O ) = O!equal;
-  local let ( =A ) = A!equal;
-
-  let alpha =
-    let rec aux (x, s, o, a) =
-      match x with
-        | Empty -> false
-        | Cons (s2, o2, a2, l) -> (s2 =S s && o2 =O o && a2 =A a) ||
-                                  aux (l, s, o, a) in
-    function x -> function s -> function o -> function a -> aux (x, s, o, a);
-
-  let empty = Empty;
-
-  (* On permet les doublons. *)
-  let add (x, s, o, a) = Cons (s, o, a, x);
-
-  (* On enleve toutes les occurrences. *)
-  let release =
-    let rec aux (x, s, o, a) =
-      match x with
-        | Empty -> Empty
-        | Cons (s2, o2, a2, l) ->
-            if (s2 =S s && o2 =O o && a2 =A a) then aux (l, s, o, a)
-            else Cons (s2, o2, a2, aux (l, s, o, a)) in
-    function x -> function s -> function o -> function a -> aux (x, s, o, a);
-
-  let is_contained =
-    let rec aux (x : Self, y : Self) =
-      match x with
-        | Empty -> true
-        | Cons (s, o, a, l) -> alpha (y, s, o, a) && aux (l, y) in
-    function x -> function y -> aux (x, y);
-
-  let get_one (x : Self) =
-    match x with
-      | Empty -> focalize_error ("No access")
-      | Cons (s, o, a, _) -> (s, o, a);
-    
-
-  let equal (x, y) = is_contained (x, y) && is_contained (y, x);
-
-  theorem equal_from_is_contained :
-    all x y : Self,
-    equal (x, y) <-> is_contained (x, y) /\ is_contained (y, x)
-  proof = by definition of equal;
-
-  let element = Empty;
-
-  local let rev_append_soa =
-    let rec aux (l1 : list_soa (S, O, A), l2 : list_soa (S, O, A)) =
-      match l1 with
-        | Empty -> l2
-        | Cons (s, o, a, t) -> aux (t, Cons (s, o, a, l2)) in
-    function l1 -> function l2 -> aux (l1, l2);
-
-  local let accesses_list : Self =
-    let rec aux_a (la, s : S, o : O, acc) =
-      match la with
-        | [] -> acc
-        | a :: t -> aux_a (t, s, o, Cons (s, o, a, acc)) in
-    let rec aux_o (lo, la, s, acc) =
-      match lo with
-        | [] -> acc
-        | o :: t ->
-            aux_o (t, la, s, rev_append_soa (aux_a (la, s, o, Empty), acc)) in
-    let rec aux_s (ls, lo, la, acc) =
-      match ls with
-        | [] -> acc
-        | s :: t ->
-            aux_s (t, lo, la, rev_append_soa (aux_o (lo, la, s, Empty), acc)) in
-    aux_s (S!all_to_list, O!all_to_list, A!all_to_list, Empty);
-
-  local let rec pow_aux (n, x, acc) =
-    if n <=0x 0 then acc else pow_aux (n - 1, x, x * acc);
-
-  local let ( ^0x ) (x, n) = pow_aux (n, x, 1);
-
-  let cardinal = 3 ^0x (S!cardinal * O!cardinal * A!cardinal);
-
-  (* local let rev_append = *)
-  (*   let rec aux (l1, l2) = *)
-  (*     match l1 with *)
-  (*       | [] -> l2 *)
-  (*       | h :: t -> aux (t, h :: l2) in *)
-  (*   function l1 -> function l2 -> aux (l1, l2); *)
-
-  let all_to_list : list (Self) = []; (* /!\ wrong *)
-
-  (* good but not efficient *)
-    (* (\* List of lists with elements of l2 and some of l1 *\) *)
-    (* let rec aux (l1 : list_soa (S, O, A), l2 : list_soa (S, O, A)) = *)
-    (*   match l1 with *)
-    (*     | Empty -> [l2] *)
-    (*     | Cons (s, o, a, t) -> rev_append (aux (t, l2), *)
-    (*                                        aux (t, Cons (s, o, a, l2))) in *)
-    (* aux (accesses_list, Empty); *)
-
-  let print (x) =
-    let rec aux (x) =
-      match x with
-        | Empty -> ""
-        | Cons (s, o, a, l) ->
-            let soa = "(" ^ S!print (s) ^ ", " ^ O!print (o) ^ ", " ^
-                      A!print (a) ^ ")" in
-            if l = Empty then soa else soa ^ "; " ^ aux (l) in
-    "[" ^ aux (x) ^ "]";
-
-  proof of empty_spec = assumed; (* TODO *)
-  proof of add_spec = assumed;
-  proof of release_spec = assumed;
-  proof of is_contained_spec = assumed;
-  proof of get_one_is_in = assumed;
-  proof of equal_spec = by property is_contained_spec, equal_from_is_contained;
-  proof of all_in_all_to_list = assumed;
+  inherit Access_mode;
+  signature read: Self;
+  signature write: Self;
 
 end;;
 
+type rw = | Read | Write ;;
+
+species Access_mode_rw_by_sum =
+
+  inherit Access_mode_rw;
+
+  representation = rw;
+
+  let read = Read;
+  let write = Write;
 
 
+end;;
 
 
 

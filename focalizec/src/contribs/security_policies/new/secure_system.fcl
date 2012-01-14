@@ -1,0 +1,174 @@
+open "basics";;
+open "utils";;
+open "lts";;
+
+
+
+(** A secure state has a normal state and can be secure or not. *)
+species Secure_state (S is State) =
+
+  inherit State;
+
+  (** Non-secure state *)
+  signature state : Self -> S;
+  property state_equal_compat: all s_1 s_2: Self, 
+     equal(s_1, s_2) -> S!equal(state(s_1), state(s_2));
+
+  signature is_secure : Self -> bool;
+  property is_secure_equal_compat: all s_1 s_2: Self,
+       equal(s_1, s_2) -> (is_secure(s_1) <-> is_secure(s_2))
+  ;
+
+  (** A secure state with the given non-secure state *)
+  signature make : Self -> S -> Self;
+
+  property make_spec :
+    all x: Self, equal(make(x, state(x)), x);
+
+  property make_equal_compat: all s_1 s_2: Self, all t_1 t_2: S,
+    equal(s_1, s_2) -> S!equal(t_1, t_2) ->
+      equal(make(s_1, t_1), make(s_2, t_2));
+
+  let is_initial  (x : Self) =
+    S!is_initial (state (x)) && is_secure (x);
+
+  theorem is_initial_spec :
+    all x : Self,
+    is_initial (x) <-> (S!is_initial (state (x)) /\ is_secure (x))
+  proof = by definition of is_initial;
+
+end;;
+
+
+(* type my_lists('s, 'l) = *)
+(*   | My_empty *)
+(*   | My_cons('s, 'l, 's, my_lists('s, 'l)) *)
+(* ;; *)
+
+(** A system in which all reachable states are secure. *)
+species Secure_transition_system (St is State, L is Label,
+                                  SLT is Abstract_triple(St, L, St),
+                                  Sys is Transition_system (St, L, SLT),
+                                  Ss is Secure_state (St),
+                                  SLS is Abstract_triple(Ss, L, Ss)
+				  ) =
+
+  inherit Transition_system (Ss, L, SLS);
+
+
+  (* let rec is_path_from_init_new(l, x) = match l with *)
+  (*   | My_empty -> Ss!is_initial(x) *)
+  (*   | My_cons(y , e, z, q) ->  *)
+  (* 	  Ss!equal(z, x) && delta(x, e, z) && is_path_from_init_new(q, y) *)
+  (* ; *)
+
+  (** If a state is reachable from a secure state, it must be secure. *)
+  let delta (x : Ss, l : L, y : Ss) =
+    Sys!delta (Ss!state (x), l, Ss!state (y)) &&
+    ( ~~ Ss!is_secure (x) || Ss!is_secure (y) );
+
+  theorem secure_base: all x: Ss,
+    is_path_from_init_to([], x) -> Ss!is_secure (x)
+    proof = by property is_path_from_init_to_base, Ss!is_initial_spec
+  ;
+
+
+  theorem secure_induction: all l: list(SLS),
+      (all z: Ss, is_path_from_init_to(l, z) -> 
+           Ss!is_secure(z)) ->
+              all x: Ss, all t:SLS, is_path_from_init_to((t :: l), x) -> 
+                Ss!is_secure(x)
+  proof = 
+    by definition of delta
+       property is_path_from_init_to_ind, L!equal_reflexive,
+                SLS!is_first, SLS!is_second, SLS!is_third, SLS!equal_spec,
+                delta_equal_compat
+  ;
+
+
+  theorem all_secure : all l: list(SLS), all  x: Ss,
+     is_path_from_init_to(l, x) -> 
+       Ss!is_secure (x)
+  proof =
+     by property secure_base, secure_induction;
+
+ theorem reachable_is_secure: all x: Ss,
+   is_reachable(x) -> Ss!is_secure(x)
+   proof = by definition of is_reachable property all_secure
+  ;
+
+end;;
+
+
+
+species Secure_operational_transition_system
+  (St is State, L is Label,
+   SLT is Abstract_triple(St, L, St),
+   Sys is Operational_transition_system (St, L, SLT),
+   Ss is Secure_state (St),
+   SLS is Abstract_triple(Ss, L, Ss)
+   ) =
+
+  inherit Secure_transition_system (St, L, SLT, Sys, Ss, SLS),
+          Operational_transition_system (Ss, L, SLS);
+
+
+  let transition(x, l) =
+     let s = Sys!transition(Ss!state(x), l) in
+     let y = Ss!make(x, s) in
+     if ((~~ Ss!is_secure(x)) || Ss!is_secure(y)) then y else x;
+
+  proof of transition_equal_compat =
+    <1>1 assume x_1 x_2: Ss,
+         assume t_1 t_2: St,
+         assume y_1 y_2: Ss,
+         assume l: L,
+         hypothesis T1: t_1 = Sys!transition(Ss!state(x_1), l),
+         hypothesis T2: t_2 = Sys!transition(Ss!state(x_2), l),
+         hypothesis Y1: y_1 = Ss!make(x_1, t_1),
+         hypothesis Y2: y_2 = Ss!make(x_2, t_2),
+         hypothesis H: Ss!equal(x_1, x_2),
+         prove Ss!equal(transition(x_1, l), transition(x_2, l))
+         <2>1 prove St!equal(t_1, t_2) 
+              by property Ss!state_equal_compat, Sys!transition_equal_compat,
+                          St!equal_reflexive, Ss!equal_reflexive,
+                          St!equal_symmetric, Ss!equal_symmetric,
+                          St!equal_transitive, Ss!equal_transitive
+                 hypothesis T1, T2, H
+         <2>2 prove St!equal(t_1, t_2) 
+              by step <2>1 
+                 hypothesis T1, T2
+                 property St!equal_reflexive, 
+                          St!equal_symmetric, 
+                          St!equal_transitive
+         <2>3 prove Ss!equal(y_1, y_2)
+              by step <2>2 
+                 hypothesis H, Y1, Y2
+                 property Ss!make_equal_compat,
+                          Ss!equal_reflexive,
+                          Ss!equal_symmetric,
+                          Ss!equal_transitive
+         <2>4 prove Ss!is_secure(y_1) <-> Ss!is_secure(y_2)
+              by step <2>3
+                 property Ss!is_secure_equal_compat,
+                          Ss!equal_reflexive,
+                          Ss!equal_symmetric,
+                          Ss!equal_transitive
+         <2>f qed by hypothesis T1, T2, Y1, Y2, H
+                     step <2>1, <2>2, <2>3, <2>4
+                     definition of transition
+                     property Ss!is_secure_equal_compat,
+                              Ss!equal_reflexive,
+                              Ss!equal_symmetric,
+                              Ss!equal_transitive
+    <1>f conclude
+
+    (* by definition of transition *)
+    (*    property Ss!equal_reflexive, Ss!equal_symmetric, Ss!equal_transitive, *)
+    (*             St!equal_reflexive, St!equal_symmetric, St!equal_transitive, *)
+    (*             Sys!transition_equal_compat, Ss!is_secure_equal_compat, *)
+    (* 	        Ss!make_equal_compat, Ss!state_equal_compat *)
+  ;
+
+
+end;;

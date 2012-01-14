@@ -1,0 +1,79 @@
+open "basics";;
+open "utils";;
+open "accesses";;
+open "p_policies";;
+
+
+(** Property-based access security policies *)
+
+
+species Target_ac (S is Subject,
+		   O is Object,
+		   A is Access_mode,
+                   R is Ternary_relation(S, O, A)) =
+
+  inherit Target, Weak_accesses (S, O, A, R);
+
+  signature as_relation: Self -> R;
+
+
+end;;
+
+
+species Configuration_ac (S is Subject,
+			  O is Object,
+			  A is Access_mode,
+			  R is Ternary_relation(S, O, A)) =
+
+  inherit Configuration,
+          Weak_accesses (S, O, A, R);
+
+  signature as_relation: Self -> R;
+
+end;;
+
+
+
+species P_policy_ac (S is Subject,
+		     O is Object,
+		     A is Access_mode,
+                     R is Ternary_relation(S, O, A),
+                     T is Target_ac(S, O, A, R),
+                     C is Configuration) =
+
+  inherit P_policy (T, C);
+
+end;;
+
+
+species P_policy_hru (S is Subject,
+		      O is Object,
+		      A is Access_mode,
+                      R is Ternary_relation(S, O, A),
+                      T is Target_ac (S, O, A, R),
+                      C is Configuration_ac (S, O, A, R)) =
+
+  inherit P_policy_ac (S, O, A, R, T, C);
+
+  let secure (t, c) = R!is_contained(T!as_relation(t), C!as_relation(t));
+    
+
+  theorem relation_is_is_contained: all t : T, all c : C,
+    relation (t, c) <-> Ac!is_contained (T!accesses (t), C!accesses (c))
+  proof = by definition of relation;
+
+end;;
+
+
+
+species P_policy_ac_rw (S is Subject,
+			O is Object,
+			A is Access_mode_rw,
+                        SOA is Abstract_triple (S, O, A),
+                        T is Target_ac (S, O, A, SOA,
+                        C is Configuration) =
+
+  inherit P_policy_ac (S, O, A, SOA, T, C);
+
+end;;
+

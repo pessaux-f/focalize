@@ -1,0 +1,74 @@
+open "basics";;
+open "products";;
+open "utils";;
+open "lts";;
+open "secure_system";;
+open "p_policies";;
+
+
+
+
+(** A secured state has a normal state and a configuration.
+    A security policy determines the security state. *)
+species Secured_state_pol (A is Target,
+			   C is Configuration,
+			   P is P_policy (A, C),
+			   S is State) =
+
+  inherit Product_set (S, C), Secure_state (S);
+
+  let state(s) = first(s);
+  let configuration(s) = second(s);
+
+  let make(s_s, s_i) = pair(s_i, configuration(s_s));
+
+  proof of make_equal_compat =
+   by definition of make, state, configuration
+      property equal_spec,
+               pair_substitution_rule
+   ;
+
+  proof of make_spec = 
+    (* [rr]: ajouter la propriete de paires *)
+    by definition of make, state, configuration
+       property equal_spec, pair_substitution_rule,
+                pair_preserves_first, pair_preserves_second
+    ;
+
+  (** To apply the policy *)
+  signature interpretation : S -> A;
+
+  let is_secure (x : Self) =
+    P!secure (interpretation (state (x)), configuration (x));
+
+end;;
+
+species Secure_transition_system_pol(A is Target,
+				     C is Configuration,
+				     P is P_policy(A, C),
+				     St is State,
+				     L is Label,
+				     SLS is Abstract_triple(St, L, St),
+				     Sys is Transition_system(St, L, SLS),
+				     Ss is Secured_state_pol(A, C, P, St),
+				     SsLS is Abstract_triple(Ss, L, Ss)) =
+
+  inherit Secure_transition_system(St, L, SLS, Sys, Ss, SsLS);
+
+end;;
+
+species Secure_operational_transition_system_pol
+    (A is Target,
+     C is Configuration,
+     P is P_policy(A, C),
+     St is State,
+     L is Label,
+     SLS is Abstract_triple(St, L, St),
+     Sys is Operational_transition_system(St, L, SLS),
+     Ss is Secured_state_pol(A, C, P, St),
+     SsLS is Abstract_triple(Ss, L, Ss)) =
+
+  inherit Secure_transition_system_pol(A, C, P, St, L, SLS, Sys, Ss, SsLS),
+          Secure_operational_transition_system(St, L, SLS, Sys, Ss, SsLS);
+
+end;;

@@ -1,0 +1,41 @@
+open "basics";;
+open "sets";;
+open "utils";;
+
+
+(** Property-based security policies *)
+
+(** A property-based policy is a characterization of secure elements of a set
+    according to some security information. *)
+
+
+species Target = inherit Setoid; end;;
+
+species Configuration = inherit Setoid; end;;
+
+
+species P_policy (A is Target, C is Configuration) =
+
+  (** Relation specifying secure targets according to configurations *)
+  inherit Relation (A, C);
+
+  signature secure: A -> C -> bool;
+
+  let relation(a, c) = secure(a, c);
+
+end;;
+
+
+
+(* (\** Finite policy *\) *)
+
+(* species Finite_target = inherit Target, Finite_set; end;; *)
+
+(* species Finite_configuration = inherit Configuration, Finite_set; end;; *)
+
+
+(* species Finite_p_policy (A is Finite_target, C is Finite_configuration) = *)
+
+(*   inherit P_policy (A, C), Finite_relation (A, C); *)
+
+(* end;; *)
