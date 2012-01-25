@@ -51,6 +51,7 @@ species Transition_system (S is State, L is Label,
 
   (** The list represents the sequence of transitions of the path in
       reverse order. *)
+
   let rec is_path_from_init_to(p, x) =
     (* let rec aux (p, x) = *)
       match p with
@@ -116,6 +117,7 @@ species Operational_transition_system (S is State, L is Label,
   ;
 
   (** A multiple transition from state x with a list l of labels *)
+  (** [rr] seems useless... Remove? *)
   let transition_iter =
     let rec aux (l, x) =
       match l with

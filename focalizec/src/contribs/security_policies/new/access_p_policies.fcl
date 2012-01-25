@@ -1,4 +1,6 @@
 open "basics";;
+open "orders";;
+open "finite_sets";;
 open "utils";;
 open "accesses";;
 open "p_policies";;
@@ -10,7 +12,7 @@ open "p_policies";;
 species Target_ac (S is Subject,
 		   O is Object,
 		   A is Access_mode,
-                   R is Ternary_relation(S, O, A)) =
+                   R is Ternary_relations(S, O, A)) =
 
   inherit Target, Weak_accesses (S, O, A, R);
 
@@ -19,14 +21,32 @@ species Target_ac (S is Subject,
 
 end;;
 
+species Target_ac_by_sets_of_triples
+          (S is Subject,
+           O is Object,
+	   A is Access_mode,
+           SOA is Abstract_triple(S, O, A),
+           PSOA is Finite_parts(SOA),
+           R is Relations_by_sets_of_triples(S, O, A, SOA, PSOA)) =
+
+  inherit Target_ac(S, O, A, R);
+
+  representation = PSOA;
+
+  let as_part(t: Self): PSOA = t;
+
+  let as_relation(t) = R!set_as_relation(t);
+    
+
+end;;
+
 
 species Configuration_ac (S is Subject,
 			  O is Object,
 			  A is Access_mode,
-			  R is Ternary_relation(S, O, A)) =
+			  R is Ternary_relations(S, O, A)) =
 
-  inherit Configuration,
-          Weak_accesses (S, O, A, R);
+  inherit Configuration, Weak_accesses (S, O, A, R);
 
   signature as_relation: Self -> R;
 
@@ -37,7 +57,7 @@ end;;
 species P_policy_ac (S is Subject,
 		     O is Object,
 		     A is Access_mode,
-                     R is Ternary_relation(S, O, A),
+                     R is Ternary_relations(S, O, A),
                      T is Target_ac(S, O, A, R),
                      C is Configuration) =
 
@@ -49,18 +69,20 @@ end;;
 species P_policy_hru (S is Subject,
 		      O is Object,
 		      A is Access_mode,
-                      R is Ternary_relation(S, O, A),
+                      R is Ternary_relations(S, O, A),
                       T is Target_ac (S, O, A, R),
                       C is Configuration_ac (S, O, A, R)) =
 
   inherit P_policy_ac (S, O, A, R, T, C);
 
-  let secure (t, c) = R!is_contained(T!as_relation(t), C!as_relation(t));
+  let secure (t, c) = R!is_contained(T!as_relation(t), C!as_relation(c));
     
 
   theorem relation_is_is_contained: all t : T, all c : C,
-    relation (t, c) <-> Ac!is_contained (T!accesses (t), C!accesses (c))
-  proof = by definition of relation;
+    relation (t, c) <-> R!is_contained (T!as_relation(t), C!as_relation (c))
+  proof = by definition of relation, secure
+
+  ;
 
 end;;
 
@@ -69,11 +91,193 @@ end;;
 species P_policy_ac_rw (S is Subject,
 			O is Object,
 			A is Access_mode_rw,
-                        SOA is Abstract_triple (S, O, A),
-                        T is Target_ac (S, O, A, SOA,
+                        R is Ternary_relations(S, O, A),
+                        T is Target_ac (S, O, A, R),
                         C is Configuration) =
 
-  inherit P_policy_ac (S, O, A, SOA, T, C);
+  inherit P_policy_ac (S, O, A, R, T, C);
 
 end;;
 
+species P_policy_hru_rw(S is Subject,
+                        O is Object,
+                        A is Access_mode_rw,
+                        R is Ternary_relations(S, O, A),
+                        T is Target_ac (S, O, A, R),
+                        C is Configuration_ac (S, O, A, R)) =
+
+  inherit P_policy_ac_rw(S, O, A, R, T, C), 
+          P_policy_hru(S, O, A, R, T, C);
+
+end;;
+
+species Security_level =
+
+  inherit Partial_order, Finite_set;
+
+end;;
+
+type security_level = 
+  | Public
+  | Secret
+;;
+
+species Two_security_levels =
+  inherit Security_level;
+
+  representation = security_level;
+
+  let cardinal = 2;
+
+  let element = Public;
+
+  let pub = Public;
+
+  let secret = Secret;
+
+  let all_to_list = [Public; Secret];
+  proof of all_in_all_to_list = assumed;
+
+  let equal(l_1, l_2) = (l_1 = l_2);
+  proof of equal_reflexive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_transitive = by definition of equal;
+
+  let leq(l_1, l_2) = match l_1 with
+    | Public -> true
+    | Secret -> (match l_2 with
+                 | Public -> false
+                 | Secret -> true);
+
+  proof of leq_extends_equal = 
+    assumed
+    (* by definition of leq, equal *)
+    (*    type security_level *)
+    ;
+
+  proof of leq_transitive = 
+    by definition of leq, equal
+       type security_level
+    ;
+  proof of leq_antisymmetric = 
+    by definition of leq, equal
+       type security_level
+    ;
+
+
+end;;
+
+collection Public_Secret = implement Two_security_levels ; end;;
+
+species Configuration_BLP(S is Subject,
+                          O is Object,
+                          L is Security_level) =
+   inherit Configuration;
+
+   signature fs: Self -> S -> L;
+
+   signature fo: Self -> O -> L;
+
+end;;
+
+(* species BLP_configurations = *)
+(*   representation = unit *)
+
+(*   let element = () ; *)
+(*   let to_string(e) = "foo"; *)
+
+(*   let equal(x, y) = true; *)
+
+(*   inherit Configuration_BLP(S, O, Public_Secret) *)
+
+(*   let fs(x, s) =  *)
+(*     if S!equal(s, s0)  *)
+(*     then S!public *)
+(*     else S!secret *)
+(*     ; *)
+
+(*   let fo(x, o) = *)
+(*     if S!equal(o, o0) *)
+(*     then S!public *)
+(*     else S!secret *)
+(*     ; *)
+
+(* end;; *)
+
+species P_policy_BLP(S is Subject,
+                     O is Object,
+                     L is Security_level,
+                     A is Access_mode_rw,
+                     SOA is Abstract_triple(S, O, A),
+                     PSOA is Finite_parts(SOA),
+                     R is Relations_by_sets_of_triples(S, O, A, SOA, PSOA),
+                     T is Target_ac_by_sets_of_triples(S, O, A, SOA, PSOA, R),
+                     C is Configuration_BLP(S, O, L)) =
+
+  inherit P_policy_ac_rw(S, O, A, R, T, C);
+
+           
+  logical let mac(c, r) =
+    all s: S, all o: O, all a: A,
+     R!relation(r, s, o, a) -> 
+       L!leq(C!fo(c, o), C!fs(c, s))
+  ;
+
+
+  let rec mac_secure(l, c) =  match l with
+    | [] -> true
+    | h::t ->  
+      L!leq(C!fo(c, SOA!second(h)), C!fs(c, SOA!first(h))) &&
+        mac_secure(t, c);
+
+
+  theorem mac_correct: all c: C, all t: T,
+     mac_secure(PSOA!to_list(T!as_part(t)),
+		c) <-> 
+       mac(c, T!as_relation(t))
+     proof = assumed;
+
+       
+  let rec mac_star_secure_elem(e, l, c) = match l with
+  | [] -> true
+  | h::t -> 
+    (( ~~ ( A!equal(SOA!third(e), A!read) &&
+            A!equal(SOA!third(h), A!write) ) ) ||
+      L!leq(C!fo(c, SOA!second(e)),
+            C!fo(c, SOA!second(h)))) &&
+    mac_star_secure_elem(e, t, c)
+  ;
+    
+  let rec mac_star_secure(l, c) = match l with
+  | [] -> true
+  | h::t ->
+     mac_star_secure_elem(h, l, c) && mac_star_secure(t, c)
+  ;
+
+  let secure(t, c) = 
+    let l = PSOA!to_list(T!as_part(t)) in
+      mac_secure(l, c) && mac_star_secure(l, c)
+  ;
+
+  logical let mac_star(c, r) =
+    all s_1 s_2: S, all o_1 o_2: O,
+      (R!relation(r, s_1, o_1, A!read) /\ R!relation(r, s_2, o_2, A!write)) ->
+         L!leq(C!fo(c, o_1), C!fo(c, o_2))
+  ;
+
+  theorem mac_star_correct: all c: C, all t: T,
+     mac_star_secure(PSOA!to_list(T!as_part(t)),
+	             c) <-> 
+       mac_star(c, T!as_relation(t))
+     proof = assumed;
+
+
+  logical let is_secure(t, c) =
+    mac(c, T!as_relation(t)) /\ mac_star(c, T!as_relation(t))
+  ;
+
+  theorem secure_is_correct: all t: T, all c: C, 
+    secure(t, c) <-> is_secure(t, c)
+    proof = assumed;
+
+end;;

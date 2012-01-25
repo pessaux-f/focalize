@@ -16,18 +16,19 @@ species Access_mode = inherit Finite_set; end;;
 species Weak_accesses(S is Subject,
 		      O is Object,
 		      A is Access_mode,
-                      R is Ternary_relations(S, O, A))
+                      R is Ternary_relations(S, O, A))=
 
-  inherit Setoid;
+  inherit Finite_set;
+
 
 end;;
 
 species Accesses(S is Subject,
 		 O is Object,
 		 A is Access_mode,
-                 R is Ternary_relations(S, O, A), 
 		 SOA is Abstract_triple(S, O, A),
-		 PSOA is Finite_parts(SOA))=
+		 PSOA is Finite_parts(SOA),
+                 R is Relations_by_sets_of_triples(S, O, A, SOA, PSOA))=
              
   inherit Weak_accesses(S, O, A, R);
 
@@ -35,79 +36,15 @@ species Accesses(S is Subject,
 
   let as_part(p: Self): PSOA = p;
 
-  let relation(p, s, o, a) = PSOA!belongs(SOA!make(s, o, a) ,as_part(p))
+  let relation(p, s, o, a) = PSOA!belongs(SOA!make(s, o, a), as_part(p));
+
+  theorem relation_spec: all p: Self, all s: S, all o: O, all a: A,
+     relation(p, s, o, a) <-> PSOA!belongs(SOA!make(s, o, a), as_part(p))
+     proof = by definition of relation;
 
   let alpha(x, s) = PSOA!belongs(s, as_part(x));
 
 end;;
-
-(* type list_soa ('soa) = *)
-(*   | NEmpty *)
-(*   | NCons ('soa, list_soa ('soa));; *)
-
-(* type old_list_soa ('s, 'o, 'a) = *)
-(*   | Empty *)
-(*   | Cons ('s, 'o, 'a, old_list_soa ('s, 'o, 'a));; *)
-
-(* let rec in_list(l, t, eq) = *)
-(*       match l with *)
-(*         | NEmpty -> false *)
-(*         | NCons (tt, ll) ->  *)
-(* 	    (\* (SOA!equal(t, tt)) || aux (ll, t) *\) *)
-(* 	    if eq(t, tt) *)
-(* 	    then true *)
-(* 	    else in_list(ll, t, eq) *)
-(* ;; *)
-
-species Accesses_by_list(S is Subject,
-			 O is Object,
-			 A is Access_mode,
-			 SOA is Abstract_triple(S, O, A),
-			 PSOA is Finite_parts(SOA)) =
-
-   (* [rr]
-      On doit prouver empty_spec, add_spec, release_spec, is_contained_spec
-    *)
-
-  inherit Accesses (S, O, A, SOA, PSOA);
-
-  (* representation = list_soa(SOA); *)
-  (* representation = list(SOA); *)
-
-  (* let alpha = *)
-  (*   let rec aux (l, t) = *)
-  (*     match l with *)
-  (*       | [] -> false *)
-  (*       | h :: ll ->  *)
-  (* 	    (\* (SOA!equal(t, tt)) || aux (ll, t) *\) *)
-  (* 	    if SOA!equal(t, h) *)
-  (* 	    then true *)
-  (* 	    else aux(ll, t) *)
-  (*   in function l -> function t -> aux (l, t); *)
-
-  (* let empty: Self = []; *)
-
-  (* let add (x: Self, t: S): Self = t :: x; *)
-
-  (* let release = *)
-  (*   let rec aux (x, t) = *)
-  (*     match x with *)
-  (*       | [] -> [] *)
-  (*       | h :: l -> *)
-  (*           if SOA!equal(t, h) then aux (l, t) *)
-  (*           else  h :: aux (l, t) in *)
-  (*   function x -> function t -> aux (x, t); *)
-
-  (* let is_contained = *)
-  (*   let rec aux (x : Self, y : Self) = *)
-  (*     match x with *)
-  (*       | [] -> true *)
-  (*       | h :: l -> *)
-  (* 	    alpha (y, h ) && aux (l, y) in *)
-  (*   function x -> function y -> aux (x, y); *)
-
-end;;
-
 
 (** Property-based access security policies with read and write accesses *)
 
@@ -128,128 +65,98 @@ species Access_mode_rw_by_sum =
 
   representation = rw;
 
+  let element = read;
+
+  let equal(a, b) = (a = b);
+  proof of equal_reflexive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_transitive = by definition of equal;
+
   let read = Read;
+
   let write = Write;
 
+  let cardinal = 2;
+
+  let print (s) = match s with
+    | Read -> "read"
+    | Write -> "write";
+
+
+  let all_to_list = [Read; Write];
+
+  proof of all_in_all_to_list =
+    assumed
+    (* by definition of all_to_list, in_list *)
+    (*    type rw *)
+    ;
 
 end;;
 
 
+collection Access_rw = implement Access_mode_rw_by_sum; end;;
 
   (* Tests *)
 
 
-(* type subject = | S0 | S1;; *)
+type subject = | S0 | S1;;
 
-(* species Subject_test = *)
+species Subject_test =
 
-(*   inherit Subject; *)
+  inherit Subject;
 
-(*   representation = subject; *)
+  representation = subject;
 
-(*   let s0 : Self = S0; *)
-(*   let s1 : Self = S1; *)
+  let s0 : Self = S0;
+  let s1 : Self = S1;
 
-(*   let cardinal = 2; *)
-(*   let all_to_list = [S0; S1]; *)
+  let cardinal = 2;
+  let all_to_list = [S0; S1];
 
-(*   let element = s0; *)
-(*   let equal (s_1, s_2) = s_1 = s_2; *)
-(*   let print (s) = *)
-(*     match s with *)
-(*       | S0 -> "s0" | S1 -> "s1"; *)
+  let element = s0;
+  let equal (s_1, s_2) = s_1 = s_2;
+  let print (s) =
+    match s with
+      | S0 -> "s0" | S1 -> "s1";
 
-(*   proof of equal_transitive = by definition of equal; *)
-(*   proof of equal_symmetric = by definition of equal; *)
-(*   proof of equal_reflexive = by definition of equal; *)
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
 
-(*   proof of all_in_all_to_list = assumed; *)
+  proof of all_in_all_to_list = assumed;
 
-(* end;; *)
+end;;
 
-(* collection S = implement Subject_test; end;; *)
-
-
-(* type object = | O0 | O1;; *)
-
-(* species Object_test = *)
-
-(*   inherit Object; *)
-
-(*   representation = object; *)
-
-(*   let o0 : Self = O0; *)
-(*   let o1 : Self = O1; *)
-
-(*   let cardinal = 2; *)
-(*   let all_to_list = [O0; O1]; *)
-
-(*   let element = o0; *)
-(*   let equal (o_1, o_2) = o_1 = o_2; *)
-(*   let print (o) = *)
-(*     match o with *)
-(*       | O0 -> "o0" | O1 -> "o1"; *)
-
-(*   proof of equal_transitive = by definition of equal; *)
-(*   proof of equal_symmetric = by definition of equal; *)
-(*   proof of equal_reflexive = by definition of equal; *)
-
-(*   proof of all_in_all_to_list = assumed; *)
-
-(* end;; *)
-
-(* collection O = implement Object_test; end;; *)
+collection S = implement Subject_test; end;;
 
 
-(* type access_mode = | A0 | A1;; *)
+type object = | O0 | O1;;
 
-(* species Access_mode_test = *)
+species Object_test =
 
-(*   inherit Access_mode; *)
+  inherit Object;
 
-(*   representation = access_mode; *)
+  representation = object;
 
-(*   let a0 : Self = A0; *)
-(*   let a1 : Self = A1; *)
+  let o0 : Self = O0;
+  let o1 : Self = O1;
 
-(*   let cardinal = 2; *)
-(*   let all_to_list = [A0; A1]; *)
+  let cardinal = 2;
+  let all_to_list = [O0; O1];
 
-(*   let element = a0; *)
-(*   let equal (a_1, a_2) = a_1 = a_2; *)
-(*   let print (a) = *)
-(*     match a with *)
-(*       | A0 -> "a0" | A1 -> "a1"; *)
+  let element = o0;
+  let equal (o_1, o_2) = o_1 = o_2;
+  let print (o) =
+    match o with
+      | O0 -> "o0" | O1 -> "o1";
 
-(*   proof of equal_transitive = by definition of equal; *)
-(*   proof of equal_symmetric = by definition of equal; *)
-(*   proof of equal_reflexive = by definition of equal; *)
+  proof of equal_transitive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_reflexive = by definition of equal;
 
-(*   proof of all_in_all_to_list = assumed; *)
+  proof of all_in_all_to_list = assumed;
 
-(* end;; *)
+end;;
 
-(* collection A = implement Access_mode_test; end;; *)
+collection O = implement Object_test; end;;
 
-
-(* collection Ac = implement Accesses_by_list (S, O, A); end;; *)
-
-(* let accesses_list_to_string = *)
-(*   let rec aux (l) = *)
-(*     match l with *)
-(*       | [] -> "]" *)
-(*       | [ac] -> Ac!print (ac) ^ "]" *)
-(*       | ac :: t -> Ac!print (ac) ^ "; " ^ aux (t) in *)
-(*   function l -> "[" ^ aux (l);; *)
-
-(* let lenght = *)
-(*   let rec aux (l, cpt) = *)
-(*     match l with *)
-(*       | [] -> cpt *)
-(*       | _h :: t -> aux (t, cpt + 1) in *)
-(*   function l -> aux (l, 0);; *)
-
-(* let l = Ac!all_to_list;; *)
-
-(* print_string (accesses_list_to_string (l) ^ "\n");; *)
-(* print_string (string_of_int (lenght (l)) ^ "\n");; *)

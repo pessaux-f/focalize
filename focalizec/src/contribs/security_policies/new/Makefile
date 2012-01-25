@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2012-01-14 16:33:56 rr Exp $
+# $Id: Makefile,v 1.2 2012-01-25 21:57:44 rr Exp $
 
 # Makefile for algebra structures implementations
 
@@ -57,7 +57,9 @@ FOCALIZE_SRC=\
  p_policies.fcl\
  policy_secured_system.fcl\
  accesses.fcl\
- access_p_policies.fcl
+ access_p_policies.fcl\
+ access_system.fcl\
+ access_secure_system
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
