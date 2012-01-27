@@ -1,4 +1,4 @@
-% $Id: lexical_conventions.tex,v 1.25 2009-08-27 16:15:41 doligez Exp $
+% $Id: lexical_conventions.tex,v 1.26 2012-01-27 15:41:10 pessaux Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Lexical conventions}
@@ -44,6 +44,7 @@ Note: Almost arbitrary text can be written inside a general comment, therefore
 general comments are used to add explanations in the code to help the reader.
 
 Example:
+
 {\scriptsize
 \begin{lstlisting}
 (* The main species of the development: S.
@@ -67,6 +68,7 @@ comment}; a uni-line comment always spreads to the end of the line.
 Note: No general comment marker may appear in a uni-line comment.
 
 Example:
+
 {\scriptsize
 \begin{lstlisting}
 -- Discarded uni-line comment
@@ -109,6 +111,7 @@ out annotations that are meaningful to them, and safely ignore others.
 For more information, consult
 \ref{documentation-generation}.
 Example:
+
 {\scriptsize
 \begin{lstlisting}
 (** Annotation for the automatic documentation processor.
@@ -431,6 +434,7 @@ let ( ++ ) (s1, s2) = s1 ^ s2 ;
 \end{lstlisting}
 }
 Then you can use the {\tt ++} operator in the usual way
+
 {\scriptsize
 \begin{lstlisting}
 let hw = "Hello" ++ " world!" ;
@@ -476,6 +480,7 @@ infix operators. Symbolic identifiers let you assign sophisticated names
 to your functions and operators.
 For instance, instead of creating a function to check if integer {\tt x}
 is equal to the predecessor of integer {\tt y}, as in
+
 {\scriptsize
 \begin{lstlisting}
 let is_eq_to_predecessor (x, y) = ... ;
@@ -483,6 +488,7 @@ let is_eq_to_predecessor (x, y) = ... ;
 \end{lstlisting}
 }
 it is possible to directly define
+
 {\scriptsize
 \begin{lstlisting}
 let ( =pred ) (x, y) = ... ;
@@ -810,6 +816,7 @@ characters {\tt <} and {\tt >}, followed by a non-empty sequence of
 alphanumeric characters (i.e. [A-Z a-z 0-9]).
 The first part of the bullet (i.e. the integer literal) stands for the
 depth of the bullet and the second part stands for its name. Example:
+
 {\scriptsize
 \begin{lstlisting}
  <1>1 assume ...
@@ -866,6 +873,7 @@ species S = inherit basics#Basic_object; ... end ;;
 \end{lstlisting}
 }
 can be transformed with no explicit qualification into:
+
 {\scriptsize
 \begin{lstlisting}
 open "basics";;
@@ -876,7 +884,9 @@ species S = inherit Basic_object; ... end ;;
 After an {\tt open} directive, the definitions of loaded (object files
 of) compilation units are added in head of the current scope and mask
 existing definitions wearing the same names. For example, in
-the following program: {\scriptsize
+the following program:
+
+{\scriptsize
 \begin{lstlisting}
 (* Redefine my basic object, containing nothing. *)
 species Basic_object = end ;;
@@ -889,6 +899,7 @@ scope, that is the one loaded by the {\tt open} directive and not from
 the one defined at the beginning of the program. It is still possible
 to recover the first definition by using the ``empty'' qualification
 {\tt \#Basic\_object} in the definition of {\tt S}:
+
 {\scriptsize
 \begin{lstlisting}
 (* Redefine my basic object, containing nothing. *)

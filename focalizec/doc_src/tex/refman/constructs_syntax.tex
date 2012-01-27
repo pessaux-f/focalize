@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.51 2012-01-27 15:34:19 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.52 2012-01-27 15:41:10 pessaux Exp $
 
 
 \section{Language constructs and syntax}
@@ -211,6 +211,7 @@ type color =
 Note that the first \terminal{\vertical} character is required: it is not a
 separator. This especially means that when writing a sum type
 definition on a single line, the first \terminal{\vertical} must be written:
+
 {\scriptsize
 \begin{lstlisting}
 type color = | Red | Blue | Green ;;
@@ -255,7 +256,8 @@ several values.
 \item Either the constructor has {\bf 1} argument that is a tuple,
   i.e. a type expression involving the {\tt *} constructor.
 
-  The corresponding type definition for such a type would be:
+ The corresponding type definition for such a type would be:
+
 {\scriptsize
 \begin{lstlisting}
 type t =
@@ -282,6 +284,7 @@ constructors, confusing the argument{\bf s} of {\tt Cstr2} with
 one and unique tuple with 3 components will result in a type error.
 Below are shown several pieces of source code with valid/invalid mixes
 between these concepts.
+
 {\scriptsize
 \begin{lstlisting}
 type mytuple = alias (bool * int * string) ;;
@@ -347,6 +350,7 @@ Any type expression, even recursive, can be used as a  parameter of
 value contructors\index{type!recursive}.
 For instance, the type of lists of boolean $\times$ integer pairs
 could be defined like:
+
 {\scriptsize
 \begin{lstlisting}
 type b_i_list =
@@ -404,6 +408,7 @@ Record types provide a way to aggregate data of various types, a bit like
 tuples, but naming the components of the group, instead of
 differentiating them by their position like in tuples. A record is
 a sequence of names and types between braces. For example:
+
 {\scriptsize
 \begin{lstlisting}
 type experiment_conditions = {
