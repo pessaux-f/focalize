@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.28 2011-12-02 17:56:57 weis Exp $
+# $Id: Makefile,v 1.29 2012-01-27 10:21:02 pessaux Exp $
 
 ROOT_DIR=..
 
@@ -44,7 +44,7 @@ KO_TEST_FILES=\
 
 include $(ROOT_DIR)/Makefile.common
 
-all:: $(CHECK_FILE) ok_all ko_all
+all: $(CHECK_FILE) ok_all ko_all
 
 ok_all: $(OK_TEST_FILES)
 	# Compile from Focalize to OCaml.

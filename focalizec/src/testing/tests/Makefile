@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2011-06-14 13:59:43 maarek Exp $
+# $Id: Makefile,v 1.2 2012-01-27 10:21:02 pessaux Exp $
 
 ROOT_DIR = ../../..
 
@@ -21,19 +21,19 @@ include $(ROOT_DIR)/Makefile.config
 include $(ROOT_DIR)/Makefile.common
 
 .PHONY: tests
-tests:: all
+tests: all
 
-all:: interf compile pretty
+all: interf compile pretty
 
-compile::
+compile:
 	~/Work/focalize/focalize/focalizec/src/toplevel/focalizec -verbose -no-coq-code length.fcl
 	~/Work/focalize/focalize/focalizec/src/toplevel/focalizec -verbose -no-coq-code triangle.fcl
 
-interf::
+interf:
 	~/Work/focalize/focalize/focalizec/src/toplevel/focalizec -i -no-ocaml-code -no-coq-code length.fcl
 	~/Work/focalize/focalize/focalizec/src/toplevel/focalizec -i -no-ocaml-code -no-coq-code triangle.fcl
 
-pretty::
+pretty:
 	~/Work/focalize/focalize/focalizec/src/toplevel/focalizec \
            -no-ocaml-code -no-coq-code -pretty length.pretty.fcl length.fcl
 	~/Work/focalize/focalize/focalizec/src/toplevel/focalizec \
@@ -45,7 +45,7 @@ pretty::
            -no-ocaml-code -no-coq-code -pretty triangle.pretty.pretty.fcl triangle.pretty.fcl
 	cmp triangle.pretty.fcl triangle.pretty.pretty.fcl
 
-clean::
+clean:
 	rm -f *.cmi *.cmo *.fo *.pfc *.v *.zv *.ml *.vo *.zv.mangled
 	rm -f *_TESTS.*
 	rm -f *.pretty.*

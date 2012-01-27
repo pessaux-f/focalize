@@ -17,3 +17,7 @@ depend-local:
 	$(CAML_DEP) $(BYT_OBJS:.cmo=.mli) $(BYT_OBJS:.cmo=.ml) > .depend
 
 clean-local:
+	echo "clean-local to do."
+
+clean-default:
+	echo "clean-default to do."
