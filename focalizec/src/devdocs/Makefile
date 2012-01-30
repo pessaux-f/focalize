@@ -10,7 +10,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.3 2012-01-30 09:06:56 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -19,7 +19,7 @@ include $(ROOT_DIR)/Makefile.config
 TEX_FILES=\
  codegen_model.tex macros.tex compiler_src_architecture.tex\
  legacy.tex phd_changes.tex environments.tex lexing_parsing.tex\
- scoping.tex mathpartir.sty
+ scoping.tex coqrecfuns.tex mathpartir.sty
 
 DOC_OBJS=legacy.dvi legacy.ps legacy.pdf
 

@@ -1,0 +1,101 @@
+Currently, a recursive function is handled in 3 ways in \coq\ depending
+on whether it is a:
+\begin{itemize}
+  \item recusive method: usage of {\tt Function}.
+  \item local recursive function: usage of {\tt fix} with assumption
+  that the function is structurally recursive on its {\bf first} argument.
+  \item toplevel recursive function: usage of {\tt Fixpoint} with assumption
+  that the function is structurally recursive on its {\bf first} argument.
+\end{itemize}
+
+\subsubsection{Recursive method}
+{\footnotesize
+\begin{lstlisting}
+species A =
+  let rec foo(x) =
+    if syntactic_equal(x, 0) then 1
+    else 1 + foo(x - 1) ;
+end ;;
+\end{lstlisting}
+}
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+Module Termination_foo_namespace.
+  Section foo.
+   (* Abstracted termination order. *)
+    Variable __term_order : (basics.int__t) -> (basics.int__t) -> Prop.
+    Variable __term_obl :(forall x : basics.int__t, ~
+      Is_true ((basics.syntactic_equal _ x 0)) -> __term_order
+      (basics._dash_ x 1) x)
+      /\
+       (well_founded __term_order).
+      
+    Function foo (__arg: (basics.int__t)) {wf __term_order __arg}:
+      basics.int__t :=
+      match __arg with
+        | (x) =>
+        (if (basics.syntactic_equal _ x 0) then 1
+          else (basics._plus_ 1 (foo (basics._dash_ x 1))))
+        end.
+      Proof.
+        apply coq_builtins.magic_prove.
+        apply coq_builtins.magic_prove.
+        Qed.
+      Definition A__foo x := foo (x).
+      End foo.
+    End Termination_foo_namespace.
+  Definition foo := Termination_foo_namespace.A__foo
+    coq_builtins.magic_order.
+\end{lstlisting}
+}
+
+
+\subsubsection{Local recursive function}
+{\footnotesize
+\begin{lstlisting}
+type t = | A | C (t) ;;
+
+species B =
+  let bar(a) =
+    let rec rec_bar(x) =
+      match x with
+      | A -> 0
+      | C(y) -> 1 + rec_bar(y) in
+    rec_bar(a) ;
+end ;;
+\end{lstlisting}
+}
+They are trivially compiled into a {\tt let fix} construct,
+hard-wiring that the the structurally decreasing argument is the first one.
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+Definition bar (a : t__t) : basics.int__t :=
+  let fix rec_bar (x : t__t) {struct x} : basics.int__t :=
+    match x with
+     | A  => 0
+     | C y => (basics._plus_ 1 (rec_bar y))
+     end
+  in (rec_bar a).
+\end{lstlisting}
+}
+
+
+\subsubsection{Toplevel recursive function}
+{\footnotesize
+\begin{lstlisting}
+let rec gee(x) =
+  if syntactic_equal(x, 0) then 1
+  else 1 + gee(x - 1)
+;;
+\end{lstlisting}
+}
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+Fixpoint gee (x : basics.int__t) {struct x} : basics.int__t :=
+  (if (basics.syntactic_equal _ x 0) then 1
+    else (basics._plus_ 1 (gee (basics._dash_ x 1)))).
+\end{lstlisting}
+}
+
