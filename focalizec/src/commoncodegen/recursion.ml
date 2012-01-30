@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.18 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: recursion.ml,v 1.19 2012-01-30 13:21:25 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -27,11 +27,11 @@ exception NestedRecursiveCalls of Parsetree.vname * Location.t;;
 exception PartialRecursiveCall of Parsetree.vname * Location.t;;
 exception MutualRecursion of (Parsetree.vname * Parsetree.vname);;
 
-(**
+(** ***************************************************************************
   Useful for storing bindings that were made between one point of a program
   and another. These constructs express constraints that must hold in
   order to have arrived at a certain point of a program.
- *)
+ *************************************************************************** *)
 type binding =
   | B_let of Parsetree.binding (** The variable was bound to the expression. *)
   | B_match of
@@ -42,22 +42,26 @@ type binding =
       Parsetree.expr * bool
 ;;
 
-(**
-  {b Descr} : Tests whether a given function applied to given arguments
-   constitutes a recursive call.
 
-  @param function_name the qualified name of the recursive function.
-  @param argument_list the list of arguments that must be supplied when
-   calling the recursive function.
-  @param expr_list the arguments supplied at the call being examined.
-  @param fexpr the expression indicating the function being applied.
 
-  @raise PartialRecursiveCall Recursive calls to the main function are only
-   valid if all arguments are supplied in one go. If the call is partial this
-   exception is raised.
-  @return [true] if the application constitutes a valid recursive
-   call; [false] otherwise.
- *)
+(** ***************************************************************************
+    {b Descr} : Tests whether a given function applied to given arguments
+    constitutes a recursive call.
+
+    @param function_name the qualified name of the recursive function.
+    @param argument_list the list of arguments that must be supplied when
+    calling the recursive function.
+    @param expr_list the arguments supplied at the call being examined.
+    @param fexpr the expression indicating the function being applied.
+
+    @raise PartialRecursiveCall Recursive calls to the main function are only
+    valid if all arguments are supplied in one go. If the call is partial this
+    exception is raised.
+    @return [true] if the application constitutes a valid recursive
+    call; [false] otherwise.
+
+  {b Visibility}: Not exported outside this module.
+ *************************************************************************** *)
 let is_recursive_call function_name argument_list expr_list fexpr =
   match fexpr.Parsetree.ast_desc with
    | Parsetree.E_var ident_expr_ast ->
@@ -77,35 +81,37 @@ let is_recursive_call function_name argument_list expr_list fexpr =
 
 
 
-
-type typed_vname = (Parsetree.vname * Types.type_simple);;
-
+type typed_vname = (Parsetree.vname * Types.type_simple) ;;
 
 
-(* ***************************************************** *)
-(** {b Descr}: Just to give a name to the result type of
-    [list_recursive_calls] to manipulate easier.
 
-    {b Rem}: Exported outside this module.               *)
-(* ***************************************************** *)
+(** ***************************************************************************
+    {b Descr}: Just to give a name to the result type of [list_recursive_calls]
+    to manipulate easier.
+
+    {b Visibility}: Exported outside this module.
+ *************************************************************************** *)
 type recursive_calls_description =
   ((typed_vname * Parsetree.expr) list * binding list) list
 ;;
 
 
 
-(**
-  {b Descr} : Compiles a list of information about recursive calls made in a
-   function body.
-   Information included is :
-    - An association list between the declared arguments of the function and
-      those passed to the recursive call;
-    - A list of bindings visible in the context of the recursive call. This
-      list is ordered from innermost to outermost.
+(** ***************************************************************************
+    {b Descr} : Compiles a list of information about recursive calls made in a
+    function body.
+    Information included is :
+      - An association list between the declared arguments of the function and
+        those passed to the recursive call;
+      - A list of bindings visible in the context of the recursive call. This
+        list is ordered from innermost to outermost.
 
-   @raise NestedRecursiveCalls in the event of nested recursion.
-   @raise PartialRecursiveCall in the event that a recursive call is incomplete.
- *)
+    @raise NestedRecursiveCalls in the event of nested recursion.
+    @raise PartialRecursiveCall in the event that a recursive call is
+    incomplete.
+
+    {b Visibility}: Exported outside this module.
+ *************************************************************************** *)
 let rec list_recursive_calls function_name argument_list bindings expr =
   let filter_nested_recursive_calls calls1 calls2 = match (calls1, calls2) with
    | ([], l) | (l, []) -> l
@@ -131,41 +137,40 @@ let rec list_recursive_calls function_name argument_list bindings expr =
            (fun (n, opt_ty) ->
              match opt_ty with None -> assert false | Some t -> (n, t))
            names_with_types in
-       (* Add the argument to the list and find recursive calls in the *)
-       (* function body.                                               *)
+       (* Add the argument to the list and find recursive calls in the function
+          body. *)
        list_recursive_calls
          function_name (argument_list @ names_with_types) bindings expr
    | Parsetree.E_var _ ->
        if is_recursive_call function_name argument_list [] expr then
          [[], bindings]
        else []
-   | Parsetree.E_app (fexpr, argexprlist) ->
-       (begin
+   | Parsetree.E_app (fexpr, argexprlist) -> (
        (* Test whether it is the function being defined that is called. *)
        if is_recursive_call function_name argument_list argexprlist fexpr then
-         (* If that is the case, check for recursive *)
-         (* calls in the arguments of this call. *)
+         (* If that is the case, check for recursive calls in the arguments of
+            this call. *)
          match
-            List.concat
-              (List.map
-                 (list_recursive_calls function_name argument_list bindings)
-                 argexprlist) with
-          | [] -> [ List.combine argument_list argexprlist, bindings ]
-                (* If no recursive calls are made when calculating the   *)
-                (* arguments, return the arguments (original and used to *)
-                (* make this recursive call) and bindings.               *)
-          | _ ->
-              (* Otherwise raise an exception. *)
-              raise
-                (NestedRecursiveCalls (function_name, expr.Parsetree.ast_loc))
+           List.concat
+             (List.map
+                (list_recursive_calls function_name argument_list bindings)
+                argexprlist) with
+         | [] -> [ List.combine argument_list argexprlist, bindings ]
+               (* If no recursive calls are made when calculating the
+                  arguments, return the arguments (original and used to make
+                  this recursive call) and bindings. *)
+         | _ ->
+             (* Otherwise raise an exception. *)
+             raise
+               (NestedRecursiveCalls (function_name, expr.Parsetree.ast_loc))
        else
-         (* If this is not a recursive call then look *)
-         (* for recursive calls in the arguments      *)
+         (* If this is not a recursive call then look for recursive calls in
+            the arguments. *)
          List.concat
            (List.map
               (list_recursive_calls function_name argument_list bindings)
               argexprlist)
-       end)
+      )
    | Parsetree.E_constr (_, expr_list) ->
        List.concat
          (List.map
@@ -216,8 +221,8 @@ let rec list_recursive_calls function_name argument_list bindings expr =
          List.concat
            (List.map list_recursive_calls_in_binding
               let_def.Parsetree.ast_desc.Parsetree.ld_bindings) in
-       (* Then look in the following expression having augmented the *)
-       (* list of bindings with those created by the let_def.        *)
+       (* Then look in the following expression having augmented the list of
+          bindings with those created by the let_def. *)
        let new_bindings =
          let extract_binding binding = B_let binding in
          (List.map extract_binding
@@ -225,8 +230,8 @@ let rec list_recursive_calls function_name argument_list bindings expr =
          @ bindings in
        let list_recursive_calls_in_expr =
          list_recursive_calls function_name argument_list new_bindings expr in
-       (* Finally make sure that recursive calls are not *)
-       (* made in both the let_def and the expression.   *)
+       (* Finally make sure that recursive calls are not made in both the
+          let_def and the expression. *)
        filter_nested_recursive_calls
          list_recursive_calls_in_def
          list_recursive_calls_in_expr
@@ -258,18 +263,20 @@ let rec list_recursive_calls function_name argument_list bindings expr =
 
 
 
-(**
-   {b Descr} : Given a list of bindings, calculates the list of variables
-     that can be considered structurally smaller than any of the given
-     variables.
+(** ***************************************************************************
+    {b Descr} : Given a list of bindings, calculates the list of variables
+    that can be considered structurally smaller than any of the given
+    variables.
 
-   @param variables the variables.
-   @param bindings the list of bindings to be searched for structurally
-     smaller variables, ordered from innermost to outermost.
+    @param variables the variables.
+    @param bindings the list of bindings to be searched for structurally
+    smaller variables, ordered from innermost to outermost.
 
-   @return the list of the variables that are structurally smaller than
-     [variables].
- *)
+    @return the list of the variables that are structurally smaller than
+    [variables].
+
+    {b Visibility}: Not exported outside this module.
+ *************************************************************************** *)
 let rec get_smaller_variables variables bindings =
   (* NB: Be wary of inner bindings that mask outer variables !!
      It is assumed that patterns do not contain multiple occurrences of the
@@ -299,26 +306,26 @@ let rec get_smaller_variables variables bindings =
            fold_vars_in_pattern_aux deconstructed_once_flag data p in
     fold_vars_in_pattern_aux false data pattern in
 
-  (* ************************************************************************ *)
-  (** {b Descr} : [analyse_match] finds structurally smaller variables of a
-     given set of variables by analysing pattern matching. The function first
+  (** *************************************************************************
+     {b Descr} : [analyse_match] finds structurally smaller variables of a
+     given set of variables by analysing pattern-matching. The function first
      recursively breaks tuples in both matched expression and pattern until a
      variable is reached in the former. At this point we can extract all
      variables in the resulting pattern and (unless the pattern is reduced to
-     a single variable) assert that they are all structurally smaller.        *)
-  (* ************************************************************************ *)
+     a single variable) assert that they are all structurally smaller.
+   ************************************************************************* *)
   let rec analyse_match (variable_set, structural_set) (expr, pattern) =
     match (expr.Parsetree.ast_desc, pattern.Parsetree.ast_desc) with
      | (Parsetree.E_var { Parsetree.ast_desc = Parsetree.EI_local v }, _) ->
-         (* In this case a single variable is being deconstructed by the     *)
-         (* pattern and therefore all variables in the pattern are elligible *)
-         (* to be structurally smaller.                                      *)
+         (* In this case a single variable is being deconstructed by the
+            pattern and therefore all variables in the pattern are elligible
+            to be structurally smaller. *)
          if Parsetree_utils.VnameSet.mem v variable_set
             || Parsetree_utils.VnameSet.mem v structural_set then
            let action deconstructed_once_flag
                (variable_set, structural_set) variable =
-             (* If at least one deconstructing pattern has been encountered *)
-             (* it is structurally smaller, otherwise it is an alias.       *)
+             (* If at least one deconstructing pattern has been encountered it
+                is structurally smaller, otherwise it is an alias. *)
              if deconstructed_once_flag then
                (Parsetree_utils.VnameSet.remove variable variable_set,
                 Parsetree_utils.VnameSet.add variable structural_set)
@@ -340,25 +347,25 @@ let rec get_smaller_variables variables bindings =
      | (_, Parsetree.P_paren p) ->
          analyse_match (variable_set, structural_set) (expr, p)
      | _ ->
-         (* In this case none of the variables in the pattern are   *)
-         (* structurally smaller and must therefore be removed from *)
-         (* both sets in case they mask variables from either set.  *)
+         (* In this case none of the variables in the pattern are structurally
+            smaller and must therefore be removed from both sets in case they
+            mask variables from either set. *)
          let action _ (variable_set, structural_set) v =
            (Parsetree_utils.VnameSet.remove v variable_set,
             Parsetree_utils.VnameSet.remove v structural_set) in
          fold_vars_in_pattern action (variable_set, structural_set) pattern in
 
-  (* ************************************************************************ *)
-  (** {b Descr} : [analyse_binding] adds the appropriate variables in a given
-       binding to either or both of given variable sets : each alias of a
-       variable is added to the set that contains the latter, and each
-       variable that is structurally smaller than a variable in either set is
-       added to the [structural_set].
+  (** *************************************************************************
+      {b Descr} : [analyse_binding] adds the appropriate variables in a given
+      binding to either or both of given variable sets : each alias of a
+      variable is added to the set that contains the latter, and each
+      variable that is structurally smaller than a variable in either set is
+      added to the [structural_set].
 
-       Btw: this function also removes all other variables encountered that
-       do not fit in either category as they may mask variables from either
-       set.                                                                   *)
-  (* ************************************************************************ *)
+      Btw: this function also removes all other variables encountered that
+      do not fit in either category as they may mask variables from either
+      set.
+   ************************************************************************* *)
   let analyse_binding binding (variable_set, structural_set) =
     match binding with
      | B_let binding ->
@@ -399,27 +406,31 @@ let rec get_smaller_variables variables bindings =
 
   let variable_set =
     List.fold_right
-      Parsetree_utils.VnameSet.add variables Parsetree_utils.VnameSet.empty in
+      Parsetree_utils.VnameSet.add
+      variables Parsetree_utils.VnameSet.empty in
   let result =
     List.fold_right
-      analyse_binding bindings (variable_set, Parsetree_utils.VnameSet.empty) in
+      analyse_binding bindings
+      (variable_set, Parsetree_utils.VnameSet.empty) in
   Parsetree_utils.VnameSet.elements (snd result)
 ;;
 
 
 
-(* ************************************************************************* *)
-(** {b Descr}: Tests whether a recursive function uses structural recursion.
+(** ***************************************************************************
+    {b Descr}: Tests whether a recursive function uses structural recursion.
 
-   @param function_name the name of the function.
-   @param arguments the arguments of the function.
-   @param structural_argument the argument supposedly destructured before
-     each recursive call.
-   @param body the body of the function.
+    @param function_name the name of the function.
+    @param arguments the arguments of the function.
+    @param structural_argument the argument supposedly destructured before
+    each recursive call.
+    @param body the body of the function.
 
-   @return [true] if the given function uses structural recursion; [false]
-   otherwise.                                                                *)
-(* ************************************************************************* *)
+    @return [true] if the given function uses structural recursion; [false]
+    otherwise.
+
+    {b Visibility}: Exported outside this module.
+ *************************************************************************** *)
 let is_structural function_name arguments structural_argument body =
   let recursive_calls = list_recursive_calls function_name arguments [] body in
   let analyse_recursive_call (arguments_assoc_list, bindings) =

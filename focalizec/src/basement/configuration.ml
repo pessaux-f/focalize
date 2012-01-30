@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.44 2011-06-14 15:00:26 weis Exp $ *)
+(* $Id: configuration.ml,v 1.45 2012-01-30 13:21:25 pessaux Exp $ *)
 
 exception No_input_file;;
 
@@ -26,7 +26,7 @@ type configuration = {
 let focalize_version_number = (0, 7, 0)
 ;;
 
-let version_date = "$Date: 2011-06-14 15:00:26 $"
+let version_date = "$Date: 2012-01-30 13:21:25 $"
 ;;
 
 let focalize_short_version =
@@ -39,7 +39,7 @@ let focalize_full_version =
 ;;
 
 let print_focalize_version v =
-  prerr_endline (Printf.sprintf "The Focalize compiler, version %s" v);
+  prerr_endline (Printf.sprintf "The FoCaLize compiler, version %s" v);
   exit 0
 ;;
 

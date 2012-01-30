@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.mli,v 1.8 2008-12-23 13:43:21 pessaux Exp $ *)
+(* $Id: recursion.mli,v 1.9 2012-01-30 13:21:25 pessaux Exp $ *)
 
 exception NestedRecursiveCalls of Parsetree.vname * Location.t
 exception PartialRecursiveCall of Parsetree.vname * Location.t
@@ -34,6 +34,8 @@ val list_recursive_calls :
   Parsetree.vname -> typed_vname list ->
     binding list -> Parsetree.expr -> recursive_calls_description
 
+(* [Unsure] Not yet used.
 val is_structural :
   Parsetree.vname -> typed_vname list -> Parsetree.vname -> Parsetree.expr ->
     bool
+*)

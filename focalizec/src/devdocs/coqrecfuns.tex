@@ -82,6 +82,7 @@ Definition bar (a : t__t) : basics.int__t :=
 
 
 \subsubsection{Toplevel recursive function}
+The function:
 {\footnotesize
 \begin{lstlisting}
 let rec gee(x) =
@@ -91,6 +92,8 @@ let rec gee(x) =
 \end{lstlisting}
 }
 
+\noindent into:
+
 {\footnotesize
 \begin{lstlisting}[language=MyCoq]
 Fixpoint gee (x : basics.int__t) {struct x} : basics.int__t :=
@@ -99,3 +102,27 @@ Fixpoint gee (x : basics.int__t) {struct x} : basics.int__t :=
 \end{lstlisting}
 }
 
+This fails since this function is not recursive structural. Instead,
+consider the following recursive structural function:
+
+{\footnotesize
+\begin{lstlisting}
+let rec buzz(x) =
+  match x with
+  | A -> 0
+  | C(y) -> 1 + buzz(y)
+;;
+\end{lstlisting}
+}
+
+\noindent which is compiled into:
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+Fixpoint buzz (x : t__t) {struct x} : basics.int__t :=
+  match x with
+   | A  => 0
+   | C y => (basics._plus_ 1 (buzz y))
+   end.
+\end{lstlisting}
+}

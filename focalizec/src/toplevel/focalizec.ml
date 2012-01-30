@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.55 2011-06-14 15:35:48 weis Exp $ *)
+(* $Id: focalizec.ml,v 1.56 2012-01-30 13:21:26 pessaux Exp $ *)
 
 exception Bad_file_suffix of string;;
 
@@ -65,7 +65,8 @@ let compile_fcl input_file_name =
   let (typing_toplevel_env, stuff_to_compile) =
     Infer.typecheck_file ~current_unit scoped_ast in
   (* Verify pattern matching soundness. *)
-  List.iter (Match_analysis.verify_matchings typing_toplevel_env) stuff_to_compile;
+  List.iter
+    (Match_analysis.verify_matchings typing_toplevel_env) stuff_to_compile ;
   (* Generate the documentation if requested. *)
   if Configuration.get_focalize_doc () then
     Main_docgen.gen_doc_please_compile_me
@@ -241,92 +242,113 @@ let main () =
   Arg.parse
     [ ("-dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
-       " dumps species non-let-rec- dependencies as dotty\n\tfiles into the \
-         argument directory.");
+       "
+     Dumps species non-let-rec- dependencies as dotty files into the argument
+     directory.");
       ("--experimental",
        Arg.Unit Configuration.set_experimental,
-       " do not use. Fear it! For the development team only!");
+       "
+     Do not use. Fear it! For the development team only!");
       ("-focalize-doc",
        Arg.Unit Configuration.set_focalize_doc,
-       " generate documentation.");
+       "
+     Generate documentation.");
       ("-i",
        Arg.Unit (fun () -> Configuration.set_do_interface_output true),
-       " prints the source file interface.");
+       "
+     Prints the source file interface.");
       ("-I",
        Arg.String (fun path -> Files.add_lib_path path),
-       " <dir> adds the specified <dir> to the path list where to search for \
-         compiled\n\tinterfaces.");
+       "
+     <dir> Adds the specified <dir> to the path list where to search for
+     compiled interfaces.");
       ("-impose-termination-proof",
        Arg.Unit Configuration.set_impose_termination_proof,
-       " makes termination proofs of recursive functions \n\
-         mandatory.");
+       "
+     Makes termination proofs of recursive functions mandatory.");
       ("-methods-history-to-text",
        Arg.String Configuration.set_methods_history_to_text,
-       " dumps species' methods' inheritance history as plain text\n\tfiles \
-         into the argument directory.");
+       "
+     Dumps species' methods' inheritance history as plain text files into the
+     argument directory.");
       ("-no-ansi-escape",
        Arg.Unit Configuration.unset_fancy_ansi,
-       " disables ANSI escape sequences in the error messages.");
+       "
+     Disables ANSI escape sequences in the error messages.");
       ("-no-coq-code",
        Arg.Unit Configuration.unset_generate_coq,
-       " disables the Coq code generation.");
+       "
+     Disables the Coq code generation.");
       ("-no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
-       " disables the OCaml code generation.");
+       "
+     Disables the OCaml code generation.");
       ("-no-test-code",
        Arg.Unit Configuration.unset_perform_tests,
-       " disables the test code generation.");
+       "
+     Disables the test code generation.");
       ("-no-tests",
        Arg.Unit Configuration.unset_perform_tests,
-       " disables the tests.");
+       "
+     Disables the tests.");
       ("-no-stdlib-path",
        Arg.Unit Configuration.unset_use_default_lib,
-       " does not include by default the standard library installation\n\t\
-         directory in the search path.");
+       "
+     Does not include by default the standard library installation directory
+     in the search path.");
       ("-ocaml-comp-mode",
        Arg.String Configuration.set_ml_compiler,
-       " specify the OCaml compiler mode. Can be \"byt\" for bytecode \
-         compilation, \"bin\" for native code compilation, or \"both\" \
-         for bytecode and native code compilation.");
+       "
+     Specify the OCaml compiler mode. Can be \"byt\" for bytecode compilation,
+     \"bin\" for native code compilation, or \"both\" for bytecode and native
+     code compilation.");
       ("-pretty",
        Arg.String Configuration.set_pretty_print,
-       " <output> pretty-prints the parse tree of the focalize file as a focalize\n\
-         source into the <output> file.");
+       "
+     <output> Pretty-prints the parse tree of the FoCaLize file as a FoCaLize
+     source into the <output> file.");
       ("-raw-ast-dump",
        Arg.Unit Configuration.set_raw_ast_dump,
-       " (undocumented) prints on stderr the raw AST structure \
-         after\n\tthe parsing stage.");
+       "
+     (Undocumented) Prints on stderr the raw AST structure after the parsing
+     stage.");
       ("-require-plugin",
        Arg.String Configuration.require_plugin,
-       " <plugin name> requires application of plugin <plugin name> on the focalize\n\
-         source file.");
+       "
+     <plugin name> Requires application of plugin <plugin name> on the
+     FoCaLize source file.");
       ("-scoped-pretty",
        Arg.String Configuration.set_pretty_scoped,
-       " (undocumented) pretty-prints the parse tree of the focalize \
-         file\n\tonce scoped as a focalize source into the argument file.");
+       "
+     (Undocumented) Pretty-prints the parse tree of the FoCaLize file once
+     scoped as a FoCaLize source into the argument file.");
       ("-stop-before-coq",
        Arg.Unit Configuration.set_stop_before_coq,
-       " when Coq code generation is activated, stops the compilation process \
-         before passing the generated file to Coq. The produced file is \
-         ended by the suffix \".v\".");
+       "
+     When Coq code generation is activated, stops the compilation process
+     before passing the generated file to Coq. The produced file is ended by
+     the suffix \".v\".");
       ("-stop-before-zenon",
        Arg.Unit Configuration.set_stop_before_zenon,
-       " when Coq code generation is activated, stops the compilation process \
-         before passing the generated file to Zenon. The produced file is \
-         ended by the suffix \".zv\".");
+       "
+     When Coq code generation is activated, stops the compilation process
+     before passing the generated file to Zenon. The produced file is ended by
+     the suffix \".zv\".");
       ("-verbose",
        Arg.Unit Configuration.set_verbose,
-       " be verbose.");
+       "
+     Be verbose. Makes the compiler jaberring about its real-time life.");
       ("-v", Arg.Unit Configuration.print_focalize_short_version,
-       " prints the focalize version then exit.");
+       "
+     Prints the focalize version then exit.");
       ("-version",
        Arg.Unit Configuration.print_focalize_full_version,
-       " prints the full focalize version, sub-version and release date,\n\t\
-         then exit.");
+       "
+     Prints the full focalize version, sub-version and release date, then exit.");
        ("-where",
         Arg.Unit Configuration.print_install_dirs,
-        " prints the binaries and libraries installation directories then \
-          exit.")
+        "
+     Prints the binaries and libraries installation directories then exit.")
      ]
     Configuration.add_input_file_name
     "Usage: focalizec [options] <files>";
