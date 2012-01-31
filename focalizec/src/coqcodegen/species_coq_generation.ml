@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.186 2011-05-06 18:04:27 maarek Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.187 2012-01-31 16:46:48 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -2860,7 +2860,16 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
 
 
 
-(** {b Rem} : For Function. *)
+(** ***************************************************************************
+    {bDescr}: Used to generate a recursive function that is not (assumed)
+    structural.
+    In this case, the function is generated using the Function construct of
+    Coq.
+    Is experimental mode is activated, then it generates a termination order
+    and a termination proof instead of using fake and generic ones.
+
+    {b Visibility}: Not exported outside this module.
+ *************************************************************************** *)
 let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
     ~self_manifest generated_fields from name params scheme body opt_term_pr
     ai =
@@ -3060,8 +3069,14 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
 
 
-(* Generates the definition of a recursive function using "Fixpoint" instead of
-   "Function" but use fake proofs everywhere. *)
+(** ***************************************************************************
+    {b Descr}: Generates the definition of a recursive function using
+    "Fixpoint" instead of "Function" but use fake proofs everywhere.
+    It weakly always assume that the function is structurally recursive with
+    its first argument decreasing.
+
+    {b Visibility}: Not exported outside this module.
+ *************************************************************************** *)
 let generate_defined_recursive_let_definition ctx print_ctx env
     generated_fields from name params scheme body ai =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -3071,18 +3086,17 @@ let generate_defined_recursive_let_definition ctx print_ctx env
    | Parsetree.BB_computational body_expr ->
        let _species_name = snd (ctx.Context.scc_current_species) in
        (* Extend the context with the mapping between these recursive
-          functions and their extra arguments. Since we are in Coq, we
-          need to take care of the logical definitions and of the
-          explicite types abstraction management. *)
+          functions and their extra arguments. Since we are in Coq, we need to
+          take care of the logical definitions and of the explicite types
+          abstraction management. *)
        let ctx' = {
          ctx with
            Context.scc_lambda_lift_params_mapping =
              [(name,
                Misc_common.make_params_list_from_abstraction_info
                  ~care_logical: true ~care_types: true ai)] } in
-       (* We get the function's parameters and their types. This will serve
-          at various stage, each time we will need to speak about a
-          parameter. *)
+       (* We get the function's parameters and their types. This will serve at
+          various stage, each time we will need to speak about a parameter. *)
        (* For [bind_parameters_to_types_from_type_scheme], not that we do not
           have anymore information about "Self"'s structure... *)
        let (params_with_type, return_ty_opt, _) =
@@ -3119,7 +3133,8 @@ let generate_defined_recursive_let_definition ctx print_ctx env
               param_ty)
          params_with_type;
        (* Generate the { struct } clause. Since only functions are recursive,
-          there is *)
+          there is issue about finding no argument. We assume the first
+          argument is always the decreasing one. *)
        let first_arg_name =
          (match params_with_type with
           | [] -> assert false
@@ -3131,15 +3146,15 @@ let generate_defined_recursive_let_definition ctx print_ctx env
          (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
          return_ty;
        (* Now we don't need anymore the sharing. Hence, clean it. This should
-          not be useful because the other guys usign printing should manage this
-          themselves (as we did just above by cleaning before activating the
-          sharing), but anyway, it is safer an not costly. So... *)
+          not be useful because the other guys using printing should manage
+          this themselves (as we did just above by cleaning before activating
+          the sharing), but anyway, it is safer an not costly. So... *)
        Types.purge_type_simple_to_coq_variable_mapping ();
        (* The ":=" token before the function's body. *)
        Format.fprintf out_fmter ":=@ ";
        (* Now, generate the body of the function.
           We specify here that we must apply recursive calls to the
-          extra arguments due to lambda-liftings becausen disabling this
+          extra arguments due to lambda-liftings because disabling this
           is only used if we want to generate the code with the "Function"
           construct of Coq. So, we just "forget" to put [name] as argument
           [~in_recursive_let_section_of]. *)
@@ -3165,6 +3180,13 @@ let generate_defined_recursive_let_definition ctx print_ctx env
 
 
 
+(** ***************************************************************************
+   {b Descr}: Is in charge to generate the Coq code for recursive functions.
+   It deals and differentiate structural and non-structural recursive
+   functions.
+
+    {b Visibility}: Not exported outside this module.
+ *************************************************************************** *)
 let generate_recursive_let_definition ctx print_ctx env ~self_manifest
     generated_fields rec_kind l =
   match l with
