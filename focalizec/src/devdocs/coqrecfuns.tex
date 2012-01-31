@@ -8,45 +8,237 @@ on whether it is a:
   that the function is structurally recursive on its {\bf first} argument.
 \end{itemize}
 
+The entry point for recursive function code generation in \coq\ is
+{\tt generate\_recursive\_let\_definition} from module {\tt Species\_coq\_generation} .
+
+
 \subsubsection{Recursive method}
 {\footnotesize
 \begin{lstlisting}
+type t = | D | C (t) ;;
+
 species A =
-  let rec foo(x) =
-    if syntactic_equal(x, 0) then 1
-    else 1 + foo(x - 1) ;
+  signature toto : int ;
+
+  let rec foo(x, y) =
+    match x with
+    | D ->
+        if syntactic_equal(y, 0) then 1
+        else 1 + foo(D, (y + 1))
+    | C(D) -> 2
+    | C(a) -> foo(a, (y - toto)) ;
 end ;;
 \end{lstlisting}
 }
+
+Entry point: {\tt generate\_defined\_recursive\_let\_definition\_With\_Function}.
+In this configuration, the generated code uses {\tt Function}, creates
+a {\tt Module} and a {\tt Section} to embed the termination
+proof. Note that logical recursive methods are not yet handled.
 
 {\footnotesize
 \begin{lstlisting}[language=MyCoq]
 Module Termination_foo_namespace.
   Section foo.
-   (* Abstracted termination order. *)
-    Variable __term_order : (basics.int__t) -> (basics.int__t) -> Prop.
-    Variable __term_obl :(forall x : basics.int__t, ~
-      Is_true ((basics.syntactic_equal _ x 0)) -> __term_order
-      (basics._dash_ x 1) x)
+\end{lstlisting}
+}
+
+Then, is creates {\tt Variables} for methods on which the recursive
+function depends (like always, using \\
+{\tt generate\_field\_definition\_prelude}). Since we are in a {\tt Section}
+for \zenon, we tell instead of abstracting dependencies by adding
+extra arguments to  the current definition, we generate {\tt Variable},
+{\tt Let} and {\tt Hypothesis}. This prelude inserts abstractions due
+to the types of the species parameters, then dues to methods of the
+species parameters the function depends on, then finally methods of
+{\tt Self} on which the function depends on.
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+    Variable abst_toto : basics.int__t.
+\end{lstlisting}
+}
+
+A {\tt Variable} always called ``{\tt  \_\_term\_order} is now generated
+to represent the order. It always has 2 arguments having the same
+type. This type is a {\bf tuple} if the method has several arguments.
+We see below that our function takes 2 parameters, one of type {\tt t}
+the other of type {\tt int}. So the order takes 2 tuples of type
+{\tt (t * int)}, i.e. will have to compare 2 ``sets'' of call
+arguments. It always return {\tt Prop}.
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+    (* Abstracted termination order. *)
+    Variable __term_order :
+      (((t__t) * (basics.int__t))%type) -> (((t__t) * (basics.int__t))%type) -> Prop.
+\end{lstlisting}
+}
+
+Then the proof obligation that this order is well-founded come. The
+{\tt Variable} representing the termination proof obligation is always
+called ``{\tt \_\_term\_obl}''.
+It's now time to generate the lemmas proving that each recursive call
+decreases. Each of then will be followed by a {\tt /\textbackslash} to make the
+conjunction of all of them. And the latest one will be used to add 
+the final ``{\tt well\_founded \_\_term\_order}'' to this big conjunction.
+This is big job is performed by {\tt generate\_termination\_lemmas} of
+the module {\tt Rec\_let\_gen}.
+
+This function takes the list (initial variable of the function * expression provided
+in the recursive calls). The expression must hence be $<$ to the
+initial variable for the function to terminate. In fact that's the tuple of
+initial variables that must be $<$ to the tuple of expressions provided
+in each recursive call. Basically, the algorithm is the following:
+
+\noindent For each recursive call:\\
+\verb+  +(* For each binding, bind the variable by a forall. \\
+\verb+  +Done by {\tt Rec\_let\_gen.generate\_variables\_quantifications} *) \\
+\verb+    + For each binding \\
+\verb+      + match binding with \\
+\verb+        + | Recursion.B\_let (name, scheme) -> \\
+\verb+          + "forall $\%$a : $\%$a, " name (specialize scheme) \\
+\verb+        + | Recursion.B\_match (\_, pattern) -> \\
+\verb+          + (* Get all bound variable of the pattern. *) \\
+\verb+          + (* Generate a forall for each bound variable. *) \\
+\verb+          + "forall $\%$a : $\%$a, " var\_name pat-var-ty \\
+\verb+        + | Recursion.B\_condition (\_, \_) -> \\
+\verb+          +  (* No possible variable bound, so nothing to do. *) \\
+\verb+  +(* We must generate the hypotheses and separate them by ->. *) \\
+\verb+  +List.iter \\
+\verb+    +(function \\
+\verb+      +| Recursion.B\_let ->\\
+\verb+        +(* A "let x = e" induces forall x: ..., x "=" e. *) \\
+\verb+        +{\tt Rec\_let\_gen.generate\_binding\_let} \\
+\verb+      +| Recursion.B\_match (expr, pattern) ->\\
+\verb+        +(* Induces "forall variables of the pattern, pattern = expr". *) \\
+\verb+        +{\tt Rec\_let\_gen.generate\_binding\_match} \\
+\verb+      +| Recursion.B\_condition (expr, bool\_val) ->\\
+\verb+        +(* Induces "Is\_true (expr)" if bool\_val is true,\\
+\verb+        +else "$\sim$ Is\_true (expr)" if bool\_val is false. *) \\
+\verb+    +) \\
+\verb+    +bindings ;\\
+\verb+  +(* Now, generate the expression that tells the decreasing by applying \\
+\verb+  +the "\_\_term\_order" {\tt Variable} or the really defined order if we were \\
+\verb+  +provided one by the argument [~explicit\_order] with its arguments to \\
+\verb+  +apply due to lambda-liftings. *) \\
+\verb+  +(* Now, generate the arguments to provide to the order. They are 2 tuples, \\
+\verb+  + the first one being the one containing arguments of the recursive call, \\
+\verb+  + the second one being the arguments of the original call. *) \\
+\verb+  +(* Separate by a /\textbackslash *)
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+    Variable __term_obl :
+      (forall x : t__t, forall y : basics.int__t,
+       (@D = x) -> ~ Is_true ((basics.syntactic_equal _ y 0)) ->
+         __term_order ((@D ), ((basics._plus_ y 1))) (x, y))
+      /\
+      (forall x : t__t, forall y : basics.int__t,
+       forall a : t__t,
+       (@C  a = x) ->
+         __term_order (a, ((basics._dash_ y abst_toto))) (x, y))
+\end{lstlisting}
+}
+
+Above, we the 2 cases of recursive calls with in one, {\tt
+  \_\_term\_order} applies to $({\tt D}, (y+1))$ and $(x, y)$ and in
+the other case, applied to $(a, (y - {\tt toto}))$ and $(x, y)$.
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
       /\
        (well_founded __term_order).
-      
-    Function foo (__arg: (basics.int__t)) {wf __term_order __arg}:
-      basics.int__t :=
+\end{lstlisting}
+}
+
+Now comes the translation of the real body of the recursive function,
+using the \coq\ {\tt Function} construct. We generate its arguments as
+a tuple if there are several. Before the return type is inserted the
+verbatim code ``{\tt \{wf \_\_term\_order \_\_arg\}}''. We need then
+to recover the individual arguments of the function. Unfortunately, we
+can't simply generate {\tt let (x, y, ..) := \_\_arg} because \coq
+only allows pairs as let-binding pattern. So instead,  we generate a
+{\tt match}.
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+    Function foo (__arg: (((t__t) * (basics.int__t))%type))
+      {wf __term_order __arg}: basics.int__t
+      :=
       match __arg with
-        | (x) =>
-        (if (basics.syntactic_equal _ x 0) then 1
-          else (basics._plus_ 1 (foo (basics._dash_ x 1))))
+        | (x,
+        y) =>
+\end{lstlisting}
+}
+
+Before being able to generate the effective body of the function, we
+must transform the recursive function's body so that all the recursive
+calls send their arguments as a unique tuple rather than as several
+arguments. This is because we ``tuplified'' the arguments of the
+recursive function in order to be able to exhibit a lexicographic
+order if needed. This job is done by
+{\tt transform\_recursive\_calls\_args\_into\_tuple} of the module
+{\tt Rec\_let\_gen}. Once we got this modified body expression, we can
+now generate the code, telling that we must not apply recursive calls to the extra
+arguments due to lambda-liftings because we are in the scope of a {\tt Section}
+containing {\tt Variable}s representing dependencies. Code generation
+for this body is as usual, using of the module {\tt generate\_expr}
+{\tt Species\_record\_type\_generation}.
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+        match x with
+         | D  =>
+             (if (basics.syntactic_equal _ y 0) then 1
+              else (basics._plus_ 1 (foo ((@D ), ((basics._plus_ y 1))))))
+         | C D  => 2
+         | C a => (foo (a, ((basics._dash_ y abst_toto))))
+         end
         end.
+\end{lstlisting}
+}
+
+Now comes the termination proof. We first enforce {\tt Variable}s to
+be used to prevent \coq from removing them (we generate {\tt assert}
+for this sake).
+Anf finally we apply {\tt magic\_prove} for each recursive call + once
+for the {\tt (well\_founded \_\_term\_order)}. In our example, this is
+2 recursive calls (so 2 proof goals) + 1 = 3.
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
       Proof.
+        assert (__force_use_abst_toto := abst_toto).
+        apply coq_builtins.magic_prove.
         apply coq_builtins.magic_prove.
         apply coq_builtins.magic_prove.
         Qed.
-      Definition A__foo x := foo (x).
+\end{lstlisting}
+}
+
+We must now create the curried version of the function, i.e. having
+several arguments and not 1 being a tuple. Remember that to be able to
+create an order, we transformed the initial (and ``real'') function by
+making it taking a tuple of arguments instead of several
+arguments. It's then now time to put thing back in place because code
+using this function relies on it having several arguments and not one
+tuple of arguments ! Finally we close the open {\tt Section} and {\tt Module}.
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+      Definition A__foo x  y := foo (x, y).
       End foo.
     End Termination_foo_namespace.
-  Definition foo := Termination_foo_namespace.A__foo
-    coq_builtins.magic_order.
+\end{lstlisting}
+}
+
+TO BE CONTINUED.
+
+{\footnotesize
+\begin{lstlisting}[language=MyCoq]
+  Definition foo (abst_toto : basics.int__t) :=
+    Termination_foo_namespace.A__foo abst_toto coq_builtins.magic_order.
 \end{lstlisting}
 }
 
@@ -54,15 +246,13 @@ Module Termination_foo_namespace.
 \subsubsection{Local recursive function}
 {\footnotesize
 \begin{lstlisting}
-type t = | A | C (t) ;;
-
 species B =
-  let bar(a) =
-    let rec rec_bar(x) =
+  let bar(a, b : int) =
+    let rec rec_bar(x, y) =
       match x with
-      | A -> 0
-      | C(y) -> 1 + rec_bar(y) in
-    rec_bar(a) ;
+      | D -> 0
+      | C(z) -> 1 + rec_bar(z, y) in
+    rec_bar(a, b) ;
 end ;;
 \end{lstlisting}
 }
@@ -70,13 +260,14 @@ They are trivially compiled into a {\tt let fix} construct,
 hard-wiring that the the structurally decreasing argument is the first one.
 {\footnotesize
 \begin{lstlisting}[language=MyCoq]
-Definition bar (a : t__t) : basics.int__t :=
-  let fix rec_bar (x : t__t) {struct x} : basics.int__t :=
+Definition bar (a : t__t) (b : basics.int__t) : basics.int__t :=
+  let fix rec_bar (__var_a : Set) (x : t__t) (y : __var_a) {struct x} :
+    basics.int__t :=
     match x with
-     | A  => 0
-     | C y => (basics._plus_ 1 (rec_bar y))
+     | D  => 0
+     | C z => (basics._plus_ 1 (rec_bar _ z y))
      end
-  in (rec_bar a).
+  in (rec_bar _ a b).
 \end{lstlisting}
 }
 
@@ -85,9 +276,9 @@ Definition bar (a : t__t) : basics.int__t :=
 The function:
 {\footnotesize
 \begin{lstlisting}
-let rec gee(x) =
-  if syntactic_equal(x, 0) then 1
-  else 1 + gee(x - 1)
+let rec gee(x, y) =
+    if syntactic_equal(x, 0) then 1
+    else 1 + gee((x - 1), (y + 1))
 ;;
 \end{lstlisting}
 }
@@ -96,9 +287,10 @@ let rec gee(x) =
 
 {\footnotesize
 \begin{lstlisting}[language=MyCoq]
-Fixpoint gee (x : basics.int__t) {struct x} : basics.int__t :=
+Fixpoint gee (x : basics.int__t) (y : basics.int__t) {struct x} : basics.int__t :=
   (if (basics.syntactic_equal _ x 0) then 1
-    else (basics._plus_ 1 (gee (basics._dash_ x 1)))).
+   else (basics._plus_ 1
+             (gee ((basics._dash_ x 1)) ((basics._plus_ y 1))))).
 \end{lstlisting}
 }
 
