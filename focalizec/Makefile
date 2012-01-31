@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.49 2011-12-02 17:56:57 weis Exp $
+# $Id: Makefile,v 1.50 2012-01-31 09:28:07 pessaux Exp $
 
 ROOT_DIR=.
 
@@ -23,7 +23,7 @@ COMPILER_DIRS=\
  src/basement src/parser src/typing\
  src/docgen src/commoncodegen src/mlcodegen src/coqcodegen\
  src/testing src/relation_extraction\
- src/toplevel src/focalizedep
+ src/toplevel src/focalizedep src/focalizetest
 
 LIB_DIRS=\
  src/stdlib src/extlib src/contribs
