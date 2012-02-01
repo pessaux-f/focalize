@@ -173,6 +173,8 @@ species Triples_by_pairs(A is Setoid, B is Setoid, C is Setoid) =
  let third (t:Self) = snd(t);
  let make(a, b, c):Self = pair(pair(a, b), c);
 
+ let element = pair(pair(A!element, B!element), C!element);
+
  proof of is_first = assumed;
  proof of is_second = assumed;
  proof of is_third = assumed;

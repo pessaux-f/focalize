@@ -15,7 +15,7 @@ species Secured_state_pol (A is Target,
 			   P is P_policy (A, C),
 			   S is State) =
 
-  inherit Product_set (S, C), Secure_state (S);
+  inherit Cartesian_product(S, C), Secure_state(S);
 
   let state(s) = first(s);
   let configuration(s) = second(s);
@@ -40,6 +40,11 @@ species Secured_state_pol (A is Target,
 
   let is_secure (x : Self) =
     P!secure (interpretation (state (x)), configuration (x));
+
+  proof of is_secure_equal_compat = 
+    assumed;
+  proof of state_equal_compat =
+    assumed;
 
 end;;
 

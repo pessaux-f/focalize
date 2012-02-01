@@ -23,6 +23,7 @@ species Transition_system (S is State, L is Label,
                            SLS is Abstract_triple(S, L, S)) =
 
   inherit Basic_object;
+  representation = unit;
 
   (** transition relation *)
   signature delta : S -> L -> S -> bool;

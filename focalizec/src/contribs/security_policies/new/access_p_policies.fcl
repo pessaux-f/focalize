@@ -33,9 +33,29 @@ species Target_ac_by_sets_of_triples
 
   representation = PSOA;
 
+  let make(p: PSOA): Self = p;
+
   let as_part(t: Self): PSOA = t;
 
   let as_relation(t) = R!set_as_relation(t);
+
+  let element = PSOA!element;
+
+  let equal(t_1, t_2) = PSOA!equal(t_1, t_2);
+  proof of equal_reflexive = 
+    by definition of equal
+       property PSOA!equal_reflexive
+    ;
+    
+  proof of equal_symmetric = 
+    by definition of equal
+       property PSOA!equal_symmetric
+    ;
+    
+  proof of equal_transitive = 
+    by definition of equal
+       property PSOA!equal_transitive
+    ;
     
 
 end;;
@@ -113,61 +133,9 @@ end;;
 
 species Security_level =
 
-  inherit Partial_order, Finite_set;
+  inherit Partial_order;
 
 end;;
-
-type security_level = 
-  | Public
-  | Secret
-;;
-
-species Two_security_levels =
-  inherit Security_level;
-
-  representation = security_level;
-
-  let cardinal = 2;
-
-  let element = Public;
-
-  let pub = Public;
-
-  let secret = Secret;
-
-  let all_to_list = [Public; Secret];
-  proof of all_in_all_to_list = assumed;
-
-  let equal(l_1, l_2) = (l_1 = l_2);
-  proof of equal_reflexive = by definition of equal;
-  proof of equal_symmetric = by definition of equal;
-  proof of equal_transitive = by definition of equal;
-
-  let leq(l_1, l_2) = match l_1 with
-    | Public -> true
-    | Secret -> (match l_2 with
-                 | Public -> false
-                 | Secret -> true);
-
-  proof of leq_extends_equal = 
-    assumed
-    (* by definition of leq, equal *)
-    (*    type security_level *)
-    ;
-
-  proof of leq_transitive = 
-    by definition of leq, equal
-       type security_level
-    ;
-  proof of leq_antisymmetric = 
-    by definition of leq, equal
-       type security_level
-    ;
-
-
-end;;
-
-collection Public_Secret = implement Two_security_levels ; end;;
 
 species Configuration_BLP(S is Subject,
                           O is Object,
@@ -217,6 +185,8 @@ species P_policy_BLP(S is Subject,
   inherit P_policy_ac_rw(S, O, A, R, T, C);
 
            
+  representation = unit ;
+
   logical let mac(c, r) =
     all s: S, all o: O, all a: A,
      R!relation(r, s, o, a) -> 

@@ -85,6 +85,8 @@ species Finite_parts_by_lists(S is Setoid) =
 
   let empty = [];
 
+  let element = empty;
+
   let rec belongs(s, e) = match e with
   | [] -> false
   | h::t -> 
@@ -100,6 +102,17 @@ species Finite_parts_by_lists(S is Setoid) =
     then e
     else s::e;
 
+
+  (* theorem belongs_right_substitution_rule: all s: S, all l_1 l_2: Self, *)
+  (*   equal(l_1, l_2) -> belongs(s, l_1) -> belongs(s, l_2) *)
+  (*   proof =  *)
+  (*     by property equal_reflexive *)
+  (*   ; *)
+
+  proof of belongs_left_substitution_rule = assumed;
+
+  proof of is_contained_spec = assumed;
+
   let rec cardinal(e) = match e with
   | [] -> 0
   | _h::t -> 1 + cardinal(t)
@@ -110,13 +123,21 @@ species Finite_parts_by_lists(S is Setoid) =
    <1>1 prove all s_1 s_2: S,
         (* [rr] ill formed! Statement reveals representation *)
          belongs(s_1, add([], s_2)) <-> S!equal(s_1, s_2) \/ belongs(s_1, [])
+        <2>0 prove all s: S, [s] = add([], s)
+            by definition of add, belongs
         <2>1 assume s_1 s_2: S,
              prove belongs(s_1, add([], s_2)) <-> 
                     S!equal(s_1, s_2) \/ belongs(s_1, [])
-        
-             <3>1 hypothesis H: belongs(s_1, add([], s_2)),
+                     <3>1 hypothesis H: belongs(s_1, add([], s_2)),
                   prove S!equal(s_1, s_2)
-                  assumed
+                  <4>1 prove ~ belongs(s_1,[])
+                       by definition of belongs
+                  <4>2 prove belongs(s_2, add([], s_2))
+                       assumed
+                       (* by step <2>0  *)
+                       (*    property S!equal_reflexive *)
+                       (*    property belongs_left_substitution_rule *)
+                  <4>f qed assumed
                   (* [rr] infinite loop? *)
                   (* by definition of belongs, add *)
                   (*    hypothesis H *)

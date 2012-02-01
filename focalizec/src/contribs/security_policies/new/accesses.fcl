@@ -18,7 +18,7 @@ species Weak_accesses(S is Subject,
 		      A is Access_mode,
                       R is Ternary_relations(S, O, A))=
 
-  inherit Finite_set;
+  inherit Setoid;
 
 
 end;;
@@ -94,69 +94,6 @@ species Access_mode_rw_by_sum =
 end;;
 
 
+(** A common access mode is read/write *)
 collection Access_rw = implement Access_mode_rw_by_sum; end;;
-
-  (* Tests *)
-
-
-type subject = | S0 | S1;;
-
-species Subject_test =
-
-  inherit Subject;
-
-  representation = subject;
-
-  let s0 : Self = S0;
-  let s1 : Self = S1;
-
-  let cardinal = 2;
-  let all_to_list = [S0; S1];
-
-  let element = s0;
-  let equal (s_1, s_2) = s_1 = s_2;
-  let print (s) =
-    match s with
-      | S0 -> "s0" | S1 -> "s1";
-
-  proof of equal_transitive = by definition of equal;
-  proof of equal_symmetric = by definition of equal;
-  proof of equal_reflexive = by definition of equal;
-
-  proof of all_in_all_to_list = assumed;
-
-end;;
-
-collection S = implement Subject_test; end;;
-
-
-type object = | O0 | O1;;
-
-species Object_test =
-
-  inherit Object;
-
-  representation = object;
-
-  let o0 : Self = O0;
-  let o1 : Self = O1;
-
-  let cardinal = 2;
-  let all_to_list = [O0; O1];
-
-  let element = o0;
-  let equal (o_1, o_2) = o_1 = o_2;
-  let print (o) =
-    match o with
-      | O0 -> "o0" | O1 -> "o1";
-
-  proof of equal_transitive = by definition of equal;
-  proof of equal_symmetric = by definition of equal;
-  proof of equal_reflexive = by definition of equal;
-
-  proof of all_in_all_to_list = assumed;
-
-end;;
-
-collection O = implement Object_test; end;;
 

@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2012-01-25 21:57:44 rr Exp $
+# $Id: Makefile,v 1.3 2012-02-01 20:47:03 rr Exp $
 
 # Makefile for algebra structures implementations
 
@@ -34,7 +34,7 @@ FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS=\
  -stop-before-coq -no-stdlib-path \
- -I $(STDLIB_DIR) -I $(ROOT_DIR)/src/extlib/algebra
+ -I $(STDLIB_DIR) 
 
 #From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
@@ -59,7 +59,23 @@ FOCALIZE_SRC=\
  accesses.fcl\
  access_p_policies.fcl\
  access_system.fcl\
- access_secure_system
+ access_secure_system.fcl\
+ main.fcl
+
+STD_BIN_OBJS=\
+ ml_builtins.cmx\
+ basics.cmx\
+ sets_externals.cmx\
+ sets.cmx\
+ products.cmx\
+ orders.cmx
+
+BIN_EXE=main.exe
+
+$(BIN_EXE): byt bin
+	$(CAML_BIN_COMPILER) -o $@\
+	   -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)\
+	    $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
 
 # FOCALIZE_SRC_UNSAFE are compiled not using the implicit rules. They have
 # their own rules at the end of this Makefile.
@@ -96,7 +112,7 @@ FOCALIZE_DOCS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.fcd)
 FOCALIZE_MML=$(FOCALIZE_DOCS:.fcd=.xml)
 FOCALIZE_MML_UNSAFE=$(FOCALIZE_DOCS_UNSAFE:.fcd=.xml)
 
-EXTERNAL_BYT_OBJS=resultant_test_external.cmo
+EXTERNAL_BYT_OBJS=
 EXTERNAL_CMIS=$(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_BIN_OBJS=$(EXTERNAL_BYT_OBJS:.cmo=.cmx)

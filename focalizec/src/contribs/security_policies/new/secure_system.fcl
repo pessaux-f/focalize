@@ -76,7 +76,7 @@ species Secure_transition_system (St is State, L is Label,
   theorem secure_induction: all l: list(SLS),
       (all z: Ss, is_path_from_init_to(l, z) -> 
            Ss!is_secure(z)) ->
-              all x: Ss, all t:SLS, is_path_from_init_to((t :: l), x) -> 
+              all x: Ss, all t: SLS, is_path_from_init_to((t :: l), x) -> 
                 Ss!is_secure(x)
   proof = 
     by definition of delta
@@ -117,6 +117,66 @@ species Secure_operational_transition_system
      let s = Sys!transition(Ss!state(x), l) in
      let y = Ss!make(x, s) in
      if ((~~ Ss!is_secure(x)) || Ss!is_secure(y)) then y else x;
+
+  proof of secure_induction = 
+    <1>1 assume l: list(SLS),
+         hypothesis I: (all z: Ss, is_path_from_init_to(l, z) -> 
+                           Ss!is_secure(z)),
+         prove all x: Ss, all t: SLS, is_path_from_init_to((t :: l), x) -> 
+                          Ss!is_secure(x)
+         <2>1 assume x: Ss, assume t: SLS,
+              hypothesis H: is_path_from_init_to((t :: l), x),
+              prove Ss!is_secure(x)
+              <3>1 prove Ss!equal(SLS!third(t), x)
+                   by hypothesis H property is_path_from_init_to_ind
+              <3>2 prove delta(SLS!first(t), SLS!second(t), x)
+                   by hypothesis H property is_path_from_init_to_ind
+              <3>3 prove is_path_from_init_to(l, SLS!first(t))
+                   by hypothesis H property is_path_from_init_to_ind
+              <3>4 prove Ss!is_secure(SLS!first(t))
+                   by step <3>3
+                      hypothesis I
+              <3>5 prove Ss!equal(transition(SLS!first(t), SLS!second(t)), x)
+                   by definition of delta
+                      step <3>2
+                      property transition_is_valid,
+                               Ss!equal_reflexive,
+                               Ss!equal_symmetric,
+                               Ss!equal_transitive
+              <3>6 prove Ss!is_secure(transition(SLS!first(t), SLS!second(t)))
+                   <4>1 hypothesis C_1: (~ Ss!is_secure(SLS!first(t))
+                       \/ Ss!is_secure(
+                           Ss!make(SLS!first(t), 
+                                   Sys!transition(Ss!state(SLS!first(t)),
+                                                  SLS!second(t))))),
+                        prove Ss!is_secure(
+                           Ss!make(SLS!first(t), 
+                                   Sys!transition(Ss!state(SLS!first(t)),
+                                                  SLS!second(t))))
+                        by hypothesis C_1 step <3>4
+                   <4>2 hypothesis C_2: Ss!is_secure(SLS!first(t)) 
+                       /\ ~ Ss!is_secure(
+                             Ss!make(SLS!first(t), 
+                                     Sys!transition(Ss!state(SLS!first(t)),
+                                                             SLS!second(t)))),
+                        prove Ss!is_secure(SLS!first(t))
+                        by hypothesis C_2
+                   <4>f qed by step <4>1, <4>2 definition of transition
+              <3>f qed by step <3>5, <3>6
+                          property transition_equal_compat,
+                                   Ss!is_secure_equal_compat
+         <2>f conclude
+    <1>f conclude
+
+    (* by definition of delta, transition *)
+    (*    property is_path_from_init_to_ind,  *)
+    (*             Ss!equal_reflexive, Ss!equal_symmetric, Ss!equal_transitive,  *)
+    (*             Ss!make_spec, Ss!make_equal_compat, *)
+    (*             Sys!transition_equal_compat, *)
+    (*             L!equal_reflexive, *)
+    (*             SLS!is_first, SLS!is_second, SLS!is_third, SLS!equal_spec, *)
+    (*             transition_equal_compat *)
+  ;
 
   proof of transition_equal_compat =
     <1>1 assume x_1 x_2: Ss,

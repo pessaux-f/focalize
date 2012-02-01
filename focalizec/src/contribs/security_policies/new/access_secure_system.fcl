@@ -8,7 +8,7 @@ open "policy_secured_system";;
 species Secure_system_hru
    (S is Subject,
     O is Object,
-    A is Access_mode_rw,
+    A is Access_mode,
     SOA is Abstract_triple(S, O, A),
     PSOA is Finite_parts(SOA),
     St is State_ac(S, O, A, SOA, PSOA),
@@ -26,5 +26,28 @@ species Secure_system_hru
   inherit Secure_operational_transition_system_pol
              (T, C, P, St, L, SLS, Sys, Ss, SsLS);
           
+
+end;;
+
+species Secure_system_blp
+   (S is Subject,
+    O is Object,
+    Le is Security_level,
+    A is Access_mode_rw,
+    SOA is Triples_by_pairs(S, O, A),
+    PSOA is Finite_parts(SOA),
+    St is State_ac(S, O, A, SOA, PSOA),
+    La is Label_ac(S, O, A, SOA),
+    SLS is Abstract_triple(St, La, St),
+    R is Relations_by_sets_of_triples(S, O, A, SOA, PSOA),
+    T is Target_ac_by_sets_of_triples(S, O, A, SOA, PSOA, R),
+    C is Configuration_BLP(S, O, Le),
+    P is P_policy_BLP(S, O, Le, A, SOA, PSOA, R, T, C),
+    Sys is Operational_transition_system_ac(S, O, A, SOA, La, PSOA, St, SLS),
+    Ss is Secured_state_pol(T, C, P, St),
+    SsLS is Abstract_triple(Ss, La, Ss)
+  ) =
+  inherit Secure_operational_transition_system_pol
+             (T, C, P, St, La, SLS, Sys, Ss, SsLS);
 
 end;;

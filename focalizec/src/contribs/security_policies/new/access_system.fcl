@@ -19,6 +19,8 @@ species State_add_release(S is Setoid,
   representation = P;
   let element: Self = P!empty;
 
+  let as_part(p: Self): P = p;
+
   let empty: Self = P!empty;
 
   let add(p: Self, e: S): Self = P!add(p, e);
@@ -95,6 +97,33 @@ species Label_ac(S is Subject,
 
   inherit Label_add_release(SOA);
 
+  representation = action * SOA;
+
+  let action(l) = match l with 
+  | (a, _t) -> a
+  ;
+
+  let entity(l) = match l with
+  | (_a, t) -> t
+  ;
+  
+  let element = (Release, SOA!element);
+
+  let add(e) = (Add, e);
+
+  let release(e) = (Release, e);
+
+  let equal(l_1, l_2) =
+    (action(l_1) = action(l_2)) &&
+      SOA!equal(entity(l_1), entity(l_2))
+  ;
+  proof of equal_reflexive = assumed;
+  proof of equal_symmetric = assumed;
+  proof of equal_transitive = assumed;
+
+  proof of add_spec = assumed;
+  proof of release_spec = assumed;
+
 end;;
 
 
@@ -104,8 +133,6 @@ species Transition_system_add_release(S is Setoid,
                                       St is State_add_release(S, P),
                                       SLS is Abstract_triple(St, L, St)) =
   inherit Transition_system(St, L, SLS);
-
-  representation = unit;
 
   let delta (x, l, y) = match L!action(l) with
   | Add -> 
@@ -184,6 +211,6 @@ species Operational_transition_system_ac
                   SLS is Abstract_triple(St, L, St)) =
 
    inherit Transition_system_ac(S, O, A, SOA, L, PSOA, St, SLS),
-           Operational_transition_system(St, L, SLS);
+           Operational_transition_system_add_release(SOA, L, PSOA, St, SLS);
 
 end;;
