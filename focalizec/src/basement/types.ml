@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.82 2010-02-11 16:47:40 doligez Exp $ *)
+(* $Id: types.ml,v 1.83 2012-02-08 16:35:29 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -550,21 +550,39 @@ let (specialize,
 
 
 
-   (* *************************************************************** *)
-   (* specialize_n_show_instanciated_generalized_vars                 *)
-   (* type_scheme -> (type_simple * (type_simple list))               *)
-   (* {b Descr} : Like [specialize] but also return the list of fresh
-      variables that were created to instanciate the generalized
-      variables of the type scheme.
+   (** *************************************************************************
+       specialize_n_show_instanciated_generalized_vars
+       {b Descr} : Like [specialize] but also return the list of fresh
+         variables that were created to instanciate the generalized variables of
+         the type scheme.
 
-      {b Rem} : Exported oustide this module.                         *)
-   (* *************************************************************** *)
-   (fun scheme ->
+       {b Rem}: See comment of
+         [MiscHelpers.bind_parameters_to_types_from_type_scheme] to understand
+         the use of the parameter [gen_vars_in_scope].
+         The parameter [gen_vars_in_scope] is hence only useful when
+         generating Coq code..
+
+       {b Visibility} : Exported oustide this module.
+    ************************************************************************* *)
+   (fun ~gen_vars_in_scope scheme ->
+     (* Compute the number of elements of the list by side effect to save one
+        walk of the list. *)
+     let num_in_scope = ref 0 in
+     List.iter
+       (fun binding ->
+         incr num_in_scope ;
+         seen := binding :: !seen)
+       gen_vars_in_scope ;
      (* Copy the type scheme's body. *)
      let instance = copy_type_simple scheme.ts_body in
-     (* Get the fresh variables that instanciated *)
-     (* the generalized ones of the scheme.       *)
-     let instanciated_generalized_vars = List.map snd !seen in
+     (* Get the fresh variables that instanciated the generalized ones of the
+        scheme except those artificially introduced from [gen_vars_in_scope].
+        For this, we reverse the list hence take all stuff appended after the
+        number of bindings added from [gen_vars_in_scope] then put the result
+        back in the original order. *)
+     let reved_seen = List.rev !seen in
+     let instanciated_generalized_vars =
+       List.rev (Handy.list_drop reved_seen !num_in_scope) in
      (* Clean up seen type for further usages. *)
      seen := [] ;
      (instance, instanciated_generalized_vars))

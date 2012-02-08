@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.38 2011-05-26 16:08:09 maarek Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.39 2012-02-08 16:35:29 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -30,7 +30,7 @@ exception Logical_methods_only_inside_species of Location.t;;
 (** {b Descr} : This module is the entry point for the compilation from FoCaL
     to Coq. It dispatches the compilation of each possible FoCaL entity to
     the dedicated compilation module.
-    It also contains the seed of toplevel let definitions code generation.  *)
+    It also contains the seed of toplevel let definitions code generation.    *)
 (* ************************************************************************** *)
 
 
@@ -73,7 +73,7 @@ let toplevel_let_def_compile ctx env let_def =
            (* Or whatever since "Self" does not exist anymore. *)
            ~self_methods_status: Species_record_type_generation.SMS_from_record
            ~recursive_methods_status: Species_record_type_generation.RMS_regular
-           ~toplevel: true ~is_rec env one_bnd
+           ~toplevel: true ~is_rec ~gen_vars_in_scope: [] env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
@@ -84,7 +84,7 @@ let toplevel_let_def_compile ctx env let_def =
                   Species_record_type_generation.SMS_from_record
                 ~recursive_methods_status:
                   Species_record_type_generation.RMS_regular
-                ~toplevel: true ~is_rec env first_bnd) in
+                ~toplevel: true ~is_rec ~gen_vars_in_scope: [] env first_bnd) in
          List.iter
            (fun binding ->
              Format.fprintf out_fmter "@]@\n@[<2>with ";
@@ -96,7 +96,8 @@ let toplevel_let_def_compile ctx env let_def =
                    Species_record_type_generation.SMS_from_record
                  ~recursive_methods_status:
                    Species_record_type_generation.RMS_regular
-                 ~toplevel: true ~is_rec !accu_env binding)
+                 ~toplevel: true ~is_rec ~gen_vars_in_scope: [] !accu_env
+                 binding)
            next_bnds;
          !accu_env) in
   Format.fprintf out_fmter "@]";
@@ -252,7 +253,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         ctx ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_generation.SMS_from_record
         ~recursive_methods_status: Species_record_type_generation.RMS_regular
-        env expr;
+        ~gen_vars_in_scope: [] env expr ;
       Format.fprintf out_fmter ").@]@\n@\n";
       (* Nothing to extend the environment. *)
       env

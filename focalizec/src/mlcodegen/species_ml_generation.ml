@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.100 2009-09-03 12:09:32 doligez Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.101 2012-02-08 16:35:30 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -442,7 +442,7 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
        structure... *)
     let (params_with_type, _, _) =
       MiscHelpers.bind_parameters_to_types_from_type_scheme
-        ~self_manifest scheme params in
+        ~self_manifest ~gen_vars_in_scope: [] scheme params in
     (* We are printing each parameter's type. These types in fact belong to a
        same type scheme. Hence, they may share variables together.
        For this reason, we first purge the printing variable mapping and after,

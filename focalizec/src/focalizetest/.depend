@@ -2,8 +2,8 @@ context_test.cmi: own_expr.cmi
 debug.cmi: ../basement/parsetree.cmi 
 expr_prolog.cmi: own_types.cmi own_expr.cmi 
 foc_predef.cmi: own_expr.cmi 
-focalize_inter.cmi: own_types.cmi own_prop.cmi own_expr.cmi own_basics.cmi \
-    expr_prolog.cmi 
+focalize_inter.cmi: ../basement/parsetree.cmi own_types.cmi own_prop.cmi \
+    own_expr.cmi own_basics.cmi expr_prolog.cmi 
 fresh_variable.cmi: 
 lexer.cmi: own_parser.cmi 
 own_basics.cmi: 
@@ -47,12 +47,12 @@ foc_predef.cmo: whattodo2.cmi whattodo.cmi useful_parsing.cmi print_xml.cmi \
 foc_predef.cmx: whattodo2.cmx whattodo.cmx useful_parsing.cmx print_xml.cmx \
     ../parser/parser.cmx own_types.cmx own_expr.cmx own_basics.cmx lexer.cmx \
     focalize_inter.cmx context_test.cmx foc_predef.cmi 
-focalize_inter.cmo: ../basement/types.cmi to_strings.cmi \
+focalize_inter.cmo: whattodo.cmi ../basement/types.cmi to_strings.cmi \
     ../basement/parsetree_utils.cmi ../basement/parsetree.cmi own_types.cmi \
     own_prop.cmi own_expr.cmi own_basics.cmi ../basement/location.cmi \
     ../basement/installation.cmo ../basement/files.cmi ../typing/env.cmi \
     focalize_inter.cmi 
-focalize_inter.cmx: ../basement/types.cmx to_strings.cmx \
+focalize_inter.cmx: whattodo.cmx ../basement/types.cmx to_strings.cmx \
     ../basement/parsetree_utils.cmx ../basement/parsetree.cmi own_types.cmx \
     own_prop.cmx own_expr.cmx own_basics.cmx ../basement/location.cmx \
     ../basement/installation.cmx ../basement/files.cmx ../typing/env.cmx \
@@ -105,14 +105,14 @@ rewrite_prop.cmx: to_strings.cmx own_types.cmx own_prop.cmx own_expr.cmx \
     rewrite_prop.cmi 
 run.cmo: whattodo2.cmi whattodo.cmi useful_parsing.cmi to_strings.cmi \
     test_prop.cmi species_harness.cmi rewrite_prop.cmi print_xml.cmi \
-    print_foc.cmi print_fml.cmi own_xml.cmi own_prop.cmi own_parser.cmi \
-    own_expr.cmi own_basics.cmi lexer.cmi focalize_inter.cmi foc_predef.cmi \
-    context_test.cmi run.cmi 
+    print_foc.cmi print_fml.cmi own_xml.cmi own_types.cmi own_prop.cmi \
+    own_parser.cmi own_expr.cmi own_basics.cmi lexer.cmi focalize_inter.cmi \
+    foc_predef.cmi context_test.cmi run.cmi 
 run.cmx: whattodo2.cmx whattodo.cmx useful_parsing.cmx to_strings.cmx \
     test_prop.cmx species_harness.cmx rewrite_prop.cmx print_xml.cmx \
-    print_foc.cmx print_fml.cmx own_xml.cmx own_prop.cmx own_parser.cmx \
-    own_expr.cmx own_basics.cmx lexer.cmx focalize_inter.cmx foc_predef.cmx \
-    context_test.cmx run.cmi 
+    print_foc.cmx print_fml.cmx own_xml.cmx own_types.cmx own_prop.cmx \
+    own_parser.cmx own_expr.cmx own_basics.cmx lexer.cmx focalize_inter.cmx \
+    foc_predef.cmx context_test.cmx run.cmi 
 species_harness.cmo: whattodo.cmi random_rep.cmi own_types.cmi own_expr.cmi \
     own_basics.cmi fresh_variable.cmi focalize_inter.cmi expr_prolog.cmi \
     context_test.cmi species_harness.cmi 

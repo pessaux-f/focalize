@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.19 2012-01-30 13:21:25 pessaux Exp $ *)
+(* $Id: recursion.ml,v 1.20 2012-02-08 16:35:29 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -129,7 +129,8 @@ let rec list_recursive_calls function_name argument_list bindings expr =
        (* We do not have anymore information about "Self"'s structure... *)
        let (names_with_types, _, _) =
          MiscHelpers.bind_parameters_to_types_from_type_scheme
-           ~self_manifest: None (Some fake_scheme) names in
+           ~self_manifest: None ~gen_vars_in_scope: [] (Some fake_scheme)
+           names in
        (* Just remove the option that must always be Some since we provided
           a scheme. *)
        let names_with_types =

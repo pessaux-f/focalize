@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.22 2011-05-04 09:22:47 maarek Exp $ *)
+(* $Id: handy.ml,v 1.23 2012-02-08 16:35:29 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -368,15 +368,34 @@ let list_first_index predicate l =
 
 
 
-(* ******************************************************************** *)
-(* ('a option) list-> 'a list                                           *)
-(** {b Descr} : Trnsforms a list of optional values to a list of values
-       only keeping the data carried by elements of the form Some (...).
-       In the result list, elements are in the same order that in the
-       list of options.
+(** ****************************************************************************
+    {b Descr}: Drops the [num] first elements of the list [l] and returns the
+      list containing the remaining elements in the same order they appear in
+      [l].
+      If the requested number of elements is <= 0 then the initial list is
+      returned. If [l] doens't have enough elements, then the exception
+      [Not_found] is raised.
 
-    {b Rem} : Exported outside this module.                             *)
-(* ******************************************************************** *)
+    {b Visibility}: Exported outside this module.
+ **************************************************************************** *)
+let rec list_drop l num =
+  if num <= 0 then l
+  else
+    match l with
+    | [] -> raise Not_found
+    | _ :: q -> list_drop q (num - 1)
+;;
+
+
+
+(** ****************************************************************************
+    {b Descr}: Transforms a list of optional values to a list of values only
+      keeping the data carried by elements of the form Some (...).
+      In the result list, elements are in the same order that in the list of
+      options.
+
+    {b Visibility}: Exported outside this module.
+ **************************************************************************** *)
 let rec option_list_to_list = function
   | [] -> []
   | h :: q ->

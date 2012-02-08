@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.42 2011-05-27 17:06:26 weis Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.43 2012-02-08 16:35:30 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -380,12 +380,12 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
      structure... *)
   let (params_with_type, _, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
-      ~self_manifest: None opt_sch params_names in
+      ~self_manifest: None ~gen_vars_in_scope: [] opt_sch params_names in
   (* We are printing each parameter's type. These types in fact belong to a
      same type scheme. Hence, they may share variables together.
      For this reason, we first purge the printing variable mapping and after,
      activate its persistence between each parameter printing. *)
-  Types.purge_type_simple_to_ml_variable_mapping ();
+  Types.purge_type_simple_to_ml_variable_mapping () ;
   List.iter
     (fun (param_vname, pot_param_ty) ->
       match pot_param_ty with
@@ -400,12 +400,12 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
        | None ->
            Format.fprintf out_fmter "@ %a"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname)
-    params_with_type;
+    params_with_type ;
   (* Now we don't need anymore the sharing. Hence, clean it. This should not
      be useful because the other guys usign printing should manage this
      themselves (as we did just above by cleaning before activating the
      sharing), but anyway, it is safer an not costly. So... *)
-  Types.purge_type_simple_to_ml_variable_mapping ();
+  Types.purge_type_simple_to_ml_variable_mapping () ;
   (* Output now the "=" sign ending the OCaml function's "header".
      With a NON-breakable space before to prevent uggly hyphenation ! *)
   Format.fprintf out_fmter " =@ ";

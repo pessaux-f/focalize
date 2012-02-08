@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.5 2012-02-08 16:35:30 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -73,3 +73,6 @@ uninstall:
 
 clean:
 	$(RM) $(EXE_NAME).byt $(EXE_NAME).bin $(EXE_NAME)
+
+depend-local:
+	$(CAML_DEP) *.mli *.ml > ./.depend

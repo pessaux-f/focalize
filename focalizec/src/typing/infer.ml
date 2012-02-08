@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.197 2011-06-14 12:38:47 weis Exp $ *)
+(* $Id: infer.ml,v 1.198 2012-02-08 16:35:30 pessaux Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -1875,7 +1875,8 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
        that they have the rigth type is specified. *)
     let (expected, _, _) =
       MiscHelpers.bind_parameters_to_types_from_type_scheme
-        ~self_manifest: ctx.self_manifest (Some scheme) args_names in
+        ~self_manifest: ctx.self_manifest ~gen_vars_in_scope: [] (Some scheme)
+        args_names in
     List.iter
       (fun (prof_param, prof_opt_ty) ->
         try

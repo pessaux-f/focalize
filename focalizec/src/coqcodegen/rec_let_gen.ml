@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.20 2010-02-11 16:47:40 doligez Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.21 2012-02-08 16:35:29 pessaux Exp $ *)
 
 let is_recursive_call ctx ~local_idents recursive_name expr_ident =
   match expr_ident.Parsetree.ast_desc with
@@ -242,7 +242,7 @@ let generate_binding_match ctx print_ctx env expr pattern =
     ctx ~in_recursive_let_section_of: [] ~local_idents
     ~self_methods_status: Species_record_type_generation.SMS_abstracted
     ~recursive_methods_status: Species_record_type_generation.RMS_regular
-    env expr
+    ~gen_vars_in_scope: [] env expr
 ;;
 
 
@@ -273,13 +273,14 @@ let generate_binding_let ctx print_ctx env binding =
       (* We do not have anymore information about "Self"'s structure... *)
       let (params_with_type, _, generalized_instanciated_vars) =
         MiscHelpers.bind_parameters_to_types_from_type_scheme
-          ~self_manifest: None (Some def_scheme) params_names in
+          ~self_manifest: None ~gen_vars_in_scope: [] (Some def_scheme)
+          params_names in
       Types.purge_type_simple_to_coq_variable_mapping () ;
       Format.fprintf out_fmter "(@[<1>" ;
       (* If the original scheme is polymorphic, then we must ad extra Coq
          parameters of type "Set" for each of the generalized variables. *)
       List.iter
-        (fun var ->
+        (fun (_, var) ->
            Format.fprintf out_fmter "fun (%a : Set) =>@ "
             (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
             var)
@@ -310,13 +311,13 @@ let generate_binding_let ctx print_ctx env binding =
          ctx ~in_recursive_let_section_of: [] ~local_idents
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_generation.RMS_regular
-         env e
+         ~gen_vars_in_scope: [] env e
    | Parsetree.BB_logical p ->
        Species_record_type_generation.generate_logical_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_generation.RMS_regular
-         env p) ;
+         ~gen_vars_in_scope: [] env p) ;
   (* If there were parameters, we must close a parenthesis. *)
   if binding_desc.Parsetree.b_params <> [] then
     Format.fprintf out_fmter "@]"
@@ -407,7 +408,7 @@ let generate_exprs_as_tuple ctx env exprs =
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_generation.RMS_regular
-     env one
+         ~gen_vars_in_scope: [] env one
    | _ ->
        let fake_tuple_desc = Parsetree.E_tuple exprs in
        let fake_tuple = {
@@ -415,11 +416,11 @@ let generate_exprs_as_tuple ctx env exprs =
          Parsetree.ast_desc = fake_tuple_desc ;
          Parsetree.ast_annot = [] ;
          Parsetree.ast_type = Parsetree.ANTI_irrelevant } in
-           Species_record_type_generation.generate_expr
+       Species_record_type_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_generation.RMS_regular
-         env fake_tuple
+         ~gen_vars_in_scope: [] env fake_tuple
 ;;
 
 
@@ -478,7 +479,7 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
                   Species_record_type_generation.SMS_abstracted
                 ~recursive_methods_status:
                   Species_record_type_generation.RMS_regular
-                env expr ;
+                ~gen_vars_in_scope: [] env expr ;
               Format.fprintf out_fmter "@]) ->@ ")
         bindings ;
       (* Now, generate the expression that telling the decreasing applying

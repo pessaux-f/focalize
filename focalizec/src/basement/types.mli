@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.48 2010-02-11 16:47:40 doligez Exp $ *)
+(* $Id: types.mli,v 1.49 2012-02-08 16:35:29 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string;;
@@ -21,8 +21,9 @@ type collection_name = string;;
 type type_name;;
 
 (** The type algebra for focalize. *)
-type type_simple;;
-type type_scheme;;
+type type_variable ;;
+type type_simple ;;
+type type_scheme ;;
 
 type type_collection = (fname * collection_name);;
 
@@ -84,8 +85,9 @@ a (closed) type scheme from a type without unknowns. *)
 val specialize : type_scheme -> type_simple;;
 val specialize_with_args : type_scheme -> type_simple list -> type_simple;;
 val specialize_n_show_instanciated_generalized_vars :
-  type_scheme -> (type_simple * (type_simple list));;
-val generalize : type_simple -> type_scheme;;
+  gen_vars_in_scope: (type_variable * type_simple) list -> type_scheme ->
+    (type_simple * ((type_variable * type_simple) list)) ;;
+val generalize : type_simple -> type_scheme ;;
 val build_type_def_scheme :
     variables: type_simple list -> body: type_simple -> type_scheme;;
 val trivial_scheme : type_simple -> type_scheme;;

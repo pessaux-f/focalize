@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.mli,v 1.23 2011-05-04 09:22:47 maarek Exp $ *)
+(* $Id: handy.mli,v 1.24 2012-02-08 16:35:29 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -74,6 +74,8 @@ val list_mem_n_remove : 'a -> 'a list -> 'a list
 val merge_uniq_list : 'a list -> 'a list -> 'a list
 
 val list_first_index : ('a -> bool) -> 'a list -> int
+
+val list_drop : 'a list -> int -> 'a list
 
 val option_list_to_list : ('a option) list -> 'a list
 

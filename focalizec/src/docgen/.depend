@@ -1,8 +1,6 @@
 env_docgen.cmi: ../basement/parsetree.cmi 
 main_docgen.cmi: ../basement/parsetree.cmi ../typing/infer.cmi 
 utils_docgen.cmi: ../basement/parsetree.cmi 
-doc_lexer.cmo: 
-doc_lexer.cmx: 
 env_docgen.cmo: ../basement/parsetree.cmi env_docgen.cmi 
 env_docgen.cmx: ../basement/parsetree.cmi env_docgen.cmi 
 main_docgen.cmo: utils_docgen.cmi ../basement/types.cmi \
@@ -14,6 +12,6 @@ main_docgen.cmx: utils_docgen.cmx ../basement/types.cmx \
     ../basement/miscHelpers.cmx ../typing/infer.cmx env_docgen.cmx \
     ../typing/env.cmx main_docgen.cmi 
 utils_docgen.cmo: ../basement/parsetree.cmi ../basement/handy.cmi \
-    doc_lexer.cmo utils_docgen.cmi 
+    utils_docgen.cmi 
 utils_docgen.cmx: ../basement/parsetree.cmi ../basement/handy.cmx \
-    doc_lexer.cmx utils_docgen.cmi 
+    utils_docgen.cmi 

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.38 2011-05-26 16:08:09 maarek Exp $ *)
+(* $Id: main_docgen.ml,v 1.39 2012-02-08 16:35:30 pessaux Exp $ *)
 
 
 
@@ -542,7 +542,7 @@ let gen_doc_logical_let out_fmt env from_opt name pnames sch body_as_prop doc =
   (* foc:param-prop*. *)
   let (params_with_type, _, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
-      ~self_manifest: None (Some sch) pnames in
+      ~self_manifest: None ~gen_vars_in_scope: [] (Some sch) pnames in
   List.iter
     (fun (p_name, p_ty_opt) ->
       (* foc:param-prop. *)
@@ -843,9 +843,10 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
      identity scheme to force later their usage for the specialization of
      each sum constructor or record fields. Hence, the sharing of these
      varibles between all these types will be preserved. *)
-  let (ty_identity, ty_param_vars) =
+  let (ty_identity, ty_param_vars_mapping) =
     Types.specialize_n_show_instanciated_generalized_vars
-      ty_descrip.Env.TypeInformation.type_identity in
+      ~gen_vars_in_scope: [] ty_descrip.Env.TypeInformation.type_identity in
+  let ty_param_vars = List.map snd ty_param_vars_mapping in
   (* foc:concrete-type. *)
   Format.fprintf out_fmt "@[<h 2><foc:concrete-type>@\n";
   (* foc:foc-name. *)

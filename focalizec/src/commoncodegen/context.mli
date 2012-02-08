@@ -13,23 +13,27 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: context.mli,v 1.9 2008-11-29 23:41:13 weis Exp $ *)
+(* $Id: context.mli,v 1.10 2012-02-08 16:35:29 pessaux Exp $ *)
 
 
+(* ************************************************************************** *)
+(** {b Descr} : Data structure to record the various stuff needed to generate
+      the Caml/Coq code for a species definition. Passing this structure
+      prevents from recursively passing a bunch of parameters to the functions.
+      Instead, one pass only one and functions use the fields they need. This
+      is mostly to preserve the stack and to make the code more readable. In
+      fact, information recorded in this structure is semantically pretty
+      un-interesting to understand the compilation process: it is
+      more utilities.
 
-(* ********************************************************************* *)
-(** {b Descr} : Data structure to record the various stuff needed to
-          generate the Caml/Coq code for a species definition. Passing
-          this structure prevents from recursively passing a bunch of
-          parameters to the functions. Instead, one pass only one and
-          functions use the fields they need. This is mostly to preserve
-          the stack and to make the code more readable. In fact,
-          information recorded in this structure is semantically pretty
-          un-interesting to understand the compilation process: it is
-          more utilities.
+    {b Attention}: This structure is intended to be built once in the
+      [toplevel_compile] function and never modified or updated during code
+      generation recursions. Hence, please do not change this assumption since
+      nobody pass a modified context to a recursive call. Please, keep the
+      usage of this structure simple this way.
 
-    {b Rem} Not exported outside this module.                            *)
-(* ********************************************************************* *)
+    {b Visibility} Not exported outside this module.                          *)
+(* ************************************************************************** *)
 type species_compil_context = {
   (** The name of the currently analysed compilation unit. *)
   scc_current_unit : Types.fname ;

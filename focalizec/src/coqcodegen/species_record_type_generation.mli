@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.23 2010-02-11 16:47:40 doligez Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.24 2012-02-08 16:35:29 pessaux Exp $ *)
 
 
 type self_methods_status =
@@ -48,31 +48,34 @@ val generate_pattern :
 
 val generate_expr :
   Context.species_compil_context ->
-    in_recursive_let_section_of: Parsetree.vname list ->
-      local_idents: Parsetree.vname list ->
-        self_methods_status: self_methods_status ->
-          recursive_methods_status: recursive_methods_status ->
-            Env.CoqGenEnv.t ->
-              Parsetree.expr -> unit
+  in_recursive_let_section_of: Parsetree.vname list ->
+  local_idents: Parsetree.vname list ->
+  self_methods_status: self_methods_status ->
+  recursive_methods_status: recursive_methods_status ->
+  gen_vars_in_scope: (Types.type_variable * Types.type_simple) list ->
+  Env.CoqGenEnv.t -> Parsetree.expr ->
+    unit
 
 val generate_logical_expr :
   Context.species_compil_context ->
-    in_recursive_let_section_of: Parsetree.vname list ->
-      local_idents: Parsetree.vname list ->
-        self_methods_status: self_methods_status ->
-          recursive_methods_status: recursive_methods_status ->
-            Env.CoqGenEnv.t ->
-              Parsetree.logical_expr -> unit
+  in_recursive_let_section_of: Parsetree.vname list ->
+  local_idents: Parsetree.vname list ->
+  self_methods_status: self_methods_status ->
+  recursive_methods_status: recursive_methods_status ->
+  gen_vars_in_scope: (Types.type_variable * Types.type_simple) list ->
+  Env.CoqGenEnv.t -> Parsetree.logical_expr ->
+    unit
 
 val let_in_binding_compile :
   Context.species_compil_context ->
-    in_recursive_let_section_of: Parsetree.vname list ->
-      local_idents: Parsetree.vname list ->
-        self_methods_status: self_methods_status ->
-          recursive_methods_status: recursive_methods_status ->
-            is_rec: bool ->
-              toplevel: bool -> Env.CoqGenEnv.t -> Parsetree.binding ->
-                Env.CoqGenEnv.t
+  in_recursive_let_section_of: Parsetree.vname list ->
+  local_idents: Parsetree.vname list ->
+  self_methods_status: self_methods_status ->
+  recursive_methods_status: recursive_methods_status ->
+  is_rec: bool -> toplevel: bool ->
+  gen_vars_in_scope: (Types.type_variable * Types.type_simple) list ->
+  Env.CoqGenEnv.t -> Parsetree.binding ->
+    Env.CoqGenEnv.t
 
 val generate_record_type :
   Context.species_compil_context ->
