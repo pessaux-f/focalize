@@ -13,20 +13,15 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.45 2012-01-30 13:21:25 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.46 2012-02-09 17:04:34 pessaux Exp $ *)
 
 exception No_input_file;;
 
-type configuration = {
-  focalize_version_number : int * int * int;
-  version_date : string;
-}
-;;
 
 let focalize_version_number = (0, 7, 0)
 ;;
 
-let version_date = "$Date: 2012-01-30 13:21:25 $"
+let version_date = "$Date: 2012-02-09 17:04:34 $"
 ;;
 
 let focalize_short_version =
