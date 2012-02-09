@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2012-02-08 16:35:30 pessaux Exp $
+# $Id: Makefile,v 1.6 2012-02-09 17:27:20 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -31,6 +31,7 @@ LOCAL_BYT_OBJS=\
  to_prolog.cmo species_harness.cmo test_prop.cmo run.cmo
 
 BYT_OBJS =\
+ ../basement/build_stamp.cmo\
  ../basement/installation.cmo\
  ../basement/configuration.cmo\
  ../basement/files.cmo\

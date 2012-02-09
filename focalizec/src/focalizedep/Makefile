@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2011-05-27 14:31:53 weis Exp $
+# $Id: Makefile,v 1.10 2012-02-09 17:27:20 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -24,6 +24,7 @@ LOCAL_BYT_OBJS=\
  directive_lexer.cmo make_depend.cmo
 
 BYT_OBJS=\
+ ../basement/build_stamp.cmo\
  ../basement/installation.cmo\
  ../basement/configuration.cmo\
  ../basement/files.cmo\

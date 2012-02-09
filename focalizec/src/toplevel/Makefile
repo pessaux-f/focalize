@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.60 2011-06-14 15:04:53 weis Exp $
+# $Id: Makefile,v 1.61 2012-02-09 17:27:20 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -32,6 +32,7 @@ CAML_INCLUDES =\
 LOCAL_BYT_OBJS=focalizec.cmo exc_wrapper.cmo
 
 BYT_OBJS =\
+ ../basement/build_stamp.cmo\
  ../basement/installation.cmo\
  ../basement/configuration.cmo\
  ../basement/handy.cmo\

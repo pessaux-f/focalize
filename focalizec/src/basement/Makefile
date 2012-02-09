@@ -12,14 +12,14 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.19 2011-05-27 14:31:53 weis Exp $
+# $Id: Makefile,v 1.20 2012-02-09 17:27:20 pessaux Exp $
 
 ROOT_DIR=../..
 
 include $(ROOT_DIR)/Makefile.config
 
 BYT_OBJS=\
- installation.cmo configuration.cmo handy.cmo\
+ build_stamp.cmo installation.cmo configuration.cmo handy.cmo\
  location.cmo types.cmo\
  files.cmo parsetree_utils.cmo miscHelpers.cmo
 
@@ -32,3 +32,10 @@ installation.ml:
 	@if test ! -L $@ ; then\
 	   echo "Please, run configure first.";\
 	fi
+
+build_stamp.ml: .FORCE
+
+.PHONY: .FORCE
+
+.FORCE:
+	echo "let build_stamp = \"" `date` "\" ;;" > build_stamp.ml

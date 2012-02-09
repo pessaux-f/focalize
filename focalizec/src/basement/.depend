@@ -5,10 +5,12 @@ types.cmi: location.cmi
 files.cmi: types.cmi 
 parsetree_utils.cmi: types.cmi parsetree.cmi 
 miscHelpers.cmi: types.cmi parsetree.cmi 
+build_stamp.cmo: 
+build_stamp.cmx: 
 installation.cmo: 
 installation.cmx: 
-configuration.cmo: installation.cmo configuration.cmi 
-configuration.cmx: installation.cmx configuration.cmi 
+configuration.cmo: installation.cmo build_stamp.cmo configuration.cmi 
+configuration.cmx: installation.cmx build_stamp.cmx configuration.cmi 
 handy.cmo: configuration.cmi handy.cmi 
 handy.cmx: configuration.cmx handy.cmi 
 location.cmo: location.cmi 
