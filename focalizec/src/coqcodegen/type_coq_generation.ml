@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.17 2011-05-27 17:06:26 weis Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.18 2012-02-10 11:00:14 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -130,7 +130,6 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
   let instanciated_body =
     Types.specialize_with_args
       type_descr.Env.TypeInformation.type_identity type_def_params in
-  Types.purge_type_simple_to_coq_variable_mapping ();
   (* Compute the number of extra polymorphic-induced *)
   (* arguments to the constructor.                   *)
   let nb_extra_args = List.length type_def_params in

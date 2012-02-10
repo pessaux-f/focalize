@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.188 2012-02-08 16:35:29 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.189 2012-02-10 11:00:14 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -526,7 +526,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter "@[<2>Variable %s%a :@ %a.@]@\n"
                    prefix Parsetree_utils.pp_vname_with_operators_expanded meth
                    (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: false)
+                      new_print_ctx ~reuse_mapping: true)
                    meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
@@ -567,7 +567,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter "@ (%s%a :@ %a)"
                    prefix Parsetree_utils.pp_vname_with_operators_expanded meth
                    (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: false)
+                      new_print_ctx ~reuse_mapping: true)
                    meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
@@ -618,12 +618,12 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                if in_section then
                  Format.fprintf out_fmter "Let abst_T := %a.@\n"
                    (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: false)
+                      new_print_ctx ~reuse_mapping: true)
                    ty
                else
                  Format.fprintf out_fmter "@ (abst_T := %a)"
                    (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: false)
+                      new_print_ctx ~reuse_mapping: true)
                    ty;
                (* Anything defined is not abstracted. *)
                []
@@ -659,13 +659,13 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter "@[<2>Variable abst_%a : %a.@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded n
                    (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: false)
+                      new_print_ctx ~reuse_mapping: true)
                    ty
                else
                  Format.fprintf out_fmter "@ (abst_%a : %a)"
                    Parsetree_utils.pp_vname_with_operators_expanded n
                    (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: false)
+                      new_print_ctx ~reuse_mapping: true)
                    ty;
                [n]
            | MinEnv.MCEE_Declared_logical (n, b) ->
@@ -720,11 +720,6 @@ let generate_defined_non_recursive_method_postlude ctx print_ctx env
             always be returned a type, i.e, something [Some ...].  *)
          assert false
      | Some t -> t) in
-  (* We are printing each parameter's type. These types in fact belong to a
-     same type scheme. Hence, they may share variables together.
-     For this reason, we first purge the printing variable mapping and after,
-     activate its persistence between each parameter printing. *)
-  Types.purge_type_simple_to_coq_variable_mapping ();
   List.iter
     (fun (param_vname, opt_param_ty) ->
       match opt_param_ty with
@@ -740,12 +735,7 @@ let generate_defined_non_recursive_method_postlude ctx print_ctx env
   (* Now, we print the ending type of the method. *)
   Format.fprintf out_fmter " :@ %a "
     (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-    ending_ty;
-  (* Now we don't need anymore the sharing. Hence, clean it. This should not
-     be useful because the other guys usign printing should manage this
-     themselves (as we did just above by cleaning before activating the
-     sharing), but anyway, it is safer an not costly. So... *)
-  Types.purge_type_simple_to_coq_variable_mapping ();
+    ending_ty ;
   (* Generates the body's code of the method if some is provided.
      No local idents in the context because we just enter the scope of a species
      fields and so we are not under a core expression. Since we are generating
@@ -2662,7 +2652,6 @@ let generate_termination_order_With_Function ctx print_ctx env name
       sorted_deps_from_params generated_fields in
   (* The 2 arguments of any decent order (i.e. the compared values). *)
   Format.fprintf out_fmter "@ (__x __y :@ ";
-  Types.purge_type_simple_to_coq_variable_mapping ();
   (* Print the tuple that is the method's arguments' types. *)
   Format.fprintf out_fmter "%a) :@ Prop :=@ "
     (print_types_as_tuple_if_several print_ctx) fun_params_n_tys;
@@ -2957,13 +2946,11 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        Format.fprintf out_fmter
          "@\n@\n(* Abstracted termination order. *)@\n";
        Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ ";
-       Types.purge_type_simple_to_coq_variable_mapping ();
        (* Print the tuple that is the method's arguments' types. *)
        Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
          (print_types_as_tuple_if_several new_print_ctx) params_with_type
          (print_types_as_tuple_if_several new_print_ctx) params_with_type;
        (* We now prove that this order is well-founded. *)
-       Types.purge_type_simple_to_coq_variable_mapping ();
        (* The Variable representing the termination proof obligation... *)
        Format.fprintf out_fmter
          "@[<2>Variable __term_obl :";
@@ -3135,11 +3122,6 @@ let generate_defined_recursive_let_definition ctx print_ctx env
            ~in_section: false ctx' print_ctx env ai.Abstractions.ai_min_coq_env
            ai.Abstractions.ai_used_species_parameter_tys
            ai.Abstractions.ai_dependencies_from_params generated_fields in
-       (* We are printing each parameter's type. These types in fact belong to
-          a same type scheme. Hence, they may share variables together.
-          For this reason, we first purge the printing variable mapping and
-          after, activate its persistence between each parameter printing. *)
-       Types.purge_type_simple_to_coq_variable_mapping ();
        List.iter
          (fun (param_vname, param_ty) ->
             Format.fprintf out_fmter "@ (%a : %a)"
@@ -3159,12 +3141,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
        (* Now, we print the ending type of the method. *)
        Format.fprintf out_fmter " :@ %a@ "
          (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
-         return_ty;
-       (* Now we don't need anymore the sharing. Hence, clean it. This should
-          not be useful because the other guys using printing should manage
-          this themselves (as we did just above by cleaning before activating
-          the sharing), but anyway, it is safer an not costly. So... *)
-       Types.purge_type_simple_to_coq_variable_mapping ();
+         return_ty ;
        (* The ":=" token before the function's body. *)
        Format.fprintf out_fmter ":=@ ";
        (* Now, generate the body of the function.

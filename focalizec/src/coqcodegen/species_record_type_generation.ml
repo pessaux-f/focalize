@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.88 2012-02-08 16:35:29 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.89 2012-02-10 11:00:14 pessaux Exp $ *)
 
 
 
@@ -595,11 +595,6 @@ let rec let_in_binding_compile ctx ~in_recursive_let_section_of
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
-  (* We are printing each parameter's type. These types in fact belong to a
-     same type scheme. Hence, they may share variables together.
-     For this reason, we first purge the printing variable mapping and after,
-     activate its persistence between each parameter printing. *)
-  Types.purge_type_simple_to_coq_variable_mapping () ;
   (* If the original scheme is polymorphic, then we must add extra Coq
      parameters of type "Set" for each of the generalized variables. Hence,
      printing the variables used to instanciate the polymorphic ones in front
@@ -669,11 +664,6 @@ let rec let_in_binding_compile ctx ~in_recursive_let_section_of
        Format.fprintf out_fmter "@ :@ %a"
          (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
          t) ;
-  (* Now we don't need anymore the sharing. Hence, clean it. This should not
-     be useful because the other guys usign printing should manage this
-     themselves (as we did just above by cleaning before activating the
-     sharing), but anyway, it is safer an not costly. So... *)
-  Types.purge_type_simple_to_coq_variable_mapping () ;
   (* Output now the ":=" sign ending the Coq function's "header".
      With a NON-breakable space before to prevent uggly hyphenation ! *)
   Format.fprintf out_fmter " :=@ " ;
@@ -801,7 +791,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                 Format.fprintf out_fmter "(%a :@ %a)@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
                   (Types.pp_type_simple_to_coq
-                     print_ctx ~reuse_mapping: false)
+                     print_ctx ~reuse_mapping: true)
                   arg_ty ;
                 (* Return the remainder of the type to continue. *)
                 res_ty)
@@ -996,8 +986,6 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
              ~gen_vars_in_scope scheme in
          (* The header... *)
          Format.fprintf out_fmter "@[<2>";
-         (* IMHO : not really useful, but... doesn't hurt... *)
-         Types.purge_type_simple_to_coq_variable_mapping () ;
          (* Now, print the polymorphic extra args. We use the same trick than
             in [let_in_binding_compile]. Consult comment over there... *)
          List.iter
@@ -1032,8 +1020,6 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
                        print_ctx ~reuse_mapping: true) ty)
                 vnames
           | _ -> assert false) ;
-         (* IMHO : not really useful, but... doesn't hurt... *)
-         Types.purge_type_simple_to_coq_variable_mapping () ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
          let loc_idents' = vnames @ loc_idents in
          (* Add the bound variable in the environment. ATTENTION: inside the
@@ -1380,7 +1366,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
           (* Field is prefixed by the species name for sake of unicity. *)
           Format.fprintf out_fmter "@[<2>rf_%a : %a"
             Parsetree_utils.pp_vname_with_operators_expanded n
-            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty ;
+            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty ;
           if semi then Format.fprintf out_fmter " ;" ;
           Format.fprintf out_fmter "@]@\n"
           end)
@@ -1394,7 +1380,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
             (* Field is prefixed by the species name for sake of unicity. *)
             Format.fprintf out_fmter "@[<2>rf_%a : %a"
               Parsetree_utils.pp_vname_with_operators_expanded n
-              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
+              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
               ty ;
             if semi then Format.fprintf out_fmter " ;" ;
             Format.fprintf out_fmter "@]@\n")

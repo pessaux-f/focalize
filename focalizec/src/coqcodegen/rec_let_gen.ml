@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.21 2012-02-08 16:35:29 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.22 2012-02-10 11:00:14 pessaux Exp $ *)
 
 let is_recursive_call ctx ~local_idents recursive_name expr_ident =
   match expr_ident.Parsetree.ast_desc with
@@ -275,7 +275,6 @@ let generate_binding_let ctx print_ctx env binding =
         MiscHelpers.bind_parameters_to_types_from_type_scheme
           ~self_manifest: None ~gen_vars_in_scope: [] (Some def_scheme)
           params_names in
-      Types.purge_type_simple_to_coq_variable_mapping () ;
       Format.fprintf out_fmter "(@[<1>" ;
       (* If the original scheme is polymorphic, then we must ad extra Coq
          parameters of type "Set" for each of the generalized variables. *)
@@ -351,7 +350,6 @@ let generate_variables_as_tuple out_fmter vars =
 
 
 let generate_variables_quantifications out_fmter print_ctx vars bindings =
-  Types.purge_type_simple_to_coq_variable_mapping () ;
   List.iter
     (fun (v, ty) ->
       Format.fprintf out_fmter "forall %a : %a,@ "
@@ -373,13 +371,12 @@ let generate_variables_quantifications out_fmter print_ctx vars bindings =
           Format.fprintf out_fmter "forall %a :@ %a,@ "
             Parsetree_utils.pp_vname_with_operators_expanded
             binding.Parsetree.ast_desc.Parsetree.b_name
-            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty
+            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty
           end)
       | Recursion.B_match (_, pattern) ->
           (begin
           let bound_vars =
             Parsetree_utils.get_local_idents_and_types_from_pattern pattern in
-          Types.purge_type_simple_to_coq_variable_mapping () ;
           (* Generate a forall for each bound variable. *)
           List.iter
             (fun (v, ty_info) ->

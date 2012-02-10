@@ -8,12 +8,12 @@ species_record_type_generation.cmi: ../basement/types.cmi \
     ../commoncodegen/abstractions.cmi 
 type_coq_generation.cmi: ../basement/parsetree.cmi ../basement/location.cmi \
     ../typing/env.cmi ../commoncodegen/context.cmi 
-main_coq_generation.cmo: type_coq_generation.cmi \
+main_coq_generation.cmo: ../basement/types.cmi type_coq_generation.cmi \
     species_record_type_generation.cmi species_coq_generation.cmi \
     ../basement/parsetree.cmi ../basement/location.cmi ../typing/infer.cmi \
     ../typing/env.cmi ../commoncodegen/context.cmi \
     ../basement/configuration.cmi 
-main_coq_generation.cmx: type_coq_generation.cmx \
+main_coq_generation.cmx: ../basement/types.cmx type_coq_generation.cmx \
     species_record_type_generation.cmx species_coq_generation.cmx \
     ../basement/parsetree.cmi ../basement/location.cmx ../typing/infer.cmx \
     ../typing/env.cmx ../commoncodegen/context.cmi \
