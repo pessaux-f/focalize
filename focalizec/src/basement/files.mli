@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: files.mli,v 1.10 2009-02-09 13:28:47 pessaux Exp $ *)
+(* $Id: files.mli,v 1.11 2012-02-10 17:07:29 pessaux Exp $ *)
 
 exception Cant_access_file_in_search_path of Types.fname
 exception Corrupted_fo of Types.fname
@@ -27,7 +27,7 @@ val fo_basename_from_module_name : string -> string
 
 type magic
 
-val fo_magic : magic;;
+val fo_magic : magic
 val check_magic : in_channel -> magic -> bool
 val write_magic : out_channel -> magic -> unit
 val get_file_name_suffix : string -> string
