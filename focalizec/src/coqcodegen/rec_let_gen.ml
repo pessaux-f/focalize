@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.22 2012-02-10 11:00:14 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.23 2012-02-10 13:02:24 pessaux Exp $ *)
 
 let is_recursive_call ctx ~local_idents recursive_name expr_ident =
   match expr_ident.Parsetree.ast_desc with
@@ -281,7 +281,7 @@ let generate_binding_let ctx print_ctx env binding =
       List.iter
         (fun (_, var) ->
            Format.fprintf out_fmter "fun (%a : Set) =>@ "
-            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
+            (Types.pp_type_simple_to_coq print_ctx)
             var)
         generalized_instanciated_vars ;
       (* Now, generate each of the real function's parameter with its type. *)
@@ -291,7 +291,7 @@ let generate_binding_let ctx print_ctx env binding =
            | Some param_ty ->
                Format.fprintf out_fmter "fun (%a : %a) =>@ "
                  Parsetree_utils.pp_vname_with_operators_expanded param_vname
-                 (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
+                 (Types.pp_type_simple_to_coq print_ctx)
                  param_ty
            | None ->
                (* Because we provided a type scheme to the function
@@ -354,7 +354,7 @@ let generate_variables_quantifications out_fmter print_ctx vars bindings =
     (fun (v, ty) ->
       Format.fprintf out_fmter "forall %a : %a,@ "
         Parsetree_utils.pp_vname_with_operators_expanded v
-        (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty)
+        (Types.pp_type_simple_to_coq print_ctx) ty)
     vars ;
   (* Now, quantify the variables bound in the bindings. *)
   List.iter
@@ -371,7 +371,7 @@ let generate_variables_quantifications out_fmter print_ctx vars bindings =
           Format.fprintf out_fmter "forall %a :@ %a,@ "
             Parsetree_utils.pp_vname_with_operators_expanded
             binding.Parsetree.ast_desc.Parsetree.b_name
-            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty
+            (Types.pp_type_simple_to_coq print_ctx) ty
           end)
       | Recursion.B_match (_, pattern) ->
           (begin
@@ -386,7 +386,7 @@ let generate_variables_quantifications out_fmter print_ctx vars bindings =
                  | _ -> assert false) in
               Format.fprintf out_fmter "forall %a :@ %a,@ "
                 Parsetree_utils.pp_vname_with_operators_expanded v
-                (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) t)
+                (Types.pp_type_simple_to_coq print_ctx) t)
             bound_vars
           end)
       | Recursion.B_condition (_, _) ->

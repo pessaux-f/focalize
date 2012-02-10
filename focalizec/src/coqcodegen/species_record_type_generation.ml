@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.89 2012-02-10 11:00:14 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.90 2012-02-10 13:02:25 pessaux Exp $ *)
 
 
 
@@ -605,9 +605,8 @@ let rec let_in_binding_compile ctx ~in_recursive_let_section_of
      the type variable of the function argument's type. *)
   List.iter
     (fun (_, var) ->
-       Format.fprintf out_fmter "@ (%a : Set)"
-        (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-        var)
+      Format.fprintf out_fmter "@ (%a : Set)"
+        (Types.pp_type_simple_to_coq print_ctx) var)
     generalized_instanciated_vars ;
   (* Record NOW in the environment the number of extra arguments due to
      polymorphism the current bound ident has in case of recursive definition.
@@ -631,8 +630,7 @@ let rec let_in_binding_compile ctx ~in_recursive_let_section_of
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-             param_ty
+             (Types.pp_type_simple_to_coq print_ctx) param_ty
        | None ->
            (* Because we provided a type scheme to the function
               [bind_parameters_to_types_from_type_scheme], MUST get one type
@@ -662,8 +660,8 @@ let rec let_in_binding_compile ctx ~in_recursive_let_section_of
        assert false
    | Some t ->
        Format.fprintf out_fmter "@ :@ %a"
-         (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-         t) ;
+         (Types.pp_type_simple_to_coq print_ctx) t
+  ) ;
   (* Output now the ":=" sign ending the Coq function's "header".
      With a NON-breakable space before to prevent uggly hyphenation ! *)
   Format.fprintf out_fmter " :=@ " ;
@@ -790,9 +788,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                   Types.extract_fun_ty_result ~self_manifest: None accu_ty in
                 Format.fprintf out_fmter "(%a :@ %a)@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
-                  (Types.pp_type_simple_to_coq
-                     print_ctx ~reuse_mapping: true)
-                  arg_ty ;
+                  (Types.pp_type_simple_to_coq print_ctx) arg_ty ;
                 (* Return the remainder of the type to continue. *)
                 res_ty)
               fun_ty
@@ -990,9 +986,8 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
             in [let_in_binding_compile]. Consult comment over there... *)
          List.iter
            (fun (_, var) ->
-              Format.fprintf out_fmter "forall %a : Set,@ "
-               (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-               var)
+             Format.fprintf out_fmter "forall %a : Set,@ "
+               (Types.pp_type_simple_to_coq print_ctx) var)
            generalized_instanciated_vars ;
          (* In Coq, we must write: "forall x y : Set, ..."
             but "exists x : Set, exists y : Set, ..." so just change the way
@@ -1008,7 +1003,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
                        (Parsetree_utils.vname_as_string_with_operators_expanded
                           vn)))
                 vnames
-                (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty
+                (Types.pp_type_simple_to_coq print_ctx) ty
           | Parsetree.Pr_exists (_, _, _) ->
               (* Now, print the real bound variables. *)
               List.iter
@@ -1016,8 +1011,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
                   Format.fprintf out_fmter "exists %s :@ %a,@ "
                     (Parsetree_utils.vname_as_string_with_operators_expanded
                        vn)
-                    (Types.pp_type_simple_to_coq
-                       print_ctx ~reuse_mapping: true) ty)
+                    (Types.pp_type_simple_to_coq print_ctx) ty)
                 vnames
           | _ -> assert false) ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
@@ -1263,7 +1257,7 @@ let species_parameters_names = ctx.Context.scc_species_parameters_names in
            | Parsetree_utils.DETK_computational ty ->
                Format.fprintf ppf "(%s : %a)@ "
                  llift_name
-                 (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
+                 (Types.pp_type_simple_to_coq print_ctx)
                  ty
            | Parsetree_utils.DETK_logical lexpr ->
                Format.fprintf ppf "(%s : " llift_name ;
@@ -1366,7 +1360,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
           (* Field is prefixed by the species name for sake of unicity. *)
           Format.fprintf out_fmter "@[<2>rf_%a : %a"
             Parsetree_utils.pp_vname_with_operators_expanded n
-            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty ;
+            (Types.pp_type_simple_to_coq print_ctx) ty ;
           if semi then Format.fprintf out_fmter " ;" ;
           Format.fprintf out_fmter "@]@\n"
           end)
@@ -1380,8 +1374,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
             (* Field is prefixed by the species name for sake of unicity. *)
             Format.fprintf out_fmter "@[<2>rf_%a : %a"
               Parsetree_utils.pp_vname_with_operators_expanded n
-              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-              ty ;
+              (Types.pp_type_simple_to_coq print_ctx) ty ;
             if semi then Format.fprintf out_fmter " ;" ;
             Format.fprintf out_fmter "@]@\n")
           l

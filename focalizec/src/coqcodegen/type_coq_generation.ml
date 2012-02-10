@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_coq_generation.ml,v 1.18 2012-02-10 11:00:14 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.19 2012-02-10 13:02:25 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -45,7 +45,7 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
   List.iter
     (fun ty ->
       Format.fprintf out_fmter "(%a : Set)@ "
-        (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty)
+        (Types.pp_type_simple_to_coq print_ctx) ty)
     tys
 ;;
 
@@ -146,8 +146,7 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
        (* of a species, hence never at toplevel, hence we don't need *)
        (* to add any bindind in the [collection_carrier_mapping].    *)
        Format.fprintf out_fmter ":=@ %a.@]@\n"
-         (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-         instanciated_body;
+         (Types.pp_type_simple_to_coq print_ctx) instanciated_body ;
        if record_in_env then
          (* Not an external type definition, so just add the type definition in
             the environment. *)
@@ -243,8 +242,7 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
            (* The type of the constructor. *)
            Format.fprintf out_fmter " :@ (@[<1>%a@])"
-             (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-             cstr_ty)
+             (Types.pp_type_simple_to_coq print_ctx) cstr_ty)
          sum_constructors_to_print;
        Format.fprintf out_fmter ".@]@\n@\n";
        if record_in_env then
@@ -314,17 +312,16 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
              if field_mut = Env.TypeInformation.FM_mutable then
                raise
                  (Mutable_record_fields_not_in_coq
-                    (type_descr.Env.TypeInformation.type_loc, field_name));
+                    (type_descr.Env.TypeInformation.type_loc, field_name)) ;
              Format.fprintf out_fmter "%a :@ %a"
                Parsetree_utils.pp_vname_with_operators_expanded field_name
-               (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-               field_ty;
-             if q <> [] then Format.fprintf out_fmter ";";
-             Format.fprintf out_fmter "@\n";
+               (Types.pp_type_simple_to_coq print_ctx) field_ty ;
+             if q <> [] then Format.fprintf out_fmter ";" ;
+             Format.fprintf out_fmter "@\n" ;
              local_print_fields q in
        (* Do the printing job... *)
-       local_print_fields record_fields_to_print;
-       Format.fprintf out_fmter " }.@]@\n ";
+       local_print_fields record_fields_to_print ;
+       Format.fprintf out_fmter " }.@]@\n " ;
        (* Not an external type definition, so just add the type definition in
           the environment. *)
        if record_in_env then

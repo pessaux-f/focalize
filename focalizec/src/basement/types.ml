@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.83 2012-02-08 16:35:29 pessaux Exp $ *)
+(* $Id: types.ml,v 1.84 2012-02-10 13:02:24 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -1467,7 +1467,7 @@ type coq_print_context = {
 
 
 
-let (pp_type_simple_to_coq, pp_type_simple_args_to_coq, pp_type_scheme_to_coq,
+let (pp_type_simple_to_coq, pp_type_simple_args_to_coq,
      purge_type_simple_to_coq_variable_mapping) =
   (* ************************************************************** *)
   (* ((type_simple * string) list) ref                              *)
@@ -1677,17 +1677,9 @@ let (pp_type_simple_to_coq, pp_type_simple_args_to_coq, pp_type_scheme_to_coq,
  (* ************************************************** *)
   (* Now, the real definition of the printing functions *)
   ((* pp_type_simple_to_coq *)
-   (fun ctx ~reuse_mapping ppf ty ->
-     (* Only reset the variable mapping if we were not told the opposite. *)
-     if not reuse_mapping then reset_type_variables_mapping_to_coq () ;
-    rec_pp_to_coq ctx 0 ppf ty),
+   (fun ctx ppf ty -> rec_pp_to_coq ctx 0 ppf ty),
    (* pp_type_simple_args_to_coq *)
    (fun ctx ppf ty n -> rec_pp_to_coq_args ctx ppf ty n),
-   (* pp_type_scheme_to_coq *)
-   (fun ctx ppf the_scheme ->
-     reset_type_variables_mapping_to_coq () ;
-     Format.fprintf ppf "%a"
-       (rec_pp_to_coq ctx 0) the_scheme.ts_body),
    (* purge_type_simple_to_coq_variable_mapping *)
    (fun () -> reset_type_variables_mapping_to_coq ())
   )

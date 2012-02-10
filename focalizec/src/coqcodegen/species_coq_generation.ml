@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.189 2012-02-10 11:00:14 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.190 2012-02-10 13:02:24 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -525,9 +525,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
              | Parsetree_utils.DETK_computational meth_ty ->
                  Format.fprintf out_fmter "@[<2>Variable %s%a :@ %a.@]@\n"
                    prefix Parsetree_utils.pp_vname_with_operators_expanded meth
-                   (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: true)
-                   meth_ty
+                   (Types.pp_type_simple_to_coq new_print_ctx) meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
                     parameter "Self" must be printed as "_p_param_name_T". *)
@@ -566,9 +564,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
              | Parsetree_utils.DETK_computational meth_ty ->
                  Format.fprintf out_fmter "@ (%s%a :@ %a)"
                    prefix Parsetree_utils.pp_vname_with_operators_expanded meth
-                   (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: true)
-                   meth_ty
+                   (Types.pp_type_simple_to_coq new_print_ctx) meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
                     parameter "Self" must be printed as "_p_param_name_T". *)
@@ -617,14 +613,10 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                let ty = Types.specialize sch in
                if in_section then
                  Format.fprintf out_fmter "Let abst_T := %a.@\n"
-                   (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: true)
-                   ty
+                   (Types.pp_type_simple_to_coq new_print_ctx) ty
                else
                  Format.fprintf out_fmter "@ (abst_T := %a)"
-                   (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: true)
-                   ty;
+                   (Types.pp_type_simple_to_coq new_print_ctx) ty ;
                (* Anything defined is not abstracted. *)
                []
            | MinEnv.MCEE_Defined_computational (fr, _, n, _, _, _)
@@ -658,15 +650,11 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                if in_section then
                  Format.fprintf out_fmter "@[<2>Variable abst_%a : %a.@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded n
-                   (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: true)
-                   ty
+                   (Types.pp_type_simple_to_coq new_print_ctx) ty
                else
                  Format.fprintf out_fmter "@ (abst_%a : %a)"
                    Parsetree_utils.pp_vname_with_operators_expanded n
-                   (Types.pp_type_simple_to_coq
-                      new_print_ctx ~reuse_mapping: true)
-                   ty;
+                   (Types.pp_type_simple_to_coq new_print_ctx) ty ;
                [n]
            | MinEnv.MCEE_Declared_logical (n, b) ->
                if in_section then
@@ -726,16 +714,14 @@ let generate_defined_non_recursive_method_postlude ctx print_ctx env
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-             param_ty
+             (Types.pp_type_simple_to_coq print_ctx) param_ty
        | None ->
            Format.fprintf out_fmter "@ %a"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname)
     params_with_type;
   (* Now, we print the ending type of the method. *)
   Format.fprintf out_fmter " :@ %a "
-    (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true)
-    ending_ty ;
+    (Types.pp_type_simple_to_coq print_ctx) ending_ty ;
   (* Generates the body's code of the method if some is provided.
      No local idents in the context because we just enter the scope of a species
      fields and so we are not under a core expression. Since we are generating
@@ -1396,11 +1382,9 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               Format.fprintf out_fmter "%s." mod_name;
             Format.fprintf out_fmter "%a.rf_%a)"
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
-              Parsetree_utils.pp_vname_with_operators_expanded meth_vname;
+              Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
             Format.fprintf out_fmter
-              " :@ %a.@]@\n"
-              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
-              meth_ty
+              " :@ %a.@]@\n" (Types.pp_type_simple_to_coq print_ctx) meth_ty
         | Env.MTK_logical lexpr ->
             Format.fprintf out_fmter
               "@[<2>Parameter ";
@@ -1480,7 +1464,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               "@[<2>Parameter _p_%a_%a :@ %a.@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded param_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname
-              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
+              (Types.pp_type_simple_to_coq print_ctx)
               meth_ty
         | Parsetree_utils.DETK_logical lexpr ->
             (* Inside the logical expression of the method of the parameter
@@ -1542,9 +1526,7 @@ let zenonify_by_property ctx print_ctx env min_coq_env
             (* We just need to print the type of the method. *)
             let meth_ty = Types.specialize scheme in
             Format.fprintf out_fmter "@[<2>Parameter %s :@ %a.@]@\n"
-              name_for_zenon
-            (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
-              meth_ty
+              name_for_zenon (Types.pp_type_simple_to_coq print_ctx) meth_ty
         | Env.CoqGenInformation.VB_toplevel_property lexpr ->
             Format.fprintf out_fmter "@[<2>Parameter %s :@ " name_for_zenon;
             (* Since the used definition is at toplevel, there is no abstraction
@@ -1584,8 +1566,7 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                  let meth_ty = Types.specialize scheme in
                  Format.fprintf out_fmter "@[<2>Parameter abst_%a :@ %a.@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
-                   (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
-                   meth_ty
+                   (Types.pp_type_simple_to_coq print_ctx) meth_ty
              | MinEnv.MCEE_Declared_logical (_, body)
              | MinEnv.MCEE_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
@@ -1684,8 +1665,7 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
               | Parsetree.ANTI_type ty ->
                   Format.fprintf out_fmter "forall %a :@ %a,@ "
                     Parsetree_utils.pp_vname_with_operators_expanded var_vname
-                    (Types.pp_type_simple_to_coq
-                       print_ctx ~reuse_mapping: false) ty
+                    (Types.pp_type_simple_to_coq print_ctx) ty
               | _ -> assert false);
              rec_print q
              end)
@@ -1815,7 +1795,7 @@ let zenonify_hyp ctx print_ctx env hyp =
                current Coq Section. *)
             Format.fprintf out_fmter "@[<2>Variable %a :@ %a.@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded vname
-              (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false) ty
+              (Types.pp_type_simple_to_coq print_ctx) ty
         | _ -> assert false
        end)
    | Parsetree.H_hypothesis (vname, logical_expr) ->
@@ -2518,11 +2498,11 @@ let print_types_as_tuple_if_several print_ctx out_fmter types =
            we don't really print 1 unique type but several arbitrary type
            expressions we want to group as a tuple. *)
         Format.fprintf out_fmter "(%a)"
-          (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty
+          (Types.pp_type_simple_to_coq print_ctx) ty
     | (_, ty) :: q ->
         (* Same remark than above for parentheses. *)
         Format.fprintf out_fmter "(%a)@ *@ "
-          (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: true) ty;
+          (Types.pp_type_simple_to_coq print_ctx) ty ;
         rec_print q in
   match types with
    | [] -> assert false
@@ -2968,16 +2948,15 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          {wf __term_order __arg}:@ %a@ :=@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
          (print_types_as_tuple_if_several new_print_ctx) params_with_type
-         (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
-         return_ty;
+         (Types.pp_type_simple_to_coq new_print_ctx) return_ty ;
        (* Unfortunately, we can't simply generate "let (x, y, ..) := __arg"
           because Coq only allows pairs as let-binding pattern. So instead,
           we generate a "match". *)
        Format.fprintf out_fmter "@[<2>match __arg with@\n| (";
        Format.fprintf out_fmter "%a"
          (Handy.pp_generic_separated_list ","
-            Parsetree_utils.pp_vname_with_operators_expanded) params;
-       Format.fprintf out_fmter ") =>@\n";
+            Parsetree_utils.pp_vname_with_operators_expanded) params ;
+       Format.fprintf out_fmter ") =>@\n" ;
        (* We must transform the recursive function's body si that all the
           recursive calls send their arguments as a unique tuple rather than as
           several arguments. This is because we "tuplified" the arguments of
@@ -3126,9 +3105,8 @@ let generate_defined_recursive_let_definition ctx print_ctx env
          (fun (param_vname, param_ty) ->
             Format.fprintf out_fmter "@ (%a : %a)"
               Parsetree_utils.pp_vname_with_operators_expanded param_vname
-              (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
-              param_ty)
-         params_with_type;
+              (Types.pp_type_simple_to_coq new_print_ctx) param_ty)
+         params_with_type ;
        (* Generate the { struct } clause. Since only functions are recursive,
           there is issue about finding no argument. We assume the first
           argument is always the decreasing one. *)
@@ -3140,8 +3118,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded first_arg_name;
        (* Now, we print the ending type of the method. *)
        Format.fprintf out_fmter " :@ %a@ "
-         (Types.pp_type_simple_to_coq new_print_ctx ~reuse_mapping: true)
-         return_ty ;
+         (Types.pp_type_simple_to_coq new_print_ctx) return_ty ;
        (* The ":=" token before the function's body. *)
        Format.fprintf out_fmter ":=@ ";
        (* Now, generate the body of the function.
@@ -3869,8 +3846,7 @@ traité les methodes de nous dont on dépend... *)
                  make_carrier_mapping_using_lambda_lifts
                    ctx.Context.scc_collections_carrier_mapping } in
              Format.fprintf out_fmter "@[<2>let local_rep :=@ %a in@]@\n"
-               (Types.pp_type_simple_to_coq print_ctx ~reuse_mapping: false)
-               type_from_scheme
+               (Types.pp_type_simple_to_coq print_ctx) type_from_scheme
             end)
           else process_one_field field_memory
       | Misc_common.CSF_property field_memory
