@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.20 2012-02-09 17:27:20 pessaux Exp $
+# $Id: Makefile,v 1.21 2012-02-10 16:24:40 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -21,7 +21,7 @@ include $(ROOT_DIR)/Makefile.config
 BYT_OBJS=\
  build_stamp.cmo installation.cmo configuration.cmo handy.cmo\
  location.cmo types.cmo\
- files.cmo parsetree_utils.cmo miscHelpers.cmo
+ files.cmo anti_keyword_conflict.cmo parsetree_utils.cmo miscHelpers.cmo
 
 include $(ROOT_DIR)/Makefile.common
 

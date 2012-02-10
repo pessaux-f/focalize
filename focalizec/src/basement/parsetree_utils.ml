@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.35 2011-05-25 06:35:22 maarek Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.36 2012-02-10 16:24:40 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -232,12 +232,30 @@ let parse_operator_string op_string =
   !renamed_operator
 ;;
 
+
+(** {b Visibility}: Exported outside this module. *)
 let vname_as_string_with_operators_expanded = function
   | Parsetree.Vqident s ->  "'" ^ (parse_operator_string s)
   | Parsetree.Vuident ("()" | "[]" | "::" as s) -> s
-  | Parsetree.Vuident s | Parsetree.Vlident s | Parsetree.Vpident s
+  | Parsetree.Vlident s -> (
+      (* Check if the lowercase identifier must be renamed to prevent keyword
+         collision in OCaml of Coq. *)
+      try
+        Anti_keyword_conflict.StrMap.find
+          s !Anti_keyword_conflict.lowerc_keywords_map
+      with Not_found ->
+        (* If the identifier was not conflicting with keywords then we must
+           process it like other identifiers. In effect, conflict resolution
+           is done so that replacement string is suitable for direct output, so
+           we don't need to send this string to the parsing done on other
+           identifiers. *)
+        parse_operator_string s
+     )
+  | Parsetree.Vuident s | Parsetree.Vpident s
   | Parsetree.Viident s -> parse_operator_string s
 ;;
+
+
 
 (* ********************************************************************* *)
 (* Format.formatter -> Parsetree.vname -> unit                           *)

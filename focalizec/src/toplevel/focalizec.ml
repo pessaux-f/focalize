@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.56 2012-01-30 13:21:26 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.57 2012-02-10 16:24:40 pessaux Exp $ *)
 
 exception Bad_file_suffix of string;;
 
@@ -353,6 +353,6 @@ let main () =
     Configuration.add_input_file_name
     "Usage: focalizec [options] <files>";
   let file_names = Configuration.get_input_file_names () in
-  dispatch_compilation file_names;
+  dispatch_compilation file_names ;
   exit 0
 ;;
