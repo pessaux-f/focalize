@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: type_ml_generation.ml,v 1.15 2011-05-27 17:06:26 weis Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.16 2012-02-10 13:25:36 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -35,7 +35,7 @@ let print_types_comma_with_same_vmapping_and_empty_carrier_mapping ctx tys =
    | [] -> ()
    | [one] ->
        Format.fprintf out_fmter " %a"
-         (Types.pp_type_simple_to_ml ~current_unit ~reuse_mapping: true []) one
+         (Types.pp_type_simple_to_ml ~current_unit []) one
    | several ->
        (begin
        (* Enclose by parentheses and separate by commas. *)
@@ -43,14 +43,10 @@ let print_types_comma_with_same_vmapping_and_empty_carrier_mapping ctx tys =
          | [] -> ()
          | [last] ->
              Format.fprintf out_fmter "%a"
-               (Types.pp_type_simple_to_ml
-                  ~current_unit ~reuse_mapping: true [])
-               last
+               (Types.pp_type_simple_to_ml ~current_unit []) last
          | first :: rem ->
              Format.fprintf out_fmter "%a,@ "
-               (Types.pp_type_simple_to_ml
-                  ~current_unit ~reuse_mapping: true [])
-               first ;
+               (Types.pp_type_simple_to_ml ~current_unit []) first ;
              rec_print_params rem in
        Format.fprintf out_fmter " (@[<1>" ;
        rec_print_params several ;
@@ -146,8 +142,7 @@ let type_def_compile ctx env type_def_name type_descr =
       (* Type abbreviation: the body is the abbreviated type. *)
       Format.fprintf out_fmter "%a@] ;;@\n "
         (Types.pp_type_simple_to_ml
-           ~current_unit: ctx.Context.rcc_current_unit
-           ~reuse_mapping: true [])
+           ~current_unit: ctx.Context.rcc_current_unit [])
         instanciated_body ;
       (* Not an external type definition, so nothing new in the environment. *)
       env
@@ -235,8 +230,7 @@ let type_def_compile ctx env type_def_name type_descr =
                (* The argument(s) of the constructor. *)
                Format.fprintf out_fmter " of@ (@[<1>%a@])"
                  (Types.pp_type_simple_to_ml
-                    ~current_unit: ctx.Context.rcc_current_unit
-                    ~reuse_mapping: true [])
+                    ~current_unit: ctx.Context.rcc_current_unit [])
                  sum_cstr_args)
         sum_constructors_to_print ;
       Format.fprintf out_fmter "@]@\n ;;@\n" ;
@@ -286,8 +280,7 @@ let type_def_compile ctx env type_def_name type_descr =
           Format.fprintf out_fmter "%a :@ %a ;"
             Parsetree_utils.pp_vname_with_operators_expanded field_name
             (Types.pp_type_simple_to_ml
-               ~current_unit: ctx.Context.rcc_current_unit
-               ~reuse_mapping: true [])
+               ~current_unit: ctx.Context.rcc_current_unit [])
             field_ty)
         record_fields_to_print ;
       Format.fprintf out_fmter " }@] ;;@\n " ;

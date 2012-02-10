@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.50 2012-02-10 13:02:24 pessaux Exp $ *)
+(* $Id: types.mli,v 1.51 2012-02-10 13:24:15 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string;;
@@ -139,9 +139,9 @@ val debug_collection_carrier_mapping : collection_carrier_mapping -> unit
 
 (** Pretty_printing for types for the OCaml translation. *)
 val pp_type_simple_to_ml :
-  current_unit: fname -> reuse_mapping: bool ->
-  collection_carrier_mapping -> Format.formatter -> type_simple ->
-  unit;;
+  current_unit: fname -> collection_carrier_mapping -> Format.formatter ->
+  type_simple ->
+    unit ;;
 
 val purge_type_simple_to_ml_variable_mapping : unit -> unit;;
 

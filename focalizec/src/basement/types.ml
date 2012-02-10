@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.84 2012-02-10 13:02:24 pessaux Exp $ *)
+(* $Id: types.ml,v 1.85 2012-02-10 13:24:15 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -1255,11 +1255,8 @@ let debug_collection_carrier_mapping cmap =
 
 
 
-(* ************************************************************************* *)
-(* reuse_mapping: bool -> (type_collection * string) list ->                 *)
-(*   Format.formatter -> type_simple -> unit                                 *)
-
-(** {b Descr} : "Compile", i.e. generate the OCaml source representation of
+(** ****************************************************************************
+    {b Descr} : "Compile", i.e. generate the OCaml source representation of
     a type. Basically, proceeds like the regular [pp_type_simple]
     except in 2 cases:
       - when encountering [Self] : in this case, generates the type variable
@@ -1280,11 +1277,6 @@ let debug_collection_carrier_mapping cmap =
     that they are generalised, to get a printing without any underscore
     in the variable's name.
 
-    To be able to print separately parts of a same type, hence keep sharing
-    of variables names, this function has an extra argument telling whether
-    the local variables names mapping must be kept from previous printing
-    calls.
-
     {b Args} :
       - [current_unit] : The string giving the name of the current
           compilation unit we are generating the OCaml code of. This is
@@ -1296,20 +1288,14 @@ let debug_collection_carrier_mapping cmap =
           OCaml file definitions like [type t1 = ... ;
           type t2 = Bar.t1 * Bar.t1] which would lead to an OCaml module
           depending of itself.
-      - [reuse_mapping] : Boolean telling if the print session must keep
-          active the previous variables names mapping. If so, then sharing
-          of variables names will be active between the previous prints and
-          the current one. If no, then all the variables of the current type
-          will be considered a new compared to those "seen" during previous
-          calls to the printing function.
       - [collections_carrier_mapping] : Mapping giving for each collection
           in the scope of the printing session, which type variable name is
           used to represent in OCaml this collection carrier's type.
       - [ppf] : Out channel where to send the text of the printed type.
       - [whole_type] : Tye type expression to print.
 
-    {b Rem} : Exported outside this module.                                  *)
-(* ************************************************************************* *)
+    {b Visibility} : Exported outside this module.
+ **************************************************************************** *)
 let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
   (* ********************************************************************** *)
   (* ((type_variable * string) list) ref                                    *)
@@ -1448,10 +1434,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
   (* ************************************************** *)
   (* Now, the real definition of the printing functions *)
   (
-   (fun ~current_unit ~reuse_mapping collections_carrier_mapping ppf
-       whole_type ->
-     (* Only reset the variable mapping if we were not told the opposite. *)
-     if not reuse_mapping then reset_type_variables_mapping_to_ml () ;
+   (fun ~current_unit collections_carrier_mapping ppf whole_type ->
      rec_pp_to_ml ~current_unit collections_carrier_mapping 0 ppf whole_type),
 
    (fun () -> reset_type_variables_mapping_to_ml ()))

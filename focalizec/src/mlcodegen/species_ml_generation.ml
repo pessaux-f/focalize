@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.101 2012-02-08 16:35:30 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.102 2012-02-10 13:25:36 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -144,8 +144,8 @@ let generate_rep_constraint_in_record_type ctx fields =
                  "me_as_carrier =@ %a@]@\n"
                  (Types.pp_type_simple_to_ml
                     ~current_unit: ctx.Context.scc_current_unit
-                    ~reuse_mapping: false
-                    ctx.Context.scc_collections_carrier_mapping) ty
+                    ctx.Context.scc_collections_carrier_mapping)
+                 ty
                end)
              else rec_search q
          | _ -> rec_search q
@@ -248,7 +248,8 @@ let generate_record_type ctx species_descr =
                 Parsetree_utils.pp_vname_with_operators_expanded n
                 (Types.pp_type_simple_to_ml
                    ~current_unit: ctx.Context.scc_current_unit
-                   ~reuse_mapping: false collections_carrier_mapping) ty
+                   collections_carrier_mapping)
+                  ty
               end)
             end)
           end)
@@ -270,7 +271,8 @@ let generate_record_type ctx species_descr =
                   Parsetree_utils.pp_vname_with_operators_expanded n
                   (Types.pp_type_simple_to_ml
                      ~current_unit: ctx.Context.scc_current_unit
-                     ~reuse_mapping: false collections_carrier_mapping) ty
+                     collections_carrier_mapping)
+                    ty
                 end))
             l
       | Env.TypeInformation.SF_theorem  (_, _, _, _, _, _)
@@ -443,11 +445,6 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
     let (params_with_type, _, _) =
       MiscHelpers.bind_parameters_to_types_from_type_scheme
         ~self_manifest ~gen_vars_in_scope: [] scheme params in
-    (* We are printing each parameter's type. These types in fact belong to a
-       same type scheme. Hence, they may share variables together.
-       For this reason, we first purge the printing variable mapping and after,
-       activate its persistence between each parameter printing. *)
-    Types.purge_type_simple_to_ml_variable_mapping () ;
     List.iter
       (fun (param_vname, opt_param_ty) ->
         match opt_param_ty with
@@ -456,16 +453,12 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
                Parsetree_utils.pp_vname_with_operators_expanded param_vname
                (Types.pp_type_simple_to_ml
                   ~current_unit: ctx.Context.scc_current_unit
-                  ~reuse_mapping: true collections_carrier_mapping) param_ty
+                  collections_carrier_mapping)
+               param_ty
          | None ->
              Format.fprintf out_fmter "@ %a"
                Parsetree_utils.pp_vname_with_operators_expanded param_vname)
       params_with_type ;
-    (* Now we don't need anymore the sharing. Hence, clean it. This should not
-       be useful because the other guys usign printing should manage this
-       themselves (as we did just above by cleaning before activating the
-       sharing), but anyway, it is safer an not costly. So... *)
-    Types.purge_type_simple_to_ml_variable_mapping () ;
     (* The "=" sign ending the OCaml function's "header". With a
        NON-breakable space to prevent uggly hyphenation ! *)
     Format.fprintf out_fmter " =@ " ;
