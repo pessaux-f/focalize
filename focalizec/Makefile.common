@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile.common,v 1.49 2011-05-27 14:33:41 weis Exp $
+# $Id: Makefile.common,v 1.50 2012-02-10 15:01:57 pessaux Exp $
 
 BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
@@ -156,7 +156,7 @@ tests:
 .dvi.ps:
 	$(DVIPS) -o $@ $<
 .dvi.pdf:
-	$(DVIPDF) -o $@ $<
+	$(DVIPDF) $< $@
 
 # Html rules
 .shtml.html:

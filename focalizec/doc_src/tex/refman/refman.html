@@ -64,7 +64,7 @@ BODY{background:white;}
 </STYLE>
 </HEAD>
 <BODY TEXT=black BGCOLOR=white>
-<!--HEVEA command line is: /usr/pkg/bin/hevea -fix macros.hva syntaxdef.hva refman.hva refman.tex -->
+<!--HEVEA command line is: hevea -fix macros.hva syntaxdef.hva refman.hva refman.tex -->
 <!--CUT DEF chapter 1 --><P><BR>
 <BR>
 <BR>
@@ -1273,9 +1273,7 @@ other regular tokens, in particular string and character literals.</P><!--TOC su
 close a general comment. General comments may span on any number of lines and
 may be arbitrarily nested. In addition, any legal <FONT COLOR=purple>FoCaLiZe</FONT> program may be
 commented out via a general comment.</P><P>Note: Almost arbitrary text can be written inside a general comment, therefore
-general comments are used to add explanations in the code to help the reader.</P><P>Example:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(* The main species of the development: S.</FONT><FONT SIZE=2>
+general comments are used to add explanations in the code to help the reader.</P><P>Example:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(* The main species of the development: S.</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   S contains only one method, m, since m is general enough to perform the</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   entire work under any circumstance. *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
@@ -1287,9 +1285,7 @@ general comments are used to add explanations in the code to help the reader.</P
 </FONT><FONT SIZE=2><EM><FONT SIZE=2>(* Another discarded comment at end of file *)</FONT></EM></FONT></TD></TR>
 </TABLE><!--TOC subsubsection Uni-line comments-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc29">3.1.3.2</A>  Uni-line comments</H4><!--SEC END --><P>The two characters <TT>--</TT>, with no intervening blanks, start a <EM>uni-line
-comment</EM>; a uni-line comment always spreads to the end of the line.</P><P>Note: No general comment marker may appear in a uni-line comment.</P><P>Example:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>-- </FONT><FONT SIZE=2>Discarded</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>uni</FONT><FONT SIZE=2>-</FONT><FONT SIZE=2>line</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>comment</FONT><FONT SIZE=2>
+comment</EM>; a uni-line comment always spreads to the end of the line.</P><P>Note: No general comment marker may appear in a uni-line comment.</P><P>Example:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>-- </FONT><FONT SIZE=2>Discarded</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>uni</FONT><FONT SIZE=2>-</FONT><FONT SIZE=2>line</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>comment</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>in</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Self</FONT><FONT SIZE=2>) = -- </FONT><FONT SIZE=2>The</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>powerful</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>m</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>method</FONT><FONT SIZE=2>.</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
@@ -1321,9 +1317,7 @@ Using embedded tags in annotations allows third-party tools to easily find
 out annotations that are meaningful to them, and safely ignore others.
 For more information, consult
 <A HREF="#documentation-generation">8</A>.
-Example:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(** Annotation for the automatic documentation processor.</FONT><FONT SIZE=2>
+Example:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(** Annotation for the automatic documentation processor.</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>    Documentation for species S. *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  ...</FONT><FONT SIZE=2>
@@ -1548,9 +1542,7 @@ names and regular function application. For instance, if you do not like the
 <FONT COLOR=purple>FoCaLiZe</FONT> predefined <CODE>^</CODE> operator to concatenate strings, you can define your
 own infix synonym for <CODE>^</CODE>, say <TT>++</TT>, using:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> ( ++ ) (</FONT><FONT SIZE=2>s1</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>s2</FONT><FONT SIZE=2>) = </FONT><FONT SIZE=2>s1</FONT><FONT SIZE=2> ^ </FONT><FONT SIZE=2>s2</FONT><FONT SIZE=2> ;</FONT></TD></TR>
 </TABLE><P>
-Then you can use the <TT>++</TT> operator in the usual way
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>hw</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2><FONT SIZE=2>"Hello"</FONT></FONT><FONT SIZE=2> ++ </FONT><FONT SIZE=2><FONT SIZE=2>" world!"</FONT></FONT><FONT SIZE=2> ;</FONT></TD></TR>
+Then you can use the <TT>++</TT> operator in the usual way</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>hw</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2><FONT SIZE=2>"Hello"</FONT></FONT><FONT SIZE=2> ++ </FONT><FONT SIZE=2><FONT SIZE=2>" world!"</FONT></FONT><FONT SIZE=2> ;</FONT></TD></TR>
 </TABLE><P>As shown in the example, at definition-time, the syntax requires
 the operator to be embraced by parentheses. More precisely, you must
 enclose the operator between <B>spaces</B> and parentheses.
@@ -1572,14 +1564,10 @@ of a comment!</P><P>The <FONT COLOR=purple>FoCaLiZe</FONT> notion of symbolic id
 infix operators. Symbolic identifiers let you assign sophisticated names
 to your functions and operators.
 For instance, instead of creating a function to check if integer <TT>x</TT>
-is equal to the predecessor of integer <TT>y</TT>, as in
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is_eq_to_predecessor</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) = ... ;</FONT><FONT SIZE=2>
+is equal to the predecessor of integer <TT>y</TT>, as in</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is_eq_to_predecessor</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) = ... ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>... </FONT><FONT SIZE=2>if</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>is_eq_to_predecessor</FONT><FONT SIZE=2> (5, 7) ... ;</FONT></TD></TR>
 </TABLE><P>
-it is possible to directly define
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> ( =</FONT><FONT SIZE=2>pred</FONT><FONT SIZE=2> ) (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) = ... ;</FONT><FONT SIZE=2>
+it is possible to directly define</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>let</FONT><FONT SIZE=2> ( =</FONT><FONT SIZE=2>pred</FONT><FONT SIZE=2> ) (</FONT><FONT SIZE=2>x</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2>) = ... ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>... </FONT><FONT SIZE=2>if</FONT><FONT SIZE=2> 5 =</FONT><FONT SIZE=2>pred</FONT><FONT SIZE=2> 7 ... ;</FONT></TD></TR>
 </TABLE><P><B>Attention</B> : since a comma can start an infix symbol, be careful
 when using commas to add a space after each comma to prevent confusion.
@@ -1831,9 +1819,7 @@ prefixed by &#X201C;0x&#X201D; or &#X201C;0X&#X201D;. Example <TT>0xF2.E4</TT>, 
 characters <TT>&lt;</TT> and <TT>&gt;</TT>, followed by a non-empty sequence of
 alphanumeric characters (i.e. [A-Z a-z 0-9]).
 The first part of the bullet (i.e. the integer literal) stands for the
-depth of the bullet and the second part stands for its name. Example:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2> &lt;1&gt;1 </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> ...</FONT><FONT SIZE=2>
+depth of the bullet and the second part stands for its name. Example:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2> &lt;1&gt;1 </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>      ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>      </FONT><FONT SIZE=2>prove</FONT><FONT SIZE=2> ...</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>   &lt;2&gt;1 </FONT><FONT SIZE=2>prove</FONT><FONT SIZE=2> ... </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> ...</FONT><FONT SIZE=2>
@@ -1870,15 +1856,12 @@ directly visible in the scope of the current compilation unit. For
 instance:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>use</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"basics"</FONT></FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>basics</FONT><FONT SIZE=2>#</FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>
-can be transformed with no explicit qualification into:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>open</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"basics"</FONT></FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
+can be transformed with no explicit qualification into:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>open</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"basics"</FONT></FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P>After an <TT>open</TT> directive, the definitions of loaded (object files
 of) compilation units are added in head of the current scope and mask
 existing definitions wearing the same names. For example, in
-the following program: <FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(* Redefine my basic object, containing nothing. *)</FONT></EM></FONT><FONT SIZE=2>
+the following program:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(* Redefine my basic object, containing nothing. *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>open</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"basics"</FONT></FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
@@ -1887,9 +1870,7 @@ the species <TT>S</TT> inherits from the last <TT>Basic_object</TT> in the
 scope, that is the one loaded by the <TT>open</TT> directive and not from
 the one defined at the beginning of the program. It is still possible
 to recover the first definition by using the &#X201C;empty&#X201D; qualification
-<TT>#Basic_object</TT> in the definition of <TT>S</TT>:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(* Redefine my basic object, containing nothing. *)</FONT></EM></FONT><FONT SIZE=2>
+<TT>#Basic_object</TT> in the definition of <TT>S</TT>:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><EM><FONT SIZE=2>(* Redefine my basic object, containing nothing. *)</FONT></EM></FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>open</FONT><FONT SIZE=2> </FONT><FONT SIZE=2><FONT SIZE=2>"basics"</FONT></FONT><FONT SIZE=2>;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>species</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>S</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2>inherit</FONT><FONT SIZE=2> #</FONT><FONT SIZE=2>Basic_object</FONT><FONT SIZE=2>; ... </FONT><FONT SIZE=2>end</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
@@ -2022,9 +2003,7 @@ these two cases, the manipulated type expression is the same and
 the two uses cannot be easily differentiated. Type aliases allows to
 give a name to a
 (complex) type expression, for sake of readability or to shorten the
-code. Example:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>experiment_conditions</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2><B>alias</B></FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>) ;;</FONT><FONT SIZE=2>
+code. Example:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>experiment_conditions</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2><B>alias</B></FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>) ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>date</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2><B>alias</B></FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>) ;;</FONT></TD></TR>
 </TABLE><P><BR>
 
@@ -2058,9 +2037,7 @@ identifiers) by preceeding them by a <TT><FONT COLOR="red">|</FONT></TT> charact
 </TABLE><P>
 Note that the first <TT><FONT COLOR="red">|</FONT></TT> character is required: it is not a
 separator. This especially means that when writing a sum type
-definition on a single line, the first <TT><FONT COLOR="red">|</FONT></TT> must be written:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>color</FONT><FONT SIZE=2> = | </FONT><FONT SIZE=2>Red</FONT><FONT SIZE=2> | </FONT><FONT SIZE=2>Blue</FONT><FONT SIZE=2> | </FONT><FONT SIZE=2>Green</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
+definition on a single line, the first <TT><FONT COLOR="red">|</FONT></TT> must be written:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>color</FONT><FONT SIZE=2> = | </FONT><FONT SIZE=2>Red</FONT><FONT SIZE=2> | </FONT><FONT SIZE=2>Blue</FONT><FONT SIZE=2> | </FONT><FONT SIZE=2>Green</FONT><FONT SIZE=2> ;;</FONT></TD></TR>
 </TABLE><P><A NAME="@default42"></A>
 <B>Values</B> of a sum type are built from the
 <B>value constructors</B>, i.e. from the names enumerated in the
@@ -2087,9 +2064,7 @@ An important attention must be taken for constructors having
 several values.
 </P><UL CLASS="itemize"><LI CLASS="li-itemize">
 Either the constructor has <B>1</B> argument that is a tuple,
-i.e. a type expression involving the <TT>*</TT> constructor.<P>The corresponding type definition for such a type would be:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>t</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+i.e. a type expression involving the <TT>*</TT> constructor.<P>The corresponding type definition for such a type would be:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>t</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
 </TABLE></LI><LI CLASS="li-itemize">Or the constructor has <B>several</B> arguments, i.e. several
@@ -2105,9 +2080,7 @@ This especially important since when matching on such value
 constructors, confusing the argument<B>s</B> of <TT>Cstr2</TT> with
 one and unique tuple with 3 components will result in a type error.
 Below are shown several pieces of source code with valid/invalid mixes
-between these concepts.
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2><B>alias</B></FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>) ;;</FONT><FONT SIZE=2>
+between these concepts.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>mytuple</FONT><FONT SIZE=2> = </FONT><FONT SIZE=2><B>alias</B></FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>) ;;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>t</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cstr</FONT><FONT SIZE=2> (</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>string</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
@@ -2149,9 +2122,7 @@ that is a 3 components tuple.</P><TABLE CLASS="lstframe" STYLE="padding:1ex;bord
 </TABLE><P>NOTA: TO BE COMPLETED.</P><P>Any type expression, even recursive, can be used as a parameter of
 value contructors<A NAME="@default44"></A>.
 For instance, the type of lists of boolean × integer pairs
-could be defined like:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>b_i_list</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+could be defined like:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>b_i_list</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Empty</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  | </FONT><FONT SIZE=2>Cons</FONT><FONT SIZE=2> ((</FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2> * </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2>) * </FONT><FONT SIZE=2>b_i_list</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>;;</FONT></TD></TR>
@@ -2194,9 +2165,7 @@ elements are <TT>(false, 2)</TT> followed by <TT>(true, 1)</TT>.</P><P><BR>
 </P><P>Record types provide a way to aggregate data of various types, a bit like
 tuples, but naming the components of the group, instead of
 differentiating them by their position like in tuples. A record is
-a sequence of names and types between braces. For example:
-<FONT SIZE=2>
-</FONT></P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>experiment_conditions</FONT><FONT SIZE=2> = {</FONT><FONT SIZE=2>
+a sequence of names and types between braces. For example:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>type</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>experiment_conditions</FONT><FONT SIZE=2> = {</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>x</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>y</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
 </FONT><FONT SIZE=2>  </FONT><FONT SIZE=2>z</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>int</FONT><FONT SIZE=2> ;</FONT><FONT SIZE=2>
