@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.39 2012-02-08 16:35:30 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.40 2012-02-10 14:26:10 pessaux Exp $ *)
 
 
 
@@ -178,9 +178,9 @@ let gen_doc_parameters out_fmt ~current_unit params =
 
     {b Rem}: Not exported outside this module.     *)
 (* *********************************************** *)
-let gen_doc_type ~reuse_mapping out_fmt ty =
-  Format.fprintf out_fmt "@[<h 2><foc:type>@\n";
-  Types.pp_type_simple_to_xml ~reuse_mapping out_fmt ty;
+let gen_doc_type out_fmt ty =
+  Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
+  Types.pp_type_simple_to_xml out_fmt ty ;
   Format.fprintf out_fmt "@]</foc:type>@\n"
 ;;
 
@@ -383,9 +383,9 @@ let rec gen_doc_forall_exists out_fmt env binder_name vnames ty_expr lexpr =
           "<foc:var><foc:foc-name>%a</foc:foc-name></foc:var>@\n"
           Utils_docgen.pp_xml_vname h;
         (* foc:type. *)
-        gen_doc_type ~reuse_mapping: true out_fmt ty;
+        gen_doc_type out_fmt ty ;
         (* %foc:proposition. *)
-        rec_gen q;
+        rec_gen q ;
         Format.fprintf out_fmt "@]</foc:%s>@\n" binder_name in
   rec_gen vnames
 
@@ -552,9 +552,9 @@ let gen_doc_logical_let out_fmt env from_opt name pnames sch body_as_prop doc =
       Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
         Utils_docgen.pp_xml_vname p_name;
       (* foc:type. *)
-      gen_doc_type ~reuse_mapping: true out_fmt ty;
+      gen_doc_type out_fmt ty ;
       Format.fprintf out_fmt "@]</foc:param-prop>@\n")
-    params_with_type;
+    params_with_type ;
   (* foc:proposition. *)
   gen_doc_proposition out_fmt env' body_as_prop;
   Format.fprintf out_fmt "@]</foc:letprop>@\n";
@@ -580,7 +580,7 @@ let gen_doc_computational_let out_fmt env from name sch rec_flag doc =
   gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other;
   let env' = Env_docgen.add_method name i_mathml i_latex env in
   (* foc:type. *)
-  gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch);
+  gen_doc_type out_fmt (Types.specialize sch);
   Format.fprintf out_fmt "@]</foc:definition>@\n";
   env'
 ;;
@@ -597,7 +597,7 @@ let gen_doc_computational_toplevel_let out_fmt name sch rec_flag =
   Format.fprintf out_fmt "<foc:foc-name>%a</foc:foc-name>@\n"
     Utils_docgen.pp_xml_vname name;
   (* foc:type. *)
-  gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch);
+  gen_doc_type out_fmt (Types.specialize sch) ;
   Format.fprintf out_fmt "@]</foc:global-fun>@\n"
 ;;
 
@@ -684,7 +684,7 @@ let gen_doc_method out_fmt env species_def_fields = function
         (* foc:informations. *)
         gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other;
         (* foc:type. *)
-        gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch);
+        gen_doc_type out_fmt (Types.specialize sch) ;
         Format.fprintf out_fmt "@]</foc:carrier>@\n"
         end)
       else
@@ -699,7 +699,7 @@ let gen_doc_method out_fmt env species_def_fields = function
         (* foc:informations. *)
         gen_doc_foc_informations out_fmt i_descrip i_mathml i_latex i_other;
         (* foc:type. *)
-        gen_doc_type ~reuse_mapping: false out_fmt (Types.specialize sch);
+        gen_doc_type out_fmt (Types.specialize sch) ;
         Format.fprintf out_fmt "@]</foc:signature>@\n"
         end);
       env'
@@ -855,8 +855,8 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
   (* foc:param*. *)
   List.iter
     (fun ty ->
-      Format.fprintf out_fmt "<foc:param infile=\"%s\">" current_unit;
-      gen_doc_type out_fmt ~reuse_mapping: true ty;
+      Format.fprintf out_fmt "<foc:param infile=\"%s\">" current_unit ;
+      gen_doc_type out_fmt ty ;
       Format.fprintf out_fmt "</foc:param>@\n")
     ty_param_vars;
   (* (foc:alias|foc:constr* ). *)
@@ -864,8 +864,8 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
    | Env.TypeInformation.TK_abstract ->
        (* TODO. We don't make any difference between an abstract type and
           an abbrev. Both are generated in XML as aliases. A bit weak... *)
-       Format.fprintf out_fmt "<foc:alias>";
-       gen_doc_type ~reuse_mapping: true out_fmt ty_identity;
+       Format.fprintf out_fmt "<foc:alias>" ;
+       gen_doc_type out_fmt ty_identity ;
        Format.fprintf out_fmt "</foc:alias>@\n"
    | Env.TypeInformation.TK_external _ ->
        Format.fprintf out_fmt "<foc:external-type></foc:external-type>@\n"
@@ -880,7 +880,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
              current_unit Utils_docgen.pp_xml_vname cstr_name;
            (* foc:type. *)
            let ty = Types.specialize_with_args sch ty_param_vars in
-           gen_doc_type ~reuse_mapping: true out_fmt ty;
+           gen_doc_type out_fmt ty ;
            Format.fprintf out_fmt "@]</foc:constr>@\n")
          constructors
    | Env.TypeInformation.TK_record fields ->
@@ -894,7 +894,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
              Utils_docgen.pp_xml_vname field_name;
            let ty = Types.specialize_with_args sch ty_param_vars in
            (* foc:type. *)
-           gen_doc_type ~reuse_mapping: true out_fmt ty;
+           gen_doc_type out_fmt ty ;
            Format.fprintf out_fmt "@]</foc:record-label-and-type>@\n")
          fields;
        Format.fprintf out_fmt "@]</foc:record-type>@\n");
@@ -917,10 +917,11 @@ let gen_doc_pcm out_fmt env ~current_unit = function
         "<foc:coq-require>%s</foc:coq-require>@\n" comp_unit;
       env
   | Infer.PCM_type (ty_vname, ty_descrip) ->
-      gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip;
+      Types.purge_type_simple_to_xml_variable_mapping () ;
+      gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip ;
       env
-  | Infer.PCM_let_def (let_def, schemes) ->
-      (begin
+  | Infer.PCM_let_def (let_def, schemes) -> (
+      Types.purge_type_simple_to_xml_variable_mapping () ;
       (* foc:global-fun foc:letprop *)
       match let_def.Parsetree.ast_desc.Parsetree.ld_logical with
        | Parsetree.LF_logical ->
@@ -962,8 +963,9 @@ let gen_doc_pcm out_fmt env ~current_unit = function
                    the documentation generation environment. Is it really what
                    we want ? *)
            end)
-      end)
+     )
   | Infer.PCM_theorem (theo_def, _) ->
+      Types.purge_type_simple_to_xml_variable_mapping () ;
       (* foc:theorem. *)
       let th_desc = theo_def.Parsetree.ast_desc in
       gen_doc_theorem
@@ -974,10 +976,13 @@ let gen_doc_pcm out_fmt env ~current_unit = function
          do not document them. *)
       env
   | Infer.PCM_species (species_def, species_descr, _) ->
+      Types.purge_type_simple_to_xml_variable_mapping () ;
       gen_doc_species out_fmt env ~current_unit species_def species_descr
   | Infer.PCM_collection (coll_def, col_descr, _) ->
+      Types.purge_type_simple_to_xml_variable_mapping () ;
       gen_doc_collection out_fmt env ~current_unit coll_def col_descr
   | Infer.PCM_testing (testing_def) ->
+       Types.purge_type_simple_to_xml_variable_mapping () ;
       gen_doc_testing out_fmt env ~current_unit testing_def
 ;;
 

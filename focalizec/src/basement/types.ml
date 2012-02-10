@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.85 2012-02-10 13:24:15 pessaux Exp $ *)
+(* $Id: types.ml,v 1.86 2012-02-10 14:26:10 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -1712,7 +1712,7 @@ let rec get_species_types_in_type ty =
 
 
 
-let pp_type_simple_to_xml ~reuse_mapping =
+let (pp_type_simple_to_xml, purge_type_simple_to_xml_variable_mapping) =
   (* ********************************************************************* *)
   (* ((type_simple * string) list) ref                                     *)
   (** {b Descr} : The mapping giving for each variable already seen the
@@ -1809,11 +1809,14 @@ let pp_type_simple_to_xml ~reuse_mapping =
         Format.fprintf ppf
           "<foc:atom order=\"first\" infile=\"%s\">%s</foc:atom>@\n"
           mod_name collection_name in
-  (* ********************** *)
-  (* The function itself... *)
-  (fun ppf ty ->
-    if not reuse_mapping then reset_type_variables_mapping () ;
-    rec_pp ppf ty)
+
+
+  ((* pp_type_simple_to_xml *)
+   (fun ppf ty -> rec_pp ppf ty)
+     ,
+   (* purge_type_simple_to_xml_variable_mapping *)
+   (fun () -> reset_type_variables_mapping ())
+  )
 ;;
 
 
