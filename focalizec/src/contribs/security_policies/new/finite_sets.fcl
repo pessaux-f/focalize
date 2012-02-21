@@ -26,6 +26,80 @@ species Finite_set =
 end;;
 
 
+species List_utils(S is Setoid)=
+  inherit Basic_object;
+  
+  let rec l_belongs(s: S, l: list(S)): bool = match l with
+  | [] -> false
+  | h::t -> 
+     if S!equal(s, h)
+     then true
+     else l_belongs(s, t)
+  ;
+
+  theorem cons_spec: all t: list(S), all s h: S, 
+    (l_belongs(s, t) \/ S!equal(s, h)) <-> l_belongs(s, h::t)
+  proof =
+    <1>1 prove all s h: S, (l_belongs(s, []) \/ S!equal(s, h)) <-> 
+           l_belongs(s, h::[])
+         <2>1 assume s h: S,
+              hypothesis H: S!equal(s, h),
+              prove l_belongs(s, h::[])
+              by definition of l_belongs hypothesis H
+         <2>2 assume s: S,
+              prove ~ l_belongs(s, []) by definition of l_belongs
+         <2>3 assume s h: S,
+              hypothesis H: l_belongs(s, h::[]),
+              prove S!equal(s, h)
+              by definition of l_belongs hypothesis H
+         <2>f conclude
+    <1>2 prove 
+           all l: list(S), (all h s: S,
+              ((l_belongs(s, l) \/ S!equal(s, h)) <-> l_belongs(s, h::l))) ->
+                 (all s h hh: S, 
+                    ((l_belongs(s, hh::l) \/ S!equal(s, h)) <-> 
+                       l_belongs(s, h::(hh::l))))
+         <2>1 assume l: list(S),
+              hypothesis I: (all s h: S,
+                               (l_belongs(s, l) \/ S!equal(s, h)) <-> 
+                                       l_belongs(s, h::l)),
+              assume s h hh: S,
+              prove (l_belongs(s, hh::l) \/ S!equal(s, h)) <-> 
+                          l_belongs(s, h::(hh::l))
+              <3>1 prove l_belongs(s, hh::l) -> l_belongs(s, h::(hh::l))
+                   <4>1 hypothesis H: l_belongs(s, hh::l),
+                        prove l_belongs(s, h::(hh::l))
+                        <5>1 hypothesis T: S!equal(s, h),
+                             prove l_belongs(s, h::(hh::l))
+                             by definition of l_belongs hypothesis T
+                        <5>2 hypothesis T: ~ S!equal(s, h),
+                             prove l_belongs(s, h::(hh::l))
+                             <6>1 prove l_belongs(s, hh::l)
+                                  by hypothesis H
+                             <6>f qed by hypothesis I, T
+                                         definition of l_belongs
+                                         step <6>1
+                        <5>f conclude
+                   <4>f conclude
+              <3>2 prove S!equal(s, h) -> l_belongs(s, h::(hh::l))
+                   by definition of l_belongs
+              <3>3 prove l_belongs(s, h::(hh::l)) ->
+                           (l_belongs(s, hh::l) \/ S!equal(s, h))
+                   <4>1 hypothesis H: ~ S!equal(s, h),
+                        hypothesis T: l_belongs(s, h::(hh::l)),
+                        prove l_belongs(s, hh::l)
+                        by definition of l_belongs
+                           hypothesis H, T
+                   <4>f conclude
+              <3>f conclude
+         <2>f conclude
+    <1>f conclude
+  ;
+
+
+
+end;;
+
 species Finite_parts(S is Setoid) =
 
   inherit Setoid ;
@@ -47,7 +121,7 @@ species Finite_parts(S is Setoid) =
   property add_spec :
     all x : Self, all t_1 t_2 : S,
     belongs(t_1, add (x, t_2)) <->
-      S!equal(t_1, t_2) \/ belongs(t_2, x);
+      S!equal(t_1, t_2) \/ belongs(t_1, x);
 
   property release_spec :
     all x : Self, all t_1 t_2 : S,
@@ -77,9 +151,10 @@ species Finite_parts(S is Setoid) =
       
 end;;
 
+
 species Finite_parts_by_lists(S is Setoid) =
 
-  inherit Finite_parts(S);
+  inherit Finite_parts(S), List_utils(S);
 
   representation = list(S);
 
@@ -87,14 +162,9 @@ species Finite_parts_by_lists(S is Setoid) =
 
   let element = empty;
 
-  let rec belongs(s, e) = match e with
-  | [] -> false
-  | h::t -> 
-     if S!equal(s, h)
-     then true
-     else belongs(s, t);
+  let belongs(s, e) = l_belongs(s, e);
 
-  proof of empty_spec = by definition of empty, belongs
+  proof of empty_spec = by definition of empty, belongs, l_belongs
   ;
 
   let add(e, s) =
@@ -120,114 +190,19 @@ species Finite_parts_by_lists(S is Setoid) =
 
 
   proof of add_spec =
-   <1>1 prove all s_1 s_2: S,
-        (* [rr] ill formed! Statement reveals representation *)
-         belongs(s_1, add([], s_2)) <-> S!equal(s_1, s_2) \/ belongs(s_1, [])
-        <2>0 prove all s: S, [s] = add([], s)
-            by definition of add, belongs
-        <2>1 assume s_1 s_2: S,
-             prove belongs(s_1, add([], s_2)) <-> 
-                    S!equal(s_1, s_2) \/ belongs(s_1, [])
-                     <3>1 hypothesis H: belongs(s_1, add([], s_2)),
-                  prove S!equal(s_1, s_2)
-                  <4>1 prove ~ belongs(s_1,[])
-                       by definition of belongs
-                  <4>2 prove belongs(s_2, add([], s_2))
-                       assumed
-                       (* by step <2>0  *)
-                       (*    property S!equal_reflexive *)
-                       (*    property belongs_left_substitution_rule *)
-                  <4>f qed assumed
-                  (* [rr] infinite loop? *)
-                  (* by definition of belongs, add *)
-                  (*    hypothesis H *)
-                  (*    property S!equal_reflexive, *)
-		  (*             S!equal_symmetric, *)
-		  (*             S!equal_transitive *)
-             <3>2 prove ~ belongs(s_1, [])
-                  by definition of belongs
-             <2>3 hypothesis H: S!equal(s_1, s_2),
-                  prove belongs(s_1, add([], s_2))
-                  by definition of belongs, add
-                     hypothesis H
-                     property S!equal_reflexive,
-                              S!equal_symmetric,
-                              S!equal_transitive
-             <3>f conclude
-        <2>f conclude
-   <1>2 prove all s: S, all l: list(S),
-        (* [rr] ill formed! Statement reveals representation *)
-         (all s_1 s_2: S, belongs(s_1, add(l, s_2)) <->
-                 S!equal(s_1, s_2) \/ belongs(s_1, l)) ->
-            (all s_1 s_2: S, belongs(s_1, add(s::l, s_2)) <->
-               S!equal(s_1, s_2) \/ belongs(s_1, s::l))
-        <2>1 assume h: S, assume t: list(S),
-             prove
-               (all s_1 s_2: S, belongs(s_1, add(t, s_2)) <->
-                         S!equal(s_1, s_2) \/ belongs(s_1, t)) ->
-                  (all s_1 s_2: S, belongs(s_1, add(h::t, s_2)) <->
-                    S!equal(s_1, s_2) \/ belongs(s_1, h::t))
-              <3>1 hypothesis I: (all s_1 s_2: S, belongs(s_1, add(t, s_2)) <->
-                                     S!equal(s_1, s_2) \/ belongs(s_1, t)),
-                   prove  (all s_1 s_2: S, belongs(s_1, add(h::t, s_2)) <->
-                              S!equal(s_1, s_2) \/ belongs(s_1, h::t))
-                   <4>1 assume s_1 s_2: S,
-                        prove belongs(s_1, add(h::t, s_2)) <->
-                                  S!equal(s_1, s_2) \/ belongs(s_1, h::t)
-                        <5>1 hypothesis H: belongs(s_1, add(h::t, s_2)),
-                             prove S!equal(s_1, s_2) \/ belongs(s_1, h::t)
-                             <6>1 hypothesis HH: S!equal(s_1, h),
-                                  prove belongs(s_1, h::t)
-                                  by definition of belongs
-                                     hypothesis HH
-                             <6>2 hypothesis HH: ~ S!equal(s_1, h),
-                                  prove S!equal(s_1, s_2) \/ belongs(s_1, h::t)
-                                  <7>1 hypothesis T: ~ S!equal(s_1, s_2),
-                                       prove belongs(s_1, h::t)
-                                       assumed
-                                       (* by hypothesis HH, T, H, I *)
-                                       (*    definition of belongs *)
-                                       (*    property S!equal_reflexive, *)
-                                       (*             S!equal_symmetric, *)
-                                       (*             S!equal_transitive *)
-                                  <7>f conclude
-                             <6>f conclude
-                        <5>2 hypothesis H: S!equal(s_1, s_2),
-                             prove belongs(s_1, add(h::t, s_2))
-                             <6>1 hypothesis T: S!equal(h, s_1),
-                                  prove belongs(s_1, add(h::t, s_2))
-                                  assumed
-                                  (* (\** [rr] Coq translation fails *\) *)
-                                  (* by definition of belongs, add *)
-                                  (*    hypothesis T, H *)
-                                  (*    property S!equal_reflexive, *)
-                                  (*             S!equal_symmetric, *)
-                                  (*             S!equal_transitive *)
-                             <6>2 hypothesis T: ~ S!equal(h, s_1), 
-                                  prove belongs(s_1, add(h::t, s_2))
-                                  assumed
-                                  (* by definition of belongs, add *)
-                                  (*    hypothesis T, H, I *)
-                                  (*    property S!equal_reflexive, *)
-                                  (*             S!equal_symmetric, *)
-                                  (*             S!equal_transitive *)
-                             <6>f conclude
-                        <5>3 hypothesis H: belongs(s_1, h::t),
-                             prove belongs(s_1, add(h::t, s_2))
-                             assumed
-                             (* (\* [rr] Coq translation fails *\) *)
-                             (* by definition of belongs, add *)
-                             (*    hypothesis H, I *)
-                        <5>f conclude
-                   <4>f conclude
-              <3>f conclude
-         <2>f conclude
-   <1>3 prove all l: list(S), all s_1 s_2: S,
-        (* [rr] ill formed! Statement reveals representation *)
-          belongs(s_1, add(l, s_2)) <->
-             S!equal(s_1, s_2) \/ belongs(s_1, l)
-        by step <1>1, <1>2
-   <1>f qed assumed
+   <1>1 assume x: Self, assume t_1 t_2: S,
+        hypothesis H: belongs(t_1, add (x, t_2)),
+        prove S!equal(t_1, t_2) \/ belongs(t_1, x)
+        assumed
+   <1>2 assume x: Self, assume t_1 t_2: S,
+        hypothesis H: S!equal(t_1, t_2),
+        prove belongs(t_1, add(x, t_2))
+        assumed
+   <1>3 assume x: Self, assume t_1 t_2: S,
+        hypothesis H: belongs(t_1, x),
+        prove belongs(t_1, add(x, t_2))
+        assumed
+   <1>f conclude
    ;
 
   let to_list(e) = e;
