@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.17 2011-05-27 15:05:43 weis Exp $
+# $Id: Makefile,v 1.18 2012-02-21 17:27:08 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -22,7 +22,7 @@ CAML_INCLUDES=-I ../basement -I ../parser
 
 BYT_OBJS=\
  env.cmo scoping.cmo substExpr.cmo substColl.cmo ast_equal.cmo\
- dep_analysis.cmo param_dep_analysis.cmo\
+ dep_analysis.cmo param_dep_analysis.cmo infoOutput.cmo\
  infer.cmo match_analysis.cmo
 
 include $(ROOT_DIR)/Makefile.common

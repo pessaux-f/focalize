@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.62 2012-02-10 16:24:40 pessaux Exp $
+# $Id: Makefile,v 1.63 2012-02-21 17:27:08 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -56,6 +56,7 @@ BYT_OBJS =\
  ../typing/ast_equal.cmo\
  ../typing/dep_analysis.cmo\
  ../typing/param_dep_analysis.cmo\
+ ../typing/infoOutput.cmo\
  ../typing/infer.cmo\
  ../typing/match_analysis.cmo\
  \

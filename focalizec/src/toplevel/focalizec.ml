@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.57 2012-02-10 16:24:40 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.58 2012-02-21 17:27:08 pessaux Exp $ *)
 
 exception Bad_file_suffix of string;;
 
@@ -271,6 +271,12 @@ let main () =
        "
      Dumps species' methods' inheritance history as plain text files into the
      argument directory.");
+
+      ("-methods-history-to-dotty",
+       Arg.String Configuration.set_methods_history_to_dotty,
+       "
+     Dumps species' methods' inheritance history as Graphwiz (.dot) files into
+     the argument directory.");
       ("-no-ansi-escape",
        Arg.Unit Configuration.unset_fancy_ansi,
        "

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.198 2012-02-08 16:35:30 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.199 2012-02-21 17:27:08 pessaux Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -389,52 +389,6 @@ type typing_context = {
   tyvars_mapping : (Parsetree.vname * Types.type_simple) list
 }
 ;;
-
-
-
-
-let methods_history_to_text ~dirname ~current_species methods =
-  (* For each species, a file named with "history_", the species name and the
-     suffix ".txt" will be generated in the directory. *)
-  let (current_species_module, current_species_vname) = current_species in
-  let out_filename =
-    Filename.concat
-      dirname
-      ("history_" ^ current_species_module ^ "_" ^
-       (Parsetree_utils.name_of_vname current_species_vname) ^ ".txt") in
-  let out_hd = open_out_bin out_filename in
-  let out_ppf = Format.formatter_of_out_channel out_hd in
-  (* Just a local function to process printing of one method. Will be handy to
-     iterate on methods of a [SF_let_rec] field. *)
-  let process_on_method from n =
-    Format.fprintf out_ppf "** Method '%a':@\n" Sourcify.pp_vname n;
-    Format.fprintf out_ppf "\tInitially appearing in species '%a'@\n"
-      Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
-    List.iter
-      (fun (inherited_from, by_expression, _) ->
-        Format.fprintf out_ppf "\tAppearing by inheritance in species '%a'@\n"
-          Sourcify.pp_qualified_species inherited_from;
-        Format.fprintf out_ppf "\t\tVia expression '%a'@\n"
-          Sourcify.pp_simple_species_expr by_expression)
-      from.Env.fh_inherited_along in
-  (* Now, dump information for each field of the species, starting by
-     information about ourselves, then closest parent first. This means that
-     reading the text top-down, we "go back in the past". *)
-  List.iter
-    (function
-      | Env.TypeInformation.SF_sig (from, n, _)
-      | Env.TypeInformation.SF_let (from, n, _, _, _, _, _, _)
-      | Env.TypeInformation.SF_theorem (from, n, _, _, _, _)
-      | Env.TypeInformation.SF_property (from, n, _, _, _) ->
-          process_on_method from n
-      | Env.TypeInformation.SF_let_rec (_, l) ->
-          List.iter
-            (fun (from, n, _, _, _, _, _, _) -> process_on_method from n)
-            l)
-    methods;
-  close_out out_hd
-;;
-
 
 
 
@@ -4747,12 +4701,18 @@ let typecheck_species_def ctx env species_def =
     Env.TypeInformation.spe_sig_params = sig_params;
     Env.TypeInformation.spe_sig_methods = reordered_normalized_methods;
     Env.TypeInformation.spe_dep_graph = species_dep_graph } in
-  (* If asked, generate the dotty output of the methods history. *)
+  (* If asked, generate the textual output of the methods history. *)
   (match Configuration.get_methods_history_to_text () with
    | None -> ()
    | Some dirname ->
-       methods_history_to_text
-         ~dirname ~current_species reordered_normalized_methods);
+       InfoOutput.methods_history_to_text
+         ~dirname ~current_species reordered_normalized_methods) ;
+  (* If asked, generate the dotty output of the methods history. *)
+  (match Configuration.get_methods_history_to_dotty () with
+   | None -> ()
+   | Some dirname ->
+       InfoOutput.methods_history_to_dot
+         ~dirname ~current_species reordered_normalized_methods) ;
   (* Extend the initial environment with the species. Not the environment
      used to typecheck the internal definitions of the species !!! *)
   let env_with_species =

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.47 2012-02-09 17:27:20 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.48 2012-02-21 17:27:08 pessaux Exp $ *)
 
 exception No_input_file;;
 
@@ -21,7 +21,7 @@ exception No_input_file;;
 let focalize_version_number = (0, 7, 0)
 ;;
 
-let version_date = "$Date: 2012-02-09 17:27:20 $"
+let version_date = "$Date: 2012-02-21 17:27:08 $"
 ;;
 
 let focalize_short_version =
@@ -111,6 +111,12 @@ let (get_dotty_dependencies, set_dotty_dependencies) =
 ;;
 
 let (get_methods_history_to_text, set_methods_history_to_text) =
+  let methods_history_out_dir = ref None in
+  (fun () -> !methods_history_out_dir),
+  (fun fname -> methods_history_out_dir := Some fname)
+;;
+
+let (get_methods_history_to_dotty, set_methods_history_to_dotty) =
   let methods_history_out_dir = ref None in
   (fun () -> !methods_history_out_dir),
   (fun fname -> methods_history_out_dir := Some fname)

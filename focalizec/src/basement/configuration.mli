@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.28 2012-02-10 17:07:29 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.29 2012-02-21 17:27:08 pessaux Exp $ *)
 
 (** {3 The internal configuration of the FoCaLize compiler} *)
 
@@ -59,6 +59,9 @@ val set_dotty_dependencies : string -> unit
 
 val get_methods_history_to_text : unit -> string option
 val set_methods_history_to_text : string -> unit
+
+val get_methods_history_to_dotty : unit -> string option
+val set_methods_history_to_dotty : string -> unit
 
 val get_raw_ast_dump : unit -> bool
 val set_raw_ast_dump : unit -> unit

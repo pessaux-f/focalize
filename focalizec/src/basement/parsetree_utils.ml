@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.36 2012-02-10 16:24:40 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.37 2012-02-21 17:27:08 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -113,6 +113,14 @@ module VnameMod = struct
   let compare = compare
 end ;;
 module VnameSet = Set.Make (VnameMod) ;;
+
+
+
+module Qualified_speciesMod = struct
+  type t = Parsetree.qualified_species
+  let compare = compare
+end;;
+module Qualified_speciesMap = Map.Make(Qualified_speciesMod) ;;
 
 
 

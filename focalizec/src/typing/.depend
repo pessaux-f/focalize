@@ -9,6 +9,7 @@ dep_analysis.cmi: ../basement/types.cmi ../basement/parsetree_utils.cmi \
     ../basement/parsetree.cmi env.cmi depGraphData.cmi 
 param_dep_analysis.cmi: ../basement/types.cmi ../basement/parsetree_utils.cmi \
     ../basement/parsetree.cmi env.cmi 
+infoOutput.cmi: ../basement/parsetree.cmi env.cmi 
 infer.cmi: ../basement/types.cmi ../basement/parsetree.cmi \
     ../basement/location.cmi env.cmi depGraphData.cmi 
 match_analysis.cmi: ../basement/location.cmi infer.cmi env.cmi 
@@ -48,16 +49,22 @@ param_dep_analysis.cmo: ../basement/types.cmi ../basement/parsetree_utils.cmi \
     ../basement/parsetree.cmi env.cmi param_dep_analysis.cmi 
 param_dep_analysis.cmx: ../basement/types.cmx ../basement/parsetree_utils.cmx \
     ../basement/parsetree.cmi env.cmx param_dep_analysis.cmi 
+infoOutput.cmo: ../parser/sourcify.cmi ../basement/parsetree_utils.cmi \
+    env.cmi infoOutput.cmi 
+infoOutput.cmx: ../parser/sourcify.cmx ../basement/parsetree_utils.cmx \
+    env.cmx infoOutput.cmi 
 infer.cmo: ../basement/types.cmi substExpr.cmi substColl.cmi \
     ../parser/sourcify.cmi scoping.cmi ../basement/parsetree_utils.cmi \
     ../basement/parsetree.cmi ../basement/miscHelpers.cmi \
-    ../basement/location.cmi ../basement/handy.cmi env.cmi dep_analysis.cmi \
-    depGraphData.cmi ../basement/configuration.cmi ast_equal.cmi infer.cmi 
+    ../basement/location.cmi infoOutput.cmi ../basement/handy.cmi env.cmi \
+    dep_analysis.cmi depGraphData.cmi ../basement/configuration.cmi \
+    ast_equal.cmi infer.cmi 
 infer.cmx: ../basement/types.cmx substExpr.cmx substColl.cmx \
     ../parser/sourcify.cmx scoping.cmx ../basement/parsetree_utils.cmx \
     ../basement/parsetree.cmi ../basement/miscHelpers.cmx \
-    ../basement/location.cmx ../basement/handy.cmx env.cmx dep_analysis.cmx \
-    depGraphData.cmi ../basement/configuration.cmx ast_equal.cmx infer.cmi 
+    ../basement/location.cmx infoOutput.cmx ../basement/handy.cmx env.cmx \
+    dep_analysis.cmx depGraphData.cmi ../basement/configuration.cmx \
+    ast_equal.cmx infer.cmi 
 match_analysis.cmo: ../basement/types.cmi ../basement/parsetree_utils.cmi \
     ../basement/parsetree.cmi ../basement/location.cmi infer.cmi env.cmi \
     match_analysis.cmi 
