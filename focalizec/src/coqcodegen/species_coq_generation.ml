@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.190 2012-02-10 13:02:24 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.191 2012-02-23 10:23:07 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -1147,7 +1147,9 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
          "(* For toplevel definition used via \"by definition of %a\". *)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident;
        let name_for_zenon =
-         Parsetree_utils.make_concatenated_name_with_operators_expanded_from_qualified_vname qvname in
+         Parsetree_utils.make_concatenated_name_with_operators_expanded_from_qualified_vname
+           ~current_unit: ctx.Context.scc_current_unit
+           ~dont_qualify_if_local: true qvname in
        match value_body with
         | Env.CoqGenInformation.VB_non_toplevel -> assert false
         | Env.CoqGenInformation.VB_toplevel_let_bound (params, scheme, body) ->

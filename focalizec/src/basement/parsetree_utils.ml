@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.37 2012-02-21 17:27:08 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.38 2012-02-23 10:23:07 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -445,11 +445,20 @@ let make_concatenated_name_from_qualified_vname = function
 
 
 
-let make_concatenated_name_with_operators_expanded_from_qualified_vname =
+(** [dont_qualify_if_local]: If [true] then if the name is qualified an
+    appears to come from the [current_unit] then qualification is omitted.
+    Thsi prevents to generate names refering explicitely to their hosting
+    module. *)
+let make_concatenated_name_with_operators_expanded_from_qualified_vname
+    ~current_unit ~dont_qualify_if_local =
   function
   | Parsetree.Vname vname -> vname_as_string_with_operators_expanded vname
-  | Parsetree.Qualified (mod_name, vname) ->
-      mod_name ^ "." ^ (vname_as_string_with_operators_expanded vname)
+  | Parsetree.Qualified (mod_name, vname) -> (
+      if dont_qualify_if_local && current_unit = mod_name then
+        vname_as_string_with_operators_expanded vname
+      else
+        mod_name ^ "." ^ (vname_as_string_with_operators_expanded vname)
+     )
 ;;
 
 
