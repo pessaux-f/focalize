@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: env.ml,v 1.138 2011-05-27 15:05:43 weis Exp $ *)
+(* $Id: env.ml,v 1.139 2012-02-23 17:42:43 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -344,7 +344,7 @@ module ScopeInformation = struct
       {b Exported} : Yes.                                               *)
   (* ****************************************************************** *)
   type species_scope =
-      (** The identifier is a specied name defined at toplevel in a file. *)
+      (** The identifier is a species name defined at toplevel in a file. *)
     | SPBI_file of Types.fname
       (** The identifier is a locally bound collection like in the case of a
           "is"-bound parameter (i.e. [c is ...]) where [c] is then considered
