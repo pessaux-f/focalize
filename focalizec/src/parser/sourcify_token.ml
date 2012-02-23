@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify_token.ml,v 1.19 2011-05-04 09:22:46 maarek Exp $ *)
+(* $Id: sourcify_token.ml,v 1.20 2012-02-23 15:37:12 pessaux Exp $ *)
 
 open Parser;;
 
@@ -54,7 +54,6 @@ let token ppf = function
   | LBRACKET -> Format.fprintf ppf "%s" "LBRACKET"
   | RBRACKET -> Format.fprintf ppf "%s" "RBRACKET"
   | COMMA -> Format.fprintf ppf "%s" "COMMA"
-  | COMMA_OP s -> Format.fprintf ppf "%s %s" "COMMA_OP" s
   | CONJUNCTION -> Format.fprintf ppf "%s" "CONJUNCTION"
   | DISJUNCTION -> Format.fprintf ppf "%s" "DISJUNCTION"
   | NEGATION -> Format.fprintf ppf "%s" "NEGATION"

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: lexer.mll,v 1.94 2011-05-06 18:01:39 maarek Exp $ *)
+(* $Id: lexer.mll,v 1.95 2012-02-23 15:37:12 pessaux Exp $ *)
 
 {
 (** {3 The Focalize lexer} *)
@@ -226,11 +226,6 @@ let token_of_uppercase_infix_symbol s =
   let length_s = String.length s in
   let length_meaningful = length_s - i in
   match c with
-  | ',' ->
-    begin match length_s, length_meaningful with
-    | 1, 1 -> COMMA
-    | _, _ -> COMMA_OP s
-    end
   | ':' ->
     begin match length_s, length_meaningful with
     | 1, 1 -> COLON
@@ -834,12 +829,9 @@ let start_uppercase_ident =
 let start_lowercase_infix_symbol =
     '_'* start_lowercase_infix_symbolic
 
-(** Starts a usual uppercase infix symbol, such as [::] or [:->:].
-    Note that ',' cannot be preceded by a '_' char due to a fatal conflict
-    with the pair notation: we want x_, y to be parsed as x_ then COMMA then y. *)
+(** Starts a usual uppercase infix symbol, such as [::] or [:->:]. *)
 let start_uppercase_infix_symbol =
-    ','
-  | '_'* start_uppercase_infix_symbolic
+  '_'* start_uppercase_infix_symbolic
 
 (** {8 Prefix symbols} *)
 
@@ -935,8 +927,7 @@ let regular_uppercase_infix_symbol =
    continue_uppercase_infix_symbol* char
  ]}
    We write instead the following: *)
-    ',' continue_uppercase_infix_symbol*
-  | '_'* ':' continue_uppercase_infix_symbol* ':'
+    '_'* ':' continue_uppercase_infix_symbol* ':'
   | '_'* '`' continue_uppercase_infix_symbol* '`'
 
 (** {6 Delimited identifiers} *)

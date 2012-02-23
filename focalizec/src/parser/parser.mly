@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.163 2011-05-27 15:04:12 weis Exp $ *)
+(* $Id: parser.mly,v 1.164 2012-02-23 15:37:12 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -176,7 +176,6 @@ let mk_proof_label (s1, s2) =
 
 /* General infix and prefix operators */
 %token COMMA
-%token <string> COMMA_OP
 
 %token CONJUNCTION
 %token DISJUNCTION
@@ -313,7 +312,7 @@ let mk_proof_label (s1, s2) =
        /* expr (e OP e OP e) with OP starting with ':' (e.g. ":=") */
 %nonassoc AS                       /* pattern (pat as RLIDENT) */
 %right    BAR                      /* Dangling match (match ... with ...) */
-%left     COMMA COMMA_OP
+%left     COMMA
        /* expr/expr_comma_list (e OP e OP e) with OP respectively */
        /* being ',' or starting with ',' */
 %right    DASH_GT DASH_GT_OP
@@ -1316,9 +1315,6 @@ expr:
     { mk_infix_application $1 $2 $3 }
 
   | expr COLON_OP expr
-    { mk_infix_application $1 $2 $3 }
-
-  | expr COMMA_OP expr
     { mk_infix_application $1 $2 $3 }
 
   | expr DASH_GT_OP expr
