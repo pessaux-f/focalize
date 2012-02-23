@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: products.fcl,v 1.14 2011-05-25 14:43:16 maarek Exp $ *)
+(* $Id: products.fcl,v 1.15 2012-02-23 10:49:39 rr Exp $ *)
 
 (**
 
@@ -279,24 +279,16 @@ species Cartesian_product (A is Setoid, B is Setoid) =
   let second (x) = match x with | (_, r) -> r;
   let pair (x, y) = (x, y);
 
-  (** Credits Eric Jaeger, William Bartlett *)
+  (* [rr]:  warning unused variable by Zenon should not be *)
   proof of pair_preserves_first =
-    (* a piece of Coq with help of the compiler *)
-     (*[rr]: todo invert syntax of coq proof ? *)
-    coq proof
-    property A!equal_reflexive
-    definition of pair, first
-    (*[rr]: todo add Qed automagically ? *)
-    {* intros; unfold abst_pair, abst_first; apply _p_A_equal_reflexive. Qed.*}
+    by property A!equal_reflexive
+       definition of pair, first
     ;
 
-  (** Credits Eric Jaeger, William Bartlett  *)
+  (* [rr]:  warning unused variable by Zenon should not be *)
   proof of pair_preserves_second =
-    (* a piece of Coq with help of the compiler*)
-    coq proof
-    property B!equal_reflexive
-    definition of pair, second
-    {* intros; unfold abst_pair, abst_second; apply _p_B_equal_reflexive. Qed. *}
+    by property B!equal_reflexive
+       definition of pair, second
     ;
 
 end;;
