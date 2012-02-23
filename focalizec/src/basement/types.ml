@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.86 2012-02-10 14:26:10 pessaux Exp $ *)
+(* $Id: types.ml,v 1.87 2012-02-23 15:18:59 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -1348,11 +1348,13 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
         name in
 
   let pp_type_name_to_ml ~current_unit ppf (hosting_module, constructor_name) =
+    let constructor_name' =
+      Anti_keyword_conflict.string_to_no_keyword_string constructor_name in
     if current_unit = hosting_module then
-      Format.fprintf ppf "_focty_%s" constructor_name
+      Format.fprintf ppf "_focty_%s" constructor_name'
     else
       Format.fprintf ppf "%s._focty_%s"
-        (String.capitalize hosting_module) constructor_name in
+        (String.capitalize hosting_module) constructor_name' in
 
   let rec rec_pp_to_ml ~current_unit collections_carrier_mapping prio ppf ty =
     (* First of all get the "repr" guy ! *)
@@ -1503,11 +1505,13 @@ let (pp_type_simple_to_coq, pp_type_simple_args_to_coq,
         name in
 
   let pp_type_name_to_coq ~current_unit ppf (hosting_module, constructor_name) =
+    let constructor_name' =
+      Anti_keyword_conflict.string_to_no_keyword_string constructor_name in
     if current_unit = hosting_module then
-      Format.fprintf ppf "%s__t" constructor_name
+      Format.fprintf ppf "%s__t" constructor_name'
     else
       (* In Coq, no file name capitalization ! *)
-      Format.fprintf ppf "%s.%s__t" hosting_module constructor_name in
+      Format.fprintf ppf "%s.%s__t" hosting_module constructor_name' in
 
 
   let rec rec_pp_to_coq ctx prio ppf ty =

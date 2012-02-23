@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.63 2012-02-21 17:27:08 pessaux Exp $
+# $Id: Makefile,v 1.64 2012-02-23 15:18:59 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -37,8 +37,8 @@ BYT_OBJS =\
  ../basement/configuration.cmo\
  ../basement/handy.cmo\
  ../basement/location.cmo\
- ../basement/types.cmo\
  ../basement/anti_keyword_conflict.cmo\
+ ../basement/types.cmo\
  ../basement/files.cmo\
  ../basement/parsetree_utils.cmo\
  ../basement/miscHelpers.cmo\

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: anti_keyword_conflict.ml,v 1.1 2012-02-10 16:24:40 pessaux Exp $ *)
+(* $Id: anti_keyword_conflict.ml,v 1.2 2012-02-23 15:18:59 pessaux Exp $ *)
 
 
 module StrMod = struct
@@ -68,8 +68,15 @@ List.iter
     ("return", "_return_") ;
     (* ("Set", "_Set_") ; Non-lowercase. *)
     (* ("Type", "_Type_") ; Non-lowercase. *)
-    ("using", "_using_") ;
-    ("", "__") ;
-    ("", "__") ;
+    ("using", "_using_")
   ]
 ;;
+
+
+let string_to_no_keyword_string s =
+  try StrMap.find s !lowerc_keywords_map with Not_found -> s ;;
+
+
+
+let string_to_no_keyword_string_if_diff s =
+  try Some (StrMap.find s !lowerc_keywords_map) with Not_found -> None ;;

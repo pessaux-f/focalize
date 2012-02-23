@@ -13,18 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: anti_keyword_conflict.mli,v 1.1 2012-02-10 16:24:40 pessaux Exp $ *)
+(* $Id: anti_keyword_conflict.mli,v 1.2 2012-02-23 15:18:59 pessaux Exp $ *)
 
-module StrMod : sig type t = string val compare : 'a -> 'a -> int end
-
-module StrMap :
-  sig
-    type key = StrMod.t
-    type 'a t = 'a Map.Make(StrMod).t
-    val empty : 'a t
-    val add : key -> 'a -> 'a t -> 'a t
-    val find : key -> 'a t -> 'a
-  end
-
-val lowerc_keywords_map : (string StrMap.t) ref
-
+val string_to_no_keyword_string : string -> string
+val string_to_no_keyword_string_if_diff : string -> string option

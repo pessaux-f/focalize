@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.38 2012-02-23 10:23:07 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.39 2012-02-23 15:18:59 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -247,17 +247,18 @@ let vname_as_string_with_operators_expanded = function
   | Parsetree.Vuident ("()" | "[]" | "::" as s) -> s
   | Parsetree.Vlident s -> (
       (* Check if the lowercase identifier must be renamed to prevent keyword
-         collision in OCaml of Coq. *)
-      try
-        Anti_keyword_conflict.StrMap.find
-          s !Anti_keyword_conflict.lowerc_keywords_map
-      with Not_found ->
-        (* If the identifier was not conflicting with keywords then we must
-           process it like other identifiers. In effect, conflict resolution
-           is done so that replacement string is suitable for direct output, so
-           we don't need to send this string to the parsing done on other
-           identifiers. *)
-        parse_operator_string s
+         collision in OCaml of Coq. In this case, transformation of possible
+         special characters is directly handled by the keyword collision
+         avoidance. So no need to call [parse_operator_string] after. *)
+      match Anti_keyword_conflict.string_to_no_keyword_string_if_diff s with
+      | Some s' -> s'
+      | None ->
+          (* If the identifier was not conflicting with keywords then we must
+             process it like other identifiers. In effect, conflict resolution
+             is done so that replacement string is suitable for direct output,
+             so we don't need to send this string to the parsing done on other
+             identifiers. *)
+          parse_operator_string s
      )
   | Parsetree.Vuident s | Parsetree.Vpident s
   | Parsetree.Viident s -> parse_operator_string s
