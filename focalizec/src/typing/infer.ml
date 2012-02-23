@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.199 2012-02-21 17:27:08 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.200 2012-02-23 17:19:20 pessaux Exp $ *)
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception used when the fusion algorithm (leading to the
@@ -2316,7 +2316,10 @@ let species_expr_to_species_param_expr ~current_unit env species_expr =
 let rec typecheck_expr_as_species_parameter_argument ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
   | Parsetree.E_self ->
-      Format.eprintf "Self is subspecies by recursion not checked: todo@.";
+      Format.eprintf
+        "@[%tWarning:%t Self@ is@ subspecies@ by recursion@ not@ \
+         @ checked:@ focalizec@ compiler@ TODO.@]@."
+        Handy.pp_set_bold Handy.pp_reset_effects ;
       TSPA_self
   | Parsetree.E_constr (cstr_expr, []) ->
       (* We re-construct a fake ident from the constructor expression just to

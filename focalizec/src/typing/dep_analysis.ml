@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.72 2009-08-27 14:14:52 doligez Exp $ *)
+(* $Id: dep_analysis.ml,v 1.73 2012-02-23 17:19:20 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -31,6 +31,7 @@
 
 
 (* For debugging purpose only. *)
+(*
 let debug_print_dependencies_from_parameters l =
   List.iter
     (fun (species_param, methods) ->
@@ -52,7 +53,9 @@ let debug_print_dependencies_from_parameters l =
       Format.eprintf "@.")
     l
 ;;
+*)
 
+(*
 let debug_print_dependencies_from_parameters2 l =
   List.iter
     (fun (species_param, (Env.ODFP_methods_list methods)) ->
@@ -75,7 +78,9 @@ let debug_print_dependencies_from_parameters2 l =
       Format.eprintf "@.")
     l
 ;;
+*)
 
+(*
 let debug_print_dependencies_from_parameters3 l =
   List.iter
     (fun (param_name, (Env.ODFP_methods_list methods)) ->
@@ -93,7 +98,7 @@ let debug_print_dependencies_from_parameters3 l =
       Format.eprintf "@.")
     l
 ;;
-(**)
+*)
 
 
 
@@ -1554,7 +1559,7 @@ let ensure_species_well_formed ~current_species fields =
 
    {b Exported} : No.                                                      *)
 (* *********************************************************************** *)
-let erase_field field =
+let erase_field ~current_species field =
   match field with
   | Env.TypeInformation.SF_sig (from, vname, _) ->
     (* Also includes "rep". *)
@@ -1572,7 +1577,7 @@ let erase_field field =
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
           Sourcify.pp_vname vname
-          Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
+          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
       (* Turn the "let" into a "sig". *)
       [Env.TypeInformation.SF_sig (from, vname, sch)]
   | Env.TypeInformation.SF_let_rec (_, l) ->
@@ -1582,16 +1587,32 @@ let erase_field field =
           if Configuration.get_verbose () then
             Format.eprintf "Erasing field '%a' coming from '%a'.@."
               Sourcify.pp_vname n
-              Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
+              Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
           Env.TypeInformation.SF_sig (from, n, sch))
         l
   | Env.TypeInformation.SF_theorem (from, n, num_ty_vars, prop, _, deps_rep) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
           Sourcify.pp_vname n
-          Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
+          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
       (* Turn the "theorem" into a "property".
-         Hence, destroys any def-dependency on the carrier ! *)
+         Hence, destroys any def-dependency on the carrier ! Generate a
+         warning since the proof is not valid anymore, hence if the species
+         was able to be turned into a collection, it can't anymore. *)
+      Format.eprintf
+        "@[%tWarning:%t In species@ '%t%a%t'@ proof@ of@ method@ '%t%a%t'\
+         @ inherited@ from@ '%t%a%t'@ was@ invalidated.@ Proof@ has@ to@ be\
+         @ done@ again.@]@."
+         Handy.pp_set_bold Handy.pp_reset_effects
+         Handy.pp_set_underlined
+         Sourcify.pp_qualified_species current_species
+         Handy.pp_reset_effects
+         Handy.pp_set_underlined
+         Sourcify.pp_qualified_species from.Env.fh_initial_apparition
+         Handy.pp_reset_effects
+         Handy.pp_set_underlined
+         Sourcify.pp_vname n
+         Handy.pp_reset_effects ;
 (* [Unsure] Recalculer ces dépendances ? Je pense que le plus safe serait
    de ne pas les changer ! *)
       let deps_rep' = { deps_rep with Env.TypeInformation.dor_def = false } in
@@ -1710,7 +1731,7 @@ let erase_fields_in_context ~current_species context fields =
               Format.eprintf ".@.";
               end);
             (* Now, really process erasing. *)
-            let erased_m_field = erase_field m_field in
+            let erased_m_field = erase_field ~current_species m_field in
             (* Extent the erasing context with names of the current field. *)
             let new_context =
               Parsetree_utils.SelfDepSet.union

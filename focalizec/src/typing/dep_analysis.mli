@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: dep_analysis.mli,v 1.23 2009-06-08 15:35:39 pessaux Exp $ *)
+(* $Id: dep_analysis.mli,v 1.24 2012-02-23 17:19:20 pessaux Exp $ *)
 
 
 
@@ -51,6 +51,7 @@ val order_species_params_methods :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list
 
 (* For debugging purpose only. *)
+(*
 val debug_print_dependencies_from_parameters :
   (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list ->
     unit
@@ -60,4 +61,4 @@ val debug_print_dependencies_from_parameters2 :
 val debug_print_dependencies_from_parameters3 :
   (Parsetree.vname * Env.ordered_methods_from_params) list ->
     unit
-
+*)
