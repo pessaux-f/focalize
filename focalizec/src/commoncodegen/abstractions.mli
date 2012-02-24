@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.26 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.27 2012-02-24 17:38:07 pessaux Exp $ *)
 
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
@@ -37,8 +37,7 @@ type field_abstraction_info =
   | FAI_sig of (Env.TypeInformation.sig_field_info * abstraction_info)
   | FAI_let of (Env.TypeInformation.let_field_info * abstraction_info)
   | FAI_let_rec of
-      (Env.TypeInformation.let_rec_kind *
-       (Env.TypeInformation.let_field_info * abstraction_info) list)
+      (Env.TypeInformation.let_field_info * abstraction_info) list
   | FAI_theorem of (Env.TypeInformation.theorem_field_info * abstraction_info)
   | FAI_property of (Env.TypeInformation.property_field_info * abstraction_info)
 

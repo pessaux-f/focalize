@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.ml,v 1.12 2009-06-10 17:57:06 pessaux Exp $ *)
+(* $Id: minEnv.ml,v 1.13 2012-02-24 17:38:07 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -122,7 +122,7 @@ let minimal_typing_environment universe species_fields =
               else (found_rep_field := Some sch ; [])
           | Env.TypeInformation.SF_let l_binding ->
               process_one_let_binding false l_binding
-          | Env.TypeInformation.SF_let_rec (_, l) ->
+          | Env.TypeInformation.SF_let_rec l ->
               List.flatten (List.map (process_one_let_binding true) l)
           | Env.TypeInformation.SF_theorem (from, n, _, body, _, _) ->
               (begin

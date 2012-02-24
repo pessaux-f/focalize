@@ -13,9 +13,8 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.mli,v 1.43 2011-05-26 16:08:09 maarek Exp $ *)
+(* $Id: infer.mli,v 1.44 2012-02-24 17:38:08 pessaux Exp $ *)
 
-exception Wrong_recursion_kind_while_fusion of Location.t
 exception Wrong_type_by_inheritance of
   (Location.t * Parsetree.vname * Types.type_simple *
    Types.type_simple * Env.from_history * Env.from_history)

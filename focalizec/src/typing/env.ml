@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: env.ml,v 1.140 2012-02-24 14:37:44 pessaux Exp $ *)
+(* $Id: env.ml,v 1.141 2012-02-24 17:38:08 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -453,9 +453,6 @@ module TypeInformation = struct
                                              definition. *)
     }
 
-  type let_rec_kind =
-    | LRK_rec
-    | LRK_structural
 
   (* *********************************************************************** *)
   (** {b Descr} : Type of information recorded in the typing environment for
@@ -587,10 +584,9 @@ module TypeInformation = struct
     | SF_sig of sig_field_info   (** Field is a "signature". *)
     | SF_let of let_field_info   (** Field is a "let" bound definition. *)
     | SF_let_rec of
-        (let_rec_kind *
-         let_field_info list)   (** The list of information similar to what
-                                    can be found for a [SF_let], but for each
-                                    mutually recursive bound identifier. *)
+        let_field_info list   (** The list of information similar to what
+                                  can be found for a [SF_let], but for each
+                                  mutually recursive bound identifier. *)
     | SF_theorem of theorem_field_info    (** Field is a theorem. *)
     | SF_property of property_field_info  (** Field is a property. *)
 
@@ -818,19 +814,13 @@ module TypeInformation = struct
               Sourcify.pp_qualified_species from.fh_initial_apparition;
             Format.fprintf ppf "let %a : %a@\n"
               Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme
-        | SF_let_rec (rec_kind, rec_bounds) ->
-            (begin
+        | SF_let_rec rec_bounds -> (
             match rec_bounds with
              | [] -> assert false  (* Empty let rec is non sense ! *)
              | (from, vname, _, ty_scheme, _, _, _, _) :: rem ->
                  Format.fprintf ppf "(* From species %a. *)@\n"
                    Sourcify.pp_qualified_species from.fh_initial_apparition;
-                 let rec_token =
-                   match rec_kind with
-                    | LRK_structural -> "recstruct"
-                    | LRK_rec -> "rec" in
-                 Format.fprintf ppf "let %s %a : %a@\n"
-                   rec_token
+                 Format.fprintf ppf "let rec %a : %a@\n"
                    Sourcify.pp_vname vname Types.pp_type_scheme ty_scheme;
                  List.iter
                    (fun (local_from, v, _, s, _, _, _, _) ->
@@ -841,7 +831,7 @@ module TypeInformation = struct
                      Format.fprintf ppf "and %a : %a@\n"
                        Sourcify.pp_vname v Types.pp_type_scheme s)
                    rem
-            end)
+           )
         | SF_theorem (from, vname, _, body, _, _) ->
             Format.fprintf ppf "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from.fh_initial_apparition;
@@ -2105,11 +2095,10 @@ module TypingEMAccess = struct
            | TypeInformation.SF_sig (_, v, s)
            | TypeInformation.SF_let (_, v, _, s, _, _, _, _) ->
                [(v, (BO_absolute s))] @ accu
-           | TypeInformation.SF_let_rec (_, l) ->
+           | TypeInformation.SF_let_rec l ->
                let l' =
                  List.map
-                   (fun (_, v, _, s, _, _, _, _) ->
-                     (v, (BO_absolute s))) l in
+                   (fun (_, v, _, s, _, _, _, _) -> (v, (BO_absolute s))) l in
                l' @ accu)
         []
         spec_info.TypeInformation.spe_sig_methods in
@@ -2319,7 +2308,7 @@ let print_field_for_debug = function
       Format.eprintf ": %a " Types.pp_type_scheme sch;
       Format.eprintf "= %a@." Sourcify.pp_binding_body body;
       Format.eprintf "@."
-  | TypeInformation.SF_let_rec (_, l) ->
+  | TypeInformation.SF_let_rec l ->
       List.iter
         (fun (_, n, args, sch, body, _, _, _) ->
           Format.eprintf "let rec %a " Sourcify.pp_vname n;

@@ -266,9 +266,9 @@ let focalize_get_functions_list =
   let rec flatten_def l tail =
     match l with
     | [] -> tail
-    | ET.SF_let_rec((t, first::others))::r ->
-        flatten_def (ET.SF_let_rec((t, others))::r) (first::tail)
-    | ET.SF_let_rec((_, []))::r ->
+    | ET.SF_let_rec((first :: others))::r ->
+        flatten_def (ET.SF_let_rec((others))::r) (first::tail)
+    | ET.SF_let_rec([])::r ->
         flatten_def r tail
     | ET.SF_let(info)::r ->
         flatten_def r (info::tail)
@@ -973,10 +973,10 @@ let get_meth_def sn meth =
     match l with
     | [] ->
         raise (Function_doesnt_exists meth)
-    | ET.SF_let_rec((t, tt::p))::r ->
+    | ET.SF_let_rec((tt::p))::r ->
         (try search_meth nn [ET.SF_let tt] with
          | Function_doesnt_exists _ ->
-             search_meth nn (ET.SF_let_rec((t, p))::r)
+             search_meth nn (ET.SF_let_rec(p)::r)
         )
     | ET.SF_let((_,n,n_l, m, b, _, _, _))::r ->
         let type_parms = typ_of_type_scheme m in
@@ -989,7 +989,7 @@ let get_meth_def sn meth =
               add_meth_params n_l type_parms def
         else
           search_meth nn r
-    | ET.SF_let_rec((_, []))::r
+    | ET.SF_let_rec([])::r
     | _::r -> search_meth nn r in
   let ss = focalize_get_species sn in
   search_meth meth (ss.ET.spe_sig_methods)
@@ -1057,20 +1057,26 @@ let convert_field f =
   | ET.SF_let((_, name, _, _, body, _, _, _)) ->
       begin
         match body with
-        | BB_logical l -> PropDef(extract_vname name, proposition_of_tprop "" l.ast_desc)
+        | BB_logical l ->
+            PropDef(extract_vname name, proposition_of_tprop "" l.ast_desc)
         | BB_computational e -> Definition(extract_vname name, e)
       end
-  | ET.SF_let_rec(l) ->
-     RecDef (List.map (fun ((_, name, _, _, body, _, _, _)) ->
-      begin
-        match body with
-        | BB_logical l -> PropDef(extract_vname name, proposition_of_tprop "" l.ast_desc)
-        | BB_computational e -> Definition(extract_vname name, e)
-      end) (snd l))
-  | ET.SF_theorem(_, name, _, body, _, _) ->
-      Theorem(extract_vname name, proposition_of_tprop "" body.ast_desc)
-  | ET.SF_property(_, name,_ ,body, _) ->
-      Property(extract_vname name, proposition_of_tprop "" body.ast_desc);;
+  | ET.SF_let_rec l ->
+      RecDef
+        (List.map
+           (fun ((_, name, _, _, body, _, _, _)) ->
+             match body with
+             | BB_logical l ->
+                 PropDef
+                   (extract_vname name, proposition_of_tprop "" l.ast_desc)
+             | BB_computational e -> Definition (extract_vname name, e))
+           l)
+  | ET.SF_theorem (_, name, _, body, _, _) ->
+      Theorem (extract_vname name, proposition_of_tprop "" body.ast_desc)
+  | ET.SF_property (_, name,_ ,body, _) ->
+      Property (extract_vname name, proposition_of_tprop "" body.ast_desc)
+;;
+
 
 
 let is_collection spc =

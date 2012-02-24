@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substExpr.ml,v 1.23 2009-06-24 10:31:25 weis Exp $ *)
+(* $Id: substExpr.ml,v 1.24 2012-02-24 17:38:08 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs substitution of a value name [name_x]
@@ -220,8 +220,7 @@ and subst_let_definition ~param_unit ~bound_variables name_x by_expr let_def =
   let let_def_desc = let_def.Parsetree.ast_desc in
   (* Substitute in the AST node description. *)
   match let_def_desc.Parsetree.ld_rec with
-   | Parsetree.RF_no_rec ->
-       (begin
+   | Parsetree.RF_no_rec -> (
        (* In case of non recursive let-definition, the set of variables    *)
        (* insensitive to substitutions is incrementally extended. Do       *)
        (* not [fold_left] otherwise the list of bindings will be reversed. *)
@@ -237,9 +236,8 @@ and subst_let_definition ~param_unit ~bound_variables name_x by_expr let_def =
            (bound_variables, []) in
        let desc' = { let_def_desc with Parsetree.ld_bindings = bindings' } in
        ({ let_def with Parsetree.ast_desc = desc' }, bound_variables')
-       end)
-   | Parsetree.RF_rec | Parsetree.RF_structural ->
-       (begin
+      )
+   | Parsetree.RF_rec -> (
        (* First get all the bound variables in the recursive let-definition. *)
        let bound_variables' =
          List.map
@@ -257,7 +255,7 @@ and subst_let_definition ~param_unit ~bound_variables name_x by_expr let_def =
               let_def_desc.Parsetree.ld_bindings) in
        let desc' = { let_def_desc with Parsetree.ld_bindings = bindings' } in
        ({ let_def with Parsetree.ast_desc = desc' }, bound_variables')
-       end)
+      )
 
 
 
@@ -357,7 +355,7 @@ let subst_species_field ~param_unit name_x by_expr field =
       Env.TypeInformation.SF_let
         (from, vname, params_names, scheme, body', opt_proof, dep, log_flag)
       end)
-  | Env.TypeInformation.SF_let_rec (rec_kind, l) ->
+  | Env.TypeInformation.SF_let_rec l ->
       (* First get all the recursive bound variables. *)
       let bound_variables =
         List.map (fun (_, vname, _, _, _, _, _, _) -> vname) l in
@@ -371,7 +369,7 @@ let subst_species_field ~param_unit name_x by_expr field =
             (from, vname, params_names, scheme, body', opt_proof,
              dep, log_flag))
           l in
-      Env.TypeInformation.SF_let_rec (rec_kind, l')
+      Env.TypeInformation.SF_let_rec l'
   | Env.TypeInformation.SF_theorem
       (from, vname, scheme, body, proof, deps_rep) ->
       (begin

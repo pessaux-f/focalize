@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infoOutput.ml,v 1.1 2012-02-21 17:27:08 pessaux Exp $ *)
+(* $Id: infoOutput.ml,v 1.2 2012-02-24 17:38:08 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -62,11 +62,11 @@ let methods_history_to_text ~dirname ~current_species methods =
       | Env.TypeInformation.SF_theorem (from, n, _, _, _, _)
       | Env.TypeInformation.SF_property (from, n, _, _, _) ->
           process_on_method from n
-      | Env.TypeInformation.SF_let_rec (_, l) ->
+      | Env.TypeInformation.SF_let_rec l ->
           List.iter
             (fun (from, n, _, _, _, _, _, _) -> process_on_method from n)
             l)
-    methods;
+    methods ;
   close_out out_hd
 ;;
 
@@ -180,7 +180,7 @@ let methods_history_to_dot ~dirname ~current_species methods =
       | Env.TypeInformation.SF_theorem (from, n, _, _, _, _)
       | Env.TypeInformation.SF_property (from, n, _, _, _) ->
           process_on_method from n
-      | Env.TypeInformation.SF_let_rec (_, l) ->
+      | Env.TypeInformation.SF_let_rec l ->
           List.iter
             (fun (from, n, _, _, _, _, _, _) -> process_on_method from n)
             l)
@@ -221,7 +221,7 @@ let methods_history_to_dot ~dirname ~current_species methods =
       | Env.TypeInformation.SF_theorem (from, n, _, _, _, _)
       | Env.TypeInformation.SF_property (from, n, _, _, _) ->
           process_on_method2 from n
-      | Env.TypeInformation.SF_let_rec (_, l) ->
+      | Env.TypeInformation.SF_let_rec l ->
           List.iter
             (fun (from, n, _, _, _, _, _, _) -> process_on_method2 from n)
             l)

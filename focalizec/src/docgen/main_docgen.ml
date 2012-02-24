@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.40 2012-02-10 14:26:10 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.41 2012-02-24 17:38:07 pessaux Exp $ *)
 
 
 
@@ -566,7 +566,7 @@ let gen_doc_logical_let out_fmt env from_opt name pnames sch body_as_prop doc =
 let gen_doc_computational_let out_fmt env from name sch rec_flag doc =
   let attr_rec_string =
     (match rec_flag with
-     | Parsetree.RF_rec | Parsetree.RF_structural -> " recursive=\"yes\""
+     | Parsetree.RF_rec -> " recursive=\"yes\""
      | Parsetree.RF_no_rec -> "") in
   Format.fprintf out_fmt "@[<h 2><foc:definition%s>@\n" attr_rec_string;
   (* foc:foc-name. *)
@@ -590,7 +590,7 @@ let gen_doc_computational_let out_fmt env from name sch rec_flag doc =
 let gen_doc_computational_toplevel_let out_fmt name sch rec_flag =
   let attr_rec_string =
     (match rec_flag with
-     | Parsetree.RF_rec | Parsetree.RF_structural -> " recursive=\"yes\""
+     | Parsetree.RF_rec -> " recursive=\"yes\""
      | Parsetree.RF_no_rec -> "") in
   Format.fprintf out_fmt "@[<h 2><foc:global-fun%s>@\n" attr_rec_string;
   (* foc:foc-name. *)

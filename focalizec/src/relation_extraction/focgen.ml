@@ -87,7 +87,7 @@ and gen_focalize_code d code = match code with
 let rec gen_focalize (fn, args, code) d = 
   let fargs = List.map (function x -> (gen_ident x, None)) args in
  Parsetree.SF_let (mk_ast ( {
-	Parsetree.ld_rec = Parsetree.RF_structural;
+	Parsetree.ld_rec = Parsetree.RF_rec;
 	Parsetree.ld_logical = Parsetree.LF_no_logical;
 	Parsetree.ld_local = Parsetree.LF_no_local;
 	Parsetree.ld_bindings = [mk_ast ({

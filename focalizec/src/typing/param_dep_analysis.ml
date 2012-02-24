@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: param_dep_analysis.ml,v 1.31 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: param_dep_analysis.ml,v 1.32 2012-02-24 17:38:08 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : This module deals with the computation of which methods
@@ -79,7 +79,7 @@ let guess_method_computational_or_logical meth_name meth_ty_opt among =
                Parsetree_utils.DETK_computational ty
                end)
              else rec_guess q
-         | Env.TypeInformation.SF_let_rec (_, let_infos) ->
+         | Env.TypeInformation.SF_let_rec let_infos ->
              (try find_in_let_rec let_infos
              with Not_found -> rec_guess q)
        | Env.TypeInformation.SF_theorem (_, n, _, lexpr, _, _)

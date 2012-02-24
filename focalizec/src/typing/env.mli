@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: env.mli,v 1.106 2012-02-24 14:37:44 pessaux Exp $ *)
+(* $Id: env.mli,v 1.107 2012-02-24 17:38:08 pessaux Exp $ *)
 
 exception Unbound_constructor of (Parsetree.vname * Location.t)
 exception Unbound_label of (Parsetree.vname * Location.t)
@@ -81,10 +81,6 @@ module TypeInformation :
       ldf_recursive : Parsetree.rec_flag ;
       ldf_logical : Parsetree.logical_flag }
 
-    type let_rec_kind =
-      | LRK_rec
-      | LRK_structural
-
     type sig_field_info =
       (from_history * Parsetree.vname * Types.type_scheme)
 
@@ -116,7 +112,7 @@ module TypeInformation :
     and species_field =
       | SF_sig of sig_field_info
       | SF_let of let_field_info
-      | SF_let_rec of (let_rec_kind * let_field_info list)
+      | SF_let_rec of let_field_info list
       | SF_theorem of theorem_field_info
       | SF_property of property_field_info
 

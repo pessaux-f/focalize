@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.102 2012-02-10 13:25:36 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.103 2012-02-24 17:38:07 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -253,15 +253,14 @@ let generate_record_type ctx species_descr =
               end)
             end)
           end)
-      | Env.TypeInformation.SF_let_rec (_, l) ->
+      | Env.TypeInformation.SF_let_rec l ->
           List.iter
             (fun (from, n, _, sch, _, _, _, _) ->
               let ty = Types.specialize sch in
               (* If the type of the sig refers to type "Prop", then the sig
                  is related to a logical let and hence must not be generated
                  in OCaml. *)
-              if not (Types.refers_to_prop_p ty) then
-                (begin
+              if not (Types.refers_to_prop_p ty) then (
                 init_fields ();
                 Format.fprintf out_fmter "(* From species %a. *)@\n"
                   Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
@@ -273,7 +272,8 @@ let generate_record_type ctx species_descr =
                      ~current_unit: ctx.Context.scc_current_unit
                      collections_carrier_mapping)
                     ty
-                end))
+               )
+            )
             l
       | Env.TypeInformation.SF_theorem  (_, _, _, _, _, _)
       | Env.TypeInformation.SF_property (_, _, _, _, _) ->
@@ -575,7 +575,7 @@ let generate_methods ctx env ~self_manifest field =
               Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
             Misc_common.CSF_let compiled_field
        end)
-   | Abstractions.FAI_let_rec (_, l) ->
+   | Abstractions.FAI_let_rec l ->
        (begin
        match l with
         | [] ->
@@ -1653,7 +1653,7 @@ let collection_compile env ~current_unit out_fmter collection_def
               Format.fprintf out_fmter ".%a ;@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
               end)
-        | Env.TypeInformation.SF_let_rec (_, l) ->
+        | Env.TypeInformation.SF_let_rec l ->
             List.iter
               (fun (_, n, _, _, _, _, _, flags) ->
                 (* Generate only if not a logical let ! *)

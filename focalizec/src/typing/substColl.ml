@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: substColl.ml,v 1.34 2009-06-27 01:29:03 weis Exp $ *)
+(* $Id: substColl.ml,v 1.35 2012-02-24 17:38:08 pessaux Exp $ *)
 
 (* ************************************************************************ *)
 (** {b Descr} : This module performs substitution of a collection name [c1]
@@ -719,7 +719,7 @@ let subst_species_field ~current_unit c1 c2 = function
       Env.TypeInformation.SF_let
         (from, vname, params_names, scheme', body', opt_proof', dep, log_flag)
       end)
-  | Env.TypeInformation.SF_let_rec (rec_kind, l) ->
+  | Env.TypeInformation.SF_let_rec l ->
       (begin
       let l' =
         List.map
@@ -753,7 +753,7 @@ let subst_species_field ~current_unit c1 c2 = function
             (from, vname, params_names, scheme', body', opt_proof',
              dep, log_flag))
           l in
-      Env.TypeInformation.SF_let_rec (rec_kind, l')
+      Env.TypeInformation.SF_let_rec l'
       end)
   | Env.TypeInformation.SF_theorem
       (from, vname, num_ty_vars, body, proof, deps_rep) ->

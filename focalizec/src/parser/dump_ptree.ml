@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.49 2011-05-27 09:41:59 weis Exp $ *)
+(* $Id: dump_ptree.ml,v 1.50 2012-02-24 17:38:08 pessaux Exp $ *)
 
 let pp_annotation ppf doc =
   List.iter
@@ -338,7 +338,6 @@ let pp_constant = pp_ast pp_constant_desc
 let pp_rec_flag ppf = function
   | Parsetree.RF_no_rec -> Format.fprintf ppf "RF_no_rec"
   | Parsetree.RF_rec -> Format.fprintf ppf "RF_rec"
-  | Parsetree.RF_structural -> Format.fprintf ppf "RF_structural"
 ;;
 
 

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.90 2012-02-10 13:02:25 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.91 2012-02-24 17:38:07 pessaux Exp $ *)
 
 
 
@@ -699,8 +699,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
   let out_fmter = ctx.Context.scc_out_fmter in
   let is_rec =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> false
-     | Parsetree.RF_rec | Parsetree.RF_structural -> true) in
+     | Parsetree.RF_no_rec -> false | Parsetree.RF_rec -> true) in
   (* Generates the binder ("fix" or non-"fix"). *)
   Format.fprintf out_fmter "@[<2>let%s@ "
     (match is_rec with
@@ -1365,7 +1364,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
           Format.fprintf out_fmter "@]@\n"
           end)
         end)
-    | Env.TypeInformation.SF_let_rec (_, l) ->
+    | Env.TypeInformation.SF_let_rec l ->
         List.iter
           (fun (from, n, _, sch, _, _, _, _) ->
             let ty = Types.specialize sch in

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.40 2012-02-10 11:00:14 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.41 2012-02-24 17:38:07 pessaux Exp $ *)
 
 
 (* ******************************************************************** *)
@@ -46,8 +46,7 @@ let toplevel_let_def_compile ctx env let_def =
   (* Currently, toplevel recursive functions are generated with "Fixpoint". *)
   let is_rec =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> false
-     | Parsetree.RF_rec | Parsetree.RF_structural -> true) in
+     | Parsetree.RF_no_rec -> false | Parsetree.RF_rec -> true) in
   let in_recursive_let_section_of =
     if is_rec then
       List.map
