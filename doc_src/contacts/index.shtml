@@ -3,7 +3,7 @@
 <!--#include virtual="beforetitle-eng.html"-->
 </head><body>
 Contacts
-<!--#include virtual="aftertitle-eng.html"--><!-- \$Id: index.shtml,v 1.5 2012-02-10 17:35:04 pessaux Exp $ -->
+<!--#include virtual="aftertitle-eng.html"--><!-- \$Id: index.shtml,v 1.6 2012-02-24 16:09:29 pessaux Exp $ -->
 <div id="container">
 <div id="header">
 <h1>Contacts</h1>
@@ -108,17 +108,12 @@ Weis</a>
       </li>
     </ul>
   </li>
-</ul>
-</h3>
-<ul>
-  <li>
-    <h3>
-    <li><a href="http://www.ensta-paristech.fr/">ENSTA-ParisTech</a> - <a href="http://uei.ensta-paristech.fr/fr/index.html">UEI</a></li>
+  <br>
+  <li><a href="http://www.ensta-paristech.fr/">ENSTA-ParisTech</a> - <a href="http://uei.ensta-paristech.fr/fr/index.html">UEI</a>
     <ul>
-      <li><a href="mailto:francois.pessaux%20%5B%5Bat%5D%5D%20ensta-paristech.fr">François
-Pessaux</a> (Enseignant / Chercheur)</li>
+      <li><a href="mailto:francois.pessaux%20%5B%5Bat%5D%5D%20ensta-paristech.fr">François Pessaux</a> (Enseignant / Chercheur)
+      </li>
     </ul>
-    </h3>
   </li>
 </ul>
 <h3>
