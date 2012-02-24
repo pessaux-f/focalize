@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2011-05-27 07:33:41 weis Exp $
+# $Id: Makefile,v 1.7 2012-02-24 15:58:07 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -23,7 +23,7 @@ include $(ROOT_DIR)/Makefile.config
 
 PROJECT_WEB_TARGET_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
 
-DOC_SRC_DIR=$(ROOT_DIR)/doc/focalizec
+DOC_SRC_DIR=$(ROOT_DIR)/focalizec/doc_src
 
 # The reference manual compiled files.
 REFERENCE_MANUAL_SRC_DIR=$(DOC_SRC_DIR)/tex/refman
