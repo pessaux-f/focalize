@@ -14,17 +14,17 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: switch_recovery_automata.fcl,v 1.7 2009-06-27 01:29:02 weis Exp $ *)
+(* $Id: switch_recovery_automata.fcl,v 1.8 2012-02-24 16:22:35 pessaux Exp $ *)
 
 use "basics";;
-use "sets_orders";;
+use "sets";;
 use "gen_def";;
 use "request";;
 use "switch_recovery_reverse_automata";;
 use "switch_recovery_normal_automata";;
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
 open "gen_def";;
 open "request";;
 open "switch_recovery_reverse_automata";;

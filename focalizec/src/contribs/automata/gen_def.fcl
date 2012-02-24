@@ -14,13 +14,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: gen_def.fcl,v 1.4 2009-06-27 01:29:02 weis Exp $ *)
+(* $Id: gen_def.fcl,v 1.5 2012-02-24 16:22:35 pessaux Exp $ *)
 
 use "basics";;
-use "sets_orders";;
+use "sets";;
 
 open "basics";;
-open "sets_orders";;
+open "sets";;
 
 (* Definition of the states *)
 species Gen_state =

@@ -14,13 +14,13 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main.fcl,v 1.5 2009-06-27 01:29:02 weis Exp $ *)
+(* $Id: main.fcl,v 1.6 2012-02-24 16:22:35 pessaux Exp $ *)
 
 (*
- *@version $Revision: 1.5 $ $Date: 2009-06-27 01:29:02 $
+ *@version $Revision: 1.6 $ $Date: 2012-02-24 16:22:35 $
  *)
 use "basics";;
-use "sets_orders";;
+use "sets";;
 use "gen_def";;
 use "request";;
 use "switch_recovery_normal_automata";;
