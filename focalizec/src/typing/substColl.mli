@@ -12,12 +12,11 @@
 (***********************************************************************)
 
 
-(* $Id: substColl.mli,v 1.5 2008-10-30 15:17:40 pessaux Exp $ *)
+(* $Id: substColl.mli,v 1.6 2012-02-24 14:37:44 pessaux Exp $ *)
 
 type substitution_replaced_collection_kind =
   | SRCK_coll of Types.type_collection
   | SRCK_self
-;;
 
 val subst_logical_expr :
   current_unit: Types.fname -> substitution_replaced_collection_kind ->

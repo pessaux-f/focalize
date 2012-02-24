@@ -1,9 +1,9 @@
 configuration.cmi: 
 handy.cmi: 
 location.cmi: 
+anti_keyword_conflict.cmi: 
 types.cmi: location.cmi 
 files.cmi: types.cmi 
-anti_keyword_conflict.cmi: 
 parsetree_utils.cmi: types.cmi parsetree.cmi 
 miscHelpers.cmi: types.cmi parsetree.cmi 
 build_stamp.cmo: 
@@ -16,14 +16,12 @@ handy.cmo: configuration.cmi handy.cmi
 handy.cmx: configuration.cmx handy.cmi 
 location.cmo: location.cmi 
 location.cmx: location.cmi 
+anti_keyword_conflict.cmo: anti_keyword_conflict.cmi 
+anti_keyword_conflict.cmx: anti_keyword_conflict.cmi 
 types.cmo: location.cmi handy.cmi anti_keyword_conflict.cmi types.cmi 
 types.cmx: location.cmx handy.cmx anti_keyword_conflict.cmx types.cmi 
 files.cmo: types.cmi configuration.cmi files.cmi 
 files.cmx: types.cmx configuration.cmx files.cmi 
-anti_keyword_conflict.cmo: anti_keyword_conflict.cmi \
-    anti_keyword_conflict.cmi 
-anti_keyword_conflict.cmx: anti_keyword_conflict.cmx \
-    anti_keyword_conflict.cmi 
 parsetree_utils.cmo: types.cmi parsetree.cmi location.cmi \
     anti_keyword_conflict.cmi parsetree_utils.cmi 
 parsetree_utils.cmx: types.cmx parsetree.cmi location.cmx \

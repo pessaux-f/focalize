@@ -11,19 +11,19 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: env.mli,v 1.105 2011-05-27 15:05:43 weis Exp $ *)
+(* $Id: env.mli,v 1.106 2012-02-24 14:37:44 pessaux Exp $ *)
 
-exception Unbound_constructor of (Parsetree.vname * Location.t);;
-exception Unbound_label of (Parsetree.vname * Location.t);;
-exception Unbound_identifier of (Parsetree.vname * Location.t);;
-exception Unbound_type of (Parsetree.vname * Location.t);;
-exception Unbound_module of (Types.fname * Location.t);;
-exception Unbound_species of (Parsetree.vname * Location.t);;
-exception Unbound_collection of (Parsetree.vname * Location.t);;
+exception Unbound_constructor of (Parsetree.vname * Location.t)
+exception Unbound_label of (Parsetree.vname * Location.t)
+exception Unbound_identifier of (Parsetree.vname * Location.t)
+exception Unbound_type of (Parsetree.vname * Location.t)
+exception Unbound_module of (Types.fname * Location.t)
+exception Unbound_species of (Parsetree.vname * Location.t)
+exception Unbound_collection of (Parsetree.vname * Location.t)
 
-exception Rebound_type of (Parsetree.vname * Location.t);;
-exception Rebound_species of (Parsetree.vname * Location.t);;
-exception Rebound_toplevel_let of (Parsetree.vname * Location.t);;
+exception Rebound_type of (Parsetree.vname * Location.t)
+exception Rebound_species of (Parsetree.vname * Location.t)
+exception Rebound_toplevel_let of (Parsetree.vname * Location.t)
 
 
 type substitution_kind =
@@ -32,9 +32,8 @@ type substitution_kind =
        Types.substitution_by_replacement_collection_kind)
   | SK_ident_by_expression of
       (Types.fname * Parsetree.vname * Parsetree.expr_desc)
-;;
 
-val debug_substitution : substitution_kind list -> unit;;
+val debug_substitution : substitution_kind list -> unit
 
 type from_history = {
   fh_initial_apparition : Parsetree.qualified_species ;
@@ -43,9 +42,8 @@ type from_history = {
     (substitution_kind list))
       list
 }
-;;
 
-val intitial_inheritance_history : Parsetree.qualified_species -> from_history;;
+val intitial_inheritance_history : Parsetree.qualified_species -> from_history
 
 module ScopeInformation :
   sig
@@ -68,10 +66,10 @@ module ScopeInformation :
     type species_binding_info = {
       spbi_methods : Parsetree.vname list ;
       spbi_params_kind : species_parameter_kind list ;
+      spbi_inherits : Parsetree.species_expr list ;
       spbi_scope : species_scope
     }
   end
-;;
 
 module TypeInformation :
   sig
@@ -159,22 +157,18 @@ module TypeInformation :
   val vname_of_species_param : species_param -> Parsetree.vname
 
   end
-;;
 
 type collection_or_species =
   | COS_collection
   | COS_species
-;;
 
 type method_type_kind =
   | MTK_computational of Types.type_scheme
   | MTK_logical of Parsetree.logical_expr
-;;
 
 type ordered_methods_from_params =
   | ODFP_methods_list of
       (Parsetree.vname * Parsetree_utils.dependency_elem_type_kind) list
-;;
 
 type generic_code_gen_method_info = {
   mi_name : Parsetree.vname ;
@@ -185,7 +179,6 @@ type generic_code_gen_method_info = {
     (TypeInformation.species_param * ordered_methods_from_params) list ;
   mi_abstracted_methods : Parsetree.vname list
   }
-;;
 
 module MlGenInformation :
   sig
@@ -206,7 +199,6 @@ module MlGenInformation :
     type label_mapping_info = Parsetree.external_translation_desc
     type constructor_mapping_info = Parsetree.external_translation_desc
   end
-;;
 
 
 module CoqGenInformation :
@@ -249,7 +241,6 @@ module CoqGenInformation :
 
     type type_info = TypeInformation.type_description
   end
-;;
 
 module ScopingEnv :
   sig
@@ -290,7 +281,6 @@ module ScopingEnv :
         loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
       t -> ScopeInformation.species_binding_info
   end
-;;
 
 type 'a binding_origin =
     (** The binding comes from the current compilation unit. *)
@@ -298,7 +288,6 @@ type 'a binding_origin =
     (** The binding was inserted by a "open" directive of the file in
         argument. *)
   | BO_opened of (Types.fname * 'a)
-;;
 
 type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
   constructors : (Parsetree.constructor_name * ('constrs binding_origin)) list;
@@ -310,7 +299,6 @@ type ('constrs, 'labels, 'types, 'values, 'species) generic_env = {
   (** [species] Contains both species and collections. *)
   species : (Parsetree.vname * ('species binding_origin)) list
 }
-;;
 
 
 module TypingEnv :
@@ -356,12 +344,11 @@ module TypingEnv :
           t -> TypeInformation.species_description
 
   end
-;;
 
 (* For focaltest : *)
-val get_species_list : TypingEnv.t -> Parsetree.vname list;;
-val get_constructor_list : TypingEnv.t -> Parsetree.constructor_name list;;
-val get_type_list : TypingEnv.t -> Parsetree.vname list;;
+val get_species_list : TypingEnv.t -> Parsetree.vname list
+val get_constructor_list : TypingEnv.t -> Parsetree.constructor_name list
+val get_type_list : TypingEnv.t -> Parsetree.vname list
 (* *************** *)
 
 module MlGenEnv :
@@ -391,7 +378,6 @@ module MlGenEnv :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
         t -> MlGenInformation.species_binding_info
   end
-;;
 
 module CoqGenEnv :
   sig
@@ -435,34 +421,37 @@ module CoqGenEnv :
       loc: Location.t -> current_unit: Types.fname ->
       Parsetree.ident -> t -> CoqGenInformation.type_info
   end
-;;
 
-exception No_available_OCaml_code_generation_envt of Types.fname;;
-exception No_available_Coq_code_generation_envt of Types.fname;;
+exception No_available_OCaml_code_generation_envt of Types.fname
+exception No_available_Coq_code_generation_envt of Types.fname
 
-type fo_file_structure;;
+type fo_file_structure
 
 val scope_open_module :
   loc: Location.t -> Types.fname -> ScopingEnv.t -> ScopingEnv.t
-;;
+
 val type_open_module :
-  loc: Location.t -> Types.fname -> TypingEnv.t -> TypingEnv.t;;
+  loc: Location.t -> Types.fname -> TypingEnv.t -> TypingEnv.t
+
 val mlgen_open_module :
   loc: Location.t -> Types.fname -> MlGenEnv.t -> MlGenEnv.t
-;;
+
 val coqgen_open_module :
   loc: Location.t -> Types.fname -> CoqGenEnv.t -> CoqGenEnv.t
-;;
+
 
 val make_fo_file :
   source_filename: Types.fname -> ScopingEnv.t -> TypingEnv.t ->
     MlGenEnv.t option -> CoqGenEnv.t option -> unit
-;;
+
+val iter_on_species_scopped :
+  (Parsetree.vname * ScopeInformation.species_binding_info binding_origin ->
+    unit) ->
+  fo_file_structure ->
+    unit
 
 val inspect_fo_structure : Format.formatter -> fo_file_structure -> unit
-;;
 
 (* For debug purpose. *)
 val print_field_for_debug : TypeInformation.species_field -> unit
-;;
 

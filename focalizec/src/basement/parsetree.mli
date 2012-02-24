@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.63 2011-05-27 09:39:08 weis Exp $ *)
+(* $Id: parsetree.mli,v 1.64 2012-02-24 14:37:44 pessaux Exp $ *)
 
 (** {2 The FoCaLiZe abstract syntax tree} *)
 
@@ -70,7 +70,6 @@ and annot_elem = {
   ae_desc : string; (** The contents of the annotation. *)
   ae_tag : string; (** The tag to designate which processor is concerned. *)
 }
-;;
 
 (** {6 Type information provision in the AST} *)
 
@@ -97,7 +96,6 @@ type ast_node_type_information =
 
 (** Note: after the type-checking pass, no AST node should still have the
     [Anti_none] kind of type information. *)
-;;
 
 (** {6 The polymorphic AST data structure} *)
 
@@ -120,7 +118,6 @@ type 'a ast = {
    mutable ast_type : ast_node_type_information;
    (** The type information of the node. *)
 }
-;;
 
 (** {3 Names of the various entities} *)
 
@@ -130,7 +127,6 @@ type module_name = Types.fname
 (** The type of ``module'' names.
   Since there are no modules in FoCaLiZe yet, modules are just files and
   module names are just file base names without their ".fcl" extension. *)
-;;
 
 type vname =
    | Vlident of string (** Lowercase (prefix) alphanumeric ident. *)
@@ -141,34 +137,27 @@ type vname =
 (** The type of variables classified by their respective lexical category,
   which can be regular identifiers (lowercase or capitalized), infix, or
   prefix symbolic identifiers. *)
-;;
 
 type qualified_species = module_name * vname
 (** The name of a species qualified with its defining module. *)
-;;
 
 type qualified_vname =
    | Vname of vname
    | Qualified of module_name * vname
 (** A [vname] with possibly a module name qualification. *)
-;;
 
 type qualified_collection_name = qualified_vname
 (** The optionally qualified name of a collection. *)
-;;
 
 type constructor_name = vname
 (** A constructor name as mentioned in type definitions. *)
-;;
 
 type label_name = vname
 (** A label name as mentioned in type definitions and ONLY there. Not in
     expressions ! *)
-;;
 
 type node_label = int * string
 (** A node label in a proof as a integer level and a string label. *)
-;;
 
 (** {6 Identifiers specific to expressions and patterns} *)
 
@@ -183,7 +172,6 @@ and expr_ident_desc =
         and the name of the method. *)
 (** The identifiers that appear in expressions: they could be globally or
     locally bound identifiers or method names. *)
-;;
 
 (** {6 Other identifiers} *)
 
@@ -193,21 +181,18 @@ and ident_desc =
   | I_global of qualified_vname
 (** Unclassified identifiers: identifiers that can appear anywhere
     in the parse trees. *)
-;;
 
 type constructor_ident = constructor_ident_desc ast
 and constructor_ident_desc =
   | CI of ident
 (** The constructor names that can appear in an expression or a pattern.
     This is always a global uppercase qualified identifier. *)
-;;
 
 type label_ident = label_ident_desc ast
 and label_ident_desc =
   | LI of ident
 (** The label names that can appear in an expression or a pattern.
     This is always a global lowercase qualified identifier. *)
-;;
 
 (** {3 Type expressions} *)
 
@@ -220,7 +205,6 @@ and rep_type_def_desc =
   | RTE_app of ident * rep_type_def list
   | RTE_prod of rep_type_def list
   | RTE_paren of rep_type_def
-;;
 
 (** {6 Types for all other entities: values, constructors, ...} *)
 
@@ -233,7 +217,6 @@ and type_expr_desc =
   | TE_self
   | TE_prop
   | TE_paren of type_expr
-;;
 
 (** {3 External definitions for values and constructors} *)
 
@@ -247,7 +230,6 @@ type external_language =
   | EL_Caml
   | EL_Coq
   | EL_external of string
-;;
 
 (** {6 External expressions} *)
 
@@ -261,7 +243,6 @@ and external_translation_desc =
 and external_code = string
 (** Foreign expressions are not parsed: they are just considered
     as unstructured strings of bytes. *)
-;;
 
 (** {6 External mappings. *)
 
@@ -274,7 +255,6 @@ and external_mapping_desc = external_binding list
 
 and external_binding = external_binding_desc ast
 and external_binding_desc = vname * external_translation
-;;
 
 (** {3 Type definitions} *)
 
@@ -323,7 +303,6 @@ and regular_type_def_body_desc =
     (** A sum type definition with its list of value constructors. *)
   | RTDB_record of (label_name * type_expr) list
     (** A record type definition with its list of labels. *)
-;;
 
 (** {3 Patterns} *)
 
@@ -334,7 +313,6 @@ and constant_desc =
   | C_bool of string
   | C_string of string
   | C_char of char
-;;
 
 type pattern = pat_desc ast
 and pat_desc =
@@ -346,24 +324,22 @@ and pat_desc =
   | P_record of (label_ident * pattern) list
   | P_tuple of pattern list
   | P_paren of pattern
-;;
 
 (** {3 Expressions} *)
 
 (** {6 Various flags for let definitions} *)
 
-type rec_flag = | RF_no_rec | RF_rec | RF_structural;;
+type rec_flag = | RF_no_rec | RF_rec | RF_structural
 
-type logical_flag = | LF_no_logical | LF_logical;;
+type logical_flag = | LF_no_logical | LF_logical
 
-type local_flag = | LF_no_local | LF_local;;
+type local_flag = | LF_no_local | LF_local
 
 type external_expr = external_expr_desc ast
 and external_expr_desc = {
   ee_internal : type_expr;
   ee_external : external_translation;
 }
-;;
 
 type expr = expr_desc ast
 and expr_desc =
@@ -488,7 +464,6 @@ and termination_proof_desc =
        Those two proofs (or more) are collected into a single proof as a
        conjunction. *)
   | TP_order of expr * param_list * proof
-;;
 
 (** {3 Species definitions} *)
 
@@ -503,21 +478,18 @@ and sig_def_desc = {
   sig_type : type_expr;
   sig_logical : logical_flag;
 }
-;;
 
 type proof_def = proof_def_desc ast
 and proof_def_desc = {
   pd_name : vname;
   pd_proof : proof;
 }
-;;
 
 type property_def = property_def_desc ast
 and property_def_desc = {
   prd_name : vname;
   prd_logical_expr : logical_expr;
 }
-;;
 
 type theorem_def = theorem_def_desc ast
 and theorem_def_desc = {
@@ -526,7 +498,6 @@ and theorem_def_desc = {
   th_stmt : logical_expr;
   th_proof : proof;
 }
-;;
 
 type termination_proof_def = termination_proof_def_desc ast
 and termination_proof_def_desc = {
@@ -542,7 +513,6 @@ and termination_proof_profile_desc = {
   (** The function's parameters. *)
   tpp_params : param_list;
 }
-;;
 
 (** {6 Species expressions} *)
 
@@ -555,7 +525,6 @@ and species_expr_desc = {
 and species_param = species_param_desc ast
 and species_param_desc =
   | SP of expr
-;;
 
 (** {6 Species definitions} *)
 
@@ -581,7 +550,6 @@ and species_field_desc =
   | SF_theorem of theorem_def
   | SF_proof of proof_def
   | SF_termination_proof of termination_proof_def
-;;
 
 (** {3 Collection definitions} *)
 
@@ -590,7 +558,6 @@ and collection_def_desc = {
   cd_name : vname;
   cd_body : species_expr;
 }
-;;
 
 (** {3 Testing definitions} *)
 
@@ -600,7 +567,6 @@ and testing_context_phrase_desc =
   | TstCtxPh_let of let_def
   | TstCtxPh_property of property_def
 and testing_context = testing_context_phrase list
-;;
 
 type testing_expr = testing_expr_desc ast
 and testing_expr_desc = {
@@ -608,19 +574,16 @@ and testing_expr_desc = {
     tst_properties : expr_ident list;
     tst_parameters : let_def list;
   }
-;;
 
 type testing_def = testing_def_desc ast
 and testing_def_desc = {
   tstd_name : vname;
   tstd_body : testing_expr;
 }
-;;
 
 (** {3 Toplevel entities} *)
 
 type expr_def = expr
-;;
 
 type phrase = phrase_desc ast
 and phrase_desc =
@@ -635,9 +598,7 @@ and phrase_desc =
   | Ph_let of let_def
   | Ph_theorem of theorem_def
   | Ph_expr of expr_def
-;;
 
 type file = file_desc ast
 and file_desc =
   | File of phrase list
-;;

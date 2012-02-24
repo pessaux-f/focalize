@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.91 2011-06-14 12:37:29 maarek Exp $ *)
+(* $Id: scoping.ml,v 1.92 2012-02-24 14:37:44 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -2334,7 +2334,9 @@ let scope_species_params_types ctx env params =
                   (* Because parameters are indeed COLLECTION parameters (i.e.
                      are intended to be finally instanciated to a collection),
                      they have no ... parameters, them. *)
-                  Env.ScopeInformation.spbi_params_kind = [];
+                  Env.ScopeInformation.spbi_params_kind = [] ;
+                  (* Collections do not inherit. *)
+                  Env.ScopeInformation.spbi_inherits = [] ;
                   Env.ScopeInformation.spbi_methods = species_methods }
                 accu_env in
             (* Now, extend the environment with the name of the carrier type
@@ -2426,7 +2428,8 @@ let scope_species_def ctx env species_def =
           match pkind.Parsetree.ast_desc with
            | Parsetree.SPT_in _ -> Env.ScopeInformation.SPK_in
            | Parsetree.SPT_is _ -> Env.ScopeInformation.SPK_is)
-        species_def_descr.Parsetree.sd_params;
+        species_def_descr.Parsetree.sd_params ;
+    Env.ScopeInformation.spbi_inherits = scoped_inherits.Parsetree.ast_desc ;
     Env.ScopeInformation.spbi_scope =
       Env.ScopeInformation.SPBI_file ctx.current_unit } in
   (* Add the species in the environment. *)
@@ -2442,9 +2445,9 @@ let scope_species_def ctx env species_def =
       (Env.ScopeInformation.TBI_defined_in ctx.current_unit)
       env_with_species in
   let scoped_def_descr = {
-    Parsetree.sd_name = species_def_descr.Parsetree.sd_name;
-    Parsetree.sd_params = scoped_params;
-    Parsetree.sd_inherits = scoped_inherits;
+    Parsetree.sd_name = species_def_descr.Parsetree.sd_name ;
+    Parsetree.sd_params = scoped_params ;
+    Parsetree.sd_inherits = scoped_inherits ;
     Parsetree.sd_fields = scoped_fields } in
   let scoped_def = { species_def with Parsetree.ast_desc = scoped_def_descr } in
   (scoped_def, final_env)
@@ -2477,6 +2480,8 @@ let scope_collection_def ctx env coll_def =
     Env.ScopeInformation.spbi_methods = methods_names;
     (* A collection never have remaining parameters ! *)
     Env.ScopeInformation.spbi_params_kind = [];
+    (* A collection never inherits. *)
+    Env.ScopeInformation.spbi_inherits = [] ;
     Env.ScopeInformation.spbi_scope =
       Env.ScopeInformation.SPBI_file ctx.current_unit } in
   (* Add the collection in the environment. *)

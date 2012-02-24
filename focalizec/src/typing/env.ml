@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: env.ml,v 1.139 2012-02-23 17:42:43 pessaux Exp $ *)
+(* $Id: env.ml,v 1.140 2012-02-24 14:37:44 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -389,6 +389,11 @@ module ScopeInformation = struct
         first-class expression point of view) and looked-up into the species
         field of the scoping environment. *)
     spbi_params_kind : species_parameter_kind list;
+    (** Scopped clauses inherit. this only serves to be able to dump the
+        inheritance graph of species. In effet, since methods presence is
+        incrementally done by eliminitating inheritance information, it
+        get impossible to find these clauses somewhere later. *)
+    spbi_inherits : Parsetree.species_expr list ;
     (** The information telling how the species is bound (i.e. "scoped"). *)
     spbi_scope : species_scope
   }
@@ -2247,6 +2252,11 @@ let make_fo_file ~source_filename scoping_toplevel_env typing_toplevel_env
 ;;
 
 
+
+(** {b Descr}: Iterate the function [f] on the species information part of a
+    scoping environment. This is mostly used to dump the inheritance graph of
+    species by examinating the scoping env. *)
+let iter_on_species_scopped f fo = List.iter f fo.ffs_scoping.species ;;
 
 
 

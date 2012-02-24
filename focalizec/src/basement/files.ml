@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: files.ml,v 1.15 2009-02-09 13:28:47 pessaux Exp $ *)
+(* $Id: files.ml,v 1.16 2012-02-24 14:37:44 pessaux Exp $ *)
 
 
 (** Paths for libraries lookup. *)
@@ -156,7 +156,7 @@ let check_magic in_handle (expected0, expected1, expected2, expected3) =
       read_major = major && read_minor = minor && read_patch_level = patch_level
       end)
     else false
-  with End_of_file ->
+  with End_of_file | Failure ("input_value: bad object") ->
     (* If we can't even read the magic information then the file is corrupted
        or not a FoCaLize object file. *)
     false

@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.64 2012-02-23 15:18:59 pessaux Exp $
+# $Id: Makefile,v 1.65 2012-02-24 14:37:44 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -114,6 +114,7 @@ FODUMP_OBJS=\
  ../typing/env.cmo\
  fodump.cmo
 
+
 EXE_NAME=$(PROJECT_NAME)
 EXE=$(EXE_NAME)-$(VERSION_NUMBER_FULL)
 
@@ -131,8 +132,9 @@ $(EXE_NAME).bin: $(BIN_OBJS)
 	$(CAML_BIN) str.cmxa $(BIN_OBJS) -o $@ &&\
 	$(LN) $(EXE_NAME).bin $(EXE_NAME)
 
-fodump: fodump.cmo
+fodump: $(FODUMP_OBJS)
 	$(CAML_BYT) $(FODUMP_OBJS) -o fodump
+
 
 install-local:
 	$(MKDIR) $(BIN_DIR) &&\

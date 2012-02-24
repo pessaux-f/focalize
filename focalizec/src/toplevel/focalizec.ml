@@ -12,7 +12,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.58 2012-02-21 17:27:08 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.59 2012-02-24 14:37:44 pessaux Exp $ *)
 
 exception Bad_file_suffix of string;;
 
@@ -24,21 +24,20 @@ let compile_fcl input_file_name =
     Filename.chop_extension (Filename.basename input_file_name) in
   (* Include the installation libraries directory in the search path. *)
   if Configuration.get_use_default_lib () then
-    Files.add_lib_path Installation.install_lib_dir;
+    Files.add_lib_path Installation.install_lib_dir ;
   (* Lex and parse the file. *)
   let ast = Parse_file.parse_file input_file_name in
   (* Hard-dump the AST if requested. *)
   if Configuration.get_raw_ast_dump () then
-    Dump_ptree.pp_file Format.err_formatter ast;
+    Dump_ptree.pp_file Format.err_formatter ast ;
   (* Pretty the AST as a new-focalize-syntax source if requested. *)
   (match Configuration.get_pretty_print () with
    | None -> ()
    | Some fname ->
        let out_hd = open_out_bin fname in
        let out_fmt = Format.formatter_of_out_channel out_hd in
-       Sourcify.pp_file out_fmt ast;
-       close_out out_hd);
-
+       Sourcify.pp_file out_fmt ast ;
+       close_out out_hd) ;
   let plug_ins = Configuration.get_plugins () in
   let plug_in_funs =
     List.map
@@ -46,9 +45,7 @@ let compile_fcl input_file_name =
        | "relation_extraction" -> Rel_ext.extract
        | s -> failwith (Printf.sprintf "Unknown plugin %s" s))
       (List.rev plug_ins) in
-  let ast =
-    List.fold_left (fun ast f -> f ast) ast plug_in_funs in
-
+  let ast = List.fold_left (fun ast f -> f ast) ast plug_in_funs in
   (* Scopes AST. *)
   let (scoped_ast, scoping_toplevel_env) =
     (let tmp = Scoping.scope_file current_unit ast in

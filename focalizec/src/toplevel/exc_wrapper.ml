@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.89 2011-02-28 13:45:51 tollitte Exp $ *)
+(* $Id: exc_wrapper.ml,v 1.90 2012-02-24 14:37:44 pessaux Exp $ *)
 
 let header ppf =
   Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
@@ -24,8 +24,8 @@ let print_focalize_exception ppf = function
   (* Miscellaneous. *)
   | Configuration.Invalid_OCaml_compiler str ->
       Format.fprintf ppf
-        "@[%tInvalid@ OCaml@ compiler@ kind \"%t%s%t\" for option \
-        -ocaml-comp-mode. Must be \"byt\", \"bin\" or \"both\".@]@."
+        "@[%tInvalid@ OCaml@ compiler@ kind@ \"%t%s%t\"@ for@ option@ \
+        -ocaml-comp-mode. Must@ be@ \"byt\",@ \"bin\"@ or@ \"both\".@]@."
         header
         Handy.pp_set_underlined str Handy.pp_reset_effects
   (* ********************* *)
@@ -38,7 +38,7 @@ let print_focalize_exception ppf = function
         Handy.pp_set_underlined fname Handy.pp_reset_effects
   | Files.Corrupted_fo fname ->
       Format.fprintf ppf
-        "@[%tInvalid@ or@ corrupted@ compiled@ interface@ '%t%s%t'. Maybe \
+        "@[%tInvalid@ or@ corrupted@ compiled@ interface@ '%t%s%t'. Maybe@ \
         it@ was@ compiled@ with@ another@ version@ of@ the@ compiler.@]@."
         header
         Handy.pp_set_underlined fname Handy.pp_reset_effects

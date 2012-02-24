@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.50 2012-01-31 09:28:07 pessaux Exp $
+# $Id: Makefile,v 1.51 2012-02-24 14:37:44 pessaux Exp $
 
 ROOT_DIR=.
 
@@ -23,7 +23,7 @@ COMPILER_DIRS=\
  src/basement src/parser src/typing\
  src/docgen src/commoncodegen src/mlcodegen src/coqcodegen\
  src/testing src/relation_extraction\
- src/toplevel src/focalizedep src/focalizetest
+ src/toplevel src/focalizedep src/focalizetest src/focalizeig
 
 LIB_DIRS=\
  src/stdlib src/extlib src/contribs
@@ -35,7 +35,7 @@ SUB_DIRS=\
  $(COMPILER_DIRS) $(LIB_DIRS) $(DOC_DIRS)
 
 COMPILER_INSTALL_DIRS=\
- src/toplevel src/focalizedep src/focalizetest $(LIB_DIRS)
+ src/toplevel src/focalizedep src/focalizetest src/focalizeig $(LIB_DIRS)
 
 include $(ROOT_DIR)/Makefile.common
 

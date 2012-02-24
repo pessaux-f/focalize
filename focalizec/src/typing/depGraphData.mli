@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: depGraphData.mli,v 1.5 2009-05-25 11:04:00 pessaux Exp $ *)
+(* $Id: depGraphData.mli,v 1.6 2012-02-24 14:37:44 pessaux Exp $ *)
 
 
 
@@ -31,8 +31,6 @@ type decl_dependency_kind =
   | DcDK_from_type
   | DcDK_from_body
   | DcDK_from_term_proof
-;;
-
 
 
 type def_dependency_kind =
@@ -40,8 +38,6 @@ type def_dependency_kind =
 				 proof. *)
   | DfDK_from_term_proof     (** The dependency comes from a termination
 				 proof. *)
-;;
-
 
 
 (* ************************************************************** *)
@@ -54,8 +50,6 @@ type def_dependency_kind =
 type dependency_kind =
   | DK_decl of decl_dependency_kind
   | DK_def of def_dependency_kind
-;;
-
 
 
 (* ******************************************************************* *)
@@ -74,5 +68,4 @@ type name_node = {
   (** Means that the current names depends on the children nodes. I.e. the
       current name's body contains calls to the children names. *)
   mutable nn_children : (name_node * dependency_kind) list
-} ;;
-
+}
