@@ -13,7 +13,14 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.23 2012-02-10 13:02:24 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.24 2012-02-27 10:39:22 pessaux Exp $ *)
+
+(* ************************************************************************** *)
+(** {b Descr} This mmodule contains utilities for recursive functions code
+    generation in Coq. It does *not* contain the core of generation code.     *)
+(* ************************************************************************** *)
+
+
 
 let is_recursive_call ctx ~local_idents recursive_name expr_ident =
   match expr_ident.Parsetree.ast_desc with

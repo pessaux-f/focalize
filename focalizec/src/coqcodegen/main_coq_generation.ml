@@ -13,18 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.41 2012-02-24 17:38:07 pessaux Exp $ *)
-
-
-(* ******************************************************************** *)
-(** {b Descr} Exception raised when a toplevel let-definition is tagged
-    "logical".
-
-    {b Rem} : Exported outside this module.                             *)
-(* ******************************************************************** *)
-exception Logical_methods_only_inside_species of Location.t;;
-
-
+(* $Id: main_coq_generation.ml,v 1.42 2012-02-27 10:39:22 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module is the entry point for the compilation from FoCaL
@@ -35,9 +24,20 @@ exception Logical_methods_only_inside_species of Location.t;;
 
 
 
+(* ************************************************************************** *)
+(** {b Descr} Exception raised when a toplevel let-definition is tagged
+    "logical".
+
+    {b Rem} : Exported outside this module.                                   *)
+(* ************************************************************************** *)
+exception Logical_methods_only_inside_species of Location.t ;;
+
+
+
+(* ************************************************************************** *)
 (** {b Descr} : Generates code for a toplevel recursive function. Currently,
-    toplevel recursive functions are always generated with "Fixpoint" even
-    if they are flagged "rec" instead of "recstruct". *)
+    toplevel recursive functions are always generated with "Fixpoint"         *)
+(* ************************************************************************** *)
 let toplevel_let_def_compile ctx env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     raise
@@ -67,7 +67,7 @@ let toplevel_let_def_compile ctx env let_def =
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
      | [one_bnd] ->
-         Species_record_type_generation.let_in_binding_compile
+         Species_record_type_generation.let_binding_compile
            ctx ~local_idents: [] ~in_recursive_let_section_of
            (* Or whatever since "Self" does not exist anymore. *)
            ~self_methods_status: Species_record_type_generation.SMS_from_record
@@ -76,7 +76,7 @@ let toplevel_let_def_compile ctx env let_def =
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
-             (Species_record_type_generation.let_in_binding_compile
+             (Species_record_type_generation.let_binding_compile
                 ctx ~local_idents: [] ~in_recursive_let_section_of
                 (* Or whatever since "Self" does not exist anymore. *)
                 ~self_methods_status:
@@ -88,7 +88,7 @@ let toplevel_let_def_compile ctx env let_def =
            (fun binding ->
              Format.fprintf out_fmter "@]@\n@[<2>with ";
              accu_env :=
-               Species_record_type_generation.let_in_binding_compile
+               Species_record_type_generation.let_binding_compile
                  ctx ~local_idents: [] ~in_recursive_let_section_of
                  (* Or whatever since "Self" does not exist anymore. *)
                  ~self_methods_status:

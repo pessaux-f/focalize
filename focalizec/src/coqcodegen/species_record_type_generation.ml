@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.91 2012-02-24 17:38:07 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.92 2012-02-27 10:39:22 pessaux Exp $ *)
 
 
 
@@ -550,7 +550,7 @@ let generate_pattern ~force_polymorphic_explicit_args ctx coqctx env pattern =
     | [last] -> rec_gen_pat last
     | h :: q ->
         rec_gen_pat h ;
-        if comma then Format.fprintf out_fmter ",";
+        if comma then Format.fprintf out_fmter "," ;
         Format.fprintf out_fmter "@ " ;
         rec_generate_pats_list ~comma: comma q in
   (* ********************** *)
@@ -560,7 +560,17 @@ let generate_pattern ~force_polymorphic_explicit_args ctx coqctx env pattern =
 
 
 
-let rec let_in_binding_compile ctx ~in_recursive_let_section_of
+(* ************************************************************************** *)
+(** {b Descr}: Code generation for *one* let binding, recursive of not.
+    If the binding is recursive, then whatever the choosen Coq primitive ("fix"
+    or "Fixpoint"), this function invariably dumps a {struct fst arg} assuming
+    that the recursion decreases on the fisrt argument of the function.
+    This function is called by [Main_coq_generation.toplevel_let_def_compile]
+    to generate code for toplevel definitions and by [let_in_def_compile] to
+    generate code for local definitions.
+    {b Visibility}: Not exported outside this module.                         *)
+(* ************************************************************************** *)
+let rec let_binding_compile ctx ~in_recursive_let_section_of
     ~local_idents ~self_methods_status ~recursive_methods_status ~is_rec
     ~toplevel ~gen_vars_in_scope env bd =
   (* Create once for all the flag used to insert the let-bound idents in the
@@ -689,8 +699,11 @@ let rec let_in_binding_compile ctx ~in_recursive_let_section_of
 
 
 
-(** {b Descr} : Starts compiling local recursive functions. Currently, they
-    are always compiled with the "fix" (lowercase !) construct of Coq. *)
+(* ************************************************************************** *)
+(** {b Descr} : Starts compiling *local* recursive or not functions. Currently,
+    recursive one are always compiled with the "fix" (lowercase !) construct of
+    Coq.                                                                      *)
+(* ************************************************************************** *)
 and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
     ~self_methods_status ~recursive_methods_status ~gen_vars_in_scope env
     let_def =
@@ -717,14 +730,14 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
      | [one_bnd] ->
-         let_in_binding_compile
+         let_binding_compile
            ctx ~in_recursive_let_section_of ~local_idents
            ~self_methods_status ~recursive_methods_status ~toplevel: false
            ~gen_vars_in_scope ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
-             (let_in_binding_compile
+             (let_binding_compile
                 ctx ~in_recursive_let_section_of ~local_idents
                 ~self_methods_status ~recursive_methods_status ~toplevel: false
                 ~gen_vars_in_scope ~is_rec env first_bnd) in
@@ -734,7 +747,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
                 "let in" definitions. *)
              Format.fprintf out_fmter "@ in@]@\n@[<2>let " ;
              accu_env :=
-               let_in_binding_compile
+               let_binding_compile
                  ctx ~in_recursive_let_section_of ~local_idents
                  ~self_methods_status ~recursive_methods_status ~is_rec
                  ~toplevel: false ~gen_vars_in_scope !accu_env binding)
@@ -982,7 +995,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          (* The header... *)
          Format.fprintf out_fmter "@[<2>";
          (* Now, print the polymorphic extra args. We use the same trick than
-            in [let_in_binding_compile]. Consult comment over there... *)
+            in [let_binding_compile]. Consult comment over there... *)
          List.iter
            (fun (_, var) ->
              Format.fprintf out_fmter "forall %a : Set,@ "

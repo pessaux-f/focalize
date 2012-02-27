@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.192 2012-02-24 17:38:07 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.193 2012-02-27 10:39:22 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -4108,9 +4108,9 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                    Env.mi_dependencies_from_parameters =
                      compiled_field_memory.Misc_common.
                        cfm_dependencies_from_parameters;
-                   (* For properties, this list should always be [] since *)
-                   (* we do not compute the visible universe since it is  *)
-                   (* never used.                                         *)
+                   (* For properties, this list should always be [] since we do
+                      not compute the visible universe since it is never
+                      used. *)
                    Env.mi_abstracted_methods =
                      compiled_field_memory.Misc_common.
                        cfm_coq_min_typ_env_names }])
@@ -4699,7 +4699,7 @@ let collection_compile env ~current_unit out_fmter collection_def
              collection_descr formals_to_effectives
              record_type_args_instanciations
              params_info.Env.CoqGenInformation.cgi_generator_parameters.
-               Env.CoqGenInformation.cgp_abstr_param_methods_for_record;
+               Env.CoqGenInformation.cgp_abstr_param_methods_for_record ;
            substitute_formal_by_effective_in_coll_meths
              ~current_unit: ctx.Context.scc_current_unit
              implemented_species_name
