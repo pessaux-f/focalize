@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.193 2012-02-27 10:39:22 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.194 2012-02-29 16:11:17 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3170,22 +3170,52 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
        (* First of all, only methods defined in the current species must be
           generated. Inherited methods ARE NOT generated again ! *)
        if from.Env.fh_initial_apparition = ctx.Context.scc_current_species
-       then
-         (begin
-           (* [Unsure] General recursive function, so use "Function" by default.
-              Instead, we should looak at the termination proof style to
-              generate the definition using other Coq construct.
-              For instance, in case of structural function, we should use
-              "Fixpoint", calling
-                generate_defined_recursive_let_definition
-                  ctx print_ctx env generated_fields from name params scheme
+       then (
+         (* [Unsure] General recursive function, so use "Function" by default.
+            Instead, we should look at the termination proof style to
+            generate the definition using other Coq construct.
+            For instance, in case of structural function, we should use
+            "Fixpoint", calling
+              generate_defined_recursive_let_definition
+                ctx print_ctx env generated_fields from name params scheme
                 body ai *)
-           generate_defined_recursive_let_definition_With_Function
-             ctx print_ctx env ~self_manifest generated_fields from name
-             params scheme body opt_term_pr ai
-         end)
-        else
-         (begin
+         match opt_term_pr with
+         | None ->
+             (* For the moment, if no termination proof is stated, we continue
+                using the "Function" scheme until better thing is available. *)
+             generate_defined_recursive_let_definition_With_Function
+               ctx print_ctx env ~self_manifest generated_fields from name
+               params scheme body opt_term_pr ai
+         | Some term_pr -> (
+             match term_pr.Parsetree.ast_desc with
+               | Parsetree.TP_structural _(* ->
+                   (* Use the "Fixpoint" scheme. *)
+                   Format.fprintf out_fmter "@[<2>Fixpoint@ " ;
+                   Species_record_type_generation.let_binding_compile
+                     ctx ~local_idents: []
+                     (* Will be updated by [let_binding_compile] itself. *)
+                     ~in_recursive_let_section_of: []
+                     ~self_methods_status:
+                       Species_record_type_generation.SMS_abstracted
+                     ~recursive_methods_status:
+                       Species_record_type_generation.RMS_regular
+                     ~toplevel: false ~is_rec: true ~gen_vars_in_scope: [] env
+                     one_bnd ;
+                   Format.fprintf out_fmter "@]"
+failwith "TODOOOOOO"
+*)
+               | Parsetree.TP_lexicographic _
+               | Parsetree.TP_measure (_, _, _)
+               | Parsetree.TP_order (_, _, _) ->
+                   (* For the moment, in other kinds of termination proof, we
+                      continue using the "Function" scheme until better thing is
+                      available. *)
+                   generate_defined_recursive_let_definition_With_Function
+                     ctx print_ctx env ~self_manifest generated_fields from name
+                     params scheme body opt_term_pr ai
+            )
+        )
+       else (
          (* Just a bit of debug/information if requested. *)
          if Configuration.get_verbose () then
            Format.eprintf
@@ -3212,7 +3242,7 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
              ai.Abstractions.ai_dependencies_from_params;
            Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
          Misc_common.CSF_let_rec [compiled_field]
-         end)
+         )
        end)
    | ((_, name1, _, _, _, _, _, _), _) ::
      ((_, name2, _, _, _, _, _, _), _) :: _ ->
@@ -3969,7 +3999,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
         (Parsetree_utils.type_coll_from_qualified_species
            ctxt_no_ccmap.Context.scc_current_species);
     Types.cpc_collections_carrier_mapping = [] } in
-  (* Because we sometimes need to bind function parameters to thei types
+  (* Because we sometimes need to bind function parameters to their types
      with the function
      [MiscHelpers.bind_parameters_to_types_from_type_scheme], we must
      beforehand know is [Self] is manifest or not. I.e. if there is a

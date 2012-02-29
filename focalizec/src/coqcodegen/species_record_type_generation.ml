@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.92 2012-02-27 10:39:22 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.93 2012-02-29 16:11:17 pessaux Exp $ *)
 
 
 
@@ -563,23 +563,35 @@ let generate_pattern ~force_polymorphic_explicit_args ctx coqctx env pattern =
 (* ************************************************************************** *)
 (** {b Descr}: Code generation for *one* let binding, recursive of not.
     If the binding is recursive, then whatever the choosen Coq primitive ("fix"
-    or "Fixpoint"), this function invariably dumps a {struct fst arg} assuming
-    that the recursion decreases on the fisrt argument of the function.
+    or "Fixpoint"), 
     This function is called by [Main_coq_generation.toplevel_let_def_compile]
     to generate code for toplevel definitions and by [let_in_def_compile] to
     generate code for local definitions.
+    This function properly handles termination proofs stated as "structural"
+    and inserts the right "{struct xxx}" in the generated code.
+    However, in case of recursive function with no termination proof or a
+    non-"structural" proof, it considers invariably that the recursion decreases
+    on the fisrt argument of the function and dumps a {struct fst arg}.
+    
+    BUGGED: the number of extra polymorphic args is not pre-recorded in the
+    Coq env in case of mutually defined function. This must be done otherwise
+    polymorphic mutually recursive functions fails.
+
+    {b Args}:
+     - [binder]: What Coq construct to use to introduce the definition, i.e.
+       "Let", "let", "let fix", "Fixpoint" or "with".
     {b Visibility}: Not exported outside this module.                         *)
 (* ************************************************************************** *)
-let rec let_binding_compile ctx ~in_recursive_let_section_of
-    ~local_idents ~self_methods_status ~recursive_methods_status ~is_rec
-    ~toplevel ~gen_vars_in_scope env bd =
+let rec let_binding_compile ctx ~binder ~opt_term_proof
+    ~in_recursive_let_section_of ~local_idents ~self_methods_status
+    ~recursive_methods_status ~is_rec ~toplevel ~gen_vars_in_scope env bd =
   (* Create once for all the flag used to insert the let-bound idents in the
      environment. *)
   let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* Generate the bound name. *)
-  Format.fprintf out_fmter "%a"
-    Parsetree_utils.pp_vname_with_operators_expanded
+  (* Generate the binder and the bound name. *)
+  Format.fprintf out_fmter "%s@ %a"
+    binder Parsetree_utils.pp_vname_with_operators_expanded
     bd.Parsetree.ast_desc.Parsetree.b_name ;
   (* Generate the parameters if some, with their type constraints. *)
   let params_names = List.map fst bd.Parsetree.ast_desc.Parsetree.b_params in
@@ -647,21 +659,75 @@ let rec let_binding_compile ctx ~in_recursive_let_section_of
               for each parameter name ! *)
            assert false)
     params_with_type ;
-  (* [Unsure] This heuristic is a pure weak hack...                    *)
   (* If the definition is a recursive function, then one must exhibit one
-     decreasing argument. Because we don't know which one is, just take one at
-     random... For instance, the first one...
+     decreasing argument. If a structural termination proof is provided, we
+     annotate the function with the related {struct xxx}.
      If there is no parameter, then the binding is not a function and we do
      not need to exhibit any decreasing argument. *)
-  if is_rec then
-    (begin
-    match params_with_type with
-     | (param_vname, _) :: _ ->
-         Format.fprintf out_fmter "@ {struct %a}"
-           Parsetree_utils.pp_vname_with_operators_expanded param_vname
-     | _ -> ()
-    end) ;
-  (* Now, print the result type of the "let". *)
+  (match opt_term_proof with
+  | None ->
+      (* If there is no termination proof, then we must just worry in the case
+         the definition is recursive. *)
+      if is_rec then (
+        (* The function is not satisfactory since it is recursive and has
+           no termination proof. Issue a warning and [Unsure] choose to consider
+           it by default as structural on its first argument. *)
+        Format.eprintf
+          "@[%tWarning:%t@ In@ species@ '%t%a%t'@ method@ '%t%a%t'@ is@ \
+           recursive@ but@ has@ no@ termination@ proof.@ It@ is@ assumed@ \
+           to@ be@ structural@ on@ its@ first@ argument..@]@."
+          Handy.pp_set_bold Handy.pp_reset_effects
+          Handy.pp_set_underlined
+          Sourcify.pp_qualified_species ctx.Context.scc_current_species
+          Handy.pp_reset_effects
+          Handy.pp_set_underlined
+          Sourcify.pp_vname bd.Parsetree.ast_desc.Parsetree.b_name
+          Handy.pp_reset_effects ;
+        match params_with_type with
+        | (param_vname, _) :: _ ->
+            Format.fprintf out_fmter "@ {struct %a}"
+              Parsetree_utils.pp_vname_with_operators_expanded param_vname
+        | _ -> ()
+       )
+  | Some term_proof -> (
+      (* Take the termination proof into account only if the definitin is
+         recursive. Otherwise, issue a warning. *)
+      if is_rec then (
+        match term_proof.Parsetree.ast_desc with
+        | Parsetree.TP_structural decr_arg ->
+            Format.fprintf out_fmter "@ {struct %a}"
+              Parsetree_utils.pp_vname_with_operators_expanded decr_arg
+        | Parsetree.TP_lexicographic _
+        | Parsetree.TP_measure (_, _, _) | Parsetree.TP_order (_, _, _) -> (
+            (* Like when there is no given proof and the function is however
+               recursive, we choose by default. *)
+            Format.eprintf
+              "@[%tWarning:%t@ In@ species@ '%t%a%t'@ method@ '%t%a%t'@ is@ \
+               recursive@ but@ has@ a@ not@ yet@ supported@ termination@ \
+               proof.@ It@ is@ assumed@ to@ be@ structural@ on@ its@ first@ \
+               argument..@]@."
+              Handy.pp_set_bold Handy.pp_reset_effects
+              Handy.pp_set_underlined
+              Sourcify.pp_qualified_species ctx.Context.scc_current_species
+              Handy.pp_reset_effects
+              Handy.pp_set_underlined
+              Sourcify.pp_vname bd.Parsetree.ast_desc.Parsetree.b_name
+              Handy.pp_reset_effects ;
+            match params_with_type with
+            | (param_vname, _) :: _ ->
+                Format.fprintf out_fmter "@ {struct %a}"
+                  Parsetree_utils.pp_vname_with_operators_expanded param_vname
+            | _ -> ()
+          )
+       )
+      else (
+        (* Definition is not recursive but has a useless termination proof.
+           By definition of the syntax, this should never arise. *)
+        assert false
+        )
+     )
+  ) ;
+  (* Now, print the result type of the "definition". *)
   (match result_ty with
    | None ->
        (* Because we provided a type scheme to the function
@@ -714,15 +780,18 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
      | Parsetree.RF_no_rec -> false | Parsetree.RF_rec -> true) in
   (* Generates the binder ("fix" or non-"fix"). *)
-  Format.fprintf out_fmter "@[<2>let%s@ "
+  Format.fprintf out_fmter "@[<2>" ;
+  let initial_binder =
     (match is_rec with
-     | false -> ""
+     | false -> "let"
      | true ->
          (* [Unsure] We don't known now how to compile several local mutually
             recursive functions. *)
          if (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings) > 1
          then failwith "TODO: local mutual recursive functions." ;
-         " fix"   (* NON-breakable space in front. *)) ;
+         "let fix") in
+  let opt_term_proof =
+    let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof in
   (* Now generate each bound definition. *)
   let env' =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_bindings with
@@ -731,26 +800,28 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
          assert false
      | [one_bnd] ->
          let_binding_compile
-           ctx ~in_recursive_let_section_of ~local_idents
-           ~self_methods_status ~recursive_methods_status ~toplevel: false
-           ~gen_vars_in_scope ~is_rec env one_bnd
+           ctx ~opt_term_proof ~binder: initial_binder
+           ~in_recursive_let_section_of ~local_idents ~self_methods_status
+           ~recursive_methods_status ~toplevel: false ~gen_vars_in_scope
+           ~is_rec env one_bnd
      | first_bnd :: next_bnds ->
          let accu_env =
            ref
              (let_binding_compile
-                ctx ~in_recursive_let_section_of ~local_idents
-                ~self_methods_status ~recursive_methods_status ~toplevel: false
-                ~gen_vars_in_scope ~is_rec env first_bnd) in
+                ctx ~opt_term_proof ~binder: initial_binder
+                ~in_recursive_let_section_of ~local_idents ~self_methods_status
+                ~recursive_methods_status ~toplevel: false ~gen_vars_in_scope
+                ~is_rec env first_bnd) in
          List.iter
            (fun binding ->
              (* We transform "let and" non recursive functions into several
                 "let in" definitions. *)
-             Format.fprintf out_fmter "@ in@]@\n@[<2>let " ;
+             Format.fprintf out_fmter "@ in@]@\n@[<2>" ;
              accu_env :=
                let_binding_compile
-                 ctx ~in_recursive_let_section_of ~local_idents
-                 ~self_methods_status ~recursive_methods_status ~is_rec
-                 ~toplevel: false ~gen_vars_in_scope !accu_env binding)
+                 ctx ~opt_term_proof ~binder: "let" ~in_recursive_let_section_of
+                 ~local_idents ~self_methods_status ~recursive_methods_status
+                 ~is_rec ~toplevel: false ~gen_vars_in_scope !accu_env binding)
            next_bnds ;
            !accu_env) in
   Format.fprintf out_fmter "@]" ;

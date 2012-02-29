@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.25 2012-02-27 10:39:22 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.26 2012-02-29 16:11:17 pessaux Exp $ *)
 
 
 type self_methods_status =
@@ -68,6 +68,7 @@ val generate_logical_expr :
 
 val let_binding_compile :
   Context.species_compil_context ->
+  binder: string -> opt_term_proof:Parsetree.termination_proof option ->
   in_recursive_let_section_of: Parsetree.vname list ->
   local_idents: Parsetree.vname list ->
   self_methods_status: self_methods_status ->

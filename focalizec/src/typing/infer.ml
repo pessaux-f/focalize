@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.201 2012-02-24 17:38:08 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.202 2012-02-29 16:11:17 pessaux Exp $ *)
 
 
 
@@ -2300,7 +2300,7 @@ let rec typecheck_expr_as_species_parameter_argument ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
   | Parsetree.E_self ->
       Format.eprintf
-        "@[%tWarning:%t Self@ is@ subspecies@ by recursion@ not@ \
+        "@[%tWarning:%t@ Self@ is@ subspecies@ by recursion@ not@ \
          @ checked:@ focalizec@ compiler@ TODO.@]@."
         Handy.pp_set_bold Handy.pp_reset_effects ;
       TSPA_self
@@ -4168,7 +4168,7 @@ let ensure_collection_completely_defined ctx fields =
                             non-definition. Then, nothing to add into the
                             list. *)
                          Format.eprintf
-                           "@[%tWarning:%t Species@ '%t%a%t'@ should@ not@ \
+                           "@[%tWarning:%t@ Species@ '%t%a%t'@ should@ not@ \
                            be@ turned@ into@ a@ collection.@ Field@ \
                            '%t%a%t'@ does@ not@ have@ a@ termination@ \
                            proof. Proof@ is@ assumed.@]@."
@@ -4471,8 +4471,8 @@ let check_if_proof_could_be_done_earlier ~current_species ~inherits_p proof_of
        the proof could be done earlier ... "in the current species" ! *)
     if where <> current_species then
       Format.eprintf
-        "@[%tWarning:%tIn@ species@ '%t%s#%a%t',@ proof@ of@ '%t%a%t'@ could@ \
-        be@ done@ earlier@ in@ '%t%s#%a%t'@."
+        "@[%tWarning:%t@ In@ species@ '%t%s#%a%t',@ proof@ of@ '%t%a%t'@ \
+        could@ be@ done@ earlier@ in@ '%t%s#%a%t'@."
         Handy.pp_set_bold Handy.pp_reset_effects
         Handy.pp_set_underlined
         (fst current_species) Sourcify.pp_vname (snd current_species)
