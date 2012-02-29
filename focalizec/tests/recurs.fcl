@@ -1,0 +1,101 @@
+open "basics";;
+
+(* Attention, utiliser B comme constructeur de somme et comme espèce
+   se passe très mal. *)
+type t = | D | C (t) ;;
+
+species A =
+  signature toto : int ;
+
+  let rec foo(x, y) =
+    match x with
+    | D ->
+        if syntactic_equal(y, 0) then 1
+        else 1 + foo(D, (y + 1))
+    | C(D) -> 2
+    | C(a) -> foo(a, (y - toto)) ;
+end ;;
+
+
+species B =
+(*
+  let rec bar(x) =
+    match x with
+    | D -> 0
+    | C(y) -> 1 + bar(y)
+  ;
+*)
+  let bar(a, b : int) =
+    let rec rec_bar(x, y) =
+      match x with
+      | D -> 0
+      | C(z) -> 1 + rec_bar(z, y) in
+    rec_bar(a, b)
+  ;
+  let bar2(a :int, b) =
+    let rec rec_bar2(x, y) =
+      match y with
+      | D -> 0
+      | C(z) -> 1 + rec_bar2(x, z)
+      termination proof = structural y
+      in
+    rec_bar2(a, b)
+  ;
+end ;;
+
+(*
+let rec gee(x, y) =
+    if syntactic_equal(x, 0) then 1
+    else 1 + gee((x - 1), (y + 1))
+;;
+*)
+
+let rec buzz(x, y) =
+  match x with
+  | D -> 0
+  | C(y) -> 1 + buzz(y, 0)
+ termination proof = structural x
+;;
+
+let rec buzz2(x, y) =
+  match x with
+  | D -> 0
+  | C(y) -> 1 + buzz2(y, 0)
+;;
+
+let toto(x) = x ;;
+
+let rec buzz3(x, y) =
+  match x with
+  | D -> 0
+  | C(y) -> 1 + buzz3(y, 0)
+termination proof = order toto on x
+assumed (* *)
+;;
+
+type tt = | Z | S (tt) ;;
+
+let rec f (x, y) =
+  match x with
+  | Z -> 0
+  | S (n) -> g (y, n)
+and g(x, y) =
+  match y with
+  | Z -> 0
+  | S (n) -> f (n, y)
+;;
+
+(*
+Ne passe pas car la syntaxe de termination proof s'attache à la définition
+complète et non à chaque fonction.
+let rec f (x) =
+  match x with
+  | Z -> 0
+  | S (n) -> g (n)
+and g(y) =
+  match y with
+  | Z -> 0
+  | S (n) -> f (n)
+termination proof = structural x
+;;
+*)
