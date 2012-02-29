@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: unix.fcl,v 1.19 2011-05-25 15:50:59 maarek Exp $ *)
+(* $Id: unix.fcl,v 1.20 2012-02-29 20:32:11 pessaux Exp $ *)
 
 (**
    @title Implementation of the Unix model
@@ -46,7 +46,9 @@ species S_set_of (A is Setoid) =
          | [] -> A!print (h) ^ "]"
          | _underscore ->
            A!print (h) ^ ",\n                     " ^
-           aux (t) in
+           aux (t)
+    termination proof = structural ls
+    in
     "[" ^ aux (l);
 
   let print_mod (l) =
@@ -56,7 +58,9 @@ species S_set_of (A is Setoid) =
        | h :: t ->
            match t with
            | [] -> A!print (h) ^ ""
-           | _underscore -> A!print (h) ^ "" ^ aux (t) in
+           | _underscore -> A!print (h) ^ "" ^ aux (t)
+    termination proof = structural ls
+    in
     "[" ^ aux (l);
 
   proof of equal_prop = assumed (* Because todo *);
@@ -469,7 +473,9 @@ species S_models_unix
       | h :: t ->
         if S_grp!equal (h, grp)
         then true
-        else aux (t) in
+        else aux (t)
+    termination proof = structural l
+    in
     aux (fst (upsilon (st)));
 
   let su (st, sub) =
@@ -479,7 +485,9 @@ species S_models_unix
       | h :: t ->
         if S_sub!equal (h, sub)
         then true
-        else aux (t) in
+        else aux (t)
+    termination proof = structural l
+    in
     aux (fst (snd (upsilon (st))));
 
   let f_p (st, obj) =
@@ -518,7 +526,9 @@ species S_models_unix
       | h :: t->
         if S_grp!equal (h, g)
         then t
-        else h :: aux (t, g) in
+        else h :: aux (t, g)
+    termination proof = structural li
+    in
     (lambda (st),
      (aux (fst (upsilon (st)), grp),
       (fst (snd (upsilon (st))),
@@ -546,7 +556,9 @@ species S_models_unix
       | h :: t->
         if S_sub!equal (h, s)
         then t
-        else h :: aux (t, s) in
+        else h :: aux (t, s)
+    termination proof = structural li
+    in
     (lambda (st),
      (fst (upsilon (st)),
       (aux (fst (snd (upsilon (st))), s),
@@ -727,7 +739,9 @@ species S_models_unix
     let rec aux (l) =
       match l with
       | [] -> ""
-      | h :: t -> S_grp!print (h) ^ ", " ^ aux (t) in
+      | h :: t -> S_grp!print (h) ^ ", " ^ aux (t)
+    termination proof = structural l
+    in
     "[" ^ aux (fst (upsilon (st))) ^ "]\n";
 
   let print_right (set_mod, r : S_acc_mod) =
@@ -1030,7 +1044,9 @@ let print_ls_all (s : string, st : C_models_unix) =
   let rec aux (ls) =
     match ls with
     | [] -> ""
-    | h :: t -> C_models_unix!print_ls (st, h) ^ "\n" ^ aux (t) in
+    | h :: t -> C_models_unix!print_ls (st, h) ^ "\n" ^ aux (t)
+  termination proof = structural ls
+  in
   print_string
     ("ls -l " ^ s ^ "\n" ^ "\n" ^ aux (list_obj))
 ;;
