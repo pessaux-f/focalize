@@ -13,7 +13,20 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.93 2012-02-29 16:11:17 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.94 2012-02-29 20:33:46 pessaux Exp $ *)
+
+
+(* ************************************************************************* *)
+(** {b Descr}: Exception raised when a termination proof stated as structural
+    refers to an identifier not being a parameter of the recursive function.
+    [Unsure] on my mind, this should have been done ealier, may be at scoping.
+
+    {b Visibility}: Exported outside this module.                            *)
+(* ************************************************************************* *)
+exception Wrong_decreasing_argument of
+  (Location.t * Parsetree.qualified_species * Parsetree.vname *
+   Parsetree.vname)
+;;
 
 
 
@@ -690,11 +703,20 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
         | _ -> ()
        )
   | Some term_proof -> (
-      (* Take the termination proof into account only if the definitin is
+      (* Take the termination proof into account only if the definition is
          recursive. Otherwise, issue a warning. *)
       if is_rec then (
         match term_proof.Parsetree.ast_desc with
         | Parsetree.TP_structural decr_arg ->
+            (* First, ensure that the identifier is really a parameter of this
+               function. [Unsure] on my mind, this should have been done
+               ealier, may be at scoping. *)
+            if not
+              (List.exists (fun (n, _) -> n = decr_arg) params_with_type) then
+              raise
+                (Wrong_decreasing_argument
+                   (bd.Parsetree.ast_loc, ctx.Context.scc_current_species,
+                    bd.Parsetree.ast_desc.Parsetree.b_name, decr_arg)) ;
             Format.fprintf out_fmter "@ {struct %a}"
               Parsetree_utils.pp_vname_with_operators_expanded decr_arg
         | Parsetree.TP_lexicographic _

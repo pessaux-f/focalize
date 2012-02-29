@@ -11,8 +11,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.26 2012-02-29 16:11:17 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.27 2012-02-29 20:33:46 pessaux Exp $ *)
 
+exception Wrong_decreasing_argument of
+  (Location.t * Parsetree.qualified_species * Parsetree.vname *
+   Parsetree.vname)
 
 type self_methods_status =
   | SMS_from_param of Parsetree.vname
