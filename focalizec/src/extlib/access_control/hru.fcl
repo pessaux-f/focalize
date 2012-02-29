@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: hru.fcl,v 1.25 2011-05-25 15:50:59 maarek Exp $ *)
+(* $Id: hru.fcl,v 1.26 2012-02-29 18:01:39 pessaux Exp $ *)
 
 (**
    @title Implementation of the HRU model
@@ -49,7 +49,8 @@ species S_set_of (A is Setoid) =
   let rec for_all (l, p) =
      match l with
      | [] -> true
-     | h :: t -> p (h) && for_all (t, p);
+     | h :: t -> p (h) && for_all (t, p)
+  termination proof = structural l ;
 
   let print (l) =
      let rec aux (ls) =
@@ -59,6 +60,7 @@ species S_set_of (A is Setoid) =
             match t with
             | [] -> A!print (h) ^ "]"
             | _underscore -> A!print (h) ^ ",\n                     " ^ aux (t)
+     termination proof = structural ls
      in "[" ^ aux (l);
 
   proof of equal_prop = assumed (* Because todo *);

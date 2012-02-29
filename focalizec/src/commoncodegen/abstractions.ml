@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.80 2012-02-24 17:38:07 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.81 2012-02-29 18:01:39 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -460,6 +460,12 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
                         (species_param_name, species_param_meths) pr in
                          Parsetree_utils.ParamDepSet.union deps1 deps2
                     end)
+                | Parsetree.TP_structural _ ->
+                    (* Abstracted stuff can not be used for structural
+                       termination. Moreover, structural termination can only
+                       rely on a function parameter, not an expression. Hence
+                       it can't induce any dependencies. *)
+                    Parsetree_utils.ParamDepSet.empty
                 | _ -> failwith "todo 123" (* [Unsure] *)) in
         (* Finally, the complete dependencies are the union of above. *)
         let meths_from_param =
@@ -513,6 +519,12 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
               Types.SpeciesCarrierTypeSet.union
                 (Types.get_species_types_in_type t)
                 !carriers_appearing_in_types
+        | Parsetree.TP_structural _ ->
+            (* Abstracted stuff can not be used for structural termination.
+               Moreover, structural termination can only rely on a function
+               parameter, not an expression. Hence it can't induce any
+               dependencies. *)
+            ()
         | _ -> failwith "todo 124");
   (* By side effect, we remind the species types appearing in the species
      parameters methods' types we depend on. *)

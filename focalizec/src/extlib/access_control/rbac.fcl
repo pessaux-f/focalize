@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rbac.fcl,v 1.23 2011-05-25 15:50:59 maarek Exp $ *)
+(* $Id: rbac.fcl,v 1.24 2012-02-29 18:01:39 pessaux Exp $ *)
 
 (**
    @title Implementation of the RBAC model
@@ -45,6 +45,7 @@ species S_set_of (A is Setoid) =
             match t with
             | [ ] -> A!print (h) ^ "]"
             | _underscore -> A!print (h) ^ ",\n                     " ^ aux (t)
+     termination proof = structural ls
      in "[" ^ aux (l);
 
   proof of equal_prop = assumed (* Because todo *);
@@ -495,6 +496,7 @@ species S_models_rbac (S_us is S_users,
             if S_us!equal (us, fst (h)) && S_ro!equal (ro, snd (h))
             then true
             else aux (t)
+     termination proof = structural l
      in aux (fst (snd (upsilon (st))));
 
   let pa (st, obj, mo, ro) =
@@ -507,6 +509,7 @@ species S_models_rbac (S_us is S_users,
                S_ro!equal (ro, snd (h))
             then true
             else aux (t)
+     termination proof = structural l
      in aux (fst (snd (snd (upsilon (st)))));
 
   let roles_s (st, sub, ro) =
@@ -517,6 +520,7 @@ species S_models_rbac (S_us is S_users,
             if S_sub!equal (sub, fst (h)) && S_ro!equal (ro, snd (h))
             then true
             else aux (t)
+     termination proof = structural l
      in aux (snd (snd (snd (upsilon (st)))));
 
   let exists_role (_st , fr, fp) =
@@ -527,6 +531,7 @@ species S_models_rbac (S_us is S_users,
             if fr (h) && fp (h)
             then true
             else aux (t)
+     termination proof = structural l
      in aux (S_ro!roles_list);
 
   let exists_role_ua (_st, fr, fp) =
@@ -537,6 +542,7 @@ species S_models_rbac (S_us is S_users,
             if fr (h) && fp (h)
             then true
             else aux (t)
+     termination proof = structural l
      in aux (S_ro!roles_list);
 
   let add_ua (st : Self, u : S_us, r : S_ro) : Self =
@@ -571,6 +577,7 @@ species S_models_rbac (S_us is S_users,
             if S_us!equal (u, fst (h)) && S_ro!equal (r, snd (h))
             then aux (t, f)
             else aux (t, h :: f)
+     termination proof = structural l
      in aux (fst (snd (upsilon (st))), [ ]);
 
   let add_pa (st : Self, o : S_obj, m : S_acc_mod, r : S_ro) : Self =
@@ -611,6 +618,7 @@ species S_models_rbac (S_us is S_users,
                S_ro!equal (r, snd (h))
             then aux (t, f)
             else aux (t, h :: f)
+     termination proof = structural l
      in aux (fst (snd (snd (upsilon (st)))), [ ]);
 
   let equal (st1, st2) = S_set_acc!equal (lambda (st1), lambda (st2));
@@ -633,6 +641,7 @@ species S_models_rbac (S_us is S_users,
                 "," ^ S_ro!print (snd (h)) ^
                 "),\n                     " ^
                 aux (t)
+     termination proof = structural ls
      in "[" ^ aux (l);
 
   let print_pa (l : list ((S_obj * S_acc_mod) * S_ro)) : string =
@@ -652,6 +661,7 @@ species S_models_rbac (S_us is S_users,
                 ")," ^ S_ro!print (snd (h)) ^
                 "),\n                     " ^
                 aux (t)
+     termination proof = structural ls
      in "[" ^ aux (l);
 
   let print (st) : string =

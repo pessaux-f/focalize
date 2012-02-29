@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.32 2011-05-25 15:50:59 maarek Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.33 2012-02-29 18:01:39 pessaux Exp $ *)
 
 (**
 
@@ -323,7 +323,9 @@ species Liste (A is Setoid) =
     let rec aux (l) =
       match l with
       | [] -> "]"
-      | x :: l -> A!print (x) ^ "," ^ aux (l) in
+      | x :: l -> A!print (x) ^ "," ^ aux (l)
+    termination proof = structural l
+    in
     "[" ^ (aux (l));
 
   (** Invariant de representation: les listes ne contiennent pas
@@ -341,7 +343,8 @@ species Liste (A is Setoid) =
     let rec aux (l) =
       match l with
       | [] -> false
-      | y :: q -> if A!equal (x, y) then true else aux (q) in
+      | y :: q -> if A!equal (x, y) then true else aux (q)
+      termination proof = structural l in
     aux (e);
 
   theorem equal_congr_est_element :
@@ -619,6 +622,7 @@ assumed
       | y :: l ->
         if A!equal (x, y) then l
         else y :: aux (l, x)
+    termination proof = structural l
     in
     aux (l, x);
 
@@ -626,14 +630,18 @@ assumed
     let rec aux (l, accu) =
       match l with
       | [] -> accu
-      | x :: l -> aux (l, !remove_element (x, accu)) in
+      | x :: l -> aux (l, !remove_element (x, accu))
+    termination proof = structural l
+    in
     aux (e2, e1);
 
   let raw_cardinal (l : Self) : int =
     let rec aux (l, x) =
       match l with
       | [] -> x
-      | _underscore :: l -> aux (l, x + 1) in
+      | _underscore :: l -> aux (l, x + 1)
+    termination proof = structural l
+    in
     aux (l, 0);
 
    let cardinal (l : Self) : int =
@@ -857,7 +865,9 @@ assumed
       | x :: l ->
         if !est_element (x, e2)
         then aux (l, !ajoute_element (x, accu))
-        else aux (l, accu) in
+        else aux (l, accu)
+    termination proof = structural e
+    in
     aux (!vide, e1);
 
    proof of inter_spec =
