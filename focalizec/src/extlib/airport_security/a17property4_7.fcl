@@ -1,8 +1,11 @@
-(* $Id: a17property4_7.fcl,v 1.1 2011-08-02 16:11:08 delahaye Exp $ *)
+(* $Id: a17property4_7.fcl,v 1.2 2012-03-01 16:38:30 pessaux Exp $ *)
 
 open "a17subjects";;
 open "specialPassengersEnv";;
 open "a17property4_2";;
+open "basic_sets" ;;
+open "conversionFunctions" ;;
+
 
 species A17property4_7(Obj is Object,
                        Obj_set is Finite_set(Obj),
@@ -157,9 +160,9 @@ species A17property4_7(Obj is Object,
     To formalize this security property, we need to consider the correlation
     between departing aircraft and air carriers *)
 
-property property_4_7_1 : all a : D_aircraft, all c : A_carrier, all s : self,
+property property_4_7_1 : all a : D_aircraft, all c : A_carrier, all s : Self,
   Dep_ac_set!member(a, !departingAircraft(s)) ->
-  A_carrier!equal(c,d_aircraft!airCarrier(a)) ->
+  A_carrier!equal(c, D_aircraft!airCarrier(a)) ->
   A_carrier!requirementDisruptive(c);
 
 (** Security Property: 4.7.2. Air carriers should include in their security
@@ -180,7 +183,7 @@ property property_4_7_2 : all a : D_aircraft, all c : A_carrier, all s : Self,
     Here, we assume that for appropriate security controls to be applied,
     requirements for disruptive passengers must have been developed. *)
 
-logical let disruptivePassengersOnBoard (a : d_aircraft, s : self) =
+logical let disruptivePassengersOnBoard (a : D_aircraft, s : Self) =
   ex p : Dis_passenger,
     Dis_pa_set!member(p, !disruptivePassengers(s)) /\
     Cp_set!member(!disToCp(p), D_aircraft!onboardPersons(a));
@@ -302,7 +305,7 @@ logical let no_contact_DangerousObject (p : Dis_passenger, a : D_aircraft,
     pilot in command. *)
 
 property hidden_assumption_5 : all p : Arm_personnel, all a : D_aircraft,
-  all s : self, 
+  all s : Self, 
   Dep_ac_set!member(a, !departingAircraft(s)) ->
   Cp_set!member(!apeToCp(p), D_aircraft!onboardPersons(a)) ->
   Arm_personnel!identityVerified(p) ->
@@ -320,7 +323,7 @@ property hidden_assumption_5 : all p : Arm_personnel, all a : D_aircraft,
     trained properly. *)
 
 property hidden_assumption_6 : all p : If_officer, all a : D_aircraft,
-  all s : self,
+  all s : Self,
   Dep_ac_set!member(a, !departingAircraft(s)) ->
   Cp_set!member(!ifoToCp(p), D_aircraft!onboardPersons(a)) ->
   If_officer!identityVerified(p) ->
@@ -339,13 +342,13 @@ property hidden_assumption_7 : all p : Arm_passenger, all o : Do, all s : Self,
   Do_set!member(o, Do_set!diff(!dangerousObjects(s),
     WpToDo!to_super_set(!weapons(s)))) ->
   !objCarriedByArmPassenger(DoToObj!to_super(o), p) -> Do!is_authorized(o);
-    
+
+(*    
 (** Security Property: 4.7a. Armed passengers admitted on board are eligible
     and can only transport authorized objects. *)
 
-(*
 theorem property_4_7a : all p : arm_passenger, all a : d_aircraft, all area : sra, 
-  all s : self,
+  all s : Self,
   arm_pa_set!member(p, !armedPassengers(s)) -> 
   sra_set!member(area, !securityRestrictedAreas(s)) ->
     dep_ac_set!member(a, sra!departingAircraft_in_sra(area)) ->
