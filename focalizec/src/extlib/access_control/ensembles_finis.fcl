@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.34 2012-03-01 11:55:58 pessaux Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.35 2012-03-01 16:09:05 pessaux Exp $ *)
 
 (**
 
@@ -1534,10 +1534,7 @@ species Liste_triee (A is Ordered_set) =
           (match l with
            | [] -> true
            | y :: _underscore -> A!lt (x, y) && !est_triee (l))
-   termination proof = order 0 on l
-   assumed
-     (* Bidon en attendant qu'on gère vraiment
-        les preuves de terminaison. *);
+   termination proof = structural l ;
 
 
    (** le nouvel invariant implique celui de l'espèce parent (non duplication).*)
