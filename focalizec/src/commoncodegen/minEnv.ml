@@ -13,46 +13,85 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.ml,v 1.13 2012-02-24 17:38:07 pessaux Exp $ *)
+(* $Id: minEnv.ml,v 1.14 2012-03-01 14:36:09 pessaux Exp $ *)
 
 
-(* *********************************************************************** *)
+(* ************************************************************************** *)
+(** {b Descr}: Describes the kind of recursion, i.e. termination proof, provided
+    to a recursive definition. Currently, we only make the difference between
+    a structural termination and none/other proofs.
+    In case of structural termination we assume that the definition was
+    generated using "Fixpoint". In any other case, we assume it has been
+    generated with "Function".
+    Note that this type may change/disapear when we will have a more unified
+    code generation model for recursion.
+
+    {b Visibility}: Exported outside this module.                             *)
+(* ************************************************************************** *)
+type rec_proof_kind =
+  | RPK_struct
+  | RPK_other
+;;
+
+
+
+(* ************************************************************************** *)
+(** {b Descr}: Tells if a definition is recursive or not. Allows embedding
+    the kind of termination proof the definition has if it as one.
+    Since we currently have 2 Coq generation models: "Fixpoint" and "Function"
+    we need to remind which one was used in case a proof is done
+    "by definition" of a recursive definition. In effect, depending on the
+    used model, we must not generate the same code for Zenon.
+
+    {b Visibility}: Exported outside this module.                             *)
+(* ************************************************************************** *)
+type rec_status =
+  | RC_non_rec
+  | RC_rec of rec_proof_kind
+;;
+
+
+
+(* ************************************************************************** *)
 (** {b Descr} Elements of the minimal Coq typing environment for methods.
-    We can't directly use [Env.TypeInformation.species_field] because they
-    can't make appearing the fact that the carrier belongs to the minimal
-    environment even if not *defined* (remind that in species fields, if
-    "rep" appears then is it *defined* otherwise; it is silently
-    declared and does't appear in the list of fields).
+    We can't directly use [Env.TypeInformation.species_field] because they can't
+    make appearing the fact that the carrier belongs to the minimal environment
+    even if not *defined* (remind that in species fields, if "rep" appears then
+    is it *defined* otherwise; it is silently declared and does't appear in the
+    list of fields).
 
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported outside this module.                               *)
+(* ************************************************************************** *)
 type min_coq_env_element =
   | MCEE_Declared_carrier    (** The carrier belongs to the environment but
-                                 only via a decl-dependency. Hence it doesn't
-                                 need to be explicitely defined, but need to
-                                 be in the environment. *)
+       only via a decl-dependency. Hence it doesn't need to be explicitely
+       defined, but need to be in the environment. *)
   | MCEE_Defined_carrier of Types.type_scheme (** The carrier belongs to the
                environment via at least a def-dependency. Then is have to
                be explicitely declared. *)
   | MCEE_Declared_computational of
       (Parsetree.vname * Types.type_scheme) (** Abstract computational method,
-           i.e. abstracted Let or abstracted Let_rec or Sig other than "rep". *)
+         i.e. abstracted Let or abstracted Let_rec or Sig other than "rep". *)
   | MCEE_Defined_computational of
       (Env.from_history *
-       bool *  (* Tells if the method is recursive. This is needed when
-		  generating pseudo-Coq code for Zenon using a "by definition"
-		  of this method. In effect, the body of the method contains
-		  the ident of this method, but when generating the Zenon
-		  stuff, the definition of the method will be named "abst_xxx".
-		  So the internal recursive call to print when generating the
-		  method's body must be replaced by "abst_xxx". This is
-		  related to the bug report #199. *)
+       rec_status *  (** Tells if the method is recursive and if so which
+          kind of termination proof it involves. This is needed when
+     		  generating pseudo-Coq code for Zenon using a "by definition"
+          of this method. In effect, the body of the method contains
+          the ident of this method, but when generating the Zenon
+          stuff, the definition of the method will be named "abst_xxx".
+          So the internal recursive call to print when generating the
+          method's body must be replaced by "abst_xxx". This is
+          related to the bug report #199. Moreover, since currently structural
+          recursion is compiled with "Fixpoint" and other kinds with
+          "Function" in Coq, we need to remind what is the compilation scheme
+          used depending on the recursion kind. *)
        Parsetree.vname * (Parsetree.vname list) * Types.type_scheme *
        Parsetree.binding_body)  (** Defined computational method, i.e. Let or
-                                    Let_rec. *)
+          Let_rec. *)
   | MCEE_Declared_logical of
-      (Parsetree.vname * Parsetree.logical_expr)  (** Abstract logical property,
-           i.e. Property or abstracted Theorem. *)
+      (Parsetree.vname * Parsetree.logical_expr)  (** Abstract logical
+          property, i.e. Property or abstracted Theorem. *)
   | MCEE_Defined_logical of      (** Defined logical property, i.e. Theorem. *)
       (Env.from_history * Parsetree.vname * Parsetree.logical_expr)
 ;;
@@ -89,14 +128,28 @@ let minimal_typing_environment universe species_fields =
      both [Let] and [Let_rec] fields. *)
   let process_one_let_binding is_rec l_binding =
     try
-      let (from, n, params, sch, body, _, _, _) = l_binding in
+      let (from, n, params, sch, body, opt_proof, _, _) = l_binding in
       let reason = VisUniverse.Universe.find n universe in
       if reason = VisUniverse.IU_only_decl then
         (* Keep in the environment, but as abstracted. *)
         [MCEE_Declared_computational (n, sch)]
-      else
+      else (
         (* Otherwise, keep the full definition. *)
-        [MCEE_Defined_computational (from, is_rec, n, params, sch, body)]
+        let rec_status =
+          if is_rec then
+            (match opt_proof with
+            | None -> RC_rec RPK_other
+            | Some proof ->
+                RC_rec (
+                match proof.Parsetree.ast_desc with
+                | Parsetree.TP_structural _ -> RPK_struct
+                | Parsetree.TP_lexicographic _
+                | Parsetree.TP_measure (_, _, _)
+                | Parsetree.TP_order (_, _, _) -> RPK_other
+               ))
+          else RC_non_rec in
+        [MCEE_Defined_computational (from, rec_status, n, params, sch, body)]
+       )
     with Not_found ->
       (* Not in the universe. Hence not in the minimal typing env. *)
       [] in

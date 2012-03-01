@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: distributed_polys.fcl,v 1.9 2011-06-14 13:12:32 rr Exp $ *)
+(* $Id: distributed_polys.fcl,v 1.10 2012-03-01 14:36:09 pessaux Exp $ *)
 
 (**
   @title Distributed polynomials
@@ -47,7 +47,7 @@ open "constants";;
    This is a kind of finite support functions from I to E.
  *)
 species Indexed_set (I is Ordered_set_with_zero,
-		     E is Setoid_with_zero) =
+         E is Setoid_with_zero) =
   inherit Setoid_with_zero;
   (**
      [rr]:
@@ -84,12 +84,12 @@ species Indexed_set (I is Ordered_set_with_zero,
   let to_rep(x: Self): distributed_representation(E, I) = x;
 
   let rec correct_cons(c, d, pp)= match pp with
-	  | Null -> ((I!geq(d, I!zero) && E!different(c, E!zero)))
-	  | NonNull(cc, dd, qq) ->
-	    (I!gt(d, dd) &&
-	      E!different(c, E!zero) &&
-	        correct_cons(cc, dd, qq))
-  ;
+    | Null -> ((I!geq(d, I!zero) && E!different(c, E!zero)))
+    | NonNull(cc, dd, qq) ->
+      (I!gt(d, dd) &&
+        E!different(c, E!zero) &&
+          correct_cons(cc, dd, qq))
+  termination proof = structural pp ;
 
   let correct_rep(p: distributed_representation(E, I)) =
      match p with
@@ -168,14 +168,14 @@ species Indexed_set (I is Ordered_set_with_zero,
               by definition of equal
                  type distributed_representation
                  property equal_reflexive
-		 hypothesis H
+     hypothesis H
           <2>f qed by step <2>1 definition of equal_symmetry_prop
     <1>2 prove all x: Self, all cx: E, all dx: I,
          equal_symmetry_prop(x) -> equal_symmetry_prop(NonNull(cx, dx, x))
          <2>1 assume x: distributed_representation(E, I),
               assume cx: E, assume dx: I,
-	      hypothesis Ind: equal_symmetry_prop(x),
-	      prove equal_symmetry_prop(NonNull(cx, dx, x)) 
+        hypothesis Ind: equal_symmetry_prop(x),
+        prove equal_symmetry_prop(NonNull(cx, dx, x)) 
                <3>1 prove all y: distributed_representation(E, I),
                    equal(NonNull(cx, dx, x), y) -> equal(y, NonNull(cx, dx, x))
                    <4>1 prove equal(NonNull(cx, dx, x), Null) -> 
@@ -190,7 +190,7 @@ species Indexed_set (I is Ordered_set_with_zero,
                          equal(NonNull(cy, dy, y), NonNull(cx, dx, x))
                         <5>1 assume cy: E, dy: I, y: Self,
                              hypothesis H: equal(NonNull(cx, dx, x),
-						 NonNull(cy, dy, y)),
+             NonNull(cy, dy, y)),
                              prove equal(NonNull(cy, dy, y), NonNull(cx, dx, x))
                              <6>1 prove E!equal(cx, cy)
                                   by hypothesis H definition of equal
@@ -216,7 +216,7 @@ species Indexed_set (I is Ordered_set_with_zero,
               <3>f qed by step <3>1 definition of equal_symmetry_prop 
          <2>f conclude
     <1>3 prove all x: distributed_representation(E, I), equal_symmetry_prop(x)
-	 by step<1>1, <1>2 type distributed_representation
+   by step<1>1, <1>2 type distributed_representation
     <1>f qed by step <1>3
          definition of equal_symmetry_prop
   ;
@@ -237,7 +237,7 @@ species Indexed_set (I is Ordered_set_with_zero,
   (*   proof = *)
   (*     assumed; *)
       (* <1>B prove corect_rep(Nulll) -> corect_rep(reductum(Null)) *)
-      (* 	   assumed *)
+      (*     assumed *)
       (* <1>I prove all c: E, all d: I, all x: Self, *)
       (*      correct_rep(x) -> correct_rep(reductum(x)) -> *)
       (*        correct_rep(NonNull(c, d, x)) ->  *)
@@ -259,8 +259,9 @@ species Indexed_set (I is Ordered_set_with_zero,
     let rec my_out(p, c, d, v) = match p with
     | Null -> E!print(c) ^ "*" ^ v ^ "**" ^ I!print(d)
     | NonNull(cc, dd, pp) ->
-	E!print(c) ^ "*" ^ v ^ "**" ^ I!print(d) ^ "+"  ^
+          E!print(c) ^ "*" ^ v ^ "**" ^ I!print(d) ^ "+"  ^
           my_out(pp, cc, dd, v)
+    termination proof = structural p
   in function p -> function v -> match p with
   | Null -> "0"
   | NonNull(cp, dp, rp) -> my_out(rp, cp, dp, v);
@@ -328,7 +329,7 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
           if M!is_zero (m)
           then !plus (ss_1, ss_2)
           else NonNull (m, d1, !plus (ss_1, ss_2))
-	  ;
+    ;
 
   logical let plus_invariant_property(p) = all q: Self,
      correct_rep(to_rep(p)) -> correct_rep(to_rep(q)) -> 
@@ -356,13 +357,13 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
                    plus_invariant_property(p) -> 
                      plus_invariant_property(NonNull(cp, dp, p))
            <2>1 assume p: distributed_representation(M, I),
-		assume cp: M, assume dp: I,
-		hypothesis H_pip: plus_invariant_property(p),
+    assume cp: M, assume dp: I,
+    hypothesis H_pip: plus_invariant_property(p),
                 prove plus_invariant_property(NonNull(cp, dp, p))
                 <3>1 prove all q: distributed_representation(M, I),
-		       correct_rep(to_rep(NonNull(cp, dp, p))) ->
-			 correct_rep(to_rep(q)) ->
-			    correct_rep(to_rep(plus(NonNull(cp, dp, p), q))) 
+           correct_rep(to_rep(NonNull(cp, dp, p))) ->
+       correct_rep(to_rep(q)) ->
+          correct_rep(to_rep(plus(NonNull(cp, dp, p), q))) 
 
                      <4>1 prove correct_rep(to_rep(NonNull(cp, dp, p))) ->
                           correct_rep(to_rep(Null)) ->
@@ -373,30 +374,30 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
                           <5>2 hypothesis H_pcr: 
                                   correct_rep(to_rep(NonNull(cp, dp, p))),
                                prove correct_rep(to_rep(plus(NonNull(cp, dp, p),
-							     Null)))
+                   Null)))
                                by hypothesis H_pcr 
                                   definition of plus, correct_rep, to_rep
                                   type distributed_representation
                           <5>f qed by step <5>1, <5>2 
                                       type distributed_representation
                      <4>2 prove all q: distributed_representation(M, I),
-			        all cq: M, all dq: I,
+              all cq: M, all dq: I,
                                 correct_rep(to_rep(NonNull(cp, dp, p))) ->
                           correct_rep(to_rep(NonNull(cq, dq, q))) ->
                             correct_rep(to_rep(plus(NonNull(cp, dp, p),
-						    NonNull(cq, dq, q))))
+                NonNull(cq, dq, q))))
                           <5>1 assume q: distributed_representation(M, I),
                                assume s: distributed_representation(M, I),
-			       assume cq: M, assume dq: I,
-			       hypothesis H_qcr: 
+             assume cq: M, assume dq: I,
+             hypothesis H_qcr: 
                                   correct_rep(to_rep(NonNull(cq, dq, q))),
                                hypothesis H_pcr:
                                   correct_rep(to_rep(NonNull(cp, dp, p))),
                                hypothesis H_s: s = plus(NonNull(cp, dp, p),
-							NonNull(cq, dq, q)),
+              NonNull(cq, dq, q)),
                                prove 
                                   correct_rep(to_rep(plus(NonNull(cp, dp, p),
-							  NonNull(cq, dq, q))))
+                NonNull(cq, dq, q))))
                                <6>pcc prove correct_cons(cp, dp, p)
                                       by hypothesis H_pcr
                                          definition of correct_rep, to_rep
@@ -414,7 +415,7 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
                                               assumed
                                           <8>f qed by step <8>1 
                                                 definition of correct_rep,
-						                to_rep
+                            to_rep
                                                 type distributed_representation
                                      <7>f qed by step <7>1
                                                  hypothesis H_pltq, H_s
@@ -448,7 +449,7 @@ species Indexed_sum (I is Monomial_ordering, M is Additive_group) =
                             type distributed_representation
            <2>f conclude
       <1>3 prove all p: distributed_representation(M, I),
-		 plus_invariant_property(p)
+     plus_invariant_property(p)
            by step <1>1, <1>2 type distributed_representation
       <1>f conclude
     ;
@@ -483,7 +484,8 @@ species Distributed_polynomials_commutative_ring
          let r = R!mult (c, cp) in
          if R!is_zero (r)
          then !monomial_multiply (c, d, pp)
-         else NonNull (r, D!plus (d, dp), monomial_multiply (c, d, pp));
+         else NonNull (r, D!plus (d, dp), monomial_multiply (c, d, pp))
+   termination proof = structural p ;
 
 
    let module_mult (c, p) = !monomial_multiply (c, D!zero, p);
@@ -493,7 +495,8 @@ species Distributed_polynomials_commutative_ring
      | Null -> zero
      | NonNull (cp, dp, pp) ->
          !plus (!monomial_multiply (cp, dp, q),
-               !mult (pp, q));
+               !mult (pp, q))
+   termination proof = structural p ;
 
    proof of mult_left_substitution_rule = assumed;
    proof of mult_commutes = assumed;
@@ -730,12 +733,14 @@ species Distributed_polynomials_integral_domain
      let ( /_r ) (c_1, c_2) = R!exquo(c_1, c_2) in
      let ( +_p ) (p_1, p_2) = plus(p_1, p_2) in
      let rec m_equo(p, c, res) = match p with
-     | Null -> Unfailed(res)
-     | NonNull(cp, dp, rp) ->
-	 let r = cp /_r c in
-	 if is_failed(r) then Failed
-	 else m_equo(rp, c, res +_p monomial(non_failed(r), dp))
-   in function p -> function c -> m_equo(p, c, zero);
+       | Null -> Unfailed(res)
+       | NonNull(cp, dp, rp) ->
+           let r = cp /_r c in
+           if is_failed(r) then Failed
+           else m_equo(rp, c, res +_p monomial(non_failed(r), dp))
+     termination proof = structural p
+     in
+     function p -> function c -> m_equo(p, c, zero);
 
    proof of module_exquo_divides = assumed;
 
@@ -746,41 +751,40 @@ species Distributed_polynomials_integral_domain
      (*[rr]: exact quotient of p by cqX^dq+rq with |rq| < dq *)
      let rec my_equo(p, cq, dq, rq) =
        match p with
-       | Null -> Unfailed(Null)
-       | NonNull(cp, dp, rp) ->
-	 let s = D!sup(dp, dq) in
-	 if ( dp <_d s) then Failed
-	 else (* dp = s *)
-           if ( s <_d dp ) then focalize_error("exquo: bad ordering")
-           else
-	     let delta = dp -_d dq in
-             if ( delta <_d D!zero)
-	     then focalize_error("exquo: negative difference")
+       | Null -> Unfailed (Null)
+       | NonNull (cp, dp, rp) ->
+           let s = D!sup (dp, dq) in
+           if ( dp <_d s) then Failed
+           else (* dp = s *)
+             if ( s <_d dp ) then focalize_error("exquo: bad ordering")
              else
-               let coeff = cp /_r cq in
-               if is_failed(coeff)
-	       then
-		 Failed
-	       else
-		 let first_mon = monomial(non_failed(coeff), delta) in
-		 let res = my_equo(rp, cq, dq, rq) in
-		 if is_failed(res) then Failed
-		 else Unfailed(plus(first_mon,
-				    non_failed(res)))
-     in function p -> function q ->
-     match q with
-     | Null -> Failed
-     | NonNull(cq, dq, rq) ->
-	 let res = my_equo(p, cq, dq, rq) in
-         if is_failed(res)
-	 then
-	   Failed
-	 else
-	   let rres = non_failed(res) in
-	   if ~~ (!equal(p, !mult(rres, q)))     
-	   then focalize_error("division check")
-	   else	res;
-	     
+               let delta = dp -_d dq in
+               if ( delta <_d D!zero)
+               then focalize_error("exquo: negative difference")
+               else
+                 let coeff = cp /_r cq in
+                 if is_failed(coeff) then
+                   Failed
+                 else
+                   let first_mon = monomial(non_failed(coeff), delta) in
+                   let res = my_equo(rp, cq, dq, rq) in
+                   if is_failed(res) then Failed
+                   else Unfailed(plus(first_mon,
+                                      non_failed(res)))
+     termination proof = structural p
+     in
+     function p -> function q ->
+       match q with
+       | Null -> Failed
+       | NonNull(cq, dq, rq) ->
+           let res = my_equo(p, cq, dq, rq) in
+           if is_failed(res) then Failed
+           else
+             let rres = non_failed(res) in
+             if ~~ (!equal(p, !mult(rres, q)))     
+             then focalize_error("division check")
+             else res ;
+       
    proof of exquo_divides = assumed;
 
 (*    let exquo = *)

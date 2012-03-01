@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.195 2012-03-01 11:55:58 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.196 2012-03-01 14:36:09 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -965,34 +965,56 @@ let generate_final_recursive_definifion_body_With_Function out_fmter
 
     {b Rem} : For Function. *)
 let zenonify_by_recursive_definition_With_Function ctx print_ctx env
-    ~self_manifest used_species_parameter_tys dependencies_from_params
-    abstracted_methods vname params scheme body =
+    ~self_manifest ~with_Function used_species_parameter_tys
+    dependencies_from_params abstracted_methods vname params scheme body =
   let out_fmter = ctx.Context.scc_out_fmter in
   let species_name = snd ctx.Context.scc_current_species in
-  (* For bug #199, to make so that Zenon identifies "abst_xx" and "xx", we
-     generate a fake Definition before generating the body of the recursive
-     fonction whose body is needed because of the "by definition of...". *)
-  Format.fprintf out_fmter
-    "(* Method \"%a\" is recursive. Special syntax for Zenon. *)@\n"
-    Parsetree_utils.pp_vname_with_operators_expanded vname;
-  (* Use specific syntax to tell Zenon that the function is recursive. *)
-  Format.fprintf out_fmter "@[<2>Function abst_%a"
-    Parsetree_utils.pp_vname_with_operators_expanded vname;
-  (* We now generate the sequence of real parameters of the method, not those
-     induced by abstraction BUT NOT the method's body. Inside, methods we
-     depend on are abstracted by "abst_xxx". *)
-  generate_defined_non_recursive_method_postlude
-    ctx print_ctx env ~self_manifest params scheme None;
-  (* Now, for Zenon, we print the **real** definition of the recursive
-     function, i.e. the one using the temporaries of the Section/namespace. *)
-  Format.fprintf out_fmter "@\n{ ";
-  (* Say that we are in a Zenon "by definition of a rec function" in order
-     to have the name "Termination_fct_namespace.fct_equation" instead of
-     "Termination_fct_namespace.species__fct". *)
-  generate_final_recursive_definifion_body_With_Function
-    out_fmter ~in_zenon_by_def: true species_name vname
-    used_species_parameter_tys dependencies_from_params abstracted_methods;
-  Format.fprintf out_fmter " }@\n:=@\n";
+  (* Check if the recursive fonction was generated using "Function" or
+     "Fixpoint". *)
+  if with_Function then (
+    (* For bug #199, to make so that Zenon identifies "abst_xx" and "xx", we
+       generate a fake Definition before generating the body of the recursive
+       fonction whose body is needed because of the "by definition of...". *)
+    Format.fprintf out_fmter
+      "(* Method \"%a\" is recursive. Special syntax for Zenon. *)@\n"
+      Parsetree_utils.pp_vname_with_operators_expanded vname ;
+    (* Use specific syntax to tell Zenon that the function is recursive. *)
+    Format.fprintf out_fmter "@[<2>Function abst_%a"
+      Parsetree_utils.pp_vname_with_operators_expanded vname ;
+    (* We now generate the sequence of real parameters of the method, not those
+       induced by abstraction BUT NOT the method's body. Inside, methods we
+       depend on are abstracted by "abst_xxx". *)
+    generate_defined_non_recursive_method_postlude
+      ctx print_ctx env ~self_manifest params scheme None ;
+    (* Now, for Zenon, we print the **real** definition of the recursive
+       function, i.e. the one using the temporaries of the Section/namespace. *)
+    Format.fprintf out_fmter "@\n{ ";
+    (* Say that we are in a Zenon "by definition of a rec function" in order
+       to have the name "Termination_fct_namespace.fct_equation" instead of
+       "Termination_fct_namespace.species__fct". *)
+    generate_final_recursive_definifion_body_With_Function
+      out_fmter ~in_zenon_by_def: true species_name vname
+      used_species_parameter_tys dependencies_from_params abstracted_methods ;
+    Format.fprintf out_fmter " }@\n:=@\n"
+   )
+  else (
+    (* Case where the recursive function was generated with "Fixpoint". In
+       this case, we don't need to have special stuff fo Zenon, we simply
+       generate the function using a regular Definition and no definition
+       equation. *)
+    Format.fprintf out_fmter
+      "(* Method \"%a\" is recursive. *)@\n"
+      Parsetree_utils.pp_vname_with_operators_expanded vname ;
+    (* Use specific syntax to tell Zenon that the function is recursive. *)
+    Format.fprintf out_fmter "@[<2>Definition abst_%a "
+      Parsetree_utils.pp_vname_with_operators_expanded vname ;
+    (* We now generate the sequence of real parameters of the method, not those
+       induced by abstraction BUT NOT the method's body. Inside, methods we
+       depend on are abstracted by "abst_xxx". *)
+    generate_defined_non_recursive_method_postlude
+      ctx print_ctx env ~self_manifest params scheme None ;
+    Format.fprintf out_fmter ":=@\n"
+   ) ;
   (* Now, we generate the body of the recursive function as given in the
      regular way (i.e. exactly like
      [generate_defined_non_recursive_method_postlude] does if a body is
@@ -1199,41 +1221,43 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
                    (Attempt_proof_by_def_of_declared_method_of_self
                       (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
              | MinEnv.MCEE_Defined_computational
-                   (_, is_rec, _, params, scheme, body) ->
+                   (_, is_rec, _, params, scheme, body) -> (
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(* For method of Self used via \"by definition of \
                    %a\". *)@\n"
-                   Sourcify.pp_expr_ident by_def_expr_ident;
-                 if is_rec then
-                   (begin
-                   (* Since we re in the case of a method of Self, we must
-                      find the abstraction_info and the abstracted_methods
-                      in the already [generated_fields]. *)
-                   let memory =
-                     find_compiled_field_memory vname generated_fields in
-                   zenonify_by_recursive_definition_With_Function
-                     ctx print_ctx env ~self_manifest
-                     memory.Misc_common.cfm_used_species_parameter_tys
-                     memory.Misc_common.cfm_dependencies_from_parameters
-                     memory.Misc_common.cfm_coq_min_typ_env_names vname params
-                     scheme body
-                   end)
-                 else
-                   (begin
-                   Format.fprintf out_fmter "@[<2>Definition abst_%a"
-                     Parsetree_utils.pp_vname_with_operators_expanded
-                     vname;
-                   (* We now generate the sequence of real parameters of the
-                      method, not those induced by abstraction and finally the
-                      method's body. Inside, methods we depend on are abstracted
-                      by "abst_xxx". *)
-                   generate_defined_non_recursive_method_postlude
-                     ctx print_ctx env ~self_manifest params scheme
-                     (Some body);
-                   (* Done... Then, final carriage return. *)
-                   Format.fprintf out_fmter ".@]@\n"
-                   end)
+                   Sourcify.pp_expr_ident by_def_expr_ident ;
+                 match is_rec with
+                 | MinEnv.RC_rec rec_kind ->
+                     (* Since we are in the case of a method of Self, we must
+                        find the abstraction_info and the abstracted_methods
+                        in the already [generated_fields]. *)
+                     let memory =
+                       find_compiled_field_memory vname generated_fields in
+                     let with_Function =
+                       (match rec_kind with
+                       | MinEnv.RPK_struct -> false
+                       | _ -> true) in
+                     zenonify_by_recursive_definition_With_Function
+                       ctx print_ctx env ~self_manifest ~with_Function
+                       memory.Misc_common.cfm_used_species_parameter_tys
+                       memory.Misc_common.cfm_dependencies_from_parameters
+                       memory.Misc_common.cfm_coq_min_typ_env_names vname params
+                       scheme body
+                 | MinEnv.RC_non_rec  ->
+                     Format.fprintf out_fmter "@[<2>Definition abst_%a"
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       vname ;
+                     (* We now generate the sequence of real parameters of the
+                        method, not those induced by abstraction and finally the
+                        method's body. Inside, methods we depend on are
+                        abstracted by "abst_xxx". *)
+                     generate_defined_non_recursive_method_postlude
+                       ctx print_ctx env ~self_manifest params scheme
+                       (Some body) ;
+                     (* Done... Then, final carriage return. *)
+                     Format.fprintf out_fmter ".@]@\n"
+                 )
              | MinEnv.MCEE_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter

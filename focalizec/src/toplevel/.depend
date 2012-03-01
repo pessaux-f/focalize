@@ -1,5 +1,6 @@
 focalizec.cmi: 
 exc_wrapper.cmo: ../basement/types.cmi ../coqcodegen/type_coq_generation.cmi \
+    ../coqcodegen/species_record_type_generation.cmi \
     ../coqcodegen/species_coq_generation.cmi ../parser/sourcify.cmi \
     ../typing/scoping.cmi ../commoncodegen/recursion.cmi \
     ../basement/parsetree_utils.cmi ../basement/parsetree.cmi \
@@ -10,6 +11,7 @@ exc_wrapper.cmo: ../basement/types.cmi ../coqcodegen/type_coq_generation.cmi \
     ../typing/dep_analysis.cmi ../typing/depGraphData.cmi \
     ../basement/configuration.cmi 
 exc_wrapper.cmx: ../basement/types.cmx ../coqcodegen/type_coq_generation.cmx \
+    ../coqcodegen/species_record_type_generation.cmx \
     ../coqcodegen/species_coq_generation.cmx ../parser/sourcify.cmx \
     ../typing/scoping.cmx ../commoncodegen/recursion.cmx \
     ../basement/parsetree_utils.cmx ../basement/parsetree.cmi \
