@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2011-08-02 16:11:08 delahaye Exp $
+# $Id: Makefile,v 1.2 2012-03-01 16:05:01 pessaux Exp $
 
 LIB_INSTALL_SUB_DIR = airport_security
 
@@ -75,19 +75,19 @@ FOCALIZE_VOS_UNSAFE = $(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
 lib: all
 
-byt:: \
+byt: \
       $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
       $(FOCALIZE_ZVS)\
       $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
-bin:: \
+bin: \
       $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
       $(FOCALIZE_ZVS)\
       $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
-install::
+install:
 	@$(MKDIR) $(LIB_INSTALL_DIR) && \
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then \
 	  echo "Installing (FoCaLize) compiled certified libs." && \
@@ -121,8 +121,8 @@ install::
 	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/; \
 	fi
 
-uninstall::
+uninstall:
 	$(RM) $(LIB_INSTALL_DIR)
 
-clean::
+clean:
 	$(RM) *.fo *.ml *.cm* *.zv *.v *.vo *.o *.pfc *.annot
