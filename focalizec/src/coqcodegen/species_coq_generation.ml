@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.194 2012-02-29 16:11:17 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.195 2012-03-01 11:55:58 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3008,23 +3008,23 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
             Parsetree_utils.pp_vname_with_operators_expanded) params
          Parsetree_utils.pp_vname_with_operators_expanded name
          (Handy.pp_generic_separated_list ","
-            Parsetree_utils.pp_vname_with_operators_expanded) params;
+            Parsetree_utils.pp_vname_with_operators_expanded) params ;
        (* Finally close the opened "Section"and "Module" . *)
        Format.fprintf out_fmter "End %a.@]@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded name;
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
        Format.fprintf out_fmter "End Termination_%a_namespace.@]@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded name;
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
 (* [Unsure] We must now generate the function applied to its order and
    termination proof and so on... *)
        Format.fprintf out_fmter "@[<2>Definition %a"
-         Parsetree_utils.pp_vname_with_operators_expanded name;
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
        ignore
          (generate_field_definition_prelude
             ~in_section: false new_ctx new_print_ctx env
             ai.Abstractions.ai_min_coq_env
             ai.Abstractions.ai_used_species_parameter_tys
-            ai.Abstractions.ai_dependencies_from_params generated_fields);
-       Format.fprintf out_fmter " :=@ ";
+            ai.Abstractions.ai_dependencies_from_params generated_fields) ;
+       Format.fprintf out_fmter " :=@ " ;
        (* Now, emit the code of the final definition, using the definition
           created in the above Section enclosed by the above namespace.
           Say that we are NOT in a Zenon "by definition of a rec function" in
@@ -3034,18 +3034,18 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          out_fmter ~in_zenon_by_def: false species_name name
          ai.Abstractions.ai_used_species_parameter_tys
          ai.Abstractions.ai_dependencies_from_params
-         abstracted_methods;
+         abstracted_methods ;
        (* Close the pretty print box. *)
-       Format.fprintf out_fmter ".@]@\n";
+       Format.fprintf out_fmter ".@]@\n" ;
        let compiled = {
-         Misc_common.cfm_is_logical = false;
-         Misc_common.cfm_from_species = from;
-         Misc_common.cfm_method_name = name;
-         Misc_common.cfm_method_scheme = Env.MTK_computational scheme;
+         Misc_common.cfm_is_logical = false ;
+         Misc_common.cfm_from_species = from ;
+         Misc_common.cfm_method_name = name ;
+         Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
          Misc_common.cfm_used_species_parameter_tys =
-           ai.Abstractions.ai_used_species_parameter_tys;
+           ai.Abstractions.ai_used_species_parameter_tys ;
          Misc_common.cfm_dependencies_from_parameters =
-           ai.Abstractions.ai_dependencies_from_params;
+           ai.Abstractions.ai_dependencies_from_params ;
          Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
        Misc_common.CSF_let_rec [compiled]
 ;;
@@ -3060,8 +3060,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
-let generate_defined_recursive_let_definition ctx print_ctx env
-    generated_fields from name params scheme body ai =
+let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
+    generated_fields from name params decr_arg_name proof_loc scheme body ai =
   let out_fmter = ctx.Context.scc_out_fmter in
   match body with
    | Parsetree.BB_logical _ ->
@@ -3110,14 +3110,18 @@ let generate_defined_recursive_let_definition ctx print_ctx env
               (Types.pp_type_simple_to_coq new_print_ctx) param_ty)
          params_with_type ;
        (* Generate the { struct } clause. Since only functions are recursive,
-          there is issue about finding no argument. We assume the first
-          argument is always the decreasing one. *)
-       let first_arg_name =
-         (match params_with_type with
-          | [] -> assert false
-          | (n, _) :: _ -> n) in
+          there is issue about finding no argument. We however ensure that
+          the specified decreasing identifier is really a parameter of the
+          function. [Unsure] on my mind, this should have been done ealier, may
+          be at scoping. *)
+       if not
+           (List.exists (fun (n, _) -> n = decr_arg_name) params_with_type) then
+         raise
+           (Species_record_type_generation.Wrong_decreasing_argument
+              (proof_loc, ctx.Context.scc_current_species, name,
+               decr_arg_name)) ;
        Format.fprintf out_fmter "@ { struct %a }@ "
-         Parsetree_utils.pp_vname_with_operators_expanded first_arg_name;
+         Parsetree_utils.pp_vname_with_operators_expanded decr_arg_name ;
        (* Now, we print the ending type of the method. *)
        Format.fprintf out_fmter " :@ %a@ "
          (Types.pp_type_simple_to_coq new_print_ctx) return_ty ;
@@ -3135,7 +3139,7 @@ let generate_defined_recursive_let_definition ctx print_ctx env
          ~recursive_methods_status: Species_record_type_generation.RMS_regular
          ~gen_vars_in_scope: [] env body_expr ;
        (* Done... Then, final carriage return. *)
-       Format.fprintf out_fmter ".@]@\n";
+       Format.fprintf out_fmter ".@]@\n@\n";
        let compiled = {
          Misc_common.cfm_is_logical = false;
          Misc_common.cfm_from_species = from;
@@ -3171,14 +3175,6 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
           generated. Inherited methods ARE NOT generated again ! *)
        if from.Env.fh_initial_apparition = ctx.Context.scc_current_species
        then (
-         (* [Unsure] General recursive function, so use "Function" by default.
-            Instead, we should look at the termination proof style to
-            generate the definition using other Coq construct.
-            For instance, in case of structural function, we should use
-            "Fixpoint", calling
-              generate_defined_recursive_let_definition
-                ctx print_ctx env generated_fields from name params scheme
-                body ai *)
          match opt_term_pr with
          | None ->
              (* For the moment, if no termination proof is stated, we continue
@@ -3188,22 +3184,10 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
                params scheme body opt_term_pr ai
          | Some term_pr -> (
              match term_pr.Parsetree.ast_desc with
-               | Parsetree.TP_structural _(* ->
-                   (* Use the "Fixpoint" scheme. *)
-                   Format.fprintf out_fmter "@[<2>Fixpoint@ " ;
-                   Species_record_type_generation.let_binding_compile
-                     ctx ~local_idents: []
-                     (* Will be updated by [let_binding_compile] itself. *)
-                     ~in_recursive_let_section_of: []
-                     ~self_methods_status:
-                       Species_record_type_generation.SMS_abstracted
-                     ~recursive_methods_status:
-                       Species_record_type_generation.RMS_regular
-                     ~toplevel: false ~is_rec: true ~gen_vars_in_scope: [] env
-                     one_bnd ;
-                   Format.fprintf out_fmter "@]"
-failwith "TODOOOOOO"
-*)
+               | Parsetree.TP_structural decr_arg_name ->
+                   generate_defined_recursive_let_definition_With_Fixpoint
+                     ctx print_ctx env generated_fields from name params
+                     decr_arg_name term_pr.Parsetree.ast_loc scheme body ai
                | Parsetree.TP_lexicographic _
                | Parsetree.TP_measure (_, _, _)
                | Parsetree.TP_order (_, _, _) ->
@@ -3232,14 +3216,14 @@ failwith "TODOOOOOO"
          (* Now, build the [compiled_field_memory], even if the method was not
             really generated because it was inherited. *)
          let compiled_field = {
-           Misc_common.cfm_is_logical = false;
-           Misc_common.cfm_from_species = from;
-           Misc_common.cfm_method_name = name;
-           Misc_common.cfm_method_scheme = Env.MTK_computational scheme;
+           Misc_common.cfm_is_logical = false ;
+           Misc_common.cfm_from_species = from ;
+           Misc_common.cfm_method_name = name ;
+           Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
            Misc_common.cfm_used_species_parameter_tys =
-             ai.Abstractions.ai_used_species_parameter_tys;
+             ai.Abstractions.ai_used_species_parameter_tys ;
            Misc_common.cfm_dependencies_from_parameters =
-             ai.Abstractions.ai_dependencies_from_params;
+             ai.Abstractions.ai_dependencies_from_params ;
            Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
          Misc_common.CSF_let_rec [compiled_field]
          )

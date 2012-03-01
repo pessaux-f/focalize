@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ticket.fcl,v 1.20 2011-05-25 15:50:59 maarek Exp $ *)
+(* $Id: ticket.fcl,v 1.21 2012-03-01 11:55:58 pessaux Exp $ *)
 
 (**
    @title Implementation of the Tickets model
@@ -35,7 +35,8 @@ species S_set_of (A is Setoid) =
   let rec for_all (l, p) =
     match l with
     | [] -> true
-    | h :: t -> p (h) && for_all (t, p);
+    | h :: t -> p (h) && for_all (t, p)
+  termination proof = structural l ;
 
   let print (l) =
     let rec aux (ls) =
@@ -46,7 +47,8 @@ species S_set_of (A is Setoid) =
         | [] -> A!print (h) ^ "]"
         | _underscore ->
           A!print (h) ^ ",\n                     " ^
-          aux (t) in
+          aux (t)
+    termination proof = structural ls in
   "[" ^ aux (l);
 
   proof of equal_prop = assumed (* Because todo *);
@@ -424,7 +426,8 @@ species S_models_ticket (S_c is S_tickets,
       | h :: t ->
         if S_c!equal (c, h)
         then true
-        else aux (t) in
+        else aux (t)
+    termination proof = structural l in
     aux (fst (snd (st)));
 
   let w (st : Self, s : S_sub, c : S_c) : bool =
@@ -434,7 +437,9 @@ species S_models_ticket (S_c is S_tickets,
       | h :: t ->
         if S_sub!equal (s, fst (h)) && S_c!equal (c, snd (h))
         then true
-        else aux (t) in
+        else aux (t)
+    termination proof = structural l
+    in
     aux (fst (snd (snd (snd (st)))));
 
   let t (st : Self, o : S_obj, m : S_acc_mod, c : S_c) : bool =
@@ -446,7 +451,9 @@ species S_models_ticket (S_c is S_tickets,
            S_acc_mod!equal (m, snd (fst (h))) &&
            S_c!equal (c, snd (h))
         then true
-        else aux (t) in
+        else aux (t)
+    termination proof = structural l
+    in
     aux (fst (snd (snd (st))));
 
   let owner (st : Self, o : S_obj, s : S_sub) : bool =
@@ -456,7 +463,9 @@ species S_models_ticket (S_c is S_tickets,
       | h :: t ->
         if S_obj!equal (o, fst (h)) && S_sub!equal (s, snd (h))
         then true
-        else aux (t) in
+        else aux (t)
+    termination proof = structural l
+    in
     aux (snd (snd (snd (snd (st)))));
 
   let exists_ticket
@@ -470,7 +479,9 @@ species S_models_ticket (S_c is S_tickets,
       | h :: t ->
         if fuc (h) && fw (h) && ft (h)
         then true
-        else aux (t) in
+        else aux (t)
+    termination proof = structural l
+    in
     aux (S_c!tickets_list);
 
   let map_ticket (st : Self, c : S_c) =
@@ -478,7 +489,9 @@ species S_models_ticket (S_c is S_tickets,
       match l with
       | [] -> st
       | h :: t ->
-        rm_w (aux (t), h, c) in
+        rm_w (aux (t), h, c)
+    termination proof = structural l
+    in
     aux (S_sub!subjects_list);
 
   let add_uc (st : Self, c : S_c) : Self =
@@ -523,7 +536,8 @@ species S_models_ticket (S_c is S_tickets,
     | h :: t ->
       if S_c!equal (c, h)
       then rm_uc_aux (f, t, st, c)
-      else rm_uc_aux (h :: f, t, st, c);
+      else rm_uc_aux (h :: f, t, st, c)
+  termination proof = structural l ;
 
   let rm_uc (st : Self, c : S_c) : Self =
     rm_uc_aux ([], fst (snd (st)), st, c);
@@ -554,7 +568,8 @@ species S_models_ticket (S_c is S_tickets,
     | h :: t ->
       if S_sub!equal (s, fst (h)) && S_c!equal (c, snd (h))
       then rm_w_aux (f, t, st, s, c)
-      else rm_w_aux (h :: f, t, st, s, c);
+      else rm_w_aux (h :: f, t, st, s, c)
+   termination proof = structural l ;
 
   let rm_w (st : Self, s : S_sub, c : S_c) : Self =
     rm_w_aux ([], fst (snd (snd (snd (st)))), st, s, c);
@@ -591,7 +606,8 @@ species S_models_ticket (S_c is S_tickets,
          S_acc_mod!equal (m, snd (fst (h))) &&
          S_c!equal (c, snd (h))
       then rm_t_aux (f, t, st, o, m, c)
-      else rm_t_aux (h :: f, t, st, o, m, c);
+      else rm_t_aux (h :: f, t, st, o, m, c)
+  termination proof = structural l ;
 
   let rm_t (st : Self, o : S_obj, m : S_acc_mod, c : S_c) : Self =
     rm_t_aux ([], fst (snd (snd (st))), st, o, m, c);
@@ -610,7 +626,9 @@ species S_models_ticket (S_c is S_tickets,
         | [] -> S_c!print (h) ^ "]"
         | _underscore ->
           S_c!print (h) ^ ",\n                     " ^
-          aux (t) in
+          aux (t)
+    termination proof = structural ls
+    in
     "[" ^ aux (l);
 
   let print_t (l : list ((S_obj * S_acc_mod) * S_c)) : string =
@@ -629,7 +647,9 @@ species S_models_ticket (S_c is S_tickets,
           "," ^ S_acc_mod!print (snd (fst (h))) ^
           ")," ^ S_c!print (snd (h)) ^
           "),\n                     " ^
-          aux (t) in
+          aux (t)
+    termination proof = structural ls
+    in
     "[" ^ aux (l);
 
   let print_w (l : list (S_sub * S_c)) : string =
@@ -646,7 +666,9 @@ species S_models_ticket (S_c is S_tickets,
           "(" ^ S_sub!print (fst (h)) ^
           "," ^ S_c!print (snd (h)) ^
           "),\n                     " ^
-          aux (t) in
+          aux (t)
+    termination proof = structural ls
+    in
     "[" ^ aux (l);
 
   let print_owner (l : list (S_obj * S_sub)) : string =
@@ -663,7 +685,9 @@ species S_models_ticket (S_c is S_tickets,
           "(" ^ S_obj!print (fst (h)) ^
           "," ^ S_sub!print (snd (h)) ^
           "),\n                     " ^
-          aux (t) in
+          aux (t)
+    termination proof = structural ls
+    in
     "[" ^ aux (l);
 
   let print (st) : string =

@@ -18,18 +18,20 @@ end ;;
 
 
 species B =
-(*
-  let rec bar(x) =
+
+  let rec bar0(x) =
     match x with
     | D -> 0
-    | C(y) -> 1 + bar(y)
+    | C(y) -> 1 + bar0(y)
+  termination proof = structural x
   ;
-*)
+
   let bar(a, b : int) =
     let rec rec_bar(x, y) =
       match x with
       | D -> 0
-      | C(z) -> 1 + rec_bar(z, y) in
+      | C(z) -> 1 + rec_bar(z, y)
+    termination proof = structural x in
     rec_bar(a, b)
   ;
   let bar2(a :int, b) =
@@ -73,6 +75,10 @@ termination proof = order toto on x
 assumed (* *)
 ;;
 
+(*
+Ne passe pas car g n'étant pas dans l'environnement avec le nb d'args
+supplémentaires dus au polymorphisme lorsque l'on génère f, à l'appel
+de g, il manque un _.
 type tt = | Z | S (tt) ;;
 
 let rec f (x, y) =
@@ -84,6 +90,7 @@ and g(x, y) =
   | Z -> 0
   | S (n) -> f (n, y)
 ;;
+*)
 
 (*
 Ne passe pas car la syntaxe de termination proof s'attache à la définition

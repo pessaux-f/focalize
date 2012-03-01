@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: ensembles_finis.fcl,v 1.33 2012-02-29 18:01:39 pessaux Exp $ *)
+(* $Id: ensembles_finis.fcl,v 1.34 2012-03-01 11:55:58 pessaux Exp $ *)
 
 (**
 
@@ -333,7 +333,8 @@ species Liste (A is Setoid) =
   let rec bien_formee (l : Self) : bool =
     match l with
     | basics#[] -> true
-    | a :: q -> ~~ (!est_element (a, q) && !bien_formee (q)) ;
+    | a :: q -> ~~ (!est_element (a, q) && !bien_formee (q))
+  termination proof = structural l ;
 
   let vide : Self = [];
 
@@ -391,7 +392,8 @@ assumed
   let rec sous_ensemble (e1 : Self, e2 : Self) : bool =
     match e1 with
     | [] -> true
-    | x :: l -> !est_element (x, e2) && !sous_ensemble (l, e2) ;
+    | x :: l -> !est_element (x, e2) && !sous_ensemble (l, e2)
+  termination proof = structural e1 ;
 
   proof of sous_ensemble_spec =
     assumed (* Zenon does not handle recursive functions yet *);
@@ -777,7 +779,8 @@ assumed
   let rec union (e1 : Self, e2 : Self) =
     match e1 with
     | [] -> e2
-    | x :: l -> !union (l, !ajoute_element (x, e2));
+    | x :: l -> !union (l, !ajoute_element (x, e2))
+  termination proof = structural e1 ;
 
   theorem bien_formee_union:
     all e1 e2 : Self,
@@ -1581,10 +1584,7 @@ species Liste_triee (A is Ordered_set) =
           else
             if A!equal (x, y) then l
             else y :: (!ajoute_element (x, l1))
-       termination proof = order 0 on l
-       assumed
-         (* Bidon en attendant qu'on gère vraiment
-            les preuves de terminaison. *);
+       termination proof = structural l ;
 
    theorem invariant1: !est_triee (!vide)
    proof =
