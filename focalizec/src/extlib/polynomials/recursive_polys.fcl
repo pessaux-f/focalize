@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursive_polys.fcl,v 1.7 2011-06-14 13:12:32 rr Exp $ *)
+(* $Id: recursive_polys.fcl,v 1.8 2012-03-01 15:09:23 pessaux Exp $ *)
 
 open "basics";;
 
@@ -63,6 +63,7 @@ let distr_output(i_print, c_print) =
    | NonNull(cc, dd, pp) ->
        c_print(c) ^ v ^ "**" ^ i_print(d) ^ "+"  ^
        my_out(pp, cc, dd, v)
+   termination proof = structural p
    in function p -> function v -> match p with
    | Null -> "0"
    | NonNull(cp, dp, rp) -> my_out(rp, cp, dp, v)
@@ -212,6 +213,7 @@ let distr_opp(r_opp) =
   | Null -> Null
   | NonNull(cp, dp, pp) ->
       NonNull(r_opp(cp), dp, distr_opposite(pp))
+  termination proof = structural p
   in function p -> distr_opposite(p)
 ;;
 
@@ -311,10 +313,10 @@ let distr_mon_mult (r_mult, r_is_0, d_plus) =
       match p with
       | Null -> Null
       | NonNull(cp, dp, pp) ->
-	  let r = r_mult(c, cp) in
-	  if r_is_0(r)
-	  then monomial_mult(pp, c, d)
-	  else NonNull(r, d_plus(d, dp), monomial_mult(pp, c, d))
+	        let r = r_mult(c, cp) in
+	        if r_is_0(r) then monomial_mult(pp, c, d)
+	        else NonNull(r, d_plus(d, dp), monomial_mult(pp, c, d))
+   termination proof = structural p
    in function c -> function d -> function p -> monomial_mult(p, c, d)
 ;;
 
@@ -327,6 +329,7 @@ let distr_mult(p_plus, mon_mult) =
      | Null -> Null
      | NonNull(cp, dp, pp) ->
 	 p_plus(mon_mult(cp, dp, q), p_mult(pp, q))
+   termination proof = structural p
    in function p -> function q -> p_mult(p, q)
 ;;
 
@@ -439,39 +442,40 @@ implement Recursive_polynomials_commutative_ring(Foc_big_integers,
 end;;
 
 let distr_mod_exquo =
-let rec d_m_exquo( ( /_r ), p, c, res) = match p with
-| Null -> Unfailed(res)
-| NonNull(cp, dp, rp) ->
-    let r = cp /_r c in
-    if is_failed(r) then Failed
-    else d_m_exquo(( /_r ), rp, c, NonNull(non_failed(r), dp, res))
-in function ( /_r ) ->
-      function p ->
-	function c ->
+  let rec d_m_exquo( ( /_r ), p, c, res) = match p with
+  | Null -> Unfailed(res)
+  | NonNull(cp, dp, rp) ->
+      let r = cp /_r c in
+      if is_failed(r) then Failed
+      else d_m_exquo(( /_r ), rp, c, NonNull(non_failed(r), dp, res))
+  termination proof = structural p
+  in
+  function ( /_r ) -> function p -> function c ->
 	  d_m_exquo(( /_r ), p, c, Null)
 ;;
 
 
 let distr_exquo (( <_d ), ( -_d ), ( /_r ), d_sup) =
-   (*[rr]: exact quotient of p by cqX^dq+rq with |rq| < dq *)
-   let rec my_equo(p, cq, dq, rq) =
-      match p with
-      | Null -> Unfailed(Null)
-      | NonNull(cp, dp, rp) ->
-	  let s = d_sup(dp, dq) in
-	  if ( dp <_d s) then Failed
-	  else (* dp = s *)
-	    let delta = dp -_d dq in
-            let coeff = cp /_r cq in
-            if is_failed(coeff) then Failed
-	    else
-	      let res = my_equo(rp, cq, dq, rq) in
-	      if is_failed(res) then Failed
-	      else Unfailed(NonNull(non_failed(coeff), delta, non_failed(res)))
-   in function p -> function q ->
-     match q with
-     | Null -> Failed
-     | NonNull(cq, dq, rq) -> my_equo(p, cq, dq, rq)
+  (*[rr]: exact quotient of p by cqX^dq+rq with |rq| < dq *)
+  let rec my_equo(p, cq, dq, rq) =
+    match p with
+    | Null -> Unfailed(Null)
+    | NonNull(cp, dp, rp) ->
+	      let s = d_sup(dp, dq) in
+	      if ( dp <_d s) then Failed
+	      else (* dp = s *)
+	        let delta = dp -_d dq in
+          let coeff = cp /_r cq in
+          if is_failed(coeff) then Failed
+	        else
+	          let res = my_equo(rp, cq, dq, rq) in
+	          if is_failed(res) then Failed
+	          else Unfailed(NonNull(non_failed(coeff), delta, non_failed(res)))
+  termination proof = structural p
+  in function p -> function q ->
+    match q with
+    | Null -> Failed
+    | NonNull(cq, dq, rq) -> my_equo(p, cq, dq, rq)
 ;;
 
 
@@ -487,18 +491,18 @@ species Recursive_polynomials_Domain
   proof of module_mult_is_integral = assumed ;
 
   let module_exquo =
-     let rec d_equo(s_equo, p, c) =
-	distr_mod_exquo(s_equo, p, c)
-     and s_equo(x, c) = match x with
-     | Base(xx) ->
-	 let res = R!exquo(xx, c) in
+     let rec d_equo (s_equo, p, c) =
+	     distr_mod_exquo (s_equo, p, c)
+     and s_equo (x, c) = match x with
+     | Base (xx) ->
+	       let res = R!exquo (xx, c) in
          if is_failed(res) then Failed
-	 else Unfailed(Base(non_failed(res)))
-     | Composed(v, p) ->
-         let res = d_equo(s_equo, p, c) in
-	 if is_failed(res) then Failed
-	 else Unfailed(Composed(v, non_failed(res)))
-     in function x -> function c -> s_equo(x, c)
+	       else Unfailed (Base (non_failed (res)))
+     | Composed (v, p) ->
+         let res = d_equo (s_equo, p, c) in
+	       if is_failed (res) then Failed
+	       else Unfailed (Composed (v, non_failed (res)))
+     in function x -> function c -> s_equo (x, c)
    ;
   
   (*[rr]: not the weakest idea opf how though *)
