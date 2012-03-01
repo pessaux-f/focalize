@@ -8,12 +8,13 @@
 (*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
+(*            2012 ENSTA ParisTech                                     *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.ml,v 1.14 2012-03-01 14:36:09 pessaux Exp $ *)
+(* $Id: minEnv.ml,v 1.15 2012-03-01 17:23:32 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)

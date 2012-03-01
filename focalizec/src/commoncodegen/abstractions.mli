@@ -6,14 +6,15 @@
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                 LIP6  --  INRIA Rocquencourt  -- ENSTA              *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
+(*            2012 ENSTA ParisTech                                     *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.mli,v 1.27 2012-02-24 17:38:07 pessaux Exp $ *)
+(* $Id: abstractions.mli,v 1.28 2012-03-01 17:23:32 pessaux Exp $ *)
 
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t

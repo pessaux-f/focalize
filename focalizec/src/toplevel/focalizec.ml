@@ -5,16 +5,19 @@
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                 LIP6  --  INRIA Rocquencourt  -- ENSTA              *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
+(*            2012 ENSTA ParisTech                                     *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.59 2012-02-24 14:37:44 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.60 2012-03-01 17:23:32 pessaux Exp $ *)
 
-exception Bad_file_suffix of string;;
+exception Bad_file_suffix of string ;;
+
+
 
 let compile_fcl input_file_name =
   (* First, let's lex and parse the input source file.
@@ -55,13 +58,15 @@ let compile_fcl input_file_name =
      | Some fname ->
          let out_hd = open_out_bin fname in
          let out_fmt = Format.formatter_of_out_channel out_hd in
-         Sourcify.pp_file out_fmt (fst tmp);
-         close_out out_hd);
+         Sourcify.pp_file out_fmt (fst tmp) ;
+         close_out out_hd) ;
     tmp) in
   (* Typechecks the AST. *)
   let (typing_toplevel_env, stuff_to_compile) =
     Infer.typecheck_file ~current_unit scoped_ast in
   (* Verify pattern matching soundness. *)
+  if Configuration.get_verbose () then
+    Format.eprintf "Checking pattern-matching exhaustivity.@." ;
   List.iter
     (Match_analysis.verify_matchings typing_toplevel_env) stuff_to_compile ;
   (* Generate the documentation if requested. *)
@@ -81,13 +86,12 @@ let compile_fcl input_file_name =
   (* Finally, go to the Coq code generation if requested and generate the
      .zv file . *)
   let coqgen_toplevel_env =
-    if Configuration.get_generate_coq () then
-      (begin
+    if Configuration.get_generate_coq () then (
       let out_file_name = (Filename.chop_extension input_file_name) ^ ".zv" in
       Some
         (Main_coq_generation.root_compile
            ~current_unit ~out_file_name stuff_to_compile)
-      end)
+     )
     else None in
   (* Generate tests if requested and if testing instructions
      are contained in the file (this avoids the creation of
@@ -110,9 +114,12 @@ let compile_fcl input_file_name =
 ;;
 
 
+
 let make_includes get_libs =
   String.concat " -I " ("" :: List.rev (get_libs ()))
 ;;
+
+
 
 let compile_ml input_file_name =
   (* We include the library search paths for OCaml. *)
@@ -121,20 +128,20 @@ let compile_ml input_file_name =
   match Configuration.get_ml_compiler () with
    | Configuration.OCamlByt ->
        let cmd = Installation.caml_byt_compiler ^ args in
-       Format.eprintf "Invoking ocamlc...@\n";
-       Format.eprintf ">> %s@." cmd;
+       Format.eprintf "Invoking ocamlc...@\n" ;
+       Format.eprintf ">> %s@." cmd ;
        let ret_code = Sys.command cmd in
        if ret_code <> 0 then exit ret_code
    | Configuration.OCamlBin ->
        let cmd = Installation.caml_bin_compiler ^ args in
-       Format.eprintf "Invoking ocamlopt...@\n";
-       Format.eprintf ">> %s@." cmd;
+       Format.eprintf "Invoking ocamlopt...@\n" ;
+       Format.eprintf ">> %s@." cmd ;
        let ret_code = Sys.command cmd in
        if ret_code <> 0 then exit ret_code
    | Configuration.OCamlBoth ->
        let cmd = Installation.caml_byt_compiler ^ args in
-       Format.eprintf "Invoking ocamlc...@\n";
-       Format.eprintf ">> %s@." cmd;
+       Format.eprintf "Invoking ocamlc...@\n" ;
+       Format.eprintf ">> %s@." cmd ;
        let ret_code = Sys.command cmd in
        if ret_code <> 0 then exit ret_code;
        let cmd = Installation.caml_bin_compiler ^ args in

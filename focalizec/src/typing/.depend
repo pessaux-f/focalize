@@ -65,9 +65,11 @@ infer.cmx: ../basement/types.cmx substExpr.cmx substColl.cmx \
     ../basement/location.cmx infoOutput.cmx ../basement/handy.cmx env.cmx \
     dep_analysis.cmx depGraphData.cmi ../basement/configuration.cmx \
     ast_equal.cmx infer.cmi 
-match_analysis.cmo: ../basement/types.cmi ../basement/parsetree_utils.cmi \
-    ../basement/parsetree.cmi ../basement/location.cmi infer.cmi env.cmi \
+match_analysis.cmo: ../basement/types.cmi ../parser/sourcify.cmi \
+    ../basement/parsetree_utils.cmi ../basement/parsetree.cmi \
+    ../basement/location.cmi infer.cmi env.cmi ../basement/configuration.cmi \
     match_analysis.cmi 
-match_analysis.cmx: ../basement/types.cmx ../basement/parsetree_utils.cmx \
-    ../basement/parsetree.cmi ../basement/location.cmx infer.cmx env.cmx \
+match_analysis.cmx: ../basement/types.cmx ../parser/sourcify.cmx \
+    ../basement/parsetree_utils.cmx ../basement/parsetree.cmi \
+    ../basement/location.cmx infer.cmx env.cmx ../basement/configuration.cmx \
     match_analysis.cmi 

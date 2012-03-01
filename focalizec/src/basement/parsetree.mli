@@ -8,12 +8,13 @@
 (*                                                                     *)
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
+(*            2012 ENSTA ParisTech                                     *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.65 2012-02-24 17:38:07 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.66 2012-03-01 17:23:32 pessaux Exp $ *)
 
 (** {2 The FoCaLiZe abstract syntax tree} *)
 
