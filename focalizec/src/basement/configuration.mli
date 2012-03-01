@@ -6,14 +6,15 @@
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
 (*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                 LIP6  --  INRIA Rocquencourt  -- ENSTA              *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
+(*            2012 ENSTA ParisTech                                     *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.29 2012-02-21 17:27:08 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.30 2012-03-01 17:32:46 pessaux Exp $ *)
 
 (** {3 The internal configuration of the FoCaLize compiler} *)
 

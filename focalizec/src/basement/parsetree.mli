@@ -6,7 +6,7 @@
 (*            Damien Doligez                                           *)
 (*            François Pessaux                                         *)
 (*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                 LIP6  --  INRIA Rocquencourt  -- ENSTA              *)
 (*                                                                     *)
 (*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
 (*            2012 ENSTA ParisTech                                     *)
@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree.mli,v 1.66 2012-03-01 17:23:32 pessaux Exp $ *)
+(* $Id: parsetree.mli,v 1.67 2012-03-01 17:32:46 pessaux Exp $ *)
 
 (** {2 The FoCaLiZe abstract syntax tree} *)
 

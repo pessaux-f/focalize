@@ -6,14 +6,15 @@
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                 LIP6  --  INRIA Rocquencourt  -- ENSTA              *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
+(*            2012 ENSTA ParisTech                                     *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: files.mli,v 1.11 2012-02-10 17:07:29 pessaux Exp $ *)
+(* $Id: files.mli,v 1.12 2012-03-01 17:32:46 pessaux Exp $ *)
 
 exception Cant_access_file_in_search_path of Types.fname
 exception Corrupted_fo of Types.fname

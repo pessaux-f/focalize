@@ -6,31 +6,30 @@
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                 LIP6  --  INRIA Rocquencourt  -- ENSTA              *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
+(*            2012 ENSTA ParisTech                                     *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: location.ml,v 1.6 2008-11-29 23:23:18 weis Exp $ *)
+(* $Id: location.ml,v 1.7 2012-03-01 17:32:46 pessaux Exp $ *)
 
 
 type position = Lexing.position = {
   pos_fname : string;
   pos_lnum : int;
   pos_bol : int;
-  pos_cnum : int;
-}
-;;
+  pos_cnum : int
+} ;;
 
 (** The location of an AST node,
     beginning and ending position of its corresponding source text. *)
 type t = {
- l_beg : position;
- l_end : position;
-}
-;;
+  l_beg : position;
+  l_end : position
+} ;;
 
 
 let none =

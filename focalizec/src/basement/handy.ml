@@ -6,14 +6,15 @@
 (*            Pierre Weis                                              *)
 (*            Damien Doligez                                           *)
 (*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
+(*                 LIP6  --  INRIA Rocquencourt  -- ENSTA              *)
 (*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
+(*            2012 ENSTA ParisTech                                     *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.23 2012-02-08 16:35:29 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.24 2012-03-01 17:32:46 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
