@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.27 2012-02-29 20:33:46 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.28 2012-03-02 12:48:48 pessaux Exp $ *)
 
 exception Wrong_decreasing_argument of
   (Location.t * Parsetree.qualified_species * Parsetree.vname *
@@ -69,6 +69,22 @@ val generate_logical_expr :
   Env.CoqGenEnv.t -> Parsetree.logical_expr ->
     unit
 
+type let_binding_pre_computation = {
+  lbpc_value_body : Env.CoqGenInformation.value_body ;
+  lbpc_params_names : Parsetree.vname list ;
+  lbpc_nb_polymorphic_args : int ;
+  lbpc_params_with_type : (Parsetree.vname * Types.type_simple option) list ;
+  lbpc_result_ty : Types.type_simple option ;
+  lbpc_generalized_instanciated_vars :
+    (Types.type_variable * Types.type_simple) list
+}
+
+val pre_compute_let_bindings_infos_for_rec :
+  is_rec:bool -> toplevel:bool ->
+  gen_vars_in_scope: (Types.type_variable * Types.type_simple) list ->
+  Env.CoqGenEnv.t -> Parsetree.binding_desc Parsetree.ast list ->
+    (Env.CoqGenEnv.t * (let_binding_pre_computation list))
+
 val let_binding_compile :
   Context.species_compil_context ->
   binder: string -> opt_term_proof:Parsetree.termination_proof option ->
@@ -78,7 +94,7 @@ val let_binding_compile :
   recursive_methods_status: recursive_methods_status ->
   is_rec: bool -> toplevel: bool ->
   gen_vars_in_scope: (Types.type_variable * Types.type_simple) list ->
-  Env.CoqGenEnv.t -> Parsetree.binding ->
+  Env.CoqGenEnv.t -> Parsetree.binding -> let_binding_pre_computation ->
     Env.CoqGenEnv.t
 
 val generate_record_type :

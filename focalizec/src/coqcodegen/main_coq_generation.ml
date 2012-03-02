@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.43 2012-02-29 16:11:17 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.44 2012-03-02 12:48:48 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module is the entry point for the compilation from FoCaL
@@ -42,7 +42,7 @@ exception Logical_methods_only_inside_species of Location.t ;;
 let toplevel_let_def_compile ctx env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     raise
-      (Logical_methods_only_inside_species let_def.Parsetree.ast_loc);
+      (Logical_methods_only_inside_species let_def.Parsetree.ast_loc) ;
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Currently, toplevel recursive functions are generated with "Fixpoint". *)
   let is_rec =
@@ -57,16 +57,23 @@ let toplevel_let_def_compile ctx env let_def =
   Format.fprintf out_fmter "@[<2>" ;
   let opt_term_proof =
     let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof in
+  (* Recover pre-compilation info and extended environment in case of
+     recursivity for all the bindings. *)
+  let (env, pre_comp_infos) =
+    Species_record_type_generation.pre_compute_let_bindings_infos_for_rec
+      ~is_rec ~toplevel: true ~gen_vars_in_scope: [] env
+      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. Remark that there is no local idents
      in the scope because we are at toplevel. In the same way, because we are
      not under the scope of a species, the way "Self" must be printed is
      non-relevant. We use [SMS_from_species] by default. *)
   let env' =
-    (match let_def.Parsetree.ast_desc.Parsetree.ld_bindings with
-     | [] ->
+    (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, pre_comp_infos)
+    with
+     | ([], _) ->
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
-     | [one_bnd] ->
+     | ([one_bnd], [one_pre_comp_info]) ->
          let binder = if is_rec then "Fixpoint" else "Let" in
          Species_record_type_generation.let_binding_compile
            ctx ~binder ~opt_term_proof ~local_idents: []
@@ -75,7 +82,9 @@ let toplevel_let_def_compile ctx env let_def =
            ~self_methods_status: Species_record_type_generation.SMS_from_record
            ~recursive_methods_status: Species_record_type_generation.RMS_regular
            ~toplevel: true ~is_rec ~gen_vars_in_scope: [] env one_bnd
-     | first_bnd :: next_bnds ->
+           one_pre_comp_info
+     | ((first_bnd :: next_bnds),
+        (first_pre_comp_info :: next_pre_comp_infos)) ->
          let first_binder = if is_rec then "Fixpoint" else "Let" in
          let accu_env =
            ref
@@ -87,10 +96,11 @@ let toplevel_let_def_compile ctx env let_def =
                   Species_record_type_generation.SMS_from_record
                 ~recursive_methods_status:
                   Species_record_type_generation.RMS_regular
-                ~toplevel: true ~is_rec ~gen_vars_in_scope: [] env first_bnd) in
-         List.iter
-           (fun binding ->
-             Format.fprintf out_fmter "@]@\n@[<2>";
+                ~toplevel: true ~is_rec ~gen_vars_in_scope: [] env first_bnd
+                first_pre_comp_info) in
+         List.iter2
+           (fun binding pre_comp_info ->
+             Format.fprintf out_fmter "@]@\n@[<2>" ;
              accu_env :=
                Species_record_type_generation.let_binding_compile
                  ctx ~binder: "with" ~opt_term_proof ~local_idents: []
@@ -101,10 +111,14 @@ let toplevel_let_def_compile ctx env let_def =
                  ~recursive_methods_status:
                    Species_record_type_generation.RMS_regular
                  ~toplevel: true ~is_rec ~gen_vars_in_scope: [] !accu_env
-                 binding)
-           next_bnds;
-         !accu_env) in
-  Format.fprintf out_fmter "@]";
+                 binding pre_comp_info)
+           next_bnds next_pre_comp_infos ;
+         !accu_env
+     | (_, _) ->
+         (* Case where we would not have the same number og pre-compiled infos
+            and of bindings. Should never happen. *)
+         assert false) in
+  Format.fprintf out_fmter "@]" ;
   env'
 ;;
 

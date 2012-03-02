@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.94 2012-02-29 20:33:46 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.95 2012-03-02 12:48:48 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -573,39 +573,35 @@ let generate_pattern ~force_polymorphic_explicit_args ctx coqctx env pattern =
 
 
 
-(* ************************************************************************** *)
-(** {b Descr}: Code generation for *one* let binding, recursive of not.
-    If the binding is recursive, then whatever the choosen Coq primitive ("fix"
-    or "Fixpoint"), 
-    This function is called by [Main_coq_generation.toplevel_let_def_compile]
-    to generate code for toplevel definitions and by [let_in_def_compile] to
-    generate code for local definitions.
-    This function properly handles termination proofs stated as "structural"
-    and inserts the right "{struct xxx}" in the generated code.
-    However, in case of recursive function with no termination proof or a
-    non-"structural" proof, it considers invariably that the recursion decreases
-    on the fisrt argument of the function and dumps a {struct fst arg}.
-    
-    BUGGED: the number of extra polymorphic args is not pre-recorded in the
-    Coq env in case of mutually defined function. This must be done otherwise
-    polymorphic mutually recursive functions fails.
+type let_binding_pre_computation = {
+  lbpc_value_body : Env.CoqGenInformation.value_body ;
+  lbpc_params_names : Parsetree.vname list ;
+  lbpc_nb_polymorphic_args : int ;
+  lbpc_params_with_type : (Parsetree.vname * Types.type_simple option) list ;
+  lbpc_result_ty : Types.type_simple option ;
+  lbpc_generalized_instanciated_vars :
+    (Types.type_variable * Types.type_simple) list
+} ;;
 
-    {b Args}:
-     - [binder]: What Coq construct to use to introduce the definition, i.e.
-       "Let", "let", "let fix", "Fixpoint" or "with".
-    {b Visibility}: Not exported outside this module.                         *)
+
+
 (* ************************************************************************** *)
-let rec let_binding_compile ctx ~binder ~opt_term_proof
-    ~in_recursive_let_section_of ~local_idents ~self_methods_status
-    ~recursive_methods_status ~is_rec ~toplevel ~gen_vars_in_scope env bd =
-  (* Create once for all the flag used to insert the let-bound idents in the
-     environment. *)
-  let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
-  let out_fmter = ctx.Context.scc_out_fmter in
-  (* Generate the binder and the bound name. *)
-  Format.fprintf out_fmter "%s@ %a"
-    binder Parsetree_utils.pp_vname_with_operators_expanded
-    bd.Parsetree.ast_desc.Parsetree.b_name ;
+(** {b Descr}: Initiate computation of things needed by [let_binding_compile]
+    and also needed to pre-enter recursive identifiers in the Coq env in order
+    to know their number of extra arguments due to polymorphism. In effect, in
+    case of recursivity (and moreover mutual recursivity), this info is needed
+    in order to apply recursive identifiers in recursive call to the right
+    number of arguments.
+    Since the determination of this number of extra arguments involves
+    computation of other things useful for effective code generation, we
+    factorize these computation here and make these results available to
+    [let_binding_compile] to avoid computing them again.
+    It directly returns an environment in which the identifier is bound to the
+    correct information. In effect, code generation (occuring after the
+    present function is called) doesn't modify this information.              *)
+(* ************************************************************************** *)
+let pre_compute_let_binding_info_for_rec env bd ~is_rec ~toplevel
+    ~gen_vars_in_scope =
   (* Generate the parameters if some, with their type constraints. *)
   let params_names = List.map fst bd.Parsetree.ast_desc.Parsetree.b_params in
   (* Recover the type scheme of the bound ident. *)
@@ -619,8 +615,84 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
     MiscHelpers.bind_parameters_to_types_from_type_scheme
       ~self_manifest: None ~gen_vars_in_scope (Some def_scheme)
       params_names in
-  (* Add the newly found generalized vars in the scope. *)
-  let gen_vars_in_scope = generalized_instanciated_vars @ gen_vars_in_scope in
+  (* Record NOW in the environment the number of extra arguments due to
+     polymorphism the current bound ident has in case of recursive definition.
+     Otherwise, it will only be done later. *)
+  let nb_polymorphic_args = List.length generalized_instanciated_vars in
+  let value_body =
+    if not toplevel then Env.CoqGenInformation.VB_non_toplevel
+    else
+      Env.CoqGenInformation.VB_toplevel_let_bound
+        (params_names, def_scheme, bd.Parsetree.ast_desc.Parsetree.b_body) in
+  let env' =
+    if is_rec then
+      let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
+      Env.CoqGenEnv.add_value
+        ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
+        (nb_polymorphic_args, value_body) env
+    else env in
+  (env',
+   { lbpc_value_body = value_body ;
+     lbpc_params_names = params_names ;
+     lbpc_params_with_type = params_with_type ;
+     lbpc_nb_polymorphic_args = nb_polymorphic_args ;
+     lbpc_result_ty = result_ty ;
+     lbpc_generalized_instanciated_vars = generalized_instanciated_vars })
+;;
+
+
+
+(* ************************************************************************** *)
+(** {b Descr}: Simply folds the pre-computation of one binding on a list of
+    bindings, accumulating the obtained environment at each step.             *)
+(* ************************************************************************** *)
+let pre_compute_let_bindings_infos_for_rec ~is_rec ~toplevel
+    ~gen_vars_in_scope env bindings =
+  (* And not [List.fold_right otherwise the list of infos will be reversed
+     compared to the list of bindings. *)
+  List.fold_left
+    (fun (env_accu, infos_accu) binding ->
+      let (env', info) = 
+        pre_compute_let_binding_info_for_rec ~is_rec ~toplevel
+          ~gen_vars_in_scope env_accu binding in
+      (env', info :: infos_accu))
+    (env, [])
+    bindings
+;;
+
+    
+
+(* ************************************************************************** *)
+(** {b Descr}: Code generation for *one* let binding, recursive of not.
+    If the binding is recursive, then whatever the choosen Coq primitive ("fix"
+    or "Fixpoint"), 
+    This function is called by [Main_coq_generation.toplevel_let_def_compile]
+    to generate code for toplevel definitions and by [let_in_def_compile] to
+    generate code for local definitions.
+    This function properly handles termination proofs stated as "structural"
+    and inserts the right "{struct xxx}" in the generated code.
+    However, in case of recursive function with no termination proof or a
+    non-"structural" proof, it considers invariably that the recursion decreases
+    on the fisrt argument of the function and dumps a {struct fst arg}.
+    
+    {b Args}:
+     - [binder]: What Coq construct to use to introduce the definition, i.e.
+       "Let", "let", "let fix", "Fixpoint" or "with".
+
+    {b Visibility}: Not exported outside this module.                         *)
+(* ************************************************************************** *)
+let rec let_binding_compile ctx ~binder ~opt_term_proof
+    ~in_recursive_let_section_of ~local_idents ~self_methods_status
+    ~recursive_methods_status ~is_rec ~toplevel ~gen_vars_in_scope env bd
+    pre_computed_bd_info =
+  (* Create once for all the flag used to insert the let-bound idents in the
+     environment. *)
+  let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* Generate the binder and the bound name. *)
+  Format.fprintf out_fmter "%s@ %a"
+    binder Parsetree_utils.pp_vname_with_operators_expanded
+    bd.Parsetree.ast_desc.Parsetree.b_name ;
   (* Build the print context. *)
   let print_ctx = {
     Types.cpc_current_unit = ctx.Context.scc_current_unit ;
@@ -630,6 +702,8 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
+  let generalized_instanciated_vars =
+    pre_computed_bd_info.lbpc_generalized_instanciated_vars in
   (* If the original scheme is polymorphic, then we must add extra Coq
      parameters of type "Set" for each of the generalized variables. Hence,
      printing the variables used to instanciate the polymorphic ones in front
@@ -643,21 +717,9 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
       Format.fprintf out_fmter "@ (%a : Set)"
         (Types.pp_type_simple_to_coq print_ctx) var)
     generalized_instanciated_vars ;
-  (* Record NOW in the environment the number of extra arguments due to
-     polymorphism the current bound ident has in case of recursive definition.
-     Otherwise, it will only be done later. *)
-  let nb_polymorphic_args = List.length generalized_instanciated_vars in
-  let value_body =
-    if not toplevel then Env.CoqGenInformation.VB_non_toplevel
-    else
-      Env.CoqGenInformation.VB_toplevel_let_bound
-        (params_names, def_scheme, bd.Parsetree.ast_desc.Parsetree.b_body) in
-  let env' =
-    if is_rec then
-      Env.CoqGenEnv.add_value
-        ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
-        (nb_polymorphic_args, value_body) env
-    else env in
+  (* Add the newly found generalized vars in the scope. *)
+  let gen_vars_in_scope = generalized_instanciated_vars @ gen_vars_in_scope in
+  let params_with_type = pre_computed_bd_info.lbpc_params_with_type in
   (* Now, generate each of the real function's parameter with its type. *)
   List.iter
     (fun (param_vname, pot_param_ty) ->
@@ -750,7 +812,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
      )
   ) ;
   (* Now, print the result type of the "definition". *)
-  (match result_ty with
+  (match pre_computed_bd_info.lbpc_result_ty with
    | None ->
        (* Because we provided a type scheme to the function
           [bind_parameters_to_types_from_type_scheme], MUST get one type for
@@ -762,28 +824,30 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   ) ;
   (* Output now the ":=" sign ending the Coq function's "header".
      With a NON-breakable space before to prevent uggly hyphenation ! *)
-  Format.fprintf out_fmter " :=@ " ;
+  Format.fprintf out_fmter " :=@\n" ;
   (* Here, each parameter name of the binding may mask a "in"-parameter. *)
-  let local_idents' = params_names @ local_idents in
+  let local_idents' = pre_computed_bd_info.lbpc_params_names @ local_idents in
   (* Now, let's generate the bound body. *)
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
-   | Parsetree.BB_computational e ->
-       let in_recursive_let_section_of =
-          if is_rec then
-            bd.Parsetree.ast_desc.Parsetree.b_name ::
-            in_recursive_let_section_of
-          else in_recursive_let_section_of in
-       generate_expr
-         ctx
-         ~in_recursive_let_section_of ~local_idents: local_idents'
-         ~self_methods_status ~recursive_methods_status 
-         ~gen_vars_in_scope env' e
-   | Parsetree.BB_logical _ -> assert false) ;
-  (* Finally, we record, even if it was already done in [env'] the number of
-     extra arguments due to polymorphism the current bound identifier has. *)
-  Env.CoqGenEnv.add_value
-    ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
-    (nb_polymorphic_args, value_body) env
+  | Parsetree.BB_computational e ->
+      let in_recursive_let_section_of =
+        if is_rec then
+          bd.Parsetree.ast_desc.Parsetree.b_name ::
+          in_recursive_let_section_of
+        else in_recursive_let_section_of in
+      generate_expr
+        ctx ~in_recursive_let_section_of ~local_idents: local_idents'
+        ~self_methods_status ~recursive_methods_status ~gen_vars_in_scope env e
+  | Parsetree.BB_logical _ -> assert false) ;
+  (* Finally, we record, (except if it was already done in [env'] in case of
+     recursive binding) the number of extra arguments due to polymorphism the
+     current bound identifier has. *)
+  if is_rec then env
+  else
+    Env.CoqGenEnv.add_value
+      ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
+      (pre_computed_bd_info.lbpc_nb_polymorphic_args,
+       pre_computed_bd_info.lbpc_value_body) env
 
 
 
@@ -814,28 +878,36 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
          "let fix") in
   let opt_term_proof =
     let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof in
+  (* Recover pre-compilation info and extended environment in case of
+     recursivity for all the bindings. *)
+  let (env, pre_comp_infos) =
+    pre_compute_let_bindings_infos_for_rec
+      ~is_rec ~toplevel: false ~gen_vars_in_scope env
+      let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. *)
   let env' =
-    (match let_def.Parsetree.ast_desc.Parsetree.ld_bindings with
-     | [] ->
+    (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, pre_comp_infos)
+    with
+     | ([], _) ->
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
-     | [one_bnd] ->
+     | ([one_bnd], [one_pre_comp_info]) ->
          let_binding_compile
            ctx ~opt_term_proof ~binder: initial_binder
            ~in_recursive_let_section_of ~local_idents ~self_methods_status
            ~recursive_methods_status ~toplevel: false ~gen_vars_in_scope
-           ~is_rec env one_bnd
-     | first_bnd :: next_bnds ->
+           ~is_rec env one_bnd one_pre_comp_info
+     | ((first_bnd :: next_bnds),
+        (first_pre_comp_info :: next_pre_comp_infos)) ->
          let accu_env =
            ref
              (let_binding_compile
                 ctx ~opt_term_proof ~binder: initial_binder
                 ~in_recursive_let_section_of ~local_idents ~self_methods_status
                 ~recursive_methods_status ~toplevel: false ~gen_vars_in_scope
-                ~is_rec env first_bnd) in
-         List.iter
-           (fun binding ->
+                ~is_rec env first_bnd first_pre_comp_info) in
+         List.iter2
+           (fun binding pre_comp_info ->
              (* We transform "let and" non recursive functions into several
                 "let in" definitions. *)
              Format.fprintf out_fmter "@ in@]@\n@[<2>" ;
@@ -843,9 +915,14 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
                let_binding_compile
                  ctx ~opt_term_proof ~binder: "let" ~in_recursive_let_section_of
                  ~local_idents ~self_methods_status ~recursive_methods_status
-                 ~is_rec ~toplevel: false ~gen_vars_in_scope !accu_env binding)
-           next_bnds ;
-           !accu_env) in
+                 ~is_rec ~toplevel: false ~gen_vars_in_scope env binding
+                 pre_comp_info)
+           next_bnds next_pre_comp_infos ;
+           !accu_env
+     | (_, _) ->
+         (* Case where we would not have the same number og pre-compiled infos
+            and of bindings. Should never happen. *)
+         assert false) in
   Format.fprintf out_fmter "@]" ;
   env'
 
@@ -1285,7 +1362,7 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
   (* Now, we will find the methods of the parameters we decl-depend on in the
      Coq type expressions. Such dependencies can only appear through properties
      and theorems bodies. *)
-let species_parameters_names = ctx.Context.scc_species_parameters_names in
+  let species_parameters_names = ctx.Context.scc_species_parameters_names in
   let print_ctx = {
     Types.cpc_current_unit = ctx.Context.scc_current_unit ;
     Types.cpc_current_species =

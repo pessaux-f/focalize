@@ -45,12 +45,14 @@ species B =
   ;
 end ;;
 
-(*
+
+
+(* Non structural !
 let rec gee(x, y) =
     if syntactic_equal(x, 0) then 1
     else 1 + gee((x - 1), (y + 1))
-;;
-*)
+;; *)
+
 
 let rec buzz(x, y) =
   match x with
@@ -75,22 +77,22 @@ termination proof = order toto on x
 assumed (* *)
 ;;
 
-(*
-Ne passe pas car g n'étant pas dans l'environnement avec le nb d'args
-supplémentaires dus au polymorphisme lorsque l'on génère f, à l'appel
-de g, il manque un _.
 type tt = | Z | S (tt) ;;
 
+
+(* Ok, number of polymorphic arguments is well known for all the recursive
+   functions. *)
 let rec f (x, y) =
   match x with
   | Z -> 0
-  | S (n) -> g (y, n)
-and g(x, y) =
-  match y with
+  | S (n) -> g (n, y)
+and g (x, y) =
+  match x with
   | Z -> 0
   | S (n) -> f (n, y)
+  termination proof = structural x
 ;;
-*)
+
 
 (*
 Ne passe pas car la syntaxe de termination proof s'attache à la définition
