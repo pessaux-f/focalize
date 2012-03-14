@@ -3,7 +3,7 @@
 <!--#include virtual="beforetitle-eng.html"-->
 </head><body>
 Contacts
-<!--#include virtual="aftertitle-eng.html"--><!-- \$Id: index.shtml,v 1.6 2012-02-24 16:09:29 pessaux Exp $ -->
+<!--#include virtual="aftertitle-eng.html"--><!-- \$Id: index.shtml,v 1.7 2012-03-14 10:46:33 jaume Exp $ -->
 <div id="container">
 <div id="header">
 <h1>Contacts</h1>
@@ -58,8 +58,6 @@ de conférence)
       </li>
       <li><a href="mailto:noyer%20%5B%5Bat%5D%5D%20spi.lip6.fr">Ivan
 Noyer</a> (Doctorant)
-      </li>
-      <li>François Pessaux (--&gt; ENSTA ParisTech)
       </li>
       <li><a href="mailto:lien.tran%20%5B%5Bat%5D%5D%20lip6.fr">Liên
 Tran</a> (Doctorant)
