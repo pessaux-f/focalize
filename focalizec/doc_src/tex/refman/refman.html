@@ -4105,18 +4105,20 @@ proof.</P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><
 </TABLE><P>A proof step starts with a proof bullet, which gives its level of
 nesting. The top level of a proof is 0. In a compound proof, the
 steps are at level one plus the level of the proof itself.</P><P><BR>
-For example, consider the following proof:</P><PRE CLASS="verbatim">  theorem foo : A -&gt; (B -&gt; A)
-  proof =
-    &lt;1&gt;1 assume h1: A,
-         prove B -&gt; A
-      &lt;2&gt;1 assume h2: B,
-           prove A
-        by hypothesis h1
-      &lt;2&gt;2 qed
-        by step &lt;2&gt;1
-    &lt;1&gt;2 qed
-      conclude
-</PRE><P>Here, the steps <CODE>&lt;1&gt;1</CODE> and <CODE>&lt;1&gt;2</CODE> are at level 1
+For example, consider the following proof:</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2>theorem</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>foo</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>all</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>a</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>a</FONT><FONT SIZE=2> -&gt; (</FONT><FONT SIZE=2>b</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>)</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>proof</FONT><FONT SIZE=2> =</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2> &lt;1&gt;1 </FONT><FONT SIZE=2>assume</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>a</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2>, </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>bool</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>       </FONT><FONT SIZE=2>hypothesis</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>h1</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>       </FONT><FONT SIZE=2>prove</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2> -&gt; </FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>       &lt;2&gt;1 </FONT><FONT SIZE=2>hypothesis</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>h2</FONT><FONT SIZE=2> : </FONT><FONT SIZE=2>b</FONT><FONT SIZE=2>,</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>            </FONT><FONT SIZE=2>prove</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>a</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>            </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>hypothesis</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>h1</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>       &lt;2&gt;2 </FONT><FONT SIZE=2>qed</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>            </FONT><FONT SIZE=2>by</FONT><FONT SIZE=2> </FONT><FONT SIZE=2>step</FONT><FONT SIZE=2> &lt;2&gt;1</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>  &lt;1&gt;2 </FONT><FONT SIZE=2>conclude</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>      </FONT><FONT SIZE=2><EM><FONT SIZE=2>(* or: qed conclude</FONT><FONT SIZE=2>
+</FONT><FONT SIZE=2>         or: qed by step &lt;1&gt;1 *)</FONT></EM></FONT></TD></TR>
+</TABLE><P>Here, the steps <CODE>&lt;1&gt;1</CODE> and <CODE>&lt;1&gt;2</CODE> are at level 1
 and form a compound proof of the top-level theorem. Step <CODE>&lt;1&gt;1</CODE>
 also has a compound proof, composed of steps <CODE>&lt;2&gt;1</CODE>
 and <CODE>&lt;2&gt;2</CODE>. These are at level 2 (one more than the level of
@@ -4142,10 +4144,10 @@ the word <TT><FONT COLOR="red">conclude</FONT></TT> when its proof is reduced to
 </P><PRE CLASS="verbatim">    &lt;1&gt;2 conclude
 </PRE><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=right NOWRAP>
 <A NAME="statement"><I><FONT COLOR=maroon>statement</FONT></I></A> </TD><TD ALIGN=center NOWRAP>::=</TD><TD ALIGN=left NOWRAP>
-{<I>assume</I> <A HREF="#assumption"><I><FONT COLOR=maroon>assumption</FONT></I></A> ,}<SUP>*</SUP>
+{<A HREF="#assumption"><I><FONT COLOR=maroon>assumption</FONT></I></A> ,}<SUP>*</SUP>
  [<I>prove</I> <A HREF="#logical-exp"><I><FONT COLOR=maroon>logical-exp</FONT></I></A>]</TD></TR>
 </TABLE></TD></TR>
-</TABLE><P>A statement must be non-empty: at least one <TT><FONT COLOR="red">assume</FONT></TT> or the
+</TABLE><P>A statement must be non-empty: at least one assumption or the
 <TT><FONT COLOR="red">prove</FONT></TT> part must be present.</P><P>A statement appearing in a step has two readings: internal and
 external. The external reading is for the rest of the
 proof: the current step proves that the assumptions imply the
@@ -4216,8 +4218,11 @@ construct <TT>Fixpoint</TT> of <FONT COLOR=purple>Coq</FONT>, hence avoiding the
 termination proof. Functions that are not recursive structural are
 currently compiled to the <TT>Function</TT> construct of <FONT COLOR=purple>Coq</FONT>. Currently,
 the termination proof that should be provided by the user is ignored
-and turned assumed.</P><P>Recursive structural functions are introduced by the <TT>let recstruct</TT>
-whereas general recursive functions are introduced by <TT>let rec</TT>.</P><P>Mutually recursive functions are currently not supported for <FONT COLOR=purple>Coq</FONT>
+and turned assumed.</P><P><BR>
+(OUT-OF-DATE:
+Recursive structural functions are introduced by the <TT>let recstruct</TT>
+whereas general recursive functions are introduced by <TT>let rec</TT>.)</P><P><BR>
+Mutually recursive functions are currently not supported for <FONT COLOR=purple>Coq</FONT>
 code generation.
 </P><!--TOC chapter Compiler options-->
 <H1 CLASS="chapter"><!--SEC ANCHOR --><A NAME="htoc110">Chapter 7</A>  Compiler options</H1><!--SEC END --><P>

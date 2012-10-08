@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.21 2009-09-02 17:14:52 weis Exp $
+% $Id: proofs.tex,v 1.22 2012-10-08 08:03:25 pessaux Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of theorems}
@@ -84,19 +84,22 @@ steps are at level one plus the level of the proof itself.
 \goodbreak
 For example, consider the following proof:
 
-\begin{verbatim}
-  theorem foo : A -> (B -> A)
-  proof =
-    <1>1 assume h1: A,
-         prove B -> A
-      <2>1 assume h2: B,
-           prove A
-        by hypothesis h1
-      <2>2 qed
-        by step <2>1
-    <1>2 qed
-      conclude
-\end{verbatim}
+{\scriptsize
+\begin{lstlisting}
+theorem foo : all a b : bool, a -> (b -> a)
+proof =
+ <1>1 assume a : bool, b : bool,
+       hypothesis h1 : a,
+       prove b -> a
+       <2>1 hypothesis h2 : b,
+            prove a
+            by hypothesis h1
+       <2>2 qed
+            by step <2>1
+  <1>2 conclude
+      (* or: qed conclude
+         or: qed by step <1>1 *)
+\end{lstlisting}}
 
 Here, the steps \verb"<1>1" and \verb"<1>2" are at level 1
 and form a compound proof of the top-level theorem.  Step \verb"<1>1"
@@ -139,7 +142,7 @@ the word \terminal{conclude} when its proof is reduced to
 
 \begin{syn}
 \nt{statement} \is
-     \rep{\tok{assume} \nt{assumption} \tok{,}}
+     \rep{\nt{assumption} \tok{,}}
      \opt{\tok{prove} \nt{logical-exp}}
 \end{syn}
 
@@ -148,7 +151,7 @@ the word \terminal{conclude} when its proof is reduced to
 %statement & ::=  & {\{\terminal{assume}\ assumption\ \terminal{,}\}*}
 %                   \ \{\terminal{prove}\ logical\_expr\}?
 %\end{syntax}
-A statement must be non-empty: at least one \terminal{assume} or the
+A statement must be non-empty: at least one assumption or the
 \terminal{prove} part must be present.
 
 A statement appearing in a step has two readings: internal and
