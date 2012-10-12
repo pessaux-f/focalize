@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.88 2012-03-01 17:32:46 pessaux Exp $ *)
+(* $Id: types.ml,v 1.89 2012-10-12 13:08:04 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -215,7 +215,7 @@ exception Arity_mismatch of (type_name * int * int  * Location.t) ;;
     {b Exported} : No                                                    *)
 (* ********************************************************************* *)
 let rec repr = function
-  | ST_var ({ tv_value = TVV_known ty1 } as var) ->
+  | ST_var ({ tv_value = TVV_known ty1 ; _ } as var) ->
       let val_of_ty1 = repr ty1 in
       var.tv_value <- TVV_known val_of_ty1 ;
       val_of_ty1
