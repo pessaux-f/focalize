@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.41 2012-02-24 17:38:07 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.42 2012-10-12 13:17:04 pessaux Exp $ *)
 
 
 
@@ -717,7 +717,7 @@ let gen_doc_method out_fmt env species_def_fields = function
                    gen_doc_logical_let
                      out_fmt env (Some from) n pnames sch lexpr doc
                | Parsetree.BB_computational
-                   { Parsetree.ast_desc = Parsetree.E_external _ } ->
+                   { Parsetree.ast_desc = Parsetree.E_external _ ; _ } ->
                      (* The only admitted case is a "logical let" defined as an
                         "external". In this case, since external stuff is an
                         expression, we find an expression as body for a
@@ -940,7 +940,7 @@ let gen_doc_pcm out_fmt env ~current_unit = function
                       binding.Parsetree.ast_desc.Parsetree.b_name
                       pnames scheme lexpr binding.Parsetree.ast_annot
                 | Parsetree.BB_computational
-                    { Parsetree.ast_desc = Parsetree.E_external _ } ->
+                    { Parsetree.ast_desc = Parsetree.E_external _ ; _ } ->
                       (* The only admitted case is a "logical let" defined as an
                          "external". In this case, since external stuff is an
                          expression, we find an expression as body for a

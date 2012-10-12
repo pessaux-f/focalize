@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: utils_docgen.ml,v 1.4 2009-06-16 09:36:43 weis Exp $ *)
+(* $Id: utils_docgen.ml,v 1.5 2012-10-12 13:17:04 pessaux Exp $ *)
 
 
 
@@ -168,7 +168,7 @@ let extract_tagged_info_from_annotation annot_elems =
   (* A local function to search the tags in an AST node. *)
   List.iter
     (function
-     | { Parsetree.ae_tag = ("" | "FoCaLize"); Parsetree.ae_desc = s } ->
+     | { Parsetree.ae_tag = ("" | "FoCaLize"); Parsetree.ae_desc = s ; _ } ->
        let lexbuf = Lexing.from_string s in
        let continue = ref true in
        (* We lex ther string until we reach its end, i.e. until we get a

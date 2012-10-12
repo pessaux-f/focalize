@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.20 2012-02-08 16:35:29 pessaux Exp $ *)
+(* $Id: recursion.ml,v 1.21 2012-10-12 13:17:58 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -317,7 +317,7 @@ let rec get_smaller_variables variables bindings =
    ************************************************************************* *)
   let rec analyse_match (variable_set, structural_set) (expr, pattern) =
     match (expr.Parsetree.ast_desc, pattern.Parsetree.ast_desc) with
-     | (Parsetree.E_var { Parsetree.ast_desc = Parsetree.EI_local v }, _) ->
+     | (Parsetree.E_var { Parsetree.ast_desc = Parsetree.EI_local v ; _ }, _) ->
          (* In this case a single variable is being deconstructed by the
             pattern and therefore all variables in the pattern are elligible
             to be structurally smaller. *)
@@ -377,7 +377,7 @@ let rec get_smaller_variables variables bindings =
           | Parsetree.BB_logical _ -> assert(false)
           | Parsetree.BB_computational
               { Parsetree.ast_desc = Parsetree.E_var
-                 { Parsetree.ast_desc = Parsetree.EI_local v }} ->
+                 { Parsetree.ast_desc = Parsetree.EI_local v ; _ } ; _ } ->
                    (* If the variable [v] is one of the considered variables *)
                    (* then the [bound_variable] becomes an alias.            *)
                    if Parsetree_utils.VnameSet.mem v variable_set then
@@ -441,7 +441,7 @@ let is_structural function_name arguments structural_argument body =
         (fun (n1, _) n2 -> n1 = n2)
         structural_argument arguments_assoc_list in
     match argument_expr.Parsetree.ast_desc with
-     | Parsetree.E_var { Parsetree.ast_desc = Parsetree.EI_local v } ->
+     | Parsetree.E_var { Parsetree.ast_desc = Parsetree.EI_local v ; _ } ->
          let smaller_variables =
            get_smaller_variables [structural_argument] bindings in
          List.mem v smaller_variables

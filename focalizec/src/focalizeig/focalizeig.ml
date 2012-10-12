@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizeig.ml,v 1.1 2012-02-24 14:37:44 pessaux Exp $ *)
+(* $Id: focalizeig.ml,v 1.2 2012-10-12 13:25:40 pessaux Exp $ *)
 
 exception No_output_file ;;
 
@@ -37,7 +37,7 @@ let dump_inheritance ppf fo_fname =
         (match species_info with
         | Env.BO_absolute x | Env.BO_opened (_, x) -> x) in
       List.iter
-        (fun { Parsetree.ast_desc = si } ->
+        (fun { Parsetree.ast_desc = si ; _ } ->
           Format.fprintf ppf "  \"%s#%s\" -> \"%a\"\n"
             current_unit (Parsetree_utils.name_of_vname species_name)
             Sourcify.pp_ident si.Parsetree.se_name
@@ -55,19 +55,19 @@ let main () =
   Arg.parse
     [ ("-o",
        Arg.String (fun fname -> out_file_name := fname),
-       "
+       "\n\
      <file> Specify the name of the output file.") ;
       ("-version",
        Arg.Unit Configuration.print_focalize_full_version,
-       "
+       "\n\
      Prints the full focalize version, sub-version and release date, then exit.") ;
       ("-where",
        Arg.Unit Configuration.print_install_dirs,
-       "
+       "\n\
      Prints the binaries and libraries installation directories then exit.")
      ]
     (fun fname -> fcl_file_names := fname :: !fcl_file_names)
-    "Usage: focalizeig <options> <.fo files>
+    "Usage: focalizeig <options> <.fo files>\n\
   Dumps the inheritance graph as a Graphwiz (.dot) text file of all the species\
   found in the FoCaLize object files provided as argument.";
       if !fcl_file_names = [] then raise Configuration.No_input_file ;

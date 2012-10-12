@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.196 2012-03-01 14:36:09 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.197 2012-10-12 13:21:59 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -90,7 +90,7 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
     (* Now, find the method in the species information. *)
     let method_info =
       List.find
-        (fun { Env.mi_name = n } -> n = method_name) species_meths_infos in
+        (fun { Env.mi_name = n ; _ } -> n = method_name) species_meths_infos in
     method_info.Env.mi_abstracted_methods
   with
   | Env.No_available_Coq_code_generation_envt file ->
@@ -1128,10 +1128,11 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
    | Parsetree.EI_local vname ->
        let rec lookup x l =
          match l with
-         | {Parsetree.ast_desc =
-              Parsetree.H_notation (((Parsetree.Vuident id
-                                    | Parsetree.Vlident id) as y), body)} :: _
-           when x = y -> (id, body)
+         | { Parsetree.ast_desc =
+               Parsetree.H_notation (((Parsetree.Vuident id
+                                     | Parsetree.Vlident id) as y), body) ;
+             _ } :: _ when x = y ->
+            (id, body)
          | _ :: t -> lookup x t
          | [] -> raise
                    (Attempt_proof_by_def_of_local_ident
