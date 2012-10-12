@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: env.ml,v 1.142 2012-10-12 13:07:23 pessaux Exp $ *)
+(* $Id: env.ml,v 1.143 2012-10-12 13:51:35 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -1609,7 +1609,7 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
 
   (* loc: Location.t -> current_unit: Types.fname -> Parsetree.ident -> *)
   (*    t -> EMAccess.species_bound_data                                *)
-  let rec find_species ~loc ~current_unit coll_ident (env : t) =
+  let find_species ~loc ~current_unit coll_ident (env : t) =
     match coll_ident.Parsetree.ast_desc with
      | Parsetree.I_local vname ->
          (* No explicit scoping information was provided, hence *)
