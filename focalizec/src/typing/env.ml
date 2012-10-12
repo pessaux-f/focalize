@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: env.ml,v 1.141 2012-02-24 17:38:08 pessaux Exp $ *)
+(* $Id: env.ml,v 1.142 2012-10-12 13:07:23 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.
@@ -2173,7 +2173,7 @@ module CoqGenEMAccess = struct
        woud come from ... polymorphism. *)
     let values_bucket =
       List.map
-        (fun { mi_name = field_name } ->
+        (fun { mi_name = field_name ; _ } ->
           (field_name, (BO_absolute (0, CoqGenInformation.VB_non_toplevel))))
         meths_info in
     { constructors = []; labels = []; types = []; values = values_bucket;

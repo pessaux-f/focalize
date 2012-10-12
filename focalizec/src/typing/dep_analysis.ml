@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.74 2012-02-24 17:38:08 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.75 2012-10-12 13:07:23 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1150,28 +1150,28 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
   (* First, outputs the header of the dotty file. *)
   Printf.fprintf out_hd "digraph G {\n";
   (* Output the meaning of the colors code just to remind the user. *)
-  Printf.fprintf out_hd "
-\"def dep\" [fontsize=10]
-\"def dep (in term proof)\" [fontsize=10]
-\"decl dep (in type)\" [fontsize=10]
-\"decl dep (in body)\" [fontsize=10]
-\"decl dep (in term proof)\" [fontsize=10]
-\"def dep\" -> \"def dep\" [style=dotted,color=blue,fontsize=10];
-\"def dep (in term proof)\" -> \"def dep (in term proof)\" [style=dotted,color=yellow,fontsize=10];
-\"decl dep (in type)\" -> \"decl dep (in type)\" [color=red,fontsize=10];
-\"decl dep (in body)\" -> \"decl dep (in body)\" [color=pink,fontsize=10];
+  Printf.fprintf out_hd "\n\
+\"def dep\" [fontsize=10]\n\
+\"def dep (in term proof)\" [fontsize=10]\n\
+\"decl dep (in type)\" [fontsize=10]\n\
+\"decl dep (in body)\" [fontsize=10]\n\
+\"decl dep (in term proof)\" [fontsize=10]\n\
+\"def dep\" -> \"def dep\" [style=dotted,color=blue,fontsize=10];\n\
+\"def dep (in term proof)\" -> \"def dep (in term proof)\" [style=dotted,color=yellow,fontsize=10];\n\
+\"decl dep (in type)\" -> \"decl dep (in type)\" [color=red,fontsize=10];\n\
+\"decl dep (in body)\" -> \"decl dep (in body)\" [color=pink,fontsize=10];\n\
 \"decl dep (in term proof)\" -> \"decl dep (in term proof)\" [color=purple,fontsize=10];\n";
   (* Outputs all the nodes of the graph. *)
   List.iter
-    (fun { DepGraphData.nn_name = n } ->
+    (fun { DepGraphData.nn_name = n ; _ } ->
       Printf.fprintf out_hd "\"%s\" [shape=box,fontsize=10];\n"
         (Parsetree_utils.name_of_vname n))
     tree_nodes;
   (* Outputs all the edges between the nodes. *)
   List.iter
-    (fun { DepGraphData.nn_name = n; DepGraphData.nn_children = children } ->
+    (fun { DepGraphData.nn_name = n; DepGraphData.nn_children = children; _ } ->
       List.iter
-        (fun ({ DepGraphData.nn_name = child_name }, decl_kind) ->
+        (fun ({ DepGraphData.nn_name = child_name ; _ }, decl_kind) ->
           (* Just make a different style depending on the kind of dependency. *)
           let (style, color) =
             (match decl_kind with
