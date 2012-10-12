@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.22 2012-10-08 08:03:25 pessaux Exp $
+% $Id: proofs.tex,v 1.23 2012-10-12 08:38:58 pessaux Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of theorems}
@@ -88,7 +88,7 @@ For example, consider the following proof:
 \begin{lstlisting}
 theorem foo : all a b : bool, a -> (b -> a)
 proof =
- <1>1 assume a : bool, b : bool,
+  <1>1 assume a : bool, b : bool,
        hypothesis h1 : a,
        prove b -> a
        <2>1 hypothesis h2 : b,
@@ -103,8 +103,9 @@ proof =
 
 Here, the steps \verb"<1>1" and \verb"<1>2" are at level 1
 and form a compound proof of the top-level theorem.  Step \verb"<1>1"
-also has a compound proof, composed of steps \verb"<2>1"
-and \verb"<2>2".  These are at level 2 (one more than the level of
+also has a compound proof (whose aim is \verb"b -> a"), composed of
+steps \verb"<2>1" 
+and \verb"<2>2".  These latter are at level 2 (one more than the level of
 their enclosing step).
 
 After the proof bullet comes the statement of the step.  This is the
@@ -139,6 +140,13 @@ the word \terminal{conclude} when its proof is reduced to
 \begin{verbatim}
     <1>2 conclude
 \end{verbatim}
+In other words, a \terminal{qed} step serves ending the enclosing
+proof. In the former example, the \verb"<2>2 qed" ends the proof of 
+\verb"<1>1" whose aim was \verb"b -> a".
+
+Similarly, the \verb"<1>2 conclude" (equivalent to
+\verb"<1>2 qed by step <1>1" or \verb"<1>2 qed conclude") ends the
+complete proof, i.e. the one implicitly at level 0, i.e. the whole theorem itself.
 
 \begin{syn}
 \nt{statement} \is
@@ -236,6 +244,34 @@ Giving a {\em proof-step-bullet} as a fact allows {\zenon} to use the
 goal. Note that even if several steps are labelled with this proof bullet,
 only one of them is in scope at any point, so there is no ambiguity (see
 section~\ref{sec:scoping}).
+
+
+\subsection{Other simple proofs examples}
+
+Here are given some trivial theorems proven using the {\focal} Proof
+Language to get familiar with the syntax and the way to think when
+making proofs. It must be understood that {\zenon} aims at helping by
+combining intermediate proved properties. A proof is no more to be
+split up to a ``trivial'' level like it is the case in {\coq}. For
+instance, in the following theorem, the fact that from \verb"~ b" and
+\verb"(b \/ c)" one can deduce \verb"c" is automatically handled by
+{\zenon}.
+
+{\scriptsize
+\begin{lstlisting}
+theorem and_ors :
+  all a b c : bool, ((a \/ b) /\ (b \/ c)) -> (~ b -> c)
+  proof =
+  <1>1 assume a : bool, b : bool, c : bool,
+       hypothesis h1 : (a \/ b) /\ (b \/ c),
+       prove ~ b -> c
+       <2>1 hypothesis h2: ~ b,
+            prove c
+            by hypothesis h1, h2  (* Indeed, (~ b /\ (b \/ c)) -> c *)
+       <2>2 qed
+            by step <2>1
+  <1>2 conclude
+\end{lstlisting}}
 
 \subsection{Scoping rules}\label{sec:scoping}
 
