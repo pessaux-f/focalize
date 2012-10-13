@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.204 2012-10-12 13:07:23 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.205 2012-10-13 09:51:32 pessaux Exp $ *)
 
 
 
@@ -3203,7 +3203,7 @@ let collapse_proof_in_non_inherited (proof_of, pr_deps_on_rep) ~current_species
 (** {B Descr} : Same than [collapse_proof_in_non_inherited] but instead of
     re-inserting the changed field in the fields list, return the list
     without the field and the changed field aside. *)
-let rec collapse_proof_in_inherited (proof_of, pr_deps_on_rep) ~current_species
+let collapse_proof_in_inherited (proof_of, pr_deps_on_rep) ~current_species
     fields =
   let name_of_proof_of = proof_of.Parsetree.pd_name in
   let rec rec_find = function
@@ -5274,7 +5274,7 @@ let typecheck_collection_def ctx env coll_def =
 
     {b Exported} : No.                                                *)
 (* ****************************************************************** *)
-let rec typecheck_phrase ctx env phrase =
+let typecheck_phrase ctx env phrase =
   match phrase.Parsetree.ast_desc with
    | Parsetree.Ph_annotation_title ->
        (PCM_annotation_title, env)
