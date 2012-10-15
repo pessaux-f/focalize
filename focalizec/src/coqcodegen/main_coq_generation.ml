@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.44 2012-03-02 12:48:48 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.45 2012-10-15 14:48:16 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module is the entry point for the compilation from FoCaL
@@ -291,8 +291,16 @@ let root_compile ~current_unit ~out_file_name stuff =
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.CoqGenEnv.empty ()) in
-  (* Always import Coq booleans and integers and floats.
-     Alias int notation to Z. *)
+  (* Since Coq 8.4 bound entities do no more appear as terms sequenced as
+     "imply" (i.e. ->) but are now directly introduce as hypothesis. This breaks
+     the code generation model for Zenon proofs. if using Coq 8.4, the we force
+     Coq getting back to previous proof goals, unsetting the "Automatic
+     Introduction" globally. Otherwise, if using Coq version < 8.4, we do not
+     unset. *)
+ if not (Configuration.get_use_coq_older_8_4 ()) then
+     Format.fprintf out_fmter "Global Unset Automatic Introduction.@\n" ;
+  (* Always import Coq booleans and integers and floats. Alias int notation to
+     Z. *)
   Format.fprintf out_fmter
     "Require Export Bool.@\n\
      Require Export ZArith.@\n\

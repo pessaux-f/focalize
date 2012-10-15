@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.61 2012-10-12 12:47:40 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.62 2012-10-15 14:47:06 pessaux Exp $ *)
 
 exception Bad_file_suffix of string ;;
 
@@ -244,7 +244,11 @@ let dispatch_compilation files =
 (* The main procedure *)
 let main () =
   Arg.parse
-    [ ("-dot-non-rec-dependencies",
+    [ ("-coq_older_8_4",
+       Arg.Unit Configuration.set_use_coq_older_8_4,
+       "\n\
+     Enables Coq code generation for versions of Coq < 8.4.");
+      ("-dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
        "\n\
      Dumps species non-let-rec- dependencies as dotty files into the argument\n\
