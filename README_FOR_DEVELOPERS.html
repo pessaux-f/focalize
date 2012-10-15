@@ -1,0 +1,258 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+
+<!--
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLiZe compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 INRIA                                                #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+$Id: README_FOR_DEVELOPERS.html,v 1.1 2012-10-15 14:23:34 pessaux Exp $
+-->
+
+<head>
+
+<meta name="GENERATOR" content="Kompozer">
+<meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Read me for developers</title></head><body bgcolor="#ffffff">
+
+<h2>How to use the FoCaLiZe Makefile</h2>
+
+  <h3>Cleaning</h3>
+
+  One target <span style="font-style: italic;">clean</span>.
+
+     <ol>
+       <li><span style="font-style: italic;">clean</span>: applied from the "toplevel" directory <span style="font-family: monospace;">focalize</span>, cleans the tools, i.e. <span style="font-family: monospace;">zenon</span>, <span style="font-family: monospace;">zvtov</span>, <span style="font-family: monospace;">focalize<span style="font-style: italic;">XXX</span></span> executables, libraries and contributions.<br>
+When applied from a subdirectory (<span style="font-family: monospace;">focalize/zenon</span>, <span style="font-family: monospace;">focalize/zvtov</span>, <span style="font-family: monospace;">focalize/focalizec</span>, <span style="font-family: monospace;">focalize/focalizec/src/stdlib</span> ...), cleans the corresponding source files tree.<br>
+</li></ol><p></p>
+
+  <h3>Making</h3>
+
+  
+<p>From the the "toplevel" directory <span style="font-family: monospace;">focalize</span>, one targets "all" (got via <code>make</code>). The <span style="font-family: monospace;">Makefile</span> is in charge of running the configuration script, build and install for all the components of the FoCaLiZe package, i.e. <span style="font-family: monospace;">zenon</span>, <span style="font-family: monospace;">zvtov</span> and <span style="font-family: monospace;">focalizec</span>, including documentation.</p>
+<ol></ol>
+  <p></p>
+
+<h2>The internals of configuration</h2>
+
+<p>Before the building phase can really start, each component of the
+FoCaLiZe package are configured, in addition to a "toplevel", general
+configuration. Configurations are performed by invocation of a <code>configure</code> in each relevant directory (i.e. <span style="font-family: monospace;">focalize</span> then <span style="font-family: monospace;">zenon</span> then <span style="font-family: monospace;">zvtov</span> and finally <span style="font-family: monospace;">focalizec</span>).</p>
+<p>Two builtin and hand-written configuration files exist: <span style="font-family: monospace;">Makefile.rules</span> and <span style="font-family: monospace;">Makefile.utils</span> that are included in the <span style="font-family: monospace;">Makefile.common</span> file. This latter also includes the "toplevel" <span style="font-family: monospace;">.config_var</span> and is the common primitive configuration to include in further <span style="font-family: monospace;">Makefiles</span>. The file <span style="font-family: monospace;">Makefile.rules</span> contains the default rules <span style="font-family: monospace;">make</span> must apply to build targets from prerequisites. The file <span style="font-family: monospace;">Makefile.utils</span> contains the <span style="font-weight: bold;">basic</span> commands (<span style="font-family: monospace;">cd</span>, <span style="font-family: monospace;">make</span>, <span style="font-family: monospace;">latex</span>
+...) used during the building phase. This latter should not be often
+modified since these commands are either available and have a
+well-established name, or simply not available.<br>
+
+
+</p>
+<p>The <code>configure</code> shell scripts perform various validity checks, commands searches then record all the configuration variables
+into files nammed <code>.config_var</code>.</p>
+<ul>
+  <li>From the "toplevel" directory <span style="font-family: monospace;">focalize</span>, variables defining the various OCaml and Coq commands are set. Generated file: <span style="font-family: monospace;">focalize/.config_var</span>.<br>
+  </li>
+  <li>From the <span style="font-family: monospace;">zenon</span> directory, variables defining here to install <span style="font-family: monospace;">zenon</span> binaries and libraries are set. Since <span style="font-family: monospace;">zenon</span> requires a hash-like command, a variable <span style="font-family: monospace;">SUM</span> is set according to what is available on the system (<span style="font-family: monospace;">sum</span>, <span style="font-family: monospace;">md5</span>, <span style="font-family: monospace;">md5sum</span> ...). Generated file: <span style="font-family: monospace;">zenon/.config_var</span>.</li>
+  <li>From the <span style="font-family: monospace;">zvtov</span> directory, variables defining here to install <span style="font-family: monospace;">zvtov</span> binaries and <span style="font-family: monospace;">man</span> pages are set. Generated file: <span style="font-family: monospace;">zvtov/.config_var</span>.</li>
+  <li>From the <span style="font-family: monospace;">focalizec</span> directory, variables are set to state:<br>
+  </li>
+  <ul>
+    <li>where to find the <span style="font-family: monospace;">OCaml</span>, <span style="font-family: monospace;">Coq</span>, <span style="font-family: monospace;">zenon</span>, <span style="font-family: monospace;">zvtov</span> that will be invoked <span style="font-weight: bold; color: red;">by </span><span style="font-family: monospace; font-weight: bold; color: red;">focalizec</span><span style="font-weight: bold; color: red;">, i.e. by the built compiler</span>.</li>
+    <li>where to install focalizec and its accompanying commands.</li>
+    <li>wether the installed <span style="font-family: monospace;">Coq</span> version is &lt; 8.4, in which case the building phase must invoke <span style="font-family: monospace;">focalizec</span> with the <span style="font-family: monospace;">-coq_older_8_4</span> option (idem later for the user when he will compile its own developments).</li>
+    <li>=&gt; Generated files: <span style="font-family: monospace;">focalizec/.config_var</span> and <span style="font-family: monospace;">focalizec/.install_var</span>.</li>
+  </ul>
+</ul>
+<h2>The building phase</h2>
+
+<p>The building phase must compile the FoCaLiZe compiler
+(<code>focalizec</code>) and its associated dependency compiler
+(<code>focalizedep</code>). To achieve this goal, we MUST have the suitable <span style="font-family: monospace;">zenon</span> and
+<code>zvtov</code> in order to compile and certify the FoCaLiZe libraries.
+
+So, the necessary building sequence is as follows:
+</p><ul><li>compile and install <span style="font-family: monospace;">zenon</span> that searches automatically for proofs from explicit clues given in the proof language:</li>
+  <ul>
+    <li><span style="font-style: italic;">./configure</span>: configuration.</li>
+    <li><span style="font-style: italic;">make all</span>: build binaries and libraries.</li>
+    <li>make doc: build the doc.</li>
+    <li>make install: install everything.<br>
+    </li>
+  </ul>
+  <li>compile and install <span style="font-family: monospace;">zvtov</span> that generates the proofs for the
+  preceding <span style="font-family: monospace;">Coq</span> compiler:</li>
+  <ul>
+    <li><span style="font-style: italic;">./configure</span>: configuration</li>
+    <li><span style="font-style: italic;">make all</span>: build binaries and libraries.</li>
+    <li><span style="font-style: italic;">make doc</span>: build the doc.</li>
+    <li><span style="font-style: italic;">make install</span>: install everything.<br>
+  </li>
+  </ul>
+<li>compile and install <span style="font-family: monospace;">focalizec</span> that will call all the tools when
+  needed (both at run-time and at build time):</li>
+  <ul>
+    <li><span style="font-style: italic;">./configure</span>: configuration.</li>
+    <li><span style="font-style: italic;">make world</span>: build build binaries and libraries. More detailled:<br>
+    </li>
+    <ul>
+      <li><span style="font-style: italic;">make byt bin</span>: really build the binaries (bytecode and native versions).<br>
+      </li>
+      <li><span style="font-style: italic;">make lib-depend</span>: now that focalizedep is built by the previous stage, compute dependencies in the <span style="font-family: monospace;">FoCaLize</span> and <span style="font-family: monospace;">OCaml</span> sources of the library.</li>
+      <li><span style="font-style: italic;">make lib</span>: now that the dependencies are computed, build the stdlib, extlib and the contribs.</li>
+    </ul>
+    <li><span style="font-style: italic;">make doc</span>: build the doc (reference manual and tutorial).</li>
+    <li><span style="font-style: italic;">make install</span>: install everything.</li>
+  </ul>
+</ul><h2>How to get the current branch for FoCaLiZe</h2>
+
+<pre># Go to the FoCaLiZe sources directory<br>cd ~/src/focalize<br><br># Create a distribution sub directory to check out the distribution branch.<br>mkdir distribution<br>cd distribution<br><br># Checkout a fresh distribution branch.<br># (Change the name "myname" by your own login name on our CVS server<br># modulogic.inria.fr)<br><br>cvs -d myname@modulogic.inria.fr:/home/cvs \<br> co focalize<br><br># Configure the FoCaLiZe, compile and install it<br>cd focalize<br>make<br></pre><p></p>
+
+<h2 style="color: rgb(255, 153, 0);">How to use the FoCaLiZe <code>doc_src</code> Makefile <span style="color: red;">(NOT re-read and updated yet)</span><br>
+</h2>
+
+  <p style="color: rgb(255, 153, 0);">The <code>doc_src</code> directory contains the Web site of the project.
+  </p>
+
+  <h3 style="color: rgb(255, 153, 0);">Architecture</h3>
+
+  <p style="color: rgb(255, 153, 0);">The web site is organized in several sub directories: each
+  directory being the target of a menu item of the main index page (or of a
+  sub-index page, if we need one in the future).
+  The source of the web site pages are files with extension
+  <code>.shtml</code>; the <code>.html</code> pages are thus generated from
+  those <code>.shtml</code> thanks to the <code>htmlc</code> text file
+  generator (from bazar-ocaml).
+  </p>
+
+  <p style="color: rgb(255, 153, 0);">Warning: <code>.html</code> files are made read-only by
+  <code>htmlc</code> as they are generated, and thus must not be edited! Only
+  <code>.shtml</code> files can be edited.
+  </p>
+
+  <h3 style="color: rgb(255, 153, 0);">Making</h3>
+
+  <p style="color: rgb(255, 153, 0);">Two main targets: "default" (got via <code>make</code>) and install (got
+  via <code>make</code> install).
+
+  </p><ol style="color: rgb(255, 153, 0);">
+    <li>default: use <code>htmlc</code> to build the web site pages.
+    </li><li>install: install the web site pages on the http server using the Unix
+    command <code>scp</code>.
+  </li></ol>
+  <p style="color: rgb(255, 153, 0);"></p>
+
+  <p style="color: rgb(255, 153, 0);">Note:
+  by default "scp" uses your local machine login name to contact the http
+  server. Thus, if your login name on the server is different then you need
+  to define it while launching <code>make</code>, using:
+  <br>
+</p><pre style="color: rgb(255, 153, 0);">make \<br>  PROJECT_WEB_TARGET_DIR='serverloginname@$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)' \<br>  install<br></pre><span style="color: rgb(255, 153, 0);">
+  (where </span><code style="color: rgb(255, 153, 0);">$(PROJECT_WEB_SERVER)</code><span style="color: rgb(255, 153, 0);"> and
+  </span><code style="color: rgb(255, 153, 0);">$(PROJECT_WEB_SITE_DIR)</code><span style="color: rgb(255, 153, 0);"> are variables you should write
+  verbatim here: they are already known by the </span><code style="color: rgb(255, 153, 0);">doc_src/Makefile</code><span style="color: rgb(255, 153, 0);">
+  file and </span><code style="color: rgb(255, 153, 0);">make</code> automatically handles them for you).
+  
+
+  <h3 style="color: rgb(255, 153, 0);">Cleaning</h3>
+
+  <p><span style="color: rgb(255, 153, 0);">The target "clean" removes the compiled </span><code style="color: rgb(255, 153, 0);">.html</code><span style="color: rgb(255, 153, 0);"> files
+  from the </span><code style="color: rgb(255, 153, 0);">doc_src</code><span style="color: rgb(255, 153, 0);"> hirearchy.</span>
+  </p>
+
+<h2>How to add a new directory to the FoCaLiZe hierarchy</h2>
+
+<p>Compilation from the <span style="font-family: monospace;">focalize/focalizec</span> directory is automatic in FoCaLiZe. The <span style="font-family: monospace;">Makefile</span> in this directory contains lists of
+sub-directories that are visited to perform the necessary tasks.<br>
+</p>
+<p><span style="font-family: monospace;">COMPILER_DIRS</span> describes directories involved in the compiler itself.<br>
+<span style="font-family: monospace;">LIB_DIRS</span> describes directories involved the libraries. <br>
+<span style="font-family: monospace;">DOC_DIRS</span> describes directories involved the documentation.<br>
+<span style="font-family: monospace;">ALL_DIRS</span> is the union of all the previous.</p>
+<p><br>
+
+
+</p>
+<pre>#!/bin/sh<br><br>#**********************************************************************#<br>#                                                                      #<br>#                        FoCaLiZe compiler                             #<br>...<br><br># $Id: README_FOR_DEVELOPERS.html,v 1.1 2012-10-15 14:23:34 pessaux Exp $<br><br>ROOT_DIR=..<br><br>include $(ROOT_DIR)/Makefile.common<br><br>COMPILER_DIRS=\<br> src/basement src/parser src/typing\<br> src/docgen src/commoncodegen src/mlcodegen src/coqcodegen\<br> src/testing src/relation_extraction\<br> src/toplevel src/focalizedep src/focalizetest src/focalizeig<br><br>LIB_DIRS=\<br> src/stdlib src/extlib src/contribs<br><br>DOC_DIRS=\<br> doc_src<br><br>ALL_DIRS=\<br> $(COMPILER_DIRS) $(LIB_DIRS) $(DOC_DIRS)<br><br>...<br></pre>
+
+<p>You must add the new directory in the list(s) at its
+proper place in the list. Note also, that you must also add all the sub
+directories of the new directory if any.
+
+</p>
+<h2 style="color: rgb(255, 153, 0);">How to release<span style="color: red;"> (NOT re-read and updated yet)</span></h2>
+
+
+<p style="color: rgb(255, 153, 0);">When a release is to be completed, and preferably before branching, you must
+consolidate the version number of every component of FoCaLiZe.
+<br>For each component, this means to edit the file
+<code>.project_config_var</code> to verify that this file indicates the
+correct current version of the tool.
+
+</p><p style="color: rgb(255, 153, 0);">For the entire FoCaLiZe system, it means to edit and verify the following
+files:
+</p><ol style="color: rgb(255, 153, 0);">
+  <li><code>./.project_config_var</code> (the version for FoCaLiZe is in this
+  file)
+  </li><li><code>zenon/.project_config_var</code> (the version for zenon is in the
+      file <code>versionnum.ml</code>)
+  </li><li><code>zvtov/.project_config_var</code> (the version for zvtov is in the
+      file <code>version.ml</code>)
+  </li><li><code>${FOCALIZEC_NAME}/.project_config_var</code> (the version for
+      <code>${FOCALIZEC_NAME}</code> is in the file
+      <code>src/basement/configuration.ml</code>)
+</li></ol>
+
+<p style="color: rgb(255, 153, 0);">The Release documentation has to be recompiled with the new version
+numbers. You need to
+</p><ul style="color: rgb(255, 153, 0);">
+ <li>edit the version files:
+    <ol>
+     <li>
+       <code>.project_config_var</code> (change the bindings of variables
+       <code>VERSION_NUMBER_MAIN</code>,
+       <code>VERSION_NUMBER_SUB</code>, and
+       <code>VERSION_NUMBER_PATCH</code>
+       ).
+
+     </li><li><code>$ROOT_DIR/focalizec/doc_src/man/focalizec.env</code> (
+       change the definition
+       <code>let focalizec_version = "0.6.0";;</code>
+       ).
+
+     </li><li><code>$ROOT_DIR/focalizec/doc_src/tex/refman/macros.tex</code> (
+       change the definitions
+       <code>\def\month{December}</code>
+       <code>\def\year{2009}</code>
+       <code>\def\focalversion{\sf 0.6.0}</code>
+       ).
+
+     </li><li><code>$ROOT_DIR/focalizec/doc_src/tex/refman/macros.hva</code> (
+       change the definitions
+       <code>\def\month{December}</code>
+       <code>\def\year{2009}</code>
+       <code>\def\focalversion{\sf 0.6.0}</code>
+       ).
+
+     </li><li><code>$ROOT_DIR/focalizec/doc_src/tex/tutorial/macros.tex</code> (
+       change the definitions
+       <code>\def\month{December}</code>
+       <code>\def\year{2009}</code>
+       <code>\def\focalversion{\sf 0.6.0}</code>
+       ).     
+    </li></ol>
+ </li><li><code>make docdir</code>
+ </li><li>cvs commit -m 'New release X.X.X.'
+</li></ul>
+
+<p>Who said «This version handling stuff could be simpler!?»
+
+
+</p></body></html>

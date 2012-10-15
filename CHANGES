@@ -1,3 +1,14 @@
+# Focalize 0.7.0
+- Update to Caml 4.0
+- Update to Coq 8.4
+- Foreign languages reserved keywords renammed on the fly to prevent
+  conflicts
+- Zenon realy smarter
+- Other things we don't remember :S
+- Focalizetest
+- No more Caml & Coq included in the distrib.
+- config & build stiff revised and simplified.
+
 # Focalize 0.6.0
 - Inductive proof on data structures.
 - Update Caml to 3.11.1
@@ -16,4 +27,4 @@ Initial distribution
 # Focalize 0.1.rc0
 First release candidate.
 
-$Id: CHANGES,v 1.3 2010-02-20 11:16:20 weis Exp $
+$Id: CHANGES,v 1.4 2012-10-15 14:23:06 pessaux Exp $

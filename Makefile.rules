@@ -1,0 +1,89 @@
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLiZe compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: Makefile.rules,v 1.1 2012-10-15 14:23:06 pessaux Exp $
+
+# This file *only* contains implicit rules.
+
+BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
+
+.PHONY: byt bin
+
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .pfc .v .vo
+.SUFFIXES: .fcd .xml
+.SUFFIXES: .tex .dvi .ps .pdf .idx
+.SUFFIXES: .shtml .html .htm
+
+# General rules used in the FoCaLize's Makefiles.
+all: byt bin
+
+byt: $(BYT_OBJS)
+
+bin: $(BIN_OBJS)
+
+# Caml rules.
+# CAML_INCLUDES can be defined as needed in each Makefile.
+# CAML_FLAGS can be defined as needed in each Makefile.
+.ml.cmo:
+	$(CAMLBYT) $(CAML_INCLUDES) $(CAML_FLAGS) -c $<
+
+.mli.cmi:
+	$(CAMLBYT) $(CAML_INCLUDES) $(CAML_FLAGS) -c $<
+
+.ml.cmx:
+	$(CAMLBIN) $(CAML_INCLUDES) $(CAML_FLAGS) -c $<
+
+.mly.ml:
+	$(CAMLYACC) $<
+
+.mll.ml:
+	$(CAMLLEX) $<
+
+# FoCaLiZe rules
+.fcl.fo:
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) $<
+.fcl.ml:
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) $<
+.fcl.zv:
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) $<
+
+.zv.v:
+	$(ZVTOV) $(ZVTOV_COMP_FLAGS) $<
+
+.v.vo:
+	$(COQC) $(COQ_INCLUDES) $<
+
+.fcl.fcd:
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -focalize-doc $<
+.fcd.xml:
+	$(XSLTPROC) $(FD2HTML) $< | $(XSLTPROC) $(MMLC2P) - > $@
+
+# Tex/LaTeX rules
+.tex.dvi:
+	$(LATEX) $< &&\
+	$(MAKE) $(<:.tex=.idx) &&\
+	$(LATEX) $<
+.tex.idx:
+	$(MAKEINDEX) $(<:.tex=.idx)
+.dvi.ps:
+	$(DVIPS) -o $@ $<
+.dvi.pdf:
+	$(DVIPDF) $< $@
+
+# Html rules
+.shtml.html:
+	$(HTMLC) -s $<
+.html.htm:
+	$(HTMLC) -c $<
+.html.dvi:
+	$(HEVEA) -fix ${HVA_FILES} $<

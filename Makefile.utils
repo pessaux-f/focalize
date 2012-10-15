@@ -1,32 +1,41 @@
-#!/bin/sh
-
 #**********************************************************************#
 #                                                                      #
 #                        FoCaLiZe compiler                             #
 #                                                                      #
 #            François Pessaux                                          #
-#            Pierre Weis                                               #
-#            Damien Doligez                                            #
 #                                                                      #
 #                               LIP6  --  INRIA Rocquencourt           #
 #                                                                      #
-#  Copyright 2008 INRIA                                                #
+#  Copyright 2008 LIP6 and INRIA                                       #
 #  Distributed only by permission.                                     #
 #                                                                      #
 #**********************************************************************#
 
-# $Id: .configure_distribution,v 1.2 2010-02-10 09:54:19 weis Exp $
+# $Id: Makefile.utils,v 1.1 2012-10-15 14:23:06 pessaux Exp $
 
-# The configuration script to collect various shell variables
-# for the project distribution.
+# Basic Unix commands
+CD=cd
+CP=cp -f
+CVS=cvs
+LN=ln -sf
+MAKE=make
+MKDIR=mkdir -p
+MV=mv -f
+RM=rm -rf
+SSH=ssh
+SCP=scp
+SUDO=sudo
+TOUCH=touch
 
-PROJECT_CVS_ROOT=`cat ./CVS/Root`
-PROJECT_CVS_REPOSITORY=`cat ./CVS/Repository`
+# Tex related processors
+GS=gs
+LATEX=latex
+MAKEINDEX=makeindex
+DVIPS=dvips
+DVIPDF=dvipdf
 
-sed \
-  -e "s,@PROJECT_CVS_ROOT@,$PROJECT_CVS_ROOT," \
-  -e "s,@PROJECT_CVS_REPOSITORY@,$PROJECT_CVS_REPOSITORY," \
-  <.distribution_var.in >.distribution_var
-
-chmod g+w .distribution_var
-
+# Htmlc compiler
+HTMLC_COMPILER=htmlc
+HTMLC_COMP_FLAGS =
+HTMLC_INCLUDES =
+HTMLC=$(HTMLC_COMPILER) $(HTMLC_COMP_FLAGS) $(HTMLC_INCLUDES)
