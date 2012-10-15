@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile_for_dist,v 1.1 2011-06-08 17:01:33 szekely Exp $
+# $Id: Makefile_for_dist,v 1.2 2012-10-15 14:58:37 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -41,16 +41,12 @@ FOCALIZE_COMP_FLAGS=\
  -stop-before-coq -no-stdlib-path\
  -I $(STDLIB_DIR) -I $(UTILSLIB_DIR) -I $(POLICIESLIB_DIR) -I $(EXEMPLESLIB_DIR)
 
-#From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
-
 CAML_COMP_FLAGS=\
- -w A -warn-error Ae -dtypes\
+ -w A -warn-error $(WARN_ERROR) -dtypes\
  -I $(STDLIB_DIR) -I $(UTILSLIB_DIR) -I $(POLICIESLIB_DIR) -I $(EXEMPLESLIB_DIR)
 
 ZVTOV_COMP_FLAGS=-script -zenon $(ZENON_COMPILER) -new
 
-# From Makefile.config
-# ZENON_LIB_DIR
 COQ_INCLUDES=\
  -I $(ZENON_LIB_DIR)\
  -I $(STDLIB_DIR) -I $(UTILSLIB_DIR) -I $(POLICIESLIB_DIR) -I $(EXEMPLESLIB_DIR)

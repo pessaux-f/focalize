@@ -13,34 +13,35 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.31 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.32 2012-10-15 14:56:45 pessaux Exp $
 
 # Makefile for access control models
 
 LIB_INSTALL_SUB_DIR=access_control
 
-ROOT_DIR=../../..
-
-include $(ROOT_DIR)/Makefile.config
+ROOT_DIR=../../../..
 
 PROJECT_LIB_INSTALL_DIR=$(LIB_DIR)/$(PROJECT_NAME_FULL)
 
 LIB_INSTALL_DIR=$(PROJECT_LIB_INSTALL_DIR)/$(LIB_INSTALL_SUB_DIR)
 
-STDLIB_DIR=$(ROOT_DIR)/src/stdlib
+STDLIB_DIR=../../stdlib
+
+FOCALIZEC=../../toplevel/focalizec
 
 FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
 
-FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR)
+FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
 
-#From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
+CAML_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes
+CAML_INCLUDES=-I $(STDLIB_DIR)
 
-CAML_COMP_FLAGS=-w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
-
-#From Makefile.config ZENON_LIB_DIR
+ZENON_LIB_DIR=../../../../zenon
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 
 include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
+include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZE_SRC=\
 	ensembles_finis.fcl\
@@ -92,42 +93,42 @@ bin:\
  $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
  $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
-install-local:
-	@$(MKDIR) $(LIB_INSTALL_DIR) &&\
+install:
+	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_FOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled non-certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_CMIS)" != "" ] ; then\
 	  echo "Installing (Ocaml interface) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/ ;\
+	  $(CP) $(FOCALIZE_CMIS) $(INSTALL_LIB_DIR)/ ;\
 	fi &&\
 	if [ "$(FOCALIZE_CMIS_UNSAFE)" != "" ] ; then\
 	  echo "Installing (Ocaml interface) compiled non-certified libs." &&\
-	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(LIB_INSTALL_DIR)/ ;\
+	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(INSTALL_LIB_DIR)/ ;\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
-uninstall-local:
-	$(RM) $(LIB_INSTALL_DIR)
-
-clean-local:
+clean:
 	$(RM) *.fo *.ml *.cm* *.zv *.v *.vo *.o *.pfc *.annot
+
+# Currently not handled.
+depend:

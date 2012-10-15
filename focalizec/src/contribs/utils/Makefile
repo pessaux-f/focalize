@@ -13,29 +13,31 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.8 2012-10-15 14:59:24 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
-ROOT_DIR=../../..
-
-include $(ROOT_DIR)/Makefile.config
+ROOT_DIR=../../../..
 
 LIB_INSTALL_DIR=$(LIB_DIR)/$(PROJECT_NAME_FULL)
 
 FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
 
-STDLIB_DIR=$(ROOT_DIR)/src/stdlib
+STDLIB_DIR=../../stdlib
 
-FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR)
+FOCALIZEC=../../toplevel/focalizec
 
-#From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
+FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
 
-CAML_COMP_FLAGS=-w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
+CAML_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes
+CAML_INCLUDES=-I $(STDLIB_DIR)
 
-# From Makefile.config ZENON_LIB_DIR
-# Was ZENON_LIB_DIR=$(ROOT_DIR)/../zenon/
+ZENON_LIB_DIR=../../../../zenon
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
+
+include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
+include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZE_SRC=\
  pair.fcl\
@@ -53,7 +55,6 @@ FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
 
-include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
@@ -70,34 +71,34 @@ bin:\
  $(FOCALIZE_BIN_OBJS)\
  $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
-install-local:
-	@$(MKDIR) $(LIB_INSTALL_DIR) &&\
+install:
+	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_FOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_CMIS)" != "" ] ; then\
 	  echo "Installing (OCaml interface) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_CMIS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then\
 	  echo "Installing (OCaml bytecode) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then\
 	  echo "Installing (OCaml native) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
 	  echo "Installing (Coq) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
-uninstall-local:
-	@($(CD) $(LIB_DIR) &&\
-	  $(RM) $(LIB_INSTALL_DIR))
-
-clean-local:
-	@$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) &&\
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) &&\
+clean:
+	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
+	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
 	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
+
+# Currently not handled.
+depend:

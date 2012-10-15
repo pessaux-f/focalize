@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2011-12-05 07:01:19 rr Exp $
+# $Id: Makefile,v 1.7 2012-10-15 14:58:37 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -41,16 +41,12 @@ FOCALIZE_COMP_FLAGS=\
  -stop-before-coq -no-stdlib-path\
  -I $(STDLIB_DIR) -I $(UTILSLIB_DIR) -I $(POLICIESLIB_DIR) -I $(EXEMPLESLIB_DIR)
 
-#From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
-
 CAML_COMP_FLAGS=\
- -w A -warn-error Ae -dtypes\
+ -w A -warn-error $(WARN_ERROR) -dtypes\
  -I $(STDLIB_DIR) -I $(UTILSLIB_DIR) -I $(POLICIESLIB_DIR) -I $(EXEMPLESLIB_DIR)
 
 ZVTOV_COMP_FLAGS=-script -zenon $(ZENON_COMPILER) -new
 
-# From Makefile.config
-# ZENON_LIB_DIR
 COQ_INCLUDES=\
  -I $(ZENON_LIB_DIR)\
  -I $(STDLIB_DIR) -I $(UTILSLIB_DIR) -I $(POLICIESLIB_DIR) -I $(EXEMPLESLIB_DIR)
@@ -153,6 +149,7 @@ CAML_COMPILE_CMD=$(CAML_BIN_COMPILER) -o $@ \
 BIN_EXE = $(FOCALIZE_SRC:.fcl=.test)
 
 include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
 
 all: $(BIN_EXE)
 
@@ -212,55 +209,52 @@ exemples/blp.test: byt bin
 	$(CAML_COMPILE_CMD) $(HRU_DEPS)
 
 install:
-	@$(MKDIR) $(LIB_INSTALL_DIR) &&\
+	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_FOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled non-certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_CMIS)" != "" ] ; then\
 	  echo "Installing (Ocaml interface) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_CMIS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_CMIS_UNSAFE)" != "" ] ; then\
 	  echo "Installing (Ocaml interface) compiled non-certified libs." &&\
-	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_CMIS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_CMIS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(EXTERNAL_CMIS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_VOS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
-uninstall-local:
-	$(RM) $(LIB_INSTALL_DIR)
-
-clean-local:
+clean:
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
 	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_CMIS) $(FOCALIZE_BYT_OBJS)
@@ -271,3 +265,5 @@ clean-local:
 	$(RM) $(FOCALIZE_VOS_UNSAFE) $(FOCALIZE_O_UNSAFE) $(FOCALIZE_PFC_UNSAFE)
 	$(RM) $(FOCALIZE_ANNOT_UNSAFE)
 	$(RM) $(BIN_EXE)
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.zv *.vo
+	$(RM) utils/*.cm* utils/*.o utils/*.a utils/*.annot *.zv *.vo

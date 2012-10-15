@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.8 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.9 2012-10-15 14:58:37 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -35,7 +35,7 @@ FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR)
 
 #From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
-#CAML_COMP_FLAGS=-w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
+#CAML_COMP_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 CAML_COMP_FLAGS=-dtypes -I $(STDLIB_DIR)
 
 # From Makefile.config ZENON_LIB_DIR
@@ -101,42 +101,39 @@ bin:\
   $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install:
-	@$(MKDIR) $(LIB_INSTALL_DIR) &&\
+	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/\
+	  $(CP) $(FOCALIZE_FOS) $(INSTALL_LIB_DIR)/\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/\
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(INSTALL_LIB_DIR)/\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/\
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/\
 	fi &&\
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/\
+	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/\
 	fi &&\
 	if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/\
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(INSTALL_LIB_DIR)/\
 	fi &&\
 	if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/\
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(INSTALL_LIB_DIR)/\
 	fi &&\
 	if [ "$(EXTERNAL_VOS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/\
+	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/\
 	fi
 
-uninstall:
-	@($(CD) $(LIB_DIR) &&\
-	  $(RM) $(LIB_INSTALL_DIR))
-
 clean:
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) &&\
-	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS) &&\
-	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) &&\
-	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml &&\
-	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm* &&\
-	$(RM) big_integers.o parse_poly.o polys_abstract.o &&\
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
+	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
+	$(RM) $(EXTERNAL_BYT_OBJS) $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)
+	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
+	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
+	$(RM) big_integers.o parse_poly.o polys_abstract.o
 	$(RM) *.annot *.glob
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 
 
 # Were not compiled to Coq in the previous FoCaL compiler...

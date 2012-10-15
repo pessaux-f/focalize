@@ -12,34 +12,36 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.43 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.44 2012-10-15 14:53:24 pessaux Exp $
 
-ROOT_DIR=../..
+ROOT_DIR=../../..
 
-include $(ROOT_DIR)/Makefile.config
-
-CAML_INCLUDES=-I ../basement
-
+# Must be defined before including Makefile.common since is used by it.
 BYT_OBJS=lexer.cmo parser.cmo parse_file.cmo \
  dump_ptree.cmo sourcify.cmo sourcify_token.cmo lex_file.cmo
 
 include $(ROOT_DIR)/Makefile.common
 
-clean-local:
-	$(RM) lexer.ml lexer.mli
-	$(RM) parser.ml parser.mli parser.conflicts parser.output
-	$(RM) menhir.out
-	$(RM) lex_file
-	#$(MAKE) depend
+CAML_INCLUDES=-I ../basement
+CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)
 
-depend-local: lexer.ml parser.ml
-	$(CAML_DEP) *.mli *.ml > ./.depend
+depend: lexer.ml parser.ml
+	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend
 
 explain:
 	menhir --explain parser.mly > menhir.out 2>&1
 
 lex_file: $(BYT_OBJS)
-	$(CAML_BYT) -o lex_file lexer.cmo sourcify_token.cmo lex_file.cmo
+	$(CAMLBYT) $(CAML_INCLUDES) -o lex_file lexer.cmo sourcify_token.cmo lex_file.cmo
 
-parser.mli: parser.ml
-parser.cmi: parser.mli
+install: # Nothing to install from there.
+
+clean:
+	$(RM) lexer.ml lexer.mli
+	$(RM) parser.ml parser.mli parser.conflicts parser.output
+	$(RM) menhir.out
+	$(RM) lex_file
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
+
+
+include .depend

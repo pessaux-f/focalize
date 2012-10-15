@@ -1,23 +1,38 @@
-ROOT_DIR=../..
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
 
-include $(ROOT_DIR)/Makefile.config
+# $Id: Makefile,v 1.4 2012-10-15 14:53:47 pessaux Exp $
 
-CAML_COMP_FLAGS=-w A -dtypes
+ROOT_DIR=../../..
 
-CAML_INCLUDES=\
- -I ../basement -I ../parser -I ../typing\
- -I ../commoncodegen
-
+# Must be defined before including Makefile.common since is used by it.
 BYT_OBJS=\
  pred.cmo foc2spec.cmo focgen.cmo rel_ext.cmo
 
 include $(ROOT_DIR)/Makefile.common
 
-depend-local:
-	$(CAML_DEP) $(BYT_OBJS:.cmo=.mli) $(BYT_OBJS:.cmo=.ml) > .depend
+CAML_INCLUDES=\
+ -I ../basement -I ../parser -I ../typing\
+ -I ../commoncodegen
+CAML_FLAGS = -annot -w A-4 -warn-error $(WARN_ERROR)
 
-clean-local:
-	echo "clean-local to do."
+depend:
+	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > .depend
 
-clean-default:
-	echo "clean-default to do."
+install: # Nothing to install from there.
+
+clean:
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
+
+include .depend

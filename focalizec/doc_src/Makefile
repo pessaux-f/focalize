@@ -13,26 +13,15 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.7 2012-10-15 15:00:22 pessaux Exp $
 
-ROOT_DIR=..
+ROOT_DIR=../..
 
-include $(ROOT_DIR)/Makefile.config
-
-SUB_DIRS=html man tex
+SUB_DIRS=man tex
 
 include $(ROOT_DIR)/Makefile.common
 
-all clean-local distclean-local doc docdir depend:
-	@for i in $(SUB_DIRS); do\
-	  echo "--> $$i ...";\
-	  ($(CD) $$i && $(MAKE) $@);\
-	  err=$$?;\
-	  echo "<-- $$i [$$err]";\
-	  case $$err in 0);; *) exit $$err;; esac;\
-	done
-
-install-local uninstall-local:
+all clean doc docdir depend install:
 	@for i in $(SUB_DIRS); do\
 	  echo "--> $$i ...";\
 	  ($(CD) $$i && $(MAKE) $@);\

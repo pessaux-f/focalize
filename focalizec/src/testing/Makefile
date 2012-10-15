@@ -12,17 +12,25 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2011-05-27 14:31:53 weis Exp $
+# $Id: Makefile,v 1.4 2012-10-15 14:55:12 pessaux Exp $
 
-ROOT_DIR = ../..
+ROOT_DIR = ../../..
 
-include $(ROOT_DIR)/Makefile.config
-
-CAML_INCLUDES = -I ../basement -I ../parser
-
+# Must be defined before including Makefile.common since is used by it.
 BYT_OBJS = testing.cmo
 
-depend-local:
-	$(CAML_DEP) *.mli *.ml > ./.depend
-
 include $(ROOT_DIR)/Makefile.common
+
+CAML_INCLUDES = -I ../basement -I ../parser
+CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)
+
+depend:
+	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend
+
+install: # Nothing to install from there.
+
+clean:
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
+
+include .depend
+

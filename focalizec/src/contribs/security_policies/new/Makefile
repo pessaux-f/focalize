@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2012-02-01 20:47:03 rr Exp $
+# $Id: Makefile,v 1.4 2012-10-15 14:58:37 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -39,7 +39,7 @@ FOCALIZE_COMP_FLAGS=\
 #From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
 CAML_COMP_FLAGS=\
- -w A -warn-error Ae -dtypes \
+ -w A -warn-error $(WARN_ERROR) -dtypes \
  -I $(STDLIB_DIR) -I $(ROOT_DIR)/src/extlib/algebra
 
 ZVTOV_COMP_FLAGS=-zenon $(ZENON_COMPILER) -new

@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2011-06-14 13:12:32 rr Exp $
+# $Id: Makefile,v 1.7 2012-10-15 14:57:10 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -37,9 +37,8 @@ FOCALIZE_COMP_FLAGS=\
 
 #From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
-CAML_COMP_FLAGS=\
- -w A -warn-error Ae -dtypes \
- -I $(STDLIB_DIR) -I $(ROOT_DIR)/src/extlib/algebra
+CAML__FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
+CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ROOT_DIR)/src/extlib/algebra
 
 ZVTOV_COMP_FLAGS=-zenon $(ZENON_COMPILER) -new
 
@@ -163,9 +162,6 @@ install:
 	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/; \
 	fi
 
-uninstall:
-	$(RM) $(LIB_INSTALL_DIR)
-
 clean:
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
@@ -176,7 +172,8 @@ clean:
 	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
 	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
 	$(RM) big_integers.o parse_poly.o polys_abstract.o
-	$(RM) *.annot *.glob *.fcd
+	$(RM) *.annot *.glob *.fcd *.zv *.vo
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 
 recursive_polys.ml: recursive_polys.fcl
 	$(FOCALIZEC) -no-coq-code $<

@@ -13,40 +13,37 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.18 2011-05-26 15:54:26 maarek Exp $
+# $Id: Makefile,v 1.19 2012-10-15 14:59:24 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
-ROOT_DIR=../../..
-
-include $(ROOT_DIR)/Makefile.config
+ROOT_DIR=../../../..
 
 LIB_INSTALL_DIR=$(LIB_DIR)/voter
 
-STDLIB_DIR=$(ROOT_DIR)/src/stdlib
+STDLIB_DIR=../../stdlib
 
-ALGEBRALIB_DIR=$(ROOT_DIR)/src/extlib/algebra
+ALGEBRALIB_DIR=../../extlib/algebra
 
 UTILSLIB_DIR=../utils
 
-FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
+FOCALIZEC=../../toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS=\
  -no-stdlib-path -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR)\
- -I $(UTILSLIB_DIR)
+ -I $(UTILSLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
 
-# From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
+CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
+CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)
 
-CAML_COMP_FLAGS=\
- -w A -warn-error Ae -dtypes -I $(STDLIB_DIR)\
- -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)
-
-# From Makefile.config ZENON_LIB_DIR
-# Was ZENON_LIB_DIR=$(ROOT_DIR)/../zenon/
-
+ZENON_LIB_DIR=../../../../zenon
 COQ_INCLUDES=\
  -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR)\
  -I $(UTILSLIB_DIR)
+
+include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
+include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZE_SRC=\
  etat_vote.fcl\
@@ -98,7 +95,6 @@ STD_BIN_OBJS=\
 
 BIN_EXE=build.bin
 
-include $(ROOT_DIR)/Makefile.common
 
 all: $(BIN_EXE)
 
@@ -115,48 +111,48 @@ bin:\
  $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 $(BIN_EXE): byt bin
-	$(CAML_BIN_COMPILER) -o $@\
+	$(CAMLBIN) -o $@\
 	   -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)\
 	    $(STD_BIN_OBJS) $(EXTERNAL_BIN_OBJS) $(FOCALIZE_BIN_OBJS)
 
-install-local:
-	$(MKDIR) $(LIB_INSTALL_DIR) &&\
+install:
+	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_FOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled non-certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_BYT_OBJS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_BYT_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(EXTERNAL_BYT_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_BIN_OBJS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_BIN_OBJS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(EXTERNAL_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_VOS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_VOS) $(LIB_INSTALL_DIR)/;\
+	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
-uninstall-local:
-	@($(CD) $(LIB_DIR) &&\
-	  $(RM) $(LIB_INSTALL_DIR))
+clean:
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.zv *.vo
 
-clean-local:
-	@$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
+# Currently not handled.
+depend:

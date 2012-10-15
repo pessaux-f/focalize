@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.2 2012-03-01 16:05:01 pessaux Exp $
+# $Id: Makefile,v 1.3 2012-10-15 14:56:45 pessaux Exp $
 
 LIB_INSTALL_SUB_DIR = airport_security
 
@@ -21,9 +21,9 @@ ROOT_DIR = ../../..
 
 include $(ROOT_DIR)/Makefile.config
 
-PROJECT_LIB_INSTALL_DIR = $(LIB_DIR)/$(PROJECT_NAME_FULL)
+PROJECT_INSTALL_LIB_DIR = $(LIB_DIR)/$(PROJECT_NAME_FULL)
 
-LIB_INSTALL_DIR = $(PROJECT_LIB_INSTALL_DIR)/$(LIB_INSTALL_SUB_DIR)
+INSTALL_LIB_DIR = $(PROJECT_INSTALL_LIB_DIR)/$(LIB_INSTALL_SUB_DIR)
 
 STDLIB_DIR = $(ROOT_DIR)/src/stdlib
 
@@ -33,7 +33,7 @@ FOCALIZE_COMP_FLAGS = -no-stdlib-path -I $(STDLIB_DIR)
 
 #From Makefile.config FOCALIZEC = $(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
 
-CAML_COMP_FLAGS = -w A -warn-error Ae -dtypes -I $(STDLIB_DIR)
+CAML_COMP_FLAGS = -w A -warn-error $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 
 #From Makefile.config ZENON_LIB_DIR
 COQ_INCLUDES = -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
@@ -88,41 +88,38 @@ bin: \
       $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install:
-	@$(MKDIR) $(LIB_INSTALL_DIR) && \
+	@$(MKDIR) $(INSTALL_LIB_DIR) && \
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then \
 	  echo "Installing (FoCaLize) compiled certified libs." && \
-	  $(CP) $(FOCALIZE_FOS) $(LIB_INSTALL_DIR)/; \
+	  $(CP) $(FOCALIZE_FOS) $(INSTALL_LIB_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then \
 	  echo "Installing (FoCaLize) compiled non-certified libs." && \
-	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(LIB_INSTALL_DIR)/; \
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(INSTALL_LIB_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_CMIS)" != "" ] ; then \
 	  echo "Installing (Ocaml interface) compiled certified libs." && \
-	  $(CP) $(FOCALIZE_CMIS) $(LIB_INSTALL_DIR)/ ; \
+	  $(CP) $(FOCALIZE_CMIS) $(INSTALL_LIB_DIR)/ ; \
 	fi && \
 	if [ "$(FOCALIZE_CMIS_UNSAFE)" != "" ] ; then \
 	  echo "Installing (Ocaml interface) compiled non-certified libs." && \
-	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(LIB_INSTALL_DIR)/ ; \
+	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(INSTALL_LIB_DIR)/ ; \
 	fi && \
 	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(LIB_INSTALL_DIR)/; \
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(INSTALL_LIB_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/; \
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(LIB_INSTALL_DIR)/; \
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(LIB_INSTALL_DIR)/; \
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/; \
 	fi && \
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then \
-	  $(CP) $(FOCALIZE_VOS) $(LIB_INSTALL_DIR)/; \
+	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/; \
 	fi
-
-uninstall:
-	$(RM) $(LIB_INSTALL_DIR)
 
 clean:
 	$(RM) *.fo *.ml *.cm* *.zv *.v *.vo *.o *.pfc *.annot
