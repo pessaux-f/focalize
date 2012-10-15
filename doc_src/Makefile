@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.5 2011-05-27 07:33:41 weis Exp $
+# $Id: Makefile,v 1.6 2012-10-15 15:49:42 pessaux Exp $
 
 ROOT_DIR=..
 
@@ -29,7 +29,8 @@ BYT_OBJS=$(SOURCES:.shtml=.html)
 
 include $(ROOT_DIR)/Makefile.common
 
-PROJECT_WEB_TARGET_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
+# PROJECT_WEB_TARGET_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
+PROJECT_WEB_TARGET_DIR="pessaux@focalize.inria.fr":$(PROJECT_WEB_SITE_DIR)
 
 byt clean_local distclean_local install-local uninstall-local:
 	@for i in $(SUB_DIRS); do\

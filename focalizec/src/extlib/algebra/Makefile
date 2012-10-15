@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.44 2012-10-15 14:57:10 pessaux Exp $
+# $Id: Makefile,v 1.45 2012-10-15 15:49:42 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -171,7 +171,7 @@ install:
 clean:
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv *.glob *.pfc *~ .*~
 
 # Do not yet compile in Coq
 iterators.ml: iterators.fcl

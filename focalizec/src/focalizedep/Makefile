@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.12 2012-10-15 14:49:19 pessaux Exp $
+# $Id: Makefile,v 1.13 2012-10-15 15:49:42 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -57,7 +57,7 @@ install:
 	 $(LN) $(EXE_NAME).bin $(EXE_NAME))
 
 clean:
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *~ .*~
 	$(RM) $(EXE_NAME).byt $(EXE_NAME).bin $(EXE_NAME)
 
 depend:

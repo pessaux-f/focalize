@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2012-10-15 14:58:37 pessaux Exp $
+# $Id: Makefile,v 1.8 2012-10-15 15:49:42 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -265,5 +265,5 @@ clean:
 	$(RM) $(FOCALIZE_VOS_UNSAFE) $(FOCALIZE_O_UNSAFE) $(FOCALIZE_PFC_UNSAFE)
 	$(RM) $(FOCALIZE_ANNOT_UNSAFE)
 	$(RM) $(BIN_EXE)
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.zv *.vo
-	$(RM) utils/*.cm* utils/*.o utils/*.a utils/*.annot *.zv *.vo
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.zv *.vo *.pfc
+	$(RM) utils/*.cm* utils/*.o utils/*.a utils/*.annot utils/*.zv utils/*.vo utils/*.pfc

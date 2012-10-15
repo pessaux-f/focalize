@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.4 2012-10-15 14:55:12 pessaux Exp $
+# $Id: Makefile,v 1.5 2012-10-15 15:49:42 pessaux Exp $
 
 ROOT_DIR = ../../..
 
@@ -30,7 +30,7 @@ depend:
 install: # Nothing to install from there.
 
 clean:
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *~ .*~
 
 include .depend
 

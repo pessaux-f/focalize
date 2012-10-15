@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.24 2012-10-15 14:44:55 pessaux Exp $
+# $Id: Makefile,v 1.25 2012-10-15 15:49:42 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -48,7 +48,7 @@ build_stamp.ml: .FORCE
 install: # Nothing to install from there.
 
 clean:
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt build_stamp.ml
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt build_stamp.ml *~ .*~
 
 
 include .depend

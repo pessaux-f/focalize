@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.44 2012-10-15 14:53:24 pessaux Exp $
+# $Id: Makefile,v 1.45 2012-10-15 15:49:42 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -41,7 +41,7 @@ clean:
 	$(RM) parser.ml parser.mli parser.conflicts parser.output
 	$(RM) menhir.out
 	$(RM) lex_file
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *~ .*~
 
 
 include .depend
