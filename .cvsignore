@@ -1,11 +1,5 @@
 .config_var
-.config_var_for_shell
-.distribution_var
-.done*
 .announce_text
-coq-*
-ocaml-*
-camlp5-*
 odoc
 doc
 configure.log
