@@ -10,11 +10,9 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.3 2012-01-30 09:06:56 pessaux Exp $
+# $Id: Makefile,v 1.4 2012-10-15 15:40:06 pessaux Exp $
 
 ROOT_DIR=../../..
-
-include $(ROOT_DIR)/Makefile.config
 
 TEX_FILES=\
  codegen_model.tex macros.tex compiler_src_architecture.tex\
