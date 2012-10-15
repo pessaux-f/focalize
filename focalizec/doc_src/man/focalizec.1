@@ -1,39 +1,21 @@
-.\"                                      Hey, EMACS: -*- nroff -*-
-.\" \$Id: focalizec.man,v 1.10 2009-08-18 15:58:40 weis Exp $
-.\"
-.\"
-.\" First parameter, NAME, should be all caps
-.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
-.\" other parameters are allowed: see man(7), man(1)
-.TH $(uppercase $package) 1 "$(the_short_date)"
-.\" Please adjust this date whenever revising the manpage.
-.\"
-.\" Some roff macros, for reference:
-.\" .nh        disable hyphenation
-.\" .hy        enable hyphenation
-.\" .ad l      left justify
-.\" .ad b      justify to both left and right margins
-.\" .nf        disable filling
-.\" .fi        enable filling
-.\" .br        insert line break
-.\" .sp <n>    insert n+1 empty lines
-.\" for manpage-specific macros, see man(7)
+.TH FOCALIZEC
+
 .SH NAME
-.B $(package)
-\-\-  The $(focal) compiler
-.UR http://$(focal).inria.fr/
-(http://$(focal).inria.fr/)
+.B focalizec
+\-\-  The FoCaLiZe compiler
+.UR http://FoCaLiZe.inria.fr/
+(http://FoCaLiZe.inria.fr/)
 .UE
 
 .SH VERSION
-$(capitalize $package) version $package_version
+Focalizec version 0.7.0
 .SH SYNOPSIS
-.B $package
+.B focalizec
 .RI [ options ]\ [ source\ file ]
 .SH DESCRIPTION
 The 
-.B $package
-compiler is a compiler for the $(focal) language. It takes a
+.B focalizec
+compiler is a compiler for the FoCaLiZe language. It takes a
 source file as input and compiles it to
 .B OCaml
 and/or pre-\fBCoq\fP
@@ -46,7 +28,7 @@ The generated
 code can directly be passed to the
 .B Objective Caml
 compiler to finally get an executable linking all the generated files
-of your $(focal) development.
+of your FoCaLiZe development.
 
 The generated pre-\fBCoq\fP source files get suffix \fI.zv\fP. They must be
 processed by the
@@ -54,13 +36,13 @@ processed by the
 automated theorem prover to get a pure
 .B Coq
 source file (with suffix \fI.v\fP).
-The $(focal) specific command
+The FoCaLiZe specific command
 .B zvtov
 is specially devoted to this task.
 
 Hence, the generation process is the following:
     file.fcl --
-.B $focalizec
+.B focalizec
 --> file.ml and/or file.zv
     file.ml --
 .B ocaml/ocamlopt ...
@@ -75,7 +57,14 @@ Hence, the generation process is the following:
 .SH OPTIONS
 Options are :
 .TP
-.B --dot-non-rec-dependencies \<dirname\>
+.B -coq_older_8_4
+Enables
+.B Coq
+code generation for versions of
+.B Coq
+< 8.4.
+.TP
+.B -dot-non-rec-dependencies \<dirname\>
 Dump non-let-rec dependencies of the species present in the compiled
 source file. The output format is suitable to be graphically displayed
 by
@@ -120,9 +109,9 @@ disable this option: if a recursive function does not have any
 termination proof, a warning is printed during compilation when trying
 to make a collection from this species.
 .TP
-.B --methods-history-to-text \<dirname\>
+.B -methods-history-to-text \<dirname\>
 Dump the methods' inheritance history of the species present in the
-compiled $(focal) files. The result is sent as plain text files into the
+compiled FoCaLiZe files. The result is sent as plain text files into the
 \<dirname\> directory. For each method of each species a file is generated
 wearing the name made of
 .I history_
@@ -131,7 +120,7 @@ wearing the name made of
 + the hosting species name + the suffix
 \fI.txt\fP.
 .TP
-.B --no-ansi-escape
+.B -no-ansi-escape
 Disable ANSI escape sequences in error messages. Default is to
 use bold, italic, underline fonts when reporting errors, to make
 the messages easier to read. This option removes all the text
@@ -139,48 +128,83 @@ attributes and should be used if your terminal doesn't support ANSI
 escape sequences or when compiling under
 \fBemacs\fP.
 .TP
-.B --no-coq-code
+.B -no-coq-code
 Disable the
 .B Coq
 code generation. Default is to generate Coq code.
 .TP
-.B --no-ocaml-code
+.B -no-ocaml-code
 Disable the
 .B OCaml
 code generation. Default is to generate OCaml code.
 .TP
+.B -no-test-code
+Disable the test code generation.
+.TP
+.B -no-tests
+Disable the tests.
+.TP
 .B -no-stdlib-path
 Do not include the standard library installation directory in the
-library search path. Rarely useful and mostly dedicated to the $(focal)
+library search path. Rarely useful and mostly dedicated to the
+.B FoCaLiZe
 compiler build process.
 .TP
-.B --pretty \<file\>
+.B -pretty \<file\>
 Undocumented: mostly for debugging purpose. Pretty-print the parse tree
-of the $(focal) file as a $(focal) source into the argument file.
+of the
+.B FoCaLiZe
+file as a
+.B FoCaLiZe
+source into the argument file.
 .TP
-.B --raw-ast-dump
+.B -raw-ast-dump
 Undocumented: mostly for debugging purpose. Print on stderr the raw AST
 structure after parsing stage.
 .TP
-.B --scoped_pretty \<file\>
-Undocumented: mostly for debugging purpose. Pretty-print the parse tree
-of the $(focal) file, once scoped, as a $(focal) source into the
-file \<file\>.
+.B -require-plugin \<plugin name\>
+Require application of plugin <plugin name> on the
+.B FoCaLize
+source file.
 .TP
-.B --verbose.
+.B -scoped_pretty \<file\>
+Undocumented: mostly for debugging purpose. Pretty-print the parse tree
+of the
+.B FoCaLiZe
+file, once scoped, as a
+.B FoCaLiZe
+source into the file \<file\>.
+.TP
+.B -stop-before-coq
+When
+.B Coq
+code generation is activated, stops the compilation process
+before passing the generated file to
+.B Coq.
+The produced file is ended by the suffix ".v".
+.TP
+.B -stop-before-zenon
+When
+.B Coq
+code generation is activated, stops the compilation process before
+passing the generated file to
+.B Zenon.
+The produced file is ended by the suffix ".zv".
+.TP
+.B -verbose
 Set the compiler verbose mode. The compiler generates the trace of
 steps and operations it performs. Mostly used for debugging purpose; for people
-interested in understanding the $(focal)'s compilation process, can also
+interested in understanding the FoCaLiZe's compilation process, can also
 explain the elaboration of the model during the compilation.
 .TP
 .B \-v
 Print the
-.B $package
+.B focalizec
 version number.
 .TP
 .B \-version
 Print the
-.B $package
+.B focalizec
 full version (version, sub-version and release date).
 .TP
 .B --where
@@ -201,7 +225,7 @@ the LICENSE file in the root directory of the distribution.
 (1)
 .B zvtov
 (1)
-.B $focalizedep
+.B focalizedep
 (1)
 .B ocamlc
 (1)
@@ -211,20 +235,17 @@ the LICENSE file in the root directory of the distribution.
 (1)
 
 The
-.B $focal
-user's manual (http://$(focal).inria.fr/eng.htm)
-(french version at http://$(focal).inria.fr/fra.htm).
+.B FoCaLiZe
+user's manual (http://FoCaLiZe.inria.fr/eng.htm)
+(french version at http://FoCaLiZe.inria.fr/fra.htm).
 
 .SH AUTHORS
-François Pessaux <François.Pessaux@lip6.fr>
+François Pessaux <Francois.Pessaux@ensta-paristech.fr>
 Pierre Weis <Pierre.Weis@inria.fr>
 .P
 This manual page was written for
-.B $package
-version 0.0.1.
+.B focalizec
+version 0.7.0.
 .P
 Laboratoire d'Informatique de l'université Paris 6,
-Institut National de Recherche en Informatique et en Automatique ($(this_year))
-
-\"  LocalWords:  UE OCaml Coq fo Caml pre zv Zenon zvtov fcl ocaml ocamlopt vo
-\"  LocalWords:  coqc TP dirname graphviz deps $focal $focalizec $focalizedep emacs
+Institut National de Recherche en Informatique et en Automatique (2012)

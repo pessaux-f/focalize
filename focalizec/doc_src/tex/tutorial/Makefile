@@ -10,11 +10,9 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.13 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.14 2012-10-15 14:42:40 pessaux Exp $
 
-ROOT_DIR=../../..
-
-include $(ROOT_DIR)/Makefile.config
+ROOT_DIR=../../../..
 
 TEX_FILES=tutorial.tex
 
@@ -40,41 +38,28 @@ FOCALIZE_XML=$(FOCALIZE_DOCS:.fcd=.xml)
 
 DOC_OBJS=tutorial.dvi tutorial.ps tutorial.pdf tutorial.html
 
+FOCALIZEC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
+FOCALIZE_COMP_FLAGS=-I $(ROOT_DIR)/focalizec/src/stdlib  $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
+CAML_INCLUDES=-I $(ROOT_DIR)/focalizec/src/stdlib
+CAML_COMP_FLAGS=-w Ae -dtypes
+
 # Defining defaults from Makefile.common
 include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
+include $(ROOT_DIR)/focalizec/.config_var
+
 # Now overwriting defaults for this directory purposes.
-
-# Already defined in Makefile.common
-#DVIPS=dvips
-#DVIPDF=dvipdf
-
 TEXINPUT=/usr/share/texmf/tex/latex//:$(TEXINPUTS)
 LATEX=TEXINPUTS=$(TEXINPUT); latex
 HEVEA=TEXINPUTS=$(TEXINPUT); hevea
 IMAGEN=imagen -extra "ppmquant 255"
 
-# DOCDIR_DIR is the directory doc that this Makefile must populate.
-DOCDIR_DIR=$(DOC_ROOT_DIR)/tex/tutorial
-
-# DOC_TGT_DIR is the target directory for the installation of the documentation
-DOC_TGT_DIR:=$(DOC_DIR)/tex/$(PROJECT_NAME_FULL)/tutorial
-
-FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
-FOCALIZE_COMP_FLAGS=-I $(ROOT_DIR)/src/stdlib
-CAML_INCLUDES=-I $(ROOT_DIR)/src/stdlib
-CAML_COMP_FLAGS=-w Ae -dtypes
-
-all doc docdir: byt $(DOC_OBJS)
+all doc: byt $(DOC_OBJS)
 
 byt: $(FOCALIZE_BYT_OBJS)
 
-clean-local: clean-generated
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) &&\
-	$(RM) $(FOCALIZE_VS)
-
-docdir-local: $(DOC_OBJS)
-	$(MKDIR) $(DOCDIR_DIR) &&\
-	$(CP) $(DOC_OBJS) $(DOCDIR_DIR)/
+clean: clean-generated
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) *.vo *.zv *.cm* *.o
 
 tutorial.dvi: $(TEX_FILES)
 	$(LATEX) tutorial.tex &&\
@@ -89,13 +74,8 @@ clean-generated:
 	$(RM) *.haux *.htoc
 	$(RM) tutorial*.gif tutorial.image.tex
 	$(RM) $(DOC_OBJS)
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt build_stamp.ml
 
-distclean-local:
-	$(RM) $(DOCDIR_DIR)
-
-install-local:
-	$(MKDIR) $(DOC_TGT_DIR) &&\
-	$(CP) $(DOC_OBJS) $(DOC_TGT_DIR)
-
-uninstall-local:
-	$(RM) $(DOC_TGT_DIR)
+install:
+	$(MKDIR) $(INSTALL_DOC_DIR)/tutorial &&\
+	$(CP) $(DOC_OBJS) $(INSTALL_DOC_DIR)/tutorial/

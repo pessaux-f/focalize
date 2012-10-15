@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.mli,v 1.30 2012-03-01 17:32:46 pessaux Exp $ *)
+(* $Id: configuration.mli,v 1.31 2012-10-15 14:44:55 pessaux Exp $ *)
 
 (** {3 The internal configuration of the FoCaLize compiler} *)
 
@@ -106,3 +106,6 @@ val get_stop_before_coq : unit -> bool
 
 val require_plugin : string -> unit
 val get_plugins : unit -> string list
+
+val set_use_coq_older_8_4 : unit -> unit
+val get_use_coq_older_8_4 : unit -> bool

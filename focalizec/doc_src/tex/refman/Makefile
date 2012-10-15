@@ -10,11 +10,9 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.28 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.29 2012-10-15 14:42:22 pessaux Exp $
 
-ROOT_DIR=../../..
-
-include $(ROOT_DIR)/Makefile.config
+ROOT_DIR=../../../..
 
 TEX_FILES=macros.tex syntaxdef.sty\
  basic_concepts.tex lexical_conventions.tex motivations.tex\
@@ -32,18 +30,14 @@ HEVEA=TEXINPUTS=$(TEXINPUT); hevea
 IMAGEN=imagen -extra "ppmquant 255"
 
 include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
 
-# DOCDIR_DIR is the directory doc that this Makefile must populate.
-DOCDIR_DIR=$(DOC_ROOT_DIR)/tex/refman
+all: doc
 
-# DOC_TGT_DIR is the target directory for the installation of the documentation
-DOC_TGT_DIR:=$(DOC_DIR)/tex/$(PROJECT_NAME_FULL)/refman
+doc: $(DOC_OBJS)
 
-all doc docdir: $(DOC_OBJS)
-
-docdir-local: $(DOC_OBJS)
-	$(MKDIR) $(DOCDIR_DIR) &&\
-	$(CP) $(DOC_OBJS) $(DOCDIR_DIR)/
+refman.pdf: refman.dvi
+	$(DVIPDF) refman.dvi refman.pdf
 
 refman.dvi: $(TEX_FILES)
 	$(LATEX) refman.tex &&\
@@ -51,26 +45,15 @@ refman.dvi: $(TEX_FILES)
 	bibtex refman &&\
 	$(LATEX) refman.tex && $(LATEX) refman.tex
 
-#refman.pdf: refman.dvi
-#	dvipdf refman.dvi
-
 refman.html: refman.dvi ${HVA_FILES}
 	$(HEVEA) -fix ${HVA_FILES} refman.tex
 
-#refman.ps: refman.dvi
-#	dvips refman.dvi
-
-clean-local:
+clean:
 	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc
 	$(RM) refman*.gif refman.image.tex
 	$(RM) $(DOC_OBJS)
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 
-distclean-local:
-	$(RM) $(DOCDIR_DIR)
-
-install-local:
-	$(MKDIR) $(DOC_TGT_DIR) &&\
-	$(CP) $(DOC_OBJS) $(DOC_TGT_DIR)
-
-uninstall-local:
-	$(RM) $(DOC_TGT_DIR)
+install:
+	$(MKDIR) $(INSTALL_DOC_DIR)/refman &&\
+	$(CP) $(DOC_OBJS) $(INSTALL_DOC_DIR)/refman/

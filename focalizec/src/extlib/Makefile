@@ -13,11 +13,9 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.25 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.26 2012-10-15 14:51:34 pessaux Exp $
 
-ROOT_DIR=../..
-
-include $(ROOT_DIR)/Makefile.config
+ROOT_DIR=../../..
 
 # Fill here to add a new directory for a new library
 SUB_DIRS=algebra access_control
@@ -36,57 +34,10 @@ byt bin:
 	  case $$err in 0);; *) exit $$err;; esac;\
 	done
 
-clean-local:
+clean doc depend install:
 	@for i in $(SUB_DIRS); do\
 	  echo "--> $$i ..." &&\
-	  ($(CD) $$i && $(MAKE) clean);\
-	  err=$$?;\
-	  echo "<-- $$i [$$err]" &&\
-	  case $$err in 0);; *) exit $$err;; esac;\
-	done
-
-distclean-local:
-	@for i in $(SUB_DIRS); do\
-	  echo "--> $$i ..." &&\
-	  ($(CD) $$i && $(MAKE) distclean);\
-	  err=$$?;\
-	  echo "<-- $$i [$$err]" &&\
-	  case $$err in 0);; *) exit $$err;; esac;\
-	done
-
-cleanlib: clean
-
-doc:
-	@for i in $(SUB_DIRS); do\
-	  echo "--> $$i ..." &&\
-	  ($(CD) $$i && $(MAKE) doc);\
-	  err=$$?;\
-	  echo "<-- $$i [$$err]" &&\
-	  case $$err in 0);; *) exit $$err;; esac;\
-	done
-
-install-local:
-	@for i in $(SUB_DIRS); do\
-	  echo "--> $$i ..." &&\
-	  ($(CD) $$i && $(MAKE) install);\
-	  err=$$?;\
-	  echo "<-- $$i [$$err]" &&\
-	  case $$err in 0);; *) exit $$err;; esac;\
-	done
-
-uninstall-local:
-	@for i in $(SUB_DIRS); do\
-	  echo "--> $$i ..." &&\
-	  ($(CD) $$i && $(MAKE) uninstall);\
-	  err=$$?;\
-	  echo "<-- $$i [$$err]" &&\
-	  case $$err in 0);; *) exit $$err;; esac;\
-	done
-
-depend:
-	@for i in $(SUB_DIRS); do\
-	  echo "--> $$i ..." &&\
-	  ($(CD) $$i && $(MAKE) depend);\
+	  ($(CD) $$i && $(MAKE) $@);\
 	  err=$$?;\
 	  echo "<-- $$i [$$err]" &&\
 	  case $$err in 0);; *) exit $$err;; esac;\

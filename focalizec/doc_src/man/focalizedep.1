@@ -1,0 +1,88 @@
+TH FOCALIZEDEP
+
+.SH NAME
+.B focalizedep
+\-\- Dependency generator for FoCaLiZe.
+.UR http://FoCaLiZe.inria.fr/
+(http://FoCaLiZe.inria.fr/)
+.UE
+
+.SH VERSION
+focalizedep version 0.7.0.
+.SH SYNOPSIS
+.B focalizedep
+.RI [ -I\ lib-dir ]\ [ source\ files ]
+.SH DESCRIPTION
+The
+.B focalizedep
+command scans each FoCaLiZe source file argument and checks for
+external compilation units references. The dependencies found are then written on
+standard output in the format suitable for the Unix
+.B make
+utility.
+This set of dependencies ensures the correct compilation order for all the
+FoCaLiZe source file arguments. It also provides proper and minimum
+recompilation when a file is modified.
+
+Typical usage is:
+
+focalizedep
+.I options
+*.fcl > .depend
+
+where .depend is the usual (hidden) file that records the set of dependencies
+for all the source files of the current directory. Typically, this file is included at
+the end of the Makefile for the directory using an include make directive:
+
+include .depend
+
+Since the standard library belongs to the FoCaLiZe package internals, and
+since it is compiled once and for all at installation time, all the
+dependencies upon the standard library are omitted.
+
+.B focalizedep
+not only handles \fI.fcl\fP files:
+it also generates dependencies for the entire set of files the
+.B focalizec
+compiler accepts. In particular, \fI.ml\fP \fI.cmo\fP
+\fI.cmx\fP \fI.zv\fP and \fI.v\fP files are properly treated.
+
+.SH OPTIONS
+The only available option is:
+.TP
+.B \-I \<dirname\>
+Add the \<dirname\> directory to the path list where to search for
+compiled interfaces. Several
+.B -I
+options can be used. The search order is in the current directory first,
+then in the directories specified by the
+.B -I
+options in their apparition order on the command line.
+
+.SH COPYRIGHT
+This program is free software, distributed under the licence found in
+the LICENSE file in the root directory of the distribution.
+.SH SEE ALSO
+.B focalizec
+(1)
+.B make
+(1)
+
+The
+.B FoCaLiZe
+user's manual (http://FoCaLiZe.inria.fr/eng.htm)
+(french version at http://FoCaLiZe.inria.fr/fra.htm).
+
+.SH AUTHORS
+François Pessaux <Francois.Pessaux@ensta-paristech.fr>
+Pierre Weis <Pierre.Weis@inria.fr>
+.P
+This manual page was written for
+.B focalizedep
+version 0.7.0.
+.P
+Laboratoire d'Informatique de l'université Paris 6,
+Institut National de Recherche en Informatique et en Automatique (2012).
+
+\"  LocalWords:  UE OCaml Coq fo Caml pre zv Zenon zvtov fcl ocaml ocamlopt vo
+\"  LocalWords:  coqc TP dirname graphviz deps FoCaLiZe focalizec focalizedep emacs

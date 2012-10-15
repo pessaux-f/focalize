@@ -1,41 +1,22 @@
-.\"                                      Hey, EMACS: -*- nroff -*-
-.\" \$Id: focalizetest.man,v 1.1 2010-07-19 13:25:13 carlier Exp $
-.\"
-.\"
-.\" First parameter, NAME, should be all caps
-.\" Second parameter, SECTION, should be 1-8, maybe w/ subsection
-.\" other parameters are allowed: see man(7), man(1)
-.TH $(uppercase $focalizetest) 1 "$(the_short_date)"
-.\" Please adjust this date whenever revising the manpage.
-.\"
-.\" Some roff macros, for reference:
-.\" .nh        disable hyphenation
-.\" .hy        enable hyphenation
-.\" .ad l      left justify
-.\" .ad b      justify to both left and right margins
-.\" .nf        disable filling
-.\" .fi        enable filling
-.\" .br        insert line break
-.\" .sp <n>    insert n+1 empty lines
-.\" for manpage-specific macros, see man(7)
+.TH FOCALIZETEST
 .SH NAME
-.B $(focalizetest)
-\-\- the $(focal) testing tool
-.UR http://$(focal).inria.fr/
-(http://$(focal).inria.fr/)
+.B focalizetest
+\-\- The FoCaLiZe testing tool
+.UR http://FoCaLiZe.inria.fr/
+(http://FoCaLiZe.inria.fr/)
 .UE
 
 .SH VERSION
-$(capitalize $focalizetest) version $package_version
+focalizetest version 0.0.1
 .SH SYNOPSIS
-.B $focalizetest
+.B focalizetest
 .RI [ options ]\ [ source\ file ]
 .SH DESCRIPTION
 The 
-.B $focalizetest
+.B focalizetest
 testing tool permits to test a property in a complete species. It takes a
 source file as input (and the species under test with the name of the property
-to test) and generates a $(focal) source containing test harness. This files
+to test) and generates a FoCaLiZe source containing test harness. This files
 could be compiled into an executable which generates random/constraint solving
 test cases, executes its and generates a xml test report. 
 
@@ -65,11 +46,11 @@ Take the list of property to test \<props\>. This is a list of property name
 separate by commas.
 .TP
 .B -o \<outfile\>
-Name of the $(focal) file to generate (test harness file).
+Name of the FoCaLiZe file to generate (test harness file).
 .TP
 .B -sicstus
 Generate an harness which generate the test cases by using constraint solving
-technics. $focalizetest generates a .prolog* file by property to test.
+technics. focalizetest generates a .prolog* file by property to test.
 .TP
 .B -mcdc \<n\>
 Number of MC/DC compliant test cases (desactivate
@@ -106,7 +87,7 @@ the LICENSE file in the root directory of the distribution.
 (1)
 .B zvtov
 (1)
-.B $focalizedep
+.B focalizedep
 (1)
 .B ocamlc
 (1)
@@ -116,21 +97,19 @@ the LICENSE file in the root directory of the distribution.
 (1)
 
 The
-.B $focal
-user's manual (http://$(focal).inria.fr/eng.htm)
-(french version at http://$(focal).inria.fr/fra.htm).
+.B FoCaLiZe
+user's manual (http://FoCaLiZe.inria.fr/eng.htm)
+(french version at http://FoCaLiZe.inria.fr/fra.htm).
 
 .SH AUTHORS
 Matthieu Carlier <Matthieu.Carlier@irisa.fr>
-François Pessaux <François.Pessaux@lip6.fr>
-Pierre Weis <Pierre.Weis@inria.fr>
 .P
 This manual page was written for
-.B $package
+.B focalizetest
 version 0.0.1.
 .P
 Laboratoire d'Informatique de l'université Paris 6,
-Institut National de Recherche en Informatique et en Automatique ($(this_year))
+Institut National de Recherche en Informatique et en Automatique (2012)
 
 \"  LocalWords:  UE OCaml Coq fo Caml pre zv Zenon zvtov fcl ocaml ocamlopt vo
-\"  LocalWords:  coqc TP dirname graphviz deps $focal $focalizec $focalizedep $focalizetest emacs
+\"  LocalWords:  coqc TP dirname graphviz deps FoCaLiZe focalizec focalizedep focalizetest emacs

@@ -10,16 +10,9 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.1 2012-02-24 14:37:44 pessaux Exp $
+# $Id: Makefile,v 1.2 2012-10-15 14:49:51 pessaux Exp $
 
-ROOT_DIR=../..
-
-include $(ROOT_DIR)/Makefile.config
-
-CAML_INCLUDES =\
- -I ../basement\
- -I ../parser\
- -I ../typing
+ROOT_DIR=../../..
 
 LOCAL_BYT_OBJS=focalizeig.cmo
 
@@ -37,36 +30,41 @@ BYT_OBJS =\
  ../typing/env.cmo\
  $(LOCAL_BYT_OBJS)
 
+CAML_INCLUDES =\
+ -I ../basement\
+ -I ../parser\
+ -I ../typing
+CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)
+
 EXE_NAME=focalizeig
-EXE=$(EXE_NAME)-$(VERSION_NUMBER_FULL)
 
 include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
 
 byt: $(EXE_NAME).byt
 
 $(EXE_NAME).byt: $(BYT_OBJS)
-	$(CAML_BYT) str.cma $(BYT_OBJS) -o $@ &&\
+	$(CAMLBYT) str.cma $(BYT_OBJS) -o $@ &&\
 	$(LN) $(EXE_NAME).byt $(EXE_NAME)
 
 bin: $(EXE_NAME).bin
 
 $(EXE_NAME).bin: $(BIN_OBJS)
-	$(CAML_BIN) str.cmxa $(BIN_OBJS) -o $@ &&\
+	$(CAMLBIN) str.cmxa $(BIN_OBJS) -o $@ &&\
 	$(LN) $(EXE_NAME).bin $(EXE_NAME)
 
-install-local:
-	$(MKDIR) $(BIN_DIR) &&\
-	$(CP) $(EXE_NAME).bin $(BIN_DIR)/$(EXE) &&\
-	($(CD) $(BIN_DIR) &&\
+install:
+	$(MKDIR) $(INSTALL_BIN_DIR) &&\
+	$(CP) $(EXE_NAME).bin $(INSTALL_BIN_DIR)/ &&\
+	($(CD) $(INSTALL_BIN_DIR) &&\
 	 $(RM) $(EXE_NAME) &&\
-	 $(LN) $(EXE) $(EXE_NAME))
+	 $(LN) $(EXE_NAME).bin $(EXE_NAME))
 
-uninstall-local:
-	($(CD) $(BIN_DIR) &&\
-	 $(RM) $(EXE) $(EXE_NAME))
-
-clean-local:
+clean:
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 	$(RM) $(EXE_NAME).byt $(EXE_NAME).bin $(EXE_NAME)
 
-depend-local:
-	$(CAML_DEP) *.mli *.ml > ./.depend
+depend:
+	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend
+
+include .depend

@@ -12,17 +12,14 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.11 2012-02-10 16:24:40 pessaux Exp $
+# $Id: Makefile,v 1.12 2012-10-15 14:49:19 pessaux Exp $
 
-ROOT_DIR=../..
-
-include $(ROOT_DIR)/Makefile.config
-
-CAML_INCLUDES=-I ../basement -I ../parser
+ROOT_DIR=../../..
 
 LOCAL_BYT_OBJS=\
  directive_lexer.cmo make_depend.cmo
 
+# Must be defined before including Makefile.common since is used by it.
 BYT_OBJS=\
  ../basement/build_stamp.cmo\
  ../basement/installation.cmo\
@@ -32,36 +29,38 @@ BYT_OBJS=\
  $(LOCAL_BYT_OBJS)
 
 include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
+
+CAML_INCLUDES =\
+ -I ../basement
+CAML_FLAGS = -w A -warn-error $(WARN_ERROR)
 
 EXE_NAME=focalizedep
-
-EXE=$(EXE_NAME)-$(VERSION_NUMBER_FULL)
 
 byt: $(EXE_NAME).byt
 
 $(EXE_NAME).byt: $(BYT_OBJS)
-	$(CAML_BYT) str.cma $(BYT_OBJS) -o $@ &&\
+	$(CAMLBYT) str.cma $(BYT_OBJS) -o $@ &&\
 	$(LN) $(EXE_NAME).byt $(EXE_NAME)
 
 bin: $(EXE_NAME).bin
 
 $(EXE_NAME).bin: $(BIN_OBJS)
-	$(CAML_BIN) str.cmxa $(BIN_OBJS) -o $@ &&\
+	$(CAMLBIN) str.cmxa $(BIN_OBJS) -o $@ &&\
 	$(LN) $(EXE_NAME).bin $(EXE_NAME)
 
-install-local:
-	$(MKDIR) $(BIN_DIR) &&\
-	$(CP) $(EXE_NAME).bin $(BIN_DIR)/$(EXE) &&\
-	($(CD) $(BIN_DIR) &&\
+install:
+	$(MKDIR) $(INSTALL_BIN_DIR) &&\
+	$(CP) $(EXE_NAME).bin $(INSTALL_BIN_DIR)/ &&\
+	($(CD) $(INSTALL_BIN_DIR) &&\
 	 $(RM) $(EXE_NAME) &&\
-	 $(LN) $(EXE) $(EXE_NAME))
+	 $(LN) $(EXE_NAME).bin $(EXE_NAME))
 
-uninstall-local:
-	($(CD) $(BIN_DIR) &&\
-	 $(RM) $(EXE) $(EXE_NAME))
-
-clean-local:
+clean:
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 	$(RM) $(EXE_NAME).byt $(EXE_NAME).bin $(EXE_NAME)
 
-depend-local:
-	$(CAML_DEP) *.mli *.ml > ./.depend
+depend:
+	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend
+
+include .depend

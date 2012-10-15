@@ -13,11 +13,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.18 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.19 2012-10-15 14:47:40 pessaux Exp $
 
-ROOT_DIR=../..
+ROOT_DIR=../../..
 
-include $(ROOT_DIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.common
 
 # Fill here to add a new directory for a new contribution
 SUB_DIRS=\
@@ -25,11 +25,9 @@ SUB_DIRS=\
  voter
 # automata
 
-include $(ROOT_DIR)/Makefile.common
-
 lib: all
 
-byt bin clean-local doc install-local uninstall-local depend:
+byt bin clean doc depend install:
 	@for i in $(SUB_DIRS); do\
 	  echo "--> $$i ..." &&\
 	  ($(CD) $$i && $(MAKE) $@);\
@@ -37,5 +35,3 @@ byt bin clean-local doc install-local uninstall-local depend:
 	  echo "<-- $$i [$$err]" &&\
 	  case $$err in 0);; *) exit $$err;; esac;\
 	done
-
-cleanlib: clean

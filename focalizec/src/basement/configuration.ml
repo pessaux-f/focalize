@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.49 2012-03-01 17:32:46 pessaux Exp $ *)
+(* $Id: configuration.ml,v 1.50 2012-10-15 14:44:55 pessaux Exp $ *)
 
 exception No_input_file;;
 
@@ -22,7 +22,7 @@ exception No_input_file;;
 let focalize_version_number = (0, 7, 0)
 ;;
 
-let version_date = "$Date: 2012-03-01 17:32:46 $"
+let version_date = "$Date: 2012-10-15 14:44:55 $"
 ;;
 
 let focalize_short_version =
@@ -199,4 +199,10 @@ let require_plugin, get_plugins =
   let plugin_list = ref [] in
   (fun s -> plugin_list := s :: !plugin_list),
   (fun () -> !plugin_list)
+;;
+
+let (get_use_coq_older_8_4, set_use_coq_older_8_4) =
+  let use_coq_older_8_4 = ref false in
+  (fun () -> !use_coq_older_8_4),
+  (fun () -> use_coq_older_8_4 := true)
 ;;

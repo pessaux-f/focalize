@@ -1,81 +1,36 @@
-#*********************************************************************#
-#                                                                     #
-#                                Htmlc                                #
-#                                                                     #
-#            Pierre Weis, projet Cristal, INRIA Rocquencourt          #
-#                                                                     #
-#  Copyright 1997 Institut National de Recherche en Informatique et   #
-#  en Automatique.  Distributed only by permission.                   #
-#                                                                     #
-#*********************************************************************#
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLize compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 LIP6 and INRIA                                       #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
 
-# $Id: Makefile,v 1.13 2011-05-26 10:21:32 weis Exp $
+# $Id: Makefile,v 1.14 2012-10-15 14:41:03 pessaux Exp $
 
-ROOT_DIR=../..
+ROOT_DIR=../../..
 
-include $(ROOT_DIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
 
-DOCDIR_DIR=$(DOC_ROOT_DIR)/man
+# The list of man files
+MAN_FILES= focalizec.1 focalizedep.1 focalizetest.1
 
-# Makefile for man page generation.
+.PHONY: all doc clean docdir install
 
-# From a list of source files (.man files) generates the
-# corresponding objects (.1 files) using Htmlc.
+# Nothing to do. Man pages are already written.
+all doc:
 
-# Usage: fill in the HTMLC and FILES variables below, then
-# make (or make all) will rebuild the whole thing
-# make clean will remove all the generated files
+# Nothing to clean. Man pages are manually written.
+clean:
 
-# The Htmlc compiler with its include path options
-# For instance htmlc -I Includes -env env
-HTMLC=htmlc -env focalizec.env
-
-# Prefix before regular names
-PACKAGE=focalizec
-PACKAGE_DEP=focalizedep
-
-# The list of source files
-MAN_FILES=$(PACKAGE).man $(PACKAGE_DEP).man focalizetest.man
-
-######## This part should automatically handle the generation of
-######## object files
-
-# The list of object files
-MAN_OBJS:=$(MAN_FILES:.man=.$(PROJECT_MAN_EXT))
-
-.PHONY: all doc visu clean docdir install
-
-all doc: $(MAN_OBJS)
-
-docdir: $(MAN_OBJS)
-	$(MKDIR) $(DOCDIR_DIR) &&\
-	$(CP) $(MAN_OBJS) $(DOCDIR_DIR)/
-
-visu: $(MAN_OBJS)
-	nroff -man $(PACKAGE).$(PROJECT_MAN_EXT) | more
-	nroff -man $(PACKAGE_DEP).$(PROJECT_MAN_EXT) | more
-
-clean-local:
-	$(RM) $(MAN_OBJS) *~
-#	cd Includes; $(RM) *~
-
-distclean-local:
-	$(RM) $(DOCDIR_DIR)
-
-install-local:
-	$(MKDIR) $(MAN_DIR) &&\
-	$(CP) $(MAN_OBJS) $(MAN_DIR)/
-
-uninstall-local:
-	@for i in $(MAN_OBJS); do\
-	  $(RM) $(MAN_DIR)/$$i;\
-	done
-
-depend:
-
-.SUFFIXES:
-.SUFFIXES: .man .1
-
-.man.1:
-	$(RM) $@
-	$(HTMLC) -f $< -t $@
+install:
+	$(MKDIR) $(INSTALL_MAN_DIR)/man1 &&\
+	$(CP) $(MAN_FILES) $(INSTALL_MAN_DIR)/man1/

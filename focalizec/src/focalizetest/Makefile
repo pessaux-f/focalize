@@ -13,13 +13,9 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.7 2012-02-10 16:24:40 pessaux Exp $
+# $Id: Makefile,v 1.8 2012-10-15 14:50:16 pessaux Exp $
 
-ROOT_DIR=../..
-
-include $(ROOT_DIR)/Makefile.config
-
-CAML_INCLUDES=-I ../basement -I ../parser -I ../typing
+ROOT_DIR=../../..
 
 LOCAL_BYT_OBJS=\
  fresh_variable.cmo own_basics.cmo whattodo.cmo own_types.cmo\
@@ -30,6 +26,7 @@ LOCAL_BYT_OBJS=\
  own_prolog.cmo print_prolog.cmo test_prolog.cmo\
  to_prolog.cmo species_harness.cmo test_prop.cmo run.cmo
 
+# Must be defined before including Makefile.common since is used by it.
 BYT_OBJS =\
  ../basement/build_stamp.cmo\
  ../basement/installation.cmo\
@@ -45,6 +42,10 @@ BYT_OBJS =\
  $(LOCAL_BYT_OBJS)
 
 include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
+
+CAML_INCLUDES=-I ../basement -I ../parser -I ../typing
+CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)
 
 EXE_NAME=focalizetest
 
@@ -53,28 +54,27 @@ EXE=$(EXE_NAME)-$(VERSION_NUMBER_FULL)
 byt: $(EXE_NAME).byt
 
 $(EXE_NAME).byt: $(BYT_OBJS)
-	$(CAML_BYT) str.cma $(BYT_OBJS) -o $@ &&\
+	$(CAMLBYT) str.cma $(BYT_OBJS) -o $@ &&\
 	$(LN) $(EXE_NAME).byt $(EXE_NAME)
 
 bin: $(EXE_NAME).bin
 
 $(EXE_NAME).bin: $(BIN_OBJS)
-	$(CAML_BIN) str.cmxa $(BIN_OBJS) -o $@ &&\
+	$(CAMLBIN) str.cmxa $(BIN_OBJS) -o $@ &&\
 	$(LN) $(EXE_NAME).bin $(EXE_NAME)
 
 install:
-	$(MKDIR) $(BIN_DIR) &&\
-	$(CP) $(EXE_NAME).bin $(BIN_DIR)/$(EXE) &&\
-	($(CD) $(BIN_DIR) &&\
+	$(MKDIR) $(INSTALL_BIN_DIR) &&\
+	$(CP) $(EXE_NAME).bin $(INSTALL_BIN_DIR)/ &&\
+	($(CD) $(INSTALL_BIN_DIR) &&\
 	 $(RM) $(EXE_NAME) &&\
-	 $(LN) $(EXE) $(EXE_NAME))
-
-uninstall:
-	($(CD) $(BIN_DIR) &&\
-	 $(RM) $(EXE) $(EXE_NAME))
+	 $(LN) $(EXE_NAME).bin $(EXE_NAME))
 
 clean:
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 	$(RM) $(EXE_NAME).byt $(EXE_NAME).bin $(EXE_NAME)
 
-depend-local:
-	$(CAML_DEP) *.mli *.ml > ./.depend
+depend:
+	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend
+
+include .depend
