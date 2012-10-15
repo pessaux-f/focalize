@@ -1,7 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html>
-
-<!--
+<html><head><!--
 #**********************************************************************#
 #                                                                      #
 #                        FoCaLiZe compiler                             #
@@ -17,10 +15,13 @@
 #                                                                      #
 #**********************************************************************#
 
-$Id: README_FOR_DEVELOPERS.html,v 1.1 2012-10-15 14:23:34 pessaux Exp $
+$Id: README_FOR_DEVELOPERS.html,v 1.2 2012-10-15 16:01:43 pessaux Exp $
 -->
 
-<head>
+
+
+
+
 
 <meta name="GENERATOR" content="Kompozer">
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Read me for developers</title></head><body bgcolor="#ffffff">
@@ -70,7 +71,15 @@ into files nammed <code>.config_var</code>.</p>
     <li>wether the installed <span style="font-family: monospace;">Coq</span> version is &lt; 8.4, in which case the building phase must invoke <span style="font-family: monospace;">focalizec</span> with the <span style="font-family: monospace;">-coq_older_8_4</span> option (idem later for the user when he will compile its own developments).</li>
     <li>=&gt; Generated files: <span style="font-family: monospace;">focalizec/.config_var</span> and <span style="font-family: monospace;">focalizec/.install_var</span>.</li>
   </ul>
-</ul>
+</ul><span style="font-weight: bold;">Warnings and error</span>: by default, the "toplevel" <span style="font-family: monospace;">configure</span> generates a variable <span style="font-family: monospace;">WARN_ERROR</span> set to <span style="font-family: monospace; font-weight: bold;">a</span>. This variable controls the amount if warnings considered as errors when compiling OCaml code. It is set by default to <span style="font-style: italic;">"no warnings are error"</span> (i.e. <span style="font-family: monospace; font-weight: bold;">a</span>)
+to ensure that when building by default, as a user, the FoCaLiZe stuff,
+compilation won't fail due to errors. As&nbsp; a developper, if you're
+interesting in cleaning your code, you may manually edit the "toplevel"
+<span style="font-family: monospace;">focalizec/.config_var</span> and change the value of this variable to <span style="font-weight: bold; font-family: monospace;">A</span>.
+This way, all warnings will be considered as errors. On the long term,
+warnings should disapear by code cleaning (at least really harmful
+warnings).<br>
+
 <h2>The building phase</h2>
 
 <p>The building phase must compile the FoCaLiZe compiler
@@ -180,7 +189,7 @@ sub-directories that are visited to perform the necessary tasks.<br>
 
 
 </p>
-<pre>#!/bin/sh<br><br>#**********************************************************************#<br>#                                                                      #<br>#                        FoCaLiZe compiler                             #<br>...<br><br># $Id: README_FOR_DEVELOPERS.html,v 1.1 2012-10-15 14:23:34 pessaux Exp $<br><br>ROOT_DIR=..<br><br>include $(ROOT_DIR)/Makefile.common<br><br>COMPILER_DIRS=\<br> src/basement src/parser src/typing\<br> src/docgen src/commoncodegen src/mlcodegen src/coqcodegen\<br> src/testing src/relation_extraction\<br> src/toplevel src/focalizedep src/focalizetest src/focalizeig<br><br>LIB_DIRS=\<br> src/stdlib src/extlib src/contribs<br><br>DOC_DIRS=\<br> doc_src<br><br>ALL_DIRS=\<br> $(COMPILER_DIRS) $(LIB_DIRS) $(DOC_DIRS)<br><br>...<br></pre>
+<pre>#!/bin/sh<br><br>#**********************************************************************#<br>#                                                                      #<br>#                        FoCaLiZe compiler                             #<br>...<br><br># $Id: README_FOR_DEVELOPERS.html,v 1.2 2012-10-15 16:01:43 pessaux Exp $<br><br>ROOT_DIR=..<br><br>include $(ROOT_DIR)/Makefile.common<br><br>COMPILER_DIRS=\<br> src/basement src/parser src/typing\<br> src/docgen src/commoncodegen src/mlcodegen src/coqcodegen\<br> src/testing src/relation_extraction\<br> src/toplevel src/focalizedep src/focalizetest src/focalizeig<br><br>LIB_DIRS=\<br> src/stdlib src/extlib src/contribs<br><br>DOC_DIRS=\<br> doc_src<br><br>ALL_DIRS=\<br> $(COMPILER_DIRS) $(LIB_DIRS) $(DOC_DIRS)<br><br>...<br></pre>
 
 <p>You must add the new directory in the list(s) at its
 proper place in the list. Note also, that you must also add all the sub
