@@ -30,3 +30,7 @@
 
 * branch_focalize_release_0_1_rc0:
    Branche pour la release.
+
+* before_config_and_build_revisited  (15 octobre 2012):
+  Version juste avant la refonte massive des mécanismes de config et de
+  build.
