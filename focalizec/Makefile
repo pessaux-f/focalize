@@ -13,11 +13,11 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.51 2012-02-24 14:37:44 pessaux Exp $
+# $Id: Makefile,v 1.52 2012-10-15 14:32:26 pessaux Exp $
 
-ROOT_DIR=.
+ROOT_DIR=..
 
-include $(ROOT_DIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.common
 
 COMPILER_DIRS=\
  src/basement src/parser src/typing\
@@ -31,23 +31,31 @@ LIB_DIRS=\
 DOC_DIRS=\
  doc_src
 
-SUB_DIRS=\
+ALL_DIRS=\
  $(COMPILER_DIRS) $(LIB_DIRS) $(DOC_DIRS)
-
-COMPILER_INSTALL_DIRS=\
- src/toplevel src/focalizedep src/focalizetest src/focalizeig $(LIB_DIRS)
-
-include $(ROOT_DIR)/Makefile.common
-
-# Where we install the libraries.
-PROJECT_LIB_INSTALL_DIR=$(LIB_DIR)/$(PROJECT_NAME_FULL)
-
-all-local: lib
 
 byt bin:
 	@for i in $(COMPILER_DIRS); do\
 	  echo "--> $$i ..." >&2 &&\
 	  ($(CD) $$i && $(MAKE) $@);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" >&2 &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done
+
+depend:
+	@for i in $(COMPILER_DIRS); do\
+	  echo "--> $$i ..." >&2 &&\
+	  ($(CD) $$i && $(MAKE) $@);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" >&2 &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done
+
+lib-depend:
+	@for i in $(LIB_DIRS); do\
+	  echo "--> $$i ..." >&2 &&\
+	  ($(CD) $$i && $(MAKE) depend);\
 	  err=$$?;\
 	  echo "<-- $$i [$$err]" >&2 &&\
 	  case $$err in 0);; *) exit $$err;; esac;\
@@ -62,28 +70,18 @@ lib:
 	  case $$err in 0);; *) exit $$err;; esac;\
 	done
 
-cleanlib:
-	@for i in $(LIB_DIRS); do\
-	  echo "--> $$i ..." >&2 &&\
-	  ($(CD) $$i && $(MAKE) $@);\
-	  err=$$?;\
-	  echo "<-- $$i [$$err]" >&2 &&\
-	  case $$err in 0);; *) exit $$err;; esac;\
-	done
+# Not yet for ocamldoc of the source code.
+# odoc: lib
+# 	@for i in $(COMPILER_DIRS); do\
+# 	  echo "--> $$i ..." >&2 &&\
+# 	  ($(CD) $$i && $(MAKE) $@);\
+# 	  err=$$?;\
+# 	  echo "<-- $$i [$$err]" >&2 &&\
+# 	  case $$err in 0);; *) exit $$err;; esac;\
+# 	done
 
-odoc: lib
-	@for i in $(COMPILER_DIRS); do\
-	  echo "--> $$i ..." >&2 &&\
-	  ($(CD) $$i && $(MAKE) $@);\
-	  err=$$?;\
-	  echo "<-- $$i [$$err]" >&2 &&\
-	  case $$err in 0);; *) exit $$err;; esac;\
-	done
-
-depend-local:
-
-clean-local clean distclean doc docdir depend:
-	@for i in $(SUB_DIRS); do\
+clean install:
+	@for i in $(ALL_DIRS); do\
 	  if test -d $$i; then\
 	    echo "--> $$i ..." >&2 &&\
 	    ($(CD) $$i && $(MAKE) $@);\
@@ -93,8 +91,8 @@ clean-local clean distclean doc docdir depend:
 	  fi;\
 	done
 
-install uninstall:
-	@for i in $(COMPILER_INSTALL_DIRS) $(DOC_DIRS); do\
+doc:
+	@for i in $(DOC_DIRS); do\
 	  if test -d $$i; then\
 	    echo "--> $$i ..." >&2 &&\
 	    ($(CD) $$i && $(MAKE) $@);\
@@ -104,34 +102,6 @@ install uninstall:
 	  fi;\
 	done
 
-install-local:
-	($(CD) $(LIB_DIR) &&\
-	 $(RM) $(PROJECT_NAME) &&\
-	 $(LN) $(PROJECT_NAME_FULL) $(PROJECT_NAME))
 
-uninstall-local:
-	$(RM) $(PROJECT_LIB_INSTALL_DIR)
-
-# We need to to finish distclean by unconfiguring this directory;
-# so we unconfigure all the SUB_DIRS before unconfiguring here with the
-# generic target of Makefile.common.
-distclean-local:
-	@for i in $(SUB_DIRS); do\
-	  if test -d $$i; then\
-	    echo "--> $$i ..." >&2 &&\
-	    ($(CD) $$i && $(MAKE) unconfigure);\
-	    err=$$?;\
-	    echo "<-- $$i [$$err]" >&2 &&\
-	    case $$err in 0);; *) exit $$err;; esac;\
-	  fi;\
-	done;\
-	$(MAKE) unconfigure
-
-test_all-local: tests
-	@for i in $(COMPILER_DIRS); do\
-	  echo "--> $$i ..." >&2 &&\
-	  ($(CD) $$i && $(MAKE) tests);\
-	  err=$$?;\
-	  echo "<-- $$i [$$err]" >&2 &&\
-	  case $$err in 0);; *) exit $$err;; esac;\
-	done
+# Everything but installation and doc.
+world: byt bin lib-depend lib

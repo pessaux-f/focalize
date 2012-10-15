@@ -13,18 +13,17 @@
 #                                                                      #
 #**********************************************************************#
 
-#  $Id: Makefile,v 1.30 2010-01-04 17:43:14 weis Exp $
+#  $Id: Makefile,v 1.31 2012-10-15 14:37:36 pessaux Exp $
 
 # Reading configuration settings.
+include ../.config_var
 include .config_var
 
-# Staging directory for package managers
-DESTDIR = ""
+CAMLFLAGS = -warn-error $(WARN_ERROR)
 
-CAMLFLAGS = -warn-error A
-
-# Variables CAMLBYT, CAMLBIN, CAMLLEX, CAMLYACC, CAMLDEP and CAMLDOC are defined
-# at configuration time their value is recorded in .config_var.
+# Variables CAMLBYT, CAMLBIN, CAMLLEX, CAMLYACC, CAMLDEP and CAMLDOC are
+# defined at configuration time their value is recorded in ../.config_var 
+# and .config_var.
 CAMLBINFLAGS = $(CAMLFLAGS) $(BIN_DEBUG_FLAGS) $(XMLRPC_FLAGS)
 
 CAMLBYTFLAGS = $(CAMLFLAGS) $(BYT_DEBUG_FLAGS) $(XMLRPC_FLAGS)
@@ -67,18 +66,12 @@ zvtov: zvtov.byt
 
 .PHONY: install
 install:
-	mkdir -p "$(DESTDIR)$(BIN_DIR)"
-	cp -p zvtov "$(DESTDIR)$(BIN_DIR)"/$(PROJECT_NAME_FULL)
-	(cd "$(DESTDIR)$(BIN_DIR)" && \
-         rm -f zvtov && ln -s $(PROJECT_NAME_FULL) zvtov)
-	mkdir -p "$(DESTDIR)$(MAN_DIR)"/man1
-	cp zvtov.1 "$(DESTDIR)$(MAN_DIR)"/man1/
+	mkdir -p $(INSTALL_BIN_DIR)
+	cp -p zvtov $(INSTALL_BIN_DIR)/
+	mkdir -p $(INSTALL_MAN_DIR)/man1
+	cp zvtov.1 $(INSTALL_MAN_DIR)/man1/
 
 .PHONY: uninstall
-uninstall:
-	rm -f "$(DESTDIR)$(BIN_DIR)"/zvtov
-	rm -f "$(DESTDIR)$(BIN_DIR)"/$(PROJECT_NAME_FULL)
-	rm -f "$(DESTDIR)$(MAN_DIR)"/man1/zvtov.1
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .v .vo
 
@@ -114,13 +107,6 @@ clean:
 	rm -f lexer_coq.ml parser_coq.ml
 	rm -f parser_coq.mli
 	rm -f zvtov *.bin *.byt
-
-.PHONY: unconfigure
-unconfigure:
-	rm -f ./.config_var ./.config_var_for_shell
-
-.PHONY: distclean
-distclean: clean unconfigure
 
 .PHONY: depend
 depend: $(IMPL) $(INTF)
