@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.164 2012-02-23 15:37:12 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.165 2012-10-15 14:52:46 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -96,9 +96,6 @@ let mk_method_expr_ident opt_qualified_vname method_vname =
 
 let mk_local_expr_var vname =
   mk (E_var (mk_local_expr_ident vname))
-;;
-let mk_global_expr_var qual vname =
-  mk (E_var (mk_global_expr_ident qual vname))
 ;;
 
 (* Infix/Prefix identifiers without scope MUST be parsed as LOCAL!   *)
