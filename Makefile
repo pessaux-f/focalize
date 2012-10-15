@@ -13,13 +13,16 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.77 2012-10-15 14:23:06 pessaux Exp $
+# $Id: Makefile,v 1.78 2012-10-15 15:26:55 pessaux Exp $
 
 ROOT_DIR=.
 
 SUB_DIRS= zenon zvtov focalizec
 
-include $(ROOT_DIR)/Makefile.common
+# No need to include Makefile.rules and .config_var (this latter not
+# existing from a scratch checkout). So no need to include the whole
+# stuff via Makefile.common. Just Makefile.utils is sufficient.
+include $(ROOT_DIR)/Makefile.utils
 
 all:
 	@echo "Toplevel configuration..."
