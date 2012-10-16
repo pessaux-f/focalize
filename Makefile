@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.78 2012-10-15 15:26:55 pessaux Exp $
+# $Id: Makefile,v 1.79 2012-10-16 11:47:17 pessaux Exp $
 
 ROOT_DIR=.
 
@@ -48,6 +48,7 @@ all:
 	@echo "Building FoCaLiZeC and stuff..."
 	@($(CD) focalizec &&\
 		./configure &&\
+		$(MAKE) depend &&\
 		$(MAKE) world &&\
 		$(MAKE) doc &&\
 	  echo "Installing..." &&\

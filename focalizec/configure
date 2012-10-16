@@ -1,5 +1,22 @@
 #!/bin/sh
 
+#**********************************************************************#
+#                                                                      #
+#                        FoCaLiZe compiler                             #
+#                                                                      #
+#            François Pessaux                                          #
+#            Pierre Weis                                               #
+#            Damien Doligez                                            #
+#                                                                      #
+#                               LIP6  --  INRIA Rocquencourt           #
+#                                                                      #
+#  Copyright 2008 INRIA                                                #
+#  Distributed only by permission.                                     #
+#                                                                      #
+#**********************************************************************#
+
+# $Id: configure,v 1.47 2012-10-16 11:47:17 pessaux Exp $
+
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
 NORMALTAG="\033[0m"
@@ -19,12 +36,6 @@ for i in $SUB_DIRS ; do
   (cd $i; touch .depend; mkdir -p odoc)
 done
 
-INSTALL_PREFIX=/usr/local
-INSTALL_BIN_DIR=${INSTALL_PREFIX}/bin
-INSTALL_LIB_DIR=${INSTALL_PREFIX}/lib/focalize
-INSTALL_MAN_DIR=${INSTALL_PREFIX}/man
-INSTALL_DOC_DIR=${INSTALL_PREFIX}/share
-
 # First recover the configuration file providing the name of ocaml and coq commands.
 if [ -f "../.config_var" ] ;
     then
@@ -35,98 +46,214 @@ else
     exit 1
 fi
 
-# Look for Zenon
-ZENON=`which zenon`
-if [ "$ZENON" != "" ] ;
-    then
-    echo $BOLDTAG"zenon found in $ZENON."$NORMALTAG
-    echo "Press enter to use default or specify another location."
-    read USER_INPUT
-    if [ "$USER_INPUT" != "" ] ;
-       then
-       ZENON=$USER_INPUT
-    fi
-    else
-    echo $BOLDTAG"zenon not found."$NORMALTAG
-    echo "Specify where to find zenon."
-    read USER_INPUT
-    ZENON=$USER_INPUT
-fi
-if [ "$ZENON" == "" ] ;
-    then
-    echo "Error. zenon not available. Install it first."
-    exit 1
-    fi
+# Remembering the number of arguments to this script, in order
+# to parse them properly.
+argc="$#"
 
-ZENON_LIB_DIR=${INSTALL_PREFIX}/lib/zenon
-echo $BOLDTAG"Where to find Zenon libraries ?"$NORMALTAG
-echo "Assumed default is $ZENON_LIB_DIR."
-echo "Press enter to use assumed default location."
-read USER_INPUT
-if [ "$USER_INPUT" != "" ] ;
-   then
-   ZENON_LIB_DIR=$USER_INPUT
+INTERACTIVE=false;
+INSTALL_PREFIX_GIVEN=false;
+INSTALL_PREFIX=/usr/local
+TOOLS_PREFIX_GIVEN=false;
+TOOLS_PREFIX="";
+
+usage () {
+    echo "usage: ./configure [options] [<directory>]"
+    echo
+}
+
+# #############################################################################
+# Parsing arguments.
+case ${argc} in
+  0) ;;
+  *)
+  while : ; do
+    # If nothing else to parse then end the loop.
+    case $# in 0) break;; *);; esac
+    case "$1" in
+      -interactive | --interactive)
+       INTERACTIVE=true;
+       shift;;
+      -install_prefix | --install_prefix)
+       INSTALL_PREFIX_GIVEN=true;
+       INSTALL_PREFIX="$2";
+       shift 2;;
+      -tools_prefix | --tools_prefix)
+       TOOLS_PREFIX_GIVEN=true;
+       TOOLS_PREFIX="$2";
+       shift 2;;
+      -help | --help)
+       usage;
+       shift;
+       exit 0;;
+      -*)
+       option="$1";
+       echo "./configure: bad option '${option}'" >&2 && \
+       echo "For help, use ./configure -help" >&2 && \
+       shift;
+       exit 2;;
+    esac;
+  done
+  ;;
+esac
+
+# At this point, if INSTALL_PREFIX has been overriden while parsing options,
+# both the 4 following variables will take benefit of this overriding.
+INSTALL_BIN_DIR=${INSTALL_PREFIX}/bin
+INSTALL_LIB_DIR=${INSTALL_PREFIX}/lib/focalize
+INSTALL_MAN_DIR=${INSTALL_PREFIX}/man
+INSTALL_DOC_DIR=${INSTALL_PREFIX}/share
+
+# #############################################################################
+# Commands stuff.
+
+# Look for Zenon
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    ZENON=`which zenon`
+    if [ "$ZENON" != "" ] ;
+    then
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"zenon found in $ZENON."$NORMALTAG
+            echo "Press enter to use default or specify another location."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                ZENON=$USER_INPUT
+            fi
+        fi
+    else
+        # No zenon command found and no explicit prefix given.
+        echo $BOLDTAG"zenon not found."$NORMALTAG
+        echo "Specify where to find zenon."
+        read USER_INPUT
+        ZENON=$USER_INPUT
+    fi
+     # Finally check that a director was entered by the user.
+    if [ "$ZENON" == "" ] ;
+    then
+        echo "Error. zenon not available. Install it first."
+        exit 1
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    ZENON=$TOOLS_PREFIX/bin/zenon
+fi
+
+# Find zenon's libraries directly using the -where option of zenon.
+ZENON_LIB_DIR=`${ZENON} -where`
+if [ "$ZENON_LIB_DIR" = "" ] ;
+then
+    echo "Error. zenon libraries not available."
+    echo "May be zenon is not installed. Install it first."
+    exit 1
 fi
 
 # Look for Zvtov
-ZVTOV=`which zvtov`
-if [ "$ZVTOV" != "" ] ;
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    ZVTOV=`which zvtov`
+    if [ "$ZVTOV" != "" ] ;
     then
-    echo $BOLDTAG"zvtov found in $ZVTOV."$NORMALTAG
-    echo "Press enter to use default or specify another zvtov."
-    read USER_INPUT
-    if [ "$USER_INPUT" != "" ] ;
-       then
-       ZVTOV=$USER_INPUT
-    fi
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"zvtov found in $ZVTOV."$NORMALTAG
+            echo "Press enter to use default or specify another zvtov."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                ZVTOV=$USER_INPUT
+            fi
+        fi
     else
-    echo $BOLDTAG"zvtov not found."$NORMALTAG
-    echo "Specify where to find zvtov."
-    read USER_INPUT
-    ZVTOV=$USER_INPUT
-fi
-if [ "$ZVTOV" == "" ] ;
-    then
-    echo "Error. zvtov not available. Install it first."
-    exit 1
+        # No zvtov command found and no explicit prefix given.
+        echo $BOLDTAG"zvtov not found."$NORMALTAG
+        echo "Specify where to find zvtov."
+        read USER_INPUT
+        ZVTOV=$USER_INPUT
     fi
+    # Finally check that a director was entered by the user.
+    if [ "$ZVTOV" == "" ] ;
+    then
+        echo "Error. zvtov not available. Install it first."
+        exit 1
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    ZVTOV=$TOOLS_PREFIX/bin/zvtov
+fi
 
+
+# #############################################################################
 # Installation stuff.
-echo $BOLDTAG"Where to install FoCaLize binaries ?"$NORMALTAG
-echo "Default is $INSTALL_BIN_DIR."
-echo "Just press enter to use default location."
-read USER_INPUT
-if [ "$USER_INPUT" != "" ] ;
-   then
-   INSTALL_BIN_DIR=$USER_INPUT
+if [ $INSTALL_PREFIX_GIVEN != true ]
+then
+    if [ $INTERACTIVE = true ]
+    then
+        # Ask question only in interactive mode, otherwise keep default value.
+        echo $BOLDTAG"Where to install FoCaLize binaries ?"$NORMALTAG
+        echo "Default is $INSTALL_BIN_DIR."
+        echo "Just press enter to use default location."
+        read USER_INPUT
+        if [ "$USER_INPUT" != "" ] ;
+        then
+            INSTALL_BIN_DIR=$USER_INPUT
+        fi
+    fi
 fi
+# Else, explicit install prefix given while parsing options, keep it blindly.
 
-echo $BOLDTAG"Where to install FoCaLize libraries ?"$NORMALTAG
-echo "Default is $INSTALL_LIB_DIR."
-echo "Just press enter to use default location."
-read USER_INPUT
-if [ "$USER_INPUT" != "" ] ;
-   then
-   INSTALL_LIB_DIR=$USER_INPUT
+if [ $INSTALL_PREFIX_GIVEN != true ]
+then
+    if [ $INTERACTIVE = true ]
+    then
+        # Ask question only in interactive mode, otherwise keep default value.
+        echo $BOLDTAG"Where to install FoCaLize libraries ?"$NORMALTAG
+        echo "Default is $INSTALL_LIB_DIR."
+        echo "Just press enter to use default location."
+        read USER_INPUT
+        if [ "$USER_INPUT" != "" ] ;
+        then
+            INSTALL_LIB_DIR=$USER_INPUT
+        fi
+    fi
 fi
+# Else, explicit install prefix given while parsing options, keep it blindly.
 
-echo $BOLDTAG"Where to install FoCaLize man pages ?"$NORMALTAG
-echo "Default is $INSTALL_MAN_DIR."
-echo "Just press enter to use default location."
-read USER_INPUT
-if [ "$USER_INPUT" != "" ] ;
-   then
-   INSTALL_MAN_DIR=$USER_INPUT
+if [ $INSTALL_PREFIX_GIVEN != true ]
+then
+    if [ $INTERACTIVE = true ]
+    then
+        # Ask question only in interactive mode, otherwise keep default value.
+        echo $BOLDTAG"Where to install FoCaLize man pages ?"$NORMALTAG
+        echo "Default is $INSTALL_MAN_DIR."
+        echo "Just press enter to use default location."
+        read USER_INPUT
+        if [ "$USER_INPUT" != "" ] ;
+        then
+            INSTALL_MAN_DIR=$USER_INPUT
+        fi
+    fi
 fi
+# Else, explicit install prefix given while parsing options, keep it blindly.
 
-echo $BOLDTAG"Where to install FoCaLize other documentation ?"$NORMALTAG
-echo "Default is $INSTALL_DOC_DIR."
-echo "Just press enter to use default location."
-read USER_INPUT
-if [ "$USER_INPUT" != "" ] ;
-   then
-   INSTALL_DOC_DIR=$USER_INPUT
+if [ $INSTALL_PREFIX_GIVEN != true ]
+then
+    if [ $INTERACTIVE = true ]
+    then
+        # Ask question only in interactive mode, otherwise keep default value.
+        echo $BOLDTAG"Where to install FoCaLize other documentation ?"$NORMALTAG
+        echo "Default is $INSTALL_DOC_DIR."
+        echo "Just press enter to use default location."
+        read USER_INPUT
+        if [ "$USER_INPUT" != "" ] ;
+        then
+            INSTALL_DOC_DIR=$USER_INPUT
+        fi
+    fi
 fi
+# Else, explicit install prefix given while parsing options, keep it blindly.
+
 
 # #############################################################################
 # Generate the installation related source file.
@@ -156,10 +283,6 @@ echo "INSTALL_LIB_DIR=$INSTALL_LIB_DIR" >> $INSTALLATION_VARS_FILE
 echo "INSTALL_MAN_DIR=$INSTALL_MAN_DIR" >> $INSTALLATION_VARS_FILE
 echo "INSTALL_DOC_DIR=$INSTALL_DOC_DIR" >> $INSTALLATION_VARS_FILE
 chmod a-w $INSTALLATION_VARS_FILE
-
-# #############################################################################
-# Building dependancy files
-make depend
 
 # #############################################################################
 # If Coq version is < 8.4, then we must call focalizec with the
