@@ -15,37 +15,100 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.91 2012-10-15 14:23:06 pessaux Exp $
+# $Id: configure,v 1.92 2012-10-16 11:08:38 pessaux Exp $
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
 NORMALTAG="\033[0m"
 
+usage () {
+    echo "usage: ./configure [options] [<directory>]"
+    echo
+    echo "Options are:"
+    echo "  [-]-interactive"
+    echo "    run interactively, asking questions."
+    echo "  [-]-tools_prefix <directory>"
+    echo "    set <directory> as the directory prefix where tools required to."
+    echo "    build FoCaLiZe are installed. The currently required non-common"
+    echo "    tools are OCaml and Coq."
+}
+
+
+INTERACTIVE=false;
+INSTALL_PREFIX_GIVEN=false;
+INSTALL_PREFIX="";
+TOOLS_PREFIX_GIVEN=false;
+TOOLS_PREFIX="";
+
+
+# Remembering the number of arguments to this script, in order
+# to parse them properly.
+argc="$#"
+
+case ${argc} in
+  0) ;;
+  *)
+  while : ; do
+    # If nothing else to parse then end the loop.
+    case $# in 0) break;; *);; esac
+    case "$1" in
+      -interactive | --interactive)
+       INTERACTIVE=true;
+       shift;;
+      -tools_prefix | --tools_prefix)
+       TOOLS_PREFIX_GIVEN=true;
+       TOOLS_PREFIX="$2";
+       shift 2;;
+      -help | --help)
+       usage;
+       shift;
+       exit 0;;
+      -*)
+       option="$1";
+       echo "./configure: bad option '${option}'" >&2 && \
+       echo "For help, use ./configure -help" >&2 && \
+       shift;
+       exit 2;;
+    esac;
+  done
+  ;;
+esac
+
 # #############################################################################
 # Pre-requisite tools stuff.
-
-CAMLWITNESS=`which ocamlc`
-CAMLDIR=`dirname $CAMLWITNESS`
-if [ "$CAMLDIR" != "" ] ;
+if [ $TOOLS_PREFIX_GIVEN != true ]
+then
+    CAMLWITNESS=`which ocamlc`
+    CAMLDIR=`dirname $CAMLWITNESS`
+    if [ "$CAMLDIR" != "" ] ;
     then
-    echo $BOLDTAG"OCaml installation found in $CAMLDIR."$NORMALTAG
-    echo "Press enter to use default or specify another path."
-    read USER_INPUT
-    if [ "$USER_INPUT" != "" ] ;
-       then
-       CAMLDIR=$USER_INPUT
-    fi
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"OCaml installation found in $CAMLDIR."$NORMALTAG
+            echo "Press enter to use default or specify another path."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                CAMLDIR=$USER_INPUT
+            fi
+        fi
     else
-    echo $BOLDTAG"OCaml installation not found."$NORMALTAG
-    echo "Specify the path where to find OCaml commands."
-    read USER_INPUT
-    CAMLDIR=$USER_INPUT
-fi
-if [ "$CAMLDIR" = "" ] ;
-    then
-    echo "Error. OCaml not available. Install it first."
-    exit 1
+        # No ocamlc command found and no explicit prefix given.
+        echo $BOLDTAG"OCaml installation not found."$NORMALTAG
+        echo "Specify the path where to find OCaml commands."
+        read USER_INPUT
+        CAMLDIR=$USER_INPUT
     fi
+    # Finally check that a director was entered by the user.
+    if [ "$CAMLDIR" = "" ] ;
+    then
+        echo "Error. OCaml not available. Install it first."
+        exit 1
+    fi
+else
+    # Explicit tools prefix given, keep it blindly.
+    CAMLDIR=$TOOLS_PREFIX
+fi
 
 CAMLBYT=$CAMLDIR/ocamlc
 CAMLBIN=$CAMLDIR/ocamlopt
@@ -54,28 +117,40 @@ CAMLYACC=$CAMLDIR/ocamlyacc
 CAMLDOC=$CAMLDIR/ocamldoc
 CAMLDEP=$CAMLDIR/ocamldep
 
-COQWITNESS=`which coqc`
-COQDIR=`dirname $COQWITNESS`
-if [ "$COQDIR" != "" ] ;
+
+if [ $TOOLS_PREFIX_GIVEN != true ]
 then
-    echo $BOLDTAG"Coq installation found in $COQDIR."$NORMALTAG
-    echo "Press enter to use default or specify another location."
-    read USER_INPUT
-    if [ "$USER_INPUT" != "" ] ;
-       then
-       COQDIR=$USER_INPUT
+    COQWITNESS=`which coqc`
+    COQDIR=`dirname $COQWITNESS`
+    if [ "$COQDIR" != "" ] ;
+    then
+        if [ $INTERACTIVE = true ]
+        then
+            echo $BOLDTAG"Coq installation found in $COQDIR."$NORMALTAG
+            echo "Press enter to use default or specify another location."
+            read USER_INPUT
+            if [ "$USER_INPUT" != "" ] ;
+            then
+                COQDIR=$USER_INPUT
+            fi
+        fi
+    else
+        # No coqc command found and no explicit prefix given.
+        echo $BOLDTAG"Coq installation not found."$NORMALTAG
+        echo "Specify the path where to find Coq commands."
+        read USER_INPUT
+        COQDIR=$USER_INPUT
+    fi
+    # Finally check that a director was entered by the user.
+    if [ "$COQDIR" = "" ] ;
+    then
+        echo "Error. Coq not available. Install it first."
+        exit 1
     fi
 else
-    echo $BOLDTAG"Coq installation not found."$NORMALTAG
-    echo "Specify the path where to find Coq commands."
-    read USER_INPUT
-    COQDIR=$USER_INPUT
+    # Explicit tools prefix given, keep it blindly.
+    COQDIR=$TOOLS_PREFIX
 fi
-if [ "$COQDIR" = "" ] ;
-then
-    echo "Error. Coq not available. Install it first."
-    exit 1
-    fi
 
 COQC=$COQDIR/coqc
 COQDEP=$COQDIR/coqdep
