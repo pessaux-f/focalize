@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.58 2012-10-16 11:08:38 pessaux Exp $
+# $Id: configure,v 1.59 2012-10-16 11:17:57 pessaux Exp $
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
@@ -52,7 +52,7 @@ usage () {
 }
 
 # #############################################################################
-# Installation stuff.
+# Parsing arguments.
 case ${argc} in
   0) ;;
   *)
@@ -87,6 +87,8 @@ esac
 INSTALL_BIN_DIR=${INSTALL_PREFIX}/bin
 INSTALL_MAN_DIR=${INSTALL_PREFIX}/man
 
+# #############################################################################
+# Installation stuff.
 if [ $INSTALL_PREFIX_GIVEN != true ]
 then
     if [ $INTERACTIVE = true ]

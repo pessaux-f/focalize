@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.92 2012-10-16 11:08:38 pessaux Exp $
+# $Id: configure,v 1.93 2012-10-16 11:17:57 pessaux Exp $
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
@@ -45,6 +45,8 @@ TOOLS_PREFIX="";
 # to parse them properly.
 argc="$#"
 
+# #############################################################################
+# Parsing arguments.
 case ${argc} in
   0) ;;
   *)
