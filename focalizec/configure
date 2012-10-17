@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.47 2012-10-16 11:47:17 pessaux Exp $
+# $Id: configure,v 1.48 2012-10-17 09:06:48 pessaux Exp $
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
@@ -59,6 +59,16 @@ TOOLS_PREFIX="";
 usage () {
     echo "usage: ./configure [options] [<directory>]"
     echo
+    echo "  [-]-install_prefix <directory>"
+    echo "    set <directory> as the directory prefix for installation of"
+    echo "    the FoCaLize commands."
+    echo "    (Default value for <directory> is $BOLDTAG$INSTALL_PREFIX$NORMALTAG.)"
+    echo "  [-]-tools_prefix <directory>"
+    echo "    set <directory> as the directory prefix where tools required to"
+    echo "    build FoCaLiZe are installed. The currently required tools (other"
+    echo "    than OCaml and Coq already configured) are zenon, zvtov."
+    echo "  [-]-interactive"
+    echo "    run interactively, asking questions."
 }
 
 # #############################################################################
@@ -320,4 +330,4 @@ then
     echo $BOLDTAG"ATTENTION:$NORMALTAG you are using a version of Coq < 8.4. FoCaliZeC must be called with"
     echo "the $BOLDTAG$FOCALIZEC_COQ_COMPATIBILITY_OPTION$NORMALTAG option."
 fi
-echo "Done. Now, please invoke: make world"
+echo "Done. Now, please invoke: 'make depend' then 'make world'."
