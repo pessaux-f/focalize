@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.49 2012-10-17 12:52:32 pessaux Exp $
+# $Id: configure,v 1.50 2012-10-17 15:09:42 pessaux Exp $
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
@@ -111,7 +111,7 @@ esac
 INSTALL_BIN_DIR=${INSTALL_PREFIX}/bin
 INSTALL_LIB_DIR=${INSTALL_PREFIX}/lib/focalize
 INSTALL_MAN_DIR=${INSTALL_PREFIX}/man
-INSTALL_DOC_DIR=${INSTALL_PREFIX}/share
+INSTALL_DOC_DIR=${INSTALL_PREFIX}/share/focalize
 
 # #############################################################################
 # Commands stuff.
