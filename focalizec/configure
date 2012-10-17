@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.48 2012-10-17 09:06:48 pessaux Exp $
+# $Id: configure,v 1.49 2012-10-17 12:52:32 pessaux Exp $
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
@@ -297,7 +297,7 @@ chmod a-w $INSTALLATION_VARS_FILE
 # #############################################################################
 # If Coq version is < 8.4, then we must call focalizec with the
 # -coq_older_8_4 option to ensure code generation is Coq-compatible.
-COQ_VERSION=`$COQC -v | grep version | cut -d ' ' -f 6`
+COQ_VERSION=`$COQC -v | grep version | cut -d ' ' -f 6`
 if [ "$COQ_VERSION" \< "8.4"  ] ;
 then FOCALIZEC_COQ_COMPATIBILITY_OPTION=-coq_older_8_4
 else FOCALIZEC_COQ_COMPATIBILITY_OPTION=""
