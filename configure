@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.93 2012-10-16 11:17:57 pessaux Exp $
+# $Id: configure,v 1.94 2012-10-17 09:13:23 pessaux Exp $
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
@@ -28,7 +28,7 @@ usage () {
     echo "  [-]-interactive"
     echo "    run interactively, asking questions."
     echo "  [-]-tools_prefix <directory>"
-    echo "    set <directory> as the directory prefix where tools required to."
+    echo "    set <directory> as the directory prefix where tools required to"
     echo "    build FoCaLiZe are installed. The currently required non-common"
     echo "    tools are OCaml and Coq."
 }
