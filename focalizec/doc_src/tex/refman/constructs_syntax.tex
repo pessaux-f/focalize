@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.52 2012-01-27 15:41:10 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.53 2012-10-17 15:30:46 pessaux Exp $
 
 
 \section{Language constructs and syntax}
@@ -1885,16 +1885,14 @@ species S =
   let equal = (=Ox);
   theorem symmetry : all x y in Self, equal (x, y) -> equal (y, x)
   proof = assumed
-    {* Machine integers equality admitted to be symmetric  *} ;
+    (* Machine integers equality admitted to be symmetric  *) ;
   ...
 end ;;
 \end{lstlisting}
 % La ligne let equal = (=Ox); est difficile a parser !
 }
 
- Following the {\tt assumed} keyword is a mandatory message used for
-sake of information, justification, traceability of the proof
-absence. Although such a proof can introduce inconsistencies if the
+Although such a proof can introduce inconsistencies if the
 ``theorem'' is not a tautology and thus decrease confidence in the
 correctness of the {\focal} program, there are several cases where
 using this keyword may help.
