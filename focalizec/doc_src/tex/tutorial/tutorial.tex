@@ -23,7 +23,7 @@
 
 \author{The {F}o{C}a{L}ize Team}
 \title{A Short Tutorial for {F}o{C}a{L}ize:\\Implementing Sets}
-\date{July 2009}
+\date{July 2009 - Updated October 2012}
 
 %----------------------------------------------------------------------------------------------
 % Contexts, languages, presentation
@@ -86,12 +86,9 @@
  keywords, types or identifiers can also be inserted directly in the text, for example
  \code{Superset}.
 
- The \foc syntax is case sensitive, uppercase and lowercase identifier being associated to
+ The \foc syntax is case sensitive, uppercase and lowercase identifiers being associated to
  different sorts of entities. Delimiters (blank spaces, tabulations, line feeds) are often
- required to separate syntactical constructs. Finally, the use in \foc sources of \ocaml or
- \coq keywords (such as \code{Set}) or of standard library file names (such as \code{list.v})
- may result in name clashes. For these reasons, the reader is advised to respect as much as
- possible the form and the names used in this tutorial.
+ required to separate syntactical constructs.
 
  The \foc syntax includes several forms of comments. Single line comments start with a
  \code{--} and go to the end of the line. Block comments are delimited by \code{(*} and
@@ -103,7 +100,7 @@
 
  Commands, file names as well as outputs or error messages are in bold font, for example
  \textbf{focalizec superset.fcl}. Terms representing specific \foc concepts are introduced
- using an emphasised font, for example \emph{collection}. Finally, mathematical statements are
+ using an emphasized font, for example \emph{collection}. Finally, mathematical statements are
  presented using the standard notations, for example $\forall\:(x\!:\!T),\:x\!=\!x$ (for any
  $x$ belonging to the set/type $T$, $x$ is equal to $x$).
 
@@ -143,7 +140,7 @@
  activity relying on \emph{formal proofs} (in the mathematical sense), whose production is only
  partially automated but which are mechanically checked.
 
- The cost of develop ping formal specifications and proofs is compensated by the important gain
+ The cost of developing formal specifications and proofs is compensated by the important gain
  w.r.t. the confidence in the development. Various studies furthermore indicate that the total
  development and ownership cost is likely to be reduced, due to disambiguation of the
  specifications, earlier detection of problems, lighter test obligations and reduced
@@ -154,8 +151,8 @@
  without having to know what is this implementation.
 
  The \foc language therefore combines a pure functional programming language inspired by \ocaml
- and a logical language. It is also object-flavoured, developments being organised through a
- hierarchy of \emph{species}, build by \emph{inheritance} or \emph{parameterisation}. In
+ and a logical language. It is also object-flavored, developments being organized through a
+ hierarchy of \emph{species}, build by \emph{inheritance} or \emph{parametrisation}. In
  essence, a \emph{species} is a kind of record combining function \emph{signatures} (that is
  their type), function \emph{definitions} (that is their code), \emph{logical properties} and
  \emph{proofs}.
@@ -166,7 +163,7 @@
  implementation of $S_1$.
 
  A species can also use the implementation of other species to build its own definitions,
- properties and proofs, through a \emph{parameterisation mechanism}. The parameters are
+ properties and proofs, through a \emph{parametrisation mechanism}. The parameters are
  required to be effective and consistent, that is to be such that every function declaration
  has an associated definition, and every property a proof that it holds. Furthermore, the
  validity of the properties of these effective parameters is likely to depend upon the
@@ -214,7 +211,7 @@ a subset.
 As we will see, we adopt here a progressive approach, justified by various engineering
 considerations regarding \foc developments, but also by the will to stick to the formal vision
 presented just before. An interesting consequence of this vision is that a genuine freedom is
-given to the developer, that can choose between various approaches for example to favour
+given to the developer, that can choose between various approaches for example to favor
 genericity and reusability, or to optimize algorithms.
 
 The rest of this paper describes the various stages of the development, distinguishing between
@@ -235,7 +232,7 @@ subsets of a given superset, for example subsets of values from \code{int}. Yet 
 would force us to fully redevelop such an implementation for any relevant type, a rather
 inappropriate strategy.
 
-We therefore favour the generic approach, through a form of polymorphic specification. In
+We therefore favor the generic approach, through a form of polymorphic specification. In
 \foc, this is possible by using parametrisation. Species can indeed be parametrised by an
 \emph{interface}, which means that implementation of the species will have to instantiate
 this parameter by a collection having the required interface. In practice, this means that
@@ -281,7 +278,7 @@ is possible with the \code{use} or \code{open} directives; the latter allows for
 notations (e.g. \code{#bool} or \code{bool} instead of \code{basics#bool}
 % Didou
 which is referred to ``file qualified notation''. We will see later a similar mechanism to
-invoke species methods that we call ``species qualified notation''. In absence of
+invoke species methods that we call ``species qua\-li\-fied notation''. In absence of
 ambiguity between these two qualification mechanisms, we will generally use the shorter
 term of ``qualified notation''
 ). Note that the
@@ -301,9 +298,10 @@ returns a boolean value.
 \begin{tip}\small[Syntax] Species names have to start with an uppercase character.
 \end{tip}
 
-\begin{tip}\small[Syntax] Separators (that is blank spaces, tabulations, line feeds) are often
-required between syntactical constructs.
-\end{tip}
+% NOT TRUE ANYMORE: SYNTAX WAS RELAXED.
+% \begin{tip}\small[Syntax] Separators (that is blank spaces, tabulations, line feeds) are often
+% required between syntactical constructs.
+% \end{tip}
 
 At this stage, we are not using any formal feature; indeed, we are just specifying here a form
 of object with a given method. To have a meaningful specification, we further require the
@@ -371,12 +369,55 @@ File name & Produced by & Used by & Description\\\hline
 
 Whereas \code{Superset} is a very short and simple specification, it can be enriched with
 additional results without further requirements. For example, combining reflexivity and
-transitivity, it is possible to prove the following property about \code{=} of the
-\code{Superset} species as follows:
+transitivity, it is possible to prove the property
+$\forall x, y,\ \ x = y \Rightarrow x = z \Rightarrow y = z$ about
+\code{=} of the \code{Superset} species.
+
+\medskip\noindent The sketch of the proof is informally the following.\\
+
+\hspace{0.2cm} By hypotheses we have:
+
+\hspace{0.2cm}\begin{tabular}{lr}
+$x = y$ & (1) \\
+$x = z$ & (2)
+\end{tabular}
+
+\hspace{0.2cm} From (1) by symmetry we prove that $y = x$ \ \ (3)
+
+\hspace{0.2cm} From (3) and (2), by transitivity we prove that $y = z$ \ \ (Qed).
+
+\medskip\noindent More formally, the underlying proof tree of this theorem is:
+\begin{small}
+\[\begin{array}{c}
+\begin{array}{c}
+\text{Trivial, by assumption}\\\hline
+x = y,\: x = z \vdash x = y \\\hline
+x = y,\: x = z \vdash y = x
+\end{array}
+\quad\quad
+\begin{array}{c}
+\text{Trivial, by assumption}\\\hline
+x = y,\: x = z \vdash x = z
+\end{array}
+\\\hline
+\begin{array}{c}
+x = y,\: x = z \vdash y = x \wedge x = z
+\\\hline
+x = y,\: x = z \vdash y = z
+\\\hline
+\vdash
+\forall\:x,\:y,\ \ x = y\Rightarrow x = z \Rightarrow y = z
+\end{array}
+\end{array}\]
+\end{small}
+
+In FoCaLiZe, thanks to \zenon, the definition and proof of this
+property is simply achieved by:
 \begin{lstlisting}
  theorem eq_symmtran : all x y z : Self, x = y -> x = z -> y = z
   proof = by property eq_symm, eq_tran ;
 \end{lstlisting}
+
 We use the keyword \code{theorem} instead of \code{property} to indicate that the proof
 follows -- it is provided after the keyword \code{proof}.
 % Didou
@@ -503,7 +544,7 @@ open "superset" ;;
 The species \code{Subset} is parametrised by a collection \code{Val} which implements the
 interface defined by the species \code{Superset}. Regarding the method, we provide a
 membership operation deciding whether or not a value belongs to a subset, denoted \code{<<};
-practically, membership defines a subset, as any subset is characterised by the values it
+practically, membership defines a subset, as any subset is characterized by the values it
 contains\footnote{Note that we describe in fact subsets for which membership is decidable.}:
 \begin{lstlisting}
 species Subset(Val is Superset) =
@@ -538,7 +579,7 @@ Following these principles, our species is enriched as follows:
                        (~(Val!( = )(v1, v2)) /\ v1 << s) ;
 \end{lstlisting}
 In this specification, each method producing a subset is associated to a property detailing
-its behaviour with regard to membership. As membership indeed characterises a specific subset,
+its behavior with regard to membership. As membership indeed characterizes a specific subset,
 such properties are as precise as a definition. This is typical of \foc specifications, where
 the concrete datatype stays hidden from outside the species: properties are generally
 relations between methods, describing the structure of a species.
@@ -571,7 +612,7 @@ specification or one of its extended versions.
 \label{specsubset_extensional}
 
 Whereas our main objective is to implement finite subsets as lists, we choose here to
-introduce very gradually various levels of specifications. Note that nothing enforces at this
+introduce very gradually various levels of specifications. Note that no\-thing enforces at this
 stage the species \code{Subset} to only describe finite subsets, and we do not want to further
 constrain it by requiring other methods and properties in \code{Subset}. We prefer to adopt a
 smoother approach, adding another level of specification by creating a new species to
@@ -591,7 +632,7 @@ is subset whose content can be analysed systematically.
 \subsubsection{Inclusion}
 \label{specsubset_extensional_inclusion}
 
-Extensional subsets being subsets, we use the inheritance mechanism: we create a new species
+Extensional subsets being subsets, we use the inheritance mechanism: we crea\-te a new species
 \code{ExtSubset} parametrised by a collection \code{Val}, which inherits of
 \code{Subset(Val)}, that is of all its methods and properties. Of course, we intend to enrich
 this specification with new methods and properties.
@@ -760,7 +801,7 @@ perfectly legitimate cases, remember the comment in Sub. \ref{specsuperset_speci
 encoding of natural values as strings.
 
 Of course, using the symbol \code{=} it is clear that our intention was to capture a form of
-equality; so we can emphasise this interpretation by adding the congruence property at the
+equality; so we can emphasize this interpretation by adding the congruence property at the
 beginning of the species \code{ExtSubset}:
 \begin{lstlisting}
  property mem_congr : all v1 v2 in Val, Val!( = )(v1, v2) ->
@@ -854,13 +895,15 @@ prove the theorem \code{incl_remove_mem}. Take care to use different step identi
 given level, as repeating an identifier will not cause an error but will mask the associated
 results and prevent \zenon to conclude.
 
-A goal step is associated with assumptions (keyword \code{assume} or \code{hypothesis}), a
+A goal step is associated with assumptions (keyword \code{assume} to
+introduce types or \code{hypothesis} to introduce logic formulae), a 
 goal (keyword \code{prove}), and possibly the tips to solve the goal (keyword \code{by}
 completed with \code{definition of}, \code{property}, \code{hypothesis}, \code{step} and
 \code{type}). If the goal \code{<x>y} is not provided with tips, then the next steps (at level
 \code{x+1}) provide a strategy to solve it, the last step of the level \code{x+1} being
 expected to be a \code{qed} with tips (or a \code{conclude}, which is equivalent to a
-\code{qed by step <x+1>*}).
+\code{qed by step <x+1>*}, i.e. all the steps of the level $x+1$,
+whose aim is to prove the enclosing level $x$ goal).
 
 Writing such a script is better done incrementally and interactively. The first attempt is
 generally a fully automated proof by \zenon, levels being introduced gradually to give
@@ -890,7 +933,8 @@ automated proof:
           <1>f qed by step <1>1 ;
 \end{lstlisting}
 The level \code{<1>} is associated to the theorem we want to prove, and the level \code{<2>}
-indicates that to prove the equality, we have to prove the mutual inclusion. Invoking the
+indicates that to prove the equality \code{s = (s - v) + v} , we have to prove the
+mutual inclusion. Invoking the
 compiler, we got a message indicating that no proof has been found for \code{<2>1} and
 \code{<2>2}; on the other hand the absence of error messages for \code{<1>f} also indicates
 that provided a proof for \code{<2>1} and \code{<2>2} \zenon will indeed conclude. So we
@@ -1125,7 +1169,7 @@ species FiniteList(Val is Superset) =
 
  inherit CoList(Val) ;
 
- property finite :
+ property induction :
   all f : (Self -> basics#bool),
   f(nil) ->
   (all l : Self, f(l) -> all v : Val, f(cons(v, l))) ->
@@ -1190,7 +1234,7 @@ structures.
 
 In this section, we continue the development by inheritance, but having in mind a
 \emph{refinement} approach: we do not specify anymore the structure itself, but instead we
-provide an implementation. Still favouring a very progressive approach in this tutorial, we
+provide an implementation. Still favoring a very progressive approach in this tutorial, we
 \emph{refine} the species \code{FiniteList} by a species \code{EnumList}, with a few
 algorithms, before providing a complete species \code{InductiveList} in which the
 \emph{representation}, that is the concrete datatype used to encode the specified structures,
@@ -1223,30 +1267,37 @@ for a specific value:
   else (if Val!( = )(v, head(l)) then true else mem(v, tail(l))) ;
  (* TODO : Termination Proof *)
 \end{lstlisting}
-The definition for the method \code{mem} is recursive, as computing \code{mem(v,l)} requires
-in some cases to compute \code{mem(v, tail(l))}. In a formal development, one has to prove
-that recursive functions always terminate to avoid logical inconsistency\footnote{Consider for
-example the function \code{let rec f(n in Nat) = f(n)}: should it be a valid definition, it
-could have any return type -- and in particular it could be used as a trick to build a value
-from an empty type.}. In its current version, \foc offers two ways to deal with such a
-function:
-\begin{itemize}
-\item The keyword \code{recstruct} indicates that the function is recursive, and that any
-recursive call is done on a parameter which is structurally ``smaller'' than the initial one.
-It is illustrated later in this tutorial.
-\item The keyword \code{rec} indicates that the function is recursive. In this case a
-termination proof is normally added after the definition, for example:
+The definition for the method \code{mem} is recursive (keyword
+\code{rec}), as computing \code{mem(v,l)} requires in some cases to compute
+\code{mem(v, tail(l))}. In a formal development, one has to prove that
+recursive functions always terminate to avoid logical
+inconsistency\footnote{Consider for example the function
+  \code{let rec f(n in Nat) = f(n)}: should it be a valid definition,
+  it could have any return type -- and in particular it could be used
+  as a   trick to build a value from an empty type.}.
 
-\code{let rec f(...)=... termination proof = by order ...}.
-\end{itemize}
-With regard to the second case, the full support in \foc of recursive functions, with proofs
-of termination based on measures, orders and so on is still in development and is not further
-detailed here. For this reason, the termination proof is for now admitted and is not required
-in the code. The \foc compiler however warns that the species is potentially unsafe
+Several termination proof kinds are being developed in FoCaLiZe (using a
+measure, an order, a structurally decreasing argument). However the only
+currently fully supported kind is stating that the recursion is structural,
+i.e. applies on a strictly decreasing argument:
+
+\code{let rec f(x, y, z)=... termination proof = structural y}.
+
+The above code states that the function \code{f} is recursive
+structural on its \code{y} argument. In other words, \code{y} is
+stated (and must be) an argument starkly decreasing at each recursive
+call.
+
+Syntax exists for other kinds of proofs but is currently
+ignored. For sake of simplicity, the termination proof is for now
+admitted and is not required in the code (a termination proof is indeed
+optional). The \foc compiler however warns that the species is potentially unsafe
 % Didou
-and will generate a pseudo-termination proof instead, in order to have the whole program
-however accepted by \coq. In some sense, we afford lying to \coq, being optimistic about the
-part of the consistency of our program involved by the termination of this function.
+and will generate a pseudo-termination proof instead (i.e. an axiom),
+in order to have the whole program however accepted by \coq. In some
+sense, we afford lying to \coq, being optimistic about the part of the
+consistency of our program involved by the termination of this
+function.
 
 We adopt here the second version, noting that if the property \code{finite} is valid, the
 function \code{mem} terminates. Indeed, a possible interpretation of \code{finite} is that it
@@ -1482,7 +1533,7 @@ statement of \code{mem_del_inv} to ease the proof by induction:
   proof = assumed (* TODO *) ;
 \end{lstlisting}
 
-Finally we prove the global result
+Finally we prove the global result:
 \begin{lstlisting}
  proof of mem_del = by property mem_del_mem, mem_del_eq, mem_del_inv
                        definition of mdm_, mde_ ;
@@ -1541,7 +1592,7 @@ well-foundation
 (finiteness of the constructs) is also
 ensured.
 
-\begin{tip}\small[Syntax] Type definitions are only authorised at top-level.
+\begin{tip}\small[Syntax] Type definitions are only authorized at top-level.
 \end{tip}
 
 This is also a polymorphic type: \code{'a} represents a type variable parametrisation our
@@ -1674,38 +1725,33 @@ It can be experimentally tested, but only at top level for now.
 
 In the species \code{IndList}, we redefine the methods \code{mem} and \code{del} as follows:
 \begin{lstlisting}
- let mem(v : Val, l : Self) =
-  let recstruct mem_(l : Self) =
+ let rec mem(v : Val, l : Self) =
    match l with
    | #FNil -> false
-   | #FCons(h, t) -> if Val!( = )(v, h) then true else mem_(t)
-  in mem_(l) ;
+   | #FCons(h, t) -> if Val!( = )(v, h) then true else mem(v, t)
+   termination proof = structural l ;
 
  proof of mem_nil = assumed (* TODO *) ;
 
  proof of mem_cons = assumed (* TODO *) ;
 
- let recstruct del(l : Self, v : Val) =
-  match l with
-  | #FNil -> #FNil
-  | #FCons(h, t) -> if Val!( = )(v, h)
-                    then del(t, v)
-                    else #FCons(h, del(t, v)) ;
+ let rec del(l : Self, v : Val) =
+   match l with
+   | #FNil -> #FNil
+   | #FCons(h, t) -> if Val!( = )(v, h)
+                     then del(t, v)
+                     else #FCons(h, del(t, v))
+  termination proof = structural l ;
 
  proof of mem_del =  assumed (* TODO *) ;
 \end{lstlisting}
-In this case, we are using the keyword \code{recstruct} to indicate a structurally recursive
-function, that is recursive calls on subterms of the parameter -- termination then being
-trivially true. For such functions, however, the decreasing parameter has to be the first one;
-that's why we are using a \code{let in} construct, as the declaration of \code{mem} puts the
-list as the second parameter.
+In this case, we have explicitly provided a termination proof,
+stating it as structural on the argument \code{l} (i.e.  \code{l} is
+the strictly decreasing argument).
 
 Such redefinitions, of course, cause the deletion of the associated proofs for \code{mem_nil},
 \code{mem_cons}, \code{mem_del}. Yet the use of pattern matching on an inductive type leads to
 simpler proofs of these properties. For this tutorial, we just admit these properties.
-
-Note that the keyword \code{recstruct} may become deprecated in future versions of \foc, as it
-is an \emph{ad hoc} adaptation to deal with a simple form of recursion.
 
 
 %----------------------------------------------------------------------------------------------
@@ -1734,13 +1780,13 @@ methods of both interfaces can be used to manipulate these values; a set can be 
 two elements, then it can be considered as a list in which we exchange the position of these
 elements.
 
-In the second case, using parametrisation, we use lists to represent subsets, but emphasising
+In the second case, using parametrisation, we use lists to represent subsets, but emphasizing
 that lists and subsets are different in nature: manipulating a subset can only be done using
 the methods of the subset interface -- and it is possible to ensure that some ``dangerous''
 methods defined for lists are not used when dealing with subsets.
 
 We discuss in the rest of this section of the strategy to build an executable program using
-the implementation of subsets with the second approach, parametrisation by lists. As a
+the implementation of subsets with the second approach, pa\-ra\-me\-tri\-sa\-tion by lists. As a
 collection is never parametrised, and always implement one and only one complete species
 whose parameters are instantiated by collections, we have to follow a strict discipline: to
 create a collection from a given species, we have to create a collection for its parameters.
@@ -1767,7 +1813,7 @@ collection, that are implementing complete species.
 
 We can implement collections with the currently defined interfaces, unfortunately this would
 not be very demonstrative in the absence of HMI. As a first mandatory step toward a program we
-therefore create a new species with methods to import or export values:
+therefore create a new species with me\-thods to import or export values:
 \begin{lstlisting}
 species PrintParseSuperset =
 
@@ -1822,17 +1868,18 @@ The species \code{Int} being complete, it can be transformed into a collection:
 \begin{lstlisting}
 collection Int_Coll = implement Int; end ;;
 \end{lstlisting}
-\code{Int} now denotes a form of abstract data type, whose representation is hidden. It is not
-possible to inherit from \code{Int}, or to modify otherwise its structure; of course, it is
-still possible to use \code{Int} as a parameter.
+\code{Int_Coll} now denotes a form of abstract data type, whose representation is hidden. It is not
+possible to inherit from \code{Int_Coll}, or to modify otherwise its
+structure; of course, it is still possible to use \code{Int_Coll} as a parameter.
 
 \begin{tip}[Implementation] Collections are the final entities of \foc developments and
-represent executable implementations. They cannot be parametrised or inherited from, but they
-can be used as parameters for other species.
+represent executable implementations. They cannot be
+pa\-ra\-me\-tri\-sed or inherited from, but they can be used as
+parameters for other species.
 \end{tip}
 
 %----------------------------------------------------------------------------------------------
-\subsection{Lists if Integers}
+\subsection{Lists of Integers}
 \label{implem_lists}
 
 As we want to create a collection from the parametrised species \code{ExtSubset}, we need
@@ -2034,7 +2081,7 @@ development and their consequences.
 We have considered, at the end of Sub. \ref{specsubset_generic}, the opportunity to declare
 additional methods and properties for the species \code{Subset}. Our concern was not to enrich
 the specification of \code{Subset} to enforces inhabitants of the species to be finite, but to
-provide more features -- recognising that it may causes unnecessary burden for the developer
+provide more features -- recognizing that it may causes unnecessary burden for the developer
 if these features are not used.
 
 For example, one could ask for the union, the intersection or the complement operations. If
@@ -2042,7 +2089,7 @@ the two formers seems to be straightforward, the situation of the latter if more
 Indeed the complement, for any subset $S$, returns the subset of elements of the superset not
 belonging to $S$. This is a perfectly valid requirement, and as we will see later in this
 section, we can even implement directly the species \code{Subset} enriched with this
-operation. Yet the complement operation would also be part of all the other inheriting
+operation. Yet the complement ope\-ra\-tion would also be part of all the other inheriting
 species, including \code{ExtSubset}, \code{ListSubset}. This would clearly cause some
 difficulties, preventing the parameter \code{Val} to be infinite, as in such a case for
 $S$ a finite subset, the complement of $S$ would not be finite. In other words, provided an
@@ -2073,8 +2120,9 @@ therefore closure reasoning does not apply for such an interface.
 Taking the example of the species \code{Subset}, we only provide a few methods to build
 subsets: the empty subset, the insertion and the removal of an element. Using only these
 methods it is not possible to build an infinite subset. But that does not mean that the
-species \code{Subset} only describes finite subsets -- nothing prevent the developer to
-introduce through inheritance more powerful methods such as a complement operation. The fact
+species \code{Subset} only describes finite subsets -- nothing
+prevents the developer from introducing
+through inheritance more powerful methods such as a complement operation. The fact
 that the species \code{Subset} only requires methods building finite subsets actually ensures
 that it is indeed valid as an ancestor for the species representing finite subsets.
 
@@ -2113,7 +2161,7 @@ subset passed as a parameter contains at least two of them. In fact, whereas the
 operator has to be implemented as a \foc function at some point in the development, it may
 not be a function in the sense of set theory. Indeed, provided $S_1$ and $S_2$ two sets that
 are extensionally equal, \emph{i.e.} containing the same elements, nothing enforces to have
-$\fid{chc}(S_1)\!=\!\fid{chc}(S_2)$. Of course, we can prevent those strange behaviours by
+$\fid{chc}(S_1)\!=\!\fid{chc}(S_2)$. Of course, we can prevent those strange behaviors by
 adding a property requiring extensional equality to be a congruence w.r.t. \code{chc}:
 \begin{lstlisting}
  property chc_congr : all s1 s2 : Self,
@@ -2132,7 +2180,7 @@ possible to build injective lists (no repetition of elements), but without a com
 operator there is no way to sort such lists. So for example the set $\{1,2\}$ has two possible
 implementations, $\fid{cons}(1,\fid{cons}(2,\fid{nil}))$ and
 $\fid{cons}(2,\fid{cons}(1,\fid{nil}))$. Whereas we can distinguish them using the structural
-equality \code{basics#( = )}, there is no way to characterise a good one and a bad one. If we
+equality \code{basics#( = )}, there is no way to characterize a good one and a bad one. If we
 now try to implement \code{chc}, we have to exhibit a function that provided a non-empty list,
 returns an element of this list. Remember that beyond an equality, we have no
 % Didou: operations
@@ -2173,11 +2221,11 @@ smallest element of the subset.
 For the sake of illustration, we consider in this subsection a totally different
 implementation of subsets based on a functional representation. Our intent is not to advice to
 use such type of code -- which is generally considered as inefficient -- but rather to
-emphasise the freedom offered to a developer facing an abstract specification, provided this
+emphasize the freedom offered to a developer facing an abstract specification, provided this
 specification is appropriate.
 
-As mentioned in Sub. \ref{specsubset_generic}, a subset is characterised by the values it
-contains, in other words a subset is characterised by its membership function. It is therefore
+As mentioned in Sub. \ref{specsubset_generic}, a subset is characterized by the values it
+contains, in other words a subset is characterized by its membership function. It is therefore
 possible to represent a subset by this very function, \foc being a functional (higher order)
 language. One of the interest of this representation is that we can represent infinite
 subsets: the function deciding if a natural value is even or not defines the subset of even

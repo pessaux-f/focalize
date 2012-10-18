@@ -285,25 +285,23 @@ species IndList(Val is SupersetWitness) =
                      (* by type mylist
                            definition of isnil, nil, cons, head, tail *) ;
 
- let mem(v : Val, l : Self) =
-  let rec mem_(l : Self) =
+ let rec mem(v : Val, l : Self) =
    match l with
    | #FNil -> false
-   | #FCons(h, t) -> if Val!( = )(v, h) then true else mem_(t)
-  in mem_(l) ;
+   | #FCons(h, t) -> if Val!( = )(v, h) then true else mem(v, t)
+   termination proof = structural l ;
 
  proof of mem_nil = assumed (* TODO *) ;
 
  proof of mem_cons = assumed (* TODO *) ;
 
- let del(l : Self, v : Val) =
-  let rec del_(l : Self) =
+ let rec del(l : Self, v : Val) =
    match l with
    | #FNil -> #FNil
    | #FCons(h, t) -> if Val!( = )(v, h)
-                     then del_(t)
-                     else #FCons(h, del_(t)) 
-  in del_(l);
+                     then del(t, v)
+                     else #FCons(h, del(t, v))
+  termination proof = structural l ;
 
  proof of mem_del =  assumed (* TODO *) ;
 
