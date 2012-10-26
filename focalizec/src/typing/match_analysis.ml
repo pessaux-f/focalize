@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: match_analysis.ml,v 1.2 2012-03-01 17:21:47 pessaux Exp $ *)
+(* $Id: match_analysis.ml,v 1.3 2012-10-26 16:11:40 pessaux Exp $ *)
 
 (** {b Descr}: Exceptions for pattern matching analysis. *)
 exception Match_not_exhaustive of Location.t ;;
@@ -86,7 +86,7 @@ let is_matrix_empty p =
 
 
 (** {b Descr}: Expands cleaned pattern. *)
-let rec expand_patterns pats =
+let expand_patterns pats =
   let find_max_size nb pat =
     let nb2 =
       (match pat.Parsetree.ast_desc with
@@ -164,8 +164,8 @@ let rec normalize pats =
 
 
 
-(** {b Descr}: Normalizes a martix for the urec algorithm. *)
-let rec normalize_matrix p =
+(** {b Descr}: Normalizes a matrix for the urec algorithm. *)
+let normalize_matrix p =
   if is_matrix_empty p then p
   else
     let cols = split_matrix p in

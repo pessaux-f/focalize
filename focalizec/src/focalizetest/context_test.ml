@@ -140,7 +140,7 @@ type context_path = string list;;
 let empty_path : context_path = [];;
 
 (** Remove all element of tc which are after the last occurence of c in tc *)
-let rec goto_coll (tc : binding_context list) (c : string) =
+let goto_coll (tc : binding_context list) (c : string) =
   let rec aux l =
     match l with
     | [] -> raise Not_found

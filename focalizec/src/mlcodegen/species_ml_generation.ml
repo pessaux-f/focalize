@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.105 2012-10-26 14:55:19 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.106 2012-10-26 16:11:40 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -946,7 +946,7 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
       {b Rem} : Local to the enclosing [dump_collection_generator_arguments]
                function. Not exported.                                        *)
   (* ************************************************************************ *)
-  let rec process_one_field_memory field_memory =
+  let process_one_field_memory field_memory =
     List.iter
       (fun (spe_param, (Env.ODFP_methods_list meths_set)) ->
         let spe_param_name =

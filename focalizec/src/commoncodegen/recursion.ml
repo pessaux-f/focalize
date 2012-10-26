@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: recursion.ml,v 1.22 2012-10-26 14:55:20 pessaux Exp $ *)
+(* $Id: recursion.ml,v 1.23 2012-10-26 16:11:40 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -277,7 +277,7 @@ let rec list_recursive_calls function_name argument_list bindings expr =
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
-let rec get_smaller_variables variables bindings =
+let get_smaller_variables variables bindings =
   (* NB: Be wary of inner bindings that mask outer variables !!
      It is assumed that patterns do not contain multiple occurrences of the
      same variable.

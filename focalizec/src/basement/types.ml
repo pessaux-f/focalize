@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.92 2012-10-26 14:55:19 pessaux Exp $ *)
+(* $Id: types.ml,v 1.93 2012-10-26 16:11:40 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -231,10 +231,11 @@ let rec repr = function
 (** {b Descr}: Generate a fresh integer used a unique identifier of a type
     variable. Designed for debug purpose only, to inspect broken sharing.    *)
 (* ************************************************************************* *)
+(* DEBUG
 let gen_tyvar_debug =
  let cpt = ref 0 in
  fun () -> incr cpt ; ! cpt
-;;
+;; *)
 
 
 

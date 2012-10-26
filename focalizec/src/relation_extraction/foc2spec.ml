@@ -24,7 +24,7 @@ let rec remove_tail_blanks str = let n = String.length str - 1 in
   else str
 
 (* Parse a tuple in an annotation. *)
-let rec parse_an_tuple str =
+let parse_an_tuple str =
   let parts = split_string str ',' in
   List.map (fun s -> skip_blanks (remove_tail_blanks s)) parts
 
@@ -67,20 +67,24 @@ let name_from_expr_ident ident = match ident.Parsetree.ast_desc with
 		| Parsetree.Vname vn -> Parsetree_utils.name_of_vname vn
 		| Parsetree.Qualified (_,vn) -> Parsetree_utils.name_of_vname vn )
 	| Parsetree.EI_method (_,vn) -> Parsetree_utils.name_of_vname vn
+;;
 	
 (* Get a function name from a focalize expr. *)
 let f_name_from_expr expr = match expr.Parsetree.ast_desc with
 	| Parsetree.E_var (expr_id) -> name_from_expr_ident expr_id
 	| _ -> raise Not_found
+;;
 
 (* Get a constructor's name from a focalize expr. *)
-let c_name_from_expr expr = match expr.Parsetree.ast_desc with
-	| Parsetree.CI (ident) -> name_from_ident ident
-	| _ -> raise Not_found
+let c_name_from_expr expr =
+  match expr.Parsetree.ast_desc with
+	| Parsetree.CI ident -> name_from_ident ident
+;;
 
 (* Get a focalize species name. *)
 let sp_name_from_spexpr spexpr = 
   name_from_ident spexpr.Parsetree.ast_desc.Parsetree.se_name
+;;
 
 (* Find the definition of a species from its name. *)
 let rec find_species_def phlist name = match phlist with
@@ -139,18 +143,22 @@ and find_properties phlist species_name_list prop_names accu =
 let get_names_of_vnames var_list =
   List.map Parsetree_utils.name_of_vname var_list
 
-(* Extract a foaclize expression. *)
-let rec extract_expr expr = match expr.Parsetree.ast_desc with
+(* Extract a FoCaLiZe expression. *)
+let rec extract_expr expr =
+  match expr.Parsetree.ast_desc with
 	| Parsetree.E_app (fn_expr, param_exprs) ->
-    let f_name = f_name_from_expr fn_expr in
-		let params = List.map extract_expr param_exprs in
-		TFun (f_name, params)
-	| Parsetree.E_var (expr_ident) -> TVar (name_from_expr_ident expr_ident)
+      let f_name = f_name_from_expr fn_expr in
+		  let params = List.map extract_expr param_exprs in
+		  TFun (f_name, params)
+	| Parsetree.E_var expr_ident -> TVar (name_from_expr_ident expr_ident)
 	| Parsetree.E_constr (cstr_ident, param_exprs) ->
-    let c_name = c_name_from_expr cstr_ident in
-		let params = List.map extract_expr param_exprs in
-		TConstr (c_name, params, CLNone)
-	| Parsetree.E_paren (expr) -> extract_expr expr
+      let c_name = c_name_from_expr cstr_ident in
+		  let params = List.map extract_expr param_exprs in
+		  TConstr (c_name, params, CLNone)
+	| Parsetree.E_paren expr -> extract_expr expr
+  | _ -> failwith "foc2spec: extract_expr: TODO."
+;;
+
 
 (* Cut the implications in a property. *)
 let rec cut_property l_expr = match l_expr.Parsetree.ast_desc with
@@ -165,53 +173,60 @@ let rec catch_forall l_expr = match l_expr.Parsetree.ast_desc with
 	| _ -> ([], l_expr)
 
 (* Get the tail element of a list and the list without it. *)
-let rec split_list l = match l with
-	| [] -> raise Not_found
-	| [x] -> x, []
-	| e::q -> let x, t = split_list q in (x, (e::t))
+let rec split_list = function
+  | [] -> raise Not_found
+  | [x] -> (x, [])
+	| e :: q -> let (x, t) = split_list q in
+    (x, (e :: t))
+;;
 
 (* Get a single predicate from an environment. *)
-let get_pred env sig_name = match List.assoc sig_name env with
-  | pred::[] -> pred
+let get_pred env sig_name =
+  match List.assoc sig_name env with
+  | [pred] -> pred
   | _ -> raise Not_found
+;;
 
 (* Extract a term in a premisse. *)
-let extract_prem_term env prem = match prem.ast_desc with
+let extract_prem_term env prem =
+  match prem.ast_desc with
 	| Parsetree.E_app (fn_expr, param_exprs) -> 
-    let f_name = f_name_from_expr fn_expr in
-		let params = List.map extract_expr param_exprs in
-    if List.mem_assoc f_name env then
-      List.map
-       (fun pred -> 
-         PMTPred {pdt_pred = pred; pdt_args = params; pdt_not_flag = false}) 
-      (List.assoc f_name env)
-    else [PMTFun (TFun (f_name, params))]
+      let f_name = f_name_from_expr fn_expr in
+		  let params = List.map extract_expr param_exprs in
+      if List.mem_assoc f_name env then
+        List.map
+          (fun pred -> 
+            PMTPred {pdt_pred = pred; pdt_args = params; pdt_not_flag = false}) 
+          (List.assoc f_name env)
+      else [PMTFun (TFun (f_name, params))]
+  | _ -> failwith "foc2spec: extract_prem_term: TODO."
+;;
 
 (* Extract a premisse. *)
-let extract_prem env prem = match extract_prem_term env prem with
+let extract_prem env prem =
+  match extract_prem_term env prem with
   | [premt] -> PMTerm premt
   | premts -> PMChoice (List.map (fun premt -> PMTerm premt) premts)
+;;
 
 (* Extract a property. *)
 let extract_property env sig_name prop_def =
 	let (variables, prop_expr) = 
     catch_forall prop_def.Parsetree.ast_desc.Parsetree.prd_logical_expr in
 	let prop_parts = cut_property prop_expr in
-	let prop_name = Parsetree_utils.name_of_vname 
-    prop_def.Parsetree.ast_desc.Parsetree.prd_name in
-	let concl, prems = split_list prop_parts in
-	let extr_concl = (match extract_expr concl with
+	let (concl, prems) = split_list prop_parts in
+	let extr_concl =
+    (match extract_expr concl with
 		| TFun (f_name, expr_list) -> if f_name = sig_name then
         { pdt_pred = (try get_pred env sig_name with Not_found ->
-           raise (PredPropertyError prop_def.ast_loc));
-          pdt_args = expr_list;
-          pdt_not_flag = false
-        }
-			else raise (PredPropertyError prop_def.ast_loc)
-		| _ -> raise (PredPropertyError prop_def.ast_loc)
-	)
-	in let extr_prems = List.map (extract_prem env) prems
-	in {p_forall = variables; p_prems = extr_prems; p_concl = extr_concl}
+          raise (PredPropertyError prop_def.ast_loc));
+          pdt_args = expr_list ;
+          pdt_not_flag = false }
+		else raise (PredPropertyError prop_def.ast_loc)
+		| _ -> raise (PredPropertyError prop_def.ast_loc)) in
+	let extr_prems = List.map (extract_prem env) prems in
+	{ p_forall = variables ; p_prems = extr_prems ; p_concl = extr_concl }
+;;
 
 (* Extract properties. *)
 let extract_properties env sig_name prop_defs = 
@@ -243,10 +258,13 @@ let extract_properties env sig_name prop_defs =
 
 
 (* Parse an extraction mode. *)
-let rec make_mode mode = match mode with
+let rec make_mode = function
   | [] -> []
-  | "I"::tail_mode -> MInput::(make_mode tail_mode)
-  | "O"::tail_mode -> MOutput::(make_mode tail_mode)
+  | "I" :: tail_mode -> MInput :: (make_mode tail_mode)
+  | "O" :: tail_mode -> MOutput :: (make_mode tail_mode)
+  | _ -> failwith "foc2spec: make_mode: TODO."
+;;
+
 
 (* Search for extraction annotations in a species. *)
 let rec search_extractions_in_sp phlist species_def fields = match fields with
@@ -294,21 +312,24 @@ let rec search_extractions_in_sp phlist species_def fields = match fields with
 					::*)
 
 (* Search for extraction annotations. *)
-let rec search_extractions_sub orig_phlist phlist = match phlist with
+let rec search_extractions_sub orig_phlist = function
 	| [] -> []
-	| ph::q ->
-		(match ph.Parsetree.ast_desc with
+	| ph :: q -> (
+      match ph.Parsetree.ast_desc with
 			| Parsetree.Ph_species species_def ->
-				(search_extractions_in_sp orig_phlist species_def
-          species_def.Parsetree.ast_desc.Parsetree.sd_fields)
-				@(search_extractions_sub orig_phlist q)
+				  (search_extractions_in_sp orig_phlist species_def
+             species_def.Parsetree.ast_desc.Parsetree.sd_fields)
+				  @ (search_extractions_sub orig_phlist q)
 			| _ -> search_extractions_sub orig_phlist q
-		)
+		 )
+;;
+
 
 (* Search for extraction annotations. *)
-let rec search_extractions file_ast = match file_ast.Parsetree.ast_desc with
-	| File (phlist) -> search_extractions_sub phlist phlist
+let search_extractions file_ast =
+  match file_ast.Parsetree.ast_desc with
+	| File phlist -> search_extractions_sub phlist phlist
+;;
 
 
-let foc2spec focfile = search_extractions focfile
-
+let foc2spec focfile = search_extractions focfile ;;

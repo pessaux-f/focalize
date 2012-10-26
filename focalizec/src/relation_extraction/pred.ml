@@ -248,12 +248,17 @@ let get_in_terms nt = match nt with
     | PMTFun t -> [t]
     )
   | NTConcl pdt -> get_out_terms_pred pdt
-let get_out_terms nt = match nt with
-  | NTPrem pmt -> ( match pmt with
-    | PMTPred pdt -> get_out_terms_pred pdt
-    | PMTFun t -> []
-    )
+;;
+
+let get_out_terms = function
+  | NTPrem pmt -> (
+      match pmt with
+      | PMTPred pdt -> get_out_terms_pred pdt
+      | PMTFun _ -> []
+     )
   | NTConcl pdt -> get_in_terms_pred pdt
+;;
+
 (* Get variables in inputs or outputs of a node_type element *)
 let get_in_vars nt = List.flatten (List.map get_variables (get_in_terms nt))
 let get_out_vars nt = List.flatten (List.map get_variables (get_out_terms nt))
@@ -472,7 +477,9 @@ let rec develop_and and_prems = match and_prems with
        dev_prems
       | _ -> assert false) prems
   | _ -> assert false
-let rec normalize_and_or prem = let rec norm_rec prem = match prem with
+;;
+
+let normalize_and_or prem = let rec norm_rec prem = match prem with
   | PMTerm _ -> PMAnd [PMOr [prem]]
   | PMChoice _ -> PMAnd [PMOr [prem]]
   | PMAnd prems -> PMAnd (flatmap
@@ -505,7 +512,7 @@ let check_insertable nt tnl = match tnl with
 
 (* TODO: modify insert_output and the recusrsor... There is something wrong. *)
 (* insert the tree output (the last node) of a property *)
-let rec insert_output ord kv nt prop tnl = 
+let insert_output ord kv nt prop tnl = 
   if not (check_insertable nt tnl) then [] (* check logical terms compatibility *)
   else try let (nt, prop) = match tnl with (* rename inputs (matching term) *)
     | tn::_ -> rename_inputs_if_possible nt tn prop
@@ -529,8 +536,8 @@ let rec insert_output ord kv nt prop tnl =
 
 
 (* insert the last premisse of a property in a tree *)
-let rec insert_last_prem_term ord kv nt prop tnl = 
-  insert_output ord kv nt prop tnl
+let insert_last_prem_term ord kv nt prop tnl =
+  insert_output ord kv nt prop tnl ;;
 
 let rec insertion_recursor ord prem_selector prop kv nt tnl =
   let rec ir_rec tnl_acc = (* try to insert prop in every node or alone *)

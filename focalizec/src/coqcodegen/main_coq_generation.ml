@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.46 2012-10-26 14:55:19 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.47 2012-10-26 16:11:40 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module is the entry point for the compilation from FoCaL
@@ -41,8 +41,7 @@ exception Logical_methods_only_inside_species of Location.t ;;
 (* ************************************************************************** *)
 let toplevel_let_def_compile ctx env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
-    raise
-      (Logical_methods_only_inside_species let_def.Parsetree.ast_loc) ;
+    raise (Logical_methods_only_inside_species let_def.Parsetree.ast_loc) ;
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Currently, toplevel recursive functions are generated with "Fixpoint". *)
   let is_rec =

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: scoping.ml,v 1.92 2012-02-24 14:37:44 pessaux Exp $ *)
+(* $Id: scoping.ml,v 1.93 2012-10-26 16:11:40 pessaux Exp $ *)
 
 
 (* *********************************************************************** *)
@@ -2189,7 +2189,7 @@ let scope_species_param ctx env param param_kind =
 
     {b Exported} : No.                                                  *)
 (* ******************************************************************** *)
-let rec scope_species_expr ctx env species_expr =
+let scope_species_expr ctx env species_expr =
   let species_expr_descr = species_expr.Parsetree.ast_desc in
   (* We first scope the "applied" ident. *)
   let se_name_ident = species_expr_descr.Parsetree.se_name in

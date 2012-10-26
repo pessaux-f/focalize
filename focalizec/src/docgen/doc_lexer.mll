@@ -1,6 +1,4 @@
 {
-open Lexing ;;
-
 type documentation_tag =
   | DT_Title of string
   | DT_Author of string

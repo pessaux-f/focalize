@@ -26,14 +26,14 @@ type minifoc_expr =
 
 type minifoc_function = string * string list * minifoc_expr;;
 
-let rec dbg_string_minifoc_var a =
+let dbg_string_minifoc_var a =
   match a with
   | FVHer(v,t) -> "(" ^ v ^ ", " ^ Own_types.string_of_typ t ^ ")"
   | FVFun(v, t) -> "(" ^ v  ^ ", " ^ Own_types.string_of_typ t ^ ")"
   | FVInt v -> v
 ;;
 
-let rec dbg_string_minifoc_arg a : string=
+let dbg_string_minifoc_arg a : string=
   match a with
   | FVar v -> dbg_string_minifoc_var v
   | FInt i -> string_of_int i
@@ -78,7 +78,7 @@ let convert_pattern f (i, s_o_l, e) =
   f e;;
 
 (** A function converting a focal expression to a minifoc expression. *)
-let rec minifoc_expr_of_myexpr e =
+let minifoc_expr_of_myexpr e =
   let rec add_let (l : (Own_expr.myexpr * Own_types.typ) list) e lv f =
     match l with
     | [] -> e lv
@@ -185,7 +185,7 @@ let list_fst_del (e, _) l = list_del e l;;
 let list_fst_dels l1 l2 =
   List.fold_right list_fst_del l1 l2;;
 
-let rec minifoc_expr_fv =
+let minifoc_expr_fv =
   let aux_args e =
       match e with
       | FVar (FVInt v) -> [v, Own_types.TAtom(Some focbasics, foctint)]

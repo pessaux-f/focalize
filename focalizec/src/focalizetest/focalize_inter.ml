@@ -5,7 +5,7 @@ open Own_prop;;
 open Own_types;;
 open Own_expr;;
 open Own_basics;;
-open To_strings;;
+
 
 exception No_module_opened;;
 
@@ -73,8 +73,7 @@ let get_dummy_ast a = { ast_loc = locnone;
                         ast_type = ANTI_none};;
 let get_uident u = get_dummy_ast (I_local (Vuident u));;
 let get_lident l = get_dummy_ast (I_local (Vlident l));;
-let get_global_lident m l =
-  get_dummy_ast (I_global (Qualified(m, Vlident l)));;
+let get_global_lident m l = get_dummy_ast (I_global (Qualified(m, Vlident l)));;
 
 let extract_vname v =
   match v with
@@ -215,7 +214,7 @@ let split_applied_type t =
   Types.extract_type_simple fnone fnone fnone fnone fconstruct fnone fnone t;;
 
 
-let rec typ_of_type_scheme t =
+let typ_of_type_scheme t =
   typ_of_type_simple (snd (Types.scheme_split t)) ;;
 
 (** focalize_open_module m
@@ -344,7 +343,7 @@ let get_parameters_number species a =
 (** raise Err_types.Def_err(_) *)
 let get_parameters species =
   let spec = focalize_get_species species in
-  let rec convert_type r =
+  let convert_type r =
     match r with
     | PtU.SPE_Self -> "Self"
     | PtU.SPE_Species((qvn, _)) -> extract_snd_qname qvn
@@ -415,7 +414,7 @@ let focalize_get_label_ident_modules_dep li l =
   | LI i ->
       focalize_get_ident_modules_dep i l;;
 
-let rec focalize_get_binding_modules_dep b l =
+let focalize_get_binding_modules_dep b l =
   let rec get_bs bs l =
     match bs with
     | [] -> l
@@ -802,14 +801,14 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
         let args = List.map (expr_typ bv) e_l in 
         let res = MApp(id, None (* Some (get_typ s) *), args) in
           res
-  | E_const({ast_desc = C_bool s}) ->
+  | E_const { ast_desc = C_bool s ; _ } ->
     ( match s with
      | "true" -> expr_glob foctrue
      | "false" -> expr_glob focfalse
      | _ -> failwith "myexpr_of_texpr: bad bool"
     )
-  | E_const({ast_desc = C_int r}) -> MInt (int_of_string r)
-  | E_const({ast_desc = C_string s}) -> MString s
+  | E_const { ast_desc = C_int r ; _ } -> MInt (int_of_string r)
+  | E_const { ast_desc = C_string s ; _ } -> MString s
   | E_var x ->
      (match x.ast_desc with
       | EI_local vn -> 

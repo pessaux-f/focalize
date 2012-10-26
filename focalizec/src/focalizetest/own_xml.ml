@@ -117,7 +117,7 @@ let get_xml_def x s =
 
 
 
-let rec xml_get_pentvalue l =
+let xml_get_pentvalue l =
   match l with
   | _n::v::[] -> get_xml_1ldef v "pentvalue"
   | _ -> raise (Bad_xml "xml_get_pent_value");;
@@ -133,10 +133,9 @@ returns the expression inside the pentvalue tags.
 
 
 
-let rec xml_get_pcollvalue l =
-  match l with
+let xml_get_pcollvalue = function
   | _n::v::[] -> get_xml_def v "pcollvalue"
-  | _ -> raise (Bad_xml "xml_get_pent_value");;
+  | _ -> raise (Bad_xml "xml_get_pent_value") ;;
 (** [xml_get_pcollvalue l] takes a list of xml tree which represents :
 
 <pcollname>string</pcollname>
@@ -204,7 +203,7 @@ let special_xml =
   ];;
 let safe_replace s = string_assoc s special_xml;;
 
-let rec xml_ident_to_ident x =
+let xml_ident_to_ident x =
   match get_xml_tag_name x with
   | "prefix" ->
       let l = get_xml_ldef x "prefix" in
@@ -412,7 +411,7 @@ let xml_forme_to_elementary : xml_tree -> variables * elementaire =
                         elem_c
   | _ -> raise (Bad_xml "xml_forme_to_elementary");;
 
-let rec xml_test_case_value_to_myexpr defs : myexpr =
+let xml_test_case_value_to_myexpr defs : myexpr =
   let l = get_xml_ldef defs "value" in
   match l with
   | _::expr::[] ->

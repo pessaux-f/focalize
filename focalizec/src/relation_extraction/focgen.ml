@@ -1,7 +1,4 @@
 open Pred
-open Parsetree
-open Parsetree_utils
-
 
 (* Dummy ast location. *)
 let null_pos = {
@@ -36,16 +33,19 @@ let gen_ident_cons var_name =
 
 
 (* Focalize pattern expressions generation. *)
-let rec gen_focalize_pat_expr pat_expr = match pat_expr with
-    | LPTrue -> mk_ast (Parsetree.P_const (mk_ast (Parsetree.C_bool "true")))
-    | LPFalse -> mk_ast (Parsetree.P_const (mk_ast (Parsetree.C_bool "false")))
-    | LPVar v_name -> mk_ast (Parsetree.P_var (gen_ident v_name))
-	  | LPConstr (p_name, args) -> 
+let rec gen_focalize_pat_expr pat_expr =
+  match pat_expr with
+  | LPTrue -> mk_ast (Parsetree.P_const (mk_ast (Parsetree.C_bool "true")))
+  | LPFalse -> mk_ast (Parsetree.P_const (mk_ast (Parsetree.C_bool "false")))
+  | LPVar v_name -> mk_ast (Parsetree.P_var (gen_ident v_name))
+	| LPConstr (p_name, args) -> 
       mk_ast (Parsetree.P_constr (gen_ident_cons p_name,
-		    List.map gen_focalize_pat_expr args))
-    | LPWild -> mk_ast (Parsetree.P_wild)
-    | LPTuple pat_expr_list -> mk_ast 
-       (Parsetree.P_tuple (List.map gen_focalize_pat_expr pat_expr_list))
+		                              List.map gen_focalize_pat_expr args))
+  | LPWild -> mk_ast (Parsetree.P_wild)
+  | LPTuple pat_expr_list -> mk_ast 
+        (Parsetree.P_tuple (List.map gen_focalize_pat_expr pat_expr_list))
+  | _ -> failwith "focgen: gen_focalize_pat_expr: TODO"
+;;
 
 (* Pattern generation. *)
 let rec gen_focalize_pat pat code d =
@@ -84,31 +84,38 @@ and gen_focalize_code d code = match code with
 (*  mk_ast (Parsetree.E_app (gen_ident_expr "focalize_error", [mk_ast (Parsetree.E_const (mk_ast (Parsetree.C_string err)))])) *)
 
 (* Focalize code generation. *)
-let rec gen_focalize (fn, args, code) d = 
+let gen_focalize (fn, args, code) d = 
   let fargs = List.map (function x -> (gen_ident x, None)) args in
- Parsetree.SF_let (mk_ast ( {
-	Parsetree.ld_rec = Parsetree.RF_rec;
-	Parsetree.ld_logical = Parsetree.LF_no_logical;
-	Parsetree.ld_local = Parsetree.LF_no_local;
-	Parsetree.ld_bindings = [mk_ast ({
-		Parsetree.b_name = gen_ident fn;
-		Parsetree.b_params = fargs;
-		Parsetree.b_type = None;
-		Parsetree.b_body = Parsetree.BB_computational ( gen_focalize_code d code );
-	})];
-	Parsetree.ld_termination_proof = None;
-	} ))
+  Parsetree.SF_let
+    (mk_ast
+       ( { Parsetree.ld_rec = Parsetree.RF_rec;
+	         Parsetree.ld_logical = Parsetree.LF_no_logical;
+	         Parsetree.ld_local = Parsetree.LF_no_local;
+	         Parsetree.ld_bindings =
+             [mk_ast ({ Parsetree.b_name = gen_ident fn;
+		                    Parsetree.b_params = fargs;
+		                    Parsetree.b_type = None;
+		                    Parsetree.b_body =
+                        Parsetree.BB_computational (gen_focalize_code d code )
+	                    })];
+	         Parsetree.ld_termination_proof = None;
+	       }))
+;;
 
 (* Name of a focalize let. *)
-let field_name f = match f with 
+let field_name = function
   | Parsetree.SF_let l -> 
-    let bind = List.hd (l.Parsetree.ast_desc.Parsetree.ld_bindings) in
-    Parsetree_utils.name_of_vname bind.Parsetree.ast_desc.Parsetree.b_name
+      let bind = List.hd (l.Parsetree.ast_desc.Parsetree.ld_bindings) in
+      Parsetree_utils.name_of_vname bind.Parsetree.ast_desc.Parsetree.b_name
+  | _ -> failwith "focgen: field_name: TODO"
+;;
 
 (* Name of a focalize signture. *)
-let sig_field_name f = match f with 
-  | Parsetree.SF_sig s -> Parsetree_utils.name_of_vname 
-    (s.Parsetree.ast_desc.Parsetree.sig_name)
+let sig_field_name = function
+  | Parsetree.SF_sig s ->
+      Parsetree_utils.name_of_vname (s.Parsetree.ast_desc.Parsetree.sig_name)
+  | _ -> failwith "focgen: sig_field_name: TODO"
+;;
 
 (* Replace a signture by its definition. *)
 

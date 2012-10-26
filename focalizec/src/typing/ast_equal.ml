@@ -12,7 +12,7 @@
 (***********************************************************************)
 
 
-(* $Id: ast_equal.ml,v 1.10 2009-05-05 09:26:18 pessaux Exp $ *)
+(* $Id: ast_equal.ml,v 1.11 2012-10-26 16:11:40 pessaux Exp $ *)
 
 (* ********************************************************************** *)
 (** {b Descr} : This module performs test equality of the AST expression.
@@ -359,7 +359,7 @@ and binding alpha_eq_map bnd1 bnd2 =
 (* ******************************************************** *)
 and logical_expr initial_alpha_eq_map initial_logical_expr1
     initial_logical_expr2 =
-  let rec __internal_logical_expr alpha_eq_map logical_expr1 logical_expr2 =
+  let __internal_logical_expr alpha_eq_map logical_expr1 logical_expr2 =
     match (logical_expr1.Parsetree.ast_desc,
            logical_expr2.Parsetree.ast_desc) with
      | ((Parsetree.Pr_forall (vnames1, ty_expr1, p1)),
