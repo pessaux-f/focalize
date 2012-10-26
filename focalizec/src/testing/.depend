@@ -1,4 +1,0 @@
-testing.cmo: ../parser/sourcify.cmi ../basement/parsetree_utils.cmi \
-    ../basement/parsetree.cmi 
-testing.cmx: ../parser/sourcify.cmx ../basement/parsetree_utils.cmx \
-    ../basement/parsetree.cmi 

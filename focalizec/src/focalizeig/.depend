@@ -1,6 +1,0 @@
-focalizeig.cmo: ../parser/sourcify.cmi ../basement/parsetree_utils.cmi \
-    ../basement/parsetree.cmi ../basement/handy.cmi ../basement/files.cmi \
-    ../typing/env.cmi ../basement/configuration.cmi 
-focalizeig.cmx: ../parser/sourcify.cmx ../basement/parsetree_utils.cmx \
-    ../basement/parsetree.cmi ../basement/handy.cmx ../basement/files.cmx \
-    ../typing/env.cmx ../basement/configuration.cmx 
