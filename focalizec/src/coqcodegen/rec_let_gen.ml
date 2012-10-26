@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.24 2012-02-27 10:39:22 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.25 2012-10-26 12:27:54 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} This mmodule contains utilities for recursive functions code
@@ -286,9 +286,9 @@ let generate_binding_let ctx print_ctx env binding =
       (* If the original scheme is polymorphic, then we must ad extra Coq
          parameters of type "Set" for each of the generalized variables. *)
       List.iter
-        (fun (_, var) ->
+        (fun var ->
            Format.fprintf out_fmter "fun (%a : Set) =>@ "
-            (Types.pp_type_simple_to_coq print_ctx)
+            (Types.pp_type_variable_to_coq print_ctx)
             var)
         generalized_instanciated_vars ;
       (* Now, generate each of the real function's parameter with its type. *)

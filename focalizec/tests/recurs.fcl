@@ -1,5 +1,13 @@
 open "basics";;
 
+species Identity =
+  let rec id (x) =
+   match x with
+   | 0 -> 0
+   | n -> 1 + id (n - 1) ;
+end ;;
+
+
 (* Attention, utiliser B comme constructeur de somme et comme espèce
    se passe très mal. *)
 type t = | D | C (t) ;;
@@ -47,11 +55,11 @@ end ;;
 
 
 
-(* Non structural !
+
 let rec gee(x, y) =
     if syntactic_equal(x, 0) then 1
     else 1 + gee((x - 1), (y + 1))
-;; *)
+;;
 
 
 let rec buzz(x, y) =

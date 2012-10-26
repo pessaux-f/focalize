@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.42 2012-10-12 13:17:04 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.43 2012-10-26 12:27:54 pessaux Exp $ *)
 
 
 
@@ -173,14 +173,27 @@ let gen_doc_parameters out_fmt ~current_unit params =
 
 
 
-(* *********************************************** *)
+(* ************************************************************************** *)
 (** {b Descr}: Emits XML code for a [simple_type].
 
-    {b Rem}: Not exported outside this module.     *)
-(* *********************************************** *)
+    {b Rem}: Not exported outside this module.
+ **************************************************************************** *)
 let gen_doc_type out_fmt ty =
   Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
   Types.pp_type_simple_to_xml out_fmt ty ;
+  Format.fprintf out_fmt "@]</foc:type>@\n"
+;;
+
+
+
+(* ************************************************************************** *)
+(** {b Descr}: Emits XML code for a [type_variable].
+
+    {b Rem}: Not exported outside this module.
+ **************************************************************************** *)
+let gen_doc_type_variable out_fmt ty_var =
+  Format.fprintf out_fmt "@[<h 2><foc:type>@\n" ;
+  Types.pp_type_variable_to_xml out_fmt ty_var ;
   Format.fprintf out_fmt "@]</foc:type>@\n"
 ;;
 
@@ -839,14 +852,10 @@ let gen_doc_testing out_fmt env ~current_unit:_current_unit testing_def =
 
 
 let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
-  (* During specialization, we remind the instanciated variables of the type
-     identity scheme to force later their usage for the specialization of
-     each sum constructor or record fields. Hence, the sharing of these
-     varibles between all these types will be preserved. *)
-  let (ty_identity, ty_param_vars_mapping) =
-    Types.specialize_n_show_instanciated_generalized_vars
-      ~gen_vars_in_scope: [] ty_descrip.Env.TypeInformation.type_identity in
-  let ty_param_vars = List.map snd ty_param_vars_mapping in
+  let ty_identity =
+    ty_descrip.Env.TypeInformation.type_identity.Types.ts_body in
+  let ty_param_vars =
+    ty_descrip.Env.TypeInformation.type_identity.Types.ts_vars in
   (* foc:concrete-type. *)
   Format.fprintf out_fmt "@[<h 2><foc:concrete-type>@\n";
   (* foc:foc-name. *)
@@ -856,9 +865,9 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
   List.iter
     (fun ty ->
       Format.fprintf out_fmt "<foc:param infile=\"%s\">" current_unit ;
-      gen_doc_type out_fmt ty ;
+      gen_doc_type_variable out_fmt ty ;
       Format.fprintf out_fmt "</foc:param>@\n")
-    ty_param_vars;
+    ty_param_vars ;
   (* (foc:alias|foc:constr* ). *)
   (match ty_descrip.Env.TypeInformation.type_kind with
    | Env.TypeInformation.TK_abstract ->
@@ -879,8 +888,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
              "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
              current_unit Utils_docgen.pp_xml_vname cstr_name;
            (* foc:type. *)
-           let ty = Types.specialize_with_args sch ty_param_vars in
-           gen_doc_type out_fmt ty ;
+           gen_doc_type out_fmt sch.Types.ts_body ;
            Format.fprintf out_fmt "@]</foc:constr>@\n")
          constructors
    | Env.TypeInformation.TK_record fields ->
@@ -892,9 +900,8 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
            (* foc:name. *)
            Format.fprintf out_fmt "<foc:name>%a</foc:name>@\n"
              Utils_docgen.pp_xml_vname field_name;
-           let ty = Types.specialize_with_args sch ty_param_vars in
            (* foc:type. *)
-           gen_doc_type out_fmt ty ;
+           gen_doc_type out_fmt sch.Types.ts_body ;
            Format.fprintf out_fmt "@]</foc:record-label-and-type>@\n")
          fields;
        Format.fprintf out_fmt "@]</foc:record-type>@\n");

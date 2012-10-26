@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.95 2012-03-02 12:48:48 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.96 2012-10-26 12:27:54 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -579,8 +579,7 @@ type let_binding_pre_computation = {
   lbpc_nb_polymorphic_args : int ;
   lbpc_params_with_type : (Parsetree.vname * Types.type_simple option) list ;
   lbpc_result_ty : Types.type_simple option ;
-  lbpc_generalized_instanciated_vars :
-    (Types.type_variable * Types.type_simple) list
+  lbpc_generalized_instanciated_vars : Types.type_variable list
 } ;;
 
 
@@ -713,9 +712,9 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
      hence establishing the correct link between the type of the variable and
      the type variable of the function argument's type. *)
   List.iter
-    (fun (_, var) ->
+    (fun var ->
       Format.fprintf out_fmter "@ (%a : Set)"
-        (Types.pp_type_simple_to_coq print_ctx) var)
+        (Types.pp_type_variable_to_coq print_ctx) var)
     generalized_instanciated_vars ;
   (* Add the newly found generalized vars in the scope. *)
   let gen_vars_in_scope = generalized_instanciated_vars @ gen_vars_in_scope in
@@ -1159,17 +1158,22 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
             | Parsetree.ANTI_irrelevant
             | Parsetree.ANTI_type _ -> assert false
             | Parsetree.ANTI_scheme s -> s) in
+(* KILL CANDIDATE ?
          let (ty, generalized_instanciated_vars) =
            Types.specialize_n_show_instanciated_generalized_vars
              ~gen_vars_in_scope scheme in
+*)
+let ty = scheme.Types.ts_body in
+let generalized_instanciated_vars = scheme.Types.ts_vars in
+
          (* The header... *)
          Format.fprintf out_fmter "@[<2>";
          (* Now, print the polymorphic extra args. We use the same trick than
             in [let_binding_compile]. Consult comment over there... *)
          List.iter
-           (fun (_, var) ->
+           (fun var ->
              Format.fprintf out_fmter "forall %a : Set,@ "
-               (Types.pp_type_simple_to_coq print_ctx) var)
+               (Types.pp_type_variable_to_coq print_ctx) var)
            generalized_instanciated_vars ;
          (* In Coq, we must write: "forall x y : Set, ..."
             but "exists x : Set, exists y : Set, ..." so just change the way

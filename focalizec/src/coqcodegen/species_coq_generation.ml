@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_coq_generation.ml,v 1.197 2012-10-12 13:21:59 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.198 2012-10-26 12:27:54 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -3866,12 +3866,7 @@ traité les methodes de nous dont on dépend... *)
             let sch =
               (match field_memory.Misc_common.cfm_method_scheme with
                | Env.MTK_computational s -> s | _ -> assert false) in
-             let (type_from_scheme, generalized_instanciated_vars) =
-               Types.specialize_n_show_instanciated_generalized_vars
-                 ~gen_vars_in_scope: [] sch in
-             (* Because "rep" is never polymorphic, its type must never
-                contain instanciated variables coming from the scheme. *)
-             assert (generalized_instanciated_vars = []);
+             let type_from_scheme = Types.specialize sch in
              let print_ctx = {
                Types.cpc_current_unit = ctx.Context.scc_current_unit;
                Types.cpc_current_species =

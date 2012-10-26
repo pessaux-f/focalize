@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.54 2012-03-01 17:32:46 pessaux Exp $ *)
+(* $Id: types.mli,v 1.55 2012-10-26 12:27:54 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -24,7 +24,12 @@ type type_name
 (** The type algebra for focalize. *)
 type type_variable
 type type_simple
-type type_scheme
+(*type type_scheme*)
+type type_scheme = {
+  ts_vars : type_variable list ;
+  ts_body : type_simple
+} ;;
+
 
 type type_collection = (fname * collection_name)
 
@@ -84,9 +89,6 @@ val subst_type_scheme :
 a (closed) type scheme from a type without unknowns. *)
 val specialize : type_scheme -> type_simple
 val specialize_with_args : type_scheme -> type_simple list -> type_simple
-val specialize_n_show_instanciated_generalized_vars :
-  gen_vars_in_scope: (type_variable * type_simple) list -> type_scheme ->
-    (type_simple * ((type_variable * type_simple) list))
 val generalize : type_simple -> type_scheme
 val build_type_def_scheme :
     variables: type_simple list -> body: type_simple -> type_scheme
@@ -152,10 +154,14 @@ type coq_print_context = {
 
 val pp_type_simple_to_coq :
   coq_print_context -> Format.formatter -> type_simple -> unit
+val pp_type_variable_to_coq :
+  coq_print_context -> Format.formatter -> type_variable -> unit
 val pp_type_simple_args_to_coq :
   coq_print_context -> Format.formatter -> type_simple -> int -> unit
 
 val purge_type_simple_to_coq_variable_mapping : unit -> unit
+(* DEBUG
+val debug_variable_mapping : unit -> unit *)
 
 module SpeciesCarrierTypeSet :
   sig
@@ -189,6 +195,7 @@ module SpeciesCarrierTypeSet :
 
 val get_species_types_in_type : type_simple -> SpeciesCarrierTypeSet.t
 val pp_type_simple_to_xml : Format.formatter -> type_simple -> unit
+val pp_type_variable_to_xml : Format.formatter -> type_variable -> unit
 val purge_type_simple_to_xml_variable_mapping : unit -> unit
 
 (** *)

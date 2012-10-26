@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: miscHelpers.ml,v 1.8 2012-03-01 17:32:46 pessaux Exp $ *)
+(* $Id: miscHelpers.ml,v 1.9 2012-10-26 12:27:54 pessaux Exp $ *)
 
 
 (** ****************************************************************************
@@ -74,10 +74,8 @@ let bind_parameters_to_types_from_type_scheme ~self_manifest ~gen_vars_in_scope
    | Some scheme ->
        (begin
        try
-         let (type_from_scheme, generalized_instanciated_vars) =
-           Types.specialize_n_show_instanciated_generalized_vars
-             ~gen_vars_in_scope scheme in
-
+         let type_from_scheme = scheme.Types.ts_body in
+         let generalized_instanciated_vars = scheme.Types.ts_vars in
          (* Be careful, the bindings list is built reversed ! We must finally
             reverse it again to keep the right order (i.e. first argument in
             head of the list. *)
