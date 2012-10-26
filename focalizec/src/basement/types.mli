@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.56 2012-10-26 13:43:15 pessaux Exp $ *)
+(* $Id: types.mli,v 1.57 2012-10-26 14:55:19 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -151,8 +151,7 @@ type coq_print_context = {
 
 val pp_type_simple_to_coq :
   coq_print_context -> Format.formatter -> type_simple -> unit
-val pp_type_variable_to_coq :
-  coq_print_context -> Format.formatter -> type_variable -> unit
+val pp_type_variable_to_coq : Format.formatter -> type_variable -> unit
 val pp_type_simple_args_to_coq :
   coq_print_context -> Format.formatter -> type_simple -> int -> unit
 

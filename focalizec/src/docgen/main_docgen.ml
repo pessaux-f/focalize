@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.44 2012-10-26 13:43:15 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.45 2012-10-26 14:55:20 pessaux Exp $ *)
 
 
 
@@ -555,7 +555,7 @@ let gen_doc_logical_let out_fmt env from_opt name pnames sch body_as_prop doc =
   (* foc:param-prop*. *)
   let (params_with_type, _, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
-      ~self_manifest: None ~gen_vars_in_scope: [] (Some sch) pnames in
+      ~self_manifest: None (Some sch) pnames in
   List.iter
     (fun (p_name, p_ty_opt) ->
       (* foc:param-prop. *)

@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_coq_generation.ml,v 1.45 2012-10-15 14:48:16 pessaux Exp $ *)
+(* $Id: main_coq_generation.ml,v 1.46 2012-10-26 14:55:19 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module is the entry point for the compilation from FoCaL
@@ -61,7 +61,7 @@ let toplevel_let_def_compile ctx env let_def =
      recursivity for all the bindings. *)
   let (env, pre_comp_infos) =
     Species_record_type_generation.pre_compute_let_bindings_infos_for_rec
-      ~is_rec ~toplevel: true ~gen_vars_in_scope: [] env
+      ~is_rec ~toplevel: true env
       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. Remark that there is no local idents
      in the scope because we are at toplevel. In the same way, because we are
@@ -81,8 +81,7 @@ let toplevel_let_def_compile ctx env let_def =
            (* Or whatever since "Self" does not exist anymore. *)
            ~self_methods_status: Species_record_type_generation.SMS_from_record
            ~recursive_methods_status: Species_record_type_generation.RMS_regular
-           ~toplevel: true ~is_rec ~gen_vars_in_scope: [] env one_bnd
-           one_pre_comp_info
+           ~toplevel: true ~is_rec env one_bnd one_pre_comp_info
      | ((first_bnd :: next_bnds),
         (first_pre_comp_info :: next_pre_comp_infos)) ->
          let first_binder = if is_rec then "Fixpoint" else "Let" in
@@ -96,8 +95,7 @@ let toplevel_let_def_compile ctx env let_def =
                   Species_record_type_generation.SMS_from_record
                 ~recursive_methods_status:
                   Species_record_type_generation.RMS_regular
-                ~toplevel: true ~is_rec ~gen_vars_in_scope: [] env first_bnd
-                first_pre_comp_info) in
+                ~toplevel: true ~is_rec env first_bnd first_pre_comp_info) in
          List.iter2
            (fun binding pre_comp_info ->
              Format.fprintf out_fmter "@]@\n@[<2>" ;
@@ -110,8 +108,7 @@ let toplevel_let_def_compile ctx env let_def =
                    Species_record_type_generation.SMS_from_record
                  ~recursive_methods_status:
                    Species_record_type_generation.RMS_regular
-                 ~toplevel: true ~is_rec ~gen_vars_in_scope: [] !accu_env
-                 binding pre_comp_info)
+                 ~toplevel: true ~is_rec !accu_env binding pre_comp_info)
            next_bnds next_pre_comp_infos ;
          !accu_env
      | (_, _) ->
@@ -277,7 +274,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         ctx ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_generation.SMS_from_record
         ~recursive_methods_status: Species_record_type_generation.RMS_regular
-        ~gen_vars_in_scope: [] env expr ;
+        env expr ;
       Format.fprintf out_fmter ").@]@\n@\n" ;
       (* Nothing to extend the environment. *)
       env

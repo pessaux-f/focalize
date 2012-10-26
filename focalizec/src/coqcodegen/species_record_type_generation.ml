@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.97 2012-10-26 13:43:15 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.98 2012-10-26 14:55:19 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -599,8 +599,7 @@ type let_binding_pre_computation = {
     correct information. In effect, code generation (occuring after the
     present function is called) doesn't modify this information.              *)
 (* ************************************************************************** *)
-let pre_compute_let_binding_info_for_rec env bd ~is_rec ~toplevel
-    ~gen_vars_in_scope =
+let pre_compute_let_binding_info_for_rec env bd ~is_rec ~toplevel =
   (* Generate the parameters if some, with their type constraints. *)
   let params_names = List.map fst bd.Parsetree.ast_desc.Parsetree.b_params in
   (* Recover the type scheme of the bound ident. *)
@@ -612,8 +611,7 @@ let pre_compute_let_binding_info_for_rec env bd ~is_rec ~toplevel
   (* We do not have anymore information about "Self"'s structure... *)
   let (params_with_type, result_ty, generalized_vars) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
-      ~self_manifest: None ~gen_vars_in_scope (Some def_scheme)
-      params_names in
+      ~self_manifest: None (Some def_scheme) params_names in
   (* Record NOW in the environment the number of extra arguments due to
      polymorphism the current bound ident has in case of recursive definition.
      Otherwise, it will only be done later. *)
@@ -645,15 +643,14 @@ let pre_compute_let_binding_info_for_rec env bd ~is_rec ~toplevel
 (** {b Descr}: Simply folds the pre-computation of one binding on a list of
     bindings, accumulating the obtained environment at each step.             *)
 (* ************************************************************************** *)
-let pre_compute_let_bindings_infos_for_rec ~is_rec ~toplevel
-    ~gen_vars_in_scope env bindings =
+let pre_compute_let_bindings_infos_for_rec ~is_rec ~toplevel env bindings =
   (* And not [List.fold_right otherwise the list of infos will be reversed
      compared to the list of bindings. *)
   List.fold_left
     (fun (env_accu, infos_accu) binding ->
       let (env', info) = 
-        pre_compute_let_binding_info_for_rec ~is_rec ~toplevel
-          ~gen_vars_in_scope env_accu binding in
+        pre_compute_let_binding_info_for_rec
+          ~is_rec ~toplevel env_accu binding in
       (env', info :: infos_accu))
     (env, [])
     bindings
@@ -682,8 +679,7 @@ let pre_compute_let_bindings_infos_for_rec ~is_rec ~toplevel
 (* ************************************************************************** *)
 let rec let_binding_compile ctx ~binder ~opt_term_proof
     ~in_recursive_let_section_of ~local_idents ~self_methods_status
-    ~recursive_methods_status ~is_rec ~toplevel ~gen_vars_in_scope env bd
-    pre_computed_bd_info =
+    ~recursive_methods_status ~is_rec ~toplevel env bd pre_computed_bd_info =
   (* Create once for all the flag used to insert the let-bound idents in the
      environment. *)
   let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
@@ -713,10 +709,8 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   List.iter
     (fun var ->
       Format.fprintf out_fmter "@ (%a : Set)"
-        (Types.pp_type_variable_to_coq print_ctx) var)
+        Types.pp_type_variable_to_coq var)
     generalized_vars ;
-  (* Add the newly found generalized vars in the scope. *)
-  let gen_vars_in_scope = generalized_vars @ gen_vars_in_scope in
   let params_with_type = pre_computed_bd_info.lbpc_params_with_type in
   (* Now, generate each of the real function's parameter with its type. *)
   List.iter
@@ -835,7 +829,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
         else in_recursive_let_section_of in
       generate_expr
         ctx ~in_recursive_let_section_of ~local_idents: local_idents'
-        ~self_methods_status ~recursive_methods_status ~gen_vars_in_scope env e
+        ~self_methods_status ~recursive_methods_status env e
   | Parsetree.BB_logical _ -> assert false) ;
   (* Finally, we record, (except if it was already done in [env'] in case of
      recursive binding) the number of extra arguments due to polymorphism the
@@ -855,8 +849,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
     Coq.                                                                      *)
 (* ************************************************************************** *)
 and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
-    ~self_methods_status ~recursive_methods_status ~gen_vars_in_scope env
-    let_def =
+    ~self_methods_status ~recursive_methods_status env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     failwith "Coq compilation of logical let in TODO" ;  (* [Unsure]. *)
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -880,7 +873,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
      recursivity for all the bindings. *)
   let (env, pre_comp_infos) =
     pre_compute_let_bindings_infos_for_rec
-      ~is_rec ~toplevel: false ~gen_vars_in_scope env
+      ~is_rec ~toplevel: false env
       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. *)
   let env' =
@@ -893,8 +886,8 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
          let_binding_compile
            ctx ~opt_term_proof ~binder: initial_binder
            ~in_recursive_let_section_of ~local_idents ~self_methods_status
-           ~recursive_methods_status ~toplevel: false ~gen_vars_in_scope
-           ~is_rec env one_bnd one_pre_comp_info
+           ~recursive_methods_status ~toplevel: false ~is_rec env one_bnd
+           one_pre_comp_info
      | ((first_bnd :: next_bnds),
         (first_pre_comp_info :: next_pre_comp_infos)) ->
          let accu_env =
@@ -902,8 +895,8 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
              (let_binding_compile
                 ctx ~opt_term_proof ~binder: initial_binder
                 ~in_recursive_let_section_of ~local_idents ~self_methods_status
-                ~recursive_methods_status ~toplevel: false ~gen_vars_in_scope
-                ~is_rec env first_bnd first_pre_comp_info) in
+                ~recursive_methods_status ~toplevel: false ~is_rec env first_bnd
+                first_pre_comp_info) in
          List.iter2
            (fun binding pre_comp_info ->
              (* We transform "let and" non recursive functions into several
@@ -913,8 +906,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
                let_binding_compile
                  ctx ~opt_term_proof ~binder: "let" ~in_recursive_let_section_of
                  ~local_idents ~self_methods_status ~recursive_methods_status
-                 ~is_rec ~toplevel: false ~gen_vars_in_scope env binding
-                 pre_comp_info)
+                 ~is_rec ~toplevel: false env binding pre_comp_info)
            next_bnds next_pre_comp_infos ;
            !accu_env
      | (_, _) ->
@@ -927,8 +919,8 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
 
 
 and generate_expr ctx ~in_recursive_let_section_of ~local_idents
-    ~self_methods_status ~recursive_methods_status ~gen_vars_in_scope
-    initial_env initial_expression =
+    ~self_methods_status ~recursive_methods_status initial_env
+    initial_expression =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
@@ -1059,8 +1051,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          let env' =
            let_in_def_compile
              ctx ~in_recursive_let_section_of ~local_idents
-             ~self_methods_status ~recursive_methods_status ~gen_vars_in_scope
-             env let_def in
+             ~self_methods_status ~recursive_methods_status env let_def in
          Format.fprintf out_fmter "@ in@\n" ;
          rec_generate_expr loc_idents env' in_expr
      | Parsetree.E_record _labs_exprs ->
@@ -1132,8 +1123,8 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
 
 
 let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
-    ~self_methods_status ~recursive_methods_status ~gen_vars_in_scope
-    initial_env initial_proposition =
+    ~self_methods_status ~recursive_methods_status initial_env
+    initial_proposition =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
@@ -1165,7 +1156,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          List.iter
            (fun var ->
              Format.fprintf out_fmter "forall %a : Set,@ "
-               (Types.pp_type_variable_to_coq print_ctx) var)
+               Types.pp_type_variable_to_coq var)
            generalized_vars ;
          (* In Coq, we must write: "forall x y : Set, ..."
             but "exists x : Set, exists y : Set, ..." so just change the way
@@ -1252,8 +1243,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          if is_bool then Format.fprintf out_fmter "@[<2>Is_true (" ;
          generate_expr
            ctx ~in_recursive_let_section_of ~local_idents: loc_idents
-           ~self_methods_status ~recursive_methods_status ~gen_vars_in_scope
-           env expr ;
+           ~self_methods_status ~recursive_methods_status env expr ;
          (* The end of the wrapper surrounding the expression if it has type
             bool. *)
          if is_bool then Format.fprintf out_fmter ")@]"
@@ -1446,8 +1436,7 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
                     never expanded. Hence this choice or another for
                     [~recursive_methods_status] is not important.
                     It could be if we allowed recursive logical methods. *)
-                 ~recursive_methods_status: RMS_regular ~gen_vars_in_scope: []
-                 env lexpr ;
+                 ~recursive_methods_status: RMS_regular env lexpr ;
                Format.fprintf ppf ")@ ")
         meths ;
       (* Just to avoid having the reference escaping... *)
@@ -1580,8 +1569,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
              expanded. Hence this choice or another for
              [~recursive_methods_status] is not important.
              It could be if we allowed recursive logical methods. *)
-          ~recursive_methods_status: RMS_regular ~gen_vars_in_scope: []
-          env logical_expr ;
+          ~recursive_methods_status: RMS_regular env logical_expr ;
         if semi then Format.fprintf out_fmter " ;" ;
         Format.fprintf out_fmter "@]@\n" in
   (* Coq syntax required not semi after the last field. That's why a simple

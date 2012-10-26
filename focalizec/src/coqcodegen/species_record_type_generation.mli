@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.30 2012-10-26 13:43:15 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.31 2012-10-26 14:55:19 pessaux Exp $ *)
 
 exception Wrong_decreasing_argument of
   (Location.t * Parsetree.qualified_species * Parsetree.vname *
@@ -55,7 +55,6 @@ val generate_expr :
   local_idents: Parsetree.vname list ->
   self_methods_status: self_methods_status ->
   recursive_methods_status: recursive_methods_status ->
-  gen_vars_in_scope: Types.type_variable list ->
   Env.CoqGenEnv.t -> Parsetree.expr ->
     unit
 
@@ -65,7 +64,6 @@ val generate_logical_expr :
   local_idents: Parsetree.vname list ->
   self_methods_status: self_methods_status ->
   recursive_methods_status: recursive_methods_status ->
-  gen_vars_in_scope: Types.type_variable list ->
   Env.CoqGenEnv.t -> Parsetree.logical_expr ->
     unit
 
@@ -80,7 +78,6 @@ type let_binding_pre_computation = {
 
 val pre_compute_let_bindings_infos_for_rec :
   is_rec:bool -> toplevel:bool ->
-  gen_vars_in_scope: Types.type_variable list ->
   Env.CoqGenEnv.t -> Parsetree.binding_desc Parsetree.ast list ->
     (Env.CoqGenEnv.t * (let_binding_pre_computation list))
 
@@ -92,7 +89,6 @@ val let_binding_compile :
   self_methods_status: self_methods_status ->
   recursive_methods_status: recursive_methods_status ->
   is_rec: bool -> toplevel: bool ->
-  gen_vars_in_scope: Types.type_variable list ->
   Env.CoqGenEnv.t -> Parsetree.binding -> let_binding_pre_computation ->
     Env.CoqGenEnv.t
 

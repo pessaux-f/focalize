@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.205 2012-10-13 09:51:32 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.206 2012-10-26 14:55:19 pessaux Exp $ *)
 
 
 
@@ -1820,8 +1820,7 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
        that they have the rigth type is specified. *)
     let (expected, _, _) =
       MiscHelpers.bind_parameters_to_types_from_type_scheme
-        ~self_manifest: ctx.self_manifest ~gen_vars_in_scope: [] (Some scheme)
-        args_names in
+        ~self_manifest: ctx.self_manifest (Some scheme) args_names in
     List.iter
       (fun (prof_param, prof_opt_ty) ->
         try

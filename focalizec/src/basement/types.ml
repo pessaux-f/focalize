@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.91 2012-10-26 13:43:15 pessaux Exp $ *)
+(* $Id: types.ml,v 1.92 2012-10-26 14:55:19 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -1506,7 +1506,7 @@ let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
       Format.fprintf ppf "%s.%s__t" hosting_module constructor_name' in
 
 
-  let internal_pp_var_to_coq ctx ppf ty_var =
+  let internal_pp_var_to_coq ppf ty_var =
     let ty_variable_name = get_or_make_type_variable_name_to_coq ty_var in
     Format.fprintf ppf "%s" ty_variable_name
     (* DEBUG
@@ -1518,7 +1518,7 @@ let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
     (* First of all get the "repr" guy ! *)
     let ty = repr ty in
     match ty with
-    | ST_var ty_var -> internal_pp_var_to_coq ctx ppf ty_var
+    | ST_var ty_var -> internal_pp_var_to_coq ppf ty_var
     | ST_arrow (ty1, ty2) ->
         (* Arrow priority: 2. *)
         if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
@@ -1664,7 +1664,7 @@ let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
   ((* pp_type_simple_to_coq *)
    (fun ctx ppf ty -> rec_pp_to_coq ctx 0 ppf ty),
    (* pp_type_variable_to_coq *)
-   (fun ctx ppf ty_var -> internal_pp_var_to_coq ctx ppf ty_var),
+   (fun ppf ty_var -> internal_pp_var_to_coq ppf ty_var),
    (* pp_type_simple_args_to_coq *)
    (fun ctx ppf ty n -> rec_pp_to_coq_args ctx ppf ty n),
    (* purge_type_simple_to_coq_variable_mapping *)

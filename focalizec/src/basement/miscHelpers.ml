@@ -14,36 +14,34 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: miscHelpers.ml,v 1.10 2012-10-26 13:43:14 pessaux Exp $ *)
+(* $Id: miscHelpers.ml,v 1.11 2012-10-26 14:55:19 pessaux Exp $ *)
 
 
 (** ****************************************************************************
-    {b Descr} : Because methods parameters do not have their type with them
-      in the [species_description]s, this function establishes the mapping
-      between the parameters names and their related type.
-      It dissecates method's the type scheme (more accurately, an instance of
-      it), "removing" arrows parameter after parameter.
-      Because the typechecking pass is already done, the FoCaLize program is
-      well-typed, hence, the type of the method must have "as many arrows as"
-      the method has parameters. If this is not the case, then we have a bug
-      somewhere else in the previous processes in the compiler.
-      This function hence returns the list giving for each parameter name its
-      type and the "result" type of the method (i.e. the type remaining after
-      having "removed all the arrows" induced by the parameters).
-      It also returns the list of type variables that were used to
-      instanciate the ones generalized in the type scheme. More accurately, this
-      list contains the couples (generalized type_variable * type being a
-      variable used to instantiate the former). This is useful for Coq
-      generation because polymorphism is explicit, leading for each
-      polymorphic parameter to one extra parameter of type "Set" used to type
-      the polymorphic parameter. Moreover, keeping in mind also the complete
-      binding instead of just the type being a variable allows to keep trace of
-      variables marked as generalized but that are bound by a hosting definition
-      and are in fact only polymorphic in the context of this hosting
-      definition.
-      This allows to avoid generating spurious explicit polymorphic parameters
-      in case they were already generated because the polymorphism comes from
-      identifiers of this hosting definition.
+    {b Descr} : Because methods parameters do not have their type scheme with
+    them in the [species_description]s, this function establishes the mapping
+    between the parameters names and their related type extracted from the
+    method's scheme.
+    It dissecates method's the type scheme (more accurately, AND NOT an instance
+    of it), "removing" arrows parameter after parameter.
+    Because the typechecking pass is already done, the FoCaLize program is
+    well-typed, hence, the type of the method must have "as many arrows as"
+    the method has parameters. If this is not the case, then we have a bug
+    somewhere else in the previous processes in the compiler.
+    
+    This function hence returns the list giving for each parameter name its
+    type and the "result" type of the method (i.e. the type remaining after
+    having "removed all the arrows" induced by the parameters).
+    It also returns the list of generalized type variables of the type scheme.
+
+    ATTENTION: OLD STRANGE STUFF WE HAD TO FIX AND SEEMS TO WORK FINE NOW
+    EVEN HAVING REMOVED THE CODE HANDLING THIS FIX:
+      Before, we had a bug  forcing us to keep trace of variables marked as
+      generalized but that are bound by a hosting definition and are in fact
+      only polymorphic in the context of this hosting definition.
+      The fix allowed to avoid generating spurious explicit polymorphic
+      parameters in case they were already generated because the polymorphism
+      comes from identifiers of this hosting definition.
       For instance, in the case of:
         let f(xx, yy) =
           let zz = (xx, yy) in
@@ -59,13 +57,10 @@
       where zz has 2 spurious extra parameters, (__var_a : Set) and
       (__var_b : Set).
 
-    {b Rem}: Note that the parameter [gen_vars_in_scope] is only useful when
-      generating Coq code.
-
     {b Visibility}: Exported outside this module.
  **************************************************************************** *)
-let bind_parameters_to_types_from_type_scheme ~self_manifest ~gen_vars_in_scope
-    opt_scheme params_names =
+let bind_parameters_to_types_from_type_scheme ~self_manifest opt_scheme
+    params_names =
   match opt_scheme with
    | None ->
        (* Since we are not given any type information, the binding will be

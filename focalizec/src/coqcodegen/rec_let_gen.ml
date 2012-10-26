@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: rec_let_gen.ml,v 1.25 2012-10-26 12:27:54 pessaux Exp $ *)
+(* $Id: rec_let_gen.ml,v 1.26 2012-10-26 14:55:19 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} This mmodule contains utilities for recursive functions code
@@ -249,7 +249,7 @@ let generate_binding_match ctx print_ctx env expr pattern =
     ctx ~in_recursive_let_section_of: [] ~local_idents
     ~self_methods_status: Species_record_type_generation.SMS_abstracted
     ~recursive_methods_status: Species_record_type_generation.RMS_regular
-    ~gen_vars_in_scope: [] env expr
+    env expr
 ;;
 
 
@@ -280,16 +280,14 @@ let generate_binding_let ctx print_ctx env binding =
       (* We do not have anymore information about "Self"'s structure... *)
       let (params_with_type, _, generalized_instanciated_vars) =
         MiscHelpers.bind_parameters_to_types_from_type_scheme
-          ~self_manifest: None ~gen_vars_in_scope: [] (Some def_scheme)
-          params_names in
+          ~self_manifest: None (Some def_scheme) params_names in
       Format.fprintf out_fmter "(@[<1>" ;
       (* If the original scheme is polymorphic, then we must ad extra Coq
          parameters of type "Set" for each of the generalized variables. *)
       List.iter
         (fun var ->
            Format.fprintf out_fmter "fun (%a : Set) =>@ "
-            (Types.pp_type_variable_to_coq print_ctx)
-            var)
+            Types.pp_type_variable_to_coq var)
         generalized_instanciated_vars ;
       (* Now, generate each of the real function's parameter with its type. *)
       List.iter
@@ -317,13 +315,13 @@ let generate_binding_let ctx print_ctx env binding =
          ctx ~in_recursive_let_section_of: [] ~local_idents
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_generation.RMS_regular
-         ~gen_vars_in_scope: [] env e
+         env e
    | Parsetree.BB_logical p ->
        Species_record_type_generation.generate_logical_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_generation.RMS_regular
-         ~gen_vars_in_scope: [] env p) ;
+         env p) ;
   (* If there were parameters, we must close a parenthesis. *)
   if binding_desc.Parsetree.b_params <> [] then
     Format.fprintf out_fmter "@]"
@@ -412,7 +410,7 @@ let generate_exprs_as_tuple ctx env exprs =
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_generation.RMS_regular
-         ~gen_vars_in_scope: [] env one
+         env one
    | _ ->
        let fake_tuple_desc = Parsetree.E_tuple exprs in
        let fake_tuple = {
@@ -424,7 +422,7 @@ let generate_exprs_as_tuple ctx env exprs =
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
          ~self_methods_status: Species_record_type_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_generation.RMS_regular
-         ~gen_vars_in_scope: [] env fake_tuple
+         env fake_tuple
 ;;
 
 
@@ -483,7 +481,7 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
                   Species_record_type_generation.SMS_abstracted
                 ~recursive_methods_status:
                   Species_record_type_generation.RMS_regular
-                ~gen_vars_in_scope: [] env expr ;
+                env expr ;
               Format.fprintf out_fmter "@]) ->@ ")
         bindings ;
       (* Now, generate the expression that telling the decreasing applying

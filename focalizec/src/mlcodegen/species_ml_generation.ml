@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_ml_generation.ml,v 1.104 2012-10-12 13:19:32 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.105 2012-10-26 14:55:19 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -438,13 +438,13 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
        Ignore the result type of the "let" if it's a function because we never
        print the type constraint on the result of the "let". We only print
        them in the arguments of the let-bound ident.
-       We also ignore the variables used to instanciate the polymorphic ones
-       of the scheme because in OCaml polymorphism is not explicit.
+       We also ignore the generalized variables of the scheme because in OCaml
+       polymorphism is not explicit.
        Note by the way thet we do not have anymore information about "Self"'s
        structure... *)
     let (params_with_type, _, _) =
       MiscHelpers.bind_parameters_to_types_from_type_scheme
-        ~self_manifest ~gen_vars_in_scope: [] scheme params in
+        ~self_manifest scheme params in
     List.iter
       (fun (param_vname, opt_param_ty) ->
         match opt_param_ty with

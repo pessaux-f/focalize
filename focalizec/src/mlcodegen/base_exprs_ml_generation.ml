@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.45 2012-02-24 17:38:07 pessaux Exp $ *)
+(* $Id: base_exprs_ml_generation.ml,v 1.46 2012-10-26 14:55:19 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -380,7 +380,7 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
      structure... *)
   let (params_with_type, _, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
-      ~self_manifest: None ~gen_vars_in_scope: [] opt_sch params_names in
+      ~self_manifest: None opt_sch params_names in
   List.iter
     (fun (param_vname, pot_param_ty) ->
       match pot_param_ty with
