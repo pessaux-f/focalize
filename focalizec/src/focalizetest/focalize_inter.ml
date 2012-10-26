@@ -141,20 +141,22 @@ let convert_ident_no =
 
 
 
-let rec type_simple_of_typ t =
+let type_simple_of_typ t =
   let i = Types.make_type_constructor in
   let rec aux t =
   match t with 
-  | TAtom(Some m, s) -> Types.type_basic (i m s) []
-  | TAtom(None, s) -> Types.type_basic (i "basics" s) []
-  | TSpecPrm(s) -> Types.type_rep_species ~species_module:"basics" ~species_name:s
-  | TFct(t1, t2) -> Types.type_arrow (aux t1) (aux t2)
-  | TProd(t1, t2) -> Types.type_tuple [aux t1; aux t2]
-  | TPrm(Some m, n, t_l) -> Types.type_basic (i m n)
-                                     (List.map aux t_l)
-  | TPrm(None, n, t_l) -> Types.type_basic (i "basics" n)
-                                     (List.map aux t_l) in
-  aux t ;;
+  | TAtom (Some m, s) -> Types.type_basic (i m s) []
+  | TAtom (None, s) -> Types.type_basic (i "basics" s) []
+  | TSpecPrm s ->
+      Types.type_rep_species ~species_module: "basics" ~species_name: s
+  | TFct (t1, t2) -> Types.type_arrow (aux t1) (aux t2)
+  | TProd (t1, t2) -> Types.type_tuple [aux t1; aux t2]
+  | TPrm (Some m, n, t_l) -> Types.type_basic (i m n) (List.map aux t_l)
+  | TPrm (None, n, t_l) -> Types.type_basic (i "basics" n) (List.map aux t_l) in
+  aux t
+;;
+
+
 
 let extract_snd_ident i =
   match i with
@@ -195,11 +197,11 @@ let rec typ_of_type_simple t =
 exception Not_a_constructor;;
 
 let split_constructor t =
-  let rec aux2 t =
+  let aux2 t =
     let ferr _ = raise Not_a_constructor in
     let fsum l = l in
     Types.extract_type_simple ferr ferr ferr fsum ferr ferr ferr t in
-  let rec aux t =
+  let aux t =
     let fnone _ = ([],t) in
     let fnone2 _ = fnone in
     let fnone3 _ = fnone2 in
@@ -214,7 +216,7 @@ let split_applied_type t =
 
 
 let rec typ_of_type_scheme t =
-  typ_of_type_simple (Types.extract_snd_type_scheme t);;
+  typ_of_type_simple (snd (Types.scheme_split t)) ;;
 
 (** focalize_open_module m
 

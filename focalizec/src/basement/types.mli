@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.55 2012-10-26 12:27:54 pessaux Exp $ *)
+(* $Id: types.mli,v 1.56 2012-10-26 13:43:15 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
@@ -24,11 +24,7 @@ type type_name
 (** The type algebra for focalize. *)
 type type_variable
 type type_simple
-(*type type_scheme*)
-type type_scheme = {
-  ts_vars : type_variable list ;
-  ts_body : type_simple
-} ;;
+type type_scheme
 
 
 type type_collection = (fname * collection_name)
@@ -45,12 +41,12 @@ val end_definition : unit -> unit
 val make_type_constructor : fname -> string -> type_name
 val type_variable : unit -> type_simple
 
+
 (** Definition of basic types. *)
 
-val type_basic : type_name -> type_simple list -> type_simple
 (** General construction of a type from its name and the list of its
     type arguments. *)
-
+val type_basic : type_name -> type_simple list -> type_simple
 
 (** The classical basic type constants, including functions and tuples. *)
 val type_int : unit -> type_simple
@@ -93,6 +89,7 @@ val generalize : type_simple -> type_scheme
 val build_type_def_scheme :
     variables: type_simple list -> body: type_simple -> type_scheme
 val trivial_scheme : type_simple -> type_scheme
+val scheme_split : type_scheme -> ((type_variable list) * type_simple)
 val scheme_contains_variable_p : type_scheme -> bool
 val copy_type_simple_but_variables :
   and_abstract: type_collection option -> type_simple -> type_simple
@@ -223,6 +220,5 @@ val extract_type_simple :
         (unit -> 'a) ->
         (fname -> collection_name -> 'a) -> type_simple ->  'a
 
-val extract_snd_type_scheme : type_scheme -> type_simple
 val nb_variable_type_scheme : type_scheme -> int
 val type_variable_eq : type_simple -> type_simple -> bool option

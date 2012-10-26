@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.96 2012-10-26 12:27:54 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.97 2012-10-26 13:43:15 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -579,7 +579,7 @@ type let_binding_pre_computation = {
   lbpc_nb_polymorphic_args : int ;
   lbpc_params_with_type : (Parsetree.vname * Types.type_simple option) list ;
   lbpc_result_ty : Types.type_simple option ;
-  lbpc_generalized_instanciated_vars : Types.type_variable list
+  lbpc_generalized_vars : Types.type_variable list
 } ;;
 
 
@@ -610,14 +610,14 @@ let pre_compute_let_binding_info_for_rec env bd ~is_rec ~toplevel
      | Parsetree.ANTI_type _ -> assert false
      | Parsetree.ANTI_scheme s -> s) in
   (* We do not have anymore information about "Self"'s structure... *)
-  let (params_with_type, result_ty, generalized_instanciated_vars) =
+  let (params_with_type, result_ty, generalized_vars) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
       ~self_manifest: None ~gen_vars_in_scope (Some def_scheme)
       params_names in
   (* Record NOW in the environment the number of extra arguments due to
      polymorphism the current bound ident has in case of recursive definition.
      Otherwise, it will only be done later. *)
-  let nb_polymorphic_args = List.length generalized_instanciated_vars in
+  let nb_polymorphic_args = List.length generalized_vars in
   let value_body =
     if not toplevel then Env.CoqGenInformation.VB_non_toplevel
     else
@@ -636,7 +636,7 @@ let pre_compute_let_binding_info_for_rec env bd ~is_rec ~toplevel
      lbpc_params_with_type = params_with_type ;
      lbpc_nb_polymorphic_args = nb_polymorphic_args ;
      lbpc_result_ty = result_ty ;
-     lbpc_generalized_instanciated_vars = generalized_instanciated_vars })
+     lbpc_generalized_vars = generalized_vars })
 ;;
 
 
@@ -701,8 +701,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
            ctx.Context.scc_current_species) ;
     Types.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
-  let generalized_instanciated_vars =
-    pre_computed_bd_info.lbpc_generalized_instanciated_vars in
+  let generalized_vars = pre_computed_bd_info.lbpc_generalized_vars in
   (* If the original scheme is polymorphic, then we must add extra Coq
      parameters of type "Set" for each of the generalized variables. Hence,
      printing the variables used to instanciate the polymorphic ones in front
@@ -715,9 +714,9 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
     (fun var ->
       Format.fprintf out_fmter "@ (%a : Set)"
         (Types.pp_type_variable_to_coq print_ctx) var)
-    generalized_instanciated_vars ;
+    generalized_vars ;
   (* Add the newly found generalized vars in the scope. *)
-  let gen_vars_in_scope = generalized_instanciated_vars @ gen_vars_in_scope in
+  let gen_vars_in_scope = generalized_vars @ gen_vars_in_scope in
   let params_with_type = pre_computed_bd_info.lbpc_params_with_type in
   (* Now, generate each of the real function's parameter with its type. *)
   List.iter
@@ -1158,14 +1157,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
             | Parsetree.ANTI_irrelevant
             | Parsetree.ANTI_type _ -> assert false
             | Parsetree.ANTI_scheme s -> s) in
-(* KILL CANDIDATE ?
-         let (ty, generalized_instanciated_vars) =
-           Types.specialize_n_show_instanciated_generalized_vars
-             ~gen_vars_in_scope scheme in
-*)
-let ty = scheme.Types.ts_body in
-let generalized_instanciated_vars = scheme.Types.ts_vars in
-
+         let (generalized_vars, ty) = Types.scheme_split scheme in
          (* The header... *)
          Format.fprintf out_fmter "@[<2>";
          (* Now, print the polymorphic extra args. We use the same trick than
@@ -1174,7 +1166,7 @@ let generalized_instanciated_vars = scheme.Types.ts_vars in
            (fun var ->
              Format.fprintf out_fmter "forall %a : Set,@ "
                (Types.pp_type_variable_to_coq print_ctx) var)
-           generalized_instanciated_vars ;
+           generalized_vars ;
          (* In Coq, we must write: "forall x y : Set, ..."
             but "exists x : Set, exists y : Set, ..." so just change the way
             we print depending on the binder. *)

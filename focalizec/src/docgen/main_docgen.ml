@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.43 2012-10-26 12:27:54 pessaux Exp $ *)
+(* $Id: main_docgen.ml,v 1.44 2012-10-26 13:43:15 pessaux Exp $ *)
 
 
 
@@ -852,10 +852,8 @@ let gen_doc_testing out_fmt env ~current_unit:_current_unit testing_def =
 
 
 let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
-  let ty_identity =
-    ty_descrip.Env.TypeInformation.type_identity.Types.ts_body in
-  let ty_param_vars =
-    ty_descrip.Env.TypeInformation.type_identity.Types.ts_vars in
+  let (ty_param_vars, ty_identity) =
+    Types.scheme_split ty_descrip.Env.TypeInformation.type_identity in
   (* foc:concrete-type. *)
   Format.fprintf out_fmt "@[<h 2><foc:concrete-type>@\n";
   (* foc:foc-name. *)
@@ -888,7 +886,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
              "<foc:foc-name infile=\"%s\">%a</foc:foc-name>@\n"
              current_unit Utils_docgen.pp_xml_vname cstr_name;
            (* foc:type. *)
-           gen_doc_type out_fmt sch.Types.ts_body ;
+           gen_doc_type out_fmt (snd (Types.scheme_split sch)) ;
            Format.fprintf out_fmt "@]</foc:constr>@\n")
          constructors
    | Env.TypeInformation.TK_record fields ->
@@ -901,7 +899,7 @@ let gen_doc_concrete_type out_fmt ~current_unit ty_vname ty_descrip =
            Format.fprintf out_fmt "<foc:name>%a</foc:name>@\n"
              Utils_docgen.pp_xml_vname field_name;
            (* foc:type. *)
-           gen_doc_type out_fmt sch.Types.ts_body ;
+           gen_doc_type out_fmt (snd (Types.scheme_split sch)) ;
            Format.fprintf out_fmt "@]</foc:record-label-and-type>@\n")
          fields;
        Format.fprintf out_fmt "@]</foc:record-type>@\n");

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.ml,v 1.90 2012-10-26 12:27:54 pessaux Exp $ *)
+(* $Id: types.ml,v 1.91 2012-10-26 13:43:15 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -710,6 +710,18 @@ let build_type_def_scheme ~variables ~body =
 (* ************************************************************************ *)
 let trivial_scheme ty = { ts_vars = [] ; ts_body = ty } ;;
 
+
+
+(* ************************************************************************** *)
+(** {b Descr} : Splits a type scheme in two parts:
+    - the list of generalized variables
+    - the body
+    WITHOUT doing any specialization ! In other words, what we get with this
+    function, is not an instance of the scheme, but simply the scheme itself
+    dissecated in its 2 components.
+   {b Exported} : Yes.                                                        *)
+(* ************************************************************************** *)
+let scheme_split sch = sch.ts_vars, sch.ts_body ;;
 
 
 
@@ -1897,7 +1909,6 @@ let extract_type_simple
          | ST_self_rep -> frep ()
          | ST_species_rep((fn, cn)) -> fspecrep fn cn;;
 
-let extract_snd_type_scheme t = t.ts_body;;
 let nb_variable_type_scheme t = List.length t.ts_vars;;
 let type_variable_eq t1 t2 =
   match t1, t2 with

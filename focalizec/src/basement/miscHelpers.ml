@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: miscHelpers.ml,v 1.9 2012-10-26 12:27:54 pessaux Exp $ *)
+(* $Id: miscHelpers.ml,v 1.10 2012-10-26 13:43:14 pessaux Exp $ *)
 
 
 (** ****************************************************************************
@@ -74,8 +74,7 @@ let bind_parameters_to_types_from_type_scheme ~self_manifest ~gen_vars_in_scope
    | Some scheme ->
        (begin
        try
-         let type_from_scheme = scheme.Types.ts_body in
-         let generalized_instanciated_vars = scheme.Types.ts_vars in
+         let (generalized_vars, type_from_scheme) = Types.scheme_split scheme in
          (* Be careful, the bindings list is built reversed ! We must finally
             reverse it again to keep the right order (i.e. first argument in
             head of the list. *)
@@ -95,7 +94,7 @@ let bind_parameters_to_types_from_type_scheme ~self_manifest ~gen_vars_in_scope
          let (revd_mapping, result_ty) =
            rec_bind [] type_from_scheme params_names in
          (* Put the resulting mapping in the right order. *)
-         ((List.rev revd_mapping), result_ty, generalized_instanciated_vars)
+         ((List.rev revd_mapping), result_ty, generalized_vars)
        with _ ->
          (* Because the typechecking was done in the previous passes, the
             program must be well-typed at this point. Then unification must

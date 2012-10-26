@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.mli,v 1.29 2012-10-26 12:27:54 pessaux Exp $ *)
+(* $Id: species_record_type_generation.mli,v 1.30 2012-10-26 13:43:15 pessaux Exp $ *)
 
 exception Wrong_decreasing_argument of
   (Location.t * Parsetree.qualified_species * Parsetree.vname *
@@ -75,7 +75,7 @@ type let_binding_pre_computation = {
   lbpc_nb_polymorphic_args : int ;
   lbpc_params_with_type : (Parsetree.vname * Types.type_simple option) list ;
   lbpc_result_ty : Types.type_simple option ;
-  lbpc_generalized_instanciated_vars : Types.type_variable list
+  lbpc_generalized_vars : Types.type_variable list
 }
 
 val pre_compute_let_bindings_infos_for_rec :
