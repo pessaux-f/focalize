@@ -15,7 +15,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: configure,v 1.50 2012-10-17 15:09:42 pessaux Exp $
+# $Id: configure,v 1.51 2012-10-26 12:44:54 pessaux Exp $
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
@@ -23,7 +23,8 @@ NORMALTAG="\033[0m"
 
 SUB_DIRS="src/basement src/parser src/typing \
   src/docgen src/commoncodegen src/mlcodegen src/coqcodegen \
-  src/toplevel \
+  src/testing src/relation_extraction src/focalizedep src/toplevel \
+  src/focalizetest src/focalizeig \
   doc_src/tex/refman \
   doc_src/tex/tutorial \
   src/stdlib \
