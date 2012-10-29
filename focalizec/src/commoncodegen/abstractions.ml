@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: abstractions.ml,v 1.82 2012-10-12 13:17:58 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.83 2012-10-29 19:46:04 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -466,7 +466,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
                        rely on a function parameter, not an expression. Hence
                        it can't induce any dependencies. *)
                     Parsetree_utils.ParamDepSet.empty
-                | _ -> failwith "todo 123" (* [Unsure] *)) in
+                | _ -> failwith "TODO: compute_lambda_liftings_for_field. termination proof other than struct/measure/order while computing dependencies." (* [Unsure] *)) in
         (* Finally, the complete dependencies are the union of above. *)
         let meths_from_param =
           Parsetree_utils.ParamDepSet.union
