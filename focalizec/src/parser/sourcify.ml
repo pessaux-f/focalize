@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: sourcify.ml,v 1.88 2012-02-24 17:38:08 pessaux Exp $ *)
+(* $Id: sourcify.ml,v 1.89 2012-10-30 11:45:42 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -891,7 +891,7 @@ let pp_regular_type_def_body_desc ppf = function
         (Handy.pp_generic_separated_list
            ";"
            (fun local_ppf (lab, e) ->
-             Format.fprintf local_ppf "%a@ =@ %a" pp_vname lab pp_type_expr e))
+             Format.fprintf local_ppf "%a@ :@ %a" pp_vname lab pp_type_expr e))
         lab_exprs
 ;;
 let pp_regular_type_def_body ppf =

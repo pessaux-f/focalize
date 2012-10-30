@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parser.mly,v 1.165 2012-10-15 14:52:46 pessaux Exp $ *)
+(* $Id: parser.mly,v 1.166 2012-10-30 11:45:41 pessaux Exp $ *)
 
 open Parsetree;;
 
@@ -557,9 +557,9 @@ define_product:
     { $2 }
 ;
 define_record_field_list:
-  | label_vname EQUAL type_expr opt_semi
+  | label_vname COLON type_expr opt_semi
     { [ ($1, $3) ] }
-  | label_vname EQUAL type_expr SEMI define_record_field_list
+  | label_vname COLON type_expr SEMI define_record_field_list
     { ($1, $3) :: $5 }
 ;
 
