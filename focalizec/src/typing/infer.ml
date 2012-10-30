@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: infer.ml,v 1.206 2012-10-26 14:55:19 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.207 2012-10-30 08:17:01 pessaux Exp $ *)
 
 
 
@@ -1293,12 +1293,14 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
            generalisable, to typecheck it, we don't change the generalisation
            level, then we won't generalise it.
            Becareful, functions are non_expansive. Because the structure of
-           the let-def includes the parameters of the bound ident, a fun like
-           [let f (x) = body] will not be considered as non_expansive if [body]
-           is not because [body] hides the function because the arguments are
-           recorded in the [b_params] field. Hence, if the list [b_params] is
-           not empty, then the bound expression is a function and is
-           non_expansive whatever the body is. *)
+           the let-def includes the parameters of the bound ident, aside its
+           body, a let-def is not directly, structurally a function expression.
+           So a fun like[let f (x) = body] would not be considered as
+           non_expansive if [body] is not because [body] is not a functional
+           expression: this is hidden because the arguments are recorded apart,
+           in the [b_params] field. Hence, if the list [b_params] is not empty,
+           then the bound expression *is* in fact a function and *is*
+           non_expansive whatever the [body] is. *)
         if not is_a_field &&
            (binding_desc.Parsetree.b_params <> [] ||
             binding_body_is_non_expansive
