@@ -1,49 +1,115 @@
-#**********************************************************************#
-#                                                                      #
-#                        FoCaLiZe compiler                             #
-#                                                                      #
-#            François Pessaux                                          #
-#            Pierre Weis                                               #
-#            Damien Doligez                                            #
-#                                                                      #
-#                               LIP6  --  INRIA Rocquencourt           #
-#                                                                      #
-#  Copyright 2008 INRIA                                                #
-#  Distributed only by permission.                                     #
-#                                                                      #
-#**********************************************************************#
+# ************************************************************************** #
+#                                                                            #
+#                        FoCaLiZe compiler                                   #
+#                                                                            #
+#            François Pessaux                                                #
+#            Pierre Weis                                                     #
+#            Damien Doligez                                                  #
+#                                                                            #
+#                               LIP6  --  INRIA Rocquencourt                 #
+#                                                                            #
+#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
+#            2012 ENSTA ParisTech                                            #
+#  Distributed only by permission.                                           #
+#                                                                            #
+# ************************************************************************** #
 
-#  $Id: INSTALL,v 1.14 2010-05-06 14:21:01 weis Exp $
+#  $Id: INSTALL,v 1.15 2012-10-30 13:45:11 pessaux Exp $
 
-(0) Installation:
-=================
+(0) Forewords:
+==============
 
-The installation of the FoCaLiZe system requires the installation of some
-tools external to FoCaLiZe with versions carefully chosen to fit with the
-FoCaLiZe system.
+The installation of the FoCaLiZe will setup 3 components:
+ - The Zenon automatic prover
+ - The Zvtov converter of proofs to various theorem provers
+ - The FoCaLiZe compiler tool suit (compiler, dependencies checker, inheritance
+   graph viewer, testing tool).
 
-These tools must be installed in your home directory, for various reasons out
-of scope of this installation short notice.
+Installation requires some external tools, the most emblematic ones being:
+ - OCaml (any recent version -- >= 3.11 --) should be fine.
+ - Coq (any recent version -- >= 8.1pl5 --) should be fine.
 
-The default directory for the installation of external tools is the directory
-pkg in your home directory.
+Some the minor (but still needed) tools are also required (LaTeX, make, dvipdf,
+dvips) but are generally part of a standard installation on a development
+machine.
 
-Thus, if the directory pkg does not exist yet, please create it by typing:
 
-  mkdir ~/pkg
+(1) Quick Installation:
+=======================
 
-Now, you are ready to compile and install FoCaLiZe, using the standard stanza:
+For hurry people, assuming default installation settings/directories from
+the toplevel 'focalize' directory run:
+  make all
+
+When prompt, enter your password to allow installer to write in installation
+directories (usage of the 'sudo' command).
+
+
+(2) After installation:
+========================
+
+If you version of Coq is older than 8.4, you'll need to invoque the FoCaLiZe
+compiler, 'focalizec' with the option:
+  -coq_older_8_4
+to ensure the generated Coq code is compliant with your version. Note that the
+configuration process will have warned you about this point.
+
+
+(3) Custom Installation:
+========================
+
+By default, configuration scripts run silently as long a they find suitable
+versions of the required tools. They install software in subdirectories of
+'/usr/local' ('lib', 'bin', 'share', 'man').
+
+If for any reason, you want to change installation directories or use versions
+of the tools different from the ones in your PATH, then you may manually
+configure, build and install the 3 components, following the scheme:
+
+From the toplevel 'focalize' directory:
   ./configure
-  make
+  cd zenon
+  ./configure
+  make all
+  make doc
+  make install
+  cd ../zvtov
+  ./configure
+  make all
+  make doc
+  make install
+  cd ../focalizec
+  ./configure
+  make depend
+  make world
+  make doc
   make install
 
-Since the second step needs a lot of compilation, expect it to take some time
-(up to one hour or so for a reasonably modern machine). 
+That's it ;)
 
-If you want to tune the installation process or inderstand how it runs, you
-may have a look below.
+Scripts 'configure' can be provided tuning options:
+* focalize/configure:
+  [-]-interactive: run interactively, asking questions.
+  [-]-tools_prefix <directory>:  set <directory> as the directory prefix where
+      tools required to build FoCaLiZe are installed. The currently required
+      non-common tools are OCaml and Coq.
+* focalize/zenon/configure:
+  [-]-interactive: run interactively, asking questions.
+  [-]-install_prefix <directory>: set <directory> as the directory prefix for
+      installation of the FoCaLize commands. (Default value for <directory>
+      is /usr/local).
+* focalize/zvtov/configure: Same than for focalize/zenon/configure.
+* focalize/focalizec/configure:
+  [-]-interactive: run interactively, asking questions.
+  [-]-install_prefix <directory>: set <directory> as the directory prefix for
+      installation of the FoCaLize commands. (Default value for <directory> is
+      /usr/local).
+  [-]-tools_prefix <directory>: set <directory> as the directory prefix where
+      tools required to build FoCaLiZe are installed. The currently required
+      tools (other than OCaml and Coq already configured) are zenon, zvtov.
 
-(1) Administrativia:
+
+(4) Administrativia:
 ====================
 
 Licence: New BSD Licence (see the file LICENSE for details)
@@ -53,104 +119,7 @@ Contacts:
 ---------
 - Web site: http://focalize.inria.fr/
 - Discussion: focalize-users@inria.fr
-- Bug reports for installation: Pierre.Weis@inria.fr
+- Bug reports for installation: francois.pessaux@ensta-paristech.fr
 - Bug reports for the compiler: http://focalize.inria.fr/
   (Find and click on the ``Bug Tracking'' link)
 - Contact developers: focalize-devel@inria.fr
-
-(2) In case of trouble:
-=======================
-
-If the default configuration settings do not please you, you may use more
-suitable configuration options.
-
-If you want to run the configuration script interactively, use:
-
-./configure -interactive
-
-If you already know what you are doing, you can fix the external tools
-installation directory with:
-
-./configure -tools_prefix <directory>
-
-or independently fix the tools and project installation directories with:
-
-./configure -tools_prefix <directory> -prefix <directory>
-
-For even finer configuration, get more information from the script with:
-
-./configure -help | more
-
-or see below to understand the configuration process.
-
-(3) The installation process in brief:
-======================================
-
-The FoCaLiZe installation is a three steps process: configuration, building (run "make") and installation of executables and
-documentation (run "make install").
-
-The installation process needs two places where to permanently install files:
-
-(1) a directory writable during the configuration and building phase,
-
-(2) a directory writable during the installation phase.
-
-Directory (1) is typically ~/pkg (hence writable by you).
-Directory (2) is typically /usr/local (hence only writable by root).
-
-Directory (1) is the argument of the -tools_prefix option of configure.
-Directory (2) is the argument of the -prefix option of configure.
-
-In directory (1), the building phase builds and installs three external
-systems: Objective Caml, CamlP5 and the Coq system. Internal tools, zenon and
-zvtov, will also install there.
-
-In directory (2) the installation phase installs the focalizec compiler, its
-library and documentation.
-
-All the tools in directory (1) and (2) are mandatory to use the FoCaLize system.
-
-(4) Some details on the installation process:
-=============================================
-
-The software will compile and install in three tasks in turn:
-
- (1) Configuration.
-
- (2) - Compilation and installation of mandatory externals tools:
-       Ocaml, Camlp5, and Coq.
-     - Compilation and installation of internal tools: zenon and zvtov.
-     - Compilation of the compiler focalizec and its libraries.
-
- (3) Installation of the compiler: focalizec.
-
-The command "./configure ~/pkg" performs task (1).
-The command "make" performs task (2).
-The command "make install" performs task (3): it installs the compiler, its
-libraries, and the documentation.
-
-External and internal tools are installed in the file system in a directory
-private to the actual version of the focalizec compiler. Default directory is
-sub directory "focalize-0.6.0" in the directory "~/pkg"; you can change this
-behavior during step 1, by calling "./configure <directory>".
-For instance, if you want to install the external tools in the directory
-"/usr/local/focalize-0.6.0", configure using:
-
-./configure "/usr/local"
-
-(5) After the installation:
-===========================
-
-For checking the proofs with coqc, you need to add this to your $HOME/.coqrc file:
-  Add LoadPath $TOOLS_INSTALL_DIR/lib.
-  Add LoadPath $TOOLS_INSTALL_DIR/lib/zenon.
-
-The default $TOOLS_INSTALL_DIR is "/usr/local/lib/focalize-0.6.0"; If you specified
-an alternate --tools_installation_prefix when configuring FoCaLiZe, you need
-to adjust these paths accordingly.
-
-(6) Optional prerequisites:
-===========================
-
- - ImageMagick (optional)
- - Ghostscript (optional)
