@@ -1,19 +1,20 @@
-#**********************************************************************#
-#                                                                      #
-#                        FoCaLize compiler                             #
-#                                                                      #
-#            François Pessaux                                          #
-#            Pierre Weis                                               #
-#            Damien Doligez                                            #
-#                                                                      #
-#                               LIP6  --  INRIA Rocquencourt           #
-#                                                                      #
-#  Copyright 2008 LIP6 and INRIA                                       #
-#  Distributed only by permission.                                     #
-#                                                                      #
-#**********************************************************************#
+# ************************************************************************** #
+#                                                                            #
+#                        FoCaLiZe compiler                                   #
+#                                                                            #
+#            François Pessaux                                                #
+#            Pierre Weis                                                     #
+#            Damien Doligez                                                  #
+#                                                                            #
+#                               LIP6  --  INRIA Rocquencourt                 #
+#                                                                            #
+#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
+#            2012 ENSTA ParisTech                                            #
+#  Distributed only by permission.                                           #
+#                                                                            #
+# ************************************************************************** #
 
-# $Id: Makefile,v 1.52 2012-10-15 14:32:26 pessaux Exp $
+# $Id: Makefile,v 1.53 2012-10-30 13:56:05 pessaux Exp $
 
 ROOT_DIR=..
 

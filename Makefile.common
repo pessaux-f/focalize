@@ -1,3 +1,21 @@
+# ************************************************************************** #
+#                                                                            #
+#                        FoCaLiZe compiler                                   #
+#                                                                            #
+#            François Pessaux                                                #
+#            Pierre Weis                                                     #
+#            Damien Doligez                                                  #
+#                                                                            #
+#                               LIP6  --  INRIA Rocquencourt                 #
+#                                                                            #
+#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
+#            2012 ENSTA ParisTech                                            #
+#  Distributed only by permission.                                           #
+#                                                                            #
+# ************************************************************************** #
+
+# $Id: Makefile.common,v 1.37 2012-10-30 13:51:14 pessaux Exp $
+
 # General utilities and commands. Excludes OCaml and Coq.
 include $(ROOT_DIR)/Makefile.utils
 
