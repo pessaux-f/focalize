@@ -1,4 +1,4 @@
-% $Id: building_species.tex,v 1.17 2009-09-02 17:14:52 weis Exp $
+% $Id: building_species.tex,v 1.18 2012-10-30 12:27:54 pessaux Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -20,38 +20,40 @@ lists ?  Grouping elements in a list does not depend  of
 the type of these elements. The only constraint is that all elements
 must have the same type. Hence, a ML-like representation of lists would be
 like:
+
 {\scriptsize
 \lstset{language=Caml}
 \begin{lstlisting}
 type 'a list =
   | Nil
   | Cons of ('a * 'a list)
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 The {\tt 'a} is a parameter of the constructor type {\tt list}, which
 is indeed a polymorphic ML type.
 
-In {\focal} we would like to create a species looking like: {\scriptsize
+In {\focal} we would like to create a species looking like:
+
+{\scriptsize
 \begin{lstlisting}
 species List =
   signature nil : Self ;
   signature cons : 'a -> Self -> Self ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Instead of abstracting the type parameter and leaving it free in the
 context of the species, in {\focal} we {\em parametrise} the species
-by a {\bf collection parameter}, the parameter named {\tt Elem} in the example:
+by a {\bf collection parameter}, the parameter named {\tt Elem} in the
+example:
+
 {\scriptsize
 \begin{lstlisting}
 species List (Elem is Basic_object) =
   signature nil : Self ;
   signature cons : Elem -> Self -> Self ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 The collection parameters are introduced by their name, followed by the {\tt is}
 keyword, followed by an {\bf interface name} (remember that an interface has
@@ -118,14 +120,15 @@ parameter, one can use the preceding parameters. For instance,
 assuming that a parametrised species {\tt List}
 declares the basic operations over lists, one can specify a new
 species working on couples of respectively values and lists of values
-like: {\scriptsize
+like:
+
+{\scriptsize
 \begin{lstlisting}
 species MyCouple (E is Basic_object, L is List (E)) =
   representation = (E * L) ;
   ... ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 The representation of this species represents the type
 {\tt ('a * ('a list))}. This means that the type of the values in the
@@ -159,6 +162,7 @@ effect in our example) method, it suffices to require each collection
 parameter to provide one. Now the printing method has only to
 add parentheses and comma around and between what is printed by each
 parameter's printing routine.
+
 {\scriptsize
 \begin{lstlisting}
 (* Minimal species requirement : having a print routine. *)
@@ -175,8 +179,7 @@ species Couple (C1 is Base_obj, c2 is Base_obj) =
        ", " ^
        C2!print (component2) ^")" ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Hence, {\tt C1!print (component1)} means ``call the collection
 {\tt C1}'s method {\tt print} with the argument {\tt component1}''.
@@ -184,26 +187,28 @@ Hence, {\tt C1!print (component1)} means ``call the collection
 The qualification mechanism using ``!'' is general and can be used to
 denote the method of any available species/collection, even those of
 species being defined (i.e. {\tt Self}). Hence, in a species instead of calling:
+
 {\scriptsize
 \begin{lstlisting}
 species Foo ... =
   let m1 (...) = ... ;
   let m2 (...) = if ... then ... else m1 (...) ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 it is allowed to explicitly qualify the call to {\tt m1} by ``!''
 with no species name, hence implicitly telling ``from myself'':
+
 {\scriptsize
 \begin{lstlisting}
 species Foo ... =
   let m1 (...) = ... ;
   let m2 (...) = if ... then ... else !m1 (...) ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 \index{name!resolution}
 \index{scoping}
+
 In fact, without explicit ``!'', the {\focal} compiler performs the
 name resolution itself, allowing a lighter way of writing programs
 instead of always needing a ``!'' character before each method call.
@@ -223,6 +228,7 @@ integer value, we need to parametrise it by an entity of a collection
 implementing the integers and to give a way to build an entity
 representing the value of the modulo. Such a parameter is called an
 {\bf entity parameter} and is introduced by the keyword {\tt in}.
+
 {\scriptsize
 \begin{lstlisting}
 
@@ -233,8 +239,7 @@ species AddModN (Number is InterfaceForInts, val_mod in Number) =
 end ;;
 
 species
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Hence, any collection created from {\tt AddModN} embeds the addition
 modulo the effective value instantiating {\tt val\_mod}. It is then
@@ -254,8 +259,7 @@ collection AddMod42 =
       (ACollImplentingInts,
        ACollImplentingInts!from_int (42));
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 \smallskip
@@ -326,8 +330,7 @@ species OrderedIntCouple =
 
   property is_ordered : all c in Self, first (c) <= scnd (c) ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 
@@ -359,8 +362,7 @@ species S2 =
 representation = bool; ... end;;
 species S3 = inherit S1, S2; ... end;;
 species S4 = inherit S0, S1; ... end;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 If some methods of inherited species have the same name, if they are all
 signatures or properties, if these species have no parameters, then
@@ -377,8 +379,7 @@ is defined in {\tt A} and {\tt B} but only declared in {\tt C}, then
 species Foo = inherit A, B, C, D;
   ... m (...) ... ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \smallskip
 \index{inheritance!parametrised species}
@@ -409,8 +410,7 @@ species ListUnique (UElem is ...) =
   let concat (l1 in Self, l2 in Self) =
     ... (* Ensure elements of l1 present in l2 are not added. *) ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 {\tt UElem} is a formal collection parameter of {\tt ListUnique} which acts
 as an effective collection parameter in the expression {\tt ListUnique}. The
@@ -461,31 +461,31 @@ interface.
 {\scriptsize
 \begin{lstlisting}
 species List (Elem is Basic_object) = ... ;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Then, we can iterate the process and build
 a species parametrised by a parametrised species, like in the example:
+
 {\scriptsize
 \begin{lstlisting}
 species MyCouple (E is Basic_object, L is List (E)) = ... ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Going on, we can  inherit
 from species that are referenced only by their name, like in:
+
 {\scriptsize
 \begin{lstlisting}
 species OrderedIntCouple = inherit IntCouple; ... ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 And finally, we mix the two possibilities, building a species by
-inheritance of a parametrised species, like in: {\scriptsize
+inheritance of a parametrised species, like in:
+
+{\scriptsize
 \begin{lstlisting}
 species ListUnique (UElem is ...) = inherit List (UElem); ... ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Hence, we can now define more accurately the notion of {\bf species
 expression} used for both inheritance and parametrisation. It is either
@@ -554,6 +554,7 @@ the notion of representation, function, and theorem.
 \index{dependency!decl}
 When defining a function, a property or a theorem it is possible to
 use another functions or signatures. For instance:
+
 {\scriptsize
 \begin{lstlisting}
 species Bla =
@@ -564,8 +565,7 @@ species Bla =
   theorem t1 : all x in Self, p1 <->  test (f1 ("Bar"))
   proof = ... ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 In this cases, knowing the type (or the logical statement) of the used
 methods is sufficient to ensure that the using method is

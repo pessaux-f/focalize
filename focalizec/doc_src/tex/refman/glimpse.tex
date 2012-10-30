@@ -1,4 +1,4 @@
-% $Id: glimpse.tex,v 1.15 2009-08-25 12:41:06 weis Exp $
+% $Id: glimpse.tex,v 1.16 2012-10-30 12:27:54 pessaux Exp $
 \def\bbbn{{\rm I\!N}} % [EJ] Sinon il y a \mathbb{N} qui fait ça bien aussi...
 \label{glimpse}
 Before entering the precise description of {\focal}, we give an
@@ -140,8 +140,7 @@ species Setoid =
    proof = by definition of different
               property refl ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 In this {\em species},  the {\em representation} is not explicitly
 given (the keyword {\tt representation} is not used), since we don't need to set
@@ -267,8 +266,7 @@ species Monoid =
   signature one : Self ;
   let element = one * one ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 {\em Monoid} are ``things'' that are {\em Setoids} but also have an operation
 {\tt *} and a specific value called {\em one}; besides the new {\em methods}
@@ -368,8 +366,7 @@ species Setoid_product (A is Setoid, B is Setoid) =
                      property A!refl, B!refl ;
 
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 We first declare methods {\tt fst}, {\tt snd} and {\tt pair} to represent the
 two projections and the construction of pairs.
@@ -440,8 +437,7 @@ species NatModel =
   signature inc : Self -> Self ;
   signature modulo : Self -> Self -> Self ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Note that {\tt NatModel} can be later implemented in various ways, using
 Peano's integers, machine integers, arbitrary-precision arithmetic (as well
@@ -450,6 +446,7 @@ simplistic)\ldots
 
 The {\em species} ``working modulo n\ldots'' now embeds the value of {\tt n}
 as an element of a collection for {\tt NatModel}:
+
 {\scriptsize
 \begin{lstlisting}
 species Modulo_n (Naturals is NatModel, n in Naturals) =
@@ -458,8 +455,8 @@ species Modulo_n (Naturals is NatModel, n in Naturals) =
   let job2 (x : Naturals, ...) =
     ... ... Naturals!modulo (x, n) ... ... ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 Using the {\em entity parameter} {\tt n}, we ensure that the
 {\em species} {\tt Modulo\_n} works for {\em any} value of the
 modulo, but will always use the {\em same} value {\tt n} of the modulo
@@ -485,8 +482,7 @@ the natural representation of a string, we could get a related collection by:
 collection MachineNativeIntegers =
   implement MachineNativeInt;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Next, to get a {\em collection} implementing arithmetic modulo $8$, we
 can define a {\em collection} for the {\em species} {\tt Modulo\_n}:
@@ -497,8 +493,7 @@ collection Modulo_8 =
   implement Modulo_n
     (MachineNativeIntegers, MachineNativeIntegers!from_string ("8");
 end;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 As exemplify here, a species is applied to effective parameters by giving
 their values with the same syntax as for parameter passing.
@@ -585,8 +580,7 @@ We now give such a demonstration.
              definition of order_inf
       <1>f conclude
     ;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 The important point is that {\zenon} works for the developer: {\bf it
 searches and completes the proof} for the developer that no more have to

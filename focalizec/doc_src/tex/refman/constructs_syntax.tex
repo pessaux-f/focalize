@@ -1,4 +1,4 @@
-% $Id: constructs_syntax.tex,v 1.53 2012-10-17 15:30:46 pessaux Exp $
+% $Id: constructs_syntax.tex,v 1.54 2012-10-30 12:27:54 pessaux Exp $
 
 
 \section{Language constructs and syntax}
@@ -139,8 +139,7 @@ code. Example:
 \begin{lstlisting}
 type experiment_conditions = alias (int * int * int * int * int) ;;
 type date = alias (int * int * int * int * int) ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \vspace{0.2cm}
 \begin{syn}
@@ -206,8 +205,8 @@ type color =
   | Blue
   | Green
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 Note that the first \terminal{\vertical} character is required: it is not a
 separator. This especially means that when writing a sum type
 definition on a single line, the first \terminal{\vertical} must be written:
@@ -215,8 +214,7 @@ definition on a single line, the first \terminal{\vertical} must be written:
 {\scriptsize
 \begin{lstlisting}
 type color = | Red | Blue | Green ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \index{value constructor}
 {\bf Values} of a sum type  are built from the
@@ -240,8 +238,9 @@ type card =
   | Jack
   | Numbered (int)
 ;;
-\end{lstlisting}
-} Hence, the {\tt Numbered} constructor ``carries'' the integer value
+\end{lstlisting}}
+
+Hence, the {\tt Numbered} constructor ``carries'' the integer value
 written on the card. Some values of type {\tt card} are: {\tt King},
 {\tt (Numbered 4)}, {\tt (Numbered 42)}. The {\tt Numbered}
 constructor has {\bf parameter}.
@@ -256,26 +255,26 @@ several values.
 \item Either the constructor has {\bf 1} argument that is a tuple,
   i.e. a type expression involving the {\tt *} constructor.
 
- The corresponding type definition for such a type would be:
+The corresponding type definition for such a type would be:
 
 {\scriptsize
 \begin{lstlisting}
 type t =
   | Cstr (bool * int * string)
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \item Or the constructor has {\bf several} arguments, i.e. several
   type expressions separated by a comma.
+
 {\scriptsize
 \begin{lstlisting}
 type t2 =
   | Cstr2 (bool, int, string)
 ;;
-\end{lstlisting}
-}
-means that the constructor {\tt Cstr2} has {\bf 3 arguments}.
+\end{lstlisting}}
+
+\noindent means that the constructor {\tt Cstr2} has {\bf 3 arguments}.
 \end{itemize}
 
 \medskip
@@ -297,9 +296,10 @@ let fct_t1 (x) =
   match x with
    | Cstr (a, b, c) -> ()
 ;;
-\end{lstlisting}
-}
-\noindent leads to
+\end{lstlisting}}
+
+\noindent leads to:
+
 \begin{verbatim}
 Error: Types
 (basics#bool * basics#int * basics#string),  '_a,  '_b and
@@ -315,8 +315,8 @@ let fct_t1 (x) =
   match x with
    | Cstr ((a, b, c)) -> ()
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 \noindent is accepted since it makes explicit that the pattern matches
 the unique argument of {\tt Cstr} that is a tuple and by the way
 de-structurates this tuple.
@@ -328,8 +328,8 @@ let fct_t2 (x) in mytuple =
   match x with
    | Cstr (x) -> x
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 \noindent is accepted since the type {\tt mytuple} aliases a 3
 components tuples and {\tt Cstr} is really parametrised by 1 argument
 that is a 3 components tuple.
@@ -341,8 +341,7 @@ let fct_t2 (x) =
   match x with
    | Cstr2 (a, b, c) -> ()
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 NOTA: TO BE COMPLETED.
 
@@ -357,8 +356,9 @@ type b_i_list =
   | Empty
   | Cons ((bool * int) * b_i_list)
 ;;
-\end{lstlisting}
-} From this type definition, a value of type {\tt b\_i\_list} is
+\end{lstlisting}}
+
+From this type definition, a value of type {\tt b\_i\_list} is
 either empty (constructor {\tt Empty}) or has a head (the first
 component of the {\tt Cons} constructor) and a tail list (the
 second component of this constructor): {\tt Cons ((false, 2), (Cons
@@ -424,8 +424,7 @@ type identity = {
   birth : int ;
   living : bool
 } ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \vspace{0.2cm}
 \begin{syn}
@@ -451,11 +450,12 @@ type identity = {
 
 To create a {\bf value} of a record type, a value
 must be provided for each field of the record.
+
 {\scriptsize
 \begin{lstlisting}
 { name = "Benjamin" ; birth = 2003 ; living = true }
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 Like in tuples, records can mix types of fields.
 
 \vspace{0.5cm}\noindent{\bf Parameterised type definitions}
@@ -474,8 +474,7 @@ type list ('a) =
   | Empty
   | Cons ('a,  list ('a))
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 The value
 constructor {\tt Cons} carries a value of type ``variable''
@@ -490,6 +489,7 @@ argument of the {\bf type constructor} {\tt list}. For instance,
 characters.
 
 Parameterised record types can also be introduced, as in the following example:
+
 {\scriptsize
 \begin{lstlisting}
 type pair ('a, 'b) = {
@@ -498,8 +498,7 @@ type pair ('a, 'b) = {
 } ;;
 
 type int_bool_pair = pair (int, bool) ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \subsection{Type-checking}
 The type-checking process is roughly similar to ML
@@ -579,6 +578,7 @@ species. Moreover, like for any other methods (cf. section
 contain type variables (but may contain collection parameter
 names). Defining a species' representation is simply done by adding the
 {\tt representation} method:
+
  {\scriptsize
 \begin{lstlisting}
 open "basics" ;;
@@ -586,8 +586,7 @@ open "basics" ;;
 species IntPair =
   representation = (int * int) ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Recall that the type introduced by the method {\tt representation} is
 denoted by {\tt Self} within the species.
@@ -806,15 +805,16 @@ the constructor must be well-typed (compatible) according to the type of the % [
 constructor. The resulting value is denoted by the
 name of the constructor followed by the tuple of values given as
 arguments. For instance, with the following type definition:
+
 {\scriptsize
 \begin{lstlisting}
 type t =
   | A
   | B (int * bool)
 ;;
-\end{lstlisting}
-}
-the expression {\tt A} is evaluated into $A$, the expression
+\end{lstlisting}}
+
+\noindent the expression {\tt A} is evaluated into $A$, the expression
 {\tt B ((2 + 3), true)} is evaluated into the value $B (5, true)$.
 
 
@@ -925,7 +925,9 @@ for ``the method {\tt meth} of the species {\tt Spe}''. By extension,
 {\tt !meth} stands for the method {\tt meth} of the current
 species. It is possible to explicit {\tt Self} in the naming scheme
 using {\tt Self!meth}. This is useful when a more recently defined
-identifier hides a method of the species at hand: {\scriptsize
+identifier hides a method of the species at hand:
+
+{\scriptsize
 \begin{lstlisting}
 species S =
   let m (x in ...) = ... ;
@@ -935,8 +937,7 @@ species S =
     (* Want to call the *method* "m" with argument the local "m" !!! *)
     !m (m) ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Hence, the name resolution mechanism allows to omit the ``!'' but
 making it explicit can help for conflicts resolution. Moreover, when
@@ -985,12 +986,13 @@ Note that spaces around the operator symbol are mandatory and part of the
 syntax. If spaces are omitted, the parens get their usual meaning and the
 interpretation can be completely different.
 A specially puzzling error is to write {\tt (*)} to mean {\tt ( * )}:
+
 {\scriptsize
 \begin{lstlisting}
 ...
 let (*) (x, y) = ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 Now, {\tt (*} is evidently parsed as the beginning of comment,
 leading to a syntax error or any other cryptic error long after the faulty
 {\tt (*} occurrence.
@@ -1018,24 +1020,27 @@ evaluate a trailing expression (the ``{\tt in-part}'' of the ``{\tt let-in}''
 or ``body'') where this ident may appear. During the evaluation of the
 trailing expression, any occurrence of the bound identifier is ``replaced''
 by the value bound to this identifier. For instance:
+
 {\scriptsize
 \begin{lstlisting}
 let x = 3 + 2 in (x, x)
-\end{lstlisting}
-}
- binds {\tt x} to the evaluation of the {\bf expression} {\tt (3+2)}
+\end{lstlisting}}
+
+\noindent binds {\tt x} to the evaluation of the {\bf expression} {\tt (3+2)}
 (i.e. the integer {\bf value} $5$) and then, the evaluation of the
 trailing expression returns the tuple {\bf value} $(5, 5)$.  From the
 syntax, it is clear that {\tt let-in} constructs can be nested.  For
-instance, {\scriptsize
+instance,
+
+{\scriptsize
 \begin{lstlisting}
 let x = 3+2 in
   let y = (x, x) in
   let z = true in
   (y, z, y, z)
-\end{lstlisting}
-}
-returns the value $((5,\ 5),\ true,\ (5,\ 5),\ true)$ of type
+\end{lstlisting}}
+
+\noindent returns the value $((5,\ 5),\ true,\ (5,\ 5),\ true)$ of type
 {\tt ((int * int) * bool * (int * int) * bool)}.
 
 
@@ -1048,6 +1053,7 @@ notion of assignment in imperative languages. In such languages (like
 C, Java, Pascal,\ldots) a variable is first {\em declared}, then a value is
 {\em assigned} to the variable. It is thus possible to assign a variable
 several times to different values. For example in C:
+
 {\scriptsize
 \begin{lstlisting}
 ...
@@ -1058,8 +1064,8 @@ several times to different values. For example in C:
   while (i > 0) i = i-- ;
 }
 ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 The variable {\tt i} is declared, then assigned the initial value
 $10$, then the {\tt while} loop makes it decreasing by successive
 assignments.
@@ -1069,6 +1075,7 @@ once and for all: it is impossible to change its  value, once it
 has been bound.
 Each new definition, binding an already bound identifier will just hide the
 old definition. For instance:
+
 {\scriptsize
 \begin{lstlisting}
 let x = 5 in
@@ -1076,9 +1083,9 @@ let x = 5 in
   let x = true in
   let z = (x, x) in
   (y, x, y, x)
-\end{lstlisting}
-}
-leads to the value $((5,\ 5),\ true, (5,\ 5),\ true)$
+\end{lstlisting}}
+
+\noindent leads to the value $((5,\ 5),\ true, (5,\ 5),\ true)$
 of type {\tt ((int * int) * bool * (int * int) * bool)}. Clearly the
 first value bound to {\tt x}  holds until {\tt x}
 is bound again: $5$ is used to define {\tt y} but not to define
@@ -1095,8 +1102,7 @@ functional value.  This lead to the natural way to define {\bf
 \begin{lstlisting}
 let f (x, y) = x + y in
 f (6, 7)
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 The {\bf let} construct binds {\tt f} to a function which has 2
 parameters {\tt x} and {\tt y}, and the body of {\tt f} is the
@@ -1114,34 +1120,31 @@ variable or parameters:
 \begin{lstlisting}
 let f (x : int, y) = x + y in
 f (6, 7)
-\end{lstlisting}
-}
+\end{lstlisting}}
 {\scriptsize
 \begin{lstlisting}
 let f (x : int, y) in int = x + y in
 f (6, 7)
-\end{lstlisting}
-}
+\end{lstlisting}}
 {\scriptsize
 \begin{lstlisting}
 let a in int = 3 in
 (a, a)
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 
 \medskip
 It is possible to define several identifiers at the same time separating
 each definition by the keyword {\tt and}.
+
 {\scriptsize
 \begin{lstlisting}
 ...
 let f = exp_1
 and g  = exp_2
 and h = exp_3 in exp;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 All the definitions are separately evaluated ``in parallel''.  As a
 consequence, the identifiers introduced by a {\tt let ... and }
@@ -1155,8 +1158,7 @@ the followig one, where {\tt exp\_2} can contain {\tt f} and {\tt
 let f = exp_1 in
  g  = exp_2 in
  h = exp_3 in exp
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Mutually recursive functions need to know each other because their
 bodies call these other functions and their definition require a
@@ -1171,8 +1173,7 @@ let rec even (x) =
 and odd (y) =
    if y = 0 then false else even (y - 1) in
 ...
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 {\large {\bf Warning:}} in the current version of {\focal} mutually
 recursive functions cannot be compiled into {\coq} code. Only
@@ -1220,6 +1221,7 @@ the {\tt logical let} construct. It serves to introduce a
 parameterised logical expression,  which can be applied to effective
 arguments to obtain a logical proposition.  Our example would be
 expressed by:
+
 {\scriptsize
 \begin{lstlisting}
 use "basics" ;;
@@ -1230,14 +1232,14 @@ species S =
   logical let f (x in int, y in int) = x < y /\ x + y < 10 ;
   ...
 end ;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Since {\tt logical let} binds an identifier to a logical expression, the
 body of the definition {\bf must} obviously {\bf be of type}
 {\tt bool}. Once defined, {\tt f} can be used as a regular function,
 but only in
 properties and theorems statements. For instance:
+
 {\scriptsize
 \begin{lstlisting}
 use "basics" ;;
@@ -1250,8 +1252,8 @@ species S =
   ...
   property p : all a in Self, all b, c in int, f (c, b) => f (m (a), b) ;
 end ;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 See other examples in the standard library where this construction is
 used to define associativity, commutativity, \ldots
 
@@ -1274,20 +1276,23 @@ value of the whole expression is the value of $exp_2$, otherwise
 (i.e. if its value is $false$) the value of $exp_3$. This obviously
 implies that $exp_2$ and $exp_3$ must have the same type. This
 construct is then a binary conditional expression (i.e. with 2
-branches).  {\scriptsize
+branches).
+
+ {\scriptsize
 \begin{lstlisting}
 let f (x) = if x then 1 else 0 in ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 The function {\tt f} will return $1$ if the effective argument
 provided for {\tt x} is $true$, otherwise it will return $0$.
+
 {\scriptsize
 \begin{lstlisting}
 let is_too_small (x) = ... in
 let y = ... in
 let y_corrected = if is_to_small (y) then 0 else y in ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 In this example, we assume we have a function {\tt is\_too\_small}
 checking if a value is ``too small'' and an identifier {\tt y} bound
 to a certain value. The result of the conditional expression bound to
@@ -1314,7 +1319,6 @@ succeeds. Then the expression associated with the matching pattern is
 evaluated to obtain the value of the whole expression {\tt
   match-with}.
 
-
 {\scriptsize
 \begin{lstlisting}
 let a = ... ;
@@ -1326,8 +1330,9 @@ let x =
    | 10 -> "ten"
    | _ -> "other" in
 ...
-\end{lstlisting}
-} The discriminated expression in this case is {\tt a + 5} of type
+\end{lstlisting}}
+
+The discriminated expression in this case is {\tt a + 5} of type
 {\tt int}. We can then react to each (or some of the) values of this
 expression. When {\tt a + 5}  is equal to $0$ the result of the
 whole {\tt match-with} expression (bound to the identifier {\tt x}) is
@@ -1380,8 +1385,8 @@ let x =
    | (1, 1, x) -> x
    | (x, y, z) -> x + y + z
 ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 According the the type-checking mechanism, the examined expression
 {\tt e} must have here type {\tt (int * int * int)}. The first pattern
 will be chosen if {\tt e} is  equal to the tuple $(0, 0, 0)$. We
@@ -1400,7 +1405,9 @@ remaining cases).
 
 The previous example used tuples as matched expression and patterns,
 but patterns also contain sum type value constructors, hence allowing
-to ``match'' on any sum type structure. For example: {\scriptsize
+to ``match'' on any sum type structure. For example:
+
+{\scriptsize
 \begin{lstlisting}
 type t =
   | A
@@ -1417,8 +1424,8 @@ let x =
    | C (x, 10) -> 5
    | C (_, y) -> y
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 This example shows different cases following the structure of the type
 {\tt t}. Note the use of the ``catch-all'' pattern
 inside  patterns. In fact, the ``catch-all'' pattern acts like
@@ -1432,6 +1439,7 @@ variables into ``{\tt \_}''s.
 \smallskip
 Patterns also allow to match record values
 (cf. \ref{record-expression}), i.e. to match on values of the fields:
+
 {\scriptsize
 \begin{lstlisting}
 type t = { name : string ; birth : int } ;;
@@ -1441,8 +1449,8 @@ let x =
    | { name = "Alexandre" } -> ...
    | { name = n ; birth = 2003 } -> ...
    | { name = n } -> ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 In such a pattern, fields not specified are considered as
 ``catch-all'' patterns. Hence, the last case catches all the record
 values not caught before since the field {\tt name}'s value is bound
@@ -1464,14 +1472,16 @@ leading to a functional value and the effective arguments that are
 expressions whose values will be provided to the function to make its
 computation. The syntax for application is simply the juxtaposition of
 the applicative expression and the comma-separated expressions used as
-arguments embraced by parentheses: {\scriptsize
+arguments embraced by parentheses:
+
+{\scriptsize
 \begin{lstlisting}
 let f (x) = ... in
 let g (x, y) = ... f (y) ... in
 g (f (3), 4)
 ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 As described in \ref{functional-value}, the evaluation of an
 application of a function to its effective arguments start by the
 evaluation of these arguments (the order of the evaluation of several
@@ -1480,12 +1490,14 @@ substituted to the corresponding parameters inside the body of the
 function and the so-obtained expression (the substituted body) is
 evaluated.  For instance, having the
 following function and application:
+
 {\scriptsize
 \begin{lstlisting}
 let g (x, y) = (y, x) in
 g (true, 1)
-\end{lstlisting}
-} The evaluation of the {\tt let-in} expression first binds the
+\end{lstlisting}}
+
+The evaluation of the {\tt let-in} expression first binds the
 identifier {\tt g} to a {\bf functional value} also called {\bf
   closure}. Then the application expression {\tt g (true, 1)} is
 evaluated. So the values of {\tt g} and of the expression {\tt
@@ -1522,6 +1534,7 @@ expression follows the same structure, replacing the type expressions
 of the definition by values of these types. For instance, assuming the
 given record type definition, the following example shows a possible
 record value:
+
 {\scriptsize
 \begin{lstlisting}
 type identity = {
@@ -1533,15 +1546,15 @@ type identity = {
 ...
 { name = "Nobody" ; birth = 42 ; living = false }
 ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 If the record type definition is in a different compilation unit, you
 may qualify the record fields by the ``{\tt\#}'' notation:
+
 {\scriptsize
 \begin{lstlisting}
 { my_file#name = "Nobody" ; my_file#birth = 42 ; my_file#living = false }
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 
@@ -1554,6 +1567,7 @@ value of a record type by modifying a few fields of an existing
 record, leaving the other fields unchanged. If the record type
 definition contains numerous fields, manually copying the old fields
 values to create the new record value appears boring and error prone:
+
 {\scriptsize
 \begin{lstlisting}
 type t = { a : int ; b : int ; c : int ; d : int ; e : int ; f : int } ;;
@@ -1567,12 +1581,13 @@ let v2 = {
   e = 6 ;  (* Changed value. *)
   f = v1.f } in
 ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 Instead of manually copy the unchanged fields, {\focal} provides a way
 to clone a record value, that is to create a {\bf new}, a {\bf fresh}
 value from an existing one,  only by specifying the fields whose values
 differ from the old record value:
+
 {\scriptsize
 \begin{lstlisting}
 type t = ... (* Like above. *)
@@ -1580,8 +1595,8 @@ let v1 = ... (* Like above. *)
 ...
 let v2 = { v1 with c = 5 ; e = 6 } in
 ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 As for other record value expressions, if the record type definition
 is in a different compilation unit, you may qualify the record fields
 by the ``{\tt\#}'' notation.
@@ -1596,12 +1611,13 @@ Once a record value is created by aggregating values of its fields, it
 is possible to recover the value of one field by a dot notation. For
 instance, assuming the type definition and record values of the
 previous example:
+
 {\scriptsize
 \begin{lstlisting}
 ... v1.a ...
 ... v2.c ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 respectively get the value of the fields {\tt a} of {\tt v1} and
 {\tt c} of {\tt v2}, that is, $1$ and $5$. If the record type
 definition is in a different compilation unit, you may qualify the
@@ -1639,6 +1655,7 @@ remaining of the species. Properties and theorems are respectively
 introduced by the keywords {\tt property} and {\tt theorem} and may
  contain expressions. The  section
 \ref{properties-theorems-proofs}  is dedicated to their detailed explanation.
+
 {\scriptsize
 \begin{lstlisting}
 open "basics" ;;
@@ -1650,8 +1667,7 @@ species My_Setoid inherits Basic_object =
   property refl : all x in Self, x = x ;
   property symm : all x y in Self, Self!( = ) (x, y) -> y = x ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 \medskip
@@ -1663,8 +1679,10 @@ toplevel-definitions. Toplevel-functions are introduced by the {\tt
   let} keyword and don't have a ``{\tt in}'' expression, this part
 being implicitly the remaining of the program (i.e. the current
 compilation unit and those using the current).  Toplevel-theorems are
-introduced by the {\tt theorem} keyword. These definitions must be ended by a double semi
-(``{\tt ;;}'').  {\scriptsize
+introduced by the {\tt theorem} keyword. These definitions must be
+ended by a double semi (``{\tt ;;}'').
+
+{\scriptsize
 \begin{lstlisting}
 let is_failed (x) =
   match x with
@@ -1687,8 +1705,7 @@ theorem int_plus_minus: all x y z in int,
       Qed.
     *}
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 
@@ -1769,6 +1786,7 @@ directive that it makes references to definitions hosted in this
 standard library needs ``wellfounded\_externals.vo'' (the compiled version of
 ``wellfounded\_externals.v'') and signals this
 fact in its early lines of code:
+
 {\scriptsize
 \begin{lstlisting}
 ...
@@ -1776,8 +1794,7 @@ open "basics";;
 open "sets_orders";;
 coq_require "wellfounded_externals";;
 ...
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 
@@ -1826,6 +1843,7 @@ expressions embed the {\focal} expressions used in computational
 methods (i.e. identifiers, conditionals, application, \ldots). This
 allows to have connected propositions using the previously defined
 functions and species methods.
+
 {\scriptsize
 \begin{lstlisting}
 species S ... =
@@ -1839,8 +1857,8 @@ species S ... =
     /\
     (!geq (x, y) -> (!gt (x, y) \/ !equal(x, y))) ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 Since  propositions in logical expressions are truth values, this
 obviously imply that the arbitrary expressions used between connectors
 must have type {\tt bool}.
@@ -1878,6 +1896,7 @@ in section \ref{making-proofs} and \ref{coq-proofs}. % [EJ] Seconde reference ma
 \item {\bf Consider the proof as ``assumed''}. This way is the
   simplest but also the weakest one since it consists in saying that
   no proof is given and the system must accept the statement as an axiom.
+
   {\scriptsize
 \begin{lstlisting}
 species S =
@@ -1991,8 +2010,7 @@ statement of the theorem, when such statement is admitted.
              <2>4 conclude
         <1>2 conclude
   ;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
   \item {\bf Write a {\coq} script} This way is the most difficult
      since it means to directly write {\coq} code. It
@@ -2010,6 +2028,7 @@ surrounded by {\tt \{*} and {\tt *\}}.
 %     powerful tools to prevent the user to directly deal with
 %     {\coq} proofs.
 Below follows an example of such a proof.
+
 {\scriptsize
 \begin{lstlisting}
 theorem int_minus_plus: all x y z in int,
@@ -2026,8 +2045,7 @@ theorem int_minus_plus: all x y z in int,
       apply Z_eq_dec. assumption.
       Qed.
     *} ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 \end{itemize}
 
 
@@ -2053,6 +2071,7 @@ the proof by the keyword {\tt proof} followed by an equal character
 % \end{syntax}
 
 \noindent For instance:
+
 {\scriptsize
 \begin{lstlisting}
 species Meet_semi_lattice inherits Setoid =
@@ -2066,8 +2085,7 @@ species Meet_semi_lattice inherits Setoid =
           equal_transitive ;
   ...
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 The kind of proof used here is written in {\focal} Proof Language and
 must not be a matter of understanding at this point since this
 particular point will be addressed with more details in chapter
