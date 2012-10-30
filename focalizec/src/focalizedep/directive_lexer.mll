@@ -1,7 +1,4 @@
 {
-open Lexing ;;
-
-
 
 (** {Rem} Not exported outside this module. *)
 exception Directive_not_terminated ;;

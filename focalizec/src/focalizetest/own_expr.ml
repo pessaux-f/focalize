@@ -90,33 +90,35 @@ let string_of_ident i =
   | Infix s ->s ;;
 
 (** Convert a term of type myexpr to a string *)
-let rec string_of_myexpr =
-      let rec aux e  =
-        match e with
-        | MGlob_id (s) -> string_of_ident s
-        | MVar(s,_o) -> if s = focself then "" else s
-        | MInt i -> string_of_int i
-        | MString s -> "\"" ^ s ^ "\""
-        | MFun (s, Some t,e) -> "fun (" ^ s ^ ":" ^ string_of_typ t ^ ") -> " ^ aux e
-        | MFun (s, None,e) -> "fun " ^ s ^ " -> " ^ aux e
-(*         | MFun (s,None,e) -> "fun (" ^ s ^ ") -> " ^ aux e *)
-        | MVarloc (b, (s, _),e1,e2) -> "let " ^ (if b then "rec " else "") ^ s ^ " = " ^ aux e1 ^ " in " ^ aux e2
-        | MIfte   (e1,e2,e3) -> "if " ^ aux e1 ^ " then " ^
-                                    aux e2 ^
-                                " else " ^
-                                    aux e3 
-        | MApp (e1, _, l1) -> aux e1 ^ (if l1 =[] then "" else to_args 
-                                        (fun (e, _t) -> aux e) l1)
-        | MMeth (sn, f) -> (string_of_string_option sn) ^ "!" ^ f
-        | MCaml_def s -> "caml " ^ s
-        | MMatch((e, _) ,case_l) -> "match " ^ aux e ^ "with " ^
-                              List.fold_right
-                                (fun (s,l,e) se -> " | #" ^ ident_name s ^
-                                                   to_args (function None -> "_"
-                                                                   | Some s -> s) l ^
-                                                   " -> " ^ aux e ^ se)
-                                       case_l "" in
-        aux;;
+let  string_of_myexpr =
+  let rec aux e  =
+    match e with
+    | MGlob_id s -> string_of_ident s
+    | MVar (s, _) -> if s = focself then "" else s
+    | MInt i -> string_of_int i
+    | MString s -> "\"" ^ s ^ "\""
+    | MFun (s, Some t, e) ->
+        "fun (" ^ s ^ ":" ^ string_of_typ t ^ ") -> " ^ aux e
+    | MFun (s, None,e) -> "fun " ^ s ^ " -> " ^ aux e
+(*  | MFun (s,None,e) -> "fun (" ^ s ^ ") -> " ^ aux e *)
+    | MVarloc (b, (s, _),e1,e2) ->
+        "let " ^ (if b then "rec " else "") ^ s ^ " = " ^ aux e1 ^ " in " ^
+        aux e2
+    | MIfte (e1, e2, e3) ->
+        "if " ^ aux e1 ^ " then " ^ aux e2 ^ " else " ^ aux e3 
+    | MApp (e1, _, l1) ->
+        aux e1 ^ (if l1 = [] then "" else to_args (fun (e, _t) -> aux e) l1)
+    | MMeth (sn, f) -> (string_of_string_option sn) ^ "!" ^ f
+    | MCaml_def s -> "caml " ^ s
+    | MMatch ((e, _) ,case_l) ->
+        "match " ^ aux e ^ "with " ^
+        List.fold_right
+          (fun (s, l, e) se -> " | #" ^ ident_name s ^
+            to_args (function None -> "_" | Some s -> s) l ^
+            " -> " ^ aux e ^ se)
+          case_l "" in
+  aux
+;;
 
 
 let string_of_an_option f t =
@@ -138,49 +140,40 @@ let dbg_string_ident s =
 ;;
 
 (** Convert a term of type myexpr to a string *)
-let rec dbg_string_myexpr =
-      let rec aux e  =
-        match e with
-        | MGlob_id s ->
-            "MGlob_id(" ^ dbg_string_ident s ^ ")"
-        | MVar(s, o) ->
-            "MVar(" ^ s ^ ", " ^ string_of_typ_option o ^ ")"
-        | MInt i ->
-            "MInt(" ^ string_of_int i ^ ")"
-        | MString s ->
-            "Mstring(\"" ^ s ^ "\")"
-        | MFun (s, t, e) ->
-            "MFun(" ^ s ^ ", " ^ string_of_typ_option t ^ ", " ^ aux e ^ ")"
-(*         | MFun (s,None,e) -> "fun (" ^ s ^ ") -> " ^ aux e *)
-        | MVarloc (b, (s,t),e1,e2) ->
-            "MVatloc(" ^ string_of_bool b ^ ", (" ^
-                         s ^ ", " ^ string_of_typ_option t ^ ")," ^
-                          aux e1 ^ ", " ^ aux e2 ^ ")"
-        | MIfte   (e1,e2,e3) -> 
-            "MIfte(" ^ aux e1 ^ ", " ^
-                                    aux e2 ^
-                                ", " ^
-                                    aux e3  ^ ")"
-        | MApp (e1,_, l1) -> 
-            "MApp(" ^
-            aux e1 ^ ", " ^ (if l1 =[] then "" else to_args 
-                                        (fun (e, _t) -> aux e ^ " : " ^
-                                        string_of_typ _t) l1) ^ ")"
-        | MMeth (sn, f) ->
-            "MMeth(" ^
-            (string_of_string_option sn) ^ ", " ^ f ^ ")"
-        | MCaml_def s -> "MCaml_def(" ^ s ^ ")"
-        | MMatch((e, t), case_l) ->
-            "MMatch((" ^ aux e ^ ", " ^ string_of_typ_option t ^ "), " ^
-                    List.fold_right
-                                (fun (s,l,e) se -> " | #" ^ ident_name s ^
-                                                   to_args string_of_string_option l ^
-                                                   " -> " ^ aux e ^ se)
-                                       case_l "" ^ ")" in
-        aux;;
-
-
-
+let dbg_string_myexpr =
+  let rec aux e  =
+    match e with
+    | MGlob_id s -> "MGlob_id(" ^ dbg_string_ident s ^ ")"
+    | MVar(s, o) -> "MVar(" ^ s ^ ", " ^ string_of_typ_option o ^ ")"
+    | MInt i -> "MInt(" ^ string_of_int i ^ ")"
+    | MString s -> "Mstring(\"" ^ s ^ "\")"
+    | MFun (s, t, e) ->
+        "MFun(" ^ s ^ ", " ^ string_of_typ_option t ^ ", " ^ aux e ^ ")"
+(*  | MFun (s,None,e) -> "fun (" ^ s ^ ") -> " ^ aux e *)
+    | MVarloc (b, (s,t),e1,e2) ->
+        "MVatloc(" ^ string_of_bool b ^ ", (" ^
+        s ^ ", " ^ string_of_typ_option t ^ ")," ^
+        aux e1 ^ ", " ^ aux e2 ^ ")"
+    | MIfte   (e1, e2, e3) -> 
+        "MIfte(" ^ aux e1 ^ ", " ^ aux e2 ^ ", " ^ aux e3  ^ ")"
+    | MApp (e1,_, l1) -> 
+        "MApp(" ^
+        aux e1 ^ ", " ^
+        (if l1 =[] then ""
+        else to_args (fun (e, _t) -> aux e ^ " : " ^ string_of_typ _t) l1) ^
+        ")"
+    | MMeth (sn, f) ->
+        "MMeth(" ^ (string_of_string_option sn) ^ ", " ^ f ^ ")"
+    | MCaml_def s -> "MCaml_def(" ^ s ^ ")"
+    | MMatch((e, t), case_l) ->
+        "MMatch((" ^ aux e ^ ", " ^ string_of_typ_option t ^ "), " ^
+        List.fold_right
+          (fun (s,l,e) se -> " | #" ^ ident_name s ^
+            to_args string_of_string_option l ^
+            " -> " ^ aux e ^ se)
+          case_l "" ^ ")" in
+  aux
+;;
 
 
 

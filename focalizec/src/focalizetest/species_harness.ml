@@ -5,7 +5,6 @@ open Own_types;;
 open Own_basics;;
 open Random_rep;;
 
-open Expr_prolog;;
 
 let suffixe_id =
   let i = ref 0 in

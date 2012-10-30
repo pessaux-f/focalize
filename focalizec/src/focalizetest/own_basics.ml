@@ -95,32 +95,34 @@ let verdict_precond_ko = "PreKo", ["result * list(result)"];;
 
 (* calculate the union of two lists *)
 
-let rec concat_no_doublon l1 l2 =
-  let rec add_elem el l =
-    if List.mem el l then
-      l
-    else
-      el::l in
-   List.fold_right add_elem l1 (List.fold_right add_elem [] l2);;
+let concat_no_doublon l1 l2 =
+  let add_elem el l = if List.mem el l then l else el :: l in
+  List.fold_right add_elem l1 (List.fold_right add_elem [] l2)
+;;
 
-let (++) = concat_no_doublon;;
+
+let (++) = concat_no_doublon ;;
+
 
 (* flatten a list and eliminate all doublon *)
-let rec flatten_no_doublon l =
-  match l with
-    | []   -> []
-    | e::r -> e ++ (flatten_no_doublon r);;
+let rec flatten_no_doublon = function
+  | []   -> []
+  | e :: r -> e ++ (flatten_no_doublon r)
+;;
+
 
 (* transforme la liste d'elements en chaine de caractere :
  *    [e1;e2;e3;... en] donne
  *          f e1 ^ s ^ f e2 ^ ... ^ s ^ f en *)
-let rec add_string_args l s f =
+let add_string_args l s f =
   let rec aux l =
     match l with
-      | [] -> ""
-      | [e] -> f e
-      | e::r -> f e ^ s ^ (aux r) in
-    aux l;;
+    | [] -> ""
+    | [ e ] -> f e
+    | e :: r -> f e ^ s ^ (aux r) in
+  aux l
+;;
+
 
 (* prend une liste de variables et met sous la forme
  *    (var1,var2,var3 ... )          *)
@@ -205,23 +207,19 @@ let replace pat dest s =
 let rec string_assoc s l =
   match l with
   | [] -> s
-  | (p,e)::r ->
-      string_assoc (replace p e s) r;;
+  | (p, e) :: r -> string_assoc (replace p e s) r
+;;
 
-let rec assoc_rev l =
-  match l with
-  | [] -> []
-  | (c1, c2)::r -> (c2, c1)::assoc_rev r;;
 
-let string_of_bool b =
-  if b then "true" else "false";;
+let string_of_bool b = if b then "true" else "false" ;;
 
-let to_prolog_assoc =
-  [':',"foctest_colon";
-   '[',"foctest_lbracket";
-   ']',"foctest_rbracket";
-   ')',"foctest_rparen";
-   '(',"foctest_lparen"];;
+let to_prolog_assoc = [
+  ':', "foctest_colon" ;
+  '[', "foctest_lbracket" ;
+  ']', "foctest_rbracket" ;
+  ')', "foctest_rparen" ;
+  '(', "foctest_lparen" ] ;;
+
 
 let string_letter_name s =
   string_assoc s to_prolog_assoc;;

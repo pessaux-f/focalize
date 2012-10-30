@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.8 2012-10-15 14:50:16 pessaux Exp $
+# $Id: Makefile,v 1.9 2012-10-30 11:25:32 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -45,7 +45,7 @@ include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
 
 CAML_INCLUDES=-I ../basement -I ../parser -I ../typing
-CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)
+CAML_FLAGS = -w A-4-32 -warn-error $(WARN_ERROR)
 
 EXE_NAME=focalizetest
 

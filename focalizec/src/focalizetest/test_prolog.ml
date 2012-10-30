@@ -5,16 +5,16 @@ open Own_basics;;
 (* A type in prolog is represented as a tuple of [type name] * [constructor list]
 *)
 
-let rec prolog_args_of_constructor_typ =
+let prolog_args_of_constructor_typ =
   let rec aux t =
     match t with
-    | TAtom(_m, s) -> prolog_fun s []  
+    | TAtom (_m, s) -> prolog_fun s []  
     | TSpecPrm _ -> failwith "houlala"
-    | TProd(t1,t2) -> prolog_fun "couple" [aux t1; aux t2]
-    | TPrm(_m, s,t_l) -> prolog_fun s (List.map aux t_l)
-    | TFct(_e1, _e2) -> failwith "prolog_args_of_constructor_typ : Fct" in
-  fun t -> 
-    List.map aux t;;
+    | TProd (t1, t2) -> prolog_fun "couple" [aux t1; aux t2]
+    | TPrm (_m, s,t_l) -> prolog_fun s (List.map aux t_l)
+    | TFct (_e1, _e2) -> failwith "prolog_args_of_constructor_typ : Fct" in
+  fun t -> List.map aux t
+;;
 (*
     match t with
     | TFct(e1, e2) -> aux e1 :: prolog_args_of_constructor_typ e2

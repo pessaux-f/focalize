@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: species_record_type_generation.ml,v 1.98 2012-10-26 14:55:19 pessaux Exp $ *)
+(* $Id: species_record_type_generation.ml,v 1.99 2012-10-30 11:25:32 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -984,7 +984,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                ~loc: ident.Parsetree.ast_loc
                ~current_unit: ctx.Context.scc_current_unit
                ~current_species_name ident env in
-           for i = 0 to nb_polymorphic_args - 1 do
+           for _i = 0 to nb_polymorphic_args - 1 do
              Format.fprintf out_fmter "@ _"
            done
          with

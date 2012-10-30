@@ -1,6 +1,5 @@
-open Print_foc;;
-open MyFormat;;
-open Own_basics;;
+open Print_foc ;;
+open MyFormat ;;
   
 (* let create_species_import n (l :( string * string) list) = n,l;; *)
 (*

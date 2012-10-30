@@ -102,7 +102,7 @@ and string_of_expr e = string_of_texp_desc e;;
 let print_expr e = print_string (string_of_expr e);;
 
 (* Transforms a proposition to string  *)
-let rec string_of_prop =
+let string_of_prop =
   let open_paren prec op_prec =
     if prec > op_prec then "(" else "" in
   let close_paren prec op_prec =
@@ -126,7 +126,7 @@ let rec string_of_prop =
         (open_paren prec 3) ^
         (pts 3 p1.ast_desc) ^ " or " ^ (pts 3 p2.ast_desc) ^
         (close_paren prec 3)
-     | Pr_imply({ast_desc = (Pr_imply(_,_) as p1)},p2) ->
+     | Pr_imply ({ ast_desc = (Pr_imply (_,_) as p1) ; _ }, p2) ->
         (open_paren prec 2) ^
         (pts 18 p1) ^ " -> " ^ (pts 2 p2.ast_desc) ^
         (close_paren prec 2)

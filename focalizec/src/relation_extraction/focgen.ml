@@ -125,9 +125,13 @@ let rec replace_sf_in_list fl f = match fl with
 	if (field_name f) = (sig_field_name orig_f) then (f)::q
 		else orig_f::(replace_sf_in_list q f)
 	| x::q -> x::(replace_sf_in_list q f)
+;;
+
 
 let replace_sf_in_s stuff field = 
   List.map (function x -> replace_sf_in_list x field) stuff
+;;
+
 
 let replace_sf stuff sp_name field (*proofs*) = 
   let nphlist = List.map (function x -> match x.Parsetree.ast_desc with

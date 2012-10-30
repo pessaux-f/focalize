@@ -47,7 +47,7 @@ let rec prolog_of_typ t =
   | TPrm(_s_o, n, p) -> prolog_fun n (List.map prolog_of_typ p)
 ;;
 
-let rec get_vars =
+let get_vars =
   let aux_args e =
       match e with
       | FVar (FVInt v) -> [v, TAtom(Some focbasics, foctint)]

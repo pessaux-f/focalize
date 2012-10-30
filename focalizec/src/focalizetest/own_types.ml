@@ -74,11 +74,10 @@ let rec string_of_ttyp t =
 (** Transforms a constructor to a string in OCaml syntax like.
 For debugging purpose only.
 *)
-let rec dbg_string_constructor ((n, t) : constructor) =
-  if t = [] then
-    ident_name n
-  else
-    (ident_name n) ^ " of " ^ add_string_args t "," string_of_typ;;
+let dbg_string_constructor ((n, t) : constructor) =
+  if t = [] then ident_name n
+  else (ident_name n) ^ " of " ^ add_string_args t "," string_of_typ
+;;
 
 let rec dbg_string_typ_body =
   function
@@ -101,18 +100,21 @@ let dbg_string_typ_definition (name, body) =
    Ex :  list(int) depends on type int
          option(list(int * int)) depends on int, list(int * int)
   *)
-let rec depends =
+let depends =
   let rec aux typ =
     match typ with
-      | TAtom _ -> [typ]
-      | TSpecPrm _ -> [typ]
-      | TProd(t1,t2)
-      | TFct(t1,t2) ->  aux t1 @ aux t2
-      | TPrm(_, _,l) -> typ :: List.fold_left (fun seed e -> aux e @ seed) [] l in
-  function 
+    | TAtom _ -> [ typ ]
+    | TSpecPrm _ -> [ typ ]
+    | TProd (t1, t2)
+    | TFct (t1, t2) ->  aux t1 @ aux t2
+    | TPrm (_, _,l) ->
+        typ :: List.fold_left (fun seed e -> aux e @ seed) [] l in
+  function
     | TAtom _ -> []
-    | TPrm(_, _,l) -> List.fold_left (fun seed e -> aux e @ seed) [] l 
-    | typ -> aux typ;;
+    | TPrm (_, _, l) -> List.fold_left (fun seed e -> aux e @ seed) [] l 
+    | typ -> aux typ
+;;
+
 
 let is_in tt t =
   let l = depends t in
@@ -121,15 +123,15 @@ let is_in tt t =
 (* flatten_prod: typ -> typ list *)
 (** flatten_type t
     flatten t over products constructor *)
-let rec flatten_prod  =
-  function
-  | TProd(e1,e2) -> (flatten_prod e1) @ (flatten_prod e2)
-  | typ -> [typ];;
+let rec flatten_prod  = function
+  | TProd (e1, e2) -> (flatten_prod e1) @ (flatten_prod e2)
+  | typ -> [typ]
+;;
 
-let rec flatten_prod_right =
-  function
-  | TProd(e1,e2) -> e1::flatten_prod e2
-  | typ -> [typ];;
+let flatten_prod_right = function
+  | TProd (e1, e2) -> e1::flatten_prod e2
+  | typ -> [typ]
+;;
 
 
 let rec get_arity typ =

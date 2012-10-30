@@ -48,10 +48,10 @@ let print_pos n =
      done;
      prerr_char '\n';
      prerr_string "  "; 
-     for i = 0 to (s.pos_cnum - s.pos_bol) - 1 do
+     for _i = 0 to (s.pos_cnum - s.pos_bol) - 1 do
        prerr_char ' '
      done;
-     for i = s.pos_cnum - s.pos_bol to e.pos_cnum - e.pos_bol - 1 do
+     for _i = s.pos_cnum - s.pos_bol to e.pos_cnum - e.pos_bol - 1 do
        prerr_char '^'
      done;
      prerr_newline ();;

@@ -14,7 +14,7 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: types.ml,v 1.94 2012-10-30 08:59:42 pessaux Exp $ *)
+(* $Id: types.ml,v 1.95 2012-10-30 11:25:32 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -1665,13 +1665,10 @@ let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
     | ST_construct (_, arg_tys) ->
        Format.fprintf ppf " %a" (Handy.pp_generic_separated_list ""
                                   (rec_pp_to_coq ctx 0)) arg_tys
-    | _ ->
-       for i = 0 to n - 1 do
-         Format.fprintf ppf "@ _";
-       done
+    | _ -> for _i = 0 to n - 1 do Format.fprintf ppf "@ _" done in
 
 
-  in
+
   (* ************************************************** *)
   (* Now, the real definition of the printing functions *)
   ((* pp_type_simple_to_coq *)

@@ -137,7 +137,6 @@ let foc_argscall_of_variables (vars : variables) : string =
 (* Operation on elementary form *)
 type elementaire = pre_cond * conclusion;; (* une forme elementaire est le
                                             couple pre-condition conclusion *)
-type elementaires = elementaire list;;
 let create_elementaire p c = (p,c);;
 let elementaire_null = [],[];;
 let map_elementaire_esc f (p,c) = (List.map f p),(List.map f c);;

@@ -1,22 +1,20 @@
-open Own_basics;; 
-open Own_types;; 
-open Own_expr;;
-open To_strings;;
-open Whattodo;;
-open Print_xml;;
+open Own_basics ;; 
+open Own_types ;; 
+open Own_expr ;;
+open Whattodo ;;
 
 
 module MyFormat :
-      sig
-        val print_string : string -> unit
-        val force_newline : unit -> unit
-        val open_box : int -> unit
-        val close_box : unit -> unit
-        val print_space : unit -> unit
-        val print_int : int -> unit
-        val set_margin : int -> unit
-        val set_formatter_out_channel : out_channel -> unit
-     end =
+    sig
+      val print_string : string -> unit
+      val force_newline : unit -> unit
+      val open_box : int -> unit
+      val close_box : unit -> unit
+      val print_space : unit -> unit
+      val print_int : int -> unit
+      val set_margin : int -> unit
+      val set_formatter_out_channel : out_channel -> unit
+    end =
    struct
         let box = ref [];;
         let current = ref 0;;
@@ -310,7 +308,7 @@ let rec print_list_comma l print_elem =
                        print_list_comma r print_elem;;
 
 (** Pretty print a species definition *)
-let rec print_inherits l =
+let print_inherits l =
   print_list_comma l (fun (s,l) ->
                         print_species_name s;
                         if not(l = []) then
@@ -467,7 +465,7 @@ let print_tlet n t e l_caml =
   force_newline ();;
 
 
-let rec print_args_cons la =
+let print_args_cons la =
     match la with
         [] -> ()
       | [e] -> 

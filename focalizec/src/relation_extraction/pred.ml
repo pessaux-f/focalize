@@ -512,7 +512,7 @@ let check_insertable nt tnl = match tnl with
 
 (* TODO: modify insert_output and the recusrsor... There is something wrong. *)
 (* insert the tree output (the last node) of a property *)
-let insert_output ord kv nt prop tnl = 
+let insert_output ord nt prop tnl = 
   if not (check_insertable nt tnl) then [] (* check logical terms compatibility *)
   else try let (nt, prop) = match tnl with (* rename inputs (matching term) *)
     | tn::_ -> rename_inputs_if_possible nt tn prop
@@ -533,11 +533,14 @@ let insert_output ord kv nt prop tnl =
         else []
   in io_rec tnl
   with Failure "impossible" -> []
+;;
 
 
 (* insert the last premisse of a property in a tree *)
-let insert_last_prem_term ord kv nt prop tnl =
-  insert_output ord kv nt prop tnl ;;
+let insert_last_prem_term ord nt prop tnl =
+  insert_output ord nt prop tnl
+;;
+
 
 let rec insertion_recursor ord prem_selector prop kv nt tnl =
   let rec ir_rec tnl_acc = (* try to insert prop in every node or alone *)
@@ -572,28 +575,34 @@ let rec insertion_recursor ord prem_selector prop kv nt tnl =
 (* insert a premisse term in the treenode list *)
 and insert_prem_term ord prem_selector kv nt prop tnl =
   if not (check_insertable nt tnl) then []
-  else if mca_check kv nt then
-    try let nt, prop = rename_inputs_if_needed nt tnl prop in
+  else
+    if mca_check kv nt then
+      try let nt, prop = rename_inputs_if_needed nt tnl prop in
       insertion_recursor ord prem_selector prop kv nt tnl
-    with Failure "impossible" -> []
-  else []
+      with Failure "impossible" -> []
+    else []
 
 (* Insert prem into tnl. Select insert_last_prem_term or insert_prem_term *)
-and insert_prem ord prem_selector kv prem prop tnl = match prem with
+and insert_prem ord prem_selector kv prem prop tnl =
+  match prem with
   | PMTerm pmt -> let nt = NTPrem pmt in
-    if prop.p_prems = [] then insert_last_prem_term ord kv nt prop tnl
+    if prop.p_prems = [] then insert_last_prem_term ord nt prop tnl
     else insert_prem_term ord prem_selector kv nt prop tnl
-  | PMAnd pl -> flatmap (fun prem ->
-      let other_prems = List.filter (fun a -> a <> prem) pl in
-      let nprop = { prop with p_prems = other_prems@prop.p_prems } in
-      insert_prem ord prem_selector kv prem nprop tnl
-    ) pl
-  | PMChoice pl -> flatmap
-    (fun prem -> insert_prem ord prem_selector kv prem prop tnl) pl
-  | PMOr pl -> List.fold_left
-    (fun trees prem -> flatmap
-      (fun tnl -> insert_prem ord prem_selector kv prem prop tnl) trees)
-    [tnl] pl
+  | PMAnd pl ->
+      flatmap
+        (fun prem ->
+          let other_prems = List.filter (fun a -> a <> prem) pl in
+          let nprop = { prop with p_prems = other_prems@prop.p_prems } in
+          insert_prem ord prem_selector kv prem nprop tnl)
+        pl
+  | PMChoice pl ->
+      flatmap (fun prem -> insert_prem ord prem_selector kv prem prop tnl) pl
+  | PMOr pl ->
+      List.fold_left
+        (fun trees prem ->
+          flatmap
+            (fun tnl -> insert_prem ord prem_selector kv prem prop tnl) trees)
+        [tnl] pl
 
 (* Choose one premisse of prop to insert into tnl *)
 and choose_prop_prem ord prem_selector kv prop tnl =
@@ -601,15 +610,21 @@ and choose_prop_prem ord prem_selector kv prop tnl =
     (fun (prem, prop) ->
       insert_prem ord prem_selector kv (normalize_and_or prem) prop tnl)
     (prem_selector prop)
+;;
+
 
 (* all trees that can result of the insertion of prop in tnl *)
 let insert_prop_concl ord prem_selector prop tnl =
   let nt = NTConcl prop.p_concl in
   match prop.p_prems with
-    | [] -> (* insert the prop alone, as a tree output *)
-      insert_output ord [] nt prop tnl
-    | _ -> (* try to insert prop in one nt or alone *)
+  | [] ->
+      (* Insert the prop alone, as a tree output. *)
+      insert_output ord nt prop tnl
+  | _ ->
+      (* Try to insert prop in one nt or alone. *)
       insertion_recursor ord prem_selector prop [] nt tnl
+;;
+
 
 (* TODO: optimization when there is no overlapping constructor to add after the
  * current one. It may be possible to test with nt_partial_ordering...

@@ -7,8 +7,6 @@ open Own_prop;;
 
 open Test_prop;;
 open Print_foc;;
-open Print_fml;;
-open Print_xml;;
 
 open Rewrite_prop;;
 open Own_expr;;
@@ -246,23 +244,23 @@ let generate =
   end;;
 
 let usage = 
-  "usage: foctest -s spc -p prop [-v] [-o outfile] [-S size] [-t number] [--let | --seq] my_file_fo
-
-Print on outfile (a.out.fcl if not specify) an automatic testing-harness.
-This harness generates a Focal source program which submits tests case to the
-property prop in species spc.
-my_file_fo (without extension) is the binary .fo file containing the species. It
-can be either a library from the standard library or a library in the current
-directory.
-The --seq and --let options specify how to simulate sequences of instructions on 
-the generated .fcl file:
-  --let makes ocamlc producting some warning messages
-  --seq can raise a stackoverflow if the number of test case is to high\n
-
-Example:
-  foctest -s 'my_species(integers, field, #int_plus(5,6))' -p 'plus_commutes,mult_commutes' library.fo
-
-will test the property plus_commutes and mult_commutes in the species my_species
+  "usage: foctest -s spc -p prop [-v] [-o outfile] [-S size] [-t number] [--let | --seq] my_file_fo\n\
+\n\
+Print on outfile (a.out.fcl if not specify) an automatic testing-harness.\n\
+This harness generates a Focal source program which submits tests case to the\n\
+property prop in species spc.\n\
+my_file_fo (without extension) is the binary .fo file containing the species. It\n\
+can be either a library from the standard library or a library in the current\n\
+directory.\n\
+The --seq and --let options specify how to simulate sequences of instructions on \n\
+the generated .fcl file:\n\
+  --let makes ocamlc producting some warning messages\n\
+  --seq can raise a stackoverflow if the number of test case is to high\n\
+\n\
+Example:\n\
+  foctest -s 'my_species(integers, field, #int_plus(5,6))' -p 'plus_commutes,mult_commutes' library.fo\n\
+\n\
+will test the property plus_commutes and mult_commutes in the species my_species\n\
 with integers, field and #int_plus(5,6) (11) as instance of parameters.";;
 
 let parse_args () = Arg.parse

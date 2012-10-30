@@ -45,11 +45,9 @@ let new_uncapitalize () =
 (*                                                                           *)
 (* ************************************************************************* *)
 
-let new_prolog_var () =
-  "Aux" ^ new_seed ();;
+let new_prolog_var () = "Aux" ^ new_seed () ;;
 
-let prolog_var _ = 
-  get_from_existing_prefix "Aux";;
+let prolog_var _ = get_from_existing_prefix "Aux" ;;
 
 
 (* ************************************************************************* *)

@@ -1,14 +1,9 @@
-open Whattodo;;
-
-open Own_types;;
-open Own_expr;;
-open Own_basics;;
-open Useful_parsing;;
-
-open To_strings;;
-open Foc_predef;;
-open Focalize_inter;;
-open Fresh_variable;;
+open Whattodo ;;
+open Own_types ;;
+open Own_expr ;;
+open Own_basics ;;
+open Useful_parsing ;;
+open Fresh_variable ;;
 
 (* Appel et declaration des fonctions importées *)
 
@@ -18,37 +13,39 @@ let meth_rnd_self = random_meth (string_of_ttyp (TAtom(None, focself)));;
 let meth_parse_self = parse_meth (string_of_ttyp (TAtom(None, focself)));;
 
 (* Get all intermediaries types within a type *)
-let rec depends =
+let depends =
   let rec aux typ cumul =
-    if List.mem typ cumul then
-      cumul
+    if List.mem typ cumul then cumul
     else
       match typ with
-      | TAtom (m, t) -> 
-        (try 
-        let types_inside = List.fold_left
-                             (fun s (_,t) -> t ++ s)
-                             [] (Focalize_inter.get_concrete_def (TPrm(m,t, []))) in
-        List.fold_left (fun s e -> aux e s) ([typ]++cumul) types_inside
-        with
-        | Focalize_inter.Not_a_concrete_type _t_o -> [typ] ++ cumul
-        )
+      | TAtom (m, t) -> (
+          try 
+            let types_inside =
+              List.fold_left
+                (fun s (_,t) -> t ++ s)
+                [] (Focalize_inter.get_concrete_def (TPrm(m,t, []))) in
+            List.fold_left (fun s e -> aux e s) ([typ]++cumul) types_inside
+          with Focalize_inter.Not_a_concrete_type _t_o -> [typ] ++ cumul
+         )
       | TSpecPrm _ -> [typ] ++ cumul
-      | TProd(t1,t2)
-      | TFct(t1,t2) -> aux t1 (aux t2 ([typ] ++ cumul))
-      | TPrm(_m, _, _l) ->
-        let types_inside = List.fold_left
-                             (fun s (_,t) -> t ++ s)
-                             [] (Focalize_inter.get_concrete_def typ) in
-        List.fold_left (fun s e -> aux e s) ([typ]++cumul) types_inside in
-  function 
+      | TProd (t1,t2)
+      | TFct (t1,t2) -> aux t1 (aux t2 ([typ] ++ cumul))
+      | TPrm (_m, _, _l) ->
+          let types_inside =
+            List.fold_left
+              (fun s (_,t) -> t ++ s)
+              [] (Focalize_inter.get_concrete_def typ) in
+          List.fold_left (fun s e -> aux e s) ([typ]++cumul) types_inside in
+  function
     | TAtom _ as typ -> [typ]
-    | TPrm(_, _s, _l) as typ ->
-        let types_inside = List.fold_left
-                             (fun s (_,t) -> t ++ s)
-                             [] (Focalize_inter.get_concrete_def typ) in
+    | TPrm (_, _s, _l) as typ ->
+        let types_inside =
+          List.fold_left
+            (fun s (_, t) -> t ++ s)
+            [] (Focalize_inter.get_concrete_def typ) in
         List.fold_left (fun s e -> aux e s) [typ] types_inside
-    | typ -> aux typ [];;
+    | typ -> aux typ []
+;;
 
 (* The predefinition *)
 
@@ -142,7 +139,7 @@ let predefined_print_meth = (* définition des fonctions importées *)
        foctbool,
           parse_foc_meth ("let " ^ print_meth (string_of_ttyp 
                                                 (TAtom(Some "basics",
-                                                foctbool))) ^ " in @STRING =
+                                                foctbool))) ^ " in @STRING =\n\
                              fun b in (@BOOL) -> if b then \"true\" else \"false\"");
        foctunit, meth_create
                     (print_meth (string_of_ttyp (TAtom(Some "basics", foctunit))))
@@ -175,7 +172,7 @@ let predefined_reinject_value_meth = (* définition des fonctions importées *)
        foctbool,
           parse_foc_meth ("let " ^ reinject_value_meth (string_of_ttyp 
                                                 (TAtom(Some "basics",
-                                                foctbool))) ^ " in @BOOL =
+                                                foctbool))) ^ " in @BOOL =\n\
                              fun b in (@BOOL) -> b");
        "big_int", meth_create
                     (reinject_value_meth (string_of_ttyp (TAtom(Some "basics", "big_int"))))
@@ -202,8 +199,8 @@ let predefined_print_xml_meth = (* définition des fonctions importées *)
        foctbool,
           parse_foc_meth ("let " ^ print_xml_meth (string_of_ttyp 
                                                 (TAtom(Some "basics",
-                                                foctbool))) ^ " in @STRING =
-                             fun b in (@BOOL) -> if b then
+                                                foctbool))) ^ " in @STRING =\n\
+                             fun b in (@BOOL) -> if b then\n\
                                \"<exprbool>true</exprbool>\" else \"<exprbool>false</exprbool>\"");
        foctunit, meth_create
                     (print_xml_meth (string_of_ttyp (TAtom(Some "basics", foctunit))))
@@ -232,7 +229,7 @@ let predefined_parse_meth = (* définition des fonctions importées *)
        foctbool,
           parse_foc_meth ("let " ^ parse_meth (string_of_ttyp 
                                                 (TAtom(Some "basics",
-                                                foctbool))) ^ " in @BOOL =
+                                                foctbool))) ^ " in @BOOL =\n\
                              fun b in (@STRING) -> if @STRUCT_EQUAL(b, \"true\") then true else false");
        foctstring, meth_create
                     (parse_meth (string_of_ttyp (TAtom(Some "basics", foctstring))))
@@ -294,32 +291,36 @@ let ast_random_cons (l : Own_types.constructor list) name =
       nval_def (aux 0 l name);;
 
 (* Take a constructor name and returns the ast which convert its to a string *)
-let rec ast_print_cons ((n, param) : Own_types.constructor) =
-  let new_id = let id = ref 0 in fun () -> id := !id +1; "v" ^ string_of_int !id in
-  let aux (v,f) = "!" ^ f ^ "(" ^ v ^ ")" in
+let ast_print_cons ((n, param) : Own_types.constructor) =
+  let new_id =
+    let id = ref 0 in
+    fun () -> id := !id + 1 ; "v" ^ string_of_int !id in
+  let aux (v, f) = "!" ^ f ^ "(" ^ v ^ ")" in
   let aux2 l =
     match l with
     | [] -> "\"\""
-    | e::r ->
+    | e :: r ->
         "@SC(@SC(\"(\"," ^
-        List.fold_left (fun s e -> "@SC(" ^ s ^ ", @SC(\", \", " ^ aux e ^ "))") (aux e) r ^
-        "),\")\")"
-  in
-  let param_n = List.map (fun e -> new_id (), print_meth (string_of_ttyp e)) param in
+        List.fold_left
+          (fun s e -> "@SC(" ^ s ^ ", @SC(\", \", " ^ aux e ^ "))") (aux e) r ^
+        "),\")\")" in
+  let param_n =
+    List.map (fun e -> new_id (), print_meth (string_of_ttyp e)) param in
   n,
   List.map (fun e -> Some e) (fst (List.split param_n)),
-  parse_foc_expr ("@SC(\"" ^ ident_name n ^ "\",
-                 " ^ aux2 param_n ^ ")");;
+  parse_foc_expr ("@SC(\"" ^ ident_name n ^ "\",\n" ^ aux2 param_n ^ ")") ;;
 
 
 let string_for_parser_of_ident s =
   match s with
   | Infix s -> "#" ^ "'" ^ s ^ "'"
-  | Prefix(None, t) -> "#" ^ t
-  | Prefix(Some m, t) -> m ^ "#" ^ t;;
+  | Prefix (None, t) -> "#" ^ t
+  | Prefix (Some m, t) -> m ^ "#" ^ t
+;;
+
 
 (* Take a constructor name and returns the ast which convert its to a string *)
-let rec ast_parse_one_cons ((n,l) : Own_types.constructor) e err =
+let ast_parse_one_cons ((n,l) : Own_types.constructor) e err =
   let a i = "a" ^ string_of_int i in
   let aux n l  = 
     let rec aux n l i cumul =
@@ -327,19 +328,19 @@ let rec ast_parse_one_cons ((n,l) : Own_types.constructor) e err =
       | [] -> string_for_parser_of_ident n ^ to_args 
                       (fun (t,i) -> "!" ^ parse_meth (string_of_ttyp t) ^ "(" ^ a i ^ ")")
                       (List.rev cumul)
-      | e::r -> "match args with
-                 | @NIL -> " ^ err ^ "
+      | e::r -> "match args with\n\
+                 | @NIL -> " ^ err ^ "\n\
                  | @CONS(" ^ a i ^ ",args) -> " ^ aux n r (i+1) ([e,i] @ cumul) in
     aux n l 1 [] in
   match l with
-  | [] -> "if @STRUCT_EQUAL(cons, \"" ^ atom_of_cons_name (ident_name n) ^ "\") then
-                   " ^ string_for_parser_of_ident n ^ "
-             else
+  | [] -> "if @STRUCT_EQUAL(cons, \"" ^ atom_of_cons_name (ident_name n) ^ "\") then\n\
+                   " ^ string_for_parser_of_ident n ^ "\n\
+             else\n\
                " ^ e
   | _ ->
-            "if @STRUCT_EQUAL(cons, \"" ^ atom_of_cons_name (ident_name n) ^ "\") then 
-               "  ^ aux n l ^ "
-             else 
+            "if @STRUCT_EQUAL(cons, \"" ^ atom_of_cons_name (ident_name n) ^ "\") then\n\
+               "  ^ aux n l ^ "\n\
+             else\n\
                " ^ e;;
 
 let ast_parse_cons (l : Own_types.constructor list) name _t =
@@ -365,8 +366,8 @@ let rec ast_print_type l_param typ : Own_expr.a_method list   =
         let n2 = print_meth (string_of_ttyp t2) in
         let n = print_meth (string_of_ttyp typ) in
           [parse_foc_meth (
-             "let " ^ n ^ "  in @STRING =
-                 fun x in (" ^ string_of_typ typ ^ ") -> 
+             "let " ^ n ^ "  in @STRING =\n\
+                 fun x in (" ^ string_of_typ typ ^ ") ->\n\
                    @SC(!" ^ n1 ^ "(@FST(x)), !" ^ n2 ^ "(@SND(x)))")]
     | TAtom(m, s) ->
         begin try
@@ -409,10 +410,10 @@ let ast_print_ident i =
   | Infix s -> "@SC(\"<infix>\",@SC(\"" ^ s ^ "\", \"</infix>\"))";;
 
 (* Take a constructor name and returns the ast which convert its to an xml string *)
-let rec ast_print_xml_cons ((n, param) : Own_types.constructor) =
+let ast_print_xml_cons ((n, param) : Own_types.constructor) =
   let new_id = let id = ref 0 in fun () -> id := !id +1; "v" ^ string_of_int !id in
-  let aux (v,f) = "@SC(\"<appright>\",
-                   @SC(" ^ "!" ^ f ^ "(" ^ v ^ "),
+  let aux (v,f) = "@SC(\"<appright>\",\n\
+                   @SC(" ^ "!" ^ f ^ "(" ^ v ^ "),\n\
                        \"</appright>\"))" in
   let aux2 l =
     match l with
@@ -430,10 +431,10 @@ let rec ast_print_xml_cons ((n, param) : Own_types.constructor) =
                  "@SC(" ^ ast_print_ident n ^ "," ^
                  "    \"</exprglobid>\"))"
                 else
-                 "@SC(\"<exprapp><appleft><exprglobid>\",
-                  @SC(" ^ ast_print_ident n ^ ",
-                  @SC(\"</exprglobid></appleft>\",
-                  @SC(" ^ aux2 param_n ^ ",
+                 "@SC(\"<exprapp><appleft><exprglobid>\",\n\
+                  @SC(" ^ ast_print_ident n ^ ",\n\
+                  @SC(\"</exprglobid></appleft>\",\n\
+                  @SC(" ^ aux2 param_n ^ ",\n\
                       \"</exprapp>\"))))"
                );;
 
@@ -450,12 +451,12 @@ let rec ast_print_xml_type l_param typ : Own_expr.a_method list   =
         let n2 = print_xml_meth (string_of_ttyp t2) in
         let n = print_xml_meth (string_of_ttyp typ) in
           [parse_foc_meth (
-             "let " ^ n ^ "  in @STRING =
-                 fun x in (" ^ string_of_typ typ ^ ") -> 
-                  @SC(\"<exprapp><appleft><exprglobid><prefix><module>basics</module><name>pair</name></prefix></exprglobid></appleft><appright>\",
-                  @SC(" ^ "!" ^ n1 ^ "(@FST(x)),
-                  @SC(\"</appright><appright>\",
-                  @SC(" ^ "!" ^ n2 ^ "(@SND(x)),
+             "let " ^ n ^ "  in @STRING =\n\
+                 fun x in (" ^ string_of_typ typ ^ ") ->\n\
+                  @SC(\"<exprapp><appleft><exprglobid><prefix><module>basics</module><name>pair</name></prefix></exprglobid></appleft><appright>\",\n\
+                  @SC(" ^ "!" ^ n1 ^ "(@FST(x)),\n\
+                  @SC(\"</appright><appright>\",\n\
+                  @SC(" ^ "!" ^ n2 ^ "(@SND(x)),\n\
                       \"</appright></exprapp>\"))))"
           )]
     | TAtom(m, s) ->
@@ -503,8 +504,8 @@ let rec ast_random_type l_param typ =
         let meth_name = random_meth (string_of_ttyp typ) in
         let m1 = random_meth (string_of_ttyp t1) in
         let m2 = random_meth (string_of_ttyp t2) in
-          [parse_foc_meth ("let " ^ meth_name ^ " in " ^ string_of_typ typ ^ " =
-                             fun n in (@INT) ->
+          [parse_foc_meth ("let " ^ meth_name ^ " in " ^ string_of_typ typ ^ " =\n\
+                             fun n in (@INT) ->\n\
                                @CRP(!" ^ m1 ^ "(n),!" ^ m2 ^ "(n))")]
     | TPrm(m, name, _)  ->
         let cons = Focalize_inter.get_concrete_def typ in
@@ -571,30 +572,30 @@ let rec ast_parse_type l_param typ =
         let m2 = parse_meth (string_of_ttyp t2) in
         let error = "@FOC_ERROR(\"parse error on type : " ^ string_of_typ typ ^ "\")"
         in
-          [parse_foc_meth ("let " ^ meth_name ^ " in " ^ string_of_typ typ ^ " =
-                             fun n in (@STRING) ->
-                               let truc = #split_cons(n) in
-                               if @STRUCT_EQUAL(@FST(truc),\"pair\") then
-                                 match @SND(truc) with
-                                 | @NIL -> " ^ error ^ "
-                                 | @CONS(e1,r) ->
-                                     ( match r with
-                                       | @NIL -> " ^ error ^ " 
-                                       | @CONS(e2,r) ->
-                                         @CRP(!" ^ m1 ^ "(e1), !" ^ m2 ^ "(e2))
-                                     )
-                               else
+          [parse_foc_meth ("let " ^ meth_name ^ " in " ^ string_of_typ typ ^ " =\n\
+                             fun n in (@STRING) ->\n\
+                               let truc = #split_cons(n) in\n\
+                               if @STRUCT_EQUAL(@FST(truc),\"pair\") then\n\
+                                 match @SND(truc) with\n\
+                                 | @NIL -> " ^ error ^ "\n\
+                                 | @CONS(e1,r) ->\n\
+                                     ( match r with\n\
+                                       | @NIL -> " ^ error ^ " \n\
+                                       | @CONS(e2,r) ->\n\
+                                         @CRP(!" ^ m1 ^ "(e1), !" ^ m2 ^ "(e2))\n\
+                                     )\n\
+                               else\n\
                                 " ^ error)
           ] 
     | TPrm(_m, name,_)  ->
         let cons = Focalize_inter.get_concrete_def typ in
         let meth_name = (parse_meth (string_of_ttyp typ)) in
         [parse_foc_meth
-           ("let rec " ^ meth_name ^ " in " ^ string_of_typ typ ^ " =
-               fun e ->
-                let ee = #split_cons(e) in
-                let cons = @FST(ee) in
-                let args = @SND(ee) in 
+           ("let rec " ^ meth_name ^ " in " ^ string_of_typ typ ^ " =\n\
+               fun e ->\n\
+                let ee = #split_cons(e) in\n\
+                let cons = @FST(ee) in\n\
+                let args = @SND(ee) in \n\
                 " ^ ast_parse_cons cons name typ)]
     | TAtom(m, s) ->
         begin try
@@ -690,7 +691,7 @@ parse_foc_meth ("let " ^ of_external_meth ()  ^ " in Self = "
 (* ************************************************************************* *)
 
 (* Take a constructor name and returns the ast which convert its to a string *)
-let rec ast_reinject_value_cons ((n, param) : Own_types.constructor) =
+let ast_reinject_value_cons ((n, param) : Own_types.constructor) =
   let new_id = let id = ref 0 in fun () -> id := !id +1; "v" ^ string_of_int !id in
   let aux (v,f) = "!" ^ f ^ "(" ^ v ^ ")" in
   let aux2 l =
@@ -717,8 +718,8 @@ let rec ast_reinject_value_type l_param typ : Own_expr.a_method list   =
         let n2 = reinject_value_meth (string_of_ttyp t2) in
         let n = reinject_value_meth (string_of_ttyp typ) in
           [parse_foc_meth (
-             "let " ^ n ^ "  in " ^ (string_of_typ typ) ^ " =
-                 fun x -> 
+             "let " ^ n ^ "  in " ^ (string_of_typ typ) ^ " =\n\
+                 fun x ->\n\
                    @CRP(!" ^ n1 ^ "(@FST(x)), !" ^ n2 ^ "(@SND(x)))")]
     | TAtom(m, s) ->
         begin try
@@ -747,7 +748,7 @@ let rec ast_reinject_value_type l_param typ : Own_expr.a_method list   =
           true]
     | TSpecPrm s ->
         let n = reinject_value_meth (string_of_ttyp typ) in
-        [parse_foc_meth ("let " ^ n ^ "  in " ^ string_of_typ typ ^ " =
+        [parse_foc_meth ("let " ^ n ^ "  in " ^ string_of_typ typ ^ " =\n\
                 fun x -> " ^ s ^ "!" ^ reinject_value_meth (string_of_ttyp
                 (TAtom(None, focself))) ^ "(x)" )]
     | TFct (_,_) -> failwith "Random_rep.ast_print_type : Not yet implemented";;

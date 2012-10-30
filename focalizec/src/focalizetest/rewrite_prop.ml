@@ -1,7 +1,6 @@
-open To_strings;;
-open Own_prop;;
-open Own_types;;
-open Own_expr;;
+open To_strings ;;
+open Own_prop ;;
+open Own_expr ;;
 (***************)
 
 (** Takes a property in caninical form and transform it to normal form *)
@@ -45,7 +44,7 @@ let rec get_variables p =
   | _ -> p, variables_null;;
 
 (* Take a property in canonical form, returns the normals forms. *)
-let rec normalise_canon n p : normal_forms =
+let normalise_canon n p : normal_forms =
   let rec aux_norm x =
     try 
       match x with

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: handy.ml,v 1.24 2012-03-01 17:32:46 pessaux Exp $ *)
+(* $Id: handy.ml,v 1.25 2012-10-30 11:25:32 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -122,7 +122,7 @@ let pp_generic_option some_prefix printer_fct ppf = function
     {b Rem} : Exported ouside this module.                    *)
 (* ********************************************************** *)
 let pp_generic_n_times n printer_fct ppf a =
-  for i = 0 to n - 1 do printer_fct ppf a done
+  for _i = 0 to n - 1 do printer_fct ppf a done
 ;;
 
 

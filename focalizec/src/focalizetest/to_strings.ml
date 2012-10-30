@@ -1,7 +1,6 @@
 open Own_prop;;
-open Own_basics;;
-open Own_types;;
-open Own_expr;;
+open Own_types ;;
+open Own_expr ;;
 
 (*
 let rec meth_to_string m =
@@ -24,7 +23,7 @@ let rec meth_to_string m =
 *)
 
 (** Obtain a string corresponding to a proposition *)
-let rec string_of_prop =
+let string_of_prop =
   let open_paren prec op_prec =
     if prec > op_prec then "(" else "" in
   let close_paren prec op_prec =

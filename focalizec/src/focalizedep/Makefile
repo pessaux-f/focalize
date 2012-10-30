@@ -12,7 +12,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.13 2012-10-15 15:49:42 pessaux Exp $
+# $Id: Makefile,v 1.14 2012-10-30 11:25:32 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -57,10 +57,10 @@ install:
 	 $(LN) $(EXE_NAME).bin $(EXE_NAME))
 
 clean:
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *~ .*~
+	$(RM) directive_lexer.ml *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *~ .*~
 	$(RM) $(EXE_NAME).byt $(EXE_NAME).bin $(EXE_NAME)
 
-depend:
+depend: directive_lexer.ml *.ml
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend
 
 include .depend
