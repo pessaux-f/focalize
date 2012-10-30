@@ -14,7 +14,7 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: type_ml_generation.ml,v 1.17 2012-10-30 08:59:42 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.18 2012-10-30 09:54:04 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -120,17 +120,12 @@ let type_def_compile ctx env type_def_name type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
   (* Type definition header. *)
   Format.fprintf out_fmter "@[<2>type" ;
-  (* Get a fresh instance of the type's identity scheme directly instanciated
-     with the variables that will serve as parameters of the definition. We
-     keep the list of these variables to be able to print them in front of the
-     type constructor in the OCaml definition. *)
-  let type_def_params =
-    List.map
-      (fun _ -> Types.type_variable ())
-      type_descr.Env.TypeInformation.type_params in
-  let instanciated_body =
-    Types.specialize_with_args
-      type_descr.Env.TypeInformation.type_identity type_def_params in
+  (* We do not operate on a fresh instance of the type's identity scheme. We
+     directly work on the type scheme, taking care to perform *no* unifications
+     to prevent poluting it ! *)
+  let type_def_params = type_descr.Env.TypeInformation.type_params in
+  let (_, tydef_body) =
+    Types.scheme_split type_descr.Env.TypeInformation.type_identity in
   Types.purge_type_simple_to_ml_variable_mapping () ;
   (* Now, generates the type definition's body. *)
   match type_descr.Env.TypeInformation.type_kind with
@@ -145,7 +140,7 @@ let type_def_compile ctx env type_def_name type_descr =
       Format.fprintf out_fmter "%a@] ;;@\n "
         (Types.pp_type_simple_to_ml
            ~current_unit: ctx.Context.rcc_current_unit [])
-        instanciated_body ;
+        tydef_body ;
       (* Not an external type definition, so nothing new in the environment. *)
       env
   | Env.TypeInformation.TK_external (external_trans, external_mapping) ->
@@ -179,35 +174,26 @@ let type_def_compile ctx env type_def_name type_descr =
       end)
   | Env.TypeInformation.TK_variant cstrs ->
       (begin
-      (* To ensure variables names sharing, we will unify an instance of each
-         constructor result type (remind they have a functional type whose
+      (* To ensure variables names sharing, rely on the type definition being
+         consistent, sharing variables between the type header and its
+         constructors. Remind a constructor has a functional type whose
          arguments are the sum constructor's arguments and result is the same
-         type that the hosting type itself) with the instance of the defined
-         type identity. *)
+         type that the hosting type itself. The only exception is for 0-ary
+         constructors that are not functions: they are constants of the hosting
+         type.
+         Hence, we harvest the constructors names and *argument* types. For
+         n-ary constructors we remind the type of the arguments. For 0-ary we do
+         not record any type since there is no argument. *)
       let sum_constructors_to_print =
         List.map
           (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
-            if sum_cstr_arity = Env.TypeInformation.CA_some then
-              (begin
-              try
-                let sum_cstr_ty = Types.specialize sum_cstr_scheme in
-                let unified_sum_cstr_ty =
-                  Types.unify
-                    ~loc: Location.none ~self_manifest: None
-                    (Types.type_arrow
-                       (Types.type_variable ()) instanciated_body)
-                    sum_cstr_ty in
-                let sum_cstr_args =
-                  (* We do not have anymore information about "Self"'s
-                     structure... *)
-                  Types.extract_fun_ty_arg
-                    ~self_manifest: None unified_sum_cstr_ty in
-                (sum_cstr_name, (Some sum_cstr_args))
-              with _ ->
-                (* Because program is already well-typed, this should always
-                   succeed. *)
-                assert false
-              end)
+            if sum_cstr_arity = Env.TypeInformation.CA_some then (
+              let (_, sum_cstr_ty) = Types.scheme_split sum_cstr_scheme in
+              let sum_cstr_args =
+                (* We don't have anymore info about "Self"'s structure... *)
+                Types.extract_fun_ty_arg ~self_manifest: None sum_cstr_ty in
+              (sum_cstr_name, (Some sum_cstr_args))
+             )
             else (sum_cstr_name, None))
           cstrs in
       (* Print the parameter(s) stuff if any. Do it only now the unifications
@@ -241,25 +227,18 @@ let type_def_compile ctx env type_def_name type_descr =
       end)
   | Env.TypeInformation.TK_record fields ->
       (begin
-      (* Like for the sum types, we make use of unification to ensure the
-         sharing of variables names. We proceed exactly the same way,
-         delaying the whole print until we unified into each record-field
-         type. *)
+       (* Like for the sum types, we directly dig in the fields schemes,
+          assuming the type definition is consistent, hance sharing variables
+          between header of the definition and its fields. *)
       let record_fields_to_print =
         List.map
           (fun (field_name, field_mut, field_scheme) ->
             try
-              let field_ty = Types.specialize field_scheme in
-              let unified_field_ty =
-                Types.unify
-                  ~loc: Location.none ~self_manifest: None
-                  (Types.type_arrow (Types.type_variable ()) instanciated_body)
-                  field_ty in
+              let (_, field_ty) = Types.scheme_split field_scheme in
               (* We do not have anymore information about "Self"'s
                  structure... *)
               let field_args =
-                Types.extract_fun_ty_arg
-                  ~self_manifest: None unified_field_ty in
+                Types.extract_fun_ty_arg ~self_manifest: None field_ty in
               (field_name, field_mut, field_args)
             with _ ->
               (* Because program is already well-typed, this should always

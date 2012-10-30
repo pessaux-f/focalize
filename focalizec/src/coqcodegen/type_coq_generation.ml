@@ -14,7 +14,7 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: type_coq_generation.ml,v 1.20 2012-10-30 08:59:42 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.21 2012-10-30 09:54:04 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -125,7 +125,7 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
      directly work on the type scheme, taking care to perform *no* unifications
      to prevent poluting it ! *)
   let type_def_params = type_descr.Env.TypeInformation.type_params in
-  let (_, instanciated_body) =
+  let (_, tydef_body) =
     Types.scheme_split type_descr.Env.TypeInformation.type_identity in
   (* Compute the number of extra polymorphic-induced arguments to the
      constructor. *)
@@ -143,7 +143,7 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
           never at toplevel, hence we don't need to add any bindind in the
           [collection_carrier_mapping]. *)
        Format.fprintf out_fmter ":=@ %a.@]@\n"
-         (Types.pp_type_simple_to_coq print_ctx) instanciated_body ;
+         (Types.pp_type_simple_to_coq print_ctx) tydef_body ;
        if record_in_env then
          (* Not an external type definition, so just add the type definition in
             the environment. *)
