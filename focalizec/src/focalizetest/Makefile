@@ -1,19 +1,21 @@
-#**********************************************************************#
-#                                                                      #
-#                        FoCaLize compiler                             #
-#                                                                      #
-#            Matthieu Carlier                                          #
-#            François Pessaux                                          #
-#            Pierre Weis                                               #
-#            Damien Doligez                                            #
-#                               LIP6  --  INRIA Rocquencourt           #
-#                                                                      #
-#  Copyright 2009 LIP6 and INRIA                                       #
-#  Distributed only by permission.                                     #
-#                                                                      #
-#**********************************************************************#
+# ************************************************************************** #
+#                                                                            #
+#                        FoCaLiZe compiler                                   #
+#                                                                            #
+#            Matthieu Carlier                                                #
+#            François Pessaux                                                #
+#            Pierre Weis                                                     #
+#            Damien Doligez                                                  #
+#                                                                            #
+#                               LIP6  --  INRIA Rocquencourt                 #
+#                                                                            #
+#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
+#            2012 ENSTA ParisTech                                            #
+#  Distributed only by permission.                                           #
+#                                                                            #
+# ************************************************************************** #
 
-# $Id: Makefile,v 1.10 2012-10-30 11:29:06 pessaux Exp $
+# $Id: Makefile,v 1.11 2012-10-30 11:55:06 pessaux Exp $
 
 ROOT_DIR=../../..
 
