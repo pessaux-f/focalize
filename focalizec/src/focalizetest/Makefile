@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.9 2012-10-30 11:25:32 pessaux Exp $
+# $Id: Makefile,v 1.10 2012-10-30 11:29:06 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -74,7 +74,7 @@ clean:
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 	$(RM) $(EXE_NAME).byt $(EXE_NAME).bin $(EXE_NAME)
 
-depend:
+depend: lexer.ml own_parser.ml *.ml *.mli
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend
 
 include .depend
