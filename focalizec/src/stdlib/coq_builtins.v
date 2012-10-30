@@ -1,43 +1,59 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLize compiler                            *)
-(*                                                                     *)
-(*            François Pessaux                                         *)
-(*            Virgile Prevosto                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
-(*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
+(* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            François Pessaux                                                *)
+(*            Pierre Weis                                                     *)
+(*            Damien Doligez                                                  *)
+(*                                                                            *)
+(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*                                                                            *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
+(*            2012 ENSTA ParisTech                                            *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
 
-(* $Id: coq_builtins.v,v 1.14 2008-12-17 12:12:16 pessaux Exp $ *)
+(* $Id: coq_builtins.v,v 1.15 2012-10-30 08:59:42 pessaux Exp $ *)
 
 Require Import Bool.
 Require Export ZArith.
 Require Export String.
 
-(* *********************************************************************** *)
-(** Equality.                                                              *)
+(* Artificial type definition on which we map any weakly polymorphic type
+   variable, i.e. type variables remaining non-generalized but not instantiated
+   however. We need such an artifact since in a polymorphic context an extra
+   argument has to be provided (since polymorphism is explicit in Coq). However,
+   a wealy variable being not generalized, it doens't appear in the definition's
+   type scheme, hence the code generation process doesn't know that it "should"
+   generate an extra parameter of type Set. Moreover, it doesn't know it
+   "should"... but it indeed *shouldn't* since the variable is really not
+   universally quantified.
+   So instead, no extra parameter is created and we map the type variable onto
+   a dedicated "meaningless" type. *)
+Inductive weak_poly_var_ty : Set := __non_generalized__ : weak_poly_var_ty.
+
+
+(* ************************************************************************** *)
+(** Equality.                                                                 *)
 
 (* Beware we use Coq [bool] type because we map FoCaLize's [bool] type on it. *)
 Section eq.
 Variable syntactic_equal___A : Set.
 
-Parameter bi__syntactic_equal : syntactic_equal___A -> syntactic_equal___A -> bool.
+Parameter bi__syntactic_equal :
+  syntactic_equal___A -> syntactic_equal___A -> bool.
 
-Axiom syntactic_equal_refl : forall x : syntactic_equal___A, Is_true (bi__syntactic_equal x x).
+Axiom syntactic_equal_refl :
+  forall x : syntactic_equal___A, Is_true (bi__syntactic_equal x x).
 
 Axiom syntactic_equal_sym :
-  forall x y : syntactic_equal___A, Is_true (bi__syntactic_equal x y) -> Is_true (bi__syntactic_equal y x).
+  forall x y : syntactic_equal___A,
+  Is_true (bi__syntactic_equal x y) -> Is_true (bi__syntactic_equal y x).
 
-Axiom
-  syntactic_equal_trans :
-    forall x y z : syntactic_equal___A,
-    Is_true (bi__syntactic_equal x y) -> Is_true (bi__syntactic_equal y z) ->
+Axiom syntactic_equal_trans :
+  forall x y z : syntactic_equal___A,
+  Is_true (bi__syntactic_equal x y) -> Is_true (bi__syntactic_equal y z) ->
     Is_true (bi__syntactic_equal x z).
 End eq.
 
@@ -66,7 +82,8 @@ Proof.
   apply decidable; auto.
 Qed.
 
-Definition zenon_syntactic_equal_s := fun D S X Y a b => zenon_syntactic_equal D S X Y b a.
+Definition zenon_syntactic_equal_s :=
+  fun D S X Y a b => zenon_syntactic_equal D S X Y b a.
 
 Theorem zenon_not_syntactic_equal :
   forall (S : Set) (x y : S),
@@ -82,8 +99,8 @@ Qed.
 
 Definition zenon_not_syntactic_equal_s := fun S X Y a b => zenon_not_syntactic_equal S X Y b a.
 
-(* *********************************************************************** *)
-(* *********************************************************************** *)
+
+(* ************************************************************************** *)
 
 Inductive list_Prop : Type :=
   | Null : list_Prop

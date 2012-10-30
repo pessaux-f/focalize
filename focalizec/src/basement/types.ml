@@ -1,20 +1,20 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLize compiler                            *)
-(*                                                                     *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                                                                     *)
-(*                 LIP6  --  INRIA Rocquencourt  -- ENSTA              *)
-(*                                                                     *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
-(*            2012 ENSTA ParisTech                                     *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
+(* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            François Pessaux                                                *)
+(*            Pierre Weis                                                     *)
+(*            Damien Doligez                                                  *)
+(*                                                                            *)
+(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*                                                                            *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
+(*            2012 ENSTA ParisTech                                            *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
 
-(* $Id: types.ml,v 1.93 2012-10-26 16:11:40 pessaux Exp $ *)
+(* $Id: types.ml,v 1.94 2012-10-30 08:59:42 pessaux Exp $ *)
 
 
 (* ***************************************************************** *)
@@ -449,7 +449,9 @@ let (pp_type_simple, pp_type_scheme) =
         let ty_variable_name =
           get_or_make_type_variable_name
             ty_var ~generalized_p: (ty_var.tv_level = generic_level) in
-        Format.fprintf ppf "'%s" ty_variable_name
+        Format.fprintf ppf "'%s" ty_variable_name ;
+        (* DEBUG
+        ; Format.fprintf ppf "(*%d,l:%d*)" ty_var.tv_debug ty_var.tv_level *)
     | ST_arrow (ty1, ty2) ->
         (* Arrow priority: 2. *)
         if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
@@ -1485,15 +1487,25 @@ let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
     type_variable_names_mapping := [] ;
     type_variables_counter := 0 in
 
-  let get_or_make_type_variable_name_to_coq ty =
+  let get_or_make_type_variable_name_to_coq ty_var =
     (* No need to repr, [rec_pp_to_coq] already did it. *)
-    try List.assq ty !type_variable_names_mapping with
+    try List.assq ty_var !type_variable_names_mapping with
     | Not_found ->
         let name =
-          "__var_" ^ (Handy.int_to_base_26 !type_variables_counter) in
-        incr type_variables_counter ;
+          (if ty_var.tv_level <> generic_level then
+            (* Attention this is a weak-polymorphic variable. Hence, it is
+               *not* bound by any extra forall ! Generating a new variable
+               name will lead to an unbound type variable !
+               Instead, we "cheat" replacing this variable by the internal
+               type we defined in Coq: 'coq_builtins.weak_poly_var_ty' *)
+            "coq_builtins.weak_poly_var_ty"
+          else
+            let tmp =
+              "__var_" ^ (Handy.int_to_base_26 !type_variables_counter) in
+            incr type_variables_counter ;
+            tmp) in
         type_variable_names_mapping :=
-          (ty, name) :: !type_variable_names_mapping ;
+          (ty_var, name) :: !type_variable_names_mapping ;
         name in
 
 

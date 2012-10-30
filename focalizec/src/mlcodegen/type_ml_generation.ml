@@ -1,17 +1,20 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLiZe compiler                            *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
-(*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
+(* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            François Pessaux                                                *)
+(*            Pierre Weis                                                     *)
+(*            Damien Doligez                                                  *)
+(*                                                                            *)
+(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*                                                                            *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
+(*            2012 ENSTA ParisTech                                            *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
 
-(* $Id: type_ml_generation.ml,v 1.16 2012-02-10 13:25:36 pessaux Exp $ *)
+(* $Id: type_ml_generation.ml,v 1.17 2012-10-30 08:59:42 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -103,14 +106,13 @@ let extend_ml_gen_env_with_type_external_mapping env external_mapping =
     In case 1), the generated type body is based on its
     [type_descr.Env.TypeInformation.type_identity] and its
     [type_descr.Env.TypeInformation.type_kind].
-    In case 2), the type will be for sure a TK_abstract (because it
-    can't be a sum or a record. Then if it is fully abstract, we map
-    it directly to an OCaml type wearing the same name than the
-    defined type itself. This means that this type must exists in
-    the OCaml environment of the generated file.
-    Returns the ML code generation environment extended by the
-    mappings of record field names or sum constructor possibly
-    induced by the type definition if it's an external one.
+    In case 2), the type will be for sure a TK_abstract (because it can't be a
+    sum or a record. Then if it is fully abstract, we map it directly to an
+    OCaml type wearing the same name than the defined type itself. This means
+    that this type must exists in the OCaml environment of the generated file.
+    Returns the ML code generation environment extended by the mappings of
+    record field names or sum constructor possibly induced by the type
+    definition if it's an external one.
 
     {b Rem} : Exported outside this module.                           *)
 (* ****************************************************************** *)

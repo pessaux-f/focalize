@@ -1,17 +1,20 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLiZe compiler                            *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
-(*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
+(* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            François Pessaux                                                *)
+(*            Pierre Weis                                                     *)
+(*            Damien Doligez                                                  *)
+(*                                                                            *)
+(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*                                                                            *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
+(*            2012 ENSTA ParisTech                                            *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
 
-(* $Id: type_coq_generation.ml,v 1.19 2012-02-10 13:02:25 pessaux Exp $ *)
+(* $Id: type_coq_generation.ml,v 1.20 2012-10-30 08:59:42 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -118,20 +121,14 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
     Types.cpc_current_species = None;
     Types.cpc_collections_carrier_mapping =
       ctx.Context.rcc_collections_carrier_mapping } in
-  (* Get a fresh instance of the type's identity scheme directly   *)
-  (* instanciated with the variables that will serve as parameters *)
-  (* of the definition. We keep the list of these variables to be  *)
-  (* able to print them in front of the type constructor in the    *)
-  (* OCaml definition.                                             *)
-  let type_def_params =
-    List.map
-      (fun _ -> Types.type_variable ())
-      type_descr.Env.TypeInformation.type_params in
-  let instanciated_body =
-    Types.specialize_with_args
-      type_descr.Env.TypeInformation.type_identity type_def_params in
-  (* Compute the number of extra polymorphic-induced *)
-  (* arguments to the constructor.                   *)
+  (* We do not operate on a fresh instance of the type's identity scheme. We
+     directly work on the type scheme, taking care to perform *no* unifications
+     to prevent poluting it ! *)
+  let type_def_params = type_descr.Env.TypeInformation.type_params in
+  let (_, instanciated_body) =
+    Types.scheme_split type_descr.Env.TypeInformation.type_identity in
+  (* Compute the number of extra polymorphic-induced arguments to the
+     constructor. *)
   let nb_extra_args = List.length type_def_params in
   (* Now, generates the type definition's body. *)
   match type_descr.Env.TypeInformation.type_kind with
@@ -141,10 +138,10 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
          print_ctx out_fmter type_def_params;
-       (* Since types are toplevel, the way "Self" is printed is non *)
-       (* relevant. Indeed, "Self" can only appear inside the scope  *)
-       (* of a species, hence never at toplevel, hence we don't need *)
-       (* to add any bindind in the [collection_carrier_mapping].    *)
+       (* Since types are toplevel, the way "Self" is printed is non relevant.
+          Indeed, "Self" can only appear inside the scope of a species, hence
+          never at toplevel, hence we don't need to add any bindind in the
+          [collection_carrier_mapping]. *)
        Format.fprintf out_fmter ":=@ %a.@]@\n"
          (Types.pp_type_simple_to_coq print_ctx) instanciated_body ;
        if record_in_env then
@@ -192,37 +189,21 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
        end)
    | Env.TypeInformation.TK_variant cstrs ->
        (begin
-       (* To ensure variables names sharing, we will unify an instance of each
-          constructor result type (remind they have a functional type whose
+       (* To ensure variables names sharing, rely on the type definition being
+          consistent, sharing variables between the type header and its
+          constructors. Remind a constructor has a functional type whose
           arguments are the sum constructor's arguments and result is the same
-          type that the hosting type itself) with the instance of the defined
-          type identity. The only difference with OCaml is that we keep the
-          complete functionnal type since in Coq constructors are really
-          "functions" : one must also write the return type of the constructor
-          (that is always the type of the definition hosting the constructor. *)
+          type that the hosting type itself. The only difference with OCaml is
+          that we keep the complete functionnal type since in Coq constructors
+          are really "functions" : one must also write the return type of the
+          constructor (that is always the type of the definition hosting the
+          constructor. *)
        let sum_constructors_to_print =
          List.map
-           (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
-             (* Recover the scheme of the constructor. *)
-             let sum_cstr_ty = Types.specialize sum_cstr_scheme in
-             try
-               let unified_sum_cstr_ty =
-                 (* If it has argument(s), then it will be functionnal. *)
-                 if sum_cstr_arity = Env.TypeInformation.CA_some then
-                   Types.unify
-                     ~loc: Location.none ~self_manifest: None
-                     (Types.type_arrow
-                        (Types.type_variable ()) instanciated_body)
-                     sum_cstr_ty
-                 else
-                   Types.unify
-                     ~loc: Location.none ~self_manifest: None
-                     instanciated_body sum_cstr_ty in
-               (sum_cstr_name, unified_sum_cstr_ty)
-             with _ ->
-               (* Because program is already well-typed, this should always
-                  succeed. *)
-               assert false)
+           (fun (sum_cstr_name, _, sum_cstr_scheme) ->
+             (* Recover the body of the scheme of the constructor. *)
+             let (_, sum_cstr_ty) = Types.scheme_split sum_cstr_scheme in
+               (sum_cstr_name, sum_cstr_ty))
            cstrs in
        Format.fprintf out_fmter "@[<2>Inductive %a__t@ "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
@@ -270,25 +251,18 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
        end)
    | Env.TypeInformation.TK_record fields ->
        (begin
-       (* Like for the sum types, we make use of unification to ensure the
-          sharing of variables names. We proceed exactly the same way,
-          delaying the whole print until we unified into each record-field
-          type. *)
+       (* Like for the sum types, we directly dig in the fields schemes,
+          assuming the type definition is consistent, hance sharing variables
+          between header of the definition and its fields. *)
        let record_fields_to_print =
          List.map
            (fun (field_name, field_mut, field_scheme) ->
              try
-               let field_ty = Types.specialize field_scheme in
-               let unified_field_ty =
-                 Types.unify
-                   ~loc: Location.none ~self_manifest: None
-                   (Types.type_arrow (Types.type_variable ()) instanciated_body)
-                   field_ty in
+               let (_, field_ty) = Types.scheme_split field_scheme in
                (* We do not have anymore information about "Self"'s
                   structure... *)
                let field_args =
-                 Types.extract_fun_ty_arg
-                   ~self_manifest: None unified_field_ty in
+                 Types.extract_fun_ty_arg ~self_manifest: None field_ty in
                (field_name, field_mut, field_args)
              with _ ->
                (* Because program is already well-typed, this should always
