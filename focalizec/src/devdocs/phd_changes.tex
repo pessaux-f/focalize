@@ -1,4 +1,4 @@
-% $Id: phd_changes.tex,v 1.13 2012-01-30 09:06:56 pessaux Exp $
+% $Id: phd_changes.tex,v 1.14 2012-10-31 14:28:20 pessaux Exp $
 \subsection{Type unification (1)}
 \index{unification}
 \index{rule![SELF1/2]}
@@ -203,8 +203,8 @@ but the day I thought to this rule, I was very poor in naming schemes
 performs a fixpoint by adding for each method of dependencies, its
 decl-dependencies coming from its ``type'' (i.e. ML-like type for
 computational methods, and statement for logical methods). Of course,
-when tracking decl-dependencies of a method, we address the method body
-in its species. But this species is a collection parameter. So before
+when tracking decl-dependencies of a method of parameter, we address
+the method type in its species. But this species is a collection parameter. So before
 adding the found method to the set of dependencies on collection
 parameters of the analysed species, we must replace in the method,
 occurrences of {\tt Self} by the by the species parameter from where
@@ -323,7 +323,7 @@ need. In fact, this gives us a ``skeleton'' of dependencies where some
 $\lambda$-liftings may have disappeared compared to the number of
 required in the inherited species. But, we know that all the methods
 involved in the dependencies are present, may be not with the right
-number of occurrences. Then we take the dependencies scheme of tin
+number of occurrences. Then we take the dependencies scheme of the
 inherited method and we rebuild a final dependencies structure by
 replacing in the inherited one all the occurrences of dependencies on
 the formal parameter by the corresponding effective argument (used
@@ -342,8 +342,8 @@ as {\tt S!rep[S<-G]} {\tt S!rep[S<-G]} and {\tt T!equal[T<-G]}
 Computing real dependencies on collection parameters for record type
 is not clearly stated. For \ocaml, it is quite trivial since we don't
 have any logical methods, hence we can only have dependencies via
-``types''. For \ocaml, the situation is more tricky. In fact, due to
-logical methods (theorems and properties), dependencies may more
+``types''. For \coq, the situation is more tricky. In fact, due to
+logical methods (theorems and properties), dependencies may be more
 complex, involving types and methods found in the expressions forming
 the logical statements.
 
@@ -592,7 +592,7 @@ $\lambda$-liftings even for properties and theorems.
 
 This raises a technical problem however since \zenon\ does not support
 yet higher order. And in fact, with this generation model, out
-theorems get parametrised by all the $\lambda$-lifted definitions. o
+theorems get parametrised by all the $\lambda$-lifted definitions. To
 circumvent this problem, we decided to only reintroduce {\tt Section}s
 in the code dedicated to be sent to \zenon, then map back the proved
 theorems onto regular $\lambda$-lifted definitions. This means that on

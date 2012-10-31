@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.25 2012-01-27 12:24:36 pessaux Exp $
+% $Id: codegen_model.tex,v 1.26 2012-10-31 14:28:20 pessaux Exp $
 \label{code-gen-model}
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -90,7 +90,7 @@ late-binding feature of \focalize. \ocaml\ requires a parameter not
 needed for \coq: this is the only fundamental difference. We will see
 that abstractions (hence, parameters) required by \coq\ can involve
 methods but this is only because some of the dependencies that are
-present in the \coq code are always trivially absent in the
+present in the \coq\ code are always trivially absent in the
 \ocaml\ code.
 
 
@@ -243,11 +243,11 @@ Module Me.
     (_p_Naturals_un : Naturals_T) : Type :=
     mk_record 
   ...
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 The record type for \ocaml\ will then look like:
+
 {\scriptsize
 \begin{lstlisting}[language=MyOCaml]
 module Cartesian_product =
@@ -257,11 +257,11 @@ module Cartesian_product =
     'a0_as_carrier * 'b1_as_carrier
   type ('a0_as_carrier, 'b1_as_carrier, 'me_as_carrier) me_as_species =
   ...
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 The record type for \coq\ will then look like:
+
 {\scriptsize
 \begin{lstlisting}[language=MyCoq]
 Module Cartesian_product.
@@ -269,34 +269,7 @@ Module Cartesian_product.
     (_p_A_tst : A_T -> basics.bool__t) : Type :=
     mk_record
   ...
-\end{lstlisting}
-}
-
-\medskip
-\paragraph{The entity parameters} In \ocaml\ they can never appear in
-the record type since in ML-like types, we can't have expressions. 
-However, in \coq\ it is possible to have dependency on an entity
-parameter in a theorem or property statement (i.e. in the type of a
-logical method). For example:
-{\scriptsize
-\begin{lstlisting}
-species Me (Naturals is IntModel, n in Naturals) =
-  representation = Naturals ;
-
- theorem myth : all x in Self,
-    basics#syntactic_equal (n, Naturals!un)
-  proof = assumed {* *} ;
-  end ;;
-\end{lstlisting}
-}
-The theorem {\tt myth} show a dependency on the entity parameter
-{\tt n}. In this case, the record type will be parameterised by this
-entity parameter like if it was a collection parameter's
-method. Obviously, an entity parameter doesn't have methods since it
-is a ``value'' and not a species. So we don't have any notion of
-method in the naming scheme. We choose to name these entity parameters
-by ``{\tt \_p\_}'' + the entity parameter's name  + {\tt \_} + the
-the entity parameter's name again.
+\end{lstlisting}}
 
 \subsubsection{Fields and their types}
 Now we saw the header of the record type definition, we must address
@@ -313,7 +286,7 @@ logical methods. This especially means that since logical methods are
 discarded in \ocaml, in this target language, we will only have
 ML-like types.
 
-The only important difference between \ocaml\ and \coq is that in
+The only important difference between \ocaml\ and \coq\ is that in
 \coq\ we always have an extra (and first) field representing the
 carrier of the species (remember that in \ocaml, instead, we had a
 type definition that we didn't have in \coq). This field always
@@ -323,7 +296,7 @@ straight the method's name. In \coq, the field's name is
 ``{\tt rf\_}'' + the method's name (``rf'' for {\bf r}ecord
 {\bf f}ield).
 
-Let's now take a simple example and seen the record types in
+Let's now take a simple example and see the record types in
 \ocaml\ and in \coq.
 
 {\footnotesize
@@ -340,8 +313,7 @@ species Me (Naturals is IntModel, n in Naturals) =
   let reduce (x in Naturals) in Self =
     Naturals!modulo (x, n) ;
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 {\footnotesize
@@ -357,8 +329,7 @@ module Me =
     (* From species ok__in_example#Me. *)
     reduce : 'naturals0_as_carrier -> 'me_as_carrier ;
     }
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 {\footnotesize
@@ -377,8 +348,7 @@ Module Me.
     (* From species ok__in_example#Me. *)
     rf_reduce : Naturals_T -> rf_T
     }.
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \label{coq-explicit-polymorphism}
 Note that in the generated \coq\ code, the method {\tt daube} (in
@@ -443,23 +413,23 @@ Virgile Prevosto's PhD.
 A method will lead to a {\tt let} of {\tt theorem} definition
 depending on its kind. The generated name is the same than in the
 \focalize\ source.
-label{ident-stringification}
+\label{ident-stringification}
 Only a ``stringification'' is done when the method
 is an operator (e.g. {\tt =}, {\tt +}, {\tt +=e}, \ldots). This
 stringification is done on the fly using a very simple mechanism
 (check function \\
 {\tt pp\_vname\_with\_operators\_expanded} in the source
 file \\
-{\tt focalize/focalizec/src//basement/parsetree\_utils.ml}.
+{\tt focalize/focalizec/src/basement/parsetree\_utils.ml}.
 
 \index{method!generator}
 The generated definition is in fact a {\bf method generator}, not the
-method itself. Its is a function that is parametrised by all the thing
-the method depends on, and whose body is the method's body''. This
-mechanism serves the late-binding feature and allow to really create a
+method itself. Its is a function that is parametrised by all the things
+the method depends on, and whose body is the method's body. This
+mechanism serves the late-binding feature and allows to really create a
 method once things it depends on are defined by applying the generator
 to the effective definitions of the methods the current method depends
-on. Hence, until the method we depend on are not yet defined, one can
+on. Hence, until the methods we depend on are not yet defined, one can
 still work with our method generator. Moreover, this allows to make
 several effective methods from a same generator, by applying
 different effective definitions for $\lambda$-lifted  parameters of
@@ -546,7 +516,7 @@ process must be inserted in order to get the proof done to finally get
 the method generator. This will be explained in section {\ref todo1}.
 
 
-\subsubsection{Sample code to help to summarise}
+\subsubsection{Sample code to help to summarize}
 \label{sample-code-virgile-part1}
 We take a part of the example given in Virgile Prevosto's Phd, section
 2.2.2 starting page 14 to illustrate the model we exposed until
@@ -587,8 +557,7 @@ species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
   proof of symm = assumed {* *} ;
 
 end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 {\footnotesize
@@ -666,8 +635,7 @@ module Setoide_produit =
   <<<< ATTENTION:                                                   >>>>
   <<<< SKIPPED THE COLLECTION GENERATOR STUFF THAT WE EXPLAIN LATER >>>>
  end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 {\footnotesize
@@ -798,8 +766,7 @@ Module Setoide_produit.
     <<<< ATTENTION:                                                   >>>>
   <<<< SKIPPED THE COLLECTION GENERATOR STUFF THAT WE EXPLAIN LATER >>>>
 End Setoide_produit.
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 
@@ -894,7 +861,7 @@ value. Hence, this shows clearly that a collection is in fact a value
 whose type is the record type we created to model the species.
 
 
-\subsubsection{Sample code to help to summarise}
+\subsubsection{Sample code to help to summarize}
 Like we did to explain the code generation model of species in
 \ref{code-gen-model-methods}, we use the same sample we used in
 \ref{sample-code-virgile-part1} and complete the parts about
@@ -936,8 +903,7 @@ module Setoide_produit =
        }
     
   end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \label{point-the-extra-unit-parameter-need}
 In the above \ocaml\ you may notice that the collection generator
@@ -947,13 +913,13 @@ not need any parameter (because there is no collection and entity
 parameter for this species) from having no argument.
 
 In effect, in this case, for sake of non-expansivity, ML type system
-doesn't allow to generalise type variables appearing in values that
+doesn't allow to generalize type variables appearing in values that
 are not functional (roughly, very roughly speaking, since there are
 other cases \ldots Let's say that functional value can have their
-type generalised).
+type generalized).
 
-This is a problem since type variables appearing the the module
-representing a species won't be generalisable, then, as soon we create
+This is a problem since type variables appearing in the module
+representing a species won't be generalizable, then, as soon we create
 a collection, we instance these type variables by the carrier
 representation and by parameters' carriers. And if we want to create
 another collection, since the variables are now instantiated (they are
@@ -1001,8 +967,7 @@ Module Setoide_produit.
     local_symm.
   
 End Setoide_produit.
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \subsubsection{Sample code for extra () parameter for \ocaml}
 \index{extra!() parameter}
@@ -1056,9 +1021,9 @@ species Concrete_list (E is Basic_object) =
        cons (h2, q2) ;
 end ;;
 
-\end{lstlisting}
-}
-Once compiled to \ocaml\, we get the following code:
+\end{lstlisting}}
+
+\noindent Once compiled to \ocaml\, we get the following code:
 
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml,
@@ -1130,9 +1095,9 @@ module Concrete_list =
        }
     
   end ;;
-\end{lstlisting}
-}
-If we check the interface of the \ocaml\ compilatio unit, we can see
+\end{lstlisting}}
+
+If we check the interface of the \ocaml\ compilation unit, we can see
 that the module {\tt Concrete\_list} has type:
 
 {\footnotesize
@@ -1159,13 +1124,13 @@ module Concrete_list :
       ('c -> 'a) -> 'b -> ('c -> 'c) -> ('a -> 'a) -> 'c -> 'b
     val collection_create : ('_a, '_a Basics._focty_list) me_as_species
   end
-\end{lstlisting}
-}
-where the function {\tt collection\_create} has a non generalised type
-variable {\tt '\_a}. Hence, to continue the example, we just need to
-create two collections, one with {\tt int} as carrier, the other with
-{\tt bool} and to create 2 collections of lists using these 2 collections
-as argument.
+\end{lstlisting}}
+
+\noindent where the function {\tt collection\_create} has a non
+generalised type variable {\tt '\_a}. Hence, to continue the example,
+we just need to create two collections, one with {\tt int} as carrier,
+the other with {\tt bool} and to create 2 collections of lists using
+these 2 collections as argument.
 
 {\footnotesize
 \begin{lstlisting}
@@ -1180,11 +1145,12 @@ species Contrete_bool inherits Basic_object =
   let print = print_bool ;
 end ;;
 collection Bool implements Contrete_bool ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 When creating the last collection implementing list of booleans, the
 {\tt '\_a} type variable was already instantiated by {\tt int}, hence
 leading to \ocaml\ complaining:
+
 \begin{verbatim}
 File ".....", line 210, characters 13-33:
 This expression has type
@@ -1255,8 +1221,8 @@ collection Les_entiers implements Entiers_concrets ;;
 collection Couple_d_entiers implements
   Monoide_produit (Les_entiers, Les_entiers)
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 We get interested directly by the way to get the collection
 {\tt Couple\_d\_entiers} since it is more interesting because the
 implemented species has collection parameters. For the collection
@@ -1372,8 +1338,7 @@ module Couple_d_entiers =
       different = t.Monoide_produit.different ;
        }
   end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 The \coq\ code follows exactly the same scheme. It appears to be more
 tricky and bigger for 2 reasons: first logical methods are in the
@@ -1399,8 +1364,8 @@ type of {\tt Monoide\_produit}, we see:
     (* From species ok__phd_sample#Setoide_produit. *)
     rf_creer : C_T -> D_T -> rf_T ;
     ...
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 that is we have 2 parameters that are the carriers of the collection
 parameters. When we want to pick values from the fields of the value
 returned by the collection generator (hence from the one of
@@ -1418,17 +1383,16 @@ let t :=
   Les_entiers.effective_collection.(Les_entiers.rf_T)
   Les_entiers.effective_collection.(Les_entiers.rf_T)
   .... in
-\end{lstlisting}
-}
-will look like:
+\end{lstlisting}}
+
+\noindent will look like:
 
 {\footnotesize
 \begin{lstlisting}[language=MyCoq]
  t.(Monoide_produit.rf_creer
       Les_entiers.effective_collection.(Les_entiers.rf_T)
       Les_entiers.effective_collection.(Les_entiers.rf_T))
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 So the full generated \coq\ code will be:
 
@@ -1551,8 +1515,7 @@ Module Couple_d_entiers.
          Les_entiers.effective_collection.(Les_entiers.rf_T)).
     
 End Couple_d_entiers.
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 \section{Toplevel values}
@@ -1584,8 +1547,7 @@ let fst (x) =
   match x with
   | (v, _) -> v
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 {\footnotesize
@@ -1600,8 +1562,7 @@ let snd (x : 'a * 'b) =
      v
      end)
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \index{\%type}\index{tuple}\index{type!tuple}
 In the \coq\ code, we see again here a hack to speak of the type of
@@ -1621,8 +1582,7 @@ Let snd (__var_a : Set) (__var_b : Set) (x : ((__var_a * __var_b)%type)) :
    | (_, v) =>
         v
   end.
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 \section{Toplevel theorems}
@@ -1640,8 +1600,7 @@ For instance:
 theorem beq_trans :
   all x y z in 'a, x = y -> y = z -> x = z
   proof = assumed {* Import trusted external code. *} ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 {\footnotesize
 \begin{lstlisting}[language=MyCoq,
@@ -1653,8 +1612,7 @@ Theorem beq_trans :
 (* Proof assumed because " Import trusted external code. ". *)
 apply coq_builtins.magic_prove.
 Qed.
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \section{Type definitions}
 \index{type!definition}
@@ -1725,8 +1683,7 @@ type t = alias int ;;
 type u = alias (t * (char * bool * string)) ;;
 type poly_pair ('a) = alias ('a * 'a) ;;
 type inv_prod ('a, 'b) = alias ('b * 'a) ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml,
@@ -1737,8 +1694,7 @@ type _focty_u =
     (Basics._focty_char * Basics._focty_bool * Basics._focty_string) ;;
 type 'a _focty_poly_pair = 'a * 'a ;;
 type ('a, 'b) _focty_inv_prod = 'b * 'a ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 {\footnotesize
 \begin{lstlisting}[language=MyCoq,
@@ -1751,8 +1707,7 @@ Definition u__t :=
 Definition poly_pair__t (__var_a : Set) := ((__var_a * __var_a)%type).
 Definition inv_prod__t (__var_b : Set) (__var_c : Set) :=
   ((__var_c * __var_b)%type).
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 The only technical thing is to make sure that type variables are
 correctly identified all along the unifications to be sure that they
@@ -1792,9 +1747,9 @@ type t =
   | A
   | B
  ;;
-\end{lstlisting}
-}
-we get the following \ocaml\ code where only the value constructors
+\end{lstlisting}}
+
+\noindent we get the following \ocaml\ code where only the value constructors
 names {\tt A} and {\tt B} are emitted:
 
 {\footnotesize
@@ -1804,8 +1759,8 @@ type _focty_t =
   | A
   | B
  ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 Whereas in \coq, in addition to the constructors names, one must
 explicitly say that they are values of this type:
 
@@ -1815,8 +1770,7 @@ explicitly say that they are values of this type:
 Inductive t__t : Set := 
   | A : (t__t)
   | B : (t__t).
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \medskip
 Parametrised value constructors are a bit more complex. We first
@@ -1846,8 +1800,8 @@ type t_poly_rec ('a) =
   | TPR1 ('a)
   | TPR2 (t_poly_rec ('a))
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 \noindent in \ocaml\ to get:
 
 {\footnotesize
@@ -1864,8 +1818,7 @@ type 'a _focty_t_poly_rec =
   | TPR1 of ('a)
   | TPR2 of ('a _focty_t_poly_rec)
  ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \noindent and in \coq\ to get:
 
@@ -1882,8 +1835,8 @@ Inductive t_rec__t : Set :=
 Inductive t_poly_rec__t (__var_b : Set) : Set := 
   | TPR1 : (__var_b -> (t_poly_rec__t __var_b))
   | TPR2 : ((t_poly_rec__t __var_b) -> (t_poly_rec__t __var_b)).
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 in both of which see see that the generated type constructor's name is
 consistently the same between the code of the name of the definition
 and the generated type expressions (so, recursive) where this type
@@ -1901,8 +1854,8 @@ constructors that ``look having'' several parameters, like in
 type t_prm_val_cstr =
   | C (int * int * int)
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 In such a case, is the value constructor {\tt C} parametrised by
 {\bf three} integers or by {\bf one} tuple of 3 integers ? This makes
 a particular difference in \coq\ because value constructors are
@@ -1931,10 +1884,10 @@ type t_prm_val_cstr =
   | C (int * int * int)
   | D (int, int, int)
 ;;
-\end{lstlisting}
-}
-we get the generated \ocaml\ code that follows, where we do make any
-difference between one and several arguments: all is every considered
+\end{lstlisting}}
+
+\noindent we get the generated \ocaml\ code that follows, where we do
+make any difference between one and several arguments: all is every considered
 as a tuple
 
 {\footnotesize
@@ -1945,9 +1898,9 @@ type _focty_t_prm_val_cstr =
   | C of ((Basics._focty_int * Basics._focty_int * Basics._focty_int))
   | D of (Basics._focty_int * Basics._focty_int * Basics._focty_int)
  ;;
-\end{lstlisting}
-}
-and the generated \coq\ code where the types of {\tt C} and {\tt D}
+\end{lstlisting}}
+
+\noindent and the generated \coq\ code where the types of {\tt C} and {\tt D}
 are clearly different:
 
 {\footnotesize
@@ -1960,8 +1913,7 @@ Inductive t_prm_val_cstr__t : Set :=
       t_prm_val_cstr__t)
   | D :
     (basics.int__t -> basics.int__t -> basics.int__t -> t_prm_val_cstr__t).
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 
@@ -1984,8 +1936,7 @@ expression in the target language.
 \begin{lstlisting}[title=Record type definitions in \focalize]
 type r0 = { x0 = int ; y0 = float } ;;
 type r1 ('a) = { x1 = 'a } ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml,
@@ -1998,8 +1949,7 @@ type _focty_r0 = {
 type 'a _focty_r1 = { 
     x1 : 'a ;
 } ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 The only difference for \coq\ is (like already encountered when
 dealing with the record type representing species and collections,
@@ -2021,8 +1971,7 @@ Record r1__t (__var_c : Set) : Type :=
   mk_r1__t {
   x1 : __var_c
   }.
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 \section{External definitions}
@@ -2067,8 +2016,7 @@ type t  =
   external ...
 and ...
 and ...
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 {\bf Attention}: Be careful that the {\tt and ...} are {\bf not} other
 type definitions: they are optional and belong to the current external
@@ -2120,8 +2068,8 @@ type foc_record ('a, 'b) =
   internal  { hcode = int ; contents = ('b * 'a) }
   ...
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 The first definition creates a type {\tt int} that is fully
 abstract. Obviously, this one will be used magically by the internals
 of the compiler, so no need to have external definitions to manipulate
@@ -2148,9 +2096,9 @@ type list ('a) =
   | []
   | ( :: ) ('a, list ('a))
 ;;
-\end{lstlisting}
-}
-but we wouldn't have been able to make so that constructors directly
+\end{lstlisting}}
+
+\noindent but we wouldn't have been able to make so that constructors directly
 map onto their counterparts in \coq\ and \ocaml\ (in effect, these
 constructors being non-regular identifiers, they would have been
 ``stringified'' like we saw in \ref{ident-stringification}).
@@ -2169,7 +2117,7 @@ value constructors) into the target languages. We will see a clear
 example once we have ended the case of {\tt foc\_diag}.
 
 \medskip
-To summarise, the {\tt internal} clause controls how the type is seen
+To summarize, the {\tt internal} clause controls how the type is seen
 on \focalize's side.
 
 
@@ -2221,8 +2169,7 @@ type _focty_int = ...
 type 'a _focty_foc_diag = ...
 type 'a _focty_list = ...
 type ('a, 'b) _focty_foc_record = ...
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 {\footnotesize
 \begin{lstlisting}[language=MyCoq,
@@ -2230,8 +2177,7 @@ type ('a, 'b) _focty_foc_record = ...
 Definition foc_diag__t (__var_a : Set) := ...
 Definition list__t (__var_a : Set) := ...
 Definition foc_record__t (__var_a : Set) (__var_b : Set) :=
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 Continuing our previous example, we state the \focalize\ external type
@@ -2272,8 +2218,7 @@ type foc_record ('a, 'b) =
   | coq -> {* coq_stubs.foc_record ['b, 'a] *}
   ...
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 In the first definition we see that to define the {\tt int}
 {\bf type constructor} in \ocaml, we will emit ``int'' and in \coq, we
@@ -2314,9 +2259,9 @@ type foc_diag ('a) =
                   fst : alpha ;
                   snd : alpha } *}
 ;;
-\end{lstlisting}
-}
-would lead to a syntactically incorrect garbage rejected by \coq\
+\end{lstlisting}}
+
+\noindent would lead to a syntactically incorrect garbage rejected by \coq\
 like:
 
 {\footnotesize
@@ -2326,8 +2271,7 @@ Definition foc_diag__t (__var_a : Set) :=
                 mk_foc_diag (alpha : Set) {
                   fst : alpha ;
                   snd : alpha } .
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \medskip
 {\bf Attention}: In the sample code in \focalize\ we are studying,
@@ -2359,8 +2303,8 @@ type _focty_int =  int ;;
 type 'a _focty_foc_diag =  ('a * 'a)  ;;
 type 'a _focty_list =  'a list ;;
 type ('a, 'b) _focty_foc_record =  ('b, 'a) Ml_stubs.bbt_record ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
+
 \noindent and:
 
 {\footnotesize
@@ -2373,8 +2317,7 @@ Definition foc_diag__t (__var_a : Set) :=  ((__var_a * __var_a)%type) .
 Definition list__t (__var_a : Set) :=  (list __var_a) .
 Definition foc_record__t (__var_a : Set) (__var_b : Set) :=
   coq_stubs.foc_record __var_b __var_a .
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 To fully understand the mapping mechanism, we must now see the stubs
 written for each target language.
@@ -2386,8 +2329,7 @@ type ('c, 'd) bbt_record = {
   bbt_hashing_code : int ;
   bbt_contents : ('c * 'd)
 } ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 {\footnotesize
 \begin{lstlisting}[frameround=fttt, frame=trBL,
@@ -2399,8 +2341,7 @@ Record foc_record (param_a : Set) (param_b : Set) : Type :=
     hc : Z;
     conts : ((param_a * param_b)%type)
 }.
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 
 \subsubsection{The extra {\tt and ...} clauses}
@@ -2447,8 +2388,7 @@ type foc_record ('a, 'b) =
   | caml -> {* Ml_stubs.bbt_contents *}
   | coq -> {* coq_stubs.conts *}
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 We must note that for {\tt foc\_record}, we mapped the record fields
 onto the related fields present in our stubs source files. Obviously,
@@ -2547,8 +2487,7 @@ let physical_equal =
   | coq -> {* coq_builtins.bi__syntactic_equal __var_a *}
     (* Wrong, but don't know how to do better. *)
 ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Such a definition is simply compiled into a definition having the same
 name in the target language than in \focalize\ (except in case where
@@ -2569,9 +2508,9 @@ code:
 let int_max =  Ml_builtins.bi__int_max ;;
 let _bar__bar_ =  Ml_builtins.bi__or_b ;;
 let physical_equal =  Ml_builtins.bi__physical_equal ;;
-\end{lstlisting}
-}
-and:
+\end{lstlisting}}
+
+\noindent and:
 
 {\footnotesize
 \begin{lstlisting}[language=MyCoq,
@@ -2580,8 +2519,7 @@ Let int_max : int__t -> int__t -> int__t :=  coq_builtins.bi__int_max.
 Let _bar__bar_ : bool__t -> bool__t -> bool__t := coq_builtins.bi__or_b.
 Let physical_equal (__var_a : Set) : __var_a -> __var_a -> bool__t :=
   coq_builtins.bi__syntactic_equal __var_a .
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 Hence, with this code generation model, since the identifier bound to
 an external definition receives, in the generated code, an effective

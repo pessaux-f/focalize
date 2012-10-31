@@ -1,4 +1,4 @@
-% $Id: intermediate.tex,v 1.10 2009-06-03 13:41:26 pessaux Exp $
+% $Id: intermediate.tex,v 1.11 2012-10-31 14:28:20 pessaux Exp $
 \label{intermediate-abstractions}
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
@@ -37,7 +37,7 @@ All this work is performed by stuff located in the source directly
 function to process toplevel theorems because they are not hosted in
 species although they may require abstractions).
 
-As explained in \ref{becoming-of-typing-output} The call to this pass
+As explained in \ref{becoming-of-typing-output} the call to this pass
 is triggered by each target code generator (i.e. once by the
 \ocaml\ code generation back-end, and once by the \coq\ one, obviously
 only if the code generation is requested for these target languages
@@ -48,14 +48,14 @@ generation environments (c.f. \ref{ocaml-code-gen-envt} and
 \ref{coq-code-gen-envt}). Hence, the entry point of abstractions
 computation must be able to work with the 2 kinds of
 environments. That the reason why the environment is passed as a sum
-type
+type:
+
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml]
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
   | EK_coq of Env.CoqGenEnv.t
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \noindent to allow to have only one set of functions to do this pass
 instead of duplicating the code and adapting it's behaviour in the few
@@ -90,8 +90,7 @@ type field_abstraction_info =
      (Env.TypeInformation.theorem_field_info * abstraction_info)
   | FAI_property of
      (Env.TypeInformation.property_field_info * abstraction_info)
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 As we said, the second component of each parameters of the
 constructors is a {\tt abstraction\_info} that summarises all the
@@ -130,8 +129,7 @@ type abstraction_info = {
       list ;
   ai_min_coq_env : MinEnv.min_coq_env_element list
 }
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 \index{$\lambda$-lift}
 In effect, knowledge of what to $\lambda$-lift is acquired along
@@ -178,8 +176,7 @@ type internal_abstraction_info = {
       list ;
   iai_min_coq_env : MinEnv.min_coq_env_element list
 }
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 As already said, the steps correspond to rules and we will a bit later
 explain how they are implemented. The rules deal with dependencies on
