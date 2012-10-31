@@ -14,7 +14,7 @@
 #                                                                            #
 # ************************************************************************** #
 
-#  $Id: INSTALL,v 1.15 2012-10-30 13:45:11 pessaux Exp $
+#  $Id: INSTALL,v 1.16 2012-10-31 15:51:49 pessaux Exp $
 
 (0) Forewords:
 ==============
@@ -63,8 +63,26 @@ versions of the required tools. They install software in subdirectories of
 '/usr/local' ('lib', 'bin', 'share', 'man').
 
 If for any reason, you want to change installation directories or use versions
-of the tools different from the ones in your PATH, then you may manually
-configure, build and install the 3 components, following the scheme:
+of the tools different from the ones in your PATH, then you may want the
+configuration process to ask you your settings (or accept the proposed ones).
+
+From the toplevel 'focalize' directory then run:
+  make interactive-all
+
+Before building components, the configuration process will search for
+dependencies and propose you what it found. You're free to accept or to enter
+an alternative path/command/directory. This is a bit verbose since you'll have
+to enter information when prompted. For finer configuration using command-line
+options, see below.
+
+(4) Finer Custom Installation:
+==============================
+
+If you don't want to bother about entering your settings at the prompt (may
+be you need to recompile several times FoCaLize, or want just to change one or
+two default values), then you need to manually configure, build and install
+the 3 components, following the scheme, feeding the xx/configure scripts with
+your command-line options (see below) for settings:
 
 From the toplevel 'focalize' directory:
   ./configure
@@ -109,7 +127,7 @@ Scripts 'configure' can be provided tuning options:
       tools (other than OCaml and Coq already configured) are zenon, zvtov.
 
 
-(4) Administrativia:
+(5) Administrativia:
 ====================
 
 Licence: New BSD Licence (see the file LICENSE for details)

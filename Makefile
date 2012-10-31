@@ -13,7 +13,7 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.79 2012-10-16 11:47:17 pessaux Exp $
+# $Id: Makefile,v 1.80 2012-10-31 15:51:49 pessaux Exp $
 
 ROOT_DIR=.
 
@@ -24,12 +24,15 @@ SUB_DIRS= zenon zvtov focalizec
 # stuff via Makefile.common. Just Makefile.utils is sufficient.
 include $(ROOT_DIR)/Makefile.utils
 
+CONFIGURE_FLAGS=
+
+# Default rule, building everything with default settings.
 all:
 	@echo "Toplevel configuration..."
-	@./configure
+	@./configure $(CONFIGURE_FLAGS)
 	@echo "Building Zenon..."
 	@($(CD) zenon &&\
-		./configure &&\
+		./configure $(CONFIGURE_FLAGS) &&\
 		$(MAKE) all &&\
 		$(MAKE) doc &&\
 	  echo "Installing..." &&\
@@ -38,7 +41,7 @@ all:
 	  case $$err in 0);; *) exit $$err;; esac;
 	@echo "Building Zvtov..."
 	@($(CD) zvtov &&\
-		./configure &&\
+		./configure $(CONFIGURE_FLAGS) &&\
 		$(MAKE) all &&\
 		$(MAKE) doc &&\
 	  echo "Installing..." &&\
@@ -47,7 +50,7 @@ all:
 	  case $$err in 0);; *) exit $$err;; esac;
 	@echo "Building FoCaLiZeC and stuff..."
 	@($(CD) focalizec &&\
-		./configure &&\
+		./configure $(CONFIGURE_FLAGS) &&\
 		$(MAKE) depend &&\
 		$(MAKE) world &&\
 		$(MAKE) doc &&\
@@ -55,6 +58,12 @@ all:
 		$(SUDO) $(MAKE) install);\
 	  err=$$?;\
 	  case $$err in 0);; *) exit $$err;; esac;
+
+
+# Alternative rule, building everything with user-specified settings.
+interactive-all:
+	make CONFIGURE_FLAGS=-interactive all
+
 
 clean:
 	@for i in $(SUB_DIRS); do\
