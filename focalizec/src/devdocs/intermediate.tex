@@ -1,4 +1,4 @@
-% $Id: intermediate.tex,v 1.11 2012-10-31 14:28:20 pessaux Exp $
+% $Id: intermediate.tex,v 1.12 2012-10-31 16:47:20 pessaux Exp $
 \label{intermediate-abstractions}
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
@@ -15,8 +15,11 @@ generators. We still need to find the complete set of methods of
 methods a method depends on.
 
 The first point will be carried out by computing the ``visible
-universe'' of a method. The second will be by computing the ``minimal
-\coq\ typing environment''. Once these sets are known, the current
+universe'' of a method and its ``minimal \coq\ typing
+environment''. The second point is achieved by applying rules of page
+153, definition 72 + the additionnal DIDOU rule.
+
+Once these sets are known, the current
 pass will create a compact form of several data useful for code
 generation, hence preventing from having to compute several time the
 same things and to ensure that the same structure (in fact, most
@@ -586,6 +589,7 @@ nothing, returning directly the dependencies on parameters we computed
 until now.
 
 We need this process to correctly compile code like:
+
 {\footnotesize
 \begin{lstlisting}
 species Couple (S is Simple, T is Simple) =
@@ -595,8 +599,7 @@ species Couple (S is Simple, T is Simple) =
     T!equal (!morph (e1), !morph (e2)) ;
 end ;;
 species Bug (G is Simple) inherits Couple (G, G) = ... end ;;
-\end{lstlisting}
-}
+\end{lstlisting}}
 
 The formal parameters {\tt S} and {\tt T} are instantiated by
 inheritance both by {\tt G}. In {\tt Couple}, {\tt equiv} depends on

@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.26 2012-10-31 14:28:20 pessaux Exp $
+% $Id: codegen_model.tex,v 1.27 2012-10-31 16:47:20 pessaux Exp $
 \label{code-gen-model}
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -210,7 +210,9 @@ Module Cartesian_product.
 
 \medskip
 \paragraph{The entity parameters} In \ocaml\ they can never appear in
-the record type since in ML-like types, we can't have expressions. 
+the record type since in ML-like types, we can't have expressions
+(however, their type can appear -- imagine simply a method returning the
+entity parameter).
 However, in \coq\ it is possible to have dependency on an entity
 parameter in a theorem or property statement (i.e. in the type of a
 logical method). For example:
