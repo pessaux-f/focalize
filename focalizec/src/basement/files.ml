@@ -14,7 +14,7 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: files.ml,v 1.18 2012-10-30 11:55:07 pessaux Exp $ *)
+(* $Id: files.ml,v 1.19 2012-11-09 12:55:59 pessaux Exp $ *)
 
 
 (** Paths for libraries lookup. *)
@@ -65,19 +65,17 @@ let (add_lib_path, get_lib_paths) =
 (* ********************************************************************** *)
 let open_in_from_lib_paths filename =
   let rec rec_open = function
-    | [] ->
-        (begin
+    | [] -> (
         try open_in_bin filename
         with Sys_error _ -> raise (Cant_access_file_in_search_path filename)
-        end)
+       )
     | h :: rem ->
         try open_in_bin (Filename.concat h filename)
         with Sys_error _ -> rec_open rem in
-  if Filename.is_relative filename then
-    (begin
+  if Filename.is_relative filename then (
     (* First, try in the current local directory. *)
     try open_in_bin filename with Sys_error _ -> rec_open (get_lib_paths ())
-    end)
+   )
   else open_in_bin filename
 ;;
 
@@ -87,9 +85,9 @@ let get_path_from_lib_paths filename =
   let rec rec_get = function
     | [] -> if Sys.file_exists filename then Some filename else None
     | h :: rem ->
-	let full_name = Filename.concat h filename in
-	if Sys.file_exists full_name then Some h
-	else rec_get rem in
+	      let full_name = Filename.concat h filename in
+	      if Sys.file_exists full_name then Some h
+	      else rec_get rem in
   (* First, try in the current local directory. *)
   if (Filename.is_relative filename) && (Sys.file_exists filename) then
     Some ""
