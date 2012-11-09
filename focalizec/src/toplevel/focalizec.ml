@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizec.ml,v 1.62 2012-10-15 14:47:06 pessaux Exp $ *)
+(* $Id: focalizec.ml,v 1.63 2012-11-09 12:56:52 pessaux Exp $ *)
 
 exception Bad_file_suffix of string ;;
 
@@ -25,7 +25,11 @@ let compile_fcl input_file_name =
      filename without dirname and extention. *)
   let current_unit =
     Filename.chop_extension (Filename.basename input_file_name) in
-  (* Include the installation libraries directory in the search path. *)
+  (* Include the installation libraries directory in the search path. At the
+     present point, all the user -I options are already processed, so adding
+     the stdlib directory now will make it be the least important path, hence
+     PREVENTS from a file of the stdlib hidding a file of the same name in the
+     user directory ! *)
   if Configuration.get_use_default_lib () then
     Files.add_lib_path Installation.install_lib_dir ;
   (* Lex and parse the file. *)
@@ -115,15 +119,10 @@ let compile_fcl input_file_name =
 
 
 
-let make_includes get_libs =
-  String.concat " -I " ("" :: List.rev (get_libs ()))
-;;
-
-
-
 let compile_ml input_file_name =
-  (* We include the library search paths for OCaml. *)
-  let includes = make_includes Files.get_lib_paths in
+  (* We include the library search paths for OCaml. [Files.get_lib_paths]
+     returns the paths already in the order they were given in the options. *)
+  let includes = String.concat " -I " ("" :: (Files.get_lib_paths ())) in
   let args = Printf.sprintf "%s -c %s" includes input_file_name in
   match Configuration.get_ml_compiler () with
    | Configuration.OCamlByt ->
@@ -170,8 +169,9 @@ let compile_zv input_file_name =
 let compile_coq input_file_name =
   (* Coq always requires Zenon .v files. *)
   let for_zenon = " -I " ^ Installation.zenon_libdir in
-  (* We include the library search paths for Coq. *)
-  let includes = make_includes Files.get_lib_paths in
+  (* We include the library search paths for OCaml. [Files.get_lib_paths]
+     returns the paths already in the order they were given in the options. *)
+  let includes = String.concat " -I " ("" :: (Files.get_lib_paths ())) in
   let cmd =
     Printf.sprintf "%s %s %s %s"
       Installation.coq_compiler includes for_zenon input_file_name in
