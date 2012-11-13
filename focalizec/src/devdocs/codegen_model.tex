@@ -1,4 +1,4 @@
-% $Id: codegen_model.tex,v 1.27 2012-10-31 16:47:20 pessaux Exp $
+% $Id: codegen_model.tex,v 1.28 2012-11-13 13:17:15 pessaux Exp $
 \label{code-gen-model}
 The code generation model is the now closely the same for both \ocaml\
 and \coq\ generated source files. The main difference comes from the
@@ -126,13 +126,14 @@ present in the \coq\ code are always trivially absent in the
   variable enable to ``late-bind'' the {\tt representation} of the
   species.
 
-\item Finally come all the methods of the species parameter appearing
+\item Finally come all the entity parameters then the methods of the
+  species parameter appearing
   in the {\bf types} of the methods of the species. Since in \ocaml\
   the type of a method can only involve type constructors (a ML-like
   type), it is clear that we won't have any such parameters. In
   effect, in \ocaml\ the logical methods are discarded. However,
   since for the type of a logical method is its logical statement, to
-  \coq's side, we can have any expression inside their type.. In
+  \coq's side, we can have any expression inside their type. In
   particular, we can have calls to some collection parameters'
   methods. Having these parameters in the record type allows the
   ``late-binding'' on the collection parameter itself (i.e. on by

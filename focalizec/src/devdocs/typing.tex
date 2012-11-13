@@ -1,4 +1,4 @@
-% $Id: typing.tex,v 1.15 2009-05-28 08:43:26 pessaux Exp $
+% $Id: typing.tex,v 1.16 2012-11-13 13:17:15 pessaux Exp $
 
 The type-checking pass performs in fact several important tasks. It
 obviously infer the type of each expression and construct, but it also
@@ -12,7 +12,7 @@ defined ones having been consistently put together.
 \label{cool-incremental-nf}
 This especially means that at each inheritance step, any species
 issued by the type-checker has all its methods: the inheritance
-disappears from the species structure. Obviously, the still have means
+disappears from the species structure. Obviously, we still have means
 to know about the inheritance history somewhere, but all the methods,
 inherited, defined, declared are always all together in a species in
 normal form.
@@ -178,6 +178,7 @@ the type-checking of the whole application expression (unified with
 In \focalize, type schemes are compound of the list of the polymorphic
 type variables that are its parameters and the type expression that is
 its body:
+
 {\footnotesize
 \begin{lstlisting}[language=MyOCaml, title=An ``expression'' AST node]
 type type_scheme = {
@@ -1007,6 +1008,56 @@ of the identifiers introduced. And since generalisation if done in
 our current one, generalisation could not be done otherwise.
 
 
+\subsubsection{Not forgetting constraints from inheritance}
+It is roughly described in Virgile's work that during fusion, methods
+inferred types and possibly inherited ones are matched against
+together to determine the final type of methods. This is not
+sufficient. In effect, let's consider the following code:
+
+{\footnotesize
+\begin{lstlisting}
+species S1 = 
+  representation = int ; 
+  signature to_int : Self -> int ; 
+end ;; 
+
+species S2 = 
+  inherit S1 ; 
+  let to_int (x) : int = x ; 
+  let join (x) = to_int (x) ; 
+end ;; 
+\end{lstlisting}
+}
+
+While in {\tt S2}, typing {\tt join}, we already typed {\tt to\_int}
+but with type ${\tt int} \rightarrow {\tt int}$ ! In effect, the
+fusion pass is not yet done for species {\tt S2} since it will be done
+once the species has all its methods typed. Hence, when typing the
+method {\tt join}, we see it calls {\tt to\_int}, so {\tt join} also
+has type ${\tt int} \rightarrow {\tt int}$.
+
+Then comes the fusion that really gives {\tt to\_int} the good type:
+${\tt Self} \rightarrow {\tt int}$. But, it's too late for {\tt join}
+which is not impacted by the fusion (no signature for it defined above
+in the inheritance), and remains with its previous type.
+
+It is clear that's not a question of missing dependency on {\tt Self} in the
+dependencies calculus causing wrong abstractions
+($\lambda$-liftings). In effect, the type found for {\tt join} is
+${\tt int} \rightarrow {\tt int}$ which is totally wrong since {\tt to\_int}
+has type ${\tt Self} \rightarrow {\tt int}$, so the argument {\tt x}
+of {\tt join}, passed to {\tt to\_int} {\bf must} be {\tt Self} an not {\tt int} ! 
+
+The solution is to notice that while inferring the type of {\tt to\_int},
+we didn't "compared" the found type to the already existing
+type due to signature brought by inheritance. So, when typing a
+method, trying to match it agains a possibly already existing type constraint
+can solve the issue. That's what is done: if a scheme is found in the
+environment (the initial environment, not the one with pre-bindings),
+then we take an instance of this scheme and unify the inferred type
+with it, retaining the result of the unification as final type for
+the method. If none is found, we simply keep the inferred type.
+
 \subsubsection{Dependencies on the carrier}
 \index{dependency!on carrier}
 \label{deps-on-carrier}
@@ -1020,6 +1071,7 @@ method contains a reference to {\tt Self} (i.e. if a type sub-term is
 as we inferred its type. However, without any type annotation, the type
 of a method could hide the fact that it refers to {\tt Self}. For
 instance, let's have the case:
+
 {\footnotesize
 \begin{lstlisting}
 species A =
