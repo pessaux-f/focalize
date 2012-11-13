@@ -14,7 +14,7 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: infer.ml,v 1.208 2012-10-30 08:59:42 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.209 2012-11-13 10:32:46 pessaux Exp $ *)
 
 
 
@@ -1424,14 +1424,70 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
            binding level, and especially, not outside the binding level used
            to infer the body !!! That's why the end_definition is done AFTER
            having created the [complete_ty]. *)
-        let complete_ty =
+        let pre_complete_ty =
           List.fold_right
             (fun arg_ty accu_ty -> Types.type_arrow arg_ty accu_ty)
             args_tys
             infered_body_ty_with_constraint in
-        if non_expansive then Types.end_definition ();
+        (* And now address bug #220 in which because a method already
+           signature-d by inheritance had not its type constraint (already
+           given) taken into account, a method using it didn't know that some
+           part of the typechecking should involve Self instead of something
+           else. For instance:
+             species S1 = 
+               representation = int ; 
+               signature to_int : Self -> int ; 
+               end
+             species S2 = 
+               inherit S1 ; 
+               let to_int (x) : int = x ; 
+               let join (x) = to_int (x) ; 
+               end
+           Typing join, we think that to_int has type int->int because fusion
+           is not yet done for the current species. Hence join has type
+           int -> int. And when fusion is done, to_int really gets type
+           Self -> int but it's too late for join.
+           If we had taken benefits of the knowledge of signature of to_int,
+           it wouls have type Self->int, hence same thing for join.
+           That's basically what we do here: if a scheme already exists in
+           the environment (hence from inherited stuff), then we use it to
+           enforce constraints on the type we just inferred for the current
+           method. This is only relevant to *methods* !!! *)
+        let complete_ty =
+          if is_a_field then (
+            try
+              let current_species_name =
+                (match ctx.current_species with
+                | None -> None
+                | Some (_, n) -> Some (Parsetree_utils.name_of_vname n)) in
+              (* Temporarily make an ident from the method name to lookup in the
+                 environment. *)
+              let fake_ident = {
+                Parsetree.ast_desc =
+                  Parsetree.EI_local binding_desc.Parsetree.b_name ;
+                Parsetree.ast_loc = binding_loc ;
+                Parsetree.ast_annot = [] ;
+                Parsetree.ast_type = Parsetree.ANTI_none } in
+              let old_scheme =
+                Env.TypingEnv.find_value
+                  ~loc: binding_loc
+                  ~current_unit: ctx.current_unit ~current_species_name
+                  fake_ident env in
+              let old_type = Types.specialize old_scheme in
+              (* Force unification en keep the prefered type. *)
+              Types.unify
+                ~loc: binding_loc
+                ~self_manifest: ctx_with_tv_vars_constraints.self_manifest
+                pre_complete_ty old_type
+            with
+              (* No previous type found, keep the infered one. *)
+              Env.Unbound_identifier (_, _) -> pre_complete_ty
+           )
+          else pre_complete_ty in (* Not a method: keep the inferred type. *)
+        (* Now, return to the initial binding level if needed. *)
+        if non_expansive then Types.end_definition () ;
         (* Unify the found type with the type that was temporarily assumed. *)
-        Types.begin_definition ();
+        Types.begin_definition () ;
         let final_ty =
           Types.unify
             ~loc: binding_loc
@@ -1459,7 +1515,7 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
   (* Typecheck the termination proof if any. *)
   (match let_def_descr.Parsetree.ld_termination_proof with
    | None -> ()
-   | Some tp -> typecheck_termination_proof ctx env' tp);
+   | Some tp -> typecheck_termination_proof ctx env' tp) ;
   (* We make the clean environment binding by discarding the location
      information we kept just to be able to pinpoint accurately the guilty
      method in case of one would have variables in its scheme. *)
