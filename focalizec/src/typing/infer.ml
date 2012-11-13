@@ -14,7 +14,7 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: infer.ml,v 1.209 2012-11-13 10:32:46 pessaux Exp $ *)
+(* $Id: infer.ml,v 1.210 2012-11-13 14:02:05 pessaux Exp $ *)
 
 
 
@@ -1288,7 +1288,7 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
      generalised or not. *)
   let pre_env_info =
     List.map
-      (fun { Parsetree.ast_desc = binding_desc ; _ } ->
+      (fun { Parsetree.ast_desc = binding_desc } ->
         (* Just use a hack telling that if the expression won't be
            generalisable, to typecheck it, we don't change the generalisation
            level, then we won't generalise it.

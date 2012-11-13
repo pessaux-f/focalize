@@ -14,7 +14,7 @@
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.21 2012-10-30 13:56:05 pessaux Exp $
+# $Id: Makefile,v 1.22 2012-11-13 14:02:05 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -27,7 +27,7 @@ BYT_OBJS=\
 include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES=-I ../basement -I ../parser
-CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)
+CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR)
 
 depend:
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > .depend

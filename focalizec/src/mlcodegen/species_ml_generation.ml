@@ -14,7 +14,7 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: species_ml_generation.ml,v 1.107 2012-10-30 11:55:07 pessaux Exp $ *)
+(* $Id: species_ml_generation.ml,v 1.108 2012-11-13 14:02:05 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -324,7 +324,7 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
     (* Now, find the method in the species information. *)
     let method_info =
       List.find
-        (fun { Env.mi_name = n ; _ } -> n = method_name)
+        (fun { Env.mi_name = n } -> n = method_name)
         species_meths_infos in
     (method_info.Env.mi_abstracted_methods,
      method_info.Env.mi_dependencies_from_parameters)

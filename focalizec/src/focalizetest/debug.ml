@@ -126,7 +126,7 @@ let string_of_prop =
         (open_paren prec 3) ^
         (pts 3 p1.ast_desc) ^ " or " ^ (pts 3 p2.ast_desc) ^
         (close_paren prec 3)
-     | Pr_imply ({ ast_desc = (Pr_imply (_,_) as p1) ; _ }, p2) ->
+     | Pr_imply ({ ast_desc = (Pr_imply (_,_) as p1) }, p2) ->
         (open_paren prec 2) ^
         (pts 18 p1) ^ " -> " ^ (pts 2 p2.ast_desc) ^
         (close_paren prec 2)

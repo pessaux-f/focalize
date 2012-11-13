@@ -801,14 +801,14 @@ let rec myexpr_of_texpr m_name bv texpr : Own_expr.myexpr =
         let args = List.map (expr_typ bv) e_l in 
         let res = MApp(id, None (* Some (get_typ s) *), args) in
           res
-  | E_const { ast_desc = C_bool s ; _ } ->
+  | E_const { ast_desc = C_bool s } ->
     ( match s with
      | "true" -> expr_glob foctrue
      | "false" -> expr_glob focfalse
      | _ -> failwith "myexpr_of_texpr: bad bool"
     )
-  | E_const { ast_desc = C_int r ; _ } -> MInt (int_of_string r)
-  | E_const { ast_desc = C_string s ; _ } -> MString s
+  | E_const { ast_desc = C_int r } -> MInt (int_of_string r)
+  | E_const { ast_desc = C_string s } -> MString s
   | E_var x ->
      (match x.ast_desc with
       | EI_local vn -> 

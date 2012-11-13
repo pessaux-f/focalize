@@ -14,7 +14,7 @@
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.16 2012-10-30 11:55:07 pessaux Exp $
+# $Id: Makefile,v 1.17 2012-11-13 14:02:05 pessaux Exp $
 
 ROOT_DIR = ../../..
 
@@ -26,7 +26,7 @@ BYT_OBJS = misc_ml_generation.cmo type_ml_generation.cmo\
 include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES = -I ../basement -I ../parser -I ../typing -I ../commoncodegen
-CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)
+CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR)
 
 depend:
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend

@@ -14,7 +14,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: parsetree_utils.ml,v 1.41 2012-10-12 13:08:04 pessaux Exp $ *)
+(* $Id: parsetree_utils.ml,v 1.42 2012-11-13 14:02:05 pessaux Exp $ *)
 
 let name_of_vname = function
   | Parsetree.Vlident s
@@ -474,7 +474,7 @@ let make_concatenated_name_with_operators_expanded_from_qualified_vname
     {b Exported} : Yes.                                                    *)
 (* *********************************************************************** *)
 let rec get_local_vname_from_expr_desc = function
-  | Parsetree.E_var ({ Parsetree.ast_desc = Parsetree.EI_local vname ; _ }) ->
+  | Parsetree.E_var ({ Parsetree.ast_desc = Parsetree.EI_local vname }) ->
       vname
   | Parsetree.E_paren expr ->
       get_local_vname_from_expr_desc expr.Parsetree.ast_desc

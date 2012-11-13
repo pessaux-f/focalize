@@ -13,11 +13,11 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dump_ptree.ml,v 1.51 2012-10-12 13:15:54 pessaux Exp $ *)
+(* $Id: dump_ptree.ml,v 1.52 2012-11-13 14:02:05 pessaux Exp $ *)
 
 let pp_annotation ppf doc =
   List.iter
-    (fun { Parsetree.ae_tag = tag; Parsetree.ae_desc = d ; _ } ->
+    (fun { Parsetree.ae_tag = tag; Parsetree.ae_desc = d } ->
        Format.fprintf ppf "ANNOT: {@@%s}, %s@\n" tag d)
     doc
 ;;

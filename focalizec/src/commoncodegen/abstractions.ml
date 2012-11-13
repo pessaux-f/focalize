@@ -14,7 +14,7 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: abstractions.ml,v 1.84 2012-10-30 11:55:06 pessaux Exp $ *)
+(* $Id: abstractions.ml,v 1.85 2012-11-13 14:02:05 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
@@ -399,7 +399,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
     (try
       let my_node =
         List.find
-          (fun { DepGraphData.nn_name = n ; _ } -> n = name)
+          (fun { DepGraphData.nn_name = n } -> n = name)
           dependency_graph_nodes in
       (* Only keep "decl-dependencies" . *)
       List.partition
@@ -641,7 +641,7 @@ let compute_lambda_liftings_for_toplevel_theorem dependency_graph_nodes name =
     (try
       let my_node =
         List.find
-          (fun { DepGraphData.nn_name = n ; _ } -> n = name)
+          (fun { DepGraphData.nn_name = n } -> n = name)
           dependency_graph_nodes in
       (* Only keep "decl-dependencies" . *)
       List.partition
@@ -1042,7 +1042,7 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
                    (try
                      let my_node =
                        List.find
-                         (fun { DepGraphData.nn_name = n ; _ } -> n = meth_name)
+                         (fun { DepGraphData.nn_name = n } -> n = meth_name)
                          dep_graph in
                      List.filter
                        (function

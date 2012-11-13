@@ -13,7 +13,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: dep_analysis.ml,v 1.75 2012-10-12 13:07:23 pessaux Exp $ *)
+(* $Id: dep_analysis.ml,v 1.76 2012-11-13 14:02:05 pessaux Exp $ *)
 
 (* *********************************************************************** *)
 (** {b Descr} : This module performs the well-formation analysis described
@@ -1163,15 +1163,15 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
 \"decl dep (in term proof)\" -> \"decl dep (in term proof)\" [color=purple,fontsize=10];\n";
   (* Outputs all the nodes of the graph. *)
   List.iter
-    (fun { DepGraphData.nn_name = n ; _ } ->
+    (fun { DepGraphData.nn_name = n } ->
       Printf.fprintf out_hd "\"%s\" [shape=box,fontsize=10];\n"
         (Parsetree_utils.name_of_vname n))
     tree_nodes;
   (* Outputs all the edges between the nodes. *)
   List.iter
-    (fun { DepGraphData.nn_name = n; DepGraphData.nn_children = children; _ } ->
+    (fun { DepGraphData.nn_name = n; DepGraphData.nn_children = children } ->
       List.iter
-        (fun ({ DepGraphData.nn_name = child_name ; _ }, decl_kind) ->
+        (fun ({ DepGraphData.nn_name = child_name }, decl_kind) ->
           (* Just make a different style depending on the kind of dependency. *)
           let (style, color) =
             (match decl_kind with

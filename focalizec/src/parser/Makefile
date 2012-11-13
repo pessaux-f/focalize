@@ -14,7 +14,7 @@
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.46 2012-10-30 11:55:07 pessaux Exp $
+# $Id: Makefile,v 1.47 2012-11-13 14:02:05 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -25,7 +25,7 @@ BYT_OBJS=lexer.cmo parser.cmo parse_file.cmo \
 include $(ROOT_DIR)/Makefile.common
 
 CAML_INCLUDES=-I ../basement
-CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)
+CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR)
 
 depend: lexer.ml parser.ml
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend

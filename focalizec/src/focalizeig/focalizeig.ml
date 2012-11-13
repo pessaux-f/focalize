@@ -11,7 +11,7 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: focalizeig.ml,v 1.2 2012-10-12 13:25:40 pessaux Exp $ *)
+(* $Id: focalizeig.ml,v 1.3 2012-11-13 14:02:05 pessaux Exp $ *)
 
 exception No_output_file ;;
 
@@ -37,7 +37,7 @@ let dump_inheritance ppf fo_fname =
         (match species_info with
         | Env.BO_absolute x | Env.BO_opened (_, x) -> x) in
       List.iter
-        (fun { Parsetree.ast_desc = si ; _ } ->
+        (fun { Parsetree.ast_desc = si } ->
           Format.fprintf ppf "  \"%s#%s\" -> \"%a\"\n"
             current_unit (Parsetree_utils.name_of_vname species_name)
             Sourcify.pp_ident si.Parsetree.se_name

@@ -14,7 +14,7 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: species_coq_generation.ml,v 1.200 2012-10-30 11:55:07 pessaux Exp $ *)
+(* $Id: species_coq_generation.ml,v 1.201 2012-11-13 14:02:05 pessaux Exp $ *)
 
 
 (* *************************************************************** *)
@@ -91,7 +91,7 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
     (* Now, find the method in the species information. *)
     let method_info =
       List.find
-        (fun { Env.mi_name = n ; _ } -> n = method_name) species_meths_infos in
+        (fun { Env.mi_name = n } -> n = method_name) species_meths_infos in
     method_info.Env.mi_abstracted_methods
   with
   | Env.No_available_Coq_code_generation_envt file ->
@@ -1113,8 +1113,8 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
          match l with
          | { Parsetree.ast_desc =
                Parsetree.H_notation (((Parsetree.Vuident id
-                                     | Parsetree.Vlident id) as y), body) ;
-             _ } :: _ when x = y ->
+                                     | Parsetree.Vlident id) as y), body) }
+             :: _ when x = y ->
             (id, body)
          | _ :: t -> lookup x t
          | [] -> raise
