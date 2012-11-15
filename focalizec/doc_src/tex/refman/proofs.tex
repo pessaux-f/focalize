@@ -1,4 +1,4 @@
-% $Id: proofs.tex,v 1.23 2012-10-12 08:38:58 pessaux Exp $
+% $Id: proofs.tex,v 1.24 2012-11-15 15:52:08 pessaux Exp $
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Proofs of theorems}
@@ -86,7 +86,7 @@ For example, consider the following proof:
 
 {\scriptsize
 \begin{lstlisting}
-theorem foo : all a b : bool, a -> (b -> a)
+theorem implications : all a b : bool, a -> (b -> a)
 proof =
   <1>1 assume a : bool, b : bool,
        hypothesis h1 : a,
@@ -98,7 +98,7 @@ proof =
             by step <2>1
   <1>2 conclude
       (* or: qed conclude
-         or: qed by step <1>1 *)
+         or: qed by step <1>1 *) ;;
 \end{lstlisting}}
 
 Here, the steps \verb"<1>1" and \verb"<1>2" are at level 1
@@ -270,8 +270,49 @@ theorem and_ors :
             by hypothesis h1, h2  (* Indeed, (~ b /\ (b \/ c)) -> c *)
        <2>2 qed
             by step <2>1
-  <1>2 conclude
+  <1>2 conclude ;;
 \end{lstlisting}}
+
+The following example illustrates how to split a proof at the lowest
+level, since in this case, we just need {\zenon} to use hypotheses we
+introduced, only forcing it to deduce \verb"a" and \verb"b" from
+\verb"a /\ b".
+
+{\scriptsize
+\begin{lstlisting}
+theorem and_or :
+  all a b : bool, (a /\ b) -> (a \/ b)
+  proof =
+  (* Sketch, assume a /\ b, then prove a and prove b, each of them being
+      trivial consequence of a /\ b. *)
+  <1>1 assume a : bool, b : bool,
+       hypothesis h1: a /\ b,
+       prove a \/ b
+       <2>1 prove a
+            by hypothesis h1
+       <2>2 prove b
+            by hypothesis h1
+       <2>3 qed
+            by step <2>1, <2>2
+  <1>2 conclude
+            (* or: qed conclude
+            or even: qed by step <1>1 *) ;;
+\end{lstlisting}}
+
+In fact, such a theorem is so simple that {\zenon} is able to
+automatically prove it:
+
+{\scriptsize
+\begin{lstlisting}
+theorem and_or :
+  all a b : bool, (a /\ b) -> (a \/ b)
+  proof = conclude ;;
+\end{lstlisting}}
+
+\noindent also pass. However, some more complex proofs will need
+explicit intermediate steps that {\zenon} can't automatically
+guess. More advance cases can be found in the tutorials provided in
+the {\tt focal} distribution.
 
 \subsection{Scoping rules}\label{sec:scoping}
 
