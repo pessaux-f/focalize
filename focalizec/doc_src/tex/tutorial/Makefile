@@ -12,11 +12,11 @@
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.15 2012-10-30 13:56:05 pessaux Exp $
+# $Id: Makefile,v 1.16 2012-11-15 15:30:38 pessaux Exp $
 
 ROOT_DIR=../../../..
 
-TEX_FILES=tutorial.tex
+TEX_FILES=tutorial.tex macros.tex
 
 HVA_FILES=tutorial.hva
 
@@ -70,6 +70,9 @@ tutorial.dvi: $(TEX_FILES)
 
 tutorial.html: tutorial.dvi ${HVA_FILES}
 	$(HEVEA) -fix ${HVA_FILES} tutorial.tex
+
+tutorial.pdf: tutorial.dvi
+	$(DVIPDF) tutorial.dvi tutorial.pdf
 
 clean-generated:
 	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc

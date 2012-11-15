@@ -65,7 +65,7 @@ BODY{background:white;}
 <BODY >
 <!--HEVEA command line is: hevea -fix tutorial.hva tutorial.tex -->
 <!--CUT DEF section 1 --><TABLE CLASS="title"><TR><TD><H1 CLASS="titlemain">A Short Tutorial for FoCaLize:<BR>
-Implementing Sets</H1><H3 CLASS="titlerest">The FoCaLize Team</H3><H3 CLASS="titlerest">July 2009</H3></TD></TR>
+Implementing Sets</H1><H3 CLASS="titlerest">The FoCaLize Team</H3><H3 CLASS="titlerest">July 2009 - Updated December 2012</H3></TD></TR>
 </TABLE><!--TOC section Contents-->
 <H2 CLASS="section"><!--SEC ANCHOR -->Contents</H2><!--SEC END --><UL CLASS="ftoc1"><LI CLASS="li-toc">
 <A HREF="#htoc1">1&#XA0;&#XA0;Forewords</A>
@@ -124,7 +124,7 @@ Implementing Sets</H1><H3 CLASS="titlerest">The FoCaLize Team</H3><H3 CLASS="tit
 </LI><LI CLASS="li-toc"><A HREF="#htoc36">8.1.2&#XA0;&#XA0;A Complete Integer Species</A>
 </LI><LI CLASS="li-toc"><A HREF="#htoc37">8.1.3&#XA0;&#XA0;An Integer Collection</A>
 </LI></UL>
-</LI><LI CLASS="li-toc"><A HREF="#htoc38">8.2&#XA0;&#XA0;Lists if Integers</A>
+</LI><LI CLASS="li-toc"><A HREF="#htoc38">8.2&#XA0;&#XA0;Lists of Integers</A>
 </LI><LI CLASS="li-toc"><A HREF="#htoc39">8.3&#XA0;&#XA0;Subsets</A>
 <UL CLASS="ftoc3"><LI CLASS="li-toc">
 <A HREF="#htoc40">8.3.1&#XA0;&#XA0;A Complete Subset Species</A>
@@ -155,7 +155,9 @@ Implementing Sets</H1><H3 CLASS="titlerest">The FoCaLize Team</H3><H3 CLASS="tit
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc1">1</A>&#XA0;&#XA0;Forewords</H2><!--SEC END --><P>
 <A NAME="foreword"></A></P><!--TOC subsection Content-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc2">1.1</A>&#XA0;&#XA0;Content</H3><!--SEC END --><P>
-<A NAME="foreword_content"></A></P><P>This document is a short tutorial for <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN>, version <FONT COLOR=purple>0.6.0</FONT> released in December 2009 <SUP><A NAME="text1" HREF="#note1">1</A></SUP>.
+<A NAME="foreword_content"></A></P><P>This document is a short tutorial for <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN>, version
+<FONT COLOR=purple>0.7.0</FONT> released
+in December 2012<SUP><A NAME="text1" HREF="#note1">1</A></SUP>.
 It describes a full but simple
 development using the main features of the <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> language, from the specification to the
 implementation, including proofs of correction.</P><P>The reader is expected to have some basic knowledge of the <SPAN STYLE="font-variant:small-caps">OCaml</SPAN> language, of object-oriented
@@ -171,14 +173,9 @@ example:
 </I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>species</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>Superset</I></FONT><FONT SIZE=2><I> =</I></FONT></TD></TR>
 </TABLE><P>This type of code has to be inserted in <SPAN STYLE="font-variant:small-caps">Unix</SPAN> ASCII files with a <EM>fcl</EM> extension. <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> keywords, types or identifiers can also be inserted directly in the text, for example
 
-<CODE>#1</CODE>.</P><P>The <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> syntax is case sensitive, uppercase and lowercase identifier being associated to
+<CODE>#1</CODE>.</P><P>The <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> syntax is case sensitive, uppercase and lowercase identifiers being associated to
 different sorts of entities. Delimiters (blank spaces, tabulations, line feeds) are often
-required to separate syntactical constructs. Finally, the use in <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> sources of <SPAN STYLE="font-variant:small-caps">OCaml</SPAN> or
-<SPAN STYLE="font-variant:small-caps">Coq</SPAN> keywords (such as 
-<CODE>#1</CODE>) or of standard library file names (such as 
-<CODE>#1</CODE>)
-may result in name clashes. For these reasons, the reader is advised to respect as much as
-possible the form and the names used in this tutorial.</P><P>The <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> syntax includes several forms of comments. Single line comments start with a
+required to separate syntactical constructs.</P><P>The <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> syntax includes several forms of comments. Single line comments start with a
 
 <CODE>#1</CODE> and go to the end of the line. Block comments are delimited by 
 <CODE>#1</CODE> and
@@ -192,7 +189,7 @@ some forms of comments, such as
 <CODE>#1</CODE> (double quote) in block
 comments; please refer to the <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> reference manual for detailed explanations.</P><P>Commands, file names as well as outputs or error messages are in bold font, for example
 <B>focalizec superset.fcl</B>. Terms representing specific <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> concepts are introduced
-using an emphasised font, for example <EM>collection</EM>. Finally, mathematical statements are
+using an emphasized font, for example <EM>collection</EM>. Finally, mathematical statements are
 presented using the standard notations, for example &#X2200; (<I>x</I>:<I>T</I>), <I>x</I>=<I>x</I> (for any
 <I>x</I> belonging to the set/type <I>T</I>, <I>x</I> is equal to <I>x</I>).</P><!--TOC section A Quick Overview of <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN>-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc4">2</A>&#XA0;&#XA0;A Quick Overview of <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN></H2><!--SEC END --><P>
@@ -221,7 +218,7 @@ checked at runtime, but a true requirement constraining <EM>implementations</EM>
 programs with concrete datatypes and algorithms. The correctness of the implementations has to
 be statically ensured at compilation time by proving that they satisfy the properties, an
 activity relying on <EM>formal proofs</EM> (in the mathematical sense), whose production is only
-partially automated but which are mechanically checked.</P><P>The cost of develop ping formal specifications and proofs is compensated by the important gain
+partially automated but which are mechanically checked.</P><P>The cost of developing formal specifications and proofs is compensated by the important gain
 w.r.t. the confidence in the development. Various studies furthermore indicate that the total
 development and ownership cost is likely to be reduced, due to disambiguation of the
 specifications, earlier detection of problems, lighter test obligations and reduced
@@ -229,15 +226,15 @@ maintenance activities. Note also that it is possible to further assess the spec
 itself by deriving consequences, to check that the specification is both correct and
 sufficiently detailed; taking our previous example, it is possible to show that a valid
 implementation of <I>f</I> is such that <I>f</I>(<I>x</I>,<I>Z</I>)=<I>x</I> &#X2013; just combining required properties,
-without having to know what is this implementation.</P><P>The <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> language therefore combines a pure functional programming language inspired by <SPAN STYLE="font-variant:small-caps">OCaml</SPAN> and a logical language. It is also object-flavoured, developments being organised through a
-hierarchy of <EM>species</EM>, build by <EM>inheritance</EM> or <EM>parameterisation</EM>. In
+without having to know what is this implementation.</P><P>The <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> language therefore combines a pure functional programming language inspired by <SPAN STYLE="font-variant:small-caps">OCaml</SPAN> and a logical language. It is also object-flavored, developments being organized through a
+hierarchy of <EM>species</EM>, build by <EM>inheritance</EM> or <EM>parametrisation</EM>. In
 essence, a <EM>species</EM> is a kind of record combining function <EM>signatures</EM> (that is
 their type), function <EM>definitions</EM> (that is their code), <EM>logical properties</EM> and
 <EM>proofs</EM>.</P><P>When a species <I>S</I><SUB>2</SUB> <EM>inherits</EM> from a species <I>S</I><SUB>1</SUB>, that means that <I>S</I><SUB>2</SUB> includes at
 least all the features of <I>S</I><SUB>1</SUB>, and can be enriched with its own functions or properties &#X2013;
 intuitively speaking, any correct implementation of <I>S</I><SUB>2</SUB> is therefore also a correct
 implementation of <I>S</I><SUB>1</SUB>.</P><P>A species can also use the implementation of other species to build its own definitions,
-properties and proofs, through a <EM>parameterisation mechanism</EM>. The parameters are
+properties and proofs, through a <EM>parametrisation mechanism</EM>. The parameters are
 required to be effective and consistent, that is to be such that every function declaration
 has an associated definition, and every property a proof that it holds. Furthermore, the
 validity of the properties of these effective parameters is likely to depend upon the
@@ -269,7 +266,7 @@ existence of a comparison between values or of an order inside the concrete repr
 a subset.</P><P>As we will see, we adopt here a progressive approach, justified by various engineering
 considerations regarding <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> developments, but also by the will to stick to the formal vision
 presented just before. An interesting consequence of this vision is that a genuine freedom is
-given to the developer, that can choose between various approaches for example to favour
+given to the developer, that can choose between various approaches for example to favor
 genericity and reusability, or to optimize algorithms.</P><P>The rest of this paper describes the various stages of the development, distinguishing between
 specification activities (the &#X201C;what to do&#X201D;) and refinements, that is the activities ensuring
 progress toward an implementation (the &#X201C;how to do&#X201D;). We describe supersets, from which
@@ -282,7 +279,7 @@ we need first to specify this superset. The simplest approach would be to decide
 subsets of a given superset, for example subsets of values from 
 <CODE>#1</CODE>. Yet of course that
 would force us to fully redevelop such an implementation for any relevant type, a rather
-inappropriate strategy.</P><P>We therefore favour the generic approach, through a form of polymorphic specification. In
+inappropriate strategy.</P><P>We therefore favor the generic approach, through a form of polymorphic specification. In
 <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN>, this is possible by using parametrisation. Species can indeed be parametrised by an
 <EM>interface</EM>, which means that implementation of the species will have to instantiate
 this parameter by a collection having the required interface. In practice, this means that
@@ -341,8 +338,6 @@ contains a function
 of the function is <EM>Self</EM>&#X2192;<EM>Self</EM>&#X2192;<EM>bool</EM>, which means that it takes two
 parameters of the current species<SUP><A NAME="text3" HREF="#note3">3</A></SUP> and
 returns a boolean value.</P><DIV CLASS="theorem"><B>Tip&#XA0;2</B>&#XA0;&#XA0;<EM>[Syntax] Species names have to start with an uppercase character.
-</EM></DIV><DIV CLASS="theorem"><B>Tip&#XA0;3</B>&#XA0;&#XA0;<EM>[Syntax] Separators (that is blank spaces, tabulations, line feeds) are often
-required between syntactical constructs.
 </EM></DIV><P>At this stage, we are not using any formal feature; indeed, we are just specifying here a form
 of object with a given method. To have a meaningful specification, we further require the
 equal function to represent an equivalence relation (that is to be reflexive, symmetric and
@@ -370,7 +365,7 @@ relation, namely reflexivity, symmetry and transitivity. We use the keyword
 hence we do not prove anything at this stage. We just require any collection implementing
 this species to provide such a proof at some point of the development &#X2013; for example as soon
 as 
-<CODE>#1</CODE> is defined.</P><DIV CLASS="theorem"><B>Tip&#XA0;4</B>&#XA0;&#XA0;<EM>[Using Symbols] Methods can be denoted by names or symbols; the choice of an
+<CODE>#1</CODE> is defined.</P><DIV CLASS="theorem"><B>Tip&#XA0;3</B>&#XA0;&#XA0;<EM>[Using Symbols] Methods can be denoted by names or symbols; the choice of an
 appropriate symbol may greatly improve the readability of a code.
 </EM></DIV><P>
 <CODE>#1</CODE> now specifies any collection offering a function named 
@@ -398,10 +393,41 @@ only containing properties &#X2013; and the <SPAN STYLE="font-variant:small-caps
 <A NAME="specsuperset_proof"></A></P><P>Whereas 
 <CODE>#1</CODE> is a very short and simple specification, it can be enriched with
 additional results without further requirements. For example, combining reflexivity and
-transitivity, it is possible to prove the following property about 
-<CODE>#1</CODE> of the
+transitivity, it is possible to prove the property
+&#X2200; <I>x</I>, <I>y</I>,  <I>x</I> = <I>y</I> &#X21D2; <I>x</I> = <I>z</I> &#X21D2; <I>y</I> = <I>z</I> about
 
-<CODE>#1</CODE> species as follows:
+<CODE>#1</CODE> of the 
+<CODE>#1</CODE> species.</P><P><BR>
+The sketch of the proof is informally the following.<BR>
+
+&#XA0; By hypotheses we have:</P><P>&#XA0;</P><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=left NOWRAP><I>x</I> = <I>y</I></TD><TD ALIGN=right NOWRAP>(1)</TD></TR>
+<TR><TD ALIGN=left NOWRAP><I>x</I> = <I>z</I></TD><TD ALIGN=right NOWRAP>(2)</TD></TR>
+</TABLE><P>&#XA0; From (1) by symmetry we prove that <I>y</I> = <I>x</I>   (3)</P><P>&#XA0; From (3) and (2), by transitivity we prove that <I>y</I> = <I>z</I>   (Qed).</P><P><BR>
+More formally, the underlying proof tree of this theorem is:
+
+</P><TABLE CLASS="display dcenter"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=center NOWRAP><TABLE CLASS="display"><TR VALIGN="middle"><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=center NOWRAP>Trivial, by assumption</TD></TR>
+<TR><TD CLASS="hbar"></TD></TR>
+<TR><TD ALIGN=center NOWRAP><I>x</I>&#XA0;=&#XA0;<I>y</I>,&#XA0;&#XA0;<I>x</I>&#XA0;=&#XA0;<I>z</I>&#XA0;&#X22A2;&#XA0;<I>x</I>&#XA0;=&#XA0;<I>y</I>&#XA0;</TD></TR>
+<TR><TD CLASS="hbar"></TD></TR>
+<TR><TD ALIGN=center NOWRAP><I>x</I>&#XA0;=&#XA0;<I>y</I>,&#XA0;&#XA0;<I>x</I>&#XA0;=&#XA0;<I>z</I>&#XA0;&#X22A2;&#XA0;<I>y</I>&#XA0;=&#XA0;<I>x</I></TD></TR>
+</TABLE></TD><TD CLASS="dcell">
+&#XA0;&#XA0;&#XA0;&#XA0;
+</TD><TD CLASS="dcell"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=center NOWRAP>Trivial, by assumption</TD></TR>
+<TR><TD CLASS="hbar"></TD></TR>
+<TR><TD ALIGN=center NOWRAP><I>x</I>&#XA0;=&#XA0;<I>y</I>,&#XA0;&#XA0;<I>x</I>&#XA0;=&#XA0;<I>z</I>&#XA0;&#X22A2;&#XA0;<I>x</I>&#XA0;=&#XA0;<I>z</I></TD></TR>
+</TABLE></TD></TR>
+</TABLE></TD></TR>
+<TR><TD CLASS="hbar"></TD></TR>
+<TR><TD ALIGN=center NOWRAP><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD ALIGN=center NOWRAP><I>x</I>&#XA0;=&#XA0;<I>y</I>,&#XA0;&#XA0;<I>x</I>&#XA0;=&#XA0;<I>z</I>&#XA0;&#X22A2;&#XA0;<I>y</I>&#XA0;=&#XA0;<I>x</I>&#XA0;&#X2227;&#XA0;<I>x</I>&#XA0;=&#XA0;<I>z</I></TD></TR>
+<TR><TD CLASS="hbar"></TD></TR>
+<TR><TD ALIGN=center NOWRAP><I>x</I>&#XA0;=&#XA0;<I>y</I>,&#XA0;&#XA0;<I>x</I>&#XA0;=&#XA0;<I>z</I>&#XA0;&#X22A2;&#XA0;<I>y</I>&#XA0;=&#XA0;<I>z</I></TD></TR>
+<TR><TD CLASS="hbar"></TD></TR>
+<TR><TD ALIGN=center NOWRAP>&#X22A2;
+&#X2200;&#XA0;<I>x</I>,&#XA0;<I>y</I>,&#XA0;&#XA0;<I>x</I>&#XA0;=&#XA0;<I>y</I>&#X21D2;&#XA0;<I>x</I>&#XA0;=&#XA0;<I>z</I>&#XA0;&#X21D2;&#XA0;<I>y</I>&#XA0;=&#XA0;<I>z</I></TD></TR>
+</TABLE></TD></TR>
+</TABLE></TD></TR>
+</TABLE><P>In FoCaLiZe, thanks to <SPAN STYLE="font-variant:small-caps">Zenon</SPAN>, the definition and proof of this
+property is simply achieved by:
 
 </P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>theorem</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>eq_symmtran</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>all</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>x</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>y</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>z</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Self</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>x</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>y</I></FONT><FONT SIZE=2><I> -&gt; </I></FONT><FONT SIZE=2><I>x</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>z</I></FONT><FONT SIZE=2><I> -&gt; </I></FONT><FONT SIZE=2><I>y</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>z</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>  </I></FONT><FONT SIZE=2><I>proof</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>by</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>property</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>eq_symm</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>eq_tran</I></FONT><FONT SIZE=2><I> ;</I></FONT></TD></TR>
@@ -420,7 +446,7 @@ proof, but rather tips that allow <SPAN STYLE="font-variant:small-caps">Zenon</S
 
 <CODE>#1</CODE> and 
 <CODE>#1</CODE>. At this stage, we can invoke the compiler to check that
-indeed <SPAN STYLE="font-variant:small-caps">Zenon</SPAN> succeeds.</P><DIV CLASS="theorem"><B>Tip&#XA0;5</B>&#XA0;&#XA0;<EM>[Derived properties] Once primitive properties have been introduced, other
+indeed <SPAN STYLE="font-variant:small-caps">Zenon</SPAN> succeeds.</P><DIV CLASS="theorem"><B>Tip&#XA0;4</B>&#XA0;&#XA0;<EM>[Derived properties] Once primitive properties have been introduced, other
 results can be proved, for example user-relevant corollaries, to check the validity and the
 completeness of the specification.
 </EM></DIV><P>Note that 
@@ -492,7 +518,7 @@ that it can be used instead of the definition of
 <CODE>#1</CODE>: if 
 <CODE>#1</CODE> is indeed redefined later, only the proof of 
 <CODE>#1</CODE>
-will have to be redone.</P><DIV CLASS="theorem"><B>Tip&#XA0;6</B>&#XA0;&#XA0;<EM>[Early Definitions] Definitions can be introduced at any stage of a </EM><EM><SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN></EM><EM> development; it is recommended to capture the meaning of early definitions in properties
+will have to be redone.</P><DIV CLASS="theorem"><B>Tip&#XA0;5</B>&#XA0;&#XA0;<EM>[Early Definitions] Definitions can be introduced at any stage of a </EM><EM><SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN></EM><EM> development; it is recommended to capture the meaning of early definitions in properties
 (proved using the definition), and to use these properties in proofs, instead of the
 definitions themselves, to limit the consequences of redefinitions.
 </EM></DIV><!--TOC subsection Clearing of the Superset Species-->
@@ -537,7 +563,7 @@ interface defined by the species
 <CODE>#1</CODE>. Regarding the method, we provide a
 membership operation deciding whether or not a value belongs to a subset, denoted 
 <CODE>#1</CODE>;
-practically, membership defines a subset, as any subset is characterised by the values it
+practically, membership defines a subset, as any subset is characterized by the values it
 contains<SUP><A NAME="text5" HREF="#note5">5</A></SUP>:
 
 </P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><I>species</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>Subset</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>is</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>Superset</I></FONT><FONT SIZE=2><I>) =</I></FONT><FONT SIZE=2><I>
@@ -569,7 +595,7 @@ Following these principles, our species is enriched as follows:
 </I></FONT><FONT SIZE=2><I>                       </I></FONT><FONT SIZE=2><I>v1</I></FONT><FONT SIZE=2><I> &lt;&lt; </I></FONT><FONT SIZE=2><I>s</I></FONT><FONT SIZE=2><I> - </I></FONT><FONT SIZE=2><I>v2</I></FONT><FONT SIZE=2><I> &lt;-&gt;</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>                       (~(</I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>!( = )(</I></FONT><FONT SIZE=2><I>v1</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>v2</I></FONT><FONT SIZE=2><I>)) /\ </I></FONT><FONT SIZE=2><I>v1</I></FONT><FONT SIZE=2><I> &lt;&lt; </I></FONT><FONT SIZE=2><I>s</I></FONT><FONT SIZE=2><I>) ;</I></FONT></TD></TR>
 </TABLE><P>In this specification, each method producing a subset is associated to a property detailing
-its behaviour with regard to membership. As membership indeed characterises a specific subset,
+its behavior with regard to membership. As membership indeed characterizes a specific subset,
 such properties are as precise as a definition. This is typical of <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> specifications, where
 the concrete datatype stays hidden from outside the species: properties are generally
 relations between methods, describing the structure of a species.</P><P>We have adopted a very dense presentation of these properties: 
@@ -653,7 +679,7 @@ reflexive and transitive:
 <CODE>#1</CODE> will therefore have to provide code for the
 method 
 <CODE>#1</CODE> as well as a proof that this code indeed represents inclusion; provided this
-proof reflexivity and transitivity will be ensured as well without further work.</P><DIV CLASS="theorem"><B>Tip&#XA0;7</B>&#XA0;<B>(Inheritance)</B>&#XA0;&#XA0;<EM> The </EM><EM>
+proof reflexivity and transitivity will be ensured as well without further work.</P><DIV CLASS="theorem"><B>Tip&#XA0;6</B>&#XA0;<B>(Inheritance)</B>&#XA0;&#XA0;<EM> The </EM><EM>
 </EM><CODE><EM>#1</EM></CODE><EM> clause has to be the first one in a species; it
 indicates that the current species includes all the signatures, definitions, properties and
 proofs on the inherited species.
@@ -807,7 +833,7 @@ it to be a congruence w.r.t. membership, that is we have never required
 perfectly legitimate cases, remember the comment in Sub. <A HREF="#specsuperset_species">4.1</A>, about the
 encoding of natural values as strings.</P><P>Of course, using the symbol 
 <CODE>#1</CODE> it is clear that our intention was to capture a form of
-equality; so we can emphasise this interpretation by adding the congruence property at the
+equality; so we can emphasize this interpretation by adding the congruence property at the
 beginning of the species 
 <CODE>#1</CODE>:
 
@@ -900,8 +926,9 @@ prove the theorem
 <CODE>#1</CODE>. Take care to use different step identifiers for a
 given level, as repeating an identifier will not cause an error but will mask the associated
 results and prevent <SPAN STYLE="font-variant:small-caps">Zenon</SPAN> to conclude.</P><P>A goal step is associated with assumptions (keyword 
-<CODE>#1</CODE> or 
-<CODE>#1</CODE>), a
+<CODE>#1</CODE> to
+introduce types or 
+<CODE>#1</CODE> to introduce logic formulae), a 
 goal (keyword 
 <CODE>#1</CODE>), and possibly the tips to solve the goal (keyword 
 <CODE>#1</CODE>
@@ -920,7 +947,8 @@ expected to be a
 <CODE>#1</CODE> with tips (or a 
 <CODE>#1</CODE>, which is equivalent to a
 
-<CODE>#1</CODE>).</P><P>Writing such a script is better done incrementally and interactively. The first attempt is
+<CODE>#1</CODE>, i.e. all the steps of the level <I>x</I>+1,
+whose aim is to prove the enclosing level <I>x</I> goal).</P><P>Writing such a script is better done incrementally and interactively. The first attempt is
 generally a fully automated proof by <SPAN STYLE="font-variant:small-caps">Zenon</SPAN>, levels being introduced gradually to give
 additional tips and guidances for tricky parts. Let&#X2019;s develop such a proof for a new theorem
 in our species 
@@ -949,7 +977,9 @@ automated proof:
 </TABLE><P>The level 
 <CODE>#1</CODE> is associated to the theorem we want to prove, and the level 
 <CODE>#1</CODE>
-indicates that to prove the equality, we have to prove the mutual inclusion. Invoking the
+indicates that to prove the equality 
+<CODE>#1</CODE> , we have to prove the
+mutual inclusion. Invoking the
 compiler, we got a message indicating that no proof has been found for 
 <CODE>#1</CODE> and
 
@@ -1015,7 +1045,7 @@ start your proof as follows:
 </I></FONT><FONT SIZE=2><I>         &lt;1&gt;</I></FONT><FONT SIZE=2><I>f</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>conclude</I></FONT><FONT SIZE=2><I> ;</I></FONT></TD></TR>
 </TABLE><P>The compiler can be invoked to check that indeed the goal can be proved using the three
 subgoals. It is then possible to focus for example on the proof of step 
-<CODE>#1</CODE>, etc.</P><DIV CLASS="theorem"><B>Tip&#XA0;8</B>&#XA0;<B>(Proofs)</B>&#XA0;&#XA0;<EM> Complex proofs are better developed incrementally, from the general levels
+<CODE>#1</CODE>, etc.</P><DIV CLASS="theorem"><B>Tip&#XA0;7</B>&#XA0;<B>(Proofs)</B>&#XA0;&#XA0;<EM> Complex proofs are better developed incrementally, from the general levels
 to the more detailed ones, and invoking regularly </EM><EM><SPAN STYLE="font-variant:small-caps">Zenon</SPAN></EM><EM> to check the validity of the
 currently developed steps.
 </EM></DIV><!--TOC subsection Finite Subsets-->
@@ -1172,7 +1202,7 @@ new species
 </I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>inherit</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>CoList</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>) ;</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>
-</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>property</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>finite</I></FONT><FONT SIZE=2><I> :</I></FONT><FONT SIZE=2><I>
+</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>property</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>induction</I></FONT><FONT SIZE=2><I> :</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>  </I></FONT><FONT SIZE=2><I>all</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>f</I></FONT><FONT SIZE=2><I> : (</I></FONT><FONT SIZE=2><I>Self</I></FONT><FONT SIZE=2><I> -&gt; </I></FONT><FONT SIZE=2><I>basics</I></FONT><FONT SIZE=2><I>#</I></FONT><FONT SIZE=2><I>bool</I></FONT><FONT SIZE=2><I>),</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>  </I></FONT><FONT SIZE=2><I>f</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>nil</I></FONT><FONT SIZE=2><I>) -&gt;</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>  (</I></FONT><FONT SIZE=2><I>all</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Self</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>f</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I>) -&gt; </I></FONT><FONT SIZE=2><I>all</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>f</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>cons</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I>))) -&gt;</I></FONT><FONT SIZE=2><I>
@@ -1232,7 +1262,7 @@ occurrences of values which are equal to its second parameter.</P><!--TOC sectio
 describes structures to collect finitely many values, with methods to build and analyse such
 structures.</P><P>In this section, we continue the development by inheritance, but having in mind a
 <EM>refinement</EM> approach: we do not specify anymore the structure itself, but instead we
-provide an implementation. Still favouring a very progressive approach in this tutorial, we
+provide an implementation. Still favoring a very progressive approach in this tutorial, we
 <EM>refine</EM> the species 
 <CODE>#1</CODE> by a species 
 <CODE>#1</CODE>, with a few
@@ -1264,29 +1294,32 @@ for a specific value:
 </I></FONT><FONT SIZE=2><I>  </I></FONT><FONT SIZE=2><I>else</I></FONT><FONT SIZE=2><I> (</I></FONT><FONT SIZE=2><I>if</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>!( = )(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>head</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I>)) </I></FONT><FONT SIZE=2><I>then</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>true</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>else</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>tail</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I>))) ;</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I> (* </I></FONT><FONT SIZE=2><I>TODO</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Termination</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>Proof</I></FONT><FONT SIZE=2><I> *)</I></FONT></TD></TR>
 </TABLE><P>The definition for the method 
-<CODE>#1</CODE> is recursive, as computing 
-<CODE>#1</CODE> requires
-in some cases to compute 
-<CODE>#1</CODE>. In a formal development, one has to prove
-that recursive functions always terminate to avoid logical inconsistency<SUP><A NAME="text13" HREF="#note13">13</A></SUP>. In its current version, <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> offers two ways to deal with such a
-function:
-</P><UL CLASS="itemize"><LI CLASS="li-itemize">
-The keyword 
-<CODE>#1</CODE> indicates that the function is recursive, and that any
-recursive call is done on a parameter which is structurally &#X201C;smaller&#X201D; than the initial one.
-It is illustrated later in this tutorial.
-</LI><LI CLASS="li-itemize">The keyword 
-<CODE>#1</CODE> indicates that the function is recursive. In this case a
-termination proof is normally added after the definition, for example:<P>
-<CODE>#1</CODE>.
-</P></LI></UL><P>
-With regard to the second case, the full support in <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> of recursive functions, with proofs
-of termination based on measures, orders and so on is still in development and is not further
-detailed here. For this reason, the termination proof is for now admitted and is not required
-in the code. The <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> compiler however warns that the species is potentially unsafe
-and will generate a pseudo-termination proof instead, in order to have the whole program
-however accepted by <SPAN STYLE="font-variant:small-caps">Coq</SPAN>. In some sense, we afford lying to <SPAN STYLE="font-variant:small-caps">Coq</SPAN>, being optimistic about the
-part of the consistency of our program involved by the termination of this function.</P><P>We adopt here the second version, noting that if the property 
+<CODE>#1</CODE> is recursive (keyword
+
+<CODE>#1</CODE>), as computing 
+<CODE>#1</CODE> requires in some cases to compute
+
+<CODE>#1</CODE>. In a formal development, one has to prove that
+recursive functions always terminate to avoid logical
+inconsistency<SUP><A NAME="text13" HREF="#note13">13</A></SUP>.</P><P>Several termination proof kinds are being developed in FoCaLiZe (using a
+measure, an order, a structurally decreasing argument). However the only
+currently fully supported kind is stating that the recursion is structural,
+i.e. applies on a strictly decreasing argument:</P><P>
+<CODE>#1</CODE>.</P><P>The above code states that the function 
+<CODE>#1</CODE> is recursive
+structural on its 
+<CODE>#1</CODE> argument. In other words, 
+<CODE>#1</CODE> is
+stated (and must be) an argument starkly decreasing at each recursive
+call.</P><P>Syntax exists for other kinds of proofs but is currently
+ignored. For sake of simplicity, the termination proof is for now
+admitted and is not required in the code (a termination proof is indeed
+optional). The <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> compiler however warns that the species is potentially unsafe
+and will generate a pseudo-termination proof instead (i.e. an axiom),
+in order to have the whole program however accepted by <SPAN STYLE="font-variant:small-caps">Coq</SPAN>. In some
+sense, we afford lying to <SPAN STYLE="font-variant:small-caps">Coq</SPAN>, being optimistic about the part of the
+consistency of our program involved by the termination of this
+function.</P><P>We adopt here the second version, noting that if the property 
 <CODE>#1</CODE> is valid, the
 function 
 <CODE>#1</CODE> terminates. Indeed, a possible interpretation of 
@@ -1525,7 +1558,7 @@ statement of
 </P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>theorem</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem_del_inv</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>all</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>w</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>, ~ </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>!( = )(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>w</I></FONT><FONT SIZE=2><I>) -&gt;</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>                       </I></FONT><FONT SIZE=2><I>all</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Self</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>mem</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I>) -&gt; </I></FONT><FONT SIZE=2><I>mem</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>del</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>w</I></FONT><FONT SIZE=2><I>))</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>  </I></FONT><FONT SIZE=2><I>proof</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>assumed</I></FONT><FONT SIZE=2><I> (* </I></FONT><FONT SIZE=2><I>TODO</I></FONT><FONT SIZE=2><I> *) ;</I></FONT></TD></TR>
-</TABLE><P>Finally we prove the global result
+</TABLE><P>Finally we prove the global result:
 
 </P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>proof</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>of</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem_del</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>by</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>property</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem_del_mem</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>mem_del_eq</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>mem_del_inv</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>                       </I></FONT><FONT SIZE=2><I>definition</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>of</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mdm_</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>mde_</I></FONT><FONT SIZE=2><I> ;</I></FONT></TD></TR>
@@ -1575,7 +1608,7 @@ they are
 structurally equal (injectivity);
 well-foundation
 (finiteness of the constructs) is also
-ensured.</P><DIV CLASS="theorem"><B>Tip&#XA0;9</B>&#XA0;&#XA0;<EM>[Syntax] Type definitions are only authorised at top-level.
+ensured.</P><DIV CLASS="theorem"><B>Tip&#XA0;8</B>&#XA0;&#XA0;<EM>[Syntax] Type definitions are only authorized at top-level.
 </EM></DIV><P>This is also a polymorphic type: 
 <CODE>#1</CODE> represents a type variable parametrisation our
 definition, 
@@ -1584,7 +1617,7 @@ definition,
 instantiating this variable. Note that the <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> syntax requires
 sum type constructor
 identifiers to
-start by an uppercase character.</P><DIV CLASS="theorem"><B>Tip&#XA0;10</B>&#XA0;&#XA0;<EM>[Syntax] Sum type constructor identifiers have to start with an uppercase character.
+start by an uppercase character.</P><DIV CLASS="theorem"><B>Tip&#XA0;9</B>&#XA0;&#XA0;<EM>[Syntax] Sum type constructor identifiers have to start with an uppercase character.
 </EM></DIV><!--TOC subsubsection Inductive Lists-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR --><A NAME="htoc29">7.2.3</A>&#XA0;&#XA0;Inductive Lists</H4><!--SEC END --><P>Provided this type, it is possible to introduce associated top level definitions and theorems
 (but not declarations and properties, in the absence of inheritance mechanism). In this
@@ -1695,40 +1728,35 @@ required information. The expected use is as follows:
 <CODE>#1</CODE> and 
 <CODE>#1</CODE> as follows:
 
-</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>let</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Self</I></FONT><FONT SIZE=2><I>) =</I></FONT><FONT SIZE=2><I>
-</I></FONT><FONT SIZE=2><I>  </I></FONT><FONT SIZE=2><I>let</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>recstruct</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem_</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Self</I></FONT><FONT SIZE=2><I>) =</I></FONT><FONT SIZE=2><I>
+</P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>let</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>rec</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Self</I></FONT><FONT SIZE=2><I>) =</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>   </I></FONT><FONT SIZE=2><I>match</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>with</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>   | #</I></FONT><FONT SIZE=2><I>FNil</I></FONT><FONT SIZE=2><I> -&gt; </I></FONT><FONT SIZE=2><I>false</I></FONT><FONT SIZE=2><I>
-</I></FONT><FONT SIZE=2><I>   | #</I></FONT><FONT SIZE=2><I>FCons</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>h</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>t</I></FONT><FONT SIZE=2><I>) -&gt; </I></FONT><FONT SIZE=2><I>if</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>!( = )(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>h</I></FONT><FONT SIZE=2><I>) </I></FONT><FONT SIZE=2><I>then</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>true</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>else</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem_</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>t</I></FONT><FONT SIZE=2><I>)</I></FONT><FONT SIZE=2><I>
-</I></FONT><FONT SIZE=2><I>  </I></FONT><FONT SIZE=2><I>in</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem_</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I>) ;</I></FONT><FONT SIZE=2><I>
+</I></FONT><FONT SIZE=2><I>   | #</I></FONT><FONT SIZE=2><I>FCons</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>h</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>t</I></FONT><FONT SIZE=2><I>) -&gt; </I></FONT><FONT SIZE=2><I>if</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>!( = )(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>h</I></FONT><FONT SIZE=2><I>) </I></FONT><FONT SIZE=2><I>then</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>true</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>else</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>t</I></FONT><FONT SIZE=2><I>)</I></FONT><FONT SIZE=2><I>
+</I></FONT><FONT SIZE=2><I>   </I></FONT><FONT SIZE=2><I>termination</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>proof</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>structural</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> ;</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>proof</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>of</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem_nil</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>assumed</I></FONT><FONT SIZE=2><I> (* </I></FONT><FONT SIZE=2><I>TODO</I></FONT><FONT SIZE=2><I> *) ;</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>proof</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>of</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem_cons</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>assumed</I></FONT><FONT SIZE=2><I> (* </I></FONT><FONT SIZE=2><I>TODO</I></FONT><FONT SIZE=2><I> *) ;</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>
-</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>let</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>recstruct</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>del</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Self</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>) =</I></FONT><FONT SIZE=2><I>
-</I></FONT><FONT SIZE=2><I>  </I></FONT><FONT SIZE=2><I>match</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>with</I></FONT><FONT SIZE=2><I>
-</I></FONT><FONT SIZE=2><I>  | #</I></FONT><FONT SIZE=2><I>FNil</I></FONT><FONT SIZE=2><I> -&gt; #</I></FONT><FONT SIZE=2><I>FNil</I></FONT><FONT SIZE=2><I>
-</I></FONT><FONT SIZE=2><I>  | #</I></FONT><FONT SIZE=2><I>FCons</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>h</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>t</I></FONT><FONT SIZE=2><I>) -&gt; </I></FONT><FONT SIZE=2><I>if</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>!( = )(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>h</I></FONT><FONT SIZE=2><I>)</I></FONT><FONT SIZE=2><I>
-</I></FONT><FONT SIZE=2><I>                    </I></FONT><FONT SIZE=2><I>then</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>del</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>t</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>)</I></FONT><FONT SIZE=2><I>
-</I></FONT><FONT SIZE=2><I>                    </I></FONT><FONT SIZE=2><I>else</I></FONT><FONT SIZE=2><I> #</I></FONT><FONT SIZE=2><I>FCons</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>h</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>del</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>t</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>)) ;</I></FONT><FONT SIZE=2><I>
+</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>let</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>rec</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>del</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Self</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I> : </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>) =</I></FONT><FONT SIZE=2><I>
+</I></FONT><FONT SIZE=2><I>   </I></FONT><FONT SIZE=2><I>match</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>with</I></FONT><FONT SIZE=2><I>
+</I></FONT><FONT SIZE=2><I>   | #</I></FONT><FONT SIZE=2><I>FNil</I></FONT><FONT SIZE=2><I> -&gt; #</I></FONT><FONT SIZE=2><I>FNil</I></FONT><FONT SIZE=2><I>
+</I></FONT><FONT SIZE=2><I>   | #</I></FONT><FONT SIZE=2><I>FCons</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>h</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>t</I></FONT><FONT SIZE=2><I>) -&gt; </I></FONT><FONT SIZE=2><I>if</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>Val</I></FONT><FONT SIZE=2><I>!( = )(</I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>h</I></FONT><FONT SIZE=2><I>)</I></FONT><FONT SIZE=2><I>
+</I></FONT><FONT SIZE=2><I>                     </I></FONT><FONT SIZE=2><I>then</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>del</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>t</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>)</I></FONT><FONT SIZE=2><I>
+</I></FONT><FONT SIZE=2><I>                     </I></FONT><FONT SIZE=2><I>else</I></FONT><FONT SIZE=2><I> #</I></FONT><FONT SIZE=2><I>FCons</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>h</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>del</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>t</I></FONT><FONT SIZE=2><I>, </I></FONT><FONT SIZE=2><I>v</I></FONT><FONT SIZE=2><I>))</I></FONT><FONT SIZE=2><I>
+</I></FONT><FONT SIZE=2><I>  </I></FONT><FONT SIZE=2><I>termination</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>proof</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>structural</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>l</I></FONT><FONT SIZE=2><I> ;</I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I>
 </I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>proof</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>of</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>mem_del</I></FONT><FONT SIZE=2><I> =  </I></FONT><FONT SIZE=2><I>assumed</I></FONT><FONT SIZE=2><I> (* </I></FONT><FONT SIZE=2><I>TODO</I></FONT><FONT SIZE=2><I> *) ;</I></FONT></TD></TR>
-</TABLE><P>In this case, we are using the keyword 
-<CODE>#1</CODE> to indicate a structurally recursive
-function, that is recursive calls on subterms of the parameter &#X2013; termination then being
-trivially true. For such functions, however, the decreasing parameter has to be the first one;
-that&#X2019;s why we are using a 
-<CODE>#1</CODE> construct, as the declaration of 
-<CODE>#1</CODE> puts the
-list as the second parameter.</P><P>Such redefinitions, of course, cause the deletion of the associated proofs for 
+</TABLE><P>In this case, we have explicitly provided a termination proof,
+stating it as structural on the argument 
+<CODE>#1</CODE> (i.e. 
+<CODE>#1</CODE> is
+the strictly decreasing argument).</P><P>Such redefinitions, of course, cause the deletion of the associated proofs for 
 <CODE>#1</CODE>,
 
 <CODE>#1</CODE>, 
 <CODE>#1</CODE>. Yet the use of pattern matching on an inductive type leads to
-simpler proofs of these properties. For this tutorial, we just admit these properties.</P><P>Note that the keyword 
-<CODE>#1</CODE> may become deprecated in future versions of <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN>, as it
-is an <EM>ad hoc</EM> adaptation to deal with a simple form of recursion.</P><!--TOC section A Complete Implementation-->
+simpler proofs of these properties. For this tutorial, we just admit these properties.</P><!--TOC section A Complete Implementation-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc33">8</A>&#XA0;&#XA0;A Complete Implementation</H2><!--SEC END --><P>
 <A NAME="implem"></A></P><P>We are now at the final stage of the development, in which we will define collections. A
 <EM>collection</EM> is a frozen implementation obtained by abstracting the concrete
@@ -1751,7 +1779,7 @@ These two approaches have similarities &#X2013; for example, in both cases the m
 represent very different intentions.</P><P>In the first case, using multiple inheritance, we claim that any subset is also a list. So the
 methods of both interfaces can be used to manipulate these values; a set can be created with
 two elements, then it can be considered as a list in which we exchange the position of these
-elements.</P><P>In the second case, using parametrisation, we use lists to represent subsets, but emphasising
+elements.</P><P>In the second case, using parametrisation, we use lists to represent subsets, but emphasizing
 that lists and subsets are different in nature: manipulating a subset can only be done using
 the methods of the subset interface &#X2013; and it is possible to ensure that some &#X201C;dangerous&#X201D;
 methods defined for lists are not used when dealing with subsets.</P><P>We discuss in the rest of this section of the strategy to build an executable program using
@@ -1830,13 +1858,14 @@ defined<SUP><A NAME="text15" HREF="#note15">15</A></SUP> and all the properties 
 </TABLE><P>
 <CODE>#1</CODE> now denotes a form of abstract data type, whose representation is hidden. It is not
 possible to inherit from 
-<CODE>#1</CODE>, or to modify otherwise its structure; of course, it is
-still possible to use 
-<CODE>#1</CODE> as a parameter.</P><DIV CLASS="theorem"><B>Tip&#XA0;11</B>&#XA0;<B>(Implementation)</B>&#XA0;&#XA0;<EM> Collections are the final entities of </EM><EM><SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN></EM><EM> developments and
-represent executable implementations. They cannot be parametrised or inherited from, but they
-can be used as parameters for other species.
-</EM></DIV><!--TOC subsection Lists if Integers-->
-<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc38">8.2</A>&#XA0;&#XA0;Lists if Integers</H3><!--SEC END --><P>
+<CODE>#1</CODE>, or to modify otherwise its
+structure; of course, it is still possible to use 
+<CODE>#1</CODE> as a parameter.</P><DIV CLASS="theorem"><B>Tip&#XA0;10</B>&#XA0;<B>(Implementation)</B>&#XA0;&#XA0;<EM> Collections are the final entities of </EM><EM><SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN></EM><EM> developments and
+represent executable implementations. They cannot be
+parametrised or inherited from, but they can be used as
+parameters for other species.
+</EM></DIV><!--TOC subsection Lists of Integers-->
+<H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc38">8.2</A>&#XA0;&#XA0;Lists of Integers</H3><!--SEC END --><P>
 <A NAME="implem_lists"></A></P><P>As we want to create a collection from the parametrised species 
 <CODE>#1</CODE>, we need
 first to create a collection for the parameter itself, that is a collection representing the
@@ -1845,7 +1874,7 @@ species
 
 </P><TABLE CLASS="lstframe" STYLE="padding:1ex;border-style:solid;"><TR><TD CLASS="lstlisting"><FONT SIZE=2><I>collection</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>IntList_Coll</I></FONT><FONT SIZE=2><I> = </I></FONT><FONT SIZE=2><I>implement</I></FONT><FONT SIZE=2><I> </I></FONT><FONT SIZE=2><I>IndList</I></FONT><FONT SIZE=2><I>(</I></FONT><FONT SIZE=2><I>Int_Coll</I></FONT><FONT SIZE=2><I>) ; </I></FONT><FONT SIZE=2><I>end</I></FONT><FONT SIZE=2><I> ;;</I></FONT></TD></TR>
 </TABLE><P>Remember that a collection cannot be parametrised, and that it has to implement a species
-whose all formal parameters are instantiated by a collection, as it is the case here.</P><DIV CLASS="theorem"><B>Tip&#XA0;12</B>&#XA0;<B>(Implementation)</B>&#XA0;&#XA0;<EM> A collection can only implements a complete species whose
+whose all formal parameters are instantiated by a collection, as it is the case here.</P><DIV CLASS="theorem"><B>Tip&#XA0;11</B>&#XA0;<B>(Implementation)</B>&#XA0;&#XA0;<EM> A collection can only implements a complete species whose
 parameters are instantiated by collections.
 </EM></DIV><!--TOC subsection Subsets-->
 <H3 CLASS="subsection"><!--SEC ANCHOR --><A NAME="htoc39">8.3</A>&#XA0;&#XA0;Subsets</H3><!--SEC END --><P>
@@ -2008,7 +2037,7 @@ additional methods and properties for the species
 <CODE>#1</CODE>. Our concern was not to enrich
 the specification of 
 <CODE>#1</CODE> to enforces inhabitants of the species to be finite, but to
-provide more features &#X2013; recognising that it may causes unnecessary burden for the developer
+provide more features &#X2013; recognizing that it may causes unnecessary burden for the developer
 if these features are not used.</P><P>For example, one could ask for the union, the intersection or the complement operations. If
 the two formers seems to be straightforward, the situation of the latter if more complex.
 Indeed the complement, for any subset <I>S</I>, returns the subset of elements of the superset not
@@ -2046,8 +2075,9 @@ therefore closure reasoning does not apply for such an interface.</P><P>Taking t
 subsets: the empty subset, the insertion and the removal of an element. Using only these
 methods it is not possible to build an infinite subset. But that does not mean that the
 species 
-<CODE>#1</CODE> only describes finite subsets &#X2013; nothing prevent the developer to
-introduce through inheritance more powerful methods such as a complement operation. The fact
+<CODE>#1</CODE> only describes finite subsets &#X2013; nothing
+prevents the developer from introducing
+through inheritance more powerful methods such as a complement operation. The fact
 that the species 
 <CODE>#1</CODE> only requires methods building finite subsets actually ensures
 that it is indeed valid as an ancestor for the species representing finite subsets.</P><P>For the same reason, species invariants have to be handled with care. It is possible to write
@@ -2082,7 +2112,7 @@ subset passed as a parameter contains at least two of them. In fact, whereas the
 operator has to be implemented as a <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> function at some point in the development, it may
 not be a function in the sense of set theory. Indeed, provided <I>S</I><SUB>1</SUB> and <I>S</I><SUB>2</SUB> two sets that
 are extensionally equal, <EM>i.e.</EM> containing the same elements, nothing enforces to have
-<EM>chc</EM>(<I>S</I><SUB>1</SUB>)=<EM>chc</EM>(<I>S</I><SUB>2</SUB>). Of course, we can prevent those strange behaviours by
+<EM>chc</EM>(<I>S</I><SUB>1</SUB>)=<EM>chc</EM>(<I>S</I><SUB>2</SUB>). Of course, we can prevent those strange behaviors by
 adding a property requiring extensional equality to be a congruence w.r.t. 
 <CODE>#1</CODE>:
 
@@ -2105,7 +2135,7 @@ operator there is no way to sort such lists. So for example the set {1,2} has tw
 implementations, <EM>cons</EM>(1,<EM>cons</EM>(2,<EM>nil</EM>)) and
 <EM>cons</EM>(2,<EM>cons</EM>(1,<EM>nil</EM>)). Whereas we can distinguish them using the structural
 equality 
-<CODE>#1</CODE>, there is no way to characterise a good one and a bad one. If we
+<CODE>#1</CODE>, there is no way to characterize a good one and a bad one. If we
 now try to implement 
 <CODE>#1</CODE>, we have to exhibit a function that provided a non-empty list,
 returns an element of this list. Remember that beyond an equality, we have no
@@ -2151,9 +2181,9 @@ smallest element of the subset.</P><!--TOC subsection Functional Representations
 <A NAME="remark_functional"></A></P><P>For the sake of illustration, we consider in this subsection a totally different
 implementation of subsets based on a functional representation. Our intent is not to advice to
 use such type of code &#X2013; which is generally considered as inefficient &#X2013; but rather to
-emphasise the freedom offered to a developer facing an abstract specification, provided this
-specification is appropriate.</P><P>As mentioned in Sub. <A HREF="#specsubset_generic">5.1</A>, a subset is characterised by the values it
-contains, in other words a subset is characterised by its membership function. It is therefore
+emphasize the freedom offered to a developer facing an abstract specification, provided this
+specification is appropriate.</P><P>As mentioned in Sub. <A HREF="#specsubset_generic">5.1</A>, a subset is characterized by the values it
+contains, in other words a subset is characterized by its membership function. It is therefore
 possible to represent a subset by this very function, <SPAN STYLE="font-variant:small-caps">FoCaLiZe</SPAN> being a functional (higher order)
 language. One of the interest of this representation is that we can represent infinite
 subsets: the function deciding if a natural value is even or not defines the subset of even
@@ -2814,11 +2844,11 @@ all elements in a
 to find a specific value.
 </DD><DT CLASS="dt-thefootnotes"><A NAME="note12" HREF="#text12">12</A></DT><DD CLASS="dd-thefootnotes">Unless an
 exception is raised.
-</DD><DT CLASS="dt-thefootnotes"><A NAME="note13" HREF="#text13">13</A></DT><DD CLASS="dd-thefootnotes">Consider for
-example the function 
-<CODE>#1</CODE>: should it be a valid definition, it
-could have any return type &#X2013; and in particular it could be used as a trick to build a value
-from an empty type.
+</DD><DT CLASS="dt-thefootnotes"><A NAME="note13" HREF="#text13">13</A></DT><DD CLASS="dd-thefootnotes">Consider for example the function
+
+<CODE>#1</CODE>: should it be a valid definition,
+it could have any return type &#X2013; and in particular it could be used
+as a trick to build a value from an empty type.
 </DD><DT CLASS="dt-thefootnotes"><A NAME="note14" HREF="#text14">14</A></DT><DD CLASS="dd-thefootnotes">In fact, we need a slightly
 more generic form as we need to quantify over all predicates.
 </DD><DT CLASS="dt-thefootnotes"><A NAME="note15" HREF="#text15">15</A></DT><DD CLASS="dd-thefootnotes">For 
