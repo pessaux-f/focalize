@@ -27,7 +27,7 @@ MV=mv -f
 RM=rm -rf
 SSH=ssh
 SCP=scp
-SUDO=
+SUDO=sudo
 TOUCH=touch
 
 # Tex related processors
