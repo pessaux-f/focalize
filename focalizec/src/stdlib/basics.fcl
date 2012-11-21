@@ -441,6 +441,77 @@ theorem int_lt_irrefl :
   proof = assumed (* Import trusted external code. *)
 ;;
 
+theorem int_gt_or_le :
+  all x y : int, (x >0x y) \/ (x <=0x y)
+  proof =
+    coq proof {*
+      intros x y.
+      unfold _gt_0x, _lt__equal_0x.
+      unfold bi__int_leq, bi__int_gt.
+      elim (Z_gt_dec x y).
+       intro H.
+       elim (Z_le_dec x y).
+        intro.
+        compute.
+        auto.
+        intro.
+        compute.
+        auto.
+       intro.
+       elim (Z_le_dec x y).
+        intro.
+        compute.
+        right.
+        auto.
+        intro.
+        compute.
+        absurd (~ x > y).
+         auto.
+         auto.
+       Qed.
+    *}
+;;
+
+theorem int_le_ge_swap :
+  all x y : int , (x <=0x y) -> (y >=0x x)
+  proof =
+    coq proof {*
+      intros x y.
+      unfold _lt__equal_0x, _gt__equal_0x, bi__int_leq, bi__int_geq.
+      elim (Z_le_dec x y).
+       intros.
+       elim (Z_ge_dec y x).
+        intro.
+        auto.
+
+        intro.
+        auto.
+        compute.
+        compute in H.
+        apply Zle_not_gt in a.
+        apply Zgt_not_le in a.
+         exact a.
+
+         clear a.
+         apply Znot_le_gt.
+         apply Zlt_not_le.
+         apply Znot_ge_lt.
+         exact b.
+
+       intros.
+       elim (Z_ge_dec y x).
+        intro.
+        compute.
+        auto.
+
+        intro.
+        compute.
+        compute in H.
+        exact H.
+       Qed.
+    *}
+;;
+
 (** {7 Theorems for integer operations} *)
 
 theorem int_0_plus:
