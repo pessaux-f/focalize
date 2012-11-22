@@ -512,6 +512,82 @@ theorem int_le_ge_swap :
     *}
 ;;
 
+
+theorem int_gt_implies_ge :
+  all x y : int, x >0x y -> x >=0x y
+  proof =
+    coq proof {*
+      intros x y.
+      unfold _gt_0x, _gt__equal_0x.
+      unfold bi__int_gt, bi__int_geq.
+      elim (Z_gt_dec x y).
+       intros.
+       compute in H.
+       elim (Z_ge_dec x y).
+        intros.
+        compute.
+        auto.
+
+        intro.
+        compute.
+        apply Znot_ge_lt in b.
+        auto with zarith.
+
+       intros.
+       compute in H.
+       elim (Z_ge_dec x y).
+        intro.
+        compute.
+        auto.
+
+        intro.
+        compute.
+        assumption.
+      Qed.
+    *}
+;;
+
+
+theorem int_diff_ge_is_pos : all x y : int, x >=0x y -> x - y >=0x 0
+proof =
+  (* Heavy use of doc:
+       coq_8_4_stdlib/Coq.ZArith.Zorder.html
+       coq_8_4_stdlib/Coq.ZArith.BinInt.html *)
+    coq proof {*
+      intros x y.
+      unfold _gt_0x, _gt__equal_0x, _dash_.
+      unfold bi__int_gt, bi__int_geq, bi__int_minus.
+      elim (Z_ge_dec x y).
+       intros.
+       compute in H.
+       elim (Z_ge_dec (x - y) 0).
+        intros.
+        compute.
+        auto.
+
+        intros.
+        compute.
+        apply Zge_le in a.  (* n <= m -> m >= n *)
+        elim b.
+        apply Zle_ge.
+        apply Zle_minus_le_0.  (* m <= n -> 0 <= n - m *)
+        assumption.
+
+       intro.
+       intro.
+       elim (Z_ge_dec (x - y) 0).
+        intros.
+        compute.
+        auto.
+
+        intros.
+        compute.
+        compute in H.
+        assumption.
+      Qed.
+    *}
+;;
+
 (** {7 Theorems for integer operations} *)
 
 theorem int_0_plus:
