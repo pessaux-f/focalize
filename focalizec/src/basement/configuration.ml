@@ -14,16 +14,10 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: configuration.ml,v 1.50 2012-10-15 14:44:55 pessaux Exp $ *)
-
-exception No_input_file;;
+exception No_input_file ;;
 
 
-let focalize_version_number = (0, 7, 0)
-;;
-
-let version_date = "$Date: 2012-10-15 14:44:55 $"
-;;
+let focalize_version_number = (0, 7, 0) ;;
 
 let focalize_short_version =
   let (major, minor, patch_level) = focalize_version_number in
@@ -32,7 +26,7 @@ let focalize_short_version =
 
 let focalize_full_version =
   Printf.sprintf
-    "%s (CVS: %s) (Build: %s)" focalize_short_version version_date
+    "%s (Build: %s)" focalize_short_version
     Build_stamp.build_stamp
 ;;
 
