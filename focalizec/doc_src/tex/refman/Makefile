@@ -51,7 +51,7 @@ refman.html: refman.dvi ${HVA_FILES}
 	$(HEVEA) -fix ${HVA_FILES} refman.tex
 
 clean:
-	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc
+	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc *.blg *.bbl *.haux *.htoc *.hind
 	$(RM) refman*.gif refman.image.tex
 	$(RM) $(DOC_OBJS)
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt

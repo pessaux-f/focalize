@@ -153,6 +153,7 @@ install:
 clean:
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.zv *.vo
+	$(RM) *.glob *.fcd *.pfc *.fo
 
 # Currently not handled.
 depend:

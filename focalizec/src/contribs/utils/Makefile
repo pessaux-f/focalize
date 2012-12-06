@@ -97,8 +97,8 @@ install:
 clean:
 	$(RM) $(FOCALIZE_FOS) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BIN_OBJS) $(FOCALIZE_VOS)
-	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
+	$(RM) $(FOCALIZE_CMIS) *.annot *.glob *.fcd *.pfc
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv
 
 # Currently not handled.
 depend:

@@ -128,7 +128,7 @@ install:
 	fi
 
 clean:
-	$(RM) *.fo *.ml *.cm* *.zv *.v *.vo *.o *.pfc *.annot
+	$(RM) *.fo *.ml *.cm* *.zv *.v *.vo *.o *.pfc *.annot *.glob
 
 # Currently not handled.
 depend:

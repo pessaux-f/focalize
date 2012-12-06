@@ -62,6 +62,7 @@ byt: $(FOCALIZE_BYT_OBJS)
 
 clean: clean-generated
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) *.vo *.zv *.cm* *.o
+	$(RM) *.fo *.glob *.pfc
 
 tutorial.dvi: $(TEX_FILES)
 	$(LATEX) tutorial.tex &&\

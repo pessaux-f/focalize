@@ -171,7 +171,7 @@ install:
 clean:
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv *.glob *.pfc *~ .*~
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv *.glob *.pfc *~ .*~ *.fo
 
 # Do not yet compile in Coq
 iterators.ml: iterators.fcl

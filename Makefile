@@ -71,3 +71,9 @@ clean:
 	  echo "<-- $$i [$$err]" >&2 &&\
 	  case $$err in 0);; *) exit $$err;; esac;\
 	done
+
+
+distrib:
+	$(RM) -f focalize-distrib.tgz
+	($(CD) .. &&\
+	tar cvzf focalize/focalize-distrib.tgz -T focalize/files-for-distrib.lst)
