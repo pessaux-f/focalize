@@ -31,6 +31,7 @@ all:
 	@echo "Building Zenon..."
 	@($(CD) zenon &&\
 		./configure $(CONFIGURE_FLAGS) &&\
+		$(MAKE) depend &&\
 		$(MAKE) all &&\
 		$(MAKE) doc &&\
 	  echo "Installing..." &&\
@@ -40,6 +41,7 @@ all:
 	@echo "Building Zvtov..."
 	@($(CD) zvtov &&\
 		./configure $(CONFIGURE_FLAGS) &&\
+		$(MAKE) depend &&\
 		$(MAKE) all &&\
 		$(MAKE) doc &&\
 	  echo "Installing..." &&\

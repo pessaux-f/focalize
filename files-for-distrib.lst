@@ -32,8 +32,6 @@
 ./focalize/focalizec/doc_src/tex/refman/pres_requir.tex
 ./focalize/focalizec/doc_src/tex/refman/proofs.tex
 ./focalize/focalizec/doc_src/tex/refman/recursion.tex
-./focalize/focalizec/doc_src/tex/refman/refman.bbl
-./focalize/focalizec/doc_src/tex/refman/refman.blg
 ./focalize/focalizec/doc_src/tex/refman/refman.hva
 ./focalize/focalizec/doc_src/tex/refman/refman.tex
 ./focalize/focalizec/doc_src/tex/refman/syntaxdef.hva

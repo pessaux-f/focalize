@@ -88,11 +88,13 @@ From the toplevel 'focalize' directory:
   ./configure
   cd zenon
   ./configure
+  make depend
   make all
   make doc
   make install
   cd ../zvtov
   ./configure
+  make depend
   make all
   make doc
   make install

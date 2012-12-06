@@ -1,6 +1,5 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<html dir="ltr" lang="en"><head>
-<!--
+<html dir="ltr" lang="en"><head><!--
 #**********************************************************************#
 #                                                                      #
 #                        FoCaLiZe compiler                             #
@@ -24,11 +23,12 @@ $Id: README_FOR_DEVELOPERS.html,v 1.3 2012-10-17 09:08:48 pessaux Exp $
 
 
 
+
+
 <meta name="GENERATOR" content="Kompozer">
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Read me for developers</title>
   <meta content="FoCaLiZe development Team" name="author">
-  <meta content="Information about the build and config of FoCaLize" name="description">
-</head><body bgcolor="#ffffff">
+  <meta content="Information about the build and config of FoCaLize" name="description"></head><body bgcolor="#ffffff">
 
 <h2>How to use the FoCaLiZe Makefile</h2>
 
@@ -99,7 +99,10 @@ OCaml and Coq.</li>
   <li><span style="font-family: monospace;">focalize/zenon/configure</span>:
     <ol>
       <li>[-]-interactive: run interactively, asking questions.</li>
-      <li>[-]-install_prefix &lt;directory&gt;: set &lt;directory&gt; as the directory prefix for installation of the FoCaLize commands. (Default value for &lt;directory&gt; is /usr/local).</li>
+      <li>[-]-install_prefix
+&lt;directory&gt;: set &lt;directory&gt; as the directory prefix for
+installation of the FoCaLize commands. (Default value for
+&lt;directory&gt; is /usr/local).</li>
     </ol>
   </li>
   <li><span style="font-family: monospace;">focalize/zvtov/configure</span>: Same than for <span style="font-family: monospace;">focalize/zenon/configure</span>.</li>
@@ -137,6 +140,9 @@ So, the necessary building sequence is as follows:
     <ul>
 
     <li><span style="font-style: italic;">./configure</span>: configuration.</li>
+      <li><span style="font-style: italic;">make depend</span>: compute dependencies for zenon sources.<br>
+      </li>
+
     <li><span style="font-style: italic;">make all</span>: build binaries and libraries.</li>
     <li>make doc: build the doc.</li>
     <li>make install: install everything.
@@ -150,6 +156,8 @@ So, the necessary building sequence is as follows:
     <ul>
 
     <li><span style="font-style: italic;">./configure</span>: configuration</li>
+      <li><span style="font-style: italic;">make depend</span>: compute dependencies for zvtov sources.</li>
+
     <li><span style="font-style: italic;">make all</span>: build binaries and libraries.</li>
     <li><span style="font-style: italic;">make doc</span>: build the doc.</li>
     <li><span style="font-style: italic;">make install</span>: install everything.
