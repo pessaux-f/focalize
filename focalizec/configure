@@ -305,6 +305,50 @@ then FOCALIZEC_COQ_COMPATIBILITY_OPTION=-coq_older_8_4
 else FOCALIZEC_COQ_COMPATIBILITY_OPTION=""
 fi
 
+# Check if installation directories are writable, if so do not use sudo
+# otherwise, use it.
+SUDO=
+touch $INSTALL_BIN_DIR/writable_p
+if [ "$?" = 0 ] ;
+then
+    rm -f $INSTALL_BIN_DIR/writable_p
+else
+    SUDO=sudo
+fi
+
+if [ "$SUDO" = "" ] ;
+then
+    touch $INSTALL_LIB_DIR/writable_p
+    if [ "$?" = 0 ]
+    then
+        rm -f $INSTALL_LIB_DIR/writable_p
+    else
+        SUDO=sudo
+    fi
+fi
+
+if [ "$SUDO" = "" ] ;
+then
+    touch $INSTALL_MAN_DIR/writable_p
+    if [ "$?" = 0 ]
+    then
+        rm -f $INSTALL_MAN_DIR/writable_p
+    else
+        SUDO=sudo
+    fi
+fi
+
+if [ "$SUDO" = "" ] ;
+then
+    touch $INSTALL_DOC_DIR/writable_p
+    if [ "$?" = 0 ]
+    then
+        rm -f $INSTALL_DOC_DIR/writable_p
+    else
+        SUDO=sudo
+    fi
+fi
+
 # #############################################################################
 # Generate the configuration vars.
 
@@ -312,6 +356,7 @@ CONFIGURATION_VARS_FILE=.config_var
 
 rm -f $CONFIGURATION_VARS_FILE
 echo "FOCALIZEC_COQ_COMPATIBILITY_OPTION=$FOCALIZEC_COQ_COMPATIBILITY_OPTION" >> $CONFIGURATION_VARS_FILE
+echo "SUDO=$SUDO" >> $CONFIGURATION_VARS_FILE
 chmod a-w $CONFIGURATION_VARS_FILE
 
 # #############################################################################
@@ -327,9 +372,10 @@ echo "  coq = $COQC"
 echo "  zvtov = $ZVTOV"
 echo "  zenon = $ZENON"
 echo "  zenon libraries directory = $ZENON_LIB_DIR"
+echo "  Use sudo to install -> $SUDO"
 if [ ! "$FOCALIZEC_COQ_COMPATIBILITY_OPTION" = "" ]
 then
     echo $BOLDTAG"ATTENTION:$NORMALTAG you are using a version of Coq < 8.4. FoCaliZeC must be called with"
     echo "the $BOLDTAG$FOCALIZEC_COQ_COMPATIBILITY_OPTION$NORMALTAG option."
 fi
-echo "Done. Now, please invoke: 'make depend' then 'make world'."
+echo "Done. Now, please invoke: 'make depend world doc install'"

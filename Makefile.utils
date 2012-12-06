@@ -14,8 +14,6 @@
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile.utils,v 1.3 2012-11-13 14:02:05 pessaux Exp $
-
 # Basic Unix commands
 CD=cd
 CP=cp -f
@@ -27,7 +25,6 @@ MV=mv -f
 RM=rm -rf
 SSH=ssh
 SCP=scp
-SUDO=sudo
 TOUCH=touch
 
 # Tex related processors

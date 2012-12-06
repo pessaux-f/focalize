@@ -66,10 +66,10 @@ zvtov: zvtov.byt
 
 .PHONY: install
 install:
-	mkdir -p $(INSTALL_BIN_DIR)
-	cp -p zvtov $(INSTALL_BIN_DIR)/
-	mkdir -p $(INSTALL_MAN_DIR)/man1
-	cp zvtov.1 $(INSTALL_MAN_DIR)/man1/
+	$(SUDO) mkdir -p $(INSTALL_BIN_DIR)
+	$(SUDO) cp -p zvtov $(INSTALL_BIN_DIR)/
+	$(SUDO) mkdir -p $(INSTALL_MAN_DIR)/man1
+	$(SUDO) cp zvtov.1 $(INSTALL_MAN_DIR)/man1/
 
 .PHONY: uninstall
 

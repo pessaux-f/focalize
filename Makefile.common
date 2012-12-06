@@ -14,8 +14,6 @@
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile.common,v 1.37 2012-10-30 13:51:14 pessaux Exp $
-
 # General utilities and commands. Excludes OCaml and Coq.
 include $(ROOT_DIR)/Makefile.utils
 

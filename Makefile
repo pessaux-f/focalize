@@ -13,8 +13,6 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.80 2012-10-31 15:51:49 pessaux Exp $
-
 ROOT_DIR=.
 
 SUB_DIRS= zenon zvtov focalizec
@@ -36,7 +34,7 @@ all:
 		$(MAKE) all &&\
 		$(MAKE) doc &&\
 	  echo "Installing..." &&\
-		$(SUDO) $(MAKE) install);\
+		$(MAKE) install);\
 	  err=$$?;\
 	  case $$err in 0);; *) exit $$err;; esac;
 	@echo "Building Zvtov..."
@@ -45,7 +43,7 @@ all:
 		$(MAKE) all &&\
 		$(MAKE) doc &&\
 	  echo "Installing..." &&\
-		$(SUDO) $(MAKE) install);\
+		$(MAKE) install);\
 	  err=$$?;\
 	  case $$err in 0);; *) exit $$err;; esac;
 	@echo "Building FoCaLiZeC and stuff..."
@@ -55,7 +53,7 @@ all:
 		$(MAKE) world &&\
 		$(MAKE) doc &&\
 	  echo "Installing..." &&\
-		$(SUDO) $(MAKE) install);\
+		$(MAKE) install);\
 	  err=$$?;\
 	  case $$err in 0);; *) exit $$err;; esac;
 

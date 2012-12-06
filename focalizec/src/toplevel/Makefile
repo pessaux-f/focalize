@@ -12,8 +12,6 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.66 2012-10-15 14:47:07 pessaux Exp $
-
 ROOT_DIR=../../..
 
 LOCAL_BYT_OBJS=focalizec.cmo exc_wrapper.cmo

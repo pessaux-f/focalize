@@ -14,11 +14,10 @@
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.53 2012-10-30 13:56:05 pessaux Exp $
-
 ROOT_DIR=..
 
 include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.config_var
 
 COMPILER_DIRS=\
  src/basement src/parser src/typing\
@@ -81,11 +80,22 @@ lib:
 # 	  case $$err in 0);; *) exit $$err;; esac;\
 # 	done
 
-clean install:
+clean:
 	@for i in $(ALL_DIRS); do\
 	  if test -d $$i; then\
 	    echo "--> $$i ..." >&2 &&\
 	    ($(CD) $$i && $(MAKE) $@);\
+	    err=$$?;\
+	    echo "<-- $$i [$$err]" >&2 &&\
+	    case $$err in 0);; *) exit $$err;; esac;\
+	  fi;\
+	done
+
+install:
+	@for i in $(ALL_DIRS); do\
+	  if test -d $$i; then\
+	    echo "--> $$i ..." >&2 &&\
+	    ($(CD) $$i && $(SUDO) $(MAKE) $@);\
 	    err=$$?;\
 	    echo "<-- $$i [$$err]" >&2 &&\
 	    case $$err in 0);; *) exit $$err;; esac;\
