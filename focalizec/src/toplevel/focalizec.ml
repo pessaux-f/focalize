@@ -170,8 +170,12 @@ let compile_coq input_file_name =
   (* Coq always requires Zenon .v files. *)
   let for_zenon = " -I " ^ Installation.zenon_libdir in
   (* We include the library search paths for OCaml. [Files.get_lib_paths]
-     returns the paths already in the order they were given in the options. *)
-  let includes = String.concat " -I " ("" :: (Files.get_lib_paths ())) in
+     returns the paths in the order they were given in the options, but
+     Coq searches first in the last -I paths. Since our semantics of the search
+     path is not like this (we behave like OCaml and GCC), we must reverse
+     this list for Coq.*)
+  let includes =
+    String.concat " -I " ("" :: (List.rev (Files.get_lib_paths ()))) in
   let cmd =
     Printf.sprintf "%s %s %s %s"
       Installation.coq_compiler includes for_zenon input_file_name in
