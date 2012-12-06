@@ -1,7 +1,0 @@
-*.html
-*.pdf
-*.ps
-*.dvi
-.done_copy_man_pages
-.done_copy_documentation
-*.1

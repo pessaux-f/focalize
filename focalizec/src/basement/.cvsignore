@@ -1,6 +1,0 @@
-*.cm*
-*.annot
-*.o
-odoc
-installation.ml
-build_stamp.ml

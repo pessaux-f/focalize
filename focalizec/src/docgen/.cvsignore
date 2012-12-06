@@ -1,6 +1,0 @@
-*.cm*
-*.annot
-*.o
-doc_lexer.ml
-odoc
-

@@ -1,9 +1,0 @@
-*.cm*
-*.sw*
-*.annot
-*.o
-odoc
-log
-a.out
-focalizetest.byt
-focalizetest.bin
