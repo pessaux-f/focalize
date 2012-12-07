@@ -48,9 +48,9 @@ directories (usage of the 'sudo' command).
 (2) After installation:
 ========================
 
-If you version of Coq is older than 8.4, you'll need to invoque the FoCaLiZe
+If your version of Coq is older than 8.3pl2, you'll need to invoque the FoCaLiZe
 compiler, 'focalizec' with the option:
-  -coq_older_8_4
+  -coq_older
 to ensure the generated Coq code is compliant with your version. Note that the
 configuration process will have warned you about this point.
 
