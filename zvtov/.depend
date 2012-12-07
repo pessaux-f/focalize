@@ -1,45 +1,45 @@
-version.cmo: version.cmi
-version.cmx: version.cmi
-misc.cmo: misc.cmi
-misc.cmx: misc.cmi
-options.cmo: version.cmi misc.cmi options.cmi
-options.cmx: version.cmx misc.cmx options.cmi
-cache.cmo: misc.cmi cache.cmi
-cache.cmx: misc.cmx cache.cmi
-expr.cmo: expr.cmi
-expr.cmx: expr.cmi
-parser_coq.cmo: expr.cmi parser_coq.cmi
-parser_coq.cmx: expr.cmx parser_coq.cmi
-lexer_coq.cmo: parser_coq.cmi lexer_coq.cmi
-lexer_coq.cmx: parser_coq.cmx lexer_coq.cmi
-invoke.cmo: parser_coq.cmi misc.cmi lexer_coq.cmi cache.cmi invoke.cmi
-invoke.cmx: parser_coq.cmx misc.cmx lexer_coq.cmx cache.cmx invoke.cmi
-invoke_cime.cmo: parser_coq.cmi misc.cmi lexer_coq.cmi invoke.cmi expr.cmi \
+version.cmo : version.cmi
+version.cmx : version.cmi
+misc.cmo : misc.cmi
+misc.cmx : misc.cmi
+options.cmo : version.cmi misc.cmi options.cmi
+options.cmx : version.cmx misc.cmx options.cmi
+cache.cmo : misc.cmi cache.cmi
+cache.cmx : misc.cmx cache.cmi
+expr.cmo : expr.cmi
+expr.cmx : expr.cmi
+parser_coq.cmo : expr.cmi parser_coq.cmi
+parser_coq.cmx : expr.cmx parser_coq.cmi
+lexer_coq.cmo : parser_coq.cmi lexer_coq.cmi
+lexer_coq.cmx : parser_coq.cmx lexer_coq.cmi
+invoke.cmo : parser_coq.cmi misc.cmi lexer_coq.cmi cache.cmi invoke.cmi
+invoke.cmx : parser_coq.cmx misc.cmx lexer_coq.cmx cache.cmx invoke.cmi
+invoke_cime.cmo : parser_coq.cmi misc.cmi lexer_coq.cmi invoke.cmi expr.cmi \
     invoke_cime.cmi
-invoke_cime.cmx: parser_coq.cmx misc.cmx lexer_coq.cmx invoke.cmx expr.cmx \
+invoke_cime.cmx : parser_coq.cmx misc.cmx lexer_coq.cmx invoke.cmx expr.cmx \
     invoke_cime.cmi
-token.cmo: token.cmi
-token.cmx: token.cmi
-lexer.cmo: token.cmi lexer.cmi
-lexer.cmx: token.cmx lexer.cmi
-parser.cmo: token.cmi misc.cmi lexer.cmi invoke_cime.cmi invoke.cmi \
+token.cmo : token.cmi
+token.cmx : token.cmi
+lexer.cmo : token.cmi lexer.cmi
+lexer.cmx : token.cmx lexer.cmi
+parser.cmo : token.cmi misc.cmi lexer.cmi invoke_cime.cmi invoke.cmi \
     parser.cmi
-parser.cmx: token.cmx misc.cmx lexer.cmx invoke_cime.cmx invoke.cmx \
+parser.cmx : token.cmx misc.cmx lexer.cmx invoke_cime.cmx invoke.cmx \
     parser.cmi
-main.cmo: version.cmi parser.cmi options.cmi misc.cmi invoke.cmi cache.cmi \
+main.cmo : version.cmi parser.cmi options.cmi misc.cmi invoke.cmi cache.cmi \
     main.cmi
-main.cmx: version.cmx parser.cmx options.cmx misc.cmx invoke.cmx cache.cmx \
+main.cmx : version.cmx parser.cmx options.cmx misc.cmx invoke.cmx cache.cmx \
     main.cmi
-version.cmi:
-misc.cmi:
-options.cmi:
-cache.cmi:
-expr.cmi:
-parser_coq.cmi: expr.cmi
-lexer_coq.cmi: parser_coq.cmi
-invoke.cmi:
-invoke_cime.cmi:
-token.cmi:
-lexer.cmi: token.cmi
-parser.cmi:
-main.cmi:
+version.cmi :
+misc.cmi :
+options.cmi :
+cache.cmi :
+expr.cmi :
+parser_coq.cmi : expr.cmi
+lexer_coq.cmi : parser_coq.cmi
+invoke.cmi :
+invoke_cime.cmi :
+token.cmi :
+lexer.cmi : token.cmi
+parser.cmi :
+main.cmi :

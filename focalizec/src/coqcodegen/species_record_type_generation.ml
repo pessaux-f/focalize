@@ -422,12 +422,12 @@ let generate_constant ctx cst =
    | Parsetree.C_bool str ->
        (* [true] maps on Coq "true". [false] maps on Coq "false". *)
        Format.fprintf ctx.Context.scc_out_fmter "%s" str
-   | Parsetree.C_string _str ->
+   | Parsetree.C_string str ->
        (* [Unsure] *)
-       Format.fprintf ctx.Context.scc_out_fmter "coq_builtins.___a_string"
-   | Parsetree.C_char _c ->
+       Format.fprintf ctx.Context.scc_out_fmter "\"%s\"%%string" str
+   | Parsetree.C_char c ->
        (* [Unsure] *)
-       Format.fprintf ctx.Context.scc_out_fmter "C_char"
+       Format.fprintf ctx.Context.scc_out_fmter "\"%c\"%%char" c
 ;;
 
 

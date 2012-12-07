@@ -155,7 +155,7 @@ let ( ^ ) =
   internal string -> string -> string
   external
   | caml -> {* Ml_builtins.bi__string_concat *}
-  | coq -> {* fun (x : string__t) (y : string__t) => coq_builtins.___a_string *}
+  | coq -> {* String.append *}
 ;;
 
 let ( <^ ) =
@@ -281,12 +281,12 @@ let abs0x =
   | coq -> {* coq_builtins.bi__int_abs *}
 ;;
 
-(** String convertions for integers. *)
+(** String convertions for integers. [Unsure] *)
 let string_of_int =
   internal int -> string
   external
   | caml -> {* Ml_builtins.bi__string_of_int *}
-  | coq -> {* fun (x : int__t) => coq_builtins.___a_string *}
+  | coq -> {* fun (x : int__t) => "42"%string *}
 ;;
 
 let int_of_string =

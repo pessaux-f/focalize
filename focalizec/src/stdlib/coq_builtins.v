@@ -423,9 +423,6 @@ Axiom __focalize_bottom__ : forall A : Set, A.
 (* Notation made available only in Coq parser, not in Coq output / feedback. *)
 Notation bottom := (__focalize_bottom__ _) (only parsing).
 
-(* Junky code to have one representative of the string__t type. *)
-Variable ___a_string : string.
-
 (** Definition of the "raise" function.
     Note that we use type [string]. This is right since in basics.fcl, the
     mapping of FoCaLize's string type will be internally done on Coq's [string]. *)
