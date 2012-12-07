@@ -195,8 +195,8 @@ let require_plugin, get_plugins =
   (fun () -> !plugin_list)
 ;;
 
-let (get_use_coq_older_8_4, set_use_coq_older_8_4) =
-  let use_coq_older_8_4 = ref false in
-  (fun () -> !use_coq_older_8_4),
-  (fun () -> use_coq_older_8_4 := true)
+let (get_use_coq_older, set_use_coq_older) =
+  let use_coq_older = ref false in
+  (fun () -> !use_coq_older),
+  (fun () -> use_coq_older := true)
 ;;

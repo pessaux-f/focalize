@@ -248,10 +248,10 @@ let dispatch_compilation files =
 (* The main procedure *)
 let main () =
   Arg.parse
-    [ ("-coq_older_8_4",
-       Arg.Unit Configuration.set_use_coq_older_8_4,
+    [ ("-coq_older",
+       Arg.Unit Configuration.set_use_coq_older,
        "\n\
-     Enables Coq code generation for versions of Coq < 8.4.");
+     Enables Coq code generation for versions of Coq < 8.3pl2.");
       ("-dot-non-rec-dependencies",
        Arg.String Configuration.set_dotty_dependencies,
        "\n\

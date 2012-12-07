@@ -288,13 +288,13 @@ let root_compile ~current_unit ~out_file_name stuff =
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.CoqGenEnv.empty ()) in
-  (* Since Coq 8.4 bound entities do no more appear as terms sequenced as
+  (* Since Coq 8.3pl2 bound entities do no more appear as terms sequenced as
      "imply" (i.e. ->) but are now directly introduce as hypothesis. This breaks
-     the code generation model for Zenon proofs. if using Coq 8.4, the we force
-     Coq getting back to previous proof goals, unsetting the "Automatic
-     Introduction" globally. Otherwise, if using Coq version < 8.4, we do not
+     the code generation model for Zenon proofs. If using Coq 8.3pl2, the we
+     force Coq getting back to previous proof goals, unsetting the "Automatic
+     Introduction" globally. Otherwise, if using Coq version < 8.3pl2, we do not
      unset. *)
- if not (Configuration.get_use_coq_older_8_4 ()) then
+ if not (Configuration.get_use_coq_older ()) then
      Format.fprintf out_fmter "Global Unset Automatic Introduction.@\n" ;
   (* Always import Coq booleans and integers and floats. Alias int notation to
      Z. *)

@@ -107,5 +107,5 @@ val get_stop_before_coq : unit -> bool
 val require_plugin : string -> unit
 val get_plugins : unit -> string list
 
-val set_use_coq_older_8_4 : unit -> unit
-val get_use_coq_older_8_4 : unit -> bool
+val set_use_coq_older : unit -> unit
+val get_use_coq_older : unit -> bool

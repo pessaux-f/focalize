@@ -297,11 +297,11 @@ echo "INSTALL_DOC_DIR=$INSTALL_DOC_DIR" >> $INSTALLATION_VARS_FILE
 chmod a-w $INSTALLATION_VARS_FILE
 
 # #############################################################################
-# If Coq version is < 8.4, then we must call focalizec with the
-# -coq_older_8_4 option to ensure code generation is Coq-compatible.
+# If Coq version is < 8.3pl2, then we must call focalizec with the
+# -coq_older option to ensure code generation is Coq-compatible.
 COQ_VERSION=`$COQC -v | grep version | cut -d ' ' -f 6`
-if [ "$COQ_VERSION" \< "8.4"  ] ;
-then FOCALIZEC_COQ_COMPATIBILITY_OPTION=-coq_older_8_4
+if [ "$COQ_VERSION" \< "8.3pl2"  ] ;
+then FOCALIZEC_COQ_COMPATIBILITY_OPTION=-coq_older
 else FOCALIZEC_COQ_COMPATIBILITY_OPTION=""
 fi
 
