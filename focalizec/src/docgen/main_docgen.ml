@@ -13,9 +13,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: main_docgen.ml,v 1.46 2012-11-13 14:02:05 pessaux Exp $ *)
-
-
 
 (* ********************************************************************** *)
 (* Format.formatter -> string option -> string option -> string option -> *)
@@ -351,16 +348,16 @@ let gen_doc_history out_fmt from_hist =
 let gen_doc_constant out_fmt cst =
   match cst.Parsetree.ast_desc with
    | Parsetree.C_int s ->
-       Format.fprintf out_fmt "<foc:int>\"%s\"</foc:int>@\n" s
+       Format.fprintf out_fmt "<foc:int val=\"%s\"></foc:int>@\n" s
    | Parsetree.C_float s ->
-       Format.fprintf out_fmt "<foc:float>\"%s\"</foc:float>@\n" s
+       Format.fprintf out_fmt "<foc:float val=\"%s\"></foc:float>@\n" s
    | Parsetree.C_bool s ->
-       Format.fprintf out_fmt "<foc:bool>\"%s\"</foc:bool>@\n" s
+       Format.fprintf out_fmt "<foc:bool val=\"%s\"></foc:bool>@\n" s
    | Parsetree.C_string s ->
-       Format.fprintf out_fmt "<foc:string>\"%s\"</foc:string>@\n"
+       Format.fprintf out_fmt "<foc:string val=\"%s\"></foc:string>@\n"
          (Utils_docgen.xmlify_string s)
    | Parsetree.C_char c ->
-       Format.fprintf out_fmt "<foc:char>\"%s\"</foc:char>@\n"
+       Format.fprintf out_fmt "<foc:char val=\"%s\"></foc:char>@\n"
          (Utils_docgen.xmlify_string (Char.escaped c))
 ;;
 

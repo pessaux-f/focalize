@@ -11,16 +11,25 @@
 
 
 
-<xsl:template match="int">
+<xsl:template match="foc:int">
   <mml:mn><xsl:value-of select="@val"/></mml:mn>
 </xsl:template>
 
-
-
-<xsl:template match="string">
+<xsl:template match="foc:float">
   <mml:ms><xsl:value-of select="@val"/></mml:ms>
 </xsl:template>
 
+<xsl:template match="foc:bool">
+  <mml:mn><xsl:value-of select="@val"/></mml:mn>
+</xsl:template>
+
+<xsl:template match="foc:string">
+  <mml:ms><xsl:value-of select="@val"/></mml:ms>
+</xsl:template>
+
+<xsl:template match="foc:char">
+  '<mml:ms><xsl:value-of select="@val"/></mml:ms>'
+</xsl:template>
 
 
 <!--  utile pour les tests :-->

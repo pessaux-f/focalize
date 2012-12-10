@@ -14,9 +14,6 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: utils_docgen.ml,v 1.7 2012-11-13 14:02:05 pessaux Exp $ *)
-
-
 
 (* *********************************************************************** *)
 (** {b Descr}: Translates a string into a XML compliant string by escaping
@@ -149,7 +146,7 @@ let find_annotation_of_method meth_name species_def_fields =
 
 
 (* ************************************************************************** *)
-(* Parsetree.annot_elem list ->                                                 *)
+(* Parsetree.annot_elem list ->                                               *)
 (*   ((string option * string option * string option *                        *)
 (*    (string option * string option * string option))                        *)
 (** {b Descr}: Searches the string related to all documentation tags known in
