@@ -1,4 +1,3 @@
-% $Id: doc_gen.tex,v 1.10 2009-08-25 12:38:07 weis Exp $
 \label{documentation-generation}
 When invoked with the {\tt $-$focalize-doc} option, the command
 {\focalizec} generates an extra file (with the ``.fcd'' suffix)
@@ -51,9 +50,9 @@ See example provided for the {\tt @description} tag below.
 This tag must appear (i.e. is only taken into account) in the first
 annotations block of the source file. The following text is considered
 to be the description of the content of the source file (what services
-it implements) and will appear in the header of the final document.
+it implements) and will appear in the header of the final
+document. For example:
 
-For example:
 {\scriptsize
 \begin{lstlisting}
 (***********************************************************************)
@@ -70,22 +69,23 @@ For example:
  @description Basic sets operations, orderings and lattices.
 *)
 ...
-\end{lstlisting}
-}
-will lead to a document header like (displayed in HTML format):
+\end{lstlisting}}
+
+\noindent will lead to a document header like (displayed in HTML format):
 
 \medskip
 \includegraphics{header_html_snapshot.ps}
 
 You may notice in the above source code example that the header
 information is located in an annotation that is not the {\bf first}
-one. In effect, the top-most banner starting by
+one. In effect, the top-most banner starting by:
+
 {\scriptsize
 \begin{lstlisting}
 (***********************************************************************)
-\end{lstlisting}
-}
-is in fact also an annotation since it starts by the sequence
+\end{lstlisting}}
+
+\noindent is in fact also an annotation since it starts by the sequence
 ``(**''. However all these annotation belong to the same annotations
 block as requiered.
 
@@ -98,9 +98,8 @@ the name of the method everywhere in the current document. This tag
 only affects the HTML display since it allows to show more usual
 symbols rather than identifiers in a browser. This is expecially
 useful for mathematical formulaes where one prefer to see the sign $=$
-rather than an identifier ``{\tt equal}''.
+rather than an identifier ``{\tt equal}''. For example:
 
-For example:
 {\scriptsize
 \begin{lstlisting}
 (** In a setoid, we can test the equality (note for logicians: this is
@@ -112,9 +111,9 @@ species Setoid =
   property equal_transitive : all x y z in Self,
     equal (x, y) -> equal (y, z) -> equal (x, z) ;
   ...
-\end{lstlisting}
-}
-will replace any occurrence of the method {\tt equal} by the
+\end{lstlisting}}
+
+\noindent will replace any occurrence of the method {\tt equal} by the
 ``\verb+<eq/>+'' MathML sequence that displays a $=$ sign when
 displayed by an HTML browser.
 
@@ -141,7 +140,17 @@ information.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsubsection{XML to HTML}
 Transformation from ``.fcd'' to a format that can be read by a WEB
-browser is performed in two passes.
+browser is performed in two passes. These 2 steps can be invoked into
+one unique Unix-shell command (all on the same line without carriage return):
+
+{\scriptsize
+\begin{verbatim}
+xsltproc ''directory to the stylesheet''/focdoc2html.xsl mysrc.fcd |
+xsltproc ''directory to the stylesheet''/mmlctop2_0.xsl - > mysrc.xml
+\end{verbatim}}
+
+\noindent More in details, the above command-line performs the 2 following
+explicit steps:
 \begin{enumerate}
   \item Convert the ``.fcl'' file to HTML with MathML annotations.
   This is done applying the stylesheet
@@ -156,25 +165,22 @@ browser is performed in two passes.
   }
 
   \item Convert the HTML+MathML temporary file into HTML.
-  This is done applying the stylesheet
+  This is done applying the stylesheet\\
   {\tt focalize/focalizec/src/docgen/focdoc2html.xsl} with the command
   \xsltproc.
 
   For example:
   {\scriptsize
   \begin{verbatim}
-  xsltproc ''directory to the stylesheet''/mmlctop2_0.xsl mysrc.fcd > mysrc.xml
-  \end{verbatim}
-  }
+  xsltproc ''directory to the stylesheet''/mmlctop2_0.xsl tmp > mysrc.xml
+\end{verbatim}}
   \smallskip
   {\bf Attention:}
   You may note that the final result file name must be ended by the
-  suffix ``.xml'' otherwise your browser won't be able to interpret it
+  suffix ``{\bf .xml}'' otherwise your browser won't be able to interpret it
   correctly and won't display symbols ($\Rightarrow, \in, \exists,
   \rightarrow, \ldots$) correctly.
 \end{enumerate}
-
-
 
 \subsection{XML to LaTeX}
 

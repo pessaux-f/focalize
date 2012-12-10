@@ -12,15 +12,14 @@
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.30 2012-10-30 13:56:05 pessaux Exp $
-
 ROOT_DIR=../../../..
 
-TEX_FILES=macros.tex syntaxdef.sty\
- basic_concepts.tex lexical_conventions.tex motivations.tex\
- proofs.tex building_species.tex macros.tex output.tex refman.tex\
- compiler_opts.tex more_on_meths.tex pres_requir.tex\
- constructs_syntax.tex bibli.bib
+TEX_FILES= syntaxdef.sty\
+	basic_concepts.tex glimpse.tex output.tex building_species.tex \
+	introduction.tex pres_requir.tex compiler_err_msgs.tex \
+	lexical_conventions.tex proofs.tex compiler_opts.tex macros.tex \
+	recursion.tex constructs_syntax.tex more_on_meths.tex refman.image.tex\
+	doc_gen.tex	motivations.tex	refman.tex bibli.bib
 
 HVA_FILES=macros.hva syntaxdef.hva refman.hva
 
