@@ -74,6 +74,8 @@ ZVTOV=../../../zvtov/zvtov
 
 lib: all
 
+# Disable DTD validation because it's too long.
+XSLTPROC_FLAGS=-novalid
 FD2HTML=$(ROOT_DIR)/focalizec/src/docgen/focdoc2html.xsl
 MMLC2P=$(ROOT_DIR)/focalizec/src/docgen/mmlctop2_0.xsl
 
