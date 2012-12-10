@@ -10,11 +10,10 @@
 (*                               LIP6  -  INRIA Rocquencourt           *)
 (*                                                                     *)
 (*  Copyright 2007 - 2009 LIP6 and INRIA                               *)
+(*            2012 ENSTA ParisTech                                     *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: basics.fcl,v 1.70 2011-06-14 13:37:06 rr Exp $ *)
 
 (** {3 The very basic definitions for focalize code} *)
 
@@ -357,7 +356,203 @@ theorem beq_trans :
   all x y z : 'a, x = y -> y = z -> x = z
   proof = coq proof {* apply syntactic_equal_trans. Qed. *} ;;
 
+
 (** {8 Integer comparisons fundamental properties} *)
+theorem int_gt_lt_swap :
+  all x y : int, (x >0x y) -> (y <0x x)
+  proof =
+    coq proof {*
+      intros x y.
+      unfold _gt_0x, _lt_0x.
+      unfold bi__int_gt, bi__int_lt.
+      elim Z_gt_dec.
+       intros.
+       elim Z_lt_dec.
+        intro.
+        compute.
+        trivial.
+
+        intro.
+        compute.
+        auto with zarith.
+
+       intro.
+       intro.
+       elim Z_lt_dec.
+        intro.
+        compute.
+        trivial.
+
+        intro.
+        compute.
+        auto with zarith.
+      Qed.
+    *}
+;;
+
+
+theorem int_lt_gt_swap :
+  all x y : int, (x <0x y) -> (y >0x x)
+  proof =
+     coq proof {*
+     intros x y.
+     unfold _lt_0x, _gt_0x.
+     unfold bi__int_lt, bi__int_gt.
+     elim Z_lt_dec.
+      intros.
+      elim Z_gt_dec.
+       intros.
+       compute.
+       trivial.
+
+       intro.
+       compute.
+       auto with zarith.
+
+      intros.
+      elim Z_gt_dec.
+       intro.
+       compute.
+       trivial.
+
+       intro.
+       compute.
+       auto with zarith.
+       Qed.
+    *}
+;;
+
+theorem int_ge_le_swap :
+  all x y : int , (x >=0x y) -> (y <=0x x)
+  proof =
+    coq proof {*
+      intros x y.
+      unfold _gt__equal_0x, _lt__equal_0x.
+      unfold bi__int_geq, bi__int_leq.
+      elim Z_ge_dec.
+       intros.
+       elim Z_le_dec.
+        intro.
+        compute.
+        trivial.
+
+        intros.
+        compute.
+        auto with zarith.
+
+       intros.
+       elim Z_le_dec.
+        intro.
+        compute.
+        trivial.
+
+        intro.
+        compute.
+        auto with zarith.
+        Qed.
+    *}
+;;
+
+
+theorem int_le_ge_swap :
+  all x y : int , (x <=0x y) -> (y >=0x x)
+  proof =
+    coq proof {*
+      intros x y.
+      unfold _lt__equal_0x, _gt__equal_0x, bi__int_leq, bi__int_geq.
+      elim (Z_le_dec x y).
+       intros.
+       elim (Z_ge_dec y x).
+        intro.
+        auto.
+
+        intro.
+        auto.
+        compute.
+        compute in H.
+        apply Zle_not_gt in a.
+        apply Zgt_not_le in a.
+         exact a.
+
+         clear a.
+         apply Znot_le_gt.
+         apply Zlt_not_le.
+         apply Znot_ge_lt.
+         exact b.
+
+       intros.
+       elim (Z_ge_dec y x).
+        intro.
+        compute.
+        auto.
+
+        intro.
+        compute.
+        compute in H.
+        exact H.
+       Qed.
+    *}
+;;
+
+theorem int_le_not_lt :
+  all x y : int, (x <=0x y) -> ~ (y <0x x)
+  proof =
+    coq proof {*
+      intros x y.
+      unfold _lt__equal_0x, _lt_0x.
+      unfold bi__int_leq, bi__int_lt.
+      elim Z_le_dec.
+       intros.
+       elim Z_lt_dec.
+        intros.
+        compute.
+        intro.
+        auto with zarith.
+
+        intro.
+        compute.
+        trivial.
+
+       intros.
+       elim Z_lt_dec.
+        intro.
+        compute.
+        auto with zarith.
+
+        intro.
+        compute.
+        auto with zarith.
+      Qed.
+    *}
+;;
+
+
+theorem int_lt_not_le :
+  all x y : int, (x <0x y) -> ~ (y <=0x x)
+  proof =
+    coq proof {*
+      intros x y.
+      unfold _lt_0x, _lt__equal_0x.
+      unfold bi__int_lt, bi__int_leq.
+      elim Z_lt_dec.
+       intros.
+       elim Z_le_dec.
+        intro.
+        compute.
+        auto with zarith.
+
+        intro.
+        auto with zarith.
+
+       intros.
+       elim Z_le_dec.
+        auto with zarith.
+
+        auto with zarith.
+      Qed.
+    *}
+;;
+
 
 theorem int_le_not_gt :
   all x y : int, (x <=0x y) -> ~ (x >0x y)
@@ -463,7 +658,32 @@ theorem int_le_trans:
 
 theorem int_lt_irrefl :
   all x y : int, x <0x y -> ~ x = y
-  proof = assumed (* Import trusted external code. *)
+  proof =
+    coq proof {*
+      intros x y.
+      unfold _lt_0x.
+      unfold bi__int_lt.
+      elim Z_lt_dec.
+       intros.
+       compute in H.
+       intro.
+       unfold _equal_ in H0.
+       apply zenon_syntactic_equal with (S := int__t) (x := x) (y := y).
+        intro.
+        apply zenon_focal_eqdec.
+
+        auto with zarith.
+        apply Zlt_not_eq.
+        trivial.
+
+        trivial.
+
+       intro.
+       compute.
+       intros.
+       trivial.
+      Qed.
+    *}
 ;;
 
 theorem int_gt_or_le :
@@ -493,46 +713,6 @@ theorem int_gt_or_le :
         absurd (~ x > y).
          auto.
          auto.
-       Qed.
-    *}
-;;
-
-theorem int_le_ge_swap :
-  all x y : int , (x <=0x y) -> (y >=0x x)
-  proof =
-    coq proof {*
-      intros x y.
-      unfold _lt__equal_0x, _gt__equal_0x, bi__int_leq, bi__int_geq.
-      elim (Z_le_dec x y).
-       intros.
-       elim (Z_ge_dec y x).
-        intro.
-        auto.
-
-        intro.
-        auto.
-        compute.
-        compute in H.
-        apply Zle_not_gt in a.
-        apply Zgt_not_le in a.
-         exact a.
-
-         clear a.
-         apply Znot_le_gt.
-         apply Zlt_not_le.
-         apply Znot_ge_lt.
-         exact b.
-
-       intros.
-       elim (Z_ge_dec y x).
-        intro.
-        compute.
-        auto.
-
-        intro.
-        compute.
-        compute in H.
-        exact H.
        Qed.
     *}
 ;;
