@@ -74,6 +74,9 @@ ZVTOV=../../../zvtov/zvtov
 
 lib: all
 
+FD2HTML=$(ROOT_DIR)/focalizec/src/docgen/focdoc2html.xsl
+MMLC2P=$(ROOT_DIR)/focalizec/src/docgen/mmlctop2_0.xsl
+
 focalizedoc:\
  $(FOCALIZE_MML)
 
