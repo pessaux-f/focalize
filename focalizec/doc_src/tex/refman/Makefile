@@ -18,7 +18,7 @@ TEX_FILES= syntaxdef.sty\
 	basic_concepts.tex glimpse.tex output.tex building_species.tex \
 	introduction.tex pres_requir.tex compiler_err_msgs.tex \
 	lexical_conventions.tex proofs.tex compiler_opts.tex macros.tex \
-	recursion.tex constructs_syntax.tex more_on_meths.tex refman.image.tex\
+	recursion.tex constructs_syntax.tex more_on_meths.tex \
 	doc_gen.tex	motivations.tex	refman.tex bibli.bib
 
 HVA_FILES=macros.hva syntaxdef.hva refman.hva
