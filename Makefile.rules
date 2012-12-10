@@ -69,7 +69,7 @@ bin: $(BIN_OBJS)
 .fcl.fcd:
 	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -focalize-doc $<
 .fcd.xml:
-	$(XSLTPROC) $(FD2HTML) $< | $(XSLTPROC) $(MMLC2P) - > $@
+	$(XSLTPROC) $(XSLTPROC_FLAGS) $(FD2HTML) $< | $(XSLTPROC) $(XSLTPROC_FLAGS) $(MMLC2P) - > $@
 
 # Tex/LaTeX rules
 .tex.dvi:
