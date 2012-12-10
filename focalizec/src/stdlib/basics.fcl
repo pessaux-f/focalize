@@ -400,7 +400,32 @@ theorem int_lt_le_trans :
 
 theorem int_le_refl :
   all x y : int, x = y -> x <=0x y
-  proof = assumed (* Import trusted external code. *)
+  proof =
+    coq proof {*
+      intros x y.
+      unfold _lt__equal_0x.
+      unfold bi__int_leq.
+      unfold _equal_.
+      elim Z_le_dec.
+       intro.
+       intro.
+       compute.
+       trivial.
+
+       intros.
+       compute.
+       apply Znot_le_gt in b.
+       apply zenon_syntactic_equal with (S := int__t) (x := x) (y := y).
+        intros.
+        apply zenon_focal_eqdec.
+
+        intro.
+        apply Zgt_not_le in b.
+        auto with zarith.
+
+        trivial.
+      Qed.
+    *}
 ;;
 
 theorem int_le_antisymm:
