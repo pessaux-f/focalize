@@ -34,6 +34,9 @@ MAKEINDEX=makeindex
 DVIPS=dvips
 DVIPDF=dvipdf
 
+# XML processing
+XSLTPROC=xsltproc
+
 # Htmlc compiler
 HTMLC_COMPILER=htmlc
 HTMLC_COMP_FLAGS =

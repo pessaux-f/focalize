@@ -426,7 +426,6 @@
 ./focalize/focalizec/src/relation_extraction/rel_ext.mli
 ./focalize/focalizec/src/relation_extraction/tests
 ./focalize/focalizec/src/relation_extraction/tests/add.fcl
-./focalize/focalizec/src/stdlib/basics.fcd
 ./focalize/focalizec/src/stdlib/basics.fcl
 ./focalize/focalizec/src/stdlib/coq_builtins.v
 ./focalize/focalizec/src/stdlib/fix.fcl
