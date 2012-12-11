@@ -1,13 +1,26 @@
 # Focalize 0.7.0
 - Update to Caml 4.0
-- Update to Coq 8.4
+- Update to Coq 8.4, compatibility with older versions up to 8.1.
 - Foreign languages reserved keywords renammed on the fly to prevent
-  conflicts
-- Zenon realy smarter
+  conflicts.
+- Zenon really smarter (induction via by type).
+- Integration of Focalizetest
+- No more Caml & Coq included in the distribution.
+- Configuration & build stuff revised and simplified.
+- Handling of weakly polymorphic type variable (ML _'a).
+- Fixed order of -I options sent to Coq.
+- More theorems in the standard library to deal with equality and comparisons
+  on int's.
+- Replacement of "assumed" proofs by real Coq proofs in the standard library.
+- Tutorial on proofs.
+- RPM build system.
+- Revisided documentation to get up-to-date.
+- Various Coq code bugs fixed.
+- Termination proofs on structurally recursive functions.
+- Support for syntax for termination proofs other than structural (partial).
+- Syntactic restrictions relaxed.
 - Other things we don't remember :S
-- Focalizetest
-- No more Caml & Coq included in the distrib.
-- config & build stiff revised and simplified.
+
 
 # Focalize 0.6.0
 - Inductive proof on data structures.
@@ -27,4 +40,3 @@ Initial distribution
 # Focalize 0.1.rc0
 First release candidate.
 
-$Id: CHANGES,v 1.4 2012-10-15 14:23:06 pessaux Exp $
