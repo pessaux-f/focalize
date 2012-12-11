@@ -132,7 +132,13 @@ then
             if [ "$USER_INPUT" != "" ] ;
             then
                 ZENON=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                ZENON=zenon
             fi
+        else
+            # Default path: trim it
+            ZENON=zenon
         fi
     else
         # No zenon command found and no explicit prefix given.
@@ -140,12 +146,12 @@ then
         echo "Specify where to find zenon."
         read USER_INPUT
         ZENON=$USER_INPUT
-    fi
-     # Finally check that a director was entered by the user.
-    if [ "$ZENON" == "" ] ;
-    then
-        echo "Error. zenon not available. Install it first."
-        exit 1
+        # Finally check that a director was entered by the user.
+        if [ "$ZENON" == "" ] ;
+        then
+            echo "Error. zenon not available. Install it first."
+            exit 1
+        fi
     fi
 else
     # Explicit tools prefix given, keep it blindly.
@@ -175,7 +181,13 @@ then
             if [ "$USER_INPUT" != "" ] ;
             then
                 ZVTOV=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                ZVTOV=zvtov
             fi
+        else
+            # Default path: trim it
+            ZVTOV=zvtov
         fi
     else
         # No zvtov command found and no explicit prefix given.
@@ -183,12 +195,12 @@ then
         echo "Specify where to find zvtov."
         read USER_INPUT
         ZVTOV=$USER_INPUT
-    fi
-    # Finally check that a director was entered by the user.
-    if [ "$ZVTOV" == "" ] ;
-    then
-        echo "Error. zvtov not available. Install it first."
-        exit 1
+        # Finally check that a director was entered by the user.
+        if [ "$ZVTOV" == "" ] ;
+        then
+            echo "Error. zvtov not available. Install it first."
+            exit 1
+        fi
     fi
 else
     # Explicit tools prefix given, keep it blindly.

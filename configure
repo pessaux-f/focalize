@@ -91,7 +91,13 @@ then
             if [ "$USER_INPUT" != "" ] ;
             then
                 CAMLDIR=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                CAMLDIR=""
             fi
+        else
+            # Default path: trim it
+            CAMLDIR=""
         fi
     else
         # No ocamlc command found and no explicit prefix given.
@@ -99,25 +105,36 @@ then
         echo "Specify the path where to find OCaml commands."
         read USER_INPUT
         CAMLDIR=$USER_INPUT
-    fi
-    # Finally check that a director was entered by the user.
-    if [ "$CAMLDIR" = "" ] ;
-    then
-        echo "Error. OCaml not available. Install it first."
-        exit 1
+        # Finally check that a director was entered by the user.
+        if [ "$CAMLDIR" = "" ] ;
+        then
+            echo "Error. OCaml not available. Install it first."
+            exit 1
+        fi
     fi
 else
     # Explicit tools prefix given, keep it blindly.
     CAMLDIR=$TOOLS_PREFIX
 fi
 
-CAMLBYT=$CAMLDIR/ocamlc
-CAMLBIN=$CAMLDIR/ocamlopt
-CAMLLEX=$CAMLDIR/ocamllex
-CAMLYACC=$CAMLDIR/ocamlyacc
-CAMLDOC=$CAMLDIR/ocamldoc
-CAMLDEP=$CAMLDIR/ocamldep
-
+# If path to ocaml is empty here, then ocaml was found but using the PATH.
+# So do not prefix it explicitly, letting PATH finding the commands.
+if [ "$CAMLDIR" != "" ] ;
+then
+    CAMLBYT=$CAMLDIR/ocamlc
+    CAMLBIN=$CAMLDIR/ocamlopt
+    CAMLLEX=$CAMLDIR/ocamllex
+    CAMLYACC=$CAMLDIR/ocamlyacc
+    CAMLDOC=$CAMLDIR/ocamldoc
+    CAMLDEP=$CAMLDIR/ocamldep
+else
+    CAMLBYT=ocamlc
+    CAMLBIN=ocamlopt
+    CAMLLEX=ocamllex
+    CAMLYACC=ocamlyacc
+    CAMLDOC=ocamldoc
+    CAMLDEP=ocamldep
+fi
 
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
@@ -133,7 +150,13 @@ then
             if [ "$USER_INPUT" != "" ] ;
             then
                 COQDIR=$USER_INPUT
+            else
+                # Default path kept: trim it to just let the PATH acting.
+                COQDIR=""
             fi
+        else
+            # Default path: trim it
+            COQDIR=""
         fi
     else
         # No coqc command found and no explicit prefix given.
@@ -141,20 +164,28 @@ then
         echo "Specify the path where to find Coq commands."
         read USER_INPUT
         COQDIR=$USER_INPUT
-    fi
-    # Finally check that a director was entered by the user.
-    if [ "$COQDIR" = "" ] ;
-    then
-        echo "Error. Coq not available. Install it first."
-        exit 1
+        # Finally check that a director was entered by the user.
+        if [ "$COQDIR" = "" ] ;
+        then
+            echo "Error. Coq not available. Install it first."
+            exit 1
+        fi
     fi
 else
     # Explicit tools prefix given, keep it blindly.
     COQDIR=$TOOLS_PREFIX
 fi
 
-COQC=$COQDIR/coqc
-COQDEP=$COQDIR/coqdep
+# If path to coq is empty here, then ocaml was found but using the PATH.
+# So do not prefix it explicitly, letting PATH finding the commands.
+if [ "$COQDIR" != "" ] ;
+then
+    COQC=$COQDIR/coqc
+    COQDEP=$COQDIR/coqdep
+else
+    COQC=coqc
+    COQDEP=coqdep
+fi
 
 # #############################################################################
 # Generate the installation and configuration file containing tools vars.
