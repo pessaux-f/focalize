@@ -31,7 +31,7 @@ all: $(BYT_OBJS)
 	@for i in $(SUB_DIRS); do\
 	  echo "--> $$i ..." >&2 &&\
 	  ($(CD) $$i &&\
-	   $(MAKE) PROJECT_WEB_TARGET_DIR='$(PROJECT_WEB_TARGET_DIR)' all);\
+	   $(MAKE) all);\
 	  err=$$?;\
 	  echo "<-- $$i [$$err]" >&2 &&\
 	  case $$err in 0);; *) exit $$err;; esac;\
@@ -42,7 +42,7 @@ clean:
 	@for i in $(SUB_DIRS); do\
 	  echo "--> $$i ..." >&2 &&\
 	  ($(CD) $$i &&\
-	   $(MAKE) PROJECT_WEB_TARGET_DIR='$(PROJECT_WEB_TARGET_DIR)' clean);\
+	   $(MAKE) clean);\
 	  err=$$?;\
 	  echo "<-- $$i [$$err]" >&2 &&\
 	  case $$err in 0);; *) exit $$err;; esac;\

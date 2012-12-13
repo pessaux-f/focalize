@@ -99,12 +99,16 @@ Algebra Systems available.
 
 <div id="main">
 
-<h3>New release of the $(focal) environment soon<h3>
+<h3>New release of the $(focal) environment soon (hope for December 2012)<h3>
 
 <p>
 A new release of the $(focal) environment, 
-<code>$(project_name) $(version_number_full)</code>, 
-will be available in the coming days.
+<code>$(project_name) 0.8.0</code>, 
+should be available in a near future. $(focal) got
+  nearly aslept for some years, without major release despite some
+  underground works. The "ghost" 0.7.0 version never became public,
+  but the 0.8.0 cumulating the evolutions of the repository is nearly
+  ready.
 </p>
 
 </div>
