@@ -1,12 +1,12 @@
 <!--#include virtual="beforetitle-eng.html"-->
-$(PROJECT_NAME_TEXT)
+$(focal)
 <!--#include virtual="aftertitle-eng.html"-->
 
 <!-- \$Id: index.shtml,v 1.9 2009-12-22 15:29:51 habib Exp $ -->
 
 <div id="container">
 <div id="header">
-<h1>The $(PROJECT_NAME_TEXT) essential</h1>
+<h1>The $(focal) essential</h1>
 <br />
 <hr />
 </div>
@@ -38,10 +38,10 @@ $(PROJECT_NAME_TEXT)
 <div id="content">
 
 <p>
-Welcome to the $(PROJECT_NAME_TEXT) website. This site offers information
-about $(PROJECT_NAME_TEXT), some documentation about the language and its
+Welcome to the $(focal) website. This site offers information
+about $(focal), some documentation about the language and its
 compiler, some training opportunities, and of course, the latest release of
-$(PROJECT_NAME_TEXT).
+$(focal).
 </p>
 
 </div>
@@ -53,7 +53,7 @@ $(PROJECT_NAME_TEXT).
 <h3>Overview<h3>
 
 <p>
-The $(PROJECT_NAME_TEXT) project aims at providing a programming
+The $(focal) project aims at providing a programming
 environment to develop certified programs. The environment is based on
 a functional programming language with object-oriented features. The
 language allows the programmer to write formal specifications and
@@ -61,14 +61,14 @@ proofs of the program in a unified and consistent setting.
 </p>
 
 <p>
-From a $(PROJECT_NAME_TEXT) source code development, the
-$(FOCALIZEC_NAME) compiler produces three source files: 
+From a $(focal) source code development, the
+$(focalizec) compiler produces three source files: 
 <ul>
 <li>
-a source file for the $(COQ_NAME) proof assistant to check the proofs, 
+a source file for the $(coq) proof assistant to check the proofs, 
 </li>
 <li>
-a source file for the $(CAML_NAME) compiler to build the executable program, 
+a source file for the $(ocaml) compiler to build the executable program, 
 </li>
 <li>
 a source file that contains the documentation extracted from the
@@ -84,10 +84,10 @@ defined executable program.
 </p>
 
 <p>
-The $(PROJECT_NAME_TEXT) distribution includes a library of 
+The $(focal) distribution includes a library of 
 mathematical algebraic structures up to multivariate polynomial
 rings, a library of security policies and various examples contributed
-by $(PROJECT_NAME_TEXT) users. The resulting libraries are noticeably
+by $(focal) users. The resulting libraries are noticeably
 efficent; for instance, the complex algorithms of the algebraic library
 provide runtime performances comparable to the best Computer
 Algebra Systems available.
@@ -99,11 +99,11 @@ Algebra Systems available.
 
 <div id="main">
 
-<h3>New release of the $(PROJECT_NAME_TEXT) environment soon<h3>
+<h3>New release of the $(focal) environment soon<h3>
 
 <p>
-A new release of the $(PROJECT_NAME_TEXT) environment, 
-<code>$(PROJECT_NAME) $(VERSION_NUMBER_FULL)</code>, 
+A new release of the $(focal) environment, 
+<code>$(project_name) $(version_number_full)</code>, 
 will be available in the coming days.
 </p>
 
@@ -113,10 +113,10 @@ will be available in the coming days.
 <div class="spacer"></div>
 
 <div id="main">
-<h3>Current version of the $(PROJECT_NAME_TEXT) environment<h3>
+<h3>Current version of the $(focal) environment<h3>
 <p>
 
-For about 3 years, the $(PROJECT_NAME_TEXT) language and compiler have been
+For about 3 years, the $(focal) language and compiler have been
 rewritten from scratch. Numerous enhancements have <span style="font-style:
 italic;">been implemented</span>. The syntax has been re-designed to be more
 homogenous and flexible. The core language provides new features like
@@ -126,14 +126,14 @@ type constructors, ...) can be qualified. Entity parameters (&quot;<span
 style="font-style:italic;">in</span>&quot; species parameter) are now managed
 in a smoother way, collections get a clearer &quot;implementation&quot;
 status, preventing confusion between collections and species in the
-$(PROJECT_NAME_TEXT) philosophy. The compilation speed has been enhanced. The
+$(focal) philosophy. The compilation speed has been enhanced. The
 global architecture of the compiler enables third party analyses to be
 grafted onto the compiler before code generation. A new backend for the C
 language is under development and should be available soon (provided license
 issues can be worked out). This is the first public release of this entirely
 revised system. Currently Fran&ccedil;ois Pessaux, in collaboration with
 Pierre Weis and Damien Doligez are in charge of this new version of the
-$(PROJECT_NAME_TEXT) environment. If you want more information, please feel
+$(focal) environment. If you want more information, please feel
 free to contact us.
 
 </p>

@@ -15,15 +15,15 @@ Contacts
 
 
 <div id="content">
-<p>To contact users, write to <code>$(PROJECT_NAME)-users@inria.fr</code>.
+<p>To contact users, write to <code>$(project_name)-users@inria.fr</code>.
 <br>
 If you find a bug, please, report it to the bug report mailing list at
-<code>$(PROJECT_NAME)-bugs@inria.fr</code>.
+<code>$(project_name)-bugs@inria.fr</code>.
 <br>
 To contact the developers (to suggest new features or enhancements),
 write to
 the developers mailing list at
-<code>$(PROJECT_NAME)-devel@inria.fr</code>.
+<code>$(project_name)-devel@inria.fr</code>.
 </p>
 </div>
 

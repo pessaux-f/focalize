@@ -86,6 +86,15 @@ target="_self">Bibtex</a>
 <h3>Communications, Conference<h3>
 <p>
 <ul>
+<li>Damien Doligez, Mathieu Jaume and Renaud Rioboo. Development of
+secured systems by mixing programs, specifications and proofs in an
+object-oriented programming environment. ACM SIGPLAN Seventh Workshop
+on Programming Languages and Analysis for Security (PLAS 2012) pages
+80-91, ACM Digital Library. 2012. <a href="http://www-spi.lip6.fr/%7Ejaume/plas2012.pdf">Pdf</a></li>
+<li>Mathieu Jaume, and Renaud Rioboo. Développement de systèmes
+sécurisés avec l'atelier Focalize. <a href="http://jfla.inria.fr/2012/index.html">23èmes Journées
+Francophones des Langages Applicatifs (JFLA 2012)</a>, 2012. <br>
+</li>
 <li>
 P. Ayrault, M. Carlier, D. Delahaye, C. Dubois, D. Doligez,
 L. Habib, T. Hardin, M. Jaume, C. Morisset, F. Pessaux, R. Rioboo and P. Weis.

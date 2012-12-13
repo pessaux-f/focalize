@@ -19,25 +19,22 @@ ROOT_DIR=../..
 
 THIS_DIR=download
 
-include $(ROOT_DIR)/Makefile.config
+include $(ROOT_DIR)/Makefile.common
 
-HTMLC_INCLUDES=-I $(ROOT_DIR)/doc_src/Includes\
- -env $(ROOT_DIR)/.config_var_for_shell -env project.env
+HTMLC_INCLUDES=-I $(ROOT_DIR)/doc_src/Includes -env project.env
 
 SOURCES=index.shtml
 BYT_OBJS=$(SOURCES:.shtml=.html)
 
-include $(ROOT_DIR)/Makefile.common
+all: $(BYT_OBJS)
 
-PROJECT_WEB_TARGET_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
-
-clean-local:
+clean:
 	$(RM) $(BYT_OBJS)
 
-install-local:
+install:
 	$(CHMODGRW) $(BYT_OBJS) &&\
 	$(SCP) $(BYT_OBJS) $(PROJECT_WEB_TARGET_DIR)/$(THIS_DIR)/
 
-uninstall-local:
+uninstall:
 	$(SSH) $(PROJECT_WEB_SERVER)\
 	  $(CD) $(PROJECT_WEB_SITE_DIR)/$(THIS_DIR)/\; $(RM) $(BYT_OBJS)

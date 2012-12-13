@@ -13,37 +13,40 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.6 2012-10-15 15:49:42 pessaux Exp $
-
 ROOT_DIR=..
-
-include $(ROOT_DIR)/Makefile.config
 
 SUB_DIRS=contacts documentation download resources
 
-HTMLC_INCLUDES=-I $(ROOT_DIR)/doc_src/Includes\
- -env $(ROOT_DIR)/.config_var_for_shell -env project.env
+include $(ROOT_DIR)/Makefile.common
+
+HTMLC_INCLUDES=-I $(ROOT_DIR)/doc_src/Includes -env project.env
 
 SOURCES=index.shtml
 BYT_OBJS=$(SOURCES:.shtml=.html)
 
-include $(ROOT_DIR)/Makefile.common
+PROJECT_WEB_SITE_DIR=/home/www/focalize
+PROJECT_WEB_TARGET_DIR="pessaux@modulogic.inria.fr":$(PROJECT_WEB_SITE_DIR)
 
-# PROJECT_WEB_TARGET_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
-PROJECT_WEB_TARGET_DIR="pessaux@focalize.inria.fr":$(PROJECT_WEB_SITE_DIR)
-
-byt clean_local distclean_local install-local uninstall-local:
+all: $(BYT_OBJS)
 	@for i in $(SUB_DIRS); do\
 	  echo "--> $$i ..." >&2 &&\
 	  ($(CD) $$i &&\
-	   $(MAKE) PROJECT_WEB_TARGET_DIR='$(PROJECT_WEB_TARGET_DIR)' $@);\
+	   $(MAKE) PROJECT_WEB_TARGET_DIR='$(PROJECT_WEB_TARGET_DIR)' all);\
 	  err=$$?;\
 	  echo "<-- $$i [$$err]" >&2 &&\
 	  case $$err in 0);; *) exit $$err;; esac;\
 	done
 
-clean-local:
+clean:
 	$(RM) $(BYT_OBJS)
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." >&2 &&\
+	  ($(CD) $$i &&\
+	   $(MAKE) PROJECT_WEB_TARGET_DIR='$(PROJECT_WEB_TARGET_DIR)' clean);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" >&2 &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done
 
 # Installation, deinstallation.
 
@@ -52,18 +55,34 @@ clean-local:
 
 # We chmod g+rw the files that we transfer to the HTTP server in order to grant
 # other developers the right to install them afterwards.
-install-local:
+install:
 	$(CHMODGRW) css/project.css &&\
 	  $(SCP) css/project.css $(PROJECT_WEB_TARGET_DIR)/css &&\
 	$(CHMODGRW) imgs/*.* &&\
 	  $(SCP) imgs/*.* $(PROJECT_WEB_TARGET_DIR)/imgs &&\
 	$(CHMODGRW) $(BYT_OBJS) &&\
 	  $(SCP) $(BYT_OBJS) $(PROJECT_WEB_TARGET_DIR)
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." >&2 &&\
+	  ($(CD) $$i &&\
+	   $(MAKE) PROJECT_WEB_TARGET_DIR='$(PROJECT_WEB_TARGET_DIR)' install);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" >&2 &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done
 
-uninstall-local:
+uninstall:
 	$(SSH) $(PROJECT_WEB_SERVER)\
 	  $(CD) $(PROJECT_WEB_SITE_DIR)/css; $(RM) project.css
 	$(SSH) $(PROJECT_WEB_SERVER)\
 	  $(CD) $(PROJECT_WEB_SITE_DIR)/imgs; $(RM) *.*
 	$(SSH) $(PROJECT_WEB_SERVER)\
 	  $(CD) $(PROJECT_WEB_SITE_DIR); $(RM) $(BYT_OBJS)
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." >&2 &&\
+	  ($(CD) $$i &&\
+	   $(MAKE) PROJECT_WEB_TARGET_DIR='$(PROJECT_WEB_TARGET_DIR)' uninstall);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" >&2 &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done

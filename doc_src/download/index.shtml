@@ -1,5 +1,5 @@
 <!--#include virtual="beforetitle-eng.html"-->
-$(PROJECT_NAME_TEXT) downloads
+$(focal) downloads
 <!--#include virtual="aftertitle-eng.html"-->
 
 <!-- \$Id: index.shtml,v 1.4 2009-04-13 20:49:12 weis Exp $ -->
@@ -18,11 +18,11 @@ $(PROJECT_NAME_TEXT) downloads
 <div id="main">
 <h3>The latest release (as of $(the_iso_date))<h3>
 <p>
-<a href="$(PROJECT_ARCHIVE_NAME)">$(PROJECT_ARCHIVE_NAME)</a> (tar-gzip).
+<a href="$(project_archive_name)">$(project_archive_name)</a> (tar-gzip).
 <br />
 This is a carefully tested release. However, if you find a
 bug, please be so kind to report it to the bug report mailing list
-<code>$(PROJECT_NAME)-bugs@inria.fr</code>.
+<code>$(project_name)-bugs@inria.fr</code>.
 <br />
 There may be some bugs; for instance, the documentation is not perfect :)
 </p>

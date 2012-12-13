@@ -19,10 +19,6 @@ ROOT_DIR=../..
 
 THIS_DIR=documentation
 
-include $(ROOT_DIR)/Makefile.config
-
-PROJECT_WEB_TARGET_DIR=$(PROJECT_WEB_SERVER):$(PROJECT_WEB_SITE_DIR)
-
 DOC_SRC_DIR=$(ROOT_DIR)/focalizec/doc_src
 
 # The reference manual compiled files.
@@ -44,9 +40,13 @@ TUTORIAL_OBJS=\
  $(TUTORIAL_NAME).html
 
 # The Unix manual pages.
-MAN_PAGES_OBJS=\
- focalizec.$(PROJECT_MAN_EXT)\
- focalizedep.$(PROJECT_MAN_EXT)
+MAN_PAGES_OBJS= focalizec.1 focalizedep.1
+
+# We cannot use the default behaviour for BYT_OBJS in Makefile.common,
+# since the default rules for .dvi -> .ps, dvi -> pdf, etc.
+# would conflict with the simple copies we do here, unless we redefine properly the
+# compilers associated to the rules (DVIPS, DVIPDF, and so on).
+include $(ROOT_DIR)/Makefile.common
 
 HTMLC_INCLUDES =\
  -I $(ROOT_DIR)/doc_src/Includes\
@@ -55,48 +55,41 @@ HTMLC_INCLUDES =\
 SOURCES=index.shtml
 BYT_OBJS=$(SOURCES:.shtml=.html)
 
-# We cannot use the default behaviour for BYT_OBJS in Makefile.common,
-# since the default rules for .dvi -> .ps, dvi -> pdf, etc.
-# would conflict with the simple copies we do here, unless we redefine properly the
-# compilers associated to the rules (DVIPS, DVIPDF, and so on).
-include $(ROOT_DIR)/Makefile.common
-
 DOC_OBJS=$(BYT_OBJS) $(MAN_PAGES_OBJS) $(REFERENCE_MANUAL_OBJS)\
  $(TUTORIAL_OBJS)
 
-all: .done_copy_documentation
+all: .done_copy_documentation .done_copy_man_pages
 
-clean-local:
+clean:
 	$(RM) .done_copy_man_pages
 	$(RM) .done_copy_documentation
 	$(RM) $(DOC_OBJS)
 
-.done_copy_man_pages: $(DOC_SRC_DIR)/man/focalizec.$(PROJECT_MAN_EXT)\
- $(DOC_SRC_DIR)/man/focalizedep.$(PROJECT_MAN_EXT)
-	$(CP) $(DOC_SRC_DIR)/man/focalizec.$(PROJECT_MAN_EXT) focalizec.$(PROJECT_MAN_EXT) &&\
-	$(CP) $(DOC_SRC_DIR)/man/focalizedep.$(PROJECT_MAN_EXT) focalizedep.$(PROJECT_MAN_EXT)
+.done_copy_man_pages: $(DOC_SRC_DIR)/man/focalizec.1\
+		 $(DOC_SRC_DIR)/man/focalizedep.1
+	$(CP) $(DOC_SRC_DIR)/man/focalizec.1 . &&\
+	$(CP) $(DOC_SRC_DIR)/man/focalizedep.1 .
 	$(TOUCH) .done_copy_man_pages
 
 # Generate the copies of the reference manual and the tutorial to put them
 # on the Web site afterwards.
-.done_copy_documentation: .done_copy_man_pages $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi\
- $(TUTORIAL_SRC_DIR)/tutorial.dvi
-	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi $(REFERENCE_MANUAL_NAME).dvi &&\
-	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.ps $(REFERENCE_MANUAL_NAME).ps &&\
-	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.pdf $(REFERENCE_MANUAL_NAME).pdf &&\
-	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.html $(REFERENCE_MANUAL_NAME).html &&\
-	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.dvi $(TUTORIAL_NAME).dvi &&\
-	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.ps $(TUTORIAL_NAME).ps &&\
-	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.pdf $(TUTORIAL_NAME).pdf &&\
-	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.html $(TUTORIAL_NAME).html &&\
+.done_copy_documentation:  $(REFERENCE_MANUAL_SRC_DIR)/refman.pdf\
+ $(TUTORIAL_SRC_DIR)/tutorial.pdf
+	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.dvi . &&\
+	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.ps . &&\
+	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.pdf . &&\
+	$(CP) $(REFERENCE_MANUAL_SRC_DIR)/refman.html . &&\
+	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.dvi . &&\
+	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.ps . &&\
+	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.pdf . &&\
+	$(CP) $(TUTORIAL_SRC_DIR)/tutorial.html . &&\
 	$(TOUCH) .done_copy_documentation
 
-install-local:
+install:
 	$(CHMODGRW) $(DOC_OBJS) &&\
 	$(SCP) $(DOC_OBJS) $(PROJECT_WEB_TARGET_DIR)/$(THIS_DIR)/
 
-
-uninstall-local:
+uninstall:
 	$(SSH) $(PROJECT_WEB_SERVER)\
 	  $(CD) $(PROJECT_WEB_SITE_DIR)/$(THIS_DIR)/\; $(RM) $(DOC_OBJS)
 
