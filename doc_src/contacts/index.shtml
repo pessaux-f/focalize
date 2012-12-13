@@ -26,7 +26,9 @@ the developers mailing list at
 <div id="main">
 Members
 <ul>
-  <li> <a href="http://www.lip6.fr">LIP6</a>- <a href="http://www-spi.lip6.fr">SPI</a>
+  <li> 
+    <h3><a href="http://www.lip6.fr">LIP6</a>- <a href="http://www-spi.lip6.fr">SPI</a></h3>
+
     <ul>
       <li><a href="http://www-spi.lip6.fr/%7Ehardin/">Thérèse Hardin</a>
 (Professeur, Project Leader) </li>
@@ -36,7 +38,9 @@ de conférence) </li>
     </ul>
   </li>
   <br>
-  <li> <a href="http://www.cnam.fr">CNAM</a>- <a href="http://cedric.cnam.fr/">CEDRIC</a> <br>
+  <li> 
+    <h3><a href="http://www.cnam.fr">CNAM</a>- <a href="http://cedric.cnam.fr/">CEDRIC</a> </h3>
+
     <ul>
       <li><a href="http://pauillac.inria.fr/%7Edelahaye/">David Delahaye</a>
 (Maître de conférence) </li>
@@ -54,14 +58,18 @@ Urbain</a>
 Viguié-Donzeau-Gouge</a> (Professeur) </li>
     </ul>
   </li>
-  <li><a href="http://www.ensta-paristech.fr/">ENSTA-ParisTech</a>
-- <a href="http://uei.ensta-paristech.fr/fr/index.html">UEI</a></li>
+  <li>
+    <h3><a href="http://www.ensta-paristech.fr/">ENSTA-ParisTech</a>
+- <a href="http://uei.ensta-paristech.fr/fr/index.html">UEI</a></h3>
+</li>
     <ul>
       <li><a href="mailto:francois.pessaux%20%5B%5Bat%5D%5D%20ensta-paristech.fr">François
 Pessaux</a> (Enseignant / Chercheur)</li>
     </ul>
   
-  <li><a href="http://www-rocq.inria.fr/">INRIA-Rocquencourt</a>
+  <li>
+    <h3><a href="http://www-rocq.inria.fr/">INRIA-Rocquencourt</a></h3>
+
     <ul>
       <li><a target="_self" href="http://pauillac.inria.fr/%7Edoligez/">Damien
 Doligez</a> (Chargé de Recherche) </li>
@@ -72,8 +80,10 @@ Weis</a>
   </li>
 </ul>
 <ul>
-  <li>Associate members
-    <ul>
+  <li>
+    <h3>Associate members
+    </h3>
+<ul>
       <li><a href="mailto:Philippe.Ayrault%20%5B%5Bat%5D%5D%20etersafe.com">Philippe
 Ayrault</a> (EterSafe, Thalès) </li>
       <li><a href="mailto:blond%20%5B%5Bat%5D%5D%20bertin.fr">Julien
