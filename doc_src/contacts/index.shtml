@@ -5,17 +5,14 @@
 Contacts
 <!--#include virtual="aftertitle-eng.html"--><!-- \$Id: index.shtml,v 1.7 2012-03-14 10:46:33 jaume Exp $ -->
 <div id="container">
-<div id="header">
-<h1>Contacts</h1>
+<div id="header">Contacts<br>
 <br>
 <hr>
 </div>
 </div>
 
-
-
 <div id="content">
-<p>To contact users, write to <code>$(project_name)-users@inria.fr</code>.
+To contact users, write to <code>$(project_name)-users@inria.fr</code>.
 <br>
 If you find a bug, please, report it to the bug report mailing list at
 <code>$(project_name)-bugs@inria.fr</code>.
@@ -24,130 +21,92 @@ To contact the developers (to suggest new features or enhancements),
 write to
 the developers mailing list at
 <code>$(project_name)-devel@inria.fr</code>.
-</p>
 </div>
 
-
-
 <div id="main">
-<h3>Members</h3>
-<h3>
-
+Members
 <ul>
-  <li>
-    <a href="http://www.lip6.fr">LIP6</a>-
-    <a href="http://www-spi.lip6.fr">SPI</a>
+  <li> <a href="http://www.lip6.fr">LIP6</a>- <a href="http://www-spi.lip6.fr">SPI</a>
     <ul>
-      <li><a href="mailto:Philippe.Ayrault%20%5B%5Bat%5D%5D%20etersafe.com">
-Philippe Ayrault</a> (Doctorant, EterSafe)
-      </li>
-      <li><a href="mailto:blond%20%5B%5Bat%5D%5D%20bertin.fr">Julien
-Blond</a> (Doctorant, Bertin)
-      </li>
-      <li><a href="http://www-spi.lip6.fr/%7Elhabib/">Lionel Habib</a>
-(Doctorant)</li>
       <li><a href="http://www-spi.lip6.fr/%7Ehardin/">Thérèse Hardin</a>
-(Professeur, Project Leader)
-      </li>
-      <li><a href="mailto:eric.jaeger%20%5B%5Bat%5D%5D%20sgdn.gouv.fr">Eric
-Jaeger</a> (Doctorant, SGDN)
-      </li>
+(Professeur, Project Leader) </li>
       <li><a href="http://www-spi.lip6.fr/%7Ejaume/">Mathieu Jaume</a>
 (Maître
-de conférence)
-      </li>
-      <li><a href="mailto:noyer%20%5B%5Bat%5D%5D%20spi.lip6.fr">Ivan
-Noyer</a> (Doctorant)
-      </li>
-      <li><a href="mailto:lien.tran%20%5B%5Bat%5D%5D%20lip6.fr">Liên
-Tran</a> (Doctorant)
-      </li>
+de conférence) </li>
     </ul>
   </li>
   <br>
-  <li>
-    <a href="http://www.cnam.fr">CNAM</a>-
-    <a href="http://cedric.cnam.fr/">CEDRIC</a>
+  <li> <a href="http://www.cnam.fr">CNAM</a>- <a href="http://cedric.cnam.fr/">CEDRIC</a> <br>
     <ul>
-      <li><a href="mailto:carlier%20at%20iie.cnam.fr">Matthieu Carlier</a>
-(Doctorant)
-      </li>
       <li><a href="http://pauillac.inria.fr/%7Edelahaye/">David Delahaye</a>
-(Maître de conférence)
-      </li>
+(Maître de conférence) </li>
       <li><a href="http://www.iie.cnam.fr/%7Edubois/">Catherine Dubois</a>
-(Professeur)
-      </li>
-      <li><a href="http://www-sop.inria.fr/lemme/Olivier.Pons/htdocs/accueil.html">
-Olivier Pons</a> (Maître de conférence)
-      </li>
+(Professeur) </li>
+      <li><a href="http://www-sop.inria.fr/lemme/Olivier.Pons/htdocs/accueil.html">Olivier
+Pons</a> (Maître de conférence) </li>
       <li><a href="http://www-spi.lip6.fr/%7Err/" target="_self">Renaud
 Rioboo</a>
-(Professeur)
-      </li>
+(Professeur) </li>
       <li><a href="http://cedric.cnam.fr/AfficheMembre.php?id=142">Xavier
 Urbain</a>
-(Maître de conférence)
-      </li>
-      <li><a href="http://cedric.cnam.fr/%7Edonzeau/" target="_self">
-Véronique Viguié-Donzeau-Gouge</a> (Professeur)
-      </li>
+(Maître de conférence) </li>
+      <li><a href="http://cedric.cnam.fr/%7Edonzeau/" target="_self">Véronique
+Viguié-Donzeau-Gouge</a> (Professeur) </li>
     </ul>
   </li>
-  <br>
+  <li><a href="http://www.ensta-paristech.fr/">ENSTA-ParisTech</a>
+- <a href="http://uei.ensta-paristech.fr/fr/index.html">UEI</a></li>
+    <ul>
+      <li><a href="mailto:francois.pessaux%20%5B%5Bat%5D%5D%20ensta-paristech.fr">François
+Pessaux</a> (Enseignant / Chercheur)</li>
+    </ul>
+  
   <li><a href="http://www-rocq.inria.fr/">INRIA-Rocquencourt</a>
     <ul>
-      <li><a target="_self" href="http://pauillac.inria.fr/%7Edoligez/">
-Damien Doligez</a> (Chargé de Recherche)
-      </li>
+      <li><a target="_self" href="http://pauillac.inria.fr/%7Edoligez/">Damien
+Doligez</a> (Chargé de Recherche) </li>
       <li><a target="_self" href="http://bat8.inria.fr/%7Eweis/">Pierre
 Weis</a>
-(Directeur de Recherche)
-      </li>
-    </ul>
-  </li>
-  <br>
-  <li><a href="http://www.ensta-paristech.fr/">ENSTA-ParisTech</a> - <a href="http://uei.ensta-paristech.fr/fr/index.html">UEI</a>
-    <ul>
-      <li><a href="mailto:francois.pessaux%20%5B%5Bat%5D%5D%20ensta-paristech.fr">François Pessaux</a> (Enseignant / Chercheur)
-      </li>
+(Directeur de Recherche) </li>
     </ul>
   </li>
 </ul>
-<h3>
 <ul>
   <li>Associate members
     <ul>
+      <li><a href="mailto:Philippe.Ayrault%20%5B%5Bat%5D%5D%20etersafe.com">Philippe
+Ayrault</a> (EterSafe, Thalès) </li>
+      <li><a href="mailto:blond%20%5B%5Bat%5D%5D%20bertin.fr">Julien
+Blond</a> (Bertin) </li>
       <li><a href="http://www-spi.lip6.fr/%7Ebonichon/">Richard Bonichon</a>
-(Chargé de Recherche CEA)
-      </li>
-      <li><a href="http://www-lsr.imag.fr/Les.Personnes/Sylvain.Boulme/">
-Sylvain Boulmé</a> (Maître de conférence INPG)
-      </li>
-      <li><a href="mailto:jean_frederic_etienne%20%5B%5Bat%5D%5D%20yahoo.com">
-Jean-Frédéric Etienne</a> (Safe-River)
-      </li>
-      <li><a href="mailto:stephane.fechter%20%5B%5Bat%5D%5D%20safe-river.com">
-Stéphane Fechter</a> (Safe-River)
-      </li>
+(Chargé de Recherche CEA) </li>
+      <li><a href="http://www-lsr.imag.fr/Les.Personnes/Sylvain.Boulme/">Sylvain
+Boulmé</a> (Maître de conférence INPG)</li>
+      <li><a href="mailto:carlier%20at%20iie.cnam.fr">Matthieu Carlier</a>
+(Ex-doctorant)</li>
+      <li><a href="mailto:jean_frederic_etienne%20%5B%5Bat%5D%5D%20yahoo.com">Jean-Frédéric
+Etienne</a> (Safe-River) </li>
+      <li><a href="mailto:stephane.fechter%20%5B%5Bat%5D%5D%20safe-river.com">Stéphane
+Fechter</a> (Safe-River)</li>
+      <li><a href="mailto:eric.jaeger%20%5B%5Bat%5D%5D%20sgdn.gouv.fr">Eric
+Jaeger</a> (ANSI)</li>
+      <li><a href="http://www-spi.lip6.fr/%7Elhabib/">Lionel Habib</a>
+(Ex-Doctorant)</li>
       <li><a href="http://www.macs.hw.ac.uk/%7Emm20/">Manuel Maarek</a>
-(Postdoc CRP Henri Tudor)
-      </li>
-      <li><a href="http://www.iist.unu.edu/%7Emorisset/en/index.html">
-Charles Morisset</a> (Postdoc UNU-IIST)
-      </li>
+(Postdoc CRP Henri Tudor) </li>
+      <li><a href="http://www.iist.unu.edu/%7Emorisset/en/index.html">Charles
+Morisset</a> (Postdoc UNU-IIST)</li>
+      <li><a href="mailto:noyer%20%5B%5Bat%5D%5D%20spi.lip6.fr">Ivan
+Noyer</a> (Ex-doctorant)</li>
       <li><a href="http://www.mpi-sb.mpg.de/%7Eprevosto/">Virgile
 Prevosto</a>
-(Chargé de Recherche CEA)
-      </li>
+(Chargé de Recherche CEA)</li>
+      <li><a href="mailto:lien.tran%20%5B%5Bat%5D%5D%20lip6.fr">Liên
+Tran</a> (Ex-doctorant)</li>
     </ul>
   </li>
 </ul>
-
-</h3>
 </div>
-
-
 
 <!--#include virtual="endofpage-eng.html"-->
 </body></html>
