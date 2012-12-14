@@ -29,11 +29,10 @@ theorems.
 \subsection{Introducing functions}
 One may want to prove that logical or ($\logor$) is commutative,
 i.e. that $(a \logor b) \Rightarrow (b \logor a)$. But, on atomic
-properties, this would again be trivial for \zenon\ as it is for
-\coq. Instead, of making again explicit trivial proof steps, we will
-now extend this formula with the (trivial again) identity
-function. Hence we want to prove that if \verb"id" is defined as
-$\lambda x.x$, then
+properties, this would again be trivial for \zenon. Instead, of making
+again explicit trivial proof steps, we will now extend this formula
+with the (trivial again) identity function. Hence we want to prove
+that if \verb"id" is defined as $\lambda x.x$, then
 $\forall a, b, c, d : int, (id (a) = b \logor id (c) = d) \Rightarrow (c = id (d) \logor a = id (b))$.
 We write this in \focal\ like:
 
@@ -47,9 +46,9 @@ command: \textbf{focalizec or\_id\_com.fcl} and we get:
 {\scriptsize
 \begin{verbatim}
 Invoking ocamlc...
->> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c or_id_com.ml
+>> ocamlc -I /usr/local/lib/focalize -c or_id_com.ml
 Invoking zvtov...
->> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new or_id_com.zv
+>> zvtov -zenon zenon -new or_id_com.zv
 File "or_id_com.fcl", line 7, characters 8-16:
 Zenon error: exhausted search space without finding a proof
 ### proof failed
@@ -136,9 +135,9 @@ It is now time to compile the program, again with the command
 {\scriptsize
 \begin{verbatim}
 Invoking ocamlc...
->> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c or_id_com3.ml
+>> ocamlc -I /usr/local/lib/focalize -c or_id_com3.ml
 Invoking zvtov...
->> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new or_id_com3.zv
+>> zvtov -zenon zenon -new or_id_com3.zv
 File "or_id_com3.fcl", line 14, characters 12-20:
 Zenon error: exhausted search space without finding a proof
 ### proof failed
@@ -179,7 +178,7 @@ $id(d) = d$, but \zenon\ is not aware of this. What \zenon\ needs is
 to know about the {\em definition} of the function \lstinline"id".
 
 Here comes
-a new fact (in addition to the already seen \lstinline"conclude",
+a new fact (in addition to the already seen facts \lstinline"conclude",
 \lstinline"hypothesis" and \lstinline"step"): the
 \lstinline"definition of" stating that \zenon\ must consider a whole
 function (i.e. including its body -- its {\em definition}) to try
@@ -198,11 +197,11 @@ done and accepted by \coq:
 {\scriptsize
 \begin{verbatim}
 Invoking ocamlc...
->> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c or_id_com.ml
+>> ocamlc -I /usr/local/lib/focalize -c or_id_com.ml
 Invoking zvtov...
->> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new or_id_com.zv
+>> zvtov -zenon zenon -new or_id_com.zv
 Invoking coqc...                                                
->> /usr/local/bin/coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon or_id_com.v
+>> coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon or_id_com.v
 \end{verbatim}}
 
 Now we suffered enough, splitting the proof of this theorem in several
@@ -223,11 +222,11 @@ happy end:
 {\scriptsize
 \begin{verbatim}
 Invoking ocamlc...
->> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c or_id_com_shortest.ml
+>> ocamlc -I /usr/local/lib/focalize -c or_id_com_shortest.ml
 Invoking zvtov...
->> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new or_id_com_shortest.zv
+>> zvtov -zenon zenon -new or_id_com_shortest.zv
 Invoking coqc...                                               
->> /usr/local/bin/coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon or_id_com_shortest.v
+>> coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon or_id_com_shortest.v
 \end{verbatim}}
 
 
@@ -363,9 +362,9 @@ or \lstinline"Green". Hence we state the theorem:
 {\scriptsize
 \begin{verbatim}
 Invoking ocamlc...
->> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c signal.ml
+>> ocamlc -I /usr/local/lib/focalize -c signal.ml
 Invoking zvtov...
->> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new signal.zv
+>> zvtov -zenon zenon -new signal.zv
 File "signal.fcl", line 7, characters 10-18:
 Zenon error: exhausted search space without finding a proof
 ### proof failed
@@ -379,7 +378,7 @@ basic logic combinations: it will never use all the material
 available in a program! So, we just need to tell him that this proof
 can be deduced from the type definition of \lstinline"signal_t".
 
-Here comes a new fact  (in addition to the already seen \lstinline"conclude",
+Here comes a new fact  (in addition to the already seen facts \lstinline"conclude",
 \lstinline"hypothesis", \lstinline"step" and \lstinline"definition of"): the
 \lstinline"type" fact stating that the definition of the following
 type must be used. We modify our program just inserting this new fact
@@ -389,136 +388,24 @@ and get:
 \lstinputlisting[numbers=left,caption=signal.fcl (2)]{signal2.fcl}}
 
 \noindent which is perfectly proven now. This could seem not so
-wonderful, but to prove such a property directly in \coq, a little more
-work would be required, applying the \verb"destruct" tactic and
-enumerating all the possible cases (hopefully shortened thanks to
-\coq\ ability to repeat attempts to a tactic on individual
-goals). Let's illustrate this point:
-
-{\scriptsize
-\begin{lstlisting}[language=MyCoq]
-Coq < Inductive signal_t : Set :=
-Coq <  | Red : signal_t
-Coq <  | Orange : signal_t
-Coq <  | Green : signal_t.
-signal_t is defined
-signal_t_rect is defined
-signal_t_ind is defined
-signal_t_rec is defined
-
-Coq < Goal forall s : signal_t, (s = Red) \/ (s = Orange) \/ (s = Green).
-1 subgoal
-  
-  ============================
-   forall s : signal_t, s = Red \/ s = Orange \/ s = Green
-
-Unnamed_thm < intro ty.
-1 subgoal
-  
-  ty : signal_t
-  ============================
-   ty = Red \/ ty = Orange \/ ty = Green
-
-Unnamed_thm < auto.
-1 subgoal
-  
-  ty : signal_t
-  ============================
-   ty = Red \/ ty = Orange \/ ty = Green
-
-(* Humm, below shows that auto tactic is not sufficient: this property
-   is not trivial for Coq. We need to be just a little more explicit. *)
-
-Unnamed_thm < destruct ty; auto.
-No more subgoals.
-\end{lstlisting}}
-
-Hence, using \zenon, such intrinsic property of inductive type
-definitions is natively understood, as long as \zenon\ is told to use
-it by the fact \lstinline"by ... type ...".
+wonderful on such an obvious property, but this means that using
+\zenon, such intrinsic property of inductive type definitions is
+natively understood, as long as \zenon\ is told to use it by the fact
+\lstinline"by ... type ...". There is no need to explicitly invoke
+and manipulate the induction principle.
 
 \medskip
 We can also show that mutual exclusion of value constructors are
 native for \zenon: let prove that if a value of type
 \lstinline"signal_t" is equal to \lstinline"Red", then it is different
-of \lstinline"Green". This can appear more than trivial, but we will
-see that this property, often used while reasoning by cases, it not so
-trivial in \coq. Let's first state and prove this property in \focal:
+of \lstinline"Green". This can appear more than obvious, such a
+property, often used while reasoning by cases, requires some
+intermediate steps (mostly applying the induction principle and
+discriminations on the constructors). Let's state and prove this
+property in \focal:
 
 {\scriptsize
 \lstinputlisting[numbers=left,caption=signal2.fcl]{signal3.fcl}}
-
-Proving the same property in \coq\ is more complex, and not having to
-deal with this during proofs is really appreciable. Let's have a look
-to an equivalent proof in \coq:
-
-{\scriptsize
-\begin{lstlisting}[language=MyCoq]
-Coq < Inductive signal_t : Set :=
-Coq <  | Red : signal_t
-Coq <  | Orange : signal_t
-Coq <  | Green : signal_t.
-signal_t is defined
-signal_t_rect is defined
-signal_t_ind is defined
-signal_t_rec is defined
-
-Coq < Goal forall s : signal_t, s = Red -> ~ (s = Green).
-1 subgoal
-  
-  ============================
-   forall s : signal_t, s = Red -> s <> Green
-
-
-Unnamed_thm < intros ty h.
-1 subgoal
-  
-  ty : signal_t
-  h : ty = Red
-  ============================
-   ty <> Green
-
-(* Humm, below shows that auto tactic is not sufficient: this property
-   is not trivial for Coq. We need to be just a little more explicit. *)
-
-Unnamed_thm < auto.
-1 subgoal
-  
-  ty : signal_t
-  h : ty = Red
-  ============================
-   ty <> Green
-
-Unnamed_thm < induction ty.
-3 subgoals
-  
-  h : Red = Red
-  ============================
-   Red <> Green
-
-subgoal 2 is:
- Orange <> Green
-subgoal 3 is:
- Green <> Green
-Unnamed_thm < discriminate.
-2 subgoals
-  
-  h : Orange = Red
-  ============================
-   Orange <> Green
-
-subgoal 2 is:
- Green <> Green
-Unnamed_thm < discriminate.
-1 subgoal
-  
-  h : Green = Red
-  ============================
-   Green <> Green
-
-Unnamed_thm < inversion h.
-No more subgoals.
-\end{lstlisting}}
 
 \subsection{Introducing lemmas}
 Until now we stated properties and demonstrated them writing
@@ -575,9 +462,9 @@ compiler and get:
 {\scriptsize
 \begin{verbatim}
 Invoking ocamlc...
->> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c lemmas.ml
+>> ocamlc -I /usr/local/lib/focalize -c lemmas.ml
 Invoking zvtov...
->> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new lemmas.zv
+>> zvtov -zenon zenon -new lemmas.zv
 File "lemmas2.fcl", line 16, characters 16-34:
 Zenon error: exhausted search space without finding a proof
 \end{verbatim}}
@@ -602,9 +489,9 @@ stating that $\forall x, y : int,\ x \le y \logor x > y$ and give it
 as a new fact to \zenon.
 
 Here comes a new fact  (in addition to the
-already seen \lstinline"conclude", \lstinline"hypothesis",
+already seen facts \lstinline"conclude", \lstinline"hypothesis",
 \lstinline"step", \lstinline"definition of" and \lstinline"type": the
-\lstinline"property" fact, stating that \zenon\ should use the given
+\lstinline"property" fact, sta\-ting that \zenon\ should use the given
 property (i.e. logical statement) to find a proof.
 
 {\scriptsize
@@ -616,11 +503,11 @@ We now compile again our development and see that with this new fact,
 {\scriptsize
 \begin{verbatim}
 Invoking ocamlc...
->> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c lemmas.ml
+>> ocamlc -I /usr/local/lib/focalize -c lemmas.ml
 Invoking zvtov...
->> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new lemmas.zv
+>> zvtov -zenon zenon -new lemmas.zv
 Invoking coqc...                                                
->> /usr/local/bin/coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon lemmas.v
+>> coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon lemmas.v
 \end{verbatim}}
 
 Obviously, we get one more theorem to demonstrate. However, we know
@@ -690,7 +577,7 @@ theorem:
 theorem int_diff_ge_is_pos : all x y : int, x >=0x y -> x - y >=0x 0
 \end{lstlisting}}
 
-It is pretty won, but not yet. In effect having a deeper look at our
+It is nearly won, but not yet. In effect, having a deeper look at our
 hypothesis \lstinline"h1", we see that it states that $x > y$ although
 the theorem \lstinline"int_diff_ge_is_pos" requires as hypothesis that
 $x \ge y$. However, our intuition immediately makes us thinking that if
@@ -757,14 +644,14 @@ simply make the proof with these 2 facts:
 ...
 \end{lstlisting}}
 
-We compile and get:
+\noindent We compile and get:
 
 {\scriptsize
 \begin{verbatim}
 Invoking ocamlc...
->> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c lemmas.ml
+>> ocamlc -I /usr/local/lib/focalize -c lemmas.ml
 Invoking zvtov...
->> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new lemmas.zv
+>> zvtov -zenon zenon -new lemmas.zv
 File "lemmas.fcl", line 21, characters 17-56:                
 Zenon error: exhausted search space without finding a proof
 ### proof failed

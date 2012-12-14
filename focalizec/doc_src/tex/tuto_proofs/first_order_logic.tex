@@ -32,38 +32,18 @@ and get few messages with not error:
 {\scriptsize
 \begin{verbatim}
 Invoking ocamlc...
->> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c ex_implications.ml
+>> ocamlc -I /usr/local/lib/focalize -c ex_implications.ml
 Invoking zvtov...
->> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new ex_implications.zv
+>> zvtov -zenon /usr/local/bin/zenon -new ex_implications.zv
 Invoking coqc...
->> /usr/local/bin/coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon ex_implications.v
+>> coqc -I /usr/local/lib/focalize -I /usr/local/lib/zenon ex_implications.v
 \end{verbatim}}
 
 Compilation, code generation and \coq\ verification were
-successful. This property can simply be translated into \coq\ as
-follows and the {\tt auto} tactic of \coq\ also directly solves the goal: 
-
-{\scriptsize
-\begin{lstlisting}[language=MyCoq]
-Coq < Variable a b c : Prop.
-a is assumed
-b is assumed
-c is assumed
-
-Coq < Goal a -> (b -> a).
-1 subgoal
-  
-  ============================
-   a -> b -> a
-
-Unnamed_thm0 < auto.
-No more subgoals.
-\end{lstlisting}}
-
-Let's investigate the tree of this proof, where we wrote hypotheses
-(context) in \green{green} and goals in \blue{blue}. The intuition is
-that we lift the two implications as hypotheses and from the hypothesis
-\lstinline"a" we trivially prove our goal.
+successful. Let's investigate the tree of this proof, where we wrote
+hypotheses (context) in \green{green} and goals in \blue{blue}. The
+intuition is that we lift the two implications as hypotheses and from
+the hypothesis \lstinline"a" we trivially prove our goal.
 
 $$
 \inferrule*[Right=($\Rightarrow$-intro)]
@@ -71,40 +51,6 @@ $$
    { \green{a} \vdash  \blue{b \Rightarrow a}}}
    { \vdash \blue{a \Rightarrow b \Rightarrow a}}
 $$
-
-Making all the steps explicit in \coq, this proof can be written:
-
-{\scriptsize
-\begin{lstlisting}[language=MyCoq]
-Coq < Variable a b c : Prop.
-a is assumed
-b is assumed
-c is assumed
-
-Coq < Goal a -> (b -> a).
-1 subgoal
-  
-  ============================
-   a -> b -> a
-
-Unnamed_thm < intro h1.
-1 subgoal
-  
-  h1 : a
-  ============================
-   b -> a
-
-Unnamed_thm < intro h2.
-1 subgoal
-  
-  h1 : a
-  h2 : b
-  ============================
-   a
-
-Unnamed_thm < exact h1.
-No more subgoals.
-\end{lstlisting}}
 
 In \focal, this {\em proof} is achieved as a simple hierarchical sequence of
 in\-ter\-me\-dia\-te {\em steps}. A proof step starts with a {\em proof bullet}, which
@@ -200,54 +146,8 @@ $$
 $$
 
 Note that we chose to prove \verb"b" but we could have chose to prove
-\verb"a" instead. This property can expressed in \coq\ as follows (and
-\verb"tauto" tactic of \coq\ also directly solves the goal):
-
-{\scriptsize
-\begin{lstlisting}[language=MyCoq]
-Coq < Goal a /\ b -> a \/ b.
-1 subgoal
-  
-  ============================
-   a /\ b -> a \/ b
-
-Unnamed_thm < intro h1.
-1 subgoal
-  
-  h1 : a /\ b
-  ============================
-   a \/ b
-
-Unnamed_thm < left.
-1 subgoal
-  
-  h1 : a /\ b
-  ============================
-   a
-
-Unnamed_thm < elim h1.
-1 subgoal
-  
-  h1 : a /\ b
-  ============================
-   a -> b -> a
-
-Unnamed_thm < intros h2 h3.
-1 subgoal
-  
-  h1 : a /\ b
-  h2 : a
-  h3 : b
-  ============================
-   a
-
-Unnamed_thm < exact h2.
-No more subgoals.
-\end{lstlisting}}
-
-We now address this property in \focal\ again, making explicit all the
-steps of the proof we did (because we didn't use the \verb"tauto"
-tactic) in \coq.
+\verb"a" instead. We now address this property in \focal\ again,
+making explicit all the steps of the proof we did.
 
 {\scriptsize
 \lstinputlisting[caption=and\_or.fcl]{and_or.fcl}}

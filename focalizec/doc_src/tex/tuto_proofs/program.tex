@@ -13,11 +13,11 @@ these points can be found in [BLA].
 
 \subsection{The goal}
 We want to model a simplified traffic signals controller. The system will
-be made of 3 signals with 3 states: green, orange and red. The
-controller will alternatively make each signal becoming green along a
-predefined sequence, making so that other signals are red. As any
-usual signals, they turn orange before turning red. We can then simply
-model the controller as a finite state automaton representing
+be made of 3 signals with 3 states: \green{green}, \orange{orange} and
+\red{red}. The controller will alternatively make each signal becoming
+green along a predefined sequence, making so that other signals are
+red. As any usual signals, they turn orange before turning red. We can
+then simply model the controller as a finite state automaton representing
 cycling sequences (where \red{R} stands for red, \green{G} for green
 and \orange{O} for orange, representing the state of each managed traffic
 signal):
@@ -46,8 +46,8 @@ followed by the corresponding signals color initials. For instance
 
 {\scriptsize
 \begin{lstlisting}
-(** Type of states the automaton can be. Simply named with letters corresponding
-    to the colors of signal 1, 2 and 3. *)
+(** Type of states the automaton can be. Simply named with letters
+     corresponding to the colors of signal 1, 2 and 3. *)
 type state_t = | S_grr | S_orr | S_rgr | S_ror | S_rrg| S_rro ;;
 \end{lstlisting}}
 
@@ -60,8 +60,8 @@ reflects this data structure.
 \begin{lstlisting}
 (** Species embedding the automaton controlling the signals colors changes. *)
 species Controller =
-  (* Need to encode tuples as nested pairs because of limitations of Coq and
-     Zenon. *)
+  (* Need to encode tuples as nested pairs because of limitations of  Coq
+     and Zenon. *)
   representation = (state_t * (color_t * (color_t * color_t))) ;
 end ;;
 \end{lstlisting}}
@@ -111,7 +111,7 @@ $$
 $$
 
 Such a property leads to the following \focal\ theorem, still left
-unproved for the moment:
+unproven for the moment:
 
 {\scriptsize
 \begin{lstlisting}
@@ -136,7 +136,7 @@ From these 3 properties, \zenon\ should be able to find the remaining
 We then just try to see if our intuition is right. We define the 3
 intermediate lemmas \lstinline"never_s1_s2_green",
 \lstinline"never_s1_s3_green" and \lstinline"never_s2_s3_green", let them
-unproved for the moment, and ask \zenon\ to prove our main theorem
+unproven for the moment, and ask \zenon\ to prove our main theorem
 \lstinline"never_2_green" \lstinline"by property ..." our 3 lemmas:
 
 {\scriptsize
@@ -148,11 +148,11 @@ We invoke the compilation by the regular command:
 {\scriptsize
 \begin{verbatim}
 Invoking ocamlc...
->> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c controller.ml
+>> ocamlc -I /usr/local/lib/focalize -c controller.ml
 Invoking zvtov...
->> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new controller.zv
+>> zvtov -zenon zenon -new controller.zv
 Invoking coqc...                                                
->> /usr/local/bin/coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon controller.v
+>> coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon controller.v
 \end{verbatim}}
 
 \noindent and see that our proof passed, assuming our 3 pending
@@ -411,7 +411,7 @@ proof =
         not green. *)
      <2>1 hypothesis h2: get_s (s) = S_grr,
           prove ~ (get_s1 (r) = C_green)
-          (* To prove the signal s1 is not green, we prove it is orange. *)
+          (* To prove the signal s1 is not green we prove it is orange. *)
           <3>1 prove get_s1 (r) = C_orange
                by hypothesis h1, h2
                   definition of get_s1, run_step

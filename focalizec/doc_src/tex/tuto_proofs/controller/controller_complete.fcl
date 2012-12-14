@@ -4,25 +4,31 @@ open "basics" ;;
 type color_t = | C_green | C_orange | C_red ;;
 
 
-(** Type of states the automaton can be. Simply named with letters corresponding
-    to the colors of signal 1, 2 and 3. *)
+(** Type of states the automaton can be. Simply named with letters
+    corresponding to the colors of signal 1, 2 and 3. *)
 type state_t = | S_grr | S_orr | S_rgr | S_ror | S_rrg| S_rro ;;
 
 
-(** Species embedding the automaton controlling the signals colors changes. *)
+(** Species embedding the automaton controlling the signals colors
+    changes. *)
 species Controller =
-  (* Need to encode tuples as nested pairs because of limitations of Coq and
-     Zenon. *)
+  (* Need to encode tuples as nested pairs because of limitations of Coq
+     and Zenon. *)
   representation = (state_t * (color_t * (color_t * color_t))) ;
   let init : Self = (S_grr, (C_green, (C_red, C_red))) ;
 
   (** Extractors of "tuples" components. *)
   let get_s (x : Self) = match x with | (a, _) -> a ;
-  let get_s1 (x : Self) = match x with | (_, a) -> match a with | (b, _) -> b ;
+  let get_s1 (x : Self) =
+    match x with | (_, a) -> match a with | (b, _) -> b ;
   let get_s2 (x : Self) =
-    match x with | (_, a) -> match a with | (_, b) -> match b with | (c, _) -> c ;
+    match x with | (_, a) ->
+      match a with | (_, b) ->
+        match b with | (c, _) -> c ;
   let get_s3 (x :Self) =
-    match x with | (_, a) -> match a with | (_, b) -> match b with | (_, c) -> c ;
+    match x with | (_, a) ->
+      match a with | (_, b) ->
+        match b with | (_, c) -> c ;
 
 
   (** Main controller function: automaton's 1 step run. *)
@@ -36,8 +42,9 @@ species Controller =
     | S_rro -> (S_grr, (C_green, (C_red, C_red))) ;
 
 
-  (** Lemma stating that s1 and s2 are never green together. It's 1/3 of the
-      final property stating that no signals are green at the same time. *)
+  (** Lemma stating that s1 and s2 are never green together. It's 1/3 of
+      the final property stating that no signals are green at the same
+      time. *)
   theorem never_s1_s2_green :
     all s r : Self,
     r = run_step (s) ->
@@ -48,11 +55,11 @@ species Controller =
        prove ~ (get_s1 (r) = C_green /\ get_s2 (r) = C_green)
 
        (* Proof by cases on values of the "automaton state" of s.
-          For each case, we will prove that one of the 2 signal at least is
-          not green. *)
+          For each case, we will prove that one of the 2 signal at least
+          is not green. *)
        <2>1 hypothesis h2: get_s (s) = S_grr,
             prove ~ (get_s1 (r) = C_green)
-            (* To prove the signal s1 is not green, we prove it is orange. *)
+            (* To prove the signal s1 is not green we prove it is orange. *)
             <3>1 prove get_s1 (r) = C_orange
                  by hypothesis h1, h2
                     definition of get_s1, run_step
