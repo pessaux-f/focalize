@@ -1,0 +1,8 @@
+open "basics" ;;
+
+type int_pair_t = alias (int * int) ;;
+
+theorem different_components :
+  all v1 v2 : int, all v : int_pair_t,
+  v = (v1, v2) -> ~ (v1 = v2) -> ~ (fst (v) = snd (v))
+  proof = conclude ;;

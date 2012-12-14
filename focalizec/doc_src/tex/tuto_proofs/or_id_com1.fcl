@@ -1,0 +1,13 @@
+open "basics" ;;
+
+let id (x : int) = x ;;
+
+theorem or_id_commutative:
+  all a b c d : int, (id (a) = b \/ id (c) = d) -> (c = id (d) \/ a = id (b))
+proof =
+  (* Sketch: assume (a = b \/ c = d), then prove (c = id (d) \/ a = id (b). *)
+  <1>1 assume a : int, b : int, c : int, d : int,
+       hypothesis h1: id (a) = b \/ id (c) = d,
+       prove c = id (d) \/ a = id (b)
+       assumed
+  <1>2 qed by step <1>1 ;;

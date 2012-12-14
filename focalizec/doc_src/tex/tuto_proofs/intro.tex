@@ -1,0 +1,33 @@
+\section{Forewords}
+
+\subsection{Content}
+This document is a tutorial for \focal, describing how to
+develop proofs of properties using \zenon. Differently from other
+tutorials, we won't focalize on mathematical developments, preferring
+to show the language in action on programs closer to what ``usual
+programers'' develop in the ``everyday life''.
+
+To get in touch with basic \zenon\ capabilities, we will first address
+very simple first order logic properties with their proofs. This will
+allow introducing the notion of hierarchical proofs. Then, we will
+program a simple 3 traffic signals controller to apply these skills on
+properties directly related to the program we will write. The aim is to
+show what are the kind of properties one may want to state and how
+their proofs get related to the types and functions definition of a
+program.
+
+\subsection{Notations and Recommandations}
+In the rest of this tutorial, pieces of \focal\ code will be presented in
+frames, as in this example:
+
+{\scriptsize
+\begin{lstlisting}
+use "basics" ;;
+species Controller =
+\end{lstlisting}}
+
+When introduced in the running text, \focal\ keywords will appear in a
+special font like \lstinline"property". Terms representing specific
+concepts of \focal\ are introduced using an emphasized font, for
+example \emph{collection}. Finally, commands and file names are in
+bold font, for example \textbf{focalizec fo\_logic.fcl}.

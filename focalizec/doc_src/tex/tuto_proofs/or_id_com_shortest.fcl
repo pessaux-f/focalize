@@ -1,0 +1,7 @@
+open "basics" ;;
+
+let id (x : int) = x ;;
+
+theorem or_id_commutative:
+  all a b c d : int, (id (a) = b \/ id (c) = d) -> (c = id (d) \/ a = id (b))
+proof = by definition of id ;;

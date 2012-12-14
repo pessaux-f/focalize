@@ -1,0 +1,19 @@
+open "basics" ;;
+
+type int_pair_t = alias (int * int) ;;
+
+theorem different_components_manual :
+  all v1 v2 : int, all v : int_pair_t,
+  v = (v1, v2) -> ~ (v1 = v2) -> ~ (fst (v) = snd (v))
+  proof =
+  <1>1 assume v1 : int, v2 : int, v : int_pair_t,
+       hypothesis h1: v = (v1, v2),
+       hypothesis h2: ~ (v1 = v2),
+       prove ~ (fst (v) = snd (v))
+       <2>1 prove fst (v) = v1
+            by hypothesis h1
+       <2>2 prove snd (v) = v2
+            by hypothesis h1
+       <2>3 qed
+            by step <2>1, <2>2 hypothesis h2
+  <1>2 conclude ;;

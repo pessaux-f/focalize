@@ -1,0 +1,8 @@
+open "basics" ;;
+
+type int_pair_t = alias (int * int) ;;
+
+theorem same_components :
+  all v : int_pair_t, all x : int, v = (x, x) -> fst (v) = snd (v)
+  proof = conclude ;;
+

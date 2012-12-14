@@ -1,0 +1,13 @@
+open "basics" ;;
+
+theorem and_or : all a b : bool, (a /\ b) -> (a \/ b)
+  proof =
+  (* Sketch: assume a /\ b, then prove b as trivial consequence of a /\ b. *)
+  <1>1 assume a : bool, b : bool,
+       hypothesis h1: a /\ b,
+       prove a \/ b
+       <2>1 prove b
+            by hypothesis h1
+       <2>2 qed
+            by step  <2>1
+  <1>2 conclude (* or, qed conclude, or even qed by step <1>1 *) ;;

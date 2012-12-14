@@ -1,0 +1,11 @@
+*.v
+*.vo
+*.zv
+*.fo
+*.cm*
+*.ml
+*.glob
+*.pfc
+*~
+*.log
+*.log

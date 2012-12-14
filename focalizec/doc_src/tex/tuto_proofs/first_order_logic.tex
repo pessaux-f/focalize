@@ -1,0 +1,267 @@
+\section{Dealing with first order logic theorems}
+
+The first part of this tutorial intends teaching how to use \zenon\ on
+simple boolean properties. The aim is to show how \zenon\ can help
+making whole part of basic inference steps one usually makes explicit
+in tools like \coq. It must clearly understood that \zenon\ is not a proof
+checker but a theorem prover. Obviously it will not au\-to\-ma\-ti\-cal\-ly
+demonstrate itself any property. However, combined with the \focal\
+proof language, it will automate tedious combinations of ``sub-lemmas''
+one usually ``think intuitively feasible''.
+
+In the following examples, we won't create species. Instead, to get
+rid of com\-ple\-xi\-ty induced by \focal\ structures, we will state and
+prove theorems at ``top-level''.
+
+
+\subsection{A so simple property: fully automated proof}
+Let's first address the following property:
+$\forall a, b : {\tt boolean}, a \Rightarrow b \Rightarrow a$.
+We write this in \focal\ as follows, in a source file
+\textbf{focalizec ex\_implications.fcl}:
+
+{\scriptsize
+\lstinputlisting[caption=ex\_implications.fcl]{ex_implications.fcl}}
+
+Here, we stated a property and directly asked \zenon\ to find a proof
+without any direction. \zenon\ then uses its internal knowledge of
+first order logic to solve the goal. At this stage it is possible to
+compile the program using the command \textbf{focalizec ex\_implications.fcl}
+and get few messages with not error:
+
+{\scriptsize
+\begin{verbatim}
+Invoking ocamlc...
+>> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c ex_implications.ml
+Invoking zvtov...
+>> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new ex_implications.zv
+Invoking coqc...
+>> /usr/local/bin/coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon ex_implications.v
+\end{verbatim}}
+
+Compilation, code generation and \coq\ verification were
+successful. This property can simply be translated into \coq\ as
+follows and the {\tt auto} tactic of \coq\ also directly solves the goal: 
+
+{\scriptsize
+\begin{lstlisting}[language=MyCoq]
+Coq < Variable a b c : Prop.
+a is assumed
+b is assumed
+c is assumed
+
+Coq < Goal a -> (b -> a).
+1 subgoal
+  
+  ============================
+   a -> b -> a
+
+Unnamed_thm0 < auto.
+No more subgoals.
+\end{lstlisting}}
+
+Let's investigate the tree of this proof, where we wrote hypotheses
+(context) in \green{green} and goals in \blue{blue}. The intuition is
+that we lift the two implications as hypotheses and from the hypothesis
+\lstinline"a" we trivially prove our goal.
+
+$$
+\inferrule*[Right=($\Rightarrow$-intro)]
+   {\inferrule*[Right=($\Rightarrow$-intro)] {\green{a, b} \vdash \blue{a}}
+   { \green{a} \vdash  \blue{b \Rightarrow a}}}
+   { \vdash \blue{a \Rightarrow b \Rightarrow a}}
+$$
+
+Making all the steps explicit in \coq, this proof can be written:
+
+{\scriptsize
+\begin{lstlisting}[language=MyCoq]
+Coq < Variable a b c : Prop.
+a is assumed
+b is assumed
+c is assumed
+
+Coq < Goal a -> (b -> a).
+1 subgoal
+  
+  ============================
+   a -> b -> a
+
+Unnamed_thm < intro h1.
+1 subgoal
+  
+  h1 : a
+  ============================
+   b -> a
+
+Unnamed_thm < intro h2.
+1 subgoal
+  
+  h1 : a
+  h2 : b
+  ============================
+   a
+
+Unnamed_thm < exact h1.
+No more subgoals.
+\end{lstlisting}}
+
+In \focal, this {\em proof} is achieved as a simple hierarchical sequence of
+in\-ter\-me\-dia\-te {\em steps}. A proof step starts with a {\em proof bullet}, which
+gives its nesting level. The top-level of a proof is 0. In a
+{\em compound proof}, the steps are at level one plus the level of the proof
+itself.
+
+{\scriptsize
+\lstinputlisting[caption=ex\_implications.fcl (2)]{ex_implications2.fcl}}
+
+Here, the {\em steps} \lstinline"<1>1" and \lstinline"<1>2" are at level 1
+and form the compound proof of the top-level theorem.  Step \lstinline"<1>1"
+also has a compound proof (whose goal is \lstinline"b -> a"), made of
+steps \lstinline"<2>1" 
+and \lstinline"<2>2".  These latter are at level 2 (one more than the level of
+their enclosing step).
+
+\medskip
+After the proof bullet comes the {\em statement} of the step,
+introduced by the keyword \lstinline{prove}.  This is the
+proposition that is asserted and proved by {\em this step}.  At the end of
+this step's proof, it becomes available as a {\em fact} for the next steps
+of this proof and deeper levels sub-goals.  In our example, step
+\lstinline"<2>1" is available in the proof of \lstinline"<2>2", and
+\lstinline"<1>1" is available in the proof of \lstinline"<1>2".  Note
+that \lstinline"<2>1" is {\bf not} available in the proof of \lstinline"<1>2"
+since \lstinline"<1>2" is located at a strictly lower nesting level
+than \lstinline"<2>1".
+
+\medskip
+After the statement is the {\em proof of the step}. This is where
+either you ask \zenon\ to do the proof from {\em facts} (hints) you
+give it, or you decide to split the proof in ``sub-steps'' on which
+\zenon\ will finally by called and that will serve (still with \zenon)
+to finally prove the current goal by combining these ``sub-steps''
+lemmas.
+
+For instance, the proof of the whole theorem (which is itself a
+statement) is not directly asked to \zenon\ as it was the case in the
+first example (with the simple fact \lstinline"proof = conclude").  It has been decided to
+split it in one sub-goal \lstinline"<1>1": prove \lstinline"b -> a". The same
+structure is applied to this goal which is split in the sub-goals
+\lstinline"<2>1" and \lstinline"<2>2".
+
+\medskip
+In the proof of sub-goal \lstinline"<2>1", appears a {\em fact}:
+\lstinline"by hypothesis h1". Here \zenon\ is asked to find a proof of
+the current goal, using hints it is provided with. You are responsible
+in giving \zenon\ facts it will need to finally find a proof. It will
+combine them in accordance with logical rules, but if it is missing
+material for the proof, it will never succeed. Here, \zenon\ is told
+that it should be able to prove the goal only using the hypothesis
+\lstinline"h1" we introduced. It will obviously succeed since the goal
+is exactly the hypothesis \lstinline"h1".
+
+From the proof of \lstinline"a", i.e. the step \lstinline"<2>1", we can conclude the
+en\-clo\-sing goal (\lstinline"prove b -> a"). This is done by the \lstinline"qed"
+step whose aim is to close the enclosing proof by mean of the provided
+facts (here the intermediate lemma stated by the step \lstinline"<2>1").
+
+Finally, coming back to the remaining part of the proof, i.e. the
+previous nesting level, we want to solve its goal (which is the whole
+theorem). In the same manner, from the step \lstinline"<1>1" that proved
+that \lstinline"b -> a" under the hypothesis \lstinline"a", we can conclude. We
+then invoke the statement \lstinline"conclude" which is equivalent to
+tell \zenon\ to use as facts, all the available proof steps in the
+scope. Hence this is equivalent here to write
+\lstinline"qed by step <1>1". Note that with \lstinline"conclude" the
+\lstinline"qed" is optional since this statement implicitly marks the
+end of the proof related to the current goal.
+
+Having a look backward to compare our \coq\ and \focal\ proofs, we can
+clearly see the same processing order. We introduced the implications as
+hypotheses, with \verb"intro" in \coq\ and \lstinline"assume" in
+\focal. Then we used the hypothesis \lstinline"h1", with \verb"exact h1" in 
+\coq\ and \lstinline"by hypothesis h1" in \focal. The implicit nested
+structure of the proof is made explicit in \focal.
+
+
+
+\subsection{Still simple but easier with \zenon}
+Let's continue with simple first-order logic properties and let's try
+to demonstrate the following statement:
+$\forall a, b : {\tt boolean}, (a \logand b) \Rightarrow (a \logor b)$.
+We can easily build the tree of this proof as follows:
+
+$$
+\inferrule* [Right=($\Rightarrow$-intro)]
+   {\inferrule* [Right=($\logand$-elim)] {\green{a \logand b} \vdash \blue{a \logand b}}
+      {\inferrule* [Right=($\logor$-elim)] {\green{a \logand b} \vdash \blue{b}}
+     { \green{a \logand b} \vdash \blue{a \logor b}}}}
+   { \vdash \blue{a \logand b \Rightarrow a \logor b}}
+$$
+
+Note that we chose to prove \verb"b" but we could have chose to prove
+\verb"a" instead. This property can expressed in \coq\ as follows (and
+\verb"tauto" tactic of \coq\ also directly solves the goal):
+
+{\scriptsize
+\begin{lstlisting}[language=MyCoq]
+Coq < Goal a /\ b -> a \/ b.
+1 subgoal
+  
+  ============================
+   a /\ b -> a \/ b
+
+Unnamed_thm < intro h1.
+1 subgoal
+  
+  h1 : a /\ b
+  ============================
+   a \/ b
+
+Unnamed_thm < left.
+1 subgoal
+  
+  h1 : a /\ b
+  ============================
+   a
+
+Unnamed_thm < elim h1.
+1 subgoal
+  
+  h1 : a /\ b
+  ============================
+   a -> b -> a
+
+Unnamed_thm < intros h2 h3.
+1 subgoal
+  
+  h1 : a /\ b
+  h2 : a
+  h3 : b
+  ============================
+   a
+
+Unnamed_thm < exact h2.
+No more subgoals.
+\end{lstlisting}}
+
+We now address this property in \focal\ again, making explicit all the
+steps of the proof we did (because we didn't use the \verb"tauto"
+tactic) in \coq.
+
+{\scriptsize
+\lstinputlisting[caption=and\_or.fcl]{and_or.fcl}}
+
+We can see that step \lstinline"<2>1" is directly proven by hypothesis
+\verb"h1", without making explicit the $\logand${\tt -ELIM} rule of
+the proof tree. Here we rely on \zenon\ to find the proof of this
+step. Again, this property is simple enough to get it proved in a
+fully automated way by \zenon.
+
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+theorem and_or : all a b : bool, (a /\ b) -> (a \/ b)
+proof = conclude ;;
+\end{lstlisting}}

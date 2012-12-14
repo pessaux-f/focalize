@@ -1,0 +1,37 @@
+open "basics" ;;
+
+(** Type of signals colors. *)
+type color_t = | C_green | C_orange | C_red ;;
+
+
+(** Type of states the automaton can be. Simply named with letters corresponding
+    to the colors of signal 1, 2 and 3. *)
+type state_t = | S_grr | S_orr | S_rgr | S_ror | S_rrg| S_rro ;;
+
+
+(** Species embedding the automaton controlling the signals colors changes. *)
+species Controller =
+  (* Need to encode tuples as nested pairs because of limitations of Coq and
+     Zenon. *)
+  representation = (state_t * (color_t * (color_t * color_t))) ;
+  let init : Self = (S_grr, (C_green, (C_red, C_red))) ;
+
+  (** Extractors of "tuples" components. *)
+  let get_s (x : Self) = match x with | (a, _) -> a ;
+  let get_s1 (x : Self) = match x with | (_, a) -> match a with | (b, _) -> b ;
+  let get_s2 (x : Self) =
+    match x with | (_, a) -> match a with | (_, b) -> match b with | (c, _) -> c ;
+  let get_s3 (x :Self) =
+    match x with | (_, a) -> match a with | (_, b) -> match b with | (_, c) -> c ;
+
+
+  (** Main controller function: automaton's 1 step run. *)
+  let run_step (state : Self) : Self =
+    match get_s (state) with
+    | S_grr -> (S_orr, (C_orange, (C_red, C_red)))
+    | S_orr -> (S_rgr, (C_red, (C_green, C_red)))
+    | S_rgr -> (S_ror, (C_red, (C_orange, C_red)))
+    | S_ror -> (S_rrg, (C_red, (C_red, C_green)))
+    | S_rrg -> (S_rro, (C_red, (C_red, C_orange)))
+    | S_rro -> (S_grr, (C_green, (C_red, C_red))) ;
+end ;;

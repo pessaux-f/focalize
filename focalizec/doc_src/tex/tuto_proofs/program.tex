@@ -1,0 +1,482 @@
+
+\section{A first simple program}
+After having seen how to write hierarchical proofs in \focal\ using
+\zenon\ in the context of pretty ad-hoc properties, we will finally
+apply previous technics on proving properties related to a (still very
+simple) program.
+
+We deliberately make no use of \focal\ advanced modeling features like
+in\-he\-ri\-tan\-ce, parametrisation, incremental conception and refinement
+mechanisms. We only consider a raw software model, obviously not
+supporting evolution, but that's not the aim. More information on
+these points can be found in [BLA].
+
+\subsection{The goal}
+We want to model a simplified traffic signals controller. The system will
+be made of 3 signals with 3 states: green, orange and red. The
+controller will alternatively make each signal becoming green along a
+predefined sequence, making so that other signals are red. As any
+usual signals, they turn orange before turning red. We can then simply
+model the controller as a finite state automaton representing
+cycling sequences (where \red{R} stands for red, \green{G} for green
+and \orange{O} for orange, representing the state of each managed traffic
+signal):
+$$\green{G}\red{R}\red{R} \rightarrow \orange{O}\red{R}\red{R}
+\rightarrow \red{R}\green{G}\red{R} \rightarrow \red{R}\orange{O}\red{R}
+\rightarrow \red{R}\red{R}\green{G} \rightarrow \red{R}\red{R}ç\orange{O}$$
+
+
+\subsection{Modeling data structures}
+Without surprise, to represent the color of a signal, we define a sum
+type with 3 values:
+
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+(** Type of signals colors. *)
+type color_t = | C_green | C_orange | C_red ;;
+\end{lstlisting}}
+
+Obviously, the automaton having 6 states, we need to define a sum type
+with as many values. For readability, we name each case ``S\_''
+followed by the corresponding signals color initials. For instance
+\lstinline"S_orr" stands for {\em ``State where signal 1 is orange, signal
+2 is red and signal 3 is red''}.
+
+{\scriptsize
+\begin{lstlisting}
+(** Type of states the automaton can be. Simply named with letters corresponding
+    to the colors of signal 1, 2 and 3. *)
+type state_t = | S_grr | S_orr | S_rgr | S_ror | S_rrg| S_rro ;;
+\end{lstlisting}}
+
+Finally, the state of the controller will consists in the current
+state of the automaton and the state of each signal. We then embed
+the controller inside a species whose \lstinline"representation"
+reflects this data structure.
+
+{\scriptsize
+\begin{lstlisting}
+(** Species embedding the automaton controlling the signals colors changes. *)
+species Controller =
+  (* Need to encode tuples as nested pairs because of limitations of Coq and
+     Zenon. *)
+  representation = (state_t * (color_t * (color_t * color_t))) ;
+end ;;
+\end{lstlisting}}
+
+One may note that instead of defining the \lstinline"representation"
+as a 4-components tuple, we nested pairs up to have 4 components. The
+reason is that currently \focal\ compiler and \zenon\ don't yet
+transparently generalize pairs, hence making very difficult proofs to
+be compiled to \coq. However, this do not reduce the expressivity of
+the language: it only makes things a bit more cumbersome.
+
+\subsection{The main algorithm}
+The controller is now modeled as a transition function taking the
+current state of the controller as input and returning the next
+state. Roughly speaking, it will discriminate on the state of the
+automaton (first component of the \lstinline"representation" which is
+the state of the controller), then determine the new state as well as
+the new states of the signals. Hence, the transition function \lstinline"run_step"
+will have type \lstinline"Self -> Self".
+
+Because we modelled the state of the controller as a tuple-like data
+structure, we first define projection functions to access individual
+components of the controller state (i.e. the automaton state and each
+signal state -- color).
+
+{\scriptsize
+\lstinputlisting[caption=controller.fcl]{controller/controller_algo.fcl}}
+
+We only defined the behavioral, computational aspects of our
+controller: no pro\-per\-ties yet. However we can compile this program and
+get a usable piece of software.
+
+\subsection{Introducing the main property}
+
+It is now time to {\em ``prove our program''}. Behind this unclear but
+widely used expression is hidden the task of characterizing the safety
+properties of a system, then prove they hold. In our very simple case,
+one interesting property is that we never have 2 green signals at the
+same time. Since we have 3 signals we will state this property as the
+negation of 3 disjunctions, each stating 2 of the 3 signals are green:
+$$
+\begin{array}{clc}
+\sim ( & (signal_1\ is\ green \logand signal_2\ is\ green)\ \logor & \\
+          & (signal_1\ is\ green \logand signal_3\ is\ green)\ \logor & \\
+          & (signal_2\ is\ green \logand signal_3\ is\ green) & )
+\end{array}
+$$
+
+Such a property leads to the following \focal\ theorem, still left
+unproved for the moment:
+
+{\scriptsize
+\begin{lstlisting}
+  (** The complete theorem stating that no signals are green at the same time. *)
+  theorem never_2_green :
+    all s r : Self,
+    r = run_step (s) ->
+    ~ ((get_s1 (r) = C_green /\ get_s2 (r) = C_green) \/
+       (get_s1 (r) = C_green /\ get_s3 (r) = C_green) \/
+       (get_s2 (r) = C_green /\ get_s3 (r) = C_green))
+  proof = assumed ;
+\end{lstlisting}}
+
+\subsection{Making the proof}
+
+It is now time to prove our theorem. One sketch of the proof is to
+prove that we never have $signal_1$ and $signal_2$ green at the same
+time, neither $signal_1$ and $signal_3$ nor $signal_2$ and $signal_3$.
+From these 3 properties, \zenon\ should be able to find the remaining
+``glue''  and prove the whole theorem!
+
+We then just try to see if our intuition is right. We define the 3
+intermediate lemmas \lstinline"never_s1_s2_green",
+\lstinline"never_s1_s3_green" and \lstinline"never_s2_s3_green", let them
+unproved for the moment, and ask \zenon\ to prove our main theorem
+\lstinline"never_2_green" \lstinline"by property ..." our 3 lemmas:
+
+{\scriptsize
+\lstinputlisting[caption=controller.fcl (2)]{controller/controller1.fcl}}
+
+We invoke the compilation by the regular command:
+\textbf{focalizec controller.fcl}:
+
+{\scriptsize
+\begin{verbatim}
+Invoking ocamlc...
+>> /usr/local/bin/ocamlc -I /usr/local/lib/focalize -c controller.ml
+Invoking zvtov...
+>> /usr/local/bin/zvtov -zenon /usr/local/bin/zenon -new controller.zv
+Invoking coqc...                                                
+>> /usr/local/bin/coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon controller.v
+\end{verbatim}}
+
+\noindent and see that our proof passed, assuming our 3 pending
+lemmas. It will then be time to actually prove these lemmas. One
+imagine easily that their proofs will be similar, since the only
+change between statements is the involved signals.
+
+
+\subsubsection{Proving the first lemma}
+We will now address proving the first lemma, namely
+\lstinline"never_s1_s2_green", using the incremental approach we
+previously introduced: setting-up the proof sketch, the main
+intermediate steps with their goal to prove left assumed, then
+refining these steps until nothing remains assumed. Obviously, our
+lemma won't be fully automatically proved by one \zenon\ step since
+its statement is too complex. Hence, we forget a proof of the shape:
+
+{\scriptsize
+\begin{lstlisting}
+theorem never_s1_s2_green :
+  all s r : Self,
+  r = run_step (s) ->
+  ~ (get_s1 (r) = C_green /\ get_s2 (r) = C_green)
+proof = by definition of ... type ... step ... hypothesis ... ;
+\end{lstlisting}}
+
+\noindent and prepare us to write a hierarchical one, whose first step is
+the simple introduction of hypotheses of our theorem, leaving its goal
+to prove (i.e. currently left \lstinline"assumed"):
+
+{\scriptsize
+\begin{lstlisting}
+theorem never_s1_s2_green :
+  all s r : Self,
+  r = run_step (s) ->
+  ~ (get_s1 (r) = C_green /\ get_s2 (r) = C_green)
+proof =
+<1>1 assume s : Self, r : Self,
+     hypothesis h1 : r = run_step (s),
+     prove ~ (get_s1 (r) = C_green /\ get_s2 (r) = C_green)
+     assumed
+<1>2 conclude ;
+\end{lstlisting}}
+
+The sketch of the proof is a study by cases on the values of the
+automaton state, showing that in each state, the resulting state of
+the signals 1 and 2 is never green for both (i.e. there is never 2
+\lstinline"C_green" values in the 2\textsuperscript{nd} and
+3\textsuperscript{rd} components of the controller state). 
+
+How can we prove this ? Simply by exhibiting, in each case, that the result
+contains at least one color not equal to
+\lstinline"C_green". Obviously, for each case we chose to target the
+signal whose value is really not green! Hence, we refine our proof and
+state each case of the proof, as many as there are states in the
+automaton, hence as many as there are cases in the transition function
+\lstinline"run_step". In the first case, no signal is green since
+$signal_1$ is orange, and $signal_2$ is red: we chose to prove that 
+$signal_1$ is not green. Conversely, in the second case, $signal_2$ is
+green: we do not have the choice and must prove that $signal_1$ is not.
+
+{\scriptsize
+\begin{lstlisting}
+(** Lemma stating that s1 and s2 are never green together. It's 1/3 of the
+    final property stating that no signals are green at the same time. *)
+theorem never_s1_s2_green :
+  all s r : Self,
+  r = run_step (s) ->
+  ~ (get_s1 (r) = C_green /\ get_s2 (r) = C_green)
+proof =
+<1>1 assume s : Self, r : Self,
+     hypothesis h1 : r = run_step (s),
+     prove ~ (get_s1 (r) = C_green /\ get_s2 (r) = C_green)
+
+     (* Proof by cases on values of the "automaton state" of s.
+        For each case, we will prove that one of the 2 signal at least is
+        not green. *)
+     <2>1 hypothesis h2: get_s (s) = S_grr,
+          prove ~ (get_s1 (r) = C_green)
+          assumed
+
+     (* Same proof kind for all the cases of automaton state. *)
+     <2>2 hypothesis h3: get_s (s) = S_orr,
+          prove ~ (get_s1 (r) = C_green)
+          assumed
+
+     (* Same proof kind for all the cases of automaton state. *)
+     <2>3 hypothesis h4: get_s (s) = S_rgr,
+          prove ~ (get_s1 (r) = C_green)
+          assumed
+
+     <2>4 hypothesis h5: get_s (s) = S_ror,
+          prove ~ (get_s1 (r) = C_green)
+          assumed
+
+     <2>5 hypothesis h6: get_s (s) = S_rrg,
+          prove ~ (get_s1 (r) = C_green)
+          assumed
+
+     <2>6 hypothesis h7: get_s (s) = S_rro,
+          prove ~ (get_s2 (r) = C_green)
+          assumed
+
+     <2>7 qed by
+          step <2>1, <2>2, <2>3, <2>4, <2>5, <2>6
+          definition of run_step
+          hypothesis h1
+          type state_t
+<1>2 conclude ;
+\end{lstlisting}}
+
+The conclusion of our proof is step \lstinline"<2>7" and obviously
+relies on the 6 preceding steps, but also on the definition of the function
+\lstinline"run_steps", the type \lstinline"state_t" and the hypothesis
+\lstinline"h1: r = run_step (s)".
+
+In effect, the intermediate steps can only be combined by \zenon,
+hoping to find a complete proof, if it knows that they represent all
+the possible cases of the function \lstinline"run_steps", knows that the type
+\lstinline"state_t" only contains the values on which
+\lstinline"run_steps" discriminates and finally knows that the
+\lstinline"r" used in all steps goals is the result of calling
+\lstinline"run_steps" (so is the resulting controller state), i.e. the
+hypothesis \lstinline"h1".
+
+As usual, we can compile the source and will see that \zenon\ finds the
+proof and the whole theorem gets accepted by \coq. Removing one of
+the facts provided in step \lstinline"<2>7" really causes the whole
+proof to fail.
+
+\medskip
+It remains now to refine our proof by removing all the
+\lstinline"assumed" we set to ``prove'' intermediate steps 
+\lstinline"<2>1" to \lstinline"<2>6". In each case, to prove that a
+signal is not green, we simply prove it has an effective other color
+value. From this exhibited value (obviously not being
+\lstinline"C_green") and the definition of the type
+\lstinline"color_t", \zenon\ can establish that -- this type being an
+inductive definition -- all its constructors are different 2 by 2. In
+other words, the fact that \lstinline"C_red" is not equal to
+\lstinline"C_green" requires \zenon\ to know the underlying type
+definition. For this reason, each proof requires the exhibition of the
+computed color (\lstinline"step<3>1") and the type
+\lstinline"color_t".
+
+The way the proof exhibiting the effective color
+value (the one different from green) works is still left assumed,
+hence following our refinement tactic.
+
+{\scriptsize
+\begin{lstlisting}
+(** Lemma stating that s1 and s2 are never green together. It's 1/3 of the
+    final property stating that no signals are green at the same time. *)
+theorem never_s1_s2_green :
+  all s r : Self,
+  r = run_step (s) ->
+  ~ (get_s1 (r) = C_green /\ get_s2 (r) = C_green)
+proof =
+<1>1 assume s : Self, r : Self,
+     hypothesis h1 : r = run_step (s),
+     prove ~ (get_s1 (r) = C_green /\ get_s2 (r) = C_green)
+
+     (* Proof by cases on values of the "automaton state" of s.
+        For each case, we will prove that one of the 2 signal at least is
+        not green. *)
+     <2>1 hypothesis h2: get_s (s) = S_grr,
+          prove ~ (get_s1 (r) = C_green)
+          (* To prove the signal s1 is not green, we prove it is orange. *)
+          <3>1 prove get_s1 (r) = C_orange
+               assumed
+          <3>2 qed by step <3>1 type color_t
+
+     (* Same proof kind for all the cases of automaton state. *)
+     <2>2 hypothesis h3: get_s (s) = S_orr,
+          prove ~ (get_s1 (r) = C_green)
+          (* To prove the signal s1 is not green, we prove it is red. *)
+          <3>1 prove get_s1 (r) = C_red
+               assumed
+          <3>2 qed by step <3>1 type color_t
+
+     (* Same proof kind for all the cases of automaton state. *)
+     <2>3 hypothesis h4: get_s (s) = S_rgr,
+          prove ~ (get_s1 (r) = C_green)
+          <3>1 prove get_s1 (r) = C_red
+               assumed
+          <3>2 qed by step <3>1 type color_t
+
+     <2>4 hypothesis h5: get_s (s) = S_ror,
+          prove ~ (get_s1 (r) = C_green)
+          <3>1 prove get_s1 (r) = C_red
+               assumed
+          <3>2 qed by step <3>1 type color_t
+
+     <2>5 hypothesis h6: get_s (s) = S_rrg,
+          prove ~ (get_s1 (r) = C_green)
+          <3>1 prove get_s1 (r) = C_red
+               assumed
+          <3>2 qed by step <3>1 type color_t
+
+     <2>6 hypothesis h7: get_s (s) = S_rro,
+          prove ~ (get_s2 (r) = C_green)
+          <3>1 prove get_s2 (r) = C_red
+               assumed
+          <3>2 qed by step <3>1 type color_t
+
+     <2>7 qed by
+          step <2>1, <2>2, <2>3, <2>4, <2>5, <2>6
+          definition of run_step
+          hypothesis h1
+          type state_t
+<1>2 conclude ;
+\end{lstlisting}}
+
+Finally, once the compilation shown that this new refinement passes
+\zenon\ searches and \coq\ assessment, it is time to complete the last
+holes of the proof, the last \lstinline"assumed" remaining. Each such
+case aims at proving that the value we chose and exhibited as being
+different from \lstinline"C_green" is really the one computed by the
+related call to \lstinline"get_s1 (r)". In other words, we need to
+demonstrate that in the case \lstinline"<2>1<3>1", we really have
+\lstinline"get_s1 (r) = C_orange" holding (and similarly for the other
+cases).
+
+One may be easily convinced that this is intrinsically due to
+the way the function \lstinline"run_step" is written! But not only:
+this is also due to the way \lstinline"get_s1" is written since it
+appears in the goal to prove.
+Moreover, each property holds in the context of the hypothesis
+representing the examined case of the pattern-matching
+\lstinline"match get_s (state) with" of \lstinline"run_step" : the
+hypothesis \lstinline"h2" in the first case (\lstinline"h3" in the
+second, \lstinline"h4" in the third, and so on). Finally, our
+hypothesis deals with a value of type \lstinline"state_t" and our goal
+with a value of type \lstinline"color_t". Hence \zenon\ will for sure
+need to know about them!
+
+Giving \zenon\ all these facts, we hope it will find a proof for each
+case, which will really be the case. Hence our complete proof of the
+initial lemma is:
+
+{\scriptsize
+\begin{lstlisting}
+(** Lemma stating that s1 and s2 are never green together. It's 1/3 of the
+    final property stating that no signals are green at the same time. *)
+theorem never_s1_s2_green :
+  all s r : Self,
+  r = run_step (s) ->
+  ~ (get_s1 (r) = C_green /\ get_s2 (r) = C_green)
+proof =
+<1>1 assume s : Self, r : Self,
+     hypothesis h1 : r = run_step (s),
+     prove ~ (get_s1 (r) = C_green /\ get_s2 (r) = C_green)
+
+     (* Proof by cases on values of the "automaton state" of s.
+        For each case, we will prove that one of the 2 signal at least is
+        not green. *)
+     <2>1 hypothesis h2: get_s (s) = S_grr,
+          prove ~ (get_s1 (r) = C_green)
+          (* To prove the signal s1 is not green, we prove it is orange. *)
+          <3>1 prove get_s1 (r) = C_orange
+               by hypothesis h1, h2
+                  definition of get_s1, run_step
+                  type state_t, color_t
+          <3>2 qed by step <3>1 type color_t
+
+     (* Same proof kind for all the cases of automaton state. *)
+     <2>2 hypothesis h3: get_s (s) = S_orr,
+          prove ~ (get_s1 (r) = C_green)
+          (* To prove the signal s1 is not green, we prove it is red. *)
+          <3>1 prove get_s1 (r) = C_red
+               by hypothesis h1, h3
+                  definition of get_s1, run_step
+                  type state_t, color_t
+          <3>2 qed by step <3>1 type color_t
+
+     (* Same proof kind for all the cases of automaton state. *)
+     <2>3 hypothesis h4: get_s (s) = S_rgr,
+          prove ~ (get_s1 (r) = C_green)
+          <3>1 prove get_s1 (r) = C_red
+               by hypothesis h1, h4
+                  definition of get_s1, run_step
+                  type state_t, color_t
+          <3>2 qed by step <3>1 type color_t
+
+     <2>4 hypothesis h5: get_s (s) = S_ror,
+          prove ~ (get_s1 (r) = C_green)
+          <3>1 prove get_s1 (r) = C_red
+               by hypothesis h1, h5
+                  definition of get_s1, run_step
+                  type state_t, color_t
+          <3>2 qed by step <3>1 type color_t
+
+     <2>5 hypothesis h6: get_s (s) = S_rrg,
+          prove ~ (get_s1 (r) = C_green)
+          <3>1 prove get_s1 (r) = C_red
+               by hypothesis h1, h6
+                  definition of get_s1, run_step
+                  type state_t, color_t
+          <3>2 qed by step <3>1 type color_t
+
+     <2>6 hypothesis h7: get_s (s) = S_rro,
+          prove ~ (get_s2 (r) = C_green)
+          <3>1 prove get_s2 (r) = C_red
+               by hypothesis h1, h7
+                  definition of get_s2, run_step
+                  type state_t, color_t
+          <3>2 qed by step <3>1 type color_t
+
+     <2>7 qed by
+          step <2>1, <2>2, <2>3, <2>4, <2>5, <2>6
+          definition of run_step
+          hypothesis h1
+          type state_t
+<1>2 conclude ;
+\end{lstlisting}}
+
+
+\subsubsection{Proving other lemmas : THE END}
+We initially decided to split our main safety property
+\lstinline"never_2_green" into 3 lemmas. We proved above the first of
+them. All of them having an identical structure, their proofs will
+obviously be strongly similar. Hence, we do not detail again their
+proofs but provide the complete source file implementing our
+controller.
+
+{\scriptsize
+\lstinputlisting[caption=controller.fcl (3)] {controller/controller_complete.fcl}}

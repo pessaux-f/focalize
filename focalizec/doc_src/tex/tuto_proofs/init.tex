@@ -1,0 +1,78 @@
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{listings}
+\lstset{basicstyle=\footnotesize\mdseries\itshape\ttfamily,
+        frame=single} %numbers=left, numberstyle=\tiny,
+\usepackage{mathpartir}
+\usepackage{times}   %% Don't know why, but required to have listings beautified.
+\usepackage{color}
+\usepackage{url}
+
+\newcommand{\ocaml}{{\sf OCaml}}
+\newcommand{\focal}{{\sf Fo\-Ca\-Li\-ze}}
+\newcommand{\zenon}{{\sf Zenon}}
+\newcommand{\coq}{{\sf Coq}}
+
+\newcommand{\logand}{\wedge}
+\newcommand{\logor}{\vee}
+
+\definecolor{green}{rgb}{0.0,0.6,0.2}
+\definecolor{brown}{rgb}{0.75,0.37,0.12}
+\definecolor{orange}{rgb}{1.0,0.4,0.2}
+\definecolor{darkblue}{rgb}{0.28,0.28,0.73}
+\newcommand{\green}[1]{{\color{green}{#1}}}
+\newcommand{\red}[1]{{\color{red}{#1}}}
+\newcommand{\blue}[1]{{\color{blue}{#1}}}
+\newcommand{\orange}[1]{{\color{orange}{#1}}}
+\newcommand{\brown}[1]{{\color{brown}{#1}}}
+\newcommand{\magenta}[1]{{\color{magenta}{#1}}}
+\newcommand{\cyan}[1]{{\color{cyan}{#1}}}
+\newcommand{\darkblue}[1]{{\color{darkblue}{#1}}}
+
+\lstdefinelanguage{FoCaLiZe}
+  {morekeywords={alias, all, and, as, assume, assumed, begin, by, caml,
+      collection, coq, coq_require, definition, else, end,
+      ex, external, false, function, hypothesis, if, in,
+      inherit, internal, implement, is, let, lexicographic,
+      local, logical, match, measure, not, notation, of, open,
+      on, or, order, proof, prop, property, prove, qed, rec,
+      representation, Self, signature, species, step,
+      structural, termination, then, theorem, true, type, use,
+      with, conclude},
+    otherkeywords={->, :, /\\, \\/, =>, \~, \#, ;, \&, \|,=,<>},
+    sensitive=false,
+    morecomment=[n]{(*}{*)},  %% Autoriser les nested comments
+    morecomment=[n]{(**}{*)}, %% Autoriser les nested comments
+    morestring=[b]",
+  }
+
+\newcommand{\setlangfocalize}{
+\lstset{
+  language=FoCaLiZe, tabsize=2, frame=single, breaklines=true,
+  basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
+}
+}
+%% By default, use FoCaLize as default listing language.
+\setlangfocalize
+
+%% To have fancier listings for Coq code.
+\lstdefinelanguage{MyCoq}
+  {morekeywords={Variable, Theorem, Section, assert, End, Qed, Let,
+      forall, ex, Chapter, Record, Parameter, Definition, Hypothesis,
+      let, match, if, then, else, end, Function, Module, Inductive,
+      Require, type, Fixpoint, fix, struct,inversion,discriminate,
+      auto, trivial, intro, intros, induction, exact, elim, left,
+      right, destruct},
+    otherkeywords={->, :, :=, =>, ;, \|,<>,=, /\\, \\/},
+    sensitive=false,
+    morecomment=[n]{(*}{*)},   %% Allow nested comments.
+    morecomment=[n]{(**}{*)},  %% Allownested comments.
+    morestring=[b]",
+  }
+
+\newcommand{\setlangcoq}{
+\lstset{
+  language=MyCoq, tabsize=2, frame=single, breaklines=true,
+  basicstyle=\ttfamily, framexleftmargin=1mm, xleftmargin=1mm
+}
+}

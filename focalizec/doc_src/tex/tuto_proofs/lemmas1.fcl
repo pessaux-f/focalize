@@ -1,0 +1,11 @@
+open "basics" ;;
+
+let abs_diff (x, y) = if x >0x y then x - y else y - x ;;
+
+theorem always_pos :
+  all x y : int, abs_diff (x, y) >=0x 0
+proof =
+  <1>1 assume x : int, y : int,
+       prove abs_diff (x, y) >=0x 0
+       assumed
+  <1>2 conclude ;;

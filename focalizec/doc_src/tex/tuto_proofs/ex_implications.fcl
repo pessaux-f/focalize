@@ -1,0 +1,4 @@
+open "basics" ;;
+
+theorem implications :  all a b : bool, a -> (b -> a)
+proof = conclude ;;

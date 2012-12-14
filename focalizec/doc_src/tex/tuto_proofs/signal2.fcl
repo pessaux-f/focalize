@@ -1,0 +1,7 @@
+open "basics" ;;
+
+type signal_t = | Red | Orange | Green ;;
+
+theorem signal_t_exclu :
+  all a : signal_t, (a = Red) \/ (a = Orange) \/ (a = Green)
+  proof = <1>1 qed by type signal_t ;;

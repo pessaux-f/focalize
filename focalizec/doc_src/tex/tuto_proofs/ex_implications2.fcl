@@ -1,0 +1,15 @@
+open "basics" ;;
+
+theorem implications :  all a b : bool, a -> (b -> a)
+proof =
+  <1>1 assume a : bool, b : bool,
+       hypothesis h1 : a,
+       prove b -> a
+       <2>1 hypothesis h2 : b,
+            prove a
+            by hypothesis h1
+       <2>2 qed
+            by step <2>1
+  <1>2 conclude
+       (* or: qed conclude
+          or: qed by step <1>1 *) ;;
