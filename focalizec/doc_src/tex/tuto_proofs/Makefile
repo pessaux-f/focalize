@@ -1,30 +1,64 @@
-FCLOBJS = ex_implications.vo or_id_com_good.vo or_id_com_shortest.vo same_comps.vo diff_comps.vo signal2.vo signal3.vo controller/controller_algo.vo controller/controller_complete.vo controller/controller1.vo controller/controller2.vo controller/controller3.vo controller/controller5.vo controller/controller5.vo lemmas1.vo lemmas3.vo lemmas4.vo lemmas5.vo
+#                                                                            #
+#            François Pessaux                                                #
+#                                                                            #
+#                               LIP6  --  INRIA Rocquencourt                 #
+#                                                                            #
+#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
+#            2012 ENSTA ParisTech                                            #
+#  Distributed only by permission.                                           #
+#                                                                            #
+# ************************************************************************** #
 
-TEXSRCS = conclusion.tex first_order_logic.tex intro.tex main.tex init.tex	program.tex
+ROOT_DIR=../../../..
 
 
-%.eps:%.fig
-	fig2dev -L eps $< $@
+FOCALIZE_SRC= ex_implications.fcl or_id_com_good.fcl or_id_com_shortest.fcl same_comps.fcl diff_comps.fcl signal2.fcl signal3.fcl controller/controller_algo.fcl controller/controller_complete.fcl controller/controller1.fcl controller/controller2.fcl controller/controller3.fcl controller/controller5.fcl controller/controller5.fcl lemmas1.fcl lemmas3.fcl lemmas4.fcl lemmas5.fcl
 
-%.vo:%.fcl
-	focalizec $<
+FOCALIZE_MLS=$(FOCALIZE_SRC:.fcl=.ml)
+FOCALIZE_BYT_OBJS=$(FOCALIZE_MLS:.ml=.cmo)
 
-all: eps code pdf
+TEX_FILES = conclusion.tex first_order_logic.tex intro.tex tuto_proofs.tex init.tex	program.tex
 
-pdf: $(TEXSRCS)
-	pdflatex main.tex
+HVA_FILES=tuto_proofs.hva
 
-eps:
+DOC_OBJS=tuto_proofs.dvi tuto_proofs.ps tuto_proofs.pdf tuto_proofs.html
 
-code: $(FCLOBJS)
+FOCALIZEC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
+FOCALIZE_COMP_FLAGS=-I $(ROOT_DIR)/focalizec/src/stdlib  $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
+CAML_INCLUDES=-I $(ROOT_DIR)/focalizec/src/stdlib
+CAML_COMP_FLAGS=-w Ae -dtypes
 
-clean: clean-code clean-latex
+# Defining defaults from Makefile.common
+include $(ROOT_DIR)/Makefile.common
+include $(ROOT_DIR)/focalizec/.install_var
+include $(ROOT_DIR)/focalizec/.config_var
 
-clean-code:
-	rm -f *.ml *.fo *.cm* *.v *.vo *.pfc *.zvtmp.pfc *.glob *.zv *.log *.aux
-	(cd controller &&\
-	rm -f *.ml *.fo *.cm* *.v *.vo *.pfc *.zvtmp.pfc *.glob *.zv *.log *.aux &&\
-	cd ..)
+# Now overwriting defaults for this directory purposes.
+TEXINPUT=/usr/share/texmf/tex/latex//:$(TEXINPUTS)
+LATEX=TEXINPUTS=$(TEXINPUT); latex
+HEVEA=TEXINPUTS=$(TEXINPUT); hevea
 
-clean-latex:
-	rm -f main.dvi main.pdf
+
+all doc: byt $(DOC_OBJS)
+
+byt: $(FOCALIZE_BYT_OBJS)
+
+tuto_proofs.dvi: $(TEX_FILES)
+	$(LATEX) tuto_proofs.tex
+
+tuto_proofs.html: tuto_proofs.dvi ${HVA_FILES}
+	$(HEVEA) -fix ${HVA_FILES} tuto_proofs.tex
+
+tuto_proofs.pdf: tuto_proofs.dvi
+	$(DVIPDF) tuto_proofs.dvi tuto_proofs.pdf
+
+clean:
+	$(RM) *.ml *.fo *.cm* *.v *.vo *.pfc *.zvtmp.pfc *.glob *.zv *.log *.aux
+	($(CD) controller &&\
+	$(RM) *.ml *.fo *.cm* *.v *.vo *.pfc *.zvtmp.pfc *.glob *.zv *.log *.aux &&\
+	$(CD) ..)
+	$(RM) $(DOC_OBJS)
+
+install:
+	$(MKDIR) $(INSTALL_DOC_DIR)/tuto_proofs &&\
+	$(CP) $(DOC_OBJS) $(INSTALL_DOC_DIR)/tuto_proofs/

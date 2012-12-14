@@ -18,7 +18,7 @@
 
 ROOT_DIR=../../..
 
-SUB_DIRS=refman tutorial
+SUB_DIRS=refman tutorial tuto_proofs
 
 include $(ROOT_DIR)/Makefile.common
 
