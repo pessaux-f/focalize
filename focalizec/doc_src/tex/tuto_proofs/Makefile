@@ -17,7 +17,7 @@ FOCALIZE_SRC= ex_implications.fcl or_id_com_good.fcl or_id_com_shortest.fcl same
 FOCALIZE_MLS=$(FOCALIZE_SRC:.fcl=.ml)
 FOCALIZE_BYT_OBJS=$(FOCALIZE_MLS:.ml=.cmo)
 
-TEX_FILES = conclusion.tex first_order_logic.tex intro.tex tuto_proofs.tex init.tex	program.tex
+TEX_FILES = conclusion.tex first_order_logic.tex intro.tex tuto_proofs.tex init.tex	program.tex bibli.bib
 
 HVA_FILES=tuto_proofs.hva
 
@@ -45,6 +45,8 @@ byt: $(FOCALIZE_BYT_OBJS)
 
 tuto_proofs.dvi: $(TEX_FILES)
 	$(LATEX) tuto_proofs.tex
+	bibtex tuto_proofs
+	$(LATEX) tuto_proofs.tex && $(LATEX) tuto_proofs.tex
 
 tuto_proofs.html: tuto_proofs.dvi ${HVA_FILES}
 	$(HEVEA) -fix ${HVA_FILES} tuto_proofs.tex
