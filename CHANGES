@@ -1,4 +1,5 @@
-# Focalize 0.7.0
+# Focalize 0.8.0
+################
 - Update to Caml 4.0
 - Update to Coq 8.4, compatibility with older versions up to 8.1.
 - Foreign languages reserved keywords renammed on the fly to prevent
@@ -9,11 +10,12 @@
 - Configuration & build stuff revised and simplified.
 - Handling of weakly polymorphic type variable (ML _'a).
 - Fixed order of -I options sent to Coq.
-- More theorems in the standard library to deal with equality and comparisons
-  on int's.
-- Replacement of "assumed" proofs by real Coq proofs in the standard library.
+- More theorems in the standard library to deal with equality and
+  comparisons on int's.
+- Replacement of "assumed" proofs by real Coq proofs in the standard
+  library.
 - Tutorial on proofs.
-- RPM build system.
+(- RPM build system. -- not fully operational)
 - Revisided documentation to get up-to-date.
 - Various Coq code bugs fixed.
 - Termination proofs on structurally recursive functions.
@@ -22,21 +24,34 @@
 - Other things we don't remember :S
 
 
+# Focalize 0.7.0
+################
+Ghost version, minor and major updates and bug fixes, never officially
+released. All changes now included in 0.8.0 version.
+
+
 # Focalize 0.6.0
+################
 - Inductive proof on data structures.
 - Update Caml to 3.11.1
 - Update Camlp5 to 5.12
 - Use Coq8.1pl4
 
+
 # Focalize 0.2.0
+################
 - Lexing
   Comments starting with a line (more than 3) * characters are accepted.
 
+
 # 2009-02-??
+############
 # Focalize 0.1.0
 Initial distribution
 
+
 # 2009-02-13
+############
 # Focalize 0.1.rc0
 First release candidate.
 
