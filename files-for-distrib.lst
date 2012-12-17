@@ -37,8 +37,8 @@
 ./focalize/focalizec/doc_src/tex/refman/syntaxdef.hva
 ./focalize/focalizec/doc_src/tex/refman/syntaxdef.sty
 ./focalize/focalizec/doc_src/tex/tuto_proofs/.gitignore
-./focalize/focalizec/doc_src/tex/tuto_proofs/.gitignore~
 ./focalize/focalizec/doc_src/tex/tuto_proofs/and_or.fcl
+./focalize/focalizec/doc_src/tex/tuto_proofs/bibli.bib
 ./focalize/focalizec/doc_src/tex/tuto_proofs/conclusion.tex
 ./focalize/focalizec/doc_src/tex/tuto_proofs/controller/controller1.fcl
 ./focalize/focalizec/doc_src/tex/tuto_proofs/controller/controller2.fcl
