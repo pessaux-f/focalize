@@ -19,56 +19,64 @@ Documentation
 
 <h3>The manual for the lastest release<h3>
 
-<p>The reference manual for the $(PROJECT_NAME) language and system:
+<p>The reference manual for the $(focal) language and system:
 <ul>
- <li><a href="$(PROJECT_NAME_FULL)_refman.ps">$(PROJECT_NAME_FULL)_refman.ps</a>,
+ <li><a href="refman.ps">refman.ps</a>,
  size
-<!--#fsize file="$(PROJECT_NAME_FULL)_refman.ps" sizefmt="abbrev"-->,
- (in PS format).
+<!--#fsize file="refman.ps" sizefmt="abbrev"-->, (in PS format).
  </li>
- <li><a href="$(PROJECT_NAME_FULL)_refman.pdf">$(PROJECT_NAME_FULL)_refman.pdf</a>,
+ <li><a href="refman.pdf">refman.pdf</a>,
  size
-<!--#fsize file="$(PROJECT_NAME_FULL)_refman.pdf" sizefmt="abbrev"-->,
- (in PDF format).
+<!--#fsize file="refman.pdf" sizefmt="abbrev"-->, (in PDF format).
  </li>
- <li><a href="$(PROJECT_NAME_FULL)_refman.dvi">$(PROJECT_NAME_FULL)_refman.dvi</a>,
+ <li><a href="refman.dvi">refman.dvi</a>,
  size
-<!--#fsize file="$(PROJECT_NAME_FULL)_refman.dvi" sizefmt="abbrev"-->,
- (in DVI format).
+<!--#fsize file="refman.dvi" sizefmt="abbrev"-->, (in DVI format).
  </li>
 </ul>
 </p>
 
 <h3>Tutorial: Implementing Sets<h3>
 
-<p>A tutorial for the $(PROJECT_NAME) language and system:
+<p>A tutorial for the $(focal) language and system:
 <ul>
- <li><a href="$(PROJECT_NAME_FULL)_tutorial.ps">$(PROJECT_NAME_FULL)_tutorial.ps</a>,
- size
-<!--#fsize file="$(PROJECT_NAME_FULL)_tutorial.ps" sizefmt="abbrev"-->,
- (in PS format).
+ <li><a href="tutorial.ps">tutorial.ps</a>,
+ size <!--#fsize file="tutorial.ps" sizefmt="abbrev"-->, (in PS format).
  </li>
- <li><a href="$(PROJECT_NAME_FULL)_tutorial.pdf">$(PROJECT_NAME_FULL)_tutorial.pdf</a>,
- size
-<!--#fsize file="$(PROJECT_NAME_FULL)_tutorial.pdf" sizefmt="abbrev"-->,
- (in PDF format).
+ <li><a href="tutorial.pdf">tutorial.pdf</a>,
+ size <!--#fsize file="tutorial.pdf" sizefmt="abbrev"-->, (in PDF format).
  </li>
- <li><a href="$(PROJECT_NAME_FULL)_tutorial.dvi">$(PROJECT_NAME_FULL)_tutorial.dvi</a>,
- size
-<!--#fsize file="$(PROJECT_NAME_FULL)_tutorial.dvi" sizefmt="abbrev"-->,
- (in DVI format).
+ <li><a href="tutorial.dvi">tutorial.dvi</a>,
+ size <!--#fsize file="tutorial.dvi" sizefmt="abbrev"-->, (in DVI format).
  </li>
 </ul>
 </p>
 
-<h3>The manual pages for the $(PROJECT_NAME) commands<h3>
+<h3>Tutorial: Playing with Proofs<h3>
+
+<p>A tutorial for the $(focal) language especially dedicated to proofs
+writing:
+<ul>
+ <li><a href="tuto_proofs.ps">tuto_proofs.ps</a>,
+ size <!--#fsize file="tuto_proofs.ps" sizefmt="abbrev"-->, (in PS format).
+ </li>
+ <li><a href="tuto_proofs.pdf">tuto_proofs.pdf</a>,
+ size <!--#fsize file="tuto_proofs.pdf" sizefmt="abbrev"-->, (in PDF format).
+ </li>
+ <li><a href="tuto_proofs.dvi">tuto_proofs.dvi</a>,
+ size <!--#fsize file="tuto_proofs.dvi" sizefmt="abbrev"-->, (in DVI format).
+ </li>
+</ul>
+</p>
+
+<h3>The manual pages for the $(focal) commands<h3>
 
 <p>
 <ul>
- <li><a href="focalizec.$(PROJECT_MAN_EXT)">
-     The manual for the <code>focalizec</code> compiler</a> (Unix man page).
+ <li><a href="focalizec.1">
+     The manual for the <code>$(focalizec)</code> compiler</a> (Unix man page).
  </li>
- <li><a href="focalizedep.$(PROJECT_MAN_EXT)">
+ <li><a href="focalizedep.1">
      The manual for the <code>focalizedep</code> make dependencies compiler</a> (Unix man page).
  </li>
 </ul>

@@ -8,12 +8,11 @@
 #                                                                      #
 #                               LIP6  --  INRIA Rocquencourt           #
 #                                                                      #
-#  Copyright 2009 LIP6 and INRIA                                       #
+#  Copyright 2007 -2012 LIP6 and INRIA                                 #
+#            2012 ENSTA ParisTech                                      #
 #  Distributed only by permission.                                     #
 #                                                                      #
 #**********************************************************************#
-
-# $Id: Makefile,v 1.4 2011-05-27 07:33:41 weis Exp $
 
 ROOT_DIR=../..
 

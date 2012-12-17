@@ -1,6 +1,6 @@
     <!--#include virtual="beforetitle-eng.html"-->
     Contacts
-    <!--#include virtual="aftertitle-eng.html"--><!-- \$Id: index.shtml,v 1.7 2012-03-14 10:46:33 jaume Exp $ -->
+    <!--#include virtual="aftertitle-eng.html"-->
     <div id="container">
       <div id="header">
         <h1>Contacts</h1>
@@ -48,7 +48,7 @@
           </li>
           <br>
           <li><a href="http://www.ensta-paristech.fr/">ENSTA-ParisTech</a>
-            - <a href="http://uei.ensta-paristech.fr/fr/index.html">UEI</a><br>
+            - <a href="http://uei.ensta-paristech.fr/fr/index.html">UIIS</a><br>
           </li>
           <ul>
             <li><a

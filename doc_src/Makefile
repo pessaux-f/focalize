@@ -8,7 +8,8 @@
 #                                                                      #
 #                               LIP6  --  INRIA Rocquencourt           #
 #                                                                      #
-#  Copyright 2009 LIP6 and INRIA                                       #
+#  Copyright 2007 - 2012 LIP6 and INRIA                                #
+#            2012 ENSTA ParisTech                                      #
 #  Distributed only by permission.                                     #
 #                                                                      #
 #**********************************************************************#
