@@ -40,8 +40,8 @@ HEVEA=TEXINPUTS=$(TEXINPUT); hevea
 
 
 # Only try to build doc if source files are present.
-all doc: byt $(DOC_OBJS)
-	@if test -f tuto_proofs.tex; then make $(DOC_OBJS); fi
+all doc:
+	@if test -f tuto_proofs.tex; then make byt ; make $(DOC_OBJS); fi
 
 byt: $(FOCALIZE_BYT_OBJS)
 

@@ -58,8 +58,8 @@ IMAGEN=imagen -extra "ppmquant 255"
 
 
 # Only try to build doc if source files are present.
-all doc: byt
-	@if test -f tutorial.tex; then make $(DOC_OBJS); fi
+all doc:
+	@if test -f tutorial.tex; then make byt ; make $(DOC_OBJS); fi
 
 byt: $(FOCALIZE_BYT_OBJS)
 

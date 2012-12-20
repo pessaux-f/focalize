@@ -9,6 +9,7 @@
 ./focalize/focalizec/doc_src/man/focalizetest.1
 ./focalize/focalizec/doc_src/man/Makefile
 ./focalize/focalizec/doc_src/tex/Makefile
+./focalize/focalizec/doc_src/tex/refman/Makefile
 ./focalize/focalizec/doc_src/tex/refman/refman.dvi
 ./focalize/focalizec/doc_src/tex/refman/refman.html
 ./focalize/focalizec/doc_src/tex/refman/refman.pdf
