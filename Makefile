@@ -76,6 +76,6 @@ clean:
 
 
 distrib:
-	$(RM) -f focalize-distrib.tgz
+	$(RM) -f focalize-0.8.0.tgz
 	($(CD) .. &&\
-	tar cvzf focalize/focalize-distrib.tgz -T focalize/files-for-distrib.lst)
+	tar cvzf focalize/focalize-0.8.0.tgz -T focalize/files-for-distrib.lst -s /focalize/focalize-0.8.0/g)
