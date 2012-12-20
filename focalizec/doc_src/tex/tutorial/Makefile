@@ -56,7 +56,10 @@ LATEX=TEXINPUTS=$(TEXINPUT); latex
 HEVEA=TEXINPUTS=$(TEXINPUT); hevea
 IMAGEN=imagen -extra "ppmquant 255"
 
-all doc: byt $(DOC_OBJS)
+
+# Only try to build doc if source files are present.
+all doc: byt
+	@if test -f tutorial.tex; then make $(DOC_OBJS); fi
 
 byt: $(FOCALIZE_BYT_OBJS)
 
@@ -75,11 +78,12 @@ tutorial.html: tutorial.dvi ${HVA_FILES}
 tutorial.pdf: tutorial.dvi
 	$(DVIPDF) tutorial.dvi tutorial.pdf
 
+# Only remove doc files if sources are present, hence doc can be rebuilt.
 clean-generated:
 	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc
 	$(RM) *.haux *.htoc
 	$(RM) tutorial*.gif tutorial.image.tex
-	$(RM) $(DOC_OBJS)
+	@if test -f tutorial.tex; then $(RM) $(DOC_OBJS); fi
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt build_stamp.ml
 
 install:

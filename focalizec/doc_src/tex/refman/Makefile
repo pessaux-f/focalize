@@ -35,7 +35,9 @@ include $(ROOT_DIR)/focalizec/.install_var
 
 all: doc
 
-doc: $(DOC_OBJS)
+# Only try to build doc if source files are present.
+doc:
+	@if test -f refman.tex; then make $(DOC_OBJS); fi
 
 refman.pdf: refman.dvi
 	$(DVIPDF) refman.dvi refman.pdf
@@ -49,10 +51,11 @@ refman.dvi: $(TEX_FILES)
 refman.html: refman.dvi ${HVA_FILES}
 	$(HEVEA) -fix ${HVA_FILES} refman.tex
 
+# Only remove doc files if sources are present, hence doc can be rebuilt.
 clean:
 	$(RM) *.aux *.log *.dvi *.idx *.ilg *.ind *.toc *.blg *.bbl *.haux *.htoc *.hind
 	$(RM) refman*.gif refman.image.tex
-	$(RM) $(DOC_OBJS)
+	@if test -f refman.tex; then $(RM) $(DOC_OBJS); fi
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 
 install:

@@ -39,7 +39,9 @@ LATEX=TEXINPUTS=$(TEXINPUT); latex
 HEVEA=TEXINPUTS=$(TEXINPUT); hevea
 
 
+# Only try to build doc if source files are present.
 all doc: byt $(DOC_OBJS)
+	@if test -f tuto_proofs.tex; then make $(DOC_OBJS); fi
 
 byt: $(FOCALIZE_BYT_OBJS)
 
@@ -54,12 +56,13 @@ tuto_proofs.html: tuto_proofs.dvi ${HVA_FILES}
 tuto_proofs.pdf: tuto_proofs.dvi
 	$(DVIPDF) tuto_proofs.dvi tuto_proofs.pdf
 
+# Only remove doc files if sources are present, hence doc can be rebuilt.
 clean:
 	$(RM) *.ml *.fo *.cm* *.v *.vo *.pfc *.zvtmp.pfc *.glob *.zv *.log *.aux
 	($(CD) controller &&\
 	$(RM) *.ml *.fo *.cm* *.v *.vo *.pfc *.zvtmp.pfc *.glob *.zv *.log *.aux &&\
 	$(CD) ..)
-	$(RM) $(DOC_OBJS)
+	@if test -f tuto_proofs.tex; then $(RM) $(DOC_OBJS); fi
 
 install:
 	$(MKDIR) $(INSTALL_DOC_DIR)/tuto_proofs &&\
