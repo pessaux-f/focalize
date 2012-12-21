@@ -140,7 +140,7 @@ let rec matrix_one_col_out p =
 (** {b Descr}: Splits a matrix by columns. *)
 let rec split_matrix p = match p with
   | [] -> []
-  | [ _ ] -> []
+  | [] :: _ -> []
   | _ ->
       let (c, np) = matrix_one_col_out p in
       c :: (split_matrix np)
