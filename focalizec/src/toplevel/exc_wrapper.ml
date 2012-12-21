@@ -561,12 +561,12 @@ let print_focalize_exception ppf = function
   (* Pattern matching analysis errors. *)
   | Match_analysis.Match_not_exhaustive at ->
        Format.fprintf ppf
-        "%a:@\n@[Pattern@ matching@ not@ exhaustive.@]@."
-        Location.pp_location at
+        "%a:@\n@[%tPattern-matching@ is@ not@ exhaustive.@]@."
+        Location.pp_location at header
   | Match_analysis.Match_useless_case at ->
        Format.fprintf ppf
-        "%a:@\n@[Useless@ case@ in@ pattern@ matching.@]@."
-        Location.pp_location at
+        "%a:@\n@[%tUseless@ case@ in@ pattern-matching.@]@."
+        Location.pp_location at header
   (* ********************** *)
   (* The ultimate firewall. *)
   | x ->
