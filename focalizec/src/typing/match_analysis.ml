@@ -2,7 +2,7 @@
 (*                                                                     *)
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
-(*            Pierre-Nicolas Tollite                                   *)
+(*            Pierre-Nicolas Tollitte                                  *)
 (*                 LIP6  --  INRIA Rocquencourt  -- ENSTA              *)
 (*                                                                     *)
 (*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
@@ -11,16 +11,17 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: match_analysis.ml,v 1.3 2012-10-26 16:11:40 pessaux Exp $ *)
+
 
 (** {b Descr}: Exceptions for pattern matching analysis. *)
 exception Match_not_exhaustive of Location.t ;;
 exception Match_useless_case of Location.t ;;
 
+
+
 (** {b Descr}: Make a dummy ast from an ast_desc. *)
-let locnone = Location.none
 let get_dummy_ast a = {
-  Parsetree.ast_loc = locnone ;
+  Parsetree.ast_loc = Location.none ;
   Parsetree.ast_desc = a ;
   Parsetree.ast_annot = [] ;
   Parsetree.ast_type = Parsetree.ANTI_none }
@@ -41,9 +42,11 @@ let focalize_get_all_constructors typing_env =
     let ci = constructor_ident_of_constructor_name cn in
     (ci,
      Env.TypingEnv.find_constructor
-       ~loc:locnone ~current_unit:"" ci typing_env) in
+       ~loc: Location.none ~current_unit: "" ci typing_env) in
   let constr = Env.get_constructor_list typing_env in
   List.map get_constr_def constr
+;;
+
 
 
 (** {b Descr}: Get the constructors of a special type *)
@@ -126,7 +129,7 @@ let rec matrix_one_col_out p =
   match p with
   | [] -> ([], [])
   | (hd_row :: tl_row) :: tail_p ->
-      let col, np = matrix_one_col_out tail_p in
+      let (col, np) = matrix_one_col_out tail_p in
       ((hd_row :: col), (tl_row :: np))
   | _ -> assert false
 ;;
@@ -136,9 +139,10 @@ let rec matrix_one_col_out p =
 (** {b Descr}: Splits a matrix by columns. *)
 let rec split_matrix p = match p with
   | [] -> []
-  | []::_ -> []
-  | _ -> let c, np = matrix_one_col_out p in
-    c::(split_matrix np)
+  | [ _ ] -> []
+  | _ ->
+      let (c, np) = matrix_one_col_out p in
+      c :: (split_matrix np)
 ;;
 
 
@@ -146,7 +150,7 @@ let rec split_matrix p = match p with
 let collapse_matrix_2 m1 m2 = List.map2 (@) m1 m2 ;;
 let rec collapse_matrix matrix_list = match matrix_list with
   | [] -> []
-  | [m] -> m
+  | [ m ] -> m
   | m1 :: ml -> collapse_matrix_2 m1 (collapse_matrix ml)
 ;;
 
@@ -155,7 +159,7 @@ let rec collapse_matrix matrix_list = match matrix_list with
 (** {b Descr}: Creates a normalized pattern matrix from a pattern list. *)
 let rec normalize pats =
   let pats = List.map clean_pattern pats in
-  let n, p = expand_patterns pats in
+  let (n, p) = expand_patterns pats in
   if n = 1 then List.map (List.map clean_pattern) p
   else let cols = split_matrix p in
   let matrix_list = List.map normalize cols in
@@ -282,7 +286,7 @@ let urec_norm pats qpat typing_env =
 
 
 
-(** {b Descr}: Dummy Wildcard pattern for exhaustiveness check. *)
+(** {b Descr}: Dummy wildcard pattern for exhaustivity check. *)
 let dummy_wild_pattern =
   { Parsetree.ast_loc = Location.none ;
     Parsetree.ast_desc = Parsetree.P_wild ;
@@ -293,25 +297,39 @@ let dummy_wild_pattern =
 
 
 (** {b Descr}: Patterns usefulness check. *)
-let rec check_usefulness pats typing_env = match pats with
-  | [] -> true
-  | _ :: [] -> true
+let rec check_usefulness pats typing_env =
+  match pats with
+  | [] -> ()
+  | [ _ ] -> ()
   | p :: tl_pats ->
-      check_usefulness tl_pats typing_env &&
-      if urec_norm tl_pats p typing_env then true
-      else raise (Match_useless_case p.Parsetree.ast_loc)
+      check_usefulness tl_pats typing_env ;
+      if not (urec_norm tl_pats p typing_env) then
+        raise (Match_useless_case p.Parsetree.ast_loc)
 ;;
+(*
+      Format.eprintf
+        "%a:@\n@[%tWarning:%tPattern-matching@ is@ not@ exhaustive.@]@."
+         Handy.pp_set_bold Handy.pp_reset_effects
+         Location.pp_location p.Parsetree.ast_loc
+
+      Format.eprintf
+        "%a:@\n@[%tWarning:%Useless@ case@ in@ pattern-matching.@]@."
+         Handy.pp_set_bold Handy.pp_reset_effects
+         Location.pp_location p.Parsetree.ast_loc
+*)
 
 
 
-(** {b Descr}: Verify a pattern matching expression. *)
-let verify typing_env m_expr = match m_expr.Parsetree.ast_desc with
+(** {b Descr}: Verify a pattern matching expression. Checks for exhaustivity
+    and absence of useless pattern. Doesn't return any validity result. Instead,
+    issues warnings or exception raising in case of problem. *)
+let verify typing_env m_expr =
+  match m_expr.Parsetree.ast_desc with
   | Parsetree.E_match (_, pattern_expr_list) ->
-  let pats, _ = List.split pattern_expr_list in
-  let res = urec_norm pats dummy_wild_pattern typing_env in
-  let _ = check_usefulness (List.rev pats) typing_env in
-  if res then raise (Match_not_exhaustive m_expr.Parsetree.ast_loc)
-  else ()
+      let (pats, _) = List.split pattern_expr_list in
+      let res = urec_norm pats dummy_wild_pattern typing_env in
+      check_usefulness (List.rev pats) typing_env ;
+      if res then raise (Match_not_exhaustive m_expr.Parsetree.ast_loc)
   | _ -> assert false
 ;;
 
@@ -402,6 +420,7 @@ and verify_matchings_expr typing_env expr =
         (fun (_, e) -> verify_matchings_expr typing_env e)
         label_expr_list
   | Parsetree.E_match (expr2, pattern_expr_list) ->
+      verify typing_env expr ;
       verify_matchings_expr typing_env expr2 ;
       List.iter
         (fun (_, e) -> verify_matchings_expr typing_env e)
