@@ -9,15 +9,15 @@
 (*                               LIP6  --  INRIA Rocquencourt          *)
 (*                                                                     *)
 (*  Copyright 2007, 2008 LIP6 and INRIA                                *)
+(*            2012 ENSTA ParisTech                                     *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: exc_wrapper.ml,v 1.92 2012-02-29 20:33:46 pessaux Exp $ *)
 
 let header ppf =
-  Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects
-;;
+  Format.fprintf ppf "%tError:%t@ " Handy.pp_set_bold Handy.pp_reset_effects ;;
+
 
 let print_focalize_exception ppf = function
   (* ************** *)
@@ -344,11 +344,11 @@ let print_focalize_exception ppf = function
         Sourcify.pp_qualified_species coll_name ;
       List.iter
         (function
-	  | Infer.NDMK_prototype field_name ->
+	        | Infer.NDMK_prototype field_name ->
               Format.fprintf ppf "\t%a@\n" Sourcify.pp_vname field_name
-	  | Infer.NDMK_termination_proof fct_name ->
-	      Format.fprintf ppf "\t%a@ (missing@ termination@ proof)@\n"
-		Sourcify.pp_vname fct_name)
+	        | Infer.NDMK_termination_proof fct_name ->
+	            Format.fprintf ppf "\t%a@ (missing@ termination@ proof)@\n"
+		            Sourcify.pp_vname fct_name)
         fields_names ;
       Format.fprintf ppf"@]@."
   | Infer.Invalid_parameter_in_delayed_proof_termination (at, name) ->
