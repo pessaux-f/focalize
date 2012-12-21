@@ -32,11 +32,10 @@
 
 
 ;; Customizable variable specifying the number of spaces for indentation.
-;(defcustom focalize-indent-quantum 2
-;  "Indentation quantum in number of space characters."
-;  :type 'integer :group 'focalize)
+(defcustom focalize-indent-quantum 2
+  "Indentation quantum in number of space characters."
+  :type 'integer :group 'focalize)
 
-(defvar focalize-indent-quantum 2)
 
 
 (defun first-keyword-of-line ()

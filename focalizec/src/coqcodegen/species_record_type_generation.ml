@@ -6,15 +6,13 @@
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
 (*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
 (*            2012 ENSTA ParisTech                                            *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
-
-(* $Id: species_record_type_generation.ml,v 1.100 2012-10-30 11:55:07 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)

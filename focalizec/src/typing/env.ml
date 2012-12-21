@@ -6,7 +6,7 @@
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
 (*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
 (*            2012 ENSTA ParisTech                                            *)
@@ -14,7 +14,6 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: env.ml,v 1.145 2012-11-13 14:02:05 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module contains the whole environments mechanisms.

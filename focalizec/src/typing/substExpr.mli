@@ -1,18 +1,20 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaL compiler                               *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
-(*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
+(* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            François Pessaux                                                *)
+(*            Pierre Weis                                                     *)
+(*            Damien Doligez                                                  *)
+(*                                                                            *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
+(*                                                                            *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
+(*            2012 ENSTA ParisTech                                            *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
 
 
-(* $Id: substExpr.mli,v 1.3 2008-12-01 14:40:21 pessaux Exp $ *)
 val subst_expr :
   param_unit: Parsetree.module_name -> Parsetree.vname ->
     by_expr: Parsetree.expr_desc -> in_expr: Parsetree.expr -> Parsetree.expr
