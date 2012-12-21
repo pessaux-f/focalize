@@ -183,6 +183,7 @@ let (set_stop_before_zenon, get_stop_before_zenon) =
   (fun () -> stop_before_zenon := true),
   (fun () -> !stop_before_zenon)
 ;;
+
 let (set_stop_before_coq, get_stop_before_coq) =
   let stop_before_coq = ref false in
   (fun () -> stop_before_coq := true),
@@ -199,4 +200,10 @@ let (get_use_coq_older, set_use_coq_older) =
   let use_coq_older = ref false in
   (fun () -> !use_coq_older),
   (fun () -> use_coq_older := true)
+;;
+
+let (set_pmatch_err_as_warn, get_pmatch_err_as_warn) =
+  let pmatch_err_as_warn = ref false in
+  (fun () -> pmatch_err_as_warn := true),
+  (fun () -> !pmatch_err_as_warn)
 ;;

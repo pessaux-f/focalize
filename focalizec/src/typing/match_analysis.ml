@@ -304,20 +304,16 @@ let rec check_usefulness pats typing_env =
   | [ _ ] -> ()
   | p :: tl_pats ->
       check_usefulness tl_pats typing_env ;
-      if not (urec_norm tl_pats p typing_env) then
-        raise (Match_useless_case p.Parsetree.ast_loc)
+      if not (urec_norm tl_pats p typing_env) then (
+        (* Only print a warning if no error raising was requested. *)
+        if (Configuration.get_pmatch_err_as_warn ()) then
+          Format.eprintf
+            "%a:@\n@[%tWarning:%t Useless@ case@ in@ pattern-matching.@]@."
+            Location.pp_location p.Parsetree.ast_loc
+            Handy.pp_set_bold Handy.pp_reset_effects
+        else raise (Match_useless_case p.Parsetree.ast_loc)
+       )
 ;;
-(*
-      Format.eprintf
-        "%a:@\n@[%tWarning:%tPattern-matching@ is@ not@ exhaustive.@]@."
-         Handy.pp_set_bold Handy.pp_reset_effects
-         Location.pp_location p.Parsetree.ast_loc
-
-      Format.eprintf
-        "%a:@\n@[%tWarning:%Useless@ case@ in@ pattern-matching.@]@."
-         Handy.pp_set_bold Handy.pp_reset_effects
-         Location.pp_location p.Parsetree.ast_loc
-*)
 
 
 
@@ -330,7 +326,15 @@ let verify typing_env m_expr =
       let (pats, _) = List.split pattern_expr_list in
       let res = urec_norm pats dummy_wild_pattern typing_env in
       check_usefulness (List.rev pats) typing_env ;
-      if res then raise (Match_not_exhaustive m_expr.Parsetree.ast_loc)
+      if res then (
+        (* Only print a warning if no error raising was requested. *)
+        if (Configuration.get_pmatch_err_as_warn ()) then
+          Format.eprintf
+            "%a:@\n@[%tWarning:%t Pattern-matching@ is@ not@ exhaustive.@]@."
+            Location.pp_location m_expr.Parsetree.ast_loc
+            Handy.pp_set_bold Handy.pp_reset_effects
+        else raise (Match_not_exhaustive m_expr.Parsetree.ast_loc)
+       )
   | _ -> assert false
 ;;
 

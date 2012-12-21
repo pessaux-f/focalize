@@ -303,6 +303,10 @@ let main () =
        "  Specify the OCaml compiler mode. Can be \"byt\" for bytecode\n\
      \    compilation, \"bin\" for native code compilation, or \"both\" for bytecode\n\
      \    and native code compilation.");
+      ("-pmatch-err-as-warn",
+       Arg.Unit Configuration.set_pmatch_err_as_warn,
+       "  Consider uncomplete/useless pattern-matching as warnings\n\
+     \    instead of errors.");
       ("-pretty",
        Arg.String Configuration.set_pretty_print,
        "<output>  Pretty-print the parse tree of the FoCaLize file as a\n\

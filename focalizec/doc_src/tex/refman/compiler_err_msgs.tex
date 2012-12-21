@@ -1,4 +1,3 @@
-% $Id: compiler_err_msgs.tex,v 1.39 2009-08-25 12:30:58 weis Exp $
 
 
 
@@ -934,6 +933,51 @@ let rec f (x) =
 
 {\em Hints}: None
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Pattern-matching is not exhaustive.}
+
+{\em Description}: The pointed pattern-matching expression doesn't
+handle all the shapes of possible incoming values according to the
+type of the matched expression. If such a non-handled value arises at
+runtime, execution will be aborted. Moreover, {\coq} will reject
+generated code.
+
+{\em Hints}: Complete the pattern-matching by adding cases covering
+all the possible shapes of values. Inspect the type definition related
+to the matched expression to find the missing constructors. The
+ultimate {\em bullet-proof} solution is to add a ``catch-all''
+pattern, although it is not always the suitable solution: study if all
+the remaining cases require the same process.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Useless case in pattern-matching.}
+
+{\em Description}: The pointed pattern-matching expression contains a
+case already caught by a previous one. Hence, this useless case will
+never be followed.
+
+{\em Hints}: Remove the spurious case. But before, make sure you
+didn't write above a pattern using a variable instead of a value
+constructor. Another common error is to use in a pattern, a variable wearing
+the same name than a previously bound one, thinking that
+pattern-matching will test equality of the matched value with the
+value of this previously bound variable. For instance:
+
+{\scriptsize
+\begin{lstlisting}
+let var = 3 in
+match (var + 0) with
+  | var -> false
+  | _ -> true
+\end{lstlisting}}
+
+\noindent will {\bf not} check that the matched value ($4$) is equal to the
+value of \lstinline"var". In the pattern, \lstinline"var" is a new
+identifier that will be bound to the value of the matched expression,
+here to $3$. Hence, in this case the first branch is always taken, leaving the
+second one useless.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
