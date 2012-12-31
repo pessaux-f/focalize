@@ -2,7 +2,6 @@
 $(focal)
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.9 2009-12-22 15:29:51 habib Exp $ -->
 
 <div id="container">
 <div id="header">
@@ -99,7 +98,7 @@ Algebra Systems available.
 
 <div id="main">
 
-<h3>New release of the $(focal) environment soon (hope for December 2012)<h3>
+<h3>New release of the $(focal) environment soon (for January 2013)<h3>
 
 <p>
 A new release of the $(focal) environment, 
