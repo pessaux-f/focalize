@@ -14,6 +14,9 @@
 #                                                                      #
 #**********************************************************************#
 
+# To manually install:
+# scp *.html pessaux@modulogic.inria.fr:/home/www/focalize/resources/
+
 ROOT_DIR=../..
 
 THIS_DIR=resources

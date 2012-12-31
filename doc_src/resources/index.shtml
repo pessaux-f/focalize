@@ -95,6 +95,14 @@ on Programming Languages and Analysis for Security (PLAS 2012) pages
 sécurisés avec l'atelier Focalize. <a href="http://jfla.inria.fr/2012/index.html">23èmes Journées
 Francophones des Langages Applicatifs (JFLA 2012)</a>, 2012. <br>
 </li>
+<li>Renaud Rioboo. Compiler les polynômes en FoCaLiZe ? Journ&eacute;e
+SSURF, 29th June 2012
+<a href="http://www-spi.lip6.fr/~jaume/RR29062010.pdf">Pdf</a></li>
+<li>David Delahaye, Catherine Dubois, Pierre-Nicolas
+Tollitte. G&eacute;n&eacute;ration de code fonctionnel certifi&eacute;
+&agrave; partir de sp&eacute;cifications dans l'environnement
+FoCaLiZe. Journ&eacute;e SSURF, 29th June 2012
+<a href="http://www-spi.lip6.fr/~jaume/PNT29062010.pdf">Pdf</a></li>
 <li>
 P. Ayrault, M. Carlier, D. Delahaye, C. Dubois, D. Doligez,
 L. Habib, T. Hardin, M. Jaume, C. Morisset, F. Pessaux, R. Rioboo and P. Weis.
@@ -330,6 +338,12 @@ Bibtex</a>
 <p>
 <ul>
 <li>
+Philippe Ayrault. Développement de logiciels critiques en
+  Focalize. Méthodologie et outils pour l'évaluation de
+  conformité. Th&egrave;se de doctorat, April 2011.
+<br />
+</li>
+<li>
 Mathieu Jaume. Descriptions formelles : Comprendre, corriger,
 implanter, r&eacute;utiliser. Application au contr&ocirc;le
 d'acc&egrave;s. Habilitation &agrave; Diriger des Recherches, November 2008.
@@ -378,7 +392,6 @@ Postscript</a>-
 href="http://focal.inria.fr/site/images/stories/articles/boulme_these.bibtex">
 Bibtex</a>
 </li>
-<br /> <br /> <br />
 <li>
 Lionel Habib. Formalisation, comparaison et implantation d'un
 mod&egrave;le de contr&ocirc;le d'acc&egrave;s &agrave; base de
