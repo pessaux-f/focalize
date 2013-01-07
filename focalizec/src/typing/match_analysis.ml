@@ -3,11 +3,12 @@
 (*                        FoCaLiZe compiler                                   *)
 (*                                                                            *)
 (*            Pierre-Nicolas Tollitte                                         *)
+(*            François Pessaux                                                *)
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
@@ -20,48 +21,43 @@ exception Match_useless_case of Location.t ;;
 
 
 
-(** {b Descr}: Make a dummy ast from an ast_desc. *)
-let get_dummy_ast a = {
-  Parsetree.ast_loc = Location.none ;
-  Parsetree.ast_desc = a ;
-  Parsetree.ast_annot = [] ;
-  Parsetree.ast_type = Parsetree.ANTI_none }
-;;
-
-
-
-(** {b Descr}: Make a dummy constructor ident from a name. *)
-let constructor_ident_of_constructor_name n =
-  get_dummy_ast (Parsetree.CI (get_dummy_ast (Parsetree.I_local n)))
-;;
-
-
-
-(** {b Descr}: Get all constructors defined in the current environment. *)
-let focalize_get_all_constructors typing_env =
-  let get_constr_def cn =
-    let ci = constructor_ident_of_constructor_name cn in
-    (ci,
-     Env.TypingEnv.find_constructor
-       ~loc: Location.none ~current_unit: "" ci typing_env) in
-  let constr = Env.get_constructor_list typing_env in
-  List.map get_constr_def constr
-;;
-
-
-
-(** {b Descr}: Get the constructors of a special type *)
-let get_constructors_of_a_type t typing_env =
-  let rec is_ok typ  =
-    let nok _ = false in
-    let nok2 _ _ = false in
-    let farrow _t1 t2 = is_ok t2 in
-    let fconstruct _ tn _args = (tn = t) in
-      Types.extract_type_simple nok farrow nok nok fconstruct nok nok2 typ in
-  let cons = focalize_get_all_constructors typing_env in
-  List.filter
-    (fun r -> is_ok (Types.specialize (snd r).Env.TypeInformation.cstr_scheme))
-    cons
+(* ************************************************************************** *)
+(** {b Descr}: Get the constructors of a type assumed this type is a construct
+    (i.e. named) sum type. Returns some [Parsetree.constructor_name]s.
+    {b Rem}: [Unsure] Doesn't handle record types.                            *)
+(* ************************************************************************** *)
+let get_constructors_of_a_type ~current_unit ty typing_env =
+  match Types.of_which_construct_type ty with
+  | None -> []       (* Not a named type: so, no constructors. *)
+  | Some type_name -> (
+      (* Ok, we've got a named type. Now recover its hosting module and its
+         constructor name. *)
+      let (host_mod, ty_cstr_name) = Types.split_type_constructor type_name in
+      (* Build a [Parsetree.ident] from these 2 parts. *)
+      let ty_cstr_ident = {
+        Parsetree.ast_loc = Location.none ;
+        Parsetree.ast_desc = 
+          Parsetree.I_global
+            (Parsetree.Qualified
+               (host_mod, (Parsetree.Vlident ty_cstr_name))) ;
+        Parsetree.ast_annot = [] ;
+        Parsetree.ast_type = Parsetree.ANTI_none } in
+      (* Find this type's definition in the typing environment. *)
+try
+      let ty_descr =
+        Env.TypingEnv.find_type
+          ~loc: Location.none ~current_unit ty_cstr_ident typing_env in
+      (* Now, inspect the type definition to find its possible constructors we
+         only have constructors in case of sum type definition, i.e. in case
+         the [type_kind] is [TK_variant]. *)
+      match ty_descr.Env.TypeInformation.type_kind with
+      | Env.TypeInformation.TK_variant val_cstrs ->
+          List.map (fun (cn, _, _) -> cn) val_cstrs
+      | _ -> []
+with
+any -> Format.eprintf "FUCK: %a@." Sourcify.pp_ident ty_cstr_ident;
+raise any
+     )
 ;;
 
 
@@ -109,8 +105,17 @@ let expand_patterns pats =
 
 
 
-(** {b Descr}: Extracts a string from a constructor identifier. *)
-let string_of_ci ci =
+(* ************************************************************************** *)
+(** {b Descr}: Extracts a string from a constructor identifier representing
+    only it's name without anymore hosting module (or qualification)
+    information. This is used to compare the constructors found in patterns
+    and the available constructors of the type of matched values.
+    {b Rem}: Since typechecking has been done, we are sure that hosting
+    modules of constructors in patterns match the ones of matched values.
+    For this reason we can safely ignore these hosting modules (i.e. the
+    full qualification of the names).                                         *)
+(* ************************************************************************** *)
+let string_of_constructor_ident ci =
   match ci.Parsetree.ast_desc with
   | Parsetree.CI ident -> (
       match ident.Parsetree.ast_desc with
@@ -183,12 +188,12 @@ let normalize_matrix p =
 (** {b Descr}: Specializes a matrix for the urec algorithm. *)
 let spec_matrix ci cargs_count p q =
   let spec_vector rows pi = match (List.hd pi).Parsetree.ast_desc with
-    | Parsetree.P_constr(ci', pats') when
-             (string_of_ci ci') = (string_of_ci ci) ->
-      (pats' @ (List.tl pi))::rows
-    | Parsetree.P_wild | Parsetree.P_const _ | Parsetree.P_var _ ->
-      ((repeat_pattern (List.hd pi) cargs_count)@(List.tl pi))::rows
-    | _ -> rows in
+  | Parsetree.P_constr (ci', pats') when
+        (string_of_constructor_ident ci') = (string_of_constructor_ident ci) ->
+      (pats' @ (List.tl pi)) :: rows
+  | Parsetree.P_wild | Parsetree.P_const _ | Parsetree.P_var _ ->
+      ((repeat_pattern (List.hd pi) cargs_count) @ (List.tl pi)) :: rows
+  | _ -> rows in
   let p' = List.fold_left spec_vector [] p in
   let q' = List.hd (spec_vector [] q) in
   (normalize_matrix p'), q'
@@ -223,65 +228,62 @@ let rec default_matrix p = match p with
 
 
 
-(** {b Descr}: Extracts the name of a sum type. *)
-let string_of_sum_type t =
-  let def _ = "" in
-  let def2 _ _ = "" in
-  let fconstruct _ s _ = s in
-  Types.extract_type_simple def def2 def def fconstruct def def2 t
-;;
-
-
-
 (** {b Descr}: Implements the Urec algorithm. *)
-let rec urec p q typing_env =
-  match (p, q) with
-  | ([], _) -> true
-  | (([] :: _), _) -> false
-  | (_, (q1 :: tail_q)) -> (
-      match q1.Parsetree.ast_desc with
-      | Parsetree.P_constr (ci, pats) -> (* q1 is a constructed pattern *)
-          let p', q' = spec_matrix ci (List.length pats) p q in
-          urec p' q' typing_env
-      | Parsetree.P_wild | Parsetree.P_const _
-      | Parsetree.P_var _ -> (* q1 is a wildcard *)
-          let first_col, _ = matrix_one_col_out p in
-          let found_cstrs = constructors_list first_col in
-          (match found_cstrs with
-          | [] -> urec (default_matrix p) tail_q typing_env
-          | (_, _, some_cstr) :: _ ->
-              let t =
-                (match some_cstr.Parsetree.ast_type with
-                | Parsetree.ANTI_type st -> string_of_sum_type st
-                | _ -> assert false) in
-              let all_cstrs = get_constructors_of_a_type t typing_env in
-              let complete_sig =
-                List.for_all
-                  (fun (ci, _) ->
-                    List.exists
-                      (fun (ci', _, _) ->
-                        (string_of_ci ci) = (string_of_ci ci'))
-                      found_cstrs)
-                  all_cstrs in
-              if complete_sig then
-                List.exists
-                  (fun (c, count, _) ->
-                    let p', q' = spec_matrix c count p q in
-                    urec p' q' typing_env)
-                  found_cstrs
-              else urec (default_matrix p) tail_q typing_env
-          )
-      | _ -> assert false
-     )
-  | _ -> assert false
+let urec ~current_unit initial_p initial_q typing_env =
+  (* Just a local function to save passign each time the current compilation
+     unit and the typing environment. *)
+  let rec local_urec p q =
+    match (p, q) with
+    | ([], _) -> true
+    | (([] :: _), _) -> false
+    | (_, (q1 :: tail_q)) -> (
+        match q1.Parsetree.ast_desc with
+        | Parsetree.P_constr (ci, pats) -> (* q1 is a constructed pattern *)
+            let (p', q') = spec_matrix ci (List.length pats) p q in
+            local_urec p' q'
+        | Parsetree.P_wild | Parsetree.P_const _
+        | Parsetree.P_var _ -> (* q1 is a wildcard *)
+            let (first_col, _) = matrix_one_col_out p in
+            let found_cstrs = constructors_list first_col in
+            (match found_cstrs with
+            | [] -> local_urec (default_matrix p) tail_q
+            | (_, _, some_cstr) :: _ ->
+                let ty =
+                  (match some_cstr.Parsetree.ast_type with
+                  | Parsetree.ANTI_type t -> t
+                  | _ -> assert false) in
+                let all_cstrs =
+                  get_constructors_of_a_type ~current_unit ty typing_env in
+                let complete_sig =
+                  List.for_all
+                    (fun ci ->
+                      let ci_as_string = Parsetree_utils.name_of_vname ci in
+                      List.exists
+                        (fun (ci', _, _) ->
+                          ci_as_string = (string_of_constructor_ident ci'))
+                        found_cstrs)
+                    all_cstrs in
+                if complete_sig then
+                  List.exists
+                    (fun (c, count, _) ->
+                      let (p', q') = spec_matrix c count p q in
+                      local_urec p' q')
+                    found_cstrs
+                else local_urec (default_matrix p) tail_q
+            )
+        | _ -> assert false
+       )
+    | _ -> assert false in
+  (* Now, really do the job. *)
+  local_urec initial_p initial_q
 ;;
 
 
 
 (** {b Descr}: Normalize the patterns and use the urec algorithm. *)
-let urec_norm pats qpat typing_env =
+let urec_norm ~current_unit pats qpat typing_env =
   match normalize (qpat :: pats) with
-  | q::p -> urec p q typing_env
+  | q::p -> urec ~current_unit p q typing_env
   | _ -> assert false
 ;;
 
@@ -298,13 +300,13 @@ let dummy_wild_pattern =
 
 
 (** {b Descr}: Patterns usefulness check. *)
-let rec check_usefulness pats typing_env =
+let rec check_usefulness ~current_unit pats typing_env =
   match pats with
   | [] -> ()
   | [ _ ] -> ()
   | p :: tl_pats ->
-      check_usefulness tl_pats typing_env ;
-      if not (urec_norm tl_pats p typing_env) then (
+      check_usefulness ~current_unit tl_pats typing_env ;
+      if not (urec_norm ~current_unit tl_pats p typing_env) then (
         (* Only print a warning if no error raising was requested. *)
         if (Configuration.get_pmatch_err_as_warn ()) then
           Format.eprintf
@@ -317,15 +319,15 @@ let rec check_usefulness pats typing_env =
 
 
 
-(** {b Descr}: Verify a pattern matching expression. Checks for exhaustivity
+(** {b Descr}: Verify a pattern-matching expression. Checks for exhaustivity
     and absence of useless pattern. Doesn't return any validity result. Instead,
     issues warnings or exception raising in case of problem. *)
-let verify typing_env m_expr =
+let verify ~current_unit typing_env m_expr =
   match m_expr.Parsetree.ast_desc with
   | Parsetree.E_match (_, pattern_expr_list) ->
       let (pats, _) = List.split pattern_expr_list in
-      let res = urec_norm pats dummy_wild_pattern typing_env in
-      check_usefulness (List.rev pats) typing_env ;
+      let res = urec_norm ~current_unit pats dummy_wild_pattern typing_env in
+      check_usefulness ~current_unit (List.rev pats) typing_env ;
       if res then (
         (* Only print a warning if no error raising was requested. *)
         if (Configuration.get_pmatch_err_as_warn ()) then
@@ -345,17 +347,18 @@ let verify typing_env m_expr =
 
     {b Visibility}: Expored outside this module.                              *)
 (* ************************************************************************** *)
-let rec verify_matchings typing_env stuff_to_compile =
+let rec verify_matchings ~current_unit typing_env stuff_to_compile =
   match stuff_to_compile with
   | Infer.PCM_species (species_def, _, _) ->
-      verify_matchings_species typing_env species_def
-  | Infer.PCM_let_def (let_def, _) -> verify_matchings_let typing_env let_def
-  | Infer.PCM_expr expr -> verify_matchings_expr typing_env expr
+      verify_matchings_species ~current_unit typing_env species_def
+  | Infer.PCM_let_def (let_def, _) ->
+      verify_matchings_let ~current_unit typing_env let_def
+  | Infer.PCM_expr expr -> verify_matchings_expr ~current_unit typing_env expr
   | _ -> ()
 
 
 
-and verify_matchings_species typing_env species_def =
+and verify_matchings_species ~current_unit typing_env species_def =
   let species_def_desc = species_def.Parsetree.ast_desc in
   if Configuration.get_verbose () then
     Format.eprintf
@@ -364,71 +367,73 @@ and verify_matchings_species typing_env species_def =
   List.iter
     (fun spe_field ->
       match spe_field.Parsetree.ast_desc with
-      | Parsetree.SF_let let_def -> verify_matchings_let typing_env let_def
+      | Parsetree.SF_let let_def ->
+          verify_matchings_let ~current_unit typing_env let_def
       | _ -> ())
     species_def_desc.Parsetree.sd_fields
 
 
 
-and verify_matchings_let typing_env let_def =
+and verify_matchings_let ~current_unit typing_env let_def =
   List.iter
     (fun binding ->
       match binding.Parsetree.ast_desc.Parsetree.b_body with
       | Parsetree.BB_logical logical_expr ->
-          verify_matchings_logexpr typing_env logical_expr
+          verify_matchings_logexpr ~current_unit typing_env logical_expr
       | Parsetree.BB_computational expr ->
-          verify_matchings_expr typing_env expr)
+          verify_matchings_expr ~current_unit typing_env expr)
     let_def.Parsetree.ast_desc.Parsetree.ld_bindings
 
 
 
-and verify_matchings_logexpr typing_env logical_expr =
+and verify_matchings_logexpr ~current_unit typing_env logical_expr =
   match logical_expr.Parsetree.ast_desc with
     | Parsetree.Pr_forall (_ ,_ , logical_expr)
     | Parsetree.Pr_exists (_ , _, logical_expr)
     | Parsetree.Pr_not logical_expr | Parsetree.Pr_paren logical_expr ->
-        verify_matchings_logexpr typing_env logical_expr
+        verify_matchings_logexpr ~current_unit typing_env logical_expr
     | Parsetree.Pr_imply (le1, le2) | Parsetree.Pr_or (le1, le2)
     | Parsetree.Pr_and (le1, le2) | Parsetree.Pr_equiv (le1, le2) ->
-        verify_matchings_logexpr typing_env le1 ;
-        verify_matchings_logexpr typing_env le2
-  | Parsetree.Pr_expr expr -> verify_matchings_expr typing_env expr
+        verify_matchings_logexpr ~current_unit typing_env le1 ;
+        verify_matchings_logexpr ~current_unit typing_env le2
+  | Parsetree.Pr_expr expr ->
+      verify_matchings_expr ~current_unit typing_env expr
 
 
 
-and verify_matchings_expr typing_env expr =
+and verify_matchings_expr ~current_unit typing_env expr =
   match expr.Parsetree.ast_desc with
   | Parsetree.E_paren expr | Parsetree.E_record_access (expr, _)
   | Parsetree.E_fun (_, expr) ->
-      verify_matchings_expr typing_env expr
+      verify_matchings_expr ~current_unit typing_env expr
   | Parsetree.E_app (expr, expr_list) ->
-      verify_matchings_expr typing_env expr ;
-      List.iter (verify_matchings_expr typing_env) expr_list
+      verify_matchings_expr ~current_unit typing_env expr ;
+      List.iter (verify_matchings_expr ~current_unit typing_env) expr_list
   | Parsetree.E_tuple expr_list
   | Parsetree.E_sequence expr_list
   | Parsetree.E_constr (_, expr_list) ->
-      List.iter (verify_matchings_expr typing_env) expr_list
+      List.iter (verify_matchings_expr ~current_unit typing_env) expr_list
   | Parsetree.E_if (expr1, expr2, expr3) ->
-      verify_matchings_expr typing_env expr1 ;
-      verify_matchings_expr typing_env expr2 ;
-      verify_matchings_expr typing_env expr3
+      verify_matchings_expr ~current_unit typing_env expr1 ;
+      verify_matchings_expr ~current_unit typing_env expr2 ;
+      verify_matchings_expr ~current_unit typing_env expr3
   | Parsetree.E_let (let_def, expr) ->
-      verify_matchings_let typing_env let_def ;
-      verify_matchings_expr typing_env expr
+      verify_matchings_let ~current_unit typing_env let_def ;
+      verify_matchings_expr ~current_unit typing_env expr
   | Parsetree.E_record label_expr_list ->
       List.iter
-        (fun (_, e) -> verify_matchings_expr typing_env e)
+        (fun (_, e) -> verify_matchings_expr ~current_unit typing_env e)
         label_expr_list
   | Parsetree.E_record_with (expr, label_expr_list) ->
-      verify_matchings_expr typing_env expr ;
+      verify_matchings_expr ~current_unit typing_env expr ;
       List.iter
-        (fun (_, e) -> verify_matchings_expr typing_env e)
+        (fun (_, e) -> verify_matchings_expr ~current_unit typing_env e)
         label_expr_list
   | Parsetree.E_match (expr2, pattern_expr_list) ->
-      verify typing_env expr ;
-      verify_matchings_expr typing_env expr2 ;
+      (* verify ~current_unit typing_env expr ; *) (* Disabled for release. *)
+      verify_matchings_expr ~current_unit typing_env expr2 ;
       List.iter
-        (fun (_, e) -> verify_matchings_expr typing_env e)
+        (fun (_, e) -> verify_matchings_expr ~current_unit typing_env e)
         pattern_expr_list
   | _ -> ()
 ;;

@@ -293,7 +293,7 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
 
 (* ************************************************************************* *)
 (* fname -> string -> type_name                                              *)
-(** {b Descr } : Creates a type constructor whose basic name is
+(** {b Descr} : Creates a type constructor whose basic name is
     [constructor_name] and hosting module is [hosting_module].
     For instance, "int" coming from the module "basics.foc" will be
     represented by [("basics", "int")].
@@ -305,6 +305,14 @@ let (begin_definition, end_definition, current_binding_level, type_variable) =
 let make_type_constructor hosting_module constructor_name =
   (hosting_module, constructor_name)
 ;;
+
+
+
+(* ************************************************************************** *)
+(* {b Descr}: Dissecate a type constructor to provide separately its hosting
+   module and the constructor's name. Obviously, this is identity !           *)
+(* ************************************************************************** *)
+let split_type_constructor type_name = (type_name : (fname * string)) ;;
 
 
 
@@ -378,6 +386,21 @@ let is_bool_type ty =
   match ty with
    | ST_construct (("basics", "bool"), []) -> true
    | _ -> false
+;;
+
+
+
+(* *************************************************************************** *)
+(** {b Descr}: Checks if the type is a construct type (i.e. a named type) and
+    if so, returns its "type name" (i.e. module and type constructor names).
+    Otherwise (not a named type): returns None.
+    {b Rem}: This is used for pattern-matching checks to finally get the value
+    constructors of a type if it has some.                                     *)
+(* *************************************************************************** *)
+let of_which_construct_type ty =
+  match repr ty with
+  | ST_construct (type_name, _) -> Some type_name
+  | _ -> None
 ;;
 
 

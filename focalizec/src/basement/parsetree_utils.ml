@@ -406,7 +406,7 @@ let unqualified_vname_of_ident ident =
     {b Ret} :
       - Parsetree.vname : The [vname] contained in the [constructor_ident].
 
-    {b Exported} : Yes.                                                       *)
+    {b Exported} : Yes.                                                      *)
 (* ************************************************************************* *)
 let unqualified_vname_of_constructor_ident ident =
   let Parsetree.CI ident = ident.Parsetree.ast_desc in

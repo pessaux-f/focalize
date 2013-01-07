@@ -39,6 +39,7 @@ val begin_definition : unit -> unit
 val end_definition : unit -> unit
 
 val make_type_constructor : fname -> string -> type_name
+val split_type_constructor : type_name -> (fname * string)
 val type_variable : unit -> type_simple
 
 
@@ -65,6 +66,7 @@ val type_rep_species :
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
 val is_bool_type : type_simple -> bool
+val of_which_construct_type : type_simple -> type_name option
 
 val type_sum_arguments_from_type_tuple : type_simple -> type_simple
 val refers_to_self_p : type_simple -> bool

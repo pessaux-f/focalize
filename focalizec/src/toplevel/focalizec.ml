@@ -8,8 +8,8 @@
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
@@ -67,11 +67,12 @@ let compile_fcl input_file_name =
   (* Typechecks the AST. *)
   let (typing_toplevel_env, stuff_to_compile) =
     Infer.typecheck_file ~current_unit scoped_ast in
-  (* Verify pattern matching soundness. *)
+  (* Verify pattern-matching soundness. *)
   if Configuration.get_verbose () then
     Format.eprintf "Checking pattern-matching exhaustivity.@." ;
   List.iter
-    (Match_analysis.verify_matchings typing_toplevel_env) stuff_to_compile ;
+    (Match_analysis.verify_matchings ~current_unit typing_toplevel_env)
+    stuff_to_compile ;
   (* Generate the documentation if requested. *)
   if Configuration.get_focalize_doc () then
     Main_docgen.gen_doc_please_compile_me
