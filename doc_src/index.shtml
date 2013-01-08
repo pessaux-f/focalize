@@ -5,7 +5,7 @@ $(focal)
 
 <div id="container">
 <div id="header">
-<h1>The $(focal) essential</h1>
+<h1>The $(focal) Essential</h1>
 <br />
 <hr />
 </div>
@@ -41,6 +41,8 @@ Welcome to the $(focal) website. This site offers information
 about $(focal), some documentation about the language and its
 compiler, some training opportunities, and of course, the latest release of
 $(focal).
+<br>
+Overview comes first but more recent news follow below...
 </p>
 
 </div>
