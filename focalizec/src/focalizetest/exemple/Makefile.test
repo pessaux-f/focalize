@@ -3,12 +3,15 @@
 FOCC=focalizec
 FOCAL_LIB=$(shell $(FOCC) -where | cut -d ' ' -f 2)
 
+OCAMLC_FLAGS=
 FOCTEST=focalizetest
-OCAMLC=$(HOME)/pkg/focalize-0.7.0/bin/ocamlc
+OCAMLC=ocamlc
 
-FOCCOPTS="-no-coq-code" $(FOCALIZEC_FLAGS)
+FOCCOPTS="-no-coq-code"
 OCAMLOPTS= -w a -I $(FOCAL_LIB) $(OCAMLC_FLAGS)
 # The file to generate 
+
+FOCTEST_OPTS=-v -t $(NUMBER_OF_TEST) -S $(SIZE_OF_ELEM) -s $(SPECIES) -sicstus -p $(PROPERTIES) $(FOCALIZEC_FLAGS)
 
 ###
 EXEC=$(patsubst %.xml,%,$(XMLFILE))
@@ -24,7 +27,7 @@ harness: $(EXEC).fcl
 
 $(EXEC).html:$(EXEC).xml
 	cp $(XSLTPATH)/test_report.css . 
-	/Users/carlier/.local/bin/xsltproc $(XSLTPATH)/test_report.xslt $(EXEC).xml >$(EXEC).html
+	xsltproc $(XSLTPATH)/test_report.xslt $(EXEC).xml >$(EXEC).html
 
 
 # When we have the .fo file, the .cmo are in the directory 
