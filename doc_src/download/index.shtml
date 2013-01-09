@@ -16,6 +16,30 @@ $(focal) downloads
 <div class="spacer"></div>
 
 <div id="main">
+<h3>The public GIT repository<h3>
+<p>
+A public GIT repository can be accessed to get the latest development
+version of $(focal). However, its content is not bullet-proof and may
+be unstable at some times. It reflects the real-time state of $(focal)
+and may bring fixes and features not available in previous releases
+and that will be part of the next release.
+<br />
+To clone the current $(focal) GIT repository, invoke:
+<br />
+<code>   git clone http://focalize.inria.fr/focalize.git</code>
+<p>
+This will create a <code>focalize</code> repository in your current directory.
+Once cloned, it is possible to fetch updates with the usual GIT
+commands (essentially <code>git pull origin master</code>). Note that
+this access being public, it doesn't allow pushing (i.e. submitting)
+modifications done in the sources tree.
+</div>
+
+
+<div class="spacer"></div>
+
+
+<div id="main">
 <h3>The latest release (as of $(the_iso_date))<h3>
 <p>
 <a href="$(project_archive_name)">$(project_archive_name)</a> (tar-gzip).
