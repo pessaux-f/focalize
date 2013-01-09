@@ -22,6 +22,20 @@ http://focalize.inria.fr/download/focalize-0.8.0.tgz
 Uncompress, extract, then read the INSTALL file in the newly created
 directory focalize.0.8.0 and follow the simple instructions written there.
 
+
+A public GIT repository is also available, allowing to fetch the latest
+development state of FoCaLiZe. However, its content is not bullet-proof and
+may be unstable at some times. It reflects the real-time state of FoCaLiZe
+and may bring fixes and features not available in previous releases and that
+will be part of the next release.
+To clone the current FoCaLiZe GIT repository, invoke: 
+   git clone http://focalize.inria.fr/focalize.git
+This will create a focalize repository in your current directory. Once cloned,
+it is possible to fetch updates with the usual GIT commands (essentially git
+pull origin master). Note that this access being public, it doesn't allow
+pushing (i.e. submitting) modifications done in the sources tree.
+
+
 To join people and discussions write to focalize-users@inria.fr.
 Implementors also listen to suggestions and compliments at mail adress
 focalize-devel@inria.fr.
