@@ -42,21 +42,27 @@ let get_constructors_of_a_type ~current_unit ty typing_env =
                (host_mod, (Parsetree.Vlident ty_cstr_name))) ;
         Parsetree.ast_annot = [] ;
         Parsetree.ast_type = Parsetree.ANTI_none } in
-      (* Find this type's definition in the typing environment. *)
-try
-      let ty_descr =
-        Env.TypingEnv.find_type
-          ~loc: Location.none ~current_unit ty_cstr_ident typing_env in
-      (* Now, inspect the type definition to find its possible constructors we
-         only have constructors in case of sum type definition, i.e. in case
-         the [type_kind] is [TK_variant]. *)
-      match ty_descr.Env.TypeInformation.type_kind with
-      | Env.TypeInformation.TK_variant val_cstrs ->
-          List.map (fun (cn, _, _) -> cn) val_cstrs
-      | _ -> []
-with
-any -> Format.eprintf "FUCK: %a@." Sourcify.pp_ident ty_cstr_ident;
-raise any
+      (* Find this type's definition in the typing environment. Since the
+         typechecking pass is done, this should never fail. *)
+      try
+        let ty_descr =
+          Env.TypingEnv.find_type
+            ~loc: Location.none ~current_unit ty_cstr_ident typing_env in
+        (* Now, inspect the type definition to find its possible constructors we
+           only have constructors in case of sum type definition, i.e. in case
+           the [type_kind] is [TK_variant] but also [TK_external] since these
+           latter can have mapped value constructors. *)
+        match ty_descr.Env.TypeInformation.type_kind with
+        | Env.TypeInformation.TK_variant val_cstrs ->
+            List.map (fun (cn, _, _) -> cn) val_cstrs
+        | Env.TypeInformation.TK_external (_, mapping) ->
+            (* External types may also have constructors. *)
+            List.map
+              (fun binding -> fst binding.Parsetree.ast_desc)
+              mapping.Parsetree.ast_desc
+        | Env.TypeInformation.TK_abstract
+        | Env.TypeInformation.TK_record _ -> []
+      with  _ -> assert false
      )
 ;;
 
@@ -201,14 +207,18 @@ let spec_matrix ci cargs_count p q =
 
 
 
-(** {b Descr}: Gets the list of root constructors of a matrix column. *)
-let rec constructors_list col = match col with
+(** {b Descr}: Gets the list of root constructors of a matrix column.
+    {b Rem}: [Unsure] Doesn't process constant patterns ! This means that int and
+    so on are considered having no constructors ! This cause analysis to be
+    broken on types other than sum types. *)
+let rec head_constructors_from_list col =
+  match col with
   | [] -> []
   | p :: tl -> (
       match p.Parsetree.ast_desc with
       | Parsetree.P_constr (ci, al) ->
-          (ci, List.length al, p) :: (constructors_list tl)
-      | _ -> constructors_list tl
+          (ci, List.length al, p) :: (head_constructors_from_list tl)
+      | _ -> head_constructors_from_list tl
      )
 ;;
 
@@ -230,7 +240,7 @@ let rec default_matrix p = match p with
 
 (** {b Descr}: Implements the Urec algorithm. *)
 let urec ~current_unit initial_p initial_q typing_env =
-  (* Just a local function to save passign each time the current compilation
+  (* Just a local function to save passing each time the current compilation
      unit and the typing environment. *)
   let rec local_urec p q =
     match (p, q) with
@@ -244,31 +254,36 @@ let urec ~current_unit initial_p initial_q typing_env =
         | Parsetree.P_wild | Parsetree.P_const _
         | Parsetree.P_var _ -> (* q1 is a wildcard *)
             let (first_col, _) = matrix_one_col_out p in
-            let found_cstrs = constructors_list first_col in
-            (match found_cstrs with
+            let patterns_cstrs = head_constructors_from_list first_col in
+            (match patterns_cstrs with
             | [] -> local_urec (default_matrix p) tail_q
             | (_, _, some_cstr) :: _ ->
                 let ty =
                   (match some_cstr.Parsetree.ast_type with
                   | Parsetree.ANTI_type t -> t
                   | _ -> assert false) in
-                let all_cstrs =
+                let all_ty_cstrs =
                   get_constructors_of_a_type ~current_unit ty typing_env in
+                (* For any constructor found in the type definition, check if
+                   it belongs to the patterns constructors. If so, the signature
+                   is complete. *)
                 let complete_sig =
                   List.for_all
                     (fun ci ->
                       let ci_as_string = Parsetree_utils.name_of_vname ci in
+                      (* Look for the corresponding constructor in the patterns
+                         constructors. *)
                       List.exists
                         (fun (ci', _, _) ->
                           ci_as_string = (string_of_constructor_ident ci'))
-                        found_cstrs)
-                    all_cstrs in
+                        patterns_cstrs)
+                    all_ty_cstrs in
                 if complete_sig then
                   List.exists
                     (fun (c, count, _) ->
                       let (p', q') = spec_matrix c count p q in
                       local_urec p' q')
-                    found_cstrs
+                    patterns_cstrs
                 else local_urec (default_matrix p) tail_q
             )
         | _ -> assert false
@@ -430,7 +445,7 @@ and verify_matchings_expr ~current_unit typing_env expr =
         (fun (_, e) -> verify_matchings_expr ~current_unit typing_env e)
         label_expr_list
   | Parsetree.E_match (expr2, pattern_expr_list) ->
-      (* verify ~current_unit typing_env expr ; *) (* Disabled for release. *)
+      verify ~current_unit typing_env expr ; (* Disabled for release. *)
       verify_matchings_expr ~current_unit typing_env expr2 ;
       List.iter
         (fun (_, e) -> verify_matchings_expr ~current_unit typing_env e)

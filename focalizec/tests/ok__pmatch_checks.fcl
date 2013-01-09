@@ -1,0 +1,99 @@
+open "basics" ;;
+
+(* CORRECT. *)
+let f0 (x) =
+  match (x) with
+  | [] -> 1
+  | _ :: _ -> 0
+;;
+
+(* NON-EXAUSTIVE *)
+let f1 (x) =
+  match (x) with
+  | [] -> 1
+;;
+
+(* CORRECT. *)
+let f2 (x) =
+  match (x) with
+  | [] -> 1
+  | _ -> 0
+;;
+
+(* REDUNDANT. *)
+let f3 (x) =
+  match (x) with
+  | [] -> 1
+  | _ :: _ -> 0
+  | _ -> 2
+;;
+
+(* REDUNDANT. *)
+let f4 (x) =
+  match (x) with
+  | [] -> 1
+  |  _ :: _ -> 0
+  | 1 :: _ -> 2
+;;
+
+type t =
+ | A 
+ | B (int, t)
+;;
+
+(* CORRECT. *)
+let g0 (x) =
+  match (x) with
+  | A -> 1
+  | B (_, _) -> 0
+;;
+
+(* NON-EXAUSTIVE. *)
+let g1 (x) =
+  match (x) with
+  | A -> 1
+;;
+
+(* CORRECT. *)
+let g2 (x) =
+  match (x) with
+  | A -> 1
+  | _ -> 0
+;;
+
+(* REDUNDANT. *)
+let g3 (x) =
+  match (x) with
+  | A -> 1
+  | B (_, _) -> 0
+  | _ -> 2
+;;
+
+(* REDUNDANT. *)
+let g4 (x) =
+  match (x) with
+  | A -> 1
+  | B (_, _) -> 0
+  | B (1, _) -> 2
+;;
+
+(* BROKEN NON-EXAUSTIVE *)
+let h0 (x) =
+  match (x) with
+  | 1 -> 1
+  | 2 -> 0
+;;
+
+(* BROKEN CORRECT *)
+let h1 (x) =
+  match (x) with
+  | 1 -> 1
+  | _ -> 0
+;;
+
+(* BROKEN CORRECT *)
+let i1 (x) =
+  match (x) with
+  | true -> 1
+  | false -> 0
+;;
