@@ -445,7 +445,7 @@ and verify_matchings_expr ~current_unit typing_env expr =
         (fun (_, e) -> verify_matchings_expr ~current_unit typing_env e)
         label_expr_list
   | Parsetree.E_match (expr2, pattern_expr_list) ->
-      verify ~current_unit typing_env expr ; (* Disabled for release. *)
+      (* verify ~current_unit typing_env expr ;*)  (* Disabled for release. *)
       verify_matchings_expr ~current_unit typing_env expr2 ;
       List.iter
         (fun (_, e) -> verify_matchings_expr ~current_unit typing_env e)
