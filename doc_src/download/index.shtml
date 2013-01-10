@@ -38,7 +38,7 @@ modifications done in the sources tree.
 
 
 <div id="main">
-<h3>The latest release (as of $(the_iso_date))<h3>
+<h3>The latest release (as of 2013-01-10)<h3>
 <p>
 <a href="$(project_archive_name)">$(project_archive_name)</a> (tar-gzip).
 <br />
@@ -53,6 +53,15 @@ There may be some bugs; for instance, the documentation is not perfect :)
 This software is free software distributed under the revised BSD
 <A HREF="LICENSE">license</A>.
 </p>
+</div>
+
+<div class="spacer"></div>
+
+<div id="main">
+<h3>Older versions<h3>
+<p>
+The previous versions of $(focal) distribs are still available in the
+<a href="oldies/">oldies</a> directory.
 </div>
 
 <div class="spacer"></div>
