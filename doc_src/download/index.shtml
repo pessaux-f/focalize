@@ -2,8 +2,6 @@
 $(focal) downloads
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.4 2009-04-13 20:49:12 weis Exp $ -->
-
 <div id="container">
 <div id="header">
 <h1>Download</h1>

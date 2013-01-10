@@ -63,7 +63,7 @@ proofs of the program in a unified and consistent setting.
 
 <p>
 From a $(focal) source code development, the
-$(focalizec) compiler produces three source files: 
+<code>$(focalizec)</code> compiler produces three source files: 
 <ul>
 <li>
 a source file for the $(coq) proof assistant to check the proofs, 
@@ -100,46 +100,35 @@ Algebra Systems available.
 
 <div id="main">
 
-<h3>New release of the $(focal) environment soon (for January 2013)<h3>
+<h3>New release of the $(focal) environment (10 January 2013)<h3>
 
 <p>
-A new release of the $(focal) environment, 
+The new release of the $(focal) environment, 
 <code>$(project_name) 0.8.0</code>, 
-should be available in a near future. $(focal) got
-  nearly aslept for some years, without major release despite some
-  underground works. The "ghost" 0.7.0 version never became public,
-  but the 0.8.0 cumulating the evolutions of the repository is nearly
-  ready.
-</p>
+is now available. $(focal) got nearly aslept for some years, without
+  major release despite some underground works. The
+  &quot;<span style="font-style: italic;">ghost</span>&quot; 0.7.0
+  version never became public, but the 0.8.0 cumulating the evolutions
+  of the repository is nearly ready.
+  Get the last version from the <a href="download/">Download</a> page
+  and the related documentation from the
+  <a href="documentation/">Documentation</a> page.
 
-</div>
+  <br>
 
-
-<div class="spacer"></div>
-
-<div id="main">
-<h3>Current version of the $(focal) environment<h3>
-<p>
-
-For about 3 years, the $(focal) language and compiler have been
-rewritten from scratch. Numerous enhancements have <span style="font-style:
-italic;">been implemented</span>. The syntax has been re-designed to be more
-homogenous and flexible. The core language provides new features like
-records, irrefutable pattern bindings, simpler &quot;external&quot;
-mappings... All syntactic elements (species, collection, record field, sum
-type constructors, ...) can be qualified. Entity parameters (&quot;<span
-style="font-style:italic;">in</span>&quot; species parameter) are now managed
-in a smoother way, collections get a clearer &quot;implementation&quot;
-status, preventing confusion between collections and species in the
-$(focal) philosophy. The compilation speed has been enhanced. The
-global architecture of the compiler enables third party analyses to be
-grafted onto the compiler before code generation. A new backend for the C
-language is under development and should be available soon (provided license
-issues can be worked out). This is the first public release of this entirely
-revised system. Currently Fran&ccedil;ois Pessaux, in collaboration with
-Pierre Weis and Damien Doligez are in charge of this new version of the
-$(focal) environment. If you want more information, please feel
-free to contact us.
+  After a pretty long time without release, this new version brings number
+of enhancements, from the <code>$(focalizec)</code> compiler and
+  Zenon. New versions of 
+OCaml and Coq are now supported as well as previous ones for sake of legacy.
+Zenon made impressive progress so as to be helpful in proving inductive
+properties for species. Installation and setup have been fully revisited,
+leading in a simpler and lighter mechanism. The standard library has been
+extended with low-level theorems. Termination proofs for structurally
+recursive functions are now possible. A certains number of bugs found in the
+focalizec compiler have been fixed. And a new tutorial about making proofs
+with Zenon is born.
+A complete description of changes / new features can in found in the CHANGES
+file of the distribution.
 
 </p>
 </div>
@@ -147,12 +136,16 @@ free to contact us.
 <div class="spacer"></div>
 
 <div id="main">
-<h3>SSURF ANR project<h3>
+<h3>Initial event: SSURF ANR project<h3>
 
 <p>
 
-The SSURF (Safety and Security UndeR Focal) ANR project has
-started. This project consists in :
+The SSURF (Safety and Security UndeR Focal) ANR project was the 
+starting point of the concretisation of the $(focal) environment,
+leading to an effective implementation of what is now the $(focalizec)
+compiler, greatly helped by Zenon.
+<br>
+As a summary, this project consisted in :
 
 <ul>
   <li>
