@@ -33,7 +33,6 @@
 ./focalize/focalizec/src/basement/files.mli
 ./focalize/focalizec/src/basement/handy.ml
 ./focalize/focalizec/src/basement/handy.mli
-./focalize/focalizec/src/basement/installation.ml
 ./focalize/focalizec/src/basement/location.ml
 ./focalize/focalizec/src/basement/location.mli
 ./focalize/focalizec/src/basement/Makefile
