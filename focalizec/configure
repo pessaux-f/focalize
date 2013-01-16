@@ -41,7 +41,7 @@ done
 # First recover the configuration file providing the name of ocaml and coq commands.
 if [ -f "../.config_var" ] ;
     then
-    source ../.config_var
+    . ../.config_var
 else
     echo "Error.Global configuration file not found."
     echo "Run ./configure from the parent directory."
