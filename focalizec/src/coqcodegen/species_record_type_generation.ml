@@ -412,8 +412,12 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
 let generate_constant ctx cst =
   match cst.Parsetree.ast_desc with
    | Parsetree.C_int str ->
-       (* Integers are directly mapped in Coq. *)
-       Format.fprintf ctx.Context.scc_out_fmter "%s" str
+       (* Integers are directly mapped in Coq. Be careful: signs - can be
+          confused with operators. We assume that strings are well-formed hence
+          are never empty. So... hit inside without checking length ^_^ *)
+       if str.[0] = '+' || str.[0] = '-' then
+         Format.fprintf ctx.Context.scc_out_fmter "(%s)" str
+       else Format.fprintf ctx.Context.scc_out_fmter "%s" str
    | Parsetree.C_float _str ->
        (* [Unsure] *)
        Format.fprintf ctx.Context.scc_out_fmter "C_float"
