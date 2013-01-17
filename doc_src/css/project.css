@@ -16,15 +16,14 @@ html {
 }
 
 #container {
-	width: 750px;
-	margin-right: auto;
-	margin-left: auto;
+	margin-right: 20px;
+	margin-left: 20px;
 	text-align: center;
 	background-color: #FFFFFF;
 	color:#AAAAAA;
 }
 #header {
-	width:100%;
+	width: 100%;
 	padding-top:15px;
 }
 .spacer {
@@ -65,7 +64,7 @@ h3 {
 	border-color:#AAAAAA;
 	border-style:solid;
 	text-align:left;
-	width:700px;
+	width:100%;
 	margin-left:auto;
 	margin-right:auto;
 	font-weight:300;
@@ -75,9 +74,8 @@ h3 {
 	margin-top:15px;
 }
 #content {
-    width: 700px ;
-    margin-left: auto ;
-    margin-right: auto ;
+  	margin-left: 20px;
+    margin-right: 20px ;
     background-color:#FFFFFF;
 }
 #content p {
@@ -87,9 +85,8 @@ h3 {
     text-align: justify;
 }
 #main {
-    width:700px;
-    margin-left: auto ;
-    margin-right: auto ;
+    margin-left: 20px;
+    margin-right: 20px ;
     background-color:#FFFFFF;
 }
 #main p {
@@ -196,12 +193,7 @@ h3 {
 	background-color:#FFFFFF;
 	float:right;
 	font-size:100%;
+  width: 200px;
 	margin-top:5px;
-}
-.left {
-	color:#AAAAAA;
-	background-color:#FFFFFF;
-	float:left;
-	font-size:100%;
-	margin-top:5px;
+	margin-right:20px;
 }
