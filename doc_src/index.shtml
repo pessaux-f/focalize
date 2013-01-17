@@ -31,7 +31,7 @@ $(focal)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <a href="resources/">Resources</a>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<a href="/">Bug Tracking (down)</a>
+<a style="color: red;" href="/">Bug Tracking (down)</a>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <a href="contacts/">Contacts</a>
 
