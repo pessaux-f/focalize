@@ -111,10 +111,6 @@ type recursive_calls_description =
     {b Visibility}: Exported outside this module.
  *************************************************************************** *)
 let rec list_recursive_calls function_name argument_list bindings expr =
-  let filter_nested_recursive_calls calls1 calls2 = match (calls1, calls2) with
-   | ([], l) | (l, []) -> l
-   | _ ->
-       raise (NestedRecursiveCalls (function_name, expr.Parsetree.ast_loc)) in
   match expr.Parsetree.ast_desc with
    | Parsetree.E_fun (names, expr) ->
        (* Get the type of the function. *)
@@ -186,9 +182,8 @@ let rec list_recursive_calls function_name argument_list bindings expr =
        let list_recursive_calls_for_all_patterns =
          List.concat
            (List.map list_recursive_calls_for_pattern pattern_expr_list) in
-       filter_nested_recursive_calls
-         list_recursive_calls_in_matched_expr
-         list_recursive_calls_for_all_patterns
+       list_recursive_calls_in_matched_expr @
+       list_recursive_calls_for_all_patterns
    | Parsetree.E_if (condition, expr_true, expr_false) ->
        (* [list_recursive_calls_in_condition] calculates the information
           pertaining to recursive calls in the condition clause. *)
@@ -204,9 +199,8 @@ let rec list_recursive_calls function_name argument_list bindings expr =
            (List.map2
               list_recursive_calls_in_expr
               [true; false] [expr_true; expr_false]) in
-       filter_nested_recursive_calls
-         list_recursive_calls_in_condition
-         list_recursive_calls_in_both_exprs
+       list_recursive_calls_in_condition @
+       list_recursive_calls_in_both_exprs
    | Parsetree.E_let (let_def, expr) ->
        (* Look for recursive calls in the body of the let_def. *)
        let list_recursive_calls_in_def =
@@ -228,11 +222,7 @@ let rec list_recursive_calls function_name argument_list bindings expr =
          @ bindings in
        let list_recursive_calls_in_expr =
          list_recursive_calls function_name argument_list new_bindings expr in
-       (* Finally make sure that recursive calls are not made in both the
-          let_def and the expression. *)
-       filter_nested_recursive_calls
-         list_recursive_calls_in_def
-         list_recursive_calls_in_expr
+       list_recursive_calls_in_def @ list_recursive_calls_in_expr
    | Parsetree.E_record label_expr_list ->
        let list_recursive_calls_in_record_item (_, expr) =
          list_recursive_calls function_name argument_list bindings expr in
