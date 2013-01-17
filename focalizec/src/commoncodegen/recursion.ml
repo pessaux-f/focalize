@@ -6,15 +6,13 @@
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
-
-(* $Id: recursion.ml,v 1.25 2012-11-13 14:02:05 pessaux Exp $ *)
 
 (**
   This module provides utilities for dealing with recursive function
@@ -23,9 +21,9 @@
   the generation of proof obligations.
  *)
 
-exception NestedRecursiveCalls of Parsetree.vname * Location.t;;
-exception PartialRecursiveCall of Parsetree.vname * Location.t;;
-exception MutualRecursion of (Parsetree.vname * Parsetree.vname);;
+exception NestedRecursiveCalls of Parsetree.vname * Location.t ;;
+exception PartialRecursiveCall of Parsetree.vname * Location.t ;;
+exception MutualRecursion of (Parsetree.vname * Parsetree.vname) ;;
 
 (** ***************************************************************************
   Useful for storing bindings that were made between one point of a program

@@ -6,15 +6,13 @@
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
-
-(* $Id: abstractions.ml,v 1.85 2012-11-13 14:02:05 pessaux Exp $ *)
 
 
 (* ************************************************************************* *)
