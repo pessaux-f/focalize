@@ -23,7 +23,7 @@ $(focal)
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <a href="resources/">Resources</a>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-<a href="/">Bug Tracking</a>
+<a href="/">Bug Tracking (down)</a>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 <a href="contacts/">Contacts</a>
 
@@ -51,7 +51,7 @@ Overview comes first but more recent news follow below...
 
 <div id="main">
 
-<h3>Overview<h3>
+<h3>Overview</h3><h3>
 
 <p>
 The $(focal) project aims at providing a programming
@@ -64,6 +64,7 @@ proofs of the program in a unified and consistent setting.
 <p>
 From a $(focal) source code development, the
 <code>$(focalizec)</code> compiler produces three source files: 
+</p>
 <ul>
 <li>
 a source file for the $(coq) proof assistant to check the proofs, 
@@ -76,7 +77,6 @@ a source file that contains the documentation extracted from the
 development sources.
 </li>
 </ul>
-</p>
 
 <p>
 Thanks to built-in inheritance mechanisms, the language allows to
@@ -93,14 +93,14 @@ efficent; for instance, the complex algorithms of the algebraic library
 provide runtime performances comparable to the best Computer
 Algebra Systems available.
 </p>
-
+</h3>
 </div>
 
 <div class="spacer"></div>
 
 <div id="main">
 
-<h3>New release of the $(focal) environment (2013-01-10)<h3>
+<h3>New release of the $(focal) environment (2013-01-10)</h3><h3>
 
 <p>
 The new release of the $(focal) environment, 
@@ -113,12 +113,11 @@ is now available. $(focal) got nearly aslept for some years, without
   Get the last version from the <a href="download/">Download</a> page
   and the related documentation from the
   <a href="documentation/">Documentation</a> page.
-
   <br>
 
-  After a pretty long time without release, this new version brings number
+After a pretty long time without release, this new version brings number
 of enhancements, from the <code>$(focalizec)</code> compiler and
-  Zenon. New versions of 
+Zenon. New versions of 
 OCaml and Coq are now supported as well as previous ones for sake of legacy.
 Zenon made impressive progress so as to be helpful in proving inductive
 properties for species. Installation and setup have been fully revisited,
@@ -129,24 +128,23 @@ focalizec compiler have been fixed. And a new tutorial about making proofs
 with Zenon is born.
 A complete description of changes / new features can in found in the CHANGES
 file of the distribution.
-
 </p>
+</h3>
 </div>
 
 <div class="spacer"></div>
 
 <div id="main">
-<h3>Initial event: The SSURF ANR project<h3>
+<h3>Initial event: The SSURF ANR project</h3><h3>
 
 <p>
-
 The SSURF (Safety and Security UndeR Focal) ANR project was the 
 starting point of the concretisation of the $(focal) environment,
 leading to an effective implementation of what is now the $(focalizec)
 compiler, greatly helped by Zenon.
 <br>
 As a summary, this project consisted in :
-
+</p>
 <ul>
   <li>
     Analyze and define the features required for an IDE in
@@ -158,14 +156,12 @@ As a summary, this project consisted in :
   </li>
 </ul>
 
-</p>
 
 <p>
-
 Further information (in french) can be found
 <a href="http://www-spi.lip6.fr/~jaume/ssurf.html">here.</a>
-
 </p>
+</h3>
 </div>
 
 <div class="spacer"></div>
