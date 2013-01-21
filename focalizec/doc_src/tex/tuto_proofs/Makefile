@@ -12,7 +12,7 @@
 ROOT_DIR=../../../..
 
 
-FOCALIZE_SRC= ex_implications.fcl or_id_com_good.fcl or_id_com_shortest.fcl same_comps.fcl diff_comps.fcl signal2.fcl signal3.fcl controller/controller_algo.fcl controller/controller_complete.fcl controller/controller1.fcl controller/controller2.fcl controller/controller3.fcl controller/controller5.fcl controller/controller5.fcl lemmas1.fcl lemmas3.fcl lemmas4.fcl lemmas5.fcl
+FOCALIZE_SRC= ex_implications.fcl or_id_com_good.fcl or_id_com_shortest.fcl same_comps.fcl diff_comps.fcl signal2.fcl signal3.fcl controller/controller_algo.fcl controller/controller_complete.fcl controller/controller1.fcl controller/controller2.fcl controller/controller3.fcl controller/controller5.fcl controller/controller5.fcl lemmas1.fcl lemmas3.fcl lemmas4.fcl lemmas5.fcl tree_mirror.fcl
 
 FOCALIZE_MLS=$(FOCALIZE_SRC:.fcl=.ml)
 FOCALIZE_BYT_OBJS=$(FOCALIZE_MLS:.ml=.cmo)

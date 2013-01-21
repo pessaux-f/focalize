@@ -10,7 +10,7 @@
   \url{francois.pessaux@ensta-paristech.fr}}
 \title{Another Tutorial for {F}o{C}a{L}ize:\\
   Playing with Proofs}
-\date{December 2012}
+\date{January 2013}
 
 \begin{document}
 
@@ -406,6 +406,73 @@ property in \focal:
 
 {\scriptsize
 \lstinputlisting[numbers=left,caption=signal2.fcl]{signal3.fcl}}
+
+
+\subsection{When automatic induction fails}
+In the previous examples, we proved very simple facts and \zenon\ directly found
+proofs in one shot \lstinline"by type ...", i.e. implicitly using
+induction on the related type. However it is not always the case. It
+may be needed to explicitly write some proofs, proving the base cases
+then each inductive cases. In such a configuration, the
+\lstinline"by type ..." won't apply alone.
+
+It must be clear that using \lstinline"by type ..." alone (again,
+implying simple induction of the type) only applies in case where the
+goal has a shape \lstinline"all x : t, P (x)". This especially means
+that a ``one shot proof'' must not start by eliminating the
+\lstinline"all x : t" as we usually did.
+
+The fact \lstinline"by type ..." is not reduced to induction: it also
+states that a proof needs to know about the constructors of a
+type. Hence, that's not because a ``one shot proof'' failed that the
+fact \lstinline"by type ..." will not be needed.
+
+In the following, we propose do prove that given a structure of binary
+tree, mirroring it twice is the identity (result tree is the same than
+initial tree. We first define the tree structure, the mirror function
+and state our property asking \zenon\ to prove it itself.
+
+{\scriptsize
+\lstinputlisting[numbers=left,caption=tree\_mirror1.fcl]{tree_mirror1.fcl}}
+
+\noindent As planned and unfortunately, after a while, \zenon\ does not find any
+proof with so much material :
+
+{\scriptsize
+\begin{verbatim}
+Invoking ocamlc...
+>> ocamlc -I /usr/local/lib/focalize -c tree_mirror1.ml
+Invoking zvtov...
+>> zvtov -zenon zenon -new tree_mirror1.zv
+File "tree_mirror1.fcl", line 14, characters 8-46:              
+Zenon error: could not find a proof within the memory size limit
+### proof failed
+\end{verbatim}}
+
+We now need to split the proof in 3 steps: one for the base case, one
+for the inductive case, and the final \lstinline"qed" combining the
+two formers. As usually, we leave the difficult part (the induction
+case) initially \lstinline"assumed" to ensure that our idea of the
+proof passes with \zenon.  We only really prove the base case since it
+is very simple and only depends on the definition of the function
+\lstinline"mirror" and the type \lstinline"bintree_t". Note that for
+the induction case, we however state the induction hypotheses (\lstinline"ir1"
+and \lstinline"ir2") before stating the goal of this case.
+
+{\scriptsize
+\lstinputlisting[numbers=left,caption=tree\_mirror2.fcl]{tree_mirror2.fcl}}
+
+Invoking \focalizec\ on this program succeeds and it is now time to
+complete our last proof. This proof, even if intuitive, can't be solved
+directly by \zenon. Hence we have to detail it. Basically the proof
+sketch is to ``unfold'' twice the function \lstinline"mirror" (i.e. to
+look at the result of \lstinline"mirror (Node (...))") then to then use induction
+hypotheses (\lstinline"ir1" and \lstinline"ir2") to finally get the
+effective equality of our two terms.
+
+{\scriptsize
+\lstinputlisting[numbers=left,caption=tree\_mirror.fcl]{tree_mirror.fcl}}
+
 
 \subsection{Introducing lemmas}
 Until now we stated properties and demonstrated them writing
