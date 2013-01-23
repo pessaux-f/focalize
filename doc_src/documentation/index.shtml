@@ -2,7 +2,6 @@
 Documentation
 <!--#include virtual="aftertitle-eng.html"-->
 
-<!-- \$Id: index.shtml,v 1.3 2009-07-06 08:43:28 habib Exp $ -->
 
 <div id="container">
 <div id="header">
@@ -15,10 +14,9 @@ Documentation
 <div class="spacer"></div>
 <div class="spacer"></div>
 
+
 <div id="main">
-
 <h3>The manual for the lastest release<h3>
-
 <p>The reference manual for the $(focal) language and system:
 <ul>
  <li><a href="refman.ps">refman.ps</a>,
@@ -36,8 +34,8 @@ Documentation
 </ul>
 </p>
 
-<h3>Tutorial: Implementing Sets<h3>
 
+<h3>Tutorial: Implementing Sets<h3>
 <p>A tutorial for the $(focal) language and system:
 <ul>
  <li><a href="tutorial.ps">tutorial.ps</a>,
@@ -52,10 +50,12 @@ Documentation
 </ul>
 </p>
 
-<h3>Tutorial: Playing with Proofs<h3>
 
+<a name="tuto_proofs"></a>
+<h3>Tutorial: Playing with Proofs (Extended on 2013-01-21) <h3>
 <p>A tutorial for the $(focal) language especially dedicated to proofs
-writing:
+writing (these online versions are more recent than those of the
+distribution):
 <ul>
  <li><a href="tuto_proofs.ps">tuto_proofs.ps</a>,
  size <!--#fsize file="tuto_proofs.ps" sizefmt="abbrev"-->, (in PS format).
@@ -69,8 +69,8 @@ writing:
 </ul>
 </p>
 
-<h3>The manual pages for the $(focal) commands<h3>
 
+<h3>The manual pages for the $(focal) commands<h3>
 <p>
 <ul>
  <li><a href="focalizec.1">
@@ -81,10 +81,11 @@ writing:
  </li>
 </ul>
 </p>
-
 </div>
 
+
 <div class="spacer"></div>
+
 
 <div id="main">
 <h3>Older versions<h3>
@@ -92,6 +93,7 @@ writing:
 The previous versions of $(focal) documentation are still available in the
 <a href="oldies/">oldies</a> directory.
 </div>
+
 
 <div class="spacer"></div>
 <div class="spacer"></div>

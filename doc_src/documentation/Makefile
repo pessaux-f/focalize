@@ -57,6 +57,8 @@ include $(ROOT_DIR)/Makefile.common
 
 HTMLC_INCLUDES = -I $(ROOT_DIR)/doc_src/Includes -env project.env
 
+# Install command: scp xxx pessaux@modulogic.inria.fr:/home/www/focalize/documentation/
+
 SOURCES=index.shtml
 BYT_OBJS=$(SOURCES:.shtml=.html)
 
