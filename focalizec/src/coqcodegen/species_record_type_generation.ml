@@ -531,6 +531,9 @@ let generate_pattern ~force_polymorphic_explicit_args ctx coqctx env pattern =
            Parsetree_utils.pp_vname_with_operators_expanded name
      | Parsetree.P_wild -> Format.fprintf out_fmter "_"
      | Parsetree.P_constr (ident, pats) ->
+         (* If the constructor has arguments, enclose them between parens. *)
+         let has_args = pats <> [] in
+         if has_args then Format.fprintf out_fmter "(" ;
          (* Disallow implicit arguments if needed. *)
          if force_polymorphic_explicit_args then Format.fprintf out_fmter "@@" ;
          let extras =
@@ -549,6 +552,7 @@ let generate_pattern ~force_polymorphic_explicit_args ctx coqctx env pattern =
             polymorphism never appear in Coq syntax. *)
          Format.fprintf out_fmter "@ " ;
          rec_generate_pats_list ~comma: false pats ;
+         if has_args then Format.fprintf out_fmter ")"
      | Parsetree.P_record _labs_pats ->
          Format.eprintf "generate_pattern P_record TODO@."
      | Parsetree.P_tuple pats ->
