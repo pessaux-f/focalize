@@ -239,7 +239,7 @@
      '("alias" "all" "and" "as" "assume" "assumed" "begin" "by"
        "caml" "collection" "conclude" "coq" "coq_require" "definition"
        "else" "end" "ex" "external" "false" "function" "hypothesis"
-       "if" "in" "inherits" "internal" "implements" "is" "let"
+       "if" "in" "inherit" "internal" "implement" "is" "let"
        "lexicographic" "local" "logical" "match" "measure" "not"
        "notation" "of" "on" "open" "or" "order" "proof" "prop"
        "property" "prove" "qed" "rec" "representation" "Self"
