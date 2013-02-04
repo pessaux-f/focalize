@@ -459,6 +459,18 @@ theorem int_lt_not_le :
 ;;
 
 
+theorem int_lt_not_gt :
+  all x y : int, (x <0x y) -> ~ (x >0x y)
+  proof =
+    coq proof {*
+    intros x y. unfold _lt_0x, _gt_0x. unfold bi__int_lt, bi__int_gt.
+    elim (Z_lt_dec x y). intro. simpl. intro. elim (Z_gt_dec x y).
+    simpl. intros. intro. auto with zarith. intro. simpl. auto with zarith.
+    intros. auto with zarith. Qed.
+    *}
+;;
+
+
 theorem int_le_not_gt :
   all x y : int, (x <=0x y) -> ~ (x >0x y)
   proof =
