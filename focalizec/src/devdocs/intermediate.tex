@@ -1,4 +1,3 @@
-% $Id: intermediate.tex,v 1.12 2012-10-31 16:47:20 pessaux Exp $
 \label{intermediate-abstractions}
 Once type-checking pass is ended, we saw that in addition to have the
 type of each expression computed and screwed in each AST node, we put
@@ -16,7 +15,12 @@ methods a method depends on.
 
 The first point will be carried out by computing the ``visible
 universe'' of a method and its ``minimal \coq\ typing
-environment''. The second point is achieved by applying rules of page
+environment''. The ``visible universe'' is the set of methods of Self
+that are needed for the analysed methods; the ``minimal \coq\ typing
+environment'' is just picking in the visible universe and abstracting
+or not its methods (i.e. just determining if we just need keeping
+their type or also their body).
+The second point is achieved by applying rules of page
 153, definition 72 + the additionnal DIDOU rule.
 
 Once these sets are known, the current
