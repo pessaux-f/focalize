@@ -1,17 +1,19 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLiZe compiler                            *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
-(*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
+(* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            François Pessaux                                                *)
+(*            Pierre Weis                                                     *)
+(*            Damien Doligez                                                  *)
+(*                                                                            *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
+(*                                                                            *)
+(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
+(*            2012 ENSTA ParisTech                                            *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
 
-(* $Id: base_exprs_ml_generation.ml,v 1.46 2012-10-26 14:55:19 pessaux Exp $ *)
 
 
 (* ************************************************************************** *)
@@ -190,16 +192,14 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    (* It comes from a toplevel stuff, hence not abstracted *)
                    (* by lambda-lifting.                                   *)
                    Format.fprintf out_fmter
-                     "%a.effective_collection.%a.%a"
+                     "%a.effective_collection.%a.rf_%a"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
                    end)
                  end)
-             | Parsetree.Qualified (module_name, coll_name) ->
-                 (begin
-                 if module_name = ctx.Context.rcc_current_unit then
-                   (begin
+             | Parsetree.Qualified (module_name, coll_name) -> (
+                 if module_name = ctx.Context.rcc_current_unit then (
                    (* Exactly like when it is method call from a species that
                       is not the current but is implicitely in the current
                       compilation unit : the call is performed to a method a
@@ -208,47 +208,44 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    if List.exists
                        (fun species_param ->
                          match species_param with
-                          | Env.TypeInformation.SPAR_in (vn, _, _) ->
-                              vn = coll_name
-                          | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
-                              (Parsetree.Vuident vn) = coll_name)
-                       ctx.Context.rcc_species_parameters_names then
-                     (begin
+                         | Env.TypeInformation.SPAR_in (vn, _, _) ->
+                             vn = coll_name
+                         | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
+                             (Parsetree.Vuident vn) = coll_name)
+                       ctx.Context.rcc_species_parameters_names then (
                      let prefix =
                        "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^
                        "_" in
                      Format.fprintf out_fmter "%s%a"
                        prefix Parsetree_utils.pp_vname_with_operators_expanded
                        vname
-                       end)
-                   else
-                     (begin
+                    )
+                   else (
                      Format.fprintf out_fmter
-                       "%a.effective_collection.%a.%a"
+                       "%a.effective_collection.%a.rf_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        coll_name
                        Parsetree_utils.pp_vname_with_operators_expanded
                        coll_name
                        Parsetree_utils.pp_vname_with_operators_expanded
                        vname
-                     end)
-                   end)
-                 else
-                   (begin
+                    )
+                  )
+                 else (
                    (* The called method belongs to a collection that is not
                       ourselves and moreover belongs to another compilation
                       unit. May be a species from the toplevel of another
                       FoCaL source file. *)
                    let capitalized_modname = String.capitalize module_name in
                    Format.fprintf out_fmter
-                     "%s.%a.effective_collection.%s.%a.%a"
+                     "%s.%a.effective_collection.%s.%a.rf_%a"
                      capitalized_modname
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      capitalized_modname
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
-                   end)
-                 end)
+                  )
+                )
             end)
        end)
 ;;

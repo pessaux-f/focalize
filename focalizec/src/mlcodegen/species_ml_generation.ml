@@ -247,7 +247,7 @@ let generate_record_type ctx species_descr =
                 Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
               (* Since we are printing a whole type scheme, it is stand-alone
                  and we don't need to keep name sharing with anythin else. *)
-              Format.fprintf out_fmter "@[<2>%a : %a ;@]@\n"
+              Format.fprintf out_fmter "@[<2>rf_%a : %a ;@]@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
                 (Types.pp_type_simple_to_ml
                    ~current_unit: ctx.Context.scc_current_unit
@@ -269,7 +269,7 @@ let generate_record_type ctx species_descr =
                   Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
                 (* Since we are printing a whole type scheme, it is stand-alone
                    and we don't need to keep name sharing with anythin else. *)
-                Format.fprintf out_fmter "%a : %a ;@\n"
+                Format.fprintf out_fmter "rf_%a : %a ;@\n"
                   Parsetree_utils.pp_vname_with_operators_expanded n
                   (Types.pp_type_simple_to_ml
                      ~current_unit: ctx.Context.scc_current_unit
@@ -891,7 +891,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                 List.iter
                   (fun (meth, _) ->
                     (* Don't print the type to prevent being too verbose. *)
-                    Format.fprintf out_fmter "@ %s%a"
+                    Format.fprintf out_fmter "@ %srf_%a"
                       prefix Parsetree_utils.pp_vname_with_operators_expanded
                       meth)
                   meths_from_param
@@ -1197,7 +1197,7 @@ let generate_collection_generator ctx env compiled_species_fields =
              method. *)
           if not field_memory.Misc_common.cfm_is_logical then begin
             init_fields ();
-            Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
+            Format.fprintf ctx.Context.scc_out_fmter "rf_%a =@ local_%a ;@\n"
               Parsetree_utils.pp_vname_with_operators_expanded
               field_memory.Misc_common.cfm_method_name
               Parsetree_utils.pp_vname_with_operators_expanded
@@ -1209,7 +1209,8 @@ let generate_collection_generator ctx env compiled_species_fields =
               (* Same than above. *)
               if not field_memory.Misc_common.cfm_is_logical then begin
                 init_fields ();
-                Format.fprintf ctx.Context.scc_out_fmter "%a =@ local_%a ;@\n"
+                Format.fprintf ctx.Context.scc_out_fmter
+                  "rf_%a =@ local_%a ;@\n"
                   Parsetree_utils.pp_vname_with_operators_expanded
                   field_memory.Misc_common.cfm_method_name
                   Parsetree_utils.pp_vname_with_operators_expanded
@@ -1465,8 +1466,8 @@ let apply_collection_generator_to_parameters ctx env collection_body_params
                 | Some fname ->
                     Format.fprintf out_fmter "%s." (String.capitalize fname)
                 | None -> ()) ;
-               (* Species name.method name. *)
-               Format.fprintf out_fmter "%a.%a"
+               (* Species name.rf_method name. *)
+               Format.fprintf out_fmter "%a.rf_%a"
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname
                  Parsetree_utils.pp_vname_with_operators_expanded meth_name)
@@ -1649,11 +1650,11 @@ let collection_compile env ~current_unit out_fmter collection_def
                Parsetree.LF_no_logical then
               (begin
               init_fields ();
-              Format.fprintf out_fmter "%a =@ t."
+              Format.fprintf out_fmter "rf_%a =@ t."
                 Parsetree_utils.pp_vname_with_operators_expanded n ;
               print_implemented_species_as_ocaml_module
                 ~current_unit out_fmter implemented_species_name ;
-              Format.fprintf out_fmter ".%a ;@\n"
+              Format.fprintf out_fmter ".rf_%a ;@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
               end)
         | Env.TypeInformation.SF_let_rec l ->
@@ -1664,11 +1665,11 @@ let collection_compile env ~current_unit out_fmter collection_def
                    Parsetree.LF_no_logical then
                   (begin
                   init_fields ();
-                  Format.fprintf out_fmter "%a =@ t."
+                  Format.fprintf out_fmter "rf_%a =@ t."
                     Parsetree_utils.pp_vname_with_operators_expanded n ;
                   print_implemented_species_as_ocaml_module
                     ~current_unit out_fmter implemented_species_name ;
-                  Format.fprintf out_fmter ".%a ;@\n"
+                  Format.fprintf out_fmter ".rf_%a ;@\n"
                     Parsetree_utils.pp_vname_with_operators_expanded n
                   end))
               l)
