@@ -265,145 +265,130 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
        else
          Format.fprintf out_fmter "%a"
            Parsetree_utils.pp_vname_with_operators_expanded vname
-   | Parsetree.EI_method (coll_specifier_opt, vname) ->
-       (begin
+   | Parsetree.EI_method (coll_specifier_opt, vname) -> (
        match coll_specifier_opt with
-        | None
-        | Some (Parsetree.Vname (Parsetree.Vuident "Self")) ->
-            (begin
-            (* Method call from the current species. *)
-            match self_methods_status with
-             | SMS_abstracted ->
-                 Format.fprintf out_fmter "abst_%a"
-                   Parsetree_utils.pp_vname_with_operators_expanded vname
-             | SMS_from_record ->
-                 Format.fprintf out_fmter "rf_%a"
-                   Parsetree_utils.pp_vname_with_operators_expanded vname
-             | SMS_from_param spe_param_name ->
-                 Format.fprintf out_fmter "_p_%a_%a"
-                   Parsetree_utils.pp_vname_with_operators_expanded
-                   spe_param_name
-                   Parsetree_utils.pp_vname_with_operators_expanded vname
-            end)
-        | Some coll_specifier ->
-            (begin
-            match coll_specifier with
-             | Parsetree.Vname coll_name ->
-                 (begin
-                 (* Method call from a species that is not the current but is
-                    implicitely in the current compilation unit. May be
-                    either a paramater or a toplevel defined collection. *)
-                 if List.exists
-                     (fun species_param ->
-                       match species_param with
-                        | Env.TypeInformation.SPAR_in (vn, _, _) ->
-                            vn = coll_name
-                        | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
-                            (Parsetree.Vuident vn) = coll_name)
-                     ctx.Context.scc_species_parameters_names then
-                   (begin
-                   (* It comes from a parameter. To retrieve the related
-                      method name we build it the same way we built it
-                      while generating the extra Coq function's parameters due
-                      to depdencencies coming from the species parameter.
-                      I.e: "_p_", followed by the species parameter name,
-                      followed by "_", followed by the method's name. *)
-                   let prefix =
-                     "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^ "_" in
-                   Format.fprintf out_fmter "%s%a"
-                     prefix
+       | None
+       | Some (Parsetree.Vname (Parsetree.Vuident "Self")) -> (
+           (* Method call from the current species. *)
+           match self_methods_status with
+           | SMS_abstracted ->
+               Format.fprintf out_fmter "abst_%a"
+                 Parsetree_utils.pp_vname_with_operators_expanded vname
+           | SMS_from_record ->
+               Format.fprintf out_fmter "rf_%a"
+                 Parsetree_utils.pp_vname_with_operators_expanded vname
+           | SMS_from_param spe_param_name ->
+               Format.fprintf out_fmter "_p_%a_%a"
+                 Parsetree_utils.pp_vname_with_operators_expanded
+                 spe_param_name
+                 Parsetree_utils.pp_vname_with_operators_expanded vname
+          )
+       | Some coll_specifier -> (
+           match coll_specifier with
+           | Parsetree.Vname coll_name -> (
+               (* Method call from a species that is not the current but is
+                  implicitely in the current compilation unit. May be
+                  either a paramater or a toplevel defined collection. *)
+               if List.exists
+                   (fun species_param ->
+                     match species_param with
+                     | Env.TypeInformation.SPAR_in (vn, _, _) ->
+                         vn = coll_name
+                     | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
+                         (Parsetree.Vuident vn) = coll_name)
+                   ctx.Context.scc_species_parameters_names then (
+                 (* It comes from a parameter. To retrieve the related
+                    method name we build it the same way we built it
+                    while generating the extra Coq function's parameters due
+                    to depdencencies coming from the species parameter.
+                    I.e: "_p_", followed by the species parameter name,
+                    followed by "_", followed by the method's name. *)
+                 let prefix =
+                   "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^ "_" in
+                 Format.fprintf out_fmter "%s%a"
+                   prefix Parsetree_utils.pp_vname_with_operators_expanded
+                   vname
+                )
+               else (
+                 if coll_name = (snd ctx.Context.scc_current_species) then (
+                   (* In fact, the name is qualified but with ourself
+                      implicitely in the current compilation unit. Then, we
+                      are not in the case of a toplevel species but in the
+                      case where a substitution replaced Self by ourself.
+                      We then must refer to our local record field. *)
+                   Format.fprintf out_fmter "rf_%a"
                      Parsetree_utils.pp_vname_with_operators_expanded vname
-                   end)
-                 else
-                   (begin
-                   if coll_name = (snd ctx.Context.scc_current_species) then
-                     (begin
-                     (* In fact, the name is qualified but with ourself
-                        implicitely in the current compilation unit. Then, we
-                        are not in the case of a toplevel species but in the
-                        case where a substitution replaced Self by ourself.
-                        We then must refer to our local record field. *)
-                     Format.fprintf out_fmter "rf_%a"
-                       Parsetree_utils.pp_vname_with_operators_expanded vname
-                     end)
-                   else
-                     (begin
+                  )
+                 else (
                    (* It comes from a toplevel stuff, hence not abstracted by
                       lambda-lifting. Then, we get the field of the
-                      collection's record obtained by the collection's effective
-                      value. *)
+                      collection's record obtained by the collection's
+                      effective value. *)
                    Format.fprintf out_fmter
                      "%a.effective_collection.(%a.rf_%a)"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
-                     end)
-                   end)
-                 end)
-             | Parsetree.Qualified (module_name, coll_name) ->
-                 (begin
-                 if module_name = ctx.Context.scc_current_unit then
-                   (begin
-                   (* Exactly like when it is method call from a species that
-                      is not the current but is implicitely in the current
-                      compilation unit : the call is performed to a method a
-                      species that is EXPLICITELY in the current compilation
-                      unit. *)
-                   if List.exists
-                       (fun species_param ->
-                         match species_param with
-                          | Env.TypeInformation.SPAR_in (vn, _, _) ->
-                              vn = coll_name
-                          | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
-                              (Parsetree.Vuident vn) = coll_name)
-                       ctx.Context.scc_species_parameters_names then
-                     (begin
-                     (* It comes from one of our species parameters. *)
-                     let prefix =
-                       "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^"_" in
-                     Format.fprintf out_fmter "%s%a"
-                       prefix Parsetree_utils.pp_vname_with_operators_expanded
-                       vname
-                       end)
-                   else
-                     (begin
-                     (* It's not from one of our species parameter but it comes
-                        from the current compilation unit. Let's check if the
-                        species is ourself. In this case, liek above we must
-                        refer to our local record field. *)
-                     if coll_name = (snd ctx.Context.scc_current_species) then
-                       Format.fprintf out_fmter "rf_%a"
-                         Parsetree_utils.pp_vname_with_operators_expanded vname
-                     else
-                       (begin
-                       Format.fprintf out_fmter
-                         "%a.effective_collection.(%a.rf_%a)"
-                         Parsetree_utils.pp_vname_with_operators_expanded
-                         coll_name
-                         Parsetree_utils.pp_vname_with_operators_expanded
-                         coll_name
-                         Parsetree_utils.pp_vname_with_operators_expanded
-                         vname
-                       end)
-                     end)
-                   end)
-                 else
-                   (begin
-                   (* The called method belongs to a species that is not
-                      ourselves and moreover belongs to another compilation
-                      unit. May be a species from the toplevel of another
-                      FoCaL source file. *)
-                   Format.fprintf out_fmter
-                     "%s.%a.effective_collection.(%s.%a.rf_%a)"
-                     module_name
-                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
-                     module_name
-                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
-                     Parsetree_utils.pp_vname_with_operators_expanded vname
-                   end)
-                 end)
-            end)
-       end)
+                  )
+                )
+              )
+           | Parsetree.Qualified (module_name, coll_name) -> (
+               if module_name = ctx.Context.scc_current_unit then (
+                 (* Exactly like when it is method call from a species that
+                    is not the current but is implicitely in the current
+                    compilation unit : the call is performed to a method a
+                    species that is EXPLICITELY in the current compilation
+                    unit. *)
+                 if List.exists
+                     (fun species_param ->
+                       match species_param with
+                       | Env.TypeInformation.SPAR_in (vn, _, _) ->
+                           vn = coll_name
+                       | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
+                           (Parsetree.Vuident vn) = coll_name)
+                     ctx.Context.scc_species_parameters_names then (
+                   (* It comes from one of our species parameters. *)
+                   let prefix =
+                     "_p_" ^ (Parsetree_utils.name_of_vname coll_name) ^"_" in
+                   Format.fprintf out_fmter "%s%a"
+                     prefix Parsetree_utils.pp_vname_with_operators_expanded
+                     vname
+                  )
+                 else (
+                   (* It's not from one of our species parameter but it comes
+                      from the current compilation unit. Let's check if the
+                      species is ourself. In this case, liek above we must
+                      refer to our local record field. *)
+                   if coll_name = (snd ctx.Context.scc_current_species) then
+                     Format.fprintf out_fmter "rf_%a"
+                       Parsetree_utils.pp_vname_with_operators_expanded vname
+                   else (
+                     Format.fprintf out_fmter
+                       "%a.effective_collection.(%a.rf_%a)"
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       coll_name
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       coll_name
+                       Parsetree_utils.pp_vname_with_operators_expanded vname
+                    )
+                  )
+                )
+               else (
+                 (* The called method belongs to a species that is not
+                    ourselves and moreover belongs to another compilation
+                    unit. May be a species from the toplevel of another
+                    FoCaL source file. *)
+                 Format.fprintf out_fmter
+                   "%s.%a.effective_collection.(%s.%a.rf_%a)"
+                   module_name
+                   Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                   module_name
+                   Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                   Parsetree_utils.pp_vname_with_operators_expanded vname
+                )
+              )
+          )
+      )
 ;;
 
 
