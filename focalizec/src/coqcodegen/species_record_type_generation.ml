@@ -113,7 +113,7 @@ let generate_method_lambda_lifted_arguments ~only_for_Self_meths out_fmter
     The "_T" will be added automatically by the printing routine. We add the
     species as a [CCMI_is] to have it printed as "xxx_T" and not as an entity
     parameter. *)
-let make_Self_cc_binding_abst_T  ~current_species =
+let make_Self_cc_binding_abst_T ~current_species =
   let (module_name, _) = current_species in
   ((module_name, "Self"), ("abst" ,Types.CCMI_is))
 ;;
@@ -1469,20 +1469,17 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
   let collections_carrier_mapping =
     ctx.Context.scc_collections_carrier_mapping in
   (* The header of the Coq record definition for the species. *)
-  let (my_fname, my_species_name) = ctx.Context.scc_current_species in
-  (* Directly trasform into a string, that's easier. *)
-  let my_species_name = Parsetree_utils.name_of_vname my_species_name in
-  (* We do not add any bindings to the [collections_carrier_mapping]  *)
-  (* before printing the record type parameters for 2 reasons:        *)
-  (*   - species parameters carriers of the record are in the         *)
-  (*     [collections_carrier_mapping], hence any added binding would *)
-  (*     make think to an extra species parameter, hence to an extra  *)
-  (*     parameter to the record (obviously wrong).                   *)
-  (*   - since species carriers are not recursive, there is no reason *)
-  (*     to have "Self" parametrizing its own record type.            *)
-  Format.fprintf out_fmter "@[<2>Record %s " my_species_name ;
-  (* Generate the record parameters mapping the species  *)
-  (* parameters and the methods from them we depend on ! *)
+  Format.fprintf out_fmter "@[<2>Record me_as_species " ;
+  (* We do not add any bindings to the [collections_carrier_mapping]
+     before printing the record type parameters for 2 reasons:
+       - species parameters carriers of the record are in the
+         [collections_carrier_mapping], hence any added binding would make
+         think to an extra species parameter, hence to an extra parameter to
+         the record (obviously wrong).
+       - since species carriers are not recursive, there is no reason
+         to have "Self" parametrizing its own record type.
+     Generate the record parameters mapping the species parameters and the
+     methods from them we depend on ! *)
   let abstracted_params_methods_in_record_type =
     generate_record_type_parameters
       ctx env field_abstraction_infos in
@@ -1494,6 +1491,8 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
      Hence, if we refer to our "rep" we will be directly mapped onto the
      "rf_T" without needing to re-construct this name each time. Do same
      thing for "Self". *)
+  let (my_fname, my_species_name) = ctx.Context.scc_current_species in
+  let my_species_name = Parsetree_utils.name_of_vname my_species_name in
   let collections_carrier_mapping =
     (make_Self_cc_binding_rf_T
       ~current_species: ctx.Context.scc_current_species) ::
