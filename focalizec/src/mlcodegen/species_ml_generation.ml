@@ -14,8 +14,6 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: species_ml_generation.ml,v 1.108 2012-11-13 14:02:05 pessaux Exp $ *)
-
 
 (* *************************************************************** *)
 (** {b Descr} : This module performs the compilation from FoCaL to
@@ -31,12 +29,12 @@
     used later during the OCaml translation. For a species parameter
     [A is/in ... ], the type variable that will be used is "'" + lowercased
     name of the species parameter + an int unique in this type +
-    "_as_carrier".
+    "_T".
     We need to add an extra int (a stamp) to prevent a same type variable
     from appearing several time in the tricky case where a IN and a IS
     parameters wear the same lowercased name. For instance:
     "species A (F is B, f in F)" where "F" and "f" will lead to a same name
-    of ML type variable: "'f_as_carrier"
+    of ML type variable: "'f_T"
 
     {b Rem} : Not exported outside this module.                             *)
 (* ************************************************************************ *)
@@ -52,7 +50,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
              lowercase. *)
           let carrier_type_variable_name =
             "'" ^ (String.uncapitalize n_as_string) ^ (string_of_int !cnt) ^
-            "_as_carrier" in
+            "_T" in
           incr cnt ;
           (* Now, build the "collection type" this name will be bound to.
              According to how the "collection type" of parameters are built,
@@ -67,7 +65,7 @@ let build_collections_carrier_mapping ~current_unit species_descr =
              for lowercase/uppercase. *)
           let carrier_type_variable_name =
             "'" ^ (String.uncapitalize (Parsetree_utils.name_of_vname n)) ^
-            (string_of_int !cnt) ^ "_as_carrier" in
+            (string_of_int !cnt) ^ "_T" in
           incr cnt ;
           (type_coll,
            (carrier_type_variable_name, (Types.CCMI_in provenance))))
@@ -183,7 +181,7 @@ let generate_record_type ctx species_descr =
   Format.fprintf out_fmter "@[<2>type " ;
   (* Process parameters and "self" type variables names. *)
   if collections_carrier_mapping = [] then
-    Format.fprintf out_fmter "'me_as_carrier "
+    Format.fprintf out_fmter "'abst_T "
   else
     (begin
     (* If there are several parameters, then enclose them by parentheses. *)
@@ -192,7 +190,7 @@ let generate_record_type ctx species_descr =
       (fun (_, (type_variable_name, _)) ->
         Format.fprintf out_fmter "%s,@ " type_variable_name)
       collections_carrier_mapping ;
-    Format.fprintf out_fmter "'me_as_carrier)@] "
+    Format.fprintf out_fmter "'abst_T)@] "
     end) ;
   (* The name of the type. *)
 
@@ -215,10 +213,10 @@ let generate_record_type ctx species_descr =
      a collection (not species, really collection)  because there is no more
      late binding: here when one say "me", it's not anymore "what I will be
      finally" because we are already "finally". Before, as long a species is
-     not a collection, it always refers to itself's type as "'me_as_carrier"
+     not a collection, it always refers to itself's type as "'abst_T"
      because late binding prevents known until the last moment who "we will
      be". But because now it's the end of the species specification, we know
-     really "who we are" and "'me_as_carrier" is definitely replaced by
+     really "who we are" and "'abst_T" is definitely replaced by
      "who we really are" : "me_as_carrier". *)
   let (my_fname, my_species_name) = ctx.Context.scc_current_species in
   let collections_carrier_mapping =

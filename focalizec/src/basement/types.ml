@@ -6,7 +6,7 @@
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
 (*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
 (*            2012 ENSTA ParisTech                                            *)
@@ -1274,7 +1274,7 @@ let debug_collection_carrier_mapping cmap =
     a type. Basically, proceeds like the regular [pp_type_simple]
     except in 2 cases:
       - when encountering [Self] : in this case, generates the type variable
-        name representing [Self], i.e. by convention "'me_as_carrier",
+        name representing [Self], i.e. by convention "'abst_T",
       - when encountering a species carrier type : in this case, generate
         the type variable name representing this species (recover it thanks
         to the mapping between collections names and type variables names
@@ -1426,7 +1426,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
         (* Here is the major difference with the regular [pp_type_simple].
            We print the type variable that represents our carrier in the
            OCaml translation. *)
-        Format.fprintf ppf "'me_as_carrier"
+        Format.fprintf ppf "'abst_T"
     | ST_species_rep (module_name, collection_name) ->
         (begin
         try
