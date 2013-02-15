@@ -3965,11 +3965,16 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     Abstractions.compute_abstractions_for_fields
       ~with_def_deps_n_term_pr: true (Abstractions.EK_coq env')
       ctxt_no_ccmap species_descr.Env.TypeInformation.spe_sig_methods in
-  (* The record type representing the species' type. We get the parameters the
-     record type has. *)
+  (* If the species is complete, the record type representing its "type".
+     We get the parameters the record type has. If the species is not complete,
+     then don't generate and anyway, we won't use
+     [abstracted_params_methods_in_record_type] (its usages are guarded by the
+     same test of species completness). *)
   let abstracted_params_methods_in_record_type =
-    Species_record_type_generation.generate_record_type
-      ctxt_ccmap env' species_descr field_abstraction_infos in
+    if species_descr.Env.TypeInformation.spe_is_closed then
+      Species_record_type_generation.generate_record_type
+        ctxt_ccmap env' species_descr field_abstraction_infos
+    else [] in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
     Types.cpc_current_unit = ctxt_no_ccmap.Context.scc_current_unit;

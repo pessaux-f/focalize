@@ -1253,8 +1253,9 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     Context.scc_collections_carrier_mapping = collections_carrier_mapping ;
     Context.scc_lambda_lift_params_mapping = [] ;
     Context.scc_out_fmter = out_fmter } in
-  (* The record type representing the species' type. *)
-  generate_record_type ctx species_descr ;
+  (* If the species is complete, the record type representing its "type". *)
+  if species_descr.Env.TypeInformation.spe_is_closed then
+   generate_record_type ctx species_descr ;
   (* Now, the methods of the species. *)
   let field_abstraction_infos =
     Abstractions.compute_abstractions_for_fields
