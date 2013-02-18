@@ -322,11 +322,8 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                  else (
                    (* It comes from a toplevel stuff, hence not abstracted by
                       lambda-lifting. Then, we get the field of the
-                      collection's record obtained by the collection's
-                      effective value. *)
-                   Format.fprintf out_fmter
-                     "%a.effective_collection.(%a.rf_%a)"
-                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                      module representing the collection. *)
+                   Format.fprintf out_fmter "%a.%a"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
                   )
@@ -363,10 +360,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                      Format.fprintf out_fmter "rf_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded vname
                    else (
-                     Format.fprintf out_fmter
-                       "%a.effective_collection.(%a.rf_%a)"
-                       Parsetree_utils.pp_vname_with_operators_expanded
-                       coll_name
+                     Format.fprintf out_fmter "%a.%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        coll_name
                        Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -378,10 +372,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                     ourselves and moreover belongs to another compilation
                     unit. May be a species from the toplevel of another
                     FoCaL source file. *)
-                 Format.fprintf out_fmter
-                   "%s.%a.effective_collection.(%s.%a.rf_%a)"
-                   module_name
-                   Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                 Format.fprintf out_fmter "%s.%a.%a"
                    module_name
                    Parsetree_utils.pp_vname_with_operators_expanded coll_name
                    Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -1332,10 +1323,7 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
                   param_name param_name ;
                 if param_ty_mod <> current_unit then
                   Format.fprintf ppf "%s." param_ty_mod ;
-                Format.fprintf ppf "%s.effective_collection.(" param_ty_coll ;
-                if param_ty_mod <> current_unit then
-                  Format.fprintf ppf "%s." param_ty_mod ;
-                Format.fprintf ppf "%s.rf_T))@ @]" param_ty_coll)
+                Format.fprintf ppf "%s.me_as_carrier)@ @]" param_ty_coll)
     ctx.Context.scc_collections_carrier_mapping ;
   (* Now, we will find the methods of the parameters we decl-depend on in the
      Coq type expressions. Such dependencies can only appear through properties

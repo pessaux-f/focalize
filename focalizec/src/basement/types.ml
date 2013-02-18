@@ -1625,29 +1625,25 @@ let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
               ctx.cpc_collections_carrier_mapping in
           match kind with
            | CCMI_is -> Format.fprintf ppf "%s_T" coll_type_variable
-           | CCMI_in provenance ->
-               (begin
+           | CCMI_in provenance -> (
                match provenance with
-                | SCK_toplevel_collection | SCK_toplevel_species ->
-                    Format.fprintf ppf "%s.effective_collection.(%s.rf_T)"
-                      collection_name collection_name
-                | SCK_species_parameter ->
-                    Format.fprintf ppf "%s_T" coll_type_variable
-               end)
+               | SCK_toplevel_collection | SCK_toplevel_species ->
+                   Format.fprintf ppf "%s.me_as_carrier" collection_name
+               | SCK_species_parameter ->
+                   Format.fprintf ppf "%s_T" coll_type_variable
+              )
         with Not_found ->
           (* If the carrier is not in the mapping created for the species
              parameters, that's because the searched species carrier's is not
              a species parameter, i.e. it's a toplevel species.
              And as always, the type's name representing a species's carrier
-             is the species's name + ".rf_T" with a possible module prefix
-             qualification if the species belongs to a file that is not the
-             currently compiled one. *)
+             is the species's name + "me_as_carrier" with a possible module
+             prefix qualification if the species belongs to a file that is not
+             the currently compiled one. *)
           if ctx.cpc_current_unit = module_name then
-            Format.fprintf ppf "%s.effective_collection.(%s.rf_T)"
-              collection_name collection_name
+            Format.fprintf ppf "%s.me_as_carrier" collection_name
           else
-            Format.fprintf ppf "%s.%s.effective_collection.(%s.%s.rf_T)"
-              module_name collection_name module_name collection_name
+            Format.fprintf ppf "%s.%s.me_as_carrier" module_name collection_name
         end)
 
   (* ********************************************************************* *)

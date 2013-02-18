@@ -67,8 +67,8 @@ let generate_constant out_fmter constant =
     the lambda-lifted principle. Otherwise, this ident is considered as
     from something not abstracted, coming from a toplevel collection. In
     this case, it is printed as a field coming from the collection's
-    effective value (i.e. field "effective_collection" of the collection
-    value) with its scoping qualification if there is some.
+    module, i.e. the direct name of the method with its scoping qualification
+    if there is some.
 
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
@@ -192,8 +192,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                    (* It comes from a toplevel stuff, hence not abstracted *)
                    (* by lambda-lifting.                                   *)
                    Format.fprintf out_fmter
-                     "%a.effective_collection.%a.rf_%a"
-                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                     "%a.%a"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
                    end)
@@ -222,9 +221,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                     )
                    else (
                      Format.fprintf out_fmter
-                       "%a.effective_collection.%a.rf_%a"
-                       Parsetree_utils.pp_vname_with_operators_expanded
-                       coll_name
+                       "%a.%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        coll_name
                        Parsetree_utils.pp_vname_with_operators_expanded
@@ -238,9 +235,7 @@ let generate_expr_ident_for_method_generator ctx ~local_idents ident =
                       FoCaL source file. *)
                    let capitalized_modname = String.capitalize module_name in
                    Format.fprintf out_fmter
-                     "%s.%a.effective_collection.%s.%a.rf_%a"
-                     capitalized_modname
-                     Parsetree_utils.pp_vname_with_operators_expanded coll_name
+                     "%s.%a.%a"
                      capitalized_modname
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname

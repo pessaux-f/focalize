@@ -111,7 +111,7 @@ let print_comma_separated_vars_list_from_mapping out_fmter vars_list =
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let generate_rep_constraint_in_record_type ctx fields =
+let generate_rep_definition ctx fields =
   let rec rec_search = function
     | [] -> ()
     | h :: q ->
@@ -175,7 +175,7 @@ let generate_record_type ctx species_descr =
     ctx.Context.scc_collections_carrier_mapping in
   (* First, check if "rep" is defined. If so, then generate the type
      constraint reflecting its effective structure. *)
-  generate_rep_constraint_in_record_type
+  generate_rep_definition
     ctx species_descr.Env.TypeInformation.spe_sig_methods ;
   (* The header of the OCaml type definition for the species record. *)
   Format.fprintf out_fmter "@[<2>type " ;
@@ -231,7 +231,7 @@ let generate_record_type ctx species_descr =
       | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _, _) ->
           (begin
           (* Skip "rep", because it is a bit different and processed above
-             c.f. function [generate_rep_constraint_in_record_type]. *)
+             c.f. function [generate_rep_definition]. *)
           if (Parsetree_utils.name_of_vname n) <> "rep" then
             (begin
             let ty = Types.specialize sch in
@@ -267,7 +267,7 @@ let generate_record_type ctx species_descr =
                   Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
                 (* Since we are printing a whole type scheme, it is stand-alone
                    and we don't need to keep name sharing with anythin else. *)
-                Format.fprintf out_fmter "rf_%a : %a ;@\n"
+                Format.fprintf out_fmter "@[<2>rf_%a : %a ;@]@\n"
                   Parsetree_utils.pp_vname_with_operators_expanded n
                   (Types.pp_type_simple_to_ml
                      ~current_unit: ctx.Context.scc_current_unit
@@ -286,6 +286,105 @@ let generate_record_type ctx species_descr =
     Format.fprintf out_fmter "@]}@\n"
   else
     Format.fprintf out_fmter "unit@]@\n"
+;;
+
+
+
+(* ************************************************************************ *)
+(** {b Descr} : Generate the OCaml code representing the signature of the
+    coming module implementing a collection. This interface wears the name
+    of the collection suffixed by "Sig". When later we will generate the
+    effective module implementing the species, we will add it a type
+    constraint usign the presently generated module signature.
+    {b Rem} : Not exported outside this module.                             *)
+(* ************************************************************************ *)
+let generate_collection_module_interface ctx collection_descr =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  let (my_fname, my_coll_name) = ctx.Context.scc_current_species in
+ (* Name the signature as the species module suffixed by "Sig". *)
+  Format.fprintf out_fmter
+    "@[<2>module type %aSig = sig@\n" Sourcify.pp_vname my_coll_name ;
+  (* Since we structurally are in a collection,  "rep" is defined. Moreover,
+     we want it to be abstract. *)
+  Format.fprintf out_fmter "type me_as_carrier@\n" ;
+  let collections_carrier_mapping =
+    ctx.Context.scc_collections_carrier_mapping in
+  (* We now extend the collections_carrier_mapping with ourselve known.
+     This is required because "rep" is defined.
+     Hence, if we refer to our "rep" (i.e. "me_as_carrier"), not to Self, I
+     mean to a type-collection that is "(our compilation unit, our species
+     name)" (that is the case when creating a collection where Self gets
+     especially abstracted to "(our compilation unit, our species name)", we
+     will be known and we wont get the fully qualified type name, otherwise
+     this would lead to a dependency with ourselve in term of OCaml module.
+     Indeed, we now may refer to our carrier explicitely here in the scope of
+     a collection (not species, really collection)  because there is no more
+     late binding: here when one say "me", it's not anymore "what I will be
+     finally" because we are already "finally". Before, as long a species is
+     not a collection, it always refers to itself's type as "'abst_T"
+     because late binding prevents known until the last moment who "we will
+     be". But because now it's the end of the species specification, we know
+     really "who we are" and "'abst_T" is definitely replaced by
+     "who we really are" : "me_as_carrier". *)
+
+  let collections_carrier_mapping =
+    ((my_fname, (Parsetree_utils.name_of_vname my_coll_name)),
+     (* [CCMI_is] or whatever, it's not used for OCaml code generation. *)
+     ("me_as_carrier", Types.CCMI_is)) ::
+    collections_carrier_mapping in
+  (* The record's fields types. *)
+  List.iter
+    (function
+      | Env.TypeInformation.SF_sig (from, n, sch)
+      | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _, _) -> (
+          (* Skip "rep", because it is a processed above. *)
+          if (Parsetree_utils.name_of_vname n) <> "rep" then (
+            let ty = Types.specialize sch in
+            (* If the type of the sig refers to type "Prop", then the sig
+               is related to a logical let and hence must not be generated in
+               OCaml. *)
+            if not (Types.refers_to_prop_p ty) then (
+              Format.fprintf out_fmter "(* From species %a. *)@\n"
+                Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
+              (* Since we are printing a whole type scheme, it is stand-alone
+                 and we don't need to keep name sharing with anythin else. *)
+              Format.fprintf out_fmter "@[<2>val %a : %a@]@\n"
+                Parsetree_utils.pp_vname_with_operators_expanded n
+                (Types.pp_type_simple_to_ml
+                   ~current_unit: ctx.Context.scc_current_unit
+                   collections_carrier_mapping)
+                ty
+             )
+           )
+         )
+      | Env.TypeInformation.SF_let_rec l ->
+          List.iter
+            (fun (from, n, _, sch, _, _, _, _) ->
+              let ty = Types.specialize sch in
+              (* If the type of the sig refers to type "Prop", then the sig
+                 is related to a logical let and hence must not be generated
+                 in OCaml. *)
+              if not (Types.refers_to_prop_p ty) then (
+                Format.fprintf out_fmter "(* From species %a. *)@\n"
+                  Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
+                (* Since we are printing a whole type scheme, it is stand-alone
+                   and we don't need to keep name sharing with anythin else. *)
+                Format.fprintf out_fmter "@[<2>val %a : %a@]@\n"
+                  Parsetree_utils.pp_vname_with_operators_expanded n
+                  (Types.pp_type_simple_to_ml
+                     ~current_unit: ctx.Context.scc_current_unit
+                     collections_carrier_mapping)
+                    ty
+               )
+            )
+            l
+      | Env.TypeInformation.SF_theorem  (_, _, _, _, _, _)
+      | Env.TypeInformation.SF_property (_, _, _, _, _) ->
+          (* Properties and theorems are purely discarded in the Ocaml
+             translation. *)
+          ())
+    collection_descr.Env.TypeInformation.spe_sig_methods ;
+  Format.fprintf out_fmter "@]end@\n@\n"
 ;;
 
 
@@ -881,17 +980,14 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
             | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
                 let capitalized_coll_mod = String.capitalize coll_mod in
                 let prefix =
-                  if coll_mod = current_unit then
-                    coll_name ^ ".effective_collection." ^ coll_name ^ "."
-                  else capitalized_coll_mod ^ "." ^ coll_name ^
-                    ".effective_collection." ^ capitalized_coll_mod ^ "." ^
-                    coll_name ^ "." in
+                  if coll_mod = current_unit then ""
+                  else capitalized_coll_mod ^ "." in
                 List.iter
                   (fun (meth, _) ->
                     (* Don't print the type to prevent being too verbose. *)
-                    Format.fprintf out_fmter "@ %srf_%a"
-                      prefix Parsetree_utils.pp_vname_with_operators_expanded
-                      meth)
+                    Format.fprintf out_fmter "@ %s%s.%a"
+                      prefix coll_name
+                      Parsetree_utils.pp_vname_with_operators_expanded meth)
                   meths_from_param
               | Misc_common.IPI_by_species_parameter prm ->
                   let species_param_name =
@@ -1455,18 +1551,8 @@ let apply_collection_generator_to_parameters ctx env collection_body_params
                 | Some fname ->
                     Format.fprintf out_fmter "%s." (String.capitalize fname)
                 | None -> ()) ;
-               (* Collection name."effective_collection.". *)
-               Format.fprintf out_fmter "%a.effective_collection."
-                 Parsetree_utils.pp_vname_with_operators_expanded
-                 corresponding_effective_vname ;
-               (* If needed, qualify the name of the species in the OCaml
-                  code. *)
-               (match corresponding_effective_opt_fname with
-                | Some fname ->
-                    Format.fprintf out_fmter "%s." (String.capitalize fname)
-                | None -> ()) ;
-               (* Species name.rf_method name. *)
-               Format.fprintf out_fmter "%a.rf_%a"
+               (* Collection name "." species method name. *)
+               Format.fprintf out_fmter "%a.%a"
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname
                  Parsetree_utils.pp_vname_with_operators_expanded meth_name)
@@ -1558,11 +1644,8 @@ let collection_compile env ~current_unit out_fmter collection_def
   if Configuration.get_verbose () then
     Format.eprintf "Generating OCaml code for collection %a@."
       Sourcify.pp_vname collection_name ;
-  (* Start the module encapsulating the collection representation. *)
-  Format.fprintf out_fmter "@[<2>module %a =@\nstruct@\n"
-    Sourcify.pp_vname collection_name ;
-  (* Now, establish the mapping between collections available *)
-  (* and the type variable names representing their carrier.  *)
+  (* Establish the mapping between collections available and the type variable
+     names representing their carrier.  *)
   let collections_carrier_mapping =
     build_collections_carrier_mapping ~current_unit collection_descr in
   (* Create the initial compilation context for this collection. *)
@@ -1575,8 +1658,17 @@ let collection_compile env ~current_unit out_fmter collection_def
     Context.scc_collections_carrier_mapping = collections_carrier_mapping ;
     Context.scc_lambda_lift_params_mapping = [] ;
     Context.scc_out_fmter = out_fmter } in
-  (* The record type representing the collection's type. *)
-  generate_record_type ctx collection_descr ;
+  (* Generate the module signature. Name it as the species module suffixed
+     by "Sig". *)
+  generate_collection_module_interface ctx collection_descr ;
+  (* Start the module encapsulating the collection representation. *)
+  Format.fprintf out_fmter "@[<2>module %a : %aSig =@\nstruct@\n"
+    Sourcify.pp_vname collection_name Sourcify.pp_vname collection_name ;
+  (* Generate the type representing Self. It is needed for collections
+     whose repr rely on the current collection's one. We just need this, not
+     the full record type. *)
+  generate_rep_definition
+    ctx collection_descr.Env.TypeInformation.spe_sig_methods ;
   (* We do not want any collection generator. Instead, we will call the
      collection generator of the collection we implement and apply it to the
      functions it needs coming from the collection applied to its parameters
@@ -1584,13 +1676,10 @@ let collection_compile env ~current_unit out_fmter collection_def
   (* Now generate the value representing the effective instance of the
      collection. We always name it by "effective_collection". *)
   Format.fprintf out_fmter "@[<2>let effective_collection =@\n" ;
-  (* The temporary value resulting from the application of the collection
-     generator mentionned just above... *)
-  Format.fprintf out_fmter "@[<2>let t =@\n" ;
-  (* Now, get the collection generator from the closed species we implement. *)
   let implemented_species_name =
     collection_def.Parsetree.ast_desc.Parsetree.
       cd_body.Parsetree.ast_desc.Parsetree.se_name in
+  (* Now, get the collection generator from the closed species we implement. *)
   print_implemented_species_as_ocaml_module
     ~current_unit out_fmter implemented_species_name ;
   (* Don't forget to add the extra unit arument. C.f
@@ -1624,20 +1713,13 @@ let collection_compile env ~current_unit out_fmter collection_def
                cgi_implemented_species_params_names in
          apply_collection_generator_to_parameters
            ctx env collection_body_params params_info) ;
-    (* Close the pretty print box of the "t". *)
-    Format.fprintf out_fmter "@ in@]@\n" ;
-    (* And now, create the final value representing the effective instance of
-       our collection, borrowing each field from the temporary value obtained
-       above. This way, our collection will have ITS own record fields names,
-       preventing the need to use those coming from the it implements. *)
-    let has_fields = ref false in
-    let init_fields () =
-      if not !has_fields then Format.fprintf out_fmter "@[<2>{@ " ;
-      has_fields := true;
-    in
-    (* Make the record value borrowing every fields from the temporary value
-       generated by the collection generator. Remind that logical let ARE NOT
-       generated in OCaml, hence must not appear in the final record value ! *)
+    (* Close the pretty print box of the "effective_collection". *)
+    Format.fprintf out_fmter "@]@\n" ;
+    (* And now, create the final functions of collection, borrowing each field
+       from the temporary value obtained above by the collection generator and
+       binding it to a function wearing the same name than the method.
+       Remind that logical let ARE NOT generated in OCaml, hence must not
+       appear in the final record value ! *)
     List.iter
       (function
         | Env.TypeInformation.SF_sig (_, _, _)
@@ -1646,40 +1728,32 @@ let collection_compile env ~current_unit out_fmter collection_def
         | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, flags) ->
             (* Generate only if not a logical let ! *)
             if flags.Env.TypeInformation.ldf_logical =
-               Parsetree.LF_no_logical then
-              (begin
-              init_fields ();
-              Format.fprintf out_fmter "rf_%a =@ t."
+               Parsetree.LF_no_logical then (
+              Format.fprintf out_fmter "@[<2>let %a =@ effective_collection."
                 Parsetree_utils.pp_vname_with_operators_expanded n ;
               print_implemented_species_as_ocaml_module
                 ~current_unit out_fmter implemented_species_name ;
-              Format.fprintf out_fmter ".rf_%a ;@\n"
+              Format.fprintf out_fmter ".rf_%a@]@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
-              end)
+             )
         | Env.TypeInformation.SF_let_rec l ->
             List.iter
               (fun (_, n, _, _, _, _, _, flags) ->
                 (* Generate only if not a logical let ! *)
                 if flags.Env.TypeInformation.ldf_logical =
-                   Parsetree.LF_no_logical then
-                  (begin
-                  init_fields ();
-                  Format.fprintf out_fmter "rf_%a =@ t."
+                   Parsetree.LF_no_logical then (
+                  Format.fprintf out_fmter 
+                    "@[<2>let %a =@ effective_collection."
                     Parsetree_utils.pp_vname_with_operators_expanded n ;
                   print_implemented_species_as_ocaml_module
                     ~current_unit out_fmter implemented_species_name ;
-                  Format.fprintf out_fmter ".rf_%a ;@\n"
+                  Format.fprintf out_fmter ".rf_%a@]@\n"
                     Parsetree_utils.pp_vname_with_operators_expanded n
-                  end))
+                 ))
               l)
       collection_descr.Env.TypeInformation.spe_sig_methods ;
-    (* End the definition of the value representing the effective instance. *)
-    if !has_fields then
-      Format.fprintf out_fmter "@ }@]"
-    else
-      Format.fprintf out_fmter "()";
     (* End the module representing the collection. *)
-    Format.fprintf out_fmter "@]@\nend ;;@]@\n@."
+    Format.fprintf out_fmter "end ;;@]@\n@."
   with Not_found ->
     (* Don't see why the species could not be present in the environment. The
        only case would be to make a collection from a collection since

@@ -176,8 +176,6 @@ let instanciate_IS_parameter_through_inheritance ctx env original_param_index
                ~current_unit ~start_spec_mod: spec_mod
                ~start_spec_name: spec_name
                ~method_name: meth in
-           (* We directly access the species's Module method since in a fully
-              defined toplevel species their is no "effective_collection". *)
            let prefix =
              if real_spec_mod = current_unit then real_spec_name ^ "."
              else
@@ -188,14 +186,12 @@ let instanciate_IS_parameter_through_inheritance ctx env original_param_index
          meths_from_param
    | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
        let prefix =
-         if coll_mod = current_unit then
-           coll_name ^ ".effective_collection.(" ^ coll_name ^ "."
-         else coll_mod ^ "." ^ coll_name ^
-           ".effective_collection.(" ^ coll_mod ^ "." ^ coll_name ^ "." in
+         if coll_mod = current_unit then coll_name ^ "."
+         else coll_mod ^ "." ^ coll_name ^ "." in
        List.iter
          (fun (meth, _) ->
            (* Don't print the type to prevent being too verbose. *)
-           Format.fprintf out_fmter "@ %srf_%a)"
+           Format.fprintf out_fmter "@ %s%a"
              prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
          meths_from_param
    | Misc_common.IPI_by_species_parameter prm ->
@@ -236,23 +232,18 @@ let instanciate_IS_parameter_carrier_through_inheritance ctx env
        Format.fprintf out_fmter "@ ";
        if spec_mod <> current_unit then
          Format.fprintf out_fmter "%s." spec_mod;
-       (* [Unsure] Eh oui, dans une toplevel species, on n'a pas de
-          "effective_collection" via lequel accéder au champ représentant
-          "rep". Faudrait-il dans ce cas générer un champ représentant la
-          "rep", au cas où quelqu'un chercherait à instancier par cette
-          espèce toplevel complète ? *)
-       Format.fprintf out_fmter "%s.??????(" spec_name;
+       (* [Unsure] Eh oui, dans une toplevel species, on n'a rien comme
+         champ représentant "rep". Faudrait-il dans ce cas générer un champ
+          représentant la "rep", au cas où quelqu'un chercherait à instancier
+          par cette espèce toplevel complète ? *)
+       Format.fprintf out_fmter "%s.??????(" spec_name ;
        if spec_mod <> current_unit then
-         Format.fprintf out_fmter "%s." spec_mod;
-       Format.fprintf out_fmter "%s.rf_T" spec_name
+         Format.fprintf out_fmter "%s." spec_mod ;
+       Format.fprintf out_fmter "%s.me_as_carrier" spec_name
    | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
-       Format.fprintf out_fmter "@ ";
-       if coll_mod <> current_unit then
-         Format.fprintf out_fmter "%s." coll_mod;
-       Format.fprintf out_fmter "%s.effective_collection.(" coll_name;
-       if coll_mod <> current_unit then
-         Format.fprintf out_fmter "%s." coll_mod;
-       Format.fprintf out_fmter "%s.rf_T)" coll_name
+       Format.fprintf out_fmter "@ " ;
+       if coll_mod <> current_unit then Format.fprintf out_fmter "%s." coll_mod;
+       Format.fprintf out_fmter "%s.me_as_carrier" coll_name
    | Misc_common.IPI_by_species_parameter prm ->
        (* In Coq, species parameters are abstracted by "_p_species_xxx". *)
        let species_param_name =
@@ -1383,12 +1374,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
             Format.fprintf out_fmter "@[<2>Parameter ";
             if mod_name <> ctx.Context.scc_current_unit then
               Format.fprintf out_fmter "%s." mod_name;
-            Format.fprintf out_fmter "%a.effective_collection.("
-              Parsetree_utils.pp_vname_with_operators_expanded
-              topl_species_name;
-            if mod_name <> ctx.Context.scc_current_unit then
-              Format.fprintf out_fmter "%s." mod_name;
-            Format.fprintf out_fmter "%a.rf_%a)"
+            Format.fprintf out_fmter "%a.%a"
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
             Format.fprintf out_fmter
@@ -1398,19 +1384,14 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               "@[<2>Parameter ";
             if mod_name <> ctx.Context.scc_current_unit then
               Format.fprintf out_fmter "%s." mod_name;
-            Format.fprintf out_fmter "%a.effective_collection.("
-              Parsetree_utils.pp_vname_with_operators_expanded
-              topl_species_name;
-            if mod_name <> ctx.Context.scc_current_unit then
-              Format.fprintf out_fmter "%s." mod_name;
-            Format.fprintf out_fmter "%a.rf_%a)"
+            Format.fprintf out_fmter "%a.%a"
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname;
             Format.fprintf out_fmter " :@ ";
             (* We must substitute Self by the toplevel collection. In effect,
                each method of Self of this toplevel collection must be called
                anyway
-                  module.species.effective_collection.(module.species.rf_meth),
+                  module.species.meth,
                possibly without module if it is the current one. This is needed
                only when generating in Zenon's Section the methods to used via
                "by property" or "by definition" when they are identified to be
@@ -4200,14 +4181,8 @@ let print_record_type_carriers_args_instanciations ctx env args_instanciations =
           Format.fprintf out_fmter "@ ";
           (match corresponding_effective_opt_fname with
            | Some fname -> Format.fprintf out_fmter "%s." fname
-           | None -> ());
-          Format.fprintf out_fmter "%a.effective_collection.(@[<1>"
-            Parsetree_utils.pp_vname_with_operators_expanded
-            corresponding_effective_vname;
-          (match corresponding_effective_opt_fname with
-           | Some fname -> Format.fprintf out_fmter "%s." fname
-           | None -> ());
-          Format.fprintf out_fmter "%a.rf_T)@]"
+           | None -> ()) ;
+          Format.fprintf out_fmter "%a.me_as_carrier"
             Parsetree_utils.pp_vname_with_operators_expanded
             corresponding_effective_vname
       | RTAI_by_in expr ->
@@ -4248,16 +4223,8 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
                (match corresponding_effective_opt_fname with
                 | Some fname -> Format.fprintf out_fmter "%s." fname
                 | None -> ());
-               (* Species name + ".effective_collection.". *)
-               Format.fprintf out_fmter "%a.effective_collection.(@[<1>"
-                 Parsetree_utils.pp_vname_with_operators_expanded
-                 corresponding_effective_vname;
-               (* If needed, qualify the name of the species in the Coq code. *)
-               (match corresponding_effective_opt_fname with
-                | Some fname -> Format.fprintf out_fmter "%s." fname
-                | None -> ());
-               (* Species name.rf_method name. *)
-               Format.fprintf out_fmter "%a.rf_%a)@]"
+               (* Species name.method name. *)
+               Format.fprintf out_fmter "%a.%a@]"
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname
                  Parsetree_utils.pp_vname_with_operators_expanded meth_name)
@@ -4362,9 +4329,51 @@ let print_implemented_species_as_coq_module ~current_unit out_fmter
 
 
 
+(** Generate the definition representing the carrier of a collection. Must
+    be the first "method" of the generated collection code. Similar to its
+    OCaml counterpart. *)
+let generate_rep_definition ctx fields =
+  let rec rec_search = function
+    | [] -> ()
+    | h :: q -> (
+        match h with
+        | Env.TypeInformation.SF_sig (_, n, sch) ->
+            (* Check if the sig is "rep". *)
+            if (Parsetree_utils.name_of_vname n) = "rep" then (
+              Format.fprintf ctx.Context.scc_out_fmter
+                "(* Carrier's structure explicitly given by \"rep\". *)@\n" ;
+              Format.fprintf ctx.Context.scc_out_fmter
+                "@[<2>Definition me_as_carrier@ " ;
+              (* Print the variables names... *)
+              List.iter
+                (function (_, (h, _)) ->
+                  Format.fprintf ctx.Context.scc_out_fmter "(%s : Set) " h)
+                ctx.Context.scc_collections_carrier_mapping ;
+              let print_ctx = {
+                Types.cpc_current_unit = ctx.Context.scc_current_unit ;
+                Types.cpc_current_species =
+                  Some
+                    (Parsetree_utils.type_coll_from_qualified_species
+                       ctx.Context.scc_current_species) ;
+                Types.cpc_collections_carrier_mapping =
+                ctx.Context.scc_collections_carrier_mapping } in
+              (* Now, output the type's name and body. *)
+              let ty = Types.specialize sch in
+              Format.fprintf ctx.Context.scc_out_fmter ":=@ %a.@]@\n"
+                (Types.pp_type_simple_to_coq print_ctx) ty
+             )
+            else rec_search q
+        | _ -> rec_search q
+       ) in
+  rec_search fields
+;;
+
+
+
+
 (* ********************************************************************** *)
-(** {b Descr} : Creates the effective value of the collection's record.
-    The record value borrows every fields from the temporary value
+(** {b Descr} : Creates the effective methods of the collection's.
+    The methods are borrowed from every fields from the temporary value
     ("__implemented") generated by the collection generator.
     In order to select a field of the "__implemented", i.e. to perform a
     projection on the "__implemented" record type, we must remember the
@@ -4386,12 +4395,11 @@ let print_implemented_species_as_coq_module ~current_unit out_fmter
         Foo0_v : basics.int__t
         }.
       ...
-      Record Coll : Type :=
-        mk_Coll {
-        Coll_T :> Set;
+      Module Coll =
+        Definition me_as_carrier := ...
         (* From species collgen_for_coq#Foo0. *)
-        Coll_v : basics.int__t
-        }.
+        Definition v := ...
+       End.
      ]}
 
     To create the record value for Coll, we must borrow the field "v"
@@ -4410,40 +4418,31 @@ let print_implemented_species_as_coq_module ~current_unit out_fmter
       Definition Coll_effective_collection :=
         mk_Coll
           self_T
-          mk_Coll self_T __implemented.(Foo0_v Csp0_effective_collection).
+          __implemented.(Foo0_v Csp0_effective_collection).
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
-let make_collection_effective_record ctx env implemented_species_name
+let make_collection_effective_methods ctx env implemented_species_name
     collection_descr formals_to_effectives record_type_args_instanciations
     record_type_args_instanciations2 =
   let out_fmter = ctx.Context.scc_out_fmter in
   let current_unit = ctx.Context.scc_current_unit in
-  (* The header of the record. *)
-  Format.fprintf out_fmter "@[<2>mk_record";
-  (* Now, always applying to the representation of "Self", i.e "rf_T". *)
-  Format.fprintf out_fmter "@ t.@[<1>(";
-  print_implemented_species_as_coq_module
-    ~current_unit out_fmter implemented_species_name;
-  Format.fprintf out_fmter ".rf_T";
-  (* Apply to the instanciations of the parameters carriers. *)
-  print_record_type_carriers_args_instanciations
-    ctx env record_type_args_instanciations;
-  (* Apply to the instanciations of the parameters methods we depend on. *)
-  print_methods_from_params_instanciations
-     ctx env formals_to_effectives record_type_args_instanciations2;
-  Format.fprintf out_fmter ")@]";
+  (* First, the definition of the carrier. *)
+  generate_rep_definition
+     ctx collection_descr.Env.TypeInformation.spe_sig_methods ;
   List.iter
     (function
       | Env.TypeInformation.SF_sig (_, _, _)
       | Env.TypeInformation.SF_property (_, _, _, _, _) -> ()
       | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
       | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
-          Format.fprintf out_fmter "@ t.@[<1>(";
+          Format.fprintf out_fmter
+            "@[<2>Definition %a :=@ effective_collection.@[<1>("
+            Parsetree_utils.pp_vname_with_operators_expanded n ;
           print_implemented_species_as_coq_module
             ~current_unit out_fmter implemented_species_name;
           Format.fprintf out_fmter ".rf_%a"
-            Parsetree_utils.pp_vname_with_operators_expanded n;
+            Parsetree_utils.pp_vname_with_operators_expanded n ;
           (* Apply to the instanciations of the parameters carriers. *)
           print_record_type_carriers_args_instanciations
             ctx env record_type_args_instanciations;
@@ -4452,15 +4451,17 @@ let make_collection_effective_record ctx env implemented_species_name
           print_methods_from_params_instanciations
             ctx env formals_to_effectives
             record_type_args_instanciations2;
-          Format.fprintf out_fmter ")@]"
+          Format.fprintf out_fmter ").@]@]@\n"
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
             (fun (_, n, _, _, _, _, _, _) ->
-              Format.fprintf out_fmter "@ t.@[<1>(";
+              Format.fprintf out_fmter
+                "@[<2>Definition %a :=@ effective_collection.@[<1>("
+                Parsetree_utils.pp_vname_with_operators_expanded n ;
               print_implemented_species_as_coq_module
                 ~current_unit out_fmter implemented_species_name;
               Format.fprintf out_fmter ".rf_%a"
-                Parsetree_utils.pp_vname_with_operators_expanded n;
+                Parsetree_utils.pp_vname_with_operators_expanded n ;
               (* Apply to the instanciations of the parameters carriers. *)
               print_record_type_carriers_args_instanciations
                 ctx env record_type_args_instanciations;
@@ -4469,11 +4470,9 @@ let make_collection_effective_record ctx env implemented_species_name
               print_methods_from_params_instanciations
                  ctx env formals_to_effectives
                  record_type_args_instanciations2;
-              Format.fprintf out_fmter ")@]")
+              Format.fprintf out_fmter ").@]@]@\n")
             l)
-    collection_descr.Env.TypeInformation.spe_sig_methods;
-  (* Close the pretty-print box of the "effective_collection". *)
-  Format.fprintf out_fmter ".@]@\n"
+    collection_descr.Env.TypeInformation.spe_sig_methods
 ;;
 
 
@@ -4655,9 +4654,6 @@ let collection_compile env ~current_unit out_fmter collection_def
      functions it needs coming from the collection applied to its parameters
      if there are some. *)
   Format.fprintf out_fmter "@[<2>Let effective_collection :=@ ";
-  (* The temporary value resulting from the application of the collection
-     generator mentionned just above... *)
-  Format.fprintf out_fmter "@[<2>let t :=@\n";
   (* Now, get the collection generator from the closed species we implement. *)
   let implemented_species_name =
     collection_def.Parsetree.ast_desc.Parsetree.
@@ -4701,14 +4697,14 @@ let collection_compile env ~current_unit out_fmter collection_def
            let record_type_args_instanciations =
              apply_collection_generator_to_parameters
                ctx env formals_to_effectives params_info in
-           (* Close the pretty print box of the "t". *)
-           Format.fprintf out_fmter "@ in @]@\n";
+           (* Close the pretty print box of the "effective_collection". *)
+           Format.fprintf out_fmter ".@]@\n" ;
            (* And now, create the final value representing the effective
               instance of our collection, borrowing each field from the
               temporary value obtained above. This way, our collection will have
               ITS own record fields names, preventing the need to use those
               coming from the it implements. *)
-           make_collection_effective_record
+           make_collection_effective_methods
              ctx env implemented_species_name
              collection_descr formals_to_effectives
              record_type_args_instanciations
@@ -4718,8 +4714,6 @@ let collection_compile env ~current_unit out_fmter collection_def
              ~current_unit: ctx.Context.scc_current_unit
              implemented_species_name
              formals_to_effectives implemented_species_methods) in
-    (* Close thre pretty print box of the "effective_collection". *)
-    Format.fprintf out_fmter "@]";
     (* End of the pretty print box of the Module embedding the collection. *)
     Format.fprintf out_fmter "@]\nEnd %a.@\n@\n"
       Sourcify.pp_vname collection_name;
