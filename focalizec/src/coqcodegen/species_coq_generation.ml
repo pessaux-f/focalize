@@ -14,8 +14,6 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: species_coq_generation.ml,v 1.201 2012-11-13 14:02:05 pessaux Exp $ *)
-
 
 (* *************************************************************** *)
 (** {b Descr} : This module performs the compilation from FoCaL to
@@ -25,40 +23,34 @@
 
 
 exception Attempt_proof_by_def_of_species_param of
-  (Location.t * Parsetree.expr_ident)
-;;
+  (Location.t * Parsetree.expr_ident) ;;
 
 
 exception Attempt_proof_by_def_of_declared_method_of_self of
-  (Location.t * Parsetree.expr_ident)
-;;
+  (Location.t * Parsetree.expr_ident) ;;
 
 
 exception Attempt_proof_by_def_of_local_ident of
-  (Location.t * Parsetree.expr_ident)
-;;
+  (Location.t * Parsetree.expr_ident) ;;
 
 
 exception Attempt_proof_by_prop_of_local_ident of
-  (Location.t * Parsetree.expr_ident)
-;;
+  (Location.t * Parsetree.expr_ident) ;;
 
 
 exception Attempt_proof_by_unknown_hypothesis of
-  (Location.t * Parsetree.vname)
-;;
+  (Location.t * Parsetree.vname) ;;
 
 
 exception Attempt_proof_by_unknown_step of
-  (Location.t * Parsetree.node_label)
-;;
+  (Location.t * Parsetree.node_label) ;;
 
 
 let section_gen_sym =
   let cnt = ref 0 in
   (fun () ->
     let tmp = !cnt in
-    incr cnt;
+    incr cnt ;
     tmp)
 ;;
 
@@ -123,24 +115,21 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
 let find_compiled_field_memory name fields =
   let rec find = function
     | [] -> assert false
-    | h :: q ->
-        (begin
+    | h :: q -> (
         match h with
-         | Misc_common.CSF_let field_memory
-         | Misc_common.CSF_theorem field_memory ->
-             if field_memory.Misc_common.cfm_method_name = name then
-               field_memory
-             else find q
-         | Misc_common.CSF_let_rec fields_memories ->
-             (begin
-             try
-               List.find
-                 (fun fm -> fm.Misc_common.cfm_method_name = name)
-                 fields_memories
-             with Not_found -> find q
-             end)
-         | _ -> find q
-        end) in
+        | Misc_common.CSF_let field_memory
+        | Misc_common.CSF_theorem field_memory ->
+            if field_memory.Misc_common.cfm_method_name = name then field_memory
+            else find q
+        | Misc_common.CSF_let_rec fields_memories -> (
+            try
+              List.find
+                (fun fm -> fm.Misc_common.cfm_method_name = name)
+                fields_memories
+            with Not_found -> find q
+           )
+        | _ -> find q
+       ) in
   find fields
 ;;
 
@@ -3619,11 +3608,10 @@ let remind_collection_generator_arguments_for_params_carriers ctx =
          | Types.CCMI_is ->
              (* "IS" parameters are capitalized vnames. *)
              (Env.ScopeInformation.SPK_is, (Parsetree.Vuident param_ty_coll))
-         | Types.CCMI_in _ ->
-             (begin
+         | Types.CCMI_in _ -> (
              (* We generate the parameter (that's not its TYPE !). *)
              (Env.ScopeInformation.SPK_in, (Parsetree.Vlident param_name))
-             end))
+            ))
       ctx.Context.scc_collections_carrier_mapping in
   params_carriers_abstr_for_record
 ;;
@@ -3909,12 +3897,11 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
     Format.eprintf "Generating Coq code for species %a@."
-      Sourcify.pp_vname species_name;
+      Sourcify.pp_vname species_name ;
   (* Start the chapter encapsulating the species representation. *)
   let module_name =
     String.capitalize (Parsetree_utils.name_of_vname species_name) in
   Format.fprintf out_fmter "@[<2>Module %s.@\n" module_name;
-
   (* Insert in the environment the value bindings of the species methods and
      the species bindings for its parameters. This is needed since in Coq
      polymorphism is explicit, hence we need to know for each method the extra
@@ -3922,16 +3909,15 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   let env' =
     extend_env_for_species_def
       ~current_species: (current_unit, species_name) env species_descr in
-
   (* Create the initial compilation context for this species. *)
   let ctxt_no_ccmap = {
-    Context.scc_current_unit = current_unit;
-    Context.scc_current_species = (current_unit, species_name);
+    Context.scc_current_unit = current_unit ;
+    Context.scc_current_species = (current_unit, species_name) ;
     Context.scc_dependency_graph_nodes = dep_graph;
     Context.scc_species_parameters_names =
-      species_descr.Env.TypeInformation.spe_sig_params;
-    Context.scc_collections_carrier_mapping = [];
-    Context.scc_lambda_lift_params_mapping = [];
+      species_descr.Env.TypeInformation.spe_sig_params ;
+    Context.scc_collections_carrier_mapping = [] ;
+    Context.scc_lambda_lift_params_mapping = [] ;
     Context.scc_out_fmter = out_fmter } in
   (* Now, establish the mapping between collections available and the names
      representing their carrier for the record type. *)
@@ -4578,8 +4564,7 @@ let substitute_formal_by_effective_in_coll_meths ~current_unit
                         expr.Parsetree.ast_desc lexpr in
                     { accu_mi with Env.mi_type_kind = Env.MTK_logical lexpr' }
                end)
-           | Misc_common.CEA_collection_name_for_is qcoll ->
-               (begin
+           | Misc_common.CEA_collection_name_for_is qcoll -> (
                let param_as_type_coll =
                  (formal_parameters_mod_name,
                   (Parsetree_utils.name_of_vname param_vname)) in
@@ -4605,7 +4590,7 @@ let substitute_formal_by_effective_in_coll_meths ~current_unit
                         (Types.SBRCK_coll effective_as_type_coll)
                         lexpr in
                     { accu_mi with Env.mi_type_kind = Env.MTK_logical lexpr' }
-               end))
+              ))
         meth_info
         form_to_effec)
     meths
@@ -4619,7 +4604,7 @@ let collection_compile env ~current_unit out_fmter collection_def
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
     Format.eprintf "Generating Coq code for collection %a@."
-      Sourcify.pp_vname collection_name;
+      Sourcify.pp_vname collection_name ;
   (* Start the "Module" encapsulating the collection representation. *)
   Format.fprintf out_fmter "@[<2>Module %a.@\n"
     Sourcify.pp_vname collection_name;
@@ -4634,21 +4619,10 @@ let collection_compile env ~current_unit out_fmter collection_def
     Context.scc_current_species = (current_unit, collection_name);
     Context.scc_dependency_graph_nodes = dep_graph;
     (* A collection never has parameter. *)
-    Context.scc_species_parameters_names = [];
+    Context.scc_species_parameters_names = [] ;
     Context.scc_collections_carrier_mapping = collections_carrier_mapping;
-    Context.scc_lambda_lift_params_mapping = [];
+    Context.scc_lambda_lift_params_mapping = [] ;
     Context.scc_out_fmter = out_fmter } in
-  (* The record type representing the collection's type. Ignore the parameters
-     needed to make the record value, they will be recovered via the
-     implemented species. *)
-  ignore
-    (Species_record_type_generation.generate_record_type
-      ctx env collection_descr
-      [(* We can safely pass an empty list of abstraction infos about the
-          collection methods because this list is only used to compute
-          the dependencies on collection parameters in order to create the
-          right parameters for the record type. Since a collection NEVER has
-          collection parameter, it is useless. *)]);
   (* We do not want any collection generator. Instead, we will call the
      collection generator of the collection we implement and apply it to the
      functions it needs coming from the collection applied to its parameters
@@ -4667,8 +4641,7 @@ let collection_compile env ~current_unit out_fmter collection_def
      generator. These arguments of course come from the species parameters the
      closed species we implement has (if it has some). We must make this
      application WITH THE RIGHT EFFECTIVE FUNCTIONS and IN THE RIGHT ORDER ! *)
-  (begin
-  try
+  (try
     let (_, implemented_species_methods, opt_params_info, _) =
       Env.CoqGenEnv.find_species
         ~loc: collection_def.Parsetree.ast_loc ~current_unit
@@ -4728,7 +4701,7 @@ let collection_compile env ~current_unit out_fmter collection_def
        collection are never entered in the environment because it's a non sense
        to make a collection "implementing" a collection ! *)
     assert false
-  end)
+  )
 ;;
 
 
@@ -4738,11 +4711,11 @@ let toplevel_theorem_compile ctx env theorem_def =
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
     Format.eprintf "Generating Coq code for toplevel theorem %a@."
-      Sourcify.pp_vname theorem_desc.Parsetree.th_name;
+      Sourcify.pp_vname theorem_desc.Parsetree.th_name ;
   (* Make a print context with an empty mapping since we are at toplevel. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit;
-    Types.cpc_current_species = None;
+    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
+    Types.cpc_current_species = None ;
     Types.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
   (* Compute the abstraction info for the theorem. In fact this means only
@@ -4752,7 +4725,7 @@ let toplevel_theorem_compile ctx env theorem_def =
   (* We create a fake [Env.from_history]. *)
   let from = {
     Env.fh_initial_apparition =
-      (ctx.Context.scc_current_unit, (Parsetree.Vlident "*Toplevel*"));
+      (ctx.Context.scc_current_unit, (Parsetree.Vlident "*Toplevel*")) ;
      Env.fh_inherited_along = [] } in
   generate_defined_theorem
     ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env

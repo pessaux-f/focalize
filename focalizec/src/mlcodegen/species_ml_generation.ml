@@ -173,10 +173,6 @@ let generate_record_type ctx species_descr =
   let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
     ctx.Context.scc_collections_carrier_mapping in
-  (* First, check if "rep" is defined. If so, then generate the type
-     constraint reflecting its effective structure. *)
-  generate_rep_definition
-    ctx species_descr.Env.TypeInformation.spe_sig_methods ;
   (* The header of the OCaml type definition for the species record. *)
   Format.fprintf out_fmter "@[<2>type " ;
   (* Process parameters and "self" type variables names. *)
