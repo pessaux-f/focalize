@@ -1105,7 +1105,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
        Format.fprintf out_fmter
          "(* For notation used via \"by definition of %a\". *)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident;
-       Format.fprintf out_fmter "@[<2>Definition %s :=" id;
+       Format.fprintf out_fmter "@[<2>Definition %s :=" id ;
        Species_record_type_generation.generate_expr
          ctx ~local_idents: [] ~in_recursive_let_section_of: []
          ~self_methods_status:
@@ -4193,31 +4193,29 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
   List.iter
     (fun (formal_species_param_name, (Env.ODFP_methods_list method_names)) ->
       match List.assoc formal_species_param_name formal_to_effective_map with
-       | Misc_common.CEA_collection_name_for_is corresponding_effective ->
-           (begin
+       | Misc_common.CEA_collection_name_for_is corresponding_effective -> (
            let
                (corresponding_effective_opt_fname,
                 corresponding_effective_vname) =
              match corresponding_effective with
-              | Parsetree.Vname n -> (None, n)
-              | Parsetree.Qualified (m, n) -> ((Some m), n) in
+             | Parsetree.Vname n -> (None, n)
+             | Parsetree.Qualified (m, n) -> ((Some m), n) in
            List.iter
              (fun (meth_name, _) ->
                (* If needed, qualify the name of the species in the Coq code.
                   Don't print the type to prevent being too verbose. *)
                Format.fprintf out_fmter "@ ";
                (match corresponding_effective_opt_fname with
-                | Some fname -> Format.fprintf out_fmter "%s." fname
-                | None -> ());
+               | Some fname -> Format.fprintf out_fmter "%s." fname
+               | None -> ()) ;
                (* Species name.method name. *)
-               Format.fprintf out_fmter "%a.%a@]"
+               Format.fprintf out_fmter "%a.%a"
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname
                  Parsetree_utils.pp_vname_with_operators_expanded meth_name)
              method_names
-           end)
-       | Misc_common.CEA_value_expr_for_in expr ->
-           (begin
+          )
+       | Misc_common.CEA_value_expr_for_in expr -> (
            Format.fprintf out_fmter "@ (@[<1>";
            (* No local idents in the context because we just enter the scope
               of a species fields and so we are not under a core expression.
@@ -4233,7 +4231,7 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
                Species_record_type_generation.RMS_regular
              env expr ;
            Format.fprintf out_fmter ")@]"
-           end))
+          ))
     l
 ;;
 
@@ -4254,12 +4252,11 @@ let apply_collection_generator_to_parameters ctx env formal_to_effective_map
     List.map
       (fun param_name ->
        match List.assoc param_name formal_to_effective_map with
-        | Misc_common.CEA_collection_name_for_is corresponding_effective ->
-            (begin
+        | Misc_common.CEA_collection_name_for_is corresponding_effective -> (
             match corresponding_effective with
-             | Parsetree.Vname n -> RTAI_by_is (None, n)
-             | Parsetree.Qualified (m, n) -> RTAI_by_is ((Some m), n)
-            end)
+            | Parsetree.Vname n -> RTAI_by_is (None, n)
+            | Parsetree.Qualified (m, n) -> RTAI_by_is ((Some m), n)
+           )
         | Misc_common.CEA_value_expr_for_in expr -> RTAI_by_in expr)
       col_gen_params_info.Env.CoqGenInformation.
         cgp_abstr_param_carriers_for_record in
@@ -4268,13 +4265,13 @@ let apply_collection_generator_to_parameters ctx env formal_to_effective_map
      use this fact to apply the generator to the instanciations of the species
      parameters carriers. *)
   print_record_type_carriers_args_instanciations
-    ctx env record_type_args_instanciations;
+    ctx env record_type_args_instanciations ;
   (* Now, we generate identifiers for methods of these species parameters we
      have dependencies on. *)
   print_methods_from_params_instanciations
     ctx env formal_to_effective_map
     col_gen_params_info.Env.CoqGenInformation.
-      cgp_abstr_param_methods_for_coll_gen;
+      cgp_abstr_param_methods_for_coll_gen ;
   record_type_args_instanciations
 ;;
 
