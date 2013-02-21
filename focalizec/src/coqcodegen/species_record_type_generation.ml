@@ -8,8 +8,8 @@
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
@@ -64,8 +64,7 @@ exception Wrong_decreasing_argument of
 (* ************************************************************************* *)
 let generate_method_lambda_lifted_arguments ~only_for_Self_meths out_fmter
     used_species_parameter_tys sorted_deps_from_params abstracted_methods =
-  if not only_for_Self_meths then
-    (begin
+  if not only_for_Self_meths then (
     (* We first instanciate the parameters corresponding to the carriers types
        of species parameters and appearing in the method's type *)
     List.iter
@@ -95,7 +94,7 @@ let generate_method_lambda_lifted_arguments ~only_for_Self_meths out_fmter
               prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
           meths)
       sorted_deps_from_params
-    end) ;
+   ) ;
   (* And finally, apply to the methods from ourselves we depend on. *)
   List.iter
     (fun n ->
@@ -173,11 +172,10 @@ type recursive_methods_status =
 
 
 let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
-   ~self_methods_status ~recursive_methods_status ident =
+    ~self_methods_status ~recursive_methods_status ident =
   let out_fmter = ctx.Context.scc_out_fmter in
   match ident.Parsetree.ast_desc with
-   | Parsetree.EI_local vname ->
-       (begin
+   | Parsetree.EI_local vname -> (
        (* Thanks to the scoping pass, identifiers remaining "local" are either
           really let-bound in the context of the expression, hence have a
           direct mapping between FoCaL and OCaml code, or species
@@ -199,8 +197,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                 | Env.TypeInformation.SPAR_is ((_, vn), _, _, _, _) ->
                     (Parsetree.Vuident vn) = vname)
              ctx.Context.scc_species_parameters_names) &&
-         (not (List.mem vname local_idents)) then
-         (begin
+         (not (List.mem vname local_idents)) then (
          (* In fact, a species "IN"-parameter. This parameter was of the form
             "foo in C". Then it's naming scheme will be "_p_" + the species
             parameter's name + the method's name that is trivially the
@@ -211,9 +208,8 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
          Format.fprintf out_fmter "_p_%a_%a"
            Parsetree_utils.pp_vname_with_operators_expanded vname
            Parsetree_utils.pp_vname_with_operators_expanded vname
-         end)
-       else
-         (begin
+         )
+       else (
          (* Really a local identifier or a call to a recursive method. *)
          let is_a_rec_fun = List.mem vname in_recursive_let_section_of in
          (* If the function is recursive, we must apply to it the naming scheme
@@ -240,8 +236,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
             recursive one. In effect, in this last case, a Section has been
             created with all the abstrations the function requires. So no need
             to apply each recursive call. *)
-         if not is_a_rec_fun then
-           (begin
+         if not is_a_rec_fun then (
             try
             (* We are not in a recursive definition, so we can apply to the
                lambda-lifted extra arguments. *)
@@ -249,9 +244,9 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                List.assoc vname ctx.Context.scc_lambda_lift_params_mapping in
              List.iter (fun s -> Format.fprintf out_fmter "@ %s" s) extra_args
               with Not_found -> ()
-             end)
-         end)
-       end)
+            )
+         )
+      )
    | Parsetree.EI_global (Parsetree.Vname _) ->
        (* In this case, may be there is some scoping process missing. *)
        assert false
@@ -1276,11 +1271,10 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
 ;;
 
 
-
-(* *********************************************************************** *)
-(* Context.species_compil_context ->                                       *)
-(*   Env.TypeInformation.species_field list ->                             *)
-(*     (Parsetree.vname * Parsetree.vname) list                            *)
+(* ************************************************************************* *)
+(* Env.CoqGenEnv.t ->
+   Abstractions.field_abstraction_info list ->
+   (Parsetree.vname * Env.ordered_methods_from_params) list                  *)
 (** {b Descr}: Generate the Coq code of a species parameters. It outputs
     both the parameters names and their type as a Coq expression.
     Either the parameter is a "is" parameter and then it's type will be
@@ -1289,14 +1283,14 @@ let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
     only if its type is built from another of our species parameters (i.e.
     not from a toplevel species/collection).
     Next come the extra parameters coming from the methods we depend on.
-    Returns the list of species params and methods required 
-    to create a value of the type record, i.e. the one we found
-    dependencies on in the body of the record type.
+    Returns the list of species params and methods required to create a value
+    of the type record, i.e. the one we found dependencies on in the body of
+    the record type ordered the same way they were lambda-lifted. 
 
     Used when generating the record type definition.
 
-    {b Rem} : Not exported outside this module.                            *)
-(* *********************************************************************** *)
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
 let generate_record_type_parameters ctx env field_abstraction_infos =
   let ppf = ctx.Context.scc_out_fmter in
   let current_unit = ctx.Context.scc_current_unit in
@@ -1308,12 +1302,13 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
        | Types.CCMI_is ->
            Format.fprintf ppf "@[<1>(%s_T :@ Set)@ @]" param_name
        | Types.CCMI_in provenance ->
-           (* We generate the lambda-lifting for the the type of the   *)
-           (* "IN" parameter here. When we will inspect the methods to *)
-           (* abstract their dependencies on species parameters, we    *)
-           (* the will skip "IN" parameters (that trivially lead to a  *)
-           (* dependency on a pseudo method wearing their name) to     *)
-           (* avoid doubles.                                           *)
+           (* We generate the lambda-lifting for "IN" parameter here (not their
+              carrier, since if needed it has mandatorily be generated as a
+              species parameter carrier during this current process).
+              When we will inspect the methods to abstract their dependencies on
+              species parameters, we the will skip "IN" parameters (that
+              trivially lead to a dependency on a pseudo method wearing their
+              name) to avoid doubles. *)
            match provenance with
             | Types.SCK_species_parameter ->
                 Format.fprintf ppf "@[<1>(_p_%s_%s :@ %s_T)@ @]"
@@ -1325,9 +1320,9 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
                   Format.fprintf ppf "%s." param_ty_mod ;
                 Format.fprintf ppf "%s.me_as_carrier)@ @]" param_ty_coll)
     ctx.Context.scc_collections_carrier_mapping ;
-  (* Now, we will find the methods of the parameters we decl-depend on in the
-     Coq type expressions. Such dependencies can only appear through properties
-     and theorems bodies. *)
+  (* Now, we will find the methods of the species parameters we decl-depend on
+     in the Coq type expressions. Such dependencies can only appear through
+     properties and theorems bodies. *)
   let species_parameters_names = ctx.Context.scc_species_parameters_names in
   let print_ctx = {
     Types.cpc_current_unit = ctx.Context.scc_current_unit ;
@@ -1384,7 +1379,7 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
   (* We now sort these methods according to the parameters' dependency graph. *)
   let ordered_deps_for_fields =
     Dep_analysis.order_species_params_methods deps_for_fields_no_ref in
-  (* By the way, returns the list of species params and methods required to
+  (* By the way, returns the list methods per species params required to
      create a value of the type record. *)
   List.map
     (fun (species_param, (Env.ODFP_methods_list meths)) ->
@@ -1430,10 +1425,10 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
 (* species_compil_context -> Env.TypeInformation.species_description ->      *)
 (*   (Parsetree.vname * Parsetree.vname) list                                *)
 (** {b Descr} : Generate the record type representing a species. This type
-    contains a field per method. This type is named as the species.
-    Returns the list of species params and methods required to create a
-    value of the type record, i.e. the one we found dependencies on in the
-    body of the record type.
+    contains one field per method. This type is always named "me_as_species".
+    Returns the list of species params with for each, the list of methods
+    required to create a value of the type record, i.e. the ones we found
+    dependencies on in the body of the record type definition.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
