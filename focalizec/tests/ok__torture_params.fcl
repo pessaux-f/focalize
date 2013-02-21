@@ -1,5 +1,4 @@
-use "basics";;
-open "basics";;
+open "basics" ;;
 
 (* ***************************************************************** *)
 (* Must pass.                                                        *)
@@ -11,7 +10,7 @@ open "basics";;
 
 
 (* *********************************************************************** *)
-(* Pass                                                                    *)
+(* No pass                                                                 *)
 (* *********************************************************************** *)
 species Base =
   representation = int ;
@@ -20,23 +19,24 @@ end ;;
 
 species Imp_pair (S1 is Base) =
   representation = S1 ;
-  let fst (n in Self) in S1 = n ;
+  let myfst (n : Self) : S1 = n ;
 end ;;
 
 species Imp_vote (C is Base, P is Imp_pair (C)) =
   representation = int ;
-  (* WE EXPECT let local_capteur = capteur _p_P_fst *)
-  let capteur (p1 in P) in C = P!fst(p1) ;
+  (* WE EXPECT let local_capteur = capteur _p_P_myfst *)
+  let capteur (p1 : P) : C = P!myfst (p1) ;
 end ;;
 
 
-collection Coll_capteur implements Base ;;
+collection Coll_capteur = implement Base ; end ;;
 
-collection Coll_pair implements Imp_pair (Coll_capteur) ;;
-species Sp_int_imp_vote inherits Imp_vote (Coll_capteur, Coll_pair) =
+collection Coll_pair = implement Imp_pair (Coll_capteur) ; end ;;
+species Sp_int_imp_vote =
+  inherit Imp_vote (Coll_capteur, Coll_pair) ;
 (* WE EXPECT
    let local_capteur =
-     Imp_vote.capteur Coll_pair.effective_collection.Coll_pair.fst
+     Imp_vote.capteur Coll_pair.effective_collection.Coll_pair.myfst
 *)
 end ;;
 (* *********************************************************************** *)
@@ -50,30 +50,35 @@ species Junk =
   signature foo : int ;
 end ;;
 
-species Imp_junk inherits Junk = let foo = 6 ; end ;;
+species Imp_junk =
+  inherit Junk ;
+  let foo = 6 ;
+end ;;
 
-species Test1 (C is Base, A is Junk, B is Imp_pair (C))
-    inherits Imp_vote (C, B) =
+species Test1 (C is Base, A is Junk, B is Imp_pair (C)) =
+  inherit Imp_vote (C, B) ;
   (* WE EXPECT let local_bar = bar _p_A_foo in *)
-  (* WE EXPECT let local_capteur = Imp_vote.capteur _p_B_fst in *)
+  (* WE EXPECT let local_capteur = Imp_vote.capteur _p_B_myfst in *)
   let bar = A!foo ;
 end ;;
 
-species Test2 inherits Test1 (Coll_capteur, Imp_junk, Coll_pair) =
+species Test2 =
+  inherit Test1 (Coll_capteur, Imp_junk, Coll_pair) ;
   (* WE EXPECT let local_bar = Test1.bar Imp_junk.foo *)
   (* WE EXPECT
      let local_capteur =
-       Imp_vote.Coll_pair.effective_collection.Coll_pair.fst *)
+       Imp_vote.Coll_pair.effective_collection.Coll_pair.myfst *)
 end ;;
 
 (* ***** *)
 (** Pass *)
-species Test3 inherits Test2  =
+species Test3 =
+  inherit Test2 ;
   let f = bar ;
   (* WE EXPECT let local_bar = Test1.bar Imp_junk.foo *)
   (* WE EXPECT
      let local_capteur = Imp_vote.capteur
-       Coll_pair.effective_collection.Coll_pair.fst *)
+       Coll_pair.effective_collection.Coll_pair.myfst *)
   (* WE EXPECT let local_f = f local_bar *)
 end ;;
 (* *********************************************************************** *)
@@ -81,7 +86,7 @@ end ;;
 
 
 species Test4 (P is Base) = representation = int ; let m = P!dummy ; end ;;
-species Test5 (A is Base) inherits Test4 (A) = let c (x in int) = m ; end ;;
+species Test5 (A is Base) = inherit Test4 (A) ; let c (x : int) = m ; end ;;
 
 
 
@@ -90,24 +95,28 @@ species Test5 (A is Base) inherits Test4 (A) = let c (x in int) = m ; end ;;
 (* Pass                                                                    *)
 (* *********************************************************************** *)
 species Sp0 = let m = 5 ; end ;;
-species Sp1 inherits Sp0 = representation = int ; let n = 5 ; end ;;
+species Sp1 = inherit Sp0 ; representation = int ; let n = 5 ; end ;;
 
 species Foo0 (A0 is Sp0) = representation = int ; let v = A0!m ;
   (* WE EXPECT let local_v = v _p_A0_m *)
 end ;;
 
-species Foo1 (A1 is Sp1) inherits Foo0 (A1) =
+species Foo1 (A1 is Sp1) =
+  inherit Foo0 (A1) ;
   let _ignore1 = 5 ;
   (* WE EXPECT let local_v = Foo0.v _p_A1_m *)
 end ;;
 
-species Foo2 (A2 is Sp1) inherits Foo1 (A2) =
+species Foo2 (A2 is Sp1) =
+  inherit Foo1 (A2) ;
    let _ignore2 = 5 ;
   (* WE EXPECT let local_v = Foo0.v _p_A2_m *)
 end ;;
 
-species Foo3 (A3 is Sp1, A4 is A3) inherits Foo2 (A4) =
-  let _ignore3 = 5 ; end ;;
+species Foo3 (A3 is Sp1, A4 is A3) =
+  inherit Foo2 (A4) ;
+  let _ignore3 = 5 ;
+end ;;
 (* *********************************************************************** *)
 
 
@@ -133,26 +142,29 @@ end ;;
 
 
 (* *********************************************************************** *)
-(* Pass                                                                    *)
+(* BROKEN                                                                  *)
 (* *********************************************************************** *)
 species Nat =
-  representation = int ; let plus (x in Self, y in Self) in Self = x ; end ;;
+  representation = int ;
+  let plus (x : Self, y : Self) : Self = x ;
+end ;;
 
-collection CNat implements Nat ;;
+collection CNat = implement Nat ; end ;;
 
 species Bar00 (a in CNat) = representation = basics#int ;
   let m = a ;
   (* WE EXPECT let local_m = m _p_a_a *)
 end ;;
 
-species Bar01 (b in CNat) inherits Bar00 (CNat!plus (b, b)) =
+species Bar01 (b in CNat) =
+  inherit Bar00 (CNat!plus (b, b)) ;
   let _ignore = 7 ;
   (* WE EXPECT
-     let local_m = Bar00.m
-       ((CNat.effective_collection.CNat.plus _p_b_b _p_b_b)) *)
+     let local_m = Bar00.m ((CNat.plus _p_b_b _p_b_b)) *)
 end ;;
 
-species Bar02 (c in CNat, d in CNat) inherits Bar01 (CNat!plus (c, d)) =
+species Bar02 (c in CNat, d in CNat) =
+  inherit Bar01 (CNat!plus (c, d)) ;
   let _ignore = 8 ;
   (* WE EXPECT
      local_m = Bar00.m
@@ -161,8 +173,8 @@ species Bar02 (c in CNat, d in CNat) inherits Bar01 (CNat!plus (c, d)) =
          (CNat.effective_collection.CNat.plus _p_c_c _p_d_d))) *)
 end ;;
 
-species Bar03 (e in CNat, f in CNat) inherits
-  Bar02 (CNat!plus (e, f), f) =
+species Bar03 (e in CNat, f in CNat) =
+  inherit Bar02 (CNat!plus (e, f), f) ;
   let _ignore = 8 ;
   (* WE EXPECT
      let local_m = Bar00.m
@@ -178,8 +190,9 @@ end ;;
 
 
 species Gee0 (A0 is Sp0) = representation = int ; let v = A0!m ; end ;;
-species Gee1 (A is Sp0, B is Sp0) inherits Gee0 (Sp0) = let _ignore = 7 ; end ;;
-species Gee2 inherits Gee1 (Sp0, Sp0) = let _ignore = 7 ; end ;;
+species Gee1 (A is Sp0, B is Sp0) = inherit Gee0 (Sp0) ; let _ignore = 7 ;
+end ;;
+species Gee2 = inherit Gee1 (Sp0, Sp0) ; let _ignore = 7 ; end ;;
 
 
 
@@ -187,14 +200,24 @@ species Gee2 inherits Gee1 (Sp0, Sp0) = let _ignore = 7 ; end ;;
 (* Pass                                                                    *)
 (* *********************************************************************** *)
 species Sp00 = let m = 5 ; end ;;
-species Sp01 inherits Sp0 = representation = int ; let n = 5 ; end ;;
-species Sp02 = representation = int ; let p = 5 ; end ;;
+species Sp01 =
+  inherit Sp0 ;
+  representation = int ;
+  let n = 5 ;
+end ;;
+species Sp02 =
+  representation = int ;
+  let p = 5 ;
+end ;;
 
-species Foo00 (A0 is Sp00, A00 is Sp02) = representation = int ; let v = (A0!m, A00!p) ;
+species Foo00 (A0 is Sp00, A00 is Sp02) =
+   representation = int ;
+   let v = (A0!m, A00!p) ;
   (* WE EXPECT let local_v = Foo00.v _p_A00_p _p_A0_m *)
 end ;;
 
-species Foo01 (A1 is Sp01) inherits Foo00 (A1, Sp02) =
+species Foo01 (A1 is Sp01) =
+  inherit Foo00 (A1, Sp02) ;
   let _ignore1 = 5 ;
   (* WE EXPECT let local_v = Foo00.v _p_A1_m Sp02.p *)
 end ;;
@@ -202,4 +225,4 @@ end ;;
 
 
 
-collection Daube implements Sp_int_imp_vote ;;
+collection Daube = implement Sp_int_imp_vote ; end  ;;
