@@ -1,19 +1,18 @@
-#**********************************************************************#
-#                                                                      #
-#                        FoCaLize compiler                             #
-#                                                                      #
-#            François Pessaux                                          #
-#            Pierre Weis                                               #
-#            Damien Doligez                                            #
-#                                                                      #
-#                               LIP6  --  INRIA Rocquencourt           #
-#                                                                      #
-#  Copyright 2008 LIP6 and INRIA                                       #
-#  Distributed only by permission.                                     #
-#                                                                      #
-#**********************************************************************#
-
-# $Id: Makefile,v 1.97 2012-10-15 15:49:42 pessaux Exp $
+# ************************************************************************** #
+#                                                                            #
+#                        FoCaLiZe compiler                                   #
+#                                                                            #
+#            François Pessaux                                                #
+#            Pierre Weis                                                     #
+#            Damien Doligez                                                  #
+#                                                                            #
+#                 LIP6  --  INRIA Rocquencourt - ENSTA ParisTech             #
+#                                                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
+#  Distributed only by permission.                                           #
+#                                                                            #
+# ************************************************************************** #
 
 # Makefile for the FoCaLize standard library
 
