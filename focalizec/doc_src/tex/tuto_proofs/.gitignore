@@ -8,4 +8,7 @@
 *.pfc
 *~
 *.log
-*.log
+*.haux
+*.html
+*.htoc
+
