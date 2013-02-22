@@ -1,51 +1,51 @@
-#**********************************************************************#
-#                                                                      #
-#                        FoCaLize compiler                             #
-#                                                                      #
-#            François Pessaux                                          #
-#            Pierre Weis                                               #
-#            Damien Doligez                                            #
-#                                                                      #
-#                               LIP6  --  INRIA Rocquencourt           #
-#                                                                      #
-#  Copyright 2008 LIP6 and INRIA                                       #
-#  Distributed only by permission.                                     #
-#                                                                      #
-#**********************************************************************#
+# ************************************************************************** #
+#                                                                            #
+#                        FoCaLiZe compiler                                   #
+#                                                                            #
+#            François Pessaux                                                #
+#            Pierre Weis                                                     #
+#            Damien Doligez                                                  #
+#            Renaud Rioobo                                                   #
+#                                                                            #
+#                 LIP6  --  INRIA Rocquencourt - ENSTA ParisTech             #
+#                                                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
+#  Distributed only by permission.                                           #
+#                                                                            #
+# ************************************************************************** #
 
-# $Id: Makefile,v 1.7 2012-10-15 14:57:10 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
 LIB_INSTALL_SUB_DIR=polynomials
 
-ROOT_DIR=../../..
-
-include $(ROOT_DIR)/Makefile.config
+ROOT_DIR=../../../..
 
 PROJECT_LIB_INSTALL_DIR=$(LIB_DIR)/$(PROJECT_NAME_FULL)
 
 LIB_INSTALL_DIR=$(PROJECT_LIB_INSTALL_DIR)/$(LIB_INSTALL_SUB_DIR)
 
-STDLIB_DIR=$(ROOT_DIR)/src/stdlib
+STDLIB_DIR=$(ROOT_DIR)/focalizec/src/stdlib
 
-FOCALIZE_COMPILER=$(ROOT_DIR)/src/toplevel/focalizec
+FOCALIZEC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS=\
- -stop-before-coq -no-stdlib-path \
- -I $(STDLIB_DIR) -I $(ROOT_DIR)/src/extlib/algebra
+  -stop-before-coq -no-stdlib-path \
+  -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) \
+  -I $(ROOT_DIR)/focalizec/src/extlib/algebra
 
-#From Makefile.config FOCALIZEC=$(FOCALIZE_COMPILER) $(FOCALIZE_COMP_FLAGS)
+CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
+CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ROOT_DIR)/focalizec/src/extlib/algebra
 
-CAML__FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
-CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ROOT_DIR)/src/extlib/algebra
-
+ZENON_LIB_DIR=../../../../zenon
 ZVTOV_COMP_FLAGS=-zenon $(ZENON_COMPILER) -new
 
-# From Makefile.config
-# ZENON_LIB_DIR
 COQ_INCLUDES=\
- -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR) -I $(ROOT_DIR)/src/extlib/algebra
+ -I $(ZENON_LIB_DIR) -I $(STDLIB_DIR) \
+ -I $(ROOT_DIR)/focalizec/src/extlib/algebra
+
+include $(ROOT_DIR)/Makefile.common
 
 FOCALIZE_SRC=\
  parse_poly.fcl\
@@ -95,7 +95,6 @@ EXTERNAL_BIN_OBJS=$(EXTERNAL_BYT_OBJS:.cmo=.cmx)
 
 EXTERNAL_VOS=
 
-include $(ROOT_DIR)/Makefile.common
 
 lib: all
 
