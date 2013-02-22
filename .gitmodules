@@ -1,0 +1,3 @@
+[submodule "zenon"]
+	path = zenon
+	url = modulogic.inria.fr:/home/cvs/zenon.git
