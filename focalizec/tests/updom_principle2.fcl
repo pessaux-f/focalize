@@ -1,0 +1,34 @@
+open "basics";;
+
+type list_t ('a) = 
+  | Nil_list
+  | Cons_list ('a, list_t ('a))
+;;
+
+type tree_t =
+  | Nil_tree
+  | Cons_tree (int, list_t (tree_t))
+;;
+
+species P =
+  signature pr: Self -> string ;
+end ;;
+
+species S1 (P1 is P) =
+  representation = list_t (P1)
+  let rec pr_list (l: Self) =
+    match l with
+    | Nil_list -> "0"
+    | Cons_list (h, q) -> 
+       P1!pr (h) ^ pr_list (q) ;
+end ;;
+
+species S2  =
+  inherit P ;
+  representation = tree_t ;
+  let rec LocalS1 = S1 (Self)
+  and pr (l) =   (* Et pas nommée autrement car S2 : P !!! *)
+    match l with
+    | Nil_tree -> ""
+    | Cons_tree (n, l) -> string_of_int (n) ^ LocalS1!pr_list (l)
+end ;;
