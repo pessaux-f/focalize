@@ -200,7 +200,7 @@ let find_entity_params_with_position params =
       original species. We search by what it was instanciated along the
       inheritance. Hence, the search starts from the original hosting
       species, with the original hosting species's parameter's index. Then
-      we go upward (more recent) along the inheritance tree.
+      we go downward (toward the more recent) along the inheritance tree.
     - [inheritance_steps] : The inheritance history describing where the
       currently processed method was defined and how it is propagated by
       inheritance up to the currently compiled species.
@@ -380,7 +380,7 @@ type is_parameter_instanciation =
 
     When invocated, this function starts processing from the oldest species
     where the currently compiled method appeared, i.e. the species where
-    it was really DEFINED, and we incrementally, setp by step, go "back" in
+    it was really DEFINED, and we incrementally, step by step, go "back" in
     the futur, to finally arrive at the "present". Along these steps, we
     look at the effective argument used for the formal corresponding one in
     the inheritance expression and substitute this effective to the formal
@@ -395,7 +395,7 @@ type is_parameter_instanciation =
     the species used to instanciate the parameter, but we still need
     afterwards to exactly find in which parent of this species each method
     we have dependencies on was REALLY defined. This job has to be done after
-    getting the result of thi function. This is architectured like this to
+    getting the result of this function. This is architectured like this to
     allow preventing to compute several times instanciations when they appear
     to be done by toplevel collections or species parameters.
 
@@ -504,7 +504,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
                               (effective_name_as_string = formal_name))
                       curr_level_species_params in
                       (* We must instanciate by the abstraction corresponding
-                         to our parameter and continue waking up along the
+                         to our parameter and continue walking up along the
                          inheritance history.
                          So we first get the index of this parameter in the
                          current level species. *)

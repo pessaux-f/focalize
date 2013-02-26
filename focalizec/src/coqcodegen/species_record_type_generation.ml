@@ -102,7 +102,7 @@ let generate_method_lambda_lifted_arguments ~only_for_Self_meths out_fmter
       else
         Format.fprintf out_fmter "@ abst_%a"
           Parsetree_utils.pp_vname_with_operators_expanded n)
-    abstracted_methods
+    abstracted_methods ;
 ;;
 
 
