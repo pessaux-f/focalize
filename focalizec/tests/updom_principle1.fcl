@@ -1,0 +1,24 @@
+open "basics";;
+
+type list_t ('a) = 
+  | Nil_list
+  | Cons_list ('a, list_t ('a))
+;;
+
+type tree_t ('a) =
+  | Nil_tree
+  | Cons_tree (int, list_t (tree_t ('a)))
+;;
+
+let rec pr_list (pr_elem_fct, l) =
+  match l with
+  | Nil_list -> "0"
+  | Cons_list (h, q) -> 
+      pr_elem_fct (h) ^ pr_list (pr_elem_fct, q)
+;; 
+
+let rec pr_tree (l) = match l with
+ | Nil_tree -> ""
+ | Cons_tree (n, l) -> string_of_int (n) ^ lp (l)
+and lp (l) = pr_list (pr_tree, l)
+;;

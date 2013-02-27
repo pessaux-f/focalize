@@ -134,7 +134,7 @@ let find_compiled_field_memory name fields =
 ;;
 
 
-(** Finish the job of [instanciate_parameter_through_inheritance] in the
+(** Finish the job of [instanciate_parameters_through_inheritance] in the
     case where the parameter has been indentified as a IS parameter. *)
 let instanciate_IS_parameter_through_inheritance ctx env original_param_index
     field_memory meths_from_param =
@@ -201,7 +201,7 @@ let instanciate_IS_parameter_through_inheritance ctx env original_param_index
 
 
 
-(** Finish the job of [instanciate_parameter_through_inheritance] in the
+(** Finish the job of [instanciate_parameters_through_inheritance] in the
     case where we instanciate parameter's carrier and this parameter has been
     indentified as a IS parameter. *)
 let instanciate_IS_parameter_carrier_through_inheritance ctx env
@@ -244,7 +244,7 @@ let instanciate_IS_parameter_carrier_through_inheritance ctx env
 
 
 
-let instanciate_parameter_through_inheritance ctx env field_memory =
+let instanciate_parameters_through_inheritance ctx env field_memory =
   let current_unit = ctx.Context.scc_current_unit in
   let out_fmter = ctx.Context.scc_out_fmter in
   (* We first must search at the origin of the method generator, the arguments
@@ -261,14 +261,13 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
   if Configuration.get_verbose () then
     Format.eprintf "Originally hosting species '%a' has %d parameters.@."
       Sourcify.pp_ident host_ident (List.length original_host_species_params);
-  (* We search the dependencies the original method had on its species
-     parameters' methods. *)
+  (* We search the dependencies the original (i.e at the level where we found
+      the method generator) method had on its species parameters' methods. *)
   let meth_info =
     List.find
       (fun inf -> inf.Env.mi_name = field_memory.Misc_common.cfm_method_name)
       host_method_infos in
-  if Configuration.get_verbose () then
-    (begin
+  if Configuration.get_verbose () then (
     Format.eprintf "Method '%a' has the following dependencies on parameters:@."
       Sourcify.pp_vname field_memory.Misc_common.cfm_method_name;
     List.iter
@@ -279,18 +278,18 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
            | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
                Parsetree.Vuident n in
         Format.eprintf "\t From parameter '%a', dependencies on methods: "
-          Sourcify.pp_vname species_param_name;
+          Sourcify.pp_vname species_param_name ;
         List.iter
           (fun (meth, _) -> Format.eprintf "%a " Sourcify.pp_vname meth)
           meths_from_param;
         Format.eprintf "@.")
       meth_info.Env.mi_dependencies_from_parameters
-    end);
+   ) ;
   (* Since in Coq, types are explicit, now we apply to each extra parameter
      coming from the lambda liftings that represent the types of the species
-     parameters used in the method. The applied stuf is not always "_p_" +
-     the species name + "_T" since the species may have no parameters the
-     parent one (from where the method generator comes) may have. For this
+     parameters used in the method. The stuff to apply is not always "_p_" +
+     the species name + "_T" since the species may have no parameters and the
+     parent one (from where the method generator comes) may have some. For this
      reason, we must instanciate the original species parameters (i.e. the
      ones of the species from where the method generator comes). *)
   List.iter
@@ -299,7 +298,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
          IS parameters. IN parameters have their type abstracted only if it
          is the one of a IS parameter (hence, this last one is a IS and is
          found just as said above). If the IN parameter has the type of a
-         toplevel species/collection, then this type is not abstrated, hence
+         toplevel species/collection, then this type is not abstracted, hence
          do not need to be instanciated ! *)
       let as_string = Parsetree_utils.name_of_vname species_param_type_name in
       let original_param_index =
@@ -311,7 +310,7 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
           original_host_species_params in
       instanciate_IS_parameter_carrier_through_inheritance
         ctx env original_param_index field_memory)
-    meth_info.Env.mi_used_species_parameter_tys;
+    meth_info.Env.mi_used_species_parameter_tys ;
   (* Now, we address the instanciation of the species parameters' methods.
      For each species parameter, we must trace by what it was instanciated. *)
   List.iter
@@ -411,7 +410,7 @@ let generate_def_dependency_equivalence env ctx generated_fields from name =
      methods. *)
   let only_for_Self_meths =
     if defined_from <> ctx.Context.scc_current_species then
-      (instanciate_parameter_through_inheritance ctx env memory; true)
+      (instanciate_parameters_through_inheritance ctx env memory; true)
     else false in
   Species_record_type_generation.generate_method_lambda_lifted_arguments
     ~only_for_Self_meths out_fmter
@@ -3677,7 +3676,7 @@ let generate_collection_generator ctx env compiled_species_fields
       field_memory.Misc_common.cfm_method_name;
     if Configuration.get_verbose () then
       Format.eprintf "Generating Coq code for method generator of '%a'.@."
-        Sourcify.pp_vname field_memory.Misc_common.cfm_method_name;
+        Sourcify.pp_vname field_memory.Misc_common.cfm_method_name ;
     (* Find the method generator to use depending on if it belongs to this
        inheritance level or if it was inherited from another species. *)
     if from.Env.fh_initial_apparition = ctx.Context.scc_current_species then (
@@ -3687,28 +3686,24 @@ let generate_collection_generator ctx env compiled_species_fields
           abstracted local species parameters as arguments.@."
           Sourcify.pp_vname field_memory.Misc_common.cfm_method_name;
       (* It comes from the current inheritance level. Then its name is simply
-         the the method's name. *)
+         the method's name. *)
       Format.fprintf out_fmter "%a"
         Parsetree_utils.pp_vname_with_operators_expanded
-        field_memory.Misc_common.cfm_method_name;
+        field_memory.Misc_common.cfm_method_name ;
       (* Now, apply the method generator to each of the extra arguments induced
          by the various lambda-lifting we previously performed.
          First, the species parameters carriers we used.
          Next, the extra arguments due to the species parameters methods we
-         depends on. Here we will not use them to lambda-lift them this time,
-         but to apply them ! The name used for application is formed according
-         to the same scheme we used at lambda-lifting time:
-         "_p_" + species parameter name + "_" + called method name. *)
+         depends on and entity parameters. Here we will not use them to
+         lambda-lift them this time, but to apply them !
+         The name used for application is formed according to the same scheme
+         we used at lambda-lifting time:
+           "_p_" + species parameter name + "_" + called method name. *)
       Species_record_type_generation.generate_method_lambda_lifted_arguments
         ~only_for_Self_meths: false out_fmter
         field_memory.Misc_common.cfm_used_species_parameter_tys
         field_memory.Misc_common.cfm_dependencies_from_parameters
-(* [Unsure] Euh, tiens, avant on appliquait aussi aux trucs de
-   Misc_common.cfm_coq_min_typ_env_names. Ce ne serait pas un oubli ici ?
-En fait, non, je ne pense pas car on est dans le cas où la méthode n'est
-pas inheritée, donc dans la version courante de la méthode, on a déjà
-traité les methodes de nous dont on dépend... *)
-        []
+        []  (* Methods of Self handled homogeneously just after. *)
      )
     else (
       (* It comes from a previous inheritance level. Then its name is the
@@ -3729,19 +3724,22 @@ traité les methodes de nous dont on dépend... *)
         Parsetree_utils.pp_vname_with_operators_expanded
         field_memory.Misc_common.cfm_method_name ;
       (* Now, apply the method generator to each of the extra arguments induced
-         by the various lambda-lifting we previously in the species from which
-         we inherit, i.e. where the method was defined.
+         by the various lambda-lifting we previously did about
+         collection / entity parameters in the species from which we inherit,
+         i.e. where the method was defined.
          During the inheritance, parameters have been instanciated. We must
          track these instanciations to know to what apply the method
          generator. *)
-      instanciate_parameter_through_inheritance ctx env field_memory
+      instanciate_parameters_through_inheritance ctx env field_memory
      );
-    (* Now, apply the method generator to each of the extra arguments induced
-       by the various lambda-lifting we previously performed. Second, the
-       methods of our inheritance tree we depend on and that are only declared.
-       These methods leaded to "local" functions defined above. Hence, for
-       each  method only declared of ourselves we depend on, its name is
-       "local_" + the method's name. *)
+    (* Now, continue applying the method generator to each of the extra
+       arguments induced by the various lambda-lifting we previously performed.
+       Here is the second part: methods of our inheritance tree we depend on
+       and that were only declared.
+       These methods leaded to "local" functions forced to be defined above
+       because of well-ordering (in accordance to dependencies on methods of
+       Self). Hence, for each method only declared of ourselves we depend on,
+       its name is "local_" + the method's name. *)
     List.iter
       (fun n ->
         Format.fprintf out_fmter "@ local_%a"
@@ -3820,19 +3818,19 @@ traité les methodes de nous dont on dépend... *)
   Format.fprintf out_fmter "mk_record" ;
   (* The "mk_record" first arguments are those corresponding to the IS species
      parameters carriers. They we already computed when we created the
-     "mk_record". So we juste now need to apply then since they are
+     "mk_record". So we just now need to apply then since they are
      parameters (with the same names) of the collection generator we are
      building. *)
   dump_collection_generator_arguments_for_params_carriers
-    out_fmter params_carriers_abstr_for_record;
-  (* Now, print the names of parameters that must be provided when using the
-     collection generator to represent methods of the species parameters that
-     are abstracted and used by the local "local_xxx" used to create the
-     collection generator. *)
+    out_fmter params_carriers_abstr_for_record ;
+  (* Now, print the same names than the parameters that must be provided when
+     using the collection generator to represent methods of the collection
+     parameters that are abstracted and used by the local "local_xxx" (these
+     latter used to create the collection generator). *)
   build_collection_generator_arguments_for_params_methods
-    out_fmter abstracted_params_methods_in_record_type;
+    out_fmter abstracted_params_methods_in_record_type ;
   (* Then, always the "local_rep" since the first record field represents what
-     is to be the species carrier (foo_T :> Set.). *)
+     is to be the "future collection" carrier (foo_T :> Set.). *)
   Format.fprintf out_fmter "@ local_rep";
   (* No need to generate the local functions that will be used to fill the
      record value since in Coq we always generate them. It's already done ! *)
@@ -3979,7 +3977,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
          are here !
          Second, we get the abstracted methods from parameters we depend on.
          These methods parametrize the collection generator and will have to
-         be provided when creatign a collection. *)
+         be provided when creating a collection. *)
       let (
         (* Parameters induced by parameters' carriers abstracted in the record
            type. They will be used to instanciate to use "mk_record" or create a
