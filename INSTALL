@@ -87,7 +87,7 @@ your command-line options (see below) for settings:
 From the toplevel 'focalize' directory:
   ./configure
   cd zenon
-  ./configure
+  ./configure-for-focalize
   make depend
   make all
   make doc
@@ -113,7 +113,7 @@ Scripts 'configure' can be provided tuning options:
   [-]-tools_prefix <directory>:  set <directory> as the directory prefix where
       tools required to build FoCaLiZe are installed. The currently required
       non-common tools are OCaml and Coq.
-* focalize/zenon/configure:
+* focalize/zenon/configure-for-focalize:
   [-]-interactive: run interactively, asking questions.
   [-]-install_prefix <directory>: set <directory> as the directory prefix for
       installation of the FoCaLize commands. (Default value for <directory>
@@ -129,8 +129,8 @@ Scripts 'configure' can be provided tuning options:
       tools (other than OCaml and Coq already configured) are zenon, zvtov.
 
 
-(5) Administrativia:
-====================
+(5) Administrivia:
+==================
 
 Licence: New BSD Licence (see the file LICENSE for details)
 -------

@@ -30,12 +30,12 @@ all:
 	@./configure $(CONFIGURE_FLAGS)
 	@echo "Building Zenon..."
 	@($(CD) zenon &&\
-		./configure $(CONFIGURE_FLAGS) &&\
+		./configure-for-focalize $(CONFIGURE_FLAGS) &&\
 		$(MAKE) depend &&\
 		$(MAKE) all &&\
 		$(MAKE) doc &&\
 	  echo "Installing..." &&\
-		$(MAKE) install);\
+		. .config_var && $(SUDO) $(MAKE) install);\
 	  err=$$?;\
 	  case $$err in 0);; *) exit $$err;; esac;
 	@echo "Building Zvtov..."
