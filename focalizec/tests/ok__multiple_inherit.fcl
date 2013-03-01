@@ -1,3 +1,5 @@
+open "basics" ;;
+
 species Foo =
   let m = 1 ;
 end ;;
@@ -7,19 +9,19 @@ species Bar =
 end ;;
 
 (* From species ok__multiple_inherit#Bar. *)
-species Gee inherits Foo, Bar = end ;;
+species Gee = inherit Foo, Bar ; end ;;
 
 (* From species ok__multiple_inherit#Foo. *)
-species Buz inherits Bar, Foo = end ;;
+species Buz = inherit Bar, Foo ; end ;;
 
 (* From species ok__multiple_inherit#Foo. *)
-species Oups1 inherits Foo, Bar, Bar, Foo = end ;;
+species Oups1 = inherit Foo, Bar, Bar, Foo ; end ;;
 
 (* From species ok__multiple_inherit#Foo. *)
-species Oups2 inherits Foo, Bar, Bar, Foo, Buz = end ;;
+species Oups2 = inherit Foo, Bar, Bar, Foo, Buz ; end ;;
 
 (* From species ok__multiple_inherit#Bar. *)
-species Oups3 inherits Foo, Bar, Bar, Foo, Buz, Bar = end ;;
+species Oups3 = inherit Foo, Bar, Bar, Foo, Buz, Bar ; end ;;
 
 (* From species ok__multiple_inherit#Foo. *)
-species Oups4 inherits Foo, Oups3, Bar, Foo, Buz, Oups2 = end ;;
+species Oups4 = inherit Foo, Oups3, Bar, Foo, Buz, Oups2 ; end ;;

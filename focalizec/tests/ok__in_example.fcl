@@ -4,9 +4,9 @@ open "basics" ;;
 
 species Bla =
   signature equal : Self -> Self -> bool ;
-  property equal_reflexive : all x in Self, !equal (x, x) ;
-  theorem equal_reflexive2 : all x in Self, !equal (x, x)
-    proof = assumed {* *} ;
+  property equal_reflexive : all x : Self, !equal (x, x) ;
+  theorem equal_reflexive2 : all x : Self, !equal (x, x)
+    proof = assumed ;
 end ;;
 
 
@@ -16,9 +16,10 @@ end ;;
 (* their type to be a "ml type". Now, "in" parameters are always of a *)
 (* species (collection more accurately) type !                        *)
 (* ****************************************************************** *)
-species IntModel inherits Basic_object =
+species IntModel =
+  inherit Basic_object ;
   representation = basics#int ;
-  let un in Self = 1 ;
+  let un : Self = 1 ;
   let modulo (a, b) = if true then a else (if false then b else un) ;
 end ;;
 
@@ -26,18 +27,18 @@ end ;;
 species Me (Naturals is IntModel, n in Naturals) =
   representation = Naturals ;
 
- theorem daube : all x in Self,
+ theorem daube : all x : Self,
     basics#syntactic_equal (n, Naturals!un)
-  proof = assumed {* *} ;
+  proof = assumed ;
 
-  let junk (x in Self) in int = 1 ;
+  let junk (x : Self) : int = 1 ;
 
-  let reduce (x in Naturals) in Self =
+  let reduce (x : Naturals) : Self =
     Naturals!modulo (x, n) ;
 end ;;
 
-collection ConcreteInt implements IntModel ;;
-collection ConcreteMe implements Me (ConcreteInt, ConcreteInt!un) ;;
+collection ConcreteInt = implement IntModel ; end ;;
+collection ConcreteMe = implement Me (ConcreteInt, ConcreteInt!un) ; end ;;
 
 (* FAIT FAIRE assert failed dans types.ml !
    species ConcreteInt inherits IntModel = end ;; *)

@@ -44,44 +44,49 @@ let ext_tail =
 ;;
 
 
-species Equalified_object inherits Basic_object =
-  let equal (x in Self, y in Self) in bool = syntactic_equal (x, y) ;
+species Equalified_object =
+  inherit Basic_object ;
+  let equal (x : Self, y : Self) : bool = syntactic_equal (x, y) ;
 end ;;
 
-species List (E is Basic_object) inherits Equalified_object =
-   signature nil : Self ;
-   signature cons : E -> Self -> Self ;
-   signature head : Self -> E ;
-   signature tail : Self -> Self ;
-   let rec map (f, l) =
-     if equal (l, nil) then nil
-     else
-       let h = head (l) in
-       let q = tail (l) in
-       let h2 = f (h) in
-       let q2 = map (f, q) in
-       cons (h2, q2) ;
+species List (E is Basic_object) =
+  inherit Equalified_object ;
+  signature nil : Self ;
+  signature cons : E -> Self -> Self ;
+  signature head : Self -> E ;
+  signature tail : Self -> Self ;
+  let rec map (f, l) =
+    if equal (l, nil) then nil
+    else
+      let h = head (l) in
+      let q = tail (l) in
+      let h2 = f (h) in
+      let q2 = map (f, q) in
+      cons (h2, q2) ;
 end ;;
 
-species Concrete_list (E is Basic_object) inherits List (E) =
+species Concrete_list (E is Basic_object) =
+  inherit List (E) ;
   representation = basics#list (E) ;
-  let nil in Self = ext_nil ;
-  let cons (e, l) in Self = ext_cons (e, l) ;
-  let head (l in Self) in E = ext_head (l) ;
-  let tail (l in Self) in Self = ext_tail (l) ;
+  let nil : Self = ext_nil ;
+  let cons (e, l) : Self = ext_cons (e, l) ;
+  let head (l : Self) : E = ext_head (l) ;
+  let tail (l : Self) : Self = ext_tail (l) ;
 end ;;
 
-species Contrete_int inherits Basic_object =
+species Contrete_int =
+  inherit Basic_object ;
   representation = basics#int ;
   let print = string_of_int ;
 end ;;
-collection Int implements Contrete_int ;;
+collection Int = implement Contrete_int ; end ;;
 
-species Contrete_bool inherits Basic_object =
+species Contrete_bool =
+  inherit Basic_object ;
   representation = basics#bool ;
   let print = print_bool ;
 end ;;
-collection Bool implements Contrete_bool ;;
+collection Bool = implement Contrete_bool ; end ;;
 
-collection Int_list implements Concrete_list (Int) ;;
-collection Bool_list implements Concrete_list (Bool) ;;
+collection Int_list = implement Concrete_list (Int) ; end ;;
+collection Bool_list = implement Concrete_list (Bool) ; end ;;

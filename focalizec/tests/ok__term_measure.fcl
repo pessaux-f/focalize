@@ -2,34 +2,30 @@ use "basics" ;;
 open "basics" ;;
 use "wellfounded" ;;
 
-theorem zero_inf_one : int_lt (0, 1)
-proof = assumed {* Well known theorem ;) *}
-;;
+theorem zero_inf_one : 0 <0x 1 proof = assumed ;;
 
-theorem abs_basics : all x in int, ((x = 0) \/ int_lt (0, x)) -> int_abs (x) = x
-proof = assumed {* Well known theorem ;) *}
-;;
+theorem abs_basics : all x : int, ((x = 0) \/ (0 <0x x)) -> abs0x (x) = x
+proof = assumed ;;
 
 
 (* let abs (x) = if x = 0 || 0 < x then x else -x ;; *)
 
 
 species Test_measure =
-  let true_gt_false (x in basics#bool) in basics#int =
+  let true_gt_false (x : basics#bool) : basics#int =
     match x with
      | true -> 1
      | false -> 0 ;
 
-  let rec f (y in basics#int, z in basics#bool) =
+  let rec f (y : basics#int, z : basics#bool) =
        if z then f (y, false) else y
   termination proof =
     measure true_gt_false on z
-    <1>1 assume z in bool,
-         assume H: z = true,
+    <1>1 assume z : bool,
+         hypothesis H: z = true,
 	 prove wellfounded#int_wf (true_gt_false (false), true_gt_false (z))
          by definition of true_gt_false, wellfounded#int_wf
-            theorem zero_inf_one
-            hypothesis H
+            property zero_inf_one hypothesis H
     <1>2 conclude
   ;
 end ;;
@@ -37,16 +33,16 @@ end ;;
 
 (*
 species Test_measure =
-  let true_gt_false (x in basics#bool) in basics#int =
+  let true_gt_false (x : basics#bool) : basics#int =
     match x with
      | true -> 1
      | false -> 0 ;
 
-  let rec f (y in basics#int, z in basics#bool) =
+  let rec f (y : basics#int, z : basics#bool) =
        if z then f (y, false) else y
   termination proof =
     measure true_gt_false on z
-    <1>1 assume z in bool,
+    <1>1 assume z : bool,
          assume H: z = true,
 	 prove wellfounded#int_wf (true_gt_false (false), true_gt_false (z))
          by definition of true_gt_false, wellfounded#int_wf
@@ -67,11 +63,14 @@ species Test_measure =
 end ;;
 *)
 
-type order =
+(*
+type order_t =
  | Onat
  | Oint
  | Ostring
  | Obool
- | Otuple of int * int * order  (* tuple length, indice in the tuple, ... *)
- | Olexico of int * (int * order) list  (* tuple length, ... *)
- | Omeasure of Parsetree.Vlident  (* Function name. *)
+ | Otuple (int * int * order_t)  (* tuple length, indice in the tuple, ... *)
+ | Olexico (int * list (int, order_t))  (* tuple length, ... *)
+ | Omeasure (Parsetree.Vlident)  (* Function name. *)
+;;
+*)

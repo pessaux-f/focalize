@@ -28,9 +28,9 @@ switch (true, "foo") ;;
 type gros_produit = alias (int * (char * bool * string) * float  * bool) ;;
 type t = alias int ;;
 type u = alias (t * int) ;;
-let bib in u = (5, 6) ;;
+let bib : u = (5, 6) ;;
 type inv_prod ('a, 'b) = alias ('b * 'a) ;;
-let doudou in inv_prod (int , string) = ("gee", 42) ;;
+let doudou : inv_prod (int , string) = ("gee", 42) ;;
 type t2 = | A | B ;;
 #A ;;
 #B ;;
@@ -57,12 +57,12 @@ type foc_diag ('a) =
 
 (* An external record type. *)
 type foc_record ('a) =
-  internal  { hcode = int ; contents = 'a }
+  internal  { hcode : int ; contents : 'a }
   external
   | caml -> {* 'a Ok__baby_toy_externals.bbt_record *}
   | coq -> {* ok__baby_toy_coq_externals.foc_record __var_b __var_a *}
 
-  and hcode =
+  with hcode =
   | caml -> {* Ok__baby_toy_externals.bbt_hashing_code *}
   | coq -> {* ok__baby_toy_coq_externals.hc *}
 
@@ -75,7 +75,7 @@ if true then junk else { hcode = 43 ; contents = "Not same..." } ;;
 basics#print_string (junk.contents) ;;
 basics#print_string ("\n") ;;
 
-let a in foc_diag (int) = (1, 4) ;;
+let a : foc_diag (int) = (1, 4) ;;
 
 type option ('a) = | None | Some ('a) ;;
 #None ;;
@@ -85,22 +85,22 @@ let uuu = Some (42) ;;
 #Some (4) ;;
 #Some ("jgjg") ;;
 let v = #Some ("kikoo") ;;
-let v = #Some (#Some (true)) ;;
+let vv = #Some (#Some (true)) ;;
 type daube ('a, 'b) = | Glop ('a) | Pasglop ('b) ;;
 let tsoin = #Glop (5) ;;
 let tsointsoin = #Pasglop ("foo") ;;
 let tsointsointsoin = Pasglop ("foo") ;;
 
-type record0 = { x0 = int ; y0 = float } ;;
+type record0 = { x0 : int ; y0 : float } ;;
 let r0 = { x0 = 5 ; y0 = 5.5 } ;;
-type record1 ('a) = { x1 = 'a } ;;
+type record1 ('a) = { x1 : 'a } ;;
 let r1 = { x1 = 5 } ;;
 let r2 = { x1 = 5.0 } ;;
 let r3 = { x1 = #None } ;;
 let r4 = { x1 = #Some ("foo") } ;;
 let r5 = { r4 with x1 = None } ;;
 
-let not_b (x) in bool =
+let not_b (x) : bool =
    match x with
    | true -> false
    | false -> true
@@ -110,7 +110,7 @@ let not_b (x) in bool =
 1 :: [ ] ;;
 
 species Basic_object =
-  let equal (x in Self, y in Self) = true ;
+  let equal (x : Self, y : Self) = true ;
 end ;;
 
 type sum = | Couic | Couac ;;
@@ -126,28 +126,28 @@ species TestAbstract =
 end ;;
 *)
 
-species Toy inherits Basic_object =
-  signature ( = ) : Self -> Self -> bool
-  ;
-  property ``equal is reflexive'' : all x y in Self,
-    Self!( = ) (x, x) /\ x = x
-  ;
-  property equal_symmetric : all x y in Self,
-    Self!equal(x, y) -> !equal(y, x)
-  ;
-  property equal_transitive : all x y z in Self,
-    !equal(x, y) -> !equal(y, z) -> !equal(x, z)
-  ;
-  signature element : Self
-  ;
-  let different (x, y) = #not_b(!equal(x, y))
-  ;
+species Toy =
+  inherit Basic_object ;
 
-  let faux_different (x) = equal (x, x)
-  ;
+  signature ( = ) : Self -> Self -> bool ;
 
-  theorem same_is_not_different : all x y in Self,
-     !different(x, y) <-> ( !equal(x, y))
+  property ``equal is reflexive'' : all x y : Self,
+    Self!( = ) (x, x) /\ x = x ;
+
+  property equal_symmetric : all x y : Self,
+    Self!equal(x, y) -> !equal(y, x) ;
+
+  property equal_transitive : all x y z : Self,
+    !equal(x, y) -> !equal(y, z) -> !equal(x, z) ;
+
+  signature element : Self ;
+
+  let different (x, y) = ~~ (!equal(x, y)) ;
+
+  let faux_different (x) = equal (x, x) ;
+
+  theorem same_is_not_different : all x y : Self,
+     !different(x, y) <-> (!equal(x, y))
   proof =
     by definition of different
       property !different, different ;
@@ -157,6 +157,5 @@ species Toy inherits Basic_object =
     match x with
     | 0 -> same_is_not_different  (* Pretty strange... *)
     | _ -> appartient (x, y) ; *)
-
 end
 ;;

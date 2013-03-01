@@ -8,18 +8,19 @@ open "basics" ;;
 (* species (collection more accurately) type !                        *)
 (* ****************************************************************** *)
 species My_basic_object =
-  let equal (x in Self, y in Self) = true ;
+  let equal (x : Self, y : Self) = true ;
 end ;;
 
-species Test inherits My_basic_object =
+species Test =
+  inherit My_basic_object ;
   representation = basics#int ;
   (* (EX1) let create (x) in Self = basics#int_of_string (x) ; *)
-  let print (x in Self) = basics#print_int (x) ;
-  let create (x in basics#int) in Self = x ;
+  let print (x : Self) = basics#print_int (x) ;
+  let create (x : basics#int) : Self = x ;
 end
 ;;
 
-collection CTest implements Test ;;
+collection CTest = implement Test ; end ;;
 
 
 species Dummy (a in CTest) =
@@ -34,5 +35,5 @@ end
 
 (* (EX1) collection CDummy implements Dummy (CTest!create ("4")) ;; *)
 
-collection CDummy implements Dummy (CTest!create (4)) ;;
+collection CDummy = implement Dummy (CTest!create (4)) ; end ;;
 CDummy!print ("Et alors ? ") ;;

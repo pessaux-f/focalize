@@ -1,26 +1,29 @@
 use "basics" ;;
 open "basics" ;;
 
-(*
+
 species Couple1 =
-  signature first : Self -> Self ;
+  signature fst : Self -> Self ;
 end ;;
 
-
-species S_couple1 inherits Couple1 = 
-  let first (c) = first (c) ;  (* On pense tomber sur le first du toplevel ! *)
+(*
+species S_couple1 =
+  inherit Couple1 ;
+  let fst (c) = fst (c) ;  (* On pense tomber sur le first du toplevel ! *)
 end ;;
+(*
 Mais en fait non, car par late-binding, on trouve dans notre environnement
 une signature pour first, donc c'est elle qu'on choisi. Et comme first n'est
 pas récursive, la résolution du late-binding induirait un cycle et donc une
 récursion non déclarée, ce qui fait que l'espèce est trouvée mal-formée.
 *)
-
+*)
 
 species Couple2 =
 end ;;
 
 
-species S_couple2 inherits Couple2 = 
-  let first (c in (int * int)) = first (c) ; (* On a bien celui du toplevel. *)
+species S_couple2 =
+  inherit Couple2 ;
+  let fst (c : (int * int)) = fst (c) ; (* On a bien celui du toplevel. *)
 end ;;

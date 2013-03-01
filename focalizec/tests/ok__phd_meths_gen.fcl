@@ -7,21 +7,22 @@ open "basics" ;;
 (* Example from Virgile Prevosto's Phd, section 6.4.3, page 115. *)
 (* ************************************************************* *)
 species Basic_object =
-  let print (x in Self) = "<abst>" ;
-  let parse (x in string) in Self = focalize_error ("not parsable") ;
-  let equal (x in Self, y) =
+  let print (x : Self) = "<abst>" ;
+  let parse (x : string) : Self = focalize_error ("not parsable") ;
+  let equal (x : Self, y) =
      let useless = if true then x else y in
      true ;
 end ;;
 
-species S inherits Basic_object =
+species S =
+  inherit Basic_object ;
   signature a : Self ;
   signature op : Self -> Self ;
   let c = op (a) ;
   signature p1 : Self -> prop ;
   signature p2 : Self -> prop ;
-  property p1_p2 : all x in Self, p2 (x) -> p1 (x) ;
-  property op_spec : all x in Self, p1 (x) -> p2 (op (x)) ;
+  property p1_p2 : all x : Self, p2 (x) -> p1 (x) ;
+  property op_spec : all x : Self, p1 (x) -> p2 (op (x)) ;
   property a_spec : p1 (a) ;
   theorem t1 : p2 (c) proof = by definition of c property op_spec, a_spec ;
   theorem t2 : p1 (c) proof = by property t1, p1_p2 ;

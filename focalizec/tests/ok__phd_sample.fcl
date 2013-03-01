@@ -7,41 +7,44 @@ open "basics" ;;
 (* The initial example given in Virgile Prevosto's Phd, section 2.2.2 *)
 (* starting page 14.                                                  *)
 (* ****************************************************************** *)
-species Setoide inherits Basic_object =
+species Setoide =
+  inherit Basic_object ;
   signature ( = ) : Self -> Self -> bool ;
   signature element : Self ;
-  let different (x, y) = basics#not_b (x = y) ;
+  let different (x, y) = ~~ (x = y) ;
 
-  property refl : all x in Self, x = x ;
-  property symm : all x y in Self, Self!( = ) (x, y) -> y = x ;
+  property refl : all x : Self, x = x ;
+  property symm : all x y : Self, Self!( = ) (x, y) -> y = x ;
 end ;;
 
-species Monoide inherits Setoide =
+species Monoide =
+  inherit Setoide ;
   signature ( * ) : Self -> Self -> Self ;
   signature un : Self ;
   let element = Self! un * !un ;
 end ;;
 
-species Setoide_produit (A is Setoide, B is Setoide) inherits Setoide =
+species Setoide_produit (A is Setoide, B is Setoide) =
+  inherit Setoide ;
   representation = (A * B) ;
 
   let ( = ) (x, y) =
-     and_b
-       (A!( = ) (basics#fst (x), basics#fst (y)),
-        B!( = ) (snd (x), snd (y))) ;
-  let creer (x, y) in Self = basics#pair (x, y) ;
+    (A!( = ) (basics#fst (x), basics#fst (y)))
+    &&
+    (B!( = ) (snd (x), snd (y))) ;
+  let creer (x, y) : Self = basics#pair (x, y) ;
   let element = Self!creer (A!element, B!element) ;
   let print (x) =
      "(" ^ A!print (fst (x)) ^ "," ^ B!print (snd (x)) ^ ")" ;
 
-  proof of refl = (* by definition of ( = ) *) assumed {* *} ;
-  proof of symm = assumed {* *} ;
+  proof of refl = (* by definition of ( = ) *) assumed ;
+  proof of symm = assumed ;
 
 end ;;
 
 
-species Monoide_produit (C is Monoide, D is Monoide)
-  inherits Monoide, Setoide_produit (C, D) =
+species Monoide_produit (C is Monoide, D is Monoide) =
+  inherit Monoide, Setoide_produit (C, D) ;
 
   let un = !creer (C!un, D!un) ;
   let ( * ) (x, y) =
@@ -50,29 +53,31 @@ species Monoide_produit (C is Monoide, D is Monoide)
 end ;;
 
 
-species Entiers_concrets inherits Monoide =
+species Entiers_concrets =
+  inherit Monoide ;
   representation = basics#int ;
 
   let un = 1 ;
-  let ( * ) = basics#int_mult ;
-  let ( = ) in Self -> Self -> bool = basics#syntactic_equal ;
+  let ( * ) = basics#( * ) ;
+  let ( = ) : Self -> Self -> bool = basics#syntactic_equal ;
   let print = basics#string_of_int ;
   let parse = basics#int_of_string ;
 
-  proof of refl = assumed {* *} ;
-  proof of symm = assumed {* *} ;
+  proof of refl = assumed ;
+  proof of symm = assumed ;
 end ;;
 
-collection Les_entiers implements Entiers_concrets ;;
+collection Les_entiers = implement Entiers_concrets ; end ;;
 
 (*
-species JunkMeGuy (A is Monoide, B is Monoide) inherits
-  Monoide_produit (A, B) =
+species JunkMeGuy (A is Monoide, B is Monoide) =
+  inherit Monoide_produit (A, B) ;
 end ;;
 *)
 
-collection Couple_d_entiers implements
-  Monoide_produit (Les_entiers, Les_entiers)
+collection Couple_d_entiers =
+  implement Monoide_produit (Les_entiers, Les_entiers) ;
+end
 ;;
 
 let cinq = Les_entiers!parse ("5") ;;
