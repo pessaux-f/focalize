@@ -2008,9 +2008,10 @@ let remap_dependencies_on_params_for_field env ctx from name
        generator by the dependencies information computed in the current
        species for the corresponding effective parameters used to instanciate
        the formal ones. *)
-    let new_deps_on_params_as_option =
-      List.map
-        (fun (inh_spe_param, (Env.ODFP_methods_list inh_ordered_meths)) ->
+    let new_deps_on_params_reved =
+      List.fold_left
+        (fun accu_deps_on_params
+            (inh_spe_param, (Env.ODFP_methods_list inh_ordered_meths)) ->
           try
             (* [inh_spe_param] : the instanciated formal parameter of the
                inherited species. *)
@@ -2080,64 +2081,76 @@ let remap_dependencies_on_params_for_field env ctx from name
                               ignore the method. *)
                            accu)
                        inh_ordered_meths [] in
-                   Some
                      (param_of_instanciater, (Env.ODFP_methods_list new_meths))
+                     :: accu_deps_on_params
              | Env.SK_ident_by_expression (_, _, expr_desc) ->
                  (* We must be in the case of a "IN" parameter. So we know that
                     during inheritance, the "IN" parameter of the inherited
                     species has been instantiated by the expression [expr_desc].
-                    We must check if this expression is an identifier that
-                    represent an entity parameter of the inheriting species.
+                    We must check if this expression contains identifiers that
+                    are entity parameters of the inheriting (current) species.
                     If so, then we must pick in our species the dependency
-                    information for this entity parameter and map it on the
+                    information for each entity parameter and map it on the
                     one computed for the inherited species.
                     We try to extract from the instantiation expression the
-                    [vname] (if some) that could be an entity parameter. If
+                    [vnames] (if some) that could be entity parameters. If
                     this fails, we jump in the handler dealing with
                     instantiations that are not done with parameters. *)
-                 let expr_identifier =
-                   Parsetree_utils.get_local_vname_from_expr_desc expr_desc in
-                 (* Now, we wonder if this identifier belongs to our (i.e. the
-                    inheriting species) entity parameters. *)
-                 let (param_of_instanciater,
-                      (Env.ODFP_methods_list meths_of_instanciater)) =
-                   Handy.list_find_custom_eq
-                     (fun possible_entity_pname (param, _) ->
-                       match param with
-                        | Env.TypeInformation.SPAR_in (n, _, _) ->
-                            n = possible_entity_pname
-                        | Env.TypeInformation.SPAR_is (_, _, _, _, _) ->
-                            (* We do not deal here with "IS" parameters. *)
-                            false)
-                     expr_identifier non_mapped_deps in
-                 (* Right, we found that the identifier is really one of our
-                    entity parameters.
-                    Since we are in the case of an entity parameter, if there
-                    is a dependency, there will be only 1 method in the list,
-                    wearing the same name than the entity parameter itself.
-                    Hence, if [inh_ordered_meths] is not empty, we just
-                    reconstruct a bucket for [param_of_instanciater] with
-                    exactly the list od dependencies computed in our species. *)
-                 let new_meths =
-                   (match inh_ordered_meths with
-                    | [] -> []
-                    | [ _ ] -> meths_of_instanciater
-                    | _ -> assert false) in
-                 Some
-                   (param_of_instanciater, (Env.ODFP_methods_list new_meths)))
+                 let expr_identifiers =
+                   Parsetree_utils.get_free_local_vnames_from_expr_desc
+                     expr_desc in
+                 List.fold_left
+                   (fun accu_entity_prms expr_id ->
+                     (* Now, we wonder if this identifier belongs to our
+                        (i.e. the inheriting species) entity parameters. *)
+                     try
+                       let (param_of_instanciater,
+                            (Env.ODFP_methods_list meths_of_instanciater)) =
+                         Handy.list_find_custom_eq
+                           (fun possible_entity_pname (param, _) ->
+                             match param with
+                             | Env.TypeInformation.SPAR_in (n, _, _) ->
+                                 n = possible_entity_pname
+                             | Env.TypeInformation.SPAR_is (_, _, _, _, _) ->
+                                 (* We do not deal here with "IS" parameters. *)
+                                 false)
+                           expr_id non_mapped_deps in
+                       (* Right, we found that the identifier is really one of
+                          our entity parameters.
+                          Since we are in the case of an entity parameter, if
+                          there is a dependency, there will be only 1 method in
+                          the list, wearing the same name than the entity
+                          parameter itself.
+                          Hence, if [inh_ordered_meths] is not empty, we just
+                          reconstruct a bucket for [param_of_instanciater] with
+                          exactly the list of dependencies computed in our
+                          species. *)
+                       let new_meths =
+                         (match inh_ordered_meths with
+                         | [] -> []
+                         | [ _ ] -> meths_of_instanciater
+                         | _ -> assert false) in
+                       (param_of_instanciater,
+                        (Env.ODFP_methods_list new_meths)) ::
+                       accu_entity_prms
+                     with Not_found -> accu_entity_prms)
+                   accu_deps_on_params
+                   expr_identifiers
+            )
           with Not_found ->
             (* If we didn't find the collection used to instanciate among the
                species parameters that's because the instanciation was done
-               by a toplevel collection or species or because the parameter
-               is a IN parameter. *)
-            None)
+               by a toplevel collection or species or, for entity parameter,
+               by an expression not involving entity parameters of the
+               inheriting species. *)
+            accu_deps_on_params)
+        []
         found_meth.Env.mi_dependencies_from_parameters in
     (* Since we may have detected that some instanciations were done with
        toplevel species/collections and not a species parameter, we may have
        some [None]s in the list. Then just forget them to get the list
        containing really only stuff related to species parameters. *)
-    let new_deps_on_params =
-      Handy.option_list_to_list new_deps_on_params_as_option in
+    let new_deps_on_params = List.rev new_deps_on_params_reved in
     (new_used_species_parameter_tys, new_deps_on_params)
     end)
   else

@@ -176,7 +176,8 @@ val unqualified_vname_of_constructor_ident :
 
 val unqualified_vname_of_expr_ident : Parsetree.expr_ident -> Parsetree.vname
 
-val get_local_vname_from_expr_desc : Parsetree.expr_desc -> Parsetree.vname
+val get_free_local_vnames_from_expr_desc :
+  Parsetree.expr_desc -> Parsetree.vname list
 
 val make_annot : Parsetree.annotation -> 'a -> 'a Parsetree.ast
 

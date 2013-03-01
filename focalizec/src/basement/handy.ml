@@ -6,15 +6,13 @@
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*                 LIP6  --  INRIA Rocquencourt  -- ENSTA PAristech           *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
-
-(* $Id: handy.ml,v 1.26 2012-10-30 11:55:07 pessaux Exp $ *)
 
 
 (** Pretty printing tools. *)
@@ -385,24 +383,6 @@ let rec list_drop l num =
     match l with
     | [] -> raise Not_found
     | _ :: q -> list_drop q (num - 1)
-;;
-
-
-
-(** ****************************************************************************
-    {b Descr}: Transforms a list of optional values to a list of values only
-      keeping the data carried by elements of the form Some (...).
-      In the result list, elements are in the same order that in the list of
-      options.
-
-    {b Visibility}: Exported outside this module.
- **************************************************************************** *)
-let rec option_list_to_list = function
-  | [] -> []
-  | h :: q ->
-      match h with
-       | None -> option_list_to_list q
-       | Some data -> data :: (option_list_to_list q)
 ;;
 
 

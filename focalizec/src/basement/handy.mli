@@ -78,7 +78,6 @@ val list_first_index : ('a -> bool) -> 'a list -> int
 
 val list_drop : 'a list -> int -> 'a list
 
-val option_list_to_list : ('a option) list -> 'a list
 
 
 (** Effects to the terminal for pretty-printing tools. *)
