@@ -31,9 +31,9 @@ Contacts
         href="http://www-spi.lip6.fr">SPI</a><br>
     <ul>
       <li><a href="http://www-spi.lip6.fr/%7Ehardin/">Th&eacute;r&egrave;se
-      Hardin</a> (Professeur, Project Leader) </li>
+      Hardin</a> (Professor, Project Leader) </li>
       <li><a href="http://www-spi.lip6.fr/%7Ejaume/">Mathieu
-      Jaume</a> (Ma&icirc;tre de conf&eacute;rence) </li>
+      Jaume</a> (Assistant Professor) </li>
     </ul>
   </li>
   <br>
@@ -41,15 +41,15 @@ Contacts
   href="http://cedric.cnam.fr/">CEDRIC</a> <br>
   <ul>
     <li><a href="http://pauillac.inria.fr/%7Edelahaye/">David
-    Delahaye</a> (Ma&icirc;tre de conf&eacute;rence) </li>
+    Delahaye</a> (Assistant Professor) </li>
     <li><a href="http://www.iie.cnam.fr/%7Edubois/">Catherine
-    Dubois</a> (Professeur) </li>
+    Dubois</a> (Professor) </li>
     <li><a
     href="http://www-sop.inria.fr/lemme/Olivier.Pons/htdocs/accueil.html">Olivier
-    Pons</a> (Ma&icirc;tre de conf&eacute;rence) </li>
-    <li><a href="http://www-spi.lip6.fr/%7Err/" target="_self">Renaud Rioboo</a> (Professeur) </li>
+    Pons</a> (Assistant Professor) </li>
+    <li><a href="http://www-spi.lip6.fr/%7Err/" target="_self">Renaud Rioboo</a> (Professor) </li>
     <li><a href="http://cedric.cnam.fr/%7Edonzeau/"
-    target="_self">V&eacute;ronique Vigui&eacute;-Donzeau-Gouge</a> (Professeur) </li>
+    target="_self">V&eacute;ronique Vigui&eacute;-Donzeau-Gouge</a> (Professor) </li>
   </ul>
 </li>
 <br>
@@ -58,16 +58,18 @@ Contacts
 - <a href="http://uei.ensta-paristech.fr/fr/index.html">UIIS</a><br>
 </li>
 <ul>
-  <li><a href="mailto:francois.pessaux%20%5B%5Bat%5D%5D%20ensta-paristech.fr">Fran&ccedil;ois Pessaux</a> (Enseignant / Chercheur)</li>
+  <li><a
+  href="mailto:francois.pessaux%20%5B%5Bat%5D%5D%20ensta-paristech.fr">Fran&ccedil;ois
+  Pessaux</a> (Assistant Professor)</li>
 </ul>
 <br>
 
 <li><a href="http://www-rocq.inria.fr/">INRIA-Rocquencourt</a><br>
 <ul>
   <li><a target="_self" href="http://pauillac.inria.fr/%7Edoligez/">Damien
-  Doligez</a> (Charg&eacute; de Recherche) </li>
+  Doligez</a> (Researcher) </li>
   <li><a target="_self" href="http://bat8.inria.fr/%7Eweis/">Pierre
-  Weis</a> (Directeur de Recherche) </li>
+  Weis</a> (Researcher) </li>
 </ul>
 </li>
 </ul>
@@ -84,26 +86,25 @@ Contacts
     href="mailto:Philippe.Ayrault%20%5B%5Bat%5D%5D%20etersafe.com">Philippe Ayrault</a> (EterSafe, Thal&egrave;s) </li>
     <li><a href="mailto:blond%20%5B%5Bat%5D%5D%20bertin.fr">Julien Blond</a> (Bertin) </li>
     <li><a href="http://www-spi.lip6.fr/%7Ebonichon/">Richard
-    Bonichon</a> (Charg&eacute; de Recherche CEA) </li>
+    Bonichon</a> (Researcher - CEA) </li>
     <li><a href="http://www-lsr.imag.fr/Les.Personnes/Sylvain.Boulme/">Sylvain
-    Boulm&eacute;</a> (Ma&icirc;tre de conf&eacute;rence
-    INPG)</li>
+    Boulm&eacute;</a> (Assistant Professor - INPG)</li>
     <li><a href="mailto:carlier%20at%20iie.cnam.fr">Matthieu
-    Carlier</a> (Ex-doctorant)</li>
+    Carlier</a> (Past PhD)</li>
     <li><a href="mailto:jean_frederic_etienne%20%5B%5Bat%5D%5D%20yahoo.com">Jean-Fr&eacute;d&eacute;ric
-    Etienne</a> (Safe-River) </li>
-    <li><a href="mailto:stephane.fechter%20%5B%5Bat%5D%5D%20safe-river.com">St&eacute;phane Fechter</a> (Safe-River)</li>
+    Etienne</a> (SafeRiver) </li>
+    <li><a href="mailto:stephane.fechter%20%5B%5Bat%5D%5D%20safe-river.com">St&eacute;phane Fechter</a> (SafeRiver)</li>
     <li><a href="mailto:eric.jaeger%20%5B%5Bat%5D%5D%20sgdn.gouv.fr">Eric Jaeger</a> (ANSI)</li>
     <li><a href="http://www-spi.lip6.fr/%7Elhabib/">Lionel
-    Habib</a> (Ex-Doctorant)</li>
+    Habib</a> (Past PhD)</li>
     <li><a href="http://www.macs.hw.ac.uk/%7Emm20/">Manuel
-    Maarek</a> (Postdoc CRP Henri Tudor) </li>
+    Maarek</a> (SafeRiver) </li>
     <li><a href="http://www.iist.unu.edu/%7Emorisset/en/index.html">Charles
-    Morisset</a> (Postdoc UNU-IIST)</li>
-    <li><a href="mailto:noyer%20%5B%5Bat%5D%5D%20spi.lip6.fr">Ivan Noyer</a> (Ex-doctorant)</li>
+    Morisset</a> (Researcher - IIT-CNR - Newcastle University)</li>
+    <li><a href="mailto:noyer%20%5B%5Bat%5D%5D%20spi.lip6.fr">Ivan Noyer</a> (Past PhD)</li>
     <li><a href="http://www.mpi-sb.mpg.de/%7Eprevosto/">Virgile
-    Prevosto</a> (Charg&eacute; de Recherche CEA)</li>
-    <li><a href="mailto:lien.tran%20%5B%5Bat%5D%5D%20lip6.fr">Li&ecirc;n Tran</a> (Ex-doctorant)</li>
+    Prevosto</a> (Researcher - CEA)</li>
+    <li><a href="mailto:lien.tran%20%5B%5Bat%5D%5D%20lip6.fr">Li&ecirc;n Tran</a> (Past PhD)</li>
   </ul>
   </h3>
 </div>
