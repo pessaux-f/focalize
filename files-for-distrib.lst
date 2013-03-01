@@ -468,6 +468,7 @@
 ./focalize/zenon/config.ml
 ./focalize/zenon/config.mli
 ./focalize/zenon/configure
+./focalize/zenon/configure-for-focalize
 ./focalize/zenon/coqterm.ml
 ./focalize/zenon/coqterm.mli
 ./focalize/zenon/doc/Makefile
