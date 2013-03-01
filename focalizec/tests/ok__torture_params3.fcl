@@ -1,0 +1,22 @@
+open "basics" ;;
+
+species Nat =
+  representation = int ;
+end ;;
+
+collection CNat = implement Nat ; end ;;
+collection CNat2 = implement Nat ; end ;;
+
+species Bar00 (a in CNat, z in CNat) =
+  representation = basics#int ;
+  let m = (a, z) ;
+end ;;
+
+let id(x, y) = x ;;
+
+species Bar01 (b in CNat, c in CNat) =
+   (* Test fix of bug #8 where instantiation of formal entity parameter is not
+      done by an effective one being a formal of the inheriting species, but
+      by a *complex expression* that *contains* one. *)
+  inherit Bar00 (b, b) ;
+end ;;
