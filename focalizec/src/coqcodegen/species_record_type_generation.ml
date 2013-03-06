@@ -1453,8 +1453,8 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
       ctx env field_abstraction_infos in
   (* Print the type of the record and it's constructor. *)
   Format.fprintf out_fmter ": Type :=@ mk_record {@\n"  ;
-  (* Always generate the "rep" coercion. *)
-  Format.fprintf out_fmter "@[<2>rf_T :> Set" ;
+  (* Always generate the "rep". *)
+  Format.fprintf out_fmter "@[<2>rf_T : Set" ;
   (* We now extend the collections_carrier_mapping with ourselve known.
      Hence, if we refer to our "rep" we will be directly mapped onto the
      "rf_T" without needing to re-construct this name each time. Do same
