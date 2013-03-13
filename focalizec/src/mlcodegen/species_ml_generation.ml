@@ -1138,7 +1138,8 @@ let generate_collection_generator ctx env compiled_species_fields =
       Parsetree_utils.pp_vname_with_operators_expanded
       field_memory.Misc_common.cfm_method_name ;
     if Configuration.get_verbose () then
-      Format.eprintf "Generating OCaml code for method generator of '%a'.@."
+      Format.eprintf
+        "Generating OCaml code for collection generator for '%a'.@."
         Sourcify.pp_vname field_memory.Misc_common.cfm_method_name ;
     (* Find the method generator to use depending on if it belongs to this
        inheritance level or if it was inherited from another species. *)
@@ -1146,7 +1147,7 @@ let generate_collection_generator ctx env compiled_species_fields =
       (begin
       if Configuration.get_verbose () then
         Format.eprintf
-          "Method '%a' not inherited, building method generator using \
+          "Method '%a' not inherited, building collection generator using \
           abstracted local species parameters as arguments.@."
           Sourcify.pp_vname field_memory.Misc_common.cfm_method_name ;
       (* It comes from the current inheritance level. Then its name is simply
