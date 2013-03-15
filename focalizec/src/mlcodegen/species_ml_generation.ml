@@ -624,6 +624,7 @@ let generate_methods ctx env ~self_manifest field =
          Misc_common.cfm_method_scheme = Env.MTK_computational sch ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
+         Misc_common.cfm_raw_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_coq_min_typ_env_names = [] } in
        Misc_common.CSF_sig compiled_field
@@ -644,6 +645,7 @@ let generate_methods ctx env ~self_manifest field =
               Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
               (* Never used for OCaml. *)
               Misc_common.cfm_used_species_parameter_tys = [] ;
+              Misc_common.cfm_raw_dependencies_from_parameters = [] ;
               Misc_common.cfm_dependencies_from_parameters = [] ;
               Misc_common.cfm_coq_min_typ_env_names = [] } in
             Misc_common.CSF_let compiled_field
@@ -666,6 +668,8 @@ let generate_methods ctx env ~self_manifest field =
               Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
               (* Never used for OCaml. *)
               Misc_common.cfm_used_species_parameter_tys = [] ;
+              Misc_common.cfm_raw_dependencies_from_parameters =
+                abstraction_info.Abstractions.ai_raw_dependencies_from_params ;
               Misc_common.cfm_dependencies_from_parameters =
                 abstraction_info.Abstractions.ai_dependencies_from_params ;
               Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
@@ -695,6 +699,7 @@ let generate_methods ctx env ~self_manifest field =
                      Env.MTK_computational scheme ;
                    (* Never used for OCaml. *)
                    Misc_common.cfm_used_species_parameter_tys = [] ;
+                   Misc_common.cfm_raw_dependencies_from_parameters = [] ;
                    Misc_common.cfm_dependencies_from_parameters = [] ;
                    Misc_common.cfm_coq_min_typ_env_names = [] } in
                  Misc_common.CSF_let compiled_field
@@ -727,6 +732,8 @@ let generate_methods ctx env ~self_manifest field =
                      Env.MTK_computational scheme ;
                    (* Never used for OCaml. *)
                    Misc_common.cfm_used_species_parameter_tys = [] ;
+                   Misc_common.cfm_raw_dependencies_from_parameters =
+                     first_ai.Abstractions.ai_raw_dependencies_from_params ;
                    Misc_common.cfm_dependencies_from_parameters =
                      first_ai.Abstractions.ai_dependencies_from_params ;
                    Misc_common.cfm_coq_min_typ_env_names =
@@ -757,6 +764,8 @@ let generate_methods ctx env ~self_manifest field =
                            Env.MTK_computational scheme ;
                          (* Never used for OCaml. *)
                          Misc_common.cfm_used_species_parameter_tys = [] ;
+                         Misc_common.cfm_raw_dependencies_from_parameters =
+                           ai.Abstractions.ai_raw_dependencies_from_params ;
                          Misc_common.cfm_dependencies_from_parameters =
                            ai.Abstractions.ai_dependencies_from_params ;
                          Misc_common.cfm_coq_min_typ_env_names =
@@ -778,6 +787,7 @@ let generate_methods ctx env ~self_manifest field =
          Misc_common.cfm_method_scheme = Env.MTK_logical lexpr ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
+         Misc_common.cfm_raw_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_coq_min_typ_env_names = [] } in
        Misc_common.CSF_theorem compiled_field
@@ -794,6 +804,7 @@ let generate_methods ctx env ~self_manifest field =
          Misc_common.cfm_method_scheme = Env.MTK_logical lexpr ;
          (* Never used for OCaml. *)
          Misc_common.cfm_used_species_parameter_tys = [] ;
+         Misc_common.cfm_raw_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_coq_min_typ_env_names = [] } in
        Misc_common.CSF_property compiled_field
@@ -1022,6 +1033,32 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
     generator and record then in a precise order that must be made public
     for the guys who want to instanciate the collection.
 
+    Attention, we do not hunt these names in the remapped dependencies since
+    these latter may have forgotten some effective dependencies in the
+    methods at this species level. In effect, remapped dependencies serve
+    knowing to what really apply a method generator, often pick among the
+    effective dependencies computed by analysing the mothod's body in the
+    species (not in the species we inherit it). In case an entity parameter
+    is instantiated for inheritance by an expression containing dependencies
+    on parameters stuff, this stuff doens't appear a dependencies of the
+    method generator (since they were not there ate generator-definition-time)
+    but need however to be lambda-lifted.
+    Consider:
+      species Compared (V is Comparable, minv in V) =
+        representation = V ;
+        let my_param = V!mult (minv, minv) ;
+      end ;;
+      species Buggy (VV is Comparable, maxv in VV) =
+        inherit Compared (VV, VV!plus(VV!plus(VV!two, VV!one), maxv)) ;
+      end ;;
+    in [Compared], [my_param] depends on [V!mult] and entity params [minv] and
+    [minv]. In [Buggy], there are in addition dependencies on [VV!plus] and
+    [VV!one] that diseaper in remapped dependencies ! In effect, remapping is
+    used to pick in the *non-remapped* dependencies to feed an inherited
+    method generator. And the inherited method generator, there are only
+    dependencies present in its body, not in the arguments provided to it
+    by the inheriting species !
+
     {b Rem} : Not exported outside this module.                            *)
 (* *********************************************************************** *)
 let dump_collection_generator_arguments_for_params_methods out_fmter
@@ -1062,7 +1099,8 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
         (* And now, union the current methods we depend on with the already
            previously recorded. *)
         spe_param_bucket := meths_set @ !spe_param_bucket)
-      field_memory.Misc_common.cfm_dependencies_from_parameters in
+      (* Use **non-remapped** dependencies !!! See explaination in header !!! *)
+      field_memory.Misc_common.cfm_raw_dependencies_from_parameters in
 
   (* ********************************************************** *)
   (* Now, really work, building by side effect for each species *)

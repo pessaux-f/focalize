@@ -697,6 +697,15 @@ type internal_abstraction_info = {
 (** {b Exported}: Yes. *)
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list;
+  (** Same than below but without remapping on dependencies of the method from
+      the inherited species. This is required to prevent dropping dependencies
+      under the pretext they were not involved in the inherited method
+      generator. This only serves to generate the extra parameters of the
+      collection generator. *)
+  ai_raw_dependencies_from_params :
+    (Env.TypeInformation.species_param *
+     Env.ordered_methods_from_params)  (** The set of methods we depend on. *)
+      list ;
   (** Dependencies on species parameters' methods. They are the union of:
         - dependencies found via [BODY] of definition 72 page 153 of Virgile
           Prevosto's Phd,
@@ -1121,7 +1130,8 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
 (*      (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) *)
 (*         list                                                             *)
 (* {b Args}:
-     - [dependencies_from_params] Those computer by all the other rules.
+     - [dependencies_from_params] Those computer by dependencies found via
+       the [TYPE] rule otherwise one get too many useless dependencies !
 
    {b Exported} : No.                                                       *)
 (* ************************************************************************ *)
@@ -1453,10 +1463,12 @@ let complete_dependencies_from_params env ~current_unit ~current_species
   let all_found_deps_until_now =
     merge_abstraction_infos
       dependencies_from_params_via_type dependencies_from_params_via_compl2 in
-  (* Get the found dependencies via rule [PRM]. *)
+  (* Get the found dependencies via rule [PRM]. This rule must only apply to
+     dependencies found from the [TYPE] rule otherwise one get too many
+     useless dependencies ! *)
   let dependencies_from_params_via_PRM =
     complete_dependencies_from_params_rule_PRM
-      env ~current_unit species_parameters all_found_deps_until_now in
+      env ~current_unit species_parameters dependencies_from_params_via_type in
   (* Merge the completions. *)
   let dependencies_from_params_via_compl3 =
     merge_abstraction_infos
@@ -2219,7 +2231,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys;
-            ai_dependencies_from_params = mapped_deps;
+            ai_raw_dependencies_from_params = sorted_deps_from_params ;
+            ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
             ai_min_coq_env = iai.iai_min_coq_env } in
@@ -2263,7 +2276,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys;
-            ai_dependencies_from_params = mapped_deps;
+            ai_raw_dependencies_from_params = sorted_deps_from_params ;
+            ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
             ai_min_coq_env = iai.iai_min_coq_env } in
@@ -2313,6 +2327,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                 let abstraction_info = {
                   ai_used_species_parameter_tys =
                     mapped_used_species_parameter_tys;
+                  ai_raw_dependencies_from_params = sorted_deps_from_params ;
                   ai_dependencies_from_params = mapped_deps;
                   ai_dependencies_from_params_for_record_type =
                     mapped_for_record_ty_deps_from_params;
@@ -2359,6 +2374,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys;
+            ai_raw_dependencies_from_params = sorted_deps_from_params ;
             ai_dependencies_from_params = mapped_deps;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
@@ -2403,7 +2419,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys;
-            ai_dependencies_from_params = mapped_deps;
+            ai_raw_dependencies_from_params = sorted_deps_from_params ;
+            ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
             ai_min_coq_env = iai.iai_min_coq_env } in
@@ -2426,9 +2443,10 @@ let compute_abstractions_for_toplevel_theorem ctx theorem =
   (* Now, its minimal Coq typing environment. *)
   let min_coq_env = MinEnv.minimal_typing_environment universe [] in
   let abstr_info = {
-    ai_used_species_parameter_tys = [];
-    ai_dependencies_from_params = [];
-    ai_dependencies_from_params_for_record_type = [];
+    ai_used_species_parameter_tys = [] ;
+    ai_raw_dependencies_from_params = [] ;
+    ai_dependencies_from_params = [] ;
+    ai_dependencies_from_params_for_record_type = [] ;
     ai_min_coq_env = min_coq_env } in
   abstr_info
 ;;

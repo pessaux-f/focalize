@@ -21,6 +21,8 @@ type compiled_field_memory = {
   cfm_method_name : Parsetree.vname;
   cfm_method_scheme : Env.method_type_kind;
   cfm_used_species_parameter_tys : Parsetree.vname list;
+  cfm_raw_dependencies_from_parameters :
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list;
   cfm_dependencies_from_parameters :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list;
   cfm_coq_min_typ_env_names : Parsetree.vname list;

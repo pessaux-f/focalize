@@ -3002,6 +3002,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
          Misc_common.cfm_used_species_parameter_tys =
            ai.Abstractions.ai_used_species_parameter_tys ;
+         Misc_common.cfm_raw_dependencies_from_parameters =
+           ai.Abstractions.ai_raw_dependencies_from_params ;
          Misc_common.cfm_dependencies_from_parameters =
            ai.Abstractions.ai_dependencies_from_params ;
          Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
@@ -3105,6 +3107,8 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
          Misc_common.cfm_method_scheme = Env.MTK_computational scheme;
          Misc_common.cfm_used_species_parameter_tys =
            ai.Abstractions.ai_used_species_parameter_tys;
+         Misc_common.cfm_raw_dependencies_from_parameters =
+           ai.Abstractions.ai_raw_dependencies_from_params;
          Misc_common.cfm_dependencies_from_parameters =
            ai.Abstractions.ai_dependencies_from_params;
          Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
@@ -3180,6 +3184,8 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
            Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
            Misc_common.cfm_used_species_parameter_tys =
              ai.Abstractions.ai_used_species_parameter_tys ;
+           Misc_common.cfm_raw_dependencies_from_parameters =
+             ai.Abstractions.ai_raw_dependencies_from_params ;
            Misc_common.cfm_dependencies_from_parameters =
              ai.Abstractions.ai_dependencies_from_params ;
            Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
@@ -3216,6 +3222,7 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
           abstraction_info.Abstractions.ai_used_species_parameter_tys;
         (* Since the "sig " has no code, it can't refer to parameters'
            methods ! *)
+        Misc_common.cfm_raw_dependencies_from_parameters = [];
         Misc_common.cfm_dependencies_from_parameters = [];
         (* Since the "sig " has no code, it can't refer to some of our
            methods ! *)
@@ -3238,12 +3245,14 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
         Misc_common.cfm_is_logical =
           (match body with
            | Parsetree.BB_logical _ -> true
-           | Parsetree.BB_computational _ -> false);
-        Misc_common.cfm_from_species = from;
-        Misc_common.cfm_method_name = name;
-        Misc_common.cfm_method_scheme = Env.MTK_computational scheme;
+           | Parsetree.BB_computational _ -> false) ;
+        Misc_common.cfm_from_species = from ;
+        Misc_common.cfm_method_name = name ;
+        Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
         Misc_common.cfm_used_species_parameter_tys =
-          abstraction_info.Abstractions.ai_used_species_parameter_tys;
+          abstraction_info.Abstractions.ai_used_species_parameter_tys ;
+        Misc_common.cfm_raw_dependencies_from_parameters =
+          abstraction_info.Abstractions.ai_raw_dependencies_from_params ;
         Misc_common.cfm_dependencies_from_parameters =
           abstraction_info.Abstractions.ai_dependencies_from_params;
         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
@@ -3261,12 +3270,14 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
           abstraction_info.Abstractions.ai_dependencies_from_params
           generated_fields (from, name, logical_expr) pr in
       let compiled_field = {
-        Misc_common.cfm_is_logical = true;
-        Misc_common.cfm_from_species = from;
-        Misc_common.cfm_method_name = name;
+        Misc_common.cfm_is_logical = true ;
+        Misc_common.cfm_from_species = from ;
+        Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_logical logical_expr;
         Misc_common.cfm_used_species_parameter_tys =
           abstraction_info.Abstractions.ai_used_species_parameter_tys;
+        Misc_common.cfm_raw_dependencies_from_parameters =
+          abstraction_info.Abstractions.ai_raw_dependencies_from_params;
         Misc_common.cfm_dependencies_from_parameters =
           abstraction_info.Abstractions.ai_dependencies_from_params;
         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
@@ -3274,14 +3285,16 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
   | Abstractions.FAI_property ((from, name, _, lexpr, _), abstraction_info) ->
       (* "Property"s are discarded. However we compute their dependencies. *)
       let compiled_field = {
-        Misc_common.cfm_is_logical = true;
-        Misc_common.cfm_from_species = from;
-        Misc_common.cfm_method_name = name;
+        Misc_common.cfm_is_logical = true ;
+        Misc_common.cfm_from_species = from ;
+        Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_logical lexpr;
         Misc_common.cfm_used_species_parameter_tys =
-          abstraction_info.Abstractions.ai_used_species_parameter_tys;
+          abstraction_info.Abstractions.ai_used_species_parameter_tys ;
+        Misc_common.cfm_raw_dependencies_from_parameters =
+          abstraction_info.Abstractions.ai_raw_dependencies_from_params;
         Misc_common.cfm_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_dependencies_from_params;
+          abstraction_info.Abstractions.ai_dependencies_from_params ;
         Misc_common.cfm_coq_min_typ_env_names = [] } in
       Misc_common.CSF_property compiled_field
 ;;
@@ -3470,6 +3483,12 @@ let extend_env_for_species_def ~current_species env species_descr =
     record then in a precise order that must be made public for the guys who
     want to instanciate the collection.
 
+    Attention, we do not hunt these names in the remapped dependencies since
+    these latter may have forgotten some effective dependencies in the
+    methods at this species level. Read full explainations in the function
+    [dump_collection_generator_arguments_for_params_methods] of file
+    "species_ml_generation.ml".
+
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
 let dump_collection_generator_arguments_for_params_methods out_fmter
@@ -3519,7 +3538,8 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
              (* And now, union the current methods we depend on with the
                 already previously recorded. *)
              spe_param_bucket := meths_set @ !spe_param_bucket)
-      field_memory.Misc_common.cfm_dependencies_from_parameters in
+      (* Use **non-remapped** dependencies !!! See explaination in header !!! *)
+      field_memory.Misc_common.cfm_raw_dependencies_from_parameters in
 
   (* ********************************************************** *)
   (* Now, really work, building by side effect for each species *)

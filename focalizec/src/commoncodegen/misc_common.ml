@@ -44,6 +44,13 @@ type compiled_field_memory = {
      is explicit and lead to a dependant type.
      NEVER USED FOR OCAML CODE GENERATION. *)
   cfm_used_species_parameter_tys : Parsetree.vname list ;
+  (** Same than below but without remapping on dependencies of the method from
+      the inherited species. This is required to prevent dropping dependencies
+      under the pretext they were not involved in the inherited method
+      generator. This only serves to generate the extra parameters of the
+      collection generator. *)
+  cfm_raw_dependencies_from_parameters :
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list;
   (** The list mapping for each species parameter, the methods the current
       method depends on. By lambda-lifting, these methods induce extra
       parameters named as "_p_" +  species parameter name + "_" + called
