@@ -1595,10 +1595,14 @@ let zenonify_by_type ctx env type_ident =
      encounter it as a FoCaLize phrase. By the way, tell not to enrich the
      environment otherwise, since the type is already defined, when inserting
      it again in the environment, we will have an error telling "already
-     bound". *)
+     bound". We also must qualify the constructors in the definition if
+     the type is not hosted in the compilation unit where the proof appears.
+     In effect, in functions using this type and on which we depend to make
+     proofs, constructors WILL be qualified. Not qualifying constructors in
+     the "fake" definition for Zenon would prevent ot from finding proofs. *)
   ignore
     (Type_coq_generation.type_def_compile
-       ~record_in_env: false reduced_ctx env type_vname ty_def)
+       ~as_zenon_fact: true reduced_ctx env type_vname ty_def)
 ;;
 
 

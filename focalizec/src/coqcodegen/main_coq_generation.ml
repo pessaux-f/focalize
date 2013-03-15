@@ -6,15 +6,14 @@
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ...  LIP6 and INRIA                                      *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: main_coq_generation.ml,v 1.48 2012-10-30 11:55:07 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} : This module is the entry point for the compilation from FoCaL
@@ -195,9 +194,10 @@ let toplevel_compile env ~current_unit out_fmter = function
       (* Since we are on the definition of the type, this type doesn't already
          exists normally. Hence, we want the code generation to enrich the
          environment with the components (record labels, sum value
-         constructors) and the type the definition induces. *)
+         constructors) and the type the definition induces. In effect, this is
+         not a "fake" type definition provided to Zenon as a fact. *)
       Type_coq_generation.type_def_compile
-        ~record_in_env: true ctx env type_def_name type_descr
+        ~as_zenon_fact: false ctx env type_def_name type_descr
   | Infer.PCM_let_def (let_def, _) ->
       Types.purge_type_simple_to_coq_variable_mapping () ;
       (* Create the initial context for compiling the let definition.
