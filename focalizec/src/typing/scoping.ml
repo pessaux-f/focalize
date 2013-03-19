@@ -8,8 +8,8 @@
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
@@ -1846,8 +1846,7 @@ and scope_logical_expr ctx env logical_expr =
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_imply (scoped_p1, scoped_p2)
-     | Parsetree.Pr_or (p1, p2) ->
-         (begin
+     | Parsetree.Pr_or (p1, p2) -> (
          (* We first ensure that if any argument is a -> or a <->, then it is
             enclosed between parentheses. *)
          (match p1.Parsetree.ast_desc with
@@ -1867,9 +1866,8 @@ and scope_logical_expr ctx env logical_expr =
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_or (scoped_p1, scoped_p2)
-         end)
-     | Parsetree.Pr_and (p1, p2) ->
-         (begin
+        )
+     | Parsetree.Pr_and (p1, p2) -> (
          (* We first ensure that if any argument is a -> or a <->, then it is
             enclosed between parentheses. *)
          (match p1.Parsetree.ast_desc with
