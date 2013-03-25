@@ -447,8 +447,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
            | Some term_pr ->
                match term_pr.Parsetree.ast_desc with
                 | Parsetree.TP_order (expr, _, pr)
-                | Parsetree.TP_measure (expr, _, pr) ->
-                    (begin
+                | Parsetree.TP_measure (expr, _, pr) -> (
                     let deps1 =
                       Param_dep_analysis.param_deps_expr
                         ~current_species
@@ -458,7 +457,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
                         ~current_species
                         (species_param_name, species_param_meths) pr in
                          Parsetree_utils.ParamDepSet.union deps1 deps2
-                    end)
+                   )
                 | Parsetree.TP_structural _ ->
                     (* Abstracted stuff can not be used for structural
                        termination. Moreover, structural termination can only
@@ -721,7 +720,8 @@ type abstraction_info = {
      Env.ordered_methods_from_params)  (** The set of methods we depend on. *)
       list;
   (* Dependencies used to generate the record type's parameters. It only
-     contains dependencies obtained by [TYPE] and [DIDOU]. *)
+     contains dependencies obtained by [TYPE] + [PRM] + [DIDOU] on
+     ([TYPE] + [PRM]). *)
   ai_dependencies_from_params_for_record_type :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
@@ -856,8 +856,7 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
              (* "Self" is never a species parameter. It can be used as an
                 effective argument, but NEVER declared as a parameter ! *)
              (accu, (counter + 1))
-         | Parsetree_utils.SPE_Species (eff_arg_qual_vname, _) ->
-             (begin
+         | Parsetree_utils.SPE_Species (eff_arg_qual_vname, _) -> (
              match eff_arg_qual_vname with
               | Parsetree.Qualified (modname, eff_arg_vname)
                 when modname = current_unit ->
@@ -880,7 +879,7 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
               | Parsetree.Vname _ ->
                   (* Scoping should have transformed it into a [Qualified]. *)
                   assert false
-             end))
+            ))
       ([], 0)
       spe_expr.Parsetree_utils.sse_effective_args in
   (* Tells that species [sse_name] uses [params_with_pos] as arguments... *)
@@ -914,8 +913,7 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
      | Parsetree.Qualified (_, n) -> Parsetree_utils.name_of_vname n) in
   let rec rec_add = function
     | [] -> []
-    | (p, d) :: q ->
-        (begin
+    | (p, d) :: q -> (
         match p with
          | Env.TypeInformation.SPAR_in (_, _, _) ->
              (* "In" parameters are never involved in the process. *)
@@ -926,7 +924,7 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
              if name = param_name_as_string then
                (p, (Parsetree_utils.ParamDepSet.union deps d)) :: q
              else (p, d) :: (rec_add q)
-        end) in
+       ) in
   rec_add to_deps
 ;;
 
@@ -1009,7 +1007,9 @@ let complete_used_species_parameters_ty ~current_unit species_params initial_set
 
 
 
-(* Returns an extension, not an union. *)
+(* Returns an extension, not an union, BUT CONTAINS FORCELY the initial set
+   [via_completion]. So ... not the union of the [via_body], [via_type] and
+   [via_completion]. *)
 let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
     ~via_type ~via_completion  =
   (* Join the 3 dependencies sets to lookup for fixpoint in only 1 set. *)
@@ -1067,17 +1067,14 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
                    with Not_found -> []  (* No children at all. *)) in
                  List.iter
                    (fun (node, _) ->
-                     if node.DepGraphData.nn_name <>
-                        (Parsetree.Vlident "rep") then
+                     if node.DepGraphData.nn_name <> Parsetree.Vlident "rep" then
                        (begin
                        (* We found a method that must be possibly added if it is
                           not already present in the already found dependencies
                           and not in the already added dependencies. *)
                        let mkind =
                          Param_dep_analysis.guess_method_computational_or_logical
-                           node.DepGraphData.nn_name
-                           None
-                           spe_meths in
+                           node.DepGraphData.nn_name None spe_meths in
                        (* We must replace occurrences of "Self" in this method
                           by the species parameter from where this method
                           comes. *)
@@ -1092,29 +1089,27 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
                               let lexpr' =
                                 SubstColl.subst_logical_expr
                                   ~current_unit SubstColl.SRCK_self
-                                  (Types.SBRCK_coll spe_par_name)
-                                  lexpr in
+                                  (Types.SBRCK_coll spe_par_name) lexpr in
                               Parsetree_utils.DETK_logical lexpr' in
                        let elem = (node.DepGraphData.nn_name, mkind) in
                        if not
                            (Parsetree_utils.ParamDepSet.mem elem meths_old) &&
-                          not (Parsetree_utils.ParamDepSet.mem elem !accu) then
-                         (begin
+                          not (Parsetree_utils.ParamDepSet.mem elem !accu) then (
                          (* We must add the method into the accu since it was
                             never seen before. *)
                          accu := Parsetree_utils.ParamDepSet.add elem !accu;
                          (* For the fixpoint, we say that it is not yet
                             reached. *)
                          changed := true
-                         end)
+                        )
                        end))
                    decl_children)
-               meths_old;
+               meths_old ;
              (* Return the new set of added methods. *)
              (param, !accu))
       !new_via_completion
       found_dependencies_from_params
-  done;
+  done ;
   !new_via_completion
 ;;
 
