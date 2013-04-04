@@ -2043,26 +2043,6 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
          Location.pp_location proof.Parsetree.ast_loc;
        Format.fprintf out_fmter "%%%%name: for_zenon_%a@\n@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;
-       (* Now, print the lemma body. Inside, any method of "Self" is
-          abstracted (without lambda-lift) and named "abst_xxx". That's why we
-          use the mode [SMS_abstracted]. *)
-       Format.fprintf out_fmter "(* Theorem's body. *)@\n";
-       (* Generate the aim depending on if we are in a regular proof or in the
-          initial stage of a termination proof. *)
-       (match aim_gen_method with
-        | ZSGM_from_logical_expr aim ->
-            Species_record_type_generation.generate_logical_expr
-              ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
-                Species_record_type_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Species_record_type_generation.RMS_regular
-              ctx env aim
-        | ZSGM_from_termination_lemma rec_calls ->
-            Rec_let_gen.generate_termination_lemmas
-              ctx print_ctx env ~explicit_order: None rec_calls ;
-            (* Always end by the obligation of well-formation of the order. *)
-            Format.fprintf out_fmter "@ (well_founded __term_order)");
        Format.fprintf out_fmter
          "@\n@\n(* Methods to use for automated proof. *)@\n";
        (* Now, print Definition and Hypothesis mentionned in the "by" clause
@@ -2100,6 +2080,29 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
             dependencies_from_params generated_fields available_hyps
             available_steps)
          real_facts;
+       (* Now, print the lemma body. Inside, any method of "Self" is
+          abstracted (without lambda-lift) and named "abst_xxx". That's why we
+          use the mode [SMS_abstracted]. *)
+       Format.fprintf out_fmter "(* Theorem's body. *)@\n";
+       Format.fprintf out_fmter "Theorem for_zenon_%a :@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded aim_name;
+       (* Generate the aim depending on if we are in a regular proof or in the
+          initial stage of a termination proof. *)
+       (match aim_gen_method with
+        | ZSGM_from_logical_expr aim ->
+            Species_record_type_generation.generate_logical_expr
+              ~local_idents: [] ~in_recursive_let_section_of: []
+              ~self_methods_status:
+                Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
+              ctx env aim
+        | ZSGM_from_termination_lemma rec_calls ->
+            Rec_let_gen.generate_termination_lemmas
+              ctx print_ctx env ~explicit_order: None rec_calls ;
+            (* Always end by the obligation of well-formation of the order. *)
+            Format.fprintf out_fmter "@ (well_founded __term_order)");
+       Format.fprintf out_fmter ".@\n";
        (* End of Zenon stuff. *)
        Format.fprintf out_fmter "%%%%end-auto-proof@\n";
        (* Now, let's print the theorem/lemma and prove it unless we are at
