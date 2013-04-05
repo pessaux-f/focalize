@@ -8,8 +8,8 @@
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - 2012... LIP6 and INRIA                                   *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
@@ -878,8 +878,7 @@ end
 
 (* *********************************************************************** *)
 (* {b Descr} : Tells if a "species" found in a code generation environment
-   is a species or a collection. This is used to adapt the access to
-   method generators when creating collection generators.
+   is a species or a collection. This is only used for printing purpose.
 
    {b Rem} : Exported outside this module.                                 *)
 (* *********************************************************************** *)

@@ -123,8 +123,7 @@ let apply_substitutions_list_on_formal_param_vname pmodname pvname substs =
         | Env.SK_ident_by_expression (_, _, _) ->
             (* We only deal with collection parameters. *)
             accu_vname
-        | Env.SK_collection_by_collection ((c1_mod_name, c1_spe_name), c2) ->
-            (begin
+        | Env.SK_collection_by_collection ((c1_mod_name, c1_spe_name), c2) -> (
             match c2 with
              | Types.SBRCK_coll (_, x) ->
                  (* By construction, the compilation unit name of c2 should
@@ -141,7 +140,7 @@ let apply_substitutions_list_on_formal_param_vname pmodname pvname substs =
                       purely disapears. *)
                    raise Not_found
                  else accu_vname
-            end))
+           ))
       pvname_as_string
       substs in
   (* Since during the substitutions we used [string]s we must finally convert
@@ -547,8 +546,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
      types since this means that the "rep" is still kept abstract. *)
   List.iter
     (fun (node, _) ->
-      if node.DepGraphData.nn_name <> (Parsetree.Vlident "rep") then
-        begin
+      if node.DepGraphData.nn_name <> (Parsetree.Vlident "rep") then (
         let st_set =
           Types.get_species_types_in_type node.DepGraphData.nn_type in
         carriers_appearing_in_types :=
@@ -569,8 +567,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
              carriers_appearing_in_types :=
                Types.SpeciesCarrierTypeSet.union
                  from_lexpr_annots !carriers_appearing_in_types
-        end)
-    decl_children;
+       ))
+    decl_children ;
   (* Same thing for the methods of ourselves we def-depend on. Attention, if we
      have a def-dependency on "rep", we must inspect its structure to know if
      it contains references to some species parameter since "rep"'s structure
@@ -720,7 +718,7 @@ type abstraction_info = {
      Env.ordered_methods_from_params)  (** The set of methods we depend on. *)
       list;
   (* Dependencies used to generate the record type's parameters. It only
-     contains dependencies obtained by [TYPE] + [PRM] + [DIDOU] on
+     contains dependencies obtained by [TYPE] + [PRM] on [TYPE] + [DIDOU] on
      ([TYPE] + [PRM]). *)
   ai_dependencies_from_params_for_record_type :
     ((** The species parameter's name and kind. *)
