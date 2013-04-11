@@ -1,5 +1,6 @@
 open "basics";;
 
+(* Example showing the need to make a substitution in rule PRM. *)
 species Base =
   signature tstbase : Self -> bool ;
 end ;;
