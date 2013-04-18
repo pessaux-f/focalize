@@ -26,7 +26,10 @@ OK_TEST_FILES=\
 	ok__need_re_ordering.fcl ok__odd_even.fcl ok__phd_def_deps.fcl \
 	ok__phd_meths_gen.fcl ok__phd_sample.fcl ok__pmatch_checks.fcl \
 	ok__scoping_tricky.fcl ok__term_measure.fcl ok__toplevel_odd_even.fcl \
-	ok__torture_params.fcl ok__torture_params2.fcl ok__torture_params3.fcl
+	ok__torture_params.fcl ok__torture_params2.fcl ok__torture_params3.fcl \
+  ok__coll_gen_llifts_on_non_remapped.fcl \
+  ok__coll_gen_llifts_on_non_remapped2.fcl ok__need_remap_deps.fcl \
+  ok__definition_72_rule_PRM_miss_subst.fcl
 
 
 KO_TEST_FILES = \
