@@ -1,0 +1,29 @@
+(* Illustrate the need for PRM to look inside type AND body to find its
+   "y". In effect, in this example, the theorem [stupid] doesn't hase any
+   dependencies in its type (logical statement). It has some in its *body* !
+   Hence, to detect that is dependency points to the parameter Cp, we must
+   inspect also the body of [stupid].
+   This is the bug #18 . *)
+
+open "basics" ;;
+
+species Base =
+  let one = 1 ;
+  signature equal : Self -> Self -> bool ;
+  property equal_spec: all x : Self, equal (x, x) ;
+end ;;
+
+species Sprim (K is Base) =
+  representation  = int ;
+  let two : Self = 2 ;
+  theorem prm_reflex: all z : K, K!equal (z, z)
+  proof = by property K!equal_spec ;
+end ;;
+
+species Sok (Cp is Base, Cpprim is Sprim (Cp)) =
+  theorem stupid : all x : Cp, Cp!equal (x, x)  proof = by property Cpprim!prm_reflex ;
+end ;;
+
+species S (Cp is Base, Cpprim is Sprim (Cp)) =
+  theorem stupid: 1 = 1  proof = by property Cpprim!prm_reflex ;
+end ;;

@@ -31,7 +31,7 @@ MUST_BE_OK_SRCS_COMPLETE=\
 	ok__torture_params.fcl ok__torture_params2.fcl ok__torture_params3.fcl \
   ok__coll_gen_llifts_on_non_remapped.fcl \
   ok__coll_gen_llifts_on_non_remapped2.fcl ok__need_remap_deps.fcl \
-  ok__definition_72_rule_PRM_miss_subst.fcl
+  ok__definition_72_rule_PRM_miss_subst.fcl ok__bug18.fcl
 
 
 # These must pass but without generating / compiling to Coq.
