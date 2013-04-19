@@ -37,12 +37,12 @@ type compiled_field_memory = {
   cfm_method_name : Parsetree.vname ;
   (** The method's type scheme. *)
   cfm_method_scheme : Env.method_type_kind ;
-  (* The positionnal list of species parameter carriers appearing in the
-     type of the method. They lead to extra arguments of type "Set" and
-     must be instanciated by the correct type when applying the method's
-     generator. This is mostly due to the fact that in Coq polymorphism
-     is explicit and lead to a dependant type.
-     NEVER USED FOR OCAML CODE GENERATION. *)
+  (** The positionnal list of species parameter carriers appearing in the
+      type of the method. They lead to extra arguments of type "Set" and
+      must be instanciated by the correct type when applying the method's
+      generator. This is mostly due to the fact that in Coq polymorphism
+      is explicit and lead to a dependant type.
+      NEVER USED FOR OCAML CODE GENERATION. *)
   cfm_used_species_parameter_tys : Parsetree.vname list ;
   (** Same than below but without remapping on dependencies of the method from
       the inherited species. This is required to prevent dropping dependencies

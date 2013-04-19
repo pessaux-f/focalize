@@ -717,9 +717,8 @@ type abstraction_info = {
      Env.TypeInformation.species_param *
      Env.ordered_methods_from_params)  (** The set of methods we depend on. *)
       list;
-  (* Dependencies used to generate the record type's parameters. It only
-     contains dependencies obtained by [TYPE] + [PRM] on [TYPE] + [DIDOU] on
-     ([TYPE] + [PRM]). *)
+  (** Dependencies used to generate the record type's parameters. It only
+      contains dependencies obtained by [DIDOU] on ([TYPE] + [PRM]). *)
   ai_dependencies_from_params_for_record_type :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
