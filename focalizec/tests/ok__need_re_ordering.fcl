@@ -1,19 +1,17 @@
-use "basics" ;;
+(* Must pass.
+ Example showing the need of the final re-organization of methods due to the
+ collapsing-procedure of properties and "proof of"s. *)
+
+
 open "basics" ;;
 
-
-(* ******************************************************************** *)
-(* Must pass.                                                           *)
-(* Example showing the need of the final re-organization of methods due *)
-(* to the collapsing-procedure of properties and "proof of"s.           *)
-(* ******************************************************************** *)
 species Closed_A =
   representation = basics#int ;
-  let ( = ) (x in Self, y in Self) = basics#syntactic_equal (x, y) ;
+  let ( = ) (x : Self, y : Self) = syntactic_equal (x, y) ;
   let element = 1 ;
 
-  property refl : all x in Self, x = x ;
-  proof of refl = assumed {* For a test, I won't make proofs !!! *} ;
+  property refl : all x : Self, x = x ;
+  proof of refl = assumed ;
 end ;;
 
 
@@ -21,24 +19,27 @@ species A =
   signature ( = ) : Self -> Self -> bool ;
   signature element : Self ;
 
-  property refl : all x in Self, x = x ;
+  property refl : all x : Self, x = x ;
 end ;;
 
-species B inherits A =
-  theorem lemme_bidon : all x in Self, true
-  proof = assumed {* For a test, I won't make proofs !!! *} ;
+species B =
+  inherit A ;
+  theorem lemme_bidon : true
+  proof = assumed ;
 end ;;
 
-species Closed_C inherits B =
+species Closed_C =
+  inherit B ;
   representation = basics#int ;
-  let ( = ) (x in Self, y in Self) = basics#syntactic_equal (x, y) ;
+  let ( = ) (x : Self, y : Self) = basics#syntactic_equal (x, y) ;
   let element = 1 ;
 
-  let rec a (x) = let foo = b (1) in 1
-  and b (x) = let foo = a (1) in 1 ;
-
   (* lemme_bidon must then appear BEFORE refl ! *)
-  proof of refl = by definition of lemme_bidon ;
+  proof of refl =
+  <1>1 assume x : Self,
+       prove true
+       by property lemme_bidon
+  <1>2 qed assumed ;
 end ;;
 
-collection Daube implements Closed_C ;;
+collection Daube = implement Closed_C ; end ;;

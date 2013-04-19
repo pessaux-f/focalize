@@ -1,10 +1,7 @@
-use "basics" ;;
-open "basics" ;;
+(* Failure required.
+   Example showing the need for methods to be not polymorphic. *)
 
-(* *********************************************************** *)
-(* Failure required                                            *)
-(* Example showing the need for methods to be not polymorphic. *)
-(* *********************************************************** *)
+open "basics" ;;
 
 species Poly =
   let id (x) = x ;
@@ -16,14 +13,14 @@ species Id_bool (X is Poly) =
   let elt = X!id (true) ;
 end ;;
 
-species Id_int inherits Poly =
+species Id_int =
+  inherit Poly ;
   representation = basics#unit ;
 
   let id (x) = if true then 1 else x ;
 end ;;
 
-collection Coll_int implements Id_int ;;
+collection Coll_int = implement Id_int ; end ;;
 
 (* Must fail !!!!!!!!!! *)
-collection Error implements Id_bool (Coll_int) ;;
-
+collection Error = implement Id_bool (Coll_int) ; end ;;

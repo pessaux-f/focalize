@@ -1,23 +1,19 @@
-use "basics" ;;
+(* Must pass.
+   Example showing simple mutually recursive methods. *)
+
 open "basics" ;;
-
-
-(* ************************************************** *)
-(* Must pass.                                         *)
-(* Example showing simple mutually recursive methods. *)
-(* ************************************************** *)
 
 species OddEven =
   representation = basics#int ;
 
-  let cinq in Self = 5 ;
+  let cinq : Self = 5 ;
 
-  let rec even (x in Self) =
-     if int_eq (x, 0) then true else odd (pred (x))
-  and odd (y in Self) =
-     if int_eq (y, 0) then false else even (pred (y)) ;
+  let rec even (x : Self) =
+     if  x =0x 0 then true else odd (pred0x (x))
+  and odd (y : Self) =
+     if y =0x 0 then false else even (pred0x (y)) ;
 end ;;
 
-collection COddEven implements OddEven ;;
+collection COddEven = implement OddEven ; end ;;
 
 let r = COddEven!even (COddEven!cinq) ;;

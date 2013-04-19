@@ -1,22 +1,24 @@
-use "basics" ;;
-open "basics" ;;
-
-
 (* ********************************************************************* *)
 (* Must pass.                                                            *)
 (* Example of Virgile Prevosto's Phd, section 3.9.6, page 56. Illustrate *)
 (* the need for the erasing procedure.                                   *)
 (* ********************************************************************* *)
-species A inherits Basic_object =
+open "basics" ;;
+
+species A =
+  inherit Basic_object ;
   signature eq : Self -> Self -> bool ;
-  let id (x in Self) = x ;
-  theorem foo : all x in Self, eq (x, id (x))
-    proof = by definition of id ;
+  let id (x : Self) = x ;
+  property cheat : all x : Self, eq (x, id (x)) ;
+
+  theorem foo : all x : Self, eq (x, id (x))
+    proof = by definition of id property cheat ;
 end ;;
 
-species B inherits A =
+species B =
+  inherit A ;
   representation = basics#int ;
-  proof of foo = by definition of id ;
-  let id (x in Self) = int_plus (x, 1) ;
+  proof of foo = by definition of id property cheat ;
+  let id (x : Self) = x + 1 ;
 end ;;
 
