@@ -3010,6 +3010,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            ai.Abstractions.ai_raw_dependencies_from_params ;
          Misc_common.cfm_dependencies_from_parameters =
            ai.Abstractions.ai_dependencies_from_params ;
+         Misc_common.cfm_dependencies_from_parameters_in_type =
+           ai.Abstractions.ai_dependencies_from_params_for_record_type ;
          Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
        Misc_common.CSF_let_rec [compiled]
 ;;
@@ -3115,6 +3117,8 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
            ai.Abstractions.ai_raw_dependencies_from_params;
          Misc_common.cfm_dependencies_from_parameters =
            ai.Abstractions.ai_dependencies_from_params;
+         Misc_common.cfm_dependencies_from_parameters_in_type =
+           ai.Abstractions.ai_dependencies_from_params_for_record_type ;
          Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
        Misc_common.CSF_let_rec [compiled]
 ;;
@@ -3192,6 +3196,8 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
              ai.Abstractions.ai_raw_dependencies_from_params ;
            Misc_common.cfm_dependencies_from_parameters =
              ai.Abstractions.ai_dependencies_from_params ;
+           Misc_common.cfm_dependencies_from_parameters_in_type =
+             ai.Abstractions.ai_dependencies_from_params_for_record_type ;
            Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
          Misc_common.CSF_let_rec [compiled_field]
          )
@@ -3228,6 +3234,7 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
            methods ! *)
         Misc_common.cfm_raw_dependencies_from_parameters = [];
         Misc_common.cfm_dependencies_from_parameters = [];
+        Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
         (* Since the "sig " has no code, it can't refer to some of our
            methods ! *)
         Misc_common.cfm_coq_min_typ_env_names = [] } in
@@ -3259,6 +3266,8 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
           abstraction_info.Abstractions.ai_raw_dependencies_from_params ;
         Misc_common.cfm_dependencies_from_parameters =
           abstraction_info.Abstractions.ai_dependencies_from_params;
+        Misc_common.cfm_dependencies_from_parameters_in_type =
+          abstraction_info.Abstractions.ai_dependencies_from_params_for_record_type ;
         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_let compiled_field
   | Abstractions.FAI_let_rec l ->
@@ -3284,6 +3293,8 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
           abstraction_info.Abstractions.ai_raw_dependencies_from_params;
         Misc_common.cfm_dependencies_from_parameters =
           abstraction_info.Abstractions.ai_dependencies_from_params;
+        Misc_common.cfm_dependencies_from_parameters_in_type =
+         abstraction_info.Abstractions.ai_dependencies_from_params_for_record_type ;
         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_theorem compiled_field
   | Abstractions.FAI_property ((from, name, _, lexpr, _), abstraction_info) ->
@@ -3299,6 +3310,8 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
           abstraction_info.Abstractions.ai_raw_dependencies_from_params;
         Misc_common.cfm_dependencies_from_parameters =
           abstraction_info.Abstractions.ai_dependencies_from_params ;
+        Misc_common.cfm_dependencies_from_parameters_in_type =
+          abstraction_info.Abstractions.ai_dependencies_from_params_for_record_type ;
         Misc_common.cfm_coq_min_typ_env_names = [] } in
       Misc_common.CSF_property compiled_field
 ;;
@@ -3454,6 +3467,7 @@ let extend_env_for_species_def ~current_species env species_descr =
                  Env.mi_type_kind = tk;
                  Env.mi_used_species_parameter_tys = [];
                  Env.mi_dependencies_from_parameters = [];
+                 Env.mi_dependencies_from_parameters_in_type = [];
                  Env.mi_abstracted_methods = [] })
                methods_n_kinds in
            (* Because species names are capitalized, we explicitely build a
@@ -4066,6 +4080,9 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                   Env.mi_dependencies_from_parameters =
                     compiled_field_memory.Misc_common.
                       cfm_dependencies_from_parameters;
+                  Env.mi_dependencies_from_parameters_in_type =
+                    compiled_field_memory.Misc_common.
+                      cfm_dependencies_from_parameters_in_type ;
                   Env.mi_abstracted_methods =
                     compiled_field_memory.Misc_common.
                       cfm_coq_min_typ_env_names }]
@@ -4079,6 +4096,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                        cfm.Misc_common.cfm_used_species_parameter_tys;
                      Env.mi_dependencies_from_parameters =
                        cfm.Misc_common.cfm_dependencies_from_parameters;
+                     Env.mi_dependencies_from_parameters_in_type =
+                       cfm.Misc_common.cfm_dependencies_from_parameters_in_type ;
                      Env.mi_abstracted_methods =
                        cfm.Misc_common.cfm_coq_min_typ_env_names })
                  compiled_field_memories
@@ -4095,6 +4114,9 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                    Env.mi_dependencies_from_parameters =
                      compiled_field_memory.Misc_common.
                        cfm_dependencies_from_parameters;
+                   Env.mi_dependencies_from_parameters_in_type =
+                     compiled_field_memory.Misc_common.
+                       cfm_dependencies_from_parameters_in_type ;
                    (* For properties, this list should always be [] since we do
                       not compute the visible universe since it is never
                       used. *)

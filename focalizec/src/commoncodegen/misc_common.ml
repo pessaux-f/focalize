@@ -61,6 +61,10 @@ type compiled_field_memory = {
       PhD. *)
   cfm_dependencies_from_parameters :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
+  (** Same than above but only with dependencies arising through the type of
+      the method. *)
+  cfm_dependencies_from_parameters_in_type :
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   (** The positional list of method names appearing in the minimal Coq typing
       environment. *)
   cfm_coq_min_typ_env_names : Parsetree.vname list
@@ -485,7 +489,10 @@ let follow_instanciations_for_is_param ctx env original_param_index
             end) in
         (* Now, really check if its a species parameter. *)
         match effective_arg_during_inher with
-         | Parsetree_utils.SPE_Self -> failwith "Instantiation of collection parameter by Self - Configuration currently not available."  (* [Unsure] *)
+         | Parsetree_utils.SPE_Self ->
+             failwith
+               "Instantiation of collection parameter by \
+                Self - Configuration currently not available."  (* [Unsure] *)
          | Parsetree_utils.SPE_Expr_entity _ -> assert false
          | Parsetree_utils.SPE_Species (effective_qual_vname, provenance) ->
              (begin
