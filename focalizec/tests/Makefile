@@ -54,6 +54,7 @@ externals: ok__baby_toy_coq_externals.v ok__baby_toy_externals.ml
 
 
 must_ok_complete: $(MUST_BE_OK_SRCS_COMPLETE)
+	@$(RM) must_ok_complete.log
 	@for i in $(MUST_BE_OK_SRCS_COMPLETE); do \
 		echo "PROCESSING: $$i" ; \
 	  $(CHECKED_FOCALIZEC) -I $(CHECKED_STDLIB) $$i; \
@@ -62,12 +63,14 @@ must_ok_complete: $(MUST_BE_OK_SRCS_COMPLETE)
 	 		0);; \
 	 	  *) echo "***********************************************************" ; \
 	       echo "*** !!! BROKEN: $$i" ; \
-	       echo "***********************************************************" ;; \
+	       echo "***********************************************************" ; \
+				 echo "*** !!! BROKEN: $$i" >> must_ok_complete.log ;; \
 	  esac; \
 	done
 
 
 must_ok_no_coq: $(MUST_BE_OK_SRCS_NO_COQ)
+	@$(RM) must_ok_no_coq.log
 	@for i in $(MUST_BE_OK_SRCS_NO_COQ); do \
 		echo "PROCESSING: $$i" ; \
 	  $(CHECKED_FOCALIZEC) -I $(CHECKED_STDLIB) -no-coq-code $$i; \
@@ -76,12 +79,14 @@ must_ok_no_coq: $(MUST_BE_OK_SRCS_NO_COQ)
 		  0);; \
 	    *) echo "***********************************************************" ; \
 	       echo "*** !!! BROKEN: $$i" ; \
-	       echo "***********************************************************" ;; \
+	       echo "***********************************************************" ; \
+				 echo "*** !!! BROKEN: $$i" >> must_ok_no_coq.log ;; \
 	  esac; \
 	done
 
 
 must_ko: $(MUST_BE_KO_SRCS)
+	@$(RM) must_ko.log
 	@for i in $(MUST_BE_KO_SRCS); do \
 		echo "PROCESSING: $$i" ; \
 	  $(CHECKED_FOCALIZEC) -I $(CHECKED_STDLIB) $$i; \
@@ -89,7 +94,8 @@ must_ko: $(MUST_BE_KO_SRCS)
 	  case $$err in \
 	    0) echo "***********************************************************" ; \
 	       echo "*** !!! BROKEN: $$i" ; \
-	       echo "***********************************************************" ;; \
+	       echo "***********************************************************" ; \
+				 echo "*** !!! BROKEN: $$i" >> must_ko.log ;; \
 	    *) ;; \
 	  esac; \
 	done
