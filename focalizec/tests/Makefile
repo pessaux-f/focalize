@@ -68,7 +68,7 @@ must_ok_complete: $(MUST_BE_OK_SRCS_COMPLETE)
 
 
 must_ok_no_coq: $(MUST_BE_OK_SRCS_NO_COQ)
-	for i in $(MUST_BE_OK_SRCS_NO_COQ); do \
+	@for i in $(MUST_BE_OK_SRCS_NO_COQ); do \
 		echo "PROCESSING: $$i" ; \
 	  $(CHECKED_FOCALIZEC) -I $(CHECKED_STDLIB) -no-coq-code $$i; \
 		err=$$?;\
