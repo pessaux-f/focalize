@@ -718,7 +718,7 @@ type abstraction_info = {
      Env.ordered_methods_from_params)  (** The set of methods we depend on. *)
       list;
   (** Dependencies used to generate the record type's parameters. It only
-      contains dependencies obtained by [DIDOU] on ([TYPE] + [PRM]). *)
+      contains dependencies obtained by [DIDOU] on ([TYPE]). *)
   ai_dependencies_from_params_for_record_type :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
@@ -1005,21 +1005,21 @@ let complete_used_species_parameters_ty ~current_unit species_params initial_set
 
 
 (* Returns an extension, not an union, BUT CONTAINS FORCELY the initial set
-   [via_completion]. So ... not the union of the [via_body], [via_type] and
-   [via_completion]. *)
+   [initial_to_complete]. So ... not the union of the [via_body], [via_type] and
+   [initial_to_complete]. *)
 let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
-    ~via_type ~via_completion  =
+    ~via_type ~initial_to_complete  =
   (* Join the 3 dependencies sets to lookup for fixpoint in only 1 set. *)
   let found_dependencies_from_params =
     merge_abstraction_infos
-      via_body (merge_abstraction_infos via_type via_completion) in
+      via_body (merge_abstraction_infos via_type initial_to_complete) in
   (* We create the set that will be the final completion. Hence it at least
-     contains the dependencies initially found in the [via_completion]. *)
-  let new_via_completion = ref via_completion in
+     contains the dependencies initially found in the [initial_to_complete]. *)
+  let completed_by_fixpoint = ref initial_to_complete in
   let changed = ref true in
   while !changed do
     changed := false;   (* Reset the fixpoint reached signal. *)
-    new_via_completion :=
+    completed_by_fixpoint :=
     List.map2
       (fun (_, meths_new) (param, meths_old) ->
         (* [meths_new] : the set of new methods added compared to the set of
@@ -1104,10 +1104,10 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
                meths_old ;
              (* Return the new set of added methods. *)
              (param, !accu))
-      !new_via_completion
+      !completed_by_fixpoint
       found_dependencies_from_params
   done ;
-  !new_via_completion
+  !completed_by_fixpoint
 ;;
 
 
@@ -1225,7 +1225,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                    (* Find the y's by looking in dependencies via the TYPE of
                       z.
                       [UNSURE] Currently, not only the TYPE, rather:
-                        [DIDOU] on ([TYPE] + [PRM]),
+                        [DIDOU] on ([TYPE]),
                       i.e. the same set than used to known what to lambda-lift
                       for the record type. C.f bug #18 *)
                    let z_dependencies =
@@ -1604,7 +1604,7 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  ~current_unit: ctx.Context.scc_current_unit
                  ~via_body: dependencies_from_params_in_body
                  ~via_type: dependencies_from_params_in_type
-                 ~via_completion: dependencies_from_params_via_compl in
+                 ~initial_to_complete: dependencies_from_params_via_compl in
              (* Now, we complete the species parameters carriers seen by
                 taking into account types of methods obtained by the
                 completion of the dependencies on parameters achieved by
@@ -1684,7 +1684,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        ~current_unit: ctx.Context.scc_current_unit
                        ~via_body: dependencies_from_params_in_bodies
                        ~via_type: dependencies_from_params_in_type
-                       ~via_completion: dependencies_from_params_via_compl in
+                       ~initial_to_complete:
+                         dependencies_from_params_via_compl in
                    (* Now, we complete the species parameters carriers seen
                       by taking into account types of methods obtained by
                       the completion of the dependencies on parameters achieved
@@ -1761,7 +1762,7 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    ~current_unit: ctx.Context.scc_current_unit
                    ~via_body: dependencies_from_params_in_bodies
                    ~via_type: dependencies_from_params_in_type
-                   ~via_completion: dependencies_from_params_via_compl in
+                   ~initial_to_complete: dependencies_from_params_via_compl in
                (* Now, we complete the species parameters carriers seen by
                   taking into account types of methods obtained by the
                   completion of the dependencies on parameters achieved by
@@ -1829,7 +1830,7 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    ~current_unit: ctx.Context.scc_current_unit
                    ~via_body: dependencies_from_params_in_bodies
                    ~via_type: dependencies_from_params_in_type
-                   ~via_completion: dependencies_from_params_via_compl in
+                   ~initial_to_complete: dependencies_from_params_via_compl in
                (* Now, we complete the species parameters carriers seen by
                   taking into account types of methods obtained by the
                   completion of the dependencies on parameters achieved by
@@ -2208,18 +2209,15 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters, i.e. [DIDOU] on ([TYPE]+[PRM]). *)
-          let pre_for_record_ty_deps_from_params =
+             parameters, i.e. [DIDOU] on ([TYPE]). Naturally contains
+             [TYPE]. *)
+          let for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
-              ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let for_record_ty_deps_from_params =
-            merge_abstraction_infos
-              pre_for_record_ty_deps_from_params
-              iai.iai_dependencies_from_params_via_type in
+              ~initial_to_complete: iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
           let sorted_for_record_ty_deps_from_params =
@@ -2253,18 +2251,15 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters, i.e. [DIDOU] on ([TYPE]+[PRM]). *)
-          let pre_for_record_ty_deps_from_params =
+             parameters, i.e. [DIDOU] on ([TYPE]). Naturally contains
+             [TYPE]. *)
+          let for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
-              ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let for_record_ty_deps_from_params =
-            merge_abstraction_infos
-              pre_for_record_ty_deps_from_params
-              iai.iai_dependencies_from_params_via_type in
+              ~initial_to_complete: iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
           let sorted_for_record_ty_deps_from_params =
@@ -2301,19 +2296,17 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        iai.iai_dependencies_from_params_via_type
                        iai.iai_dependencies_from_params_via_completions) in
                 (* Build the dependencies used to generate the record type
-                   parameters, i.e. [DIDOU] on ([TYPE]+[PRM]). *)
-                let pre_for_record_ty_deps_from_params =
+                   parameters, i.e. [DIDOU] on ([TYPE]). Naturally contains
+                   [TYPE]. *)
+                let for_record_ty_deps_from_params =
                   complete_dependencies_from_params_rule_didou
                     ~current_unit: ctx.Context.scc_current_unit
                     ~via_body:
                     (make_empty_param_deps
                        ctx.Context.scc_species_parameters_names)
                     ~via_type: iai.iai_dependencies_from_params_via_type
-                    ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-                let for_record_ty_deps_from_params =
-                  merge_abstraction_infos
-                    pre_for_record_ty_deps_from_params
-                    iai.iai_dependencies_from_params_via_type in
+                    ~initial_to_complete:
+                      iai.iai_dependencies_from_params_via_type in
                 let sorted_deps_from_params =
                   Dep_analysis.order_species_params_methods
                     all_deps_from_params in
@@ -2351,18 +2344,14 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters, i.e. [DIDOU] on ([TYPE]+[PRM]). *)
-          let pre_for_record_ty_deps_from_params =
+             parameters, i.e. [DIDOU] on ([TYPE]). Naturally contains [TYPE]. *)
+          let for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
-              ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let for_record_ty_deps_from_params =
-            merge_abstraction_infos
-              pre_for_record_ty_deps_from_params
-              iai.iai_dependencies_from_params_via_type in
+              ~initial_to_complete: iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
           let sorted_for_record_ty_deps_from_params =
@@ -2396,18 +2385,14 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters, i.e. [DIDOU] on ([TYPE]+[PRM]). *)
-          let pre_for_record_ty_deps_from_params =
+             parameters, i.e. [DIDOU] on ([TYPE]). Naturally contains [TYPE]. *)
+          let for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
-              ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let for_record_ty_deps_from_params =
-            merge_abstraction_infos
-              pre_for_record_ty_deps_from_params
-              iai.iai_dependencies_from_params_via_type in
+              ~initial_to_complete: iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
           let sorted_for_record_ty_deps_from_params =
