@@ -929,17 +929,19 @@ let typecheck_fact ctx env fact =
 
 
 
-(* ***************************************************************** *)
-(* Parsetree.vname -> Env.TypeInformation.species_field list ->      *)
-(*   Env.TypeInformation.species_field list ->                       *)
-(*     Env.TypeInformation.species_field list                        *)
-(* {b Descr} : Checks if the 2 lists of fields contain methods
-   names that overlap. If so then raises en exception
-   [Method_multiply_defined], else returns le concatenation of the 2
-   lists (first @ second)
+(* ************************************************************************ *)
+(* Parsetree.vname -> Env.TypeInformation.species_field list ->
+   Env.TypeInformation.species_field list ->
+     Env.TypeInformation.species_field list                                 *)
+(** {b Descr} : Checks if the 2 lists of fields contain methods names that
+    overlap. If so then raises en exception [Method_multiply_defined], else
+    returns le concatenation of the 2 lists (first @ second).
+    Used to prevent 2 fields at the same inheritance level from having same
+    names. In other words, this forbids a species to defines several times a
+    same method at a same inheritance level.
 
-   {b Exported} : No.                                                *)
-(* ***************************************************************** *)
+   {b Exported} : No.                                                       *)
+(* ************************************************************************ *)
 let append_and_ensure_method_uniquely_defined current_species l1 l2 =
   (* Just a local flattening function... *)
   let local_flat_fields fields =
@@ -1995,13 +1997,12 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                    current_species accu_fields [field_info]),
                  ctx', env, accu_proofs, accu_term_proofs)
                end)
-           | Parsetree.SF_sig sig_def ->
-               (begin
+           | Parsetree.SF_sig sig_def -> (
                let sig_def_descr = sig_def.Parsetree.ast_desc in
-               Types.begin_definition ();
+               Types.begin_definition () ;
                let ty =
                  typecheck_type_expr ctx env sig_def_descr.Parsetree.sig_type in
-               Types.end_definition ();
+               Types.end_definition () ;
                (* Extend the environment with this new method of Self.
                   Be careful : methods are not polymorphics (c.f. Virgile
                   Prevosto's Phd section 3.3, page 24). No generelization ! *)
@@ -2020,9 +2021,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                ((append_and_ensure_method_uniquely_defined
                   current_species accu_fields [field_info]),
                 ctx, env', accu_proofs, accu_term_proofs)
-               end)
-           | Parsetree.SF_let let_def ->
-               (begin
+              )
+           | Parsetree.SF_let let_def -> (
                (* No relevant type information to record in the AST node. *)
                field.Parsetree.ast_type <- Parsetree.ANTI_irrelevant;
                (* Don't increase level, this will be done in the let
@@ -2047,8 +2047,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                (* We now collect the type information of these methods in
                   order to make them suitable for a "type of method". *)
                match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-                | Parsetree.RF_rec ->
-                    (begin
+                | Parsetree.RF_rec -> (
                     let field_infos =
                       List.map2
                         (fun (id, ty_scheme, has_def_dep_on_rep) binding ->
@@ -2056,7 +2055,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                             binding.Parsetree.ast_desc.Parsetree.b_body in
                           let params_names =
                             List.map
-                              fst binding.Parsetree.ast_desc.Parsetree.b_params in
+                              fst
+                              binding.Parsetree.ast_desc.Parsetree.b_params in
                           (* Note that [expr] below is already typed here. *)
                           ((Env.intitial_inheritance_history current_species),
                            id, params_names, ty_scheme, expr,
@@ -2074,9 +2074,8 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                         current_species accu_fields
                         [(Env.TypeInformation.SF_let_rec field_infos)]),
                      ctx, env', accu_proofs, accu_term_proofs)
-                    end)
-                | Parsetree.RF_no_rec ->
-                    (begin
+                   )
+                | Parsetree.RF_no_rec -> (
                     (* Not recursive, then the list should be only 1 long.
                        Anyway, if that not the case, this does not annoy.
                        So we return a list of n fields with 1 name in each. *)
@@ -2103,12 +2102,12 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                     ((append_and_ensure_method_uniquely_defined
                         current_species accu_fields field_infos),
                      ctx, env', accu_proofs, accu_term_proofs)
-                    end)
-               end)
+                   )
+              )
            | Parsetree.SF_property property_def ->
                (begin
-               Types.reset_deps_on_rep ();
-               Types.begin_definition ();
+               Types.reset_deps_on_rep () ;
+               Types.begin_definition () ;
                (* For the same reason that in external definition, variables
                   present in a type expression in a property are implicitely
                   considered as universally quantified. In effect, there no
@@ -2122,7 +2121,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                   [typecheck_logical_expr] with a binding level of + 1
                   compared to our current one, generalization could not be
                   done otherwise. *)
-               Types.begin_definition ();
+               Types.begin_definition () ;
                let vmapp =
                  make_implicit_var_mapping_from_logical_expr
                    property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr in
@@ -2134,9 +2133,9 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                  typecheck_logical_expr
                    ~in_proof: false ctx' env
                    property_def.Parsetree.ast_desc.Parsetree.prd_logical_expr in
-               Types.end_definition ();
+               Types.end_definition () ;
                (* Check for a decl dependency on "rep". *)
-               Types.check_for_decl_dep_on_self ty;
+               Types.check_for_decl_dep_on_self ty ;
                (* Record the type information in the AST node. *)
                property_def.Parsetree.ast_type <- Parsetree.ANTI_type ty;
                (* Extend the environment.
@@ -2215,16 +2214,16 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                (* Because the type of a proof is not relevant in FoCaL,
                   the typechecking of a proof does not returns any type.
                   We record the non-relevance of the type in the AST node. *)
-               proof_def.Parsetree.ast_type <- Parsetree.ANTI_irrelevant;
+               proof_def.Parsetree.ast_type <- Parsetree.ANTI_irrelevant ;
                (* Type-cheking of the proof may induce def/decl dependency on
                   "rep" ! *)
-               Types.reset_deps_on_rep ();
-               typecheck_proof ctx env proof_def_desc.Parsetree.pd_proof;
+               Types.reset_deps_on_rep () ;
+               typecheck_proof ctx env proof_def_desc.Parsetree.pd_proof ;
                let dep_on_rep = {
-                 Env.TypeInformation.dor_def = Types.get_def_dep_on_rep ();
+                 Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
                  Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep ()} in
                (* No relevant type information to record in the AST node. *)
-               field.Parsetree.ast_type <- Parsetree.ANTI_irrelevant;
+               field.Parsetree.ast_type <- Parsetree.ANTI_irrelevant ;
                (* No extension there. *)
                (accu_fields, ctx, env, accu_proofs @ [(proof_def, dep_on_rep)],
                 accu_term_proofs)
@@ -2236,10 +2235,10 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                   their specified parameters names. *)
                List.iter
                   (typecheck_termination_proof_profile ctx env accu_fields)
-                  desc.Parsetree.tpd_profiles;
+                  desc.Parsetree.tpd_profiles ;
                (* Type-cheking of the proof may induce def/decl dependency on
                   "rep" ! *)
-               Types.reset_deps_on_rep ();
+               Types.reset_deps_on_rep () ;
                (* Typecheck the inner proof. *)
                typecheck_termination_proof
                   ctx env desc.Parsetree.tpd_termination_proof;
@@ -3175,7 +3174,7 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
    Then return the initial [fields] list with this field transformed inside
    and an option telling if a change finally occured and if yes, we get a
    [Some] containing the [from_history] of the theorem.
-   This process is used to make Parsetree.SF_proof diseaper, merging their
+   This process is used to make Parsetree.SF_proof disapear, merging their
    proof in the related property definition in order to create an equivalent
    theorem instead. It also serves to merge proof re-done of a theorem
    because the user knew that the therem's original proof was invalidated
@@ -3282,7 +3281,7 @@ let collapse_proof_in_inherited (proof_of, pr_deps_on_rep) ~current_species
                let deps_rep' = {
                  Env.TypeInformation.dor_def =
                    pr_deps_on_rep.Env.TypeInformation.dor_def ||
-                   deps_rep.Env.TypeInformation.dor_def;
+                   deps_rep.Env.TypeInformation.dor_def ;
                  Env.TypeInformation.dor_decl =
                    pr_deps_on_rep.Env.TypeInformation.dor_decl ||
                    deps_rep.Env.TypeInformation.dor_decl } in
@@ -3325,42 +3324,44 @@ let collapse_proof_in_inherited (proof_of, pr_deps_on_rep) ~current_species
 
 
 (* ************************************************************************ *)
-(* current_species: Parsetree.qualified_vname -> Parsetree.proof_def ->     *)
-(*  Env.TypeInformation.species_field list ->                               *)
-(*    Env.TypeInformation.species_field list ->                             *)
-(*      (Env.TypeInformation.species_field list *                           *)
-(*       Env.TypeInformation.species_field list *                           *)
-(*       ((Parsetree.vname * Env.from_history) list))                       *)
-(* {b Descr} : Tries to find among [methods], property fields whose proofs
-   are separately given in the list of proofs [found_proofs_of].
-   Each time the search succeeds, the property and the related proof are
-   merged in a new theorem field, hence discarding the property fields.
-   Because this process is performed before the normalization pass, we
-   still require to have 3 separate lists of methods:
-     - the inherited ones,
-     - those defined at the current inheritance level.
-     - the assoc list giing for each theorem what was it initial
-       [from_history] of the property before the collapsing turned it into
-       a theorem.
-   For this reason, the search will be done first on the methods defined at
-   the current inheritance level (in order to find the "most recent") and
-   only if the search failed, we will try it again on the inherited methods.
+(* current_species: Parsetree.qualified_species ->
+   (Parsetree.proof_def_desc Parsetree.ast *
+    Env.TypeInformation.dependency_on_rep) list ->
+   Env.TypeInformation.species_field list ->
+   Env.TypeInformation.species_field list ->
+     Env.TypeInformation.species_field list *
+     Env.TypeInformation.species_field list *
+     (Parsetree.vname * Env.from_history) list                              *)
+(** {b Descr} : Tries to find among [methods], property fields whose proofs
+    are separately given in the list of proofs [found_proofs_of].
+    Each time the search succeeds, the property and the related proof are
+    merged in a new theorem field, hence discarding the property field.
+    Because this process is performed before the normalization pass, we
+    still require to return 3 separate lists:
+      - the inherited methods after collapsing ones,
+      - those defined at the current inheritance level after collapsing,
+      - the assoc list giving for each theorem what was the initial
+        [from_history] of the property before the collapsing turned it into
+        a theorem.
+    For this reason, the search will be done first on the methods defined at
+    the current inheritance level (in order to find the "most recent") and
+    only if the search failed, we will try it again on the inherited methods.
 
-   {b Rem} : BE CAREFUL, such a merge now require a re-ordering of the
-   final fields. In effect, by moving the proof_of field when merging it as
-   a [SF_theorem] located where the initial [SF_property] field was, if the
-   proof (that was originally "later") uses stuff defined between the
-   [SF_property] and the original location of the proof, then this stuff
-   will now appear "after" the proof itself. And this is not well-formed.
+    {b Rem} : BE CAREFUL, such a merge now requires a re-ordering of the
+    final fields. In effect, by moving the proof_of field when merging it as
+    a [SF_theorem] located where the initial [SF_property] field was, if the
+    proof (that was originally "later") uses stuff defined between the
+    [SF_property] and the original location of the proof, then this stuff
+    will now appear "after" the proof itself. And this is not well-formed.
 
-   {b Exported} : Yes.                                                      *)
+    {b Exported} : Yes.                                                     *)
 (* ************************************************************************ *)
 let collapse_proofs_of ~current_species found_proofs_of
       inherited_methods_infos methods_info =
-  (* A bit dirty, we could reminf this without a reference, but I get bored
-     to have a third accumulator int the [fold_left] below... In this list, we
+  (* A bit dirty, we could remind this without a reference, but I get bored
+     to have a third accumulator in the [fold_left] below... In this list, we
      will record for each theorem, the [from_history] of the property it was
-     before collapsing. If there was non collapsing, then the theorem was
+     before collapsing. If there was no collapsing, then the theorem was
      already a theorem, then we remind if [from_history] however. *)
   let original_properties_from_histories = ref [] in
   (* We must first reverse the lists of methods so that the collapse
@@ -3370,22 +3371,22 @@ let collapse_proofs_of ~current_species found_proofs_of
   let (revd_collapsed_inherited_methods, revd_collapsed_current_methods) =
     List.fold_left
       (fun (accu_inherited, accu_current) (found_proof_of, pr_desp_rep) ->
-        (* First, try on the "most recent" methods, i.e. the current *)
-        (* inheritance level's ones.                                 *)
+        (* First, try on the "most recent" methods, i.e. the current
+           inheritance level's ones. *)
         let (collapsed_current, was_collapsed) =
           collapse_proof_in_non_inherited
             ~current_species (found_proof_of.Parsetree.ast_desc, pr_desp_rep)
             accu_current in
         match was_collapsed with
-         | Some theo_from ->
-             (begin
-             (* Collapsing without inheritance. Hence we the [from_history]. *)
+         | Some theo_from -> (
+             (* Collapsing without inheritance. Hence we record
+                the [from_history] directly because the theorem is at the
+                current level. *)
              original_properties_from_histories :=
                theo_from :: !original_properties_from_histories;
              (accu_inherited, collapsed_current)
-             end)
-         | None ->
-             (begin
+            )
+         | None -> (
              (* No collapse in the current level's methods, then try on the
                 inherited ones. *)
              let (collapsed_inherited, collapsed_option) =
@@ -3407,14 +3408,14 @@ let collapse_proofs_of ~current_species found_proofs_of
                      [from_history]. *)
                   original_properties_from_histories :=
                     from_before_collapse ::
-                    !original_properties_from_histories;
+                    !original_properties_from_histories ;
                   (* Transfer the inherited field that had no proof to the
                      non-inherited fields list since it received its proof now,
                      i.e. in the non-inherited fields !
                      Note that now, in [collapsed_inherited] the collapsed
                      field has now disapeared. *)
                   (collapsed_inherited, (fresh_theorem :: accu_current))
-             end))
+            ))
       (revd_inherited_methods_infos, revd_methods_info)
       found_proofs_of in
   (* And then, reverse again the result to get again the initial and correct
@@ -4139,7 +4140,7 @@ let normalize_species ~loc ctx methods_info inherited_methods_infos =
               (* Extract the names forming the erasing context. *)
               let psi_i0_names =
                 Dep_analysis.ordered_names_list_of_fields [psi_i0] in
-              w1 :=  (fields_fusion ~loc ctx psi_i0 phi) :: bigX;
+              w1 :=  (fields_fusion ~loc ctx psi_i0 phi) :: bigX ;
               (* Apply the formula Section of Section 3.9.7, page 57.
                  Hence we erase in the tail of the list, i.e. in fields found
                  after [psi_i0]. *)
@@ -4657,7 +4658,7 @@ let typecheck_species_def ctx env species_def =
       ctx_with_inherited_repr env_with_inherited_methods
       species_def_desc.Parsetree.sd_fields in
   (* We ensure that there is not several times a same "proof of". *)
-  ensure_no_proof_of_doubles found_proofs_of;
+  ensure_no_proof_of_doubles found_proofs_of ;
   (* We first collapse "proof-of"s with their related property to lead to a
      theorem. *)
   let (collapsed_inherited_methods_infos, collapsed_methods_info,
