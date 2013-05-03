@@ -1543,14 +1543,14 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
       Prevosto's Phd, section 3.9.4 pages 51 & 52).
       ATTENTION : Because idents (bound by forall and exists) are
       **expressions** and are directly entered in the environment with the
-      type logical_expr, the rule of Virgile telling that expressions must
+      type Prop, the rule of Virgile telling that expressions must
       be of type bool is incorrect. In effect, because idents are expressions
-      and are already types logical_expr, unifying them with bool wil always
+      and are already typed Prop, unifying them with bool wil always
       fail. Moreover, this fact may leak all around the expression type, then
       one cannot restrict the check to only say that an expression-ident
-      typed logical_expr is correct.
+      typed Prop is correct.
       This may flood all around the proposition expression. Then, in case of
-      an expression, one allows both logical_expr and bool as types.
+      an expression, one allows both Prop and bool as types.
       The [~in_proof] boolean enables to abstract Self only in case we infer
       a [logical_expr]'s type inside a property/theorem definition and not
       in it's proof !
@@ -1604,7 +1604,7 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
            (Types.unify
               ~loc: logical_expr.Parsetree.ast_loc
               ~self_manifest: ctx.self_manifest ty1 ty2);
-         (* Enforce the type to be [logical_expr]. *)
+         (* Enforce the type to be Prop. *)
          let final_ty =
            Types.unify
              ~loc: logical_expr.Parsetree.ast_loc
@@ -1612,7 +1612,7 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
          final_ty
      | Parsetree.Pr_not pr ->
          let ty = typecheck_logical_expr ~in_proof ctx env pr in
-         (* Enforce the type to be [logical_expr]. *)
+         (* Enforce the type to be Prop. *)
          let final_ty =
            Types.unify
              ~loc: logical_expr.Parsetree.ast_loc
@@ -1625,8 +1625,8 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
             not in its proof. *)
          let ctx' =
            if in_proof then ctx else { ctx with self_manifest = None } in
-         (* Expressions must be typed as [bool] OR [logical_expr]. If  so, then
-            the returned  type is [logical_expr]. *)
+         (* Expressions must be typed as bool OR Prop. If  so, then the
+            returned type is Prop. *)
          let ty = typecheck_expr ctx' env expr in
          (try
            (* First try to check if it is typed bool. *)
