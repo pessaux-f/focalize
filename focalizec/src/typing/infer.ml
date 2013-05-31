@@ -4030,79 +4030,122 @@ let non_conflicting_fields_p f1 f2 =
    | (Env.TypeInformation.SF_let (_, v1, _, sch1, _, _, _, _),
       Env.TypeInformation.SF_sig (_, v2, sch2))
    | (Env.TypeInformation.SF_sig (_, v1, sch1),
-      Env.TypeInformation.SF_let (_, v2, _, sch2, _, _, _, _)) ->
-        (* If signatures/lets wear the same names and have the same scheme
-           then fields are not conflicting. *)
-        if v1 = v2 then
-          (begin
-          let ty1 = Types.specialize sch1 in
-          let ty2 = Types.specialize sch2 in
-          try
-            ignore
-              (Types.unify
-                 ~loc: Location.none ~self_manifest: None ty1 ty2);
-            (* Unification succeeded so fields have same type. *)
-            true
-          with _ -> false  (* Unification failed, then types are conflicting. *)
-          end)
-        else false (* Not the same fields names, then fields are conflicting. *)
+      Env.TypeInformation.SF_let (_, v2, _, sch2, _, _, _, _)) -> (
+        (* Since this function is called on fields sharing a same name, then
+           on these 2 fields having each on unique name, v1 should always
+           be the same than v2.
+           More over, since the type of a method can't be changed, sch1 and
+           sch2 should always be unifiable. *)
+        assert (v1 = v2) ;
+        let ty1 = Types.specialize sch1 in
+        let ty2 = Types.specialize sch2 in
+        try
+          ignore
+            (Types.unify
+               ~loc: Location.none ~self_manifest: None ty1 ty2);
+          (* Unification succeeded so fields have same type. There is no
+             "change" (hence no conflict) because we are in the cases of
+             signature versus signature or definition and in this case,
+             there was no previously existing definition: hence body didn't
+             change. *)
+          true
+        with _ ->
+          assert false  (* Unification failed, then types are conflicting. *)
+       )
    | (Env.TypeInformation.SF_sig (_, v1, sch1),
       (Env.TypeInformation.SF_let_rec l2))
    | ((Env.TypeInformation.SF_let_rec l2),
       Env.TypeInformation.SF_sig (_, v1, sch1)) ->
-        (* There is no conflict if one of the rec-bound identifiers wears the
-           same name than the signature and have the same type. *)
-        List.exists
-          (fun (_, v, _, sch, _, _, _, _) ->
-            if v = v1 then
-              (begin
-              (* For each unification, take a fresh scheme for the signature
-                 to prevent being poluted by previous unifications. *)
-              let ty1 = Types.specialize sch1 in
-              let t = Types.specialize sch in
-              try
-                ignore
-                  (Types.unify ~loc: Location.none ~self_manifest: None ty1 t);
-                (* Unification succeeded so fields have same type. *)
-                true
-              with _ -> false  (* Unification failed: types are conflicting. *)
-              end)
-            else false)
-          l2
+        (* Same remark than for signature / let above. If we find one (in fact
+           the unique method in the let rec with the name v1, then all is
+           right. We MUST find it by the way. *)
+        let found =
+          List.exists
+            (fun (_, v, _, sch, _, _, _, _) ->
+              if v = v1 then
+                (begin
+                  (* For each unification, take a fresh scheme for the signature
+                     to prevent being poluted by previous unifications. *)
+                  let ty1 = Types.specialize sch1 in
+                  let t = Types.specialize sch in
+                  try
+                    ignore
+                      (Types.unify
+                         ~loc: Location.none ~self_manifest: None ty1 t) ;
+                    (* Unification succeeded so fields have same type. *)
+                    true
+                  with _ ->
+                    (* Unification failed: types are conflicting. *)
+                    assert false
+                end)
+              else false)
+            l2 in
+        if not found then assert false ;
+        true  (* Never possible conflict with a signature involved. *)
    | (Env.TypeInformation.SF_let (from1, v1, _, _, _, _, _, log1),
       Env.TypeInformation.SF_let (from2, v2, _, _, _, _, _, log2)) ->
+        (* Should never fail since we call this function on fields with at
+           least one common name. *)
+        assert (v1 = v2) ;
         (* Unless fields are wearing the same name and are coming from the
            same species, we consider that 2 let definitions are conflicting.
            We could go further, applying equality modulo alpha-conversion but
            we don't do for the moment. *)
-        (v1 = v2) &&
         (from1.Env.fh_initial_apparition = from2.Env.fh_initial_apparition) &&
         (log1 = log2)
-   | (Env.TypeInformation.SF_theorem (from1, v1, _, _, _, _),
-      Env.TypeInformation.SF_theorem (from2, v2, _, _, _, _)) ->
+   | (Env.TypeInformation.SF_theorem (from1, v1, _, b1, _, _),
+      Env.TypeInformation.SF_theorem (from2, v2, _, b2, _, _)) ->
+        (* Should never fail since we call this function on fields with at
+           least one common name. *)
+        assert (v1 = v2) ;
+        (* Two theorems with the same must have the same statement since this
+           latter is their type and type can be modified along inheritance. *)
+        assert (Ast_equal.logical_expr_equal_p b1 b2) ;
        (* Since we don't want to inspect proofs, theorems are compatible only
           if they wear the same names and come from the same species. *)
-       (v1 = v2) &&
        (from1.Env.fh_initial_apparition = from2.Env.fh_initial_apparition)
    | (Env.TypeInformation.SF_property (_, v1, _, b1, _),
       Env.TypeInformation.SF_property (_, v2, _, b2, _)) ->
-        (* Two properties are the same if they are wearing the same name and
-           have the same logical expression as body. *)
-        v1 = v2 && Ast_equal.logical_expr_equal_p b1 b2
+        (* Should never fail since we call this function on fields with at
+           least one common name. *)
+        assert (v1 = v2) ;
+        (* Two properties with the same must have the same statement since this
+           latter is their type and type can be modified along inheritance. *)
+        assert (Ast_equal.logical_expr_equal_p b1 b2) ;
+        (* Like for signature / signature, there is no change, hence no
+           conflict. *)
+        true
    | ((Env.TypeInformation.SF_let_rec l1),
-      (Env.TypeInformation.SF_let_rec l2)) ->
+      (Env.TypeInformation.SF_let_rec l2)) -> (
         (* Same thing than for lets but on all the bound names. *)
-       (begin
-       try
-         List.for_all2
-           (fun (from1, v1, _, _, _, _, _, log1)
-                (from2, v2, _, _, _, _, _, log2) ->
-             (from1.Env.fh_initial_apparition =
-              from2.Env.fh_initial_apparition) && (v1 = v2) && (log1 = log2))
-           l1 l2
-       with Invalid_argument "List.for_all2" -> false
-       end)
-   | (_, _) -> false
+        try
+          List.for_all2
+            (fun (from1, v1, _, _, _, _, _, log1)
+                 (from2, v2, _, _, _, _, _, log2) ->
+              (from1.Env.fh_initial_apparition =
+               from2.Env.fh_initial_apparition) && (v1 = v2) && (log1 = log2))
+            l1 l2
+        with Invalid_argument "List.for_all2" -> false
+       )
+   | (Env.TypeInformation.SF_theorem (_, v1, _, b1, _, _),
+      Env.TypeInformation.SF_property (_, v2, _, b2, _))
+   | (Env.TypeInformation.SF_property (_, v1, _, b1, _),
+      Env.TypeInformation.SF_theorem (_, v2, _, b2, _, _)) ->
+        assert (v1 = v2) ;
+        (* Same remark than for theorem / theorem and property / theorem. *)
+        assert (Ast_equal.logical_expr_equal_p b1 b2) ;
+        (* Like for signature versus let. No conflict. *)
+        true
+   | ((Env.TypeInformation.SF_let_rec _), (Env.TypeInformation.SF_let _))
+   | ((Env.TypeInformation.SF_let _), (Env.TypeInformation.SF_let_rec _)) ->
+       (* Let versus let-rec and let-rec versus let: we crudely they changed,
+          hence conflict. *)
+       false
+   | (_, _) ->
+       (* Should never arise because we call this function on fields with at
+          least one common name, and if 2 methods have the same name, they
+          must be of the same kind. *)
+       assert false
 ;;
 
 
