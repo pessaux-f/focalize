@@ -1,0 +1,78 @@
+open "basics";;
+open "sets";;
+open "utils";;
+
+
+(** Property-based security policies *)
+
+(** A property-based policy is a characterization of secure elements of a set
+    according to some security information. *)
+
+
+species Target = inherit Setoid; end;;
+
+species Configuration = inherit Setoid; end;;
+
+
+species P_policy (A is Target, C is Configuration) =
+
+  (** Relation specifying secure targets according to configurations *)
+  inherit Relation (A, C);
+
+  signature secure: A -> C -> bool;
+
+  let relation(a, c) = secure(a, c);
+
+end;;
+
+(*
+species Targeted_P_policy (A is Target, C is Configuration, F is Finite_parts(A)) =
+
+  (** Relation specifying secure targets according to configurations *)
+  inherit P_policy(A, C);
+
+  signature is_secure_target_of: C -> F -> prop;
+ 
+  (* spec : is_secure_target_of(c,ens) ssi all t in ens secure(t,c) *)
+
+end;;
+*)
+
+species Interpreted_Target(A is Target) =
+  inherit Target;
+  signature interpretation : A -> Self;
+end;;
+
+species Interpreted_configurations(C is Configuration) =
+  inherit Configuration;
+  signature interpretation : C -> Self;
+end;;
+
+species Interpreted_configurations_by_parts
+        (A is Target, C is Configuration, D is Interpreted_Target(A),
+         FD is Finite_parts(D)) =
+  inherit Interpreted_configurations(C);
+
+  signature as_part : Self -> FD;
+ 
+end;;
+
+
+species Interpreted_P_policy 
+        (A is Target, C is Configuration, 
+         P is P_policy(A, C), 
+         IT is Interpreted_Target(A), 
+         FIT is Finite_parts(IT),
+         IC is Interpreted_configurations_by_parts(A, C, IT, FIT)) =
+
+  inherit P_policy(IT, IC);
+
+  let secure(it, ic) = FIT!belongs(it, IC!as_part(ic));
+
+  property compat_interpretations :  all c: C, all a: A, 
+   FIT!belongs(IT!interpretation(a), IC!as_part(IC!interpretation(c))) 
+   <->
+   P!secure(a, c);
+    
+end;;
+
