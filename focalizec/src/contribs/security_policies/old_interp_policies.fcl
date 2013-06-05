@@ -1,5 +1,6 @@
-open "basics";;
+
 open "sets";;
+open "finite_sets";;
 open "utils";;
 open "p_policies";;
 
@@ -21,6 +22,24 @@ species Interpreted_Target(A is Target) =
   inherit Target;
   signature interpretation : A -> Self;
 end;;
+
+
+
+
+species Identity_Interpreted_Target(A is Target) =
+  inherit Interpreted_Target(A);
+  representation = A;
+  let interpretation(a) = a;
+  let element = A!element;
+  let equal(a, b) = A!equal(a, b);
+  proof of equal_reflexive = by property A!equal_reflexive
+                                definition of equal;
+  proof of equal_symmetric = by property A!equal_symmetric
+                                definition of equal;
+  proof of equal_transitive = by property A!equal_transitive
+                                definition of equal;
+end;;
+
 
 species Interpreted_configurations(C is Configuration) =
   inherit Configuration;
@@ -55,3 +74,10 @@ species Interpreted_P_policy
     
 end;;
 
+
+species Extensional_p_policy(A is Target, C is Configuration, P is P_policy(A, C),
+                             AI is Identity_Interpreted_Target(A),
+                             FAI is Finite_parts(AI),
+                             IC is Interpreted_configurations_by_parts(A, C, AI, FAI)) =
+  inherit Interpreted_P_policy(A, C, P, AI, FAI, IC); 
+end;;

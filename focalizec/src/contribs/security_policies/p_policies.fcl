@@ -25,17 +25,3 @@ species P_policy (A is Target, C is Configuration) =
 
 end;;
 
-
-
-(* (\** Finite policy *\) *)
-
-(* species Finite_target = inherit Target, Finite_set; end;; *)
-
-(* species Finite_configuration = inherit Configuration, Finite_set; end;; *)
-
-
-(* species Finite_p_policy (A is Finite_target, C is Finite_configuration) = *)
-
-(*   inherit P_policy (A, C), Finite_relation (A, C); *)
-
-(* end;; *)
