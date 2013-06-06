@@ -4022,7 +4022,11 @@ let oldest_inter_n_field_n_fields phi fields =
 
 
 (** {b Descr} : Implement the silently "described" notion of conflict
-    detection mentionned in Virgile Prevosto's Phd page 57 line 6. *)
+    detection mentionned in Virgile Prevosto's Phd page 57 line 6.
+
+    Attention: attempts to make this function smarter lead to bug #26. This
+    should be now fixed, but this raised the [Unsure] comment after having
+    deeply thought at this problem. *)
 let non_conflicting_fields_p f1 f2 =
   match (f1, f2) with
    | (Env.TypeInformation.SF_sig (_, v1, sch1),
@@ -4050,7 +4054,16 @@ let non_conflicting_fields_p f1 f2 =
              change. *)
           true
         with _ ->
-          assert false  (* Unification failed, then types are conflicting. *)
+          (* Unification failed, then types are conflicting. Due to the fact that
+             types can't be changed, the unique case where unification may
+             fail is in case where we tried to unify Self and its effective
+             representation. And since we do not have any [self_manifest] available
+             here, we can't take into account this possible equivalence.
+             [Unsure] We chose to raise a conflict although if we knew the
+             effective type of Self this should not occur. Is this solution too
+             restrictive ? May it invalidate stuff that should not have be
+             invalidated ? Have to investigate... *)
+          false (* Consider as a conflict. *)
        )
    | (Env.TypeInformation.SF_sig (_, v1, sch1),
       (Env.TypeInformation.SF_let_rec l2))
@@ -4059,29 +4072,25 @@ let non_conflicting_fields_p f1 f2 =
         (* Same remark than for signature / let above. If we find one (in fact
            the unique method in the let rec with the name v1, then all is
            right. We MUST find it by the way. *)
-        let found =
-          List.exists
-            (fun (_, v, _, sch, _, _, _, _) ->
-              if v = v1 then
-                (begin
-                  (* For each unification, take a fresh scheme for the signature
-                     to prevent being poluted by previous unifications. *)
-                  let ty1 = Types.specialize sch1 in
-                  let t = Types.specialize sch in
-                  try
-                    ignore
-                      (Types.unify
-                         ~loc: Location.none ~self_manifest: None ty1 t) ;
-                    (* Unification succeeded so fields have same type. *)
-                    true
-                  with _ ->
-                    (* Unification failed: types are conflicting. *)
-                    assert false
-                end)
-              else false)
-            l2 in
-        if not found then assert false ;
-        true  (* Never possible conflict with a signature involved. *)
+        List.exists
+          (fun (_, v, _, sch, _, _, _, _) ->
+            if v = v1 then (
+              (* For each unification, take a fresh scheme for the signature
+                 to prevent being poluted by previous unifications. *)
+              let ty1 = Types.specialize sch1 in
+              let t = Types.specialize sch in
+              try
+                ignore
+                  (Types.unify ~loc: Location.none ~self_manifest: None ty1 t) ;
+                (* Unification succeeded so fields have same type. *)
+                true
+              with _ ->
+                (* Unification failed: same remark than for sig/sig, sig/let
+                   and so on above. *)
+                false
+             )
+            else false)
+          l2
    | (Env.TypeInformation.SF_let (from1, v1, _, _, _, _, _, log1),
       Env.TypeInformation.SF_let (from2, v2, _, _, _, _, _, log2)) ->
         (* Should never fail since we call this function on fields with at
