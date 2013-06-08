@@ -1,0 +1,82 @@
+open "basics";;
+open "sets";;
+open "finite_sets";;
+open "utils";;
+
+
+(** Accesses are done by active entities, the subjects, over passive entities, 
+    the objects, according to access modes (for exemple, read, write, etc).    *)
+
+species Subject = inherit Finite_set; end;;
+
+species Object = inherit Finite_set; end;;
+
+species Access_mode = inherit Finite_set; end;;
+
+species Weak_accesses(S is Subject,
+		      O is Object,
+		      A is Access_mode,
+                      R is Ternary_relations(S, O, A))=
+  inherit Setoid;
+end;;
+
+species Accesses(S is Subject,
+		 O is Object,
+		 A is Access_mode,
+		 SOA is Abstract_triple(S, O, A),
+		 PSOA is Finite_parts(SOA),
+                 R is Relations_by_sets_of_triples(S, O, A, SOA, PSOA))=             
+
+  inherit Weak_accesses(S, O, A, R);
+
+  representation = PSOA;
+
+  let as_part(p: Self): PSOA = p;
+
+  let relation(p, s, o, a) = PSOA!belongs(SOA!make(s, o, a), as_part(p));
+
+  theorem relation_spec: all p: Self, all s: S, all o: O, all a: A,
+     relation(p, s, o, a) <-> PSOA!belongs(SOA!make(s, o, a), as_part(p))
+     proof = by definition of relation;
+
+  let alpha(x, s) = PSOA!belongs(s, as_part(x));
+
+end;;
+
+(** Property-based access security policies with read and write accesses *)
+
+species Access_mode_rw =
+  inherit Access_mode;
+  signature read: Self;
+  signature write: Self;
+end;;
+
+type rw = | Read | Write ;;
+
+species Access_mode_rw_by_sum =
+  inherit Access_mode_rw;
+  representation = rw;
+  let element = read;
+  let equal(a, b) = (a = b);
+  proof of equal_reflexive = by definition of equal;
+  proof of equal_symmetric = by definition of equal;
+  proof of equal_transitive = by definition of equal;
+  let read = Read;
+  let write = Write;
+  let cardinal = 2;
+  let print (s) = match s with
+    | Read -> "read"
+    | Write -> "write";
+  let all_to_list = [Read; Write];
+  proof of all_in_all_to_list =
+    assumed
+    (* by definition of all_to_list, in_list *)
+    (*    type rw *)
+    ;
+end;;
+
+
+(** A common access mode is read/write *)
+
+collection Access_rw = implement Access_mode_rw_by_sum; end;;
+
