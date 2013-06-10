@@ -25,3 +25,16 @@ species P_policy (A is Target, C is Configuration) =
 
 end;;
 
+(** And-Composition of two policies defined over the same targets and configurations *)
+
+species And_P_policy (A is Target, C is Configuration,
+                      P1 is P_policy(A, C), P2 is P_policy(A, C)) =
+
+ inherit P_policy(A, C);
+
+ let secure(a, c) = P1!secure(a, c) && P2!secure(a, c);
+
+ theorem secure_is_secure : all a:A, all c:C, secure(a, c) <-> (P1!secure(a, c) /\ P2!secure(a, c))
+   proof = by definition of secure;
+
+end;;
