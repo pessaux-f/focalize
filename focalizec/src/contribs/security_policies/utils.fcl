@@ -1,6 +1,6 @@
 open "basics";;
 open "sets";;
-open "finite_sets";;
+open "finite_sets_f";;
 
 
 (** an entity of Relation is one relation between A and B *)
