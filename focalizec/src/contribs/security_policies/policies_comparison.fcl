@@ -44,3 +44,19 @@ species Policy_order_not_leq(A1 is Target, C1 is Configuration, P1 is P_policy(A
   property not_leq : ex c : C, all c2 : C2, ~ (equiv_config(c, c2)); 
 
 end;;
+
+
+species Policy_morph(A1 is Target, C1 is Configuration, P1 is P_policy(A1, C1),
+                     A2 is Target, C2 is Configuration, P2 is P_policy(A2, C2),
+                     I is Target_Interpretation(A1,A2),
+                     F2 is Finite_parts(A2),
+                     C is Interpreted_configurations_by_parts(C1, A2, F2), 
+                     IP1 is Interpreted_P_policy(A1, C1, P1, A2, I, F2, C)) =
+  inherit Policy_order_leq(A1, C1, P1, A2, C2, P2, I, F2, C, IP1);
+
+  signature interp_config : C1 -> C2 ;
+  property spec_interp_config : all c1 : C1, all t1 : A1,
+      P1!secure(c1, t1) <->  P2!secure(interp_config(c1), I!interpretation(t1)) ;
+
+  proof of leq = by property interp_config;
+end;;
