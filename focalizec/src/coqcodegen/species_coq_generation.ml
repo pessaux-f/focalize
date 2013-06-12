@@ -1865,7 +1865,7 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
           again later if they are mentionned as used in a [F_hypothesis] .*)
        List.iter (zenonify_hyp ctx print_ctx env) stmt_desc.Parsetree.s_hyps;
        (* We extend the context of available hypothesis with the new ones. *)
-       let available_hyps' = available_hyps @ stmt_desc.Parsetree.s_hyps in
+       let available_hyps' = stmt_desc.Parsetree.s_hyps @ available_hyps in
        (* Finally, we deal with the conclusion of the statement. *)
        let new_aim =
          (match stmt_desc.Parsetree.s_concl with
