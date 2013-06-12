@@ -81,7 +81,6 @@ species Policy_not_morph(A1 is Target, C1 is Configuration, P1 is P_policy(A1, C
                          IP1 is Interpreted_P_policy(A1, C1, P1, A2, I, F2, IC1)) =
   inherit Policy_not_leq(A1, C1, P1, A2, C2, P2, I, F2, IC1, IP1);
 
-  property not_leq : ex c : C1, all c2 : C2, ~ (equiv_config(c, c2));
   signature ctr_ex : C1 ;
   property spec_ctr_ex : all c2 : C2, ~ (equiv_config(ctr_ex, c2)) ;
   (* ca va etre dur à prouver ca non ? *)
