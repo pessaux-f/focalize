@@ -1,4 +1,4 @@
-open "finite_sets";;
+open "finite_sets_f";;
 open "p_policies";;
 open "interp_policies";;
 
@@ -6,41 +6,85 @@ species Policy_order(A1 is Target, C1 is Configuration, P1 is P_policy(A1, C1),
                      A2 is Target, C2 is Configuration, P2 is P_policy(A2, C2),
                      I is Target_Interpretation(A1,A2),
                      F2 is Finite_parts(A2),
-                     C is Interpreted_configurations_by_parts(C1, A2, F2), 
-                     IP1 is Interpreted_P_policy(A1, C1, P1, A2, I, F2, C)) =
+                     IC1 is Interpreted_configurations_by_parts(C1, A2, F2), 
+                     IP1 is Interpreted_P_policy(A1, C1, P1, A2, I, F2, IC1)) =
 
-  logical let equiv_config(c:C, c2:C2) = all t : A2, IP1!secure(t, c) <-> P2!secure(t, c2);
+(*  logical let equiv_config(c:IC1, c2:C2) = all t : A2, IP1!secure(t, c) <-> P2!secure(t, c2); *)
+  logical let equiv_config(c1:C1, c2:C2) = all t : A1, P1!secure(t, c1) <-> P2!secure(I!interpretation(t), c2); 
+(* n'ai-je pas modifié le sens de la définition ? *)
 
-  theorem equiv_config_spec : all c:C, all c2:C2,  
+(*
+  theorem equiv_config_spec : all c:IC1, all c2:C2,  
                               equiv_config(c, c2) <-> (all t : A2, IP1!secure(t, c) <-> P2!secure(t, c2))
   proof = by definition of equiv_config;
+*)
+  theorem equiv_config_spec : all c1:C1, all c2:C2,  
+                              equiv_config(c1, c2) <-> (all t : A1, P1!secure(t, c1) <-> P2!secure(I!interpretation(t), c2))
+  proof = by definition of equiv_config;
 
-(*  logical let leq = all c : C, ex c2 : C2, equiv_config(c, c2); *)
 
-end;;
-
-
-species Policy_order_is_leq(A1 is Target, C1 is Configuration, P1 is P_policy(A1, C1),
-                            A2 is Target, C2 is Configuration, P2 is P_policy(A2, C2),
-                            I is Target_Interpretation(A1,A2),
-                            F2 is Finite_parts(A2),
-                            C is Interpreted_configurations_by_parts(C1, A2, F2), 
-                            IP1 is Interpreted_P_policy(A1, C1, P1, A2, I, F2, C)) =
-  inherit Policy_order(A1, C1, P1, A2, C2, P2, I, F2, C, IP1);
-
-  property leq : all c : C, ex c2 : C2, equiv_config(c, c2); 
+(*  logical let leq = all c : IC1, ex c2 : C2, equiv_config(c, c2); *)
 
 end;;
 
 
-species Policy_order_not_leq(A1 is Target, C1 is Configuration, P1 is P_policy(A1, C1),
-                             A2 is Target, C2 is Configuration, P2 is P_policy(A2, C2),
-                             I is Target_Interpretation(A1,A2),
-                             F2 is Finite_parts(A2),
-                             C is Interpreted_configurations_by_parts(C1, A2, F2), 
-                             IP1 is Interpreted_P_policy(A1, C1, P1, A2, I, F2, C)) =
-  inherit Policy_order(A1, C1, P1, A2, C2, P2, I, F2, C, IP1);
+species Policy_leq(A1 is Target, C1 is Configuration, P1 is P_policy(A1, C1),
+                   A2 is Target, C2 is Configuration, P2 is P_policy(A2, C2),
+                   I is Target_Interpretation(A1,A2),
+                   F2 is Finite_parts(A2),
+                   IC1 is Interpreted_configurations_by_parts(C1, A2, F2), 
+                   IP1 is Interpreted_P_policy(A1, C1, P1, A2, I, F2, IC1)) =
+  inherit Policy_order(A1, C1, P1, A2, C2, P2, I, F2, IC1, IP1);
 
-  property not_leq : ex c : C, all c2 : C2, ~ (equiv_config(c, c2)); 
+(*  property leq : all c : IC1, ex c2 : C2, equiv_config(c, c2); *)
+
+  property leq : all c : C1, ex c2 : C2, equiv_config(c, c2); 
+
+end;;
+
+
+species Policy_not_leq(A1 is Target, C1 is Configuration, P1 is P_policy(A1, C1),
+                       A2 is Target, C2 is Configuration, P2 is P_policy(A2, C2),
+                       I is Target_Interpretation(A1,A2),
+                       F2 is Finite_parts(A2),
+                       IC1 is Interpreted_configurations_by_parts(C1, A2, F2), 
+                       IP1 is Interpreted_P_policy(A1, C1, P1, A2, I, F2, IC1)) =
+  inherit Policy_order(A1, C1, P1, A2, C2, P2, I, F2, IC1, IP1);
+
+(*  property not_leq : ex c : IC1, all c2 : C2, ~ (equiv_config(c, c2)); *)
+
+  property not_leq : ex c : C1, all c2 : C2, ~ (equiv_config(c, c2));
+
+end;;
+
+
+species Policy_morph(A1 is Target, C1 is Configuration, P1 is P_policy(A1, C1),
+                     A2 is Target, C2 is Configuration, P2 is P_policy(A2, C2),
+                     I is Target_Interpretation(A1,A2),
+                     F2 is Finite_parts(A2),
+                     IC1 is Interpreted_configurations_by_parts(C1, A2, F2), 
+                     IP1 is Interpreted_P_policy(A1, C1, P1, A2, I, F2, IC1)) =
+  inherit Policy_leq(A1, C1, P1, A2, C2, P2, I, F2, IC1, IP1);
+
+  signature interp_config : C1 -> C2 ;
+  property spec_interp_config : all c1 : C1, all t1 : A1,
+      P1!secure(t1, c1) <->  P2!secure(I!interpretation(t1), interp_config(c1)) ;
+
+  proof of leq = by definition of equiv_config property spec_interp_config, IP1!spec_IC, IP1!spec_secure;
+end;;
+
+species Policy_not_morph(A1 is Target, C1 is Configuration, P1 is P_policy(A1, C1),
+                         A2 is Target, C2 is Configuration, P2 is P_policy(A2, C2),
+                         I is Target_Interpretation(A1,A2),
+                         F2 is Finite_parts(A2),
+                         IC1 is Interpreted_configurations_by_parts(C1, A2, F2), 
+                         IP1 is Interpreted_P_policy(A1, C1, P1, A2, I, F2, IC1)) =
+  inherit Policy_not_leq(A1, C1, P1, A2, C2, P2, I, F2, IC1, IP1);
+
+  signature ctr_ex : C1 ;
+  property spec_ctr_ex : all c2 : C2, ~ (equiv_config(ctr_ex, c2)) ;
+  (* ca va etre dur à prouver ca non ? *)
+
+  proof of not_leq = by definition of ctr_ex property spec_ctr_ex ;
 
 end;;
