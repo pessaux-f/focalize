@@ -1,7 +1,6 @@
 open "basics";;
 open "sets";;
 
-
 species Finite_set =
 
   inherit Setoid;
@@ -13,15 +12,14 @@ species Finite_set =
   signature all_to_list : list (Self);
 
 
-  let in_list =
-    let rec aux (l, x) =
+  let rec in_list (l, x) =
       match l with
         | [] -> false
-        | h :: q -> equal (h, x) || aux (q, x) in
-    function x -> function l -> aux (l, x);
+        | h :: q -> (equal (h, x) || in_list (q, x))
+      termination proof = structural l;
 
   property all_in_all_to_list :
-    all x : Self, in_list (x, all_to_list);
+    all x : Self, in_list (all_to_list, x);
 
 end;;
 

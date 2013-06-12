@@ -1,6 +1,6 @@
 open "basics";;
 open "orders";;
-open "finite_sets";;
+open "finite_sets_f";;
 open "utils";;
 open "accesses";;
 open "p_policies";;
@@ -181,8 +181,6 @@ species P_policy_MLS_rw(S is Subject,
 
   inherit P_policy_ac_rw(S, O, A, R, T, C), P_policy_MLS(S, O, A, R, T, L, C); 
 
-  representation = unit ;
-
 end;;
 
 
@@ -200,10 +198,17 @@ species Confidentiality_MLS_policy_rw(S is Subject,
 
  inherit P_policy_MLS_rw(S, O, L, A, SOA, PSOA, R, T, C);
 
-  logical let mac_read(c, r) =
-    all s: S, all o: O, all a: A,
+ logical let mac_read(c, r) =
+    all s: S, all o: O, 
      R!relation(r, s, o, A!read) -> L!leq(C!fo(c, o), C!fs(c, s))
   ;
+
+  theorem mac_read_spec : all c:C, all r:R, 
+        mac_read(c, r) 
+    <-> (all s: S, all o: O,
+         R!relation(r, s, o, A!read) -> L!leq(C!fo(c, o), C!fs(c, s)))
+  proof = by definition of mac_read;
+
 
   let rec mac_read_secure(l, c) =  match l with
     | [] -> true
@@ -221,14 +226,10 @@ species Confidentiality_MLS_policy_rw(S is Subject,
       mac_read_secure(l, c)
   ;
 
-  logical let is_secure(t, c) =
-    mac_read(c, T!as_relation(t))
-   ;
-
-
-  theorem secure_is_correct: all t: T, all c: C, 
-    secure(t, c) <-> is_secure(t, c)
-    proof = assumed;
+  theorem secure_spec : all t: T, all c: C, 
+    secure(t, c) <-> mac_read(c, T!as_relation(t))
+    proof = by definition of secure 
+               property mac_read_correct ;
 
 end;;
 
@@ -248,8 +249,14 @@ species Integrity_MLS_policy_rw(S is Subject,
 
 
   logical let mac_write(c, r) =
-    all s: S, all o: O, all a: A,
+    all s: S, all o: O, 
      R!relation(r, s, o, A!write) -> L!leq(C!fo(c, o), C!fs(c, s))
+  ;
+
+  theorem mac_write_spec : all c:C, all r:R, mac_write(c, r) <->
+    (all s: S, all o: O,
+     R!relation(r, s, o, A!write) -> L!leq(C!fo(c, o), C!fs(c, s)))
+  proof = by definition of mac_write
   ;
 
   let rec mac_secure_write(l, c) =  match l with
@@ -268,12 +275,8 @@ species Integrity_MLS_policy_rw(S is Subject,
       mac_secure_write(l, c)
   ;
 
-  logical let is_secure(t, c) =
-    mac_write(c, T!as_relation(t))
-   ;
-
   theorem secure_is_correct: all t: T, all c: C, 
-    secure(t, c) <-> is_secure(t, c)
+    secure(t, c) <->  mac_write(c, T!as_relation(t))
     proof = assumed;
 
 end;;
@@ -324,12 +327,8 @@ species Confinment_up_MLS_policy_rw(S is Subject,
       no_write_down_secure(l, c)
   ;
 
-  logical let is_secure(t, c) =
-    no_write_down(c, T!as_relation(t))
-   ;
-
   theorem secure_is_correct: all t: T, all c: C, 
-    secure(t, c) <-> is_secure(t, c)
+    secure(t, c) <-> no_write_down(c, T!as_relation(t))
     proof = assumed;
 
 end;;

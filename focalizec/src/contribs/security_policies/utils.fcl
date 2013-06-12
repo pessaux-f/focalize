@@ -1,6 +1,6 @@
 open "basics";;
 open "sets";;
-open "finite_sets";;
+open "finite_sets_f";;
 
 
 (** an entity of Relation is one relation between A and B *)
@@ -16,13 +16,44 @@ species Binary_relations(A is Setoid, B is Setoid) =
   inherit Basic_object ;
 
   signature relation: Self -> A -> B -> bool;
-
+  
   signature is_contained: Self -> Self -> bool ;
 
   property is_contained_spec: all r_1 r_2: Self, 
         is_contained(r_1, r_2) 
    <->  all a: A, all b: B, 
          relation(r_1, a, b) -> relation(r_2, a, b);
+
+end;;
+
+species Composition_relations(A is Setoid, B is Setoid, C is Setoid, 
+                              R_AB is Binary_relations(A, B),
+                              R_BC is Binary_relations(B, C)) =
+ inherit Binary_relations(A, C);
+
+ signature compose_rel : R_AB -> R_BC -> Self;
+
+(* There is an incredible (ununderstandable) typing bug ! 
+ property compose_rel_spec : 
+    all r1: R_AB, all r2: R_BC, all a: A, all c: C, 
+         relation(compose_rel(r1, r2), a, c)
+     <-> (ex b: B, (R_AB!relation(r1, a, b) /\ R_BC!relation(r2, b, c))) 
+ ;
+*)
+
+end;;
+
+species Binary_rel_over(A is Setoid)=
+inherit Binary_relations(A, A);
+signature rt_closure : Self -> Self;
+
+property rt_closure_spec : all r: Self, all a1 a2: A,
+                        relation(rt_closure(r), a1, a2) 
+                        <-> ( A!equal(a1, a2) \/
+                              (ex a3: A, (relation(r, a1, a3) /\ relation(rt_closure(r), a3, a2))));
+
+(* theorem closure_is_reflexive : recuper les  def de reflexive, teransitve  et les utiliser pour ecrire les theoremes
+qui disent que la closure est reflexive et transitive *)
 
 end;;
 
@@ -145,6 +176,30 @@ species Relations_by_sets_of_pairs(A is Setoid, B is Setoid,
     ;
 
 end;;
+
+species Composition_relations_sets_of_pair(A is Setoid, 
+                                           B is Setoid,
+                                           T_AB is Abstract_pairs(A, B),
+                                           P_AB is Finite_parts(T_AB), 
+                                           C is Setoid,
+                                           T_BC is Abstract_pairs(B, C),
+                                           P_BC is Finite_parts(T_BC),
+                                           R_AB is Relations_by_sets_of_pairs(A, B, T_AB, P_AB),
+                                           R_BC is Relations_by_sets_of_pairs(B, C, T_BC, P_BC),
+                                           T_AC is Abstract_pairs(A, C),
+                                           P_AC is Finite_parts(T_AC)) =
+inherit Relations_by_sets_of_pairs(A, C, T_AC, P_AC), Composition_relations(A, B, C, R_AB, R_BC);
+
+(* Theo ... c est comme le code caml de li214 *)
+
+end;;
+
+
+
+
+
+
+
 
 species Pairs_by_pairs(A is Setoid, B is Setoid) =
  inherit Abstract_pairs(A, B) ;
