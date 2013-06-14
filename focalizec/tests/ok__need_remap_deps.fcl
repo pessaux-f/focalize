@@ -1,0 +1,27 @@
+(* Example showing the need to remap computed deps onto inherited ones.
+   In effect, S and T are instantiated both by G. Hence, in Bug, equiv
+   only depends on G!equal although the method generator in Couple expects
+   2 arguments: one for S!equal and one for T!equal. *)
+open "basics" ;;
+
+species Simple =
+   signature equal : Self -> Self -> bool ;
+end ;;
+
+species Couple (S is Simple, T is Simple) =
+  let equiv (e1, e2) =
+    let _i = S!equal(e1, e1) in
+    let _j = T!equal(e2, e2) in
+    3 ;
+end ;;
+
+species Bug (G is Simple) =
+  inherit Couple (G, G) ;
+  representation = int ;
+  theorem theo: true
+    proof =
+      <1>1 
+         prove true
+         <2>f qed assumed
+      <1>2 qed by definition of equiv ;
+end ;;

@@ -2,14 +2,14 @@
 $(focal)
 <!--#include virtual="aftertitle-eng.html"-->
 
-<div class="right">
-<h2>Recent news</h2>
-<ul>
-  <li>2012-01-23: Bug tracker available</li>
-  <li>2013-01-21: Tutorial on proofs extended</li>
-  <li>2013-01-10: Release 0.8.0</li>
-</ul>
-</div>
+<!-- <div class="right"> -->
+<!-- <h2>Recent news</h2> -->
+<!-- <ul> -->
+<!--   <li>2012-01-23: Bug tracker available</li> -->
+<!--   <li>2013-01-21: Tutorial on proofs extended</li> -->
+<!--   <li>2013-01-10: Release 0.8.0</li> -->
+<!-- </ul> -->
+<!-- </div> -->
 
 
 <div id="container">
@@ -97,6 +97,21 @@ $(focal)
   Algebra Systems available.
   </p>
   </h3>
+</div>
+
+<div class="spacer"></div>
+
+
+<div id="main">
+<h3>Split of $(focal) and Zenon GIT repositories (2013-04-08)</h3><h3>
+<p>
+  $(focal) and Zenon are now in two separate GIT repositories. This won't
+  impact the available material but now requires to clone both repositories.
+  This split allows lighter installation when only needing Zenon. Until
+  Zenon's repository is cleanly integrated as a sub-module of the $(focal)
+  one, these two separate clone/pull/push processes are required.
+</p>
+</h3>
 </div>
 
 

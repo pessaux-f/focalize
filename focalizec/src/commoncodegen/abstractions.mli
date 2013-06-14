@@ -27,6 +27,8 @@ type field_body_kind =
 
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list ;
+  ai_raw_dependencies_from_params :
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   ai_dependencies_from_params :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   ai_dependencies_from_params_for_record_type :

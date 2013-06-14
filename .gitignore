@@ -18,3 +18,5 @@
 *.blg
 *.fcd
 *.prolog*
+*~
+.DS_Store

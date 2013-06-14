@@ -1,8 +1,0 @@
-open "sets";;
-
-species Done_bug =
-
-  inherit Setoid;
-  signature done: Self;
-
-end;;

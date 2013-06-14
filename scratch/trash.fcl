@@ -1,0 +1,64 @@
+open "basics" ;;
+
+species Data =
+  let id = "default" ;
+  signature from_int : int -> Self ;
+end ;;
+
+species Comparable =
+  inherit Data ;
+  signature lt : Self -> Self -> bool ;
+  signature eq : Self -> Self -> bool ;
+  let gt (x, y) = ~~ (lt (x, y)) && ~~ (eq (x, y)) ;
+  let toto = id ;  
+  property lt_not_gt : all x y : Self, lt (x, y) -> ~ gt (x, y) ;
+end ;;
+
+species NativeInt =
+  inherit Comparable ;
+  representation = int ;
+  let id = "native int" ;
+  let from_int (x) : Self = x ;
+  let lt (x, y) = x <0x y ;
+  let eq (x, y) = x =0x y ;
+  proof of lt_not_gt =
+    by definition of lt, gt, eq property int_lt_not_gt ;
+end ;;
+
+type statut_t = | In_range | Too_low | Too_high ;;
+
+species Thresholder (V is Comparable, minv in V, maxv in V) =
+  representation = (V * statut_t) ;
+  let get_value (x : Self) = fst (x) ;
+  let get_status (x : Self) = snd (x) ;
+
+  let junk (x : Self) =
+    let _a = get_value (x) in
+    let _b = get_status (x) in
+    3 ;
+
+  let filter (x) : Self =
+    if V!lt (x, minv) then (minv, Too_low)
+    else
+      if V!gt (x, maxv) then (maxv, Too_high)
+      else (x, In_range) ;
+
+  theorem too_low_not_gt_min :
+    all x : V, get_status (filter (x)) = Too_low -> ~ V!gt (x, minv)
+  proof =
+   <1>1 assume x : V,
+        hypothesis H: snd (filter (x)) = Too_low,
+        prove ~ V!gt (x, minv)
+        <2>1 prove V!lt (x, minv)
+             by definition of filter type statut_t hypothesis H
+        <2>2 qed by step <2>1 property V!lt_not_gt
+   <1>2 qed by step <1>1 definition of get_status ;
+end ;;
+
+collection IntColl = implement NativeInt ; end ;;
+
+collection Thresh_5_10 =
+  implement
+    Thresholder (IntColl, IntColl!from_int (5),
+                 IntColl!from_int (10)) ;
+end ;;

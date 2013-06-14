@@ -1,0 +1,47 @@
+(* Illustrate the fact that collection generator lambda-lifting have to be
+   computed from the *non-remapped* dependencies to avoid forgetting
+   dependencies possily dropped when remmaping.
+
+   In [Compared], [my_param] depends on [V!mult] and entity params [minv] and
+   [minv]. In [Buggy], there are in addition dependencies on [VV!plus] and
+   [VV!one] that diseaper in remapped dependencies ! In effect, remapping is
+   used to pick in the *non-remapped* dependencies to feed an inherited
+   method generator. And the inherited method generator, there are only
+   dependencies present in its body, not in the arguments provided to it
+   by the inheriting species !
+
+   This illustrate the fix of bug #13. *)
+open "basics" ;;
+
+species Comparable =
+  signature one : Self ;
+  signature plus : Self -> Self -> Self ;
+  signature mult : Self -> Self -> Self ;
+  let two = plus (one, one) ;
+end ;;
+
+
+species Compared (V is Comparable, minv in V) =
+  representation = V ;
+  let my_param = V!mult (minv, minv) ;
+end ;;
+
+
+species Buggy (VV is Comparable, maxv in VV) =
+  inherit Compared (VV, VV!plus(VV!plus(VV!two, VV!one), maxv)) ;
+end ;;
+
+species FullComparable =
+  inherit Comparable ;
+  representation = int ;
+  let one : Self = 1 ;
+  let plus (x : Self, y : Self) = x + y ;
+  let mult (x : Self, y : Self) = x * y ;
+end ;;
+
+collection ColComparable = implement FullComparable ; end ;;
+collection ColBuggy =
+  implement Buggy (ColComparable, ColComparable!two) ;
+end ;;
+
+ColBuggy!my_param ;;

@@ -146,11 +146,13 @@ species Toy =
 
   let faux_different (x) = equal (x, x) ;
 
+  property cheat : all x y : Self,
+     !different(x, y) <-> (!equal(x, y)) ;
+
   theorem same_is_not_different : all x y : Self,
      !different(x, y) <-> (!equal(x, y))
   proof =
-    by definition of different
-      property !different, different ;
+    by definition of different, equal property cheat ;
 
   (* Recursive logicals are not anymore syntactically accepted !
   logical rec appartient (x in int, y in int) in prop =

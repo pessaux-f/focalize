@@ -35,7 +35,7 @@ all:
 		$(MAKE) all &&\
 		$(MAKE) doc &&\
 	  echo "Installing..." &&\
-		. .config_var && $$SUDO $(MAKE) install);\
+		. ./.config_var && $$SUDO $(MAKE) install);\
 	  err=$$?;\
 	  case $$err in 0);; *) exit $$err;; esac;
 	@echo "Building Zvtov..."

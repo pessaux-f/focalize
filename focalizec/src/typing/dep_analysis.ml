@@ -765,7 +765,7 @@ let union_y_clock_x_etc ~current_species x_name fields =
       (* First compute the great union.
          We look for the most recently defined field that binds [y_name].
          This way, we really "compute" \Cal B_s (y) because \Cal B is defined
-         to return the body of the most recent fiedl in the inheritance. *)
+         to return the body of the most recent field in the inheritance. *)
       let field_y = find_most_recent_rec_field_binding y_name fields in
       let u =
         Parsetree_utils.SelfDepSet.union

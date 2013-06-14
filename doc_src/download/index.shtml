@@ -31,8 +31,17 @@ Once cloned, it is possible to fetch updates with the usual GIT
 commands (essentially <code>git pull origin master</code>). Note that
 this access being public, it doesn't allow pushing (i.e. submitting)
 modifications done in the sources tree.
-</div>
 
+<p>
+Since Zenon is now in a separate GIT repository, it must be cloned apart in
+the $(focal) directory. Hence, once $(focal) is cloned, go inside its base
+directory (<code>cd focalize</code>) and clone Zenon by invoking:
+<br />
+<code>   git clone http://focalize.inria.fr/zenon.git</code>
+<p>
+This will create a <code>zenon</code> repository in your
+<code>focalize</code> directory.
+</div>
 
 <div class="spacer"></div>
 

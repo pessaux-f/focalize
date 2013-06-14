@@ -86,6 +86,11 @@ target="_self">Bibtex</a>
 <h3>Communications, Conference<h3>
 <p>
 <ul>
+
+<li>ML Dependency Analysis for Assessors.
+Philippe Ayrault, Vincent Benayoun, Catherine Dubois and François Pessaux.
+SEFM 2012 - Thessaloniki (Greece), October 2012.
+<a href="http://francois.pessaux.perso.sfr.fr/files/ML_deps_assess.pdf">Pdf</a></li>
 <li>Damien Doligez, Mathieu Jaume and Renaud Rioboo. Development of
 secured systems by mixing programs, specifications and proofs in an
 object-oriented programming environment. ACM SIGPLAN Seventh Workshop
@@ -103,6 +108,11 @@ Tollitte. G&eacute;n&eacute;ration de code fonctionnel certifi&eacute;
 &agrave; partir de sp&eacute;cifications dans l'environnement
 FoCaLiZe. Journ&eacute;e SSURF, 29th June 2012
 <a href="http://www-spi.lip6.fr/~jaume/PNT29062010.pdf">Pdf</a></li>
+<li>Development of a generic voter under FoCaL.
+Philippe Ayrault, Thérèse Hardin and François Pessaux.
+In TAP2009 - Zurich, July 2009.
+<a href="http://francois.pessaux.perso.sfr.fr/files/papier_voteur_tap09.pdf">Pdf</a>, 2012.
+</li>
 <li>
 P. Ayrault, M. Carlier, D. Delahaye, C. Dubois, D. Doligez,
 L. Habib, T. Hardin, M. Jaume, C. Morisset, F. Pessaux, R. Rioboo and P. Weis.

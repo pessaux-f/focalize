@@ -37,13 +37,20 @@ type compiled_field_memory = {
   cfm_method_name : Parsetree.vname ;
   (** The method's type scheme. *)
   cfm_method_scheme : Env.method_type_kind ;
-  (* The positionnal list of species parameter carriers appearing in the
-     type of the method. They lead to extra arguments of type "Set" and
-     must be instanciated by the correct type when applying the method's
-     generator. This is mostly due to the fact that in Coq polymorphism
-     is explicit and lead to a dependant type.
-     NEVER USED FOR OCAML CODE GENERATION. *)
+  (** The positionnal list of species parameter carriers appearing in the
+      type of the method. They lead to extra arguments of type "Set" and
+      must be instanciated by the correct type when applying the method's
+      generator. This is mostly due to the fact that in Coq polymorphism
+      is explicit and lead to a dependant type.
+      NEVER USED FOR OCAML CODE GENERATION. *)
   cfm_used_species_parameter_tys : Parsetree.vname list ;
+  (** Same than below but without remapping on dependencies of the method from
+      the inherited species. This is required to prevent dropping dependencies
+      under the pretext they were not involved in the inherited method
+      generator. This only serves to generate the extra parameters of the
+      collection generator. *)
+  cfm_raw_dependencies_from_parameters :
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list;
   (** The list mapping for each species parameter, the methods the current
       method depends on. By lambda-lifting, these methods induce extra
       parameters named as "_p_" +  species parameter name + "_" + called
@@ -53,6 +60,10 @@ type compiled_field_memory = {
       ALL the dependencies found via definition 72 p 153 in Virgile Prevosto's
       PhD. *)
   cfm_dependencies_from_parameters :
+    (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
+  (** Same than above but only with dependencies arising through the type of
+      the method. *)
+  cfm_dependencies_from_parameters_in_type :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   (** The positional list of method names appearing in the minimal Coq typing
       environment. *)
@@ -478,7 +489,10 @@ let follow_instanciations_for_is_param ctx env original_param_index
             end) in
         (* Now, really check if its a species parameter. *)
         match effective_arg_during_inher with
-         | Parsetree_utils.SPE_Self -> failwith "Instantiation of collection parameter by Self - Configuration currently not available."  (* [Unsure] *)
+         | Parsetree_utils.SPE_Self ->
+             failwith
+               "Instantiation of collection parameter by \
+                Self - Configuration currently not available."  (* [Unsure] *)
          | Parsetree_utils.SPE_Expr_entity _ -> assert false
          | Parsetree_utils.SPE_Species (effective_qual_vname, provenance) ->
              (begin

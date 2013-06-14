@@ -1,10 +1,6 @@
-use "basics" ;;
 open "basics" ;;
 
-
-(* ******************************************************************* *)
-(* Must fail.                                                          *)
-(*
+(* Must fail.
     JUSTIFICATION DUE TO THE OLD UNIFICATION AND TYPES STRUCTURE
     THAT WERE ALLOWING ANY TYPE TO HAVE A "link" FIELD TO TELL THAT
     A TYPE IS KNOWN TO BE EQUAL TO ANOTHER (UNTIL types.ml CVS
@@ -18,20 +14,18 @@ open "basics" ;;
     AND HOW IT WAS EXHIBITED WHEN WE ADD THIS Self FRESH COPY HACK.
     ANYWAY, THIS EXAMPLE MUST FAIL.
 *)
-(* Example showing the need to use a fresh copy the the "representation" type     *)
-(* structure to prevent first unification from spoiling this structure *)
-(* hence making any further unifications successful between "rep" type *)
-(* and normally incompatible other types structures.                   *)
-(* ******************************************************************* *)
+(* Example showing the need to use a fresh copy the the "representation" type
+   structure to prevent first unification from spoiling this structure hence
+   making any further unifications successful between "rep" type and normally
+   incompatible other types structures. *)
+
 species Fails =
   representation = basics#int ;
-  let x in Self = 5 ;
-  let y in Self = 5 ;
-  let z in Self = "56" ;  (* If "rep"'s type structure was not fresly       *)
-                          (* copied before any unification, one unification *)
-                          (* of [Self] with [int] would have be performed   *)
-                          (* above, "rep"'s structure known as [int] would  *)
-                          (* be physically made equal to [Self], hence      *)
-                          (* allowing [Types.unify] to success with any     *)
-                          (* other type to unify with {Self].               *)
+  let x : Self = 5 ;
+  let y : Self = 5 ;
+  let z : Self = "56" ;  (* If "rep"'s type structure was not fresly copied
+     before any unification, one unification of [Self] with [int] would have
+     be performed above, "rep"'s structure known as [int] would be physically
+     made equal to [Self], hence allowing [Types.unify] to success with any
+     other type to unify with {Self]. *)
 end ;;

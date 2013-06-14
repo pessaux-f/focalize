@@ -244,13 +244,18 @@ let rec print_myexpr : (string * string) list -> myexpr -> unit =
     | MGlob_id s ->
         print_indent_symb s
     | MCaml_def s ->
-        print_string "internal 'a";
-        force_newline ();
-        print_string "external | caml -> {*";
+        (* Choose a typr variable having fw chances to really appear somewhere
+           else. We can't analyze the type of the external definition since ...
+           we do not have it. So saying that the type is a variable will
+           allways pass even if too laxist. *)
+        print_string "internal 'zzz" ;
+        force_newline () ;
+        print_string "external | caml -> {*" ;
         print_space ();
-        let s = try List.assoc s l_caml with 
-                | Not_found -> failwith (s ^ " caml definition unvailable") in
-        print_string s;
+        let s =
+          try List.assoc s l_caml with 
+          | Not_found -> failwith (s ^ " caml definition unvailable") in
+        print_string s ;
         print_string "*}"
     | MVar(id, None) -> (if not (id = focself) then print_string id)
     | MVar(id, Some _t) -> (if not (id = focself) then print_string id) (* TODO ? *)

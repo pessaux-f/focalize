@@ -1,0 +1,46 @@
+(* Initially to illustrate the fact that collection generator lambda-lifting
+   have to be computed from the *non-remapped* dependencies to avoid forgetting
+   dependencies possily dropped when remmaping.
+   See "ok__coll_gen_llifts_on_non_remapped.fcl" for initial explaination.
+   The fix worked but it seems that on the present example, Coq can't find the
+   type of a lambda-lift. *)
+open "basics" ;;
+
+species Comparable =
+  signature one : Self ;
+  signature plus : Self -> Self -> Self ;
+  signature mult : Self -> Self -> Self ;
+  signature from_int : int -> Self ;
+  signature to_int : Self -> int ;
+  let two = plus (one, one) ;
+end ;;
+
+
+species Compared (V is Comparable, minv in V) =
+  representation = V ;
+  let my_param = V!mult (minv, minv) ;
+end ;;
+
+
+species Buggy (VV is Comparable, ZZ is Comparable, maxv in VV) =
+  inherit Compared
+   (VV,
+    VV!plus (VV!plus (VV!from_int (ZZ!to_int (ZZ!one)), VV!one), maxv)) ;
+end ;;
+
+species FullComparable =
+  inherit Comparable ;
+  representation = int ;
+  let one : Self = 1 ;
+  let plus (x : Self, y : Self) = x + y ;
+  let mult (x : Self, y : Self) = x * y ;
+  let from_int (x) : Self = x ;
+  let to_int (x : Self) : int = x ;
+end ;;
+
+collection ColComparable = implement FullComparable ; end ;;
+collection ColBuggy =
+  implement Buggy (ColComparable, ColComparable, ColComparable!two) ;
+end ;;
+
+ColBuggy!my_param ;;

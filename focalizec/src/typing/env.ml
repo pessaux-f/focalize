@@ -8,8 +8,8 @@
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - 2012... LIP6 and INRIA                                   *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
@@ -878,8 +878,7 @@ end
 
 (* *********************************************************************** *)
 (* {b Descr} : Tells if a "species" found in a code generation environment
-   is a species or a collection. This is used to adapt the access to
-   method generators when creating collection generators.
+   is a species or a collection. This is only used for printing purpose.
 
    {b Rem} : Exported outside this module.                                 *)
 (* *********************************************************************** *)
@@ -933,6 +932,10 @@ type generic_code_gen_method_info = {
      TypeInformation.species_param *
      (* The set of methods of this parameter on which we have dependencies. *)
      ordered_methods_from_params) list;
+  (* Same than above but only for dependencies arising through the type of the
+     method. *)
+  mi_dependencies_from_parameters_in_type :
+    (TypeInformation.species_param * ordered_methods_from_params) list ;
   mi_abstracted_methods : Parsetree.vname list   (** The positional list
       of methods from ourselves abstracted by lambda-lifting. *)
 }

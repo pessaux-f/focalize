@@ -123,8 +123,7 @@ let apply_substitutions_list_on_formal_param_vname pmodname pvname substs =
         | Env.SK_ident_by_expression (_, _, _) ->
             (* We only deal with collection parameters. *)
             accu_vname
-        | Env.SK_collection_by_collection ((c1_mod_name, c1_spe_name), c2) ->
-            (begin
+        | Env.SK_collection_by_collection ((c1_mod_name, c1_spe_name), c2) -> (
             match c2 with
              | Types.SBRCK_coll (_, x) ->
                  (* By construction, the compilation unit name of c2 should
@@ -141,7 +140,7 @@ let apply_substitutions_list_on_formal_param_vname pmodname pvname substs =
                       purely disapears. *)
                    raise Not_found
                  else accu_vname
-            end))
+           ))
       pvname_as_string
       substs in
   (* Since during the substitutions we used [string]s we must finally convert
@@ -447,8 +446,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
            | Some term_pr ->
                match term_pr.Parsetree.ast_desc with
                 | Parsetree.TP_order (expr, _, pr)
-                | Parsetree.TP_measure (expr, _, pr) ->
-                    (begin
+                | Parsetree.TP_measure (expr, _, pr) -> (
                     let deps1 =
                       Param_dep_analysis.param_deps_expr
                         ~current_species
@@ -458,7 +456,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
                         ~current_species
                         (species_param_name, species_param_meths) pr in
                          Parsetree_utils.ParamDepSet.union deps1 deps2
-                    end)
+                   )
                 | Parsetree.TP_structural _ ->
                     (* Abstracted stuff can not be used for structural
                        termination. Moreover, structural termination can only
@@ -548,8 +546,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
      types since this means that the "rep" is still kept abstract. *)
   List.iter
     (fun (node, _) ->
-      if node.DepGraphData.nn_name <> (Parsetree.Vlident "rep") then
-        begin
+      if node.DepGraphData.nn_name <> (Parsetree.Vlident "rep") then (
         let st_set =
           Types.get_species_types_in_type node.DepGraphData.nn_type in
         carriers_appearing_in_types :=
@@ -570,8 +567,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
              carriers_appearing_in_types :=
                Types.SpeciesCarrierTypeSet.union
                  from_lexpr_annots !carriers_appearing_in_types
-        end)
-    decl_children;
+       ))
+    decl_children ;
   (* Same thing for the methods of ourselves we def-depend on. Attention, if we
      have a def-dependency on "rep", we must inspect its structure to know if
      it contains references to some species parameter since "rep"'s structure
@@ -697,6 +694,15 @@ type internal_abstraction_info = {
 (** {b Exported}: Yes. *)
 type abstraction_info = {
   ai_used_species_parameter_tys : Parsetree.vname list;
+  (** Same than below but without remapping on dependencies of the method from
+      the inherited species. This is required to prevent dropping dependencies
+      under the pretext they were not involved in the inherited method
+      generator. This only serves to generate the extra parameters of the
+      collection generator. *)
+  ai_raw_dependencies_from_params :
+    (Env.TypeInformation.species_param *
+     Env.ordered_methods_from_params)  (** The set of methods we depend on. *)
+      list ;
   (** Dependencies on species parameters' methods. They are the union of:
         - dependencies found via [BODY] of definition 72 page 153 of Virgile
           Prevosto's Phd,
@@ -711,8 +717,8 @@ type abstraction_info = {
      Env.TypeInformation.species_param *
      Env.ordered_methods_from_params)  (** The set of methods we depend on. *)
       list;
-  (* Dependencies used to generate the record type's parameters. It only
-     contains dependencies obtained by [TYPE] and [DIDOU]. *)
+  (** Dependencies used to generate the record type's parameters. It only
+      contains dependencies obtained by [DIDOU] on ([TYPE]). *)
   ai_dependencies_from_params_for_record_type :
     ((** The species parameter's name and kind. *)
      Env.TypeInformation.species_param *
@@ -847,8 +853,7 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
              (* "Self" is never a species parameter. It can be used as an
                 effective argument, but NEVER declared as a parameter ! *)
              (accu, (counter + 1))
-         | Parsetree_utils.SPE_Species (eff_arg_qual_vname, _) ->
-             (begin
+         | Parsetree_utils.SPE_Species (eff_arg_qual_vname, _) -> (
              match eff_arg_qual_vname with
               | Parsetree.Qualified (modname, eff_arg_vname)
                 when modname = current_unit ->
@@ -871,7 +876,7 @@ let get_user_of_parameters_with_position ~current_unit species_parameters
               | Parsetree.Vname _ ->
                   (* Scoping should have transformed it into a [Qualified]. *)
                   assert false
-             end))
+            ))
       ([], 0)
       spe_expr.Parsetree_utils.sse_effective_args in
   (* Tells that species [sse_name] uses [params_with_pos] as arguments... *)
@@ -905,8 +910,7 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
      | Parsetree.Qualified (_, n) -> Parsetree_utils.name_of_vname n) in
   let rec rec_add = function
     | [] -> []
-    | (p, d) :: q ->
-        (begin
+    | (p, d) :: q -> (
         match p with
          | Env.TypeInformation.SPAR_in (_, _, _) ->
              (* "In" parameters are never involved in the process. *)
@@ -917,7 +921,7 @@ let add_param_dependencies ~param_name ~deps ~to_deps =
              if name = param_name_as_string then
                (p, (Parsetree_utils.ParamDepSet.union deps d)) :: q
              else (p, d) :: (rec_add q)
-        end) in
+       ) in
   rec_add to_deps
 ;;
 
@@ -1000,20 +1004,22 @@ let complete_used_species_parameters_ty ~current_unit species_params initial_set
 
 
 
-(* Returns an extension, not an union. *)
+(* Returns an extension, not an union, BUT CONTAINS FORCELY the initial set
+   [initial_to_complete]. So ... not the union of the [via_body], [via_type] and
+   [initial_to_complete]. *)
 let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
-    ~via_type ~via_completion  =
+    ~via_type ~initial_to_complete  =
   (* Join the 3 dependencies sets to lookup for fixpoint in only 1 set. *)
   let found_dependencies_from_params =
     merge_abstraction_infos
-      via_body (merge_abstraction_infos via_type via_completion) in
+      via_body (merge_abstraction_infos via_type initial_to_complete) in
   (* We create the set that will be the final completion. Hence it at least
-     contains the dependencies initially found in the [via_completion]. *)
-  let new_via_completion = ref via_completion in
+     contains the dependencies initially found in the [initial_to_complete]. *)
+  let completed_by_fixpoint = ref initial_to_complete in
   let changed = ref true in
   while !changed do
     changed := false;   (* Reset the fixpoint reached signal. *)
-    new_via_completion :=
+    completed_by_fixpoint :=
     List.map2
       (fun (_, meths_new) (param, meths_old) ->
         (* [meths_new] : the set of new methods added compared to the set of
@@ -1058,17 +1064,14 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
                    with Not_found -> []  (* No children at all. *)) in
                  List.iter
                    (fun (node, _) ->
-                     if node.DepGraphData.nn_name <>
-                        (Parsetree.Vlident "rep") then
+                     if node.DepGraphData.nn_name <> Parsetree.Vlident "rep" then
                        (begin
                        (* We found a method that must be possibly added if it is
                           not already present in the already found dependencies
                           and not in the already added dependencies. *)
                        let mkind =
                          Param_dep_analysis.guess_method_computational_or_logical
-                           node.DepGraphData.nn_name
-                           None
-                           spe_meths in
+                           node.DepGraphData.nn_name None spe_meths in
                        (* We must replace occurrences of "Self" in this method
                           by the species parameter from where this method
                           comes. *)
@@ -1083,30 +1086,28 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
                               let lexpr' =
                                 SubstColl.subst_logical_expr
                                   ~current_unit SubstColl.SRCK_self
-                                  (Types.SBRCK_coll spe_par_name)
-                                  lexpr in
+                                  (Types.SBRCK_coll spe_par_name) lexpr in
                               Parsetree_utils.DETK_logical lexpr' in
                        let elem = (node.DepGraphData.nn_name, mkind) in
                        if not
                            (Parsetree_utils.ParamDepSet.mem elem meths_old) &&
-                          not (Parsetree_utils.ParamDepSet.mem elem !accu) then
-                         (begin
+                          not (Parsetree_utils.ParamDepSet.mem elem !accu) then (
                          (* We must add the method into the accu since it was
                             never seen before. *)
                          accu := Parsetree_utils.ParamDepSet.add elem !accu;
                          (* For the fixpoint, we say that it is not yet
                             reached. *)
                          changed := true
-                         end)
+                        )
                        end))
                    decl_children)
-               meths_old;
+               meths_old ;
              (* Return the new set of added methods. *)
              (param, !accu))
-      !new_via_completion
+      !completed_by_fixpoint
       found_dependencies_from_params
-  done;
-  !new_via_completion
+  done ;
+  !completed_by_fixpoint
 ;;
 
 
@@ -1121,12 +1122,14 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
 (*      (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) *)
 (*         list                                                             *)
 (* {b Args}:
-     - [dependencies_from_params] Those computer by all the other rules.
+     - [dependencies_from_params] Those computer by dependencies found via
+       the [TYPE] + [BODY] rules otherwise one get too many useless
+       dependencies !
 
    {b Exported} : No.                                                       *)
 (* ************************************************************************ *)
 let complete_dependencies_from_params_rule_PRM env ~current_unit
-    species_parameters starting_dependencies_from_params =
+    species_parameters deps_from_type_and_body =
   (* First, we look for "is" parameters themselves parametrised. We hunt in
      the [species_parameters], to get some [Env.TypeInformation.SPAR_is]
      whose [simple_species_expr] has a non empty list [sse_effective_args]. *)
@@ -1194,7 +1197,11 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                   the position where the effective argument was used. *)
                let formal_name = List.nth sprim_params position in
                (* Now, get the z in Deps (S, C_{p'}) (that can be found in
-                  [starting_dependencies_from_params]), ... *)
+                  [deps_from_type_and_body]), ...
+                  We need to take into accound both TYPE and BODY because some
+                  methods (theorems for instance) may make reference to no
+                  parameter method in their type (logical statement), but only
+                  in their body (proof). This was bug #18. *)
                let all_z =
                  Handy.list_assoc_custom_eq
                    (fun x y ->
@@ -1205,7 +1212,7 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                           false
                       | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
                           n = y)
-                   cpprim starting_dependencies_from_params in
+                   cpprim deps_from_type_and_body in
                Parsetree_utils.ParamDepSet.fold
                  (fun z accu_deps_for_zs ->
                    (* Forall z, we must search the set of methods, y, on which
@@ -1215,8 +1222,15 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
                      List.find
                        (fun m_info -> m_info.Env.mi_name = (fst z))
                        sprim_meths_abstr_infos in
+                   (* Find the y's by looking in dependencies via the TYPE of
+                      z.
+                      [UNSURE] Currently, not only the TYPE, rather:
+                        [DIDOU] on ([TYPE]),
+                      i.e. the same set than used to known what to lambda-lift
+                      for the record type. C.f bug #18 *)
                    let z_dependencies =
-                     z_priv_meth_info.Env.mi_dependencies_from_parameters in
+                     z_priv_meth_info.Env.
+                       mi_dependencies_from_parameters_in_type in
                    (* Now, find the one corresponding to [formal_name]. If
                       none is found in the assoc list that because there no
                       method in the dependencies on this parameter. *)
@@ -1334,7 +1348,8 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
     {b Exported} : No.                                                       *)
 (* ************************************************************************* *)
 let complete_dependencies_from_params env ~current_unit ~current_species
-    seen_abstractions species_parameters def_children universe type_kind =
+    seen_abstractions species_parameters def_children universe type_kind
+    deps_from_body =
   (* Rule [TYPE] possible only if a logical expression is provided. In effect,
      in a type scheme, species_parameters can never appear since it is a
      ML-like type. Furthermore, even in case of termination proof, we have
@@ -1447,16 +1462,17 @@ let complete_dependencies_from_params env ~current_unit ~current_species
              accu_deps_from_params)
       universe
       dependencies_from_params_via_compl1 in
-  (* Join all the found dependencies in a unique bunch so that
-     [complete_dependencies_from_params_rule_PRM] will have 1 bunch to know
-     which ones have already be found. *)
-  let all_found_deps_until_now =
-    merge_abstraction_infos
-      dependencies_from_params_via_type dependencies_from_params_via_compl2 in
-  (* Get the found dependencies via rule [PRM]. *)
+  (* Join all the found dependencies via [TYPE] and [BODY] in a unique bunch
+     so that [complete_dependencies_from_params_rule_PRM] will have 1 bunch into
+     which it has to search for dependencies on other parameters. *)
+  let found_deps_via_type_and_body =
+    merge_abstraction_infos dependencies_from_params_via_type deps_from_body in
+  (* Get the found dependencies via rule [PRM]. This rule must only apply to
+     dependencies found from the [TYPE] rule otherwise one get too many
+     useless dependencies ! *)
   let dependencies_from_params_via_PRM =
     complete_dependencies_from_params_rule_PRM
-      env ~current_unit species_parameters all_found_deps_until_now in
+      env ~current_unit species_parameters found_deps_via_type_and_body in
   (* Merge the completions. *)
   let dependencies_from_params_via_compl3 =
     merge_abstraction_infos
@@ -1579,7 +1595,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  env ~current_unit: ctx.Context.scc_current_unit
                  ~current_species: ctx.Context.scc_current_species
                  abstractions_accu ctx.Context.scc_species_parameters_names
-                 def_children universe (FTK_computational method_ty) in
+                 def_children universe (FTK_computational method_ty)
+                 dependencies_from_params_in_body in
              (* Extra completion by a transitive closure that was missing in
                 Virgile Prevosto's Phd. *)
              let dependencies_from_params_via_didou =
@@ -1587,7 +1604,7 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  ~current_unit: ctx.Context.scc_current_unit
                  ~via_body: dependencies_from_params_in_body
                  ~via_type: dependencies_from_params_in_type
-                 ~via_completion: dependencies_from_params_via_compl in
+                 ~initial_to_complete: dependencies_from_params_via_compl in
              (* Now, we complete the species parameters carriers seen by
                 taking into account types of methods obtained by the
                 completion of the dependencies on parameters achieved by
@@ -1658,7 +1675,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        ~current_unit: ctx.Context.scc_current_unit
                        abstractions_accu ctx.Context.
                          scc_species_parameters_names
-                       def_children universe (FTK_computational method_ty) in
+                       def_children universe (FTK_computational method_ty)
+                       dependencies_from_params_in_bodies in
                    (* Extra completion by a transitive closure that was missing
                       in Virgile Prevosto's Phd. *)
                    let dependencies_from_params_via_didou =
@@ -1666,7 +1684,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        ~current_unit: ctx.Context.scc_current_unit
                        ~via_body: dependencies_from_params_in_bodies
                        ~via_type: dependencies_from_params_in_type
-                       ~via_completion: dependencies_from_params_via_compl in
+                       ~initial_to_complete:
+                         dependencies_from_params_via_compl in
                    (* Now, we complete the species parameters carriers seen
                       by taking into account types of methods obtained by
                       the completion of the dependencies on parameters achieved
@@ -1734,7 +1753,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    env ~current_species: ctx.Context.scc_current_species
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
-                   def_children universe (FTK_logical logical_expr) in
+                   def_children universe (FTK_logical logical_expr)
+                   dependencies_from_params_in_bodies in
                (* Extra completion by a transitive closure that was missing in
                   Virgile Prevosto's Phd. *)
                let dependencies_from_params_via_didou =
@@ -1742,7 +1762,7 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    ~current_unit: ctx.Context.scc_current_unit
                    ~via_body: dependencies_from_params_in_bodies
                    ~via_type: dependencies_from_params_in_type
-                   ~via_completion: dependencies_from_params_via_compl in
+                   ~initial_to_complete: dependencies_from_params_via_compl in
                (* Now, we complete the species parameters carriers seen by
                   taking into account types of methods obtained by the
                   completion of the dependencies on parameters achieved by
@@ -1801,7 +1821,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    env ~current_species: ctx.Context.scc_current_species
                    ~current_unit: ctx.Context.scc_current_unit
                    abstractions_accu ctx.Context.scc_species_parameters_names
-                   def_children universe (FTK_logical logical_expr) in
+                   def_children universe (FTK_logical logical_expr)
+                   dependencies_from_params_in_bodies in
                (* Extra completion by a transitive closure that was missing in
                   Virgile Prevosto's Phd. *)
                let dependencies_from_params_via_didou =
@@ -1809,7 +1830,7 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    ~current_unit: ctx.Context.scc_current_unit
                    ~via_body: dependencies_from_params_in_bodies
                    ~via_type: dependencies_from_params_in_type
-                   ~via_completion: dependencies_from_params_via_compl in
+                   ~initial_to_complete: dependencies_from_params_via_compl in
                (* Now, we complete the species parameters carriers seen by
                   taking into account types of methods obtained by the
                   completion of the dependencies on parameters achieved by
@@ -2188,18 +2209,15 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters, i.e. [TYPE]+[PRM]+([DIDOU] on [TYPE]+[PRM]). *)
-          let pre_for_record_ty_deps_from_params =
+             parameters, i.e. [DIDOU] on ([TYPE]). Naturally contains
+             [TYPE]. *)
+          let for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
-              ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let for_record_ty_deps_from_params =
-            merge_abstraction_infos
-              pre_for_record_ty_deps_from_params
-              iai.iai_dependencies_from_params_via_type in
+              ~initial_to_complete: iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
           let sorted_for_record_ty_deps_from_params =
@@ -2219,7 +2237,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys;
-            ai_dependencies_from_params = mapped_deps;
+            ai_raw_dependencies_from_params = sorted_deps_from_params ;
+            ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
             ai_min_coq_env = iai.iai_min_coq_env } in
@@ -2232,18 +2251,15 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters, i.e. [TYPE]+[PRM]+([DIDOU] on [TYPE]+[PRM]). *)
-          let pre_for_record_ty_deps_from_params =
+             parameters, i.e. [DIDOU] on ([TYPE]). Naturally contains
+             [TYPE]. *)
+          let for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
-              ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let for_record_ty_deps_from_params =
-            merge_abstraction_infos
-              pre_for_record_ty_deps_from_params
-              iai.iai_dependencies_from_params_via_type in
+              ~initial_to_complete: iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
           let sorted_for_record_ty_deps_from_params =
@@ -2263,7 +2279,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys;
-            ai_dependencies_from_params = mapped_deps;
+            ai_raw_dependencies_from_params = sorted_deps_from_params ;
+            ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
             ai_min_coq_env = iai.iai_min_coq_env } in
@@ -2279,19 +2296,17 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        iai.iai_dependencies_from_params_via_type
                        iai.iai_dependencies_from_params_via_completions) in
                 (* Build the dependencies used to generate the record type
-                   parameters, i.e. [TYPE]+[PRM]+([DIDOU] on [TYPE]+[PRM]). *)
-                let pre_for_record_ty_deps_from_params =
+                   parameters, i.e. [DIDOU] on ([TYPE]). Naturally contains
+                   [TYPE]. *)
+                let for_record_ty_deps_from_params =
                   complete_dependencies_from_params_rule_didou
                     ~current_unit: ctx.Context.scc_current_unit
                     ~via_body:
                     (make_empty_param_deps
                        ctx.Context.scc_species_parameters_names)
                     ~via_type: iai.iai_dependencies_from_params_via_type
-                    ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-                let for_record_ty_deps_from_params =
-                  merge_abstraction_infos
-                    pre_for_record_ty_deps_from_params
-                    iai.iai_dependencies_from_params_via_type in
+                    ~initial_to_complete:
+                      iai.iai_dependencies_from_params_via_type in
                 let sorted_deps_from_params =
                   Dep_analysis.order_species_params_methods
                     all_deps_from_params in
@@ -2313,6 +2328,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                 let abstraction_info = {
                   ai_used_species_parameter_tys =
                     mapped_used_species_parameter_tys;
+                  ai_raw_dependencies_from_params = sorted_deps_from_params ;
                   ai_dependencies_from_params = mapped_deps;
                   ai_dependencies_from_params_for_record_type =
                     mapped_for_record_ty_deps_from_params;
@@ -2328,18 +2344,14 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters, i.e. [TYPE]+[PRM]+([DIDOU] on [TYPE]+[PRM]). *)
-          let pre_for_record_ty_deps_from_params =
+             parameters, i.e. [DIDOU] on ([TYPE]). Naturally contains [TYPE]. *)
+          let for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
-              ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let for_record_ty_deps_from_params =
-            merge_abstraction_infos
-              pre_for_record_ty_deps_from_params
-              iai.iai_dependencies_from_params_via_type in
+              ~initial_to_complete: iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
           let sorted_for_record_ty_deps_from_params =
@@ -2359,6 +2371,7 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys;
+            ai_raw_dependencies_from_params = sorted_deps_from_params ;
             ai_dependencies_from_params = mapped_deps;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
@@ -2372,18 +2385,14 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  iai.iai_dependencies_from_params_via_type
                  iai.iai_dependencies_from_params_via_completions) in
           (* Build the dependencies used to generate the record type
-             parameters, i.e. [TYPE]+[PRM]+([DIDOU] on [TYPE]+[PRM]). *)
-          let pre_for_record_ty_deps_from_params =
+             parameters, i.e. [DIDOU] on ([TYPE]). Naturally contains [TYPE]. *)
+          let for_record_ty_deps_from_params =
             complete_dependencies_from_params_rule_didou
               ~current_unit: ctx.Context.scc_current_unit
               ~via_body:
                 (make_empty_param_deps ctx.Context.scc_species_parameters_names)
               ~via_type: iai.iai_dependencies_from_params_via_type
-              ~via_completion: iai.iai_dependencies_from_params_via_PRM in
-          let for_record_ty_deps_from_params =
-            merge_abstraction_infos
-              pre_for_record_ty_deps_from_params
-              iai.iai_dependencies_from_params_via_type in
+              ~initial_to_complete: iai.iai_dependencies_from_params_via_type in
           let sorted_deps_from_params =
             Dep_analysis.order_species_params_methods all_deps_from_params in
           let sorted_for_record_ty_deps_from_params =
@@ -2403,7 +2412,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
           (* Build the final [abstraction_info]. *)
           let abstraction_info = {
             ai_used_species_parameter_tys = mapped_used_species_parameter_tys;
-            ai_dependencies_from_params = mapped_deps;
+            ai_raw_dependencies_from_params = sorted_deps_from_params ;
+            ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
             ai_min_coq_env = iai.iai_min_coq_env } in
@@ -2426,9 +2436,10 @@ let compute_abstractions_for_toplevel_theorem ctx theorem =
   (* Now, its minimal Coq typing environment. *)
   let min_coq_env = MinEnv.minimal_typing_environment universe [] in
   let abstr_info = {
-    ai_used_species_parameter_tys = [];
-    ai_dependencies_from_params = [];
-    ai_dependencies_from_params_for_record_type = [];
+    ai_used_species_parameter_tys = [] ;
+    ai_raw_dependencies_from_params = [] ;
+    ai_dependencies_from_params = [] ;
+    ai_dependencies_from_params_for_record_type = [] ;
     ai_min_coq_env = min_coq_env } in
   abstr_info
 ;;

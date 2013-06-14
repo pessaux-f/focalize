@@ -174,6 +174,8 @@ type generic_code_gen_method_info = {
   mi_used_species_parameter_tys : Parsetree.vname list ;
   mi_dependencies_from_parameters :
     (TypeInformation.species_param * ordered_methods_from_params) list ;
+  mi_dependencies_from_parameters_in_type :
+    (TypeInformation.species_param * ordered_methods_from_params) list ;
   mi_abstracted_methods : Parsetree.vname list
   }
 

@@ -1,0 +1,13 @@
+(* Ilustrate need for well-formation check. This time, its is without
+   using signatures. *)
+open "basics" ;;
+
+species A =
+  let rec x (u : unit) : int = let _v = 4 in y (u)
+  and y (u : unit) = let _v = 5 in x (u) ;
+end ;;
+
+species B = inherit A ;
+  let a (u : unit) = let _v = 6 in x (u) ;
+  let y (u : unit) = let _v = 7 in a (u) ;
+end ;;

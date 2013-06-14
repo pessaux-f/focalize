@@ -366,6 +366,68 @@ polymorphics, and for which \coq\ would say that it ``can't infer a
 type for this placeholder''.
 
 
+\subsubsection{Dependencies on collection parameters for collection generator}
+For the $\lambda$-liftings to do for the collection generator, only taking into
+account remapped dependencies is wrong in case where some dependencies really
+present in the inheriting species are not mapped onto inherited ones. This is
+the bug n°13.
+
+{\footnotesize
+\begin{lstlisting}
+species Comparable =
+  signature one : Self ;
+end ;;
+
+species Compared (V is Comparable, minv in V) =
+  representation = V ;
+  let my_param = minv ;
+end ;;
+
+species Buggy (VV is Comparable) =
+  inherit Compared (VV, VV!one) ;
+end ;;
+\end{lstlisting}
+}
+
+In effect, \lstinline"Buggy!my_param" has a dep on \lstinline"VV!one" (its own param).
+but in the inherited, \lstinline"Compared!my_param" instead has a dep on its
+entity parameter {\tt minv}, not on its collection param {\tt V}. Hence, during
+the ``remapping'', the dependency in {\tt Buggy} is dropped and the collection
+generator is missing a $\lambda$-lifting:
+
+{\footnotesize
+\begin{lstlisting}[language=MyOCaml]
+  (* Fully defined 'Buggy' species's collection generator. *)
+  let collection_create () =
+    (* From species bugggg_avec_damien#Compared. *)
+    let local_my_param = Compared.my_param (_p_VV_one) in
+    { rf_my_param = local_my_param ;
+       }
+\end{lstlisting}
+}
+
+In fact, the remapping process is correct since it really lead to the correct
+set of arguments to pass to the inherited method generator. What is wrong is
+that to compute the arguments of the {\bf *collection generator*} we make a
+{\em "big union"} of the extra arguments of the {\bf *method generators*}. But,
+in our case, these extra arguments of the {\bf *method generators*} are correct,
+simply in one of them, there is some stuff coming from the collection parameters
+(in the expression used to instantiate the in-param) and this stuff is {\bf NOT}
+a method on which the inherited method generator depends on. 
+So, the stuff to $\lambda$-lift in the {\bf *collection generator*} should be
+computed not on the mapped dependencies but on the {\bf NON}-mapped
+dependencies ! This should be the {\em "big union"} of non-remapped dependencies. 
+
+\medskip
+In addition to the fact that $\lambda$-liftings to generate for collection
+generator must use *non*-remapped deps, the rule {\tt [PRM]} must be applied to
+deps on params found from rule {\tt [TYPE]} otherwise one has too many (and useless) 
+$\lambda$-liftings. 
+This last point caused some extra argument for which Coq didn't succeed in
+finding the type. Note that there still have examples where it arises, but in
+this case arguments are usefull (see bug n° 15 in the tracker). 
+
+
 
 \subsection{Coq code generation model}
 \subsubsection{The problem}

@@ -6,15 +6,13 @@
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ...  LIP6 and INRIA                                      *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
-
-(* $Id: type_coq_generation.ml,v 1.21 2012-10-30 09:54:04 pessaux Exp $ *)
 
 
 (* ********************************************************************** *)
@@ -91,16 +89,16 @@ let extend_coq_gen_env_with_type_external_mapping env nb_extra_args
 
 
 (* ************************************************************************* *)
-(* record_in_env: bool -> Context.reduced_compil_context ->                  *)
+(* as_zenon_fact: bool -> Context.reduced_compil_context ->                  *)
 (*   Env.CoqGenEnv.t -> Parsetree.vname ->                                   *)
 (*     Env.TypeInformation.type_description -> Env.CoqGenEnv.t               *)
 (** {b Descr} : Emits the Coq code for a type definition. Depending on the
-    [~record_in_env] flag, it enriches the environment with elements induced
+    [~as_zenon_fact] flag, it enriches the environment with elements induced
     by the type definition. Returns the environment either enriched or
     non-modified.
 
     {b Params} :
-      - [~record_in_env] : Since this function is used to generate the Coq
+      - [~as_zenon_fact] : Since this function is used to generate the Coq
     code for a type definition (and in this case, we want to enrich the
     environment) and the tip for Zenon in a proof "by type ..." (and in this
     case, since the type is already defined, we don't want to enrich the
@@ -109,15 +107,21 @@ let extend_coq_gen_env_with_type_external_mapping env nb_extra_args
     got as argument must be enriched and returned as function result. Note
     that if we don't want to enrich the environment, then when we invoke the
     current function, the user should make an "ignore" since it should not
-    be interested in the function return value.
+    be interested in the function return value. Hence if this flag is true
+    then the environment must not be enriched, and moreover, the emitted
+    definition for Zenon must qualify the constructors if the type is not
+    hosted in the current compilation unit. In effect, in functions using
+    this type and on which we depend to make proofs, constructors WILL be
+    qualified. Not qualifying constructors in the "fake" definition for Zenon
+    would prevent ot from finding proofs.
 
     {b Exported} : Yes.                                                      *)
 (* ************************************************************************* *)
-let type_def_compile ~record_in_env ctx env type_def_name type_descr =
+let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.rcc_current_unit;
+    Types.cpc_current_unit = ctx.Context.rcc_current_unit ;
     Types.cpc_current_species = None;
     Types.cpc_collections_carrier_mapping =
       ctx.Context.rcc_collections_carrier_mapping } in
@@ -144,9 +148,7 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
           [collection_carrier_mapping]. *)
        Format.fprintf out_fmter ":=@ %a.@]@\n"
          (Types.pp_type_simple_to_coq print_ctx) tydef_body ;
-       if record_in_env then
-         (* Not an external type definition, so just add the type definition in
-            the environment. *)
+       if not as_zenon_fact then
          Env.CoqGenEnv.add_type
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
            type_descr env
@@ -180,7 +182,7 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
        let env_with_external_mapping =
          extend_coq_gen_env_with_type_external_mapping
            env nb_extra_args external_mapping in
-       if record_in_env then
+       if not as_zenon_fact then
          (* Finally add the type definition in the returned environment. *)
          Env.CoqGenEnv.add_type
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
@@ -215,18 +217,31 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
          print_ctx out_fmter type_def_params;
        Format.fprintf out_fmter ":@ Set :=@ ";
+       (* Qualify constructor if we are printing a fact for Zenon and the
+          location where we generate it is not in the compilation unit
+          hosting the type definition. *)
+       let tydef_comp_unit =
+         Filename.chop_extension
+           (type_descr.Env.TypeInformation.type_loc.Location.
+              l_beg.Location.pos_fname) in
+       let qualif =
+         if ctx.Context.rcc_current_unit <> tydef_comp_unit &&
+            as_zenon_fact
+         then tydef_comp_unit ^ "."
+         else "" in
        (* And finally really print the constructors definitions. *)
        List.iter
-         (fun (sum_cstr_name, cstr_ty) ->
+         (fun (sum_cstr_name, cstr_ty) ->            
            (* The sum constructor name. *)
-           Format.fprintf out_fmter "@\n| %a"
-             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
+           Format.fprintf out_fmter "@\n| %s%a"
+             qualif
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
            (* The type of the constructor. *)
            Format.fprintf out_fmter " :@ (@[<1>%a@])"
              (Types.pp_type_simple_to_coq print_ctx) cstr_ty)
          sum_constructors_to_print;
        Format.fprintf out_fmter ".@]@\n@\n";
-       if record_in_env then
+       if not as_zenon_fact then
          (begin
          (* Since any variant type constructors must be inserted in the
             environment in order to know the number of extra leading "_" due to
@@ -296,9 +311,7 @@ let type_def_compile ~record_in_env ctx env type_def_name type_descr =
        (* Do the printing job... *)
        local_print_fields record_fields_to_print ;
        Format.fprintf out_fmter " }.@]@\n " ;
-       (* Not an external type definition, so just add the type definition in
-          the environment. *)
-       if record_in_env then
+       if not as_zenon_fact then
          Env.CoqGenEnv.add_type
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
            type_descr env

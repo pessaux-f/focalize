@@ -1,0 +1,22 @@
+open "basics";;
+
+(* Example showing the need to make a substitution in rule PRM. *)
+species Base =
+  signature tstbase : Self -> bool ;
+end ;;
+
+
+species Pair (A is Base) =
+  let test (x : A) = A!tstbase ((x)) ;
+  theorem test_spec: all x : A, A!tstbase (x)
+  proof = assumed ;
+end ;;
+
+
+species Argg (AX is Base, P is Pair (AX)) =
+  (* Why bugs when removing "P!test (x) ->" ? *)
+  theorem bug: all x : AX, P!test (x) -> 0 = 0
+  proof =
+    <1>1  prove 0 = 0 by property P!test_spec
+    <1>f qed assumed ;
+end ;;

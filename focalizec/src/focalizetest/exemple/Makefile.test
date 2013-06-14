@@ -11,7 +11,14 @@ FOCCOPTS="-no-coq-code"
 OCAMLOPTS= -w a -I $(FOCAL_LIB) $(OCAMLC_FLAGS)
 # The file to generate 
 
+
+# Use Sicstus.
 FOCTEST_OPTS=-v -t $(NUMBER_OF_TEST) -S $(SIZE_OF_ELEM) -s $(SPECIES) -sicstus -p $(PROPERTIES) $(FOCALIZEC_FLAGS)
+
+# Do not use Sicstus, use random test cases generation instead.
+# FOCTEST_OPTS=-v -t $(NUMBER_OF_TEST) -S $(SIZE_OF_ELEM) -s $(SPECIES) -no-sicstus -p $(PROPERTIES) $(FOCALIZEC_FLAGS)
+
+
 
 ###
 EXEC=$(patsubst %.xml,%,$(XMLFILE))

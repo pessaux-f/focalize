@@ -21,10 +21,6 @@ LIB_INSTALL_SUB_DIR=access_control
 
 ROOT_DIR=../../../..
 
-PROJECT_LIB_INSTALL_DIR=$(LIB_DIR)/$(PROJECT_NAME_FULL)
-
-LIB_INSTALL_DIR=$(PROJECT_LIB_INSTALL_DIR)/$(LIB_INSTALL_SUB_DIR)
-
 STDLIB_DIR=../../stdlib
 
 FOCALIZEC=../../toplevel/focalizec
@@ -42,6 +38,7 @@ COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
 include $(ROOT_DIR)/focalizec/.config_var
+
 
 FOCALIZE_SRC=\
 	ensembles_finis.fcl\
@@ -94,37 +91,37 @@ bin:\
  $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install:
-	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
+	@$(MKDIR) $(INSTALL_LIB_DIR)/extlib/access_control &&\
 	if [ "$(FOCALIZE_FOS)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS) $(INSTALL_LIB_DIR)/;\
+	  $(CP) $(FOCALIZE_FOS) $(INSTALL_LIB_DIR)/extlib/access_control/;\
 	fi &&\
 	if [ "$(FOCALIZE_FOS_UNSAFE)" != "" ] ; then\
 	  echo "Installing (FoCaLize) compiled non-certified libs." &&\
-	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(INSTALL_LIB_DIR)/;\
+	  $(CP) $(FOCALIZE_FOS_UNSAFE) $(INSTALL_LIB_DIR)/extlib/access_control/;\
 	fi &&\
 	if [ "$(FOCALIZE_CMIS)" != "" ] ; then\
 	  echo "Installing (Ocaml interface) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_CMIS) $(INSTALL_LIB_DIR)/ ;\
+	  $(CP) $(FOCALIZE_CMIS) $(INSTALL_LIB_DIR)/extlib/access_control/ ;\
 	fi &&\
 	if [ "$(FOCALIZE_CMIS_UNSAFE)" != "" ] ; then\
 	  echo "Installing (Ocaml interface) compiled non-certified libs." &&\
-	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(INSTALL_LIB_DIR)/ ;\
+	  $(CP) $(FOCALIZE_CMIS_UNSAFE) $(INSTALL_LIB_DIR)/extlib/access_control/ ;\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BYT_OBJS) $(INSTALL_LIB_DIR)/;\
+	  $(CP) $(FOCALIZE_BYT_OBJS) $(INSTALL_LIB_DIR)/extlib/access_control/;\
 	fi &&\
 	if [ "$(FOCALIZE_BYT_OBJS_UNSAFE)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/;\
+	  $(CP) $(FOCALIZE_BYT_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/extlib/access_control/;\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
+	  $(CP) $(FOCALIZE_BIN_OBJS) $(INSTALL_LIB_DIR)/extlib/access_control/;\
 	fi &&\
 	if [ "$(FOCALIZE_BIN_OBJS_UNSAFE)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/;\
+	  $(CP) $(FOCALIZE_BIN_OBJS_UNSAFE) $(INSTALL_LIB_DIR)/extlib/access_control/;\
 	fi &&\
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
+	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/extlib/access_control/;\
 	fi
 
 clean:
