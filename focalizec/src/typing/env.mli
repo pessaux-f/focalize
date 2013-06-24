@@ -59,7 +59,7 @@ module ScopeInformation :
       | TBI_defined_in of Types.fname
 
     type species_scope =
-      | SPBI_file of Types.fname
+      | SPBI_file of (Types.fname * bool)
       | SPBI_parameter
 
     type species_parameter_kind = SPK_in | SPK_is

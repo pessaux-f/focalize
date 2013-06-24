@@ -346,8 +346,9 @@ module ScopeInformation = struct
       {b Exported} : Yes.                                               *)
   (* ****************************************************************** *)
   type species_scope =
-      (** The identifier is a species name defined at toplevel in a file. *)
-    | SPBI_file of Types.fname
+      (** The identifier is a species name defined at toplevel in a file. 
+          If the bool is [true] then it is a collection. *)
+    | SPBI_file of (Types.fname * bool)
       (** The identifier is a locally bound collection like in the case of a
           "is"-bound parameter (i.e. [c is ...]) where [c] is then considered
           as a local collection). *)

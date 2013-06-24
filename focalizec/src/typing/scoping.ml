@@ -212,11 +212,22 @@ exception Ambiguous_logical_expression_and of
 (** {b Descr} : Exception raised when an hypothesis, notation or variable
     name is introduced although there already exists on in the current
     scope of a proof.
+
     {b Exported} : Yes.                                                 *)
 (* ******************************************************************** *)
 exception Rebound_hyp_notation_or_var_in_proof of
   (Parsetree.vname * Location.t)
 ;;
+
+
+
+(* ******************************************************************** *)
+(** {b Descr} : Exception raised when a proof fact uses the property of a
+    species instead of a collection.
+
+    {b Exported} : Yes.                                                 *)
+(* ******************************************************************** *)
+exception Proof_by_species_property of (Parsetree.expr_ident * Location.t) ;;
 
 
 
@@ -1186,6 +1197,27 @@ let rec scope_fact ctx env fact =
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
+               (* Take care that the property comes from a collection or a
+                  collection parameter ! Not from a toplevel species. This
+                  was bug #25. *)
+               (match tmp with
+               | Parsetree.EI_method (Some coll_qvname, _) -> (
+                   let fake_sp_or_coll_name = {
+                     Parsetree.ast_desc = Parsetree.I_global coll_qvname ;
+                     Parsetree.ast_loc = Location.none ;
+                     Parsetree.ast_annot = [] ;
+                     Parsetree.ast_type = Parsetree.ANTI_none } in
+                   let host_of_prop =
+                     Env.ScopingEnv.find_species
+                       ~loc: ident.Parsetree.ast_loc fake_sp_or_coll_name
+                       ~current_unit: ctx.current_unit env in
+                   match host_of_prop.Env.ScopeInformation.spbi_scope with
+                   | Env.ScopeInformation.SPBI_file (_, false) ->
+                       raise
+                         (Proof_by_species_property
+                            (ident, ident.Parsetree.ast_loc))
+                   | _ -> ())
+               | _ -> ()) ;
                { ident with Parsetree.ast_desc = tmp })
              idents in
          Parsetree.F_property scoped_idents
@@ -2208,7 +2240,7 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
          parameter, then the hosting file is the current compilation unit. *)
       let hosting_file =
         (match species_info.Env.ScopeInformation.spbi_scope with
-         | Env.ScopeInformation.SPBI_file n -> n
+         | Env.ScopeInformation.SPBI_file (n, _) -> n
          | Env.ScopeInformation.SPBI_parameter -> ctx.current_unit) in
       let scoped_glob_ident = {
         glob_ident with
@@ -2277,7 +2309,7 @@ let scope_species_expr ctx env species_expr =
   let scoped_ident_descr =
     match ident_scope_info.Env.ScopeInformation.spbi_scope with
      | Env.ScopeInformation.SPBI_parameter -> Parsetree.I_local basic_vname
-     | Env.ScopeInformation.SPBI_file hosting_file ->
+     | Env.ScopeInformation.SPBI_file (hosting_file, _) ->
          Parsetree.I_global (Parsetree.Qualified (hosting_file, basic_vname)) in
   let scoped_ident = {
     se_name_ident with Parsetree.ast_desc = scoped_ident_descr } in
@@ -2374,7 +2406,7 @@ let scope_species_params_types ctx env params =
               match ident_scope_info.Env.ScopeInformation.spbi_scope with
               | Env.ScopeInformation.SPBI_parameter ->
                   Parsetree.I_local basic_vname
-              | Env.ScopeInformation.SPBI_file hosting_file ->
+              | Env.ScopeInformation.SPBI_file (hosting_file, _) ->
                   Parsetree.I_global
                     (Parsetree.Qualified (hosting_file, basic_vname)) in
             let scoped_ident = {
@@ -2507,7 +2539,8 @@ let scope_species_def ctx env species_def =
         species_def_descr.Parsetree.sd_params ;
     Env.ScopeInformation.spbi_inherits = scoped_inherits.Parsetree.ast_desc ;
     Env.ScopeInformation.spbi_scope =
-      Env.ScopeInformation.SPBI_file ctx.current_unit } in
+      Env.ScopeInformation.SPBI_file
+        (ctx.current_unit, false (* Not a collection. *)) } in
   (* Add the species in the environment. *)
   let env_with_species =
     Env.ScopingEnv.add_species
@@ -2559,7 +2592,8 @@ let scope_collection_def ctx env coll_def =
     (* A collection never inherits. *)
     Env.ScopeInformation.spbi_inherits = [] ;
     Env.ScopeInformation.spbi_scope =
-      Env.ScopeInformation.SPBI_file ctx.current_unit } in
+      Env.ScopeInformation.SPBI_file
+        (ctx.current_unit, true (* Is a collection. *)) } in
   (* Add the collection in the environment. *)
   let env_with_coll =
     Env.ScopingEnv.add_species

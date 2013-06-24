@@ -111,6 +111,13 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname vname
         Handy.pp_reset_effects
+  | Scoping.Proof_by_species_property (ident, at) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tThe property@ '%t%a%t'@ doesn't@ belong@ to@ a@ collection@ \
+        but@ to@ a@ species.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_expr_ident ident
+        Handy.pp_reset_effects
   (* *************************** *)
   (* Generic environments stuff. *)
   | Env.Unbound_constructor (vname, at) ->
