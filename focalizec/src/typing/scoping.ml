@@ -208,6 +208,18 @@ exception Ambiguous_logical_expression_and of
 
 
 
+(* ******************************************************************** *)
+(** {b Descr} : Exception raised when an hypothesis, notation or variable
+    name is introduced although there already exists on in the current
+    scope of a proof.
+    {b Exported} : Yes.                                                 *)
+(* ******************************************************************** *)
+exception Rebound_hyp_notation_or_var_in_proof of
+  (Parsetree.vname * Location.t)
+;;
+
+
+
 (* ********************************************************************** *)
 (** {b Descr} : Datastructure recording various the information required
     and propagated during the scoping pass. It is much more convenient to
@@ -1095,6 +1107,37 @@ let scope_enforced_deps ctx env enforced_deps =
 
 
 (* *********************************************************************** *)
+(** {b Descr}: Check if a local [vname] already exists in the value
+    environment.
+    This is used to detect hypotheses, notation or variable names in proofs
+    hyps that are existing several times in the scope.
+    In effect, they lead to Coq Variables and Coq complains if it has several
+    Variables with the same name in the scope.
+
+    {b Exported} : No.                                                      *)
+(* *********************************************************************** *)
+let local_name_already_bound vname ctx env =
+  (* We embedd the [vname] inside a dummy [ident] in order to lookup. *)
+  let fake_ident = {
+    Parsetree.ast_desc = Parsetree.EI_local vname ;
+    Parsetree.ast_loc = Location.none ;
+    Parsetree.ast_annot = [] ;
+    Parsetree.ast_type = Parsetree.ANTI_none } in
+  try
+    ignore
+      (Env.ScopingEnv.find_value
+         ~loc: Location.none ~current_unit: ctx.current_unit
+         ~current_species_name: ctx.current_species fake_ident
+         env) ;
+    (* No exception, hence found, hence error since we do not want several
+       hypotheses with the same name in the scope. *)
+    true
+  with _ -> false  (* Ok, not found. *)
+;;
+
+
+
+(* *********************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.fact -> Parsetree.fact *)
 (* {b Descr} : Scopes a [fact] and return this scoped fact].
 
@@ -1198,11 +1241,14 @@ and scope_hyps ctx env hyps =
     List.fold_left
       (fun (accu_env, accu_scoped_hyps) hyp ->
         let hyp_desc = hyp.Parsetree.ast_desc in
-        let (new_desc, accu_env') =
-          (begin
+        let (new_desc, accu_env') = (
           match hyp_desc with
            | Parsetree.H_variable (vname, type_expr) ->
                let scoped_type_expr = scope_type_expr ctx accu_env type_expr in
+               if local_name_already_bound vname ctx env then
+                 raise
+                   (Rebound_hyp_notation_or_var_in_proof
+                      (vname, hyp.Parsetree.ast_loc)) ;
                let env' =
                  Env.ScopingEnv.add_value
                    ~toplevel: None vname Env.ScopeInformation.SBI_local
@@ -1211,6 +1257,12 @@ and scope_hyps ctx env hyps =
            | Parsetree.H_hypothesis (vname, logical_expr) ->
                let scoped_logical_expr =
                  scope_logical_expr ctx accu_env logical_expr in
+               (* Ensure that there is not already an hypothesis with the same
+                  name in the scope. *)
+               if local_name_already_bound vname ctx env then
+                 raise
+                   (Rebound_hyp_notation_or_var_in_proof
+                      (vname, hyp.Parsetree.ast_loc)) ;
                let env' =
                  Env.ScopingEnv.add_value
                    ~toplevel: None vname Env.ScopeInformation.SBI_local
@@ -1218,12 +1270,16 @@ and scope_hyps ctx env hyps =
                ((Parsetree.H_hypothesis (vname, scoped_logical_expr)), env')
            | Parsetree.H_notation (vname, expr) ->
                let scoped_expr = scope_expr ctx accu_env expr in
+               if local_name_already_bound vname ctx env then
+                 raise
+                   (Rebound_hyp_notation_or_var_in_proof
+                      (vname, hyp.Parsetree.ast_loc)) ;
                let env' =
                  Env.ScopingEnv.add_value
                    ~toplevel: None vname Env.ScopeInformation.SBI_local
                    accu_env in
                ((Parsetree.H_notation (vname, scoped_expr)), env')
-          end) in
+         ) in
         (accu_env',
          { hyp with Parsetree.ast_desc = new_desc } :: accu_scoped_hyps))
       (env, [])
