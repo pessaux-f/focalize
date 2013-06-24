@@ -26,8 +26,8 @@ let focalize_short_version =
 
 let focalize_full_version =
   Printf.sprintf
-    "%s (Build: %s)" focalize_short_version
-    Build_stamp.build_stamp
+    "%s\nBuild date: %s\nLast commit SHA: %s"
+    focalize_short_version Build_stamp.build_date Build_stamp.last_commit
 ;;
 
 let print_focalize_version v =
