@@ -384,10 +384,11 @@ type is_parameter_instanciation =
 (*      is_parameter_instanciation                                            *)
 (** {b Descr} : Takes the index of the parameter we want to instanciate
     among the list of parameters of the species where this parameter
-    lives. Reminds that this parameter belongs to the species who DEFINED
+    lives. Remind that this parameter belongs to the species who DEFINED
     the method we are processing to create the collection generator (i.e. 
     the method whose method generator is inherited in the currently
-    compiled species).
+    compiled species and from -- by multiple steps possibly -- the species
+    in which the index is meaningful).
 
     When invocated, this function starts processing from the oldest species
     where the currently compiled method appeared, i.e. the species where
@@ -424,7 +425,9 @@ type is_parameter_instanciation =
 
     - [inheritance_steps] : The inheritance history describing where the
       currently processed method was defined and how it is propagated by
-      inheritance up to the currently compiled species.
+      inheritance up to the currently compiled species. In head are the most
+      recent steps, in tail the older. This list will be processed in reverse
+      order to "go back to the future".
 
     {b Rem} : Exported outside this module.                                    *) 
 (* ************************************************************************* *)
@@ -529,8 +532,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
                           inheritance tree for further instanciations.@."
                           index_of_instancier ;
                       rec_follow index_of_instancier rem_steps
-              | Types.SCK_toplevel_collection ->
-                  (begin
+              | Types.SCK_toplevel_collection -> (
                   (* The instanciation is done by a toplevel collection. In
                      this case, no need from now to continue walking up
                      along the inheritance history, there won't be anymore
@@ -540,19 +542,23 @@ let follow_instanciations_for_is_param ctx env original_param_index
                       "Final instanciation by toplevel collection.@." ;
                   IPI_by_toplevel_collection
                     (effective_mod, effective_name_as_string)
-                  end)
-              | Types.SCK_toplevel_species ->
-                  (begin
+                 )
+              | Types.SCK_toplevel_species -> (
                   (* The instanciation is done by a toplevel species. In this
                      case, no need from now to continue walking up along the
                      inheritance history, there won't be anymore
                      instanciations. *)
+                  (* [Unsure] [Fixme] Possibly cause of bug #31 !!! *)
+                  Format.eprintf "!!! WARNING !!! Using an illegal feature. \
+                    Attempt to inherite instantiating a parameter by a \
+                    toplevel species. This causes bug #31 and will be removed \
+                    soon.@." ;
                   if Configuration.get_verbose () then
                     Format.eprintf
                       "Final instanciation by toplevel species.@." ;
                   IPI_by_toplevel_species
                     (effective_mod, effective_name_as_string)
-                  end)
+                 )
              end) in
   (* We must walk the inheritance steps in reverse order since it is built
      with most recent steps in head. *)
