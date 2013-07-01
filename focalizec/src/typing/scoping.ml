@@ -1723,20 +1723,15 @@ and scope_termination_proof ctx env params_env tp =
       - [~toplevel_let] : Boolean telling if the let-definition is at
         toplevel. If not, then the let-definition is in fact a "let in"
         definition
-
       - [ctx] : Current scoping context.
-
       - [env] : Current scoping environment.
-
       - [let_def] : The let definition to scope.
 
     {b Ret} :
       - [Parsetree.let_def] : The scoped let definition.
-
       - [Env.ScopingEnv.t] : The initial scoping environment extended with
         the information bound to the identifiers defined in the
         let-definition.
-
       - [Parsetree.vname list] : The list of names bound by this definition.
 
     {b Exported} : No.                                                       *)
@@ -1827,20 +1822,19 @@ and scope_let_definition ~toplevel_let ctx env let_def =
              Parsetree.BB_logical
                (scope_logical_expr
                   ctx env_with_ty_constraints_variables logical_expr)
-           else
-             (begin
+           else (
              match logical_expr.Parsetree.ast_desc with
-              | Parsetree.Pr_expr expr ->
-                  (* Turn the logical_expr into an expression since we are not
-                     in a logical let. *)
-                  Parsetree.BB_computational
-                    (scope_expr ctx env_with_ty_constraints_variables expr)
-              | _ ->
-                  raise
-                    (Non_logical_let_cant_define_logical_expr
-                       (let_binding_descr.Parsetree.b_name,
-                        let_binding.Parsetree.ast_loc))
-             end)
+             | Parsetree.Pr_expr expr ->
+                 (* Turn the logical_expr into an expression since we are not
+                    in a logical let. *)
+                 Parsetree.BB_computational
+                   (scope_expr ctx env_with_ty_constraints_variables expr)
+             | _ ->
+                 raise
+                   (Non_logical_let_cant_define_logical_expr
+                      (let_binding_descr.Parsetree.b_name,
+                       let_binding.Parsetree.ast_loc))
+            )
        | Parsetree.BB_computational expr ->
            Parsetree.BB_computational
              (scope_expr ctx env_with_ty_constraints_variables expr)) in
@@ -1943,14 +1937,14 @@ and scope_logical_expr ctx env logical_expr =
               raise
                 (Ambiguous_logical_expression_or
                   (0, logical_expr.Parsetree.ast_loc))
-          | _ -> ());
+          | _ -> ()) ;
          (match p2.Parsetree.ast_desc with
           | Parsetree.Pr_imply (_, _)
           | Parsetree.Pr_equiv (_, _) ->
               raise
                 (Ambiguous_logical_expression_or
                   (1, logical_expr.Parsetree.ast_loc))
-          | _ -> ());
+          | _ -> ()) ;
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_or (scoped_p1, scoped_p2)
@@ -1971,7 +1965,7 @@ and scope_logical_expr ctx env logical_expr =
               raise
                 (Ambiguous_logical_expression_and
                   (1, logical_expr.Parsetree.ast_loc))
-          | _ -> ());
+          | _ -> ()) ;
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_and (scoped_p1, scoped_p2)
@@ -2609,6 +2603,8 @@ let scope_collection_def ctx env coll_def =
   (scoped_coll_def, final_env)
 ;;
 
+
+
 (** Scopes a collection, a let binding  or a property within a testing
    context in the same manner as [scope_phrase].  *)
 let scope_testing_context_phrase ctx env testing_context_phrase =
@@ -2636,25 +2632,27 @@ let scope_testing_context_phrase ctx env testing_context_phrase =
              name (Env.ScopeInformation.SBI_file ctx.current_unit) env in
          ((Parsetree.TstCtxPh_property scoped_property), env', ctx)
    ) in
-   ({ testing_context_phrase with Parsetree.ast_desc = new_desc }, new_env, new_ctx)
+   ({ testing_context_phrase with Parsetree.ast_desc = new_desc },
+    new_env, new_ctx)
 ;;
+
+
 
 (** {b Descr} : Scopes a testing definition. Returns the scoped
    definition and the initial environment extended with a binding
    for the collections inside. This second returned value might be
    useful to offer a common typing environement to all testing
    definitions *)
-let scope_testing ctx env (testing_def: Parsetree.testing_def_desc Parsetree.ast) =
+let scope_testing ctx env
+    (testing_def: Parsetree.testing_def_desc Parsetree.ast) =
   let testing_def_desc = testing_def.Parsetree.ast_desc in
   let testing_name = testing_def_desc.Parsetree.tstd_name in
   let testing_expr = testing_def_desc.Parsetree.tstd_body in
   let testing_expr_desc = testing_expr.Parsetree.ast_desc in
   let testing_context = testing_expr_desc.Parsetree.tst_context in
-
   if Configuration.get_verbose () then
     Format.eprintf "Scoping testing '%a'.@."
       Sourcify.pp_vname testing_name;
-
   (* We first deal with the context
      the testing defines. We treat it as a sequence of toplevel phrases.  *)
   let (scoped_testing_context,env') =
@@ -2671,9 +2669,7 @@ let scope_testing ctx env (testing_def: Parsetree.testing_def_desc Parsetree.ast
           (* Return the scoped phrase. *)
           testing_context_phrase')
         testing_context in
-    scoped_testing_context, !current_env
-  in
-
+    scoped_testing_context, !current_env in
   (* We then test whether a collection testing_name is among the
      collections defined in the testing definition. *)
   let loc = testing_def.Parsetree.ast_loc in
@@ -2687,7 +2683,6 @@ let scope_testing ctx env (testing_def: Parsetree.testing_def_desc Parsetree.ast
     Env.ScopingEnv.find_species
       ~loc
       ~current_unit: ctx.current_unit fake_ident env' in
-
   (* We then deal with the list of properties being tested. The scoping
      is done in the context of the tested collection. *)
   let _ctx_tested_coll = { ctx with
@@ -2695,18 +2690,14 @@ let scope_testing ctx env (testing_def: Parsetree.testing_def_desc Parsetree.ast
                Some
                  (Parsetree_utils.name_of_vname
                     testing_name) } in
-  let scoped_properties = 
-    (* TESTING TODO : for now, we do not look into the property list. *)
-   testing_expr_desc.Parsetree.tst_properties in
-
-  let scoped_parameters =
-    (* TESTING TODO : for now, we do not look into the parameters. *)
-    testing_expr_desc.Parsetree.tst_parameters in
-      
+  (* [Unsure] TESTING TODO : for now, we do not look into the property list. *)
+  let scoped_properties = testing_expr_desc.Parsetree.tst_properties in
+  (* TESTING TODO : for now, we do not look into the parameters. *)
+  let scoped_parameters = testing_expr_desc.Parsetree.tst_parameters in
   (* We reassemble everything *)
    let scoped_testing_expr_desc = {
-     Parsetree.tst_context = scoped_testing_context;
-     Parsetree.tst_properties = scoped_properties;
+     Parsetree.tst_context = scoped_testing_context ;
+     Parsetree.tst_properties = scoped_properties ;
      Parsetree.tst_parameters = scoped_parameters } in
    let scoped_testing_expr =
      { testing_expr with Parsetree.ast_desc = scoped_testing_expr_desc } in
@@ -2718,6 +2709,8 @@ let scope_testing ctx env (testing_def: Parsetree.testing_def_desc Parsetree.ast
      defined within the testing definition. *)
   (scoped_testing_def, env')
 ;;
+
+
 
 let scope_phrase ctx env phrase =
   let (new_desc, new_env, new_ctx) =
