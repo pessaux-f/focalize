@@ -149,30 +149,6 @@ let instanciate_IS_parameter_through_inheritance ctx env original_param_index
       field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
   (* Now really generate the code of by what to instanciate. *)
   (match instancied_with with
-   | Misc_common.IPI_by_toplevel_species (spec_mod, spec_name) ->
-       (* We found that a toplevel species provides this method because this
-          species is finally used as effective parameter. However, may be the
-          method on which we have a dependency is not directly in this
-          toplevel species.
-          May be it is in one of its parents. We must search in its inheritance
-          to determine exactly in which species each method is REALLY defined
-          (not only inherited). *)
-       List.iter
-         (fun (meth, _) ->
-           let (real_spec_mod, real_spec_name) =
-             Misc_common.find_toplevel_spe_defining_meth_through_inheritance
-               (Abstractions.EK_coq env)
-               ~current_unit ~start_spec_mod: spec_mod
-               ~start_spec_name: spec_name
-               ~method_name: meth in
-           let prefix =
-             if real_spec_mod = current_unit then real_spec_name ^ "."
-             else
-               real_spec_mod ^ "." ^ real_spec_name ^ "." ^ real_spec_mod ^
-               "." in
-           Format.fprintf out_fmter "@ %s%a"
-             prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-         meths_from_param
    | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
        let prefix =
          if coll_mod = current_unit then coll_name ^ "."
@@ -217,18 +193,6 @@ let instanciate_IS_parameter_carrier_through_inheritance ctx env
       field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
   (* Now really generate the code of by what to instanciate. *)
   match instancied_with with
-   | Misc_common.IPI_by_toplevel_species (spec_mod, spec_name) ->
-       Format.fprintf out_fmter "@ ";
-       if spec_mod <> current_unit then
-         Format.fprintf out_fmter "%s." spec_mod;
-       (* [Unsure] Eh oui, dans une toplevel species, on n'a rien comme
-         champ représentant "rep". Faudrait-il dans ce cas générer un champ
-          représentant la "rep", au cas où quelqu'un chercherait à instancier
-          par cette espèce toplevel complète ? *)
-       Format.fprintf out_fmter "%s.??????(" spec_name ;
-       if spec_mod <> current_unit then
-         Format.fprintf out_fmter "%s." spec_mod ;
-       Format.fprintf out_fmter "%s.me_as_carrier" spec_name
    | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
        Format.fprintf out_fmter "@ " ;
        if coll_mod <> current_unit then Format.fprintf out_fmter "%s." coll_mod;

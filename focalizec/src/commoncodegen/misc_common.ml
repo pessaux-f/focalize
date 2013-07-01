@@ -357,10 +357,6 @@ let follow_instanciations_for_in_param ctx env original_param_name
         compilation scheme using the
         "Module_representing_collection.effective_collection.fct"
         indirection.
-      - [IPI_by_toplevel_species] : The species parameter was instanciated
-        by a toplevel species fully defined. In this case, the way to
-        reach functions to apply to the method generator is directly based
-        on the indirection "Module_representing_species.fct".
       - [IPI_by_species_parameter] : The species parameter was instanciated
         by a species parameter of the species who inherits. In this case,
         we must use the extra parameter added to the collection generator
@@ -371,7 +367,6 @@ let follow_instanciations_for_in_param ctx env original_param_name
 (* ************************************************************************* *)
 type is_parameter_instanciation =
   | IPI_by_toplevel_collection of Types.type_collection
-  | IPI_by_toplevel_species of Types.type_collection
   | IPI_by_species_parameter of Env.TypeInformation.species_param
 ;;
 
@@ -544,20 +539,10 @@ let follow_instanciations_for_is_param ctx env original_param_index
                     (effective_mod, effective_name_as_string)
                  )
               | Types.SCK_toplevel_species -> (
-                  (* The instanciation is done by a toplevel species. In this
-                     case, no need from now to continue walking up along the
-                     inheritance history, there won't be anymore
-                     instanciations. *)
-                  (* [Unsure] [Fixme] Possibly cause of bug #31 !!! *)
-                  Format.eprintf "!!! WARNING !!! Using an illegal feature. \
-                    Attempt to inherite instantiating a parameter by a \
-                    toplevel species. This causes bug #31 and will be removed \
-                    soon.@." ;
-                  if Configuration.get_verbose () then
-                    Format.eprintf
-                      "Final instanciation by toplevel species.@." ;
-                  IPI_by_toplevel_species
-                    (effective_mod, effective_name_as_string)
+                  (* The instanciation is done by a toplevel species. This is
+                     unsafe as shows bug #31. However, this should have already
+                     been rejected at scoping stage. *)
+                  assert false
                  )
              end) in
   (* We must walk the inheritance steps in reverse order since it is built

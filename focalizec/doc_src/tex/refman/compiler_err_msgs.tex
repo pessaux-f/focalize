@@ -515,7 +515,7 @@ the current defined species.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{A  "is"  parameter can only be instantiated by an identifier of a collection.}
+\section*{A "is" parameter can only be instantiated by an identifier of a collection.}
 
 {\em Description}: In a species expression, a parametrised species by
 an entity parameter ({\tt is}-parameter) is provided an effective
@@ -528,6 +528,20 @@ argument that is not a collection identifier.
 % {\tt in}-parameter) must be instantiated by a {\tt collection}
 % identifier.
 {\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Illegal use of toplevel species '$S$' as effective argument.}
+
+{\em Description}: Effective parameter in species expressions (for inheritance
+or collection implementation) can only be collections or collection
+parameters. In the present case, a toplevel species was used instead which
+is inconsistent.
+
+{\em Hints}: None.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Collection '$s_1$' is not compatible with '$s_2$'. In method

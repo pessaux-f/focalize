@@ -299,6 +299,13 @@ let print_focalize_exception ppf = function
         "%a:@\n@[%tA@ \"is\"@ parameter@ can@ only@ be@ an@ identifier@ \
          of@ a@ collection.@]@."
         Location.pp_location at header
+  | Scoping.Toplevel_species_as_effective_param (sp_ident, at) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tIllegal@ use@ of@ toplevel@ species@ '%t%a%t'@ as@ \
+        effective@ argument.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_ident sp_ident
+        Handy.pp_reset_effects
   | Infer.Not_subspecies_conflicting_field (c1, c2, field, ty1, ty2, at) ->
       Format.fprintf ppf
         "%a:@\n@[%tCollection@ '%t%a%t'@ is@ not@ a@ subspecies@ \

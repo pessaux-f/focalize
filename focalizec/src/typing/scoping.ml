@@ -231,6 +231,18 @@ exception Proof_by_species_property of (Parsetree.expr_ident * Location.t) ;;
 
 
 
+(* ************************************************************************** *)
+(** {b Descr} : Exception raised when a toplevel species is used as effective
+    parameter in a species expression.
+
+    {b Exported} : Yes.                                                       *)
+(* ************************************************************************** *)
+exception Toplevel_species_as_effective_param of
+  (Parsetree.ident * Location.t)
+;;
+
+
+
 (* ********************************************************************** *)
 (** {b Descr} : Datastructure recording various the information required
     and propagated during the scoping pass. It is much more convenient to
@@ -2216,8 +2228,14 @@ let rec scope_species_fields ctx env = function
 ;;
 
 
+
 (** Species parameters arguments can only be atomic names of species. Hence
-    they can only look like 0-ary sum type value constructors expressions. *)
+    they can only look like 0-ary sum type value constructors expressions.
+
+    Attention, to fix bug #31, oen must ensure that effective arguments are
+    not toplevel species. In effect, only collection or collection parameters
+    are safe to be used as effective parameters in a species expression
+    (either for inheritance or collection-implement). *)
 let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
   | Parsetree.E_self -> initial_expr
@@ -2225,7 +2243,7 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
       let Parsetree.CI glob_ident = cstr_expr.Parsetree.ast_desc in
       (* Ensure that the mentionned hosting compilation unit of the species was
          mentionned to be "used" or "opened". *)
-      ensure_ident_allowed_qualified ctx glob_ident;
+      ensure_ident_allowed_qualified ctx glob_ident ;
       let species_info =
         Env.ScopingEnv.find_species
           ~loc: glob_ident.Parsetree.ast_loc
@@ -2234,7 +2252,13 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
          parameter, then the hosting file is the current compilation unit. *)
       let hosting_file =
         (match species_info.Env.ScopeInformation.spbi_scope with
-         | Env.ScopeInformation.SPBI_file (n, _) -> n
+         | Env.ScopeInformation.SPBI_file (n, is_coll) ->
+             (* Forbid toplevel species as effective argument. *)
+             if not is_coll then
+               raise
+                 (Toplevel_species_as_effective_param
+                    (glob_ident, glob_ident.Parsetree.ast_loc)) ;
+             n
          | Env.ScopeInformation.SPBI_parameter -> ctx.current_unit) in
       let scoped_glob_ident = {
         glob_ident with
