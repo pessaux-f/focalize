@@ -153,7 +153,6 @@ species Relations_by_sets_of_triples(A is Setoid, B is Setoid, C is Setoid,
                                     property P!belongs_left_substitution_rule,
                                              T!equal_symmetric,
                                              T!equal_transitive
-vvvvvv
                    <4>f conclude
               <3>f qed by step <3>2 
                           property P!is_contained_spec
@@ -180,6 +179,65 @@ species Triples_by_pairs(A is Setoid, B is Setoid, C is Setoid) =
  proof of is_second = assumed;
  proof of is_third = assumed;
 
+
+end;;
+
+
+
+(* ceci ressemble beaucoup à cartesian product *)
+species Abstract_pairs(A is Setoid, B is Setoid) =
+
+  inherit Setoid;
+
+  signature first: Self -> A;
+  signature second: Self -> B;
+
+  signature make: A -> B -> Self;
+
+  property is_first : all a: A, all b: B,
+    A!equal(first(make(a, b)), a);
+
+  property is_second : all a: A, all b: B, 
+    B!equal(second(make(a, b)), b);
+
+  let equal(x, y) = A!equal(first(x), first(y)) &&
+                    B!equal(second(x), second(y)) ;
+
+  theorem equal_spec: all x y: Self,
+        !equal(x, y) 
+   <-> ( A!equal(first(x), first(y)) /\
+         B!equal(second(x), second(y)) )
+     proof = by definition of equal;
+
+  proof of equal_reflexive =
+    by property equal_spec,
+	        A!equal_reflexive, B!equal_reflexive
+  ;
+
+  proof of equal_symmetric =
+   by property equal_spec,
+               A!equal_symmetric, B!equal_symmetric
+  ;
+
+  proof of equal_transitive =
+      by property equal_spec,
+	          A!equal_transitive, B!equal_transitive
+  ;
+
+end;;
+
+(* suite de cartesian product *)
+species Pairs_by_pairs(A is Setoid, B is Setoid) =
+ inherit Abstract_pairs(A, B) ;
+ representation = A * B ;
+ let first (t: Self) = fst(t) ;  
+ let second (t: Self) = snd(t);
+ let make(a, b):Self = pair(a, b);
+
+ let element = pair(A!element, B!element);
+
+ proof of is_first = assumed;
+ proof of is_second = assumed;
 
 end;;
 
