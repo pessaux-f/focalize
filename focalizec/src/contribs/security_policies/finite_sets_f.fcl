@@ -32,8 +32,9 @@ species List_utils(S is Setoid)=
   | h::t -> 
      if S!equal(s, h)
      then true
-     else l_belongs(s, t)
-  ;
+     else l_belongs(s, t);
+(*  termination proof = structural l; BUG REPORT : la preuve ligne 77 ne passe
+plus avec une definition structurelle *)
 
   theorem cons_spec: all t: list(S), all s h: S, 
     (l_belongs(s, t) \/ S!equal(s, h)) <-> l_belongs(s, h::t)

@@ -1,11 +1,7 @@
-(*** en chantier, a compiler, trier... ***)
-
 open "basics";;
 open "sets";;
 open "finite_sets_f";;
-open "utils";;
-
-(*** moved from util, be careful ***)
+open "listes";;
 
 (** entities of Binary_relations are binary relations *)
 
@@ -14,7 +10,13 @@ species Binary_relations(A is Setoid, B is Setoid) =
   inherit Setoid ;
 
   signature relation: Self -> A -> B -> bool;
-  
+
+  property relation_compatible_left : all r: Self, all a1 a2: A, all b: B,
+    A!equal(a1, a2) -> (relation(r, a1, b) -> relation(r, a2, b));
+
+  property relation_compatible_right : all r: Self, all a: A, all b1 b2: B,
+    B!equal(b1, b2) -> (relation(r, a, b1) -> relation(r, a, b2));
+
   signature is_contained: Self -> Self -> bool ;
 
   property is_contained_spec: all r_1 r_2: Self, 
@@ -45,6 +47,15 @@ species Binary_relations(A is Setoid, B is Setoid) =
     all a1 a2 : A, all b : B,
     ( relation (r, a1, b) /\ relation (r, a2, b) ) -> A!equal (a1, a2);
 
+  theorem is_left_unique_spec : all r: Self, 
+   (all a1 a2 : A, all b : B,
+     ( relation (r, a1, b) /\ relation (r, a2, b) ) -> A!equal (a1, a2))
+   <-> is_left_unique (r)
+  proof = by definition of is_left_unique;
+
+(*** TODO : add spec to all def. *)
+
+
   logical let is_right_unique (r: Self) =
     all a : A, all b1 b2 : B,
     ( relation (r, a, b1) /\ relation (r, a, b2) ) -> B!equal (b1, b2);
@@ -54,6 +65,8 @@ species Binary_relations(A is Setoid, B is Setoid) =
 
   logical let is_right_total (r: Self) =
     all b : B, ex a : A, relation (r, a, b);
+
+(* TODO : a finir *)
 
 end;;
 
@@ -74,7 +87,7 @@ species Composition_relations(A is Setoid, B is Setoid, C is Setoid,
 
 end;;
 
-species Binary_rel_over(A is Setoid)=
+species Internal_binary_relations(A is Setoid, L is Utils(A))=
   
   inherit Binary_relations(A, A);
 
@@ -93,29 +106,151 @@ species Binary_rel_over(A is Setoid)=
   signature rt_closure : Self -> Self;
 
   property rt_closure_spec : all r: Self, all a1 a2: A,
-                          relation(rt_closure(r), a1, a2) 
-                          <-> ( A!equal(a1, a2) \/
-                                (ex a3: A, (relation(r, a1, a3) /\ relation(rt_closure(r), a3, a2))));
-(*
+       relation(rt_closure(r), a1, a2) 
+   <-> ( A!equal(a1, a2) \/
+         (ex a3: A, (relation(r, a1, a3) /\ relation(rt_closure(r), a3, a2))));
+
+  let rec rt_closure_aux(r: Self, a1: A, a2: A, l: list(A)) : bool =
+   match l with
+    | [] -> A!equal(a1, a2)
+    | h::t -> relation(r, a1, h) && rt_closure_aux(r, h, a2, t)
+   termination proof = structural l;
+
+  theorem rt_closure_compatible_left: 
+   all r: Self, all a1 a2 a3: A, all l: list(A),
+   A!equal(a1, a2) -> rt_closure_aux(r, a1, a3, l) 
+   -> rt_closure_aux(r, a2 , a3, l)
+  proof = assumed;
+
+  theorem rt_closure_aux_trans: all r: Self, all a1 a2 a3: A, all l1 l2: list(A),
+     (rt_closure_aux(r, a1, a2, l1) && rt_closure_aux(r, a2, a3, l2))
+     -> rt_closure_aux(r, a1, a3, L!append(l1, l2))
+  proof = 
+  <1>1 assume r: Self,
+       assume a1 a2 a3: A,
+       prove all l1 l2: list(A),
+             (rt_closure_aux(r, a1, a2, l1) && rt_closure_aux(r, a2, a3, l2))
+             -> rt_closure_aux(r, a1, a3, L!append(l1, l2))
+       <2>1 prove all l2: list(A),
+            (rt_closure_aux(r, a1, a2, []) && rt_closure_aux(r, a2, a3, l2))
+            -> rt_closure_aux(r, a1, a3, L!append([], l2))
+            <3>1 assume l2: list(A),
+                 hypothesis H1: rt_closure_aux(r, a1, a2, []),
+                 hypothesis H2: rt_closure_aux(r, a2, a3, l2),
+                 prove rt_closure_aux(r, a1, a3, L!append([], l2))
+                 <4>1 prove A!equal(a1, a2)
+                      by hypothesis H1
+                         definition of rt_closure_aux
+                 <4>2 prove rt_closure_aux(r, a1, a3, l2)
+                      by property rt_closure_compatible_left,
+                                  A!equal_symmetric
+                         hypothesis H2
+                         step <4>1
+                 <4>3 prove L!append([], l2) = l2
+                      by property L!append_def
+                 <4>f qed by step <4>2, <4>3
+            <3>f conclude
+       <2>2 prove 
+                all h: A,
+                all t: list(A),
+                (all l2: list(A),
+                 (rt_closure_aux(r, a1, a2, t) && rt_closure_aux(r, a2, a3, l2))
+                 -> rt_closure_aux(r, a1, a3, L!append(t, l2)))
+                ->
+                (all l2: list(A),
+                 (rt_closure_aux(r, a1, a2, h::t) 
+                   && rt_closure_aux(r, a2, a3, l2))
+                 -> rt_closure_aux(r, a1, a3, L!append(h::t, l2)))
+            <3>1 assume h: A,
+                 assume t: list(A),
+                 hypothesis HI: (all l2: list(A),
+                                (rt_closure_aux(r, a1, a2, t) 
+                                 && rt_closure_aux(r, a2, a3, l2))
+                                -> rt_closure_aux(r, a1, a3, L!append(t, l2))),
+                 assume l2: list(A),
+                 hypothesis H1: rt_closure_aux(r, a1, a2, h::t) ,
+                 hypothesis H2: rt_closure_aux(r, a2, a3, l2),
+                 prove rt_closure_aux(r, a1, a3, L!append(h::t, l2))
+                 assumed
+            <3>f conclude
+       <2>f conclude
+  <1>f conclude 
+ ;
+
+
+
+
+  theorem rt_closure_aux_exist: all r: Self, all a1 a2: A,
+       relation(rt_closure(r), a1, a2) 
+    <-> (ex l: list(A), rt_closure_aux(r, a1, a2, l))
+   proof = assumed
+;
+
   theorem rt_closure_is_reflexive : all r: Self,
     is_reflexive(rt_closure(r))
-  proof = by definition of is_reflexive property rt_closure_spec ;
+  proof = by definition of is_reflexive 
+          property rt_closure_spec, relation_compatible_left,
+                   A!equal_reflexive
+  ;
 
   theorem rt_closure_is_transitive : all r: Self,
     is_transitive(rt_closure(r))
-  proof = by definition of is_transitive property rt_closure_spec ; 
+  proof = assumed;
+(*
+   <1>1 assume r: Self, 
+        assume a1 a2 a3 :A,
+        hypothesis H1: relation(rt_closure(r), a1, a2),
+        hypothesis H2: relation(rt_closure(r), a2, a3),
+        prove relation(rt_closure(r), a1, a3)
+        <2>1 hypothesis He: A!equal(a1, a2),
+             prove relation(rt_closure(r), a1, a3)
+             by property A!equal_symmetric, relation_compatible_left
+                hypothesis He, H2
+        <2>2 hypothesis He: 
+             (ex a4: A, (relation(r, a1, a4) 
+                        /\ relation(rt_closure(r), a4, a2))),
+             prove relation(rt_closure(r), a1, a3)
+             <3>1 hypothesis Hhe: A!equal(a2, a3),
+                  prove relation(rt_closure(r), a1, a3)
+                  by property A!equal_symmetric, relation_compatible_right
+                     hypothesis Hhe, H1
+             <3>2 hypothesis Hhe: 
+                  (ex a5: A, (relation(r, a2, a5) 
+                          /\ relation(rt_closure(r), a5, a3))),
+                  prove relation(rt_closure(r), a1, a3)
+                  <4>1 assume a4: A, 
+                       assume a5: A,
+                       hypothesis Hhh1: relation(r, a1, a4) ,
+                       hypothesis Hhh2: relation(rt_closure(r), a4, a2),
+                       hypothesis Hhh3: relation(r, a2, a5) ,
+                       hypothesis Hhh4: relation(rt_closure(r), a5, a3),
+                       prove relation(rt_closure(r), a1, a3)
+                       <5>1 
+                  <4>f qed by step <4>1 
+                              hypothesis He, Hhe
+             <3>f qed by step <3>1, <3>2
+                         property rt_closure_spec
+                         hypothesis H2
+        <2>f qed by step <2>1, <2>2
+                    property rt_closure_spec
+                    hypothesis H1
+   <1>f qed by step <1>1
+               definition of is_transitive
+;
+*)
+ 
 
 (* pb de congruence de A!equal *)
-*)
-  property rt_closure_is_reflexive : all r: Self,
+
+(*  property rt_closure_is_reflexive : all r: Self,
     is_reflexive(rt_closure(r)) ;
 
   property rt_closure_is_transitive : all r: Self,
     is_transitive(rt_closure(r)) ;
-
+*)
 end;;
 
-
+(*
 species Relations_by_sets_of_pairs(A is Setoid, B is Setoid,
                                      T is Abstract_pairs(A, B),
                                      P is Finite_parts(T)) =
@@ -229,5 +364,6 @@ end;;
 
 
 
-(*** draft ***)
 
+
+*)
