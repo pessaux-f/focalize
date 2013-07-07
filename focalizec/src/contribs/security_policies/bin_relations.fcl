@@ -53,20 +53,48 @@ species Binary_relations(A is Setoid, B is Setoid) =
    <-> is_left_unique (r)
   proof = by definition of is_left_unique;
 
-(*** TODO : add spec to all def. *)
-
-
   logical let is_right_unique (r: Self) =
     all a : A, all b1 b2 : B,
     ( relation (r, a, b1) /\ relation (r, a, b2) ) -> B!equal (b1, b2);
 
+  theorem is_right_unique_spec : all r: Self,
+    (all a : A, all b1 b2 : B,
+      ( relation (r, a, b1) /\ relation (r, a, b2) ) -> B!equal (b1, b2))
+    <-> is_right_unique (r)
+  proof = by definition of is_right_unique;
+    
   logical let is_left_total (r: Self) =
     all a : A, ex b : B, relation (r, a, b);
+
+  theorem is_left_total_spec : all r: Self,
+    (all a : A, ex b : B, relation (r, a, b))
+    <-> is_left_total(r)
+  proof = by definition of is_left_total;
 
   logical let is_right_total (r: Self) =
     all b : B, ex a : A, relation (r, a, b);
 
+  theorem is_right_total_spec : all r: Self,
+    (all b : B, ex a : A, relation (r, a, b))
+    <-> is_right_total(r)
+  proof = by definition of is_right_total;
+
+  logical let is_injective (r: Self) =
+    is_left_unique(r);
+
+  theorem is_injective_spec : all r: Self,
+    is_injective(r) <-> is_left_unique(r)
+  proof = by definition of is_injective;
+
+  logical let is_deterministic (r: Self) =
+    is_right_unique(r);
+
+  theorem is_deterministic_spec : all r: Self,
+    is_deterministic(r) <-> is_right_unique(r)
+  proof = by definition of is_deterministic;
+
 (* TODO : a finir *)
+(* surjective, functionnal etc... *)
 
 end;;
 
@@ -116,10 +144,10 @@ species Internal_binary_relations(A is Setoid, L is Utils(A))=
     | h::t -> relation(r, a1, h) && rt_closure_aux(r, h, a2, t)
    termination proof = structural l;
 
-  theorem rt_closure_compatible_left: 
+  theorem rt_closure_aux_compatible_left: 
    all r: Self, all a1 a2 a3: A, all l: list(A),
-   A!equal(a1, a2) -> rt_closure_aux(r, a1, a3, l) 
-   -> rt_closure_aux(r, a2 , a3, l)
+   A!equal(a1, a2) -> (rt_closure_aux(r, a1, a3, l) 
+   -> rt_closure_aux(r, a2 , a3, l))
   proof = assumed;
 
   theorem rt_closure_aux_trans: all r: Self, all a1 a2 a3: A, all l1 l2: list(A),
@@ -142,7 +170,7 @@ species Internal_binary_relations(A is Setoid, L is Utils(A))=
                       by hypothesis H1
                          definition of rt_closure_aux
                  <4>2 prove rt_closure_aux(r, a1, a3, l2)
-                      by property rt_closure_compatible_left,
+                      by property rt_closure_aux_compatible_left,
                                   A!equal_symmetric
                          hypothesis H2
                          step <4>1
@@ -239,15 +267,6 @@ species Internal_binary_relations(A is Setoid, L is Utils(A))=
 ;
 *)
  
-
-(* pb de congruence de A!equal *)
-
-(*  property rt_closure_is_reflexive : all r: Self,
-    is_reflexive(rt_closure(r)) ;
-
-  property rt_closure_is_transitive : all r: Self,
-    is_transitive(rt_closure(r)) ;
-*)
 end;;
 
 (*
