@@ -126,11 +126,19 @@ species Internal_binary_relations(A is Setoid, L is Utils(A))=
   logical let is_reflexive(r: Self) = 
      all x: A, relation(r, x, x);
 
+  theorem is_reflexive_spec : all r: Self,
+     (all x: A, relation(r, x, x)) <-> is_reflexive(r)
+  proof = by definition of is_reflexive ;
+
   logical let is_transitive(r: Self) = 
      all x y z : A, (relation(r, x, y) /\ relation(r, y, z))
        -> relation(r, x, z) ;  
 
-
+  theorem is_transitive_spec : all r: Self,
+    (all x y z : A, (relation(r, x, y) /\ relation(r, y, z))
+       -> relation(r, x, z))
+    <-> is_transitive(r)
+  proof = by definition of is_transitive ;
   
   signature rt_closure : Self -> Self;
 
@@ -180,7 +188,7 @@ species Internal_binary_relations(A is Setoid, L is Utils(A))=
    <1>f conclude ;
 
   theorem rt_closure_aux_trans: all r: Self, all a1 a2 a3: A, all l1 l2: list(A),
-     (rt_closure_aux(r, a1, a2, l1) && rt_closure_aux(r, a2, a3, l2))
+     (rt_closure_aux(r, a1, a2, l1) /\ rt_closure_aux(r, a2, a3, l2))
      -> rt_closure_aux(r, a1, a3, L!append(l1, l2))
   proof = 
   <1>1 assume r: Self,
@@ -245,56 +253,28 @@ species Internal_binary_relations(A is Setoid, L is Utils(A))=
 
   theorem rt_closure_is_reflexive : all r: Self,
     is_reflexive(rt_closure(r))
-  proof = by definition of is_reflexive 
-          property rt_closure_spec, relation_compatible_left,
+(* [tl] : I use is_reflexive_spec rather than the definition so the
+proof won't be canceled in case of redefinition of is_reflexive *) 
+  proof = by property is_reflexive_spec, rt_closure_spec, relation_compatible_left,
                    A!equal_reflexive
   ;
 
   theorem rt_closure_is_transitive : all r: Self,
     is_transitive(rt_closure(r))
-  proof = assumed;
-(*
-   <1>1 assume r: Self, 
-        assume a1 a2 a3 :A,
-        hypothesis H1: relation(rt_closure(r), a1, a2),
-        hypothesis H2: relation(rt_closure(r), a2, a3),
-        prove relation(rt_closure(r), a1, a3)
-        <2>1 hypothesis He: A!equal(a1, a2),
-             prove relation(rt_closure(r), a1, a3)
-             by property A!equal_symmetric, relation_compatible_left
-                hypothesis He, H2
-        <2>2 hypothesis He: 
-             (ex a4: A, (relation(r, a1, a4) 
-                        /\ relation(rt_closure(r), a4, a2))),
-             prove relation(rt_closure(r), a1, a3)
-             <3>1 hypothesis Hhe: A!equal(a2, a3),
-                  prove relation(rt_closure(r), a1, a3)
-                  by property A!equal_symmetric, relation_compatible_right
-                     hypothesis Hhe, H1
-             <3>2 hypothesis Hhe: 
-                  (ex a5: A, (relation(r, a2, a5) 
-                          /\ relation(rt_closure(r), a5, a3))),
-                  prove relation(rt_closure(r), a1, a3)
-                  <4>1 assume a4: A, 
-                       assume a5: A,
-                       hypothesis Hhh1: relation(r, a1, a4) ,
-                       hypothesis Hhh2: relation(rt_closure(r), a4, a2),
-                       hypothesis Hhh3: relation(r, a2, a5) ,
-                       hypothesis Hhh4: relation(rt_closure(r), a5, a3),
-                       prove relation(rt_closure(r), a1, a3)
-                       <5>1 
-                  <4>f qed by step <4>1 
-                              hypothesis He, Hhe
-             <3>f qed by step <3>1, <3>2
-                         property rt_closure_spec
-                         hypothesis H2
-        <2>f qed by step <2>1, <2>2
-                    property rt_closure_spec
-                    hypothesis H1
-   <1>f qed by step <1>1
-               definition of is_transitive
-;
-*)
+  proof = 
+   <1>1 assume r: Self, assume x y z: A,  
+        hypothesis H1: (relation(rt_closure(r), x, y) /\ relation(rt_closure(r), y, z)),
+        prove relation(rt_closure(r), x, z)
+        <2>1 prove (ex l: list(A), rt_closure_aux(r, x, z, l))	
+           <3>1 prove (ex l1 l2: list(A), (rt_closure_aux(r, x, y, l1) /\ rt_closure_aux(r, y, z, l2)))
+                by hypothesis H1 property rt_closure_aux_exist
+           <3>2 assume l1 l2: list(A),
+                hypothesis H2: (rt_closure_aux(r, x, y, l1) /\ rt_closure_aux(r, y, z, l2)),
+                prove rt_closure_aux(r, x, z, L!append(l1, l2))
+                by property rt_closure_aux_trans hypothesis H2
+           <3>f conclude
+        <2>f qed by step <2>1 property rt_closure_aux_exist
+   <1>f qed by step <1>1 property is_transitive_spec ;
  
 end;;
 
