@@ -41,7 +41,8 @@ species Binary_relations(A is Setoid, B is Setoid) =
   let element = empty;
 
   (* TODO : aller chercher autres les proprietes dans temp/relations_mutable.fcl *)
-  (* + union et intersection... *)
+  (* + union et intersection... + full par rapport a empty,         *)
+  (*           mais pk pas heriter d'un (partial set de) superset ? *)
 
   logical let is_left_unique (r: Self) =
     all a1 a2 : A, all b : B,
@@ -148,7 +149,35 @@ species Internal_binary_relations(A is Setoid, L is Utils(A))=
    all r: Self, all a1 a2 a3: A, all l: list(A),
    A!equal(a1, a2) -> (rt_closure_aux(r, a1, a3, l) 
    -> rt_closure_aux(r, a2 , a3, l))
-  proof = assumed;
+  proof = 
+   <1>1 assume r: Self,
+        prove all l: list(A),
+          all a1 a2 a3: A,
+          A!equal(a1, a2) -> ((rt_closure_aux(r, a1, a3, l) 
+            -> rt_closure_aux(r, a2 , a3, l)))
+        <2>1 prove all a1 a2 a3: A,
+             A!equal(a1, a2) -> ((rt_closure_aux(r, a1, a3, []) 
+               -> rt_closure_aux(r, a2 , a3, [])))
+             by definition of rt_closure_aux
+                property relation_compatible_left, A!equal_symmetric, A!equal_transitive
+        <2>2 assume h: A, assume t: list(A),
+             prove all a1 a2 a3: A,
+                     A!equal(a1, a2) -> ((rt_closure_aux(r, a1, a3, h::t) 
+                       -> rt_closure_aux(r, a2 , a3, h::t)))
+             <3>1 assume a1 a2 a3: A,
+                  hypothesis H2: A!equal(a1, a2),
+                  hypothesis H3: rt_closure_aux(r, a1, a3, h::t),
+                  prove rt_closure_aux(r, a2 , a3, h::t)
+                  <4>0 prove relation(r, a1, h)
+                       by hypothesis H3 definition of rt_closure_aux
+		  <4>1 prove relation (r, a2, h)
+                       by step <4>0 hypothesis H2 property relation_compatible_left
+                  <4>2 prove rt_closure_aux(r, h, a3, t)
+                       by hypothesis H3 definition of rt_closure_aux
+		  <4>f qed by step <4>1, <4>2 definition of rt_closure_aux
+             <3>f conclude
+        <2>f conclude
+   <1>f conclude ;
 
   theorem rt_closure_aux_trans: all r: Self, all a1 a2 a3: A, all l1 l2: list(A),
      (rt_closure_aux(r, a1, a2, l1) && rt_closure_aux(r, a2, a3, l2))
