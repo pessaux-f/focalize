@@ -38,6 +38,45 @@ species Binary_relations(A is Setoid, B is Setoid) =
 
   signature empty: Self;
 
+  property empty_spec : all a : A, all b : B, ~ relation (empty, a, b);
+
+  signature full: Self;
+
+  property full_spec : all a : A, all b : B, relation (full, a, b);
+
+  signature singleton : A -> B -> Self;
+
+  property singleton_spec :
+    all a1 : A, all b1 : B,
+        all a2 : A, all b2 : B,
+      relation (singleton (a1, b1), a2, b2) <->
+      ( A!equal (a1, a2) && B!equal (b1, b2) );
+
+  signature union : Self -> Self -> Self;
+
+  property union_spec :
+    all r1 r2 : Self,
+      all a : A, all b : B,
+      relation (union (r1, r2), a, b) <->
+      ( relation (r1, a, b) \/ relation (r2, a, b) );
+
+  signature inter : Self -> Self -> Self;
+
+  property inter_spec :
+    all r1 r2 : Self,
+      all a : A, all b : B,
+      relation (inter (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ relation (r2, a, b) );
+
+  signature diff : Self -> Self -> Self;
+
+   property diff_spec :
+    all r1 r2 : Self,
+      all a : A, all b : B,
+      relation (diff (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+
   let element = empty;
 
   (* TODO : aller chercher autres les proprietes dans temp/relations_mutable.fcl *)
@@ -99,20 +138,22 @@ species Binary_relations(A is Setoid, B is Setoid) =
 
 end;;
 
-species Composition_relations(A is Setoid, B is Setoid, C is Setoid, 
-                              R_AB is Binary_relations(A, B),
-                              R_BC is Binary_relations(B, C)) =
-  inherit Binary_relations(A, C);
+
+
+
+
+species Composition_relations(AA is Setoid, BB is Setoid, CC is Setoid, 
+                              R_AB is Binary_relations(AA, BB),
+                              R_BC is Binary_relations(BB, CC)) =
+  inherit Binary_relations(AA, CC);
 
   signature compose_rel : R_AB -> R_BC -> Self;
   
-  (* There is an incredible (ununderstandable) typing bug ! 
   property compose_rel_spec : 
-  all r1: R_AB, all r2: R_BC, all a: A, all c: C, 
+  all r1: R_AB, all r2: R_BC, all a: AA, all c: CC, 
      relation(compose_rel(r1, r2), a, c)
-     <-> (ex b: B, (R_AB!relation(r1, a, b) /\ R_BC!relation(r2, b, c))) 
+     <-> (ex b: BB, (R_AB!relation(r1, a, b) /\ R_BC!relation(r2, b, c))) 
   ;
-  *)
 
 end;;
 

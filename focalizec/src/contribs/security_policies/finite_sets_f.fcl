@@ -1,5 +1,6 @@
 open "basics";;
 open "sets";;
+open "listes";;
 
 species Finite_set =
 
@@ -23,7 +24,7 @@ species Finite_set =
 
 end;;
 
-
+(*
 species List_utils(S is Setoid)=
   inherit Basic_object;
   
@@ -33,8 +34,11 @@ species List_utils(S is Setoid)=
      if S!equal(s, h)
      then true
      else l_belongs(s, t);
-(*  termination proof = structural l; BUG REPORT : la preuve ligne 77 ne passe
+(*  termination proof = structural l; BUG REPORT : la preuve ligne 77+x ne passe
 plus avec une definition structurelle *)
+
+  theorem empty_spec: all s:S, ~(l_belongs(s, []))
+  proof = by definition of l_belongs;
 
   theorem cons_spec: all t: list(S), all s h: S, 
     (l_belongs(s, t) \/ S!equal(s, h)) <-> l_belongs(s, h::t)
@@ -98,6 +102,7 @@ plus avec une definition structurelle *)
 
 
 end;;
+*)
 
 species Finite_parts(S is Setoid) =
 
@@ -105,11 +110,19 @@ species Finite_parts(S is Setoid) =
 
   signature cardinal: Self -> int;
   signature empty : Self;
+  signature is_empty : Self -> bool;
   signature add : Self -> S -> Self;
   signature belongs: S -> Self -> bool;
   signature release : Self -> S -> Self;
   signature to_list : Self -> list(S) ;
   signature is_contained : Self -> Self -> bool;
+
+(*
+  property inductive_scheme_part: all p: (Self -> prop),
+      p(empty) 
+   -> (all s: S, all x:Self, p(x) -> p(add(x, s)))
+   -> all x: Self, p(x); 
+*)
 
   property belongs_left_substitution_rule: all s_1 s_2: S, all r: Self,
        S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r);
@@ -117,14 +130,30 @@ species Finite_parts(S is Setoid) =
   property empty_spec :
     all t: S, ~ belongs(t, empty);
 
+  property is_empty_empty : 
+     is_empty (empty); 
+
   property add_spec :
     all x : Self, all t_1 t_2 : S,
     belongs(t_1, add (x, t_2)) <->
       (S!equal(t_1, t_2) \/ belongs(t_1, x));
 
+  theorem add_contains1: 
+    all c: Self, all e : S, belongs (e, (add (c, e))) 
+    proof = assumed;
+  
+  theorem add_contains2: 
+    all c: Self, all e : S, all x : S, ~ (S!equal(e, x)) -> 
+       belongs (x, (add (c, e))) <-> belongs (x, c)
+  proof = assumed;
+
   property release_spec :
     all x : Self, all t_1 t_2 : S,
     belongs(t_1, release(x, t_2)) <-> (S!different (t_1, t_2) /\ belongs(t_1, x));
+
+  property release_contains: 
+    all c: Self, all e : S, all x : S, ~~(S!equal (e, x)) -> 
+       (belongs (x, (release (c, e))) <-> belongs (x, c));
 
   property is_contained_spec :
     all x y : Self,
@@ -147,13 +176,19 @@ species Finite_parts(S is Setoid) =
                                 property is_contained_transitive;
   proof of equal_symmetric = by definition of equal;
 
-      
+  property to_list_empty : 
+    all l : Self, is_empty(l) <-> to_list(l) = []
+; 
+  
+  property unique_belongs : all c : Self, all e : S, 
+   ~~ (belongs (e, release (c, e))) ;
+    
 end;;
 
 
-species Finite_parts_by_lists(S is Setoid) =
+species Finite_parts_by_lists(S is Setoid, L is Utils(S)) =
 
-  inherit Finite_parts(S), List_utils(S);
+  inherit Finite_parts(S);
 
   representation = list(S);
 
@@ -161,9 +196,10 @@ species Finite_parts_by_lists(S is Setoid) =
 
   let element = empty;
 
-  let belongs(s, e) = l_belongs(s, e);
+  let belongs(s, e) = L!mem(e, s);
 
-  proof of empty_spec = by definition of empty, belongs, l_belongs
+  proof of empty_spec = by definition of empty, belongs 
+                        property L!mem_empty_spec
   ;
 
   let add(e, s) =
@@ -204,7 +240,7 @@ species Finite_parts_by_lists(S is Setoid) =
    <1>f conclude
    ;
 
-  let to_list(e) = e;
+  let to_list(e: Self): list(S) = e;
 
   let rec release(e, s) = match e with
   | [] -> []
@@ -226,6 +262,11 @@ species Finite_parts_by_lists(S is Setoid) =
 
   (* proof of is_contained_spec = *)
   (*  by definition of is_contained,  *)
+
+  property to_list_belongs :
+    all c: Self, all e : S, belongs (e, c) <-> L!mem(to_list(c), e);
+
+
 
 end;;
 

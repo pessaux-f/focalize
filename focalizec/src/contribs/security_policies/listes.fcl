@@ -104,6 +104,19 @@ theorem append_def:
  proof = by definition of append
  ;
 
+
+theorem append_def_nil: 
+ all l2: list(A), append([], l2) = l2
+ proof = by definition of append;
+
+theorem append_def_cons : 
+ all l2: list(A),
+ all h: A, all t: list(A),
+     append(h::t, l2) = (h::append(t, l2))
+ proof = by definition of append
+ ;
+
+
 theorem append_right_neutral:
   all l : list(A), append(l,  []) = l
 proof = 
@@ -149,4 +162,6 @@ proof = assumed
 
 end
 ;;   
+
+
 
