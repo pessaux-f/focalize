@@ -1,0 +1,272 @@
+open "basics";;
+open "sets";;
+open "listes";;
+
+species Finite_set =
+
+  inherit Setoid;
+
+  (** Number of members of the species *)
+  signature cardinal : int;
+
+  (** All the members of the species. *)
+  signature all_to_list : list (Self);
+
+
+  let rec in_list (l, x) =
+      match l with
+        | [] -> false
+        | h :: q -> (equal (h, x) || in_list (q, x))
+      termination proof = structural l;
+
+  property all_in_all_to_list :
+    all x : Self, in_list (all_to_list, x);
+
+end;;
+
+(*
+species List_utils(S is Setoid)=
+  inherit Basic_object;
+  
+  let rec l_belongs(s: S, l: list(S)): bool = match l with
+  | [] -> false
+  | h::t -> 
+     if S!equal(s, h)
+     then true
+     else l_belongs(s, t);
+(*  termination proof = structural l; BUG REPORT : la preuve ligne 77+x ne passe
+plus avec une definition structurelle *)
+
+  theorem empty_spec: all s:S, ~(l_belongs(s, []))
+  proof = by definition of l_belongs;
+
+  theorem cons_spec: all t: list(S), all s h: S, 
+    (l_belongs(s, t) \/ S!equal(s, h)) <-> l_belongs(s, h::t)
+  proof =
+    <1>1 prove all s h: S, (l_belongs(s, []) \/ S!equal(s, h)) <-> 
+           l_belongs(s, h::[])
+         <2>1 assume s h: S,
+              hypothesis H: S!equal(s, h),
+              prove l_belongs(s, h::[])
+              by definition of l_belongs hypothesis H
+         <2>2 assume s: S,
+              prove ~ l_belongs(s, []) by definition of l_belongs
+         <2>3 assume s h: S,
+              hypothesis H: l_belongs(s, h::[]),
+              prove S!equal(s, h)
+              by definition of l_belongs hypothesis H
+         <2>f conclude
+    <1>2 prove 
+           all l: list(S), (all h s: S,
+              ((l_belongs(s, l) \/ S!equal(s, h)) <-> l_belongs(s, h::l))) ->
+                 (all s h hh: S, 
+                    ((l_belongs(s, hh::l) \/ S!equal(s, h)) <-> 
+                       l_belongs(s, h::(hh::l))))
+         <2>1 assume l: list(S),
+              hypothesis I: (all s h: S,
+                               (l_belongs(s, l) \/ S!equal(s, h)) <-> 
+                                       l_belongs(s, h::l)),
+              assume s h hh: S,
+              prove (l_belongs(s, hh::l) \/ S!equal(s, h)) <-> 
+                          l_belongs(s, h::(hh::l))
+              <3>1 prove l_belongs(s, hh::l) -> l_belongs(s, h::(hh::l))
+                   <4>1 hypothesis H: l_belongs(s, hh::l),
+                        prove l_belongs(s, h::(hh::l))
+                        <5>1 hypothesis T: S!equal(s, h),
+                             prove l_belongs(s, h::(hh::l))
+                             by definition of l_belongs hypothesis T
+                        <5>2 hypothesis T: ~ S!equal(s, h),
+                             prove l_belongs(s, h::(hh::l))
+                             <6>1 prove l_belongs(s, hh::l)
+                                  by hypothesis H
+                             <6>f qed by hypothesis I, T
+                                         definition of l_belongs
+                                         step <6>1
+                        <5>f conclude
+                   <4>f conclude
+              <3>2 prove S!equal(s, h) -> l_belongs(s, h::(hh::l))
+                   by definition of l_belongs
+              <3>3 prove l_belongs(s, h::(hh::l)) ->
+                           (l_belongs(s, hh::l) \/ S!equal(s, h))
+                   <4>1 hypothesis H: ~ S!equal(s, h),
+                        hypothesis T: l_belongs(s, h::(hh::l)),
+                        prove l_belongs(s, hh::l)
+                        by definition of l_belongs
+                           hypothesis H, T
+                   <4>f conclude
+              <3>f conclude
+         <2>f conclude
+    <1>f conclude
+  ;
+
+
+
+end;;
+*)
+
+species Finite_parts(S is Setoid) =
+
+  inherit Setoid ;
+
+  signature cardinal: Self -> int;
+  signature empty : Self;
+  signature is_empty : Self -> bool;
+  signature add : Self -> S -> Self;
+  signature belongs: S -> Self -> bool;
+  signature release : Self -> S -> Self;
+  signature to_list : Self -> list(S) ;
+  signature is_contained : Self -> Self -> bool;
+
+(*
+  property inductive_scheme_part: all p: (Self -> prop),
+      p(empty) 
+   -> (all s: S, all x:Self, p(x) -> p(add(x, s)))
+   -> all x: Self, p(x); 
+*)
+
+  property belongs_left_substitution_rule: all s_1 s_2: S, all r: Self,
+       S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r);
+
+  property empty_spec :
+    all t: S, ~ belongs(t, empty);
+
+  property is_empty_empty : 
+     is_empty (empty); 
+
+  property add_spec :
+    all x : Self, all t_1 t_2 : S,
+    belongs(t_1, add (x, t_2)) <->
+      (S!equal(t_1, t_2) \/ belongs(t_1, x));
+
+  theorem add_contains1: 
+    all c: Self, all e : S, belongs (e, (add (c, e))) 
+    proof = assumed;
+  
+  theorem add_contains2: 
+    all c: Self, all e : S, all x : S, ~ (S!equal(e, x)) -> 
+       belongs (x, (add (c, e))) <-> belongs (x, c)
+  proof = assumed;
+
+  property release_spec :
+    all x : Self, all t_1 t_2 : S,
+    belongs(t_1, release(x, t_2)) <-> (S!different (t_1, t_2) /\ belongs(t_1, x));
+
+  property release_contains: 
+    all c: Self, all e : S, all x : S, ~~(S!equal (e, x)) -> 
+       (belongs (x, (release (c, e))) <-> belongs (x, c));
+
+  property is_contained_spec :
+    all x y : Self,
+    is_contained (x, y) <-> ( all t : S,
+                              belongs(t, x) -> belongs(t, y) );
+
+  theorem is_contained_reflexive : all x : Self, is_contained (x, x)
+  proof = by property is_contained_spec;
+
+  theorem is_contained_transitive :
+    all x y z : Self,
+    (is_contained (x, y) /\ is_contained (y, z)) -> is_contained (x, z)
+  proof = by property is_contained_spec;
+
+  let equal(x, y) = is_contained(x, y) && is_contained(y, x);
+
+  proof of equal_reflexive = by definition of equal 
+                                property is_contained_reflexive;
+  proof of equal_transitive = by definition of equal  
+                                property is_contained_transitive;
+  proof of equal_symmetric = by definition of equal;
+
+  property to_list_empty : 
+    all l : Self, is_empty(l) <-> to_list(l) = []
+; 
+  
+  property unique_belongs : all c : Self, all e : S, 
+   ~~ (belongs (e, release (c, e))) ;
+    
+end;;
+
+
+species Finite_parts_by_lists(S is Setoid, L is Utils(S)) =
+
+  inherit Finite_parts(S);
+
+  representation = list(S);
+
+  let empty = [];
+
+  let element = empty;
+
+  let belongs(s, e) = L!mem(e, s);
+
+  proof of empty_spec = by definition of empty, belongs 
+                        property L!mem_empty_spec
+  ;
+
+  let add(e, s) =
+    if belongs(s, e)
+    then e
+    else s::e;
+
+
+  (* theorem belongs_right_substitution_rule: all s: S, all l_1 l_2: Self, *)
+  (*   equal(l_1, l_2) -> belongs(s, l_1) -> belongs(s, l_2) *)
+  (*   proof =  *)
+  (*     by property equal_reflexive *)
+  (*   ; *)
+
+  proof of belongs_left_substitution_rule = assumed;
+
+  proof of is_contained_spec = assumed;
+
+  let rec cardinal(e) = match e with
+  | [] -> 0
+  | _h::t -> 1 + cardinal(t)
+  ;
+
+
+  proof of add_spec =
+   <1>1 assume x: Self, assume t_1 t_2: S,
+        hypothesis H: belongs(t_1, add (x, t_2)),
+        prove S!equal(t_1, t_2) \/ belongs(t_1, x)
+        assumed
+   <1>2 assume x: Self, assume t_1 t_2: S,
+        hypothesis H: S!equal(t_1, t_2),
+        prove belongs(t_1, add(x, t_2))
+        assumed
+   <1>3 assume x: Self, assume t_1 t_2: S,
+        hypothesis H: belongs(t_1, x),
+        prove belongs(t_1, add(x, t_2))
+        assumed
+   <1>f conclude
+   ;
+
+  let to_list(e: Self): list(S) = e;
+
+  let rec release(e, s) = match e with
+  | [] -> []
+  | h::t -> 
+    if S!equal(s, h)
+    then t
+    else h::release(t, s)        
+    ;
+
+  proof of release_spec = assumed;
+
+  let rec is_contained(l_1, l_2) = match l_1 with
+  | [] -> true
+  | h::t -> 
+    if belongs(h, l_2) 
+    then is_contained(t, l_2)
+    else false
+  ;
+
+  (* proof of is_contained_spec = *)
+  (*  by definition of is_contained,  *)
+
+  property to_list_belongs :
+    all c: Self, all e : S, belongs (e, c) <-> L!mem(to_list(c), e);
+
+
+
+end;;
+

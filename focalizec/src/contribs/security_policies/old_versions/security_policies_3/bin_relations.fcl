@@ -294,10 +294,8 @@ species Internal_binary_relations(A is Setoid, L is Utils(A))=
 
   theorem rt_closure_is_reflexive : all r: Self,
     is_reflexive(rt_closure(r))
-(* [tl] : I use is_reflexive_spec rather than the definition so the
-proof won't be canceled in case of redefinition of is_reflexive *) 
-  proof = by property is_reflexive_spec, rt_closure_spec, relation_compatible_left,
-                   A!equal_reflexive
+  proof = by property is_reflexive_spec, rt_closure_spec,
+                      relation_compatible_left, A!equal_reflexive
   ;
 
   theorem rt_closure_is_transitive : all r: Self,
