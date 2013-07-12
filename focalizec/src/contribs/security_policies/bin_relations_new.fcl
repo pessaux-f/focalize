@@ -479,6 +479,7 @@ species Internal_binary_relations(A is Setoid, L is Utils(A))=
    <-> (ex l: list(A), rt_closure_aux(r, a1, a2, l));
 
   (** Usual inductive definition for closure *)
+  (* [tl]: I think we could prove it in finite_relation *)
   theorem is_rt_closure : all r: Self, all a1 a2: A,
        relation(rt_closure(r), a1, a2) 
    -> (A!equal(a1, a2) \/
@@ -617,6 +618,9 @@ species Internal_binary_relations(A is Setoid, L is Utils(A))=
 end;;
 
 
+
+(* [tl]: shouldn't the following be moved into "finite_relations.fcl ? *)
+
 species Relations_by_sets_of_pairs(A is Setoid, B is Setoid,
                                      T is Product_set(A, B),
                                      P is Finite_parts(T)) =
@@ -699,25 +703,28 @@ end;;
 
 
 
-species Internal_relations_by_sets_of_pairs(A is Setoid,
-                                     T is Product_set(A, A),
-                                     LA is Utils(A),
-                                     LT is Utils(T),
-                                     P is Finite_parts_by_lists(T, LT)) =
+species Internal_relations_by_sets_of_pairs(A is Finite_set,
+                                            T is Product_set(A, A),
+                                            LA is Utils(A),
+                                            LT is Utils(T),
+					    P is Finite_parts_by_lists(T, LT)) =
 
   inherit Internal_binary_relations(A, LA), 
           Relations_by_sets_of_pairs(A, A, T, P);
 
-  let rec rt_closure(r) = match r with
-   | [] -> []
-   | h::t -> let c_t = rt_closure(t) in
-             let x = T!first(h) in
-             let y = T!second(h) in
-             let ly = filter_first(y, c_t) in
-             let lx = substitute(y,x,ly) in
-             let r = LT!append ....
+  let identity : Self =
+    let rec make_from_list(l) = match l with
+      | [] -> []
+      | h::t -> T!pair(h, h)::make_from_list(t)
+   in P!from_list(make_from_list(A!all_to_list))
+  ;
+  (* spec to do *)
+
 
 end;;
+
+
+
 
 
 (* (y a un truc qui compile pas) *)

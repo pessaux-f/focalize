@@ -59,7 +59,7 @@ plus avec une definition structurelle *)
     <1>2 prove 
            all l: list(S), (all h s: S,
               ((l_belongs(s, l) \/ S!equal(s, h)) <-> l_belongs(s, h::l))) ->
-                 (all s h hh: S, 
+                  (all s h hh: S, 
                     ((l_belongs(s, hh::l) \/ S!equal(s, h)) <-> 
                        l_belongs(s, h::(hh::l))))
          <2>1 assume l: list(S),
@@ -241,6 +241,17 @@ species Finite_parts_by_lists(S is Setoid, L is Utils(S)) =
    ;
 
   let to_list(e: Self): list(S) = e;
+
+  let from_list(l: list(S)): Self = l;
+
+  theorem from_list_valid : 
+    (all e: Self,
+      equal(from_list(to_list(e)), e))
+    /\
+    (all l: list(S),
+      (to_list(from_list(l)) = l))
+  proof = by definition of to_list, from_list property equal_reflexive ;    
+    
 
   let rec release(e, s) = match e with
   | [] -> []
