@@ -631,7 +631,23 @@ species Relations_by_sets_of_pairs(A is Setoid, B is Setoid,
 
   let set_as_relation(s: P): Self = s;
 
+  let relation_as_set(s: Self): P = s;
+
+  theorem set_relation_valid :
+    (all p: P, P!equal(relation_as_set(set_as_relation(p)), p))
+   /\
+    (all s: Self, equal(set_as_relation(relation_as_set(s)), s))
+  proof = by definition of set_as_relation, relation_as_set
+             property P!equal_reflexive, equal_reflexive
+  ;
+
   let relation(r, a, b) = P!belongs(T!pair(a, b), r);
+  
+  (* [tl]: forced to use relation_as_set otherwise
+     "Error: Types Self and bin_relations_new#P are not compatible." *)
+  theorem relation_spec :  all a: A, all b: B, all r: Self,
+    relation(r, a, b) <-> P!belongs(T!pair(a, b), relation_as_set(r))
+  proof = by definition of relation, relation_as_set ;
 
   let is_contained(r_1, r_2) = P!is_contained(r_1, r_2);
 
@@ -716,10 +732,82 @@ species Internal_relations_by_sets_of_pairs(A is Finite_set,
     let rec make_from_list(l) = match l with
       | [] -> []
       | h::t -> T!pair(h, h)::make_from_list(t)
+      termination proof = structural l
    in P!from_list(make_from_list(A!all_to_list))
   ;
   (* spec to do *)
 
+  (* as_list parce que sinon c'est le bazar, le lecteur est libre de rajouter
+     P!from/to_list partout, pour faire generique *)
+  let rec rt_singleton_as_list(x: A, lr: list(T)): list(T) = 
+    (* f takes an element of A and a list of T!pairs and return
+       a pair (la, lb) where in la for all c in la, T!first(c) = x
+       lb is the rest of lr *)
+    let rec f(x, l) =  match l with
+      | [] -> ([], [])
+      | h::t -> let c = f(x, t) in let l1 = fst(c) in let l2 = snd(c) in
+                  if A!equal(T!first(h), T!second(h)) then (l1, l2) else
+		   (if A!equal(x, T!first(h))
+                    then (h::l1, l2)
+                    else (l1, h::l2))
+      termination proof = structural l
+    in 
+    let rec subst_fst(x, l) = match l with
+      | [] -> []
+      | h::t -> let b = T!second(h) in T!pair(x, b)::subst_fst(x, t)
+      termination proof = structural l
+    in
+
+    let c = f(x, lr) in let la = fst(c) in let lb = snd(c) in
+      if la = [] then [T!pair(x, x)]
+      else LT!append(la, subst_fst(x, rt_singleton_as_list(x, lb)))
+
+    termination proof = structural lr
+  ;
+
+  theorem rt_singleton_as_list_spec : all x y: A, all r: Self,
+    LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                             T!pair(x, y))
+    <-> (ex l: list(A), rt_closure_aux(r, x, y, l))
+  proof = 
+  <0>1 assume x y: A, assume r: Self,
+       prove LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                            T!pair(x, y))
+          -> (ex l: list(A), rt_closure_aux(r, x, y, l))
+       assumed
+  <0>2 assume x y: A, assume r: Self,
+       prove (ex l: list(A), rt_closure_aux(r, x, y, l))
+          -> LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                            T!pair(x, y))
+    <1>1 hypothesis H1: rt_closure_aux(r, x, y, []),
+         prove LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                              T!pair(x, y))
+      <2>1 prove A!equal(x, y)
+           by property rt_closure_aux_nil hypothesis H1
+      <2>2 prove A!equal(x, y)
+              -> LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                                T!pair(x, y))
+           (* compatibility issue between A!equal and "=", see LA!mem *)
+           assumed
+      <2>f conclude
+    <1>2 assume h: A, assume t: list(A),
+         hypothesis H2: rt_closure_aux(r, x, y, h::t),
+         prove LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                              T!pair(x, y))
+         assumed
+    <1>f conclude
+  <0>f conclude
+  ;
+
+  let rt_closure(r) =
+    let lr = P!to_list(relation_as_set(r)) in
+    let rec make_rt_closure(l) = match l with
+      | [] -> []
+      | h::t -> LT!append(rt_singleton_as_list(h, lr),
+                          make_rt_closure(t))
+      termination proof = structural l
+    in make_rt_closure(A!all_to_list)
+  ;
 
 end;;
 
