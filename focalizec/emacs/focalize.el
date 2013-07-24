@@ -138,7 +138,11 @@
 
 
 ;; Indent the current line. By hypothesis, we are at the beginning of the
-;; current line.
+;; current line. Returns the new position after indentation. If no indentation
+;; was done then it is the same as before. Otherwise it is the point where
+;; we arrived due to the indentation.
+;; We need to return this position because save-excursion restores the state
+;; of the buffer and positions at its end of execution.
 (defun focalize-indent-current ()
   (if (> (line-beginning-position) 1) ; THEN
       ; Ok, we are not on the first line of the buffer. So let's work.
@@ -163,12 +167,13 @@
              prev_indent_amount from_prev_line from_current_line)
             (indent-line-to
              (+ from_current_line (+ from_prev_line prev_indent_amount)))
+            (point)
             ) ; END LET
           ) ; END LET*
         )
     ; ELSE
-    ()   ; Do nothing.
-    )
+    (point)
+    )    ; End of if.
   )
 
 
@@ -182,12 +187,18 @@
                          ; and initialise it with the current position.
         ) ; IN
     (beginning-of-line) ; Go to the beginning of the line.
-    (focalize-indent-current)    ; Really indent.
-    ; Go back to the initial position if we are now placed before.
-    (if (< (point) starting-point)   ; 'point' returns the current position
-                                     ; as an integer.
-        ; THEN
-        (goto-char starting-point))
+    (let (
+          (new-point
+           (focalize-indent-current))    ; Really indent.
+          ) ; IN
+      ; Go back to the initial position if we are now placed before else go to
+      ; the new position (indentation point).
+      (if (< new-point starting-point)
+          ; THEN
+          (goto-char starting-point)
+          ; ELSE
+          (goto-char new-point))
+      ) ; End of let.
     ; Erase the MARKER 'starting-point'.
     (set-marker starting-point nil)
     )
