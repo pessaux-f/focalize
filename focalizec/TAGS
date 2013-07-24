@@ -1,36 +1,40 @@
-# Tags CVS annotant focalize.
-# ###########################
+# Tags of the FoCaL/FoCaLiZe repository.
+# ######################################
 
 * types_d_especes_alleges :
-   Juste après avoir simplifié le type des espèces afin de ne plus avoir
-   en double [Env....species_description] et [Types.type_species].
+    Just after having simplified the type of species in order not to have
+    anymore in double [Env....species_description] and [Types.type_species].
 
 * avant_especes_param_par_self :
-   Juste avant de rajouter la possibilité qu'une espèce soit paramétrée
-   par Self.
+    Just before adding ability of parametrising a species by Self.
 
 * release_interne_pour_etudiants_M1_mathieu :
-   Tag de la version qui marche en Caml pour quasiment toute la lib standard
-   et pour ensembles_finis.foc afin que les étudiants de M1 de Mathieu
-   puissent commencer à utiliser le nouveau compilo pour leur sujet de stage.
-   Coq sucks encore un peu: j'ai identifé un bug à trois faces à la con
-   sur les in-parameters en Coq (je vais corriger ça rapidement dès que
-   j'aurai 2 minutes) et il me reste encore à finir de générer les
-   collections en Coq.
+    Tag of the version working in OCaml for nearly all the standard library and
+    for ensembles_finis.foc. This will allow Mathieu's M1 students starting to
+    use the new compiler for their internship.
+    Coq still sucks a bit: I identified a boring 3-facets bug abou
+    in-parameters in Coq (I'll fix this quickly as soon as I have 2 minutes)
+    and their remains to end collection generation in Coq.
 
 * avant_suppression_sections:
-   Gel avant de reprendre la passe de génération de code Coq pour en supprimer
-   l'utilisation des Sections et les remplacer par une gestion "manuelle" des
-   abstractions.
+    Frozen before modification of the Coq code generation pass to remove usage
+    of Sections and replace them by a "manual" management of the abstractions.
 
 * marche_16_10_2008:
-   Version juste avant que l'on mette l'égalité en natif. Le commit suivant
-   va rendre la lib non-compilable temporairement. Il faudra adapter les
-   preuves.
+    Version just before we set equality as a native feature. The next commit
+    will make the stdlib non-compilable temporarily. Proofs will have to be
+    adapted.
+
+* focalize_release_0_6_0 (07 May 2010):
+    For a release that will have never existed :/
+
+* Before_removing_Coq_Function (27 Feb 2012):
 
 * branch_focalize_release_0_1_rc0:
-   Branche pour la release.
+    Branch for release.
 
-* before_config_and_build_revisited  (15 octobre 2012):
-  Version juste avant la refonte massive des mécanismes de config et de
-  build.
+* before_config_and_build_revisited  (13 Oct 2012):
+    Version just before massive changes in config and build mechanisms.
+
+* 0.8.0 (10 Jan 2013)
+    Release 0.8.0.
