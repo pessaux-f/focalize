@@ -613,9 +613,15 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
 
 
 
-(* Prints args and body with methodes abstracted by "abst_xxx". *)
-let generate_defined_non_recursive_method_postlude ctx print_ctx env
-    ~self_manifest params scheme body_opt =
+(* {b Descr} : Generates the postlude of the prototype of a definec method. It
+   Prints its arguments with their type (not those induced by lambda-liftings),
+   its return type and its body (if some is provided) WITH methods
+   abstracted by "abst_xxx".
+   If [decr_arg_name] is provided, then it is assumed that this prototype it
+   the one of a function defined with "Fixpoint" and in this case we insert
+   a "{struct xxx}" directive before the return type. *)
+let generate_defined_method_proto_postlude ctx print_ctx env
+    ~self_manifest params scheme decr_arg_name_opt body_opt =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Add the parameters of the let-binding with their type. *)
   (* Ignore the result type of the "let" if it's a function because we never
@@ -643,7 +649,23 @@ let generate_defined_non_recursive_method_postlude ctx print_ctx env
        | None ->
            Format.fprintf out_fmter "@ %a"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname)
-    params_with_type;
+    params_with_type ;
+  (* Generate the { struct } clause. Since only functions are recursive,
+     there is issue about finding no argument. We however ensure that
+     the specified decreasing identifier is really a parameter of the
+     function. [Unsure] on my mind, this should have been done ealier, may
+     be at scoping. *)
+   (match decr_arg_name_opt with
+   | Some (proof_loc, fct_name, decr_arg_name) ->
+       if not
+           (List.exists (fun (n, _) -> n = decr_arg_name) params_with_type) then
+         raise
+           (Species_record_type_generation.Wrong_decreasing_argument
+              (proof_loc, ctx.Context.scc_current_species, fct_name,
+               decr_arg_name)) ;
+       Format.fprintf out_fmter "@ { struct %a }@ "
+         Parsetree_utils.pp_vname_with_operators_expanded decr_arg_name
+   | None -> ()) ;
   (* Now, we print the ending type of the method. *)
   Format.fprintf out_fmter " :@ %a "
     (Types.pp_type_simple_to_coq print_ctx) ending_ty ;
@@ -699,10 +721,10 @@ let generate_defined_non_recursive_method ctx print_ctx env min_coq_env
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
     Format.eprintf "Generating Coq code for field '%a'.@."
-      Parsetree_utils.pp_vname_with_operators_expanded name;
+      Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Start the Coq function definition. *)
   Format.fprintf out_fmter "@[<2>Definition %a"
-    Parsetree_utils.pp_vname_with_operators_expanded name;
+    Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Generate the prelude of the method, i.e the sequence of parameters induced
      by the various lamda-liftings and their types .
      By the way, we get updated in the [new_print_ctx] the way "Self" must be
@@ -714,11 +736,12 @@ let generate_defined_non_recursive_method ctx print_ctx env min_coq_env
   (* We now generate the postlude of the method, i.e the sequence of real
      parameters of the method, not those induced by abstraction and finally
      the method's body. Inside, methods we depend on are abstracted by
-     "abst_xxx". *)
-  generate_defined_non_recursive_method_postlude
-    new_ctx new_print_ctx env ~self_manifest params scheme (Some body);
+     "abst_xxx". Since the method is non recursive, there is no decreasing
+     argument to pass. *)
+  generate_defined_method_proto_postlude
+    new_ctx new_print_ctx env ~self_manifest params scheme None (Some body) ;
   (* Done... Then, final carriage return. *)
-  Format.fprintf out_fmter ".@]@\n";
+  Format.fprintf out_fmter ".@]@\n" ;
   abstracted_methods
 ;;
 
@@ -754,7 +777,7 @@ let generate_non_recursive_field_binding ctx print_ctx env min_coq_env
           Parsetree_utils.pp_vname_with_operators_expanded name
           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
       (* Recover the arguments for abstracted methods of Self in the inherited
-    generator. *)
+         generator. *)
       find_inherited_method_generator_abstractions
         ~current_unit: ctx.Context.scc_current_unit
         from.Env.fh_initial_apparition name env
@@ -874,70 +897,86 @@ let generate_final_recursive_definifion_body_With_Function out_fmter
       else
         Format.fprintf out_fmter "abst_%a@ "
           Parsetree_utils.pp_vname_with_operators_expanded n)
-    abstracted_methods;
+    abstracted_methods ;
   (* We now apply the fake termination order. *)
-  Format.fprintf out_fmter "coq_builtins.magic_order";
+  Format.fprintf out_fmter "coq_builtins.magic_order"
 ;;
 
 
 
-(** To make the construct "Function" of Coq working with Zenon.
+(** To make recursive definitions working with Zenon.
 
     {b Rem} : For Function. *)
-let zenonify_by_recursive_definition_With_Function ctx print_ctx env
-    ~self_manifest ~with_Function used_species_parameter_tys
+let zenonify_by_recursive_definition ctx print_ctx env
+    ~self_manifest ~rec_kind used_species_parameter_tys
     dependencies_from_params abstracted_methods vname params scheme body =
   let out_fmter = ctx.Context.scc_out_fmter in
   let species_name = snd ctx.Context.scc_current_species in
   (* Check if the recursive fonction was generated using "Function" or
      "Fixpoint". *)
-  if with_Function then (
-    (* For bug #199, to make so that Zenon identifies "abst_xx" and "xx", we
-       generate a fake Definition before generating the body of the recursive
-       fonction whose body is needed because of the "by definition of...". *)
-    Format.fprintf out_fmter
-      "(* Method \"%a\" is recursive. Special syntax for Zenon. *)@\n"
-      Parsetree_utils.pp_vname_with_operators_expanded vname ;
-    (* Use specific syntax to tell Zenon that the function is recursive. *)
-    Format.fprintf out_fmter "@[<2>Function abst_%a"
-      Parsetree_utils.pp_vname_with_operators_expanded vname ;
-    (* We now generate the sequence of real parameters of the method, not those
-       induced by abstraction BUT NOT the method's body. Inside, methods we
-       depend on are abstracted by "abst_xxx". *)
-    generate_defined_non_recursive_method_postlude
-      ctx print_ctx env ~self_manifest params scheme None ;
-    (* Now, for Zenon, we print the **real** definition of the recursive
-       function, i.e. the one using the temporaries of the Section/namespace. *)
-    Format.fprintf out_fmter "@\n{ ";
-    (* Say that we are in a Zenon "by definition of a rec function" in order
-       to have the name "Termination_fct_namespace.fct_equation" instead of
-       "Termination_fct_namespace.species__fct". *)
-    generate_final_recursive_definifion_body_With_Function
-      out_fmter ~in_zenon_by_def: true species_name vname
-      used_species_parameter_tys dependencies_from_params abstracted_methods ;
-    Format.fprintf out_fmter " }@\n:=@\n"
-   )
-  else (
-    (* Case where the recursive function was generated with "Fixpoint". In
-       this case, we don't need to have special stuff fo Zenon, we simply
-       generate the function using a regular Definition and no definition
-       equation. *)
-    Format.fprintf out_fmter
-      "(* Method \"%a\" is recursive. *)@\n"
-      Parsetree_utils.pp_vname_with_operators_expanded vname ;
-    (* Use specific syntax to tell Zenon that the function is recursive. *)
-    Format.fprintf out_fmter "@[<2>Definition abst_%a "
-      Parsetree_utils.pp_vname_with_operators_expanded vname ;
-    (* We now generate the sequence of real parameters of the method, not those
-       induced by abstraction BUT NOT the method's body. Inside, methods we
-       depend on are abstracted by "abst_xxx". *)
-    generate_defined_non_recursive_method_postlude
-      ctx print_ctx env ~self_manifest params scheme None ;
-    Format.fprintf out_fmter ":=@\n"
-   ) ;
+  (match rec_kind with
+   | MinEnv.RPK_other ->
+       (* Assumed to have been generated with "Function". *)
+       (* For bug #199, to make so that Zenon identifies "abst_xx" and "xx", we
+          generate a fake Definition before generating the body of the recursive
+          fonction whose body is needed because of the "by definition of...". *)
+       Format.fprintf out_fmter
+         "(* Method \"%a\" is recursive. Special syntax \"Function\" for \
+         Zenon. *)@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded vname ;
+       (* Use specific syntax to tell Zenon that the function is recursive. *)
+       Format.fprintf out_fmter "@[<2>Function abst_%a"
+         Parsetree_utils.pp_vname_with_operators_expanded vname ;
+       (* We now generate the sequence of real parameters of the method, NOT
+          those induced by abstraction AND NOT the method's body. Inside this
+          body, methods we depend on are abstracted by "abst_xxx". Since we are
+          in the case of "by definition" of a function generated by "Function",
+          it is not structural, hence there is no decreasing argument to
+          pass. *)
+       generate_defined_method_proto_postlude
+         ctx print_ctx env ~self_manifest params scheme None None ;
+       (* Now, for Zenon, we print the **real** definition of the recursive
+          function, i.e. the one using the temporaries of the
+          Section/namespace. *)
+       Format.fprintf out_fmter "@\n{ ";
+       (* Say that we are in a Zenon "by definition of a rec function" in order
+          to have the name "Termination_fct_namespace.fct_equation" instead of
+          "Termination_fct_namespace.species__fct". *)
+       generate_final_recursive_definifion_body_With_Function
+         out_fmter ~in_zenon_by_def: true species_name vname
+         used_species_parameter_tys dependencies_from_params
+         abstracted_methods ;
+       Format.fprintf out_fmter " }@\n:=@\n"
+   | MinEnv.RPK_struct decr_arg_name ->
+       (* Case where the recursive function was generated with "Fixpoint". In
+          this case, we need to use the special syntax "Fixpoint" also for
+          Zenon, and no definition equation. *)
+       Format.fprintf out_fmter
+         "(* Method \"%a\" is recursive structural. Special syntax \
+         \"Fixpoint\" for Zenon. *)@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded vname ;
+       (* Use specific syntax to tell Zenon that the function is recursive. *)
+       Format.fprintf out_fmter "@[<2>Fixpoint abst_%a "
+         Parsetree_utils.pp_vname_with_operators_expanded vname ;
+       (* We now generate the sequence of real parameters of the method, NOT
+          those induced by abstraction AND NOT the method's body. Inside this
+          body, methods we depend on are abstracted by "abst_xxx". Since we are
+          in the case of "by definition" of a function generated by "Fixpoint",
+          we MUST pass the decreasing argument to have the "{ struct xxx }"
+          directive emitted. We pass a [Location.none] (which is only used to
+          raise an error if the decreasing arg doesn't exist) because there is
+          no reason for such error occuring. In effect, we are in a
+          "by definition", hence the real definition of the used method has
+          inevitably be generated before, hence the check has already be
+          done. *)
+       generate_defined_method_proto_postlude
+         ctx print_ctx env ~self_manifest params scheme
+         (Some (Location.none, vname, decr_arg_name)) None ;
+       Format.fprintf out_fmter ":=@\n"
+  ) ;
   (* Now, we generate the body of the recursive function as given in the
      regular way (i.e. exactly like
-     [generate_defined_non_recursive_method_postlude] does if a body is
+     [generate_defined_proto_postlude] does if a body is
      provided.
      ATTENTION: Since here the recursively defined function is an "abst_xxx",
      we must ensure that occurrences of this function in its body will also
@@ -1091,17 +1130,19 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
        match value_body with
         | Env.CoqGenInformation.VB_non_toplevel -> assert false
         | Env.CoqGenInformation.VB_toplevel_let_bound (params, scheme, body) ->
-            Format.fprintf out_fmter "@[<2>Definition %s" name_for_zenon;
+            Format.fprintf out_fmter "@[<2>Definition %s" name_for_zenon ;
             (* We now generate the sequence of real parameters of the
-               method, not those induced by abstraction and finally the
+               method, NOT those induced by abstractions and finally the
                method's body. Anyway, since the used definition is at toplevel,
                there is no abstraction no notion of "Self", no dependencies. *)
-            generate_defined_non_recursive_method_postlude
-              ctx print_ctx env ~self_manifest params scheme (Some body);
+(* TODO TODO TODO certainement coup du Fipoint aussi à voir... *)
+            generate_defined_method_proto_postlude
+              ctx print_ctx env ~self_manifest params scheme
+(* TODO TODO *) None (Some body) ;
             (* Done... Then, final carriage return. *)
             Format.fprintf out_fmter ".@]@\n"
         | Env.CoqGenInformation.VB_toplevel_property lexpr ->
-            Format.fprintf out_fmter "@[<2>Definition %s :=@ " name_for_zenon;
+            Format.fprintf out_fmter "@[<2>Definition %s :=@ " name_for_zenon ;
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
             Species_record_type_generation.generate_logical_expr
@@ -1149,12 +1190,8 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
                         in the already [generated_fields]. *)
                      let memory =
                        find_compiled_field_memory vname generated_fields in
-                     let with_Function =
-                       (match rec_kind with
-                       | MinEnv.RPK_struct -> false
-                       | _ -> true) in
-                     zenonify_by_recursive_definition_With_Function
-                       ctx print_ctx env ~self_manifest ~with_Function
+                     zenonify_by_recursive_definition
+                       ctx print_ctx env ~self_manifest ~rec_kind
                        memory.Misc_common.cfm_used_species_parameter_tys
                        memory.Misc_common.cfm_dependencies_from_parameters
                        memory.Misc_common.cfm_coq_min_typ_env_names vname params
@@ -1166,9 +1203,10 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
                      (* We now generate the sequence of real parameters of the
                         method, not those induced by abstraction and finally the
                         method's body. Inside, methods we depend on are
-                        abstracted by "abst_xxx". *)
-                     generate_defined_non_recursive_method_postlude
-                       ctx print_ctx env ~self_manifest params scheme
+                        abstracted by "abst_xxx". Non recursive, hence not
+                        decreasing argument to pass. *)
+                     generate_defined_method_proto_postlude
+                       ctx print_ctx env ~self_manifest params scheme None
                        (Some body) ;
                      (* Done... Then, final carriage return. *)
                      Format.fprintf out_fmter ".@]@\n"
@@ -2773,7 +2811,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
 
 
 (** ***************************************************************************
-    {bDescr}: Used to generate a recursive function that is not (assumed)
+    {b Descr}: Used to generate a recursive function that is not (assumed)
     structural.
     In this case, the function is generated using the Function construct of
     Coq.
@@ -2984,103 +3022,51 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
 (** ***************************************************************************
     {b Descr}: Generates the definition of a recursive function using
-    "Fixpoint" instead of "Function" but use fake proofs everywhere.
-    It weakly always assume that the function is structurally recursive with
-    its first argument decreasing.
+    "Fixpoint" instead of "Function". This function is assumed to be
+    structurally recursive with its argument [decr_arg_name] decreasing.
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
 let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
     generated_fields from name params decr_arg_name proof_loc scheme body ai =
   let out_fmter = ctx.Context.scc_out_fmter in
-  match body with
-   | Parsetree.BB_logical _ ->
-       failwith "recursive logical : TODO"  (* [Unsure] *)
-   | Parsetree.BB_computational body_expr ->
-       let _species_name = snd (ctx.Context.scc_current_species) in
-       (* Extend the context with the mapping between these recursive
-          functions and their extra arguments. Since we are in Coq, we need to
-          take care of the logical definitions and of the explicite types
-          abstraction management. *)
-       let ctx' = {
-         ctx with
-           Context.scc_lambda_lift_params_mapping =
-             [(name,
-               Misc_common.make_params_list_from_abstraction_info
-                 ~care_logical: true ~care_types: true ai)] } in
-       (* We get the function's parameters and their types. This will serve at
-          various stage, each time we will need to speak about a parameter. *)
-       (* For [bind_parameters_to_types_from_type_scheme], not that we do not
-          have anymore information about "Self"'s structure... *)
-       let (params_with_type, return_ty_opt, _) =
-         MiscHelpers.bind_parameters_to_types_from_type_scheme
-           ~self_manifest: None (Some scheme) params in
-       (* Just remove the option that must always be Some since we provided
-          a scheme. *)
-       let params_with_type =
-         List.map
-           (fun (n, opt_ty) ->
-             match opt_ty with None -> assert false | Some t -> (n, t))
-           params_with_type in
-       let return_ty =
-         match return_ty_opt with None -> assert false | Some t -> t in
-       (* Now, generate the prelude of the only method introduced by
-          "let rec". *)
-       Format.fprintf out_fmter "@[<2>Fixpoint %a@ "
-         Parsetree_utils.pp_vname_with_operators_expanded name;
-       let (abstracted_methods, new_ctx, new_print_ctx) =
-         generate_field_definition_prelude
-           ~in_section: false ctx' print_ctx env ai.Abstractions.ai_min_coq_env
-           ai.Abstractions.ai_used_species_parameter_tys
-           ai.Abstractions.ai_dependencies_from_params generated_fields in
-       List.iter
-         (fun (param_vname, param_ty) ->
-            Format.fprintf out_fmter "@ (%a : %a)"
-              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-              (Types.pp_type_simple_to_coq new_print_ctx) param_ty)
-         params_with_type ;
-       (* Generate the { struct } clause. Since only functions are recursive,
-          there is issue about finding no argument. We however ensure that
-          the specified decreasing identifier is really a parameter of the
-          function. [Unsure] on my mind, this should have been done ealier, may
-          be at scoping. *)
-       if not
-           (List.exists (fun (n, _) -> n = decr_arg_name) params_with_type) then
-         raise
-           (Species_record_type_generation.Wrong_decreasing_argument
-              (proof_loc, ctx.Context.scc_current_species, name,
-               decr_arg_name)) ;
-       Format.fprintf out_fmter "@ { struct %a }@ "
-         Parsetree_utils.pp_vname_with_operators_expanded decr_arg_name ;
-       (* Now, we print the ending type of the method. *)
-       Format.fprintf out_fmter " :@ %a@ "
-         (Types.pp_type_simple_to_coq new_print_ctx) return_ty ;
-       (* The ":=" token before the function's body. *)
-       Format.fprintf out_fmter ":=@ ";
-       (* Now, generate the body of the function.
-          We specify here that we must apply recursive calls to the
-          extra arguments due to lambda-liftings because disabling this
-          is only used if we want to generate the code with the "Function"
-          construct of Coq. So, we just "forget" to put [name] as argument
-          [~in_recursive_let_section_of]. *)
-       Species_record_type_generation.generate_expr
-         new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
-         ~self_methods_status: Species_record_type_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_generation.RMS_regular
-         env body_expr ;
-       (* Done... Then, final carriage return. *)
-       Format.fprintf out_fmter ".@]@\n@\n";
-       let compiled = {
-         Misc_common.cfm_is_logical = false;
-         Misc_common.cfm_from_species = from;
-         Misc_common.cfm_method_name = name;
-         Misc_common.cfm_method_scheme = Env.MTK_computational scheme;
+  (* Extend the context with the mapping between these recursive
+     functions and their extra arguments. Since we are in Coq, we need to take
+     care of the logical definitions and of the explicite types abstraction
+     management. *)
+  let ctx' = {
+    ctx with
+      Context.scc_lambda_lift_params_mapping =
+        [(name,
+          Misc_common.make_params_list_from_abstraction_info
+            ~care_logical: true ~care_types: true ai)] } in
+  (* Now, generate the prelude of the only method introduced by "let rec". *)
+  Format.fprintf out_fmter "@[<2>Fixpoint %a@ "
+    Parsetree_utils.pp_vname_with_operators_expanded name ;
+  let (abstracted_methods, new_ctx, new_print_ctx) =
+    generate_field_definition_prelude
+      ~in_section: false ctx' print_ctx env ai.Abstractions.ai_min_coq_env
+      ai.Abstractions.ai_used_species_parameter_tys
+      ai.Abstractions.ai_dependencies_from_params generated_fields in
+  (* Generate the postlude of the prototype, i.e. non-lifted args with
+     their type, the "{ struct xxx }" clause and the return type. Also
+     generate the body of the function by the way. *)
+  generate_defined_method_proto_postlude
+    new_ctx new_print_ctx env ~self_manifest: None params scheme
+    (Some (proof_loc, name, decr_arg_name)) (Some body) ;
+  (* Done... Then, final carriage return. *)
+  Format.fprintf out_fmter ".@]@\n@\n" ;
+  let compiled = {
+    Misc_common.cfm_is_logical = false ;
+    Misc_common.cfm_from_species = from ;
+    Misc_common.cfm_method_name = name ;
+    Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
          Misc_common.cfm_used_species_parameter_tys =
-           ai.Abstractions.ai_used_species_parameter_tys;
+           ai.Abstractions.ai_used_species_parameter_tys ;
          Misc_common.cfm_raw_dependencies_from_parameters =
-           ai.Abstractions.ai_raw_dependencies_from_params;
+           ai.Abstractions.ai_raw_dependencies_from_params ;
          Misc_common.cfm_dependencies_from_parameters =
-           ai.Abstractions.ai_dependencies_from_params;
+           ai.Abstractions.ai_dependencies_from_params ;
          Misc_common.cfm_dependencies_from_parameters_in_type =
            ai.Abstractions.ai_dependencies_from_params_for_record_type ;
          Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in

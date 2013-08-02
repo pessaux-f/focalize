@@ -22,15 +22,16 @@
     to a recursive definition. Currently, we only make the difference between
     a structural termination and none/other proofs.
     In case of structural termination we assume that the definition was
-    generated using "Fixpoint". In any other case, we assume it has been
-    generated with "Function".
+    generated using "Fixpoint" using the provided parameter name as
+    decreasing argument. In any other case, we assume it has been generated
+    with "Function".
     Note that this type may change/disapear when we will have a more unified
     code generation model for recursion.
 
     {b Visibility}: Exported outside this module.                             *)
 (* ************************************************************************** *)
 type rec_proof_kind =
-  | RPK_struct
+  | RPK_struct of Parsetree.vname
   | RPK_other
 ;;
 
@@ -143,7 +144,8 @@ let minimal_typing_environment universe species_fields =
             | Some proof ->
                 RC_rec (
                 match proof.Parsetree.ast_desc with
-                | Parsetree.TP_structural _ -> RPK_struct
+                | Parsetree.TP_structural decr_arg_name ->
+                    RPK_struct decr_arg_name
                 | Parsetree.TP_lexicographic _
                 | Parsetree.TP_measure (_, _, _)
                 | Parsetree.TP_order (_, _, _) -> RPK_other

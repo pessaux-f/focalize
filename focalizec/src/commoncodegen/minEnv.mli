@@ -17,7 +17,7 @@
 (* $Id: minEnv.mli,v 1.11 2012-03-01 17:23:32 pessaux Exp $ *)
 
 type rec_proof_kind =
-  | RPK_struct
+  | RPK_struct of Parsetree.vname
   | RPK_other
 
 type rec_status =
