@@ -207,3 +207,9 @@ let (set_pmatch_err_as_warn, get_pmatch_err_as_warn) =
   (fun () -> pmatch_err_as_warn := true),
   (fun () -> !pmatch_err_as_warn)
 ;;
+
+let (set_zvtov_extra_opts, get_zvtov_extra_opts) =
+  let zvtov_extra_opts = ref "" in
+  (fun s -> zvtov_extra_opts := !zvtov_extra_opts ^ " " ^ s),
+  (fun () -> !zvtov_extra_opts)
+;;
