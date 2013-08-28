@@ -209,13 +209,20 @@
 ;; functions will know what it a "word".
 (defvar focalize-mode-syntax-table
   (let ((table (make-syntax-table)))
+    ;; Underscore is a valid part of a word.
     (modify-syntax-entry ?_ "w" table)
     (modify-syntax-entry ?\\ "\\" table)
-    (modify-syntax-entry ?/ ". 124b" table)
+    ;; Open paren is the start of a two-character comment sequence ('1').
+    (modify-syntax-entry ?( ". 1" table)
+    ;; Close paren is the end of a two-character comment-start sequence ('4').
+    (modify-syntax-entry ?) ". 4" table)
+    ;; Star is the second character of a two-character comment-start sequence
+    ;; ('2') or the start of a two-character comment-end sequence ('3').
     (modify-syntax-entry ?* ". 23" table)
     (modify-syntax-entry ?+ "." table)
     (modify-syntax-entry ?- "." table)
     (modify-syntax-entry ?= "." table)
+    ;; Newline ends a "b-style" comment.
     (modify-syntax-entry ?\n "> b" table)
     (modify-syntax-entry ?< "." table)
     (modify-syntax-entry ?> "." table)
@@ -279,7 +286,7 @@
      (list "\\(--.*\n\\)" '(1 font-lock-comment-face t))
      (list "\\(\(\\*.*\\*\)\\)" '(1 font-lock-comment-face t))
      (list "\\(\{\\*.*\\*\}\\)" '(1 font-lock-comment-face t))
-     (list "\\(\(\\*\*.*\\*\)\\)" '(1 font-lock-comment-face t))
+     (list "\\(\(\\*\\*.*\\*\)\\)" '(1 font-lock-comment-face t))
      ))
   "Stuff to highlight.")
 
