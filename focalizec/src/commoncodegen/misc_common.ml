@@ -357,10 +357,6 @@ let follow_instanciations_for_in_param ctx env original_param_name
         compilation scheme using the
         "Module_representing_collection.effective_collection.fct"
         indirection.
-      - [IPI_by_toplevel_species] : The species parameter was instanciated
-        by a toplevel species fully defined. In this case, the way to
-        reach functions to apply to the method generator is directly based
-        on the indirection "Module_representing_species.fct".
       - [IPI_by_species_parameter] : The species parameter was instanciated
         by a species parameter of the species who inherits. In this case,
         we must use the extra parameter added to the collection generator
@@ -371,7 +367,6 @@ let follow_instanciations_for_in_param ctx env original_param_name
 (* ************************************************************************* *)
 type is_parameter_instanciation =
   | IPI_by_toplevel_collection of Types.type_collection
-  | IPI_by_toplevel_species of Types.type_collection
   | IPI_by_species_parameter of Env.TypeInformation.species_param
 ;;
 
@@ -384,10 +379,11 @@ type is_parameter_instanciation =
 (*      is_parameter_instanciation                                            *)
 (** {b Descr} : Takes the index of the parameter we want to instanciate
     among the list of parameters of the species where this parameter
-    lives. Reminds that this parameter belongs to the species who DEFINED
+    lives. Remind that this parameter belongs to the species who DEFINED
     the method we are processing to create the collection generator (i.e. 
     the method whose method generator is inherited in the currently
-    compiled species).
+    compiled species and from -- by multiple steps possibly -- the species
+    in which the index is meaningful).
 
     When invocated, this function starts processing from the oldest species
     where the currently compiled method appeared, i.e. the species where
@@ -424,7 +420,9 @@ type is_parameter_instanciation =
 
     - [inheritance_steps] : The inheritance history describing where the
       currently processed method was defined and how it is propagated by
-      inheritance up to the currently compiled species.
+      inheritance up to the currently compiled species. In head are the most
+      recent steps, in tail the older. This list will be processed in reverse
+      order to "go back to the future".
 
     {b Rem} : Exported outside this module.                                    *) 
 (* ************************************************************************* *)
@@ -529,8 +527,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
                           inheritance tree for further instanciations.@."
                           index_of_instancier ;
                       rec_follow index_of_instancier rem_steps
-              | Types.SCK_toplevel_collection ->
-                  (begin
+              | Types.SCK_toplevel_collection -> (
                   (* The instanciation is done by a toplevel collection. In
                      this case, no need from now to continue walking up
                      along the inheritance history, there won't be anymore
@@ -540,19 +537,13 @@ let follow_instanciations_for_is_param ctx env original_param_index
                       "Final instanciation by toplevel collection.@." ;
                   IPI_by_toplevel_collection
                     (effective_mod, effective_name_as_string)
-                  end)
-              | Types.SCK_toplevel_species ->
-                  (begin
-                  (* The instanciation is done by a toplevel species. In this
-                     case, no need from now to continue walking up along the
-                     inheritance history, there won't be anymore
-                     instanciations. *)
-                  if Configuration.get_verbose () then
-                    Format.eprintf
-                      "Final instanciation by toplevel species.@." ;
-                  IPI_by_toplevel_species
-                    (effective_mod, effective_name_as_string)
-                  end)
+                 )
+              | Types.SCK_toplevel_species -> (
+                  (* The instanciation is done by a toplevel species. This is
+                     unsafe as shows bug #31. However, this should have already
+                     been rejected at scoping stage. *)
+                  assert false
+                 )
              end) in
   (* We must walk the inheritance steps in reverse order since it is built
      with most recent steps in head. *)

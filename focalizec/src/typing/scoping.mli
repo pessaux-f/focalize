@@ -1,18 +1,19 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaL compiler                               *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
-(*                                                                     *)
-(*  Copyright 2007 LIP6 and INRIA                                      *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
+(* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            François Pessaux                                                *)
+(*            Pierre Weis                                                     *)
+(*            Damien Doligez                                                  *)
+(*                                                                            *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
+(*                                                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
 
-
-(* $Id: scoping.mli,v 1.16 2009-02-06 15:28:27 pessaux Exp $ *)
 
 exception Non_logical_let_cant_define_logical_expr of (Parsetree.vname * Location.t)
 exception Module_not_specified_as_used of (Location.t * Types.fname)
@@ -26,6 +27,9 @@ exception Termination_proof_delayed_only_on_self_meth of
   (Location.t *  Parsetree.vname)
 exception Ambiguous_logical_expression_or of (int * Location.t)
 exception Ambiguous_logical_expression_and of (int * Location.t)
+exception Rebound_hyp_notation_or_var_in_proof of (Parsetree.vname * Location.t)
+exception Proof_by_species_property of (Parsetree.expr_ident * Location.t)
+exception Toplevel_species_as_effective_param of (Parsetree.ident * Location.t)
 
 val scope_file :
   Types.fname -> Parsetree.file -> Parsetree.file * Env.ScopingEnv.t

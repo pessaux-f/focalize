@@ -1,0 +1,70 @@
+open "basics";;
+open "sets";;
+
+
+species Abstract_triple(A is Setoid, B is Setoid, C is Setoid) =
+
+  inherit Setoid;
+
+  signature first: Self -> A;
+  signature second: Self -> B;
+  signature third: Self -> C;
+
+  signature make: A -> B -> C -> Self;
+
+  property is_first : all a: A, all b: B, all c: C,
+    A!equal(first(make(a, b, c)), a);
+
+  property is_second : all a: A, all b: B, all c: C,
+    B!equal(second(make(a, b, c)), b);
+
+  property is_third : all a: A, all b: B, all c: C,
+    C!equal(third(make(a, b, c)), c);
+
+  let equal(x, y) = A!equal(first(x), first(y)) &&
+                    B!equal(second(x), second(y)) &&
+                    C!equal(third(x), third(y));
+
+  theorem equal_spec: all x y: Self,
+        !equal(x, y) 
+   <-> ( A!equal(first(x), first(y)) /\
+         B!equal(second(x), second(y)) /\
+         C!equal(third(x), third(y)) )
+     proof = by definition of equal;
+
+  proof of equal_reflexive =
+    by property equal_spec,
+	        A!equal_reflexive, B!equal_reflexive, C!equal_reflexive	
+  ;
+
+  proof of equal_symmetric =
+   by property equal_spec,
+               A!equal_symmetric, B!equal_symmetric, C!equal_symmetric
+  ;
+
+  proof of equal_transitive =
+      by property equal_spec,
+	          A!equal_transitive, B!equal_transitive, C!equal_transitive
+  ;
+
+end;;
+
+
+species Triples_by_pairs(A is Setoid, B is Setoid, C is Setoid) =
+ inherit Abstract_triple(A, B, C) ;
+ representation = (A * B) * C ;
+ let first (t: Self) = fst(fst(t)) ;  
+ let second (t: Self) = snd(fst(t));
+ let third (t:Self) = snd(t);
+ let make(a, b, c):Self = pair(pair(a, b), c);
+
+ let element = pair(pair(A!element, B!element), C!element);
+
+ proof of is_first = assumed;
+ proof of is_second = assumed;
+ proof of is_third = assumed;
+
+
+end;;
+
+

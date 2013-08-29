@@ -208,6 +208,41 @@ exception Ambiguous_logical_expression_and of
 
 
 
+(* ******************************************************************** *)
+(** {b Descr} : Exception raised when an hypothesis, notation or variable
+    name is introduced although there already exists on in the current
+    scope of a proof.
+
+    {b Exported} : Yes.                                                 *)
+(* ******************************************************************** *)
+exception Rebound_hyp_notation_or_var_in_proof of
+  (Parsetree.vname * Location.t)
+;;
+
+
+
+(* ******************************************************************** *)
+(** {b Descr} : Exception raised when a proof fact uses the property of a
+    species instead of a collection.
+
+    {b Exported} : Yes.                                                 *)
+(* ******************************************************************** *)
+exception Proof_by_species_property of (Parsetree.expr_ident * Location.t) ;;
+
+
+
+(* ************************************************************************** *)
+(** {b Descr} : Exception raised when a toplevel species is used as effective
+    parameter in a species expression.
+
+    {b Exported} : Yes.                                                       *)
+(* ************************************************************************** *)
+exception Toplevel_species_as_effective_param of
+  (Parsetree.ident * Location.t)
+;;
+
+
+
 (* ********************************************************************** *)
 (** {b Descr} : Datastructure recording various the information required
     and propagated during the scoping pass. It is much more convenient to
@@ -1095,6 +1130,37 @@ let scope_enforced_deps ctx env enforced_deps =
 
 
 (* *********************************************************************** *)
+(** {b Descr}: Check if a local [vname] already exists in the value
+    environment.
+    This is used to detect hypotheses, notation or variable names in proofs
+    hyps that are existing several times in the scope.
+    In effect, they lead to Coq Variables and Coq complains if it has several
+    Variables with the same name in the scope.
+
+    {b Exported} : No.                                                      *)
+(* *********************************************************************** *)
+let local_name_already_bound vname ctx env =
+  (* We embedd the [vname] inside a dummy [ident] in order to lookup. *)
+  let fake_ident = {
+    Parsetree.ast_desc = Parsetree.EI_local vname ;
+    Parsetree.ast_loc = Location.none ;
+    Parsetree.ast_annot = [] ;
+    Parsetree.ast_type = Parsetree.ANTI_none } in
+  try
+    ignore
+      (Env.ScopingEnv.find_value
+         ~loc: Location.none ~current_unit: ctx.current_unit
+         ~current_species_name: ctx.current_species fake_ident
+         env) ;
+    (* No exception, hence found, hence error since we do not want several
+       hypotheses with the same name in the scope. *)
+    true
+  with _ -> false  (* Ok, not found. *)
+;;
+
+
+
+(* *********************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.fact -> Parsetree.fact *)
 (* {b Descr} : Scopes a [fact] and return this scoped fact].
 
@@ -1143,6 +1209,27 @@ let rec scope_fact ctx env fact =
                let tmp =
                  scoped_expr_ident_desc_from_value_binding_info
                    ~basic_vname scope_info in
+               (* Take care that the property comes from a collection or a
+                  collection parameter ! Not from a toplevel species. This
+                  was bug #25. *)
+               (match tmp with
+               | Parsetree.EI_method (Some coll_qvname, _) -> (
+                   let fake_sp_or_coll_name = {
+                     Parsetree.ast_desc = Parsetree.I_global coll_qvname ;
+                     Parsetree.ast_loc = Location.none ;
+                     Parsetree.ast_annot = [] ;
+                     Parsetree.ast_type = Parsetree.ANTI_none } in
+                   let host_of_prop =
+                     Env.ScopingEnv.find_species
+                       ~loc: ident.Parsetree.ast_loc fake_sp_or_coll_name
+                       ~current_unit: ctx.current_unit env in
+                   match host_of_prop.Env.ScopeInformation.spbi_scope with
+                   | Env.ScopeInformation.SPBI_file (_, false) ->
+                       raise
+                         (Proof_by_species_property
+                            (ident, ident.Parsetree.ast_loc))
+                   | _ -> ())
+               | _ -> ()) ;
                { ident with Parsetree.ast_desc = tmp })
              idents in
          Parsetree.F_property scoped_idents
@@ -1198,11 +1285,14 @@ and scope_hyps ctx env hyps =
     List.fold_left
       (fun (accu_env, accu_scoped_hyps) hyp ->
         let hyp_desc = hyp.Parsetree.ast_desc in
-        let (new_desc, accu_env') =
-          (begin
+        let (new_desc, accu_env') = (
           match hyp_desc with
            | Parsetree.H_variable (vname, type_expr) ->
                let scoped_type_expr = scope_type_expr ctx accu_env type_expr in
+               if local_name_already_bound vname ctx env then
+                 raise
+                   (Rebound_hyp_notation_or_var_in_proof
+                      (vname, hyp.Parsetree.ast_loc)) ;
                let env' =
                  Env.ScopingEnv.add_value
                    ~toplevel: None vname Env.ScopeInformation.SBI_local
@@ -1211,6 +1301,12 @@ and scope_hyps ctx env hyps =
            | Parsetree.H_hypothesis (vname, logical_expr) ->
                let scoped_logical_expr =
                  scope_logical_expr ctx accu_env logical_expr in
+               (* Ensure that there is not already an hypothesis with the same
+                  name in the scope. *)
+               if local_name_already_bound vname ctx env then
+                 raise
+                   (Rebound_hyp_notation_or_var_in_proof
+                      (vname, hyp.Parsetree.ast_loc)) ;
                let env' =
                  Env.ScopingEnv.add_value
                    ~toplevel: None vname Env.ScopeInformation.SBI_local
@@ -1218,12 +1314,16 @@ and scope_hyps ctx env hyps =
                ((Parsetree.H_hypothesis (vname, scoped_logical_expr)), env')
            | Parsetree.H_notation (vname, expr) ->
                let scoped_expr = scope_expr ctx accu_env expr in
+               if local_name_already_bound vname ctx env then
+                 raise
+                   (Rebound_hyp_notation_or_var_in_proof
+                      (vname, hyp.Parsetree.ast_loc)) ;
                let env' =
                  Env.ScopingEnv.add_value
                    ~toplevel: None vname Env.ScopeInformation.SBI_local
                    accu_env in
                ((Parsetree.H_notation (vname, scoped_expr)), env')
-          end) in
+         ) in
         (accu_env',
          { hyp with Parsetree.ast_desc = new_desc } :: accu_scoped_hyps))
       (env, [])
@@ -1635,20 +1735,15 @@ and scope_termination_proof ctx env params_env tp =
       - [~toplevel_let] : Boolean telling if the let-definition is at
         toplevel. If not, then the let-definition is in fact a "let in"
         definition
-
       - [ctx] : Current scoping context.
-
       - [env] : Current scoping environment.
-
       - [let_def] : The let definition to scope.
 
     {b Ret} :
       - [Parsetree.let_def] : The scoped let definition.
-
       - [Env.ScopingEnv.t] : The initial scoping environment extended with
         the information bound to the identifiers defined in the
         let-definition.
-
       - [Parsetree.vname list] : The list of names bound by this definition.
 
     {b Exported} : No.                                                       *)
@@ -1739,20 +1834,19 @@ and scope_let_definition ~toplevel_let ctx env let_def =
              Parsetree.BB_logical
                (scope_logical_expr
                   ctx env_with_ty_constraints_variables logical_expr)
-           else
-             (begin
+           else (
              match logical_expr.Parsetree.ast_desc with
-              | Parsetree.Pr_expr expr ->
-                  (* Turn the logical_expr into an expression since we are not
-                     in a logical let. *)
-                  Parsetree.BB_computational
-                    (scope_expr ctx env_with_ty_constraints_variables expr)
-              | _ ->
-                  raise
-                    (Non_logical_let_cant_define_logical_expr
-                       (let_binding_descr.Parsetree.b_name,
-                        let_binding.Parsetree.ast_loc))
-             end)
+             | Parsetree.Pr_expr expr ->
+                 (* Turn the logical_expr into an expression since we are not
+                    in a logical let. *)
+                 Parsetree.BB_computational
+                   (scope_expr ctx env_with_ty_constraints_variables expr)
+             | _ ->
+                 raise
+                   (Non_logical_let_cant_define_logical_expr
+                      (let_binding_descr.Parsetree.b_name,
+                       let_binding.Parsetree.ast_loc))
+            )
        | Parsetree.BB_computational expr ->
            Parsetree.BB_computational
              (scope_expr ctx env_with_ty_constraints_variables expr)) in
@@ -1855,14 +1949,14 @@ and scope_logical_expr ctx env logical_expr =
               raise
                 (Ambiguous_logical_expression_or
                   (0, logical_expr.Parsetree.ast_loc))
-          | _ -> ());
+          | _ -> ()) ;
          (match p2.Parsetree.ast_desc with
           | Parsetree.Pr_imply (_, _)
           | Parsetree.Pr_equiv (_, _) ->
               raise
                 (Ambiguous_logical_expression_or
                   (1, logical_expr.Parsetree.ast_loc))
-          | _ -> ());
+          | _ -> ()) ;
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_or (scoped_p1, scoped_p2)
@@ -1883,7 +1977,7 @@ and scope_logical_expr ctx env logical_expr =
               raise
                 (Ambiguous_logical_expression_and
                   (1, logical_expr.Parsetree.ast_loc))
-          | _ -> ());
+          | _ -> ()) ;
          let scoped_p1 = scope_logical_expr ctx env p1 in
          let scoped_p2 = scope_logical_expr ctx env p2 in
          Parsetree.Pr_and (scoped_p1, scoped_p2)
@@ -2134,8 +2228,14 @@ let rec scope_species_fields ctx env = function
 ;;
 
 
+
 (** Species parameters arguments can only be atomic names of species. Hence
-    they can only look like 0-ary sum type value constructors expressions. *)
+    they can only look like 0-ary sum type value constructors expressions.
+
+    Attention, to fix bug #31, oen must ensure that effective arguments are
+    not toplevel species. In effect, only collection or collection parameters
+    are safe to be used as effective parameters in a species expression
+    (either for inheritance or collection-implement). *)
 let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
   match initial_expr.Parsetree.ast_desc with
   | Parsetree.E_self -> initial_expr
@@ -2143,7 +2243,7 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
       let Parsetree.CI glob_ident = cstr_expr.Parsetree.ast_desc in
       (* Ensure that the mentionned hosting compilation unit of the species was
          mentionned to be "used" or "opened". *)
-      ensure_ident_allowed_qualified ctx glob_ident;
+      ensure_ident_allowed_qualified ctx glob_ident ;
       let species_info =
         Env.ScopingEnv.find_species
           ~loc: glob_ident.Parsetree.ast_loc
@@ -2152,7 +2252,13 @@ let rec scope_expr_collection_cstr_for_is_param ctx env initial_expr =
          parameter, then the hosting file is the current compilation unit. *)
       let hosting_file =
         (match species_info.Env.ScopeInformation.spbi_scope with
-         | Env.ScopeInformation.SPBI_file n -> n
+         | Env.ScopeInformation.SPBI_file (n, is_coll) ->
+             (* Forbid toplevel species as effective argument. *)
+             if not is_coll then
+               raise
+                 (Toplevel_species_as_effective_param
+                    (glob_ident, glob_ident.Parsetree.ast_loc)) ;
+             n
          | Env.ScopeInformation.SPBI_parameter -> ctx.current_unit) in
       let scoped_glob_ident = {
         glob_ident with
@@ -2221,7 +2327,7 @@ let scope_species_expr ctx env species_expr =
   let scoped_ident_descr =
     match ident_scope_info.Env.ScopeInformation.spbi_scope with
      | Env.ScopeInformation.SPBI_parameter -> Parsetree.I_local basic_vname
-     | Env.ScopeInformation.SPBI_file hosting_file ->
+     | Env.ScopeInformation.SPBI_file (hosting_file, _) ->
          Parsetree.I_global (Parsetree.Qualified (hosting_file, basic_vname)) in
   let scoped_ident = {
     se_name_ident with Parsetree.ast_desc = scoped_ident_descr } in
@@ -2318,7 +2424,7 @@ let scope_species_params_types ctx env params =
               match ident_scope_info.Env.ScopeInformation.spbi_scope with
               | Env.ScopeInformation.SPBI_parameter ->
                   Parsetree.I_local basic_vname
-              | Env.ScopeInformation.SPBI_file hosting_file ->
+              | Env.ScopeInformation.SPBI_file (hosting_file, _) ->
                   Parsetree.I_global
                     (Parsetree.Qualified (hosting_file, basic_vname)) in
             let scoped_ident = {
@@ -2451,7 +2557,8 @@ let scope_species_def ctx env species_def =
         species_def_descr.Parsetree.sd_params ;
     Env.ScopeInformation.spbi_inherits = scoped_inherits.Parsetree.ast_desc ;
     Env.ScopeInformation.spbi_scope =
-      Env.ScopeInformation.SPBI_file ctx.current_unit } in
+      Env.ScopeInformation.SPBI_file
+        (ctx.current_unit, false (* Not a collection. *)) } in
   (* Add the species in the environment. *)
   let env_with_species =
     Env.ScopingEnv.add_species
@@ -2503,7 +2610,8 @@ let scope_collection_def ctx env coll_def =
     (* A collection never inherits. *)
     Env.ScopeInformation.spbi_inherits = [] ;
     Env.ScopeInformation.spbi_scope =
-      Env.ScopeInformation.SPBI_file ctx.current_unit } in
+      Env.ScopeInformation.SPBI_file
+        (ctx.current_unit, true (* Is a collection. *)) } in
   (* Add the collection in the environment. *)
   let env_with_coll =
     Env.ScopingEnv.add_species
@@ -2518,6 +2626,8 @@ let scope_collection_def ctx env coll_def =
       env_with_coll in
   (scoped_coll_def, final_env)
 ;;
+
+
 
 (** Scopes a collection, a let binding  or a property within a testing
    context in the same manner as [scope_phrase].  *)
@@ -2546,25 +2656,27 @@ let scope_testing_context_phrase ctx env testing_context_phrase =
              name (Env.ScopeInformation.SBI_file ctx.current_unit) env in
          ((Parsetree.TstCtxPh_property scoped_property), env', ctx)
    ) in
-   ({ testing_context_phrase with Parsetree.ast_desc = new_desc }, new_env, new_ctx)
+   ({ testing_context_phrase with Parsetree.ast_desc = new_desc },
+    new_env, new_ctx)
 ;;
+
+
 
 (** {b Descr} : Scopes a testing definition. Returns the scoped
    definition and the initial environment extended with a binding
    for the collections inside. This second returned value might be
    useful to offer a common typing environement to all testing
    definitions *)
-let scope_testing ctx env (testing_def: Parsetree.testing_def_desc Parsetree.ast) =
+let scope_testing ctx env
+    (testing_def: Parsetree.testing_def_desc Parsetree.ast) =
   let testing_def_desc = testing_def.Parsetree.ast_desc in
   let testing_name = testing_def_desc.Parsetree.tstd_name in
   let testing_expr = testing_def_desc.Parsetree.tstd_body in
   let testing_expr_desc = testing_expr.Parsetree.ast_desc in
   let testing_context = testing_expr_desc.Parsetree.tst_context in
-
   if Configuration.get_verbose () then
     Format.eprintf "Scoping testing '%a'.@."
       Sourcify.pp_vname testing_name;
-
   (* We first deal with the context
      the testing defines. We treat it as a sequence of toplevel phrases.  *)
   let (scoped_testing_context,env') =
@@ -2581,9 +2693,7 @@ let scope_testing ctx env (testing_def: Parsetree.testing_def_desc Parsetree.ast
           (* Return the scoped phrase. *)
           testing_context_phrase')
         testing_context in
-    scoped_testing_context, !current_env
-  in
-
+    scoped_testing_context, !current_env in
   (* We then test whether a collection testing_name is among the
      collections defined in the testing definition. *)
   let loc = testing_def.Parsetree.ast_loc in
@@ -2597,7 +2707,6 @@ let scope_testing ctx env (testing_def: Parsetree.testing_def_desc Parsetree.ast
     Env.ScopingEnv.find_species
       ~loc
       ~current_unit: ctx.current_unit fake_ident env' in
-
   (* We then deal with the list of properties being tested. The scoping
      is done in the context of the tested collection. *)
   let _ctx_tested_coll = { ctx with
@@ -2605,18 +2714,14 @@ let scope_testing ctx env (testing_def: Parsetree.testing_def_desc Parsetree.ast
                Some
                  (Parsetree_utils.name_of_vname
                     testing_name) } in
-  let scoped_properties = 
-    (* TESTING TODO : for now, we do not look into the property list. *)
-   testing_expr_desc.Parsetree.tst_properties in
-
-  let scoped_parameters =
-    (* TESTING TODO : for now, we do not look into the parameters. *)
-    testing_expr_desc.Parsetree.tst_parameters in
-      
+  (* [Unsure] TESTING TODO : for now, we do not look into the property list. *)
+  let scoped_properties = testing_expr_desc.Parsetree.tst_properties in
+  (* TESTING TODO : for now, we do not look into the parameters. *)
+  let scoped_parameters = testing_expr_desc.Parsetree.tst_parameters in
   (* We reassemble everything *)
    let scoped_testing_expr_desc = {
-     Parsetree.tst_context = scoped_testing_context;
-     Parsetree.tst_properties = scoped_properties;
+     Parsetree.tst_context = scoped_testing_context ;
+     Parsetree.tst_properties = scoped_properties ;
      Parsetree.tst_parameters = scoped_parameters } in
    let scoped_testing_expr =
      { testing_expr with Parsetree.ast_desc = scoped_testing_expr_desc } in
@@ -2628,6 +2733,8 @@ let scope_testing ctx env (testing_def: Parsetree.testing_def_desc Parsetree.ast
      defined within the testing definition. *)
   (scoped_testing_def, env')
 ;;
+
+
 
 let scope_phrase ctx env phrase =
   let (new_desc, new_env, new_ctx) =

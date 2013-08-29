@@ -1,0 +1,845 @@
+open "basics";;
+open "sets";;
+open "listes";;
+open "finite_sets_f";;
+open "products";;
+
+
+(** Binary relation *)
+
+
+(** A : domain, B : codomain *)
+species Binary_relations (A is Setoid, B is Setoid) =
+
+  inherit Partial_set;
+
+  signature relation : Self -> A -> B -> bool;
+
+  property relation_compatible_left : all r: Self, all a1 a2: A, all b: B,
+    A!equal(a1, a2) -> (relation(r, a1, b) -> relation(r, a2, b));
+
+  property relation_compatible_right : all r: Self, all a: A, all b1 b2: B,
+    B!equal(b1, b2) -> (relation(r, a, b1) -> relation(r, a, b2));
+
+   signature is_contained: Self -> Self -> bool ;
+
+  property is_contained_spec: all r_1 r_2: Self, 
+        is_contained(r_1, r_2) 
+   <->  all a: A, all b: B, 
+         relation(r_1, a, b) -> relation(r_2, a, b);
+
+  let equal(x, y) = is_contained(x, y) && is_contained(y, x) ;
+
+  theorem equal_spec :
+    all r1 r2 : Self,
+    equal (r1, r2) <-> (all a : A, all b : B,
+                       relation (r1, a, b) <-> relation (r2, a, b))
+  proof = by definition of equal property is_contained_spec ;
+
+  proof of equal_reflexive = by property equal_spec;
+  proof of equal_symmetric = by property equal_spec;
+  proof of equal_transitive = by property equal_spec;
+
+
+  signature empty : unit -> Self;
+
+  (** Statement for the empty relation being element of Self *)
+  logical let empty_belongs = true;
+
+  signature full : unit -> Self;
+
+  (** Statement for the full relation being element of Self *)
+  logical let full_belongs = true;
+
+  signature singleton : A -> B -> Self;
+
+  (** Statement for the singleton relation being element of Self *)
+  logical let singleton_belongs (_a : A, _b : B) = true;
+
+  signature union : Self -> Self -> Self;
+
+  (** Statement describing when union is a composition law *)
+  logical let union_is_internal (_r1 : Self, _r2 : Self) = true;
+
+  signature inter : Self -> Self -> Self;
+
+  (** Statement describing when inter is a composition law *)
+  logical let inter_is_internal (_r1 : Self, _r2 : Self) = true;
+
+  signature diff : Self -> Self -> Self;
+
+  (** Statement describing when diff is a composition law *)
+  logical let diff_is_internal (_r1 : Self, _r2 : Self) = true;
+
+
+  logical let is_A_singleton = all a : A, A!equal (a, A!element);
+  logical let is_B_singleton = all b : B, B!equal (b, B!element);
+
+
+
+  property empty_spec :
+    empty_belongs ->
+      all a : A, all b : B, ~ relation (empty (()), a, b);
+
+  property full_spec :
+    full_belongs ->
+      all a : A, all b : B, relation (full (()), a, b);
+
+  property singleton_spec :
+    all a1 : A, all b1 : B,
+    singleton_belongs (a1, b1) ->
+      all a2 : A, all b2 : B,
+      relation (singleton (a1, b1), a2, b2) <->
+      ( A!equal (a1, a2) && B!equal (b1, b2) );
+
+  property union_spec :
+    all r1 r2 : Self,
+    union_is_internal (r1, r2) ->
+      all a : A, all b : B,
+      relation (union (r1, r2), a, b) <->
+      ( relation (r1, a, b) \/ relation (r2, a, b) );
+
+  property inter_spec :
+    all r1 r2 : Self,
+    inter_is_internal (r1, r2) ->
+      all a : A, all b : B,
+      relation (inter (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ relation (r2, a, b) );
+
+  property diff_spec :
+    all r1 r2 : Self,
+    diff_is_internal (r1, r2) ->
+      all a : A, all b : B,
+      relation (diff (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+
+  logical let is_left_unique (r) =
+    all a1 a2 : A, all b : B,
+    ( relation (r, a1, b) /\ relation (r, a2, b) ) -> A!equal (a1, a2);
+
+  theorem is_left_unique_spec : all r: Self, 
+   (all a1 a2 : A, all b : B,
+     ( relation (r, a1, b) /\ relation (r, a2, b) ) -> A!equal (a1, a2))
+   <-> is_left_unique (r)
+  proof = by definition of is_left_unique;
+
+
+  logical let is_right_unique (r) =
+    all a : A, all b1 b2 : B,
+    ( relation (r, a, b1) /\ relation (r, a, b2) ) -> B!equal (b1, b2);
+
+  theorem is_right_unique_spec : all r: Self,
+    (all a : A, all b1 b2 : B,
+      ( relation (r, a, b1) /\ relation (r, a, b2) ) -> B!equal (b1, b2))
+    <-> is_right_unique (r)
+  proof = by definition of is_right_unique;
+ 
+
+  logical let is_left_total (r) =
+    all a : A, ex b : B, relation (r, a, b);
+
+ theorem is_left_total_spec : all r: Self,
+    (all a : A, ex b : B, relation (r, a, b))
+    <-> is_left_total(r)
+  proof = by definition of is_left_total;
+
+
+  logical let is_right_total (r) =
+    all b : B, ex a : A, relation (r, a, b);
+
+  theorem is_right_total_spec : all r: Self,
+    (all b : B, ex a : A, relation (r, a, b))
+    <-> is_right_total(r)
+  proof = by definition of is_right_total;
+
+
+
+end;;
+
+
+species Injective_relations (A is Setoid, B is Setoid) =
+
+  inherit Binary_relations (A, B);
+
+  property left_unique : all r : Self, is_left_unique (r);
+
+
+  (** A can't be empty *)
+  logical let full_belongs = is_A_singleton;
+
+  logical let union_is_internal (r1, r2) =
+    all a1 a2 : A, all b : B,
+    ( relation (r1, a1, b) /\ relation (r2, a2, b) ) -> A!equal (a1, a2);
+
+
+  theorem left_unique_empty :
+    empty_belongs -> is_left_unique (empty (()))
+  proof = assumed;            (* TODO *)
+
+  theorem left_unique_full :
+    full_belongs -> is_left_unique (full (()))
+  proof = assumed;            (* TODO *)
+
+  theorem left_unique_singleton :
+    all a : A, all b : B,
+    singleton_belongs (a, b) -> is_left_unique (singleton (a, b))
+  proof = assumed;            (* TODO *)
+
+  theorem left_unique_union :
+    all r1 r2 : Self,
+    union_is_internal (r1, r2) -> is_left_unique (union (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem left_unique_inter :
+    all r1 r2 : Self,
+    inter_is_internal (r1, r2) -> is_left_unique (inter (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem left_unique_diff :
+    all r1 r2 : Self,
+    diff_is_internal (r1, r2) -> is_left_unique (diff (r1, r2))
+  proof = assumed;            (* TODO *)
+
+end;;
+
+
+species Determinist_relations (A is Setoid, B is Setoid) =
+
+  inherit Binary_relations (A, B);
+
+  property right_unique : all r : Self, is_right_unique (r);
+
+
+  logical let full_belongs = is_B_singleton;
+
+  logical let union_is_internal (r1, r2) =
+    all a : A, all b1 b2 : B,
+    ( relation (r1, a, b1) /\ relation (r2, a, b2) ) -> B!equal (b1, b2);
+
+
+  theorem right_unique_empty :
+    empty_belongs -> is_right_unique (empty (()))
+  proof = assumed;            (* TODO *)
+
+  theorem right_unique_full :
+    full_belongs -> is_right_unique (full (()))
+  proof = assumed;            (* TODO *)
+
+  theorem right_unique_singleton :
+    all a : A, all b : B,
+    singleton_belongs (a, b) -> is_right_unique (singleton (a, b))
+  proof = assumed;            (* TODO *)
+
+  theorem right_unique_union :
+    all r1 r2 : Self,
+    union_is_internal (r1, r2) -> is_right_unique (union (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem right_unique_inter :
+    all r1 r2 : Self,
+    inter_is_internal (r1, r2) -> is_right_unique (inter (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem right_unique_diff :
+    all r1 r2 : Self,
+    diff_is_internal (r1, r2) -> is_right_unique (diff (r1, r2))
+  proof = assumed;            (* TODO *)
+
+end;;
+
+
+species Left_total_relations (A is Setoid, B is Setoid) =
+
+  inherit Binary_relations (A, B);
+
+  property left_total : all r : Self, is_left_total (r);
+
+
+  logical let empty_belongs = false;
+
+  logical let singleton_belongs (_a, _b) = is_A_singleton;
+
+  logical let inter_is_internal (r1, r2) =
+    all a : A, ex b : B, relation (r1, a, b) /\ relation (r2, a, b);
+
+  logical let diff_is_internal (r1, r2) =
+    all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b);
+
+
+  theorem left_total_empty :
+    empty_belongs -> is_left_total (empty (()))
+  proof = assumed;            (* TODO *)
+
+  theorem left_total_full :
+    full_belongs -> is_left_total (full (()))
+  proof = assumed;            (* TODO *)
+
+  theorem left_total_singleton :
+    all a : A, all b : B,
+    singleton_belongs (a, b) -> is_left_total (singleton (a, b))
+  proof = assumed;            (* TODO *)
+
+  theorem left_total_union :
+    all r1 r2 : Self,
+    union_is_internal (r1, r2) -> is_left_total (union (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem left_total_inter :
+    all r1 r2 : Self,
+    inter_is_internal (r1, r2) -> is_left_total (inter (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem left_total_diff :
+    all r1 r2 : Self,
+    diff_is_internal (r1, r2) -> is_left_total (diff (r1, r2))
+  proof = assumed;            (* TODO *)
+
+end;;
+
+
+species Surjective_relations (A is Setoid, B is Setoid) =
+
+  inherit Binary_relations (A, B);
+
+  property right_total : all r : Self, is_right_total (r);
+
+
+  logical let empty_belongs = false;
+
+  logical let singleton_belongs (_a, _b) = is_B_singleton;
+
+  logical let inter_is_internal (r1, r2) =
+    all b : B, ex a : A, relation (r1, a, b) /\ relation (r2, a, b);
+
+  logical let diff_is_internal (r1, r2) =
+    all b : B, ex a : A, relation (r1, a, b) /\ ~ relation (r2, a, b);
+
+
+  theorem right_total_empty :
+    empty_belongs -> is_right_total (empty (()))
+  proof = assumed;            (* TODO *)
+
+  theorem right_total_full :
+    full_belongs -> is_right_total (full (()))
+  proof = assumed;            (* TODO *)
+
+  theorem right_total_singleton :
+    all a : A, all b : B,
+    singleton_belongs (a, b) -> is_right_total (singleton (a, b))
+  proof = assumed;            (* TODO *)
+
+  theorem right_total_union :
+    all r1 r2 : Self,
+    union_is_internal (r1, r2) -> is_right_total (union (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem right_total_inter :
+    all r1 r2 : Self,
+    inter_is_internal (r1, r2) -> is_right_total (inter (r1, r2))
+  proof = assumed;            (* TODO *)
+
+  theorem right_total_diff :
+    all r1 r2 : Self,
+    diff_is_internal (r1, r2) -> is_right_total (diff (r1, r2))
+  proof = assumed;            (* TODO *)
+
+end;;
+
+
+species Functions (A is Setoid, B is Setoid) =
+
+  inherit Determinist_relations (A, B), Left_total_relations (A, B);
+
+end;;
+
+
+species Injective_functions (A is Setoid, B is Setoid) =
+
+  inherit Functions (A, B), Injective_relations (A, B);
+
+  logical let full_belongs = is_A_singleton /\ is_B_singleton;
+
+  logical let union_is_internal (r1, r2) =
+    all a1 a2 : A, all b1 b2 : B,
+    (( relation (r1, a1, b1) /\ relation (r2, a2, b1) ) -> A!equal (a1, a2)) /\
+    (( relation (r1, a1, b1) /\ relation (r2, a1, b2) ) -> B!equal (b1, b2));
+
+  (* Les preuves suivantes devraient etre cassees *)
+
+  (* proof of left_unique_full = assumed; (\* TODO *\) *)
+  (* proof of left_total_full = assumed; *)
+  (* proof of right_total_full = assumed; *)
+
+  (* proof of left_unique_union = assumed; (\* TODO *\) *)
+  (* proof of left_total_union = assumed; *)
+  (* proof of right_total_union = assumed; *)
+
+end;;
+
+
+species Surjective_functions (A is Setoid, B is Setoid) =
+
+  inherit Functions (A, B), Surjective_relations (A, B);
+
+  logical let singleton_belongs (_a, _b) = is_A_singleton /\ is_B_singleton;
+
+  logical let inter_is_internal (r1, r2) =
+    ( all a : A, ex b : B, relation (r1, a, b) /\ relation (r2, a, b) ) /\
+    ( all b : B, ex a : A, relation (r1, a, b) /\ relation (r2, a, b) );
+
+  logical let diff_is_internal (r1, r2) =
+    ( all a : A, ex b : B, relation (r1, a, b) /\ ~ relation (r2, a, b) ) /\
+    ( all b : B, ex a : A, relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+  (* Les preuves suivantes devraient etre cassees *)
+
+  (* proof of left_unique_singleton = assumed; (\* TODO *\) *)
+  (* proof of left_total_singleton = assumed; *)
+  (* proof of right_total_singleton = assumed; *)
+
+  (* proof of left_unique_inter = assumed; (\* TODO *\) *)
+  (* proof of left_total_inter = assumed; *)
+  (* proof of right_total_inter = assumed; *)
+
+  (* proof of left_unique_diff = assumed; (\* TODO *\) *)
+  (* proof of left_total_diff = assumed; *)
+  (* proof of right_total_diff = assumed; *)
+
+end;;
+
+
+species Bijections (A is Setoid, B is Setoid) =
+
+  inherit Injective_functions (A, B), Surjective_functions (A, B);
+
+end;;
+
+
+species Composition_relations(AA is Setoid, BB is Setoid, CC is Setoid, 
+                              R_AB is Binary_relations(AA, BB),
+                              R_BC is Binary_relations(BB, CC)) =
+  inherit Binary_relations(AA, CC);
+
+  signature compose_rel : R_AB -> R_BC -> Self;
+  
+  property compose_rel_spec : 
+  all r1: R_AB, all r2: R_BC, all a: AA, all c: CC, 
+     relation(compose_rel(r1, r2), a, c)
+     <-> (ex b: BB, (R_AB!relation(r1, a, b) /\ R_BC!relation(r2, b, c))) 
+  ;
+
+end;;
+
+
+species Internal_binary_relations(A is Setoid, L is Utils(A))=
+  
+  inherit Binary_relations(A, A);
+
+  (* TODO : les autres proprietes *)
+
+
+  logical let is_reflexive(r: Self) = 
+     all x: A, relation(r, x, x);
+
+  theorem is_reflexive_spec : all r: Self,
+     (all x: A, relation(r, x, x)) <-> is_reflexive(r)
+  proof = by definition of is_reflexive ;
+
+  logical let is_transitive(r: Self) = 
+     all x y z : A, (relation(r, x, y) /\ relation(r, y, z))
+       -> relation(r, x, z) ;  
+
+  theorem is_transitive_spec : all r: Self,
+    (all x y z : A, (relation(r, x, y) /\ relation(r, y, z))
+       -> relation(r, x, z))
+    <-> is_transitive(r)
+  proof = by definition of is_transitive ;
+  
+  let rec rt_closure_aux(r: Self, a1: A, a2: A, l: list(A)) : bool =
+   match l with
+    | [] -> A!equal(a1, a2)
+    | h::t -> relation(r, a1, h) && rt_closure_aux(r, h, a2, t)
+   termination proof = structural l;
+
+  theorem rt_closure_aux_nil : all r: Self, all a1 a2: A, 
+   rt_closure_aux(r, a1, a2, []) <-> A!equal(a1, a2)
+  proof = by definition of rt_closure_aux;
+
+  theorem rt_closure_aux_cons : all r: Self, all h: A, all t: list(A),
+                                all a1 a2: A, 
+   rt_closure_aux(r, a1, a2, h::t) <-> (relation(r, a1, h) /\ 
+                                      rt_closure_aux(r, h, a2, t))
+  proof = by definition of rt_closure_aux;
+
+  signature rt_closure : Self -> Self;
+
+  property rt_closure_spec : all r: Self, all a1 a2: A,
+       relation(rt_closure(r), a1, a2) 
+   <-> (ex l: list(A), rt_closure_aux(r, a1, a2, l));
+
+  (** Usual inductive definition for closure *)
+  (* [tl]: I think we could prove it in finite_relation *)
+  theorem is_rt_closure : all r: Self, all a1 a2: A,
+       relation(rt_closure(r), a1, a2) 
+   -> (A!equal(a1, a2) \/
+      (ex a3: A, (relation(r, a1, a3) /\ relation(rt_closure(r), a3, a2))))
+  proof = assumed;
+
+  theorem rt_closure_aux_compatible_left: 
+   all r: Self, all a1 a2 a3: A, all l: list(A),
+   A!equal(a1, a2) -> (rt_closure_aux(r, a1, a3, l) 
+   -> rt_closure_aux(r, a2 , a3, l))
+  proof = 
+   <1>1 assume r: Self,
+        prove all l: list(A),
+          all a1 a2 a3: A,
+          A!equal(a1, a2) -> ((rt_closure_aux(r, a1, a3, l) 
+            -> rt_closure_aux(r, a2 , a3, l)))
+        <2>1 prove all a1 a2 a3: A,
+             A!equal(a1, a2) -> ((rt_closure_aux(r, a1, a3, []) 
+               -> rt_closure_aux(r, a2 , a3, [])))
+             by property  rt_closure_aux_nil, A!equal_symmetric, 
+                         A!equal_transitive
+        <2>2 assume h: A, assume t: list(A),
+             prove all a1 a2 a3: A,
+                     A!equal(a1, a2) -> ((rt_closure_aux(r, a1, a3, h::t) 
+                       -> rt_closure_aux(r, a2 , a3, h::t)))
+             <3>1 assume a1 a2 a3: A,
+                  hypothesis H2: A!equal(a1, a2),
+                  hypothesis H3: rt_closure_aux(r, a1, a3, h::t),
+                  prove rt_closure_aux(r, a2 , a3, h::t)
+                  <4>0 prove relation(r, a1, h)
+                       by hypothesis H3 property rt_closure_aux_cons
+		  <4>1 prove relation (r, a2, h)
+                       by step <4>0 hypothesis H2 
+                          property relation_compatible_left
+                  <4>2 prove rt_closure_aux(r, h, a3, t)
+                       by hypothesis H3 property rt_closure_aux_cons
+		  <4>f qed by step <4>1, <4>2 
+                              property rt_closure_aux_nil,
+                                       rt_closure_aux_cons
+             <3>f conclude
+        <2>f conclude
+   <1>f conclude ;
+
+  theorem rt_closure_aux_trans: 
+  all r: Self, all l1 l2: list(A), all a1 a2 a3: A, 
+     (rt_closure_aux(r, a1, a2, l1) /\ rt_closure_aux(r, a2, a3, l2))
+     -> rt_closure_aux(r, a1, a3, L!append(l1, l2))
+  proof = 
+  <1>1 assume r: Self,
+       prove all l1 l2: list(A),
+             all a1 a2 a3: A,
+               (rt_closure_aux(r, a1, a2, l1) 
+                && rt_closure_aux(r, a2, a3, l2))
+             -> rt_closure_aux(r, a1, a3, L!append(l1, l2))
+       <2>1 assume a1 a2 a3: A,
+            prove all l2: list(A),
+            (rt_closure_aux(r, a1, a2, []) && rt_closure_aux(r, a2, a3, l2))
+            -> rt_closure_aux(r, a1, a3, L!append([], l2))
+            <3>1 assume l2: list(A),
+                 hypothesis H1: rt_closure_aux(r, a1, a2, []),
+                 hypothesis H2: rt_closure_aux(r, a2, a3, l2),
+                 prove rt_closure_aux(r, a1, a3, L!append([], l2))
+                 <4>1 prove A!equal(a1, a2)
+                      by hypothesis H1
+                         property rt_closure_aux_nil
+                 <4>2 prove rt_closure_aux(r, a1, a3, l2)
+                      by property rt_closure_aux_compatible_left,
+                                  A!equal_symmetric
+                         hypothesis H2
+                         step <4>1
+                 <4>3 prove L!append([], l2) = l2
+                      by property L!append_def_nil
+                 <4>f qed by step <4>2, <4>3
+            <3>f conclude
+       <2>2 prove 
+             all h: A, all t: list(A),
+             (all l2: list(A), all a1 a2 a3: A,
+                 (   rt_closure_aux(r, a1, a2, t) 
+                  && rt_closure_aux(r, a2, a3, l2))
+              -> rt_closure_aux(r, a1, a3, L!append(t, l2)))
+             -> (all l2: list(A),
+                 all a1 a2 a3: A,
+                 (rt_closure_aux(r, a1, a2, h::t) 
+                   && rt_closure_aux(r, a2, a3, l2))
+                 -> rt_closure_aux(r, a1, a3, L!append(h::t, l2)))
+            <3>1 assume h: A,
+                 assume t: list(A),
+                 hypothesis HI: (all l2: list(A), all a1 a2 a3: A,
+                   (   rt_closure_aux(r, a1, a2, t) 
+                    && rt_closure_aux(r, a2, a3, l2))
+                   -> rt_closure_aux(r, a1, a3, L!append(t, l2))),
+                 assume l2: list(A),
+                 assume a1 a2 a3: A,
+                 hypothesis H1: rt_closure_aux(r, a1, a2, h::t) ,
+                 hypothesis H2: rt_closure_aux(r, a2, a3, l2),
+                 prove rt_closure_aux(r, a1, a3, L!append(h::t, l2))
+                 <4>1 prove rt_closure_aux(r, a1, a3, h::(L!append(t, l2)))
+                      <5>1 prove relation(r, a1, h)
+                           by hypothesis H1
+                              property rt_closure_aux_cons
+                      <5>2 prove rt_closure_aux(r, h, a3, L!append(t, l2))
+                           by hypothesis H1, H2, HI
+                              property rt_closure_aux_cons
+                      <5>f qed by step <5>1, <5>2
+                                  property rt_closure_aux_cons
+                <4>f qed by step <4>1
+                            property L!append_def_cons
+            <3>f conclude
+       <2>f conclude
+  <1>f conclude 
+ ;
+
+  theorem rt_closure_is_reflexive : all r: Self,
+    is_reflexive(rt_closure(r))
+  proof = by property is_reflexive_spec, rt_closure_spec, 
+                      rt_closure_aux_nil, A!equal_reflexive
+  ;
+
+  theorem rt_closure_is_transitive : all r: Self,
+    is_transitive(rt_closure(r))
+  proof = 
+   <1>1 assume r: Self, assume x y z: A,  
+        hypothesis H1: (relation(rt_closure(r), x, y) /\ relation(rt_closure(r), y, z)),
+        prove relation(rt_closure(r), x, z)
+        <2>1 prove (ex l: list(A), rt_closure_aux(r, x, z, l))	
+           <3>1 prove (ex l1 l2: list(A), (rt_closure_aux(r, x, y, l1) /\ rt_closure_aux(r, y, z, l2)))
+                by hypothesis H1 property rt_closure_spec
+           <3>2 assume l1 l2: list(A),
+                hypothesis H2: (rt_closure_aux(r, x, y, l1) /\ rt_closure_aux(r, y, z, l2)),
+                prove rt_closure_aux(r, x, z, L!append(l1, l2))
+                by property rt_closure_aux_trans hypothesis H2
+           <3>f conclude
+        <2>f qed by step <2>1 property rt_closure_spec
+   <1>f qed by step <1>1 property is_transitive_spec ;
+ 
+end;;
+
+
+
+(* [tl]: shouldn't the following be moved into "finite_relations.fcl ? *)
+
+species Relations_by_sets_of_pairs(A is Setoid, B is Setoid,
+                                     T is Product_set(A, B),
+                                     P is Finite_parts(T)) =
+
+  inherit Binary_relations(A, B);
+
+  representation = P;
+
+  let set_as_relation(s: P): Self = s;
+
+  let relation_as_set(s: Self): P = s;
+
+  theorem set_relation_valid :
+    (all p: P, P!equal(relation_as_set(set_as_relation(p)), p))
+   /\
+    (all s: Self, equal(set_as_relation(relation_as_set(s)), s))
+  proof = by definition of set_as_relation, relation_as_set
+             property P!equal_reflexive, equal_reflexive
+  ;
+
+  let relation(r, a, b) = P!belongs(T!pair(a, b), r);
+  
+  (* [tl]: forced to use relation_as_set otherwise
+     "Error: Types Self and bin_relations_new#P are not compatible." *)
+  theorem relation_spec :  all a: A, all b: B, all r: Self,
+    relation(r, a, b) <-> P!belongs(T!pair(a, b), relation_as_set(r))
+  proof = by definition of relation, relation_as_set ;
+
+  let is_contained(r_1, r_2) = P!is_contained(r_1, r_2);
+
+  proof of is_contained_spec = 
+    <1>1 assume r_1 r_2: Self, 
+         prove is_contained(r_1, r_2) <-> 
+           (all a: A, all b: B, 
+              P!belongs(T!pair(a, b), r_1) -> 
+                   P!belongs(T!pair(a, b), r_2))
+         <2>1 hypothesis C: is_contained(r_1, r_2),
+              prove all a: A, all b: B,
+                P!belongs(T!pair(a, b), r_1) ->
+                  P!belongs(T!pair(a, b), r_2)
+              <3>1 assume a: A, assume b: B, 
+                   hypothesis H: P!belongs(T!pair(a, b), r_1),
+                   prove P!belongs(T!pair(a, b), r_2)
+                   by hypothesis H, C 
+                      definition of is_contained, relation
+                      property P!is_contained_spec
+              <3>f conclude
+         <2>2 hypothesis I: all a: A, all b: B, 
+                  (P!belongs(T!pair(a, b), r_1) -> 
+                           P!belongs(T!pair(a, b), r_2)),
+              prove is_contained(r_1, r_2)
+              <3>1 prove all a: A, all b: B, 
+                    P!belongs(T!pair(a, b), r_1) -> 
+                       P!belongs(T!pair(a, b), r_2)
+                   by hypothesis I
+              <3>2 prove all t: T, P!belongs(t, r_1) -> P!belongs(t, r_2)
+                   <4>1 assume t: T,
+                        hypothesis H: P!belongs(t, r_1),
+                        prove P!belongs(t, r_2)
+                        <5>0 prove T!equal(t, T!pair(T!first(t),
+                                                     T!second(t)))
+                             by property T!pair_preserves_first, 
+                                         T!pair_preserves_second, 
+                                         T!equal_spec, 
+                                         A!equal_reflexive,
+                                         A!equal_symmetric,
+                                         A!equal_transitive,
+                                         B!equal_reflexive,
+                                         B!equal_symmetric,
+                                         B!equal_transitive
+                        <5>1 prove P!belongs(T!pair(T!first(t),
+                                                    T!second(t)),
+                                             r_1)
+                             by hypothesis H 
+                                step <5>0 
+                                property P!belongs_left_substitution_rule
+                        <5>2 prove P!belongs(T!pair(T!first(t),
+                                                    T!second(t)),
+                                             r_2)
+                             by step <5>1 hypothesis I
+                        <5>f qed by step <5>0, <5>2
+                                    property P!belongs_left_substitution_rule,
+                                             T!equal_symmetric,
+                                             T!equal_transitive
+
+                   <4>f conclude
+              <3>f qed by step <3>2 
+                          property P!is_contained_spec
+                          definition of relation, is_contained 
+                   
+         <2>f conclude
+    <1>f qed by step <1>1 definition of relation, is_contained
+    ;
+
+end;;
+
+
+
+species Internal_relations_by_sets_of_pairs(A is Finite_set,
+                                            T is Product_set(A, A),
+                                            LA is Utils(A),
+                                            LT is Utils(T),
+					    P is Finite_parts_by_lists(T, LT)) =
+
+  inherit Internal_binary_relations(A, LA), 
+          Relations_by_sets_of_pairs(A, A, T, P);
+
+  let identity : Self =
+    let rec make_from_list(l) = match l with
+      | [] -> []
+      | h::t -> T!pair(h, h)::make_from_list(t)
+      termination proof = structural l
+   in P!from_list(make_from_list(A!all_to_list))
+  ;
+  (* spec to do *)
+
+  (* as_list parce que sinon c'est le bazar, le lecteur est libre de rajouter
+     P!from/to_list partout, pour faire generique *)
+  let rec rt_singleton_as_list(x: A, lr: list(T)): list(T) = 
+    (* f takes an element of A and a list of T!pairs and return
+       a pair (la, lb) where in la for all c in la, T!first(c) = x
+       lb is the rest of lr *)
+    let rec f(x, l) =  match l with
+      | [] -> ([], [])
+      | h::t -> let c = f(x, t) in let l1 = fst(c) in let l2 = snd(c) in
+                  if A!equal(T!first(h), T!second(h)) then (l1, l2) else
+		   (if A!equal(x, T!first(h))
+                    then (h::l1, l2)
+                    else (l1, h::l2))
+      termination proof = structural l
+    in 
+    let rec subst_fst(x, l) = match l with
+      | [] -> []
+      | h::t -> let b = T!second(h) in T!pair(x, b)::subst_fst(x, t)
+      termination proof = structural l
+    in
+
+    let c = f(x, lr) in let la = fst(c) in let lb = snd(c) in
+      if la = [] then [T!pair(x, x)]
+      else LT!append(la, subst_fst(x, rt_singleton_as_list(x, lb)))
+
+    termination proof = structural lr
+  ;
+
+  theorem rt_singleton_as_list_spec : all x y: A, all r: Self,
+    LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                             T!pair(x, y))
+    <-> (ex l: list(A), rt_closure_aux(r, x, y, l))
+  proof = 
+  <0>1 assume x y: A, assume r: Self,
+       prove LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                            T!pair(x, y))
+          -> (ex l: list(A), rt_closure_aux(r, x, y, l))
+       assumed
+  <0>2 assume x y: A, assume r: Self,
+       prove (ex l: list(A), rt_closure_aux(r, x, y, l))
+          -> LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                            T!pair(x, y))
+    <1>1 hypothesis H1: rt_closure_aux(r, x, y, []),
+         prove LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                              T!pair(x, y))
+      <2>1 prove A!equal(x, y)
+           by property rt_closure_aux_nil hypothesis H1
+      <2>2 prove A!equal(x, y)
+              -> LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                                T!pair(x, y))
+           (* compatibility issue between A!equal and "=", see LA!mem *)
+           assumed
+      <2>f conclude
+    <1>2 assume h: A, assume t: list(A),
+         hypothesis H2: rt_closure_aux(r, x, y, h::t),
+         prove LT!mem(rt_singleton_as_list(x, P!to_list(relation_as_set(r))),
+                                              T!pair(x, y))
+         assumed
+    <1>f conclude
+  <0>f conclude
+  ;
+
+  let rt_closure(r) =
+    let lr = P!to_list(relation_as_set(r)) in
+    let rec make_rt_closure(l) = match l with
+      | [] -> []
+      | h::t -> LT!append(rt_singleton_as_list(h, lr),
+                          make_rt_closure(t))
+      termination proof = structural l
+    in make_rt_closure(A!all_to_list)
+  ;
+
+end;;
+
+
+
+
+
+(* (y a un truc qui compile pas) *)
+(*
+species Composition_relations_sets_of_pair(A is Setoid, 
+                                           B is Setoid,
+                                           T_AB is Abstract_pairs(A, B),
+                                           P_AB is Finite_parts(T_AB), 
+                                           C is Setoid,
+                                           T_BC is Abstract_pairs(B, C),
+                                           P_BC is Finite_parts(T_BC),
+                                           R_AB is Relations_by_sets_of_pairs(A, B, T_AB, P_AB),
+                                           R_BC is Relations_by_sets_of_pairs(B, C, T_BC, P_BC),
+                                           T_AC is Abstract_pairs(A, C),
+                                           P_AC is Finite_parts(T_AC)) =
+inherit Relations_by_sets_of_pairs(A, C, T_AC, P_AC), Composition_relations(A, B, C, R_AB, R_BC);
+
+(* Theo ... c est comme le code caml de li214 *)
+
+end;;
+
+*)
+
+
+
+
+
+
+
+

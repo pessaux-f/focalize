@@ -14,44 +14,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: minEnv.ml,v 1.15 2012-03-01 17:23:32 pessaux Exp $ *)
-
-
-(* ************************************************************************** *)
-(** {b Descr}: Describes the kind of recursion, i.e. termination proof, provided
-    to a recursive definition. Currently, we only make the difference between
-    a structural termination and none/other proofs.
-    In case of structural termination we assume that the definition was
-    generated using "Fixpoint". In any other case, we assume it has been
-    generated with "Function".
-    Note that this type may change/disapear when we will have a more unified
-    code generation model for recursion.
-
-    {b Visibility}: Exported outside this module.                             *)
-(* ************************************************************************** *)
-type rec_proof_kind =
-  | RPK_struct
-  | RPK_other
-;;
-
-
-
-(* ************************************************************************** *)
-(** {b Descr}: Tells if a definition is recursive or not. Allows embedding
-    the kind of termination proof the definition has if it as one.
-    Since we currently have 2 Coq generation models: "Fixpoint" and "Function"
-    we need to remind which one was used in case a proof is done
-    "by definition" of a recursive definition. In effect, depending on the
-    used model, we must not generate the same code for Zenon.
-
-    {b Visibility}: Exported outside this module.                             *)
-(* ************************************************************************** *)
-type rec_status =
-  | RC_non_rec
-  | RC_rec of rec_proof_kind
-;;
-
-
 
 (* ************************************************************************** *)
 (** {b Descr} Elements of the minimal Coq typing environment for methods.
@@ -75,18 +37,19 @@ type min_coq_env_element =
          i.e. abstracted Let or abstracted Let_rec or Sig other than "rep". *)
   | MCEE_Defined_computational of
       (Env.from_history *
-       rec_status *  (** Tells if the method is recursive and if so which
-          kind of termination proof it involves. This is needed when
-     		  generating pseudo-Coq code for Zenon using a "by definition"
-          of this method. In effect, the body of the method contains
-          the ident of this method, but when generating the Zenon
-          stuff, the definition of the method will be named "abst_xxx".
-          So the internal recursive call to print when generating the
-          method's body must be replaced by "abst_xxx". This is
-          related to the bug report #199. Moreover, since currently structural
-          recursion is compiled with "Fixpoint" and other kinds with
-          "Function" in Coq, we need to remind what is the compilation scheme
-          used depending on the recursion kind. *)
+         (** Tells if the method is recursive and if so which kind of
+             termination proof it involves. This is needed when generating
+             pseudo-Coq code for Zenon using a "by definition" of this method.
+             In effect, the body of the method contains the ident of this
+             method, but when generating the Zenon stuff, the definition of the
+             method will be named "abst_xxx".
+             So the internal recursive call to print when generating the
+             method's body must be replaced by "abst_xxx". This is related to
+             the bug report #199. Moreover, since currently structural
+             recursion is compiled with "Fixpoint" and other kinds with
+             "Function" in Coq, we need to remind what is the compilation scheme
+             used depending on the recursion kind. *)
+       Env.CoqGenInformation.rec_status *
        Parsetree.vname * (Parsetree.vname list) * Types.type_scheme *
        Parsetree.binding_body)  (** Defined computational method, i.e. Let or
           Let_rec. *)
@@ -139,16 +102,19 @@ let minimal_typing_environment universe species_fields =
         let rec_status =
           if is_rec then
             (match opt_proof with
-            | None -> RC_rec RPK_other
+            | None ->
+                Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other
             | Some proof ->
-                RC_rec (
+                Env.CoqGenInformation.RC_rec (
                 match proof.Parsetree.ast_desc with
-                | Parsetree.TP_structural _ -> RPK_struct
+                | Parsetree.TP_structural decr_arg_name ->
+                    Env.CoqGenInformation.RPK_struct decr_arg_name
                 | Parsetree.TP_lexicographic _
                 | Parsetree.TP_measure (_, _, _)
-                | Parsetree.TP_order (_, _, _) -> RPK_other
+                | Parsetree.TP_order (_, _, _) ->
+                    Env.CoqGenInformation.RPK_other
                ))
-          else RC_non_rec in
+          else Env.CoqGenInformation.RC_non_rec in
         [MCEE_Defined_computational (from, rec_status, n, params, sch, body)]
        )
     with Not_found ->

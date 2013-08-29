@@ -59,7 +59,7 @@ module ScopeInformation :
       | TBI_defined_in of Types.fname
 
     type species_scope =
-      | SPBI_file of Types.fname
+      | SPBI_file of (Types.fname * bool)
       | SPBI_parameter
 
     type species_parameter_kind = SPK_in | SPK_is
@@ -230,10 +230,19 @@ module CoqGenInformation :
        (method_info list) *
        (collection_generator_info option) * collection_or_species)
 
+    type rec_proof_kind =
+      | RPK_struct of Parsetree.vname
+      | RPK_other
+
+    type rec_status =
+      | RC_non_rec
+      | RC_rec of rec_proof_kind
+
     type value_body =
       | VB_non_toplevel
       | VB_toplevel_let_bound of
-          ((Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
+          (rec_status * (Parsetree.vname list) * Types.type_scheme *
+           Parsetree.binding_body)
       | VB_toplevel_property of Parsetree.logical_expr
 
     type value_mapping_info = (int * value_body)

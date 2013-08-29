@@ -112,3 +112,6 @@ val get_use_coq_older : unit -> bool
 
 val get_pmatch_err_as_warn : unit -> bool
 val set_pmatch_err_as_warn : unit -> unit
+
+val get_zvtov_extra_opts : unit -> string
+val set_zvtov_extra_opts : string -> unit

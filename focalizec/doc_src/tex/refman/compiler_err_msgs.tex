@@ -202,6 +202,32 @@ non-ambiguous.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Hypothesis, notation or variable name '$name$' already bound in
+  the current scope of the proof.}
+{\em Description}: In the current proof, an hypothesis, a notation or a
+variable is introduced but there already exists one with this name.
+
+{\em Hints}: Rename the mentionned hypothesis, notation or variable.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{The property '$name$' doesn't belong to a collection but to a
+  species.}
+{\em Description}: A proof fact attempts to use a property hosted in a species
+instead of in a collection. Since only collections are ensuring that properties
+they contain hold, only properties from collections can be used to make
+proofs. In effect, in a species, a property may only be stated without being
+provable. Relying on an unproved property may allow to write wrong proofs.
+
+{\em Hints}: Either you have a collection implementing the species from whom
+you are trying to use the proof and then use the property from this collection.
+Or have a collection parameter whose interface is the species from whom you
+are trying to use the proof and then use the property from this collection
+parameter.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Unbound sum type value constructor '$name$'.}
 {\em Description}: An identifier representing a sum type value constructor
 was not found among the available sum type definitions.
@@ -489,7 +515,7 @@ the current defined species.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section*{A  "is"  parameter can only be instantiated by an identifier of a collection.}
+\section*{A "is" parameter can only be instantiated by an identifier of a collection.}
 
 {\em Description}: In a species expression, a parametrised species by
 an entity parameter ({\tt is}-parameter) is provided an effective
@@ -502,6 +528,20 @@ argument that is not a collection identifier.
 % {\tt in}-parameter) must be instantiated by a {\tt collection}
 % identifier.
 {\em Hints}: None.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Illegal use of toplevel species '$S$' as effective argument.}
+
+{\em Description}: Effective parameter in species expressions (for inheritance
+or collection implementation) can only be collections or collection
+parameters. In the present case, a toplevel species was used instead which
+is inconsistent.
+
+{\em Hints}: None.
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Collection '$s_1$' is not compatible with '$s_2$'. In method
