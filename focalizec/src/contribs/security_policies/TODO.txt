@@ -1,0 +1,28 @@
+(not seen yet : all about relation [in lib]
+     	      	the main directory files)
+
+
+Do not modify Renaud's libraries (listes.fcl and coll.fcl)
+But remove the useless one (which is ?)
+
+
+Rename "utils" as "relation" (be careful, there is relation (without self),
+and relations (with self), there is some "s" to remove among species' names)
+
+
+Clean finite set (don't forget to use Renaud's list library)
+
+
+Link correctly the libraries' files
+And check names which (may) have been changed
+
+
+Make a better "extended product" library (for instance with the proofs)
+Cf cartesian product (stdlib)
+
+
+Solve the basics#( = ) vs Self!( = ) vs Self!equal problem
+(conflict between some libraries)
+
+
+DOCUMENT EVERYTHING !!!!
