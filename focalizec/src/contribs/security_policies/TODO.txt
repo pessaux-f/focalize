@@ -1,5 +1,5 @@
 (not seen yet : all about relation [in lib]
-     	      	the main directory files)
+     	      	+ the main directory files)
 
 
 Do not modify Renaud's libraries (listes.fcl and coll.fcl)
@@ -11,6 +11,10 @@ and relations (with self), there is some "s" to remove among species' names)
 
 
 Clean finite set (don't forget to use Renaud's list library)
+
+
+Check, clean and improve bin_relations_new and finite_relations
+(which were copied from "relation mutable")
 
 
 Link correctly the libraries' files

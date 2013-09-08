@@ -1,9 +1,12 @@
+
 open "basics";;
 open "sets";;
 open "listes";;
 open "finite_sets_f";;
 open "products";;
 
+
+(* copy from relation mutable ; a bit modified *)
 
 (** Binary relation *)
 
@@ -414,6 +417,9 @@ species Bijections (A is Setoid, B is Setoid) =
   inherit Injective_functions (A, B), Surjective_functions (A, B);
 
 end;;
+
+
+(* end copy from "relation mutable" *)
 
 
 species Composition_relations(AA is Setoid, BB is Setoid, CC is Setoid, 
