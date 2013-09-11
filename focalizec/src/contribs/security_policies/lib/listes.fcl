@@ -1,7 +1,5 @@
 open "sets";;
 open "basics";;
-(*open "peano";;
-*)
 
 species Utils(A is Basic_object) =
 inherit Basic_object;

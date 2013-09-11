@@ -1,5 +1,21 @@
-(not seen yet : all about relation [in lib]
-     	      	+ the main directory files)
+lib
+==
+Dans depertoir lib : les utilitaires qui n'ont rien a voir avec la
+secu + From_RENAUD_CATHERINE qui contient le dev sur les iterateurs de
+Renaud et Catherine
+
+
+1- listes.fcl : utilitaires sur les listes (potentiellement a completer
+selon les besoins)
+
+2- 
+
+
+
+
+
+=============
+
 
 
 Do not modify Renaud's libraries (listes.fcl and coll.fcl)
