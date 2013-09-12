@@ -212,10 +212,12 @@
     ;; Underscore is a valid part of a word.
     (modify-syntax-entry ?_ "w" table)
     (modify-syntax-entry ?\\ "\\" table)
-    ;; Open paren is the start of a two-character comment sequence ('1').
-    (modify-syntax-entry ?( ". 1" table)
-    ;; Close paren is the end of a two-character comment-start sequence ('4').
-    (modify-syntax-entry ?) ". 4" table)
+    ;; Open paren is the start of a two-character comment sequence ('1') and
+    ;; is an opening paired-character to match with the rparen.
+    (modify-syntax-entry ?( "()1" table)
+    ;; Close paren is the end of a two-character comment-start sequence ('4')
+    ;; and is a closing paired-character to match with the lparen.
+    (modify-syntax-entry ?) ")(4" table)
     ;; Star is the second character of a two-character comment-start sequence
     ;; ('2') or the start of a two-character comment-end sequence ('3').
     (modify-syntax-entry ?* ". 23" table)
