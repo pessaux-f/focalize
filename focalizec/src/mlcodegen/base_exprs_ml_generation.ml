@@ -645,23 +645,25 @@ and generate_expr ctx ~local_idents env initial_expression =
     | [] -> ()
     | [last] -> rec_generate loc_idents last
     | h :: q ->
-        rec_generate loc_idents h;
-        Format.fprintf out_fmter "%s@ " comma;
+        rec_generate loc_idents h ;
+        Format.fprintf out_fmter "%s@ " comma ;
         rec_generate_exprs_list comma loc_idents q
+
 
 
   and rec_generate_record_field_exprs_list loc_idents = function
     | [] -> ()
     | [(label, last)] ->
-        rec_generate_one_record_field_name label;
-        Format.fprintf out_fmter " =@ ";
+        rec_generate_one_record_field_name label ;
+        Format.fprintf out_fmter " =@ " ;
         rec_generate loc_idents last
     | (h_label, h_expr) :: q ->
         rec_generate_one_record_field_name h_label;
-        Format.fprintf out_fmter " =@ ";
+        Format.fprintf out_fmter " =@ " ;
         rec_generate loc_idents h_expr;
-        Format.fprintf out_fmter ";@ ";
+        Format.fprintf out_fmter ";@ " ;
         rec_generate_record_field_exprs_list loc_idents q
+
 
 
   (* ********************************************************************** *)
