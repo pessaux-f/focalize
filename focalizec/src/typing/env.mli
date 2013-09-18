@@ -221,7 +221,10 @@ module CoqGenInformation :
       cmi_external_translation : Parsetree.external_translation_desc option
     }
 
-    type label_mapping_info = Parsetree.external_translation_desc
+    type label_mapping_info = {
+      lmi_num_polymorphics_extra_args : int ;
+      lmi_external_translation : Parsetree.external_translation_desc option
+    }
 
     type method_info = generic_code_gen_method_info
 

@@ -413,8 +413,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
         ~loc: cstr_expr.Parsetree.ast_loc
         ~current_unit: ctx.Context.scc_current_unit cstr_expr env in
     (match mapping_info.Env.CoqGenInformation.cmi_external_translation with
-     | None ->
-         (begin
+     | None -> (
          (* The constructor isn't coming from an external definition. *)
          let Parsetree.CI global_ident = cstr_expr.Parsetree.ast_desc in
          match global_ident.Parsetree.ast_desc with
@@ -432,9 +431,8 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
               else
                 Format.fprintf ctx.Context.scc_out_fmter "%a"
                   Parsetree_utils.pp_vname_with_operators_expanded name
-         end)
-     | Some external_expr ->
-         (begin
+        )
+     | Some external_expr -> (
          (* The constructor comes from an external definition. *)
          let (_, coq_binding) =
            try
@@ -451,13 +449,70 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
                   ("Coq", cstr_expr)) in
          (* Now directly generate the name the constructor is mapped onto. *)
          Format.fprintf ctx.Context.scc_out_fmter "%s" coq_binding
-         end)) ;
+        )) ;
     (* Always returns the number of type arguments that must be printed
        after the constructor. *)
     mapping_info.Env.CoqGenInformation.cmi_num_polymorphics_extra_args
   with _ ->
     (* Since in Coq all the constructors must be inserted in the generation
        environment, if we don't find the constructor, then we were wrong
+       somewhere else before. *)
+    assert false
+;;
+
+
+
+(* Exactly the same principle than for sum type constructors in the above
+   function [generate_constructor_ident_for_method_generator]. *)
+let generate_record_label_for_method_generator ctx env label =
+  try
+    let mapping_info =
+      Env.CoqGenEnv.find_label
+        ~loc: label.Parsetree.ast_loc
+        ~current_unit: ctx.Context.scc_current_unit label env in
+    (match mapping_info.Env.CoqGenInformation.lmi_external_translation with
+    | None -> (
+        (* The label isn't coming from an external definition. *)
+        let Parsetree.LI global_ident = label.Parsetree.ast_desc in
+        match global_ident.Parsetree.ast_desc with
+          | Parsetree.I_local name
+          | Parsetree.I_global (Parsetree.Vname name) ->
+              Format.fprintf ctx.Context.scc_out_fmter "%a"
+                Parsetree_utils.pp_vname_with_operators_expanded name
+          | Parsetree.I_global (Parsetree.Qualified (fname, name)) ->
+              (* If the constructor belongs to the current compilation unit
+                 then one must not qualify it. *)
+              if fname <> ctx.Context.scc_current_unit then
+                Format.fprintf ctx.Context.scc_out_fmter "%s.%a"
+                  fname          (* No module name capitalization in Coq. *)
+                  Parsetree_utils.pp_vname_with_operators_expanded name
+              else
+                Format.fprintf ctx.Context.scc_out_fmter "%a"
+                  Parsetree_utils.pp_vname_with_operators_expanded name
+        )
+    | Some external_expr ->
+        (* The constructor comes from an external definition. *)
+        let (_, coq_binding) =
+          try
+            List.find
+              (function
+                | (Parsetree.EL_Coq, _) -> true
+                | (Parsetree.EL_Caml, _)
+                | ((Parsetree.EL_external _), _) -> false)
+              external_expr
+          with Not_found ->
+            (* No Coq mapping found. *)
+            raise
+              (Externals_generation_errs.No_external_field_def
+                 ("Coq", label)) in
+        (* Now directly generate the name the label is mapped onto. *)
+        Format.fprintf ctx.Context.scc_out_fmter "%s" coq_binding) ;
+    (* Always returns the number of type arguments that must be printed
+       after the label. *)
+    mapping_info.Env.CoqGenInformation.lmi_num_polymorphics_extra_args
+  with _ ->
+    (* Since in Coq all the record labels must be inserted in the generation
+       environment, if we don't find the label, then we were wrong
        somewhere else before. *)
     assert false
 ;;
@@ -1051,8 +1106,19 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
      | Parsetree.E_record _labs_exprs ->
          (* [Unsure] *)
          Format.fprintf out_fmter "E_record"
-     | Parsetree.E_record_access (_expr, _label) ->
-         Format.fprintf out_fmter "E_record_access"
+     | Parsetree.E_record_access (expr, label) -> (
+         rec_generate_expr loc_idents env expr ;
+         Format.fprintf out_fmter ".@[<2>(" ;
+         let extras =
+           generate_record_label_for_method_generator ctx env label in
+         (* Add the type arguments of the record type. *)
+         begin match expression.Parsetree.ast_type with
+         | Parsetree.ANTI_type t ->
+             Types.pp_type_simple_args_to_coq print_ctx out_fmter t extras
+         | _ -> assert false
+         end ;
+         Format.fprintf out_fmter ")@]"
+        )
      | Parsetree.E_record_with (_expr, _labels_exprs) ->
          Format.fprintf out_fmter "E_record_with"
      | Parsetree.E_tuple exprs ->

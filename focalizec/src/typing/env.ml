@@ -1050,13 +1050,18 @@ module CoqGenInformation = struct
   type constructor_mapping_info = {
     (** The number of extra argument the constructor has due to its
         polymorphism. *)
-    cmi_num_polymorphics_extra_args : int;
+    cmi_num_polymorphics_extra_args : int ;
     cmi_external_translation : Parsetree.external_translation_desc option
     }
 
   (** The list of mappings according to external languages to know to which
       string the record type field name corresponds. *)
-  type label_mapping_info =  Parsetree.external_translation_desc
+  type label_mapping_info = {
+    (** The number of extra argument the label has due to its
+        polymorphism. *)
+    lmi_num_polymorphics_extra_args : int ;
+    lmi_external_translation : Parsetree.external_translation_desc option
+  }
 
   type method_info = generic_code_gen_method_info
 

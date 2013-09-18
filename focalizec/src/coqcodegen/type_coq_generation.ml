@@ -65,13 +65,17 @@ let extend_coq_gen_env_with_type_external_mapping env nb_extra_args
           (match bound_name with
            | Parsetree.Vlident _ ->
                (* Starting by a lowercase letter means record field name. *)
-               Env.CoqGenEnv.add_label
-                 bound_name external_translation.Parsetree.ast_desc rec_env
+               let label_mapping_info = {
+                 Env.CoqGenInformation.lmi_num_polymorphics_extra_args =
+                   nb_extra_args ;
+                 Env.CoqGenInformation.lmi_external_translation =
+                   Some external_translation.Parsetree.ast_desc } in
+               Env.CoqGenEnv.add_label bound_name label_mapping_info rec_env
            | Parsetree.Vuident _ | Parsetree.Viident _ | Parsetree.Vpident _ ->
                (* Starting by an uppercase letter means sum constructor. *)
                let cstr_mapping_info = {
                  Env.CoqGenInformation.cmi_num_polymorphics_extra_args =
-                   nb_extra_args;
+                   nb_extra_args ;
                  Env.CoqGenInformation.cmi_external_translation =
                    Some external_translation.Parsetree.ast_desc } in
                Env.CoqGenEnv.add_constructor
@@ -156,11 +160,11 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
    | Env.TypeInformation.TK_external (external_expr, external_mapping) ->
        (begin
        Format.fprintf out_fmter "@[<2>Definition %a__t@ "
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
-         print_ctx out_fmter type_def_params;
-       Format.fprintf out_fmter ":=@ ";
+         print_ctx out_fmter type_def_params ;
+       Format.fprintf out_fmter ":=@ " ;
        (* And now, bind the FoCaL identifier to the Coq one. *)
        (try
          let (_, coq_binding) =
@@ -175,7 +179,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
          (* We didn't find any correspondance for Coq. *)
          raise
            (Externals_generation_errs.No_external_type_def
-              ("Coq", type_def_name, external_expr.Parsetree.ast_loc)));
+              ("Coq", type_def_name, external_expr.Parsetree.ast_loc))) ;
        (* We build the extended code generation environment in which sum
           constructors or labels are recorded in order to be able to remind on
           what to map them when we will see them. *)
@@ -252,8 +256,8 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                Env.CoqGenEnv.add_constructor
                  sum_cstr_name
                  { Env.CoqGenInformation.cmi_num_polymorphics_extra_args =
-                   nb_extra_args;
-                   Env.CoqGenInformation.cmi_external_translation = None}
+                     nb_extra_args ;
+                   Env.CoqGenInformation.cmi_external_translation = None }
                  accu_env)
              env
              sum_constructors_to_print in
@@ -311,10 +315,25 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
        (* Do the printing job... *)
        local_print_fields record_fields_to_print ;
        Format.fprintf out_fmter " }.@]@\n " ;
-       if not as_zenon_fact then
+       if not as_zenon_fact then (
+         (* Add the record labels in the environment like we do for constructors
+            in sum types. Same remarks, same process. *)
+         let env_with_record_labels =
+           List.fold_left
+             (fun accu_env (label_name, _, _) ->
+               Env.CoqGenEnv.add_label
+                 label_name
+                 { Env.CoqGenInformation.lmi_num_polymorphics_extra_args =
+                     nb_extra_args ;
+                   Env.CoqGenInformation.lmi_external_translation = None }
+                 accu_env)
+             env
+             record_fields_to_print in
+         (* Finally add the type definition in the returned environment. *)
          Env.CoqGenEnv.add_type
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
-           type_descr env
+           type_descr env_with_record_labels
+        )
        else env
        end)
 ;;
