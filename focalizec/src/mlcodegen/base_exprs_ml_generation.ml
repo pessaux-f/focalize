@@ -8,12 +8,11 @@
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
-
 
 
 (* ************************************************************************** *)
@@ -328,6 +327,48 @@ let pp_to_ocaml_label_ident ctx ppf lab_ident =
 
 
 
+(* ************************************************************************** *)
+(** {b Descr} : Function to the general expression generation that generates
+    one record field name according to whether it has a special translation to
+    OCaml because it is external (hence it is bound in the code generation
+    environment) or it is straightly translated as a regular FoCaL record
+    label.
+    Making this function prevents from writing several times the code to
+    access the environment and determine if we write the label with
+    translation of directly depending of the access result.
+
+    {b Rem} : Not exported outside this module.                              *)
+(* ************************************************************************* *)
+let generate_record_field_name env ctx label =
+  let out_fmter = ctx.Context.rcc_out_fmter in
+  try
+    let mapping_info =
+      Env.MlGenEnv.find_label
+        ~loc: label.Parsetree.ast_loc
+        ~current_unit: ctx.Context.rcc_current_unit label env in
+    let (_, ocaml_binding) =
+      try
+        List.find
+          (function
+            | (Parsetree.EL_Caml, _) -> true
+            | (Parsetree.EL_Coq, _)
+            | ((Parsetree.EL_external _), _) -> false)
+          mapping_info
+      with Not_found ->
+        (* No OCaml mapping found. *)
+        raise
+          (Externals_generation_errs.No_external_field_def
+             ("OCaml", label)) in
+    Format.fprintf out_fmter "%s" ocaml_binding
+  with
+  | Env.Unbound_label (_, _) ->
+      (* If no binding for the field name in the environment, then it get's
+         directly mapped onto its FoCaL name. *)
+      Format.fprintf out_fmter "%a" (pp_to_ocaml_label_ident ctx) label
+;;
+
+
+
 let generate_pattern ctx env pattern =
   let out_fmter = ctx.Context.rcc_out_fmter in
   let rec rec_gen_pat pat =
@@ -337,41 +378,54 @@ let generate_pattern ctx env pattern =
          Format.fprintf out_fmter "%a"
            Parsetree_utils.pp_vname_with_operators_expanded name
      | Parsetree.P_as (p, name) ->
-         Format.fprintf out_fmter "(";
-         rec_gen_pat p;
+         Format.fprintf out_fmter "(" ;
+         rec_gen_pat p ;
          Format.fprintf out_fmter "as@ %a)"
            Parsetree_utils.pp_vname_with_operators_expanded name
      | Parsetree.P_wild -> Format.fprintf out_fmter "_"
-     | Parsetree.P_constr (ident, pats) ->
-         (begin
-         generate_constructor_ident_for_method_generator ctx env ident;
+     | Parsetree.P_constr (ident, pats) -> (
+         generate_constructor_ident_for_method_generator ctx env ident ;
          (* Discriminate on the number of arguments to know if parens are
             needed. *)
          match pats with
           | [] -> ()
           | _ ->
-              Format.fprintf out_fmter " (";
-              rec_generate_pats_list pats;
+              Format.fprintf out_fmter " (" ;
+              rec_generate_pats_list pats ;
               Format.fprintf out_fmter ")"
-         end)
-     | Parsetree.P_record _labs_pats ->
-         Format.eprintf "generate_pattern P_record TODO@."
+        )
+     | Parsetree.P_record labs_pats ->
+         Format.fprintf out_fmter "@[<1>{" ;
+         rec_generate_pats_record labs_pats ;
+         Format.fprintf out_fmter "}@]"
      | Parsetree.P_tuple pats ->
-         Format.fprintf out_fmter "(@[<1>";
-         rec_generate_pats_list pats;
+         Format.fprintf out_fmter "@[<1>(" ;
+         rec_generate_pats_list pats ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.P_paren p ->
-         Format.fprintf out_fmter "(@[<1>";
-         rec_gen_pat p;
+         Format.fprintf out_fmter "@[<1>(" ;
+         rec_gen_pat p ;
          Format.fprintf out_fmter ")@]"
 
+  and rec_generate_pats_record = function
+    | [] -> ()
+    | [(last_label, last_pattern)] ->
+        generate_record_field_name env ctx last_label ;
+        Format.fprintf out_fmter " =@ " ;
+        rec_gen_pat last_pattern
+    | (label, pattern) :: q ->
+        generate_record_field_name env ctx label ;
+        Format.fprintf out_fmter " =@ " ;
+        rec_gen_pat pattern ;
+        Format.fprintf out_fmter ";@ " ;
+        rec_generate_pats_record q
 
   and rec_generate_pats_list = function
     | [] -> ()
     | [last] -> rec_gen_pat last
     | h :: q ->
-        rec_gen_pat h;
-        Format.fprintf out_fmter ",@ ";
+        rec_gen_pat h ;
+        Format.fprintf out_fmter ",@ " ;
         rec_generate_pats_list q in
   (* ********************** *)
   (* Now, let's do the job. *)
@@ -598,7 +652,7 @@ and generate_expr ctx ~local_idents env initial_expression =
          Format.fprintf out_fmter "@[<2>" ;
          rec_generate loc_idents expr ;
          Format.fprintf out_fmter ".@," ;
-         rec_generate_one_record_field_name label_name ;
+         generate_record_field_name env ctx label_name ;
          Format.fprintf out_fmter "@]"
      | Parsetree.E_record_with (expr, labs_exprs) ->
          (* Because in OCaml the with construct only starts by an ident, we
@@ -671,57 +725,15 @@ and generate_expr ctx ~local_idents env initial_expression =
   and rec_generate_record_field_exprs_list loc_idents = function
     | [] -> ()
     | [(label, last)] ->
-        rec_generate_one_record_field_name label ;
+        generate_record_field_name env ctx label ;
         Format.fprintf out_fmter " =@ " ;
         rec_generate loc_idents last
     | (h_label, h_expr) :: q ->
-        rec_generate_one_record_field_name h_label;
+        generate_record_field_name env ctx h_label;
         Format.fprintf out_fmter " =@ " ;
         rec_generate loc_idents h_expr;
         Format.fprintf out_fmter ";@ " ;
-        rec_generate_record_field_exprs_list loc_idents q
-
-
-
-  (* ********************************************************************** *)
-  (* Parsetree.label_ident -> unit                                          *)
-  (** {b Descr} : Local function to the general expression generation that
-         generates one record field name according to whether it has a
-         special translation to OCaml because it is external (hence it is
-         bound in the code generation environment) or it is straightly
-         translated as a regular FoCaL record label.
-         Makeking this function prevents from writing several times the
-         code to access the environment and determine if we write the
-         label with translation of directly depending of the access result.
-
-      {b Rem} : Not exported outside this module. Local to the function
-         [generate_expr].                                                   *)
-  (* ********************************************************************** *)
-  and rec_generate_one_record_field_name label =
-    try
-      let mapping_info =
-        Env.MlGenEnv.find_label
-          ~loc: label.Parsetree.ast_loc
-          ~current_unit: ctx.Context.rcc_current_unit label env in
-      let (_, ocaml_binding) =
-        try
-          List.find
-            (function
-              | (Parsetree.EL_Caml, _) -> true
-              | (Parsetree.EL_Coq, _)
-              | ((Parsetree.EL_external _), _) -> false)
-            mapping_info
-        with Not_found ->
-          (* No OCaml mapping found. *)
-          raise
-            (Externals_generation_errs.No_external_field_def
-               ("OCaml", label)) in
-      Format.fprintf out_fmter "%s" ocaml_binding
-    with
-    | Env.Unbound_label (_, _) ->
-        (* If no binding for the field name in the environment, then it get's
-           directly mapped onto its FoCaL name. *)
-        Format.fprintf out_fmter "%a" (pp_to_ocaml_label_ident ctx) label in
+        rec_generate_record_field_exprs_list loc_idents q in
 
 
   (* ************************************************ *)
