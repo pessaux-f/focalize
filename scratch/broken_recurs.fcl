@@ -1,0 +1,32 @@
+open "basics" ;;
+
+species A =
+  (* Broken
+      Error:
+      In environment
+      __term_order : basics.int__t -> basics.int__t -> Prop
+      x : basics.int__t
+      a : basics.int__t
+      The term "0" has type "Z" while it is expected to have type 
+      "family". *)
+  (* Sans doute une confusion avec un autre f de l'environnement car f
+     est en fait unbound dans l'envt (même erreur qu'en dessous). *)  
+  let rec f (x) =
+    let a = f (0) in
+    1 + f (x + 1) ;
+end ;;
+
+
+species B =
+  let rec f (x) =
+    if (x = 1) || (x = 2) then 1
+    else f (x - 1) + f (x - 2) ;
+
+  (* Broken Error: The reference g was not found in the current environment. *)
+  let rec g (x) =
+    if (x = 1) || (x = 2) then 1
+    else      
+      let a = g (x - 1) in
+      let b = g (x - 2) in
+      a + b ;
+end ;;
