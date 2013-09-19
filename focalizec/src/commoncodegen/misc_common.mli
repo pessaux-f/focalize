@@ -55,7 +55,6 @@ val follow_instanciations_for_in_param :
 
 type is_parameter_instanciation =
   | IPI_by_toplevel_collection of Types.type_collection
-  | IPI_by_toplevel_species of Types.type_collection
   | IPI_by_species_parameter of Env.TypeInformation.species_param
 
 val follow_instanciations_for_is_param :

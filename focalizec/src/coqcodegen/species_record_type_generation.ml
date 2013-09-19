@@ -413,8 +413,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
         ~loc: cstr_expr.Parsetree.ast_loc
         ~current_unit: ctx.Context.scc_current_unit cstr_expr env in
     (match mapping_info.Env.CoqGenInformation.cmi_external_translation with
-     | None ->
-         (begin
+     | None -> (
          (* The constructor isn't coming from an external definition. *)
          let Parsetree.CI global_ident = cstr_expr.Parsetree.ast_desc in
          match global_ident.Parsetree.ast_desc with
@@ -432,9 +431,8 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
               else
                 Format.fprintf ctx.Context.scc_out_fmter "%a"
                   Parsetree_utils.pp_vname_with_operators_expanded name
-         end)
-     | Some external_expr ->
-         (begin
+        )
+     | Some external_expr -> (
          (* The constructor comes from an external definition. *)
          let (_, coq_binding) =
            try
@@ -451,13 +449,70 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
                   ("Coq", cstr_expr)) in
          (* Now directly generate the name the constructor is mapped onto. *)
          Format.fprintf ctx.Context.scc_out_fmter "%s" coq_binding
-         end)) ;
+        )) ;
     (* Always returns the number of type arguments that must be printed
        after the constructor. *)
     mapping_info.Env.CoqGenInformation.cmi_num_polymorphics_extra_args
   with _ ->
     (* Since in Coq all the constructors must be inserted in the generation
        environment, if we don't find the constructor, then we were wrong
+       somewhere else before. *)
+    assert false
+;;
+
+
+
+(* Exactly the same principle than for sum type constructors in the above
+   function [generate_constructor_ident_for_method_generator]. *)
+let generate_record_label_for_method_generator ctx env label =
+  try
+    let mapping_info =
+      Env.CoqGenEnv.find_label
+        ~loc: label.Parsetree.ast_loc
+        ~current_unit: ctx.Context.scc_current_unit label env in
+    (match mapping_info.Env.CoqGenInformation.lmi_external_translation with
+    | None -> (
+        (* The label isn't coming from an external definition. *)
+        let Parsetree.LI global_ident = label.Parsetree.ast_desc in
+        match global_ident.Parsetree.ast_desc with
+          | Parsetree.I_local name
+          | Parsetree.I_global (Parsetree.Vname name) ->
+              Format.fprintf ctx.Context.scc_out_fmter "%a"
+                Parsetree_utils.pp_vname_with_operators_expanded name
+          | Parsetree.I_global (Parsetree.Qualified (fname, name)) ->
+              (* If the constructor belongs to the current compilation unit
+                 then one must not qualify it. *)
+              if fname <> ctx.Context.scc_current_unit then
+                Format.fprintf ctx.Context.scc_out_fmter "%s.%a"
+                  fname          (* No module name capitalization in Coq. *)
+                  Parsetree_utils.pp_vname_with_operators_expanded name
+              else
+                Format.fprintf ctx.Context.scc_out_fmter "%a"
+                  Parsetree_utils.pp_vname_with_operators_expanded name
+        )
+    | Some external_expr ->
+        (* The constructor comes from an external definition. *)
+        let (_, coq_binding) =
+          try
+            List.find
+              (function
+                | (Parsetree.EL_Coq, _) -> true
+                | (Parsetree.EL_Caml, _)
+                | ((Parsetree.EL_external _), _) -> false)
+              external_expr
+          with Not_found ->
+            (* No Coq mapping found. *)
+            raise
+              (Externals_generation_errs.No_external_field_def
+                 ("Coq", label)) in
+        (* Now directly generate the name the label is mapped onto. *)
+        Format.fprintf ctx.Context.scc_out_fmter "%s" coq_binding) ;
+    (* Always returns the number of type arguments that must be printed
+       after the label. *)
+    mapping_info.Env.CoqGenInformation.lmi_num_polymorphics_extra_args
+  with _ ->
+    (* Since in Coq all the record labels must be inserted in the generation
+       environment, if we don't find the label, then we were wrong
        somewhere else before. *)
     assert false
 ;;
@@ -577,7 +632,7 @@ type let_binding_pre_computation = {
     correct information. In effect, code generation (occuring after the
     present function is called) doesn't modify this information.              *)
 (* ************************************************************************** *)
-let pre_compute_let_binding_info_for_rec env bd ~is_rec ~toplevel =
+let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
   (* Generate the parameters if some, with their type constraints. *)
   let params_names = List.map fst bd.Parsetree.ast_desc.Parsetree.b_params in
   (* Recover the type scheme of the bound ident. *)
@@ -598,14 +653,17 @@ let pre_compute_let_binding_info_for_rec env bd ~is_rec ~toplevel =
     if not toplevel then Env.CoqGenInformation.VB_non_toplevel
     else
       Env.CoqGenInformation.VB_toplevel_let_bound
-        (params_names, def_scheme, bd.Parsetree.ast_desc.Parsetree.b_body) in
+        (rec_status, params_names, def_scheme,
+         bd.Parsetree.ast_desc.Parsetree.b_body) in
   let env' =
-    if is_rec then
-      let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
-      Env.CoqGenEnv.add_value
-        ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
-        (nb_polymorphic_args, value_body) env
-    else env in
+    (match rec_status with
+    | Env.CoqGenInformation.RC_rec _ ->
+        let toplevel_loc =
+          if toplevel then Some bd.Parsetree.ast_loc else None in
+        Env.CoqGenEnv.add_value
+          ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
+          (nb_polymorphic_args, value_body) env
+    | Env.CoqGenInformation.RC_non_rec -> env) in
   (env',
    { lbpc_value_body = value_body ;
      lbpc_params_names = params_names ;
@@ -619,16 +677,17 @@ let pre_compute_let_binding_info_for_rec env bd ~is_rec ~toplevel =
 
 (* ************************************************************************** *)
 (** {b Descr}: Simply folds the pre-computation of one binding on a list of
-    bindings, accumulating the obtained environment at each step.             *)
+    bindings (not forcely mutually recursive), accumulating the obtained
+    environment at each step.                                                 *)
 (* ************************************************************************** *)
-let pre_compute_let_bindings_infos_for_rec ~is_rec ~toplevel env bindings =
+let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
   (* And not [List.fold_right otherwise the list of infos will be reversed
      compared to the list of bindings. *)
   List.fold_left
     (fun (env_accu, infos_accu) binding ->
       let (env', info) = 
         pre_compute_let_binding_info_for_rec
-          ~is_rec ~toplevel env_accu binding in
+          ~rec_status ~toplevel env_accu binding in
       (env', info :: infos_accu))
     (env, [])
     bindings
@@ -657,7 +716,8 @@ let pre_compute_let_bindings_infos_for_rec ~is_rec ~toplevel env bindings =
 (* ************************************************************************** *)
 let rec let_binding_compile ctx ~binder ~opt_term_proof
     ~in_recursive_let_section_of ~local_idents ~self_methods_status
-    ~recursive_methods_status ~is_rec ~toplevel env bd pre_computed_bd_info =
+    ~recursive_methods_status ~rec_status ~toplevel env bd
+    pre_computed_bd_info =
   (* Create once for all the flag used to insert the let-bound idents in the
      environment. *)
   let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
@@ -713,7 +773,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   | None ->
       (* If there is no termination proof, then we must just worry in the case
          the definition is recursive. *)
-      if is_rec then (
+      if rec_status <> Env.CoqGenInformation.RC_non_rec then (  (* Is rec. *)
         (* The function is not satisfactory since it is recursive and has
            no termination proof. Issue a warning and [Unsure] choose to consider
            it by default as structural on its first argument. *)
@@ -737,7 +797,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   | Some term_proof -> (
       (* Take the termination proof into account only if the definition is
          recursive. Otherwise, issue a warning. *)
-      if is_rec then (
+      if rec_status <> Env.CoqGenInformation.RC_non_rec then (  (* Is rec. *)
         match term_proof.Parsetree.ast_desc with
         | Parsetree.TP_structural decr_arg ->
             (* First, ensure that the identifier is really a parameter of this
@@ -801,7 +861,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
   | Parsetree.BB_computational e ->
       let in_recursive_let_section_of =
-        if is_rec then
+        if rec_status <> Env.CoqGenInformation.RC_non_rec then  (* Is rec. *)
           bd.Parsetree.ast_desc.Parsetree.b_name ::
           in_recursive_let_section_of
         else in_recursive_let_section_of in
@@ -812,7 +872,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   (* Finally, we record, (except if it was already done in [env'] in case of
      recursive binding) the number of extra arguments due to polymorphism the
      current bound identifier has. *)
-  if is_rec then env
+  if rec_status <> Env.CoqGenInformation.RC_non_rec then env  (* Is rec. *)
   else
     Env.CoqGenEnv.add_value
       ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
@@ -831,15 +891,26 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     failwith "Coq compilation of logical let in TODO" ;  (* [Unsure]. *)
   let out_fmter = ctx.Context.scc_out_fmter in
-  let is_rec =
+  let rec_status =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> false | Parsetree.RF_rec -> true) in
+     | Parsetree.RF_no_rec -> Env.CoqGenInformation.RC_non_rec
+     | Parsetree.RF_rec -> (
+         match let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof with
+         | None -> Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other
+         | Some term_pr -> (
+             match term_pr.Parsetree.ast_desc with
+             | Parsetree.TP_structural decr_arg ->
+                 Env.CoqGenInformation.RC_rec
+                   (Env.CoqGenInformation.RPK_struct decr_arg)
+             | _ ->
+                 Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other))
+    ) in
   (* Generates the binder ("fix" or non-"fix"). *)
   Format.fprintf out_fmter "@[<2>" ;
   let initial_binder =
-    (match is_rec with
-     | false -> "let"
-     | true ->
+    (match rec_status with
+     | Env.CoqGenInformation.RC_non_rec -> "let"
+     | Env.CoqGenInformation.RC_rec _ ->
          (* [Unsure] We don't known now how to compile several local mutually
             recursive functions. *)
          if (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings) > 1
@@ -851,7 +922,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
      recursivity for all the bindings. *)
   let (env, pre_comp_infos) =
     pre_compute_let_bindings_infos_for_rec
-      ~is_rec ~toplevel: false env
+      ~rec_status ~toplevel: false env
       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. *)
   let env' =
@@ -864,7 +935,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
          let_binding_compile
            ctx ~opt_term_proof ~binder: initial_binder
            ~in_recursive_let_section_of ~local_idents ~self_methods_status
-           ~recursive_methods_status ~toplevel: false ~is_rec env one_bnd
+           ~recursive_methods_status ~toplevel: false ~rec_status env one_bnd
            one_pre_comp_info
      | ((first_bnd :: next_bnds),
         (first_pre_comp_info :: next_pre_comp_infos)) ->
@@ -873,8 +944,8 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
              (let_binding_compile
                 ctx ~opt_term_proof ~binder: initial_binder
                 ~in_recursive_let_section_of ~local_idents ~self_methods_status
-                ~recursive_methods_status ~toplevel: false ~is_rec env first_bnd
-                first_pre_comp_info) in
+                ~recursive_methods_status ~toplevel: false ~rec_status env
+                first_bnd first_pre_comp_info) in
          List.iter2
            (fun binding pre_comp_info ->
              (* We transform "let and" non recursive functions into several
@@ -884,7 +955,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
                let_binding_compile
                  ctx ~opt_term_proof ~binder: "let" ~in_recursive_let_section_of
                  ~local_idents ~self_methods_status ~recursive_methods_status
-                 ~is_rec ~toplevel: false env binding pre_comp_info)
+                 ~rec_status ~toplevel: false env binding pre_comp_info)
            next_bnds next_pre_comp_infos ;
            !accu_env
      | (_, _) ->
@@ -1032,15 +1103,27 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
              ~self_methods_status ~recursive_methods_status env let_def in
          Format.fprintf out_fmter "@ in@\n" ;
          rec_generate_expr loc_idents env' in_expr
-     | Parsetree.E_record _labs_exprs ->
-         (* [Unsure] *)
-         Format.fprintf out_fmter "E_record"
-     | Parsetree.E_record_access (_expr, _label) ->
-         Format.fprintf out_fmter "E_record_access"
+     | Parsetree.E_record labs_exprs ->
+         (* Use the Coq syntax {| .. := .. ; .. := .. |}. *)
+         Format.fprintf out_fmter "@[<1>{|@ " ;
+         rec_generate_record_field_exprs_list env loc_idents labs_exprs ;
+         Format.fprintf out_fmter "@ |}@]"
+     | Parsetree.E_record_access (expr, label) -> (
+         rec_generate_expr loc_idents env expr ;
+         Format.fprintf out_fmter ".@[<2>(" ;
+         let extras =
+           generate_record_label_for_method_generator ctx env label in
+         (* Add the type arguments of the ***record type***, not the full
+            expression type. *)
+         (match expr.Parsetree.ast_type with
+         | Parsetree.ANTI_type t ->
+             Types.pp_type_simple_args_to_coq print_ctx out_fmter t extras
+         | _ -> assert false) ;
+         Format.fprintf out_fmter ")@]"
+        )
      | Parsetree.E_record_with (_expr, _labels_exprs) ->
          Format.fprintf out_fmter "E_record_with"
-     | Parsetree.E_tuple exprs ->
-         (begin
+     | Parsetree.E_tuple exprs -> (
          match exprs with
           | [] -> assert false
           | [one] -> rec_generate_expr loc_idents env one
@@ -1048,7 +1131,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
               Format.fprintf out_fmter "@[<1>(" ;
               rec_generate_exprs_list ~comma: true loc_idents env exprs ;
               Format.fprintf out_fmter ")@]"
-         end)
+        )
      | Parsetree.E_sequence exprs ->
          let rec loop ppf = function
           | [] -> ()
@@ -1080,6 +1163,24 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          Format.fprintf out_fmter "@[<1>(" ;
          rec_generate_expr loc_idents env expr ;
          Format.fprintf out_fmter ")@]"
+
+
+
+  (* [Same] Quasi same code than for OCaml. *)
+  and rec_generate_record_field_exprs_list env loc_idents = function
+    | [] -> ()
+    | [(label, last)] ->
+        (* In record expression, no need to print extra _ even if the record
+           type is polymorphic. *)
+        ignore (generate_record_label_for_method_generator ctx env label) ;
+        Format.fprintf out_fmter " :=@ " ;
+        rec_generate_expr loc_idents env last
+    | (h_label, h_expr) :: q ->
+        ignore (generate_record_label_for_method_generator ctx env h_label) ;
+        Format.fprintf out_fmter " :=@ " ;
+        rec_generate_expr loc_idents env h_expr ;
+        Format.fprintf out_fmter ";@ " ;
+        rec_generate_record_field_exprs_list env loc_idents q
 
 
 

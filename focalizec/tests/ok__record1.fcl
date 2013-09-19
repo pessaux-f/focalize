@@ -1,0 +1,17 @@
+open "basics" ;;
+
+type non_poly_t = { a : bool ; b : bool } ;;
+
+let non_poly_access (x) = x.a ;;
+let non_poly_make (u: unit) = { a = true ; b = false } ;;
+let non_poly_val = { a = true ; b = false } ;;
+
+
+
+type poly_t ('a) = { pa: 'a ; pb : bool } ;;
+
+let poly_access1 (x) = x.pa ;;
+let poly_access2 (x) = x.pb ;;
+
+let poly_make (u: unit) = { pa = true ; pb = false } ;;
+let poly_val = { pa = true ; pb = false } ;;

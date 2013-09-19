@@ -6,8 +6,8 @@
 ;;
 ;;                 LIP6 - INRIA Rocquencourt - ENSTA ParisTech
 ;;
-;;  Copyright 2007 - 2012 LIP6 and INRIA
-;;            2012 ENSTA ParisTech
+;;  Copyright 2007 - ... LIP6 and INRIA
+;;            2012 - ... ENSTA ParisTech
 ;;  Distributed only by permission.
 ;;
 ;; *********************************************************************
@@ -138,7 +138,11 @@
 
 
 ;; Indent the current line. By hypothesis, we are at the beginning of the
-;; current line.
+;; current line. Returns the new position after indentation. If no indentation
+;; was done then it is the same as before. Otherwise it is the point where
+;; we arrived due to the indentation.
+;; We need to return this position because save-excursion restores the state
+;; of the buffer and positions at its end of execution.
 (defun focalize-indent-current ()
   (if (> (line-beginning-position) 1) ; THEN
       ; Ok, we are not on the first line of the buffer. So let's work.
@@ -163,12 +167,13 @@
              prev_indent_amount from_prev_line from_current_line)
             (indent-line-to
              (+ from_current_line (+ from_prev_line prev_indent_amount)))
+            (point)
             ) ; END LET
           ) ; END LET*
         )
     ; ELSE
-    ()   ; Do nothing.
-    )
+    (point)
+    )    ; End of if.
   )
 
 
@@ -182,12 +187,18 @@
                          ; and initialise it with the current position.
         ) ; IN
     (beginning-of-line) ; Go to the beginning of the line.
-    (focalize-indent-current)    ; Really indent.
-    ; Go back to the initial position if we are now placed before.
-    (if (< (point) starting-point)   ; 'point' returns the current position
-                                     ; as an integer.
-        ; THEN
-        (goto-char starting-point))
+    (let (
+          (new-point
+           (focalize-indent-current))    ; Really indent.
+          ) ; IN
+      ; Go back to the initial position if we are now placed before else go to
+      ; the new position (indentation point).
+      (if (< new-point starting-point)
+          ; THEN
+          (goto-char starting-point)
+          ; ELSE
+          (goto-char new-point))
+      ) ; End of let.
     ; Erase the MARKER 'starting-point'.
     (set-marker starting-point nil)
     )
@@ -198,13 +209,22 @@
 ;; functions will know what it a "word".
 (defvar focalize-mode-syntax-table
   (let ((table (make-syntax-table)))
+    ;; Underscore is a valid part of a word.
     (modify-syntax-entry ?_ "w" table)
     (modify-syntax-entry ?\\ "\\" table)
-    (modify-syntax-entry ?/ ". 124b" table)
+    ;; Open paren is the start of a two-character comment sequence ('1') and
+    ;; is an opening paired-character to match with the rparen.
+    (modify-syntax-entry ?( "()1" table)
+    ;; Close paren is the end of a two-character comment-start sequence ('4')
+    ;; and is a closing paired-character to match with the lparen.
+    (modify-syntax-entry ?) ")(4" table)
+    ;; Star is the second character of a two-character comment-start sequence
+    ;; ('2') or the start of a two-character comment-end sequence ('3').
     (modify-syntax-entry ?* ". 23" table)
     (modify-syntax-entry ?+ "." table)
     (modify-syntax-entry ?- "." table)
     (modify-syntax-entry ?= "." table)
+    ;; Newline ends a "b-style" comment.
     (modify-syntax-entry ?\n "> b" table)
     (modify-syntax-entry ?< "." table)
     (modify-syntax-entry ?> "." table)
@@ -268,7 +288,7 @@
      (list "\\(--.*\n\\)" '(1 font-lock-comment-face t))
      (list "\\(\(\\*.*\\*\)\\)" '(1 font-lock-comment-face t))
      (list "\\(\{\\*.*\\*\}\\)" '(1 font-lock-comment-face t))
-     (list "\\(\(\\*\*.*\\*\)\\)" '(1 font-lock-comment-face t))
+     (list "\\(\(\\*\\*.*\\*\)\\)" '(1 font-lock-comment-face t))
      ))
   "Stuff to highlight.")
 

@@ -1,0 +1,48 @@
+lib
+==
+Dans depertoir lib : les utilitaires qui n'ont rien a voir avec la
+secu + From_RENAUD_CATHERINE qui contient le dev sur les iterateurs de
+Renaud et Catherine
+
+
+1- listes.fcl : utilitaires sur les listes (potentiellement a completer
+selon les besoins)
+
+2- 
+
+
+
+
+
+=============
+
+
+
+Do not modify Renaud's libraries (listes.fcl and coll.fcl)
+But remove the useless one (which is ?)
+
+
+Rename "utils" as "relation" (be careful, there is relation (without self),
+and relations (with self), there is some "s" to remove among species' names)
+
+
+Clean finite set (don't forget to use Renaud's list library)
+
+
+Check, clean and improve bin_relations_new and finite_relations
+(which were copied from "relation mutable")
+
+
+Link correctly the libraries' files
+And check names which (may) have been changed
+
+
+Make a better "extended product" library (for instance with the proofs)
+Cf cartesian product (stdlib)
+
+
+Solve the basics#( = ) vs Self!( = ) vs Self!equal problem
+(conflict between some libraries)
+
+
+DOCUMENT EVERYTHING !!!!

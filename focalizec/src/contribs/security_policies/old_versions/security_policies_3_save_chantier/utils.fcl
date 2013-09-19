@@ -1,0 +1,114 @@
+open "basics";;
+open "sets";;
+open "finite_sets_f";;
+
+species Relation(A is Setoid, B is Setoid) =
+  inherit Basic_object;
+  signature relation: A -> B -> bool;
+end;;
+
+
+(** entities of Ternary_relations are ternary relations *)
+
+species Ternary_relations(A is Setoid, B is Setoid, C is Setoid) =
+
+  inherit Basic_object ;
+
+  signature relation: Self -> A -> B -> C -> bool;
+
+  signature is_contained: Self -> Self -> bool ;
+
+  property is_contained_spec: all r_1 r_2: Self, 
+        is_contained(r_1, r_2) 
+   <->  all a: A, all b: B, all c: C, 
+         relation(r_1, a, b, c) -> relation(r_2, a, b, c);
+
+end;;
+
+species Relations_by_sets_of_triples(A is Setoid, B is Setoid, C is Setoid,
+                                     T is Abstract_triple(A, B, C),
+                                     P is Finite_parts(T)) =
+
+  inherit Ternary_relations(A, B, C);
+
+  representation = P;
+
+  let set_as_relation(s: P): Self = s;
+
+  let relation(r, a, b, c) = P!belongs(T!make(a, b, c), r);
+
+  let is_contained(r_1, r_2) = P!is_contained(r_1, r_2);
+
+  proof of is_contained_spec = 
+    <1>1 assume r_1 r_2: Self, 
+         prove is_contained(r_1, r_2) <-> 
+           (all a: A, all b: B, all c: C,
+              P!belongs(T!make(a, b, c), r_1) -> 
+                   P!belongs(T!make(a, b, c), r_2))
+         <2>1 hypothesis C: is_contained(r_1, r_2),
+              prove all a: A, all b: B, all  c: C,
+                P!belongs(T!make(a, b, c), r_1) ->
+                  P!belongs(T!make(a, b, c), r_2)
+              <3>1 assume a: A, assume b: B, assume c: C,
+                   hypothesis H: P!belongs(T!make(a, b, c), r_1),
+                   prove P!belongs(T!make(a, b, c), r_2)
+                   by hypothesis H, C
+                      definition of is_contained, relation
+                      property P!is_contained_spec
+              <3>f conclude
+         <2>2 hypothesis I: all a: A, all b: B, all c: C,
+                  (P!belongs(T!make(a, b, c), r_1) -> 
+                           P!belongs(T!make(a, b, c), r_2)),
+              prove is_contained(r_1, r_2)
+              <3>1 prove all a: A, all b: B, all c: C,
+                    P!belongs(T!make(a, b, c), r_1) -> 
+                       P!belongs(T!make(a, b, c), r_2)
+                   by hypothesis I
+              <3>2 prove all t: T, P!belongs(t, r_1) -> P!belongs(t, r_2)
+                   <4>1 assume t: T,
+                        hypothesis H: P!belongs(t, r_1),
+                        prove P!belongs(t, r_2)
+                        <5>0 prove T!equal(t, T!make(T!first(t),
+                                                     T!second(t),
+                                                     T!third(t)))
+                             by property T!is_first, T!is_second, T!is_third,
+                                         T!equal_spec, 
+                                         A!equal_reflexive,
+                                         A!equal_symmetric,
+                                         A!equal_transitive,
+                                         B!equal_reflexive,
+                                         B!equal_symmetric,
+                                         B!equal_transitive,
+                                         C!equal_reflexive,
+                                         C!equal_symmetric,
+                                         C!equal_transitive
+                        <5>1 prove P!belongs(T!make(T!first(t),
+                                                    T!second(t),
+                                                    T!third(t)),
+                                             r_1)
+                             by hypothesis H 
+                                step <5>0 
+                                property P!belongs_left_substitution_rule
+                        <5>2 prove P!belongs(T!make(T!first(t),
+                                                    T!second(t),
+                                                    T!third(t)),
+                                             r_2)
+                             by step <5>1 hypothesis I
+                        <5>f qed by step <5>0, <5>2
+                                    property P!belongs_left_substitution_rule,
+                                             T!equal_symmetric,
+                                             T!equal_transitive
+                   <4>f conclude
+              <3>f qed by step <3>2 
+                          property P!is_contained_spec
+                          definition of relation, is_contained 
+                   
+         <2>f conclude
+    <1>f qed by step <1>1 definition of relation, is_contained
+    ;
+
+end;;
+
+
+
+

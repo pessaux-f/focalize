@@ -968,33 +968,6 @@ let instanciate_parameter_through_inheritance ctx env field_memory =
                  Env.fh_inherited_along in
            (* Now really generate the code of by what to instanciate. *)
            (match instancied_with with
-            | Misc_common.IPI_by_toplevel_species (spec_mod, spec_name) ->
-                (* We found that a toplevel species provides this method
-                   because this species is finally used as effective parameter.
-                   However, may be the method on which we have dependency is
-                   not directly in this toplevel species. May be it is in one
-                   of its parents. We must search in its inheritance to
-                   determine exactly in which species each method is REALLY
-                   defined (not only inherited). *)
-                List.iter
-                  (fun (meth, _) ->
-                    let (real_spec_mod, real_spec_name) =
-                      Misc_common.
-                      find_toplevel_spe_defining_meth_through_inheritance
-                        (Abstractions.EK_ml env) ~current_unit
-                        ~start_spec_mod: spec_mod ~start_spec_name: spec_name
-                        ~method_name: meth in
-                    let capitalized_real_spec_mod =
-                      String.capitalize real_spec_mod in
-                    let prefix =
-                      if real_spec_mod = current_unit then real_spec_name ^ "."
-                      else
-                        capitalized_real_spec_mod ^ "." ^ real_spec_name ^ "." ^
-                        capitalized_real_spec_mod in
-                    Format.fprintf out_fmter "@ %s%a"
-                      prefix Parsetree_utils.pp_vname_with_operators_expanded
-                      meth)
-                  meths_from_param
             | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
                 let capitalized_coll_mod = String.capitalize coll_mod in
                 let prefix =

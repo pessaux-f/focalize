@@ -26,8 +26,8 @@ let focalize_short_version =
 
 let focalize_full_version =
   Printf.sprintf
-    "%s (Build: %s)" focalize_short_version
-    Build_stamp.build_stamp
+    "%s\nBuild date: %s\nLast commit SHA: %s"
+    focalize_short_version Build_stamp.build_date Build_stamp.last_commit
 ;;
 
 let print_focalize_version v =
@@ -206,4 +206,10 @@ let (set_pmatch_err_as_warn, get_pmatch_err_as_warn) =
   let pmatch_err_as_warn = ref false in
   (fun () -> pmatch_err_as_warn := true),
   (fun () -> !pmatch_err_as_warn)
+;;
+
+let (set_zvtov_extra_opts, get_zvtov_extra_opts) =
+  let zvtov_extra_opts = ref "" in
+  (fun s -> zvtov_extra_opts := !zvtov_extra_opts ^ " " ^ s),
+  (fun () -> !zvtov_extra_opts)
 ;;

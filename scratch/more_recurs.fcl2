@@ -1,0 +1,141 @@
+Inductive t__t : Set := 
+  | D : (t__t)
+  | C : (t__t -> t__t).
+
+
+Fixpoint buzz (g :nat) (x : t__t) { struct x} : t__t :=
+  match x with
+   | D  => D
+   | C y => C(buzz g y)
+end.
+
+
+Definition buzz := 
+  fix buzz (g : nat) (x : t__t) {struct x} : t__t :=
+    match x with
+    | D => D
+    | C y => C (buzz g y)
+    end.
+
+
+Function plus (m n : nat) {struct n} : nat :=
+ match n with
+ | 0 => m
+ | S p => S (plus m p)
+ end.
+
+Function foo (x : nat) : nat :=
+  match x with
+  | 0 => 0
+  | n => 1 + foo (n - 1)
+  end.
+
+Utiliser Fix ?
+------------------------------------
+
+
+
+(*
+Definition foo (x : nat) : nat :=
+  match x with
+  | 0 => 0
+  | n => 1 + foo (n - 1)
+  end.
+*)
+
+
+Axiom magic_prove : forall A : Prop, A.
+Axiom __magic_order__ : forall A : Set, A -> A -> Prop.
+Notation magic_order := (__magic_order__ _) (only parsing).
+
+Let foo_order (x : nat) (y : nat) : Prop := magic_order x y.
+Let foo_order_wf : (well_founded foo_order).
+eapply magic_prove. Qed.
+
+Theorem foo_call1_decr : forall x : nat, forall n : nat,
+  (n = x) -> foo_order (n - 1) x.
+apply magic_prove. Qed.
+
+Let foo_aux
+    (x : nat)
+    (foo_rec : (forall _x : nat, (foo_order _x x) -> nat))
+    : nat :=
+  match x with
+  | 0 => 0
+  | n => 1 + foo_rec (n - 1) (foo_call1_decr x n (magic_prove (n = x)))
+  end.
+
+Let foo := (Fix foo_order_wf (fun (x : nat) => nat) foo_aux).
+
+
+
+
+
+(*
+Definition bar (x: nat) (y : bool) : bool :=
+  let y' := not (Is_true y) in
+  if x = 0 then y
+  else
+    if x = 1 then bar (x - 1, y)
+    else bar (x - 1) y'.
+*)
+Require Import Bool.
+Axiom magic_prove : forall A : Prop, A.
+Axiom __magic_order__ : forall A : Set, A -> A -> Prop.
+Notation magic_order := (__magic_order__ _) (only parsing).
+Section eq.
+Variable syntactic_equal___A : Set.
+Parameter bi__syntactic_equal :
+  syntactic_equal___A -> syntactic_equal___A -> bool.
+End eq.
+
+
+
+Let bar_order (x : ((nat * bool)%type)) (y : ((nat * bool)%type)) : Prop :=
+  magic_order x y.
+Let bar_order_wf : (well_founded bar_order).
+eapply magic_prove. Qed.
+
+Theorem bar_call1_decr : forall x : nat, forall y : bool, forall y' : bool,
+  (y' = negb y) -> (x <> 0) -> (x = 1) ->
+     bar_order ((x - 1), y) (x, y).
+apply magic_prove. Qed.
+
+Theorem bar_call2_decr : forall x : nat, forall y : bool, forall y' : bool,
+  (y' = negb y) -> (x <> 0) -> (x <> 1) ->
+    bar_order ((x - 1), y') (x, y).
+apply magic_prove. Qed.
+
+Let bar_aux (x : nat) (y : bool)
+  (bar_rec :
+    forall _x : nat, forall _y : bool, (bar_order (_x, _y) (x, y)) -> bool)
+  : bool :=
+  let y' := negb y in
+  if bi__syntactic_equal _ x 0 then y
+  else
+    if bi__syntactic_equal _ x 1 then
+      bar_rec
+        (x - 1) y (bar_call1_decr x y y'
+                     (magic_prove (y' = negb y))
+                     (magic_prove (x <> 0))
+                     (magic_prove (x = 1))
+                  )
+    else
+      bar_rec
+        (x - 1) y' (bar_call2_decr x y y'
+                      (magic_prove (y' = negb y))
+                      (magic_prove (x <> 0))
+                      (magic_prove (x <> 1))
+                   ).
+
+Let tutu := (Fix bar_order_wf).
+
+
+ (*Let tutu3 := (Fix bar_order_wf (fun (x : nat) (y : bool) => bool)). NO *)
+
+Let toto := (Fix bar_order_wf (fun (x : (nat * bool)%type) => bool) bar_aux).
+
+Let tata := (Fix bar_order_wf (fun (x : nat) (y : bool) => bool) bar_aux).
+
+
+Let toto := (Fix bar_order_wf (fun (t : (nat * bool)%type) => nat => bool => bool) bar_aux).

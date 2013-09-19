@@ -19,3 +19,6 @@
 *.fcd
 *.prolog*
 *.png
+*~
+.DS_Store
+

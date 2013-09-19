@@ -1,0 +1,12 @@
+open "basics" ;;
+
+species A =
+  let rec f (x) = if true then g (x + 1) else 0
+  and g (x) = if true then f (x - 1) else 0 ;
+end ;;
+
+species B =
+  inherit A ;
+  let rec g (x) = if true then h (x + 1) else 0
+  and h (x) = if true then g (x - 1) else 0 ;
+end ;;

@@ -1,0 +1,1556 @@
+(** Catherine Dubois - Renaud Rioboo - October 2012*)
+
+open "sets";;
+open "basics";;
+(*open "peano";;
+*)
+
+species Utils(A is Basic_object) =
+inherit Basic_object;
+
+representation = unit;
+
+let rec mem (l, x: A) =
+      match l with
+        | [] -> false
+        | h :: q ->  h = x || (mem (q, x))
+termination proof = structural l
+;
+
+theorem mem_cons_head: all x: A, all l: list(A), 
+  mem(x::l, x)
+proof = by definition of mem;
+
+theorem mem_cons_tail: all x y: A, all l: list(A),
+  mem(l, x) -> mem(y::l, x)
+proof = by definition of mem;
+
+theorem mem_empty_spec: all x: A, ~~(mem([], x))
+proof = by definition of mem;
+
+theorem mem_contains: all l: list(A),
+   ~~( l = [] ) <-> (ex x: A, mem(l, x))
+proof = 
+  <1>1 assume l: list(A),
+       prove (l = []) -> all x: A, ~~(mem(l, x))
+       by property mem_empty_spec
+  <1>2 prove all l: list(A), ~~(l = []) -> ex x: A, mem(l, x)
+       <2>1 prove ~~([] = []) -> ex x: A, mem([], x)
+            conclude
+       <2>2 assume l: list(A), assume a: A ,
+            hypothesis I: ~~(l = []) -> ex x: A, mem(l, x),
+            prove ex x: A, mem(a::l, x)
+            <3>1 prove mem(a::l, a) by property mem_cons_head
+            <3>f conclude
+       <2>f conclude
+  <1>f conclude;
+
+theorem not_mem_empty : 
+  all l : list(A), (all x : A, mem (l, x) = false) -> l =  [] 
+  proof = 
+    <1>1 prove (all x : A, mem ([] , x) = false) -> []   =  [] 
+         conclude
+    <1>2 prove
+         (all l:list(A), 
+         ((all x : A, mem (l, x) = false) -> l =  []) -> 
+          (all e: A, (all x : A, mem ((e::l), x) = false) -> (e::l) =  []))
+         <2>1 assume l:list(A), 
+              assume e : A,
+              hypothesis H : (all x : A, mem ((e::l), x) = false), 
+              prove (e::l) = []
+              <3>1 prove  mem ((e::l), e) = false
+                   by hypothesis H
+              <3>2 prove mem ((e::l), e) = ((e = e) || mem(l, e))
+                   by definition of mem
+              <3>3 prove (e = e) || mem(l, e) = true
+                   conclude
+              <3>4 prove mem ((e::l), e) = true
+                   assumed (* by step <3>2, <3>3 *)
+              <3>f qed by hypothesis H step <3>4
+         <2>f conclude
+     <1>f qed by step <1>1, <1>2
+;
+
+theorem mem_spec: all l : list(A), all e h : A,  
+(mem (l, e) \/ (e = h)) <-> mem (h :: l, e)
+proof = assumed
+; 
+  
+
+let rec rm (l, x : A) =
+      match l with
+        | [] -> []
+        | h :: q ->  if h = x then q else h :: (rm (q, x)) 
+termination proof = structural l
+;
+
+let rec length (l : list(A)) = 
+      match l with
+        | [] -> 0
+        | h :: q ->  1 + (length (q)) 
+termination proof = structural l
+;
+     
+let rec append (l1 : list(A), l2) =
+      match l1 with
+        | [] -> l2
+        | h :: q ->  h::(append (q, l2))
+termination proof = structural l1
+;
+
+theorem append_right_neutral:
+  all l : list(A), append(l,  []) = l
+proof = 
+  <1>1 prove append([], []) = []
+       by definition of append
+  <1>2 assume l: list(A), assume a: A,
+       hypothesis I: append(l, []) = l,
+       prove append(a::l, []) = a::l
+       <2>1 prove append(a::l, []) = a::append(l, [])
+            by definition of append
+       <2>f qed by step <2>1 hypothesis I
+  <1>f conclude
+;
+
+theorem append_left_neutral: all l: list(A),
+  append([], l) = l
+proof = by definition of append;
+
+logical let append_neutral(n: list(A)) = 
+  all l: list(A), (append(l, n) = l) /\ (append(n, l) = l);
+
+theorem nil_neutral: append_neutral([])
+proof = by property append_left_neutral, append_right_neutral
+           definition of append_neutral;
+
+theorem nil_unique: all n: list(A),
+  append_neutral(n) -> n = []
+proof = 
+  <1>1 assume n: list(A),
+       hypothesis N: append_neutral(n),
+       prove n = []
+       <2>1 prove append([], n) = []
+            by hypothesis N definition of append_neutral
+       <2>2 prove append([], n) = n
+            by property append_left_neutral
+       <2>f conclude
+  <1>f conclude;
+
+theorem append_spec: all l1 l2 : list(A), all a : A, 
+  ( mem (l1, a) \/ mem (l2, a) ) <-> mem (append (l1, l2), a)
+proof = assumed
+;
+
+end
+;;   
+
+
+
+(*logical let caselist (p : list('a) -> prop) = 
+  p ([]) -> (all e : 'a, (all r  : list('a), p(r) -> p (e::r))) -> 
+  (all l : list('a), p(l))
+;; 
+*)
+
+
+species Collection (Elt is Setoid, L is Utils(Elt))  =
+
+  (* number of elements of a collection *)
+  signature size : Self -> int;
+
+  property size_positive:
+   all a : Self, 0 <=0x size (a) ;
+
+  (*empty collection*)
+  signature empty : Self;
+
+  property empty_has_no_element: 
+    size(empty) = 0;
+
+  (* signature includes : list(Elt) -> Self -> bool ; *)
+
+  (* property empty_includes: all c: Self, includes([], c); *)
+
+  (* property includes_spec: all e: Elt, all l: list(Elt), all c: Self, *)
+  (*   includes(e::l, c) -> includes(l, remove(e, c)); *)
+
+
+  (* membership of an element*)
+  signature contains: Elt -> Self -> bool;
+  
+  (* property includes_contains :  *)
+  (*  all x : Elt, all l : list(Elt), all c: Self, *)
+  (*     L!mem (l, x) -> includes (l, c) -> contains(x, c) ; *)
+
+  property contains_empty: 
+    all a : Elt, contains (a, empty) = false;
+ 
+  signature is_empty : Self -> bool;
+ 
+  property is_empty_empty : 
+     is_empty (empty) = true; 
+
+  signature add: Elt -> Self -> Self;
+
+  property add_spec: all c: Self, all e x: Elt,
+    contains(x, add(e, c)) <-> ( (x = e) || contains(x, c));
+  
+  theorem add_contains1: 
+    all c: Self, all e : Elt, contains (e, (add (e, c))) 
+    proof = by property add_spec;
+  
+  theorem add_contains2: 
+    all c: Self, all e : Elt, all x : Elt, ~ (e = x) -> 
+       contains (x, (add (e, c))) <-> contains (x, c)
+  proof = by property add_spec;
+
+  signature remove: Elt -> Self -> Self;
+
+  property remove_contains: 
+    all c: Self, all e : Elt, all x : Elt, ~~(Elt!equal (e, x)) -> 
+       (contains (x, (remove (e, c))) <-> contains (x, c));
+
+  signature tolist : Self -> list(Elt);
+
+  (* property tolist_includes: all c: Self, includes(tolist(c), c); *)
+
+  property tolist_contains :
+    all c: Self, all e : Elt, contains (e, c) <-> L!mem (tolist(c), e);
+
+  property tolist_empty : 
+    all l : Self, is_empty (l) <-> tolist(l) = []
+; 
+end
+;;
+
+species CollectionAsSet (Elt is Setoid, L is Utils(Elt))  =
+inherit Collection(Elt, L) ;
+
+property unique_contains : all c : Self, all e : Elt, 
+ ~~ (contains (e, remove (e, c))) ;
+
+end
+;;
+
+
+species ListCol (Elt is Setoid, L is Utils(Elt)) =
+inherit Collection(Elt, L);
+
+representation = list(Elt);
+
+let empty = []
+;
+
+let is_empty (l : Self) = l = []
+; 
+
+
+let  contains (e: Elt, l: Self) = L!mem (l, e)
+;
+
+let rec remove(e, l) = match l with
+  | [] -> []
+  | h::t -> 
+    if (h = e) then t else h::remove(e, t)
+termination proof = structural l
+;
+
+proof of remove_contains = assumed;
+
+let head (l: Self) : Elt = 
+      match l with
+        | [] -> Elt!element
+        | h :: _q ->  h ;
+
+theorem head_contains: all c: Self, 
+  ~~(is_empty(c)) -> contains(head(c), c)
+  proof = 
+  <1>1 prove ~~(is_empty([])) -> contains(head([]), [])
+       by definition of is_empty
+  <1>2 assume h: Elt, l: Self,
+       prove ~~(is_empty(h::l)) -> contains(head(h::l), h::l)
+       by definition of is_empty, contains, head
+          property L!mem_cons_head
+  <1>3 prove all l: list(Elt),
+       ~~(is_empty(l)) -> contains(head(l), l)
+       by step <1>1, <1>2
+  <1>f qed by step <1>3
+;
+
+let tail (l : Self) : Self = 
+      match l with
+        | [] ->  []
+        | _h :: q ->  q ;
+
+let tolist (l: Self): list(Elt) = l;
+
+theorem tail_includes: all c: Self, 
+  all e: Elt, L!mem(tolist(tail(c)), e) -> contains(e, c)
+(* includes(tolist(tail(c)), c) *)
+proof = 
+<1>1 prove all c: list(Elt), all e: Elt,
+       L!mem(tolist(tail(c)), e) -> contains(e, c)
+     <2>1 assume e: Elt,
+          hypothesis H: L!mem(tolist(tail([])), e),
+          prove contains(e, [])
+          by definition of contains, tolist, tail
+             hypothesis H
+     <2>2 assume e: Elt, h: Elt, l: list(Elt),
+          hypothesis I: L!mem(tolist(tail(l)), e) -> contains(e, l),
+          hypothesis H: L!mem(tolist(tail(h :: l)), e),
+          prove contains(e, h :: l)
+          <3>1 prove L!mem(l, e) by hypothesis H definition of tolist, tail
+          <3>f qed by step <3>1 definition of contains property L!mem_spec
+     <2>f conclude
+<1>f conclude
+;
+
+
+proof of is_empty_empty = by definition of empty, is_empty;
+
+proof of tolist_empty = 
+  by definition of is_empty, tolist
+;
+
+proof of tolist_contains = by definition of contains, tolist
+;
+
+proof of contains_empty =
+  by definition of contains, empty
+     property L!mem_empty_spec
+;
+
+theorem head_tail_spec: all l : Self, 
+ ~~ is_empty (l ) -> tolist (l) = ((head (l) ) :: (tolist (tail (l))))
+proof = 
+<1>1 prove all l: list(Elt),
+      ~~ is_empty (l ) -> tolist (l) = ((head (l) ) :: (tolist (tail (l))))
+     <2>1 prove all l: list(Elt),
+          ~~(l = []) -> l = (head(l) :: tail(l))
+          <3>1 prove ~~([] = []) -> [] = ( head([]) :: tail([]))
+               conclude
+          <3>2 prove all l: list(Elt), all h: Elt,
+               (~~(l = []) -> l = (head(l) :: tail(l))) ->
+                (~~(h :: l = []) -> h :: l = (head(h :: l) :: tail(h :: l)))
+               <4>1 assume l: list(Elt), assume h: Elt,
+                    hypothesis I: ~~(l = []) -> l = (head(l) :: tail(l)),
+                    prove (h :: l) = (head(h :: l) :: tail(h :: l))
+                    by definition of head, tail
+                <4>f conclude
+          <3>f conclude
+     <2>f qed by step <2>1 definition of is_empty, tolist
+<1>f conclude
+;
+
+let rec size(l: Self) = match l with 
+  | [] -> 0
+  | _h::t -> 1 + size(t)
+termination proof = structural l;
+
+proof of empty_has_no_element = by definition of size, empty;
+
+proof of size_positive = assumed;
+(*
+let append (l1 : Self, l2 : Self) = L!append (l1, l2);
+*)
+
+end
+;;
+
+species Iterator (Elt is Setoid, L is Utils(Elt), Col is Collection(Elt, L)) =
+
+signature start : Col -> Self;
+
+signature hasnext : Self -> bool;
+
+signature stepp : Self -> Elt * Self;
+
+property next_empty : 
+  all c : Col, Col!is_empty (c) = true -> hasnext (start (c)) = false;
+
+property next_nonempty : 
+  all c : Col, Col!is_empty (c) = false -> hasnext (start (c)) = true;
+
+signature measure_it : Self -> int;
+
+property mea_post :
+  all a : Self, 0 <=0x  measure_it (a) ;
+
+property mea_decreases : 
+  all i1 i2 : Self, all e: Elt, stepp (i1) = (e, i2) -> measure_it (i2) <0x measure_it (i1);
+
+(** 
+  for an iterator it, a collection c and a list l;
+  model(it, c, l) should describe the elements of c which are in l
+  and which are not treated by it
+*)
+signature model : Self -> Col -> list(Elt) ->  prop;
+
+(** elements of l are in c *)
+property model_includes: all it: Self, all c: Col, all l : list(Elt),
+  model(it, c, l) -> 
+    all e: Elt, L!mem(l, e) -> Col!contains(e, c);
+
+(*[rr, cd] reveals too much *)
+(* signature elements_left: Self -> list(Elt); *)
+
+(* property model_elements: all it: Self, all c: Col, *)
+(*    model(it, c, elements_left(it)) *)
+(* ; *)
+
+(** should start correctly *)
+property model_start :
+   all c : Col,  
+   model (start (c), c, Col!tolist(c)) ;
+
+(* logical let same_elems (c, l) = (\* Col -> list(Elt) -> Prop = *\) *)
+(*   all x: Elt, Col!contains (x, c) <-> L!mem (l, x); *)
+
+(** while l is not empty hasnext should return true*)
+property model_hasnext_true :
+   all it : Self, all l : list(Elt), all c : Col, 
+   model (it, c, l) -> (hasnext(it) = true) -> 
+   ~~(l = [])
+;
+(** *)
+property model_hasnext_false :
+   all it : Self, all l : list(Elt), all c : Col, 
+   model (it, c, l) -> (hasnext(it) = false) -> 
+      l = []; 
+
+
+
+property model_step : 
+   all it it2 : Self, all e : Elt, all l : list(Elt), all c : Col, 
+   model (it, c, l) ->
+    hasnext(it) ->
+     stepp (it) = (e, it2)  -> 
+       L!mem (l, e)
+  ;
+
+property model_step_bis : 
+   all it : Self, all e : Elt, all l : list(Elt), all c : Col, 
+   model (it, c, l) ->
+    hasnext(it) ->
+       L!mem (l, fst(stepp(it)))
+  ;
+
+(* property model_step2: all it it2: Self, all c: Col, all e: Elt, *)
+(*    all l: list(Elt), hasnext(it) -> *)
+(*      model(it, c, l) -> *)
+(*       stepp(it) = (e, it2) -> *)
+(*        (\* if there exists a list which is a model *\) *)
+(*        (all l2: list(Elt), model(it2, c, l2) -> *)
+(*           (\* then l2 is made of elements of l *\) *)
+(*           (all x: Elt, (L!mem(l2, x) -> L!mem(l, e))  *)
+(*                         /\  *)
+(*                        (~~(x = e) -> (L!mem(l, x) -> L!mem(l2, x)))) *)
+(* 	) *)
+(* ; *)
+
+
+
+property model_step_exists: all it it2: Self, all c: Col, all e: Elt,
+   all l: list(Elt), hasnext(it) ->
+     model(it, c, l) ->
+      stepp(it) = (e, it2) ->
+       (* there exists a list which is a model *)
+       (ex l2: list(Elt), model(it2, c, l2))
+          (* (\* l2 is made of elements of l *\) *)
+          (* (all x: Elt, (L!mem(l2, x) -> L!mem(l, e)) /\  *)
+          (*              (~~(x = e) -> (L!mem(l, x) -> L!mem(l2, x)))) *)
+;
+
+property model_step_new2: all it it2: Self,
+   all e: Elt, all l: list(Elt),  all c: Col,
+    model(it, c, l) -> hasnext(it) ->
+      (stepp (it) = (e, it2))  ->
+      (all l2: list(Elt), model(it2, c, l2) ->
+        (all y: Elt,  ~(e = y) -> 
+           (L!mem(l, y) <-> L!mem(l2, y))))
+;
+end
+;;
+
+species Non_removable_iterator(Elt is Setoid,
+                               L is Utils(Elt), 
+			       Col is Collection(Elt, L)) =
+  inherit Iterator(Elt, L, Col) ;
+
+
+end;;
+
+species Removable_iterator(Elt is Setoid,
+                           L is Utils(Elt), 
+			   Col is Collection(Elt, L)) =
+  inherit Iterator(Elt, L, Col) ;
+
+  signature remove: Self -> Self ;
+  signature get_collection: Self -> Col ;
+
+end;;
+
+species Unique_iterator (Elt is Setoid,
+                         L is Utils(Elt), 
+                         Col is CollectionAsSet(Elt, L)) =
+inherit Iterator(Elt, L, Col) ; 
+
+property model_step_unique : 
+   all it it2: Self, all e: Elt, all l l2: list(Elt), all c : Col, 
+   model (it, c, l) -> hasnext(it) ->
+     stepp (it) = (e, it2)  ->
+        model(it2, c, l2) ->
+	  ~~(L!mem(l2, e))
+;
+
+end
+;;
+
+species Multiple_iterator (Elt is Setoid,
+                         L is Utils(Elt), 
+                         Col is CollectionAsSet(Elt, L)) =
+inherit Iterator(Elt, L, Col) ; 
+
+end
+;;
+
+species Iter_tools (Elt is Setoid,
+                    L is Utils(Elt),
+                    Col is Collection(Elt, L),
+                    It is Iterator(Elt, L, Col)) =
+
+inherit Collection(Elt, L);
+
+representation = Col;
+
+let it_order(it1, it2) = It!measure_it(it1) <=0x It!measure_it(it2);
+
+let add(e, c) = Col!add(e, c);
+
+let rec copy_aux (it, a) = 
+if It!hasnext(it) then  
+     let res = It!stepp (it) in
+     copy_aux (snd(res), Col!add(fst(res), a))
+else a
+termination proof = order 
+it_order
+on it assumed;
+(*
+termination proof = measure measure_it on it
+should write the mea_decreases is the reason
+*)
+(*
+give an inductive  property adapted to copy_aux
+*)
+
+let copy (c) = copy_aux (It!start (c), Col!empty);
+
+logical let copy_inv_prop(it: It) = 
+   all a c: Col, all l: list(Elt),
+      It!model(it, c, l) ->
+         (all x: Elt, Col!contains(x, a) -> Col!contains(x, c)) ->
+            (all x: Elt, Col!contains(x, copy_aux(it, a)) <-> 
+                ((L!mem(l, x) || Col!contains(x, a))))
+;
+
+theorem inductive_measure: 
+  (all it: It,
+    (all it2: It, (It!measure_it(it2) <0x It!measure_it(it)) ->
+                copy_inv_prop(it2)) -> copy_inv_prop(it))
+   <->
+   all it: It, copy_inv_prop(it)
+proof = assumed;
+
+
+(* all it it2 : It, all a: Col, all e: Elt,  *)
+(*   hasnext(it) -> (It!stepp(it) = (e, it2)) ->  *)
+(*      copy_inv_prop(it2, Col!add(e, a), copy_aux(it2, Col!add(e, a)) -> *)
+(*       copy_inv_prop(it, a, copy_aux(it2, Col!add(e, a))) *)
+   
+
+theorem copy_new_invariant: all it: It,
+   copy_inv_prop(it)
+proof = 
+<1>1 assume it: It, 
+     hypothesis R: (all it2: It, 
+                     (It!measure_it(it2) <0x It!measure_it(it)) ->
+                                 copy_inv_prop(it2)),
+     prove copy_inv_prop(it)
+     <2>1 assume a c: Col, assume l: list(Elt),
+          hypothesis M: It!model(it, c, l),
+          hypothesis A: all x: Elt, Col!contains(x, a) -> Col!contains(x, c),
+          assume x: Elt,
+          prove Col!contains(x, copy_aux(it, a)) <->
+            (L!mem(l, x) || Col!contains(x, a))
+          <3>1 hypothesis N: It!hasnext(it),
+               notation res = It!stepp(it),
+               notation e = fst(res),
+               notation it2 = snd(res),
+               prove Col!contains(x, copy_aux(it, a)) <->
+                    (L!mem(l, x) || Col!contains(x, a))
+               <4>0 prove It!stepp(it) = (e, it2)
+                     (* by definition of res, e, it2 *)
+                     assumed
+               <4>1 prove It!measure_it(it2) <0x It!measure_it(it)
+                    by property It!mea_decreases
+                       step <4>0
+               <4>2 prove copy_inv_prop(it2)
+                    by step <4>1 hypothesis R
+               <4>3 prove copy_aux(it, a) = copy_aux(it2, Col!add(e, a))
+                         (* by definition of copy_aux *)
+                         (*    step <4>0 *)
+                         (*    hypothesis N *)
+                         assumed
+               <4>4 assume y: Elt,
+                    hypothesis A2: 
+                      Col!contains(y, Col!add(e, a)),
+                    prove Col!contains(y, c)
+                    <5>1 hypothesis YE: (e = y),
+                         prove Col!contains(y, c)
+                         by property It!model_step,
+                                     It!model_includes
+                            hypothesis YE, M, N
+                         step <4>0
+                    <5>2 hypothesis YE: ~ (e = y),
+                         prove Col!contains(y, c)
+                          by hypothesis A, YE, A2
+                              property Col!add_contains2
+                    <5>f conclude
+               <4>5 assume l2: list(Elt),
+                    hypothesis M2: It!model(it2, c, l2),
+                    prove Col!contains(x, copy_aux(it, a)) <->
+                           L!mem(l, x) || Col!contains(x, a)
+                    <5>0 prove 
+                         Col!contains(x, copy_aux(it2, Col!add(e, a)))
+                         <-> 
+                         (L!mem(l2, x) || 
+                           Col!contains(x, Col!add(e, a)))
+                          by step <4>2, <4>4
+                             hypothesis M2
+                             definition of copy_inv_prop
+                    <5>1 hypothesis H: Col!contains(x, copy_aux(it, a)),
+                          prove L!mem(l, x) || Col!contains(x, a)
+                         <6>0 prove Col!contains(x, 
+                                                   copy_aux(it2,
+                                                             Col!add(e, a)))
+                                 by step <4>3 hypothesis H
+                         <6>1 hypothesis XE: (x = e),
+                              prove L!mem(l, x)
+                              by property It!model_step
+                                 hypothesis M, N, XE
+                                 step <4>0
+                         <6>2 hypothesis XE: ~ (x = e),
+                              prove L!mem(l, x) || Col!contains(x, a)
+                              assumed
+                              (* by step <4>4, <5>0, <6>0, <4>0 *)
+                              (*    definition of copy_inv_prop *)
+                              (*    property It!model_step_new2, *)
+                              (*             Col!add_contains2 *)
+                              (*    hypothesis M, N, M2, XE *)
+                         <6>f qed by step <6>1, <6>2
+                    <5>2 hypothesis H: L!mem(l, x) || Col!contains(x, a),
+                         prove Col!contains(x, copy_aux(it, a))
+                         <6>1 prove Col!contains(x,
+                                                 copy_aux(it2, Col!add(e, a)))
+                              <7>1 prove L!mem(l2, x) 
+                                         ||
+                                         Col!contains(x, Col!add(e, a))
+                                   <8>1 hypothesis XE: e = x,
+                                        prove Col!contains(x, Col!add(e, a))
+                                        by property Col!add_contains1
+                                           hypothesis XE
+                                   <8>2 hypothesis XE: ~ (e = x),
+                                        prove L!mem(l2, x) 
+                                              ||
+                                              Col!contains(x, Col!add(e, a))
+                                        <9>1 hypothesis HH: L!mem(l, x),
+                                             prove L!mem(l2, x) 
+                                             <0>1 prove 
+                                             all y: Elt,  ~(e = y) -> 
+                                               L!mem(l, y) -> L!mem(l2, y)
+                                             by hypothesis M, N, M2
+                                                step <4>0
+                                                property It!model_step_new2
+                                             <0>2 prove 
+                                             all x: Elt, ~ (e = x) -> 
+                                               L!mem(l, x) -> L!mem(l2, x)
+                                             by step <0>1
+                                             <0>f qed by step <0>2
+                                                         hypothesis XE, HH
+                                        <9>2 hypothesis HH: Col!contains(x, a),
+                                             prove Col!contains(x, 
+                                                                Col!add(e, a))
+                                             by hypothesis HH, XE
+                                                property Col!add_spec
+                                        <9>f qed by step <9>1, <9>2 
+                                                    hypothesis H
+                                   <8>f conclude
+                              <7>f qed by step <7>1, <5>0
+                         <6>f qed by step <6>1, <4>3
+                    <5>f conclude
+               <4>f qed by step <4>5
+                    property It!model_step_exists
+                    hypothesis M, N
+                    step <4>0
+          <3>2 hypothesis N: ~~ (It!hasnext(it)),
+               prove Col!contains(x, copy_aux(it, a)) <->
+                    (L!mem(l, x) || Col!contains(x, a))
+              <4>1 prove (l = []) 
+                   by property It!model_hasnext_false
+                   hypothesis N, M
+              <4>2 prove ~~ (L!mem(l, x)) 
+                   by property L!mem_empty_spec step <4>1
+              <4>3 prove copy_aux(it, a) = a 
+                  by definition of copy_aux hypothesis N
+              <4>f qed by step <4>2, <4>3
+          <3>f conclude               
+     <2>f qed by step <2>1 definition of copy_inv_prop
+<1>f qed by step <1>1 property inductive_measure
+;
+
+theorem copy_invariant: all it: It, all a: Col, all c: Col, all l: list(Elt),
+  It!model(it, c, l) ->
+  (all x: Elt, Col!contains(x, a) -> Col!contains(x, c)) -> 
+     (all x: Elt, Col!contains(x, copy_aux(it, a)) <-> 
+           ((L!mem(l, x) || Col!contains(x, a))))
+proof = by property copy_new_invariant definition of copy_inv_prop
+;
+
+theorem copy_spec : 
+  all e: Elt, all c : Col, 
+    Col!contains (e, c) <-> Col!contains (e, copy(c))
+proof = 
+  <1>1 assume e: Elt, assume c: Col,
+       notation a = Col!empty,
+       notation l =  Col!tolist(c),
+       notation it = It!start(c),
+       prove Col!contains(e, c) <-> 
+             Col!contains(e, copy_aux(It!start(c), Col!empty))
+       <2>0 prove It!model(it, c, l)
+            by property It!model_start
+               definition of it, l
+       <2>1 hypothesis H: Col!contains(e, c),
+            prove  Col!contains(e, copy_aux(it, a))
+            by hypothesis H step <2>0
+               property copy_invariant, Col!contains_empty, Col!tolist_contains
+               definition of l, a, it
+       <2>2 hypothesis H: Col!contains(e, copy_aux(it, a)),
+            prove Col!contains(e, c)
+            <3>1 prove L!mem(l, e)
+                 by property copy_invariant, Col!contains_empty
+                    hypothesis H definition of l, a step <2>0
+            <3>f qed by step <3>1 property Col!tolist_contains
+                        definition of l
+       <2>f qed by step <2>1, <2>2 definition of a, it
+  <1>f qed by step <1>1 definition of copy
+;
+
+
+end
+;;
+
+(* species Coll_tools (Elt is Setoid, L is Utils(Elt), Col is Collection(Elt, L), *)
+(*                    Iter is Iterator(Elt, L, Col) ) =  *)
+(* inherit Collection(Elt, L); *)
+
+(* let rec copy_aux (it, a) =  *)
+(* if Iter!hasnext(it) then   *)
+(*      let res = Iter!stepp (it) in *)
+(*      Col!add (fst(res), copy_aux (snd(res), a))  *)
+(* else a *)
+(* ; *)
+
+(* let copy (c) = copy_aux ((Iter!start (c)), Col!empty); *)
+
+(* property copy_spec :  *)
+(*   all e: Elt, all c : Col,  *)
+(*     Col!contains (e, c) = Col!contains (e, copy (c)) ; *)
+
+(* end *)
+(* ;; *)
+
+
+species ListIterator (Elt is Setoid, L is Utils(Elt), 
+                      LCol is ListCol(Elt, L)) =
+inherit Iterator(Elt, L, LCol);
+
+(** Elements left to treat *)
+representation = LCol ;
+
+let tolist (l : Self) = LCol!tolist (l)
+; 
+
+let is_empty (l : Self) = LCol!is_empty (l)
+; 
+
+let hasnext (it : Self) = ~~(is_empty (it));
+
+let start (c : LCol) : Self = c;
+
+let stepp (it) = 
+  if hasnext (it) then (LCol!head (it), LCol!tail (it))
+  else focalize_error ("no more next") ;
+
+let measure_it (c) = LCol!size (c);
+
+
+logical let model (it: Self, c, l) = 
+  (all x : Elt, L!mem (l, x) 
+   <-> 
+   L!mem (tolist(it), x)); 
+
+theorem model_spec_list: all it: Self, all c: LCol, all l: list(Elt),
+   model(it, c, l) <->
+     ( all x: Elt, L!mem(l, x) <-> L!mem(tolist(it), x))
+proof = by definition of model;
+
+
+proof of model_start =
+  by definition of tolist, start, model
+;
+
+theorem hasnext_spec:
+all it : Self, hasnext (it) = false <-> tolist (it) = []
+proof = 
+  by definition of hasnext, is_empty, tolist property LCol!tolist_empty 
+;
+
+proof of model_hasnext_false =
+  <1>1 assume it: Self, assume c: LCol, assume l: list(Elt),
+       hypothesis M: model(it, c, l),
+       hypothesis N: hasnext(it) = false,
+       prove l = []
+       <2>1 prove tolist(it) = [] 
+            by property hasnext_spec hypothesis N
+       <2>2 prove all x: Elt, L!mem(l, x) -> L!mem([], x) 
+            by step <2>1 hypothesis M definition of model
+       <2>f qed by step <2>2 property L!not_mem_empty, L!mem_empty_spec
+  <1>f conclude
+   ;
+
+proof of model_hasnext_true =
+  <1>1 assume it: Self, assume c: LCol, assume l: list(Elt),
+       hypothesis M: model(it, c, l),
+       hypothesis N: hasnext(it) = true,
+       prove ~~(l = [])
+       <2>1 prove ~~(tolist(it) = []) 
+            by property hasnext_spec hypothesis N
+       (* <2>2 prove ex x: Elt, L!mem(tolist(it), x)  *)
+       (*      by step <2>1 property L!mem_contains *)
+       <2>3 prove ex x: Elt, L!mem(l, x)
+            by step <2>1 definition of model hypothesis M
+            property L!mem_contains
+       <2>f qed by step <2>3 property L!mem_contains
+  <1>f conclude
+;
+
+proof of model_step = 
+<1>1 assume it it2 : Self, assume e : Elt, 
+     assume l : list(Elt), assume c : LCol,
+     hypothesis M: model (it, c, l),
+     hypothesis N: hasnext(it),
+     hypothesis D: stepp (it) = (e, it2),
+     prove L!mem(l, e)
+     <2>1 prove e = LCol!head(it) by definition of stepp hypothesis N, D
+     <2>2 prove LCol!contains(e, it) 
+          by property LCol!head_contains hypothesis N 
+             step <2>1 definition of hasnext, is_empty
+     <2>f qed by step <2>2 definition of model, tolist hypothesis M 
+                 property LCol!tolist_contains
+<1>f conclude
+;
+
+logical let includes(l: list(Elt), c: LCol) =
+  all e: Elt, L!mem(l, e) -> LCol!contains(e, c);
+  
+
+(** initialy we build models form the collection c with nothing handled *)
+theorem model_start_includes: all c: LCol, all l: list(Elt),
+   model(start(c), c, l) -> includes(l, c)
+   proof =
+   <1>1 assume c: LCol, assume l: list(Elt),
+        hypothesis M: model(start(c), c, l),
+        prove all e: Elt, L!mem(l, e) -> LCol!contains(e, c)
+        by definition of start, model, tolist
+           hypothesis M
+           property model_start, LCol!tolist_contains
+   <1>f qed by step <1>1 definition of includes
+;
+
+(** we keep handled element *)
+theorem stepp_preserves_includes: all it it2: Self, all c: LCol,
+  all l l2: list(Elt), all e: Elt,
+    model(it, c, l) -> hasnext(it) -> (stepp(it) = (e, it2)) -> 
+      model(it2, c, l2) ->
+        includes(l, c) -> includes(l2, c)
+  proof = 
+     by definition of includes, model, tolist, stepp, hasnext
+        property model_step, model_hasnext_true,
+                 LCol!tolist_contains, LCol!tail_includes
+  ;
+
+logical let model_preserved(c, it) =
+  all l: list(Elt), model(it, c, l) -> includes(l, c)
+;
+
+proof of model_step_exists = 
+<1>1 assume it it2: Self, assume c: LCol, assume e: Elt,
+     assume l: list(Elt),
+     hypothesis M: model(it, c, l),
+     hypothesis N: hasnext(it),
+     hypothesis S: stepp(it) = (e, it2),
+     prove ex l2: list(Elt), model(it2, c, l2)
+     <2>1 prove it2 = LCol!tail(it)
+          by hypothesis S, N definition of stepp
+     <2>2 notation l2 = LCol!tolist(it2),
+          prove model(it2, c, l2)
+          <3>1 assume x: Elt,
+               prove L!mem(l2, x) <-> L!mem(tolist(it2), x)
+               by definition of tolist, l2
+          <3>f qed by step <3>1 definition of model
+    <2>f qed by step <2>2
+<1>f conclude
+;
+
+proof of model_step_new2 =
+<1>1 assume it it2: Self,
+     assume e: Elt,
+     assume l: list(Elt),
+     assume c: LCol,
+     hypothesis M: model(it, c, l),
+     hypothesis N: hasnext(it),
+     hypothesis S: stepp(it) = (e, it2),
+     assume l2: list(Elt),
+     hypothesis M2: model(it2, c, l2),
+     assume y: Elt,
+     hypothesis YE: ~ (e = y),
+     prove L!mem(l, y) <-> L!mem(l2, y)
+     <2>a prove it2 = LCol!tail(it)
+          by definition of stepp hypothesis N, S
+     <2>b prove e = LCol!head(it)
+          by definition of stepp hypothesis N, S
+     <2>c prove ~~ LCol!is_empty(it)
+          by hypothesis N definition of hasnext, is_empty
+     <2>d prove  LCol!tolist(it) = e :: LCol!tolist(it2)
+          by step <2>a, <2>b, <2>c property LCol!head_tail_spec
+     <2>1 hypothesis H: L!mem(l, y),
+          prove L!mem(l2, y)
+          <3>1 prove L!mem(LCol!tolist(it), y)
+               by hypothesis H, M definition of model, tolist
+          <3>2 prove L!mem(LCol!tolist(it2), y)
+               assumed
+               (* by step <2>d, <3>1 hypothesis H, YE property L!mem_spec *)
+          <3>f qed by step <3>2 hypothesis M2 definition of model, tolist
+     <2>2 hypothesis H: L!mem(l2, y),
+          prove L!mem(l, y)
+          <3>1 prove L!mem(LCol!tolist(it2), y)
+               by hypothesis H, M2
+                  definition of model, tolist
+          <3>2 prove L!mem(LCol!tolist(it), y)
+               assumed
+               (* by step <2>d, <3>1 hypothesis H, YE property L!mem_spec *)
+          <3>f qed by step <3>2 hypothesis M definition of tolist, model
+     <2>f qed by step <2>1, <2>2
+<1>f conclude
+;
+
+end
+;;
+
+species ListCollectionAsSet(Elt is Setoid, L is Utils(Elt)) = 
+inherit ListCol(Elt, L), CollectionAsSet(Elt, L); 
+
+let torep (l : Self ) : list(Elt) = l;
+
+let rec nodouble (l) = 
+      match l with
+        | [] ->  true 
+        | h :: q ->  nodouble (q) && ~~ L!mem (q, h)
+termination proof = structural l
+;
+
+theorem nodouble_list_inv : all l : Self, nodouble(torep(l)) 
+proof = assumed (* representation invariant*)
+;
+
+theorem remove_smaller: all l: Self, all e h: Elt,
+  L!mem(torep(remove(e, l)), h) -> L!mem(torep(l), h)
+  proof = 
+  <1>1 assume l: list(Elt), assume e h: Elt,
+       hypothesis R:  L!mem(remove(e, l), h),
+       prove L!mem(l, h)
+       <2>1 prove L!mem(remove(e, []), h) ->  L!mem([], h)
+            by definition of remove
+       <2>2 prove all ll: list(Elt), all hh: Elt,
+              (L!mem(remove(e, ll), h) -> L!mem(ll, h)) ->
+                (L!mem(remove(e, hh :: ll), h) -> L!mem(hh :: ll, h))
+            <3>1 assume ll: list(Elt), assume hh: Elt,
+                 hypothesis I: (L!mem(remove(e, ll), h) -> L!mem(ll, h)),
+                 hypothesis RR: L!mem(remove(e, hh :: ll), h),
+                 prove L!mem(hh :: ll, h)
+                 <4>1 hypothesis E: (e = hh),
+                      prove L!mem(hh :: ll, h)
+                      <5>1 prove remove(e, hh :: ll) = ll
+                           by definition of remove hypothesis E
+                      <5>2 prove L!mem(ll, h) by step <5>1 hypothesis RR
+                      <5>f qed by step <5>2 property L!mem_spec
+                 <4>2 hypothesis E: ~(e = hh),
+                      prove L!mem(hh :: ll, h)
+                      <5>1 hypothesis H: h = hh,
+                           prove L!mem(hh :: ll, h)
+                           by hypothesis H property L!mem_spec
+                      <5>2 hypothesis H: ~(h = hh),
+                           prove L!mem(ll, h)
+                           <6>1 prove L!mem(remove(e, ll), h)
+                                <7>1 prove 
+                                      remove(e, hh :: ll) = hh :: remove(e, ll)
+                                     by definition of remove hypothesis E
+                                <7>2 prove L!mem(hh :: remove(e, ll), h)
+                                     by hypothesis RR step <7>1
+                                <7>3 prove L!mem(remove(e, ll), h)
+                                     by step <7>2 hypothesis E, H
+                                        property L!mem_spec
+                                <7>f qed by step <7>3
+                           <6>f qed by step <6>1 hypothesis I
+                      <5>f qed by step <5>1, <5>2 
+                                  hypothesis E property L!mem_spec
+                 <4>f conclude
+            <3>f conclude
+       <2>3 prove all l: list(Elt), L!mem(remove(e, l), h) -> L!mem(l, h)
+            by step <2>1, <2>2
+       <2>f qed by step <2>3 hypothesis R
+  <1>f qed by step <1>1 definition of torep
+;
+
+theorem head_tail_unique: all  l: Self,
+  ~~(is_empty(l)) -> remove(head(l), l) = tail(l)
+proof = 
+<1>1 prove ~~(is_empty([])) -> remove(head([]), []) = tail([])
+     by definition of is_empty
+<1>2 prove all h: Elt, all l: list(Elt),
+       (~~(is_empty(l)) -> remove(head(l), l) = tail(l)) ->
+         ~~(is_empty(h::l)) -> remove(head(h::l), h::l) = tail(h::l)
+     <2>1 assume h: Elt, assume l: list(Elt),
+          hypothesis I: ~~(is_empty(l)) -> remove(head(l), l) = tail(l),
+          prove ~~(is_empty(h::l)) -> remove(head(h::l), h::l) = tail(h::l)
+          by definition of is_empty, remove, head, tail
+      <2>f conclude
+<1>3 prove all l: list(Elt), ~~(is_empty(l)) -> remove(head(l), l) = tail(l)
+     by step <1>1, <1>2
+<1>f qed by step <1>3
+;
+
+theorem removes_preserves_inv : all l : Self, all e : Elt,
+  nodouble (torep(l)) -> nodouble (torep(remove (e, l)))
+proof = 
+<1>1 prove all l: list(Elt), all e: Elt,
+     nodouble(l) -> nodouble(remove(e, l))
+     <2>1 prove all e: Elt, nodouble([]) -> nodouble(remove(e, []))
+          by definition of nodouble, remove
+     <2>2 assume h e: Elt, assume t: list(Elt),
+          hypothesis I: nodouble(t) -> nodouble(remove(e, t)),
+          hypothesis N: nodouble(h::t),
+          prove nodouble(remove(e, h::t))
+          <3>1 hypothesis H: (h = e),
+               prove nodouble(remove(e, h::t))
+               <4>1 prove remove(e, h::t) = t
+                    by definition of remove hypothesis H
+               <4>2 prove nodouble(t) 
+                    by definition of nodouble
+                       hypothesis N
+               <4>f conclude
+          <3>2 hypothesis E: ~~(h = e),
+               prove nodouble(remove(e, h::t))
+               <4>1 prove remove(e, h::t) = h::remove(e, t)
+                    by definition of remove hypothesis E
+               <4>2 prove nodouble(t) 
+                    by definition of nodouble
+                       hypothesis N
+               <4>3 prove nodouble(remove(e, t))
+                    by step <4>2 hypothesis I 
+               <4>4 prove nodouble(h::remove(e, t))
+                    <5>1 prove ~~(L!mem(remove(e, t), h))
+                         <6>1 hypothesis F: L!mem(remove(e, t), h),
+                              prove L!mem(t, h)
+                              by hypothesis F
+                                 property remove_smaller
+                                 definition of torep
+                         <6>f qed by step <6>1
+                                     hypothesis N
+                                     definition of nodouble
+                    <5>f qed by step <5>1, <4>2
+                             hypothesis I
+                             definition of nodouble
+               <4>f qed by step <4>1, <4>4
+          <3>f conclude
+     <2>f conclude
+<1>2 qed by step <1>1 definition of torep
+;
+
+proof of unique_contains =
+<1>1 assume c : Self,
+     assume e : Elt,
+     prove  ~~ L!mem (remove(e, c), e)
+     <2>1 prove ~~ L!mem (remove(e, []), e)
+          <3>1 prove  ~~ L!mem ([], e) by property L!mem_empty_spec
+          <3>f qed by step <3>1 definition of remove
+     <2>2 prove all l : list(Elt),  ~~ L!mem (remove(e, l), e)
+                -> all x : Elt,  ~~ L!mem (remove(e, x::l), e)
+          <3>1 assume l : list(Elt),
+               hypothesis H :  ~~ L!mem (remove(e, l), e),
+               prove all x : Elt,  ~~ L!mem (remove(e, x::l), e)
+               <4>1 assume x : Elt,
+                    prove  ~~ L!mem (remove(e, x::l), e)
+                    <5>1 hypothesis Hxe : x = e,
+                         prove  ~~ L!mem (remove(e, x::l), e)
+                         <6>1 prove ~~ L!mem (l, e)
+                              <7>1 prove L!mem (x::l, e)
+                                   by hypothesis Hxe property L!mem_spec
+                              <7>2 prove nodouble(x::l)
+                                   by property nodouble_list_inv
+                                      definition of torep
+                               <7>3 prove ~~ L!mem (l, x)
+                                   by step <7>2 definition of nodouble
+                              <7>f qed by step <7>3 hypothesis Hxe
+                         <6>f qed by hypothesis Hxe
+                                     step <6>1 definition of remove
+                    <5>2 hypothesis Hnxe : ~~ (x = e),
+                         prove  ~~ L!mem (remove(e, x::l), e)
+                         <6>1 prove ~~ L!mem (x::remove(e,l), e)
+                              by hypothesis H, Hnxe property L!mem_spec
+                         <6>f qed by hypothesis Hnxe
+                                     step <6>1 definition of remove
+                    <5>f conclude
+               <4>f conclude
+          <3>f conclude
+     <3>f prove all l : list(Elt),
+                 ~~ L!mem (remove(e, l), e)
+           by step <2>1, <2>2
+     <2>f qed by step <3>f
+<1>f  qed by step <1>1
+             property tolist_contains
+             definition of tolist
+;
+
+let rec add(e, l) = match l with
+  | [] -> [e]
+  | h::t -> 
+    if (e = h) 
+    then t
+    else 
+     if L!mem(t, e)
+     then l
+     else e :: l
+termination proof = structural l;
+
+proof of add_spec = assumed;
+    
+end
+;;
+
+
+species Unique_listIterator (Elt is Setoid, L is Utils(Elt), 
+                             LCol is ListCollectionAsSet(Elt, L)) =
+inherit Unique_iterator(Elt, L, LCol), ListIterator(Elt, L, LCol);
+
+(* proof of model_hasnext_true_unique = *)
+(*     <1>1 assume it: Self, assume c: LCol, assume l: list(Elt), *)
+(*        hypothesis M: model(it, c, l), *)
+(*        hypothesis N: hasnext(it) = true, *)
+(*        prove  *)
+(* ; *)
+
+proof of model_step_unique = 
+  <1>1 assume it it2: Self, assume e: Elt, 
+       assume c: LCol,
+       assume l l2: list(Elt),
+       hypothesis M: model(it, c, l),
+       hypothesis N: hasnext(it),
+       hypothesis S: stepp(it) = (e, it2),
+       hypothesis M2: model(it2, c, l2),
+       prove ~~(L!mem(l2, e))
+       <2>1 prove e = LCol!head(it)
+            by hypothesis N, S definition of stepp
+       <2>2 prove it2 = LCol!tail(it)
+            by hypothesis N, S definition of stepp
+       <2>3 prove ~~(LCol!contains(e, it2))
+            <3>1 prove ~~(LCol!is_empty(it))
+                 by hypothesis N definition of hasnext, is_empty
+            <3>2 prove it2 = LCol!remove(e, it)
+                 by property LCol!head_tail_unique
+                    step <2>1, <2>2, <3>1
+            <3>f qed by step <3>2 property LCol!unique_contains
+       <2>4 prove ~~(L!mem(tolist(it2), e))
+            by definition of tolist step <2>3 property LCol!tolist_contains
+       <2>f qed by step <2>4
+                   hypothesis M2
+                   definition of model
+  <1>f conclude
+; 
+
+end
+;;
+
+type partial('a) =
+  | PFailed
+  | PUnfailed('a)
+;;
+
+species Removable_genericIterator(Elt is Setoid, L is Utils(Elt),
+                               Col is Collection(Elt, L),
+                               It is Iterator(Elt, L, Col)) =
+
+inherit Removable_iterator(Elt, L, Col);
+
+(* elements left to handle, last element returned, Underlying collction *)
+representation = It * (partial(Elt) * Col) ;
+
+local let get_iterator(it) = match it with
+ | (i, _) -> i
+;
+
+let get_collection(it: Self) =
+  match it with 
+  | (_i, re) ->
+      (match re with
+      | (_e, col) -> col
+      )
+;
+
+let remove(it: Self): Self =
+  let i = fst(it) and re = snd(it) in
+  let e = fst(re) and col = snd(re) in
+  match e with
+    | PFailed -> it
+    | PUnfailed(x) ->
+       (i, (PFailed , Col!remove(x, col)))
+;
+
+
+theorem remove_idempotent: all it: Self, remove(remove(it)) = remove(it)
+proof = assumed (* by definition of remove type partiel *)
+;
+
+theorem remove_initial_false: all c: Col,
+   remove(start(c)) = start(c)
+proof = 
+  <1>1 assume c: Col, assume it: Self,
+       hypothesis It: it = start(c),
+       prove remove(it) = it
+       (* <2>0 prove fst(snd(remove(it))) = basics#PFailed *)
+       (*      by definition of remove type basics#partiel *)
+       <2>1 prove it = (It!start(c), (PFailed, c))
+            by definition of start hypothesis It
+       <2>2 prove remove((It!start(c), (PFailed, c))) = 
+                   (It!start(c), (PFailed, c))
+            assumed (* by definition of remove type partial *)
+       <2>2 qed by step <2>1, <2>2 hypothesis It
+  <1>f conclude
+;
+
+let stepp(it) =
+  if hasnext(it)
+  then
+     let c = It!stepp(fst(it)) in
+        (fst(c), (snd(c), (PUnfailed(fst(c)), snd(snd(it)))))
+  else focalize_error("no more next")
+;
+
+(* let stepp(it) = *)
+(*   if hasnext(it) *)
+(*   then *)
+(*     match It!stepp(fst(it)) with *)
+(*     | (e, i) -> (e, (i, (PUnfailed(e), snd(snd(it))))) *)
+(*   else focalize_error("no more next") *)
+(* ; *)
+
+theorem step_remove_spec: all e x: Elt, all it it2: Self,
+  hasnext(it) -> (stepp(it) = (e, it2)) -> ~~(Elt!equal(e, x)) -> 
+     Col!contains(x, get_collection(it)) <-> 
+       Col!contains(x, get_collection(remove(it2)))
+proof = 
+<1>1 assume e x: Elt, assume it it2: Self,
+     notation i = get_iterator(it),
+     notation i2 = get_iterator(it2),
+     notation c = get_collection(it),
+     notation c2 = get_collection(remove(it2)),
+     hypothesis N: hasnext(it),
+     hypothesis S: stepp(it) = (e, it2),
+     hypothesis E:  ~~(Elt!equal(e, x)),
+     prove Col!contains(x, get_collection(it)) <-> 
+              Col!contains(x, get_collection(remove(it2)))
+     <2>1 prove it2 = (snd(It!stepp(i)), (PUnfailed(e), c))
+          by definition of stepp, i, c, get_iterator, get_collection
+             hypothesis S, N
+     <2>2 prove e = fst(It!stepp(fst(it)))
+          by definition of stepp
+             hypothesis S, N
+     <2>3 prove remove(it2) = (snd(It!stepp(i)), (PFailed, Col!remove(e, c)))
+          (* by step <2>1, <2>2 *)
+          (*    definition of remove *)
+          (*    type partial *)
+          assumed
+     <2>4 prove c2 = Col!remove(e, c)
+          by step <2>3 definition of c2, get_collection
+     <2>5 prove Col!contains(x, Col!remove(e, c)) <-> Col!contains(x, c)
+          by hypothesis E 
+             property Col!remove_contains
+     <2>f qed by step <2>4, <2>5 definition of c, c2
+<1>f conclude
+;
+
+let start(c) = (It!start(c), (PFailed, c))
+;
+
+
+
+logical let model(it, c, l) = 
+  It!model(get_iterator(it), c, l)
+;
+
+
+
+(* let tolist(it) = match it with *)
+(* | (i, _, _) -> It!tolist(i) *)
+(* ; *)
+
+(* let is_empty(it) = match it with *)
+(* | (i, _, _) -> It!is_empty(i) *)
+(* ; *)
+
+proof of model_hasnext_false = by definition of hasnext, model, get_iterator
+                                  property It!model_hasnext_false
+;
+
+proof of model_hasnext_true = by definition of hasnext, model, get_iterator
+                                  property It!model_hasnext_true
+;
+
+
+proof of model_step =
+<1>1 assume it it2 : Self, assume e : Elt,
+     assume l : list(Elt), assume c : Col,
+     hypothesis M: model (it, c, l),
+     hypothesis N: hasnext(it),
+     hypothesis D: stepp (it) = (e, it2),
+     notation i = get_iterator(it),
+     notation i2 = get_iterator(it2),
+     prove L!mem(l, e)
+     <2>1 prove It!model(i, c, l)
+          by definition of model, i, get_iterator
+             hypothesis M
+     <2>2 prove It!hasnext(i)
+          by definition of hasnext, i, get_iterator
+             hypothesis N
+     <2>3 prove It!stepp(i) = (e, i2)
+          <3>1 prove it2 = (snd(It!stepp(i)),
+                            (PUnfailed(fst(It!stepp(i))), snd(snd(it))))
+               by hypothesis D, N
+                  definition of stepp, i, get_iterator
+          <3>2 prove e = fst(It!stepp(i))
+               by hypothesis D, N
+                  definition of i, get_iterator, stepp
+          <3>f qed by step <3>1, <3>2
+                      definition of i2, get_iterator
+     <2>f qed by step  <2>1, <2>2, <2>3
+              property It!model_step
+
+<1>f conclude
+;
+
+(* proof of model_step2 = by definition of stepp, model, get_iterator, hasnext *)
+(*                          property It!model_step2 *)
+(* ; *)
+
+let measure_it(it) = match it with
+| (i, _) -> It!measure_it(i)
+;
+
+let hasnext(it) = match it with
+| (i, _) -> It!hasnext(i)
+;
+
+proof of model_start = by definition of start, model, get_iterator
+                          property It!model_start
+;
+
+(* theorem remove_removes: all it : Self, all i: It, all c: Col, all e: Elt, *)
+(*     it = remove((i, (PUnfailed(e), c))) -> *)
+(*        get_collecion(it) = Col!remove(e, c) *)
+
+proof of model_step_new2 =
+<1>1 assume it it2: Self,
+     assume e: Elt, l: list(Elt), c: Col,
+     hypothesis M: model(it, c, l),
+     hypothesis N: hasnext(it),
+     hypothesis IE2: stepp(it) = (e, it2),
+     assume l2: list(Elt),
+     hypothesis M2: model(it2, c, l2),
+     assume y: Elt,
+     hypothesis YE: ~(e = y),
+     prove L!mem(l, y) <-> L!mem(l2, y)
+     <2>1 notation i = get_iterator(it),
+          notation i2 = get_iterator(it2),
+          prove L!mem(l, y) <-> L!mem(l2, y)
+          <3>1 prove It!model(i, c, l)
+               by definition of model, i hypothesis M
+          <3>2 prove It!model(i2, c, l2)
+               by definition of model, i2 hypothesis M2
+          <3>4 prove It!hasnext(i)
+               by definition of hasnext, i, get_iterator hypothesis N
+          <3>3 prove It!stepp(i) = (e, i2)
+               <4>1 prove e = fst(It!stepp(i))
+                    by definition of stepp, i, get_iterator
+                       hypothesis N, IE2
+               <4>2 prove i2 = snd(It!stepp(i))
+                    assumed
+                    (* by definition of stepp, i, i2, get_iterator *)
+                    (*    hypothesis N, IE2 *)
+                    (*    type partial *)
+               <4>f qed by step <4>1, <4>2
+          <3>f qed by step <3>1, <3>4, <3>3, <3>2
+                      hypothesis YE
+                      property It!model_step_new2
+     <2>f conclude
+<1>f conclude
+;
+end
+;;
+
+species RemovableUniqueIterator(Elt is Setoid,
+                                L is Utils(Elt),
+                                Col is CollectionAsSet(Elt, L),
+                                It is Unique_iterator(Elt, L, Col)) =
+
+  inherit Unique_iterator(Elt, L, Col),
+          Removable_genericIterator(Elt, L, Col, It);
+
+  proof of model_step_unique =
+    <1>1 assume it it2: Self, assume e: Elt, assume l l2: list(Elt),
+         assume c: Col,
+         hypothesis M: model(it, c, l),
+         hypothesis N: hasnext(it),
+         hypothesis S: stepp(it) = (e, it2),
+         hypothesis M2: model(it2, c, l2),
+         notation i = get_iterator(it),
+         notation i2 = get_iterator(it2),
+         prove ~~(L!mem(l2, e))
+         <2>1 prove It!model(i, c, l)
+              by definition of model, i, get_iterator
+                 hypothesis M
+         <2>2 prove It!hasnext(i)
+              by definition of hasnext, i, get_iterator
+                 hypothesis N
+         <2>3 prove it2 = (snd(It!stepp(fst(it))),
+                           (PUnfailed(fst(It!stepp(fst(it)))), snd(snd(it))))
+              by definition of stepp
+                 hypothesis N, S
+         <2>4 prove It!model(i2, c, l2)
+              by definition of model, i2, get_iterator
+                 hypothesis M2
+         <2>5 prove e = fst(It!stepp(i))
+              by hypothesis S, N definition of stepp, i, get_iterator
+         <2>6 prove i2 = snd(It!stepp(i))
+              by step <2>3
+                 definition of i, i2, get_iterator
+         <2>f qed by step <2>1, <2>2, <2>5, <2>6, <2>4
+                     property It!model_step_unique
+    <1>f conclude
+  ;
+
+theorem model_unique: all it: Self, all l l2: list(Elt), all c: Col,
+   model(it, c, l) -> hasnext(it) ->
+    model(snd(stepp(it)), c, l2) ->
+     ~~(L!mem(l2, fst(stepp(it))))
+proof = 
+<1>1 assume it: Self, assume l l2: list(Elt), assume c: Col,
+    hypothesis N: hasnext(it),
+    hypothesis M: model(it, c, l),
+    hypothesis M2: model(snd(stepp(it)), c, l2),
+    prove  ~~(L!mem(l2, fst(stepp(it))))
+    <2>1 notation it2 = snd(stepp(it)),
+         notation e = fst(stepp(it)),
+         notation i = fst(it),
+         prove  ~~(L!mem(l2, fst(stepp(it))))
+         <3>1 prove e = fst(It!stepp(i))
+              by definition of e, stepp, i
+              hypothesis N
+         <3>2 prove it2 = (snd(It!stepp(i)),
+                           (PUnfailed(e),
+                               snd(snd(it))))
+              by definition of stepp, it2, e, i
+                 hypothesis N
+         <3>3 prove fst(it2) = snd(It!stepp(i))
+              by step <3>2
+         <3>4 prove It!stepp(i) = (e, fst(it2))
+              by step <3>1, <3>3
+         <3>5 prove It!hasnext(i)
+              by hypothesis N definition of hasnext, i
+         <3>6 prove It!model(i, c, l)
+              by hypothesis M definition of model, get_iterator, i
+         <3>7 prove It!model(fst(it2), c, l2)
+              by hypothesis M2 definition of model, get_iterator, it2
+         <3>8 prove ~~(L!mem(l2, e))
+              by step <3>6, <3>5, <3>4, <3>7
+                 property It!model_step_unique
+              (* by step <3>6, <3>5, <3>7, <3>2, <3>1 *)
+              (*    property It!model_unique *)
+         <3>f qed by step <3>8 definition of e
+     <2>f conclude
+<1>f conclude
+;
+end
+;;
+
+
+type embeded_iterator('i, 'e, 'c) =
+| Rien ( 'i, 'c)
+| Un ( 'i, 'e, 'c)
+;;
+
+species Removable_Embeded_Iterator(Elt is Setoid, L is Utils(Elt),
+                               Col is Collection(Elt, L),
+                               It is Iterator(Elt, L, Col)) =
+
+inherit Removable_iterator(Elt, L, Col);
+
+(* elements left to handle, last element returned, Underlying collction *)
+representation = embeded_iterator(It, Elt, Col);
+
+let get_iterator(it:Self) = match it with
+| Rien(i, _) -> i
+| Un(i, _, _) -> i
+;
+
+let get_collection(it: Self) = match it with
+| Rien(_, c) -> c
+| Un(_, _, c) -> c
+;
+
+(* let stepp(it) = *)
+(*   if hasnext(it) *)
+(*   then *)
+(*      let s = It!stepp(get_iterator(it)) in *)
+(*         (fst(s), Un((snd(s), fst(s), get_collection(it)))) *)
+(*   else focalize_error("no more next") *)
+(* ; *)
+
+
+end;;
+
+
+(* open "small_integers";; *)
+
+(* collection Elt = *)
+
+(*   implement Small_integers; *)
+
+(* end;; *)
+
+(* collection L_elt = *)
+(*   implement Utils(Elt); *)
+(* end;; *)
+
+(* collection L_elt_coll = *)
+(*   implement ListCollectionAsSet(Elt, L_elt); *)
+(* end;; *)

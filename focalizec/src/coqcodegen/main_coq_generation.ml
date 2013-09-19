@@ -44,11 +44,22 @@ let toplevel_let_def_compile ctx env let_def =
     raise (Logical_methods_only_inside_species let_def.Parsetree.ast_loc) ;
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Currently, toplevel recursive functions are generated with "Fixpoint". *)
-  let is_rec =
+  let rec_status =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> false | Parsetree.RF_rec -> true) in
+     | Parsetree.RF_no_rec -> Env.CoqGenInformation.RC_non_rec
+     | Parsetree.RF_rec -> (
+         match let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof with
+         | None -> Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other
+         | Some term_pr -> (
+             match term_pr.Parsetree.ast_desc with
+             | Parsetree.TP_structural decr_arg ->
+                 Env.CoqGenInformation.RC_rec
+                   (Env.CoqGenInformation.RPK_struct decr_arg)
+             | _ ->
+                 Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other))
+    ) in
   let in_recursive_let_section_of =
-    if is_rec then
+    if rec_status <> Env.CoqGenInformation.RC_non_rec then  (* Is rec. *)
       List.map
         (fun b -> b.Parsetree.ast_desc.Parsetree.b_name)
         let_def.Parsetree.ast_desc.Parsetree.ld_bindings
@@ -60,7 +71,7 @@ let toplevel_let_def_compile ctx env let_def =
      recursivity for all the bindings. *)
   let (env, pre_comp_infos) =
     Species_record_type_generation.pre_compute_let_bindings_infos_for_rec
-      ~is_rec ~toplevel: true env
+      ~rec_status ~toplevel: true env
       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. Remark that there is no local idents
      in the scope because we are at toplevel. In the same way, because we are
@@ -73,17 +84,21 @@ let toplevel_let_def_compile ctx env let_def =
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
-         let binder = if is_rec then "Fixpoint" else "Let" in
+         let binder =
+           if rec_status <> Env.CoqGenInformation.RC_non_rec then "Fixpoint"
+           else "Let" in
          Species_record_type_generation.let_binding_compile
            ctx ~binder ~opt_term_proof ~local_idents: []
            ~in_recursive_let_section_of
            (* Or whatever since "Self" does not exist anymore. *)
            ~self_methods_status: Species_record_type_generation.SMS_from_record
            ~recursive_methods_status: Species_record_type_generation.RMS_regular
-           ~toplevel: true ~is_rec env one_bnd one_pre_comp_info
+           ~toplevel: true ~rec_status env one_bnd one_pre_comp_info
      | ((first_bnd :: next_bnds),
         (first_pre_comp_info :: next_pre_comp_infos)) ->
-         let first_binder = if is_rec then "Fixpoint" else "Let" in
+         let first_binder =
+           if rec_status <> Env.CoqGenInformation.RC_non_rec then "Fixpoint"
+           else "Let" in
          let accu_env =
            ref
              (Species_record_type_generation.let_binding_compile
@@ -94,7 +109,8 @@ let toplevel_let_def_compile ctx env let_def =
                   Species_record_type_generation.SMS_from_record
                 ~recursive_methods_status:
                   Species_record_type_generation.RMS_regular
-                ~toplevel: true ~is_rec env first_bnd first_pre_comp_info) in
+                ~toplevel: true ~rec_status env first_bnd
+                first_pre_comp_info) in
          List.iter2
            (fun binding pre_comp_info ->
              Format.fprintf out_fmter "@]@\n@[<2>" ;
@@ -107,7 +123,7 @@ let toplevel_let_def_compile ctx env let_def =
                    Species_record_type_generation.SMS_from_record
                  ~recursive_methods_status:
                    Species_record_type_generation.RMS_regular
-                 ~toplevel: true ~is_rec !accu_env binding pre_comp_info)
+                 ~toplevel: true ~rec_status !accu_env binding pre_comp_info)
            next_bnds next_pre_comp_infos ;
          !accu_env
      | (_, _) ->

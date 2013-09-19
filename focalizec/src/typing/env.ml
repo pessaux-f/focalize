@@ -346,8 +346,9 @@ module ScopeInformation = struct
       {b Exported} : Yes.                                               *)
   (* ****************************************************************** *)
   type species_scope =
-      (** The identifier is a species name defined at toplevel in a file. *)
-    | SPBI_file of Types.fname
+      (** The identifier is a species name defined at toplevel in a file. 
+          If the bool is [true] then it is a collection. *)
+    | SPBI_file of (Types.fname * bool)
       (** The identifier is a locally bound collection like in the case of a
           "is"-bound parameter (i.e. [c is ...]) where [c] is then considered
           as a local collection). *)
@@ -1049,13 +1050,18 @@ module CoqGenInformation = struct
   type constructor_mapping_info = {
     (** The number of extra argument the constructor has due to its
         polymorphism. *)
-    cmi_num_polymorphics_extra_args : int;
+    cmi_num_polymorphics_extra_args : int ;
     cmi_external_translation : Parsetree.external_translation_desc option
     }
 
   (** The list of mappings according to external languages to know to which
       string the record type field name corresponds. *)
-  type label_mapping_info =  Parsetree.external_translation_desc
+  type label_mapping_info = {
+    (** The number of extra argument the label has due to its
+        polymorphism. *)
+    lmi_num_polymorphics_extra_args : int ;
+    lmi_external_translation : Parsetree.external_translation_desc option
+  }
 
   type method_info = generic_code_gen_method_info
 
@@ -1071,10 +1077,45 @@ module CoqGenInformation = struct
      (** Tells if the info is bound to a species or a collection. *)
      collection_or_species)
 
+  (* ************************************************************************ *)
+  (** {b Descr}: Describes the kind of recursion, i.e. termination proof,
+      provided to a recursive definition. Currently, we only make the
+      difference between a structural termination and none/other proofs.
+      In case of structural termination we assume that the definition was
+      generated using "Fixpoint" using the provided parameter name as
+      decreasing argument. In any other case, we assume it has been generated
+      with "Function".
+      Note that this type may change/disapear when we will have a more unified
+      code generation model for recursion.
+
+      {b Visibility}: Exported outside this module.                           *)
+  (* ************************************************************************ *)
+  type rec_proof_kind =
+    | RPK_struct of Parsetree.vname
+    | RPK_other
+
+
+
+  (* ************************************************************************ *)
+  (** {b Descr}: Tells if a definition is recursive or not. Allows embedding
+      the kind of termination proof the definition has if it as one.
+      Since we currently have 2 Coq generation models: "Fixpoint" and "Function"
+      we need to remind which one was used in case a proof is done
+      "by definition" of a recursive definition. In effect, depending on the
+      used model, we must not generate the same code for Zenon.
+
+      {b Visibility}: Exported outside this module.                           *)
+  (* ************************************************************************ *)
+  type rec_status =
+    | RC_non_rec
+    | RC_rec of rec_proof_kind
+
+
   type value_body =
     | VB_non_toplevel
     | VB_toplevel_let_bound of
-        ((Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
+        (rec_status * (Parsetree.vname list) * Types.type_scheme *
+         Parsetree.binding_body)
     | VB_toplevel_property of Parsetree.logical_expr
 
   type value_mapping_info = (int * (** The number of polymorphic type variables

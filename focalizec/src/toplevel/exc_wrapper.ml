@@ -8,8 +8,8 @@
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
@@ -87,23 +87,37 @@ let print_focalize_exception ppf = function
   | Scoping.Termination_proof_delayed_only_on_self_meth (at, name) ->
       Format.fprintf ppf
         "%a:@\n@[%tDelayed@ termination@ proof@ refers@ to@ an@ unknown@ \
-         method '%t%a%t' of the species.@]@."
+         method@ '%t%a%t'@ of@ the@ species.@]@."
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname name Handy.pp_reset_effects
   | Scoping.Ambiguous_logical_expression_or (pos, at) ->
       let side =
         (match pos with 0 -> "left" | 1 -> "right" | _ -> assert false) in
       Format.fprintf ppf
-        "%a:@\n@[%tAmbiguous logical expression. Add explicit parentheses \
-        to associate the %s argument of the \\/ properly.@]@."
+        "%a:@\n@[%tAmbiguous@ logical@ expression.@ Add@ explicit@ parentheses \
+        to@ associate@ the@ %s@ argument@ of@ the@ \\/@ properly.@]@."
         Location.pp_location at header side
   | Scoping.Ambiguous_logical_expression_and (pos, at) ->
       let side =
         (match pos with 0 -> "left" | 1 -> "right" | _ -> assert false) in
       Format.fprintf ppf
-        "%a:@\n@[%tAmbiguous logical expression. Add explicit parentheses \
-        to associate the %s argument of the /\\ properly.@]@."
+        "%a:@\n@[%tAmbiguous@ logical@ expression.@ Add explicit@ parentheses@ \
+        to@ associate@ the@ %s@ argument@ of@ the@ /\\@ properly.@]@."
         Location.pp_location at header side
+  | Scoping.Rebound_hyp_notation_or_var_in_proof (vname, at) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tHypothesis,@ notation@ or@ variable@ name@ '%t%a%t'@ \
+        already@ bound@ in@ the@ current@ scope@ of@ the@ proof.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_vname vname
+        Handy.pp_reset_effects
+  | Scoping.Proof_by_species_property (ident, at) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tThe property@ '%t%a%t'@ doesn't@ belong@ to@ a@ collection@ \
+        but@ to@ a@ species.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_expr_ident ident
+        Handy.pp_reset_effects
   (* *************************** *)
   (* Generic environments stuff. *)
   | Env.Unbound_constructor (vname, at) ->
@@ -285,6 +299,13 @@ let print_focalize_exception ppf = function
         "%a:@\n@[%tA@ \"is\"@ parameter@ can@ only@ be@ an@ identifier@ \
          of@ a@ collection.@]@."
         Location.pp_location at header
+  | Scoping.Toplevel_species_as_effective_param (sp_ident, at) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tIllegal@ use@ of@ toplevel@ species@ '%t%a%t'@ as@ \
+        effective@ argument.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_ident sp_ident
+        Handy.pp_reset_effects
   | Infer.Not_subspecies_conflicting_field (c1, c2, field, ty1, ty2, at) ->
       Format.fprintf ppf
         "%a:@\n@[%tCollection@ '%t%a%t'@ is@ not@ a@ subspecies@ \
