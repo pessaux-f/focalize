@@ -392,7 +392,6 @@ let unqualified_vname_of_ident ident =
 
 
 (* ************************************************************************* *)
-(* Parsetree.constructor_ident -> Parsetree.vname                            *)
 (** {b Descr} : Extracts the [vname] from a [constructor_ident], hence
     providing the name denoted by this identifier without any
     qualification/scoping.
@@ -408,6 +407,26 @@ let unqualified_vname_of_ident ident =
 (* ************************************************************************* *)
 let unqualified_vname_of_constructor_ident ident =
   let Parsetree.CI ident = ident.Parsetree.ast_desc in
+  unqualified_vname_of_ident ident
+;;
+
+
+
+(* ************************************************************************* *)
+(** {b Descr} : Extracts the [vname] from a [label_ident], hence providing
+    the name denoted by this identifier without any qualification/scoping.
+    For example, "bar", "foo#bar" will lead to the [vname] "bar".
+
+    {b Args} :
+      - [ident] : The [label_ident] in which to find the inner [vname].
+
+    {b Ret} :
+      - Parsetree.vname : The [vname] contained in the [constructor_ident].
+
+    {b Exported} : Yes.                                                      *)
+(* ************************************************************************* *)
+let unqualified_vname_of_label_ident ident =
+  let Parsetree.LI ident = ident.Parsetree.ast_desc in
   unqualified_vname_of_ident ident
 ;;
 

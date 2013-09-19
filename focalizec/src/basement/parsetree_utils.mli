@@ -174,6 +174,8 @@ val unqualified_vname_of_ident : Parsetree.ident -> Parsetree.vname
 val unqualified_vname_of_constructor_ident :
   Parsetree.constructor_ident -> Parsetree.vname
 
+val unqualified_vname_of_label_ident : Parsetree.label_ident -> Parsetree.vname
+
 val unqualified_vname_of_expr_ident : Parsetree.expr_ident -> Parsetree.vname
 
 val get_free_local_vnames_from_expr_desc :

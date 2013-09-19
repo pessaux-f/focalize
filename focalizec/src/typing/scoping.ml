@@ -1162,7 +1162,35 @@ let local_name_already_bound vname ctx env =
 
 (* *********************************************************************** *)
 (* scoping_context -> Env.ScopingEnv.t -> Parsetree.fact -> Parsetree.fact *)
-(* {b Descr} : Scopes a [fact] and return this scoped fact].
+(* {b Descr} : Scopes a [label_ident] and return this scoped [label_ident].
+   During scoping, verification that the compilation unit hosting the record
+   type definition having this label is correctly mentionned as "used" or
+   "opened".
+
+   {b Exported} : No.                                                      *)
+(* *********************************************************************** *)
+
+let scope_record_label ctx env label =
+  let basic_vname = Parsetree_utils.unqualified_vname_of_label_ident label in
+  let label_hosting_info =
+    Env.ScopingEnv.find_label
+      ~loc: label.Parsetree.ast_loc ~current_unit: ctx.current_unit label env in
+  (* Ensure that the mentionned hosting compilation unit of the record label
+     was mentionned to be "used" or "opened". *)
+  let Parsetree.LI lbl_glob_ident = label.Parsetree.ast_desc in
+  ensure_ident_allowed_qualified ctx lbl_glob_ident ;
+  let scoped_global_ident = { label with
+    Parsetree.ast_desc =
+      Parsetree.I_global
+        (Parsetree.Qualified (label_hosting_info, basic_vname)) } in
+  { label with Parsetree.ast_desc = Parsetree.LI scoped_global_ident }
+;;
+
+
+
+(* *********************************************************************** *)
+(* scoping_context -> Env.ScopingEnv.t -> Parsetree.fact -> Parsetree.fact *)
+(* {b Descr} : Scopes a [fact] and return this scoped [fact].
 
    {b Exported} : No.                                                      *)
 (* *********************************************************************** *)
@@ -1437,8 +1465,7 @@ and scope_expr ctx env expr =
          let scoped_fun_expr = scope_expr ctx env fun_expr in
          let scoped_args = List.map (scope_expr ctx env) args_exprs in
          Parsetree.E_app (scoped_fun_expr, scoped_args)
-     | Parsetree.E_constr (cstr_ident, args_exprs) ->
-         (begin
+     | Parsetree.E_constr (cstr_ident, args_exprs) -> (
          let basic_vname =
            Parsetree_utils.unqualified_vname_of_constructor_ident cstr_ident in
          let cstr_hosting_info =
@@ -1448,7 +1475,7 @@ and scope_expr ctx env expr =
          let Parsetree.CI global_ident = cstr_ident.Parsetree.ast_desc in
          (* Ensure that the mentionned hosting compilation unit if the
             constructor was mentionned to be "used" or "opened". *)
-         ensure_ident_allowed_qualified ctx global_ident;
+         ensure_ident_allowed_qualified ctx global_ident ;
          let scoped_global_ident = {
            global_ident with
              Parsetree.ast_desc =
@@ -1459,7 +1486,7 @@ and scope_expr ctx env expr =
          (* Now, scopes the arguments. *)
          let scoped_args = List.map (scope_expr ctx env) args_exprs in
          Parsetree.E_constr (scoped_cstr, scoped_args)
-         end)
+        )
      | Parsetree.E_match (e, pats_exprs) ->
          let scoped_e = scope_expr ctx env e in
          (* No scoping environment extention because bindings are local to
@@ -1487,30 +1514,21 @@ and scope_expr ctx env expr =
          let scoped_labels_exprs =
            List.map
              (fun (label, bound_expr) ->
-               (* Ensure that the mentionned hosting compilation unit of the
-                  record label was mentionned to be "used" or "opened". *)
-               let Parsetree.LI lbl_glob_ident = label.Parsetree.ast_desc in
-               ensure_ident_allowed_qualified ctx lbl_glob_ident;
-               (label, (scope_expr ctx env bound_expr)))
+               let scoped_label = scope_record_label ctx env label in
+               (scoped_label, (scope_expr ctx env bound_expr)))
              labels_exprs in
          Parsetree.E_record scoped_labels_exprs
      | Parsetree.E_record_access (e, label) ->
-         (* Ensure that the mentionned hosting compilation unit of the
-            record label was mentionned to be "used" or "opened". *)
-         let Parsetree.LI lbl_glob_ident = label.Parsetree.ast_desc in
-         ensure_ident_allowed_qualified ctx lbl_glob_ident;
+         let scoped_label = scope_record_label ctx env label in
          let e' = scope_expr ctx env e in
-         Parsetree.E_record_access (e', label)
+         Parsetree.E_record_access (e', scoped_label)
      | Parsetree.E_record_with (e, labels_exprs) ->
          let scoped_e = scope_expr ctx env e in
          let scoped_labels_exprs =
            List.map
              (fun (label, bound_expr) ->
-               (* Ensure that the mentionned hosting compilation unit of the
-                  record label was mentionned to be "used" or "opened". *)
-               let Parsetree.LI lbl_glob_ident = label.Parsetree.ast_desc in
-               ensure_ident_allowed_qualified ctx lbl_glob_ident;
-               (label, (scope_expr ctx env bound_expr)))
+               ((scope_record_label ctx env label),
+                (scope_expr ctx env bound_expr)))
              labels_exprs in
          Parsetree.E_record_with (scoped_e, scoped_labels_exprs)
      | Parsetree.E_tuple exprs ->
