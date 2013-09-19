@@ -1103,26 +1103,27 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
              ~self_methods_status ~recursive_methods_status env let_def in
          Format.fprintf out_fmter "@ in@\n" ;
          rec_generate_expr loc_idents env' in_expr
-     | Parsetree.E_record _labs_exprs ->
-         (* [Unsure] *)
-         Format.fprintf out_fmter "E_record"
+     | Parsetree.E_record labs_exprs ->
+         (* Use the Coq syntax {| .. := .. ; .. := .. |}. *)
+         Format.fprintf out_fmter "@[<1>{|@ " ;
+         rec_generate_record_field_exprs_list env loc_idents labs_exprs ;
+         Format.fprintf out_fmter "@ |}@]"
      | Parsetree.E_record_access (expr, label) -> (
          rec_generate_expr loc_idents env expr ;
          Format.fprintf out_fmter ".@[<2>(" ;
          let extras =
            generate_record_label_for_method_generator ctx env label in
-         (* Add the type arguments of the record type. *)
-         begin match expression.Parsetree.ast_type with
+         (* Add the type arguments of the ***record type***, not the full
+            expression type. *)
+         (match expr.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
              Types.pp_type_simple_args_to_coq print_ctx out_fmter t extras
-         | _ -> assert false
-         end ;
+         | _ -> assert false) ;
          Format.fprintf out_fmter ")@]"
         )
      | Parsetree.E_record_with (_expr, _labels_exprs) ->
          Format.fprintf out_fmter "E_record_with"
-     | Parsetree.E_tuple exprs ->
-         (begin
+     | Parsetree.E_tuple exprs -> (
          match exprs with
           | [] -> assert false
           | [one] -> rec_generate_expr loc_idents env one
@@ -1130,7 +1131,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
               Format.fprintf out_fmter "@[<1>(" ;
               rec_generate_exprs_list ~comma: true loc_idents env exprs ;
               Format.fprintf out_fmter ")@]"
-         end)
+        )
      | Parsetree.E_sequence exprs ->
          let rec loop ppf = function
           | [] -> ()
@@ -1162,6 +1163,24 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          Format.fprintf out_fmter "@[<1>(" ;
          rec_generate_expr loc_idents env expr ;
          Format.fprintf out_fmter ")@]"
+
+
+
+  (* [Same] Quasi same code than for OCaml. *)
+  and rec_generate_record_field_exprs_list env loc_idents = function
+    | [] -> ()
+    | [(label, last)] ->
+        (* In record expression, no need to print extra _ even if the record
+           type is polymorphic. *)
+        ignore (generate_record_label_for_method_generator ctx env label) ;
+        Format.fprintf out_fmter " :=@ " ;
+        rec_generate_expr loc_idents env last
+    | (h_label, h_expr) :: q ->
+        ignore (generate_record_label_for_method_generator ctx env h_label) ;
+        Format.fprintf out_fmter " :=@ " ;
+        rec_generate_expr loc_idents env h_expr ;
+        Format.fprintf out_fmter ";@ " ;
+        rec_generate_record_field_exprs_list env loc_idents q
 
 
 
