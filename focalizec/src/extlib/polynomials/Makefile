@@ -171,7 +171,7 @@ clean:
 	$(RM) big_integers.ml parse_poly.ml polys_abstract.ml
 	$(RM) big_integers.cm* parse_poly.cm* polys_abstract.cm*
 	$(RM) big_integers.o parse_poly.o polys_abstract.o
-	$(RM) *.annot *.glob *.fcd *.zv *.vo
+	$(RM) *.annot *.glob *.fcd *.zv *.vo *.fo *.pfc
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
 
 recursive_polys.ml: recursive_polys.fcl
