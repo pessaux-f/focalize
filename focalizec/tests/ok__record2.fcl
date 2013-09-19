@@ -1,0 +1,9 @@
+open "basics" ;;
+open "ok__record1" ;;
+
+type alias_poly_t = alias poly_t (int) ;;
+let alias_val = { pa = true ; pb = false } ;;
+let alias_access1 (x) = x.pa ;;
+let alias_access2 (x) = x.pb ;;
+let alias_make (x : int, y) = { pa = x ; pb = y } ;;
+let alias_make2 (u: unit) = poly_make (()) ;;
