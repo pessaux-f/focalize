@@ -6,15 +6,13 @@
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
-
-(* $Id: type_ml_generation.ml,v 1.18 2012-10-30 09:54:04 pessaux Exp $ *)
 
 
 (* ************************************************************************ *)
@@ -264,7 +262,7 @@ let type_def_compile ctx env type_def_name type_descr =
                ~current_unit: ctx.Context.rcc_current_unit [])
             field_ty)
         record_fields_to_print ;
-      Format.fprintf out_fmter " }@] ;;@\n " ;
+      Format.fprintf out_fmter "@]@\n} ;;@\n" ;
       (* Not an external type definition, so nothing new in the environment. *)
       env
       end)
