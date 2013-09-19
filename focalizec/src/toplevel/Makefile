@@ -58,7 +58,6 @@ BYT_OBJS =\
  ../commoncodegen/externals_generation_errs.cmo\
  ../commoncodegen/recursion.cmo\
  \
- ../mlcodegen/misc_ml_generation.cmo\
  ../mlcodegen/type_ml_generation.cmo\
  ../mlcodegen/base_exprs_ml_generation.cmo\
  ../mlcodegen/species_ml_generation.cmo\
