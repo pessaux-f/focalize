@@ -41,7 +41,7 @@ Make a better "extended product" library (for instance with the proofs)
 Cf cartesian product (stdlib)
 
 
-Solve the basics#( = ) vs Self!( = ) vs Self!equal problem
+Solve the basics#( = ) vs Self!( = ) vs Self!equal conflict
 (conflict between some libraries)
 
 

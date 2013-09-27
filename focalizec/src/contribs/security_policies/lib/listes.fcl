@@ -1,32 +1,32 @@
 open "sets";;
 open "basics";;
 
-species Utils(A is Basic_object) =
-inherit Basic_object;
+species Basic_list_util(A is Basic_object) =
+  inherit Basic_object;
+  
+  representation = unit;
+  
+  let rec mem (l, x: A) =
+    match l with
+    | [] -> false
+    | h :: q ->  h = x || (mem (q, x))
+    termination proof = structural l
+  ;
 
-representation = unit;
+  theorem mem_cons_head: all x: A, all l: list(A), 
+    mem(x::l, x)
+  proof = by definition of mem;
+  
+  theorem mem_cons_tail: all x y: A, all l: list(A),
+    mem(l, x) -> mem(y::l, x)
+  proof = by definition of mem;
 
-let rec mem (l, x: A) =
-      match l with
-        | [] -> false
-        | h :: q ->  h = x || (mem (q, x))
-termination proof = structural l
-;
-
-theorem mem_cons_head: all x: A, all l: list(A), 
-  mem(x::l, x)
-proof = by definition of mem;
-
-theorem mem_cons_tail: all x y: A, all l: list(A),
-  mem(l, x) -> mem(y::l, x)
-proof = by definition of mem;
-
-theorem mem_empty_spec: all x: A, ~~(mem([], x))
-proof = by definition of mem;
-
-theorem mem_contains: all l: list(A),
-   ~~( l = [] ) <-> (ex x: A, mem(l, x))
-proof = 
+  theorem mem_empty_spec: all x: A, ~~(mem([], x))
+  proof = by definition of mem;
+  
+  theorem mem_contains: all l: list(A),
+    ~~( l = [] ) <-> (ex x: A, mem(l, x))
+  proof = 
   <1>1 assume l: list(A),
        prove (l = []) -> all x: A, ~~(mem(l, x))
        by property mem_empty_spec
@@ -41,8 +41,8 @@ proof =
        <2>f conclude
   <1>f conclude;
 
-theorem not_mem_empty : 
-  all l : list(A), (all x : A, mem (l, x) = false) -> l =  [] 
+  theorem not_mem_empty : 
+    all l : list(A), (all x : A, mem (l, x) = false) -> l =  [] 
   proof = 
     <1>1 prove (all x : A, mem ([] , x) = false) -> []   =  [] 
          conclude
@@ -69,7 +69,7 @@ theorem not_mem_empty :
 
 theorem mem_spec: all l : list(A), all e h : A,  
  (mem (l, e) \/ (e = h)) <-> mem (h :: l, e)
-proof = assumed
+proof = assumed (* hum hum ... *)
 ; 
   
 
@@ -155,7 +155,7 @@ proof =
 
 theorem append_spec: all l1 l2 : list(A), all a : A, 
   ( mem (l1, a) \/ mem (l2, a) ) <-> mem (append (l1, l2), a)
-proof = assumed
+proof = assumed (* hum hum *)
 ;
 
 end
@@ -163,3 +163,47 @@ end
 
 
 
+
+species List_util(A is Setoid) =
+  inherit Basic_list_util(A);
+  
+  let rec belongs(l, x: A) =
+    match l with
+    | [] -> false
+    | h :: q ->  A!equal(h, x) || (belongs (q, x))
+    termination proof = structural l
+  ;
+  
+  theorem mem_implies_belongs : all x: A, all l: list(A),
+    mem(l, x) -> belongs(l, x)
+  proof = 
+   <1>1 assume x: A,
+        prove mem([], x) -> belongs([], x)
+        by definition of mem, belongs
+   <1>2 assume x h : A,
+        assume t: list(A),
+        prove (mem(t, x) -> belongs(t, x))
+           -> (mem(h::t, x) -> belongs(h::t, x))
+        <2>1 hypothesis HI: (mem(t, x) -> belongs(t, x)),
+             hypothesis H1: mem(h::t, x),
+             prove belongs(h::t, x)
+	     by definition of mem, belongs property A!equal_reflexive
+                hypothesis HI, H1  
+        <2>f conclude
+   <1>f conclude
+  ;
+
+  theorem belongs_cons_head: all x: A, all l: list(A), 
+    belongs(x::l, x)
+  proof = by definition of belongs property A!equal_reflexive;
+  
+  theorem belongs_cons_tail: all x y: A, all l: list(A),
+    belongs(l, x) -> belongs(y::l, x)
+  proof = by definition of belongs;
+
+  theorem belongs_empty_spec: all x: A, ~~(belongs([], x))
+  proof = by definition of belongs;
+
+
+end
+;;   
