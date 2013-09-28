@@ -193,17 +193,22 @@ species List_util(A is Setoid) =
    <1>f conclude
   ;
 
+  theorem belongs_spec: all t: list(A), all h x: A,
+    (belongs(t, x) \/ A!equal(h, x)) <-> belongs(h::t, x)
+  proof = by definition of belongs;
+
+  (* copy of the mem's theorems with belongs : (TODO : to be finished) *)
+
   theorem belongs_cons_head: all x: A, all l: list(A), 
     belongs(x::l, x)
-  proof = by definition of belongs property A!equal_reflexive;
+  proof = by property belongs_spec, A!equal_reflexive;
   
   theorem belongs_cons_tail: all x y: A, all l: list(A),
     belongs(l, x) -> belongs(y::l, x)
-  proof = by definition of belongs;
+  proof = by property belongs_spec;
 
   theorem belongs_empty_spec: all x: A, ~~(belongs([], x))
   proof = by definition of belongs;
-
 
 end
 ;;   
