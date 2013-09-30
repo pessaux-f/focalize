@@ -41,35 +41,9 @@ species Basic_list_util(A is Basic_object) =
        <2>f conclude
   <1>f conclude;
 
-  theorem not_mem_empty : 
-    all l : list(A), (all x : A, mem (l, x) = false) -> l =  [] 
-  proof = 
-    <1>1 prove (all x : A, mem ([] , x) = false) -> []   =  [] 
-         conclude
-    <1>2 prove
-         (all l:list(A), 
-         ((all x : A, mem (l, x) = false) -> l =  []) -> 
-          (all e: A, (all x : A, mem ((e::l), x) = false) -> (e::l) =  []))
-         <2>1 assume l:list(A), 
-              assume e : A,
-              hypothesis H : (all x : A, mem ((e::l), x) = false), 
-              prove (e::l) = []
-              <3>1 prove  mem ((e::l), e) = false
-                   by hypothesis H
-              <3>2 prove mem ((e::l), e) = ((e = e) || mem(l, e))
-                   by definition of mem
-              <3>3 prove (e = e) || mem(l, e) = true
-                   conclude
-              <3>4 prove mem ((e::l), e) = true
-                   assumed (* by step <3>2, <3>3 *)
-              <3>f qed by hypothesis H step <3>4
-         <2>f conclude
-     <1>f qed by step <1>1, <1>2
-;
-
 theorem mem_spec: all l : list(A), all e h : A,  
  (mem (l, e) \/ (e = h)) <-> mem (h :: l, e)
-proof = assumed (* hum hum ... *)
+proof = by definition of mem
 ; 
   
 
@@ -153,15 +127,9 @@ proof =
        <2>f conclude
   <1>f conclude;
 
-theorem append_spec: all l1 l2 : list(A), all a : A, 
-  ( mem (l1, a) \/ mem (l2, a) ) <-> mem (append (l1, l2), a)
-proof = assumed (* hum hum *)
-;
 
 end
 ;;   
-
-
 
 
 species List_util(A is Setoid) =
@@ -196,8 +164,6 @@ species List_util(A is Setoid) =
   theorem belongs_spec: all t: list(A), all h x: A,
     (belongs(t, x) \/ A!equal(h, x)) <-> belongs(h::t, x)
   proof = by definition of belongs;
-
-  (* copy of the mem's theorems with belongs : (TODO : to be finished) *)
 
   theorem belongs_cons_head: all x: A, all l: list(A), 
     belongs(x::l, x)

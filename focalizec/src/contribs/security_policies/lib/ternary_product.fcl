@@ -1,8 +1,9 @@
 open "basics";;
 open "sets";;
+open "products";;
 
 
-species Abstract_triple(A is Setoid, B is Setoid, C is Setoid) =
+species Abstract_triples(A is Setoid, B is Setoid, C is Setoid) =
 
   inherit Setoid;
 
@@ -51,7 +52,7 @@ end;;
 
 
 species Triples_by_pairs(A is Setoid, B is Setoid, C is Setoid) =
- inherit Abstract_triple(A, B, C) ;
+ inherit Abstract_triples(A, B, C) ;
  representation = (A * B) * C ;
  let first (t: Self) = fst(fst(t)) ;  
  let second (t: Self) = snd(fst(t));

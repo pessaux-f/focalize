@@ -6,9 +6,17 @@ Renaud et Catherine
 
 
 1- listes.fcl : utilitaires sur les listes (potentiellement a completer
-selon les besoins)
+selon les besoins) : on a les listes avec mem et le = natif sur les
+elements de la liste et on a les listes dont les elements sont dans un
+setoide et dont la fonction d'appartenance s'appelle belongs et repose sur
+l'egalite des setoides
 
-2- 
+2- ternary_produc.fcl : representation abstraite des triplets +
+representation ``concrete'' avec des paires * ... idealement on
+aimerait pouvoir utiliser l'espece Cartesian_product de Renaud, mais
+cela nous obligerait a parametrer deux fois .... d'ou une certaine
+lourdeur .... du coup on se contente de 3 assumed sur des proprietes
+triviales sur les projections
 
 
 
