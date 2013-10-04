@@ -1439,8 +1439,7 @@ and scope_expr ctx env expr =
              vnames in
          let scoped_body = scope_expr ctx env' body in
          Parsetree.E_fun (vnames, scoped_body)
-     | Parsetree.E_var ident ->
-         (begin
+     | Parsetree.E_var ident -> (
          (* Ensure that the mentionned hosting compilation unit of the
             expr_ident was mentionned to be "used" or "opened". *)
          ensure_expr_ident_allowed_qualified ctx ident;
@@ -1460,7 +1459,7 @@ and scope_expr ctx env expr =
          let scoped_ident =
            { ident with Parsetree.ast_desc = scoped_ident_descr } in
          Parsetree.E_var scoped_ident
-         end)
+        )
      | Parsetree.E_app (fun_expr, args_exprs) ->
          let scoped_fun_expr = scope_expr ctx env fun_expr in
          let scoped_args = List.map (scope_expr ctx env) args_exprs in
@@ -1844,30 +1843,50 @@ and scope_let_definition ~toplevel_let ctx env let_def =
         let_binding_descr.Parsetree.b_params in
     (* Now scope the body. We ensure that bindings of a non-logical let are
        logical_exprs of the form [Pr_expr] and if so, we remove this
-       constructor and turn the binding_body to a [BB_computational]. *)
-    let scoped_body =
-      (match let_binding_descr.Parsetree.b_body with
-       | Parsetree.BB_logical logical_expr ->
-           if let_def_descr.Parsetree.ld_logical = Parsetree.LF_logical then
-             Parsetree.BB_logical
-               (scope_logical_expr
-                  ctx env_with_ty_constraints_variables logical_expr)
-           else (
-             match logical_expr.Parsetree.ast_desc with
-             | Parsetree.Pr_expr expr ->
-                 (* Turn the logical_expr into an expression since we are not
-                    in a logical let. *)
-                 Parsetree.BB_computational
-                   (scope_expr ctx env_with_ty_constraints_variables expr)
-             | _ ->
-                 raise
-                   (Non_logical_let_cant_define_logical_expr
-                      (let_binding_descr.Parsetree.b_name,
-                       let_binding.Parsetree.ast_loc))
-            )
-       | Parsetree.BB_computational expr ->
-           Parsetree.BB_computational
-             (scope_expr ctx env_with_ty_constraints_variables expr)) in
+       constructor and turn the binding_body to a [BB_computational].
+       On the other side, logical-let must be a [Pr_expr] or if not, we
+       plug their [expr] into a [logical_expr] of the form [Pr_expr]. *)
+       let scoped_body = (
+         if let_def_descr.Parsetree.ld_logical = Parsetree.LF_logical then (
+           (* Force to be a [logical_expr] of the form [Pr_expr] even if parsing
+              gave us an [expr] becauss the form of the function didn't
+              show logical formula (instead, may be, just a boolean expression
+              that must be "converted" into Prop). *)
+           match let_binding_descr.Parsetree.b_body with
+           | Parsetree.BB_logical logical_expr ->
+               Parsetree.BB_logical
+                 (scope_logical_expr
+                    ctx env_with_ty_constraints_variables logical_expr)
+           | Parsetree.BB_computational expr ->
+               let logical_expr_of_expr = {
+                 Parsetree.ast_loc = expr.Parsetree.ast_loc ;
+                 Parsetree.ast_desc = Parsetree.Pr_expr expr ;
+                 Parsetree.ast_annot = expr.Parsetree.ast_annot ;
+                 Parsetree.ast_type = Parsetree.ANTI_none
+               } in
+               Parsetree.BB_logical
+                 (scope_logical_expr
+                    ctx env_with_ty_constraints_variables logical_expr_of_expr)
+          )
+         else (
+           (* The let was not stated as logical, Ensure we have an [expr]
+              or at least a [logical_expr] of the form [Pr_expr] . *)
+           match let_binding_descr.Parsetree.b_body with
+           | Parsetree.BB_computational expr ->
+               Parsetree.BB_computational
+                 (scope_expr ctx env_with_ty_constraints_variables expr)
+
+          | Parsetree.BB_logical
+                { Parsetree.ast_desc = Parsetree.Pr_expr expr } ->
+              (* Turn the logical_expr into an expression since we are not
+                 in a logical let. *)
+              Parsetree.BB_computational
+                (scope_expr ctx env_with_ty_constraints_variables expr)
+          | Parsetree.BB_logical _ ->
+              raise
+                (Non_logical_let_cant_define_logical_expr
+                   (let_binding_descr.Parsetree.b_name,
+                    let_binding.Parsetree.ast_loc)))) in
     (* Now scope the optionnal body's type. *)
     let scoped_b_type =
       (match let_binding_descr.Parsetree.b_type with
