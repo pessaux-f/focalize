@@ -209,8 +209,9 @@
 ;; functions will know what it a "word".
 (defvar focalize-mode-syntax-table
   (let ((table (make-syntax-table)))
-    ;; Underscore is a valid part of a word.
-    (modify-syntax-entry ?_ "w" table)
+    ;; Underscore is a valid part of a word. Removed to allow forward-word
+    ; to stop on _.
+    ; (modify-syntax-entry ?_ "w" table)
     (modify-syntax-entry ?\\ "\\" table)
     ;; Open paren is the start of a two-character comment sequence ('1') and
     ;; is an opening paired-character to match with the rparen.
