@@ -53,6 +53,7 @@ let compile_fcl input_file_name =
       (List.rev plug_ins) in
   let ast = List.fold_left (fun ast f -> f ast) ast plug_in_funs in
   (* Scopes AST. *)
+  if Configuration.get_verbose () then Format.eprintf "Scoping AST.@." ;
   let (scoped_ast, scoping_toplevel_env) =
     (let tmp = Scoping.scope_file current_unit ast in
     (* Pretty the scoped AST if requested. *)
@@ -65,6 +66,7 @@ let compile_fcl input_file_name =
          close_out out_hd) ;
     tmp) in
   (* Typechecks the AST. *)
+  if Configuration.get_verbose () then Format.eprintf "Typechecking AST.@." ;
   let (typing_toplevel_env, stuff_to_compile) =
     Infer.typecheck_file ~current_unit scoped_ast in
   (* Verify pattern-matching soundness. *)
