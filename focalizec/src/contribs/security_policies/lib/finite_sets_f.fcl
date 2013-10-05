@@ -44,6 +44,7 @@ species Finite_parts(S is Setoid) =
    -> all x: Self, p(x); 
 *)
 
+  (* pourquoi ca s'appelle pas belongs_equal_compat ? *)
   property belongs_left_substitution_rule: all s_1 s_2: S, all r: Self,
        S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r);
 
@@ -106,20 +107,39 @@ species Finite_parts(S is Setoid) =
 end;;
 
 
-species Finite_parts_by_lists(S is Setoid, L is Utils(S)) =
+(* ne serait il pas plus judicieux de programmer un finite_set by_lists avec par exemple des belongs et compagnie puis de faire hériter finite parts by lists ? *)
+
+species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
 
   inherit Finite_parts(S);
 
   representation = list(S);
 
+
+  (* y a pas un moyen de dire à zenon de regarder la rep plutot que ca ? *)  
+  let to_list(e: Self): list(S) = e;
+
+  let from_list(l: list(S)): Self = l;
+
+  theorem from_list_valid : 
+    (all e: Self,
+      equal(from_list(to_list(e)), e))
+    /\
+    (all l: list(S),
+      (to_list(from_list(l)) = l))
+  proof = by definition of to_list, from_list property equal_reflexive ;    
+    
+
   let empty = [];
 
   let element = empty;
 
-  let belongs(s, e) = L!mem(e, s);
+  (* l'inversion s e est franchement moche faudrait changer list_utils... *)
+
+  let belongs(s, e) = L!belongs(e, s);
 
   proof of empty_spec = by definition of empty, belongs 
-                        property L!mem_empty_spec
+                        property L!belongs_empty_spec
   ;
 
   let add(e, s) =
@@ -134,7 +154,48 @@ species Finite_parts_by_lists(S is Setoid, L is Utils(S)) =
   (*     by property equal_reflexive *)
   (*   ; *)
 
-  proof of belongs_left_substitution_rule = assumed;
+  proof of belongs_left_substitution_rule = 
+   <1>1 prove all s_1 s_2 : S, all l : list(S),
+         S!equal(s_1, s_2) -> belongs(s_1, l) -> belongs(s_2, l)
+    <2>1 prove all s_1 s_2 : S, 
+           S!equal(s_1, s_2) -> belongs(s_1, []) -> belongs(s_2, [])
+         by property L!belongs_empty_spec definition of belongs
+    <2>2 prove all s_1 s_2 h : S, all t : list(S),
+             (S!equal(s_1, s_2) -> belongs(s_1, t) -> belongs(s_2, t))
+           ->
+             (S!equal(s_1, s_2) -> belongs(s_1, h::t) -> belongs(s_2, h::t))
+     <3>1 assume s_1 s_2 : S,
+          hypothesis H : S!equal(s_1, s_2),
+          prove all h : S, all t : list(S),
+            (belongs(s_1, t) -> belongs(s_2, t))
+         -> (belongs(s_1, h::t) -> belongs(s_2, h::t))
+      <4>1 assume h : S, assume t : list(S),
+           hypothesis H1 : belongs(s_1, t) -> belongs(s_2, t),
+           hypothesis H2 : belongs(s_1, h::t),
+           prove belongs(s_2, h::t)
+       <5>1 prove L!belongs(t, s_1) -> L!belongs(t, s_2)
+            by hypothesis H1 definition of belongs
+       <5>2 prove L!belongs(h::t, s_1)
+            by hypothesis H2 definition of belongs
+       <5>3 prove L!belongs(h::t, s_2)
+        <6>1 hypothesis HH1 : ~~ S!equal(h, s_2),
+             prove L!belongs(t, s_2)
+         <7>1 prove ~~ S!equal(s_1, h)
+              by hypothesis HH1, H
+                 property S!equal_transitive, S!equal_symmetric
+         <7>2 prove L!belongs(t, s_1)
+              by property L!belongs_spec, S!equal_symmetric step <7>1, <5>2
+         <7>f qed by step <7>1, <7>2, <5>1
+        <6>f qed by step <6>1 property L!belongs_spec
+       <5>f qed by step <5>3 definition of belongs
+      <4>f conclude
+     <3>f conclude
+    <2>f conclude
+   <1>2 prove all s_1 s_2 : S, all r: Self,
+          S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r)
+        by step <1>1 property from_list_valid
+   <1>f conclude
+  ;
 
   proof of is_contained_spec = assumed;
 
@@ -160,19 +221,6 @@ species Finite_parts_by_lists(S is Setoid, L is Utils(S)) =
    <1>f conclude
    ;
 
-  let to_list(e: Self): list(S) = e;
-
-  let from_list(l: list(S)): Self = l;
-
-  theorem from_list_valid : 
-    (all e: Self,
-      equal(from_list(to_list(e)), e))
-    /\
-    (all l: list(S),
-      (to_list(from_list(l)) = l))
-  proof = by definition of to_list, from_list property equal_reflexive ;    
-    
-
   let rec release(e, s) = match e with
   | [] -> []
   | h::t -> 
@@ -195,7 +243,7 @@ species Finite_parts_by_lists(S is Setoid, L is Utils(S)) =
   (*  by definition of is_contained,  *)
 
   property to_list_belongs :
-    all c: Self, all e : S, belongs (e, c) <-> L!mem(to_list(c), e);
+    all c: Self, all e : S, belongs (e, c) <-> L!belongs(to_list(c), e);
 
 
 
