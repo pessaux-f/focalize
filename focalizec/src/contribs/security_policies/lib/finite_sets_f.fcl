@@ -59,10 +59,12 @@ species Finite_parts(S is Setoid) =
     belongs(t_1, add (x, t_2)) <->
       (S!equal(t_1, t_2) \/ belongs(t_1, x));
 
+  (* to be change into property *)
   theorem add_contains1: 
     all c: Self, all e : S, belongs (e, (add (c, e))) 
     proof = assumed;
   
+  (* same as above *)
   theorem add_contains2: 
     all c: Self, all e : S, all x : S, ~ (S!equal(e, x)) -> 
        belongs (x, (add (c, e))) <-> belongs (x, c)
@@ -191,17 +193,17 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
       <4>f conclude
      <3>f conclude
     <2>f conclude
+   (* this step and the theorem from_list_valid seems useless *)
    <1>2 prove all s_1 s_2 : S, all r: Self,
           S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r)
         by step <1>1 property from_list_valid
    <1>f conclude
   ;
 
-  proof of is_contained_spec = assumed;
-
   let rec cardinal(e) = match e with
   | [] -> 0
   | _h::t -> 1 + cardinal(t)
+  termination proof = structural e
   ;
 
 
@@ -226,10 +228,11 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
   | h::t -> 
     if S!equal(s, h)
     then t
-    else h::release(t, s)        
-    ;
+    else h::release(t, s)
+  termination proof = structural e    
+  ;
 
-  proof of release_spec = assumed;
+  proof of release_spec = assumed; (* S!different ? mais ca va pas non ? *)
 
   let rec is_contained(l_1, l_2) = match l_1 with
   | [] -> true
@@ -237,7 +240,11 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
     if belongs(h, l_2) 
     then is_contained(t, l_2)
     else false
+  termination proof = structural l_1
   ;
+
+  proof of is_contained_spec = assumed ;
+
 
   (* proof of is_contained_spec = *)
   (*  by definition of is_contained,  *)
