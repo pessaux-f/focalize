@@ -373,30 +373,33 @@ let type_rep_species ~species_module ~species_name =
 
 
 
-(* ***************************************************************** *)
-(* type_simple -> bool                                               *)
-(** {b Descr}: Verifies if the type is "bool". This is used in Coq
-    generation to determine if an expression must be surrounded by a
-    wrapper applying Coq's "Is_true".
+(* ************************************************************************** *)
+(** {b Descr}: Verifies if the type is "bool" or "Self". This is used in Coq
+    generation to determine if an expression must be surrounded by a wrapper
+    applying Coq's "Is_true".
+    See the comment in species_record_type_generation.ml in the function
+    [rec_generate_logical_expr] to understand why the type Self must also be
+    considered.
 
-    {b Exported}: Yes.                                               *)
-(* ***************************************************************** *)
-let is_bool_type ty =
+    {b Exported}: Yes.                                                        *)
+(* ************************************************************************** *)
+let is_bool_or_self_type ty =
   let ty = repr ty in
   match ty with
    | ST_construct (("basics", "bool"), []) -> true
+   | ST_self_rep -> true
    | _ -> false
 ;;
 
 
 
-(* *************************************************************************** *)
+(* ************************************************************************** *)
 (** {b Descr}: Checks if the type is a construct type (i.e. a named type) and
     if so, returns its "type name" (i.e. module and type constructor names).
     Otherwise (not a named type): returns None.
     {b Rem}: This is used for pattern-matching checks to finally get the value
-    constructors of a type if it has some.                                     *)
-(* *************************************************************************** *)
+    constructors of a type if it has some.                                    *)
+(* ************************************************************************** *)
 let of_which_construct_type ty =
   match repr ty with
   | ST_construct (type_name, _) -> Some type_name

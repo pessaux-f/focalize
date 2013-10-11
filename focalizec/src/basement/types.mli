@@ -65,7 +65,7 @@ val type_rep_species :
   species_module: fname -> species_name: collection_name -> type_simple
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
-val is_bool_type : type_simple -> bool
+val is_bool_or_self_type : type_simple -> bool
 val of_which_construct_type : type_simple -> type_name option
 
 val type_sum_arguments_from_type_tuple : type_simple -> type_simple

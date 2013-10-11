@@ -1309,10 +1309,16 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          Format.fprintf out_fmter "@]"
      | Parsetree.Pr_expr expr ->
          (* The wrapper surrounding the expression by Coq's "Is_true" if the
-            expression's type is [bool]. *)
+            expression's type is [bool].
+            Bug #45 exhibited that the type here may also be Self in case
+            the representation was bool. Because logical propositions
+            are expected to be well-typed at this point, if the type is Self,
+            then for sure representation was bool. It could also have been
+            Prop ... but not because Prop is not a legal type directly usable
+            by the user. So, if the type is Self, we also wrap. *)
          let is_bool =
            (match expr.Parsetree.ast_type with
-            | Parsetree.ANTI_type ty -> Types.is_bool_type ty
+            | Parsetree.ANTI_type ty -> Types.is_bool_or_self_type ty
             | Parsetree.ANTI_none
             | Parsetree.ANTI_irrelevant
             | Parsetree.ANTI_scheme _ ->
