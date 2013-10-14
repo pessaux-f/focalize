@@ -44,7 +44,7 @@ species Finite_parts(S is Setoid) =
    -> all x: Self, p(x); 
 *)
 
-  (* pourquoi ca s'appelle pas belongs_equal_compat ? *)
+
   property belongs_left_substitution_rule: all s_1 s_2: S, all r: Self,
        S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r);
 
@@ -59,16 +59,14 @@ species Finite_parts(S is Setoid) =
     belongs(t_1, add (x, t_2)) <->
       (S!equal(t_1, t_2) \/ belongs(t_1, x));
 
-  (* to be change into property *)
   theorem add_contains1: 
     all c: Self, all e : S, belongs (e, (add (c, e))) 
-    proof = assumed;
+    proof = by property add_spec, S!equal_reflexive;
   
-  (* same as above *)
   theorem add_contains2: 
     all c: Self, all e : S, all x : S, ~ (S!equal(e, x)) -> 
-       belongs (x, (add (c, e))) <-> belongs (x, c)
-  proof = assumed;
+       (belongs (x, (add (c, e))) <-> belongs (x, c))
+  proof = by property add_spec, S!equal_symmetric ;
 
   property release_spec :
     all x : Self, all t_1 t_2 : S,
@@ -193,11 +191,11 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
       <4>f conclude
      <3>f conclude
     <2>f conclude
-   (* this step and the theorem from_list_valid seems useless *)
-   <1>2 prove all s_1 s_2 : S, all r: Self,
+   (* thanks to the powerful features of Zenon, this step and the theorem from_list_valid seems useless *)
+   (*  <1>2 prove all s_1 s_2 : S, all r: Self,
           S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r)
-        by step <1>1 property from_list_valid
-   <1>f conclude
+        by step <1>1 property from_list_valid *)
+   <1>f conclude 
   ;
 
   let rec cardinal(e) = match e with
