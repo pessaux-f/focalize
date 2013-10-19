@@ -147,7 +147,6 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
     then e
     else s::e;
 
-
   (* theorem belongs_right_substitution_rule: all s: S, all l_1 l_2: Self, *)
   (*   equal(l_1, l_2) -> belongs(s, l_1) -> belongs(s, l_2) *)
   (*   proof =  *)
@@ -242,11 +241,47 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
   ;
 
   proof of is_contained_spec = 
-   <1>1 assume x y : Self,
-        prove is_contained(x, y) -> (all e : S, belongs(e, x) -> belongs(e, y))
-        assumed
+   <1>1 assume y : list(S),
+        prove all x: list(S), (is_contained(x, y)
+                              -> (all e : S, belongs(e, x) -> belongs(e, y)))
+    <2>1 prove is_contained([], y) ->
+                 (all e : S, belongs(e, []) -> belongs(e, y))
+         by definition of belongs property L!belongs_empty_spec
+    <2>2 assume h: S, assume t: list(S),
+         hypothesis HI : is_contained(t, y) ->
+                           (all e : S, belongs(e, t) -> belongs(e, y)),
+         prove is_contained(h::t, y) ->
+                (all e : S, belongs(e, h::t) -> belongs(e, y))
+     <3>1 hypothesis H: is_contained(h::t, y),
+          assume e : S,
+          hypothesis H1: belongs(e, h::t),
+          prove belongs(e, y)
+      <4>1 prove S!equal(h, e) \/ belongs(e, t)
+           by hypothesis H1 definition of belongs
+              property L!belongs_spec
+      <4>2 prove S!equal(h, e) -> belongs(e, y)
+       (* visiblement zenon arrive pas a "eclacter"
+          la definition de is_contained, faut faire des étapes... *)
+       <5>1 prove belongs(h, y)
+            by hypothesis H definition of is_contained
+       <5>2 hypothesis H11: S!equal(h, e),
+            prove belongs(e, y)
+            by step <5>1 property belongs_left_substitution_rule
+               hypothesis H11
+       <5>f conclude
+      <4>3 prove belongs(e, t) -> belongs(e, y)
+       <5>1 prove is_contained(t, y)
+            by hypothesis H definition of is_contained
+       <5>2 hypothesis H12: belongs(e, t),
+            prove belongs(e, y)
+            by step <5>1 hypothesis HI, H12
+       <5>f conclude
+      <4>f conclude
+     <3>f conclude
+    <2>f conclude
    <1>2 assume y : Self,
-        prove all x : list(S), (* ici pas de conflit de types, mais si on met Self, pas de preuve *)
+        prove all x : list(S),
+        (* ici pas de conflit de types, mais si on met Self, pas de preuve *)
                (all e : S, belongs(e, x) -> belongs(e, y)) -> is_contained(x, y)
     <2>1 prove (all e : S, belongs(e, []) -> belongs(e, y)) 
                  -> is_contained([], y)
@@ -256,14 +291,18 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
                  -> is_contained(t, y))
             -> ((all e : S, belongs(e, h::t) -> belongs(e, y)) 
                  -> is_contained(h::t, y))
-     <3>1 hypothesis H1 : (all e : S, belongs(e, t) -> belongs(e, y)) 
+     <3>1 hypothesis HI : (all e : S, belongs(e, t) -> belongs(e, y)) 
                             -> is_contained(t, y),
-          hypothesis H2 : all e : S, belongs(e, h::t) -> belongs(e, y),
+          hypothesis H : all e : S, belongs(e, h::t) -> belongs(e, y),
           prove is_contained(h::t, y)
       <4>1 prove belongs(h, y)
-           assumed (* a finir ... non trivial ... *)
+       <5>1 prove belongs(h, h::t)
+            by definition of belongs property L!belongs_spec, S!equal_reflexive
+       <5>2 prove belongs(h, y)
+            by step <5>1 hypothesis H
+       <5>f conclude
       <4>2 prove is_contained(t, y)
-           assumed
+           by definition of belongs property L!belongs_spec hypothesis HI, H
       <4>f qed by step <4>1, <4>2 definition of is_contained
      <3>f conclude
     <2>f conclude
