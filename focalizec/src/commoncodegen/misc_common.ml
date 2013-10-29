@@ -732,20 +732,24 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
       | MinEnv.MCEE_Defined_logical (_, _, _) ->
           (* Anything defined is not abstracted. *)
           ()
-      | MinEnv.MCEE_Declared_logical (_, _) ->
+      | MinEnv.MCEE_Declared_logical (n, _) ->
           (* In Ocaml, (i.e if [care_logical] is [false]) logical properties
              are forgotten. *)
-          if care_logical then failwith "TODO 42"
+          if care_logical then (
+            let llift_name =
+              "abst_" ^
+              (Parsetree_utils.vname_as_string_with_operators_expanded n) in
+            the_list_reversed := llift_name :: !the_list_reversed
+           )
       | MinEnv.MCEE_Declared_carrier ->
          (* In Ocaml generation model (i.e. if [care_types] is [false], the
              carrier is never lambda-lifted then doesn't appear as an extra
              parameter. Hence, we take care of the carrier only in Coq, i.e. if
              [care_types] is [true]. *)
-          if care_types then
-            (begin
+          if care_types then (
             (* In Coq, the carrier is always abstracted by "abst_T". *)
             the_list_reversed := "abst_T" :: !the_list_reversed
-            end)
+           )
       | MinEnv.MCEE_Declared_computational (n, _) ->
           let llift_name =
             "abst_" ^
