@@ -253,7 +253,42 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
   termination proof = structural e    
   ;
 
-  proof of release_spec = assumed; (* S!different ? mais ca va pas non ? *)
+  proof of release_spec =
+   <0>1 assume e1 e2 : S,
+        prove all l:list(S),
+               belongs(e1, release(l, e2))
+           <-> (S!different (e1, e2) /\ belongs(e1, l))
+    <1>b prove belongs(e1, release([], e2))
+           <-> (S!different (e1, e2) /\ belongs(e1, []))
+     <2>1 prove ~ (belongs(e1, release([], e2)))
+          by definition of release, empty property empty_spec
+     <2>2 prove ~ (S!different (e1, e2) /\ belongs(e1, []))
+          by definition of empty property empty_spec
+     <2>f conclude
+    <1>i assume t: list(S), assume h: S,
+         hypothesis HI : (belongs(e1, release(t, e2))
+                          <-> (S!different (e1, e2) /\ belongs(e1, t))),
+         prove (belongs(e1, release(h::t, e2))
+           <-> (S!different (e1, e2) /\ belongs(e1, h::t)))
+     <2>1 hypothesis H1 : belongs(e1, release(h::t, e2)),
+          prove S!different (e1, e2) /\ belongs(e1, h::t)
+      <3>11 hypothesis C1 : S!equal(e2, h),
+            prove S!different (e1, e2)
+(* va y avoir un probleme de référence mutelle avec unique belongs non ? *)
+            assumed
+      <3>12 hypothesis C1 : S!equal(e2, h),
+            prove belongs(e1, h::t)
+            assumed
+      <3>2 hypothesis C2 : ~ S!equal(e2, h),
+           prove S!different (e1, e2) /\ belongs(e1, h::t)
+           assumed
+      <3>f conclude
+     <2>2 hypothesis H2 : S!different (e1, e2) /\ belongs(e1, h::t),
+          prove belongs(e1, release(h::t, e2))
+          assumed
+     <2>f conclude
+    <1>f conclude
+   <0>f conclude;           
 
   let rec is_contained(l_1, l_2) = match l_1 with
   | [] -> true
@@ -340,7 +375,8 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
   property to_list_belongs :
     all c: Self, all e : S, belongs (e, c) <-> L!belongs(to_list(c), e);
 
-(**il manque is_empty, is_empty_empty, release_contain, to_list_empty, unique_belongs *)
-
 end;;
+
+(* il manque is_empty, is_empty_empty, release_contain, to_list_empty, unique_belongs *)
+species Foo = end;;
 
