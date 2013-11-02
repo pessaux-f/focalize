@@ -2,7 +2,7 @@ open "basics";;
 open "sets";;
 open "listes";;
 
-species Finite_set =
+species Finite_set(L is List_util(Self)) =
 
   inherit Setoid;
 
@@ -11,17 +11,11 @@ species Finite_set =
 
   (** All the members of the species. *)
   signature all_to_list : list (Self);
-
-(* should use List_util *)
-  let rec in_list (l, x) =
-      match l with
-        | [] -> false
-        | h :: q -> (equal (h, x) || in_list (q, x))
-      termination proof = structural l;
-
+  (**
   property all_in_all_to_list :
-    all x : Self, in_list (all_to_list, x);
-
+    all x : Self, L!belongs (all_to_list, x);
+   *)
+  signature toto : Self;
 end;;
 
 species Finite_parts(S is Setoid) =
@@ -107,28 +101,11 @@ species Finite_parts(S is Setoid) =
 end;;
 
 
-(* ne serait il pas plus judicieux de programmer un finite_set by_lists avec par exemple des belongs et compagnie puis de faire hériter finite parts by lists ? *)
-
 species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
 
   inherit Finite_parts(S);
 
   representation = list(S);
-
-
-  (* y a pas un moyen de dire à zenon de regarder la rep plutot que ca ? *)  
-  let to_list(e: Self): list(S) = e;
-
-  let from_list(l: list(S)): Self = l;
-
-  theorem from_list_valid : 
-    (all e: Self,
-      equal(from_list(to_list(e)), e))
-    /\
-    (all l: list(S),
-      (to_list(from_list(l)) = l))
-  proof = by definition of to_list, from_list property equal_reflexive ;    
-    
 
   let empty = [];
 
@@ -190,10 +167,6 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
       <4>f conclude
      <3>f conclude
     <2>f conclude
-   (* thanks to the powerful features of Zenon, this step and the theorem from_list_valid seems useless *)
-   (*  <1>2 prove all s_1 s_2 : S, all r: Self,
-          S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r)
-        by step <1>1 property from_list_valid *)
    <1>f conclude 
   ;
 
@@ -367,7 +340,7 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
   property to_list_belongs :
     all c: Self, all e : S, belongs (e, c) <-> L!belongs(to_list(c), e);
 
-
+(**il manque is_empty, is_empty_empty, release_contain, to_list_empty, unique_belongs *)
 
 end;;
 
