@@ -244,11 +244,24 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
    <1>f conclude
    ;
 
+(*
   let rec release(e, s) = match e with
   | [] -> []
   | h::t -> 
     if S!equal(s, h)
     then t
+    else h::release(t, s)
+  termination proof = structural e    
+  ;
+*)
+(* pour plus de facilité dans la preuve, je m'assure que j'élimine toute
+   les occurences de s dans e bien que ce soit moins optimisé *)
+(* j'aurais eu un probleme de référence mutelle avec unique belongs non ? *)
+  let rec release(e, s) = match e with
+  | [] -> []
+  | h::t -> 
+    if S!equal(s, h)
+    then release(t, s)
     else h::release(t, s)
   termination proof = structural e    
   ;
@@ -274,18 +287,44 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
           prove S!different (e1, e2) /\ belongs(e1, h::t)
       <3>11 hypothesis C1 : S!equal(e2, h),
             prove S!different (e1, e2)
-(* va y avoir un probleme de référence mutelle avec unique belongs non ? *)
-            assumed
+        <4>1 prove belongs(e1, release(t, e2))
+             by definition of release hypothesis H1, C1
+        <4>f qed by step <4>1 hypothesis HI
       <3>12 hypothesis C1 : S!equal(e2, h),
             prove belongs(e1, h::t)
-            assumed
+        <4>1 prove belongs(e1, t)
+             by hypothesis HI, C1, H1 definition of release
+        <4>f qed by step <4>1 property L!belongs_spec definition of belongs
+(* on peut pas utiliser add spec, car on doit passer par les listes pour les
+   preuves (a cause de l'induction) *)
       <3>2 hypothesis C2 : ~ S!equal(e2, h),
            prove S!different (e1, e2) /\ belongs(e1, h::t)
-           assumed
+       <4>1 assume r: list(S), hypothesis Hr : r = release(h::t, e2),
+            prove belongs(e1, release(t, e2))
+(* by definition of release hypothesis C2, H1 suffisait pas,
+   d'ou l'introduction de t = release(h::t, e2) *)
+        <5>1 prove r = release(t, e2)
+             (* zenon s'en sort pas, etapes en plus *)
+         <6>1 prove release(h::t, e2) = release(t, e2)
+(*              by definition of release hypothesis C2 *)
+(* zenon s'en sort toujours pas et la je ne vois vraiment pas ... *)
+              assumed
+         <6>f qed by step <6>1 hypothesis Hr
+        <5>2 prove belongs(e1, r)
+             by step <5>1 hypothesis Hr, H1
+        <5>f conclude
+       <4>f qed by step <4>1 hypothesis HI definition of belongs
+                                           property L!belongs_spec
       <3>f conclude
      <2>2 hypothesis H2 : S!different (e1, e2) /\ belongs(e1, h::t),
           prove belongs(e1, release(h::t, e2))
-          assumed
+      <3>1 hypothesis C1 : S!equal(e1, h),
+           prove belongs(e1, release(h::t, e2))
+           assumed
+      <3>2 hypothesis C2 : ~ S!equal(e1, h),
+           prove belongs(e1, release(h::t, e2))
+           assumed
+      <3>f conclude
      <2>f conclude
     <1>f conclude
    <0>f conclude;           
