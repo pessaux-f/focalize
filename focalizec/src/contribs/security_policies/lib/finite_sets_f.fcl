@@ -267,10 +267,13 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
   ;
 
   proof of release_spec =
+   (* let's prove it by induction on lists *)
    <0>1 assume e1 e2 : S,
         prove all l:list(S),
                belongs(e1, release(l, e2))
            <-> (S!different (e1, e2) /\ belongs(e1, l))
+
+   (* empty list *)
     <1>b prove belongs(e1, release([], e2))
            <-> (S!different (e1, e2) /\ belongs(e1, []))
      <2>1 prove ~ (belongs(e1, release([], e2)))
@@ -278,56 +281,91 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
      <2>2 prove ~ (S!different (e1, e2) /\ belongs(e1, []))
           by definition of empty property empty_spec
      <2>f conclude
+
+    (* induction step *)
     <1>i assume t: list(S), assume h: S,
          hypothesis HI : (belongs(e1, release(t, e2))
                           <-> (S!different (e1, e2) /\ belongs(e1, t))),
          prove (belongs(e1, release(h::t, e2))
            <-> (S!different (e1, e2) /\ belongs(e1, h::t)))
+
+     (* ( -> ) *)
      <2>1 hypothesis H1 : belongs(e1, release(h::t, e2)),
           prove S!different (e1, e2) /\ belongs(e1, h::t)
-      <3>11 hypothesis C1 : S!equal(e2, h),
-            prove S!different (e1, e2)
-        <4>1 prove belongs(e1, release(t, e2))
-             by definition of release hypothesis H1, C1
-        <4>f qed by step <4>1 hypothesis HI
-      <3>12 hypothesis C1 : S!equal(e2, h),
-            prove belongs(e1, h::t)
-        <4>1 prove belongs(e1, t)
+
+      (* by cases : either S!equal(e2, h) or not *)
+      <3>1 hypothesis C1 : S!equal(e2, h),
+            prove S!different (e1, e2) /\ belongs(e1, h::t)
+       <4>1 prove S!different (e1, e2)
+            by definition of release hypothesis H1, C1, HI
+       <4>2 prove belongs(e1, h::t)
+        <5>1 prove belongs(e1, t)
              by hypothesis HI, C1, H1 definition of release
-        <4>f qed by step <4>1 property L!belongs_spec definition of belongs
-(* on peut pas utiliser add spec, car on doit passer par les listes pour les
-   preuves (a cause de l'induction) *)
+        <5>f qed by step <5>1 property L!belongs_spec definition of belongs
+       <4>f conclude
+
       <3>2 hypothesis C2 : ~ S!equal(e2, h),
            prove S!different (e1, e2) /\ belongs(e1, h::t)
-       <4>1 assume r: list(S), hypothesis Hr : r = release(h::t, e2),
-            prove belongs(e1, release(t, e2))
-(* by definition of release hypothesis C2, H1 suffisait pas,
-   d'ou l'introduction de t = release(h::t, e2) *)
-        <5>1 prove r = release(t, e2)
-             (* zenon s'en sort pas, etapes en plus *)
-         <6>1 prove release(h::t, e2) = release(t, e2)
-(*              by definition of release hypothesis C2 *)
-(* zenon s'en sort toujours pas et la je ne vois vraiment pas ... *)
-              assumed
-         <6>f qed by step <6>1 hypothesis Hr
-        <5>2 prove belongs(e1, r)
-             by step <5>1 hypothesis Hr, H1
+       (* second cases discussion, this time on e1 *)
+       <4>1 hypothesis C21 : S!equal(e1, h),
+            prove S!different (e1, e2) /\ belongs(e1, h::t)
+        <5>1 prove S!different (e1, e2)
+             by hypothesis C2, C21
+             property S!equal_symmetric, S!equal_transitive,
+                      S!same_is_not_different
+        <5>2 prove belongs(e1, h::t)
+             by definition of belongs property L!belongs_spec, S!equal_symmetric
+                hypothesis C21
         <5>f conclude
-       <4>f qed by step <4>1 hypothesis HI definition of belongs
-                                           property L!belongs_spec
+       <4>2 hypothesis C22 : ~ S!equal(e1, h),
+            prove S!different (e1, e2) /\ belongs(e1, h::t)
+        <5>1 prove belongs(e1, h::release(t, e2))
+             by hypothesis H1, C2 definition of release
+        <5>2 prove belongs(e1, release(t, e2))
+             by step <5>1 hypothesis C22 definition of belongs
+                property L!belongs_spec, S!equal_symmetric
+        <5>3 prove S!different (e1, e2) /\ belongs(e1, t)
+             by step <5>2 hypothesis HI
+        <5>4 prove belongs(e1, h::t)
+             by step <5>3 definition of belongs property L!belongs_spec
+        <5>f conclude
+       <4>f conclude
       <3>f conclude
+
+     (* ( <- ) *)
      <2>2 hypothesis H2 : S!different (e1, e2) /\ belongs(e1, h::t),
           prove belongs(e1, release(h::t, e2))
+
+      (* by cases again, on e1 *)
       <3>1 hypothesis C1 : S!equal(e1, h),
            prove belongs(e1, release(h::t, e2))
-           assumed
+       <4>1 prove ~ S!equal(e2, h)
+            by hypothesis H2, C1
+               property S!same_is_not_different, S!equal_symmetric,
+                        S!equal_transitive
+       <4>2 prove release(h::t, e2) = h::release(t, e2)
+            by step <4>1 definition of release
+       <4>3 prove belongs(e1, h::release(t, e2))
+            by definition of belongs property L!belongs_spec hypothesis C1
+               property S!equal_symmetric
+       <4>f qed by step <4>2, <4>3
+
       <3>2 hypothesis C2 : ~ S!equal(e1, h),
            prove belongs(e1, release(h::t, e2))
-           assumed
+       <4>1 prove belongs(e1, t)
+            by definition of belongs property L!belongs_spec, S!equal_symmetric
+               hypothesis C2, H2
+       <4>2 prove belongs(e1, release(t, e2))
+            by step <4>1 hypothesis H2, HI
+       <4>3 prove release(h::t, e2) = release(t, e2)
+               \/ release(h::t, e2) = h::release(t, e2)
+            by definition of release
+       <4>f qed by step <4>3, <4>2 definition of belongs property L!belongs_spec
       <3>f conclude
      <2>f conclude
     <1>f conclude
-   <0>f conclude;           
+   <0>f conclude
+  ;
 
   let rec is_contained(l_1, l_2) = match l_1 with
   | [] -> true
