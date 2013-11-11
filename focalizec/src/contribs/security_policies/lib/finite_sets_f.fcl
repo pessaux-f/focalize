@@ -11,11 +11,14 @@ species Finite_set(L is List_util(Self)) =
 
   (** All the members of the species. *)
   signature all_to_list : list (Self);
-  (**
-  property all_in_all_to_list :
-    all x : Self, L!belongs (all_to_list, x);
-   *)
-  signature toto : Self;
+
+(*  property all_in_all_to_list :                            *)
+(*     all x : Self, L!belongs (all_to_list, x);             *)
+(* BUG :                                                     *)
+(* File "finite_sets_f.fcl", line 16, characters 19-45:      *)
+(* Error: Types Self and finite_sets_f#L are not compatible. *)
+
+
 end;;
 
 species Finite_parts(S is Setoid) =
@@ -41,6 +44,10 @@ species Finite_parts(S is Setoid) =
 
   property belongs_left_substitution_rule: all s_1 s_2: S, all r: Self,
        S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r);
+
+(* property belongs_right_substitution_rule: all s: S, all l_1 l_2: Self, *)
+(*   equal(l_1, l_2) -> belongs(s, l_1) -> belongs(s, l_2) *)
+(*   ; *)
 
   property empty_spec :
     all t: S, ~ belongs(t, empty);
@@ -123,12 +130,6 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
     if belongs(s, e)
     then e
     else s::e;
-
-  (* theorem belongs_right_substitution_rule: all s: S, all l_1 l_2: Self, *)
-  (*   equal(l_1, l_2) -> belongs(s, l_1) -> belongs(s, l_2) *)
-  (*   proof =  *)
-  (*     by property equal_reflexive *)
-  (*   ; *)
 
   proof of belongs_left_substitution_rule = 
    <1>1 prove all s_1 s_2 : S, all l : list(S),
@@ -396,8 +397,7 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
            by hypothesis H1 definition of belongs
               property L!belongs_spec
       <4>2 prove S!equal(h, e) -> belongs(e, y)
-       (* visiblement zenon arrive pas a "eclacter"
-          la definition de is_contained, faut faire des étapes... *)
+    (* apparently zenon can't unfold is_contained's definition so more steps *)
        <5>1 prove belongs(h, y)
             by hypothesis H definition of is_contained
        <5>2 hypothesis H11: S!equal(h, e),
@@ -417,7 +417,8 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
     <2>f conclude
    <1>2 assume y : Self,
         prove all x : list(S),
-        (* ici pas de conflit de types, mais si on met Self, pas de preuve *)
+        (* we must do the proof explicitely with list rather than with Self, *)
+        (* or zenon won't be able to use induction *)
                (all e : S, belongs(e, x) -> belongs(e, y)) -> is_contained(x, y)
     <2>1 prove (all e : S, belongs(e, []) -> belongs(e, y)) 
                  -> is_contained([], y)
@@ -456,4 +457,3 @@ end;;
 
 (* il manque is_empty, is_empty_empty, release_contain, to_list_empty, unique_belongs *)
 species Foo = end;;
-
