@@ -12,8 +12,8 @@ species Finite_set(L is List_util(Self)) =
   (** All the members of the species. *)
   signature all_to_list : list (Self);
 
-(*  property all_in_all_to_list :                            *)
-(*     all x : Self, L!belongs (all_to_list, x);             *)
+(*  property all_in_all_to_list :           *)                 
+(*     all x : Self, L!belongs (all_to_list, x); *)             
 (* BUG :                                                     *)
 (* File "finite_sets_f.fcl", line 16, characters 19-45:      *)
 (* Error: Types Self and finite_sets_f#L are not compatible. *)
@@ -44,10 +44,6 @@ species Finite_parts(S is Setoid) =
 
   property belongs_left_substitution_rule: all s_1 s_2: S, all r: Self,
        S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r);
-
-(* property belongs_right_substitution_rule: all s: S, all l_1 l_2: Self, *)
-(*   equal(l_1, l_2) -> belongs(s, l_1) -> belongs(s, l_2) *)
-(*   ; *)
 
   property empty_spec :
     all t: S, ~ belongs(t, empty);
@@ -97,6 +93,13 @@ species Finite_parts(S is Setoid) =
   proof of equal_transitive = by definition of equal  
                                 property is_contained_transitive;
   proof of equal_symmetric = by definition of equal;
+
+
+theorem belongs_right_substitution_rule: all s: S, all l_1 l_2: Self, 
+   equal(l_1, l_2) -> belongs(s, l_1) -> belongs(s, l_2) 
+  proof = by definition of equal 
+             property  is_contained_spec ; 
+
 
   property to_list_empty : 
     all l : Self, is_empty(l) <-> to_list(l) = []
@@ -255,8 +258,8 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
   termination proof = structural e    
   ;
 *)
-(* pour plus de facilité dans la preuve, je m'assure que j'élimine toute
-   les occurences de s dans e bien que ce soit moins optimisé *)
+(* pour plus de prouvabilité dans la preuve, je m'assure que j'élimine toute
+   les occurences de s dans e bien que ce soit moins optimisé  ... welcome to english comments *)
 (* j'aurais eu un probleme de référence mutelle avec unique belongs non ? *)
   let rec release(e, s) = match e with
   | [] -> []
