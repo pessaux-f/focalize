@@ -464,5 +464,7 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
 
 end;;
 
-(* il manque is_empty, is_empty_empty, release_contain, to_list_empty, unique_belongs *)
+(* il manque release_contain, to_list_empty, unique_belongs *)
+(* + verifier si certaines proprietes ne sont pas prouvables *)
+(* a un plus haut niveau d'abstraction *)
 species Foo = end;;
