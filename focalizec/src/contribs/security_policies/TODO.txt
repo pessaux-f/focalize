@@ -25,7 +25,7 @@ triviales sur les projections
 =============
 
 /!\ à l'utilistation de mem (ancien list_util) à remplacer par belongs !!
-
+  => en plus l'ordre des arguments a ete modifie, etre vigilant.
 
 Do not modify Renaud's libraries (listes.fcl and coll.fcl)
 But remove the useless one (which is ?)

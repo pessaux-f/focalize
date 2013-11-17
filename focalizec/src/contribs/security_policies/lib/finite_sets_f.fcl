@@ -13,7 +13,7 @@ species Finite_set(L is List_util(Self)) =
   signature all_to_list : list (Self);
 
 (*  property all_in_all_to_list :           *)                 
-(*     all x : Self, L!belongs (all_to_list, x); *)             
+(*     all x : Self, L!belongs (x, all_to_list); *)             
 (* BUG :                                                     *)
 (* File "finite_sets_f.fcl", line 16, characters 19-45:      *)
 (* Error: Types Self and finite_sets_f#L are not compatible. *)
@@ -40,10 +40,6 @@ species Finite_parts(S is Setoid) =
    -> (all s: S, all x:Self, p(x) -> p(add(x, s)))
    -> all x: Self, p(x); 
 *)
-
-
-  property belongs_left_substitution_rule: all s_1 s_2: S, all r: Self,
-       S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r);
 
   property empty_spec :
     all t: S, ~ belongs(t, empty);
@@ -95,10 +91,13 @@ species Finite_parts(S is Setoid) =
   proof of equal_symmetric = by definition of equal;
 
 
-theorem belongs_right_substitution_rule: all s: S, all l_1 l_2: Self, 
-   equal(l_1, l_2) -> belongs(s, l_1) -> belongs(s, l_2) 
+  theorem belongs_right_substitution_rule: all s: S, all l_1 l_2: Self, 
+     equal(l_1, l_2) -> belongs(s, l_1) -> belongs(s, l_2) 
   proof = by definition of equal 
              property  is_contained_spec ; 
+
+  property belongs_left_substitution_rule: all s_1 s_2: S, all r: Self,
+       S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r);
 
 
   property to_list_empty : 
@@ -123,7 +122,7 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
 
   (* l'inversion s e est franchement moche faudrait changer list_utils... *)
 
-  let belongs(s, e) = L!belongs(e, s);
+  let belongs(s, e) = L!belongs(s, e);
 
   proof of empty_spec = by definition of empty, belongs 
                         property L!belongs_empty_spec
@@ -153,17 +152,17 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
            hypothesis H1 : belongs(s_1, t) -> belongs(s_2, t),
            hypothesis H2 : belongs(s_1, h::t),
            prove belongs(s_2, h::t)
-       <5>1 prove L!belongs(t, s_1) -> L!belongs(t, s_2)
+       <5>1 prove L!belongs(s_1, t) -> L!belongs(s_2, t)
             by hypothesis H1 definition of belongs
-       <5>2 prove L!belongs(h::t, s_1)
+       <5>2 prove L!belongs(s_1, h::t)
             by hypothesis H2 definition of belongs
-       <5>3 prove L!belongs(h::t, s_2)
+       <5>3 prove L!belongs(s_2, h::t)
         <6>1 hypothesis HH1 : ~~ S!equal(h, s_2),
-             prove L!belongs(t, s_2)
+             prove L!belongs(s_2, t)
          <7>1 prove ~~ S!equal(s_1, h)
               by hypothesis HH1, H
                  property S!equal_transitive, S!equal_symmetric
-         <7>2 prove L!belongs(t, s_1)
+         <7>2 prove L!belongs(s_1, t)
               by property L!belongs_spec, S!equal_symmetric step <7>1, <5>2
          <7>f qed by step <7>1, <7>2, <5>1
         <6>f qed by step <6>1 property L!belongs_spec
@@ -449,12 +448,19 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
    <1>f conclude	
   ;
 
+  let is_empty(s: Self) = match s with
+    | [] -> true
+    | _ -> false;
 
-  (* proof of is_contained_spec = *)
-  (*  by definition of is_contained,  *)
+  proof of is_empty_empty = (* BUG ZENON : by definition of is_empty, empty ; *)
+    <1>1 prove is_empty([])
+         by definition of is_empty
+    <1>2 prove empty = []
+         by definition of empty
+    <1>f conclude;
 
   property to_list_belongs :
-    all c: Self, all e : S, belongs (e, c) <-> L!belongs(to_list(c), e);
+    all c: Self, all e : S, belongs (e, c) <-> L!belongs(e, to_list(c));
 
 end;;
 

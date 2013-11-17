@@ -6,43 +6,43 @@ species Basic_list_util(A is Basic_object) =
   
   representation = unit;
   
-  let rec mem (l, x: A) =
+  let rec mem (x: A, l) =
     match l with
     | [] -> false
-    | h :: q ->  h = x || (mem (q, x))
+    | h :: q ->  h = x || (mem (x, q))
     termination proof = structural l
   ;
 
   theorem mem_cons_head: all x: A, all l: list(A), 
-    mem(x::l, x)
+    mem(x, x::l)
   proof = by definition of mem;
   
   theorem mem_cons_tail: all x y: A, all l: list(A),
-    mem(l, x) -> mem(y::l, x)
+    mem(x, l) -> mem(x, y::l)
   proof = by definition of mem;
 
-  theorem mem_empty_spec: all x: A, ~~(mem([], x))
+  theorem mem_empty_spec: all x: A, ~~(mem(x, []))
   proof = by definition of mem;
   
   theorem mem_contains: all l: list(A),
-    ~~( l = [] ) <-> (ex x: A, mem(l, x))
+    ~~( l = [] ) <-> (ex x: A, mem(x, l))
   proof = 
   <1>1 assume l: list(A),
-       prove (l = []) -> all x: A, ~~(mem(l, x))
+       prove (l = []) -> all x: A, ~~(mem(x, l))
        by property mem_empty_spec
-  <1>2 prove all l: list(A), ~~(l = []) -> ex x: A, mem(l, x)
-       <2>1 prove ~~([] = []) -> ex x: A, mem([], x)
+  <1>2 prove all l: list(A), ~~(l = []) -> ex x: A, mem(x, l)
+       <2>1 prove ~~([] = []) -> ex x: A, mem(x, [])
             conclude
        <2>2 assume l: list(A), assume a: A ,
-            hypothesis I: ~~(l = []) -> ex x: A, mem(l, x),
-            prove ex x: A, mem(a::l, x)
-            <3>1 prove mem(a::l, a) by property mem_cons_head
+            hypothesis I: ~~(l = []) -> ex x: A, mem(x, l),
+            prove ex x: A, mem(x, a::l)
+            <3>1 prove mem(a, a::l) by property mem_cons_head
             <3>f conclude
        <2>f conclude
   <1>f conclude;
 
 theorem mem_spec: all l : list(A), all e h : A,  
- (mem (l, e) \/ (e = h)) <-> mem (h :: l, e)
+ (mem (e, l) \/ (e = h)) <-> mem (e, h :: l)
 proof = by definition of mem
 ; 
   
@@ -135,26 +135,26 @@ end
 species List_util(A is Setoid) =
   inherit Basic_list_util(A);
   
-  let rec belongs(l, x: A) =
+  let rec belongs(x: A, l) =
     match l with
     | [] -> false
-    | h :: q ->  A!equal(h, x) || (belongs (q, x))
+    | h :: q ->  A!equal(h, x) || (belongs (x, q))
     termination proof = structural l
   ;
   
   theorem mem_implies_belongs : all x: A, all l: list(A),
-    mem(l, x) -> belongs(l, x)
+    mem(x, l) -> belongs(x, l)
   proof = 
    <1>1 assume x: A,
-        prove mem([], x) -> belongs([], x)
+        prove mem(x, []) -> belongs(x, [])
         by definition of mem, belongs
    <1>2 assume x h : A,
         assume t: list(A),
-        prove (mem(t, x) -> belongs(t, x))
-           -> (mem(h::t, x) -> belongs(h::t, x))
-        <2>1 hypothesis HI: (mem(t, x) -> belongs(t, x)),
-             hypothesis H1: mem(h::t, x),
-             prove belongs(h::t, x)
+        prove (mem(x, t) -> belongs(x, t))
+           -> (mem(x, h::t) -> belongs(x, h::t))
+        <2>1 hypothesis HI: (mem(x, t) -> belongs(x, t)),
+             hypothesis H1: mem(x, h::t),
+             prove belongs(x, h::t)
 	     by definition of mem, belongs property A!equal_reflexive
                 hypothesis HI, H1  
         <2>f conclude
@@ -162,18 +162,18 @@ species List_util(A is Setoid) =
   ;
 
   theorem belongs_spec: all t: list(A), all h x: A,
-    (belongs(t, x) \/ A!equal(h, x)) <-> belongs(h::t, x)
+    (belongs(x, t) \/ A!equal(h, x)) <-> belongs(x, h::t)
   proof = by definition of belongs;
 
   theorem belongs_cons_head: all x: A, all l: list(A), 
-    belongs(x::l, x)
+    belongs(x, x::l)
   proof = by property belongs_spec, A!equal_reflexive;
   
   theorem belongs_cons_tail: all x y: A, all l: list(A),
-    belongs(l, x) -> belongs(y::l, x)
+    belongs(x, l) -> belongs(x, y::l)
   proof = by property belongs_spec;
 
-  theorem belongs_empty_spec: all x: A, ~~(belongs([], x))
+  theorem belongs_empty_spec: all x: A, ~~(belongs(x, []))
   proof = by definition of belongs;
 
 end
