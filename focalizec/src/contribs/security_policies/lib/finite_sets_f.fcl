@@ -32,6 +32,8 @@ species Finite_parts(S is Setoid) =
   signature belongs: S -> Self -> bool;
   signature release : Self -> S -> Self;
   signature to_list : Self -> list(S) ;
+  (* Not possible to specify to_list without specification of lists *)
+
   signature is_contained : Self -> Self -> bool;
 
 (*
@@ -65,9 +67,10 @@ species Finite_parts(S is Setoid) =
     all x : Self, all t_1 t_2 : S,
     belongs(t_1, release(x, t_2)) <-> (S!different (t_1, t_2) /\ belongs(t_1, x));
 
-  property release_contains: 
+  theorem release_contains: 
     all c: Self, all e : S, all x : S, ~~(S!equal (e, x)) -> 
-       (belongs (x, (release (c, e))) <-> belongs (x, c));
+       (belongs (x, (release (c, e))) <-> belongs (x, c))
+   proof = by property S!same_is_not_different, S!equal_symmetric, release_spec;
 
   property is_contained_spec :
     all x y : Self,
@@ -100,13 +103,16 @@ species Finite_parts(S is Setoid) =
        S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r);
 
 
-  property to_list_empty : 
+(* should become provable with a specification of to_list *)
+(*  property to_list_empty : 
     all l : Self, is_empty(l) <-> to_list(l) = []
 ; 
-  
-  property unique_belongs : all c : Self, all e : S, 
-   ~~ (belongs (e, release (c, e))) ;
-    
+*)
+
+  theorem unique_belongs : all c : Self, all e : S, 
+   ~~ (belongs (e, release (c, e))) 
+    proof = by property S!same_is_not_different, S!equal_reflexive, release_spec;
+
 end;;
 
 
@@ -119,8 +125,6 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
   let empty = [];
 
   let element = empty;
-
-  (* l'inversion s e est franchement moche faudrait changer list_utils... *)
 
   let belongs(s, e) = L!belongs(s, e);
 
@@ -175,7 +179,7 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
 
   let rec cardinal(e) = match e with
   | [] -> 0
-  | _h::t -> 1 + cardinal(t)
+  | _ ::t -> 1 + cardinal(t)
   termination proof = structural e
   ;
 
@@ -247,7 +251,7 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
    <1>f conclude
    ;
 
-(*
+(* First version (not provable without induction schemes) 
   let rec release(e, s) = match e with
   | [] -> []
   | h::t -> 
@@ -257,9 +261,9 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
   termination proof = structural e    
   ;
 *)
-(* pour plus de prouvabilité dans la preuve, je m'assure que j'élimine toute
-   les occurences de s dans e bien que ce soit moins optimisé  ... welcome to english comments *)
-(* j'aurais eu un probleme de référence mutelle avec unique belongs non ? *)
+
+(* We DO NOT assume here that each element has at most one occurrence in a list representing a finite part *)
+
   let rec release(e, s) = match e with
   | [] -> []
   | h::t -> 
@@ -452,19 +456,31 @@ species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
     | [] -> true
     | _ -> false;
 
-  proof of is_empty_empty = (* BUG ZENON : by definition of is_empty, empty ; *)
+  proof of is_empty_empty = 
     <1>1 prove is_empty([])
          by definition of is_empty
     <1>2 prove empty = []
          by definition of empty
     <1>f conclude;
 
+(* 
+Something strange : by proving is_empty_empty with :
+
+" by definition of is_empty, empty ; "
+
+leads to : 
+
+Zenon error: exhausted search space without finding a proof
+### proof failed
+*)
+
+
+let to_list (s:Self):list(S) = s;
+
+(* Should be in the abstract species Finite_parts ... but need a specification of lists *)
   property to_list_belongs :
     all c: Self, all e : S, belongs (e, c) <-> L!belongs(e, to_list(c));
 
-end;;
+  proof of to_list_belongs = by definition of to_list, belongs;
 
-(* il manque release_contain, to_list_empty, unique_belongs *)
-(* + verifier si certaines proprietes ne sont pas prouvables *)
-(* a un plus haut niveau d'abstraction *)
-species Foo = end;;
+end;;
