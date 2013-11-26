@@ -2,13 +2,14 @@
 
 C=focalizec
 FLAGS=-stop-before-coq -zvtovopt -script
-EXEC=listes.v finite_sets_f.v
-# j'utilise .v plutot que .ml car je veux des preuves...
+SRC=listes.fcl finite_sets_f.fcl
+V=$(SRC:.fcl=.v)
+ML=$(SRC:.fcl=.ml)
 
 # voir pour makefile conditionnel avec listes des fichiers
 # pour lesquels y a le bug zenon
 
-all : $(EXEC)
+all : $(V) # j'utilise .v plutot que .ml car je veux des preuves...
 
 %.ml : 	%.fcl
 	$(C) $(FLAGS) $<
