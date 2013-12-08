@@ -2,7 +2,7 @@
 
 C=focalizec
 FLAGS=-stop-before-coq -zvtovopt -script
-SRC=listes.fcl finite_sets_f.fcl
+SRC=listes.fcl finite_sets_f.fcl ternary_product.fcl
 V=$(SRC:.fcl=.v)
 ML=$(SRC:.fcl=.ml)
 

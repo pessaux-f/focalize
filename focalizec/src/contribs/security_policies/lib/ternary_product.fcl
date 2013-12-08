@@ -22,9 +22,13 @@ species Abstract_triples(A is Setoid, B is Setoid, C is Setoid) =
   property is_third : all a: A, all b: B, all c: C,
     C!equal(third(make(a, b, c)), c);
 
+
+
   let equal(x, y) = A!equal(first(x), first(y)) &&
                     B!equal(second(x), second(y)) &&
                     C!equal(third(x), third(y));
+
+  (* substitutions rules are missing cf product.fcl of the stdlib *)
 
   theorem equal_spec: all x y: Self,
         !equal(x, y) 
@@ -52,20 +56,41 @@ end;;
 
 
 species Triples_by_pairs(A is Setoid, B is Setoid, C is Setoid) =
- inherit Abstract_triples(A, B, C) ;
- representation = (A * B) * C ;
- let first (t: Self) = fst(fst(t)) ;  
- let second (t: Self) = snd(fst(t));
- let third (t:Self) = snd(t);
- let make(a, b, c):Self = pair(pair(a, b), c);
+  inherit Abstract_triples(A, B, C) ;
+  representation = (A * B) * C ;
+  (* May use Cartesian_product as a representation, to benefit from the       *)
+  (* proofs that are already made. But it would be necessary to parameterize  *)
+  (* everything by Cartesian_product, which would be heavy and (?) not        *)
+  (* justified                                                                *)
+  let first (t: Self) = fst(fst(t)) ;  
+  let second (t: Self) = snd(fst(t));
+  let third (t:Self) = snd(t);
+  let make(a, b, c):Self = pair(pair(a, b), c);
+  
+  let element = pair(pair(A!element, B!element), C!element);
 
- let element = pair(pair(A!element, B!element), C!element);
+  proof of is_first = assumed;
+  (* problems encountered :                                                   *)
+  (* !equal not defined (and a fortiori not specified) for "concrete"         *)
+  (* pairs (A * B). Besides, if we build the proof with the "=" (it wouldn't  *)
+  (* be satisfying, but is there a choice ?) then we still have the problem   *)
+  (* that quatification over pairs isn't available e.g.                       *)
+  (* "all p:(A * B), all z:C, p = fst(p, c)" won't be accepted by zenon       *)
 
- proof of is_first = assumed;
- proof of is_second = assumed;
- proof of is_third = assumed;
-
+  (* But it should be provable with a specification of pairs. What to do ?    *)
+  (* -> declare such a specification at top level ? impossible, we need       *)
+  (*    the !equal from Setoid                                                *)
+  (* -> use Cartesian_product ? already discussed                             *)
+  (* -> do the same as for the lists (Pair_utils species, with                *)
+  (*    representation = unit) ? again, parameterization is necessary         *)
+  (* -> re-discuss with Francois about the "internal collections" of Renaud ? *)
+  (*    here is a typical case were the use of parameterization would         *)
+  (*    reveal the representation so ...                                      *)
+  
+  (* BUG ZENON (?) : I get                                                    *)
+  (* "Zenon warning: symbol basics.fst is used with inconsistent arities"     *)
+  (* when I write "by definition of fst, ..."                                 *)
+  proof of is_second = assumed;
+  proof of is_third = assumed;
 
 end;;
-
-
