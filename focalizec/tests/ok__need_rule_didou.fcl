@@ -1,0 +1,15 @@
+open "basics" ;;
+
+(** Show the need for the completion rule "DIDOU". *)
+species A =
+  signature f : Self -> int ;
+  signature g : Self -> int ;
+  (* In A, th0 depends on f and g. *)
+  property th0: all x : Self, f (x) = 0 /\ g (x) = 1 ;
+end ;;
+
+species B (P is A) =
+  (* Using P!th0 to prove stuff on P!f also brings P!g in the context ! *)
+  theorem th1 : all x : P, P!f (x) = 0
+  proof = by property P!th0 ;
+end ;;
