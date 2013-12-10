@@ -61,7 +61,7 @@ species Triples_by_pairs(A is Setoid, B is Setoid, C is Setoid) =
   (* May use Cartesian_product as a representation, to benefit from the       *)
   (* proofs that are already made. But it would be necessary to parameterize  *)
   (* everything by Cartesian_product, which would be heavy and (?) not        *)
-  (* justified                                                                *)
+  (* justified (?)                                                            *)
   let first (t: Self) = fst(fst(t)) ;  
   let second (t: Self) = snd(fst(t));
   let third (t:Self) = snd(t);
@@ -85,7 +85,7 @@ species Triples_by_pairs(A is Setoid, B is Setoid, C is Setoid) =
   (*    representation = unit) ? again, parameterization is necessary         *)
   (* -> re-discuss with Francois about the "internal collections" of Renaud ? *)
   (*    here is a typical case were the use of parameterization would         *)
-  (*    reveal the representation so ...                                      *)
+  (*    "reveal" the representation so ...                                    *)
   
   (* BUG ZENON (?) : I get                                                    *)
   (* "Zenon warning: symbol basics.fst is used with inconsistent arities"     *)
