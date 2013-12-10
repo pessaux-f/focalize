@@ -75,7 +75,7 @@ species Triples_by_pairs(A is Setoid, B is Setoid, C is Setoid) =
   (* pairs (A * B). Besides, if we build the proof with the "=" (it wouldn't  *)
   (* be satisfying, but is there a choice ?) then we still have the problem   *)
   (* that quatification over pairs isn't available e.g.                       *)
-  (* "all p:(A * B), all z:C, p = fst(p, c)" won't be accepted by zenon       *)
+  (* "all p:(B * C), all x:A, x = fst(x, p)" won't be accepted by zenon       *)
 
   (* But it should be provable with a specification of pairs. What to do ?    *)
   (* -> declare such a specification at top level ? impossible, we need       *)
