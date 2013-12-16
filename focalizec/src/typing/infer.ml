@@ -1563,13 +1563,13 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
     (match logical_expr.Parsetree.ast_desc with
      | Parsetree.Pr_forall (vnames, t_expr, pr)
      | Parsetree.Pr_exists (vnames, t_expr, pr) ->
-         Types.begin_definition ();
+         Types.begin_definition () ;
          let ty = typecheck_type_expr ctx env t_expr in
-         Types.end_definition ();
+         Types.end_definition () ;
          (* ATTENTION ! Since the final type does not involves the type of the
-            quantified variables, we must check here is there is a dependency
+            quantified variables, we must check here if there is a dependency
             on "Self" here otherwise we will miss it forever ! *)
-         Types.check_for_decl_dep_on_self ty;
+         Types.check_for_decl_dep_on_self ty ;
          (* Now typecheck the logical_expr's body in the extended environment.*)
          (* Note that as often, the order bindings are inserted in the        *)
          (* environment does not matter since parameters can never depends    *)
@@ -1580,6 +1580,10 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
              (fun accu_env th_name ->
                Env.TypingEnv.add_value ~toplevel: None th_name scheme accu_env)
              env vnames in
+         (* And go on with the body... *)
+         Types.begin_definition () ;
+         let log_expr_ty = typecheck_logical_expr ~in_proof ctx env' pr in
+         Types.end_definition () ;
          (* Fix the type scheme in the [t_expr]. But ATTENTION, generalize the
             scheme ! In effect, the scheme used to put in the environment is
             not generalized (no mu-rule), but the one that must be stored in
@@ -1591,9 +1595,8 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
             generealized and the Coq generation code can't see that it must add
             extra "forall ... : Set,". *)
          let generalized_scheme = Types.generalize ty in
-         t_expr.Parsetree.ast_type <- Parsetree.ANTI_scheme generalized_scheme;
-         (* And go on with the body... *)
-         typecheck_logical_expr ~in_proof ctx env' pr
+         t_expr.Parsetree.ast_type <- Parsetree.ANTI_scheme generalized_scheme ;
+         log_expr_ty
      | Parsetree.Pr_imply (pr1, pr2)
      | Parsetree.Pr_or (pr1, pr2)
      | Parsetree.Pr_and (pr1, pr2)
@@ -1637,7 +1640,7 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
           with err ->
            (begin
             try
-             (* If not bool,try to check if it is typed logical_expr. *)
+             (* If not bool, try to check if it is typed logical_expr. *)
              ignore
                (Types.unify
                   ~loc: logical_expr.Parsetree.ast_loc
@@ -1650,7 +1653,7 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
          Types.type_prop ()
      | Parsetree.Pr_paren pr -> typecheck_logical_expr ~in_proof ctx env pr) in
   logical_expr.Parsetree.ast_type <- Parsetree.ANTI_type final_ty;
-  Types.check_for_decl_dep_on_self final_ty;
+  Types.check_for_decl_dep_on_self final_ty ;
   final_ty
 
 
@@ -1789,7 +1792,7 @@ and typecheck_theorem_def ctx env theorem_def =
      expression to prevent variables from being "unbound".
      We must increase the bindind level because when processing [Pr_forall]
      and [Pr_exists], the function [typecheck_logical_expr] needs to store
-     the scheme of the idents introduced. And since generalisation if done
+     the scheme of the idents introduced. And since generalisation is done
      in [typecheck_logical_expr] with a binding level of + 1 compared to
      our current one, generalization could not be done otherwise. *)
   Types.begin_definition ();
