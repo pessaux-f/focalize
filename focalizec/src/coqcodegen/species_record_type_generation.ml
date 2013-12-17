@@ -1036,7 +1036,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                 identifier bound by a pattern. Then we can safely ignore it. *)
              Env.Unbound_identifier (_, _) -> 0) in
          (* If some extra "_" are needed, then enclose the whole expression
-            between parens (was bug #48). *)
+            between parens (was bug #50). *)
          if nb_polymorphic_args > 0 then Format.fprintf out_fmter "@[<2>(" ;
          generate_expr_ident_for_E_var
            ctx ~in_recursive_let_section_of ~local_idents: loc_idents
