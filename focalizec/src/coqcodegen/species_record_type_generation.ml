@@ -1017,30 +1017,37 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          Format.fprintf out_fmter "=>@ " ;
          rec_generate_expr loc_idents env body ;
          Format.fprintf out_fmter ")@]" ;
-     | Parsetree.E_var ident ->
-         (begin
+     | Parsetree.E_var ident -> (
+         (* Get the number of extra args "_" that will be needed because of
+            polymorphism. *)
+         let nb_polymorphic_args =
+           (try
+             let current_species_name =
+               Some
+                 (Parsetree_utils.name_of_vname
+                    (snd ctx.Context.scc_current_species)) in
+             fst
+               (Env.CoqGenEnv.find_value
+                  ~loc: ident.Parsetree.ast_loc
+                  ~current_unit: ctx.Context.scc_current_unit
+                  ~current_species_name ident env)
+           with
+             (* If the identifier was not found, then it was may be a local
+                identifier bound by a pattern. Then we can safely ignore it. *)
+             Env.Unbound_identifier (_, _) -> 0) in
+         (* If some extra "_" are needed, then enclose the whole expression
+            between parens (was bug #48). *)
+         if nb_polymorphic_args > 0 then Format.fprintf out_fmter "@[<2>(" ;
          generate_expr_ident_for_E_var
            ctx ~in_recursive_let_section_of ~local_idents: loc_idents
            ~self_methods_status ~recursive_methods_status ident ;
          (* Now, add the extra "_"'s if the identifier is polymorphic. *)
-         try
-           let current_species_name =
-             Some
-               (Parsetree_utils.name_of_vname
-                 (snd ctx.Context.scc_current_species)) in
-           let (nb_polymorphic_args, _) =
-             Env.CoqGenEnv.find_value
-               ~loc: ident.Parsetree.ast_loc
-               ~current_unit: ctx.Context.scc_current_unit
-               ~current_species_name ident env in
-           for _i = 0 to nb_polymorphic_args - 1 do
-             Format.fprintf out_fmter "@ _"
-           done
-         with
-           (* If the identifier was not found, then it was may be a local  *)
-           (* identifier bound by a pattern. Then we can safely ignore it. *)
-           Env.Unbound_identifier (_, _) -> ()
-         end)
+         for _i = 0 to nb_polymorphic_args - 1 do
+           Format.fprintf out_fmter "@ _"
+         done ;
+         (* Close the opened parenthesis if one was opened. *)
+         if nb_polymorphic_args > 0 then Format.fprintf out_fmter ")@]"
+         )
      | Parsetree.E_app (func_expr, args) ->
          Format.fprintf out_fmter "@[<2>(" ;
          rec_generate_expr loc_idents env func_expr ;
