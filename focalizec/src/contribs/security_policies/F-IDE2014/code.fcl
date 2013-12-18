@@ -1,0 +1,202 @@
+open "basics";;
+open "sets";;
+open "products";;
+
+
+(** Binary relations *)
+
+
+(** A : domain, B : codomain *)
+species Binary_relations (A is Setoid, B is Setoid) =
+
+  inherit Partial_set;
+
+  logical let is_A_singleton = all a : A, A!equal (a, A!element);
+  logical let is_B_singleton = all b : B, B!equal (b, B!element);
+
+  signature relation : Self -> A -> B -> bool;
+
+  property relation_compatible_left : all r: Self, all a1 a2: A, all b: B,
+    A!equal(a1, a2) -> (relation(r, a1, b) -> relation(r, a2, b));
+
+  property relation_compatible_right : all r: Self, all a: A, all b1 b2: B,
+    B!equal(b1, b2) -> (relation(r, a, b1) -> relation(r, a, b2));
+
+  signature is_contained: Self -> Self -> bool ;
+
+  property is_contained_spec: all r_1 r_2: Self, 
+        is_contained(r_1, r_2) 
+   <->  all a: A, all b: B, 
+         relation(r_1, a, b) -> relation(r_2, a, b);
+
+  let equal(x, y) = is_contained(x, y) && is_contained(y, x) ;
+
+  theorem equal_spec :
+    all r1 r2 : Self,
+    equal (r1, r2) <-> (all a : A, all b : B,
+                       relation (r1, a, b) <-> relation (r2, a, b))
+  proof = by definition of equal property is_contained_spec ;
+
+  proof of equal_reflexive = by property equal_spec;
+  proof of equal_symmetric = by property equal_spec;
+  proof of equal_transitive = by property equal_spec;
+
+  signature empty : unit -> Self;
+ 
+  logical let is_internal_empty = true;
+
+  property empty_spec :
+    is_internal_empty ->
+      all a : A, all b : B, ~ relation (empty (()), a, b);
+
+  signature full : unit -> Self;
+  logical let is_internal_full = true;
+
+  property full_spec :
+      is_internal_full ->
+      all a : A, all b : B, relation (full (()), a, b);
+
+  signature singleton : A -> B -> Self;
+  logical let is_internal_singleton (_a : A, _b : B) = true;
+
+
+  property singleton_spec :
+    all a1 : A, all b1 : B,
+    is_internal_singleton(a1, b1) ->
+      all a2 : A, all b2 : B,
+      relation (singleton (a1, b1), a2, b2) <->
+      ( A!equal (a1, a2) && B!equal (b1, b2) );
+
+  signature union : Self -> Self -> Self;
+
+  logical let is_internal_union (_r1 : Self, _r2 : Self) = true;
+
+  property union_spec :
+    all r1 r2 : Self,
+    is_internal_union(r1, r2) ->
+      all a : A, all b : B,
+      relation (union (r1, r2), a, b) <->
+      ( relation (r1, a, b) \/ relation (r2, a, b) );
+
+  signature inter : Self -> Self -> Self;
+  logical let is_internal_inter (_r1 : Self, _r2 : Self) = true;
+
+  property inter_spec :
+    all r1 r2 : Self,
+    is_internal_inter(r1, r2) ->
+      all a : A, all b : B,
+      relation (inter (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ relation (r2, a, b) );
+
+  signature diff : Self -> Self -> Self;
+  logical let is_internal_diff (_r1 : Self, _r2 : Self) = true;
+
+  property diff_spec :
+    all r1 r2 : Self,
+    is_internal_diff (r1, r2) ->
+      all a : A, all b : B,
+      relation (diff (r1, r2), a, b) <->
+      ( relation (r1, a, b) /\ ~ relation (r2, a, b) );
+
+(** Properties over relations *)
+
+  logical let is_left_unique (r) =
+    all a1 a2 : A, all b : B,
+    ( relation (r, a1, b) /\ relation (r, a2, b) ) -> A!equal (a1, a2);
+
+  theorem is_left_unique_spec : all r: Self, 
+   (all a1 a2 : A, all b : B,
+     ( relation (r, a1, b) /\ relation (r, a2, b) ) -> A!equal (a1, a2))
+   <-> is_left_unique (r)
+  proof = by definition of is_left_unique;
+
+  logical let is_right_unique (r) =
+    all a : A, all b1 b2 : B,
+    ( relation (r, a, b1) /\ relation (r, a, b2) ) -> B!equal (b1, b2);
+
+  theorem is_right_unique_spec : all r: Self,
+    (all a : A, all b1 b2 : B,
+      ( relation (r, a, b1) /\ relation (r, a, b2) ) -> B!equal (b1, b2))
+    <-> is_right_unique (r)
+  proof = by definition of is_right_unique;
+ 
+  logical let is_left_total (r) =
+    all a : A, ex b : B, relation (r, a, b);
+
+ theorem is_left_total_spec : all r: Self,
+    (all a : A, ex b : B, relation (r, a, b))
+    <-> is_left_total(r)
+  proof = by definition of is_left_total;
+
+  logical let is_right_total (r) =
+    all b : B, ex a : A, relation (r, a, b);
+
+  theorem is_right_total_spec : all r: Self,
+    (all b : B, ex a : A, relation (r, a, b))
+    <-> is_right_total(r)
+  proof = by definition of is_right_total;
+
+end;;
+
+species Injective_relations (A is Setoid, B is Setoid) =
+
+  inherit Binary_relations (A, B);
+
+  property left_unique : all r : Self, is_left_unique (r);
+
+  logical let is_internal_union(r1, r2) =
+    all a1 a2 : A, all b : B,
+    ( relation (r1, a1, b) /\ relation (r2, a2, b) ) -> A!equal (a1, a2) ;
+
+  theorem  left_unique_union :
+    all r1 r2 : Self,
+    is_internal_union (r1, r2) -> is_left_unique (union (r1, r2))
+  proof = by definition of is_internal_union, is_left_unique
+             property union_spec, left_unique;
+
+end;;
+
+
+
+
+species Internal_binary_relations(A is Setoid)=
+  
+  inherit Binary_relations(A, A);
+
+  (* TODO : les autres proprietes, antisymetric, symetric, order,equivalence,preorder  *)
+
+
+  logical let is_reflexive(r: Self) = 
+     all x: A, relation(r, x, x);
+
+  theorem is_reflexive_spec : all r: Self,
+     (all x: A, relation(r, x, x)) <-> is_reflexive(r)
+  proof = by definition of is_reflexive ;
+
+  logical let is_transitive(r: Self) = 
+     all x y z : A, (relation(r, x, y) /\ relation(r, y, z))
+       -> relation(r, x, z) ;  
+
+  theorem is_transitive_spec : all r: Self,
+    (all x y z : A, (relation(r, x, y) /\ relation(r, y, z))
+       -> relation(r, x, z))
+    <-> is_transitive(r)
+  proof = by definition of is_transitive ;
+  
+(* TODO : composition + proprietes sur la composition *)
+(* signature + spec de produit et inverse + theorem R symetrique ssi R.inverse(R) = R *)
+(* relation identite a rajouter en haut + theorem refleflive ssi elle contient l identite *)
+ 
+end;;
+
+(****
+pour l'implem : 
+species relations_finies inheriths relation et finitepart puis species relationfiiesbylist 
+inherits relationsfinies
+
+donner le produit et l'inverse
+
++ def de l'espece des applications avec signature f:a->B et def de relation a partir de f + preuve 
+de isdetermist
+
+***)
