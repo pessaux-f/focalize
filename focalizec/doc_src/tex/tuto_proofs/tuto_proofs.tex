@@ -10,7 +10,7 @@
   \url{francois.pessaux@ensta-paristech.fr}}
 \title{Another Tutorial for {F}o{C}a{L}ize:\\
   Playing with Proofs}
-\date{January 2013}
+\date{December 2013}
 
 \begin{document}
 
@@ -205,7 +205,7 @@ Invoking coqc...
 \end{verbatim}}
 
 Now we suffered enough, splitting the proof of this theorem in several
-parts and learnt the \lstinline{by definition of} fact, let's just
+parts and learned the \lstinline{by definition of} fact, let's just
 discover that all the intermediate steps we did, dealing with {\em basic
 logic combinations} \ldots could again be automatically done by
 \zenon\ and that, only telling it that it should use the definition of
@@ -396,7 +396,7 @@ and manipulate the induction principle.
 
 \medskip
 We can also show that mutual exclusion of value constructors are
-native for \zenon: let prove that if a value of type
+native for \zenon: let's prove that if a value of type
 \lstinline"signal_t" is equal to \lstinline"Red", then it is different
 of \lstinline"Green". This can appear more than obvious, such a
 property, often used while reasoning by cases, requires some
@@ -427,7 +427,78 @@ states that a proof needs to know about the constructors of a
 type. Hence, that's not because a ``one shot proof'' failed that the
 fact \lstinline"by type ..." will not be needed.
 
-In the following, we propose do prove that given a structure of binary
+\subsubsection{Simple example}
+We first start with a simple theorem stating that a function \lstinline"zero"
+defined recursively always return 0. We try to directly ask \zenon\ to apply
+the induction principle to solve the goal:
+
+{\scriptsize
+\lstinputlisting[numbers=left,caption=zero.fcl (1)]{zero1.fcl}}
+
+\noindent and see that the proof failed:
+{\scriptsize
+\begin{verbatim}
+Invoking ocamlc...
+>> ocamlc -I /usr/local/lib/focalize -c zero.ml
+Invoking zvtov...
+>> zvtov -zenon zenon -new zero.zv
+File "zero.fcl", line 12, characters 8-42:                     
+Zenon error: could not find a proof within the memory size limit
+### proof failed
+\end{verbatim}}
+
+We now need to split the proof in 3 steps: one for the base case, one
+for the inductive case, and the final \lstinline"qed" combining the
+two former. As usually, we leave the difficult part (the induction
+case) initially \lstinline"assumed" to ensure that our idea of the
+proof passes with \zenon.  We only really prove the base case since it
+is very simple and only depends on the definition of the function
+\lstinline"zero" and the type \lstinline"peano_t".
+
+{\scriptsize
+\lstinputlisting[numbers=left,caption=zero.fcl (2)]{zero2.fcl}}
+
+The proof is now found. {\bf The most important point to understand is that
+\zenon\ could apply the induction principle in step \lstinline"<1>3"
+because it has two steps of the form:
+\begin{itemize}
+\item P (base case)
+\item all $y$ : t, P ($y$) $->$ P (inductive case using $y$)
+\end{itemize}
+}
+
+Our property being \lstinline"zero (...) = 0", the step \lstinline"<1>1"
+is the base case: \lstinline"zero (Z) = 0" and the step \lstinline"<1>2"
+is the induction case:
+\lstinline"all y : peano_t, zero (y) = 0 -> zero (S (y)) = 0".
+
+We can now end the proof by really proving the step \lstinline"<1>2". We
+first introduce \lstinline"y" and the induction hypothesis \lstinline"inH"
+in the context, then we must prove \lstinline"zero (S (y)) = 0". This last
+goal is simply a consequence of the induction hypothesis, the definition of
+the function \lstinline"zero" and the definition of the type
+\lstinline"peano_t". Note that in this step, the type \lstinline"peano_t"
+is not used for induction: \zenon\ only needs it to know the constructor
+\lstinline"S".
+
+{\scriptsize
+\lstinputlisting[numbers=left,caption=zero.fcl (3)]{zero3.fcl}}
+
+The proof is now complete and the compilation is a success:
+
+{\scriptsize
+\begin{verbatim}
+Invoking ocamlc...
+>> ocamlc -I /usr/local/lib/focalize -c zero.ml
+Invoking zvtov...
+>> zvtov -zenon zenon -new  -script zero.zv
+Invoking coqc...                                                
+>> coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon zero.v
+\end{verbatim}}
+
+
+\subsubsection{More complex example}
+In this next example, we propose to prove that given a structure of binary
 tree, mirroring it twice is the identity (result tree is the same than
 initial tree. We first define the tree structure, the mirror function
 and state our property asking \zenon\ to prove it itself.
@@ -449,11 +520,10 @@ Zenon error: could not find a proof within the memory size limit
 ### proof failed
 \end{verbatim}}
 
-We now need to split the proof in 3 steps: one for the base case, one
-for the inductive case, and the final \lstinline"qed" combining the
-two formers. As usually, we leave the difficult part (the induction
-case) initially \lstinline"assumed" to ensure that our idea of the
-proof passes with \zenon.  We only really prove the base case since it
+As in the previous example, we need to split the proof in 3 steps: one for the
+base case, one for the inductive case, and the final \lstinline"qed" combining
+the two former. We postpone the difficult part (the induction case) for later
+and mark it \lstinline"assumed". We however prove the base case since it
 is very simple and only depends on the definition of the function
 \lstinline"mirror" and the type \lstinline"bintree_t". Note that for
 the induction case, we however state the induction hypotheses (\lstinline"ir1"
@@ -520,7 +590,7 @@ to conclude the goal.
 
 In both intermediate steps \lstinline"<2>1" and \lstinline"<2>2" the
 goal is the same than the global one: we did not yet split it, changed
-it by any refinement. However, we introduced 2 differents (and
+it by any refinement. However, we introduced 2 different (and
 complementary) hypotheses.
 Having in mind that having covered cases $x > y$
 and  $x \le y$ we covered all the cases of integers, we run the
@@ -687,7 +757,7 @@ previous case, to demonstrate that $y \ge x$
 \lstinline"by property int_le_ge_swap hypothesis h2".
 
 \medskip
-We finally show the new form of the proof, skiping the ({\em a priori}
+We finally show the new form of the proof, skipping the ({\em a priori}
 obvious) proof that {\tt abs\_diff (x, y) = y - x}. Although it seems
 it is only a consequence of the definition of \lstinline{abs_diff}, we
 will see later that it requires something more.
