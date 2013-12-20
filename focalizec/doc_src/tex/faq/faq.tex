@@ -1,0 +1,318 @@
+\documentclass[10pt,a4paper]{article}
+% No page numbers.
+\renewcommand\thepage{}
+
+\input{macros}
+
+
+\begin{document}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\noindent {\bf $\bullet$ Q:}
+\begin{adjustwidth}{2em}{0em}
+I get the error message:\\
+  \verb+Error: The reference basics.int__t was not found in the current+\\
+  \verb+environment+\\
+when \coq\ compiles.
+\end{adjustwidth}
+
+%%%%%%%%%%%%%%%
+\medskip
+\noindent {\bf $\bullet$ A:}
+\begin{adjustwidth}{2em}{0em}
+You probably forgot to open the module {\tt basics} in you \focal\ program.
+Add the directive \lstinline{open "basics" ;;} at the top of your source
+ file.
+ \end{adjustwidth}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bigskip
+\noindent {\bf $\bullet$ Q:}
+\begin{adjustwidth}{2em}{0em}
+I get the error message:\\
+  \verb+Error: Types Self and ... are not compatible.+\\
+when \focalizec\ compiles.
+\end{adjustwidth}
+
+%%%%%%%%%%%%%%%
+\medskip
+\noindent {\bf $\bullet$ A:}
+\begin{adjustwidth}{2em}{0em}
+You probably have created a def-dedendency on the
+representation in the statement of a property or a theorem, like in:
+{\small
+\begin{lstlisting}
+species Bug =
+  representation = int ;
+  property wrong : all x : Self, x = x + 0 ;
+end ;;
+\end{lstlisting}}
+
+
+This statement reveals that the representation is indeed {\tt int} since to
+have \lstinline"x + 0" well-typed, {\tt Self} must exactly be {\tt int}. This
+makes the interface of the species impossible to be typed as a collection
+since the representation will be abstracted. You may need to add extra methods
+hidding the dependency on representation.
+\end{adjustwidth}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bigskip
+\noindent {\bf $\bullet$ Q:}
+\begin{adjustwidth}{2em}{0em}
+How to I make a function taking a tuple in argument ?
+\end{adjustwidth}
+
+%%%%%%%%%%%%%%%
+\medskip
+\noindent {\bf $\bullet$ A:}
+\begin{adjustwidth}{2em}{0em}
+\lstinline"let f ( (x, y) ) = ... ;;"
+\end{adjustwidth}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bigskip
+\noindent {\bf $\bullet$ Q:}
+\begin{adjustwidth}{2em}{0em}
+How to I make a function taking {\tt unit} in argument ?
+\end{adjustwidth}
+
+%%%%%%%%%%%%%%%
+\medskip
+\noindent {\bf $\bullet$ A:}
+\begin{adjustwidth}{2em}{0em}
+\lstinline"let f (_x : unit) = ... ;;"
+\end{adjustwidth}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bigskip
+\noindent {\bf $\bullet$ Q:}
+\begin{adjustwidth}{2em}{0em}
+What is the difference between a constructor having several
+arguments and a constructor having one argument being a tuple ?
+\end{adjustwidth}
+
+%%%%%%%%%%%%%%%
+\medskip
+\noindent {\bf $\bullet$ A:}
+\begin{adjustwidth}{2em}{0em}
+A constructor with one argument being a tuple is defined using the ``tupling''
+type constructor \lstinline{*}:
+{\small
+\begin{lstlisting}
+type with_1_tuple_arg = 
+  | A (int * bool * string) ;;   (* Note the stars. *)
+\end{lstlisting}}
+
+A valid usage of this construtor is:
+{\small
+\begin{lstlisting}
+let ok = A ( (1, false, "") ) ;;
+\end{lstlisting}}
+
+\noindent where it is important to note the double parentheses. This
+constructor has 1 argument that is a tuple. The syntax for constructors with
+arguments already requires parentheses, that's the reason for these double
+parentheses.
+
+Trying to use this constructor as:
+
+{\small
+\begin{lstlisting}
+let ko = A (1, false, "") ;;
+\end{lstlisting}}
+
+\noindent would lead to an error telling that types {\tt int * bool * string}
+and {\tt int} are not compatible. In effect in this case, {\tt A} is
+considered to be applied to several arguments, the first one being {\tt 1}
+that is of type {\tt int}. And {\tt int} is really incompatible with a tuple
+type.
+
+A similar constructor with several separate arguments is defined using
+the ``comma'' construct:
+
+{\small
+\begin{lstlisting}
+type with_several_args =
+  | B (int, bool, string) ;;   (* Note the comas. *)
+\end{lstlisting}}
+
+A valid usage of this construtor is:
+{\small
+\begin{lstlisting}
+let ok = B (1, false, "") ;;
+\end{lstlisting}}
+
+\noindent where it is important to note the unique pair of parentheses. This
+constructor has 3 arguments.
+
+Trying to use this constructor as:
+
+{\small
+\begin{lstlisting}
+let ko = B ( (1, false, "") ) ;;
+\end{lstlisting}}
+
+\noindent would lead to an error telling that types {\tt int} and
+{\tt int * bool * string} are not compatible. In effect, we try to pass to
+{\tt B} one unique argument that is a tuple. And a tuple is incompatible with
+the first expected argument of {\tt B}, that is {\tt int}.
+\end{adjustwidth}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bigskip
+\noindent {\bf $\bullet$ Q:}
+\begin{adjustwidth}{2em}{0em}
+I get a syntax error on a sum type definition or a pattern-matching.
+\end{adjustwidth}
+
+%%%%%%%%%%%%%%%
+\medskip
+\noindent {\bf $\bullet$ A:}
+\begin{adjustwidth}{2em}{0em}
+Beware that conversely to \ocaml, the first bar is not optional in \focal.
+
+\begin{minipage}{6.2cm}
+Wrong
+{\small
+\begin{lstlisting}
+type t =
+    Z
+  | S (t) ;;
+
+match x with
+    Z -> ...
+  | S (y) ...
+\end{lstlisting}}
+\end{minipage}\hskip1cm
+\begin{minipage}{6.2cm}
+Correct
+{\small
+\begin{lstlisting}
+type t =
+  | Z
+  | S (t) ;;
+
+match x with
+  | Z -> ...
+  | S (y) ...
+\end{lstlisting}}
+\end{minipage}
+\end{adjustwidth}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bigskip
+\noindent {\bf $\bullet$ Q:}
+\begin{adjustwidth}{2em}{0em}
+I get the error message:\\
+  \verb+Zenon error: uncaught exception File "coqterm.ml", line +\\
+  \verb+325, characters 6-12: Assertion failed+
+\end{adjustwidth}
+
+%%%%%%%%%%%%%%%
+\medskip
+\noindent {\bf $\bullet$ A:}
+\begin{adjustwidth}{2em}{0em}
+This is a current issue in \zenon. Compile your program
+adding the option \verb+-zvtovopt -script+ to \focalizec. This asks
+\zenon\ to output proofs as a \coq\ script instead of a \coq\ term. This should
+be fixed in the future.
+\end{adjustwidth}
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\bigskip
+\noindent {\bf $\bullet$ Q:}
+\begin{adjustwidth}{2em}{0em}
+I get the error message:\\
+  \verb+Error: Types coq_builtins#prop and basics#bool are not compatible.+
+\end{adjustwidth}
+
+%%%%%%%%%%%%%%%
+\medskip
+\noindent {\bf $\bullet$ A:}
+\begin{adjustwidth}{2em}{0em}
+You confused the ``not'' operators \lstinline"~" and \lstinline"~~" or
+probably used a \lstinline"logical let" definition in a \lstinline"let"
+definition like in the following example.
+
+{\small
+\begin{lstlisting}
+species Bug =
+  logical let not0 (x) = ~~ (x = 0) ;
+  let g (y) = if not0 (y) then ... else ... ;
+end ;;
+\end{lstlisting}}
+
+\lstinline"logical let" are definitions whose result type is {\tt prop}, i.e.
+the type of logical {\bf statement}. They are intended to be used in theorems
+or properties and are discarded in \ocaml\ code since this latter doesn't
+deal with logical/proof aspects. The type of logical {\bf expressions} is
+{\tt bool} and is automatically transformed into {\tt prop} in the context
+of logical statements of theorems or properties. However, in the context of
+computational definitions, {\tt prop} is always rejected. In the above example,
+you may have defined the {\em computational} function {\tt not0} by:
+
+{\small
+\begin{lstlisting}
+species Bug =
+  let not0 (x) = ~ (x = 0) ;
+  let g (y) = if not0 (y) then ... else ... ;
+end ;;
+\end{lstlisting}}
+
+\noindent where \lstinline"~" is the ``not'' on booleans, whereas
+\lstinline"~~" is the ``not'' on logical propositions.
+\end{adjustwidth}
+\end{document}
+
+
+(*
+* Attention, ordre des assumes important.
+* Attention, ne pas couper le ET en 2 hypothèses séparées directement.
+
+  theorem set_makes_on2:
+    all state1 state2 : Self, all y : bool,
+    (y = true /\ state2 = my_snd (one_step (state1, y))) -> is_on (state2)
+  proof =
+   <1>1 assume state1 state2 : Self,
+        assume y : bool,
+        hypothesis h1: (y = true /\ state2 = my_snd (one_step (state1, y))),
+        prove is_on (state2)
+        <2>1 prove state2 = my_snd (one_step (state1, y))
+             by hypothesis h1
+        <2>2 prove y = true
+             by hypothesis h1
+        <2>e qed by definition of one_step, is_on, my_snd
+                 property AA!set_makes_on
+                 step <2>1, <2>2 hypothesis h1
+   <1>e conclude ;
+
+*)
+
+
+
+
+
+
+
+
+
+
+* Forme des buts pour l'induction de Zenon.
+
+
+* Tuples et patterns imbriqués pas encore gérés par Zenon --> les éclater.
