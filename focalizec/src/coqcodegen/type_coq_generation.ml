@@ -118,6 +118,8 @@ let extend_coq_gen_env_with_type_external_mapping env nb_extra_args
     this type and on which we depend to make proofs, constructors WILL be
     qualified. Not qualifying constructors in the "fake" definition for Zenon
     would prevent ot from finding proofs.
+    ATTENTION: constructors must be qualified without the "filesystem-path"
+    of their hosting file (was bug #19).
 
     {b Exported} : Yes.                                                      *)
 (* ************************************************************************* *)
@@ -223,14 +225,15 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
        Format.fprintf out_fmter ":@ Set :=@ ";
        (* Qualify constructor if we are printing a fact for Zenon and the
           location where we generate it is not in the compilation unit
-          hosting the type definition. *)
+          hosting the type definition. Drop the file-system full path (was
+          bug #19). *)
        let tydef_comp_unit =
          Filename.chop_extension
-           (type_descr.Env.TypeInformation.type_loc.Location.
-              l_beg.Location.pos_fname) in
+           (Filename.basename
+              (type_descr.Env.TypeInformation.type_loc.Location.
+                 l_beg.Location.pos_fname)) in
        let qualif =
-         if ctx.Context.rcc_current_unit <> tydef_comp_unit &&
-            as_zenon_fact
+         if ctx.Context.rcc_current_unit <> tydef_comp_unit && as_zenon_fact
          then tydef_comp_unit ^ "."
          else "" in
        (* And finally really print the constructors definitions. *)

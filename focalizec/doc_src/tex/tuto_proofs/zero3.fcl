@@ -1,0 +1,22 @@
+open "basics" ;;
+
+type peano_t = | Z | S (peano_t) ;;
+
+let rec zero (x) =
+ match x with
+ | Z -> 0
+ | S (y) -> zero (y)
+termination proof = structural x ;;
+
+theorem always_0: all x : peano_t, zero (x) = 0
+proof =
+  <1>1 prove zero (Z) = 0
+       by definition of zero type peano_t
+  <1>2 prove all y : peano_t, zero (y) = 0 -> zero (S (y)) = 0
+       <2>1 assume y : peano_t,
+            hypothesis indH: zero (y) = 0,
+            prove zero (S (y)) = 0
+            by hypothesis indH definition of zero type peano_t
+       <2>2 qed by step <2>1
+  <1>3 qed by step <1>1, <1>2 type peano_t
+;;
