@@ -244,9 +244,9 @@ species Internal_binary_relations(A is Setoid)=
   proof = by definition of is_symmetric;
 
   logical let is_antisymmetric(r: Self) =
-     all x y : A, relation(r, x, y) -> ~ relation(r, y, x);
+     all x y : A, ( relation(r, x, y) /\ relation(r, y, x) ) -> A!equal(x, y);
   theorem is_antisymmetric_spec : all r: Self,
-     ( all x y : A, relation(r, x, y) -> ~ relation(r, y, x) )
+   ( all x y : A, ( relation(r, x, y) /\ relation(r, y, x) ) -> A!equal(x, y) )
        <-> is_antisymmetric(r)
   proof = by definition of is_antisymmetric;
 
