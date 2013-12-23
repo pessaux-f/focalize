@@ -58,11 +58,11 @@ let main () =
        "\n\
      <file> Specify the name of the output file.") ;
       ("-version",
-       Arg.Unit Configuration.print_focalize_full_version,
+       Arg.Unit Build_configuration.print_focalize_full_version,
        "\n\
      Prints the full focalize version, sub-version and release date, then exit.") ;
       ("-where",
-       Arg.Unit Configuration.print_install_dirs,
+       Arg.Unit Build_configuration.print_install_dirs,
        "\n\
      Prints the binaries and libraries installation directories then exit.")
      ]

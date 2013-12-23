@@ -1023,9 +1023,9 @@ let get_type_kind tk =
 ;;
 
 (* Initialize the environnement *)
-let focalize_init m =
+let focalize_init install_lib_dir m =
   set_module m;
-  Files.add_lib_path Installation.install_lib_dir;
+  Files.add_lib_path install_lib_dir;
   ignore (open_module_cumul m)
 ;;
 

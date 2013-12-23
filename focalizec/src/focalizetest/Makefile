@@ -28,7 +28,6 @@ LOCAL_BYT_OBJS=\
  own_prolog.cmo print_prolog.cmo test_prolog.cmo\
  to_prolog.cmo species_harness.cmo test_prop.cmo run.cmo
 
-# Must be defined before including Makefile.common since is used by it.
 BYT_OBJS =\
  ../basement/build_stamp.cmo\
  ../basement/installation.cmo\

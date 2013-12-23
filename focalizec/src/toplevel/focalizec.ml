@@ -334,11 +334,11 @@ let main () =
       ("-v", Arg.Unit Configuration.print_focalize_short_version,
        "  Print the focalize version then exit.");
       ("-version",
-       Arg.Unit Configuration.print_focalize_full_version,
+       Arg.Unit Build_configuration.print_focalize_full_version,
        "  Print the full focalize version, sub-version and release date, then\n\
      \    exit.");
        ("-where",
-        Arg.Unit Configuration.print_install_dirs,
+        Arg.Unit Build_configuration.print_install_dirs,
         "  Print the binaries and libraries installation directories then \
            exit.");
        ("-zvtovopt",

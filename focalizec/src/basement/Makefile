@@ -16,9 +16,9 @@
 
 ROOT_DIR=../../..
 
-# Must be defined before including Makefile.common since is used by it.
 BYT_OBJS=\
- build_stamp.cmo installation.cmo configuration.cmo handy.cmo\
+ build_stamp.cmo installation.cmo configuration.cmo build_configuration.cmo\
+ handy.cmo\
  location.cmo anti_keyword_conflict.cmo types.cmo\
  files.cmo parsetree_utils.cmo miscHelpers.cmo
 

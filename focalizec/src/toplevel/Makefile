@@ -21,6 +21,7 @@ BYT_OBJS =\
  ../basement/build_stamp.cmo\
  ../basement/installation.cmo\
  ../basement/configuration.cmo\
+ ../basement/build_configuration.cmo\
  ../basement/handy.cmo\
  ../basement/location.cmo\
  ../basement/anti_keyword_conflict.cmo\
