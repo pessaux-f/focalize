@@ -1,0 +1,487 @@
+(* copy from lib ; do not modify *)
+open "basics";;
+open "sets";;
+open "listes";;
+
+species Finite_set(L is List_util(Self)) =
+
+  inherit Setoid;
+
+  (** Number of members of the species *)
+  signature cardinal : int;
+
+  (** All the members of the species. *)
+  signature all_to_list : list (Self);
+
+(*  property all_in_all_to_list :           *)                 
+(*     all x : Self, L!belongs (x, all_to_list); *)             
+(* BUG :                                                     *)
+(* File "finite_sets_f.fcl", line 16, characters 19-45:      *)
+(* Error: Types Self and finite_sets_f#L are not compatible. *)
+
+
+end;;
+
+species Finite_parts(S is Setoid) =
+
+  inherit Setoid ;
+
+  signature cardinal: Self -> int;
+  signature empty : Self;
+  signature is_empty : Self -> bool;
+  signature add : Self -> S -> Self;
+  signature belongs: S -> Self -> bool;
+  signature release : Self -> S -> Self;
+  signature to_list : Self -> list(S) ;
+  (* Not possible to specify to_list without specification of lists *)
+
+  signature is_contained : Self -> Self -> bool;
+
+(*
+  property inductive_scheme_part: all p: (Self -> prop),
+      p(empty) 
+   -> (all s: S, all x:Self, p(x) -> p(add(x, s)))
+   -> all x: Self, p(x); 
+*)
+
+  property empty_spec :
+    all t: S, ~ belongs(t, empty);
+
+  property is_empty_empty : 
+     is_empty (empty); 
+
+  property add_spec :
+    all x : Self, all t_1 t_2 : S,
+    belongs(t_1, add (x, t_2)) <->
+      (S!equal(t_1, t_2) \/ belongs(t_1, x));
+
+  theorem add_contains1: 
+    all c: Self, all e : S, belongs (e, (add (c, e))) 
+    proof = by property add_spec, S!equal_reflexive;
+  
+  theorem add_contains2: 
+    all c: Self, all e : S, all x : S, ~ (S!equal(e, x)) -> 
+       (belongs (x, (add (c, e))) <-> belongs (x, c))
+  proof = by property add_spec, S!equal_symmetric ;
+
+  property release_spec :
+    all x : Self, all t_1 t_2 : S,
+    belongs(t_1, release(x, t_2)) <-> (S!different (t_1, t_2) /\ belongs(t_1, x));
+
+  theorem release_contains: 
+    all c: Self, all e : S, all x : S, ~~(S!equal (e, x)) -> 
+       (belongs (x, (release (c, e))) <-> belongs (x, c))
+   proof = by property S!same_is_not_different, S!equal_symmetric, release_spec;
+
+  property is_contained_spec :
+    all x y : Self,
+    is_contained (x, y) <-> ( all t : S,
+                              belongs(t, x) -> belongs(t, y) );
+
+  theorem is_contained_reflexive : all x : Self, is_contained (x, x)
+  proof = by property is_contained_spec;
+
+  theorem is_contained_transitive :
+    all x y z : Self,
+    (is_contained (x, y) /\ is_contained (y, z)) -> is_contained (x, z)
+  proof = by property is_contained_spec;
+
+  let equal(x, y) = is_contained(x, y) && is_contained(y, x);
+
+  proof of equal_reflexive = by definition of equal 
+                                property is_contained_reflexive;
+  proof of equal_transitive = by definition of equal  
+                                property is_contained_transitive;
+  proof of equal_symmetric = by definition of equal;
+
+
+  theorem belongs_right_substitution_rule: all s: S, all l_1 l_2: Self, 
+     equal(l_1, l_2) -> belongs(s, l_1) -> belongs(s, l_2) 
+  proof = by definition of equal 
+             property  is_contained_spec ; 
+
+  property belongs_left_substitution_rule: all s_1 s_2: S, all r: Self,
+       S!equal(s_1, s_2) -> belongs(s_1, r) -> belongs(s_2, r);
+
+
+(* should become provable with a specification of to_list *)
+(*  property to_list_empty : 
+    all l : Self, is_empty(l) <-> to_list(l) = []
+; 
+*)
+
+  theorem unique_belongs : all c : Self, all e : S, 
+   ~~ (belongs (e, release (c, e))) 
+    proof = by property S!same_is_not_different, S!equal_reflexive, release_spec;
+
+end;;
+
+
+species Finite_parts_by_lists(S is Setoid, L is List_util(S)) =
+
+  inherit Finite_parts(S);
+
+  representation = list(S);
+
+  let empty = [];
+
+  let element = empty;
+
+  let belongs(s, e) = L!belongs(s, e);
+
+  proof of empty_spec = by definition of empty, belongs 
+                        property L!belongs_empty_spec
+  ;
+
+  let add(e, s) =
+    if belongs(s, e)
+    then e
+    else s::e;
+
+  proof of belongs_left_substitution_rule = 
+   <1>1 prove all s_1 s_2 : S, all l : list(S),
+         S!equal(s_1, s_2) -> belongs(s_1, l) -> belongs(s_2, l)
+    <2>1 prove all s_1 s_2 : S, 
+           S!equal(s_1, s_2) -> belongs(s_1, []) -> belongs(s_2, [])
+         by property L!belongs_empty_spec definition of belongs
+    <2>2 prove all s_1 s_2 h : S, all t : list(S),
+             (S!equal(s_1, s_2) -> belongs(s_1, t) -> belongs(s_2, t))
+           ->
+             (S!equal(s_1, s_2) -> belongs(s_1, h::t) -> belongs(s_2, h::t))
+     <3>1 assume s_1 s_2 : S,
+          hypothesis H : S!equal(s_1, s_2),
+          prove all h : S, all t : list(S),
+            (belongs(s_1, t) -> belongs(s_2, t))
+         -> (belongs(s_1, h::t) -> belongs(s_2, h::t))
+      <4>1 assume h : S, assume t : list(S),
+           hypothesis H1 : belongs(s_1, t) -> belongs(s_2, t),
+           hypothesis H2 : belongs(s_1, h::t),
+           prove belongs(s_2, h::t)
+       <5>1 prove L!belongs(s_1, t) -> L!belongs(s_2, t)
+            by hypothesis H1 definition of belongs
+       <5>2 prove L!belongs(s_1, h::t)
+            by hypothesis H2 definition of belongs
+       <5>3 prove L!belongs(s_2, h::t)
+        <6>1 hypothesis HH1 : ~~ S!equal(h, s_2),
+             prove L!belongs(s_2, t)
+         <7>1 prove ~~ S!equal(s_1, h)
+              by hypothesis HH1, H
+                 property S!equal_transitive, S!equal_symmetric
+         <7>2 prove L!belongs(s_1, t)
+              by property L!belongs_spec, S!equal_symmetric step <7>1, <5>2
+         <7>f qed by step <7>1, <7>2, <5>1
+        <6>f qed by step <6>1 property L!belongs_spec
+       <5>f qed by step <5>3 definition of belongs
+      <4>f conclude
+     <3>f conclude
+    <2>f conclude
+   <1>f conclude 
+  ;
+
+  let rec cardinal(e) = match e with
+  | [] -> 0
+  | _ ::t -> 1 + cardinal(t)
+  termination proof = structural e
+  ;
+
+
+  proof of add_spec =
+   <1>1 assume s: Self, assume e1 e2: S,
+        hypothesis H: belongs(e1, add (s, e2)),
+        prove S!equal(e1, e2) \/ belongs(e1, s)
+    <2>1 hypothesis H1: belongs(e2, s),
+         prove S!equal(e1, e2) \/ belongs(e1, s)
+     <3>1 prove s = add(s, e2)
+          by definition of add hypothesis H1
+     <3>2 prove belongs(e1, s)
+          by step <3>1 hypothesis H
+     <3>f conclude
+    <2>2 hypothesis H2: ~ belongs(e2, s),
+         prove S!equal(e1, e2) \/ belongs(e1, s)
+     <3>1 prove add(s, e2) = e2::s
+          by definition of add hypothesis H2
+     <3>2 prove belongs(e1, e2::s)
+          by step <3>1 hypothesis H
+     <3>3 prove S!equal(e1, e2) \/ belongs(e1, s)
+          by step <3>2 definition of belongs
+             property L!belongs_spec, S!equal_symmetric
+     <3>f qed by step <3>3
+    <2>f conclude
+
+   <1>2 assume s: Self, assume e1 e2: S,
+        hypothesis H: S!equal(e1, e2),
+        prove belongs(e1, add(s, e2))
+    <2>1 hypothesis H1: belongs(e2, s),
+         prove belongs(e1, add(s, e2))
+     <3>1 prove s = add(s, e2)
+          by definition of add hypothesis H1
+     <3>2 prove belongs(e1, s)
+          by property belongs_left_substitution_rule, S!equal_symmetric
+             hypothesis H, H1
+     <3>f conclude
+    <2>2 hypothesis H2: ~ belongs(e2, s),
+         prove belongs(e1, add(s, e2))
+     <3>1 prove add(s, e2) = e2::s
+          by definition of add hypothesis H2
+     <3>2 prove belongs(e1, e2::s)
+          by definition of belongs property L!belongs_spec, S!equal_symmetric
+             hypothesis H
+     <3>f conclude
+    <2>f conclude
+
+   <1>3 assume s: Self, assume e1 e2: S,
+        hypothesis H: belongs(e1, s),
+        prove belongs(e1, add(s, e2))
+    <2>1 hypothesis H1: belongs(e2, s),
+         prove belongs(e1, add(s, e2))
+     <3>1 prove s = add(s, e2)
+          by definition of add hypothesis H1
+     <3>2 prove belongs(e1, s)
+          by hypothesis H
+     <3>f conclude
+    <2>2 hypothesis H2: ~ belongs(e2, s),
+         prove belongs(e1, add(s, e2))
+     <3>1 prove add(s, e2) = e2::s
+          by definition of add hypothesis H2
+     <3>2 prove belongs(e1, e2::s)
+          by definition of belongs property L!belongs_spec
+             hypothesis H
+     <3>f conclude
+    <2>f conclude
+
+   <1>f conclude
+   ;
+
+(* First version (not provable without induction schemes) 
+  let rec release(e, s) = match e with
+  | [] -> []
+  | h::t -> 
+    if S!equal(s, h)
+    then t
+    else h::release(t, s)
+  termination proof = structural e    
+  ;
+*)
+
+(* We DO NOT assume here that each element has at most one occurrence in a list representing a finite part *)
+
+  let rec release(e, s) = match e with
+  | [] -> []
+  | h::t -> 
+    if S!equal(s, h)
+    then release(t, s)
+    else h::release(t, s)
+  termination proof = structural e    
+  ;
+
+  proof of release_spec =
+   (* let's prove it by induction on lists *)
+   <0>1 assume e1 e2 : S,
+        prove all l:list(S),
+               belongs(e1, release(l, e2))
+           <-> (S!different (e1, e2) /\ belongs(e1, l))
+
+   (* empty list *)
+    <1>b prove belongs(e1, release([], e2))
+           <-> (S!different (e1, e2) /\ belongs(e1, []))
+     <2>1 prove ~ (belongs(e1, release([], e2)))
+          by definition of release, empty property empty_spec
+     <2>2 prove ~ (S!different (e1, e2) /\ belongs(e1, []))
+          by definition of empty property empty_spec
+     <2>f conclude
+
+    (* induction step *)
+    <1>i assume t: list(S), assume h: S,
+         hypothesis HI : (belongs(e1, release(t, e2))
+                          <-> (S!different (e1, e2) /\ belongs(e1, t))),
+         prove (belongs(e1, release(h::t, e2))
+           <-> (S!different (e1, e2) /\ belongs(e1, h::t)))
+
+     (* ( -> ) *)
+     <2>1 hypothesis H1 : belongs(e1, release(h::t, e2)),
+          prove S!different (e1, e2) /\ belongs(e1, h::t)
+
+      (* by cases : either S!equal(e2, h) or not *)
+      <3>1 hypothesis C1 : S!equal(e2, h),
+            prove S!different (e1, e2) /\ belongs(e1, h::t)
+       <4>1 prove S!different (e1, e2)
+            by definition of release hypothesis H1, C1, HI
+       <4>2 prove belongs(e1, h::t)
+        <5>1 prove belongs(e1, t)
+             by hypothesis HI, C1, H1 definition of release
+        <5>f qed by step <5>1 property L!belongs_spec definition of belongs
+       <4>f conclude
+
+      <3>2 hypothesis C2 : ~ S!equal(e2, h),
+           prove S!different (e1, e2) /\ belongs(e1, h::t)
+       (* second cases discussion, this time on e1 *)
+       <4>1 hypothesis C21 : S!equal(e1, h),
+            prove S!different (e1, e2) /\ belongs(e1, h::t)
+        <5>1 prove S!different (e1, e2)
+             by hypothesis C2, C21
+             property S!equal_symmetric, S!equal_transitive,
+                      S!same_is_not_different
+        <5>2 prove belongs(e1, h::t)
+             by definition of belongs property L!belongs_spec, S!equal_symmetric
+                hypothesis C21
+        <5>f conclude
+       <4>2 hypothesis C22 : ~ S!equal(e1, h),
+            prove S!different (e1, e2) /\ belongs(e1, h::t)
+        <5>1 prove belongs(e1, h::release(t, e2))
+             by hypothesis H1, C2 definition of release
+        <5>2 prove belongs(e1, release(t, e2))
+             by step <5>1 hypothesis C22 definition of belongs
+                property L!belongs_spec, S!equal_symmetric
+        <5>3 prove S!different (e1, e2) /\ belongs(e1, t)
+             by step <5>2 hypothesis HI
+        <5>4 prove belongs(e1, h::t)
+             by step <5>3 definition of belongs property L!belongs_spec
+        <5>f conclude
+       <4>f conclude
+      <3>f conclude
+
+     (* ( <- ) *)
+     <2>2 hypothesis H2 : S!different (e1, e2) /\ belongs(e1, h::t),
+          prove belongs(e1, release(h::t, e2))
+
+      (* by cases again, on e1 *)
+      <3>1 hypothesis C1 : S!equal(e1, h),
+           prove belongs(e1, release(h::t, e2))
+       <4>1 prove ~ S!equal(e2, h)
+            by hypothesis H2, C1
+               property S!same_is_not_different, S!equal_symmetric,
+                        S!equal_transitive
+       <4>2 prove release(h::t, e2) = h::release(t, e2)
+            by step <4>1 definition of release
+       <4>3 prove belongs(e1, h::release(t, e2))
+            by definition of belongs property L!belongs_spec hypothesis C1
+               property S!equal_symmetric
+       <4>f qed by step <4>2, <4>3
+
+      <3>2 hypothesis C2 : ~ S!equal(e1, h),
+           prove belongs(e1, release(h::t, e2))
+       <4>1 prove belongs(e1, t)
+            by definition of belongs property L!belongs_spec, S!equal_symmetric
+               hypothesis C2, H2
+       <4>2 prove belongs(e1, release(t, e2))
+            by step <4>1 hypothesis H2, HI
+       <4>3 prove release(h::t, e2) = release(t, e2)
+               \/ release(h::t, e2) = h::release(t, e2)
+            by definition of release
+       <4>f qed by step <4>3, <4>2 definition of belongs property L!belongs_spec
+      <3>f conclude
+     <2>f conclude
+    <1>f conclude
+   <0>f conclude
+  ;
+
+  let rec is_contained(l_1, l_2) = match l_1 with
+  | [] -> true
+  | h::t -> belongs(h, l_2) && is_contained(t, l_2)
+  (* troublant : avec 
+     if belongs(h, l_2) then is_contained(t, l_2) else false,
+     la preuve <4>f passe pas *)
+  termination proof = structural l_1
+  ;
+
+  proof of is_contained_spec = 
+   <1>1 assume y : list(S),
+        prove all x: list(S), (is_contained(x, y)
+                              -> (all e : S, belongs(e, x) -> belongs(e, y)))
+    <2>1 prove is_contained([], y) ->
+                 (all e : S, belongs(e, []) -> belongs(e, y))
+         by definition of belongs property L!belongs_empty_spec
+    <2>2 assume h: S, assume t: list(S),
+         hypothesis HI : is_contained(t, y) ->
+                           (all e : S, belongs(e, t) -> belongs(e, y)),
+         prove is_contained(h::t, y) ->
+                (all e : S, belongs(e, h::t) -> belongs(e, y))
+     <3>1 hypothesis H: is_contained(h::t, y),
+          assume e : S,
+          hypothesis H1: belongs(e, h::t),
+          prove belongs(e, y)
+      <4>1 prove S!equal(h, e) \/ belongs(e, t)
+           by hypothesis H1 definition of belongs
+              property L!belongs_spec
+      <4>2 prove S!equal(h, e) -> belongs(e, y)
+    (* apparently zenon can't unfold is_contained's definition so more steps *)
+       <5>1 prove belongs(h, y)
+            by hypothesis H definition of is_contained
+       <5>2 hypothesis H11: S!equal(h, e),
+            prove belongs(e, y)
+            by step <5>1 property belongs_left_substitution_rule
+               hypothesis H11
+       <5>f conclude
+      <4>3 prove belongs(e, t) -> belongs(e, y)
+       <5>1 prove is_contained(t, y)
+            by hypothesis H definition of is_contained
+       <5>2 hypothesis H12: belongs(e, t),
+            prove belongs(e, y)
+            by step <5>1 hypothesis HI, H12
+       <5>f conclude
+      <4>f conclude
+     <3>f conclude
+    <2>f conclude
+   <1>2 assume y : Self,
+        prove all x : list(S),
+        (* we must do the proof explicitely with list rather than with Self, *)
+        (* or zenon won't be able to use induction *)
+               (all e : S, belongs(e, x) -> belongs(e, y)) -> is_contained(x, y)
+    <2>1 prove (all e : S, belongs(e, []) -> belongs(e, y)) 
+                 -> is_contained([], y)
+         by definition of is_contained
+    <2>2 assume h : S, assume t : Self,
+         prove ((all e : S, belongs(e, t) -> belongs(e, y)) 
+                 -> is_contained(t, y))
+            -> ((all e : S, belongs(e, h::t) -> belongs(e, y)) 
+                 -> is_contained(h::t, y))
+     <3>1 hypothesis HI : (all e : S, belongs(e, t) -> belongs(e, y)) 
+                            -> is_contained(t, y),
+          hypothesis H : all e : S, belongs(e, h::t) -> belongs(e, y),
+          prove is_contained(h::t, y)
+      <4>1 prove belongs(h, y)
+       <5>1 prove belongs(h, h::t)
+            by definition of belongs property L!belongs_spec, S!equal_reflexive
+       <5>2 prove belongs(h, y)
+            by step <5>1 hypothesis H
+       <5>f conclude
+      <4>2 prove is_contained(t, y)
+           by definition of belongs property L!belongs_spec hypothesis HI, H
+      <4>f qed by step <4>1, <4>2 definition of is_contained
+     <3>f conclude
+    <2>f conclude
+   <1>f conclude	
+  ;
+
+  let is_empty(s: Self) = match s with
+    | [] -> true
+    | _ -> false;
+
+  proof of is_empty_empty = 
+    <1>1 prove is_empty([])
+         by definition of is_empty
+    <1>2 prove empty = []
+         by definition of empty
+    <1>f conclude;
+
+(* 
+Something strange : by proving is_empty_empty with :
+
+" by definition of is_empty, empty ; "
+
+leads to : 
+
+Zenon error: exhausted search space without finding a proof
+### proof failed
+*)
+
+
+let to_list (s:Self):list(S) = s;
+
+(* Should be in the abstract species Finite_parts ... but need a specification of lists *)
+  property to_list_belongs :
+    all c: Self, all e : S, belongs (e, c) <-> L!belongs(e, to_list(c));
+
+  proof of to_list_belongs = by definition of to_list, belongs;
+
+end;;
