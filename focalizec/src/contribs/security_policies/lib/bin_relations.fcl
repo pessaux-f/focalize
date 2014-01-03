@@ -1,4 +1,4 @@
-
+(* TODO : fusionner avec le fichier de F-IDE *)
 open "basics";;
 open "sets";;
 open "listes";;
