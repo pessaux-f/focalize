@@ -8,13 +8,12 @@
 #                                                                            #
 #                               LIP6  --  INRIA Rocquencourt                 #
 #                                                                            #
-#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
-#            2012 ENSTA ParisTech                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
 #  Distributed only by permission.                                           #
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.8 2012-10-30 13:56:05 pessaux Exp $
 
 ROOT_DIR=../..
 
@@ -30,3 +29,7 @@ all clean doc docdir depend install:
 	  echo "<-- $$i [$$err]";\
 	  case $$err in 0);; *) exit $$err;; esac;\
 	done
+
+# TODO
+uninstall:
+	echo "Uninstall extlib TODO"

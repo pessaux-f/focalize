@@ -75,6 +75,16 @@ clean:
 	done
 
 
+uninstall:
+	@for i in $(SUB_DIRS); do\
+	  echo "--> $$i ..." >&2 &&\
+	  ($(CD) $$i && $(MAKE) $@);\
+	  err=$$?;\
+	  echo "<-- $$i [$$err]" >&2 &&\
+	  case $$err in 0);; *) exit $$err;; esac;\
+	done
+
+
 distrib:
 	$(RM) -f focalize-0.8.0.tgz
 	($(CD) .. &&\

@@ -14,6 +14,7 @@
 #                                                                            #
 # ************************************************************************** #
 
+
 ROOT_DIR=../../..
 
 BYT_OBJS=\
@@ -47,6 +48,8 @@ build_stamp.ml: .FORCE
 
 
 install: # Nothing to install from there.
+
+uninstall: # Nothing to install from there.
 
 clean:
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt build_stamp.ml *~ .*~

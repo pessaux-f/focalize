@@ -1,16 +1,19 @@
-#**********************************************************************#
-#                                                                      #
-#                        FoCaLize compiler                             #
-#                                                                      #
-#            François Pessaux                                          #
-#            Pierre Weis                                               #
-#            Damien Doligez                                            #
-#                               LIP6  --  INRIA Rocquencourt           #
-#                                                                      #
-#  Copyright 2008 LIP6 and INRIA                                       #
-#  Distributed only by permission.                                     #
-#                                                                      #
-#**********************************************************************#
+# ************************************************************************** #
+#                                                                            #
+#                        FoCaLiZe compiler                                   #
+#                                                                            #
+#            François Pessaux                                                #
+#            Pierre Weis                                                     #
+#            Damien Doligez                                                  #
+#                                                                            #
+#                               LIP6  --  INRIA Rocquencourt                 #
+#                                                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
+#  Distributed only by permission.                                           #
+#                                                                            #
+# ************************************************************************** #
+
 
 ROOT_DIR=../../..
 
@@ -138,6 +141,9 @@ install:
 	($(CD) $(INSTALL_BIN_DIR) &&\
 	 $(RM) $(EXE_NAME) &&\
 	 $(LN) $(EXE_NAME).bin $(EXE_NAME))
+
+uninstall:
+	$(RM) $(INSTALL_BIN_DIR)/$(EXE_NAME).bin $(INSTALL_BIN_DIR)/$(EXE_NAME)
 
 clean:
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt
