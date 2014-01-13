@@ -2703,7 +2703,7 @@ let generate_termination_order_With_Function ctx print_ctx env name
               print_pattern_for_order
                 out_fmter ~var_suffix: "1" pattern_description in
             Format.fprintf out_fmter " =>@\n";
-            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n";
+            Format.fprintf out_fmter "@[<2>match@ __y@ with@\n";
             let printed2 =
               print_pattern_for_order
                 out_fmter ~var_suffix: "2" pattern_description in
