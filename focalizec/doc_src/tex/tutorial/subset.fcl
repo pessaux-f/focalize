@@ -54,7 +54,7 @@ species ExtSubset(Val is Superset) =
  theorem incl_tran : all s1 s2 s3 : Self, s1 <: s2 -> s2 <: s3 -> s1 <: s3
   proof = by property mem_incl ;
 
- property eq_incl : all s1 s2 : Self, s1 = s2 <-> s1 <: s2 /\ s2 <: s1 ;
+ property eq_incl : all s1 s2 : Self, (s1 = s2) <-> (s1 <: s2 /\ s2 <: s1) ;
  proof of eq_refl = by property eq_incl, incl_refl ;
  proof of eq_symm = by property eq_incl ;
  proof of eq_tran = by property eq_incl, incl_tran ;

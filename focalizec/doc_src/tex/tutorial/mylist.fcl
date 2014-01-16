@@ -79,11 +79,11 @@ species FiniteList(Val is Superset) =
  signature mem : Val -> Self -> basics#bool ;
  property mem_nil : all v : Val, ~ mem(v, nil) ;
  property mem_cons : all v h : Val, all t : Self,
-                     mem(v, cons(h, t)) <-> Val!( = )(v, h) \/ mem(v, t) ;
+                     mem(v, cons(h, t)) <-> (Val!( = )(v, h) \/ mem(v, t)) ;
 
  signature del : Self -> Val -> Self ;
  property mem_del : all v w : Val, all l : Self,
-                    mem(v, del(l, w)) <-> ~ Val!( = )(v, w) /\ mem(v, l) ;
+                    mem(v, del(l, w)) <-> (~ Val!( = )(v, w) /\ mem(v, l)) ;
 
 end ;;
 
