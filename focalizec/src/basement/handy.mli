@@ -78,6 +78,8 @@ val list_first_index : ('a -> bool) -> 'a list -> int
 
 val list_drop : 'a list -> int -> 'a list
 
+val list_indices_of_present_in : all: 'a list -> subset: 'a list -> int list
+
 
 
 (** Effects to the terminal for pretty-printing tools. *)
