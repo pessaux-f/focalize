@@ -1,0 +1,87 @@
+open "basics";;
+open "sets";;
+open "products";;
+(* open "listes";; *)
+(* open "finite_sets_f";; *)
+
+(** ======= Binary Relations ======= *)
+
+
+(** A : domain, B : codomain *)
+species Binary_relations (A is Setoid, B is Setoid) =
+
+  inherit Setoid;  
+
+  signature relation : Self -> A -> B -> bool;
+
+  property relation_compatible_left : all r: Self, all a1 a2: A, all b: B,
+    A!equal(a1, a2) -> (relation(r, a1, b) -> relation(r, a2, b));
+
+  property relation_compatible_right : all r: Self, all a: A, all b1 b2: B,
+    B!equal(b1, b2) -> (relation(r, a, b1) -> relation(r, a, b2));
+
+  signature is_contained: Self -> Self -> bool ;
+
+  property is_contained_spec: all r_1 r_2: Self, 
+        is_contained(r_1, r_2) 
+   <->  all a: A, all b: B, 
+         relation(r_1, a, b) -> relation(r_2, a, b);
+
+  let equal(x, y) = is_contained(x, y) && is_contained(y, x) ;
+
+  theorem equal_spec :
+    all r1 r2 : Self,
+    equal (r1, r2) <-> (all a : A, all b : B,
+                       relation (r1, a, b) <-> relation (r2, a, b))
+  proof = by definition of equal property is_contained_spec ;
+
+  proof of equal_reflexive = by property equal_spec;
+  proof of equal_symmetric = by property equal_spec;
+  proof of equal_transitive = by property equal_spec;
+
+  logical let is_union_r(r1,r2,r3) = all a : A, all b : B, 
+    relation(r3,a,b) <-> (relation(r1,a,b) \/ relation(r2,a,b));
+
+  theorem is_union_r_spec : all r1 r2 r3 : Self,
+    is_union_r(r1,r2,r3) <-> (all a : A, all b : B, 
+    relation(r3,a,b) <-> (relation(r1,a,b) \/ relation(r2,a,b)))
+  proof = by definition of is_union_r;
+
+  logical let is_left_unique (r) =
+    all a1 a2 : A, all b : B,
+    ( relation (r, a1, b) /\ relation (r, a2, b) ) -> A!equal (a1, a2);
+
+  theorem is_left_unique_spec : all r: Self, 
+   (all a1 a2 : A, all b : B,
+     ( relation (r, a1, b) /\ relation (r, a2, b) ) -> A!equal (a1, a2))
+   <-> is_left_unique (r)
+  proof = by definition of is_left_unique;
+
+ theorem union_is_left_unique : all r1 r2 r3 : Self,
+   is_union_r(r1,r2,r3) ->
+   (
+   (is_left_unique(r1) /\ is_left_unique(r2)
+    /\ (all a1 a2 : A, all b : B,
+         ((relation (r1, a1, b) /\ relation (r2, a2, b)) -> A!equal (a1, a2))))
+   <-> is_left_unique(r3))
+   proof = assumed;
+
+
+
+end;;
+
+
+
+species Injective_relations (A is Setoid, B is Setoid) =
+
+  inherit Binary_relations (A, B);
+
+  property left_unique : all r : Self, is_left_unique (r);
+
+  theorem injective_union : all r1 r2 r3 : Self, 
+    is_union_r(r1,r2,r3) 
+    -> (all a1 a2 : A, all b : B,
+         ((relation (r1, a1, b) /\ relation (r2, a2, b)) -> A!equal (a1, a2)))
+  proof = by property left_unique, union_is_left_unique ;
+
+end;;
