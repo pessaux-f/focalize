@@ -2,20 +2,18 @@
 #                                                                            #
 #                        FoCaLiZe compiler                                   #
 #                                                                            #
-#            Matthieu Carlier                                                #
 #            François Pessaux                                                #
 #            Pierre Weis                                                     #
 #            Damien Doligez                                                  #
 #                                                                            #
 #                               LIP6  --  INRIA Rocquencourt                 #
 #                                                                            #
-#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
-#            2012 ENSTA ParisTech                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
 #  Distributed only by permission.                                           #
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.12 2012-11-13 14:02:05 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -28,7 +26,6 @@ LOCAL_BYT_OBJS=\
  own_prolog.cmo print_prolog.cmo test_prolog.cmo\
  to_prolog.cmo species_harness.cmo test_prop.cmo run.cmo
 
-# Must be defined before including Makefile.common since is used by it.
 BYT_OBJS =\
  ../basement/build_stamp.cmo\
  ../basement/installation.cmo\
@@ -71,6 +68,9 @@ install:
 	($(CD) $(INSTALL_BIN_DIR) &&\
 	 $(RM) $(EXE_NAME) &&\
 	 $(LN) $(EXE_NAME).bin $(EXE_NAME))
+
+uninstall:
+	$(RM) $(INSTALL_BIN_DIR)/$(EXE_NAME).bin $(INSTALL_BIN_DIR)/$(EXE_NAME)
 
 clean:
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt

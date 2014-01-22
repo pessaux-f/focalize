@@ -14,11 +14,12 @@
 #                                                                            #
 # ************************************************************************** #
 
+
 ROOT_DIR=../../..
 
-# Must be defined before including Makefile.common since is used by it.
 BYT_OBJS=\
- build_stamp.cmo installation.cmo configuration.cmo handy.cmo\
+ build_stamp.cmo installation.cmo configuration.cmo build_configuration.cmo\
+ handy.cmo\
  location.cmo anti_keyword_conflict.cmo types.cmo\
  files.cmo parsetree_utils.cmo miscHelpers.cmo
 
@@ -47,6 +48,8 @@ build_stamp.ml: .FORCE
 
 
 install: # Nothing to install from there.
+
+uninstall: # Nothing to install from there.
 
 clean:
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt build_stamp.ml *~ .*~

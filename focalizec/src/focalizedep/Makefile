@@ -8,13 +8,12 @@
 #                                                                            #
 #                               LIP6  --  INRIA Rocquencourt                 #
 #                                                                            #
-#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
-#            2012 ENSTA ParisTech                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
 #  Distributed only by permission.                                           #
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.15 2012-10-30 11:55:07 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -57,6 +56,9 @@ install:
 	($(CD) $(INSTALL_BIN_DIR) &&\
 	 $(RM) $(EXE_NAME) &&\
 	 $(LN) $(EXE_NAME).bin $(EXE_NAME))
+
+uninstall:
+	$(RM) $(INSTALL_BIN_DIR)/$(EXE_NAME).bin $(INSTALL_BIN_DIR)/$(EXE_NAME)
 
 clean:
 	$(RM) directive_lexer.ml *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *~ .*~

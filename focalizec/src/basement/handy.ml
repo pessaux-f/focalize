@@ -387,6 +387,25 @@ let rec list_drop l num =
 
 
 
+(** {b Descr}: Returns the list of the positions in [all] of elements also
+    present in [subset]. If an element of [subset] doesn't exist in [all] the
+    exception [Not_found] is raised.
+    The resulting list is ordered according to the order of elements of
+    [subset].
+    For instance, [list_indices_of_present_in ~all: [1;5;6;7] ~subset:[7;5]]
+    will return [3;1] since 5 and 7 are present in both lists and at
+    respective positions 3 and 1.
+    For instance, [list_indices_of_present_in ~all:[7;1;5;6] ~subset: [7;5]
+    will return [0; 2].
+    Comparison is done using structural equality.
+    {b Attention}: None of the lists are assumed to have several times a same
+    element. The elements of [subset] are exepected to appear in [all]. *)
+let list_indices_of_present_in ~all ~subset =
+   List.map (fun s_e -> list_first_index (fun a_e -> a_e = s_e) all) subset
+;;
+
+
+
 let pp_set_shaded ppf =
   if Configuration.get_fancy_ansi () then Format.fprintf ppf "@<0>\027[2m" ;;
 

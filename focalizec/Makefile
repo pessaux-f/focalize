@@ -8,11 +8,12 @@
 #                                                                            #
 #                               LIP6  --  INRIA Rocquencourt                 #
 #                                                                            #
-#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
-#            2012 ENSTA ParisTech                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
 #  Distributed only by permission.                                           #
 #                                                                            #
 # ************************************************************************** #
+
 
 ROOT_DIR=..
 
@@ -92,6 +93,17 @@ clean:
 	done
 
 install:
+	@for i in $(ALL_DIRS); do\
+	  if test -d $$i; then\
+	    echo "--> $$i ..." >&2 &&\
+	    ($(CD) $$i && $(SUDO) $(MAKE) $@);\
+	    err=$$?;\
+	    echo "<-- $$i [$$err]" >&2 &&\
+	    case $$err in 0);; *) exit $$err;; esac;\
+	  fi;\
+	done
+
+uninstall:
 	@for i in $(ALL_DIRS); do\
 	  if test -d $$i; then\
 	    echo "--> $$i ..." >&2 &&\

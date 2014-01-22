@@ -28,7 +28,7 @@ FOCALIZE_SRC=\
  orders.fcl\
  strict_orders.fcl\
  orders_and_lattices.fcl\
- wellfounded.fcl\
+ wellfoundation.fcl\
  sums.fcl\
  quotients.fcl\
  fix.fcl
@@ -59,7 +59,7 @@ EXTERNAL_CMIS=$(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 EXTERNAL_VOS=\
  coq_builtins.vo\
  sets_externals.vo\
- wellfounded_externals.vo
+ wellfoundation_externals.vo
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
@@ -133,6 +133,10 @@ install:
 	  echo "Installing (Coq) external stubs." &&\
 	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
 	fi
+
+# TODO
+uninstall:
+	echo "Uninstall stdlib TODO"
 
 clean:
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.fo *.vo *.pfc *.glob *~ .*~

@@ -23,9 +23,9 @@
 
 exception No_input_file
 
-val focalize_version_number : (int * int * int) 
-
-val focalize_full_version : string
+val focalize_version_number : (int * int * int)
+val focalize_short_version : string
+val print_focalize_version : string -> 'a
 
 val get_experimental : unit -> bool
 val set_experimental : unit -> unit
@@ -52,8 +52,6 @@ val get_pretty_scoped : unit -> string option
 val set_pretty_scoped : string -> unit
 
 val print_focalize_short_version : unit -> unit
-val print_focalize_full_version : unit -> unit
-val print_install_dirs : unit -> unit
 
 val get_dotty_dependencies : unit -> string option
 val set_dotty_dependencies : string -> unit
@@ -75,9 +73,6 @@ val unset_generate_coq : unit -> unit
 
 val get_fancy_ansi : unit -> bool
 val unset_fancy_ansi : unit -> unit
-
-val get_generate_coq : unit -> bool
-val unset_generate_coq : unit -> unit
 
 val get_generate_tests : unit -> bool
 val unset_generate_tests : unit -> unit

@@ -428,16 +428,40 @@ let generate_exprs_as_tuple ctx env exprs =
 
 
 
-(** [explicit_order] : Serves to use this function for both the code generation
-    in the Section of the recursive function and outside.
-    In the first case, the order is represented by a Variable ("__term_order")
-    with no need to apply any argument since abstractions are done by Variables
-    in the Section.
-    In the second case, the order is the really defined one and is called by
-    function's name + "_wforder". In this second case, since we manage
-    ourselves explicitely the abstractions and we are not in a Section, we must
-    explicitely apply the order to the stuff it needs due to extra arguments
-    induced by the various dependencies. *)
+
+(** {b Descr}: Represent the 2 kinds of order to generate to argue the
+    decreasing of a recursive function. Depending on the point of view,
+    different code has to be emitted. *)
+type order_kind =
+  | OK_expr of (Parsetree.expr * (int list)) (** Case of the "user-order". It
+         only deals with the function's arguments involved in the decreasing
+         of the recursing. The user specifies his order on only the arguments
+         he is interested in. So the order to generate is directly coming
+         from the expression given as "order" by the user. The int list
+         is the list of indices of the function's parameters used by this
+         "user-order". *)
+  | OK_wfounded of   (** Case of the "Function-order", i.e. the one that the
+         Coq construct Function expects to prove correct recursive definition.
+         This order uses all the arguments of the function and is made of
+         the "xxx_wforder" generated applied to its dependencies. Hence in
+         this case we need dependency information. *)
+      (Parsetree.vname *
+       (Parsetree.vname list) *
+       ((Env.TypeInformation.species_param *
+         Env.ordered_methods_from_params) list) *
+       Parsetree.vname list)
+;;
+
+
+
+(** [explicit_order] : Serves to use this function for code generation
+    of the user-side and the Function-side termination theorems.
+    In the first case, the order is the one provided by the user in its
+    termination proof, using order or measure. It doesn't deal with all the
+    function's arguments but only the ones involved in the recursion decreasing.
+    This order expression is then eta-expanded and wrapped into a Is_true.
+    In the second case, the order is a generated one and is called by
+    function's name + "_wforder". It deals with all the function's arguments! *)
 let generate_termination_lemmas ctx print_ctx env ~explicit_order
     recursive_calls =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -485,26 +509,57 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
                 env expr ;
               Format.fprintf out_fmter "@]) ->@ ")
         bindings ;
-      (* Now, generate the expression that telling the decreasing applying
-         the "__term_order" Variable or the really defined order if we were
-         provided one by the argument [~explicit_order] with its arguments to
-         apply due to lambda-liftings. *)
+      (* Now, generate the expression that states the decreasing applying
+         the "user-" or "Function-" order depending the argument
+         [~explicit_order]. In case of "Function-" order, we have to apply it
+         to its arguments coming from to lambda-liftings. *)
       (match explicit_order with
-       | None ->
-           Format.fprintf out_fmter "__term_order@ "
-       | Some (fun_name, ai, sorted_deps_from_params, abstracted_methods) ->
+       | OK_expr (expr_order, rec_fun_used_args_indices) ->
+           (* Surround by a Is_true since the user order can only be oa
+              function returning a bool, hence must be plunged into Prop. *)
+           Format.fprintf out_fmter "Is_true ((@[<1>" ;
+           Species_record_type_generation.generate_expr
+             ctx ~in_recursive_let_section_of: [] ~local_idents: []
+             ~self_methods_status:
+               Species_record_type_generation.SMS_abstracted
+             ~recursive_methods_status:
+               Species_record_type_generation.RMS_regular env expr_order ;
+           Format.fprintf out_fmter "@])@ " ;
+           (* Now, generate the tuples of only arguments used in the order
+              given by the user to provide to this order. *)
+(* [Unsure] considered orders only compare 2 simple arguments, not a tuple. *)
+           if (List.length rec_fun_used_args_indices) <> 1 then
+             failwith "TODO: order/measure using several arguments" ;
+           let index = List.hd rec_fun_used_args_indices in
+           let rec_arg = List.nth rec_args index in
+           let initial_var = List.nth initial_vars index in
+           (* Generate the corresponding recursive call argument. *)
+           Species_record_type_generation.generate_expr
+             ctx ~in_recursive_let_section_of: [] ~local_idents: []
+             ~self_methods_status:
+               Species_record_type_generation.SMS_abstracted
+             ~recursive_methods_status:
+               Species_record_type_generation.RMS_regular env rec_arg ;
+           (* Generate the initial argument of the function. *)
+           Format.fprintf out_fmter "@ %a"
+             Parsetree_utils.pp_vname_with_operators_expanded
+             (fst initial_var) ;
+           (* Close the surrounding Is_true. *)
+           Format.fprintf out_fmter "@])"
+       | OK_wfounded (fname, ai, sorted_deps_from_params, abstracted_methods) ->
            Format.fprintf out_fmter "(%a_wforder"
-             Parsetree_utils.pp_vname_with_operators_expanded fun_name ;
+             Parsetree_utils.pp_vname_with_operators_expanded fname ;
            Species_record_type_generation.generate_method_lambda_lifted_arguments
              ~only_for_Self_meths: false out_fmter ai sorted_deps_from_params
              abstracted_methods ;
-           Format.fprintf out_fmter ")@ ") ;
-      (* Now, generate the arguments to provide to the order. *)
-      generate_exprs_as_tuple ctx env rec_args ;
-      Format.fprintf out_fmter "@ " ;
-      (* Generate a tuple of all the variables. *)
-      generate_variables_as_tuple out_fmter initial_vars ;
+           Format.fprintf out_fmter ")@ " ;
+           (* Now, generate the tuples of all the arguments to provide to the
+              order as Function expects it. *)
+           generate_exprs_as_tuple ctx env rec_args ;
+           Format.fprintf out_fmter "@ " ;
+           (* Generate a tuple of all the variables. *)
+           generate_variables_as_tuple out_fmter initial_vars) ;
+      (* Connected by ^'s. *)
       Format.fprintf out_fmter ")@\n/\\@\n")
-    (* Connected by ^'s. *)
     recursive_calls
 ;;

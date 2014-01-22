@@ -1,9 +1,10 @@
 open "basics";;
 open "sets";;
 open "products";;
+open "listes";;
+open "finite_sets_f";;
 
-
-(** Binary relations *)
+(** ======= Binary Relations ======= *)
 
 
 (** A : domain, B : codomain *)
@@ -203,8 +204,7 @@ species Injective_relations (A is Setoid, B is Setoid) =
   proof = assumed;
 end;;
 
-(* ========================================================================== *)
-
+(** ======= Internal Binary Relations ======= *)
 
 species Internal_binary_relations(A is Setoid)=
   
@@ -287,6 +287,7 @@ species Internal_binary_relations(A is Setoid)=
   theorem thm01 : all r : Self,
     is_symmetric(r) <-> equal(r, inverse(r))
   proof = by property is_symmetric_spec, equal_spec, is_contained_spec, inverse_spec ;
+  (* TODO : verson detaillee pour montrer que c est comme en math *)
 
 
   theorem thm02 : all r : Self,
@@ -317,11 +318,167 @@ species Internal_binary_relations(A is Setoid)=
         by step <1>1, <1>2
    <1>f qed by step <1>3 property is_reflexive_spec ;
 
-(* TODO : theoremes sur composition : *)
-(* theorem R symetrique ssi R.inverse(R) = R *)
- 
 (* TODO : when possible, replace "by definition of ..." by    *)
 (*                               "by property ..._spec"       *)
+
+end;;
+
+
+(** ======= Implementation of Binary Relations ======= *)
+
+species Relations_by_sets_of_pairs(A is Setoid, B is Setoid,
+                                     T is Cartesian_product(A, B),
+                                     P is Finite_parts(T)) =
+
+  (* TODO : beaucoup de propriétés encore à prouver !! *)
+
+  inherit Binary_relations(A, B);
+
+  representation = P;
+
+  let set_as_relation(s: P): Self = s;
+
+  let relation_as_set(s: Self): P = s;
+
+  theorem set_relation_valid :
+    (all p: P, P!equal(relation_as_set(set_as_relation(p)), p))
+   /\
+    (all s: Self, equal(set_as_relation(relation_as_set(s)), s))
+  proof = by definition of set_as_relation, relation_as_set
+             property P!equal_reflexive, equal_reflexive
+  ;
+
+  let relation(r, a, b) = P!belongs(T!pair(a, b), r);
+
+  (* Is it correct to reveal the representation ? *)
+  theorem relation_spec :  all a: A, all b: B, all r: Self,
+    relation(r, a, b) <-> P!belongs(T!pair(a, b), relation_as_set(r))
+  proof = by definition of relation, relation_as_set ;
+
+
+  proof of relation_compatible_left =
+    <0>1 assume a1 a2 : A, assume b : B, assume r : Self,
+         hypothesis Heq : A!equal(a1, a2),
+         hypothesis H : relation(r, a1, b),
+         prove relation(r, a2, b)
+     <1>1 hypothesis H1 : P!belongs(T!pair(a1, b), relation_as_set(r)),
+          prove P!belongs(T!pair(a2, b), relation_as_set(r))
+      <2>1 prove T!equal(T!pair(a1, b), T!pair(a2, b))
+       <3>1 prove A!equal(T!first(T!pair(a1, b)), T!first(T!pair(a2, b)))
+        <4>1 prove A!equal(T!first(T!pair(a1, b)), a1)
+             by property T!pair_preserves_first
+        <4>2 prove A!equal(T!first(T!pair(a2, b)), a2)
+             by property T!pair_preserves_first
+        <4>f qed by step <4>1, <4>2 hypothesis Heq
+                    property A!equal_transitive, A!equal_symmetric
+       <3>2 prove B!equal(T!second(T!pair(a1, b)), T!second(T!pair(a2, b)))
+        <4>1 prove B!equal(T!second(T!pair(a1, b)), b)
+             by property T!pair_preserves_second
+        <4>2 prove B!equal(T!second(T!pair(a2, b)), b)
+             by property T!pair_preserves_second
+        <4>f qed by step <4>1, <4>2
+                    property B!equal_transitive, B!equal_symmetric
+       <3>f qed by step <3>1, <3>2 property T!equal_spec
+      <2>f qed by step <2>1 property P!belongs_left_substitution_rule
+                  hypothesis H1
+     <1>f qed by step <1>1 hypothesis H property relation_spec
+    <0>f conclude ;
+
+
+  proof of relation_compatible_right =
+    <0>1 assume a : A, assume b1 b2 : B, assume r : Self,
+         hypothesis Heq : B!equal(b1, b2),
+         hypothesis H : relation(r, a, b1),
+         prove relation(r, a, b2)
+     <1>1 hypothesis H1 : P!belongs(T!pair(a, b1), relation_as_set(r)),
+          prove P!belongs(T!pair(a, b2), relation_as_set(r))
+      <2>1 prove T!equal(T!pair(a, b1), T!pair(a, b2))
+       <3>1 prove B!equal(T!second(T!pair(a, b1)), T!second(T!pair(a, b2)))
+        <4>1 prove B!equal(T!second(T!pair(a, b1)), b1)
+             by property T!pair_preserves_second
+        <4>2 prove B!equal(T!second(T!pair(a, b2)), b2)
+             by property T!pair_preserves_second
+        <4>f qed by step <4>1, <4>2 hypothesis Heq
+                    property B!equal_transitive, B!equal_symmetric
+       <3>2 prove A!equal(T!first(T!pair(a, b1)), T!first(T!pair(a, b2)))
+        <4>1 prove A!equal(T!first(T!pair(a, b1)), a)
+             by property T!pair_preserves_first
+        <4>2 prove A!equal(T!first(T!pair(a, b2)), a)
+             by property T!pair_preserves_first
+        <4>f qed by step <4>1, <4>2
+                    property A!equal_transitive, A!equal_symmetric
+       <3>f qed by step <3>1, <3>2 property T!equal_spec
+      <2>f qed by step <2>1 property P!belongs_left_substitution_rule
+                  hypothesis H1
+     <1>f qed by step <1>1 hypothesis H property relation_spec
+    <0>f conclude ;
+
+
+  let is_contained(r_1, r_2) = P!is_contained(r_1, r_2);
+
+  proof of is_contained_spec = 
+    <1>1 assume r_1 r_2: Self, 
+         prove is_contained(r_1, r_2) <-> 
+           (all a: A, all b: B, 
+              P!belongs(T!pair(a, b), r_1) -> 
+                   P!belongs(T!pair(a, b), r_2))
+         <2>1 hypothesis C: is_contained(r_1, r_2),
+              prove all a: A, all b: B,
+                P!belongs(T!pair(a, b), r_1) ->
+                  P!belongs(T!pair(a, b), r_2)
+              <3>1 assume a: A, assume b: B, 
+                   hypothesis H: P!belongs(T!pair(a, b), r_1),
+                   prove P!belongs(T!pair(a, b), r_2)
+                   by hypothesis H, C 
+                      definition of is_contained, relation
+                      property P!is_contained_spec
+              <3>f conclude
+         <2>2 hypothesis I: all a: A, all b: B, 
+                  (P!belongs(T!pair(a, b), r_1) -> 
+                           P!belongs(T!pair(a, b), r_2)),
+              prove is_contained(r_1, r_2)
+              <3>1 prove all a: A, all b: B, 
+                    P!belongs(T!pair(a, b), r_1) -> 
+                       P!belongs(T!pair(a, b), r_2)
+                   by hypothesis I
+              <3>2 prove all t: T, P!belongs(t, r_1) -> P!belongs(t, r_2)
+                   <4>1 assume t: T,
+                        hypothesis H: P!belongs(t, r_1),
+                        prove P!belongs(t, r_2)
+                        <5>0 prove T!equal(t, T!pair(T!first(t),
+                                                     T!second(t)))
+                             by property T!pair_preserves_first, 
+                                         T!pair_preserves_second, 
+                                         T!equal_spec, 
+                                         A!equal_reflexive,
+                                         A!equal_symmetric,
+                                         A!equal_transitive,
+                                         B!equal_reflexive,
+                                         B!equal_symmetric,
+                                         B!equal_transitive
+                        <5>1 prove P!belongs(T!pair(T!first(t),
+                                                    T!second(t)),
+                                             r_1)
+                             by hypothesis H 
+                                step <5>0 
+                                property P!belongs_left_substitution_rule
+                        <5>2 prove P!belongs(T!pair(T!first(t),
+                                                    T!second(t)),
+                                             r_2)
+                             by step <5>1 hypothesis I
+                        <5>f qed by step <5>0, <5>2
+                                    property P!belongs_left_substitution_rule,
+                                             T!equal_symmetric,
+                                             T!equal_transitive
+
+                   <4>f conclude
+              <3>f qed by step <3>2 
+                          property P!is_contained_spec
+                          definition of relation, is_contained 
+                   
+         <2>f conclude
+    <1>f qed by step <1>1 definition of relation, is_contained
+    ;
 
 end;;
 
@@ -337,3 +494,5 @@ de isdetermist
 
 tri topo !!
 ***)
+
+

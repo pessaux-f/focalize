@@ -8,13 +8,12 @@
 #                                                                            #
 #                               LIP6  --  INRIA Rocquencourt                 #
 #                                                                            #
-#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
-#            2012 ENSTA ParisTech                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
 #  Distributed only by permission.                                           #
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.4 2012-10-30 13:56:05 pessaux Exp $
 
 ROOT_DIR=../../..
 
@@ -24,6 +23,7 @@ BYT_OBJS =\
  ../basement/build_stamp.cmo\
  ../basement/installation.cmo\
  ../basement/configuration.cmo\
+ ../basement/build_configuration.cmo\
  ../basement/handy.cmo\
  ../basement/location.cmo\
  ../parser/sourcify.cmo\
@@ -63,6 +63,9 @@ install:
 	($(CD) $(INSTALL_BIN_DIR) &&\
 	 $(RM) $(EXE_NAME) &&\
 	 $(LN) $(EXE_NAME).bin $(EXE_NAME))
+
+uninstall:
+	$(RM) $(INSTALL_BIN_DIR)/$(EXE_NAME).bin $(INSTALL_BIN_DIR)/$(EXE_NAME)
 
 clean:
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *~ .*~

@@ -374,8 +374,8 @@
 ./focalize/focalizec/src/stdlib/sets_externals.v
 ./focalize/focalizec/src/stdlib/strict_orders.fcl
 ./focalize/focalizec/src/stdlib/sums.fcl
-./focalize/focalizec/src/stdlib/wellfounded.fcl
-./focalize/focalizec/src/stdlib/wellfounded_externals.v
+./focalize/focalizec/src/stdlib/wellfoundation.fcl
+./focalize/focalizec/src/stdlib/wellfoundation_externals.v
 ./focalize/focalizec/src/testing/Makefile
 ./focalize/focalizec/src/testing/test.spec
 ./focalize/focalizec/src/testing/testing.ml

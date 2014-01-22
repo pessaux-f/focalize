@@ -2,7 +2,7 @@
 
 C=focalizec
 FLAGS=-stop-before-coq -zvtovopt -script
-SRC=listes.fcl finite_sets_f.fcl ternary_product.fcl
+SRC=listes.fcl finite_sets_f.fcl code.fcl
 V=$(SRC:.fcl=.v)
 ML=$(SRC:.fcl=.ml)
 
@@ -18,10 +18,12 @@ all : $(V) # j'utilise .v plutot que .ml car je veux des preuves...
 	$(C) $(FLAGS) $<
 
 # indique les dépendances (pas moyen d'automatiser ?)
+code.ml : finite_sets_f.ml listes.ml
+code.v : finite_sets_f.v listes.v
 finite_sets_f.ml : listes.ml
+finite_sets_f.v : listes.v
 
 # nettoyage
-
 CMO=$(SRC:.fcl=.cmo)
 CMI=$(SRC:.fcl=.cmi)
 FO=$(SRC:.fcl=.fo)

@@ -71,6 +71,10 @@ install:
 	$(SUDO) mkdir -p $(INSTALL_MAN_DIR)/man1
 	$(SUDO) cp zvtov.1 $(INSTALL_MAN_DIR)/man1/
 
+uninstall:
+	$(SUDO) rm -f $(INSTALL_BIN_DIR)/zvtov
+	$(SUDO) rm -f $(INSTALL_MAN_DIR)/man1/zvtov.1
+
 .PHONY: uninstall
 
 .SUFFIXES: .ml .mli .cmo .cmi .cmx .v .vo

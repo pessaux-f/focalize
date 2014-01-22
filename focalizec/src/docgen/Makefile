@@ -1,18 +1,19 @@
-#**********************************************************************#
-#                                                                      #
-#                        FoCaLize compiler                             #
-#                                                                      #
-#            François Pessaux                                          #
-#            Pierre Weis                                               #
-#            Damien Doligez                                            #
-#                               LIP6  --  INRIA Rocquencourt           #
-#                                                                      #
-#  Copyright 2008 LIP6 and INRIA                                       #
-#  Distributed only by permission.                                     #
-#                                                                      #
-#**********************************************************************#
+# ************************************************************************** #
+#                                                                            #
+#                        FoCaLiZe compiler                                   #
+#                                                                            #
+#            François Pessaux                                                #
+#            Pierre Weis                                                     #
+#            Damien Doligez                                                  #
+#                                                                            #
+#                               LIP6  --  INRIA Rocquencourt                 #
+#                                                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
+#  Distributed only by permission.                                           #
+#                                                                            #
+# ************************************************************************** #
 
-# $Id: Makefile,v 1.12 2012-11-13 14:02:05 pessaux Exp $
 
 ROOT_DIR = ../../..
 
@@ -28,6 +29,8 @@ depend:
 	$(CAMLDEP) $(CAML_INCLUDES) *.mli *.ml > ./.depend
 
 install: # Nothing to install from there.
+
+uninstall: # Nothing to install from there.
 
 clean:
 	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt

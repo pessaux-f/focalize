@@ -1,0 +1,36 @@
+\usepackage{fullpage}
+\usepackage{listings}
+\usepackage{times}   %% Don't know why, but required to have listings beautified
+\usepackage{changepage}
+
+\newcommand{\ocaml}{{\sf OCaml}}
+\newcommand{\focal}{{\sf Fo\-Ca\-Li\-ze}}
+\newcommand{\focalizec}{{\sf focalizec}}
+\newcommand{\zenon}{{\sf Zenon}}
+\newcommand{\coq}{{\sf Coq}}
+
+\lstdefinelanguage{FoCaLiZe}
+  {morekeywords={alias, all, and, as, assume, assumed, begin, by, caml,
+      collection, coq, coq_require, definition, else, end,
+      ex, external, false, function, hypothesis, if, in,
+      inherit, internal, implement, is, let, lexicographic,
+      local, logical, match, measure, not, notation, of, open,
+      on, or, order, proof, prop, property, prove, qed, rec,
+      representation, Self, signature, species, step,
+      structural, termination, then, theorem, true, type, use,
+      with, conclude},
+    otherkeywords={->, :, /\\, \\/, =>, \~, \#, ;, \&, \|,=,<>},
+    sensitive=false,
+    morecomment=[n]{(*}{*)},  %% Autoriser les nested comments
+    morecomment=[n]{(**}{*)}, %% Autoriser les nested comments
+    morestring=[b]",
+  }
+
+\newcommand{\setlangfocalize}{
+\lstset{
+  language=FoCaLiZe, tabsize=2, frame=none, breaklines=true,
+  basicstyle=\ttfamily, xleftmargin=1mm
+}
+}
+%% By default, use FoCaLize as default listing language.
+\setlangfocalize

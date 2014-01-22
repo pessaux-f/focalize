@@ -163,8 +163,8 @@ let generate =
        (first_call := false;
         let library_name = Filename.basename (remove_suffixe file) in
         (* load the environment *)
-          focalize_init "basics";
-          focalize_init library_name;
+          focalize_init Installation.install_lib_dir "basics";
+          focalize_init Installation.install_lib_dir library_name;
                 (*******)
         let prop =
           match get_use_report () with

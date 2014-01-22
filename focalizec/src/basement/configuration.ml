@@ -24,12 +24,6 @@ let focalize_short_version =
   Printf.sprintf "%d.%d.%d" major minor patch_level
 ;;
 
-let focalize_full_version =
-  Printf.sprintf
-    "%s\nBuild date: %s\nLast commit SHA: %s"
-    focalize_short_version Build_stamp.build_date Build_stamp.last_commit
-;;
-
 let print_focalize_version v =
   prerr_endline (Printf.sprintf "The FoCaLize compiler, version %s" v);
   exit 0
@@ -37,16 +31,6 @@ let print_focalize_version v =
 
 let print_focalize_short_version () =
   print_focalize_version focalize_short_version
-;;
-
-let print_focalize_full_version () =
-  print_focalize_version focalize_full_version
-;;
-
-let print_install_dirs () =
-  Format.printf "%s %s@."
-    Installation.install_bin_dir Installation.install_lib_dir;
-  exit 0
 ;;
 
 let (get_experimental, set_experimental) =

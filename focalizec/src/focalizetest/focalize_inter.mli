@@ -200,10 +200,11 @@ val load_fichier : string -> unit
 should be a .foc filename. *)
 *)
 
-val focalize_init : string -> unit;;
-(** [focalize_init module_name] loads the .fo file corresponding to
+val focalize_init : string -> string -> unit;;
+(** [focalize_init lib_dir module_name] loads the .fo file corresponding to
 [module_name]. All others functions defined in this module refer to the
-environment given by this function. *)
+environment given by this function. [lib_dir] must be the library directory
+of focalizec, found in [Installation.install_lib_dir]. *)
 
 (** {6 Verifying types} *)
 

@@ -103,9 +103,30 @@ $(focal)
 
 
 <div id="main">
+<h3>Fix of the Zenon GIT repository (2014-01-17)</h3><h3>
+<p>
+  <a href="http://focal.inria.fr/zenon/">Zenon</a> GIT repository got corrupted
+  causing an incorrect
+  <code>git clone</code> when used as anynymous user via the http link
+  provided in the <a href="download/">Download</a> page. The version that was
+  fetched did not include number of (more or less) recent commits, hence did
+  not make available bug fixes and features of Zenon.
+</p>
+<p> This is now fixed, users can clone or update their version of Zenon.
+  Versions prior to <code>0.7.2 [a257] 2014-01-05</code> are out-of-date
+  and were possibly impacted by the repository corruption.
+</h3>
+</div>
+
+
+<div class="spacer"></div>
+
+
+<div id="main">
 <h3>Split of $(focal) and Zenon GIT repositories (2013-04-08)</h3><h3>
 <p>
-  $(focal) and Zenon are now in two separate GIT repositories. This won't
+  $(focal) and <a href="http://focal.inria.fr/zenon/">Zenon</a> are now in two
+  separate GIT repositories. This won't
   impact the available material but now requires to clone both repositories.
   This split allows lighter installation when only needing Zenon. Until
   Zenon's repository is cleanly integrated as a sub-module of the $(focal)
