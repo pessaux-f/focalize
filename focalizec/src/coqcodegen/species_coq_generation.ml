@@ -896,8 +896,10 @@ let generate_final_recursive_definifion_body_With_Function out_fmter
         Format.fprintf out_fmter "abst_%a@ "
           Parsetree_utils.pp_vname_with_operators_expanded n)
     abstracted_methods ;
-  (* We now apply the fake termination order. *)
-  Format.fprintf out_fmter "coq_builtins.magic_order"
+  (* We now apply the fake termination order only if we cheated with proof, i.e.
+     if we are not in experimental mode. *)
+  if not (Configuration.get_experimental ()) then
+    Format.fprintf out_fmter "coq_builtins.magic_order"
 ;;
 
 
@@ -3097,7 +3099,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            (print_types_as_tuple_if_several new_print_ctx) params_with_type
            (print_types_as_tuple_if_several new_print_ctx) params_with_type
         ) ;
-       (* Generate the recursive uncurryed function *)
+       (* Generate the recursive uncurryed function. *)
        Format.fprintf out_fmter
          "@[<2>Function %a@ (__arg:@ %a)@ {wf "
          Parsetree_utils.pp_vname_with_operators_expanded name
@@ -3105,31 +3107,15 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        if not (Configuration.get_experimental ()) then
          Format.fprintf out_fmter "__term_order@ __arg}"
        else (
-         Format.fprintf out_fmter "(%a_wforder@ ("
+         Format.fprintf out_fmter "(%a_wforder@ "
            Parsetree_utils.pp_vname_with_operators_expanded name ;
-         (* The order expression. *)
-         (match opt_term_pr with
-         | None -> Format.fprintf out_fmter "coq_builtins.magic_order"
-         | Some term_pr -> (
-             match term_pr.Parsetree.ast_desc with
-             | Parsetree.TP_structural _ ->
-                 failwith "TODO: structural4."  (* [Unsure] *)
-             | Parsetree.TP_lexicographic _ ->
-                 failwith "TODO: lexicographic4."  (* [Unsure] *)
-             | Parsetree.TP_measure (_, _, _) ->
-                 failwith "TODO: measure4."  (* [Unsure] *)
-             | Parsetree.TP_order (order_expr, _, _) ->
-                 Species_record_type_generation.generate_expr
-                   new_ctx ~local_idents: []
-                   ~in_recursive_let_section_of: [name]
-                   ~self_methods_status:
-                     Species_record_type_generation.SMS_abstracted
-                   ~recursive_methods_status:
-                     Species_record_type_generation.RMS_regular
-                   env order_expr
-            )
-         ) ;
-         Format.fprintf out_fmter "))@ __arg}"
+         (* Apply the order to its arguments due to lambda-lifts. *)
+         Species_record_type_generation.generate_method_lambda_lifted_arguments
+           ~only_for_Self_meths: false out_fmter
+           ai.Abstractions.ai_used_species_parameter_tys
+           ai.Abstractions.ai_dependencies_from_params
+           abstracted_methods ;
+         Format.fprintf out_fmter ")@ __arg}"
         ) ;
        Format.fprintf out_fmter ":@ %a@ :=@\n"
          (Types.pp_type_simple_to_coq new_print_ctx) return_ty ;
@@ -3169,7 +3155,6 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        (* Print the proof using the above material. *)
        if Configuration.get_experimental () then
          Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\n"
-           (* "coq_builtins.prove_term_obl __term_obl.@\n"; *)
        else
          Format.fprintf out_fmter "%a"
            (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
