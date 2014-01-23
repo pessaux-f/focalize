@@ -18,7 +18,7 @@
 ROOT_DIR=../../..
 
 # Fill here to add a new directory for a new library
-SUB_DIRS=algebra access_control
+SUB_DIRS=algebra
 # polynomials (PW: Commented out since does not compile yet (as of 0.6.0 version).)
 
 include $(ROOT_DIR)/Makefile.common

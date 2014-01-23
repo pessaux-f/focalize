@@ -111,16 +111,6 @@
 ./focalize/focalizec/src/docgen/proposition2tex.xsl
 ./focalize/focalizec/src/docgen/utils_docgen.ml
 ./focalize/focalizec/src/docgen/utils_docgen.mli
-./focalize/focalizec/src/extlib/access_control/access_control.fcl
-./focalize/focalizec/src/extlib/access_control/ensembles_finis.fcl
-./focalize/focalizec/src/extlib/access_control/hru.fcl
-./focalize/focalizec/src/extlib/access_control/Makefile
-./focalize/focalizec/src/extlib/access_control/rbac.fcl
-./focalize/focalizec/src/extlib/access_control/ticket.fcl
-./focalize/focalizec/src/extlib/access_control/tm
-./focalize/focalizec/src/extlib/access_control/tm/graph.ml
-./focalize/focalizec/src/extlib/access_control/tm/trust_management.fcl
-./focalize/focalizec/src/extlib/access_control/unix.fcl
 ./focalize/focalizec/src/extlib/airport_security/a17property4_2.fcl
 ./focalize/focalizec/src/extlib/airport_security/a17property4_3.fcl
 ./focalize/focalizec/src/extlib/airport_security/a17property4_4.fcl
