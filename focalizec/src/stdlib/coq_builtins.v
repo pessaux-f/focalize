@@ -506,3 +506,73 @@ Let bi__int_gt (x : Z) (y : Z)  := dec_to_bool (Z_gt_dec x y).
 
 (* The absolute value on Z. *)
 Let bi__int_abs (x : Z) := Zabs x.
+
+
+
+(* ************************************************************************* *)
+(** Projectors on tuples. Builtin from 1 to 5. Internally used to compile
+    recursive functions with non-structural termination proof.               *)
+(* ************************************************************************* *)
+
+(* Same than fst, but this latter is defined in native FoCaLiZe. *)
+Definition __right (__var_a : Set) (__var_b : Set)
+ (x : ((__var_a * __var_b)%type)) :  __var_b :=
+  match x with | (_, v) => v
+   end.
+
+(* Same than snd, but this latter is defined in native FoCaLiZe. *)
+Definition __left (__var_a : Set) (__var_b : Set)
+ (x : ((__var_a * __var_b)%type)) :  __var_a :=
+  match x with | (v, _) => v
+   end.
+
+(* Rightmost level-1 projection of any tuple (..., x) *)
+Definition __tpl_lastprj1 (__var_a : Set) (__var_b : Set)
+ (x : ((__var_a * __var_b)%type)) :  __var_b :=
+  __right __var_a __var_b x.
+
+(* First projection of a 2-uple (x, _) *)
+Definition __tpl_firstprj2  (__var_a : Set) (__var_b : Set)
+ (x : ((__var_a * __var_b)%type)) :  __var_a :=
+  __left __var_a __var_b x.
+
+(* Rightmost level-2 projection of any tuple (...,(x, _)) *)
+Definition __tpl_lastprj2 (__var_a : Set) (__var_b : Set) (__var_c : Set)
+ (x : ((__var_a * __var_b * __var_c)%type)) :  __var_b :=
+__right _ _ (__left _ _ x).
+
+(* First projection of a 3-uple (x, (_, _)) *)
+Definition __tpl_firstprj3  (__var_a : Set) (__var_b : Set)  (__var_c : Set)
+ (x : ((__var_a * __var_b * __var_c)%type)) :  __var_a :=
+__left _ _ (__left _ _ x).
+
+(* Rightmost level-3 projection of any tuple (...,(x, (_, _))) *)
+Definition __tpl_lastprj3 (__var_a : Set) (__var_b : Set) (__var_c : Set)
+  (__var_d : Set)
+  (x : ((__var_a * __var_b * __var_c * __var_d)%type)) :  __var_b :=
+__right _ _ (__left _ _ (__left _ _ x)).
+
+(* First projection of a 4-uple (x, (_, (_, _))) *)
+Definition __tpl_firstprj4  (__var_a : Set) (__var_b : Set)  (__var_c : Set)
+ (__var_d : Set)
+ (x : ((__var_a * __var_b * __var_c * __var_d)%type)) :  __var_a :=
+__left _ _ (__left _ _ (__left _ _ x)).
+
+(* Rightmost level-4 projection of any tuple (...,(x, (_, (_, _)))) *)
+Definition __tpl_lastprj4 (__var_a : Set) (__var_b : Set) (__var_c : Set)
+  (__var_d : Set) (__var_e : Set)
+  (x : ((__var_a * __var_b * __var_c * __var_d * __var_e)%type)) :  __var_b :=
+__right _ _ (__left _ _ (__left _ _ (__left _ _ x))).
+
+(* First projection of a 5-uple (x, (_, (_, (_, _)))) *)
+Definition __tpl_firstprj5  (__var_a : Set) (__var_b : Set)  (__var_c : Set)
+ (__var_d : Set) (__var_e : Set)
+ (x : ((__var_a * __var_b * __var_c * __var_d* __var_e)%type)) :  __var_a :=
+__left _ _ (__left _ _ (__left _ _ (__left _ _ x))).
+
+(* Rightmost level-5 projection of any tuple (...,(x, (_, (_, (_, _))))) *)
+Definition __tpl_lastprj5 (__var_a : Set) (__var_b : Set) (__var_c : Set)
+  (__var_d : Set) (__var_e : Set) (__var_f : Set)
+  (x : ((__var_a * __var_b * __var_c * __var_d * __var_e * __var_f)%type)) :
+    __var_b :=
+__right _ _ (__left _ _ (__left _ _ (__left _ _ (__left _ _ x)))).

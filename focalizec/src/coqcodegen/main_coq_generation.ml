@@ -322,6 +322,7 @@ let root_compile ~current_unit ~out_file_name stuff =
      Require Export Ascii.@\n\
      Require Export String.@\n\
      Require Export List.@\n\
+     Require Import Wellfounded.@\n\
      Require Export Recdef.@\n\
      Require Export coq_builtins.@\n@\n";
   if Configuration.get_experimental () then

@@ -2323,7 +2323,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
        (begin
        (* Generate the common code for proofs done by Zenon either by [Pf_auto]
           of by [Pf_node]. *)
-       print_common_prelude_for_zenon ();
+       print_common_prelude_for_zenon () ;
        (* Get the stuff to add to the current collection carrier mapping to
           make so the type expressions representing some species parameter
           carrier types, will be automatically be mapped onto our freshly
@@ -2359,13 +2359,13 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
           auto-proof is ended because this will be done directly by
           [generate_defined_theorem]. *)
        ignore
-         (zenonify_proof ~in_nested_proof: false ~qed:true ctx print_ctx env
+         (zenonify_proof ~in_nested_proof: false ~qed: true ctx print_ctx env
             min_coq_env ~self_manifest dependencies_from_params generated_fields
             [(* No available hypothesis at the beginning. *)]
             [(* No available steps at the beginning. *)] section_name_seed
             logical_expr_or_term_stuff name
             None (* No parent proof at the beginning. *)
-            proof);
+            proof) ;
        (* Now, unfortunately when Coq closes a Section, it only abstracts
           Parameters and Variables really used. Since WE lambda-lift all the
           dependencies, even if they are not used, we must enforce all the
@@ -2633,6 +2633,8 @@ let print_pattern_for_order out_fmter ~var_suffix description =
 
 
 
+(* [Unsure] Candidate for killing once match have disappeared in order
+  generation. *)
 let print_idents_as_tuple out_fmter idents =
   let rec rec_print = function
     | [] -> assert false
@@ -2646,6 +2648,48 @@ let print_idents_as_tuple out_fmter idents =
   Format.fprintf out_fmter "(";
   rec_print idents;
   Format.fprintf out_fmter ")"
+;;
+
+
+
+(** {b Descr}: Prints the tuple of function arguments involved in a termination
+    order. Each function argument is obtained by a projection of the order
+    argument named [arg_name]. The projection is done using builtin Coq
+    definitions, depending on the indice of the initial function argument and
+    the number of arguments this initial function has.
+    The file coq_builtins.v contains a set of pre-defined (and non-exhaustive)
+    projection functions allwing to recover individual components of tuples
+    between 2 and 6 components. This is mostly to avoid using nested pattern
+    matchings to extract components from the tuples passed to the order (and
+    that represent the tuplification of all the initial function's arguments).
+    In effect, with pattern matching, we don't know how to automate parts of
+    the proof termination in Coq. *)
+let print_order_args_as_tuple out_fmter ~fun_arity arg_name indices =
+  if fun_arity = 0 then Format.fprintf out_fmter "%s" arg_name
+  else
+    let rec rec_print = function
+      | [] -> assert false
+      | [last] ->
+          if last = 0 then
+            Format.fprintf out_fmter
+              "(coq_builtins.__tpl_firstprj%d@ " fun_arity
+          else 
+            Format.fprintf out_fmter
+              "(coq_builtins.__tpl_lastprj%d@ )" (fun_arity - last) ;
+          for _i = 1 to fun_arity do Format.fprintf out_fmter "_@ " done ;
+          Format.fprintf out_fmter "%s)" arg_name
+      | h :: q ->
+          if h = 0 then
+            Format.fprintf out_fmter
+              "(coq_builtins.__tpl_firtprj%d@ " fun_arity
+          else Format.fprintf out_fmter
+            "(coq_builtins.__tpl_lastprj%d@ " (fun_arity - h) ;
+          for _i = 1 to fun_arity do Format.fprintf out_fmter "_@ " done ;
+          Format.fprintf out_fmter "%s),@ " arg_name ;
+          rec_print q in
+    Format.fprintf out_fmter "(" ;
+    rec_print indices ;
+    Format.fprintf out_fmter ")"
 ;;
 
 
@@ -2676,7 +2720,7 @@ let generate_termination_order_With_Function ctx print_ctx env name
   let out_fmter = ctx.Context.scc_out_fmter in
   (* The order's name: the function's name + "_wforder". *)
   Format.fprintf out_fmter "@[<2>Definition %a_wforder"
-    Parsetree_utils.pp_vname_with_operators_expanded name;
+    Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Generate the lambda-lifts for our dependencies. *)
   let (_, ctx, print_ctx) =
     generate_field_definition_prelude
@@ -2684,10 +2728,10 @@ let generate_termination_order_With_Function ctx print_ctx env name
       ai.Abstractions.ai_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
   (* The 2 arguments of any decent order (i.e. the compared values). *)
-  Format.fprintf out_fmter "@ (__x __y :@ ";
+  Format.fprintf out_fmter "@ (__x __y :@ " ;
   (* Print the tuple that is the method's arguments' types. *)
   Format.fprintf out_fmter "%a) :@ Prop :=@ "
-    (print_types_as_tuple_if_several print_ctx) fun_params_n_tys;
+    (print_types_as_tuple_if_several print_ctx) fun_params_n_tys ;
   (* Now we need to generate the order's body depending on the kind of the used
      termination method. *)
   match opt_term_pr with
@@ -2760,32 +2804,12 @@ let generate_termination_order_With_Function ctx print_ctx env name
                "Definition" of the order. *)
             Format.fprintf out_fmter ")@\nend@]@\nend@].@]@\n@\n"
             end)
-        | Parsetree.TP_order (order_expr, order_args, _) ->
-            (begin
-            (* Get the indices of the variables the pattern must bind. *)
-            let pattern_description =
-              pattern_from_used_variables fun_params_n_tys order_args in
-            (* Generate the 2 match to retrieve arguments used by our order.
-               If the order uses only the 2nd and 3rd arguments of a 4
-               arguments-function, then the 2 match will only retain the 2nd
-               and 3rd components of the tuple of function'as arguments. *)
-            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n";
-            let printed1 =
-              print_pattern_for_order
-                out_fmter ~var_suffix: "1" pattern_description in
-            Format.fprintf out_fmter " =>@\n";
-            Format.fprintf out_fmter "@[<2>match@ __y@ with@\n";
-            let printed2 =
-              print_pattern_for_order
-                out_fmter ~var_suffix: "2" pattern_description in
-            Format.fprintf out_fmter " =>@\n(";
-            (* Now, generate the Coq translation of the expression of the
-               order. *)
-            (* Since the order is an expression of type [bool], we must
+        | Parsetree.TP_order (order_expr, used_params, _) -> (
+            (* Generate the Coq translation of the expression of the
+               order. Since the order is an expression of type [bool], we must
                surround the generated expression by a "Is_true" for Coq. *)
-            Format.fprintf out_fmter "@[<2>Is_true (";
+            Format.fprintf out_fmter "@[<2>Is_true (" ;
             let local_idents =
-              printed2 @ printed1 @
               [ Parsetree.Vlident "__x"; Parsetree.Vlident "__y" ] in
             Species_record_type_generation.generate_expr
               ctx ~local_idents ~in_recursive_let_section_of: [name]
@@ -2794,18 +2818,27 @@ let generate_termination_order_With_Function ctx print_ctx env name
               ~recursive_methods_status:
                 Species_record_type_generation.RMS_regular
               env order_expr ;
+            (* Compute the list of positionnal indices of the recursive
+               function's parameters used in the order. *)
+            let used_params_indices =
+              Handy.list_indices_of_present_in
+                ~all: (List.map fst fun_params_n_tys)
+                ~subset: (List.map fst used_params) in
             (* Now apply this expression to the 2 tuples of used arguments
-               extracted by the 2 "matchs". *)
+               extracted by calls to builtin extractors depending on their
+               indice among the function parameters. *)
+            let fun_arity = List.length fun_params_n_tys in
             Format.fprintf out_fmter "@ ";
-            print_idents_as_tuple out_fmter printed1;
+            print_order_args_as_tuple
+              out_fmter ~fun_arity "__x" used_params_indices ;
             Format.fprintf out_fmter "@ ";
-            print_idents_as_tuple out_fmter printed2;
+            print_order_args_as_tuple
+              out_fmter ~fun_arity "__y" used_params_indices ;
             (* Close the parenthese and the box of the "Is_true". *)
             Format.fprintf out_fmter ")@]";
-            (* Close the 2 boxes of the "matchs" and the box of the whole
-               "Definition" of the order. *)
-            Format.fprintf out_fmter ")@\nend@]@\nend@].@]@\n@\n"
-            end)
+            (* Close the box of the whole "Definition" of the order. *)
+            Format.fprintf out_fmter ".@]@\n@\n"
+           )
        end)
 ;;
 
@@ -2816,7 +2849,7 @@ let generate_termination_order_With_Function ctx print_ctx env name
     this former application, the tuple of all variables / recursive args
     of the function: not only those on which the user-order operates. *)
 let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
-    name (params : Parsetree.vname list) ai
+    name fun_params_n_tys ai
     sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
     recursive_calls opt_term_pr =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -2832,10 +2865,11 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
             failwith "TODO: measure3."  (* [Unsure] *)
         | Parsetree.TP_order (order_expr, used_params, proof) ->
             (* Compute the list of positionnal indices of the recursive
-               function's parameters used in ht order. *)
+               function's parameters used in the order. *)
             let used_params_indices =
               Handy.list_indices_of_present_in
-                ~all: params ~subset: (List.map fst used_params) in
+                ~all: (List.map fst fun_params_n_tys)
+                ~subset: (List.map fst used_params) in
             generate_theorem_section_if_by_zenon
               ctx print_ctx env
               ai.Abstractions.ai_min_coq_env ~self_manifest
@@ -2879,15 +2913,15 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
   (match opt_term_pr with
    | None ->
        Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\nQed."
-   | Some term_pr ->
-       (begin
+   | Some term_pr -> (
        match term_pr.Parsetree.ast_desc with
         | Parsetree.TP_structural _ ->
             failwith "TODO: structural2."  (* [Unsure] *)
         | Parsetree.TP_lexicographic _ ->
             failwith "TODO: lexicographic2."  (* [Unsure] *)
-        | Parsetree.TP_measure (_, _, proof)
-        | Parsetree.TP_order (_, _, proof) ->
+        | Parsetree.TP_measure (_, _, _proof) ->
+            failwith "TODO: measure2."  (* [Unsure] *)
+        | Parsetree.TP_order (order_expr, used_params, proof) ->
             (match proof.Parsetree.ast_desc with
              | Parsetree.Pf_assumed _ ->
                  (* Proof assumed, then simply use "magic_prove". *)
@@ -2896,27 +2930,72 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                  Format.fprintf out_fmter
                    "apply coq_builtins.magic_prove.@\nQed."
              | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
-                 (* Proof done by Zenon. Apply the temporary theorem. *)
+                 (* Proof done by Zenon. Apply soldering stuff. *)
                  Format.fprintf out_fmter
                    "unfold %a_wforder;simpl.@\n\
                     elim for_zenon_abstracted_%a ; intro __user_dec1.@\n\
-                    intro __user_rem_dec_n_wf.@\n\
-                    TODO repeat nb rec call - 1 times@\n\
-                    \ \ (* Break first AND on the left. *)@\n\
-                    \ \ elim __user_rem_dec_n_wf.@\n\
-                    \ \ clear __user_rem_dec_n_wf.@\n\
-                    (* Last intros. *)@\n\
-                    TODO intros __user_dec2 __user_wf.@\n\
-                    TODO repeat nb rec call times@\n\
-                    \ \ split;auto.@\n\
-                    TODO Some more stuff..."
+                    intro __user_rem_dec_n_wf.@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded name
-                   Parsetree_utils.pp_vname_with_operators_expanded name
+                   Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 let nb_rec_calls = List.length recursive_calls in
+                 (* Repeat nb rec call - 1 times... *)
+                 for _i = 2 to nb_rec_calls do
+                   Format.fprintf out_fmter
+                     "(* Break first AND on the left. *)@\n\
+                     elim __user_rem_dec_n_wf.@\n\
+                     clear __user_rem_dec_n_wf.@\n"
+                  done ;
+                  Format.fprintf out_fmter
+                    "(* Last intros. *)@\n\
+                    intros __user_dec2 __user_wf.@\n" ;
+                  (* Repeat nb rec call times... *)
+                  for _i = 1 to nb_rec_calls do
+                    Format.fprintf out_fmter "split;auto.@\n"
+                  done ;
+                  Format.fprintf out_fmter
+                    "set (R := (fun __a __b => Is_true (" ;
+                  (* Same code than generated for the theorem representing the
+                     proof obligation as expected by the user. *)
+                  Species_record_type_generation.generate_expr
+                    ~local_idents: [] ~in_recursive_let_section_of: []
+                    ~self_methods_status:
+                      Species_record_type_generation.SMS_abstracted
+                    ~recursive_methods_status:
+                      Species_record_type_generation.RMS_regular
+                    ctx env order_expr ;
+                  Format.fprintf out_fmter " __a __b))).@\n" ;
+                  Format.fprintf out_fmter
+                    "change@ (well_founded (fun@ __c __d@ :@ " ;
+                  Format.fprintf out_fmter "%a@ =>@ R "
+                    (print_types_as_tuple_if_several print_ctx)
+                    fun_params_n_tys ;
+                  (* Same arguments than for the xxx_wforder. *)
+                  (* Compute the list of positionnal indices of the recursive
+                     function's parameters used in the order. *)
+                  let used_params_indices =
+                    Handy.list_indices_of_present_in
+                      ~all: (List.map fst fun_params_n_tys)
+                      ~subset: (List.map fst used_params) in
+                  let fun_arity = List.length fun_params_n_tys in
+                  print_order_args_as_tuple
+                    out_fmter ~fun_arity "__c" used_params_indices ;
+                  Format.fprintf out_fmter "@ " ;
+                  print_order_args_as_tuple
+                    out_fmter ~fun_arity "__d" used_params_indices ;
+                  Format.fprintf out_fmter ")).@\n" ;
+                  Format.fprintf out_fmter
+                    "apply wf_inverse_image.@\nassumption.@\n" ;
+                  (* Repeat as many times there are lambda-liftings... *)
+                  List.iter
+                    (fun _ ->Format.fprintf out_fmter "auto.@\n")
+                    abstracted_methods ;
+                  Format.fprintf out_fmter "Qed.@\n"
              | Parsetree.Pf_coq (_, script) ->
                  (* Dump verbatim the Coq code. *)
-                 Format.fprintf out_fmter "%s" script);
-       end));
-  Format.fprintf out_fmter "@]@\n@\n"
+                 Format.fprintf out_fmter "%s" script)
+      ));
+  Format.fprintf out_fmter "@]@\n@\n" ;
+  (abstracted_methods, new_ctx, new_print_ctx)
 ;;
 
 
@@ -2976,51 +3055,83 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Recursion.list_recursive_calls name params_with_type [] body_expr in
 
 (* [Unsure] *)
-       if (Configuration.get_experimental ()) then (
-         (* ---> Generate the order depending on the kind of proof. *)
-         generate_termination_order_With_Function
-           ctx' print_ctx env name params_with_type ai
-           ai.Abstractions.ai_dependencies_from_params generated_fields
-           opt_term_pr
-        ) ;
-
-       (* ---> Start the Coq "Section" containing the termination theorem as
-          expected by Function and the definition of the Coq Function. *)
-       Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded name ;
-
-(* [Unsure] *)
-       if (Configuration.get_experimental ()) then (
-         (* ---> Generate the termination proof. *)
-         generate_termination_proof_With_Function ctx' print_ctx env
-           ~self_manifest name params ai
-           ai.Abstractions.ai_dependencies_from_params
-           generated_fields recursive_calls opt_term_pr
-        );
-
-       (* ---> Now, generate the prelude of the only method introduced by
-          "let rec". *)
        let (abstracted_methods, new_ctx, new_print_ctx) =
-         generate_field_definition_prelude
-           ~in_section: true ctx' print_ctx env ai.Abstractions.ai_min_coq_env
-           ai.Abstractions.ai_used_species_parameter_tys
-           ai.Abstractions.ai_dependencies_from_params generated_fields in
-       (* We now generate the order. It always has 2 arguments having the same
-          type. This type is a tuple if the method has several arguments. This
-          type was already computed above for the termination order... *)
-       Format.fprintf out_fmter
-         "@\n@\n(* Abstracted termination order. *)@\n";
-       Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ ";
-       (* Print the tuple that is the method's arguments' types. *)
-       Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
-         (print_types_as_tuple_if_several new_print_ctx) params_with_type
-         (print_types_as_tuple_if_several new_print_ctx) params_with_type;
+         if (Configuration.get_experimental ()) then (
+           (* ---> Generate the order depending on the kind of proof. *)
+           generate_termination_order_With_Function
+             ctx' print_ctx env name params_with_type ai
+             ai.Abstractions.ai_dependencies_from_params generated_fields
+             opt_term_pr ;
+           (* ---> Start the Coq "Section" containing the termination theorem as
+              expected by Function and the definition of the Coq Function. *)
+           Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
+             Parsetree_utils.pp_vname_with_operators_expanded name ;
+           (* ---> Generate the termination proof. *)
+           generate_termination_proof_With_Function ctx' print_ctx env
+             ~self_manifest name params_with_type ai
+             ai.Abstractions.ai_dependencies_from_params
+             generated_fields recursive_calls opt_term_pr
+          )
+         else (
+           (* ---> Start the Coq "Section" containing the termination theorem as
+              expected by Function and the definition of the Coq Function. *)
+           Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
+             Parsetree_utils.pp_vname_with_operators_expanded name ;
+           (* ---> Now, generate the prelude of the only method introduced by
+              "let rec". *)
+           generate_field_definition_prelude
+             ~in_section: true ctx' print_ctx env ai.Abstractions.ai_min_coq_env
+             ai.Abstractions.ai_used_species_parameter_tys
+             ai.Abstractions.ai_dependencies_from_params generated_fields
+          ) in
+
+       if not (Configuration.get_experimental ()) then (
+         (* We now generate the order. It always has 2 arguments having the same
+            type. This type is a tuple if the method has several arguments. This
+            type was already computed above for the termination order... *)
+         Format.fprintf out_fmter
+           "@\n@\n(* Abstracted termination order. *)@\n";
+         Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ ";
+         (* Print the tuple that is the method's arguments' types. *)
+         Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
+           (print_types_as_tuple_if_several new_print_ctx) params_with_type
+           (print_types_as_tuple_if_several new_print_ctx) params_with_type
+        ) ;
        (* Generate the recursive uncurryed function *)
        Format.fprintf out_fmter
-         "@[<2>Function %a@ (__arg:@ %a)@ \
-         {wf __term_order __arg}:@ %a@ :=@\n"
+         "@[<2>Function %a@ (__arg:@ %a)@ {wf "
          Parsetree_utils.pp_vname_with_operators_expanded name
-         (print_types_as_tuple_if_several new_print_ctx) params_with_type
+         (print_types_as_tuple_if_several new_print_ctx) params_with_type ;
+       if not (Configuration.get_experimental ()) then
+         Format.fprintf out_fmter "__term_order@ __arg}"
+       else (
+         Format.fprintf out_fmter "(%a_wforder@ ("
+           Parsetree_utils.pp_vname_with_operators_expanded name ;
+         (* The order expression. *)
+         (match opt_term_pr with
+         | None -> Format.fprintf out_fmter "coq_builtins.magic_order"
+         | Some term_pr -> (
+             match term_pr.Parsetree.ast_desc with
+             | Parsetree.TP_structural _ ->
+                 failwith "TODO: structural4."  (* [Unsure] *)
+             | Parsetree.TP_lexicographic _ ->
+                 failwith "TODO: lexicographic4."  (* [Unsure] *)
+             | Parsetree.TP_measure (_, _, _) ->
+                 failwith "TODO: measure4."  (* [Unsure] *)
+             | Parsetree.TP_order (order_expr, _, _) ->
+                 Species_record_type_generation.generate_expr
+                   new_ctx ~local_idents: []
+                   ~in_recursive_let_section_of: [name]
+                   ~self_methods_status:
+                     Species_record_type_generation.SMS_abstracted
+                   ~recursive_methods_status:
+                     Species_record_type_generation.RMS_regular
+                   env order_expr
+            )
+         ) ;
+         Format.fprintf out_fmter "))@ __arg}"
+        ) ;
+       Format.fprintf out_fmter ":@ %a@ :=@\n"
          (Types.pp_type_simple_to_coq new_print_ctx) return_ty ;
        (* Unfortunately, we can't simply generate "let (x, y, ..) := __arg"
           because Coq only allows pairs as let-binding pattern. So instead,
