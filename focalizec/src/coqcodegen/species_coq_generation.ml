@@ -3007,11 +3007,12 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
     structural.
     In this case, the function is generated using the Function construct of
     Coq.
-    Is experimental mode is activated, then it generates a termination order
+    If experimental mode is activated, then it generates a termination order
     and a termination proof instead of using fake and generic ones.
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
+(* TODO: split in several parts. Too big ! *)
 let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
     ~self_manifest generated_fields from name params scheme body opt_term_pr
     ai =
@@ -3153,8 +3154,35 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          ai.Abstractions.ai_min_coq_env
          ai.Abstractions.ai_used_species_parameter_tys;
        (* Print the proof using the above material. *)
-       if Configuration.get_experimental () then
-         Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\n"
+       if Configuration.get_experimental () then (
+         (* ---> Generate the soldering Coq script. *)
+         Format.fprintf out_fmter
+           "elim f_termination ; \
+           intros __for_function_dec1 __for_function_rem_dec_n_wf.@\n" ;
+         (* Repeat nb rec call - 1 times... *)
+         let nb_rec_calls = List.length recursive_calls in
+         for _i = 2 to nb_rec_calls do
+           Format.fprintf out_fmter
+             "(* Break first AND on the left. *)@\n\
+             elim __for_function_rem_dec_n_wf.@\n" ;
+           Format.fprintf out_fmter
+             "(* Last intros. *)@\n\
+              intros __for_function_dec2 __user_wf.@\n"
+         done ;
+         Format.fprintf out_fmter
+           "split.@\nintros.@\napply __for_function_dec1.@\nunfold Is_true.@\n\
+           rewrite teq0; auto.@\nunfold Is_true.@\nrewrite teq1; auto.@\n\
+           (* Break decreasing obligation and well-founded. *)@\n\
+           split.@\n\
+           intros.@\n\
+           apply __for_function_dec2.@\n\
+           unfold Is_true.@\n\
+           rewrite teq0; auto.@\n\
+           unfold Is_true.@\n\
+           rewrite teq1; auto.@\n\
+           (* Remaining well-foundation... *)@\n\
+           assumption.@\n"
+        )
        else
          Format.fprintf out_fmter "%a"
            (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
