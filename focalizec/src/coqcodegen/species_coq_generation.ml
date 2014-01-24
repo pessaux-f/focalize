@@ -2667,7 +2667,7 @@ let print_idents_as_tuple out_fmter idents =
     In effect, with pattern matching, we don't know how to automate parts of
     the proof termination in Coq. *)
 let print_order_args_as_tuple out_fmter ~fun_arity arg_name indices =
-  if fun_arity = 0 then Format.fprintf out_fmter "%s" arg_name
+  if fun_arity = 1 then Format.fprintf out_fmter "%s" arg_name
   else
     let rec rec_print = function
       | [] -> assert false
