@@ -114,7 +114,7 @@ $(focal)
  For sake of homogeneity, "final-ity" is available also for "non-logical"
  definitions.
 <br><br>
-The following code:<br>
+The following code<sup>*</sup>:<br>
 <code>
   &nbsp;&nbsp;logical let is_A_singleton = all a : A, A!equal (a, A!element);<br>
   &nbsp;&nbsp;(* Theorem to avoid changes of is_A_singleton. *)<br>
@@ -132,6 +132,9 @@ may now be simplified in:
 Since no children in the inheritance will be allowed to alter the "meaning"
 of <code>is_A_singleton</code>, the theorem <code>is_A_singleton_spec</code>
 is no more needed.
+</p>
+<p style="font-style: italic;"><font size="-1">(*) Thank's to Mathieu
+and Th&eacute;o for the example.</font>
 </p>
 </h3>
 </div>
