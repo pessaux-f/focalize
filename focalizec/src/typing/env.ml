@@ -2032,14 +2032,6 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
         | _ ->  raise (Unbound_type (vname, loc)));
         (* If we found a species with this name, issue the better message. *)
         raise (Unbound_collection (vname, loc))
-
-  (* Added for FocalTest *)
-  let get_t : t -> (EMAccess.constructor_bound_data, EMAccess.label_bound_data,
-                    EMAccess.type_bound_data, EMAccess.value_bound_data,
-                    EMAccess.species_bound_data) generic_env =
-                      fun t -> t
-;;
-  (*   *)
 end
 ;;
 
