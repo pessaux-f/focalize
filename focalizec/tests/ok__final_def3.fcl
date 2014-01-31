@@ -1,0 +1,19 @@
+open "basics" ;;
+
+(* Must pass.
+   Example showing usage of final let rec.
+   Second and third definitions must be accepted since the first one was not
+   final. *)
+species A =
+  let rec f (x : int) = 5 ;
+end ;;
+
+species B =
+  inherit A ;
+  final let f (y :int) = 50 ;
+end ;;
+
+species C =
+  inherit A ;
+  let rec f (z :int) = 500 ;
+end ;;

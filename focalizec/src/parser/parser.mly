@@ -234,6 +234,7 @@ let mk_proof_label (s1, s2) =
 %token END
 %token EX
 %token EXTERNAL
+%token FINAL
 %token FUNCTION
 %token HYPOTHESIS
 %token IF
@@ -806,20 +807,24 @@ define_let_semi_list:
 /**** FUNCTION & VALUES DEFINITION ****/
 
 let_binding:
-  | opt_local LET binding following_binding_list
-    { mk {
+  | opt_local_final LET binding following_binding_list
+    { let (local, final) = $1 in
+      mk {
         ld_rec = RF_no_rec;
         ld_logical = LF_no_logical;
-        ld_local = $1;
+        ld_final = final;
+        ld_local = local;
         ld_bindings = $3 :: $4;
         ld_termination_proof = None;
       }
     }
-  | opt_local LET REC binding following_binding_list opt_termination_proof
-    { mk {
+  | opt_local_final LET REC binding following_binding_list opt_termination_proof
+    { let (local, final) = $1 in
+      mk {
        ld_rec = RF_rec;
        ld_logical = LF_no_logical;
-       ld_local = $1;
+       ld_final = final;
+       ld_local = local;
        ld_bindings = $4 :: $5;
        ld_termination_proof = $6;
       }
@@ -1533,6 +1538,13 @@ pattern_record_field_list:
     { [ ($1, $3) ] }
   | label_ident EQUAL pattern SEMI pattern_record_field_list
     { ($1, $3) :: $5 }
+;
+
+opt_local_final:
+  |                { (LF_no_local, LF_no_final) }
+  | LOCAL          { (LF_local, LF_no_final) }
+  | FINAL          { (LF_no_local, LF_final) }
+  | FINAL LOCAL    { (LF_local, LF_final) }
 ;
 
 opt_local:

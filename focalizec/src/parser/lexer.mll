@@ -111,6 +111,7 @@ List.iter
   "ex", EX;
   "external", EXTERNAL;
   "false", BOOL "false";
+  "final", FINAL;
   "function", FUNCTION;
   "hypothesis", HYPOTHESIS;
   "if", IF;

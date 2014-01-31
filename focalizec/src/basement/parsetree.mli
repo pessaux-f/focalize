@@ -332,6 +332,8 @@ type rec_flag = | RF_no_rec | RF_rec
 
 type logical_flag = | LF_no_logical | LF_logical
 
+type final_flag = | LF_no_final | LF_final
+
 type local_flag = | LF_no_local | LF_local
 
 type external_expr = external_expr_desc ast
@@ -363,6 +365,7 @@ and let_def = let_def_desc ast
 and let_def_desc = {
   ld_rec : rec_flag;
   ld_logical : logical_flag;
+  ld_final : final_flag;
   ld_local : local_flag;
   ld_bindings : binding list;
   ld_termination_proof : termination_proof option;

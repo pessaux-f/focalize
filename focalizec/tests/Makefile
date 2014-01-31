@@ -32,7 +32,7 @@ MUST_BE_OK_SRCS_COMPLETE=\
   ok__coll_gen_llifts_on_non_remapped.fcl \
   ok__coll_gen_llifts_on_non_remapped2.fcl ok__need_remap_deps.fcl \
   ok__definition_72_rule_PRM_miss_subst.fcl ok__bug18.fcl ok__record1.fcl \
-	ok__record2.fcl
+	ok__record2.fcl ok__final_def1.fcl ok__final_def2.fcl ok__final_def3.fcl
 
 
 # These must pass but without generating / compiling to Coq.
@@ -42,7 +42,8 @@ MUST_BE_OK_SRCS_NO_COQ = \
 
 # These must fail and be rejected by FoCaLiZe.
 MUST_BE_KO_SRCS = \
-  ko__bad_self_use.fcl ko__param_toy.fcl ko__test_error.fcl ko__test_rec.fcl
+  ko__bad_self_use.fcl ko__param_toy.fcl ko__test_error.fcl ko__test_rec.fcl \
+  ko__final_def1.fcl ko__final_def2.fcl ko__final_def3.fcl
 
 
 include $(ROOT_DIR)/Makefile.common

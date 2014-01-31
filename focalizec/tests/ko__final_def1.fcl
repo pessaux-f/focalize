@@ -1,0 +1,20 @@
+open "basics" ;;
+
+(* Must fail.
+   Example showing usage of final let.
+   First redefinition must pass since they are exactly the same.
+   Second must fail because bodies are different. *)
+species A =
+  final let x = 5 ;
+  final let y = 7 ;
+end ;;
+
+species B =
+  inherit A ;
+  let x = 5 ;   (* Must pass here since redefinition by the same body. *)
+end ;;
+
+species C =
+  inherit B ;
+  let y = 50 ;  (* Must fail here since redefinition by a different body. *)
+end ;;

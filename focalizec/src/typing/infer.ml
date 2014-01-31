@@ -351,7 +351,17 @@ exception Invalid_parameter_in_delayed_proof_termination of
 
     {b Exported} : Yes.                                                  *)
 (* ********************************************************************* *)
-exception No_mix_between_logical_defs of (Location.t * Parsetree.vname);;
+exception No_mix_between_logical_defs of (Location.t * Parsetree.vname) ;;
+
+
+
+(* ************************************************************************* *)
+(** {b Descr} : Exception raised when a let-method is redefined although it
+    was tagged as final.
+
+    {b Exported} : Yes.                                                      *)
+(* ************************************************************************* *)
+exception No_redef_final_let of (Location.t * Parsetree.vname) ;;
 
 
 
@@ -1176,7 +1186,7 @@ let rec typecheck_expr ctx env initial_expr =
              (Types.unify
                 ~loc: initial_expr.Parsetree.ast_loc
                 ~self_manifest: ctx.self_manifest
-                ty_expr (Types.type_unit ()));
+                ty_expr (Types.type_unit ())) ;
            typecheck_sequence exprs in
          typecheck_sequence exprs
      | Parsetree.E_external ext_expr ->
@@ -1185,7 +1195,7 @@ let rec typecheck_expr ctx env initial_expr =
   (* Store the type information in the expression's node. *)
   initial_expr.Parsetree.ast_type <- Parsetree.ANTI_type final_ty;
   (* Check if the expression has type Self and set the flag according to. *)
-  Types.check_for_decl_dep_on_self final_ty;
+  Types.check_for_decl_dep_on_self final_ty ;
   final_ty
 
 
@@ -2046,7 +2056,9 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                  Env.TypeInformation.ldf_recursive =
                    let_def.Parsetree.ast_desc.Parsetree.ld_rec;
                  Env.TypeInformation.ldf_logical =
-                   let_def.Parsetree.ast_desc.Parsetree.ld_logical } in
+                   let_def.Parsetree.ast_desc.Parsetree.ld_logical ;
+                 Env.TypeInformation.ldf_final =
+                   let_def.Parsetree.ast_desc.Parsetree.ld_final } in
                (* We now collect the type information of these methods in
                   order to make them suitable for a "type of method". *)
                match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
@@ -3645,20 +3657,26 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
   let rec rec_fusion l1 l2 =
     match l1 with
     | [] -> l2
-    | ((f1, n1, _, sc1, _, _, _, log_flag1) as meth) :: rem1 ->
+    | ((f1, n1, prev_args, sc1, prev_body, _, _, flags1) as meth) :: rem1 ->
       let (fused_meth, new_l2) =
         (try
           let (m2, rem_of_l2) = find_and_remain n1 l2 in
-          let (f2, n2, args2, sc2, body2, otp2, dep2, log_flag2) = m2 in
+          let (f2, n2, args2, sc2, body2, otp2, dep2, flags2) = m2 in
           (* We don't allow to redefine methods mixing logical and computation
              flag. *)
-          if log_flag1.Env.TypeInformation.ldf_logical !=
-             log_flag2.Env.TypeInformation.ldf_logical then
-            raise (No_mix_between_logical_defs (loc, n1));
-          Types.begin_definition ();
+          if flags1.Env.TypeInformation.ldf_logical !=
+             flags2.Env.TypeInformation.ldf_logical then
+            raise (No_mix_between_logical_defs (loc, n1)) ;
+          (* Only allow redefinition if is identity modulo alpha-conversion. *)
+          if (flags1.Env.TypeInformation.ldf_final = Parsetree.LF_final) &&
+             (not (Ast_equal.binding_body_equal_p
+                     ~params1:prev_args ~params2: args2
+                     ~body1: prev_body ~body2: body2)) then
+            raise (No_redef_final_let (loc, n1)) ;
+          Types.begin_definition () ;
           let ty1 = Types.specialize sc1 in
           let ty2 = Types.specialize sc2 in
-          Types.reset_deps_on_rep ();
+          Types.reset_deps_on_rep () ;
           (* Ensure that the 2 versions of the method are type-compatible. *)
           (try
             ignore
@@ -3666,7 +3684,7 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
           with _ ->
             (* Try to have a more comprehensive error message. *)
             raise
-              (Wrong_type_by_inheritance (loc, n1, ty1, ty2, f1, f2)));
+              (Wrong_type_by_inheritance (loc, n1, ty1, ty2, f1, f2))) ;
           Types.end_definition ();
           (* And return the seconde one (late binding) with the presence of
              def-dependency on "rep" updated. *)
@@ -3676,7 +3694,7 @@ let fusion_fields_let_rec_let_rec ~loc ctx rec_meths1 rec_meths2 =
             Env.TypeInformation.dor_decl =
               dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
             } in
-          let m2' = (f2, n2, args2, sc2, body2, otp2, dep', log_flag2) in
+          let m2' = (f2, n2, args2, sc2, body2, otp2, dep', flags2) in
           (m2', rem_of_l2)
          with Not_found ->
           (* The method doesn't belong to l2, then keep this one. *)
@@ -3744,14 +3762,20 @@ let fusion_fields_let_let_rec ~loc ctx meth1 rec_meths2 =
    the new one. *)
 let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
   try
-    let (f2, n2, args2, sc2, body2, otp2, dep2, log_flag2) = meth2 in
+    let (f2, n2, args2, sc2, body2, otp2, dep2, flags2) = meth2 in
     let (m1, rem_of_l1) = find_and_remain n2 rec_meths1 in
-    let (f1, n1, _, sc1, _, _, _, log_flag1) = m1 in
+    let (f1, n1, prev_args, sc1, prev_body, _, _, flags1) = m1 in
     (* We don't allow to redefine methods mixing logical and computation
        flag. *)
-    if log_flag1.Env.TypeInformation.ldf_logical !=
-       log_flag2.Env.TypeInformation.ldf_logical then
-      raise (No_mix_between_logical_defs (loc, n1));
+    if flags1.Env.TypeInformation.ldf_logical !=
+       flags2.Env.TypeInformation.ldf_logical then
+      raise (No_mix_between_logical_defs (loc, n1)) ;
+    (* Only allow redefinition if is identity modulo alpha-conversion. *)
+    if (flags1.Env.TypeInformation.ldf_final = Parsetree.LF_final) &&
+       (not (Ast_equal.binding_body_equal_p
+               ~params1:prev_args ~params2: args2
+               ~body1: prev_body ~body2: body2)) then
+      raise (No_redef_final_let (loc, n1)) ;
     Types.begin_definition ();
     let ty1 = Types.specialize sc1 in
     let ty2 = Types.specialize sc2 in
@@ -3772,7 +3796,7 @@ let fusion_fields_let_rec_let ~loc ctx rec_meths1 meth2 =
           dep2.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep ();
         Env.TypeInformation.dor_decl =
           dep2.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep () } in
-    let m2' = (f2, n2, args2, sc2, body2, otp2, dep', log_flag2) in
+    let m2' = (f2, n2, args2, sc2, body2, otp2, dep', flags2) in
     (* No matter if the position of the re-inserted method differs from its
        original place. So, finally as result, if the fusion succeeded we get
        the old recursive methods except the one wearing the name of newly
@@ -3870,14 +3894,21 @@ let fields_fusion ~loc ctx phi1 phi2 =
         (* If a sig is specified, we always keep it as type. *)
         Env.TypeInformation.SF_let
           (from1, n1, pars1, sc2, body, otp1, dep', log1)
-   | (Env.TypeInformation.SF_let (from1, n1, _, sc1, _, _, _, log_flag1),
+   | (Env.TypeInformation.SF_let
+          (from1, n1, prev_pars, sc1, prev_body, _, _, flags1),
       Env.TypeInformation.SF_let
-          (from2, n2, pars2, sc2, body, otp2, dep, log_flag2)) when n1 = n2 ->
+          (from2, n2, pars2, sc2, body, otp2, dep, flags2)) when n1 = n2 ->
         (* let / let. *)
         (* Late binding : keep the second body ! *)
-        if log_flag1.Env.TypeInformation.ldf_logical !=
-           log_flag2.Env.TypeInformation.ldf_logical then
+        if flags1.Env.TypeInformation.ldf_logical !=
+           flags2.Env.TypeInformation.ldf_logical then
           raise (No_mix_between_logical_defs (loc, n1));
+        (* Only allow redefinition if is identity modulo alpha-conversion. *)
+        if (flags1.Env.TypeInformation.ldf_final = Parsetree.LF_final) &&
+           (not (Ast_equal.binding_body_equal_p
+                   ~params1:prev_pars ~params2: pars2
+                   ~body1: prev_body ~body2: body)) then
+          raise (No_redef_final_let (loc, n1)) ;
         Types.reset_deps_on_rep ();
         Types.begin_definition ();
         let ty1 = Types.specialize sc1 in
@@ -3891,12 +3922,12 @@ let fields_fusion ~loc ctx phi1 phi2 =
         Types.end_definition ();
         let dep' = {
           Env.TypeInformation.dor_def =
-            dep.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep ();
+            dep.Env.TypeInformation.dor_def || Types.get_def_dep_on_rep () ;
           Env.TypeInformation.dor_decl =
             dep.Env.TypeInformation.dor_decl || Types.get_decl_dep_on_rep ()
           } in
         Env.TypeInformation.SF_let
-          (from2, n2, pars2, (Types.generalize ty), body, otp2, dep', log_flag2)
+          (from2, n2, pars2, (Types.generalize ty), body, otp2, dep', flags2)
    | (Env.TypeInformation.SF_let meth1,
       Env.TypeInformation.SF_let_rec rec_meths2) ->
         Env.TypeInformation.SF_let_rec
@@ -3946,7 +3977,7 @@ let fields_fusion ~loc ctx phi1 phi2 =
         if n1 = n2 then
           (begin
             (* Now ensure that there is the same number ot type variables. *)
-            assert (ntyvar1 = ntyvar2);
+            assert (ntyvar1 = ntyvar2) ;
             (* Finally, ensure that the propositions are the same. *)
             if Ast_equal.logical_expr_equal_p logical_expr1 logical_expr2
             then phi1 (* Return the theorem. *)
@@ -4057,11 +4088,12 @@ let non_conflicting_fields_p f1 f2 =
              change. *)
           true
         with _ ->
-          (* Unification failed, then types are conflicting. Due to the fact that
-             types can't be changed, the unique case where unification may
+          (* Unification failed, then types are conflicting. Due to the fact
+             that types can't be changed, the unique case where unification may
              fail is in case where we tried to unify Self and its effective
-             representation. And since we do not have any [self_manifest] available
-             here, we can't take into account this possible equivalence.
+             representation. And since we do not have any [self_manifest]
+             available here, we can't take into account this possible
+             equivalence.
              [Unsure] We chose to raise a conflict although if we knew the
              effective type of Self this should not occur. Is this solution too
              restrictive ? May it invalidate stuff that should not have be

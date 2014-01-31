@@ -408,3 +408,21 @@ and logical_expr initial_alpha_eq_map initial_logical_expr1
 
 (** The wrapper to make the alpha-conversion mapping hidden. *)
 let logical_expr_equal_p p1 p2 = logical_expr [] p1 p2 ;;
+
+
+
+(** {b Descr}: A wrapper to make the alpha-conversion mapping hidden and to
+    test equality during fusion (for "final"-check of let-def methods), dealing
+    with AST stored in the typing environment.
+
+    {b Rem} : Not exported outside this module.     *)
+let binding_body_equal_p ~params1 ~params2 ~body1 ~body2 =
+  (* We extend the alpha-conversion mapping with the parameters. *)
+  let alpha_eq_map = (List.map2 (fun n1 n2 -> (n1, n2)) params1 params2) in
+  (match (body1, body2) with
+   | ((Parsetree.BB_computational e1), (Parsetree.BB_computational e2)) ->
+       expr alpha_eq_map e1 e2
+   | ((Parsetree.BB_logical p1), (Parsetree.BB_logical p2)) ->
+       logical_expr alpha_eq_map p1 p2
+   | (_, _) -> false)
+;;

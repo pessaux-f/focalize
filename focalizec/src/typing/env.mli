@@ -80,7 +80,8 @@ module TypeInformation :
 
     type let_definition_flags = {
       ldf_recursive : Parsetree.rec_flag ;
-      ldf_logical : Parsetree.logical_flag }
+      ldf_logical : Parsetree.logical_flag ;
+      ldf_final : Parsetree.final_flag }
 
     type sig_field_info =
       (from_history * Parsetree.vname * Types.type_scheme)

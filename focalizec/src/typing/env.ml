@@ -451,9 +451,11 @@ module TypeInformation = struct
   type let_definition_flags = {
     ldf_recursive : Parsetree.rec_flag; (** Tells if the  let-bound identifier
                                              is recursive or not. *)
-    ldf_logical : Parsetree.logical_flag (** Tells if the let-bound identifier
-                                             is a logical or a computational
-                                             definition. *)
+    ldf_logical : Parsetree.logical_flag; (** Tells if the let-bound identifier
+                                              is a logical or a computational
+                                              definition. *)
+    ldf_final : Parsetree.final_flag (** Tells if the let-bound identifier
+                                         is final, i.e. can't be redefined. *)
     }
 
 

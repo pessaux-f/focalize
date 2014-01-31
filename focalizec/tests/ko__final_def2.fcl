@@ -1,0 +1,14 @@
+open "basics" ;;
+
+(* Must fail.
+   Example showing usage of logical final let.
+   Must fail because bodies are different. *)
+
+species A =
+  logical final let null (x : int) = x = 0 ;
+end ;;
+
+species B =
+  inherit A ;
+  logical final let null (x : int) = ~ (x = 0) ;
+end ;;

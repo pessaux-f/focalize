@@ -727,6 +727,19 @@ expressions and the other for your computational behaviour).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Definition '$name$' is redefined although marked final.}
+
+{\em Description}: In the inheritance tree of the current species, a
+method $name$ was previously defined with the keyword {\tt final} forbidding
+any later redefinition while the current species try to redefine it.
+
+{\em Hints}: If the previous definition was flagged as to be never changed,
+there may have good reasons. Try to understand while the software architecture
+imposed this constraint (before -- may be dangerously-- thinking at removing the
+{\tt final} qualifier!).
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Species 'sname' is not well-formed. Method  '$name$' involves
   a non-declared recursion for the following dependent methods: \ldots}
 

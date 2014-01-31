@@ -259,7 +259,7 @@
     (regexp-opt
      '("alias" "all" "and" "as" "assume" "assumed" "begin" "by"
        "caml" "collection" "conclude" "coq" "coq_require" "definition"
-       "else" "end" "ex" "external" "false" "function" "hypothesis"
+       "else" "end" "ex" "external" "false" "final" "function" "hypothesis"
        "if" "in" "inherit" "internal" "implement" "is" "let"
        "lexicographic" "local" "logical" "match" "measure" "not"
        "notation" "of" "on" "open" "or" "order" "proof" "prop"

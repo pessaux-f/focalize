@@ -1,0 +1,13 @@
+open "basics" ;;
+
+(* Must pass.
+   Example showing usage of final let.
+   Second definition must be accepted since the first one was not final. *)
+species A =
+  let x = 5 ;
+end ;;
+
+species B =
+  inherit A ;
+  final let x = 50 ;
+end ;;

@@ -111,6 +111,7 @@ let token ppf = function
   | EX -> Format.fprintf ppf "%s" "EX"
   | EXTERNAL -> Format.fprintf ppf "%s" "EXTERNAL"
   | FUNCTION -> Format.fprintf ppf "%s" "FUNCTION"
+  | FINAL -> Format.fprintf ppf "%s" "FINAL"
   | HYPOTHESIS -> Format.fprintf ppf "%s" "HYPOTHESIS"
   | IF -> Format.fprintf ppf "%s" "IF"
   | IN -> Format.fprintf ppf "%s" "IN"

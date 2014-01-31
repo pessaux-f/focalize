@@ -16,3 +16,7 @@
 
 val logical_expr_equal_p :
   Parsetree.logical_expr -> Parsetree.logical_expr -> bool
+
+val binding_body_equal_p :
+  params1: Parsetree.vname list -> params2: Parsetree.vname list ->
+  body1: Parsetree.binding_body -> body2: Parsetree.binding_body -> bool

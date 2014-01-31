@@ -58,6 +58,7 @@ exception Scheme_contains_type_vars of
 exception Invalid_parameter_in_delayed_proof_termination of
   (Location.t * Parsetree.vname)
 exception No_mix_between_logical_defs of (Location.t * Parsetree.vname)
+exception No_redef_final_let of (Location.t * Parsetree.vname)
 
 type please_compile_me =
   | PCM_annotation_title

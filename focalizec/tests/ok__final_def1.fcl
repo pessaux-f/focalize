@@ -1,0 +1,14 @@
+open "basics" ;;
+
+(* Must pass.
+  Example showing usage of final logical let.
+  Redefinition allowed because same definition modulo alpha-conversion. *)
+
+species A =
+  logical final let null (yy : int) = ~ (yy = 0) ;
+end ;;
+
+species B =
+  inherit A ;
+  logical final let null (x : int) = ~ (x = 0) ;
+end ;;

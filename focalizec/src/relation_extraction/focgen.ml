@@ -90,6 +90,7 @@ let gen_focalize (fn, args, code) d =
     (mk_ast
        ( { Parsetree.ld_rec = Parsetree.RF_rec;
 	         Parsetree.ld_logical = Parsetree.LF_no_logical;
+	         Parsetree.ld_final = Parsetree.LF_no_final;
 	         Parsetree.ld_local = Parsetree.LF_no_local;
 	         Parsetree.ld_bindings =
              [mk_ast ({ Parsetree.b_name = gen_ident fn;

@@ -416,6 +416,13 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_vname name
         Handy.pp_reset_effects
+  | Infer.No_redef_final_let (at, name) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tDefinition@ '%t%a%t'@ is@ redefined@ although@ marked@ \
+        final.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_vname name
+        Handy.pp_reset_effects
   (* ********************** *)
   (* Dependencies analysis. *)
   | Dep_analysis.Ill_formed_species (species_name, field_node, found_path) ->

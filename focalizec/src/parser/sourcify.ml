@@ -2,21 +2,19 @@
 (*                                                                            *)
 (*                        FoCaLiZe compiler                                   *)
 (*                                                                            *)
-(*            François Pessaux                                                *)
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
+(*            François Pessaux                                                *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: sourcify.ml,v 1.90 2012-10-30 11:55:07 pessaux Exp $ *)
-
-open Parsetree;;
+open Parsetree ;;
 
 (** {b Desc} : Describe wether an [expr_desc] must appears in infix or
     prefix position as the functionnal part in an applicative expression.
@@ -333,6 +331,11 @@ let pp_constant_desc ppf = function
 let pp_constant = pp_ast pp_constant_desc
 ;;
 
+let pp_final_flag ppf = function
+  | Parsetree.LF_no_final -> ()
+  | Parsetree.LF_final -> Format.fprintf ppf "final@ "
+;;
+
 let pp_local_flag ppf = function
   | Parsetree.LF_no_local -> ()
   | Parsetree.LF_local -> Format.fprintf ppf "local@ "
@@ -348,19 +351,16 @@ let pp_rec_flag ppf = function
   | Parsetree.RF_rec -> Format.fprintf ppf "rec@ "
 ;;
 
-(* *********************************************************************** *)
-(* pp_let_def_binding_flags :                                              *)
-(*   Format.formatter ->                                                   *)
-(*     (Parsetree.rec_flag * Parsetree.log_flag * Parsetree.loc_flag) ->   *)
-(*       unit                                                              *)
+(* ************************************************************************* *)
 (** {b Descr} : Pretty prints a [let_def_desc] binding kind as FoCal
     source. It mostly determines if the binding is a "let" or a "logical".
     Aside this, it add the possible "local" and "rec" flags is needed.
 
-    {b Rem} : Not exported ouside this module.                             *)
-(* *********************************************************************** *)
-let pp_let_def_binding_flags ppf (ld_rec, ld_logical, ld_local) =
-  Format.fprintf ppf "%a%alet %a"
+    {b Rem} : Not exported ouside this module.                               *)
+(* ************************************************************************* *)
+let pp_let_def_binding_flags ppf (ld_rec, ld_logical, ld_final, ld_local) =
+  Format.fprintf ppf "%a%a%alet %a"
+    pp_final_flag ld_final
     pp_local_flag ld_local
     pp_logical_flag ld_logical
     pp_rec_flag ld_rec
@@ -548,7 +548,8 @@ and pp_species_field ppf = pp_ast pp_species_field_desc ppf
 and pp_let_def_desc ppf ldd =
   Format.fprintf ppf "@[<2>%a"
     pp_let_def_binding_flags
-    (ldd.Parsetree.ld_rec, ldd.Parsetree.ld_logical, ldd.Parsetree.ld_local);
+    (ldd.Parsetree.ld_rec, ldd.Parsetree.ld_logical,
+     ldd.Parsetree.ld_final, ldd.Parsetree.ld_local) ;
   (* Now print the bindings. This is especially handled because bindings *)
   (* after the first one ar separated by "and" instead of "let".         *)
   (match ldd.Parsetree.ld_bindings with
