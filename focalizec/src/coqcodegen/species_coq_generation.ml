@@ -2677,7 +2677,7 @@ let print_order_args_as_tuple out_fmter ~fun_arity arg_name indices =
               "(coq_builtins.__tpl_firstprj%d@ " fun_arity
           else 
             Format.fprintf out_fmter
-              "(coq_builtins.__tpl_lastprj%d@ )" (fun_arity - last) ;
+              "(coq_builtins.__tpl_lastprj%d@ " (fun_arity - last) ;
           for _i = 1 to fun_arity do Format.fprintf out_fmter "_@ " done ;
           Format.fprintf out_fmter "%s)" arg_name
       | h :: q ->
@@ -2935,21 +2935,19 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                  (* Proof done by Zenon. Apply soldering stuff. *)
                  Format.fprintf out_fmter
                    "unfold %a_wforder;simpl.@\n\
-                    elim for_zenon_abstracted_%a ; intro __user_dec1.@\n\
-                    intro __user_rem_dec_n_wf.@\n"
+                    elim for_zenon_abstracted_%a.@\n\
+                    intro __user_dec1.@\nintro __user_rem_dec_n_wf.@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded name
                    Parsetree_utils.pp_vname_with_operators_expanded name ;
                  let nb_rec_calls = List.length recursive_calls in
-                 (* Repeat nb rec call - 1 times... *)
-                 for _i = 2 to nb_rec_calls do
+                 (* Repeat nb -1 rec call times... *)
+                 for i = 2 to nb_rec_calls do
                    Format.fprintf out_fmter
-                     "(* Break first AND on the left. *)@\n\
-                     elim __user_rem_dec_n_wf.@\n\
-                     clear __user_rem_dec_n_wf.@\n"
+                     "elim __user_rem_dec_n_wf.@\n\
+                      clear __user_rem_dec_n_wf.@\n\
+                      intro __user_dec%d.@\n\
+                      intro __user_rem_dec_n_wf.@\n" i
                   done ;
-                  Format.fprintf out_fmter
-                    "(* Last intros. *)@\n\
-                    intros __user_dec2 __user_wf.@\n" ;
                   (* Repeat nb rec call times... *)
                   for _i = 1 to nb_rec_calls do
                     Format.fprintf out_fmter "split;auto.@\n"
@@ -3156,32 +3154,57 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        (* Print the proof using the above material. *)
        if Configuration.get_experimental () then (
          (* ---> Generate the soldering Coq script. *)
-         Format.fprintf out_fmter
-           "elim f_termination ; \
-           intros __for_function_dec1 __for_function_rem_dec_n_wf.@\n" ;
-         (* Repeat nb rec call - 1 times... *)
+         let nb_args = List.length params_with_type in
          let nb_rec_calls = List.length recursive_calls in
-         for _i = 2 to nb_rec_calls do
-           Format.fprintf out_fmter
-             "(* Break first AND on the left. *)@\n\
-             elim __for_function_rem_dec_n_wf.@\n" ;
-           Format.fprintf out_fmter
-             "(* Last intros. *)@\n\
-              intros __for_function_dec2 __user_wf.@\n"
-         done ;
          Format.fprintf out_fmter
-           "split.@\nintros.@\napply __for_function_dec1.@\nunfold Is_true.@\n\
-           rewrite teq0; auto.@\nunfold Is_true.@\nrewrite teq1; auto.@\n\
-           (* Break decreasing obligation and well-founded. *)@\n\
-           split.@\n\
-           intros.@\n\
-           apply __for_function_dec2.@\n\
-           unfold Is_true.@\n\
-           rewrite teq0; auto.@\n\
-           unfold Is_true.@\n\
-           rewrite teq1; auto.@\n\
-           (* Remaining well-foundation... *)@\n\
-           assumption.@\n"
+           "elim %a_termination.@\n\
+           intros __for_function_dec1 __for_function_rem_dec_n_wf.@\n"
+           Parsetree_utils.pp_vname_with_operators_expanded name ;
+         (* Repeat nb rec call - 1 times... TODO WRONG ! *)
+         for i = 2 to nb_rec_calls do
+           Format.fprintf out_fmter
+             "elim __for_function_rem_dec_n_wf.@\n\
+              clear __for_function_rem_dec_n_wf.@\n\
+              intros __for_function_dec%d __for_function_rem_dec_n_wf.@\n" i
+         done ;
+         (* Repeat for each recursive call. *)
+         let call_num = ref 1 in (* Recursive calls counter. *)
+         List.iter
+           (fun (_, rec_call_bindings) ->
+             Format.fprintf out_fmter "split.@\n" ;
+             (* n - 1 intermediate variables and their type due to the tuple
+                decomposition because of the pattern matching --> 2 (n - 1)
+                intros.
+                1 type per function argument --> n
+                So: 2 (n - 1) + n = 3 n - 2 *)
+             Format.fprintf out_fmter
+               "(* Remove stuff due to matching the tuple of args. *)@\n" ;
+             for _i = 1 to 3 * nb_args - 2 do
+               Format.fprintf out_fmter "intro. "
+             done ;
+             Format.fprintf out_fmter "@\n" ;
+             (* Now intros will bring the teq's There are as many as the
+                condition-string (i.e. bindings) of the current recursive
+                call. *)
+             let nb_bindings = List.length rec_call_bindings in
+             Format.fprintf out_fmter
+               "(* Introduce each condition-string hypothesis. *)@\n" ;
+             for i = 1 to nb_bindings do
+               Format.fprintf out_fmter "intro __binding%d.@\n" i
+             done ;
+             Format.fprintf out_fmter
+               "apply __for_function_dec%d.@\n" !call_num ;
+             (* Process each binding subgoal. *)
+             for i = 1 to nb_bindings do
+               Format.fprintf out_fmter
+                 "unfold Is_true. rewrite __binding%d; auto.@\n" i ;
+             done ;
+             incr call_num)
+           recursive_calls ;
+         (* The finally remaining stuff related to the well-foundation. *)
+         Format.fprintf out_fmter
+           "(* Remaining well-foundation... *)@\n\
+               assumption.@\n"
         )
        else
          Format.fprintf out_fmter "%a"
