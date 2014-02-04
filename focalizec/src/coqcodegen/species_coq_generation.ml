@@ -2950,7 +2950,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                   done ;
                   (* Repeat nb rec call times... *)
                   for _i = 1 to nb_rec_calls do
-                    Format.fprintf out_fmter "split;auto.@\n"
+                    Format.fprintf out_fmter "split. auto.@\n"
                   done ;
                   Format.fprintf out_fmter
                     "set (R := (fun __a __b => Is_true (" ;
