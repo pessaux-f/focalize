@@ -249,6 +249,12 @@ Proof.
 intros x; case x; simpl in |- *; auto with bool.
 Defined.
 
+Lemma EqTrue_is_true : forall x : bool, x = true -> Is_true x.
+Proof.
+intros x; case x; simpl in |- *; auto with bool.
+Defined.
+
+
 Ltac Replacetrue :=
   match goal with
   | id:(?X1 = true :>bool) |- _ =>
