@@ -143,12 +143,15 @@ let rec list_recursive_calls function_name argument_list bindings expr =
        (* Test whether it is the function being defined that is called. *)
        if is_recursive_call function_name argument_list argexprlist fexpr then
          (* If that is the case, check for recursive calls in the arguments of
-            this call. *)
+            this call. To follow the order the Coq "Function" harvests
+            recursive call in an application, reverse the list. Hence, calls
+            are harvested from right to left. *)
          match
            List.concat
-             (List.map
-                (list_recursive_calls function_name argument_list bindings)
-                argexprlist) with
+             (List.rev
+                (List.map
+                   (list_recursive_calls function_name argument_list bindings)
+                   argexprlist)) with
          | [] -> [ List.combine argument_list argexprlist, bindings ]
                (* If no recursive calls are made when calculating the
                   arguments, return the arguments (original and used to make
@@ -159,11 +162,13 @@ let rec list_recursive_calls function_name argument_list bindings expr =
                (NestedRecursiveCalls (function_name, expr.Parsetree.ast_loc))
        else
          (* If this is not a recursive call then look for recursive calls in
-            the arguments. *)
+            the arguments. Same remark about order of recursive calls to fit
+            the Coq "Function". *)
          List.concat
-           (List.map
-              (list_recursive_calls function_name argument_list bindings)
-              argexprlist)
+           (List.rev
+              (List.map
+                 (list_recursive_calls function_name argument_list bindings)
+                 argexprlist))
       )
    | Parsetree.E_constr (_, expr_list) ->
        List.concat
