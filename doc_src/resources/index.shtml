@@ -24,14 +24,14 @@ Mathieu Jaume and Charles Morisset. Un cadre s&eacute;mantique pour le
 contr&ocirc;le d'acc&egrave;s. 
 Technique et Science Informatique, TSI 27(8):951-976, 2008.
 <br />
-<a href="http://www-spi.lip6.fr/%7Ejaume/tsi08.pdf">Pdf</a>
+<a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/tsi08.pdf">Pdf</a>
 </li>
 <li>
 Julien Blond and Charles Morisset. Un moniteur de r&eacute;f&eacute;rence 
 s&ucirc;r d'une base de donn&eacute;es. 
 TSI (Technique et Science Informatiques), 2007.
 <br />
-<a href="http://www-spi.lip6.fr/%7Ejaume/blondmorisset.pdf"> Pdf</a>
+<a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/blondmorisset.pdf"> Pdf</a>
 </li>
 <li>
 Mathieu Jaume and Charles Morisset. A formal approach to implement
@@ -95,7 +95,7 @@ SEFM 2012 - Thessaloniki (Greece), October 2012.
 secured systems by mixing programs, specifications and proofs in an
 object-oriented programming environment. ACM SIGPLAN Seventh Workshop
 on Programming Languages and Analysis for Security (PLAS 2012) pages
-80-91, ACM Digital Library. 2012. <a href="http://www-spi.lip6.fr/%7Ejaume/plas2012.pdf">Pdf</a></li>
+80-91, ACM Digital Library. 2012. <a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/plas2012.pdf">Pdf</a></li>
 <li>Mathieu Jaume, and Renaud Rioboo. Développement de systèmes
 sécurisés avec l'atelier Focalize. <a href="http://jfla.inria.fr/2012/index.html">23èmes Journées
 Francophones des Langages Applicatifs (JFLA 2012)</a>, 2012. <br>
@@ -119,7 +119,7 @@ L. Habib, T. Hardin, M. Jaume, C. Morisset, F. Pessaux, R. Rioboo and P. Weis.
 Trusted Software within FoCaL. C&amp;ESAR 2008 - Trusting Trusted Computing?,
 Rennes, December 2008.
 <br />
-<a href="http://www-spi.lip6.fr/%7Ejaume/cesar.pdf">Pdf</a>
+<a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/cesar.pdf">Pdf</a>
 </li>
 <li>
 Lionel Habib, Mathieu Jaume and Charles Morisset.
@@ -127,7 +127,7 @@ A formal comparison of the Bell &amp; LaPadula and RBAC models.
 Fourth International Conference on Information Assurance and Security,
 IAS'2008, Naples, Italy, September 2008, IEEE CS Press.
 <br />
-<a href="http://www-spi.lip6.fr/%7Ejaume/ias08.pdf">Pdf</a>
+<a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/ias08.pdf">Pdf</a>
 </li>
 <li>
 Matthieu Carlier and Catherine Dubois. Functional Testing in the Focal
@@ -141,28 +141,28 @@ Charles Morisset and Anderson Santana de Oliveira.
 Automated Detection of Information Leakage in Access Control.
 Security and Rewriting Techniques, SecReT 2007.
 <br />
-<a href="http://www-spi.lip6.fr/%7Ejaume/secret07.pdf">Pdf</a>
+<a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/secret07.pdf">Pdf</a>
 </li>
 <li>
 Mathieu Jaume and Charles Morisset. Contr&ocirc;ler le contr&ocirc;le d'acc&egrave;s
 : Approches formelles. Approches Formelles dans l'Assistance au
 D&eacute;veloppement de Logiciels (AFADL'07), Namur (Belgium), June 2007.
 <br />
-<a href="http://www-spi.lip6.fr/%7Ejaume/jmafadl07.pdf">Pdf</a>
+<a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/jmafadl07.pdf">Pdf</a>
 </li>
 <li>
 Fr&eacute;d&eacute;ric Blanqui, Th&eacute;r&egrave;se Hardin and Pierre Weis. On the
 implementation of construction functions for non-free concrete data
 types. ESOP07 (European Symposium on Programming), LNCS 4421, 2007.
 <br />
-<a href="http://www-spi.lip6.fr/%7Ejaume/esop07.pdf">Pdf</a>
+<a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/esop07.pdf">Pdf</a>
 </li>
 <li>
 Eric Jaeger and Catherine Dubois. Why Would You Trust B?. 
 Conference on Logic Programming Artificial Intelligence and
 Reasoning, LPAR 2007, LNCS.
 <br />
-<a href="http://www-spi.lip6.fr/%7Ejaume/jaeggerdubois.pdf">Pdf</a>
+<a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/jaeggerdubois.pdf">Pdf</a>
 </li>
 <li>
 David Delahaye, Jean-Fr&eacute;d&eacute;ric
@@ -359,7 +359,7 @@ Mathieu Jaume. Descriptions formelles : Comprendre, corriger,
 implanter, r&eacute;utiliser. Application au contr&ocirc;le
 d'acc&egrave;s. Habilitation &agrave; Diriger des Recherches, November 2008.
 <br />
-<a href="http://www-spi.lip6.fr/%7Ejaume/hdrmj.pdf">Pdf</a>
+<a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/hdrmj.pdf">Pdf</a>
 </li>
 <li>
 Charles Morisset. S&eacute;mantique des syst&egrave;mes de
@@ -408,7 +408,7 @@ Lionel Habib. Formalisation, comparaison et implantation d'un
 mod&egrave;le de contr&ocirc;le d'acc&egrave;s &agrave; base de
 r&ocirc;les. Master thesis, September 2007. 
 <br />
-<a href="http://www-spi.lip6.fr/%7Ejaume/Rapport_M2_Lionel_Habib.pdf">Pdf</a>
+<a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/Rapport_M2_Lionel_Habib.pdf">Pdf</a>
 </li>
 <li>
 Charles Morisset. Formalisation et implantation d'un mod&egrave;le de
