@@ -70,7 +70,13 @@ type bool =
   | False
   external
   | caml -> {* bool *}
-  | coq -> {* bool *}  (* Builtin of Coq *)
+  (* Uggly hack to insert the induction principles below the type definition.
+     We just alias the principles coming from the List module of Coq. *)
+  | coq -> {* bool.
+              Definition bool__t_ind := bool_ind.
+              Definition bool__t_rect := bool_rect.
+              Definition bool__t_rec := bool_rec
+           *}  (* Builtin of Coq *)
 
   with True =
   | caml -> {* true *}
@@ -92,7 +98,13 @@ type list ('a) =
   | ( :: ) ('a, list ('a))
   external
   | caml -> {* 'a list *}
-  | coq -> {* (List.list __var_a) *}
+  (* Uggly hack to insert the induction principles below the type definition.
+     We just alias the principles coming from the List module of Coq.
+     Was bug #53. *)
+  | coq -> {* (List.list __var_a).
+              Definition list__t_ind := list_ind.
+              Definition list__t_rect := list_rect.
+              Definition list__t_rec := list_rec *}
 
   with [] =
   | caml -> {* [] *}
