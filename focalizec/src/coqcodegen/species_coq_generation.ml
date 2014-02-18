@@ -2935,10 +2935,18 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                  (* Proof done by Zenon. Apply soldering stuff. *)
                  Format.fprintf out_fmter
                    "unfold %a_wforder;simpl.@\n\
-                    elim for_zenon_abstracted_%a.@\n\
-                    intro __user_dec1.@\nintro __user_rem_dec_n_wf.@\n"
+                    elim (for_zenon_abstracted_%a@ "
                    Parsetree_utils.pp_vname_with_operators_expanded name
                    Parsetree_utils.pp_vname_with_operators_expanded name ;
+                 (* Apply the theorem to its arguments due to lambda-lifts. *)
+                 Species_record_type_generation.
+                   generate_method_lambda_lifted_arguments
+                     ~only_for_Self_meths: false out_fmter
+                     ai.Abstractions.ai_used_species_parameter_tys
+                     sorted_deps_from_params abstracted_methods ;
+                 Format.fprintf out_fmter
+                   ").@\n\
+                    intro __user_dec1.@\nintro __user_rem_dec_n_wf.@\n" ;
                  let nb_rec_calls = List.length recursive_calls in
                  (* Repeat nb -1 rec call times... *)
                  for i = 2 to nb_rec_calls do
@@ -2985,10 +2993,6 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                   Format.fprintf out_fmter ")).@\n" ;
                   Format.fprintf out_fmter
                     "apply wf_inverse_image.@\nassumption.@\n" ;
-                  (* Repeat as many times there are lambda-liftings... *)
-                  List.iter
-                    (fun _ ->Format.fprintf out_fmter "auto.@\n")
-                    abstracted_methods ;
                   Format.fprintf out_fmter "Qed.@\n"
              | Parsetree.Pf_coq (_, script) ->
                  (* Dump verbatim the Coq code. *)
