@@ -1815,14 +1815,18 @@ let debug_available_steps steps =
         Format.eprintf "\t%a@."
           Sourcify.pp_logical_expr h.psa_base_logical_expr;
         List.iter
-          (fun (n, ty) ->
-            Format.eprintf "\t\t%a : %a@."
-              Sourcify.pp_vname n Sourcify.pp_type_expr ty)
-          h.psa_assumed_variables;
+          (function
+            | AH_variable (n, ty) ->
+                Format.eprintf "\t\t%a : %a@."
+                  Sourcify.pp_vname n Sourcify.pp_type_expr ty
+            | AH_lemma _ -> ())
+          h.psa_assumed_variables_and_lemmas ;
         List.iter
-          (fun log_expr ->
-            Format.eprintf "\t\t%a@." Sourcify.pp_logical_expr log_expr)
-          h.psa_assumed_lemmas;
+          (function
+            | AH_lemma log_expr ->
+                Format.eprintf "\t\t%a@." Sourcify.pp_logical_expr log_expr
+            | AH_variable (_, _) -> ())
+          h.psa_assumed_variables_and_lemmas ;
         rec_debug q in
   Format.eprintf "debug_available_steps START@.";
   rec_debug steps;
