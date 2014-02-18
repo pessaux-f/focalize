@@ -259,10 +259,11 @@ let generate_binding_let ctx print_ctx env binding =
   let out_fmter = ctx.Context.scc_out_fmter in
   let binding_desc = binding.Parsetree.ast_desc in
   (* Quantification of the variable was done previously by the function
-     [generate_variables_quantifications]. *)
-  Format.fprintf out_fmter "%a =@ "
-    Parsetree_utils.pp_vname_with_operators_expanded
-    binding_desc.Parsetree.b_name ;
+     [generate_variables_quantifications].
+     To keep consistent with the way we generate equalities, do not directly
+     use a =. Instead, use the regular scheme with Is_true and
+     basics._equal_. *)
+  Format.fprintf out_fmter "Is_true ((basics._equal_ _) " ;
   (* If the binding has arguments, then it's a function. So for a binding
      looking like "let f (x, y) = ..." we generate
      "x = (fun x => fun y => ...)". *)
@@ -325,7 +326,11 @@ let generate_binding_let ctx print_ctx env binding =
          env p) ;
   (* If there were parameters, we must close a parenthesis. *)
   if binding_desc.Parsetree.b_params <> [] then
-    Format.fprintf out_fmter "@]"
+    Format.fprintf out_fmter "@]" ;
+  (* The bound variable (after, like Coq does). *)
+  Format.fprintf out_fmter "@ %a)"
+    Parsetree_utils.pp_vname_with_operators_expanded
+    binding_desc.Parsetree.b_name
 ;;
 
 
