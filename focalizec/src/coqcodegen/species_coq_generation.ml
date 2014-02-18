@@ -1809,22 +1809,23 @@ let debug_available_steps steps =
     | [] -> ()
     | h :: q ->
         Format.eprintf "***********@.";
-        Format.eprintf "\t<%d>%s@."
+        Format.eprintf "\tNODE: <%d>%s@."
           (fst h.psa_node_label) (snd h.psa_node_label);
-        Format.eprintf "\t%a@." Sourcify.pp_vname h.psa_lemma_name;
-        Format.eprintf "\t%a@."
+        Format.eprintf "\tNAME: %a@." Sourcify.pp_vname h.psa_lemma_name;
+        Format.eprintf "\tBASE LOG EXPR: %a@."
           Sourcify.pp_logical_expr h.psa_base_logical_expr;
         List.iter
           (function
             | AH_variable (n, ty) ->
-                Format.eprintf "\t\t%a : %a@."
+                Format.eprintf "\t\tVARIABLE %a : %a@."
                   Sourcify.pp_vname n Sourcify.pp_type_expr ty
             | AH_lemma _ -> ())
           h.psa_assumed_variables_and_lemmas ;
         List.iter
           (function
             | AH_lemma log_expr ->
-                Format.eprintf "\t\t%a@." Sourcify.pp_logical_expr log_expr
+                Format.eprintf "\t\tLEMMA %a@."
+                  Sourcify.pp_logical_expr log_expr
             | AH_variable (_, _) -> ())
           h.psa_assumed_variables_and_lemmas ;
         rec_debug q in
