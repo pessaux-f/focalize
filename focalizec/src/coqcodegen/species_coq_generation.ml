@@ -2975,7 +2975,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                   Format.fprintf out_fmter
                     "change@ (well_founded (fun@ __c __d@ :@ " ;
                   Format.fprintf out_fmter "%a@ =>@ R "
-                    (print_types_as_tuple_if_several print_ctx)
+                    (print_types_as_tuple_if_several new_print_ctx)
                     fun_params_n_tys ;
                   (* Same arguments than for the xxx_wforder. *)
                   (* Compute the list of positionnal indices of the recursive
