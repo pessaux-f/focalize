@@ -627,6 +627,14 @@ let generate_defined_method_proto_postlude ctx print_ctx env
      in the arguments of the let-bound ident.
      Note by the whay that we do not have anymore information about "Self"'s
      structure... *)
+  (* However, print the generalised variable usign the same trick than in
+     [let_binding_compile]. Consult comment over there... This was bug #55. *)
+  let (generalized_vars, _) = Types.scheme_split scheme in
+  List.iter
+    (fun var ->
+      Format.fprintf out_fmter "@ (%a : Set)"
+        Types.pp_type_variable_to_coq var)
+    generalized_vars ;
   let (params_with_type, ending_ty_opt, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
       ~self_manifest (Some scheme) params in
@@ -1107,6 +1115,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
        (* Done... Then, final carriage return. *)
        Format.fprintf out_fmter ".@]@\n"
    | Parsetree.EI_global qvname -> (
+Format.eprintf "FOOO@." ;
        (* The stuff is in fact a toplevel definition, not a species method. We
           must recover its type kind from the environment. *)
        let current_species_name =
@@ -1118,7 +1127,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
            ~loc: by_def_expr_ident.Parsetree.ast_loc
            ~current_unit: ctx.Context.scc_current_unit
            ~current_species_name by_def_expr_ident env in
-                 (* A bit of comment. *)
+       (* A bit of comment. *)
        Format.fprintf out_fmter
          "(* For toplevel definition used via \"by definition of %a\". *)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident ;
