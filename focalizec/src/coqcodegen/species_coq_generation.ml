@@ -2075,7 +2075,27 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
              Parsetree_utils.pp_vname_with_operators_expanded hn)
          available_hyps;
        (* Dump verbatim the Coq code. *)
-       Format.fprintf out_fmter "%s@\n" script;
+       if script <> "daube" then
+         Format.fprintf out_fmter "%s@\n" script
+       else (
+(* [Unsure] *)
+         Format.fprintf out_fmter
+           "Ltac SplitandAssumption:=@\n\
+             (repeat match goal with@\n\
+                       | [ |- ?a /\\ ?b ] => split;try (intros ; auto)@\n\
+                     end).@\n" ;
+         (* One must harvest all the available steps at the current level
+            and generalize (in the sens of Coq) their related (generated)
+            lemma. *)
+         List.iter
+           (fun step ->
+              Format.fprintf out_fmter "generalize %a.@\n"
+                Parsetree_utils.pp_vname_with_operators_expanded
+                step.psa_lemma_name)
+           available_steps ;
+         Format.fprintf out_fmter
+           "unfold well_wrapper.@\nintros.@\nSplitandAssumption.@\nQed.@\n"
+       )
    | Parsetree.Pf_node nodes ->
        (* For each successive node, we remember the previously seen **extra**
           steps that will be available for the trailing Qed node. *)
@@ -3196,7 +3216,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
                 elimination of the hypothesis __for_function_dec%d. *)
              Format.fprintf out_fmter
                "intros.@\napply __for_function_dec%d ; \
-               auto || (apply coq_builtins.EqTrue_is_true; assumption) || (apply coq_builtins.IsTrue_eq_false2; assumption).@\n" !call_num ;
+               auto || (apply coq_builtins.EqTrue_is_true; assumption) || (apply coq_builtins.IsTrue_eq_false2; assumption) || (apply coq_builtins.syntactic_equal_refl).@\n" !call_num ;
              incr call_num)
            recursive_calls ;
          (* The finally remaining stuff related to the well-foundation. *)
