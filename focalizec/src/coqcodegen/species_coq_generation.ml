@@ -1943,7 +1943,71 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
 
 
 
-(* Returns the **new** available steps found. *)
+
+(** Factorize theorem generation for Zenon, with dependencies enforcement. *)
+and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_coq_env
+    available_hyps aim_gen_method aim_name enforced_deps =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* [Unsure] Bad place to make the check. This should be made in something
+     like "abstration.ml". Ensure that the *)
+  ensure_enforced_dependencies_by_definition_are_definitions
+    min_coq_env enforced_deps ;
+  (* Now, print the lemma body. Inside, any method of "Self" is abstracted
+     (without lambda-lift) and named "abst_xxx". That's why we use the mode
+     [SMS_abstracted]. *)
+  Format.fprintf out_fmter "(* Theorem's body. *)@\n";
+  (* Be careful if the coq proof appears in a nested proof of a Zenon script
+     under a Zenon script then we must not apply the naming scheme
+     "for_zenon__xxx". Otherwise, if the coq proof is at toplevel of the Zenon
+     proof (i.e. in fact ends the Zenon proof), we must directly give the
+     theorem the real name since we do not have to (and we do not) create the
+     various intermediate theorems induced by Zenon stuff, especially the fact
+     that we open some Sections to "look like" first-order. *)
+  let opt_for_zenon = if in_nested_proof then "" else "for_zenon_" in
+  Format.fprintf out_fmter "@[<2>Theorem %s%a :@ "
+    opt_for_zenon Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
+  (* Generate the aim depending on if we are in a regular proof or in the
+     initial stage of a termination proof. *)
+  (match aim_gen_method with
+  | ZSGM_from_logical_expr aim ->
+      Species_record_type_generation.generate_logical_expr
+        ~local_idents: [] ~in_recursive_let_section_of: []
+        ~self_methods_status: Species_record_type_generation.SMS_abstracted
+        ~recursive_methods_status: Species_record_type_generation.RMS_regular
+        ctx env aim
+  | ZSGM_from_termination_lemma (order_expr, used_params_indices, rec_calls) ->
+      Rec_let_gen.generate_termination_lemmas
+        ctx print_ctx env
+        ~explicit_order:
+        (Rec_let_gen.OK_expr (order_expr, used_params_indices))
+        rec_calls ;
+      (* Always end by the obligation of well-formation of the user-order
+         eta-expanded to wrap its result with a Is_true. *)
+      Format.fprintf out_fmter
+        "@ (well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
+      Species_record_type_generation.generate_expr
+        ~local_idents: [] ~in_recursive_let_section_of: []
+        ~self_methods_status: Species_record_type_generation.SMS_abstracted
+        ~recursive_methods_status: Species_record_type_generation.RMS_regular
+        ctx env order_expr ;
+      Format.fprintf out_fmter "@ __a1 __a2)))"
+  ) ;
+  Format.fprintf out_fmter ".@]@\n";
+  (* Enforce Hypothesis and Variables to be used to prevent Coq from removing
+     it. *)
+  List.iter
+    (fun h ->
+      match h.Parsetree.ast_desc with
+      | Parsetree.H_notation (_, _) -> ()
+      | Parsetree.H_variable (n, _) | Parsetree.H_hypothesis (n, _) ->
+          Format.fprintf out_fmter
+            "@[<2>assert (__force_use_%a :=@ %a).@]@\n"
+            Parsetree_utils.pp_vname_with_operators_expanded n
+            Parsetree_utils.pp_vname_with_operators_expanded n)
+    available_hyps
+
+
+
 and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
     ~self_manifest dependencies_from_params generated_fields available_hyps
     available_steps section_name_seed aim_gen_method aim_name parent_proof_opt
@@ -1951,138 +2015,16 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
   let out_fmter = ctx.Context.scc_out_fmter in
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed enforced_deps ->
-       (* [Unsure] Bad place to make the check. This should be made in
-          something like "abstration.ml". Ensure that the *)
-       ensure_enforced_dependencies_by_definition_are_definitions
-         min_coq_env enforced_deps;
-       (* Now, print the lemma body. Inside, any method of "Self" is
-          abstracted (without lambda-lift) and named "abst_xxx". That's why we
-          use the mode [SMS_abstracted]. *)
-       Format.fprintf out_fmter "(* Theorem's body. *)@\n";
-      (* Be careful if the coq proof appears in a nested proof of a Zenon
-          script under a Zenon script then we must not apply the naming scheme
-          "for_zenon__xxx". Otherwise, if the coq proof is at toplevel of the
-          Zenon proof (i.e. in fact ends the Zenon proof), we must directly
-          give the theorem the real name since we do not have to (and we do
-          not) create the various intermediate theorems induced by Zenon
-          stuff, especially the fact that we open some Sections to "look like"
-          first-order. *)
-       let opt_for_zenon = if in_nested_proof then "" else "for_zenon_" in
-       Format.fprintf out_fmter "@[<2>Theorem %s%a :@ "
-         opt_for_zenon
-         Parsetree_utils.pp_vname_with_operators_expanded aim_name;
-       (* Generate the aim depending on if we are in a regular proof or in the
-          initial stage of a termination proof. *)
-       (match aim_gen_method with
-        | ZSGM_from_logical_expr aim ->
-            Species_record_type_generation.generate_logical_expr
-              ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
-                Species_record_type_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Species_record_type_generation.RMS_regular
-              ctx env aim
-        | ZSGM_from_termination_lemma
-              (order_expr, used_params_indices, rec_calls) ->
-            Rec_let_gen.generate_termination_lemmas
-              ctx print_ctx env
-              ~explicit_order:
-                (Rec_let_gen.OK_expr (order_expr, used_params_indices))
-              rec_calls ;
-            (* Always end by the obligation of well-formation of the user-order
-               eta-expanded to wrap its result with a Is_true. *)
-            Format.fprintf out_fmter
-              "@ (well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
-            Species_record_type_generation.generate_expr
-              ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
-                Species_record_type_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Species_record_type_generation.RMS_regular
-              ctx env order_expr ;
-           Format.fprintf out_fmter "@ __a1 __a2)))"
-       ) ;
-       Format.fprintf out_fmter ".@]@\n";
-       (* Enforce Hypothesis and Variables to be used to prevent Coq from
-          removing it. *)
-       List.iter
-         (fun h ->
-           match h.Parsetree.ast_desc with
-            | Parsetree.H_notation (_, _) -> ()
-            | Parsetree.H_variable (n, _)
-            | Parsetree.H_hypothesis (n, _) ->
-                Format.fprintf out_fmter
-                  "@[<2>assert (__force_use_%a :=@ %a).@]@\n"
-             Parsetree_utils.pp_vname_with_operators_expanded n
-             Parsetree_utils.pp_vname_with_operators_expanded n)
-         available_hyps;
+       emit_zenon_theorem_for_proof
+         ~in_nested_proof ctx print_ctx env min_coq_env available_hyps
+         aim_gen_method aim_name enforced_deps ;
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter "(* Proof was flagged as assumed. *)@\n";
        Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\nQed.@\n"
    | Parsetree.Pf_coq (enforced_deps, script) ->
-       (* [Unsure] Bad place to make the check. This should be made in
-          something like "abstration.ml". Ensure that the *)
-       ensure_enforced_dependencies_by_definition_are_definitions
-         min_coq_env enforced_deps;
-       (* Now, print the lemma body. Inside, any method of "Self" is
-          abstracted (without lambda-lift) and named "abst_xxx". That's why we
-          use the mode [SMS_abstracted]. *)
-       Format.fprintf out_fmter "(* Theorem's body. *)@\n";
-       (* Be careful if the coq proof appears in a nested proof of a Zenon
-          script under a Zenon script then we must not apply the naming scheme
-          "for_zenon__xxx". Otherwise, if the coq proof is at toplevel of the
-          Zenon proof (i.e. in fact ends the Zenon proof), we must directly
-          give the theorem the real name since we do not have to (and we do
-          not) create the various intermediate theorems induced by Zenon
-          stuff, especially the fact that we open some Sections to "look like"
-          first-order. *)
-       let opt_for_zenon = if in_nested_proof then "" else "for_zenon_" in
-       Format.fprintf out_fmter "@[<2>Theorem %s%a :@ "
-         opt_for_zenon
-         Parsetree_utils.pp_vname_with_operators_expanded aim_name;
-       (* Generate the aim depending on if we are in a regular proof or in the
-          initial stage of a termination proof. *)
-       (match aim_gen_method with
-        | ZSGM_from_logical_expr aim ->
-            Species_record_type_generation.generate_logical_expr
-              ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
-                Species_record_type_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Species_record_type_generation.RMS_regular
-              ctx env aim
-        | ZSGM_from_termination_lemma
-              (order_expr, used_params_indices, rec_calls) ->
-            Rec_let_gen.generate_termination_lemmas
-              ctx print_ctx env
-              ~explicit_order:
-                (Rec_let_gen.OK_expr (order_expr, used_params_indices))
-              rec_calls ;
-            (* Always end by the obligation of well-formation of the user-order
-               eta-expanded to wrap its result with a Is_true. *)
-            Format.fprintf out_fmter
-              "@ (well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
-            Species_record_type_generation.generate_expr
-              ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
-                Species_record_type_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Species_record_type_generation.RMS_regular
-              ctx env order_expr ;
-           Format.fprintf out_fmter "@ __a1 __a2)))"
-       ) ;
-       Format.fprintf out_fmter ".@]@\n";
-       (* Enforce Hypothesis to be used to prevent Coq from removing it. *)
-       List.iter
-         (fun h ->
-           match h.Parsetree.ast_desc with
-            | Parsetree.H_variable (_, _) | Parsetree.H_notation (_, _) -> ()
-            | Parsetree.H_hypothesis (hn, _) ->
-                Format.fprintf out_fmter
-                  "@[<2>assert (__force_use_%a :=@ %a).@]@\n"
-             Parsetree_utils.pp_vname_with_operators_expanded hn
-             Parsetree_utils.pp_vname_with_operators_expanded hn)
-         available_hyps;
+       emit_zenon_theorem_for_proof
+         ~in_nested_proof ctx print_ctx env min_coq_env available_hyps
+         aim_gen_method aim_name enforced_deps ;
        (* Dump verbatim the Coq code. *)
        if script <> "daube" then
          Format.fprintf out_fmter "%s@\n" script
@@ -2214,16 +2156,15 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
        (* Now, let's print the theorem/lemma and prove it unless we are at
           toplevel (i.e. not in a nested proof). In this last case, this will
           be done directly by [generate_defined_theorem]. *)
-       if in_nested_proof then
-         (begin
+       if in_nested_proof then (
          (* In a nested proof, we are always provided a real [logical_expr]
             since the way to generate a statement directly via the recursive
             calls description only arises a the toplevel of a (termination)
             proof. *)
          let aim =
            (match aim_gen_method with
-            | ZSGM_from_logical_expr lexpr -> lexpr
-            | ZSGM_from_termination_lemma (_, _, _) -> assert false) in
+           | ZSGM_from_logical_expr lexpr -> lexpr
+           | ZSGM_from_termination_lemma (_, _, _) -> assert false) in
          Format.fprintf out_fmter "@[<2>Theorem %a :@ "
            Parsetree_utils.pp_vname_with_operators_expanded aim_name;
          Species_record_type_generation.generate_logical_expr
@@ -2231,7 +2172,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
            ~self_methods_status: Species_record_type_generation.SMS_abstracted
            ~recursive_methods_status: Species_record_type_generation.RMS_regular
            ctx env aim ;
-         Format.fprintf out_fmter ".@]@\n";
+         Format.fprintf out_fmter ".@]@\n" ;
          (* Enforce Hypothesis to be used to prevent Coq from removing it. *)
          List.iter
            (fun h ->
@@ -2246,7 +2187,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
          (* Apply Zenon's result to prove the lemma... *)
          Format.fprintf out_fmter "apply for_zenon_%a;@\nauto.@\nQed.@\n"
            Parsetree_utils.pp_vname_with_operators_expanded aim_name
-         end)
+        )
 ;;
 
 
@@ -4984,3 +4925,4 @@ let toplevel_theorem_compile ctx env theorem_def =
     from theorem_desc.Parsetree.th_name theorem_desc.Parsetree.th_stmt
     theorem_desc.Parsetree.th_proof
 ;;
+
