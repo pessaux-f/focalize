@@ -493,17 +493,19 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
       List.iter
         (function
           | Recursion.B_let let_binding ->
-              (* A "let x = e" induces forall x: ..., x "=" e.
+              (* A "let x = e" induces forall x: ...,
+                 Is_true (basics._equal_ _ e x).
                  [Unsure] Alpha-conv !!!!!!! *)
               Format.fprintf out_fmter "(" ;
               generate_binding_let ctx print_ctx env let_binding ;
-              Format.fprintf out_fmter ") ->@ " ;
+              Format.fprintf out_fmter ") ->@ "
           | Recursion.B_match (expr, pattern) ->
-              (* Induces "forall variables of the pattern, pattern = expr".
+              (* Induces "forall variables of the pattern,
+                 Is_true (basics._equal_ _ expr pattern)".
                  [Unsure] Alpha-conv des vars du pattern !!!!!!! *)
               Format.fprintf out_fmter "(" ;
               generate_binding_match ctx print_ctx env expr pattern ;
-              Format.fprintf out_fmter ") ->@ " ;
+              Format.fprintf out_fmter ") ->@ "
           | Recursion.B_condition (expr, bool_val) ->
               (* Induces "Is_true (expr)" if [bool_val] is true, else
                  "~ Is_true (expr)" if [bool_val] is false. *)
