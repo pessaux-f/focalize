@@ -38,7 +38,7 @@ CAML_INCLUDES =\
  -I ../basement\
  -I ../parser\
  -I ../typing
-CAML_FLAGS = -w A-4 -warn-error $(WARN_ERROR)
+CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR)
 
 EXE_NAME=focalizeig
 

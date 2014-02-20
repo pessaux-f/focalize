@@ -128,33 +128,6 @@ let make_Self_cc_binding_species_param ~current_species spe_param_name =
 
 
 
-(* ************************************************************************ *)
-(* current_unit: Parsetree.modname -> Format.formatter ->                   *)
-(*   Parsetree.qualified_vname -> unit                                      *)
-(** {b Descr}: Pretty prints a [Parsetree.qualified_vname] as a Coq regular
-    identifier. If the identifier has a qualification that is different of
-    the current compilation unit, then we use the dot-notation.
-    Otherwise no qualification is printed.
-    No transformation is performed on the ident (no abstraction stuff, no
-    change, no prefix) : the name is directly generated as it is.
-    If the ident , in fact, has no qualification, then the scoping process
-    may have failed earlier because any qualified name must have and
-    explicit qualification after the scoping pass.
-
-    {b Rem}: Not exported outside this module.                               *)
-(* ************************************************************************ *)
-let simply_pp_to_coq_qualified_vname ~current_unit ppf = function
-  | Parsetree.Vname _ ->
-      (* In this case, may be there is some scoping process missing. *)
-      assert false
-  | Parsetree.Qualified (modname, vname) ->
-      if modname <> current_unit then
-        Format.fprintf ppf "%s." modname ;
-      Parsetree_utils.pp_vname_with_operators_expanded ppf vname
-;;
-
-
-
 type self_methods_status =
   | SMS_from_param of Parsetree.vname  (** Must be called "_p_Param_<meth>". *)
   | SMS_abstracted     (** Must be called "abst_<meth>". *)
@@ -1349,40 +1322,6 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
   rec_generate_logical_expr local_idents initial_env initial_proposition
 ;;
 
-
-
-(* ************************************************************************ *)
-(* current_unit: Parsetree.modname -> Format.formatter -> Parsetree.expr -> *)
-(*   unit                                                                   *)
-(** {b Descr} : Translate an [expr] expected to be a species parameter
-    expression into a Coq type.
-    Because species names are capitalized, they must appear as sum
-    constructors [expr]s. We also allow to have parentheses surrounding the
-    expression. Hence, this function only handles these 2 kinds of [expr]s.
-
-    {b Rem}: Not exported outside this module.                              *)
-(* ************************************************************************ *)
-let rec generate_expr_as_species_parameter_expression ~current_unit ppf expr =
-  match expr.Parsetree.ast_desc with
-   | Parsetree.E_constr (constr_ident, exprs) ->
-       (* Remember that species names are capitalized. Hence the only legal
-          core expression denoting species are sum type constructors. *)
-       let Parsetree.CI glob_ident = constr_ident.Parsetree.ast_desc in
-       let cstr_qual_name =
-         (match glob_ident.Parsetree.ast_desc with
-          | Parsetree.I_local vn -> Parsetree.Vname vn
-          | Parsetree.I_global qvn -> qvn) in
-       Format.fprintf ppf "%a"
-         (simply_pp_to_coq_qualified_vname ~current_unit) cstr_qual_name ;
-       if exprs <> [] then
-         Format.fprintf ppf "@[<2>@ (%a)@]"
-           (Handy.pp_generic_separated_list ";"
-              (generate_expr_as_species_parameter_expression ~current_unit))
-           exprs
-   | Parsetree.E_paren expr' ->
-       generate_expr_as_species_parameter_expression ~current_unit ppf expr'
-   | _ -> assert false
-;;
 
 
 (* ************************************************************************* *)

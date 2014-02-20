@@ -3192,7 +3192,6 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        (* Print the proof using the above material. *)
        if Configuration.get_experimental () then (
          (* ---> Generate the soldering Coq script. *)
-         let nb_args = List.length params_with_type in
          let nb_rec_calls = List.length recursive_calls in
          Format.fprintf out_fmter
            "elim %a_termination.@\n\
@@ -3208,7 +3207,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          (* Repeat for each recursive call. *)
          let call_num = ref 1 in (* Recursive calls counter. *)
          List.iter
-           (fun (_, rec_call_bindings) ->
+           (fun (_, _) ->
              Format.fprintf out_fmter "split.@\n" ;
              (* Remove stuff due to matching the tuple of args.
                 n - 1 intermediate variables and their type due to the tuple

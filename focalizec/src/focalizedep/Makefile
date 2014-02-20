@@ -34,7 +34,7 @@ include $(ROOT_DIR)/focalizec/.install_var
 
 CAML_INCLUDES =\
  -I ../basement
-CAML_FLAGS = -w A -warn-error $(WARN_ERROR)
+CAML_FLAGS = -w A-4-9 -warn-error $(WARN_ERROR)
 
 EXE_NAME=focalizedep
 
