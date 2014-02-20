@@ -330,7 +330,7 @@ let generate_binding_let ctx print_ctx env binding =
          env p) ;
   (* If there were parameters, we must close a parenthesis. *)
   if binding_desc.Parsetree.b_params <> [] then
-    Format.fprintf out_fmter "@]" ;
+    Format.fprintf out_fmter "@])" ;
   (* The bound variable (after, like Coq does). *)
   Format.fprintf out_fmter "@ %a)"
     Parsetree_utils.pp_vname_with_operators_expanded
