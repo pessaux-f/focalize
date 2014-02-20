@@ -27,6 +27,7 @@ SSH=ssh
 SCP=scp
 TOUCH=touch
 CHMODGRW=chmod ug+rw
+CHMOD=chmod
 
 # Tex related processors
 GS=gs
