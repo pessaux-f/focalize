@@ -239,18 +239,22 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
 let generate_binding_match ctx print_ctx env expr pattern =
   let out_fmter = ctx.Context.scc_out_fmter in
   let local_idents = Parsetree_utils.get_local_idents_from_pattern pattern in
-  (* Now, generate "pattern = expr". But attention !!! We print something like
-     a pattern, but not a pattern ! Since we are not in the case of a pattern
-     in a match, we must apply the possible polymorphic arguments of the sum
-     value constructors! So, force the extra "_"s to be printed. *)
-  Species_record_type_generation.generate_pattern
-    ~force_polymorphic_explicit_args: true ctx print_ctx env pattern ;
-  Format.fprintf out_fmter " =@ " ;
+  (* Now, generate "Is_true (basics._equal_ _ expr pattern" to keep consistent
+     with the way we generate equalities,. But attention !!! We print
+     something like a pattern, but not a pattern ! Since we are not in the
+     case of a pattern in a match, we must apply the possible polymorphic
+     arguments of the sum value constructors! So, force the extra "_"s to be
+     printed. *)
+  Format.fprintf out_fmter "Is_true ((basics._equal_ _) (" ;
   Species_record_type_generation.generate_expr
     ctx ~in_recursive_let_section_of: [] ~local_idents
     ~self_methods_status: Species_record_type_generation.SMS_abstracted
     ~recursive_methods_status: Species_record_type_generation.RMS_regular
-    env expr
+    env expr ;
+  Format.fprintf out_fmter ")@ (" ;
+  Species_record_type_generation.generate_pattern
+    ~force_polymorphic_explicit_args: true ctx print_ctx env pattern ;
+  Format.fprintf out_fmter "))"
 ;;
 
 
