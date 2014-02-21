@@ -32,3 +32,10 @@ val generate_termination_lemmas :
 val transform_recursive_calls_args_into_tuple :
   Context.species_compil_context -> local_idents: Parsetree.vname list ->
     Parsetree.vname -> Parsetree.expr -> Parsetree.expr
+
+val print_user_termination_obls :
+  Parsetree.vname ->
+  (((Parsetree.vname * Types.type_simple) * Parsetree.expr) list *
+   Recursion.binding list)
+  list ->
+    Parsetree.expr -> int list -> unit

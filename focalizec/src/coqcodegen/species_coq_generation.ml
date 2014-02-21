@@ -2898,8 +2898,16 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
             failwith "TODO: lexicographic2."  (* [Unsure] *)
         | Parsetree.TP_measure (_, _, _proof) ->
             failwith "TODO: measure2."  (* [Unsure] *)
-        | Parsetree.TP_order (order_expr, used_params, proof) ->
-            (match proof.Parsetree.ast_desc with
+        | Parsetree.TP_order (order_expr, used_params, proof) -> (
+            (* Compute the list of positionnal indices of the recursive
+               function's parameters used in the order. *)
+            let used_params_indices =
+              Handy.list_indices_of_present_in
+                ~all: (List.map fst fun_params_n_tys)
+                ~subset: (List.map fst used_params) in
+            Rec_let_gen.print_user_termination_obls
+              name recursive_calls order_expr used_params_indices ;
+            match proof.Parsetree.ast_desc with
              | Parsetree.Pf_assumed _ ->
                  (* Proof assumed, then simply use "magic_prove". *)
                  Format.fprintf out_fmter
@@ -2953,12 +2961,6 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                     (print_types_as_tuple_if_several new_print_ctx)
                     fun_params_n_tys ;
                   (* Same arguments than for the xxx_wforder. *)
-                  (* Compute the list of positionnal indices of the recursive
-                     function's parameters used in the order. *)
-                  let used_params_indices =
-                    Handy.list_indices_of_present_in
-                      ~all: (List.map fst fun_params_n_tys)
-                      ~subset: (List.map fst used_params) in
                   let fun_arity = List.length fun_params_n_tys in
                   print_order_args_as_tuple
                     out_fmter ~fun_arity "__c" used_params_indices ;

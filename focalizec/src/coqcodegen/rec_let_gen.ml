@@ -310,7 +310,7 @@ let generate_binding_let ctx print_ctx env binding =
                   for each parameter name ! *)
                assert false)
         params_with_type ;
-        params_names
+      params_names
       end)
     else
       [ (* No local identifiers since no parameters to the let binding. *) ] in
@@ -434,7 +434,6 @@ let generate_exprs_as_tuple ctx env exprs =
          ~recursive_methods_status: Species_record_type_generation.RMS_regular
          env fake_tuple
 ;;
-
 
 
 
@@ -573,4 +572,134 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
       (* Connected by ^'s. *)
       Format.fprintf out_fmter ")@\n/\\@\n")
     recursive_calls
+;;
+
+
+
+let print_user_variables_quantifications vars bindings =
+  List.iter
+    (fun (v, ty) ->
+      Format.eprintf "all %a : %a,@ "
+        Sourcify.pp_vname v Types.pp_type_simple ty)
+    vars ;
+  (* Now, quantify the variables bound in the bindings. *)
+  List.iter
+    (function
+      | Recursion.B_let binding -> (
+          (* Generate a forall to bind the identifier. *)
+          let scheme =
+            (match binding.Parsetree.ast_type with
+            | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
+            | Parsetree.ANTI_type _ -> assert false
+            | Parsetree.ANTI_scheme s -> s) in
+          let ty = Types.specialize scheme in
+          Format.eprintf  "all %a :@ %a,@ "
+            Sourcify.pp_vname binding.Parsetree.ast_desc.Parsetree.b_name
+            Types.pp_type_simple ty
+         )
+      | Recursion.B_match (_, pattern) -> (
+          let bound_vars =
+            Parsetree_utils.get_local_idents_and_types_from_pattern pattern in
+          (* Generate a forall for each bound variable. *)
+          List.iter
+            (fun (v, ty_info) ->
+              let t =
+                (match ty_info with
+                | Parsetree.ANTI_type t -> t
+                | _ -> assert false) in
+              Format.eprintf "all %a :@ %a,@ "
+                Sourcify.pp_vname v Types.pp_type_simple t)
+            bound_vars
+         )
+      | Recursion.B_condition (_, _) ->
+          (* No possible variable bound, so nothing to do. *)
+          ())
+    bindings
+;;
+
+
+
+let print_user_binding_let binding =
+  let binding_desc = binding.Parsetree.ast_desc in
+  (* Quantification of the variable was done previously by the function
+     [generate_variables_quantifications]. *)
+  (* If the binding has arguments, then it's a function. So for a binding
+     looking like "let f (x, y) = ... in" we generate the same form of
+     obligation since we have no other way to represent the binding. In effect,
+     we don't have anomymous lambdas ike those we use to generate the Coq
+     version of the obligations. *)
+   if binding_desc.Parsetree.b_params <> [] then (
+     Format.eprintf "let %a in@ " Sourcify.pp_binding binding
+   )
+   else (
+     (* Otherwise, we print the body of the let binding and the bound name will
+        arrive after. *)
+     Format.eprintf "(%a"
+       Sourcify.pp_binding_body binding_desc.Parsetree.b_body ;
+     (* The bound variable (after, like Coq does). *)
+     Format.eprintf "=@ %a)@ ->"
+       Parsetree_utils.pp_vname_with_operators_expanded
+       binding_desc.Parsetree.b_name
+    )
+;;
+
+
+
+(** {b Descr}: Prints on stderr the obligation proofs the user will have to
+    do on its recursive function to prove that his order makes arguments
+    decreasing. This output is lighter than its Coq version because it outputs
+    some Focal source code. *)
+let print_user_termination_obls fun_name recursive_calls user_order
+    rec_fun_used_args_indices =
+  Format.eprintf
+    "Termination proof obligations for the recursive function '%a':@\n"
+    Sourcify.pp_vname fun_name ;
+  let counter = ref 1 in
+  List.iter
+    (fun (n_exprs, bindings) ->
+      (* The list of hypotheses induced by bindings is in *reverse order*.
+         Let's reverse it. *)
+      let bindings = List.rev bindings in
+      Format.eprintf "@[<2><1>%d prove@ " !counter ;
+      incr counter ;
+      (* [n_exprs]: (initial variable of the function * expression provided
+         in the recursive call). The expression must hence be < to the initial
+         variable for the function to terminate. In fact that's the tuple of
+         initial variables that must be < to the tuple of expressions provided
+         in the recursive call. *)
+      let (initial_vars, rec_args) = List.split n_exprs in
+      (* For each variable, bind it by a forall. *)
+      print_user_variables_quantifications initial_vars bindings ;
+      (* We must generate the hypotheses and separate them by ->. *)
+      List.iter
+        (function
+          | Recursion.B_let let_binding -> print_user_binding_let let_binding
+          | Recursion.B_match (expr, pattern) ->
+              Format.eprintf "(%a@ = %a) ->@ "
+                Sourcify.pp_pattern pattern Sourcify.pp_expr expr
+          | Recursion.B_condition (expr, bool_val) ->
+              Format.eprintf "(%a" Sourcify.pp_expr expr ;
+              if not bool_val then Format.eprintf "@ =@ false" ;
+              Format.eprintf ") ->@ ")
+        bindings ;
+      (* Now, generate the goals that states the decreasing applying
+         the "user-"order. *)
+      Format.eprintf "%a" Sourcify.pp_expr user_order ;
+      Format.eprintf "( " ;
+      (* Now, generate the tuples of only arguments used in the order
+         given by the user to provide to this order. *)
+(* [Unsure] considered orders only compare 2 simple arguments, not a tuple. *)
+      if (List.length rec_fun_used_args_indices) <> 1 then
+        failwith "TODO: order/measure using several arguments" ;
+      let index = List.hd rec_fun_used_args_indices in
+      let rec_arg = List.nth rec_args index in
+      let initial_var = List.nth initial_vars index in
+      (* Generate the corresponding recursive call argument. *)
+      Format.eprintf "%a" Sourcify.pp_expr rec_arg ;
+      (* Generate the initial argument of the function. *)
+      Format.eprintf ",@ %a" Sourcify.pp_vname (fst initial_var) ;
+      Format.eprintf ")" ;
+      Format.eprintf "@]@\n")
+    recursive_calls ;
+  Format.eprintf "@\n"
 ;;
