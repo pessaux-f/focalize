@@ -1115,7 +1115,6 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
        (* Done... Then, final carriage return. *)
        Format.fprintf out_fmter ".@]@\n"
    | Parsetree.EI_global qvname -> (
-Format.eprintf "FOOO@." ;
        (* The stuff is in fact a toplevel definition, not a species method. We
           must recover its type kind from the environment. *)
        let current_species_name =
