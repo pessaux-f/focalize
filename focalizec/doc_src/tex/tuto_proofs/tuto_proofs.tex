@@ -10,7 +10,7 @@
   \url{francois.pessaux@ensta-paristech.fr}}
 \title{Another Tutorial for {F}o{C}a{L}ize:\\
   Playing with Proofs}
-\date{December 2013}
+\date{March 2014}
 
 \begin{document}
 
@@ -520,6 +520,7 @@ Zenon error: could not find a proof within the memory size limit
 ### proof failed
 \end{verbatim}}
 
+\red{
 As in the previous example, we need to split the proof in 3 steps: one for the
 base case, one for the inductive case, and the final \lstinline"qed" combining
 the two former. We postpone the difficult part (the induction case) for later
@@ -528,17 +529,25 @@ is very simple and only depends on the definition of the function
 \lstinline"mirror" and the type \lstinline"bintree_t". Note that for
 the induction case, we however state the induction hypotheses (\lstinline"ir1"
 and \lstinline"ir2") before stating the goal of this case.
+\\
+{\bf TODO 03/2014}: Add info about order of the premises when several recursive calls
+and variables to bind. Add info between equivalence between implications and
+universal quantifications versus \lstinline"hypothesis" and
+\lstinline"assume".}
 
 {\scriptsize
 \lstinputlisting[numbers=left,caption=tree\_mirror2.fcl]{tree_mirror2.fcl}}
 
-Invoking \focalizec\ on this program succeeds and it is now time to
+\red{Invoking \focalizec\ on this program succeeds and it is now time to
 complete our last proof. This proof, even if intuitive, can't be solved
 directly by \zenon. Hence we have to detail it. Basically the proof
 sketch is to ``unfold'' twice the function \lstinline"mirror" (i.e. to
-look at the result of \lstinline"mirror (Node (...))") then to then use induction
-hypotheses (\lstinline"ir1" and \lstinline"ir2") to finally get the
+look at the result of \lstinline"mirror (Node (...))") then to then use
+induction hypotheses (\lstinline"ir1" and \lstinline"ir2") to finally get the
 effective equality of our two terms.
+\\
+{\bf TODO 03/2014}: Not really, just a bit more of work as shown in the code.
+Update discussion with the fixed proof.}
 
 {\scriptsize
 \lstinputlisting[numbers=left,caption=tree\_mirror.fcl]{tree_mirror.fcl}}
