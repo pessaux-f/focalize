@@ -102,6 +102,24 @@ $(focal)
 <div class="spacer"></div>
 
 <div id="main">
+<h3>Update of tutorial "Playing with proofs" (2014-03-06)</h3><h3>
+<p>
+The tutorial "Playing with Proofs" available in the distribution and via the
+<a href="documentation/">Documentation</a> page has been updated to make the
+proof dealing with tree mirror working again. We still have to add few words
+to explain clearly how to state induction hypotheses in case of multiple
+recursive calls. Some words also have to be added about the shape of the goals
+and the equivalent shapes they can have to allow Zenon to use induction.
+
+Will be done ASAP ;)
+</p>
+</h3>
+</div>
+
+
+<div class="spacer"></div>
+
+<div id="main">
 <h3>Fixed broken links to papers in resources (2014-02-14)</h3><h3>
 <p>
 Due to a site migration, some links to papers available in the
