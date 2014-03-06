@@ -16,12 +16,13 @@ proof =
   <1>1 (* Base case. *)
        prove mirror (mirror (Leaf)) = Leaf
        by definition of mirror type bintree_t
-  <1>2 assume rr : bintree_t,
-       assume ll : bintree_t,
-       assume i : int,
-       (* Induction hypotheses. *)       
-       hypothesis ir1: mirror (mirror (rr)) = rr,
+  <1>2 assume ll : bintree_t,
+       (* Induction hypothesis. *)
        hypothesis ir2: mirror (mirror (ll)) = ll,
+       assume i : int,
+       (* Induction hypothesis. *)
+       assume rr : bintree_t,
+       hypothesis ir1: mirror (mirror (rr)) = rr,
        (* Recursive case. *)
        prove mirror (mirror (Node (ll, i, rr))) = Node (ll, i, rr)
        assumed

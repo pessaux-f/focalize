@@ -16,17 +16,23 @@ proof =
   <1>1 (* Base case. *)
        prove mirror (mirror (Leaf)) = Leaf
        by definition of mirror type bintree_t
-  <1>2 assume rr : bintree_t,
-       assume ll : bintree_t,
-       assume i : int,
-       (* Induction hypotheses. *)       
-       hypothesis ir1: mirror (mirror (rr)) = rr,
+  <1>2 assume ll : bintree_t,
+       (* Induction hypothesis. *)
        hypothesis ir2: mirror (mirror (ll)) = ll,
+       assume i : int,
+       (* Induction hypothesis. *)
+       assume rr : bintree_t,
+       hypothesis ir1: mirror (mirror (rr)) = rr,
        (* Recursive case. *)
        prove mirror (mirror (Node (ll, i, rr))) = Node (ll, i, rr)
        <2>1 prove mirror (Node (ll, i, rr)) = Node (mirror (rr), i, mirror (ll))
             by definition of mirror type bintree_t
-       <2>2 qed by step <2>1 hypothesis ir1, ir2 type bintree_t
-                   definition of mirror
+       <2>2 prove mirror (Node (mirror (rr), i, mirror (ll))) =
+                  Node (mirror (mirror(ll)), i, mirror (mirror (rr)))
+            by type bintree_t definition of mirror
+       <2>3 prove Node (mirror (mirror(ll)), i, mirror (mirror (rr))) =
+                  Node (ll, i, rr)
+            by hypothesis ir1, ir2
+       <2>4 qed by step <2>1, <2>2, <2>3
   <1>3 qed by step <1>1, <1>2 type bintree_t
 ;;
