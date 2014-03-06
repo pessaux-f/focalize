@@ -1,0 +1,25 @@
+open "basics" ;;
+
+type bintree_t =
+  | Leaf
+  | Node (bintree_t, int, bintree_t) ;;
+
+let rec mirror (t) =
+  match t with
+  | Leaf -> Leaf
+  | Node (l, i, r) -> Node (mirror (r), i, mirror (l))
+termination proof = structural t
+;;
+
+theorem double_mir_is_id : all t : bintree_t, mirror (mirror (t)) = t
+proof =
+  <1>1 (* Base case. *)
+       prove mirror (mirror (Leaf)) = Leaf
+       by definition of mirror type bintree_t
+  <1>2  prove all ll : bintree_t, mirror (mirror (ll)) = ll ->
+        all i : int,
+        all rr : bintree_t, mirror (mirror (rr)) = rr ->
+          mirror (mirror (Node (ll, i, rr))) = Node (ll, i, rr)
+       assumed
+  <1>3 qed by step <1>1, <1>2 type bintree_t
+;;

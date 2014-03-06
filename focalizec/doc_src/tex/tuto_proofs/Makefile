@@ -16,7 +16,7 @@ FOCALIZE_SRC= ex_implications.fcl or_id_com_good.fcl or_id_com_shortest.fcl same
 
 # Particular rule because Zenon has a missing case when outputing proofs
 # as a Coq term. And this source file falls in the hole ^_^
-FOCALIZE_SRC2=tree_mirror.fcl zero3.fcl
+FOCALIZE_SRC2=tree_mirror2.fcl tree_mirror2bis.fcl tree_mirror.fcl zero3.fcl
 
 FOCALIZE_MLS=$(FOCALIZE_SRC:.fcl=.ml)
 FOCALIZE_BYT_OBJS=$(FOCALIZE_MLS:.ml=.cmo) $(FOCALIZE_SRC2:.fcl=.vo)
@@ -52,6 +52,10 @@ byt: $(FOCALIZE_BYT_OBJS)
 
 # Particular rules because Zenon has a missing case when outputing proofs
 # as a Coq term. And this source file falls in the hole ^_^
+tree_mirror2.vo: tree_mirror2.fcl
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -zvtovopt -script tree_mirror2.fcl
+tree_mirror2bis.vo: tree_mirror2bis.fcl
+	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -zvtovopt -script tree_mirror2bis.fcl
 tree_mirror.vo: tree_mirror.fcl
 	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -zvtovopt -script tree_mirror.fcl
 zero3.vo: zero3.fcl
