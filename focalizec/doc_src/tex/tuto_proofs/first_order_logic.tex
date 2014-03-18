@@ -139,7 +139,7 @@ We can easily build the tree of this proof as follows:
 
 $$
 \inferrule* [Right=($\Rightarrow$-intro)]
-   {\inferrule* [Right=($\logand$-elim)] {\green{a \logand b} \vdash \blue{a \logand b}}
+   {\inferrule* [Right=($\logand$-intro)] {\green{a \logand b} \vdash \blue{a \logand b}}
       {\inferrule* [Right=($\logor$-elim)] {\green{a \logand b} \vdash \blue{b}}
      { \green{a \logand b} \vdash \blue{a \logor b}}}}
    { \vdash \blue{a \logand b \Rightarrow a \logor b}}
