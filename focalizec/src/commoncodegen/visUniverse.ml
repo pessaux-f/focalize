@@ -1,19 +1,19 @@
-(***********************************************************************)
-(*                                                                     *)
-(*                        FoCaLize compiler                            *)
-(*                                                                     *)
-(*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
-(*                                                                     *)
-(*                               LIP6  --  INRIA Rocquencourt          *)
-(*                                                                     *)
-(*  Copyright 2007, 2008 LIP6 and INRIA                                *)
-(*  Distributed only by permission.                                    *)
-(*                                                                     *)
-(***********************************************************************)
+(* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            François Pessaux                                                *)
+(*            Pierre Weis                                                     *)
+(*            Damien Doligez                                                  *)
+(*                                                                            *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
+(*                                                                            *)
+(*  Copyright 2007 - ...  LIP6 and INRIA                                      *)
+(*            2012 - ... ENSTA ParisTech                                      *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
 
-(* $Id: visUniverse.ml,v 1.10 2009-05-18 15:29:38 pessaux Exp $ *)
 
 (* ******************************************************************** *)
 (** {b Descr} : Describes how a method arrives into a visible universe.
@@ -83,43 +83,41 @@ let visible_universe ~with_def_deps_n_term_pr dep_graph x_decl_dependencies
      changed to that def tag in the universe. *)
   let universe = ref Universe.empty in
   (* If we are in coq case, then we also take into account the dependencies
-     induced by recursive functions termination proofs. *)
-  if with_def_deps_n_term_pr then
-    (begin
+     induced by recursive functions termination proofs. Hence, we take in one
+     shot all the decl-dependencies. *)
+  if with_def_deps_n_term_pr then (
     List.iter
       (fun (n, _) ->
         universe := Universe.add n.DepGraphData.nn_name IU_only_decl !universe)
       x_decl_dependencies
-    end)
-  else
-    (begin
+   )
+  else (
     (* Otherwise, we are only interested in decl-dependencies that are not
        induced by recursive functions termination proofs. *)
     List.iter
       (fun (n, dep_kind) ->
         match dep_kind with
-         | DepGraphData.DK_def _ ->
-             assert false (* Should always be a decl-dependency ! *)
-         | DepGraphData.DK_decl DepGraphData.DcDK_from_term_proof ->
-	     (* For termination proofs we need to take these dependencies
-		into account. *)
-	     if with_def_deps_n_term_pr then
-	       universe :=
-		 Universe.add n.DepGraphData.nn_name IU_only_decl !universe
-         | DepGraphData.DK_decl _ ->
-             universe :=
-               Universe.add n.DepGraphData.nn_name IU_only_decl !universe)
+        | DepGraphData.DK_def _ ->
+            assert false (* Should always be a decl-dependency ! *)
+        | DepGraphData.DK_decl DepGraphData.DcDK_from_term_proof ->
+            (* For termination proofs we need to take these dependencies
+               into account. *)
+            if with_def_deps_n_term_pr then
+              universe :=
+                Universe.add n.DepGraphData.nn_name IU_only_decl !universe
+        | DepGraphData.DK_decl _ ->
+            universe :=
+              Universe.add n.DepGraphData.nn_name IU_only_decl !universe)
       x_decl_dependencies
-    end) ;
+   ) ;
   (* We take def-dependencies and their transitive implied decl-dependencies
      only if requested. And in this case, we also take def-dependencies coming
      from the recursive functions termination proofs. *)
-  if with_def_deps_n_term_pr then
-    (begin
+  if with_def_deps_n_term_pr then (
     (* Next, apply rule 2 and 3. Add the def-dependencies. Like
-       decl-dependencies,  they are already available, so take them as a
-       parameter instead of computing them again. For each of them we
-       follow the transitive links to add the transitive def-dependencies.
+       decl-dependencies, they are already available, so take them as a
+       parameter instead of computing them again. For each of them we follow
+       the transitive links to add the transitive def-dependencies.
        Rule 3 is implemented by adding for each transitive def-dependency
        node, its decl-dependencies. *)
     (* First, create the set of already visited nodes. *)
@@ -132,8 +130,7 @@ let visible_universe ~with_def_deps_n_term_pr dep_graph x_decl_dependencies
         found. This way, one unique walk is needed.                 *)
     (* ************************************************************ *)
     let rec transitive_addition n =
-      if not (Parsetree_utils.VnameSet.mem n.DepGraphData.nn_name !seen) then
-        (begin
+      if not (Parsetree_utils.VnameSet.mem n.DepGraphData.nn_name !seen) then (
         (* Mark it as seen. *)
         seen := Parsetree_utils.VnameSet.add n.DepGraphData.nn_name !seen ;
         (* Add the node that has def-dependency to the universe. If the
@@ -144,8 +141,7 @@ let visible_universe ~with_def_deps_n_term_pr dep_graph x_decl_dependencies
         (* Add the decl-dependencies of this node to the universe. *)
         List.iter
           (function
-            | (child_node, (DepGraphData.DK_decl _)) ->
-                (begin
+            | (child_node, (DepGraphData.DK_decl _)) -> (
                 (* If the method already appeared with the tag meaning that is
                    comes here thanks to a transitive def-dep, let it unchanged,
                    otherwise add it with the tag meaning that it come here
@@ -162,10 +158,10 @@ let visible_universe ~with_def_deps_n_term_pr dep_graph x_decl_dependencies
                   universe :=
                     Universe.add
                       child_node.DepGraphData.nn_name IU_only_decl !universe
-                end)
+               )
             | (_, (DepGraphData.DK_def _)) -> ())
           n.DepGraphData.nn_children ;
-        (* Recurse on each def-pedendency child of the current node. *)
+        (* Recurse on each def-dependency child of the current node. *)
         List.iter
           (function
             | (child_node, (DepGraphData.DK_def _)) ->
@@ -174,7 +170,7 @@ let visible_universe ~with_def_deps_n_term_pr dep_graph x_decl_dependencies
                 transitive_addition child_node
             | (_, (DepGraphData.DK_decl _)) -> ())
           n.DepGraphData.nn_children
-        end) in
+       ) in
     (* Now, start the transitive hunt for each initial def-dependencies
        nodes. *)
     List.iter
@@ -213,19 +209,18 @@ let visible_universe ~with_def_deps_n_term_pr dep_graph x_decl_dependencies
                      higher priority and must not be changed. *)
                   if not
                       (Universe.mem child_node.DepGraphData.nn_name !universe)
-                  then
-                    (begin
+                  then (
                     universe :=
                       Universe.add
                         child_node.DepGraphData.nn_name IU_only_decl !universe ;
                     (* Mark that we must continue the fixpoint. *)
-                    continue := true ;
-                    end)
+                    continue := true
+                   )
               | (_, _) -> ())
             z_node.DepGraphData.nn_children)
         !universe
     done
-    end) ;
+   ) ;
   (* Finally, return the visible universe. *)
   !universe
 ;;
