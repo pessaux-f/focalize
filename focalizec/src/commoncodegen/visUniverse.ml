@@ -99,12 +99,7 @@ let visible_universe ~with_def_deps_n_term_pr dep_graph x_decl_dependencies
         match dep_kind with
         | DepGraphData.DK_def _ ->
             assert false (* Should always be a decl-dependency ! *)
-        | DepGraphData.DK_decl DepGraphData.DcDK_from_term_proof ->
-            (* For termination proofs we need to take these dependencies
-               into account. *)
-            if with_def_deps_n_term_pr then
-              universe :=
-                Universe.add n.DepGraphData.nn_name IU_only_decl !universe
+        | DepGraphData.DK_decl DepGraphData.DcDK_from_term_proof -> ()
         | DepGraphData.DK_decl _ ->
             universe :=
               Universe.add n.DepGraphData.nn_name IU_only_decl !universe)
