@@ -654,16 +654,19 @@ let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
     environment at each step.                                                 *)
 (* ************************************************************************** *)
 let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
-  (* And not [List.fold_right otherwise the list of infos will be reversed
-     compared to the list of bindings. *)
-  List.fold_left
-    (fun (env_accu, infos_accu) binding ->
-      let (env', info) = 
-        pre_compute_let_binding_info_for_rec
-          ~rec_status ~toplevel env_accu binding in
-      (env', info :: infos_accu))
-    (env, [])
-    bindings
+  (* And not [List.fold_right otherwise the bindings will be processed in
+     reverse order. However, the list of infos needs be reversed to
+     keep them in the same order than the list of bindings (was bug #60). *)
+  let (new_env, reved_infos) =
+    List.fold_left
+      (fun (env_accu, infos_accu) binding ->
+        let (env', info) = 
+          pre_compute_let_binding_info_for_rec
+            ~rec_status ~toplevel env_accu binding in
+        (env', info :: infos_accu))
+      (env, [])
+      bindings in
+  (new_env, (List.rev reved_infos))
 ;;
 
     
