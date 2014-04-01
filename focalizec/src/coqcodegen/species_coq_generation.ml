@@ -2025,7 +2025,8 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
          ~in_nested_proof ctx print_ctx env min_coq_env available_hyps
          aim_gen_method aim_name enforced_deps ;
        (* Dump verbatim the Coq code. *)
-       if script <> "daube" then
+       (* Was "daube" ^_^. Just a hack until we finish the work with Cath. *)
+       if script <> "wf_qed" then
          Format.fprintf out_fmter "%s@\n" script
        else (
 (* [Unsure] *)
