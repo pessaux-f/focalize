@@ -14,16 +14,22 @@
 (*                                                                     *)
 (***********************************************************************)
 
-type min_coq_env_element =
-    MCEE_Declared_carrier
-  | MCEE_Defined_carrier of Types.type_scheme
-  | MCEE_Declared_computational of (Parsetree.vname * Types.type_scheme)
-  | MCEE_Defined_computational of
+type min_coq_env_method =
+    MCEM_Declared_carrier
+  | MCEM_Defined_carrier of Types.type_scheme
+  | MCEM_Declared_computational of (Parsetree.vname * Types.type_scheme)
+  | MCEM_Defined_computational of
       (Env.from_history * Env.CoqGenInformation.rec_status * Parsetree.vname *
        (Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
-  | MCEE_Declared_logical of (Parsetree.vname * Parsetree.logical_expr)
-  | MCEE_Defined_logical of
+  | MCEM_Declared_logical of (Parsetree.vname * Parsetree.logical_expr)
+  | MCEM_Defined_logical of
       (Env.from_history * Parsetree.vname * Parsetree.logical_expr)
+
+type min_coq_env_reason =
+  | MCER_only_logical
+  | MCER_even_comput
+
+type min_coq_env_element = (min_coq_env_reason * min_coq_env_method)
 
 val find_coq_env_element_by_name :
   Parsetree.vname -> min_coq_env_element list -> min_coq_env_element

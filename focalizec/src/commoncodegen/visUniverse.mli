@@ -16,8 +16,9 @@
 (* $Id: visUniverse.mli,v 1.6 2008-12-03 09:07:26 pessaux Exp $ *)
 
 type in_the_universe_because =
-   | IU_only_decl
-   | IU_trans_def
+  | IU_decl_comput
+  | IU_decl_logic
+  | IU_trans_def
 ;;
 
 module Universe :
@@ -40,7 +41,7 @@ module Universe :
 ;;
 
 val visible_universe :
-  with_def_deps_n_term_pr: bool -> DepGraphData.name_node list ->
+  DepGraphData.name_node list ->
   (DepGraphData.name_node * DepGraphData.dependency_kind) list ->
   (DepGraphData.name_node * DepGraphData.dependency_kind) list ->
   in_the_universe_because Universe.t

@@ -525,18 +525,22 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter ")"
            ))
         meths_from_param)
-    dependencies_from_params;
+    dependencies_from_params ;
   (* Generate the parameters denoting methods of ourselves we depend on
      according the the minimal typing environment. *)
   let abstracted_methods =
     List.flatten
       (List.map
-         (function
-           | MinEnv.MCEE_Defined_carrier sch ->
+         (function (_, meth_dep)  ->
+           (* Reason ignored since in Coq we take all the kinds of methods in
+              account. *)
+           match meth_dep with
+           | MinEnv.MCEM_Defined_carrier sch ->
                (* Now, if "rep" is defined, then we generate an equivalence
                   between "abst_T" and it's representation using the
                   abstracted types passed as arguments to the Definition to
-                  represent carriers of the species parameters we depend on. *)
+                  represent carriers of the species parameters we depend
+                  on. *)
                let ty = Types.specialize sch in
                if in_section then
                  Format.fprintf out_fmter "Let abst_T := %a.@\n"
@@ -546,8 +550,8 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                    (Types.pp_type_simple_to_coq new_print_ctx) ty ;
                (* Anything defined is not abstracted. *)
                []
-           | MinEnv.MCEE_Defined_computational (fr, _, n, _, _, _)
-           | MinEnv.MCEE_Defined_logical (fr, n, _) ->
+           | MinEnv.MCEM_Defined_computational (fr, _, n, _, _, _)
+           | MinEnv.MCEM_Defined_logical (fr, n, _) ->
                (* We must add an equivalence to enforce de def-dependency. *)
                if in_section then
                  Format.fprintf out_fmter "Let abst_%a :=@ "
@@ -565,13 +569,13 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                if in_section then Format.fprintf out_fmter ".@\n"
                else Format.fprintf out_fmter ")";
                []                  (* Anything defined is not abstracted. *)
-           | MinEnv.MCEE_Declared_carrier ->
+           | MinEnv.MCEM_Declared_carrier ->
                (* Note that by construction, the carrier is first in the env. *)
                if in_section then
                  Format.fprintf out_fmter "@[<2>Variable abst_T : Set.@]@\n"
                else Format.fprintf out_fmter "@ (abst_T : Set)";
                [Parsetree.Vlident "rep"]
-           | MinEnv.MCEE_Declared_computational (n, sch) ->
+           | MinEnv.MCEM_Declared_computational (n, sch) ->
                (* Due to a decl-dependency, hence: abstract. *)
                let ty = Types.specialize sch in
                if in_section then
@@ -583,7 +587,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                    Parsetree_utils.pp_vname_with_operators_expanded n
                    (Types.pp_type_simple_to_coq new_print_ctx) ty ;
                [n]
-           | MinEnv.MCEE_Declared_logical (n, b) ->
+           | MinEnv.MCEM_Declared_logical (n, b) ->
                if in_section then
                  Format.fprintf out_fmter "@[<2>Hypothesis abst_%a :@ "
                    Parsetree_utils.pp_vname_with_operators_expanded n
@@ -1034,20 +1038,20 @@ let ensure_enforced_by_definition_is_definition min_coq_env def_expr_ident =
            (* The method comes from ourselves (Self). So we will search it
               inside the coq minimal typing environment. *)
            let method_info =
-             MinEnv.find_coq_env_element_by_name vname min_coq_env in
+             snd (MinEnv.find_coq_env_element_by_name vname min_coq_env) in
            match method_info with
-           | MinEnv.MCEE_Declared_carrier | MinEnv.MCEE_Defined_carrier _ ->
+           | MinEnv.MCEM_Declared_carrier | MinEnv.MCEM_Defined_carrier _ ->
                (* Syntax does not allow to mention "Self" as a proof
                   element. *)
                assert false
-           | MinEnv.MCEE_Declared_computational (_, _)
-           | MinEnv.MCEE_Declared_logical (_, _) ->
+           | MinEnv.MCEM_Declared_computational (_, _)
+           | MinEnv.MCEM_Declared_logical (_, _) ->
                (* We can't prove "by definition" of something only declared ! *)
                raise
                  (Attempt_proof_by_def_of_declared_method_of_self
                     (def_expr_ident.Parsetree.ast_loc, def_expr_ident))
-           | MinEnv.MCEE_Defined_computational (_, _, _, _, _, _)
-           | MinEnv.MCEE_Defined_logical (_, _, _) -> ()
+           | MinEnv.MCEM_Defined_computational (_, _, _, _, _, _)
+           | MinEnv.MCEM_Defined_logical (_, _, _) -> ()
           )
        | Some (Parsetree.Qualified (_, _)) ->
            (* The method comes from another module's species. Hence it is for
@@ -1190,21 +1194,21 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
             (* The method comes from ourselves (Self). So we will search it
                inside the coq minimal typing environment. *)
             let method_info =
-              MinEnv.find_coq_env_element_by_name vname min_coq_env in
+              snd (MinEnv.find_coq_env_element_by_name vname min_coq_env) in
             match method_info with
-             | MinEnv.MCEE_Declared_carrier
-             | MinEnv.MCEE_Defined_carrier _ ->
+             | MinEnv.MCEM_Declared_carrier
+             | MinEnv.MCEM_Defined_carrier _ ->
                  (* Syntax does not allow to mention "Self" as a proof
                     element. *)
                  assert false
-             | MinEnv.MCEE_Declared_computational (_, _)
-             | MinEnv.MCEE_Declared_logical (_, _) ->
+             | MinEnv.MCEM_Declared_computational (_, _)
+             | MinEnv.MCEM_Declared_logical (_, _) ->
                  (* We can't prove "by definition" of something only
                     declared ! *)
                  raise
                    (Attempt_proof_by_def_of_declared_method_of_self
                       (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
-             | MinEnv.MCEE_Defined_computational
+             | MinEnv.MCEM_Defined_computational
                    (_, is_rec, _, params, scheme, body) -> (
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
@@ -1239,7 +1243,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
                      (* Done... Then, final carriage return. *)
                      Format.fprintf out_fmter ".@]@\n"
                  )
-             | MinEnv.MCEE_Defined_logical (_, _, body) ->
+             | MinEnv.MCEM_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(* For method of Self used via \"by definition of \
@@ -1537,15 +1541,15 @@ let zenonify_by_property ctx print_ctx env min_coq_env
             (* The method comes from ourselves (Self). So we will search it
                inside the coq minimal typing environment. *)
             let method_info =
-              MinEnv.find_coq_env_element_by_name vname min_coq_env in
+              snd (MinEnv.find_coq_env_element_by_name vname min_coq_env) in
             match method_info with
-             | MinEnv.MCEE_Declared_carrier
-             | MinEnv.MCEE_Defined_carrier _ ->
+             | MinEnv.MCEM_Declared_carrier
+             | MinEnv.MCEM_Defined_carrier _ ->
                  (* Syntax does not allow to mention "Self" as a proof
                     element. *)
                  assert false
-             | MinEnv.MCEE_Declared_computational (_, scheme)
-             | MinEnv.MCEE_Defined_computational (_, _, _, _, scheme, _) ->
+             | MinEnv.MCEM_Declared_computational (_, scheme)
+             | MinEnv.MCEM_Defined_computational (_, _, _, _, scheme, _) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(* For method of Self used via \"by property %a\". *)@\n"
@@ -1555,8 +1559,8 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter "@[<2>Parameter abst_%a :@ %a.@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
                    (Types.pp_type_simple_to_coq print_ctx) meth_ty
-             | MinEnv.MCEE_Declared_logical (_, body)
-             | MinEnv.MCEE_Defined_logical (_, _, body) ->
+             | MinEnv.MCEM_Declared_logical (_, body)
+             | MinEnv.MCEM_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(* For method of Self used via \"by property %a\". *)@\n"
@@ -2234,14 +2238,15 @@ let generate_asserts_for_dependencies out_fmter dependencies_from_params
   (* Generate the parameters denoting methods of ourselves we depend on
      according the the minimal typing environment. *)
   List.iter
-    (function
-      | MinEnv.MCEE_Defined_carrier _ | MinEnv.MCEE_Declared_carrier ->
+    (function (_, meth_dep) ->
+      match meth_dep with
+      | MinEnv.MCEM_Defined_carrier _ | MinEnv.MCEM_Declared_carrier ->
           Format.fprintf out_fmter
             "@[<2>assert (__force_use_abst_T :=@ abst_T).@]@\n"
-      | MinEnv.MCEE_Defined_computational (_, _, n, _, _, _)
-      | MinEnv.MCEE_Defined_logical (_, n, _)
-      | MinEnv.MCEE_Declared_computational (n, _)
-      | MinEnv.MCEE_Declared_logical (n, _) ->
+      | MinEnv.MCEM_Defined_computational (_, _, n, _, _, _)
+      | MinEnv.MCEM_Defined_logical (_, n, _)
+      | MinEnv.MCEM_Declared_computational (n, _)
+      | MinEnv.MCEM_Declared_logical (n, _) ->
           Format.fprintf out_fmter
             "@[<2>assert (__force_use_abst_%a :=@ abst_%a).@]@\n"
             Parsetree_utils.pp_vname_with_operators_expanded n
@@ -4122,7 +4127,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* Now, compute abstractions for the methods of the species. *)
   let field_abstraction_infos =
     Abstractions.compute_abstractions_for_fields
-      ~with_def_deps_n_term_pr: true (Abstractions.EK_coq env')
+      (Abstractions.EK_coq env')
       ctxt_no_ccmap species_descr.Env.TypeInformation.spe_sig_methods in
   (* If the species is complete, the record type representing its "type".
      We get the parameters the record type has. If the species is not complete,

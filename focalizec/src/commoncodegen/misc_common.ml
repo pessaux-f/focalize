@@ -726,35 +726,37 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
   (* Next, the extra arguments due to methods of ourselves we depend on.
      They are always present in the species under the name "self_...". *)
   List.iter
-    (function
-      | MinEnv.MCEE_Defined_carrier _
-      | MinEnv.MCEE_Defined_computational (_, _, _, _, _, _)
-      | MinEnv.MCEE_Defined_logical (_, _, _) ->
-          (* Anything defined is not abstracted. *)
-          ()
-      | MinEnv.MCEE_Declared_logical (n, _) ->
-          (* In Ocaml, (i.e if [care_logical] is [false]) logical properties
-             are forgotten. *)
-          if care_logical then (
+    (function (reason, meth_dep) ->
+      (* Work only if the dependency concerns any kind of backend or
+         if it concerns logical ones and it is requested to take care of
+         logical aspects. *)
+      if reason = MinEnv.MCER_even_comput || care_logical then (
+        match meth_dep with
+        | MinEnv.MCEM_Defined_carrier _
+        | MinEnv.MCEM_Defined_computational (_, _, _, _, _, _)
+        | MinEnv.MCEM_Defined_logical (_, _, _) ->
+            (* Anything defined is not abstracted. *)
+            ()
+        | MinEnv.MCEM_Declared_logical (n, _) ->
             let llift_name =
               "abst_" ^
               (Parsetree_utils.vname_as_string_with_operators_expanded n) in
             the_list_reversed := llift_name :: !the_list_reversed
-           )
-      | MinEnv.MCEE_Declared_carrier ->
-         (* In Ocaml generation model (i.e. if [care_types] is [false], the
-             carrier is never lambda-lifted then doesn't appear as an extra
-             parameter. Hence, we take care of the carrier only in Coq, i.e. if
-             [care_types] is [true]. *)
-          if care_types then (
-            (* In Coq, the carrier is always abstracted by "abst_T". *)
-            the_list_reversed := "abst_T" :: !the_list_reversed
-           )
-      | MinEnv.MCEE_Declared_computational (n, _) ->
-          let llift_name =
-            "abst_" ^
-            (Parsetree_utils.vname_as_string_with_operators_expanded n) in
-          the_list_reversed := llift_name :: !the_list_reversed)
+        | MinEnv.MCEM_Declared_carrier ->
+            (* In Ocaml generation model (i.e. if [care_types] is [false], the
+               carrier is never lambda-lifted then doesn't appear as an extra
+               parameter. Hence, we take care of the carrier only in Coq, i.e.
+               if [care_types] is [true]. *)
+            if care_types then (
+              (* In Coq, the carrier is always abstracted by "abst_T". *)
+              the_list_reversed := "abst_T" :: !the_list_reversed
+             )
+        | MinEnv.MCEM_Declared_computational (n, _) ->
+            let llift_name =
+              "abst_" ^
+              (Parsetree_utils.vname_as_string_with_operators_expanded n) in
+            the_list_reversed := llift_name :: !the_list_reversed
+       ))
     ai.Abstractions.ai_min_coq_env ;
   (* Finally, reverse the list to keep the right oder. *)
   List.rev !the_list_reversed

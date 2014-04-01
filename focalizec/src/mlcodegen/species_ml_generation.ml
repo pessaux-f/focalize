@@ -511,24 +511,28 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
     let abstracted_methods =
       List.flatten
         (List.map
-           (function
-             | MinEnv.MCEE_Defined_carrier _
-             | MinEnv.MCEE_Defined_computational (_, _, _, _, _, _)
-             | MinEnv.MCEE_Defined_logical (_, _, _) ->
-                 (* Anything defined is not abstracted. *)
-                 []
-             | MinEnv.MCEE_Declared_logical (_, _) ->
-                 (* In Ocaml, logical properties are forgotten. *)
-                 []
-             | MinEnv.MCEE_Declared_carrier ->
-                 (* In Ocaml generation model, the carrier is never
-                    lambda-lifted then doesn't appear as an extra parameter. *)
-                 []
-             | MinEnv.MCEE_Declared_computational (n, _) ->
-                 (* Don't print types. *)
-                 Format.fprintf out_fmter "@ abst_%a"
-                   Parsetree_utils.pp_vname_with_operators_expanded n ;
-                 [n])
+           (function (reason, meth_dep) ->
+             if reason =  MinEnv.MCER_even_comput then (
+               match meth_dep with
+               | MinEnv.MCEM_Defined_carrier _
+               | MinEnv.MCEM_Defined_computational (_, _, _, _, _, _) ->
+                   (* Anything defined is not abstracted. *)
+                   []
+               | MinEnv.MCEM_Defined_logical (_, _, _)
+               | MinEnv.MCEM_Declared_logical (_, _) ->
+                   (* In Ocaml, logical properties shoudl not appear. *)
+                   assert false
+               | MinEnv.MCEM_Declared_carrier ->
+                   (* In Ocaml generation model, the carrier is never
+                      lambda-lifted then doesn't appear as an extra
+                      parameter. *)
+                   []
+               | MinEnv.MCEM_Declared_computational (n, _) ->
+                   (* Don't print types. *)
+                   Format.fprintf out_fmter "@ abst_%a"
+                     Parsetree_utils.pp_vname_with_operators_expanded n ;
+                   [n])
+             else [])
            min_coq_env) in
     (* Add the parameters of the let-binding with their type.
        Ignore the result type of the "let" if it's a function because we never
@@ -1374,7 +1378,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* Now, the methods of the species. *)
   let field_abstraction_infos =
     Abstractions.compute_abstractions_for_fields
-      ~with_def_deps_n_term_pr: false (Abstractions.EK_ml env)
+      (Abstractions.EK_ml env)
       ctx species_descr.Env.TypeInformation.spe_sig_methods in
   (* Because we sometimes need to bind function parameters to thei types
      with the function

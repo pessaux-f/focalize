@@ -49,8 +49,8 @@ val make_empty_param_deps :
       (Env.TypeInformation.species_param * Parsetree_utils.ParamDepSet.t) list
 
 val compute_abstractions_for_fields :
-  with_def_deps_n_term_pr : bool -> environment_kind ->
-    Context.species_compil_context -> Env.TypeInformation.species_field list ->
+  environment_kind -> Context.species_compil_context ->
+  Env.TypeInformation.species_field list ->
       field_abstraction_info list
 
 val compute_abstractions_for_toplevel_theorem :

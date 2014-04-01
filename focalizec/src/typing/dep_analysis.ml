@@ -908,7 +908,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Apply the rules section 3.5, page 32, definition  16 to get the
       dependencies.                                                        *)
   (* ********************************************************************* *)
-  let local_build_for_one_let n ty b opt_term_proof dep_on_rep =
+  let local_build_for_one_let n ty b opt_term_proof dep_on_rep ~is_logical =
     (* Find the dependencies node for the current name. *)
     let n_node = find_or_create tree_nodes (n, ty) in
     (* Check if there is a decl-dependency on "rep". *)
@@ -920,8 +920,12 @@ let build_dependencies_graph_for_fields ~current_species fields =
           tree_nodes ((Parsetree.Vlident "rep"), (Types.type_self ())) in
       (* Now add an edge from the current name's node to the decl-dependencies
          node of "rep". In "Let/rec" methods, "decl" dependencies can only
-         come from the type of the method. *)
-      let edge = (node, DepGraphData.DK_decl DepGraphData.DcDK_from_type) in
+         come from the type of the method. The logical/computational aspect
+         depends on if the let is logical or not. *)
+      let edge =
+        if is_logical then
+          (node, DepGraphData.DK_decl DepGraphData.DcDK_from_type_logic)
+        else  (node, DepGraphData.DK_decl DepGraphData.DcDK_from_type_comput) in
       n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
@@ -932,13 +936,17 @@ let build_dependencies_graph_for_fields ~current_species fields =
       in_species_decl_dependencies_for_one_function_name
         ~current_species (n, b) fields in
     (* Now, find the decl-dependencies nodes for these names. *)
+    let add_as =
+      if is_logical then 
+        DepGraphData.DK_decl DepGraphData.DcDK_from_body_logic
+      else DepGraphData.DK_decl DepGraphData.DcDK_from_body_comput in
     let n_deps_nodes =
       Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
           (* In "Let/rec" methods, "decl" dependencies can only come from the
              BODY of the method. *)
-          (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_body)) :: accu)
+          (node, add_as) :: accu)
         n_decl_deps_names
         [] in
     (* Now add an edge from the current name's node to each of the
@@ -962,7 +970,7 @@ let build_dependencies_graph_for_fields ~current_species fields =
             Parsetree_utils.SelfDepSet.fold
               (fun n accu ->
                 let node = find_or_create tree_nodes n in
-                (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_term_proof))
+                (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_body_logic))
                 :: accu)
               term_pr_decl_names
               [] in
@@ -1028,7 +1036,8 @@ let build_dependencies_graph_for_fields ~current_species fields =
          Even in a theorem, a decl-dependency on the carrier can only come
          from the type (of course, one can't say in the body, i.e. in the
          proof, "by def Self" or "by property Self" !). *)
-      let edge = (node, DepGraphData.DK_decl DepGraphData.DcDK_from_type) in
+      let edge =
+        (node, DepGraphData.DK_decl DepGraphData.DcDK_from_type_logic) in
       n_node.DepGraphData.nn_children <-
         Handy.list_cons_uniq_custom_eq
           (fun (n1, dk1) (n2, dk2) -> n1 == n2 && dk1 = dk2)
@@ -1045,14 +1054,16 @@ let build_dependencies_graph_for_fields ~current_species fields =
       Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_type)) :: accu)
+          (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_type_logic)) ::
+          accu)
         n_decl_deps_names_from_type
         [] in
     let n_decl_deps_nodes =
       Parsetree_utils.SelfDepSet.fold
         (fun n accu ->
           let node = find_or_create tree_nodes n in
-          (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_body)) :: accu)
+          (node, (DepGraphData.DK_decl DepGraphData.DcDK_from_body_logic)) ::
+          accu)
         n_decl_deps_names_from_body
         n_decl_deps_nodes in
     (* Now add an edge from the current name's node to each of the
@@ -1107,15 +1118,22 @@ let build_dependencies_graph_for_fields ~current_species fields =
               { DepGraphData.nn_name = n; DepGraphData.nn_type = ty;
                 DepGraphData.nn_children = [] } :: !tree_nodes
             end)
-      | Env.TypeInformation.SF_let (_, n, _, sch, b, _, deps_on_rep, _) ->
+      | Env.TypeInformation.SF_let (_, n, _, sch, b, _, deps_on_rep, flags) ->
           let ty = Types.specialize sch in
           (* ALways ignore the proof if some in non-recursive functions. *)
-          local_build_for_one_let n ty b None deps_on_rep
+          local_build_for_one_let
+            n ty b None deps_on_rep
+            ~is_logical:
+              (flags.Env.TypeInformation.ldf_logical = Parsetree.LF_logical)
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
-            (fun (_, n, _, sch, b, opt_term_proof, deps_on_rep, _) ->
+            (fun (_, n, _, sch, b, opt_term_proof, deps_on_rep, flags) ->
               let ty = Types.specialize sch in
-              local_build_for_one_let n ty b opt_term_proof deps_on_rep)
+              local_build_for_one_let
+                n ty b opt_term_proof deps_on_rep
+                ~is_logical:
+                  (flags.Env.TypeInformation.ldf_logical =
+                   Parsetree.LF_logical))
             l
       | Env.TypeInformation.SF_theorem (_, n, _, prop, body, deps_on_rep) ->
           let ty = Types.type_prop () in
@@ -1158,9 +1176,10 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
 \"decl dep (in term proof)\" [fontsize=10]\n\
 \"def dep\" -> \"def dep\" [style=dotted,color=blue,fontsize=10];\n\
 \"def dep (in term proof)\" -> \"def dep (in term proof)\" [style=dotted,color=yellow,fontsize=10];\n\
-\"decl dep (in type)\" -> \"decl dep (in type)\" [color=red,fontsize=10];\n\
-\"decl dep (in body)\" -> \"decl dep (in body)\" [color=pink,fontsize=10];\n\
-\"decl dep (in term proof)\" -> \"decl dep (in term proof)\" [color=purple,fontsize=10];\n";
+\"decl dep (in logical type)\" -> \"decl dep (in logical type)\" [color=red,fontsize=10];\n\
+\"decl dep (in logical body)\" -> \"decl dep (in logical body)\" [color=pink,fontsize=10];\n\
+\"decl dep (in computational type)\" -> \"decl dep (in computational type)\" [color=purple,fontsize=10];\n\
+\"decl dep (in computational body)\" -> \"decl dep (in computational body)\" [color=brown,fontsize=10];\n";
   (* Outputs all the nodes of the graph. *)
   List.iter
     (fun { DepGraphData.nn_name = n } ->
@@ -1175,10 +1194,14 @@ let dependencies_graph_to_dotty ~dirname ~current_species tree_nodes =
           (* Just make a different style depending on the kind of dependency. *)
           let (style, color) =
             (match decl_kind with
-             | DepGraphData.DK_decl DepGraphData.DcDK_from_type -> ("", "red")
-             | DepGraphData.DK_decl DepGraphData.DcDK_from_body -> ("", "pink")
-             | DepGraphData.DK_decl DepGraphData.DcDK_from_term_proof ->
+             | DepGraphData.DK_decl DepGraphData.DcDK_from_type_logic ->
+                 ("", "red")
+             | DepGraphData.DK_decl DepGraphData.DcDK_from_body_logic ->
+                 ("", "pink")
+             | DepGraphData.DK_decl DepGraphData.DcDK_from_type_comput ->
                  ("", "purple")
+             | DepGraphData.DK_decl DepGraphData.DcDK_from_body_comput ->
+                 ("", "brown")
              | DepGraphData.DK_def DepGraphData.DfDK_not_from_term_proof ->
                  ("style=dotted,", "blue")
              | DepGraphData.DK_def DepGraphData.DfDK_from_term_proof ->

@@ -1052,13 +1052,12 @@ let complete_dependencies_from_params_rule_didou ~current_unit ~via_body
                        (function
                          | (_,
                             (DepGraphData.DK_decl
-                               DepGraphData.DcDK_from_type)) -> true
+                               (DepGraphData.DcDK_from_type_logic |
+                                DepGraphData.DcDK_from_type_comput))) -> true
                          | (_,
                             (DepGraphData.DK_decl
-                               DepGraphData.DcDK_from_body)) -> false
-                         | (_,
-                            (DepGraphData.DK_decl
-                               DepGraphData.DcDK_from_term_proof)) -> false
+                               (DepGraphData.DcDK_from_body_logic |
+                               DepGraphData.DcDK_from_body_comput))) -> false
                          | (_, (DepGraphData.DK_def _)) -> false)
                        my_node.DepGraphData.nn_children
                    with Not_found -> []  (* No children at all. *)) in
@@ -1490,21 +1489,14 @@ let complete_dependencies_from_params env ~current_unit ~current_species
 
 
 (* ************************************************************************** *)
-(* with_def_deps_n_term_pr: bool -> environment_kind ->                       *)
+(* environment_kind ->                                                        *)
 (*   Context.species_compil_context ->                                        *)
 (*     Env.TypeInformation.species_field list ->                              *)
 (*       internal_field_abstraction_info list                                 *)
-(** {b Descr}:
-    To be usable for OCaml generation, the [with_def_deps_n_term_pr] flag
-    enables to forget the def-dependencies and their implied
-    transitive decl-dependencies and also dependencies induced by recursive
-    functions termination proofs. In effect, in OCaml, only decl-dependencies
-    are relevant and since there is no termination proof, dependencies
-    induced by them must be forgotten.
-
+(**
    {b Exported} : No.                                                         *)
 (* ************************************************************************** *)
-let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
+let __compute_abstractions_for_fields env ctx fields =
   let reversed_abstractions =
     (* ATTENTION: do not [fold_right] ! We build the list in reverse order
        end finally reverse it at the end for sake of efficiency. We explicitly
@@ -1581,7 +1573,6 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
              (* Compute the visible universe of the method. *)
              let universe =
                VisUniverse.visible_universe
-                 ~with_def_deps_n_term_pr
                  ctx.Context.scc_dependency_graph_nodes decl_children
                  def_children in
              (* Complete the dependencies from species parameters info. By the
@@ -1659,7 +1650,6 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    (* Compute the visible universe of the method. *)
                    let universe =
                      VisUniverse.visible_universe
-                       ~with_def_deps_n_term_pr
                        ctx.Context.scc_dependency_graph_nodes
                        decl_children def_children in
                    (* Complete the dependencies from species parameters info.
@@ -1735,7 +1725,6 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                (* Compute the visible universe of the theorem. *)
                let universe =
                  VisUniverse.visible_universe
-                   ~with_def_deps_n_term_pr
                    ctx.Context.scc_dependency_graph_nodes decl_children
                    def_children in
                (* Now, its minimal Coq typing environment. *)
@@ -1806,7 +1795,6 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                (* Compute the visible universe of the theorem. *)
                let universe =
                  VisUniverse.visible_universe
-                   ~with_def_deps_n_term_pr
                    ctx.Context.scc_dependency_graph_nodes decl_children
                    def_children in
                (* Complete the dependencies from species parameters info. By the
@@ -2183,7 +2171,7 @@ let remap_dependencies_on_params_for_field env ctx from name
 
 
 (* ************************************************************************* *)
-(* with_def_deps_n_term_pr : bool -> environment_kind ->                     *)
+(*   environment_kind ->                                                     *)
 (*   Context.species_compil_context ->                                       *)
 (*     Env.TypeInformation.species_field list -> field_abstraction_info list *)
 (** {b Descr} : Wrapper above [_compute_abstractions_for_fields] that
@@ -2194,9 +2182,9 @@ let remap_dependencies_on_params_for_field env ctx from name
 
     {b Exported} : Yes.                                                      *)
 (* ************************************************************************* *)
-let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
+let compute_abstractions_for_fields env ctx fields =
   let internal_abstractions =
-    __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields in
+    __compute_abstractions_for_fields env ctx fields in
   (* Now convert the internal form of the abstractions information into the
      public one. *)
   List.map
@@ -2431,7 +2419,6 @@ let compute_abstractions_for_toplevel_theorem ctx theorem =
   (* Compute the visible universe of the theorem. *)
   let universe =
     VisUniverse.visible_universe
-      ~with_def_deps_n_term_pr: true
       ctx.Context.scc_dependency_graph_nodes decl_children def_children in
   (* Now, its minimal Coq typing environment. *)
   let min_coq_env = MinEnv.minimal_typing_environment universe [] in

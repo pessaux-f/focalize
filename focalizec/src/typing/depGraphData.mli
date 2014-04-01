@@ -11,9 +11,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: depGraphData.mli,v 1.6 2012-02-24 14:37:44 pessaux Exp $ *)
-
-
 
 (* ************************************************************************* *)
 (** {b Descr} Describes for a "decl" dependency , the 3 cases of its origin.
@@ -28,9 +25,12 @@
     {b Rem} : Exported outside this module.                                  *)
 (* ************************************************************************* *)
 type decl_dependency_kind =
-  | DcDK_from_type
-  | DcDK_from_body
-  | DcDK_from_term_proof
+  | DcDK_from_type_logic  (* I.e. in logical statement of property or theorem
+                             but not in computational type. *)
+  | DcDK_from_type_comput
+  | DcDK_from_body_logic   (* Only concerns logical backends, i.e. in proofs
+                              (termination or other). *)
+  | DcDK_from_body_comput  (* Also concerns logical backends. *)
 
 
 type def_dependency_kind =
