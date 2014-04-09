@@ -15,93 +15,17 @@
 (***********************************************************************)
 
 
-(* ************************************************************************** *)
-(** {b Descr} Elements of the minimal Coq typing environment for methods.
-    We can't directly use [Env.TypeInformation.species_field] because they can't
-    make appearing the fact that the carrier belongs to the minimal environment
-    even if not *defined* (remind that in species fields, if "rep" appears then
-    is it *defined* otherwise; it is silently declared and does't appear in the
-    list of fields).
-
-    {b Rem} : Not exported outside this module.                               *)
-(* ************************************************************************** *)
-type min_coq_env_method =
-  | MCEM_Declared_carrier    (** The carrier belongs to the environment but
-       only via a decl-dependency. Hence it doesn't need to be explicitely
-       defined, but need to be in the environment. *)
-  | MCEM_Defined_carrier of Types.type_scheme (** The carrier belongs to the
-               environment via at least a def-dependency. Then is have to
-               be explicitely declared. *)
-  | MCEM_Declared_computational of
-      (Parsetree.vname * Types.type_scheme) (** Abstract computational method,
-         i.e. abstracted Let or abstracted Let_rec or Sig other than "rep". *)
-  | MCEM_Defined_computational of
-      (Env.from_history *
-         (** Tells if the method is recursive and if so which kind of
-             termination proof it involves. This is needed when generating
-             pseudo-Coq code for Zenon using a "by definition" of this method.
-             In effect, the body of the method contains the ident of this
-             method, but when generating the Zenon stuff, the definition of the
-             method will be named "abst_xxx".
-             So the internal recursive call to print when generating the
-             method's body must be replaced by "abst_xxx". This is related to
-             the bug report #199. Moreover, since currently structural
-             recursion is compiled with "Fixpoint" and other kinds with
-             "Function" in Coq, we need to remind what is the compilation scheme
-             used depending on the recursion kind. *)
-       Env.CoqGenInformation.rec_status *
-       Parsetree.vname * (Parsetree.vname list) * Types.type_scheme *
-       Parsetree.binding_body)  (** Defined computational method, i.e. Let or
-          Let_rec. *)
-  | MCEM_Declared_logical of
-      (Parsetree.vname * Parsetree.logical_expr)  (** Abstract logical
-          property, i.e. Property or abstracted Theorem. *)
-  | MCEM_Defined_logical of      (** Defined logical property, i.e. Theorem. *)
-      (Env.from_history * Parsetree.vname * Parsetree.logical_expr)
-;;
-
-
-
-(** {b Descr}: Tells by which kind of construct (i.e. only logical or logical
-    and/or computational) the method to add as dependency arrived. In other
-    words, this tag tells if only logical target languages must take this
-    dependency into account or if logical ANN also computational target
-    languages are also impacted.
-    This allows to compute the dependency calculus once for all, and not once
-    for each target language. After thi common pass of calculus, each backend
-    will select either [MCER_only_logical] AND [MCER_even_comput] dependencies
-    for logical targets or only [MCER_even_comput] dependencies for
-    computational targets.
-    Clearly, [MCER_even_comput] is absorbant, this means that if a method
-    is initiall present as dependency tagged by [MCER_only_logical], if it
-    appear to be also required for computational stuff, it will be added
-    with the tag [MCER_even_comput] whicb subsumes [MCER_only_logical].
-    Said again differently, [MCER_even_comput] concerns both computational
-    and logical targets although [MCER_only_logical] concerns only logical
-    targets. *)
-type min_coq_env_reason =
-  | MCER_only_logical   (** The method is only induced by logical stuff and
-                            must not be taken into account by only-computational
-                            targets backend. *)
-  | MCER_even_comput    (** The method is induced by at least computational
-                            stuff and must be taken into account by
-                            only-computational and also logical targets
-                            backend. *)
-;;
-
-type min_coq_env_element = (min_coq_env_reason * min_coq_env_method) ;;
-
-
 let find_coq_env_element_by_name name min_coq_env =
   List.find
     (fun (_, meth) ->
       match meth with
-      | MCEM_Declared_carrier
-      | MCEM_Defined_carrier _ -> name = (Parsetree.Vuident "rep")
-      | MCEM_Declared_computational (n, _)
-      | MCEM_Defined_computational (_, _, n, _, _, _)
-      | MCEM_Declared_logical (n, _)
-      | MCEM_Defined_logical (_, n, _) -> n = name)
+      | Env.TypeInformation.MCEM_Declared_carrier
+      | Env.TypeInformation.MCEM_Defined_carrier _ ->
+          name = (Parsetree.Vuident "rep")
+      | Env.TypeInformation.MCEM_Declared_computational (n, _)
+      | Env.TypeInformation.MCEM_Defined_computational (_, _, n, _, _, _)
+      | Env.TypeInformation.MCEM_Declared_logical (n, _)
+      | Env.TypeInformation.MCEM_Defined_logical (_, n, _) -> n = name)
     min_coq_env
 ;;
 
@@ -127,30 +51,30 @@ let minimal_typing_environment universe species_fields =
       match VisUniverse.Universe.find n universe with
       | VisUniverse.IU_decl_comput ->
           (* Keep in the environment, but as abstracted. *)
-          [(MCER_even_comput, MCEM_Declared_computational (n, sch))]
+          [(Env.TypeInformation.MCER_even_comput,
+            Env.TypeInformation.MCEM_Declared_computational (n, sch))]
       | VisUniverse.IU_decl_logic ->
           (* Keep in the environment, but as abstracted. *)
-          [(MCER_only_logical, MCEM_Declared_computational (n, sch))]
+          [(Env.TypeInformation.MCER_only_logical,
+            Env.TypeInformation.MCEM_Declared_computational (n, sch))]
       | VisUniverse.IU_trans_def ->
           (* Otherwise, keep the full definition. *)
           let rec_status =
             if is_rec then
               (match opt_proof with
-              | None ->
-                  Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other
+              | None -> Env.RC_rec Env.RPK_other
               | Some proof ->
-                  Env.CoqGenInformation.RC_rec (
+                  Env.RC_rec (
                   match proof.Parsetree.ast_desc with
                   | Parsetree.TP_structural decr_arg_name ->
-                      Env.CoqGenInformation.RPK_struct decr_arg_name
+                      Env.RPK_struct decr_arg_name
                   | Parsetree.TP_lexicographic _
                   | Parsetree.TP_measure (_, _, _)
-                  | Parsetree.TP_order (_, _, _) ->
-                      Env.CoqGenInformation.RPK_other
+                  | Parsetree.TP_order (_, _, _) -> Env.RPK_other
                  ))
-            else Env.CoqGenInformation.RC_non_rec in
-          [(MCER_even_comput,
-            MCEM_Defined_computational
+            else Env.RC_non_rec in
+          [(Env.TypeInformation.MCER_even_comput,
+            Env.TypeInformation.MCEM_Defined_computational
               (from, rec_status, n, params, sch, body))]
      )
     with Not_found ->
@@ -175,11 +99,13 @@ let minimal_typing_environment universe species_fields =
                 try (
                   match VisUniverse.Universe.find n universe with
                   | VisUniverse.IU_decl_logic | VisUniverse.IU_trans_def ->
-                      [(MCER_only_logical,
-                        MCEM_Declared_computational (n, sch))]
+                      [(Env.TypeInformation.MCER_only_logical,
+                        Env.TypeInformation.MCEM_Declared_computational
+                          (n, sch))]
                   | VisUniverse.IU_decl_comput ->
-                      [(MCER_even_comput,
-                        MCEM_Declared_computational (n, sch))]
+                      [(Env.TypeInformation.MCER_even_comput,
+                        Env.TypeInformation.MCEM_Declared_computational
+                          (n, sch))]
                  )
                 with Not_found -> []
                )
@@ -195,7 +121,8 @@ let minimal_typing_environment universe species_fields =
                 match VisUniverse.Universe.find n universe with
                 | VisUniverse.IU_decl_logic ->
                     (* Keep in the environment, but as abstracted. *)
-                    [(MCER_only_logical, MCEM_Declared_logical (n, body))]
+                    [(Env.TypeInformation.MCER_only_logical,
+                      Env.TypeInformation.MCEM_Declared_logical (n, body))]
                 | VisUniverse.IU_decl_comput ->
                     (* How could it be since computational stuff can't depend
                        on logical ones ? *)
@@ -227,9 +154,11 @@ let minimal_typing_environment universe species_fields =
          match reason with
          | VisUniverse.IU_decl_comput ->
              (* A decl-dependency was found even if "rep" is not defined. *)
-             (MCER_even_comput, MCEM_Declared_carrier) :: env_without_carrier
+             (Env.TypeInformation.MCER_even_comput,
+              Env.TypeInformation.MCEM_Declared_carrier) :: env_without_carrier
          | VisUniverse.IU_decl_logic ->
-             (MCER_only_logical, MCEM_Declared_carrier) :: env_without_carrier
+             (Env.TypeInformation.MCER_only_logical,
+              Env.TypeInformation.MCEM_Declared_carrier) :: env_without_carrier
          | VisUniverse.IU_trans_def ->
              (* Impossible to have a def-dependency if the carrier's
                 structure is unknown ! *)
@@ -239,9 +168,11 @@ let minimal_typing_environment universe species_fields =
          match reason with
          | VisUniverse.IU_decl_comput ->
              (* A decl-dependency was found. No matter what "rep" is. *)
-             (MCER_even_comput, MCEM_Declared_carrier) :: env_without_carrier
+             (Env.TypeInformation.MCER_even_comput,
+              Env.TypeInformation.MCEM_Declared_carrier) :: env_without_carrier
          | VisUniverse.IU_decl_logic ->
-             (MCER_only_logical, MCEM_Declared_carrier) :: env_without_carrier
+             (Env.TypeInformation.MCER_only_logical,
+              Env.TypeInformation.MCEM_Declared_carrier) :: env_without_carrier
          | VisUniverse.IU_trans_def ->
              (* A def-dependency was found. So, record the carrier's
                 structure.
@@ -255,7 +186,8 @@ let minimal_typing_environment universe species_fields =
               on logical methods. Or we are processing a logical method, and
               in this case anyway all the kind of dependencies must be taken
               into account! *)
-             (MCER_even_comput, (MCEM_Defined_carrier sch)) ::
+             (Env.TypeInformation.MCER_even_comput,
+              (Env.TypeInformation.MCEM_Defined_carrier sch)) ::
              env_without_carrier
         )
    )

@@ -46,20 +46,18 @@ let toplevel_let_def_compile ctx env let_def =
   (* Currently, toplevel recursive functions are generated with "Fixpoint". *)
   let rec_status =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> Env.CoqGenInformation.RC_non_rec
+     | Parsetree.RF_no_rec -> Env.RC_non_rec
      | Parsetree.RF_rec -> (
          match let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof with
-         | None -> Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other
+         | None -> Env.RC_rec Env.RPK_other
          | Some term_pr -> (
              match term_pr.Parsetree.ast_desc with
              | Parsetree.TP_structural decr_arg ->
-                 Env.CoqGenInformation.RC_rec
-                   (Env.CoqGenInformation.RPK_struct decr_arg)
-             | _ ->
-                 Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other))
+                 Env.RC_rec (Env.RPK_struct decr_arg)
+             | _ -> Env.RC_rec Env.RPK_other))
     ) in
   let in_recursive_let_section_of =
-    if rec_status <> Env.CoqGenInformation.RC_non_rec then  (* Is rec. *)
+    if rec_status <> Env.RC_non_rec then  (* Is rec. *)
       List.map
         (fun b -> b.Parsetree.ast_desc.Parsetree.b_name)
         let_def.Parsetree.ast_desc.Parsetree.ld_bindings
@@ -85,7 +83,7 @@ let toplevel_let_def_compile ctx env let_def =
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
          let binder =
-           if rec_status <> Env.CoqGenInformation.RC_non_rec then "Fixpoint"
+           if rec_status <> Env.RC_non_rec then "Fixpoint"
            else "Let" in
          Species_record_type_generation.let_binding_compile
            ctx ~binder ~opt_term_proof ~local_idents: []
@@ -97,8 +95,7 @@ let toplevel_let_def_compile ctx env let_def =
      | ((first_bnd :: next_bnds),
         (first_pre_comp_info :: next_pre_comp_infos)) ->
          let first_binder =
-           if rec_status <> Env.CoqGenInformation.RC_non_rec then "Fixpoint"
-           else "Let" in
+           if rec_status <> Env.RC_non_rec then "Fixpoint" else "Let" in
          let accu_env =
            ref
              (Species_record_type_generation.let_binding_compile

@@ -204,6 +204,43 @@ type substitution_kind =
                                  must be replaced. *)
 ;;
 
+
+
+  (* ************************************************************************ *)
+  (** {b Descr}: Describes the kind of recursion, i.e. termination proof,
+      provided to a recursive definition. Currently, we only make the
+      difference between a structural termination and none/other proofs.
+      In case of structural termination we assume that the definition was
+      generated using "Fixpoint" using the provided parameter name as
+      decreasing argument. In any other case, we assume it has been generated
+      with "Function".
+      Note that this type may change/disapear when we will have a more unified
+      code generation model for recursion.
+
+      {b Visibility}: Exported outside this module.                           *)
+  (* ************************************************************************ *)
+type rec_proof_kind =
+  | RPK_struct of Parsetree.vname
+  | RPK_other ;;
+
+
+
+(* ************************************************************************ *)
+(** {b Descr}: Tells if a definition is recursive or not. Allows embedding
+    the kind of termination proof the definition has if it as one.
+    Since we currently have 2 Coq generation models: "Fixpoint" and "Function"
+    we need to remind which one was used in case a proof is done
+    "by definition" of a recursive definition. In effect, depending on the
+    used model, we must not generate the same code for Zenon.
+
+    {b Visibility}: Exported outside this module.                           *)
+(* ************************************************************************ *)
+type rec_status =
+  | RC_non_rec
+  | RC_rec of rec_proof_kind ;;
+
+
+
 (* For debugging purpose. *)
 let debug_substitution substs =
   Format.eprintf "[ ";
@@ -422,6 +459,20 @@ end
 (* *********************************************************************** *)
 
 
+(* ********************************************************************** *)
+(** {b Descr} This type is defined just in order to ensure that functions
+    requiring "dependencies on parameters" argument ordered according to
+    their dependency graph will really receive one and will not use an
+    unsorted list.
+
+    {b Rem} : Exported outside this module.                               *)
+(* ********************************************************************** *)
+type ordered_methods_from_params =
+  | ODFP_methods_list of
+      (Parsetree.vname * Parsetree_utils.dependency_elem_type_kind) list
+;;
+
+
 
 (* ********************************************************************** *)
 (** {b Descr} : This module contains the structure of typing information
@@ -595,7 +646,115 @@ module TypeInformation = struct
     | SF_theorem of theorem_field_info    (** Field is a theorem. *)
     | SF_property of property_field_info  (** Field is a property. *)
 
+  (** {b Descr} Elements of the minimal Coq typing environment for methods.
+      We can't directly use [Env.TypeInformation.species_field] because they
+      can't make appearing the fact that the carrier belongs to the minimal
+      environment even if not *defined* (remind that in species fields, if
+      "rep" appears then is it *defined* otherwise; it is silently declared
+      and does't appear in the list of fields).
 
+      {b Rem} : Not exported outside this module.                               *)
+  type min_coq_env_method =
+    | MCEM_Declared_carrier    (** The carrier belongs to the environment but
+         only via a decl-dependency. Hence it doesn't need to be explicitely
+         defined, but need to be in the environment. *)
+    | MCEM_Defined_carrier of Types.type_scheme (** The carrier belongs to the
+                 environment via at least a def-dependency. Then is have to
+                 be explicitely declared. *)
+    | MCEM_Declared_computational of
+        (Parsetree.vname * Types.type_scheme) (** Abstract computational method,
+           i.e. abstracted Let or abstracted Let_rec or Sig other than "rep". *)
+    | MCEM_Defined_computational of
+        (from_history *
+           (** Tells if the method is recursive and if so which kind of
+               termination proof it involves. This is needed when generating
+               pseudo-Coq code for Zenon using a "by definition" of this method.
+               In effect, the body of the method contains the ident of this
+               method, but when generating the Zenon stuff, the definition of
+               the method will be named "abst_xxx".
+               So the internal recursive call to print when generating the
+               method's body must be replaced by "abst_xxx". This is related to
+               the bug report #199. Moreover, since currently structural
+               recursion is compiled with "Fixpoint" and other kinds with
+               "Function" in Coq, we need to remind what is the compilation
+               scheme used depending on the recursion kind. *)
+         rec_status *
+         Parsetree.vname * (Parsetree.vname list) * Types.type_scheme *
+         Parsetree.binding_body)  (** Defined computational method, i.e. Let or
+            Let_rec. *)
+    | MCEM_Declared_logical of
+        (Parsetree.vname * Parsetree.logical_expr)  (** Abstract logical
+            property, i.e. Property or abstracted Theorem. *)
+    | MCEM_Defined_logical of     (** Defined logical property, i.e. Theorem. *)
+        (from_history * Parsetree.vname * Parsetree.logical_expr)
+
+    (** {b Descr}: Tells by which kind of construct (i.e. only logical or
+        logical and/or computational) the method to add as dependency arrived.
+        In other words, this tag tells if only logical target languages must
+        take this dependency into account or if logical ANN also computational
+        target languages are also impacted.
+        This allows to compute the dependency calculus once for all, and not
+        once for each target language. After thi common pass of calculus, each
+        backend will select either [MCER_only_logical] AND [MCER_even_comput]
+        dependencies for logical targets or only [MCER_even_comput]
+        dependencies for computational targets.
+        Clearly, [MCER_even_comput] is absorbant, this means that if a method
+        is initiall present as dependency tagged by [MCER_only_logical], if it
+        appear to be also required for computational stuff, it will be added
+        with the tag [MCER_even_comput] whicb subsumes [MCER_only_logical].
+        Said again differently, [MCER_even_comput] concerns both computational
+        and logical targets although [MCER_only_logical] concerns only logical
+        targets. *)
+
+  type min_coq_env_reason =
+    | MCER_only_logical   (** The method is only induced by logical stuff and
+                              must not be taken into account by
+                              only-computational targets backend. *)
+    | MCER_even_comput    (** The method is induced by at least computational
+                              stuff and must be taken into account by
+                              only-computational and also logical targets
+                              backend. *)
+
+  type min_coq_env_element = (min_coq_env_reason * min_coq_env_method)
+
+  (* REMOVE DOUBLE WITH STUFF OF generic_code_gen_method_info *)
+  type field_abstraction_info = {
+    (** The positional list of parameters carrier abstracted in the method. *)
+    ad_used_species_parameter_tys : Parsetree.vname list;
+    (** Same than below but without remapping on dependencies of the method from
+        the inherited species. This is required to prevent dropping dependencies
+        under the pretext they were not involved in the inherited method
+        generator. This only serves to generate the extra parameters of the
+        collection generator. *)
+    ad_raw_dependencies_from_params :
+      (species_param *
+       ordered_methods_from_params)  (** The set of methods we depend on. *)
+      list ;
+  (** Dependencies on species parameters' methods. They are the union of:
+        - dependencies found via [BODY] of definition 72 page 153 of Virgile
+          Prevosto's Phd,
+        - dependencies found via [TYPE] of definition 72 page 153 of Virgile
+          Prevosto's Phd,
+        - other dependencies found via [DEF-DEP], [UNIVERSE] and [PRM] of
+          definition 72 page 153 of Virgile Prevosto's Phd + those found
+          by the missing rule in Virgile Prevosto's Phd that temporarily
+          named [DIDOU]. *)
+    ad_dependencies_from_parameters :
+      ((** The positional list of methods from the species parameters
+           abstracted by lambda-lifting. *)
+       species_param *
+       (* The set of methods of this parameter on which we have dependencies. *)
+       ordered_methods_from_params) list;
+    (* Same than above but only for dependencies arising through the type of the
+       method. *)
+    ad_dependencies_from_parameters_in_type :
+      (species_param * ordered_methods_from_params) list ;
+(*
+    ad_abstracted_methods : Parsetree.vname list ;   (** The positional list
+        of methods from ourselves abstracted by lambda-lifting. *)
+*)
+    ad_min_coq_env : min_coq_env_element list
+  }
 
   (* *********************************************************************** *)
   (** {b Desc} : Describes the essence of a species or collection. This
@@ -616,7 +775,10 @@ module TypeInformation = struct
     (** Method's name, type and body if defined. *)
     spe_sig_methods : species_field list;
     (** The dependency graph of the methods of the species. *)
-    spe_dep_graph : DepGraphData.name_node list
+    spe_dep_graph : DepGraphData.name_node list ;  (* STILL USEFUL ? *)
+    (** The positional list of methods from ourselves abstracted by
+        lambda-lifting. *)
+    spe_meths_abstractions : (Parsetree.vname * field_abstraction_info) list
     }
 
 
@@ -899,21 +1061,6 @@ type method_type_kind =
 
 
 
-(* ********************************************************************** *)
-(** {b Descr} This type is defined just in order to ensure that functions
-    requiring "dependencies on parameters" argument ordered according to
-    their dependency graph will really receive one and will not use an
-    unsorted list.
-
-    {b Rem} : Exported outside this module.                               *)
-(* ********************************************************************** *)
-type ordered_methods_from_params =
-  | ODFP_methods_list of
-      (Parsetree.vname * Parsetree_utils.dependency_elem_type_kind) list
-;;
-
-
-
 (* ************************************************************************ *)
 (** {b Descr} : Common for OCaml and Coq code generation environments. This
     represent various information about the methods, their abstraction,
@@ -1078,40 +1225,6 @@ module CoqGenInformation = struct
      (collection_generator_info option) *
      (** Tells if the info is bound to a species or a collection. *)
      collection_or_species)
-
-  (* ************************************************************************ *)
-  (** {b Descr}: Describes the kind of recursion, i.e. termination proof,
-      provided to a recursive definition. Currently, we only make the
-      difference between a structural termination and none/other proofs.
-      In case of structural termination we assume that the definition was
-      generated using "Fixpoint" using the provided parameter name as
-      decreasing argument. In any other case, we assume it has been generated
-      with "Function".
-      Note that this type may change/disapear when we will have a more unified
-      code generation model for recursion.
-
-      {b Visibility}: Exported outside this module.                           *)
-  (* ************************************************************************ *)
-  type rec_proof_kind =
-    | RPK_struct of Parsetree.vname
-    | RPK_other
-
-
-
-  (* ************************************************************************ *)
-  (** {b Descr}: Tells if a definition is recursive or not. Allows embedding
-      the kind of termination proof the definition has if it as one.
-      Since we currently have 2 Coq generation models: "Fixpoint" and "Function"
-      we need to remind which one was used in case a proof is done
-      "by definition" of a recursive definition. In effect, depending on the
-      used model, we must not generate the same code for Zenon.
-
-      {b Visibility}: Exported outside this module.                           *)
-  (* ************************************************************************ *)
-  type rec_status =
-    | RC_non_rec
-    | RC_rec of rec_proof_kind
-
 
   type value_body =
     | VB_non_toplevel

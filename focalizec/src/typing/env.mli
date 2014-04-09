@@ -26,6 +26,13 @@ exception Rebound_type of (Parsetree.vname * Location.t)
 exception Rebound_species of (Parsetree.vname * Location.t)
 exception Rebound_toplevel_let of (Parsetree.vname * Location.t)
 
+type rec_proof_kind =
+  | RPK_struct of Parsetree.vname
+  | RPK_other
+
+type rec_status =
+  | RC_non_rec
+  | RC_rec of rec_proof_kind
 
 type substitution_kind =
   | SK_collection_by_collection of
@@ -71,6 +78,10 @@ module ScopeInformation :
       spbi_scope : species_scope
     }
   end
+
+type ordered_methods_from_params =
+  | ODFP_methods_list of
+      (Parsetree.vname * Parsetree_utils.dependency_elem_type_kind) list
 
 module TypeInformation :
   sig
@@ -118,12 +129,42 @@ module TypeInformation :
       | SF_theorem of theorem_field_info
       | SF_property of property_field_info
 
+    type min_coq_env_method =
+        MCEM_Declared_carrier
+      | MCEM_Defined_carrier of Types.type_scheme
+      | MCEM_Declared_computational of (Parsetree.vname * Types.type_scheme)
+      | MCEM_Defined_computational of
+          (from_history * rec_status * Parsetree.vname *
+           (Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
+      | MCEM_Declared_logical of (Parsetree.vname * Parsetree.logical_expr)
+      | MCEM_Defined_logical of
+          (from_history * Parsetree.vname * Parsetree.logical_expr)
+
+    type min_coq_env_reason =
+      | MCER_only_logical
+      | MCER_even_comput
+
+    type min_coq_env_element = (min_coq_env_reason * min_coq_env_method)
+
+    type field_abstraction_info = {
+      ad_used_species_parameter_tys : Parsetree.vname list ;
+      ad_raw_dependencies_from_params :
+      (species_param * ordered_methods_from_params) list ;
+      ad_dependencies_from_parameters :
+        (species_param * ordered_methods_from_params) list ;
+      ad_dependencies_from_parameters_in_type :
+        (species_param * ordered_methods_from_params) list ;
+(*      ad_abstracted_methods : Parsetree.vname list ; *)
+      ad_min_coq_env : min_coq_env_element list
+    }
+
     type species_description = {
       spe_kind : Types.species_collection_kind ;
       spe_is_closed : bool ;
       spe_sig_params : species_param list ;
       spe_sig_methods : species_field list ;
-      spe_dep_graph : DepGraphData.name_node list
+      spe_dep_graph : DepGraphData.name_node list ;
+      spe_meths_abstractions : (Parsetree.vname * field_abstraction_info) list
     }
     type constructor_arity = CA_zero | CA_some
     type constructor_description = {
@@ -137,7 +178,8 @@ module TypeInformation :
     }
     type type_kind =
       | TK_abstract
-      | TK_external of (Parsetree.external_translation * Parsetree.external_mapping)
+      | TK_external of
+          (Parsetree.external_translation * Parsetree.external_mapping)
       | TK_variant of (Parsetree.constructor_name * constructor_arity *
                        Types.type_scheme) list
       | TK_record of
@@ -163,10 +205,6 @@ type collection_or_species =
 type method_type_kind =
   | MTK_computational of Types.type_scheme
   | MTK_logical of Parsetree.logical_expr
-
-type ordered_methods_from_params =
-  | ODFP_methods_list of
-      (Parsetree.vname * Parsetree_utils.dependency_elem_type_kind) list
 
 type generic_code_gen_method_info = {
   mi_name : Parsetree.vname ;
@@ -233,14 +271,6 @@ module CoqGenInformation :
       ((TypeInformation.species_param list) *
        (method_info list) *
        (collection_generator_info option) * collection_or_species)
-
-    type rec_proof_kind =
-      | RPK_struct of Parsetree.vname
-      | RPK_other
-
-    type rec_status =
-      | RC_non_rec
-      | RC_rec of rec_proof_kind
 
     type value_body =
       | VB_non_toplevel

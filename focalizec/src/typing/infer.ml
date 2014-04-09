@@ -384,7 +384,7 @@ type typing_context = {
   self_manifest : Types.type_simple option;
   (** Mapping between 'variables [vname]s and the [simple_type] they are
       bound to. Used when creating a polymorphic type definition. *)
-  tyvars_mapping : (Parsetree.vname * Types.type_simple) list
+  tyvars_mapping : (Parsetree.vname * Types.type_simple) list ;
 }
 ;;
 
@@ -2948,25 +2948,26 @@ let typecheck_species_def_params ctx env species_params =
                  ~current_unit: ctx.current_unit
                  (ctx.current_unit, param_name_as_string) species_expr_fields in
              let param_description = {
-               Env.TypeInformation.spe_kind = Types.SCK_species_parameter;
-               Env.TypeInformation.spe_is_closed = false;
-               Env.TypeInformation.spe_sig_params = [];
-               Env.TypeInformation.spe_sig_methods = abstracted_methods;
-               Env.TypeInformation.spe_dep_graph = species_dep_graph } in
+               Env.TypeInformation.spe_kind = Types.SCK_species_parameter ;
+               Env.TypeInformation.spe_is_closed = false ;
+               Env.TypeInformation.spe_sig_params = [] ;
+               Env.TypeInformation.spe_sig_methods = abstracted_methods ;
+               Env.TypeInformation.spe_dep_graph = species_dep_graph ;
+               Env.TypeInformation.spe_meths_abstractions = [] } in
              let accu_env' =
                Env.TypingEnv.add_species
                  ~loc: species_expr.Parsetree.ast_loc
                  param_vname param_description accu_env in
              (* Create the carrier type of the parameter and extend the
                 current environment. *)
-             Types.begin_definition ();
+             Types.begin_definition () ;
              let param_carrier_ty =
                Types.type_rep_species ~species_module: ctx.current_unit
                  ~species_name: param_name_as_string in
-             Types.end_definition ();
+             Types.end_definition () ;
              (* Record the type of the parameter in the AST node. *)
              param_kind.Parsetree.ast_type <-
-               Parsetree.ANTI_type param_carrier_ty;
+               Parsetree.ANTI_type param_carrier_ty ;
              (* Create the type description of the carrier the parameter is. *)
              let param_carrier_ty_description = {
                Env.TypeInformation.type_loc = Location.none;
@@ -4801,7 +4802,22 @@ let typecheck_species_def ctx env species_def =
         ~current_species ~inherits_p proof_of
         reordered_normalized_methods original_properties_from_histories
         species_dep_graph)
-    found_proofs_of;
+    found_proofs_of ;
+
+
+  let abstr_ctx = {
+    Abstractions2.acc_current_unit = ctx.current_unit ;
+    Abstractions2.acc_current_species = current_species ;
+    Abstractions2.acc_dependency_graph_nodes = species_dep_graph ;
+    Abstractions2.acc_species_parameters_names = sig_params } in
+  (* Now, compute all the dependencies stuff. *)
+  let field_abstraction_infos =
+    Abstractions2.compute_abstractions_for_fields
+      env abstr_ctx reordered_normalized_methods in
+
+
+
+
   (* If asked, generate the dotty output of the dependencies. *)
   (match Configuration.get_dotty_dependencies () with
    | None -> ()
@@ -4813,7 +4829,7 @@ let typecheck_species_def ctx env species_def =
      this is independant of the fact to be a collection. *)
   let is_closed =
     (try
-       ensure_collection_completely_defined ctx reordered_normalized_methods;
+       ensure_collection_completely_defined ctx reordered_normalized_methods ;
        (* If the check didn't fail, then the species if fully defined. *)
        true with
      | Collection_not_fully_defined _ -> false) in
@@ -4824,7 +4840,8 @@ let typecheck_species_def ctx env species_def =
     Env.TypeInformation.spe_is_closed = is_closed;
     Env.TypeInformation.spe_sig_params = sig_params;
     Env.TypeInformation.spe_sig_methods = reordered_normalized_methods;
-    Env.TypeInformation.spe_dep_graph = species_dep_graph } in
+    Env.TypeInformation.spe_dep_graph = species_dep_graph ;
+    Env.TypeInformation.spe_meths_abstractions = field_abstraction_infos } in
   (* If asked, generate the textual output of the methods history. *)
   (match Configuration.get_methods_history_to_text () with
    | None -> ()
@@ -5351,7 +5368,7 @@ let typecheck_collection_def ctx env coll_def =
   if Configuration.get_verbose () then
     Format.eprintf
       "Computing dependencies inside collection '%a'.@."
-      Sourcify.pp_vname coll_def_desc.Parsetree.cd_name;
+      Sourcify.pp_vname coll_def_desc.Parsetree.cd_name ;
   let collection_dep_graph =
     Dep_analysis.build_dependencies_graph_for_fields
       ~current_species collection_fields in
@@ -5360,15 +5377,17 @@ let typecheck_collection_def ctx env coll_def =
    | None -> ()
    | Some dirname ->
        Dep_analysis.dependencies_graph_to_dotty
-         ~dirname ~current_species collection_dep_graph);
+         ~dirname ~current_species collection_dep_graph) ;
   (* Let's build our "type" information. Since we are managing a collection
      and NOT a species, we must set [spe_kind] to [SCK_toplevel_collection]. *)
   let collec_description = {
-    Env.TypeInformation.spe_kind = Types.SCK_toplevel_collection;
-    Env.TypeInformation.spe_is_closed = true;            (* Obviously, eh ! *)
-    Env.TypeInformation.spe_sig_params = [];
-    Env.TypeInformation.spe_sig_methods = collection_fields;
-    Env.TypeInformation.spe_dep_graph = collection_dep_graph } in
+    Env.TypeInformation.spe_kind = Types.SCK_toplevel_collection ;
+    Env.TypeInformation.spe_is_closed = true ;           (* Obviously, eh ! *)
+    Env.TypeInformation.spe_sig_params = [] ;
+    Env.TypeInformation.spe_sig_methods = collection_fields ;
+    Env.TypeInformation.spe_dep_graph = collection_dep_graph ;
+    (* No more relevant for a collection. *)
+    Env.TypeInformation.spe_meths_abstractions = [] } in
   (* Add this collection in the environment. *)
   let env_with_collection =
     Env.TypingEnv.add_species

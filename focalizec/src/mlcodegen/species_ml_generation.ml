@@ -512,22 +512,23 @@ let generate_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
       List.flatten
         (List.map
            (function (reason, meth_dep) ->
-             if reason =  MinEnv.MCER_even_comput then (
+             if reason = Env.TypeInformation.MCER_even_comput then (
                match meth_dep with
-               | MinEnv.MCEM_Defined_carrier _
-               | MinEnv.MCEM_Defined_computational (_, _, _, _, _, _) ->
+               | Env.TypeInformation.MCEM_Defined_carrier _
+               | Env.TypeInformation.MCEM_Defined_computational
+                     (_, _, _, _, _, _) ->
                    (* Anything defined is not abstracted. *)
                    []
-               | MinEnv.MCEM_Defined_logical (_, _, _)
-               | MinEnv.MCEM_Declared_logical (_, _) ->
+               | Env.TypeInformation.MCEM_Defined_logical (_, _, _)
+               | Env.TypeInformation.MCEM_Declared_logical (_, _) ->
                    (* In Ocaml, logical properties shoudl not appear. *)
                    assert false
-               | MinEnv.MCEM_Declared_carrier ->
+               | Env.TypeInformation.MCEM_Declared_carrier ->
                    (* In Ocaml generation model, the carrier is never
                       lambda-lifted then doesn't appear as an extra
                       parameter. *)
                    []
-               | MinEnv.MCEM_Declared_computational (n, _) ->
+               | Env.TypeInformation.MCEM_Declared_computational (n, _) ->
                    (* Don't print types. *)
                    Format.fprintf out_fmter "@ abst_%a"
                      Parsetree_utils.pp_vname_with_operators_expanded n ;

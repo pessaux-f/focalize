@@ -685,7 +685,7 @@ type internal_abstraction_info = {
      Env.TypeInformation.species_param *
      Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
       list;
-  iai_min_coq_env : MinEnv.min_coq_env_element list
+  iai_min_coq_env : Env.TypeInformation.min_coq_env_element list
 }
 ;;
 
@@ -725,7 +725,7 @@ type abstraction_info = {
      Env.ordered_methods_from_params)  (** The set of methods we depend on
                                            only through types and completion. *)
       list;
-  ai_min_coq_env : MinEnv.min_coq_env_element list
+  ai_min_coq_env : Env.TypeInformation.min_coq_env_element list
 }
 ;;
 

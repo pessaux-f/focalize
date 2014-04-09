@@ -33,7 +33,7 @@ type abstraction_info = {
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   ai_dependencies_from_params_for_record_type :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
-  ai_min_coq_env : MinEnv.min_coq_env_element list
+  ai_min_coq_env : Env.TypeInformation.min_coq_env_element list
 }
 
 type field_abstraction_info =

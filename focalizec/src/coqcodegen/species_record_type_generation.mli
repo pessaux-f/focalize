@@ -77,7 +77,7 @@ type let_binding_pre_computation = {
 }
 
 val pre_compute_let_bindings_infos_for_rec :
-  rec_status:Env.CoqGenInformation.rec_status -> toplevel:bool ->
+  rec_status: Env.rec_status -> toplevel:bool ->
   Env.CoqGenEnv.t -> Parsetree.binding_desc Parsetree.ast list ->
     (Env.CoqGenEnv.t * (let_binding_pre_computation list))
 
@@ -88,7 +88,7 @@ val let_binding_compile :
   local_idents: Parsetree.vname list ->
   self_methods_status: self_methods_status ->
   recursive_methods_status: recursive_methods_status ->
-  rec_status:Env.CoqGenInformation.rec_status -> toplevel: bool ->
+  rec_status: Env.rec_status -> toplevel: bool ->
   Env.CoqGenEnv.t -> Parsetree.binding -> let_binding_pre_computation ->
     Env.CoqGenEnv.t
 

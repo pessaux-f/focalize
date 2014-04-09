@@ -630,13 +630,13 @@ let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
          bd.Parsetree.ast_desc.Parsetree.b_body) in
   let env' =
     (match rec_status with
-    | Env.CoqGenInformation.RC_rec _ ->
+    | Env.RC_rec _ ->
         let toplevel_loc =
           if toplevel then Some bd.Parsetree.ast_loc else None in
         Env.CoqGenEnv.add_value
           ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
           (nb_polymorphic_args, value_body) env
-    | Env.CoqGenInformation.RC_non_rec -> env) in
+    | Env.RC_non_rec -> env) in
   (env',
    { lbpc_value_body = value_body ;
      lbpc_params_names = params_names ;
@@ -749,7 +749,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   | None ->
       (* If there is no termination proof, then we must just worry in the case
          the definition is recursive. *)
-      if rec_status <> Env.CoqGenInformation.RC_non_rec then (  (* Is rec. *)
+      if rec_status <> Env.RC_non_rec then (  (* Is rec. *)
         (* The function is not satisfactory since it is recursive and has
            no termination proof. Issue a warning and [Unsure] choose to consider
            it by default as structural on its first argument. *)
@@ -773,7 +773,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   | Some term_proof -> (
       (* Take the termination proof into account only if the definition is
          recursive. Otherwise, issue a warning. *)
-      if rec_status <> Env.CoqGenInformation.RC_non_rec then (  (* Is rec. *)
+      if rec_status <> Env.RC_non_rec then (  (* Is rec. *)
         match term_proof.Parsetree.ast_desc with
         | Parsetree.TP_structural decr_arg ->
             (* First, ensure that the identifier is really a parameter of this
@@ -837,7 +837,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
   | Parsetree.BB_computational e ->
       let in_recursive_let_section_of =
-        if rec_status <> Env.CoqGenInformation.RC_non_rec then  (* Is rec. *)
+        if rec_status <> Env.RC_non_rec then  (* Is rec. *)
           bd.Parsetree.ast_desc.Parsetree.b_name ::
           in_recursive_let_section_of
         else in_recursive_let_section_of in
@@ -848,7 +848,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   (* Finally, we record, (except if it was already done in [env'] in case of
      recursive binding) the number of extra arguments due to polymorphism the
      current bound identifier has. *)
-  if rec_status <> Env.CoqGenInformation.RC_non_rec then env  (* Is rec. *)
+  if rec_status <> Env.RC_non_rec then env  (* Is rec. *)
   else
     Env.CoqGenEnv.add_value
       ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
@@ -869,24 +869,22 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
   let out_fmter = ctx.Context.scc_out_fmter in
   let rec_status =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> Env.CoqGenInformation.RC_non_rec
+     | Parsetree.RF_no_rec -> Env.RC_non_rec
      | Parsetree.RF_rec -> (
          match let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof with
-         | None -> Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other
+         | None -> Env.RC_rec Env.RPK_other
          | Some term_pr -> (
              match term_pr.Parsetree.ast_desc with
              | Parsetree.TP_structural decr_arg ->
-                 Env.CoqGenInformation.RC_rec
-                   (Env.CoqGenInformation.RPK_struct decr_arg)
-             | _ ->
-                 Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other))
+                 Env.RC_rec (Env.RPK_struct decr_arg)
+             | _ ->  Env.RC_rec Env.RPK_other))
     ) in
   (* Generates the binder ("fix" or non-"fix"). *)
   Format.fprintf out_fmter "@[<2>" ;
   let initial_binder =
     (match rec_status with
-     | Env.CoqGenInformation.RC_non_rec -> "let"
-     | Env.CoqGenInformation.RC_rec _ ->
+     | Env.RC_non_rec -> "let"
+     | Env.RC_rec _ ->
          (* [Unsure] We don't known now how to compile several local mutually
             recursive functions. *)
          if (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings) > 1

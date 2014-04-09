@@ -18,7 +18,7 @@
 ROOT_DIR = ../../..
 
 # Must be defined before including Makefile.common since is used by it.
-BYT_OBJS = visUniverse.cmo minEnv.cmo abstractions.cmo misc_common.cmo\
+BYT_OBJS =  misc_common.cmo\
 	externals_generation_errs.cmo recursion.cmo
 
 include $(ROOT_DIR)/Makefile.common

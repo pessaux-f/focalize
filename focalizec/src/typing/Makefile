@@ -14,15 +14,15 @@
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: Makefile,v 1.22 2012-11-13 14:02:05 pessaux Exp $
 
 ROOT_DIR=../../..
 
 # Must be defined before including Makefile.common since is used by it.
 BYT_OBJS=\
- env.cmo scoping.cmo substExpr.cmo substColl.cmo ast_equal.cmo\
- dep_analysis.cmo param_dep_analysis.cmo infoOutput.cmo\
- infer.cmo match_analysis.cmo
+  env.cmo scoping.cmo substExpr.cmo substColl.cmo ast_equal.cmo\
+  dep_analysis.cmo param_dep_analysis.cmo infoOutput.cmo\
+  visUniverse.cmo minEnv.cmo abstractions.cmo abstractions2.cmo infer.cmo \
+  match_analysis.cmo
 
 include $(ROOT_DIR)/Makefile.common
 

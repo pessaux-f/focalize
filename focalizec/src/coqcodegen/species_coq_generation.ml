@@ -535,7 +535,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
            (* Reason ignored since in Coq we take all the kinds of methods in
               account. *)
            match meth_dep with
-           | MinEnv.MCEM_Defined_carrier sch ->
+           | Env.TypeInformation.MCEM_Defined_carrier sch ->
                (* Now, if "rep" is defined, then we generate an equivalence
                   between "abst_T" and it's representation using the
                   abstracted types passed as arguments to the Definition to
@@ -550,8 +550,8 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                    (Types.pp_type_simple_to_coq new_print_ctx) ty ;
                (* Anything defined is not abstracted. *)
                []
-           | MinEnv.MCEM_Defined_computational (fr, _, n, _, _, _)
-           | MinEnv.MCEM_Defined_logical (fr, n, _) ->
+           | Env.TypeInformation.MCEM_Defined_computational (fr, _, n, _, _, _)
+           | Env.TypeInformation.MCEM_Defined_logical (fr, n, _) ->
                (* We must add an equivalence to enforce de def-dependency. *)
                if in_section then
                  Format.fprintf out_fmter "Let abst_%a :=@ "
@@ -569,13 +569,13 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                if in_section then Format.fprintf out_fmter ".@\n"
                else Format.fprintf out_fmter ")";
                []                  (* Anything defined is not abstracted. *)
-           | MinEnv.MCEM_Declared_carrier ->
+           | Env.TypeInformation.MCEM_Declared_carrier ->
                (* Note that by construction, the carrier is first in the env. *)
                if in_section then
                  Format.fprintf out_fmter "@[<2>Variable abst_T : Set.@]@\n"
                else Format.fprintf out_fmter "@ (abst_T : Set)";
                [Parsetree.Vlident "rep"]
-           | MinEnv.MCEM_Declared_computational (n, sch) ->
+           | Env.TypeInformation.MCEM_Declared_computational (n, sch) ->
                (* Due to a decl-dependency, hence: abstract. *)
                let ty = Types.specialize sch in
                if in_section then
@@ -587,7 +587,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                    Parsetree_utils.pp_vname_with_operators_expanded n
                    (Types.pp_type_simple_to_coq new_print_ctx) ty ;
                [n]
-           | MinEnv.MCEM_Declared_logical (n, b) ->
+           | Env.TypeInformation.MCEM_Declared_logical (n, b) ->
                if in_section then
                  Format.fprintf out_fmter "@[<2>Hypothesis abst_%a :@ "
                    Parsetree_utils.pp_vname_with_operators_expanded n
@@ -927,7 +927,7 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
   (* Check if the recursive fonction was generated using "Function" or
      "Fixpoint". *)
   (match rec_kind with
-   | Env.CoqGenInformation.RPK_other ->
+   | Env.RPK_other ->
        (* Assumed to have been generated with "Function". *)
        (* For bug #199, to make so that Zenon identifies "abst_xx" and "xx", we
           generate a fake Definition before generating the body of the recursive
@@ -959,7 +959,7 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
          used_species_parameter_tys dependencies_from_params
          abstracted_methods ;
        Format.fprintf out_fmter " }@\n:=@\n"
-   | Env.CoqGenInformation.RPK_struct decr_arg_name ->
+   | Env.RPK_struct decr_arg_name ->
        (* Case where the recursive function was generated with "Fixpoint". In
           this case, we need to use the special syntax "Fixpoint" also for
           Zenon, and no definition equation. *)
@@ -1040,18 +1040,19 @@ let ensure_enforced_by_definition_is_definition min_coq_env def_expr_ident =
            let method_info =
              snd (MinEnv.find_coq_env_element_by_name vname min_coq_env) in
            match method_info with
-           | MinEnv.MCEM_Declared_carrier | MinEnv.MCEM_Defined_carrier _ ->
+           | Env.TypeInformation.MCEM_Declared_carrier
+           | Env.TypeInformation.MCEM_Defined_carrier _ ->
                (* Syntax does not allow to mention "Self" as a proof
                   element. *)
                assert false
-           | MinEnv.MCEM_Declared_computational (_, _)
-           | MinEnv.MCEM_Declared_logical (_, _) ->
+           | Env.TypeInformation.MCEM_Declared_computational (_, _)
+           | Env.TypeInformation.MCEM_Declared_logical (_, _) ->
                (* We can't prove "by definition" of something only declared ! *)
                raise
                  (Attempt_proof_by_def_of_declared_method_of_self
                     (def_expr_ident.Parsetree.ast_loc, def_expr_ident))
-           | MinEnv.MCEM_Defined_computational (_, _, _, _, _, _)
-           | MinEnv.MCEM_Defined_logical (_, _, _) -> ()
+           | Env.TypeInformation.MCEM_Defined_computational (_, _, _, _, _, _)
+           | Env.TypeInformation.MCEM_Defined_logical (_, _, _) -> ()
           )
        | Some (Parsetree.Qualified (_, _)) ->
            (* The method comes from another module's species. Hence it is for
@@ -1143,7 +1144,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
         | Env.CoqGenInformation.VB_toplevel_let_bound
               (rec_status, params, scheme, body) -> (
             match rec_status with
-            | Env.CoqGenInformation.RC_non_rec ->
+            | Env.RC_non_rec ->
                 (* Non recursive toplevel function: use a "Definition". *)
                 Format.fprintf out_fmter "@[<2>Definition %s" name_for_zenon ;
                 (* We now generate the sequence of real parameters of the
@@ -1153,14 +1154,14 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
                    dependencies. *)
               generate_defined_method_proto_postlude
                 ctx print_ctx env ~self_manifest params scheme None (Some body)
-           | Env.CoqGenInformation.RC_rec pr_kind ->
+           | Env.RC_rec pr_kind ->
                (* Recursive function. Because toplevel, currently always
                   generated by "Fixpoint". *)
                Format.fprintf out_fmter "@[<2>Fixpoint %s" name_for_zenon ;
                let decr_arg =
                  (match pr_kind with
-                 | Env.CoqGenInformation.RPK_struct n -> n
-                 | Env.CoqGenInformation.RPK_other ->
+                 | Env.RPK_struct n -> n
+                 | Env.RPK_other ->
                     (* Currently, we shamely assume that the function is
                        structural on it first argument. *)
                     List.hd params) in
@@ -1196,19 +1197,19 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
             let method_info =
               snd (MinEnv.find_coq_env_element_by_name vname min_coq_env) in
             match method_info with
-             | MinEnv.MCEM_Declared_carrier
-             | MinEnv.MCEM_Defined_carrier _ ->
+             | Env.TypeInformation.MCEM_Declared_carrier
+             | Env.TypeInformation.MCEM_Defined_carrier _ ->
                  (* Syntax does not allow to mention "Self" as a proof
                     element. *)
                  assert false
-             | MinEnv.MCEM_Declared_computational (_, _)
-             | MinEnv.MCEM_Declared_logical (_, _) ->
+             | Env.TypeInformation.MCEM_Declared_computational (_, _)
+             | Env.TypeInformation.MCEM_Declared_logical (_, _) ->
                  (* We can't prove "by definition" of something only
                     declared ! *)
                  raise
                    (Attempt_proof_by_def_of_declared_method_of_self
                       (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
-             | MinEnv.MCEM_Defined_computational
+             | Env.TypeInformation.MCEM_Defined_computational
                    (_, is_rec, _, params, scheme, body) -> (
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
@@ -1216,7 +1217,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
                    %a\". *)@\n"
                    Sourcify.pp_expr_ident by_def_expr_ident ;
                  match is_rec with
-                 | Env.CoqGenInformation.RC_rec rec_kind ->
+                 | Env.RC_rec rec_kind ->
                      (* Since we are in the case of a method of Self, we must
                         find the abstraction_info and the abstracted_methods
                         in the already [generated_fields]. *)
@@ -1228,7 +1229,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
                        memory.Misc_common.cfm_dependencies_from_parameters
                        memory.Misc_common.cfm_coq_min_typ_env_names vname params
                        scheme body
-                 | Env.CoqGenInformation.RC_non_rec  ->
+                 | Env.RC_non_rec  ->
                      Format.fprintf out_fmter "@[<2>Definition abst_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        vname ;
@@ -1243,7 +1244,7 @@ let zenonify_by_definition ctx print_ctx env min_coq_env ~self_manifest
                      (* Done... Then, final carriage return. *)
                      Format.fprintf out_fmter ".@]@\n"
                  )
-             | MinEnv.MCEM_Defined_logical (_, _, body) ->
+             | Env.TypeInformation.MCEM_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(* For method of Self used via \"by definition of \
@@ -1543,13 +1544,14 @@ let zenonify_by_property ctx print_ctx env min_coq_env
             let method_info =
               snd (MinEnv.find_coq_env_element_by_name vname min_coq_env) in
             match method_info with
-             | MinEnv.MCEM_Declared_carrier
-             | MinEnv.MCEM_Defined_carrier _ ->
+             | Env.TypeInformation.MCEM_Declared_carrier
+             | Env.TypeInformation.MCEM_Defined_carrier _ ->
                  (* Syntax does not allow to mention "Self" as a proof
                     element. *)
                  assert false
-             | MinEnv.MCEM_Declared_computational (_, scheme)
-             | MinEnv.MCEM_Defined_computational (_, _, _, _, scheme, _) ->
+             | Env.TypeInformation.MCEM_Declared_computational (_, scheme)
+             | Env.TypeInformation.MCEM_Defined_computational
+                   (_, _, _, _, scheme, _) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(* For method of Self used via \"by property %a\". *)@\n"
@@ -1559,8 +1561,8 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter "@[<2>Parameter abst_%a :@ %a.@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
                    (Types.pp_type_simple_to_coq print_ctx) meth_ty
-             | MinEnv.MCEM_Declared_logical (_, body)
-             | MinEnv.MCEM_Defined_logical (_, _, body) ->
+             | Env.TypeInformation.MCEM_Declared_logical (_, body)
+             | Env.TypeInformation.MCEM_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(* For method of Self used via \"by property %a\". *)@\n"
@@ -2240,13 +2242,14 @@ let generate_asserts_for_dependencies out_fmter dependencies_from_params
   List.iter
     (function (_, meth_dep) ->
       match meth_dep with
-      | MinEnv.MCEM_Defined_carrier _ | MinEnv.MCEM_Declared_carrier ->
+      | Env.TypeInformation.MCEM_Defined_carrier _
+      | Env.TypeInformation.MCEM_Declared_carrier ->
           Format.fprintf out_fmter
             "@[<2>assert (__force_use_abst_T :=@ abst_T).@]@\n"
-      | MinEnv.MCEM_Defined_computational (_, _, n, _, _, _)
-      | MinEnv.MCEM_Defined_logical (_, n, _)
-      | MinEnv.MCEM_Declared_computational (n, _)
-      | MinEnv.MCEM_Declared_logical (n, _) ->
+      | Env.TypeInformation.MCEM_Defined_computational (_, _, n, _, _, _)
+      | Env.TypeInformation.MCEM_Defined_logical (_, n, _)
+      | Env.TypeInformation.MCEM_Declared_computational (n, _)
+      | Env.TypeInformation.MCEM_Declared_logical (n, _) ->
           Format.fprintf out_fmter
             "@[<2>assert (__force_use_abst_%a :=@ abst_%a).@]@\n"
             Parsetree_utils.pp_vname_with_operators_expanded n

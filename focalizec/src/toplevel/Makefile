@@ -47,6 +47,10 @@ BYT_OBJS =\
  ../typing/dep_analysis.cmo\
  ../typing/param_dep_analysis.cmo\
  ../typing/infoOutput.cmo\
+ ../typing/visUniverse.cmo\
+ ../typing/minEnv.cmo\
+ ../typing/abstractions.cmo\
+ ../typing/abstractions2.cmo\
  ../typing/infer.cmo\
  ../typing/match_analysis.cmo\
  \
@@ -55,9 +59,6 @@ BYT_OBJS =\
  ../docgen/env_docgen.cmo\
  ../docgen/main_docgen.cmo\
  \
- ../commoncodegen/visUniverse.cmo\
- ../commoncodegen/minEnv.cmo\
- ../commoncodegen/abstractions.cmo\
  ../commoncodegen/misc_common.cmo\
  ../commoncodegen/externals_generation_errs.cmo\
  ../commoncodegen/recursion.cmo\
