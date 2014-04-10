@@ -1753,14 +1753,17 @@ let zenonify_fact ctx print_ctx env min_coq_env ~self_manifest
            Format.fprintf out_fmter "@[<2>Parameter %a :@ "
              Parsetree_utils.pp_vname_with_operators_expanded
              avail_info.psa_lemma_name;
-           add_quantifications_and_implications ctx print_ctx env avail_info;
-           (* Now, print the lemma's body. *)
+           add_quantifications_and_implications ctx print_ctx env avail_info ;
+           (* Now, print the lemma's body. Be careful to enclose it between
+              parens to avoid associativity issues. Was bug #62. *)
+           Format.fprintf out_fmter "(" ;
            Species_record_type_generation.generate_logical_expr
              ctx ~local_idents: [] ~in_recursive_let_section_of: []
              ~self_methods_status: Species_record_type_generation.SMS_abstracted
              ~recursive_methods_status:
                Species_record_type_generation.RMS_regular
-             env avail_info.psa_base_logical_expr;
+             env avail_info.psa_base_logical_expr ;
+           Format.fprintf out_fmter ")" ;
            (* Done... Then, final carriage return. *)
            Format.fprintf out_fmter ".@]@\n")
          node_labels
