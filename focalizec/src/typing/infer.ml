@@ -4655,7 +4655,8 @@ type please_compile_me =
             "oldestly" inherited in head of the list. *)
         Env.TypeInformation.species_description *
         (** The depency graph of the species's methods. *)
-        (DepGraphData.name_node list))
+        (DepGraphData.name_node list) *
+        (Parsetree.vname * Env.TypeInformation.field_abstraction_info) list)
   | PCM_collection of
       ((** The collection expression. *)
        Parsetree.collection_def *
@@ -4895,7 +4896,9 @@ let typecheck_species_def ctx env species_def =
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name
       Env.TypeInformation.pp_species_description species_description
     end);
-  (PCM_species (species_def, species_description, species_dep_graph),
+  (PCM_species
+     (species_def, species_description, species_dep_graph,
+      field_abstraction_infos),
    species_carrier_type, env_with_species)
 ;;
 

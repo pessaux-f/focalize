@@ -1349,7 +1349,7 @@ let generate_collection_generator ctx env compiled_species_fields =
 
 
 let species_compile env ~current_unit out_fmter species_def species_descr
-    dep_graph =
+    dep_graph abstraction_infos =
   let species_def_desc = species_def.Parsetree.ast_desc in
   let species_name = species_def_desc.Parsetree.sd_name in
   (* Just a bit of debug. *)

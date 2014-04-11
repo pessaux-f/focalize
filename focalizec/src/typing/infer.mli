@@ -67,7 +67,8 @@ type please_compile_me =
   | PCM_coq_require of Parsetree.module_name
   | PCM_species of
       (Parsetree.species_def * Env.TypeInformation.species_description *
-       (DepGraphData.name_node list))
+       (DepGraphData.name_node list) *
+       (Parsetree.vname * Env.TypeInformation.field_abstraction_info) list)
   | PCM_collection of
       (Parsetree.collection_def * Env.TypeInformation.species_description *
        (DepGraphData.name_node list))

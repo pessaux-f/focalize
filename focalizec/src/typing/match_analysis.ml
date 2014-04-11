@@ -364,7 +364,7 @@ let verify ~current_unit typing_env m_expr =
 (* ************************************************************************** *)
 let rec verify_matchings ~current_unit typing_env stuff_to_compile =
   match stuff_to_compile with
-  | Infer.PCM_species (species_def, _, _) ->
+  | Infer.PCM_species (species_def, _, _, _) ->
       verify_matchings_species ~current_unit typing_env species_def
   | Infer.PCM_let_def (let_def, _) ->
       verify_matchings_let ~current_unit typing_env let_def

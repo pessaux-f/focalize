@@ -51,11 +51,12 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_coq_require _ ->
       (* Really nothing to do... *)
       env
-  | Infer.PCM_species (species_def, species_descr, dep_graph) ->
+  | Infer.PCM_species (species_def, species_descr, dep_graph, abstr_info) ->
       Types.purge_type_simple_to_ml_variable_mapping () ;
       let species_binding_info =
         Species_ml_generation.species_compile
-          env ~current_unit out_fmter species_def species_descr dep_graph in
+          env ~current_unit out_fmter species_def species_descr dep_graph
+          abstr_info in
       (* Return the ml code generation environment extended by the current
          species's collection generator information. *)
       Env.MlGenEnv.add_species

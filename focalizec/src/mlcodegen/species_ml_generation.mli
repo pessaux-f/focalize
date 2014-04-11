@@ -18,6 +18,7 @@ val species_compile :
    Env.MlGenEnv.t -> current_unit: Types.fname -> Format.formatter ->
     Parsetree.species_def -> Env.TypeInformation.species_description ->
       DepGraphData.name_node list ->
+      (Parsetree.vname * Env.TypeInformation.field_abstraction_info) list ->
         (Env.TypeInformation.species_param list *
          Env.MlGenInformation.method_info list *
          (Env.MlGenInformation.collection_generator_info option) *

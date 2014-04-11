@@ -977,7 +977,7 @@ let gen_doc_pcm out_fmt env ~current_unit = function
       (* Since toplevel expressions are not usable for any developpement, we
          do not document them. *)
       env
-  | Infer.PCM_species (species_def, species_descr, _) ->
+  | Infer.PCM_species (species_def, species_descr, _, _) ->
       Types.purge_type_simple_to_xml_variable_mapping () ;
       gen_doc_species out_fmt env ~current_unit species_def species_descr
   | Infer.PCM_collection (coll_def, col_descr, _) ->
