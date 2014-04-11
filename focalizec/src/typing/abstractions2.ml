@@ -707,24 +707,6 @@ let merge_abstraction_infos ai1 ai2 =
 ;;
 
 
-
-(** Not exported. Only for internal intermediate computation where we need to
-  remind from which rules the found dependencies come from. *)
-type internal_field_abstraction_info =
-  | IFAI_sig of
-      (Env.TypeInformation.sig_field_info * internal_abstraction_info)
-  | IFAI_let of
-      (Env.TypeInformation.let_field_info * internal_abstraction_info)
-  | IFAI_let_rec of
-      (Env.TypeInformation.let_field_info * internal_abstraction_info) list
-  | IFAI_theorem of
-      (Env.TypeInformation.theorem_field_info * internal_abstraction_info)
-  | IFAI_property of
-      (Env.TypeInformation.property_field_info * internal_abstraction_info)
-;;
-
-
-
 (** May return None is the searched field is "rep" since it may not be
     defined. *)
 let find_field_abstraction_by_name name abstractions =
