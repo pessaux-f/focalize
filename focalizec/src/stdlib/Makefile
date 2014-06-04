@@ -44,6 +44,8 @@ FOCALIZE_BIN_OBJS=$(FOCALIZE_BYT_OBJS:.cmo=.cmx)
 FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
+FOCALIZE_DKS=$(FOCALIZE_ZVS:.zv=.dk)
+FOCALIZE_DKOS=$(FOCALIZE_DKS:.dk=.dko)
 
 FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 
@@ -60,6 +62,9 @@ EXTERNAL_VOS=\
  coq_builtins.vo\
  sets_externals.vo\
  wellfoundation_externals.vo
+
+EXTERNAL_DKOS=\
+ dk_builtins.dko
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
@@ -82,18 +87,20 @@ focalizedoc:\
  $(FOCALIZE_MML)
 
 byt:\
- $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
+ $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS) $(EXTERNAL_DKOS)\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BYT_OBJS)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
 
 bin:\
- $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
+ $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) $(EXTERNAL_DKOS)\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BIN_OBJS)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
@@ -117,6 +124,10 @@ install:
 	  echo "Installing (Coq) compiled certified libs." &&\
 	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
+	if [ "$(FOCALIZE_DKOS)" != "" ]; then\
+	  echo "Installing (Dedukti) compiled certified libs." &&\
+	  $(CP) $(FOCALIZE_DKOS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
 	if [ "$(EXTERNAL_CMIS)" != "" ]; then\
 	  echo "Installing (OCaml interface) external stubs." &&\
 	  $(CP) $(EXTERNAL_CMIS) $(INSTALL_LIB_DIR)/;\
@@ -132,6 +143,10 @@ install:
 	if [ "$(EXTERNAL_VOS)" != "" ]; then\
 	  echo "Installing (Coq) external stubs." &&\
 	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(EXTERNAL_DKOS)" != "" ]; then\
+	  echo "Installing (Dedukti) external stubs." &&\
+	  $(CP) $(EXTERNAL_DKOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
 # TODO

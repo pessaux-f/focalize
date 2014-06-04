@@ -23,7 +23,7 @@ UNDERLINETAG="\033[4m"
 NORMALTAG="\033[0m"
 
 SUB_DIRS="src/basement src/parser src/typing \
-  src/docgen src/commoncodegen src/mlcodegen src/coqcodegen \
+  src/docgen src/commoncodegen src/mlcodegen src/coqcodegen src/dkcodegen \
   src/testing src/relation_extraction src/focalizedep src/toplevel \
   src/focalizetest src/focalizeig \
   doc_src/tex/refman \
@@ -38,7 +38,7 @@ for i in $SUB_DIRS ; do
   (cd $i; touch .depend; mkdir -p odoc)
 done
 
-# First recover the configuration file providing the name of ocaml and coq commands.
+# First recover the configuration file providing the name of ocaml, coq and dedukti commands.
 if [ -f "../.config_var" ] ;
     then
     . ../.config_var
@@ -68,7 +68,7 @@ usage () {
     echo "  [-]-tools_prefix <directory>"
     echo "    set <directory> as the directory prefix where tools required to"
     echo "    build FoCaLiZe are installed. The currently required tools (other"
-    echo "    than OCaml and Coq already configured) are zenon, zvtov."
+    echo "    than OCaml, Coq and Dedukti already configured) are zenon, zvtov."
     echo "  [-]-interactive"
     echo "    run interactively, asking questions."
 }
@@ -315,6 +315,7 @@ echo "let install_lib_dir = \"$INSTALL_LIB_DIR\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let caml_byt_compiler = \"$CAMLBYT\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let caml_bin_compiler = \"$CAMLBIN\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let coq_compiler = \"$COQC\" ;;" >> $CONFIG_SUMMARY_DOT_ML
+echo "let dedukti_compiler = \"$DKCHECK\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let zvtov_compiler = \"$ZVTOV\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let zenon_compiler = \"$ZENON\" ;;" >> $CONFIG_SUMMARY_DOT_ML
 echo "let zenon_libdir = \"$ZENON_LIB_DIR\" ;;" >> $CONFIG_SUMMARY_DOT_ML
@@ -417,6 +418,7 @@ echo "  other documentation -> $INSTALL_DOC_DIR"
 echo "  ocaml bytecode compiler = $CAMLBYT"
 echo "  ocaml binary compiler = $CAMLBIN"
 echo "  coq = $COQC"
+echo "  dedukti = $DKCHECK"
 echo "  zvtov = $ZVTOV"
 echo "  zenon = $ZENON"
 echo "  git = $GIT  (not important if not available)"

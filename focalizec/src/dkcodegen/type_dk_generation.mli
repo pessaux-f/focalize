@@ -2,28 +2,20 @@
 (*                                                                            *)
 (*                        FoCaLiZe compiler                                   *)
 (*                                                                            *)
+(*            François Pessaux                                                *)
 (*            Pierre Weis                                                     *)
 (*            Damien Doligez                                                  *)
-(*            François Pessaux                                                *)
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*  Copyright 2007 - ...  LIP6 and INRIA                                      *)
 (*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
 
+exception Mutable_record_fields_not_in_dk of (Location.t * Parsetree.vname)
 
-(* The Htmlc environment for the project. *)
-
-(* An alias for the shell variable PROJECT_FIRST_YEAR/ *)
-let project_first_year=2005;;
-let focal = "FoCaLiZe";;
-let focalizec = "focalizec" ;;
-let coq = "Coq" ;;
-let ocaml = "OCaml" ;;
-let dedukti = "Dedukti" ;;
-let project_name = "focalize" ;;
-let version_number_full = "0.9.0" ;;
-let project_archive_name = "focalize-0.9.0.tgz" ;;
+val type_def_compile :
+  as_zenon_fact: bool -> Context.reduced_compil_context -> Env.DkGenEnv.t ->
+    Parsetree.vname -> Env.TypeInformation.type_description -> Env.DkGenEnv.t

@@ -246,13 +246,13 @@ let generate_binding_match ctx print_ctx env expr pattern =
      arguments of the sum value constructors! So, force the extra "_"s to be
      printed. *)
   Format.fprintf out_fmter "Is_true ((basics._equal_ _) (" ;
-  Species_record_type_generation.generate_expr
+  Species_record_type_coq_generation.generate_expr
     ctx ~in_recursive_let_section_of: [] ~local_idents
-    ~self_methods_status: Species_record_type_generation.SMS_abstracted
-    ~recursive_methods_status: Species_record_type_generation.RMS_regular
+    ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
+    ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
     env expr ;
   Format.fprintf out_fmter ")@ (" ;
-  Species_record_type_generation.generate_pattern
+  Species_record_type_coq_generation.generate_pattern
     ~force_polymorphic_explicit_args: true ctx print_ctx env pattern ;
   Format.fprintf out_fmter "))"
 ;;
@@ -275,7 +275,7 @@ let generate_binding_let ctx print_ctx env binding =
     if binding_desc.Parsetree.b_params <> [] then
       (begin
       (* It is pretty like [let_binding_compile] in the file
-         [species_record_type_generation.ml]. *)
+         [species_record_type_coq_generation.ml]. *)
       let params_names = List.map fst binding_desc.Parsetree.b_params in
       (* Recover the type scheme of the bound ident. *)
       let def_scheme =
@@ -317,16 +317,16 @@ let generate_binding_let ctx print_ctx env binding =
   (* Now, in any case, we print the body of the let binding. *)
   (match binding_desc.Parsetree.b_body with
    | Parsetree.BB_computational e ->
-       Species_record_type_generation.generate_expr
+       Species_record_type_coq_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents
-         ~self_methods_status: Species_record_type_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_generation.RMS_regular
+         ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
          env e
    | Parsetree.BB_logical p ->
-       Species_record_type_generation.generate_logical_expr
+       Species_record_type_coq_generation.generate_logical_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents
-         ~self_methods_status: Species_record_type_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_generation.RMS_regular
+         ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
          env p) ;
   (* If there were parameters, we must close a parenthesis. *)
   if binding_desc.Parsetree.b_params <> [] then
@@ -340,7 +340,7 @@ let generate_binding_let ctx print_ctx env binding =
 
 
 let generate_variables_as_tuple out_fmter vars =
-  let rec rec_gen = function
+  let rec rec_coq_gen = function
     | [] -> assert false
     | [(last, _)] ->
         Format.fprintf out_fmter "%a"
@@ -348,7 +348,7 @@ let generate_variables_as_tuple out_fmter vars =
     | (h, _) :: q -> 
         Format.fprintf out_fmter "%a,@ "
           Parsetree_utils.pp_vname_with_operators_expanded h ;
-        rec_gen q in
+        rec_coq_gen q in
   (* *********************** *)
   (* Now, really do the job. *)
   match vars with
@@ -358,7 +358,7 @@ let generate_variables_as_tuple out_fmter vars =
          Parsetree_utils.pp_vname_with_operators_expanded one
    | _ ->
        Format.fprintf out_fmter "(" ;
-       rec_gen vars ;
+       rec_coq_gen vars ;
        Format.fprintf out_fmter ")"
 ;;
 
@@ -416,10 +416,10 @@ let generate_exprs_as_tuple ctx env exprs =
   match exprs with
    | [] -> assert false
    | [one] ->
-       Species_record_type_generation.generate_expr
+       Species_record_type_coq_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
-         ~self_methods_status: Species_record_type_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_generation.RMS_regular
+         ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
          env one
    | _ ->
        let fake_tuple_desc = Parsetree.E_tuple exprs in
@@ -428,10 +428,10 @@ let generate_exprs_as_tuple ctx env exprs =
          Parsetree.ast_desc = fake_tuple_desc ;
          Parsetree.ast_annot = [] ;
          Parsetree.ast_type = Parsetree.ANTI_irrelevant } in
-       Species_record_type_generation.generate_expr
+       Species_record_type_coq_generation.generate_expr
          ctx ~in_recursive_let_section_of: [] ~local_idents: []
-         ~self_methods_status: Species_record_type_generation.SMS_abstracted
-         ~recursive_methods_status: Species_record_type_generation.RMS_regular
+         ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
          env fake_tuple
 ;;
 
@@ -510,12 +510,12 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
                  "~ Is_true (expr)" if [bool_val] is false. *)
               if not bool_val then Format.fprintf out_fmter "~@ " ;
               Format.fprintf out_fmter "Is_true (@[<1>" ;
-              Species_record_type_generation.generate_expr
+              Species_record_type_coq_generation.generate_expr
                 ctx ~in_recursive_let_section_of: [] ~local_idents: []
                 ~self_methods_status:
-                  Species_record_type_generation.SMS_abstracted
+                  Species_record_type_coq_generation.SMS_abstracted
                 ~recursive_methods_status:
-                  Species_record_type_generation.RMS_regular
+                  Species_record_type_coq_generation.RMS_regular
                 env expr ;
               Format.fprintf out_fmter "@]) ->@ ")
         bindings ;
@@ -528,12 +528,12 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
            (* Surround by a Is_true since the user order can only be oa
               function returning a bool, hence must be plunged into Prop. *)
            Format.fprintf out_fmter "Is_true ((@[<1>" ;
-           Species_record_type_generation.generate_expr
+           Species_record_type_coq_generation.generate_expr
              ctx ~in_recursive_let_section_of: [] ~local_idents: []
              ~self_methods_status:
-               Species_record_type_generation.SMS_abstracted
+               Species_record_type_coq_generation.SMS_abstracted
              ~recursive_methods_status:
-               Species_record_type_generation.RMS_regular env expr_order ;
+               Species_record_type_coq_generation.RMS_regular env expr_order ;
            Format.fprintf out_fmter "@])@ " ;
            (* Now, generate the tuples of only arguments used in the order
               given by the user to provide to this order. *)
@@ -544,12 +544,12 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
            let rec_arg = List.nth rec_args index in
            let initial_var = List.nth initial_vars index in
            (* Generate the corresponding recursive call argument. *)
-           Species_record_type_generation.generate_expr
+           Species_record_type_coq_generation.generate_expr
              ctx ~in_recursive_let_section_of: [] ~local_idents: []
              ~self_methods_status:
-               Species_record_type_generation.SMS_abstracted
+               Species_record_type_coq_generation.SMS_abstracted
              ~recursive_methods_status:
-               Species_record_type_generation.RMS_regular env rec_arg ;
+               Species_record_type_coq_generation.RMS_regular env rec_arg ;
            (* Generate the initial argument of the function. *)
            Format.fprintf out_fmter "@ %a"
              Parsetree_utils.pp_vname_with_operators_expanded
@@ -559,7 +559,7 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
        | OK_wfounded (fname, ai, sorted_deps_from_params, abstracted_methods) ->
            Format.fprintf out_fmter "(%a_wforder"
              Parsetree_utils.pp_vname_with_operators_expanded fname ;
-           Species_record_type_generation.generate_method_lambda_lifted_arguments
+           Species_record_type_coq_generation.generate_method_lambda_lifted_arguments
              ~only_for_Self_meths: false out_fmter ai sorted_deps_from_params
              abstracted_methods ;
            Format.fprintf out_fmter ")@ " ;

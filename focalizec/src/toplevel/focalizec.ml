@@ -89,13 +89,23 @@ let compile_fcl input_file_name =
            ~current_unit ~out_file_name stuff_to_compile)
       end)
     else None in
-  (* Finally, go to the Coq code generation if requested and generate the
+  (* Go to the Coq code generation if requested and generate the
      .zv file . *)
   let coqgen_toplevel_env =
     if Configuration.get_generate_coq () then (
       let out_file_name = (Filename.chop_extension input_file_name) ^ ".zv" in
       Some
         (Main_coq_generation.root_compile
+           ~current_unit ~out_file_name stuff_to_compile)
+     )
+    else None in
+  (* Finally, go to the Dedukti code generation if requested and generate the
+     .dk file . *)
+  let dkgen_toplevel_env =
+    if Configuration.get_generate_dk () then (
+      let out_file_name = (Filename.chop_extension input_file_name) ^ ".zv" in
+      Some
+        (Main_dk_generation.root_compile
            ~current_unit ~out_file_name stuff_to_compile)
      )
     else None in
@@ -116,7 +126,7 @@ let compile_fcl input_file_name =
   Env.make_fo_file
     ~source_filename: input_file_name
     scoping_toplevel_env typing_toplevel_env mlgen_toplevel_env
-    coqgen_toplevel_env
+    coqgen_toplevel_env dkgen_toplevel_env
 ;;
 
 
@@ -188,6 +198,31 @@ let compile_coq input_file_name =
 ;;
 
 
+let compile_zdk input_file_name =
+  let cmd =
+    Printf.sprintf "%s -zenon %s -new %s %s"
+      Installation.zvtov_compiler Installation.zenon_compiler
+      (Configuration.get_zvtov_extra_opts ())
+      input_file_name in
+  Format.eprintf "Invoking zvtov...@\n" ;
+  Format.eprintf ">> %s@." cmd ;
+  let ret_code = Sys.command cmd in
+  if ret_code <> 0 then exit ret_code
+;;
+
+
+
+let compile_dk input_file_name =
+  let cmd =
+    Printf.sprintf "%s %s"
+      Installation.dedukti_compiler input_file_name in
+  Format.eprintf "Invoking dkcheck...@\n";
+  Format.eprintf ">> %s@." cmd;
+  let ret_code = Sys.command cmd in
+  if ret_code <> 0 then exit ret_code
+;;
+
+
 
 let dispatch_compilation files =
   List.iter
@@ -212,6 +247,15 @@ let dispatch_compilation files =
                 compile_coq (input_file_no_suffix ^ ".v")
              )
            );
+          if Configuration.get_generate_dk () then (
+            if not (Configuration.get_stop_before_zenon ()) then (
+              (* If a .zdk file was generated, let's compile it. *)
+              compile_zdk (input_file_no_suffix ^ ".zdk") ;
+              (* Finally, pass it to Dedukti. *)
+              if not (Configuration.get_stop_before_dk ()) then
+                compile_dk (input_file_no_suffix ^ ".dk")
+             )
+           );
           (* let tests_file_no_suffix = *)
           (*   Testing.add_tests_suffix input_file_no_suffix in *)
           (* let tests_file_fcl = tests_file_no_suffix ^ ".fcl" in *)
@@ -226,10 +270,12 @@ let dispatch_compilation files =
       | "ml" | "mli" -> compile_ml input_file_name
       | "zv" ->
           compile_zv input_file_name;
-          (* Finally, pass it to Coq. *)
+          (* Finally, pass it to Coq and Dedukti. *)
           let input_file_no_suffix = Filename.chop_extension input_file_name in
-          compile_coq (input_file_no_suffix ^ ".v")
+          compile_coq (input_file_no_suffix ^ ".v") ;
+          compile_dk (input_file_no_suffix ^ ".dk")
       | "v" -> compile_coq input_file_name
+      | "dk" -> compile_dk input_file_name
       | _ -> raise (Bad_file_suffix input_file_name)
     )
     files
@@ -279,6 +325,9 @@ let main () =
       ("-no-coq-code",
        Arg.Unit Configuration.unset_generate_coq,
        "  Disable the Coq code generation.");
+      ("-no-dedukti-code",
+       Arg.Unit Configuration.unset_generate_dk,
+       "  Disable the Dedukti code generation.");
       ("-no-ocaml-code",
        Arg.Unit Configuration.unset_generate_ocaml,
        "  Disable the OCaml code generation.");
@@ -323,11 +372,17 @@ let main () =
      \    process before passing the generated file to Coq. The produced file\
           is ended\n\
      \    by the suffix \".v\".");
+      ("-stop-before-dk",
+       Arg.Unit Configuration.set_stop_before_dk,
+       "  When Dedukti code generation is activated, stop the compilation\n\
+     \    process before passing the generated file to Dedukti. The produced file\
+          is ended\n\
+     \    by the suffix \".dk\".");
       ("-stop-before-zenon",
        Arg.Unit Configuration.set_stop_before_zenon,
-       "  When Coq code generation is activated, stop the \n\
+       "  When Coq/Dedukti code generation is activated, stop the \n\
      \    compilation process before passing the generated file to Zenon.\n\
-     \    The produced file is ended by the suffix \".zv\".");
+     \    The produced file is ended by the suffix \".zv\" or \".zdk\".");
       ("-verbose",
        Arg.Unit Configuration.set_verbose,
        "  Be verbose. Make the compiler jaberring about its real-time life.");

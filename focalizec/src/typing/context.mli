@@ -18,7 +18,7 @@
 
 (* ************************************************************************** *)
 (** {b Descr} : Data structure to record the various stuff needed to generate
-      the Caml/Coq code for a species definition. Passing this structure
+      the Caml/Coq/Dedukti code for a species definition. Passing this structure
       prevents from recursively passing a bunch of parameters to the functions.
       Instead, one pass only one and functions use the fields they need. This
       is mostly to preserve the stack and to make the code more readable. In
@@ -48,7 +48,7 @@ type species_compil_context = {
       For "in" parameters, the name is [Env.TypeInformation.SPAR_is (n, _)]. *)
   scc_species_parameters_names : Env.TypeInformation.species_param list ;
   (** The current correspondance between collection parameters names and
-      the names they are mapped onto in the Coq code and their kind. *)
+      the names they are mapped onto in the Coq/Dedukti code and their kind. *)
   scc_collections_carrier_mapping : Types.collection_carrier_mapping ;
   (** The current correspondance between method names of Self and their
       extra parameters they must be applied to because of the lambda-lifting
@@ -66,7 +66,7 @@ type species_compil_context = {
 
 (* ********************************************************************** *)
 (** {b Descr} : Reduced data structure to record the various stuff needed
-          to generate Caml/Coq code for various constructs. Passing this
+          to generate Caml/Coq/Dedukti code for various constructs. Passing this
           structure prevents from recursively passing a bunch of
           parameters to the functions. Instead, one pass only one and
           functions use the fields they need. This is mostly to preserve
