@@ -1,0 +1,79 @@
+#NAME dk_char.
+(; 7bits (ascii) characters ;)
+
+char : cc.uT := dk_machine_int.Mint dk_nat.7.
+Char := cc.eT char.
+_O : dk_binary_nat.BNat := dk_binary_nat.O.
+S0 : dk_binary_nat.BNat -> dk_binary_nat.BNat := dk_binary_nat.S0.
+S1 : dk_binary_nat.BNat -> dk_binary_nat.BNat := dk_binary_nat.S1.
+cast : dk_binary_nat.BNat -> Char := dk_machine_int.cast_bnat dk_nat.7.
+
+0 : Char := cast (S0 (S0 (S0 (S0 (S1 (S1 _O)))))).
+1 : Char := cast (S1 (S0 (S0 (S0 (S1 (S1 _O)))))).
+2 : Char := cast (S0 (S1 (S0 (S0 (S1 (S1 _O)))))).
+3 : Char := cast (S1 (S1 (S0 (S0 (S1 (S1 _O)))))).
+4 : Char := cast (S0 (S0 (S1 (S0 (S1 (S1 _O)))))).
+5 : Char := cast (S1 (S0 (S1 (S0 (S1 (S1 _O)))))).
+6 : Char := cast (S0 (S1 (S1 (S0 (S1 (S1 _O)))))).
+7 : Char := cast (S1 (S1 (S1 (S0 (S1 (S1 _O)))))).
+8 : Char := cast (S0 (S0 (S0 (S1 (S1 (S1 _O)))))).
+9 : Char := cast (S1 (S0 (S0 (S1 (S1 (S1 _O)))))).
+
+A : Char := cast (S1 (S0 (S0 (S0 (S0 (S0 (S1 _O))))))).
+B : Char := cast (S0 (S1 (S0 (S0 (S0 (S0 (S1 _O))))))).
+C : Char := cast (S1 (S1 (S0 (S0 (S0 (S0 (S1 _O))))))).
+D : Char := cast (S0 (S0 (S1 (S0 (S0 (S0 (S1 _O))))))).
+E : Char := cast (S1 (S0 (S1 (S0 (S0 (S0 (S1 _O))))))).
+F : Char := cast (S0 (S1 (S1 (S0 (S0 (S0 (S1 _O))))))).
+G : Char := cast (S1 (S1 (S1 (S0 (S0 (S0 (S1 _O))))))).
+H : Char := cast (S0 (S0 (S0 (S1 (S0 (S0 (S1 _O))))))).
+I : Char := cast (S1 (S0 (S0 (S1 (S0 (S0 (S1 _O))))))).
+J : Char := cast (S0 (S1 (S0 (S1 (S0 (S0 (S1 _O))))))).
+K : Char := cast (S1 (S1 (S0 (S1 (S0 (S0 (S1 _O))))))).
+L : Char := cast (S0 (S0 (S1 (S1 (S0 (S0 (S1 _O))))))).
+M : Char := cast (S1 (S0 (S1 (S1 (S0 (S0 (S1 _O))))))).
+N : Char := cast (S0 (S1 (S1 (S1 (S0 (S0 (S1 _O))))))).
+O : Char := cast (S1 (S1 (S1 (S1 (S0 (S0 (S1 _O))))))).
+P : Char := cast (S0 (S0 (S0 (S0 (S1 (S0 (S1 _O))))))).
+Q : Char := cast (S1 (S0 (S0 (S0 (S1 (S0 (S1 _O))))))).
+R : Char := cast (S0 (S1 (S0 (S0 (S1 (S0 (S1 _O))))))).
+S : Char := cast (S1 (S1 (S0 (S0 (S1 (S0 (S1 _O))))))).
+T : Char := cast (S0 (S0 (S1 (S0 (S1 (S0 (S1 _O))))))).
+U : Char := cast (S1 (S0 (S1 (S0 (S1 (S0 (S1 _O))))))).
+V : Char := cast (S0 (S1 (S1 (S0 (S1 (S0 (S1 _O))))))).
+W : Char := cast (S1 (S1 (S1 (S0 (S1 (S0 (S1 _O))))))).
+X : Char := cast (S0 (S0 (S0 (S1 (S1 (S0 (S1 _O))))))).
+Y : Char := cast (S1 (S0 (S0 (S1 (S1 (S0 (S1 _O))))))).
+Z : Char := cast (S0 (S1 (S0 (S1 (S1 (S0 (S1 _O))))))).
+
+a : Char := cast (S1 (S0 (S0 (S0 (S0 (S1 (S1 _O))))))).
+b : Char := cast (S0 (S1 (S0 (S0 (S0 (S1 (S1 _O))))))).
+c : Char := cast (S1 (S1 (S0 (S0 (S0 (S1 (S1 _O))))))).
+d : Char := cast (S0 (S0 (S1 (S0 (S0 (S1 (S1 _O))))))).
+e : Char := cast (S1 (S0 (S1 (S0 (S0 (S1 (S1 _O))))))).
+f : Char := cast (S0 (S1 (S1 (S0 (S0 (S1 (S1 _O))))))).
+g : Char := cast (S1 (S1 (S1 (S0 (S0 (S1 (S1 _O))))))).
+h : Char := cast (S0 (S0 (S0 (S1 (S0 (S1 (S1 _O))))))).
+i : Char := cast (S1 (S0 (S0 (S1 (S0 (S1 (S1 _O))))))).
+j : Char := cast (S0 (S1 (S0 (S1 (S0 (S1 (S1 _O))))))).
+k : Char := cast (S1 (S1 (S0 (S1 (S0 (S1 (S1 _O))))))).
+l : Char := cast (S0 (S0 (S1 (S1 (S0 (S1 (S1 _O))))))).
+m : Char := cast (S1 (S0 (S1 (S1 (S0 (S1 (S1 _O))))))).
+n : Char := cast (S0 (S1 (S1 (S1 (S0 (S1 (S1 _O))))))).
+o : Char := cast (S1 (S1 (S1 (S1 (S0 (S1 (S1 _O))))))).
+p : Char := cast (S0 (S0 (S0 (S0 (S1 (S1 (S1 _O))))))).
+q : Char := cast (S1 (S0 (S0 (S0 (S1 (S1 (S1 _O))))))).
+r : Char := cast (S0 (S1 (S0 (S0 (S1 (S1 (S1 _O))))))).
+s : Char := cast (S1 (S1 (S0 (S0 (S1 (S1 (S1 _O))))))).
+t : Char := cast (S0 (S0 (S1 (S0 (S1 (S1 (S1 _O))))))).
+u : Char := cast (S1 (S0 (S1 (S0 (S1 (S1 (S1 _O))))))).
+v : Char := cast (S0 (S1 (S1 (S0 (S1 (S1 (S1 _O))))))).
+w : Char := cast (S1 (S1 (S1 (S0 (S1 (S1 (S1 _O))))))).
+x : Char := cast (S0 (S0 (S0 (S1 (S1 (S1 (S1 _O))))))).
+y : Char := cast (S1 (S0 (S0 (S1 (S1 (S1 (S1 _O))))))).
+z : Char := cast (S0 (S1 (S0 (S1 (S1 (S1 (S1 _O))))))).
+
+__ : Char := cast (S1 (S0 (S1 (S1 (S1 (S1 (S1 _O))))))).
+
+equal : Char -> Char -> cc.eT dk_bool.bool
+      := dk_machine_int.equal dk_nat.7.
