@@ -2016,6 +2016,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
     proof =
   let out_fmter = ctx.Context.scc_out_fmter in
   match proof.Parsetree.ast_desc with
+   | Parsetree.Pf_coq (enforced_deps, _)
    | Parsetree.Pf_assumed enforced_deps ->
        emit_zenon_theorem_for_proof
          ~in_nested_proof ctx print_ctx env min_dk_env available_hyps
@@ -2297,7 +2298,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
   (* *********************** *)
   (* Start really the job... *)
   match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed _ | Parsetree.Pf_dk _ ->
+   | Parsetree.Pf_assumed _ | Parsetree.Pf_coq _ | Parsetree.Pf_dk _ ->
        () (* No Section needed. *)
    | Parsetree.Pf_node _ | Parsetree.Pf_auto _ ->
        (begin
@@ -2463,7 +2464,7 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
   Format.fprintf out_fmter ".@]@\n";
   (* End the proof matter. *)
   (match proof.Parsetree.ast_desc with
-   | Parsetree.Pf_assumed _ ->
+   | Parsetree.Pf_assumed _ | Parsetree.Pf_coq _ ->
        (* Proof assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter "(* Proof was flagged as assumed *)@\n";
        Format.fprintf out_fmter "apply dk_builtins.magic_prove.@\nQed.@\n"
@@ -2911,7 +2912,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
             Rec_let_dk_gen.print_user_termination_obls
               name recursive_calls order_expr used_params_indices ;
             match proof.Parsetree.ast_desc with
-             | Parsetree.Pf_assumed _ ->
+             | Parsetree.Pf_assumed _ | Parsetree.Pf_coq _ ->
                  (* Proof assumed, then simply use "magic_prove". *)
                  Format.fprintf out_fmter
                    "(* Proof was flagged as assumed. *)@\n";

@@ -29,6 +29,7 @@ type int =
   external
   | caml -> {* int *}
   | coq -> {* Z *}
+  | dedukti -> {* dk_int.int *}
 ;;
 
 type unit =
@@ -37,10 +38,12 @@ type unit =
   external
   | caml -> {* unit *}
   | coq -> {* coq_builtins.bi__unit *}  (* FoCaLize's Coq definition of builtin. *)
-
+  | dedukti -> {* dk_builtins.unit *}
+  
   with () =
   | caml -> {* () *}
   | coq -> {* coq_builtins.Void *}
+  | dedukti -> {* dk_builtins.tt *}
 ;;
 
 type float =
@@ -48,6 +51,7 @@ type float =
   external
   | caml -> {* float *}
   | coq -> {* R *}  (* From the Reals module. *)
+  | dedukti -> {* dk_builtins.float *}  (* From the Reals module. *)
 ;;
 
 type char =
@@ -55,6 +59,7 @@ type char =
   external
   | caml -> {* char *}
   | coq -> {* ascii *}
+  | dedukti -> {* dk_char.char *}
 ;;
 
 type string =
@@ -62,6 +67,7 @@ type string =
   external
   | caml -> {* string *}
   | coq -> {* string *}  (* From the Ascii module. *)
+  | dedukti -> {* dk_string.string *}
 ;;
 
 type bool =
@@ -77,14 +83,17 @@ type bool =
               Definition bool__t_rect := bool_rect.
               Definition bool__t_rec := bool_rec
            *}  (* Builtin of Coq *)
+  | dedukti -> {* dk_bool.bool *}
 
   with True =
   | caml -> {* true *}
   | coq -> {* true *}
+  | dedukti -> {* dk_bool.true *}
 
   and False =
   | caml -> {* false *}
   | coq -> {* false *}
+  | dedukti -> {* dk_bool.false *}
 ;;
 
 (** Note that it is impossible to alias the type of propositions [prop__t] to
@@ -105,14 +114,17 @@ type list ('a) =
               Definition list__t_ind := list_ind.
               Definition list__t_rect := list_rect.
               Definition list__t_rec := list_rec *}
+  | dedukti -> {* (dk_list.list __var_a) *}
 
   with [] =
   | caml -> {* [] *}
   | coq -> {* List.nil *}
+  | dedukti -> {* dk_list.nil *}
 
   and ( :: ) =
   | caml -> {* ( :: ) *}
   | coq -> {* List.cons *}
+  | dedukti -> {* dk_list.cons *}
 ;;
 
 (** {6 Basic operations on basic types} *)
@@ -123,6 +135,7 @@ let ( && ) =
   external
   | caml -> {* Ml_builtins.bi__and_b *}
   | coq -> {* coq_builtins.bi__and_b *}
+  | dedukti -> {* dk_bool.and *}
 ;;
 
 
@@ -131,6 +144,7 @@ let ( || ) =
   external
   | caml -> {* Ml_builtins.bi__or_b *}
   | coq -> {* coq_builtins.bi__or_b *}
+  | dedukti -> {* dk_bool.or *}
 ;;
 
 
@@ -139,6 +153,7 @@ let ( ~~ ) =
   external
   | caml -> {* Ml_builtins.bi__not_b *}
   | coq -> {* coq_builtins.bi__not_b *}
+  | dedukti -> {* dk_bool.not *}
 ;;
 
 
@@ -147,6 +162,7 @@ let ( |<>| ) =
   external
   | caml -> {* Ml_builtins.bi__xor_b *}
   | coq -> {* coq_builtins.bi__xor_b *}
+  | dedukti -> {* dk_bool.xor *}
 ;;
 
 
@@ -173,6 +189,7 @@ let ( ^ ) =
   external
   | caml -> {* Ml_builtins.bi__string_concat *}
   | coq -> {* String.append *}
+  | dedukti -> {* dk_string.append *}
 ;;
 
 
@@ -181,6 +198,7 @@ let ( <^ ) =
   external
   | caml -> {* Ml_builtins.bi__string_lt *}
   | coq -> {* fun (x : string__t) (y : string__t) => true *}
+  | dedukti -> {* dk_string.lt *}
 ;;
 
 (** {7 Operations on integers} *)
@@ -191,6 +209,7 @@ let ( =0x ) =
   external
   | caml -> {* Ml_builtins.bi__int_eq *}
   | coq -> {* coq_builtins.bi__int_eq *}
+  | dedukti -> {* dk_int.eq *}
 ;;
 
 
@@ -199,6 +218,7 @@ let ( <0x ) =
   external
   | caml -> {* Ml_builtins.bi__int_lt *}
   | coq -> {* coq_builtins.bi__int_lt *}
+  | dedukti -> {* dk_int.lt *}
 ;;
 
 
@@ -207,6 +227,7 @@ let ( <=0x ) =
   external
   | caml -> {* Ml_builtins.bi__int_leq *}
   | coq -> {* coq_builtins.bi__int_leq *}
+  | dedukti -> {* dk_int.leq *}
 ;;
 
 
@@ -215,6 +236,7 @@ let ( >=0x ) =
   external
   | caml -> {* Ml_builtins.bi__int_geq *}
   | coq -> {* coq_builtins.bi__int_geq *}
+  | dedukti -> {* dk_int.geq *}
 ;;
 
 
@@ -223,6 +245,7 @@ let ( >0x ) =
   external
   | caml -> {* Ml_builtins.bi__int_gt *}
   | coq -> {* coq_builtins.bi__int_gt *}
+  | dedukti -> {* dk_int.gt *}
 ;;
 
 
@@ -232,6 +255,7 @@ let ( + ) =
   external
   | caml -> {* Ml_builtins.bi__int_plus *}
   | coq -> {* coq_builtins.bi__int_plus *}
+  | dedukti -> {* dk_int.plus *}
 ;;
 
 
@@ -240,6 +264,7 @@ let ( - ) =
   external
   | caml -> {* Ml_builtins.bi__int_minus *}
   | coq -> {* coq_builtins.bi__int_minus *}
+  | dedukti -> {* dk_int.minus *}
 ;;
 
 
@@ -248,6 +273,7 @@ let ( ~0x ) =
   external
   | caml -> {* Ml_builtins.bi__int_opposite *}
   | coq -> {* coq_builtins.bi__int_opposite *}
+  | dedukti -> {* dk_int.opp *}
 ;;
 
 
@@ -256,6 +282,7 @@ let ( * ) =
   external
   | caml -> {* Ml_builtins.bi__int_mult *}
   | coq -> {* coq_builtins.bi__int_mult *}
+  | dedukti -> {* dk_int.mult *}
 ;;
 
 
@@ -265,6 +292,7 @@ let ( / ) =
   external
   | caml -> {* Ml_builtins.bi__int_div *}
   | coq -> {* coq_builtins.bi__int_div *}
+  | dedukti -> {* dk_int.div *}
 ;;
 
 
@@ -274,6 +302,7 @@ let ( % ) =
   external
   | caml -> {* Ml_builtins.bi__int_mod *}
   | coq -> {* coq_builtins.bi__int_mod *}
+  | dedukti -> {* dk_int.mod *}
 ;;
 
 
@@ -291,6 +320,7 @@ let max0x =
   external
   | caml -> {* Ml_builtins.bi__int_max *}
   | coq -> {* coq_builtins.bi__int_max *}
+  | dedukti -> {* dk_int.max *}
 ;;
 
 
@@ -299,6 +329,7 @@ let min0x =
   external
   | caml -> {* Ml_builtins.bi__int_min *}
   | coq -> {* coq_builtins.bi__int_min *}
+  | dedukti -> {* dk_int.min *}
 ;;
 
 
@@ -308,6 +339,7 @@ let abs0x =
   external
   | caml -> {* Ml_builtins.bi__int_abs *}
   | coq -> {* coq_builtins.bi__int_abs *}
+  | dedukti -> {* dk_int.abs *}
 ;;
 
 
@@ -317,6 +349,7 @@ let string_of_int =
   external
   | caml -> {* Ml_builtins.bi__string_of_int *}
   | coq -> {* fun (x : int__t) => "42"%string *}
+  | dedukti -> {* dk_string.of_int *}
 ;;
 
 
@@ -325,6 +358,7 @@ let int_of_string =
   external
   | caml -> {* Ml_builtins.bi__int_of_string *}
   | coq -> {* fun (x : string__t) => 42 *}
+  | dedukti -> {* dk_string.to_int *}
 ;;
 
 
@@ -342,6 +376,7 @@ let ( = ) =
   external
   | caml -> {* Ml_builtins.bi__syntactic_equal *}
   | coq -> {* coq_builtins.bi__syntactic_equal _ *}
+  | dedukti -> {* (dk_builtins.eq __var_a) *}
 ;;
 
 
@@ -354,6 +389,7 @@ let print_int =
   external
   | caml -> {* Ml_builtins.bi__print_int *}
   | coq -> {* fun (x : int__t) => coq_builtins.Void *}
+  | dedukti -> {* (x : dk_int.Int => dk_builtins.tt) *}
 ;;
 
 
@@ -362,6 +398,7 @@ let print_newline =
   external
   | caml -> {* Ml_builtins.bi__print_newline *}
   | coq -> {* fun (x : unit__t) => coq_builtins.Void *}
+  | dedukti -> {* (x : cc.eT dk_builtins.unit => dk_builtins.tt) *}
 ;;
 
 
@@ -370,6 +407,7 @@ let print_string =
   external
   | caml -> {* Ml_builtins.bi__print_string *}
   | coq -> {* fun (x : string__t) => coq_builtins.Void *}
+  | dedukti -> {* (x : dk_string.String => dk_builtins.tt) *}
 ;;
 
 
@@ -803,6 +841,7 @@ let focalize_error =
   external
   | caml -> {* Ml_builtins.bi__focalize_error *}
   | coq -> {* coq_builtins.focalize_error *}
+  | dedukti -> {* (s : dk_string.String => dk_fail.fail __var_a) *}
 ;;
 
 

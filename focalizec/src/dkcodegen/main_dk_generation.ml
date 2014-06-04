@@ -159,7 +159,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       (* One must "open" the dedukti code generation environment of this module
          and return the environment extended with these "opened" bindings. *)
       Env.dkgen_open_module ~loc: phrase_loc modname env
-  | Infer.PCM_coq_require fname ->
+  | Infer.PCM_coq_require _ ->
       env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
       Types.purge_type_simple_to_dk_variable_mapping () ;

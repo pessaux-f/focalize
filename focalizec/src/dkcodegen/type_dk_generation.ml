@@ -174,6 +174,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              (function
                | (Parsetree.EL_Dk, _) -> true
                | (Parsetree.EL_Caml, _)
+               | (Parsetree.EL_Coq, _)
                | ((Parsetree.EL_external _), _) -> false)
              external_expr.Parsetree.ast_desc in
          Format.fprintf out_fmter "%s.@]@.@\n" dk_binding

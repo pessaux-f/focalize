@@ -103,7 +103,7 @@ let compile_fcl input_file_name =
      .dk file . *)
   let dkgen_toplevel_env =
     if Configuration.get_generate_dk () then (
-      let out_file_name = (Filename.chop_extension input_file_name) ^ ".zv" in
+      let out_file_name = (Filename.chop_extension input_file_name) ^ ".dk.zv" in
       Some
         (Main_dk_generation.root_compile
            ~current_unit ~out_file_name stuff_to_compile)
@@ -200,10 +200,12 @@ let compile_coq input_file_name =
 
 let compile_zdk input_file_name =
   let cmd =
-    Printf.sprintf "%s -zenon %s -new %s %s"
+    Printf.sprintf "%s -zenon %s -new %s %s.zv && mv %s.v %s"
       Installation.zvtov_compiler Installation.zenon_compiler
       (Configuration.get_zvtov_extra_opts ())
-      input_file_name in
+      input_file_name
+      input_file_name (Filename.basename input_file_name)
+  in
   Format.eprintf "Invoking zvtov...@\n" ;
   Format.eprintf ">> %s@." cmd ;
   let ret_code = Sys.command cmd in
@@ -250,7 +252,7 @@ let dispatch_compilation files =
           if Configuration.get_generate_dk () then (
             if not (Configuration.get_stop_before_zenon ()) then (
               (* If a .zdk file was generated, let's compile it. *)
-              compile_zdk (input_file_no_suffix ^ ".zdk") ;
+              compile_zdk (input_file_no_suffix ^ ".dk") ;
               (* Finally, pass it to Dedukti. *)
               if not (Configuration.get_stop_before_dk ()) then
                 compile_dk (input_file_no_suffix ^ ".dk")
@@ -270,10 +272,14 @@ let dispatch_compilation files =
       | "ml" | "mli" -> compile_ml input_file_name
       | "zv" ->
           compile_zv input_file_name;
-          (* Finally, pass it to Coq and Dedukti. *)
+          (* Finally, pass it to Coq or Dedukti. *)
           let input_file_no_suffix = Filename.chop_extension input_file_name in
-          compile_coq (input_file_no_suffix ^ ".v") ;
-          compile_dk (input_file_no_suffix ^ ".dk")
+          let suffix2 = String.lowercase
+            (Files.get_file_name_suffix input_file_no_suffix) in
+          if suffix2 = ".dk" then
+            compile_dk (input_file_no_suffix)
+          else
+            compile_coq (input_file_no_suffix ^ ".v") ;
       | "v" -> compile_coq input_file_name
       | "dk" -> compile_dk input_file_name
       | _ -> raise (Bad_file_suffix input_file_name)

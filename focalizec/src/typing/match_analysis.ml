@@ -334,29 +334,6 @@ let rec check_usefulness ~current_unit pats typing_env =
 
 
 
-(** {b Descr}: Verify a pattern-matching expression. Checks for exhaustivity
-    and absence of useless pattern. Doesn't return any validity result. Instead,
-    issues warnings or exception raising in case of problem. *)
-let verify ~current_unit typing_env m_expr =
-  match m_expr.Parsetree.ast_desc with
-  | Parsetree.E_match (_, pattern_expr_list) ->
-      let (pats, _) = List.split pattern_expr_list in
-      let res = urec_norm ~current_unit pats dummy_wild_pattern typing_env in
-      check_usefulness ~current_unit (List.rev pats) typing_env ;
-      if res then (
-        (* Only print a warning if no error raising was requested. *)
-        if (Configuration.get_pmatch_err_as_warn ()) then
-          Format.eprintf
-            "%a:@\n@[%tWarning:%t Pattern-matching@ is@ not@ exhaustive.@]@."
-            Location.pp_location m_expr.Parsetree.ast_loc
-            Handy.pp_set_bold Handy.pp_reset_effects
-        else raise (Match_not_exhaustive m_expr.Parsetree.ast_loc)
-       )
-  | _ -> assert false
-;;
-
-
-
 (* ************************************************************************** *)
 (** {b Descr}: Search for pattern matching expressions in the AST.
 
