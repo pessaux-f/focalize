@@ -1,3 +1,34 @@
 *.ml
 *.v
 *.xml
+*.dk
+
+# Generated from generated files
+*.cm?
+*.vo
+.depend
+*.o
+*.bin
+*.byt
+*.aux
+*.glob
+*.toc
+*.log
+*.pfc
+*.output
+*.fo
+*.zv
+*.annot
+*.bbl
+*.blg
+*.fcd
+*.prolog*
+*.dko
+
+# Ungenerated files with generated extensions
+!*_externals.v
+!*_externals.ml
+!dk_*.dk
+!coq_builtins.v
+!ml_builtins.ml
+!cc.dk
