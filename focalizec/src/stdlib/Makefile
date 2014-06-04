@@ -64,6 +64,19 @@ EXTERNAL_VOS=\
  wellfoundation_externals.vo
 
 EXTERNAL_DKOS=\
+ cc.dko\
+ dk_bool.dko\
+ dk_fail.dko\
+ dk_opt.dko\
+ dk_tuple.dko\
+ dk_logic.dko\
+ dk_list.dko\
+ dk_nat.dko\
+ dk_int.dko\
+ dk_binary_nat.dko\
+ dk_machine_int.dko\
+ dk_char.dko\
+ dk_string.dko\
  dk_builtins.dko
 
 include $(ROOT_DIR)/Makefile.common

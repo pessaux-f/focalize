@@ -1,0 +1,22 @@
+#NAME dk_string.
+(; lists of ascii characters ;)
+
+string : cc.uT.
+String := cc.eT string.
+nil : String.
+cons : dk_char.Char -> String -> String.
+
+
+equal : String -> String -> dk_bool.Bool.
+
+[ s : String ] equal s s --> dk_bool.true
+[ c : dk_char.Char, s : String ]
+    equal nil (cons c s) --> dk_bool.false
+[ c : dk_char.Char, s : String ]
+    equal (cons c s) nil --> dk_bool.false
+[ c1 : dk_char.Char, s1 : String,
+  c2 : dk_char.Char, s2 : String ]
+    equal (cons c1 s1)
+          (cons c2 s2)
+      -->
+    dk_bool.and (dk_char.equal c1 c2) (equal s1 s2).
