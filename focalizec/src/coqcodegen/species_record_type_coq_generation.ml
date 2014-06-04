@@ -413,6 +413,7 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
                (function
                  | (Parsetree.EL_Coq, _) -> true
                  | (Parsetree.EL_Caml, _)
+                 | (Parsetree.EL_Dk, _)
                  | ((Parsetree.EL_external _), _) -> false)
                external_expr
            with Not_found ->
@@ -471,6 +472,7 @@ let generate_record_label_for_method_generator ctx env label =
               (function
                 | (Parsetree.EL_Coq, _) -> true
                 | (Parsetree.EL_Caml, _)
+                | (Parsetree.EL_Dk, _)
                 | ((Parsetree.EL_external _), _) -> false)
               external_expr
           with Not_found ->
@@ -1125,6 +1127,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                (function
                  | (Parsetree.EL_Coq, _) -> true
                  | (Parsetree.EL_Caml, _)
+                 | (Parsetree.EL_Dk, _)
                  | ((Parsetree.EL_external _), _) -> false)
                e_translation.Parsetree.ast_desc in
            Format.fprintf out_fmter "%s" coq_code

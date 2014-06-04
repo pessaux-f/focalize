@@ -15,3 +15,10 @@ unknown_proof : cc.eT unknown_type.
 string : cc.uT := dk_string.string.
 some_string : cc.eT string.
 prop : cc.uT := dk_logic.prop.
+
+(; Unit ;)
+unit : cc.uT.
+tt : cc.eT unit.
+
+(; Float ;)
+float : cc.uT.
