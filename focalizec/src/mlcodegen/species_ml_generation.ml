@@ -627,7 +627,8 @@ let generate_methods ctx env ~self_manifest field =
          Misc_common.cfm_raw_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
-         Misc_common.cfm_coq_min_typ_env_names = [] } in
+         Misc_common.cfm_coq_min_typ_env_names = [];
+         Misc_common.cfm_dk_min_typ_env_names = []} in
        Misc_common.CSF_sig compiled_field
    | Abstractions.FAI_let ((from, name, params, scheme, body, _, _, _),
                            abstraction_info) ->
@@ -649,13 +650,20 @@ let generate_methods ctx env ~self_manifest field =
               Misc_common.cfm_raw_dependencies_from_parameters = [] ;
               Misc_common.cfm_dependencies_from_parameters = [] ;
               Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
-              Misc_common.cfm_coq_min_typ_env_names = [] } in
+              Misc_common.cfm_coq_min_typ_env_names = [];
+              Misc_common.cfm_dk_min_typ_env_names = []} in
             Misc_common.CSF_let compiled_field
         | Parsetree.BB_computational body_expr ->
             (* No recursivity, then the method cannot call itself in its body
                then no need to set the [scc_lambda_lift_params_mapping] of the
                context. *)
             let coq_min_typ_env_names =
+              generate_one_field_binding
+                ctx env abstraction_info.Abstractions.ai_min_coq_env
+                ~let_connect: Misc_common.LC_first_non_rec ~self_manifest
+                abstraction_info.Abstractions.ai_dependencies_from_params
+                (from, name, params, (Some scheme), body_expr) in
+            let dk_min_typ_env_names =
               generate_one_field_binding
                 ctx env abstraction_info.Abstractions.ai_min_coq_env
                 ~let_connect: Misc_common.LC_first_non_rec ~self_manifest
@@ -676,7 +684,8 @@ let generate_methods ctx env ~self_manifest field =
                 abstraction_info.Abstractions.ai_dependencies_from_params ;
               Misc_common.cfm_dependencies_from_parameters_in_type =
                 abstraction_info.Abstractions.ai_dependencies_from_params_for_record_type ;
-              Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
+              Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names;
+              Misc_common.cfm_dk_min_typ_env_names = dk_min_typ_env_names} in
             Misc_common.CSF_let compiled_field
        end)
    | Abstractions.FAI_let_rec l ->
@@ -706,7 +715,8 @@ let generate_methods ctx env ~self_manifest field =
                    Misc_common.cfm_raw_dependencies_from_parameters = [] ;
                    Misc_common.cfm_dependencies_from_parameters = [] ;
                    Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
-                   Misc_common.cfm_coq_min_typ_env_names = [] } in
+                   Misc_common.cfm_coq_min_typ_env_names = [];
+                   Misc_common.cfm_dk_min_typ_env_names = []} in
                  Misc_common.CSF_let compiled_field
              | Parsetree.BB_computational body_expr ->
                  (* Extend the context with the mapping between these recursive
@@ -729,6 +739,12 @@ let generate_methods ctx env ~self_manifest field =
                      ~let_connect: Misc_common.LC_first_rec ~self_manifest
                      first_ai.Abstractions.ai_dependencies_from_params
                      (from, name, params, (Some scheme), body_expr) in
+                 let first_dk_min_typ_env_names =
+                   generate_one_field_binding
+                     ctx' env first_ai.Abstractions.ai_min_coq_env
+                     ~let_connect: Misc_common.LC_first_rec ~self_manifest
+                     first_ai.Abstractions.ai_dependencies_from_params
+                     (from, name, params, (Some scheme), body_expr) in
                  let first_compiled = {
                    Misc_common.cfm_is_logical = false ;
                    Misc_common.cfm_from_species = from ;
@@ -744,7 +760,9 @@ let generate_methods ctx env ~self_manifest field =
                    Misc_common.cfm_dependencies_from_parameters_in_type =
                      first_ai.Abstractions.ai_dependencies_from_params_for_record_type ;
                    Misc_common.cfm_coq_min_typ_env_names =
-                     first_coq_min_typ_env_names } in
+                     first_coq_min_typ_env_names;
+                   Misc_common.cfm_dk_min_typ_env_names =
+                     first_dk_min_typ_env_names} in
                  (* Finally, generate the remaining  methods, introduced by
                     "and". *)
                  let rem_compiled =
@@ -764,6 +782,12 @@ let generate_methods ctx env ~self_manifest field =
                            ~let_connect: Misc_common.LC_following ~self_manifest
                            ai.Abstractions.ai_dependencies_from_params
                            (from, name, params, (Some scheme), body_e) in
+                       let dk_min_typ_env_names =
+                         generate_one_field_binding
+                           ctx' env ai.Abstractions.ai_min_coq_env
+                           ~let_connect: Misc_common.LC_following ~self_manifest
+                           ai.Abstractions.ai_dependencies_from_params
+                           (from, name, params, (Some scheme), body_e) in
                        { Misc_common.cfm_is_logical = false ;
                          Misc_common.cfm_from_species = from ;
                          Misc_common.cfm_method_name = name ;
@@ -778,7 +802,9 @@ let generate_methods ctx env ~self_manifest field =
                          Misc_common.cfm_dependencies_from_parameters_in_type =
                            ai.Abstractions.ai_dependencies_from_params_for_record_type ;
                          Misc_common.cfm_coq_min_typ_env_names =
-                           coq_min_typ_env_names })
+                           coq_min_typ_env_names;
+                         Misc_common.cfm_dk_min_typ_env_names =
+                           dk_min_typ_env_names})
                      q in
                  Misc_common.CSF_let_rec (first_compiled :: rem_compiled)
             end)
@@ -799,7 +825,8 @@ let generate_methods ctx env ~self_manifest field =
          Misc_common.cfm_raw_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
-         Misc_common.cfm_coq_min_typ_env_names = [] } in
+         Misc_common.cfm_coq_min_typ_env_names = [];
+         Misc_common.cfm_dk_min_typ_env_names = []} in
        Misc_common.CSF_theorem compiled_field
    | Abstractions.FAI_property ((from, name, _, lexpr, _), _) ->
        (* Properties are purely discarded in the Ocaml translation. *)
@@ -817,7 +844,8 @@ let generate_methods ctx env ~self_manifest field =
          Misc_common.cfm_raw_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
-         Misc_common.cfm_coq_min_typ_env_names = [] } in
+         Misc_common.cfm_coq_min_typ_env_names = [];
+         Misc_common.cfm_dk_min_typ_env_names = []} in
        Misc_common.CSF_property compiled_field
 ;;
 

@@ -40,8 +40,8 @@ type compiled_field_memory = {
   (** The positionnal list of species parameter carriers appearing in the
       type of the method. They lead to extra arguments of type "Set" and
       must be instanciated by the correct type when applying the method's
-      generator. This is mostly due to the fact that in Coq polymorphism
-      is explicit and lead to a dependant type.
+      generator. This is mostly due to the fact that in Coq and Dedukti
+      polymorphism is explicit and lead to a dependant type.
       NEVER USED FOR OCAML CODE GENERATION. *)
   cfm_used_species_parameter_tys : Parsetree.vname list ;
   (** Same than below but without remapping on dependencies of the method from
@@ -65,9 +65,10 @@ type compiled_field_memory = {
       the method. *)
   cfm_dependencies_from_parameters_in_type :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
-  (** The positional list of method names appearing in the minimal Coq typing
-      environment. *)
-  cfm_coq_min_typ_env_names : Parsetree.vname list
+  (** The positional list of method names appearing in the minimal Coq/Dedukti
+      typing environment. *)
+  cfm_coq_min_typ_env_names : Parsetree.vname list ;
+  cfm_dk_min_typ_env_names : Parsetree.vname list
 } ;;
 
 
@@ -296,6 +297,12 @@ let follow_instanciations_for_in_param ctx env original_param_name
                      Env.CoqGenEnv.find_species
                        ~loc: Location.none ~current_unit
                        curr_level_species_ident env in
+                   sp_prms
+               | Abstractions.EK_dk env ->
+                   let (sp_prms, _, _, _) =
+                     Env.DkGenEnv.find_species
+                       ~loc: Location.none ~current_unit
+                       curr_level_species_ident env in
                    sp_prms)
             end) in
         let new_params_to_later_instanciate =
@@ -484,6 +491,12 @@ let follow_instanciations_for_is_param ctx env original_param_index
                      ~loc: Location.none ~current_unit
                      curr_level_species_ident env in
                  sp_prms
+             | Abstractions.EK_dk env ->
+                 let (sp_prms, _, _, _) =
+                   Env.DkGenEnv.find_species
+                     ~loc: Location.none ~current_unit
+                     curr_level_species_ident env in
+                 sp_prms
             end) in
         (* Now, really check if its a species parameter. *)
         match effective_arg_during_inher with
@@ -613,6 +626,11 @@ let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
            let (_, data, _, _) =
              Env.CoqGenEnv.find_species
                ~loc: Location.none ~current_unit species_ident env in
+           data
+       | Abstractions.EK_dk env ->
+           let (_, data, _, _) =
+             Env.DkGenEnv.find_species
+               ~loc: Location.none ~current_unit species_ident env in
            data) in
     (* Now, just search information about the method... *)
     let meth_info =
@@ -664,11 +682,11 @@ type let_connector =
     {b Args} :
       - [care_logical] : Boolean telling if the target language needs
         logical definitions (i.e. theorems, properties). For instance,
-        is true for Coq and false for OCaml.
+        is true for Coq and Dedukti and false for OCaml.
 
       - [care_types] : Boolean telling if the target language needs to
         explicitely manage abstraction of types. For instance, is true for
-        Coq and false for OCaml.
+        Coq and Dedukti and false for OCaml.
 
       - [ai] : The [abstraction_info] of a method, recording this
         method's dependencies.
@@ -744,10 +762,11 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
       | MinEnv.MCEE_Declared_carrier ->
          (* In Ocaml generation model (i.e. if [care_types] is [false], the
              carrier is never lambda-lifted then doesn't appear as an extra
-             parameter. Hence, we take care of the carrier only in Coq, i.e. if
+             parameter. Hence, we take care of the carrier only in Coq and
+             Dedukti, i.e. if
              [care_types] is [true]. *)
           if care_types then (
-            (* In Coq, the carrier is always abstracted by "abst_T". *)
+            (* In Coq/Dedukti, the carrier is always abstracted by "abst_T". *)
             the_list_reversed := "abst_T" :: !the_list_reversed
            )
       | MinEnv.MCEE_Declared_computational (n, _) ->

@@ -19,6 +19,7 @@
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
   | EK_coq of Env.CoqGenEnv.t
+  | EK_dk of Env.DkGenEnv.t
 
 type field_body_kind =
   | FBK_expr of Parsetree.expr
@@ -33,7 +34,8 @@ type abstraction_info = {
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   ai_dependencies_from_params_for_record_type :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
-  ai_min_coq_env : MinEnv.min_coq_env_element list
+  ai_min_coq_env : MinEnv.min_coq_env_element list ;
+  ai_min_dk_env : MinEnv.min_dk_env_element list
 }
 
 type field_abstraction_info =

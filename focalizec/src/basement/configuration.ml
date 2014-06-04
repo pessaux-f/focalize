@@ -119,6 +119,12 @@ let (get_generate_coq, unset_generate_coq) =
   (fun () -> generate_coq := false)
 ;;
 
+let (get_generate_dk, unset_generate_dk) =
+  let generate_dk = ref true in
+  (fun () -> !generate_dk),
+  (fun () -> generate_dk := false)
+;;
+
 let (get_fancy_ansi, unset_fancy_ansi) =
   let fancy_ansi = ref true in
   (fun () -> !fancy_ansi),
@@ -172,6 +178,12 @@ let (set_stop_before_coq, get_stop_before_coq) =
   let stop_before_coq = ref false in
   (fun () -> stop_before_coq := true),
   (fun () -> !stop_before_coq)
+;;
+
+let (set_stop_before_dk, get_stop_before_dk) =
+  let stop_before_dk = ref false in
+  (fun () -> stop_before_dk := true),
+  (fun () -> !stop_before_dk)
 ;;
 
 let require_plugin, get_plugins =

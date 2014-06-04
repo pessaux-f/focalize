@@ -28,6 +28,7 @@ The installation of the FoCaLiZe will setup 3 components:
 Installation requires some external tools, the most emblematic ones being:
  - OCaml (any recent version -- >= 3.11 --) should be fine.
  - Coq (any recent version -- >= 8.1pl5 --) should be fine.
+ - Dedukti (any recent version -- >= 2.2 --) should be fine.
 
 Some the minor (but still needed) tools are also required (LaTeX, make, dvipdf,
 dvips) but are generally part of a standard installation on a development
@@ -112,7 +113,7 @@ Scripts 'configure' can be provided tuning options:
   [-]-interactive: run interactively, asking questions.
   [-]-tools_prefix <directory>:  set <directory> as the directory prefix where
       tools required to build FoCaLiZe are installed. The currently required
-      non-common tools are OCaml and Coq.
+      non-common tools are OCaml, Coq and Dedukti.
 * focalize/zenon/configure-for-focalize:
   [-]-interactive: run interactively, asking questions.
   [-]-install_prefix <directory>: set <directory> as the directory prefix for
@@ -126,7 +127,7 @@ Scripts 'configure' can be provided tuning options:
       /usr/local).
   [-]-tools_prefix <directory>: set <directory> as the directory prefix where
       tools required to build FoCaLiZe are installed. The currently required
-      tools (other than OCaml and Coq already configured) are zenon, zvtov.
+      tools (other than OCaml, Coq and Dedukti already configured) are zenon, zvtov.
 
 
 (5) Administrivia:

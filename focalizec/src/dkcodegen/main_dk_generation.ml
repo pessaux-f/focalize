@@ -17,7 +17,7 @@
 
 (* ************************************************************************** *)
 (** {b Descr} : This module is the entry point for the compilation from FoCaL
-    to Coq. It dispatches the compilation of each possible FoCaL entity to
+    to Dedukti. It dispatches the compilation of each possible FoCaL entity to
     the dedicated compilation module.
     It also contains the seed of toplevel let definitions code generation.    *)
 (* ************************************************************************** *)
@@ -46,20 +46,20 @@ let toplevel_let_def_compile ctx env let_def =
   (* Currently, toplevel recursive functions are generated with "Fixpoint". *)
   let rec_status =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> Env.CoqGenInformation.RC_non_rec
+     | Parsetree.RF_no_rec -> Env.DkGenInformation.RC_non_rec
      | Parsetree.RF_rec -> (
          match let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof with
-         | None -> Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other
+         | None -> Env.DkGenInformation.RC_rec Env.DkGenInformation.RPK_other
          | Some term_pr -> (
              match term_pr.Parsetree.ast_desc with
              | Parsetree.TP_structural decr_arg ->
-                 Env.CoqGenInformation.RC_rec
-                   (Env.CoqGenInformation.RPK_struct decr_arg)
+                 Env.DkGenInformation.RC_rec
+                   (Env.DkGenInformation.RPK_struct decr_arg)
              | _ ->
-                 Env.CoqGenInformation.RC_rec Env.CoqGenInformation.RPK_other))
+                 Env.DkGenInformation.RC_rec Env.DkGenInformation.RPK_other))
     ) in
   let in_recursive_let_section_of =
-    if rec_status <> Env.CoqGenInformation.RC_non_rec then  (* Is rec. *)
+    if rec_status <> Env.DkGenInformation.RC_non_rec then  (* Is rec. *)
       List.map
         (fun b -> b.Parsetree.ast_desc.Parsetree.b_name)
         let_def.Parsetree.ast_desc.Parsetree.ld_bindings
@@ -70,7 +70,7 @@ let toplevel_let_def_compile ctx env let_def =
   (* Recover pre-compilation info and extended environment in case of
      recursivity for all the bindings. *)
   let (env, pre_comp_infos) =
-    Species_record_type_coq_generation.pre_compute_let_bindings_infos_for_rec
+    Species_record_type_dk_generation.pre_compute_let_bindings_infos_for_rec
       ~rec_status ~toplevel: true env
       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. Remark that there is no local idents
@@ -85,44 +85,44 @@ let toplevel_let_def_compile ctx env let_def =
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
          let binder =
-           if rec_status <> Env.CoqGenInformation.RC_non_rec then "Fixpoint"
+           if rec_status <> Env.DkGenInformation.RC_non_rec then "Fixpoint"
            else "Let" in
-         Species_record_type_coq_generation.let_binding_compile
+         Species_record_type_dk_generation.let_binding_compile
            ctx ~binder ~opt_term_proof ~local_idents: []
            ~in_recursive_let_section_of
            (* Or whatever since "Self" does not exist anymore. *)
-           ~self_methods_status: Species_record_type_coq_generation.SMS_from_record
-           ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
+           ~self_methods_status: Species_record_type_dk_generation.SMS_from_record
+           ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
            ~toplevel: true ~rec_status env one_bnd one_pre_comp_info
      | ((first_bnd :: next_bnds),
         (first_pre_comp_info :: next_pre_comp_infos)) ->
          let first_binder =
-           if rec_status <> Env.CoqGenInformation.RC_non_rec then "Fixpoint"
+           if rec_status <> Env.DkGenInformation.RC_non_rec then "Fixpoint"
            else "Let" in
          let accu_env =
            ref
-             (Species_record_type_coq_generation.let_binding_compile
+             (Species_record_type_dk_generation.let_binding_compile
                 ctx ~binder: first_binder ~opt_term_proof ~local_idents: []
                 ~in_recursive_let_section_of
                 (* Or whatever since "Self" does not exist anymore. *)
                 ~self_methods_status:
-                  Species_record_type_coq_generation.SMS_from_record
+                  Species_record_type_dk_generation.SMS_from_record
                 ~recursive_methods_status:
-                  Species_record_type_coq_generation.RMS_regular
+                  Species_record_type_dk_generation.RMS_regular
                 ~toplevel: true ~rec_status env first_bnd
                 first_pre_comp_info) in
          List.iter2
            (fun binding pre_comp_info ->
              Format.fprintf out_fmter "@]@\n@[<2>" ;
              accu_env :=
-               Species_record_type_coq_generation.let_binding_compile
+               Species_record_type_dk_generation.let_binding_compile
                  ctx ~binder: "with" ~opt_term_proof ~local_idents: []
                  ~in_recursive_let_section_of
                  (* Or whatever since "Self" does not exist anymore. *)
                  ~self_methods_status:
-                   Species_record_type_coq_generation.SMS_from_record
+                   Species_record_type_dk_generation.SMS_from_record
                  ~recursive_methods_status:
-                   Species_record_type_coq_generation.RMS_regular
+                   Species_record_type_dk_generation.RMS_regular
                  ~toplevel: true ~rec_status !accu_env binding pre_comp_info)
            next_bnds next_pre_comp_infos ;
          !accu_env
@@ -137,56 +137,52 @@ let toplevel_let_def_compile ctx env let_def =
 
 
 (* ********************************************************************* *)
-(** {b Descr} : Dispatch the Coq code generation of a toplevel structure
+(** {b Descr} : Dispatch the Dedukti code generation of a toplevel structure
     to the various more specialized code generation routines.
 
     {b Arg} :
       - [current_unit] : The name of the current compilation unit (i.e.
         the name of the file without extension and not capitalized).
-      - [out_fmter] : The out channel where to generate the Coq source
+      - [out_fmter] : The out channel where to generate the Dedukti source
         code.
-      - unnamed : The structure for which the Coq source code has to be
+      - unnamed : The structure for which the Dedukti source code has to be
         generated.
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
 let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_annotation_title -> env
-  | Infer.PCM_use (_, modname) ->
-      (* One must let known that the module is required. *)
-      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname ;
+  | Infer.PCM_use _ ->
+      (* Nothing to do for Dedukti. *)
       env
   | Infer.PCM_open (phrase_loc, modname) ->
-      (* One must "open" the coq code generation environment of this module
-         and return the environment extended with these "opened" bindings.
-         We must also generate a "Require" for this Coq module. *)
-      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" modname ;
-      Env.coqgen_open_module ~loc: phrase_loc modname env
+      (* One must "open" the dedukti code generation environment of this module
+         and return the environment extended with these "opened" bindings. *)
+      Env.dkgen_open_module ~loc: phrase_loc modname env
   | Infer.PCM_coq_require fname ->
-      Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" fname ;
       env
   | Infer.PCM_species (species_def, species_descr, dep_graph) ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Types.purge_type_simple_to_dk_variable_mapping () ;
       let spe_binding_info =
-        Species_coq_generation.species_compile
+        Species_dk_generation.species_compile
           ~current_unit env out_fmter species_def species_descr dep_graph in
-      (* Return the coq code generation environment extended by the current
+      (* Return the Dedukti code generation environment extended by the current
          species's information. *)
-      Env.CoqGenEnv.add_species
+      Env.DkGenEnv.add_species
         ~loc: species_def.Parsetree.ast_loc
         species_def.Parsetree.ast_desc.Parsetree.sd_name
         spe_binding_info env
   | Infer.PCM_collection (collection_def, collection_descr, dep_graph) ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Types.purge_type_simple_to_dk_variable_mapping () ;
       (* Collections don't have parameters or any remaining abstraction.
          Collections do not have collection generator, then simply add them in
          the environment with None.
          Finally, collections do not have any parameters, so empty list! *)
       let collection_methods =
-        Species_coq_generation.collection_compile
+        Species_dk_generation.collection_compile
           env ~current_unit out_fmter collection_def collection_descr
           dep_graph in
-      Env.CoqGenEnv.add_species
+      Env.DkGenEnv.add_species
         ~loc: collection_def.Parsetree.ast_loc
         collection_def.Parsetree.ast_desc.Parsetree.cd_name
         ([], collection_methods, None, Env.COS_collection) env
@@ -196,7 +192,7 @@ let toplevel_compile env ~current_unit out_fmter = function
          separatly. *)
       env
   | Infer.PCM_type (type_def_name, type_descr) ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Types.purge_type_simple_to_dk_variable_mapping () ;
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
         Context.rcc_current_unit = current_unit ;
@@ -212,10 +208,10 @@ let toplevel_compile env ~current_unit out_fmter = function
          environment with the components (record labels, sum value
          constructors) and the type the definition induces. In effect, this is
          not a "fake" type definition provided to Zenon as a fact. *)
-      Type_coq_generation.type_def_compile
+      Type_dk_generation.type_def_compile
         ~as_zenon_fact: false ctx env type_def_name type_descr
   | Infer.PCM_let_def (let_def, _) ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Types.purge_type_simple_to_dk_variable_mapping () ;
       (* Create the initial context for compiling the let definition.
          We would not need a "full" context, a "reduced" one would be
          sufficient, but via [let_binding_compile], the function
@@ -237,7 +233,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       Format.fprintf out_fmter ".@\n@\n" ;
       env'
   | Infer.PCM_theorem (theorem_def, found_type_variables) ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Types.purge_type_simple_to_dk_variable_mapping () ;
       let ctx = {
         Context.scc_current_unit = current_unit ;
         (* Dummy, since not under a species. *)
@@ -252,7 +248,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         Context.scc_dependency_graph_nodes = [] ;
         Context.scc_out_fmter = out_fmter } in
       let _ =
-        Species_coq_generation.toplevel_theorem_compile ctx env theorem_def in
+        Species_dk_generation.toplevel_theorem_compile ctx env theorem_def in
       (* Be careful, the ending . is generated by the proof code. *)
       Format.fprintf out_fmter "@\n@\n";
       (* Must now extend the value environment. Since the theorem is toplevel,
@@ -263,16 +259,17 @@ let toplevel_compile env ~current_unit out_fmter = function
       let num_vars = List.length found_type_variables in
       let env_binding =
         (num_vars,
-         Env.CoqGenInformation.VB_toplevel_property
+         Env.DkGenInformation.VB_toplevel_property
            theorem_def.Parsetree.ast_desc.Parsetree.th_stmt) in
       (* Return the extended environmenent. *)
-      Env.CoqGenEnv.add_value
+      Env.DkGenEnv.add_value
         ~toplevel: (Some theorem_def.Parsetree.ast_loc)
         theorem_def.Parsetree.ast_desc.Parsetree.th_name env_binding env
   | Infer.PCM_expr expr ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
-      (* We compile toplevel expressions as "Check" orders under Coq. *)
-      Format.fprintf out_fmter "@[<1>Check@ (" ;
+      Types.purge_type_simple_to_dk_variable_mapping () ;
+      (* We compile toplevel expressions as "Strong normal form" orders under
+         Dedukti. *)
+      Format.fprintf out_fmter "@[<1>#SNF@ (" ;
       let ctx = {
         Context.scc_current_unit = current_unit ;
         (* Dummy, since not under a species. *)
@@ -286,10 +283,10 @@ let toplevel_compile env ~current_unit out_fmter = function
         (* Empty, since not under a species. *)
         Context.scc_dependency_graph_nodes = [] ;
         Context.scc_out_fmter = out_fmter } in
-      Species_record_type_coq_generation.generate_expr
+      Species_record_type_dk_generation.generate_expr
         ctx ~local_idents: [] ~in_recursive_let_section_of: []
-        ~self_methods_status: Species_record_type_coq_generation.SMS_from_record
-        ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
+        ~self_methods_status: Species_record_type_dk_generation.SMS_from_record
+        ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
         env expr ;
       Format.fprintf out_fmter ").@]@\n@\n" ;
       (* Nothing to extend the environment. *)
@@ -300,36 +297,10 @@ let toplevel_compile env ~current_unit out_fmter = function
 
 let root_compile ~current_unit ~out_file_name stuff =
   if Configuration.get_verbose () then
-    Format.eprintf "Starting Coq code generation.@.";
+    Format.eprintf "Starting Dedukti code generation.@.";
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
-  let global_env = ref (Env.CoqGenEnv.empty ()) in
-  (* Since Coq 8.3pl2 bound entities do no more appear as terms sequenced as
-     "imply" (i.e. ->) but are now directly introduce as hypothesis. This breaks
-     the code generation model for Zenon proofs. If using Coq 8.3pl2, the we
-     force Coq getting back to previous proof goals, unsetting the "Automatic
-     Introduction" globally. Otherwise, if using Coq version < 8.3pl2, we do not
-     unset. *)
- if not (Configuration.get_use_coq_older ()) then
-     Format.fprintf out_fmter "Global Unset Automatic Introduction.@\n" ;
-  (* Always import Coq booleans and integers and floats. Alias int notation to
-     Z. *)
-  Format.fprintf out_fmter
-    "Require Export Bool.@\n\
-     Require Export ZArith.@\n\
-     Open Scope Z_scope.@\n\
-     Require Export Reals.@\n\
-     Require Export Ascii.@\n\
-     Require Export String.@\n\
-     Require Export List.@\n\
-     Require Import Wellfounded.@\n\
-     Require Export Recdef.@\n\
-     Require Export coq_builtins.@\n@\n";
-  if Configuration.get_experimental () then
-    Format.fprintf out_fmter
-      "(* Below: to prevent Function to apply heuristics that would@\n\
-          the expected aim in recursive functions termination proofs. *)@\n@\n\
-       Set Function_raw_tcc.@\n@\n";
+  let global_env = ref (Env.DkGenEnv.empty ()) in
   try
     List.iter
       (fun data ->
@@ -347,7 +318,7 @@ let root_compile ~current_unit ~out_file_name stuff =
     close_out out_hd;
     (begin
     try
-      (* And rename it to prevent an incorrecty Coq source file from
+      (* And rename it to prevent an incorrecty Dedukti source file from
          remaining, but to still keep a trace of what could be generated until
          the error arose. *)
       let trace_filename = out_file_name ^ ".mangled" in
@@ -363,7 +334,7 @@ let root_compile ~current_unit ~out_file_name stuff =
          here I/O errors, then will be raise again the initial error. *)
       Format.eprintf
         "Error@ while@ trying@ to@ keep@ trace@ of@ the@ partially@ \
-         generated@ Coq@ code:@ %s.@\nInitial@ error@ follows.@."
+         generated@ Dedukti@ code:@ %s.@\nInitial@ error@ follows.@."
         (Printexc.to_string second_error)
       end)
     end);

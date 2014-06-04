@@ -68,11 +68,14 @@ $(focal)
 
 <p>
   From a $(focal) source code development, the
-  <code>$(focalizec)</code> compiler produces three source files: 
+  <code>$(focalizec)</code> compiler produces four source files: 
 </p>
   <ul>
     <li>
     a source file for the $(coq) proof assistant to check the proofs, 
+    </li>
+    <li>
+    a source file for the $(dedukti) type checker, 
     </li>
     <li>
     a source file for the $(ocaml) compiler to build the executable program, 

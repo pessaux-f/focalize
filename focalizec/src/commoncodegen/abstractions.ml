@@ -20,7 +20,7 @@
     parameters of a species. It computes the dependencies on species
     parameters and creates a structure that sumarises all the abstractions
     the methods of a species require. To have *all* the dependencies, it
-    asks to build the minimal coq typing environment and the visible
+    asks to build the minimal coq/dedukti typing environment and the visible
     universe. It will use the fact that dependencies on methods on "Self"
     for each method is already computed.
     The output data-structure will be sent to the code generation pass.      *)
@@ -65,6 +65,7 @@ type field_type_kind =
 type environment_kind =
   | EK_ml of Env.MlGenEnv.t
   | EK_coq of Env.CoqGenEnv.t
+  | EK_dk of Env.DkGenEnv.t
 ;;
 
 
@@ -136,8 +137,8 @@ let apply_substitutions_list_on_formal_param_vname pmodname pvname substs =
                       dependency on the parameter disepear. In effect, in this
                       case, instead of depending on the collection parameter
                       carrier, we depend on OUR carrier. And this is caught by
-                      the minimal Coq typing environment. So this parameter
-                      purely disapears. *)
+                      the minimal Coq/Dedukti typing environment. So this
+                      parameter purely disapears. *)
                    raise Not_found
                  else accu_vname
            ))
@@ -391,7 +392,7 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
   (* Get all the methods we directly decl-depend on. They will lead each to an
      extra parameter of the final OCaml function (lambda-lifing). Get the
      methods we directly def-depend. They will be ignored for OCaml but used
-     for Coq. *)
+     for Coq and Dedukti. *)
   let (decl_children, def_children) =
     (try
       let my_node =
@@ -599,8 +600,8 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
     def_children;
   (* Now compute the set of species parameters types used in the types of the
      methods comming from the species parameters that the current field uses.
-     This information is required for Coq since they will lead to extra args
-     of type "Set". *)
+     This information is required for Coq and Dedukti since they will lead to
+     extra args of type "Set". *)
 (* [Unsure] Ne garder seulement les paramètres en "is" ? *)
   let species_param_names =
     List.map
@@ -685,7 +686,8 @@ type internal_abstraction_info = {
      Env.TypeInformation.species_param *
      Parsetree_utils.ParamDepSet.t)  (** The set of methods we depend on. *)
       list;
-  iai_min_coq_env : MinEnv.min_coq_env_element list
+  iai_min_coq_env : MinEnv.min_coq_env_element list ;
+  iai_min_dk_env : MinEnv.min_dk_env_element list
 }
 ;;
 
@@ -725,7 +727,8 @@ type abstraction_info = {
      Env.ordered_methods_from_params)  (** The set of methods we depend on
                                            only through types and completion. *)
       list;
-  ai_min_coq_env : MinEnv.min_coq_env_element list
+  ai_min_coq_env : MinEnv.min_coq_env_element list ;
+  ai_min_dk_env : MinEnv.min_dk_env_element list
 }
 ;;
 
@@ -1182,6 +1185,12 @@ let complete_dependencies_from_params_rule_PRM env ~current_unit
              let (a, b, _, _) =
                Env.CoqGenEnv.find_species
                  ~loc: Location.none ~current_unit sprim env in
+             (a, b)
+         | EK_dk env ->
+             (* Just extract the components we need. *)
+             let (a, b, _, _) =
+               Env.DkGenEnv.find_species
+                 ~loc: Location.none ~current_unit sprim env in
              (a, b)) in
       List.fold_left
         (fun inner_accu_deps_from_params (effective_arg, position) ->
@@ -1556,7 +1565,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                iai_dependencies_from_params_via_type = empty_deps;
                iai_dependencies_from_params_via_PRM = empty_deps;
                iai_dependencies_from_params_via_completions = empty_deps;
-               iai_min_coq_env = [] } in
+               iai_min_coq_env = [];
+               iai_min_dk_env = []} in
              (IFAI_sig (si, abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_let
                 ((_, name, _, sch, body, _, _, _) as li) ->
@@ -1618,9 +1628,11 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  used_species_parameter_tys_in_meths_self_after_completion
                  dependencies_from_params_in_type
                  dependencies_from_params_via_didou in
-             (* Now, its minimal Coq typing environment. *)
+             (* Now, its minimal Coq/Dedukti typing environment. *)
              let min_coq_env =
-               MinEnv.minimal_typing_environment universe fields in
+               MinEnv.minimal_coq_typing_environment universe fields in
+             let min_dk_env =
+               MinEnv.minimal_dk_typing_environment universe fields in
              let abstr_info = {
                iai_used_species_parameter_tys = all_used_species_parameter_tys;
                iai_dependencies_from_params_via_body =
@@ -1631,7 +1643,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                  dependencies_from_params_via_prm;
                iai_dependencies_from_params_via_completions =
                  dependencies_from_params_via_didou;
-               iai_min_coq_env = min_coq_env } in
+               iai_min_coq_env = min_coq_env;
+               iai_min_dk_env = min_dk_env } in
              (IFAI_let (li, abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_let_rec l ->
              let deps_infos =
@@ -1698,9 +1711,11 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        used_species_parameter_tys_in_meths_self_after_completion
                        dependencies_from_params_in_type
                        dependencies_from_params_via_didou in
-                   (* Now, its minimal Coq typing environment. *)
+                   (* Now, its minimal Coq/Dedukti typing environment. *)
                    let min_coq_env =
-                     MinEnv.minimal_typing_environment universe fields in
+                     MinEnv.minimal_coq_typing_environment universe fields in
+                   let min_dk_env =
+                     MinEnv.minimal_dk_typing_environment universe fields in
                    let abstr_info = {
                      iai_used_species_parameter_tys =
                        all_used_species_parameter_tys;
@@ -1712,7 +1727,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                        dependencies_from_params_via_prm;
                      iai_dependencies_from_params_via_completions =
                        dependencies_from_params_via_didou;
-                     iai_min_coq_env = min_coq_env } in
+                     iai_min_coq_env = min_coq_env ;
+                     iai_min_dk_env = min_dk_env } in
                    (li, abstr_info))
                  l in
              (IFAI_let_rec deps_infos) :: abstractions_accu
@@ -1738,9 +1754,11 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    ~with_def_deps_n_term_pr
                    ctx.Context.scc_dependency_graph_nodes decl_children
                    def_children in
-               (* Now, its minimal Coq typing environment. *)
+               (* Now, its minimal Coq/Dedukti typing environment. *)
                let min_coq_env =
-                 MinEnv.minimal_typing_environment universe fields in
+                 MinEnv.minimal_coq_typing_environment universe fields in
+               let min_dk_env =
+                 MinEnv.minimal_dk_typing_environment universe fields in
                (* Complete the dependencies from species parameters info. By the
                   way, we record the species parameters carrier appearing in the
                   methods of self that were added during the completion
@@ -1786,7 +1804,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    dependencies_from_params_via_prm;
                  iai_dependencies_from_params_via_completions =
                    dependencies_from_params_via_didou;
-                 iai_min_coq_env = min_coq_env } in
+                 iai_min_coq_env = min_coq_env;
+                 iai_min_dk_env = min_dk_env } in
                (IFAI_theorem (ti, abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_property
              ((_, name, _, logical_expr, _) as pi) ->
@@ -1843,9 +1862,11 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    used_species_parameter_tys_in_meths_self_after_completion
                    dependencies_from_params_in_type
                    dependencies_from_params_via_didou in
-               (* Now, its minimal Coq typing environment. *)
+               (* Now, its minimal Coq/Dedukti typing environment. *)
                let min_coq_env =
-                 MinEnv.minimal_typing_environment universe fields in
+                 MinEnv.minimal_coq_typing_environment universe fields in
+               let min_dk_env =
+                 MinEnv.minimal_dk_typing_environment universe fields in
                let abstr_info = {
                  iai_used_species_parameter_tys =
                    all_used_species_parameter_tys;
@@ -1857,7 +1878,8 @@ let __compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                    dependencies_from_params_via_prm;
                  iai_dependencies_from_params_via_completions =
                    dependencies_from_params_via_didou;
-                 iai_min_coq_env = min_coq_env } in
+                 iai_min_coq_env = min_coq_env;
+                 iai_min_dk_env = min_dk_env } in
                (IFAI_property (pi, abstr_info)) :: abstractions_accu)
       []      (* Initial empty abstractions accumulator. *)
       fields in
@@ -1931,6 +1953,13 @@ let remap_dependencies_on_params_for_field env ctx from name
            (* Just keep the information about methods. *)
            let (_, ms, _, _) =
              Env.CoqGenEnv.find_species
+               ~loc: Location.none
+               ~current_unit: ctx.Context.scc_current_unit fake_ident e in
+           ms
+       | EK_dk e ->
+           (* Just keep the information about methods. *)
+           let (_, ms, _, _) =
+             Env.DkGenEnv.find_species
                ~loc: Location.none
                ~current_unit: ctx.Context.scc_current_unit fake_ident e in
            ms
@@ -2053,7 +2082,7 @@ let remap_dependencies_on_params_for_field env ctx from name
                     parameter's carrier disappeared, it's the same thing about
                     its methods that are now methods of "Self" and these
                     methods of "Self" are taken into account by the minimal
-                    Coq typing environment. *)
+                    Coq/Dedukti typing environment. *)
                  raise Not_found
              | Env.SK_collection_by_collection
                  (_, Types.SBRCK_coll effective_instanciater) ->
@@ -2241,7 +2270,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
             ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
-            ai_min_coq_env = iai.iai_min_coq_env } in
+            ai_min_coq_env = iai.iai_min_coq_env;
+            ai_min_dk_env = iai.iai_min_dk_env } in
           FAI_sig (sig_field_info, abstraction_info)
       | IFAI_let (let_field_info, iai) ->
           let all_deps_from_params =
@@ -2283,7 +2313,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
             ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
-            ai_min_coq_env = iai.iai_min_coq_env } in
+            ai_min_coq_env = iai.iai_min_coq_env;
+            ai_min_dk_env = iai.iai_min_dk_env } in
           FAI_let (let_field_info, abstraction_info)
       | IFAI_let_rec internal_infos ->
           let abstraction_infos =
@@ -2332,7 +2363,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
                   ai_dependencies_from_params = mapped_deps;
                   ai_dependencies_from_params_for_record_type =
                     mapped_for_record_ty_deps_from_params;
-                  ai_min_coq_env = iai.iai_min_coq_env } in
+                  ai_min_coq_env = iai.iai_min_coq_env;
+                  ai_min_dk_env = iai.iai_min_dk_env } in
                 (let_field_info, abstraction_info))
               internal_infos in
           FAI_let_rec abstraction_infos
@@ -2375,7 +2407,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
             ai_dependencies_from_params = mapped_deps;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
-            ai_min_coq_env = iai.iai_min_coq_env } in
+            ai_min_coq_env = iai.iai_min_coq_env;
+            ai_min_dk_env = iai.iai_min_dk_env } in
           FAI_theorem (theorem_field_info, abstraction_info)
       | IFAI_property (property_field_info, iai) ->
           let all_deps_from_params =
@@ -2416,7 +2449,8 @@ let compute_abstractions_for_fields ~with_def_deps_n_term_pr env ctx fields =
             ai_dependencies_from_params = mapped_deps ;
             ai_dependencies_from_params_for_record_type =
               mapped_for_record_ty_deps_from_params;
-            ai_min_coq_env = iai.iai_min_coq_env } in
+            ai_min_coq_env = iai.iai_min_coq_env;
+            ai_min_dk_env = iai.iai_min_dk_env } in
           FAI_property (property_field_info, abstraction_info))
     internal_abstractions
 ;;
@@ -2433,13 +2467,15 @@ let compute_abstractions_for_toplevel_theorem ctx theorem =
     VisUniverse.visible_universe
       ~with_def_deps_n_term_pr: true
       ctx.Context.scc_dependency_graph_nodes decl_children def_children in
-  (* Now, its minimal Coq typing environment. *)
-  let min_coq_env = MinEnv.minimal_typing_environment universe [] in
+  (* Now, its minimal Coq/Dedukti typing environment. *)
+  let min_coq_env = MinEnv.minimal_coq_typing_environment universe [] in
+  let min_dk_env = MinEnv.minimal_dk_typing_environment universe [] in
   let abstr_info = {
     ai_used_species_parameter_tys = [] ;
     ai_raw_dependencies_from_params = [] ;
     ai_dependencies_from_params = [] ;
     ai_dependencies_from_params_for_record_type = [] ;
-    ai_min_coq_env = min_coq_env } in
+    ai_min_coq_env = min_coq_env;
+    ai_min_dk_env = min_dk_env } in
   abstr_info
 ;;

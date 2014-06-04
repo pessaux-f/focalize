@@ -28,6 +28,25 @@ type min_coq_env_element =
 val find_coq_env_element_by_name :
   Parsetree.vname -> min_coq_env_element list -> min_coq_env_element
 
-val minimal_typing_environment :
+val minimal_coq_typing_environment :
   VisUniverse.in_the_universe_because VisUniverse.Universe.t ->
   Env.TypeInformation.species_field list -> min_coq_env_element list
+
+  
+type min_dk_env_element =
+    MDEE_Declared_carrier
+  | MDEE_Defined_carrier of Types.type_scheme
+  | MDEE_Declared_computational of (Parsetree.vname * Types.type_scheme)
+  | MDEE_Defined_computational of
+      (Env.from_history * Env.DkGenInformation.rec_status * Parsetree.vname *
+       (Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
+  | MDEE_Declared_logical of (Parsetree.vname * Parsetree.logical_expr)
+  | MDEE_Defined_logical of
+      (Env.from_history * Parsetree.vname * Parsetree.logical_expr)
+
+val find_dk_env_element_by_name :
+  Parsetree.vname -> min_dk_env_element list -> min_dk_env_element
+
+val minimal_dk_typing_environment :
+  VisUniverse.in_the_universe_because VisUniverse.Universe.t ->
+  Env.TypeInformation.species_field list -> min_dk_env_element list

@@ -413,6 +413,7 @@ and pp_pattern ppf = pp_ast pp_pat_desc ppf
 let pp_external_language ppf = function
   | Parsetree.EL_Caml -> Format.fprintf ppf "caml@ "
   | Parsetree.EL_Coq -> Format.fprintf ppf "coq@ "
+  | Parsetree.EL_Dk -> Format.fprintf ppf "dedukti@ "
   | Parsetree.EL_external s -> Format.fprintf ppf "%s@ " s
 ;;
 
@@ -636,6 +637,11 @@ and pp_proof_desc ppf = function
       Format.fprintf ppf "@[<2>by %a@]" (pp_facts "") facts
   | Parsetree.Pf_coq (enf_deps, s) ->
       Format.fprintf ppf "@[<2>coq proof@ %a"
+        (pp_enforced_dependencies " ") enf_deps;
+      if enf_deps <> [] then Format.fprintf ppf " ";
+      Format.fprintf ppf "@ {*%s*}@]" s
+  | Parsetree.Pf_dk (enf_deps, s) ->
+      Format.fprintf ppf "@[<2>dedukti proof@ %a"
         (pp_enforced_dependencies " ") enf_deps;
       if enf_deps <> [] then Format.fprintf ppf " ";
       Format.fprintf ppf "@ {*%s*}@]" s
