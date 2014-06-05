@@ -45,7 +45,7 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
     print_ctx out_fmter tys =
   List.iter
     (fun ty ->
-      Format.fprintf out_fmter "(%a : Set)@ "
+      Format.fprintf out_fmter "(%a : cc.uT)@ "
         (Types.pp_type_simple_to_dk print_ctx) ty)
     tys
 ;;
@@ -143,7 +143,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
   (* Now, generates the type definition's body. *)
   match type_descr.Env.TypeInformation.type_kind with
    | Env.TypeInformation.TK_abstract ->
-       Format.fprintf out_fmter "@[<2>Definition %a__t@ "
+       Format.fprintf out_fmter "@[<2>%a__t@ "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
@@ -161,7 +161,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
        else env
    | Env.TypeInformation.TK_external (external_expr, external_mapping) ->
        (begin
-       Format.fprintf out_fmter "@[<2>Definition %a__t@ "
+       Format.fprintf out_fmter "@[<2>%a__t@ "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
@@ -223,7 +223,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
           constructors definitions). *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
          print_ctx out_fmter type_def_params;
-       Format.fprintf out_fmter ":@ Set :=@ ";
+       Format.fprintf out_fmter ":@ cc.uT :=@ ";
        (* Qualify constructor if we are printing a fact for Zenon and the
           location where we generate it is not in the compilation unit
           hosting the type definition. Drop the file-system full path (was

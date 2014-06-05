@@ -84,9 +84,7 @@ let toplevel_let_def_compile ctx env let_def =
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
-         let binder =
-           if rec_status <> Env.DkGenInformation.RC_non_rec then "Fixpoint"
-           else "Let" in
+         let binder = "" in
          Species_record_type_dk_generation.let_binding_compile
            ctx ~binder ~opt_term_proof ~local_idents: []
            ~in_recursive_let_section_of
@@ -301,6 +299,7 @@ let root_compile ~current_unit ~out_file_name stuff =
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.DkGenEnv.empty ()) in
+  Format.fprintf out_fmter "#NAME %s.@\n" current_unit;
   try
     List.iter
       (fun data ->

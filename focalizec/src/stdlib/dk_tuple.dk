@@ -1,43 +1,43 @@
 #NAME dk_tuple.
 
-tuple : cc.uT -> cc.uT -> cc.uT.
-Tuple : cc.uT -> cc.uT -> Type.
-[ A : cc.uT, B : cc.uT ] Tuple A B --> cc.eT (tuple A B).
+prod : cc.uT -> cc.uT -> cc.uT.
+Prod : cc.uT -> cc.uT -> Type.
+[ A : cc.uT, B : cc.uT ] Prod A B --> cc.eT (prod A B).
 
-cpl : A : cc.uT ->
+pair : A : cc.uT ->
       B : cc.uT ->
       cc.eT A ->
       cc.eT B ->
-      Tuple A B.
+      Prod A B.
 
-fst : A : cc.uT -> B : cc.uT -> Tuple A B -> cc.eT A.
-snd : A : cc.uT -> B : cc.uT -> Tuple A B -> cc.eT B.
+fst : A : cc.uT -> B : cc.uT -> Prod A B -> cc.eT A.
+snd : A : cc.uT -> B : cc.uT -> Prod A B -> cc.eT B.
 
 [A : cc.uT, B : cc.uT, a : cc.eT A, b : cc.eT B]
-    fst A B (cpl A B a b) --> a.
+    fst A B (pair A B a b) --> a.
 [A : cc.uT, B : cc.uT, a : cc.eT A, b : cc.eT B]
-    snd A B (cpl A B a b) --> b.
+    snd A B (pair A B a b) --> b.
 
-dTuple : A : cc.uT -> (cc.eT A -> cc.uT) -> cc.uT.
-DTuple : A : cc.uT -> (cc.eT A -> cc.uT) -> Type.
-[ A : cc.uT, B : cc.eT A -> cc.uT ] DTuple A B --> cc.eT (dTuple A B).
+dprod : A : cc.uT -> (cc.eT A -> cc.uT) -> cc.uT.
+Dprod : A : cc.uT -> (cc.eT A -> cc.uT) -> Type.
+[ A : cc.uT, B : cc.eT A -> cc.uT ] Dprod A B --> cc.eT (dprod A B).
 
-dcpl : A : cc.uT ->
+dpair : A : cc.uT ->
        B : (cc.eT A -> cc.uT) ->
        a : cc.eT A ->
        cc.eT (B a) ->
-       DTuple A B.
+       Dprod A B.
 
 dfst : A : cc.uT ->
        B : (cc.eT A -> cc.uT) ->
-       DTuple A B ->
+       Dprod A B ->
        cc.eT A.
 dsnd : A : cc.uT ->
        B : (cc.eT A -> cc.uT) ->
-       t : DTuple A B ->
+       t : Dprod A B ->
        cc.eT (B (dfst A B t)).
 
 [A : cc.uT, B : (cc.eT A -> cc.uT), a : cc.eT A, b : cc.eT (B a)]
-    dfst A B (dcpl A B a b) --> a.
+    dfst A B (dpair A B a b) --> a.
 [A : cc.uT, B : (cc.eT A -> cc.uT), a : cc.eT A, b : cc.eT (B a)]
-    dsnd A B (dcpl A B a b) --> b.
+    dsnd A B (dpair A B a b) --> b.

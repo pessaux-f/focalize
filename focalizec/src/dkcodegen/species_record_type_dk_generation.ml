@@ -570,8 +570,8 @@ let generate_pattern ~force_polymorphic_explicit_args ctx dkctx env pattern =
     | [] -> ()
     | [last] -> rec_gen_pat last
     | h :: q ->
+        if comma then Format.fprintf out_fmter "dk_tuple.pair@ " ;
         rec_gen_pat h ;
-        if comma then Format.fprintf out_fmter "," ;
         Format.fprintf out_fmter "@ " ;
         rec_generate_pats_list ~comma: comma q in
   (* ********************** *)
@@ -701,8 +701,8 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the binder and the bound name. *)
-  Format.fprintf out_fmter "%s@ %a"
-    binder Parsetree_utils.pp_vname_with_operators_expanded
+  Format.fprintf out_fmter "%a"
+    Parsetree_utils.pp_vname_with_operators_expanded
     bd.Parsetree.ast_desc.Parsetree.b_name ;
   (* Build the print context. *)
   let print_ctx = {
@@ -724,7 +724,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
      the type variable of the function argument's type. *)
   List.iter
     (fun var ->
-      Format.fprintf out_fmter "@ (%a : Set)"
+      Format.fprintf out_fmter "@ (%a : cc.uT)"
         Types.pp_type_variable_to_dk var)
     generalized_vars ;
   let params_with_type = pre_computed_bd_info.lbpc_params_with_type in
@@ -733,7 +733,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
     (fun (param_vname, pot_param_ty) ->
       match pot_param_ty with
        | Some param_ty ->
-           Format.fprintf out_fmter "@ (%a : %a)"
+           Format.fprintf out_fmter "@ (%a : cc.eT %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
              (Types.pp_type_simple_to_dk print_ctx) param_ty
        | None ->
@@ -827,7 +827,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
           the result value of the "let". *)
        assert false
    | Some t ->
-       Format.fprintf out_fmter "@ :@ %a"
+       Format.fprintf out_fmter "@ :@ cc.eT %a"
          (Types.pp_type_simple_to_dk print_ctx) t
   ) ;
   (* Output now the ":=" sign ending the Dk function's "header".
@@ -985,7 +985,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                   Types.extract_fun_ty_arg ~self_manifest: None accu_ty in
                 let res_ty =
                   Types.extract_fun_ty_result ~self_manifest: None accu_ty in
-                Format.fprintf out_fmter "(%a :@ %a)@ "
+                Format.fprintf out_fmter "(%a :@ cc.eT %a)@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
                   (Types.pp_type_simple_to_dk print_ctx) arg_ty ;
                 (* Return the remainder of the type to continue. *)
@@ -1174,9 +1174,9 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
     | [] -> ()
     | [last] -> rec_generate_expr loc_idents env last
     | h :: q ->
+        if comma then Format.fprintf out_fmter "dk_tuple.pair@ ";
         rec_generate_expr loc_idents env h ;
-        if comma then Format.fprintf out_fmter ",@ "
-        else Format.fprintf out_fmter "@ " ;
+        Format.fprintf out_fmter "@ " ;
         rec_generate_exprs_list ~comma loc_idents env q in
 
 
@@ -1359,7 +1359,7 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
     (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
       match param_kind with
        | Types.CCMI_is ->
-           Format.fprintf ppf "@[<1>(%s_T :@ Set)@ @]" param_name
+           Format.fprintf ppf "@[<1>(%s_T :@ cc.uT)@ @]" param_name
        | Types.CCMI_in provenance ->
            (* We generate the lambda-lifting for "IN" parameter here (not their
               carrier, since if needed it has mandatorily be generated as a
@@ -1370,10 +1370,10 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
               name) to avoid doubles. *)
            match provenance with
             | Types.SCK_species_parameter ->
-                Format.fprintf ppf "@[<1>(_p_%s_%s :@ %s_T)@ @]"
+                Format.fprintf ppf "@[<1>(_p_%s_%s :@ cc.eT %s_T)@ @]"
                   param_name param_name param_ty_coll
             | Types.SCK_toplevel_collection | Types.SCK_toplevel_species ->
-                Format.fprintf ppf "@[<1>(_p_%s_%s :@ "
+                Format.fprintf ppf "@[<1>(_p_%s_%s :@ cc.eT "
                   param_name param_name ;
                 if param_ty_mod <> current_unit then
                   Format.fprintf ppf "%s." param_ty_mod ;
@@ -1457,12 +1457,12 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
             (Parsetree_utils.vname_as_string_with_operators_expanded meth) in
           match meth_ty_kind with
            | Parsetree_utils.DETK_computational ty ->
-               Format.fprintf ppf "(%s : %a)@ "
+               Format.fprintf ppf "(%s : cc.eT %a)@ "
                  llift_name
                  (Types.pp_type_simple_to_dk print_ctx)
                  ty
            | Parsetree_utils.DETK_logical lexpr ->
-               Format.fprintf ppf "(%s : " llift_name ;
+               Format.fprintf ppf "(%s : cc.eP " llift_name ;
                generate_logical_expr ctx
                  ~in_recursive_let_section_of: [] ~local_idents: []
                  ~self_methods_status: (SMS_from_param species_param_name)
@@ -1511,9 +1511,9 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
     generate_record_type_parameters
       ctx env field_abstraction_infos in
   (* Print the type of the record and it's constructor. *)
-  Format.fprintf out_fmter ": Type :=@ mk_record {@\n"  ;
+  Format.fprintf out_fmter ": cc.uT :=@ mk_record {@\n"  ;
   (* Always generate the "rep". *)
-  Format.fprintf out_fmter "@[<2>rf_T : Set" ;
+  Format.fprintf out_fmter "@[<2>rf_T : cc.uT" ;
   (* We now extend the collections_carrier_mapping with ourselve known.
      Hence, if we refer to our "rep" we will be directly mapped onto the
      "rf_T" without needing to re-construct this name each time. Do same
@@ -1558,7 +1558,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
           Format.fprintf out_fmter "(* From species %a. *)@\n"
             Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
           (* Field is prefixed by the species name for sake of unicity. *)
-          Format.fprintf out_fmter "@[<2>rf_%a : %a"
+          Format.fprintf out_fmter "@[<2>rf_%a : cc.eT %a"
             Parsetree_utils.pp_vname_with_operators_expanded n
             (Types.pp_type_simple_to_dk print_ctx) ty ;
           if semi then Format.fprintf out_fmter " ;" ;
@@ -1572,7 +1572,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
             Format.fprintf out_fmter "(* From species %a. *)@\n"
               Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
             (* Field is prefixed by the species name for sake of unicity. *)
-            Format.fprintf out_fmter "@[<2>rf_%a : %a"
+            Format.fprintf out_fmter "@[<2>rf_%a : cc.eT %a"
               Parsetree_utils.pp_vname_with_operators_expanded n
               (Types.pp_type_simple_to_dk print_ctx) ty ;
             if semi then Format.fprintf out_fmter " ;" ;
@@ -1587,7 +1587,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
         Format.fprintf out_fmter "(* From species %a. *)@\n"
           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
         (* Field is prefixed by the species name for sake of unicity. *)
-        Format.fprintf out_fmter "@[<2>rf_%a :@ "
+        Format.fprintf out_fmter "@[<2>rf_%a :@ cc.eT "
           Parsetree_utils.pp_vname_with_operators_expanded n ;
         (* Generate the Dk code representing the proposition.
            No local idents in the context because we just enter the scope of a
