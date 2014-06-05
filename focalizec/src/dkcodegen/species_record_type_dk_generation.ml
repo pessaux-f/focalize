@@ -1169,12 +1169,33 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
         rec_generate_record_field_exprs_list env loc_idents q
 
 
+  and generate_expression_type (e : Parsetree.expr) =
+    match e.Parsetree.ast_type with
+    | Parsetree.ANTI_none
+    | Parsetree.ANTI_irrelevant
+    | Parsetree.ANTI_scheme _ ->
+       assert false     (* An expression should have a meaningful type *)
+    | Parsetree.ANTI_type st ->
+       Types.pp_type_simple_to_dk print_ctx out_fmter st
+
+  and rec_generate_exprs_type_list ~comma loc_idents env = function
+    | [] -> ()
+    | [last] -> generate_expression_type last
+    | h :: q ->
+       if comma then Format.fprintf out_fmter "dk_tuple.prod@ ";
+       generate_expression_type h;
+       Format.fprintf out_fmter "@ ";
+       rec_generate_exprs_type_list ~comma loc_idents env q
 
   and rec_generate_exprs_list ~comma loc_idents env = function
     | [] -> ()
     | [last] -> rec_generate_expr loc_idents env last
     | h :: q ->
         if comma then Format.fprintf out_fmter "dk_tuple.pair@ ";
+        generate_expression_type h;
+        Format.fprintf out_fmter "@ ";
+        rec_generate_exprs_type_list ~comma loc_idents env q;
+        Format.fprintf out_fmter "@ ";
         rec_generate_expr loc_idents env h ;
         Format.fprintf out_fmter "@ " ;
         rec_generate_exprs_list ~comma loc_idents env q in
