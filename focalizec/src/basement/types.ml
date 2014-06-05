@@ -1801,12 +1801,9 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     match ty with
     | ST_var ty_var -> internal_pp_var_to_dk ppf ty_var
     | ST_arrow (ty1, ty2) ->
-        (* Arrow priority: 2. *)
-        if prio >= 2 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>%a@ ->@ %a@]"
+        Format.fprintf ppf "@[<1>(@[<2>cc.Arrow@ %a@ %a@])@]"
           (rec_pp_to_dk ctx 2) ty1
           (rec_pp_to_dk ctx 1) ty2 ;
-        if prio >= 2 then Format.fprintf ppf ")@]"
     | ST_sum_arguments tys ->
         (* In dk, constructors' arguments are curried, not tupled. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
@@ -1816,7 +1813,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>((%a)%%type)@]"
+        Format.fprintf ppf "@[<2>(%a)@]"
           (rec_pp_to_dk_tuple ctx 3) tys ;
         if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_construct (type_name, arg_tys) ->
@@ -1905,7 +1902,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | [last] ->
         Format.fprintf ppf "%a" (rec_pp_to_dk ctx prio) last
     | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "%a@ * %a"
+        Format.fprintf ppf "dk_tuple.prod@ %a@ %a"
           (rec_pp_to_dk ctx prio) ty1
           (rec_pp_to_dk_tuple ctx prio)
           (ty2 :: rem)
@@ -1917,7 +1914,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | [last] ->
         Format.fprintf ppf "%a" (rec_pp_to_dk ctx prio) last
     | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "%a@ -> %a"
+        Format.fprintf ppf "cc.Arrow@ %a@ %a"
           (rec_pp_to_dk ctx prio) ty1
           (rec_pp_to_dk_sum_arguments ctx prio)
           (ty2 :: rem)

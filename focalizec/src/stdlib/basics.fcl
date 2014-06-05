@@ -114,7 +114,7 @@ type list ('a) =
               Definition list__t_ind := list_ind.
               Definition list__t_rect := list_rect.
               Definition list__t_rec := list_rec *}
-  | dedukti -> {* (dk_list.list __var_a) *}
+  | dedukti -> {* dk_list.list __var_a *}
 
   with [] =
   | caml -> {* [] *}
