@@ -1052,26 +1052,63 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          Format.fprintf out_fmter ")@]" ;
      | Parsetree.E_match (expr, pats_exprs) ->
          (begin
-         Format.fprintf out_fmter "@[<1>match " ;
+             (* Dedukti has no term-level pattern-matching in the sence that *)
+             (* pattern-matching can only occure in toplevel rewrie-rules. *)
+             (* Hence we need a different match term for each matchable type,
+                we assume that for each matchable type, all constructors C_i are
+                defined in the same file and that a patterm-matching constant
+                match__C_0__...__C_n is also defined in this file. *)
+             (* We also assume that the pattern matching has exactly one case *)
+             (* per constructor. *)
+             let patterns : Parsetree.pattern list = List.map fst pats_exprs in
+             let patt_constructor (patt : Parsetree.pattern) : Parsetree.ident_desc
+               = match patt.Parsetree.ast_desc with
+               | Parsetree.P_constr (cid, _) ->
+                  let Parsetree.CI id = cid.Parsetree.ast_desc in
+                  id.Parsetree.ast_desc
+               | Parsetree.P_tuple (_) ->
+                  Parsetree.I_global (Parsetree.Qualified
+                                        ("dk_tuple", Parsetree.Vlident "pair"))
+               | _ -> assert false
+             in
+             let patt_constructors = List.map patt_constructor patterns in
+             let patterns_file_name : Types.fname = match List.hd patt_constructors with
+               | Parsetree.I_global (Parsetree.Qualified (m, _)) -> m
+               | _ -> assert false
+             in
+             let pattern_vnames =
+               List.sort compare
+                         (List.map
+                            (function
+                                Parsetree.I_global (Parsetree.Qualified (_, c)) -> c
+                              | _ -> assert false)
+                            patt_constructors)
+             in
+             Format.fprintf out_fmter "@[<1>%s.match__" patterns_file_name;
+             List.iter
+               (Format.fprintf
+                  out_fmter
+                  "%a"
+                  Parsetree_utils.pp_vname_with_operators_expanded)
+               pattern_vnames;
+             Format.fprintf out_fmter "@ ";
          rec_generate_expr loc_idents env expr ;
-         Format.fprintf out_fmter " with" ;
          List.iter
            (fun (pattern, expr) ->
              (* My indentation style: indent of 4 between *)
              (* the pattern and its related processing.   *)
-             Format.fprintf out_fmter "@\n@[<4>| " ;
+             Format.fprintf out_fmter "@\n@[<4>( " ;
              generate_pattern
                ~force_polymorphic_explicit_args: false ctx print_ctx env
                pattern;
-             Format.fprintf out_fmter " =>@\n" ;
              (* Here, each name of the pattern may mask a "in"-parameter. *)
              let loc_idents' =
                (Parsetree_utils.get_local_idents_from_pattern pattern) @
                loc_idents in
              rec_generate_expr loc_idents' env expr ;
-             Format.fprintf out_fmter "@]")
+             Format.fprintf out_fmter ")@]")
            pats_exprs ;
-         Format.fprintf out_fmter "@\nend@]"
+         Format.fprintf out_fmter "@]"
          end)
      | Parsetree.E_if (expr1, expr2, expr3) ->
          Format.fprintf out_fmter "@[<2>(if@ " ;

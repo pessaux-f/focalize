@@ -35,15 +35,12 @@ exception Logical_methods_only_inside_species of Location.t ;;
 
 
 (* ************************************************************************** *)
-(** {b Descr}: Generates code for a toplevel recursive or not function.
-    Currently, toplevel recursive functions are always generated with
-    "Fixpoint"                                                                *)
+(** {b Descr}: Generates code for a toplevel function.                        *)
 (* ************************************************************************** *)
 let toplevel_let_def_compile ctx env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
     raise (Logical_methods_only_inside_species let_def.Parsetree.ast_loc) ;
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* Currently, toplevel recursive functions are generated with "Fixpoint". *)
   let rec_status =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
      | Parsetree.RF_no_rec -> Env.DkGenInformation.RC_non_rec
