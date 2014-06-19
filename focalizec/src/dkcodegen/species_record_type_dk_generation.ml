@@ -662,7 +662,7 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
   let (new_env, reved_infos) =
     List.fold_left
       (fun (env_accu, infos_accu) binding ->
-        let (env', info) = 
+        let (env', info) =
           pre_compute_let_binding_info_for_rec
             ~rec_status ~toplevel env_accu binding in
         (env', info :: infos_accu))
@@ -671,12 +671,12 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
   (new_env, (List.rev reved_infos))
 ;;
 
-    
+
 
 (* ************************************************************************** *)
 (** {b Descr}: Code generation for *one* let binding, recursive of not.
     If the binding is recursive, then whatever the choosen Dk primitive ("fix"
-    or "Fixpoint"), 
+    or "Fixpoint"),
     This function is called by [Main_dk_generation.toplevel_let_def_compile]
     to generate code for toplevel definitions and by [let_in_def_compile] to
     generate code for local definitions.
@@ -685,7 +685,7 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
     However, in case of recursive function with no termination proof or a
     non-"structural" proof, it considers invariably that the recursion decreases
     on the fisrt argument of the function and dumps a {struct fst arg}.
-    
+
     {b Args}:
      - [binder]: What Dk construct to use to introduce the definition, i.e.
        "Let", "let", "let fix", "Fixpoint" or "with".
@@ -1402,7 +1402,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
     Next come the extra parameters coming from the methods we depend on.
     Returns the list of species params and methods required to create a value
     of the type record, i.e. the one we found dependencies on in the body of
-    the record type ordered the same way they were lambda-lifted. 
+    the record type ordered the same way they were lambda-lifted.
 
     Used when generating the record type definition.
 
