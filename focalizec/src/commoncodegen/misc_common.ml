@@ -697,7 +697,7 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
              sp_param_ty_name) ^
           "_T" in
         the_list_reversed := llift_name :: !the_list_reversed)
-      ai.Abstractions.ai_used_species_parameter_tys ;
+      ai.Env.TypeInformation.ad_used_species_parameter_tys ;
   (* Next, abstract according to the species's parameters methods the current
      method depends on. *)
   List.iter
@@ -722,7 +722,7 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
              (Parsetree_utils.vname_as_string_with_operators_expanded meth))
             :: !the_list_reversed)
         meths_from_param)
-    ai.Abstractions.ai_dependencies_from_params ;
+    ai.Env.TypeInformation.ad_dependencies_from_parameters ;
   (* Next, the extra arguments due to methods of ourselves we depend on.
      They are always present in the species under the name "self_...". *)
   List.iter
@@ -757,7 +757,7 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
               (Parsetree_utils.vname_as_string_with_operators_expanded n) in
             the_list_reversed := llift_name :: !the_list_reversed
        ))
-    ai.Abstractions.ai_min_coq_env ;
+    ai.Env.TypeInformation.ad_min_coq_env ;
   (* Finally, reverse the list to keep the right oder. *)
   List.rev !the_list_reversed
 ;;
@@ -765,7 +765,6 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
 
 
 (* ************************************************************************* *)
-(* Abstractions.field_abstraction_info list -> Types.type_simple option      *)
 (** {b Descr} : Finds among the fields abstractions if there is the
     signature "representation". If finds some, then returns an instance of
     its type scheme. If doesn't find any, returns [None].
@@ -792,11 +791,10 @@ let make_params_list_from_abstraction_info ~care_logical ~care_types ai =
 (* ************************************************************************* *)
 let rec find_self_representation_if_some = function
   | [] -> None
-  | h :: q ->
-      (begin
+  | h :: q -> (
       match h with
-       | Abstractions.FAI_sig ((_, (Parsetree.Vlident "rep"), sch), _) ->
+       | Env.TypeInformation.SF_sig (_, (Parsetree.Vlident "rep"), sch) ->
            Some (Types.specialize sch)
        | _ -> find_self_representation_if_some q
-      end)
+      )
 ;;

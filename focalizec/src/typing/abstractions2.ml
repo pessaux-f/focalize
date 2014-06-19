@@ -707,15 +707,44 @@ let merge_abstraction_infos ai1 ai2 =
 ;;
 
 
+
+(** Used to store the abstraction info of non mutually recursive field and
+    the abstraction infoS of mutually recursive fieldS. *)
+type ('a) variadic_data =
+  | VD_One of 'a
+  | VD_More of 'a list
+;;
+
+
+
 (** May return None is the searched field is "rep" since it may not be
     defined. *)
 let find_field_abstraction_by_name name abstractions =
+  let rec find_in_let_rec let_infos abstr_infos =
+    match (let_infos, abstr_infos) with
+    | ([], []) -> raise Not_found
+    | (((_, n, _, _, _, _, _, _) :: qn), (ai :: qai)) ->
+        if n = name then ai else find_in_let_rec qn qai
+    | (_, _) -> assert false in
   let rec rec_find = function
     | [] ->
         if name = (Parsetree.Vlident "rep") then None
         else assert false
-    | (_from, n, ai) :: q ->
-        if n = name then Some (ai) else rec_find q in
+    | (field, (VD_One ai)) :: q -> (
+        match field with
+         | Env.TypeInformation.SF_sig (_, n, _)
+         | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) 
+         | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
+         | Env.TypeInformation.SF_property (_, n, _, _, _) ->
+             if n = name then Some (ai) else rec_find q
+         | Env.TypeInformation.SF_let_rec _ -> assert false
+       )
+    | (field, (VD_More ais)) :: q -> (
+        match field with
+        | Env.TypeInformation.SF_let_rec l -> (
+            try Some (find_in_let_rec l ais) with Not_found -> rec_find q
+           )
+        | _ -> assert false) in
   rec_find abstractions
 ;;
 
@@ -1385,11 +1414,12 @@ let complete_dependencies_from_params env ~current_unit ~current_species
 
 
 (* ************************************************************************** *)
-(* environment_kind ->                                                        *)
-(*   abstractions_comput_context ->                                           *)
-(*     Env.TypeInformation.species_field list ->                              *)
-(*       internal_field_abstraction_info list                                 *)
-(**
+(* Env.TypingEnv.t ->
+   abstractions_comput_context ->
+   Env.TypeInformation.species_field list ->
+     (Env.TypeInformation.species_field *
+      internal_abstraction_info variadic_data) list
+
    {b Exported} : No.                                                         *)
 (* ************************************************************************** *)
 let __compute_abstractions_for_fields env ctx fields =
@@ -1445,7 +1475,7 @@ let __compute_abstractions_for_fields env ctx fields =
                iai_dependencies_from_params_via_PRM = empty_deps;
                iai_dependencies_from_params_via_completions = empty_deps;
                iai_min_coq_env = [] } in
-             (from, signame, abstr_info) :: abstractions_accu
+             (current_field, (VD_One abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_let (from, name, _, sch, body, _, _, _) ->
              let method_ty = Types.specialize sch in
              (* ATTENTION, the [dependencies_from_params_in_body] is not
@@ -1518,7 +1548,7 @@ let __compute_abstractions_for_fields env ctx fields =
                iai_dependencies_from_params_via_completions =
                  dependencies_from_params_via_didou;
                iai_min_coq_env = min_coq_env } in
-             (from, name, abstr_info) :: abstractions_accu
+             (current_field, (VD_One abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_let_rec l ->
              let deps_infos =
                List.map
@@ -1585,21 +1615,19 @@ let __compute_abstractions_for_fields env ctx fields =
                    (* Now, its minimal Coq typing environment. *)
                    let min_coq_env =
                      MinEnv.minimal_typing_environment universe fields in
-                   let abstr_info = {
-                     iai_used_species_parameter_tys =
-                       all_used_species_parameter_tys;
-                     iai_dependencies_from_params_via_body =
-                       dependencies_from_params_in_bodies;
-                     iai_dependencies_from_params_via_type =
-                       dependencies_from_params_in_type;
-                     iai_dependencies_from_params_via_PRM =
-                       dependencies_from_params_via_prm;
-                     iai_dependencies_from_params_via_completions =
-                       dependencies_from_params_via_didou;
-                     iai_min_coq_env = min_coq_env } in
-                   (from, name, abstr_info))
+                     { iai_used_species_parameter_tys =
+                         all_used_species_parameter_tys;
+                       iai_dependencies_from_params_via_body =
+                         dependencies_from_params_in_bodies;
+                       iai_dependencies_from_params_via_type =
+                         dependencies_from_params_in_type;
+                       iai_dependencies_from_params_via_PRM =
+                         dependencies_from_params_via_prm;
+                       iai_dependencies_from_params_via_completions =
+                         dependencies_from_params_via_didou;
+                       iai_min_coq_env = min_coq_env })
                  l in
-             deps_infos @ abstractions_accu
+             (current_field, (VD_More deps_infos)) :: abstractions_accu
          | Env.TypeInformation.SF_theorem
              (from, name, _, logical_expr, proof, _) ->
                (* ATTENTION, the [dependencies_from_params_in_bodies] is not
@@ -1670,7 +1698,7 @@ let __compute_abstractions_for_fields env ctx fields =
                  iai_dependencies_from_params_via_completions =
                    dependencies_from_params_via_didou;
                  iai_min_coq_env = min_coq_env } in
-               (from, name, abstr_info) :: abstractions_accu
+               (current_field, (VD_One abstr_info)) :: abstractions_accu
          | Env.TypeInformation.SF_property
              (from, name, _, logical_expr, _) ->
                (* ATTENTION, the [dependencies_from_params_in_bodies] is not
@@ -1740,13 +1768,14 @@ let __compute_abstractions_for_fields env ctx fields =
                  iai_dependencies_from_params_via_completions =
                    dependencies_from_params_via_didou;
                  iai_min_coq_env = min_coq_env } in
-               (from, name, abstr_info) :: abstractions_accu)
+               (current_field, (VD_One abstr_info)) :: abstractions_accu)
       []      (* Initial empty abstractions accumulator. *)
       fields in
   (* Finally, put the list of abstractions in the right order, i.e. in the
      order of apparition of the fields in the species. *)
   List.rev reversed_abstractions
 ;;
+
 
 
 
@@ -2067,9 +2096,10 @@ let compute_abstractions_for_fields env ctx fields =
   let internal_abstractions =
     __compute_abstractions_for_fields env ctx fields in
   (* Now convert the internal form of the abstractions information into the
-     public one. *)
-  List.map
-    (function (from, name, iai) ->
+     public one. Make a local function dealing with one binding. We'll map it
+     onto the list of internal abstractions and calling it several times on
+     "let rec" fields. *)
+  let process_one_field from name iai =
       let all_deps_from_params =
         merge_abstraction_infos
           iai.iai_dependencies_from_params_via_body
@@ -2110,8 +2140,32 @@ let compute_abstractions_for_fields env ctx fields =
         Env.TypeInformation.ad_dependencies_from_parameters_in_type =
           mapped_for_record_ty_deps_from_params ;
         Env.TypeInformation.ad_min_coq_env = iai.iai_min_coq_env } in
-      (name, abstraction_info))
-    internal_abstractions
+      (name, abstraction_info) in
+    (* Really do the job. And *do not* fold_left otherwise bindings will be
+       reversed in the list. *)
+    List.fold_right
+      (fun (field, variadic_iai) accu ->
+        match field with
+        | Env.TypeInformation.SF_sig (from, name, _)
+        | Env.TypeInformation.SF_let (from, name, _, _, _, _, _, _)
+        | Env.TypeInformation.SF_theorem (from, name, _, _, _, _)
+        | Env.TypeInformation.SF_property (from, name, _, _, _) ->
+            let iai =
+              match variadic_iai with
+              | VD_One v -> v | VD_More _ -> assert false in
+            (process_one_field from name iai) :: accu
+        | Env.TypeInformation.SF_let_rec fields ->
+            let iais =
+              match variadic_iai with
+              | VD_One _ -> assert false | VD_More vs -> vs in
+            let fields' =
+              List.map2
+                (fun (from, name, _, _, _, _, _, _) i ->
+                  process_one_field from name i)
+                fields iais in
+            fields' @ accu)
+      internal_abstractions
+      [(* Initial accu is empty. *)]
 ;;
 
 

@@ -2712,8 +2712,8 @@ let generate_termination_order_With_Function ctx print_ctx env name
   (* Generate the lambda-lifts for our dependencies. *)
   let (_, ctx, print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx print_ctx env ai.Abstractions.ai_min_coq_env
-      ai.Abstractions.ai_used_species_parameter_tys
+      ~in_section: false ctx print_ctx env ai.Env.TypeInformation.ad_min_coq_env
+      ai.Env.TypeInformation.ad_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
   (* The 2 arguments of any decent order (i.e. the compared values). *)
   Format.fprintf out_fmter "@ (__x __y :@ " ;
@@ -2860,8 +2860,8 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                 ~subset: (List.map fst used_params) in
             generate_theorem_section_if_by_zenon
               ctx print_ctx env
-              ai.Abstractions.ai_min_coq_env ~self_manifest
-              ai.Abstractions.ai_used_species_parameter_tys
+              ai.Env.TypeInformation.ad_min_coq_env ~self_manifest
+              ai.Env.TypeInformation.ad_used_species_parameter_tys
               sorted_deps_from_params generated_fields name
               (ZSGM_from_termination_lemma
                  (order_expr, used_params_indices, recursive_calls)) proof
@@ -2870,8 +2870,8 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
       are under a Section, do not lambda-lift. *)
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: true ctx print_ctx env ai.Abstractions.ai_min_coq_env
-      ai.Abstractions.ai_used_species_parameter_tys
+      ~in_section: true ctx print_ctx env ai.Env.TypeInformation.ad_min_coq_env
+      ai.Env.TypeInformation.ad_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
   (* The termination theorem... *)
   Format.fprintf out_fmter "@[<2>Theorem %a_termination"
@@ -2883,7 +2883,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
      ont the ones involved in recursion decreasing. *)
   let explicit_order =
     Rec_let_gen.OK_wfounded
-      (name, ai.Abstractions.ai_used_species_parameter_tys,
+      (name, ai.Env.TypeInformation.ad_used_species_parameter_tys,
        sorted_deps_from_params, abstracted_methods) in
   Rec_let_gen.generate_termination_lemmas
     new_ctx new_print_ctx env ~explicit_order recursive_calls ;
@@ -2894,8 +2894,8 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
   (* Apply the order to its arguments due to lambda-lifts. *)
   Species_record_type_generation.generate_method_lambda_lifted_arguments
      ~only_for_Self_meths: false out_fmter
-     ai.Abstractions.ai_used_species_parameter_tys sorted_deps_from_params
-     abstracted_methods ;
+     ai.Env.TypeInformation.ad_used_species_parameter_tys
+     sorted_deps_from_params abstracted_methods ;
   Format.fprintf out_fmter ")).@]@\n@\n";
   (* Now, manage the proof of this termination theorem if some is provided. *)
   (match opt_term_pr with
@@ -2936,7 +2936,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                  Species_record_type_generation.
                    generate_method_lambda_lifted_arguments
                      ~only_for_Self_meths: false out_fmter
-                     ai.Abstractions.ai_used_species_parameter_tys
+                     ai.Env.TypeInformation.ad_used_species_parameter_tys
                      sorted_deps_from_params abstracted_methods ;
                  Format.fprintf out_fmter
                    ").@\n\
@@ -3053,8 +3053,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            (* ---> Generate the order depending on the kind of proof. *)
            generate_termination_order_With_Function
              ctx' print_ctx env name params_with_type ai
-             ai.Abstractions.ai_dependencies_from_params generated_fields
-             opt_term_pr ;
+             ai.Env.TypeInformation.ad_dependencies_from_parameters
+             generated_fields opt_term_pr ;
            (* ---> Start the Coq "Section" containing the termination theorem as
               expected by Function and the definition of the Coq Function. *)
            Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
@@ -3062,7 +3062,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            (* ---> Generate the termination proof. *)
            generate_termination_proof_With_Function ctx' print_ctx env
              ~self_manifest name params_with_type ai
-             ai.Abstractions.ai_dependencies_from_params
+             ai.Env.TypeInformation.ad_dependencies_from_parameters
              generated_fields recursive_calls opt_term_pr
           )
          else (
@@ -3073,9 +3073,11 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            (* ---> Now, generate the prelude of the only method introduced by
               "let rec". *)
            generate_field_definition_prelude
-             ~in_section: true ctx' print_ctx env ai.Abstractions.ai_min_coq_env
-             ai.Abstractions.ai_used_species_parameter_tys
-             ai.Abstractions.ai_dependencies_from_params generated_fields
+             ~in_section: true ctx' print_ctx env
+             ai.Env.TypeInformation.ad_min_coq_env
+             ai.Env.TypeInformation.ad_used_species_parameter_tys
+             ai.Env.TypeInformation.ad_dependencies_from_parameters
+             generated_fields
           ) in
 
        if not (Configuration.get_experimental ()) then (
@@ -3103,8 +3105,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          (* Apply the order to its arguments due to lambda-lifts. *)
          Species_record_type_generation.generate_method_lambda_lifted_arguments
            ~only_for_Self_meths: false out_fmter
-           ai.Abstractions.ai_used_species_parameter_tys
-           ai.Abstractions.ai_dependencies_from_params
+           ai.Env.TypeInformation.ad_used_species_parameter_tys
+           ai.Env.TypeInformation.ad_dependencies_from_parameters
            abstracted_methods ;
          Format.fprintf out_fmter ")@ __arg}"
         ) ;
@@ -3140,9 +3142,9 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        (* Enforce "Variables" to be used to prevent Coq from removing it. We
           generate "assert" for this sake. *)
        generate_asserts_for_dependencies
-         out_fmter ai.Abstractions.ai_dependencies_from_params
-         ai.Abstractions.ai_min_coq_env
-         ai.Abstractions.ai_used_species_parameter_tys;
+         out_fmter ai.Env.TypeInformation.ad_dependencies_from_parameters
+         ai.Env.TypeInformation.ad_min_coq_env
+         ai.Env.TypeInformation.ad_used_species_parameter_tys;
        (* Print the proof using the above material. *)
        if Configuration.get_experimental () then (
          (* ---> Generate the soldering Coq script. *)
@@ -3215,9 +3217,10 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        ignore
          (generate_field_definition_prelude
             ~in_section: false new_ctx new_print_ctx env
-            ai.Abstractions.ai_min_coq_env
-            ai.Abstractions.ai_used_species_parameter_tys
-            ai.Abstractions.ai_dependencies_from_params generated_fields) ;
+            ai.Env.TypeInformation.ad_min_coq_env
+            ai.Env.TypeInformation.ad_used_species_parameter_tys
+            ai.Env.TypeInformation.ad_dependencies_from_parameters
+            generated_fields) ;
        Format.fprintf out_fmter " :=@ " ;
        (* Now, emit the code of the final definition, using the definition
           created in the above Section enclosed by the above namespace.
@@ -3226,8 +3229,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
           instead of "Termination_fct_namespace.fct_equation". *)
        generate_final_recursive_definifion_body_With_Function
          out_fmter ~in_zenon_by_def: false species_name name
-         ai.Abstractions.ai_used_species_parameter_tys
-         ai.Abstractions.ai_dependencies_from_params
+         ai.Env.TypeInformation.ad_used_species_parameter_tys
+         ai.Env.TypeInformation.ad_dependencies_from_parameters
          abstracted_methods ;
        (* Close the pretty print box. *)
        Format.fprintf out_fmter ".@]@\n" ;
@@ -3237,13 +3240,13 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Misc_common.cfm_method_name = name ;
          Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
          Misc_common.cfm_used_species_parameter_tys =
-           ai.Abstractions.ai_used_species_parameter_tys ;
+           ai.Env.TypeInformation.ad_used_species_parameter_tys ;
          Misc_common.cfm_raw_dependencies_from_parameters =
-           ai.Abstractions.ai_raw_dependencies_from_params ;
+           ai.Env.TypeInformation.ad_raw_dependencies_from_params ;
          Misc_common.cfm_dependencies_from_parameters =
-           ai.Abstractions.ai_dependencies_from_params ;
+           ai.Env.TypeInformation.ad_dependencies_from_parameters ;
          Misc_common.cfm_dependencies_from_parameters_in_type =
-           ai.Abstractions.ai_dependencies_from_params_for_record_type ;
+           ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
          Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
        Misc_common.CSF_let_rec [compiled]
 ;;
@@ -3275,9 +3278,10 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx' print_ctx env ai.Abstractions.ai_min_coq_env
-      ai.Abstractions.ai_used_species_parameter_tys
-      ai.Abstractions.ai_dependencies_from_params generated_fields in
+      ~in_section: false ctx' print_ctx env
+      ai.Env.TypeInformation.ad_min_coq_env
+      ai.Env.TypeInformation.ad_used_species_parameter_tys
+      ai.Env.TypeInformation.ad_dependencies_from_parameters generated_fields in
   (* Generate the postlude of the prototype, i.e. non-lifted args with
      their type, the "{ struct xxx }" clause and the return type. Also
      generate the body of the function by the way. *)
@@ -3292,13 +3296,13 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
     Misc_common.cfm_method_name = name ;
     Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
          Misc_common.cfm_used_species_parameter_tys =
-           ai.Abstractions.ai_used_species_parameter_tys ;
+           ai.Env.TypeInformation.ad_used_species_parameter_tys ;
          Misc_common.cfm_raw_dependencies_from_parameters =
-           ai.Abstractions.ai_raw_dependencies_from_params ;
+           ai.Env.TypeInformation.ad_raw_dependencies_from_params ;
          Misc_common.cfm_dependencies_from_parameters =
-           ai.Abstractions.ai_dependencies_from_params ;
+           ai.Env.TypeInformation.ad_dependencies_from_parameters ;
          Misc_common.cfm_dependencies_from_parameters_in_type =
-           ai.Abstractions.ai_dependencies_from_params_for_record_type ;
+           ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
          Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
        Misc_common.CSF_let_rec [compiled]
 ;;
@@ -3313,14 +3317,15 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
 let generate_recursive_let_definition ctx print_ctx env ~self_manifest
-    generated_fields l =
+    fields_abstraction_infos generated_fields l =
   match l with
    | [] ->
        (* A "let", then a fortiori "let rec" construct *)
        (* must at least bind one identifier !          *)
        assert false
-   | [((from, name, params, scheme, body, opt_term_pr, _, _), ai)] ->
+   | [(from, name, params, scheme, body, opt_term_pr, _, _)] ->
        (begin
+       let ai = List.assoc name fields_abstraction_infos in
        (* First of all, only methods defined in the current species must be
           generated. Inherited methods ARE NOT generated again ! *)
        if from.Env.fh_initial_apparition = ctx.Context.scc_current_species
@@ -3350,7 +3355,8 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
             )
         )
        else (
-         (* Just a bit of debug/information if requested. *)
+         (* Just inherited, no code to emit.
+            Start by a bit of debug/information if requested. *)
          if Configuration.get_verbose () then
            Format.eprintf
              "Field '%a' inherited from species '%a' but not \
@@ -3371,19 +3377,18 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
            Misc_common.cfm_method_name = name ;
            Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
            Misc_common.cfm_used_species_parameter_tys =
-             ai.Abstractions.ai_used_species_parameter_tys ;
+             ai.Env.TypeInformation.ad_used_species_parameter_tys ;
            Misc_common.cfm_raw_dependencies_from_parameters =
-             ai.Abstractions.ai_raw_dependencies_from_params ;
+             ai.Env.TypeInformation.ad_raw_dependencies_from_params ;
            Misc_common.cfm_dependencies_from_parameters =
-             ai.Abstractions.ai_dependencies_from_params ;
+             ai.Env.TypeInformation.ad_dependencies_from_parameters ;
            Misc_common.cfm_dependencies_from_parameters_in_type =
-             ai.Abstractions.ai_dependencies_from_params_for_record_type ;
+             ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
            Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
          Misc_common.CSF_let_rec [compiled_field]
          )
        end)
-   | ((_, name1, _, _, _, _, _, _), _) ::
-     ((_, name2, _, _, _, _, _, _), _) :: _ ->
+   | (_, name1, _, _, _, _, _, _) :: (_, name2, _, _, _, _, _, _) :: _ ->
        raise (Recursion.MutualRecursion (name1, name2))
 ;;
 
@@ -3392,43 +3397,44 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
 (** generated_fields : The list of previous fields of the species that have
     already be generated. Used while generating theorems to know what to apply
         to the methods generators the theorem depends on. *)
-let generate_methods ctx print_ctx env ~self_manifest generated_fields =
-     function
-  | Abstractions.FAI_sig ((from, name, sch), abstraction_info) ->
+let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos
+    generated_fields = function
+  | Env.TypeInformation.SF_sig (from, name, sch) ->
       (* Only declared, hence, no code to generate yet ! *)
       if Configuration.get_verbose () then
         Format.eprintf "Coq code for signature '%a' leads to void code.@."
           Parsetree_utils.pp_vname_with_operators_expanded name;
+      let abstraction_info = List.assoc name fields_abstraction_infos in
       (* Nothing very exciting to keep for the collection generator. *)
       let compiled_field = {
-        Misc_common.cfm_is_logical = false;
-        Misc_common.cfm_from_species = from;
-        Misc_common.cfm_method_name = name;
-        Misc_common.cfm_method_scheme = Env.MTK_computational sch;
+        Misc_common.cfm_is_logical = false ;
+        Misc_common.cfm_from_species = from ;
+        Misc_common.cfm_method_name = name ;
+        Misc_common.cfm_method_scheme = Env.MTK_computational sch ;
         (* Since no code is generated for "sig", no need to get bored with
            species parameters carriers that may appear in the type of the
            "sig". *)
         Misc_common.cfm_used_species_parameter_tys =
-          abstraction_info.Abstractions.ai_used_species_parameter_tys;
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys ;
         (* Since the "sig " has no code, it can't refer to parameters'
            methods ! *)
-        Misc_common.cfm_raw_dependencies_from_parameters = [];
-        Misc_common.cfm_dependencies_from_parameters = [];
+        Misc_common.cfm_raw_dependencies_from_parameters = [] ;
+        Misc_common.cfm_dependencies_from_parameters = [] ;
         Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
         (* Since the "sig " has no code, it can't refer to some of our
            methods ! *)
         Misc_common.cfm_coq_min_typ_env_names = [] } in
       Misc_common.CSF_sig compiled_field
-  | Abstractions.FAI_let ((from, name, params, scheme, body, _, _, _),
-                          abstraction_info) ->
+  | Env.TypeInformation.SF_let (from, name, params, scheme, body, _, _, _) ->
+      let abstraction_info = List.assoc name fields_abstraction_infos in
       (* No recursivity, then the method cannot call itself in its body then
          no need to set the [scc_lambda_lift_params_mapping] of the context. *)
       let coq_min_typ_env_names =
         generate_non_recursive_field_binding
-          ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env
+          ctx print_ctx env abstraction_info.Env.TypeInformation.ad_min_coq_env
          ~self_manifest
-          abstraction_info.Abstractions.ai_used_species_parameter_tys
-          abstraction_info.Abstractions.ai_dependencies_from_params
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters
           generated_fields (from, name, params, scheme, body) in
       (* Now, build the [compiled_field_memory], even if the method was not
          really generated because it was inherited. *)
@@ -3441,26 +3447,27 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
         Misc_common.cfm_used_species_parameter_tys =
-          abstraction_info.Abstractions.ai_used_species_parameter_tys ;
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys ;
         Misc_common.cfm_raw_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_raw_dependencies_from_params ;
+          abstraction_info.Env.TypeInformation.ad_raw_dependencies_from_params ;
         Misc_common.cfm_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_dependencies_from_params;
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters;
         Misc_common.cfm_dependencies_from_parameters_in_type =
-          abstraction_info.Abstractions.ai_dependencies_from_params_for_record_type ;
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_let compiled_field
-  | Abstractions.FAI_let_rec l ->
+  | Env.TypeInformation.SF_let_rec l ->
       generate_recursive_let_definition
-        ctx print_ctx env ~self_manifest generated_fields l
-  | Abstractions.FAI_theorem ((from, name, _, logical_expr, pr, _),
-                              abstraction_info) ->
+        ctx print_ctx env ~self_manifest fields_abstraction_infos
+        generated_fields l
+  | Env.TypeInformation.SF_theorem  (from, name, _, logical_expr, pr, _) ->
+      let abstraction_info = List.assoc name fields_abstraction_infos in
       let coq_min_typ_env_names =
         generate_theorem
-          ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env
+          ctx print_ctx env abstraction_info.Env.TypeInformation.ad_min_coq_env
           ~self_manifest
-          abstraction_info.Abstractions.ai_used_species_parameter_tys
-          abstraction_info.Abstractions.ai_dependencies_from_params
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters
           generated_fields (from, name, logical_expr) pr in
       let compiled_field = {
         Misc_common.cfm_is_logical = true ;
@@ -3468,30 +3475,31 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_logical logical_expr;
         Misc_common.cfm_used_species_parameter_tys =
-          abstraction_info.Abstractions.ai_used_species_parameter_tys;
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys;
         Misc_common.cfm_raw_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_raw_dependencies_from_params;
+          abstraction_info.Env.TypeInformation.ad_raw_dependencies_from_params;
         Misc_common.cfm_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_dependencies_from_params;
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters;
         Misc_common.cfm_dependencies_from_parameters_in_type =
-         abstraction_info.Abstractions.ai_dependencies_from_params_for_record_type ;
+         abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
         Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_theorem compiled_field
-  | Abstractions.FAI_property ((from, name, _, lexpr, _), abstraction_info) ->
+  | Env.TypeInformation.SF_property (from, name, _, lexpr, _) ->
       (* "Property"s are discarded. However we compute their dependencies. *)
+      let abstraction_info = List.assoc name fields_abstraction_infos in
       let compiled_field = {
         Misc_common.cfm_is_logical = true ;
         Misc_common.cfm_from_species = from ;
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_logical lexpr;
         Misc_common.cfm_used_species_parameter_tys =
-          abstraction_info.Abstractions.ai_used_species_parameter_tys ;
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys ;
         Misc_common.cfm_raw_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_raw_dependencies_from_params;
+          abstraction_info.Env.TypeInformation.ad_raw_dependencies_from_params;
         Misc_common.cfm_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_dependencies_from_params ;
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters ;
         Misc_common.cfm_dependencies_from_parameters_in_type =
-          abstraction_info.Abstractions.ai_dependencies_from_params_for_record_type ;
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
         Misc_common.cfm_coq_min_typ_env_names = [] } in
       Misc_common.CSF_property compiled_field
 ;;
@@ -4091,7 +4099,7 @@ let generate_collection_generator ctx env compiled_species_fields
 
 
 let species_compile env ~current_unit out_fmter species_def species_descr
-    dep_graph abstr_infos =
+    dep_graph fields_abstraction_infos =
   let species_def_desc = species_def.Parsetree.ast_desc in
   let species_name = species_def_desc.Parsetree.sd_name in
   (* Just a bit of debug. *)
@@ -4156,7 +4164,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
      beforehand know is [Self] is manifest or not. I.e. if there is a
      signature called "representation". *)
   let self_manifest =
-    Misc_common.find_self_representation_if_some field_abstraction_infos in
+    Misc_common.find_self_representation_if_some
+      species_descr.Env.TypeInformation.spe_sig_methods in
   (* Now, generate the Coq code of the methods. *)
   let compiled_fields =
     List.fold_left
@@ -4164,11 +4173,12 @@ let species_compile env ~current_unit out_fmter species_def species_descr
         (* Pass the accu to be able to remind the already generated fields. *)
         let compiled_field =
           generate_methods
-            ctxt_no_ccmap print_ctx env' ~self_manifest accu field in
+            ctxt_no_ccmap print_ctx env' ~self_manifest
+            fields_abstraction_infos accu field in
         (* Not efficient, but required to keep the fields in the right order. *)
         accu @ [compiled_field])
       []
-      field_abstraction_infos in
+      species_descr.Env.TypeInformation.spe_sig_methods in
   (* Now build the list of the species parameters names to make them public in
      the future ml generation environnment. *)
   let species_params_names_n_kinds =

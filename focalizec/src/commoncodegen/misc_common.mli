@@ -75,8 +75,9 @@ type let_connector =
 
 
 val make_params_list_from_abstraction_info :
-  care_logical: bool -> care_types: bool -> Abstractions.abstraction_info ->
-  string list
+  care_logical: bool -> care_types: bool ->
+  Env.TypeInformation.field_abstraction_info ->
+    string list
 
 val find_self_representation_if_some :
-  Abstractions.field_abstraction_info list -> Types.type_simple option
+  Env.TypeInformation.species_field list -> Types.type_simple option

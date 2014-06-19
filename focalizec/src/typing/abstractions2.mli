@@ -21,6 +21,7 @@ val compute_abstractions_for_fields :
   Env.TypeInformation.species_field list ->
   (Parsetree.vname * Env.TypeInformation.field_abstraction_info)
   list
+
 val compute_abstractions_for_toplevel_theorem :
   abstractions_comput_context ->
   Parsetree.theorem_def_desc Parsetree.ast ->
