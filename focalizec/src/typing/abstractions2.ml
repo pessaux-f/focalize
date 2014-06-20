@@ -50,6 +50,25 @@ type field_type_kind =
 ;;
 
 
+
+(* ************************************************************************* *)
+(** {b Descr} Serves in [Misc_common.follow_instanciations_for_xxx] and some
+    other functions in [Misc_common] to pass the code generation environment
+    of the current language backend.
+    This information is present in all the code generation environments but
+    these environments have different types.
+    Hence, when we will need to access an environment, with this 2
+    constructors, we will know its type and which primitives to use.
+
+    {b Exported} : Yes.                                                      *)
+(* ************************************************************************* *)
+type environment_kind =
+  | EK_ml of Env.MlGenEnv.t
+  | EK_coq of Env.CoqGenEnv.t
+;;
+
+
+
 type abstractions_comput_context = {
   (** The name of the currently analysed compilation unit. *)
   acc_current_unit : Types.fname ;
@@ -2166,26 +2185,4 @@ let compute_abstractions_for_fields env ctx fields =
             fields' @ accu)
       internal_abstractions
       [(* Initial accu is empty. *)]
-;;
-
-
-
-let compute_abstractions_for_toplevel_theorem ctx theorem =
-  let th_desc = theorem.Parsetree.ast_desc in
-  let (decl_children, def_children) =
-    compute_lambda_liftings_for_toplevel_theorem
-      ctx.acc_dependency_graph_nodes th_desc.Parsetree.th_name in
-  (* Compute the visible universe of the theorem. *)
-  let universe =
-    VisUniverse.visible_universe
-      ctx.acc_dependency_graph_nodes decl_children def_children in
-  (* Now, its minimal Coq typing environment. *)
-  let min_coq_env = MinEnv.minimal_typing_environment universe [] in
-  let abstr_info = {
-    Env.TypeInformation.ad_used_species_parameter_tys = [] ;
-    Env.TypeInformation.ad_raw_dependencies_from_params = [] ;
-    Env.TypeInformation.ad_dependencies_from_parameters = [] ;
-    Env.TypeInformation.ad_dependencies_from_parameters_in_type = [] ;
-    Env.TypeInformation.ad_min_coq_env = min_coq_env } in
-  abstr_info
 ;;

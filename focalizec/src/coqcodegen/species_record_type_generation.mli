@@ -94,6 +94,6 @@ val let_binding_compile :
 
 val generate_record_type :
   Context.species_compil_context ->
-    Env.CoqGenEnv.t -> Env.TypeInformation.species_description ->
-      Abstractions.field_abstraction_info list ->
-        (Parsetree.vname * Env.ordered_methods_from_params) list
+  Env.CoqGenEnv.t -> Env.TypeInformation.species_description ->
+  (Parsetree.vname * Env.TypeInformation.field_abstraction_info) list ->
+    (Parsetree.vname * Env.ordered_methods_from_params) list

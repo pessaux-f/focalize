@@ -21,7 +21,7 @@ ROOT_DIR=../../..
 BYT_OBJS=\
   env.cmo scoping.cmo substExpr.cmo substColl.cmo ast_equal.cmo\
   dep_analysis.cmo param_dep_analysis.cmo infoOutput.cmo\
-  visUniverse.cmo minEnv.cmo abstractions.cmo abstractions2.cmo infer.cmo \
+  visUniverse.cmo minEnv.cmo abstractions2.cmo infer.cmo \
   match_analysis.cmo
 
 include $(ROOT_DIR)/Makefile.common

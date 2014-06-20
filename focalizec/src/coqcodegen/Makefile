@@ -19,7 +19,7 @@ ROOT_DIR = ../../..
 
 # Must be defined before including Makefile.common since is used by it.
 BYT_OBJS = species_record_type_generation.cmo rec_let_gen.cmo\
-	 type_coq_generation.cmo species_coq_generation.cmo \
+	type_coq_generation.cmo species_coq_generation.cmo \
 	main_coq_generation.cmo
 
 include $(ROOT_DIR)/Makefile.common

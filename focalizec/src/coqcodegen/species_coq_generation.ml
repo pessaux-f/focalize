@@ -143,7 +143,7 @@ let instanciate_IS_parameter_through_inheritance ctx env original_param_index
      species where it was really DEFINED. *)
   let instancied_with =
     Misc_common.follow_instanciations_for_is_param
-      ctx (Abstractions.EK_coq env) original_param_index
+      ctx (Abstractions2.EK_coq env) original_param_index
       field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
   (* Now really generate the code of by what to instanciate. *)
   (match instancied_with with
@@ -187,7 +187,7 @@ let instanciate_IS_parameter_carrier_through_inheritance ctx env
      species where it was really DEFINED. *)
   let instancied_with =
     Misc_common.follow_instanciations_for_is_param
-      ctx (Abstractions.EK_coq env) original_param_index
+      ctx (Abstractions2.EK_coq env) original_param_index
       field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
   (* Now really generate the code of by what to instanciate. *)
   match instancied_with with
@@ -299,7 +299,7 @@ let instanciate_parameters_through_inheritance ctx env field_memory =
              (* We get the FoCaL expression once substitutions are done. *)
              let instancied_expr =
                Misc_common.follow_instanciations_for_in_param
-                 ctx (Abstractions.EK_coq env) param_name
+                 ctx (Abstractions2.EK_coq env) param_name
                  original_param_unit original_param_index
                  field_memory.Misc_common.cfm_from_species.
                    Env.fh_inherited_along in
@@ -2488,7 +2488,6 @@ let generate_defined_theorem ctx print_ctx env min_coq_env ~self_manifest
 
 
 
-
 let generate_theorem ctx print_ctx env min_coq_env used_species_parameter_tys
     ~self_manifest dependencies_from_params generated_fields
    (from, name, logical_expr) proof =
@@ -4135,11 +4134,6 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     { ctxt_no_ccmap with
         Context.scc_collections_carrier_mapping =
           collections_carrier_mapping } in
-  (* Now, compute abstractions for the methods of the species. *)
-  let field_abstraction_infos =
-    Abstractions.compute_abstractions_for_fields
-      (Abstractions.EK_coq env')
-      ctxt_no_ccmap species_descr.Env.TypeInformation.spe_sig_methods in
   (* If the species is complete, the record type representing its "type".
      We get the parameters the record type has. If the species is not complete,
      then don't generate and anyway, we won't use
@@ -4148,7 +4142,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   let abstracted_params_methods_in_record_type =
     if species_descr.Env.TypeInformation.spe_is_closed then
       Species_record_type_generation.generate_record_type
-        ctxt_ccmap env' species_descr field_abstraction_infos
+        ctxt_ccmap env' species_descr fields_abstraction_infos
     else [] in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
@@ -4933,17 +4927,15 @@ let toplevel_theorem_compile ctx env theorem_def =
     Types.cpc_current_species = None ;
     Types.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
-  (* Compute the abstraction info for the theorem. In fact this means only
-     computing its def/decl-dependencies on other theorems or properties. *)
-  let abstraction_info =
-    Abstractions.compute_abstractions_for_toplevel_theorem ctx theorem_def in
-  (* We create a fake [Env.from_history]. *)
+  (* No abstraction info to compute for toplevel theorems since there's no
+     dependencies outside species !
+     We create a fake [Env.from_history]. *)
   let from = {
     Env.fh_initial_apparition =
       (ctx.Context.scc_current_unit, (Parsetree.Vlident "*Toplevel*")) ;
      Env.fh_inherited_along = [] } in
   generate_defined_theorem
-    ctx print_ctx env abstraction_info.Abstractions.ai_min_coq_env
+    ctx print_ctx env [(* Empty min coq env. *)]
     ~self_manifest: None [] [] []
     from theorem_desc.Parsetree.th_name theorem_desc.Parsetree.th_stmt
     theorem_desc.Parsetree.th_proof
