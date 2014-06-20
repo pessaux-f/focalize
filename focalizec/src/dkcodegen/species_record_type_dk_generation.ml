@@ -352,6 +352,29 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
 
 
 
+(* TODO *)
+let generate_constant_pattern ctx cst k =
+  match cst.Parsetree.ast_desc with
+   | Parsetree.C_int str ->
+       (* Integers are directly mapped in Dk. Be careful: signs - can be
+          confused with operators. We assume that strings are well-formed hence
+          are never empty. So... hit inside without checking length ^_^ *)
+       if str.[0] = '+' || str.[0] = '-' then
+         Format.fprintf ctx.Context.scc_out_fmter "(%s)" str
+       else Format.fprintf ctx.Context.scc_out_fmter "%s" str
+   | Parsetree.C_float _str ->
+       (* [Unsure] *)
+       Format.fprintf ctx.Context.scc_out_fmter "C_float"
+   | Parsetree.C_bool str ->
+       (* [true] maps on Dk "true". [false] maps on Dk "false". *)
+       Format.fprintf ctx.Context.scc_out_fmter "%s" str
+   | Parsetree.C_string str ->
+       (* [Unsure] *)
+       Format.fprintf ctx.Context.scc_out_fmter "\"%s\"%%string" str
+   | Parsetree.C_char c ->
+       (* [Unsure] *)
+       Format.fprintf ctx.Context.scc_out_fmter "\"%c\"%%char" c
+;;
 
 let generate_constant ctx cst =
   match cst.Parsetree.ast_desc with
@@ -377,61 +400,73 @@ let generate_constant ctx cst =
 ;;
 
 
-
+(* Special pair constructor *)
+let pair_cident =
+  let pair_ident_desc = Parsetree.I_global
+                          (Parsetree.Qualified
+                             ("dk_tuple",
+                              Parsetree.Vlident "pair")) in
+  let pair_ident = Parsetree_utils.make_ast pair_ident_desc in
+  let pair_cident_desc = Parsetree.CI pair_ident in
+  Parsetree_utils.make_ast pair_cident_desc
+;;
 
 let generate_constructor_ident_for_method_generator ctx env cstr_expr =
-  try
-    let mapping_info =
-      Env.DkGenEnv.find_constructor
-        ~loc: cstr_expr.Parsetree.ast_loc
-        ~current_unit: ctx.Context.scc_current_unit cstr_expr env in
-    (match mapping_info.Env.DkGenInformation.cmi_external_translation with
-     | None -> (
-         (* The constructor isn't coming from an external definition. *)
-         let Parsetree.CI global_ident = cstr_expr.Parsetree.ast_desc in
-         match global_ident.Parsetree.ast_desc with
-          | Parsetree.I_local name
-          | Parsetree.I_global (Parsetree.Vname name) ->
+  if cstr_expr = pair_cident then 2 else
+  (begin
+      try
+        let mapping_info =
+          Env.DkGenEnv.find_constructor
+            ~loc: cstr_expr.Parsetree.ast_loc
+            ~current_unit: ctx.Context.scc_current_unit cstr_expr env in
+        (match mapping_info.Env.DkGenInformation.cmi_external_translation with
+         | None -> (
+           (* The constructor isn't coming from an external definition. *)
+           let Parsetree.CI global_ident = cstr_expr.Parsetree.ast_desc in
+           match global_ident.Parsetree.ast_desc with
+           | Parsetree.I_local name
+           | Parsetree.I_global (Parsetree.Vname name) ->
               Format.fprintf ctx.Context.scc_out_fmter "%a"
-                Parsetree_utils.pp_vname_with_operators_expanded name
-          | Parsetree.I_global (Parsetree.Qualified (fname, name)) ->
+                             Parsetree_utils.pp_vname_with_operators_expanded name
+           | Parsetree.I_global (Parsetree.Qualified (fname, name)) ->
               (* If the constructor belongs to the current compilation unit
                  then one must not qualify it. *)
               if fname <> ctx.Context.scc_current_unit then
                 Format.fprintf ctx.Context.scc_out_fmter "%s.%a"
-                  fname          (* No module name capitalization in Dk. *)
-                  Parsetree_utils.pp_vname_with_operators_expanded name
+                               fname          (* No module name capitalization in Dk. *)
+                               Parsetree_utils.pp_vname_with_operators_expanded name
               else
                 Format.fprintf ctx.Context.scc_out_fmter "%a"
-                  Parsetree_utils.pp_vname_with_operators_expanded name
-        )
-     | Some external_expr -> (
-         (* The constructor comes from an external definition. *)
-         let (_, dk_binding) =
-           try
-             List.find
-               (function
-                 | (Parsetree.EL_Dk, _) -> true
-                 | (Parsetree.EL_Caml, _)
-                 | (Parsetree.EL_Coq, _)
-                 | ((Parsetree.EL_external _), _) -> false)
-               external_expr
-           with Not_found ->
-             (* No Dk mapping found. *)
-             raise
-               (Externals_generation_errs.No_external_constructor_def
-                  ("Dk", cstr_expr)) in
-         (* Now directly generate the name the constructor is mapped onto. *)
-         Format.fprintf ctx.Context.scc_out_fmter "%s" dk_binding
+                               Parsetree_utils.pp_vname_with_operators_expanded name
+         )
+         | Some external_expr -> (
+           (* The constructor comes from an external definition. *)
+           let (_, dk_binding) =
+             try
+               List.find
+                 (function
+                   | (Parsetree.EL_Dk, _) -> true
+                   | (Parsetree.EL_Caml, _)
+                   | (Parsetree.EL_Coq, _)
+                   | ((Parsetree.EL_external _), _) -> false)
+                 external_expr
+             with Not_found ->
+               (* No Dk mapping found. *)
+               raise
+                 (Externals_generation_errs.No_external_constructor_def
+                    ("Dk", cstr_expr)) in
+           (* Now directly generate the name the constructor is mapped onto. *)
+           Format.fprintf ctx.Context.scc_out_fmter "%s" dk_binding
         )) ;
-    (* Always returns the number of type arguments that must be printed
+        (* Always returns the number of type arguments that must be printed
        after the constructor. *)
-    mapping_info.Env.DkGenInformation.cmi_num_polymorphics_extra_args
-  with _ ->
-    (* Since in Dk all the constructors must be inserted in the generation
+        mapping_info.Env.DkGenInformation.cmi_num_polymorphics_extra_args
+      with _ ->
+        (* Since in Dk all the constructors must be inserted in the generation
        environment, if we don't find the constructor, then we were wrong
        somewhere else before. *)
-    assert false
+        assert false
+    end)
 ;;
 
 
@@ -493,6 +528,16 @@ let generate_record_label_for_method_generator ctx env label =
 ;;
 
 
+(* Takes an Parsetree.ast and print its type *)
+let generate_simple_type_of_ast dkctx out_fmter a =
+ match a.Parsetree.ast_type with
+ | Parsetree.ANTI_none
+ | Parsetree.ANTI_irrelevant
+ | Parsetree.ANTI_scheme _ ->
+    Format.fprintf out_fmter "unknown_type"
+ | Parsetree.ANTI_type st ->
+    Types.pp_type_simple_to_dk dkctx out_fmter st
+;;
 
 (* ************************************************************************** *)
 (* force_polymorphic_explicit_args: bool -> Context.species_compil_context -> *)
@@ -502,81 +547,130 @@ let generate_record_label_for_method_generator ctx env label =
     generating a pattern in the target code (see description of
     [~force_polymorphic_explicit_args]).
 
+    This function does more than its Coq counterpart because Dedukti patterns
+    are only allowed in rewrite-rules, so at toplevel.
+    Moreover, Dedukti patterns are not equivalent to ml patterns because
+    confluence has to be guaranteed. Hence
+      match x with
+        | 0 -> 0
+        | _ -> 1
+    cannot be translated in Dedukti by two rewrite rules.
+    TODO (future optimization): realize when patterns are orthogonal and can
+    hence be compiled by rewrite-rules.
+
+    In Dedukti, each pattern is translated as a function with a continuation.
+    Exhaustivity is not checked, empty pattern-matching compiles to "run-time"
+    failure.
+
     {b Args} :
-      - [~force_polymorphic_explicit_args]: Normally, when generating sum value
-        constructors as pattern we must never add the "_" denoting the
-        polymorphism if the contructor belongs to a parametrized type. The
-        only exception is when we generate the recursive functions termination
-        lemmas with [Rec_let_gen.generate_binding_match].
-        In effect, in this case, we must generate the hypotheses induced by
-        conditions (hence also match) and separate them by ->. And in this
-        case, we do not re-generate a real pattern-matching, but an expression.
-        And in expression, polymorphic arguments must be explicitely writen
-        with some "_"s. Moreover, this means that we must disable the implicit
-        arguments by prefixing the constructor by "@".
+      - [d]: A function unit -> unit printing the term bound to the pattern.
+      - [k]: A continuation in case the pattern is not matched.
 
     {b Exported} : Yes                                                        *)
 (* ************************************************************************** *)
-let generate_pattern ~force_polymorphic_explicit_args ctx dkctx env pattern =
+let generate_pattern ctx dkctx env pattern
+                     print_d (d : 'a Parsetree.ast) k =
   let out_fmter = ctx.Context.scc_out_fmter in
-  let rec rec_gen_pat pat =
+  let rec rec_gen_pat pat print_d (d : 'a Parsetree.ast) =
     match pat.Parsetree.ast_desc with
-     | Parsetree.P_const constant -> generate_constant ctx constant
+     | Parsetree.P_const constant -> generate_constant_pattern ctx constant k
      | Parsetree.P_var name ->
-         Format.fprintf out_fmter "%a"
-           Parsetree_utils.pp_vname_with_operators_expanded name
+        (* "function x -> d" is the same as "fun x -> d" *)
+        Format.fprintf out_fmter "(%a :@ "
+                       Parsetree_utils.pp_vname_with_operators_expanded name;
+        generate_pattern_type pat;
+        Format.fprintf out_fmter " =>@ ";
+        print_d ();
+        Format.fprintf out_fmter ")"
      | Parsetree.P_as (p, name) ->
-         Format.fprintf out_fmter "(" ;
-         rec_gen_pat p ;
-         Format.fprintf out_fmter "as@ %a)"
-           Parsetree_utils.pp_vname_with_operators_expanded name
-     | Parsetree.P_wild -> Format.fprintf out_fmter "_"
-     | Parsetree.P_constr (ident, pats) ->
-         (* If the constructor has arguments, enclose them between parens. *)
-         let has_args = pats <> [] in
-         if has_args then Format.fprintf out_fmter "(" ;
-         (* Disallow implicit arguments if needed. *)
-         if force_polymorphic_explicit_args then Format.fprintf out_fmter "@@" ;
-         let extras =
-           generate_constructor_ident_for_method_generator ctx env ident
-         in
-         (* If we must force the apparition of polymorphic extra arguments... *)
-         if force_polymorphic_explicit_args then
-           (begin
-             (* Add the type arguments of the constructor. *)
-             match pat.Parsetree.ast_type with
-             | Parsetree.ANTI_type t ->
-                 Types.pp_type_simple_args_to_dk dkctx out_fmter t extras
-             | _ -> assert false
-           end) ;
-         (* In "match" patterns, extra arguments of the constructor due to
-            polymorphism never appear in Dk syntax. *)
-         Format.fprintf out_fmter "@ " ;
-         rec_generate_pats_list ~comma: false pats ;
-         if has_args then Format.fprintf out_fmter ")"
+        (* "function p(y) as x -> d(x,y) | _ -> k"
+           is the same as
+           "fun x -> (function p(y) -> d(x,y)) x" *)
+        Format.fprintf out_fmter "(%a :@ "
+                       Parsetree_utils.pp_vname_with_operators_expanded name;
+        generate_pattern_type pat;
+        Format.fprintf out_fmter " =>@ ";
+        rec_gen_pat p print_d d;
+        Format.fprintf out_fmter "@ %a)"
+                       Parsetree_utils.pp_vname_with_operators_expanded name
+     | Parsetree.P_wild -> print_d ()
      | Parsetree.P_record _labs_pats ->
          Format.eprintf "generate_pattern P_record TODO@."
-     | Parsetree.P_tuple pats ->
-         Format.fprintf out_fmter "(@[<1>" ;
-         rec_generate_pats_list ~comma: true pats ;
-         Format.fprintf out_fmter ")@]"
+     | Parsetree.P_tuple [] -> assert false (* Tuples should not be empty *)
+     | Parsetree.P_tuple [ p ] -> rec_gen_pat p print_d d
+     | Parsetree.P_tuple (p :: pats) -> (* Tuples are a special case of constructor *)
+        let tail = Parsetree_utils.make_ast (Parsetree.P_tuple pats) in
+        let desc = Parsetree.P_constr (pair_cident, [p ; tail] ) in
+        (* Update pattern type to reflect current use *)
+        let ast = Parsetree_utils.make_ast desc in
+        ast.Parsetree.ast_type <- pat.Parsetree.ast_type;
+        rec_gen_pat ast print_d d
      | Parsetree.P_paren p ->
          Format.fprintf out_fmter "(@[<1>" ;
-         rec_gen_pat p ;
+         rec_gen_pat p print_d d;
          Format.fprintf out_fmter ")@]"
+     | Parsetree.P_constr (cident, pats) -> (* Most interesting case *)
+        (* A function match__C : RT (Return type) : * ->
+                                 PV (Polymorphic variables) : * ->
+                                 then_case : (ty_1 -> .. ty_n-> RT) ->
+                                 else_case : (DT PV -> RT) ->
+                                 DT PV -> RT
+                      is available in the same dedukti file than the constructor
+         *)
+        let Parsetree.CI ident = cident.Parsetree.ast_desc in
+        let pattern_file_name = match ident.Parsetree.ast_desc with
+          | Parsetree.I_global (Parsetree.Qualified (f, _))  -> f ^ "."
+          | _ -> ""
+        in
+        Format.fprintf out_fmter "@[<1>%smatch__%a@ "
+                       pattern_file_name
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       (Parsetree_utils.unqualified_vname_of_constructor_ident
+                          cident) ;
+        (* Now the return type *)
+        generate_simple_type_of_ast dkctx out_fmter d ;
+        Format.fprintf out_fmter "@ ";
+        (* Now polymorphic variables *)
+        let extras =
+           generate_constructor_ident_for_method_generator ctx env cident
+        in
+        (begin
+            match pat.Parsetree.ast_type with
+            | Parsetree.ANTI_type t ->
+               Types.pp_type_simple_args_to_dk dkctx out_fmter t extras
+            | _ ->
+               Format.fprintf out_fmter "(unknown_pattern_type %a)"
+                              Parsetree_utils.pp_vname_with_operators_expanded
+                              (Parsetree_utils.unqualified_vname_of_constructor_ident
+                                 cident)
+          end) ;
+        Format.fprintf out_fmter "@ (";
+        let count = ref 0 in
+        List.iter (fun pat ->
+                   Format.fprintf out_fmter "pattern_var_%d :@ " !count;
+                   generate_simple_type_of_ast dkctx out_fmter pat;
+                   Format.fprintf out_fmter " =>@ ";
+                   incr count)
+                  pats;
+        (* Recursive calls actually depend on d *)
+        rec_generate_pats_list print_d d 0 pats;
+        Format.fprintf out_fmter ")@]"
 
+  and rec_generate_pats_list print_d d count = function
+    | [] -> print_d ()
+    | pat :: pats ->
+       rec_gen_pat pat
+                   (fun () -> rec_generate_pats_list print_d d (count+1) pats)
+                   d;
+       Format.fprintf out_fmter "@ pattern_var_%d" count
 
-  and rec_generate_pats_list ~comma = function
-    | [] -> ()
-    | [last] -> rec_gen_pat last
-    | h :: q ->
-        if comma then Format.fprintf out_fmter "dk_tuple.pair@ " ;
-        rec_gen_pat h ;
-        Format.fprintf out_fmter "@ " ;
-        rec_generate_pats_list ~comma: comma q in
+  and generate_pattern_type (p : Parsetree.pattern) =
+    generate_simple_type_of_ast dkctx out_fmter p
+  in
+
   (* ********************** *)
   (* Now, let's do the job. *)
-  rec_gen_pat pattern
+  rec_gen_pat pattern print_d d
 ;;
 
 
@@ -1051,65 +1145,19 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          end;
          Format.fprintf out_fmter ")@]" ;
      | Parsetree.E_match (expr, pats_exprs) ->
-         (begin
-             (* Dedukti has no term-level pattern-matching in the sence that *)
-             (* pattern-matching can only occure in toplevel rewrie-rules. *)
-             (* Hence we need a different match term for each matchable type,
-                we assume that for each matchable type, all constructors C_i are
-                defined in the same file and that a patterm-matching constant
-                match__C_0__...__C_n is also defined in this file. *)
-             (* We also assume that the pattern matching has exactly one case *)
-             (* per constructor. *)
-             let patterns : Parsetree.pattern list = List.map fst pats_exprs in
-             let patt_constructor (patt : Parsetree.pattern) : Parsetree.ident_desc
-               = match patt.Parsetree.ast_desc with
-               | Parsetree.P_constr (cid, _) ->
-                  let Parsetree.CI id = cid.Parsetree.ast_desc in
-                  id.Parsetree.ast_desc
-               | Parsetree.P_tuple (_) ->
-                  Parsetree.I_global (Parsetree.Qualified
-                                        ("dk_tuple", Parsetree.Vlident "pair"))
-               | _ -> assert false
-             in
-             let patt_constructors = List.map patt_constructor patterns in
-             let patterns_file_name : Types.fname = match List.hd patt_constructors with
-               | Parsetree.I_global (Parsetree.Qualified (m, _)) -> m
-               | _ -> assert false
-             in
-             let pattern_vnames =
-               List.sort compare
-                         (List.map
-                            (function
-                                Parsetree.I_global (Parsetree.Qualified (_, c)) -> c
-                              | _ -> assert false)
-                            patt_constructors)
-             in
-             Format.fprintf out_fmter "@[<1>%s.match__" patterns_file_name;
-             List.iter
-               (Format.fprintf
-                  out_fmter
-                  "%a"
-                  Parsetree_utils.pp_vname_with_operators_expanded)
-               pattern_vnames;
-             Format.fprintf out_fmter "@ ";
-         rec_generate_expr loc_idents env expr ;
-         List.iter
-           (fun (pattern, expr) ->
-             (* My indentation style: indent of 4 between *)
-             (* the pattern and its related processing.   *)
-             Format.fprintf out_fmter "@\n@[<4>( " ;
-             generate_pattern
-               ~force_polymorphic_explicit_args: false ctx print_ctx env
-               pattern;
-             (* Here, each name of the pattern may mask a "in"-parameter. *)
-             let loc_idents' =
-               (Parsetree_utils.get_local_idents_from_pattern pattern) @
-               loc_idents in
-             rec_generate_expr loc_idents' env expr ;
-             Format.fprintf out_fmter ")@]")
-           pats_exprs ;
-         Format.fprintf out_fmter "@]"
-         end)
+        let rec generate_pattern_matching = function
+          | [] ->
+             Format.fprintf out_fmter "(dk_fail.fail@ ";
+             generate_simple_type_of_ast print_ctx out_fmter expression;
+             Format.fprintf out_fmter ")"
+          | (pat, d) :: pats ->
+             generate_pattern ctx print_ctx env pat
+                              (fun () -> rec_generate_expr loc_idents env d) d
+                              (fun () -> generate_pattern_matching pats) in
+        generate_pattern_matching pats_exprs;
+        Format.fprintf out_fmter "@ ";
+        rec_generate_expr loc_idents env expr
+     (*  *)
      | Parsetree.E_if (expr1, expr2, expr3) ->
          Format.fprintf out_fmter "@[<2>(if@ " ;
          rec_generate_expr loc_idents env expr1 ;

@@ -252,8 +252,9 @@ let generate_binding_match ctx print_ctx env expr pattern =
     ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
     env expr ;
   Format.fprintf out_fmter ")@ (" ;
-  Species_record_type_dk_generation.generate_pattern
-    ~force_polymorphic_explicit_args: true ctx print_ctx env pattern ;
+  (* TODO: adapt to nex pattern matching generation *)
+  (* Species_record_type_dk_generation.generate_pattern *)
+  (*   ~force_polymorphic_explicit_args: true ctx print_ctx env pattern ; *)
   Format.fprintf out_fmter "))"
 ;;
 

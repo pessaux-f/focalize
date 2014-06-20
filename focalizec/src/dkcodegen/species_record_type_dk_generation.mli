@@ -45,9 +45,13 @@ val generate_method_lambda_lifted_arguments :
        Parsetree.vname list -> unit
 
 val generate_pattern :
-  force_polymorphic_explicit_args: bool -> Context.species_compil_context ->
-    Types.dk_print_context ->
-    Env.DkGenEnv.t -> Parsetree.pattern -> unit
+  Context.species_compil_context ->
+  Types.dk_print_context ->
+  Env.DkGenEnv.t -> Parsetree.pattern ->
+  (unit -> unit) ->
+  Parsetree.expr ->
+  (unit -> unit) ->
+  unit
 
 val generate_expr :
   Context.species_compil_context ->

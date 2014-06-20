@@ -18,7 +18,7 @@ snd : A : cc.uT -> B : cc.uT -> Prod A B -> cc.eT B.
 [A : cc.uT, B : cc.uT, a : cc.eT A, b : cc.eT B]
     snd A B (pair A B a b) --> b.
 
-match_pair : A : cc.uT ->
+match__pair : A : cc.uT ->
              B : cc.uT ->
              Prod A B ->
              C : cc.uT ->
@@ -27,7 +27,7 @@ match_pair : A : cc.uT ->
 
 [ A : cc.uT, B : cc.uT, C : cc.uT,
   a : cc.eT A, b : cc.eT B, f : cc.eT A -> cc.eT B -> cc.eT C ]
-    match_pair A B (pair A B a b) C f --> f a b.
+    match__pair A B (pair A B a b) C f --> f a b.
 
 dprod : A : cc.uT -> (cc.eT A -> cc.uT) -> cc.uT.
 Dprod : A : cc.uT -> (cc.eT A -> cc.uT) -> Type.
