@@ -49,7 +49,7 @@ BYT_OBJS =\
  ../typing/infoOutput.cmo\
  ../typing/visUniverse.cmo\
  ../typing/minEnv.cmo\
- ../typing/abstractions2.cmo\
+ ../typing/abstrs.cmo\
  ../typing/infer.cmo\
  ../typing/match_analysis.cmo\
  \

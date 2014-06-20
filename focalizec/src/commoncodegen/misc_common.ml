@@ -285,13 +285,13 @@ let follow_instanciations_for_in_param ctx env original_param_name
               Parsetree_utils.make_pseudo_species_ident
                 ~current_unit step_species in
               (match env with
-               | Abstractions2.EK_ml env ->
+               | Abstrs.EK_ml env ->
                    let (sp_prms, _, _, _) =
                      Env.MlGenEnv.find_species
                        ~loc: Location.none ~current_unit
                        curr_level_species_ident env in
                    sp_prms
-               | Abstractions2.EK_coq env ->
+               | Abstrs.EK_coq env ->
                    let (sp_prms, _, _, _) =
                      Env.CoqGenEnv.find_species
                        ~loc: Location.none ~current_unit
@@ -472,13 +472,13 @@ let follow_instanciations_for_is_param ctx env original_param_index
               Parsetree_utils.make_pseudo_species_ident
                 ~current_unit step_species in
             match env with
-             | Abstractions2.EK_ml env ->
+             | Abstrs.EK_ml env ->
                  let (sp_prms, _, _, _) =
                    Env.MlGenEnv.find_species
                      ~loc: Location.none ~current_unit
                      curr_level_species_ident env in
                  sp_prms
-             | Abstractions2.EK_coq env ->
+             | Abstrs.EK_coq env ->
                  let (sp_prms, _, _, _) =
                    Env.CoqGenEnv.find_species
                      ~loc: Location.none ~current_unit
@@ -604,12 +604,12 @@ let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
     (* We get the species' methods information. *)
     let methods_infos =
       (match env with
-       | Abstractions2.EK_ml env ->
+       | Abstrs.EK_ml env ->
            let (_, data, _, _) =
              Env.MlGenEnv.find_species
                ~loc: Location.none ~current_unit species_ident env in
            data
-       | Abstractions2.EK_coq env ->
+       | Abstrs.EK_coq env ->
            let (_, data, _, _) =
              Env.CoqGenEnv.find_species
                ~loc: Location.none ~current_unit species_ident env in

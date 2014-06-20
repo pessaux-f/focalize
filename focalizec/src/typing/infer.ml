@@ -4804,21 +4804,16 @@ let typecheck_species_def ctx env species_def =
         reordered_normalized_methods original_properties_from_histories
         species_dep_graph)
     found_proofs_of ;
-
-
+  (* Let's build the context needed to trigger abstractions computations. *)
   let abstr_ctx = {
-    Abstractions2.acc_current_unit = ctx.current_unit ;
-    Abstractions2.acc_current_species = current_species ;
-    Abstractions2.acc_dependency_graph_nodes = species_dep_graph ;
-    Abstractions2.acc_species_parameters_names = sig_params } in
+    Abstrs.acc_current_unit = ctx.current_unit ;
+    Abstrs.acc_current_species = current_species ;
+    Abstrs.acc_dependency_graph_nodes = species_dep_graph ;
+    Abstrs.acc_species_parameters_names = sig_params } in
   (* Now, compute all the dependencies stuff. *)
   let field_abstraction_infos =
-    Abstractions2.compute_abstractions_for_fields
+    Abstrs.compute_abstractions_for_fields
       env abstr_ctx reordered_normalized_methods in
-
-
-
-
   (* If asked, generate the dotty output of the dependencies. *)
   (match Configuration.get_dotty_dependencies () with
    | None -> ()

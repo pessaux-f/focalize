@@ -717,7 +717,7 @@ module TypeInformation = struct
 
   type min_coq_env_element = (min_coq_env_reason * min_coq_env_method)
 
-  (* [TODO] REMOVE DOUBLE WITH STUFF OF generic_code_gen_method_info *)
+  (* [TODO] [KILL] REMOVE DOUBLE WITH STUFF OF generic_code_gen_method_info *)
   type field_abstraction_info = {
     (** The positional list of parameters carrier abstracted in the method. *)
     ad_used_species_parameter_tys : Parsetree.vname list;
@@ -743,16 +743,14 @@ module TypeInformation = struct
       ((** The positional list of methods from the species parameters
            abstracted by lambda-lifting. *)
        species_param *
-       (* The set of methods of this parameter on which we have dependencies. *)
-       ordered_methods_from_params) list;
-    (* Same than above but only for dependencies arising through the type of the
-       method. [TODO] Still used ???? *)
+       (** The set of methods of this parameter on which we have
+           dependencies. *)
+       ordered_methods_from_params) list ;
+    (** Same than above but only for dependencies arising through the type of
+        the method. *)
     ad_dependencies_from_parameters_in_type :
       (species_param * ordered_methods_from_params) list ;
-(*
-    ad_abstracted_methods : Parsetree.vname list ;   (** The positional list
-        of methods from ourselves abstracted by lambda-lifting. *)
-*)
+    (** Minimal Coq typing environnment. *)
     ad_min_coq_env : min_coq_env_element list
   }
 

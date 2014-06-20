@@ -143,7 +143,7 @@ let instanciate_IS_parameter_through_inheritance ctx env original_param_index
      species where it was really DEFINED. *)
   let instancied_with =
     Misc_common.follow_instanciations_for_is_param
-      ctx (Abstractions2.EK_coq env) original_param_index
+      ctx (Abstrs.EK_coq env) original_param_index
       field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
   (* Now really generate the code of by what to instanciate. *)
   (match instancied_with with
@@ -187,7 +187,7 @@ let instanciate_IS_parameter_carrier_through_inheritance ctx env
      species where it was really DEFINED. *)
   let instancied_with =
     Misc_common.follow_instanciations_for_is_param
-      ctx (Abstractions2.EK_coq env) original_param_index
+      ctx (Abstrs.EK_coq env) original_param_index
       field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
   (* Now really generate the code of by what to instanciate. *)
   match instancied_with with
@@ -299,7 +299,7 @@ let instanciate_parameters_through_inheritance ctx env field_memory =
              (* We get the FoCaL expression once substitutions are done. *)
              let instancied_expr =
                Misc_common.follow_instanciations_for_in_param
-                 ctx (Abstractions2.EK_coq env) param_name
+                 ctx (Abstrs.EK_coq env) param_name
                  original_param_unit original_param_index
                  field_memory.Misc_common.cfm_from_species.
                    Env.fh_inherited_along in

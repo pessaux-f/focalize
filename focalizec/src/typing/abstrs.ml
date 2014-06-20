@@ -634,30 +634,6 @@ let compute_lambda_liftings_for_field ~current_unit ~current_species
 
 
 
-(** We are at toplevel, not in the context of a species, so there is no way
-    to have dependencies via species parameters. Hence, we just need to matter
-    about the other toplevel theorems and properties we depend on. *)
-let compute_lambda_liftings_for_toplevel_theorem dependency_graph_nodes name =
-  (* Get all the properties or theorems we directly decl-depend on. Get the
-     properties or theorems we directly def-depend. *)
-  let (decl_children, def_children) =
-    (try
-      let my_node =
-        List.find
-          (fun { DepGraphData.nn_name = n } -> n = name)
-          dependency_graph_nodes in
-      (* Only keep "decl-dependencies" . *)
-      List.partition
-        (function
-          | (_, DepGraphData.DK_decl _) -> true
-          | (_, DepGraphData.DK_def _) -> false)
-        my_node.DepGraphData.nn_children
-    with Not_found -> ([], [])  (* No children at all. *)) in
-  (decl_children, def_children)
-;;
-
-
-
 (** {b Descr} : For intermediate internal computation where we need to remind
     from where the found dependencies on species parameters come.
 
@@ -1455,7 +1431,7 @@ let __compute_abstractions_for_fields env ctx fields =
     List.fold_left
       (fun abstractions_accu current_field ->
         match current_field with
-         | Env.TypeInformation.SF_sig (from, signame, sch) ->
+         | Env.TypeInformation.SF_sig (_, _, sch) ->
              (* Trivially, sigs can't induce dependencies on methods since
                 they only involve types. However, they may induce species
                 parameters carrier types used. *)
@@ -1495,7 +1471,7 @@ let __compute_abstractions_for_fields env ctx fields =
                iai_dependencies_from_params_via_completions = empty_deps;
                iai_min_coq_env = [] } in
              (current_field, (VD_One abstr_info)) :: abstractions_accu
-         | Env.TypeInformation.SF_let (from, name, _, sch, body, _, _, _) ->
+         | Env.TypeInformation.SF_let (_, name, _, sch, body, _, _, _) ->
              let method_ty = Types.specialize sch in
              (* ATTENTION, the [dependencies_from_params_in_body] is not
                 the complete set of dependencies. It must be completed to
@@ -1571,7 +1547,7 @@ let __compute_abstractions_for_fields env ctx fields =
          | Env.TypeInformation.SF_let_rec l ->
              let deps_infos =
                List.map
-                 (fun (from, name, _, sch, body, opt_term_pr, _, _) ->
+                 (fun (_, name, _, sch, body, opt_term_pr, _, _) ->
                    let body_as_fbk =
                      match body with
                       | Parsetree.BB_logical p -> FBK_logical_expr p
@@ -1648,7 +1624,7 @@ let __compute_abstractions_for_fields env ctx fields =
                  l in
              (current_field, (VD_More deps_infos)) :: abstractions_accu
          | Env.TypeInformation.SF_theorem
-             (from, name, _, logical_expr, proof, _) ->
+             (_, name, _, logical_expr, proof, _) ->
                (* ATTENTION, the [dependencies_from_params_in_bodies] is not
                   the complete set of dependencies. It must be completed to
                   fully represent the definition 72 page 153 from Virgile
@@ -1718,8 +1694,7 @@ let __compute_abstractions_for_fields env ctx fields =
                    dependencies_from_params_via_didou;
                  iai_min_coq_env = min_coq_env } in
                (current_field, (VD_One abstr_info)) :: abstractions_accu
-         | Env.TypeInformation.SF_property
-             (from, name, _, logical_expr, _) ->
+         | Env.TypeInformation.SF_property (_, name, _, logical_expr, _) ->
                (* ATTENTION, the [dependencies_from_params_in_bodies] is not
                   the complete set of dependencies. It must be completed to
                   fully represent the definition 72 page 153 from Virgile

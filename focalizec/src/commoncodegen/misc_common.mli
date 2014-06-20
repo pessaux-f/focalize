@@ -47,7 +47,7 @@ val get_implements_effectives :
   collection_effective_arguments list
 
 val follow_instanciations_for_in_param :
-  Context.species_compil_context -> Abstractions2.environment_kind ->
+  Context.species_compil_context -> Abstrs.environment_kind ->
   Parsetree.vname -> Parsetree.module_name -> int ->
   (Parsetree.qualified_species * Parsetree_utils.simple_species_expr * 'a)
       list ->
@@ -58,13 +58,13 @@ type is_parameter_instanciation =
   | IPI_by_species_parameter of Env.TypeInformation.species_param
 
 val follow_instanciations_for_is_param :
-  Context.species_compil_context -> Abstractions2.environment_kind -> int ->
+  Context.species_compil_context -> Abstrs.environment_kind -> int ->
   (Parsetree.qualified_species * Parsetree_utils.simple_species_expr * 'a)
       list ->
 	is_parameter_instanciation
 
 val find_toplevel_spe_defining_meth_through_inheritance :
-  Abstractions2.environment_kind -> current_unit: Parsetree.module_name ->
+  Abstrs.environment_kind -> current_unit: Parsetree.module_name ->
   start_spec_mod: Parsetree.module_name -> start_spec_name: string ->
   method_name: Parsetree.vname -> (Parsetree.module_name * string)
 

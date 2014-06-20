@@ -1390,7 +1390,7 @@ let generate_record_type_parameters ctx env species_descr
   (* We first build the lists of dependent methods for each property and
      theorem fields. *)
   let tmp_deps_for_fields =
-    Abstractions2.make_empty_param_deps species_parameters_names in
+    Abstrs.make_empty_param_deps species_parameters_names in
   let deps_for_fields =
     List.map (fun (a, b) -> (a, ref b)) tmp_deps_for_fields in
   List.iter
