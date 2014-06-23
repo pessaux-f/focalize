@@ -9,7 +9,7 @@
 (*                               LIP6  --  INRIA Rocquencourt                 *)
 (*                                                                            *)
 (*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
@@ -114,13 +114,11 @@ let print_comma_separated_vars_list_from_mapping out_fmter vars_list =
 let generate_rep_definition ctx fields =
   let rec rec_search = function
     | [] -> ()
-    | h :: q ->
-        (begin
+    | h :: q -> (
         match h with
          | Env.TypeInformation.SF_sig (_, n, sch) ->
              (* Check if the sig is "rep". *)
-             if (Parsetree_utils.name_of_vname n) = "rep" then
-               (begin
+             if (Parsetree_utils.name_of_vname n) = "rep" then (
                Format.fprintf ctx.Context.scc_out_fmter
                  "(* Carrier's structure explicitly given by \"rep\". *)@\n" ;
                Format.fprintf ctx.Context.scc_out_fmter "@[<2>type " ;
@@ -147,10 +145,9 @@ let generate_rep_definition ctx fields =
                     ~current_unit: ctx.Context.scc_current_unit
                     ctx.Context.scc_collections_carrier_mapping)
                  ty
-               end)
+              )
              else rec_search q
-         | _ -> rec_search q
-        end) in
+         | _ -> rec_search q) in
   rec_search fields
 ;;
 
@@ -178,8 +175,7 @@ let generate_record_type ctx species_descr =
   (* Process parameters and "self" type variables names. *)
   if collections_carrier_mapping = [] then
     Format.fprintf out_fmter "'abst_T "
-  else
-    (begin
+  else (
     (* If there are several parameters, then enclose them by parentheses. *)
     Format.fprintf out_fmter "(@[<1>" ;
     List.iter
@@ -187,15 +183,12 @@ let generate_record_type ctx species_descr =
         Format.fprintf out_fmter "%s,@ " type_variable_name)
       collections_carrier_mapping ;
     Format.fprintf out_fmter "'abst_T)@] "
-    end) ;
+   ) ;
   (* The name of the type. *)
-
   let has_fields = ref false in
   let init_fields () =
-    if not !has_fields then Format.fprintf out_fmter "{@\n";
-    has_fields := true;
-  in
-
+    if not !has_fields then Format.fprintf out_fmter "{@\n" ;
+    has_fields := true in
   Format.fprintf out_fmter "me_as_species = " ;
   (* We now extend the collections_carrier_mapping with ourselve known.
      This is required when "rep" is defined.
@@ -224,19 +217,16 @@ let generate_record_type ctx species_descr =
   List.iter
     (function
       | Env.TypeInformation.SF_sig (from, n, sch)
-      | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _, _) ->
-          (begin
+      | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _, _) -> (
           (* Skip "rep", because it is a bit different and processed above
              c.f. function [generate_rep_definition]. *)
-          if (Parsetree_utils.name_of_vname n) <> "rep" then
-            (begin
+          if (Parsetree_utils.name_of_vname n) <> "rep" then (
             let ty = Types.specialize sch in
             (* If the type of the sig refers to type "Prop", then the sig
                is related to a logical let and hence must not be generated in
                OCaml. *)
-            if not (Types.refers_to_prop_p ty) then
-              (begin
-              init_fields ();
+            if not (Types.refers_to_prop_p ty) then (
+              init_fields () ;
               Format.fprintf out_fmter "(* From species %a. *)@\n"
                 Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
               (* Since we are printing a whole type scheme, it is stand-alone
@@ -246,10 +236,10 @@ let generate_record_type ctx species_descr =
                 (Types.pp_type_simple_to_ml
                    ~current_unit: ctx.Context.scc_current_unit
                    collections_carrier_mapping)
-                  ty
-              end)
-            end)
-          end)
+                ty
+             )
+           )
+         )
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
             (fun (from, n, _, sch, _, _, _, _) ->
@@ -278,10 +268,8 @@ let generate_record_type ctx species_descr =
              translation. *)
           ())
     species_descr.Env.TypeInformation.spe_sig_methods ;
-  if !has_fields then
-    Format.fprintf out_fmter "@]}@\n"
-  else
-    Format.fprintf out_fmter "unit@]@\n"
+  if !has_fields then Format.fprintf out_fmter "@]}@\n"
+  else Format.fprintf out_fmter "unit@]@\n"
 ;;
 
 

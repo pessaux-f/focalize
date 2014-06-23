@@ -1652,11 +1652,9 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
   let out_fmter = ctx.Context.scc_out_fmter in
   let rec rec_print = function
     | [] -> ()
-    | assumed :: q ->
-        (begin
+    | assumed :: q -> (
         match assumed with
-         | AH_variable (var_vname, ty_expr) ->
-             (begin
+         | AH_variable (var_vname, ty_expr) -> (
              (* Quantify all the assumed variables. *)
              (match ty_expr.Parsetree.ast_type with
               | Parsetree.ANTI_type ty ->
@@ -1665,7 +1663,7 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
                     (Types.pp_type_simple_to_coq print_ctx) ty
               | _ -> assert false) ;
              rec_print q
-             end)
+            )
          | AH_lemma log_expr ->
              (* Make a string of implications with the assumed logical
                 expressions. *)
@@ -1679,7 +1677,7 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
              Format.fprintf out_fmter ") ->@ ";
              rec_print q ;
              Format.fprintf out_fmter "@]"
-        end) in
+       ) in
   rec_print avail_info.psa_assumed_variables_and_lemmas
 ;;
 
@@ -1785,8 +1783,7 @@ let zenonify_fact ctx print_ctx env min_coq_env ~self_manifest
 let zenonify_hyp ctx print_ctx env hyp =
   let out_fmter = ctx.Context.scc_out_fmter in
   match hyp.Parsetree.ast_desc with
-   | Parsetree.H_variable  (vname, type_expr) ->
-       (begin
+   | Parsetree.H_variable  (vname, type_expr) -> (
        match type_expr.Parsetree.ast_type with
         | Parsetree.ANTI_type ty ->
             (* Notation "assume ... in ...". This leads to a Variable in the
@@ -1795,7 +1792,7 @@ let zenonify_hyp ctx print_ctx env hyp =
               Parsetree_utils.pp_vname_with_operators_expanded vname
               (Types.pp_type_simple_to_coq print_ctx) ty
         | _ -> assert false
-       end)
+      )
    | Parsetree.H_hypothesis (vname, logical_expr) ->
        (* Notation "H: all blabla in Self, foo -> bar...". This leads to a
           Variable in the current Coq Section. *)
@@ -1914,12 +1911,11 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
        (* Finally, we deal with the conclusion of the statement. *)
        let new_aim =
          (match stmt_desc.Parsetree.s_concl with
-          | None ->
-              (begin
+          | None -> (
               match aim_gen_method with
                | ZSGM_from_logical_expr lexpr -> lexpr
                | ZSGM_from_termination_lemma (_, _, _) -> assert false
-              end)
+             )
           | Some logical_expr -> logical_expr) in
        (* Now, handle the nested proof of the conclusion of the statement or
           the default one if there is no new aim provided. *)
@@ -2307,8 +2303,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed _ | Parsetree.Pf_coq _ ->
        () (* No Section needed. *)
-   | Parsetree.Pf_node _ | Parsetree.Pf_auto _ ->
-       (begin
+   | Parsetree.Pf_node _ | Parsetree.Pf_auto _ -> (
        (* Generate the common code for proofs done by Zenon either by [Pf_auto]
           of by [Pf_node]. *)
        print_common_prelude_for_zenon () ;
@@ -2409,7 +2404,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
        (* End the Section. *)
        Format.fprintf out_fmter "End Proof_of_%a.@]@\n@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
-       end)
+      )
 ;;
 
 
@@ -2498,8 +2493,7 @@ let generate_theorem ctx print_ctx env min_coq_env used_species_parameter_tys
         ctx print_ctx env min_coq_env ~self_manifest used_species_parameter_tys
         dependencies_from_params generated_fields from name logical_expr
         proof
-    else
-      (begin
+    else (
       (* Just a bit of debug/information if requested. *)
       if Configuration.get_verbose () then
         Format.eprintf
@@ -2512,7 +2506,7 @@ let generate_theorem ctx print_ctx env min_coq_env used_species_parameter_tys
       find_inherited_method_generator_abstractions
         ~current_unit: ctx.Context.scc_current_unit
         from.Env.fh_initial_apparition name env
-      end) in
+      ) in
   (* Return the names abstracted in the minimal typing environment. *)
   abstracted_methods
 ;;
@@ -2589,8 +2583,7 @@ let pattern_from_used_variables fun_params_n_tys vars_used_by_order =
 let print_pattern_for_order out_fmter ~var_suffix description =
   let rec rec_print = function
     | [] -> assert false
-    | [(last_name, last_presence)] ->
-        (begin
+    | [(last_name, last_presence)] -> (
         if last_presence then
           (Format.fprintf out_fmter "%a%s"
              Parsetree_utils.pp_vname_with_operators_expanded last_name
@@ -2600,7 +2593,7 @@ let print_pattern_for_order out_fmter ~var_suffix description =
         else
           (Format.fprintf out_fmter "_";
            [])
-        end)
+       )
     | (name, presence) :: q ->
         let printed =
           if presence then
@@ -3322,8 +3315,7 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
        (* A "let", then a fortiori "let rec" construct *)
        (* must at least bind one identifier !          *)
        assert false
-   | [(from, name, params, scheme, body, opt_term_pr, _, _)] ->
-       (begin
+   | [(from, name, params, scheme, body, opt_term_pr, _, _)] -> (
        let ai = List.assoc name fields_abstraction_infos in
        (* First of all, only methods defined in the current species must be
           generated. Inherited methods ARE NOT generated again ! *)
@@ -3386,7 +3378,7 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
            Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
          Misc_common.CSF_let_rec [compiled_field]
          )
-       end)
+      )
    | (_, name1, _, _, _, _, _, _) :: (_, name2, _, _, _, _, _, _) :: _ ->
        raise (Recursion.MutualRecursion (name1, name2))
 ;;
@@ -4186,8 +4178,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
      defined and get the information about which arguments to pass in order to
      later call the collection generator. *)
   let extra_args_from_spe_params =
-    if species_descr.Env.TypeInformation.spe_is_closed then
-      (begin
+    if species_descr.Env.TypeInformation.spe_is_closed then (
       (* Explicitely use the context having the collection carrier mapping that
          contains the species parameters carriers !
          It will be used to remind the arguments to pass to the record type
@@ -4240,7 +4231,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
             species_params_names_n_kinds;
           Env.CoqGenInformation.cgi_generator_parameters =
             coll_gen_params_info }
-      end)
+     )
     else None in
   (* The end of the module hosting the species. *)
   Format.fprintf out_fmter "@]\nEnd %s.@\n@\n" module_name;

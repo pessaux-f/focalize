@@ -1776,20 +1776,17 @@ let __compute_abstractions_for_fields env ctx fields =
 (* [Unsure] Not efficient: we examine the species parameter at each turn ! *)
 let rec find_subst_of spe_param = function
   | [] -> raise Not_found
-  | h :: q ->
-      (begin
+  | h :: q -> (
       match h with
-       | Env.SK_collection_by_collection (c1, _) ->
-           (begin
+       | Env.SK_collection_by_collection (c1, _) -> (
            match spe_param with
             | Env.TypeInformation.SPAR_in (_, _, _) ->
                 (* Substitution of a collection is not for "IN" parameters. *)
                 find_subst_of spe_param q
             | Env.TypeInformation.SPAR_is (prm_ty_col, _, _, _, _) ->
                 if prm_ty_col = c1 then h else find_subst_of spe_param q
-           end)
-       | Env.SK_ident_by_expression (_, entp_name, _) ->
-           (begin
+          )
+       | Env.SK_ident_by_expression (_, entp_name, _) -> (
            match spe_param with
             | Env.TypeInformation.SPAR_in (in_name, _, _) ->
                 if in_name = entp_name then h else find_subst_of spe_param q
@@ -1797,8 +1794,8 @@ let rec find_subst_of spe_param = function
                 (* Substitution of an expression identifier is not for "IS"
                    parameters. *)
                 find_subst_of spe_param q
-           end)
-      end)
+          )
+     )
 ;;
 
 
@@ -1818,9 +1815,9 @@ let remap_dependencies_on_params_for_field env ctx from name
     let (_, _, substs) = List.hd from.Env.fh_inherited_along in
     (* Just create a temporary ident from the original hosting species name. *)
     let fake_ident = {
-      Parsetree.ast_loc = Location.none;
-      Parsetree.ast_annot = [];
-      Parsetree.ast_type = Parsetree.ANTI_none;
+      Parsetree.ast_loc = Location.none ;
+      Parsetree.ast_annot = [] ;
+      Parsetree.ast_type = Parsetree.ANTI_none ;
       Parsetree.ast_desc =
         (* If the hosting species is in the current compilation unit, then we
            make a fake LOCAL ident. Otherwise, a fake GLOBAL ident. *)

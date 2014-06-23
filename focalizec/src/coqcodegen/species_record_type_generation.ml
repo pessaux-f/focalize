@@ -539,14 +539,13 @@ let generate_pattern ~force_polymorphic_explicit_args ctx coqctx env pattern =
            generate_constructor_ident_for_method_generator ctx env ident
          in
          (* If we must force the apparition of polymorphic extra arguments... *)
-         if force_polymorphic_explicit_args then
-           (begin
+         if force_polymorphic_explicit_args then (
              (* Add the type arguments of the constructor. *)
              match pat.Parsetree.ast_type with
              | Parsetree.ANTI_type t ->
                  Types.pp_type_simple_args_to_coq coqctx out_fmter t extras
              | _ -> assert false
-           end) ;
+          ) ;
          (* In "match" patterns, extra arguments of the constructor due to
             polymorphism never appear in Coq syntax. *)
          Format.fprintf out_fmter "@ " ;
@@ -1031,23 +1030,20 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
      | Parsetree.E_constr (cstr_ident, args) ->
          Format.fprintf out_fmter "@[<1>(@@" ;
          let extras =
-           generate_constructor_ident_for_method_generator ctx env cstr_ident
-         in
+           generate_constructor_ident_for_method_generator
+             ctx env cstr_ident in
          (* Add the type arguments of the constructor. *)
-         begin match expression.Parsetree.ast_type with
+         (match expression.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
              Types.pp_type_simple_args_to_coq print_ctx out_fmter t extras
-         | _ -> assert false
-         end;
-         begin match args with
+         | _ -> assert false) ;
+         (match args with
           | [] -> ()
           | _ ->
               Format.fprintf out_fmter "@ " ;
-              rec_generate_exprs_list ~comma: false loc_idents env args ;
-         end;
+              rec_generate_exprs_list ~comma: false loc_idents env args) ;
          Format.fprintf out_fmter ")@]" ;
-     | Parsetree.E_match (expr, pats_exprs) ->
-         (begin
+     | Parsetree.E_match (expr, pats_exprs) -> (
          Format.fprintf out_fmter "@[<1>match " ;
          rec_generate_expr loc_idents env expr ;
          Format.fprintf out_fmter " with" ;
@@ -1068,7 +1064,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
              Format.fprintf out_fmter "@]")
            pats_exprs ;
          Format.fprintf out_fmter "@\nend@]"
-         end)
+        )
      | Parsetree.E_if (expr1, expr2, expr3) ->
          Format.fprintf out_fmter "@[<2>(if@ " ;
          rec_generate_expr loc_idents env expr1 ;
@@ -1119,8 +1115,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
           | [one] -> rec_generate_expr loc_idents env one
           | _ :: exprs -> loop ppf exprs in
          Format.fprintf out_fmter "@[<1>(%a)@]" loop exprs
-     | Parsetree.E_external external_expr ->
-         (begin
+     | Parsetree.E_external external_expr -> (
          let e_translation =
            external_expr.Parsetree.ast_desc.Parsetree.ee_external in
          try
@@ -1139,7 +1134,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
              (Externals_generation_errs.No_external_value_def
                 ("Coq", (Parsetree.Vlident "<expr>"),
                  expression.Parsetree.ast_loc))
-         end)
+        )
      | Parsetree.E_paren expr ->
          Format.fprintf out_fmter "@[<1>(" ;
          rec_generate_expr loc_idents env expr ;
