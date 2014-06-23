@@ -717,7 +717,7 @@ module TypeInformation = struct
 
   type min_coq_env_element = (min_coq_env_reason * min_coq_env_method)
 
-  (* [TODO] [KILL] REMOVE DOUBLE WITH STUFF OF generic_code_gen_method_info *)
+
   type field_abstraction_info = {
     (** The positional list of parameters carrier abstracted in the method. *)
     ad_used_species_parameter_tys : Parsetree.vname list;
@@ -1063,8 +1063,6 @@ type method_type_kind =
 (** {b Descr} : Common for OCaml and Coq code generation environments. This
     represent various information about the methods, their abstraction,
     their body, their type scheme.
-
-CANDIDATE FOR BEING KILLED ?
 
     {b Rem} : Exported outside this module.                                 *)
 (* ************************************************************************ *)
