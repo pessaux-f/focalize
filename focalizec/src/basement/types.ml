@@ -47,15 +47,6 @@ type type_name =
 
 
 
-(* ************************************* *)
-(** {b Descr} Record field (label) name.
-
-    {b Exported} : Yes                   *)
-(* ************************************* *)
-type label_name = string ;;
-
-
-
 (* ****************************************************************** *)
 (** {b Descr} : Binding level considered as describing the level of a
     generalized type variable.

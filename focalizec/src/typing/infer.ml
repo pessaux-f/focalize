@@ -322,17 +322,6 @@ exception Scheme_contains_type_vars of (
 
 
 (* ********************************************************************** *)
-(** {b Descr} : Exception raised when a delayed termination proof is told
-    to be related to a function that doesn't exist in the current species.
-
-    {b Exported} : Yes.                                                   *)
-(* ********************************************************************** *)
-exception No_function_for_termination_proof of (Location.t * Parsetree.vname)
-;;
-
-
-
-(* ********************************************************************** *)
 (** {b Descr} : Exception raised when a delayed termination proof profile
     uses a parameter that doesn't exist in the original function.
 
