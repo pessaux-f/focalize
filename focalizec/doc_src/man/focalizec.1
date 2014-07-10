@@ -8,7 +8,7 @@
 .UE
 
 .SH VERSION
-Focalizec version 0.8.0
+Focalizec version 0.8.0.
 .SH SYNOPSIS
 .B focalizec
 .RI [ options ]\ [ source\ file ]
@@ -214,7 +214,21 @@ Print the binaries and libraries installation directories.
 Set options to pass to the
 .B zvtov
 tool. This latter is anyway always called with options
-"-zenon (path to Zenon) -new" in head.
+"-zenon (path to Zenon) -new" in head. It is possible to use this option to
+pass options to
+.B zenon
+but be careful of correctly quoting options to make sure they are interpreted
+by their respective recipient.
+
+For instance, telling
+.B zenon
+to change its maximum memory size can be done in the 3 equivalent ways
+
+   focalizec -zvtovopt '-zopt '\\''-max-size 2G'\\' foo.fcl
+
+   focalizec -zvtovopt "-zopt \\"-max-size 2G\\"" foo.fcl
+
+   focalizec -zvtovopt "-zopt '-max-size 2G'" foo.fcl
 .TP
 .B \-help
 Display this list of options.
