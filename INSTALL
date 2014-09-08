@@ -14,7 +14,6 @@
 #                                                                            #
 # ************************************************************************** #
 
-#  $Id: INSTALL,v 1.16 2012-10-31 15:51:49 pessaux Exp $
 
 (0) Forewords:
 ==============
@@ -28,6 +27,12 @@ The installation of the FoCaLiZe will setup 3 components:
 Installation requires some external tools, the most emblematic ones being:
  - OCaml (any recent version -- >= 3.11 --) should be fine.
  - Coq (any recent version -- >= 8.1pl5 --) should be fine.
+ - Zenon (either download an archive or get it from the GIT repository by
+  invoking:
+      git clone http://focalize.inria.fr/zenon.git
+  in the root directory of focalize (usually "focalize")).
+ - Hevea (for the documentation in HTML) that can be fetched at
+      http://hevea.inria.fr.
 
 Some the minor (but still needed) tools are also required (LaTeX, make, dvipdf,
 dvips) but are generally part of a standard installation on a development

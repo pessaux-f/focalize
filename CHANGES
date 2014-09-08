@@ -1,8 +1,30 @@
-# Focalize 0.?.?
+# Focalize 0.9.0
 ################
-- final let stuff...
-- fcd2html.sh
-- ...
+- Update to Caml 4.02.0
+- Update to Coq 8.4pl4
+- New contruct "final let" to prevent redefinition by inheritance
+- Script to transform FocDoc to HTML (fcd2html.sh)
+- Emacs mode (pretty basic)
+- Deep rewriting of dependencies computation code to fully compute *once* for
+  all the possible backends (OCaml, Coq)
+- Fixed code in dependencies computation.
+- Uniformization of names and code generation schemes between OCaml and Coq.
+- Lighter generated code (removed useless records and few other things)
+- Interface .mli file generated for OCaml code output
+- Ambiguous <-> now detected
+- Records available (not yet handled by Zenon)
+- Various cleanup
+- Building the compiler is lighter
+- Installation issues solved
+* Zenon
+  - String syntax
+  - Numerous bug fixed
+  - Installation issues solved
+  - Zenon is now in a separate GIT repository
+- Numerous bug fixed (5, 6, 8, 13, 14, 18, 19, 25, 27, 29, 31, 32, 42, 45, 47,
+  49, 53, 55, 60, 62)
+- Other things we don't remember :S
+
 
 # Focalize 0.8.0
 ################
