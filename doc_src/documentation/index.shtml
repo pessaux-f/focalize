@@ -34,6 +34,15 @@ Documentation
 </ul>
 </p>
 
+<h3>Programming and Proving: Practice with FoCaLiZe<h3>
+<p>A course in $(focal) given in May 2014 at Ecole des Jeunes Chercheurs en Programmation (EJCP) :
+<ul>
+ <li><a href="ejcp2014fclslides.pdf">Slides in PDF</a>.
+ </li>
+ <li><a href="ejcp2014notes.pdf">Lecture notes in PDF</a>.
+ </li>
+</ul>
+</p>
 
 <h3>Tutorial: Implementing Sets<h3>
 <p>A tutorial for the $(focal) language and system:

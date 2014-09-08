@@ -102,6 +102,20 @@ $(focal)
 <div class="spacer"></div>
 
 <div id="main">
+<h3>Slides and Lecture Notes of EJCP 2014 (2014-09-08)</h3><h3>
+<p>
+The material of the course given at Ecole des Jeunes Chercheurs en
+Programmation (EJCP) in May 2014 is now available via the
+<a href="documentation/">Documentation</a> page. This document introduces
+the aims of proving software and shows application using $(focal).
+</p>
+</h3>
+</div>
+
+
+<div class="spacer"></div>
+
+<div id="main">
 <h3>Update of tutorial "Playing with proofs" (2014-03-06)</h3><h3>
 <p>
 The tutorial "Playing with Proofs" available in the distribution and via the
