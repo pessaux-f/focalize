@@ -3,7 +3,7 @@ body {
 	font-size:12px;
 	cursor:default;
 	color:#AAAAAA;
-	background-color:#FFFFFF
+  background-color: #EEEEFF
 }
 * {
 	margin: 0px;
@@ -89,6 +89,21 @@ h3 {
     margin-right: 20px ;
     background-color:#FFFFFF;
 }
+#main a:link {
+	color:#C65640;
+	background-color:#FFFFFF;
+	text-decoration:underline;
+}
+#main a:visited {
+	color:#682C20;
+	background-color:#FFFFFF;
+	text-decoration:underline;
+}
+#main a:hover {
+	color:#FF0000;
+	background-color:#FFFFFF;
+	text-decoration:underline;
+}
 #main p {
     color:#111111;
     background-color:#FFFFFF;
@@ -123,8 +138,18 @@ h3 {
 	font-size:20px;
 	text-decoration:none;
 }
+#maincontent a:link {
+	color:#C65640;
+	background-color:#FFFFFF;
+	text-decoration:underline;
+}
+#maincontent a:visited {
+	color:#682C20;
+	background-color:#FFFFFF;
+	text-decoration:underline;
+}
 #maincontent a:hover {
-	color:#3399FF;
+	color:#FF0000;
 	background-color:#FFFFFF;
 	text-decoration:underline;
 }
