@@ -23,7 +23,12 @@ TEX_FILES= syntaxdef.sty\
 
 HVA_FILES=macros.hva syntaxdef.hva refman.hva
 
+include $(ROOT_DIR)/focalizec/.config_var
+ifeq ($(HEVEAFOUND),true)
 DOC_OBJS=refman.dvi refman.ps refman.pdf refman.html
+else
+DOC_OBJS=refman.dvi refman.ps refman.pdf
+endif
 
 TEXINPUT=/usr/share/texmf/tex/latex//:$(TEXINPUTS)
 LATEX=TEXINPUTS=$(TEXINPUT); latex
@@ -32,6 +37,7 @@ IMAGEN=imagen -extra "ppmquant 255"
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
+
 
 all: doc
 

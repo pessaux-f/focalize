@@ -38,7 +38,12 @@ FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 
 FOCALIZE_XML=$(FOCALIZE_DOCS:.fcd=.xml)
 
+include $(ROOT_DIR)/focalizec/.config_var
+ifeq ($(HEVEAFOUND),true)
 DOC_OBJS=tutorial.dvi tutorial.ps tutorial.pdf tutorial.html
+else
+DOC_OBJS=tutorial.dvi tutorial.ps tutorial.pdf
+endif
 
 FOCALIZEC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
 FOCALIZE_COMP_FLAGS=-I $(ROOT_DIR)/focalizec/src/stdlib  $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
@@ -48,7 +53,6 @@ CAML_COMP_FLAGS=-w Ae -dtypes
 # Defining defaults from Makefile.common
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
-include $(ROOT_DIR)/focalizec/.config_var
 
 # Now overwriting defaults for this directory purposes.
 TEXINPUT=/usr/share/texmf/tex/latex//:$(TEXINPUTS)

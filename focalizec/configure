@@ -208,7 +208,6 @@ else
 fi
 
 
-
 # Find GIT. This is used to make the build-stamp to know what was the last
 # commit involved in the current build.
 echo "#!/bin/sh" > gitlastsha.sh
@@ -386,6 +385,16 @@ then
     fi
 fi
 
+
+# Check if Hevea is available to convert docs in HTML.
+HEVEAFOUND=false
+HEVEAPATH=`which hevea`
+if [ "$HEVEAPATH" != "" ] ;
+    then
+       HEVEAFOUND=true
+fi
+
+
 # #############################################################################
 # Generate the configuration vars.
 
@@ -394,7 +403,9 @@ CONFIGURATION_VARS_FILE=.config_var
 rm -f $CONFIGURATION_VARS_FILE
 echo "FOCALIZEC_COQ_COMPATIBILITY_OPTION=$FOCALIZEC_COQ_COMPATIBILITY_OPTION" >> $CONFIGURATION_VARS_FILE
 echo "SUDO=$SUDO" >> $CONFIGURATION_VARS_FILE
+echo "HEVEAFOUND=$HEVEAFOUND" >> $CONFIGURATION_VARS_FILE
 chmod a-w $CONFIGURATION_VARS_FILE
+
 
 # #############################################################################
 # Summary feedback.
@@ -411,6 +422,12 @@ echo "  zenon = $ZENON"
 echo "  git = $GIT  (not important if not available)"
 echo "  zenon libraries directory = $ZENON_LIB_DIR"
 echo "  Use sudo to install -> $SUDO"
+if [ "$HEVEAFOUND" != "" ] ;
+then
+    echo "  Hevea DVI to HTML utility found, HTML docs will be generated."
+else
+    echo "  Hevea DVI to HTML utility NOT found, HTML docs won't be generated."
+fi
 if [ ! "$FOCALIZEC_COQ_COMPATIBILITY_OPTION" = "" ]
 then
     echo $BOLDTAG"ATTENTION:$NORMALTAG you are using a version of Coq < 8.4. FoCaliZeC must be called with"

@@ -25,7 +25,12 @@ TEX_FILES = conclusion.tex first_order_logic.tex intro.tex tuto_proofs.tex init.
 
 HVA_FILES=tuto_proofs.hva
 
+include $(ROOT_DIR)/focalizec/.config_var
+ifeq ($(HEVEAFOUND),true)
 DOC_OBJS=tuto_proofs.dvi tuto_proofs.ps tuto_proofs.pdf tuto_proofs.html
+else
+DOC_OBJS=tuto_proofs.dvi tuto_proofs.ps tuto_proofs.pdf
+endif
 
 FOCALIZEC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
 FOCALIZE_COMP_FLAGS= -I $(ROOT_DIR)/focalizec/src/stdlib  $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
@@ -35,7 +40,6 @@ CAML_COMP_FLAGS=-w Ae -dtypes
 # Defining defaults from Makefile.common
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
-include $(ROOT_DIR)/focalizec/.config_var
 
 # Now overwriting defaults for this directory purposes.
 TEXINPUT=/usr/share/texmf/tex/latex//:$(TEXINPUTS)
