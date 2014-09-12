@@ -3,19 +3,14 @@
 (*                        FoCaLize compiler                            *)
 (*                                                                     *)
 (*            François Pessaux                                         *)
-(*            Pierre Weis                                              *)
-(*            Damien Doligez                                           *)
 (*                                                                     *)
 (*                 LIP6  --  INRIA Rocquencourt  -- ENSTA              *)
 (*                                                                     *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                               *)
-(*            2012 ENSTA ParisTech                                     *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                *)
+(*            2012 - ... ENSTA ParisTech                               *)
 (*  Distributed only by permission.                                    *)
 (*                                                                     *)
 (***********************************************************************)
-
-(* $Id: anti_keyword_conflict.ml,v 1.3 2012-03-01 17:32:46 pessaux Exp $ *)
-
 
 module StrMod = struct
   type t = string
@@ -60,6 +55,7 @@ List.iter
     (* Coq keywords not being also FoCaLize keywords. *)
     ("at", "_at_") ;
     ("cofix", "_cofix_") ;
+    ("exists", "_exists_") ;
     ("exists2", "_exists2_") ;
     ("fix", "_fix_") ;
     ("forall", "_forall_") ;
