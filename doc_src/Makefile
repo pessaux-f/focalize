@@ -16,7 +16,7 @@
 
 ROOT_DIR=..
 
-SUB_DIRS=contacts documentation download resources
+SUB_DIRS=contacts documentation download resources snippets
 
 include $(ROOT_DIR)/Makefile.common
 

@@ -20,6 +20,8 @@ Contacts
   <li>Users mailing-list: <code>$(project_name)-users[[at]]inria.fr</code>.</li>
   <li>Developers mailing-list: <code>$(project_name)-devel[[at]]inria.fr</code>.</li>
   </ul>
+</h3>
+</div>
 <br>
 
 
@@ -30,7 +32,7 @@ Contacts
   <li><a target="_self" href="http://pauillac.inria.fr/%7Edoligez/">Damien Doligez</a> (Researcher - INRIA/Microsoft) </li>
     <li><a href="http://www.iie.cnam.fr/%7Edubois/">Catherine Dubois</a> (Professor - CNAM/CEDRIC) </li>
     <li><a href="http://www-spi.lip6.fr/%7Ehardin/">Th&eacute;r&egrave;se Hardin</a> (Emerita Professor, Past Project Leader - LIP6/SPI) </li>
-    <li><a href="http://www-spi.lip6.fr/%7Ejaume/">Mathieu Jaume</a> (Assistant Professor - LIP6/SPI) </li>
+    <li><a href="http://pagesperso-systeme.lip6.fr/Mathieu.Jaume/">Mathieu Jaume</a> (Assistant Professor - LIP6/SPI) </li>
   <li><a href="http://perso.ensta-paristech.fr/%7Epessaux/">Fran&ccedil;ois Pessaux</a> (Assistant Professor - ENSTA/U2IS)</li>
     <li><a href="http://www-spi.lip6.fr/%7Err/" target="_self">Renaud Rioboo</a> (Professor - CNAM/CEDRIC) </li>
 </ul>
