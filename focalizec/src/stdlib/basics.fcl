@@ -264,7 +264,7 @@ let ( - ) =
   external
   | caml -> {* Ml_builtins.bi__int_minus *}
   | coq -> {* coq_builtins.bi__int_minus *}
-  | dedukti -> {* dk_int.minus *}
+  | dedukti -> {* dk_int.sub *}
 ;;
 
 
@@ -292,7 +292,7 @@ let ( / ) =
   external
   | caml -> {* Ml_builtins.bi__int_div *}
   | coq -> {* coq_builtins.bi__int_div *}
-  | dedukti -> {* dk_int.div *}
+  | dedukti -> {* dk_int.quo *}
 ;;
 
 

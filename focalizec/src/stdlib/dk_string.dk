@@ -20,3 +20,25 @@ equal : String -> String -> dk_bool.Bool.
           (cons c2 s2)
       -->
     dk_bool.and (dk_char.equal c1 c2) (equal s1 s2).
+
+append : String -> String -> String.
+[ s : String ]
+    append nil s --> s
+[ c : dk_char.Char, s1 : String, s2 : String ]
+    append (cons c s1) s2 --> cons c (append s1 s2).
+
+lt : String -> String -> dk_bool.Bool.
+[ ]
+    lt nil nil --> dk_bool.false
+[ c : dk_char.Char, s : String ]
+    lt nil (cons c s) --> dk_bool.true
+[ c : dk_char.Char, s : String ]
+    lt (cons c s) nil --> dk_bool.false
+[ c1 : dk_char.Char, c2 : dk_char.Char,
+  s1 : String, s2 : String ]
+    lt (cons c1 s1) (cons c2 s2)
+      -->
+    dk_bool.or (dk_char.lt c1 c2)
+               (dk_bool.and
+                 (dk_char.equal c1 c2)
+                 (lt s1 s2)).
