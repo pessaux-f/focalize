@@ -531,10 +531,12 @@ let generate_record_label_for_method_generator ctx env label =
 (* Takes an Parsetree.ast and print its type *)
 let generate_simple_type_of_ast dkctx out_fmter a =
  match a.Parsetree.ast_type with
- | Parsetree.ANTI_none
- | Parsetree.ANTI_irrelevant
- | Parsetree.ANTI_scheme _ ->
-    Format.fprintf out_fmter "unknown_type"
+ | Parsetree.ANTI_none ->
+    Format.fprintf out_fmter "no_type"
+ | Parsetree.ANTI_irrelevant ->
+    Format.fprintf out_fmter "irrelevant_type"
+ | Parsetree.ANTI_scheme ts ->
+    Types.pp_type_simple_to_dk dkctx out_fmter (Types.specialize ts)
  | Parsetree.ANTI_type st ->
     Types.pp_type_simple_to_dk dkctx out_fmter st
 ;;
@@ -563,20 +565,22 @@ let generate_simple_type_of_ast dkctx out_fmter a =
     failure.
 
     {b Args} :
-      - [d]: A function unit -> unit printing the term bound to the pattern.
+      - [d]: An ast: the term bound to the pattern.
+      - [print_d]: A function to print d.
       - [k]: A continuation in case the pattern is not matched.
+      - [e]: a function to print the expression matched
 
     {b Exported} : Yes                                                        *)
 (* ************************************************************************** *)
 let generate_pattern ctx dkctx env pattern
-                     print_d (d : 'a Parsetree.ast) k =
+                     print_d (d : 'a Parsetree.ast) k e =
   let out_fmter = ctx.Context.scc_out_fmter in
   let rec rec_gen_pat pat print_d (d : 'a Parsetree.ast) =
     match pat.Parsetree.ast_desc with
      | Parsetree.P_const constant -> generate_constant_pattern ctx constant k
      | Parsetree.P_var name ->
         (* "function x -> d" is the same as "fun x -> d" *)
-        Format.fprintf out_fmter "(%a :@ "
+        Format.fprintf out_fmter "(%a :@ cc.eT@ "
                        Parsetree_utils.pp_vname_with_operators_expanded name;
         generate_pattern_type pat;
         Format.fprintf out_fmter " =>@ ";
@@ -593,11 +597,23 @@ let generate_pattern ctx dkctx env pattern
         rec_gen_pat p print_d d;
         Format.fprintf out_fmter "@ %a)"
                        Parsetree_utils.pp_vname_with_operators_expanded name
-     | Parsetree.P_wild -> print_d ()
+     | Parsetree.P_wild ->
+        (* "function _ -> d" is the same as "fun __ -> d" *)
+        Format.fprintf out_fmter "(__ :@ cc.eT@ ";
+        generate_pattern_type pat;
+        Format.fprintf out_fmter " =>@ ";
+        print_d ();
+        Format.fprintf out_fmter ")"
      | Parsetree.P_record _labs_pats ->
          Format.eprintf "generate_pattern P_record TODO@."
      | Parsetree.P_tuple [] -> assert false (* Tuples should not be empty *)
      | Parsetree.P_tuple [ p ] -> rec_gen_pat p print_d d
+     | Parsetree.P_tuple [ p1 ; p2 ] -> (* Tuples are a special case of constructor *)
+        let desc = Parsetree.P_constr (pair_cident, [p1 ; p2] ) in
+        (* Update pattern type to reflect current use *)
+        let ast = Parsetree_utils.make_ast desc in
+        ast.Parsetree.ast_type <- pat.Parsetree.ast_type;
+        rec_gen_pat ast print_d d
      | Parsetree.P_tuple (p :: pats) -> (* Tuples are a special case of constructor *)
         let tail = Parsetree_utils.make_ast (Parsetree.P_tuple pats) in
         let desc = Parsetree.P_constr (pair_cident, [p ; tail] ) in
@@ -610,11 +626,12 @@ let generate_pattern ctx dkctx env pattern
          rec_gen_pat p print_d d;
          Format.fprintf out_fmter ")@]"
      | Parsetree.P_constr (cident, pats) -> (* Most interesting case *)
-        (* A function match__C : RT (Return type) : * ->
-                                 PV (Polymorphic variables) : * ->
+        (* A function match__C : PV (Polymorphic variables) : * ->
+                                 DT PV ->
+                                 RT (Return type) : * ->
                                  then_case : (ty_1 -> .. ty_n-> RT) ->
                                  else_case : (DT PV -> RT) ->
-                                 DT PV -> RT
+                                 RT
                       is available in the same dedukti file than the constructor
          *)
         let Parsetree.CI ident = cident.Parsetree.ast_desc in
@@ -622,15 +639,13 @@ let generate_pattern ctx dkctx env pattern
           | Parsetree.I_global (Parsetree.Qualified (f, _))  -> f ^ "."
           | _ -> ""
         in
-        Format.fprintf out_fmter "@[<1>%smatch__%a@ "
+        Format.fprintf out_fmter "@[<1>%smatch__%a"
                        pattern_file_name
                        Parsetree_utils.pp_vname_with_operators_expanded
                        (Parsetree_utils.unqualified_vname_of_constructor_ident
                           cident) ;
-        (* Now the return type *)
-        generate_simple_type_of_ast dkctx out_fmter d ;
-        Format.fprintf out_fmter "@ ";
         (* Now polymorphic variables *)
+        (* Number of polymorphic variables *)
         let extras =
            generate_constructor_ident_for_method_generator ctx env cident
         in
@@ -644,17 +659,26 @@ let generate_pattern ctx dkctx env pattern
                               (Parsetree_utils.unqualified_vname_of_constructor_ident
                                  cident)
           end) ;
+        (* Now the matched term *)
+        Format.fprintf out_fmter "@ ";
+        e ();
+        (* Now the return type *)
+        Format.fprintf out_fmter "@ ";
+        generate_simple_type_of_ast dkctx out_fmter d ;
+        (* Now the pattern function *)
         Format.fprintf out_fmter "@ (";
         let count = ref 0 in
         List.iter (fun pat ->
-                   Format.fprintf out_fmter "pattern_var_%d :@ " !count;
+                   Format.fprintf out_fmter "pattern_var_%d :@ cc.eT@ " !count;
                    generate_simple_type_of_ast dkctx out_fmter pat;
                    Format.fprintf out_fmter " =>@ ";
                    incr count)
                   pats;
         (* Recursive calls actually depend on d *)
         rec_generate_pats_list print_d d 0 pats;
-        Format.fprintf out_fmter ")@]"
+        Format.fprintf out_fmter ")";
+        Format.fprintf out_fmter "@]";
+
 
   and rec_generate_pats_list print_d d count = function
     | [] -> print_d ()
@@ -1153,10 +1177,10 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
           | (pat, d) :: pats ->
              generate_pattern ctx print_ctx env pat
                               (fun () -> rec_generate_expr loc_idents env d) d
-                              (fun () -> generate_pattern_matching pats) in
+                              (fun () -> generate_pattern_matching pats)
+                              (fun () -> rec_generate_expr loc_idents env expr)
+        in
         generate_pattern_matching pats_exprs;
-        Format.fprintf out_fmter "@ ";
-        rec_generate_expr loc_idents env expr
      (*  *)
      | Parsetree.E_if (expr1, expr2, expr3) ->
          Format.fprintf out_fmter "@[<2>(if@ " ;

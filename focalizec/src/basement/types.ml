@@ -1926,9 +1926,19 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     | ST_construct (_, arg_tys) ->
        Format.fprintf ppf " %a" (Handy.pp_generic_separated_list ""
                                   (rec_pp_to_dk ctx 0)) arg_tys
-    | _ -> for _i = 0 to n - 1 do Format.fprintf ppf "@ _" done in
-
-
+    | ST_tuple l ->
+       List.iter (fun t -> Format.fprintf ppf "@ %a"
+                                       (rec_pp_to_dk ctx 0) t)
+                 l
+    | t ->
+       (* In Dedukti, we cannot print underscores
+          instead of inferable type variables.
+          Printing the type will not be satisfactory,
+          it may be replaced by an error.
+        *)
+       Format.fprintf ppf "@ %a (; from %d underscores ;)"
+                      (rec_pp_to_dk ctx 0) t n
+  in
 
   (* ************************************************** *)
   (* Now, the real definition of the printing functions *)

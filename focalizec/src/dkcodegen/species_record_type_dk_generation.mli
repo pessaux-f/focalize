@@ -51,6 +51,7 @@ val generate_pattern :
   (unit -> unit) ->
   Parsetree.expr ->
   (unit -> unit) ->
+  (unit -> unit) ->
   unit
 
 val generate_expr :
