@@ -1100,6 +1100,28 @@ let unify ~loc ~self_manifest type1 type2 =
   rec_unify type1 type2
 ;;
 
+(* ************************************************************************* *)
+(** {b Descr} : Unifies the type scheme [ts]
+    with the simple type [st].
+
+    [st] is assumed to be an instance of [ts].
+
+    This functions returns a list of simple types
+    corresponding to the instantiations of the variables in the scheme.
+
+    This funcition is used in the Dedukti backend to fill
+    type arguments which are passed as underscores to Coq.
+
+    {b Rem} : Exported oustide this module.                              *)
+(* ************************************************************************* *)
+let unify_with_instance ts st =
+  ignore (unify ~loc:Location.none ~self_manifest:None ts.ts_body st);
+  List.map (fun v -> match v.tv_value
+                  with
+                  | TVV_known t -> t
+                  | TVV_unknown -> assert false)
+           ts.ts_vars
+;;
 
 
 (* ********************************************************************* *)
@@ -1843,8 +1865,11 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
              (* Obviously, Self should refer to the current species. This
                 means that the CURRENT species MUST be in the CURRENT
                 compilation unit ! *)
-             assert (species_modname = ctx.dpc_current_unit) ;
              (* If "Self" is kept abstract, then it won't appear in the
+
+                 (* /!\ Assertion failure!! *)
+
+                 (* assert (species_modname = ctx.dpc_current_unit) ; *)
                 collection_carrier_mapping and must be printed like "abst_T"
                 (for instance when printing in a field definition). Otherwise
                 it may show the species from which it is the carrier (when

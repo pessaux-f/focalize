@@ -104,6 +104,11 @@ val unify :
   loc: Location.t -> self_manifest: (type_simple option) -> type_simple ->
   type_simple -> type_simple
 
+val unify_with_instance :
+  type_scheme ->
+  type_simple ->
+  type_simple list
+
 val reset_deps_on_rep : unit -> unit
 val check_for_decl_dep_on_self : type_simple -> unit
 val get_def_dep_on_rep : unit -> bool
