@@ -350,18 +350,24 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
       )
 ;;
 
+let butfst (str : string) : string =
+  String.sub str 1 (String.length str - 1)
+;;
 
+let butlast (str : string) : string =
+  String.sub str 0 (String.length str - 1)
+;;
+
+let last (str : string) : char =
+  str.[String.length str - 1]
+;;
 
 (* TODO *)
 let generate_constant_pattern ctx cst k =
   match cst.Parsetree.ast_desc with
    | Parsetree.C_int str ->
-       (* Integers are directly mapped in Dk. Be careful: signs - can be
-          confused with operators. We assume that strings are well-formed hence
-          are never empty. So... hit inside without checking length ^_^ *)
-       if str.[0] = '+' || str.[0] = '-' then
-         Format.fprintf ctx.Context.scc_out_fmter "(%s)" str
-       else Format.fprintf ctx.Context.scc_out_fmter "%s" str
+       (* [Unsure] *)
+       Format.fprintf ctx.Context.scc_out_fmter "C_int"
    | Parsetree.C_float _str ->
        (* [Unsure] *)
        Format.fprintf ctx.Context.scc_out_fmter "C_float"
@@ -379,12 +385,31 @@ let generate_constant_pattern ctx cst k =
 let generate_constant ctx cst =
   match cst.Parsetree.ast_desc with
    | Parsetree.C_int str ->
-       (* Integers are directly mapped in Dk. Be careful: signs - can be
-          confused with operators. We assume that strings are well-formed hence
-          are never empty. So... hit inside without checking length ^_^ *)
-       if str.[0] = '+' || str.[0] = '-' then
-         Format.fprintf ctx.Context.scc_out_fmter "(%s)" str
-       else Format.fprintf ctx.Context.scc_out_fmter "%s" str
+      let sign = (str.[0] = '-') in
+      let abs_str =
+        if str.[0] = '-' || str.[0] = '+'
+        then butfst str
+        else str
+      in
+      let rec print_abs fmter s =
+        if s = "" then (
+          Format.fprintf fmter "dk_nat.dnil"
+        ) else (
+          Format.fprintf fmter
+                         "@[<2>(dk_nat.dcons@ %a@ dk_nat._%c)@]"
+                         print_abs (butlast s)
+                         (last s)
+        )
+      in
+      if sign
+      then Format.fprintf ctx.Context.scc_out_fmter
+                          "@[<2>(dk_int.opp@ ";
+      Format.fprintf ctx.Context.scc_out_fmter
+                     "@[<2>(dk_int.from_nat@ @[<2>(dk_nat.list_to_nat %a)@])@]"
+                     print_abs abs_str;
+      if sign
+      then Format.fprintf ctx.Context.scc_out_fmter
+                          ")@]";
    | Parsetree.C_float _str ->
        (* [Unsure] *)
        Format.fprintf ctx.Context.scc_out_fmter "C_float"

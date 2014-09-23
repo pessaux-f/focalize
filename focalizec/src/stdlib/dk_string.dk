@@ -42,3 +42,48 @@ lt : String -> String -> dk_bool.Bool.
                (dk_bool.and
                  (dk_char.equal c1 c2)
                  (lt s1 s2)).
+
+of_diglist : dk_nat.Diglist -> String.
+[] of_diglist (dk_list.nil dk_nat.Digit) --> nil
+[ d : cc.eT dk_nat.Digit, l : dk_nat.Diglist ]
+    of_diglist (dk_list.cons dk_nat.Digit d l)
+      -->
+    cons (dk_char.digit_to_char d)
+         (of_diglist l).
+
+of_nat : cc.eT dk_nat.nat -> String.
+[ n : cc.eT dk_nat.nat ] of_nat n --> of_diglist (dk_nat.nat_to_list n).
+
+of_int : cc.eT dk_int.int -> String.
+[n : dk_nat.Nat]
+    of_int (dk_int.make n dk_nat.O)
+      -->
+    of_nat n
+[m : dk_nat.Nat]
+    of_int (dk_int.make dk_nat.O (dk_nat.S m))
+      -->
+    cons dk_char.hyphen (of_nat (dk_nat.S m)).
+
+to_diglist : String -> dk_nat.Diglist.
+[]
+    to_diglist nil
+      -->
+      dk_list.nil dk_nat.Digit
+[ c : dk_char.Char, s : String]
+    to_diglist (cons c s)
+      -->
+    dk_list.cons dk_nat.Digit
+      (dk_char.char_to_digit c)
+      (to_diglist s).
+
+to_nat : String -> dk_nat.Nat.
+[ s : String ] to_nat s --> dk_nat.list_to_nat (to_diglist s).
+
+to_int : String -> cc.eT dk_int.int.
+[ c : dk_char.Char, s : String ]
+    to_int (cons c s)
+      -->
+    dk_bool.ite dk_int.int
+      (dk_char.equal c dk_char.hyphen)
+      (dk_int.opp (dk_int.from_nat (to_nat s)))
+      (dk_int.from_nat (to_nat (cons c s))).

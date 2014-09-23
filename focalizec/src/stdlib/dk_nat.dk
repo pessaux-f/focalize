@@ -123,16 +123,45 @@ digit_to_nat : cc.eT Digit -> Nat.
 [] digit_to_nat _9 --> 9.
 
 (; Conversion from a list of digits (weakest digit at head) to_nat a nat ;)
-list_to_nat : cc.eT (dk_list.list Digit) -> Nat.
+Diglist := cc.eT (dk_list.list Digit).
+list_to_nat : Diglist -> Nat.
 [ ] list_to_nat (dk_list.nil Digit) --> O
-[ d : cc.eT Digit, l : cc.eT (dk_list.list Digit) ] list_to_nat (dk_list.cons Digit d l)
+[ d : cc.eT Digit, l : Diglist ] list_to_nat (dk_list.cons Digit d l)
       --> plus (digit_to_nat d) (mult 10 (list_to_nat l)).
 
-(; Natotation with weakest digit on the right side ;)
-diglist : cc.uT := dk_list.list Digit.
-dnil : cc.eT diglist := dk_list.nil Digit.
-dcons : cc.eT diglist -> cc.eT Digit -> cc.eT diglist
-      := l : cc.eT diglist => d : cc.eT Digit => dk_list.cons Digit d l.
+(; Notation with weakest digit on the right side ;)
+dnil : Diglist := dk_list.nil Digit.
+dcons : Diglist -> cc.eT Digit -> Diglist
+      := l : Diglist => d : cc.eT Digit => dk_list.cons Digit d l.
 
 (; Example ;)
 42 : Nat := list_to_nat (dcons (dcons dnil _4) _2).
+
+nat_to_digit : Nat -> cc.eT Digit.
+[] nat_to_digit O --> _0
+[] nat_to_digit (S O) --> _1
+[] nat_to_digit (S (S O)) --> _2
+[] nat_to_digit (S (S (S O))) --> _3
+[] nat_to_digit (S (S (S (S O)))) --> _4
+[] nat_to_digit (S (S (S (S (S O))))) --> _5
+[] nat_to_digit (S (S (S (S (S (S O)))))) --> _6
+[] nat_to_digit (S (S (S (S (S (S (S O))))))) --> _7
+[] nat_to_digit (S (S (S (S (S (S (S (S O)))))))) --> _8
+[] nat_to_digit (S (S (S (S (S (S (S (S (S O))))))))) --> _9.
+
+nat_to_list_aux : Nat -> Diglist.
+[]
+    nat_to_list_aux O
+      -->
+      dk_list.nil Digit
+[ n : Nat ]
+    nat_to_list_aux (S n)
+      -->
+    dk_list.cons Digit
+      (nat_to_digit (mod (S n) 10))
+      (nat_to_list_aux (quo (S n) 10)).
+
+nat_to_list : Nat -> Diglist.
+[] nat_to_list O --> dk_list.cons Digit _0 (dk_list.nil Digit)
+[ n : Nat ]
+    nat_to_list (S n) --> nat_to_list_aux (S n).
