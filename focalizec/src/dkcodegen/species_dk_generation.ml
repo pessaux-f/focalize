@@ -2443,8 +2443,7 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
     (ZSGM_from_logical_expr logical_expr) proof;
   (* Now, generate the real theorem, using the temporarily created and applying
      the proof. *)
-  Format.fprintf out_fmter "@[<2>Theorem ";
-  Format.fprintf out_fmter "%a "
+  Format.fprintf out_fmter "@[<2>%a "
     Parsetree_utils.pp_vname_with_operators_expanded name;
   (* Generate the prelude of the method, i.e the sequence of parameters and
      their types induced by the various lamda-liftings. *)
@@ -2452,7 +2451,7 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
     generate_field_definition_prelude
       ~in_section: false ctx print_ctx env min_dk_env
       used_species_parameter_tys dependencies_from_params generated_fields in
-  Format.fprintf out_fmter ":@ " ;
+  Format.fprintf out_fmter ":@ dk_logic.eP@ (" ;
   (* Finally, the theorem itself. Inside, any method of "Self" is abstracted
      (i.e. is lambda-lifted), hence named "abst_xxx". That's why we use the
      mode [SMS_abstracted]. *)
@@ -2461,12 +2460,20 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
     ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
     ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
     new_ctx env logical_expr ;
-  Format.fprintf out_fmter ".@]@\n";
+  Format.fprintf out_fmter ") :=@]@\n";
   (* End the proof matter. *)
   (match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed _ | Parsetree.Pf_coq _ ->
        (* Proof assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter "(; Proof was flagged as assumed ;)@\n";
+       Format.fprintf out_fmter "dk_builtins.magic_prove@ (";
+       (* Print again the theorem *)
+       Species_record_type_dk_generation.generate_logical_expr
+         ~local_idents: [] ~in_recursive_let_section_of: []
+         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         new_ctx env logical_expr ;
+       Format.fprintf out_fmter ").@\n"
    | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
        (* Proof done by Zenon. Apply the temporary theorem. *)
        Format.fprintf out_fmter

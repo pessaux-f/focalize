@@ -1350,32 +1350,30 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
             in [let_binding_compile]. Consult comment over there... *)
          List.iter
            (fun var ->
-             Format.fprintf out_fmter "forall %a : Set,@ "
+             Format.fprintf out_fmter "dk_logic.forall_type (%a : cc.uT => @ "
                Types.pp_type_variable_to_dk var)
            generalized_vars ;
-         (* In Dk, we must write: "forall x y : Set, ..."
-            but "exists x : Set, exists y : Set, ..." so just change the way
-            we print depending on the binder. *)
+         (* Now, print the binder and the real bound variables. *)
          (match proposition.Parsetree.ast_desc with
           | Parsetree.Pr_forall (_, _, _) ->
-              (* Now, print the binder and the real bound variables. *)
-              Format.fprintf out_fmter "forall@ %a :@ %a,@ "
-                (Handy.pp_generic_separated_list
-                   " "
-                   (fun ppf vn ->
-                     Format.fprintf ppf "%s"
-                       (Parsetree_utils.vname_as_string_with_operators_expanded
-                          vn)))
-                vnames
-                (Types.pp_type_simple_to_dk print_ctx) ty
-          | Parsetree.Pr_exists (_, _, _) ->
-              (* Now, print the real bound variables. *)
               List.iter
                 (fun vn ->
-                  Format.fprintf out_fmter "exists %s :@ %a,@ "
-                    (Parsetree_utils.vname_as_string_with_operators_expanded
-                       vn)
-                    (Types.pp_type_simple_to_dk print_ctx) ty)
+                 Format.fprintf out_fmter
+                                "dk_logic.forall (%a) (%s :@ cc.eT (%a)@ =>@ "
+                                (Types.pp_type_simple_to_dk print_ctx) ty
+                                (Parsetree_utils.vname_as_string_with_operators_expanded
+                                   vn)
+                                (Types.pp_type_simple_to_dk print_ctx) ty)
+                vnames
+          | Parsetree.Pr_exists (_, _, _) ->
+              List.iter
+                (fun vn ->
+                 Format.fprintf out_fmter
+                                "dk_logic.exists (%a) (%s :@ cc.eT (%a)@ =>@ "
+                                (Types.pp_type_simple_to_dk print_ctx) ty
+                                (Parsetree_utils.vname_as_string_with_operators_expanded
+                                   vn)
+                                (Types.pp_type_simple_to_dk print_ctx) ty)
                 vnames
           | _ -> assert false) ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
@@ -1392,39 +1390,46 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
              env
              vnames in
          rec_generate_logical_expr loc_idents' env' logical_expr ;
+         (* Close the parens opened for binders *)
+         List.iter
+           (fun _ -> Format.fprintf out_fmter ")")
+           vnames ;
+         List.iter
+           (fun _ -> Format.fprintf out_fmter ")")
+           generalized_vars;
          Format.fprintf out_fmter "@]"
          end)
      | Parsetree.Pr_imply (logical_expr1, logical_expr2) ->
-         Format.fprintf out_fmter "@[<2>" ;
+         Format.fprintf out_fmter "@[<2>dk_logic.imp@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr1 ;
-         Format.fprintf out_fmter " ->@ " ;
+         Format.fprintf out_fmter ")@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr2 ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_or (logical_expr1, logical_expr2) ->
-         Format.fprintf out_fmter "@[<2>" ;
+         Format.fprintf out_fmter "@[<2>dk_logic.or@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr1 ;
-         Format.fprintf out_fmter " \\/@ " ;
+         Format.fprintf out_fmter ")@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr2 ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_and (logical_expr1, logical_expr2) ->
-         Format.fprintf out_fmter "@[<2>" ;
+         Format.fprintf out_fmter "@[<2>dk_logic.and@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr1 ;
-         Format.fprintf out_fmter " /\\@ " ;
+         Format.fprintf out_fmter ")@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr2 ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
-         Format.fprintf out_fmter "@[<2>" ;
+         Format.fprintf out_fmter "@[<2>dk_logic.eqv@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr1 ;
-         Format.fprintf out_fmter " <->@ " ;
+         Format.fprintf out_fmter ")@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr2 ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_not logical_expr ->
          Format.fprintf out_fmter "@[<2>" ;
-         Format.fprintf out_fmter "~" ;
+         Format.fprintf out_fmter "dk_logic.not@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_expr expr ->
-         (* The wrapper surrounding the expression by Dk's "Is_true" if the
+         (* The wrapper surrounding the expression by Dk's "ebP" if the
             expression's type is [bool].
             Bug #45 exhibited that the type here may also be Self in case
             the representation was bool. Because logical propositions
@@ -1441,7 +1446,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
                 (* Note that expression never has a type scheme, but only a
                    type. *)
                 assert false) in
-         if is_bool then Format.fprintf out_fmter "@[<2>Is_true (" ;
+         if is_bool then Format.fprintf out_fmter "@[<2>dk_logic.ebP (" ;
          generate_expr
            ctx ~in_recursive_let_section_of ~local_idents: loc_idents
            ~self_methods_status ~recursive_methods_status env expr ;

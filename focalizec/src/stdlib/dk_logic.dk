@@ -16,6 +16,7 @@ and : Prop -> Prop -> Prop.
 or : Prop -> Prop -> Prop.
 eqv : Prop -> Prop -> Prop
     := f1 : Prop => f2 : Prop => and (imp f1 f2) (imp f2 f1).
+forall_type : (cc.uT -> Prop) -> Prop.
 forall : A : cc.uT -> (cc.eT A -> Prop) -> Prop.
 exists : A : cc.uT -> (cc.eT A -> Prop) -> Prop.
 
@@ -31,6 +32,11 @@ eP : Prop -> Type
       -->
     cc.Pi A (x : cc.eT A => eeP (f x)).
 
+[ f : cc.uT -> Prop ]
+    eeP (forall_type f)
+      -->
+    cc.PiT (x : cc.uT => eeP (f x)).
+
 
 
 TrueT : Type := eP True.
@@ -38,6 +44,8 @@ FalseT : Type := eP False.
 I : TrueT.
 False_elim : A : cc.uT -> FalseT -> cc.eT A.
 
+Istrue : dk_bool.Bool -> Type.
+[ b : dk_bool.Bool ] Istrue b --> eP (ebP b).
 
 and_intro : f1 : Prop ->
             f2 : Prop ->
