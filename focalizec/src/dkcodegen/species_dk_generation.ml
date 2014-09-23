@@ -929,8 +929,8 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
           generate a fake Definition before generating the body of the recursive
           fonction whose body is needed because of the "by definition of...". *)
        Format.fprintf out_fmter
-         "(* Method \"%a\" is recursive. Special syntax \"Function\" for \
-         Zenon. *)@\n"
+         "(; Method \"%a\" is recursive. Special syntax \"Function\" for \
+         Zenon. ;)@\n"
          Parsetree_utils.pp_vname_with_operators_expanded vname ;
        (* Use specific syntax to tell Zenon that the function is recursive. *)
        Format.fprintf out_fmter "@[<2>Function abst_%a"
@@ -960,8 +960,8 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
           this case, we need to use the special syntax "Fixpoint" also for
           Zenon, and no definition equation. *)
        Format.fprintf out_fmter
-         "(* Method \"%a\" is recursive structural. Special syntax \
-         \"Fixpoint\" for Zenon. *)@\n"
+         "(; Method \"%a\" is recursive structural. Special syntax \
+         \"Fixpoint\" for Zenon. ;)@\n"
          Parsetree_utils.pp_vname_with_operators_expanded vname ;
        (* Use specific syntax to tell Zenon that the function is recursive. *)
        Format.fprintf out_fmter "@[<2>Fixpoint abst_%a "
@@ -1102,7 +1102,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
        in
        let (id, body) = lookup vname available_hyps in
        Format.fprintf out_fmter
-         "(* For notation used via \"by definition of %a\". *)@\n"
+         "(; For notation used via \"by definition of %a\". ;)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident;
        Format.fprintf out_fmter "@[<2>Definition %s :=" id ;
        Species_record_type_dk_generation.generate_expr
@@ -1128,7 +1128,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
            ~current_species_name by_def_expr_ident env in
        (* A bit of comment. *)
        Format.fprintf out_fmter
-         "(* For toplevel definition used via \"by definition of %a\". *)@\n"
+         "(; For toplevel definition used via \"by definition of %a\". ;)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident ;
        let name_for_zenon =
          Parsetree_utils.make_concatenated_name_with_operators_expanded_from_qualified_vname
@@ -1208,8 +1208,8 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                    (_, is_rec, _, params, scheme, body) -> (
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
-                   "(* For method of Self used via \"by definition of \
-                   %a\". *)@\n"
+                   "(; For method of Self used via \"by definition of \
+                   %a\". ;)@\n"
                    Sourcify.pp_expr_ident by_def_expr_ident ;
                  match is_rec with
                  | Env.DkGenInformation.RC_rec rec_kind ->
@@ -1242,8 +1242,8 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
              | MinEnv.MDEE_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
-                   "(* For method of Self used via \"by definition of \
-                   %a\". *)@\n"
+                   "(; For method of Self used via \"by definition of \
+                   %a\". ;)@\n"
                    Sourcify.pp_expr_ident by_def_expr_ident;
                  Format.fprintf out_fmter "@[<2>Definition abst_%a :=@ "
                    Parsetree_utils.pp_vname_with_operators_expanded vname ;
@@ -1371,8 +1371,8 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
        let meth_ty_kind = find_method_type_kind_by_name meth_vname coll_info in
        (* A bit of comment. *)
        Format.fprintf out_fmter
-         "(* For toplevel collection's method used via \"by \
-         property %a\". *)@\n"
+         "(; For toplevel collection's method used via \"by \
+         property %a\". ;)@\n"
          Sourcify.pp_expr_ident by_prop_expr_ident;
        match meth_ty_kind with
         | Env.MTK_computational meth_sch ->
@@ -1447,8 +1447,8 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
          List.find (fun (n, _) -> n = meth_vname) param_meths in
        (* A bit of comment. *)
        Format.fprintf out_fmter
-         "(* For species parameter method used via \"by \
-         property %a\". *)@\n"
+         "(; For species parameter method used via \"by \
+         property %a\". ;)@\n"
          Sourcify.pp_expr_ident by_prop_expr_ident;
        (* The method is name by "_p_" + the species parameter's name
           + "_" + the method's name. *)
@@ -1507,7 +1507,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
            ~current_species_name by_prop_expr_ident env in
                  (* A bit of comment. *)
        Format.fprintf out_fmter
-         "(* For toplevel definition used via \"by property of %a\". *)@\n"
+         "(; For toplevel definition used via \"by property of %a\". ;)@\n"
          Sourcify.pp_expr_ident by_prop_expr_ident;
        let name_for_zenon =
          Parsetree_utils.make_concatenated_name_from_qualified_vname qvname in
@@ -1548,7 +1548,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
              | MinEnv.MDEE_Defined_computational (_, _, _, _, scheme, _) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
-                   "(* For method of Self used via \"by property %a\". *)@\n"
+                   "(; For method of Self used via \"by property %a\". ;)@\n"
                    Sourcify.pp_expr_ident by_prop_expr_ident;
                  (* We just need to print the type of the method. *)
                  let meth_ty = Types.specialize scheme in
@@ -1559,7 +1559,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
              | MinEnv.MDEE_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
-                   "(* For method of Self used via \"by property %a\". *)@\n"
+                   "(; For method of Self used via \"by property %a\". ;)@\n"
                    Sourcify.pp_expr_ident by_prop_expr_ident;
                  (* We need to print the logical expression of the method. *)
                  Format.fprintf out_fmter "@[<2>Parameter abst_%a :@ "
@@ -1597,7 +1597,7 @@ let zenonify_by_type ctx env type_ident =
       ~current_unit: ctx.Context.scc_current_unit type_ident env in
   (* A bit of comment. *)
   Format.fprintf out_fmter
-    "(* For type definition used via \"by type %a\". *)@\n"
+    "(; For type definition used via \"by type %a\". ;)@\n"
     Sourcify.pp_ident type_ident;
   (* Now, generate the definition like we usually do in Dk syntax. *)
   let reduced_ctx = {
@@ -1717,7 +1717,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
                  raise
                    (Attempt_proof_by_unknown_hypothesis
                       (fact.Parsetree.ast_loc, vname))) in
-           Format.fprintf out_fmter "(* For hypothesis \"%a\". *)@\n"
+           Format.fprintf out_fmter "(; For hypothesis \"%a\". ;)@\n"
              Sourcify.pp_vname vname;
            Format.fprintf out_fmter "@[<2>Parameter %a :@ "
              Parsetree_utils.pp_vname_with_operators_expanded vname ;
@@ -1748,7 +1748,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
                  raise
                    (Attempt_proof_by_unknown_step
                       (fact.Parsetree.ast_loc, node_label))) in
-           Format.fprintf out_fmter "(* For step <%d>%s. *)@\n"
+           Format.fprintf out_fmter "(; For step <%d>%s. ;)@\n"
              (fst node_label) (snd node_label);
            Format.fprintf out_fmter "@[<2>Parameter %a :@ "
              Parsetree_utils.pp_vname_with_operators_expanded
@@ -1957,7 +1957,7 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_dk_env
   (* Now, print the lemma body. Inside, any method of "Self" is abstracted
      (without lambda-lift) and named "abst_xxx". That's why we use the mode
      [SMS_abstracted]. *)
-  Format.fprintf out_fmter "(* Theorem's body. *)@\n";
+  Format.fprintf out_fmter "(; Theorem's body. ;)@\n";
   (* Be careful if the dk proof appears in a nested proof of a Zenon script
      under a Zenon script then we must not apply the naming scheme
      "for_zenon__xxx". Otherwise, if the dk proof is at toplevel of the Zenon
@@ -2022,7 +2022,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
          ~in_nested_proof ctx print_ctx env min_dk_env available_hyps
          aim_gen_method aim_name enforced_deps ;
        (* Proof is assumed, then simply use "magic_prove". *)
-       Format.fprintf out_fmter "(* Proof was flagged as assumed. *)@\n";
+       Format.fprintf out_fmter "(; Proof was flagged as assumed. ;)@\n";
        Format.fprintf out_fmter "apply dk_builtins.magic_prove.@\nQed.@\n"
    | Parsetree.Pf_dk (enforced_deps, script) ->
        emit_zenon_theorem_for_proof
@@ -2120,7 +2120,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
        (* Now, print the lemma body. Inside, any method of "Self" is
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
-       Format.fprintf out_fmter "(* Theorem's body. *)@\n";
+       Format.fprintf out_fmter "(; Theorem's body. ;)@\n";
        Format.fprintf out_fmter "Theorem for_zenon_%a :@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;
        (* Generate the aim depending on if we are in a regular proof or in the
@@ -2279,7 +2279,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
      of proofs done by [Pf_auto] or [Pf_node]. It prints the opening of the
      main Section and the theorem. *)
   let print_common_prelude_for_zenon () =
-    Format.fprintf out_fmter "(* Section for proof of theorem '%a'. *)@\n"
+    Format.fprintf out_fmter "(; Section for proof of theorem '%a'. ;)@\n"
       Parsetree_utils.pp_vname_with_operators_expanded name;
     (* Start the Section. *)
     Format.fprintf out_fmter "@[<2>Section Proof_of_%a.@\n"
@@ -2355,7 +2355,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
           on each method and species parameter carrier type we depend on to be
           sure that Dk will abstract it. *)
        Format.fprintf out_fmter
-         "(* Dummy theorem to enforce Dk abstractions. *)@\n";
+         "(; Dummy theorem to enforce Dk abstractions. ;)@\n";
        Format.fprintf out_fmter "@[<2>Theorem ";
        Format.fprintf out_fmter "for_zenon_abstracted_%a "
          Parsetree_utils.pp_vname_with_operators_expanded name;
@@ -2431,7 +2431,7 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
     Format.eprintf "Generating Dk code for field '%a'.@."
       Parsetree_utils.pp_vname_with_operators_expanded name;
   (* Put an extra newline before the theorem to make some air ! *)
-  Format.fprintf out_fmter "@\n(* From species %a. *)@\n"
+  Format.fprintf out_fmter "@\n(; From species %a. ;)@\n"
     Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
   (* Create the Section for Zenon in order to build the temporary theorem that
      will be used with its proof to build the REAL and proved theorem. This
@@ -2466,8 +2466,7 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
   (match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed _ | Parsetree.Pf_coq _ ->
        (* Proof assumed, then simply use "magic_prove". *)
-       Format.fprintf out_fmter "(* Proof was flagged as assumed *)@\n";
-       Format.fprintf out_fmter "apply dk_builtins.magic_prove.@\nQed.@\n"
+       Format.fprintf out_fmter "(; Proof was flagged as assumed ;)@\n";
    | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
        (* Proof done by Zenon. Apply the temporary theorem. *)
        Format.fprintf out_fmter
@@ -2915,7 +2914,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
              | Parsetree.Pf_assumed _ | Parsetree.Pf_coq _ ->
                  (* Proof assumed, then simply use "magic_prove". *)
                  Format.fprintf out_fmter
-                   "(* Proof was flagged as assumed. *)@\n";
+                   "(; Proof was flagged as assumed. ;)@\n";
                  Format.fprintf out_fmter
                    "apply dk_builtins.magic_prove.@\nQed."
              | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
@@ -3176,7 +3175,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            recursive_calls ;
          (* The finally remaining stuff related to the well-foundation. *)
          Format.fprintf out_fmter
-           "(* Remaining well-foundation... *)@\n\
+           "(; Remaining well-foundation... ;)@\n\
                assumption.@\n"
         )
        else
@@ -3887,7 +3886,7 @@ let generate_collection_generator ctx env compiled_species_fields
   (* *********************************************************************** *)
   let process_one_field field_memory =
     let from = field_memory.Misc_common.cfm_from_species in
-    Format.fprintf out_fmter "(* From species %a. *)@\n"
+    Format.fprintf out_fmter "(; From species %a. ;)@\n"
       Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
     Format.fprintf out_fmter "@[<2>let local_%a :=@ "
       Parsetree_utils.pp_vname_with_operators_expanded
@@ -4532,7 +4531,7 @@ let generate_rep_definition ctx fields =
             (* Check if the sig is "rep". *)
             if (Parsetree_utils.name_of_vname n) = "rep" then (
               Format.fprintf ctx.Context.scc_out_fmter
-                "(* Carrier's structure explicitly given by \"rep\". *)@\n" ;
+                "(; Carrier's structure explicitly given by \"rep\". ;)@\n" ;
               Format.fprintf ctx.Context.scc_out_fmter
                 "@[<2>Definition me_as_carrier@ " ;
               (* Print the variables names... *)

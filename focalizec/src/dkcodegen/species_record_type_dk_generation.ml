@@ -1685,7 +1685,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
         if (Parsetree_utils.name_of_vname n) <> "rep" then
           (begin
           let ty = Types.specialize sch in
-          Format.fprintf out_fmter "(* From species %a. *)@\n"
+          Format.fprintf out_fmter "(; From species %a. ;)@\n"
             Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
           (* Field is prefixed by the species name for sake of unicity. *)
           Format.fprintf out_fmter "@[<2>rf_%a : cc.eT %a"
@@ -1699,7 +1699,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
         List.iter
           (fun (from, n, _, sch, _, _, _, _) ->
             let ty = Types.specialize sch in
-            Format.fprintf out_fmter "(* From species %a. *)@\n"
+            Format.fprintf out_fmter "(; From species %a. ;)@\n"
               Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
             (* Field is prefixed by the species name for sake of unicity. *)
             Format.fprintf out_fmter "@[<2>rf_%a : cc.eT %a"
@@ -1714,7 +1714,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
         (from, n, _polymorphic_vars_map, logical_expr, _) ->
         (* In the record type, theorems and properties are displayed in same
            way. *)
-        Format.fprintf out_fmter "(* From species %a. *)@\n"
+        Format.fprintf out_fmter "(; From species %a. ;)@\n"
           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
         (* Field is prefixed by the species name for sake of unicity. *)
         Format.fprintf out_fmter "@[<2>rf_%a :@ cc.eT "
