@@ -1325,11 +1325,13 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
     | [] -> ()
     | [last] -> rec_generate_expr loc_idents env last
     | h :: q ->
-        if comma then Format.fprintf out_fmter "dk_tuple.pair@ ";
-        generate_expression_type h;
-        Format.fprintf out_fmter "@ ";
-        rec_generate_exprs_type_list ~comma loc_idents env q;
-        Format.fprintf out_fmter "@ ";
+       if comma then            (* There is no builtin syntax for pairs in Dedukti, we use a pair function instead. *)
+         (Format.fprintf out_fmter "dk_tuple.pair@ ";
+          generate_expression_type h;
+          Format.fprintf out_fmter "@ ";
+          rec_generate_exprs_type_list ~comma loc_idents env q;
+          Format.fprintf out_fmter "@ ";
+         );
         rec_generate_expr loc_idents env h ;
         Format.fprintf out_fmter "@ " ;
         rec_generate_exprs_list ~comma loc_idents env q in
