@@ -8,6 +8,8 @@ S0 : dk_binary_nat.BNat -> dk_binary_nat.BNat := dk_binary_nat.S0.
 S1 : dk_binary_nat.BNat -> dk_binary_nat.BNat := dk_binary_nat.S1.
 cast : dk_binary_nat.BNat -> Char := dk_machine_int.cast_bnat dk_nat.7.
 
+hyphen : Char := cast (S1 (S0 (S1 (S1 (S0 (S1 _O)))))).
+
 0 : Char := cast (S0 (S0 (S0 (S0 (S1 (S1 _O)))))).
 1 : Char := cast (S1 (S0 (S0 (S0 (S1 (S1 _O)))))).
 2 : Char := cast (S0 (S1 (S0 (S0 (S1 (S1 _O)))))).
@@ -75,7 +77,134 @@ z : Char := cast (S0 (S1 (S0 (S1 (S1 (S1 (S1 _O))))))).
 
 __ : Char := cast (S1 (S0 (S1 (S1 (S1 (S1 (S1 _O))))))).
 
+
 equal : Char -> Char -> cc.eT dk_bool.bool
       := dk_machine_int.equal dk_nat.7.
 
 lt : Char -> Char -> dk_bool.Bool := dk_machine_int.signed_lt dk_nat.7.
+
+(; Conversion to digits, useful for reading numbers as strings ;)
+
+digit_to_char : cc.eT dk_nat.Digit -> Char.
+[] digit_to_char dk_nat._0 --> 0
+[] digit_to_char dk_nat._1 --> 1
+[] digit_to_char dk_nat._2 --> 2
+[] digit_to_char dk_nat._3 --> 3
+[] digit_to_char dk_nat._4 --> 4
+[] digit_to_char dk_nat._5 --> 5
+[] digit_to_char dk_nat._6 --> 6
+[] digit_to_char dk_nat._7 --> 7
+[] digit_to_char dk_nat._8 --> 8
+[] digit_to_char dk_nat._9 --> 9.
+
+char_to_digit : Char -> cc.eT dk_nat.Digit.
+
+[] char_to_digit
+     (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))))
+                        (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))))
+                                           (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))
+                                                              (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))
+                                                                                 (dk_machine_int.S1 (dk_nat.S (dk_nat.S dk_nat.O))
+                                                                                                    (dk_machine_int.S1 (dk_nat.S dk_nat.O)
+                                                                                                                       (dk_machine_int.S0 dk_nat.O
+                                                                                                                          dk_machine_int.O)))))))
+      --> dk_nat._0
+
+[] char_to_digit
+     (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))))
+                        (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))))
+                                           (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))
+                                                              (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))
+                                                                                 (dk_machine_int.S1 (dk_nat.S (dk_nat.S dk_nat.O))
+                                                                                                    (dk_machine_int.S1 (dk_nat.S dk_nat.O)
+                                                                                                                       (dk_machine_int.S0 dk_nat.O
+                                                                                                                          dk_machine_int.O)))))))
+      --> dk_nat._1
+
+[] char_to_digit
+     (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))))
+                        (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))))
+                                           (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))
+                                                              (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))
+                                                                                 (dk_machine_int.S1 (dk_nat.S (dk_nat.S dk_nat.O))
+                                                                                                    (dk_machine_int.S1 (dk_nat.S dk_nat.O)
+                                                                                                                       (dk_machine_int.S0 dk_nat.O
+                                                                                                                          dk_machine_int.O)))))))
+      --> dk_nat._2
+
+[] char_to_digit
+     (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))))
+                        (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))))
+                                           (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))
+                                                              (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))
+                                                                                 (dk_machine_int.S1 (dk_nat.S (dk_nat.S dk_nat.O))
+                                                                                                    (dk_machine_int.S1 (dk_nat.S dk_nat.O)
+                                                                                                                       (dk_machine_int.S0 dk_nat.O
+                                                                                                                          dk_machine_int.O)))))))
+      --> dk_nat._3
+
+[] char_to_digit
+     (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))))
+                        (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))))
+                                           (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))
+                                                              (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))
+                                                                                 (dk_machine_int.S1 (dk_nat.S (dk_nat.S dk_nat.O))
+                                                                                                    (dk_machine_int.S1 (dk_nat.S dk_nat.O)
+                                                                                                                       (dk_machine_int.S0 dk_nat.O
+                                                                                                                          dk_machine_int.O)))))))
+      --> dk_nat._4
+
+[] char_to_digit
+     (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))))
+                        (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))))
+                                           (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))
+                                                              (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))
+                                                                                 (dk_machine_int.S1 (dk_nat.S (dk_nat.S dk_nat.O))
+                                                                                                    (dk_machine_int.S1 (dk_nat.S dk_nat.O)
+                                                                                                                       (dk_machine_int.S0 dk_nat.O
+                                                                                                                          dk_machine_int.O)))))))
+      --> dk_nat._5
+
+[] char_to_digit
+     (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))))
+                        (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))))
+                                           (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))
+                                                              (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))
+                                                                                 (dk_machine_int.S1 (dk_nat.S (dk_nat.S dk_nat.O))
+                                                                                                    (dk_machine_int.S1 (dk_nat.S dk_nat.O)
+                                                                                                                       (dk_machine_int.S0 dk_nat.O
+                                                                                                                          dk_machine_int.O)))))))
+      --> dk_nat._6
+
+[] char_to_digit
+     (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))))
+                        (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))))
+                                           (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))
+                                                              (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))
+                                                                                 (dk_machine_int.S1 (dk_nat.S (dk_nat.S dk_nat.O))
+                                                                                                    (dk_machine_int.S1 (dk_nat.S dk_nat.O)
+                                                                                                                       (dk_machine_int.S0 dk_nat.O
+                                                                                                                          dk_machine_int.O)))))))
+      --> dk_nat._7
+
+[] char_to_digit
+     (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))))
+                        (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))))
+                                           (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))
+                                                              (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))
+                                                                                 (dk_machine_int.S1 (dk_nat.S (dk_nat.S dk_nat.O))
+                                                                                                    (dk_machine_int.S1 (dk_nat.S dk_nat.O)
+                                                                                                                       (dk_machine_int.S0 dk_nat.O
+                                                                                                                          dk_machine_int.O)))))))
+      --> dk_nat._8
+
+[] char_to_digit
+     (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))))
+                        (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))))
+                                           (dk_machine_int.S0 (dk_nat.S (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O))))
+                                                              (dk_machine_int.S1 (dk_nat.S (dk_nat.S (dk_nat.S dk_nat.O)))
+                                                                                 (dk_machine_int.S1 (dk_nat.S (dk_nat.S dk_nat.O))
+                                                                                                    (dk_machine_int.S1 (dk_nat.S dk_nat.O)
+                                                                                                                       (dk_machine_int.S0 dk_nat.O
+                                                                                                                          dk_machine_int.O)))))))
+      --> dk_nat._9.

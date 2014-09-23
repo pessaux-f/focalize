@@ -10,6 +10,7 @@ B : Type := cc.eT dk_bool.bool.
  ;)
 int : cc.uT.
 I : Type := cc.eT int.
+Int := I.
 (; the only constructor of Int, make n m builds the integer n - m ;)
 make : Nat -> Nat -> I.
 (;
@@ -21,6 +22,9 @@ or
  make O (S n) which is -n-1
 ;)
 [n : Nat, m : Nat] make (dk_nat.S n) (dk_nat.S m) --> make n m.
+
+from_nat : Nat -> I.
+[ n : Nat ] from_nat n --> make n O.
 
 nat_abs : I -> Nat.
 [n : Nat] nat_abs (make n dk_nat.O) --> n
