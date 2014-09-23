@@ -1,6 +1,6 @@
 #NAME dk_builtins.
 (; This file defines basic types for the translation of FoCaLize
-standard library into Dedukti ;) 
+standard library into Dedukti ;)
 
 Object : Type.
 collection : cc.uT.
@@ -22,3 +22,10 @@ tt : cc.eT unit.
 
 (; Float ;)
 float : cc.uT.
+
+(; Equality ;)
+eq : T : cc.uT -> cc.eT T -> cc.eT T -> dk_bool.Bool.
+refl : T : cc.uT -> t : cc.eT T -> dk_logic.Istrue (eq T t t).
+
+(; Assumed proves ;)
+magic_prove : P : cc.eT prop -> dk_logic.eP P.
