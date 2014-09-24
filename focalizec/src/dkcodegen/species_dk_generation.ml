@@ -420,8 +420,8 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
         let param_name =  "_p_" ^ as_string in
         (* First, generate the parameter. *)
         if in_section then
-          Format.fprintf out_fmter "@[<2>Variable %s_T :@ Set.@]@\n" param_name
-        else Format.fprintf out_fmter "@ (%s_T :@ Set)" param_name;
+          Format.fprintf out_fmter "@[<2>Variable %s_T :@ cc.uT.@]@\n" param_name
+        else Format.fprintf out_fmter "@ (%s_T :@ cc.uT)" param_name;
         (* Return the stuff to extend the collection_carrier_mapping. *)
         ((ctx.Context.scc_current_unit, as_string),
          (param_name, Types.CCMI_is)))
@@ -568,18 +568,18 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
            | MinEnv.MDEE_Declared_carrier ->
                (* Note that by construction, the carrier is first in the env. *)
                if in_section then
-                 Format.fprintf out_fmter "@[<2>Variable abst_T : Set.@]@\n"
-               else Format.fprintf out_fmter "@ (abst_T : Set)";
+                 Format.fprintf out_fmter "@[<2>Variable abst_T : cc.uT.@]@\n"
+               else Format.fprintf out_fmter "@ (abst_T : cc.uT)";
                [Parsetree.Vlident "rep"]
            | MinEnv.MDEE_Declared_computational (n, sch) ->
                (* Due to a decl-dependency, hence: abstract. *)
                let ty = Types.specialize sch in
                if in_section then
-                 Format.fprintf out_fmter "@[<2>Variable abst_%a : %a.@]@\n"
+                 Format.fprintf out_fmter "@[<2>Variable abst_%a : cc.eT %a.@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded n
                    (Types.pp_type_simple_to_dk new_print_ctx) ty
                else
-                 Format.fprintf out_fmter "@ (abst_%a : %a)"
+                 Format.fprintf out_fmter "@ (abst_%a : cc.eT %a)"
                    Parsetree_utils.pp_vname_with_operators_expanded n
                    (Types.pp_type_simple_to_dk new_print_ctx) ty ;
                [n]
@@ -632,7 +632,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
   let (generalized_vars, _) = Types.scheme_split scheme in
   List.iter
     (fun var ->
-      Format.fprintf out_fmter "@ (%a : Set)"
+      Format.fprintf out_fmter "@ (%a : cc.uT)"
         Types.pp_type_variable_to_dk var)
     generalized_vars ;
   let (params_with_type, ending_ty_opt, _) =
@@ -649,7 +649,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
     (fun (param_vname, opt_param_ty) ->
       match opt_param_ty with
        | Some param_ty ->
-           Format.fprintf out_fmter "@ (%a : %a)"
+           Format.fprintf out_fmter "@ (%a : cc.eT %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
              (Types.pp_type_simple_to_dk print_ctx) param_ty
        | None ->
@@ -673,7 +673,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded decr_arg_name
    | None -> ()) ;
   (* Now, we print the ending type of the method. *)
-  Format.fprintf out_fmter " :@ %a "
+  Format.fprintf out_fmter " :@ cc.eT %a "
     (Types.pp_type_simple_to_dk print_ctx) ending_ty ;
   (* Generates the body's code of the method if some is provided.
      No local idents in the context because we just enter the scope of a species
@@ -3837,7 +3837,7 @@ let dump_collection_generator_arguments_for_params_carriers out_fmter lst =
       match param_kind with
        | Env.ScopeInformation.SPK_is ->
            (* We need to enforce the type for Dk because I don't know what. *)
-           Format.fprintf out_fmter "@ (_p_%a_T : Set)"
+           Format.fprintf out_fmter "@ (_p_%a_T : cc.uT)"
              Parsetree_utils.pp_vname_with_operators_expanded param_name;
        | Env.ScopeInformation.SPK_in ->
            (* One must use the parameter of the collection generator to
@@ -4545,7 +4545,7 @@ let generate_rep_definition ctx fields =
               (* Print the variables names... *)
               List.iter
                 (function (_, (h, _)) ->
-                  Format.fprintf ctx.Context.scc_out_fmter "(%s : Set) " h)
+                  Format.fprintf ctx.Context.scc_out_fmter "(%s : cc.uT) " h)
                 ctx.Context.scc_collections_carrier_mapping ;
               let print_ctx = {
                 Types.dpc_current_unit = ctx.Context.scc_current_unit ;
