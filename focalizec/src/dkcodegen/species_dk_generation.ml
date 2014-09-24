@@ -729,7 +729,8 @@ let generate_defined_non_recursive_method ctx print_ctx env min_dk_env
     Format.eprintf "Generating Dedukti code for field '%a'.@."
       Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Start the Dedukti function definition. *)
-  Format.fprintf out_fmter "@[<2>Definition %a"
+  Format.fprintf out_fmter "@[<2>%a__%a"
+    Sourcify.pp_vname (snd ctx.Context.scc_current_species)
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Generate the prelude of the method, i.e the sequence of parameters induced
      by the various lamda-liftings and their types .
@@ -4107,7 +4108,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   (* Start the chapter encapsulating the species representation. *)
   let module_name =
     String.capitalize (Parsetree_utils.name_of_vname species_name) in
-  Format.fprintf out_fmter "@[<2>Module %s.@\n" module_name;
+  Format.fprintf out_fmter "@[<2>(; Module %s. ;)@\n" module_name;
   (* Insert in the environment the value bindings of the species methods and
      the species bindings for its parameters. This is needed since in Dk
      polymorphism is explicit, hence we need to know for each method the extra
@@ -4245,7 +4246,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
       end)
     else None in
   (* The end of the module hosting the species. *)
-  Format.fprintf out_fmter "@]\nEnd %s.@\n@\n" module_name;
+  Format.fprintf out_fmter "@]\n(; End %s. ;)@\n@\n" module_name;
   (* Now, extract the fields names to create the [species_binding_info]. *)
   let species_binding_info =
     List.flatten
