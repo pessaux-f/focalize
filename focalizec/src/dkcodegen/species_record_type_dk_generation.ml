@@ -625,75 +625,85 @@ let generate_simple_type_of_ast dkctx out_fmter a =
     failure.
 
     {b Args} :
-      - [d]: An ast: the term bound to the pattern.
-      - [print_d]: A function to print d.
-      - [k]: A continuation in case the pattern is not matched.
-      - [e]: a function to print the expression matched
+      - [~d]: A function to print the term bound to the pattern.
+      - [~k]: A continuation in case the pattern is not matched.
+      - [~ret_type]: The type returned by the pattern.
+      - [~e]: a function to print the expression matched
 
     {b Exported} : Yes                                                        *)
 (* ************************************************************************** *)
 let generate_pattern ctx dkctx env pattern
-                     print_d (d : 'a Parsetree.ast) k e =
+                     ~d ~k ~ret_type ~e =
   let out_fmter = ctx.Context.scc_out_fmter in
-  let rec rec_gen_pat pat print_d (d : 'a Parsetree.ast) =
+  let rec rec_gen_pat pat ~d ~k ~ret_type ~e =
     match pat.Parsetree.ast_desc with
      | Parsetree.P_const constant -> generate_constant_pattern ctx constant k
      | Parsetree.P_var name ->
-        (* "function x -> d" is the same as "fun x -> d" *)
+        (* "match e with x -> d | _ -> k" is the same as "(fun x -> d) e" *)
         Format.fprintf out_fmter "(%a :@ cc.eT@ "
                        Parsetree_utils.pp_vname_with_operators_expanded name;
         generate_pattern_type pat;
         Format.fprintf out_fmter " =>@ ";
-        print_d ();
-        Format.fprintf out_fmter ")"
+        d ();
+        Format.fprintf out_fmter ")@ ";
+        e ()
      | Parsetree.P_as (p, name) ->
-        (* "function p(y) as x -> d(x,y) | _ -> k"
+        (* "match e with p(y) as x -> d(x,y) | _ -> k"
            is the same as
-           "fun x -> (function p(y) -> d(x,y)) x" *)
+           "(fun x -> (match e with p(y) -> d(x,y))) e" *)
         Format.fprintf out_fmter "(%a :@ "
                        Parsetree_utils.pp_vname_with_operators_expanded name;
         generate_pattern_type pat;
         Format.fprintf out_fmter " =>@ ";
-        rec_gen_pat p print_d d;
-        Format.fprintf out_fmter "@ %a)"
-                       Parsetree_utils.pp_vname_with_operators_expanded name
+        rec_gen_pat p ~d ~k ~ret_type ~e;
+        Format.fprintf out_fmter "@ %a)@ ";
+        e ()
      | Parsetree.P_wild ->
-        (* "function _ -> d" is the same as "fun __ -> d" *)
-        Format.fprintf out_fmter "(__ :@ cc.eT@ ";
-        generate_pattern_type pat;
-        Format.fprintf out_fmter " =>@ ";
-        print_d ();
-        Format.fprintf out_fmter ")"
+        (* "match e with _ -> d" is the same as "d" *)
+        d ();
      | Parsetree.P_record _labs_pats ->
          Format.eprintf "generate_pattern P_record TODO@."
      | Parsetree.P_tuple [] -> assert false (* Tuples should not be empty *)
-     | Parsetree.P_tuple [ p ] -> rec_gen_pat p print_d d
+     | Parsetree.P_tuple [ p ] -> rec_gen_pat p ~d ~k ~ret_type ~e
      | Parsetree.P_tuple [ p1 ; p2 ] -> (* Tuples are a special case of constructor *)
         let desc = Parsetree.P_constr (pair_cident, [p1 ; p2] ) in
         (* Update pattern type to reflect current use *)
         let ast = Parsetree_utils.make_ast desc in
         ast.Parsetree.ast_type <- pat.Parsetree.ast_type;
-        rec_gen_pat ast print_d d
+        rec_gen_pat ast ~d ~k ~ret_type ~e
      | Parsetree.P_tuple (p :: pats) -> (* Tuples are a special case of constructor *)
         let tail = Parsetree_utils.make_ast (Parsetree.P_tuple pats) in
         let desc = Parsetree.P_constr (pair_cident, [p ; tail] ) in
         (* Update pattern type to reflect current use *)
         let ast = Parsetree_utils.make_ast desc in
         ast.Parsetree.ast_type <- pat.Parsetree.ast_type;
-        rec_gen_pat ast print_d d
+        rec_gen_pat ast ~d ~k ~ret_type ~e
      | Parsetree.P_paren p ->
          Format.fprintf out_fmter "(@[<1>" ;
-         rec_gen_pat p print_d d;
+         rec_gen_pat p ~d ~k ~ret_type ~e;
          Format.fprintf out_fmter ")@]"
      | Parsetree.P_constr (cident, pats) -> (* Most interesting case *)
         (* A function match__C : PV (Polymorphic variables) : * ->
                                  DT PV ->
                                  RT (Return type) : * ->
                                  then_case : (ty_1 -> .. ty_n-> RT) ->
-                                 else_case : (DT PV -> RT) ->
+                                 else_case : RT ->
                                  RT
                       is available in the same dedukti file than the constructor
          *)
+
+        (* match e with P(p1, p2) -> d | _ -> k
+           is the same as
+           match e with
+           | P(x, y) -> (match x with
+              | p1 -> (match y with
+                | p2 -> d
+                | _ -> k)
+              | _ -> k)
+           | _ -> k
+         where x and y are fresh variables (pattern_variable_%d)
+         *)
+
         let Parsetree.CI ident = cident.Parsetree.ast_desc in
         let pattern_file_name = match ident.Parsetree.ast_desc with
           | Parsetree.I_global (Parsetree.Qualified (f, _))  -> f ^ "."
@@ -724,9 +734,10 @@ let generate_pattern ctx dkctx env pattern
         e ();
         (* Now the return type *)
         Format.fprintf out_fmter "@ ";
-        generate_simple_type_of_ast dkctx out_fmter d ;
-        (* Now the pattern function *)
+        generate_simple_type_of_ast dkctx out_fmter ret_type ;
+        (* Now the pattern function (then case) *)
         Format.fprintf out_fmter "@ (";
+        (* Then case 1/2: Abstract over fresh variables *)
         let count = ref 0 in
         List.iter (fun pat ->
                    Format.fprintf out_fmter "pattern_var_%d :@ cc.eT@ " !count;
@@ -734,19 +745,38 @@ let generate_pattern ctx dkctx env pattern
                    Format.fprintf out_fmter " =>@ ";
                    incr count)
                   pats;
-        (* Recursive calls actually depend on d *)
-        rec_generate_pats_list print_d d 0 pats;
+        (* Then case 2/2: Generate the matching on the fresh variables *)
+        rec_generate_pats_list 0 ~k ~d ~ret_type pats;
+        Format.fprintf out_fmter ")";
+
+        (* Now the continuation (else case) *)
+        Format.fprintf out_fmter "@ (";
+        k ();
         Format.fprintf out_fmter ")";
         Format.fprintf out_fmter "@]";
 
 
-  and rec_generate_pats_list print_d d count = function
-    | [] -> print_d ()
+  and rec_generate_pats_list count ~k ~d ~ret_type = function
+    | [] -> d ()
     | pat :: pats ->
-       rec_gen_pat pat
-                   (fun () -> rec_generate_pats_list print_d d (count+1) pats)
-                   d;
-       Format.fprintf out_fmter "@ pattern_var_%d" count
+       (* we produce the term
+          match pattern_var_%{count} with
+            | pat -> recursive_call
+            | _ -> k
+        *)
+       let fresh_var_name =
+         Parsetree.Vlident (Printf.sprintf "pattern_var_%d" count)
+       in
+       (* let fresh_var_pat = Parsetree.P_var fresh_var_name in *)
+       (* let fresh_var_desc = Parsetree.EI_local fresh_var_name in *)
+       (* let fresh_var = Parsetree_utils.make_ast fresh_var_desc in *)
+       rec_gen_pat
+         pat
+         ~d: (fun () ->
+                    rec_generate_pats_list (count+1) ~k ~d ~ret_type pats)
+         ~k
+         ~ret_type
+         ~e: (fun () -> Sourcify.pp_vname out_fmter fresh_var_name)
 
   and generate_pattern_type (p : Parsetree.pattern) =
     generate_simple_type_of_ast dkctx out_fmter p
@@ -754,7 +784,7 @@ let generate_pattern ctx dkctx env pattern
 
   (* ********************** *)
   (* Now, let's do the job. *)
-  rec_gen_pat pattern print_d d
+  rec_gen_pat pattern ~d ~k ~ret_type ~e
 ;;
 
 
@@ -1264,9 +1294,10 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
              Format.fprintf out_fmter ")"
           | (pat, d) :: pats ->
              generate_pattern ctx print_ctx env pat
-                              (fun () -> rec_generate_expr loc_idents env d) d
-                              (fun () -> generate_pattern_matching pats)
-                              (fun () -> rec_generate_expr loc_idents env expr)
+                              ~d: (fun () -> rec_generate_expr loc_idents env d)
+                              ~ret_type: d
+                              ~k: (fun () -> generate_pattern_matching pats)
+                              ~e: (fun () -> rec_generate_expr loc_idents env expr)
         in
         generate_pattern_matching pats_exprs;
      (*  *)
