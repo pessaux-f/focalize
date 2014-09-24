@@ -44,16 +44,6 @@ val generate_method_lambda_lifted_arguments :
      Env.ordered_methods_from_params) list ->
        Parsetree.vname list -> unit
 
-val generate_pattern :
-  Context.species_compil_context ->
-  Types.dk_print_context ->
-  Env.DkGenEnv.t -> Parsetree.pattern ->
-  (unit -> unit) ->
-  Parsetree.expr ->
-  (unit -> unit) ->
-  (unit -> unit) ->
-  unit
-
 val generate_expr :
   Context.species_compil_context ->
   in_recursive_let_section_of: Parsetree.vname list ->
