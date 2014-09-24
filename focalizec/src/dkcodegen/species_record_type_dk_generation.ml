@@ -382,6 +382,33 @@ let generate_constant_pattern ctx cst k =
        Format.fprintf ctx.Context.scc_out_fmter "\"%c\"%%char" c
 ;;
 
+(* Print a char code (7 bits representing a char using ascii)
+   in Dedukti. *)
+let rec print_char_code_to_dk fmter n =
+  if n == 0 then Format.fprintf fmter "dk_char._O"
+  else Format.fprintf fmter "@[<2>(dk_char.S%d@ %a)@]"
+                      (n mod 2)
+                      print_char_code_to_dk (n / 2)
+;;
+
+(* Print a char to Dedukti.
+   If an alias exists in dk_char, then use it to increase readability.
+ *)
+let print_char_to_dk fmter c =
+  if
+    (c >= 'a' && c <= 'z') ||
+      (c >= 'A' && c <= 'Z') ||
+        (c >= '0' && c <= '9')
+  then Format.fprintf fmter "dk_char.%c" c
+  else
+    match c with
+    | '-' -> Format.fprintf fmter "dk_char.hyphen"
+    | '_' -> Format.fprintf fmter "dk_char.__"
+    | ' ' -> Format.fprintf fmter "dk_char.space"
+    | c -> Format.fprintf fmter "@[<2>(dk_char.cast@ %a)@]"
+                         print_char_code_to_dk (int_of_char c)
+;;
+
 let generate_constant ctx cst =
   match cst.Parsetree.ast_desc with
    | Parsetree.C_int str ->
@@ -417,11 +444,17 @@ let generate_constant ctx cst =
        (* [true] maps on Dk "true". [false] maps on Dk "false". *)
        Format.fprintf ctx.Context.scc_out_fmter "%s" str
    | Parsetree.C_string str ->
-       (* [Unsure] *)
-       Format.fprintf ctx.Context.scc_out_fmter "\"%s\"%%string" str
+      let rec compile_str fmter s =
+        if s = "" then
+          Format.fprintf fmter "dk_string.nil"
+        else
+          Format.fprintf fmter "@[<2>(dk_string.cons@ %a@ %a)@]"
+                         print_char_to_dk s.[0]
+                         compile_str (butfst s)
+      in
+      compile_str ctx.Context.scc_out_fmter str
    | Parsetree.C_char c ->
-       (* [Unsure] *)
-       Format.fprintf ctx.Context.scc_out_fmter "\"%c\"%%char" c
+       print_char_to_dk ctx.Context.scc_out_fmter c
 ;;
 
 

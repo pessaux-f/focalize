@@ -9,6 +9,9 @@ S1 : dk_binary_nat.BNat -> dk_binary_nat.BNat := dk_binary_nat.S1.
 cast : dk_binary_nat.BNat -> Char := dk_machine_int.cast_bnat dk_nat.7.
 
 hyphen : Char := cast (S1 (S0 (S1 (S1 (S0 (S1 _O)))))).
+__ : Char := cast (S1 (S0 (S1 (S1 (S1 (S1 (S1 _O))))))).
+space : Char := cast (S0 (S0 (S0 (S0 (S0 (S1 _O)))))).
+
 
 0 : Char := cast (S0 (S0 (S0 (S0 (S1 (S1 _O)))))).
 1 : Char := cast (S1 (S0 (S0 (S0 (S1 (S1 _O)))))).
@@ -75,7 +78,6 @@ x : Char := cast (S0 (S0 (S0 (S1 (S1 (S1 (S1 _O))))))).
 y : Char := cast (S1 (S0 (S0 (S1 (S1 (S1 (S1 _O))))))).
 z : Char := cast (S0 (S1 (S0 (S1 (S1 (S1 (S1 _O))))))).
 
-__ : Char := cast (S1 (S0 (S1 (S1 (S1 (S1 (S1 _O))))))).
 
 
 equal : Char -> Char -> cc.eT dk_bool.bool
