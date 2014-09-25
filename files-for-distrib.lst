@@ -531,7 +531,6 @@
 ./focalize/Makefile.utils
 ./focalize/README
 ./focalize/README_FOR_DEVELOPERS.html
-./focalize/zvtov
 ./focalize/zvtov/cache.ml
 ./focalize/zvtov/cache.mli
 ./focalize/zvtov/configure
@@ -541,7 +540,10 @@
 ./focalize/zvtov/invoke.mli
 ./focalize/zvtov/invoke_cime.ml
 ./focalize/zvtov/invoke_cime.mli
+./focalize/zvtov/lexer.ml
+./focalize/zvtov/lexer.mli
 ./focalize/zvtov/lexer.mll
+./focalize/zvtov/lexer_coq.mli
 ./focalize/zvtov/lexer_coq.mll
 ./focalize/zvtov/main.ml
 ./focalize/zvtov/main.mli
@@ -550,6 +552,8 @@
 ./focalize/zvtov/misc.mli
 ./focalize/zvtov/options.ml
 ./focalize/zvtov/options.mli
+./focalize/zvtov/parser.ml
+./focalize/zvtov/parser.mli
 ./focalize/zvtov/parser_coq.mly
 ./focalize/zvtov/token.ml
 ./focalize/zvtov/token.mli
