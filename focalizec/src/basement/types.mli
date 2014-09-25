@@ -120,6 +120,9 @@ val extract_fun_ty_result :
 val extract_fun_ty_arg :
   self_manifest: type_simple option -> type_simple -> type_simple
 
+val extract_prod_ty :
+  self_manifest: type_simple option -> type_simple -> type_simple list
+
 (** Pretty_printing for types and type schemes for FoCaLize. *)
 val pp_type_name : Format.formatter -> type_name -> unit
 val pp_type_simple : Format.formatter -> type_simple -> unit

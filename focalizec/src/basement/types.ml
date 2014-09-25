@@ -822,6 +822,28 @@ let extract_fun_ty_result ~self_manifest ty =
        end)
    | _ -> assert false
 ;;
+(* *********************************************************************** *)
+(* type_simple -> type_simple                                              *)
+(** {b Descr} : Extracts from a product type the list of simple types it is composed of.
+
+    {b Rem} : Exported outside this module.                                *)
+(* *********************************************************************** *)
+let extract_prod_ty ~self_manifest ty =
+  let ty = repr ty in
+  match ty with
+   | ST_tuple l -> l
+   | ST_self_rep ->
+       (begin
+       match self_manifest with
+        | None -> [ST_self_rep]
+        | Some t ->
+            let t = repr t in
+            match t with
+             | ST_tuple l -> l
+             | _ -> [t]
+       end)
+   | _ -> [ty]
+;;
 
 
 
