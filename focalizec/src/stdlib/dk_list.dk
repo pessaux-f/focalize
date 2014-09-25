@@ -42,6 +42,26 @@ simple_match : A : cc.uT ->
                return : cc.uT =>
                match A (_x : List A => return).
 
+match__nil : A : cc.uT ->
+             List A ->
+             return : cc.uT ->
+             cc.eT return ->
+             cc.eT return ->
+             cc.eT return.
+[ A : cc.uT, ret : cc.uT, ncase : cc.eT ret, ccase : cc.eT ret ]
+    match__nil A (nil A) ret ncase ccase --> ncase
+[ A : cc.uT, a : cc.eT A, l : List A, ret : cc.uT, ncase : cc.eT ret, ccase : cc.eT ret ]
+    match__nil A (cons A a l) ret ncase ccase --> ccase.
+
+match__cons : A : cc.uT ->
+              List A ->
+              return : cc.uT ->
+              (cc.eT A -> List A -> cc.eT return) ->
+              cc.eT return ->
+              cc.eT return.
+[ A : cc.uT, l : List A, ret : cc.uT, ncase : cc.eT ret, ccase : cc.eT A -> List A -> cc.eT ret ]
+    match__cons A l ret ccase ncase --> simple_match A ret ncase ccase l.
+
 (; Append ;)
 append : A : cc.uT -> List A -> List A -> List A.
 [ A : cc.uT, l2 : List A ]

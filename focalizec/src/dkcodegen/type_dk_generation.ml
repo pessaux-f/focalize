@@ -63,7 +63,23 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrow
     tys
 ;;
 
+(* Same but at the other side of the ":". *)
+let print_types_parameters_with_arrows print_ctx out_fmter tys =
+  List.iter
+    (fun ty ->
+      Format.fprintf out_fmter "cc.eT %a ->@ "
+        (Types.pp_type_simple_to_dk print_ctx) ty)
+    tys
+;;
 
+(* Same but with spaces. *)
+let print_types_parameters_with_spaces print_ctx out_fmter tys =
+  List.iter
+    (fun ty ->
+      Format.fprintf out_fmter "@ %a"
+        (Types.pp_type_simple_to_dk print_ctx) ty)
+    tys
+;;
 
 (** [nb_extra_args] : the number of extra argument of type "Set" used to
      represent the polymorphism in case where the constructor belongs to a
@@ -219,15 +235,26 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
           that we keep the complete functionnal type since in Dk constructors
           are really "functions" : one must also write the return type of the
           constructor (that is always the type of the definition hosting the
-          constructor. *)
+          constructor.
+          However we need the list of argument types to type destructors so we take the function from type_ml_generation.ml.
+*)
        let sum_constructors_to_print =
          List.map
-           (fun (sum_cstr_name, _, sum_cstr_scheme) ->
+           (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
              (* Recover the body of the scheme of the constructor. *)
              let (_, sum_cstr_ty) = Types.scheme_split sum_cstr_scheme in
-               (sum_cstr_name, sum_cstr_ty))
+             let sum_cstr_args =
+               (* We don't have anymore info about "Self"'s structure... *)
+               if sum_cstr_arity = Env.TypeInformation.CA_some then
+                 Types.extract_prod_ty
+                   ~self_manifest: None
+                   (Types.extract_fun_ty_arg ~self_manifest: None sum_cstr_ty)
+               else []
+             in
+
+             (sum_cstr_name, sum_cstr_ty, sum_cstr_args))
            cstrs in
-       Format.fprintf out_fmter "@[<2>%a__t : "
+       Format.fprintf out_fmter "(; Inductive definition ;)@\n@[<2>%a__t : "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* Print the parameter(s) stuff if any. Do it only now the unifications
           have been done with the sum constructors to be sure that thanks to
@@ -236,7 +263,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
           constructors definitions). *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
          print_ctx out_fmter type_def_params;
-       Format.fprintf out_fmter "cc.uT.@\n";
+       Format.fprintf out_fmter "cc.uT.@\n(; Constructors ;)";
        (* Qualify constructor if we are printing a fact for Zenon and the
           location where we generate it is not in the compilation unit
           hosting the type definition. Drop the file-system full path (was
@@ -250,19 +277,40 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
          if ctx.Context.rcc_current_unit <> tydef_comp_unit && as_zenon_fact
          then tydef_comp_unit ^ "."
          else "" in
-       (* And finally really print the constructors definitions. *)
+       (* Then really print the constructors declarations. *)
        List.iter
-         (fun (sum_cstr_name, cstr_ty) ->
+         (fun (sum_cstr_name, cstr_ty, _) ->
            (* The sum constructor name. *)
-           Format.fprintf out_fmter "@\n%s%a :@ "
+           Format.fprintf out_fmter "@\n%s%a :@ @[<v 2>"
              qualif
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
            (* The type of the constructor.
               Parameterized as the inductive. *)
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
              print_ctx out_fmter type_def_params;
-           Format.fprintf out_fmter "cc.eT (@[<1>%a@])."
+           Format.fprintf out_fmter "cc.eT (@[<1>%a@])@]."
              (Types.pp_type_simple_to_dk print_ctx) cstr_ty)
+         sum_constructors_to_print;
+       (* And finally, the destructors. *)
+       Format.fprintf out_fmter "@\n(; Destructors ;)";
+       List.iter
+         (fun (sum_cstr_name, cstr_ty, cstr_args) ->
+           (* The sum constructor name. *)
+           Format.fprintf out_fmter "@\n%smatch__%a :@ @[<v 2>"
+             qualif
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
+           (* The type of the destructor.
+              Parameterized as the inductive. *)
+           print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
+             print_ctx out_fmter type_def_params;
+           Format.fprintf out_fmter
+                          "cc.eT (@[<1>%a__t%a@]) ->@ Ret_type : cc.uT ->@ (%acc.eT Ret_type@]) ->@ cc.eT Ret_type ->@ cc.eT Ret_type.@]"
+                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+                          (print_types_parameters_with_spaces print_ctx) type_def_params
+                          (* The type of the matching function.
+                             Parameterized as the constructor. *)
+                          (print_types_parameters_with_arrows print_ctx) cstr_args
+         )
          sum_constructors_to_print;
        Format.fprintf out_fmter "@]@\n@\n";
        if not as_zenon_fact then
@@ -272,7 +320,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
             polymorphism, we return the extended environment. *)
          let env_with_value_constructors =
            List.fold_left
-             (fun accu_env (sum_cstr_name, _) ->
+             (fun accu_env (sum_cstr_name, _, _) ->
                Env.DkGenEnv.add_constructor
                  sum_cstr_name
                  { Env.DkGenInformation.cmi_num_polymorphics_extra_args =

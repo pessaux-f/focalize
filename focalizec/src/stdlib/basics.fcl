@@ -77,13 +77,17 @@ type bool =
   external
   | caml -> {* bool *}
   (* Uggly hack to insert the induction principles below the type definition.
-     We just alias the principles coming from the List module of Coq. *)
+     We just alias the principles coming from the Bool modules of Coq and Dedukti. *)
   | coq -> {* bool.
               Definition bool__t_ind := bool_ind.
               Definition bool__t_rect := bool_rect.
               Definition bool__t_rec := bool_rec
            *}  (* Builtin of Coq *)
-  | dedukti -> {* dk_bool.bool *}
+  | dedukti -> {* dk_bool.bool.
+                  true := dk_bool.true.
+                  false := dk_bool.false.
+                  match__true := dk_bool.match__true.
+                  match_false := dk_bool.match__false *}
 
   with True =
   | caml -> {* true *}
@@ -108,13 +112,17 @@ type list ('a) =
   external
   | caml -> {* 'a list *}
   (* Uggly hack to insert the induction principles below the type definition.
-     We just alias the principles coming from the List module of Coq.
+     We just alias the principles coming from the List modules of Coq and Dedukti.
      Was bug #53. *)
   | coq -> {* (List.list __var_a).
               Definition list__t_ind := list_ind.
               Definition list__t_rect := list_rect.
               Definition list__t_rec := list_rec *}
-  | dedukti -> {* dk_list.list __var_a *}
+  | dedukti -> {* dk_list.list __var_a.
+                  nil := dk_list.nil.
+                  cons := dk_list.cons.
+                  match__nil := dk_list.match__nil.
+                  match__cons := dk_list.match__cons *}
 
   with [] =
   | caml -> {* [] *}

@@ -41,6 +41,24 @@ ite :
       -->
     match (b : Bool => A) x y b.
 
+match__true :
+  Bool ->
+  A : cc.uT ->
+  cc.eT A ->
+  cc.eT A ->
+  cc.eT A.
+[ A : cc.uT, b : Bool, t : cc.eT A, e : cc.eT A]
+    match__true b A t e --> ite A b t e.
+
+match__false :
+  Bool ->
+  A : cc.uT ->
+  cc.eT A ->
+  cc.eT A ->
+  cc.eT A.
+[ A : cc.uT, b : Bool, t : cc.eT A, e : cc.eT A]
+    match__false b A t e --> ite A b e t.
+
 (; boolean if .. then .. else .. ;)
 iteb : Bool -> Bool -> Bool -> Bool
      := ite bool.
