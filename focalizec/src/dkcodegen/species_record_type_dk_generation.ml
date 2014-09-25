@@ -473,60 +473,40 @@ let pair_cident =
 
 let generate_constructor_ident_for_method_generator ctx env cstr_expr =
   if cstr_expr = pair_cident then 2 else
-  (begin
-      try
+    (begin
         let mapping_info =
-          Env.DkGenEnv.find_constructor
-            ~loc: cstr_expr.Parsetree.ast_loc
-            ~current_unit: ctx.Context.scc_current_unit cstr_expr env in
+          try
+            Env.DkGenEnv.find_constructor
+              ~loc: cstr_expr.Parsetree.ast_loc
+              ~current_unit: ctx.Context.scc_current_unit cstr_expr env
+          (* Since in Dk all the constructors must be inserted in the generation
+       environment, if we don't find the constructor, then we were wrong
+       somewhere else before. *)
+
+          with _ -> assert false
+        in
         (match mapping_info.Env.DkGenInformation.cmi_external_translation with
-         | None -> (
+         | None -> ()
            (* The constructor isn't coming from an external definition. *)
-           let Parsetree.CI global_ident = cstr_expr.Parsetree.ast_desc in
-           match global_ident.Parsetree.ast_desc with
-           | Parsetree.I_local name
-           | Parsetree.I_global (Parsetree.Vname name) ->
-              Format.fprintf ctx.Context.scc_out_fmter "%a"
-                             Parsetree_utils.pp_vname_with_operators_expanded name
-           | Parsetree.I_global (Parsetree.Qualified (fname, name)) ->
-              (* If the constructor belongs to the current compilation unit
-                 then one must not qualify it. *)
-              if fname <> ctx.Context.scc_current_unit then
-                Format.fprintf ctx.Context.scc_out_fmter "%s.%a"
-                               fname          (* No module name capitalization in Dk. *)
-                               Parsetree_utils.pp_vname_with_operators_expanded name
-              else
-                Format.fprintf ctx.Context.scc_out_fmter "%a"
-                               Parsetree_utils.pp_vname_with_operators_expanded name
-         )
          | Some external_expr -> (
            (* The constructor comes from an external definition. *)
-           let (_, dk_binding) =
-             try
-               List.find
-                 (function
-                   | (Parsetree.EL_Dk, _) -> true
-                   | (Parsetree.EL_Caml, _)
-                   | (Parsetree.EL_Coq, _)
-                   | ((Parsetree.EL_external _), _) -> false)
-                 external_expr
-             with Not_found ->
+           if not (List.exists
+                   (function
+                     | (Parsetree.EL_Dk, _) -> true
+                     | (Parsetree.EL_Caml, _)
+                     | (Parsetree.EL_Coq, _)
+                     | ((Parsetree.EL_external _), _) -> false)
+                   external_expr)
+           then
                (* No Dk mapping found. *)
                raise
                  (Externals_generation_errs.No_external_constructor_def
-                    ("Dk", cstr_expr)) in
-           (* Now directly generate the name the constructor is mapped onto. *)
-           Format.fprintf ctx.Context.scc_out_fmter "%s" dk_binding
+                    ("Dk", cstr_expr))
         )) ;
         (* Always returns the number of type arguments that must be printed
        after the constructor. *)
         mapping_info.Env.DkGenInformation.cmi_num_polymorphics_extra_args
-      with _ ->
-        (* Since in Dk all the constructors must be inserted in the generation
-       environment, if we don't find the constructor, then we were wrong
-       somewhere else before. *)
-        assert false
-    end)
+      end)
 ;;
 
 
@@ -708,15 +688,14 @@ let generate_pattern ctx dkctx env pattern
          *)
 
         let Parsetree.CI ident = cident.Parsetree.ast_desc in
-        let pattern_file_name = match ident.Parsetree.ast_desc with
-          | Parsetree.I_global (Parsetree.Qualified (f, _))  -> f ^ "."
-          | _ -> ""
+        let pattern_file_name, pattern_vname = match ident.Parsetree.ast_desc with
+          | Parsetree.I_global (Parsetree.Qualified (f, v))  -> (f ^ ".", v)
+          | Parsetree.I_global (Parsetree.Vname v)
+          | Parsetree.I_local v -> ("", v)
         in
         Format.fprintf out_fmter "@[<1>%smatch__%a"
                        pattern_file_name
-                       Parsetree_utils.pp_vname_with_operators_expanded
-                       (Parsetree_utils.unqualified_vname_of_constructor_ident
-                          cident) ;
+                       Sourcify.pp_vname pattern_vname;
         (* Now polymorphic variables *)
         (* Number of polymorphic variables *)
         let extras =
