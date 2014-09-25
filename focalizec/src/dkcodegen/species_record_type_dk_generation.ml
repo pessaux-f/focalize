@@ -624,6 +624,9 @@ let generate_simple_type_of_ast dkctx out_fmter a =
     Exhaustivity is not checked, empty pattern-matching compiles to "run-time"
     failure.
 
+    The code produced by this function is equivalent to
+    (match e with pat -> d | _ -> k) : ret_type
+
     {b Args} :
       - [~d]: A function to print the term bound to the pattern.
       - [~k]: A continuation in case the pattern is not matched.
