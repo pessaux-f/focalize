@@ -50,6 +50,19 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
     tys
 ;;
 
+(* Same but arrows between parameters instead of spaces.
+   Useful for Dedukti declarations for which we cannot pass parameters
+   but only a (Pi-) type.
+*)
+let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
+    print_ctx out_fmter tys =
+  List.iter
+    (fun ty ->
+      Format.fprintf out_fmter "%a : cc.uT ->@ "
+        (Types.pp_type_simple_to_dk print_ctx) ty)
+    tys
+;;
+
 
 
 (** [nb_extra_args] : the number of extra argument of type "Set" used to
@@ -214,16 +227,16 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              let (_, sum_cstr_ty) = Types.scheme_split sum_cstr_scheme in
                (sum_cstr_name, sum_cstr_ty))
            cstrs in
-       Format.fprintf out_fmter "@[<2>Inductive %a__t@ "
+       Format.fprintf out_fmter "@[<2>%a__t : "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* Print the parameter(s) stuff if any. Do it only now the unifications
           have been done with the sum constructors to be sure that thanks to
           unifications, "sames" variables will have the "same" name everywhere
           (i.e. in the the parameters enumeration of the type and in the sum
           constructors definitions). *)
-       print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
+       print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
          print_ctx out_fmter type_def_params;
-       Format.fprintf out_fmter ":@ cc.uT :=@ ";
+       Format.fprintf out_fmter "cc.uT.@\n";
        (* Qualify constructor if we are printing a fact for Zenon and the
           location where we generate it is not in the compilation unit
           hosting the type definition. Drop the file-system full path (was
@@ -239,16 +252,19 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
          else "" in
        (* And finally really print the constructors definitions. *)
        List.iter
-         (fun (sum_cstr_name, cstr_ty) ->            
+         (fun (sum_cstr_name, cstr_ty) ->
            (* The sum constructor name. *)
-           Format.fprintf out_fmter "@\n| %s%a"
+           Format.fprintf out_fmter "@\n%s%a :@ "
              qualif
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
-           (* The type of the constructor. *)
-           Format.fprintf out_fmter " :@ (@[<1>%a@])"
+           (* The type of the constructor.
+              Parameterized as the inductive. *)
+           print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
+             print_ctx out_fmter type_def_params;
+           Format.fprintf out_fmter "cc.eT (@[<1>%a@])."
              (Types.pp_type_simple_to_dk print_ctx) cstr_ty)
          sum_constructors_to_print;
-       Format.fprintf out_fmter ".@]@\n@\n";
+       Format.fprintf out_fmter "@]@\n@\n";
        if not as_zenon_fact then
          (begin
          (* Since any variant type constructors must be inserted in the
