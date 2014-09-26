@@ -1124,6 +1124,26 @@ let unify ~loc ~self_manifest type1 type2 =
 ;;
 
 (* ************************************************************************* *)
+(** {b Descr} : Returns a copy of the variable [v].
+
+    {b Rem} : Not exported oustide this module.                              *)
+(* ************************************************************************* *)
+let clone_variable v =
+  {tv_value = v.tv_value;
+   tv_level = v.tv_level}
+;;
+
+(* ************************************************************************* *)
+(** {b Descr} : Copy the content of variable [v1] in [v2].
+
+    {b Rem} : Not exported oustide this module.                              *)
+(* ************************************************************************* *)
+let copy_variable v1 v2 =
+  v2.tv_value <- v1.tv_value;
+  v2.tv_level <- v1.tv_level
+;;
+
+(* ************************************************************************* *)
 (** {b Descr} : Unifies the type scheme [ts]
     with the simple type [st].
 
@@ -1138,12 +1158,19 @@ let unify ~loc ~self_manifest type1 type2 =
     {b Rem} : Exported oustide this module.                              *)
 (* ************************************************************************* *)
 let unify_with_instance ts st =
+  (* First make a copy because we don't want to change the scheme. *)
+  let ts_vars = List.map clone_variable ts.ts_vars in
+  (* Perform the unification *)
   ignore (unify ~loc:Location.none ~self_manifest:None ts.ts_body st);
-  List.map (fun v -> match v.tv_value
-                  with
-                  | TVV_known t -> t
-                  | TVV_unknown -> assert false)
-           ts.ts_vars
+  let results =
+    List.map (fun v -> match v.tv_value with
+                    | TVV_known t -> t
+                    | TVV_unknown -> ST_var v)
+             ts.ts_vars
+  in
+  (* Put the copied variables back in the scheme. *)
+  List.iter2 copy_variable ts_vars ts.ts_vars;
+  results
 ;;
 
 
