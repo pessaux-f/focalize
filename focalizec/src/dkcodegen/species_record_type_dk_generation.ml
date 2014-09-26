@@ -639,7 +639,7 @@ let generate_pattern ctx dkctx env pattern
         generate_pattern_type pat;
         Format.fprintf out_fmter " =>@ ";
         rec_gen_pat p ~d ~k ~ret_type ~e;
-        Format.fprintf out_fmter "@ %a)@ ";
+        Format.fprintf out_fmter ")@ ";
         e ()
      | Parsetree.P_wild ->
         (* "match e with _ -> d" is the same as "d" *)
