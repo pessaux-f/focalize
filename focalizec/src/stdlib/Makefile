@@ -77,7 +77,9 @@ EXTERNAL_DKOS=\
  dk_machine_int.dko\
  dk_char.dko\
  dk_string.dko\
- dk_builtins.dko
+ dk_builtins.dko\
+ sets_externals.dko\
+ wellfoundation_externals.dko
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
