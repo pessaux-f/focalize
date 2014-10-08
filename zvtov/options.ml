@@ -16,6 +16,10 @@ let options = ref [
             " continue after failed proofs and keep .v file";
   "-debug", Arg.Set keep_temp_files,
          "   do not remove temporary files";
+  "-icoq", Arg.Unit (fun () -> input_format := I_coq),
+       "     use Coq syntax as input format";
+  "-idedukti", Arg.Unit (fun () -> input_format := I_dk),
+       "     use Dedukti syntax as input format";
   "-new", Arg.Unit (fun () -> Misc.focal_ext := "focal"),
        "     tell zenon to use the new focalize syntax for booleans (default)";
   "-nocache", Arg.Clear with_cache,
