@@ -1,0 +1,3 @@
+#NAME sets_externals.
+
+i_failed (A : cc.uT) (s : cc.eT dk_string.string) (e : cc.eT A) : cc.eT A := e.
