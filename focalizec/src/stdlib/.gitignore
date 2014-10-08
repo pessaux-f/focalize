@@ -28,6 +28,7 @@
 # Ungenerated files with generated extensions
 !*_externals.v
 !*_externals.ml
+!*_externals.dk
 !dk_*.dk
 !coq_builtins.v
 !ml_builtins.ml
