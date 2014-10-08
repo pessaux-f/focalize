@@ -169,7 +169,7 @@ uninstall:
 	echo "Uninstall stdlib TODO"
 
 clean:
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.fo *.vo *.pfc *.glob *~ .*~
+	$(RM) *.dko *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.fo *.vo *.pfc *.glob *~ .*~
 	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 
 depend:
