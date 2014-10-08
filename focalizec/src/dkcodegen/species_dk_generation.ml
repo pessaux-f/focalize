@@ -539,7 +539,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                   represent carriers of the species parameters we depend on. *)
                let ty = Types.specialize sch in
                if in_section then
-                 Format.fprintf out_fmter "Let abst_T := %a.@\n"
+                 Format.fprintf out_fmter "abst_T := %a.@\n"
                    (Types.pp_type_simple_to_dk new_print_ctx) ty
                else
                  Format.fprintf out_fmter "@ (abst_T := %a)"
@@ -550,7 +550,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
            | MinEnv.MDEE_Defined_logical (fr, n, _) ->
                (* We must add an equivalence to enforce de def-dependency. *)
                if in_section then
-                 Format.fprintf out_fmter "Let abst_%a :=@ "
+                 Format.fprintf out_fmter "abst_%a :=@ "
                    Parsetree_utils.pp_vname_with_operators_expanded n
                else
                  Format.fprintf out_fmter "@ (abst_%a :=@ "
@@ -1105,7 +1105,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
        Format.fprintf out_fmter
          "(; For notation used via \"by definition of %a\". ;)@\n"
          Sourcify.pp_expr_ident by_def_expr_ident;
-       Format.fprintf out_fmter "@[<2>Definition %s :=" id ;
+       Format.fprintf out_fmter "@[<2>%s :=" id ;
        Species_record_type_dk_generation.generate_expr
          ctx ~local_idents: [] ~in_recursive_let_section_of: []
          ~self_methods_status:
@@ -1142,7 +1142,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
             match rec_status with
             | Env.DkGenInformation.RC_non_rec ->
                 (* Non recursive toplevel function: use a "Definition". *)
-                Format.fprintf out_fmter "@[<2>Definition %s" name_for_zenon ;
+                Format.fprintf out_fmter "@[<2>%s" name_for_zenon ;
                 (* We now generate the sequence of real parameters of the
                    method, NOT those induced by abstractions and finally the
                    method's body. Anyway, since the used definition is at
@@ -1173,7 +1173,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
             (* Then, final carriage return. *)
             Format.fprintf out_fmter ".@]@\n"
         | Env.DkGenInformation.VB_toplevel_property lexpr ->
-            Format.fprintf out_fmter "@[<2>Definition %s :=@ " name_for_zenon ;
+            Format.fprintf out_fmter "@[<2>%s :=@ " name_for_zenon ;
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
             Species_record_type_dk_generation.generate_logical_expr
@@ -1226,7 +1226,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                        memory.Misc_common.cfm_dk_min_typ_env_names vname params
                        scheme body
                  | Env.DkGenInformation.RC_non_rec  ->
-                     Format.fprintf out_fmter "@[<2>Definition abst_%a"
+                     Format.fprintf out_fmter "@[<2>abst_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        vname ;
                      (* We now generate the sequence of real parameters of the
@@ -1246,7 +1246,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                    "(; For method of Self used via \"by definition of \
                    %a\". ;)@\n"
                    Sourcify.pp_expr_ident by_def_expr_ident;
-                 Format.fprintf out_fmter "@[<2>Definition abst_%a :=@ "
+                 Format.fprintf out_fmter "@[<2>abst_%a :=@ "
                    Parsetree_utils.pp_vname_with_operators_expanded vname ;
                  (* We now generate the sequence of real parameters of the
                     method, not those induced by abstraction and finally the
@@ -1967,7 +1967,7 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_dk_env
      various intermediate theorems induced by Zenon stuff, especially the fact
      that we open some Sections to "look like" first-order. *)
   let opt_for_zenon = if in_nested_proof then "" else "for_zenon_" in
-  Format.fprintf out_fmter "@[<2>Theorem %s%a :@ "
+  Format.fprintf out_fmter "@[<2>%s%a :@ "
     opt_for_zenon Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
   (* Generate the aim depending on if we are in a regular proof or in the
      initial stage of a termination proof. *)
@@ -2082,7 +2082,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
        Format.fprintf out_fmter "%%%%name: for_zenon_%a@\n@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;
        Format.fprintf out_fmter
-         "@\n@\n(* Methods to use for automated proof. *)@\n";
+         "@\n@\n(; Methods to use for automated proof. ;)@\n";
        (* Now, print Definition and Hypothesis mentionned in the "by" clause
           without using the method generator. This means that one must
           "inline" the Definitions' bodies (in fact, for Hypothesis, since we
@@ -2122,7 +2122,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
        Format.fprintf out_fmter "(; Theorem's body. ;)@\n";
-       Format.fprintf out_fmter "Theorem for_zenon_%a :@\n"
+       Format.fprintf out_fmter "for_zenon_%a :@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;
        (* Generate the aim depending on if we are in a regular proof or in the
           initial stage of a termination proof. *)
@@ -2170,7 +2170,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
            (match aim_gen_method with
            | ZSGM_from_logical_expr lexpr -> lexpr
            | ZSGM_from_termination_lemma (_, _, _) -> assert false) in
-         Format.fprintf out_fmter "@[<2>Theorem %a :@ "
+         Format.fprintf out_fmter "@[<2>%a :@ "
            Parsetree_utils.pp_vname_with_operators_expanded aim_name;
          Species_record_type_dk_generation.generate_logical_expr
            ~local_idents: [] ~in_recursive_let_section_of: []
@@ -2357,7 +2357,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
           sure that Dk will abstract it. *)
        Format.fprintf out_fmter
          "(; Dummy theorem to enforce Dk abstractions. ;)@\n";
-       Format.fprintf out_fmter "@[<2>Theorem ";
+       Format.fprintf out_fmter "@[<2>";
        Format.fprintf out_fmter "for_zenon_abstracted_%a "
          Parsetree_utils.pp_vname_with_operators_expanded name;
        Format.fprintf out_fmter ":@ ";
@@ -2707,7 +2707,7 @@ let generate_termination_order_With_Function ctx print_ctx env name
     opt_term_pr =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* The order's name: the function's name + "_wforder". *)
-  Format.fprintf out_fmter "@[<2>Definition %a_wforder"
+  Format.fprintf out_fmter "@[<2>%a_wforder"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Generate the lambda-lifts for our dependencies. *)
   let (_, ctx, print_ctx) =
@@ -2874,7 +2874,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
       ai.Abstractions.ai_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
   (* The termination theorem... *)
-  Format.fprintf out_fmter "@[<2>Theorem %a_termination"
+  Format.fprintf out_fmter "@[<2>%a_termination"
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   Format.fprintf out_fmter "@ :@[@ " ;
   (* Generate the statement of the theorem representing the termination proof
@@ -3083,7 +3083,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
             type. This type is a tuple if the method has several arguments. This
             type was already computed above for the termination order... *)
          Format.fprintf out_fmter
-           "@\n@\n(* Abstracted termination order. *)@\n";
+           "@\n@\n(; Abstracted termination order. ;)@\n";
          Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ ";
          (* Print the tuple that is the method's arguments' types. *)
          Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
@@ -3195,7 +3195,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        Format.fprintf out_fmter "Qed.@]@\n";
        (* ---> Generate the curryed version. *)
        Format.fprintf out_fmter
-         "@[<2>Definition %a__%a %a :=@ %a (%a).@]@\n"
+         "@[<2>%a__%a %a :=@ %a (%a).@]@\n"
          Parsetree_utils.pp_vname_with_operators_expanded species_name
          Parsetree_utils.pp_vname_with_operators_expanded name
          (Handy.pp_generic_separated_list " "
@@ -3210,7 +3210,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded name ;
 (* [Unsure] We must now generate the function applied to its order and
    termination proof and so on... *)
-       Format.fprintf out_fmter "@\n@[<2>Definition %a"
+       Format.fprintf out_fmter "@\n@[<2>%a"
          Parsetree_utils.pp_vname_with_operators_expanded name ;
        ignore
          (generate_field_definition_prelude
@@ -3980,11 +3980,11 @@ let generate_collection_generator ctx env compiled_species_fields
   (* Now, let's really work. *)
   (* A little comment in the generated Dk code. *)
   Format.fprintf out_fmter
-    "@\n(* Fully defined '%a' species's collection generator. *)@\n"
+    "@\n(; Fully defined '%a' species's collection generator. ;)@\n"
     Sourcify.pp_vname current_species_name;
   (* The generic name of the collection generator: the species' name +
      "_collection_create". *)
-  Format.fprintf out_fmter "@[<2>Definition collection_create";
+  Format.fprintf out_fmter "@[<2>collection_create";
   (* The collection generator first arguments are those corresponding to the
      IS species parameters carriers, hence to the record type parameters.
      All of them are in the [collection_carrier_mapping] of the current
@@ -4541,7 +4541,7 @@ let generate_rep_definition ctx fields =
               Format.fprintf ctx.Context.scc_out_fmter
                 "(; Carrier's structure explicitly given by \"rep\". ;)@\n" ;
               Format.fprintf ctx.Context.scc_out_fmter
-                "@[<2>Definition me_as_carrier@ " ;
+                "@[<2>me_as_carrier@ " ;
               (* Print the variables names... *)
               List.iter
                 (function (_, (h, _)) ->
@@ -4635,7 +4635,7 @@ let make_collection_effective_methods ctx env implemented_species_name
       | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
       | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
           Format.fprintf out_fmter
-            "@[<2>Definition %a :=@ effective_collection.@[<1>("
+            "@[<2>%a :=@ effective_collection.@[<1>("
             Parsetree_utils.pp_vname_with_operators_expanded n ;
           print_implemented_species_as_dk_module
             ~current_unit out_fmter implemented_species_name;
@@ -4654,7 +4654,7 @@ let make_collection_effective_methods ctx env implemented_species_name
           List.iter
             (fun (_, n, _, _, _, _, _, _) ->
               Format.fprintf out_fmter
-                "@[<2>Definition %a :=@ effective_collection.@[<1>("
+                "@[<2>%a :=@ effective_collection.@[<1>("
                 Parsetree_utils.pp_vname_with_operators_expanded n ;
               print_implemented_species_as_dk_module
                 ~current_unit out_fmter implemented_species_name;
