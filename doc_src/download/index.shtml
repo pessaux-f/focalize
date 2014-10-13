@@ -47,7 +47,7 @@ This will create a <code>zenon</code> repository in your
 
 
 <div id="main">
-<h3>The latest release (as of 2013-01-10)<h3>
+<h3>The latest release (as of 2014-10-14)<h3>
 <p>
 <a href="$(project_archive_name)">$(project_archive_name)</a> (tar-gzip).
 <br />

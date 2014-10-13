@@ -25,7 +25,7 @@ HTMLC_INCLUDES=-I $(ROOT_DIR)/doc_src/Includes -env project.env
 SOURCES=index.shtml
 BYT_OBJS=$(SOURCES:.shtml=.html)
 
-# Install command: scp xxx pessaux@modulogic.inria.fr:/home/www/htdocs/focalize/
+# Install command: scp xxx pessaux@sosie.inria.fr:/home/www/htdocs/focalize/
 PROJECT_WEB_SITE_DIR=/home/www/htdocs/focalize
 PROJECT_WEB_TARGET_DIR="pessaux@sosie.inria.fr":$(PROJECT_WEB_SITE_DIR)
 
