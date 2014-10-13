@@ -75,10 +75,10 @@ $(focal)
 </p>
   <ul>
     <li>
-    a source file for the $(coq) proof assistant to check the proofs, 
+    a source file for the $(coq) proof assistant to check the proofs,
     </li>
     <li>
-    a source file for the $(ocaml) compiler to build the executable program, 
+    a source file for the $(ocaml) compiler to build the executable program,
     </li>
     <li>
     a source file that contains the documentation extracted from the
@@ -90,7 +90,7 @@ $(focal)
   refine a development from the coarse-grain specification to the fully
   defined executable program.
   <br><br>
-  The $(focal) distribution includes a library of 
+  The $(focal) distribution includes a library of
   mathematical algebraic structures up to multivariate polynomial
   rings, a library of security policies and various examples contributed
   by $(focal) users. The resulting libraries are noticeably
@@ -99,6 +99,28 @@ $(focal)
   Algebra Systems available.
   </p>
   </h3>
+</div>
+
+
+<div class="spacer"></div>
+
+<div id="main">
+<h3>New release (0.9.0) of the $(focal) environment (2014-10-14)</h3><h3>
+<p>
+  The new release of the $(focal) environment,
+  <code>$(project_name) 0.9.0</code>,
+  is now available.
+  A certain number of bugs found in the <code>focalizec</code> compiler have
+  been fixed and Zenon also had several issues fixed.
+  <code>Final let</code>-definitions are now integrated. The computation of
+  dependencies has been deeply rewritten to compute them *once* for all the
+  possible backends (OCaml, Coq). Generated code is slightly lighter and
+  naming schemes and code generation schemes have been uniformized between
+  OCaml and Coq.
+  A complete description of changes / new features can in found in the CHANGES
+  file of the distribution.
+</p>
+</h3>
 </div>
 
 
@@ -263,7 +285,7 @@ and Th&eacute;o for the example.</font>
 
 
 <div id="main">
-<h3>New release of the $(focal) environment (2013-01-10)</h3><h3>
+<h3>New release (0.8.0) of the $(focal) environment (2013-01-10)</h3><h3>
 <p>
   The new release of the $(focal) environment, 
   <code>$(project_name) 0.8.0</code>, 
