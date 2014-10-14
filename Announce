@@ -1,26 +1,22 @@
 Hi,
 
 It is my pleasure to announce the new release for FoCaLiZe (the
-0.8.0 version).
+0.9.0 version).
 
-After a pretty long time without release, this new version brings number
-of enhancements, from the focalizec compiler and Zenon. New versions of
-OCaml and Coq are now supported as well as previous ones for sake of legacy.
-Zenon made impressive progress so as to be helpful in proving inductive
-properties for species. Installation and setup have been fully revisited,
-leading in a simpler and lighter mechanism. The standard library has been
-extended with low-level theorems. Termination proofs for structurally
-recursive functions are now possible. A certains number of bugs found in the
-focalizec compiler have been fixed. And a new tutorial about making proofs
-with Zenon is born.
+A certain number of bugs found in the focalizec compiler have been fixed and
+Zenon also had several issues fixed. Final let-definitions are now integrated.
+The computation of dependencies has been deeply rewritten to compute them
+*once* for all the possible backends (OCaml, Coq). Generated code is slightly
+lighter and naming schemes and code generation schemes have been standardized
+between OCaml and Coq.
 A complete description of changes / new features can in found in the CHANGES
 file of the distribution.
 
-The 0.8.0 release is available from FoCaLiZe.inria.fr at
-http://focalize.inria.fr/download/focalize-0.8.0.tgz
+The 0.9.0 release is available from focalize.inria.fr at
+http://focalize.inria.fr/download/focalize-0.9.0.tgz
 
 Uncompress, extract, then read the INSTALL file in the newly created
-directory focalize.0.8.0 and follow the simple instructions written there.
+directory focalize.0.9.0 and follow the simple instructions written there.
 
 
 A public GIT repository is also available, allowing to fetch the latest
@@ -28,7 +24,7 @@ development state of FoCaLiZe. However, its content is not bullet-proof and
 may be unstable at some times. It reflects the real-time state of FoCaLiZe
 and may bring fixes and features not available in previous releases and that
 will be part of the next release.
-To clone the current FoCaLiZe GIT repository, invoke: 
+To clone the current FoCaLiZe GIT repository, invoke:
    git clone http://focalize.inria.fr/focalize.git
 This will create a focalize repository in your current directory. Once cloned,
 it is possible to fetch updates with the usual GIT commands (essentially git
@@ -37,16 +33,16 @@ pushing (i.e. submitting) modifications done in the sources tree.
 
 
 To join people and discussions write to focalize-users@inria.fr.
-Implementors also listen to suggestions and compliments at mail adress
-focalize-devel@inria.fr.
+Implementors also listen to suggestions (and compliments if some ^_^) at the
+mail address: focalize-devel@inria.fr.
 
 Enjoy.
 
-For the entire FoCaLiZe implementor group,
+For the entire FoCaLiZe implementation group,
 
 François Pessaux.
 
-January 2013
+October 2014
 
 What is it FoCaLiZe ?
 ---------------------
@@ -56,7 +52,7 @@ programs and systems. It provides a purely functional language to formally
 express specifications, describe the design and code the algorithms.
 Within the functional language, FoCaLiZe provides a logical framework to
 express the properties of the code. A simple declarative language provides
-the natural expression of proofs of properties them from within the program 
+the natural expression of proofs of properties them from within the program
 source code.
 
 The FoCaLiZe compiler extracts statements and proof scripts from the source
@@ -64,7 +60,7 @@ file, to pass them to the Zenon proof generator to produce Coq proof terms
 that are then formally verified.
 
 The FoCaLiZe compiler also generates the code corresponding to the
-program as an Objective Caml source file. This way, programs developped in
+program as an Objective Caml source file. This way, programs developed in
 FoCaLiZe can be efficiently compiled to native code on a large variety of
 architectures.
 
@@ -78,8 +74,8 @@ design and implementation, while proving that their implementation
 meets its specification or design requirements. The FoCaLiZe language offers
 high level mechanisms such as inheritance, late binding, redefinition,
 parametrization, etc. Confidence in proofs submitted by developers or
-automatically generated ultimately relies on Coq formal proof verification. 
+automatically generated ultimately relies on Coq formal proof verification.
 
 FoCaLiZe is a son of the previous Focal system. However, it is a completely
-new implementation with vastly revised syntax and semantices, featuring a
+new implementation with vastly revised syntax and semantics, featuring a
 rock-solid infrastructure and greatly improved capabilities.
