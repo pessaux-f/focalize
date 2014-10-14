@@ -83,7 +83,7 @@ quo : Nat -> Nat -> Nat.
 (; exponentiation ;)
 pow : Nat -> Nat -> Nat.
 [ n : Nat ] pow n O --> S O
-[ n : Nat, k : Nat ] pow n (S k) --> mult n (pow n k). 
+[ n : Nat, k : Nat ] pow n (S k) --> mult n (pow n k).
 
 (; Decimal representation ;)
 Digit : cc.uT.
