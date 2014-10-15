@@ -53,6 +53,38 @@ let section_gen_sym =
 ;;
 
 
+(*
+   There is no "Section" mechanism in Dedukti.
+   It's use in the Coq backend is to call Zenon in a simple context
+   where type information is pretty much discarded and undefined methods
+   are free symbols.
+
+   We extend the Zenon Dedukti input and output in order to tell Zenon
+   how to abstract the theorem statement directly.
+
+   By doing so, we also avoid the dummy theorem produced in the Coq backend
+   and needed to abstract over unused section variables.
+*)
+
+(* Type describing the possible section variables *)
+type section_variable =
+  | SVType of string                                           (* Type *)
+  | SVVar of                                                   (* Variable *)
+      string *                  (* Prefix: empty string or module name *)
+        Parsetree.vname *       (* Name of the variable *)
+        Types.type_simple *     (* Type of the variable *)
+        Types.dk_print_context  (* Print context for the type *)
+  | SVHyp of                                                   (* Hypothesis *)
+      (* Whether the method is abstracted,
+         gives the prefix and how to print the formula *)
+      Species_record_type_dk_generation.self_methods_status *
+        Parsetree.vname *              (* Name of the hypothesis *)
+        Parsetree.logical_expr *       (* Formula *)
+        Context.species_compil_context (* Print context for the formula *)
+
+(* List of variable declarations for current section.
+   This is a global variable. *)
+let section_variable_list : section_variable list ref = ref []
 
 (* ************************************************************************ *)
 (** {b Descr} : Recover the parameters abstracted from our method to apply
@@ -398,10 +430,12 @@ let find_method_type_kind_by_name vname coll_meths =
 
   Args:
     - [~in_section] : True when this function is called to generate abstractions
-    in a Section. Is is only the case when used to generate the code of a
+    in a Section. It is only the case when used to generate the code of a
     temporary theorem for Zenon purpose. In this case, instead of abstracting
     dependencies by adding extra arguments to the current definition, we
-    generate Variable, Let and Hypothesis.*)
+    generate Variable, Let and Hypothesis. These are stored in the global variable
+    section_variable_list and passed to Zenon for abstraction.
+*)
 let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
     used_species_parameter_tys dependencies_from_params generated_fields =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -420,7 +454,8 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
         let param_name =  "_p_" ^ as_string in
         (* First, generate the parameter. *)
         if in_section then
-          Format.fprintf out_fmter "@[<2>Variable %s_T :@ cc.uT.@]@\n" param_name
+          section_variable_list := SVType param_name :: !section_variable_list
+          (* Format.fprintf out_fmter "@[<2>Variable %s_T :@ cc.uT.@]@\n" param_name *)
         else Format.fprintf out_fmter "@ (%s_T :@ cc.uT)" param_name;
         (* Return the stuff to extend the collection_carrier_mapping. *)
         ((ctx.Context.scc_current_unit, as_string),
@@ -459,9 +494,8 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
           if in_section then (
             match meth_ty_kind with
              | Parsetree_utils.DETK_computational meth_ty ->
-                 Format.fprintf out_fmter "@[<2>Variable %s%a :@ %a.@]@\n"
-                   prefix Parsetree_utils.pp_vname_with_operators_expanded meth
-                   (Types.pp_type_simple_to_dk new_print_ctx) meth_ty
+                section_variable_list :=
+                  SVVar (prefix, meth, meth_ty, new_print_ctx) :: !section_variable_list
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
                     parameter "Self" must be printed as "_p_param_name_T". *)
@@ -474,22 +508,12 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                    Context.scc_collections_carrier_mapping =
                      self_map ::
                        new_ctx.Context.scc_collections_carrier_mapping } in
-                 Format.fprintf out_fmter "@[<2>Variable %s%a :@ "
-                   prefix
-                   Parsetree_utils.pp_vname_with_operators_expanded meth;
-                 (* Even if we are generating the prelude of a recursive
-                    function, we can't have a recursion via the dependencies
-                    from a species parameter. *)
-                 Species_record_type_dk_generation.generate_logical_expr
-                   new_ctx' ~in_recursive_let_section_of: [] ~local_idents: []
-                   ~self_methods_status:
-                     (Species_record_type_dk_generation.SMS_from_param
-                        species_param_name)
-                   ~recursive_methods_status:
-                     Species_record_type_dk_generation.RMS_regular
-                   env lexpr ;
-                 Format.fprintf out_fmter "@].@\n"
-           )
+                 section_variable_list :=
+                   SVHyp (Species_record_type_dk_generation.SMS_from_param
+                            species_param_name,
+                          meth,
+                          lexpr,
+                          new_ctx') :: !section_variable_list)
           else (
             match meth_ty_kind with
              | Parsetree_utils.DETK_computational meth_ty ->
@@ -568,16 +592,15 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
            | MinEnv.MDEE_Declared_carrier ->
                (* Note that by construction, the carrier is first in the env. *)
                if in_section then
-                 Format.fprintf out_fmter "@[<2>Variable abst_T : cc.uT.@]@\n"
+                 section_variable_list := SVType "abst" :: !section_variable_list
                else Format.fprintf out_fmter "@ (abst_T : cc.uT)";
                [Parsetree.Vlident "rep"]
            | MinEnv.MDEE_Declared_computational (n, sch) ->
                (* Due to a decl-dependency, hence: abstract. *)
                let ty = Types.specialize sch in
                if in_section then
-                 Format.fprintf out_fmter "@[<2>Variable abst_%a : cc.eT %a.@]@\n"
-                   Parsetree_utils.pp_vname_with_operators_expanded n
-                   (Types.pp_type_simple_to_dk new_print_ctx) ty
+                 section_variable_list :=
+                   SVVar ("abst_", n, ty, new_print_ctx) :: !section_variable_list
                else
                  Format.fprintf out_fmter "@ (abst_%a : cc.eT %a)"
                    Parsetree_utils.pp_vname_with_operators_expanded n
@@ -585,23 +608,27 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                [n]
            | MinEnv.MDEE_Declared_logical (n, b) ->
                if in_section then
-                 Format.fprintf out_fmter "@[<2>Hypothesis abst_%a :@ "
-                   Parsetree_utils.pp_vname_with_operators_expanded n
+                 section_variable_list :=
+                   SVHyp (Species_record_type_dk_generation.SMS_abstracted,
+                          n,
+                          b,
+                          new_ctx) :: !section_variable_list
                else
-                 Format.fprintf out_fmter "@ (abst_%a :@ "
+                 (Format.fprintf out_fmter "@ (abst_%a :@ "
                    Parsetree_utils.pp_vname_with_operators_expanded n;
                (* Methods from Self are printed "abst_XXX" since dependencies
                   have leaded to extra parameters "abst_XXX".
                   Even if we are generating the prelude of a recursive
                   function, we can't have a recursion via the dependencies
                   from other methods of ourselves. *)
-               Species_record_type_dk_generation.generate_logical_expr
-                 new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
-                 ~self_methods_status:
-                   Species_record_type_dk_generation.SMS_abstracted env b
-                 ~recursive_methods_status:
-                   Species_record_type_dk_generation.RMS_regular ;
-               if in_section then Format.fprintf out_fmter ".@]@\n"
+                  Species_record_type_dk_generation.generate_logical_expr
+                    new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
+                    ~self_methods_status:
+                    Species_record_type_dk_generation.SMS_abstracted env b
+                    ~recursive_methods_status:
+                    Species_record_type_dk_generation.RMS_regular) ;
+
+               if in_section then ()
                else Format.fprintf out_fmter ")";
                [n])
          min_dk_env) in
@@ -2079,10 +2106,40 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
           this is sufficient *)
        Format.fprintf out_fmter "%%%%location: [%a]@\n"
          Location.pp_location proof.Parsetree.ast_loc;
-       Format.fprintf out_fmter "%%%%name: for_zenon_%a@\n@\n"
+       Format.fprintf out_fmter "%%%%name: for_zenon_%a@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;
+       (* Tell Zenon to abstract over "Section" variables *)
+       (* Each variable has to be printed on its line,
+          hence the horizontal printing box *)
+       List.iter (
+         function
+         | SVType vname -> Format.fprintf out_fmter "%%%%type: %s_T@\n" vname
+         | SVVar (prefix, vname, ty, pctx) ->
+            Format.fprintf out_fmter
+              "%%%%begin-variable: %s%a :@ cc.eT %a@\n%%%%end-variable@\n"
+              prefix Parsetree_utils.pp_vname_with_operators_expanded vname
+              (Types.pp_type_simple_to_dk pctx) ty
+         | SVHyp (meth_status, vname, lexpr, sctx) ->
+            let prefix = match meth_status with
+              | Species_record_type_dk_generation.SMS_abstracted -> "abst_"
+              | Species_record_type_dk_generation.SMS_from_param name ->
+                 "_p_" ^ (Parsetree_utils.name_of_vname name) ^ "_"
+              | Species_record_type_dk_generation.SMS_from_record ->
+                 assert false (* We never construct Hypothesis from record *)
+            in
+            Format.fprintf out_fmter "%%%%begin-hypothesis: %s%a :@ "
+              prefix
+              Parsetree_utils.pp_vname_with_operators_expanded vname;
+            Species_record_type_dk_generation.generate_logical_expr
+              sctx ~in_recursive_let_section_of: [] ~local_idents: []
+              ~self_methods_status:meth_status
+              ~recursive_methods_status:
+              Species_record_type_dk_generation.RMS_regular
+              env lexpr ;
+            Format.fprintf out_fmter "@\n%%%%end-hypothesis@\n")
+         (List.rev !section_variable_list);
        Format.fprintf out_fmter
-         "@\n@\n(; Methods to use for automated proof. ;)@\n";
+         "@\n@\n@\n(; Methods to use for automated proof. ;)@\n";
        (* Now, print Definition and Hypothesis mentionned in the "by" clause
           without using the method generator. This means that one must
           "inline" the Definitions' bodies (in fact, for Hypothesis, since we
@@ -2280,11 +2337,10 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
      of proofs done by [Pf_auto] or [Pf_node]. It prints the opening of the
      main Section and the theorem. *)
   let print_common_prelude_for_zenon () =
-    Format.fprintf out_fmter "(; Section for proof of theorem '%a'. ;)@\n"
+    Format.fprintf out_fmter "@[<2>(; Section for proof of theorem '%a'. ;)@\n"
       Parsetree_utils.pp_vname_with_operators_expanded name;
     (* Start the Section. *)
-    Format.fprintf out_fmter "@[<2>Section Proof_of_%a.@\n"
-      Parsetree_utils.pp_vname_with_operators_expanded name;
+    section_variable_list := [];
     (* We must now dump Variables, Let and Hypothesis for all the things we
        usually lambda-lift in a regular definition of method. This is due to
        the fact that here we still use the Section mechanism. Hence, we do
@@ -2398,10 +2454,10 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
          out_fmter dependencies_from_params min_dk_env
          used_species_parameter_tys;
        Format.fprintf out_fmter
-         "apply for_zenon_%a;@\nauto.@\nQed.@\n"
+         "apply for_zenon_%a;@\nauto.@\nQed."
          Parsetree_utils.pp_vname_with_operators_expanded name;
        (* End the Section. *)
-       Format.fprintf out_fmter "End Proof_of_%a.@]@\n@\n"
+       Format.fprintf out_fmter "@]@\n(; End Proof_of_%a. ;)@\n@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
        end)
 ;;
