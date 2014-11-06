@@ -25,6 +25,10 @@ and that will be part of the next release.
 To clone the current $(focal) GIT repository, invoke:
 <br />
 <code>   git clone http://focalize.inria.fr/focalize.git</code>
+<br />
+or from the alternate (and experimental) mirror:
+<br />
+<code>   git clone https://focalize.ensta-paristech.fr/download/focalize.git</code>
 <p>
 This will create a <code>focalize</code> repository in your current directory.
 Once cloned, it is possible to fetch updates with the usual GIT
@@ -38,6 +42,10 @@ the $(focal) directory. Hence, once $(focal) is cloned, go inside its base
 directory (<code>cd focalize</code>) and clone Zenon by invoking:
 <br />
 <code>   git clone http://focalize.inria.fr/zenon.git</code>
+<br />
+or from the alternate (and experimental) mirror:
+<br />
+<code>   git clone https://focalize.ensta-paristech.fr/download/zenon.git</code>
 <p>
 This will create a <code>zenon</code> repository in your
 <code>focalize</code> directory.

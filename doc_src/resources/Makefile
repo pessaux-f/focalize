@@ -15,7 +15,7 @@
 #**********************************************************************#
 
 # To manually install:
-# scp *.html pessaux@sosie.inria.fr:/home/www/htdocs/focalize/resources/
+# scp *.html pessaux@sosie.inria.fr:/home/www/focalize/resources/
 
 ROOT_DIR=../..
 
