@@ -108,6 +108,16 @@ $(focal)
   </h3>
 </div>
 
+<div class="spacer"></div>
+
+<div id="main">
+<h3>Experimental mirror of GIT repositories (Nov 2014)</h3><h3>
+<p>
+  The GIT repositories of $(focal) and Zenon are now daily mirrored at ENSTA.
+  We hope that the synchronization will work fine...
+</p>
+</h3>
+</div>
 
 <div class="spacer"></div>
 
