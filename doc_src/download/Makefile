@@ -26,7 +26,7 @@ HTMLC_INCLUDES=-I $(ROOT_DIR)/doc_src/Includes -env project.env
 SOURCES=index.shtml
 BYT_OBJS=$(SOURCES:.shtml=.html)
 
-# Install command: scp xxx pessaux@sosie.inria.fr:/home/www/htdocs/focalize/download/
+# Install command: scp xxx pessaux@sosie.inria.fr:/home/www/focalize/download/
 
 all: $(BYT_OBJS)
 
