@@ -156,11 +156,12 @@ let toplevel_compile env ~current_unit out_fmter = function
       Env.dkgen_open_module ~loc: phrase_loc modname env
   | Infer.PCM_coq_require _ ->
       env
-  | Infer.PCM_species (species_def, species_descr, dep_graph) ->
+  | Infer.PCM_species (species_def, species_descr, dep_graph, abstr_info) ->
       Types.purge_type_simple_to_dk_variable_mapping () ;
       let spe_binding_info =
         Species_dk_generation.species_compile
-          ~current_unit env out_fmter species_def species_descr dep_graph in
+          ~current_unit env out_fmter species_def species_descr dep_graph
+      abstr_info in
       (* Return the Dedukti code generation environment extended by the current
          species's information. *)
       Env.DkGenEnv.add_species

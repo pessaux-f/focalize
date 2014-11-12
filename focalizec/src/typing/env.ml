@@ -717,6 +717,77 @@ module TypeInformation = struct
 
   type min_coq_env_element = (min_coq_env_reason * min_coq_env_method)
 
+  (** {b Descr} Elements of the minimal Dk typing environment for methods.
+      We can't directly use [Env.TypeInformation.species_field] because they
+      can't make appearing the fact that the carrier belongs to the minimal
+      environment even if not *defined* (remind that in species fields, if
+      "rep" appears then is it *defined* otherwise; it is silently declared
+      and does't appear in the list of fields).
+
+      {b Rem} : Not exported outside this module.                               *)
+  type min_dk_env_method =
+    | MDEM_Declared_carrier    (** The carrier belongs to the environment but
+         only via a decl-dependency. Hence it doesn't need to be explicitely
+         defined, but need to be in the environment. *)
+    | MDEM_Defined_carrier of Types.type_scheme (** The carrier belongs to the
+                 environment via at least a def-dependency. Then is have to
+                 be explicitely declared. *)
+    | MDEM_Declared_computational of
+        (Parsetree.vname * Types.type_scheme) (** Abstract computational method,
+           i.e. abstracted Let or abstracted Let_rec or Sig other than "rep". *)
+    | MDEM_Defined_computational of
+        (from_history *
+           (** Tells if the method is recursive and if so which kind of
+               termination proof it involves. This is needed when generating
+               pseudo-Dk code for Zenon using a "by definition" of this method.
+               In effect, the body of the method contains the ident of this
+               method, but when generating the Zenon stuff, the definition of
+               the method will be named "abst_xxx".
+               So the internal recursive call to print when generating the
+               method's body must be replaced by "abst_xxx". This is related to
+               the bug report #199. Moreover, since currently structural
+               recursion is compiled with "Fixpoint" and other kinds with
+               "Function" in Dk, we need to remind what is the compilation
+               scheme used depending on the recursion kind. *)
+         rec_status *
+         Parsetree.vname * (Parsetree.vname list) * Types.type_scheme *
+         Parsetree.binding_body)  (** Defined computational method, i.e. Let or
+            Let_rec. *)
+    | MDEM_Declared_logical of
+        (Parsetree.vname * Parsetree.logical_expr)  (** Abstract logical
+            property, i.e. Property or abstracted Theorem. *)
+    | MDEM_Defined_logical of     (** Defined logical property, i.e. Theorem. *)
+        (from_history * Parsetree.vname * Parsetree.logical_expr)
+
+    (** {b Descr}: Tells by which kind of construct (i.e. only logical or
+        logical and/or computational) the method to add as dependency arrived.
+        In other words, this tag tells if only logical target languages must
+        take this dependency into account or if logical ANN also computational
+        target languages are also impacted.
+        This allows to compute the dependency calculus once for all, and not
+        once for each target language. After thi common pass of calculus, each
+        backend will select either [MDER_only_logical] AND [MDER_even_comput]
+        dependencies for logical targets or only [MDER_even_comput]
+        dependencies for computational targets.
+        Clearly, [MDER_even_comput] is absorbant, this means that if a method
+        is initiall present as dependency tagged by [MDER_only_logical], if it
+        appear to be also required for computational stuff, it will be added
+        with the tag [MDER_even_comput] whicb subsumes [MDER_only_logical].
+        Said again differently, [MDER_even_comput] concerns both computational
+        and logical targets although [MDER_only_logical] concerns only logical
+        targets. *)
+
+  type min_dk_env_reason =
+    | MDER_only_logical   (** The method is only induced by logical stuff and
+                              must not be taken into account by
+                              only-computational targets backend. *)
+    | MDER_even_comput    (** The method is induced by at least computational
+                              stuff and must be taken into account by
+                              only-computational and also logical targets
+                              backend. *)
+
+  type min_dk_env_element = (min_dk_env_reason * min_dk_env_method)
+
 
   type field_abstraction_info = {
     (** The positional list of parameters carrier abstracted in the method. *)
@@ -751,7 +822,9 @@ module TypeInformation = struct
     ad_dependencies_from_parameters_in_type :
       (species_param * ordered_methods_from_params) list ;
     (** Minimal Coq typing environnment. *)
-    ad_min_coq_env : min_coq_env_element list
+    ad_min_coq_env : min_coq_env_element list ;
+    (** Minimal Dedukti typing environnment. *)
+    ad_min_dk_env : min_dk_env_element list
   }
 
   (* *********************************************************************** *)

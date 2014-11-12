@@ -298,7 +298,7 @@ let follow_instanciations_for_in_param ctx env original_param_name
                        ~loc: Location.none ~current_unit
                        curr_level_species_ident env in
                    sp_prms
-               | Abstractions.EK_dk env ->
+               | Abstrs.EK_dk env ->
                    let (sp_prms, _, _, _) =
                      Env.DkGenEnv.find_species
                        ~loc: Location.none ~current_unit
@@ -491,7 +491,7 @@ let follow_instanciations_for_is_param ctx env original_param_index
                      ~loc: Location.none ~current_unit
                      curr_level_species_ident env in
                  sp_prms
-             | Abstractions.EK_dk env ->
+             | Abstrs.EK_dk env ->
                  let (sp_prms, _, _, _) =
                    Env.DkGenEnv.find_species
                      ~loc: Location.none ~current_unit
@@ -627,7 +627,7 @@ let find_toplevel_spe_defining_meth_through_inheritance env ~current_unit
              Env.CoqGenEnv.find_species
                ~loc: Location.none ~current_unit species_ident env in
            data
-       | Abstractions.EK_dk env ->
+       | Abstrs.EK_dk env ->
            let (_, data, _, _) =
              Env.DkGenEnv.find_species
                ~loc: Location.none ~current_unit species_ident env in

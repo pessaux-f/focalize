@@ -146,6 +146,23 @@ module TypeInformation :
 
     type min_coq_env_element = (min_coq_env_reason * min_coq_env_method)
 
+    type min_dk_env_method =
+        MDEM_Declared_carrier
+      | MDEM_Defined_carrier of Types.type_scheme
+      | MDEM_Declared_computational of (Parsetree.vname * Types.type_scheme)
+      | MDEM_Defined_computational of
+          (from_history * rec_status * Parsetree.vname *
+           (Parsetree.vname list) * Types.type_scheme * Parsetree.binding_body)
+      | MDEM_Declared_logical of (Parsetree.vname * Parsetree.logical_expr)
+      | MDEM_Defined_logical of
+          (from_history * Parsetree.vname * Parsetree.logical_expr)
+
+    type min_dk_env_reason =
+      | MDER_only_logical
+      | MDER_even_comput
+
+    type min_dk_env_element = (min_dk_env_reason * min_dk_env_method)
+
     type field_abstraction_info = {
       ad_used_species_parameter_tys : Parsetree.vname list ;
       ad_raw_dependencies_from_params :
@@ -155,7 +172,8 @@ module TypeInformation :
       ad_dependencies_from_parameters_in_type :
         (species_param * ordered_methods_from_params) list ;
 (*      ad_abstracted_methods : Parsetree.vname list ; *)
-      ad_min_coq_env : min_coq_env_element list
+      ad_min_coq_env : min_coq_env_element list ;
+      ad_min_dk_env : min_dk_env_element list
     }
 
     type species_description = {

@@ -143,7 +143,7 @@ let instanciate_IS_parameter_through_inheritance ctx env original_param_index
      species where it was really DEFINED. *)
   let instancied_with =
     Misc_common.follow_instanciations_for_is_param
-      ctx (Abstractions.EK_dk env) original_param_index
+      ctx (Abstrs.EK_dk env) original_param_index
       field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
   (* Now really generate the code of by what to instanciate. *)
   (match instancied_with with
@@ -187,7 +187,7 @@ let instanciate_IS_parameter_carrier_through_inheritance ctx env
      species where it was really DEFINED. *)
   let instancied_with =
     Misc_common.follow_instanciations_for_is_param
-      ctx (Abstractions.EK_dk env) original_param_index
+      ctx (Abstrs.EK_dk env) original_param_index
       field_memory.Misc_common.cfm_from_species.Env.fh_inherited_along in
   (* Now really generate the code of by what to instanciate. *)
   match instancied_with with
@@ -299,7 +299,7 @@ let instanciate_parameters_through_inheritance ctx env field_memory =
              (* We get the FoCaL expression once substitutions are done. *)
              let instancied_expr =
                Misc_common.follow_instanciations_for_in_param
-                 ctx (Abstractions.EK_dk env) param_name
+                 ctx (Abstrs.EK_dk env) param_name
                  original_param_unit original_param_index
                  field_memory.Misc_common.cfm_from_species.
                    Env.fh_inherited_along in
@@ -531,8 +531,11 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
   let abstracted_methods =
     List.flatten
       (List.map
-         (function
-           | MinEnv.MDEE_Defined_carrier sch ->
+         (function (_, meth_dep) ->
+           (* Reason ignored since in Dedukti we take all the kinds of methods in
+              account. *)
+           match meth_dep with
+           | Env.TypeInformation.MDEM_Defined_carrier sch ->
                (* Now, if "rep" is defined, then we generate an equivalence
                   between "abst_T" and it's representation using the
                   abstracted types passed as arguments to the Definition to
@@ -546,8 +549,8 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                    (Types.pp_type_simple_to_dk new_print_ctx) ty ;
                (* Anything defined is not abstracted. *)
                []
-           | MinEnv.MDEE_Defined_computational (fr, _, n, _, _, _)
-           | MinEnv.MDEE_Defined_logical (fr, n, _) ->
+           | Env.TypeInformation.MDEM_Defined_computational (fr, _, n, _, _, _)
+           | Env.TypeInformation.MDEM_Defined_logical (fr, n, _) ->
                (* We must add an equivalence to enforce de def-dependency. *)
                if in_section then
                  Format.fprintf out_fmter "abst_%a :=@ "
@@ -565,13 +568,13 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                if in_section then Format.fprintf out_fmter ".@\n"
                else Format.fprintf out_fmter ")";
                []                  (* Anything defined is not abstracted. *)
-           | MinEnv.MDEE_Declared_carrier ->
+           | Env.TypeInformation.MDEM_Declared_carrier ->
                (* Note that by construction, the carrier is first in the env. *)
                if in_section then
                  Format.fprintf out_fmter "@[<2>Variable abst_T : cc.uT.@]@\n"
                else Format.fprintf out_fmter "@ (abst_T : cc.uT)";
                [Parsetree.Vlident "rep"]
-           | MinEnv.MDEE_Declared_computational (n, sch) ->
+           | Env.TypeInformation.MDEM_Declared_computational (n, sch) ->
                (* Due to a decl-dependency, hence: abstract. *)
                let ty = Types.specialize sch in
                if in_section then
@@ -583,7 +586,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                    Parsetree_utils.pp_vname_with_operators_expanded n
                    (Types.pp_type_simple_to_dk new_print_ctx) ty ;
                [n]
-           | MinEnv.MDEE_Declared_logical (n, b) ->
+           | Env.TypeInformation.MDEM_Declared_logical (n, b) ->
                if in_section then
                  Format.fprintf out_fmter "@[<2>Hypothesis abst_%a :@ "
                    Parsetree_utils.pp_vname_with_operators_expanded n
@@ -924,7 +927,7 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
   (* Check if the recursive fonction was generated using "Function" or
      "Fixpoint". *)
   (match rec_kind with
-   | Env.DkGenInformation.RPK_other ->
+   | Env.RPK_other ->
        (* Assumed to have been generated with "Function". *)
        (* For bug #199, to make so that Zenon identifies "abst_xx" and "xx", we
           generate a fake Definition before generating the body of the recursive
@@ -956,7 +959,7 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
          used_species_parameter_tys dependencies_from_params
          abstracted_methods ;
        Format.fprintf out_fmter " }@\n:=@\n"
-   | Env.DkGenInformation.RPK_struct decr_arg_name ->
+   | Env.RPK_struct decr_arg_name ->
        (* Case where the recursive function was generated with "Fixpoint". In
           this case, we need to use the special syntax "Fixpoint" also for
           Zenon, and no definition equation. *)
@@ -1035,20 +1038,20 @@ let ensure_enforced_by_definition_is_definition min_dk_env def_expr_ident =
            (* The method comes from ourselves (Self). So we will search it
               inside the Dedukti minimal typing environment. *)
            let method_info =
-             MinEnv.find_dk_env_element_by_name vname min_dk_env in
+             snd (MinEnv.find_dk_env_element_by_name vname min_dk_env) in
            match method_info with
-           | MinEnv.MDEE_Declared_carrier | MinEnv.MDEE_Defined_carrier _ ->
+           | Env.TypeInformation.MDEM_Declared_carrier | Env.TypeInformation.MDEM_Defined_carrier _ ->
                (* Syntax does not allow to mention "Self" as a proof
                   element. *)
                assert false
-           | MinEnv.MDEE_Declared_computational (_, _)
-           | MinEnv.MDEE_Declared_logical (_, _) ->
+           | Env.TypeInformation.MDEM_Declared_computational (_, _)
+           | Env.TypeInformation.MDEM_Declared_logical (_, _) ->
                (* We can't prove "by definition" of something only declared ! *)
                raise
                  (Attempt_proof_by_def_of_declared_method_of_self
                     (def_expr_ident.Parsetree.ast_loc, def_expr_ident))
-           | MinEnv.MDEE_Defined_computational (_, _, _, _, _, _)
-           | MinEnv.MDEE_Defined_logical (_, _, _) -> ()
+           | Env.TypeInformation.MDEM_Defined_computational (_, _, _, _, _, _)
+           | Env.TypeInformation.MDEM_Defined_logical (_, _, _) -> ()
           )
        | Some (Parsetree.Qualified (_, _)) ->
            (* The method comes from another module's species. Hence it is for
@@ -1191,21 +1194,21 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
             (* The method comes from ourselves (Self). So we will search it
                inside the Dedukti minimal typing environment. *)
             let method_info =
-              MinEnv.find_dk_env_element_by_name vname min_dk_env in
+              snd (MinEnv.find_dk_env_element_by_name vname min_dk_env) in
             match method_info with
-             | MinEnv.MDEE_Declared_carrier
-             | MinEnv.MDEE_Defined_carrier _ ->
+             | Env.TypeInformation.MDEM_Declared_carrier
+             | Env.TypeInformation.MDEM_Defined_carrier _ ->
                  (* Syntax does not allow to mention "Self" as a proof
                     element. *)
                  assert false
-             | MinEnv.MDEE_Declared_computational (_, _)
-             | MinEnv.MDEE_Declared_logical (_, _) ->
+             | Env.TypeInformation.MDEM_Declared_computational (_, _)
+             | Env.TypeInformation.MDEM_Declared_logical (_, _) ->
                  (* We can't prove "by definition" of something only
                     declared ! *)
                  raise
                    (Attempt_proof_by_def_of_declared_method_of_self
                       (by_def_expr_ident.Parsetree.ast_loc, by_def_expr_ident))
-             | MinEnv.MDEE_Defined_computational
+             | Env.TypeInformation.MDEM_Defined_computational
                    (_, is_rec, _, params, scheme, body) -> (
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
@@ -1213,7 +1216,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                    %a\". ;)@\n"
                    Sourcify.pp_expr_ident by_def_expr_ident ;
                  match is_rec with
-                 | Env.DkGenInformation.RC_rec rec_kind ->
+                 | Env.RC_rec rec_kind ->
                      (* Since we are in the case of a method of Self, we must
                         find the abstraction_info and the abstracted_methods
                         in the already [generated_fields]. *)
@@ -1225,7 +1228,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                        memory.Misc_common.cfm_dependencies_from_parameters
                        memory.Misc_common.cfm_dk_min_typ_env_names vname params
                        scheme body
-                 | Env.DkGenInformation.RC_non_rec  ->
+                 | Env.RC_non_rec  ->
                      Format.fprintf out_fmter "@[<2>abst_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        vname ;
@@ -1240,7 +1243,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                      (* Done... Then, final carriage return. *)
                      Format.fprintf out_fmter ".@]@\n"
                  )
-             | MinEnv.MDEE_Defined_logical (_, _, body) ->
+             | Env.TypeInformation.MDEM_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(; For method of Self used via \"by definition of \
@@ -1538,15 +1541,15 @@ let zenonify_by_property ctx print_ctx env min_dk_env
             (* The method comes from ourselves (Self). So we will search it
                inside the dk minimal typing environment. *)
             let method_info =
-              MinEnv.find_dk_env_element_by_name vname min_dk_env in
+              snd (MinEnv.find_dk_env_element_by_name vname min_dk_env) in
             match method_info with
-             | MinEnv.MDEE_Declared_carrier
-             | MinEnv.MDEE_Defined_carrier _ ->
+             | Env.TypeInformation.MDEM_Declared_carrier
+             | Env.TypeInformation.MDEM_Defined_carrier _ ->
                  (* Syntax does not allow to mention "Self" as a proof
                     element. *)
                  assert false
-             | MinEnv.MDEE_Declared_computational (_, scheme)
-             | MinEnv.MDEE_Defined_computational (_, _, _, _, scheme, _) ->
+             | Env.TypeInformation.MDEM_Declared_computational (_, scheme)
+             | Env.TypeInformation.MDEM_Defined_computational (_, _, _, _, scheme, _) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(; For method of Self used via \"by property %a\". ;)@\n"
@@ -1556,8 +1559,8 @@ let zenonify_by_property ctx print_ctx env min_dk_env
                  Format.fprintf out_fmter "@[<2>Parameter abst_%a :@ %a.@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
                    (Types.pp_type_simple_to_dk print_ctx) meth_ty
-             | MinEnv.MDEE_Declared_logical (_, body)
-             | MinEnv.MDEE_Defined_logical (_, _, body) ->
+             | Env.TypeInformation.MDEM_Declared_logical (_, body)
+             | Env.TypeInformation.MDEM_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
                  Format.fprintf out_fmter
                    "(; For method of Self used via \"by property %a\". ;)@\n"
@@ -2236,14 +2239,16 @@ let generate_asserts_for_dependencies out_fmter dependencies_from_params
   (* Generate the parameters denoting methods of ourselves we depend on
      according the the minimal typing environment. *)
   List.iter
-    (function
-      | MinEnv.MDEE_Defined_carrier _ | MinEnv.MDEE_Declared_carrier ->
+    (function (_, meth_dep) ->
+      match meth_dep with
+      | Env.TypeInformation.MDEM_Defined_carrier _
+      | Env.TypeInformation.MDEM_Declared_carrier ->
           Format.fprintf out_fmter
             "@[<2>assert (__force_use_abst_T :=@ abst_T).@]@\n"
-      | MinEnv.MDEE_Defined_computational (_, _, n, _, _, _)
-      | MinEnv.MDEE_Defined_logical (_, n, _)
-      | MinEnv.MDEE_Declared_computational (n, _)
-      | MinEnv.MDEE_Declared_logical (n, _) ->
+      | Env.TypeInformation.MDEM_Defined_computational (_, _, n, _, _, _)
+      | Env.TypeInformation.MDEM_Defined_logical (_, n, _)
+      | Env.TypeInformation.MDEM_Declared_computational (n, _)
+      | Env.TypeInformation.MDEM_Declared_logical (n, _) ->
           Format.fprintf out_fmter
             "@[<2>assert (__force_use_abst_%a :=@ abst_%a).@]@\n"
             Parsetree_utils.pp_vname_with_operators_expanded n
@@ -2281,9 +2286,6 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
      main Section and the theorem. *)
   let print_common_prelude_for_zenon () =
     Format.fprintf out_fmter "(; Section for proof of theorem '%a'. ;)@\n"
-      Parsetree_utils.pp_vname_with_operators_expanded name;
-    (* Start the Section. *)
-    Format.fprintf out_fmter "@[<2>Section Proof_of_%a.@\n"
       Parsetree_utils.pp_vname_with_operators_expanded name;
     (* We must now dump Variables, Let and Hypothesis for all the things we
        usually lambda-lift in a regular definition of method. This is due to
@@ -2400,9 +2402,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
        Format.fprintf out_fmter
          "apply for_zenon_%a;@\nauto.@\nQed.@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name;
-       (* End the Section. *)
-       Format.fprintf out_fmter "End Proof_of_%a.@]@\n@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded name
+       Format.fprintf out_fmter "@\n@\n";
        end)
 ;;
 
@@ -2712,8 +2712,9 @@ let generate_termination_order_With_Function ctx print_ctx env name
   (* Generate the lambda-lifts for our dependencies. *)
   let (_, ctx, print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx print_ctx env ai.Abstractions.ai_min_dk_env
-      ai.Abstractions.ai_used_species_parameter_tys
+      ~in_section: false ctx print_ctx env
+      ai.Env.TypeInformation.ad_min_dk_env
+      ai.Env.TypeInformation.ad_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
   (* The 2 arguments of any decent order (i.e. the compared values). *)
   Format.fprintf out_fmter "@ (__x __y :@ " ;
@@ -2860,8 +2861,8 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                 ~subset: (List.map fst used_params) in
             generate_theorem_section_if_by_zenon
               ctx print_ctx env
-              ai.Abstractions.ai_min_dk_env ~self_manifest
-              ai.Abstractions.ai_used_species_parameter_tys
+              ai.Env.TypeInformation.ad_min_dk_env ~self_manifest
+              ai.Env.TypeInformation.ad_used_species_parameter_tys
               sorted_deps_from_params generated_fields name
               (ZSGM_from_termination_lemma
                  (order_expr, used_params_indices, recursive_calls)) proof
@@ -2870,8 +2871,9 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
       are under a Section, do not lambda-lift. *)
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: true ctx print_ctx env ai.Abstractions.ai_min_dk_env
-      ai.Abstractions.ai_used_species_parameter_tys
+      ~in_section: true ctx print_ctx env
+      ai.Env.TypeInformation.ad_min_dk_env
+      ai.Env.TypeInformation.ad_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
   (* The termination theorem... *)
   Format.fprintf out_fmter "@[<2>%a_termination"
@@ -2883,7 +2885,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
      ont the ones involved in recursion decreasing. *)
   let explicit_order =
     Rec_let_dk_gen.OK_wfounded
-      (name, ai.Abstractions.ai_used_species_parameter_tys,
+      (name, ai.Env.TypeInformation.ad_used_species_parameter_tys,
        sorted_deps_from_params, abstracted_methods) in
   Rec_let_dk_gen.generate_termination_lemmas
     new_ctx new_print_ctx env ~explicit_order recursive_calls ;
@@ -2894,7 +2896,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
   (* Apply the order to its arguments due to lambda-lifts. *)
   Species_record_type_dk_generation.generate_method_lambda_lifted_arguments
      ~only_for_Self_meths: false out_fmter
-     ai.Abstractions.ai_used_species_parameter_tys sorted_deps_from_params
+     ai.Env.TypeInformation.ad_used_species_parameter_tys sorted_deps_from_params
      abstracted_methods ;
   Format.fprintf out_fmter ")).@]@\n@\n";
   (* Now, manage the proof of this termination theorem if some is provided. *)
@@ -2936,7 +2938,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                  Species_record_type_dk_generation.
                    generate_method_lambda_lifted_arguments
                      ~only_for_Self_meths: false out_fmter
-                     ai.Abstractions.ai_used_species_parameter_tys
+                     ai.Env.TypeInformation.ad_used_species_parameter_tys
                      sorted_deps_from_params abstracted_methods ;
                  Format.fprintf out_fmter
                    ").@\n\
@@ -3053,7 +3055,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            (* ---> Generate the order depending on the kind of proof. *)
            generate_termination_order_With_Function
              ctx' print_ctx env name params_with_type ai
-             ai.Abstractions.ai_dependencies_from_params generated_fields
+             ai.Env.TypeInformation.ad_dependencies_from_parameters generated_fields
              opt_term_pr ;
            (* ---> Start the Dk "Section" containing the termination theorem as
               expected by Function and the definition of the Dk Function. *)
@@ -3062,7 +3064,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            (* ---> Generate the termination proof. *)
            generate_termination_proof_With_Function ctx' print_ctx env
              ~self_manifest name params_with_type ai
-             ai.Abstractions.ai_dependencies_from_params
+             ai.Env.TypeInformation.ad_dependencies_from_parameters
              generated_fields recursive_calls opt_term_pr
           )
          else (
@@ -3073,9 +3075,11 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            (* ---> Now, generate the prelude of the only method introduced by
               "let rec". *)
            generate_field_definition_prelude
-             ~in_section: true ctx' print_ctx env ai.Abstractions.ai_min_dk_env
-             ai.Abstractions.ai_used_species_parameter_tys
-             ai.Abstractions.ai_dependencies_from_params generated_fields
+             ~in_section: true ctx' print_ctx env
+             ai.Env.TypeInformation.ad_min_dk_env
+             ai.Env.TypeInformation.ad_used_species_parameter_tys
+             ai.Env.TypeInformation.ad_dependencies_from_parameters
+             generated_fields
           ) in
 
        if not (Configuration.get_experimental ()) then (
@@ -3103,8 +3107,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          (* Apply the order to its arguments due to lambda-lifts. *)
          Species_record_type_dk_generation.generate_method_lambda_lifted_arguments
            ~only_for_Self_meths: false out_fmter
-           ai.Abstractions.ai_used_species_parameter_tys
-           ai.Abstractions.ai_dependencies_from_params
+           ai.Env.TypeInformation.ad_used_species_parameter_tys
+           ai.Env.TypeInformation.ad_dependencies_from_parameters
            abstracted_methods ;
          Format.fprintf out_fmter ")@ __arg}"
         ) ;
@@ -3140,9 +3144,10 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        (* Enforce "Variables" to be used to prevent Dk from removing it. We
           generate "assert" for this sake. *)
        generate_asserts_for_dependencies
-         out_fmter ai.Abstractions.ai_dependencies_from_params
-         ai.Abstractions.ai_min_dk_env
-         ai.Abstractions.ai_used_species_parameter_tys;
+         out_fmter
+         ai.Env.TypeInformation.ad_dependencies_from_parameters
+         ai.Env.TypeInformation.ad_min_dk_env
+         ai.Env.TypeInformation.ad_used_species_parameter_tys;
        (* Print the proof using the above material. *)
        if Configuration.get_experimental () then (
          (* ---> Generate the soldering Dk script. *)
@@ -3215,9 +3220,10 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        ignore
          (generate_field_definition_prelude
             ~in_section: false new_ctx new_print_ctx env
-            ai.Abstractions.ai_min_dk_env
-            ai.Abstractions.ai_used_species_parameter_tys
-            ai.Abstractions.ai_dependencies_from_params generated_fields) ;
+            ai.Env.TypeInformation.ad_min_dk_env
+            ai.Env.TypeInformation.ad_used_species_parameter_tys
+            ai.Env.TypeInformation.ad_dependencies_from_parameters
+            generated_fields) ;
        Format.fprintf out_fmter " :=@ " ;
        (* Now, emit the code of the final definition, using the definition
           created in the above Section enclosed by the above namespace.
@@ -3226,8 +3232,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
           instead of "Termination_fct_namespace.fct_equation". *)
        generate_final_recursive_definifion_body_With_Function
          out_fmter ~in_zenon_by_def: false species_name name
-         ai.Abstractions.ai_used_species_parameter_tys
-         ai.Abstractions.ai_dependencies_from_params
+         ai.Env.TypeInformation.ad_used_species_parameter_tys
+         ai.Env.TypeInformation.ad_dependencies_from_parameters
          abstracted_methods ;
        (* Close the pretty print box. *)
        Format.fprintf out_fmter ".@]@\n" ;
@@ -3237,14 +3243,14 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Misc_common.cfm_method_name = name ;
          Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
          Misc_common.cfm_used_species_parameter_tys =
-           ai.Abstractions.ai_used_species_parameter_tys ;
+           ai.Env.TypeInformation.ad_used_species_parameter_tys ;
          Misc_common.cfm_raw_dependencies_from_parameters =
-           ai.Abstractions.ai_raw_dependencies_from_params ;
+           ai.Env.TypeInformation.ad_raw_dependencies_from_params ;
          Misc_common.cfm_dependencies_from_parameters =
-           ai.Abstractions.ai_dependencies_from_params ;
+           ai.Env.TypeInformation.ad_dependencies_from_parameters ;
          Misc_common.cfm_dependencies_from_parameters_in_type =
-           ai.Abstractions.ai_dependencies_from_params_for_record_type ;
-         Misc_common.cfm_coq_min_typ_env_names = [];
+           ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
+         Misc_common.cfm_coq_min_typ_env_names = abstracted_methods;
          Misc_common.cfm_dk_min_typ_env_names = abstracted_methods } in
        Misc_common.CSF_let_rec [compiled]
 ;;
@@ -3276,9 +3282,9 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx' print_ctx env ai.Abstractions.ai_min_dk_env
-      ai.Abstractions.ai_used_species_parameter_tys
-      ai.Abstractions.ai_dependencies_from_params generated_fields in
+      ~in_section: false ctx' print_ctx env ai.Env.TypeInformation.ad_min_dk_env
+      ai.Env.TypeInformation.ad_used_species_parameter_tys
+      ai.Env.TypeInformation.ad_dependencies_from_parameters generated_fields in
   (* Generate the postlude of the prototype, i.e. non-lifted args with
      their type, the "{ struct xxx }" clause and the return type. Also
      generate the body of the function by the way. *)
@@ -3293,13 +3299,13 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
     Misc_common.cfm_method_name = name ;
     Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
          Misc_common.cfm_used_species_parameter_tys =
-           ai.Abstractions.ai_used_species_parameter_tys ;
+           ai.Env.TypeInformation.ad_used_species_parameter_tys ;
          Misc_common.cfm_raw_dependencies_from_parameters =
-           ai.Abstractions.ai_raw_dependencies_from_params ;
+           ai.Env.TypeInformation.ad_raw_dependencies_from_params ;
          Misc_common.cfm_dependencies_from_parameters =
-           ai.Abstractions.ai_dependencies_from_params ;
+           ai.Env.TypeInformation.ad_dependencies_from_parameters ;
          Misc_common.cfm_dependencies_from_parameters_in_type =
-           ai.Abstractions.ai_dependencies_from_params_for_record_type ;
+           ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
          Misc_common.cfm_coq_min_typ_env_names = [];
          Misc_common.cfm_dk_min_typ_env_names = abstracted_methods} in
        Misc_common.CSF_let_rec [compiled]
@@ -3315,14 +3321,14 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
 let generate_recursive_let_definition ctx print_ctx env ~self_manifest
-    generated_fields l =
+    fields_abstraction_infos generated_fields l =
   match l with
    | [] ->
        (* A "let", then a fortiori "let rec" construct *)
        (* must at least bind one identifier !          *)
        assert false
-   | [((from, name, params, scheme, body, opt_term_pr, _, _), ai)] ->
-       (begin
+   | [(from, name, params, scheme, body, opt_term_pr, _, _)] ->
+      let ai = List.assoc name fields_abstraction_infos in
        (* First of all, only methods defined in the current species must be
           generated. Inherited methods ARE NOT generated again ! *)
        if from.Env.fh_initial_apparition = ctx.Context.scc_current_species
@@ -3373,20 +3379,19 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
            Misc_common.cfm_method_name = name ;
            Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
            Misc_common.cfm_used_species_parameter_tys =
-             ai.Abstractions.ai_used_species_parameter_tys ;
+             ai.Env.TypeInformation.ad_used_species_parameter_tys ;
            Misc_common.cfm_raw_dependencies_from_parameters =
-             ai.Abstractions.ai_raw_dependencies_from_params ;
+             ai.Env.TypeInformation.ad_raw_dependencies_from_params ;
            Misc_common.cfm_dependencies_from_parameters =
-             ai.Abstractions.ai_dependencies_from_params ;
+             ai.Env.TypeInformation.ad_dependencies_from_parameters ;
            Misc_common.cfm_dependencies_from_parameters_in_type =
-             ai.Abstractions.ai_dependencies_from_params_for_record_type ;
-           Misc_common.cfm_coq_min_typ_env_names = [];
+             ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
+           Misc_common.cfm_coq_min_typ_env_names = abstracted_methods ;
            Misc_common.cfm_dk_min_typ_env_names = abstracted_methods} in
          Misc_common.CSF_let_rec [compiled_field]
          )
-       end)
-   | ((_, name1, _, _, _, _, _, _), _) ::
-     ((_, name2, _, _, _, _, _, _), _) :: _ ->
+   | (_, name1, _, _, _, _, _, _) ::
+     (_, name2, _, _, _, _, _, _) :: _ ->
        raise (Recursion.MutualRecursion (name1, name2))
 ;;
 
@@ -3395,12 +3400,13 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
 (** generated_fields : The list of previous fields of the species that have
     already be generated. Used while generating theorems to know what to apply
         to the methods generators the theorem depends on. *)
-let generate_methods ctx print_ctx env ~self_manifest generated_fields =
+let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos generated_fields =
      function
-  | Abstractions.FAI_sig ((from, name, sch), abstraction_info) ->
+  | Env.TypeInformation.SF_sig (from, name, sch) ->
       (* Only declared, hence, no code to generate yet ! *)
+      let abstraction_info = List.assoc name fields_abstraction_infos in
       if Configuration.get_verbose () then
-        Format.eprintf "Dk code for signature '%a' leads to void code.@."
+        Format.eprintf "Dedukti code for signature '%a' leads to void code.@."
           Parsetree_utils.pp_vname_with_operators_expanded name;
       (* Nothing very exciting to keep for the collection generator. *)
       let compiled_field = {
@@ -3412,7 +3418,7 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
            species parameters carriers that may appear in the type of the
            "sig". *)
         Misc_common.cfm_used_species_parameter_tys =
-          abstraction_info.Abstractions.ai_used_species_parameter_tys;
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys;
         (* Since the "sig " has no code, it can't refer to parameters'
            methods ! *)
         Misc_common.cfm_raw_dependencies_from_parameters = [];
@@ -3423,16 +3429,17 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
         Misc_common.cfm_coq_min_typ_env_names = [];
         Misc_common.cfm_dk_min_typ_env_names = [] } in
       Misc_common.CSF_sig compiled_field
-  | Abstractions.FAI_let ((from, name, params, scheme, body, _, _, _),
-                          abstraction_info) ->
+  | Env.TypeInformation.SF_let (from, name, params, scheme, body, _, _, _) ->
+      let abstraction_info = List.assoc name fields_abstraction_infos in
       (* No recursivity, then the method cannot call itself in its body then
          no need to set the [scc_lambda_lift_params_mapping] of the context. *)
       let dk_min_typ_env_names =
         generate_non_recursive_field_binding
-          ctx print_ctx env abstraction_info.Abstractions.ai_min_dk_env
-         ~self_manifest
-          abstraction_info.Abstractions.ai_used_species_parameter_tys
-          abstraction_info.Abstractions.ai_dependencies_from_params
+          ctx print_ctx env
+          abstraction_info.Env.TypeInformation.ad_min_dk_env
+          ~self_manifest
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters
           generated_fields (from, name, params, scheme, body) in
       (* Now, build the [compiled_field_memory], even if the method was not
          really generated because it was inherited. *)
@@ -3445,27 +3452,27 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_computational scheme ;
         Misc_common.cfm_used_species_parameter_tys =
-          abstraction_info.Abstractions.ai_used_species_parameter_tys ;
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys ;
         Misc_common.cfm_raw_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_raw_dependencies_from_params ;
+          abstraction_info.Env.TypeInformation.ad_raw_dependencies_from_params ;
         Misc_common.cfm_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_dependencies_from_params;
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters;
         Misc_common.cfm_dependencies_from_parameters_in_type =
-          abstraction_info.Abstractions.ai_dependencies_from_params_for_record_type ;
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
         Misc_common.cfm_coq_min_typ_env_names = [];
         Misc_common.cfm_dk_min_typ_env_names = dk_min_typ_env_names } in
       Misc_common.CSF_let compiled_field
-  | Abstractions.FAI_let_rec l ->
+  | Env.TypeInformation.SF_let_rec l ->
       generate_recursive_let_definition
-        ctx print_ctx env ~self_manifest generated_fields l
-  | Abstractions.FAI_theorem ((from, name, _, logical_expr, pr, _),
-                              abstraction_info) ->
+        ctx print_ctx env ~self_manifest fields_abstraction_infos generated_fields l
+  | Env.TypeInformation.SF_theorem (from, name, _, logical_expr, pr, _) ->
+      let abstraction_info = List.assoc name fields_abstraction_infos in
       let dk_min_typ_env_names =
         generate_theorem
-          ctx print_ctx env abstraction_info.Abstractions.ai_min_dk_env
+          ctx print_ctx env abstraction_info.Env.TypeInformation.ad_min_dk_env
           ~self_manifest
-          abstraction_info.Abstractions.ai_used_species_parameter_tys
-          abstraction_info.Abstractions.ai_dependencies_from_params
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters
           generated_fields (from, name, logical_expr) pr in
       let compiled_field = {
         Misc_common.cfm_is_logical = true ;
@@ -3473,17 +3480,18 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_logical logical_expr;
         Misc_common.cfm_used_species_parameter_tys =
-          abstraction_info.Abstractions.ai_used_species_parameter_tys;
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys;
         Misc_common.cfm_raw_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_raw_dependencies_from_params;
+          abstraction_info.Env.TypeInformation.ad_raw_dependencies_from_params;
         Misc_common.cfm_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_dependencies_from_params;
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters;
         Misc_common.cfm_dependencies_from_parameters_in_type =
-         abstraction_info.Abstractions.ai_dependencies_from_params_for_record_type ;
+         abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
         Misc_common.cfm_coq_min_typ_env_names = [];
         Misc_common.cfm_dk_min_typ_env_names = dk_min_typ_env_names } in
       Misc_common.CSF_theorem compiled_field
-  | Abstractions.FAI_property ((from, name, _, lexpr, _), abstraction_info) ->
+  | Env.TypeInformation.SF_property (from, name, _, lexpr, _) ->
+      let abstraction_info = List.assoc name fields_abstraction_infos in
       (* "Property"s are discarded. However we compute their dependencies. *)
       let compiled_field = {
         Misc_common.cfm_is_logical = true ;
@@ -3491,13 +3499,13 @@ let generate_methods ctx print_ctx env ~self_manifest generated_fields =
         Misc_common.cfm_method_name = name ;
         Misc_common.cfm_method_scheme = Env.MTK_logical lexpr;
         Misc_common.cfm_used_species_parameter_tys =
-          abstraction_info.Abstractions.ai_used_species_parameter_tys ;
+          abstraction_info.Env.TypeInformation.ad_used_species_parameter_tys ;
         Misc_common.cfm_raw_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_raw_dependencies_from_params;
+          abstraction_info.Env.TypeInformation.ad_raw_dependencies_from_params;
         Misc_common.cfm_dependencies_from_parameters =
-          abstraction_info.Abstractions.ai_dependencies_from_params ;
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters ;
         Misc_common.cfm_dependencies_from_parameters_in_type =
-          abstraction_info.Abstractions.ai_dependencies_from_params_for_record_type ;
+          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
         Misc_common.cfm_coq_min_typ_env_names = [];
         Misc_common.cfm_dk_min_typ_env_names = [] } in
       Misc_common.CSF_property compiled_field
@@ -4098,7 +4106,7 @@ let generate_collection_generator ctx env compiled_species_fields
 
 
 let species_compile env ~current_unit out_fmter species_def species_descr
-    dep_graph =
+    dep_graph fields_abstraction_infos =
   let species_def_desc = species_def.Parsetree.ast_desc in
   let species_name = species_def_desc.Parsetree.sd_name in
   (* Just a bit of debug. *)
@@ -4134,11 +4142,6 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     { ctxt_no_ccmap with
         Context.scc_collections_carrier_mapping =
           collections_carrier_mapping } in
-  (* Now, compute abstractions for the methods of the species. *)
-  let field_abstraction_infos =
-    Abstractions.compute_abstractions_for_fields
-      ~with_def_deps_n_term_pr: true (Abstractions.EK_dk env')
-      ctxt_no_ccmap species_descr.Env.TypeInformation.spe_sig_methods in
   (* If the species is complete, the record type representing its "type".
      We get the parameters the record type has. If the species is not complete,
      then don't generate and anyway, we won't use
@@ -4147,7 +4150,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
   let abstracted_params_methods_in_record_type =
     if species_descr.Env.TypeInformation.spe_is_closed then
       Species_record_type_dk_generation.generate_record_type
-        ctxt_ccmap env' species_descr field_abstraction_infos
+        ctxt_ccmap env' species_descr fields_abstraction_infos
     else [] in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
@@ -4163,7 +4166,8 @@ let species_compile env ~current_unit out_fmter species_def species_descr
      beforehand know is [Self] is manifest or not. I.e. if there is a
      signature called "representation". *)
   let self_manifest =
-    Misc_common.find_self_representation_if_some field_abstraction_infos in
+    Misc_common.find_self_representation_if_some
+      species_descr.Env.TypeInformation.spe_sig_methods in
   (* Now, generate the Dk code of the methods. *)
   let compiled_fields =
     List.fold_left
@@ -4171,11 +4175,12 @@ let species_compile env ~current_unit out_fmter species_def species_descr
         (* Pass the accu to be able to remind the already generated fields. *)
         let compiled_field =
           generate_methods
-            ctxt_no_ccmap print_ctx env' ~self_manifest accu field in
+            ctxt_no_ccmap print_ctx env' ~self_manifest
+            fields_abstraction_infos accu field in
         (* Not efficient, but required to keep the fields in the right order. *)
         accu @ [compiled_field])
       []
-      field_abstraction_infos in
+      species_descr.Env.TypeInformation.spe_sig_methods in
   (* Now build the list of the species parameters names to make them public in
      the future ml generation environnment. *)
   let species_params_names_n_kinds =
@@ -4922,7 +4927,7 @@ let toplevel_theorem_compile ctx env theorem_def =
   let theorem_desc = theorem_def.Parsetree.ast_desc in
   (* Just a bit of debug. *)
   if Configuration.get_verbose () then
-    Format.eprintf "Generating Dk code for toplevel theorem %a@."
+    Format.eprintf "Generating Dedukti code for toplevel theorem %a@."
       Sourcify.pp_vname theorem_desc.Parsetree.th_name ;
   (* Make a print context with an empty mapping since we are at toplevel. *)
   let print_ctx = {
@@ -4930,17 +4935,15 @@ let toplevel_theorem_compile ctx env theorem_def =
     Types.dpc_current_species = None ;
     Types.dpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
-  (* Compute the abstraction info for the theorem. In fact this means only
-     computing its def/decl-dependencies on other theorems or properties. *)
-  let abstraction_info =
-    Abstractions.compute_abstractions_for_toplevel_theorem ctx theorem_def in
-  (* We create a fake [Env.from_history]. *)
+  (* No abstraction info to compute for toplevel theorems since there's no
+     dependencies outside species !
+     We create a fake [Env.from_history]. *)
   let from = {
     Env.fh_initial_apparition =
       (ctx.Context.scc_current_unit, (Parsetree.Vlident "*Toplevel*")) ;
      Env.fh_inherited_along = [] } in
   generate_defined_theorem
-    ctx print_ctx env abstraction_info.Abstractions.ai_min_dk_env
+    ctx print_ctx env []
     ~self_manifest: None [] [] []
     from theorem_desc.Parsetree.th_name theorem_desc.Parsetree.th_stmt
     theorem_desc.Parsetree.th_proof

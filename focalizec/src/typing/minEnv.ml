@@ -33,13 +33,13 @@ let find_dk_env_element_by_name name min_dk_env =
   List.find
     (fun (_, meth) ->
       match meth with
-      | Env.TypeInformation.MCEM_Declared_carrier
-      | Env.TypeInformation.MCEM_Defined_carrier _ ->
+      | Env.TypeInformation.MDEM_Declared_carrier
+      | Env.TypeInformation.MDEM_Defined_carrier _ ->
           name = (Parsetree.Vuident "rep")
-      | Env.TypeInformation.MCEM_Declared_computational (n, _)
-      | Env.TypeInformation.MCEM_Defined_computational (_, _, n, _, _, _)
-      | Env.TypeInformation.MCEM_Declared_logical (n, _)
-      | Env.TypeInformation.MCEM_Defined_logical (_, n, _) -> n = name)
+      | Env.TypeInformation.MDEM_Declared_computational (n, _)
+      | Env.TypeInformation.MDEM_Defined_computational (_, _, n, _, _, _)
+      | Env.TypeInformation.MDEM_Declared_logical (n, _)
+      | Env.TypeInformation.MDEM_Defined_logical (_, n, _) -> n = name)
     min_dk_env
 ;;
 
@@ -230,12 +230,12 @@ let minimal_dk_typing_environment universe species_fields =
       match VisUniverse.Universe.find n universe with
       | VisUniverse.IU_decl_comput ->
           (* Keep in the environment, but as abstracted. *)
-          [(Env.TypeInformation.MCER_even_comput,
-            Env.TypeInformation.MCEM_Declared_computational (n, sch))]
+          [(Env.TypeInformation.MDER_even_comput,
+            Env.TypeInformation.MDEM_Declared_computational (n, sch))]
       | VisUniverse.IU_decl_logic ->
           (* Keep in the environment, but as abstracted. *)
-          [(Env.TypeInformation.MCER_only_logical,
-            Env.TypeInformation.MCEM_Declared_computational (n, sch))]
+          [(Env.TypeInformation.MDER_only_logical,
+            Env.TypeInformation.MDEM_Declared_computational (n, sch))]
       | VisUniverse.IU_trans_def ->
           (* Otherwise, keep the full definition. *)
           let rec_status =
@@ -252,8 +252,8 @@ let minimal_dk_typing_environment universe species_fields =
                   | Parsetree.TP_order (_, _, _) -> Env.RPK_other
                  ))
             else Env.RC_non_rec in
-          [(Env.TypeInformation.MCER_even_comput,
-            Env.TypeInformation.MCEM_Defined_computational
+          [(Env.TypeInformation.MDER_even_comput,
+            Env.TypeInformation.MDEM_Defined_computational
               (from, rec_status, n, params, sch, body))]
      )
     with Not_found ->
@@ -278,12 +278,12 @@ let minimal_dk_typing_environment universe species_fields =
                 try (
                   match VisUniverse.Universe.find n universe with
                   | VisUniverse.IU_decl_logic | VisUniverse.IU_trans_def ->
-                      [(Env.TypeInformation.MCER_only_logical,
-                        Env.TypeInformation.MCEM_Declared_computational
+                      [(Env.TypeInformation.MDER_only_logical,
+                        Env.TypeInformation.MDEM_Declared_computational
                           (n, sch))]
                   | VisUniverse.IU_decl_comput ->
-                      [(Env.TypeInformation.MCER_even_comput,
-                        Env.TypeInformation.MCEM_Declared_computational
+                      [(Env.TypeInformation.MDER_even_comput,
+                        Env.TypeInformation.MDEM_Declared_computational
                           (n, sch))]
                  )
                 with Not_found -> []
@@ -300,8 +300,8 @@ let minimal_dk_typing_environment universe species_fields =
                 match VisUniverse.Universe.find n universe with
                 | VisUniverse.IU_decl_logic ->
                     (* Keep in the environment, but as abstracted. *)
-                    [(Env.TypeInformation.MCER_only_logical,
-                      Env.TypeInformation.MCEM_Declared_logical (n, body))]
+                    [(Env.TypeInformation.MDER_only_logical,
+                      Env.TypeInformation.MDEM_Declared_logical (n, body))]
                 | VisUniverse.IU_decl_comput ->
                     (* How could it be since computational stuff can't depend
                        on logical ones ? *)
@@ -333,11 +333,11 @@ let minimal_dk_typing_environment universe species_fields =
          match reason with
          | VisUniverse.IU_decl_comput ->
              (* A decl-dependency was found even if "rep" is not defined. *)
-             (Env.TypeInformation.MCER_even_comput,
-              Env.TypeInformation.MCEM_Declared_carrier) :: env_without_carrier
+             (Env.TypeInformation.MDER_even_comput,
+              Env.TypeInformation.MDEM_Declared_carrier) :: env_without_carrier
          | VisUniverse.IU_decl_logic ->
-             (Env.TypeInformation.MCER_only_logical,
-              Env.TypeInformation.MCEM_Declared_carrier) :: env_without_carrier
+             (Env.TypeInformation.MDER_only_logical,
+              Env.TypeInformation.MDEM_Declared_carrier) :: env_without_carrier
          | VisUniverse.IU_trans_def ->
              (* Impossible to have a def-dependency if the carrier's
                 structure is unknown ! *)
@@ -347,15 +347,15 @@ let minimal_dk_typing_environment universe species_fields =
          match reason with
          | VisUniverse.IU_decl_comput ->
              (* A decl-dependency was found. No matter what "rep" is. *)
-             (Env.TypeInformation.MCER_even_comput,
-              Env.TypeInformation.MCEM_Declared_carrier) :: env_without_carrier
+             (Env.TypeInformation.MDER_even_comput,
+              Env.TypeInformation.MDEM_Declared_carrier) :: env_without_carrier
          | VisUniverse.IU_decl_logic ->
-             (Env.TypeInformation.MCER_only_logical,
-              Env.TypeInformation.MCEM_Declared_carrier) :: env_without_carrier
+             (Env.TypeInformation.MDER_only_logical,
+              Env.TypeInformation.MDEM_Declared_carrier) :: env_without_carrier
          | VisUniverse.IU_trans_def ->
              (* A def-dependency was found. So, record the carrier's
                 structure.
-              ATTENTION: We tag it [MCER_even_comput] and it is very subtil!
+              ATTENTION: We tag it [MDER_even_comput] and it is very subtil!
               The question is won't it bring a non-existing def-dep on rep
               in computational code although this dep was initially brought
               by a dependency on a logical method?
@@ -365,8 +365,8 @@ let minimal_dk_typing_environment universe species_fields =
               on logical methods. Or we are processing a logical method, and
               in this case anyway all the kind of dependencies must be taken
               into account! *)
-             (Env.TypeInformation.MCER_even_comput,
-              (Env.TypeInformation.MCEM_Defined_carrier sch)) ::
+             (Env.TypeInformation.MDER_even_comput,
+              (Env.TypeInformation.MDEM_Defined_carrier sch)) ::
              env_without_carrier
         )
    )

@@ -1588,7 +1588,8 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let generate_record_type_parameters ctx env field_abstraction_infos =
+let generate_record_type_parameters ctx env species_descr
+    fields_abstraction_infos =
   let ppf = ctx.Context.scc_out_fmter in
   let current_unit = ctx.Context.scc_current_unit in
   (* We first abstract the species/entity parameters carriers and entity
@@ -1632,16 +1633,17 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
   (* We first build the lists of dependent methods for each property and
      theorem fields. *)
   let tmp_deps_for_fields =
-    Abstractions.make_empty_param_deps species_parameters_names in
+    Abstrs.make_empty_param_deps species_parameters_names in
   let deps_for_fields =
     List.map (fun (a, b) -> (a, ref b)) tmp_deps_for_fields in
   List.iter
     (function
-      | Abstractions.FAI_sig ( _, _)
-      | Abstractions.FAI_let (_, _)
-      | Abstractions.FAI_let_rec _ -> ()
-      | Abstractions.FAI_theorem (_, ai)
-      | Abstractions.FAI_property (_, ai) ->
+      | Env.TypeInformation.SF_sig _
+      | Env.TypeInformation.SF_let _
+      | Env.TypeInformation.SF_let_rec _ -> ()
+      | Env.TypeInformation.SF_theorem (_, name, _, _, _, _)
+      | Env.TypeInformation.SF_property (_, name, _, _, _) ->
+          let ai = List.assoc name fields_abstraction_infos in
           (* Recover the dependencies on parameters from the abstractions
              but only taking care of dependencies induced by [TYPE] and
              [COMPLETIONS]. *)
@@ -1668,8 +1670,8 @@ let generate_record_type_parameters ctx env field_abstraction_infos =
                            Parsetree_utils.ParamDepSet.add d accu)
                            !param_bucket deps_on_meths
                    with Not_found -> assert false)
-            ai.Abstractions.ai_dependencies_from_params_for_record_type)
-    field_abstraction_infos ;
+            ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type)
+    species_descr.Env.TypeInformation.spe_sig_methods ;
   (* Just remove the references inside the assoc list. *)
   let deps_for_fields_no_ref =
     List.map (fun (a, b) -> (a, !b)) deps_for_fields in
@@ -1747,7 +1749,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
      methods from them we depend on ! *)
   let abstracted_params_methods_in_record_type =
     generate_record_type_parameters
-      ctx env field_abstraction_infos in
+      ctx env species_descr field_abstraction_infos in
   (* Print the type of the record and it's constructor. *)
   Format.fprintf out_fmter ": cc.uT :=@ mk_record {@\n"  ;
   (* Always generate the "rep". *)

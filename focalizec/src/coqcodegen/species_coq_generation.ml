@@ -1912,7 +1912,7 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_coq_env
        let new_aim =
          (match stmt_desc.Parsetree.s_concl with
           | None -> (
-              match aim_gen_method with
+              match aim_coq_gen_method with
                | ZSGM_from_logical_expr lexpr -> lexpr
                | ZSGM_from_termination_lemma (_, _, _) -> assert false
              )
@@ -2875,7 +2875,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
      Function expects and that deals with all the function's parameters, not
      ont the ones involved in recursion decreasing. *)
   let explicit_order =
-    Rec_let_gen.OK_wfounded
+    Rec_let_coq_gen.OK_wfounded
       (name, ai.Env.TypeInformation.ad_used_species_parameter_tys,
        sorted_deps_from_params, abstracted_methods) in
   Rec_let_coq_gen.generate_termination_lemmas

@@ -1615,7 +1615,7 @@ let __compute_abstractions_for_fields env ctx fields =
                        dependencies_from_params_via_didou in
                    (* Now, its minimal Coq/Dedukti typing environment. *)
                    let min_coq_env =
-                     MinEnv.minimal_typing_environment universe fields in
+                     MinEnv.minimal_coq_typing_environment universe fields in
                    let min_dk_env =
                      MinEnv.minimal_dk_typing_environment universe fields in
                      { iai_used_species_parameter_tys =
