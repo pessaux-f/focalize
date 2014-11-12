@@ -1658,7 +1658,8 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
              (* Quantify all the assumed variables. *)
              (match ty_expr.Parsetree.ast_type with
               | Parsetree.ANTI_type ty ->
-                  Format.fprintf out_fmter "forall %a :@ %a,@ "
+                  Format.fprintf out_fmter "dk_logic.forall (%a) (%a :@ cc.eT (%a) =>@ "
+                    (Types.pp_type_simple_to_dk print_ctx) ty
                     Parsetree_utils.pp_vname_with_operators_expanded var_vname
                     (Types.pp_type_simple_to_dk print_ctx) ty
               | _ -> assert false) ;
@@ -1681,6 +1682,25 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
   rec_print avail_info.psa_assumed_variables_and_lemmas
 ;;
 
+let close_quantifications_and_implications ctx print_ctx env avail_info =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  let rec rec_print = function
+    | [] -> ()
+    | assumed :: q ->
+        (begin
+        match assumed with
+         | AH_variable (var_vname, ty_expr) ->
+             (* Quantify all the assumed variables. *)
+             (match ty_expr.Parsetree.ast_type with
+              | Parsetree.ANTI_type ty ->
+                  Format.fprintf out_fmter ")"
+              | _ -> assert false) ;
+             rec_print q;
+         | AH_lemma _ ->
+             rec_print q
+        end) in
+  rec_print avail_info.psa_assumed_variables_and_lemmas
+;;
 
 
 (* *********************************************************************** *)
@@ -1768,6 +1788,8 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
                Species_record_type_dk_generation.RMS_regular
              env avail_info.psa_base_logical_expr ;
            Format.fprintf out_fmter ")" ;
+           (* Close parentheses introduced by the function quantifications_and_implications *)
+           close_quantifications_and_implications ctx print_ctx env avail_info ;
            (* Done... Then, final carriage return. *)
            Format.fprintf out_fmter ".@]@\n")
          node_labels
