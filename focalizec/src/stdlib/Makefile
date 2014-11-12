@@ -170,10 +170,11 @@ uninstall:
 
 clean:
 	$(RM) *.dko *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.fo *.vo *.pfc *.glob *~ .*~
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) $(FOCALIZE_DKS)
 
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 	$(FOCALIZEDEP) *.fcl >> ./.depend
+	$(DKDEP) *.dk >> ./.depend
 
 include .depend
