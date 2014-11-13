@@ -17,11 +17,15 @@ let rec incr_last = function
   | h::t -> h :: (incr_last t)
 ;;
 
-let prelude () = String.concat "" [
-  "Require Import zenon.\n";
-  "Require Import zenon_induct.\n";
-  sprintf "Require Import zenon_%s.\n" !Misc.focal_ext;
-  ]
+let prelude () =
+  if !input_format = I_coq then
+    String.concat
+      ""
+      ["Require Import zenon.\n";
+       "Require Import zenon_induct.\n";
+       sprintf "Require Import zenon_%s.\n" !Misc.focal_ext ]
+  else
+    ""
 ;;
 
 let parse filename lb oc =
