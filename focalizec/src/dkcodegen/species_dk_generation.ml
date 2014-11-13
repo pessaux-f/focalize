@@ -2126,7 +2126,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
        rec_dump available_steps nodes
    | Parsetree.Pf_auto facts ->
        (* Generate Zenon's header. *)
-       Format.fprintf out_fmter "%%%%begin-auto-proof@\n";
+       Format.fprintf out_fmter "@\n%%%%begin-auto-proof@\n";
        (* Location is not the while theorem, but its body instead. I think
           this is sufficient *)
        Format.fprintf out_fmter "%%%%location: [%a]@\n"
