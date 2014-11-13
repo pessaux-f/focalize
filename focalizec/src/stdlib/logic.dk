@@ -1,0 +1,39 @@
+#NAME logic.
+type : Type := cc.uT.
+term : type -> Type := cc.eT.
+
+termtype : type.
+Term : Type := term termtype.
+Prop: Type := dk_logic.Prop.
+prf: Prop -> Type := dk_logic.eP.
+anyterm: Term.
+
+not: Prop -> Prop := dk_logic.not.
+notc: Prop -> Prop :=
+  A:Prop => not (not (not (not (not A)))).
+True: Prop := dk_logic.True.
+Truec: Prop := not (not (True)).
+False: Prop := dk_logic.False.
+Falsec: Prop := not (not (False)).
+and: Prop -> Prop -> Prop := dk_logic.and.
+andc: Prop -> Prop -> Prop :=
+  A:Prop => B:Prop => not (not (and (not (not A)) (not (not B)))).
+or: Prop -> Prop -> Prop := dk_logic.or.
+orc: Prop -> Prop -> Prop :=
+  A:Prop => B:Prop => not (not (or (not (not A)) (not (not B)))).
+imply: Prop -> Prop -> Prop := dk_logic.imp.
+implyc: Prop -> Prop -> Prop :=
+  A:Prop => B:Prop => not (not (imply (not (not A)) (not (not B)))).
+forall: (Term -> Prop) -> Prop := dk_logic.forall termtype.
+forallc: (Term -> Prop) -> Prop :=
+  P:(Term -> Prop) =>
+  not (not (forall (x:Term => not (not (P x))))).
+exists: (Term -> Prop) -> Prop := dk_logic.exists termtype.
+existsc: (Term -> Prop) -> Prop :=
+  P:(Term -> Prop) =>
+  not (not (exists (x:Term => not (not (P x))))).
+equal: Term -> Term -> Prop.
+equalc: Term -> Term -> Prop :=
+  a:Term => b:Term => not (not (equal a b)).
+equiv: Prop -> Prop -> Prop :=
+  A:Prop => B:Prop => and (imply A B) (imply B A).

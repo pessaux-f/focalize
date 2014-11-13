@@ -33,3 +33,5 @@
 !coq_builtins.v
 !ml_builtins.ml
 !cc.dk
+!focal.dk
+!logic.dk

@@ -6,19 +6,9 @@ prop : cc.uT.
 Prop : Type := cc.eT prop.
 ebP : cc.eT dk_bool.bool -> Prop.
 
-True : Prop := ebP dk_bool.true.
-False : Prop := ebP dk_bool.false.
-
 imp : Prop -> Prop -> Prop.
-not : Prop -> Prop
-    := f : Prop => imp f False.
-and : Prop -> Prop -> Prop.
-or : Prop -> Prop -> Prop.
-eqv : Prop -> Prop -> Prop
-    := f1 : Prop => f2 : Prop => and (imp f1 f2) (imp f2 f1).
 forall_type : (cc.uT -> Prop) -> Prop.
 forall : A : cc.uT -> (cc.eT A -> Prop) -> Prop.
-exists : A : cc.uT -> (cc.eT A -> Prop) -> Prop.
 
 eeP : Prop -> cc.uT.
 eP : Prop -> Type
@@ -36,6 +26,23 @@ eP : Prop -> Type
     eeP (forall_type f)
       -->
     cc.PiT (x : cc.uT => eeP (f x)).
+
+True : Prop := forall prop (P : Prop => imp P P).
+False : Prop := forall prop (P : Prop => P).
+not (f : Prop) : Prop := imp f False.
+and (A : Prop) (B : Prop) : Prop :=
+  forall prop (P : Prop => imp (imp A (imp B P)) P).
+or  (A : Prop) (B : Prop) : Prop :=
+  forall prop (P : Prop => imp (imp A P) (imp (imp B P) P)).
+eqv (A : Prop) (B : Prop) : Prop :=
+  and (imp A B) (imp B A).
+
+exists (A : cc.uT) (f : cc.eT A -> Prop) : Prop :=
+  forall prop (P : Prop => imp (forall A (x : cc.eT A => imp (f x) P)) P).
+forallc (A : cc.uT) (f : cc.eT A -> Prop) : Prop :=
+  not (not (forall A (x : cc.eT A => not (not (f x))))).
+existsc (A : cc.uT) (f : cc.eT A -> Prop) : Prop :=
+  not (not (exists A (x : cc.eT A => not (not (f x))))).
 
 
 
@@ -105,354 +112,6 @@ eqv_elim1 := f1 : Prop =>
 eqv_elim2 := f1 : Prop =>
              f2 : Prop =>
              and_elim2 (imp f1 f2) (imp f2 f1).
-
-imp_transfer :
-  b1 : cc.eT dk_bool.bool ->
-  b2 : cc.eT dk_bool.bool ->
-  eP (ebP (dk_bool.imp b1 b2)) ->
-  eP (imp (ebP b1) (ebP b2))
-  :=
-    dk_bool.match
-      (b1 : cc.eT dk_bool.bool =>
-       eeP (forall dk_bool.bool
-              (b2 : cc.eT dk_bool.bool =>
-               imp (ebP (dk_bool.imp b1 b2))
-                   (imp (ebP b1) (ebP b2)))))
-      (b2 : cc.eT dk_bool.bool =>
-       H : eP (ebP b2) =>
-       I : TrueT =>
-       H)
-      (b2 : cc.eT dk_bool.bool =>
-       I : TrueT =>
-       H : FalseT =>
-       False_elim (eeP (ebP b2)) H).
-
-and_transfer :
-  b1 : cc.eT dk_bool.bool ->
-  b2 : cc.eT dk_bool.bool ->
-  eP (ebP (dk_bool.and b1 b2)) ->
-  eP (and (ebP b1) (ebP b2))
-  :=
-    dk_bool.match
-      (b1 : cc.eT dk_bool.bool =>
-       eeP (forall dk_bool.bool
-              (b2 : cc.eT dk_bool.bool =>
-               imp (ebP (dk_bool.and b1 b2))
-                   (and (ebP b1) (ebP b2)))))
-      (b2 : cc.eT dk_bool.bool =>
-       H : eP (ebP b2) =>
-       and_intro True (ebP b2) I H)
-      (b2 : cc.eT dk_bool.bool =>
-       H  : FalseT =>
-       False_elim (eeP (and False (ebP b2))) H).
-
-not_transfer :
-  b : cc.eT dk_bool.bool ->
-  eP (ebP (dk_bool.not b)) ->
-  eP (not (ebP b))
-  :=
-    dk_bool.match
-      (b : cc.eT dk_bool.bool =>
-       eeP (imp
-             (ebP (dk_bool.not b))
-             (not (ebP b))))
-      (H : FalseT => I : TrueT => H)
-      (I : TrueT => H : FalseT => H).
-
-eqv_transfer :
-  b1 : cc.eT dk_bool.bool ->
-  b2 : cc.eT dk_bool.bool ->
-  eP (ebP (dk_bool.eqv b1 b2)) ->
-  eP (eqv (ebP b1) (ebP b2))
-  :=
-    dk_bool.match
-      (b1 : cc.eT dk_bool.bool =>
-       eeP (forall dk_bool.bool
-              (b2 : cc.eT dk_bool.bool =>
-               imp (ebP (dk_bool.eqv b1 b2))
-                   (eqv (ebP b1) (ebP b2)))))
-      (b2 : cc.eT dk_bool.bool =>
-       H : eP (ebP b2) =>
-       eqv_intro
-         True
-         (ebP b2)
-         (I : TrueT => H)
-         (H : eP (ebP b2) => I))
-      (b2 : cc.eT dk_bool.bool =>
-       H : eP (ebP (dk_bool.not b2)) =>
-       eqv_intro
-         False
-         (ebP b2)
-         (False_elim (eeP (ebP b2)))
-         (not_transfer b2 H)).
-
-or_transfer :
-  b1 : cc.eT dk_bool.bool ->
-  b2 : cc.eT dk_bool.bool ->
-  eP (ebP (dk_bool.or b1 b2)) ->
-  eP (or (ebP b1) (ebP b2))
-  :=
-    dk_bool.match
-      (b1 : cc.eT dk_bool.bool =>
-       eeP (forall dk_bool.bool (b2 : cc.eT dk_bool.bool =>
-            imp (ebP (dk_bool.or b1 b2))
-            (or (ebP b1) (ebP b2)))))
-      (b2 : cc.eT dk_bool.bool =>
-       or_intro1 True (ebP b2))
-      (b2 : cc.eT dk_bool.bool =>
-       or_intro2 False (ebP b2)).
-
-bool_eqv_refl : b : cc.eT dk_bool.bool ->
-                eP (ebP (dk_bool.eqv b b))
-              := dk_bool.match
-                  (b : cc.eT dk_bool.bool => eeP (ebP (dk_bool.eqv b b)))
-                  I
-                    I.
-
-bool_and_elim1 : b1 : cc.eT dk_bool.bool ->
-                 b2 : cc.eT dk_bool.bool ->
-                 eP (ebP (dk_bool.and b1 b2)) ->
-                 eP (ebP b1)
-               :=
-                 b1 : cc.eT dk_bool.bool =>
-                 b2 : cc.eT dk_bool.bool =>
-                 H : eP (ebP (dk_bool.and b1 b2)) =>
-                 and_elim1
-                   (ebP b1)
-                   (ebP b2)
-                   (and_transfer b1 b2 H).
-bool_and_elim2 : b1 : cc.eT dk_bool.bool ->
-                 b2 : cc.eT dk_bool.bool ->
-                 eP (ebP (dk_bool.and b1 b2)) ->
-                 eP (ebP b2)
-               :=
-                 b1 : cc.eT dk_bool.bool =>
-                 b2 : cc.eT dk_bool.bool =>
-                 H : eP (ebP (dk_bool.and b1 b2)) =>
-                 and_elim2
-                   (ebP b1)
-                   (ebP b2)
-                   (and_transfer b1 b2 H).
-
-bool_or_true : b : cc.eT dk_bool.bool ->
-               eP (ebP (dk_bool.or b dk_bool.true))
-             :=
-               dk_bool.match
-                 (b : cc.eT dk_bool.bool => eeP (ebP (dk_bool.or b dk_bool.true)))
-                 I
-                   I.
-
-bool_or_false : b : cc.eT dk_bool.bool ->
-                eP (ebP b) ->
-                eP (ebP (dk_bool.or b dk_bool.false))
-              :=
-                dk_bool.match
-                  (b : cc.eT dk_bool.bool =>
-                   eeP (
-                     imp (ebP b)
-                         (ebP (dk_bool.or b dk_bool.false))))
-                  (I : TrueT => I)
-                  (H : FalseT => H).
-
-bool_or_sym : b1 : cc.eT dk_bool.bool ->
-              b2 : cc.eT dk_bool.bool ->
-              eP (ebP (dk_bool.or b1 b2)) ->
-              eP (ebP (dk_bool.or b2 b1))
-            :=
-              dk_bool.match
-                (b1 : cc.eT dk_bool.bool =>
-                 eeP (
-                   forall dk_bool.bool (b2 : cc.eT dk_bool.bool =>
-                                        imp (ebP (dk_bool.or b1 b2))
-                                            (ebP (dk_bool.or b2 b1)))))
-                (b2 : cc.eT dk_bool.bool =>
-                 I : TrueT =>
-                 bool_or_true b2)
-                bool_or_false.
-
-bool_or_intro1 : b1 : cc.eT dk_bool.bool ->
-                 b2 : cc.eT dk_bool.bool ->
-                 eP (ebP b1) ->
-                 eP (ebP (dk_bool.or b1 b2))
-               :=
-                 dk_bool.match
-                   (b1 : cc.eT dk_bool.bool =>
-                    eeP (
-                      forall dk_bool.bool
-                        (b2 : cc.eT dk_bool.bool =>
-                         imp (ebP b1) (ebP (dk_bool.or b1 b2)))))
-                   (b2 : cc.eT dk_bool.bool =>
-                    I : TrueT =>
-                    I)
-                   (b2 : cc.eT dk_bool.bool =>
-                    False_elim (eeP (ebP b2))).
-
-bool_or_intro2 : b1 : cc.eT dk_bool.bool ->
-                 b2 : cc.eT dk_bool.bool ->
-                 eP (ebP b2) ->
-                 eP (ebP (dk_bool.or b1 b2))
-               :=
-                 b1 : cc.eT dk_bool.bool =>
-                 b2 : cc.eT dk_bool.bool =>
-                 H : eP (ebP b2) =>
-                 bool_or_sym b2 b1 (bool_or_intro1 b2 b1 H).
-
-if_uT : b : dk_bool.Bool ->
-        cc.uT ->
-        cc.uT ->
-        cc.uT.
-[ A : cc.uT, B : cc.uT ] if_uT dk_bool.true A B --> A
-[ A : cc.uT, B : cc.uT ] if_uT dk_bool.false A B --> B.
-
-booltype_if_elim : b : cc.eT dk_bool.bool ->
-                   A : cc.uT ->
-                   B : cc.uT ->
-                   eP (ebP b) ->
-                   cc.eT (if_uT b A B) ->
-                   cc.eT A.
-
-[ A : cc.uT,
-  B : cc.uT,
-  a : cc.eT A,
-  H : TrueT ]
-    booltype_if_elim dk_bool.true A B H a --> a
-[ A : cc.uT,
-  B : cc.uT,
-  b : cc.eT B,
-  H : FalseT ]
-    booltype_if_elim dk_bool.false A B H b --> False_elim A H.
-
-booltype_if_intro : b : cc.eT dk_bool.bool ->
-                    A : cc.uT ->
-                    B : cc.uT ->
-                    eP (ebP b) ->
-                    cc.eT A ->
-                    cc.eT (if_uT b A B).
-[ A : cc.uT,
-  B : cc.uT,
-  a : cc.eT A,
-  H : TrueT ]
-    booltype_if_intro dk_bool.true A B H a --> a
-[ A : cc.uT,
-  B : cc.uT,
-  a : cc.eT A,
-  H : FalseT ]
-    booltype_if_intro dk_bool.false A B H a --> False_elim B H.
-
-booltype_ifnot_elim : b : cc.eT dk_bool.bool ->
-                      A : cc.uT ->
-                      B : cc.uT ->
-                      eP (ebP (dk_bool.not b)) ->
-                      cc.eT (if_uT b A B) ->
-                      cc.eT B.
-[ A : cc.uT,
-  B : cc.uT,
-  H : TrueT,
-  a : cc.eT B ]
-    booltype_ifnot_elim dk_bool.false A B H a --> a
-[ A : cc.uT,
-  B : cc.uT,
-  H : FalseT,
-  a : cc.eT A ]
-    booltype_ifnot_elim dk_bool.true A B H a --> False_elim B H.
-
-bool_if_intro : b : cc.eT dk_bool.bool ->
-                H : eP (ebP b) ->
-                A : cc.uT ->
-                a1 : cc.eT A ->
-                a2 : cc.eT A ->
-                P : (cc.eT A -> cc.uT) ->
-                cc.eT (P a1) ->
-                cc.eT (P (dk_bool.ite A b a1 a2)).
-[ H : TrueT,
-  A : cc.uT,
-  a1 : cc.eT A,
-  a2 : cc.eT A,
-  P : cc.eT A -> cc.uT,
-  H1 : cc.eT (P a1) ]
-    bool_if_intro dk_bool.true H A a1 a2 P H1 --> H1
-[ A : cc.uT,
-  H : FalseT,
-  a1 : cc.eT A,
-  a2 : cc.eT A,
-  P : cc.eT A -> cc.uT,
-  H1 : cc.eT (P a1)]
-    bool_if_intro dk_bool.false H A a1 a2 P H1 --> False_elim (P a2) H.
-
-bool_if_elim : b : cc.eT dk_bool.bool ->
-               H : eP (ebP b) ->
-               A : cc.uT ->
-               a1 : cc.eT A ->
-               a2 : cc.eT A ->
-               P : (cc.eT A -> cc.uT) ->
-               cc.eT (P (dk_bool.ite A b a1 a2)) ->
-               cc.eT (P a1).
-[ H : TrueT,
-  A : cc.uT,
-  a1 : cc.eT A,
-  a2 : cc.eT A,
-  P : cc.eT A -> cc.uT,
-  H1 : cc.eT (P a1) ]
-    bool_if_elim dk_bool.true H A a1 a2 P H1 --> H1
-[ H : FalseT,
-  A : cc.uT,
-  a1 : cc.eT A,
-  a2 : cc.eT A,
-  P : cc.eT A -> cc.uT,
-  H2 : cc.eT (P a2) ]
-    bool_if_elim dk_bool.false H A a1 a2 P H2 --> False_elim (P a1) H.
-
-bool_ifnot_intro : b : cc.eT dk_bool.bool ->
-                   H : eP (ebP (dk_bool.not b)) ->
-                   A : cc.uT ->
-                   a1 : cc.eT A ->
-                   a2 : cc.eT A ->
-                   P : (cc.eT A -> cc.uT) ->
-                   cc.eT (P a2) ->
-                   cc.eT (P (dk_bool.ite A b a1 a2)).
-[ H : TrueT,
-  A : cc.uT,
-  a1 : cc.eT A,
-  a2 : cc.eT A,
-  P : cc.eT A -> cc.uT,
-  H2 : cc.eT (P a2) ]
-    bool_ifnot_intro dk_bool.false H A a1 a2 P H2 --> H2
-[ H : FalseT,
-  A : cc.uT,
-  a1 : cc.eT A,
-  a2 : cc.eT A,
-  P : cc.eT A -> cc.uT,
-  H2 : cc.eT (P a2) ]
-    bool_ifnot_intro dk_bool.true H A a1 a2 P H2 --> False_elim (P a1) H.
-
-bool_ifnot_elim : b : cc.eT dk_bool.bool ->
-                  H : eP (ebP (dk_bool.not b)) ->
-                  A : cc.uT ->
-                  a1 : cc.eT A ->
-                  a2 : cc.eT A ->
-                  P : (cc.eT A -> cc.uT) ->
-                  cc.eT (P (dk_bool.ite A b a1 a2)) ->
-                  cc.eT (P a2).
-[ H : TrueT,
-  A : cc.uT,
-  a1 : cc.eT A,
-  a2 : cc.eT A,
-  P : cc.eT A -> cc.uT,
-  H2 : cc.eT (P a2) ]
-    bool_ifnot_elim dk_bool.false H A a1 a2 P H2 --> H2
-[ H : FalseT,
-  A : cc.uT,
-  a1 : cc.eT A,
-  a2 : cc.eT A,
-  P : cc.eT A -> cc.uT,
-  H1 : cc.eT (P a1) ]
-    bool_ifnot_elim dk_bool.true H A a1 a2 P H1 --> False_elim (P a2) H.
-
-(; Magic proof ;)
-(; Definition of assumed proofs ;)
-magic_proof : p : Prop -> eP p.
-
-
 
 (; equality ;)
 equal : A : cc.uT -> x : cc.eT A -> y : cc.eT A -> Prop

@@ -78,6 +78,8 @@ EXTERNAL_DKOS=\
  dk_char.dko\
  dk_string.dko\
  dk_builtins.dko\
+ logic.dko\
+ focal.dko\
  sets_externals.dko\
  wellfoundation_externals.dko
 
