@@ -577,20 +577,25 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
            | Env.TypeInformation.MDEM_Defined_logical (fr, n, _) ->
                (* We must add an equivalence to enforce de def-dependency. *)
                if in_section then
-                 Format.fprintf out_fmter "abst_%a :=@ "
+                 Format.fprintf out_fmter "abst_%a :=@ %a__%a.@\n"
+                   Parsetree_utils.pp_vname_with_operators_expanded n
+                   (fun out (module_name, species_name) ->
+                    Format.fprintf out "%s.%a"
+                                   module_name
+       Parsetree_utils.pp_vname_with_operators_expanded species_name
+                   ) ctx.Context.scc_current_species
                    Parsetree_utils.pp_vname_with_operators_expanded n
                else
-                 Format.fprintf out_fmter "@ (abst_%a :=@ "
+                 (Format.fprintf out_fmter "@ (abst_%a :=@ "
                    Parsetree_utils.pp_vname_with_operators_expanded n;
-               (* We must recover the method generator of the method we
+                  (* We must recover the method generator of the method we
                   def-depend on. Then we must apply this generator to the
                   arguments it needs, parameters carriers, parameters methods
                   and methods of Self depending on wether these last ones are
                   really defined in the current species or still abstract. *)
-               generate_def_dependency_equivalence
-                 env new_ctx generated_fields fr n;
-               if in_section then Format.fprintf out_fmter ".@\n"
-               else Format.fprintf out_fmter ")";
+                  generate_def_dependency_equivalence
+                    env new_ctx generated_fields fr n;
+                  Format.fprintf out_fmter ")");
                []                  (* Anything defined is not abstracted. *)
            | Env.TypeInformation.MDEM_Declared_carrier ->
                (* Note that by construction, the carrier is first in the env. *)
