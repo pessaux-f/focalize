@@ -31,7 +31,7 @@ usage () {
     echo "  [-]-tools_prefix <directory>"
     echo "    set <directory> as the directory prefix where tools required to"
     echo "    build FoCaLiZe are installed. The currently required non-common"
-    echo "    tools are OCaml, Coq and Dedukti."
+    echo "    tools are OCaml and Coq."
 }
 
 
@@ -187,57 +187,6 @@ else
     COQDEP=coqdep
 fi
 
-
-if [ $TOOLS_PREFIX_GIVEN != true ]
-then
-    DKWITNESS=`which dkcheck`
-    DKDIR=`dirname $DKWITNESS`
-    if [ "$DKDIR" != "" ] ;
-    then
-        if [ $INTERACTIVE = true ]
-        then
-            echo $BOLDTAG"Dedukti installation found in $DKDIR."$NORMALTAG
-            echo "Press enter to use default or specify another location."
-            read USER_INPUT
-            if [ "$USER_INPUT" != "" ] ;
-            then
-                DKDIR=$USER_INPUT
-            else
-                # Default path kept: trim it to just let the PATH acting.
-                DKDIR=""
-            fi
-        else
-            # Default path: trim it
-            DKDIR=""
-        fi
-    else
-        # No dkcheck command found and no explicit prefix given.
-        echo $BOLDTAG"Dedukti installation not found."$NORMALTAG
-        echo "Specify the path where to find Dedukti commands."
-        read USER_INPUT
-        DKDIR=$USER_INPUT
-        # Finally check that a director was entered by the user.
-        if [ "$DKDIR" = "" ] ;
-        then
-            echo "Error. Dedukti not available. Install it first."
-            exit 1
-        fi
-    fi
-else
-    # Explicit tools prefix given, keep it blindly.
-    DKDIR=$TOOLS_PREFIX
-fi
-
-# If path to Dedukti is empty here, then ocaml was found but using the PATH.
-# So do not prefix it explicitly, letting PATH finding the commands.
-if [ "$DKDIR" != "" ] ;
-then
-    DKCHECK=$DKDIR/dkcheck
-    DKDEP=$DKDIR/dkdep
-else
-    DKCHECK=dkcheck
-    DKDEP=dkdep
-fi
 # #############################################################################
 # Generate the installation and configuration file containing tools vars.
 CONFIGURATION_VARS_FILE=.config_var
@@ -251,8 +200,6 @@ echo "CAMLDOC=$CAMLDOC" >> $CONFIGURATION_VARS_FILE
 echo "CAMLDEP=$CAMLDEP" >> $CONFIGURATION_VARS_FILE
 echo "COQC=$COQC" >> $CONFIGURATION_VARS_FILE
 echo "COQDEP=$COQDEP" >> $CONFIGURATION_VARS_FILE
-echo "DKCHECK=$DKCHECK" >> $CONFIGURATION_VARS_FILE
-echo "DKDEP=$DKDEP" >> $CONFIGURATION_VARS_FILE
 echo "WARN_ERROR=a" >> $CONFIGURATION_VARS_FILE
 chmod a-w $CONFIGURATION_VARS_FILE
 
@@ -267,6 +214,4 @@ echo "  ocamldoc = $CAMLDOC"
 echo "  ocamldep = $CAMLDEP"
 echo "  coqc = $COQC"
 echo "  coqdep = $COQDEP"
-echo "  dkcheck = $DKCHECK"
-echo "  dkdep = $DKDEP"
 echo "Done"

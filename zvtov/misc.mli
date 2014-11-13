@@ -9,8 +9,6 @@ val try_remove : string -> unit;;
 
 (* Options from the command line *)
 
-type input_format = I_coq | I_dk;;
-val input_format : input_format ref;;
 val with_cime : bool ref;;
 val stop_on_failure : bool ref;;
 val keep_temp_files : bool ref;;

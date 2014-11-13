@@ -323,9 +323,7 @@ let type_unit () = type_basic ("basics", "unit") [] ;;
 
 let type_arrow t1 t2 = ST_arrow (t1, t2) ;;
 
-let type_prop_coq () = type_basic ("coq_builtins", "prop") [] ;;
-
-let type_prop_dk () = type_basic ("dk_builtins", "prop") [] ;;
+let type_prop () = type_basic ("coq_builtins", "prop") [] ;;
 
 let type_tuple tys = ST_tuple tys ;;
 
@@ -367,9 +365,9 @@ let type_rep_species ~species_module ~species_name =
 
 
 (* ************************************************************************** *)
-(** {b Descr}: Verifies if the type is "bool" or "Self". This is used in Coq and
-    Dedukti generation to determine if an expression must be surrounded by a
-    wrapper applying Coq's and Dedukti's "Is_true".
+(** {b Descr}: Verifies if the type is "bool" or "Self". This is used in Coq
+    generation to determine if an expression must be surrounded by a wrapper
+    applying Coq's "Is_true".
     See the comment in species_record_type_generation.ml in the function
     [rec_generate_logical_expr] to understand why the type Self must also be
     considered.
@@ -415,7 +413,7 @@ let (pp_type_simple, pp_type_scheme) =
 
       This mapping is purely local to the pretty-print function of type into
       the FoCaLize syntax. It is especially not shared with the type
-      printing routine used to generate the OCaml, Coq or Dedukti code.
+      printing routine used to generate the OCaml or Coq code.
       {b Exported} : No.                                                     *)
   (* *********************************************************************** *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
@@ -428,7 +426,7 @@ let (pp_type_simple, pp_type_scheme) =
 
       This counter is purely local to the pretty-print function of type into
       the FoCaLize syntax. It is especially not shared with the type printing
-      routine used to generate the OCaml, Coq or Dedukti code.
+      routine used to generate the OCaml or Coq code.
 
       {b Exported} : No.                                                      *)
   (* ************************************************************************ *)
@@ -442,7 +440,7 @@ let (pp_type_simple, pp_type_scheme) =
      {b Rem} : Not exported. This counter is purely local to the
       pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the OCaml, Coq or Dedukti code.                     *)
+      generate the OCaml or Coq code.                              *)
   (* ************************************************************* *)
   let reset_type_variables_mapping () =
     type_variable_names_mapping := [] ;
@@ -823,28 +821,6 @@ let extract_fun_ty_result ~self_manifest ty =
        end)
    | _ -> assert false
 ;;
-(* *********************************************************************** *)
-(* type_simple -> type_simple                                              *)
-(** {b Descr} : Extracts from a product type the list of simple types it is composed of.
-
-    {b Rem} : Exported outside this module.                                *)
-(* *********************************************************************** *)
-let extract_prod_ty ~self_manifest ty =
-  let ty = repr ty in
-  match ty with
-   | ST_tuple l -> l
-   | ST_self_rep ->
-       (begin
-       match self_manifest with
-        | None -> [ST_self_rep]
-        | Some t ->
-            let t = repr t in
-            match t with
-             | ST_tuple l -> l
-             | _ -> [t]
-       end)
-   | _ -> [ty]
-;;
 
 
 
@@ -928,8 +904,7 @@ let refers_to_prop_p ty =
      | ST_sum_arguments tys -> List.exists test tys
      | ST_tuple tys -> List.exists test tys
      | ST_construct (cstr_name, args) ->
-       cstr_name = ("coq_builtins", "prop") ||
-        cstr_name = ("dk_builtins", "prop") || List.exists test args
+         cstr_name = ("coq_builtins", "prop") || List.exists test args
      | ST_self_rep -> false
      | ST_species_rep _ -> false in
   test ty
@@ -1123,55 +1098,6 @@ let unify ~loc ~self_manifest type1 type2 =
   rec_unify type1 type2
 ;;
 
-(* ************************************************************************* *)
-(** {b Descr} : Returns a copy of the variable [v].
-
-    {b Rem} : Not exported oustide this module.                              *)
-(* ************************************************************************* *)
-let clone_variable v =
-  {tv_value = v.tv_value;
-   tv_level = v.tv_level}
-;;
-
-(* ************************************************************************* *)
-(** {b Descr} : Copy the content of variable [v1] in [v2].
-
-    {b Rem} : Not exported oustide this module.                              *)
-(* ************************************************************************* *)
-let copy_variable v1 v2 =
-  v2.tv_value <- v1.tv_value;
-  v2.tv_level <- v1.tv_level
-;;
-
-(* ************************************************************************* *)
-(** {b Descr} : Unifies the type scheme [ts]
-    with the simple type [st].
-
-    [st] is assumed to be an instance of [ts].
-
-    This functions returns a list of simple types
-    corresponding to the instantiations of the variables in the scheme.
-
-    This funcition is used in the Dedukti backend to fill
-    type arguments which are passed as underscores to Coq.
-
-    {b Rem} : Exported oustide this module.                              *)
-(* ************************************************************************* *)
-let unify_with_instance ts st =
-  (* First make a copy because we don't want to change the scheme. *)
-  let ts_vars = List.map clone_variable ts.ts_vars in
-  (* Perform the unification *)
-  ignore (unify ~loc:Location.none ~self_manifest:None ts.ts_body st);
-  let results =
-    List.map (fun v -> match v.tv_value with
-                    | TVV_known t -> t
-                    | TVV_unknown -> ST_var v)
-             ts.ts_vars
-  in
-  (* Put the copied variables back in the scheme. *)
-  List.iter2 copy_variable ts_vars ts.ts_vars;
-  results
-;;
 
 
 (* ********************************************************************* *)
@@ -1283,8 +1209,8 @@ type species_collection_kind =
 (* {b Descr}: Describes in the [scc_collections_carrier_mapping] the kind
    of species parameter.
    It can either be a "IS" parameter.
-   Otherwise, it is a "IN" parameter. For Coq and Dedukti, we hence need to know
-   if the type of this parameter is built from another of our species
+   Otherwise, it is a "IN" parameter. For Coq, we hence need to know if
+   the type of this parameter is built from another of our species
    parameters of from a toplevel species/collection.
 
    {b Rem} : Exported outside this module.                                *)
@@ -1299,8 +1225,8 @@ type collection_carrier_mapping_info =
 
 
 (** Correspondance between collection parameters names and
-    the names they are mapped onto in the Caml/Coq/Dedukti code and their kind.
-    Note that in Coq/Dedukti, the mapped name doesn't have the trailing "_T". *)
+    the names they are mapped onto in the Caml/Coq code and their kind.
+    Note that in Coq, the mapped name doesn't have the trailing "_T". *)
 type collection_carrier_mapping =
   (type_collection * (string * collection_carrier_mapping_info)) list
 ;;
@@ -1387,7 +1313,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
       {b Rem} : Not exported. This mapping is purely local to the
       pretty-print function of type into the OCaml syntax. It is especially
       not shared with the type printing routine used to generate the FoCaLize
-      feedback and the Coq/Dedukti code.                *)
+      feedback and the Coq code.                *)
   (* ********************************************************************** *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
@@ -1400,7 +1326,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
       {b Rem} : Not exported. This counter is purely local to the
       pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the FoCaLize feedback and the Coq/Dedukti code.           *)
+      generate the FoCaLize feedback and the Coq code.                      *)
   (* ******************************************************************* *)
   let type_variables_counter = ref 0 in
 
@@ -1413,7 +1339,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
       However, this counter is purely local to the pretty-print
       function of type into the FoCaLize syntax. It is especially not
       shared with the type printing routine used to generate the
-      FoCaLize feedback and the Coq/Dedukti code.                  *)
+      FoCaLize feedback and the Coq code.                             *)
   (* ************************************************************* *)
   let reset_type_variables_mapping_to_ml () =
     type_variable_names_mapping := [] ;
@@ -1531,6 +1457,7 @@ type coq_print_context = {
   cpc_current_species : type_collection option ;
   cpc_collections_carrier_mapping : collection_carrier_mapping
 } ;;
+
 
 
 let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
@@ -1777,266 +1704,6 @@ let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
 ;;
 
 
-type dk_print_context = {
-  dpc_current_unit : fname ;
-  dpc_current_species : type_collection option ;
-  dpc_collections_carrier_mapping : collection_carrier_mapping
-} ;;
-
-
-let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
-     purge_type_simple_to_dk_variable_mapping
-     (* DEBUG
-     , debug_variable_mapping *)) =
-  (* ************************************************************** *)
-  (* ((type_simple * string) list) ref                              *)
-  (** {b Descr} : The mapping giving for each variable already seen
-      the name used to denote it while printing it.
-
-      {b Rem} : Not exported. This mapping is purely local to the
-      pretty-print function of type into the FoCaLize syntax. It is
-      especially not shared with the type printing routine used to
-      generate the OCaml code or the FoCaLize feedback.               *)
-  (* ************************************************************* *)
-  let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
-
-  (* ************************************************************** *)
-  (* int ref                                                        *)
-  (** {b Descr} : The counter counting the number of different
-      variables already seen hence printed. It serves to generate a
-      fresh name to new variables to print.
-
-      {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCaLize syntax. It is
-      especially not shared with the type printing routine used to
-      generate the OCaml or Coq code.                               *)
-  (* ************************************************************** *)
-  let type_variables_counter = ref 0 in
-
-  (* ************************************************************* *)
-  (* unit -> unit                                                  *)
-  (** {b Descr} : Resets the variables names mapping an counter.
-      This allows to stop name-sharing between type prints.
-
-      {b Rem} : Not exported. This counter is purely local to the
-      pretty-print function of type into the FoCaLize syntax. It is
-      especially not shared with the type printing routine used to
-      generate the OCaml or Coq code.                              *)
-  (* ************************************************************* *)
-  let reset_type_variables_mapping_to_dk () =
-    type_variable_names_mapping := [] ;
-    type_variables_counter := 0 in
-
-  let get_or_make_type_variable_name_to_dk ty_var =
-    (* No need to repr, [rec_pp_to_dk] already did it. *)
-    try List.assq ty_var !type_variable_names_mapping with
-    | Not_found ->
-        let name =
-          (if ty_var.tv_level <> generic_level then
-            (* Attention this is a weak-polymorphic variable. Hence, it is
-               *not* bound by any extra forall ! Generating a new variable
-               name will lead to an unbound type variable !
-               Instead, we "cheat" replacing this variable by the internal
-               type we defined in Dk: 'dk_builtins.weak_poly_var_ty' *)
-            "dk_builtins.weak_poly_var_ty"
-          else
-            let tmp =
-              "__var_" ^ (Handy.int_to_base_26 !type_variables_counter) in
-            incr type_variables_counter ;
-            tmp) in
-        type_variable_names_mapping :=
-          (ty_var, name) :: !type_variable_names_mapping ;
-        name in
-
-
-  let pp_type_name_to_dk ~current_unit ppf (hosting_module, constructor_name) =
-    let constructor_name' =
-      Anti_keyword_conflict.string_to_no_keyword_string constructor_name in
-    if current_unit = hosting_module then
-      Format.fprintf ppf "%s__t" constructor_name'
-    else
-      (* In Dedukti, no file name capitalization ! *)
-      Format.fprintf ppf "%s.%s__t" hosting_module constructor_name' in
-
-
-  let internal_pp_var_to_dk ppf ty_var =
-    let ty_variable_name = get_or_make_type_variable_name_to_dk ty_var in
-    Format.fprintf ppf "%s" ty_variable_name
-    (* DEBUG
-    ; Format.fprintf ppf "(*%d,l:%d*)" ty_var.tv_debug ty_var.tv_level *)
-    in
-
-
-  let rec rec_pp_to_dk ctx prio ppf ty =
-    (* First of all get the "repr" guy ! *)
-    let ty = repr ty in
-    match ty with
-    | ST_var ty_var -> internal_pp_var_to_dk ppf ty_var
-    | ST_arrow (ty1, ty2) ->
-        Format.fprintf ppf "@[<1>(@[<2>cc.Arrow@ %a@ %a@])@]"
-          (rec_pp_to_dk ctx 2) ty1
-          (rec_pp_to_dk ctx 1) ty2 ;
-    | ST_sum_arguments tys ->
-        (* In dk, constructors' arguments are curried, not tupled. *)
-        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>%a@]"
-          (rec_pp_to_dk_sum_arguments ctx 3) tys ;
-        if prio >= 3 then Format.fprintf ppf ")@]"
-    | ST_tuple tys ->
-        (* Tuple priority: 3. *)
-        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>(%a)@]"
-          (rec_pp_to_dk_tuple ctx 3) tys ;
-        if prio >= 3 then Format.fprintf ppf ")@]"
-    | ST_construct (type_name, arg_tys) ->
-        (begin
-        (* Priority of arguments of a sum type constructor : like an regular
-           application : 0. *)
-        match arg_tys with
-         | [] -> Format.fprintf ppf "%a"
-               (pp_type_name_to_dk ~current_unit: ctx.dpc_current_unit)
-               type_name
-         | _ ->
-             Format.fprintf ppf "@[<1>(%a@ %a)@]"
-               (pp_type_name_to_dk ~current_unit: ctx.dpc_current_unit)
-               type_name
-               (Handy.pp_generic_separated_list " "
-                  (rec_pp_to_dk ctx 0)) arg_tys
-        end)
-    | ST_self_rep ->
-        (begin
-        match ctx.dpc_current_species with
-         | None ->
-             (* Referencing "Self" outside a species should have been caught
-                earlier, i.e. at typechecking stage. *)
-             assert false
-         | Some (species_modname, _) ->
-             (begin
-             (* Obviously, Self should refer to the current species. This
-                means that the CURRENT species MUST be in the CURRENT
-                compilation unit ! *)
-             (* If "Self" is kept abstract, then it won't appear in the
-
-                 (* /!\ Assertion failure!! *)
-
-                 (* assert (species_modname = ctx.dpc_current_unit) ; *)
-                collection_carrier_mapping and must be printed like "abst_T"
-                (for instance when printing in a field definition). Otherwise
-                it may show the species from which it is the carrier (when
-                printing the record type) and must appear in the
-                collection_carrier_mapping. *)
-             try
-               let (self_as_string, _) =
-                 List.assoc
-                   (species_modname, "Self")
-                   ctx.dpc_collections_carrier_mapping in
-               Format.fprintf ppf "%s_T" self_as_string
-             with Not_found ->  Format.fprintf ppf "abst_T"
-             end)
-        end)
-    | ST_species_rep (module_name, collection_name) ->
-        (begin
-        try
-          let (coll_type_variable, kind) =
-            List.assoc
-              (module_name, collection_name)
-              ctx.dpc_collections_carrier_mapping in
-          match kind with
-           | CCMI_is -> Format.fprintf ppf "%s_T" coll_type_variable
-           | CCMI_in provenance -> (
-               match provenance with
-               | SCK_toplevel_collection | SCK_toplevel_species ->
-                   Format.fprintf ppf "%s.me_as_carrier" collection_name
-               | SCK_species_parameter ->
-                   Format.fprintf ppf "%s_T" coll_type_variable
-              )
-        with Not_found ->
-          (* If the carrier is not in the mapping created for the species
-             parameters, that's because the searched species carrier's is not
-             a species parameter, i.e. it's a toplevel species.
-             And as always, the type's name representing a species's carrier
-             is the species's name + "me_as_carrier" with a possible module
-             prefix qualification if the species belongs to a file that is not
-             the currently compiled one. *)
-          if ctx.dpc_current_unit = module_name then
-            Format.fprintf ppf "%s.me_as_carrier" collection_name
-          else
-            Format.fprintf ppf "%s.%s.me_as_carrier" module_name collection_name
-        end)
-
-  (* ********************************************************************* *)
-  (** {b Descr} : Encodes FoCaLize tuples into nested pairs because Dk
-      doesn't have tuples with abitrary arity: it just has pairs.
-      Associativity is on the left, i.e, a FoCaLize tuple "(1, 2, 3, 4)" will
-      be mapped onto the Dedukti "(prod 1 (prod 2 (prod 3 4)))" data structure.
-
-      {b Rem} : Not exported outside this module.                          *)
-  (* ********************************************************************* *)
-  and rec_pp_to_dk_tuple ctx prio ppf = function
-    | [] -> assert false  (* Tuples should never have 0 component. *)
-    | [last] ->
-        Format.fprintf ppf "%a" (rec_pp_to_dk ctx prio) last
-    | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "dk_tuple.prod@ %a@ %a"
-          (rec_pp_to_dk ctx prio) ty1
-          (rec_pp_to_dk_tuple ctx prio)
-          (ty2 :: rem)
-
-
-
-  and rec_pp_to_dk_sum_arguments ctx prio ppf = function
-    | [] -> ()
-    | [last] ->
-        Format.fprintf ppf "%a" (rec_pp_to_dk ctx prio) last
-    | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "cc.Arrow@ %a@ %a"
-          (rec_pp_to_dk ctx prio) ty1
-          (rec_pp_to_dk_sum_arguments ctx prio)
-          (ty2 :: rem)
-
-
-
-  and rec_pp_to_dk_args ctx ppf t n =
-    match repr t with
-    | ST_construct (_, arg_tys) ->
-       Format.fprintf ppf " %a" (Handy.pp_generic_separated_list ""
-                                  (rec_pp_to_dk ctx 0)) arg_tys
-    | ST_tuple l ->
-       List.iter (fun t -> Format.fprintf ppf "@ %a"
-                                       (rec_pp_to_dk ctx 0) t)
-                 l
-    | t ->
-       (* In Dedukti, we cannot print underscores
-          instead of inferable type variables.
-          Printing the type will not be satisfactory,
-          it may be replaced by an error.
-        *)
-       Format.fprintf ppf "@ %a (; from %d underscores ;)"
-                      (rec_pp_to_dk ctx 0) t n
-  in
-
-  (* ************************************************** *)
-  (* Now, the real definition of the printing functions *)
-  ((* pp_type_simple_to_dk *)
-   (fun ctx ppf ty -> rec_pp_to_dk ctx 0 ppf ty),
-   (* pp_type_variable_to_dk *)
-   (fun ppf ty_var -> internal_pp_var_to_dk ppf ty_var),
-   (* pp_type_simple_args_to_dk *)
-   (fun ctx ppf ty n -> rec_pp_to_dk_args ctx ppf ty n),
-   (* purge_type_simple_to_dk_variable_mapping *)
-   (fun () -> reset_type_variables_mapping_to_dk ())
-   (* DEBUG
-   ,
-   (* debug_variable_mapping *)
-   (fun () ->
-     List.iter
-       (fun (var, name) ->
-         Format.eprintf "(%d, %s) " var.tv_debug name)
-       !type_variable_names_mapping ;
-     Format.eprintf "@.") *)
-  )
-;;
-
 
 module SpeciesCarrierType = struct
   type t =  (fname * collection_name)
@@ -2053,8 +1720,8 @@ module SpeciesCarrierTypeSet = Set.Make (SpeciesCarrierType) ;;
 (* type_simple -> SpeciesCarrierTypeSet.t                               *)
 (** {b Descr} : This function searches for species carrier types inside
     a [simple_type]. This will serve to determine which extra argument
-    will have to be added in Coq and Dedukti to make these species carrier
-    type abstracted by a parameter of type "Set".
+    will have to be added in Coq to make these species carrier type
+    abstracted by a parameter of type "Set".
 
     {b Rem} : Exported outside this module.                             *)
 (* ******************************************************************** *)
@@ -2090,7 +1757,7 @@ let (pp_type_simple_to_xml, pp_type_variable_to_xml,
       {b Rem} : Not exported. This mapping is purely local to the
               pretty-print function of type into the FoCaLize syntax. It is
               especially not shared with the type printing routine used to
-              generate the OCaml, Coq or Dedukti code.                     *)
+              generate the OCaml or Coq code.                              *)
   (* ********************************************************************* *)
   let type_variable_names_mapping = ref ([] : (type_variable * string) list) in
 
@@ -2103,7 +1770,7 @@ let (pp_type_simple_to_xml, pp_type_variable_to_xml,
       {b Rem} : Not exported. This counter is purely local to the
       pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the OCaml, Coq or Dedukti code.                           *)
+      generate the OCaml or Coq code.                                    *)
   (* ******************************************************************* *)
   let type_variables_counter = ref 0 in
 
@@ -2115,7 +1782,7 @@ let (pp_type_simple_to_xml, pp_type_variable_to_xml,
      {b Rem} : Not exported. This counter is purely local to the
       pretty-print function of type into the FoCaLize syntax. It is
       especially not shared with the type printing routine used to
-      generate the OCaml, Coq or Dedukti code.                     *)
+      generate the OCaml or Coq code.                              *)
   (* ************************************************************* *)
   let reset_type_variables_mapping () =
     type_variable_names_mapping := [] ;

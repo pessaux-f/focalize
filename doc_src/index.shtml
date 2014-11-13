@@ -73,19 +73,16 @@ $(focal)
   environment to develop certified programs. The environment is based on
   a functional programming language with object-oriented features. The
   language allows the programmer to write formal specifications and
-  proofs of the program in a unified and consistent setting.
+  proofs of the program in a unified and consistent setting. 
 </p>
 
 <p>
   From a $(focal) source code development, the
-  <code>$(focalizec)</code> compiler produces four source files:
+  <code>$(focalizec)</code> compiler produces three source files: 
 </p>
   <ul>
     <li>
     a source file for the $(coq) proof assistant to check the proofs,
-    </li>
-    <li>
-    a source file for the $(dedukti) type checker,
     </li>
     <li>
     a source file for the $(ocaml) compiler to build the executable program,
@@ -319,8 +316,8 @@ and Th&eacute;o for the example.</font>
 <div id="main">
 <h3>New release (0.8.0) of the $(focal) environment (2013-01-10)</h3><h3>
 <p>
-  The new release of the $(focal) environment,
-  <code>$(project_name) 0.8.0</code>,
+  The new release of the $(focal) environment, 
+  <code>$(project_name) 0.8.0</code>, 
   is now available. $(focal) got nearly asleep for some years, without
   major release despite some underground works. The
   &quot;<span style="font-style: italic;">ghost</span>&quot; 0.7.0
@@ -333,7 +330,7 @@ and Th&eacute;o for the example.</font>
 
   After a pretty long time without release, this new version brings number
   of enhancements, from the <code>$(focalizec)</code> compiler and
-  Zenon. New versions of
+  Zenon. New versions of 
   OCaml and Coq are now supported as well as previous ones for sake of legacy.
   Zenon made impressive progress so as to be helpful in proving inductive
   properties for species. Installation and setup have been fully revisited,
@@ -355,7 +352,7 @@ and Th&eacute;o for the example.</font>
 <div id="main">
 <h3>Initial event: The SSURF ANR project</h3><h3>
 <p>
-  The SSURF (Safety and Security UndeR Focal) ANR project was the
+  The SSURF (Safety and Security UndeR Focal) ANR project was the 
   starting point of the concretization of the $(focal) environment,
   leading to an effective implementation of what is now the $(focalizec)
   compiler, greatly helped by Zenon.

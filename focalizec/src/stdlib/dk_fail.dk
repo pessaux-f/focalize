@@ -1,3 +1,0 @@
-#NAME dk_fail.
-
-fail : A : cc.uT -> cc.eT A.

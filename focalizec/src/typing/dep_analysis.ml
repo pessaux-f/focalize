@@ -418,31 +418,6 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
          (Parsetree_utils.SelfDepSet.empty,
           Parsetree_utils.SelfDepSet.empty)
          enf_deps
-   | Parsetree.Pf_dk (enf_deps, _) ->
-       List.fold_left
-         (fun (accu_decl, accu_def) dep ->
-           match dep.Parsetree.ast_desc with
-            | Parsetree.Ed_definition idents ->
-                let accu_def' =
-                  List.fold_left
-                    (fun accu ident ->
-                      Parsetree_utils.SelfDepSet.union accu
-                        (ident_in_fact_dependencies ~current_species ident))
-                    accu_def
-                    idents in
-                (accu_decl, accu_def')
-            | Parsetree.Ed_property idents ->
-                let accu_decl' =
-                  List.fold_left
-                    (fun accu ident ->
-                      Parsetree_utils.SelfDepSet.union accu
-                        (ident_in_fact_dependencies ~current_species ident))
-                    accu_decl
-                    idents in
-                (accu_decl', accu_def))
-         (Parsetree_utils.SelfDepSet.empty,
-          Parsetree_utils.SelfDepSet.empty)
-         enf_deps
    | Parsetree.Pf_auto facts ->
        (begin
        List.fold_left
@@ -686,7 +661,7 @@ let where field_name fields =
 let names_set_of_field = function
   | Env.TypeInformation.SF_property (_, vname, _, _, _)
   | Env.TypeInformation.SF_theorem (_, vname, _, _, _, _) ->
-      let ty = Types.type_prop_coq () in
+      let ty = Types.type_prop () in
       Parsetree_utils.SelfDepSet.singleton (vname, ty)
   | Env.TypeInformation.SF_sig (_, vname, sch)
   | Env.TypeInformation.SF_let (_, vname, _, sch, _, _, _, _) ->
@@ -721,7 +696,7 @@ let ordered_names_list_of_fields fields =
       match field with
        | Env.TypeInformation.SF_property (_, n, _, _, _)
        | Env.TypeInformation.SF_theorem (_, n, _, _, _, _) ->
-           let ty = Types.type_prop_coq () in
+           let ty = Types.type_prop () in
            (n, ty) :: accu
        | Env.TypeInformation.SF_sig (_, n, sch)
        | Env.TypeInformation.SF_let (_, n, _, sch, _, _, _, _) ->
@@ -1161,10 +1136,10 @@ let build_dependencies_graph_for_fields ~current_species fields =
                    Parsetree.LF_logical))
             l
       | Env.TypeInformation.SF_theorem (_, n, _, prop, body, deps_on_rep) ->
-          let ty = Types.type_prop_coq () in
+          let ty = Types.type_prop () in
           local_build_for_one_theo_property n ty prop (Some body) deps_on_rep;
       | Env.TypeInformation.SF_property (_, n, _, prop, deps_on_rep) ->
-          let ty = Types.type_prop_coq () in
+          let ty = Types.type_prop () in
           local_build_for_one_theo_property n ty prop None deps_on_rep)
     fields;
   (* Return the list of nodes of the graph. *)

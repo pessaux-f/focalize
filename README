@@ -23,7 +23,7 @@ proofs of their code within the same setting. In FoCaLiZe, the proof
 development is computer assisted via the Zenon proof finder; Zenon
 dramatically leverage the amount of details to include in the proofs. In the
 end, all the proofs are formally machine checked using the trusty Coq proof
-checker and the Dedukti type checker.
+checker.
 
 Thanks to its inheritance and refinement mechanisms, FoCaLiZe encourages
 incremental refinements of the specification until efficient executable code

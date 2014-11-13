@@ -14,11 +14,11 @@
 #                                                                            #
 # ************************************************************************** #
 
-# General utilities and commands. Excludes OCaml, Coq and Dedukti.
+# General utilities and commands. Excludes OCaml and Coq.
 include $(ROOT_DIR)/Makefile.utils
 
 # Implicit rules.
 include $(ROOT_DIR)/Makefile.rules
 
-# Compilers: OCaml, Coq and Dedukti
+# Compilers: OCaml and Coq
 include $(ROOT_DIR)/.config_var

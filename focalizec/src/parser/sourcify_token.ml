@@ -105,7 +105,6 @@ let token ppf = function
   | CONCLUDE -> Format.fprintf ppf "%s" "CONCLUDE"
   | COQ -> Format.fprintf ppf "%s" "COQ"
   | COQ_REQUIRE -> Format.fprintf ppf "%s" "COQ_REQUIRE"
-  | DEDUKTI -> Format.fprintf ppf "%s" "DEDUKTI"
   | DEFINITION -> Format.fprintf ppf "%s" "DEFINITION"
   | ELSE -> Format.fprintf ppf "%s" "ELSE"
   | END -> Format.fprintf ppf "%s" "END"

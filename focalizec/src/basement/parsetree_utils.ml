@@ -30,7 +30,7 @@ let name_of_vname = function
     This will serves to make sets of methods [vname]s in order to represent
     dependencies of methods of "Self" on methods of "Self".
     We keep the name's scheme in order to be able to annotate it if required
-    during Coq and Dedukti code generation.
+    during Coq code generation.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
@@ -65,7 +65,7 @@ type dependency_elem_type_kind =
     We keep the name's scheme or logical expression (depending on wether the
     method we depend on is computational or logical) in order to be able to
     annotate it or print its body (for logical expressions) if required
-    during Coq and Dedukti code generation.
+    during Coq code generation.
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
@@ -170,9 +170,9 @@ let rec get_local_idents_and_types_from_pattern pat =
 
 (* ********************************************************************* *)
 (* string -> string                                                      *)
-(** {b Descr} : Translate a FoCaLize operator name to a legal OCaml, Coq
-              or Dedukti function name, preventing the versatile FoCaLize
-              operators names from being lexically incorrect if straighforwardly
+(** {b Descr} : Translate a FoCaLize operator name to a legal OCaml or Coq
+              function name, preventing the versatile FoCaLize operators
+              names from being lexically incorrect if straighforwardly
               converted into OCaml or Coq identifiers.
               The transformation is pretty simple and stupid (read
               sturdy :), replacing all the legal "symbolic" characters
@@ -246,10 +246,9 @@ let vname_as_string_with_operators_expanded = function
   | Parsetree.Vuident ("()" | "[]" | "::" as s) -> s
   | Parsetree.Vlident s -> (
       (* Check if the lowercase identifier must be renamed to prevent keyword
-         collision in OCaml, Coq or Dedukti. In this case, transformation of
-         possible special characters is directly handled by the keyword
-         collision avoidance.
-         So no need to call [parse_operator_string] after. *)
+         collision in OCaml of Coq. In this case, transformation of possible
+         special characters is directly handled by the keyword collision
+         avoidance. So no need to call [parse_operator_string] after. *)
       match Anti_keyword_conflict.string_to_no_keyword_string_if_diff s with
       | Some s' -> s'
       | None ->
@@ -268,11 +267,10 @@ let vname_as_string_with_operators_expanded = function
 
 (* ********************************************************************* *)
 (* Format.formatter -> Parsetree.vname -> unit                           *)
-(** {b Descr} : Pretty prints a [vname] value as an OCaml, Coq or Dedukti source
-    ident.
-    Because FoC allows more infix/prefix operators than OCaml, Coq or Dedukti
+(** {b Descr} : Pretty prints a [vname] value as an OCaml or Coq source ident.
+    Because FoC allows more infix/prefix operators than OCaml or Coq
     syntax, it's impossible to crudely translate the string of the
-    [vname] to OCaml, Coq or Dedukti.
+    [vname] to OCaml or Coq.
     For instance, a FoC infix operator "( **+ )" has no equivalent in
     OCaml or Coq syntax : "( **+ )" is not a correct operator identifier
     according to OCaml or Coq.

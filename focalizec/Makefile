@@ -22,7 +22,7 @@ include $(ROOT_DIR)/focalizec/.config_var
 
 COMPILER_DIRS=\
  src/basement src/parser src/typing\
- src/docgen src/commoncodegen src/mlcodegen src/coqcodegen src/dkcodegen\
+ src/docgen src/commoncodegen src/mlcodegen src/coqcodegen\
  src/testing src/relation_extraction\
  src/toplevel src/focalizedep src/focalizetest src/focalizeig
 

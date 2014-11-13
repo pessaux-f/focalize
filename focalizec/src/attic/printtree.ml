@@ -175,7 +175,6 @@ and print_pat_desc = function
 
 let rec print_external_language = function
   | EL_Caml -> printf "EL_Caml" | EL_Coq -> printf "EL_Coq"
-  | EL_Dk -> printf "EL_Dk"
   | EL_external s ->
      printf "@[<1>(%s@ " "EL_external"; print_quoted_string s; printf ")@]";;
 
@@ -350,8 +349,6 @@ and print_proof_desc = function
      printf "@[<1>(%s@ " "Pf_auto"; print_list (print_fact) l_f; printf ")@]"
   | Pf_coq s ->
      printf "@[<1>(%s@ " "Pf_coq"; print_quoted_string s; printf ")@]"
-  | Pf_dk s ->
-     printf "@[<1>(%s@ " "Pf_dk"; print_quoted_string s; printf ")@]"
   | Pf_node l_p ->
      printf "@[<1>(%s@ " "Pf_node"; print_list (print_proof_node) l_p;
      printf ")@]"

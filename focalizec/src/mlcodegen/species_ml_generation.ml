@@ -449,7 +449,7 @@ let find_inherited_method_generator_abstractions ~current_unit from_species
 
     {b Rem} : Not exported outside this module.                          *)
 (* ********************************************************************* *)
-let generate_coq_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
+let generate_one_field_binding ctx env min_coq_env ~let_connect ~self_manifest
     dependencies_from_params (from, name, params, scheme, body) =
   let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
@@ -589,173 +589,6 @@ let generate_coq_one_field_binding ctx env min_coq_env ~let_connect ~self_manife
 ;;
 
 
-(* ********************************************************************* *)
-(** {b Descr} : Really dumps the OCaml code for ONE species Let or
-    Let_rec binding.
-
-    {b Args} :
-      - [ctx] : The current generation context
-
-      - [env] : The current generation environment.
-
-      - [min_dk_env] : The current minimal environment of the
-        method.
-
-      - [~let_connect] flag telling whether we must start the function
-        binding with "let" or "and".
-
-      - [dependencies_from_params] : The information giving for each
-        species parameter, the set of methods the current method depends
-        on.
-
-      - [(from, name, params, scheme, body)] : The constitutive elements
-        of the method.
-
-    {b Return} :
-      - The list of methods names from ourselves the current method
-        depends.
-
-    {b Rem} : Not exported outside this module.                          *)
-(* ********************************************************************* *)
-let generate_dk_one_field_binding ctx env min_dk_env ~let_connect ~self_manifest
-    dependencies_from_params (from, name, params, scheme, body) =
-  let out_fmter = ctx.Context.scc_out_fmter in
-  let collections_carrier_mapping =
-     ctx.Context.scc_collections_carrier_mapping in
-  (* First of all, only methods defined in the current species must be
-     generated. Inherited methods ARE NOT generated again ! *)
-  if from.Env.fh_initial_apparition = ctx.Context.scc_current_species then
-    (begin
-    (* Just a bit of debug. *)
-    if Configuration.get_verbose () then
-      Format.eprintf "Generating OCaml code for field '%a'.@."
-        Parsetree_utils.pp_vname_with_operators_expanded name ;
-    (* Start the OCaml function definition. *)
-    (match let_connect with
-     | Misc_common.LC_first_non_rec ->
-         Format.fprintf out_fmter "@[<2>let %a"
-           Parsetree_utils.pp_vname_with_operators_expanded name
-     | Misc_common.LC_first_rec ->
-         Format.fprintf out_fmter "@[<2>let rec %a"
-           Parsetree_utils.pp_vname_with_operators_expanded name
-     | Misc_common.LC_following ->
-         Format.fprintf out_fmter "@[<2>and %a"
-           Parsetree_utils.pp_vname_with_operators_expanded name) ;
-    (* First, abstract according to the species's parameters the current
-       method depends on. *)
-    List.iter
-      (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
-        (* Recover the species parameter's name. *)
-        let species_param_name =
-          Env.TypeInformation.vname_of_species_param species_param in
-        (* Each abstracted method will be named like "_p_", followed by the
-           species parameter name, followed by "_", followed by the method's
-           name.
-           We don't care here about whether the species parameters is "IN" or
-           "IS". *)
-        let prefix =
-          "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
-        List.iter
-          (fun (meth, _) ->
-          (* Don't print the type to prevent being too verbose. *)
-            Format.fprintf out_fmter "@ %s%a"
-              prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-          meths_from_param)
-      dependencies_from_params ;
-    (* Next, the extra arguments due to methods of ourselves we depend on.
-       They are always present in the species under the name "abst_...". *)
-    let abstracted_methods =
-      List.flatten
-        (List.map
-           (function (reason, meth_dep) ->
-             if reason = Env.TypeInformation.MDER_even_comput then (
-               match meth_dep with
-               | Env.TypeInformation.MDEM_Defined_carrier _
-               | Env.TypeInformation.MDEM_Defined_computational
-                     (_, _, _, _, _, _) ->
-                   (* Anything defined is not abstracted. *)
-                   []
-               | Env.TypeInformation.MDEM_Defined_logical (_, _, _)
-               | Env.TypeInformation.MDEM_Declared_logical (_, _) ->
-                   (* In Ocaml, logical properties shoudl not appear. *)
-                   assert false
-               | Env.TypeInformation.MDEM_Declared_carrier ->
-                   (* In Ocaml generation model, the carrier is never
-                      lambda-lifted then doesn't appear as an extra
-                      parameter. *)
-                   []
-               | Env.TypeInformation.MDEM_Declared_computational (n, _) ->
-                   (* Don't print types. *)
-                   Format.fprintf out_fmter "@ abst_%a"
-                     Parsetree_utils.pp_vname_with_operators_expanded n ;
-                   [n])
-             else [])
-           min_dk_env) in
-    (* Add the parameters of the let-binding with their type.
-       Ignore the result type of the "let" if it's a function because we never
-       print the type constraint on the result of the "let". We only print
-       them in the arguments of the let-bound ident.
-       We also ignore the generalized variables of the scheme because in OCaml
-       polymorphism is not explicit.
-       Note by the way thet we do not have anymore information about "Self"'s
-       structure... *)
-    let (params_with_type, _, _) =
-      MiscHelpers.bind_parameters_to_types_from_type_scheme
-        ~self_manifest scheme params in
-    List.iter
-      (fun (param_vname, opt_param_ty) ->
-        match opt_param_ty with
-         | Some param_ty ->
-             Format.fprintf out_fmter "@ (%a : %a)"
-               Parsetree_utils.pp_vname_with_operators_expanded param_vname
-               (Types.pp_type_simple_to_ml
-                  ~current_unit: ctx.Context.scc_current_unit
-                  collections_carrier_mapping)
-               param_ty
-         | None ->
-             Format.fprintf out_fmter "@ %a"
-               Parsetree_utils.pp_vname_with_operators_expanded param_vname)
-      params_with_type ;
-    (* The "=" sign ending the OCaml function's "header". With a
-       NON-breakable space to prevent uggly hyphenation ! *)
-    Format.fprintf out_fmter " =@ " ;
-    (* Generates the body's code of the method. *)
-    let expr_ctx = {
-      Context.rcc_current_unit = ctx.Context.scc_current_unit ;
-      Context.rcc_species_parameters_names =
-        ctx.Context.scc_species_parameters_names ;
-      Context.rcc_collections_carrier_mapping =
-        ctx.Context.scc_collections_carrier_mapping ;
-      Context.rcc_lambda_lift_params_mapping =
-        ctx.Context.scc_lambda_lift_params_mapping ;
-      Context.rcc_out_fmter = out_fmter } in
-    (* No local idents in the context because we just enter the scope of a
-       species fields and so we are not under a core expression. *)
-    Base_exprs_ml_generation.generate_expr expr_ctx ~local_idents: [] env body ;
-    (* Done... Then, final carriage return. *)
-    Format.fprintf out_fmter "@]@\n" ;
-    abstracted_methods
-    end)
-  else
-    (begin
-    (* Just a bit of debug/information if requested. *)
-    if Configuration.get_verbose () then
-      Format.eprintf
-        "Field '%a' inherited from species '%a' but not (re)-declared is not \
-        generated again.@."
-        Parsetree_utils.pp_vname_with_operators_expanded name
-        Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
-    (* Recover the arguments for abstracted methods of Self in the inherited
-       generator EXCEPT the info about dependencies on species that are now
-       obsolete in the pair we get from the inherited species. *)
-    let (abstracted_methods, _) =
-      find_inherited_method_generator_abstractions
-        ~current_unit: ctx.Context.scc_current_unit
-        from.Env.fh_initial_apparition name env in
-    abstracted_methods
-    end)
-;;
-
 
 (* *********************************************************************** *)
 (** {b Desc} : Generates the OCaml code for ONE method field (i.e. for one
@@ -787,8 +620,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
          Misc_common.cfm_raw_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
-         Misc_common.cfm_coq_min_typ_env_names = [];
-         Misc_common.cfm_dk_min_typ_env_names = []} in
+         Misc_common.cfm_coq_min_typ_env_names = [] } in
        Misc_common.CSF_sig compiled_field
    | Env.TypeInformation.SF_let (from, name, params, scheme, body, _, _, _) ->
        (begin
@@ -809,8 +641,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
               Misc_common.cfm_raw_dependencies_from_parameters = [] ;
               Misc_common.cfm_dependencies_from_parameters = [] ;
               Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
-              Misc_common.cfm_coq_min_typ_env_names = [];
-              Misc_common.cfm_dk_min_typ_env_names = []} in
+              Misc_common.cfm_coq_min_typ_env_names = [] } in
             Misc_common.CSF_let compiled_field
         | Parsetree.BB_computational body_expr ->
             (* No recursivity, then the method cannot call itself in its body
@@ -818,14 +649,8 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
                context. *)
             let abstr_inf = List.assoc name fields_abstraction_infos in
             let coq_min_typ_env_names =
-              generate_coq_one_field_binding
+              generate_one_field_binding
                 ctx env abstr_inf.Env.TypeInformation.ad_min_coq_env
-                ~let_connect: Misc_common.LC_first_non_rec ~self_manifest
-                abstr_inf.Env.TypeInformation.ad_dependencies_from_parameters
-                (from, name, params, (Some scheme), body_expr) in
-            let dk_min_typ_env_names =
-              generate_dk_one_field_binding
-                ctx env abstr_inf.Env.TypeInformation.ad_min_dk_env
                 ~let_connect: Misc_common.LC_first_non_rec ~self_manifest
                 abstr_inf.Env.TypeInformation.ad_dependencies_from_parameters
                 (from, name, params, (Some scheme), body_expr) in
@@ -844,8 +669,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
                 abstr_inf.Env.TypeInformation.ad_dependencies_from_parameters ;
               Misc_common.cfm_dependencies_from_parameters_in_type =
                 abstr_inf.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-              Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names;
-              Misc_common.cfm_dk_min_typ_env_names = dk_min_typ_env_names} in
+              Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
             Misc_common.CSF_let compiled_field
        end)
    | Env.TypeInformation.SF_let_rec l ->
@@ -875,8 +699,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
                    Misc_common.cfm_raw_dependencies_from_parameters = [] ;
                    Misc_common.cfm_dependencies_from_parameters = [] ;
                    Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
-                   Misc_common.cfm_coq_min_typ_env_names = [];
-                   Misc_common.cfm_dk_min_typ_env_names = []} in
+                   Misc_common.cfm_coq_min_typ_env_names = [] } in
                  Misc_common.CSF_let compiled_field
              | Parsetree.BB_computational body_expr ->
                  (* Since this will need several to find the abstraction infos
@@ -912,14 +735,8 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
                  let first_ai = List.assoc name rec_bound_ais in
                  (* Now, generate the first method, introduced by "let rec". *)
                  let first_coq_min_typ_env_names =
-                   generate_coq_one_field_binding
+                   generate_one_field_binding
                      ctx' env first_ai.Env.TypeInformation.ad_min_coq_env
-                     ~let_connect: Misc_common.LC_first_rec ~self_manifest
-                     first_ai.Env.TypeInformation.ad_dependencies_from_parameters
-                     (from, name, params, (Some scheme), body_expr) in
-                 let first_dk_min_typ_env_names =
-                   generate_dk_one_field_binding
-                     ctx' env first_ai.Env.TypeInformation.ad_min_dk_env
                      ~let_connect: Misc_common.LC_first_rec ~self_manifest
                      first_ai.Env.TypeInformation.ad_dependencies_from_parameters
                      (from, name, params, (Some scheme), body_expr) in
@@ -938,9 +755,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
                    Misc_common.cfm_dependencies_from_parameters_in_type =
                      first_ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
                    Misc_common.cfm_coq_min_typ_env_names =
-                     first_coq_min_typ_env_names;
-                   Misc_common.cfm_dk_min_typ_env_names =
-                     first_dk_min_typ_env_names} in
+                     first_coq_min_typ_env_names } in
                  (* Finally, generate the remaining  methods, introduced by
                     "and". *)
                  let rem_compiled =
@@ -956,14 +771,8 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
                           | Parsetree.BB_computational e -> e) in
                        let ai = List.assoc name rec_bound_ais in
                        let coq_min_typ_env_names =
-                         generate_coq_one_field_binding
+                         generate_one_field_binding
                            ctx' env ai.Env.TypeInformation.ad_min_coq_env
-                           ~let_connect: Misc_common.LC_following ~self_manifest
-                           ai.Env.TypeInformation.ad_dependencies_from_parameters
-                           (from, name, params, (Some scheme), body_e) in
-                       let dk_min_typ_env_names =
-                         generate_dk_one_field_binding
-                           ctx' env ai.Env.TypeInformation.ad_min_dk_env
                            ~let_connect: Misc_common.LC_following ~self_manifest
                            ai.Env.TypeInformation.ad_dependencies_from_parameters
                            (from, name, params, (Some scheme), body_e) in
@@ -981,9 +790,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
                          Misc_common.cfm_dependencies_from_parameters_in_type =
                            ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
                          Misc_common.cfm_coq_min_typ_env_names =
-                           coq_min_typ_env_names;
-                         Misc_common.cfm_dk_min_typ_env_names =
-                           dk_min_typ_env_names})
+                           coq_min_typ_env_names })
                      q in
                  Misc_common.CSF_let_rec (first_compiled :: rem_compiled)
             end)
@@ -1004,8 +811,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
          Misc_common.cfm_raw_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
-         Misc_common.cfm_coq_min_typ_env_names = [];
-         Misc_common.cfm_dk_min_typ_env_names = []} in
+         Misc_common.cfm_coq_min_typ_env_names = [] } in
        Misc_common.CSF_theorem compiled_field
    | Env.TypeInformation.SF_property (from, name, _, lexpr, _) ->
        (* Properties are purely discarded in the Ocaml translation. *)
@@ -1023,8 +829,7 @@ let generate_methods ctx env ~self_manifest fields_abstraction_infos field =
          Misc_common.cfm_raw_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters = [] ;
          Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
-         Misc_common.cfm_coq_min_typ_env_names = [];
-         Misc_common.cfm_dk_min_typ_env_names = []} in
+         Misc_common.cfm_coq_min_typ_env_names = [] } in
        Misc_common.CSF_property compiled_field
 ;;
 

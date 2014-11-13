@@ -28,7 +28,6 @@ type compiled_field_memory = {
   cfm_dependencies_from_parameters_in_type :
     (Env.TypeInformation.species_param * Env.ordered_methods_from_params) list ;
   cfm_coq_min_typ_env_names : Parsetree.vname list;
-  cfm_dk_min_typ_env_names : Parsetree.vname list;
 }
 
 type compiled_species_fields =

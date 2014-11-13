@@ -88,7 +88,7 @@ into files nammed <code>.config_var</code>.</p>
 <ul>
 
   <li>From the "toplevel" directory <span style="font-family: monospace;">focalize</span>, variables defining
-the various OCaml, Coq and Dedukti commands are set. Generated file: <span style="font-family: monospace;">focalize/.config_var</span>. </li>
+the various OCaml and Coq commands are set. Generated file: <span style="font-family: monospace;">focalize/.config_var</span>. </li>
   <li>From the <span style="font-family: monospace;">zenon</span>
 directory, variables defining here to install <span style="font-family: monospace;">zenon</span> binaries and libraries
 are set. Since <span style="font-family: monospace;">zenon</span>
@@ -102,7 +102,7 @@ file: <span style="font-family: monospace;">zvtov/.config_var</span>.</li>
 directory, variables are set to state:
     <ul>
       <li>where to find the <span style="font-family: monospace;">OCaml</span>,
-        <span style="font-family: monospace;">Coq</span>, <span style="font-family: monospace;">Dedukti</span>, <span style="font-family: monospace;">zenon</span>, <span style="font-family: monospace;">zvtov</span> that will be invoked <span style="font-weight: bold; color: red;">by </span><span style="font-family: monospace; font-weight: bold; color: red;">focalizec</span><span style="font-weight: bold; color: red;">, i.e. by the built compiler</span>.</li>
+        <span style="font-family: monospace;">Coq</span>, <span style="font-family: monospace;">zenon</span>, <span style="font-family: monospace;">zvtov</span> that will be invoked <span style="font-weight: bold; color: red;">by </span><span style="font-family: monospace; font-weight: bold; color: red;">focalizec</span><span style="font-weight: bold; color: red;">, i.e. by the built compiler</span>.</li>
       <li>where to install focalizec and its accompanying commands.</li>
       <li>wether the installed <span style="font-family: monospace;">Coq</span>
 version is &lt; 8.3pl2, in which case the building phase must invoke <span style="font-family: monospace;">focalizec</span> with the <span style="font-family: monospace;">-coq_older</span> option (idem
@@ -121,7 +121,7 @@ guessing and setting things according what it finds and assumes
 (commands present in the paths, default installation directories).<br>
 
 To control the <span style="font-family: monospace;">configure</span>
-scripts if you have a non-standard installation of OCaml, Coq or Dedukti, if you
+scripts if you have a non-standard installation of OCaml or Coq, if you
 want to use a special version of <span style="font-family: monospace;">zenon</span>
 or <span style="font-family: monospace;">zvtov</span> or if you want
 to install FoCaLiZe in another directory, you must invoke the configure
@@ -136,7 +136,7 @@ of the following options:<br>
       <li>[-]-tools_prefix &lt;directory&gt;:&nbsp; set
 &lt;directory&gt; as the directory prefix where tools required to build
 FoCaLiZe are installed. The currently required non-common tools are
-OCaml, Coq and Dedukti.</li>
+OCaml and Coq.</li>
     </ol>
   </li>
   <li><span style="font-family: monospace;">focalize/zenon/configure</span>:
@@ -157,7 +157,7 @@ as the directory prefix for installation of the FoCaLize commands.
 (Default value for &lt;directory&gt; is /usr/local).</li>
       <li>[-]-tools_prefix &lt;directory&gt;: set &lt;directory&gt; as
 the directory prefix where tools required to build FoCaLiZe are
-installed. The currently required tools (other than OCaml, Coq and Dedukti
+installed. The currently required tools (other than OCaml and Coq
 already configured) are zenon, zvtov.</li>
     </ol>
   </li>

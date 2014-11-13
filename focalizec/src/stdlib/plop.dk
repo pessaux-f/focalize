@@ -1,0 +1,4 @@
+#Coq1univ
+T : Coq1univ.Utype.
+[] T --> 
+Coq1univ.dotprop.

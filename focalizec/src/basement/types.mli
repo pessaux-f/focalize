@@ -60,8 +60,7 @@ val type_arrow : type_simple -> type_simple -> type_simple
 val type_sum_arguments : type_simple list -> type_simple
 val type_tuple : type_simple list -> type_simple
 val type_list : type_simple -> type_simple
-val type_prop_coq : unit -> type_simple
-val type_prop_dk : unit -> type_simple
+val type_prop : unit -> type_simple
 val type_rep_species :
   species_module: fname -> species_name: collection_name -> type_simple
 (** Generate the carrier type of the currently analysed species. *)
@@ -104,11 +103,6 @@ val unify :
   loc: Location.t -> self_manifest: (type_simple option) -> type_simple ->
   type_simple -> type_simple
 
-val unify_with_instance :
-  type_scheme ->
-  type_simple ->
-  type_simple list
-
 val reset_deps_on_rep : unit -> unit
 val check_for_decl_dep_on_self : type_simple -> unit
 val get_def_dep_on_rep : unit -> bool
@@ -119,9 +113,6 @@ val extract_fun_ty_result :
   self_manifest: type_simple option -> type_simple -> type_simple
 val extract_fun_ty_arg :
   self_manifest: type_simple option -> type_simple -> type_simple
-
-val extract_prod_ty :
-  self_manifest: type_simple option -> type_simple -> type_simple list
 
 (** Pretty_printing for types and type schemes for FoCaLize. *)
 val pp_type_name : Format.formatter -> type_name -> unit
@@ -169,23 +160,6 @@ val pp_type_simple_args_to_coq :
 val purge_type_simple_to_coq_variable_mapping : unit -> unit
 (* DEBUG
 val debug_variable_mapping : unit -> unit *)
-
-
-(** Pretty_printing for types for the Dedukti translation. *)
-type dk_print_context = {
-  dpc_current_unit : fname ;
-  dpc_current_species : type_collection option ;
-  dpc_collections_carrier_mapping : collection_carrier_mapping
-}
-
-
-val pp_type_simple_to_dk :
-  dk_print_context -> Format.formatter -> type_simple -> unit
-val pp_type_variable_to_dk : Format.formatter -> type_variable -> unit
-val pp_type_simple_args_to_dk :
-  dk_print_context -> Format.formatter -> type_simple -> int -> unit
-
-val purge_type_simple_to_dk_variable_mapping : unit -> unit
 
 module SpeciesCarrierTypeSet :
   sig

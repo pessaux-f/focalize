@@ -157,7 +157,6 @@ let type_def_compile ctx env type_def_name type_descr =
             (function
              | (Parsetree.EL_Caml, _) -> true
              | (Parsetree.EL_Coq, _)
-             | (Parsetree.EL_Dk, _)
              | ((Parsetree.EL_external _), _) -> false)
             external_trans.Parsetree.ast_desc in
         Format.fprintf out_fmter "%s@]@ ;;@\n" ocaml_code

@@ -221,14 +221,13 @@ and type_expr_desc =
 
 (** {6 External languages name definitions} *)
 
-(** The external languages known to the compiler are [Caml], [Coq] and [Dedukti].
+(** The external languages known to the compiler are [Caml] and [Coq].
     Any other language can be mentioned as external using its name
     which is uninterpreted. *)
 
 type external_language =
   | EL_Caml
   | EL_Coq
-  | EL_Dk
   | EL_external of string
 
 (** {6 External expressions} *)
@@ -438,7 +437,6 @@ and proof_desc =
   | Pf_assumed of enforced_dependency list
   | Pf_auto of fact list
   | Pf_coq of enforced_dependency list * external_code
-  | Pf_dk of enforced_dependency list * external_code
   | Pf_node of proof_node list
 
 and proof_node = proof_node_desc ast

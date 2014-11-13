@@ -19,7 +19,7 @@
 (** {b Descr} : This module deals with the computation of which methods
     of a collection parameter an expression "needs" (i.e. depends on).
     This information is required in order to be able to generate the
-    Coq/Dedukti/OCaml code.                                             *)
+    Coq/OCaml code.                                                     *)
 (* ******************************************************************** *)
 
 
@@ -404,15 +404,6 @@ and param_deps_proof ~current_species (param_coll_name, param_coll_meths)
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed enforced_deps
    | Parsetree.Pf_coq (enforced_deps, _) ->
-       List.fold_left
-         (fun accu_deps enf_dep ->
-           Parsetree_utils.ParamDepSet.union
-             accu_deps
-             (param_deps_enforced_deps_in_proof
-                ~current_species (param_coll_name, param_coll_meths) enf_dep))
-         Parsetree_utils.ParamDepSet.empty
-         enforced_deps
-   | Parsetree.Pf_dk (enforced_deps, _) ->
        List.fold_left
          (fun accu_deps enf_dep ->
            Parsetree_utils.ParamDepSet.union

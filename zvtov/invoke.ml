@@ -55,100 +55,55 @@ let get_pos loc =
   with Scanf.Scan_failure _ | End_of_file -> Nowhere
 ;;
 
-type loop_context = {
-  lexbuf : Lexing.lexbuf ;
-  name : string ref ;
-  end_head : int ref ;
-  theorem_end : int ref ;
-  theorem : int ref ;
-  tail : int ref ;
-};;
-
-let rec loop_coq ctx =
-  match Lexer_coq.coqtoken ctx.lexbuf with
-  | Parser_coq.BEGINPROOF ->
-     ctx.end_head := Lexing.lexeme_end ctx.lexbuf;
-     loop_coq ctx;
-  | Parser_coq.BEGINNAME n ->
-     ctx.name := n;
-     ctx.end_head := Lexing.lexeme_end ctx.lexbuf;
-     loop_coq ctx;
-  | Parser_coq.BEGINHEADER ->
-     ctx.end_head := Lexing.lexeme_end ctx.lexbuf;
-     loop_coq ctx;
-  | Parser_coq.PARAMETER ->
-     if !(ctx.theorem_end) < 0 then ctx.theorem_end := Lexing.lexeme_start ctx.lexbuf;
-     loop_coq ctx;
-  | Parser_coq.DEFINITION ->
-     if !(ctx.theorem_end) < 0 then ctx.theorem_end := Lexing.lexeme_start ctx.lexbuf;
-     loop_coq ctx;
-  | Parser_coq.THEOREM ->
-     ctx.theorem := Lexing.lexeme_start ctx.lexbuf;
-     ctx.theorem_end := -1;
-     loop_coq ctx;
-  | Parser_coq.ENDPROOF ->
-     if !(ctx.theorem_end) < 0 then ctx.theorem_end := Lexing.lexeme_start ctx.lexbuf;
-     ctx.tail := Lexing.lexeme_start ctx.lexbuf;
-     loop_coq ctx;
-  | Parser_coq.EOF ->
-     ()
-  | _ -> loop_coq ctx;
-;;
-
-let rec loop_dk ctx =
-  match Lexer_dk.dktoken ctx.lexbuf with
-  | Parser_dk.BEGINPROOF ->
-     ctx.end_head := Lexing.lexeme_end ctx.lexbuf;
-     loop_dk ctx;
-  | Parser_dk.BEGINNAME n ->
-     ctx.name := n;
-     ctx.end_head := Lexing.lexeme_end ctx.lexbuf;
-     loop_dk ctx;
-  | Parser_dk.BEGINHEADER ->
-     ctx.end_head := Lexing.lexeme_end ctx.lexbuf;
-     loop_dk ctx;
-  | Parser_dk.PARAMETER ->
-     if !(ctx.theorem_end) < 0 then ctx.theorem_end := Lexing.lexeme_start ctx.lexbuf;
-     loop_dk ctx;
-  | Parser_dk.DEFINITION ->
-     if !(ctx.theorem_end) < 0 then ctx.theorem_end := Lexing.lexeme_start ctx.lexbuf;
-     loop_dk ctx;
-  | Parser_dk.THEOREM ->
-     ctx.theorem := Lexing.lexeme_start ctx.lexbuf;
-     ctx.theorem_end := -1;
-     loop_dk ctx;
-  | Parser_dk.ENDPROOF ->
-     if !(ctx.theorem_end) < 0 then ctx.theorem_end := Lexing.lexeme_start ctx.lexbuf;
-     ctx.tail := Lexing.lexeme_start ctx.lexbuf;
-     loop_dk ctx;
-  | Parser_dk.EOF ->
-     ()
-  | _ -> loop_dk ctx;
-;;
-
 let output_placeholder oc data =
-  let ctx = {
-    lexbuf = Lexing.from_string data ;
-    name = ref "" ;
-    end_head = ref (-1) ;
-    theorem_end = ref (-1) ;
-    theorem = ref (-1) ;
-    tail = ref (-1) ;
-  } in
-  (match !input_format with
-   | I_coq -> loop_coq ctx
-   | I_dk -> loop_dk ctx);
+  let lexbuf = Lexing.from_string data in
+  let name = ref "" in
+  let end_head = ref (-1) in
+  let theorem_end = ref (-1) in
+  let theorem = ref (-1) in
+  let tail = ref (-1) in
+  let rec loop () =
+    match Lexer_coq.coqtoken lexbuf with
+    | Parser_coq.BEGINPROOF ->
+        end_head := Lexing.lexeme_end lexbuf;
+        loop ();
+    | Parser_coq.BEGINNAME n ->
+        name := n;
+        end_head := Lexing.lexeme_end lexbuf;
+        loop ();
+    | Parser_coq.BEGINHEADER ->
+        end_head := Lexing.lexeme_end lexbuf;
+        loop ();
+    | Parser_coq.PARAMETER ->
+        if !theorem_end < 0 then theorem_end := Lexing.lexeme_start lexbuf;
+        loop ();
+    | Parser_coq.DEFINITION ->
+        if !theorem_end < 0 then theorem_end := Lexing.lexeme_start lexbuf;
+        loop ();
+    | Parser_coq.THEOREM ->
+        theorem := Lexing.lexeme_start lexbuf;
+        theorem_end := -1;
+        loop ();
+    | Parser_coq.ENDPROOF ->
+        if !theorem_end < 0 then theorem_end := Lexing.lexeme_start lexbuf;
+        tail := Lexing.lexeme_start lexbuf;
+        loop ();
+    | Parser_coq.EOF ->
+        ()
+    | _ -> loop ();
+  in
+  loop ();
   let len = String.length data in
-  if !(ctx.tail) < 0 then ctx.tail := len;
-  assert (!(ctx.theorem_end) >= 0);
-  if !(ctx.end_head) < 0 then ctx.end_head := 0;
-  if !(ctx.theorem) >= 0 then
-    output_string oc (String.sub data !(ctx.theorem) (!(ctx.tail) - !(ctx.theorem)))
+  if !tail < 0 then tail := len;
+  assert (!theorem_end >= 0);
+  if !end_head < 0 then end_head := 0;
+  if !theorem >= 0 then
+    output_string oc (String.sub data !theorem (!tail - !theorem))
   else begin
     output_string oc "Theorem ";
-    output_string oc !(ctx.name);
+    output_string oc !name;
     output_string oc " :\n";
-    output_string oc (String.sub data !(ctx.end_head) (!(ctx.theorem_end) - !(ctx.end_head)));
+    output_string oc (String.sub data !end_head (!theorem_end - !end_head));
     output_string oc ".\n";
   end;
   output_string oc "Proof. TO_BE_DONE_MANUALLY.\n";
@@ -175,7 +130,7 @@ let zenon_loc file (_: string * string) data loc oc =
   let tmp_out = (file ^ "-zvtmp.v") in
   let tmp_err = (file ^ "-zvtmp.err") in
   let cleanup () =
-    (* try_remove tmp_in; *)
+    try_remove tmp_in;
     try_remove tmp_out;
     try_remove tmp_err;
   in
@@ -196,24 +151,18 @@ let zenon_loc file (_: string * string) data loc oc =
     let tmpoc = open_out_bin tmp_in in
     output_string tmpoc data;
     close_out tmpoc;
-    let ifmt = match !input_format with I_coq -> "coq" | I_dk -> "dedukti" in
-    let zenon_ifmt = match !input_format with I_coq -> " -ifocal" | I_dk -> "-idedukti" in
     let cmd =
       if !use_coqterm then
-        Printf.sprintf "%s -p%d -o%sterm -x %s %s %s %s -keepclassical -wout %s %s >%s"
+        Printf.sprintf "%s -p%d -ocoqterm -x %s %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
-                       ifmt
                        !focal_ext
                        !zopt (String.concat " " (List.rev !add_opt))
-                       zenon_ifmt
                        tmp_err tmp_in tmp_out
       else
-        Printf.sprintf "%s -p%d -o%s -x %s %s %s %s -keepclassical -wout %s %s >%s"
+        Printf.sprintf "%s -p%d -ocoq -x %s %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
-                       ifmt
                        !focal_ext
                        !zopt (String.concat " " (List.rev !add_opt))
-                       zenon_ifmt
                        tmp_err tmp_in tmp_out
     in
     if !verbose then Printf.eprintf "%s\n%!" cmd;

@@ -407,3 +407,36 @@ let get_smaller_variables variables bindings =
       (variable_set, Parsetree_utils.VnameSet.empty) in
   Parsetree_utils.VnameSet.elements (snd result)
 ;;
+
+
+
+(** ***************************************************************************
+    {b Descr}: Tests whether a recursive function uses structural recursion.
+
+    @param function_name the name of the function.
+    @param arguments the arguments of the function.
+    @param structural_argument the argument supposedly destructured before
+    each recursive call.
+    @param body the body of the function.
+
+    @return [true] if the given function uses structural recursion; [false]
+    otherwise.
+
+    {b Visibility}: Exported outside this module.
+ *************************************************************************** *)
+let is_structural function_name arguments structural_argument body =
+  let recursive_calls = list_recursive_calls function_name arguments [] body in
+  let analyse_recursive_call (arguments_assoc_list, bindings) =
+    (* Just forget the type while searching in the assoc list. *)
+    let argument_expr =
+      Handy.list_assoc_custom_eq
+        (fun (n1, _) n2 -> n1 = n2)
+        structural_argument arguments_assoc_list in
+    match argument_expr.Parsetree.ast_desc with
+     | Parsetree.E_var { Parsetree.ast_desc = Parsetree.EI_local v } ->
+         let smaller_variables =
+           get_smaller_variables [structural_argument] bindings in
+         List.mem v smaller_variables
+     | _ -> false in
+  List.for_all analyse_recursive_call recursive_calls
+;;

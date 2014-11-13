@@ -32,7 +32,7 @@ type constructor_name = string
 type node_label = int * string
      (** Node label in proof. *);;
 type external_name = string
-     (** External name from Ocaml, Coq or Dedukti. *);;
+     (** External name from Ocaml or Coq. *);;
 
 type 'a ast = {
    ast_loc : location; (** The location in the source of the AST node. *)
@@ -172,7 +172,6 @@ and proof_desc =
   | Pf_assumed
   | Pf_auto of fact list
   | Pf_coq of string
-  | Pf_dk of string
   | Pf_node of proof_node list
 
 and proof_node = proof_node_desc ast
@@ -233,7 +232,6 @@ and external_def_desc = {
 and external_language =
   | EL_Caml
   | EL_Coq
-  | EL_Dk
   | EL_external of string
 
 and external_def_body = external_def_body_desc ast

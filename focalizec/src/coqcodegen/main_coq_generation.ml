@@ -68,7 +68,7 @@ let toplevel_let_def_compile ctx env let_def =
   (* Recover pre-compilation info and extended environment in case of
      recursivity for all the bindings. *)
   let (env, pre_comp_infos) =
-    Species_record_type_coq_generation.pre_compute_let_bindings_infos_for_rec
+    Species_record_type_generation.pre_compute_let_bindings_infos_for_rec
       ~rec_status ~toplevel: true env
       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
   (* Now generate each bound definition. Remark that there is no local idents
@@ -85,12 +85,12 @@ let toplevel_let_def_compile ctx env let_def =
          let binder =
            if rec_status <> Env.RC_non_rec then "Fixpoint"
            else "Let" in
-         Species_record_type_coq_generation.let_binding_compile
+         Species_record_type_generation.let_binding_compile
            ctx ~binder ~opt_term_proof ~local_idents: []
            ~in_recursive_let_section_of
            (* Or whatever since "Self" does not exist anymore. *)
-           ~self_methods_status: Species_record_type_coq_generation.SMS_from_record
-           ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
+           ~self_methods_status: Species_record_type_generation.SMS_from_record
+           ~recursive_methods_status: Species_record_type_generation.RMS_regular
            ~toplevel: true ~rec_status env one_bnd one_pre_comp_info
      | ((first_bnd :: next_bnds),
         (first_pre_comp_info :: next_pre_comp_infos)) ->
@@ -98,28 +98,28 @@ let toplevel_let_def_compile ctx env let_def =
            if rec_status <> Env.RC_non_rec then "Fixpoint" else "Let" in
          let accu_env =
            ref
-             (Species_record_type_coq_generation.let_binding_compile
+             (Species_record_type_generation.let_binding_compile
                 ctx ~binder: first_binder ~opt_term_proof ~local_idents: []
                 ~in_recursive_let_section_of
                 (* Or whatever since "Self" does not exist anymore. *)
                 ~self_methods_status:
-                  Species_record_type_coq_generation.SMS_from_record
+                  Species_record_type_generation.SMS_from_record
                 ~recursive_methods_status:
-                  Species_record_type_coq_generation.RMS_regular
+                  Species_record_type_generation.RMS_regular
                 ~toplevel: true ~rec_status env first_bnd
                 first_pre_comp_info) in
          List.iter2
            (fun binding pre_comp_info ->
              Format.fprintf out_fmter "@]@\n@[<2>" ;
              accu_env :=
-               Species_record_type_coq_generation.let_binding_compile
+               Species_record_type_generation.let_binding_compile
                  ctx ~binder: "with" ~opt_term_proof ~local_idents: []
                  ~in_recursive_let_section_of
                  (* Or whatever since "Self" does not exist anymore. *)
                  ~self_methods_status:
-                   Species_record_type_coq_generation.SMS_from_record
+                   Species_record_type_generation.SMS_from_record
                  ~recursive_methods_status:
-                   Species_record_type_coq_generation.RMS_regular
+                   Species_record_type_generation.RMS_regular
                  ~toplevel: true ~rec_status !accu_env binding pre_comp_info)
            next_bnds next_pre_comp_infos ;
          !accu_env
@@ -284,10 +284,10 @@ let toplevel_compile env ~current_unit out_fmter = function
         (* Empty, since not under a species. *)
         Context.scc_dependency_graph_nodes = [] ;
         Context.scc_out_fmter = out_fmter } in
-      Species_record_type_coq_generation.generate_expr
+      Species_record_type_generation.generate_expr
         ctx ~local_idents: [] ~in_recursive_let_section_of: []
-        ~self_methods_status: Species_record_type_coq_generation.SMS_from_record
-        ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
+        ~self_methods_status: Species_record_type_generation.SMS_from_record
+        ~recursive_methods_status: Species_record_type_generation.RMS_regular
         env expr ;
       Format.fprintf out_fmter ").@]@\n@\n" ;
       (* Nothing to extend the environment. *)

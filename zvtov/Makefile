@@ -29,11 +29,11 @@ CAMLBINFLAGS = $(CAMLFLAGS) $(BIN_DEBUG_FLAGS) $(XMLRPC_FLAGS)
 CAMLBYTFLAGS = $(CAMLFLAGS) $(BYT_DEBUG_FLAGS) $(XMLRPC_FLAGS)
 
 MODULES = version misc options cache \
-          expr parser_coq lexer_coq parser_dk lexer_dk invoke invoke_cime \
+          expr parser_coq lexer_coq invoke invoke_cime \
           $(XMLRPC_MODULE) token lexer parser main
 
-LEXERS = lexer_coq lexer_dk lexer
-PARSERS = parser_coq parser_dk
+LEXERS = lexer_coq lexer
+PARSERS = parser_coq
 
 PLAIN_MODULES = version misc cache invoke expr invoke_cime $(XMLRPC_MODULE) \
                 token parser options main
@@ -100,15 +100,6 @@ parser_coq.ml: parser_coq.mly
 parser_coq.mli: parser_coq.ml
 	:
 
-lexer_dk.ml: lexer_dk.mll
-	$(CAMLLEX) lexer_dk.mll
-
-parser_dk.ml: parser_dk.mly
-	$(CAMLYACC) -v parser_dk.mly
-
-parser_dk.mli: parser_dk.ml
-	:
-
 .PHONY: doc odoc docdir
 doc odoc docdir:
 	@echo "The documentation for zvtov is not yet available :(" >&2
@@ -118,9 +109,7 @@ clean:
 	rm -f .#*
 	rm -f *.cm* *.o *.annot *.output
 	rm -f lexer_coq.ml parser_coq.ml
-	rm -f lexer_dk.ml parser_dk.ml
 	rm -f parser_coq.mli
-	rm -f parser_dk.mli
 	rm -f zvtov *.bin *.byt
 
 .PHONY: depend

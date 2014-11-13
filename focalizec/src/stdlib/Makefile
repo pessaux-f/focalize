@@ -44,8 +44,6 @@ FOCALIZE_BIN_OBJS=$(FOCALIZE_BYT_OBJS:.cmo=.cmx)
 FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
-FOCALIZE_DKS=$(FOCALIZE_ZVS:.zv=.dk)
-FOCALIZE_DKOS=$(FOCALIZE_DKS:.dk=.dko)
 
 FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 
@@ -62,24 +60,6 @@ EXTERNAL_VOS=\
  coq_builtins.vo\
  sets_externals.vo\
  wellfoundation_externals.vo
-
-EXTERNAL_DKOS=\
- cc.dko\
- dk_bool.dko\
- dk_fail.dko\
- dk_opt.dko\
- dk_tuple.dko\
- dk_logic.dko\
- dk_list.dko\
- dk_nat.dko\
- dk_int.dko\
- dk_binary_nat.dko\
- dk_machine_int.dko\
- dk_char.dko\
- dk_string.dko\
- dk_builtins.dko\
- sets_externals.dko\
- wellfoundation_externals.dko
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
@@ -102,20 +82,18 @@ focalizedoc:\
  $(FOCALIZE_MML)
 
 byt:\
- $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS) $(EXTERNAL_DKOS)\
+ $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS)\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BYT_OBJS)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)\
- $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 bin:\
- $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) $(EXTERNAL_DKOS)\
+ $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BIN_OBJS)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)\
- $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
@@ -139,10 +117,6 @@ install:
 	  echo "Installing (Coq) compiled certified libs." &&\
 	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
-	if [ "$(FOCALIZE_DKOS)" != "" ]; then\
-	  echo "Installing (Dedukti) compiled certified libs." &&\
-	  $(CP) $(FOCALIZE_DKOS) $(INSTALL_LIB_DIR)/;\
-	fi &&\
 	if [ "$(EXTERNAL_CMIS)" != "" ]; then\
 	  echo "Installing (OCaml interface) external stubs." &&\
 	  $(CP) $(EXTERNAL_CMIS) $(INSTALL_LIB_DIR)/;\
@@ -158,10 +132,6 @@ install:
 	if [ "$(EXTERNAL_VOS)" != "" ]; then\
 	  echo "Installing (Coq) external stubs." &&\
 	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
-	fi &&\
-	if [ "$(EXTERNAL_DKOS)" != "" ]; then\
-	  echo "Installing (Dedukti) external stubs." &&\
-	  $(CP) $(EXTERNAL_DKOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
 # TODO
@@ -169,12 +139,11 @@ uninstall:
 	echo "Uninstall stdlib TODO"
 
 clean:
-	$(RM) *.dko *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.fo *.vo *.pfc *.glob *~ .*~
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) $(FOCALIZE_DKS)
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.fo *.vo *.pfc *.glob *~ .*~
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
 
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 	$(FOCALIZEDEP) *.fcl >> ./.depend
-	$(DKDEP) *.dk >> ./.depend
 
 include .depend

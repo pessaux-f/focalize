@@ -33,7 +33,6 @@ Installation requires some external tools, the most emblematic ones being:
   in the root directory of focalize (usually "focalize")).
  - Hevea (for the documentation in HTML) that can be fetched at
       http://hevea.inria.fr.
- - Dedukti (any recent version -- >= 2.2 --) should be fine.
 
 Some the minor (but still needed) tools are also required (LaTeX, make, dvipdf,
 dvips) but are generally part of a standard installation on a development
@@ -118,7 +117,7 @@ Scripts 'configure' can be provided tuning options:
   [-]-interactive: run interactively, asking questions.
   [-]-tools_prefix <directory>:  set <directory> as the directory prefix where
       tools required to build FoCaLiZe are installed. The currently required
-      non-common tools are OCaml, Coq and Dedukti.
+      non-common tools are OCaml and Coq.
 * focalize/zenon/configure-for-focalize:
   [-]-interactive: run interactively, asking questions.
   [-]-install_prefix <directory>: set <directory> as the directory prefix for
@@ -132,7 +131,7 @@ Scripts 'configure' can be provided tuning options:
       /usr/local).
   [-]-tools_prefix <directory>: set <directory> as the directory prefix where
       tools required to build FoCaLiZe are installed. The currently required
-      tools (other than OCaml, Coq and Dedukti already configured) are zenon, zvtov.
+      tools (other than OCaml and Coq already configured) are zenon, zvtov.
 
 
 (5) Administrivia:

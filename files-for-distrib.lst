@@ -189,16 +189,6 @@
 ./focalize/focalizec/src/coqcodegen/species_record_type_generation.mli
 ./focalize/focalizec/src/coqcodegen/type_coq_generation.ml
 ./focalize/focalizec/src/coqcodegen/type_coq_generation.mli
-./focalize/focalizec/src/coqcodegen/main_coq_generation.ml
-./focalize/focalizec/src/dkcodegen/Makefile
-./focalize/focalizec/src/dkcodegen/rec_let_gen.ml
-./focalize/focalizec/src/dkcodegen/rec_let_gen.mli
-./focalize/focalizec/src/dkcodegen/species_dk_generation.ml
-./focalize/focalizec/src/dkcodegen/species_dk_generation.mli
-./focalize/focalizec/src/dkcodegen/species_record_type_generation.ml
-./focalize/focalizec/src/dkcodegen/species_record_type_generation.mli
-./focalize/focalizec/src/dkcodegen/type_dk_generation.ml
-./focalize/focalizec/src/dkcodegen/type_dk_generation.mli
 ./focalize/focalizec/src/docgen/doc_lexer.mll
 ./focalize/focalizec/src/docgen/docgen.spec
 ./focalize/focalizec/src/docgen/env_docgen.ml

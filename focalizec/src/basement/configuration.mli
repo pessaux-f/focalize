@@ -71,9 +71,6 @@ val unset_generate_ocaml : unit -> unit
 val get_generate_coq : unit -> bool
 val unset_generate_coq : unit -> unit
 
-val get_generate_dk : unit -> bool
-val unset_generate_dk : unit -> unit
-
 val get_fancy_ansi : unit -> bool
 val unset_fancy_ansi : unit -> unit
 
@@ -101,9 +98,6 @@ val get_stop_before_zenon : unit -> bool
 
 val set_stop_before_coq : unit -> unit
 val get_stop_before_coq : unit -> bool
-
-val set_stop_before_dk : unit -> unit
-val get_stop_before_dk : unit -> bool
 
 val require_plugin : string -> unit
 val get_plugins : unit -> string list

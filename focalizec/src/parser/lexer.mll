@@ -105,7 +105,6 @@ List.iter
   "conclude", CONCLUDE;
   "coq", COQ;
   "coq_require", COQ_REQUIRE;
-  "dedukti", DEDUKTI;
   "definition", DEFINITION;
   "else", ELSE;
   "end", END;
