@@ -200,7 +200,7 @@ let zenon_loc file (_: string * string) data loc oc =
     let zenon_ifmt = match !input_format with I_coq -> " -ifocal" | I_dk -> "-idedukti" in
     let cmd =
       if !use_coqterm then
-        Printf.sprintf "%s -p%d -o%sterm -x %s %s %s %s -keepclassical -wout %s %s >%s"
+        Printf.sprintf "%s -p%d -o%sterm -x %s %s %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
                        ifmt
                        !focal_ext
@@ -208,7 +208,7 @@ let zenon_loc file (_: string * string) data loc oc =
                        zenon_ifmt
                        tmp_err tmp_in tmp_out
       else
-        Printf.sprintf "%s -p%d -o%s -x %s %s %s %s -keepclassical -wout %s %s >%s"
+        Printf.sprintf "%s -p%d -o%s -x %s %s %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
                        ifmt
                        !focal_ext
