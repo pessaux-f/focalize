@@ -559,44 +559,13 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
            (* Reason ignored since in Dedukti we take all the kinds of methods in
               account. *)
            match meth_dep with
-           | Env.TypeInformation.MDEM_Defined_carrier sch ->
-               (* Now, if "rep" is defined, then we generate an equivalence
-                  between "abst_T" and it's representation using the
-                  abstracted types passed as arguments to the Definition to
-                  represent carriers of the species parameters we depend on. *)
-               let ty = Types.specialize sch in
-               if in_section then
-                 Format.fprintf out_fmter "abst_T := %a.@\n"
-                   (Types.pp_type_simple_to_dk new_print_ctx) ty
-               else
-                 Format.fprintf out_fmter "@ (abst_T := %a)"
-                   (Types.pp_type_simple_to_dk new_print_ctx) ty ;
-               (* Anything defined is not abstracted. *)
-               []
-           | Env.TypeInformation.MDEM_Defined_computational (fr, _, n, _, _, _)
-           | Env.TypeInformation.MDEM_Defined_logical (fr, n, _) ->
-               (* We must add an equivalence to enforce de def-dependency. *)
-               if in_section then
-                 Format.fprintf out_fmter "abst_%a :=@ %a__%a.@\n"
-                   Parsetree_utils.pp_vname_with_operators_expanded n
-                   (fun out (module_name, species_name) ->
-                    Format.fprintf out "%s.%a"
-                                   module_name
-       Parsetree_utils.pp_vname_with_operators_expanded species_name
-                   ) ctx.Context.scc_current_species
-                   Parsetree_utils.pp_vname_with_operators_expanded n
-               else
-                 (Format.fprintf out_fmter "@ (abst_%a :=@ "
-                   Parsetree_utils.pp_vname_with_operators_expanded n;
-                  (* We must recover the method generator of the method we
-                  def-depend on. Then we must apply this generator to the
-                  arguments it needs, parameters carriers, parameters methods
-                  and methods of Self depending on wether these last ones are
-                  really defined in the current species or still abstract. *)
-                  generate_def_dependency_equivalence
-                    env new_ctx generated_fields fr n;
-                  Format.fprintf out_fmter ")");
-               []                  (* Anything defined is not abstracted. *)
+           | Env.TypeInformation.MDEM_Defined_carrier _
+           | Env.TypeInformation.MDEM_Defined_computational _
+           | Env.TypeInformation.MDEM_Defined_logical _ ->
+              (* Anything defined is not abstracted. *)
+              []
+              (* Contrary to Coq, we cannot give definitions
+                 in the list of arguments. Fortunately, Zenonide unfolds all definitions. *)
            | Env.TypeInformation.MDEM_Declared_carrier ->
                (* Note that by construction, the carrier is first in the env. *)
                if in_section then
