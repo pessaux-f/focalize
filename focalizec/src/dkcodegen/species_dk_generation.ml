@@ -2157,7 +2157,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
               | Species_record_type_dk_generation.SMS_from_record ->
                  assert false (* We never construct Hypothesis from record *)
             in
-            Format.fprintf out_fmter "%%%%begin-hypothesis: %s%a :@ "
+            Format.fprintf out_fmter "%%%%begin-hypothesis: %s%a :@ \""
               prefix
               Parsetree_utils.pp_vname_with_operators_expanded vname;
             Species_record_type_dk_generation.generate_logical_expr
@@ -2166,7 +2166,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
               ~recursive_methods_status:
               Species_record_type_dk_generation.RMS_regular
               env lexpr ;
-            Format.fprintf out_fmter "@\n%%%%end-hypothesis@\n")
+            Format.fprintf out_fmter "\"@\n%%%%end-hypothesis@\n")
          (List.rev !section_variable_list);
        Format.fprintf out_fmter
          "@\n@\n@\n(; Methods to use for automated proof. ;)@\n";
