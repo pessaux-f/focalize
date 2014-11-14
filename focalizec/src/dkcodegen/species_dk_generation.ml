@@ -2016,14 +2016,7 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_dk_env
      (without lambda-lift) and named "abst_xxx". That's why we use the mode
      [SMS_abstracted]. *)
   Format.fprintf out_fmter "(; Theorem's body. ;)@\n";
-  (* Be careful if the dk proof appears in a nested proof of a Zenon script
-     under a Zenon script then we must not apply the naming scheme
-     "for_zenon__xxx". Otherwise, if the dk proof is at toplevel of the Zenon
-     proof (i.e. in fact ends the Zenon proof), we must directly give the
-     theorem the real name since we do not have to (and we do not) create the
-     various intermediate theorems induced by Zenon stuff, especially the fact
-     that we open some Sections to "look like" first-order. *)
-  let opt_for_zenon = if in_nested_proof then "" else "for_zenon_" in
+  let opt_for_zenon = "" in
   Format.fprintf out_fmter "@[<2>%s%a :@ "
     opt_for_zenon Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
   (* Generate the aim depending on if we are in a regular proof or in the
@@ -2136,7 +2129,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
           this is sufficient *)
        Format.fprintf out_fmter "%%%%location: [%a]@\n"
          Location.pp_location proof.Parsetree.ast_loc;
-       Format.fprintf out_fmter "%%%%name: for_zenon_%a@\n"
+       Format.fprintf out_fmter "%%%%name: %a@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;
        (* Tell Zenon to abstract over "Section" variables *)
        (* Each variable has to be printed on its line,
@@ -2209,7 +2202,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
        Format.fprintf out_fmter "(; Theorem's body. ;)@\n";
-       Format.fprintf out_fmter "for_zenon_%a :@\n"
+       Format.fprintf out_fmter "%a :@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;
        (* Generate the aim depending on if we are in a regular proof or in the
           initial stage of a termination proof. *)
@@ -2277,7 +2270,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
                     Parsetree_utils.pp_vname_with_operators_expanded hn)
            available_hyps;
          (* Apply Zenon's result to prove the lemma... *)
-         Format.fprintf out_fmter "apply for_zenon_%a;@\nauto.@\nQed.@\n"
+         Format.fprintf out_fmter "apply %a;@\nauto.@\nQed.@\n"
            Parsetree_utils.pp_vname_with_operators_expanded aim_name
         )
 ;;
@@ -2436,58 +2429,6 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
             logical_expr_or_term_stuff name
             None (* No parent proof at the beginning. *)
             proof) ;
-       (* Now, unfortunately when Dk closes a Section, it only abstracts
-          Parameters and Variables really used. Since WE lambda-lift all the
-          dependencies, even if they are not used, we must enforce all the
-          Parameters and Variables declared in the Section to be used. Hence
-          we define a dummy extra Theorem in which we simply put an "assert"
-          on each method and species parameter carrier type we depend on to be
-          sure that Dk will abstract it. *)
-       Format.fprintf out_fmter
-         "(; Dummy theorem to enforce Dk abstractions. ;)@\n";
-       Format.fprintf out_fmter "@[<2>";
-       Format.fprintf out_fmter "for_zenon_abstracted_%a "
-         Parsetree_utils.pp_vname_with_operators_expanded name;
-       Format.fprintf out_fmter ":@ ";
-       (* Generate the aim depending on if we are in a regular proof or in the
-          initial stage of a termination proof. *)
-       (match logical_expr_or_term_stuff with
-        | ZSGM_from_logical_expr logical_expr ->
-            Species_record_type_dk_generation.generate_logical_expr
-              ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
-                Species_record_type_dk_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular
-              ctx env logical_expr
-        | ZSGM_from_termination_lemma
-            (order_expr, used_params_indices, rec_calls) ->
-            Rec_let_dk_gen.generate_termination_lemmas
-              ctx print_ctx env
-              ~explicit_order:
-                (Rec_let_dk_gen.OK_expr (order_expr, used_params_indices))
-                rec_calls ;
-            (* Always end by the obligation of well-formation of the user-order
-               eta-expanded to wrap its result with a Is_true. *)
-            Format.fprintf out_fmter
-              "@ (well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
-            Species_record_type_dk_generation.generate_expr
-              ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
-                Species_record_type_dk_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular
-              ctx env order_expr ;
-           Format.fprintf out_fmter "@ __a1 __a2)))"
-       ) ;
-       Format.fprintf out_fmter ".@]@\n";
-       (* Now, for each abstracted method we depend on we generate an assert. *)
-       generate_asserts_for_dependencies
-         out_fmter dependencies_from_params min_dk_env
-         used_species_parameter_tys;
-       Format.fprintf out_fmter
-         "apply for_zenon_%a;@\nauto.@\nQed."
-         Parsetree_utils.pp_vname_with_operators_expanded name;
        (* End the Section. *)
        Format.fprintf out_fmter "@]@\n(; End Proof_of_%a. ;)@\n@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
@@ -2522,14 +2463,6 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
   (* Put an extra newline before the theorem to make some air ! *)
   Format.fprintf out_fmter "@\n(; From species %a. ;)@\n"
     Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
-  (* Create the Section for Zenon in order to build the temporary theorem that
-     will be used with its proof to build the REAL and proved theorem. This
-     does the work only if the theorem must be proved by Zenon. Otherwise, it
-     does nothing ! *)
-  generate_theorem_section_if_by_zenon
-    ctx print_ctx env min_dk_env ~self_manifest used_species_parameter_tys
-    dependencies_from_params generated_fields name
-    (ZSGM_from_logical_expr logical_expr) proof;
   (* Now, generate the real theorem, using the temporarily created and applying
      the proof. *)
   Format.fprintf out_fmter "@[<2>%a "
@@ -2564,10 +2497,13 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
          new_ctx env logical_expr ;
        Format.fprintf out_fmter ").@\n"
    | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
-       (* Proof done by Zenon. Apply the temporary theorem. *)
-       Format.fprintf out_fmter
-         "apply for_zenon_abstracted_%a;@\nauto.@\nQed.@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded name
+       (* Proof done by Zenon. *)
+       generate_theorem_section_if_by_zenon
+         ctx print_ctx env min_dk_env ~self_manifest
+         used_species_parameter_tys
+         dependencies_from_params generated_fields name
+         (ZSGM_from_logical_expr logical_expr) proof;
+       Format.fprintf out_fmter "@\n"
    | Parsetree.Pf_dk (_, script) ->
        (* Dump verbatim the Dk code. *)
        Format.fprintf out_fmter "%s@\n" script);
@@ -3019,7 +2955,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                  (* Proof done by Zenon. Apply soldering stuff. *)
                  Format.fprintf out_fmter
                    "unfold %a_wforder;simpl.@\n\
-                    elim (for_zenon_abstracted_%a@ "
+                    elim (abstracted_%a@ "
                    Parsetree_utils.pp_vname_with_operators_expanded name
                    Parsetree_utils.pp_vname_with_operators_expanded name ;
                  (* Apply the theorem to its arguments due to lambda-lifts. *)
