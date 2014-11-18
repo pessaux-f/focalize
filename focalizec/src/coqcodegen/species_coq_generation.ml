@@ -2050,7 +2050,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
                 step.psa_lemma_name)
            available_steps ;
          Format.fprintf out_fmter
-           "unfold well_wrapper.@\nintros.@\nSplitandAssumption.@\nQed.@\n"
+           "unfold basics.well_wrapper.@\nintros.@\nSplitandAssumption.@\nQed.@\n"
        )
    | Parsetree.Pf_node nodes ->
        (* For each successive node, we remember the previously seen **extra**

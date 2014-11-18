@@ -817,6 +817,17 @@ end
 ;;
 
 
+(** Embed a FoCaLiZe function of type 'a -> 'a -> bool into a *property* that
+    it is a well-founded order. This is *not* a theorem ! This is a somewhat
+    of logical let indeed. *)
+let well_wrapper =
+  internal ('a -> 'a -> bool) -> prop
+  external
+  | caml -> {* () *}
+  | coq -> {* (fun f => well_founded (fun x y => Is_true (f x y))) *}
+;;
+
+
 (* .......... SNIPED .......... *)
 
 type partiel ('a) =
