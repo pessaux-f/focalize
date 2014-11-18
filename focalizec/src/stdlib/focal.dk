@@ -1,6 +1,6 @@
 #NAME focal.
 
-Is_true : dk_bool.Bool -> logic.Prop.
+Is_true : dk_bool.Bool -> logic.Prop := dk_logic.ebP.
 
 zenon_focal_not : b : dk_bool.Bool ->
                   logic.prf (logic.not (logic.not (Is_true b))) ->
