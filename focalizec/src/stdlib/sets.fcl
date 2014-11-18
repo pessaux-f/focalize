@@ -136,7 +136,7 @@ let ifailed  =
   external
   | caml -> {* Sets_externals.i_failed *}
   | coq -> {* sets_externals.i_failed _ *}
-  | dedukti -> {* sets_external.i_failed *}
+  | dedukti -> {* sets_externals.i_failed *}
 ;;
 
 (**
