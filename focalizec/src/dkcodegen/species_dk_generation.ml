@@ -2399,7 +2399,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
             None (* No parent proof at the beginning. *)
             proof) ;
        (* End the Section. *)
-       Format.fprintf out_fmter "@]@\n(; End Proof_of_%a. ;)@\n@\n"
+       Format.fprintf out_fmter "@].@\n(; End Proof_of_%a. ;)@\n@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
        end)
 ;;
