@@ -532,7 +532,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                    Context.scc_collections_carrier_mapping =
                      self_map ::
                        new_ctx.Context.scc_collections_carrier_mapping } in
-                 Format.fprintf out_fmter "@ (%s%a :@ "
+                 Format.fprintf out_fmter "@ (%s%a :@ dk_logic.eP ("
                    prefix
                    Parsetree_utils.pp_vname_with_operators_expanded meth;
                  (* Even if we are generating the prelude of a recursive
@@ -546,7 +546,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                    ~recursive_methods_status:
                      Species_record_type_dk_generation.RMS_regular
                    env lexpr ;
-                 Format.fprintf out_fmter ")"
+                 Format.fprintf out_fmter "))"
            ))
         meths_from_param)
     dependencies_from_params;
@@ -591,7 +591,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                           b,
                           new_ctx) :: !section_variable_list
                else
-                 (Format.fprintf out_fmter "@ (abst_%a :@ "
+                 (Format.fprintf out_fmter "@ (abst_%a :@ dk_logic.eP ("
                    Parsetree_utils.pp_vname_with_operators_expanded n;
                (* Methods from Self are printed "abst_XXX" since dependencies
                   have leaded to extra parameters "abst_XXX".
@@ -603,10 +603,8 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                     ~self_methods_status:
                     Species_record_type_dk_generation.SMS_abstracted env b
                     ~recursive_methods_status:
-                    Species_record_type_dk_generation.RMS_regular) ;
-
-               if in_section then ()
-               else Format.fprintf out_fmter ")";
+                    Species_record_type_dk_generation.RMS_regular;
+                  Format.fprintf out_fmter "))");
                [n])
          min_dk_env) in
   (abstracted_methods, new_ctx, new_print_ctx)
@@ -1669,14 +1667,14 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
          | AH_lemma log_expr ->
              (* Make a string of implications with the assumed logical
                 expressions. *)
-             Format.fprintf out_fmter "@[<1>(";
+             Format.fprintf out_fmter "@[<1>dk_logic.imply (";
              Species_record_type_dk_generation.generate_logical_expr
                ctx ~local_idents: [] ~in_recursive_let_section_of: []
                ~self_methods_status:
                  Species_record_type_dk_generation.SMS_abstracted
                ~recursive_methods_status:
                  Species_record_type_dk_generation.RMS_regular env log_expr ;
-             Format.fprintf out_fmter ") ->@ ";
+             Format.fprintf out_fmter ")@ (";
              rec_print q ;
              Format.fprintf out_fmter "@]"
         end) in
@@ -1698,7 +1696,8 @@ let close_quantifications_and_implications ctx print_ctx env avail_info =
               | _ -> assert false) ;
              rec_print q;
          | AH_lemma _ ->
-             rec_print q
+            Format.fprintf out_fmter ")";
+            rec_print q
         end) in
   rec_print avail_info.psa_assumed_variables_and_lemmas
 ;;
@@ -1775,7 +1774,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
                       (fact.Parsetree.ast_loc, node_label))) in
            Format.fprintf out_fmter "(; For step <%d>%s. ;)@\n"
              (fst node_label) (snd node_label);
-           Format.fprintf out_fmter "@[<2>%a :@ "
+           Format.fprintf out_fmter "@[<2>%a :@ dk_logic.eP ("
              Parsetree_utils.pp_vname_with_operators_expanded
              avail_info.psa_lemma_name;
            add_quantifications_and_implications ctx print_ctx env avail_info ;
@@ -1788,7 +1787,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
              ~recursive_methods_status:
                Species_record_type_dk_generation.RMS_regular
              env avail_info.psa_base_logical_expr ;
-           Format.fprintf out_fmter ")" ;
+           Format.fprintf out_fmter "))" ;
            (* Close parentheses introduced by the function quantifications_and_implications *)
            close_quantifications_and_implications ctx print_ctx env avail_info ;
            (* Done... Then, final carriage return. *)
