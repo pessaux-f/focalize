@@ -1195,15 +1195,14 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
           | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
           | Parsetree.ANTI_scheme _ -> assert false
           | Parsetree.ANTI_type t -> t) in
-       let id_type_scheme : Types.type_scheme option =
+       let (nb_polymorphic_args, id_type_scheme) =
          try
-           (match
-               (snd
-                  (Env.DkGenEnv.find_value
-                     ~loc: ident.Parsetree.ast_loc
-                     ~current_unit: ctx.Context.scc_current_unit
-                     ~current_species_name ident env))
-             with
+           let (nb, vb) =
+             (Env.DkGenEnv.find_value
+                ~loc: ident.Parsetree.ast_loc
+                ~current_unit: ctx.Context.scc_current_unit
+                ~current_species_name ident env) in
+           (nb, match vb with
              | Env.DkGenInformation.VB_toplevel_let_bound (_, _, ts, _) -> Some ts
              | Env.DkGenInformation.VB_non_toplevel
              | Env.DkGenInformation.VB_toplevel_property _ -> None
@@ -1211,13 +1210,14 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          with
            (* If the identifier was not found, then it was may be a local
                 identifier bound by a pattern. Then we can safely ignore it. *)
-           Env.Unbound_identifier (_, _) -> None in
-       let nb_polymorphic_args =
+           Env.Unbound_identifier (_, _) -> (0, None)
+       in
+       assert (nb_polymorphic_args =
          match id_type_scheme with
          | Some ts ->
             let (l, _) = Types.scheme_split ts in List.length l
          | None -> 0
-       in
+              );
 
        (* If some extra "_" are needed, then enclose the whole expression
             between parens (was bug #50). *)
@@ -1235,6 +1235,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                type_scheme
                id_type_simple
            in
+           assert (List.length type_arguments = nb_polymorphic_args);
            List.iter (fun st ->
                       Format.fprintf out_fmter "@ (%a)"
                                      (Types.pp_type_simple_to_dk print_ctx) st
