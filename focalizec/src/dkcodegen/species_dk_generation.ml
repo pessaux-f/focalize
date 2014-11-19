@@ -1667,7 +1667,7 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
          | AH_lemma log_expr ->
              (* Make a string of implications with the assumed logical
                 expressions. *)
-             Format.fprintf out_fmter "@[<1>dk_logic.imply (";
+             Format.fprintf out_fmter "@[<1>dk_logic.imp (";
              Species_record_type_dk_generation.generate_logical_expr
                ctx ~local_idents: [] ~in_recursive_let_section_of: []
                ~self_methods_status:
