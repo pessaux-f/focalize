@@ -517,7 +517,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
           else (
             match meth_ty_kind with
              | Parsetree_utils.DETK_computational meth_ty ->
-                 Format.fprintf out_fmter "@ (%s%a :@ %a)"
+                 Format.fprintf out_fmter "@ (%s%a :@ cc.eT (%a))"
                    prefix Parsetree_utils.pp_vname_with_operators_expanded meth
                    (Types.pp_type_simple_to_dk new_print_ctx) meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
@@ -675,7 +675,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded decr_arg_name
    | None -> ()) ;
   (* Now, we print the ending type of the method. *)
-  Format.fprintf out_fmter " :@ cc.eT %a "
+  Format.fprintf out_fmter " :@ cc.eT (%a) "
     (Types.pp_type_simple_to_dk print_ctx) ending_ty ;
   (* Generates the body's code of the method if some is provided.
      No local idents in the context because we just enter the scope of a species
@@ -1387,7 +1387,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
             Format.fprintf out_fmter
-              " :@ %a.@]@\n" (Types.pp_type_simple_to_dk print_ctx) meth_ty
+              " :@ cc.eT (%a).@]@\n" (Types.pp_type_simple_to_dk print_ctx) meth_ty
         | Env.MTK_logical lexpr ->
             Format.fprintf out_fmter
               "@[<2>";
@@ -1396,7 +1396,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
             Format.fprintf out_fmter "%a.%a"
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname;
-            Format.fprintf out_fmter " :@ ";
+            Format.fprintf out_fmter " :@ dk_logic.eP (";
             (* We must substitute Self by the toplevel collection. In effect,
                each method of Self of this toplevel collection must be called
                anyway
@@ -1428,7 +1428,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
                 Species_record_type_dk_generation.SMS_from_record
               ~recursive_methods_status:
                 Species_record_type_dk_generation.RMS_regular env lexpr' ;
-            Format.fprintf out_fmter ".@]@\n"
+            Format.fprintf out_fmter ").@]@\n"
        end)
    | SPOTS_param param_name ->
        (begin
@@ -1458,7 +1458,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
        match meth_ty_kind with
         | Parsetree_utils.DETK_computational meth_ty ->
             Format.fprintf out_fmter
-              "@[<2>_p_%a_%a :@ %a.@]@\n"
+              "@[<2>_p_%a_%a :@ cc.eT (%a).@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded param_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname
               (Types.pp_type_simple_to_dk print_ctx)
@@ -1473,7 +1473,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               Context.scc_collections_carrier_mapping =
                 self_map :: ctx.Context.scc_collections_carrier_mapping } in
             Format.fprintf out_fmter
-              "@[<2>_p_%a_%a :@ "
+              "@[<2>_p_%a_%a :@ dk_logic.eP@ ("
               Parsetree_utils.pp_vname_with_operators_expanded param_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname;
             Species_record_type_dk_generation.generate_logical_expr
@@ -1482,7 +1482,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
                 (Species_record_type_dk_generation.SMS_from_param param_name)
               ~recursive_methods_status:
                 Species_record_type_dk_generation.RMS_regular env lexpr ;
-            Format.fprintf out_fmter ".@]@\n"
+            Format.fprintf out_fmter ").@]@\n"
        end)
 ;;
 
@@ -1519,10 +1519,10 @@ let zenonify_by_property ctx print_ctx env min_dk_env
         | Env.DkGenInformation.VB_toplevel_let_bound (_, _, scheme, _) ->
             (* We just need to print the type of the method. *)
             let meth_ty = Types.specialize scheme in
-            Format.fprintf out_fmter "@[<2>%s :@ %a.@]@\n"
+            Format.fprintf out_fmter "@[<2>%s :@ cc.eT (%a).@]@\n"
               name_for_zenon (Types.pp_type_simple_to_dk print_ctx) meth_ty
         | Env.DkGenInformation.VB_toplevel_property lexpr ->
-            Format.fprintf out_fmter "@[<2>%s :@ " name_for_zenon;
+            Format.fprintf out_fmter "@[<2>%s :@ dk_logic.eP (" name_for_zenon;
             (* Since the used definition is at toplevel, there is no abstraction
                no notion of "Self", no dependencies. *)
             Species_record_type_dk_generation.generate_logical_expr
@@ -1532,7 +1532,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
               ~recursive_methods_status:
                 Species_record_type_dk_generation.RMS_regular env lexpr ;
             (* Done... Then, final carriage return. *)
-            Format.fprintf out_fmter ".@]@\n"
+            Format.fprintf out_fmter ").@]@\n"
       )
    | Parsetree.EI_method (qcollname_opt, vname) -> (
        match qcollname_opt with
@@ -1555,7 +1555,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
                    Sourcify.pp_expr_ident by_prop_expr_ident;
                  (* We just need to print the type of the method. *)
                  let meth_ty = Types.specialize scheme in
-                 Format.fprintf out_fmter "@[<2>abst_%a :@ %a.@]@\n"
+                 Format.fprintf out_fmter "@[<2>abst_%a :@ cc.eT (%a).@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
                    (Types.pp_type_simple_to_dk print_ctx) meth_ty
              | Env.TypeInformation.MDEM_Declared_logical (_, body)
@@ -1565,7 +1565,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
                    "(; For method of Self used via \"by property %a\". ;)@\n"
                    Sourcify.pp_expr_ident by_prop_expr_ident;
                  (* We need to print the logical expression of the method. *)
-                 Format.fprintf out_fmter "@[<2>abst_%a :@ "
+                 Format.fprintf out_fmter "@[<2>abst_%a :@ dk_logic.eP ("
                    Parsetree_utils.pp_vname_with_operators_expanded vname;
                  (* We now generate the sequence of real parameters of the
                     method, not those induced by abstraction and finally the
@@ -1578,7 +1578,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
                    ~recursive_methods_status:
                      Species_record_type_dk_generation.RMS_regular env body ;
                  (* Done... Then, final carriage return. *)
-                 Format.fprintf out_fmter ".@]@\n"
+                 Format.fprintf out_fmter ").@]@\n"
            )
         | Some qcollname ->
             zenonify_by_property_when_qualified_method
@@ -1743,7 +1743,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
                       (fact.Parsetree.ast_loc, vname))) in
            Format.fprintf out_fmter "(; For hypothesis \"%a\". ;)@\n"
              Sourcify.pp_vname vname;
-           Format.fprintf out_fmter "@[<2>%a :@ "
+           Format.fprintf out_fmter "@[<2>%a :@ dk_logic.eP ("
              Parsetree_utils.pp_vname_with_operators_expanded vname ;
            Species_record_type_dk_generation.generate_logical_expr
              ctx ~local_idents: [] ~in_recursive_let_section_of: []
@@ -1752,7 +1752,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
              ~recursive_methods_status:
                 Species_record_type_dk_generation.RMS_regular env hyp_logical_expr ;
            (* Done... Then, final carriage return. *)
-           Format.fprintf out_fmter ".@]@\n")
+           Format.fprintf out_fmter ").@]@\n")
          vnames
    | Parsetree.F_node node_labels ->
        (* Syntax: "by step ...". We must search among the [available_steps] the
@@ -1811,7 +1811,7 @@ let zenonify_hyp ctx print_ctx env hyp =
         | Parsetree.ANTI_type ty ->
             (* Notation "assume ... in ...". This leads to a Variable in the
                current Dk Section. *)
-            Format.fprintf out_fmter "@[<2>Variable %a :@ %a.@]@\n"
+            Format.fprintf out_fmter "@[<2>Variable %a :@ cc.eT (%a).@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded vname
               (Types.pp_type_simple_to_dk print_ctx) ty
         | _ -> assert false
@@ -1819,14 +1819,14 @@ let zenonify_hyp ctx print_ctx env hyp =
    | Parsetree.H_hypothesis (vname, logical_expr) ->
        (* Notation "H: all blabla in Self, foo -> bar...". This leads to a
           Variable in the current Dk Section. *)
-       Format.fprintf out_fmter "@[<2>Variable %a :@ "
+       Format.fprintf out_fmter "@[<2>Variable %a :@ dk_logic.eP ("
          Parsetree_utils.pp_vname_with_operators_expanded vname;
        Species_record_type_dk_generation.generate_logical_expr
          ~local_idents: [] ~in_recursive_let_section_of: []
          ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
          ctx env logical_expr ;
-       Format.fprintf out_fmter ".@]@\n"
+       Format.fprintf out_fmter ").@]@\n"
    | Parsetree.H_notation (vname, expr) ->
        (* Leads to a Definition. *)
        Format.fprintf out_fmter "@[<2>Let %a :=@ "
@@ -1985,7 +1985,7 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_dk_env
      [SMS_abstracted]. *)
   Format.fprintf out_fmter "(; Theorem's body. ;)@\n";
   let opt_for_zenon = "" in
-  Format.fprintf out_fmter "@[<2>%s%a :@ "
+  Format.fprintf out_fmter "@[<2>%s%a :@ dk_logic.eP ("
     opt_for_zenon Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
   (* Generate the aim depending on if we are in a regular proof or in the
      initial stage of a termination proof. *)
@@ -2013,7 +2013,7 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_dk_env
         ctx env order_expr ;
       Format.fprintf out_fmter "@ __a1 __a2)))"
   ) ;
-  Format.fprintf out_fmter ".@]@\n";
+  Format.fprintf out_fmter ").@]@\n";
   (* Enforce Hypothesis and Variables to be used to prevent Dk from removing
      it. *)
   List.iter
@@ -2218,14 +2218,14 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
            (match aim_gen_method with
            | ZSGM_from_logical_expr lexpr -> lexpr
            | ZSGM_from_termination_lemma (_, _, _) -> assert false) in
-         Format.fprintf out_fmter "@[<2>%a :@ "
+         Format.fprintf out_fmter "@[<2>%a :@ dk_logic.eP ("
            Parsetree_utils.pp_vname_with_operators_expanded aim_name;
          Species_record_type_dk_generation.generate_logical_expr
            ~local_idents: [] ~in_recursive_let_section_of: []
            ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
            ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
            ctx env aim ;
-         Format.fprintf out_fmter ".@]@\n" ;
+         Format.fprintf out_fmter ").@]@\n" ;
          (* Enforce Hypothesis to be used to prevent Dk from removing it. *)
          List.iter
            (fun h ->
