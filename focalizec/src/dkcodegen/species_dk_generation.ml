@@ -421,6 +421,12 @@ let find_method_type_kind_by_name vname coll_meths =
 ;;
 
 
+type prelude_delimiter =
+  | PD_app                      (* A list of arguments *)
+  | PD_arr                      (* A list of implications and dependent products *)
+  | PD_lam                      (* A list of lambda abstractions *)
+  | PD_none                     (* Don't print the prelude *)
+  | PD_postlude                 (* Close parentheses etc... *)
 
 (** Factorise la genération des abstrations pour un champ défini. Ca colle
     donc les abstractions dues aux types des paramètres d'espèce, puis
@@ -429,14 +435,16 @@ let find_method_type_kind_by_name vname coll_meths =
     En cas de non-Section, on met l'espace de séparation AVANT.
 
   Args:
-    - [~in_section] : True when this function is called to generate abstractions
-    in a Section. It is only the case when used to generate the code of a
-    temporary theorem for Zenon purpose. In this case, instead of abstracting
-    dependencies by adding extra arguments to the current definition, we
-    generate Variable, Let and Hypothesis. These are stored in the global variable
-    section_variable_list and passed to Zenon for abstraction.
-*)
-let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
+    - [~in_section] : Collect section variables
+    - [~delim] : Indicate how to delimit parameters:
+        print them as a list of arguments, a string of arrows or
+        a string of lambdas.
+        If it is PD_postlude, print the closing parentheses and
+        apply the definitions of defined abstract methods.
+        A poor's man let binding is achieved by calling this
+        function first with ~delim:PD_arr and then ~delim:PD_postlude.
+ *)
+let generate_field_definition_prelude ~in_section ~delim ctx print_ctx env min_dk_env
     used_species_parameter_tys dependencies_from_params generated_fields =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the parameters from the species parameters' types we use.
@@ -453,10 +461,14 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
             species_param_type_name in
         let param_name =  "_p_" ^ as_string in
         (* First, generate the parameter. *)
+        (match delim with
+        | PD_app -> Format.fprintf out_fmter "@ (%s_T :@ cc.uT)" param_name
+        | PD_arr -> Format.fprintf out_fmter "%s_T :@ cc.uT ->@ " param_name
+        | PD_lam -> Format.fprintf out_fmter "%s_T :@ cc.uT =>@ " param_name
+        | PD_postlude
+        | PD_none -> ());
         if in_section then
-          section_variable_list := SVType param_name :: !section_variable_list
-          (* Format.fprintf out_fmter "@[<2>Variable %s_T :@ cc.uT.@]@\n" param_name *)
-        else Format.fprintf out_fmter "@ (%s_T :@ cc.uT)" param_name;
+          section_variable_list := SVType param_name :: !section_variable_list;
         (* Return the stuff to extend the collection_carrier_mapping. *)
         ((ctx.Context.scc_current_unit, as_string),
          (param_name, Types.CCMI_is)))
@@ -517,9 +529,21 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
           else (
             match meth_ty_kind with
              | Parsetree_utils.DETK_computational meth_ty ->
-                 Format.fprintf out_fmter "@ (%s%a :@ cc.eT (%a))"
-                   prefix Parsetree_utils.pp_vname_with_operators_expanded meth
-                   (Types.pp_type_simple_to_dk new_print_ctx) meth_ty
+                (match delim with
+                 | PD_app ->
+                    Format.fprintf out_fmter "@ (%s%a :@ cc.eT (%a))"
+                      prefix Parsetree_utils.pp_vname_with_operators_expanded meth
+                      (Types.pp_type_simple_to_dk new_print_ctx) meth_ty
+                 | PD_arr ->
+                    Format.fprintf out_fmter "%s%a :@ cc.eT (%a) ->@ "
+                      prefix Parsetree_utils.pp_vname_with_operators_expanded meth
+                      (Types.pp_type_simple_to_dk new_print_ctx) meth_ty
+                 | PD_lam ->
+                    Format.fprintf out_fmter "%s%a :@ cc.eT (%a) =>@ "
+                      prefix Parsetree_utils.pp_vname_with_operators_expanded meth
+                      (Types.pp_type_simple_to_dk new_print_ctx) meth_ty
+                 | PD_postlude
+                 | PD_none -> ())
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
                     parameter "Self" must be printed as "_p_param_name_T". *)
@@ -532,22 +556,59 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                    Context.scc_collections_carrier_mapping =
                      self_map ::
                        new_ctx.Context.scc_collections_carrier_mapping } in
-                 Format.fprintf out_fmter "@ (%s%a :@ dk_logic.eP ("
-                   prefix
-                   Parsetree_utils.pp_vname_with_operators_expanded meth;
-                 (* Even if we are generating the prelude of a recursive
-                    function, we can't have a recursion via the dependencies
-                    from a species parameter. *)
-                 Species_record_type_dk_generation.generate_logical_expr
-                   new_ctx' ~in_recursive_let_section_of: [] ~local_idents: []
-                   ~self_methods_status:
-                     (Species_record_type_dk_generation.SMS_from_param
-                        species_param_name)
-                   ~recursive_methods_status:
-                     Species_record_type_dk_generation.RMS_regular
-                   env lexpr ;
-                 Format.fprintf out_fmter "))"
-           ))
+                 (match delim with
+                  | PD_app ->
+                     Format.fprintf out_fmter "@ (%s%a :@ dk_logic.eP ("
+                       prefix
+                       Parsetree_utils.pp_vname_with_operators_expanded meth;
+                     (* Even if we are generating the prelude of a recursive
+                        function, we can't have a recursion via the dependencies
+                        from a species parameter. *)
+                     Species_record_type_dk_generation.generate_logical_expr
+                       new_ctx' ~in_recursive_let_section_of: [] ~local_idents: []
+                       ~self_methods_status:
+                       (Species_record_type_dk_generation.SMS_from_param
+                          species_param_name)
+                       ~recursive_methods_status:
+                       Species_record_type_dk_generation.RMS_regular
+                       env lexpr ;
+                     Format.fprintf out_fmter "))"
+                  | PD_arr ->
+                     Format.fprintf out_fmter "%s%a :@ dk_logic.eP ("
+                       prefix
+                       Parsetree_utils.pp_vname_with_operators_expanded meth;
+                     (* Even if we are generating the prelude of a recursive
+                        function, we can't have a recursion via the dependencies
+                        from a species parameter. *)
+                     Species_record_type_dk_generation.generate_logical_expr
+                       new_ctx' ~in_recursive_let_section_of: [] ~local_idents: []
+                       ~self_methods_status:
+                       (Species_record_type_dk_generation.SMS_from_param
+                          species_param_name)
+                       ~recursive_methods_status:
+                       Species_record_type_dk_generation.RMS_regular
+                       env lexpr ;
+                     Format.fprintf out_fmter ") ->@ "
+                  | PD_lam ->
+                     Format.fprintf out_fmter "%s%a :@ dk_logic.eP ("
+                       prefix
+                       Parsetree_utils.pp_vname_with_operators_expanded meth;
+                     (* Even if we are generating the prelude of a recursive
+                        function, we can't have a recursion via the dependencies
+                        from a species parameter. *)
+                     Species_record_type_dk_generation.generate_logical_expr
+                       new_ctx' ~in_recursive_let_section_of: [] ~local_idents: []
+                       ~self_methods_status:
+                       (Species_record_type_dk_generation.SMS_from_param
+                          species_param_name)
+                       ~recursive_methods_status:
+                       Species_record_type_dk_generation.RMS_regular
+                       env lexpr ;
+                     Format.fprintf out_fmter ") =>@ "
+                  | PD_postlude
+                  | PD_none -> ())
+                 )
+          )
         meths_from_param)
     dependencies_from_params;
   (* Generate the parameters denoting methods of ourselves we depend on
@@ -559,29 +620,94 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
            (* Reason ignored since in Dedukti we take all the kinds of methods in
               account. *)
            match meth_dep with
-           | Env.TypeInformation.MDEM_Defined_carrier _
-           | Env.TypeInformation.MDEM_Defined_computational _
-           | Env.TypeInformation.MDEM_Defined_logical _ ->
+           | Env.TypeInformation.MDEM_Defined_carrier sch ->
+              let ty = Types.specialize sch in
+              (match delim with
+                 | PD_arr ->
+                    Format.fprintf out_fmter "@ (abst_T : cc.uT =>@ "
+                 | PD_postlude ->
+                   Format.fprintf out_fmter ")@ (%a)"
+                   (Types.pp_type_simple_to_dk new_print_ctx) ty
+                 | _ -> ()
+              );
               (* Anything defined is not abstracted. *)
               []
-              (* Contrary to Coq, we cannot give definitions
-                 in the list of arguments. Fortunately, Zenonide unfolds all definitions. *)
+           | Env.TypeInformation.MDEM_Defined_computational (fr, _, n, _, sch, _) ->
+              let ty = Types.specialize sch in
+              (match delim with
+                 | PD_arr ->
+                    Format.fprintf out_fmter "@ (abst_%a : cc.eT (%a) =>@ "
+                Parsetree_utils.pp_vname_with_operators_expanded n
+                (Types.pp_type_simple_to_dk new_print_ctx) ty
+                 | PD_postlude ->
+                    (Format.fprintf out_fmter ")@ (%a__"
+                       Sourcify.pp_vname
+                       (snd ctx.Context.scc_current_species);
+                    generate_def_dependency_equivalence
+                      env new_ctx generated_fields fr n;
+                    Format.fprintf out_fmter ")");
+                 | _ -> ()
+              );
+              []
+           | Env.TypeInformation.MDEM_Defined_logical (fr, n, b) ->
+              (match delim with
+                 | PD_arr ->
+                   Format.fprintf out_fmter "@ (abst_%a :@ dk_logic.eP ("
+                 Parsetree_utils.pp_vname_with_operators_expanded n;
+                 (* Methods from Self are printed "abst_XXX" since dependencies
+                    have leaded to extra parameters "abst_XXX".
+                    Even if we are generating the prelude of a recursive
+                    function, we can't have a recursion via the dependencies
+                    from other methods of ourselves. *)
+              Species_record_type_dk_generation.generate_logical_expr
+                new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
+                ~self_methods_status:
+                Species_record_type_dk_generation.SMS_abstracted env b
+                ~recursive_methods_status:
+                Species_record_type_dk_generation.RMS_regular;
+              Format.fprintf out_fmter ") =>@ "
+                 | PD_postlude ->
+                   Format.fprintf out_fmter ")@ (";
+                    generate_def_dependency_equivalence
+                      env new_ctx generated_fields fr n;
+                    Format.fprintf out_fmter ")"
+                 | _ -> ()
+              );
+              []
            | Env.TypeInformation.MDEM_Declared_carrier ->
                (* Note that by construction, the carrier is first in the env. *)
                if in_section then
-                 section_variable_list := SVType "abst" :: !section_variable_list
-               else Format.fprintf out_fmter "@ (abst_T : cc.uT)";
+                 section_variable_list := SVType "abst" :: !section_variable_list;
+               (match delim with
+                | PD_app -> Format.fprintf out_fmter "@ (abst_T : cc.uT)"
+                | PD_arr -> Format.fprintf out_fmter "abst_T : cc.uT ->@ "
+                | PD_lam -> Format.fprintf out_fmter "abst_T : cc.uT =>@ "
+                | PD_postlude
+                | PD_none -> ()
+               );
                [Parsetree.Vlident "rep"]
            | Env.TypeInformation.MDEM_Declared_computational (n, sch) ->
                (* Due to a decl-dependency, hence: abstract. *)
                let ty = Types.specialize sch in
                if in_section then
                  section_variable_list :=
-                   SVVar ("abst_", n, ty, new_print_ctx) :: !section_variable_list
-               else
-                 Format.fprintf out_fmter "@ (abst_%a : cc.eT %a)"
-                   Parsetree_utils.pp_vname_with_operators_expanded n
-                   (Types.pp_type_simple_to_dk new_print_ctx) ty ;
+                   SVVar ("abst_", n, ty, new_print_ctx) :: !section_variable_list;
+               (match delim with
+                | PD_app ->
+                   Format.fprintf out_fmter "@ (abst_%a : cc.eT %a)"
+                     Parsetree_utils.pp_vname_with_operators_expanded n
+                     (Types.pp_type_simple_to_dk new_print_ctx) ty
+                | PD_arr ->
+                   Format.fprintf out_fmter "abst_%a : cc.eT %a ->@ "
+                     Parsetree_utils.pp_vname_with_operators_expanded n
+                     (Types.pp_type_simple_to_dk new_print_ctx) ty
+                | PD_lam ->
+                   Format.fprintf out_fmter "abst_%a : cc.eT %a =>@ "
+                     Parsetree_utils.pp_vname_with_operators_expanded n
+                     (Types.pp_type_simple_to_dk new_print_ctx) ty
+                | PD_postlude
+                | PD_none -> ()
+               );
                [n]
            | Env.TypeInformation.MDEM_Declared_logical (n, b) ->
                if in_section then
@@ -589,22 +715,56 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                    SVHyp (Species_record_type_dk_generation.SMS_abstracted,
                           n,
                           b,
-                          new_ctx) :: !section_variable_list
-               else
-                 (Format.fprintf out_fmter "@ (abst_%a :@ dk_logic.eP ("
-                   Parsetree_utils.pp_vname_with_operators_expanded n;
-               (* Methods from Self are printed "abst_XXX" since dependencies
-                  have leaded to extra parameters "abst_XXX".
-                  Even if we are generating the prelude of a recursive
-                  function, we can't have a recursion via the dependencies
-                  from other methods of ourselves. *)
-                  Species_record_type_dk_generation.generate_logical_expr
-                    new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
-                    ~self_methods_status:
-                    Species_record_type_dk_generation.SMS_abstracted env b
-                    ~recursive_methods_status:
-                    Species_record_type_dk_generation.RMS_regular;
-                  Format.fprintf out_fmter "))");
+                          new_ctx) :: !section_variable_list;
+               (match delim with
+                | PD_app ->
+                   Format.fprintf out_fmter "@ (abst_%a :@ dk_logic.eP ("
+                     Parsetree_utils.pp_vname_with_operators_expanded n;
+                     (* Methods from Self are printed "abst_XXX" since dependencies
+                        have leaded to extra parameters "abst_XXX".
+                        Even if we are generating the prelude of a recursive
+                        function, we can't have a recursion via the dependencies
+                        from other methods of ourselves. *)
+                   Species_record_type_dk_generation.generate_logical_expr
+                     new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
+                     ~self_methods_status:
+                     Species_record_type_dk_generation.SMS_abstracted env b
+                     ~recursive_methods_status:
+                     Species_record_type_dk_generation.RMS_regular;
+                   Format.fprintf out_fmter "))"
+                | PD_arr ->
+                   Format.fprintf out_fmter "abst_%a :@ dk_logic.eP ("
+                     Parsetree_utils.pp_vname_with_operators_expanded n;
+                     (* Methods from Self are printed "abst_XXX" since dependencies
+                        have leaded to extra parameters "abst_XXX".
+                        Even if we are generating the prelude of a recursive
+                        function, we can't have a recursion via the dependencies
+                        from other methods of ourselves. *)
+                   Species_record_type_dk_generation.generate_logical_expr
+                     new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
+                     ~self_methods_status:
+                     Species_record_type_dk_generation.SMS_abstracted env b
+                     ~recursive_methods_status:
+                     Species_record_type_dk_generation.RMS_regular;
+                   Format.fprintf out_fmter ") ->@ "
+                | PD_lam ->
+                   Format.fprintf out_fmter "abst_%a :@ dk_logic.eP ("
+                     Parsetree_utils.pp_vname_with_operators_expanded n;
+                     (* Methods from Self are printed "abst_XXX" since dependencies
+                        have leaded to extra parameters "abst_XXX".
+                        Even if we are generating the prelude of a recursive
+                        function, we can't have a recursion via the dependencies
+                        from other methods of ourselves. *)
+                   Species_record_type_dk_generation.generate_logical_expr
+                     new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
+                     ~self_methods_status:
+                     Species_record_type_dk_generation.SMS_abstracted env b
+                     ~recursive_methods_status:
+                     Species_record_type_dk_generation.RMS_regular;
+                   Format.fprintf out_fmter ") =>@ "
+                | PD_postlude
+                | PD_none -> ()
+               );
                [n])
          min_dk_env) in
   (abstracted_methods, new_ctx, new_print_ctx)
@@ -740,7 +900,7 @@ let generate_defined_non_recursive_method ctx print_ctx env min_dk_env
      printed. *)
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx print_ctx env min_dk_env
+      ~in_section: false ~delim: PD_app ctx print_ctx env min_dk_env
       used_species_parameter_tys dependencies_from_params generated_fields in
   (* We now generate the postlude of the method, i.e the sequence of real
      parameters of the method, not those induced by abstraction and finally
@@ -2342,7 +2502,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
        or Hypothesis. *)
     ignore
       (generate_field_definition_prelude
-         ~in_section: true ctx print_ctx env min_dk_env
+         ~in_section: true ~delim: PD_none ctx print_ctx env min_dk_env
          used_species_parameter_tys dependencies_from_params
          generated_fields) in
   (* *********************** *)
@@ -2433,15 +2593,15 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
     Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
   (* Now, generate the real theorem, using the temporarily created and applying
      the proof. *)
-  Format.fprintf out_fmter "@[<2>%a "
+  Format.fprintf out_fmter "@[<2>%a :@ "
     Parsetree_utils.pp_vname_with_operators_expanded name;
   (* Generate the prelude of the method, i.e the sequence of parameters and
      their types induced by the various lamda-liftings. *)
   let (abstracted_methods, new_ctx, _) =
     generate_field_definition_prelude
-      ~in_section: false ctx print_ctx env min_dk_env
+      ~in_section: false ~delim: PD_arr ctx print_ctx env min_dk_env
       used_species_parameter_tys dependencies_from_params generated_fields in
-  Format.fprintf out_fmter ":@ dk_logic.eP@ (" ;
+  Format.fprintf out_fmter "dk_logic.eP@ (" ;
   (* Finally, the theorem itself. Inside, any method of "Self" is abstracted
      (i.e. is lambda-lifted), hence named "abst_xxx". That's why we use the
      mode [SMS_abstracted]. *)
@@ -2450,7 +2610,16 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
     ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
     ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
     new_ctx env logical_expr ;
-  Format.fprintf out_fmter ") :=@]@\n";
+  Format.fprintf out_fmter ")";
+  ignore (generate_field_definition_prelude
+    ~in_section: false ~delim: PD_postlude ctx print_ctx env min_dk_env
+    used_species_parameter_tys dependencies_from_params generated_fields);
+  Format.fprintf out_fmter " :=@\n";
+  ignore (generate_field_definition_prelude
+            ~in_section: false ~delim: PD_lam ctx print_ctx env min_dk_env
+            used_species_parameter_tys dependencies_from_params generated_fields
+         );
+  Format.fprintf out_fmter "@]@\n";
   (* End the proof matter. *)
   (match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed _ | Parsetree.Pf_coq _ ->
@@ -2704,7 +2873,7 @@ let generate_termination_order_With_Function ctx print_ctx env name
   (* Generate the lambda-lifts for our dependencies. *)
   let (_, ctx, print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx print_ctx env
+      ~in_section: false ~delim: PD_none ctx print_ctx env
       ai.Env.TypeInformation.ad_min_dk_env
       ai.Env.TypeInformation.ad_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
@@ -2863,7 +3032,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
       are under a Section, do not lambda-lift. *)
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: true ctx print_ctx env
+      ~in_section: true ~delim: PD_none ctx print_ctx env
       ai.Env.TypeInformation.ad_min_dk_env
       ai.Env.TypeInformation.ad_used_species_parameter_tys
       sorted_deps_from_params generated_fields in
@@ -3067,7 +3236,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            (* ---> Now, generate the prelude of the only method introduced by
               "let rec". *)
            generate_field_definition_prelude
-             ~in_section: true ctx' print_ctx env
+             ~in_section: true ~delim: PD_none ctx' print_ctx env
              ai.Env.TypeInformation.ad_min_dk_env
              ai.Env.TypeInformation.ad_used_species_parameter_tys
              ai.Env.TypeInformation.ad_dependencies_from_parameters
@@ -3211,7 +3380,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded name ;
        ignore
          (generate_field_definition_prelude
-            ~in_section: false new_ctx new_print_ctx env
+            ~in_section: false ~delim: PD_none new_ctx new_print_ctx env
             ai.Env.TypeInformation.ad_min_dk_env
             ai.Env.TypeInformation.ad_used_species_parameter_tys
             ai.Env.TypeInformation.ad_dependencies_from_parameters
@@ -3274,7 +3443,7 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   let (abstracted_methods, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
-      ~in_section: false ctx' print_ctx env ai.Env.TypeInformation.ad_min_dk_env
+      ~in_section: false ~delim: PD_none ctx' print_ctx env ai.Env.TypeInformation.ad_min_dk_env
       ai.Env.TypeInformation.ad_used_species_parameter_tys
       ai.Env.TypeInformation.ad_dependencies_from_parameters generated_fields in
   (* Generate the postlude of the prototype, i.e. non-lifted args with
