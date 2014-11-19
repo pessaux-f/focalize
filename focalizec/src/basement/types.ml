@@ -70,6 +70,7 @@ type type_simple =
                                                   constructor's arguments. To
                                                   prevent them from being
                                                   confused with tuples. *)
+  | ST_prop                                   (** The type of logical formulae *)
   | ST_construct of
       (** Type constructor, possibly with arguments. Encompass the types
           related to records and sums. Any value of these types are typed as
@@ -323,9 +324,7 @@ let type_unit () = type_basic ("basics", "unit") [] ;;
 
 let type_arrow t1 t2 = ST_arrow (t1, t2) ;;
 
-let type_prop_coq () = type_basic ("coq_builtins", "prop") [] ;;
-
-let type_prop_dk () = type_basic ("dk_builtins", "prop") [] ;;
+let type_prop () = ST_prop ;;
 
 let type_tuple tys = ST_tuple tys ;;
 
@@ -499,6 +498,7 @@ let (pp_type_simple, pp_type_scheme) =
                pp_type_name type_name
                (Handy.pp_generic_separated_list "," (rec_pp 0)) arg_tys
         end)
+    | ST_prop -> Format.fprintf ppf "prop"
     | ST_self_rep -> Format.fprintf ppf "Self"
     | ST_species_rep (module_name, collection_name) ->
         Format.fprintf ppf "%s#%s" module_name collection_name in
@@ -542,6 +542,7 @@ let (specialize, specialize_with_args) =
      | ST_construct (name, args) ->
          ST_construct (name, List.map copy_type_simple args)
      | ST_self_rep -> ST_self_rep
+     | ST_prop
      | ST_species_rep _ -> ty in
 
 
@@ -627,6 +628,7 @@ let copy_type_simple_but_variables ~and_abstract =
           | Some coll_name -> ST_species_rep coll_name
           | None -> ST_self_rep
          end)
+     | ST_prop
      | (ST_species_rep _) as tdesc -> tdesc in
   (* ******************** *)
   (* The function itself. *)
@@ -687,7 +689,7 @@ let generalize =
      | ST_sum_arguments tys -> List.iter find_parameters tys
      | ST_tuple tys -> List.iter find_parameters tys
      | ST_construct (_, args) -> List.iter find_parameters args
-     | ST_self_rep | ST_species_rep _ -> () in
+     | ST_prop | ST_self_rep | ST_species_rep _ -> () in
   (* Let's do the job now. *)
   (fun ty ->
     find_parameters ty ;
@@ -757,7 +759,7 @@ let rec lowerize_levels max_level ty =
    | ST_sum_arguments tys -> List.iter (lowerize_levels max_level) tys
    | ST_tuple tys -> List.iter (lowerize_levels max_level) tys
    | ST_construct (_, args) -> List.iter (lowerize_levels max_level) args
-   | ST_self_rep | ST_species_rep _ -> ()
+   | ST_prop | ST_self_rep | ST_species_rep _ -> ()
 ;;
 
 
@@ -779,7 +781,7 @@ let scheme_contains_variable_p scheme =
      | ST_sum_arguments tys -> List.exists rec_check tys
      | ST_tuple tys -> List.exists rec_check tys
      | ST_construct (_, args) -> List.exists rec_check args
-     | ST_self_rep | ST_species_rep _ -> false in
+     | ST_prop | ST_self_rep | ST_species_rep _ -> false in
   rec_check scheme.ts_body
 ;;
 
@@ -907,7 +909,7 @@ let refers_to_self_p ty =
      | ST_tuple tys -> List.exists test tys
      | ST_construct (_, args) -> List.exists test args
      | ST_self_rep -> true
-     | ST_species_rep _ -> false in
+     | ST_prop | ST_species_rep _ -> false in
   test ty
 ;;
 
@@ -927,9 +929,8 @@ let refers_to_prop_p ty =
      | ST_arrow (ty1, ty2) -> test ty1 || test ty2
      | ST_sum_arguments tys -> List.exists test tys
      | ST_tuple tys -> List.exists test tys
-     | ST_construct (cstr_name, args) ->
-       cstr_name = ("coq_builtins", "prop") ||
-        cstr_name = ("dk_builtins", "prop") || List.exists test args
+     | ST_construct (cstr_name, args) -> List.exists test args
+     | ST_prop -> true
      | ST_self_rep -> false
      | ST_species_rep _ -> false in
   test ty
@@ -1015,6 +1016,7 @@ let occur_check ~loc var ty =
      | ST_sum_arguments tys -> List.iter test tys
      | ST_tuple tys -> List.iter test tys
      | ST_construct (_, args) -> List.iter test args
+     | ST_prop
      | ST_species_rep _ -> ()
      | ST_self_rep ->
          (* There is a dependency on the carrier. Note it ! *)
@@ -1232,6 +1234,7 @@ let subst_type_simple (fname1, spe_name1) c2 =
      | ST_construct (name, args) ->
          ST_construct (name, List.map rec_copy args)
      | ST_self_rep -> ST_self_rep
+     | ST_prop -> ST_prop
      | ST_species_rep (fname, coll_name) ->
          if fname = fname1 && coll_name = spe_name1 then
            (begin
@@ -1469,16 +1472,8 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
            otherwise 0 if already a tuple because we force parens. *)
         match arg_tys with
          | [] ->
-             (* Just the special case for type "prop" that maps onto bool...
-                The problem is that we can't really "define" "prop" in the
-                file "basic.foc" because "prop" is a keyword. Hence, we make
-                directly the shortcut between "prop" and the type "bool"
-                defined in the "coq_builtins.v" file. *)
-             if type_name = ("coq_builtins", "prop") then
-               Format.fprintf ppf "Basics._focty_bool"
-             else
-               Format.fprintf ppf "%a"
-                 (pp_type_name_to_ml ~current_unit) type_name
+             Format.fprintf ppf "%a"
+               (pp_type_name_to_ml ~current_unit) type_name
          | [one] ->
              Format.fprintf ppf "%a@ %a"
                (rec_pp_to_ml ~current_unit collections_carrier_mapping 3) one
@@ -1490,6 +1485,7 @@ let (pp_type_simple_to_ml, purge_type_simple_to_ml_variable_mapping) =
                arg_tys
                (pp_type_name_to_ml ~current_unit) type_name
         end)
+    | ST_prop -> Format.fprintf ppf "Basics._focty_bool"
     | ST_self_rep ->
         (* Here is the major difference with the regular [pp_type_simple].
            We print the type variable that represents our carrier in the
@@ -1655,6 +1651,7 @@ let (pp_type_simple_to_coq, pp_type_variable_to_coq, pp_type_simple_args_to_coq,
                (Handy.pp_generic_separated_list " "
                   (rec_pp_to_coq ctx 0)) arg_tys
         end)
+    | ST_prop -> Format.fprintf ppf "coq_builtins.prop__t"
     | ST_self_rep ->
         (begin
         match ctx.cpc_current_species with
@@ -1903,6 +1900,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
                (Handy.pp_generic_separated_list " "
                   (rec_pp_to_dk ctx 0)) arg_tys
         end)
+    | ST_prop -> Format.fprintf ppf "dk_builtins.prop"
     | ST_self_rep ->
         (begin
         match ctx.dpc_current_species with
@@ -2072,8 +2070,9 @@ let rec get_species_types_in_type ty =
            SpeciesCarrierTypeSet.union accu (get_species_types_in_type t))
          SpeciesCarrierTypeSet.empty
          tys
-     | ST_self_rep -> SpeciesCarrierTypeSet.empty
-     | ST_species_rep st -> SpeciesCarrierTypeSet.singleton st
+   | ST_prop
+   | ST_self_rep -> SpeciesCarrierTypeSet.empty
+   | ST_species_rep st -> SpeciesCarrierTypeSet.singleton st
 ;;
 
 
@@ -2171,6 +2170,8 @@ let (pp_type_simple_to_xml, pp_type_variable_to_xml,
                mod_name cstr_name ;
              Format.fprintf ppf "@]</foc:prm>@\n"
         end)
+    | ST_prop -> Format.fprintf ppf
+               "<foc:atom order=\"first\" infile=\"coq_builtins\">prop__t</foc:atom>@\n"
     | ST_self_rep ->
         (* order = "first" because the atom does not represent a species. *)
         Format.fprintf ppf "<foc:self order=\"first\"/>@\n"
@@ -2203,6 +2204,7 @@ type local_type =
   | Lt_fun of local_type * local_type
   | Lt_tuple of local_type list
   | Lt_constr of (string * string) * local_type list
+  | Lt_prop
   | Lt_self
   | Lt_species of (string * string)
 ;;
@@ -2234,6 +2236,8 @@ let rec type_simple_to_local_type ty =
    | ST_construct ((f, id), l) ->
        Lt_constr ((f, id), (List.map type_simple_to_local_type l))
 
+   | ST_prop -> Lt_prop
+
    | ST_self_rep ->
        Lt_self
 
@@ -2252,6 +2256,7 @@ let extract_type_simple
         (ftuple : type_simple list -> 'a)
         (fsum : type_simple list -> 'a)
         (fconstruct : string -> string -> type_simple list -> 'a)
+        (fprop : unit -> 'a)
         (frep : unit -> 'a)
         (fspecrep : fname -> collection_name -> 'a) ts =
          let ts = repr ts in
@@ -2261,6 +2266,7 @@ let extract_type_simple
          | ST_tuple(t_l) -> ftuple t_l
          | ST_sum_arguments(t_l) -> fsum t_l
          | ST_construct((t, t_l)) -> fconstruct (fst t) (snd t) t_l
+         | ST_prop -> fprop ()
          | ST_self_rep -> frep ()
          | ST_species_rep((fn, cn)) -> fspecrep fn cn;;
 
