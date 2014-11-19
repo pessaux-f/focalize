@@ -3,6 +3,7 @@ open Own_basics;;
 
 (* Types' type :  *)
 type typ =
+  | TProp
   | TAtom of string option * string (** represents : int, float, string ... *)
   | TSpecPrm of string (** represents collection parameters *)
   | TFct of typ * typ (** for a type : typ -> typ *)

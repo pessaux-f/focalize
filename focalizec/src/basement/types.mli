@@ -60,8 +60,7 @@ val type_arrow : type_simple -> type_simple -> type_simple
 val type_sum_arguments : type_simple list -> type_simple
 val type_tuple : type_simple list -> type_simple
 val type_list : type_simple -> type_simple
-val type_prop_coq : unit -> type_simple
-val type_prop_dk : unit -> type_simple
+val type_prop : unit -> type_simple
 val type_rep_species :
   species_module: fname -> species_name: collection_name -> type_simple
 (** Generate the carrier type of the currently analysed species. *)
@@ -228,6 +227,7 @@ type local_type =
   | Lt_fun of local_type * local_type
   | Lt_tuple of local_type list
   | Lt_constr of (string * string) * local_type list
+  | Lt_prop
   | Lt_self
   | Lt_species of (string * string)
 
@@ -244,6 +244,7 @@ val extract_type_simple :
         (type_simple list -> 'a) ->
         (type_simple list -> 'a) ->
         (string -> string -> type_simple list -> 'a) ->
+        (unit -> 'a) ->
         (unit -> 'a) ->
         (fname -> collection_name -> 'a) -> type_simple ->  'a
 

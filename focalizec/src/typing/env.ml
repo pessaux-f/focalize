@@ -2504,7 +2504,7 @@ module TypingEMAccess = struct
            | TypeInformation.SF_theorem (_, v, _, _, _, _) ->
                (* Scheme is trivially "Prop". Donc need to bother about the
                   binding level, this scheme will never be polymorphic. *)
-               let s = Types.generalize (Types.type_prop_coq ()) in
+               let s = Types.generalize (Types.type_prop ()) in
                [(v, (BO_absolute s))] @ accu
            | TypeInformation.SF_sig (_, v, s)
            | TypeInformation.SF_let (_, v, _, s, _, _, _, _) ->

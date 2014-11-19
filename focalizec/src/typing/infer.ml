@@ -456,7 +456,7 @@ let rec typecheck_type_expr ctx env ty_expr =
          let tys = List.map (typecheck_type_expr ctx env) ty_exprs in
          Types.type_tuple tys
      | Parsetree.TE_self -> Types.type_self ()
-     | Parsetree.TE_prop -> Types.type_prop_coq ()
+     | Parsetree.TE_prop -> Types.type_prop ()
      | Parsetree.TE_paren inner -> typecheck_type_expr ctx env inner) in
   (* Store the type information in the expression's node. *)
   ty_expr.Parsetree.ast_type <- Parsetree.ANTI_type final_ty;
@@ -1610,7 +1610,7 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
          let final_ty =
            Types.unify
              ~loc: logical_expr.Parsetree.ast_loc
-             ~self_manifest: ctx.self_manifest ty1 (Types.type_prop_coq ()) in
+             ~self_manifest: ctx.self_manifest ty1 (Types.type_prop ()) in
          final_ty
      | Parsetree.Pr_not pr ->
          let ty = typecheck_logical_expr ~in_proof ctx env pr in
@@ -1618,7 +1618,7 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
          let final_ty =
            Types.unify
              ~loc: logical_expr.Parsetree.ast_loc
-             ~self_manifest: ctx.self_manifest ty (Types.type_prop_coq ()) in
+             ~self_manifest: ctx.self_manifest ty (Types.type_prop ()) in
          final_ty
      | Parsetree.Pr_expr expr ->
          (* Make the carrier abstract to prevent def-dependencies with "rep"
@@ -1643,13 +1643,13 @@ and typecheck_logical_expr ~in_proof ctx env logical_expr =
              ignore
                (Types.unify
                   ~loc: logical_expr.Parsetree.ast_loc
-                  ~self_manifest: ctx'.self_manifest ty (Types.type_prop_coq ()))
+                  ~self_manifest: ctx'.self_manifest ty (Types.type_prop ()))
             with _ ->
              (* If it's neither bool nor logical_expr, then restore the fisrt
                 error cause  for error report. *)
              raise err
            end));
-         Types.type_prop_coq ()
+         Types.type_prop ()
      | Parsetree.Pr_paren pr -> typecheck_logical_expr ~in_proof ctx env pr) in
   logical_expr.Parsetree.ast_type <- Parsetree.ANTI_type final_ty;
   Types.check_for_decl_dep_on_self final_ty ;
@@ -2501,7 +2501,7 @@ let is_sub_species_of ~loc ctx ~name_should_be_sub_spe s1
             l' @ accu
         | Env.TypeInformation.SF_theorem (from, v, _, _, _, _)
         | Env.TypeInformation.SF_property (from, v, _, _, _) ->
-            let sc = Types.trivial_scheme (Types.type_prop_coq ()) in
+            let sc = Types.trivial_scheme (Types.type_prop ()) in
             (v, sc, from) :: accu)
       fields [] in
   let flat_s1 = local_flat_fields s1 in
@@ -3143,13 +3143,13 @@ let extend_env_with_inherits ~current_species ~loc ctx env spe_exprs =
                    l in
                (e, accu_ctx)
              | Env.TypeInformation.SF_theorem  (_, theo_name, _, _, _, _) ->
-                 let t_sch = Types.trivial_scheme (Types.type_prop_coq ()) in
+                 let t_sch = Types.trivial_scheme (Types.type_prop ()) in
                  let e =
                    Env.TypingEnv.add_value
                      ~toplevel: None theo_name t_sch accu_env in
                  (e, accu_ctx)
              | Env.TypeInformation.SF_property (_, prop_name, _, _, _) ->
-                 let prop_sch = Types.trivial_scheme (Types.type_prop_coq ()) in
+                 let prop_sch = Types.trivial_scheme (Types.type_prop ()) in
                  let e =
                    Env.TypingEnv.add_value
                      ~toplevel: None prop_name prop_sch accu_env in
@@ -5502,7 +5502,7 @@ let typecheck_phrase ctx env phrase =
        let (ty, polymorphic_vars_names) =
          typecheck_theorem_def ctx env theorem_def in
        Types.end_definition ();
-       let scheme = Types.trivial_scheme (Types.type_prop_coq ()) in
+       let scheme = Types.trivial_scheme (Types.type_prop ()) in
        let env' =
          Env.TypingEnv.add_value
            ~toplevel: (Some theorem_def.Parsetree.ast_loc)
