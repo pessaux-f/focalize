@@ -240,8 +240,19 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
            (* Method call from the current species. *)
            match self_methods_status with
            | SMS_abstracted ->
-               Format.fprintf out_fmter "abst_%a"
-                 Parsetree_utils.pp_vname_with_operators_expanded vname
+              (* On the Dedukti side, def dependencies are not
+                 abstracted because Dedukti lacks let. *)
+              (* We check here if the method is defined,
+                 in which case we print its full name and dependencies *)
+              let is_defined = false in
+              if is_defined
+              then
+                Format.fprintf out_fmter "%a__%a"
+                  Sourcify.pp_vname (snd ctx.Context.scc_current_species)
+                  Parsetree_utils.pp_vname_with_operators_expanded vname
+              else
+                Format.fprintf out_fmter "abst_%a"
+                  Parsetree_utils.pp_vname_with_operators_expanded vname
            | SMS_from_record ->
                Format.fprintf out_fmter "rf_%a"
                  Parsetree_utils.pp_vname_with_operators_expanded vname
