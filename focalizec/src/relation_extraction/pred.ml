@@ -428,13 +428,6 @@ let mca_check kv nt = match nt with
   | NTConcl _ -> true
   | NTPrem _ -> included (get_in_vars nt) kv
 
-
-(* Mode coherency analysis for a predicate term *)
-(* Check that variables needed by the output are known *)
-let mca_check_output kv pdt = 
-  let vars = get_in_vars (NTConcl pdt) in
-included vars kv
-
 (* Get new knwon variables for the mode coherency analysis *)
 (* Add variables calculated with nt to the known variables *)
 let mca_add_vars kv nt = (get_out_vars nt) @ kv

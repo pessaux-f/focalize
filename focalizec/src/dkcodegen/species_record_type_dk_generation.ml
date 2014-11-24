@@ -374,12 +374,12 @@ let last (str : string) : char =
 ;;
 
 (* TODO *)
-let generate_constant_pattern ctx cst k =
+let generate_constant_pattern ctx cst =
   match cst.Parsetree.ast_desc with
-   | Parsetree.C_int str ->
+   | Parsetree.C_int _ ->
        (* [Unsure] *)
        Format.fprintf ctx.Context.scc_out_fmter "C_int"
-   | Parsetree.C_float _str ->
+   | Parsetree.C_float _ ->
        (* [Unsure] *)
        Format.fprintf ctx.Context.scc_out_fmter "C_float"
    | Parsetree.C_bool str ->
@@ -631,7 +631,7 @@ let generate_pattern ctx dkctx env pattern
   let out_fmter = ctx.Context.scc_out_fmter in
   let rec rec_gen_pat pat ~d ~k ~ret_type ~e =
     match pat.Parsetree.ast_desc with
-     | Parsetree.P_const constant -> generate_constant_pattern ctx constant k
+     | Parsetree.P_const constant -> generate_constant_pattern ctx constant
      | Parsetree.P_var name ->
         (* "match e with x -> d | _ -> k" is the same as "(fun x -> d) e" *)
         Format.fprintf out_fmter "(%a :@ cc.eT@ "
@@ -887,13 +887,9 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
     non-"structural" proof, it considers invariably that the recursion decreases
     on the fisrt argument of the function and dumps a {struct fst arg}.
 
-    {b Args}:
-     - [binder]: What Dk construct to use to introduce the definition, i.e.
-       "Let", "let", "let fix", "Fixpoint" or "with".
-
     {b Visibility}: Not exported outside this module.                         *)
 (* ************************************************************************** *)
-let rec let_binding_compile ctx ~binder ~opt_term_proof
+let rec let_binding_compile ctx ~opt_term_proof
     ~in_recursive_let_section_of ~local_idents ~self_methods_status
     ~recursive_methods_status ~rec_status ~toplevel env bd
     pre_computed_bd_info =
@@ -1086,15 +1082,6 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
     ) in
   (* Generates the binder ("fix" or non-"fix"). *)
   Format.fprintf out_fmter "@[<2>" ;
-  let initial_binder =
-    (match rec_status with
-     | Env.DkGenInformation.RC_non_rec -> "let"
-     | Env.DkGenInformation.RC_rec _ ->
-         (* [Unsure] We don't known now how to compile several local mutually
-            recursive functions. *)
-         if (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings) > 1
-         then failwith "TODO: local mutual recursive functions." ;
-         "let fix") in
   let opt_term_proof =
     let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof in
   (* Recover pre-compilation info and extended environment in case of
@@ -1112,7 +1099,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
          let_binding_compile
-           ctx ~opt_term_proof ~binder: initial_binder
+           ctx ~opt_term_proof
            ~in_recursive_let_section_of ~local_idents ~self_methods_status
            ~recursive_methods_status ~toplevel: false ~rec_status env one_bnd
            one_pre_comp_info
@@ -1121,7 +1108,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
          let accu_env =
            ref
              (let_binding_compile
-                ctx ~opt_term_proof ~binder: initial_binder
+                ctx ~opt_term_proof
                 ~in_recursive_let_section_of ~local_idents ~self_methods_status
                 ~recursive_methods_status ~toplevel: false ~rec_status env
                 first_bnd first_pre_comp_info) in
@@ -1132,7 +1119,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
              Format.fprintf out_fmter "@ in@]@\n@[<2>" ;
              accu_env :=
                let_binding_compile
-                 ctx ~opt_term_proof ~binder: "let" ~in_recursive_let_section_of
+                 ctx ~opt_term_proof ~in_recursive_let_section_of
                  ~local_idents ~self_methods_status ~recursive_methods_status
                  ~rec_status ~toplevel: false env binding pre_comp_info)
            next_bnds next_pre_comp_infos ;

@@ -294,7 +294,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
        (* And finally, the destructors. *)
        Format.fprintf out_fmter "@\n(; Destructors ;)";
        List.iter
-         (fun (sum_cstr_name, cstr_ty, cstr_args) ->
+         (fun (sum_cstr_name, _, cstr_args) ->
            (* The sum constructor name. *)
            Format.fprintf out_fmter "@\n%smatch__%a :@ @[<v 2>"
              qualif

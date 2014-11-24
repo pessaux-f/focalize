@@ -1841,17 +1841,17 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
   rec_print avail_info.psa_assumed_variables_and_lemmas
 ;;
 
-let close_quantifications_and_implications ctx print_ctx env avail_info =
+let close_quantifications_and_implications ctx avail_info =
   let out_fmter = ctx.Context.scc_out_fmter in
   let rec rec_print = function
     | [] -> ()
     | assumed :: q ->
         (begin
         match assumed with
-         | AH_variable (var_vname, ty_expr) ->
+         | AH_variable (_, ty_expr) ->
              (* Quantify all the assumed variables. *)
              (match ty_expr.Parsetree.ast_type with
-              | Parsetree.ANTI_type ty ->
+              | Parsetree.ANTI_type _ ->
                   Format.fprintf out_fmter ")"
               | _ -> assert false) ;
              rec_print q;
@@ -1949,7 +1949,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
              env avail_info.psa_base_logical_expr ;
            Format.fprintf out_fmter "))" ;
            (* Close parentheses introduced by the function quantifications_and_implications *)
-           close_quantifications_and_implications ctx print_ctx env avail_info ;
+           close_quantifications_and_implications ctx avail_info ;
            (* Done... Then, final carriage return. *)
            Format.fprintf out_fmter ".@]@\n")
          node_labels
@@ -2133,7 +2133,7 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_dk_env
 
 
 (** Factorize theorem generation for Zenon, with dependencies enforcement. *)
-and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_dk_env
+and emit_zenon_theorem_for_proof ctx print_ctx env min_dk_env
     available_hyps aim_gen_method aim_name enforced_deps =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* [Unsure] Bad place to make the check. This should be made in something
@@ -2198,14 +2198,14 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
    | Parsetree.Pf_coq (enforced_deps, _)
    | Parsetree.Pf_assumed enforced_deps ->
        emit_zenon_theorem_for_proof
-         ~in_nested_proof ctx print_ctx env min_dk_env available_hyps
+         ctx print_ctx env min_dk_env available_hyps
          aim_gen_method aim_name enforced_deps ;
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter "(; Proof was flagged as assumed. ;)@\n";
        Format.fprintf out_fmter "apply dk_builtins.magic_prove.@\nQed.@\n"
    | Parsetree.Pf_dk (enforced_deps, script) ->
        emit_zenon_theorem_for_proof
-         ~in_nested_proof ctx print_ctx env min_dk_env available_hyps
+         ctx print_ctx env min_dk_env available_hyps
          aim_gen_method aim_name enforced_deps ;
        (* Dump verbatim the Dk code. *)
        (* Was "daube" ^_^. Just a hack until we finish the work with Cath. *)

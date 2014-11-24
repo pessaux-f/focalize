@@ -81,9 +81,8 @@ let toplevel_let_def_compile ctx env let_def =
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
-         let binder = "" in
          Species_record_type_dk_generation.let_binding_compile
-           ctx ~binder ~opt_term_proof ~local_idents: []
+           ctx ~opt_term_proof ~local_idents: []
            ~in_recursive_let_section_of
            (* Or whatever since "Self" does not exist anymore. *)
            ~self_methods_status: Species_record_type_dk_generation.SMS_from_record
@@ -91,13 +90,10 @@ let toplevel_let_def_compile ctx env let_def =
            ~toplevel: true ~rec_status env one_bnd one_pre_comp_info
      | ((first_bnd :: next_bnds),
         (first_pre_comp_info :: next_pre_comp_infos)) ->
-         let first_binder =
-           if rec_status <> Env.DkGenInformation.RC_non_rec then "Fixpoint"
-           else "Let" in
          let accu_env =
            ref
              (Species_record_type_dk_generation.let_binding_compile
-                ctx ~binder: first_binder ~opt_term_proof ~local_idents: []
+                ctx ~opt_term_proof ~local_idents: []
                 ~in_recursive_let_section_of
                 (* Or whatever since "Self" does not exist anymore. *)
                 ~self_methods_status:
@@ -111,7 +107,7 @@ let toplevel_let_def_compile ctx env let_def =
              Format.fprintf out_fmter "@]@\n@[<2>" ;
              accu_env :=
                Species_record_type_dk_generation.let_binding_compile
-                 ctx ~binder: "with" ~opt_term_proof ~local_idents: []
+                 ctx ~opt_term_proof ~local_idents: []
                  ~in_recursive_let_section_of
                  (* Or whatever since "Self" does not exist anymore. *)
                  ~self_methods_status:

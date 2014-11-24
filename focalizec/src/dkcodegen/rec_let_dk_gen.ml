@@ -236,7 +236,7 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
 
 
 
-let generate_binding_match ctx print_ctx env expr pattern =
+let generate_binding_match ctx env expr pattern =
   let out_fmter = ctx.Context.scc_out_fmter in
   let local_idents = Parsetree_utils.get_local_idents_from_pattern pattern in
   (* Now, generate "Is_true (basics._equal_ _ expr pattern" to keep consistent
@@ -504,7 +504,7 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
                  Is_true (basics._equal_ _ expr pattern)".
                  [Unsure] Alpha-conv des vars du pattern !!!!!!! *)
               Format.fprintf out_fmter "(" ;
-              generate_binding_match ctx print_ctx env expr pattern ;
+              generate_binding_match ctx env expr pattern ;
               Format.fprintf out_fmter ") ->@ "
           | Recursion.B_condition (expr, bool_val) ->
               (* Induces "Is_true (expr)" if [bool_val] is true, else

@@ -624,21 +624,6 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined node_num node_name
         Handy.pp_reset_effects
-  | Species_record_type_coq_generation.Wrong_decreasing_argument
-      (at, species_name, def_name, decr_arg)
-  | Species_record_type_dk_generation.Wrong_decreasing_argument
-      (at, species_name, def_name, decr_arg) ->
-      Format.fprintf ppf
-        "%a:@\n@[%tIn@ species@ '%t%a%t'@ structural@ termination@ proof@ \
-         of@ '%t%a%t'@ refers@ to@ an@ identifier@ '%t%a%t'@ not@ belonging@ \
-         to@ its@ parameters.@]@."
-        Location.pp_location at header
-        Handy.pp_set_underlined Sourcify.pp_qualified_species species_name
-        Handy.pp_reset_effects
-        Handy.pp_set_underlined Sourcify.pp_vname def_name
-        Handy.pp_reset_effects
-        Handy.pp_set_underlined Sourcify.pp_vname decr_arg
-        Handy.pp_reset_effects
   (* ************************** *)
   (* Recursion analysis errors. *)
   | Recursion.MutualRecursion (name1, name2) ->

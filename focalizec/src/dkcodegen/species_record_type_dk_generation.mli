@@ -78,7 +78,7 @@ val pre_compute_let_bindings_infos_for_rec :
 
 val let_binding_compile :
   Context.species_compil_context ->
-  binder: string -> opt_term_proof:Parsetree.termination_proof option ->
+  opt_term_proof:Parsetree.termination_proof option ->
   in_recursive_let_section_of: Parsetree.vname list ->
   local_idents: Parsetree.vname list ->
   self_methods_status: self_methods_status ->

@@ -929,7 +929,7 @@ let refers_to_prop_p ty =
      | ST_arrow (ty1, ty2) -> test ty1 || test ty2
      | ST_sum_arguments tys -> List.exists test tys
      | ST_tuple tys -> List.exists test tys
-     | ST_construct (cstr_name, args) -> List.exists test args
+     | ST_construct (_, args) -> List.exists test args
      | ST_prop -> true
      | ST_self_rep -> false
      | ST_species_rep _ -> false in
