@@ -172,3 +172,8 @@ equal_congr :
     y : cc.eT A =>
     H : eP (equal A x y) =>
     equal_ind A (z : cc.eT A => equal B (f x) (f z)) x y H (refl B (f x)).
+
+
+
+[] ebP dk_bool.true --> True
+[] ebP dk_bool.false --> False.

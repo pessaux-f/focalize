@@ -37,3 +37,23 @@ equalc: Term -> Term -> Prop :=
   a:Term => b:Term => not (not (equal a b)).
 equiv: Prop -> Prop -> Prop :=
   A:Prop => B:Prop => and (imply A B) (imply B A).
+
+
+(; Constructive theorems ;)
+
+not_or_left (A : Prop)
+            (B : Prop)
+            (H : prf (not (or A B)))
+            (G : prf A) : prf False :=
+  H (P : Prop => piA : prf (imply A P) => piB : prf (imply B P) => piA G).
+not_or_right (A : Prop)
+             (B : Prop)
+             (H : prf (not (or A B)))
+             (G : prf B) : prf False :=
+  H (P : Prop => piA : prf (imply A P) => piB : prf (imply B P) => piB G).
+
+NNem (P : Prop) : prf (not (not (or P (not P))))
+:=
+  H : prf (not (or P (not P))) =>
+  not_or_right P (not P) H
+                   (not_or_left P (not P) H).
