@@ -14,6 +14,7 @@ let rec xml_string_of_typ t =
       "<typeprmatom>"^ s ^ "</typeprmatom>" 
   | TFct(t1,t2) ->
       "<typefct><left>"^ xml_string_of_typ t1 ^ "</left><right>" ^ xml_string_of_typ t2 ^ "</right></typefct>" 
+  | TProp -> "<typeatom>Prop</typeatom>"
   | TProd(t1,t2) ->
       "<typeprod><left>"^ xml_string_of_typ t1 ^ "</left><right>" ^ xml_string_of_typ t2 ^ "</right></typeprod>" 
   | TPrm(_m, s,t_l) ->

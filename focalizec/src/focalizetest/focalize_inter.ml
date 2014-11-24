@@ -146,6 +146,7 @@ let type_simple_of_typ t =
   match t with 
   | TAtom (Some m, s) -> Types.type_basic (i m s) []
   | TAtom (None, s) -> Types.type_basic (i "basics" s) []
+  | TProp -> Types.type_prop ()
   | TSpecPrm s ->
       Types.type_rep_species ~species_module: "basics" ~species_name: s
   | TFct (t1, t2) -> Types.type_arrow (aux t1) (aux t2)

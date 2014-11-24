@@ -27,6 +27,7 @@ let depends =
             List.fold_left (fun s e -> aux e s) ([typ]++cumul) types_inside
           with Focalize_inter.Not_a_concrete_type _t_o -> [typ] ++ cumul
          )
+      | TProp -> []
       | TSpecPrm _ -> [typ] ++ cumul
       | TProd (t1,t2)
       | TFct (t1,t2) -> aux t1 (aux t2 ([typ] ++ cumul))
@@ -397,6 +398,7 @@ let rec ast_print_type l_param typ : Own_expr.a_method list   =
     | TSpecPrm s ->
         let n = print_meth (string_of_ttyp typ) in
         [parse_foc_meth ("let " ^ n ^ "  in @STRING = fun x in (" ^ s ^ ") -> " ^ s ^ "!print(x)")]
+    | TProp -> failwith "Random_rep.ast_print_type : prop type, not yet implemented"
     | TFct (_,_) -> failwith "Random_rep.ast_print_type : functional type, not yet implemented";;
 
 (* ************************************************************************* *)
@@ -489,6 +491,7 @@ let rec ast_print_xml_type l_param typ : Own_expr.a_method list   =
         let fself = print_xml_meth (string_of_ttyp (TAtom(None, focself))) in
         [parse_foc_meth ("let " ^ n ^ "  in @STRING = fun x in (" ^ s ^ ") -> " ^
         s ^ "!" ^ fself ^ "(x)")]
+    | TProp -> failwith "Random_rep.ast_print_xml_type : can't print Prop"
     | TFct (_,_) -> failwith "Random_rep.ast_print_xml_type : can't print a functional type";;
 
 
@@ -560,6 +563,7 @@ let rec ast_random_type l_param typ =
                                   (TAtom(Some "basics", foctint))
                                   (expr_meth s meth_rnd_self [expr_var "n"])) false in
         [mmethod]
+    | TProp
     | TFct (_,_) -> failwith "Random_rep.ast_random_type : Not yet implemented";;
 
 (* ast_parse_type : typ -> import * methods * string *)
@@ -623,6 +627,7 @@ let rec ast_parse_type l_param typ =
                                   (TAtom(Some "basics", foctstring))
                                   (expr_meth s meth_parse_self [expr_var "n"])) false in
         [mmethod]
+    | TProp
     | TFct (_,_) -> failwith "Random_rep.ast_random_type : Not yet implemented";;
 
 
@@ -751,6 +756,7 @@ let rec ast_reinject_value_type l_param typ : Own_expr.a_method list   =
         [parse_foc_meth ("let " ^ n ^ "  in " ^ string_of_typ typ ^ " =\n\
                 fun x -> " ^ s ^ "!" ^ reinject_value_meth (string_of_ttyp
                 (TAtom(None, focself))) ^ "(x)" )]
+    | TProp
     | TFct (_,_) -> failwith "Random_rep.ast_print_type : Not yet implemented";;
 
 (** Takes the list of parameters, the list of type we want to handle.
