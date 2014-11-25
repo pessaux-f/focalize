@@ -1903,7 +1903,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
 
 
 
-let zenonify_hyp ctx print_ctx env hyp =
+let zenonify_hyp ctx print_ctx env ~sep hyp =
   let out_fmter = ctx.Context.scc_out_fmter in
   match hyp.Parsetree.ast_desc with
    | Parsetree.H_variable  (vname, type_expr) ->
@@ -1912,22 +1912,22 @@ let zenonify_hyp ctx print_ctx env hyp =
         | Parsetree.ANTI_type ty ->
             (* Notation "assume ... in ...". This leads to a Variable in the
                current Dk Section. *)
-            Format.fprintf out_fmter "@[<2>Variable %a :@ cc.eT (%a).@]@\n"
+            Format.fprintf out_fmter "@[<2>%a :@ cc.eT (%a) %s@ @]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded vname
-              (Types.pp_type_simple_to_dk print_ctx) ty
+              (Types.pp_type_simple_to_dk print_ctx) ty sep
         | _ -> assert false
        end)
    | Parsetree.H_hypothesis (vname, logical_expr) ->
        (* Notation "H: all blabla in Self, foo -> bar...". This leads to a
           Variable in the current Dk Section. *)
-       Format.fprintf out_fmter "@[<2>Variable %a :@ dk_logic.eP ("
+       Format.fprintf out_fmter "@[<2>%a :@ dk_logic.eP ("
          Parsetree_utils.pp_vname_with_operators_expanded vname;
        Species_record_type_dk_generation.generate_logical_expr
          ~local_idents: [] ~in_recursive_let_section_of: []
          ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
          ctx env logical_expr ;
-       Format.fprintf out_fmter ").@]@\n"
+       Format.fprintf out_fmter ") %s@ @]@\n" sep
    | Parsetree.H_notation (vname, expr) ->
        (* Leads to a Definition. *)
        Format.fprintf out_fmter "@[<2>Let %a :=@ "
@@ -2014,23 +2014,84 @@ type zenon_statement_dk_generation_method =
     return the concatenation of fresh ones and already know. Hence, returns
     and EXTENSION of the steps that must be manually appended !
  *)
-let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_dk_env
+let rec zenonify_proof_node section_name_seed node aim_gen_method =
+  match node.Parsetree.ast_desc with
+   | Parsetree.PN_sub ((label_num, label_name), stmt, _) ->
+       (begin
+       let section_name = section_name_seed ^ "_" ^ label_name in
+       let lemma_name = Parsetree.Vlident ("__" ^ section_name ^ "_LEMMA") in
+       let stmt_desc = stmt.Parsetree.ast_desc in
+       (* Finally, we deal with the conclusion of the statement. *)
+       let new_aim =
+         (match stmt_desc.Parsetree.s_concl with
+          | None ->
+              (begin
+              match aim_gen_method with
+               | ZSGM_from_logical_expr lexpr -> lexpr
+               | ZSGM_from_termination_lemma (_, _, _) -> assert false
+              end)
+          | Some logical_expr -> logical_expr) in
+       let assumed_variables_and_lemmas =
+         find_assumed_variables_and_lemmas_in_hyps stmt_desc.Parsetree.s_hyps in
+       (* We return the extra step known thanks to the current [PN_sub] This
+          extra step will be made available for the rest of the surrounding
+          proof and sibling [PN_sub]/[PN_qed]. *)
+       [{ psa_node_label = (label_num, label_name);
+          psa_lemma_name = lemma_name;
+          psa_base_logical_expr = new_aim;
+          psa_assumed_variables_and_lemmas = assumed_variables_and_lemmas }]
+       end)
+   | Parsetree.PN_qed ((_label_num, _label_name), _) ->
+       [(* No new extra step available. *)]
+
+and zenonify_proof_node_print_before ctx print_ctx env
+    section_name_seed node aim_gen_method =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  match node.Parsetree.ast_desc with
+   | Parsetree.PN_sub ((_, label_name), stmt, _) ->
+       (begin
+       let section_name = section_name_seed ^ "_" ^ label_name in
+       let lemma_name = Parsetree.Vlident ("__" ^ section_name ^ "_LEMMA") in
+       Format.fprintf out_fmter "@[<2>(; Section __%s. ;)@\n" section_name;
+       Format.fprintf out_fmter "(%a :@ ("
+                      Sourcify.pp_vname lemma_name;
+       let stmt_desc = stmt.Parsetree.ast_desc in
+       (* First, generate the hypotheses of the statement. We also recover the
+          "Hypothesis" of the statement because we will need to print them
+          again later if they are mentionned as used in a [F_hypothesis] .*)
+       List.iter (zenonify_hyp ctx print_ctx env ~sep:"->") stmt_desc.Parsetree.s_hyps;
+       (* Finally, we deal with the conclusion of the statement. *)
+       let new_aim =
+         (match stmt_desc.Parsetree.s_concl with
+          | None ->
+              (begin
+              match aim_gen_method with
+               | ZSGM_from_logical_expr lexpr -> lexpr
+               | ZSGM_from_termination_lemma (_, _, _) -> assert false
+              end)
+          | Some logical_expr -> logical_expr) in
+       Format.fprintf out_fmter "dk_logic.eP (";
+       Species_record_type_dk_generation.generate_logical_expr
+         ~local_idents: [] ~in_recursive_let_section_of: []
+         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
+         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
+         ctx env new_aim ;
+       Format.fprintf out_fmter ")) =>@ ("
+       end)
+   | Parsetree.PN_qed _ -> ()
+
+and zenonify_proof_node_print_after ~in_nested_proof ctx print_ctx env min_dk_env
     ~self_manifest dependencies_from_params generated_fields available_hyps
     available_steps section_name_seed parent_proof_opt node default_aim_name
     aim_gen_method =
   let out_fmter = ctx.Context.scc_out_fmter in
   match node.Parsetree.ast_desc with
-   | Parsetree.PN_sub ((label_num, label_name), stmt, proof) ->
+   | Parsetree.PN_sub ((_, label_name), stmt, proof) ->
        (begin
-       (* Start a new nested Section to prove the statement. *)
-       let section_name = section_name_seed ^ "_" ^ label_name in
-       Format.fprintf out_fmter "@[<2>Section __%s.@\n" section_name;
+           Format.fprintf out_fmter "))";
+           let section_name = section_name_seed ^ "_" ^ label_name in
+       let lemma_name = Parsetree.Vlident ("__" ^ section_name ^ "_LEMMA") in
        let stmt_desc = stmt.Parsetree.ast_desc in
-       (* First, generate the hypotheses of the statement. We also recover the
-          "Hypothesis" of the statement because we will need to print them
-          again later if they are mentionned as used in a [F_hypothesis] .*)
-       List.iter (zenonify_hyp ctx print_ctx env) stmt_desc.Parsetree.s_hyps;
-       (* We extend the context of available hypothesis with the new ones. *)
        let available_hyps' = stmt_desc.Parsetree.s_hyps @ available_hyps in
        (* Finally, we deal with the conclusion of the statement. *)
        let new_aim =
@@ -2042,40 +2103,25 @@ let rec zenonify_proof_node ~in_nested_proof ctx print_ctx env min_dk_env
                | ZSGM_from_termination_lemma (_, _, _) -> assert false
               end)
           | Some logical_expr -> logical_expr) in
-       (* Now, handle the nested proof of the conclusion of the statement or
-          the default one if there is no new aim provided. *)
-       let lemma_name = Parsetree.Vlident ("__" ^ section_name ^ "_LEMMA") in
+       Format.fprintf out_fmter "(";
+       List.iter (zenonify_hyp ctx print_ctx env ~sep:"=>") stmt_desc.Parsetree.s_hyps;
        zenonify_proof
          ~in_nested_proof: true ~qed:false ctx print_ctx env min_dk_env
          ~self_manifest dependencies_from_params generated_fields
          available_hyps' available_steps section_name
          (ZSGM_from_logical_expr new_aim) lemma_name parent_proof_opt proof;
-       Format.fprintf out_fmter "End __%s.@]@\n" section_name;
-       (* Since we end a Section, all the lemma will have now to be explicitely
-          quantified/implified by the assumed variables and hypotheses. *)
-       let assumed_variables_and_lemmas =
-         find_assumed_variables_and_lemmas_in_hyps stmt_desc.Parsetree.s_hyps in
-       (* We return the extra step known thanks to the current [PN_sub] This
-          extra step will be made available for the rest of the surrounding
-          proof and sibling [PN_sub]/[PN_qed]. *)
-       [{ psa_node_label = (label_num, label_name);
-          psa_lemma_name = lemma_name;
-          psa_base_logical_expr = new_aim;
-          psa_assumed_variables_and_lemmas = assumed_variables_and_lemmas }]
+       Format.fprintf out_fmter ")@ ";
+       Format.fprintf out_fmter "(; End __%s.@] ;)@\n" section_name
        end)
    | Parsetree.PN_qed ((_label_num, _label_name), proof) ->
        zenonify_proof ~in_nested_proof ~qed:true ctx print_ctx env min_dk_env
          ~self_manifest dependencies_from_params generated_fields available_hyps
          available_steps section_name_seed aim_gen_method default_aim_name
-         parent_proof_opt proof;
-       [(* No new extra step available. *)]
-
-
-
+         parent_proof_opt proof
 
 (** Factorize theorem generation for Zenon, with dependencies enforcement. *)
 and emit_zenon_theorem_for_proof ctx print_ctx env min_dk_env
-    available_hyps aim_gen_method aim_name enforced_deps =
+    aim_gen_method aim_name enforced_deps =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* [Unsure] Bad place to make the check. This should be made in something
      like "abstration.ml". Ensure that the *)
@@ -2114,21 +2160,7 @@ and emit_zenon_theorem_for_proof ctx print_ctx env min_dk_env
         ctx env order_expr ;
       Format.fprintf out_fmter "@ __a1 __a2)))"
   ) ;
-  Format.fprintf out_fmter ").@]@\n";
-  (* Enforce Hypothesis and Variables to be used to prevent Dk from removing
-     it. *)
-  List.iter
-    (fun h ->
-      match h.Parsetree.ast_desc with
-      | Parsetree.H_notation (_, _) -> ()
-      | Parsetree.H_variable (n, _) | Parsetree.H_hypothesis (n, _) ->
-          Format.fprintf out_fmter
-            "@[<2>assert (__force_use_%a :=@ %a).@]@\n"
-            Parsetree_utils.pp_vname_with_operators_expanded n
-            Parsetree_utils.pp_vname_with_operators_expanded n)
-    available_hyps
-
-
+  Format.fprintf out_fmter ").@]@\n"
 
 and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
     ~self_manifest dependencies_from_params generated_fields available_hyps
@@ -2139,57 +2171,42 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
    | Parsetree.Pf_coq (enforced_deps, _)
    | Parsetree.Pf_assumed enforced_deps ->
        emit_zenon_theorem_for_proof
-         ctx print_ctx env min_dk_env available_hyps
+         ctx print_ctx env min_dk_env
          aim_gen_method aim_name enforced_deps ;
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter "(; Proof was flagged as assumed. ;)@\n";
        Format.fprintf out_fmter "apply dk_builtins.magic_prove.@\nQed.@\n"
    | Parsetree.Pf_dk (enforced_deps, script) ->
        emit_zenon_theorem_for_proof
-         ctx print_ctx env min_dk_env available_hyps
+         ctx print_ctx env min_dk_env
          aim_gen_method aim_name enforced_deps ;
        (* Dump verbatim the Dk code. *)
-       (* Was "daube" ^_^. Just a hack until we finish the work with Cath. *)
-       if script <> "wf_qed" then
-         Format.fprintf out_fmter "%s@\n" script
-       else (
-(* [Unsure] *)
-         Format.fprintf out_fmter
-           "Ltac SplitandAssumption:=@\n\
-             (repeat match goal with@\n\
-                       | [ |- ?a /\\ ?b ] => split;try (intros ; auto)@\n\
-                     end).@\n" ;
-         (* One must harvest all the available steps at the current level
-            and generalize (in the sens of Dk) their related (generated)
-            lemma. *)
-         List.iter
-           (fun step ->
-              Format.fprintf out_fmter "generalize %a.@\n"
-                Parsetree_utils.pp_vname_with_operators_expanded
-                step.psa_lemma_name)
-           available_steps ;
-         Format.fprintf out_fmter
-           "unfold well_wrapper.@\nintros.@\nSplitandAssumption.@\nQed.@\n"
-       )
+       Format.fprintf out_fmter "%s@\n" script;
    | Parsetree.Pf_node nodes ->
        (* For each successive node, we remember the previously seen **extra**
           steps that will be available for the trailing Qed node. *)
        let rec rec_dump accu_avail_steps = function
          | [] -> ()
          | node :: q ->
+            begin
              let extra_avail_steps =
-               zenonify_proof_node
-                 ~in_nested_proof ctx print_ctx env min_dk_env
-                 ~self_manifest dependencies_from_params generated_fields
-                 available_hyps accu_avail_steps section_name_seed (Some proof)
-                 node aim_name aim_gen_method in
+               zenonify_proof_node section_name_seed node aim_gen_method in
+             zenonify_proof_node_print_before
+                 ctx print_ctx env section_name_seed node aim_gen_method;
              rec_dump
                (* And not not append in the other way otherwise, the newly
                   found steps will be in tail of the list and of we look for
                   a step that has the same name than an older one, we will
                   find the older one and that's wrong ! (Exactly like just
                   above). *)
-               (extra_avail_steps @ accu_avail_steps) q in
+               (extra_avail_steps @ accu_avail_steps) q;
+             zenonify_proof_node_print_after
+                 ~in_nested_proof ctx print_ctx env min_dk_env
+                 ~self_manifest dependencies_from_params generated_fields
+                 available_hyps accu_avail_steps section_name_seed (Some proof)
+                 node aim_name aim_gen_method
+            end
+       in
        rec_dump available_steps nodes
    | Parsetree.Pf_auto facts ->
        (* Generate Zenon's header. *)
@@ -2283,98 +2300,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
        (* Now, let's print the theorem/lemma and prove it unless we are at
           toplevel (i.e. not in a nested proof). In this last case, this will
           be done directly by [generate_defined_theorem]. *)
-       if in_nested_proof then (
-         (* In a nested proof, we are always provided a real [logical_expr]
-            since the way to generate a statement directly via the recursive
-            calls description only arises a the toplevel of a (termination)
-            proof. *)
-         let aim =
-           (match aim_gen_method with
-           | ZSGM_from_logical_expr lexpr -> lexpr
-           | ZSGM_from_termination_lemma (_, _, _) -> assert false) in
-         Format.fprintf out_fmter "@[<2>%a :@ dk_logic.eP ("
-           Parsetree_utils.pp_vname_with_operators_expanded aim_name;
-         Species_record_type_dk_generation.generate_logical_expr
-           ~local_idents: [] ~in_recursive_let_section_of: []
-           ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-           ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
-           ctx env aim ;
-         Format.fprintf out_fmter ").@]@\n" ;
-         (* Enforce Hypothesis to be used to prevent Dk from removing it. *)
-         List.iter
-           (fun h ->
-             match h.Parsetree.ast_desc with
-              | Parsetree.H_variable (_, _) | Parsetree.H_notation (_, _) -> ()
-              | Parsetree.H_hypothesis (hn, _) ->
-                  Format.fprintf out_fmter
-                    "@[<2>assert (__force_use_%a :=@ %a).@]@\n"
-                    Parsetree_utils.pp_vname_with_operators_expanded hn
-                    Parsetree_utils.pp_vname_with_operators_expanded hn)
-           available_hyps;
-         (* Apply Zenon's result to prove the lemma... *)
-         Format.fprintf out_fmter "apply %a;@\nauto.@\nQed.@\n"
-           Parsetree_utils.pp_vname_with_operators_expanded aim_name
-        )
 ;;
-
-
-
-let generate_asserts_for_dependencies out_fmter dependencies_from_params
-    min_dk_env used_species_parameter_tys =
-  (* Abstract according to the species's parameters carriers the current method
-      depends on. *)
-  List.iter
-    (fun carrier_name ->
-      Format.fprintf out_fmter
-        "@[<2>assert (__force_use_p_%a_T :=@ _p_%a_T).@]@\n"
-        Parsetree_utils.pp_vname_with_operators_expanded carrier_name
-        Parsetree_utils.pp_vname_with_operators_expanded carrier_name)
-    used_species_parameter_tys;
-  (* Abstract according to the species's parameters the current method depends
-     on. *)
-  List.iter
-    (fun (species_param, (Env.ODFP_methods_list meths_from_param)) ->
-      (* Recover the species parameter's name. *)
-      let species_param_name =
-        match species_param with
-         | Env.TypeInformation.SPAR_in (n, _, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
-             Parsetree.Vuident n in
-      (* Each abstracted method is named like "_p_", followed by the
-         species parameter name, followed by "_", followed by the method's
-         name.
-         We don't care here about whether the species parameters is "in" or
-         "is". *)
-      let prefix =
-        "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
-      List.iter
-        (fun (meth, _) ->
-          Format.fprintf out_fmter
-            "@[<2>assert (__force_use_%s%a :=@ %s%a).@]@\n"
-            prefix Parsetree_utils.pp_vname_with_operators_expanded meth
-            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-        meths_from_param)
-    dependencies_from_params;
-  (* Generate the parameters denoting methods of ourselves we depend on
-     according the the minimal typing environment. *)
-  List.iter
-    (function (_, meth_dep) ->
-      match meth_dep with
-      | Env.TypeInformation.MDEM_Defined_carrier _
-      | Env.TypeInformation.MDEM_Declared_carrier ->
-          Format.fprintf out_fmter
-            "@[<2>assert (__force_use_abst_T :=@ abst_T).@]@\n"
-      | Env.TypeInformation.MDEM_Defined_computational (_, _, n, _, _, _)
-      | Env.TypeInformation.MDEM_Defined_logical (_, n, _)
-      | Env.TypeInformation.MDEM_Declared_computational (n, _)
-      | Env.TypeInformation.MDEM_Declared_logical (n, _) ->
-          Format.fprintf out_fmter
-            "@[<2>assert (__force_use_abst_%a :=@ abst_%a).@]@\n"
-            Parsetree_utils.pp_vname_with_operators_expanded n
-            Parsetree_utils.pp_vname_with_operators_expanded n)
-    min_dk_env
-;;
-
 
 
 (* ************************************************************************* *)
@@ -3214,13 +3140,6 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
           "__arg". *)
        Format.fprintf out_fmter "@\nend.@]@\n";
        Format.fprintf out_fmter "@[<v 2>Proof.@\n";
-       (* Enforce "Variables" to be used to prevent Dk from removing it. We
-          generate "assert" for this sake. *)
-       generate_asserts_for_dependencies
-         out_fmter
-         ai.Env.TypeInformation.ad_dependencies_from_parameters
-         ai.Env.TypeInformation.ad_min_dk_env
-         ai.Env.TypeInformation.ad_used_species_parameter_tys;
        (* Print the proof using the above material. *)
        if Configuration.get_experimental () then (
          (* ---> Generate the soldering Dk script. *)
