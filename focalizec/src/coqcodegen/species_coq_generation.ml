@@ -2544,94 +2544,6 @@ let print_types_as_tuple_if_several print_ctx out_fmter types =
 
 
 
-(* ************************************************************** *)
-(* ('a * 'b) list -> ('a * 'c) list -> ('a * bool) list           *)
-(** {b Descr}: Find the variables that must be kept in the pattern
-    representing the tuple of a recursive function's arguments
-    the termination order, applies on them. For each variable of
-    the function (i.e. those in the list [fun_params_n_tys]) we
-    make a couple in the result with this variable's name and the
-    boolean value telling if the variable appears in the pattern.
-
-    {b Rem} : Not exported outside this module.                     *)
-(* ************************************************************** *)
-let pattern_from_used_variables fun_params_n_tys vars_used_by_order =
-  let rec rec_find = function
-    | [] -> []
-    | (h, _) :: q ->
-        (* Check if this function parameter is used by the order... *)
-        let component =
-          if Handy.list_mem_custom_eq
-              (fun (n, _) n' -> n = n') h vars_used_by_order then (h, true)
-          else (h, false) in
-        component :: (rec_find q) in
-  rec_find fun_params_n_tys
-;;
-
-
-
-(* ************************************************************************ *)
-(** {b Descr} : Prints the structure of the pattern with for each retained
-    variable (i.e. whose presence = [true]) its name followed by the string
-    [suffix] or "_" if the variable is not retained.
-    Note that the parentheses surrouding the pattern are printed by this
-    function.
-    Returns the list of generated idents as [Vlident]s.
-
-    {b Rem} : Not exported outside this module.                               *)
-(* ************************************************************************ *)
-let print_pattern_for_order out_fmter ~var_suffix description =
-  let rec rec_print = function
-    | [] -> assert false
-    | [(last_name, last_presence)] -> (
-        if last_presence then
-          (Format.fprintf out_fmter "%a%s"
-             Parsetree_utils.pp_vname_with_operators_expanded last_name
-             var_suffix;
-           [Parsetree.Vlident
-              ((Parsetree_utils.name_of_vname last_name) ^ var_suffix)])
-        else
-          (Format.fprintf out_fmter "_";
-           [])
-       )
-    | (name, presence) :: q ->
-        let printed =
-          if presence then
-            (Format.fprintf out_fmter "%a%s,@ "
-               Parsetree_utils.pp_vname_with_operators_expanded name
-               var_suffix;
-             [Parsetree.Vlident
-                ((Parsetree_utils.name_of_vname name) ^ var_suffix)])
-          else
-            (Format.fprintf out_fmter "_,@ "; []) in
-        printed @ (rec_print q) in
-  Format.fprintf out_fmter "(";
-  let printed = rec_print description in
-  Format.fprintf out_fmter ")";
-  printed
-;;
-
-
-
-(* [Unsure] Candidate for killing once match have disappeared in order
-  generation. *)
-let print_idents_as_tuple out_fmter idents =
-  let rec rec_print = function
-    | [] -> assert false
-    | [last] ->
-        Format.fprintf out_fmter "%a"
-          Parsetree_utils.pp_vname_with_operators_expanded last
-    | h :: q ->
-        Format.fprintf out_fmter "%a,@ "
-          Parsetree_utils.pp_vname_with_operators_expanded h;
-        rec_print q in
-  Format.fprintf out_fmter "(";
-  rec_print idents;
-  Format.fprintf out_fmter ")"
-;;
-
-
-
 (** {b Descr}: Prints the tuple of function arguments involved in a termination
     order. Each function argument is obtained by a projection of the order
     argument named [arg_name]. The projection is done using builtin Coq
@@ -2728,45 +2640,27 @@ let generate_termination_order_With_Function ctx print_ctx env name
             failwith "TODO: structural1."  (* [Unsure] *)
         | Parsetree.TP_lexicographic _ ->
             failwith "TODO: lexicographic1."  (* [Unsure] *)
-        | Parsetree.TP_measure (measure_expr, measure_args, _) ->
-            (begin
-            (* Get the indices of the variables the pattern must bind. *)
-            let pattern_description =
-              pattern_from_used_variables fun_params_n_tys measure_args in
-            (* Generate the 2 match to retrieve arguments used by our order.
-               If the order uses only the 2nd and 3rd arguments of a 4
-               arguments-function, then the 2 match will only retain the 2nd
-               and 3rd components of the tuple of function'as arguments. *)
-            Format.fprintf out_fmter "@[<2>match@ __x@ with@\n| ";
-            let printed1 =
-              print_pattern_for_order
-                out_fmter ~var_suffix: "1" pattern_description in
-            Format.fprintf out_fmter " =>@\n";
-            Format.fprintf out_fmter "@[<2>match@ __y@ with@\n| ";
-            let printed2 =
-              print_pattern_for_order
-                out_fmter ~var_suffix: "2" pattern_description in
-            Format.fprintf out_fmter " =>@\n(";
-            (* Now, generate the Coq translation of the measure expression
-               applied to both tuples of arguments and linked by the <
-               relation. *)
-            Format.fprintf out_fmter "@[<2>Is_true (wellfounded.int_wf@ ";
+        | Parsetree.TP_measure (measure_expr, used_params, _) -> (
+            (*  Since <0x returns a [bool], we must surround the generated
+                application expression by a "Is_true" for Coq. *)
+            Format.fprintf out_fmter "@[<2>(Is_true@ @[<2>(" ;
             let local_idents =
-              printed2 @ printed1 @
               [ Parsetree.Vlident "__x"; Parsetree.Vlident "__y" ] in
-            Format.fprintf out_fmter "(";
-            Species_record_type_generation.generate_expr
-              ctx ~local_idents ~in_recursive_let_section_of: [name]
-              ~self_methods_status:
-                Species_record_type_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Species_record_type_generation.RMS_regular
-              env measure_expr ;
-            (* Now apply this expression to the first tuple of used arguments
-               extracted by the 2 "matchs". *)
-            Format.fprintf out_fmter "@ ";
-            print_idents_as_tuple out_fmter printed1;
-            Format.fprintf out_fmter ")@ (";
+            (* Compute the list of positionnal indices of the recursive
+               function's parameters used in the order. *)
+            let used_params_indices =
+              Handy.list_indices_of_present_in
+                ~all: (List.map fst fun_params_n_tys)
+                ~subset: (List.map fst used_params) in
+            let fun_arity = List.length fun_params_n_tys in
+            (* Generate the first part telling that the second argument applied
+               to the measure gives a result always >= 0. *)
+            Format.fprintf out_fmter
+              "basics._amper__amper_@ \
+                @[<2>(basics._lt__equal_0x@ \
+                  0 @[<2>(" ;
+            (* Generate the second application of the measure (hence to the
+               second argument). *)
             Species_record_type_generation.generate_expr
               ctx ~local_idents ~in_recursive_let_section_of: [name]
               ~self_methods_status:
@@ -2775,29 +2669,54 @@ let generate_termination_order_With_Function ctx print_ctx env name
                 Species_record_type_generation.RMS_regular
               env measure_expr ;
             Format.fprintf out_fmter "@ " ;
-            print_idents_as_tuple out_fmter printed2;
-            Format.fprintf out_fmter ")" ;
-            (* Close the parenthesis of "Is_true" and the box of
-               "wellfounded.int_wf". *)
-            Format.fprintf out_fmter ")@]" ;
-            (* Close the 2 boxes of the "matchs" and the box of the whole
-               "Definition" of the order. *)
-            Format.fprintf out_fmter ")@\nend@]@\nend@].@]@\n@\n"
-            end)
-        | Parsetree.TP_order (order_expr, used_params, _) -> (
-            (* Generate the Coq translation of the expression of the
-               order. Since the order is an expression of type [bool], we must
-               surround the generated expression by a "Is_true" for Coq. *)
-            Format.fprintf out_fmter "@[<2>Is_true (" ;
-            let local_idents =
-              [ Parsetree.Vlident "__x"; Parsetree.Vlident "__y" ] in
+            print_order_args_as_tuple
+              out_fmter ~fun_arity "__y" used_params_indices ;
+            Format.fprintf out_fmter ")@])@]@ " ;
+            (* *)
+            (* Now apply this expression to the 2 tuples of used arguments
+               extracted by calls to builtin extractors depending on their
+               indice among the function parameters.
+               This generates the application to < on integers (basics._lt_0x).
+               Form is hence:
+                 basics._lt_0x (abst_"mesfct" ... x) (abst_"mesfct" ... y) *)
+            Format.fprintf out_fmter "@[<2>(basics._lt_0x@ @[<2>(" ;
+            (* Generate the first application of the measure (hence to the
+               first argument). *)
             Species_record_type_generation.generate_expr
               ctx ~local_idents ~in_recursive_let_section_of: [name]
               ~self_methods_status:
                 Species_record_type_generation.SMS_abstracted
               ~recursive_methods_status:
                 Species_record_type_generation.RMS_regular
-              env order_expr ;
+              env measure_expr ;
+            Format.fprintf out_fmter "@ " ;
+            print_order_args_as_tuple
+              out_fmter ~fun_arity "__x" used_params_indices ;
+            Format.fprintf out_fmter ")@]@ @[<2>(" ;
+            (* Generate the second application of the measure (hence to the
+               second argument). *)
+            Species_record_type_generation.generate_expr
+              ctx ~local_idents ~in_recursive_let_section_of: [name]
+              ~self_methods_status:
+                Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
+              env measure_expr ;
+            Format.fprintf out_fmter "@ ";
+            print_order_args_as_tuple
+              out_fmter ~fun_arity "__y" used_params_indices ;
+            Format.fprintf out_fmter ")@]" ;
+            (* Close various parentheses and the box of the whole
+               "Definition" of the order. *)
+            Format.fprintf out_fmter ")@])@])@].@]@\n@\n"
+           )
+        | Parsetree.TP_order (order_expr, used_params, _) -> (
+            (* Generate the Coq translation of the expression of the
+               order. Since the order returns a [bool], we must surround the
+               generated application  expression by a "Is_true" for Coq. *)
+            Format.fprintf out_fmter "@[<2>Is_true (" ;
+            let local_idents =
+              [ Parsetree.Vlident "__x"; Parsetree.Vlident "__y" ] in
             (* Compute the list of positionnal indices of the recursive
                function's parameters used in the order. *)
             let used_params_indices =
@@ -2808,14 +2727,21 @@ let generate_termination_order_With_Function ctx print_ctx env name
                extracted by calls to builtin extractors depending on their
                indice among the function parameters. *)
             let fun_arity = List.length fun_params_n_tys in
-            Format.fprintf out_fmter "@ ";
+            Species_record_type_generation.generate_expr
+              ctx ~local_idents ~in_recursive_let_section_of: [name]
+              ~self_methods_status:
+                Species_record_type_generation.SMS_abstracted
+              ~recursive_methods_status:
+                Species_record_type_generation.RMS_regular
+              env order_expr ;
+            Format.fprintf out_fmter "@ " ;
             print_order_args_as_tuple
               out_fmter ~fun_arity "__x" used_params_indices ;
-            Format.fprintf out_fmter "@ ";
+            Format.fprintf out_fmter "@ " ;
             print_order_args_as_tuple
               out_fmter ~fun_arity "__y" used_params_indices ;
             (* Close the parenthese and the box of the "Is_true". *)
-            Format.fprintf out_fmter ")@]";
+            Format.fprintf out_fmter ")@]" ;
             (* Close the box of the whole "Definition" of the order. *)
             Format.fprintf out_fmter ".@]@\n@\n"
            )
@@ -2824,7 +2750,7 @@ let generate_termination_order_With_Function ctx print_ctx env name
 
 
 
-(** {b Rem} :  For Function. Uses the "fname"_wforder previously generated
+(** {b Rem} : For Function. Uses the "fname"_wforder previously generated
     (i.e. the order as Function expects, not the user-order) and uses, for
     this former application, the tuple of all variables / recursive args
     of the function: not only those on which the user-order operates. *)
