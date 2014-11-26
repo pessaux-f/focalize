@@ -2841,8 +2841,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
             failwith "TODO: structural3."  (* [Unsure] *)
         | Parsetree.TP_lexicographic _ ->
             failwith "TODO: lexicographic3."  (* [Unsure] *)
-        | Parsetree.TP_measure (_order_expr, _used_params, _proof) ->
-            failwith "TODO: measure3."  (* [Unsure] *)
+        | Parsetree.TP_measure (order_expr, used_params, proof)
         | Parsetree.TP_order (order_expr, used_params, proof) ->
             (* Compute the list of positionnal indices of the recursive
                function's parameters used in the order. *)
@@ -2899,8 +2898,20 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
             failwith "TODO: structural2."  (* [Unsure] *)
         | Parsetree.TP_lexicographic _ ->
             failwith "TODO: lexicographic2."  (* [Unsure] *)
-        | Parsetree.TP_measure (_, _, _proof) ->
-            failwith "TODO: measure2."  (* [Unsure] *)
+        | Parsetree.TP_measure (_, _, proof) -> (
+            match proof.Parsetree.ast_desc with
+            | Parsetree.Pf_assumed _ ->
+                (* Proof assumed, then simply use "magic_prove". *)
+                Format.fprintf out_fmter
+                  "(* Proof was flagged as assumed. *)@\n";
+                Format.fprintf out_fmter
+                  "apply coq_builtins.magic_prove.@\nQed."
+            | Parsetree.Pf_coq (_, script) ->
+                (* Dump verbatim the Coq code. *)
+                Format.fprintf out_fmter "%s" script
+            | _ ->
+                failwith "TODO: measure2."  (* [Unsure] *)
+           )
         | Parsetree.TP_order (order_expr, used_params, proof) -> (
             (* Compute the list of positionnal indices of the recursive
                function's parameters used in the order. *)
