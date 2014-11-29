@@ -81,10 +81,11 @@ type section_variable =
         Parsetree.vname *              (* Name of the hypothesis *)
         Parsetree.logical_expr *       (* Formula *)
         Context.species_compil_context (* Print context for the formula *)
+;;
 
 (* List of variable declarations for current section.
    This is a global variable. *)
-let section_variable_list : section_variable list ref = ref []
+let section_variable_list : section_variable list ref = ref [];;
 
 (* ************************************************************************ *)
 (** {b Descr} : Recover the parameters abstracted from our method to apply
@@ -1973,7 +1974,9 @@ let zenonify_hyp ctx print_ctx env ~sep hyp =
                current Dk Section. *)
             Format.fprintf out_fmter "@[<2>%a :@ cc.eT (%a) %s@ @]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded vname
-              (Types.pp_type_simple_to_dk print_ctx) ty sep
+              (Types.pp_type_simple_to_dk print_ctx) ty sep;
+            section_variable_list :=
+              SVVar ("", vname, ty, print_ctx) :: !section_variable_list
         | _ -> assert false
        end)
    | Parsetree.H_hypothesis (vname, logical_expr) ->
