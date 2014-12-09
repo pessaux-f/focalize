@@ -29,7 +29,7 @@ SUB_DIRS="src/basement src/parser src/typing \
   doc_src/tex/refman \
   doc_src/tex/tutorial \
   src/stdlib \
-  src/extlib src/extlib/algebra src/extlib/access_control \
+  src/extlib src/extlib/algebra src/extlib/airport_security \
   src/contribs"
 
 touch .depend
