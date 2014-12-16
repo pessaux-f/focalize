@@ -722,12 +722,12 @@ let generate_pattern ctx dkctx env pattern
                               (Parsetree_utils.unqualified_vname_of_constructor_ident
                                  cident)
           end) ;
-        (* Now the matched term *)
-        Format.fprintf out_fmter "@ ";
-        e ();
         (* Now the return type *)
         Format.fprintf out_fmter "@ ";
         generate_simple_type_of_ast dkctx out_fmter ret_type ;
+        (* Now the matched term *)
+        Format.fprintf out_fmter "@ ";
+        e ();
         (* Now the pattern function (then case) *)
         Format.fprintf out_fmter "@ (";
         (* Then case 1/2: Abstract over fresh variables *)

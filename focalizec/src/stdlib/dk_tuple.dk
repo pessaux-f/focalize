@@ -20,8 +20,8 @@ snd : A : cc.uT -> B : cc.uT -> Prod A B -> cc.eT B.
 
 match__pair : A : cc.uT ->
               B : cc.uT ->
-              Prod A B ->
               C : cc.uT ->
+              Prod A B ->
               (cc.eT A -> cc.eT B -> cc.eT C) ->
               cc.eT C ->
               cc.eT C.
@@ -30,7 +30,7 @@ match__pair : A : cc.uT ->
   a : cc.eT A, b : cc.eT B,
   f : cc.eT A -> cc.eT B -> cc.eT C,
   g : cc.eT C ]
-    match__pair A B (pair A B a b) C f g --> f a b.
+    match__pair A B C (pair A B a b) f g --> f a b.
 
 dprod : A : cc.uT -> (cc.eT A -> cc.uT) -> cc.uT.
 Dprod : A : cc.uT -> (cc.eT A -> cc.uT) -> Type.

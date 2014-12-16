@@ -304,7 +304,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
              print_ctx out_fmter type_def_params;
            Format.fprintf out_fmter
-                          "cc.eT (@[<1>%a__t%a@]) ->@ Ret_type : cc.uT ->@ (%acc.eT Ret_type@]) ->@ cc.eT Ret_type ->@ cc.eT Ret_type.@]"
+                          "Ret_type : cc.uT ->@ cc.eT (@[<1>%a__t%a@]) ->@ (%acc.eT Ret_type@]) ->@ cc.eT Ret_type ->@ cc.eT Ret_type.@]"
                           Parsetree_utils.pp_vname_with_operators_expanded type_def_name
                           (print_types_parameters_with_spaces print_ctx) type_def_params
                           (* The type of the matching function.
