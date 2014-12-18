@@ -11,11 +11,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
+type termination_expr_kind =
+  | TEK_order of Parsetree.expr
+  | TEK_measure of Parsetree.expr
 
 type order_kind =
-  | OK_expr of (Parsetree.expr * (int list)) (* Liste des indices d'arguments
-                                                de la fonction récursive
-                                                uilisés dans l'ordre. *)
+  | OK_expr of (termination_expr_kind * (int list))
   | OK_wfounded of
       (Parsetree.vname *
        (Parsetree.vname list) *

@@ -14,7 +14,6 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: rec_let_gen.ml,v 1.27 2012-10-30 11:55:07 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} This mmodule contains utilities for recursive functions code
@@ -437,17 +436,26 @@ let generate_exprs_as_tuple ctx env exprs =
 
 
 
+type termination_expr_kind =
+  | TEK_order of Parsetree.expr    (** Expression denotes an order. *)
+  | TEK_measure of Parsetree.expr  (** Expression denotes a measure. *)
+;;
+
+
+
 (** {b Descr}: Represent the 2 kinds of order to generate to argue the
     decreasing of a recursive function. Depending on the point of view,
-    different code has to be emitted. *)
+    different code has to be emitted. In the first case we are dealing with
+    the "user order" or the "user measure". In the second we are dealing
+    with the real "Function" order, i.e. the one that Function needs. *)
 type order_kind =
-  | OK_expr of (Parsetree.expr * (int list)) (** Case of the "user-order". It
-         only deals with the function's arguments involved in the decreasing
-         of the recursing. The user specifies his order on only the arguments
-         he is interested in. So the order to generate is directly coming
-         from the expression given as "order" by the user. The int list
-         is the list of indices of the function's parameters used by this
-         "user-order". *)
+  | OK_expr of (termination_expr_kind * (int list)) (** Case of the
+         "user-order". It only deals with the function's arguments involved in
+         the decreasing of the recursing. The user specifies his order on only
+         the arguments he is interested in. So the order to generate is
+         directly coming from the expression given as "order" by the user. The
+         int list is the list of indices of the function's parameters used by
+         this "user-order". *)
   | OK_wfounded of   (** Case of the "Function-order", i.e. the one that the
          Coq construct Function expects to prove correct recursive definition.
          This order uses all the arguments of the function and is made of
@@ -524,8 +532,9 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
          [~explicit_order]. In case of "Function-" order, we have to apply it
          to its arguments coming from to lambda-liftings. *)
       (match explicit_order with
-       | OK_expr (expr_order, rec_fun_used_args_indices) ->
-           (* Surround by a Is_true since the user order can only be oa
+       | OK_expr ((TEK_order expr_order), rec_fun_used_args_indices) ->
+           (* Case of a proof by an order.
+              Surround by a Is_true since the user order can only be a
               function returning a bool, hence must be plunged into Prop. *)
            Format.fprintf out_fmter "Is_true ((@[<1>" ;
            Species_record_type_generation.generate_expr
@@ -556,6 +565,48 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
              (fst initial_var) ;
            (* Close the surrounding Is_true. *)
            Format.fprintf out_fmter "@])"
+       | OK_expr ((TEK_measure expr_mea), rec_fun_used_args_indices) ->
+           (* Case of a proof by a measure.
+              Surround by a Is_true since 0x< returns a bool, hence must be
+              plunged into Prop. *)
+           Format.fprintf out_fmter "Is_true (@[<1>basics._lt_0x@ (" ;
+           (* Call the measure on the first argument. *)
+           Species_record_type_generation.generate_expr
+             ctx ~in_recursive_let_section_of: [] ~local_idents: []
+             ~self_methods_status:
+               Species_record_type_generation.SMS_abstracted
+             ~recursive_methods_status:
+               Species_record_type_generation.RMS_regular env expr_mea ;
+(* [Unsure] considered orders only compare 2 simple arguments, not a tuple. *)
+           if (List.length rec_fun_used_args_indices) <> 1 then
+             failwith "TODO: order/measure using several arguments" ;
+           let index = List.hd rec_fun_used_args_indices in
+           let rec_arg = List.nth rec_args index in
+           let initial_var = List.nth initial_vars index in
+           (* Put the first argument (recursive call argument). *)
+           Format.fprintf out_fmter "@ " ;
+           Species_record_type_generation.generate_expr
+             ctx ~in_recursive_let_section_of: [] ~local_idents: []
+             ~self_methods_status:
+               Species_record_type_generation.SMS_abstracted
+             ~recursive_methods_status:
+               Species_record_type_generation.RMS_regular env rec_arg ;
+           (* Close paren of first application of the measure and open one for
+              the second . *)
+           Format.fprintf out_fmter ")@ (" ;
+           (* Call a seconde time the measure. *)
+           Species_record_type_generation.generate_expr
+             ctx ~in_recursive_let_section_of: [] ~local_idents: []
+             ~self_methods_status:
+               Species_record_type_generation.SMS_abstracted
+             ~recursive_methods_status:
+               Species_record_type_generation.RMS_regular env expr_mea ;
+           (* Put the second argument (initial one of the function). *)
+           Format.fprintf out_fmter "@ %a"
+             Parsetree_utils.pp_vname_with_operators_expanded
+             (fst initial_var) ;
+           (* Close second app of the measure and the surrounding Is_true. *)
+           Format.fprintf out_fmter ")@])"
        | OK_wfounded (fname, ai, sorted_deps_from_params, abstracted_methods) ->
            Format.fprintf out_fmter "(%a_wforder"
              Parsetree_utils.pp_vname_with_operators_expanded fname ;
@@ -646,7 +697,7 @@ let print_user_binding_let binding =
 
 
 (** {b Descr}: Prints on stderr the obligation proofs the user will have to
-    do on its recursive function to prove that his order makes arguments
+    do on its recursive function to prove that its order makes arguments
     decreasing. This output is lighter than its Coq version because it outputs
     some Focal source code. *)
 let print_user_termination_obls fun_name recursive_calls user_order
@@ -701,5 +752,9 @@ let print_user_termination_obls fun_name recursive_calls user_order
       Format.eprintf ")" ;
       Format.eprintf "@]@\n")
     recursive_calls ;
-  Format.eprintf "@\n"
+  (* Print the obligation stating the well-foundation of the order. *)
+  Format.eprintf "@[<2><1>%d prove well_wrapper (%a)@]@\n"
+    !counter Sourcify.pp_expr user_order ;
+  (* Print the conclusion step since it will probably be always the same. *)
+  Format.eprintf "@[<2><42>e qed coq proof {*wf_qed*}@]@\n"
 ;;
