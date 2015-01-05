@@ -2279,6 +2279,12 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
          Location.pp_location proof.Parsetree.ast_loc;
        Format.fprintf out_fmter "%%%%name: %a@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;
+       (* If the representation is concrete, define abst_T as the representation. *)
+       (match self_manifest with
+        | Some ty ->
+           Format.fprintf out_fmter "%%%%type_alias: abst_T := %a@\n"
+                          (Types.pp_type_simple_to_dk print_ctx) ty
+        | None -> ());
        (* Tell Zenon to abstract over "Section" variables *)
        (* Each variable has to be printed on its line,
           hence the horizontal printing box *)
