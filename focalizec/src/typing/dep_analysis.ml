@@ -103,8 +103,6 @@ let debug_print_dependencies_from_parameters3 l =
 
 
 (* ****************************************************************** *)
-(* current_species: Parsetree.qualified_vname -> Parsetree.expr ->    *)
-(*  Parsetree_utils.DepNameSet.t                                      *)
 (** {b Descr} : Compute the set of vnames the expression [expression]
     decl-depends of in the species [~current_species].
 
@@ -463,26 +461,30 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
 
 
 
+(* ************************************************************************* *)
+(** {b Descr} : Compute the set of vnames the expression termination proof
+    decl-depends and def-depends on in the species [~current_species].
+
+    {b Exported} : No.                                                       *)
+(* ************************************************************************* *)
 let termination_proof_decl_n_def_dependencies ~current_species t_proof =
   match t_proof.Parsetree.ast_desc with
    | Parsetree.TP_structural _ ->
        (Parsetree_utils.SelfDepSet.empty,
         Parsetree_utils.SelfDepSet.empty)
-   | Parsetree.TP_lexicographic facts ->
-       (begin
-       List.fold_left
-         (fun (accu_decl_deps, accu_def_deps) fact ->
-           let (fact_decl_deps, fact_def_deps) =
-             fact_decl_n_def_dependencies ~current_species fact in
-           (* Return both "decl" and "def" dependencies. *)
-           ((Parsetree_utils.SelfDepSet.union
-               accu_decl_deps fact_decl_deps),
-            (Parsetree_utils.SelfDepSet.union
-               accu_def_deps fact_def_deps)))
-         (Parsetree_utils.SelfDepSet.empty,
-          Parsetree_utils.SelfDepSet.empty)
-         facts
-       end)
+   | Parsetree.TP_lexicographic (orders_exprs, _,  sub_pr) ->
+       let (sub_proof_decl_deps, sub_proof_def_deps) =
+         proof_decl_n_def_dependencies ~current_species sub_pr in
+       (* No def-dependencies in [expr]s. *)
+       let all_decl =
+         List.fold_left
+           (fun accu_deps e ->
+             Parsetree_utils.SelfDepSet.union
+               (expr_decl_dependencies ~current_species e) accu_deps)
+           sub_proof_decl_deps
+           (* Accumulate in the decl computed for the proof. *)
+           orders_exprs in
+       (all_decl, sub_proof_def_deps)
    | Parsetree.TP_measure (expr, _,  sub_pr)
    | Parsetree.TP_order (expr, _,  sub_pr) ->
        (* No def-dependencies in an [expr]. *)

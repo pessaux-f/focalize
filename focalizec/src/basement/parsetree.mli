@@ -453,7 +453,7 @@ and termination_proof_desc =
     (** The order is computed as a lexicographic order and
        the termination proof is infered automatically.
        A hint can be given as a list of facts. *)
-  | TP_lexicographic of fact list
+  | TP_lexicographic of (expr list * param_list * proof)
     (** Gives a measure [expr] that proves the termination of the recursive
         function because the [proof] proves that all recursive calls'
         arguments decrease w.r.t. this measure. *)

@@ -1828,18 +1828,20 @@ and typecheck_theorem_def ctx env theorem_def =
 (* *********************************************************************** *)
 and typecheck_termination_proof ctx env tp =
   (* Anyway, a proof has no type... So... *)
-  tp.Parsetree.ast_type <- Parsetree.ANTI_irrelevant;
+  tp.Parsetree.ast_type <- Parsetree.ANTI_irrelevant ;
   match tp.Parsetree.ast_desc with
    | Parsetree.TP_structural _ ->
        (* Nothing to record because a [vname] doesn't have a "type" bucket. *)
        ()
-   | Parsetree.TP_lexicographic facts ->
-       List.iter (typecheck_fact ctx env) facts
+   | Parsetree.TP_lexicographic (orders_exprs, _, proof) ->
+       (* Nothing to record for the [vname]s because they do not have any
+           "type" bucket. *)
+       List.iter (fun e -> ignore (typecheck_expr ctx env e)) orders_exprs ;
+       typecheck_proof ctx env proof
    | Parsetree.TP_measure (expr, _, proof)
    | Parsetree.TP_order (expr, _, proof) ->
-       (* Nothing to record for the [vname]s because *)
-       (* they do not have any "type" bucket.        *)
-       ignore (typecheck_expr ctx env expr);
+       (* Same remark than above about identifiers [vname]s. *)
+       ignore (typecheck_expr ctx env expr) ;
        typecheck_proof ctx env proof
 
 
@@ -1859,10 +1861,10 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
   (* One must first search the function name in the environment. We embedd the
      [vname] inside a dummy [ident] in order to lookup. *)
   let fake_ident = {
-    Parsetree.ast_desc = Parsetree.EI_local fct_vname;
+    Parsetree.ast_desc = Parsetree.EI_local fct_vname ;
     (* Roughly correction as a location, even is not exact. *)
-    Parsetree.ast_loc = profile.Parsetree.ast_loc;
-    Parsetree.ast_annot = [];
+    Parsetree.ast_loc = profile.Parsetree.ast_loc ;
+    Parsetree.ast_annot = [] ;
     Parsetree.ast_type = Parsetree.ANTI_none } in
   (* Since we have a [vname], we can't store in the AST any type information.
      however we still lookup in the environment to ensure the identifier is
@@ -1882,8 +1884,7 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
         ~self_manifest: ctx.self_manifest (Some scheme) args_names in
     List.iter
       (fun (prof_param, prof_opt_ty) ->
-        try
-          (begin
+        try (
           (* Because we provided a scheme, when we called the function
              [bind_parameters_to_types_from_type_scheme], we are sure to get
              a "Some". *)
@@ -1900,7 +1901,7 @@ and typecheck_termination_proof_profile ctx env previous_fields profile =
                  (Types.unify
                     ~loc: profile.Parsetree.ast_loc
                     ~self_manifest: ctx.self_manifest expected_ty ty)
-          end)
+         )
         with Not_found ->
           (* The argument doesn't exist among those of the function. *)
           raise
@@ -1949,14 +1950,14 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
                let rep_vname = Parsetree.Vlident "rep" in
                (* On must not defined several rep inside a species. *)
                if ctx.self_manifest <> None then
-                 raise (Method_multiply_defined (rep_vname, current_species));
-               Types.begin_definition ();
+                 raise (Method_multiply_defined (rep_vname, current_species)) ;
+               Types.begin_definition () ;
                let ty = typecheck_rep_type_def ctx env rep_type_def in
-               Types.end_definition ();
+               Types.end_definition () ;
                (* Before modifying the context, just check that no "rep" was
                   previously identified. If some, then fails. *)
                if ctx.self_manifest <> None then
-                 raise (Rep_multiply_defined field.Parsetree.ast_loc);
+                 raise (Rep_multiply_defined field.Parsetree.ast_loc) ;
                (* Extend the context with the type "rep" is equal to. Beware
                   we make a copy of the infered type in order to keep the
                   originally infered type aside any further modifications that
@@ -4872,14 +4873,13 @@ let typecheck_species_def ctx env species_def =
   species_def.Parsetree.ast_type <- Parsetree.ANTI_type species_carrier_type;
   if Configuration.get_verbose () then
     Format.eprintf "Species '%a' accepted.@."
-      Sourcify.pp_vname species_def_desc.Parsetree.sd_name;
+      Sourcify.pp_vname species_def_desc.Parsetree.sd_name ;
   (* Interface printing stuff. *)
-  if Configuration.get_do_interface_output () then
-    (begin
+  if Configuration.get_do_interface_output () then (
     Format.printf "@[<2>species %a%a@]@\n"
       Sourcify.pp_vname species_def_desc.Parsetree.sd_name
       Env.TypeInformation.pp_species_description species_description
-    end);
+   );
   (PCM_species
      (species_def, species_description, species_dep_graph,
       field_abstraction_infos),

@@ -646,8 +646,9 @@ and pp_proof ppf = pp_ast pp_proof_desc ppf
 and pp_termination_proof_desc ppf = function
   | Parsetree.TP_structural vname ->
       Format.fprintf ppf "structural %a" pp_vname vname
-  | Parsetree.TP_lexicographic facts ->
-      Format.fprintf ppf "@[<2>lexicographic@ %a@]" (pp_facts "") facts
+  | Parsetree.TP_lexicographic (orders_exprs, param_list, proof) ->
+      Format.fprintf ppf "@[<2>lexicographic@ %a@ on %a@ %a@]"
+        (pp_exprs ",") orders_exprs pp_param_list param_list pp_proof proof
   | Parsetree.TP_measure (expr, param_list, proof) ->
       Format.fprintf ppf "@[<2>measure@ %a@ on %a@ %a@]"
         pp_expr expr pp_param_list param_list pp_proof proof
