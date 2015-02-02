@@ -222,21 +222,13 @@ species Categorical_property_of_Product_set
              hypothesis H : E!equal (x, y),
            prove P!equal (!morph (x), !morph (y))
            <2>1 prove A!equal (P!first (!morph (x)), P!first (!morph (y)))
-                <3>1 prove A!equal (M_a!morph (x), M_a!morph (y))
-                     by hypothesis H
-                        property M_a!morph_substitution_rule
-                <3>f qed
-                     by step <3>1
-                        property morph_first_factorize,
-                                 A!equal_symmetric, A!equal_transitive
+                by property A!equal_transitive, A!equal_symmetric,
+                            morph_first_factorize, M_a!morph_substitution_rule
+                   hypothesis H
            <2>2 prove B!equal (P!second (!morph (x)), P!second (!morph (y)))
-                <3>1 prove B!equal (M_b!morph (x),M_b!morph (y))
-                     by hypothesis H
-                        property M_b!morph_substitution_rule
-                <3>f qed
-                     by step <3>1
-                        property morph_second_factorize,
-                                 B!equal_symmetric, B!equal_transitive
+                by property B!equal_transitive, B!equal_symmetric,
+                            morph_second_factorize, M_b!morph_substitution_rule
+                   hypothesis H
            <2>f qed by step <2>1, <2>2 property P!equal_spec
       <1>f conclude
   ;
