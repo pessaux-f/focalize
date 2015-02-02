@@ -145,7 +145,7 @@ species Product_set (A is Setoid, B is Setoid) =
                      property  B!equal_reflexive,
                B!equal_transitive, B!equal_symmetric
            <2>f qed by step <2>1, <2>2
-                       definition of equal
+                       property equal_spec
       <1>f conclude;
 
   (** consistency between builder and equality, second arg *)
@@ -173,7 +173,7 @@ species Product_set (A is Setoid, B is Setoid) =
                              hypothesis H
              property B!equal_transitive, B!equal_symmetric
            <2>f qed by step <2>1, <2>2
-                       definition of equal
+                       property equal_spec
       <1>f conclude;
 
   (** Programmers should use this global consistency property when possible *)
@@ -203,48 +203,10 @@ species Categorical_property_of_Product_set
   inherit Setoid_morphism (E, P);
 
     let morph (x) = P!pair (M_a!morph (x), M_b!morph (x));
-    proof of morph_substitution_rule =
-      <1>1 assume
-             x : E, y : E,
-             hypothesis H : E!equal (x, y),
-           prove P!equal (!morph (x), !morph (y))
-           <2>1 prove A!equal (P!first (!morph (x)), P!first (!morph (y)))
-                <3>1 prove A!equal (P!first (P!pair (M_a!morph (x), M_b!morph (x))),
-                                   P!first (P!pair (M_a!morph (y), M_b!morph (y))))
-                     <4>1 prove A!equal (M_a!morph (x), M_a!morph (y))
-                          by hypothesis H property M_a!morph_substitution_rule
-                     <4>2 prove A!equal (P!first (P!pair (M_a!morph (x),
-                                                       M_b!morph (x))),
-                                        M_a!morph (x))
-                          by property P!pair_preserves_first
-                     <4>3 prove A!equal (P!first (P!pair (M_a!morph (y),
-                                                       M_b!morph (y))),
-                                        M_a!morph (y))
-                          by property P!pair_preserves_first
-                     <4>f qed by step <4>1, <4>2, <4>3
-                                 property A!equal_transitive, A!equal_symmetric
-                <3>f qed by step <3>1 definition of morph
-           <2>2 prove B!equal (P!second (!morph (x)), P!second (!morph (y)))
-                <3>1 prove B!equal (P!second (P!pair (M_a!morph (x),
-           M_b!morph (x))),
-                                   P!second (P!pair (M_a!morph (y),
-           M_b!morph (y))))
-                     <4>1 prove B!equal (M_b!morph (x), M_b!morph (y))
-                          by hypothesis H property M_b!morph_substitution_rule
-                     <4>2 prove B!equal (P!second (P!pair (M_a!morph (x),
-        M_b!morph (x))),
-                                        M_b!morph (x))
-                          by property P!pair_preserves_second
-                     <4>3 prove B!equal (P!second (P!pair (M_a!morph (y),
-        M_b!morph (y))),
-                                        M_b!morph (y))
-                          by property P!pair_preserves_second
-                     <4>f qed by step <4>1, <4>2, <4>3
-                                 property B!equal_transitive, B!equal_symmetric
-                <3>f qed by step <3>1 definition of morph
-           <2>f qed by step <2>1, <2>2 property P!equal_spec
-      <1>f conclude
-  ;
+
+    theorem morph_spec : all x : E,
+      P!equal (!morph (x), P!pair (M_a!morph (x), M_b!morph(x)))
+    proof = by property P!equal_reflexive definition of morph;
 
     theorem morph_first_factorize: all x : E,
       A!equal (P!first (!morph (x)), M_a!morph (x))
@@ -253,6 +215,31 @@ species Categorical_property_of_Product_set
     theorem morph_second_factorize: all x : E,
       B!equal (P!second (!morph (x)), M_b!morph (x))
       proof = by property P!pair_preserves_second definition of morph;
+
+    proof of morph_substitution_rule =
+      <1>1 assume
+             x : E, y : E,
+             hypothesis H : E!equal (x, y),
+           prove P!equal (!morph (x), !morph (y))
+           <2>1 prove A!equal (P!first (!morph (x)), P!first (!morph (y)))
+                <3>1 prove A!equal (M_a!morph (x), M_a!morph (y))
+                     by hypothesis H
+                        property M_a!morph_substitution_rule
+                <3>f qed
+                     by step <3>1
+                        property morph_first_factorize,
+                                 A!equal_symmetric, A!equal_transitive
+           <2>2 prove B!equal (P!second (!morph (x)), P!second (!morph (y)))
+                <3>1 prove B!equal (M_b!morph (x),M_b!morph (y))
+                     by hypothesis H
+                        property M_b!morph_substitution_rule
+                <3>f qed
+                     by step <3>1
+                        property morph_second_factorize,
+                                 B!equal_symmetric, B!equal_transitive
+           <2>f qed by step <2>1, <2>2 property P!equal_spec
+      <1>f conclude
+  ;
 
 end;;
 
