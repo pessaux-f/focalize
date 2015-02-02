@@ -453,7 +453,7 @@ let generate_constant ctx cst =
        Format.fprintf ctx.Context.scc_out_fmter "C_float"
    | Parsetree.C_bool str ->
        (* [true] maps on Dk "true". [false] maps on Dk "false". *)
-       Format.fprintf ctx.Context.scc_out_fmter "%s" str
+       Format.fprintf ctx.Context.scc_out_fmter "dk_bool.%s" str
    | Parsetree.C_string str ->
       Format.fprintf ctx.Context.scc_out_fmter "(; \"%s\" ;)@ " str;
       let rec compile_str fmter s =
