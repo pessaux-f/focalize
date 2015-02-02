@@ -2528,7 +2528,8 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
     Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
   (* Now, generate the real theorem, using the temporarily created and applying
      the proof. *)
-  Format.fprintf out_fmter "@[<2>%a :@ "
+  Format.fprintf out_fmter "@[<2>%a__%a :@ "
+    Sourcify.pp_vname (snd ctx.Context.scc_current_species)
     Parsetree_utils.pp_vname_with_operators_expanded name;
   (* Generate the prelude of the method, i.e the sequence of parameters and
      their types induced by the various lamda-liftings. *)
