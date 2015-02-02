@@ -1283,11 +1283,13 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
         generate_pattern_matching pats_exprs;
      (*  *)
      | Parsetree.E_if (expr1, expr2, expr3) ->
-         Format.fprintf out_fmter "@[<2>(if@ " ;
+         Format.fprintf out_fmter "@[<2>(dk_bool.ite@ " ;
+         generate_simple_type_of_ast print_ctx out_fmter expr2;
+         Format.fprintf out_fmter "@ " ;
          rec_generate_expr loc_idents env expr1 ;
-         Format.fprintf out_fmter "@ @[<2>then@ @]" ;
+         Format.fprintf out_fmter "@ " ;
          rec_generate_expr loc_idents env expr2 ;
-         Format.fprintf out_fmter "@ @[<2>else@ @]" ;
+         Format.fprintf out_fmter "@ " ;
          rec_generate_expr loc_idents env expr3 ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_let (let_def, in_expr) ->
