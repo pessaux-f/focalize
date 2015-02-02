@@ -44,7 +44,7 @@ FOCALIZE_BIN_OBJS=$(FOCALIZE_BYT_OBJS:.cmo=.cmx)
 FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
-FOCALIZE_DKS=$(FOCALIZE_ZVS:.zv=.dk)
+FOCALIZE_DKS=$(FOCALIZE_SRC:.fcl=.dk)
 FOCALIZE_DKOS=$(FOCALIZE_DKS:.dk=.dko)
 
 FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
@@ -89,7 +89,7 @@ include $(ROOT_DIR)/focalizec/.install_var
 include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZEC=../toplevel/focalizec
-FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
+FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -stop-before-coq
 FOCALIZEDEP=../focalizedep/focalizedep
 ZENON=../../../zenon/zenon
 ZVTOV=../../../zvtov/zvtov
