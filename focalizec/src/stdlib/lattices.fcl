@@ -287,7 +287,6 @@ species Lattice =
        (* x = x v y; x ^ y = x ^ (x v y) = x *)
        <1>1 assume x : Self, y : Self,
             hypothesis H : !order_sup(y, x),
-            notation s = !sup (x, y),
             prove !order_inf(x, y)
             <2>1 prove !equal(!inf(x, y), x)
                  <3>1 prove !equal(y, !sup(x, y))
