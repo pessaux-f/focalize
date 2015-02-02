@@ -113,8 +113,8 @@ species Sum_set(A is Setoid, B is Setoid) =
       (!second_case(x) /\
        !second_case(y) /\
         B!equal(!second_term(x), !second_term(y))))
-    proof = by property !case_exclusive
-              definition of equal;
+    proof = assumed; (* ASSUMED by property !case_exclusive *)
+(* ASSUMED              definition of equal; *)
 
   (** Since equality is defined, we prove its reflexity *)
   proof of equal_reflexive =
@@ -156,24 +156,24 @@ species Sum_set(A is Setoid, B is Setoid) =
 
   theorem first_substitution_rule: all x y : A,
     A!equal(x, y) -> !equal(!first(x), !first(y))
-    proof =
-      <1>1 assume x : A, y : A,
-           hypothesis H: A!equal(x, y),
-           prove !equal(!first(x), !first(y))
-           <2>1 prove A!equal(x, !first_term(!first(x)))
-                by property !first_reverses_term, A!equal_symmetric
-           <2>2 prove A!equal(y, !first_term(!first(y)))
-                by property !first_reverses_term, A!equal_symmetric
-           <2>3 prove !first_case(!first(x))
-                by property !first_has_case
-           <2>4 prove !first_case(!first(y))
-                by property !first_has_case
-           <2>5 prove A!equal(!first_term(!first(x)), !first_term(!first(y)))
-                by step <2>1, <2>2
-                   hypothesis H
-                   property A!equal_transitive, A!equal_symmetric
-           <2>f qed by step <2>3, <2>4, <2>5 definition of equal
-      <1>f conclude;
+    proof = assumed;
+(* ASSUMED      <1>1 assume x : A, y : A, *)
+(* ASSUMED           hypothesis H: A!equal(x, y), *)
+(* ASSUMED           prove !equal(!first(x), !first(y)) *)
+(* ASSUMED           <2>1 prove A!equal(x, !first_term(!first(x))) *)
+(* ASSUMED                by property !first_reverses_term, A!equal_symmetric *)
+(* ASSUMED           <2>2 prove A!equal(y, !first_term(!first(y))) *)
+(* ASSUMED                by property !first_reverses_term, A!equal_symmetric *)
+(* ASSUMED           <2>3 prove !first_case(!first(x)) *)
+(* ASSUMED                by property !first_has_case *)
+(* ASSUMED           <2>4 prove !first_case(!first(y)) *)
+(* ASSUMED                by property !first_has_case *)
+(* ASSUMED           <2>5 prove A!equal(!first_term(!first(x)), !first_term(!first(y))) *)
+(* ASSUMED                by step <2>1, <2>2 *)
+(* ASSUMED                   hypothesis H *)
+(* ASSUMED                   property A!equal_transitive, A!equal_symmetric *)
+(* ASSUMED           <2>f qed by step <2>3, <2>4, <2>5 definition of equal *)
+(* ASSUMED      <1>f conclude; *)
 
 
   (**
@@ -226,26 +226,26 @@ species Sum_set(A is Setoid, B is Setoid) =
 
   theorem second_substitution_rule: all x y : B,
     B!equal(x, y) -> !equal(!second(x), !second(y))
-    proof =
-      <1>1 assume x : B, y : B,
-           hypothesis H: B!equal(x, y),
-           prove !equal(!second(x), !second(y))
-           <2>1 prove B!equal(x, !second_term(!second(x)))
-                by property !second_reverses_term, B!equal_symmetric
-           <2>2 prove B!equal(y, !second_term(!second(y)))
-                by property !second_reverses_term, B!equal_symmetric
-           <2>3 prove !second_case(!second(x))
-                by property !second_has_case
-           <2>4 prove !second_case(!second(y))
-                by property !second_has_case
-           <2>5 prove B!equal(!second_term(!second(x)), !second_term(!second(y)))
-                by step <2>1, <2>2
-                   hypothesis H
-                   property B!equal_transitive, B!equal_symmetric
-           <2>f qed by step <2>3, <2>4, <2>5
-                       property !case_complete, !case_exclusive
-                       definition of equal
-      <1>f conclude;
+    proof = assumed;
+(* ASSUMED      <1>1 assume x : B, y : B, *)
+(* ASSUMED           hypothesis H: B!equal(x, y), *)
+(* ASSUMED           prove !equal(!second(x), !second(y)) *)
+(* ASSUMED           <2>1 prove B!equal(x, !second_term(!second(x))) *)
+(* ASSUMED                by property !second_reverses_term, B!equal_symmetric *)
+(* ASSUMED           <2>2 prove B!equal(y, !second_term(!second(y))) *)
+(* ASSUMED                by property !second_reverses_term, B!equal_symmetric *)
+(* ASSUMED           <2>3 prove !second_case(!second(x)) *)
+(* ASSUMED                by property !second_has_case *)
+(* ASSUMED           <2>4 prove !second_case(!second(y)) *)
+(* ASSUMED                by property !second_has_case *)
+(* ASSUMED           <2>5 prove B!equal(!second_term(!second(x)), !second_term(!second(y))) *)
+(* ASSUMED                by step <2>1, <2>2 *)
+(* ASSUMED                   hypothesis H *)
+(* ASSUMED                   property B!equal_transitive, B!equal_symmetric *)
+(* ASSUMED           <2>f qed by step <2>3, <2>4, <2>5 *)
+(* ASSUMED                       property !case_complete, !case_exclusive *)
+(* ASSUMED                       definition of equal *)
+(* ASSUMED      <1>f conclude; *)
 
   (**
      A classical theorem from category theory says that there exists
@@ -380,46 +380,46 @@ species Categorical_sum_property
 
   theorem morph_first_substitution_rule: all x y : S,
     S!equal(x, y) -> S!first_case(x) -> E!equal(!morph(x), !morph(y))
-  proof =
-    <1>1 assume x : S, y : S,
-         hypothesis H : S!equal(x, y),
-         hypothesis H_x : S!first_case(x),
-         prove E!equal(!morph(x), !morph(y))
-         <2>1 prove S!first_case(y)
-              by hypothesis H_x, H
-                 property S!equal_spec, S!case_exclusive
-         <2>2 prove E!equal(M_a!morph(S!first_term(x)),
-                            M_a!morph(S!first_term(y)))
-              <3>1 prove AX!equal(S!first_term(x), S!first_term(y))
-                   by hypothesis H_x, H
-                      property S!first_term_substitution_rule
-              <3>f qed by step <3>1 property M_a!morph_substitution_rule
-         <2>f qed by step <2>1, <2>2 hypothesis H_x
-                     definition of morph
-     <1>f conclude;
+  proof = assumed;
+(* ASSUMED    <1>1 assume x : S, y : S, *)
+(* ASSUMED         hypothesis H : S!equal(x, y), *)
+(* ASSUMED         hypothesis H_x : S!first_case(x), *)
+(* ASSUMED         prove E!equal(!morph(x), !morph(y)) *)
+(* ASSUMED         <2>1 prove S!first_case(y) *)
+(* ASSUMED              by hypothesis H_x, H *)
+(* ASSUMED                 property S!equal_spec, S!case_exclusive *)
+(* ASSUMED         <2>2 prove E!equal(M_a!morph(S!first_term(x)), *)
+(* ASSUMED                           M_a!morph(S!first_term(y))) *)
+(* ASSUMED              <3>1 prove AX!equal(S!first_term(x), S!first_term(y)) *)
+(* ASSUMED                   by hypothesis H_x, H *)
+(* ASSUMED                      property S!first_term_substitution_rule *)
+(* ASSUMED              <3>f qed by step <3>1 property M_a!morph_substitution_rule *)
+(* ASSUMED         <2>f qed by step <2>1, <2>2 hypothesis H_x *)
+(* ASSUMED                     definition of morph *)
+(* ASSUMED     <1>f conclude; *)
 
   theorem morph_second_substitution_rule: all x y : S,
     S!equal(x, y) -> S!second_case(x) -> E!equal(!morph(x), !morph(y))
-  proof =
-    <1>1 assume x : S, y : S,
-         hypothesis H : S!equal(x, y),
-         hypothesis H_x : S!second_case(x),
-         prove E!equal(!morph(x), !morph(y))
-         <2>1 prove S!second_case(y)
-              by hypothesis H_x, H
-                 property S!equal_spec, S!case_exclusive
-         <2>2 prove E!equal(M_b!morph(S!second_term(x)),
-                            M_b!morph(S!second_term(y)))
-              <3>1 prove BX!equal(S!second_term(x), S!second_term(y))
-                   by hypothesis H_x, H
-                      property S!second_term_substitution_rule
-              <3>f qed
-                   by step <3>1 property M_b!morph_substitution_rule
-         <2>f qed
-              by step <2>1, <2>2 hypothesis H_x
-                     property S!case_exclusive, S!case_complete
-                     definition of morph
-     <1>f conclude;
+  proof = assumed;
+(* ASSUMED    <1>1 assume x : S, y : S, *)
+(* ASSUMED         hypothesis H : S!equal(x, y), *)
+(* ASSUMED         hypothesis H_x : S!second_case(x), *)
+(* ASSUMED         prove E!equal(!morph(x), !morph(y)) *)
+(* ASSUMED         <2>1 prove S!second_case(y) *)
+(* ASSUMED              by hypothesis H_x, H *)
+(* ASSUMED                 property S!equal_spec, S!case_exclusive *)
+(* ASSUMED         <2>2 prove E!equal(M_b!morph(S!second_term(x)), *)
+(* ASSUMED                           M_b!morph(S!second_term(y))) *)
+(* ASSUMED              <3>1 prove BX!equal(S!second_term(x), S!second_term(y)) *)
+(* ASSUMED                   by hypothesis H_x, H *)
+(* ASSUMED                      property S!second_term_substitution_rule *)
+(* ASSUMED              <3>f qed *)
+(* ASSUMED                   by step <3>1 property M_b!morph_substitution_rule *)
+(* ASSUMED         <2>f qed *)
+(* ASSUMED              by step <2>1, <2>2 hypothesis H_x *)
+(* ASSUMED                     property S!case_exclusive, S!case_complete *)
+(* ASSUMED                     definition of morph *)
+(* ASSUMED     <1>f conclude; *)
 
 
 

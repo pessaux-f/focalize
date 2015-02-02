@@ -6,7 +6,7 @@ termtype : type.
 Term : Type := term termtype.
 Prop: Type := dk_logic.Prop.
 prf: Prop -> Type := dk_logic.eP.
-anyterm: Term.
+anyterm: ty : type -> term ty.
 
 not: Prop -> Prop := dk_logic.not.
 notc: Prop -> Prop :=
