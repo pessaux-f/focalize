@@ -119,6 +119,10 @@ equal : A : cc.uT -> x : cc.eT A -> y : cc.eT A -> Prop
                                      forall (cc.Arrow A prop)
                                             (H : (cc.eT A -> Prop) =>
                                              imp (H x) (H y)).
+
+equalc (A : cc.uT) (x : cc.eT A) (y : cc.eT A) : Prop :=
+  not (not (equal A x y)).
+
 refl : A : cc.uT -> x : cc.eT A -> eP (equal A x x)
      := A : cc.uT => x : cc.eT A =>
                      H : (cc.eT A -> Prop) =>
