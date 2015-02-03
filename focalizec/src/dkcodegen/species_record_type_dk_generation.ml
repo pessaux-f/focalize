@@ -1250,7 +1250,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          rec_generate_exprs_list ~comma: false loc_idents env args ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_ident, args) ->
-         Format.fprintf out_fmter "@[<1>(@@" ;
+         Format.fprintf out_fmter "@[<1>(" ;
          let extras =
            generate_constructor_ident_for_method_generator ctx env cstr_ident
          in
