@@ -20,7 +20,8 @@ do
 
     echo
     echo ${f%.*}
-    if dkcheck "$d"
+    dkcheck -e $d |& head -n 1
+    if [ -e ${f%.*}.dko ]
     then
         ok="$ok $f"
         echo 'OK'
