@@ -20,13 +20,16 @@ do
 
     echo
     echo ${f%.*}
-    dkcheck -e $d |& head -n 1
+    dkres=$(dkcheck -e $d |& head -n 1)
+    echo "$dkres"
     if [ -e ${f%.*}.dko ]
     then
         ok="$ok $f"
         echo 'OK'
     else
-        echo 'KO'
+        error_line=$(echo "$dkres" | sed -r 's/.*line:([0-9]+)\ .*/\1/')
+        echo -n "KO: line $error_line at "
+        percent "$error_line" $(cat $d | wc -l)
     fi
     size=$(cat $f | wc -l)
     echo "size: $size"
