@@ -44,8 +44,8 @@ FOCALIZE_BIN_OBJS=$(FOCALIZE_BYT_OBJS:.cmo=.cmx)
 FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
-FOCALIZE_DKS=$(FOCALIZE_SRC:.fcl=.dk)
-FOCALIZE_DKOS=$(FOCALIZE_DKS:.dk=.dko)
+FOCALIZE_DKS=$(FOCALIZE_SRC:.fcl=.sk)
+FOCALIZE_DKOS=$(FOCALIZE_DKS:.sk=.dko)
 
 FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 
@@ -65,6 +65,7 @@ EXTERNAL_VOS=\
 
 EXTERNAL_DKOS=\
  cc.dko\
+ builtins.dko\
  dk_bool.dko\
  dk_fail.dko\
  dk_opt.dko\
@@ -83,6 +84,9 @@ EXTERNAL_DKOS=\
  focal.dko\
  sets_externals.dko\
  wellfoundation_externals.dko
+
+builtins.dko: builtins.dk
+	dkcheck -e $<
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
@@ -178,6 +182,6 @@ clean:
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 	$(FOCALIZEDEP) *.fcl >> ./.depend
-	$(DKDEP) *.dk >> ./.depend
+	$(DKDEP) *.sk >> ./.depend
 
 include .depend

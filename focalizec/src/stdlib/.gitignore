@@ -1,7 +1,7 @@
 *.ml
 *.v
 *.xml
-*.dk
+*.sk
 *.coz
 
 # Generated from generated files
@@ -29,11 +29,11 @@
 # Ungenerated files with generated extensions
 !*_externals.v
 !*_externals.ml
-!*_externals.dk
-!dk_*.dk
+!*_externals.sk
+!dk_*.sk
 !coq_builtins.v
 !ml_builtins.ml
-!cc.dk
-!focal.dk
-!logic.dk
-!classic.dk
+!cc.sk
+!focal.sk
+!logic.sk
+!classic.sk

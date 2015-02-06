@@ -190,7 +190,7 @@ fi
 
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
-    DKWITNESS=`which dkcheck`
+    DKWITNESS=`which skcheck`
     DKDIR=`dirname $DKWITNESS`
     if [ "$DKDIR" != "" ] ;
     then
@@ -232,11 +232,11 @@ fi
 # So do not prefix it explicitly, letting PATH finding the commands.
 if [ "$DKDIR" != "" ] ;
 then
-    DKCHECK=$DKDIR/dkcheck
-    DKDEP=$DKDIR/dkdep
+    DKCHECK=$DKDIR/skcheck
+    DKDEP=$DKDIR/skdep
 else
-    DKCHECK=dkcheck
-    DKDEP=dkdep
+    DKCHECK=skcheck
+    DKDEP=skdep
 fi
 # #############################################################################
 # Generate the installation and configuration file containing tools vars.

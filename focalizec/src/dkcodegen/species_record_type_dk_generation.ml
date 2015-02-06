@@ -455,16 +455,7 @@ let generate_constant ctx cst =
        (* [true] maps on Dk "true". [false] maps on Dk "false". *)
        Format.fprintf ctx.Context.scc_out_fmter "dk_bool.%s" str
    | Parsetree.C_string str ->
-      Format.fprintf ctx.Context.scc_out_fmter "(; \"%s\" ;)@ " str;
-      let rec compile_str fmter s =
-        if s = "" then
-          Format.fprintf fmter "dk_string.nil"
-        else
-          Format.fprintf fmter "@[<0>(dk_string.cons %a@\n%a)@]"
-                         print_char_to_dk s.[0]
-                         compile_str (butfst s)
-      in
-      compile_str ctx.Context.scc_out_fmter str
+      Format.fprintf ctx.Context.scc_out_fmter "\"%s\"" str;
    | Parsetree.C_char c ->
       Format.fprintf ctx.Context.scc_out_fmter "(; \'%c\' ;)@ " c;
       print_char_to_dk ctx.Context.scc_out_fmter c
