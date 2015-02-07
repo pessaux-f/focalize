@@ -53,6 +53,24 @@ let section_gen_sym =
 ;;
 
 
+(* Print the type of a method *)
+let print_method_type ctx print_ctx env out_fmter meth_type_kind =
+  match meth_type_kind with
+  | Parsetree_utils.DETK_computational meth_ty ->
+     Format.fprintf out_fmter "cc.eT (%a)"
+       (Types.pp_type_simple_to_dk print_ctx) meth_ty
+  | Parsetree_utils.DETK_logical lexpr ->
+     Format.fprintf out_fmter "dk_logic.eP (";
+     Species_record_type_dk_generation.generate_logical_expr
+       ctx ~in_recursive_let_section_of: [] ~local_idents: []
+       ~self_methods_status:
+       Species_record_type_dk_generation.SMS_from_record
+       ~recursive_methods_status:
+       Species_record_type_dk_generation.RMS_regular
+       env lexpr ;
+     Format.fprintf out_fmter ")"
+;;
+
 (*
    There is no "Section" mechanism in Dedukti.
    Its use in the Coq backend is to call Zenon in a simple context
@@ -3651,8 +3669,8 @@ let extend_env_for_species_def ~current_species env species_descr =
 
     {b Rem} : Not exported outside this module.                               *)
 (* ************************************************************************** *)
-let dump_collection_generator_arguments_for_params_methods out_fmter
-    compiled_species_fields =
+let dump_collection_generator_arguments_for_params_methods
+    ctx print_ctx env out_fmter compiled_species_fields =
   (* Let's create an assoc list mapping for each species paramater name the
      set of methods names from it that needed to be lambda-lifted, hence that
      will lead to parameters of the collection generator.
@@ -3736,10 +3754,12 @@ let dump_collection_generator_arguments_for_params_methods out_fmter
         "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
         "_" in
       List.iter
-        (fun (meth, _) ->
-          (* Don't print the type to prevent being too verbose. *)
-          Format.fprintf out_fmter "@ %s%a"
-            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
+        (fun (meth, meth_ty_kind) ->
+          Format.fprintf out_fmter "@ (%s%a : %a)"
+            prefix
+            Parsetree_utils.pp_vname_with_operators_expanded meth
+            (print_method_type ctx print_ctx env) meth_ty_kind
+        )
         meths_set)
   ordered_species_params_names_and_methods;
   (* Finally, make this parameters information public by returning it. By the
@@ -3834,7 +3854,7 @@ let build_collection_generator_arguments_for_params_methods out_fmter
 
 
 
-let generate_collection_generator ctx env compiled_species_fields
+let generate_collection_generator ctx print_ctx env compiled_species_fields
     abstracted_params_methods_in_record_type =
   let current_species_name = snd ctx.Context.scc_current_species in
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -3857,7 +3877,7 @@ let generate_collection_generator ctx env compiled_species_fields
     let from = field_memory.Misc_common.cfm_from_species in
     Format.fprintf out_fmter "(; From species %a. ;)@\n"
       Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
-    Format.fprintf out_fmter "@[<2>let local_%a :=@ "
+    Format.fprintf out_fmter "@[<2>(local_%a :=@ "
       Parsetree_utils.pp_vname_with_operators_expanded
       field_memory.Misc_common.cfm_method_name;
     if Configuration.get_verbose () then
@@ -3932,7 +3952,7 @@ let generate_collection_generator ctx env compiled_species_fields
           Parsetree_utils.pp_vname_with_operators_expanded n)
       field_memory.Misc_common.cfm_dk_min_typ_env_names;
     (* That's all for this field code generation. *)
-    Format.fprintf out_fmter "@ in@]@\n";
+    Format.fprintf out_fmter ")@]@\n";
     if Configuration.get_verbose () then
       Format.eprintf "End of Dk code for method generator of '%a'.@."
         Sourcify.pp_vname field_memory.Misc_common.cfm_method_name in
@@ -3966,8 +3986,7 @@ let generate_collection_generator ctx env compiled_species_fields
      instanciate in order to apply the collection generator. *)
   let abstr_params_methods_in_coll_gen =
     dump_collection_generator_arguments_for_params_methods
-      out_fmter compiled_species_fields in
-  Format.fprintf out_fmter " :=@ ";
+      ctx print_ctx env out_fmter compiled_species_fields in
   (* Generate the local functions that will be used to fill the record value. *)
   List.iter
     (function
@@ -3990,7 +4009,7 @@ let generate_collection_generator ctx env compiled_species_fields
                     declared in the collection generator's header. *)
                  make_carrier_mapping_using_lambda_lifts
                    ctx.Context.scc_collections_carrier_mapping } in
-             Format.fprintf out_fmter "@[<2>let local_rep :=@ %a in@]@\n"
+             Format.fprintf out_fmter "@[<2>(local_rep :=@ %a)@]@\n"
                (Types.pp_type_simple_to_dk print_ctx) type_from_scheme
            )
           else process_one_field field_memory
@@ -4000,6 +4019,7 @@ let generate_collection_generator ctx env compiled_species_fields
       | Misc_common.CSF_let_rec l ->
           List.iter (fun fm -> process_one_field fm) l)
     compiled_species_fields ;
+  Format.fprintf out_fmter " :=@ ";
   (* Now, apply the record type constructor. *)
   Format.fprintf out_fmter "mk_record" ;
   (* The "mk_record" first arguments are those corresponding to the IS species
@@ -4173,7 +4193,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
            recovered with the above [params_carriers_abstr_for_record]. *)
         abstr_params_methods_in_coll_gen) =
         generate_collection_generator
-          ctxt_ccmap env' compiled_fields
+          ctxt_ccmap print_ctx env' compiled_fields
           abstracted_params_methods_in_record_type in
       (* From this, we must remove parameters whose methods list is empty.
          In fact, they correspond to entity parameters. Since to generate
