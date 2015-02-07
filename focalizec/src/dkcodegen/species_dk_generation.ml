@@ -3750,15 +3750,23 @@ let dump_collection_generator_arguments_for_params_methods
     (fun (species_param, (Env.ODFP_methods_list meths_set)) ->
       let species_param_name =
         Env.TypeInformation.vname_of_species_param species_param in
-      let prefix =
-        "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^
-        "_" in
+      let species_param_str_name =
+        Parsetree_utils.name_of_vname species_param_name
+      in
+      let prefix = "_p_" ^ species_param_str_name ^ "_" in
+      let new_print_ctx =
+        {print_ctx
+        with Types.dpc_collections_carrier_mapping =
+               ((ctx.Context.scc_current_unit, species_param_str_name),
+                ("_p_" ^ species_param_str_name, Types.CCMI_is))
+               :: print_ctx.Types.dpc_collections_carrier_mapping}
+      in
       List.iter
         (fun (meth, meth_ty_kind) ->
           Format.fprintf out_fmter "@ (%s%a : %a)"
             prefix
             Parsetree_utils.pp_vname_with_operators_expanded meth
-            (print_method_type ctx print_ctx env) meth_ty_kind
+            (print_method_type ctx new_print_ctx env) meth_ty_kind
         )
         meths_set)
   ordered_species_params_names_and_methods;
