@@ -864,6 +864,22 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
 ;;
 
 
+let print_ident out i =
+  match i.Parsetree.ast_desc with
+  | Parsetree.I_local vname
+  | Parsetree.I_global (Parsetree.Vname vname) ->
+     Parsetree_utils.pp_vname_with_operators_expanded out vname
+  | Parsetree.I_global (Parsetree.Qualified (fname, vname)) ->
+     Format.fprintf out "%s.%a"
+       fname
+       Parsetree_utils.pp_vname_with_operators_expanded vname
+;;
+
+let print_constr_ident out i =
+  let Parsetree.CI id = i.Parsetree.ast_desc in
+  print_ident out id
+;;
+
 
 (* ************************************************************************** *)
 (** {b Descr}: Code generation for *one* let binding, recursive of not.
@@ -1241,7 +1257,8 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          rec_generate_exprs_list ~comma: false loc_idents env args ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_ident, args) ->
-         Format.fprintf out_fmter "@[<1>(@@" ;
+         Format.fprintf out_fmter "@[<1>(%a"
+           print_constr_ident cstr_ident;
          let extras =
            generate_constructor_ident_for_method_generator ctx env cstr_ident
          in
