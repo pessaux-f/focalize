@@ -3786,14 +3786,20 @@ let remind_collection_generator_arguments_for_params_carriers ctx =
 
 (** {b Descr} : Really prints the code for arguments computed by
     [remind_collection_generator_arguments_for_params_carriers]. *)
-let dump_collection_generator_arguments_for_params_carriers out_fmter lst =
+let dump_collection_generator_arguments_for_params_carriers out_fmter lst ~param =
   List.iter
     (fun (param_kind, param_name) ->
       match param_kind with
        | Env.ScopeInformation.SPK_is ->
            (* We need to enforce the type for Dk because I don't know what. *)
-           Format.fprintf out_fmter "@ (_p_%a_T : cc.uT)"
-             Parsetree_utils.pp_vname_with_operators_expanded param_name;
+          if param then
+            Format.fprintf out_fmter "@ (_p_%a_T : cc.uT)"
+              Parsetree_utils.pp_vname_with_operators_expanded
+              param_name
+          else
+            Format.fprintf out_fmter "@ _p_%a_T"
+              Parsetree_utils.pp_vname_with_operators_expanded
+              param_name
        | Env.ScopeInformation.SPK_in ->
            (* One must use the parameter of the collection generator to
               abstract the "IN" parameter. This parameter is losely named by
@@ -3950,7 +3956,7 @@ let generate_collection_generator ctx env compiled_species_fields
     remind_collection_generator_arguments_for_params_carriers ctx in
   (* Now, we dump them to make them parameters of the collection generator. *)
   dump_collection_generator_arguments_for_params_carriers
-    out_fmter params_carriers_abstr_for_record;
+    out_fmter params_carriers_abstr_for_record ~param:true;
   (* Generate the parameters the collection generator needs to build each of
      the current species's local function (functions corresponding to the
      actual method stored in the collection record).
@@ -4002,7 +4008,7 @@ let generate_collection_generator ctx env compiled_species_fields
      parameters (with the same names) of the collection generator we are
      building. *)
   dump_collection_generator_arguments_for_params_carriers
-    out_fmter params_carriers_abstr_for_record ;
+    out_fmter params_carriers_abstr_for_record ~param:false;
   (* Now, print the same names than the parameters that must be provided when
      using the collection generator to represent methods of the collection
      parameters that are abstracted and used by the local "local_xxx" (these
