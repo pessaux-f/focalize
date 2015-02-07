@@ -21,13 +21,15 @@ do
 
     echo
     echo ${f%.*}
-    skindent "$s" > $d && dkcheck -e $d |& head -n 1
+    result=$(( skindent "$s" > $d && dkcheck -e $d ) |& head -n 1)
     if [ -e ${f%.*}.dko ]
     then
         ok="$ok $f"
         echo 'OK'
     else
-        echo 'KO'
+        res_line=$(echo "$result" | sed -r 's/.*line:([0-9]*) .*/\1/')
+        echo -n 'KO: '
+        percent "$res_line" $(cat "$s" | wc -l)
     fi
     size=$(cat $f | wc -l)
     echo "size: $size"
