@@ -54,7 +54,7 @@ let section_gen_sym =
 
 
 (* Print the type of a method *)
-let print_method_type ctx print_ctx env out_fmter meth_type_kind =
+let print_method_type ctx print_ctx env param out_fmter meth_type_kind =
   match meth_type_kind with
   | Parsetree_utils.DETK_computational meth_ty ->
      Format.fprintf out_fmter "cc.eT (%a)"
@@ -64,7 +64,7 @@ let print_method_type ctx print_ctx env out_fmter meth_type_kind =
      Species_record_type_dk_generation.generate_logical_expr
        ctx ~in_recursive_let_section_of: [] ~local_idents: []
        ~self_methods_status:
-       Species_record_type_dk_generation.SMS_from_record
+       (Species_record_type_dk_generation.SMS_from_param param)
        ~recursive_methods_status:
        Species_record_type_dk_generation.RMS_regular
        env lexpr ;
@@ -3754,19 +3754,30 @@ let dump_collection_generator_arguments_for_params_methods
         Parsetree_utils.name_of_vname species_param_name
       in
       let prefix = "_p_" ^ species_param_str_name ^ "_" in
+      let coll_mapping =
+        ((ctx.Context.scc_current_unit, "Self"),
+         ("_p_" ^ species_param_str_name, Types.CCMI_is))
+        ::
+          ((ctx.Context.scc_current_unit, species_param_str_name),
+         ("_p_" ^ species_param_str_name, Types.CCMI_is))
+        :: print_ctx.Types.dpc_collections_carrier_mapping
+      in
       let new_print_ctx =
         {print_ctx
         with Types.dpc_collections_carrier_mapping =
-               ((ctx.Context.scc_current_unit, species_param_str_name),
-                ("_p_" ^ species_param_str_name, Types.CCMI_is))
-               :: print_ctx.Types.dpc_collections_carrier_mapping}
+               coll_mapping}
+      in
+      let new_ctx =
+        {ctx
+        with Context.scc_collections_carrier_mapping =
+               coll_mapping}
       in
       List.iter
         (fun (meth, meth_ty_kind) ->
           Format.fprintf out_fmter "@ (%s%a : %a)"
             prefix
             Parsetree_utils.pp_vname_with_operators_expanded meth
-            (print_method_type ctx new_print_ctx env) meth_ty_kind
+            (print_method_type new_ctx new_print_ctx env species_param_name) meth_ty_kind
         )
         meths_set)
   ordered_species_params_names_and_methods;
