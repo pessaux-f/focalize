@@ -16,11 +16,13 @@ ok=
 # Test if the dk files is accepted by Dedukti
 for f in *.fcl
 do
+    s=${f%.*}.sk
     d=${f%.*}.dk
 
     echo
     echo ${f%.*}
-    if dkcheck "$d"
+    skindent "$s" > $d && dkcheck -e $d |& head -n 1
+    if [ -e ${f%.*}.dko ]
     then
         ok="$ok $f"
         echo 'OK'

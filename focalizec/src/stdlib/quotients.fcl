@@ -54,7 +54,7 @@ species Represented_by (S is Basic_object) =
 
   theorem correct_rep_spec : all x : Self,
      !correct_representation (x) <-> !represents_some_self (!to_rep (x))
-     proof = by definition of correct_representation
+     proof = assumed (* ASSUMED by definition of correct_representation *)
   ;
 
   (** Combining to_rep and from_rep gives identity. *)
