@@ -245,7 +245,7 @@ let instanciate_IS_parameter_carrier_through_inheritance ctx env
    | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
        Format.fprintf out_fmter "@ " ;
        if coll_mod <> current_unit then Format.fprintf out_fmter "%s." coll_mod;
-       Format.fprintf out_fmter "%s.me_as_carrier" coll_name
+       Format.fprintf out_fmter "%s__me_as_carrier" coll_name
    | Misc_common.IPI_by_species_parameter prm ->
        (* In Dedukti, species parameters are abstracted by "_p_species_xxx". *)
        let species_param_name =
@@ -400,7 +400,7 @@ let generate_def_dependency_equivalence env ctx generated_fields from name =
   (* Generate the application of the method generator. First, its name. *)
   let defined_from = from.Env.fh_initial_apparition in
   if (fst defined_from) <> ctx.Context.scc_current_unit then
-    Format.fprintf out_fmter "%s." (fst defined_from);
+    Format.fprintf out_fmter "%s__" (fst defined_from);
   (* If the generator comes from another species, qualify by its module. *)
   if defined_from <> ctx.Context.scc_current_species then
     Format.fprintf out_fmter "%a."
@@ -1426,7 +1426,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
             Format.fprintf out_fmter "@[<2>";
             if mod_name <> ctx.Context.scc_current_unit then
               Format.fprintf out_fmter "%s." mod_name;
-            Format.fprintf out_fmter "%a.%a"
+            Format.fprintf out_fmter "%a__%a"
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
             Format.fprintf out_fmter
@@ -1436,7 +1436,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               "@[<2>";
             if mod_name <> ctx.Context.scc_current_unit then
               Format.fprintf out_fmter "%s." mod_name;
-            Format.fprintf out_fmter "%a.%a"
+            Format.fprintf out_fmter "%a__%a"
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname;
             Format.fprintf out_fmter " :@ dk_logic.eP (";
@@ -3925,7 +3925,7 @@ let generate_collection_generator ctx print_ctx env compiled_species_fields
           defined_from_mod Sourcify.pp_vname defined_from_species ;
       if defined_from_mod <> ctx.Context.scc_current_unit then
         Format.fprintf out_fmter "%s." defined_from_mod ;
-      Format.fprintf out_fmter "%a.%a"
+      Format.fprintf out_fmter "%a__%a"
         Parsetree_utils.pp_vname_with_operators_expanded defined_from_species
         Parsetree_utils.pp_vname_with_operators_expanded
         field_memory.Misc_common.cfm_method_name ;
@@ -4361,7 +4361,7 @@ let print_record_type_carriers_args_instanciations ctx env args_instanciations =
           (match corresponding_effective_opt_fname with
            | Some fname -> Format.fprintf out_fmter "%s." fname
            | None -> ()) ;
-          Format.fprintf out_fmter "%a.me_as_carrier"
+          Format.fprintf out_fmter "%a__me_as_carrier"
             Parsetree_utils.pp_vname_with_operators_expanded
             corresponding_effective_vname
       | RTAI_by_in expr ->
@@ -4402,7 +4402,7 @@ let print_methods_from_params_instanciations ctx env formal_to_effective_map l =
                | Some fname -> Format.fprintf out_fmter "%s." fname
                | None -> ()) ;
                (* Species name.method name. *)
-               Format.fprintf out_fmter "%a.%a"
+               Format.fprintf out_fmter "%a__%a"
                  Parsetree_utils.pp_vname_with_operators_expanded
                  corresponding_effective_vname
                  Parsetree_utils.pp_vname_with_operators_expanded meth_name)

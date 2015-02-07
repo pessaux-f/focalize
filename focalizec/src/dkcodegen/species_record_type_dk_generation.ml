@@ -302,7 +302,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                    (* It comes from a toplevel stuff, hence not abstracted by
                       lambda-lifting. Then, we get the field of the
                       module representing the collection. *)
-                   Format.fprintf out_fmter "%a.%a"
+                   Format.fprintf out_fmter "%a__%a"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
                   )
@@ -339,7 +339,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                      Format.fprintf out_fmter "rf_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded vname
                    else (
-                     Format.fprintf out_fmter "%a.%a"
+                     Format.fprintf out_fmter "%a__%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        coll_name
                        Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -351,7 +351,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                     ourselves and moreover belongs to another compilation
                     unit. May be a species from the toplevel of another
                     FoCaL source file. *)
-                 Format.fprintf out_fmter "%s.%a.%a"
+                 Format.fprintf out_fmter "%s.%a__%a"
                    module_name
                    Parsetree_utils.pp_vname_with_operators_expanded coll_name
                    Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -1624,7 +1624,7 @@ let generate_record_type_parameters ctx env species_descr
                                   param_name param_name ;
                    if param_ty_mod <> current_unit then
                      Format.fprintf ppf "%s." param_ty_mod ;
-                   Format.fprintf ppf "%s.me_as_carrier)@ @]" param_ty_coll
+                   Format.fprintf ppf "%s__me_as_carrier)@ @]" param_ty_coll
                )
     ctx.Context.scc_collections_carrier_mapping ;
   (* Now, we will find the methods of the species parameters we decl-depend on
