@@ -3912,7 +3912,10 @@ let generate_collection_generator ctx print_ctx env compiled_species_fields
           Sourcify.pp_vname field_memory.Misc_common.cfm_method_name;
       (* It comes from the current inheritance level. Then its name is simply
          the method's name. *)
-      Format.fprintf out_fmter "%a"
+      let (_, current_species_vname) = ctx.Context.scc_current_species in
+      Format.fprintf out_fmter "%a__%a"
+        Parsetree_utils.pp_vname_with_operators_expanded
+        current_species_vname
         Parsetree_utils.pp_vname_with_operators_expanded
         field_memory.Misc_common.cfm_method_name ;
       (* Now, apply the method generator to each of the extra arguments induced
