@@ -400,10 +400,8 @@ let generate_def_dependency_equivalence env ctx generated_fields from name =
   (* Generate the application of the method generator. First, its name. *)
   let defined_from = from.Env.fh_initial_apparition in
   if (fst defined_from) <> ctx.Context.scc_current_unit then
-    Format.fprintf out_fmter "%s__" (fst defined_from);
-  (* If the generator comes from another species, qualify by its module. *)
-  if defined_from <> ctx.Context.scc_current_species then
-    Format.fprintf out_fmter "%a."
+    Format.fprintf out_fmter "%s." (fst defined_from);
+    Format.fprintf out_fmter "%a__"
       Parsetree_utils.pp_vname_with_operators_expanded
       (snd defined_from);
   (* Now, print the generator's name. *)
@@ -584,10 +582,8 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
               let ty = Types.specialize sch in
               if not in_section then
                 begin
-                  Format.fprintf out_fmter "@ (abst_%a :=@ %a__"
-                    Parsetree_utils.pp_vname_with_operators_expanded n
-                    Sourcify.pp_vname
-                    (snd ctx.Context.scc_current_species);
+                  Format.fprintf out_fmter "@ (abst_%a :=@ "
+                    Parsetree_utils.pp_vname_with_operators_expanded n;
                   generate_def_dependency_equivalence
                     env new_ctx generated_fields fr n;
                   Format.fprintf out_fmter ")"
