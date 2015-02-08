@@ -869,6 +869,9 @@ let print_ident out i =
   | Parsetree.I_local vname
   | Parsetree.I_global (Parsetree.Vname vname) ->
      Parsetree_utils.pp_vname_with_operators_expanded out vname
+  (* Hack for unit *)
+  | Parsetree.I_global (Parsetree.Qualified ("basics", Parsetree.Vuident "()")) ->
+     Format.fprintf out "dk_builltins.tt"
   | Parsetree.I_global (Parsetree.Qualified (fname, vname)) ->
      Format.fprintf out "%s.%a"
        fname
