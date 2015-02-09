@@ -1755,8 +1755,10 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
   let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
     ctx.Context.scc_collections_carrier_mapping in
+  let (_, species_name) = ctx.Context.scc_current_species in
   (* The header of the Dk record definition for the species. *)
-  Format.fprintf out_fmter "@[<2>Record me_as_species " ;
+  Format.fprintf out_fmter "@[<2>Record %a__me_as_species "
+    Sourcify.pp_vname species_name;
   (* We do not add any bindings to the [collections_carrier_mapping]
      before printing the record type parameters for 2 reasons:
        - species parameters carriers of the record are in the
@@ -1772,7 +1774,8 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
       ctx env species_descr field_abstraction_infos in
   let (_, species_name) = ctx.Context.scc_current_species in
   (* Print the constructor. *)
-  Format.fprintf out_fmter " := mk_record {@\n";
+  Format.fprintf out_fmter " := %a__mk_record {@\n"
+      Sourcify.pp_vname species_name;
   (* Always generate the "rep". *)
   Format.fprintf out_fmter "@[<2>%a__rf_T :@ cc.uT"
     Sourcify.pp_vname species_name;

@@ -4040,7 +4040,8 @@ let generate_collection_generator ctx print_ctx env compiled_species_fields
     compiled_species_fields ;
   Format.fprintf out_fmter " :=@ ";
   (* Now, apply the record type constructor. *)
-  Format.fprintf out_fmter "mk_record" ;
+  Format.fprintf out_fmter "%a__mk_record"
+    Sourcify.pp_vname current_species_name;
   (* The "mk_record" first arguments are those corresponding to the IS species
      parameters carriers. They we already computed when we created the
      "mk_record". So we just now need to apply then since they are
@@ -4538,7 +4539,8 @@ let generate_rep_definition ctx fields =
               Format.fprintf ctx.Context.scc_out_fmter
                 "(; Carrier's structure explicitly given by \"rep\". ;)@\n" ;
               Format.fprintf ctx.Context.scc_out_fmter
-                "@[<2>me_as_carrier@ " ;
+                "@[<2>%a__me_as_carrier@ "
+                Sourcify.pp_vname (snd ctx.Context.scc_current_species);
               (* Print the variables names... *)
               List.iter
                 (function (_, (h, _)) ->
@@ -4622,6 +4624,7 @@ let make_collection_effective_methods ctx env implemented_species_name
     record_type_args_instanciations2 =
   let out_fmter = ctx.Context.scc_out_fmter in
   let current_unit = ctx.Context.scc_current_unit in
+  let (_, species_name) = ctx.scc_current_species in
   (* First, the definition of the carrier. *)
   generate_rep_definition
      ctx collection_descr.Env.TypeInformation.spe_sig_methods ;
@@ -4632,12 +4635,13 @@ let make_collection_effective_methods ctx env implemented_species_name
       | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
       | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
           Format.fprintf out_fmter
-            "@[<2>%a :=@ @[<1>(proj_"
+            "@[<2>%a__%a :=@ @[<1>(proj_"
+            Sourcify.pp_vname species_name
             Parsetree_utils.pp_vname_with_operators_expanded n ;
           print_implemented_species_as_dk_module
             ~current_unit out_fmter implemented_species_name;
-          Format.fprintf out_fmter "__rf_%a@ effective_collection"
-            Parsetree_utils.pp_vname_with_operators_expanded n ;
+          Format.fprintf out_fmter "__rf_%a@ "
+            Parsetree_utils.pp_vname_with_operators_expanded n;
           (* Apply to the instanciations of the parameters carriers. *)
           print_record_type_carriers_args_instanciations
             ctx env record_type_args_instanciations;
@@ -4646,7 +4650,8 @@ let make_collection_effective_methods ctx env implemented_species_name
           print_methods_from_params_instanciations
             ctx env formals_to_effectives
             record_type_args_instanciations2;
-          Format.fprintf out_fmter ").@]@]@\n"
+          Format.fprintf out_fmter "@ %a__effective_collection).@]@]@\n"
+            Sourcify.pp_vname species_name;
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
             (fun (_, n, _, _, _, _, _, _) ->
@@ -4836,7 +4841,8 @@ let collection_compile env ~current_unit out_fmter collection_def
      collection generator of the collection we implement and apply it to the
      functions it needs coming from the collection applied to its parameters
      if there are some. *)
-  Format.fprintf out_fmter "@[<2>effective_collection :=@ ";
+  Format.fprintf out_fmter "@[<2>%a__effective_collection :=@ "
+    Sourcify.pp_vname collection_name;
   (* Now, get the collection generator from the closed species we implement. *)
   let implemented_species_name =
     collection_def.Parsetree.ast_desc.Parsetree.
