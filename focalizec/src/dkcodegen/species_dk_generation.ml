@@ -200,8 +200,8 @@ let instanciate_IS_parameter_through_inheritance ctx env original_param_index
   (match instancied_with with
    | Misc_common.IPI_by_toplevel_collection (coll_mod, coll_name) ->
        let prefix =
-         if coll_mod = current_unit then coll_name ^ "."
-         else coll_mod ^ "." ^ coll_name ^ "." in
+         if coll_mod = current_unit then coll_name ^ "__"
+         else coll_mod ^ "." ^ coll_name ^ "__" in
        List.iter
          (fun (meth, _) ->
            (* Don't print the type to prevent being too verbose. *)
