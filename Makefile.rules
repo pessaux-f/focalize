@@ -67,7 +67,7 @@ bin: $(BIN_OBJS)
 	$(COQC) $(COQ_INCLUDES) $<
 
 .sk.dko:
-	$(DKCHECK) -e $(DK_INCLUDES) $<
+	skindent $< | dkcheck -e -stdin $(DK_INCLUDES)
 .dk.dko:
 	dkcheck -e $(DK_INCLUDES) $<
 

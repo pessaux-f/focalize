@@ -217,8 +217,9 @@ let compile_zdk input_file_name =
 
 let compile_dk input_file_name =
   let cmd =
-    Printf.sprintf "%s -e %s"
-      Installation.dedukti_compiler input_file_name in
+    Printf.sprintf "%s %s | %s -e -stdin"
+      Installation.sukerujo_compiler input_file_name
+      Installation.dedukti_compiler in
   Format.eprintf "Invoking dkcheck...@\n";
   Format.eprintf ">> %s@." cmd;
   let ret_code = Sys.command cmd in

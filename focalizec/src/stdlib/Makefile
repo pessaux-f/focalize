@@ -85,7 +85,7 @@ EXTERNAL_DKOS=\
  sets_externals.dko\
  wellfoundation_externals.dko
 
-builtins.dko: builtins.dk
+builtins.dko: builtins.dk cc.dko
 	dkcheck -e $<
 
 include $(ROOT_DIR)/Makefile.common
@@ -182,6 +182,6 @@ clean:
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 	$(FOCALIZEDEP) *.fcl >> ./.depend
-	$(DKDEP) *.sk >> ./.depend
+	$(SKDEP) *.sk >> ./.depend
 
 include .depend
