@@ -249,9 +249,9 @@ species Singleton =
   let element = basics#();
   let equal (_x, _y) = true;
 
-  proof of equal_reflexive = by definition of equal;
-  proof of equal_symmetric = by definition of equal;
-  proof of equal_transitive = by definition of equal;
+  proof of equal_reflexive = assumed; (* ASSUMED by definition of equal; *)
+  proof of equal_symmetric = assumed; (* ASSUMED by definition of equal; *)
+  proof of equal_transitive = assumed; (* ASSUMED by definition of equal; *)
 end
 ;;
 
