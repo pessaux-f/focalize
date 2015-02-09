@@ -1870,16 +1870,18 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
     let ty = repr ty in
     match ty with
     | ST_var ty_var -> internal_pp_var_to_dk ppf ty_var
+    | ST_arrow (ST_sum_arguments tys, ty2) ->
+        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
+        Format.fprintf ppf "@[<2>%a@]"
+          (rec_pp_to_dk_sum_arguments ~ret_type:ty2 ctx 3) tys ;
+        if prio >= 3 then Format.fprintf ppf ")@]"
     | ST_arrow (ty1, ty2) ->
         Format.fprintf ppf "@[<1>(@[<2>cc.Arrow@ %a@ %a@])@]"
           (rec_pp_to_dk ctx 2) ty1
           (rec_pp_to_dk ctx 1) ty2 ;
     | ST_sum_arguments tys ->
-        (* In dk, constructors' arguments are curried, not tupled. *)
-        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
-        Format.fprintf ppf "@[<2>%a@]"
-          (rec_pp_to_dk_sum_arguments ctx 3) tys ;
-        if prio >= 3 then Format.fprintf ppf ")@]"
+       failwith "In Dedukti, sum arguments are only allowed in the left part of an arrow@\n%a@\n"
+         (rec_pp_to_dk_tuple ctx 3) tys
     | ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
@@ -1983,15 +1985,14 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
 
 
 
-  and rec_pp_to_dk_sum_arguments ctx prio ppf = function
-    | [] -> ()
-    | [last] ->
-        Format.fprintf ppf "%a" (rec_pp_to_dk ctx prio) last
-    | ty1 :: ty2 :: rem ->
-        Format.fprintf ppf "cc.Arrow@ %a@ %a"
+  and rec_pp_to_dk_sum_arguments ~ret_type ctx prio ppf = function
+    | [] ->
+        Format.fprintf ppf "%a" (rec_pp_to_dk ctx prio) ret_type
+    | ty1 :: rem ->
+        Format.fprintf ppf "(cc.Arrow@ %a@ %a)"
           (rec_pp_to_dk ctx prio) ty1
-          (rec_pp_to_dk_sum_arguments ctx prio)
-          (ty2 :: rem)
+          (rec_pp_to_dk_sum_arguments ~ret_type ctx prio)
+          rem
 
 
 
