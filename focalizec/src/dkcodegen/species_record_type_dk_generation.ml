@@ -117,8 +117,11 @@ let make_Self_cc_binding_abst_T ~current_species =
   ((module_name, "Self"), ("abst" ,Types.CCMI_is))
 ;;
 let make_Self_cc_binding_rf_T ~current_species =
-  let (module_name, _) = current_species in
-  ((module_name, "Self"), ("rf", Types.CCMI_is))
+  let (module_name, species_name) = current_species in
+  ((module_name, "Self"),
+   (Printf.sprintf "%s__rf"
+      (Parsetree_utils.name_of_vname species_name),
+    Types.CCMI_is))
 ;;
 let make_Self_cc_binding_species_param ~current_species spe_param_name =
   let (module_name, _) = current_species in
@@ -147,6 +150,7 @@ type recursive_methods_status =
 let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
     ~self_methods_status ~recursive_methods_status ident =
   let out_fmter = ctx.Context.scc_out_fmter in
+  let (_, species_name) = ctx.Context.scc_current_species in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname -> (
        (* Thanks to the scoping pass, identifiers remaining "local" are either
@@ -254,7 +258,8 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                 Format.fprintf out_fmter "abst_%a"
                   Parsetree_utils.pp_vname_with_operators_expanded vname
            | SMS_from_record ->
-               Format.fprintf out_fmter "rf_%a"
+               Format.fprintf out_fmter "%a__rf_%a"
+                 Sourcify.pp_vname species_name
                  Parsetree_utils.pp_vname_with_operators_expanded vname
            | SMS_from_param spe_param_name ->
                Format.fprintf out_fmter "_p_%a_%a"
@@ -295,7 +300,8 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                       are not in the case of a toplevel species but in the
                       case where a substitution replaced Self by ourself.
                       We then must refer to our local record field. *)
-                   Format.fprintf out_fmter "rf_%a"
+                   Format.fprintf out_fmter "%a__rf_%a"
+                     Sourcify.pp_vname species_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
                   )
                  else (
@@ -336,7 +342,8 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                       species is ourself. In this case, liek above we must
                       refer to our local record field. *)
                    if coll_name = (snd ctx.Context.scc_current_species) then
-                     Format.fprintf out_fmter "rf_%a"
+                     Format.fprintf out_fmter "%a__rf_%a"
+                       Sourcify.pp_vname species_name
                        Parsetree_utils.pp_vname_with_operators_expanded vname
                    else (
                      Format.fprintf out_fmter "%a__%a"
@@ -1763,10 +1770,12 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
   let abstracted_params_methods_in_record_type =
     generate_record_type_parameters
       ctx env species_descr field_abstraction_infos in
+  let (_, species_name) = ctx.Context.scc_current_species in
   (* Print the constructor. *)
   Format.fprintf out_fmter " := mk_record {@\n";
   (* Always generate the "rep". *)
-  Format.fprintf out_fmter "@[<2>rf_T :@ cc.uT";
+  Format.fprintf out_fmter "@[<2>%a__rf_T :@ cc.uT"
+    Sourcify.pp_vname species_name;
   (* We now extend the collections_carrier_mapping with ourselve known.
      Hence, if we refer to our "rep" we will be directly mapped onto the
      "rf_T" without needing to re-construct this name each time. Do same
@@ -1811,7 +1820,8 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
           Format.fprintf out_fmter "(; From species %a. ;)@\n"
             Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
           (* Field is prefixed by the species name for sake of unicity. *)
-          Format.fprintf out_fmter "@[<2>rf_%a :@ cc.eT (%a)"
+          Format.fprintf out_fmter "@[<2>%a__rf_%a :@ cc.eT (%a)"
+            Sourcify.pp_vname species_name
             Parsetree_utils.pp_vname_with_operators_expanded n
             (Types.pp_type_simple_to_dk print_ctx) ty ;
           if semi then Format.fprintf out_fmter "," ;
@@ -1825,7 +1835,8 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
             Format.fprintf out_fmter "(; From species %a. ;)@\n"
               Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
             (* Field is prefixed by the species name for sake of unicity. *)
-            Format.fprintf out_fmter "@[<2>rf_%a : cc.eT (%a)"
+            Format.fprintf out_fmter "@[<2>%a__rf_%a : cc.eT (%a)"
+              Sourcify.pp_vname species_name
               Parsetree_utils.pp_vname_with_operators_expanded n
               (Types.pp_type_simple_to_dk print_ctx) ty ;
             if semi then Format.fprintf out_fmter "," ;
@@ -1840,7 +1851,8 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
         Format.fprintf out_fmter "(; From species %a. ;)@\n"
           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
         (* Field is prefixed by the species name for sake of unicity. *)
-        Format.fprintf out_fmter "@[<2>rf_%a :@ dk_logic.eP ("
+        Format.fprintf out_fmter "@[<2>%a__rf_%a :@ dk_logic.eP ("
+          Sourcify.pp_vname species_name
           Parsetree_utils.pp_vname_with_operators_expanded n;
         (* Generate the Dk code representing the proposition.
            No local idents in the context because we just enter the scope of a

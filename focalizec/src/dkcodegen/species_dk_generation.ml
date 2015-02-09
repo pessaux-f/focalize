@@ -3983,7 +3983,8 @@ let generate_collection_generator ctx print_ctx env compiled_species_fields
     Sourcify.pp_vname current_species_name;
   (* The generic name of the collection generator: the species' name +
      "_collection_create". *)
-  Format.fprintf out_fmter "@[<2>collection_create";
+  Format.fprintf out_fmter "@[<2>%a__collection_create"
+      Sourcify.pp_vname current_species_name;
   (* The collection generator first arguments are those corresponding to the
      IS species parameters carriers, hence to the record type parameters.
      All of them are in the [collection_carrier_mapping] of the current
@@ -4631,11 +4632,11 @@ let make_collection_effective_methods ctx env implemented_species_name
       | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
       | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
           Format.fprintf out_fmter
-            "@[<2>%a :=@ effective_collection.@[<1>("
+            "@[<2>%a :=@ @[<1>(proj_"
             Parsetree_utils.pp_vname_with_operators_expanded n ;
           print_implemented_species_as_dk_module
             ~current_unit out_fmter implemented_species_name;
-          Format.fprintf out_fmter ".rf_%a"
+          Format.fprintf out_fmter "__rf_%a@ effective_collection"
             Parsetree_utils.pp_vname_with_operators_expanded n ;
           (* Apply to the instanciations of the parameters carriers. *)
           print_record_type_carriers_args_instanciations
@@ -4814,7 +4815,7 @@ let collection_compile env ~current_unit out_fmter collection_def
     Format.eprintf "Generating Dk code for collection %a@."
       Sourcify.pp_vname collection_name ;
   (* Start the "Module" encapsulating the collection representation. *)
-  Format.fprintf out_fmter "@[<2>Module %a.@\n"
+  Format.fprintf out_fmter "@[<2>(; Module %a. ;)@\n"
     Sourcify.pp_vname collection_name;
   (* Now, establish the mapping between collections available and the names
      representing their carrier. *)
@@ -4835,7 +4836,7 @@ let collection_compile env ~current_unit out_fmter collection_def
      collection generator of the collection we implement and apply it to the
      functions it needs coming from the collection applied to its parameters
      if there are some. *)
-  Format.fprintf out_fmter "@[<2>Let effective_collection :=@ ";
+  Format.fprintf out_fmter "@[<2>effective_collection :=@ ";
   (* Now, get the collection generator from the closed species we implement. *)
   let implemented_species_name =
     collection_def.Parsetree.ast_desc.Parsetree.
@@ -4844,7 +4845,7 @@ let collection_compile env ~current_unit out_fmter collection_def
      implemented species name + ".collection_create". *)
   print_implemented_species_for_dk
     ~current_unit out_fmter implemented_species_name;
-  Format.fprintf out_fmter ".collection_create";
+  Format.fprintf out_fmter "__collection_create";
   (* Finally, we must recover the arguments to apply to this collection
      generator. These arguments of course come from the species parameters the
      closed species we implement has (if it has some). We must make this
@@ -4896,7 +4897,7 @@ let collection_compile env ~current_unit out_fmter collection_def
              implemented_species_name
              formals_to_effectives implemented_species_methods) in
     (* End of the pretty print box of the Module embedding the collection. *)
-    Format.fprintf out_fmter "@]\nEnd %a.@\n@\n"
+    Format.fprintf out_fmter "@]\n(; End %a. ;)@\n@\n"
       Sourcify.pp_vname collection_name;
     (* We now return the methods this collection has in order to put this
        information in the environment. The collections has the same methods
