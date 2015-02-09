@@ -21,7 +21,7 @@ do
 
     echo
     echo ${f%.*}
-    result=$(( skindent "$s" > $d && dkcheck -e $d ) |& head -n 1)
+    result=$( skcheck -e "$s" |& grep ERROR)
     if [ -e ${f%.*}.dko ]
     then
         ok="$ok $f"
