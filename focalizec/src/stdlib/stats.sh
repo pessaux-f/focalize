@@ -16,20 +16,20 @@ ok=
 # Test if the dk files is accepted by Dedukti
 for f in *.fcl
 do
+    s=${f%.*}.sk
     d=${f%.*}.dk
 
     echo
     echo ${f%.*}
-    dkres=$(dkcheck -e $d |& head -n 1)
-    echo "$dkres"
+    result=$( skcheck -e "$s" |& grep ERROR)
     if [ -e ${f%.*}.dko ]
     then
         ok="$ok $f"
         echo 'OK'
     else
-        error_line=$(echo "$dkres" | sed -r 's/.*line:([0-9]+)\ .*/\1/')
-        echo -n "KO: line $error_line at "
-        percent "$error_line" $(cat $d | wc -l)
+        res_line=$(echo "$result" | sed -r 's/.*line:([0-9]*) .*/\1/')
+        echo -n 'KO: '
+        percent "$res_line" $(cat "$s" | wc -l)
     fi
     size=$(cat $f | wc -l)
     echo "size: $size"

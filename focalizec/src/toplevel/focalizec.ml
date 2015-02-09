@@ -100,10 +100,10 @@ let compile_fcl input_file_name =
      )
     else None in
   (* Finally, go to the Dedukti code generation if requested and generate the
-     .dk file . *)
+     .sk file . *)
   let dkgen_toplevel_env =
     if Configuration.get_generate_dk () then (
-      let out_file_name = (Filename.chop_extension input_file_name) ^ ".dk.zv" in
+      let out_file_name = (Filename.chop_extension input_file_name) ^ ".sk.zv" in
       Some
         (Main_dk_generation.root_compile
            ~current_unit ~out_file_name stuff_to_compile)
@@ -253,10 +253,10 @@ let dispatch_compilation files =
           if Configuration.get_generate_dk () then (
             if not (Configuration.get_stop_before_zenon ()) then (
               (* If a .zdk file was generated, let's compile it. *)
-              compile_zdk (input_file_no_suffix ^ ".dk") ;
+              compile_zdk (input_file_no_suffix ^ ".sk") ;
               (* Finally, pass it to Dedukti. *)
               if not (Configuration.get_stop_before_dk ()) then
-                compile_dk (input_file_no_suffix ^ ".dk")
+                compile_dk (input_file_no_suffix ^ ".sk")
              )
            );
           (* let tests_file_no_suffix = *)
@@ -282,7 +282,7 @@ let dispatch_compilation files =
           else
             compile_coq (input_file_no_suffix ^ ".v") ;
       | "v" -> compile_coq input_file_name
-      | "dk" -> compile_dk input_file_name
+      | "sk" -> compile_dk input_file_name
       | _ -> raise (Bad_file_suffix input_file_name)
     )
     files

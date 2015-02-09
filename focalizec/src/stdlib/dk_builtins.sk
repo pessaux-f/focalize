@@ -12,7 +12,6 @@ unknown_def : cc.eT unknown_type.
 unknown_proof : cc.eT unknown_type.
 
 (; String ;)
-string : cc.uT := dk_string.string.
 some_string : cc.eT string.
 prop : cc.uT := dk_logic.prop.
 

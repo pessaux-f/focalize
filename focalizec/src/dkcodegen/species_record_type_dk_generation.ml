@@ -117,8 +117,11 @@ let make_Self_cc_binding_abst_T ~current_species =
   ((module_name, "Self"), ("abst" ,Types.CCMI_is))
 ;;
 let make_Self_cc_binding_rf_T ~current_species =
-  let (module_name, _) = current_species in
-  ((module_name, "Self"), ("rf", Types.CCMI_is))
+  let (module_name, species_name) = current_species in
+  ((module_name, "Self"),
+   (Printf.sprintf "%s__rf"
+      (Parsetree_utils.name_of_vname species_name),
+    Types.CCMI_is))
 ;;
 let make_Self_cc_binding_species_param ~current_species spe_param_name =
   let (module_name, _) = current_species in
@@ -147,6 +150,7 @@ type recursive_methods_status =
 let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
     ~self_methods_status ~recursive_methods_status ident =
   let out_fmter = ctx.Context.scc_out_fmter in
+  let (_, species_name) = ctx.Context.scc_current_species in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname -> (
        (* Thanks to the scoping pass, identifiers remaining "local" are either
@@ -254,7 +258,8 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                 Format.fprintf out_fmter "abst_%a"
                   Parsetree_utils.pp_vname_with_operators_expanded vname
            | SMS_from_record ->
-               Format.fprintf out_fmter "rf_%a"
+               Format.fprintf out_fmter "%a__rf_%a"
+                 Sourcify.pp_vname species_name
                  Parsetree_utils.pp_vname_with_operators_expanded vname
            | SMS_from_param spe_param_name ->
                Format.fprintf out_fmter "_p_%a_%a"
@@ -295,14 +300,15 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                       are not in the case of a toplevel species but in the
                       case where a substitution replaced Self by ourself.
                       We then must refer to our local record field. *)
-                   Format.fprintf out_fmter "rf_%a"
+                   Format.fprintf out_fmter "%a__rf_%a"
+                     Sourcify.pp_vname species_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
                   )
                  else (
                    (* It comes from a toplevel stuff, hence not abstracted by
                       lambda-lifting. Then, we get the field of the
                       module representing the collection. *)
-                   Format.fprintf out_fmter "%a.%a"
+                   Format.fprintf out_fmter "%a__%a"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
                   )
@@ -336,10 +342,11 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                       species is ourself. In this case, liek above we must
                       refer to our local record field. *)
                    if coll_name = (snd ctx.Context.scc_current_species) then
-                     Format.fprintf out_fmter "rf_%a"
+                     Format.fprintf out_fmter "%a__rf_%a"
+                       Sourcify.pp_vname species_name
                        Parsetree_utils.pp_vname_with_operators_expanded vname
                    else (
-                     Format.fprintf out_fmter "%a.%a"
+                     Format.fprintf out_fmter "%a__%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        coll_name
                        Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -351,7 +358,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                     ourselves and moreover belongs to another compilation
                     unit. May be a species from the toplevel of another
                     FoCaL source file. *)
-                 Format.fprintf out_fmter "%s.%a.%a"
+                 Format.fprintf out_fmter "%s.%a__%a"
                    module_name
                    Parsetree_utils.pp_vname_with_operators_expanded coll_name
                    Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -455,16 +462,7 @@ let generate_constant ctx cst =
        (* [true] maps on Dk "true". [false] maps on Dk "false". *)
        Format.fprintf ctx.Context.scc_out_fmter "dk_bool.%s" str
    | Parsetree.C_string str ->
-      Format.fprintf ctx.Context.scc_out_fmter "(; \"%s\" ;)@ " str;
-      let rec compile_str fmter s =
-        if s = "" then
-          Format.fprintf fmter "dk_string.nil"
-        else
-          Format.fprintf fmter "@[<0>(dk_string.cons %a@\n%a)@]"
-                         print_char_to_dk s.[0]
-                         compile_str (butfst s)
-      in
-      compile_str ctx.Context.scc_out_fmter str
+      Format.fprintf ctx.Context.scc_out_fmter "\"%s\"" str;
    | Parsetree.C_char c ->
       Format.fprintf ctx.Context.scc_out_fmter "(; \'%c\' ;)@ " c;
       print_char_to_dk ctx.Context.scc_out_fmter c
@@ -873,6 +871,25 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
 ;;
 
 
+let print_ident out i =
+  match i.Parsetree.ast_desc with
+  | Parsetree.I_local vname
+  | Parsetree.I_global (Parsetree.Vname vname) ->
+     Parsetree_utils.pp_vname_with_operators_expanded out vname
+  (* Hack for unit *)
+  | Parsetree.I_global (Parsetree.Qualified ("basics", Parsetree.Vuident "()")) ->
+     Format.fprintf out "dk_builtins.tt"
+  | Parsetree.I_global (Parsetree.Qualified (fname, vname)) ->
+     Format.fprintf out "%s.%a"
+       fname
+       Parsetree_utils.pp_vname_with_operators_expanded vname
+;;
+
+let print_constr_ident out i =
+  let Parsetree.CI id = i.Parsetree.ast_desc in
+  print_ident out id
+;;
+
 
 (* ************************************************************************** *)
 (** {b Descr}: Code generation for *one* let binding, recursive of not.
@@ -1250,7 +1267,8 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          rec_generate_exprs_list ~comma: false loc_idents env args ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_ident, args) ->
-         Format.fprintf out_fmter "@[<1>(" ;
+         Format.fprintf out_fmter "@[<1>(%a"
+           print_constr_ident cstr_ident;
          let extras =
            generate_constructor_ident_for_method_generator ctx env cstr_ident
          in
@@ -1567,10 +1585,6 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
   rec_generate_logical_expr local_idents initial_env initial_proposition
 ;;
 
-
-
-type param_style = Arrow | Name;;
-
 (* ************************************************************************* *)
 (* Env.DkGenEnv.t ->
    Abstractions.field_abstraction_info list ->
@@ -1591,7 +1605,7 @@ type param_style = Arrow | Name;;
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let generate_record_type_parameters ctx ~style env species_descr
+let generate_record_type_parameters ctx env species_descr
     fields_abstraction_infos =
   let ppf = ctx.Context.scc_out_fmter in
   let current_unit = ctx.Context.scc_current_unit in
@@ -1601,11 +1615,7 @@ let generate_record_type_parameters ctx ~style env species_descr
     (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
       match param_kind with
        | Types.CCMI_is ->
-          (match style with
-           | Arrow ->
-              Format.fprintf ppf "@[<1>%s_T :@ cc.uT ->@ @]" param_name
-           | Name ->
-              Format.fprintf ppf "%s_T@ " param_name)
+           Format.fprintf ppf "@[<1>(%s_T :@ cc.uT)@ @]" param_name
        | Types.CCMI_in provenance ->
            (* We generate the lambda-lifting for "IN" parameter here (not their
               carrier, since if needed it has mandatorily be generated as a
@@ -1616,24 +1626,15 @@ let generate_record_type_parameters ctx ~style env species_descr
               name) to avoid doubles. *)
            match provenance with
             | Types.SCK_species_parameter ->
-               (match style with
-                | Arrow ->
-                   Format.fprintf ppf "@[<1>_p_%s_%s :@ cc.eT %s_T ->@ @]"
-                                  param_name param_name param_ty_coll
-                | Name ->
-                   Format.fprintf ppf "_p_%s_%s@ "
-                                  param_name param_name)
-            | Types.SCK_toplevel_collection | Types.SCK_toplevel_species ->
-               (match style with
-                | Arrow ->
-                   Format.fprintf ppf "@[<1>_p_%s_%s :@ cc.eT "
+                Format.fprintf ppf "@[<1>(_p_%s_%s :@ cc.eT %s_T)@ @]"
+                               param_name param_name param_ty_coll
+            | Types.SCK_toplevel_collection
+            | Types.SCK_toplevel_species ->
+                Format.fprintf ppf "@[<1>(_p_%s_%s :@ cc.eT "
                                   param_name param_name ;
                    if param_ty_mod <> current_unit then
                      Format.fprintf ppf "%s." param_ty_mod ;
-                   Format.fprintf ppf "%s.me_as_carrier ->@ @]" param_ty_coll
-                | Name ->
-                   Format.fprintf ppf "_p_%s_%s@ "
-                                  param_name param_name)
+                   Format.fprintf ppf "%s__me_as_carrier)@ @]" param_ty_coll
                )
     ctx.Context.scc_collections_carrier_mapping ;
   (* Now, we will find the methods of the species parameters we decl-depend on
@@ -1715,29 +1716,22 @@ let generate_record_type_parameters ctx ~style env species_descr
             (Parsetree_utils.vname_as_string_with_operators_expanded meth) in
           match meth_ty_kind with
            | Parsetree_utils.DETK_computational ty ->
-              (match style with
-               | Arrow ->
-                  Format.fprintf ppf "%s : cc.eT %a ->@ "
-                                 llift_name
-                                 (Types.pp_type_simple_to_dk print_ctx)
-                                 ty
-               | Name ->
-                  Format.fprintf ppf "%s@ "
-                                 llift_name;)
+               Format.fprintf ppf "(%s : cc.eT %a)@ "
+                              llift_name
+                              (Types.pp_type_simple_to_dk print_ctx)
+                              ty
            | Parsetree_utils.DETK_logical lexpr ->
-              (match style with
-               | Arrow ->
-                  Format.fprintf ppf "%s : cc.eP " llift_name ;
-                  generate_logical_expr ctx
-                                        ~in_recursive_let_section_of: [] ~local_idents: []
-                                        ~self_methods_status: (SMS_from_param species_param_name)
+               Format.fprintf ppf "(%s : cc.eP " llift_name ;
+               generate_logical_expr
+                 ctx
+                 ~in_recursive_let_section_of: [] ~local_idents: []
+                 ~self_methods_status: (SMS_from_param species_param_name)
                  (* Anyway, in the record type, bodies of recursive are
                     never expanded. Hence this choice or another for
                     [~recursive_methods_status] is not important.
                     It could be if we allowed recursive logical methods. *)
                                         ~recursive_methods_status: RMS_regular env lexpr ;
-                  Format.fprintf ppf " ->@ "
-               | Name -> Format.fprintf ppf "%s@ " llift_name))
+                  Format.fprintf ppf ")@ ")
         meths ;
       (* Just to avoid having the reference escaping... *)
       (species_param_name, (Env.ODFP_methods_list meths)))
@@ -1761,8 +1755,10 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
   let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
     ctx.Context.scc_collections_carrier_mapping in
+  let (_, species_name) = ctx.Context.scc_current_species in
   (* The header of the Dk record definition for the species. *)
-  Format.fprintf out_fmter "@[<2>me_as_species :@ " ;
+  Format.fprintf out_fmter "@[<2>Record %a__me_as_species "
+    Sourcify.pp_vname species_name;
   (* We do not add any bindings to the [collections_carrier_mapping]
      before printing the record type parameters for 2 reasons:
        - species parameters carriers of the record are in the
@@ -1774,18 +1770,15 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
      Generate the record parameters mapping the species parameters and the
      methods from them we depend on ! *)
   let abstracted_params_methods_in_record_type =
-    generate_record_type_parameters ~style: Arrow
+    generate_record_type_parameters
       ctx env species_descr field_abstraction_infos in
-  (* Print the type of the record and it's constructor. *)
-  Format.fprintf out_fmter " cc.uT.@\n";
+  let (_, species_name) = ctx.Context.scc_current_species in
+  (* Print the constructor. *)
+  Format.fprintf out_fmter " := %a__mk_record {@\n"
+      Sourcify.pp_vname species_name;
   (* Always generate the "rep". *)
-  Format.fprintf out_fmter "@[<2>rf_T :@ ";
-  ignore (generate_record_type_parameters ~style: Arrow
-            ctx env species_descr field_abstraction_infos);
-  Format.fprintf out_fmter "cc.eT (me_as_species@ ";
-  ignore (generate_record_type_parameters ~style: Name
-            ctx env species_descr field_abstraction_infos);
-  Format.fprintf out_fmter ") -> cc.uT.@]@\n" ;
+  Format.fprintf out_fmter "@[<2>%a__rf_T :@ cc.uT"
+    Sourcify.pp_vname species_name;
   (* We now extend the collections_carrier_mapping with ourselve known.
      Hence, if we refer to our "rep" we will be directly mapped onto the
      "rf_T" without needing to re-construct this name each time. Do same
@@ -1798,7 +1791,6 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
     ((my_fname, my_species_name),(("rf"), Types.CCMI_is)) ::
     collections_carrier_mapping in
   (* We mask the old ctx to take benefit of the new one with the bindings. *)
-  let old_ctx = ctx in
   let ctx = {
     ctx with
     Context.scc_collections_carrier_mapping = collections_carrier_mapping } in
@@ -1811,9 +1803,16 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
            ctx.Context.scc_current_species) ;
     Types.dpc_collections_carrier_mapping = collections_carrier_mapping } in
   (* Put a trailing semi only if there are other fields to generate. *)
+  (match species_descr.Env.TypeInformation.spe_sig_methods with
+   | [] -> ()
+   | [Env.TypeInformation.SF_sig (_, n, _)] ->
+       if (Parsetree_utils.name_of_vname n) = "rep" then
+         ()   (* Case where there was only 1 field and that field was "rep". *)
+       else Format.fprintf out_fmter ","
+   | _ -> Format.fprintf out_fmter ",") ;
   Format.fprintf out_fmter "@]@\n" ;
   (* We must now generate the record's fields types. *)
-  let output_one_field = function
+  let output_one_field ~semi = function
     | Env.TypeInformation.SF_sig (from, n, sch)
     | Env.TypeInformation.SF_let (from, n, _, sch, _, _, _, _) ->
         (begin
@@ -1824,15 +1823,12 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
           Format.fprintf out_fmter "(; From species %a. ;)@\n"
             Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
           (* Field is prefixed by the species name for sake of unicity. *)
-          Format.fprintf out_fmter "@[<2>rf_%a :@ "
-            Parsetree_utils.pp_vname_with_operators_expanded n;
-          ignore (generate_record_type_parameters ~style: Arrow
-                    old_ctx env species_descr field_abstraction_infos);
-          Format.fprintf out_fmter "cc.eT (me_as_species@ ";
-          ignore (generate_record_type_parameters
-                    ~style: Name old_ctx env species_descr field_abstraction_infos);
-          Format.fprintf out_fmter ") ->@ cc.eT %a.@]@\n"
+          Format.fprintf out_fmter "@[<2>%a__rf_%a :@ cc.eT (%a)"
+            Sourcify.pp_vname species_name
+            Parsetree_utils.pp_vname_with_operators_expanded n
             (Types.pp_type_simple_to_dk print_ctx) ty ;
+          if semi then Format.fprintf out_fmter "," ;
+          Format.fprintf out_fmter "@]@\n"
           end)
         end)
     | Env.TypeInformation.SF_let_rec l ->
@@ -1842,15 +1838,11 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
             Format.fprintf out_fmter "(; From species %a. ;)@\n"
               Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
             (* Field is prefixed by the species name for sake of unicity. *)
-            Format.fprintf out_fmter "@[<2>rf_%a :@ "
-              Parsetree_utils.pp_vname_with_operators_expanded n;
-            ignore (generate_record_type_parameters ~style: Arrow
-                      old_ctx env species_descr field_abstraction_infos);
-            Format.fprintf out_fmter "cc.eT (me_as_species@ ";
-            ignore (generate_record_type_parameters
-                      ~style: Name old_ctx env species_descr field_abstraction_infos);
-            Format.fprintf out_fmter ") ->@ cc.eT %a."
+            Format.fprintf out_fmter "@[<2>%a__rf_%a : cc.eT (%a)"
+              Sourcify.pp_vname species_name
+              Parsetree_utils.pp_vname_with_operators_expanded n
               (Types.pp_type_simple_to_dk print_ctx) ty ;
+            if semi then Format.fprintf out_fmter "," ;
             Format.fprintf out_fmter "@]@\n")
           l
     | Env.TypeInformation.SF_theorem
@@ -1862,14 +1854,9 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
         Format.fprintf out_fmter "(; From species %a. ;)@\n"
           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
         (* Field is prefixed by the species name for sake of unicity. *)
-        Format.fprintf out_fmter "@[<2>rf_%a :@ "
-          Parsetree_utils.pp_vname_with_operators_expanded n ;
-        ignore (generate_record_type_parameters ~style: Arrow
-                  old_ctx env species_descr field_abstraction_infos);
-        Format.fprintf out_fmter "cc.eT (me_as_species@ ";
-        ignore (generate_record_type_parameters
-                  ~style: Name old_ctx env species_descr field_abstraction_infos);
-        Format.fprintf out_fmter ") ->@ cc.eT ";
+        Format.fprintf out_fmter "@[<2>%a__rf_%a :@ dk_logic.eP ("
+          Sourcify.pp_vname species_name
+          Parsetree_utils.pp_vname_with_operators_expanded n;
         (* Generate the Dk code representing the proposition.
            No local idents in the context because we just enter the scope of a
            species fields and so we are not under a core expression.
@@ -1884,18 +1871,19 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
              [~recursive_methods_status] is not important.
              It could be if we allowed recursive logical methods. *)
           ~recursive_methods_status: RMS_regular env logical_expr ;
-        Format.fprintf out_fmter "." ;
+        Format.fprintf out_fmter ")";
+        if semi then Format.fprintf out_fmter "," ;
         Format.fprintf out_fmter "@]@\n" in
   (* Dk syntax required not semi after the last field. That's why a simple
      [List.iter] of [output_one_field]'s body doesn't work.
      One must separate the case of the last element of the list. *)
   let rec iter_semi_separated = function
     | [] -> ()
-    | [last] -> output_one_field last
+    | [last] -> output_one_field ~semi:false last
     | h :: q ->
-        output_one_field h ;
+        output_one_field ~semi:true h ;
         iter_semi_separated q in
   iter_semi_separated species_descr.Env.TypeInformation.spe_sig_methods ;
-  Format.fprintf out_fmter "@]@\n@\n" ;
+  Format.fprintf out_fmter "@]}.@\n@\n" ;
   abstracted_params_methods_in_record_type
 ;;

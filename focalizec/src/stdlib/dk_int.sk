@@ -1,7 +1,6 @@
 #NAME dk_int.
-Nat : Type := dk_nat.Nat.
-O : Nat := dk_nat.O.
-S : Nat -> Nat := dk_nat.S.
+
+Nat : Type := cc.eT nat.
 
 B : Type := cc.eT dk_bool.bool.
 
@@ -15,20 +14,20 @@ Int := I.
 make : Nat -> Nat -> I.
 (;
 thanks to this rule, intergers reduce to one of the three following normal form :
- make O O which is 0
+ make 0 0 which is 0
 or
- make (S n) O which is n+1
+ make (S n) 0 which is n+1
 or
- make O (S n) which is -n-1
+ make 0 (S n) which is -n-1
 ;)
-[n : Nat, m : Nat] make (dk_nat.S n) (dk_nat.S m) --> make n m.
+[n : Nat, m : Nat] make (S n) (S m) --> make n m.
 
 from_nat : Nat -> I.
-[ n : Nat ] from_nat n --> make n O.
+[ n : Nat ] from_nat n --> make n 0.
 
 nat_abs : I -> Nat.
-[n : Nat] nat_abs (make n dk_nat.O) --> n
-[m : Nat] nat_abs (make dk_nat.O m) --> m.
+[n : Nat] nat_abs (make n 0) --> n
+[m : Nat] nat_abs (make 0 m) --> m.
 
 (; n - m <= p - q iff n + q <= m + p ;)
 leq : I -> I -> B.
@@ -84,26 +83,26 @@ min : I -> I -> I.
     min m n --> dk_bool.ite int (leq m n) m n.
 
 abs : I -> I.
-[ i : I ] abs i --> make (nat_abs i) O.
+[ i : I ] abs i --> make (nat_abs i) 0.
 
 mod : I -> I -> I.
 [n : Nat, m : Nat, p : Nat]
-    mod (make m n) (make p dk_nat.O)
+    mod (make m n) (make p 0)
       --> make (dk_nat.mod m p) (dk_nat.mod n p)
 [n : Nat, m : Nat, p : Nat]
-    mod (make m n) (make dk_nat.O p)
+    mod (make m n) (make 0 p)
       --> make (dk_nat.mod m p) (dk_nat.mod n p).
 
 quo : I -> I -> I.
 [m : Nat, p : Nat]
-    quo (make m dk_nat.O) (make p dk_nat.O)
-      --> make (dk_nat.quo m p) O
+    quo (make m 0) (make p 0)
+      --> make (dk_nat.quo m p) 0
 [m : Nat, p : Nat]
-    quo (make dk_nat.O m) (make dk_nat.O p)
-      --> make (dk_nat.quo m p) O
+    quo (make 0 m) (make 0 p)
+      --> make (dk_nat.quo m p) 0
 [m : Nat, p : Nat]
-    quo (make dk_nat.O m) (make p dk_nat.O)
-      --> make O (dk_nat.quo m p)
+    quo (make 0 m) (make p 0)
+      --> make 0 (dk_nat.quo m p)
 [m : Nat, p : Nat]
-    quo (make m dk_nat.O) (make dk_nat.O p)
-      --> make O (dk_nat.quo m p).
+    quo (make m 0) (make 0 p)
+      --> make 0 (dk_nat.quo m p).

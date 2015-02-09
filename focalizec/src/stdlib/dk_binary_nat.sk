@@ -13,15 +13,15 @@ S1 : BNat -> BNat.
 [] S0 O --> O.
 
 nat_of_bnat : BNat -> UNat.
-[] nat_of_bnat O --> dk_nat.O
+[] nat_of_bnat O --> 0
 [ bn : BNat ]
     nat_of_bnat (S0 bn)
       -->
-    dk_nat.mult dk_nat.2 (nat_of_bnat bn)
+    dk_nat.mult 2 (nat_of_bnat bn)
 [ bn : BNat ]
     nat_of_bnat (S1 bn)
       -->
-    dk_nat.S (dk_nat.mult dk_nat.2 (nat_of_bnat bn)).
+    S (dk_nat.mult 2 (nat_of_bnat bn)).
 
 succ : BNat -> BNat.
 (; 0 + 1 = 2 * 0 + 1 ;)
@@ -32,8 +32,8 @@ succ : BNat -> BNat.
 [ n : BNat ] succ (S1 n) --> S0 (succ n).
 
 bnat_of_nat : UNat -> BNat.
-[] bnat_of_nat dk_nat.O --> O
-[ n : UNat ] bnat_of_nat (dk_nat.S n) --> succ (bnat_of_nat n).
+[] bnat_of_nat 0 --> O
+[ n : UNat ] bnat_of_nat (S n) --> succ (bnat_of_nat n).
 
 (; Order ;)
 lt : BNat -> BNat -> Bool.
@@ -101,24 +101,24 @@ div2 : BNat -> BNat.
 [ n : BNat ] div2 (S1 n) --> n.
 
 length : BNat -> UNat.
-[] length O --> dk_nat.O
-[ n : BNat ] length (S0 n) --> dk_nat.S (length n)
-[ n : BNat ] length (S1 n) --> dk_nat.S (length n).
+[] length O --> 0
+[ n : BNat ] length (S0 n) --> S (length n)
+[ n : BNat ] length (S1 n) --> S (length n).
 
 (; quo2 n k = n / 2^k ;)
 quo2 : BNat -> UNat -> BNat.
-[ n : BNat ] quo2 n dk_nat.O --> n
+[ n : BNat ] quo2 n 0 --> n
 [ k : UNat ] quo2 O k --> O
 [ n : BNat, k : UNat ]
-    quo2 (S0 n) (dk_nat.S k) --> quo2 n k
+    quo2 (S0 n) (S k) --> quo2 n k
 [ n : BNat, k : UNat ]
-    quo2 (S1 n) (dk_nat.S k) --> quo2 n k.
+    quo2 (S1 n) (S k) --> quo2 n k.
 
 (; mod2 n k = n % 2^k ;)
 mod2 : BNat -> UNat -> BNat.
-[ n : BNat ] mod2 n dk_nat.O --> O
+[ n : BNat ] mod2 n 0 --> O
 [ k : UNat ] mod2 O k --> O
 [ n : BNat, k : UNat ]
-    mod2 (S0 n) (dk_nat.S k) --> S0 (mod2 n k)
+    mod2 (S0 n) (S k) --> S0 (mod2 n k)
 [ n : BNat, k : UNat ]
-    mod2 (S1 n) (dk_nat.S k) --> S1 (mod2 n k).
+    mod2 (S1 n) (S k) --> S1 (mod2 n k).

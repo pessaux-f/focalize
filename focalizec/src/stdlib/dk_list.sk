@@ -1,12 +1,7 @@
 #NAME dk_list.
 
 (; Polymorphic lists ;)
-list : cc.uT -> cc.uT.
 List := A : cc.uT => cc.eT (list A).
-
-(; Constructors ;)
-nil : A : cc.uT -> List A.
-cons : A : cc.uT -> cc.eT A -> List A -> List A.
 
 (; Case distinction ;)
 match : A : cc.uT ->

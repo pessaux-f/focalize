@@ -59,7 +59,7 @@ type char =
   external
   | caml -> {* char *}
   | coq -> {* ascii *}
-  | dedukti -> {* dk_char.char *}
+  | dedukti -> {* char *}
 ;;
 
 type string =
@@ -67,7 +67,7 @@ type string =
   external
   | caml -> {* string *}
   | coq -> {* string *}  (* From the Ascii module. *)
-  | dedukti -> {* dk_string.string *}
+  | dedukti -> {* string *}
 ;;
 
 type bool =
@@ -118,21 +118,19 @@ type list ('a) =
               Definition list__t_ind := list_ind.
               Definition list__t_rect := list_rect.
               Definition list__t_rec := list_rec *}
-  | dedukti -> {* dk_list.list __var_a.
-                  nil := dk_list.nil.
-                  cons := dk_list.cons.
+  | dedukti -> {* list __var_a.
                   match__nil := dk_list.match__nil.
                   match__cons := dk_list.match__cons *}
 
   with [] =
   | caml -> {* [] *}
   | coq -> {* List.nil *}
-  | dedukti -> {* dk_list.nil *}
+  | dedukti -> {* nil *}
 
   and ( :: ) =
   | caml -> {* ( :: ) *}
   | coq -> {* List.cons *}
-  | dedukti -> {* dk_list.cons *}
+  | dedukti -> {* cons *}
 ;;
 
 (** {6 Basic operations on basic types} *)

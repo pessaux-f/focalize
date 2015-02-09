@@ -1944,7 +1944,7 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
            | CCMI_in provenance -> (
                match provenance with
                | SCK_toplevel_collection | SCK_toplevel_species ->
-                   Format.fprintf ppf "%s.me_as_carrier" collection_name
+                   Format.fprintf ppf "%s__me_as_carrier" collection_name
                | SCK_species_parameter ->
                    Format.fprintf ppf "%s_T" coll_type_variable
               )
@@ -1957,9 +1957,9 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
              prefix qualification if the species belongs to a file that is not
              the currently compiled one. *)
           if ctx.dpc_current_unit = module_name then
-            Format.fprintf ppf "%s.me_as_carrier" collection_name
+            Format.fprintf ppf "%s__me_as_carrier" collection_name
           else
-            Format.fprintf ppf "%s.%s.me_as_carrier" module_name collection_name
+            Format.fprintf ppf "%s.%s__me_as_carrier" module_name collection_name
         end)
 
   (* ********************************************************************* *)
