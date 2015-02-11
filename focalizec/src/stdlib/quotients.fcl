@@ -171,18 +171,18 @@ species Represented_by_setoid (S is Setoid) =
   proof =
     by definition of equal, to_rep;
 
-  proof of to_rep_reverses = assumed
-(* ASSUMED    <1>1 assume x : Self, *)
-(* ASSUMED         prove S!equal (!from_rep (!to_rep (x)), x) *)
-(* ASSUMED         <2>1 prove S!equal (!from_rep (x), x) *)
-(* ASSUMED              <3>1 prove !correct_representation (x) *)
-(* ASSUMED                   by property !correct_invariant *)
-(* ASSUMED              <3>2 prove !represents_some_self (!to_rep (x)) *)
-(* ASSUMED                   by step <3>1 property !correct_rep_spec *)
-(* ASSUMED              <3>f qed by step <3>2 *)
-(* ASSUMED                          definition of represents_some_self, to_rep *)
-(* ASSUMED         <2>f qed by step <2>1 definition of to_rep *)
-(* ASSUMED     <1>f qed by step <1>1 definition of equal *)
+  proof of to_rep_reverses =
+    <1>1 assume x : Self,
+         prove S!equal (!from_rep (!to_rep (x)), x)
+         <2>1 prove S!equal (!from_rep (x), x)
+              <3>1 prove !correct_representation (x)
+                   assumed (* ASSUMED by property !correct_invariant *)
+              <3>2 prove !represents_some_self (!to_rep (x))
+                   assumed (* ASSUMED by step <3>1 property !correct_rep_spec *)
+              <3>f qed assumed (* ASSUMED by step <3>2
+ASSUMED                          definition of represents_some_self, to_rep *)
+         <2>f qed assumed (* ASSUMED by step <2>1 definition of to_rep *)
+     <1>f qed assumed (* ASSUMED by step <1>1 definition of equal *)
   ;
 
 end
@@ -227,15 +227,15 @@ species Quotient_set (S is Setoid,
 
   (** we state that we create reduced elements *)
   theorem sample_is_reduced: !correct_representation (!element)
-    proof = assumed
-(* ASSUMED    <1>1 prove !represents_some_self (!element) *)
-(* ASSUMED         <2>1 prove S!equal (Proj!reduce (!element), !element) *)
-(* ASSUMED              by property Proj!reduce_is_projection, S!equal_symmetric *)
-(* ASSUMED              definition of element *)
-(* ASSUMED         <2>f qed by step <2>1 *)
-(* ASSUMED                  definition of represents_some_self, from_rep *)
-(* ASSUMED    <1>2 qed by step <1>1 *)
-(* ASSUMED                definition of to_rep, correct_representation *)
+    proof =
+    <1>1 prove !represents_some_self (!element)
+         <2>1 prove S!equal (Proj!reduce (!element), !element) assumed (*
+ASSUMED              by property Proj!reduce_is_projection, S!equal_symmetric
+ASSUMED              definition of element *)
+         <2>f qed assumed (* ASSUMED by step <2>1
+ASSUMED                  definition of represents_some_self, from_rep *)
+    <1>2 qed assumed (* ASSUMED by step <1>1
+ASSUMED                definition of to_rep, correct_representation *)
     ;
 end
 ;;

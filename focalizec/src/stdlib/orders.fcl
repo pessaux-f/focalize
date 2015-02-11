@@ -157,38 +157,38 @@ species Partial_order =
 
   theorem lt_is_transitive: all x y z : Self,
     !lt (x, y) -> !lt (y, z) -> !lt (x, z)
-    proof = assumed
-(* ASSUMED    <1>1 assume x : Self, y : Self, z : Self, *)
-(* ASSUMED         hypothesis H_xy : !lt (x, y), hypothesis H_yz: !lt (y, z), *)
-(* ASSUMED         prove !lt (x, z) *)
-(* ASSUMED         <2>1 prove !leq (x, z) *)
-(* ASSUMED              by hypothesis H_xy, H_yz *)
-(* ASSUMED                 property !lt_is_leq_and_different, !leq_transitive *)
-(* ASSUMED         <2>2 prove !different (x, z) *)
-(* ASSUMED              <3>1 hypothesis F : !equal (z, x), *)
-(* ASSUMED                   prove false *)
-(* ASSUMED                   <4>1 prove !leq (z, x) *)
-(* ASSUMED                        by hypothesis F *)
-(* ASSUMED                           property !leq_extends_equal *)
-(* ASSUMED                   <4>2 prove !leq (y, x) *)
-(* ASSUMED                        by step <4>1 *)
-(* ASSUMED                           hypothesis H_yz *)
-(* ASSUMED                           property !lt_refines_leq, !leq_transitive *)
-(* ASSUMED                   <4>3 prove leq (x, y) *)
-(* ASSUMED                        by hypothesis H_xy *)
-(* ASSUMED                           property lt_refines_leq, leq_transitive *)
-(* ASSUMED                   <4>4 prove !equal (x, y) *)
-(* ASSUMED                        by step <4>2, <4>3 *)
-(* ASSUMED                           property !leq_antisymmetric *)
-(* ASSUMED                   <4>5 prove !different (x, y) *)
-(* ASSUMED                        by hypothesis H_xy *)
-(* ASSUMED                           property !lt_refines_different *)
-(* ASSUMED                   <4>f qed by step <4>4, <4>5 *)
-(* ASSUMED                               property same_is_not_different *)
-(* ASSUMED              <3>f qed by step <3>1 *)
-(* ASSUMED                          property !same_is_not_different, !equal_symmetric *)
-(* ASSUMED         <2>f qed by step <2>1, <2>2 property !lt_is_leq_and_different *)
-(* ASSUMED    <1>f conclude *)
+    proof =
+    <1>1 assume x : Self, y : Self, z : Self,
+         hypothesis H_xy : !lt (x, y), hypothesis H_yz: !lt (y, z),
+         prove !lt (x, z)
+         <2>1 prove !leq (x, z)
+              by hypothesis H_xy, H_yz
+                 property !lt_is_leq_and_different, !leq_transitive
+         <2>2 prove !different (x, z)
+              <3>1 hypothesis F : !equal (z, x),
+                   prove false
+                   <4>1 prove !leq (z, x)
+                        by hypothesis F
+                           property !leq_extends_equal
+                   <4>2 prove !leq (y, x)
+                        by step <4>1
+                           hypothesis H_yz
+                           property !lt_refines_leq, !leq_transitive
+                   <4>3 prove leq (x, y)
+                        by hypothesis H_xy
+                           property lt_refines_leq, leq_transitive
+                   <4>4 prove !equal (x, y)
+                        by step <4>2, <4>3
+                           property !leq_antisymmetric
+                   <4>5 prove !different (x, y)
+                        by hypothesis H_xy
+                           property !lt_refines_different
+                   <4>f qed assumed (* ASSUMED by step <4>4, <4>5
+                               ASSUMED property same_is_not_different *)
+              <3>f qed assumed (* ASSUMED by step <3>1
+                                  ASSUMED property !same_is_not_different, !equal_symmetric *)
+         <2>f qed by step <2>1, <2>2 property !lt_is_leq_and_different
+    <1>f conclude
   ;
 
   theorem geq_antisymmetric : all x y : Self,

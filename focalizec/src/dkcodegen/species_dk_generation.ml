@@ -2084,23 +2084,39 @@ and emit_zenon_theorem_for_proof ctx print_ctx env min_dk_env
         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
         ctx env aim
   | ZSGM_from_termination_lemma (order_expr, used_params_indices, rec_calls) ->
-      Rec_let_dk_gen.generate_termination_lemmas
-        ctx print_ctx env
-        ~explicit_order:
-        (Rec_let_dk_gen.OK_expr (order_expr, used_params_indices))
-        rec_calls ;
-      (* Always end by the obligation of well-formation of the user-order
-         eta-expanded to wrap its result with a Is_true. *)
       Format.fprintf out_fmter
-        "@ (well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
-      Species_record_type_dk_generation.generate_expr
+        "@ (; Termination proof ignored in Dedukti output ;)"
+  ) ;
+  Format.fprintf out_fmter ").@]@\n"
+
+(* Same for assumed proof *)
+and admit_zenon_theorem_for_proof ctx print_ctx env min_dk_env
+    aim_gen_method aim_name enforced_deps =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* [Unsure] Bad place to make the check. This should be made in something
+     like "abstration.ml". Ensure that the *)
+  ensure_enforced_dependencies_by_definition_are_definitions
+    min_dk_env enforced_deps ;
+  (* Now, print the lemma body. Inside, any method of "Self" is abstracted
+     (without lambda-lift) and named "abst_xxx". That's why we use the mode
+     [SMS_abstracted]. *)
+  Format.fprintf out_fmter "(; Assumed proof node. ;)@\n";
+  let opt_for_zenon = "" in
+  Format.fprintf out_fmter "@[<2>dk_builtins.magic_prove (";
+  (* Generate the aim depending on if we are in a regular proof or in the
+     initial stage of a termination proof. *)
+  (match aim_gen_method with
+  | ZSGM_from_logical_expr aim ->
+      Species_record_type_dk_generation.generate_logical_expr
         ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
-        ctx env order_expr ;
-      Format.fprintf out_fmter "@ __a1 __a2)))"
+        ctx env aim
+  | ZSGM_from_termination_lemma (order_expr, used_params_indices, rec_calls) ->
+      Format.fprintf out_fmter
+        "@ (; Termination proof ignored in Dedukt output ;)"
   ) ;
-  Format.fprintf out_fmter ").@]@\n"
+  Format.fprintf out_fmter ")@]@\n"
 
 and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
     ~self_manifest dependencies_from_params generated_fields available_hyps
@@ -2110,18 +2126,15 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_coq (enforced_deps, _)
    | Parsetree.Pf_assumed enforced_deps ->
-       emit_zenon_theorem_for_proof
+       admit_zenon_theorem_for_proof
          ctx print_ctx env min_dk_env
          aim_gen_method aim_name enforced_deps ;
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter "(; Proof was flagged as assumed. ;)@\n";
-       Format.fprintf out_fmter "apply dk_builtins.magic_prove.@\nQed.@\n"
+
    | Parsetree.Pf_dk (enforced_deps, script) ->
-       emit_zenon_theorem_for_proof
-         ctx print_ctx env min_dk_env
-         aim_gen_method aim_name enforced_deps ;
        (* Dump verbatim the Dk code. *)
-       Format.fprintf out_fmter "%s@\n" script;
+       Format.fprintf out_fmter "(%s)@\n" script;
    | Parsetree.Pf_node nodes ->
        (* For each successive node, we remember the previously seen **extra**
           steps that will be available for the trailing Qed node. *)
@@ -2247,25 +2260,9 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
               ~recursive_methods_status:
                 Species_record_type_dk_generation.RMS_regular
               ctx env aim
-        | ZSGM_from_termination_lemma
-              (order_expr, used_params_indices, rec_calls) ->
-            Rec_let_dk_gen.generate_termination_lemmas
-              ctx print_ctx env
-              ~explicit_order:
-                (Rec_let_dk_gen.OK_expr (order_expr, used_params_indices))
-              rec_calls ;
-            (* Always end by the obligation of well-formation of the user-order
-               eta-expanded to wrap its result with a Is_true. *)
+        | ZSGM_from_termination_lemma _ ->
             Format.fprintf out_fmter
-              "@ (well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
-            Species_record_type_dk_generation.generate_expr
-              ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
-                Species_record_type_dk_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Species_record_type_dk_generation.RMS_regular
-              ctx env order_expr ;
-           Format.fprintf out_fmter "@ __a1 __a2)))"
+              "@ (; Termination proof ignored in Dedukti output ;)"
        ) ;
        Format.fprintf out_fmter ".@\n" ;
        (* End of Zenon stuff. *)

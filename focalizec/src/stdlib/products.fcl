@@ -254,20 +254,20 @@ species Cartesian_product (A is Setoid, B is Setoid) =
 
   representation = A * B;
 
-  let first (x) = match x with | (r, _) -> r;
-  let second (x) = match x with | (_, r) -> r;
+  let first (x) = fst(x);
+  let second (x) = snd(x);
   let pair (x, y) = (x, y);
 
   (* [rr]:  warning unused variable by Zenon should not be *)
-  proof of pair_preserves_first = assumed
-(* ASSUMED     by property A!equal_reflexive *)
-(* ASSUMED        definition of pair, first *)
+  proof of pair_preserves_first =
+     by property A!equal_reflexive
+        definition of pair, first
     ;
 
   (* [rr]:  warning unused variable by Zenon should not be *)
-  proof of pair_preserves_second = assumed
-(* ASSUMED    by property B!equal_reflexive *)
-(* ASSUMED       definition of pair, second *)
+  proof of pair_preserves_second =
+    by property B!equal_reflexive
+       definition of pair, second
     ;
 
 end;;
