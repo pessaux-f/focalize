@@ -15,7 +15,7 @@ let progress_level = ref 1;;
 let use_coqterm = ref true;;
 let verbose = ref false;;
 let zcmd = ref "zenon";;
-let zopt = ref "-x induct -q -short -max-time 5m";;
+let zopt = ref "-x induct -x pair -q -short -max-time 5m";;
 let focal_ext = ref "focal";;
 let add_opt = ref [];;
 
