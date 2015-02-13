@@ -330,10 +330,10 @@ ASSUMED                                property equal_transitive *)
                         assumed (* ASSUMED by hypothesis H
 ASSUMED                           property equal_reflexive
 ASSUMED                           definition of inf *)
-                  <4>f qed assumed (* ASSUMED by step <4>1, <4>2 *)
+                  <4>f qed by step <4>1, <4>2
              <3>f qed
-                assumed (* ASSUMED by step <3>1, <3>2
-ASSUMED                   property equal_symmetric, equal_transitive *)
+                  by step <3>1, <3>2
+                     property equal_symmetric, equal_transitive
         <2>2 hypothesis Hyx : !leq (y, x),
              prove !equal (!inf (x, y), !inf (y, x))
              (* [rr]: could do as <2>1 above, but zenon is wiser *)
@@ -341,9 +341,9 @@ ASSUMED                   property equal_symmetric, equal_transitive *)
 ASSUMED                property equal_reflexive, leq_antisymmetric
 ASSUMED                definition of inf *)
         <2>f qed
-           assumed (* ASSUMED by step <2>1, <2>2
-ASSUMED              property total_order *)
-   <1>2 qed assumed (* ASSUMED conclude *)
+             by step <2>1, <2>2
+                property total_order
+   <1>2 qed conclude
   ;
 
 end
@@ -434,22 +434,22 @@ species Ordered_set_as_lattice =
 ASSUMED                        by step <4>1
 ASSUMED                           property equal_reflexive
 ASSUMED                           definition of sup *)
-                   <4>f qed assumed (*
-ASSUMED                      by step <4>2
-ASSUMED                         property sup_commutes,
-ASSUMED                                  equal_symmetric, equal_transitive *)
+                   <4>f qed
+                        by step <4>2
+                           property sup_commutes,
+                                    equal_symmetric, equal_transitive
               <3>2 prove !equal (x, !inf (x, y)) assumed (*
 ASSUMED                   by hypothesis H
 ASSUMED                      property equal_reflexive
 ASSUMED                      definition of inf *)
               <3>3 prove !equal (!inf (x, !sup (x, y)),
-                               !inf (x, y)) assumed (*
+                               !inf (x, y))
 (* [rr]: loops?    by step <3>1 property !inf_substitution_rule, !equal_symmetric *)
-ASSUMED                   by step <3>1
-ASSUMED                      property inf_right_substitution_rule, equal_symmetric *)
-              <3>f qed assumed (*
-ASSUMED                 by step <3>3, <3>2
-ASSUMED                    property equal_symmetric, equal_transitive *)
+                   by step <3>1
+                      property inf_right_substitution_rule, equal_symmetric
+              <3>f qed
+                   by step <3>3, <3>2
+                      property equal_symmetric, equal_transitive
          <2>2 hypothesis H : !leq (y, x),
               prove !equal (x, !inf (x, !sup (x, y)))
               <3>1 prove !geq (x, y)
@@ -461,16 +461,16 @@ ASSUMED                      property equal_reflexive
 ASSUMED                      definition of sup *)
               <3>3 prove !equal (!inf (x, !sup (x, y)),
                                !inf (x, x))
-                   assumed (* ASSUMED by step <3>2
-ASSUMED                      property inf_right_substitution_rule, equal_symmetric *)
-              <3>f qed assumed (*
-ASSUMED                 by step <3>2, <3>3
-ASSUMED                    property inf_idempotent,
-ASSUMED                             equal_symmetric, equal_transitive *)
-         <2>f qed assumed (*
-ASSUMED            by step <2>1, <2>2
-ASSUMED               property total_order *)
-    <1>f qed assumed (* ASSUMED conclude *)
+                   by step <3>2
+                      property inf_right_substitution_rule, equal_symmetric
+              <3>f qed
+                 by step <3>2, <3>3
+                    property inf_idempotent,
+                             equal_symmetric, equal_transitive
+         <2>f qed
+            by step <2>1, <2>2
+               property total_order
+    <1>f qed conclude
 
    ;
 
@@ -483,29 +483,29 @@ ASSUMED               property total_order *)
               <3>1 prove !equal (x, !inf (x, y))
                    assumed (* ASSUMED by hypothesis H property equal_reflexive definition of inf *)
               <3>2 prove !equal (!sup (x, !inf (x, y)),
-                                !sup (x, x)) assumed (*
-ASSUMED                      by step <3>1
-ASSUMED                      property sup_right_substitution_rule, equal_symmetric *)
-              <3>f qed assumed (* ASSUMED by step <3>2
-ASSUMED                          property sup_idempotent, equal_reflexive,
-ASSUMED                          equal_symmetric, equal_transitive *)
+                                !sup (x, x))
+                         by step <3>1
+                         property sup_right_substitution_rule, equal_symmetric
+              <3>f qed by step <3>2
+                          property sup_idempotent, equal_reflexive,
+                          equal_symmetric, equal_transitive
          <2>2 hypothesis H : !leq (y, x),
               prove !equal (x, !sup (x, !inf (x, y)))
               <3>2 prove !equal (!sup (x, y), !sup (x, !inf (x, y)))
                    <4>1 prove !equal (y, !inf (y, x)) assumed (*
 ASSUMED                        by hypothesis H property equal_reflexive
 ASSUMED                        definition of inf *)
-                   <4>2 prove !equal (y, !inf (x, y)) assumed (*
-ASSUMED                        by step <4>1 property inf_commutes,
-ASSUMED                           equal_transitive, equal_symmetric *)
+                   <4>2 prove !equal (y, !inf (x, y))
+                        by step <4>1 property inf_commutes,
+                           equal_transitive, equal_symmetric
                    <4>f qed assumed (* ASSUMED by step <4>2 property sup_right_substitution_rule *)
               <3>3 prove !equal (!sup (x, y), x) assumed (*
 ASSUMED                   by hypothesis H property equal_reflexive
 ASSUMED                      definition of sup, geq *)
-              <3>f qed assumed (* ASSUMED by step <3>2,  <3>3
-ASSUMED                       property equal_symmetric, equal_transitive *)
-         <2>f qed assumed (* ASSUMED by step <2>1, <2>2 property total_order *)
-    <1>f qed assumed (* ASSUMED conclude *)
+              <3>f qed by step <3>2,  <3>3
+                       property equal_symmetric, equal_transitive
+         <2>f qed by step <2>1, <2>2 property total_order
+    <1>f qed conclude
     ;
 
 end

@@ -88,13 +88,13 @@ open "sets";;
                 prove !equal(x, y)
                 assumed (* ASSUMED by hypothesis HH_xy property !equal_reflexive, !equal_symmetric *)
            <2>3 hypothesis HH_xy: syntactic_equal(x, y) /\ !lt(y, x),
-                prove !equal(x, y) assumed (* ASSUMEDby hypothesis HH_xy property equal_reflexive *)
+                prove !equal(x, y) assumed (* ASSUMED by hypothesis HH_xy property equal_reflexive *)
            <2>4 hypothesis HH_xy: syntactic_equal(x, y) /\ syntactic_equal(y, x),
                 prove !equal(x, y) assumed (* ASSUMED by hypothesis HH_xy property !equal_reflexive *)
            <2>5 qed assumed (* ASSUMED by step <2>1, <2>2, <2>3, <2>4
                     ASSUMED   hypothesis H_xy, H_yx
                     ASSUMED   definition of leq *)
-      <1>f qed assumed (* ASSUMED conclude *)
+      <1>f qed conclude
   ;
 
   theorem leq_transitive: all x y z : Self,
@@ -118,7 +118,7 @@ open "sets";;
            <2>f qed assumed (* ASSUMED by step <2>1, <2>2, <2>3, <2>4
                        hypothesis H_xy, H_yz
                        definition of leq *)
-      <1>f qed assumed (* ASSUMED conclude *)
+      <1>f qed conclude
   ;
 
 end

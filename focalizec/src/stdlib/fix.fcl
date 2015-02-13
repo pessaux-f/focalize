@@ -212,7 +212,7 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
                    property A!equal_symmetric, A!equal_transitive
            <2>f qed assumed (* ASSUMED by step <2>1, <2>2, <2>5 *)
                         (* ASSUMED definition of equal *)
-      <1>f qed assumed (* ASSUMED conclude *);
+      <1>f qed conclude;
 
 
    (**
@@ -257,7 +257,7 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
 (* ASSUMED                by step <2>1, <2>2, <2>3 *)
 (* ASSUMED                   property !case_exclusive *)
 (* ASSUMED                   definition of equal *)
-      <1>f qed assumed (* ASSUMED conclude *);
+      <1>f qed conclude;
 
   (**
      Strict injection, we build an arbitrary number of different terms.
@@ -302,7 +302,7 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
             <2>f qed assumed (* ASSUMED by step <2>1, <2>2, <2>3 *)
 (* ASSUMED                        property !case_exclusive *)
 (* ASSUMED                        definition of equal *)
-        <1>2 qed assumed (* ASSUMED conclude *);
+        <1>2 qed conclude;
 
    theorem inductive_substitution_rule: all x_1 x_2 : B, all y_1 y_2 : Self,
     B!equal(x_1, x_2) -> !equal(y_1, y_2) ->
@@ -455,7 +455,7 @@ ASSUMED                     property inductive_symmetry *)
 ASSUMED                  by hypothesis B, H_xy, H_yz
 ASSUMED                     definition of equal
 ASSUMED                     property A!equal_transitive *)
-             <3>f qed assumed (* ASSUMED by step <3>1 definition of transitivity_prop *)
+             <3>f qed by step <3>1 definition of transitivity_prop
         <2>2 assume x : Self,
              hypothesis I: !inductive_case(x),
              hypothesis R: !transitivity_prop(!inductive_second_term(x)),
@@ -508,11 +508,11 @@ ASSUMED                                   definition of transitivity_prop *)
 ASSUMED                              hypothesis I
 ASSUMED                              definition of equal
 ASSUMED                              property case_complete, case_exclusive *)
-             <3>f qed assumed (* ASSUMED by step <3>1 definition of transitivity_prop *)
+             <3>f qed by step <3>1 definition of transitivity_prop
         <2>f qed assumed (* ASSUMED by step <2>1, <2>2
 ASSUMED                    definition of inductive_property
 ASSUMED                    property !inductive_transitivity *)
-   <1>f qed assumed (* ASSUMED by step <1>1 definition of transitivity_prop *);
+   <1>f qed by step <1>1 definition of transitivity_prop;
 
 
 end
