@@ -2173,7 +2173,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
        (* If the representation is concrete, define abst_T as the representation. *)
        (match self_manifest with
         | Some ty ->
-           Format.fprintf out_fmter "%%%%type_alias: abst_T := %a@\n"
+           Format.fprintf out_fmter "%%%%begin-type-alias: abst_T := %a@\n%%%%end-type-alias@\n"
                           (Types.pp_type_simple_to_dk print_ctx) ty
         | None -> ());
        (* Tell Zenon to abstract over "Section" variables *)
