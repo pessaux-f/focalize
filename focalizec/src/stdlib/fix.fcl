@@ -379,12 +379,12 @@ ASSUMED                 definition of equal, reflexive_prop *)
 (* ASSUMED                               step <4>1 *)
 (* ASSUMED                               property !case_exclusive *)
 (* ASSUMED                               definition of equal, reflexive_prop *)
-              <3>f qed assumed (* ASSUMED by step <3>1 definition of reflexive_prop *)
+              <3>f qed by step <3>1 definition of reflexive_prop
          <2>f qed assumed (* ASSUMED by step <2>1, <2>2
 ASSUMED                     definition of inductive_property *)
                      (* the automagic *)
 (* ASSUMED                     property !inductive_reflexivity *)
-    <1>f qed assumed (* ASSUMED by step <1>1 definition of reflexive_prop *);
+    <1>f qed by step <1>1 definition of reflexive_prop;
 
 
   logical let symmetry_prop(x) = all y : Self,
@@ -434,7 +434,7 @@ ASSUMED                          definition of equal *)
          <2>f qed assumed (* ASSUMED by step <2>1, <2>2
 ASSUMED                     definition of inductive_property, symmetry_prop
 ASSUMED                     property inductive_symmetry *)
-    <1>f qed assumed (* ASSUMED by step <1>1 definition of symmetry_prop *);
+    <1>f qed by step <1>1 definition of symmetry_prop;
 
 
   logical let transitivity_prop(x) = all y z : Self,
@@ -501,9 +501,9 @@ ASSUMED                            by hypothesis H_yz
 ASSUMED                               step <4>a
 ASSUMED                               definition of equal
 ASSUMED                               property case_exclusive, case_complete *)
-                       <5>f qed assumed (* ASSUMED by step <5>1, <5>2
-ASSUMED                                   hypothesis R
-ASSUMED                                   definition of transitivity_prop *)
+                       <5>f qed by step <5>1, <5>2
+                                   hypothesis R
+                                   definition of transitivity_prop
                   <4>f qed assumed (* ASSUMED by step <4>1, <4>2, <4>b
 ASSUMED                              hypothesis I
 ASSUMED                              definition of equal
