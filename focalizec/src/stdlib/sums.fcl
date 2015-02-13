@@ -172,8 +172,8 @@ species Sum_set(A is Setoid, B is Setoid) =
                 by step <2>1, <2>2
                    hypothesis H
                    property A!equal_transitive, A!equal_symmetric
-           <2>f qed by step <2>3, <2>4, <2>5 definition of equal
-      <1>f qed by property equal;
+           <2>f qed assumed (* ASSUMED by step <2>3, <2>4, <2>5 definition of equal *)
+      <1>f qed conclude;
 
 
   (**
