@@ -27,7 +27,7 @@ COMPILER_DIRS=\
  src/toplevel src/focalizedep src/focalizetest src/focalizeig
 
 LIB_DIRS=\
- src/stdlib src/extlib src/contribs
+ src/stdlib
 
 DOC_DIRS=\
  doc_src
