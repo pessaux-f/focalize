@@ -275,15 +275,15 @@ species Ordered_set_as_meet_semi_lattice =
 
   let inf (x, y) = if !leq (x, y) then x else y;
 
-  proof of leq_refines_order_inf = assumed
+  proof of leq_refines_order_inf = assumed (* assertion failure in llmtolk *)
 (* ASSUMED   by property leq_reflexive, leq_extends_equal *)
 (* ASSUMED      definition of inf, order_inf *)
   ;
 
-  proof of inf_left_substitution_rule = assumed
-(* ASSUMED    by property equal_reflexive, equal_symmetric, *)
-(* ASSUMED                leq_reflexive, leq_extends_equal, leq_transitive *)
-(* ASSUMED       definition of inf *)
+  proof of inf_left_substitution_rule =
+    by property equal_reflexive, equal_symmetric,
+                leq_reflexive, leq_extends_equal, leq_transitive
+       definition of inf
   ;
 
   proof of inf_idempotent = assumed
