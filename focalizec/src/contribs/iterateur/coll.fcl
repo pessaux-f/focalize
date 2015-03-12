@@ -17,18 +17,18 @@ let rec mem (l, x: A) =
 termination proof = structural l
 ;
 
-theorem not_mem_empty : 
-  all l : list(A), (all x : A, mem (l, x) = false) -> l =  [] 
-  proof = 
-    <1>1 prove (all x : A, mem ([] , x) = false) -> []   =  [] 
+theorem not_mem_empty :
+  all l : list(A), (all x : A, mem (l, x) = false) -> l =  []
+  proof =
+    <1>1 prove (all x : A, mem ([] , x) = false) -> []   =  []
          conclude
     <1>2 prove
-         (all l:list(A), 
-         ((all x : A, mem (l, x) = false) -> l =  []) -> 
+         (all l:list(A),
+         ((all x : A, mem (l, x) = false) -> l =  []) ->
           (all e: A, (all x : A, mem ((e::l), x) = false) -> (e::l) =  []))
-         <2>1 assume l:list(A), 
+         <2>1 assume l:list(A),
               assume e : A,
-              hypothesis H : (all x : A, mem ((e::l), x) = false), 
+              hypothesis H : (all x : A, mem ((e::l), x) = false),
               prove (e::l) = []
               <3>1 prove  mem ((e::l), e) = false
                    by hypothesis H
@@ -37,32 +37,32 @@ theorem not_mem_empty :
               <3>3 prove (e = e) || mem(l, e) = true
                    conclude
               <3>4 prove mem ((e::l), e) = true
-                   assumed (*by step <3>2, <3>3*) 
+                   assumed (*by step <3>2, <3>3*)
               <3>f qed by hypothesis H step <3>4
          <2>f conclude
      <1>f qed by step <1>1, <1>2
 ;
 
-theorem mem_spec: all l : list(A), all e h : A,  
+theorem mem_spec: all l : list(A), all e h : A,
  mem (l, e) \/ (e = h) <-> mem (h :: l, e)
 proof = assumed
-; 
-  
+;
+
 
 let rec rm (l, x : A) =
       match l with
         | [] -> []
-        | h :: q ->  if h = x then q else h :: (rm (q, x)) 
+        | h :: q ->  if h = x then q else h :: (rm (q, x))
 termination proof = structural l
 ;
 
-let rec length (l : list(A)) = 
+let rec length (l : list(A)) =
       match l with
         | [] -> 0
-        | h :: q ->  1 + (length (q)) 
+        | h :: q ->  1 + (length (q))
 termination proof = structural l
 ;
-     
+
 let rec append (l1 : list(A), l2) =
       match l1 with
         | [] -> l2
@@ -75,20 +75,20 @@ theorem append_right_neutral:
 proof = assumed
 ;
 
-theorem append_spec: all l1 l2 : list(A), all a : A, 
+theorem append_spec: all l1 l2 : list(A), all a : A,
   ( mem (l1, a) \/ mem (l2, a) ) <-> mem (append (l1, l2), a)
 proof = assumed
 ;
 
 end
-;;   
+;;
 
 
 
-(*logical let caselist (p : list('a) -> prop) = 
-  p ([]) -> (all e : 'a, (all r  : list('a), p(r) -> p (e::r))) -> 
+(*logical let caselist (p : list('a) -> prop) =
+  p ([]) -> (all e : 'a, (all r  : list('a), p(r) -> p (e::r))) ->
   (all l : list('a), p(l))
-;; 
+;;
 *)
 
 
@@ -98,38 +98,38 @@ species Coll (Elt is Setoid, L is Utils(Elt))  =
   signature size : Self -> int;
 
   property size_positive:
-   all a : Self, 0 <=0x size (a) ;
+   all a : Self, 0 <= size (a) ;
 
   (*empty collection*)
   signature empty : Self;
 
-  property empty_has_no_element: 
+  property empty_has_no_element:
     size(empty) = 0;
 
   (* membership of an element*)
   signature contains : Elt -> Self -> bool;
-  
-  property contains_empty: 
+
+  property contains_empty:
     all a : Elt, contains (a, empty) = false;
- 
+
   signature is_empty : Self -> bool;
- 
-  property is_empty_empty : 
-     is_empty (empty) = true; 
+
+  property is_empty_empty :
+     is_empty (empty) = true;
 
   signature add: Elt -> Self -> Self;
-  
-  property add_contains1: 
+
+  property add_contains1:
     all c: Self, all e : Elt, contains (e, (add (e, c))) ;
-  
-  property add_contains2: 
-    all c: Self, all e : Elt, all x : Elt, Elt!equal (e, x) = false -> 
+
+  property add_contains2:
+    all c: Self, all e : Elt, all x : Elt, Elt!equal (e, x) = false ->
        contains (x, (add (e, c))) = contains (x, c);
 
   signature remove: Elt -> Self -> Self;
 
-  property remove_contains: 
-    all c: Self, all e : Elt, all x : Elt, Elt!equal (e, x) = false -> 
+  property remove_contains:
+    all c: Self, all e : Elt, all x : Elt, Elt!equal (e, x) = false ->
        contains (x, (remove (e, c))) = contains (x, c);
 
   signature tolist : Self -> list(Elt);
@@ -137,17 +137,17 @@ species Coll (Elt is Setoid, L is Utils(Elt))  =
    property tolist_contains :
     all c: Self, all e : Elt, contains (e, c) <-> L!mem (tolist(c), e);
 
-  theorem tolist_empty : 
+  theorem tolist_empty :
     all l : Self, is_empty (l) <-> tolist(l) = []
   proof = assumed
  (*   <1>1 assume l : Self,
-         hypothesis h: is_empty(l), 
-         prove tolist(l) = [] 
+         hypothesis h: is_empty(l),
+         prove tolist(l) = []
          assumed
      <1>f conclude
 *)
-; 
-   
+;
+
 end
 ;;
 
@@ -160,21 +160,21 @@ let empty = []
 ;
 
 let is_empty (l : Self) = l = []
-; 
- 
+;
 
-let head (l: Self) : Elt = 
+
+let head (l: Self) : Elt =
       match l with
         | [] -> Elt!element
         | h :: _q ->  h ;
 
 
-let tail (l : Self) : Self = 
+let tail (l : Self) : Self =
       match l with
         | [] ->  []
         | _h :: q ->  q ;
 
-theorem head_tail_spec: all l : Self, 
+theorem head_tail_spec: all l : Self,
  ~~ is_empty (l ) -> tolist (l) = ((head (l) ) :: (tolist (tail (l))))
 proof = assumed
 ;
@@ -194,10 +194,10 @@ signature start : Col -> Self;
 
 signature hasnext : Self -> bool;
 
-property next_empty : 
+property next_empty :
   all c : Col, Col!is_empty (c) = true -> hasnext (start (c)) = false;
 
-property next_nonempty : 
+property next_nonempty :
   all c : Col, Col!is_empty (c) = false -> hasnext (start (c)) = true;
 
 signature stepp : Self -> Elt * Self;
@@ -205,173 +205,173 @@ signature stepp : Self -> Elt * Self;
 signature measure_it : Self -> int;
 
 property mea_post :
-  all a : Self, 0 <=0x  measure_it (a) ;
+  all a : Self, 0 <=  measure_it (a) ;
 
-property mea_decreases : 
-  all i1 i2 : Self, all e: Elt, stepp (i1) = (e, i2) -> measure_it (i2) <0x measure_it (i1);
+property mea_decreases :
+  all i1 i2 : Self, all e: Elt, stepp (i1) = (e, i2) -> measure_it (i2) < measure_it (i1);
 
 signature model : Self -> Col -> list(Elt) -> prop;
 
 property model_start :
-   all c : Col,  
+   all c : Col,
    model (start (c), c, []) ;
 
 logical let same_elems (c, l) = (* Col -> list(Elt) -> Prop = *)
   all x: Elt, Col!contains (x, c) <-> L!mem (l, x);
 
 property model_hasnext_true :
-   all it : Self, all l : list(Elt), all c : Col, 
-   model (it, c, l) -> (hasnext(it) = true) -> 
-     ((all e: Elt, L!mem (l, e) -> Col!contains (e, c)) /\ 
+   all it : Self, all l : list(Elt), all c : Col,
+   model (it, c, l) -> (hasnext(it) = true) ->
+     ((all e: Elt, L!mem (l, e) -> Col!contains (e, c)) /\
      (ex e : Elt, ~~ L!mem (l, e) /\ Col!contains (e, c))) ;
 
 property model_hasnext_false :
-   all it : Self, all l : list(Elt), all c : Col, 
-   model (it, c, l) -> (hasnext(it) = false) -> 
-      same_elems (c, l); 
+   all it : Self, all l : list(Elt), all c : Col,
+   model (it, c, l) -> (hasnext(it) = false) ->
+      same_elems (c, l);
 
-property model_step : 
-   all it it2 : Self, all e : Elt, all l : list(Elt), all c : Col, 
+property model_step :
+   all it it2 : Self, all e : Elt, all l : list(Elt), all c : Col,
    model (it, c, l) ->
-     stepp (it) = (e, it2)  -> 
-       (~~ L!mem (l, e) /\ 
-        model (it2, c, (e::l))  /\ 
-        Col!contains (e, c)); 
+     stepp (it) = (e, it2)  ->
+       (~~ L!mem (l, e) /\
+        model (it2, c, (e::l))  /\
+        Col!contains (e, c));
 
 end
 ;;
 
 species Iter_tools (Elt is Setoid, L is Utils(Elt), Col is Coll(Elt, L)) =
 
-inherit Iterator(Elt, L, Col); 
+inherit Iterator(Elt, L, Col);
 
-let rec copy_aux (it) = 
-if hasnext(it) then  
+let rec copy_aux (it) =
+if hasnext(it) then
      let res = stepp (it) in
-     Col!add (fst(res), copy_aux (snd(res))) 
+     Col!add (fst(res), copy_aux (snd(res)))
 else Col!empty;
 (*termination proof = measure measure_it on it
 ;*)
 
 let copy (c) = copy_aux (start (c));
 
-property copy_spec : 
-  all e: Elt, all c : Col, 
+property copy_spec :
+  all e: Elt, all c : Col,
     Col!contains (e, c) = Col!contains (e, copy (c)) ;
 
 property copy_invariant: all it:Self, all clone : Col,
-copy_aux (it) = clone -> all c : Col, all l : list(Elt) , model (it, c, l) -> 
+copy_aux (it) = clone -> all c : Col, all l : list(Elt) , model (it, c, l) ->
   all x: Elt,  L!mem (l, x) = Col!contains (x, clone);
 
 end
 ;;
 
 species Coll_tools (Elt is Setoid, L is Utils(Elt), Col is Coll(Elt, L),
-                   Iter is Iterator(Elt, L, Col) ) = 
+                   Iter is Iterator(Elt, L, Col) ) =
 inherit Coll(Elt, L);
 
-let rec copy_aux (it, a) = 
-if Iter!hasnext(it) then  
+let rec copy_aux (it, a) =
+if Iter!hasnext(it) then
      let res = Iter!stepp (it) in
-     Col!add (fst(res), copy_aux (snd(res), a)) 
+     Col!add (fst(res), copy_aux (snd(res), a))
 else a;
 
 let copy (c) = copy_aux ((Iter!start (c)), Col!empty);
 
-property copy_spec : 
-  all e: Elt, all c : Col, 
+property copy_spec :
+  all e: Elt, all c : Col,
     Col!contains (e, c) = Col!contains (e, copy (c)) ;
 
 end
 ;;
 
 
-species ListIterator (Elt is Setoid, L is Utils(Elt), 
+species ListIterator (Elt is Setoid, L is Utils(Elt),
 LCol is ListCol(Elt, L)) =
 inherit Iterator(Elt, L, LCol);
 
 representation = LCol;
 
 let tolist (l : Self) = LCol!tolist (l)
-; 
+;
 
 let is_empty (l : Self) = LCol!is_empty (l)
-; 
+;
 
 let hasnext (it : Self) = ~~(is_empty (it) );
 
 let start (c : LCol) : Self = c;
 
-let stepp (it) = 
+let stepp (it) =
   if hasnext (it) then pair (LCol!head (it), LCol!tail (it))
   else focalize_error ("no more next") ;
 
 let measure_it (c) = LCol!size (c);
 
-logical let model (it: Self, c, l) = 
-  (all x : Elt, L!mem (LCol!tolist (c), x) 
-   <-> 
-   L!mem (L!append (l, tolist(it)), x)); 
+logical let model (it: Self, c, l) =
+  (all x : Elt, L!mem (LCol!tolist (c), x)
+   <->
+   L!mem (L!append (l, tolist(it)), x));
 
 (*theorem hasnext_is_false :
   all it : Self, hasnext (it) = false -> LCol!tolist(it) = []
-   proof = 
+   proof =
    <1>1 assume it : Self,
-        hypothesis H : hasnext(it) = false, 
+        hypothesis H : hasnext(it) = false,
         prove LCol!tolist(it) = []
-   <1>f qed by definition of hasnext 
+   <1>f qed by definition of hasnext
 ;*)
 
 proof of model_start =
-   <1>1 assume c: LCol,  
-        prove (all x: Elt, L!mem (LCol!tolist(c), x) 
+   <1>1 assume c: LCol,
+        prove (all x: Elt, L!mem (LCol!tolist(c), x)
                <->
               L!mem (L!append ([], tolist(start(c))), x))
-        <2>a prove L!append([], tolist(start(c))) = 
+        <2>a prove L!append([], tolist(start(c))) =
                         tolist(start(c))
              assumed (*by definition of append*)
         <2>b prove LCol!tolist(c) = tolist(start(c))
              by definition of start, tolist
         <2>1 assume x: Elt,
-             hypothesis  H: L!mem (LCol!tolist(c), x), 
+             hypothesis  H: L!mem (LCol!tolist(c), x),
              prove L!mem (L!append ([], tolist(start(c))), x)
-             by step <2>a, <2>b hypothesis H 
+             by step <2>a, <2>b hypothesis H
          <2>2 assume x: Elt,
-             hypothesis H: L!mem (L!append ([], tolist(start(c))), x), 
-             prove L!mem (LCol!tolist(c), x) 
-             by step <2>a, <2>b hypothesis H 
+             hypothesis H: L!mem (L!append ([], tolist(start(c))), x),
+             prove L!mem (LCol!tolist(c), x)
+             by step <2>a, <2>b hypothesis H
         <2>f conclude
     <1>f qed by step <1>1 definition of model
-    ; 
+    ;
 
 theorem hasnext_spec:
 all it : Self, hasnext (it) = false <-> tolist (it) = []
-proof = 
-  by definition of hasnext, is_empty, tolist property LCol!tolist_empty 
+proof =
+  by definition of hasnext, is_empty, tolist property LCol!tolist_empty
 ;
 
 proof of model_hasnext_false =
    <1>1 assume c : LCol, l : list(Elt), it : Self,
-        hypothesis h1 : (all x: Elt, L!mem (LCol!tolist(c), x) 
+        hypothesis h1 : (all x: Elt, L!mem (LCol!tolist(c), x)
                <->
-              L!mem (L!append (l, tolist(it)), x)), 
-        hypothesis h2: hasnext (it) = false, 
+              L!mem (L!append (l, tolist(it)), x)),
+        hypothesis h2: hasnext (it) = false,
         prove all x:Elt, LCol!contains(x, c) <-> L!mem (l,x)
-        <2>1 assume x: Elt, 
-             hypothesis h3:  LCol!contains(x, c), 
+        <2>1 assume x: Elt,
+             hypothesis h3:  LCol!contains(x, c),
              prove  L!mem (l,x)
              <3>1 prove L!mem(LCol!tolist(c), x) by hypothesis h3 property LCol!tolist_contains
-               <3>2 prove tolist(it) = [] 
+               <3>2 prove tolist(it) = []
                    by hypothesis h2 property hasnext_spec
                 <3>3 prove L!append (l, tolist(it)) = l
                      by property L!append_right_neutral step <3>2
-                <3>4 prove L!mem (LCol!tolist(c), x) 
+                <3>4 prove L!mem (LCol!tolist(c), x)
                     by property LCol!tolist_contains hypothesis h3
-             <3>f qed by step <3>3, <3>4 hypothesis h1 
-        <2>2 assume x: Elt, 
-             hypothesis h3:  L!mem (l,x), 
+             <3>f qed by step <3>3, <3>4 hypothesis h1
+        <2>2 assume x: Elt,
+             hypothesis h3:  L!mem (l,x),
              prove   LCol!contains(x, c)
-             <3>1 prove L!mem (LCol!tolist(c), x) 
+             <3>1 prove L!mem (LCol!tolist(c), x)
                   <4>1 prove tolist(it) = []  by hypothesis h2 property hasnext_spec
                   <4>2 prove L!append (l, tolist(it)) = l
                        by property L!append_right_neutral step <4>1
@@ -383,32 +383,32 @@ proof of model_hasnext_false =
 
 proof of model_hasnext_true =
 <1>1 assume it : Self, assume l : list(Elt), assume c : LCol,
-     hypothesis h1 : (all x: Elt, L!mem (LCol!tolist(c), x) 
+     hypothesis h1 : (all x: Elt, L!mem (LCol!tolist(c), x)
                <->
-     L!mem (L!append (l, tolist(it)), x)), 
+     L!mem (L!append (l, tolist(it)), x)),
      hypothesis h2: hasnext (it) = true,
-     prove  (all e: Elt, L!mem (l, e) -> LCol!contains (e, c)) /\ 
+     prove  (all e: Elt, L!mem (l, e) -> LCol!contains (e, c)) /\
      (ex e : Elt, ~~ L!mem (l, e) /\ LCol!contains (e, c))
-     <2>1 assume e : Elt, 
-          hypothesis h:  L!mem (l, e), 
+     <2>1 assume e : Elt,
+          hypothesis h:  L!mem (l, e),
           prove  LCol!contains (e, c)
           <3>1 prove  L!mem (L!append (l, tolist(it)), e)
                by hypothesis h  property L!append_spec
           <3>2 prove L!mem (LCol!tolist(c), e)  by step <3>1 hypothesis h1
-          <3>f qed by step <3>2 property LCol!tolist_contains 
-     <2>2 notation e =  LCol!head  (it) , 
-          prove ~~ L!mem (l, e) /\ LCol!contains (e, c) 
+          <3>f qed by step <3>2 property LCol!tolist_contains
+     <2>2 notation e =  LCol!head  (it) ,
+          prove ~~ L!mem (l, e) /\ LCol!contains (e, c)
           <3>1 prove ~~ L!mem (l, e) assumed
-          <3>2 prove LCol!contains (e, c) 
-               <4>1 prove L!mem (tolist(it), e)  
+          <3>2 prove LCol!contains (e, c)
+               <4>1 prove L!mem (tolist(it), e)
                     <5>1 prove  ~~ LCol!is_empty (it)
-                     by hypothesis h2 property hasnext_spec property LCol!tolist_empty definition of tolist 
-                     <5>2 prove LCol!tolist(it) = e :: (LCol!tolist(LCol!tail(it))) 
+                     by hypothesis h2 property hasnext_spec property LCol!tolist_empty definition of tolist
+                     <5>2 prove LCol!tolist(it) = e :: (LCol!tolist(LCol!tail(it)))
                      by step <5>1 property LCol!head_tail_spec definition of e
                      <5>3 prove L!mem (e :: (LCol!tolist(LCol!tail(it))), e) assumed
                      <5>f qed by step <5>3, <5>2 definition of tolist
                <4>2 prove L!mem (L!append (l, tolist(it)), e) by property L!append_spec step <4>1
-               <4>f qed by step <4>2 hypothesis h1  property LCol!tolist_contains 
+               <4>f qed by step <4>2 hypothesis h1  property LCol!tolist_contains
           <3>f conclude
      <2>f conclude
 <1>f qed by step <1>1 definition of model
@@ -416,5 +416,3 @@ proof of model_hasnext_true =
 
 end
 ;;
-
-

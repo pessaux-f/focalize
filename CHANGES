@@ -1,3 +1,8 @@
+- Experimental termination proofs by measure and by order. Triggered if
+  the option --experimental is set.
+- Order relations on orders are not anymore called <0x, <=0x etc, but simply
+  <, <= etc.
+
 # Focalize 0.9.0
 ################
 - Update to Caml 4.02.0

@@ -194,7 +194,7 @@ let ( =0x ) =
 ;;
 
 
-let ( <0x ) =
+let ( < ) =
   internal int -> int -> bool
   external
   | caml -> {* Ml_builtins.bi__int_lt *}
@@ -202,7 +202,7 @@ let ( <0x ) =
 ;;
 
 
-let ( <=0x ) =
+let ( <= ) =
   internal int -> int -> bool
   external
   | caml -> {* Ml_builtins.bi__int_leq *}
@@ -210,7 +210,7 @@ let ( <=0x ) =
 ;;
 
 
-let ( >=0x ) =
+let ( >= ) =
   internal int -> int -> bool
   external
   | caml -> {* Ml_builtins.bi__int_geq *}
@@ -218,7 +218,7 @@ let ( >=0x ) =
 ;;
 
 
-let ( >0x ) =
+let ( > ) =
   internal  int -> int -> bool
   external
   | caml -> {* Ml_builtins.bi__int_gt *}
@@ -278,15 +278,15 @@ let ( % ) =
 
 
 (** Successor. *)
-let succ0x (x : int) : int = x + 1 ;;
+let int_succ (x : int) : int = x + 1 ;;
 
 
 (** Predecessor. *)
-let pred0x (x : int) : int = x - 1 ;;
+let int_pred (x : int) : int = x - 1 ;;
 
 
 (** Maximum and minimum of two integer values. *)
-let max0x =
+let int_max =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_max *}
@@ -294,7 +294,7 @@ let max0x =
 ;;
 
 
-let min0x =
+let int_min =
   internal int -> int -> int
   external
   | caml -> {* Ml_builtins.bi__int_min *}
@@ -303,7 +303,7 @@ let min0x =
 
 
 (** Absolute value for integers. *)
-let abs0x =
+let int_abs =
   internal int -> int
   external
   | caml -> {* Ml_builtins.bi__int_abs *}
@@ -397,10 +397,10 @@ theorem beq_trans :
 
 (** {8 Integer comparisons fundamental properties} *)
 theorem int_gt_lt_swap :
-  all x y : int, (x >0x y) -> (y <0x x)
+  all x y : int, (x > y) -> (y < x)
   proof =
     coq proof {*
-    intros x y. unfold _gt_0x, _lt_0x. unfold bi__int_gt, bi__int_lt.
+    intros x y. unfold _gt_, _lt_. unfold bi__int_gt, bi__int_lt.
     elim Z_gt_dec. intros. elim Z_lt_dec. intro. compute. trivial. intro.
     compute. auto with zarith. intro. intro. elim Z_lt_dec. intro. compute.
     trivial. intro. compute. auto with zarith. Qed.
@@ -409,10 +409,10 @@ theorem int_gt_lt_swap :
 
 
 theorem int_lt_gt_swap :
-  all x y : int, (x <0x y) -> (y >0x x)
+  all x y : int, (x < y) -> (y > x)
   proof =
     coq proof {*
-    intros x y. unfold _lt_0x, _gt_0x. unfold bi__int_lt, bi__int_gt.
+    intros x y. unfold _lt_, _gt_. unfold bi__int_lt, bi__int_gt.
     elim Z_lt_dec. intros. elim Z_gt_dec. intros. compute. trivial. intro.
     compute. auto with zarith. intros. elim Z_gt_dec. intro. compute. trivial.
     intro. compute. auto with zarith. Qed.
@@ -421,10 +421,10 @@ theorem int_lt_gt_swap :
 
 
 theorem int_ge_le_swap :
-  all x y : int , (x >=0x y) -> (y <=0x x)
+  all x y : int , (x >= y) -> (y <= x)
   proof =
     coq proof {*
-    intros x y. unfold _gt__equal_0x, _lt__equal_0x.
+    intros x y. unfold _gt__equal_, _lt__equal_.
     unfold bi__int_geq, bi__int_leq. elim Z_ge_dec. intros. elim Z_le_dec.
     intro. compute. trivial. intros. compute. auto with zarith. intros.
     elim Z_le_dec. intro. compute. trivial. intro. compute. auto with zarith.
@@ -434,10 +434,10 @@ theorem int_ge_le_swap :
 
 
 theorem int_le_ge_swap :
-  all x y : int , (x <=0x y) -> (y >=0x x)
+  all x y : int , (x <= y) -> (y >= x)
   proof =
     coq proof {*
-    intros x y. unfold _lt__equal_0x, _gt__equal_0x, bi__int_leq, bi__int_geq.
+    intros x y. unfold _lt__equal_, _gt__equal_, bi__int_leq, bi__int_geq.
     elim (Z_le_dec x y). intros. elim (Z_ge_dec y x). intro. auto. intro. auto.
     compute. compute in H. apply Zle_not_gt in a. apply Zgt_not_le in a.
     exact a. clear a. apply Znot_le_gt. apply Zlt_not_le. apply Znot_ge_lt.
@@ -448,10 +448,10 @@ theorem int_le_ge_swap :
 
 
 theorem int_le_not_lt :
-  all x y : int, (x <=0x y) -> ~ (y <0x x)
+  all x y : int, (x <= y) -> ~ (y < x)
   proof =
     coq proof {*
-    intros x y. unfold _lt__equal_0x, _lt_0x. unfold bi__int_leq, bi__int_lt.
+    intros x y. unfold _lt__equal_, _lt_. unfold bi__int_leq, bi__int_lt.
     elim Z_le_dec. intros. elim Z_lt_dec. intros. compute. intro.
     auto with zarith. intro. compute. trivial. intros. elim Z_lt_dec. intro.
     compute. auto with zarith. intro. compute. auto with zarith. Qed.
@@ -460,10 +460,10 @@ theorem int_le_not_lt :
 
 
 theorem int_lt_not_le :
-  all x y : int, (x <0x y) -> ~ (y <=0x x)
+  all x y : int, (x < y) -> ~ (y <= x)
   proof =
     coq proof {*
-    intros x y. unfold _lt_0x, _lt__equal_0x. unfold bi__int_lt, bi__int_leq.
+    intros x y. unfold _lt_, _lt__equal_. unfold bi__int_lt, bi__int_leq.
     elim Z_lt_dec. intros. elim Z_le_dec. intro. compute. auto with zarith.
     intro. auto with zarith. intros. elim Z_le_dec. auto with zarith.
     auto with zarith. Qed.
@@ -472,10 +472,10 @@ theorem int_lt_not_le :
 
 
 theorem int_lt_not_gt :
-  all x y : int, (x <0x y) -> ~ (x >0x y)
+  all x y : int, (x < y) -> ~ (x > y)
   proof =
     coq proof {*
-    intros x y. unfold _lt_0x, _gt_0x. unfold bi__int_lt, bi__int_gt.
+    intros x y. unfold _lt_, _gt_. unfold bi__int_lt, bi__int_gt.
     elim (Z_lt_dec x y). intro. simpl. intro. elim (Z_gt_dec x y).
     simpl. intros. intro. auto with zarith. intro. simpl. auto with zarith.
     intros. auto with zarith. Qed.
@@ -484,10 +484,10 @@ theorem int_lt_not_gt :
 
 
 theorem int_le_not_gt :
-  all x y : int, (x <=0x y) -> ~ (x >0x y)
+  all x y : int, (x <= y) -> ~ (x > y)
   proof =
     coq proof {*
-    intros x y; unfold _lt__equal_0x, _gt_0x  in |- *.
+    intros x y; unfold _lt__equal_, _gt_  in |- *.
     unfold bi__int_leq , bi__int_gt. elim (Z_le_dec x y). intros H.
     intros b; clear b. elim (Z_gt_dec x y). intros H1; absurd (x > y)%Z.
     apply Zle_not_gt; trivial. trivial.
@@ -497,10 +497,10 @@ theorem int_le_not_gt :
 
 
 theorem int_gt_not_le :
-  all x y : int, (x >0x y) -> ~ (x <=0x y)
+  all x y : int, (x > y) -> ~ (x <= y)
   proof =
     coq proof {*
-    intros x y. unfold _gt_0x, _lt__equal_0x. unfold bi__int_gt, bi__int_leq.
+    intros x y. unfold _gt_, _lt__equal_. unfold bi__int_gt, bi__int_leq.
     elim Z_gt_dec. intros. elim Z_le_dec. intro. compute. auto with zarith.
     intro. compute. auto with zarith. intros. elim Z_le_dec. auto with zarith.
     intro. auto with zarith. Qed.
@@ -509,10 +509,10 @@ theorem int_gt_not_le :
 
 
 theorem int_not_ge_lt :
-  all x y : int, ~ (x >=0x y) -> (x <0x y)
+  all x y : int, ~ (x >= y) -> (x < y)
   proof =
     coq proof {*
-    intros x y. unfold _gt__equal_0x, _lt_0x. unfold bi__int_geq, bi__int_lt.
+    intros x y. unfold _gt__equal_, _lt_. unfold bi__int_geq, bi__int_lt.
     elim Z_ge_dec. intros. elim Z_lt_dec. intro. compute. trivial. intro.
     compute. compute in H. auto with zarith. intros. elim Z_lt_dec. intro.
     compute. trivial. intro. compute. compute in H. auto with zarith. Qed.
@@ -521,10 +521,10 @@ theorem int_not_ge_lt :
 
 
 theorem int_not_lt_ge :
-  all x y : int, ~ (x <0x y) -> (x >=0x y)
+  all x y : int, ~ (x < y) -> (x >= y)
   proof =
     coq proof {*
-    intros x y. unfold _lt_0x, _gt__equal_0x. unfold bi__int_lt, bi__int_geq.
+    intros x y. unfold _lt_, _gt__equal_. unfold bi__int_lt, bi__int_geq.
     elim Z_lt_dec. intros. elim Z_ge_dec. intro.
     compute. trivial. intro. compute. compute in H. auto with zarith.
     intro. intro. elim Z_ge_dec. intro. compute. trivial. intro. compute.
@@ -534,10 +534,10 @@ theorem int_not_lt_ge :
 
 
 theorem int_not_gt_le :
-  all x y : int, ~ (x >0x y) -> (x <=0x y)
+  all x y : int, ~ (x > y) -> (x <= y)
   proof =
     coq proof {*
-    intros x y. unfold _gt_0x, _lt__equal_0x. unfold bi__int_gt, bi__int_leq.
+    intros x y. unfold _gt_, _lt__equal_. unfold bi__int_gt, bi__int_leq.
     elim Z_gt_dec. intro.  intro. elim Z_le_dec. intro. compute. trivial.
     intro. compute. compute in H. apply Zgt_not_le in a. auto with zarith.
     intro. intro. elim Z_le_dec. intro. compute. trivial. intro. compute.
@@ -547,10 +547,10 @@ theorem int_not_gt_le :
 
 
 theorem int_not_le_gt :
-  all x y : int, ~ (x <=0x y) -> (x >0x y)
+  all x y : int, ~ (x <= y) -> (x > y)
   proof =
     coq proof {*
-    intros x y. unfold _lt__equal_0x, _gt_0x. unfold bi__int_leq, bi__int_gt.
+    intros x y. unfold _lt__equal_, _gt_. unfold bi__int_leq, bi__int_gt.
     elim Z_le_dec. intros. elim Z_gt_dec. intro. compute. trivial. intro.
     compute. compute in H. auto with zarith. intros. elim Z_gt_dec. intro.
     compute. trivial. intro. compute. compute in H. auto with zarith. Qed.
@@ -559,10 +559,10 @@ theorem int_not_le_gt :
 
 
 theorem int_lt_le_trans :
-  all x y z : int,  x <0x y -> y <=0x z -> x <0x z
+  all x y z : int,  x < y -> y <= z -> x < z
   proof =
     coq proof {*
-    intros x y z. unfold _lt_0x, _lt__equal_0x, bi__int_lt, bi__int_leq in |- *.
+    intros x y z. unfold _lt_, _lt__equal_, bi__int_lt, bi__int_leq in |- *.
     elim (Z_lt_dec x y). elim (Z_le_dec y z).
     intros Hle Hlt foo bar; clear foo bar.
     elim (Z_lt_dec x z). intros H; compute in |- *; trivial.
@@ -574,10 +574,10 @@ theorem int_lt_le_trans :
 
 
 theorem int_le_refl :
-  all x y : int, x = y -> x <=0x y
+  all x y : int, x = y -> x <= y
   proof =
     coq proof {*
-    intros x y. unfold _lt__equal_0x. unfold bi__int_leq. unfold _equal_.
+    intros x y. unfold _lt__equal_. unfold bi__int_leq. unfold _equal_.
     elim Z_le_dec. intro. intro. compute. trivial. intros. compute.
     apply Znot_le_gt in b.
     apply zenon_syntactic_equal with (S := int__t) (x := x) (y := y).
@@ -588,11 +588,11 @@ theorem int_le_refl :
 
 
 theorem int_le_antisymm:
-  all x y : int, x <=0x y -> y <=0x x -> x = y
+  all x y : int, x <= y -> y <= x -> x = y
   proof =
     coq proof {*
     intros x y.
-    unfold _lt__equal_0x, bi__int_leq in |- *.
+    unfold _lt__equal_, bi__int_leq in |- *.
     elim (Z_le_dec x y); elim (Z_le_dec y x).
     intros H1 H2. intros b c; clear b c. replace x with y.
     eapply beq_refl. apply Zle_antisym; trivial.
@@ -605,10 +605,10 @@ theorem int_le_antisymm:
 ;;
 
 theorem int_le_trans:
-  all x y z : int, x <=0x y -> y <=0x z -> x <=0x z
+  all x y z : int, x <= y -> y <= z -> x <= z
   proof =
     coq proof {*
-    unfold _lt__equal_0x, bi__int_leq in |- *; intros x y z H1 H2.
+    unfold _lt__equal_, bi__int_leq in |- *; intros x y z H1 H2.
     apply dec_IsTrue. cut (x <= y)%Z. cut (y <= z)%Z.
     eauto with zarith. eapply IsTrue_dec. apply H2.
     eapply IsTrue_dec; apply H1. Qed.
@@ -617,10 +617,10 @@ theorem int_le_trans:
 
 
 theorem int_lt_irrefl :
-  all x y : int, x <0x y -> ~ x = y
+  all x y : int, x < y -> ~ x = y
   proof =
     coq proof {*
-    intros x y. unfold _lt_0x. unfold bi__int_lt. elim Z_lt_dec. intros.
+    intros x y. unfold _lt_. unfold bi__int_lt. elim Z_lt_dec. intros.
     compute in H. intro. unfold _equal_ in H0.
     apply zenon_syntactic_equal with (S := int__t) (x := x) (y := y).
     intro. apply zenon_focal_eqdec. auto with zarith. apply Zlt_not_eq.
@@ -630,10 +630,10 @@ theorem int_lt_irrefl :
 
 
 theorem int_gt_or_le :
-  all x y : int, (x >0x y) \/ (x <=0x y)
+  all x y : int, (x > y) \/ (x <= y)
   proof =
     coq proof {*
-    intros x y. unfold _gt_0x, _lt__equal_0x. unfold bi__int_leq, bi__int_gt.
+    intros x y. unfold _gt_, _lt__equal_. unfold bi__int_leq, bi__int_gt.
     elim (Z_gt_dec x y). intro H. elim (Z_le_dec x y). intro. compute.
     auto. intro. compute. auto. intro. elim (Z_le_dec x y). intro. compute.
     right. auto. intro. compute. absurd (~ x > y). auto. auto. Qed.
@@ -642,10 +642,10 @@ theorem int_gt_or_le :
 
 
 theorem int_gt_implies_ge :
-  all x y : int, x >0x y -> x >=0x y
+  all x y : int, x > y -> x >= y
   proof =
     coq proof {*
-    intros x y. unfold _gt_0x, _gt__equal_0x. unfold bi__int_gt, bi__int_geq.
+    intros x y. unfold _gt_, _gt__equal_. unfold bi__int_gt, bi__int_geq.
     elim (Z_gt_dec x y). intros. compute in H. elim (Z_ge_dec x y). intros.
     compute. auto. intro. compute. apply Znot_ge_lt in b. auto with zarith.
     intros. compute in H. elim (Z_ge_dec x y). intro. compute. auto. intro.
@@ -654,13 +654,13 @@ theorem int_gt_implies_ge :
 ;;
 
 
-theorem int_diff_ge_is_pos : all x y : int, x >=0x y -> x - y >=0x 0
+theorem int_diff_ge_is_pos : all x y : int, x >= y -> x - y >= 0
 proof =
   (* Heavy use of doc:
        coq_8_4_stdlib/Coq.ZArith.Zorder.html
        coq_8_4_stdlib/Coq.ZArith.BinInt.html *)
     coq proof {*
-    intros x y. unfold _gt_0x, _gt__equal_0x, _dash_.
+    intros x y. unfold _gt_, _gt__equal_, _dash_.
     unfold bi__int_gt, bi__int_geq, bi__int_minus. elim (Z_ge_dec x y).
     intros. compute in H. elim (Z_ge_dec (x - y) 0). intros. compute. auto.
     intros. compute. apply Zge_le in a.  (* n <= m -> m >= n *)
@@ -685,10 +685,10 @@ theorem int_0_plus:
 
 
 theorem int_lt_le_S:
-  all x y : int, x <0x y -> x + 1 <=0x y
+  all x y : int, x < y -> x + 1 <= y
   proof =
     coq proof {*
-      unfold _lt_0x, _lt__equal_0x, _plus_ in |- *; intros x y Hlt;
+      unfold _lt_, _lt__equal_, _plus_ in |- *; intros x y Hlt;
       unfold bi__int_lt, bi__int_leq, bi__int_plus;
       apply dec_IsTrue; fold (Zsucc x) in |- *; apply Zlt_le_succ;
       trivial. exact (IsTrue_dec Hlt). Qed.
@@ -731,10 +731,10 @@ theorem int_plus_plus:
 
 
 theorem int_le_plus_plus:
-  all x y z t : int, x <=0x y -> z <=0x t -> x + z <=0x y + t
+  all x y z t : int, x <= y -> z <= t -> x + z <= y + t
   proof =
     coq proof {*
-      unfold _plus_, _lt__equal_0x in |- *; intros x y z t H1 H2;
+      unfold _plus_, _lt__equal_ in |- *; intros x y z t H1 H2;
       unfold bi__int_leq, bi__int_plus, bi__int_plus;
       apply dec_IsTrue; apply Zplus_le_compat;
       [ exact (IsTrue_dec H1) | exact (IsTrue_dec H2) ]. Qed.
@@ -743,27 +743,27 @@ theorem int_le_plus_plus:
 
 
 theorem int_min_le:
-  all x y z : int, (z <=0x x /\ z <=0x y) -> z <=0x min0x (x, y)
+  all x y z : int, (z <= x /\ z <= y) -> z <= int_min (x, y)
   proof =
     coq proof {*
       intros x y z H; elim H; intros H1 H2; clear H;
-      unfold min0x in |- *; unfold bi__int_min; elim (Z_lt_dec x y);
+      unfold int_min in |- *; unfold bi__int_min; elim (Z_lt_dec x y);
       intros H; trivial. Qed.
     *}
 ;;
 
 
 theorem int_min_le2:
-  all x y z : int, z <=0x min0x (x, y) -> (z <=0x x /\ z <=0x y)
+  all x y z : int, z <= int_min (x, y) -> (z <= x /\ z <= y)
   proof =
     coq proof {*
-      intros x y z; unfold min0x in |- *.
+      intros x y z; unfold int_min in |- *.
       unfold bi__int_min.
       case (Z_lt_dec x y); intros H1 H2; split; trivial.
-      apply int_le_trans with x; trivial. unfold _lt__equal_0x, bi__int_leq;
+      apply int_le_trans with x; trivial. unfold _lt__equal_, bi__int_leq;
       apply dec_IsTrue; apply Zlt_le_weak; trivial.
       apply int_le_trans with y; trivial.
-      unfold _lt__equal_0x, bi__int_leq; apply dec_IsTrue.
+      unfold _lt__equal_, bi__int_leq; apply dec_IsTrue.
       elim (Zle_or_lt y x); trivial.   intros Habs; absurd (x < y)%Z; trivial.
       Qed.
     *}

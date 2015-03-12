@@ -27,7 +27,7 @@ species B(P is A) =
   let rec length(x : Self) : int =
     match x with
     | [] -> 0
-    | h::r -> basics#succ0x(!length(r));
+    | h::r -> basics#succ(!length(r));
 
   let rec of_bool_list(x : list(bool)) : Self =
     match x with

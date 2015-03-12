@@ -7,29 +7,29 @@ open "basic_sets";;
 theorem beq_subst : all a b : bool, a = b -> a -> b
 proof = assumed (* To do *);;
 
-theorem int_eq_geq : all a b c : int, a =0x b -> a >=0x c -> b >=0x c
+theorem int_eq_geq : all a b c : int, a =0x b -> a >= c -> b >= c
 proof = assumed (* To do *);;
 
-theorem int_portion : all min num : int, 
-  0 <=0x min -> min <=0x 100 -> num >=0x 0 -> num >=0x ((min * num) / 100)
+theorem int_portion : all min num : int,
+  0 <= min -> min <= 100 -> num >= 0 -> num >= ((min * num) / 100)
 proof = assumed (* To do *);;
 
 (** Annex 17 subjects *)
 
-(** Domain Subject : Items carried by airside persons or contained in cabin 
-    or hold baggage. *) 
+(** Domain Subject : Items carried by airside persons or contained in cabin
+    or hold baggage. *)
 
 species Object =
 
   inherit Setoid;
 
-(** Attribute : characterizes whether an object is inaccessible in cabin or not. 
+(** Attribute : characterizes whether an object is inaccessible in cabin or not.
     Derived from Property 4.7.6 of Annex 17. *)
 
 signature inaccessible_in_cabin : Self -> bool;
 
-(** Domain Property : compatibility of function inaccessible_in_cabin 
-    with the equality relation. *) 
+(** Domain Property : compatibility of function inaccessible_in_cabin
+    with the equality relation. *)
 property equal_inaccessible_in_cabin : all x y : Self,
   !equal(x, y) -> !inaccessible_in_cabin (x) = !inaccessible_in_cabin (y);
 
@@ -74,7 +74,7 @@ end;;
 
 species AirsideSubject (Obj is Object, Obj_set is Finite_set(Obj)) =
 
-  inherit Setoid; 
+  inherit Setoid;
 
 signature identityVerified : Self -> bool;
 
@@ -89,7 +89,7 @@ end;;
 species AirsidePerson(Obj is Object, Obj_set is Finite_set(Obj)) =
 
   inherit AirsideSubject(Obj, Obj_set);
-  
+
 end;;
 
 species AirsideVehicle(Obj is Object, Obj_set is Finite_set(Obj)) =
@@ -99,7 +99,7 @@ species AirsideVehicle(Obj is Object, Obj_set is Finite_set(Obj)) =
 end;;
 
 species UnescortedPerson(Obj is Object, Obj_set is Finite_set(Obj)) =
-                       
+
   inherit AirsidePerson(Obj, Obj_set);
 
 signature backgroundChecked : Self -> bool;
@@ -120,7 +120,7 @@ species Baggage (Obj is Object, Obj_set is Finite_set(Obj)) =
 
  signature screened : Self -> bool;
 
- property equal_baggage : all x y : Self, !equal(x, y) -> 
+ property equal_baggage : all x y : Self, !equal(x, y) ->
    (!screened(x) = !screened(y) /\
     Obj_set!equal(!get_objects(x), !get_objects(y)));
 
@@ -129,18 +129,18 @@ end;;
 species CabinBaggage (Obj is Object, Obj_set is Finite_set(Obj)) =
 
   inherit Baggage(Obj, Obj_set);
- 
+
 (** objects in cabin baggage are considered to be accessible in cabin *)
 
-property object_inaccessible : 
+property object_inaccessible :
  all o : Obj, all s : Self,
-   Obj_set!member(o, !get_objects(s)) -> 
+   Obj_set!member(o, !get_objects(s)) ->
       ~ (Obj!inaccessible_in_cabin(o));
 
 end;;
 
-species CabinPerson (Obj is Object, 
-                     Obj_set is Finite_set(Obj), 
+species CabinPerson (Obj is Object,
+                     Obj_set is Finite_set(Obj),
                      C_baggage is CabinBaggage(Obj, Obj_set),
                      Cb_set is Finite_set(C_baggage)) =
 
@@ -150,7 +150,7 @@ signature objects_worn : Self -> Obj_set;
 
 signature cabinBaggage : Self -> Cb_set;
 
-property equal_congruence2: all x y : Self, 
+property equal_congruence2: all x y : Self,
     !equal(x, y) ->
               (Cb_set!equal(!cabinBaggage(x), !cabinBaggage(y)) /\
                Obj_set!equal(!objects_worn(x), !objects_worn(y)));
@@ -160,16 +160,16 @@ property equal_congruence2: all x y : Self,
 property invariant_objects : all o : Obj, all s : Self,
   Obj_set!member(o, !objects_worn(s)) -> ~ (Obj!inaccessible_in_cabin(o));
 
-signature objectsInCBaggage : Self -> Obj_set; 
+signature objectsInCBaggage : Self -> Obj_set;
 
 property objectsInCBaggage_const1 : all s : Self, all o : Obj,
   Obj_set!member(o, !objectsInCBaggage(s)) ->
-    (ex c : C_baggage, 
-       Cb_set!member(c, !cabinBaggage(s)) /\ 
+    (ex c : C_baggage,
+       Cb_set!member(c, !cabinBaggage(s)) /\
        Obj_set!member(o, C_baggage!get_objects(c)));
- 
+
 property objectsInCBaggage_const2 : all s : Self, all c : C_baggage,
-  all o : Obj,  
+  all o : Obj,
     Cb_set!member(c, !cabinBaggage(s)) ->
     Obj_set!member(o, C_baggage!get_objects(c)) ->
     Obj_set!member(o, !objectsInCBaggage(s));
@@ -190,8 +190,8 @@ species Seat_number =
 
 end;;
 
-species CabinPassenger(Obj is Object, 
-                       Obj_set is Finite_set(Obj), 
+species CabinPassenger(Obj is Object,
+                       Obj_set is Finite_set(Obj),
                        C_baggage is CabinBaggage(Obj, Obj_set),
                        Cb_set is Finite_set(C_baggage),
                        Seat_no is Seat_number) =
@@ -206,8 +206,8 @@ property equal_seat : all x y : Self,
 
 end;;
 
-species DisembarkedPassenger(Obj is Object, 
-                             Obj_set is Finite_set(Obj), 
+species DisembarkedPassenger(Obj is Object,
+                             Obj_set is Finite_set(Obj),
                              C_baggage is CabinBaggage(Obj, Obj_set),
                              Cb_set is Finite_set(C_baggage),
                              Seat_no is Seat_number) =
@@ -216,30 +216,30 @@ species DisembarkedPassenger(Obj is Object,
 
 end;;
 
-species DepartingPassenger (Obj is Object, 
-                            Obj_set is Finite_set(Obj), 
+species DepartingPassenger (Obj is Object,
+                            Obj_set is Finite_set(Obj),
                             C_baggage is CabinBaggage(Obj, Obj_set),
                             Cb_set is Finite_set(C_baggage),
                             Seat_no is Seat_number) =
-    
+
   inherit CabinPassenger(Obj, Obj_set, C_baggage, Cb_set, Seat_no);
 
 end;;
 
-species OrdinaryPassenger(Obj is Object, 
-                          Obj_set is Finite_set(Obj), 
+species OrdinaryPassenger(Obj is Object,
+                          Obj_set is Finite_set(Obj),
                           Wp is Weapon,
                           C_baggage is CabinBaggage(Obj, Obj_set),
                           Cb_set is Finite_set(C_baggage),
-                          Seat_no is Seat_number, 
+                          Seat_no is Seat_number,
                           A_person is AirsidePerson(Obj, Obj_set)) =
 
   inherit DepartingPassenger(Obj, Obj_set, C_baggage, Cb_set, Seat_no);
 
-signature mixing_or_contact : A_person -> Self -> bool;         
+signature mixing_or_contact : A_person -> Self -> bool;
 signature no_access_to : Wp -> Self -> bool;
 
-property equal_mixing : all x y : Self, all p : A_person, 
+property equal_mixing : all x y : Self, all p : A_person,
   !equal(x, y) -> !mixing_or_contact(p, x) -> !mixing_or_contact(p, y);
 
 property equal_access_wp : all x y : Self, all o : Wp,
@@ -249,16 +249,16 @@ signature objects_mixing : Self -> Obj_set;
 
 property objects_mixing_const1 : all s : Self, all o : Obj,
    Obj_set!member(o, !objects_mixing(s)) ->
-        (ex p : A_person, 
+        (ex p : A_person,
             !mixing_or_contact(p, s) /\
-            Obj_set!member(o, A_person!objects_carried(p)));   
- 
-property objects_mixing_const2 : all s : Self, all p : A_person, all o : Obj,  
+            Obj_set!member(o, A_person!objects_carried(p)));
+
+property objects_mixing_const2 : all s : Self, all p : A_person, all o : Obj,
    !mixing_or_contact(p, s) ->
-     Obj_set!member(o, A_person!objects_carried(p)) ->  
+     Obj_set!member(o, A_person!objects_carried(p)) ->
        Obj_set!member(o, !objects_mixing(s));
 
-property objects_carried_subset : all s : Self, 
+property objects_carried_subset : all s : Self,
    Obj_set!subset(!objects_carried(s),
                   Obj_set!union(Obj_set!union(!objects_worn(s),
                                               !objectsInCBaggage(s)),
@@ -266,7 +266,7 @@ property objects_carried_subset : all s : Self,
 
 end;;
 
-species ScreenedPassenger(Obj is Object, 
+species ScreenedPassenger(Obj is Object,
                           Obj_set is Finite_set(Obj),
                           Wp is Weapon,
                           C_baggage is CabinBaggage(Obj, Obj_set),
@@ -285,9 +285,9 @@ property equal_screened : all x y : Self, !equal(x, y) ->
 
 end;;
 
-species OriginatingPassenger(Obj is Object, 
+species OriginatingPassenger(Obj is Object,
                              Obj_set is Finite_set(Obj),
-                             Wp is Weapon, 
+                             Wp is Weapon,
                              C_baggage is CabinBaggage(Obj, Obj_set),
                              Cb_set is Finite_set(C_baggage),
                              Seat_no is Seat_number,
@@ -298,8 +298,8 @@ species OriginatingPassenger(Obj is Object,
 
 end;;
 
-species TransferPassenger(Obj is Object, 
-                          Obj_set is Finite_set(Obj), Wp is Weapon, 
+species TransferPassenger(Obj is Object,
+                          Obj_set is Finite_set(Obj), Wp is Weapon,
                           C_baggage is CabinBaggage(Obj, Obj_set),
                           Cb_set is Finite_set(C_baggage),
                           Seat_no is Seat_number,
@@ -315,7 +315,7 @@ property equal_secure : all x y : Self,
 
 end;;
 
-species TransitPassenger(Obj is Object, 
+species TransitPassenger(Obj is Object,
                          Obj_set is Finite_set(Obj), Wp is Weapon,
                          C_baggage is CabinBaggage(Obj, Obj_set),
                          Cb_set is Finite_set(C_baggage),
@@ -327,9 +327,9 @@ species TransitPassenger(Obj is Object,
 
 end;;
 
-species ArmedPassenger(Obj is Object, 
+species ArmedPassenger(Obj is Object,
                        Obj_set is Finite_set(Obj),
-                       Wp is Weapon, 
+                       Wp is Weapon,
                        C_baggage is CabinBaggage(Obj, Obj_set),
                        Cb_set is Finite_set(C_baggage),
                        Seat_no is Seat_number) =
@@ -350,7 +350,7 @@ end;;
 
 species ArmedPersonnel(Obj is Object,
                        Obj_set is Finite_set(Obj),
-                       Wp is Weapon, 
+                       Wp is Weapon,
                        C_baggage is CabinBaggage(Obj, Obj_set),
                        Cb_set is Finite_set(C_baggage),
                        Seat_no is Seat_number) =
@@ -359,9 +359,9 @@ species ArmedPersonnel(Obj is Object,
 
 end;;
 
-species InFlightOfficer(Obj is Object, 
+species InFlightOfficer(Obj is Object,
                         Obj_set is Finite_set(Obj),
-                        Wp is Weapon, 
+                        Wp is Weapon,
                         C_baggage is CabinBaggage(Obj, Obj_set),
                         Cb_set is Finite_set(C_baggage),
                         Seat_no is Seat_number) =
@@ -398,8 +398,8 @@ property objects_carried_subset : all s : Self, all o : Obj,
 
 end;;
 
-species HoldBaggage (Obj is Object, 
-                     Obj_set is Finite_set(Obj), 
+species HoldBaggage (Obj is Object,
+                     Obj_set is Finite_set(Obj),
                      C_baggage is CabinBaggage(Obj, Obj_set),
                      Cb_set is Finite_set(C_baggage),
                      Seat_no is Seat_number,
@@ -412,7 +412,7 @@ signature owner : Self -> C_passenger;
 
 signature additional_screening : Self -> bool;
 
-(** this predicate is necessary for the transportation of 
+(** this predicate is necessary for the transportation of
     unaccompanied hold baggage. *)
 
 signature accepted_for_carriage : Self -> bool;
@@ -423,15 +423,15 @@ signature inaccessible_in_cabin : Self -> bool;
 
 signature interference : Self -> bool;
 
-property invariant_inaccessible : all s : Self,  
- !inaccessible_in_cabin (s) -> 
-   all o : Obj, Obj_set!member (o, !get_objects (s)) -> 
+property invariant_inaccessible : all s : Self,
+ !inaccessible_in_cabin (s) ->
+   all o : Obj, Obj_set!member (o, !get_objects (s)) ->
     Obj!inaccessible_in_cabin (o);
-   
+
 property invariant_screenedH1 : all s : Self,
   !additional_screening(s) -> !screened(s);
 
-property equal_congruence : all x y : Self, !equal(x, y) -> 
+property equal_congruence : all x y : Self, !equal(x, y) ->
   (!authorized_for_carriage(x) = !authorized_for_carriage(y) /\
    !additional_screening(x) = !additional_screening(y) /\
    !inaccessible_in_cabin(x) = !inaccessible_in_cabin(y) /\
@@ -442,8 +442,8 @@ property equal_congruence : all x y : Self, !equal(x, y) ->
 end;;
 
 species OriginatingHoldBaggage
-                    (Obj is Object, 
-                     Obj_set is Finite_set(Obj), 
+                    (Obj is Object,
+                     Obj_set is Finite_set(Obj),
                      Wp is Weapon,
                      C_baggage is CabinBaggage(Obj, Obj_set),
                      Cb_set is Finite_set(C_baggage),
@@ -492,9 +492,9 @@ end;;
 species Pilot(Obj is Object, Obj_set is Finite_set(Obj),
               C_baggage is CabinBaggage(Obj, Obj_set),
               Cb_set is Finite_set(C_baggage),
-              Seat_no is Seat_number,                
+              Seat_no is Seat_number,
               Seat_set is Finite_set(Seat_no)) =
-           
+
   inherit UnescortedPerson(Obj, Obj_set),
           CabinPerson(Obj, Obj_set, C_baggage, Cb_set);
 
@@ -515,7 +515,7 @@ species DepartingAircraft(Obj is Object, Obj_set is Finite_set(Obj),
                           C_baggage is CabinBaggage(Obj, Obj_set),
                           Cb_set is Finite_set(C_baggage),
                           C_person is CabinPerson(Obj, Obj_set, C_baggage,
-                            Cb_set), 
+                            Cb_set),
                           Cp_set is Finite_set(C_person),
                           Seat_no is Seat_number,
                           Seat_set is Finite_set(Seat_no),
@@ -541,7 +541,7 @@ signature onboardPersons : Self -> Cp_set;
 signature loadedHoldBaggage : Self -> Hl_set;
 
 signature initial_cabin : Self -> Obj_set;
-signature initial_hold : Self -> Obj_set; 
+signature initial_hold : Self -> Obj_set;
 signature initial_exterior : Self -> Obj_set;
 
 let initial_objects (s : Self) : Obj_set =
@@ -549,7 +549,7 @@ let initial_objects (s : Self) : Obj_set =
                  !initial_hold(s)),
                  !initial_exterior(s));
 
-theorem initial_objects_const : all s : Self, 
+theorem initial_objects_const : all s : Self,
   all o : Obj,
     Obj_set!member(o, !initial_objects(s)) ->
      (Obj_set!member(o, !initial_cabin(s)) \/
@@ -592,20 +592,20 @@ property equal_congruence2 : all x y : Self, all s : As,
 property equal_congruence3 : all x y : Self, all s : As,
   !equal(x, y) -> !access_authorized(s, x) -> !access_authorized(s, y);
 
-property equal_congruence4 : all x y : Self, all p : Arm_passenger, 
+property equal_congruence4 : all x y : Self, all p : Arm_passenger,
   !equal(x, y) -> !obtainedAgreement(p, x) -> !obtainedAgreement(p, y);
 
-property equal_congruence5 : all x y : Self, all p : As, 
+property equal_congruence5 : all x y : Self, all p : As,
    !equal(x, y) -> !movementSupervised(p, x) -> !movementSupervised(p, y);
 
 signature getObjectsInHold : Self -> Obj_set;
 
-property getObjectsInHold1 : all s : Self, all o : Obj, 
+property getObjectsInHold1 : all s : Self, all o : Obj,
               Obj_set!member(o, !getObjectsInHold(s)) ->
-                (ex l : H_baggage, 
-                  Hl_set!member(l, !loadedHoldBaggage(s)) /\ 
+                (ex l : H_baggage,
+                  Hl_set!member(l, !loadedHoldBaggage(s)) /\
                   Obj_set!member(o, H_baggage!get_objects(l)));
-                 
+
 property getObjectsInHold2 : all s : Self, all l : H_baggage, all o : Obj,
                Hl_set!member(l, !loadedHoldBaggage(s)) ->
 	                    Obj_set!member(o, H_baggage!get_objects(l)) ->
@@ -613,27 +613,27 @@ property getObjectsInHold2 : all s : Self, all l : H_baggage, all o : Obj,
 
 signature objectsAccessingAircraft : Self -> Obj_set;
 
-property objectsAccessingAircraft1:  
+property objectsAccessingAircraft1:
   all s : Self, all p : As, all o : Obj,
-   !accessing_aircraft(p, s) -> 
+   !accessing_aircraft(p, s) ->
       Obj_set!member(o, As!objects_carried(p)) ->
          Obj_set!member(o, !objectsAccessingAircraft(s));
 
 property objectsAccessingAircraft2: all s : Self, all o : Obj,
      Obj_set!member(o, !objectsAccessingAircraft(s)) ->
-       (ex p : As, 
+       (ex p : As,
            !accessing_aircraft(p, s) /\
             Obj_set!member(o, As!objects_carried(p)));
- 
-property onboardObjects1 : all s : Self, 
+
+property onboardObjects1 : all s : Self,
      Obj_set!subset(!onboardObjects(s),
                     Obj_set!union(Obj_set!union(!getObjectsInHold(s),
                                                  !objectsAccessingAircraft(s)),
                                   !initial_objects(s)));
-                                  
+
 property accessing_aircraft_congruence : all x y : As, all s : Self,
     As!equal(x, y) -> !accessing_aircraft(x, s) -> !accessing_aircraft(y, s);
- 
+
 property access_authorized_congruence : all x y : As, all s : Self,
     As!equal(x, y) -> !access_authorized(x, s) -> !access_authorized(y, s);
 
@@ -657,7 +657,7 @@ species OriginatingAircraft(Obj is Object, Obj_set is Finite_set(Obj),
                             C_baggage is CabinBaggage(Obj, Obj_set),
                             Cb_set is Finite_set(C_baggage),
                             C_person is CabinPerson(Obj, Obj_set, C_baggage,
-                              Cb_set), 
+                              Cb_set),
                             Cp_set is Finite_set(C_person),
                             Seat_no is Seat_number,
                             Seat_set is Finite_set(Seat_no),
@@ -692,7 +692,7 @@ species TransitAircraft(Obj is Object, Obj_set is Finite_set(Obj),
                         C_baggage is CabinBaggage(Obj, Obj_set),
                         Cb_set is Finite_set(C_baggage),
                         C_person is CabinPerson(Obj, Obj_set, C_baggage,
-                          Cb_set), 
+                          Cb_set),
                         Cp_set is Finite_set(C_person),
                         Seat_no is Seat_number,
                         Seat_set is Finite_set(Seat_no),
@@ -749,7 +749,7 @@ species SecurityRestrictedArea(Obj is Object, Obj_set is Finite_set(Obj),
                                  H_baggage, Hl_set, Arm_passenger, Pi,
                                  A_carrier),
                                Dep_ac_set is Finite_set(D_aircraft)) =
- 
+
   inherit Setoid;
 
 signature airsideSubjects_in_sra : Self -> As_set;
@@ -757,10 +757,10 @@ signature airsideSubjects_in_sra : Self -> As_set;
 (* subjects in sra include also subjects on board aircraft in sra *)
 
 signature departingAircraft_in_sra : Self -> Dep_ac_set;
- 
+
 signature holdBaggage_in_sra : Self -> Hl_set;
 
-(** hold baggage in sra also include all hold baggage on 
+(** hold baggage in sra also include all hold baggage on
     board aircraft in sra *)
 
 signature access_authorized : As -> Self -> bool;

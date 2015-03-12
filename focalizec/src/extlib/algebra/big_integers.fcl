@@ -421,11 +421,11 @@ species Integers_big_int =
   proof of opposite_is_opposite = assumed (* Because todo *);
 
   logical let euclidean_ordering (x, y) =
-    if !sign (x) <0x 0 then
-      if #sign_big_int (y) <0x 0 then !lt (x, y)
+    if !sign (x) < 0 then
+      if #sign_big_int (y) < 0 then !lt (x, y)
       else !lt (x, !opposite (y))
     else
-      if #sign_big_int (y) <0x 0 then !lt (x, !opposite (y))
+      if #sign_big_int (y) < 0 then !lt (x, !opposite (y))
       else !lt (x, y);
 
   proof of euclidean_ordering_is_irreflexive = assumed (* Because todo *);

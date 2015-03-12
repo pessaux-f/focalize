@@ -113,12 +113,12 @@ species A17property4_2(Obj is Object,
                      PiToCp, DskToCpa, DepToCpa, CpaToCp, TsToDsk, TfToDsk);
 
 (** Security Property: 4.2.1. Access to security restricted areas must be
-    controlled in order to prevent unauthorized entry. 	
+    controlled in order to prevent unauthorized entry.
 
     For this security property it is obvious that the concept of unauthorized
     entry applies to persons or vehicles that may have access to security
     restricted areas. As such, the security property is specified in two steps,
-    as follows: *)     
+    as follows: *)
 
 property property_4_2_1a : all area : Sra, all s : Self,
   Sra_set!member(area, !securityRestrictedAreas(s)) ->
@@ -142,7 +142,7 @@ property property_4_2_1b : all area : Sra, all s : Self,
 property property_4_2_2 : all s : Self,
   ~ (Sra_set!equal(!securityRestrictedAreas(s), Sra_set!empty));
 
-(** Security Property: 4.2.3. The identity of persons and vehicles must be 
+(** Security Property: 4.2.3. The identity of persons and vehicles must be
     verified at designated checkpoints before access is granted into security
     restricted areas.
 
@@ -161,7 +161,7 @@ property property_4_2_3 : all p : A_subject, all area : Sra, all s : Self,
 property property_4_2_4a : all p : U_person, all area : Sra, all s : Self,
   Sra_set!member(area, !securityRestrictedAreas(s)) ->
   Sra!access_authorized(!upToAs(p), area) -> Sra!granted_access_to(p, area);
- 
+
 property property_4_2_4b : all p : U_person, all area : Sra, all s : Self,
   Sra_set!member(area, !securityRestrictedAreas(s)) ->
   Sra!granted_access_to(p, area) -> U_person!backgroundChecked(p);
@@ -176,7 +176,7 @@ property property_4_2_4b : all p : U_person, all area : Sra, all s : Self,
     subject given set. In addition, to properly cater for the notion of
     authorized access to aircraft, this property is formalized in two steps, as
     follows: *)
-    
+
 property property_4_2_5a : all p : A_subject, all area : Sra,
   all a : D_aircraft, all s : Self,
   Sra_set!member(area, !securityRestrictedAreas(s)) ->
@@ -202,11 +202,11 @@ let lower : int = 0;
 let upper : int = 100;
 
 property min_portion_const : all s : Self,
-   (!lower <=0x !min_portion(s)) /\ (!min_portion(s) <=0x !upper);
+   (!lower <= !min_portion(s)) /\ (!min_portion(s) <= !upper);
 
 property property_4_2_6 : all area : Sra, all s : Self,
   Sra_set!member(area, !securityRestrictedAreas(s)) ->
-  Up_set!cardinal(!screenedUnescortedPersons(area, s)) >=0x
+  Up_set!cardinal(!screenedUnescortedPersons(area, s)) >=
   ((!min_portion(s) * Up_set!cardinal(!unescortedPersons_in_sra(area, s))) /
    !upper);
 
@@ -233,12 +233,12 @@ property hidden_assumption_4_2_H1 : all p : U_person, all a : D_aircraft,
   D_aircraft!accessing_aircraft(!upToAs(p), a);
 
 logical let trustworthy (p : U_person) =
-  (all area : Sra, all s : Self, 
+  (all area : Sra, all s : Self,
     Sra_set!member(area, !securityRestrictedAreas(s)) ->
-    Up_set!cardinal(!screenedUnescortedPersons(area, s)) >=0x
+    Up_set!cardinal(!screenedUnescortedPersons(area, s)) >=
     ((!min_portion(s) * Up_set!cardinal(!unescortedPersons_in_sra(area, s))) /
      !upper)) /\ U_person!backgroundChecked(p);
- 
+
 (** Hidden Assumption: 4.2_H2. If unescorted persons are trustworthy then they
     are considered not to carry any unauthorized dangerous objects. *)
 
@@ -275,7 +275,7 @@ property hidden_assumption_4_2_H4 : all v : A_vehicle, all area : Sra,
 (** Security Property : 4.2. Persons (other than passengers) and vehicles
     accessing aircraft are authorized. The persons concerned are considered as
     trustworthy and do not introduce any unauthorized dangerous objects on
-    board. 
+    board.
 
     Correctness proof for Property 4.2. *)
 
@@ -378,7 +378,7 @@ proof =
    or conflicting security properties in the part of the regulation dedicated
    to access control. This verification is carried out w.r.t. the following
    scenarios.
- 
+
 signature u_person1 : U_person;
 signature vehicle1 : A_vehicle;
 signature aircraft1 : D_aircraft;
@@ -416,7 +416,7 @@ proof = by property !a17prop4_2_fact1, !a17prop4_2_fact2, !a17prop4_2_fact3,
         !property_4_2_5a, !property_4_2_5b, !property_4_2_6,
         !hidden_assumption_4_2_H1, !hidden_assumption_4_2_H2,
         !hidden_assumption_4_2_H3, !hidden_assumption_4_2_H4, !property_4_2,
-        !airsideSubjects_in_sra, !aSubject_dAircraft_not_access, 
+        !airsideSubjects_in_sra, !aSubject_dAircraft_not_access,
         UpToAp!to_super_airsideSubject, ApToAs!to_super_airsideSubject,
         A_subject!equal_symmetric, D_aircraft!movementSupervised_congruence,
         Sra!access_authorized_congruence, beq_symm, beq_subst,

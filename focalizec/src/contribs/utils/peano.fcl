@@ -102,14 +102,14 @@ species Imp_peano =
   (* Version avec gestion de l'overflow *)
   (*
   let s(x : Self) : Self =
-    if x <0x 1000 then
-      basics#succ(x)
+    if x < 1000 then
+      basics#int_succ(x)
     else
       foc_error("Peano overflow")
   ;
   *)
 
-  let s (x : Self) : Self = basics#succ0x (x);
+  let s (x : Self) : Self = basics#int_succ (x);
 
   (* Proof of Peano properties *)
   proof of equal_reflexive =

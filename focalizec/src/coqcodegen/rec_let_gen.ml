@@ -567,9 +567,9 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
            Format.fprintf out_fmter "@])"
        | OK_expr ((TEK_measure expr_mea), rec_fun_used_args_indices) ->
            (* Case of a proof by a measure.
-              Surround by a Is_true since 0x< returns a bool, hence must be
+              Surround by a Is_true since < returns a bool, hence must be
               plunged into Prop. *)
-           Format.fprintf out_fmter "Is_true (@[<1>basics._lt_0x@ (" ;
+           Format.fprintf out_fmter "Is_true (@[<1>basics._lt_@ (" ;
            (* Call the measure on the first argument. *)
            Species_record_type_generation.generate_expr
              ctx ~in_recursive_let_section_of: [] ~local_idents: []

@@ -29,7 +29,7 @@ species Avl =
         | #MInf -> false
         | #PInf -> true
         | #Entier(iiii) ->
-            iii <=0x iiii;
+            iii <= iiii;
 
   let is_ok(a, i1, i2) =
     ( !intt_leq(i1, #Entier(a)) &&
@@ -52,7 +52,7 @@ species Avl =
         !ordered_aux(a2, #Entier(e), #PInf);
 
   let max(entier1, entier2) =
-    if entier1 <=0x entier2 then
+    if entier1 <= entier2 then
       entier2
     else
       entier1;
@@ -69,8 +69,8 @@ species Avl =
         let b2 = basics#snd(c2) in
         let diff1 = p1 - p2 in
         let diff2 = p2 - p1 in
-        let leq1 = diff1 <=0x 1 in
-        let leq2 = diff2 <=0x 1 in
+        let leq1 = diff1 <= 1 in
+        let leq2 = diff2 <= 1 in
         let tmax = !max(p1, p2) in
         let nmax = tmax + 1 in
         basics#pair(nmax, b1 && b2 && leq1 && leq2);
@@ -80,7 +80,7 @@ species Avl =
 
   theorem truc :
       all a : arbre,
-       (!tree_size(a) >0x 6) -> !ordered(a) -> !balanced(a) -> true
+       (!tree_size(a) > 6) -> !ordered(a) -> !balanced(a) -> true
     proof =
       assumed;
 

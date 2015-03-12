@@ -721,7 +721,7 @@ species Ordered_additive_group =
       the set of positive elements *)
   signature sign : Self -> int;
 
-  let leq (x, y) = !sign (!minus (x, y)) <=0x 0;
+  let leq (x, y) = !sign (!minus (x, y)) <= 0;
 
   proof of total_order = assumed (* Because todo *);
   -- proof of lt_is_not_leq = assumed;

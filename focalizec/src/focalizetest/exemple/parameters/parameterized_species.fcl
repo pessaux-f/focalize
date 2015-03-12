@@ -39,19 +39,19 @@ end;;
 
 species C (Y1 is A, Y2 is B(Y1)) =
   representation = Y1 * Y2;
- 
+
   let print (x : Self) =
     "(" ^ Y1!print(basics#fst(x)) ^ "," ^ Y2!print(basics#snd(x)) ^ ")";
 
-  let equal (a : Self, b : Self) = 
-   Y1!equal(basics#fst(a), basics#fst(b)) && 
+  let equal (a : Self, b : Self) =
+   Y1!equal(basics#fst(a), basics#fst(b)) &&
           Y2!equal(basics#snd(a), basics#snd(b));
 
   theorem equal_commutes :
     all x y : Self, !equal(x, y) -> !equal(y, x)
       proof =
         assumed;
-      
+
 end;;
 
 collection Coll_c =
@@ -71,7 +71,7 @@ species D (W1 is A, W2 is B(W1), W3 is C(W1, W2)) =
        !equal(x, y) -> (!equal(y, x) /\ !equal(x, y))
      proof =
       assumed;
-        
+
 end;;
 
 (***************************)
@@ -83,7 +83,7 @@ species Modulo(S is Int, r1 in S) =
   let zero : Self = 0;
 
   let rec normalize (x : Self) : Self =
-      if x <0x 0 then
+      if x < 0 then
         !normalize(x + !base)
       else
         x % !base;
@@ -99,15 +99,15 @@ species Modulo(S is Int, r1 in S) =
   let equal (a : Self, b : Self) =
     (!normalize(a) =0x !normalize(b));
 
-  (* the programmer is a bad mathematician !! *)         
+  (* the programmer is a bad mathematician !! *)
   theorem right_cancel_law :
     all x y z : Self,
        ~~(!equal(z, !zero)) -> !equal(!mult(x, z), !mult(y, z)) ->
              !equal(x, y)
      proof = (* this is obviously false *)
        assumed;
-   (* here a proof :  
-       if r1 = a * b and we take k != k'  then 
+   (* here a proof :
+       if r1 = a * b and we take k != k'  then
         (k*a)*b == (k'*a)*b  holds ( 0 = 0 )
         but k != k' by assumption !!
     *)
@@ -119,8 +119,8 @@ let rec gcd(x : int, y : int) : int =
   else if y = 0 then
     x
   else
-    let max = if x >0x y then x else y in
-    let min = if x >0x y then y else x in
+    let max = if x > y then x else y in
+    let min = if x > y then y else x in
     #gcd(max % min, min) ;;
 (* An example of species parameterized by an entity parameters and a collection
    parameters *)
@@ -136,10 +136,10 @@ species Modulo2(I is Int, m1 in I, m2 in I, M3 is Modulo(I, m1), M4 is Modulo(I,
            true
     else
       (M3!to_int(M3!normalize(basics#fst(x))) - M4!to_int(M4!normalize(basics#snd(x))))
-                                     % !gcd 
+                                     % !gcd
                                   = 0;
 
-  let rec eucli_etend(a : int, b : int, p : int, q : int, r : int, s : int) = 
+  let rec eucli_etend(a : int, b : int, p : int, q : int, r : int, s : int) =
     if ~~(b =0x 0) then
       let quo = a / b in
         !eucli_etend(b, a % b, r, s, p - (quo * r), q - (quo * s))
@@ -170,7 +170,7 @@ species Modulo2(I is Int, m1 in I, m2 in I, M3 is Modulo(I, m1), M4 is Modulo(I,
 
   let equal (x : Self, y : Self) : bool =
     M3!equal(basics#fst(x), basics#fst(y)) &&
-           M4!equal(basics#snd(x) , basics#snd (y)); 
+           M4!equal(basics#snd(x) , basics#snd (y));
 
   theorem to_int_correct :
      all x : Self,

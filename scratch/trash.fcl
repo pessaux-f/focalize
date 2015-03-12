@@ -10,7 +10,7 @@ species Comparable =
   signature lt : Self -> Self -> bool ;
   signature eq : Self -> Self -> bool ;
   let gt (x, y) = ~~ (lt (x, y)) && ~~ (eq (x, y)) ;
-  let toto = id ;  
+  let toto = id ;
   property lt_not_gt : all x y : Self, lt (x, y) -> ~ gt (x, y) ;
 end ;;
 
@@ -19,7 +19,7 @@ species NativeInt =
   representation = int ;
   let id = "native int" ;
   let from_int (x) : Self = x ;
-  let lt (x, y) = x <0x y ;
+  let lt (x, y) = x < y ;
   let eq (x, y) = x =0x y ;
   proof of lt_not_gt =
     by definition of lt, gt, eq property int_lt_not_gt ;

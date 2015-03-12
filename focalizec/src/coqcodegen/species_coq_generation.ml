@@ -2002,7 +2002,7 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_coq_env
             (* Always end by the obligation of user measure always >= 0,
                eta-expanded to wrap its result with a Is_true. *)
             Format.fprintf out_fmter
-              "(forall@ __x,@ Is_true@ (basics._lt__equal_0x@ 0@ (" ;
+              "(forall@ __x,@ Is_true@ (basics._lt__equal_@ 0@ (" ;
             Species_record_type_generation.generate_expr
               ~local_idents: [] ~in_recursive_let_section_of: []
               ~self_methods_status:
@@ -2418,7 +2418,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
                  (* Always end by the obligation of user measure always >= 0,
                     eta-expanded to wrap its result with a Is_true. *)
                  Format.fprintf out_fmter
-                   "(forall@ __x,@ Is_true@ (basics._lt__equal_0x@ 0@ (" ;
+                   "(forall@ __x,@ Is_true@ (basics._lt__equal_@ 0@ (" ;
                  Species_record_type_generation.generate_expr
                    ~local_idents: [] ~in_recursive_let_section_of: []
                    ~self_methods_status:
@@ -2677,7 +2677,7 @@ let generate_termination_order_With_Function ctx print_ctx env name
         | Parsetree.TP_lexicographic _ ->
             failwith "TODO: lexicographic1."  (* [Unsure] *)
         | Parsetree.TP_measure (measure_expr, used_params, _) -> (
-            (*  Since <0x returns a [bool], we must surround the generated
+            (*  Since < returns a [bool], we must surround the generated
                 application expression by a "Is_true" for Coq. *)
             Format.fprintf out_fmter "@[<2>(Is_true@ @[<2>(" ;
             let local_idents =
@@ -2693,7 +2693,7 @@ let generate_termination_order_With_Function ctx print_ctx env name
                to the measure gives a result always >= 0. *)
             Format.fprintf out_fmter
               "basics._amper__amper_@ \
-                @[<2>(basics._lt__equal_0x@ \
+                @[<2>(basics._lt__equal_@ \
                   0 @[<2>(" ;
             (* Generate the second application of the measure (hence to the
                second argument). *)
@@ -2712,10 +2712,10 @@ let generate_termination_order_With_Function ctx print_ctx env name
             (* Now apply this expression to the 2 tuples of used arguments
                extracted by calls to builtin extractors depending on their
                indice among the function parameters.
-               This generates the application to < on integers (basics._lt_0x).
+               This generates the application to < on integers (basics._lt_).
                Form is hence:
-                 basics._lt_0x (abst_"mesfct" ... x) (abst_"mesfct" ... y) *)
-            Format.fprintf out_fmter "@[<2>(basics._lt_0x@ @[<2>(" ;
+                 basics._lt_ (abst_"mesfct" ... x) (abst_"mesfct" ... y) *)
+            Format.fprintf out_fmter "@[<2>(basics._lt_@ @[<2>(" ;
             (* Generate the first application of the measure (hence to the
                first argument). *)
             Species_record_type_generation.generate_expr
@@ -2907,8 +2907,8 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                   "(* There, only remains the well-foundation obligation. *)@\n\
                    set@ (R := fun x y : basics.int__t =>@\n\
                     Is_true@\n\
-                      (basics._amper__amper_@ (basics._lt__equal_0x@ 0@ y)@\n\
-                        (basics._lt_0x x y))).@\n\
+                      (basics._amper__amper_@ (basics._lt__equal_@ 0@ y)@\n\
+                        (basics._lt_ x y))).@\n\
                    @[<2>change@ (well_founded@ (fun@ __c __d@ :@ " ;
                 Format.fprintf out_fmter "%a@ =>@ R "
                   (print_types_as_tuple_if_several new_print_ctx)
@@ -2945,8 +2945,8 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
                   apply@ wf_incl@ with@ (R2 := (fun x y : Z => 0 <= y /\\ x < y)).@\n\
                   unfold inclusion,@ R.@\n\
                   unfold basics.int__t,@ basics._amper__amper_,@ \
-                   basics._lt__equal_0x,@\n\
-                   basics._lt_0x,@ bi__and_b,@ bi__int_leq,@ bi__int_lt.@\n\
+                   basics._lt__equal_,@\n\
+                   basics._lt_,@ bi__and_b,@ bi__int_leq,@ bi__int_lt.@\n\
                   intros x y.@\n\
                   elim@ (Z_le_dec@ 0@ y);@ intro;@ elim@ (Z_lt_dec@ x@ y);@ \
                    simpl;@ intros;@ intuition.@\n\
