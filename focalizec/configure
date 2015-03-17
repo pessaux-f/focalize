@@ -121,7 +121,7 @@ INSTALL_DOC_DIR=${INSTALL_PREFIX}/share/focalize
 # Look for Zenon
 if [ $TOOLS_PREFIX_GIVEN != true ]
 then
-    ZENON=`which zenon`
+    ZENON=`which zenon_modulo`
     if [ "$ZENON" != "" ] ;
     then
         if [ $INTERACTIVE = true ]
@@ -134,11 +134,11 @@ then
                 ZENON=$USER_INPUT
             else
                 # Default path kept: trim it to just let the PATH acting.
-                ZENON=zenon
+                ZENON=zenon_modulo
             fi
         else
             # Default path: trim it
-            ZENON=zenon
+            ZENON=zenon_modulo
         fi
     else
         # No zenon command found and no explicit prefix given.
@@ -155,7 +155,7 @@ then
     fi
 else
     # Explicit tools prefix given, keep it blindly.
-    ZENON=$TOOLS_PREFIX/bin/zenon
+    ZENON=$TOOLS_PREFIX/bin/zenon_modulo
 fi
 
 # Find zenon's libraries directly using the -where option of zenon.
