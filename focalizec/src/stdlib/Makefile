@@ -42,6 +42,7 @@ FOCALIZE_BYT_OBJS=$(FOCALIZE_MLS:.ml=.cmo)
 FOCALIZE_BIN_OBJS=$(FOCALIZE_BYT_OBJS:.cmo=.cmx)
 
 FOCALIZE_ZVS=$(FOCALIZE_SRC:.fcl=.zv)
+FOCALIZE_SKZVS=$(FOCALIZE_SRC:.fcl=.sk.zv)
 FOCALIZE_VS=$(FOCALIZE_ZVS:.zv=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
 FOCALIZE_DKS=$(FOCALIZE_SRC:.fcl=.sk)
@@ -165,7 +166,7 @@ uninstall:
 
 clean:
 	$(RM) *.dko *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.fo *.vo *.pfc *.glob *~ .*~
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) $(FOCALIZE_DKS)
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_SKZVS) $(FOCALIZE_VS) $(FOCALIZE_DKS)
 
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
