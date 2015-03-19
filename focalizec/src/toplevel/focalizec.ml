@@ -165,16 +165,15 @@ let compile_ml input_file_name =
 
 
 let compile_zv input_file_name =
-  (* let cmd = *)
-  (*   Printf.sprintf "%s -zenon %s -new %s %s" *)
-  (*     Installation.zvtov_compiler Installation.zenon_compiler *)
-  (*     (Configuration.get_zvtov_extra_opts ()) *)
-  (*     input_file_name in *)
-  (* Format.eprintf "Invoking zvtov...@\n" ; *)
-  (* Format.eprintf ">> %s@." cmd ; *)
-  (* let ret_code = Sys.command cmd in *)
-  (* if ret_code <> 0 then exit ret_code *)
-  ()
+  let cmd =
+    Printf.sprintf "%s -zenon %s -new %s %s"
+      Installation.zvtov_compiler Installation.zenon_compiler
+      (Configuration.get_zvtov_extra_opts ())
+      input_file_name in
+  Format.eprintf "Invoking zvtov...@\n" ;
+  Format.eprintf ">> %s@." cmd ;
+  let ret_code = Sys.command cmd in
+  if ret_code <> 0 then exit ret_code
 ;;
 
 

@@ -94,7 +94,7 @@ include $(ROOT_DIR)/focalizec/.install_var
 include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZEC=../toplevel/focalizec
-FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -no-coq-code
+FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
 FOCALIZEDEP=../focalizedep/focalizedep
 ZENON=../../../zenon/zenon
 ZVTOV=../../../zvtov/zvtov
@@ -110,15 +110,17 @@ focalizedoc:\
  $(FOCALIZE_MML)
 
 byt:\
- $(EXTERNAL_BYT_OBJS) $(EXTERNAL_DKOS)\
+ $(EXTERNAL_BYT_OBJS) $(EXTERNAL_VOS) $(EXTERNAL_DKOS)\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_BYT_OBJS)\
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
  $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
 
 bin:\
- $(EXTERNAL_BIN_OBJS) $(EXTERNAL_DKOS)\
+ $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS) $(EXTERNAL_DKOS)\
  $(FOCALIZE_MLS)\
  $(FOCALIZE_BIN_OBJS)\
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
  $(FOCALIZE_DKS) $(FOCALIZE_DKOS)
 
 install:
@@ -143,6 +145,10 @@ install:
 	  echo "Installing (Dedukti) compiled certified libs." &&\
 	  $(CP) $(FOCALIZE_DKOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
+	if [ "$(FOCALIZE_VOS)" != "" ]; then\
+	  echo "Installing (Coq) compiled certified libs." &&\
+	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
 	if [ "$(EXTERNAL_CMIS)" != "" ]; then\
 	  echo "Installing (OCaml interface) external stubs." &&\
 	  $(CP) $(EXTERNAL_CMIS) $(INSTALL_LIB_DIR)/;\
@@ -154,6 +160,10 @@ install:
 	if [ "$(EXTERNAL_BIN_OBJS)" != "" ]; then\
 	  echo "Installing (OCaml native) external stubs." &&\
 	  $(CP) $(EXTERNAL_BIN_OBJS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
+	if [ "$(EXTERNAL_VOS)" != "" ]; then\
+	  echo "Installing (Coq) external stubs." &&\
+	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
 	if [ "$(EXTERNAL_DKOS)" != "" ]; then\
 	  echo "Installing (Dedukti) external stubs." &&\
