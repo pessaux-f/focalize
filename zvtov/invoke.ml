@@ -199,7 +199,7 @@ let zenon_loc file (_: string * string) data loc oc =
     let ifmt = match !input_format with I_coq -> "coq" | I_dk -> "dk" in
     let zenon_ifmt = match !input_format with I_coq -> " -ifocal" | I_dk -> "-idk" in
     let cmd =
-      if !input_format = I_coq && !use_coqterm then
+      if !use_coqterm then
         Printf.sprintf "%s -p%d -o%sterm -x %s %s %s %s -wout %s %s >%s"
                        !zcmd (translate_progress !progress_level)
                        ifmt
