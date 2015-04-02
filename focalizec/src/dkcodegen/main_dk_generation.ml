@@ -294,7 +294,6 @@ let root_compile ~current_unit ~out_file_name stuff =
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.DkGenEnv.empty ()) in
   Format.fprintf out_fmter "#NAME %s.@\n" current_unit;
-  Format.fprintf out_fmter "Is_true := focal.Is_true.@\n";
   try
     List.iter
       (fun data ->
