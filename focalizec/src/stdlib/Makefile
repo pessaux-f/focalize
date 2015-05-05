@@ -85,6 +85,9 @@ EXTERNAL_DKOS=\
  sets_externals.dko\
  wellfoundation_externals.dko
 
+cc.dko: cc.dk
+	dkcheck -e $<
+
 builtins.dko: builtins.dk cc.dko
 	dkcheck -e $<
 
@@ -93,7 +96,7 @@ include $(ROOT_DIR)/focalizec/.install_var
 include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZEC=../toplevel/focalizec
-FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
+FOCALIZE_COMP_FLAGS=-no-stdlib-path $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -no-coq-code
 FOCALIZEDEP=../focalizedep/focalizedep
 ZENON=../../../zenon/zenon
 ZVTOV=../../../zvtov/zvtov

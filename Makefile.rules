@@ -66,10 +66,8 @@ bin: $(BIN_OBJS)
 .v.vo:
 	$(COQC) $(COQ_INCLUDES) $<
 
-.sk.dko:
+%.dko:
 	skindent $< | dkcheck -e -stdin $(DK_INCLUDES)
-.dk.dko:
-	dkcheck -e $(DK_INCLUDES) $<
 
 .fcl.fcd:
 	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -focalize-doc $<
