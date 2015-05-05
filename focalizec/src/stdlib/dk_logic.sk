@@ -44,6 +44,11 @@ forallc (A : cc.uT) (f : cc.eT A -> Prop) : Prop :=
 existsc (A : cc.uT) (f : cc.eT A -> Prop) : Prop :=
   not (not (exists A (x : cc.eT A => not (not (f x))))).
 
+exists_type (f : cc.uT -> Prop) : Prop
+:= forall prop (z : Prop =>
+                (imp (forall_type (a : cc.uT =>
+                                   imp (f a) z))
+                     z)).
 
 
 TrueT : Type := eP True.
