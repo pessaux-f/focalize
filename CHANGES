@@ -2,6 +2,10 @@
   the option --experimental is set.
 - Order relations on orders are not anymore called <0x, <=0x etc, but simply
   <, <= etc.
+- Simplifications in the generated code for collections. Use of implicit
+  arguments in right number instead of full types/expression. Makes the
+  generated code shorter and more readable.
+
 
 # Focalize 0.9.0
 ################

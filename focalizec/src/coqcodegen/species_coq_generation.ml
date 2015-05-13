@@ -4612,7 +4612,6 @@ let generate_rep_definition ctx fields =
 
 
 
-
 (* ********************************************************************** *)
 (** {b Descr} : Creates the effective methods of the collection's.
     The methods are borrowed from every fields from the temporary value
@@ -4662,6 +4661,10 @@ let generate_rep_definition ctx fields =
           self_T
           __implemented.(Foo0_v Csp0_effective_collection).
 
+    OR EVEN SHORTER: Coq is smart enough to guess the types provided that
+    we give the right number of implicit parameters (_). So, now, instead
+    of making all this proessing, we generate some _'s.
+
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
 let make_collection_effective_methods ctx env implemented_species_name
@@ -4669,9 +4672,23 @@ let make_collection_effective_methods ctx env implemented_species_name
     record_type_args_instanciations2 =
   let out_fmter = ctx.Context.scc_out_fmter in
   let current_unit = ctx.Context.scc_current_unit in
+  (* Local function to print as many _ as the record type has arguments.
+     Before, we printed the exact expressions that were used as arguments
+     of the record type to make projections. *)
+  let print_underscores l =
+    List.iter
+      (fun (formal_species_param_name, (Env.ODFP_methods_list method_names)) ->
+      match List.assoc formal_species_param_name formals_to_effectives with
+       | Misc_common.CEA_collection_name_for_is corresponding_effective ->
+           List.iter
+             (fun _ -> Format.fprintf ctx.Context.scc_out_fmter "@ _")
+             method_names
+       | Misc_common.CEA_value_expr_for_in _ ->
+           Format.fprintf ctx.Context.scc_out_fmter "@ _")
+    l in
   (* First, the definition of the carrier. *)
   generate_rep_definition
-     ctx collection_descr.Env.TypeInformation.spe_sig_methods ;
+    ctx collection_descr.Env.TypeInformation.spe_sig_methods ;
   List.iter
     (function
       | Env.TypeInformation.SF_sig (_, _, _)
@@ -4686,13 +4703,11 @@ let make_collection_effective_methods ctx env implemented_species_name
           Format.fprintf out_fmter ".rf_%a"
             Parsetree_utils.pp_vname_with_operators_expanded n ;
           (* Apply to the instanciations of the parameters carriers. *)
-          print_record_type_carriers_args_instanciations
-            ctx env record_type_args_instanciations;
+          List.iter (fun _ -> Format.fprintf out_fmter "@ _")
+            record_type_args_instanciations ;
           (* Apply to the instanciations of the parameters methods we depend
-              on. *)
-          print_methods_from_params_instanciations
-            ctx env formals_to_effectives
-            record_type_args_instanciations2;
+             on. *)
+          print_underscores record_type_args_instanciations2 ;
           Format.fprintf out_fmter ").@]@]@\n"
       | Env.TypeInformation.SF_let_rec l ->
           List.iter
@@ -4705,13 +4720,11 @@ let make_collection_effective_methods ctx env implemented_species_name
               Format.fprintf out_fmter ".rf_%a"
                 Parsetree_utils.pp_vname_with_operators_expanded n ;
               (* Apply to the instanciations of the parameters carriers. *)
-              print_record_type_carriers_args_instanciations
-                ctx env record_type_args_instanciations;
+              List.iter (fun _ -> Format.fprintf out_fmter "@ _")
+                record_type_args_instanciations ;
               (* Apply to the instanciations of the parameters methods we
                  depend on. *)
-              print_methods_from_params_instanciations
-                 ctx env formals_to_effectives
-                 record_type_args_instanciations2;
+              print_underscores record_type_args_instanciations2 ;
               Format.fprintf out_fmter ").@]@]@\n")
             l)
     collection_descr.Env.TypeInformation.spe_sig_methods
