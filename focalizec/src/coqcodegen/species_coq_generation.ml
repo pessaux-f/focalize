@@ -2045,12 +2045,6 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
        (* Dump verbatim the Coq code. *)
        (* Was "daube" ^_^. Just a hack until we finish the work with Cath. *)
        if script = "wf_qed" || script = "mf_qed" then (
-(* [Unsure] *)
-         Format.fprintf out_fmter
-           "Ltac SplitandAssumption:=@\n\
-             (repeat match goal with@\n\
-                       | [ |- ?a /\\ ?b ] => split;try (intros ; eauto)@\n\
-                     end).@\n" ;
          (* One must harvest all the available steps at the current level
             and generalize (in the sens of Coq) their related (generated)
             lemma. *)
