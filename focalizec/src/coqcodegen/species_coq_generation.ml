@@ -907,11 +907,7 @@ let generate_final_recursive_definifion_body_With_Function out_fmter
       else
         Format.fprintf out_fmter "abst_%a@ "
           Parsetree_utils.pp_vname_with_operators_expanded n)
-    abstracted_methods ;
-  (* We now apply the fake termination order only if we cheated with proof, i.e.
-     if we are not in experimental mode. *)
-  if not (Configuration.get_experimental ()) then
-    Format.fprintf out_fmter "coq_builtins.magic_order"
+    abstracted_methods
 ;;
 
 
@@ -3045,8 +3041,8 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
     structural.
     In this case, the function is generated using the Function construct of
     Coq.
-    If experimental mode is activated, then it generates a termination order
-    and a termination proof instead of using fake and generic ones.
+    It generates a termination order and a termination proof instead of
+    using fake and generic ones.
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
@@ -3094,70 +3090,35 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
           proof obligation. *)
        let recursive_calls =
          Recursion.list_recursive_calls name params_with_type [] body_expr in
-
-(* [Unsure] *)
+       (* ---> Generate the order depending on the kind of proof. *)
+       generate_termination_order_With_Function
+         ctx' print_ctx env name params_with_type ai
+         ai.Env.TypeInformation.ad_dependencies_from_parameters
+         generated_fields opt_term_pr ;
+       (* ---> Start the Coq "Section" containing the termination theorem as
+          expected by Function and the definition of the Coq Function. *)
+       Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       (* ---> Generate the termination proof. *)
        let (abstracted_methods, new_ctx, new_print_ctx) =
-         if (Configuration.get_experimental ()) then (
-           (* ---> Generate the order depending on the kind of proof. *)
-           generate_termination_order_With_Function
-             ctx' print_ctx env name params_with_type ai
-             ai.Env.TypeInformation.ad_dependencies_from_parameters
-             generated_fields opt_term_pr ;
-           (* ---> Start the Coq "Section" containing the termination theorem as
-              expected by Function and the definition of the Coq Function. *)
-           Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
-             Parsetree_utils.pp_vname_with_operators_expanded name ;
-           (* ---> Generate the termination proof. *)
-           generate_termination_proof_With_Function ctx' print_ctx env
-             ~self_manifest name params_with_type ai
-             ai.Env.TypeInformation.ad_dependencies_from_parameters
-             generated_fields recursive_calls opt_term_pr
-          )
-         else (
-           (* ---> Start the Coq "Section" containing the termination theorem as
-              expected by Function and the definition of the Coq Function. *)
-           Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
-             Parsetree_utils.pp_vname_with_operators_expanded name ;
-           (* ---> Now, generate the prelude of the only method introduced by
-              "let rec". *)
-           generate_field_definition_prelude
-             ~in_section: true ctx' print_ctx env
-             ai.Env.TypeInformation.ad_min_coq_env
-             ai.Env.TypeInformation.ad_used_species_parameter_tys
-             ai.Env.TypeInformation.ad_dependencies_from_parameters
-             generated_fields
-          ) in
-
-       if not (Configuration.get_experimental ()) then (
-         (* We now generate the order. It always has 2 arguments having the same
-            type. This type is a tuple if the method has several arguments. This
-            type was already computed above for the termination order... *)
-         Format.fprintf out_fmter
-           "@\n@\n(* Abstracted termination order. *)@\n";
-         Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ ";
-         (* Print the tuple that is the method's arguments' types. *)
-         Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
-           (print_types_as_tuple_if_several new_print_ctx) params_with_type
-           (print_types_as_tuple_if_several new_print_ctx) params_with_type
-        ) ;
+         generate_termination_proof_With_Function ctx' print_ctx env
+           ~self_manifest name params_with_type ai
+           ai.Env.TypeInformation.ad_dependencies_from_parameters
+           generated_fields recursive_calls opt_term_pr in
        (* Generate the recursive uncurryed function. *)
        Format.fprintf out_fmter
          "@[<2>Function %a@ (__arg:@ %a)@ {wf "
          Parsetree_utils.pp_vname_with_operators_expanded name
          (print_types_as_tuple_if_several new_print_ctx) params_with_type ;
-       if not (Configuration.get_experimental ()) then
-         Format.fprintf out_fmter "__term_order@ __arg}"
-       else (
-         Format.fprintf out_fmter "(%a_wforder@ "
-           Parsetree_utils.pp_vname_with_operators_expanded name ;
-         (* Apply the order to its arguments due to lambda-lifts. *)
-         Species_record_type_generation.generate_method_lambda_lifted_arguments
-           ~only_for_Self_meths: false out_fmter
-           ai.Env.TypeInformation.ad_used_species_parameter_tys
+       Format.fprintf out_fmter "(%a_wforder@ "
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+       (* Apply the order to its arguments due to lambda-lifts. *)
+       Species_record_type_generation.generate_method_lambda_lifted_arguments
+         ~only_for_Self_meths: false out_fmter
+         ai.Env.TypeInformation.ad_used_species_parameter_tys
            ai.Env.TypeInformation.ad_dependencies_from_parameters
-           abstracted_methods ;
-         Format.fprintf out_fmter ")@ __arg}"
-        ) ;
+         abstracted_methods ;
+       Format.fprintf out_fmter ")@ __arg}" ;
        Format.fprintf out_fmter ":@ %a@ :=@\n"
          (Types.pp_type_simple_to_coq new_print_ctx) return_ty ;
        (* Unfortunately, we can't simply generate "let (x, y, ..) := __arg"
@@ -3194,8 +3155,9 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          ai.Env.TypeInformation.ad_min_coq_env
          ai.Env.TypeInformation.ad_used_species_parameter_tys;
        (* Print the proof using the above material. *)
-       if Configuration.get_experimental () then (
-         (* ---> Generate the soldering Coq script. *)
+       if opt_term_pr <> None then (
+         (* ---> A termination proof was given. Generate the soldering Coq
+            script. *)
          let nb_rec_calls = List.length recursive_calls in
          Format.fprintf out_fmter
            "elim %a_termination.@\n\
@@ -3228,19 +3190,23 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
                 elimination of the hypothesis __for_function_dec%d. *)
              Format.fprintf out_fmter
                "intros.@\neapply __for_function_dec%d ; \
-               eauto || (apply coq_builtins.EqTrue_is_true; assumption) || (apply coq_builtins.IsTrue_eq_false2; assumption) || (apply coq_builtins.syntactic_equal_refl).@\n" !call_num ;
-             incr call_num)
+                eauto || (apply coq_builtins.EqTrue_is_true; assumption) || \
+                (apply coq_builtins.IsTrue_eq_false2; assumption) || \
+                (apply coq_builtins.syntactic_equal_refl).@\n" !call_num ;
+                incr call_num)
            recursive_calls ;
          (* The finally remaining stuff related to the well-foundation. *)
          Format.fprintf out_fmter
            "(* Remaining well-foundation... *)@\n\
-               assumption.@\n"
+           assumption.@\n"
         )
-       else
+       else (
+         (* No termination proof given. Hence, generate a fake proof. *)
          Format.fprintf out_fmter "%a"
            (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
               Format.fprintf)
-           "apply coq_builtins.magic_prove.@\n";
+           "apply coq_builtins.magic_prove.@\n"
+        );
        (* Close the pretty print of of the "Function". *)
        Format.fprintf out_fmter "Qed.@]@\n";
        (* ---> Generate the curryed version. *)
@@ -3258,8 +3224,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded name ;
        Format.fprintf out_fmter "End Termination_%a_namespace.@]@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name ;
-(* [Unsure] We must now generate the function applied to its order and
-   termination proof and so on... *)
+       (* We must now generate the function applied to its order and
+          termination proof and so on... *)
        Format.fprintf out_fmter "@\n@[<2>Definition %a"
          Parsetree_utils.pp_vname_with_operators_expanded name ;
        ignore

@@ -1,5 +1,4 @@
-- Experimental termination proofs by measure and by order. Triggered if
-  the option --experimental is set.
+- Termination proofs by measure and by order.
 - Order relations on orders are not anymore called <0x, <=0x etc, but simply
   <, <= etc.
 - Simplifications in the generated code for collections. Use of implicit
