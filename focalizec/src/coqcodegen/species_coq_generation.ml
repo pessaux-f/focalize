@@ -3202,10 +3202,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
         )
        else (
          (* No termination proof given. Hence, generate a fake proof. *)
-         Format.fprintf out_fmter "%a"
-           (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
-              Format.fprintf)
-           "apply coq_builtins.magic_prove.@\n"
+         Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\n"
         );
        (* Close the pretty print of of the "Function". *)
        Format.fprintf out_fmter "Qed.@]@\n";
