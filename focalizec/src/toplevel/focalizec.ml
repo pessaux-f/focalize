@@ -215,10 +215,15 @@ let compile_zdk input_file_name =
 
 
 let compile_dk input_file_name =
+  let for_zenon = " -I " ^ Installation.zenon_libdir in
+  let includes =
+    String.concat " -I " ("" :: (Files.get_lib_paths ())) in
   let cmd =
-    Printf.sprintf "%s %s | %s -e -stdin"
+    Printf.sprintf "%s %s | %s -e -stdin %s %s"
       Installation.sukerujo_compiler input_file_name
-      Installation.dedukti_compiler in
+      Installation.dedukti_compiler
+      for_zenon includes
+  in
   Format.eprintf "Invoking dkcheck...@\n";
   Format.eprintf ">> %s@." cmd;
   let ret_code = Sys.command cmd in
