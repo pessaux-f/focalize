@@ -2776,11 +2776,193 @@ let generate_termination_order_With_Function ctx print_ctx env name
 
 
 
+(* ************************************************************************ *)
+(** {b Descr}: Generate the ultimate termination proof expected by Function
+    for a recursive function whose termination fact is a measure.
+
+    {b Rem} : For Function.
+
+    {b Exported}: No.                                                       *)
+(* ************************************************************************ *)
+let generate_measure_term_proof_for_Function
+    ctx print_ctx env name fun_params_n_tys ai sorted_deps_from_params
+    abstracted_methods recursive_calls meas_expr used_params proof =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* Compute the list of positionnal indices of the recursive function's
+     parameters used in the order. *)
+  let used_params_indices =
+    Handy.list_indices_of_present_in
+      ~all: (List.map fst fun_params_n_tys)
+      ~subset: (List.map fst used_params) in
+  match proof.Parsetree.ast_desc with
+  | Parsetree.Pf_assumed _ ->
+      (* Proof assumed, then simply use "magic_prove". *)
+      Format.fprintf out_fmter
+        "(* Proof was flagged as assumed. *)@\n";
+      Format.fprintf out_fmter
+        "apply coq_builtins.magic_prove.@\nQed."
+  | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
+      (* Proof done by Zenon. Apply soldering stuff. *)
+      Format.fprintf out_fmter
+        "unfold %a_wforder;simpl.@\n\
+        elim (for_zenon_abstracted_%a@ "
+         Parsetree_utils.pp_vname_with_operators_expanded name
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
+      (* Apply the theorem to its arguments due to lambda-lifts. *)
+      Species_record_type_generation.generate_method_lambda_lifted_arguments
+        ~only_for_Self_meths: false out_fmter
+        ai.Env.TypeInformation.ad_used_species_parameter_tys
+        sorted_deps_from_params abstracted_methods ;
+      Format.fprintf out_fmter
+        ").@\n\
+         intro __user_dec1.@\nintro __user_rem_dec_n_wf.@\n\
+         (* Separate decreasing obligations and well-foundation. *)@\n\
+         split.@\n" ;
+      let nb_rec_calls = List.length recursive_calls in
+      (* Repeat nb rec call times... *)
+      for _i = 1 to nb_rec_calls do
+        Format.fprintf out_fmter
+          "intros.@ apply coq_builtins.andb_intro;@ eauto.@\n"
+      done ;
+      (* Some verbatim Coq. *)
+      Format.fprintf out_fmter
+        "(* There, only remains the well-foundation obligation. *)@\n\
+         set@ (R := fun x y : basics.int__t =>@\n\
+         Is_true@\n\
+           (basics._amper__amper_@ (basics._lt__equal_@ 0@ y)@\n\
+           (basics._lt_ x y))).@\n\
+         @[<2>change@ (well_founded@ (fun@ __c __d@ :@ " ;
+      Format.fprintf out_fmter "%a@ =>@ R "
+        (print_types_as_tuple_if_several print_ctx) fun_params_n_tys ;
+      (* Apply the user measure on the first projected argument. *)
+      Format.fprintf out_fmter "@[<2>(" ;
+      Species_record_type_generation.generate_expr
+        ~local_idents: [] ~in_recursive_let_section_of: []
+        ~self_methods_status: Species_record_type_generation.SMS_abstracted
+        ~recursive_methods_status: Species_record_type_generation.RMS_regular
+        ctx env meas_expr ;
+      let fun_arity = List.length fun_params_n_tys in
+      print_order_args_as_tuple
+        out_fmter ~fun_arity "__c" used_params_indices ;
+      Format.fprintf out_fmter ")@ (" ;
+      Species_record_type_generation.generate_expr
+        ~local_idents: [] ~in_recursive_let_section_of: []
+        ~self_methods_status: Species_record_type_generation.SMS_abstracted
+        ~recursive_methods_status: Species_record_type_generation.RMS_regular
+        ctx env meas_expr ;
+      print_order_args_as_tuple out_fmter ~fun_arity "__d" used_params_indices ;
+      Format.fprintf out_fmter ")@]))@].@\n" ;
+      (* Now copy verbatim the script. This handles the well-foundation proof
+         of the order defined on Z by embedding it in N thank's to the proof
+         of "is always positive". *)
+      Format.fprintf out_fmter "\
+        apply@ wf_inverse_image.@\n\
+        apply@ wf_incl@ with@ (R2 := (fun x y : Z => 0 <= y /\\ x < y)).@\n\
+        unfold inclusion,@ R.@\n\
+        unfold basics.int__t,@ basics._amper__amper_,@ \
+        basics._lt__equal_,@\n\
+        basics._lt_,@ bi__and_b,@ bi__int_leq,@ bi__int_lt.@\n\
+        intros x y.@\n\
+        elim@ (Z_le_dec@ 0@ y);@ intro;@ elim@ (Z_lt_dec@ x@ y);@ \
+        simpl;@ intros;@ intuition.@\n\
+        apply@ (Zwf_well_founded@ 0).@\n\
+        Qed."
+  | Parsetree.Pf_coq (_, script) ->
+      (* Dump verbatim the Coq code. *)
+      Format.fprintf out_fmter "%s" script
+;;
+
+
+
+(* ************************************************************************ *)
+(** {b Descr}: Generate the ultimate termination proof expected by Function
+    for a recursive function whose termination fact is a well-founded
+    relation.
+
+    {b Rem} : For Function.
+
+    {b Exported}: No.                                                       *)
+(* ************************************************************************ *)
+let generate_order_term_proof_for_Function
+    ctx print_ctx env name fun_params_n_tys ai sorted_deps_from_params
+    abstracted_methods recursive_calls order_expr used_params proof =
+  let out_fmter = ctx.Context.scc_out_fmter in
+  (* Compute the list of positionnal indices of the recursive function's
+     parameters used in the order. *)
+  let used_params_indices =
+    Handy.list_indices_of_present_in
+      ~all: (List.map fst fun_params_n_tys)
+      ~subset: (List.map fst used_params) in
+  Rec_let_gen.print_user_termination_obls
+    name recursive_calls order_expr used_params_indices ;
+  match proof.Parsetree.ast_desc with
+  | Parsetree.Pf_assumed _ ->
+      (* Proof assumed, then simply use "magic_prove". *)
+      Format.fprintf out_fmter "(* Proof was flagged as assumed. *)@\n" ;
+      Format.fprintf out_fmter "apply coq_builtins.magic_prove.@\nQed."
+  | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
+      (* Proof done by Zenon. Apply soldering stuff. *)
+      Format.fprintf out_fmter
+        "unfold %a_wforder;simpl.@\n\
+         elim (for_zenon_abstracted_%a@ "
+        Parsetree_utils.pp_vname_with_operators_expanded name
+        Parsetree_utils.pp_vname_with_operators_expanded name ;
+     (* Apply the theorem to its arguments due to lambda-lifts. *)
+     Species_record_type_generation.
+       generate_method_lambda_lifted_arguments
+         ~only_for_Self_meths: false out_fmter
+         ai.Env.TypeInformation.ad_used_species_parameter_tys
+         sorted_deps_from_params abstracted_methods ;
+     Format.fprintf out_fmter
+       ").@\n\
+        intro __user_dec1.@\nintro __user_rem_dec_n_wf.@\n" ;
+     let nb_rec_calls = List.length recursive_calls in
+     (* Repeat nb -1 rec call times... *)
+     for i = 2 to nb_rec_calls do
+       Format.fprintf out_fmter
+         "elim __user_rem_dec_n_wf.@\n\
+          clear __user_rem_dec_n_wf.@\n\
+          intro __user_dec%d.@\n\
+          intro __user_rem_dec_n_wf.@\n" i
+      done ;
+      (* Repeat nb rec call times... *)
+      for _i = 1 to nb_rec_calls do
+        Format.fprintf out_fmter "split. auto.@\n"
+      done ;
+      Format.fprintf out_fmter
+        "set (R := (fun __a __b => Is_true (" ;
+      (* Same code than generated for the theorem representing the  proof
+         obligation as expected by the user. *)
+      Species_record_type_generation.generate_expr
+        ~local_idents: [] ~in_recursive_let_section_of: []
+        ~self_methods_status: Species_record_type_generation.SMS_abstracted
+        ~recursive_methods_status: Species_record_type_generation.RMS_regular
+        ctx env order_expr ;
+      Format.fprintf out_fmter " __a __b))).@\n" ;
+      Format.fprintf out_fmter
+        "change@ @[<2>(well_founded (fun@ __c __d@ :@ " ;
+      Format.fprintf out_fmter "%a@ =>@ R "
+        (print_types_as_tuple_if_several print_ctx) fun_params_n_tys ;
+      (* Same arguments than for the xxx_wforder. *)
+      let fun_arity = List.length fun_params_n_tys in
+      print_order_args_as_tuple out_fmter ~fun_arity "__c" used_params_indices ;
+      Format.fprintf out_fmter "@ " ;
+      print_order_args_as_tuple out_fmter ~fun_arity "__d" used_params_indices ;
+      Format.fprintf out_fmter "))@].@\n" ;
+      Format.fprintf out_fmter "apply wf_inverse_image.@\nassumption.@\n" ;
+      Format.fprintf out_fmter "Qed.@\n"
+  | Parsetree.Pf_coq (_, script) ->
+      (* Dump verbatim the Coq code. *)
+      Format.fprintf out_fmter "%s" script
+;;
+
+
+
 (** {b Rem} : For Function. Uses the "fname"_wforder previously generated
     (i.e. the order as Function expects, not the user-order) and uses, for
     this former application, the tuple of all variables / recursive args
     of the function: not only those on which the user-order operates. *)
-let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
+let generate_termination_proof_for_Function ctx print_ctx env ~self_manifest
     name fun_params_n_tys ai
     sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
     recursive_calls opt_term_pr =
@@ -2853,177 +3035,17 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
             failwith "TODO: structural2."  (* [Unsure] *)
         | Parsetree.TP_lexicographic _ ->
             failwith "TODO: lexicographic2."  (* [Unsure] *)
-        | Parsetree.TP_measure (meas_expr, used_params, proof) -> (
-            (* Compute the list of positionnal indices of the recursive
-               function's parameters used in the order. *)
-(* TODO: move outside or higher. *)
-            let used_params_indices =
-              Handy.list_indices_of_present_in
-                ~all: (List.map fst fun_params_n_tys)
-                ~subset: (List.map fst used_params) in
-            match proof.Parsetree.ast_desc with
-            | Parsetree.Pf_assumed _ ->
-                (* Proof assumed, then simply use "magic_prove". *)
-                Format.fprintf out_fmter
-                  "(* Proof was flagged as assumed. *)@\n";
-                Format.fprintf out_fmter
-                  "apply coq_builtins.magic_prove.@\nQed."
-            | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
-                (* Proof done by Zenon. Apply soldering stuff. *)
-                Format.fprintf out_fmter
-                  "unfold %a_wforder;simpl.@\n\
-                   elim (for_zenon_abstracted_%a@ "
-                   Parsetree_utils.pp_vname_with_operators_expanded name
-                   Parsetree_utils.pp_vname_with_operators_expanded name ;
-                (* Apply the theorem to its arguments due to lambda-lifts. *)
-                Species_record_type_generation.
-                  generate_method_lambda_lifted_arguments
-                  ~only_for_Self_meths: false out_fmter
-                  ai.Env.TypeInformation.ad_used_species_parameter_tys
-                  sorted_deps_from_params abstracted_methods ;
-                Format.fprintf out_fmter
-                  ").@\n\
-                  intro __user_dec1.@\nintro __user_rem_dec_n_wf.@\n\
-                  (* Separate decreasing obligations and well-foundation. *)@\n\
-                  split.@\n" ;
-                let nb_rec_calls = List.length recursive_calls in
-                (* Repeat nb rec call times... *)
-                for _i = 1 to nb_rec_calls do
-                  Format.fprintf out_fmter
-                    "intros.@ apply coq_builtins.andb_intro;@ eauto.@\n"
-                done ;
-                (* Some verbatim Coq. *)
-                Format.fprintf out_fmter
-                  "(* There, only remains the well-foundation obligation. *)@\n\
-                   set@ (R := fun x y : basics.int__t =>@\n\
-                    Is_true@\n\
-                      (basics._amper__amper_@ (basics._lt__equal_@ 0@ y)@\n\
-                        (basics._lt_ x y))).@\n\
-                   @[<2>change@ (well_founded@ (fun@ __c __d@ :@ " ;
-                Format.fprintf out_fmter "%a@ =>@ R "
-                  (print_types_as_tuple_if_several new_print_ctx)
-                  fun_params_n_tys ;
-                (* Apply the user measure on the first projected argument. *)
-                Format.fprintf out_fmter "@[<2>(" ;
-                Species_record_type_generation.generate_expr
-                  ~local_idents: [] ~in_recursive_let_section_of: []
-                  ~self_methods_status:
-                     Species_record_type_generation.SMS_abstracted
-                  ~recursive_methods_status:
-                     Species_record_type_generation.RMS_regular
-                  ctx env meas_expr ;
-                let fun_arity = List.length fun_params_n_tys in
-                print_order_args_as_tuple
-                  out_fmter ~fun_arity "__c" used_params_indices ;
-                Format.fprintf out_fmter ")@ (" ;
-                Species_record_type_generation.generate_expr
-                  ~local_idents: [] ~in_recursive_let_section_of: []
-                  ~self_methods_status:
-                     Species_record_type_generation.SMS_abstracted
-                  ~recursive_methods_status:
-                     Species_record_type_generation.RMS_regular
-                  ctx env meas_expr ;
-                print_order_args_as_tuple
-                  out_fmter ~fun_arity "__d" used_params_indices ;
-                Format.fprintf out_fmter ")@]))@].@\n" ;
-                (* Now copy verbatim the script. This handles the
-                   well-foundation proof of the order defined on Z by
-                   embedding it in N thank's to the proof of "is always
-                   positive". *)
-                Format.fprintf out_fmter "\
-                  apply@ wf_inverse_image.@\n\
-                  apply@ wf_incl@ with@ (R2 := (fun x y : Z => 0 <= y /\\ x < y)).@\n\
-                  unfold inclusion,@ R.@\n\
-                  unfold basics.int__t,@ basics._amper__amper_,@ \
-                   basics._lt__equal_,@\n\
-                   basics._lt_,@ bi__and_b,@ bi__int_leq,@ bi__int_lt.@\n\
-                  intros x y.@\n\
-                  elim@ (Z_le_dec@ 0@ y);@ intro;@ elim@ (Z_lt_dec@ x@ y);@ \
-                   simpl;@ intros;@ intuition.@\n\
-                  apply@ (Zwf_well_founded@ 0).@\n\
-                  Qed."
-            | Parsetree.Pf_coq (_, script) ->
-                (* Dump verbatim the Coq code. *)
-                Format.fprintf out_fmter "%s" script
-           )
-        | Parsetree.TP_order (order_expr, used_params, proof) -> (
-            (* Compute the list of positionnal indices of the recursive
-               function's parameters used in the order. *)
-(* TODO: move outside or higher. *)
-            let used_params_indices =
-              Handy.list_indices_of_present_in
-                ~all: (List.map fst fun_params_n_tys)
-                ~subset: (List.map fst used_params) in
-            Rec_let_gen.print_user_termination_obls
-              name recursive_calls order_expr used_params_indices ;
-            match proof.Parsetree.ast_desc with
-             | Parsetree.Pf_assumed _ ->
-                 (* Proof assumed, then simply use "magic_prove". *)
-                 Format.fprintf out_fmter
-                   "(* Proof was flagged as assumed. *)@\n";
-                 Format.fprintf out_fmter
-                   "apply coq_builtins.magic_prove.@\nQed."
-             | Parsetree.Pf_auto _  | Parsetree.Pf_node _ ->
-                 (* Proof done by Zenon. Apply soldering stuff. *)
-                 Format.fprintf out_fmter
-                   "unfold %a_wforder;simpl.@\n\
-                    elim (for_zenon_abstracted_%a@ "
-                   Parsetree_utils.pp_vname_with_operators_expanded name
-                   Parsetree_utils.pp_vname_with_operators_expanded name ;
-                 (* Apply the theorem to its arguments due to lambda-lifts. *)
-                 Species_record_type_generation.
-                   generate_method_lambda_lifted_arguments
-                     ~only_for_Self_meths: false out_fmter
-                     ai.Env.TypeInformation.ad_used_species_parameter_tys
-                     sorted_deps_from_params abstracted_methods ;
-                 Format.fprintf out_fmter
-                   ").@\n\
-                    intro __user_dec1.@\nintro __user_rem_dec_n_wf.@\n" ;
-                 let nb_rec_calls = List.length recursive_calls in
-                 (* Repeat nb -1 rec call times... *)
-                 for i = 2 to nb_rec_calls do
-                   Format.fprintf out_fmter
-                     "elim __user_rem_dec_n_wf.@\n\
-                      clear __user_rem_dec_n_wf.@\n\
-                      intro __user_dec%d.@\n\
-                      intro __user_rem_dec_n_wf.@\n" i
-                  done ;
-                  (* Repeat nb rec call times... *)
-                  for _i = 1 to nb_rec_calls do
-                    Format.fprintf out_fmter "split. auto.@\n"
-                  done ;
-                  Format.fprintf out_fmter
-                    "set (R := (fun __a __b => Is_true (" ;
-                  (* Same code than generated for the theorem representing the
-                     proof obligation as expected by the user. *)
-                  Species_record_type_generation.generate_expr
-                    ~local_idents: [] ~in_recursive_let_section_of: []
-                    ~self_methods_status:
-                      Species_record_type_generation.SMS_abstracted
-                    ~recursive_methods_status:
-                      Species_record_type_generation.RMS_regular
-                    ctx env order_expr ;
-                  Format.fprintf out_fmter " __a __b))).@\n" ;
-                  Format.fprintf out_fmter
-                    "change@ @[<2>(well_founded (fun@ __c __d@ :@ " ;
-                  Format.fprintf out_fmter "%a@ =>@ R "
-                    (print_types_as_tuple_if_several new_print_ctx)
-                    fun_params_n_tys ;
-                  (* Same arguments than for the xxx_wforder. *)
-                  let fun_arity = List.length fun_params_n_tys in
-                  print_order_args_as_tuple
-                    out_fmter ~fun_arity "__c" used_params_indices ;
-                  Format.fprintf out_fmter "@ " ;
-                  print_order_args_as_tuple
-                    out_fmter ~fun_arity "__d" used_params_indices ;
-                  Format.fprintf out_fmter "))@].@\n" ;
-                  Format.fprintf out_fmter
-                    "apply wf_inverse_image.@\nassumption.@\n" ;
-                  Format.fprintf out_fmter "Qed.@\n"
-             | Parsetree.Pf_coq (_, script) ->
-                 (* Dump verbatim the Coq code. *)
-                 Format.fprintf out_fmter "%s" script)
-      ));
+        | Parsetree.TP_measure (meas_expr, used_params, proof) ->
+            generate_measure_term_proof_for_Function
+              ctx new_print_ctx env name fun_params_n_tys ai
+              sorted_deps_from_params abstracted_methods recursive_calls
+              meas_expr used_params proof
+        | Parsetree.TP_order (order_expr, used_params, proof) ->
+            generate_order_term_proof_for_Function
+              ctx new_print_ctx env name fun_params_n_tys ai
+              sorted_deps_from_params abstracted_methods recursive_calls
+              order_expr used_params proof
+     ));
   Format.fprintf out_fmter "@]@\n@\n" ;
   (abstracted_methods, new_ctx, new_print_ctx)
 ;;
@@ -3040,7 +3062,6 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
-(* TODO: split in several parts. Too big ! *)
 let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
     ~self_manifest generated_fields from name params scheme body opt_term_pr
     ai =
@@ -3095,7 +3116,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* ---> Generate the termination proof. *)
        let (abstracted_methods, new_ctx, new_print_ctx) =
-         generate_termination_proof_With_Function ctx' print_ctx env
+         generate_termination_proof_for_Function ctx' print_ctx env
            ~self_manifest name params_with_type ai
            ai.Env.TypeInformation.ad_dependencies_from_parameters
            generated_fields recursive_calls opt_term_pr in
@@ -4624,7 +4645,7 @@ let generate_rep_definition ctx fields =
 
     {b Rem} : Not exported outside this module.                           *)
 (* ********************************************************************** *)
-let make_collection_effective_methods ctx env implemented_species_name
+let make_collection_effective_methods ctx implemented_species_name
     collection_descr formals_to_effectives record_type_args_instanciations
     record_type_args_instanciations2 =
   let out_fmter = ctx.Context.scc_out_fmter in
@@ -4636,7 +4657,7 @@ let make_collection_effective_methods ctx env implemented_species_name
     List.iter
       (fun (formal_species_param_name, (Env.ODFP_methods_list method_names)) ->
       match List.assoc formal_species_param_name formals_to_effectives with
-       | Misc_common.CEA_collection_name_for_is corresponding_effective ->
+       | Misc_common.CEA_collection_name_for_is _ ->
            List.iter
              (fun _ -> Format.fprintf ctx.Context.scc_out_fmter "@ _")
              method_names
@@ -4904,8 +4925,7 @@ let collection_compile env ~current_unit out_fmter collection_def
               ITS own record fields names, preventing the need to use those
               coming from the it implements. *)
            make_collection_effective_methods
-             ctx env implemented_species_name
-             collection_descr formals_to_effectives
+             ctx implemented_species_name collection_descr formals_to_effectives
              record_type_args_instanciations
              params_info.Env.CoqGenInformation.cgi_generator_parameters.
                Env.CoqGenInformation.cgp_abstr_param_methods_for_record ;

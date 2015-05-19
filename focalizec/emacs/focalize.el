@@ -89,7 +89,7 @@
   (let ((end_kw (last-keyword-of-line))) ; IN
     (cond
      ((member
-       end_kw '("else" "then" "begin" "species" "collection"))
+       end_kw '("let" "else" "then" "begin" "species" "collection"))
       focalize-indent-quantum)
      (t    ; DEFAULT
       0)
