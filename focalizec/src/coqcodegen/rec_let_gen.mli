@@ -39,4 +39,4 @@ val print_user_termination_obls :
   (((Parsetree.vname * Types.type_simple) * Parsetree.expr) list *
    Recursion.binding list)
   list ->
-    Parsetree.expr -> int list -> unit
+    Parsetree.expr -> int -> unit

@@ -747,12 +747,15 @@ and pp_termination_proof_desc ppf = function
   | Parsetree.TP_lexicographic (orders_exprs, param_list, proof) ->
       Format.fprintf ppf "@[<2>TP_lexicographic@ ((@ %a),@ %a,@ %a@ )@]"
         pp_exprs orders_exprs pp_param_list param_list pp_proof proof
-  | Parsetree.TP_measure (expr, param_list, proof) ->
+  | Parsetree.TP_measure (expr, param, proof) ->
       Format.fprintf ppf "@[<2>TP_measure@ (@ %a,@ %a,@ %a@ )@]"
-        pp_expr expr pp_param_list param_list pp_proof proof
-  | Parsetree.TP_order (expr, param_list, proof) ->
+        pp_expr expr pp_param param pp_proof proof
+  | Parsetree.TP_order (expr, param, proof) ->
       Format.fprintf ppf "@[<2>TP_order@ (@ %a,@ %a,@ %a@ )@]"
-        pp_expr expr pp_param_list param_list pp_proof proof
+        pp_expr expr pp_param param pp_proof proof
+and pp_param ppf (vname, ty_expr_opt) =
+  Format.fprintf ppf "(%a,@ %a)" pp_vname vname
+    (Handy.pp_generic_explicit_option pp_type_expr) ty_expr_opt
 and pp_param_list =
     (Handy.pp_generic_separated_list
        ","

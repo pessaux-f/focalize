@@ -729,14 +729,10 @@ let print_user_termination_obls fun_name recursive_calls user_order
          the "user-"order. *)
       Format.eprintf "%a" Sourcify.pp_expr user_order ;
       Format.eprintf "( " ;
-      (* Now, generate the tuples of only arguments used in the order
-         given by the user to provide to this order. *)
-(* [Unsure] considered orders only compare 2 simple arguments, not a tuple. *)
-      if (List.length rec_fun_used_arg_index) <> 1 then
-        failwith "TODO: order/measure using several arguments" ;
-      let index = List.hd rec_fun_used_arg_index in
-      let rec_arg = List.nth rec_args index in
-      let initial_var = List.nth initial_vars index in
+      (* Now, generate the only argument used in the order given by the user
+         to provide to this order. *)
+      let rec_arg = List.nth rec_args rec_fun_used_arg_index in
+      let initial_var = List.nth initial_vars rec_fun_used_arg_index in
       (* Generate the corresponding recursive call argument. *)
       Format.eprintf "%a" Sourcify.pp_expr rec_arg ;
       (* Generate the initial argument of the function. *)

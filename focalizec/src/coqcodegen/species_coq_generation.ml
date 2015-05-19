@@ -2575,7 +2575,7 @@ let print_order_args_as_tuple out_fmter ~fun_arity arg_name indices =
           if last = 0 then
             Format.fprintf out_fmter
               "(coq_builtins.__tpl_firstprj%d@ " fun_arity
-          else 
+          else
             Format.fprintf out_fmter
               "(coq_builtins.__tpl_lastprj%d@ " (fun_arity - last) ;
           for _i = 1 to fun_arity do Format.fprintf out_fmter "_@ " done ;
@@ -2650,18 +2650,16 @@ let generate_termination_order_for_Function ctx print_ctx env name
             failwith "TODO: structural1."  (* [Unsure] *)
         | Parsetree.TP_lexicographic _ ->
             failwith "TODO: lexicographic1."  (* [Unsure] *)
-        | Parsetree.TP_measure (measure_expr, used_params, _) -> (
+        | Parsetree.TP_measure (measure_expr, (used_param, _), _) -> (
             (*  Since < returns a [bool], we must surround the generated
                 application expression by a "Is_true" for Coq. *)
             Format.fprintf out_fmter "@[<2>(Is_true@ @[<2>(" ;
             let local_idents =
               [ Parsetree.Vlident "__x"; Parsetree.Vlident "__y" ] in
-            (* Compute the list of positionnal indices of the recursive
-               function's parameters used in the order. *)
-            let used_params_indices =
-              Handy.list_indices_of_present_in
-                ~all: (List.map fst fun_params_n_tys)
-                ~subset: (List.map fst used_params) in
+            (* Compute the index of the recursive function's parameter used
+               in the order. *)
+            let used_param_index =
+              Handy.list_index_of used_param (List.map fst fun_params_n_tys) in
             let fun_arity = List.length fun_params_n_tys in
             (* Generate the first part telling that the second argument applied
                to the measure gives a result always >= 0. *)
@@ -2680,7 +2678,7 @@ let generate_termination_order_for_Function ctx print_ctx env name
               env measure_expr ;
             Format.fprintf out_fmter "@ " ;
             print_order_args_as_tuple
-              out_fmter ~fun_arity "__y" used_params_indices ;
+              out_fmter ~fun_arity "__y" [used_param_index] ;
             Format.fprintf out_fmter ")@])@]@ " ;
             (* *)
             (* Now apply this expression to the 2 tuples of used arguments
@@ -2701,7 +2699,7 @@ let generate_termination_order_for_Function ctx print_ctx env name
               env measure_expr ;
             Format.fprintf out_fmter "@ " ;
             print_order_args_as_tuple
-              out_fmter ~fun_arity "__x" used_params_indices ;
+              out_fmter ~fun_arity "__x" [used_param_index] ;
             Format.fprintf out_fmter ")@]@ @[<2>(" ;
             (* Generate the second application of the measure (hence to the
                second argument). *)
@@ -2714,13 +2712,13 @@ let generate_termination_order_for_Function ctx print_ctx env name
               env measure_expr ;
             Format.fprintf out_fmter "@ ";
             print_order_args_as_tuple
-              out_fmter ~fun_arity "__y" used_params_indices ;
+              out_fmter ~fun_arity "__y" [used_param_index] ;
             Format.fprintf out_fmter ")@]" ;
             (* Close various parentheses and the box of the whole
                "Definition" of the order. *)
             Format.fprintf out_fmter ")@])@])@].@]@\n@\n"
            )
-        | Parsetree.TP_order (order_expr, used_params, _) -> (
+        | Parsetree.TP_order (order_expr, (used_param, _), _) -> (
             (* Generate the Coq translation of the expression of the
                order. Since the order returns a [bool], we must surround the
                generated application  expression by a "Is_true" for Coq. *)
@@ -2729,10 +2727,8 @@ let generate_termination_order_for_Function ctx print_ctx env name
               [ Parsetree.Vlident "__x"; Parsetree.Vlident "__y" ] in
             (* Compute the list of positionnal indices of the recursive
                function's parameters used in the order. *)
-            let used_params_indices =
-              Handy.list_indices_of_present_in
-                ~all: (List.map fst fun_params_n_tys)
-                ~subset: (List.map fst used_params) in
+            let used_param_index =
+              Handy.list_index_of used_param (List.map fst fun_params_n_tys) in
             (* Now apply this expression to the 2 tuples of used arguments
                extracted by calls to builtin extractors depending on their
                indice among the function parameters. *)
@@ -2746,10 +2742,10 @@ let generate_termination_order_for_Function ctx print_ctx env name
               env order_expr ;
             Format.fprintf out_fmter "@ " ;
             print_order_args_as_tuple
-              out_fmter ~fun_arity "__x" used_params_indices ;
+              out_fmter ~fun_arity "__x" [used_param_index] ;
             Format.fprintf out_fmter "@ " ;
             print_order_args_as_tuple
-              out_fmter ~fun_arity "__y" used_params_indices ;
+              out_fmter ~fun_arity "__y" [used_param_index] ;
             (* Close the parenthese and the box of the "Is_true". *)
             Format.fprintf out_fmter ")@]" ;
             (* Close the box of the whole "Definition" of the order. *)
@@ -2770,14 +2766,12 @@ let generate_termination_order_for_Function ctx print_ctx env name
 (* ************************************************************************ *)
 let generate_measure_term_proof_for_Function
     ctx print_ctx env name fun_params_n_tys ai sorted_deps_from_params
-    abstracted_methods recursive_calls meas_expr used_params proof =
+    abstracted_methods recursive_calls meas_expr used_param proof =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Compute the list of positionnal indices of the recursive function's
      parameters used in the order. *)
-  let used_params_indices =
-    Handy.list_indices_of_present_in
-      ~all: (List.map fst fun_params_n_tys)
-      ~subset: (List.map fst used_params) in
+  let used_param_index =
+    Handy.list_index_of used_param (List.map fst fun_params_n_tys) in
   match proof.Parsetree.ast_desc with
   | Parsetree.Pf_assumed _ ->
       (* Proof assumed, then simply use "magic_prove". *)
@@ -2827,14 +2821,15 @@ let generate_measure_term_proof_for_Function
         ctx env meas_expr ;
       let fun_arity = List.length fun_params_n_tys in
       print_order_args_as_tuple
-        out_fmter ~fun_arity "__c" used_params_indices ;
+        out_fmter ~fun_arity "__c" [used_param_index] ;
       Format.fprintf out_fmter ")@ (" ;
       Species_record_type_generation.generate_expr
         ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_generation.SMS_abstracted
         ~recursive_methods_status: Species_record_type_generation.RMS_regular
         ctx env meas_expr ;
-      print_order_args_as_tuple out_fmter ~fun_arity "__d" used_params_indices ;
+      print_order_args_as_tuple
+        out_fmter ~fun_arity "__d" [used_param_index] ;
       Format.fprintf out_fmter ")@]))@].@\n" ;
       (* Now copy verbatim the script. This handles the well-foundation proof
          of the order defined on Z by embedding it in N thank's to the proof
@@ -2869,16 +2864,15 @@ let generate_measure_term_proof_for_Function
 (* ************************************************************************ *)
 let generate_order_term_proof_for_Function
     ctx print_ctx env name fun_params_n_tys ai sorted_deps_from_params
-    abstracted_methods recursive_calls order_expr used_params proof =
+    abstracted_methods recursive_calls order_expr used_param proof =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Compute the list of positionnal indices of the recursive function's
      parameters used in the order. *)
-  let used_params_indices =
-    Handy.list_indices_of_present_in
-      ~all: (List.map fst fun_params_n_tys)
-      ~subset: (List.map fst used_params) in
+  let used_param_index =
+    Handy.list_index_of used_param (List.map fst fun_params_n_tys) in
+  (* Print to the user the termination obligations. *)
   Rec_let_gen.print_user_termination_obls
-    name recursive_calls order_expr used_params_indices ;
+    name recursive_calls order_expr used_param_index ;
   match proof.Parsetree.ast_desc with
   | Parsetree.Pf_assumed _ ->
       (* Proof assumed, then simply use "magic_prove". *)
@@ -2929,9 +2923,11 @@ let generate_order_term_proof_for_Function
         (print_types_as_tuple_if_several print_ctx) fun_params_n_tys ;
       (* Same arguments than for the xxx_wforder. *)
       let fun_arity = List.length fun_params_n_tys in
-      print_order_args_as_tuple out_fmter ~fun_arity "__c" used_params_indices ;
+      print_order_args_as_tuple
+        out_fmter ~fun_arity "__c" [used_param_index] ;
       Format.fprintf out_fmter "@ " ;
-      print_order_args_as_tuple out_fmter ~fun_arity "__d" used_params_indices ;
+      print_order_args_as_tuple
+        out_fmter ~fun_arity "__d" [used_param_index] ;
       Format.fprintf out_fmter "))@].@\n" ;
       Format.fprintf out_fmter "apply wf_inverse_image.@\nassumption.@\n" ;
       Format.fprintf out_fmter "Qed.@\n"
@@ -2954,25 +2950,20 @@ let generate_termination_proof_for_Function ctx print_ctx env ~self_manifest
   (match opt_term_pr with
    | None -> ()
    | Some term_pr -> (
-       let (order_expr, used_params, proof) =
+       let (order_expr, used_param, proof) =
          (match term_pr.Parsetree.ast_desc with
          | Parsetree.TP_structural _ ->
              failwith "TODO: structural3."  (* [Unsure] *)
          | Parsetree.TP_lexicographic _ ->
              failwith "TODO: lexicographic3."  (* [Unsure] *)
-         | Parsetree.TP_measure (e, prms, pr) ->
-             ((Rec_let_gen.TEK_measure e), prms, pr)
-         | Parsetree.TP_order  (e, prms, pr) ->
-             ((Rec_let_gen.TEK_order e), prms, pr)) in
-       (* Compute the list of positionnal indices of the recursive function's
-          parameters used in the order. *)
-       let used_params_indices =
-         Handy.list_indices_of_present_in
-           ~all: (List.map fst fun_params_n_tys)
-           ~subset: (List.map fst used_params) in
-       (* Syntactically, there can be one and only one used parameter. *)
-       assert (List.length used_params_indices = 1) ;
-       let used_param_index = List.hd used_params_indices in
+         | Parsetree.TP_measure (e, (prm, _), pr) ->
+             ((Rec_let_gen.TEK_measure e), prm, pr)
+         | Parsetree.TP_order  (e, (prm, _), pr) ->
+             ((Rec_let_gen.TEK_order e), prm, pr)) in
+       (* Compute the index of the recursive function's parameter used in the
+          order. *)
+       let used_param_index =
+         Handy.list_index_of used_param (List.map fst fun_params_n_tys) in
        generate_theorem_section_if_by_zenon
          ctx print_ctx env
          ai.Env.TypeInformation.ad_min_coq_env ~self_manifest
@@ -3022,16 +3013,16 @@ let generate_termination_proof_for_Function ctx print_ctx env ~self_manifest
             failwith "TODO: structural2."  (* [Unsure] *)
         | Parsetree.TP_lexicographic _ ->
             failwith "TODO: lexicographic2."  (* [Unsure] *)
-        | Parsetree.TP_measure (meas_expr, used_params, proof) ->
+        | Parsetree.TP_measure (meas_expr, (used_param, _), proof) ->
             generate_measure_term_proof_for_Function
               ctx new_print_ctx env name fun_params_n_tys ai
               sorted_deps_from_params abstracted_methods recursive_calls
-              meas_expr used_params proof
-        | Parsetree.TP_order (order_expr, used_params, proof) ->
+              meas_expr used_param proof
+        | Parsetree.TP_order (order_expr, (used_param, _), proof) ->
             generate_order_term_proof_for_Function
               ctx new_print_ctx env name fun_params_n_tys ai
               sorted_deps_from_params abstracted_methods recursive_calls
-              order_expr used_params proof
+              order_expr used_param proof
      ));
   Format.fprintf out_fmter "@]@\n@\n" ;
   (abstracted_methods, new_ctx, new_print_ctx)

@@ -80,6 +80,8 @@ val list_drop : 'a list -> int -> 'a list
 
 val list_indices_of_present_in : all: 'a list -> subset: 'a list -> int list
 
+val list_index_of : 'a -> 'a list -> int
+
 
 
 (** Effects to the terminal for pretty-printing tools. *)

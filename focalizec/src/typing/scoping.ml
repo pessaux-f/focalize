@@ -1705,45 +1705,40 @@ and scope_termination_proof ctx env params_env tp =
          Parsetree.ast_desc =
            Parsetree.TP_lexicographic
              (scoped_orders_exprs, scoped_args, scoped_proof) }
-   | Parsetree.TP_measure (expr, args, proof) ->
+   | Parsetree.TP_measure (expr, (arg_name, arg_type), proof) ->
        let scoped_expr = scope_expr ctx env expr in
-       let scoped_args =
-         List.map
-           (fun (arg_name, arg_type) ->
-             (* Same remark than above for the approximative location. *)
-             if not
-                 (can_be_scoped_as_local_p
-                    ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
-               raise
-                 (Structural_termination_only_on_fun_arg
-                    (tp.Parsetree.ast_loc, arg_name));
-             let scoped_arg_ty =
-               match arg_type with
-                | None -> None
-                | Some ty -> Some (scope_type_expr ctx params_env ty) in
-             (arg_name, scoped_arg_ty))
-           args in
+       let scoped_arg = (
+         if not
+             (can_be_scoped_as_local_p
+                ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
+           raise
+             (Structural_termination_only_on_fun_arg
+                (tp.Parsetree.ast_loc, arg_name)) ;
+         let scoped_arg_ty =
+           match arg_type with
+           | None -> None
+           | Some ty -> Some (scope_type_expr ctx params_env ty) in
+         (arg_name, scoped_arg_ty)
+        ) in
        let scoped_proof = scope_proof ctx env proof in
        { tp with
          Parsetree.ast_desc =
-           Parsetree.TP_measure (scoped_expr, scoped_args, scoped_proof) }
-   | Parsetree.TP_order (expr, args, proof) ->
+           Parsetree.TP_measure (scoped_expr, scoped_arg, scoped_proof) }
+   | Parsetree.TP_order (expr, (arg_name, arg_type), proof) ->
        let scoped_expr = scope_expr ctx env expr in
-       let scoped_args =
-         List.map
-           (fun (arg_name, arg_type) ->
-             if not
-                 (can_be_scoped_as_local_p
-                    ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
-               raise
-                 (Structural_termination_only_on_fun_arg
-                    (tp.Parsetree.ast_loc, arg_name));
-             let scoped_arg_ty =
-               match arg_type with
-                | None -> None
-                | Some ty -> Some (scope_type_expr ctx params_env ty) in
-             (arg_name, scoped_arg_ty))
-           args in
+       let scoped_args = (
+         if not
+             (can_be_scoped_as_local_p
+                ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
+           raise
+             (Structural_termination_only_on_fun_arg
+                (tp.Parsetree.ast_loc, arg_name)) ;
+         let scoped_arg_ty =
+           match arg_type with
+           | None -> None
+           | Some ty -> Some (scope_type_expr ctx params_env ty) in
+         (arg_name, scoped_arg_ty)
+        ) in
        let scoped_proof = scope_proof ctx env proof in
        { tp with
          Parsetree.ast_desc =

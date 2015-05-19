@@ -893,9 +893,9 @@ termination_proof:
     { mk_annot $1 (TP_structural $3) }
   | opt_annot LEXICOGRAPHIC expr_comma_list ON param_list proof
     { mk_annot $1 (TP_lexicographic ($3, $5, $6)) }
-  | opt_annot MEASURE expr ON param_list proof
+  | opt_annot MEASURE expr ON param proof
     { mk_annot $1 (TP_measure ($3, $5, $6)) }
-  | opt_annot ORDER expr ON param_list proof
+  | opt_annot ORDER expr ON param proof
     { mk_annot $1 (TP_order ($3, $5, $6)) }
 ;
 
