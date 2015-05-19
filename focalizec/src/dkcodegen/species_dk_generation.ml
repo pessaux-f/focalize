@@ -2195,7 +2195,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
               | Species_record_type_dk_generation.SMS_from_record ->
                  assert false (* We never construct Hypothesis from record *)
             in
-            Format.fprintf out_fmter "%%%%begin-hypothesis: %s%a :@ "
+            Format.fprintf out_fmter "%%%%begin-hypothesis: %s%a :@ dk_logic.eP ("
               prefix
               Parsetree_utils.pp_vname_with_operators_expanded vname;
             Species_record_type_dk_generation.generate_logical_expr
@@ -2204,7 +2204,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
               ~recursive_methods_status:
               Species_record_type_dk_generation.RMS_regular
               env lexpr ;
-            Format.fprintf out_fmter "@\n%%%%end-hypothesis@\n")
+            Format.fprintf out_fmter ")@\n%%%%end-hypothesis@\n")
          (List.rev !section_variable_list);
        Format.fprintf out_fmter
          "@\n@\n@\n(; Methods to use for automated proof. ;)@\n";
@@ -2247,7 +2247,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
        Format.fprintf out_fmter "(; Theorem's body. ;)@\n";
-       Format.fprintf out_fmter "%a :@\n"
+       Format.fprintf out_fmter "%a : dk_logic.eP (@\n"
          Parsetree_utils.pp_vname_with_operators_expanded aim_name;
        (* Generate the aim depending on if we are in a regular proof or in the
           initial stage of a termination proof. *)
@@ -2264,7 +2264,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
             Format.fprintf out_fmter
               "@ (; Termination proof ignored in Dedukti output ;)"
        ) ;
-       Format.fprintf out_fmter ".@\n" ;
+       Format.fprintf out_fmter ").@\n" ;
        (* End of Zenon stuff. *)
        Format.fprintf out_fmter "%%%%end-auto-proof@\n";
        (* Now, let's print the theorem/lemma and prove it unless we are at
