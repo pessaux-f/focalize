@@ -200,8 +200,8 @@ let compile_coq input_file_name =
 
 let compile_zdk input_file_name =
   let cmd =
-    Printf.sprintf "%s -verbose -idedukti -zenon %s -new %s %s.zv && mv %s.v %s"
-      Installation.zvtov_compiler Installation.zenon_compiler
+    Printf.sprintf "%s -verbose -idedukti -new %s %s.zv && mv %s.v %s"
+      Installation.zvtov_compiler (* Installation.zenon_compiler *)
       (Configuration.get_zvtov_extra_opts ())
       input_file_name
       input_file_name (Filename.basename input_file_name)
