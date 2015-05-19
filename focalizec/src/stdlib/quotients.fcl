@@ -54,7 +54,7 @@ species Represented_by (S is Basic_object) =
 
   theorem correct_rep_spec : all x : Self,
      !correct_representation (x) <-> !represents_some_self (!to_rep (x))
-     proof = assumed (* ASSUMED by definition of correct_representation *)
+     proof = assumed (* ASSUMED (bug in type aliases) by definition of correct_representation *)
   ;
 
   (** Combining to_rep and from_rep gives identity. *)
@@ -63,12 +63,12 @@ species Represented_by (S is Basic_object) =
   (** Since we provide an injection to s from_rep is a surjection. *)
   theorem from_rep_is_surjective : all x : Self, ex y : S,
     !equal (!from_rep (y), x)
-  proof = assumed
-(* ASSUMED   <1>1 assume x : Self, *)
-(* ASSUMED        prove !equal (!from_rep (x), x) *)
-(* ASSUMED        by property to_rep_reverses *)
+  proof =
+   <1>1 assume x : Self,
+        prove !equal (!from_rep (x), x)
+        assumed (* ASSUMED (bug in type aliases) by property to_rep_reverses *)
 (* ASSUMED        definition of to_rep *)
-(* ASSUMED   <1>f conclude *)
+   <1>f qed assumed (* ASSUMED (bug in type aliases) conclude *)
   ;
 
   (** Every element of Self should verify an invariant. *)
@@ -176,13 +176,13 @@ species Represented_by_setoid (S is Setoid) =
          prove S!equal (!from_rep (!to_rep (x)), x)
          <2>1 prove S!equal (!from_rep (x), x)
               <3>1 prove !correct_representation (x)
-                   assumed (* ASSUMED by property !correct_invariant *)
+                   assumed (* ASSUMED (bug in type aliases) by property !correct_invariant *)
               <3>2 prove !represents_some_self (!to_rep (x))
-                   assumed (* ASSUMED by step <3>1 property !correct_rep_spec *)
-              <3>f qed assumed (* ASSUMED by step <3>2
-ASSUMED                          definition of represents_some_self, to_rep *)
-         <2>f qed assumed (* ASSUMED by step <2>1 definition of to_rep *)
-     <1>f qed assumed (* ASSUMED by step <1>1 definition of equal *)
+                   assumed (* ASSUMED (bug in type aliases) by step <3>1 property !correct_rep_spec *)
+              <3>f qed assumed (* ASSUMED (bug in type aliases) by step <3>2 *)
+(* ASSUMED                          definition of represents_some_self, to_rep *)
+         <2>f qed assumed (* ASSUMED (bug in type aliases) by step <2>1 definition of to_rep *)
+     <1>f qed assumed (* ASSUMED (bug in type aliases) by step <1>1 definition of equal *)
   ;
 
 end
@@ -229,12 +229,12 @@ species Quotient_set (S is Setoid,
   theorem sample_is_reduced: !correct_representation (!element)
     proof =
     <1>1 prove !represents_some_self (!element)
-         <2>1 prove S!equal (Proj!reduce (!element), !element) assumed (*
-ASSUMED              by property Proj!reduce_is_projection, S!equal_symmetric
-ASSUMED              definition of element *)
-         <2>f qed assumed (* ASSUMED by step <2>1
+         <2>1 prove S!equal (Proj!reduce (!element), !element)
+              by property Proj!reduce_is_projection, S!equal_symmetric
+              definition of element
+         <2>f qed assumed (* ASSUMED (type error) by step <2>1
 ASSUMED                  definition of represents_some_self, from_rep *)
-    <1>2 qed assumed (* ASSUMED by step <1>1
+    <1>2 qed assumed (* ASSUMED (type error) by step <1>1
 ASSUMED                definition of to_rep, correct_representation *)
     ;
 end
@@ -249,9 +249,9 @@ species Singleton =
   let element = basics#();
   let equal (_x, _y) = true;
 
-  proof of equal_reflexive = assumed; (* ASSUMED by definition of equal; *)
-  proof of equal_symmetric = assumed; (* ASSUMED by definition of equal; *)
-  proof of equal_transitive = assumed; (* ASSUMED by definition of equal; *)
+  proof of equal_reflexive = assumed (* ASSUMED (bad dependency on Rep) by definition of equal *);
+  proof of equal_symmetric = assumed (* ASSUMED (bad dependency on Rep) by definition of equal *);
+  proof of equal_transitive = assumed (* ASSUMED (bad dependency on Rep) by definition of equal *);
 end
 ;;
 

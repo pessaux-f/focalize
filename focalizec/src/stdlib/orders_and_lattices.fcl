@@ -275,32 +275,32 @@ species Ordered_set_as_meet_semi_lattice =
 
   let inf (x, y) = if !leq (x, y) then x else y;
 
-  proof of leq_refines_order_inf = assumed
-(* ASSUMED   by property leq_reflexive, leq_extends_equal *)
-(* ASSUMED      definition of inf, order_inf *)
+  proof of leq_refines_order_inf =
+   by property leq_reflexive, leq_extends_equal
+      definition of inf, order_inf
   ;
 
-  proof of inf_left_substitution_rule = assumed
-(* ASSUMED    by property equal_reflexive, equal_symmetric, *)
-(* ASSUMED                leq_reflexive, leq_extends_equal, leq_transitive *)
-(* ASSUMED       definition of inf *)
+  proof of inf_left_substitution_rule =
+    by property equal_reflexive, equal_symmetric,
+                leq_reflexive, leq_extends_equal, leq_transitive
+       definition of inf
   ;
 
-  proof of inf_idempotent = assumed
-(* ASSUMED    by property equal_reflexive *)
-(* ASSUMED       definition of inf *)
+  proof of inf_idempotent =
+    by property equal_reflexive
+       definition of inf
   ;
 
-  proof of inf_is_associative = assumed
-(* ASSUMED    by property equal_reflexive, leq_transitive, total_order *)
-(* ASSUMED       definition of inf *)
+  proof of inf_is_associative =
+    by property equal_reflexive, leq_transitive, total_order
+       definition of inf
   ;
 
   theorem order_inf_refines_leq : all x y : Self,
     !leq (x, y) -> !order_inf (x, y)
-    proof = assumed
-(* ASSUMED      by property total_order, total_order, leq_antisymmetric *)
-(* ASSUMED         definition of inf, order_inf *)
+    proof =
+       by property total_order, total_order, leq_antisymmetric
+         definition of inf, order_inf
   ;
 
   proof of inf_commutes =
@@ -308,42 +308,42 @@ species Ordered_set_as_meet_semi_lattice =
         prove !equal (!inf (x, y), !inf (y, x))
         <2>1 hypothesis Hxy : !leq (x, y),
              prove !equal (!inf (x, y), !inf (y, x))
-             <3>1 prove !equal (x, !inf (x, y)) assumed (*
-ASSUMED                  by hypothesis Hxy
-ASSUMED                     property equal_reflexive
-ASSUMED                     definition of inf *)
+             <3>1 prove !equal (x, !inf (x, y))
+                  by hypothesis Hxy
+                     property equal_reflexive
+                     definition of inf
              <3>2 prove !equal (x, !inf (y, x))
                   <4>1 hypothesis Hyx : !leq (y, x),
                        prove !equal (x, !inf (y, x))
                        <5>1 prove !equal (x, y)
                             by hypothesis Hxy, Hyx
                                property leq_antisymmetric
-                        <5>2 prove !equal (y, !inf (y, x)) assumed (*
-ASSUMED                             by hypothesis Hyx
-ASSUMED                                property equal_reflexive
-ASSUMED                                definition of inf *)
-                        <5>f qed assumed (*
-ASSUMED                             by step <5>1, <5>2
-ASSUMED                                property equal_transitive *)
+                        <5>2 prove !equal (y, !inf (y, x))
+                             by hypothesis Hyx
+                                property equal_reflexive
+                                definition of inf
+                        <5>f qed
+                             by step <5>1, <5>2
+                                property equal_transitive, inf
                   <4>2 hypothesis H : ~ (!leq (y, x)),
                         prove !equal (x, !inf (y, x))
-                        assumed (* ASSUMED by hypothesis H
-ASSUMED                           property equal_reflexive
-ASSUMED                           definition of inf *)
-                  <4>f qed by step <4>1, <4>2
+                        by hypothesis H
+                           property equal_reflexive
+                           definition of inf
+                  <4>f qed by step <4>1, <4>2 property inf
              <3>f qed
                   by step <3>1, <3>2
-                     property equal_symmetric, equal_transitive
+                     property equal_symmetric, equal_transitive, inf
         <2>2 hypothesis Hyx : !leq (y, x),
              prove !equal (!inf (x, y), !inf (y, x))
              (* [rr]: could do as <2>1 above, but zenon is wiser *)
-             assumed (* ASSUMED by hypothesis Hyx
-ASSUMED                property equal_reflexive, leq_antisymmetric
-ASSUMED                definition of inf *)
+             by hypothesis Hyx
+                property equal_reflexive, leq_antisymmetric
+                definition of inf
         <2>f qed
              by step <2>1, <2>2
-                property total_order
-   <1>2 qed conclude
+                property total_order, inf
+   <1>2 qed by step <1>1 property inf
   ;
 
 end
@@ -374,30 +374,30 @@ species Ordered_set_as_join_semi_lattice =
 
   let sup (x, y) = if !geq (x, y) then x else y;
 
-  proof of sup_idempotent = assumed
-(* ASSUMED    by property equal_reflexive *)
-(* ASSUMED       definition of sup *)
+  proof of sup_idempotent =
+    by property equal_reflexive
+       definition of sup
   ;
 
-  proof of geq_refines_order_sup = assumed
-(* ASSUMED    by property geq_reflexive, geq_extends_equal *)
-(* ASSUMED       definition of sup, order_sup *)
+  proof of geq_refines_order_sup =
+    by property geq_reflexive, geq_extends_equal
+       definition of sup, order_sup
   ;
 
-  proof of sup_commutes = assumed
-(* ASSUMED    by property equal_reflexive, leq_antisymmetric, total_order *)
-(* ASSUMED       definition of sup, geq *)
+  proof of sup_commutes =
+    by property equal_reflexive, leq_antisymmetric, total_order
+       definition of sup, geq
   ;
 
-  proof of sup_is_associative = assumed
-(* ASSUMED    by property equal_reflexive, leq_transitive, total_order *)
-(* ASSUMED       definition of sup, geq *)
+  proof of sup_is_associative =
+    by property equal_reflexive, leq_transitive, total_order
+       definition of sup, geq
   ;
 
-  proof of sup_left_substitution_rule = assumed
-(* ASSUMED    by property equal_reflexive, equal_symmetric, *)
-(* ASSUMED       leq_reflexive, leq_extends_equal, leq_transitive *)
-(* ASSUMED       definition of sup, geq *)
+  proof of sup_left_substitution_rule =
+    by property equal_reflexive, equal_symmetric,
+       leq_reflexive, leq_extends_equal, leq_transitive
+       definition of sup, geq
   ;
 
 end
@@ -430,47 +430,47 @@ species Ordered_set_as_lattice =
                    <4>1 prove !geq (y, x)
                         by hypothesis H
                            definition of geq
-                   <4>2 prove !equal (!sup (y, x), y) assumed (*
-ASSUMED                        by step <4>1
-ASSUMED                           property equal_reflexive
-ASSUMED                           definition of sup *)
+                   <4>2 prove !equal (!sup (y, x), y)
+                        by step <4>1
+                           property equal_reflexive, geq
+                           definition of sup
                    <4>f qed
                         by step <4>2
                            property sup_commutes,
-                                    equal_symmetric, equal_transitive
-              <3>2 prove !equal (x, !inf (x, y)) assumed (*
-ASSUMED                   by hypothesis H
-ASSUMED                      property equal_reflexive
-ASSUMED                      definition of inf *)
+                                    equal_symmetric, equal_transitive, sup
+              <3>2 prove !equal (x, !inf (x, y))
+                   by hypothesis H
+                      property equal_reflexive
+                      definition of inf
               <3>3 prove !equal (!inf (x, !sup (x, y)),
                                !inf (x, y))
 (* [rr]: loops?    by step <3>1 property !inf_substitution_rule, !equal_symmetric *)
                    by step <3>1
-                      property inf_right_substitution_rule, equal_symmetric
+                      property inf_right_substitution_rule, equal_symmetric, inf, sup
               <3>f qed
                    by step <3>3, <3>2
-                      property equal_symmetric, equal_transitive
+                      property equal_symmetric, equal_transitive, inf, sup
          <2>2 hypothesis H : !leq (y, x),
               prove !equal (x, !inf (x, !sup (x, y)))
               <3>1 prove !geq (x, y)
                    by hypothesis H
                       definition of geq
-              <3>2 prove !equal (x, !sup (x, y)) assumed (*
-ASSUMED                   by step <3>1
-ASSUMED                      property equal_reflexive
-ASSUMED                      definition of sup *)
+              <3>2 prove !equal (x, !sup (x, y))
+                   by step <3>1
+                      property equal_reflexive, geq
+                      definition of sup
               <3>3 prove !equal (!inf (x, !sup (x, y)),
                                !inf (x, x))
                    by step <3>2
-                      property inf_right_substitution_rule, equal_symmetric
+                      property inf_right_substitution_rule, equal_symmetric, inf, sup
               <3>f qed
                  by step <3>2, <3>3
                     property inf_idempotent,
-                             equal_symmetric, equal_transitive
+                             equal_symmetric, equal_transitive, inf, sup
          <2>f qed
             by step <2>1, <2>2
-               property total_order
-    <1>f qed conclude
+               property total_order, inf, sup
+    <1>f qed by step <1>1 property inf, sup
 
    ;
 
@@ -481,31 +481,31 @@ ASSUMED                      definition of sup *)
          <2>1 hypothesis H : !leq (x, y),
               prove !equal (x, !sup (x, !inf (x, y)))
               <3>1 prove !equal (x, !inf (x, y))
-                   assumed (* ASSUMED by hypothesis H property equal_reflexive definition of inf *)
+                   by hypothesis H property equal_reflexive definition of inf
               <3>2 prove !equal (!sup (x, !inf (x, y)),
                                 !sup (x, x))
                          by step <3>1
-                         property sup_right_substitution_rule, equal_symmetric
+                         property sup_right_substitution_rule, equal_symmetric, inf, sup
               <3>f qed by step <3>2
                           property sup_idempotent, equal_reflexive,
-                          equal_symmetric, equal_transitive
+                          equal_symmetric, equal_transitive, inf, sup
          <2>2 hypothesis H : !leq (y, x),
               prove !equal (x, !sup (x, !inf (x, y)))
               <3>2 prove !equal (!sup (x, y), !sup (x, !inf (x, y)))
-                   <4>1 prove !equal (y, !inf (y, x)) assumed (*
-ASSUMED                        by hypothesis H property equal_reflexive
-ASSUMED                        definition of inf *)
+                   <4>1 prove !equal (y, !inf (y, x))
+                        by hypothesis H property equal_reflexive
+                        definition of inf
                    <4>2 prove !equal (y, !inf (x, y))
                         by step <4>1 property inf_commutes,
-                           equal_transitive, equal_symmetric
-                   <4>f qed assumed (* ASSUMED by step <4>2 property sup_right_substitution_rule *)
-              <3>3 prove !equal (!sup (x, y), x) assumed (*
-ASSUMED                   by hypothesis H property equal_reflexive
-ASSUMED                      definition of sup, geq *)
+                           equal_transitive, equal_symmetric, inf
+                   <4>f qed by step <4>2 property sup_right_substitution_rule, inf, sup
+              <3>3 prove !equal (!sup (x, y), x)
+                   by hypothesis H property equal_reflexive
+                      definition of sup, geq
               <3>f qed by step <3>2,  <3>3
-                       property equal_symmetric, equal_transitive
-         <2>f qed by step <2>1, <2>2 property total_order
-    <1>f qed conclude
+                       property equal_symmetric, equal_transitive, inf, sup
+         <2>f qed by step <2>1, <2>2 property total_order, inf, sup
+    <1>f qed by step <1>1 property inf, sup
     ;
 
 end

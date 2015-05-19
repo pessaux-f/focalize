@@ -69,10 +69,10 @@ open "sets";;
   let leq(x, y) = !lt(x, y) || syntactic_equal(x, y);
 
   theorem lt_refines_leq: all x y : Self, !lt(x, y) -> !leq(x, y)
-    proof = assumed ; (* ASSUMED by definition of leq; *)
+    proof = by definition of leq;
 
   theorem leq_reflexive : all x : Self, !leq(x, x)
-    proof = assumed ; (* ASSUMED by definition of leq; *)
+    proof = assumed (* ASSUMED (uses coq_builtins.zenon_not_syntactic_equal) by definition of leq *);
 
   theorem leq_antisymmetric: all x y : Self,
     !leq(x, y) -> !leq(y, x) -> !equal(x, y)
@@ -86,15 +86,15 @@ open "sets";;
                    property !lt_is_transitive, !lt_is_irreflexive
            <2>2 hypothesis HH_xy: !lt(x, y) /\ syntactic_equal(y, x),
                 prove !equal(x, y)
-                assumed (* ASSUMED by hypothesis HH_xy property !equal_reflexive, !equal_symmetric *)
+                assumed (* ASSUMED (uses coq_builtins.zenon_not_syntactic_equal) by hypothesis HH_xy property !equal_reflexive, !equal_symmetric *)
            <2>3 hypothesis HH_xy: syntactic_equal(x, y) /\ !lt(y, x),
-                prove !equal(x, y) assumed (* ASSUMED by hypothesis HH_xy property equal_reflexive *)
+                prove !equal(x, y) assumed (* ASSUMED (uses coq_builtins.zenon_not_syntactic_equal) by hypothesis HH_xy property equal_reflexive *)
            <2>4 hypothesis HH_xy: syntactic_equal(x, y) /\ syntactic_equal(y, x),
-                prove !equal(x, y) assumed (* ASSUMED by hypothesis HH_xy property !equal_reflexive *)
-           <2>5 qed assumed (* ASSUMED by step <2>1, <2>2, <2>3, <2>4
-                    ASSUMED   hypothesis H_xy, H_yx
-                    ASSUMED   definition of leq *)
-      <1>f qed conclude
+                prove !equal(x, y) assumed (* ASSUMED (uses coq_builtins.zenon_not_syntactic_equal) by hypothesis HH_xy property !equal_reflexive *)
+           <2>5 qed assumed (* ASSUMED (uses coq_builtins.zenon_not_syntactic_equal) by step <2>1, <2>2, <2>3, <2>4 *)
+(* ASSUMED                       hypothesis H_xy, H_yx *)
+(* ASSUMED                       definition of leq *)
+      <1>f qed by step <1>1 property leq
   ;
 
   theorem leq_transitive: all x y z : Self,
@@ -108,17 +108,17 @@ open "sets";;
                 by hypothesis H property !lt_is_transitive
            <2>2 hypothesis  H: (!lt(x, y) /\ syntactic_equal(y, z)),
                 prove !lt(x, z)
-                assumed (* ASSUMED by hypothesis H *)
+                assumed (* ASSUMED (uses coq_builtins.zenon_not_syntactic_equal) by hypothesis H *)
            <2>3 hypothesis  H: (syntactic_equal(x, y) /\ !lt(y, z)),
                 prove !lt(x, z)
-                assumed (* ASSUMED by hypothesis H *)
+                assumed (* ASSUMED (uses coq_builtins.zenon_not_syntactic_equal) by hypothesis H *)
            <2>4 hypothesis  H: (syntactic_equal(x, y) /\ syntactic_equal(y, z)),
                 prove !equal(x, z)
-                assumed (* ASSUMED by hypothesis H property !equal_transitive, !equal_reflexive *)
-           <2>f qed assumed (* ASSUMED by step <2>1, <2>2, <2>3, <2>4
-                       hypothesis H_xy, H_yz
-                       definition of leq *)
-      <1>f qed conclude
+                assumed (* ASSUMED (uses coq_builtins.zenon_not_syntactic_equal) by hypothesis H property !equal_transitive, !equal_reflexive *)
+           <2>f qed assumed (* ASSUMED (uses coq_builtins.zenon_not_syntactic_equal) by step <2>1, <2>2, <2>3, <2>4 *)
+(* ASSUMED                       hypothesis H_xy, H_yz *)
+(* ASSUMED                       definition of leq *)
+      <1>f qed by step <1>1 property leq
   ;
 
 end
@@ -153,9 +153,9 @@ species Syntactical_setoid =
 
   property equal_is_syntactic: all x y : Self, !equal(x, y ) -> x = y;
 
-  proof of equal_symmetric = assumed; (* ASSUMED by property !equal_reflexive, !equal_is_syntactic; *)
+  proof of equal_symmetric = assumed (* ASSUMED by property !equal_reflexive, !equal_is_syntactic *); (* Fatal error: exception File "lltodk.ml", line 818, characters 8-14: Assertion failed *)
 
-  proof of equal_transitive = assumed; (* ASSUMED by property !equal_reflexive, !equal_is_syntactic; *)
+  proof of equal_transitive = assumed (* ASSUMED by property !equal_reflexive, !equal_is_syntactic *); (* Fatal error: exception File "lltodk.ml", line 818, characters 8-14: Assertion failed *)
 
 
 end;;
@@ -168,40 +168,39 @@ species Strictly_ordered_set =
 
   theorem leq_from_lt: all x y : Self,
     !leq(x, y) <-> (!lt(x, y) \/ syntactic_equal(x, y))
-    proof = assumed; (* ASSUMED by definition of leq; *)
+    proof = by definition of leq;
 
   (** An ordering is total if the &leq; relation is complete *)
   property total_order: all x y : Self,
     !leq(x, y) \/ leq(y, x);
 
-  proof of different_is_complete = assumed (*
-ASSUMED    by property leq_from_lt, !different_is_not_same,
-ASSUMED                !total_order,
-ASSUMED                !lt_is_irreflexive, !lt_is_transitive
-ASSUMED       definition of different *)
+  proof of different_is_complete = assumed (* exhausted search space without finding a proof *)
+(* ASSUMED    by property leq_from_lt, !different_is_not_same, *)
+(* ASSUMED                !total_order, *)
+(* ASSUMED                !lt_is_irreflexive, !lt_is_transitive *)
+(* ASSUMED       definition of different *)
   ;
-  proof of same_is_not_different = by property different_is_not_same;
 
-  theorem different_is_syntactic: all x y : Self, ~(x = y) -> different(x, y)
+  theorem different_is_syntactic: all x y : Self, (~(x = y)) -> different(x, y)
     proof =
     <1>1 assume x : Self, y : Self,
          hypothesis  D_xy: ~(x = y),
          prove !different(x, y)
          <3>1 hypothesis  L_xy: !leq(x, y),
-              prove !lt(x, y)
-              assumed (* ASSUMED by hypothesis D_xy, L_xy
-ASSUMED                 property leq_from_lt, lt_is_irreflexive *)
+              prove !lt(x, y) assumed (* Fatal error: exception File "lltodk.ml", line 818, characters 8-14: Assertion failed *)
+(* ASSUMED              by hypothesis D_xy, L_xy *)
+(* ASSUMED                 property leq_from_lt, lt_is_irreflexive *)
          <3>2 hypothesis  L_yx: !leq(y, x),
-              prove !lt(y, x)
-              assumed (* ASSUMED by hypothesis L_yx, D_xy
-ASSUMED                 property leq_from_lt, lt_is_irreflexive *)
-         <3>f qed assumed (* ASSUMED by step <3>1, <3>2
-ASSUMED                     property different_is_symmetric, !total_order
-ASSUMED                     definition of different *)
-    <1>f qed assumed (* ASSUMED conclude *);
+              prove !lt(y, x) assumed (* Fatal error: exception File "lltodk.ml", line 818, characters 8-14: Assertion failed *)
+(* ASSUMED              by hypothesis L_yx, D_xy *)
+(* ASSUMED                 property leq_from_lt, lt_is_irreflexive *)
+         <3>f qed by step <3>1, <3>2
+                     property different_is_symmetric, !total_order
+                     definition of different
+    <1>f qed by step <1>1 property different;
 
-  proof of equal_is_syntactic = assumed;
-(* ASSUMED    by property different_is_syntactic, different_is_not_same; *)
+  proof of equal_is_syntactic =
+    by property different_is_syntactic, different_is_not_same;
 
 end
 ;;

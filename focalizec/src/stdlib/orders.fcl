@@ -185,10 +185,8 @@ species Partial_order =
                            property !lt_refines_different
                    <4>f qed by step <4>4, <4>5
                                property same_is_not_different
-              <3>f qed assumed (* ASSUMED by step <3>1   (Error while translating from LL to LK, :  | (Is_true false) |
-Fatal error: exception File "llmtolk.ml", line 698, characters 4-10: Assertion failed
-)
-                                  ASSUMED property !same_is_not_different, !equal_symmetric *)
+              <3>f qed by step <3>1
+                          property !same_is_not_different, !equal_symmetric
          <2>f qed by step <2>1, <2>2 property !lt_is_leq_and_different
     <1>f conclude
   ;

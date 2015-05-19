@@ -113,8 +113,8 @@ species Sum_set(A is Setoid, B is Setoid) =
       (!second_case(x) /\
        !second_case(y) /\
         B!equal(!second_term(x), !second_term(y))))
-    proof = assumed; (* ASSUMED by property !case_exclusive (Fatal error: exception Invalid_argument("ret_bool_to_prop")) *)
-(* ASSUMED              definition of equal; *)
+    proof = assumed (* ASSUMED (Fatal error: exception File "lltodk.ml", line 818, characters 8-14: Assertion failed) by property !case_exclusive *)
+(* ASSUMED              definition of equal *);
 
   (** Since equality is defined, we prove its reflexity *)
   proof of equal_reflexive =
@@ -172,8 +172,8 @@ species Sum_set(A is Setoid, B is Setoid) =
                 by step <2>1, <2>2
                    hypothesis H
                    property A!equal_transitive, A!equal_symmetric
-           <2>f qed assumed (* ASSUMED by step <2>3, <2>4, <2>5 definition of equal *)
-      <1>f qed conclude;
+           <2>f qed assumed (* ASSUMED (Fatal error: exception File "lltodk.ml", line 818, characters 8-14: Assertion failed) by step <2>3, <2>4, <2>5 definition of equal *)
+      <1>f qed by step <1>1 property equal;
 
 
   (**
@@ -242,10 +242,10 @@ species Sum_set(A is Setoid, B is Setoid) =
                 by step <2>1, <2>2
                    hypothesis H
                    property B!equal_transitive, B!equal_symmetric
-           <2>f qed assumed (* ASSUMED by step <2>3, <2>4, <2>5
-ASSUMED                       property !case_complete, !case_exclusive
-ASSUMED                       definition of equal *)
-      <1>f qed conclude;
+           <2>f qed assumed (* ASSUMED (Fatal error: exception File "lltodk.ml", line 818, characters 8-14: Assertion failed) by step <2>3, <2>4, <2>5 *)
+(* ASSUMED                       property !case_complete, !case_exclusive *)
+(* ASSUMED                       definition of equal *)
+      <1>f qed by step <1>1 property equal;
 
   (**
      A classical theorem from category theory says that there exists
@@ -394,9 +394,9 @@ species Categorical_sum_property
                    by hypothesis H_x, H
                       property S!first_term_substitution_rule
               <3>f qed by step <3>1 property M_a!morph_substitution_rule
-         <2>f qed assumed (* ASSUMED by step <2>1, <2>2 hypothesis H_x (Fatal error: exception File "llmtolk.ml", line 556, characters 3-9: Assertion failed)
-ASSUMED                     definition of morph *)
-     <1>f qed conclude;
+         <2>f qed by step <2>1, <2>2 hypothesis H_x
+                     definition of morph
+     <1>f qed by step <1>1 property morph;
 
   theorem morph_second_substitution_rule: all x y : S,
     S!equal(x, y) -> S!second_case(x) -> E!equal(!morph(x), !morph(y))
@@ -415,11 +415,11 @@ ASSUMED                     definition of morph *)
                       property S!second_term_substitution_rule
               <3>f qed
                    by step <3>1 property M_b!morph_substitution_rule
-         <2>f qed assumed (*
-ASSUMED              by step <2>1, <2>2 hypothesis H_x
-ASSUMED                     property S!case_exclusive, S!case_complete
-ASSUMED                     definition of morph *)
-     <1>f qed conclude;
+         <2>f qed
+              by step <2>1, <2>2 hypothesis H_x
+                     property S!case_exclusive, S!case_complete
+                     definition of morph
+     <1>f qed by step <1>1 property morph;
 
 
 
