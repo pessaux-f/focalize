@@ -16,7 +16,7 @@ type termination_expr_kind =
   | TEK_measure of Parsetree.expr
 
 type order_kind =
-  | OK_expr of (termination_expr_kind * (int list))
+  | OK_expr of (termination_expr_kind * int)
   | OK_wfounded of
       (Parsetree.vname *
        (Parsetree.vname list) *

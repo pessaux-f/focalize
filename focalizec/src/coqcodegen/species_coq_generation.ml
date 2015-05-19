@@ -1868,9 +1868,9 @@ type zenon_statement_generation_method =
   | ZSGM_from_termination_lemma of
       (Rec_let_gen.termination_expr_kind *  (** Expression representing the
           measure or theorder. *)
-       (int list) *      (** Indices of the recursive function parameters
-           applied to the order/measure expression. This list will serve to
-           identify which of them will have to be passed to the user-order. *)
+        int *      (** Index of the recursive function parameter
+           applied to the order/measure expression. This index will serve to
+           identify which one will have to be passed to the user-order. *)
        Recursion.recursive_calls_description)
 ;;
 
@@ -1974,11 +1974,10 @@ and emit_zenon_theorem_for_proof ~in_nested_proof ctx print_ctx env min_coq_env
         ~self_methods_status: Species_record_type_generation.SMS_abstracted
         ~recursive_methods_status: Species_record_type_generation.RMS_regular
         ctx env aim
-  | ZSGM_from_termination_lemma (expr, used_params_indices, rec_calls) ->
+  | ZSGM_from_termination_lemma (expr, used_param_index, rec_calls) ->
       Rec_let_gen.generate_termination_lemmas
         ctx print_ctx env
-        ~explicit_order:
-          (Rec_let_gen.OK_expr (expr, used_params_indices))
+        ~explicit_order: (Rec_let_gen.OK_expr (expr, used_param_index))
         rec_calls ;
       (match expr with
       | Rec_let_gen.TEK_order e ->
@@ -2971,13 +2970,16 @@ let generate_termination_proof_for_Function ctx print_ctx env ~self_manifest
          Handy.list_indices_of_present_in
            ~all: (List.map fst fun_params_n_tys)
            ~subset: (List.map fst used_params) in
+       (* Syntactically, there can be one and only one used parameter. *)
+       assert (List.length used_params_indices = 1) ;
+       let used_param_index = List.hd used_params_indices in
        generate_theorem_section_if_by_zenon
          ctx print_ctx env
          ai.Env.TypeInformation.ad_min_coq_env ~self_manifest
          ai.Env.TypeInformation.ad_used_species_parameter_tys
          sorted_deps_from_params generated_fields name
          (ZSGM_from_termination_lemma
-            (order_expr, used_params_indices, recursive_calls)) proof
+            (order_expr, used_param_index, recursive_calls)) proof
       )) ;
   (* Generate the Variables and Definitions for our dependencies. Since we
       are under a Section, do not lambda-lift. *)

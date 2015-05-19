@@ -449,13 +449,13 @@ type termination_expr_kind =
     the "user order" or the "user measure". In the second we are dealing
     with the real "Function" order, i.e. the one that Function needs. *)
 type order_kind =
-  | OK_expr of (termination_expr_kind * (int list)) (** Case of the
-         "user-order". It only deals with the function's arguments involved in
+  | OK_expr of (termination_expr_kind * int) (** Case of the
+         "user-order". It only deals with the function's argument involved in
          the decreasing of the recursing. The user specifies his order on only
-         the arguments he is interested in. So the order to generate is
+         the unique argument he is interested in. So the order to generate is
          directly coming from the expression given as "order" by the user. The
-         int list is the list of indices of the function's parameters used by
-         this "user-order". *)
+         int is the indiex of the function's parameter used by this
+         "user-order". *)
   | OK_wfounded of   (** Case of the "Function-order", i.e. the one that the
          Coq construct Function expects to prove correct recursive definition.
          This order uses all the arguments of the function and is made of
@@ -532,7 +532,7 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
          [~explicit_order]. In case of "Function-" order, we have to apply it
          to its arguments coming from to lambda-liftings. *)
       (match explicit_order with
-       | OK_expr ((TEK_order expr_order), rec_fun_used_args_indices) ->
+       | OK_expr ((TEK_order expr_order), rec_fun_used_arg_index) ->
            (* Case of a proof by an order.
               Surround by a Is_true since the user order can only be a
               function returning a bool, hence must be plunged into Prop. *)
@@ -544,14 +544,10 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
              ~recursive_methods_status:
                Species_record_type_generation.RMS_regular env expr_order ;
            Format.fprintf out_fmter "@])@ " ;
-           (* Now, generate the tuples of only arguments used in the order
-              given by the user to provide to this order. *)
-(* [Unsure] considered orders only compare 2 simple arguments, not a tuple. *)
-           if (List.length rec_fun_used_args_indices) <> 1 then
-             failwith "TODO: order/measure using several arguments" ;
-           let index = List.hd rec_fun_used_args_indices in
-           let rec_arg = List.nth rec_args index in
-           let initial_var = List.nth initial_vars index in
+           (* Now, generate the only argument used in the order given by the
+              user to provide to this order. *)
+           let rec_arg = List.nth rec_args rec_fun_used_arg_index in
+           let initial_var = List.nth initial_vars rec_fun_used_arg_index in
            (* Generate the corresponding recursive call argument. *)
            Species_record_type_generation.generate_expr
              ctx ~in_recursive_let_section_of: [] ~local_idents: []
@@ -565,7 +561,7 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
              (fst initial_var) ;
            (* Close the surrounding Is_true. *)
            Format.fprintf out_fmter "@])"
-       | OK_expr ((TEK_measure expr_mea), rec_fun_used_args_indices) ->
+       | OK_expr ((TEK_measure expr_mea), rec_fun_used_arg_index) ->
            (* Case of a proof by a measure.
               Surround by a Is_true since < returns a bool, hence must be
               plunged into Prop. *)
@@ -577,12 +573,8 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
                Species_record_type_generation.SMS_abstracted
              ~recursive_methods_status:
                Species_record_type_generation.RMS_regular env expr_mea ;
-(* [Unsure] considered orders only compare 2 simple arguments, not a tuple. *)
-           if (List.length rec_fun_used_args_indices) <> 1 then
-             failwith "TODO: order/measure using several arguments" ;
-           let index = List.hd rec_fun_used_args_indices in
-           let rec_arg = List.nth rec_args index in
-           let initial_var = List.nth initial_vars index in
+           let rec_arg = List.nth rec_args rec_fun_used_arg_index in
+           let initial_var = List.nth initial_vars rec_fun_used_arg_index in
            (* Put the first argument (recursive call argument). *)
            Format.fprintf out_fmter "@ " ;
            Species_record_type_generation.generate_expr
@@ -701,7 +693,7 @@ let print_user_binding_let binding =
     decreasing. This output is lighter than its Coq version because it outputs
     some Focal source code. *)
 let print_user_termination_obls fun_name recursive_calls user_order
-    rec_fun_used_args_indices =
+    rec_fun_used_arg_index =
   Format.eprintf
     "Termination proof obligations for the recursive function '%a':@\n"
     Sourcify.pp_vname fun_name ;
@@ -740,9 +732,9 @@ let print_user_termination_obls fun_name recursive_calls user_order
       (* Now, generate the tuples of only arguments used in the order
          given by the user to provide to this order. *)
 (* [Unsure] considered orders only compare 2 simple arguments, not a tuple. *)
-      if (List.length rec_fun_used_args_indices) <> 1 then
+      if (List.length rec_fun_used_arg_index) <> 1 then
         failwith "TODO: order/measure using several arguments" ;
-      let index = List.hd rec_fun_used_args_indices in
+      let index = List.hd rec_fun_used_arg_index in
       let rec_arg = List.nth rec_args index in
       let initial_var = List.nth initial_vars index in
       (* Generate the corresponding recursive call argument. *)
