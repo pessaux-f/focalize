@@ -71,6 +71,15 @@ FOCALIZE_VS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.v)
 FOCALIZE_VOS=$(FOCALIZE_VS:.v=.vo)
 FOCALIZE_VOS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.vo)
 
+FOCALIZE_ZSKS=$(FOCALIZE_SRC:.fcl=.sk.zv)
+FOCALIZE_ZSKS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.sk.zv)
+
+FOCALIZE_SKS=$(FOCALIZE_SRC:.fcl=.sk)
+FOCALIZE_SKS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.sk)
+
+FOCALIZE_DKOS=$(FOCALIZE_SKS:.sk=.dko)
+FOCALIZE_DKOS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.dko)
+
 FOCALIZE_DOCS=$(FOCALIZE_SRC:.fcl=.fcd)
 FOCALIZE_DOCS_UNSAFE=$(FOCALIZE_SRC_UNSAFE:.fcl=.fcd)
 
@@ -102,6 +111,7 @@ ZVTOV_COMP_FLAGS=-script -zenon $(ZENON_COMPILER) -new
 
 ZENON_LIB_DIR=../../../../zenon
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
+DK_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 
 lib: all
 
@@ -113,14 +123,16 @@ byt:\
  $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 bin:\
  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
  $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)\
+ $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\
@@ -155,6 +167,9 @@ install:
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
 	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
+	if [ "$(FOCALIZE_DKOS)" != "" ] ; then\
+	  $(CP) $(FOCALIZE_DKOS) $(INSTALL_LIB_DIR)/;\
+	fi &&\
 	if [ "$(EXTERNAL_CMIS)" != "" ] ; then\
 	  $(CP) $(EXTERNAL_CMIS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
@@ -169,17 +184,17 @@ install:
 	fi
 
 clean:
-	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS)
-	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE)
-	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv *.glob *.pfc *~ .*~ *.fo
+	$(RM) $(FOCALIZE_MLS) $(FOCALIZE_ZVS) $(FOCALIZE_VS) $(FOCALIZE_ZSKS) $(FOCALIZE_SKS)
+	$(RM) $(FOCALIZE_MLS_UNSAFE) $(FOCALIZE_ZVS_UNSAFE) $(FOCALIZE_VS_UNSAFE) $(FOCALIZE_ZSKS_UNSAFE) $(FOCALIZE_SKS_UNSAFE)
+	$(RM) *.cm* *.o *.a *.annot *.out *.output *.bin *.byt *.vo *.zv *.dko *.glob *.pfc *~ .*~ *.fo
 
 # Do not yet compile in Coq
 iterators.ml: iterators.fcl
-	$(FOCALIZEC) -no-stdlib-path -I $(STDLIB_DIR) -no-coq-code $<
+	$(FOCALIZEC) -no-stdlib-path -I $(STDLIB_DIR) -no-coq-code -no-dedukti-code $<
 small_integers.ml: small_integers.fcl
-	$(FOCALIZEC) -no-stdlib-path -I $(STDLIB_DIR) -no-coq-code $<
+	$(FOCALIZEC) -no-stdlib-path -I $(STDLIB_DIR) -no-coq-code -no-dedukti-code $<
 big_integers.ml: big_integers.fcl
-	$(FOCALIZEC) -no-stdlib-path -I $(STDLIB_DIR) -no-coq-code $<
+	$(FOCALIZEC) -no-stdlib-path -I $(STDLIB_DIR) -no-coq-code -no-dedukti-code $<
 #End temporary
 
 # Should be generated ?
