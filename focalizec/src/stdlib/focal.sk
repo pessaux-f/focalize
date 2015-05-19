@@ -331,7 +331,7 @@ zenon_focal_ite_bool :
                             (Not (Is_true thn)))
                        (Imp (Imp
                               (Not (Is_true cond))
-                              (Not (Is_true thn)))
+                              (Not (Is_true els)))
                             (Not
                               (Is_true
                                 (ifb cond thn els))))))))
@@ -503,10 +503,6 @@ zenon_focal_notistrue_false :
           (H : eP (Not (eqb false false)) =>
            G : eP (Not False) => H (refl false)).
 
-zenon_focal_eqdec (T : cc.uT) (x : cc.eT T) (y : cc.eT T)
-                  : eP (Or (equal T x y) (Not (equal T x y)))
-:= zen.xmid (equal T x y).
-
 zenon_focal_false_s := zenon_focal_false.
 zenon_focal_nottrue_s := zenon_focal_nottrue.
 zenon_focal_trueequal_s (x : Bool)
@@ -668,3 +664,19 @@ zenon_focal_ite_rel_nr_s (A : cc.uT)
                          (h2 : eP (Not (Is_true cond)) -> eP (NotNot (r e1 els)))
 := zenon_focal_ite_rel_nr A B r e1 cond thn els h1 h2 c.
 
+
+
+
+syntactic_equal := dk_builtins.eq.
+
+zenon_syntactic_equal : A : cc.uT ->
+                        x : cc.eT A ->
+                        y : cc.eT A ->
+                        eP (Not (equal A x y)) ->
+                        eP (Not (Is_true (syntactic_equal A x y))).
+
+zenon_not_syntactic_equal : A : cc.uT ->
+                            x : cc.eT A ->
+                            y : cc.eT A ->
+                            eP (NotNot (equal A x y)) ->
+                            eP (NotNot (Is_true (syntactic_equal A x y))).
