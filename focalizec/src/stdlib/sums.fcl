@@ -113,7 +113,8 @@ species Sum_set(A is Setoid, B is Setoid) =
       (!second_case(x) /\
        !second_case(y) /\
         B!equal(!second_term(x), !second_term(y))))
-    proof = assumed (* ASSUMED (Fatal error: exception File "lltodk.ml", line 818, characters 8-14: Assertion failed) by property !case_exclusive *)
+    proof = assumed (* ASSUMED (Zenon error: exhausted search space without finding a proof
+) by property !case_exclusive *)
 (* ASSUMED              definition of equal *);
 
   (** Since equality is defined, we prove its reflexity *)
@@ -172,7 +173,7 @@ species Sum_set(A is Setoid, B is Setoid) =
                 by step <2>1, <2>2
                    hypothesis H
                    property A!equal_transitive, A!equal_symmetric
-           <2>f qed assumed (* ASSUMED (Fatal error: exception File "lltodk.ml", line 818, characters 8-14: Assertion failed) by step <2>3, <2>4, <2>5 definition of equal *)
+           <2>f qed by step <2>3, <2>4, <2>5 definition of equal
       <1>f qed by step <1>1 property equal;
 
 
@@ -242,9 +243,9 @@ species Sum_set(A is Setoid, B is Setoid) =
                 by step <2>1, <2>2
                    hypothesis H
                    property B!equal_transitive, B!equal_symmetric
-           <2>f qed assumed (* ASSUMED (Fatal error: exception File "lltodk.ml", line 818, characters 8-14: Assertion failed) by step <2>3, <2>4, <2>5 *)
-(* ASSUMED                       property !case_complete, !case_exclusive *)
-(* ASSUMED                       definition of equal *)
+           <2>f qed by step <2>3, <2>4, <2>5
+                       property !case_complete, !case_exclusive
+                       definition of equal
       <1>f qed by step <1>1 property equal;
 
   (**
