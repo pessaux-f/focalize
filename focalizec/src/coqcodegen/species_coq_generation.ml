@@ -2055,7 +2055,8 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
                 step.psa_lemma_name)
            available_steps ;
          Format.fprintf out_fmter
-           "unfold basics.well_wrapper.@\nintros.@\nSplitandAssumption.@\nQed.@\n"
+           "unfold basics.well_wrapper.@\nintros.@\n\
+            SplitandAssumption.@\nQed.@\n"
         )
        else Format.fprintf out_fmter "%s@\n" script
    | Parsetree.Pf_node nodes ->
@@ -2080,13 +2081,13 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
        rec_dump available_steps nodes
    | Parsetree.Pf_auto facts ->
        (* Generate Zenon's header. *)
-       Format.fprintf out_fmter "%%%%begin-auto-proof@\n";
+       Format.fprintf out_fmter "%%%%begin-auto-proof@\n" ;
        (* Location is not the while theorem, but its body instead. I think
           this is sufficient *)
        Format.fprintf out_fmter "%%%%location: [%a]@\n"
-         Location.pp_location proof.Parsetree.ast_loc;
+         Location.pp_location proof.Parsetree.ast_loc ;
        Format.fprintf out_fmter "%%%%name: for_zenon_%a@\n@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded aim_name;
+         Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
        Format.fprintf out_fmter
          "@\n@\n(* Methods to use for automated proof. *)@\n";
        (* Now, print Definition and Hypothesis mentionned in the "by" clause
@@ -2109,13 +2110,13 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
                       | _ -> assert false) in
               (* Make a pseudo list with all the encountered steps (node
                  labels). *)
-              [{ Parsetree.ast_loc = proof.Parsetree.ast_loc;
+              [{ Parsetree.ast_loc = proof.Parsetree.ast_loc ;
                  Parsetree.ast_desc =
                    Parsetree.F_node (
                      match parent_proof_nodes with
                      | None -> []
-                     | Some x -> find_only_PN_subs_in_proof_nodes x);
-                 Parsetree.ast_annot = [];
+                     | Some x -> find_only_PN_subs_in_proof_nodes x) ;
+                 Parsetree.ast_annot = [] ;
                  Parsetree.ast_type = Parsetree.ANTI_irrelevant }]
           | _ -> facts) in
        List.iter
@@ -2123,13 +2124,13 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
             ctx print_ctx env min_coq_env ~self_manifest
             dependencies_from_params generated_fields available_hyps
             available_steps)
-         real_facts;
+         real_facts ;
        (* Now, print the lemma body. Inside, any method of "Self" is
           abstracted (without lambda-lift) and named "abst_xxx". That's why we
           use the mode [SMS_abstracted]. *)
-       Format.fprintf out_fmter "(* Theorem's body. *)@\n";
+       Format.fprintf out_fmter "(* Theorem's body. *)@\n" ;
        Format.fprintf out_fmter "Theorem for_zenon_%a :@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded aim_name;
+         Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
        (* Generate the aim depending on if we are in a regular proof or in the
           initial stage of a termination proof. *)
        (match aim_gen_method with
@@ -2141,28 +2142,12 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
               ~recursive_methods_status:
                 Species_record_type_generation.RMS_regular
               ctx env aim
-        | ZSGM_from_termination_lemma
-              (expr, used_params_indices, rec_calls) ->
-            Rec_let_gen.generate_termination_lemmas
-              ctx print_ctx env
-              ~explicit_order: (Rec_let_gen.OK_expr (expr, used_params_indices))
-              rec_calls ;
-            (* Always end by the obligation of well-formation of the user-order
-               eta-expanded to wrap its result with a Is_true. *)
-            Format.fprintf out_fmter
-                  "@ (well_founded@ (fun __a1 __a2 =>@ Is_true@ (" ;
-            let order_expr =
-              (match expr with
-              | Rec_let_gen.TEK_order e -> e
-              | Rec_let_gen.TEK_measure _ -> failwith "TODO 2154" )in
-            Species_record_type_generation.generate_expr
-              ~local_idents: [] ~in_recursive_let_section_of: []
-              ~self_methods_status:
-                Species_record_type_generation.SMS_abstracted
-              ~recursive_methods_status:
-                Species_record_type_generation.RMS_regular
-              ctx env order_expr ;
-           Format.fprintf out_fmter "@ __a1 __a2)))"
+        | ZSGM_from_termination_lemma (_, _, _) ->
+            (* Termination proofs are always initiated by
+               generate_theorem_section_if_by_zenon and are never nested.
+               So there is no reason to find a nested step/proof dealing with
+               termination. *)
+            assert false
        ) ;
        Format.fprintf out_fmter ".@\n" ;
        (* End of Zenon stuff. *)
@@ -2419,14 +2404,14 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
                  Format.fprintf out_fmter "@ __x))) "
             )
        ) ;
-       Format.fprintf out_fmter ".@]@\n";
+       Format.fprintf out_fmter ".@]@\n" ;
        (* Now, for each abstracted method we depend on we generate an assert. *)
        generate_asserts_for_dependencies
          out_fmter dependencies_from_params min_coq_env
-         used_species_parameter_tys;
+         used_species_parameter_tys ;
        Format.fprintf out_fmter
          "apply for_zenon_%a;@\nauto.@\nQed.@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded name;
+         Parsetree_utils.pp_vname_with_operators_expanded name ;
        (* End the Section. *)
        Format.fprintf out_fmter "End Proof_of_%a.@]@\n@\n"
          Parsetree_utils.pp_vname_with_operators_expanded name
@@ -2631,7 +2616,7 @@ let print_order_args_as_tuple out_fmter ~fun_arity arg_name indices =
 
     {b Exported}: No.                                                       *)
 (* ************************************************************************ *)
-let generate_termination_order_With_Function ctx print_ctx env name
+let generate_termination_order_for_Function ctx print_ctx env name
     fun_params_n_tys ai sorted_deps_from_params
     generated_fields (* Only needed for "prelude". *)
     opt_term_pr =
@@ -3106,7 +3091,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        let recursive_calls =
          Recursion.list_recursive_calls name params_with_type [] body_expr in
        (* ---> Generate the order depending on the kind of proof. *)
-       generate_termination_order_With_Function
+       generate_termination_order_for_Function
          ctx' print_ctx env name params_with_type ai
          ai.Env.TypeInformation.ad_dependencies_from_parameters
          generated_fields opt_term_pr ;
@@ -3178,7 +3163,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            "elim %a_termination.@\n\
            intros __for_function_dec1 __for_function_rem_dec_n_wf.@\n"
            Parsetree_utils.pp_vname_with_operators_expanded name ;
-         (* Repeat nb rec call - 1 times... TODO WRONG ! *)
+         (* Repeat nb rec call - 1 times... *)
          for i = 2 to nb_rec_calls do
            Format.fprintf out_fmter
              "elim __for_function_rem_dec_n_wf.@\n\
