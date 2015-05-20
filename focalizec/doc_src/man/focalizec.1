@@ -150,6 +150,14 @@ library search path. Rarely useful and mostly dedicated to the
 .B FoCaLiZe
 compiler build process.
 .TP
+.B -ocaml-comp-mode
+Specify the OCaml compiler mode. Can be "byt" for bytecode compilation,
+"bin" for native code compilation, or "both" for bytecode
+and native code compilation.
+.TP
+.B -pmatch-err-as-warn
+Not fully working.
+.TP
 .B -pretty \<file\>
 Undocumented: mostly for debugging purpose. Pretty-print the parse tree
 of the
@@ -174,6 +182,14 @@ of the
 file, once scoped, as a
 .B FoCaLiZe
 source into the file \<file\>.
+.TP
+.B -show-term-obls
+Print the termination proofs obligations to prove for recursive functions.
+.TP
+.B -sto
+Shortcut for the
+.B -show-term-obls
+option.
 .TP
 .B -stop-before-coq
 When

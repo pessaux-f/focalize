@@ -320,7 +320,7 @@ let main () =
       ("-show-term-obls",
           Arg.Unit Configuration.set_show_term_obls,
        "  Print the termination proofs obligations to prove for\n\
-          recursive functions.");
+     \    recursive functions.");
       ("-sto",
           Arg.Unit Configuration.set_show_term_obls,
        "  Shortcut for '-show-term-obls'.");
