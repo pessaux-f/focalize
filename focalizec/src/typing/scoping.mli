@@ -21,7 +21,7 @@ exception Self_cant_parameterize_itself of Location.t
 exception Is_parameter_only_coll_ident of Location.t
 exception Parametrized_species_wrong_arity of (Location.t * int * int)
 exception Invalid_external_binding_identifier of (Location.t * Parsetree.vname)
-exception Structural_termination_only_on_fun_arg of
+exception Termination_only_on_fun_arg of
   (Location.t * Parsetree.vname)
 exception Termination_proof_delayed_only_on_self_meth of
   (Location.t *  Parsetree.vname)

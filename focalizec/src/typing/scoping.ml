@@ -153,11 +153,11 @@ exception Invalid_external_binding_number of Location.t;;
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception raised when a termination proof mentions a
-    structural decreasing ident that is not an argument of the function.
+    decreasing ident that is not an argument of the function.
 
     {b Exported} :  Yes.                                                 *)
 (* ********************************************************************* *)
-exception Structural_termination_only_on_fun_arg of
+exception Termination_only_on_fun_arg of
   (Location.t * Parsetree.vname)
 ;;
 
@@ -1680,7 +1680,7 @@ and scope_termination_proof ctx env params_env tp =
          (* Wrong ! The structural argument must be an argument locally bound
             by the function defintion ! *)
          raise
-           (Structural_termination_only_on_fun_arg
+           (Termination_only_on_fun_arg
               (tp.Parsetree.ast_loc, arg_name))
    | Parsetree.TP_lexicographic (orders_exprs, args, proof) ->
        let scoped_orders_exprs = List.map (scope_expr ctx env) orders_exprs in
@@ -1692,7 +1692,7 @@ and scope_termination_proof ctx env params_env tp =
                  (can_be_scoped_as_local_p
                     ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
                raise
-                 (Structural_termination_only_on_fun_arg
+                 (Termination_only_on_fun_arg
                     (tp.Parsetree.ast_loc, arg_name));
              let scoped_arg_ty =
                match arg_type with
@@ -1712,7 +1712,7 @@ and scope_termination_proof ctx env params_env tp =
              (can_be_scoped_as_local_p
                 ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
            raise
-             (Structural_termination_only_on_fun_arg
+             (Termination_only_on_fun_arg
                 (tp.Parsetree.ast_loc, arg_name)) ;
          let scoped_arg_ty =
            match arg_type with
@@ -1731,7 +1731,7 @@ and scope_termination_proof ctx env params_env tp =
              (can_be_scoped_as_local_p
                 ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
            raise
-             (Structural_termination_only_on_fun_arg
+             (Termination_only_on_fun_arg
                 (tp.Parsetree.ast_loc, arg_name)) ;
          let scoped_arg_ty =
            match arg_type with
