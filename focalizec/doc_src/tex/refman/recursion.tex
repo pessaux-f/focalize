@@ -1,10 +1,6 @@
 \index{recursion}
-In the current alpha-release, the logical counterpart of recursive
-functions is not completely handled for the {\coq} code generation. We
-are still working on the point: recursive functions are planed to be
-fully supported as soon as possible, in addition with new material to
-help writing the required termination proofs.
 
+(OUT-OF-DATE:
 In the current state {\focal} provides 2 ways to write recursive
 functions depending on whether they involve a structural or general
 recursion. The difference in the generated code only affects the
@@ -13,12 +9,12 @@ construct {\tt Fixpoint} of {\coq}, hence avoiding the user to provide a
 termination proof. Functions that are not recursive structural are
 currently compiled to the {\tt Function} construct of {\coq}. Currently,
 the termination proof that should be provided by the user is ignored
-and turned assumed.
+and turned assumed.)
 
 \medskip
-(OUT-OF-DATE:
-Recursive structural functions are introduced by the {\tt let recstruct}
-whereas general recursive functions are introduced by {\tt let rec}.)
+Termination proofs can by {\tt structural ...}, or {\tt order ... on ...}, or
+{\tt measure ... on ...}.
+Documentation TODO!
 
 \medskip
 Mutually recursive functions are currently not supported for {\coq}

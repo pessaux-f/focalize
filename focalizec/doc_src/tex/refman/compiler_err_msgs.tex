@@ -228,6 +228,20 @@ parameter.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Termination proof considers '$name$' as decreasing but it is not
+  an argument of the function.}
+
+{\em Description}: A termination proof (either \terminal{by measure} or
+\terminal{by order} of a recursive function uses the identifier '$name$'
+to pinpoint the decreasing parameter. However, this identifier is not a
+parameter of the function.
+
+{\em Hints}: You may got confused in the name of the parameter. Ony one of
+the function's parameter can appear at this place.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Unbound sum type value constructor '$name$'.}
 {\em Description}: An identifier representing a sum type value constructor
 was not found among the available sum type definitions.
