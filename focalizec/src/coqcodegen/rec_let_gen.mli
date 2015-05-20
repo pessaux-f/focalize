@@ -34,9 +34,16 @@ val transform_recursive_calls_args_into_tuple :
   Context.species_compil_context -> local_idents: Parsetree.vname list ->
     Parsetree.vname -> Parsetree.expr -> Parsetree.expr
 
-val print_user_termination_obls :
+val print_user_termination_obls_for_order :
   Parsetree.vname ->
   (((Parsetree.vname * Types.type_simple) * Parsetree.expr) list *
    Recursion.binding list)
   list ->
     Parsetree.expr -> int -> unit
+
+val print_user_termination_obls_for_measure :
+  Parsetree.vname ->
+  (((Parsetree.vname * Types.type_simple) * Parsetree.expr) list *
+   Recursion.binding list)
+  list ->
+    Parsetree.expr -> int -> Parsetree.vname -> Types.type_simple -> unit
