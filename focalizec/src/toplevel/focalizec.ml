@@ -237,8 +237,7 @@ let dispatch_compilation files =
 
 
 
-
-(* The main procedure *)
+(* The main procedure. *)
 let main () =
   Arg.parse
     [ ("-coq_older",
@@ -250,7 +249,8 @@ let main () =
      \    files into the argument directory.");
       ("--experimental",
        Arg.Unit Configuration.set_experimental,
-       "  Do not use. Fear it! For the development team only!");
+       "  Do not use. Fear it! Does nothing, or does some things.\n\
+          For the development team only!");
       ("-focalize-doc",
        Arg.Unit Configuration.set_focalize_doc,
        "  Generate documentation.");
@@ -317,6 +317,13 @@ let main () =
        Arg.String Configuration.set_pretty_scoped,
        "  (Undocumented) Pretty-print the parse tree of the FoCaLize\n\
      \    file once scoped as a FoCaLize source into the argument file.");
+      ("-show-term-obls",
+          Arg.Unit Configuration.set_show_term_obls,
+       "  Print the termination proofs obligations to prove for\n\
+          recursive functions.");
+      ("-sto",
+          Arg.Unit Configuration.set_show_term_obls,
+       "  Shortcut for '-show-term-obls'.");
       ("-stop-before-coq",
        Arg.Unit Configuration.set_stop_before_coq,
        "  When Coq code generation is activated, stop the compilation\n\
@@ -328,7 +335,7 @@ let main () =
        "  When Coq code generation is activated, stop the \n\
      \    compilation process before passing the generated file to Zenon.\n\
      \    The produced file is ended by the suffix \".zv\".");
-      ("-verbose",
+       ("-verbose",
        Arg.Unit Configuration.set_verbose,
        "  Be verbose. Make the compiler jaberring about its real-time life.");
       ("-v", Arg.Unit Configuration.print_focalize_short_version,

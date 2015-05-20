@@ -2774,8 +2774,9 @@ let generate_measure_term_proof_for_Function
     Handy.list_index_of used_param (List.map fst fun_params_n_tys) in
   let used_param_ty = List.assoc used_param fun_params_n_tys in
   (* Print to the user the termination obligations. *)
-  Rec_let_gen.print_user_termination_obls_for_measure
-    name recursive_calls meas_expr used_param_index used_param used_param_ty ;
+  if (Configuration.get_show_term_obls ()) then
+    Rec_let_gen.print_user_termination_obls_for_measure
+      name recursive_calls meas_expr used_param_index used_param used_param_ty ;
   match proof.Parsetree.ast_desc with
   | Parsetree.Pf_assumed _ ->
       (* Proof assumed, then simply use "magic_prove". *)
@@ -2875,8 +2876,9 @@ let generate_order_term_proof_for_Function
   let used_param_index =
     Handy.list_index_of used_param (List.map fst fun_params_n_tys) in
   (* Print to the user the termination obligations. *)
-  Rec_let_gen.print_user_termination_obls_for_order
-    name recursive_calls order_expr used_param_index ;
+  if (Configuration.get_show_term_obls ()) then
+    Rec_let_gen.print_user_termination_obls_for_order
+      name recursive_calls order_expr used_param_index ;
   match proof.Parsetree.ast_desc with
   | Parsetree.Pf_assumed _ ->
       (* Proof assumed, then simply use "magic_prove". *)
