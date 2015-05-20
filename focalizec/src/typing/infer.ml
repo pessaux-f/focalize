@@ -427,8 +427,7 @@ let rec typecheck_type_expr ctx env ty_expr =
          Types.type_arrow
            (typecheck_type_expr ctx env ty_expr1)
            (typecheck_type_expr ctx env ty_expr2)
-     | Parsetree.TE_app (ty_cstr_ident, args_ty_exprs) ->
-         (begin
+     | Parsetree.TE_app (ty_cstr_ident, args_ty_exprs) -> (
          let ty_descr =
            Env.TypingEnv.find_type
              ~loc: ty_cstr_ident.Parsetree.ast_loc
@@ -451,7 +450,7 @@ let rec typecheck_type_expr ctx env ty_expr =
             the sum type constructor is applied to. *)
          Types.specialize_with_args
            ty_descr.Env.TypeInformation.type_identity args_ty
-         end)
+        )
      | Parsetree.TE_prod ty_exprs ->
          let tys = List.map (typecheck_type_expr ctx env) ty_exprs in
          Types.type_tuple tys
@@ -1024,7 +1023,7 @@ let rec typecheck_expr ctx env initial_expr =
              ~current_unit: ctx.current_unit ~current_species_name ident env in
          let ident_ty = Types.specialize var_scheme in
          (* Record the [ident]'s type in its AST node. *)
-         ident.Parsetree.ast_type <- Parsetree.ANTI_type ident_ty;
+         ident.Parsetree.ast_type <- Parsetree.ANTI_type ident_ty ;
          ident_ty
      | Parsetree.E_app (functional_expr, args_exprs) ->
          let fun_ty = typecheck_expr ctx env functional_expr in
@@ -1306,9 +1305,9 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
               binding_desc.Parsetree.b_body) then
           (begin
           (* The body expression will be authorised to be generalized. *)
-          Types.begin_definition ();
+          Types.begin_definition () ;
           let ty = Types.type_variable () in
-          Types.end_definition ();
+          Types.end_definition () ;
           (* Say "true" to mean "generalizable" (implies that a
              begin/end_definition have been performed). *)
           (binding_desc.Parsetree.b_name, ty, true)
@@ -1342,7 +1341,7 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
            the let-definition is a species field. Otherwise, keep if as it is
            in order to accumulate the information for the global surrounding
            expression. *)
-        if is_a_field then Types.reset_deps_on_rep ();
+        if is_a_field then Types.reset_deps_on_rep () ;
         let binding_desc =  binding.Parsetree.ast_desc in
         let binding_loc = binding.Parsetree.ast_loc in
         (* Get all the type constraints from both the params and the body
@@ -1432,14 +1431,14 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
            given) taken into account, a method using it didn't know that some
            part of the typechecking should involve Self instead of something
            else. For instance:
-             species S1 = 
-               representation = int ; 
-               signature to_int : Self -> int ; 
+             species S1 =
+               representation = int ;
+               signature to_int : Self -> int ;
                end
-             species S2 = 
-               inherit S1 ; 
-               let to_int (x) : int = x ; 
-               let join (x) = to_int (x) ; 
+             species S2 =
+               inherit S1 ;
+               let to_int (x) : int = x ;
+               let join (x) = to_int (x) ;
                end
            Typing join, we think that to_int has type int->int because fusion
            is not yet done for the current species. Hence join has type
@@ -1472,7 +1471,7 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
                   ~current_unit: ctx.current_unit ~current_species_name
                   fake_ident env in
               let old_type = Types.specialize old_scheme in
-              (* Force unification en keep the prefered type. *)
+              (* Force unification and keep the prefered type. *)
               Types.unify
                 ~loc: binding_loc
                 ~self_manifest: ctx_with_tv_vars_constraints.self_manifest
@@ -1491,20 +1490,20 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
             ~loc: binding_loc
             ~self_manifest: ctx_with_tv_vars_constraints.self_manifest
             assumed_ty complete_ty in
-        Types.end_definition ();
+        Types.end_definition () ;
         (* Check for a decl dependency on "rep". *)
-        Types.check_for_decl_dep_on_self final_ty;
+        Types.check_for_decl_dep_on_self final_ty ;
         (* And finally returns the type binding induced by this definition. *)
         let ty_scheme =
           if non_expansive
           then Types.generalize final_ty
           else Types.trivial_scheme final_ty in
         (* Record the scheme in the AST node of the [binding]. *)
-        binding.Parsetree.ast_type <- Parsetree.ANTI_scheme ty_scheme;
+        binding.Parsetree.ast_type <- Parsetree.ANTI_scheme ty_scheme ;
         (* Recover if a def-dependency or a decl-dependency on "rep" was/were
            found for this binding. *)
         let dep_on_rep = {
-          Env.TypeInformation.dor_def = Types.get_def_dep_on_rep ();
+          Env.TypeInformation.dor_def = Types.get_def_dep_on_rep () ;
           Env.TypeInformation.dor_decl = Types.get_decl_dep_on_rep () } in
         (binding_desc.Parsetree.b_name, ty_scheme, binding_loc,
          dep_on_rep))
@@ -1513,7 +1512,44 @@ and typecheck_let_definition ~is_a_field ctx env let_def =
   (* Typecheck the termination proof if any. *)
   (match let_def_descr.Parsetree.ld_termination_proof with
    | None -> ()
-   | Some tp -> typecheck_termination_proof ctx env' tp) ;
+   | Some tp ->
+       (* We must first extend the environment with the parameters of the
+          function(s).
+          [Unsure] We add all the parameters of ALL the function,
+          hence in case of mutually recursive functions with arguments wearing
+          the same names, this will suck !!! However, termination of mutually
+          recursive functions is not currently available/understood...
+          First start by a local function doing the job... *)
+       let rec add_bindings_parameters in_env env_bnds bnds =
+         match (env_bnds, bnds) with
+         | ([], []) -> in_env
+         | (((_, sc, _, _) :: qeq), (hb :: qb)) ->
+             (* Get the list of params with their type. *)
+             let (params_n_ty, _, _) =
+               MiscHelpers.bind_parameters_to_types_from_type_scheme
+                 ~self_manifest: ctx.self_manifest (Some sc)
+                 (List.map fst hb.Parsetree.ast_desc.Parsetree.b_params) in
+             (* Now add each of them in the environment. *)
+             let in_env' =
+               List.fold_left
+                 (fun env_accu (n, topt) ->
+                   match topt with
+                   | Some t ->
+                       Env.TypingEnv.add_value
+                         ~toplevel: None n (Types.generalize t) env_accu
+                   | None ->
+                       (* Since we provided a scheme above to
+                          bind_parameters_to_types_from_type_scheme, each
+                          parameter must have been labelled by a type. *)
+                       assert false)
+                 in_env params_n_ty in
+             (* Recurse on the other bindings. *)
+             add_bindings_parameters in_env' qeq qb
+         | (_, _) -> assert false in
+       let env_with_all_params =
+         add_bindings_parameters
+           env' tmp_env_bindings let_def_descr.Parsetree.ld_bindings in
+       typecheck_termination_proof ctx env_with_all_params tp) ;
   (* We make the clean environment binding by discarding the location
      information we kept just to be able to pinpoint accurately the guilty
      method in case of one would have variables in its scheme. *)
@@ -1829,6 +1865,10 @@ and typecheck_theorem_def ctx env theorem_def =
 and typecheck_termination_proof ctx env tp =
   (* Anyway, a proof has no type... So... *)
   tp.Parsetree.ast_type <- Parsetree.ANTI_irrelevant ;
+  let current_species_name =
+    (match ctx.current_species with
+    | None -> None
+    | Some (_, n) -> Some (Parsetree_utils.name_of_vname n)) in
   match tp.Parsetree.ast_desc with
    | Parsetree.TP_structural _ ->
        (* Nothing to record because a [vname] doesn't have a "type" bucket. *)
@@ -1838,10 +1878,45 @@ and typecheck_termination_proof ctx env tp =
            "type" bucket. *)
        List.iter (fun e -> ignore (typecheck_expr ctx env e)) orders_exprs ;
        typecheck_proof ctx env proof
-   | Parsetree.TP_measure (expr, _, proof)
-   | Parsetree.TP_order (expr, _, proof) ->
-       (* Same remark than above about identifiers [vname]s. *)
-       ignore (typecheck_expr ctx env expr) ;
+   | Parsetree.TP_measure (expr, (arg_vname, _), proof)
+   | Parsetree.TP_order (expr, (arg_vname, _), proof) ->
+       (* Get the type of the measure or order expression.
+          It must be a function:
+           - taking the same type than the one of the used argument for
+             decreasing, and returning an int for a measure or a bool.
+           - taking rwoce the same type than the one of the used argument for
+             decreasing, and returning a bool for an order. *)
+       let meas_ty = typecheck_expr ctx env expr in
+       (* Temporarily make an ident from the argument name to lookup in the
+          environment. *)
+       let fake_ident = {
+         Parsetree.ast_desc = Parsetree.EI_local arg_vname ;
+         Parsetree.ast_loc = expr.Parsetree.ast_loc ;
+         Parsetree.ast_annot = [] ;
+         Parsetree.ast_type = Parsetree.ANTI_none } in
+       let arg_sch =
+         Env.TypingEnv.find_value
+           ~loc: expr.Parsetree.ast_loc ~current_unit: ctx.current_unit
+           ~current_species_name fake_ident env in
+       let arg_ty = Types.specialize arg_sch in
+       let tmp_fun_ty =
+         (match tp.Parsetree.ast_desc with
+         | Parsetree.TP_measure (_, _, _) ->
+             (* Temporary functionnal type (arg ty -> int) to unify with the
+                type of the measure. *)
+             Types.type_arrow arg_ty (Types.type_int ())
+         | Parsetree.TP_order (_, _, _) ->
+             (* Temporary functionnal type (arg ty -> arg ty -> bool) to unify
+                with the type of the measure. *)
+             Types.type_arrow arg_ty
+               (Types.type_arrow arg_ty (Types.type_bool ()))
+         | _ -> assert false (* Already in the above matched cases. *)
+         ) in
+       ignore
+         (Types.unify
+            ~loc: expr.Parsetree.ast_loc ~self_manifest: ctx.self_manifest
+            meas_ty tmp_fun_ty) ;
+       (* Finally, typecheck the proof. *)
        typecheck_proof ctx env proof
 
 
@@ -2027,7 +2102,7 @@ and typecheck_species_fields initial_ctx initial_env initial_fields =
               )
            | Parsetree.SF_let let_def -> (
                (* No relevant type information to record in the AST node. *)
-               field.Parsetree.ast_type <- Parsetree.ANTI_irrelevant;
+               field.Parsetree.ast_type <- Parsetree.ANTI_irrelevant ;
                (* Don't increase level, this will be done in the let
                   inference.
                   Be careful : methods are not polymorphics (c.f. Virgile

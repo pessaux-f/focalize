@@ -28,7 +28,7 @@
     well-typed, hence, the type of the method must have "as many arrows as"
     the method has parameters. If this is not the case, then we have a bug
     somewhere else in the previous processes in the compiler.
-    
+
     This function hence returns the list giving for each parameter name its
     type and the "result" type of the method (i.e. the type remaining after
     having "removed all the arrows" induced by the parameters).

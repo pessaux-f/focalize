@@ -1889,7 +1889,6 @@ and scope_let_definition ~toplevel_let ctx env let_def =
            | Parsetree.BB_computational expr ->
                Parsetree.BB_computational
                  (scope_expr ctx env_with_ty_constraints_variables expr)
-
           | Parsetree.BB_logical
                 { Parsetree.ast_desc = Parsetree.Pr_expr expr } ->
               (* Turn the logical_expr into an expression since we are not
@@ -1909,8 +1908,8 @@ and scope_let_definition ~toplevel_let ctx env let_def =
            Some (scope_type_expr ctx env_with_ty_constraints_variables tye)) in
     let new_binding_desc =
       { let_binding_descr with
-          Parsetree.b_params = scoped_b_params;
-          Parsetree.b_type = scoped_b_type;
+          Parsetree.b_params = scoped_b_params ;
+          Parsetree.b_type = scoped_b_type ;
           Parsetree.b_body = scoped_body } in
     { let_binding with Parsetree.ast_desc = new_binding_desc } in
   let scoped_bindings =
@@ -1930,7 +1929,7 @@ and scope_let_definition ~toplevel_let ctx env let_def =
      environment. *)
   let scoped_let_def_desc = {
     let_def_descr with
-      Parsetree.ld_bindings = scoped_bindings;
+      Parsetree.ld_bindings = scoped_bindings ;
       Parsetree.ld_termination_proof = scoped_termination_proof } in
   let scoped_let_def = {
     let_def with Parsetree.ast_desc = scoped_let_def_desc } in
