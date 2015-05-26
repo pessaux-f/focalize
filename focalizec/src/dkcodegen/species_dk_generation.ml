@@ -2989,9 +2989,6 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
              [(name,
                Misc_common.make_params_list_from_abstraction_info
                  ~care_logical: true ~care_types: true ai)] } in
-       (* Open the "Section" and "Module" for the recursive definition. *)
-       Format.fprintf out_fmter "@\n@[<2>Module Termination_%a_namespace.@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded name;
        (* We get the function's parameters and their types. This will serve
           at various stage, each time we will need to speak about a
           parameter. *)
@@ -3016,28 +3013,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
 (* [Unsure] *)
        let (abstracted_methods, new_ctx, new_print_ctx) =
-         if (Configuration.get_experimental ()) then (
-           (* ---> Generate the order depending on the kind of proof. *)
-           generate_termination_order_With_Function
-             ctx' print_ctx env name params_with_type ai
-             ai.Env.TypeInformation.ad_dependencies_from_parameters generated_fields
-             opt_term_pr ;
-           (* ---> Start the Dk "Section" containing the termination theorem as
-              expected by Function and the definition of the Dk Function. *)
-           Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
-             Parsetree_utils.pp_vname_with_operators_expanded name ;
-           (* ---> Generate the termination proof. *)
-           generate_termination_proof_With_Function ctx' print_ctx env
-             ~self_manifest name params_with_type ai
-             ai.Env.TypeInformation.ad_dependencies_from_parameters
-             generated_fields recursive_calls opt_term_pr
-          )
-         else (
-           (* ---> Start the Dk "Section" containing the termination theorem as
-              expected by Function and the definition of the Dk Function. *)
-           Format.fprintf out_fmter "@\n@[<2>Section %a.@\n"
-             Parsetree_utils.pp_vname_with_operators_expanded name ;
-           (* ---> Now, generate the prelude of the only method introduced by
+         ((* ---> Now, generate the prelude of the only method introduced by
               "let rec". *)
            generate_field_definition_prelude
              ~in_section: true ctx' print_ctx env
@@ -3047,36 +3023,33 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
              generated_fields
           ) in
 
-       if not (Configuration.get_experimental ()) then (
-         (* We now generate the order. It always has 2 arguments having the same
-            type. This type is a tuple if the method has several arguments. This
-            type was already computed above for the termination order... *)
-         Format.fprintf out_fmter
-           "@\n@\n(; Abstracted termination order. ;)@\n";
-         Format.fprintf out_fmter "@[<2>Variable __term_order@ :@ ";
-         (* Print the tuple that is the method's arguments' types. *)
-         Format.fprintf out_fmter "%a -> %a -> Prop.@]@\n"
-           (print_types_as_tuple_if_several new_print_ctx) params_with_type
-           (print_types_as_tuple_if_several new_print_ctx) params_with_type
-        ) ;
-       (* Generate the recursive uncurryed function. *)
+
+       (*
+          A recursive method m is defined in Dedukti by two symbols m and rec_m:
+
+          let rec m (arg1, arg2) = F(m, arg1, arg2)
+
+          becomes
+
+          rec_m : T1 -> T2 -> T.
+          m : T1 -> T2 -> T.
+          [arg1 : T1, arg2 : T2] rec_m arg1 arg2 --> F(m, arg1, arg2).
+          [arg1 : T1, arg2 : T2] m arg1 arg2 --> call_by_value_T2 T (call_by_value_T1 (T2 -> T) rec_m arg1) arg2.
+
+          call_by_value_Ti has been defined with Ti such that if v is a value of type Ti and f a function of type
+          Ti -> T then
+          (call_by_value_Ti T f c) rewrites to (f c).
+        *)
+
+
+
+       (* Generate the recursive function. *)
+
+       (* Generate the recursive function. *)
        Format.fprintf out_fmter
-         "@[<2>Function %a@ (__arg:@ %a)@ {wf "
+         "@[<2>[] rec_%a@ --> %a@ "
          Parsetree_utils.pp_vname_with_operators_expanded name
          (print_types_as_tuple_if_several new_print_ctx) params_with_type ;
-       if not (Configuration.get_experimental ()) then
-         Format.fprintf out_fmter "__term_order@ __arg}"
-       else (
-         Format.fprintf out_fmter "(%a_wforder@ "
-           Parsetree_utils.pp_vname_with_operators_expanded name ;
-         (* Apply the order to its arguments due to lambda-lifts. *)
-         Species_record_type_dk_generation.generate_method_lambda_lifted_arguments
-           ~only_for_Self_meths: false out_fmter
-           ai.Env.TypeInformation.ad_used_species_parameter_tys
-           ai.Env.TypeInformation.ad_dependencies_from_parameters
-           abstracted_methods ;
-         Format.fprintf out_fmter ")@ __arg}"
-        ) ;
        Format.fprintf out_fmter ":@ %a@ :=@\n"
          (Types.pp_type_simple_to_dk new_print_ctx) return_ty ;
        (* Unfortunately, we can't simply generate "let (x, y, ..) := __arg"
@@ -3166,11 +3139,6 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          Parsetree_utils.pp_vname_with_operators_expanded name
          (Handy.pp_generic_separated_list ","
             Parsetree_utils.pp_vname_with_operators_expanded) params ;
-       (* Finally close the opened "Section"and "Module" . *)
-       Format.fprintf out_fmter "End %a.@]@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded name ;
-       Format.fprintf out_fmter "End Termination_%a_namespace.@]@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded name ;
 (* [Unsure] We must now generate the function applied to its order and
    termination proof and so on... *)
        Format.fprintf out_fmter "@\n@[<2>%a"

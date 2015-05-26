@@ -120,6 +120,194 @@ let extend_dk_gen_env_with_type_external_mapping env nb_extra_args
 
 
 
+(* Recursive definitions need to enforce an evaluation order:
+   some functions should only be applied to their arguments after
+   they have been reduced to values. This is ensured by a special
+   "call_by_value" higher-order and polymorphic function defined for
+   each type:
+
+   If T is a type with a polymorphic parameter poly_arg, then
+
+   call_by_value : poly_arg : cc.uT ->
+                   R : cc.uT ->
+                   (cc.eT (T poly_args) -> cc.eT R) ->
+                   cc.eT (T poly_arg) -> cc.eT R.
+
+   and for each possible value v of type T,
+
+   [ poly_arg : cc.uT, R : cc.uT, f : cc.eT (T poly_arg) -> cc.eT R ]
+       call_by_value_T poly_arg R f v --> f v.
+
+   This function defines this function call_by_value_T
+ *)
+
+let generate_call_by_value_definition ctx env type_def_name type_descr =
+  let out_fmter = ctx.Context.rcc_out_fmter in
+  (* Build the print context for the methods once for all. *)
+  let print_ctx = {
+    Types.dpc_current_unit = ctx.Context.rcc_current_unit ;
+    Types.dpc_current_species = None;
+    Types.dpc_collections_carrier_mapping =
+      ctx.Context.rcc_collections_carrier_mapping } in
+  (* We do not operate on a fresh instance of the type's identity scheme. We
+     directly work on the type scheme, taking care to perform *no* unifications
+     to prevent poluting it ! *)
+  let type_def_params = type_descr.Env.TypeInformation.type_params in
+  let (_, tydef_body) =
+    Types.scheme_split type_descr.Env.TypeInformation.type_identity in
+  (* Compute the number of extra polymorphic-induced arguments to the
+     constructor. *)
+  let nb_extra_args = List.length type_def_params in
+  match type_descr.Env.TypeInformation.type_kind with
+   | Env.TypeInformation.TK_abstract -> ()
+   | Env.TypeInformation.TK_external _ -> ()
+                                           (* We use the same hack than for inserting the rest of the type definition *)
+   | Env.TypeInformation.TK_variant cstrs ->
+       (begin
+       let sum_constructors_to_print =
+         List.map
+           (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
+             (* Recover the body of the scheme of the constructor. *)
+             let (_, sum_cstr_ty) = Types.scheme_split sum_cstr_scheme in
+             let sum_cstr_args =
+               (* We don't have anymore info about "Self"'s structure... *)
+               if sum_cstr_arity = Env.TypeInformation.CA_some then
+                 Types.extract_prod_ty
+                   ~self_manifest: None
+                   (Types.extract_fun_ty_arg ~self_manifest: None sum_cstr_ty)
+               else []
+             in
+
+             (sum_cstr_name, sum_cstr_ty, sum_cstr_args))
+           cstrs in
+       Format.fprintf out_fmter "@[<2>call_by_value_%a__t : "
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
+       (* Print the parameter(s) stuff if any. Do it only now the unifications
+          have been done with the sum constructors to be sure that thanks to
+          unifications, "sames" variables will have the "same" name everywhere
+          (i.e. in the the parameters enumeration of the type and in the sum
+          constructors definitions). *)
+       print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
+         print_ctx out_fmter type_def_params;
+       Format.fprintf out_fmter "-> R : cc.uT ->@ (cc.eT (@[<1>%a__t%a@]) ->@ cc.eT R) ->@ cc.eT (@[<1>%a__t%a@]) ->@ cc.eT R.@\n"
+                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+                          (print_types_parameters_with_spaces print_ctx) type_def_params
+                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+                          (print_types_parameters_with_spaces print_ctx) type_def_params
+       ;
+       (* CBV has a rewrite rule for each constructor. *)
+       List.iter
+         (fun (sum_cstr_name, _, cstr_args) ->
+           (* The sum constructor name. *)
+           Format.fprintf out_fmter "@\n[match__%a :@ @[<v 2>"
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
+           (* The type of the destructor.
+              Parameterized as the inductive. *)
+           print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
+             print_ctx out_fmter type_def_params;
+           Format.fprintf out_fmter
+                          "Ret_type : cc.uT ->@ cc.eT (@[<1>%a__t%a@]) ->@ (%acc.eT Ret_type@]) ->@ cc.eT Ret_type ->@ cc.eT Ret_type.@]"
+                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+                          (print_types_parameters_with_spaces print_ctx) type_def_params
+                          (* The type of the matching function.
+                             Parameterized as the constructor. *)
+                          (print_types_parameters_with_arrows print_ctx) cstr_args
+         )
+         sum_constructors_to_print;
+       Format.fprintf out_fmter "@]@\n@\n";
+       if not as_zenon_fact then
+         (begin
+         (* Since any variant type constructors must be inserted in the
+            environment in order to know the number of extra leading "_" due to
+            polymorphism, we return the extended environment. *)
+         let env_with_value_constructors =
+           List.fold_left
+             (fun accu_env (sum_cstr_name, _, _) ->
+               Env.DkGenEnv.add_constructor
+                 sum_cstr_name
+                 { Env.DkGenInformation.cmi_num_polymorphics_extra_args =
+                     nb_extra_args ;
+                   Env.DkGenInformation.cmi_external_translation = None }
+                 accu_env)
+             env
+             sum_constructors_to_print in
+         (* Finally add the type definition in the returned environment. *)
+         Env.DkGenEnv.add_type
+           ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
+           type_descr env_with_value_constructors
+         end)
+       else env
+       end)
+   | Env.TypeInformation.TK_record fields ->
+       (begin
+       (* Like for the sum types, we directly dig in the fields schemes,
+          assuming the type definition is consistent, hance sharing variables
+          between header of the definition and its fields. *)
+       let record_fields_to_print =
+         List.map
+           (fun (field_name, field_mut, field_scheme) ->
+             try
+               let (_, field_ty) = Types.scheme_split field_scheme in
+               (* We do not have anymore information about "Self"'s
+                  structure... *)
+               let field_args =
+                 Types.extract_fun_ty_arg ~self_manifest: None field_ty in
+               (field_name, field_mut, field_args)
+             with _ ->
+               (* Because program is already well-typed, this should always
+                  succeed. *)
+               assert false)
+           fields in
+       Format.fprintf out_fmter "@[<2>Record@ %a__t@ "
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
+       (* Print the parameter(s) stuff if any. *)
+       print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
+         print_ctx out_fmter type_def_params;
+       Format.fprintf out_fmter ":@ Type :=@\nmk_%a__t {@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
+       (* And finally really print the fields definitions. We just create a
+          local handy function to print the trailing semi only if the
+          processed field is not the last of the list (Dk syntax need). *)
+       let rec local_print_fields = function
+         | [] -> ()
+         | (field_name, field_mut, field_ty) :: q ->
+             (* The mutable fields are not yet supported for Dk code. *)
+             if field_mut = Env.TypeInformation.FM_mutable then
+               raise
+                 (Mutable_record_fields_not_in_dk
+                    (type_descr.Env.TypeInformation.type_loc, field_name)) ;
+             Format.fprintf out_fmter "%a :@ %a"
+               Parsetree_utils.pp_vname_with_operators_expanded field_name
+               (Types.pp_type_simple_to_dk print_ctx) field_ty ;
+             if q <> [] then Format.fprintf out_fmter ";" ;
+             Format.fprintf out_fmter "@\n" ;
+             local_print_fields q in
+       (* Do the printing job... *)
+       local_print_fields record_fields_to_print ;
+       Format.fprintf out_fmter " }.@]@\n " ;
+       if not as_zenon_fact then (
+         (* Add the record labels in the environment like we do for constructors
+            in sum types. Same remarks, same process. *)
+         let env_with_record_labels =
+           List.fold_left
+             (fun accu_env (label_name, _, _) ->
+               Env.DkGenEnv.add_label
+                 label_name
+                 { Env.DkGenInformation.lmi_num_polymorphics_extra_args =
+                     nb_extra_args ;
+                   Env.DkGenInformation.lmi_external_translation = None }
+                 accu_env)
+             env
+             record_fields_to_print in
+         (* Finally add the type definition in the returned environment. *)
+         Env.DkGenEnv.add_type
+           ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
+           type_descr env_with_record_labels
+        )
+       else env
+       end)
+;;
+
 
 (* ************************************************************************* *)
 (* as_zenon_fact: bool -> Context.reduced_compil_context ->                  *)
