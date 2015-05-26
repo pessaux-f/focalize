@@ -185,4 +185,19 @@ depend:
 	$(FOCALIZEDEP) *.fcl >> ./.depend
 	$(SKDEP) *.sk >> ./.depend
 
+
+%.tgz: %
+	tar zcvf $@ $<
+
+%.dk: %.sk
+	skindent $< > $@
+
+FOCALIZE_SRC_TGZ = $(FOCALIZE_SRC:.fcl=.fcl.tgz)
+FOCALIZE_DKS_TGZ = $(FOCALIZE_SRC:.fcl=.dk.tgz)
+FOCALIZE_VS_TGZ = $(FOCALIZE_SRC:.fcl=.v.tgz)
+
+compress_sources: $(FOCALIZE_SRC_TGZ)
+compress_dks: $(FOCALIZE_DKS_TGZ)
+compress_vs: $(FOCALIZE_VS_TGZ)
+
 include .depend
