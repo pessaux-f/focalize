@@ -13,6 +13,14 @@ O : MInt UO.
 S0 : N : UNat -> MInt N -> MInt (US N).
 S1 : N : UNat -> MInt N -> MInt (US N).
 
+call_by_value_Mint : N : UNat -> R : cc.uT -> (MInt N -> cc.eT R) -> MInt N -> cc.eT R.
+[ R : cc.uT, f : MInt 0 -> cc.eT R ]
+    call_by_value_Mint 0 R f O --> f O
+[ N : UNat, R : cc.uT, f : MInt (S N) -> cc.eT R, n : MInt N ]
+    call_by_value_Mint (S N) R f (S0 N n) --> f (S0 N n)
+[ N : UNat, R : cc.uT, f : MInt (S N) -> cc.eT R, n : MInt N ]
+    call_by_value_Mint (S N) R f (S1 N n) --> f (S1 N n).
+
 zero : N : UNat -> MInt N.
 [] zero 0 --> O
 [ N : UNat ] zero (S N) --> S0 N (zero N).

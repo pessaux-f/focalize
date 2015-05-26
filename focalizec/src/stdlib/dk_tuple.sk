@@ -10,6 +10,17 @@ pair : A : cc.uT ->
        cc.eT B ->
        Prod A B.
 
+call_by_value_prod : A : cc.uT ->
+                     B : cc.uT ->
+                     R : cc.uT ->
+                     (Prod A B -> cc.eT R) ->
+                     Prod A B ->
+                     cc.eT R.
+
+[ A : cc.uT, B : cc.uT, R : cc.uT, f : Prod A B -> cc.eT R, a : cc.eT A, b : cc.eT B ]
+    call_by_value_prod A B R f (pair A B a b)
+      --> f (pair A B a b).
+
 fst : A : cc.uT -> B : cc.uT -> Prod A B -> cc.eT A.
 snd : A : cc.uT -> B : cc.uT -> Prod A B -> cc.eT B.
 

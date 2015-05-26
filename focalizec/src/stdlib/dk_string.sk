@@ -3,6 +3,12 @@
 
 String := cc.eT string.
 
+call_by_value_string : R : cc.uT -> (String -> cc.eT R) -> String -> cc.eT R.
+[ R : cc.uT, f : String -> cc.eT R ]
+    call_by_value_string R f "" --> f ""
+[ R : cc.uT, f : String -> cc.eT R, c : cc.eT char, s : String ]
+    call_by_value_string R f (string_cons c s) --> f (string_cons c s).
+
 equal : String -> String -> dk_bool.Bool.
 
 [ s : String ] equal s s --> dk_bool.true

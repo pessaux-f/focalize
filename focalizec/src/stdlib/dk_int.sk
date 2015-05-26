@@ -22,6 +22,11 @@ or
 ;)
 [n : Nat, m : Nat] make (S n) (S m) --> make n m.
 
+call_by_value_int : R : cc.uT -> (Int -> cc.eT R) -> Int -> cc.eT R.
+[ R : cc.uT, f : Int -> cc.eT R, n : Nat, m : Nat ]
+    call_by_value_int R f (make n m)
+      --> f (make n m).
+
 from_nat : Nat -> I.
 [ n : Nat ] from_nat n --> make n 0.
 

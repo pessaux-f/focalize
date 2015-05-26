@@ -19,6 +19,10 @@ prop : cc.uT := dk_logic.prop.
 unit : cc.uT.
 tt : cc.eT unit.
 
+call_by_value_unit : R : cc.uT -> (cc.eT unit -> cc.eT R) -> cc.eT unit -> cc.eT R.
+[ R : cc.uT, f : cc.eT unit -> cc.eT R ]
+    call_by_value_unit R f tt --> f tt.
+
 (; Float ;)
 float : cc.uT.
 

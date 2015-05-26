@@ -12,6 +12,15 @@ S1 : BNat -> BNat.
 (; twice zero is zero ;)
 [] S0 O --> O.
 
+call_by_value_bNat : R : cc.uT -> (BNat -> cc.eT R) -> BNat -> cc.eT R.
+[ R : cc.uT, f : BNat -> cc.eT R ]
+    call_by_value_bNat R f O --> f O
+[ R : cc.uT, f : BNat -> cc.eT R, n : BNat ]
+    call_by_value_bNat R f (S0 n) --> f (S0 n)
+[ R : cc.uT, f : BNat -> cc.eT R, n : BNat ]
+    call_by_value_bNat R f (S1 n) --> f (S1 n).
+
+
 nat_of_bnat : BNat -> UNat.
 [] nat_of_bnat O --> 0
 [ bn : BNat ]

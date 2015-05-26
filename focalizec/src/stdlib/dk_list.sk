@@ -1,7 +1,22 @@
 #NAME dk_list.
 
+(; list, nil and cons are keywords in Sukerujo ;)
+
 (; Polymorphic lists ;)
 List := A : cc.uT => cc.eT (list A).
+
+call_by_value_list : A : cc.uT ->
+                     R : cc.uT ->
+                     (List A -> cc.eT R) ->
+                     List A ->
+                     cc.eT R.
+
+[ A : cc.uT, R : cc.uT, f : List A -> cc.eT R ]
+    call_by_value_list A R f (nil A)
+      --> f (nil A)
+[ A : cc.uT, R : cc.uT, f : List A -> cc.eT R, a : cc.eT A, l : List A ]
+    call_by_value_list A R f (cons A a l)
+      --> f (cons A a l).
 
 (; Case distinction ;)
 match : A : cc.uT ->

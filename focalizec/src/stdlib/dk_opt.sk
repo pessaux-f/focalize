@@ -8,6 +8,19 @@ Option : cc.uT -> Type.
 None : A : cc.uT -> Option A.
 Some : A : cc.uT -> cc.eT A -> Option A.
 
+call_by_value_option : A : cc.uT ->
+                       R : cc.uT ->
+                       (Option A -> cc.eT R) ->
+                       Option A ->
+                       cc.eT R.
+[ A : cc.uT, R : cc.uT, f : Option A -> cc.eT R ]
+    call_by_value_option A R f (None A)
+      --> f (None A)
+[ A : cc.uT, R : cc.uT, f : Option A -> cc.eT R, a : cc.eT A ]
+    call_by_value_option A R f (Some A a)
+      --> f (Some A a).
+
+
 match_option : A : cc.uT ->
                P : (Option A -> cc.uT) ->
                cc.eT (P (None A)) ->

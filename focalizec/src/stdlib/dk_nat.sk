@@ -1,6 +1,15 @@
 #NAME dk_nat.
+
+(; nat, 0, and S are keywords in Sukerujo ;)
+
 Bool : Type := dk_bool.Bool.
 Nat := cc.eT nat.
+
+call_by_value_nat : R : cc.uT -> (Nat -> cc.eT R) -> Nat -> cc.eT R.
+[ R : cc.uT, f : Nat -> cc.eT R ]
+    call_by_value_nat R f 0 --> f 0
+[ R : cc.uT, f : Nat -> cc.eT R, n : Nat ]
+    call_by_value_nat R f (S n) --> f (S n).
 
 (; Order ;)
 lt : Nat -> Nat -> Bool.

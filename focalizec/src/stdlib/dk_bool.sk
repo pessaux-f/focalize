@@ -9,6 +9,13 @@ Bool : Type := cc.eT bool.
 true : Bool.
 false : Bool.
 
+(; Values of type Bool are true and false ;)
+call_by_value_bool : R : cc.uT -> (Bool -> cc.eT R) -> Bool -> cc.eT R.
+[ R : cc.uT, f : Bool -> cc.eT R ]
+    call_by_value_bool R f true --> f true
+[ R : cc.uT, f : Bool -> cc.eT R ]
+    call_by_value_bool R f false --> f false.
+
 (; Pattern-matching ;)
 match :
   P : (Bool -> cc.uT) ->
