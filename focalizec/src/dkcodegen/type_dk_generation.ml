@@ -215,7 +215,6 @@ let generate_call_by_value_definition ctx env type_def_name type_descr =
          )
          sum_constructors_to_print;
        Format.fprintf out_fmter "@]@\n@\n";
-       if not as_zenon_fact then
          (begin
          (* Since any variant type constructors must be inserted in the
             environment in order to know the number of extra leading "_" due to
@@ -231,81 +230,11 @@ let generate_call_by_value_definition ctx env type_def_name type_descr =
                  accu_env)
              env
              sum_constructors_to_print in
-         (* Finally add the type definition in the returned environment. *)
-         Env.DkGenEnv.add_type
-           ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
-           type_descr env_with_value_constructors
-         end)
-       else env
-       end)
+         ()
+          end)
+        end)
    | Env.TypeInformation.TK_record fields ->
-       (begin
-       (* Like for the sum types, we directly dig in the fields schemes,
-          assuming the type definition is consistent, hance sharing variables
-          between header of the definition and its fields. *)
-       let record_fields_to_print =
-         List.map
-           (fun (field_name, field_mut, field_scheme) ->
-             try
-               let (_, field_ty) = Types.scheme_split field_scheme in
-               (* We do not have anymore information about "Self"'s
-                  structure... *)
-               let field_args =
-                 Types.extract_fun_ty_arg ~self_manifest: None field_ty in
-               (field_name, field_mut, field_args)
-             with _ ->
-               (* Because program is already well-typed, this should always
-                  succeed. *)
-               assert false)
-           fields in
-       Format.fprintf out_fmter "@[<2>Record@ %a__t@ "
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
-       (* Print the parameter(s) stuff if any. *)
-       print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
-         print_ctx out_fmter type_def_params;
-       Format.fprintf out_fmter ":@ Type :=@\nmk_%a__t {@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
-       (* And finally really print the fields definitions. We just create a
-          local handy function to print the trailing semi only if the
-          processed field is not the last of the list (Dk syntax need). *)
-       let rec local_print_fields = function
-         | [] -> ()
-         | (field_name, field_mut, field_ty) :: q ->
-             (* The mutable fields are not yet supported for Dk code. *)
-             if field_mut = Env.TypeInformation.FM_mutable then
-               raise
-                 (Mutable_record_fields_not_in_dk
-                    (type_descr.Env.TypeInformation.type_loc, field_name)) ;
-             Format.fprintf out_fmter "%a :@ %a"
-               Parsetree_utils.pp_vname_with_operators_expanded field_name
-               (Types.pp_type_simple_to_dk print_ctx) field_ty ;
-             if q <> [] then Format.fprintf out_fmter ";" ;
-             Format.fprintf out_fmter "@\n" ;
-             local_print_fields q in
-       (* Do the printing job... *)
-       local_print_fields record_fields_to_print ;
-       Format.fprintf out_fmter " }.@]@\n " ;
-       if not as_zenon_fact then (
-         (* Add the record labels in the environment like we do for constructors
-            in sum types. Same remarks, same process. *)
-         let env_with_record_labels =
-           List.fold_left
-             (fun accu_env (label_name, _, _) ->
-               Env.DkGenEnv.add_label
-                 label_name
-                 { Env.DkGenInformation.lmi_num_polymorphics_extra_args =
-                     nb_extra_args ;
-                   Env.DkGenInformation.lmi_external_translation = None }
-                 accu_env)
-             env
-             record_fields_to_print in
-         (* Finally add the type definition in the returned environment. *)
-         Env.DkGenEnv.add_type
-           ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
-           type_descr env_with_record_labels
-        )
-       else env
-       end)
+      ()
 ;;
 
 
