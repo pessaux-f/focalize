@@ -200,7 +200,7 @@ Invoking ocamlc...
 >> ocamlc -I /usr/local/lib/focalize -c or_id_com.ml
 Invoking zvtov...
 >> zvtov -zenon zenon -new or_id_com.zv
-Invoking coqc...                                                
+Invoking coqc...
 >> coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon or_id_com.v
 \end{verbatim}}
 
@@ -225,7 +225,7 @@ Invoking ocamlc...
 >> ocamlc -I /usr/local/lib/focalize -c or_id_com_shortest.ml
 Invoking zvtov...
 >> zvtov -zenon zenon -new or_id_com_shortest.zv
-Invoking coqc...                                               
+Invoking coqc...
 >> coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon or_id_com_shortest.v
 \end{verbatim}}
 
@@ -442,7 +442,7 @@ Invoking ocamlc...
 >> ocamlc -I /usr/local/lib/focalize -c zero.ml
 Invoking zvtov...
 >> zvtov -zenon zenon -new zero.zv
-File "zero.fcl", line 12, characters 8-42:                     
+File "zero.fcl", line 12, characters 8-42:
 Zenon error: could not find a proof within the memory size limit
 ### proof failed
 \end{verbatim}}
@@ -492,7 +492,7 @@ Invoking ocamlc...
 >> ocamlc -I /usr/local/lib/focalize -c zero.ml
 Invoking zvtov...
 >> zvtov -zenon zenon -new  -script zero.zv
-Invoking coqc...                                                
+Invoking coqc...
 >> coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon zero.v
 \end{verbatim}}
 
@@ -515,7 +515,7 @@ Invoking ocamlc...
 >> ocamlc -I /usr/local/lib/focalize -c tree_mirror1.ml
 Invoking zvtov...
 >> zvtov -zenon zenon -new tree_mirror1.zv
-File "tree_mirror1.fcl", line 14, characters 8-46:              
+File "tree_mirror1.fcl", line 14, characters 8-46:
 Zenon error: could not find a proof within the memory size limit
 ### proof failed
 \end{verbatim}}
@@ -575,14 +575,11 @@ and a subtraction:
 \begin{lstlisting}[caption=lemmas.fcl]
 open "basics" ;;
 
-let abs_diff (x, y) = if x >0x y then x - y else y - x ;;
+let abs_diff (x, y) = if x > y then x - y else y - x ;;
 \end{lstlisting}}
 
-In this program and the following, relational operators on integers
-are written suffixed by \lstinline{0x}. These are the \focal\
-operators on \lstinline{int} ( \lstinline{>0x}, \lstinline{<0x},
-\lstinline{>=0x} \ldots). We now state the property we want to
-demonstrate, and as always we initially state it as \lstinline{assumed}:
+We now state the property we want to demonstrate, and as always we initially
+state it as \lstinline{assumed}:
 
 {\scriptsize
 \lstinputlisting[numbers=left,caption=lemmas.fcl (2)]{lemmas1.fcl}}
@@ -652,7 +649,7 @@ Invoking ocamlc...
 >> ocamlc -I /usr/local/lib/focalize -c lemmas.ml
 Invoking zvtov...
 >> zvtov -zenon zenon -new lemmas.zv
-Invoking coqc...                                                
+Invoking coqc...
 >> coqc  -I /usr/local/lib/focalize  -I /usr/local/lib/zenon lemmas.v
 \end{verbatim}}
 
@@ -667,7 +664,7 @@ library''! And looking among available theorems (in
 
 {\scriptsize
 \begin{lstlisting}
-theorem int_gt_or_le : all x y : int, (x >0x y) \/ (x <=0x y)
+theorem int_gt_or_le : all x y : int, (x > y) \/ (x <= y)
 \end{lstlisting}}
 
 \noindent exactly fitting what we need! So, proof of our lemma will be
@@ -675,7 +672,7 @@ trivial since it will simply be done \lstinline"by property basics.int_gt_or_le"
 But, we can make even simpler: in our proof, let's just use this
 theorem from the library instead of aliasing it by our lemma! Hence,
 in our proof, we change \lstinline"<2>3 qed" by adding
-\lstinline"by ... int_gt_or_le" instead of 
+\lstinline"by ... int_gt_or_le" instead of
 \lstinline"by ... two_ints_are_gt_or_le" and remove this latter from
 our source code.
 
@@ -720,7 +717,7 @@ theorem:
 
 {\scriptsize
 \begin{lstlisting}
-theorem int_diff_ge_is_pos : all x y : int, x >=0x y -> x - y >=0x 0
+theorem int_diff_ge_is_pos : all x y : int, x >= y -> x - y >= 0
 \end{lstlisting}}
 
 It is nearly won, but not yet. In effect, having a deeper look at our
@@ -735,7 +732,7 @@ Fortunately, we again discover a theorem fitting our expectations in
 
 {\scriptsize
 \begin{lstlisting}
-theorem int_gt_implies_ge : all x y : int, x >0x y -> x >=0x y
+theorem int_gt_implies_ge : all x y : int, x > y -> x >= y
 \end{lstlisting}}
 
 Note that in ``real life'', it will happen that the library do not already
@@ -783,8 +780,8 @@ simply make the proof with these 2 facts:
 {\scriptsize
 \begin{lstlisting}
 ...
-       <2>2 hypothesis h2: x <=0x y,
-                 prove abs_diff (x, y) >=0x 0
+       <2>2 hypothesis h2: x <= y,
+                 prove abs_diff (x, y) >= 0
             <3>1 prove abs_diff (x, y) = y - x
                       by definition of abs_diff hypothesis h2
 ...
@@ -798,14 +795,14 @@ Invoking ocamlc...
 >> ocamlc -I /usr/local/lib/focalize -c lemmas.ml
 Invoking zvtov...
 >> zvtov -zenon zenon -new lemmas.zv
-File "lemmas.fcl", line 21, characters 17-56:                
+File "lemmas.fcl", line 21, characters 17-56:
 Zenon error: exhausted search space without finding a proof
 ### proof failed
 \end{verbatim}}
 
-Having closer look at our hypothesis \lstinline"h2: x <=0x y" and the
+Having closer look at our hypothesis \lstinline"h2: x <= y" and the
 way \lstinline"abs_diff" has its conditional written
-\lstinline"if x >0x y", we see that the \lstinline"if" tests $x >y$,
+\lstinline"if x > y", we see that the \lstinline"if" tests $x >y$,
 hence in the ``else-case'' we have $\sim (x >y)$ and not $x \le y$ as
 stated in the hypothesis! In effect, in a ``else-branch'' the holding
 property is ``{\bf not}-the-tested-condition''. And again, for \zenon,
@@ -815,7 +812,7 @@ exists in \focal\ standard library:
 
 {\scriptsize
 \begin{lstlisting}
-theorem int_le_not_gt : all x y : int, (x <=0x y) -> ~ (x >0x y)
+theorem int_le_not_gt : all x y : int, (x <= y) -> ~ (x > y)
 \end{lstlisting}}
 
 At this point, adding the fact \lstinline"int_le_not_gt" to the proof
@@ -831,4 +828,3 @@ of our step \lstinline"<3>1" will finally conclude the whole proof:
 \bibliography{bibli}
 
 \end{document}
-

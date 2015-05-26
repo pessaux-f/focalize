@@ -68,9 +68,9 @@ species Int_value =
 
   let plus (n1 : Self, n2 : Self) : Self = n1 + n2;
 
-  let geq (n1 : Self, n2 : Self) : bool = n1 >=0x n2;
+  let geq (n1 : Self, n2 : Self) : bool = n1 >= n2;
 
-  let pos (n : Self) : bool = n >0x 0;
+  let pos (n : Self) : bool = n > 0;
 
 end
 ;;

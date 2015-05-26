@@ -149,16 +149,16 @@ let basics_result = (* used otherwise *)
   ["focalize_error", (fun _l _v -> prolog_fun "fail" []);
    "~0x", (fun l v -> equal_op v "-" (prolog_int 0 :: l));
    "=0x", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#=" l]);
-   "<=0x", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#=<" l]);
-   ">0x", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#>" l]);
-   ">=0x", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#>=" l]);
+   "<=", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#=<" l]);
+   ">", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#>" l]);
+   ">=", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#>=" l]);
    "=", (fun l v -> prolog_fun "unifyD" (prolog_var v ::l));
    "=", (fun l v -> prolog_fun "unifyD" (prolog_var v ::l));
    "+", (fun l v -> equal_op v "+" l);
    "True", (fun _ _ -> prolog_int 1);
    "False", (fun _ _ -> prolog_int 0);
-   "succ0x", (fun l v -> prolog_fun "succ" (prolog_var v::l));
-   "max0x", (fun l v -> prolog_fun "int_max" (prolog_var v ::l));
+   "succ", (fun l v -> prolog_fun "succ" (prolog_var v::l));
+   "max", (fun l v -> prolog_fun "int_max" (prolog_var v ::l));
    "*", (fun l v -> equal_op v "*" l);
    "-", (fun l v -> equal_op v "-" l);
    "/", (fun l v -> equal_op v "/" l);
@@ -166,7 +166,7 @@ let basics_result = (* used otherwise *)
    "&&", (fun l v -> prolog_fun "and_b" (prolog_var v ::l));
    "||", (fun l v -> prolog_fun "or_b" (prolog_var v ::l));
    "~~", (fun l v -> prolog_fun "not_b" (prolog_var v ::l));
-   "<0x", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#<" l]);
+   "<", (fun l v -> prolog_fun "#<=>" [prolog_var v; prolog_fun "#<" l]);
    "pair", (fun l v -> prolog_fun "pair" (prolog_var v::l));
    "snd", (fun l v -> prolog_fun "scnd" (prolog_var v::l));
    "fst", (fun l v -> prolog_fun "first" (prolog_var v::l))

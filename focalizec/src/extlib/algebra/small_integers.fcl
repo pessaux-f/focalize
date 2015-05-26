@@ -63,17 +63,17 @@ species Basic_small_nats =
   (** We check overflow by testing signs @mathml <plus/> *)
   let plus (m : Self, n : Self) : Self  =
      let r = m + n in
-     if m <=0x 0 then
-       if n <=0x 0 then
+     if m <= 0 then
+       if n <= 0 then
          (* sum of negative is negative *)
-         if r <=0x 0 then r
+         if r <= 0 then r
          else focalize_error ("small integer Overflow")
        else (* negative and positive don't produce overflow *)
          r
      else (* x > 0 *)
-       if n >0x 0 then
+       if n > 0 then
          (* sum of positive is positive *)
-         if r >0x 0 then r
+         if r > 0 then r
          else focalize_error ("small integer Overflow")
        else (* positive and negative don't produce overflow *)
          r
@@ -83,23 +83,23 @@ species Basic_small_nats =
       @mathml <mult/> *)
   let mult (m : Self, n : Self) : Self =
      let r = m * n in
-     if m <0x 0 then
-       if n <=0x 0 then
+     if m < 0 then
+       if n <= 0 then
          (* product of negatives is positive *)
-         if r >=0x 0 then r
+         if r >= 0 then r
          else focalize_error ("small integer Overflow")
        else
          (* product of negative and positive is negative *)
-         if r <=0x 0 then r
+         if r <= 0 then r
          else focalize_error ("small integer Overflow")
      else (* x > 0 *)
-       if n >0x 0 then
+       if n > 0 then
          (* sum of positives is positive *)
-         if r >0x 0 then r
+         if r > 0 then r
          else focalize_error ("small integer Overflow")
        else
          (* product of positive and negative is negative *)
-         if r <=0x 0 then r
+         if r <= 0 then r
          else focalize_error ("small integer Overflow")
      ;
 
@@ -109,7 +109,7 @@ species Basic_small_nats =
   proof of equal_transitive = by definition of equal;
 --  proof of equal_from_leq = assumed {* Because toto *};
   let is_one (x : Self) = x = 1;
-  let leq (x : Self, y : Self) = x <=0x y;
+  let leq (x : Self, y : Self) = x <= y;
   (* declared in basic_object *)
   let parse (x) = int_of_string (x);
   let print (x) = string_of_int (x);
@@ -119,10 +119,10 @@ species Basic_small_nats =
     else weak_structures#cr_qrr (m / n, m % n);
 
   logical let euclidean_ordering (n : Self, m : Self) =
-    if n >0x 0 then
-      if m >0x 0 then n <0x m else n <0x (~0x m)
+    if n > 0 then
+      if m > 0 then n < m else n < (~0x m)
     else
-      if m >0x 0 then (~0x n) <0x m else (~0x n) <0x (~0x m);
+      if m > 0 then (~0x n) < m else (~0x n) < (~0x m);
 end
 ;;
 
@@ -132,9 +132,9 @@ species Basic_small_ints =
 
   let opposite (x : Self) : Self = 0 - x;
   let sign (x : Self) =
-    if x <0x 0 then -1
+    if x < 0 then -1
     else
-     if x >0x 0 then 1 else 0;
+     if x > 0 then 1 else 0;
 
 end
 ;;
@@ -149,12 +149,12 @@ species Small_naturals =
   let seed (x) = randoms#random_seed (x);
   let to_int (n : Self) : int = n;
   let of_int (n : int) : Self =
-     if n <0x 0
+     if n < 0
      then !failed ("small_naturals!of_int: naturals are positive")
      else n;
   let minus (n, m) =
      let r = n - m in
-     if r <0x 0 then
+     if r < 0 then
        !failed ("small_naturals!minus: can't substract")
      else r;
 

@@ -20,15 +20,15 @@ let focbasics = "basics";;
 
 let focequal = Infix "=";;
 let focintequal = Infix "=0x";;
-let focintgt = Infix ">0x";; 
-let focintgeq = Infix ">=0x";; 
-let focintleq = Infix "<=0x";; 
+let focintgt = Infix ">";;
+let focintgeq = Infix ">=";;
+let focintleq = Infix "<=";;
 (* let focintmod = Prefix "int_mod";; *)
 
 let focaddint = Infix "+";;
 let focstringconcat = Infix "^";;
-let focpred = Prefix(Some "basics", "pred0x");;
-let focsucc = Prefix(Some "basics", "succ0x");;
+let focpred = Prefix(Some "basics", "pred");;
+let focsucc = Prefix(Some "basics", "succ");;
 let focunit = Prefix(Some "basics", "()");;
 let foctrue = Prefix(Some "basics", "True");;
 let focfalse = Prefix(Some "basics", "False");;
@@ -70,7 +70,7 @@ let suffixe_id =
       i := !i + 1;
       s ^ "__" ^ string_of_int (!i);;
 
-let spec_instru_name s l = 
+let spec_instru_name s l =
   suffixe_id (s ^ "_instru" ^ List.fold_left (fun s e -> s ^ "_" ^ e) "" l);;
 
 let spec_test_name s =
@@ -183,7 +183,7 @@ let replace pat dest s =
   let rec comp pat ip lp s i ls =
     if ip >= lp then
       true
-    else 
+    else
       if i >= ls then
         false
       else
@@ -240,4 +240,3 @@ let string_of_option f t =
   match t with
   | None -> "none"
   | Some t -> "some(" ^ f t ^ ")";;
-

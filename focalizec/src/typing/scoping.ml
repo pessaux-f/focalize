@@ -153,11 +153,11 @@ exception Invalid_external_binding_number of Location.t;;
 
 (* ********************************************************************* *)
 (** {b Descr} : Exception raised when a termination proof mentions a
-    structural decreasing ident that is not an argument of the function.
+    decreasing ident that is not an argument of the function.
 
     {b Exported} :  Yes.                                                 *)
 (* ********************************************************************* *)
-exception Structural_termination_only_on_fun_arg of
+exception Termination_only_on_fun_arg of
   (Location.t * Parsetree.vname)
 ;;
 
@@ -1680,14 +1680,10 @@ and scope_termination_proof ctx env params_env tp =
          (* Wrong ! The structural argument must be an argument locally bound
             by the function defintion ! *)
          raise
-           (Structural_termination_only_on_fun_arg
+           (Termination_only_on_fun_arg
               (tp.Parsetree.ast_loc, arg_name))
-   | Parsetree.TP_lexicographic facts ->
-       { tp with
-         Parsetree.ast_desc =
-           Parsetree.TP_lexicographic (List.map (scope_fact ctx env) facts) }
-   | Parsetree.TP_measure (expr, args, proof) ->
-       let scoped_expr = scope_expr ctx env expr in
+   | Parsetree.TP_lexicographic (orders_exprs, args, proof) ->
+       let scoped_orders_exprs = List.map (scope_expr ctx env) orders_exprs in
        let scoped_args =
          List.map
            (fun (arg_name, arg_type) ->
@@ -1696,7 +1692,7 @@ and scope_termination_proof ctx env params_env tp =
                  (can_be_scoped_as_local_p
                     ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
                raise
-                 (Structural_termination_only_on_fun_arg
+                 (Termination_only_on_fun_arg
                     (tp.Parsetree.ast_loc, arg_name));
              let scoped_arg_ty =
                match arg_type with
@@ -1707,24 +1703,42 @@ and scope_termination_proof ctx env params_env tp =
        let scoped_proof = scope_proof ctx env proof in
        { tp with
          Parsetree.ast_desc =
-           Parsetree.TP_measure (scoped_expr, scoped_args, scoped_proof) }
-   | Parsetree.TP_order (expr, args, proof) ->
+           Parsetree.TP_lexicographic
+             (scoped_orders_exprs, scoped_args, scoped_proof) }
+   | Parsetree.TP_measure (expr, (arg_name, arg_type), proof) ->
        let scoped_expr = scope_expr ctx env expr in
-       let scoped_args =
-         List.map
-           (fun (arg_name, arg_type) ->
-             if not
-                 (can_be_scoped_as_local_p
-                    ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
-               raise
-                 (Structural_termination_only_on_fun_arg
-                    (tp.Parsetree.ast_loc, arg_name));
-             let scoped_arg_ty =
-               match arg_type with
-                | None -> None
-                | Some ty -> Some (scope_type_expr ctx params_env ty) in
-             (arg_name, scoped_arg_ty))
-           args in
+       let scoped_arg = (
+         if not
+             (can_be_scoped_as_local_p
+                ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
+           raise
+             (Termination_only_on_fun_arg
+                (tp.Parsetree.ast_loc, arg_name)) ;
+         let scoped_arg_ty =
+           match arg_type with
+           | None -> None
+           | Some ty -> Some (scope_type_expr ctx params_env ty) in
+         (arg_name, scoped_arg_ty)
+        ) in
+       let scoped_proof = scope_proof ctx env proof in
+       { tp with
+         Parsetree.ast_desc =
+           Parsetree.TP_measure (scoped_expr, scoped_arg, scoped_proof) }
+   | Parsetree.TP_order (expr, (arg_name, arg_type), proof) ->
+       let scoped_expr = scope_expr ctx env expr in
+       let scoped_args = (
+         if not
+             (can_be_scoped_as_local_p
+                ctx params_env ~loc: tp.Parsetree.ast_loc arg_name) then
+           raise
+             (Termination_only_on_fun_arg
+                (tp.Parsetree.ast_loc, arg_name)) ;
+         let scoped_arg_ty =
+           match arg_type with
+           | None -> None
+           | Some ty -> Some (scope_type_expr ctx params_env ty) in
+         (arg_name, scoped_arg_ty)
+        ) in
        let scoped_proof = scope_proof ctx env proof in
        { tp with
          Parsetree.ast_desc =
@@ -1875,7 +1889,6 @@ and scope_let_definition ~toplevel_let ctx env let_def =
            | Parsetree.BB_computational expr ->
                Parsetree.BB_computational
                  (scope_expr ctx env_with_ty_constraints_variables expr)
-
           | Parsetree.BB_logical
                 { Parsetree.ast_desc = Parsetree.Pr_expr expr } ->
               (* Turn the logical_expr into an expression since we are not
@@ -1895,8 +1908,8 @@ and scope_let_definition ~toplevel_let ctx env let_def =
            Some (scope_type_expr ctx env_with_ty_constraints_variables tye)) in
     let new_binding_desc =
       { let_binding_descr with
-          Parsetree.b_params = scoped_b_params;
-          Parsetree.b_type = scoped_b_type;
+          Parsetree.b_params = scoped_b_params ;
+          Parsetree.b_type = scoped_b_type ;
           Parsetree.b_body = scoped_body } in
     { let_binding with Parsetree.ast_desc = new_binding_desc } in
   let scoped_bindings =
@@ -1916,7 +1929,7 @@ and scope_let_definition ~toplevel_let ctx env let_def =
      environment. *)
   let scoped_let_def_desc = {
     let_def_descr with
-      Parsetree.ld_bindings = scoped_bindings;
+      Parsetree.ld_bindings = scoped_bindings ;
       Parsetree.ld_termination_proof = scoped_termination_proof } in
   let scoped_let_def = {
     let_def with Parsetree.ast_desc = scoped_let_def_desc } in

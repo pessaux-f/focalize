@@ -406,6 +406,10 @@ let list_indices_of_present_in ~all ~subset =
 
 
 
+let list_index_of e l = list_first_index (fun a_e -> a_e = e) l ;;
+
+
+
 let pp_set_shaded ppf =
   if Configuration.get_fancy_ansi () then Format.fprintf ppf "@<0>\027[2m" ;;
 

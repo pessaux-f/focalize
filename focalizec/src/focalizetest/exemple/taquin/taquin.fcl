@@ -82,12 +82,12 @@ species Board(I is Int, sx in I, sy in I, S is Square) =
 
   let init(x : unit) : Self =
      let rec init_line(x, y) =
-       if x >0x I!to_int(sx) then
+       if x > I!to_int(sx) then
          [] 
        else
  S!init(x, y, I!to_int(sx), I!to_int(sy))::init_line(x + 1, y) in
      let rec init_column(y) =
-       if y >0x I!to_int(sy) then
+       if y > I!to_int(sy) then
          []
        else
          init_line(1, y)::init_column(y + 1) in
@@ -113,7 +113,7 @@ species Taquin_square =
       if x = -1 then
         "  "
       else
-        if x <=0x 9 then
+        if x <= 9 then
           " " ^ basics#string_of_int(x)
         else
           basics#string_of_int(x) in
@@ -169,7 +169,7 @@ species Taquin (I is Int, size in I, Sq is Taquin_square, B is Board(I, size, si
     let x = !get_blank_pos_x(ss) in
     let y = !get_blank_pos_y(ss) in
     let bb = !get_board(ss) in
-    if x >=0x !size then
+    if x >= !size then
       ss
     else
       let in_blank = B!cget(bb, x, y) in
@@ -181,7 +181,7 @@ species Taquin (I is Int, size in I, Sq is Taquin_square, B is Board(I, size, si
     let x = !get_blank_pos_x(ss) in
     let y = !get_blank_pos_y(ss) in
     let bb = !get_board(ss) in
-    if y <=0x 1 then
+    if y <= 1 then
       ss
     else
       let in_blank = B!cget(bb, x, y) in
@@ -193,7 +193,7 @@ species Taquin (I is Int, size in I, Sq is Taquin_square, B is Board(I, size, si
     let x = !get_blank_pos_x(ss) in
     let y = !get_blank_pos_y(ss) in
     let bb = !get_board(ss) in
-    if y >=0x !size then
+    if y >= !size then
       ss
     else
       let in_blank = B!cget(bb, x, y) in

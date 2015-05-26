@@ -110,3 +110,6 @@ val set_pmatch_err_as_warn : unit -> unit
 
 val get_zvtov_extra_opts : unit -> string
 val set_zvtov_extra_opts : string -> unit
+
+val set_show_term_obls : unit -> unit
+val get_show_term_obls : unit -> bool

@@ -443,15 +443,19 @@ let param_deps_termination_proof ~current_species
     (param_coll_name, param_coll_meths) t_proof =
   match t_proof.Parsetree.ast_desc with
    | Parsetree.TP_structural _ -> Parsetree_utils.ParamDepSet.empty
-   | Parsetree.TP_lexicographic facts ->
+   | Parsetree.TP_lexicographic (orders_exprs, _,  sub_pr) ->
+       let deps_in_pr =
+         param_deps_proof ~current_species (param_coll_name, param_coll_meths)
+           sub_pr in
        List.fold_left
-         (fun accu_deps fact ->
+         (fun accu_deps e ->
            Parsetree_utils.ParamDepSet.union
              accu_deps
-             (param_deps_fact
-                ~current_species (param_coll_name, param_coll_meths) fact))
-         Parsetree_utils.ParamDepSet.empty
-         facts
+             (__param_deps_expr
+                ~current_species (param_coll_name, param_coll_meths) [] e))
+         (* Accumulate in the deps of the proof. *)
+         deps_in_pr
+         orders_exprs
    | Parsetree.TP_measure (expr, _,  sub_pr)
    | Parsetree.TP_order (expr, _,  sub_pr) ->
        let deps_in_pr =

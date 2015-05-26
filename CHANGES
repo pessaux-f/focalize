@@ -1,3 +1,16 @@
+- Termination proofs by measure and by order.
+- Termination proofs (order/measure) now typechecked correctly.
+  Before, there was no verification on the expression used as order or measure,
+  and on the argument's type used.
+- Fixed exception not handled (turned in an error message) for decreasing
+  ident not a function argument in termination proofs.
+- Order relations on orders are not anymore called <0x, <=0x etc, but simply
+  <, <= etc.
+- Simplifications in the generated code for collections. Use of implicit
+  arguments in right number instead of full types/expression. Makes the
+  generated code shorter and more readable.
+
+
 # Focalize 0.9.0
 ################
 - Update to Caml 4.02.0

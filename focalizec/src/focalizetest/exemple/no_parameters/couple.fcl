@@ -1,8 +1,8 @@
-use "basics";; 
-open "basics";; 
+use "basics";;
+open "basics";;
 
 type couple('t) =
-| Zero 
+| Zero
 | Tuple('t, 't)
 ;;
 
@@ -29,11 +29,11 @@ species Groupe_couple_entier =
         | #Zero -> t1
         | #Tuple(c, d) -> #Tuple(a + c , b + d)
         );
-  
-  let well_formed(t : Self) = 
+
+  let well_formed(t : Self) =
     match t with
     | #Zero -> true
-    | #Tuple(a, b) -> 
+    | #Tuple(a, b) ->
         if (a =0x 0) && (b =0x 0) then
           false
         else
@@ -57,7 +57,7 @@ species Groupe_couple_list_int =
 
   let append(a : string, b : string) = a ^ b;
 
-  let equal (t1, t2) = 
+  let equal (t1, t2) =
     match t1 with
     | #Zero ->
         (match t2 with
@@ -95,7 +95,7 @@ species Groupe_couple_list_int =
      match l2 with
      | [] -> l1
      | a::l -> !list_append(a::l1, l);
-  
+
   let plus (t1 : Self, t2 : Self) =
       match t1 with
       | #Zero -> t2
@@ -129,7 +129,7 @@ species Groupe_couple_list_int =
     | #Zero -> true
     | #Tuple(a, b) -> (!list_somme(a) =0x !list_somme(b));
 
-  let rev (t : Self) = 
+  let rev (t : Self) =
     match t with
     | #Zero -> #Zero
     | #Tuple(a, b) -> #Tuple(b, a);
@@ -137,13 +137,13 @@ species Groupe_couple_list_int =
   let rec lin (x, l) =
    match l with
    | [] -> false
-   | e::r -> 
+   | e::r ->
        if (x =0x e) then
          true
        else
          !lin(x, r);
 
-  let rec incl(l1, l2) = 
+  let rec incl(l1, l2) =
    match l1 with
    | [] -> true
    | e::r ->
@@ -169,4 +169,3 @@ species Groupe_couple_list_int =
      assumed;
 
 end;;
-

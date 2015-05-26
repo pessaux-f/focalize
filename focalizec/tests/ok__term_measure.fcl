@@ -2,9 +2,9 @@ use "basics" ;;
 open "basics" ;;
 use "wellfounded" ;;
 
-theorem zero_inf_one : 0 <0x 1 proof = assumed ;;
+theorem zero_inf_one : 0 < 1 proof = assumed ;;
 
-theorem abs_basics : all x : int, ((x = 0) \/ (0 <0x x)) -> abs0x (x) = x
+theorem abs_basics : all x : int, ((x = 0) \/ (0 < x)) -> abs (x) = x
 proof = assumed ;;
 
 

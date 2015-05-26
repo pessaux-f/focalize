@@ -197,3 +197,9 @@ let (set_zvtov_extra_opts, get_zvtov_extra_opts) =
   (fun s -> zvtov_extra_opts := !zvtov_extra_opts ^ " " ^ s),
   (fun () -> !zvtov_extra_opts)
 ;;
+
+let (set_show_term_obls, get_show_term_obls) =
+  let show_term_obls = ref false in
+  (fun () -> show_term_obls := true),
+  (fun () -> !show_term_obls)
+;;

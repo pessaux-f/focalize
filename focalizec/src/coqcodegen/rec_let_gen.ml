@@ -14,7 +14,6 @@
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: rec_let_gen.ml,v 1.27 2012-10-30 11:55:07 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} This mmodule contains utilities for recursive functions code
@@ -60,8 +59,7 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
            let (body', rec_found) = rec_transform_expr body in
            if rec_found then failwith "Tupling too complex" ;
            ((Parsetree.E_fun (args, body')), false)
-       | Parsetree.E_app (e, args) ->
-           (begin
+       | Parsetree.E_app (e, args) -> (
            let args' =
              List.map
                (fun ex ->
@@ -71,17 +69,16 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
                args in
            let (e', rec_found) = rec_transform_expr e in
            let args'' =
-             if rec_found then
-               (begin
+             if rec_found then (
                let tupled_args_desc = Parsetree.E_tuple args' in
                [ { Parsetree.ast_loc = Location.none ;
                    Parsetree.ast_desc = tupled_args_desc ;
                    Parsetree.ast_annot = [] ;
                    Parsetree.ast_type = Parsetree.ANTI_irrelevant } ]
-               end)
+              )
              else args' in
            ((Parsetree.E_app (e', args'')), false)
-           end)
+          )
        | Parsetree.E_constr (cident, args) ->
            let args' =
              List.map
@@ -198,7 +195,7 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
        | Parsetree.Pr_paren lexpr ->
            Parsetree.Pr_paren (rec_transform_logical_expr lexpr)) in
     { logical_expr with Parsetree.ast_desc = new_desc }
-           
+
 
 
   and transform_binding_body body =
@@ -345,7 +342,7 @@ let generate_variables_as_tuple out_fmter vars =
     | [(last, _)] ->
         Format.fprintf out_fmter "%a"
           Parsetree_utils.pp_vname_with_operators_expanded last
-    | (h, _) :: q -> 
+    | (h, _) :: q ->
         Format.fprintf out_fmter "%a,@ "
           Parsetree_utils.pp_vname_with_operators_expanded h ;
         rec_gen q in
@@ -437,16 +434,25 @@ let generate_exprs_as_tuple ctx env exprs =
 
 
 
+type termination_expr_kind =
+  | TEK_order of Parsetree.expr    (** Expression denotes an order. *)
+  | TEK_measure of Parsetree.expr  (** Expression denotes a measure. *)
+;;
+
+
+
 (** {b Descr}: Represent the 2 kinds of order to generate to argue the
     decreasing of a recursive function. Depending on the point of view,
-    different code has to be emitted. *)
+    different code has to be emitted. In the first case we are dealing with
+    the "user order" or the "user measure". In the second we are dealing
+    with the real "Function" order, i.e. the one that Function needs. *)
 type order_kind =
-  | OK_expr of (Parsetree.expr * (int list)) (** Case of the "user-order". It
-         only deals with the function's arguments involved in the decreasing
-         of the recursing. The user specifies his order on only the arguments
-         he is interested in. So the order to generate is directly coming
-         from the expression given as "order" by the user. The int list
-         is the list of indices of the function's parameters used by this
+  | OK_expr of (termination_expr_kind * int) (** Case of the
+         "user-order". It only deals with the function's argument involved in
+         the decreasing of the recursing. The user specifies his order on only
+         the unique argument he is interested in. So the order to generate is
+         directly coming from the expression given as "order" by the user. The
+         int is the indiex of the function's parameter used by this
          "user-order". *)
   | OK_wfounded of   (** Case of the "Function-order", i.e. the one that the
          Coq construct Function expects to prove correct recursive definition.
@@ -524,8 +530,9 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
          [~explicit_order]. In case of "Function-" order, we have to apply it
          to its arguments coming from to lambda-liftings. *)
       (match explicit_order with
-       | OK_expr (expr_order, rec_fun_used_args_indices) ->
-           (* Surround by a Is_true since the user order can only be oa
+       | OK_expr ((TEK_order expr_order), rec_fun_used_arg_index) ->
+           (* Case of a proof by an order.
+              Surround by a Is_true since the user order can only be a
               function returning a bool, hence must be plunged into Prop. *)
            Format.fprintf out_fmter "Is_true ((@[<1>" ;
            Species_record_type_generation.generate_expr
@@ -535,14 +542,10 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
              ~recursive_methods_status:
                Species_record_type_generation.RMS_regular env expr_order ;
            Format.fprintf out_fmter "@])@ " ;
-           (* Now, generate the tuples of only arguments used in the order
-              given by the user to provide to this order. *)
-(* [Unsure] considered orders only compare 2 simple arguments, not a tuple. *)
-           if (List.length rec_fun_used_args_indices) <> 1 then
-             failwith "TODO: order/measure using several arguments" ;
-           let index = List.hd rec_fun_used_args_indices in
-           let rec_arg = List.nth rec_args index in
-           let initial_var = List.nth initial_vars index in
+           (* Now, generate the only argument used in the order given by the
+              user to provide to this order. *)
+           let rec_arg = List.nth rec_args rec_fun_used_arg_index in
+           let initial_var = List.nth initial_vars rec_fun_used_arg_index in
            (* Generate the corresponding recursive call argument. *)
            Species_record_type_generation.generate_expr
              ctx ~in_recursive_let_section_of: [] ~local_idents: []
@@ -556,6 +559,44 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
              (fst initial_var) ;
            (* Close the surrounding Is_true. *)
            Format.fprintf out_fmter "@])"
+       | OK_expr ((TEK_measure expr_mea), rec_fun_used_arg_index) ->
+           (* Case of a proof by a measure.
+              Surround by a Is_true since < returns a bool, hence must be
+              plunged into Prop. *)
+           Format.fprintf out_fmter "Is_true (@[<1>basics._lt_@ (" ;
+           (* Call the measure on the first argument. *)
+           Species_record_type_generation.generate_expr
+             ctx ~in_recursive_let_section_of: [] ~local_idents: []
+             ~self_methods_status:
+               Species_record_type_generation.SMS_abstracted
+             ~recursive_methods_status:
+               Species_record_type_generation.RMS_regular env expr_mea ;
+           let rec_arg = List.nth rec_args rec_fun_used_arg_index in
+           let initial_var = List.nth initial_vars rec_fun_used_arg_index in
+           (* Put the first argument (recursive call argument). *)
+           Format.fprintf out_fmter "@ " ;
+           Species_record_type_generation.generate_expr
+             ctx ~in_recursive_let_section_of: [] ~local_idents: []
+             ~self_methods_status:
+               Species_record_type_generation.SMS_abstracted
+             ~recursive_methods_status:
+               Species_record_type_generation.RMS_regular env rec_arg ;
+           (* Close paren of first application of the measure and open one for
+              the second . *)
+           Format.fprintf out_fmter ")@ (" ;
+           (* Call a seconde time the measure. *)
+           Species_record_type_generation.generate_expr
+             ctx ~in_recursive_let_section_of: [] ~local_idents: []
+             ~self_methods_status:
+               Species_record_type_generation.SMS_abstracted
+             ~recursive_methods_status:
+               Species_record_type_generation.RMS_regular env expr_mea ;
+           (* Put the second argument (initial one of the function). *)
+           Format.fprintf out_fmter "@ %a"
+             Parsetree_utils.pp_vname_with_operators_expanded
+             (fst initial_var) ;
+           (* Close second app of the measure and the surrounding Is_true. *)
+           Format.fprintf out_fmter ")@])"
        | OK_wfounded (fname, ai, sorted_deps_from_params, abstracted_methods) ->
            Format.fprintf out_fmter "(%a_wforder"
              Parsetree_utils.pp_vname_with_operators_expanded fname ;
@@ -579,7 +620,7 @@ let generate_termination_lemmas ctx print_ctx env ~explicit_order
 let print_user_variables_quantifications vars bindings =
   List.iter
     (fun (v, ty) ->
-      Format.eprintf "all %a : %a,@ "
+      Format.printf "all %a : %a,@ "
         Sourcify.pp_vname v Types.pp_type_simple ty)
     vars ;
   (* Now, quantify the variables bound in the bindings. *)
@@ -593,7 +634,7 @@ let print_user_variables_quantifications vars bindings =
             | Parsetree.ANTI_type _ -> assert false
             | Parsetree.ANTI_scheme s -> s) in
           let ty = Types.specialize scheme in
-          Format.eprintf  "all %a :@ %a,@ "
+          Format.printf  "all %a :@ %a,@ "
             Sourcify.pp_vname binding.Parsetree.ast_desc.Parsetree.b_name
             Types.pp_type_simple ty
          )
@@ -607,7 +648,7 @@ let print_user_variables_quantifications vars bindings =
                 (match ty_info with
                 | Parsetree.ANTI_type t -> t
                 | _ -> assert false) in
-              Format.eprintf "all %a :@ %a,@ "
+              Format.printf "all %a :@ %a,@ "
                 Sourcify.pp_vname v Types.pp_type_simple t)
             bound_vars
          )
@@ -629,15 +670,15 @@ let print_user_binding_let binding =
      we don't have anomymous lambdas ike those we use to generate the Coq
      version of the obligations. *)
    if binding_desc.Parsetree.b_params <> [] then (
-     Format.eprintf "let %a in@ " Sourcify.pp_binding binding
+     Format.printf "let@ %a@ in@ " Sourcify.pp_binding binding
    )
    else (
      (* Otherwise, we print the body of the let binding and the bound name will
         arrive after. *)
-     Format.eprintf "(%a"
+     Format.printf "(%a"
        Sourcify.pp_binding_body binding_desc.Parsetree.b_body ;
      (* The bound variable (after, like Coq does). *)
-     Format.eprintf "=@ %a)@ ->"
+     Format.printf "=@ %a)@ ->@ "
        Parsetree_utils.pp_vname_with_operators_expanded
        binding_desc.Parsetree.b_name
     )
@@ -645,22 +686,30 @@ let print_user_binding_let binding =
 
 
 
-(** {b Descr}: Prints on stderr the obligation proofs the user will have to
-    do on its recursive function to prove that his order makes arguments
-    decreasing. This output is lighter than its Coq version because it outputs
-    some Focal source code. *)
-let print_user_termination_obls fun_name recursive_calls user_order
-    rec_fun_used_args_indices =
-  Format.eprintf
-    "Termination proof obligations for the recursive function '%a':@\n"
-    Sourcify.pp_vname fun_name ;
+(* ************************************************************************ *)
+(** {b Descr}: Prints on stdout the obligation proofs the user will have to
+    do on its recursive function to prove that its order makes arguments
+    decreasing and that the order is well-founded.
+    This output is lighter than its Coq version because it outputs
+    some Focal source code.
+
+    {b Exported}: Yes.                                                      *)
+(* ************************************************************************ *)
+let print_user_termination_obls_for_order fun_name recursive_calls user_order
+    rec_fun_used_arg_index =
+  Format.printf
+    "@\n\
+    ---------------------------------------------------------------@\n\
+    %tTermination proof obligations for the recursive function%t '%t%a%t':@\n"
+   Handy.pp_set_bold Handy.pp_reset_effects
+   Handy.pp_set_underlined Sourcify.pp_vname fun_name Handy.pp_reset_effects ;
   let counter = ref 1 in
   List.iter
     (fun (n_exprs, bindings) ->
       (* The list of hypotheses induced by bindings is in *reverse order*.
          Let's reverse it. *)
       let bindings = List.rev bindings in
-      Format.eprintf "@[<2><1>%d prove@ " !counter ;
+      Format.printf "@[<2><1>%d prove@ " !counter ;
       incr counter ;
       (* [n_exprs]: (initial variable of the function * expression provided
          in the recursive call). The expression must hence be < to the initial
@@ -675,31 +724,105 @@ let print_user_termination_obls fun_name recursive_calls user_order
         (function
           | Recursion.B_let let_binding -> print_user_binding_let let_binding
           | Recursion.B_match (expr, pattern) ->
-              Format.eprintf "(%a@ = %a) ->@ "
+              Format.printf "(%a@ = %a)@ ->@ "
                 Sourcify.pp_pattern pattern Sourcify.pp_expr expr
           | Recursion.B_condition (expr, bool_val) ->
-              Format.eprintf "(%a" Sourcify.pp_expr expr ;
-              if not bool_val then Format.eprintf "@ =@ false" ;
-              Format.eprintf ") ->@ ")
+              Format.printf "(%a" Sourcify.pp_expr expr ;
+              if not bool_val then Format.printf "@ =@ false" ;
+              Format.printf ")@ ->@ ")
         bindings ;
       (* Now, generate the goals that states the decreasing applying
          the "user-"order. *)
-      Format.eprintf "%a" Sourcify.pp_expr user_order ;
-      Format.eprintf "( " ;
-      (* Now, generate the tuples of only arguments used in the order
-         given by the user to provide to this order. *)
-(* [Unsure] considered orders only compare 2 simple arguments, not a tuple. *)
-      if (List.length rec_fun_used_args_indices) <> 1 then
-        failwith "TODO: order/measure using several arguments" ;
-      let index = List.hd rec_fun_used_args_indices in
-      let rec_arg = List.nth rec_args index in
-      let initial_var = List.nth initial_vars index in
+      Format.printf "%a@ (" Sourcify.pp_expr user_order ;
+      (* Now, generate the only argument used in the order given by the user
+         to provide to this order. *)
+      let rec_arg = List.nth rec_args rec_fun_used_arg_index in
+      let initial_var = List.nth initial_vars rec_fun_used_arg_index in
       (* Generate the corresponding recursive call argument. *)
-      Format.eprintf "%a" Sourcify.pp_expr rec_arg ;
+      Format.printf "%a" Sourcify.pp_expr rec_arg ;
       (* Generate the initial argument of the function. *)
-      Format.eprintf ",@ %a" Sourcify.pp_vname (fst initial_var) ;
-      Format.eprintf ")" ;
-      Format.eprintf "@]@\n")
+      Format.printf ",@ %a)" Sourcify.pp_vname (fst initial_var) ;
+      Format.printf "@]@\n")
     recursive_calls ;
-  Format.eprintf "@\n"
+  (* Print the obligation stating the well-foundness of the order. *)
+  Format.printf "@[<2><1>%d prove well_wrapper@ (%a)@]@\n"
+    !counter Sourcify.pp_expr user_order ;
+  (* Print the conclusion step since it is always the same. *)
+  Format.printf
+    "@[<2><1>e qed coq proof {*wf_qed*}@]@\n\
+     ---------------------------------------------------------------@\n"
+;;
+
+
+
+(* ************************************************************************ *)
+(** {b Descr}: Prints on stdout the obligation proofs the user will have to
+    do on its recursive function to prove that its order makes arguments
+    decreasing and that the measure is always positive or null.
+    This output is lighter than its Coq version because it outputs
+    some Focal source code.
+
+    {b Exported}: Yes.                                                      *)
+(* ************************************************************************ *)
+let print_user_termination_obls_for_measure fun_name recursive_calls user_meas
+    rec_fun_used_arg_index rec_fun_used_param rec_fun_used_param_ty =
+  Format.printf
+    "@\n\
+    ---------------------------------------------------------------@\n\
+    %tTermination proof obligations for the recursive function%t '%t%a%t':@\n"
+   Handy.pp_set_bold Handy.pp_reset_effects
+   Handy.pp_set_underlined Sourcify.pp_vname fun_name Handy.pp_reset_effects ;
+  let counter = ref 1 in
+  List.iter
+    (fun (n_exprs, bindings) ->
+      (* The list of hypotheses induced by bindings is in *reverse order*.
+         Let's reverse it. *)
+      let bindings = List.rev bindings in
+      Format.printf "@[<2><1>%d prove@ " !counter ;
+      incr counter ;
+      (* [n_exprs]: (initial variable of the function * expression provided
+         in the recursive call). The expression must hence be < to the initial
+         variable for the function to terminate. In fact that's the tuple of
+         initial variables that must be < to the tuple of expressions provided
+         in the recursive call. *)
+      let (initial_vars, rec_args) = List.split n_exprs in
+      (* For each variable, bind it by a forall. *)
+      print_user_variables_quantifications initial_vars bindings ;
+      (* We must generate the hypotheses and separate them by ->. *)
+      List.iter
+        (function
+          | Recursion.B_let let_binding -> print_user_binding_let let_binding
+          | Recursion.B_match (expr, pattern) ->
+              Format.printf "(%a@ = %a)@ ->@ "
+                Sourcify.pp_pattern pattern Sourcify.pp_expr expr
+          | Recursion.B_condition (expr, bool_val) ->
+              Format.printf "(%a" Sourcify.pp_expr expr ;
+              if not bool_val then Format.printf "@ =@ false" ;
+              Format.printf ")@ ->@ ")
+        bindings ;
+      (* Now, generate the goals that states the decreasing applying
+         the "user-"measure. *)
+      Format.printf "%a@ (" Sourcify.pp_expr user_meas ;
+      (* Now, generate the only argument used in the order given by the user
+         to provide to this order. *)
+      let rec_arg = List.nth rec_args rec_fun_used_arg_index in
+      let initial_var = List.nth initial_vars rec_fun_used_arg_index in
+      (* Generate the corresponding recursive call argument. *)
+      Format.printf "%a" Sourcify.pp_expr rec_arg ;
+      (* Generate the initial argument of the function. *)
+      Format.printf ")@ <@ %a@ (%a)"
+        Sourcify.pp_expr user_meas Sourcify.pp_vname (fst initial_var) ;
+      Format.printf "@]@\n")
+    recursive_calls ;
+  (* Print the obligation stating the measure is always positive ot null. *)
+  Format.printf "@[<2><1>%d prove@ " !counter   ;
+  Format.printf "all %a :@ %a,@ "
+    Sourcify.pp_vname rec_fun_used_param
+    Types.pp_type_simple rec_fun_used_param_ty ;
+  Format.printf "0 <= %a (%a)@]@\n"
+    Sourcify.pp_expr user_meas Sourcify.pp_vname rec_fun_used_param ;
+  (* Print the conclusion step since it is always the same. *)
+  Format.printf
+    "@[<2><1>e qed coq proof {*mf_qed*}@]@\n\
+     ---------------------------------------------------------------@\n"
 ;;

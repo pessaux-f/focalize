@@ -620,7 +620,7 @@ module TypeInformation = struct
              expression is kept because Coq code generation need to know it
              in order to make the type expression annotation the parameter
              in the hosting species record type. *)
-          Parsetree_utils.simple_species_expr *
+          Parsetree_utils.simple_species_expr (* [Unsure] Really used ? *) *
           (** The dependency graph of the methods of the species we are a
               "IS" parameter. *)
           (DepGraphData.name_node list))

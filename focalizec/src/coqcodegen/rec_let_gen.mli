@@ -11,11 +11,12 @@
 (*                                                                     *)
 (***********************************************************************)
 
+type termination_expr_kind =
+  | TEK_order of Parsetree.expr
+  | TEK_measure of Parsetree.expr
 
 type order_kind =
-  | OK_expr of (Parsetree.expr * (int list)) (* Liste des indices d'arguments
-                                                de la fonction récursive
-                                                uilisés dans l'ordre. *)
+  | OK_expr of (termination_expr_kind * int)
   | OK_wfounded of
       (Parsetree.vname *
        (Parsetree.vname list) *
@@ -33,9 +34,16 @@ val transform_recursive_calls_args_into_tuple :
   Context.species_compil_context -> local_idents: Parsetree.vname list ->
     Parsetree.vname -> Parsetree.expr -> Parsetree.expr
 
-val print_user_termination_obls :
+val print_user_termination_obls_for_order :
   Parsetree.vname ->
   (((Parsetree.vname * Types.type_simple) * Parsetree.expr) list *
    Recursion.binding list)
   list ->
-    Parsetree.expr -> int list -> unit
+    Parsetree.expr -> int -> unit
+
+val print_user_termination_obls_for_measure :
+  Parsetree.vname ->
+  (((Parsetree.vname * Types.type_simple) * Parsetree.expr) list *
+   Recursion.binding list)
+  list ->
+    Parsetree.expr -> int -> Parsetree.vname -> Types.type_simple -> unit

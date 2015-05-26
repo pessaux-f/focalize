@@ -1,28 +1,28 @@
 open "basics" ;;
 
-let abs_diff (x, y) = if x >0x y then x - y else y - x ;;
+let abs_diff (x, y) = if x > y then x - y else y - x ;;
 
 theorem always_pos :
-  all x y : int, abs_diff (x, y) >=0x 0
+  all x y : int, abs_diff (x, y) >= 0
 proof =
   <1>1 assume x : int, y : int,
-       prove abs_diff (x, y) >=0x 0
-       <2>1 hypothesis h1: x >0x y,
-            prove abs_diff (x, y) >=0x 0
+       prove abs_diff (x, y) >= 0
+       <2>1 hypothesis h1: x > y,
+            prove abs_diff (x, y) >= 0
             <3>1 prove abs_diff (x, y) = x - y
                  by definition of abs_diff hypothesis h1
-            <3>2 prove x - y >=0x 0
+            <3>2 prove x - y >= 0
                  by hypothesis h1
                     property int_diff_ge_is_pos, int_gt_implies_ge
             <3>3 qed by step <3>1, <3>2
-       <2>2 hypothesis h2: x <=0x y,
-            prove abs_diff (x, y) >=0x 0
+       <2>2 hypothesis h2: x <= y,
+            prove abs_diff (x, y) >= 0
             <3>1 prove abs_diff (x, y) = y - x
                  by definition of abs_diff hypothesis h2
-                    property int_le_not_gt  (* To rewrite <=0x into ~ >0x *)
-            <3>2 prove y >=0x x
+                    property int_le_not_gt  (* To rewrite <= into ~ > *)
+            <3>2 prove y >= x
                  by property int_le_ge_swap hypothesis h2
-            <3>3 prove y - x >=0x 0
+            <3>3 prove y - x >= 0
                  by step <3>2 hypothesis h2 property int_diff_ge_is_pos
             <3>4 qed by step <3>1, <3>2, <3>3
        <2>3 qed by step <2>1, <2>2 property int_gt_or_le

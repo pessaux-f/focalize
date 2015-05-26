@@ -118,6 +118,13 @@ let print_focalize_exception ppf = function
         Location.pp_location at header
         Handy.pp_set_underlined Sourcify.pp_expr_ident ident
         Handy.pp_reset_effects
+  | Scoping.Termination_only_on_fun_arg (at, vname) ->
+      Format.fprintf ppf
+        "%a:@\n@[%tTermination@ proof@ considers@ '%t%a%t'@ as@ decreasing@ \
+         but@ it@ is@ not@ an@ argument@ of@ the@ function.@]@."
+        Location.pp_location at header
+        Handy.pp_set_underlined Sourcify.pp_vname vname
+        Handy.pp_reset_effects
   (* *************************** *)
   (* Generic environments stuff. *)
   | Env.Unbound_constructor (vname, at) ->

@@ -23,7 +23,7 @@ species Length_spec =
   (* add is an addition *)
 
   theorem zero_neutral :
-      all l : Self, !equal(!add(l, !zero), l) 
+      all l : Self, !equal(!add(l, !zero), l)
     proof = assumed;
 
   theorem add_assoc :
@@ -38,7 +38,7 @@ species Length_spec =
 
   theorem min_correct :
       all x y : Self,
-        !equal(!min(x, y), x) \/ 
+        !equal(!min(x, y), x) \/
         !equal(!min(x, y), y)
     proof = assumed ;
 
@@ -50,7 +50,7 @@ species Length_spec =
 
   theorem max_correct :
       all x y : Self,
-        !equal(!max(x, y), x) \/ 
+        !equal(!max(x, y), x) \/
         !equal(!max(x, y), y)
     proof = assumed ;
 
@@ -69,7 +69,7 @@ species Length_spec =
   theorem leq_transitive :
       all l1 l2 l3 : Self, (!leq(l1, l2) /\ !leq(l2, l3)) -> !leq(l1, l3)
     proof = assumed;
-  
+
   theorem leq_antisym :
       all l1 l2 : Self, (!leq(l1, l2) /\ ~(!equal(l1, l2))) -> ~(!leq(l2, l1))
     proof = assumed;
@@ -83,7 +83,7 @@ species Length_spec =
 
   theorem leq_gt_correct :
       all l1 l2 : Self,
-      !leq(l1, l2) <-> !gt(l2, l1) 
+      !leq(l1, l2) <-> !gt(l2, l1)
     proof = assumed;
 
   theorem geq_gt_correct :
@@ -122,10 +122,10 @@ species Length_imp_int =
 
   let add(x : Self, y : Self) : Self = x + y;
 
-  let leq(x : Self, y : Self) : bool = x <=0x y;
-  let lt (x : Self, y : Self) : bool = x <0x y;
-  let geq(x : Self, y : Self) : bool = x >=0x y;
-  let gt (x : Self, y : Self) : bool = x >0x y;
+  let leq(x : Self, y : Self) : bool = x <= y;
+  let lt (x : Self, y : Self) : bool = x < y;
+  let geq(x : Self, y : Self) : bool = x >= y;
+  let gt (x : Self, y : Self) : bool = x > y;
 
   let zero : Self = 0;
 
@@ -137,14 +137,13 @@ species Length_imp_int =
 
   let from_int (x : int) : Self = x;
   let to_int (x : Self) : Self = x;
-  
-  let min (x : Self, y : Self) : Self = min0x(x, y);
-  let max (x : Self, y : Self) : Self = max0x(x, y);
+
+  let min (x : Self, y : Self) : Self = min(x, y);
+  let max (x : Self, y : Self) : Self = max(x, y);
 end;;
 
 species Length_int = inherit Length_imp_int, Length_spec; end;;
 
-collection Length_int_coll = 
+collection Length_int_coll =
   implement Length_int;
 end;;
-

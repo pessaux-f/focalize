@@ -418,7 +418,7 @@ let token_of_paren_uppercase_prefix_symbol s =
 (** The prefix version of an uppercase prefix operator. *)
 let token_of_paren_uppercase_infix_symbol s =
 (*  prerr_endline (Printf.sprintf "token_of_paren_uppercase_infix_symbol %s" s);*)
-  assert (String.length s > 0);
+  assert (String.length s > 0) ;
   IUIDENT s
 ;;
 (** The prefix version of an uppercase infix operator. *)
@@ -426,13 +426,13 @@ let token_of_paren_uppercase_infix_symbol s =
 (** {3 Various auxiliaries to lex special tokens} *)
 
 (** {6 Lexing the external code tokens} *)
-let initial_external_code_buffer = String.create 256;;
+let initial_external_code_buffer = String.create 256 ;;
 let external_code_buff = ref initial_external_code_buffer
 and external_code_index = ref 0
 ;;
 
 let reset_external_code_buffer () =
-  external_code_buff := initial_external_code_buffer;
+  external_code_buff := initial_external_code_buffer ;
   external_code_index := 0
 ;;
 

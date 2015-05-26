@@ -19,7 +19,7 @@ species List_i =
   signature sort : Self -> Self;
   signature insert_elem : int -> Self -> int * Self;
 
-  let well_formed(x : Self) : bool = (!elem_length(x) =0x !length); 
+  let well_formed(x : Self) : bool = (!elem_length(x) =0x !length);
 
   theorem always_well_formed :
     all x : Self, !well_formed(x)
@@ -68,7 +68,7 @@ species List_cons(P is List_i) =
   let to_self (x : int * P) : Self = !cons(basics#fst(x), basics#snd(x));
         (* sort a list *)
 
-  let sort(x : Self) : Self = 
+  let sort(x : Self) : Self =
     !to_self(P!insert_elem(!hd(x), P!sort(!tl(x))));
 
   let plus(x : Self, y : Self) : Self =
@@ -96,24 +96,24 @@ species List_cons(P is List_i) =
   let sorted(x : int, y : Self) =
     let h = !hd(y) in
     let t = !tl(y) in
-    (x <=0x h && P!sorted(h, t));
+    (x <= h && P!sorted(h, t));
 
   let sorted_rev(x : int, y : Self) =
     let h = !hd(y) in
     let t = !tl(y) in
-    (x >0x h && P!sorted_rev(h, t));
+    (x > h && P!sorted_rev(h, t));
 
   let is_in(x : int, y : Self) =
     (!hd(y) =0x x || P!is_in(x, !tl(y)));
 
-  (* Insert an element in a sorted list *)   
+  (* Insert an element in a sorted list *)
   let insert_elem (e : int, x : Self) : int * Self =
     let fst = !hd(x) in
-    if e >0x fst then
+    if e > fst then
       let paire = P!insert_elem(e, !tl(x)) in
       let ep = basics#fst(paire) in
       let tp = basics#snd(paire) in
-      if ep >0x fst then 
+      if ep > fst then
         basics#pair(fst, !cons(ep, tp))
       else
         basics#pair(ep, !cons(fst, tp))
@@ -125,7 +125,7 @@ species List_cons(P is List_i) =
     all x : Self, !equal(x, !cons(!hd(x), !tl(x)))
     proof =
       assumed;
-  
+
   theorem cons_hd2 :
     all l : P, all e : int,
       e =0x !hd(!cons(e, l))
@@ -139,8 +139,8 @@ species List_cons(P is List_i) =
 
   theorem insert_two_first :
     all x : Self, all y : int,
-      basics#fst(!insert_elem(y, x)) <=0x
-      !hd( basics#snd (!insert_elem(y, x)) ) 
+      basics#fst(!insert_elem(y, x)) <=
+      !hd( basics#snd (!insert_elem(y, x)))
     proof =
       assumed;
 
@@ -202,7 +202,7 @@ species List_null =
   representation = int;
 
   let length = 0;
- 
+
   let elem_length(x : Self) = 0;
   let plus(x : Self, y : Self) : Self = 0;
   let minus(x : Self, y : Self) : Self = 0;
@@ -281,7 +281,7 @@ species List_7(P0 is List_0,
                P1 is List_1(P0),
                P2 is List_2(P0, P1),
                P3 is List_3(P0, P1, P2),
-               P4 is List_4(P0, P1, P2, P3), 
+               P4 is List_4(P0, P1, P2, P3),
                P5 is List_5(P0, P1, P2, P3, P4),
                P6 is List_6(P0, P1, P2, P3, P4, P5)
               ) =
@@ -300,7 +300,7 @@ species List_8(P0 is List_0,
  inherit List_cons(P7);
 end;;
 
-              
+
 species List_9(P0 is List_0,
                P1 is List_1(P0),
                P2 is List_2(P0, P1),
@@ -313,7 +313,7 @@ species List_9(P0 is List_0,
               ) =
  inherit List_cons(P8);
 end;;
-              
+
 species List_10(P0 is List_0,
                P1 is List_1(P0),
                P2 is List_2(P0, P1),
@@ -327,6 +327,3 @@ species List_10(P0 is List_0,
               ) =
  inherit List_cons(P9);
 end;;
-              
-              
-              

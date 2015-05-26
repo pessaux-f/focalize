@@ -78,15 +78,15 @@ species Order_sup =
     (f(x) * f(x + 1)) / 2;
 
   let rec sum_n(x : int) =
-    let x = if x <0x 0 then 0 - x else x in
-    if x <0x 1 then
+    let x = if x < 0 then 0 - x else x in
+    if x < 1 then
       0
    else
      x + !sum_n(x - 1);
 
   theorem duplicate_ok :
       all x z : int,
-      z =0x !duplicate(x) -> x >0x 0 -> z = !sum_n(x + 1)
+      z =0x !duplicate(x) -> x > 0 -> z = !sum_n(x + 1)
     proof =
       assumed;
 
@@ -126,7 +126,7 @@ species Order_sup =
     | [] -> s
     | e::r -> !sorted_fold_left(f, f(s, e), r);
 
-  let ho_sorted_left_f(s, e) = pair(e, snd(s) && (fst(s) <=0x e));
+  let ho_sorted_left_f(s, e) = pair(e, snd(s) && (fst(s) <= e));
   let ho_sorted_left(l : list(int)) =
     match l with
     | [] -> true
@@ -138,18 +138,18 @@ species Order_sup =
     | [] -> s
     | e::r -> f(e, !sorted_fold_right(f, r, s));
 
-  let ho_sorted_right_f(e, s) = pair(e, snd(s) && (e <=0x fst(s)));
+  let ho_sorted_right_f(e, s) = pair(e, snd(s) && (e <= fst(s)));
   let ho_sorted_right(l : list(int)) =
     match l with
     | [] -> true
     | e::r -> snd(!sorted_fold_right(!ho_sorted_right_f, r, pair(!last(r, e), true)));
 
   theorem ho_sorted_l :
-      all l : list(int), !ho_sorted_left(l) -> !list_length(l) >0x 2 -> !ho_sorted_left(l)
+      all l : list(int), !ho_sorted_left(l) -> !list_length(l) > 2 -> !ho_sorted_left(l)
   proof = assumed;
 
   theorem ho_sorted_r :
-      all l : list(int), !ho_sorted_right(l) -> !list_length(l) >0x 2 -> !ho_sorted_right(l)
+      all l : list(int), !ho_sorted_right(l) -> !list_length(l) > 2 -> !ho_sorted_right(l)
   proof = assumed;
 
   (****************************************************************************)
@@ -168,7 +168,7 @@ species Order_sup =
   theorem ho_sum_list_l :
       all l1 l2 : list(int), all s1 s2 : int,
       s1 = !ho_sum_list_left(l1) ->
-      s2 = !ho_sum_list_left(l2) -> !list_length(l1) >0x 2 -> !list_length(l2) >0x 2 ->
+      s2 = !ho_sum_list_left(l2) -> !list_length(l1) > 2 -> !list_length(l2) > 2 ->
         !ho_sum_list_left(!append(l1, l2)) = s1 + s2
   proof =
       assumed;
@@ -176,7 +176,7 @@ species Order_sup =
   theorem ho_sum_list_r :
       all l1 l2 : list(int), all s1 s2 : int,
       s1 = !ho_sum_list_right(l1) ->
-      s2 = !ho_sum_list_right(l2) -> !list_length(l1) >0x 2 -> !list_length(l2) >0x 2 ->
+      s2 = !ho_sum_list_right(l2) -> !list_length(l1) > 2 -> !list_length(l2) > 2 ->
         !ho_sum_list_right(!append(l1, l2)) = s1 + s2
   proof =
       assumed;
@@ -269,7 +269,7 @@ species Order_sup =
     match a with
     | L -> N(L, n1, L)
     | N(a1, n2, a2) ->
-        if n1 <0x n2 then
+        if n1 < n2 then
           N(insert(n1, a1), n2, a2)
         else
           N(a1, n2, insert(n1, a2));
@@ -280,12 +280,12 @@ species Order_sup =
   let rec geq(a, n) =
     match a with
    | L -> true
-   | N(a1, nn, a2) -> n >=0x nn && geq(a1, nn) && geq(a2, nn);
+   | N(a1, nn, a2) -> n >= nn && geq(a1, nn) && geq(a2, nn);
 
   let rec leq(n, a) =
     match a with
    | L -> true
-   | N(a1, nn, a2) -> n <=0x nn && leq(nn, a1) && leq(nn, a2);
+   | N(a1, nn, a2) -> n <= nn && leq(nn, a1) && leq(nn, a2);
 
   let rec bst(t) =
     match t with
@@ -373,7 +373,7 @@ species Order_sup =
 
   theorem test_sum_list_f :
     all n m : int,
-    n>=0x 0 -> n <=0x 250 -> !sum(n) = m -> m = ((n * (n + 1)) / 2)
+    n>= 0 -> n <= 250 -> !sum(n) = m -> m = ((n * (n + 1)) / 2)
   proof =
     assumed;
 
