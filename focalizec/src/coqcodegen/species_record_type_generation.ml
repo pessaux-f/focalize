@@ -668,12 +668,12 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
   (new_env, (List.rev reved_infos))
 ;;
 
-    
+
 
 (* ************************************************************************** *)
 (** {b Descr}: Code generation for *one* let binding, recursive of not.
     If the binding is recursive, then whatever the choosen Coq primitive ("fix"
-    or "Fixpoint"), 
+    or "Fixpoint"),
     This function is called by [Main_coq_generation.toplevel_let_def_compile]
     to generate code for toplevel definitions and by [let_in_def_compile] to
     generate code for local definitions.
@@ -682,7 +682,7 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
     However, in case of recursive function with no termination proof or a
     non-"structural" proof, it considers invariably that the recursion decreases
     on the fisrt argument of the function and dumps a {struct fst arg}.
-    
+
     {b Args}:
      - [binder]: What Coq construct to use to introduce the definition, i.e.
        "Let", "let", "let fix", "Fixpoint" or "with".
@@ -794,7 +794,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
               "@[%tWarning:%t@ In@ species@ '%t%a%t'@ method@ '%t%a%t'@ is@ \
                recursive@ but@ has@ a@ not@ yet@ supported@ termination@ \
                proof.@ It@ is@ assumed@ to@ be@ structural@ on@ its@ first@ \
-               argument..@]@."
+               argument.@]@."
               Handy.pp_set_bold Handy.pp_reset_effects
               Handy.pp_set_underlined
               Sourcify.pp_qualified_species ctx.Context.scc_current_species
