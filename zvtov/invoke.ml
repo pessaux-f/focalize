@@ -171,9 +171,10 @@ let zenon_loc file (_: string * string) data loc oc =
       flush stderr;
   | _ -> assert false;
   end;
-  let tmp_in = (file ^ "-zvtmp.coz") in
-  let tmp_out = (file ^ "-zvtmp.v") in
-  let tmp_err = (file ^ "-zvtmp.err") in
+  let file_with_number = file ^ "-" ^ string_of_int !lemma_number in
+  let tmp_in = (file_with_number ^ "-zvtmp.coz") in
+  let tmp_out = (file_with_number ^ "-zvtmp.v") in
+  let tmp_err = (file_with_number ^ "-zvtmp.err") in
   let cleanup () =
     (* try_remove tmp_in; *)
     try_remove tmp_out;
