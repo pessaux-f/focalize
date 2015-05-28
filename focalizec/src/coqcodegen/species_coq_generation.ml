@@ -3088,7 +3088,9 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        (* Compute the recursive calls information to generate the termination
           proof obligation. *)
        let recursive_calls =
-         Recursion.list_recursive_calls name params_with_type [] body_expr in
+         Recursion.list_recursive_calls
+           ~current_unit: ctx.Context.scc_current_unit name params_with_type
+           [] body_expr in
        (* ---> Generate the order depending on the kind of proof. *)
        generate_termination_order_for_Function
          ctx' print_ctx env name params_with_type ai
@@ -3135,7 +3137,8 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
           order if needed. *)
        let tuplified_body =
          Rec_let_gen.transform_recursive_calls_args_into_tuple
-           new_ctx ~local_idents: [] name body_expr in
+           new_ctx ~current_unit: ctx.Context.scc_current_unit
+           ~local_idents: [] name body_expr in
        (* We specify here that we must not apply recursive calls to the extra
           arguments due to lambda-liftings. *)
        Species_record_type_generation.generate_expr
@@ -3371,7 +3374,7 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
              "Field '%a' inherited from species '%a' but not \
              (re)-declared is not generated again. @."
              Parsetree_utils.pp_vname_with_operators_expanded name
-             Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
+             Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
          (* Recover the arguments for abstracted methods of Self in the
             inherited generator.*)
          let abstracted_methods =

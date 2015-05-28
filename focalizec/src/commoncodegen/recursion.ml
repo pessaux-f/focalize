@@ -60,10 +60,10 @@ type binding =
 
   {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
-let is_recursive_call function_name argument_list expr_list fexpr =
+let is_recursive_call ~current_unit function_name argument_list expr_list
+    fexpr =
   match fexpr.Parsetree.ast_desc with
-   | Parsetree.E_var ident_expr_ast ->
-       begin
+   | Parsetree.E_var ident_expr_ast -> (
        match ident_expr_ast.Parsetree.ast_desc with
         | Parsetree.EI_local name ->
             name = function_name
@@ -72,8 +72,29 @@ let is_recursive_call function_name argument_list expr_list fexpr =
                   raise
                     (PartialRecursiveCall
                        (function_name, fexpr.Parsetree.ast_loc)))
+        | Parsetree.EI_global qvn -> (
+            match qvn with
+            | Parsetree.Vname name ->
+                name = function_name
+                  && (List.length argument_list = List.length expr_list
+                    ||
+                      raise
+                        (PartialRecursiveCall
+                           (function_name, fexpr.Parsetree.ast_loc)))
+            | Parsetree.Qualified (unit_name, name) ->
+                (* In case of toplevel recursive function, the name of the
+                   function is a global ident. Check that we are really
+                   talking of the ident of the same compilation unit than the
+                   one we are currently processing. *)
+                name = function_name && unit_name = current_unit
+                  && (List.length argument_list = List.length expr_list
+                    ||
+                      raise
+                        (PartialRecursiveCall
+                           (function_name, fexpr.Parsetree.ast_loc)))
+           )
         | _ -> false
-       end
+      )
    | _ -> false
 ;;
 
@@ -110,7 +131,8 @@ type recursive_calls_description =
 
     {b Visibility}: Exported outside this module.
  *************************************************************************** *)
-let rec list_recursive_calls function_name argument_list bindings expr =
+let rec list_recursive_calls ~current_unit function_name argument_list
+    bindings expr =
   match expr.Parsetree.ast_desc with
    | Parsetree.E_fun (names, expr) ->
        (* Get the type of the function. *)
@@ -134,14 +156,17 @@ let rec list_recursive_calls function_name argument_list bindings expr =
        (* Add the argument to the list and find recursive calls in the function
           body. *)
        list_recursive_calls
-         function_name (argument_list @ names_with_types) bindings expr
+         ~current_unit function_name (argument_list @ names_with_types)
+         bindings expr
    | Parsetree.E_var _ ->
-       if is_recursive_call function_name argument_list [] expr then
+       if is_recursive_call
+           ~current_unit function_name argument_list [] expr then
          [[], bindings]
        else []
    | Parsetree.E_app (fexpr, argexprlist) -> (
        (* Test whether it is the function being defined that is called. *)
-       if is_recursive_call function_name argument_list argexprlist fexpr then
+       if is_recursive_call
+           ~current_unit function_name argument_list argexprlist fexpr then
          (* If that is the case, check for recursive calls in the arguments of
             this call. To follow the order the Coq "Function" harvests
             recursive call in an application, reverse the list. Hence, calls
@@ -150,7 +175,8 @@ let rec list_recursive_calls function_name argument_list bindings expr =
            List.concat
              (List.rev
                 (List.map
-                   (list_recursive_calls function_name argument_list bindings)
+                   (list_recursive_calls
+                      ~current_unit function_name argument_list bindings)
                    argexprlist)) with
          | [] -> [ List.combine argument_list argexprlist, bindings ]
                (* If no recursive calls are made when calculating the
@@ -167,23 +193,26 @@ let rec list_recursive_calls function_name argument_list bindings expr =
          List.concat
            (List.rev
               (List.map
-                 (list_recursive_calls function_name argument_list bindings)
+                 (list_recursive_calls
+                    ~current_unit function_name argument_list bindings)
                  argexprlist))
       )
    | Parsetree.E_constr (_, expr_list) ->
        List.concat
          (List.map
-            (list_recursive_calls function_name argument_list bindings)
+            (list_recursive_calls
+               ~current_unit function_name argument_list bindings)
             expr_list)
    | Parsetree.E_match (matched_expr, pattern_expr_list) ->
        let list_recursive_calls_in_matched_expr =
-         list_recursive_calls function_name argument_list bindings matched_expr
-       in
+         list_recursive_calls
+           ~current_unit function_name argument_list bindings matched_expr in
        (* Find the recursive calls in each expression, adding the proper
           'pattern match' binding to the list of bindings. *)
        let list_recursive_calls_for_pattern (p, e) =
          let new_bindings = (B_match (matched_expr, p)) :: bindings in
-         list_recursive_calls function_name argument_list new_bindings e in
+         list_recursive_calls
+           ~current_unit function_name argument_list new_bindings e in
        let list_recursive_calls_for_all_patterns =
          List.concat
            (List.map list_recursive_calls_for_pattern pattern_expr_list) in
@@ -193,12 +222,14 @@ let rec list_recursive_calls function_name argument_list bindings expr =
        (* [list_recursive_calls_in_condition] calculates the information
           pertaining to recursive calls in the condition clause. *)
        let list_recursive_calls_in_condition =
-         list_recursive_calls function_name argument_list bindings condition in
+         list_recursive_calls
+           ~current_unit function_name argument_list bindings condition in
        (* [list_recursive_calls_in_expr] calculates the information
           pertaining to recursive calls in an expression. *)
        let list_recursive_calls_in_expr boolean expr =
          let new_bindings = (B_condition (condition, boolean)) :: bindings in
-         list_recursive_calls function_name argument_list new_bindings expr in
+         list_recursive_calls
+           ~current_unit function_name argument_list new_bindings expr in
        let list_recursive_calls_in_both_exprs =
          List.concat
            (List.map2
@@ -214,7 +245,7 @@ let rec list_recursive_calls function_name argument_list bindings expr =
             | Parsetree.BB_logical _ -> assert(false)
             | Parsetree.BB_computational expr ->
                 list_recursive_calls
-                  function_name argument_list bindings expr in
+                  ~current_unit function_name argument_list bindings expr in
          List.concat
            (List.map list_recursive_calls_in_binding
               let_def.Parsetree.ast_desc.Parsetree.ld_bindings) in
@@ -226,32 +257,38 @@ let rec list_recursive_calls function_name argument_list bindings expr =
             let_def.Parsetree.ast_desc.Parsetree.ld_bindings)
          @ bindings in
        let list_recursive_calls_in_expr =
-         list_recursive_calls function_name argument_list new_bindings expr in
+         list_recursive_calls
+           ~current_unit function_name argument_list new_bindings expr in
        list_recursive_calls_in_def @ list_recursive_calls_in_expr
    | Parsetree.E_record label_expr_list ->
        let list_recursive_calls_in_record_item (_, expr) =
-         list_recursive_calls function_name argument_list bindings expr in
+         list_recursive_calls
+           ~current_unit function_name argument_list bindings expr in
        List.concat
          (List.map list_recursive_calls_in_record_item label_expr_list)
    | Parsetree.E_record_access (expr, _) ->
-       list_recursive_calls function_name argument_list bindings expr
+       list_recursive_calls
+         ~current_unit function_name argument_list bindings expr
    | Parsetree.E_record_with (expr, label_expr_list) ->
        let list_recursive_calls_in_record_item (_, expr) =
-         list_recursive_calls function_name argument_list bindings expr in
+         list_recursive_calls
+           ~current_unit function_name argument_list bindings expr in
        List.concat
-         ((list_recursive_calls function_name argument_list bindings expr) ::
+         ((list_recursive_calls
+             ~current_unit function_name argument_list bindings expr) ::
           (List.map list_recursive_calls_in_record_item label_expr_list))
    | Parsetree.E_tuple expr_list
    | Parsetree.E_sequence expr_list ->
        List.concat
          (List.map
-            (list_recursive_calls function_name argument_list bindings)
-            expr_list)
+            (list_recursive_calls
+               ~current_unit function_name argument_list bindings) expr_list)
    | Parsetree.E_self | Parsetree.E_const _ | Parsetree.E_external _ ->
        (* The remaining expressions cannot lead to recursive calls *)
        []
    | Parsetree.E_paren expr ->
-       list_recursive_calls function_name argument_list bindings expr
+       list_recursive_calls
+         ~current_unit function_name argument_list bindings expr
 ;;
 
 
@@ -424,7 +461,8 @@ let get_smaller_variables variables bindings =
 
     {b Visibility}: Exported outside this module.
  *************************************************************************** *)
-let is_structural function_name arguments structural_argument body =
+let is_structural ~current_unit function_name arguments structural_argument
+    body =
   let recursive_calls = list_recursive_calls function_name arguments [] body in
   let analyse_recursive_call (arguments_assoc_list, bindings) =
     (* Just forget the type while searching in the assoc list. *)
@@ -438,5 +476,5 @@ let is_structural function_name arguments structural_argument body =
            get_smaller_variables [structural_argument] bindings in
          List.mem v smaller_variables
      | _ -> false in
-  List.for_all analyse_recursive_call recursive_calls
+  List.for_all analyse_recursive_call (recursive_calls ~current_unit)
 ;;

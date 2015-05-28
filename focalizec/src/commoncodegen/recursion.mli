@@ -31,11 +31,11 @@ type recursive_calls_description =
   ((typed_vname * Parsetree.expr) list * binding list) list
 
 val list_recursive_calls :
-  Parsetree.vname -> typed_vname list ->
-    binding list -> Parsetree.expr -> recursive_calls_description
+  current_unit: Parsetree.module_name -> Parsetree.vname -> typed_vname list ->
+  binding list -> Parsetree.expr -> recursive_calls_description
 
 (* [Unsure] Not yet used.
 val is_structural :
-  Parsetree.vname -> typed_vname list -> Parsetree.vname -> Parsetree.expr ->
-    bool
+  current_unit: Parsetree.module_name -> Parsetree.vname -> typed_vname list ->
+  Parsetree.vname -> Parsetree.expr -> bool
 *)

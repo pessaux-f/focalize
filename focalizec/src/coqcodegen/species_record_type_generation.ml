@@ -601,8 +601,9 @@ type let_binding_pre_computation = {
     factorize these computation here and make these results available to
     [let_binding_compile] to avoid computing them again.
     It directly returns an environment in which the identifier is bound to the
-    correct information. In effect, code generation (occuring after the
-    present function is called) doesn't modify this information.              *)
+    correct information *if it is recursive*, otherwise the environment is
+    unchanged. In effect, code generation (occuring after the present function
+    is called) doesn't modify this information.                               *)
 (* ************************************************************************** *)
 let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
   (* Generate the parameters if some, with their type constraints. *)
@@ -659,7 +660,7 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
   let (new_env, reved_infos) =
     List.fold_left
       (fun (env_accu, infos_accu) binding ->
-        let (env', info) = 
+        let (env', info) =
           pre_compute_let_binding_info_for_rec
             ~rec_status ~toplevel env_accu binding in
         (env', info :: infos_accu))

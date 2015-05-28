@@ -8,7 +8,7 @@
 (*                                                                            *)
 (*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - ...  LIP6 and INRIA                                      *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
 (*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
@@ -66,8 +66,10 @@ let toplevel_let_def_compile ctx env let_def =
   let opt_term_proof =
     let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof in
   (* Recover pre-compilation info and extended environment in case of
-     recursivity for all the bindings. *)
-  let (env, pre_comp_infos) =
+     recursivity for all the bindings. If no recursivity, then the environment
+     is unchanged. This means that in case of recursive function, we DO NOT
+     have to extend the environment again. *)
+  let (env2, pre_comp_infos) =
     Species_record_type_generation.pre_compute_let_bindings_infos_for_rec
       ~rec_status ~toplevel: true env
       let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
@@ -75,25 +77,101 @@ let toplevel_let_def_compile ctx env let_def =
      in the scope because we are at toplevel. In the same way, because we are
      not under the scope of a species, the way "Self" must be printed is
      non-relevant. We use [SMS_from_species] by default. *)
-  let env' =
+  let final_env =
     (match (let_def.Parsetree.ast_desc.Parsetree.ld_bindings, pre_comp_infos)
     with
      | ([], _) ->
          (* The "let" construct should always at least bind one identifier ! *)
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
-         let binder =
-           if rec_status <> Env.RC_non_rec then "Fixpoint"
-           else "Let" in
-         Species_record_type_generation.let_binding_compile
-           ctx ~binder ~opt_term_proof ~local_idents: []
-           ~in_recursive_let_section_of
-           (* Or whatever since "Self" does not exist anymore. *)
-           ~self_methods_status: Species_record_type_generation.SMS_from_record
-           ~recursive_methods_status: Species_record_type_generation.RMS_regular
-           ~toplevel: true ~rec_status env one_bnd one_pre_comp_info
+         if rec_status <> Env.RC_non_rec then (
+           (* In case of a unique recursive function, generate the code like
+              for methods. *)
+           let def_scheme =
+             (match one_bnd.Parsetree.ast_type with
+             | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
+             | Parsetree.ANTI_type _ -> assert false
+             | Parsetree.ANTI_scheme s -> s) in
+           (* Build the print context. *)
+           let print_ctx = {
+             Types.cpc_current_unit = ctx.Context.scc_current_unit ;
+             Types.cpc_current_species =
+             Some
+               (Parsetree_utils.type_coll_from_qualified_species
+                  ctx.Context.scc_current_species) ;
+             Types.cpc_collections_carrier_mapping =
+             ctx.Context.scc_collections_carrier_mapping } in
+           (* Create a dummy "history" to give to the function. Since we are
+              at toplevel, we are not processing a method, hence "it" does not
+              "come" from "somewhere by inheritance". *)
+           let dummy_history =
+             { Env.fh_initial_apparition =
+                 ("(**)", (Parsetree.Vuident "(**)")) ;
+               Env.fh_inherited_along = [] } in
+           (* Also create a dummy "abstraction_info" to give to the function.
+              For the same reason that just above, it is empty because
+              useless. *)
+           let dummy_abstr_info =
+             { Env.TypeInformation.ad_used_species_parameter_tys = [] ;
+               Env.TypeInformation.ad_raw_dependencies_from_params = [] ;
+               Env.TypeInformation.ad_dependencies_from_parameters = [] ;
+               Env.TypeInformation.ad_dependencies_from_parameters_in_type = [];
+               Env.TypeInformation.ad_min_coq_env = [] } in
+           (match opt_term_proof with
+           | Some { Parsetree.ast_desc = Parsetree.TP_structural decr_arg ;
+                    Parsetree.ast_loc = term_pr_loc } ->
+                ignore
+                  (Species_coq_generation.generate_defined_recursive_let_definition_With_Fixpoint
+                     ctx print_ctx env2
+                     [(*generated_fields*)] dummy_history
+                     one_bnd.Parsetree.ast_desc.Parsetree.b_name
+                     one_pre_comp_info.Species_record_type_generation.
+                       lbpc_params_names
+                     decr_arg term_pr_loc
+                     def_scheme one_bnd.Parsetree.ast_desc.Parsetree.b_body
+                     dummy_abstr_info) ;
+                (* No need to extended the environment. This was done by
+                   [pre_compute_let_bindings_infos_for_rec] because we are
+                   processing a recursive function. *)
+                env2
+            | _ ->
+                (* Throw the result since we are not processing a method. All
+                   what is needed to enrich the environment is already
+                   available in the [one_pre_comp_info]. *)
+                ignore
+                  (Species_coq_generation.generate_defined_recursive_let_definition_With_Function
+                     ctx print_ctx env2
+                     ~self_manifest: None [(*generated_fields*)] dummy_history
+                     one_bnd.Parsetree.ast_desc.Parsetree.b_name
+                     one_pre_comp_info.Species_record_type_generation.
+                       lbpc_params_names
+                     def_scheme one_bnd.Parsetree.ast_desc.Parsetree.b_body
+                     opt_term_proof dummy_abstr_info) ;
+                (* No need to extended the environment. This was done by
+                   [pre_compute_let_bindings_infos_for_rec] because we are
+                   processing a recursive function. *)
+                env2
+           )
+             )
+         else (
+           (* Non recursive method. *)
+           let env' =
+             Species_record_type_generation.let_binding_compile
+               ctx ~binder: "Let" ~opt_term_proof ~local_idents: []
+               ~in_recursive_let_section_of
+               (* Or whatever since "Self" does not exist anymore. *)
+               ~self_methods_status:
+                 Species_record_type_generation.SMS_from_record
+               ~recursive_methods_status:
+                 Species_record_type_generation.RMS_regular
+               ~toplevel: true ~rec_status env2 one_bnd one_pre_comp_info in
+           Format.fprintf out_fmter "." ;
+           env'
+          )
      | ((first_bnd :: next_bnds),
         (first_pre_comp_info :: next_pre_comp_infos)) ->
+         (* In case of mutually recursive functions, generate the code
+            assuming they are structurally décreasing. *)
          let first_binder =
            if rec_status <> Env.RC_non_rec then "Fixpoint" else "Let" in
          let accu_env =
@@ -106,7 +184,7 @@ let toplevel_let_def_compile ctx env let_def =
                   Species_record_type_generation.SMS_from_record
                 ~recursive_methods_status:
                   Species_record_type_generation.RMS_regular
-                ~toplevel: true ~rec_status env first_bnd
+                ~toplevel: true ~rec_status env2 first_bnd
                 first_pre_comp_info) in
          List.iter2
            (fun binding pre_comp_info ->
@@ -122,13 +200,14 @@ let toplevel_let_def_compile ctx env let_def =
                    Species_record_type_generation.RMS_regular
                  ~toplevel: true ~rec_status !accu_env binding pre_comp_info)
            next_bnds next_pre_comp_infos ;
+         Format.fprintf out_fmter "." ;
          !accu_env
      | (_, _) ->
          (* Case where we would not have the same number og pre-compiled infos
             and of bindings. Should never happen. *)
          assert false) in
-  Format.fprintf out_fmter "@]" ;
-  env'
+  Format.fprintf out_fmter "@]@\n" ;
+  final_env
 ;;
 
 
@@ -231,9 +310,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         (* Empty, since not under a species. *)
         Context.scc_dependency_graph_nodes = [] ;
         Context.scc_out_fmter = out_fmter } in
-      let env' = toplevel_let_def_compile ctx env let_def in
-      Format.fprintf out_fmter ".@\n@\n" ;
-      env'
+      toplevel_let_def_compile ctx env let_def
   | Infer.PCM_theorem (theorem_def, found_type_variables) ->
       Types.purge_type_simple_to_coq_variable_mapping () ;
       let ctx = {
@@ -298,7 +375,7 @@ let toplevel_compile env ~current_unit out_fmter = function
 
 let root_compile ~current_unit ~out_file_name stuff =
   if Configuration.get_verbose () then
-    Format.eprintf "Starting Coq code generation.@.";
+    Format.eprintf "Starting Coq code generation.@." ;
   let out_hd = open_out_bin out_file_name in
   let out_fmter = Format.formatter_of_out_channel out_hd in
   let global_env = ref (Env.CoqGenEnv.empty ()) in
@@ -336,13 +413,13 @@ let root_compile ~current_unit ~out_file_name stuff =
         global_env := new_env)
       stuff;
     (* Flush the pretty-printer. *)
-    Format.fprintf out_fmter "@?";
-    close_out out_hd;
+    Format.fprintf out_fmter "@?" ;
+    close_out out_hd ;
     !global_env
   with whatever ->
     (* In any error case, flush the pretty-printer and close the outfile. *)
-    Format.fprintf out_fmter "@?";
-    close_out out_hd;
+    Format.fprintf out_fmter "@?" ;
+    close_out out_hd ;
     (begin
     try
       (* And rename it to prevent an incorrecty Coq source file from
@@ -351,8 +428,8 @@ let root_compile ~current_unit ~out_file_name stuff =
       let trace_filename = out_file_name ^ ".mangled" in
       (* If the file of trace already exists, then first discard it to prevent
          OS file I/O errors. *)
-      if Sys.file_exists trace_filename then Sys.remove trace_filename;
-      Sys.rename out_file_name trace_filename;
+      if Sys.file_exists trace_filename then Sys.remove trace_filename ;
+      Sys.rename out_file_name trace_filename ;
     with second_error ->
       (begin
       (* Here we want to catch errors that can arise during the trace file
