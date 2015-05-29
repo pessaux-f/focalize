@@ -32,7 +32,7 @@ FOCALIZE_COMP_FLAGS=-no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILI
 CAML_FLAGS=-w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR)
 
-ZENON_LIB_DIR=../../../../zenon
+ZENON_LIB_DIR= $(shell zenon -where)
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 
 include $(ROOT_DIR)/Makefile.common

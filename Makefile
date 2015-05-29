@@ -15,7 +15,7 @@
 
 ROOT_DIR=.
 
-SUB_DIRS= zenon zvtov focalizec
+SUB_DIRS= zvtov focalizec
 
 # No need to include Makefile.rules and .config_var (this latter not
 # existing from a scratch checkout). So no need to include the whole
@@ -28,16 +28,6 @@ CONFIGURE_FLAGS=
 all:
 	@echo "Toplevel configuration..."
 	@./configure $(CONFIGURE_FLAGS)
-	@echo "Building Zenon..."
-	@($(CD) zenon &&\
-		./configure-for-focalize $(CONFIGURE_FLAGS) &&\
-		$(MAKE) depend &&\
-		$(MAKE) all &&\
-		$(MAKE) doc &&\
-	  echo "Installing..." &&\
-		. ./.config_var && $$SUDO $(MAKE) install);\
-	  err=$$?;\
-	  case $$err in 0);; *) exit $$err;; esac;
 	@echo "Building Zvtov..."
 	@($(CD) zvtov &&\
 		./configure $(CONFIGURE_FLAGS) &&\

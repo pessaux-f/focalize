@@ -38,7 +38,7 @@ FOCALIZE_COMP_FLAGS=\
 CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ROOT_DIR)/focalizec/src/extlib/algebra
 
-ZENON_LIB_DIR=../../../../zenon
+ZENON_LIB_DIR= $(shell zenon -where)
 ZVTOV_COMP_FLAGS=-zenon $(ZENON_COMPILER) -new
 
 COQ_INCLUDES=\

@@ -100,7 +100,7 @@ CAML_INCLUDES=-I $(STDLIB_DIR)
 
 ZVTOV_COMP_FLAGS=-script -zenon $(ZENON_COMPILER) -new
 
-ZENON_LIB_DIR=../../../../zenon
+ZENON_LIB_DIR=$(shell zenon -where)
 COQ_INCLUDES=-I $(ZENON_LIB_DIR) -I $(STDLIB_DIR)
 
 lib: all
