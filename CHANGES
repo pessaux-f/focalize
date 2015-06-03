@@ -1,3 +1,7 @@
+
+# Focalize 0.9.1
+################
+
 - Termination proofs by measure and by order.
 - Termination proofs (order/measure) now typechecked correctly.
   Before, there was no verification on the expression used as order or measure,
@@ -9,6 +13,7 @@
 - Simplifications in the generated code for collections. Use of implicit
   arguments in right number instead of full types/expression. Makes the
   generated code shorter and more readable.
+- Don't require Zenon source code to be present in a zenon subfolder
 
 
 # Focalize 0.9.0
