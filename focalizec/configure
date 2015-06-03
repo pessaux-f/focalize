@@ -344,6 +344,7 @@ fi
 # Check if installation directories are writable, if so do not use sudo
 # otherwise, use it.
 SUDO=
+mkdir $INSTALL_BIN_DIR || true
 touch $INSTALL_BIN_DIR/writable_p
 if [ "$?" = 0 ] ;
 then
@@ -354,6 +355,7 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
+    mkdir $INSTALL_LIB_DIR || true
     touch $INSTALL_LIB_DIR/writable_p
     if [ "$?" = 0 ]
     then
@@ -365,6 +367,7 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
+    mkdir $INSTALL_MAN_DIR || true
     touch $INSTALL_MAN_DIR/writable_p
     if [ "$?" = 0 ]
     then
@@ -376,6 +379,7 @@ fi
 
 if [ "$SUDO" = "" ] ;
 then
+    mkdir $INSTALL_DOC_DIR || true
     touch $INSTALL_DOC_DIR/writable_p
     if [ "$?" = 0 ]
     then
