@@ -59,8 +59,8 @@ EXTERNAL_CMIS=$(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_VOS=\
  coq_builtins.vo\
- sets_externals.vo\
- wellfoundation_externals.vo
+ sets_externals.vo
+
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var
