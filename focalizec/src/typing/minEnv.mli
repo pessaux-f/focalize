@@ -19,7 +19,16 @@ val find_coq_env_element_by_name :
   Parsetree.vname -> Env.TypeInformation.min_coq_env_element list ->
     Env.TypeInformation.min_coq_env_element
 
-val minimal_typing_environment :
+val minimal_coq_typing_environment :
   VisUniverse.in_the_universe_because VisUniverse.Universe.t ->
   Env.TypeInformation.species_field list ->
     Env.TypeInformation.min_coq_env_element list
+
+val find_dk_env_element_by_name :
+  Parsetree.vname -> Env.TypeInformation.min_dk_env_element list ->
+    Env.TypeInformation.min_dk_env_element
+
+val minimal_dk_typing_environment :
+  VisUniverse.in_the_universe_because VisUniverse.Universe.t ->
+  Env.TypeInformation.species_field list ->
+    Env.TypeInformation.min_dk_env_element list

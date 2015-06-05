@@ -5,6 +5,8 @@ exception Error of string;;
 exception Zenon_failed;;
 let error msg = raise (Error msg);;
 
+type input_format = I_coq | I_dk;;
+let input_format = ref I_coq;;
 let with_cime = ref false;;
 let stop_on_failure = ref true;;
 let keep_temp_files = ref false;;
@@ -13,7 +15,7 @@ let progress_level = ref 1;;
 let use_coqterm = ref true;;
 let verbose = ref false;;
 let zcmd = ref "zenon";;
-let zopt = ref "-x induct -ifocal -q -short -max-time 5m";;
+let zopt = ref "-q -short -max-time 5m";;
 let focal_ext = ref "focal";;
 let add_opt = ref [];;
 

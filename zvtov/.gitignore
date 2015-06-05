@@ -2,4 +2,7 @@ lexer.ml
 lexer_coq.ml
 parser_coq.ml
 parser_coq.mli
+lexer_dk.ml
+parser_dk.ml
+parser_dk.mli
 zvtov

@@ -117,8 +117,11 @@ let make_Self_cc_binding_abst_T ~current_species =
   ((module_name, "Self"), ("abst" ,Types.CCMI_is))
 ;;
 let make_Self_cc_binding_rf_T ~current_species =
-  let (module_name, _) = current_species in
-  ((module_name, "Self"), ("rf", Types.CCMI_is))
+  let (module_name, species_name) = current_species in
+  ((module_name, "Self"),
+   (Printf.sprintf "%s__rf"
+      (Parsetree_utils.name_of_vname species_name),
+    Types.CCMI_is))
 ;;
 let make_Self_cc_binding_species_param ~current_species spe_param_name =
   let (module_name, _) = current_species in
@@ -147,6 +150,7 @@ type recursive_methods_status =
 let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
     ~self_methods_status ~recursive_methods_status ident =
   let out_fmter = ctx.Context.scc_out_fmter in
+  let (_, species_name) = ctx.Context.scc_current_species in
   match ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname -> (
        (* Thanks to the scoping pass, identifiers remaining "local" are either
@@ -224,7 +228,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
        (* In this case, may be there is some scoping process missing. *)
        assert false
    | Parsetree.EI_global (Parsetree.Qualified (mod_name, vname)) ->
-       (* Call the Coq corresponding identifier in the corresponding   *)
+       (* Call the Dk corresponding identifier in the corresponding   *)
        (* module (i.e. the [mod_name]). If the module is the currently *)
        (* compiled one, then do not qualify the identifier.            *)
        if mod_name <> ctx.Context.scc_current_unit then
@@ -240,10 +244,22 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
            (* Method call from the current species. *)
            match self_methods_status with
            | SMS_abstracted ->
-               Format.fprintf out_fmter "abst_%a"
-                 Parsetree_utils.pp_vname_with_operators_expanded vname
+              (* On the Dedukti side, def dependencies are not
+                 abstracted because Dedukti lacks let. *)
+              (* We check here if the method is defined,
+                 in which case we print its full name and dependencies *)
+              let is_defined = false in
+              if is_defined
+              then
+                Format.fprintf out_fmter "%a__%a"
+                  Sourcify.pp_vname (snd ctx.Context.scc_current_species)
+                  Parsetree_utils.pp_vname_with_operators_expanded vname
+              else
+                Format.fprintf out_fmter "abst_%a"
+                  Parsetree_utils.pp_vname_with_operators_expanded vname
            | SMS_from_record ->
-               Format.fprintf out_fmter "rf_%a"
+               Format.fprintf out_fmter "%a__rf_%a"
+                 Sourcify.pp_vname species_name
                  Parsetree_utils.pp_vname_with_operators_expanded vname
            | SMS_from_param spe_param_name ->
                Format.fprintf out_fmter "_p_%a_%a"
@@ -267,7 +283,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                    ctx.Context.scc_species_parameters_names then (
                  (* It comes from a parameter. To retrieve the related
                     method name we build it the same way we built it
-                    while generating the extra Coq function's parameters due
+                    while generating the extra Dk function's parameters due
                     to depdencencies coming from the species parameter.
                     I.e: "_p_", followed by the species parameter name,
                     followed by "_", followed by the method's name. *)
@@ -284,14 +300,15 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                       are not in the case of a toplevel species but in the
                       case where a substitution replaced Self by ourself.
                       We then must refer to our local record field. *)
-                   Format.fprintf out_fmter "rf_%a"
+                   Format.fprintf out_fmter "%a__rf_%a"
+                     Sourcify.pp_vname species_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
                   )
                  else (
                    (* It comes from a toplevel stuff, hence not abstracted by
                       lambda-lifting. Then, we get the field of the
                       module representing the collection. *)
-                   Format.fprintf out_fmter "%a.%a"
+                   Format.fprintf out_fmter "%a__%a"
                      Parsetree_utils.pp_vname_with_operators_expanded coll_name
                      Parsetree_utils.pp_vname_with_operators_expanded vname
                   )
@@ -325,10 +342,11 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                       species is ourself. In this case, liek above we must
                       refer to our local record field. *)
                    if coll_name = (snd ctx.Context.scc_current_species) then
-                     Format.fprintf out_fmter "rf_%a"
+                     Format.fprintf out_fmter "%a__rf_%a"
+                       Sourcify.pp_vname species_name
                        Parsetree_utils.pp_vname_with_operators_expanded vname
                    else (
-                     Format.fprintf out_fmter "%a.%a"
+                     Format.fprintf out_fmter "%a__%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        coll_name
                        Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -340,7 +358,7 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
                     ourselves and moreover belongs to another compilation
                     unit. May be a species from the toplevel of another
                     FoCaL source file. *)
-                 Format.fprintf out_fmter "%s.%a.%a"
+                 Format.fprintf out_fmter "%s.%a__%a"
                    module_name
                    Parsetree_utils.pp_vname_with_operators_expanded coll_name
                    Parsetree_utils.pp_vname_with_operators_expanded vname
@@ -350,23 +368,29 @@ let generate_expr_ident_for_E_var ctx ~in_recursive_let_section_of ~local_idents
       )
 ;;
 
+let butfst (str : string) : string =
+  String.sub str 1 (String.length str - 1)
+;;
 
+let butlast (str : string) : string =
+  String.sub str 0 (String.length str - 1)
+;;
 
+let last (str : string) : char =
+  str.[String.length str - 1]
+;;
 
-let generate_constant ctx cst =
+(* TODO *)
+let generate_constant_pattern ctx cst =
   match cst.Parsetree.ast_desc with
-   | Parsetree.C_int str ->
-       (* Integers are directly mapped in Coq. Be careful: signs - can be
-          confused with operators. We assume that strings are well-formed hence
-          are never empty. So... hit inside without checking length ^_^ *)
-       if str.[0] = '+' || str.[0] = '-' then
-         Format.fprintf ctx.Context.scc_out_fmter "(%s)" str
-       else Format.fprintf ctx.Context.scc_out_fmter "%s" str
-   | Parsetree.C_float _str ->
+   | Parsetree.C_int _ ->
+       (* [Unsure] *)
+       Format.fprintf ctx.Context.scc_out_fmter "C_int"
+   | Parsetree.C_float _ ->
        (* [Unsure] *)
        Format.fprintf ctx.Context.scc_out_fmter "C_float"
    | Parsetree.C_bool str ->
-       (* [true] maps on Coq "true". [false] maps on Coq "false". *)
+       (* [true] maps on Dk "true". [false] maps on Dk "false". *)
        Format.fprintf ctx.Context.scc_out_fmter "%s" str
    | Parsetree.C_string str ->
        (* [Unsure] *)
@@ -376,61 +400,122 @@ let generate_constant ctx cst =
        Format.fprintf ctx.Context.scc_out_fmter "\"%c\"%%char" c
 ;;
 
+(* Print a char code (7 bits representing a char using ascii)
+   in Dedukti. *)
+let rec print_char_code_to_dk fmter n =
+  if n == 0 then Format.fprintf fmter "dk_char._O"
+  else Format.fprintf fmter "@[<2>(dk_char.S%d@ %a)@]"
+                      (n mod 2)
+                      print_char_code_to_dk (n / 2)
+;;
+
+(* Print a char to Dedukti.
+   If an alias exists in dk_char, then use it to increase readability.
+ *)
+let print_char_to_dk fmter c =
+  if
+    (c >= 'a' && c <= 'z') ||
+      (c >= 'A' && c <= 'Z') ||
+        (c >= '0' && c <= '9')
+  then Format.fprintf fmter "dk_char.%c" c
+  else
+    match c with
+    | '-' -> Format.fprintf fmter "dk_char.hyphen"
+    | '_' -> Format.fprintf fmter "dk_char.__"
+    | ' ' -> Format.fprintf fmter "dk_char.space"
+    | c -> Format.fprintf fmter "@[<2>(dk_char.cast@ %a)@]"
+                         print_char_code_to_dk (int_of_char c)
+;;
+
+let generate_constant ctx cst =
+  match cst.Parsetree.ast_desc with
+   | Parsetree.C_int str ->
+      let sign = (str.[0] = '-') in
+      let abs_str =
+        if str.[0] = '-' || str.[0] = '+'
+        then butfst str
+        else str
+      in
+      let rec print_abs fmter s =
+        if s = "" then (
+          Format.fprintf fmter "dk_nat.dnil"
+        ) else (
+          Format.fprintf fmter
+                         "@[<2>(dk_nat.dcons@ %a@ dk_nat._%c)@]"
+                         print_abs (butlast s)
+                         (last s)
+        )
+      in
+      if sign
+      then Format.fprintf ctx.Context.scc_out_fmter
+                          "@[<2>(dk_int.opp@ ";
+      Format.fprintf ctx.Context.scc_out_fmter
+                     "@[<2>(dk_int.from_nat@ @[<2>(dk_nat.list_to_nat %a)@])@]"
+                     print_abs abs_str;
+      if sign
+      then Format.fprintf ctx.Context.scc_out_fmter
+                          ")@]";
+   | Parsetree.C_float _str ->
+       (* [Unsure] *)
+       Format.fprintf ctx.Context.scc_out_fmter "C_float"
+   | Parsetree.C_bool str ->
+       (* [true] maps on Dk "true". [false] maps on Dk "false". *)
+       Format.fprintf ctx.Context.scc_out_fmter "dk_bool.%s" str
+   | Parsetree.C_string str ->
+      Format.fprintf ctx.Context.scc_out_fmter "\"%s\"" str;
+   | Parsetree.C_char c ->
+      Format.fprintf ctx.Context.scc_out_fmter "(; \'%c\' ;)@ " c;
+      print_char_to_dk ctx.Context.scc_out_fmter c
+;;
 
 
+(* Special pair constructor *)
+let pair_cident =
+  let pair_ident_desc = Parsetree.I_global
+                          (Parsetree.Qualified
+                             ("dk_tuple",
+                              Parsetree.Vlident "pair")) in
+  let pair_ident = Parsetree_utils.make_ast pair_ident_desc in
+  let pair_cident_desc = Parsetree.CI pair_ident in
+  Parsetree_utils.make_ast pair_cident_desc
+;;
 
 let generate_constructor_ident_for_method_generator ctx env cstr_expr =
-  try
-    let mapping_info =
-      Env.CoqGenEnv.find_constructor
-        ~loc: cstr_expr.Parsetree.ast_loc
-        ~current_unit: ctx.Context.scc_current_unit cstr_expr env in
-    (match mapping_info.Env.CoqGenInformation.cmi_external_translation with
-     | None -> (
-         (* The constructor isn't coming from an external definition. *)
-         let Parsetree.CI global_ident = cstr_expr.Parsetree.ast_desc in
-         match global_ident.Parsetree.ast_desc with
-          | Parsetree.I_local name
-          | Parsetree.I_global (Parsetree.Vname name) ->
-              Format.fprintf ctx.Context.scc_out_fmter "%a"
-                Parsetree_utils.pp_vname_with_operators_expanded name
-          | Parsetree.I_global (Parsetree.Qualified (fname, name)) ->
-              (* If the constructor belongs to the current compilation unit
-                 then one must not qualify it. *)
-              if fname <> ctx.Context.scc_current_unit then
-                Format.fprintf ctx.Context.scc_out_fmter "%s.%a"
-                  fname          (* No module name capitalization in Coq. *)
-                  Parsetree_utils.pp_vname_with_operators_expanded name
-              else
-                Format.fprintf ctx.Context.scc_out_fmter "%a"
-                  Parsetree_utils.pp_vname_with_operators_expanded name
-        )
-     | Some external_expr -> (
-         (* The constructor comes from an external definition. *)
-         let (_, coq_binding) =
-           try
-             List.find
-               (function
-                 | (Parsetree.EL_Coq, _) -> true
-                 | (Parsetree.EL_Caml, _)
-                 | ((Parsetree.EL_external _), _) -> false)
-               external_expr
-           with Not_found ->
-             (* No Coq mapping found. *)
-             raise
-               (Externals_generation_errs.No_external_constructor_def
-                  ("Coq", cstr_expr)) in
-         (* Now directly generate the name the constructor is mapped onto. *)
-         Format.fprintf ctx.Context.scc_out_fmter "%s" coq_binding
-        )) ;
-    (* Always returns the number of type arguments that must be printed
-       after the constructor. *)
-    mapping_info.Env.CoqGenInformation.cmi_num_polymorphics_extra_args
-  with _ ->
-    (* Since in Coq all the constructors must be inserted in the generation
+  if cstr_expr = pair_cident then 2 else
+    (begin
+        let mapping_info =
+          try
+            Env.DkGenEnv.find_constructor
+              ~loc: cstr_expr.Parsetree.ast_loc
+              ~current_unit: ctx.Context.scc_current_unit cstr_expr env
+          (* Since in Dk all the constructors must be inserted in the generation
        environment, if we don't find the constructor, then we were wrong
        somewhere else before. *)
-    assert false
+
+          with _ -> assert false
+        in
+        (match mapping_info.Env.DkGenInformation.cmi_external_translation with
+         | None -> ()
+           (* The constructor isn't coming from an external definition. *)
+         | Some external_expr -> (
+           (* The constructor comes from an external definition. *)
+           if not (List.exists
+                   (function
+                     | (Parsetree.EL_Dk, _) -> true
+                     | (Parsetree.EL_Caml, _)
+                     | (Parsetree.EL_Coq, _)
+                     | ((Parsetree.EL_external _), _) -> false)
+                   external_expr)
+           then
+               (* No Dk mapping found. *)
+               raise
+                 (Externals_generation_errs.No_external_constructor_def
+                    ("Dk", cstr_expr))
+        )) ;
+        (* Always returns the number of type arguments that must be printed
+       after the constructor. *)
+        mapping_info.Env.DkGenInformation.cmi_num_polymorphics_extra_args
+      end)
 ;;
 
 
@@ -440,10 +525,10 @@ let generate_constructor_ident_for_method_generator ctx env cstr_expr =
 let generate_record_label_for_method_generator ctx env label =
   try
     let mapping_info =
-      Env.CoqGenEnv.find_label
+      Env.DkGenEnv.find_label
         ~loc: label.Parsetree.ast_loc
         ~current_unit: ctx.Context.scc_current_unit label env in
-    (match mapping_info.Env.CoqGenInformation.lmi_external_translation with
+    (match mapping_info.Env.DkGenInformation.lmi_external_translation with
     | None -> (
         (* The label isn't coming from an external definition. *)
         let Parsetree.LI global_ident = label.Parsetree.ast_desc in
@@ -457,7 +542,7 @@ let generate_record_label_for_method_generator ctx env label =
                  then one must not qualify it. *)
               if fname <> ctx.Context.scc_current_unit then
                 Format.fprintf ctx.Context.scc_out_fmter "%s.%a"
-                  fname          (* No module name capitalization in Coq. *)
+                  fname          (* No module name capitalization in Dk. *)
                   Parsetree_utils.pp_vname_with_operators_expanded name
               else
                 Format.fprintf ctx.Context.scc_out_fmter "%a"
@@ -465,121 +550,238 @@ let generate_record_label_for_method_generator ctx env label =
         )
     | Some external_expr ->
         (* The constructor comes from an external definition. *)
-        let (_, coq_binding) =
+        let (_, dk_binding) =
           try
             List.find
               (function
-                | (Parsetree.EL_Coq, _) -> true
+                | (Parsetree.EL_Dk, _) -> true
                 | (Parsetree.EL_Caml, _)
+                | (Parsetree.EL_Coq, _)
                 | ((Parsetree.EL_external _), _) -> false)
               external_expr
           with Not_found ->
-            (* No Coq mapping found. *)
+            (* No Dk mapping found. *)
             raise
               (Externals_generation_errs.No_external_field_def
-                 ("Coq", label)) in
+                 ("Dk", label)) in
         (* Now directly generate the name the label is mapped onto. *)
-        Format.fprintf ctx.Context.scc_out_fmter "%s" coq_binding) ;
+        Format.fprintf ctx.Context.scc_out_fmter "%s" dk_binding) ;
     (* Always returns the number of type arguments that must be printed
        after the label. *)
-    mapping_info.Env.CoqGenInformation.lmi_num_polymorphics_extra_args
+    mapping_info.Env.DkGenInformation.lmi_num_polymorphics_extra_args
   with _ ->
-    (* Since in Coq all the record labels must be inserted in the generation
+    (* Since in Dk all the record labels must be inserted in the generation
        environment, if we don't find the label, then we were wrong
        somewhere else before. *)
     assert false
 ;;
 
 
+(* Takes an Parsetree.ast and print its type *)
+let generate_simple_type_of_ast dkctx out_fmter a =
+ match a.Parsetree.ast_type with
+ | Parsetree.ANTI_none ->
+    Format.fprintf out_fmter "no_type"
+ | Parsetree.ANTI_irrelevant ->
+    Format.fprintf out_fmter "irrelevant_type"
+ | Parsetree.ANTI_scheme ts ->
+    Types.pp_type_simple_to_dk dkctx out_fmter (Types.specialize ts)
+ | Parsetree.ANTI_type st ->
+    Types.pp_type_simple_to_dk dkctx out_fmter st
+;;
 
 (* ************************************************************************** *)
 (* force_polymorphic_explicit_args: bool -> Context.species_compil_context -> *)
-(*   Env.CoqGenEnv.t -> Parsetree.pattern -> unit                             *)
-(** {b Descr} : Emits coq code for a pattern. Attention, this function can
+(*   Env.DkGenEnv.t -> Parsetree.pattern -> unit                             *)
+(** {b Descr} : Emits dk code for a pattern. Attention, this function can
     also be used to generate code from a pettern but not in the context of
     generating a pattern in the target code (see description of
     [~force_polymorphic_explicit_args]).
 
+    This function does more than its Coq counterpart because Dedukti patterns
+    are only allowed in rewrite-rules, so at toplevel.
+    Moreover, Dedukti patterns are not equivalent to ml patterns because
+    confluence has to be guaranteed. Hence
+      match x with
+        | 0 -> 0
+        | _ -> 1
+    cannot be translated in Dedukti by two rewrite rules.
+    TODO (future optimization): realize when patterns are orthogonal and can
+    hence be compiled by rewrite-rules.
+
+    In Dedukti, each pattern is translated as a function with a continuation.
+    Exhaustivity is not checked, empty pattern-matching compiles to "run-time"
+    failure.
+
+    The code produced by this function is equivalent to
+    (match e with pat -> d | _ -> k) : ret_type
+
     {b Args} :
-      - [~force_polymorphic_explicit_args]: Normally, when generating sum value
-        constructors as pattern we must never add the "_" denoting the
-        polymorphism if the contructor belongs to a parametrized type. The
-        only exception is when we generate the recursive functions termination
-        lemmas with [Rec_let_gen.generate_binding_match].
-        In effect, in this case, we must generate the hypotheses induced by
-        conditions (hence also match) and separate them by ->. And in this
-        case, we do not re-generate a real pattern-matching, but an expression.
-        And in expression, polymorphic arguments must be explicitely writen
-        with some "_"s. Moreover, this means that we must disable the implicit
-        arguments by prefixing the constructor by "@".
+      - [~d]: A function to print the term bound to the pattern.
+      - [~k]: A continuation in case the pattern is not matched.
+      - [~ret_type]: The type returned by the pattern.
+      - [~e]: a function to print the expression matched
 
     {b Exported} : Yes                                                        *)
 (* ************************************************************************** *)
-let generate_pattern ~force_polymorphic_explicit_args ctx coqctx env pattern =
+let generate_pattern ctx dkctx env pattern
+                     ~d ~k ~ret_type ~e =
   let out_fmter = ctx.Context.scc_out_fmter in
-  let rec rec_gen_pat pat =
+  let rec rec_gen_pat pat ~d ~k ~ret_type ~e =
     match pat.Parsetree.ast_desc with
-     | Parsetree.P_const constant -> generate_constant ctx constant
+     | Parsetree.P_const constant -> generate_constant_pattern ctx constant
      | Parsetree.P_var name ->
-         Format.fprintf out_fmter "%a"
-           Parsetree_utils.pp_vname_with_operators_expanded name
+        (* "match e with x -> d | _ -> k" is the same as "(fun x -> d) e" *)
+        Format.fprintf out_fmter "(%a :@ cc.eT@ "
+                       Parsetree_utils.pp_vname_with_operators_expanded name;
+        generate_pattern_type pat;
+        Format.fprintf out_fmter " =>@ ";
+        d ();
+        Format.fprintf out_fmter ")@ ";
+        e ()
      | Parsetree.P_as (p, name) ->
-         Format.fprintf out_fmter "(" ;
-         rec_gen_pat p ;
-         Format.fprintf out_fmter "as@ %a)"
-           Parsetree_utils.pp_vname_with_operators_expanded name
-     | Parsetree.P_wild -> Format.fprintf out_fmter "_"
-     | Parsetree.P_constr (ident, pats) ->
-         (* If the constructor has arguments, enclose them between parens. *)
-         let has_args = pats <> [] in
-         if has_args then Format.fprintf out_fmter "(" ;
-         (* Disallow implicit arguments if needed. *)
-         if force_polymorphic_explicit_args then Format.fprintf out_fmter "@@" ;
-         let extras =
-           generate_constructor_ident_for_method_generator ctx env ident
-         in
-         (* If we must force the apparition of polymorphic extra arguments... *)
-         if force_polymorphic_explicit_args then (
-             (* Add the type arguments of the constructor. *)
-             match pat.Parsetree.ast_type with
-             | Parsetree.ANTI_type t ->
-                 Types.pp_type_simple_args_to_coq coqctx out_fmter t extras
-             | _ -> assert false
-          ) ;
-         (* In "match" patterns, extra arguments of the constructor due to
-            polymorphism never appear in Coq syntax. *)
-         Format.fprintf out_fmter "@ " ;
-         rec_generate_pats_list ~comma: false pats ;
-         if has_args then Format.fprintf out_fmter ")"
+        (* "match e with p(y) as x -> d(x,y) | _ -> k"
+           is the same as
+           "(fun x -> (match e with p(y) -> d(x,y))) e" *)
+        Format.fprintf out_fmter "(%a :@ "
+                       Parsetree_utils.pp_vname_with_operators_expanded name;
+        generate_pattern_type pat;
+        Format.fprintf out_fmter " =>@ ";
+        rec_gen_pat p ~d ~k ~ret_type ~e;
+        Format.fprintf out_fmter ")@ ";
+        e ()
+     | Parsetree.P_wild ->
+        (* "match e with _ -> d" is the same as "d" *)
+        d ();
      | Parsetree.P_record _labs_pats ->
          Format.eprintf "generate_pattern P_record TODO@."
-     | Parsetree.P_tuple pats ->
-         Format.fprintf out_fmter "(@[<1>" ;
-         rec_generate_pats_list ~comma: true pats ;
-         Format.fprintf out_fmter ")@]"
+     | Parsetree.P_tuple [] -> assert false (* Tuples should not be empty *)
+     | Parsetree.P_tuple [ p ] -> rec_gen_pat p ~d ~k ~ret_type ~e
+     | Parsetree.P_tuple [ p1 ; p2 ] -> (* Tuples are a special case of constructor *)
+        let desc = Parsetree.P_constr (pair_cident, [p1 ; p2] ) in
+        (* Update pattern type to reflect current use *)
+        let ast = Parsetree_utils.make_ast desc in
+        ast.Parsetree.ast_type <- pat.Parsetree.ast_type;
+        rec_gen_pat ast ~d ~k ~ret_type ~e
+     | Parsetree.P_tuple (p :: pats) -> (* Tuples are a special case of constructor *)
+        let tail = Parsetree_utils.make_ast (Parsetree.P_tuple pats) in
+        let desc = Parsetree.P_constr (pair_cident, [p ; tail] ) in
+        (* Update pattern type to reflect current use *)
+        let ast = Parsetree_utils.make_ast desc in
+        ast.Parsetree.ast_type <- pat.Parsetree.ast_type;
+        rec_gen_pat ast ~d ~k ~ret_type ~e
      | Parsetree.P_paren p ->
          Format.fprintf out_fmter "(@[<1>" ;
-         rec_gen_pat p ;
+         rec_gen_pat p ~d ~k ~ret_type ~e;
          Format.fprintf out_fmter ")@]"
+     | Parsetree.P_constr (cident, pats) -> (* Most interesting case *)
+        (* A function match__C : PV (Polymorphic variables) : * ->
+                                 DT PV ->
+                                 RT (Return type) : * ->
+                                 then_case : (ty_1 -> .. ty_n-> RT) ->
+                                 else_case : RT ->
+                                 RT
+                      is available in the same dedukti file than the constructor
+         *)
+
+        (* match e with P(p1, p2) -> d | _ -> k
+           is the same as
+           match e with
+           | P(x, y) -> (match x with
+              | p1 -> (match y with
+                | p2 -> d
+                | _ -> k)
+              | _ -> k)
+           | _ -> k
+         where x and y are fresh variables (pattern_variable_%d)
+         *)
+
+        let Parsetree.CI ident = cident.Parsetree.ast_desc in
+        let pattern_file_name, pattern_vname = match ident.Parsetree.ast_desc with
+          | Parsetree.I_global (Parsetree.Qualified (f, v))  -> (f ^ ".", v)
+          | Parsetree.I_global (Parsetree.Vname v)
+          | Parsetree.I_local v -> ("", v)
+        in
+        Format.fprintf out_fmter "@[<1>%smatch__%a"
+                       pattern_file_name
+                       Sourcify.pp_vname pattern_vname;
+        (* Now polymorphic variables *)
+        (* Number of polymorphic variables *)
+        let extras =
+           generate_constructor_ident_for_method_generator ctx env cident
+        in
+        (begin
+            match pat.Parsetree.ast_type with
+            | Parsetree.ANTI_type t ->
+               Types.pp_type_simple_args_to_dk dkctx out_fmter t extras
+            | _ ->
+               Format.fprintf out_fmter "(unknown_pattern_type %a)"
+                              Parsetree_utils.pp_vname_with_operators_expanded
+                              (Parsetree_utils.unqualified_vname_of_constructor_ident
+                                 cident)
+          end) ;
+        (* Now the return type *)
+        Format.fprintf out_fmter "@ ";
+        generate_simple_type_of_ast dkctx out_fmter ret_type ;
+        (* Now the matched term *)
+        Format.fprintf out_fmter "@ ";
+        e ();
+        (* Now the pattern function (then case) *)
+        Format.fprintf out_fmter "@ (";
+        (* Then case 1/2: Abstract over fresh variables *)
+        let count = ref 0 in
+        List.iter (fun pat ->
+                   Format.fprintf out_fmter "pattern_var_%d :@ cc.eT@ " !count;
+                   generate_simple_type_of_ast dkctx out_fmter pat;
+                   Format.fprintf out_fmter " =>@ ";
+                   incr count)
+                  pats;
+        (* Then case 2/2: Generate the matching on the fresh variables *)
+        rec_generate_pats_list 0 ~k ~d ~ret_type pats;
+        Format.fprintf out_fmter ")";
+
+        (* Now the continuation (else case) *)
+        Format.fprintf out_fmter "@ (";
+        k ();
+        Format.fprintf out_fmter ")";
+        Format.fprintf out_fmter "@]";
 
 
-  and rec_generate_pats_list ~comma = function
-    | [] -> ()
-    | [last] -> rec_gen_pat last
-    | h :: q ->
-        rec_gen_pat h ;
-        if comma then Format.fprintf out_fmter "," ;
-        Format.fprintf out_fmter "@ " ;
-        rec_generate_pats_list ~comma: comma q in
+  and rec_generate_pats_list count ~k ~d ~ret_type = function
+    | [] -> d ()
+    | pat :: pats ->
+       (* we produce the term
+          match pattern_var_%{count} with
+            | pat -> recursive_call
+            | _ -> k
+        *)
+       let fresh_var_name =
+         Parsetree.Vlident (Printf.sprintf "pattern_var_%d" count)
+       in
+       (* let fresh_var_pat = Parsetree.P_var fresh_var_name in *)
+       (* let fresh_var_desc = Parsetree.EI_local fresh_var_name in *)
+       (* let fresh_var = Parsetree_utils.make_ast fresh_var_desc in *)
+       rec_gen_pat
+         pat
+         ~d: (fun () ->
+                    rec_generate_pats_list (count+1) ~k ~d ~ret_type pats)
+         ~k
+         ~ret_type
+         ~e: (fun () -> Sourcify.pp_vname out_fmter fresh_var_name)
+
+  and generate_pattern_type (p : Parsetree.pattern) =
+    generate_simple_type_of_ast dkctx out_fmter p
+  in
+
   (* ********************** *)
   (* Now, let's do the job. *)
-  rec_gen_pat pattern
+  rec_gen_pat pattern ~d ~k ~ret_type ~e
 ;;
 
 
 
 type let_binding_pre_computation = {
-  lbpc_value_body : Env.CoqGenInformation.value_body ;
+  lbpc_value_body : Env.DkGenInformation.value_body ;
   lbpc_params_names : Parsetree.vname list ;
   lbpc_nb_polymorphic_args : int ;
   lbpc_params_with_type : (Parsetree.vname * Types.type_simple option) list ;
@@ -591,7 +793,7 @@ type let_binding_pre_computation = {
 
 (* ************************************************************************** *)
 (** {b Descr}: Initiate computation of things needed by [let_binding_compile]
-    and also needed to pre-enter recursive identifiers in the Coq env in order
+    and also needed to pre-enter recursive identifiers in the Dk env in order
     to know their number of extra arguments due to polymorphism. In effect, in
     case of recursivity (and moreover mutual recursivity), this info is needed
     in order to apply recursive identifiers in recursive call to the right
@@ -622,20 +824,20 @@ let pre_compute_let_binding_info_for_rec env bd ~rec_status ~toplevel =
      Otherwise, it will only be done later. *)
   let nb_polymorphic_args = List.length generalized_vars in
   let value_body =
-    if not toplevel then Env.CoqGenInformation.VB_non_toplevel
+    if not toplevel then Env.DkGenInformation.VB_non_toplevel
     else
-      Env.CoqGenInformation.VB_toplevel_let_bound
+      Env.DkGenInformation.VB_toplevel_let_bound
         (rec_status, params_names, def_scheme,
          bd.Parsetree.ast_desc.Parsetree.b_body) in
   let env' =
     (match rec_status with
-    | Env.RC_rec _ ->
+    | Env.DkGenInformation.RC_rec _ ->
         let toplevel_loc =
           if toplevel then Some bd.Parsetree.ast_loc else None in
-        Env.CoqGenEnv.add_value
+        Env.DkGenEnv.add_value
           ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
           (nb_polymorphic_args, value_body) env
-    | Env.RC_non_rec -> env) in
+    | Env.DkGenInformation.RC_non_rec -> env) in
   (env',
    { lbpc_value_body = value_body ;
      lbpc_params_names = params_names ;
@@ -659,7 +861,7 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
   let (new_env, reved_infos) =
     List.fold_left
       (fun (env_accu, infos_accu) binding ->
-        let (env', info) = 
+        let (env', info) =
           pre_compute_let_binding_info_for_rec
             ~rec_status ~toplevel env_accu binding in
         (env', info :: infos_accu))
@@ -668,13 +870,32 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
   (new_env, (List.rev reved_infos))
 ;;
 
-    
+
+let print_ident out i =
+  match i.Parsetree.ast_desc with
+  | Parsetree.I_local vname
+  | Parsetree.I_global (Parsetree.Vname vname) ->
+     Parsetree_utils.pp_vname_with_operators_expanded out vname
+  (* Hack for unit *)
+  | Parsetree.I_global (Parsetree.Qualified ("basics", Parsetree.Vuident "()")) ->
+     Format.fprintf out "dk_builtins.tt"
+  | Parsetree.I_global (Parsetree.Qualified (fname, vname)) ->
+     Format.fprintf out "%s.%a"
+       fname
+       Parsetree_utils.pp_vname_with_operators_expanded vname
+;;
+
+let print_constr_ident out i =
+  let Parsetree.CI id = i.Parsetree.ast_desc in
+  print_ident out id
+;;
+
 
 (* ************************************************************************** *)
 (** {b Descr}: Code generation for *one* let binding, recursive of not.
-    If the binding is recursive, then whatever the choosen Coq primitive ("fix"
-    or "Fixpoint"), 
-    This function is called by [Main_coq_generation.toplevel_let_def_compile]
+    If the binding is recursive, then whatever the choosen Dk primitive ("fix"
+    or "Fixpoint"),
+    This function is called by [Main_dk_generation.toplevel_let_def_compile]
     to generate code for toplevel definitions and by [let_in_def_compile] to
     generate code for local definitions.
     This function properly handles termination proofs stated as "structural"
@@ -682,14 +903,10 @@ let pre_compute_let_bindings_infos_for_rec ~rec_status ~toplevel env bindings =
     However, in case of recursive function with no termination proof or a
     non-"structural" proof, it considers invariably that the recursion decreases
     on the fisrt argument of the function and dumps a {struct fst arg}.
-    
-    {b Args}:
-     - [binder]: What Coq construct to use to introduce the definition, i.e.
-       "Let", "let", "let fix", "Fixpoint" or "with".
 
     {b Visibility}: Not exported outside this module.                         *)
 (* ************************************************************************** *)
-let rec let_binding_compile ctx ~binder ~opt_term_proof
+let rec let_binding_compile ctx ~opt_term_proof
     ~in_recursive_let_section_of ~local_idents ~self_methods_status
     ~recursive_methods_status ~rec_status ~toplevel env bd
     pre_computed_bd_info =
@@ -698,20 +915,20 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the binder and the bound name. *)
-  Format.fprintf out_fmter "%s@ %a"
-    binder Parsetree_utils.pp_vname_with_operators_expanded
+  Format.fprintf out_fmter "%a"
+    Parsetree_utils.pp_vname_with_operators_expanded
     bd.Parsetree.ast_desc.Parsetree.b_name ;
   (* Build the print context. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species =
+    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Types.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.cpc_collections_carrier_mapping =
+    Types.dpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
   let generalized_vars = pre_computed_bd_info.lbpc_generalized_vars in
-  (* If the original scheme is polymorphic, then we must add extra Coq
+  (* If the original scheme is polymorphic, then we must add extra Dk
      parameters of type "Set" for each of the generalized variables. Hence,
      printing the variables used to instanciate the polymorphic ones in front
      of the function, they will appear and moreover they will be "tagged" as
@@ -721,8 +938,8 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
      the type variable of the function argument's type. *)
   List.iter
     (fun var ->
-      Format.fprintf out_fmter "@ (%a : Set)"
-        Types.pp_type_variable_to_coq var)
+      Format.fprintf out_fmter "@ (%a : cc.uT)"
+        Types.pp_type_variable_to_dk var)
     generalized_vars ;
   let params_with_type = pre_computed_bd_info.lbpc_params_with_type in
   (* Now, generate each of the real function's parameter with its type. *)
@@ -730,9 +947,9 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
     (fun (param_vname, pot_param_ty) ->
       match pot_param_ty with
        | Some param_ty ->
-           Format.fprintf out_fmter "@ (%a : %a)"
+           Format.fprintf out_fmter "@ (%a : cc.eT %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_coq print_ctx) param_ty
+             (Types.pp_type_simple_to_dk print_ctx) param_ty
        | None ->
            (* Because we provided a type scheme to the function
               [bind_parameters_to_types_from_type_scheme], MUST get one type
@@ -748,7 +965,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   | None ->
       (* If there is no termination proof, then we must just worry in the case
          the definition is recursive. *)
-      if rec_status <> Env.RC_non_rec then (  (* Is rec. *)
+      if rec_status <> Env.DkGenInformation.RC_non_rec then (  (* Is rec. *)
         (* The function is not satisfactory since it is recursive and has
            no termination proof. Issue a warning and [Unsure] choose to consider
            it by default as structural on its first argument. *)
@@ -772,7 +989,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   | Some term_proof -> (
       (* Take the termination proof into account only if the definition is
          recursive. Otherwise, issue a warning. *)
-      if rec_status <> Env.RC_non_rec then (  (* Is rec. *)
+      if rec_status <> Env.DkGenInformation.RC_non_rec then (  (* Is rec. *)
         match term_proof.Parsetree.ast_desc with
         | Parsetree.TP_structural decr_arg ->
             (* First, ensure that the identifier is really a parameter of this
@@ -824,10 +1041,10 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
           the result value of the "let". *)
        assert false
    | Some t ->
-       Format.fprintf out_fmter "@ :@ %a"
-         (Types.pp_type_simple_to_coq print_ctx) t
+       Format.fprintf out_fmter "@ :@ cc.eT %a"
+         (Types.pp_type_simple_to_dk print_ctx) t
   ) ;
-  (* Output now the ":=" sign ending the Coq function's "header".
+  (* Output now the ":=" sign ending the Dk function's "header".
      With a NON-breakable space before to prevent uggly hyphenation ! *)
   Format.fprintf out_fmter " :=@\n" ;
   (* Here, each parameter name of the binding may mask a "in"-parameter. *)
@@ -836,7 +1053,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   (match bd.Parsetree.ast_desc.Parsetree.b_body with
   | Parsetree.BB_computational e ->
       let in_recursive_let_section_of =
-        if rec_status <> Env.RC_non_rec then  (* Is rec. *)
+        if rec_status <> Env.DkGenInformation.RC_non_rec then  (* Is rec. *)
           bd.Parsetree.ast_desc.Parsetree.b_name ::
           in_recursive_let_section_of
         else in_recursive_let_section_of in
@@ -847,9 +1064,9 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   (* Finally, we record, (except if it was already done in [env'] in case of
      recursive binding) the number of extra arguments due to polymorphism the
      current bound identifier has. *)
-  if rec_status <> Env.RC_non_rec then env  (* Is rec. *)
+  if rec_status <> Env.DkGenInformation.RC_non_rec then env  (* Is rec. *)
   else
-    Env.CoqGenEnv.add_value
+    Env.DkGenEnv.add_value
       ~toplevel: toplevel_loc bd.Parsetree.ast_desc.Parsetree.b_name
       (pre_computed_bd_info.lbpc_nb_polymorphic_args,
        pre_computed_bd_info.lbpc_value_body) env
@@ -859,36 +1076,29 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
 (* ************************************************************************** *)
 (** {b Descr} : Starts compiling *local* recursive or not functions. Currently,
     recursive one are always compiled with the "fix" (lowercase !) construct of
-    Coq.                                                                      *)
+    Dk.                                                                      *)
 (* ************************************************************************** *)
 and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
     ~self_methods_status ~recursive_methods_status env let_def =
   if let_def.Parsetree.ast_desc.Parsetree.ld_logical = Parsetree.LF_logical then
-    failwith "Coq compilation of logical let in TODO" ;  (* [Unsure]. *)
+    failwith "Dk compilation of logical let in TODO" ;  (* [Unsure]. *)
   let out_fmter = ctx.Context.scc_out_fmter in
   let rec_status =
     (match let_def.Parsetree.ast_desc.Parsetree.ld_rec with
-     | Parsetree.RF_no_rec -> Env.RC_non_rec
+     | Parsetree.RF_no_rec -> Env.DkGenInformation.RC_non_rec
      | Parsetree.RF_rec -> (
          match let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof with
-         | None -> Env.RC_rec Env.RPK_other
+         | None -> Env.DkGenInformation.RC_rec Env.DkGenInformation.RPK_other
          | Some term_pr -> (
              match term_pr.Parsetree.ast_desc with
              | Parsetree.TP_structural decr_arg ->
-                 Env.RC_rec (Env.RPK_struct decr_arg)
-             | _ ->  Env.RC_rec Env.RPK_other))
+                 Env.DkGenInformation.RC_rec
+                   (Env.DkGenInformation.RPK_struct decr_arg)
+             | _ ->
+                 Env.DkGenInformation.RC_rec Env.DkGenInformation.RPK_other))
     ) in
   (* Generates the binder ("fix" or non-"fix"). *)
   Format.fprintf out_fmter "@[<2>" ;
-  let initial_binder =
-    (match rec_status with
-     | Env.RC_non_rec -> "let"
-     | Env.RC_rec _ ->
-         (* [Unsure] We don't known now how to compile several local mutually
-            recursive functions. *)
-         if (List.length let_def.Parsetree.ast_desc.Parsetree.ld_bindings) > 1
-         then failwith "TODO: local mutual recursive functions." ;
-         "let fix") in
   let opt_term_proof =
     let_def.Parsetree.ast_desc.Parsetree.ld_termination_proof in
   (* Recover pre-compilation info and extended environment in case of
@@ -906,7 +1116,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
          assert false
      | ([one_bnd], [one_pre_comp_info]) ->
          let_binding_compile
-           ctx ~opt_term_proof ~binder: initial_binder
+           ctx ~opt_term_proof
            ~in_recursive_let_section_of ~local_idents ~self_methods_status
            ~recursive_methods_status ~toplevel: false ~rec_status env one_bnd
            one_pre_comp_info
@@ -915,7 +1125,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
          let accu_env =
            ref
              (let_binding_compile
-                ctx ~opt_term_proof ~binder: initial_binder
+                ctx ~opt_term_proof
                 ~in_recursive_let_section_of ~local_idents ~self_methods_status
                 ~recursive_methods_status ~toplevel: false ~rec_status env
                 first_bnd first_pre_comp_info) in
@@ -926,7 +1136,7 @@ and let_in_def_compile ctx ~in_recursive_let_section_of ~local_idents
              Format.fprintf out_fmter "@ in@]@\n@[<2>" ;
              accu_env :=
                let_binding_compile
-                 ctx ~opt_term_proof ~binder: "let" ~in_recursive_let_section_of
+                 ctx ~opt_term_proof ~in_recursive_let_section_of
                  ~local_idents ~self_methods_status ~recursive_methods_status
                  ~rec_status ~toplevel: false env binding pre_comp_info)
            next_bnds next_pre_comp_infos ;
@@ -944,14 +1154,14 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
     ~self_methods_status ~recursive_methods_status initial_env
     initial_expression =
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* Create the coq type print context. *)
+  (* Create the dk type print context. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species =
+    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Types.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.cpc_collections_carrier_mapping =
+    Types.dpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
 
   let rec rec_generate_expr loc_idents env expression =
@@ -980,9 +1190,9 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                   Types.extract_fun_ty_arg ~self_manifest: None accu_ty in
                 let res_ty =
                   Types.extract_fun_ty_result ~self_manifest: None accu_ty in
-                Format.fprintf out_fmter "(%a :@ %a)@ "
+                Format.fprintf out_fmter "(%a :@ cc.eT %a)@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
-                  (Types.pp_type_simple_to_coq print_ctx) arg_ty ;
+                  (Types.pp_type_simple_to_dk print_ctx) arg_ty ;
                 (* Return the remainder of the type to continue. *)
                 res_ty)
               fun_ty
@@ -991,36 +1201,65 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          rec_generate_expr loc_idents env body ;
          Format.fprintf out_fmter ")@]" ;
      | Parsetree.E_var ident -> (
-         (* Get the number of extra args "_" that will be needed because of
-            polymorphism. *)
-         let nb_polymorphic_args =
-           (try
-             let current_species_name =
-               Some
-                 (Parsetree_utils.name_of_vname
-                    (snd ctx.Context.scc_current_species)) in
-             fst
-               (Env.CoqGenEnv.find_value
-                  ~loc: ident.Parsetree.ast_loc
-                  ~current_unit: ctx.Context.scc_current_unit
-                  ~current_species_name ident env)
-           with
-             (* If the identifier was not found, then it was may be a local
+       let current_species_name =
+         Some
+           (Parsetree_utils.name_of_vname
+              (snd ctx.Context.scc_current_species)) in
+       let id_type_simple : Types.type_simple =
+         (match expression.Parsetree.ast_type with
+          | Parsetree.ANTI_none | Parsetree.ANTI_irrelevant
+          | Parsetree.ANTI_scheme _ -> assert false
+          | Parsetree.ANTI_type t -> t) in
+       let (nb_polymorphic_args, id_type_scheme) =
+         try
+           let (nb, vb) =
+             (Env.DkGenEnv.find_value
+                ~loc: ident.Parsetree.ast_loc
+                ~current_unit: ctx.Context.scc_current_unit
+                ~current_species_name ident env) in
+           (nb, match vb with
+             | Env.DkGenInformation.VB_toplevel_let_bound (_, _, ts, _) -> Some ts
+             | Env.DkGenInformation.VB_non_toplevel
+             | Env.DkGenInformation.VB_toplevel_property _ -> None
+           )
+         with
+           (* If the identifier was not found, then it was may be a local
                 identifier bound by a pattern. Then we can safely ignore it. *)
-             Env.Unbound_identifier (_, _) -> 0) in
-         (* If some extra "_" are needed, then enclose the whole expression
+           Env.Unbound_identifier (_, _) -> (0, None)
+       in
+       assert (nb_polymorphic_args =
+         match id_type_scheme with
+         | Some ts ->
+            let (l, _) = Types.scheme_split ts in List.length l
+         | None -> 0
+              );
+
+       (* If some extra "_" are needed, then enclose the whole expression
             between parens (was bug #50). *)
          if nb_polymorphic_args > 0 then Format.fprintf out_fmter "@[<2>(" ;
          generate_expr_ident_for_E_var
            ctx ~in_recursive_let_section_of ~local_idents: loc_idents
            ~self_methods_status ~recursive_methods_status ident ;
-         (* Now, add the extra "_"'s if the identifier is polymorphic. *)
-         for _i = 0 to nb_polymorphic_args - 1 do
-           Format.fprintf out_fmter "@ _"
-         done ;
-         (* Close the opened parenthesis if one was opened. *)
-         if nb_polymorphic_args > 0 then Format.fprintf out_fmter ")@]"
+         (* Now, add the extra type parameters if the identifier is polymorphic. *)
+         if nb_polymorphic_args > 0 then (
+           let type_scheme =
+             match id_type_scheme with Some ts -> ts | None -> assert false
+           in
+           let type_arguments =
+             Types.unify_with_instance
+               type_scheme
+               id_type_simple
+           in
+           assert (List.length type_arguments = nb_polymorphic_args);
+           List.iter (fun st ->
+                      Format.fprintf out_fmter "@ (%a)"
+                                     (Types.pp_type_simple_to_dk print_ctx) st
+                     )
+                     type_arguments;
+           (* Close the opened parenthesis if one was opened. *)
+           if nb_polymorphic_args > 0 then Format.fprintf out_fmter ")@]"
          )
+     )
      | Parsetree.E_app (func_expr, args) ->
          Format.fprintf out_fmter "@[<2>(" ;
          rec_generate_expr loc_idents env func_expr ;
@@ -1028,60 +1267,81 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          rec_generate_exprs_list ~comma: false loc_idents env args ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_constr (cstr_ident, args) ->
-         Format.fprintf out_fmter "@[<1>(@@" ;
+         Format.fprintf out_fmter "@[<1>(%a"
+           print_constr_ident cstr_ident;
          let extras =
-           generate_constructor_ident_for_method_generator
-             ctx env cstr_ident in
+           generate_constructor_ident_for_method_generator ctx env cstr_ident
+         in
          (* Add the type arguments of the constructor. *)
-         (match expression.Parsetree.ast_type with
+         begin match expression.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
-             Types.pp_type_simple_args_to_coq print_ctx out_fmter t extras
-         | _ -> assert false) ;
-         (match args with
+             Types.pp_type_simple_args_to_dk print_ctx out_fmter t extras
+         | _ -> assert false
+         end;
+         begin match args with
           | [] -> ()
           | _ ->
               Format.fprintf out_fmter "@ " ;
-              rec_generate_exprs_list ~comma: false loc_idents env args) ;
+              rec_generate_exprs_list ~comma: false loc_idents env args ;
+         end;
          Format.fprintf out_fmter ")@]" ;
-     | Parsetree.E_match (expr, pats_exprs) -> (
-         Format.fprintf out_fmter "@[<1>match " ;
-         rec_generate_expr loc_idents env expr ;
-         Format.fprintf out_fmter " with" ;
-         List.iter
-           (fun (pattern, expr) ->
-             (* My indentation style: indent of 4 between *)
-             (* the pattern and its related processing.   *)
-             Format.fprintf out_fmter "@\n@[<4>| " ;
-             generate_pattern
-               ~force_polymorphic_explicit_args: false ctx print_ctx env
-               pattern;
-             Format.fprintf out_fmter " =>@\n" ;
-             (* Here, each name of the pattern may mask a "in"-parameter. *)
-             let loc_idents' =
-               (Parsetree_utils.get_local_idents_from_pattern pattern) @
-               loc_idents in
-             rec_generate_expr loc_idents' env expr ;
-             Format.fprintf out_fmter "@]")
-           pats_exprs ;
-         Format.fprintf out_fmter "@\nend@]"
-        )
+     | Parsetree.E_match (expr, pats_exprs) ->
+        let rec generate_pattern_matching = function
+          | [] ->
+             Format.fprintf out_fmter "(dk_fail.fail@ ";
+             generate_simple_type_of_ast print_ctx out_fmter expression;
+             Format.fprintf out_fmter ")"
+          | (pat, d) :: pats ->
+             generate_pattern ctx print_ctx env pat
+                              ~d: (fun () -> rec_generate_expr loc_idents env d)
+                              ~ret_type: d
+                              ~k: (fun () -> generate_pattern_matching pats)
+                              ~e: (fun () -> rec_generate_expr loc_idents env expr)
+        in
+        generate_pattern_matching pats_exprs;
+     (*  *)
      | Parsetree.E_if (expr1, expr2, expr3) ->
-         Format.fprintf out_fmter "@[<2>(if@ " ;
+         Format.fprintf out_fmter "@[<2>(dk_bool.ite@ " ;
+         generate_simple_type_of_ast print_ctx out_fmter expr2;
+         Format.fprintf out_fmter "@ " ;
          rec_generate_expr loc_idents env expr1 ;
-         Format.fprintf out_fmter "@ @[<2>then@ @]" ;
+         Format.fprintf out_fmter "@ " ;
          rec_generate_expr loc_idents env expr2 ;
-         Format.fprintf out_fmter "@ @[<2>else@ @]" ;
+         Format.fprintf out_fmter "@ " ;
          rec_generate_expr loc_idents env expr3 ;
          Format.fprintf out_fmter ")@]"
      | Parsetree.E_let (let_def, in_expr) ->
-         let env' =
-           let_in_def_compile
-             ctx ~in_recursive_let_section_of ~local_idents
-             ~self_methods_status ~recursive_methods_status env let_def in
-         Format.fprintf out_fmter "@ in@\n" ;
-         rec_generate_expr loc_idents env' in_expr
+        let (env, pre_comp_infos) =
+          pre_compute_let_bindings_infos_for_rec
+            ~rec_status: Env.DkGenInformation.RC_non_rec
+            ~toplevel: false env
+            let_def.Parsetree.ast_desc.Parsetree.ld_bindings in
+        let rec aux out_fmter = function
+         | ([], []) -> rec_generate_expr loc_idents env in_expr
+         | (fst_bnd :: next_bnds,
+            fst_pre_comp_info :: next_pre_comp_info) ->
+            (* Simply translate by a beta redex,
+               this only works for non-recursive local lets *)
+            Format.fprintf out_fmter "@[<2>((%a : cc.eT %a =>@ %a)@ %a)@]"
+              Parsetree_utils.pp_vname_with_operators_expanded
+              fst_bnd.Parsetree.ast_desc.Parsetree.b_name
+              (Types.pp_type_simple_to_dk print_ctx)
+              (match fst_pre_comp_info.lbpc_result_ty with
+               | None -> assert false
+               | Some t -> t)
+              aux (next_bnds, next_pre_comp_info)
+              (fun _ -> rec_generate_expr loc_idents env)
+              (match fst_bnd.Parsetree.ast_desc.Parsetree.b_body with
+               | Parsetree.BB_logical _ -> assert false
+               | Parsetree.BB_computational e -> e)
+         | _ -> assert false
+        in
+        aux
+          out_fmter
+          (let_def.Parsetree.ast_desc.Parsetree.ld_bindings,
+           pre_comp_infos)
      | Parsetree.E_record labs_exprs ->
-         (* Use the Coq syntax {| .. := .. ; .. := .. |}. *)
+         (* Use the Dk syntax {| .. := .. ; .. := .. |}. *)
          Format.fprintf out_fmter "@[<1>{|@ " ;
          rec_generate_record_field_exprs_list env loc_idents labs_exprs ;
          Format.fprintf out_fmter "@ |}@]"
@@ -1094,7 +1354,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
             expression type. *)
          (match expr.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
-             Types.pp_type_simple_args_to_coq print_ctx out_fmter t extras
+             Types.pp_type_simple_args_to_dk print_ctx out_fmter t extras
          | _ -> assert false) ;
          Format.fprintf out_fmter ")@]"
         )
@@ -1115,26 +1375,28 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
           | [one] -> rec_generate_expr loc_idents env one
           | _ :: exprs -> loop ppf exprs in
          Format.fprintf out_fmter "@[<1>(%a)@]" loop exprs
-     | Parsetree.E_external external_expr -> (
+     | Parsetree.E_external external_expr ->
+         (begin
          let e_translation =
            external_expr.Parsetree.ast_desc.Parsetree.ee_external in
          try
-           (* Simply a somewhat verbatim output of the Coq translation. *)
-           let (_, coq_code) =
+           (* Simply a somewhat verbatim output of the Dk translation. *)
+           let (_, dk_code) =
              List.find
                (function
-                 | (Parsetree.EL_Coq, _) -> true
+                 | (Parsetree.EL_Dk, _) -> true
                  | (Parsetree.EL_Caml, _)
+                 | (Parsetree.EL_Coq, _)
                  | ((Parsetree.EL_external _), _) -> false)
                e_translation.Parsetree.ast_desc in
-           Format.fprintf out_fmter "%s" coq_code
+           Format.fprintf out_fmter "%s" dk_code
          with Not_found ->
-           (* No Coq mapping found. *)
+           (* No Dk mapping found. *)
            raise
              (Externals_generation_errs.No_external_value_def
-                ("Coq", (Parsetree.Vlident "<expr>"),
+                ("Dk", (Parsetree.Vlident "<expr>"),
                  expression.Parsetree.ast_loc))
-        )
+         end)
      | Parsetree.E_paren expr ->
          Format.fprintf out_fmter "@[<1>(" ;
          rec_generate_expr loc_idents env expr ;
@@ -1159,14 +1421,37 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
         rec_generate_record_field_exprs_list env loc_idents q
 
 
+  and generate_expression_type (e : Parsetree.expr) =
+    match e.Parsetree.ast_type with
+    | Parsetree.ANTI_none
+    | Parsetree.ANTI_irrelevant
+    | Parsetree.ANTI_scheme _ ->
+       assert false     (* An expression should have a meaningful type *)
+    | Parsetree.ANTI_type st ->
+       Types.pp_type_simple_to_dk print_ctx out_fmter st
+
+  and rec_generate_exprs_type_list ~comma loc_idents env = function
+    | [] -> ()
+    | [last] -> generate_expression_type last
+    | h :: q ->
+       if comma then Format.fprintf out_fmter "dk_tuple.prod@ ";
+       generate_expression_type h;
+       Format.fprintf out_fmter "@ ";
+       rec_generate_exprs_type_list ~comma loc_idents env q
 
   and rec_generate_exprs_list ~comma loc_idents env = function
     | [] -> ()
     | [last] -> rec_generate_expr loc_idents env last
     | h :: q ->
+       if comma then            (* There is no builtin syntax for pairs in Dedukti, we use a pair function instead. *)
+         (Format.fprintf out_fmter "dk_tuple.pair@ ";
+          generate_expression_type h;
+          Format.fprintf out_fmter "@ ";
+          rec_generate_exprs_type_list ~comma loc_idents env q;
+          Format.fprintf out_fmter "@ ";
+         );
         rec_generate_expr loc_idents env h ;
-        if comma then Format.fprintf out_fmter ",@ "
-        else Format.fprintf out_fmter "@ " ;
+        Format.fprintf out_fmter "@ " ;
         rec_generate_exprs_list ~comma loc_idents env q in
 
 
@@ -1181,14 +1466,14 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
     ~self_methods_status ~recursive_methods_status initial_env
     initial_proposition =
   let out_fmter = ctx.Context.scc_out_fmter in
-  (* Create the coq type print context. *)
+  (* Create the dk type print context. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species =
+    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Types.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.cpc_collections_carrier_mapping =
+    Types.dpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
 
   let rec rec_generate_logical_expr loc_idents env proposition =
@@ -1210,32 +1495,30 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
             in [let_binding_compile]. Consult comment over there... *)
          List.iter
            (fun var ->
-             Format.fprintf out_fmter "forall %a : Set,@ "
-               Types.pp_type_variable_to_coq var)
+             Format.fprintf out_fmter "dk_logic.forall_type (%a : cc.uT => @ "
+               Types.pp_type_variable_to_dk var)
            generalized_vars ;
-         (* In Coq, we must write: "forall x y : Set, ..."
-            but "exists x : Set, exists y : Set, ..." so just change the way
-            we print depending on the binder. *)
+         (* Now, print the binder and the real bound variables. *)
          (match proposition.Parsetree.ast_desc with
           | Parsetree.Pr_forall (_, _, _) ->
-              (* Now, print the binder and the real bound variables. *)
-              Format.fprintf out_fmter "forall@ %a :@ %a,@ "
-                (Handy.pp_generic_separated_list
-                   " "
-                   (fun ppf vn ->
-                     Format.fprintf ppf "%s"
-                       (Parsetree_utils.vname_as_string_with_operators_expanded
-                          vn)))
-                vnames
-                (Types.pp_type_simple_to_coq print_ctx) ty
-          | Parsetree.Pr_exists (_, _, _) ->
-              (* Now, print the real bound variables. *)
               List.iter
                 (fun vn ->
-                  Format.fprintf out_fmter "exists %s :@ %a,@ "
-                    (Parsetree_utils.vname_as_string_with_operators_expanded
-                       vn)
-                    (Types.pp_type_simple_to_coq print_ctx) ty)
+                 Format.fprintf out_fmter
+                                "dk_logic.forall (%a) (%s :@ cc.eT (%a)@ =>@ "
+                                (Types.pp_type_simple_to_dk print_ctx) ty
+                                (Parsetree_utils.vname_as_string_with_operators_expanded
+                                   vn)
+                                (Types.pp_type_simple_to_dk print_ctx) ty)
+                vnames
+          | Parsetree.Pr_exists (_, _, _) ->
+              List.iter
+                (fun vn ->
+                 Format.fprintf out_fmter
+                                "dk_logic.exists (%a) (%s :@ cc.eT (%a)@ =>@ "
+                                (Types.pp_type_simple_to_dk print_ctx) ty
+                                (Parsetree_utils.vname_as_string_with_operators_expanded
+                                   vn)
+                                (Types.pp_type_simple_to_dk print_ctx) ty)
                 vnames
           | _ -> assert false) ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
@@ -1246,45 +1529,52 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          let env' =
            List.fold_left
              (fun accu_env vname ->
-               Env.CoqGenEnv.add_value
+               Env.DkGenEnv.add_value
                  ~toplevel: None vname
-                 (0, Env.CoqGenInformation.VB_non_toplevel) accu_env)
+                 (0, Env.DkGenInformation.VB_non_toplevel) accu_env)
              env
              vnames in
          rec_generate_logical_expr loc_idents' env' logical_expr ;
+         (* Close the parens opened for binders *)
+         List.iter
+           (fun _ -> Format.fprintf out_fmter ")")
+           vnames ;
+         List.iter
+           (fun _ -> Format.fprintf out_fmter ")")
+           generalized_vars;
          Format.fprintf out_fmter "@]"
          end)
      | Parsetree.Pr_imply (logical_expr1, logical_expr2) ->
-         Format.fprintf out_fmter "@[<2>" ;
+         Format.fprintf out_fmter "@[<2>dk_logic.imp@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr1 ;
-         Format.fprintf out_fmter " ->@ " ;
+         Format.fprintf out_fmter ")@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr2 ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_or (logical_expr1, logical_expr2) ->
-         Format.fprintf out_fmter "@[<2>" ;
+         Format.fprintf out_fmter "@[<2>dk_logic.or@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr1 ;
-         Format.fprintf out_fmter " \\/@ " ;
+         Format.fprintf out_fmter ")@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr2 ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_and (logical_expr1, logical_expr2) ->
-         Format.fprintf out_fmter "@[<2>" ;
+         Format.fprintf out_fmter "@[<2>dk_logic.and@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr1 ;
-         Format.fprintf out_fmter " /\\@ " ;
+         Format.fprintf out_fmter ")@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr2 ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_equiv (logical_expr1, logical_expr2) ->
-         Format.fprintf out_fmter "@[<2>" ;
+         Format.fprintf out_fmter "@[<2>dk_logic.eqv@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr1 ;
-         Format.fprintf out_fmter " <->@ " ;
+         Format.fprintf out_fmter ")@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr2 ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_not logical_expr ->
          Format.fprintf out_fmter "@[<2>" ;
-         Format.fprintf out_fmter "~" ;
+         Format.fprintf out_fmter "dk_logic.not@ (" ;
          rec_generate_logical_expr loc_idents env logical_expr ;
-         Format.fprintf out_fmter "@]"
+         Format.fprintf out_fmter ")@]"
      | Parsetree.Pr_expr expr ->
-         (* The wrapper surrounding the expression by Coq's "Is_true" if the
+         (* The wrapper surrounding the expression by Dk's "ebP" if the
             expression's type is [bool].
             Bug #45 exhibited that the type here may also be Self in case
             the representation was bool. Because logical propositions
@@ -1301,7 +1591,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
                 (* Note that expression never has a type scheme, but only a
                    type. *)
                 assert false) in
-         if is_bool then Format.fprintf out_fmter "@[<2>Is_true (" ;
+         if is_bool then Format.fprintf out_fmter "@[<2>dk_logic.ebP (" ;
          generate_expr
            ctx ~in_recursive_let_section_of ~local_idents: loc_idents
            ~self_methods_status ~recursive_methods_status env expr ;
@@ -1318,14 +1608,12 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
   rec_generate_logical_expr local_idents initial_env initial_proposition
 ;;
 
-
-
 (* ************************************************************************* *)
-(* Env.CoqGenEnv.t ->
+(* Env.DkGenEnv.t ->
    Abstractions.field_abstraction_info list ->
    (Parsetree.vname * Env.ordered_methods_from_params) list                  *)
-(** {b Descr}: Generate the Coq code of a species parameters. It outputs
-    both the parameters names and their type as a Coq expression.
+(** {b Descr}: Generate the Dk code of a species parameters. It outputs
+    both the parameters names and their type as a Dk expression.
     Either the parameter is a "is" parameter and then it's type will be
     rebuilt from its species expression.
     Or it is a "in" parameter and then it is a parameter of the record
@@ -1334,7 +1622,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
     Next come the extra parameters coming from the methods we depend on.
     Returns the list of species params and methods required to create a value
     of the type record, i.e. the one we found dependencies on in the body of
-    the record type ordered the same way they were lambda-lifted. 
+    the record type ordered the same way they were lambda-lifted.
 
     Used when generating the record type definition.
 
@@ -1350,7 +1638,7 @@ let generate_record_type_parameters ctx env species_descr
     (fun ((param_ty_mod, param_ty_coll), (param_name, param_kind)) ->
       match param_kind with
        | Types.CCMI_is ->
-           Format.fprintf ppf "@[<1>(%s_T :@ Set)@ @]" param_name
+           Format.fprintf ppf "@[<1>(%s_T :@ cc.uT)@ @]" param_name
        | Types.CCMI_in provenance ->
            (* We generate the lambda-lifting for "IN" parameter here (not their
               carrier, since if needed it has mandatorily be generated as a
@@ -1361,26 +1649,28 @@ let generate_record_type_parameters ctx env species_descr
               name) to avoid doubles. *)
            match provenance with
             | Types.SCK_species_parameter ->
-                Format.fprintf ppf "@[<1>(_p_%s_%s :@ %s_T)@ @]"
-                  param_name param_name param_ty_coll
-            | Types.SCK_toplevel_collection | Types.SCK_toplevel_species ->
-                Format.fprintf ppf "@[<1>(_p_%s_%s :@ "
-                  param_name param_name ;
-                if param_ty_mod <> current_unit then
-                  Format.fprintf ppf "%s." param_ty_mod ;
-                Format.fprintf ppf "%s.me_as_carrier)@ @]" param_ty_coll)
+                Format.fprintf ppf "@[<1>(_p_%s_%s :@ cc.eT %s_T)@ @]"
+                               param_name param_name param_ty_coll
+            | Types.SCK_toplevel_collection
+            | Types.SCK_toplevel_species ->
+                Format.fprintf ppf "@[<1>(_p_%s_%s :@ cc.eT "
+                                  param_name param_name ;
+                   if param_ty_mod <> current_unit then
+                     Format.fprintf ppf "%s." param_ty_mod ;
+                   Format.fprintf ppf "%s__me_as_carrier)@ @]" param_ty_coll
+               )
     ctx.Context.scc_collections_carrier_mapping ;
   (* Now, we will find the methods of the species parameters we decl-depend on
-     in the Coq type expressions. Such dependencies can only appear through
+     in the Dk type expressions. Such dependencies can only appear through
      properties and theorems bodies. *)
   let species_parameters_names = ctx.Context.scc_species_parameters_names in
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species =
+    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Types.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-      Types.cpc_collections_carrier_mapping =
+      Types.dpc_collections_carrier_mapping =
         ctx.Context.scc_collections_carrier_mapping } in
   (* We first build the lists of dependent methods for each property and
      theorem fields. *)
@@ -1449,21 +1739,22 @@ let generate_record_type_parameters ctx env species_descr
             (Parsetree_utils.vname_as_string_with_operators_expanded meth) in
           match meth_ty_kind with
            | Parsetree_utils.DETK_computational ty ->
-               Format.fprintf ppf "(%s : %a)@ "
-                 llift_name
-                 (Types.pp_type_simple_to_coq print_ctx)
-                 ty
+               Format.fprintf ppf "(%s : cc.eT %a)@ "
+                              llift_name
+                              (Types.pp_type_simple_to_dk print_ctx)
+                              ty
            | Parsetree_utils.DETK_logical lexpr ->
-               Format.fprintf ppf "(%s : " llift_name ;
-               generate_logical_expr ctx
+               Format.fprintf ppf "(%s : cc.eP " llift_name ;
+               generate_logical_expr
+                 ctx
                  ~in_recursive_let_section_of: [] ~local_idents: []
                  ~self_methods_status: (SMS_from_param species_param_name)
                  (* Anyway, in the record type, bodies of recursive are
                     never expanded. Hence this choice or another for
                     [~recursive_methods_status] is not important.
                     It could be if we allowed recursive logical methods. *)
-                 ~recursive_methods_status: RMS_regular env lexpr ;
-               Format.fprintf ppf ")@ ")
+                                        ~recursive_methods_status: RMS_regular env lexpr ;
+                  Format.fprintf ppf ")@ ")
         meths ;
       (* Just to avoid having the reference escaping... *)
       (species_param_name, (Env.ODFP_methods_list meths)))
@@ -1483,12 +1774,14 @@ let generate_record_type_parameters ctx env species_descr
 
     {b Rem} : Not exported outside this module.                              *)
 (* ************************************************************************* *)
-let generate_record_type ctx env species_descr fields_abstraction_infos =
+let generate_record_type ctx env species_descr field_abstraction_infos =
   let out_fmter = ctx.Context.scc_out_fmter in
   let collections_carrier_mapping =
     ctx.Context.scc_collections_carrier_mapping in
-  (* The header of the Coq record definition for the species. *)
-  Format.fprintf out_fmter "@[<2>Record me_as_species " ;
+  let (_, species_name) = ctx.Context.scc_current_species in
+  (* The header of the Dk record definition for the species. *)
+  Format.fprintf out_fmter "@[<2>Record %a__me_as_species "
+    Sourcify.pp_vname species_name;
   (* We do not add any bindings to the [collections_carrier_mapping]
      before printing the record type parameters for 2 reasons:
        - species parameters carriers of the record are in the
@@ -1501,11 +1794,14 @@ let generate_record_type ctx env species_descr fields_abstraction_infos =
      methods from them we depend on ! *)
   let abstracted_params_methods_in_record_type =
     generate_record_type_parameters
-      ctx env species_descr fields_abstraction_infos in
-  (* Print the type of the record and it's constructor. *)
-  Format.fprintf out_fmter ": Type :=@ mk_record {@\n"  ;
+      ctx env species_descr field_abstraction_infos in
+  let (_, species_name) = ctx.Context.scc_current_species in
+  (* Print the constructor. *)
+  Format.fprintf out_fmter " := %a__mk_record {@\n"
+      Sourcify.pp_vname species_name;
   (* Always generate the "rep". *)
-  Format.fprintf out_fmter "@[<2>rf_T : Set" ;
+  Format.fprintf out_fmter "@[<2>%a__rf_T :@ cc.uT"
+    Sourcify.pp_vname species_name;
   (* We now extend the collections_carrier_mapping with ourselve known.
      Hence, if we refer to our "rep" we will be directly mapped onto the
      "rf_T" without needing to re-construct this name each time. Do same
@@ -1521,22 +1817,22 @@ let generate_record_type ctx env species_descr fields_abstraction_infos =
   let ctx = {
     ctx with
     Context.scc_collections_carrier_mapping = collections_carrier_mapping } in
-  (* Create the coq type print context with the context new bindings. *)
+  (* Create the dk type print context with the context new bindings. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species =
+    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Types.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.cpc_collections_carrier_mapping = collections_carrier_mapping } in
+    Types.dpc_collections_carrier_mapping = collections_carrier_mapping } in
   (* Put a trailing semi only if there are other fields to generate. *)
   (match species_descr.Env.TypeInformation.spe_sig_methods with
    | [] -> ()
    | [Env.TypeInformation.SF_sig (_, n, _)] ->
        if (Parsetree_utils.name_of_vname n) = "rep" then
          ()   (* Case where there was only 1 field and that field was "rep". *)
-       else Format.fprintf out_fmter " ;"
-   | _ -> Format.fprintf out_fmter " ;") ;
+       else Format.fprintf out_fmter ","
+   | _ -> Format.fprintf out_fmter ",") ;
   Format.fprintf out_fmter "@]@\n" ;
   (* We must now generate the record's fields types. *)
   let output_one_field ~semi = function
@@ -1547,13 +1843,14 @@ let generate_record_type ctx env species_descr fields_abstraction_infos =
         if (Parsetree_utils.name_of_vname n) <> "rep" then
           (begin
           let ty = Types.specialize sch in
-          Format.fprintf out_fmter "(* From species %a. *)@\n"
+          Format.fprintf out_fmter "(; From species %a. ;)@\n"
             Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
           (* Field is prefixed by the species name for sake of unicity. *)
-          Format.fprintf out_fmter "@[<2>rf_%a : %a"
+          Format.fprintf out_fmter "@[<2>%a__rf_%a :@ cc.eT (%a)"
+            Sourcify.pp_vname species_name
             Parsetree_utils.pp_vname_with_operators_expanded n
-            (Types.pp_type_simple_to_coq print_ctx) ty ;
-          if semi then Format.fprintf out_fmter " ;" ;
+            (Types.pp_type_simple_to_dk print_ctx) ty ;
+          if semi then Format.fprintf out_fmter "," ;
           Format.fprintf out_fmter "@]@\n"
           end)
         end)
@@ -1561,13 +1858,14 @@ let generate_record_type ctx env species_descr fields_abstraction_infos =
         List.iter
           (fun (from, n, _, sch, _, _, _, _) ->
             let ty = Types.specialize sch in
-            Format.fprintf out_fmter "(* From species %a. *)@\n"
+            Format.fprintf out_fmter "(; From species %a. ;)@\n"
               Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
             (* Field is prefixed by the species name for sake of unicity. *)
-            Format.fprintf out_fmter "@[<2>rf_%a : %a"
+            Format.fprintf out_fmter "@[<2>%a__rf_%a : cc.eT (%a)"
+              Sourcify.pp_vname species_name
               Parsetree_utils.pp_vname_with_operators_expanded n
-              (Types.pp_type_simple_to_coq print_ctx) ty ;
-            if semi then Format.fprintf out_fmter " ;" ;
+              (Types.pp_type_simple_to_dk print_ctx) ty ;
+            if semi then Format.fprintf out_fmter "," ;
             Format.fprintf out_fmter "@]@\n")
           l
     | Env.TypeInformation.SF_theorem
@@ -1576,12 +1874,13 @@ let generate_record_type ctx env species_descr fields_abstraction_infos =
         (from, n, _polymorphic_vars_map, logical_expr, _) ->
         (* In the record type, theorems and properties are displayed in same
            way. *)
-        Format.fprintf out_fmter "(* From species %a. *)@\n"
+        Format.fprintf out_fmter "(; From species %a. ;)@\n"
           Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
         (* Field is prefixed by the species name for sake of unicity. *)
-        Format.fprintf out_fmter "@[<2>rf_%a :@ "
-          Parsetree_utils.pp_vname_with_operators_expanded n ;
-        (* Generate the Coq code representing the proposition.
+        Format.fprintf out_fmter "@[<2>%a__rf_%a :@ dk_logic.eP ("
+          Sourcify.pp_vname species_name
+          Parsetree_utils.pp_vname_with_operators_expanded n;
+        (* Generate the Dk code representing the proposition.
            No local idents in the context because we just enter the scope of a
            species fields and so we are not under a core expression.
            In the record type, methods of "Self" are always named using
@@ -1595,16 +1894,17 @@ let generate_record_type ctx env species_descr fields_abstraction_infos =
              [~recursive_methods_status] is not important.
              It could be if we allowed recursive logical methods. *)
           ~recursive_methods_status: RMS_regular env logical_expr ;
-        if semi then Format.fprintf out_fmter " ;" ;
+        Format.fprintf out_fmter ")";
+        if semi then Format.fprintf out_fmter "," ;
         Format.fprintf out_fmter "@]@\n" in
-  (* Coq syntax required not semi after the last field. That's why a simple
+  (* Dk syntax required not semi after the last field. That's why a simple
      [List.iter] of [output_one_field]'s body doesn't work.
      One must separate the case of the last element of the list. *)
   let rec iter_semi_separated = function
     | [] -> ()
-    | [last] -> output_one_field ~semi: false last
+    | [last] -> output_one_field ~semi:false last
     | h :: q ->
-        output_one_field ~semi: true h ;
+        output_one_field ~semi:true h ;
         iter_semi_separated q in
   iter_semi_separated species_descr.Env.TypeInformation.spe_sig_methods ;
   Format.fprintf out_fmter "@]}.@\n@\n" ;

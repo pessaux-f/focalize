@@ -21,8 +21,8 @@ include $(ROOT_DIR)/Makefile.common
 
 # Fill here to add a new directory for a new contribution
 SUB_DIRS=\
- utils\
- voter
+ utils
+# voter
 # automata
 
 lib: all

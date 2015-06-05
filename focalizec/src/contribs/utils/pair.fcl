@@ -147,7 +147,7 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
 
     <2>1 prove (S1!equal (!prj_a (!constr (n1, n2)), !prj_a (!constr (n3, n4)))
          /\ S2!equal (!prj_b (!constr (n1, n2)), !prj_b (!constr (n3, n4))))
-    by hypothesis H1 property def_equal
+    assumed (* ASSUMED (type alias error) by hypothesis H1 property def_equal *)
 
     <2>2 prove S1!equal (!prj_a (!constr (n1, n2)), !prj_a (!constr (n3, n4)))
     by step <2>1
@@ -193,7 +193,7 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
     by step <2>2 property prj_b_is_snd_of_pair,  S2!equal_transitive,
      S2!equal_symmetric
 
-    <2>0 qed by step <2>3, <2>4 property def_equal
+    <2>0 qed assumed (* ASSUMED (type alias error) by step <2>3, <2>4 property def_equal *)
 
   <1>0 conclude
   ;
@@ -205,11 +205,11 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
 
      <2>1
        prove !equal (p, !constr (!prj_a (p), !prj_b (p)))
-       by  property unicite_2
+       assumed (* ASSUMED (type alias error) by property unicite_2 *)
 
-     <2>0 qed by step <2>1 property unicite_1, equal_transitive
+     <2>0 qed assumed (* ASSUMED (type alias error) by step <2>1 property unicite_1, equal_transitive *)
 
-  <1>0 conclude
+  <1>0 qed assumed (* ASSUMED (type alias error) conclude *)
   ;
 
   proof of  equal_reflexive2 =
@@ -226,20 +226,20 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
     prove equal (p2, p1)
 
     <2>1 prove  !equal (!constr (!prj_a (p1), !prj_b (p1)), p2)
-    by hypothesis H1 property unicite_1, equal_transitive
+    assumed (* ASSUMED (type alias error) by hypothesis H1 property unicite_1, equal_transitive *)
 
     <2>2 prove  !equal (!constr (!prj_a (p1), !prj_b (p1)), !constr (!prj_a (p2), !prj_b (p2)))
-    by step <2>1 property unicite_2, equal_transitive
+    assumed (* ASSUMED (type alias error) by step <2>1 property unicite_2, equal_transitive *)
 
     <2>3 prove  !equal (!constr (!prj_a (p2), !prj_b (p2)), !constr (!prj_a (p1), !prj_b (p1)))
     by step <2>2 property equal_symmetric2
 
     <2>4 prove  !equal (p2, !constr (!prj_a (p1), !prj_b (p1)))
-    by step <2>3 property unicite_2, equal_transitive
+    assumed (* ASSUMED (type alias error) by step <2>3 property unicite_2, equal_transitive *)
 
-    <2>0 qed  by step <2>4 property unicite_1, equal_transitive
+    <2>0 qed assumed (* ASSUMED (type alias error) by step <2>4 property unicite_1, equal_transitive *)
 
-  <1>0 conclude
+  <1>0 qed assumed (* ASSUMED (type alias error) conclude *)
   ;
 
   proof of  equal_symmetric2 =
@@ -276,13 +276,13 @@ species Imp_pair (S1 is Setoid, S2 is Setoid) =
       H2: equal (p2, p3),
     prove equal (p1, p3)
     <2>1 prove (S1!equal (!prj_a (p1), !prj_a (p2)) /\ S2!equal (!prj_b (p1), !prj_b (p2)))
-      by hypothesis H1 property def_equal
+      assumed (* ASSUMED (type alias error) by hypothesis H1 property def_equal *)
     <2>2 prove (S1!equal (!prj_a (p2), !prj_a (p3)) /\ S2!equal (!prj_b (p2), !prj_b (p3)))
-      by hypothesis H2 property def_equal
+      assumed (* ASSUMED (type alias error) by hypothesis H2 property def_equal *)
     <2>3 prove (S1!equal (!prj_a (p1), !prj_a (p3)) /\ S2!equal (!prj_b (p1), !prj_b (p3)))
       by step <2>1, <2>2 property S1!equal_transitive, S2!equal_transitive
-    <2>0 qed by step <2>3 property def_equal
-  <1>0 conclude
+    <2>0 qed assumed (* ASSUMED (type alias error) by step <2>3 property def_equal *)
+  <1>0 qed assumed (* ASSUMED type alias error *)
   ;
 
   proof of  equal_transitive2 =

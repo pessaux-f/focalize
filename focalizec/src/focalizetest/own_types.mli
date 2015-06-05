@@ -4,6 +4,7 @@
 type typ =
 (*   | TVar of string  (** Polymorphic types *) *)
 (*   | TSelf   (** rep's type *)  *)
+  | TProp
   | TAtom of string option * string           (** [int],[float] ... *)
   | TSpecPrm of string (** represents collection parameters *)
   | TFct of typ * typ         (** function type *)

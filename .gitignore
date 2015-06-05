@@ -20,5 +20,8 @@
 *.prolog*
 *.png
 *~
+*.coz
+*.dko
+*.sk
 .DS_Store
 

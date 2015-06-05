@@ -564,6 +564,12 @@ and subst_proof ~current_unit c1 c2 proof =
              (subst_enforced_dependency ~current_unit c1 c2)
              enforced_dependencies in
          Parsetree.Pf_coq (enforced_dependencies', script)
+     | Parsetree.Pf_dk (enforced_dependencies, script) ->
+         let enforced_dependencies' =
+           List.map
+             (subst_enforced_dependency ~current_unit c1 c2)
+             enforced_dependencies in
+         Parsetree.Pf_dk (enforced_dependencies', script)
      | Parsetree.Pf_node proof_nodes ->
          let proof_nodes' =
            List.map (subst_proof_node ~current_unit c1 c2) proof_nodes in

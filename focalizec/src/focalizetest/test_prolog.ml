@@ -9,6 +9,7 @@ let prolog_args_of_constructor_typ =
   let rec aux t =
     match t with
     | TAtom (_m, s) -> prolog_fun s []  
+    | TProp
     | TSpecPrm _ -> failwith "houlala"
     | TProd (t1, t2) -> prolog_fun "couple" [aux t1; aux t2]
     | TPrm (_m, s,t_l) -> prolog_fun s (List.map aux t_l)

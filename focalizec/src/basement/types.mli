@@ -103,6 +103,11 @@ val unify :
   loc: Location.t -> self_manifest: (type_simple option) -> type_simple ->
   type_simple -> type_simple
 
+val unify_with_instance :
+  type_scheme ->
+  type_simple ->
+  type_simple list
+
 val reset_deps_on_rep : unit -> unit
 val check_for_decl_dep_on_self : type_simple -> unit
 val get_def_dep_on_rep : unit -> bool
@@ -113,6 +118,9 @@ val extract_fun_ty_result :
   self_manifest: type_simple option -> type_simple -> type_simple
 val extract_fun_ty_arg :
   self_manifest: type_simple option -> type_simple -> type_simple
+
+val extract_prod_ty :
+  self_manifest: type_simple option -> type_simple -> type_simple list
 
 (** Pretty_printing for types and type schemes for FoCaLize. *)
 val pp_type_name : Format.formatter -> type_name -> unit
@@ -161,6 +169,23 @@ val purge_type_simple_to_coq_variable_mapping : unit -> unit
 (* DEBUG
 val debug_variable_mapping : unit -> unit *)
 
+
+(** Pretty_printing for types for the Dedukti translation. *)
+type dk_print_context = {
+  dpc_current_unit : fname ;
+  dpc_current_species : type_collection option ;
+  dpc_collections_carrier_mapping : collection_carrier_mapping
+}
+
+
+val pp_type_simple_to_dk :
+  dk_print_context -> Format.formatter -> type_simple -> unit
+val pp_type_variable_to_dk : Format.formatter -> type_variable -> unit
+val pp_type_simple_args_to_dk :
+  dk_print_context -> Format.formatter -> type_simple -> int -> unit
+
+val purge_type_simple_to_dk_variable_mapping : unit -> unit
+
 module SpeciesCarrierTypeSet :
   sig
     type elt = (fname * collection_name)
@@ -202,6 +227,7 @@ type local_type =
   | Lt_fun of local_type * local_type
   | Lt_tuple of local_type list
   | Lt_constr of (string * string) * local_type list
+  | Lt_prop
   | Lt_self
   | Lt_species of (string * string)
 
@@ -218,6 +244,7 @@ val extract_type_simple :
         (type_simple list -> 'a) ->
         (type_simple list -> 'a) ->
         (string -> string -> type_simple list -> 'a) ->
+        (unit -> 'a) ->
         (unit -> 'a) ->
         (fname -> collection_name -> 'a) -> type_simple ->  'a
 

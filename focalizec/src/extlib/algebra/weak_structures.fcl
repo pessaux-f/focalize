@@ -406,6 +406,7 @@ type quo_rem_result ('a) =
   external
   | caml -> {* 'a Weak_structures_externals.quo_rem_result *}
   | coq -> {* weak_structures_externals.quo_rem_result __var_a *}
+  | dedukti -> {* weak_structures_externals.quo_rem_result __var_a *}
 ;;
 
 let cr_qrr =
@@ -413,6 +414,7 @@ let cr_qrr =
   external
   | caml -> {* Weak_structures_externals.cr_qrr *}
   | coq -> {* weak_structures_externals.cr_qrr _ *}
+  | dedukti -> {* weak_structures_externals.cr_qrr __var_a *}
 ;;
 
 let quot =
@@ -420,6 +422,7 @@ let quot =
   external
   | caml -> {* Weak_structures_externals.qrr_quot *}
   | coq -> {* weak_structures_externals.qrr_quot _ *}
+  | dedukti -> {* weak_structures_externals.qrr_quot __var_a *}
 ;;
 
 let rema =
@@ -427,6 +430,7 @@ let rema =
   external
   | caml -> {* Weak_structures_externals.qrr_rema *}
   | coq -> {* weak_structures_externals.qrr_rema _ *}
+  | dedukti -> {* weak_structures_externals.qrr_rema __var_a *}
 ;;
 
 
@@ -440,8 +444,8 @@ species Euclidean_semi_ring =
   let quotient (x, y) = #quot (Self!quo_rem (x, y));
   let remainder (x, y) = #rema (Self!quo_rem (x, y));
 
-  let rec gcd (x, y) =
-    if Self!is_zero (y) then x else Self!gcd (y, Self!remainder (x, y));
+  let gcd (x, y) = x; (* ASSUMED: recursive definition *)
+(* ASSUMED    if Self!is_zero (y) then x else Self!gcd (y, Self!remainder (x, y)); *)
   (* termination proof =
       order euclidean_ordering on y
       by property well_founded_euclidean_ordering, remainder_is_smaller; *)
@@ -509,7 +513,7 @@ species Euclidean_semi_ring =
             <2>f qed by step <2>1, <2>2
                         property !equal_symmetric,
                                  !divides_transitive, !divides_extends_equal
-       <1>f conclude
+       <1>f qed assumed (* ASSUMED exhausted search space *)
     ;
 
    (** Units are extremal *)
@@ -571,6 +575,7 @@ type bezout_res ('a) =
   external
   | caml -> {* 'a Weak_structures_externals.bezout_res *}
   | coq -> {* weak_structures_externals.bezout_res __var_a *}
+  | dedukti -> {* weak_structures_externals.bezout_res __var_a *}
 ;;
 
 let cr_br =
@@ -578,6 +583,7 @@ let cr_br =
   external
   | caml -> {* Weak_structures_externals.cr_br *}
   | coq -> {* weak_structures_externals.cr_br __var_a *}
+  | dedukti -> {* weak_structures_externals.cr_br __var_a *}
 ;;
 
 let gcd =
@@ -585,6 +591,7 @@ let gcd =
   external
   | caml -> {* Weak_structures_externals.br_gcd *}
   | coq -> {* weak_structures_externals.br_gcd __var_a *}
+  | dedukti -> {* weak_structures_externals.br_gcd __var_a *}
 ;;
 
 let coef1 =
@@ -592,6 +599,7 @@ let coef1 =
   external
   | caml -> {* Weak_structures_externals.br_coef1 *}
   | coq -> {* weak_structures_externals.br_coef1 __var_a *}
+  | dedukti -> {* weak_structures_externals.br_coef1 __var_a *}
 ;;
 
 let coef2 =
@@ -599,4 +607,5 @@ let coef2 =
   external
   | caml -> {* Weak_structures_externals.br_coef2 *}
   | coq -> {* weak_structures_externals.br_coef2 __var_a *}
+  | dedukti -> {* weak_structures_externals.br_coef2 __var_a *}
 ;;

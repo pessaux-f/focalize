@@ -229,6 +229,7 @@ let mk_proof_label (s1, s2) =
 %token CONCLUDE
 %token COQ
 %token COQ_REQUIRE
+%token DEDUKTI
 %token DEFINITION
 %token ELSE
 %token END
@@ -424,6 +425,8 @@ external_language:
     { EL_Caml }
   | COQ
     { EL_Coq }
+  | DEDUKTI
+    { EL_Dk }
   | STRING
     { EL_external $1 }
 ;
@@ -984,6 +987,8 @@ proof:
     { mk_annot $1 (Pf_assumed $2) }
   | opt_annot COQ PROOF enforced_dependencies EXTERNAL_CODE
     { mk_annot $1 (Pf_coq ($4, $5)) }
+  | opt_annot DEDUKTI PROOF enforced_dependencies EXTERNAL_CODE
+    { mk_annot $1 (Pf_dk ($4, $5)) }
   | opt_annot BY fact_list
     { mk_annot $1 (Pf_auto $3) }
   | proof_node_list
