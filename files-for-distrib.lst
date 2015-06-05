@@ -189,13 +189,14 @@
 ./focalize/focalizec/src/coqcodegen/species_record_type_coq_generation.mli
 ./focalize/focalizec/src/coqcodegen/type_coq_generation.ml
 ./focalize/focalizec/src/coqcodegen/type_coq_generation.mli
+./focalize/focalizec/src/dkcodegen/main_dk_generation.ml
 ./focalize/focalizec/src/dkcodegen/Makefile
-./focalize/focalizec/src/dkcodegen/rec_let_gen.ml
-./focalize/focalizec/src/dkcodegen/rec_let_gen.mli
+./focalize/focalizec/src/dkcodegen/rec_let_dk_gen.ml
+./focalize/focalizec/src/dkcodegen/rec_let_dk_gen.mli
 ./focalize/focalizec/src/dkcodegen/species_dk_generation.ml
 ./focalize/focalizec/src/dkcodegen/species_dk_generation.mli
-./focalize/focalizec/src/dkcodegen/species_record_type_generation.ml
-./focalize/focalizec/src/dkcodegen/species_record_type_generation.mli
+./focalize/focalizec/src/dkcodegen/species_record_type_dk_generation.ml
+./focalize/focalizec/src/dkcodegen/species_record_type_dk_generation.mli
 ./focalize/focalizec/src/dkcodegen/type_dk_generation.ml
 ./focalize/focalizec/src/dkcodegen/type_dk_generation.mli
 ./focalize/focalizec/src/docgen/doc_lexer.mll
@@ -263,6 +264,7 @@
 ./focalize/focalizec/src/extlib/algebra/weak_structures.fcl
 ./focalize/focalizec/src/extlib/algebra/weak_structures_externals.ml
 ./focalize/focalizec/src/extlib/algebra/weak_structures_externals.v
+./focalize/focalizec/src/extlib/algebra/weak_structures_externals.sk
 ./focalize/focalizec/src/extlib/Makefile
 ./focalize/focalizec/src/extlib/openmath/bench.ml
 ./focalize/focalizec/src/extlib/openmath/lexer.mll
@@ -549,6 +551,8 @@
 ./focalize/zvtov/lexer.mll
 ./focalize/zvtov/lexer_coq.mli
 ./focalize/zvtov/lexer_coq.mll
+./focalize/zvtov/lexer_dk.mli
+./focalize/zvtov/lexer_dk.mll
 ./focalize/zvtov/main.ml
 ./focalize/zvtov/main.mli
 ./focalize/zvtov/Makefile
@@ -559,6 +563,7 @@
 ./focalize/zvtov/parser.ml
 ./focalize/zvtov/parser.mli
 ./focalize/zvtov/parser_coq.mly
+./focalize/zvtov/parser_dk.mly
 ./focalize/zvtov/token.ml
 ./focalize/zvtov/token.mli
 ./focalize/zvtov/version.ml
