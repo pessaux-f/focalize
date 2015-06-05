@@ -1,0 +1,49 @@
+#NAME dk_string.
+(; lists of ascii characters ;)
+
+String := cc.eT string.
+
+call_by_value_string : R : cc.uT -> (String -> cc.eT R) -> String -> cc.eT R.
+[ R : cc.uT, f : String -> cc.eT R ]
+    call_by_value_string R f "" --> f ""
+[ R : cc.uT, f : String -> cc.eT R, c : cc.eT char, s : String ]
+    call_by_value_string R f (string_cons c s) --> f (string_cons c s).
+
+equal : String -> String -> dk_bool.Bool.
+
+[ s : String ] equal s s --> dk_bool.true
+[ c : dk_char.Char, s : String ]
+    equal "" (string_cons c s) --> dk_bool.false
+[ c : dk_char.Char, s : String ]
+    equal (string_cons c s) "" --> dk_bool.false
+[ c1 : dk_char.Char, s1 : String,
+  c2 : dk_char.Char, s2 : String ]
+    equal (string_cons c1 s1)
+          (string_cons c2 s2)
+      -->
+    dk_bool.and (dk_char.equal c1 c2) (equal s1 s2).
+
+append : String -> String -> String.
+[ s : String ]
+    append "" s --> s
+[ c : dk_char.Char, s1 : String, s2 : String ]
+    append (string_cons c s1) s2 --> string_cons c (append s1 s2).
+
+lt : String -> String -> dk_bool.Bool.
+[ ]
+    lt "" "" --> dk_bool.false
+[ c : dk_char.Char, s : String ]
+    lt "" (string_cons c s) --> dk_bool.true
+[ c : dk_char.Char, s : String ]
+    lt (string_cons c s) "" --> dk_bool.false
+[ c1 : dk_char.Char, c2 : dk_char.Char,
+  s1 : String, s2 : String ]
+    lt (string_cons c1 s1) (string_cons c2 s2)
+      -->
+    dk_bool.or (dk_char.lt c1 c2)
+               (dk_bool.and
+                 (dk_char.equal c1 c2)
+                 (lt s1 s2)).
+
+of_int (n : cc.eT dk_int.int) : String := "".
+to_int (s : String) : cc.eT dk_int.int := dk_int.make 0 0.

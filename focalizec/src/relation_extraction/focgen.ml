@@ -128,12 +128,6 @@ let rec replace_sf_in_list fl f = match fl with
 	| x::q -> x::(replace_sf_in_list q f)
 ;;
 
-
-let replace_sf_in_s stuff field = 
-  List.map (function x -> replace_sf_in_list x field) stuff
-;;
-
-
 let replace_sf stuff sp_name field (*proofs*) = 
   let nphlist = List.map (function x -> match x.Parsetree.ast_desc with
 	  | Parsetree.Ph_species species_def -> 

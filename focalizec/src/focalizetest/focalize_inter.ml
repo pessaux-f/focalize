@@ -146,6 +146,7 @@ let type_simple_of_typ t =
   match t with 
   | TAtom (Some m, s) -> Types.type_basic (i m s) []
   | TAtom (None, s) -> Types.type_basic (i "basics" s) []
+  | TProp -> Types.type_prop ()
   | TSpecPrm s ->
       Types.type_rep_species ~species_module: "basics" ~species_name: s
   | TFct (t1, t2) -> Types.type_arrow (aux t1) (aux t2)
@@ -175,9 +176,10 @@ let rec string_of_type_simple =
   let fconstruct _ tn args =
     tn ^ "(" ^ add_string_args args ", " aux ^ ")" in
   let frep () = "Self" in
+  let fprop () = "prop" in
   let fspecrep _s1 s2 = s2 in
   fun t ->
-    Types.extract_type_simple fvar farrow ftuple fsum fconstruct frep fspecrep t;;
+    Types.extract_type_simple fvar farrow ftuple fsum fconstruct fprop frep fspecrep t;;
 
 let rec typ_of_type_simple t =
   let fvar = fun () -> failwith "typ_of_type_simple: variable type met" in
@@ -190,8 +192,9 @@ let rec typ_of_type_simple t =
   let fconstruct m tn args = if args = [] then TAtom(Some m, tn) else
                            TPrm(Some m, tn, List.map typ_of_type_simple args) in
   let frep () = TAtom(None, focself) in
+  let fprop () = TProp in
   let fspecrep _s1 s2 = TSpecPrm(s2) in
-  Types.extract_type_simple fvar farrow ftuple fsum fconstruct frep fspecrep t;;
+  Types.extract_type_simple fvar farrow ftuple fsum fconstruct fprop frep fspecrep t;;
 
 exception Not_a_constructor;;
 
@@ -199,19 +202,19 @@ let split_constructor t =
   let aux2 t =
     let ferr _ = raise Not_a_constructor in
     let fsum l = l in
-    Types.extract_type_simple ferr ferr ferr fsum ferr ferr ferr t in
+    Types.extract_type_simple ferr ferr ferr fsum ferr ferr ferr ferr t in
   let aux t =
     let fnone _ = ([],t) in
     let fnone2 _ = fnone in
     let fnone3 _ = fnone2 in
     let farrow t1 t2 = (aux2 t1, t2) in
-    Types.extract_type_simple fnone farrow fnone fnone fnone3 fnone fnone2 t in
+    Types.extract_type_simple fnone farrow fnone fnone fnone3 fnone fnone fnone2 t in
   aux t;;
 
 let split_applied_type t =
   let fnone _ = raise (Not_a_concrete_type None) in
   let fconstruct m n t_l = (Types.make_type_constructor m n, t_l) in
-  Types.extract_type_simple fnone fnone fnone fnone fconstruct fnone fnone t;;
+  Types.extract_type_simple fnone fnone fnone fnone fconstruct fnone fnone fnone t;;
 
 
 let typ_of_type_scheme t =
@@ -548,7 +551,7 @@ let get_constructors_of_a_type t =
     let nok2 _ _ = false in
     let farrow _t1 t2 = is_ok t2 in
     let fconstruct _ tn _args = (tn = t) in
-      Types.extract_type_simple nok farrow nok nok fconstruct nok nok2 typ in
+      Types.extract_type_simple nok farrow nok nok fconstruct nok nok nok2 typ in
     let cons = focalize_get_all_constructors () in
     let pe = List.filter (fun r -> is_ok (Types.specialize (snd r).ET.cstr_scheme)) cons in
     List.fold_left (fun s e -> if List.mem e s then s else e::s) [] pe;;
@@ -633,7 +636,7 @@ let get_type_arity t : int option =
     let nok2 _ _ = false in
     let farrow _t1 t2 = is_ok t2 in
     let fconstruct _ tn _args = (tn = t) in
-      Types.extract_type_simple nok farrow nok nok fconstruct nok nok2 typ in
+      Types.extract_type_simple nok farrow nok nok fconstruct nok nok nok2 typ in
     let cons = focalize_get_all_constructors () in
     match List.filter 
             (fun r ->

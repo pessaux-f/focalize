@@ -103,6 +103,8 @@ let debug_print_dependencies_from_parameters3 l =
 
 
 (* ****************************************************************** *)
+(* current_species: Parsetree.qualified_vname -> Parsetree.expr ->    *)
+(*  Parsetree_utils.DepNameSet.t                                      *)
 (** {b Descr} : Compute the set of vnames the expression [expression]
     decl-depends of in the species [~current_species].
 
@@ -392,6 +394,31 @@ let rec proof_decl_n_def_dependencies ~current_species proof =
   match proof.Parsetree.ast_desc with
    | Parsetree.Pf_assumed enf_deps
    | Parsetree.Pf_coq (enf_deps, _) ->
+       List.fold_left
+         (fun (accu_decl, accu_def) dep ->
+           match dep.Parsetree.ast_desc with
+            | Parsetree.Ed_definition idents ->
+                let accu_def' =
+                  List.fold_left
+                    (fun accu ident ->
+                      Parsetree_utils.SelfDepSet.union accu
+                        (ident_in_fact_dependencies ~current_species ident))
+                    accu_def
+                    idents in
+                (accu_decl, accu_def')
+            | Parsetree.Ed_property idents ->
+                let accu_decl' =
+                  List.fold_left
+                    (fun accu ident ->
+                      Parsetree_utils.SelfDepSet.union accu
+                        (ident_in_fact_dependencies ~current_species ident))
+                    accu_decl
+                    idents in
+                (accu_decl', accu_def))
+         (Parsetree_utils.SelfDepSet.empty,
+          Parsetree_utils.SelfDepSet.empty)
+         enf_deps
+   | Parsetree.Pf_dk (enf_deps, _) ->
        List.fold_left
          (fun (accu_decl, accu_def) dep ->
            match dep.Parsetree.ast_desc with

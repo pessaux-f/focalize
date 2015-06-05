@@ -3,6 +3,7 @@ open Own_basics;;
 
 (* Types' type :  *)
 type typ =
+  | TProp
   | TAtom of string option * string (** represents : int, float, string ... *)
   | TSpecPrm of string (** represents collection parameters *)
   | TFct of typ * typ (** for a type : typ -> typ *)
@@ -36,6 +37,7 @@ let rec string_of_typ =
                 | TAtom(_, s) -> s (* int, float, Self, ... *)
                 | TSpecPrm(s) -> s
 (*                 | TSelf -> "Self" *)
+                | TProp -> "Prop"
                 | TFct (t1,t2) ->
                                 open_paren prec 0 ^
                                 print 1 t1 ^ " -> " ^ print 0 t2 ^
@@ -60,6 +62,7 @@ let rec string_of_ttyp t =
   | TSpecPrm(s) -> "TSpecPrm(" ^ s ^ ")"
   | TFct(t1,t2) -> "TFct(" ^ string_of_ttyp t1 ^ "," ^ string_of_ttyp t2 ^ ")"
   | TProd(t1,t2) -> "TProd(" ^ string_of_ttyp t1 ^ "," ^ string_of_ttyp t2 ^ ")"
+  | TProp -> "TProp"
   | TPrm(None, s, t_l) ->
       if t_l = [] then
         string_of_ttyp (TAtom(None, s))
@@ -105,6 +108,7 @@ let depends =
     match typ with
     | TAtom _ -> [ typ ]
     | TSpecPrm _ -> [ typ ]
+    | TProp -> [ typ ]
     | TProd (t1, t2)
     | TFct (t1, t2) ->  aux t1 @ aux t2
     | TPrm (_, _,l) ->
@@ -137,6 +141,7 @@ let flatten_prod_right = function
 let rec get_arity typ =
   match typ with
   | TAtom(_) -> 0
+  | TProp -> 0
   | TSpecPrm(_) -> 0
   | TFct(_, t2) -> get_arity t2 + 1
   | TProd(_, _) -> 0

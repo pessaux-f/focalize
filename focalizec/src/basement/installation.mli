@@ -21,6 +21,8 @@ val install_lib_dir : string;;
 val caml_byt_compiler : string;;
 val caml_bin_compiler : string;;
 val coq_compiler : string;;
+val dedukti_compiler : string;;
+val sukerujo_compiler : string;;
 val zvtov_compiler : string;;
 val zenon_compiler : string;;
 val zenon_libdir : string;;

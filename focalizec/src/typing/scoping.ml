@@ -1407,6 +1407,10 @@ and scope_proof ctx env proof =
          let scoped_enforced_deps =
            List.map (scope_enforced_deps ctx env) enf_deps in
          Parsetree.Pf_coq (scoped_enforced_deps, script)
+     | Parsetree.Pf_dk (enf_deps, script) ->
+         let scoped_enforced_deps =
+           List.map (scope_enforced_deps ctx env) enf_deps in
+         Parsetree.Pf_dk (scoped_enforced_deps, script)
      | Parsetree.Pf_auto facts ->
          Parsetree.Pf_auto (List.map (scope_fact ctx env) facts)
      | Parsetree.Pf_node proof_nodes ->

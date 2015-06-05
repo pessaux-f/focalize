@@ -22,7 +22,7 @@ BIN_OBJS = $(BYT_OBJS:.cmo=.cmx)
 
 .PHONY: byt bin
 
-.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .pfc .v .vo
+.SUFFIXES: .ml .mli .mll .mly .cmo .cmi .cmx .annot .fcl .fo .zv .pfc .v .vo .dk .sk .dko
 .SUFFIXES: .fcd .xml
 .SUFFIXES: .tex .dvi .ps .pdf .idx
 .SUFFIXES: .shtml .html .htm
@@ -65,6 +65,9 @@ bin: $(BIN_OBJS)
 
 .v.vo:
 	$(COQC) $(COQ_INCLUDES) $<
+
+%.dko:
+	skcheck -e $(DK_INCLUDES) $<
 
 .fcl.fcd:
 	$(FOCALIZEC) $(FOCALIZE_COMP_FLAGS) -focalize-doc $<

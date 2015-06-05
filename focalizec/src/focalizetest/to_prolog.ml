@@ -41,6 +41,7 @@ open Own_types;;
 let rec prolog_of_typ t =
   match t with
   | TAtom(_s_o, n) -> prolog_fun n []
+  | TProp
   | TSpecPrm(_) -> failwith "prolog_of_typ: Invalid typ" 
   | TFct(_, _) -> prolog_fun "fun" [prolog_int (get_arity t)]
   | TProd(a,b) -> prolog_fun "pair" [prolog_of_typ a; prolog_of_typ b]
@@ -198,6 +199,7 @@ let rec expand_self tc cp t =
       expand_self tc cp (TAtom(None, focself))
   | TFct(t1,t2) -> TFct(expand_self tc cp t1, expand_self tc cp t2)
   | TProd(t1,t2) -> TProd(expand_self tc cp t1, expand_self tc cp t2)
+  | TProp -> TProp
   | TPrm(m, t, t_l) -> TPrm(m, t, List.map (expand_self tc cp) t_l);;
 
 
