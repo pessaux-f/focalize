@@ -2054,7 +2054,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_coq_env
                 step.psa_lemma_name)
            available_steps ;
          Format.fprintf out_fmter
-           "unfold basics.well_wrapper.@\nintros.@\n\
+           "unfold basics.is_well_founded.@\nintros.@\n\
             SplitandAssumption.@\nQed.@\n"
         )
        else Format.fprintf out_fmter "%s@\n" script

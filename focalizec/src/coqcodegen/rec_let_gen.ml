@@ -758,7 +758,7 @@ let print_user_termination_obls_for_order fun_name recursive_calls user_order
       Format.printf "@]@\n")
     recursive_calls ;
   (* Print the obligation stating the well-foundness of the order. *)
-  Format.printf "@[<2><1>%d prove well_wrapper@ (%a)@]@\n"
+  Format.printf "@[<2><1>%d prove is_well_founded@ (%a)@]@\n"
     !counter Sourcify.pp_expr user_order ;
   (* Print the conclusion step since it is always the same. *)
   Format.printf
