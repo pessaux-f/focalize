@@ -1,21 +1,132 @@
 \index{recursion}
 
-(OUT-OF-DATE:
-In the current state {\focal} provides 2 ways to write recursive
-functions depending on whether they involve a structural or general
-recursion. The difference in the generated code only affects the
-{\coq} code. Recursive structural functions are compiled to the
-construct {\tt Fixpoint} of {\coq}, hence avoiding the user to provide a
-termination proof. Functions that are not recursive structural are
-currently compiled to the {\tt Function} construct of {\coq}. Currently,
-the termination proof that should be provided by the user is ignored
-and turned assumed.)
+When defining a recursive function {\focal}, as {\coq}, expects a proof that
+this function terminates. A termination proof is stated immediately after the
+body of its related recursive function definition:
 
-\medskip
-Termination proofs can by {\tt structural ...}, or {\tt order ... on ...}, or
-{\tt measure ... on ...}.
-Documentation TODO!
+{\scriptsize
+\begin{lstlisting}
+let rec f (...) = ...
+termination proof = ...
+\end{lstlisting}
+}
 
-\medskip
-Mutually recursive functions are currently not supported for {\coq}
-code generation.
+Termination proofs apply to recursive methods of species as well as to toplevel
+recursive functions with the limitations presented in the next section.
+Recursive functions or methods can be used as {\zenon} hints in proofs like
+any other ones (\lstinline"by definition of").
+
+As usually, proving that a function terminates implies showing that each
+recursive call is made on an argument which is ``smaller'' than the initial
+one. The notion of ``smaller'' can be stated by different means.
+
+
+\section{Limitations}
+Termination proofs are not supported for some forms of recursion. In such
+cases, it may be possible to omit the proof of the related functions, letting
+the compiler generating an assumed proof. The following shapes of recursion
+or recursive functions do not currently support termination proofs:
+
+\begin{itemize}
+\item Local recursive functions (nested in functions or more generally
+      expressions).
+\item Nested recursive calls, i.e. of the form \lstinline"f (f (e))".
+\item Mutually recursive functions other than those structural on their first
+   argument.
+\item Termination proofs using a {\em measure} can only refer to {\bf one}
+   parameter of the function among all the ones it has.
+\item In this early state, {\bf polymorphic} toplevel recursive functions
+  may be incorrectly generated, leading to a {\coq} error.
+\end{itemize}
+
+
+\section{Kinds of termination proofs}
+{\focal} proposes 3 ways to prove the termination of a function: by a
+structural decreasing of an argument, using a well-founded relation or
+using a measure. Each possibility is detailed in the following sections.
+
+
+From a technical point of view, the difference in the generated code only
+affects the {\coq} code. Recursive structural functions are compiled to the
+construct {\tt Fixpoint} of {\coq}. Functions that are not recursive
+structural or that do not have termination proofs are compiled to the
+{\tt Function} construct of {\coq}.
+
+
+\subsection{Structural termination}
+A structural recursive function is characterized by recursive calls performed
+on a subterm of the initial decreasing argument. Hence this argument must be of
+an inductive type. The termination proof is stated by:
+{\tt termination proof = structural on $arg$}.
+
+\subsubsection{Example}
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+let rec length (l : list (int)) =
+  match l with
+  | [] -> 0
+  | _ :: q ->  1 + (length (q))
+termination proof = structural l ;;
+\end{lstlisting}
+}
+
+\subsubsection{Example}
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+let rec mem (x, l) =
+  match l with
+  | [] -> false
+  | h :: q ->  if x = x then true else mem (x, q)
+termination proof = structural l ;;
+\end{lstlisting}
+}
+
+\subsubsection{{\bf Wrong} Example}
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+let rec zero (x) =
+  match x with
+  | 0 -> 0
+  | n -> zero (n - 1)
+termination proof = structural x ;;
+\end{lstlisting}
+}
+
+In this case $(n - 1)$ is not a subterm of $n$. This latter has type
+{\tt int} which is not an inductive type. Currently, the compiler does not
+ensure that the type is inductive, leading to a {\coq} error. This is a
+known limitation and weakness of the compiler which should be fixed in a
+future release.
+
+\subsubsection{Example}
+
+{\scriptsize
+\begin{lstlisting}
+open "basics" ;;
+
+type pint_t =
+ | Z
+ | S (pint_t)
+;;
+
+let rec zero (x) =
+  match x with
+  | Z -> 0
+  | S (n) -> zero (n)
+termination proof = structural x ;;
+\end{lstlisting}
+}
+
+This new function uses a representation of the integers being an inductive
+type (Peano's integer indeed). The structural decreasing is now ensured and
+this definition is correct.
+
+
+\subsection{Termination by a well-founded relation}
+\subsection{Termination by a measure}
