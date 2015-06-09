@@ -458,6 +458,57 @@ theorem int_le_not_lt :
     *}
 ;;
 
+theorem int_diff_le:
+  all x y : int, y <= x -> 0 <= x -> 0 <= y -> x - y <= x
+  proof = coq proof {*
+  intros x y.  unfold basics._dash_.  unfold bi__int_minus.  unfold
+  basics._lt__equal_.  unfold bi__int_leq.  elim (Z_le_dec y x).
+  intros H1 H2.  elim (Z_le_dec 0 x).  intros H3 H4.  elim (Z_le_dec 0 y).
+  intros H5 H6.  elim (Z_le_dec (x - y) x).  intros.  auto.
+  intro.  auto.  compute.  auto.  absurd (x - y <= x).  assumption.
+   auto with zarith.
+   auto with zarith.  intros.  elim (Z_le_dec (x - y) x).  intro.
+   auto.
+    intro.  auto.
+    intros foo bar.  elim (Z_le_dec 0 y).
+    intros.  elim (Z_le_dec (x - y) x).  intro.  auto.
+    intro.  auto.
+   intros.  elim (Z_le_dec (x - y) x).  auto.
+    auto.
+    intros G1 G2.  elim (Z_le_dec 0 x).  intro.  intro.  elim (Z_le_dec 0 y).
+    intros.  elim (Z_le_dec (x - y) x).  elim (Z_le_dec (x - y) x);
+    auto.  auto.  intros.  elim (Z_le_dec (x - y) x); auto.  intro.
+    intro.  elim (Z_le_dec 0 y).  intro.  intro.
+    elim (Z_le_dec (x - y) x); auto.  intros.  elim (Z_le_dec (x - y) x).
+    auto.  intros. compute.  trivial.  auto. Qed.
+  *}
+;;
+
+theorem int_diff_lt:
+  all x y : int, y <= x -> 0 <= x -> 0 < y -> x - y < x
+  proof = coq proof {*
+  intros x y.  unfold basics._dash_, bi__int_minus, basics._lt__equal_,
+  basics._lt_, bi__int_leq, bi__int_lt.  elim (Z_le_dec y x).
+  intros H1 H2.  elim (Z_le_dec 0 x).  intros H3 H4.  elim (Z_lt_dec 0 y).
+  intros H5 H6.  elim (Z_lt_dec (x - y) x).  intros.  auto.
+  intro.  auto.  compute.  auto.  absurd (x - y < x).  assumption.
+   auto with zarith.
+   auto with zarith.  intros.  elim (Z_lt_dec (x - y) x).  intro.
+   auto.
+    intro.  auto.
+    intros foo bar.  elim (Z_lt_dec 0 y).
+    intros.  elim (Z_lt_dec (x - y) x).  intro.  auto.
+    intro.  auto.
+   intros.  elim (Z_lt_dec (x - y) x).  auto.
+    auto.
+    intros G1 G2.  elim (Z_le_dec 0 x).  intro.  intro.  elim (Z_lt_dec 0 y).
+    intros.  elim (Z_lt_dec (x - y) x).  elim (Z_lt_dec (x - y) x);
+    auto.  auto.  intros.  elim (Z_lt_dec (x - y) x); auto.  intro.
+    intro.  elim (Z_lt_dec 0 y).  intro.  intro.
+    elim (Z_lt_dec (x - y) x); auto.  intros.  elim (Z_lt_dec (x - y) x).
+    auto.  intros. compute.  trivial.  auto. Qed.
+  *}
+  ;;
 
 theorem int_lt_not_le :
   all x y : int, (x < y) -> ~ (y <= x)
