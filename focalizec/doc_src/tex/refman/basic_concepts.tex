@@ -1,4 +1,3 @@
-% $Id: basic_concepts.tex,v 1.19 2009-08-25 12:38:07 weis Exp $
 
 As stated in section \ref{glimpse}, the {\focal} language is designed
 to build an application step by step, going from very abstract
@@ -10,14 +9,14 @@ Object-Oriented language as C++, Java, etc.  are.}
 
  In the following we  focus on the basic concepts underlying a
 {\focal} development, that is:
-\begin{itemize}
+\begin{compact-itemize}
 \item Top-level definitions
   \item Species
   \item Collections
   \item Parametrisation
   \item Inheritance
   \item Late-binding
-\end{itemize}
+\end{compact-itemize}
 To ensure that this part can be read independently of the section
 \ref{glimpse}, we duplicate some explanations.
 
@@ -28,7 +27,7 @@ To ensure that this part can be read independently of the section
 \index{toplevel}
 We call {\bf toplevel-definition} (just one word) a definition which
 appears outside species and collections. Such definitions can only be:
-\begin{itemize}
+\begin{compact-itemize}
   \item Species
   \item collections,
   \item type definitions,
@@ -36,7 +35,7 @@ appears outside species and collections. Such definitions can only be:
   \item general functions (not depending on a species),
   \item expressions to be directly evaluated (but there is no way to
     bind their value to an identifier).
-\end{itemize}
+\end{compact-itemize}
 Any toplevel-definition is terminated by a double semi-character
 (``;;'').\index{;;}
 
@@ -62,7 +61,7 @@ Species names are always {\bf capitalised}. As any
 toplevel-definition, a species ends with a double semi-character
 (``;;'').\index{;;} There are several kinds of methods:
 \smallskip
-\begin{itemize}
+\begin{compact-itemize}
   \medskip
   \label{rep-is-method}
 \item The {\bf representation}\index{representation}. It
@@ -210,7 +209,7 @@ end ;;
       \end{lstlisting}
     }
 
-\end{itemize}
+\end{compact-itemize}
 
 \label{no-polymorphism-for-methods}
 One important restriction on the type of the methods is that it cannot
@@ -227,11 +226,11 @@ parametrisation\index{parametrisation} as explained further
 its methods are {\em defined}, i.e. have an implementation. In other
 words this means that there is no more methods only {\em
  declared}. This notion implies that:
-\begin{itemize}
+\begin{compact-itemize}
   \item The representation has been associated with a type definition.
   \item Every declaration is associated to a definition.
   \item A proof is given for every property.
-\end{itemize}
+\end{compact-itemize}
 
 \smallskip
 Obviously, it is possible to build a species without signatures and
