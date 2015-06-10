@@ -977,50 +977,7 @@ let generate_final_recursive_definifion_body_With_Function out_fmter
       Parsetree_utils.pp_vname_with_operators_expanded name
       Parsetree_utils.pp_vname_with_operators_expanded name
   else
-    Format.fprintf out_fmter "Termination_%a_namespace.%a__%a@ "
-      Parsetree_utils.pp_vname_with_operators_expanded name
-      Parsetree_utils.pp_vname_with_operators_expanded species_name
-      Parsetree_utils.pp_vname_with_operators_expanded name;
-  (* We directly apply the abstracted arguments. That's a kind of
-     eta-expansion. *)
-  List.iter
-    (fun n ->
-      Format.fprintf out_fmter "_p_%a_T@ "
-        Parsetree_utils.pp_vname_with_operators_expanded n)
-    used_species_parameter_tys;
-  List.iter
-    (fun (sparam, (Env.ODFP_methods_list meths)) ->
-      (* Recover the species parameter's name. *)
-      let species_param_name =
-        match sparam with
-         | Env.TypeInformation.SPAR_in (n, _, _) -> n
-         | Env.TypeInformation.SPAR_is ((_, n), _, _, _, _) ->
-             Parsetree.Vuident n in
-      (* Each abstracted method will be named like "_p_", followed by the
-         species parameter name, followed by "_", followed by the method's
-         name.
-         We don't care here about whether the species parameters is "in" or
-         "is". *)
-      let prefix =
-        "_p_" ^ (Parsetree_utils.name_of_vname species_param_name) ^ "_" in
-      List.iter
-        (fun (meth, _) ->
-          Format.fprintf out_fmter "%s%a@ "
-            prefix Parsetree_utils.pp_vname_with_operators_expanded meth)
-        meths)
-    dependencies_from_params;
-  List.iter
-    (fun n ->
-      if n = Parsetree.Vlident "rep" then
-        Format.fprintf out_fmter "abst_T@ "
-      else
-        Format.fprintf out_fmter "abst_%a@ "
-          Parsetree_utils.pp_vname_with_operators_expanded n)
-    abstracted_methods ;
-  (* We now apply the fake termination order only if we cheated with proof, i.e.
-     if we are not in experimental mode. *)
-  if not (Configuration.get_experimental ()) then
-    Format.fprintf out_fmter "dk_builtins.magic_order"
+    Format.fprintf out_fmter "TODO@ "
 ;;
 
 
@@ -2849,121 +2806,110 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
           (call_by_value_Ti T f c) rewrites to (f c).
         *)
 
-
-
-       (* Generate the recursive function. *)
-
-       (* Generate the recursive function. *)
+       (* Declare both symbols *)
        Format.fprintf out_fmter
-         "@[<2>[] rec_%a@ --> %a@ "
-         Parsetree_utils.pp_vname_with_operators_expanded name
-         (print_types_as_tuple_if_several new_print_ctx) params_with_type ;
-       Format.fprintf out_fmter ":@ %a@ :=@\n"
+         "@[<2>%a__rec_%a@ : "
+         Parsetree_utils.pp_vname_with_operators_expanded species_name
+         Parsetree_utils.pp_vname_with_operators_expanded name;
+
+       ignore (generate_field_definition_prelude
+                 ~in_section: false ~sep: "->" ctx' print_ctx env
+                 ai.Env.TypeInformation.ad_min_dk_env
+                 ai.Env.TypeInformation.ad_used_species_parameter_tys
+                 ai.Env.TypeInformation.ad_dependencies_from_parameters
+                 generated_fields);
+
+       List.iter
+         (fun (_, ty) ->
+          Format.fprintf out_fmter "cc.eT (%a) ->@ "
+            (Types.pp_type_simple_to_dk new_print_ctx) ty)
+         params_with_type;
+
+       Format.fprintf out_fmter "cc.eT (%a).@]@\n"
          (Types.pp_type_simple_to_dk new_print_ctx) return_ty ;
-       (* Unfortunately, we can't simply generate "let (x, y, ..) := __arg"
-          because Dk only allows pairs as let-binding pattern. So instead,
-          we generate a "match". *)
-       Format.fprintf out_fmter "@[<2>match __arg with@\n| (";
-       Format.fprintf out_fmter "%a"
-         (Handy.pp_generic_separated_list ","
-            Parsetree_utils.pp_vname_with_operators_expanded) params ;
-       Format.fprintf out_fmter ") =>@\n" ;
-       (* We must transform the recursive function's body si that all the
-          recursive calls send their arguments as a unique tuple rather than as
-          several arguments. This is because we "tuplified" the arguments of
-          the recursive function in order to be able to exhibit a lexicographic
-          order if needed. *)
-       let tuplified_body =
-         Rec_let_dk_gen.transform_recursive_calls_args_into_tuple
-           new_ctx ~local_idents: [] name body_expr in
-       (* We specify here that we must not apply recursive calls to the extra
-          arguments due to lambda-liftings. *)
+
+       Format.fprintf out_fmter
+         "@[<2>%a@ : "
+         Parsetree_utils.pp_vname_with_operators_expanded name;
+
+       ignore (generate_field_definition_prelude
+                 ~in_section: false ~sep: "->" ctx' print_ctx env
+                 ai.Env.TypeInformation.ad_min_dk_env
+                 ai.Env.TypeInformation.ad_used_species_parameter_tys
+                 ai.Env.TypeInformation.ad_dependencies_from_parameters
+                 generated_fields);
+
+       List.iter
+         (fun (_, ty) ->
+          Format.fprintf out_fmter "cc.eT (%a) ->@ "
+            (Types.pp_type_simple_to_dk new_print_ctx) ty)
+         params_with_type;
+
+       Format.fprintf out_fmter "cc.eT (%a).@]@\n"
+         (Types.pp_type_simple_to_dk new_print_ctx) return_ty ;
+
+       let rec print_list_param_with_type sep out = function
+         | [] -> ()
+         | [(a, ty)] ->
+            Format.fprintf out "%a : cc.eT (%a)"
+              Parsetree_utils.pp_vname_with_operators_expanded a
+              (Types.pp_type_simple_to_dk new_print_ctx) ty
+         | (a, ty) :: l ->
+            Format.fprintf out "%a : cc.eT (%a) %s@ %a"
+              Parsetree_utils.pp_vname_with_operators_expanded a
+              (Types.pp_type_simple_to_dk new_print_ctx) ty
+              sep
+              (print_list_param_with_type sep) l
+       in
+
+       (* Generate the recursive function. *)
+       Format.fprintf out_fmter "@[<2>[] %a__rec_%a@ -->@\n"
+         Parsetree_utils.pp_vname_with_operators_expanded species_name
+         Parsetree_utils.pp_vname_with_operators_expanded name;
+
+       ignore (generate_field_definition_prelude
+                 ~in_section: false ~sep: "=>" ctx' print_ctx env
+                 ai.Env.TypeInformation.ad_min_dk_env
+                 ai.Env.TypeInformation.ad_used_species_parameter_tys
+                 ai.Env.TypeInformation.ad_dependencies_from_parameters
+                 generated_fields);
+
+       List.iter
+         (fun (a, ty) ->
+          Format.fprintf out_fmter "%a : cc.eT (%a) =>@ "
+              Parsetree_utils.pp_vname_with_operators_expanded a
+              (Types.pp_type_simple_to_dk new_print_ctx) ty)
+         params_with_type;
+
+       (* In Dedukti, we do want the current recursive method to be applied to
+          parameters coming from lambda-lifting. Hence ~in_recursive_let_section_of: []
+          instead of ~in_recursive_let_section_of: [name] (as found in Coq translation) *)
+
        Species_record_type_dk_generation.generate_expr
-         new_ctx ~local_idents: [] ~in_recursive_let_section_of: [name]
+         new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
          ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
          ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
-         env tuplified_body ;
-       (* Print the "end" of the "match" introduced to split the tuple of
-          "__arg". *)
-       Format.fprintf out_fmter "@\nend.@]@\n";
-       Format.fprintf out_fmter "@[<v 2>Proof.@\n";
-       (* Print the proof using the above material. *)
-       if Configuration.get_experimental () then (
-         (* ---> Generate the soldering Dk script. *)
-         let nb_rec_calls = List.length recursive_calls in
-         Format.fprintf out_fmter
-           "elim %a_termination.@\n\
-           intros __for_function_dec1 __for_function_rem_dec_n_wf.@\n"
-           Parsetree_utils.pp_vname_with_operators_expanded name ;
-         (* Repeat nb rec call - 1 times... TODO WRONG ! *)
-         for i = 2 to nb_rec_calls do
-           Format.fprintf out_fmter
-             "elim __for_function_rem_dec_n_wf.@\n\
-              clear __for_function_rem_dec_n_wf.@\n\
-              intros __for_function_dec%d __for_function_rem_dec_n_wf.@\n" i
-         done ;
-         (* Repeat for each recursive call. *)
-         let call_num = ref 1 in (* Recursive calls counter. *)
-         List.iter
-           (fun (_, _) ->
-             Format.fprintf out_fmter "split.@\n" ;
-             (* Remove stuff due to matching the tuple of args.
-                n - 1 intermediate variables and their type due to the tuple
-                decomposition because of the pattern matching --> 2 (n - 1)
-                intros.
-                1 type per function argument --> n
-                So: 2 (n - 1) + n = 3 n - 2.
-                Then intros induced by the bindings. There are as many as the
-                condition-string (i.e. bindings) of the current recursive
-                call.
-                All this stuff can be globally introduced by a simple intros.
-                Then all the binding subgoals can be globally solved by
-                a "try-retry-on-error" on the goals generated by the
-                elimination of the hypothesis __for_function_dec%d. *)
-             Format.fprintf out_fmter
-               "intros.@\napply __for_function_dec%d ; \
-               auto || (apply dk_builtins.EqTrue_is_true; assumption) || (apply dk_builtins.IsTrue_eq_false2; assumption) || (apply dk_builtins.syntactic_equal_refl).@\n" !call_num ;
-             incr call_num)
-           recursive_calls ;
-         (* The finally remaining stuff related to the well-foundation. *)
-         Format.fprintf out_fmter
-           "(; Remaining well-foundation... ;)@\n\
-               assumption.@\n"
-        )
-       else
-         Format.fprintf out_fmter "%a"
-           (Handy.pp_generic_n_times ((List.length recursive_calls) + 1)
-              Format.fprintf)
-           "apply dk_builtins.magic_prove.@\n";
-       (* Close the pretty print of of the "Function". *)
-       Format.fprintf out_fmter "Qed.@]@\n";
-       (* ---> Generate the curryed version. *)
-       Format.fprintf out_fmter
-         "@[<2>%a__%a %a :=@ %a (%a).@]@\n"
-         Parsetree_utils.pp_vname_with_operators_expanded species_name
-         Parsetree_utils.pp_vname_with_operators_expanded name
-         (Handy.pp_generic_separated_list " "
-            Parsetree_utils.pp_vname_with_operators_expanded) params
-         Parsetree_utils.pp_vname_with_operators_expanded name
-         (Handy.pp_generic_separated_list ","
-            Parsetree_utils.pp_vname_with_operators_expanded) params ;
-(* [Unsure] We must now generate the function applied to its order and
-   termination proof and so on... *)
-       Format.fprintf out_fmter "@\n@[<2>%a"
-         Parsetree_utils.pp_vname_with_operators_expanded name ;
-       ignore
-         (generate_field_definition_prelude
-            ~in_section: true new_ctx new_print_ctx env
-            ai.Env.TypeInformation.ad_min_dk_env
-            ai.Env.TypeInformation.ad_used_species_parameter_tys
-            ai.Env.TypeInformation.ad_dependencies_from_parameters
-            generated_fields) ;
-       Format.fprintf out_fmter " :=@ " ;
-       (* Now, emit the code of the final definition, using the definition
-          created in the above Section enclosed by the above namespace.
-          Say that we are NOT in a Zenon "by definition of a rec function" in
-          order to have the name "Termination_fct_namespace.species__fct"
-          instead of "Termination_fct_namespace.fct_equation". *)
+         env body_expr ;
+       Format.fprintf out_fmter ".@]@\n" ;
+
+       (* Generate the CBV version. *)
+       Format.fprintf out_fmter "@[<2>[] %a -->@ "
+         Parsetree_utils.pp_vname_with_operators_expanded name;
+
+       ignore (generate_field_definition_prelude
+                 ~in_section: false ~sep: "=>" ctx' print_ctx env
+                 ai.Env.TypeInformation.ad_min_dk_env
+                 ai.Env.TypeInformation.ad_used_species_parameter_tys
+                 ai.Env.TypeInformation.ad_dependencies_from_parameters
+                 generated_fields);
+
+       List.iter
+         (fun (a, ty) ->
+          Format.fprintf out_fmter "%a : cc.eT (%a) =>@ "
+              Parsetree_utils.pp_vname_with_operators_expanded a
+              (Types.pp_type_simple_to_dk new_print_ctx) ty)
+         params_with_type;
+
        generate_final_recursive_definifion_body_With_Function
          out_fmter ~in_zenon_by_def: false species_name name
          ai.Env.TypeInformation.ad_used_species_parameter_tys
