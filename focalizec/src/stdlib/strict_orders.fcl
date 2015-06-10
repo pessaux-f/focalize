@@ -174,11 +174,30 @@ species Strictly_ordered_set =
   property total_order: all x y : Self,
     !leq(x, y) \/ leq(y, x);
 
-  proof of different_is_complete = assumed (* exhausted search space without finding a proof *)
-(* ASSUMED    by property leq_from_lt, !different_is_not_same, *)
-(* ASSUMED                !total_order, *)
-(* ASSUMED                !lt_is_irreflexive, !lt_is_transitive *)
-(* ASSUMED       definition of different *)
+  theorem total_order_strict: all x y : Self,
+    !lt(x, y) \/ !lt(y, x) \/ syntactic_equal(x, y)
+    proof = by property leq_from_lt, total_order;
+
+  proof of different_is_complete =
+    <1>1 assume x : Self, y : Self, z : Self,
+         hypothesis H : !different(x, y),
+         prove (!different(x, z) \/ !different(y, z))
+         <2>1 hypothesis Hxz : !lt(x, z),
+              prove (!different(x, z) \/ !different(y, z))
+              by hypothesis Hxz
+                 definition of different
+         <2>2 hypothesis Hxz : !lt(z, x),
+              prove (!different(x, z) \/ !different(y, z))
+              by hypothesis Hxz
+                 definition of different
+         <2>3 hypothesis Hxz : syntactic_equal(x, z),
+              prove (!different(x, z) \/ !different(y, z))
+              by hypothesis H, Hxz
+                 property lt_is_irreflexive
+                 definition of different
+         <2>f qed by step <2>1, <2>2, <2>3
+                     property total_order_strict, different
+     <1>f qed by step <1>1 property different
   ;
 
   theorem different_is_syntactic: all x y : Self, (~(x = y)) -> different(x, y)
