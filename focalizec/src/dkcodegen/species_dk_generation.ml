@@ -971,13 +971,7 @@ let rec find_only_PN_subs_in_proof_nodes = function
    {b Rem} : For Function.    *)
 let generate_final_recursive_definifion_body_With_Function out_fmter
     ~in_zenon_by_def species_name name used_species_parameter_tys
-    dependencies_from_params abstracted_methods =
-  if in_zenon_by_def then
-    Format.fprintf out_fmter "Termination_%a_namespace.%a_equation@ "
-      Parsetree_utils.pp_vname_with_operators_expanded name
-      Parsetree_utils.pp_vname_with_operators_expanded name
-  else
-    Format.fprintf out_fmter "TODO@ "
+    dependencies_from_params abstracted_methods = ()
 ;;
 
 
@@ -1020,10 +1014,9 @@ let zenonify_by_recursive_meth_definition ctx print_ctx env
        (* Say that we are in a Zenon "by definition of a rec function" in order
           to have the name "Termination_fct_namespace.fct_equation" instead of
           "Termination_fct_namespace.species__fct". *)
-       generate_final_recursive_definifion_body_With_Function
-         out_fmter ~in_zenon_by_def: true species_name vname
-         used_species_parameter_tys dependencies_from_params
-         abstracted_methods ;
+       Format.fprintf out_fmter "Termination_%a_namespace.%a_equation@ "
+          Parsetree_utils.pp_vname_with_operators_expanded vname
+          Parsetree_utils.pp_vname_with_operators_expanded vname;
        Format.fprintf out_fmter " }@\n:=@\n"
    | Env.RPK_struct decr_arg_name ->
        (* Case where the recursive function was generated with "Fixpoint". In
@@ -2910,11 +2903,29 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
               (Types.pp_type_simple_to_dk new_print_ctx) ty)
          params_with_type;
 
-       generate_final_recursive_definifion_body_With_Function
-         out_fmter ~in_zenon_by_def: false species_name name
-         ai.Env.TypeInformation.ad_used_species_parameter_tys
-         ai.Env.TypeInformation.ad_dependencies_from_parameters
-         abstracted_methods ;
+       let rec print_cbv_types_as_arrows out = function
+         | [] -> Types.pp_type_simple_to_dk new_print_ctx out return_ty
+         | ty :: l ->
+            Format.fprintf out "(@[cc.Arrow %a %a@])"
+              (Types.pp_type_simple_to_dk new_print_ctx) ty
+              print_cbv_types_as_arrows l
+       in
+
+       let rec print_cbv accu out = function
+         | [] ->
+            Format.fprintf out "@[%a__rec_%a@]"
+               Parsetree_utils.pp_vname_with_operators_expanded species_name
+               Parsetree_utils.pp_vname_with_operators_expanded name;
+         | (a, ty) :: l ->
+            Format.fprintf out "@[call_by_value_%a@ %a@ (%a)@ %a@]"
+               (Types.pp_type_simple_to_dk new_print_ctx) ty
+               print_cbv_types_as_arrows accu
+               (print_cbv (ty :: accu)) l
+               Parsetree_utils.pp_vname_with_operators_expanded a
+       in
+
+       print_cbv [] out_fmter (List.rev params_with_type);
+
        (* Close the pretty print box. *)
        Format.fprintf out_fmter ".@]@\n" ;
        let compiled = {
