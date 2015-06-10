@@ -113,9 +113,8 @@ species Sum_set(A is Setoid, B is Setoid) =
       (!second_case(x) /\
        !second_case(y) /\
         B!equal(!second_term(x), !second_term(y))))
-    proof = assumed (* ASSUMED (Zenon error: exhausted search space without finding a proof
-) by property !case_exclusive *)
-(* ASSUMED              definition of equal *);
+    proof = by property !case_exclusive
+              definition of equal;
 
   (** Since equality is defined, we prove its reflexity *)
   proof of equal_reflexive =
