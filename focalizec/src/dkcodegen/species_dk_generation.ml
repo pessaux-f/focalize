@@ -446,9 +446,10 @@ let find_method_type_kind_by_name vname coll_meths =
     En cas de non-Section, on met l'espace de séparation AVANT.
 
   Args:
-    - [~in_section] : Collect section variables
+    - [~in_section] : Collect section variables instead of printing them
+    - [~sep] : What to print between arguments
  *)
-let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
+let generate_field_definition_prelude ~in_section ?sep ctx print_ctx env min_dk_env
     used_species_parameter_tys dependencies_from_params generated_fields =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the parameters from the species parameters' types we use.
@@ -468,7 +469,11 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
           section_variable_list :=
             SVType param_name :: !section_variable_list
         else
-          Format.fprintf out_fmter "@ (%s_T :@ cc.uT)" param_name;
+          (match sep with
+           | None ->
+              Format.fprintf out_fmter "@ (%s_T :@ cc.uT)" param_name;
+           | Some sep ->
+              Format.fprintf out_fmter "%s_T :@ cc.uT %s@ " param_name sep);
         (* Return the stuff to extend the collection_carrier_mapping. *)
         ((ctx.Context.scc_current_unit, as_string),
          (param_name, Types.CCMI_is)))
@@ -529,10 +534,17 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
           else (
             match meth_ty_kind with
              | Parsetree_utils.DETK_computational meth_ty ->
-                Format.fprintf out_fmter "@ (%s%a :@ cc.eT (%a))"
-                  prefix
-                  Parsetree_utils.pp_vname_with_operators_expanded meth
-                  (Types.pp_type_simple_to_dk new_print_ctx) meth_ty
+                (match sep with
+                 | None ->
+                    Format.fprintf out_fmter "@ (%s%a :@ cc.eT (%a))"
+                      prefix
+                      Parsetree_utils.pp_vname_with_operators_expanded meth
+                      (Types.pp_type_simple_to_dk new_print_ctx) meth_ty
+                 | Some sep ->
+                    Format.fprintf out_fmter "%s%a :@ cc.eT (%a) %s@ "
+                      prefix
+                      Parsetree_utils.pp_vname_with_operators_expanded meth
+                      (Types.pp_type_simple_to_dk new_print_ctx) meth_ty sep)
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
                     parameter "Self" must be printed as "_p_param_name_T". *)
@@ -545,10 +557,16 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                    Context.scc_collections_carrier_mapping =
                      self_map ::
                        new_ctx.Context.scc_collections_carrier_mapping } in
-                 Format.fprintf out_fmter "@ (%s%a :@ dk_logic.eP ("
-                   prefix
-                   Parsetree_utils.pp_vname_with_operators_expanded meth;
-                     (* Even if we are generating the prelude of a recursive
+                 (match sep with
+                 | None ->
+                    Format.fprintf out_fmter "@ (%s%a :@ dk_logic.eP ("
+                       prefix
+                       Parsetree_utils.pp_vname_with_operators_expanded meth
+                 | Some sep ->
+                    Format.fprintf out_fmter "%s%a :@ dk_logic.eP ("
+                       prefix
+                       Parsetree_utils.pp_vname_with_operators_expanded meth);
+                   (* Even if we are generating the prelude of a recursive
                         function, we can't have a recursion via the dependencies
                         from a species parameter. *)
                      Species_record_type_dk_generation.generate_logical_expr
@@ -559,8 +577,10 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                        ~recursive_methods_status:
                        Species_record_type_dk_generation.RMS_regular
                        env lexpr ;
-                     Format.fprintf out_fmter "))"
-          )
+                 Format.fprintf out_fmter ")";
+                 (match sep with
+                 | None -> Format.fprintf out_fmter ")"
+                 | Some sep -> Format.fprintf out_fmter " %s@ " sep))
         )
         meths_from_param)
     dependencies_from_params;
@@ -582,32 +602,56 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                                new_print_ctx)
                   :: !section_variable_list
               else
-                Format.fprintf out_fmter "@ (abst_T := %a)"
-                  (Types.pp_type_simple_to_dk new_print_ctx) ty;
+                 (match sep with
+                 | None ->
+                    Format.fprintf out_fmter "@ (abst_T := %a)"
+                       (Types.pp_type_simple_to_dk new_print_ctx) ty
+                 | Some sep ->
+                    Format.fprintf out_fmter "abst_T := %a %s@ "
+                       (Types.pp_type_simple_to_dk new_print_ctx) ty sep);
               (* Anything defined is not abstracted. *)
               []
            | Env.TypeInformation.MDEM_Defined_computational (fr, _, n, _, sch, _) ->
               let ty = Types.specialize sch in
               if not in_section then
                 begin
-                  Format.fprintf out_fmter "@ (abst_%a :=@ "
-                    Parsetree_utils.pp_vname_with_operators_expanded n;
-                  generate_def_dependency_equivalence
-                    env new_ctx generated_fields fr n;
-                  Format.fprintf out_fmter ")"
+                 (match sep with
+                 | None ->
+                    Format.fprintf out_fmter "@ (abst_%a :=@ "
+                       Parsetree_utils.pp_vname_with_operators_expanded n;
+                    generate_def_dependency_equivalence
+                      env new_ctx generated_fields fr n;
+                    Format.fprintf out_fmter ")"
+                 | Some sep ->
+                    Format.fprintf out_fmter "abst_%a :=@ "
+                       Parsetree_utils.pp_vname_with_operators_expanded n;
+                    generate_def_dependency_equivalence
+                      env new_ctx generated_fields fr n;
+                    Format.fprintf out_fmter " %s@ " sep)
                 end;
               []
            | Env.TypeInformation.MDEM_Defined_logical (fr, n, b) ->
               if not in_section then
                 begin
-                  Format.fprintf out_fmter "@ (abst_%a :=@ "
-                  Parsetree_utils.pp_vname_with_operators_expanded n;
-                 (* Methods from Self are printed "abst_XXX" since dependencies
-                    have leaded to extra parameters "abst_XXX".
-                    Even if we are generating the prelude of a recursive
-                    function, we can't have a recursion via the dependencies
-                    from other methods of ourselves. *)
-                  Format.fprintf out_fmter ")"
+                 (match sep with
+                 | None ->
+                   Format.fprintf out_fmter "@ (abst_%a :=@ "
+                     Parsetree_utils.pp_vname_with_operators_expanded n;
+                   (* Methods from Self are printed "abst_XXX" since dependencies
+                      have leaded to extra parameters "abst_XXX".
+                      Even if we are generating the prelude of a recursive
+                      function, we can't have a recursion via the dependencies
+                      from other methods of ourselves. *)
+                   Format.fprintf out_fmter ")"
+                 | Some sep ->
+                   Format.fprintf out_fmter "abst_%a :=@ "
+                     Parsetree_utils.pp_vname_with_operators_expanded n;
+                   (* Methods from Self are printed "abst_XXX" since dependencies
+                      have leaded to extra parameters "abst_XXX".
+                      Even if we are generating the prelude of a recursive
+                      function, we can't have a recursion via the dependencies
+                      from other methods of ourselves. *)
+                   Format.fprintf out_fmter " %s@ " sep)
                 end;
               []
            | Env.TypeInformation.MDEM_Declared_carrier ->
@@ -615,7 +659,11 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                if in_section then
                  section_variable_list := SVType "abst" :: !section_variable_list
                else
-                 Format.fprintf out_fmter "@ (abst_T : cc.uT)";
+                 (match sep with
+                 | None ->
+                    Format.fprintf out_fmter "@ (abst_T : cc.uT)"
+                 | Some sep ->
+                    Format.fprintf out_fmter "abst_T : cc.uT %s@ " sep);
                [Parsetree.Vlident "rep"]
            | Env.TypeInformation.MDEM_Declared_computational (n, sch) ->
                (* Due to a decl-dependency, hence: abstract. *)
@@ -624,9 +672,15 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                  section_variable_list :=
                    SVVar ("abst_", n, ty, new_print_ctx) :: !section_variable_list
                else
-                 Format.fprintf out_fmter "@ (abst_%a : cc.eT %a)"
-                   Parsetree_utils.pp_vname_with_operators_expanded n
-                   (Types.pp_type_simple_to_dk new_print_ctx) ty;
+                 (match sep with
+                 | None ->
+                   Format.fprintf out_fmter "@ (abst_%a : cc.eT %a)"
+                     Parsetree_utils.pp_vname_with_operators_expanded n
+                     (Types.pp_type_simple_to_dk new_print_ctx) ty
+                 | Some sep ->
+                   Format.fprintf out_fmter "abst_%a : cc.eT %a %s@ "
+                     Parsetree_utils.pp_vname_with_operators_expanded n
+                     (Types.pp_type_simple_to_dk new_print_ctx) ty sep);
                [n]
            | Env.TypeInformation.MDEM_Declared_logical (n, b) ->
                if in_section then
@@ -637,8 +691,13 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                           new_ctx) :: !section_variable_list
                else
                  begin
+                 (match sep with
+                 | None ->
                    Format.fprintf out_fmter "@ (abst_%a :@ dk_logic.eP ("
-                     Parsetree_utils.pp_vname_with_operators_expanded n;
+                     Parsetree_utils.pp_vname_with_operators_expanded n
+                 | Some sep ->
+                   Format.fprintf out_fmter "abst_%a :@ dk_logic.eP ("
+                     Parsetree_utils.pp_vname_with_operators_expanded n);
                    (* Methods from Self are printed "abst_XXX" since dependencies
                         have leaded to extra parameters "abst_XXX".
                         Even if we are generating the prelude of a recursive
@@ -650,7 +709,11 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_dk_env
                      Species_record_type_dk_generation.SMS_abstracted env b
                      ~recursive_methods_status:
                      Species_record_type_dk_generation.RMS_regular;
+                 (match sep with
+                 | None ->
                    Format.fprintf out_fmter "))"
+                 | Some sep ->
+                   Format.fprintf out_fmter ") %s@ " sep)
                  end;
                [n])
          min_dk_env) in
