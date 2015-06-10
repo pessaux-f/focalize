@@ -180,40 +180,6 @@ let generate_call_by_value_definition ctx env type_def_name type_descr =
 
              (sum_cstr_name, sum_cstr_ty, sum_cstr_args))
            cstrs in
-       Format.fprintf out_fmter "@[<2>call_by_value_%a__t : "
-         Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
-       (* Print the parameter(s) stuff if any. Do it only now the unifications
-          have been done with the sum constructors to be sure that thanks to
-          unifications, "sames" variables will have the "same" name everywhere
-          (i.e. in the the parameters enumeration of the type and in the sum
-          constructors definitions). *)
-       print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
-         print_ctx out_fmter type_def_params;
-       Format.fprintf out_fmter "-> R : cc.uT ->@ (cc.eT (@[<1>%a__t%a@]) ->@ cc.eT R) ->@ cc.eT (@[<1>%a__t%a@]) ->@ cc.eT R.@\n"
-                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
-                          (print_types_parameters_with_spaces print_ctx) type_def_params
-                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
-                          (print_types_parameters_with_spaces print_ctx) type_def_params
-       ;
-       (* CBV has a rewrite rule for each constructor. *)
-       List.iter
-         (fun (sum_cstr_name, _, cstr_args) ->
-           (* The sum constructor name. *)
-           Format.fprintf out_fmter "@\n[match__%a :@ @[<v 2>"
-             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
-           (* The type of the destructor.
-              Parameterized as the inductive. *)
-           print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
-             print_ctx out_fmter type_def_params;
-           Format.fprintf out_fmter
-                          "Ret_type : cc.uT ->@ cc.eT (@[<1>%a__t%a@]) ->@ (%acc.eT Ret_type@]) ->@ cc.eT Ret_type ->@ cc.eT Ret_type.@]"
-                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
-                          (print_types_parameters_with_spaces print_ctx) type_def_params
-                          (* The type of the matching function.
-                             Parameterized as the constructor. *)
-                          (print_types_parameters_with_arrows print_ctx) cstr_args
-         )
-         sum_constructors_to_print;
        Format.fprintf out_fmter "@]@\n@\n";
          (begin
          (* Since any variant type constructors must be inserted in the
@@ -421,7 +387,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
              print_ctx out_fmter type_def_params;
            Format.fprintf out_fmter
-                          "Ret_type : cc.uT ->@ cc.eT (@[<1>%a__t%a@]) ->@ (%acc.eT Ret_type@]) ->@ cc.eT Ret_type ->@ cc.eT Ret_type.@]"
+                          "Ret_type : cc.uT ->@ cc.eT (@[<1>%a__t%a@]) ->@ (@[%acc.eT Ret_type@]) ->@ cc.eT Ret_type ->@ cc.eT Ret_type.@]"
                           Parsetree_utils.pp_vname_with_operators_expanded type_def_name
                           (print_types_parameters_with_spaces print_ctx) type_def_params
                           (* The type of the matching function.
@@ -429,9 +395,44 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           (print_types_parameters_with_arrows print_ctx) cstr_args
          )
          sum_constructors_to_print;
-       Format.fprintf out_fmter "@]@\n@\n";
+       Format.fprintf out_fmter "@]\n@\n";
        if not as_zenon_fact then
          (begin
+             (* The call_by_value construction is higher-order so we don't give it to Zenon *)
+             Format.fprintf out_fmter "@[<2>call_by_value_%a__t : "
+               Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
+       (* Print the parameter(s) stuff if any. Do it only now the unifications
+          have been done with the sum constructors to be sure that thanks to
+          unifications, "sames" variables will have the "same" name everywhere
+          (i.e. in the the parameters enumeration of the type and in the sum
+          constructors definitions). *)
+       print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
+         print_ctx out_fmter type_def_params;
+       Format.fprintf out_fmter "R : cc.uT ->@ (cc.eT (@[<1>%a__t%a@]) ->@ cc.eT R) ->@ cc.eT (@[<1>%a__t%a@]) ->@ cc.eT R.@]@\n"
+                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+                          (print_types_parameters_with_spaces print_ctx) type_def_params
+                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+                          (print_types_parameters_with_spaces print_ctx) type_def_params
+       ;
+       (* CBV has a rewrite rule for each constructor. *)
+       List.iter
+         (fun (sum_cstr_name, _, cstr_args) ->
+           (* The sum constructor name. *)
+           Format.fprintf out_fmter "@[(; CBV for type constructor %a (TODO) ;)@]@\n"
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
+           (* (\* The type of the destructor. *)
+           (*    Parameterized as the inductive. *\) *)
+           (* print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows *)
+           (*   print_ctx out_fmter type_def_params; *)
+           (* Format.fprintf out_fmter *)
+           (*                "Ret_type : cc.uT ->@ cc.eT (@[<1>%a__t%a@]) ->@ (%acc.eT Ret_type@]) ->@ cc.eT Ret_type ->@ cc.eT Ret_type.@]" *)
+           (*                Parsetree_utils.pp_vname_with_operators_expanded type_def_name *)
+           (*                (print_types_parameters_with_spaces print_ctx) type_def_params *)
+           (*                (\* The type of the matching function. *)
+           (*                   Parameterized as the constructor. *\) *)
+           (*                (print_types_parameters_with_arrows print_ctx) cstr_args *)
+         )
+         sum_constructors_to_print;
          (* Since any variant type constructors must be inserted in the
             environment in order to know the number of extra leading "_" due to
             polymorphism, we return the extended environment. *)
