@@ -1785,7 +1785,7 @@ type dk_print_context = {
 
 
 let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
-     purge_type_simple_to_dk_variable_mapping
+     purge_type_simple_to_dk_variable_mapping, has_cbv, pp_for_cbv_type_simple_to_dk
      (* DEBUG
      , debug_variable_mapping *)) =
   (* ************************************************************** *)
@@ -2017,6 +2017,55 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
                       (rec_pp_to_dk ctx 0) t n
   in
 
+  let has_cbv ty =
+    (* First of all get the "repr" guy ! *)
+    let ty = repr ty in
+    match ty with
+    | ST_tuple _ | ST_construct _ -> true
+    | ST_var _ | ST_arrow _ | ST_sum_arguments _ | ST_prop
+    | ST_self_rep | ST_species_rep _ -> false
+  in
+
+  let rec_pp_cbv_to_dk_tuple ctx prio ppf = function
+    | [] -> assert false  (* Tuples should never have 0 component. *)
+    | [last] ->
+        Format.fprintf ppf "%a" (rec_pp_to_dk ctx prio) last
+    | ty1 :: ty2 :: rem ->
+        Format.fprintf ppf "dk_tuple.call_by_value_prod@ %a@ %a"
+          (rec_pp_to_dk ctx prio) ty1
+          (rec_pp_to_dk_tuple ctx prio)
+          (ty2 :: rem)
+  in
+
+  let rec_pp_cbv_to_dk ctx prio ppf ty =
+    (* First of all get the "repr" guy ! *)
+    let ty = repr ty in
+    match ty with
+    | ST_tuple tys ->
+        (* Tuple priority: 3. *)
+        if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
+        Format.fprintf ppf "@[<2>(%a)@]"
+          (rec_pp_cbv_to_dk_tuple ctx 3) tys ;
+        if prio >= 3 then Format.fprintf ppf ")@]"
+    | ST_construct (type_name, arg_tys) ->
+        (begin
+        (* Priority of arguments of a sum type constructor : like an regular
+           application : 0. *)
+        match arg_tys with
+         | [] -> Format.fprintf ppf "call_by_value_%a"
+               (pp_type_name_to_dk ~current_unit: ctx.dpc_current_unit)
+               type_name
+         | _ ->
+             Format.fprintf ppf "@[<1>(call_by_value_%a@ %a)@]"
+               (pp_type_name_to_dk ~current_unit: ctx.dpc_current_unit)
+               type_name
+               (Handy.pp_generic_separated_list " "
+                  (rec_pp_to_dk ctx 0)) arg_tys
+        end)
+    | _ -> assert false
+                 (* rec_pp_cbv_to_dk should only be called when has_cbv returns true *)
+  in
+
   (* ************************************************** *)
   (* Now, the real definition of the printing functions *)
   ((* pp_type_simple_to_dk *)
@@ -2026,7 +2075,11 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
    (* pp_type_simple_args_to_dk *)
    (fun ctx ppf ty n -> rec_pp_to_dk_args ctx ppf ty n),
    (* purge_type_simple_to_dk_variable_mapping *)
-   (fun () -> reset_type_variables_mapping_to_dk ())
+   (fun () -> reset_type_variables_mapping_to_dk ()),
+   (* has_cbv *)
+   (has_cbv),
+   (* pp_for_cbv_type_simple_to_dk *)
+   (fun ctx ppf ty -> rec_pp_cbv_to_dk ctx 0 ppf ty)
    (* DEBUG
    ,
    (* debug_variable_mapping *)

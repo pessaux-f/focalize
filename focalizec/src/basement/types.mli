@@ -183,6 +183,9 @@ val pp_type_simple_to_dk :
 val pp_type_variable_to_dk : Format.formatter -> type_variable -> unit
 val pp_type_simple_args_to_dk :
   dk_print_context -> Format.formatter -> type_simple -> int -> unit
+val has_cbv : type_simple -> bool
+val pp_for_cbv_type_simple_to_dk :
+  dk_print_context -> Format.formatter -> type_simple -> unit
 
 val purge_type_simple_to_dk_variable_mapping : unit -> unit
 

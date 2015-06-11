@@ -2916,10 +2916,14 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
             Format.fprintf out "@[%a__rec_%a@]"
                Parsetree_utils.pp_vname_with_operators_expanded species_name
                Parsetree_utils.pp_vname_with_operators_expanded name;
-         | (a, ty) :: l ->
-            Format.fprintf out "@[call_by_value_%a@ %a@ (%a)@ %a@]"
-               (Types.pp_type_simple_to_dk new_print_ctx) ty
+         | (a, ty) :: l when Types.has_cbv ty ->
+            Format.fprintf out "@[%a@ %a@ (%a)@ %a@]"
+               (Types.pp_for_cbv_type_simple_to_dk new_print_ctx) ty
                print_cbv_types_as_arrows accu
+               (print_cbv (ty :: accu)) l
+               Parsetree_utils.pp_vname_with_operators_expanded a
+         | (a, ty) :: l ->
+            Format.fprintf out "@[%a@ %a@]"
                (print_cbv (ty :: accu)) l
                Parsetree_utils.pp_vname_with_operators_expanded a
        in
