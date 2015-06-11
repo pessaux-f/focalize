@@ -731,7 +731,7 @@ let generate_pattern ctx dkctx env pattern
         (* Then case 1/2: Abstract over fresh variables *)
         let count = ref 0 in
         List.iter (fun pat ->
-                   Format.fprintf out_fmter "pattern_var_%d :@ cc.eT@ " !count;
+                   Format.fprintf out_fmter "pattern_var_%d_ :@ cc.eT@ " !count;
                    generate_simple_type_of_ast dkctx out_fmter pat;
                    Format.fprintf out_fmter " =>@ ";
                    incr count)
@@ -751,12 +751,12 @@ let generate_pattern ctx dkctx env pattern
     | [] -> d ()
     | pat :: pats ->
        (* we produce the term
-          match pattern_var_%{count} with
+          match pattern_var_%{count}_ with
             | pat -> recursive_call
             | _ -> k
         *)
        let fresh_var_name =
-         Parsetree.Vlident (Printf.sprintf "pattern_var_%d" count)
+         Parsetree.Vlident (Printf.sprintf "pattern_var_%d_" count)
        in
        (* let fresh_var_pat = Parsetree.P_var fresh_var_name in *)
        (* let fresh_var_desc = Parsetree.EI_local fresh_var_name in *)
