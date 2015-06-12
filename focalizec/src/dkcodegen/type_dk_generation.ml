@@ -63,6 +63,27 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrow
     tys
 ;;
 
+(* Same but commas between parameters instead of spaces.
+   Useful for Dedukti rewrite contexts.
+*)
+let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
+    print_ctx out_fmter tys =
+  List.iter
+    (fun ty ->
+      Format.fprintf out_fmter "%a : cc.uT,@ "
+        (Types.pp_type_simple_to_dk print_ctx) ty)
+    tys
+;;
+
+let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces
+    print_ctx out_fmter tys =
+  List.iter
+    (fun ty ->
+      Format.fprintf out_fmter "%a@ "
+        (Types.pp_type_simple_to_dk print_ctx) ty)
+    tys
+;;
+
 (* Same but at the other side of the ":". *)
 let print_types_parameters_with_arrows print_ctx out_fmter tys =
   List.iter
@@ -387,12 +408,56 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
              print_ctx out_fmter type_def_params;
            Format.fprintf out_fmter
-                          "Ret_type : cc.uT ->@ cc.eT (@[<1>%a__t%a@]) ->@ (@[%acc.eT Ret_type@]) ->@ cc.eT Ret_type ->@ cc.eT Ret_type.@]"
+                          "Ret_type : cc.uT ->@ cc.eT (@[<1>%a__t%a@]) ->@ (@[%acc.eT Ret_type@]) ->@ cc.eT Ret_type ->@ cc.eT Ret_type.@]@\n"
                           Parsetree_utils.pp_vname_with_operators_expanded type_def_name
                           (print_types_parameters_with_spaces print_ctx) type_def_params
                           (* The type of the matching function.
                              Parameterized as the constructor. *)
+                          (print_types_parameters_with_arrows print_ctx) cstr_args;
+           List.iter (fun (curr_sum_cstr_name, _, curr_cstr_args) ->
+                      if (sum_cstr_name = curr_sum_cstr_name) then
+                        begin
+                          Format.fprintf out_fmter
+                          "[%a%aRet_type : cc.uT,@ pattern : (@[%acc.eT Ret_type@]),@ default : cc.eT Ret_type] %smatch__%a@ %aRet_type@ (%a@ %a@ %a)@ pattern@ default -->@ pattern%a.@\n"
+                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx)
+                          type_def_params
+                          (fun out -> List.iteri (fun i -> Format.fprintf out "x_%d_ : cc.eT (%a),@ "
+                                                       i
+                                                       (Types.pp_type_simple_to_dk print_ctx)))
+                          cstr_args
                           (print_types_parameters_with_arrows print_ctx) cstr_args
+                          qualif
+                          Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
+                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
+                          type_def_params
+                          Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
+                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
+                          type_def_params
+                          (fun out -> List.iteri (fun i a -> Format.fprintf out "x_%d_@ " i))
+                          cstr_args
+                          (fun out -> List.iteri (fun i a -> Format.fprintf out "@ x_%d_" i))
+                          cstr_args;
+                        end else begin
+                          Format.fprintf out_fmter
+                          "[%a%aRet_type : cc.uT,@ pattern : (@[%acc.eT Ret_type@]),@ default : cc.eT Ret_type] %smatch__%a@ %aRet_type@ (%a@ %a@ %a)@ pattern@ default -->@ default.@\n"
+                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas print_ctx)
+                          type_def_params
+                          (fun out -> List.iteri (fun i -> Format.fprintf out "x_%d_ : cc.eT (%a),@ "
+                                                       i
+                                                       (Types.pp_type_simple_to_dk print_ctx)))
+                          curr_cstr_args
+                          (print_types_parameters_with_arrows print_ctx) cstr_args
+                          qualif
+                          Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
+                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
+                          type_def_params
+                          Parsetree_utils.pp_vname_with_operators_expanded curr_sum_cstr_name
+                          (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
+                          type_def_params
+                          (fun out -> List.iteri (fun i a -> Format.fprintf out "x_%d_@ " i))
+                          curr_cstr_args;
+           end)
+         sum_constructors_to_print
          )
          sum_constructors_to_print;
        Format.fprintf out_fmter "@]\n@\n";
@@ -419,7 +484,38 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
          (fun (sum_cstr_name, _, cstr_args) ->
            (* The sum constructor name. *)
            Format.fprintf out_fmter "@[(; CBV for type constructor %a (TODO) ;)@]@\n"
-             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
+           Format.fprintf out_fmter "@[[";
+           print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
+             print_ctx out_fmter type_def_params;
+           Format.fprintf out_fmter "R : cc.uT, f : cc.eT (@[<1>%a__t%a@]) ->@ cc.eT R"
+                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name
+                          (print_types_parameters_with_spaces print_ctx) type_def_params;
+           List.iteri
+             (fun i -> Format.fprintf out_fmter ",@ x_%d_ : cc.eT (%a)"
+                                   i
+                                   (Types.pp_type_simple_to_dk print_ctx))
+             cstr_args;
+           Format.fprintf out_fmter "] call_by_value_%a__t@ "
+                          Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
+           List.iter (Format.fprintf out_fmter "%a " (Types.pp_type_simple_to_dk print_ctx))
+                     type_def_params;
+           Format.fprintf out_fmter "R@ f@ (%a"
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
+           List.iter (Format.fprintf out_fmter "@ %a" (Types.pp_type_simple_to_dk print_ctx))
+                     type_def_params;
+           List.iteri
+             (fun i ty -> Format.fprintf out_fmter "@ x_%d_" i)
+             cstr_args;
+           Format.fprintf out_fmter ")@ --> ";
+           Format.fprintf out_fmter "f@ (%a"
+             Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
+           List.iter (Format.fprintf out_fmter "@ %a" (Types.pp_type_simple_to_dk print_ctx))
+                     type_def_params;
+           List.iteri
+             (fun i ty -> Format.fprintf out_fmter "@ x_%d_" i)
+             cstr_args;
+           Format.fprintf out_fmter ").@\n";
            (* (\* The type of the destructor. *)
            (*    Parameterized as the inductive. *\) *)
            (* print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows *)
