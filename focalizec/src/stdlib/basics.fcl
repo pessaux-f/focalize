@@ -29,7 +29,7 @@ type int =
   external
   | caml -> {* int *}
   | coq -> {* Z *}
-  | dedukti -> {* dk_int.int *}
+  | dedukti -> {* dk_int.int. call_by_value_int__t := dk_int.call_by_value_int *}
 ;;
 
 type unit =
@@ -38,7 +38,7 @@ type unit =
   external
   | caml -> {* unit *}
   | coq -> {* coq_builtins.bi__unit *}  (* FoCaLize's Coq definition of builtin. *)
-  | dedukti -> {* dk_builtins.unit *}
+  | dedukti -> {* dk_builtins.unit. call_by_value_unit__t := dk_builtins.call_by_value_unit *}
 
   with () =
   | caml -> {* () *}
@@ -59,7 +59,7 @@ type char =
   external
   | caml -> {* char *}
   | coq -> {* ascii *}
-  | dedukti -> {* char *}
+  | dedukti -> {* char. call_by_value_char__t := dk_char.call_by_value_char *}
 ;;
 
 type string =
@@ -67,7 +67,7 @@ type string =
   external
   | caml -> {* string *}
   | coq -> {* string *}  (* From the Ascii module. *)
-  | dedukti -> {* string *}
+  | dedukti -> {* string. call_by_value_string__t := dk_int.call_by_value_string *}
 ;;
 
 type bool =
@@ -87,7 +87,8 @@ type bool =
                   true := dk_bool.true.
                   false := dk_bool.false.
                   match__true := dk_bool.match__true.
-                  match_false := dk_bool.match__false *}
+                  match__false := dk_bool.match__false.
+                  call_by_value_bool__t := dk_bool.call_by_value_bool *}
 
   with True =
   | caml -> {* true *}
@@ -102,8 +103,7 @@ type bool =
 
 (** Note that it is impossible to alias the type of propositions [prop__t] to
    Coq [Prop] here, since "prop" is a keyword in FoCaLiZe, hence this makes a
-   crude syntax error. However, "Prop" is not available for OCaml programs, so
-   we can safely hard-define it in coq_builtins.v. *)
+   crude syntax error. We hard-define it in coq_builtins.v and dk_logic.sk. *)
 
 type list ('a) =
   internal
@@ -120,7 +120,8 @@ type list ('a) =
               Definition list__t_rec := list_rec *}
   | dedukti -> {* list __var_a.
                   match__nil := dk_list.match__nil.
-                  match__cons := dk_list.match__cons *}
+                  match__cons := dk_list.match__cons.
+                  call_by_value_list__t := dk_list.call_by_value_list *}
 
   with [] =
   | caml -> {* [] *}
