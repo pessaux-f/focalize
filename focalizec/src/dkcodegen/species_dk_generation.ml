@@ -4396,11 +4396,12 @@ let make_collection_effective_methods ctx env implemented_species_name
           List.iter
             (fun (_, n, _, _, _, _, _, _) ->
               Format.fprintf out_fmter
-                "@[<2>%a :=@ effective_collection.@[<1>("
-                Parsetree_utils.pp_vname_with_operators_expanded n ;
+                "@[<2>%a__%a :=@ @[<1>(proj_"
+                Sourcify.pp_vname species_name
+                Parsetree_utils.pp_vname_with_operators_expanded n;
               print_implemented_species_as_dk_module
                 ~current_unit out_fmter implemented_species_name;
-              Format.fprintf out_fmter ".rf_%a"
+              Format.fprintf out_fmter "__rf_%a@ "
                 Parsetree_utils.pp_vname_with_operators_expanded n ;
               (* Apply to the instanciations of the parameters carriers. *)
               print_record_type_carriers_args_instanciations
@@ -4410,7 +4411,8 @@ let make_collection_effective_methods ctx env implemented_species_name
               print_methods_from_params_instanciations
                  ctx env formals_to_effectives
                  record_type_args_instanciations2;
-              Format.fprintf out_fmter ").@]@]@\n")
+              Format.fprintf out_fmter "@ %a__effective_collection).@]@]@\n"
+                Sourcify.pp_vname species_name;)
             l)
     collection_descr.Env.TypeInformation.spe_sig_methods
 ;;
