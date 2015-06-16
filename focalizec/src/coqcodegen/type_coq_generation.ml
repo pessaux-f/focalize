@@ -46,7 +46,7 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
   List.iter
     (fun ty ->
       Format.fprintf out_fmter "(%a : Set)@ "
-        (Types.pp_type_simple_to_coq print_ctx) ty)
+        (Coq_pprint.pp_type_simple_to_coq print_ctx) ty)
     tys
 ;;
 
@@ -127,9 +127,9 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.rcc_current_unit ;
-    Types.cpc_current_species = None;
-    Types.cpc_collections_carrier_mapping =
+    Coq_pprint.cpc_current_unit = ctx.Context.rcc_current_unit ;
+    Coq_pprint.cpc_current_species = None;
+    Coq_pprint.cpc_collections_carrier_mapping =
       ctx.Context.rcc_collections_carrier_mapping } in
   (* We do not operate on a fresh instance of the type's identity scheme. We
      directly work on the type scheme, taking care to perform *no* unifications
@@ -153,7 +153,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
           never at toplevel, hence we don't need to add any bindind in the
           [collection_carrier_mapping]. *)
        Format.fprintf out_fmter ":=@ %a.@]@\n"
-         (Types.pp_type_simple_to_coq print_ctx) tydef_body ;
+         (Coq_pprint.pp_type_simple_to_coq print_ctx) tydef_body ;
        if not as_zenon_fact then
          Env.CoqGenEnv.add_type
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
@@ -246,7 +246,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
            (* The type of the constructor. *)
            Format.fprintf out_fmter " :@ (@[<1>%a@])"
-             (Types.pp_type_simple_to_coq print_ctx) cstr_ty)
+             (Coq_pprint.pp_type_simple_to_coq print_ctx) cstr_ty)
          sum_constructors_to_print;
        Format.fprintf out_fmter ".@]@\n@\n";
        if not as_zenon_fact then
@@ -312,7 +312,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                     (type_descr.Env.TypeInformation.type_loc, field_name)) ;
              Format.fprintf out_fmter "%a :@ %a"
                Parsetree_utils.pp_vname_with_operators_expanded field_name
-               (Types.pp_type_simple_to_coq print_ctx) field_ty ;
+               (Coq_pprint.pp_type_simple_to_coq print_ctx) field_ty ;
              if q <> [] then Format.fprintf out_fmter ";" ;
              Format.fprintf out_fmter "@\n" ;
              local_print_fields q in

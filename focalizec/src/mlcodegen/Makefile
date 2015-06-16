@@ -18,7 +18,7 @@
 ROOT_DIR = ../../..
 
 # Must be defined before including Makefile.common since is used by it.
-BYT_OBJS = type_ml_generation.cmo	base_exprs_ml_generation.cmo \
+BYT_OBJS = ml_pprint.cmo type_ml_generation.cmo base_exprs_ml_generation.cmo \
 	species_ml_generation.cmo main_ml_generation.cmo
 
 include $(ROOT_DIR)/Makefile.common

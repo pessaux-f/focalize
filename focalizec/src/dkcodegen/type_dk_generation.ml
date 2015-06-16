@@ -46,7 +46,7 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
   List.iter
     (fun ty ->
       Format.fprintf out_fmter "(%a : cc.uT)@ "
-        (Types.pp_type_simple_to_dk print_ctx) ty)
+        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
     tys
 ;;
 
@@ -59,7 +59,7 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrow
   List.iter
     (fun ty ->
       Format.fprintf out_fmter "%a : cc.uT ->@ "
-        (Types.pp_type_simple_to_dk print_ctx) ty)
+        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
     tys
 ;;
 
@@ -71,7 +71,7 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_comma
   List.iter
     (fun ty ->
       Format.fprintf out_fmter "%a : cc.uT,@ "
-        (Types.pp_type_simple_to_dk print_ctx) ty)
+        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
     tys
 ;;
 
@@ -80,7 +80,7 @@ let print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_space
   List.iter
     (fun ty ->
       Format.fprintf out_fmter "%a@ "
-        (Types.pp_type_simple_to_dk print_ctx) ty)
+        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
     tys
 ;;
 
@@ -89,7 +89,7 @@ let print_types_parameters_with_arrows print_ctx out_fmter tys =
   List.iter
     (fun ty ->
       Format.fprintf out_fmter "cc.eT %a ->@ "
-        (Types.pp_type_simple_to_dk print_ctx) ty)
+        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
     tys
 ;;
 
@@ -98,7 +98,7 @@ let print_types_parameters_with_spaces print_ctx out_fmter tys =
   List.iter
     (fun ty ->
       Format.fprintf out_fmter "@ %a"
-        (Types.pp_type_simple_to_dk print_ctx) ty)
+        (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
     tys
 ;;
 
@@ -166,9 +166,9 @@ let generate_call_by_value_definition ctx env type_def_name type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
-    Types.dpc_current_unit = ctx.Context.rcc_current_unit ;
-    Types.dpc_current_species = None;
-    Types.dpc_collections_carrier_mapping =
+    Dk_pprint.dpc_current_unit = ctx.Context.rcc_current_unit ;
+    Dk_pprint.dpc_current_species = None;
+    Dk_pprint.dpc_collections_carrier_mapping =
       ctx.Context.rcc_collections_carrier_mapping } in
   (* We do not operate on a fresh instance of the type's identity scheme. We
      directly work on the type scheme, taking care to perform *no* unifications
@@ -260,9 +260,9 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
   let out_fmter = ctx.Context.rcc_out_fmter in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
-    Types.dpc_current_unit = ctx.Context.rcc_current_unit ;
-    Types.dpc_current_species = None;
-    Types.dpc_collections_carrier_mapping =
+    Dk_pprint.dpc_current_unit = ctx.Context.rcc_current_unit ;
+    Dk_pprint.dpc_current_species = None;
+    Dk_pprint.dpc_collections_carrier_mapping =
       ctx.Context.rcc_collections_carrier_mapping } in
   (* We do not operate on a fresh instance of the type's identity scheme. We
      directly work on the type scheme, taking care to perform *no* unifications
@@ -286,7 +286,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
           never at toplevel, hence we don't need to add any bindind in the
           [collection_carrier_mapping]. *)
        Format.fprintf out_fmter ":=@ %a.@]@\n"
-         (Types.pp_type_simple_to_dk print_ctx) tydef_body ;
+         (Dk_pprint.pp_type_simple_to_dk print_ctx) tydef_body ;
        if not as_zenon_fact then
          Env.DkGenEnv.add_type
            ~loc: type_descr.Env.TypeInformation.type_loc type_def_name
@@ -393,7 +393,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_arrows
              print_ctx out_fmter type_def_params;
            Format.fprintf out_fmter "cc.eT (@[<1>%a@])@]."
-             (Types.pp_type_simple_to_dk print_ctx) cstr_ty)
+             (Dk_pprint.pp_type_simple_to_dk print_ctx) cstr_ty)
          sum_constructors_to_print;
        (* And finally, the destructors. *)
        Format.fprintf out_fmter "@\n(; Destructors ;)";
@@ -423,7 +423,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           type_def_params
                           (fun out -> List.iteri (fun i -> Format.fprintf out "x_%d_ : cc.eT (%a),@ "
                                                        i
-                                                       (Types.pp_type_simple_to_dk print_ctx)))
+                                                       (Dk_pprint.pp_type_simple_to_dk print_ctx)))
                           cstr_args
                           (print_types_parameters_with_arrows print_ctx) cstr_args
                           qualif
@@ -444,7 +444,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           type_def_params
                           (fun out -> List.iteri (fun i -> Format.fprintf out "x_%d_ : cc.eT (%a),@ "
                                                        i
-                                                       (Types.pp_type_simple_to_dk print_ctx)))
+                                                       (Dk_pprint.pp_type_simple_to_dk print_ctx)))
                           curr_cstr_args
                           (print_types_parameters_with_arrows print_ctx) cstr_args
                           qualif
@@ -494,15 +494,15 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            List.iteri
              (fun i -> Format.fprintf out_fmter ",@ x_%d_ : cc.eT (%a)"
                                    i
-                                   (Types.pp_type_simple_to_dk print_ctx))
+                                   (Dk_pprint.pp_type_simple_to_dk print_ctx))
              cstr_args;
            Format.fprintf out_fmter "] call_by_value_%a__t@ "
                           Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
-           List.iter (Format.fprintf out_fmter "%a " (Types.pp_type_simple_to_dk print_ctx))
+           List.iter (Format.fprintf out_fmter "%a " (Dk_pprint.pp_type_simple_to_dk print_ctx))
                      type_def_params;
            Format.fprintf out_fmter "R@ f@ (%a"
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
-           List.iter (Format.fprintf out_fmter "@ %a" (Types.pp_type_simple_to_dk print_ctx))
+           List.iter (Format.fprintf out_fmter "@ %a" (Dk_pprint.pp_type_simple_to_dk print_ctx))
                      type_def_params;
            List.iteri
              (fun i ty -> Format.fprintf out_fmter "@ x_%d_" i)
@@ -510,7 +510,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            Format.fprintf out_fmter ")@ --> ";
            Format.fprintf out_fmter "f@ (%a"
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
-           List.iter (Format.fprintf out_fmter "@ %a" (Types.pp_type_simple_to_dk print_ctx))
+           List.iter (Format.fprintf out_fmter "@ %a" (Dk_pprint.pp_type_simple_to_dk print_ctx))
                      type_def_params;
            List.iteri
              (fun i ty -> Format.fprintf out_fmter "@ x_%d_" i)
@@ -590,7 +590,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                     (type_descr.Env.TypeInformation.type_loc, field_name)) ;
              Format.fprintf out_fmter "%a :@ %a"
                Parsetree_utils.pp_vname_with_operators_expanded field_name
-               (Types.pp_type_simple_to_dk print_ctx) field_ty ;
+               (Dk_pprint.pp_type_simple_to_dk print_ctx) field_ty ;
              if q <> [] then Format.fprintf out_fmter ";" ;
              Format.fprintf out_fmter "@\n" ;
              local_print_fields q in

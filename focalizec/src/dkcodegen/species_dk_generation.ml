@@ -58,7 +58,7 @@ let print_method_type ctx print_ctx env param out_fmter meth_type_kind =
   match meth_type_kind with
   | Parsetree_utils.DETK_computational meth_ty ->
      Format.fprintf out_fmter "cc.eT (%a)"
-       (Types.pp_type_simple_to_dk print_ctx) meth_ty
+       (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
   | Parsetree_utils.DETK_logical lexpr ->
      Format.fprintf out_fmter "dk_logic.eP (";
      Species_record_type_dk_generation.generate_logical_expr
@@ -87,13 +87,13 @@ let print_method_type ctx print_ctx env param out_fmter meth_type_kind =
    Section variables are passed to Zenon because it needs them for type inference. *)
 type section_variable =
   | SVType of string                                           (* Type *)
-  | SVTypeAlias of string * Types.type_simple * Types.dk_print_context
+  | SVTypeAlias of string * Types.type_simple * Dk_pprint.dk_print_context
                                                                (* Type alias *)
   | SVVar of                                                   (* Variable *)
       string *                  (* Prefix: empty string or module name *)
         Parsetree.vname *       (* Name of the variable *)
         Types.type_simple *     (* Type of the variable *)
-        Types.dk_print_context  (* Print context for the type *)
+        Dk_pprint.dk_print_context  (* Print context for the type *)
   | SVHyp of                                                   (* Hypothesis *)
       (* Whether the method is abstracted,
          gives the prefix and how to print the formula *)
@@ -517,9 +517,9 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
   (* Same thing for the printing comtext. *)
   let new_print_ctx = {
     print_ctx with
-      Types.dpc_collections_carrier_mapping =
+      Dk_pprint.dpc_collections_carrier_mapping =
         cc_mapping_extension @
-          print_ctx.Types.dpc_collections_carrier_mapping } in
+          print_ctx.Dk_pprint.dpc_collections_carrier_mapping } in
   (* Abstract according to the species's parameters the current method depends
      on. *)
   List.iter
@@ -570,7 +570,7 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
                     Parsetree_utils.pp_vname_with_operators_expanded
                     meth)
                   (fun out -> Format.fprintf out "cc.eT (%a)"
-                      (Types.pp_type_simple_to_dk new_print_ctx)
+                      (Dk_pprint.pp_type_simple_to_dk new_print_ctx)
                       meth_ty)
                   out_fmter;
             | Parsetree_utils.DETK_logical lexpr ->
@@ -614,6 +614,7 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
               account. *)
            match meth_dep with
            | Env.TypeInformation.MDEM_Defined_carrier sch ->
+
                let ty = Types.specialize sch in
                if in_section then
                  section_variable_list :=
@@ -624,7 +625,7 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
                else
                  print_defined_arg (fun out -> Format.fprintf out "abst_T")
                    (fun out -> Format.fprintf out "%a"
-                       (Types.pp_type_simple_to_dk new_print_ctx)
+                       (Dk_pprint.pp_type_simple_to_dk new_print_ctx)
                        ty)
                    out_fmter;
                (* Anything defined is not abstracted. *)
@@ -673,7 +674,7 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
                    (fun out -> Format.fprintf out "abst_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded n)
                    (fun out -> Format.fprintf out "cc.eT %a"
-                       (Types.pp_type_simple_to_dk new_print_ctx) ty)
+                       (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty)
                    out_fmter;
                [n]
            | Env.TypeInformation.MDEM_Declared_logical (n, b) ->
@@ -730,7 +731,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
   List.iter
     (fun var ->
       Format.fprintf out_fmter "@ (%a : cc.uT)"
-        Types.pp_type_variable_to_dk var)
+        Dk_pprint.pp_type_variable_to_dk var)
     generalized_vars ;
   let (params_with_type, ending_ty_opt, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
@@ -748,7 +749,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : cc.eT %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_dk print_ctx) param_ty
+             (Dk_pprint.pp_type_simple_to_dk print_ctx) param_ty
        | None ->
            Format.fprintf out_fmter "@ %a"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname)
@@ -771,7 +772,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
    | None -> ()) ;
   (* Now, we print the ending type of the method. *)
   Format.fprintf out_fmter " :@ cc.eT (%a) "
-    (Types.pp_type_simple_to_dk print_ctx) ending_ty ;
+    (Dk_pprint.pp_type_simple_to_dk print_ctx) ending_ty ;
   (* Generates the body's code of the method if some is provided.
      No local idents in the context because we just enter the scope of a species
      fields and so we are not under a core expression. Since we are generating
@@ -803,7 +804,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
 
 (* ************************************************************************* *)
 (* Context.species_compil_context ->                                         *)
-(*  Types.dk_print_context -> Env.DkGenEnv.t ->                            *)
+(*  Dk_pprint.dk_print_context -> Env.DkGenEnv.t ->                            *)
 (*    min_dk_env_element list -> Parsetree.vname list ->                    *)
 (*      (Parsetree.vname * Parsetree_utils.DepNameSet.t) list ->             *)
 (*        Parsetree.vname -> Parsetree.expr -> let_connect: let_connector -> *)
@@ -1390,7 +1391,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
             Format.fprintf out_fmter
-              " :@ cc.eT (%a).@]@\n" (Types.pp_type_simple_to_dk print_ctx) meth_ty
+              " :@ cc.eT (%a).@]@\n" (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
         | Env.MTK_logical lexpr ->
             Format.fprintf out_fmter
               "@[<2>";
@@ -1464,7 +1465,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               "@[<2>_p_%a_%a :@ cc.eT (%a).@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded param_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname
-              (Types.pp_type_simple_to_dk print_ctx)
+              (Dk_pprint.pp_type_simple_to_dk print_ctx)
               meth_ty
         | Parsetree_utils.DETK_logical lexpr ->
             (* Inside the logical expression of the method of the parameter
@@ -1523,7 +1524,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
             (* We just need to print the type of the method. *)
             let meth_ty = Types.specialize scheme in
             Format.fprintf out_fmter "@[<2>%s :@ cc.eT (%a).@]@\n"
-              name_for_zenon (Types.pp_type_simple_to_dk print_ctx) meth_ty
+              name_for_zenon (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
         | Env.DkGenInformation.VB_toplevel_property lexpr ->
             Format.fprintf out_fmter "@[<2>%s :@ dk_logic.eP (" name_for_zenon;
             (* Since the used definition is at toplevel, there is no abstraction
@@ -1560,7 +1561,7 @@ let zenonify_by_property ctx print_ctx env min_dk_env
                  let meth_ty = Types.specialize scheme in
                  Format.fprintf out_fmter "@[<2>abst_%a :@ cc.eT (%a).@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
-                   (Types.pp_type_simple_to_dk print_ctx) meth_ty
+                   (Dk_pprint.pp_type_simple_to_dk print_ctx) meth_ty
              | Env.TypeInformation.MDEM_Declared_logical (_, body)
              | Env.TypeInformation.MDEM_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
@@ -1661,9 +1662,9 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
              (match ty_expr.Parsetree.ast_type with
               | Parsetree.ANTI_type ty ->
                   Format.fprintf out_fmter "dk_logic.forall (%a) (%a :@ cc.eT (%a) =>@ "
-                    (Types.pp_type_simple_to_dk print_ctx) ty
+                    (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
                     Parsetree_utils.pp_vname_with_operators_expanded var_vname
-                    (Types.pp_type_simple_to_dk print_ctx) ty
+                    (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
               | _ -> assert false) ;
              rec_print q
              end)
@@ -1816,7 +1817,7 @@ let zenonify_hyp ctx print_ctx env ~sep hyp =
                current Dk Section. *)
             Format.fprintf out_fmter "@[<2>%a :@ cc.eT (%a) %s@ @]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded vname
-              (Types.pp_type_simple_to_dk print_ctx) ty sep;
+              (Dk_pprint.pp_type_simple_to_dk print_ctx) ty sep;
             section_variable_list :=
               SVVar ("", vname, ty, print_ctx) :: !section_variable_list
         | _ -> assert false
@@ -2143,7 +2144,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
          | SVTypeAlias (s, ty, ctx) ->
             Format.fprintf out_fmter "%%%%begin-type-alias: %s := %a@\n%%%%end-type-alias@\n"
                            s
-                           (Types.pp_type_simple_to_dk ctx) ty
+                           (Dk_pprint.pp_type_simple_to_dk ctx) ty
          | _ -> ())
        !section_variable_list;
        (* Now all other section variables *)
@@ -2155,7 +2156,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
             Format.fprintf out_fmter
               "%s%a :@ cc.eT %a.@\n"
               prefix Parsetree_utils.pp_vname_with_operators_expanded vname
-              (Types.pp_type_simple_to_dk pctx) ty
+              (Dk_pprint.pp_type_simple_to_dk pctx) ty
          | SVHyp (meth_status, vname, lexpr, sctx) -> ()
             (* let prefix = match meth_status with *)
             (*   | Species_record_type_dk_generation.SMS_abstracted -> "abst_" *)
@@ -2319,9 +2320,9 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
          cc_mapping_extension @ ctx.Context.scc_collections_carrier_mapping } in
        let print_ctx = {
          print_ctx with
-           Types.dpc_collections_carrier_mapping =
+           Dk_pprint.dpc_collections_carrier_mapping =
              cc_mapping_extension @
-               print_ctx.Types.dpc_collections_carrier_mapping } in
+               print_ctx.Dk_pprint.dpc_collections_carrier_mapping } in
        (* Create a unique name seed for Sections of this theorem. *)
        let section_name_seed =
          String.uppercase (Handy.int_to_base_26 (section_gen_sym ())) in
@@ -2346,7 +2347,7 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_dk_env
 
 
 (* ************************************************************************* *)
-(* Context.species_compil_context -> Types.dk_print_context ->              *)
+(* Context.species_compil_context -> Dk_pprint.dk_print_context ->              *)
 (*   Env.DkGenEnv.t -> min_dk_env_element list ->                          *)
 (*     compiled_species_fields list -> Parsetree.qualified_species ->        *)
 (*       Parsetree.vname -> Parsetree.logical_expr -> Parsetree.vname list   *)
@@ -2468,11 +2469,11 @@ let print_types_as_tuple_if_several print_ctx out_fmter types =
            we don't really print 1 unique type but several arbitrary type
            expressions we want to group as a tuple. *)
         Format.fprintf out_fmter "(%a)"
-          (Types.pp_type_simple_to_dk print_ctx) ty
+          (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
     | (_, ty) :: q ->
         (* Same remark than above for parentheses. *)
         Format.fprintf out_fmter "(%a)@ *@ "
-          (Types.pp_type_simple_to_dk print_ctx) ty ;
+          (Dk_pprint.pp_type_simple_to_dk print_ctx) ty ;
         rec_print q in
   match types with
    | [] -> assert false
@@ -2758,11 +2759,11 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        List.iter
          (fun (_, ty) ->
           Format.fprintf out_fmter "cc.eT (%a) ->@ "
-            (Types.pp_type_simple_to_dk new_print_ctx) ty)
+            (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty)
          params_with_type;
 
        Format.fprintf out_fmter "cc.eT (%a).@]@\n"
-         (Types.pp_type_simple_to_dk new_print_ctx) return_ty ;
+         (Dk_pprint.pp_type_simple_to_dk new_print_ctx) return_ty ;
 
        Format.fprintf out_fmter
          "@[<2>%a__%a@ : "
@@ -2779,22 +2780,22 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
        List.iter
          (fun (_, ty) ->
           Format.fprintf out_fmter "cc.eT (%a) ->@ "
-            (Types.pp_type_simple_to_dk new_print_ctx) ty)
+            (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty)
          params_with_type;
 
        Format.fprintf out_fmter "cc.eT (%a).@]@\n"
-         (Types.pp_type_simple_to_dk new_print_ctx) return_ty ;
+         (Dk_pprint.pp_type_simple_to_dk new_print_ctx) return_ty ;
 
        let rec print_list_param_with_type sep out = function
          | [] -> ()
          | [(a, ty)] ->
             Format.fprintf out "%a : cc.eT (%a)"
               Parsetree_utils.pp_vname_with_operators_expanded a
-              (Types.pp_type_simple_to_dk new_print_ctx) ty
+              (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty
          | (a, ty) :: l ->
             Format.fprintf out "%a : cc.eT (%a) %s@ %a"
               Parsetree_utils.pp_vname_with_operators_expanded a
-              (Types.pp_type_simple_to_dk new_print_ctx) ty
+              (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty
               sep
               (print_list_param_with_type sep) l
        in
@@ -2864,14 +2865,14 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          (fun (a, ty) ->
           Format.fprintf out_fmter "%a : cc.eT (%a) =>@ "
               Parsetree_utils.pp_vname_with_operators_expanded a
-              (Types.pp_type_simple_to_dk new_print_ctx) ty)
+              (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty)
          params_with_type;
 
        let rec print_cbv_types_as_arrows out = function
-         | [] -> Types.pp_type_simple_to_dk new_print_ctx out return_ty
+         | [] -> Dk_pprint.pp_type_simple_to_dk new_print_ctx out return_ty
          | ty :: l ->
             Format.fprintf out "(@[cc.Arrow %a %a@])"
-              (Types.pp_type_simple_to_dk new_print_ctx) ty
+              (Dk_pprint.pp_type_simple_to_dk new_print_ctx) ty
               print_cbv_types_as_arrows l
        in
 
@@ -2887,9 +2888,9 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
                       ai.Env.TypeInformation.ad_dependencies_from_parameters
                       generated_fields);
             Format.fprintf out "@]"
-         | (a, ty) :: l when Types.has_cbv ty ->
+         | (a, ty) :: l when Dk_pprint.has_cbv ty ->
             Format.fprintf out "@[%a@ %a@ (%a)@ %a@]"
-               (Types.pp_for_cbv_type_simple_to_dk new_print_ctx) ty
+               (Dk_pprint.pp_for_cbv_type_simple_to_dk new_print_ctx) ty
                print_cbv_types_as_arrows accu
                (print_cbv (ty :: accu)) l
                Parsetree_utils.pp_vname_with_operators_expanded a
@@ -3454,11 +3455,11 @@ let dump_collection_generator_arguments_for_params_methods
         ::
           ((ctx.Context.scc_current_unit, species_param_str_name),
          ("_p_" ^ species_param_str_name, Types.CCMI_is))
-        :: print_ctx.Types.dpc_collections_carrier_mapping
+        :: print_ctx.Dk_pprint.dpc_collections_carrier_mapping
       in
       let new_print_ctx =
         {print_ctx
-        with Types.dpc_collections_carrier_mapping =
+        with Dk_pprint.dpc_collections_carrier_mapping =
                coll_mapping}
       in
       let new_ctx =
@@ -3716,18 +3717,18 @@ let generate_collection_generator ctx print_ctx env compiled_species_fields
                | Env.MTK_computational s -> s | _ -> assert false) in
              let type_from_scheme = Types.specialize sch in
              let print_ctx = {
-               Types.dpc_current_unit = ctx.Context.scc_current_unit;
-               Types.dpc_current_species =
+               Dk_pprint.dpc_current_unit = ctx.Context.scc_current_unit;
+               Dk_pprint.dpc_current_species =
                Some
                  (Parsetree_utils.type_coll_from_qualified_species
                     ctx.Context.scc_current_species);
-               Types.dpc_collections_carrier_mapping =
+               Dk_pprint.dpc_collections_carrier_mapping =
                  (* Prefix all the "IS" mappings by "_p_" to use the parameters
                     declared in the collection generator's header. *)
                  make_carrier_mapping_using_lambda_lifts
                    ctx.Context.scc_collections_carrier_mapping } in
              Format.fprintf out_fmter "@[<2>(local_rep :=@ %a)@]@\n"
-               (Types.pp_type_simple_to_dk print_ctx) type_from_scheme
+               (Dk_pprint.pp_type_simple_to_dk print_ctx) type_from_scheme
            )
           else process_one_field field_memory
       | Misc_common.CSF_property field_memory
@@ -3845,12 +3846,12 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     else [] in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
-    Types.dpc_current_unit = ctxt_no_ccmap.Context.scc_current_unit;
-    Types.dpc_current_species =
+    Dk_pprint.dpc_current_unit = ctxt_no_ccmap.Context.scc_current_unit;
+    Dk_pprint.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctxt_no_ccmap.Context.scc_current_species);
-    Types.dpc_collections_carrier_mapping = [] } in
+    Dk_pprint.dpc_collections_carrier_mapping = [] } in
   (* Because we sometimes need to bind function parameters to their types
      with the function
      [MiscHelpers.bind_parameters_to_types_from_type_scheme], we must
@@ -4245,17 +4246,17 @@ let generate_rep_definition ctx fields =
                   Format.fprintf ctx.Context.scc_out_fmter "(%s : cc.uT) " h)
                 ctx.Context.scc_collections_carrier_mapping ;
               let print_ctx = {
-                Types.dpc_current_unit = ctx.Context.scc_current_unit ;
-                Types.dpc_current_species =
+                Dk_pprint.dpc_current_unit = ctx.Context.scc_current_unit ;
+                Dk_pprint.dpc_current_species =
                   Some
                     (Parsetree_utils.type_coll_from_qualified_species
                        ctx.Context.scc_current_species) ;
-                Types.dpc_collections_carrier_mapping =
+                Dk_pprint.dpc_collections_carrier_mapping =
                 ctx.Context.scc_collections_carrier_mapping } in
               (* Now, output the type's name and body. *)
               let ty = Types.specialize sch in
               Format.fprintf ctx.Context.scc_out_fmter ":=@ %a.@]@\n"
-                (Types.pp_type_simple_to_dk print_ctx) ty
+                (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
              )
             else rec_search q
         | _ -> rec_search q
@@ -4629,9 +4630,9 @@ let toplevel_theorem_compile ctx env theorem_def =
       Sourcify.pp_vname theorem_desc.Parsetree.th_name ;
   (* Make a print context with an empty mapping since we are at toplevel. *)
   let print_ctx = {
-    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.dpc_current_species = None ;
-    Types.dpc_collections_carrier_mapping =
+    Dk_pprint.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Dk_pprint.dpc_current_species = None ;
+    Dk_pprint.dpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
   (* No abstraction info to compute for toplevel theorems since there's no
      dependencies outside species !

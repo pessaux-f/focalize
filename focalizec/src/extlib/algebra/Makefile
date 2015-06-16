@@ -211,7 +211,7 @@ arrays_externals.vo: $(STDLIB_DIR)/basics.vo
 # End Should be generated ?
 
 depend:
-	../../focalizedep/focalizedep $(FOCALIZE_SRC) > .depend
+	../../focalizedep/focalizedep $(FOCALIZE_SRC) iterators.fcl > .depend
 	skdep $(EXTERNAL_DKOS:.dko=.sk) >> .depend
 .depend: depend
 

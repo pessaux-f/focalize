@@ -48,7 +48,7 @@ val generate_method_lambda_lifted_arguments :
 
 val generate_pattern :
   force_polymorphic_explicit_args: bool -> Context.species_compil_context ->
-    Types.coq_print_context ->
+    Coq_pprint.coq_print_context ->
     Env.CoqGenEnv.t -> Parsetree.pattern -> unit
 
 val generate_expr :

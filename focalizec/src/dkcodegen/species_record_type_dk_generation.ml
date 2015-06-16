@@ -585,9 +585,9 @@ let generate_simple_type_of_ast dkctx out_fmter a =
  | Parsetree.ANTI_irrelevant ->
     Format.fprintf out_fmter "irrelevant_type"
  | Parsetree.ANTI_scheme ts ->
-    Types.pp_type_simple_to_dk dkctx out_fmter (Types.specialize ts)
+    Dk_pprint.pp_type_simple_to_dk dkctx out_fmter (Types.specialize ts)
  | Parsetree.ANTI_type st ->
-    Types.pp_type_simple_to_dk dkctx out_fmter st
+    Dk_pprint.pp_type_simple_to_dk dkctx out_fmter st
 ;;
 
 (* ************************************************************************** *)
@@ -713,7 +713,7 @@ let generate_pattern ctx dkctx env pattern
         (begin
             match pat.Parsetree.ast_type with
             | Parsetree.ANTI_type t ->
-               Types.pp_type_simple_args_to_dk dkctx out_fmter t extras
+               Dk_pprint.pp_type_simple_args_to_dk dkctx out_fmter t extras
             | _ ->
                Format.fprintf out_fmter "(unknown_pattern_type %a)"
                               Parsetree_utils.pp_vname_with_operators_expanded
@@ -920,12 +920,12 @@ let rec let_binding_compile ctx ~opt_term_proof
     bd.Parsetree.ast_desc.Parsetree.b_name ;
   (* Build the print context. *)
   let print_ctx = {
-    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.dpc_current_species =
+    Dk_pprint.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Dk_pprint.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.dpc_collections_carrier_mapping =
+    Dk_pprint.dpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
   let generalized_vars = pre_computed_bd_info.lbpc_generalized_vars in
   (* If the original scheme is polymorphic, then we must add extra Dk
@@ -939,7 +939,7 @@ let rec let_binding_compile ctx ~opt_term_proof
   List.iter
     (fun var ->
       Format.fprintf out_fmter "@ (%a : cc.uT)"
-        Types.pp_type_variable_to_dk var)
+        Dk_pprint.pp_type_variable_to_dk var)
     generalized_vars ;
   let params_with_type = pre_computed_bd_info.lbpc_params_with_type in
   (* Now, generate each of the real function's parameter with its type. *)
@@ -949,7 +949,7 @@ let rec let_binding_compile ctx ~opt_term_proof
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : cc.eT %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_dk print_ctx) param_ty
+             (Dk_pprint.pp_type_simple_to_dk print_ctx) param_ty
        | None ->
            (* Because we provided a type scheme to the function
               [bind_parameters_to_types_from_type_scheme], MUST get one type
@@ -1042,7 +1042,7 @@ let rec let_binding_compile ctx ~opt_term_proof
        assert false
    | Some t ->
        Format.fprintf out_fmter "@ :@ cc.eT %a"
-         (Types.pp_type_simple_to_dk print_ctx) t
+         (Dk_pprint.pp_type_simple_to_dk print_ctx) t
   ) ;
   (* Output now the ":=" sign ending the Dk function's "header".
      With a NON-breakable space before to prevent uggly hyphenation ! *)
@@ -1156,12 +1156,12 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the dk type print context. *)
   let print_ctx = {
-    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.dpc_current_species =
+    Dk_pprint.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Dk_pprint.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.dpc_collections_carrier_mapping =
+    Dk_pprint.dpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
 
   let rec rec_generate_expr loc_idents env expression =
@@ -1192,7 +1192,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                   Types.extract_fun_ty_result ~self_manifest: None accu_ty in
                 Format.fprintf out_fmter "(%a :@ cc.eT %a)@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
-                  (Types.pp_type_simple_to_dk print_ctx) arg_ty ;
+                  (Dk_pprint.pp_type_simple_to_dk print_ctx) arg_ty ;
                 (* Return the remainder of the type to continue. *)
                 res_ty)
               fun_ty
@@ -1253,7 +1253,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
            assert (List.length type_arguments = nb_polymorphic_args);
            List.iter (fun st ->
                       Format.fprintf out_fmter "@ (%a)"
-                                     (Types.pp_type_simple_to_dk print_ctx) st
+                                     (Dk_pprint.pp_type_simple_to_dk print_ctx) st
                      )
                      type_arguments;
            (* Close the opened parenthesis if one was opened. *)
@@ -1275,7 +1275,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          (* Add the type arguments of the constructor. *)
          begin match expression.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
-             Types.pp_type_simple_args_to_dk print_ctx out_fmter t extras
+             Dk_pprint.pp_type_simple_args_to_dk print_ctx out_fmter t extras
          | _ -> assert false
          end;
          begin match args with
@@ -1325,7 +1325,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
             Format.fprintf out_fmter "@[<2>((%a : cc.eT %a =>@ %a)@ %a)@]"
               Parsetree_utils.pp_vname_with_operators_expanded
               fst_bnd.Parsetree.ast_desc.Parsetree.b_name
-              (Types.pp_type_simple_to_dk print_ctx)
+              (Dk_pprint.pp_type_simple_to_dk print_ctx)
               (match fst_pre_comp_info.lbpc_result_ty with
                | None -> assert false
                | Some t -> t)
@@ -1354,7 +1354,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
             expression type. *)
          (match expr.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
-             Types.pp_type_simple_args_to_dk print_ctx out_fmter t extras
+             Dk_pprint.pp_type_simple_args_to_dk print_ctx out_fmter t extras
          | _ -> assert false) ;
          Format.fprintf out_fmter ")@]"
         )
@@ -1428,7 +1428,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
     | Parsetree.ANTI_scheme _ ->
        assert false     (* An expression should have a meaningful type *)
     | Parsetree.ANTI_type st ->
-       Types.pp_type_simple_to_dk print_ctx out_fmter st
+       Dk_pprint.pp_type_simple_to_dk print_ctx out_fmter st
 
   and rec_generate_exprs_type_list ~comma loc_idents env = function
     | [] -> ()
@@ -1468,12 +1468,12 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the dk type print context. *)
   let print_ctx = {
-    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.dpc_current_species =
+    Dk_pprint.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Dk_pprint.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.dpc_collections_carrier_mapping =
+    Dk_pprint.dpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
 
   let rec rec_generate_logical_expr loc_idents env proposition =
@@ -1496,7 +1496,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          List.iter
            (fun var ->
              Format.fprintf out_fmter "dk_logic.forall_type (%a : cc.uT => @ "
-               Types.pp_type_variable_to_dk var)
+               Dk_pprint.pp_type_variable_to_dk var)
            generalized_vars ;
          (* Now, print the binder and the real bound variables. *)
          (match proposition.Parsetree.ast_desc with
@@ -1505,20 +1505,20 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
                 (fun vn ->
                  Format.fprintf out_fmter
                                 "dk_logic.forall (%a) (%s :@ cc.eT (%a)@ =>@ "
-                                (Types.pp_type_simple_to_dk print_ctx) ty
+                                (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
                                 (Parsetree_utils.vname_as_string_with_operators_expanded
                                    vn)
-                                (Types.pp_type_simple_to_dk print_ctx) ty)
+                                (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
                 vnames
           | Parsetree.Pr_exists (_, _, _) ->
               List.iter
                 (fun vn ->
                  Format.fprintf out_fmter
                                 "dk_logic.exists (%a) (%s :@ cc.eT (%a)@ =>@ "
-                                (Types.pp_type_simple_to_dk print_ctx) ty
+                                (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
                                 (Parsetree_utils.vname_as_string_with_operators_expanded
                                    vn)
-                                (Types.pp_type_simple_to_dk print_ctx) ty)
+                                (Dk_pprint.pp_type_simple_to_dk print_ctx) ty)
                 vnames
           | _ -> assert false) ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
@@ -1665,12 +1665,12 @@ let generate_record_type_parameters ctx env species_descr
      properties and theorems bodies. *)
   let species_parameters_names = ctx.Context.scc_species_parameters_names in
   let print_ctx = {
-    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.dpc_current_species =
+    Dk_pprint.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Dk_pprint.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-      Types.dpc_collections_carrier_mapping =
+      Dk_pprint.dpc_collections_carrier_mapping =
         ctx.Context.scc_collections_carrier_mapping } in
   (* We first build the lists of dependent methods for each property and
      theorem fields. *)
@@ -1741,7 +1741,7 @@ let generate_record_type_parameters ctx env species_descr
            | Parsetree_utils.DETK_computational ty ->
                Format.fprintf ppf "(%s : cc.eT %a)@ "
                               llift_name
-                              (Types.pp_type_simple_to_dk print_ctx)
+                              (Dk_pprint.pp_type_simple_to_dk print_ctx)
                               ty
            | Parsetree_utils.DETK_logical lexpr ->
                Format.fprintf ppf "(%s : cc.eP " llift_name ;
@@ -1819,12 +1819,12 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
     Context.scc_collections_carrier_mapping = collections_carrier_mapping } in
   (* Create the dk type print context with the context new bindings. *)
   let print_ctx = {
-    Types.dpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.dpc_current_species =
+    Dk_pprint.dpc_current_unit = ctx.Context.scc_current_unit ;
+    Dk_pprint.dpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.dpc_collections_carrier_mapping = collections_carrier_mapping } in
+    Dk_pprint.dpc_collections_carrier_mapping = collections_carrier_mapping } in
   (* Put a trailing semi only if there are other fields to generate. *)
   (match species_descr.Env.TypeInformation.spe_sig_methods with
    | [] -> ()
@@ -1849,7 +1849,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
           Format.fprintf out_fmter "@[<2>%a__rf_%a :@ cc.eT (%a)"
             Sourcify.pp_vname species_name
             Parsetree_utils.pp_vname_with_operators_expanded n
-            (Types.pp_type_simple_to_dk print_ctx) ty ;
+            (Dk_pprint.pp_type_simple_to_dk print_ctx) ty ;
           if semi then Format.fprintf out_fmter "," ;
           Format.fprintf out_fmter "@]@\n"
           end)
@@ -1864,7 +1864,7 @@ let generate_record_type ctx env species_descr field_abstraction_infos =
             Format.fprintf out_fmter "@[<2>%a__rf_%a : cc.eT (%a)"
               Sourcify.pp_vname species_name
               Parsetree_utils.pp_vname_with_operators_expanded n
-              (Types.pp_type_simple_to_dk print_ctx) ty ;
+              (Dk_pprint.pp_type_simple_to_dk print_ctx) ty ;
             if semi then Format.fprintf out_fmter "," ;
             Format.fprintf out_fmter "@]@\n")
           l

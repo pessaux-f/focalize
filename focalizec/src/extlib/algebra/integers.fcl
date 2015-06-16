@@ -22,9 +22,6 @@
 use "basics";;
 open "basics";;
 
-(* use "iterators";; *)
-(* open "iterators";; *)
-
 use "sets";;
 use "strict_orders";;
 use "orders_and_lattices";;

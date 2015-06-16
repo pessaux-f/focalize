@@ -304,7 +304,7 @@ let generate_binding_let ctx print_ctx env binding =
       List.iter
         (fun var ->
            Format.fprintf out_fmter "fun (%a : Set) =>@ "
-            Types.pp_type_variable_to_coq var)
+            Coq_pprint.pp_type_variable_to_coq var)
         generalized_instanciated_vars ;
       (* Now, generate each of the real function's parameter with its type. *)
       List.iter
@@ -313,7 +313,7 @@ let generate_binding_let ctx print_ctx env binding =
            | Some param_ty ->
                Format.fprintf out_fmter "fun (%a : %a) =>@ "
                  Parsetree_utils.pp_vname_with_operators_expanded param_vname
-                 (Types.pp_type_simple_to_coq print_ctx)
+                 (Coq_pprint.pp_type_simple_to_coq print_ctx)
                  param_ty
            | None ->
                (* Because we provided a type scheme to the function
@@ -380,7 +380,7 @@ let generate_variables_quantifications out_fmter print_ctx vars bindings =
     (fun (v, ty) ->
       Format.fprintf out_fmter "forall %a : %a,@ "
         Parsetree_utils.pp_vname_with_operators_expanded v
-        (Types.pp_type_simple_to_coq print_ctx) ty)
+        (Coq_pprint.pp_type_simple_to_coq print_ctx) ty)
     vars ;
   (* Now, quantify the variables bound in the bindings. *)
   List.iter
@@ -397,7 +397,7 @@ let generate_variables_quantifications out_fmter print_ctx vars bindings =
           Format.fprintf out_fmter "forall %a :@ %a,@ "
             Parsetree_utils.pp_vname_with_operators_expanded
             binding.Parsetree.ast_desc.Parsetree.b_name
-            (Types.pp_type_simple_to_coq print_ctx) ty
+            (Coq_pprint.pp_type_simple_to_coq print_ctx) ty
           end)
       | Recursion.B_match (_, pattern) ->
           (begin
@@ -412,7 +412,7 @@ let generate_variables_quantifications out_fmter print_ctx vars bindings =
                  | _ -> assert false) in
               Format.fprintf out_fmter "forall %a :@ %a,@ "
                 Parsetree_utils.pp_vname_with_operators_expanded v
-                (Types.pp_type_simple_to_coq print_ctx) t)
+                (Coq_pprint.pp_type_simple_to_coq print_ctx) t)
             bound_vars
           end)
       | Recursion.B_condition (_, _) ->

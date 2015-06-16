@@ -153,7 +153,7 @@ let toplevel_compile env ~current_unit out_fmter = function
   | Infer.PCM_coq_require _ ->
       env
   | Infer.PCM_species (species_def, species_descr, dep_graph, abstr_info) ->
-      Types.purge_type_simple_to_dk_variable_mapping () ;
+      Dk_pprint.purge_type_simple_to_dk_variable_mapping () ;
       let spe_binding_info =
         Species_dk_generation.species_compile
           ~current_unit env out_fmter species_def species_descr dep_graph
@@ -165,7 +165,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         species_def.Parsetree.ast_desc.Parsetree.sd_name
         spe_binding_info env
   | Infer.PCM_collection (collection_def, collection_descr, dep_graph) ->
-      Types.purge_type_simple_to_dk_variable_mapping () ;
+      Dk_pprint.purge_type_simple_to_dk_variable_mapping () ;
       (* Collections don't have parameters or any remaining abstraction.
          Collections do not have collection generator, then simply add them in
          the environment with None.
@@ -184,7 +184,7 @@ let toplevel_compile env ~current_unit out_fmter = function
          separatly. *)
       env
   | Infer.PCM_type (type_def_name, type_descr) ->
-      Types.purge_type_simple_to_dk_variable_mapping () ;
+      Dk_pprint.purge_type_simple_to_dk_variable_mapping () ;
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
         Context.rcc_current_unit = current_unit ;
@@ -203,7 +203,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       Type_dk_generation.type_def_compile
         ~as_zenon_fact: false ctx env type_def_name type_descr
   | Infer.PCM_let_def (let_def, _) ->
-      Types.purge_type_simple_to_dk_variable_mapping () ;
+      Dk_pprint.purge_type_simple_to_dk_variable_mapping () ;
       (* Create the initial context for compiling the let definition.
          We would not need a "full" context, a "reduced" one would be
          sufficient, but via [let_binding_compile], the function
@@ -225,7 +225,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       Format.fprintf out_fmter ".@\n@\n" ;
       env'
   | Infer.PCM_theorem (theorem_def, found_type_variables) ->
-      Types.purge_type_simple_to_dk_variable_mapping () ;
+      Dk_pprint.purge_type_simple_to_dk_variable_mapping () ;
       let ctx = {
         Context.scc_current_unit = current_unit ;
         (* Dummy, since not under a species. *)
@@ -258,7 +258,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         ~toplevel: (Some theorem_def.Parsetree.ast_loc)
         theorem_def.Parsetree.ast_desc.Parsetree.th_name env_binding env
   | Infer.PCM_expr expr ->
-      Types.purge_type_simple_to_dk_variable_mapping () ;
+      Dk_pprint.purge_type_simple_to_dk_variable_mapping () ;
       (* We compile toplevel expressions as "Strong normal form" orders under
          Dedukti. *)
       Format.fprintf out_fmter "@[<1>#SNF@ (" ;

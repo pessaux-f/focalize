@@ -34,7 +34,7 @@ exception Attempt_proof_by_unknown_step of
 
 val generate_defined_recursive_let_definition_With_Function :
   Context.species_compil_context ->
-  Types.coq_print_context ->
+  Coq_pprint.coq_print_context ->
   Env.CoqGenEnv.t ->
   self_manifest: Types.type_simple option ->
   Misc_common.compiled_species_fields list ->
@@ -49,7 +49,7 @@ val generate_defined_recursive_let_definition_With_Function :
 
 val generate_defined_recursive_let_definition_With_Fixpoint :
   Context.species_compil_context ->
-  Types.coq_print_context ->
+  Coq_pprint.coq_print_context ->
   Env.CoqGenEnv.t ->
   Misc_common.compiled_species_fields list ->
   Env.from_history ->

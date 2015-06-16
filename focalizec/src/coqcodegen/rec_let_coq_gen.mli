@@ -25,7 +25,7 @@ type order_kind =
        Parsetree.vname list)
 
 val generate_termination_lemmas :
-  Context.species_compil_context -> Types.coq_print_context ->
+  Context.species_compil_context -> Coq_pprint.coq_print_context ->
   Env.CoqGenEnv.t -> explicit_order: order_kind ->
   Recursion.recursive_calls_description ->
     unit

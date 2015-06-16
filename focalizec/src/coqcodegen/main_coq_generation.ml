@@ -94,12 +94,12 @@ let toplevel_let_def_compile ctx env let_def =
              | Parsetree.ANTI_scheme s -> s) in
            (* Build the print context. *)
            let print_ctx = {
-             Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-             Types.cpc_current_species =
+             Coq_pprint.cpc_current_unit = ctx.Context.scc_current_unit ;
+             Coq_pprint.cpc_current_species =
              Some
                (Parsetree_utils.type_coll_from_qualified_species
                   ctx.Context.scc_current_species) ;
-             Types.cpc_collections_carrier_mapping =
+             Coq_pprint.cpc_collections_carrier_mapping =
              ctx.Context.scc_collections_carrier_mapping } in
            (* Create a dummy "history" to give to the function. Since we are
               at toplevel, we are not processing a method, hence "it" does not
@@ -243,7 +243,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       Format.fprintf out_fmter "@[<2>Require@ %s@].@\n" fname ;
       env
   | Infer.PCM_species (species_def, species_descr, dep_graph, abstr_info) ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Coq_pprint.purge_type_simple_to_coq_variable_mapping () ;
       let spe_binding_info =
         Species_coq_generation.species_compile
           ~current_unit env out_fmter species_def species_descr dep_graph
@@ -255,7 +255,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         species_def.Parsetree.ast_desc.Parsetree.sd_name
         spe_binding_info env
   | Infer.PCM_collection (collection_def, collection_descr, dep_graph) ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Coq_pprint.purge_type_simple_to_coq_variable_mapping () ;
       (* Collections don't have parameters or any remaining abstraction.
          Collections do not have collection generator, then simply add them in
          the environment with None.
@@ -274,7 +274,7 @@ let toplevel_compile env ~current_unit out_fmter = function
          separatly. *)
       env
   | Infer.PCM_type (type_def_name, type_descr) ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Coq_pprint.purge_type_simple_to_coq_variable_mapping () ;
       (* Create the initial context for compiling the type definition. *)
       let ctx = {
         Context.rcc_current_unit = current_unit ;
@@ -293,7 +293,7 @@ let toplevel_compile env ~current_unit out_fmter = function
       Type_coq_generation.type_def_compile
         ~as_zenon_fact: false ctx env type_def_name type_descr
   | Infer.PCM_let_def (let_def, _) ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Coq_pprint.purge_type_simple_to_coq_variable_mapping () ;
       (* Create the initial context for compiling the let definition.
          We would not need a "full" context, a "reduced" one would be
          sufficient, but via [let_binding_compile], the function
@@ -313,7 +313,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         Context.scc_out_fmter = out_fmter } in
       toplevel_let_def_compile ctx env let_def
   | Infer.PCM_theorem (theorem_def, found_type_variables) ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Coq_pprint.purge_type_simple_to_coq_variable_mapping () ;
       let ctx = {
         Context.scc_current_unit = current_unit ;
         (* Dummy, since not under a species. *)
@@ -346,7 +346,7 @@ let toplevel_compile env ~current_unit out_fmter = function
         ~toplevel: (Some theorem_def.Parsetree.ast_loc)
         theorem_def.Parsetree.ast_desc.Parsetree.th_name env_binding env
   | Infer.PCM_expr expr ->
-      Types.purge_type_simple_to_coq_variable_mapping () ;
+      Coq_pprint.purge_type_simple_to_coq_variable_mapping () ;
       (* We compile toplevel expressions as "Check" orders under Coq. *)
       Format.fprintf out_fmter "@[<1>Check@ (" ;
       let ctx = {

@@ -434,9 +434,9 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
   (* Same thing for the printing comtext. *)
   let new_print_ctx = {
     print_ctx with
-      Types.cpc_collections_carrier_mapping =
+      Coq_pprint.cpc_collections_carrier_mapping =
         cc_mapping_extension @
-          print_ctx.Types.cpc_collections_carrier_mapping } in
+          print_ctx.Coq_pprint.cpc_collections_carrier_mapping } in
   (* Abstract according to the species's parameters the current method depends
      on. *)
   List.iter
@@ -461,7 +461,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
              | Parsetree_utils.DETK_computational meth_ty ->
                  Format.fprintf out_fmter "@[<2>Variable %s%a :@ %a.@]@\n"
                    prefix Parsetree_utils.pp_vname_with_operators_expanded meth
-                   (Types.pp_type_simple_to_coq new_print_ctx) meth_ty
+                   (Coq_pprint.pp_type_simple_to_coq new_print_ctx) meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
                     parameter "Self" must be printed as "_p_param_name_T". *)
@@ -495,7 +495,7 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
              | Parsetree_utils.DETK_computational meth_ty ->
                  Format.fprintf out_fmter "@ (%s%a :@ %a)"
                    prefix Parsetree_utils.pp_vname_with_operators_expanded meth
-                   (Types.pp_type_simple_to_coq new_print_ctx) meth_ty
+                   (Coq_pprint.pp_type_simple_to_coq new_print_ctx) meth_ty
              | Parsetree_utils.DETK_logical lexpr ->
                  (* Inside the logical expression of the method of the
                     parameter "Self" must be printed as "_p_param_name_T". *)
@@ -544,10 +544,10 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                let ty = Types.specialize sch in
                if in_section then
                  Format.fprintf out_fmter "Let abst_T := %a.@\n"
-                   (Types.pp_type_simple_to_coq new_print_ctx) ty
+                   (Coq_pprint.pp_type_simple_to_coq new_print_ctx) ty
                else
                  Format.fprintf out_fmter "@ (abst_T := %a)"
-                   (Types.pp_type_simple_to_coq new_print_ctx) ty ;
+                   (Coq_pprint.pp_type_simple_to_coq new_print_ctx) ty ;
                (* Anything defined is not abstracted. *)
                []
            | Env.TypeInformation.MCEM_Defined_computational (fr, _, n, _, _, _)
@@ -581,11 +581,11 @@ let generate_field_definition_prelude ~in_section ctx print_ctx env min_coq_env
                if in_section then
                  Format.fprintf out_fmter "@[<2>Variable abst_%a : %a.@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded n
-                   (Types.pp_type_simple_to_coq new_print_ctx) ty
+                   (Coq_pprint.pp_type_simple_to_coq new_print_ctx) ty
                else
                  Format.fprintf out_fmter "@ (abst_%a : %a)"
                    Parsetree_utils.pp_vname_with_operators_expanded n
-                   (Types.pp_type_simple_to_coq new_print_ctx) ty ;
+                   (Coq_pprint.pp_type_simple_to_coq new_print_ctx) ty ;
                [n]
            | Env.TypeInformation.MCEM_Declared_logical (n, b) ->
                if in_section then
@@ -637,7 +637,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
   List.iter
     (fun var ->
       Format.fprintf out_fmter "@ (%a : Set)"
-        Types.pp_type_variable_to_coq var)
+        Coq_pprint.pp_type_variable_to_coq var)
     generalized_vars ;
   let (params_with_type, ending_ty_opt, _) =
     MiscHelpers.bind_parameters_to_types_from_type_scheme
@@ -655,7 +655,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_coq print_ctx) param_ty
+             (Coq_pprint.pp_type_simple_to_coq print_ctx) param_ty
        | None ->
            Format.fprintf out_fmter "@ %a"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname)
@@ -678,7 +678,7 @@ let generate_defined_method_proto_postlude ctx print_ctx env
    | None -> ()) ;
   (* Now, we print the ending type of the method. *)
   Format.fprintf out_fmter " :@ %a "
-    (Types.pp_type_simple_to_coq print_ctx) ending_ty ;
+    (Coq_pprint.pp_type_simple_to_coq print_ctx) ending_ty ;
   (* Generates the body's code of the method if some is provided.
      No local idents in the context because we just enter the scope of a species
      fields and so we are not under a core expression. Since we are generating
@@ -1385,7 +1385,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               Parsetree_utils.pp_vname_with_operators_expanded topl_species_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname ;
             Format.fprintf out_fmter
-              " :@ %a.@]@\n" (Types.pp_type_simple_to_coq print_ctx) meth_ty
+              " :@ %a.@]@\n" (Coq_pprint.pp_type_simple_to_coq print_ctx) meth_ty
         | Env.MTK_logical lexpr ->
             Format.fprintf out_fmter
               "@[<2>Parameter ";
@@ -1459,7 +1459,7 @@ let zenonify_by_property_when_qualified_method ctx print_ctx env
               "@[<2>Parameter _p_%a_%a :@ %a.@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded param_name
               Parsetree_utils.pp_vname_with_operators_expanded meth_vname
-              (Types.pp_type_simple_to_coq print_ctx)
+              (Coq_pprint.pp_type_simple_to_coq print_ctx)
               meth_ty
         | Parsetree_utils.DETK_logical lexpr ->
             (* Inside the logical expression of the method of the parameter
@@ -1518,7 +1518,7 @@ let zenonify_by_property ctx print_ctx env min_coq_env
             (* We just need to print the type of the method. *)
             let meth_ty = Types.specialize scheme in
             Format.fprintf out_fmter "@[<2>Parameter %s :@ %a.@]@\n"
-              name_for_zenon (Types.pp_type_simple_to_coq print_ctx) meth_ty
+              name_for_zenon (Coq_pprint.pp_type_simple_to_coq print_ctx) meth_ty
         | Env.CoqGenInformation.VB_toplevel_property lexpr ->
             Format.fprintf out_fmter "@[<2>Parameter %s :@ " name_for_zenon;
             (* Since the used definition is at toplevel, there is no abstraction
@@ -1556,7 +1556,7 @@ let zenonify_by_property ctx print_ctx env min_coq_env
                  let meth_ty = Types.specialize scheme in
                  Format.fprintf out_fmter "@[<2>Parameter abst_%a :@ %a.@]@\n"
                    Parsetree_utils.pp_vname_with_operators_expanded vname
-                   (Types.pp_type_simple_to_coq print_ctx) meth_ty
+                   (Coq_pprint.pp_type_simple_to_coq print_ctx) meth_ty
              | Env.TypeInformation.MCEM_Declared_logical (_, body)
              | Env.TypeInformation.MCEM_Defined_logical (_, _, body) ->
                  (* A bit of comment. *)
@@ -1656,7 +1656,7 @@ let add_quantifications_and_implications ctx print_ctx env avail_info =
               | Parsetree.ANTI_type ty ->
                   Format.fprintf out_fmter "forall %a :@ %a,@ "
                     Parsetree_utils.pp_vname_with_operators_expanded var_vname
-                    (Types.pp_type_simple_to_coq print_ctx) ty
+                    (Coq_pprint.pp_type_simple_to_coq print_ctx) ty
               | _ -> assert false) ;
              rec_print q
             )
@@ -1786,7 +1786,7 @@ let zenonify_hyp ctx print_ctx env hyp =
                current Coq Section. *)
             Format.fprintf out_fmter "@[<2>Variable %a :@ %a.@]@\n"
               Parsetree_utils.pp_vname_with_operators_expanded vname
-              (Types.pp_type_simple_to_coq print_ctx) ty
+              (Coq_pprint.pp_type_simple_to_coq print_ctx) ty
         | _ -> assert false
       )
    | Parsetree.H_hypothesis (vname, logical_expr) ->
@@ -2326,9 +2326,9 @@ let generate_theorem_section_if_by_zenon ctx print_ctx env min_coq_env
          cc_mapping_extension @ ctx.Context.scc_collections_carrier_mapping } in
        let print_ctx = {
          print_ctx with
-           Types.cpc_collections_carrier_mapping =
+           Coq_pprint.cpc_collections_carrier_mapping =
              cc_mapping_extension @
-               print_ctx.Types.cpc_collections_carrier_mapping } in
+               print_ctx.Coq_pprint.cpc_collections_carrier_mapping } in
        (* Create a unique name seed for Sections of this theorem. *)
        let section_name_seed =
          String.uppercase (Handy.int_to_base_26 (section_gen_sym ())) in
@@ -2538,11 +2538,11 @@ let print_types_as_tuple_if_several print_ctx out_fmter types =
            we don't really print 1 unique type but several arbitrary type
            expressions we want to group as a tuple. *)
         Format.fprintf out_fmter "(%a)"
-          (Types.pp_type_simple_to_coq print_ctx) ty
+          (Coq_pprint.pp_type_simple_to_coq print_ctx) ty
     | (_, ty) :: q ->
         (* Same remark than above for parentheses. *)
         Format.fprintf out_fmter "(%a)@ *@ "
-          (Types.pp_type_simple_to_coq print_ctx) ty ;
+          (Coq_pprint.pp_type_simple_to_coq print_ctx) ty ;
         rec_print q in
   match types with
    | [] -> assert false
@@ -3124,7 +3124,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          abstracted_methods ;
        Format.fprintf out_fmter ")@ __arg}" ;
        Format.fprintf out_fmter ":@ %a@ :=@\n"
-         (Types.pp_type_simple_to_coq new_print_ctx) return_ty ;
+         (Coq_pprint.pp_type_simple_to_coq new_print_ctx) return_ty ;
        (* Unfortunately, we can't simply generate "let (x, y, ..) := __arg"
           because Coq only allows pairs as let-binding pattern. So instead,
           we generate a "match". *)
@@ -4035,18 +4035,18 @@ let generate_collection_coq_generator ctx env compiled_species_fields
                | Env.MTK_computational s -> s | _ -> assert false) in
              let type_from_scheme = Types.specialize sch in
              let print_ctx = {
-               Types.cpc_current_unit = ctx.Context.scc_current_unit;
-               Types.cpc_current_species =
+               Coq_pprint.cpc_current_unit = ctx.Context.scc_current_unit;
+               Coq_pprint.cpc_current_species =
                Some
                  (Parsetree_utils.type_coll_from_qualified_species
                     ctx.Context.scc_current_species);
-               Types.cpc_collections_carrier_mapping =
+               Coq_pprint.cpc_collections_carrier_mapping =
                  (* Prefix all the "IS" mappings by "_p_" to use the parameters
                     declared in the collection generator's header. *)
                  make_carrier_mapping_using_lambda_lifts
                    ctx.Context.scc_collections_carrier_mapping } in
              Format.fprintf out_fmter "@[<2>let local_rep :=@ %a in@]@\n"
-               (Types.pp_type_simple_to_coq print_ctx) type_from_scheme
+               (Coq_pprint.pp_type_simple_to_coq print_ctx) type_from_scheme
            )
           else process_one_field field_memory
       | Misc_common.CSF_property field_memory
@@ -4162,12 +4162,12 @@ let species_compile env ~current_unit out_fmter species_def species_descr
     else [] in
   (* Build the print context for the methods once for all. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctxt_no_ccmap.Context.scc_current_unit;
-    Types.cpc_current_species =
+    Coq_pprint.cpc_current_unit = ctxt_no_ccmap.Context.scc_current_unit;
+    Coq_pprint.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctxt_no_ccmap.Context.scc_current_species);
-    Types.cpc_collections_carrier_mapping = [] } in
+    Coq_pprint.cpc_collections_carrier_mapping = [] } in
   (* Because we sometimes need to bind function parameters to their types
      with the function
      [MiscHelpers.bind_parameters_to_types_from_type_scheme], we must
@@ -4560,17 +4560,17 @@ let generate_rep_definition ctx fields =
                   Format.fprintf ctx.Context.scc_out_fmter "(%s : Set) " h)
                 ctx.Context.scc_collections_carrier_mapping ;
               let print_ctx = {
-                Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-                Types.cpc_current_species =
+                Coq_pprint.cpc_current_unit = ctx.Context.scc_current_unit ;
+                Coq_pprint.cpc_current_species =
                   Some
                     (Parsetree_utils.type_coll_from_qualified_species
                        ctx.Context.scc_current_species) ;
-                Types.cpc_collections_carrier_mapping =
+                Coq_pprint.cpc_collections_carrier_mapping =
                 ctx.Context.scc_collections_carrier_mapping } in
               (* Now, output the type's name and body. *)
               let ty = Types.specialize sch in
               Format.fprintf ctx.Context.scc_out_fmter ":=@ %a.@]@\n"
-                (Types.pp_type_simple_to_coq print_ctx) ty
+                (Coq_pprint.pp_type_simple_to_coq print_ctx) ty
              )
             else rec_search q
         | _ -> rec_search q
@@ -4950,9 +4950,9 @@ let toplevel_theorem_compile ctx env theorem_def =
       Sourcify.pp_vname theorem_desc.Parsetree.th_name ;
   (* Make a print context with an empty mapping since we are at toplevel. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species = None ;
-    Types.cpc_collections_carrier_mapping =
+    Coq_pprint.cpc_current_unit = ctx.Context.scc_current_unit ;
+    Coq_pprint.cpc_current_species = None ;
+    Coq_pprint.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
   (* No abstraction info to compute for toplevel theorems since there's no
      dependencies outside species !

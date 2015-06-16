@@ -460,7 +460,7 @@ let rec let_binding_compile ctx ~local_idents env bd opt_sch =
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_ml
+             (Ml_pprint.pp_type_simple_to_ml
                 ~current_unit: ctx.Context.rcc_current_unit
                 ctx.Context.rcc_collections_carrier_mapping)
              param_ty

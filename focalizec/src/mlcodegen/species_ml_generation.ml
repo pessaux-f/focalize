@@ -141,7 +141,7 @@ let generate_rep_definition ctx fields =
                let ty = Types.specialize sch in
                Format.fprintf ctx.Context.scc_out_fmter
                  "me_as_carrier =@ %a@]@\n"
-                 (Types.pp_type_simple_to_ml
+                 (Ml_pprint.pp_type_simple_to_ml
                     ~current_unit: ctx.Context.scc_current_unit
                     ctx.Context.scc_collections_carrier_mapping)
                  ty
@@ -233,7 +233,7 @@ let generate_record_type ctx species_descr =
                  and we don't need to keep name sharing with anythin else. *)
               Format.fprintf out_fmter "@[<2>rf_%a : %a ;@]@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
-                (Types.pp_type_simple_to_ml
+                (Ml_pprint.pp_type_simple_to_ml
                    ~current_unit: ctx.Context.scc_current_unit
                    collections_carrier_mapping)
                 ty
@@ -255,7 +255,7 @@ let generate_record_type ctx species_descr =
                    and we don't need to keep name sharing with anythin else. *)
                 Format.fprintf out_fmter "@[<2>rf_%a : %a ;@]@\n"
                   Parsetree_utils.pp_vname_with_operators_expanded n
-                  (Types.pp_type_simple_to_ml
+                  (Ml_pprint.pp_type_simple_to_ml
                      ~current_unit: ctx.Context.scc_current_unit
                      collections_carrier_mapping)
                     ty
@@ -334,7 +334,7 @@ let generate_collection_module_interface ctx collection_descr =
                  and we don't need to keep name sharing with anythin else. *)
               Format.fprintf out_fmter "@[<2>val %a : %a@]@\n"
                 Parsetree_utils.pp_vname_with_operators_expanded n
-                (Types.pp_type_simple_to_ml
+                (Ml_pprint.pp_type_simple_to_ml
                    ~current_unit: ctx.Context.scc_current_unit
                    collections_carrier_mapping)
                 ty
@@ -355,7 +355,7 @@ let generate_collection_module_interface ctx collection_descr =
                    and we don't need to keep name sharing with anythin else. *)
                 Format.fprintf out_fmter "@[<2>val %a : %a@]@\n"
                   Parsetree_utils.pp_vname_with_operators_expanded n
-                  (Types.pp_type_simple_to_ml
+                  (Ml_pprint.pp_type_simple_to_ml
                      ~current_unit: ctx.Context.scc_current_unit
                      collections_carrier_mapping)
                     ty
@@ -540,7 +540,7 @@ let generate_ml_one_field_binding ctx env min_coq_env ~let_connect ~self_manifes
          | Some param_ty ->
              Format.fprintf out_fmter "@ (%a : %a)"
                Parsetree_utils.pp_vname_with_operators_expanded param_vname
-               (Types.pp_type_simple_to_ml
+               (Ml_pprint.pp_type_simple_to_ml
                   ~current_unit: ctx.Context.scc_current_unit
                   collections_carrier_mapping)
                param_ty

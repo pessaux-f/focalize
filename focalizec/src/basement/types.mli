@@ -19,7 +19,7 @@
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string
 type collection_name = string
-type type_name
+type type_name = fname * string
 
 (** The type algebra for focalize. *)
 type type_variable
@@ -85,6 +85,7 @@ val type_list : type_simple -> type_simple
 val type_prop : unit -> type_simple
 val type_rep_species :
   species_module: fname -> species_name: collection_name -> type_simple
+val is_generalized_type_variable : type_variable -> bool
 (** Generate the carrier type of the currently analysed species. *)
 val type_self : unit -> type_simple
 val is_bool_or_self_type : type_simple -> bool
@@ -163,53 +164,6 @@ type collection_carrier_mapping =
   (type_collection * (string * collection_carrier_mapping_info)) list
 
 val debug_collection_carrier_mapping : collection_carrier_mapping -> unit
-
-
-(** Pretty_printing for types for the OCaml translation. *)
-val pp_type_simple_to_ml :
-  current_unit: fname -> collection_carrier_mapping -> Format.formatter ->
-  type_simple ->
-    unit
-
-val purge_type_simple_to_ml_variable_mapping : unit -> unit
-
-(** Pretty_printing for types for the Coq translation. *)
-type coq_print_context = {
-  cpc_current_unit : fname ;
-  cpc_current_species : type_collection option ;
-  cpc_collections_carrier_mapping : collection_carrier_mapping
-}
-
-
-val pp_type_simple_to_coq :
-  coq_print_context -> Format.formatter -> type_simple -> unit
-val pp_type_variable_to_coq : Format.formatter -> type_variable -> unit
-val pp_type_simple_args_to_coq :
-  coq_print_context -> Format.formatter -> type_simple -> int -> unit
-
-val purge_type_simple_to_coq_variable_mapping : unit -> unit
-(* DEBUG
-val debug_variable_mapping : unit -> unit *)
-
-
-(** Pretty_printing for types for the Dedukti translation. *)
-type dk_print_context = {
-  dpc_current_unit : fname ;
-  dpc_current_species : type_collection option ;
-  dpc_collections_carrier_mapping : collection_carrier_mapping
-}
-
-
-val pp_type_simple_to_dk :
-  dk_print_context -> Format.formatter -> type_simple -> unit
-val pp_type_variable_to_dk : Format.formatter -> type_variable -> unit
-val pp_type_simple_args_to_dk :
-  dk_print_context -> Format.formatter -> type_simple -> int -> unit
-val has_cbv : type_simple -> bool
-val pp_for_cbv_type_simple_to_dk :
-  dk_print_context -> Format.formatter -> type_simple -> unit
-
-val purge_type_simple_to_dk_variable_mapping : unit -> unit
 
 module SpeciesCarrierTypeSet :
   sig

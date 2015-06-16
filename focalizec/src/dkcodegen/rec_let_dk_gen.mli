@@ -24,7 +24,7 @@ type order_kind =
        Parsetree.vname list)
 
 val generate_termination_lemmas :
-  Context.species_compil_context -> Types.dk_print_context ->
+  Context.species_compil_context -> Dk_pprint.dk_print_context ->
   Env.DkGenEnv.t -> explicit_order: order_kind ->
   Recursion.recursive_calls_description ->
     unit

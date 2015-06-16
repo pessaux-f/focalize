@@ -545,7 +545,7 @@ let generate_pattern ~force_polymorphic_explicit_args ctx coqctx env pattern =
              (* Add the type arguments of the constructor. *)
              match pat.Parsetree.ast_type with
              | Parsetree.ANTI_type t ->
-                 Types.pp_type_simple_args_to_coq coqctx out_fmter t extras
+                 Coq_pprint.pp_type_simple_args_to_coq coqctx out_fmter t extras
              | _ -> assert false
           ) ;
          (* In "match" patterns, extra arguments of the constructor due to
@@ -706,12 +706,12 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
     bd.Parsetree.ast_desc.Parsetree.b_name ;
   (* Build the print context. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species =
+    Coq_pprint.cpc_current_unit = ctx.Context.scc_current_unit ;
+    Coq_pprint.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.cpc_collections_carrier_mapping =
+    Coq_pprint.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
   let generalized_vars = pre_computed_bd_info.lbpc_generalized_vars in
   (* If the original scheme is polymorphic, then we must add extra Coq
@@ -725,7 +725,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
   List.iter
     (fun var ->
       Format.fprintf out_fmter "@ (%a : Set)"
-        Types.pp_type_variable_to_coq var)
+        Coq_pprint.pp_type_variable_to_coq var)
     generalized_vars ;
   let params_with_type = pre_computed_bd_info.lbpc_params_with_type in
   (* Now, generate each of the real function's parameter with its type. *)
@@ -735,7 +735,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
        | Some param_ty ->
            Format.fprintf out_fmter "@ (%a : %a)"
              Parsetree_utils.pp_vname_with_operators_expanded param_vname
-             (Types.pp_type_simple_to_coq print_ctx) param_ty
+             (Coq_pprint.pp_type_simple_to_coq print_ctx) param_ty
        | None ->
            (* Because we provided a type scheme to the function
               [bind_parameters_to_types_from_type_scheme], MUST get one type
@@ -828,7 +828,7 @@ let rec let_binding_compile ctx ~binder ~opt_term_proof
        assert false
    | Some t ->
        Format.fprintf out_fmter "@ :@ %a"
-         (Types.pp_type_simple_to_coq print_ctx) t
+         (Coq_pprint.pp_type_simple_to_coq print_ctx) t
   ) ;
   (* Output now the ":=" sign ending the Coq function's "header".
      With a NON-breakable space before to prevent uggly hyphenation ! *)
@@ -949,12 +949,12 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species =
+    Coq_pprint.cpc_current_unit = ctx.Context.scc_current_unit ;
+    Coq_pprint.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.cpc_collections_carrier_mapping =
+    Coq_pprint.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
 
   let rec rec_generate_expr loc_idents env expression =
@@ -985,7 +985,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
                   Types.extract_fun_ty_result ~self_manifest: None accu_ty in
                 Format.fprintf out_fmter "(%a :@ %a)@ "
                   Parsetree_utils.pp_vname_with_operators_expanded arg_name
-                  (Types.pp_type_simple_to_coq print_ctx) arg_ty ;
+                  (Coq_pprint.pp_type_simple_to_coq print_ctx) arg_ty ;
                 (* Return the remainder of the type to continue. *)
                 res_ty)
               fun_ty
@@ -1038,7 +1038,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
          (* Add the type arguments of the constructor. *)
          (match expression.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
-             Types.pp_type_simple_args_to_coq print_ctx out_fmter t extras
+             Coq_pprint.pp_type_simple_args_to_coq print_ctx out_fmter t extras
          | _ -> assert false) ;
          (match args with
           | [] -> ()
@@ -1097,7 +1097,7 @@ and generate_expr ctx ~in_recursive_let_section_of ~local_idents
             expression type. *)
          (match expr.Parsetree.ast_type with
          | Parsetree.ANTI_type t ->
-             Types.pp_type_simple_args_to_coq print_ctx out_fmter t extras
+             Coq_pprint.pp_type_simple_args_to_coq print_ctx out_fmter t extras
          | _ -> assert false) ;
          Format.fprintf out_fmter ")@]"
         )
@@ -1187,12 +1187,12 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Create the coq type print context. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species =
+    Coq_pprint.cpc_current_unit = ctx.Context.scc_current_unit ;
+    Coq_pprint.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.cpc_collections_carrier_mapping =
+    Coq_pprint.cpc_collections_carrier_mapping =
       ctx.Context.scc_collections_carrier_mapping } in
 
   let rec rec_generate_logical_expr loc_idents env proposition =
@@ -1215,7 +1215,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
          List.iter
            (fun var ->
              Format.fprintf out_fmter "forall %a : Set,@ "
-               Types.pp_type_variable_to_coq var)
+               Coq_pprint.pp_type_variable_to_coq var)
            generalized_vars ;
          (* In Coq, we must write: "forall x y : Set, ..."
             but "exists x : Set, exists y : Set, ..." so just change the way
@@ -1231,7 +1231,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
                        (Parsetree_utils.vname_as_string_with_operators_expanded
                           vn)))
                 vnames
-                (Types.pp_type_simple_to_coq print_ctx) ty
+                (Coq_pprint.pp_type_simple_to_coq print_ctx) ty
           | Parsetree.Pr_exists (_, _, _) ->
               (* Now, print the real bound variables. *)
               List.iter
@@ -1239,7 +1239,7 @@ let generate_logical_expr ctx ~in_recursive_let_section_of ~local_idents
                   Format.fprintf out_fmter "exists %s :@ %a,@ "
                     (Parsetree_utils.vname_as_string_with_operators_expanded
                        vn)
-                    (Types.pp_type_simple_to_coq print_ctx) ty)
+                    (Coq_pprint.pp_type_simple_to_coq print_ctx) ty)
                 vnames
           | _ -> assert false) ;
          (* Here, the bound variables name may mask a "in"-parameter. *)
@@ -1379,12 +1379,12 @@ let generate_record_type_parameters ctx env species_descr
      properties and theorems bodies. *)
   let species_parameters_names = ctx.Context.scc_species_parameters_names in
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species =
+    Coq_pprint.cpc_current_unit = ctx.Context.scc_current_unit ;
+    Coq_pprint.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-      Types.cpc_collections_carrier_mapping =
+      Coq_pprint.cpc_collections_carrier_mapping =
         ctx.Context.scc_collections_carrier_mapping } in
   (* We first build the lists of dependent methods for each property and
      theorem fields. *)
@@ -1455,7 +1455,7 @@ let generate_record_type_parameters ctx env species_descr
            | Parsetree_utils.DETK_computational ty ->
                Format.fprintf ppf "(%s : %a)@ "
                  llift_name
-                 (Types.pp_type_simple_to_coq print_ctx)
+                 (Coq_pprint.pp_type_simple_to_coq print_ctx)
                  ty
            | Parsetree_utils.DETK_logical lexpr ->
                Format.fprintf ppf "(%s : " llift_name ;
@@ -1527,12 +1527,12 @@ let generate_record_type ctx env species_descr fields_abstraction_infos =
     Context.scc_collections_carrier_mapping = collections_carrier_mapping } in
   (* Create the coq type print context with the context new bindings. *)
   let print_ctx = {
-    Types.cpc_current_unit = ctx.Context.scc_current_unit ;
-    Types.cpc_current_species =
+    Coq_pprint.cpc_current_unit = ctx.Context.scc_current_unit ;
+    Coq_pprint.cpc_current_species =
       Some
         (Parsetree_utils.type_coll_from_qualified_species
            ctx.Context.scc_current_species) ;
-    Types.cpc_collections_carrier_mapping = collections_carrier_mapping } in
+    Coq_pprint.cpc_collections_carrier_mapping = collections_carrier_mapping } in
   (* Put a trailing semi only if there are other fields to generate. *)
   (match species_descr.Env.TypeInformation.spe_sig_methods with
    | [] -> ()
@@ -1556,7 +1556,7 @@ let generate_record_type ctx env species_descr fields_abstraction_infos =
           (* Field is prefixed by the species name for sake of unicity. *)
           Format.fprintf out_fmter "@[<2>rf_%a : %a"
             Parsetree_utils.pp_vname_with_operators_expanded n
-            (Types.pp_type_simple_to_coq print_ctx) ty ;
+            (Coq_pprint.pp_type_simple_to_coq print_ctx) ty ;
           if semi then Format.fprintf out_fmter " ;" ;
           Format.fprintf out_fmter "@]@\n"
           end)
@@ -1570,7 +1570,7 @@ let generate_record_type ctx env species_descr fields_abstraction_infos =
             (* Field is prefixed by the species name for sake of unicity. *)
             Format.fprintf out_fmter "@[<2>rf_%a : %a"
               Parsetree_utils.pp_vname_with_operators_expanded n
-              (Types.pp_type_simple_to_coq print_ctx) ty ;
+              (Coq_pprint.pp_type_simple_to_coq print_ctx) ty ;
             if semi then Format.fprintf out_fmter " ;" ;
             Format.fprintf out_fmter "@]@\n")
           l
