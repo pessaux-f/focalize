@@ -67,7 +67,7 @@ type string =
   external
   | caml -> {* string *}
   | coq -> {* string *}  (* From the Ascii module. *)
-  | dedukti -> {* string. call_by_value_string__t := dk_int.call_by_value_string *}
+  | dedukti -> {* string. call_by_value_string__t := dk_string.call_by_value_string *}
 ;;
 
 type bool =

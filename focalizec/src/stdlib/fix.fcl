@@ -176,19 +176,19 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
   signature inductive_second_term: Self -> Self;
 
   (** This should enable to prove basic properties *)
-  let equal(x, y) = true
-(* ASSUMED     if !base_case(x) *)
-(* ASSUMED     then *)
-(* ASSUMED       if !base_case(y) *)
-(* ASSUMED       then A!equal(!base_term(x), !base_term(y)) *)
-(* ASSUMED       else false *)
-(* ASSUMED     else *)
-(* ASSUMED       if !base_case(y)*)
-(* ASSUMED       then false *)
-(* ASSUMED       else (* both inductive cases *) *)
-(* ASSUMED         if B!equal(!inductive_first_term(x), !inductive_first_term(y)) *)
-(* ASSUMED         then !equal(!inductive_second_term(x), !inductive_second_term(y)) *)
-(* ASSUMED         else false *)
+  let rec equal(x, y) =
+     if !base_case(x)
+     then
+       if !base_case(y)
+       then A!equal(!base_term(x), !base_term(y))
+       else false
+     else
+       if !base_case(y)
+       then false
+       else (* both inductive cases *)
+         if B!equal(!inductive_first_term(x), !inductive_first_term(y))
+         then !equal(!inductive_second_term(x), !inductive_second_term(y))
+         else false
   ;
 
   (** base constructor has functional property *)
@@ -317,8 +317,8 @@ species Linear_fixed_set(A is Setoid, B is Setoid) =
 
   (** Wow! Nice theorem, chose another name for your's *)
   theorem element_is_same: !equal(!element, !element)
-    proof = by property !base_has_case, A!equal_reflexive
-               definition of element, equal;
+    proof = by property !base_has_case, A!equal_reflexive, !base_substitution_rule
+               definition of element;
 
   (** Not to be used later, just a tease *)
   theorem structural_equal_inductive: all x y : Self,
