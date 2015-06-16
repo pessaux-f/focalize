@@ -59,30 +59,40 @@ let generic_level = 100000000 ;;
 
 (* **************************************************** *)
 (** {b Descr} : Describes the type algebra of FoCaLize.
+    Actually, this is a view of it. Internally type_simple
+    and type_simple_view are the same type but only
+    the definition of type_simple_view is (privately)
+    exported.
 
-    {b Exported} : Abstract.                            *)
+    {b Exported} : Private.                             *)
 (* **************************************************** *)
-type type_simple =
-  | ST_var of type_variable                   (** Type variable. *)
-  | ST_arrow of (type_simple * type_simple)   (** Functional type. *)
-  | ST_tuple of type_simple list              (** Tuple type. *)
-  | ST_sum_arguments of type_simple list      (** Type of sum type value
-                                                  constructor's arguments. To
-                                                  prevent them from being
-                                                  confused with tuples. *)
-  | ST_prop                                   (** The type of logical formulae *)
+type type_simple_view =
+  | ST_var of type_variable                             (** Type variable. *)
+  | ST_arrow of (type_simple_view * type_simple_view)   (** Functional type. *)
+  | ST_tuple of type_simple_view list                   (** Tuple type. *)
+  | ST_sum_arguments of type_simple_view list
+      (** Type of sum type value constructor's arguments. To prevent them from
+          being confused with tuples. *)
+  | ST_prop                                             (** The type of logical
+                                                            formulae *)
   | ST_construct of
       (** Type constructor, possibly with arguments. Encompass the types
           related to records and sums. Any value of these types are typed as
           a [ST_construct] whose name is the name of the record (or sum)
           type. *)
-      (type_name * type_simple list)
+      (type_name * type_simple_view list)
   | ST_self_rep     (** Carrier type of the currently analysed species. *)
   | ST_species_rep of
       (** Carrier type of a collection hosted in the specified module. *)
       (fname * collection_name)
 
 
+(* *********************************************************** *)
+(** {b Descr} : Non-canonical internal version of simple types.
+
+    {b Exported} : Abstract.                                   *)
+(* *********************************************************** *)
+and type_simple = type_simple_view
 
 (* ************************************************************************** *)
 (** {b Descr} : Variable of type (type variable).
@@ -214,6 +224,31 @@ let rec repr = function
       var.tv_value <- TVV_known val_of_ty1 ;
       val_of_ty1
   | ty -> ty
+;;
+
+(* ********************************************************************* *)
+(* type_simple -> type_simple_view                                       *)
+(** {b Descr} : Recursively call `repr`.
+    This is useful for printing since we have to call repr at each step
+    when printing. Since the output of this function is canonical, we can
+    use it as a view function.
+
+    {b Exported} : Yes                                                   *)
+(* ********************************************************************* *)
+let rec view_type_simple ty =
+  match repr ty with
+    | ST_arrow (ty1, ty2) ->
+       ST_arrow (view_type_simple ty1, view_type_simple ty2)
+    | ST_sum_arguments tys ->
+       ST_sum_arguments (List.map view_type_simple tys)
+    | ST_tuple tys ->
+       ST_tuple (List.map view_type_simple tys)
+    | ST_construct (type_name, arg_tys) ->
+       ST_construct (type_name, List.map view_type_simple arg_tys)
+    | ST_var _
+    | ST_prop
+    | ST_self_rep
+    | ST_species_rep _ as ty' -> ty'
 ;;
 
 
