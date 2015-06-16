@@ -32,6 +32,36 @@ exception Attempt_proof_by_unknown_step of
   (Location.t * Parsetree.node_label)
 
 
+val generate_defined_recursive_let_definition_With_Function :
+  Context.species_compil_context ->
+  Types.coq_print_context ->
+  Env.CoqGenEnv.t ->
+  self_manifest: Types.type_simple option ->
+  Misc_common.compiled_species_fields list ->
+  Env.from_history ->
+  Parsetree.vname ->
+  Parsetree.vname list ->
+  Types.type_scheme ->
+  Parsetree.binding_body ->
+  Parsetree.termination_proof_desc Parsetree.ast option ->
+  Env.TypeInformation.field_abstraction_info ->
+  Misc_common.compiled_species_fields
+
+val generate_defined_recursive_let_definition_With_Fixpoint :
+  Context.species_compil_context ->
+  Types.coq_print_context ->
+  Env.CoqGenEnv.t ->
+  Misc_common.compiled_species_fields list ->
+  Env.from_history ->
+  Parsetree.vname ->
+  Parsetree.vname list ->
+  Parsetree.vname ->
+  Location.t ->
+  Types.type_scheme ->
+  Parsetree.binding_body ->
+  Env.TypeInformation.field_abstraction_info ->
+    Misc_common.compiled_species_fields
+
 val species_compile :
   Env.CoqGenEnv.t -> current_unit: Types.fname -> Format.formatter ->
     Parsetree.species_def_desc Parsetree.ast ->

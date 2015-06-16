@@ -21,16 +21,17 @@ ROOT_DIR=../../..
 FOCALIZE_COMP_FLAGS=-no-stdlib-path
 
 FOCALIZE_SRC=\
- basics.fcl\
- sets.fcl\
- products.fcl\
- lattices.fcl\
- orders.fcl\
- strict_orders.fcl\
- orders_and_lattices.fcl\
- wellfoundation.fcl\
- sums.fcl\
- quotients.fcl\
+ basics.fcl \
+ wellfoundation.fcl \
+ sets.fcl \
+ products.fcl \
+ lattices.fcl \
+ orders.fcl \
+ strict_orders.fcl \
+ orders_and_lattices.fcl \
+ wellfoundation.fcl \
+ sums.fcl \
+ quotients.fcl \
  fix.fcl
 
 FOCALIZE_FOS=$(FOCALIZE_SRC:.fcl=.fo)
@@ -58,8 +59,8 @@ EXTERNAL_CMIS=$(EXTERNAL_BYT_OBJS:.cmo=.cmi)
 
 EXTERNAL_VOS=\
  coq_builtins.vo\
- sets_externals.vo\
- wellfoundation_externals.vo
+ sets_externals.vo
+
 
 include $(ROOT_DIR)/Makefile.common
 include $(ROOT_DIR)/focalizec/.install_var

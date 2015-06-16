@@ -516,7 +516,7 @@ by enclosing the symbol between spaces and parens.
 
 Moreover, {\focal} has special forms of identifiers to allow using
 spaces inside or to extend the notion of operator identifiers.
-\begin{itemize}
+\begin{compact-itemize}
   \item {\bf Delimited alphanumerical identifiers}.
     \index{identifier!delimited}
     They start by two {\tt `} (backquote) characters and end by two
@@ -526,7 +526,7 @@ spaces inside or to extend the notion of operator identifiers.
   \item {\bf Delimited symbolic identifiers}.
     They are delimited by the same delimiter characters and contain
     symbolic characters.
-\end{itemize}
+\end{compact-itemize}
 % [EJ] Certes, mais ``equal is reflexive'' c'est uppercase ou lowercase ?
 
 As usual, the first meaningful character at the beginning of a delimited
@@ -620,14 +620,14 @@ i.e. without a base prefix, integers are in decimal. For instance:
 {\tt 0}, {\tt -42}, {\tt +36}. {\focal} syntax allows to also specify
 integers in other bases by preceding the digits by the following
 prefixes:
-\begin{itemize}
+\begin{compact-itemize}
   \item {\bf Binary}: base 2. Prefix is {\tt 0b} or {\tt 0B}.
     Digits are [0-1].
   \item {\bf Octal}: base 8. Prefix is {\tt 0o} or {\tt 00}.
     Digits are [0-7].
   \item {\bf Hexadecimal}: base 16. Prefix is {\tt 0x} or {\tt 0X}.
     Digits are [0-9] [A-F] [a-f].
-\end{itemize}
+\end{compact-itemize}
 Here are various examples of integers in various bases:
 {\tt -0x1Ff}, {\tt 0B01001}, {\tt +Oo347}, {\tt -OxFF\_FF}.
 
@@ -850,7 +850,7 @@ reference it by referencing the external compilation unit
 compilation unit's name before the definition's name using the '\#'
 character as delimiter. Examples:
 
-\begin{itemize}
+\begin{compact-itemize}
   \item {\tt basics\#string} stands for the type definition of
     {\tt string} coming from the source file ``basics.fcl''.
   \item {\tt  basics\#Basic\_object} stands for the species
@@ -858,7 +858,7 @@ character as delimiter. Examples:
   \item {\tt db\#My\_db\_coll!create} stands for the method
     {\tt create} of a collection {\tt My\_db\_coll} hosted in the
     source file ``db.fcl''.
-\end{itemize}
+\end{compact-itemize}
 
 \index{directive!open}
 The qualification can be omitted by using the {\tt open} directive

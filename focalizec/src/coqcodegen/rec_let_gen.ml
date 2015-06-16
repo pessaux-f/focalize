@@ -22,7 +22,8 @@
 
 
 
-let is_recursive_call ctx ~local_idents recursive_name expr_ident =
+let is_recursive_call ctx ~current_unit ~local_idents recursive_name
+    expr_ident =
   match expr_ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
        (begin
@@ -39,12 +40,23 @@ let is_recursive_call ctx ~local_idents recursive_name expr_ident =
          (* Really a local identifier or a call to a recursive method. *)
          vname = recursive_name
        end)
-   | Parsetree.EI_global _ | Parsetree.EI_method (_, _) -> false
+   | Parsetree.EI_global qvn -> (
+       match qvn with
+       | Parsetree.Vname vname -> vname = recursive_name
+       | Parsetree.Qualified (unit_name, vname) ->
+           (* In case of toplevel recursive function, the name of the function
+              is a global ident. Check that we are really talking of the ident
+              of the same compilation unit than the one we are currently
+              processing. *)
+           vname = recursive_name && unit_name = current_unit
+       )
+   | Parsetree.EI_method (_, _) -> false
 ;;
 
 
 
-let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
+let transform_recursive_calls_args_into_tuple ctx ~current_unit ~local_idents
+    recursive_name
     initial_expr =
   let rec rec_transform_expr expr =
     let (new_desc, recursive_call_found) =
@@ -53,7 +65,8 @@ let transform_recursive_calls_args_into_tuple ctx ~local_idents recursive_name
            (expr.Parsetree.ast_desc, false)
        | Parsetree.E_var expr_ident ->
            let rec_found =
-             is_recursive_call ctx ~local_idents recursive_name expr_ident in
+             is_recursive_call
+               ctx ~current_unit ~local_idents recursive_name expr_ident in
            (expr.Parsetree.ast_desc, rec_found)
        | Parsetree.E_fun (args, body) ->
            let (body', rec_found) = rec_transform_expr body in
@@ -745,7 +758,7 @@ let print_user_termination_obls_for_order fun_name recursive_calls user_order
       Format.printf "@]@\n")
     recursive_calls ;
   (* Print the obligation stating the well-foundness of the order. *)
-  Format.printf "@[<2><1>%d prove well_wrapper@ (%a)@]@\n"
+  Format.printf "@[<2><1>%d prove is_well_founded@ (%a)@]@\n"
     !counter Sourcify.pp_expr user_order ;
   (* Print the conclusion step since it is always the same. *)
   Format.printf
