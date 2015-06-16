@@ -31,7 +31,7 @@ species FromMesureToWF (MI is MeasureInterf) =
     all mi1 mi2: MI,
     order_fct (mi1, mi2) <->
     (0 <= MI!meas_fct (mi2)) && (MI!meas_fct (mi1) < MI!meas_fct (mi2))
-  proof = by definition of order_fct ;
+  proof = assumed (* ASSUMED: Zenon does not know how to type "0" (by definition of order_fct) *);
 
 
   (* Theorem stating the the relation BUILT from the measure is well-founded.
