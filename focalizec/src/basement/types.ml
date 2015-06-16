@@ -1881,9 +1881,8 @@ let (pp_type_simple_to_dk, pp_type_variable_to_dk, pp_type_simple_args_to_dk,
         Format.fprintf ppf "@[<1>(@[<2>cc.Arrow@ %a@ %a@])@]"
           (rec_pp_to_dk ctx 2) ty1
           (rec_pp_to_dk ctx 1) ty2 ;
-    | ST_sum_arguments tys ->
-       failwith "In Dedukti, sum arguments are only allowed in the left part of an arrow@\n%a@\n"
-         (rec_pp_to_dk_tuple ctx 3) tys
+    | ST_sum_arguments _ ->
+       failwith "In Dedukti, sum arguments are only allowed in the left part of an arrow@\n"
     | ST_tuple tys ->
         (* Tuple priority: 3. *)
         if prio >= 3 then Format.fprintf ppf "@[<1>(" ;
