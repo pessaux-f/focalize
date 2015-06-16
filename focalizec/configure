@@ -7,16 +7,17 @@
 #            François Pessaux                                                #
 #            Pierre Weis                                                     #
 #            Damien Doligez                                                  #
+#            Raphaël Cauderlier                                              #
 #                                                                            #
 #                               LIP6  --  INRIA Rocquencourt                 #
 #                                                                            #
-#  Copyright 2007 - 2012 LIP6 and INRIA                                      #
-#            2012 ENSTA ParisTech                                            #
+#  Copyright 2007 - ... LIP6 and INRIA                                       #
+#            2012 - ... ENSTA ParisTech                                      #
+#            2013 - ... CNAM CEDRIC-CPR                                      #
 #  Distributed only by permission.                                           #
 #                                                                            #
 # ************************************************************************** #
 
-# $Id: configure,v 1.52 2012-10-30 13:56:05 pessaux Exp $
 
 BOLDTAG="\033[1m"
 UNDERLINETAG="\033[4m"
