@@ -1,0 +1,68 @@
+#NAME weak_structures_externals.
+
+quo_rem_result : __var_a:cc.uT -> cc.uT.
+
+mk_quo_rem_result :
+  __var_a : cc.uT ->
+  (cc.eT __var_a) ->
+  (cc.eT __var_a) ->
+  cc.eT (quo_rem_result __var_a).
+
+proj_quot :
+  __var_a:cc.uT -> cc.eT (quo_rem_result __var_a) -> cc.eT __var_a.
+
+[__var_a : cc.uT, quot : cc.eT __var_a, rema : cc.eT __var_a]
+  proj_quot __var_a (mk_quo_rem_result __var_a quot rema) --> quot.
+
+proj_rema :
+  __var_a:cc.uT -> cc.eT (quo_rem_result __var_a) -> cc.eT __var_a.
+
+[__var_a : cc.uT, quot : cc.eT __var_a, rema : cc.eT __var_a]
+  proj_rema __var_a (mk_quo_rem_result __var_a quot rema) --> rema.
+
+cr_qrr (__var_a : cc.uT) (x : cc.eT __var_a) (y : cc.eT __var_a) :=
+  mk_quo_rem_result __var_a x y.
+
+qrr_quot (__var_a : cc.uT) (x : cc.eT (quo_rem_result __var_a)) :=
+   proj_quot __var_a x.
+
+qrr_rema (__var_a : cc.uT) (x : cc.eT (quo_rem_result __var_a)) :=
+   proj_rema __var_a x.
+
+bezout_res : cc.uT -> cc.uT.
+
+mk_bezout_res :
+  __var_a : cc.uT ->
+  (cc.eT __var_a) ->
+  (cc.eT __var_a) ->
+  (cc.eT __var_a) ->
+  cc.eT (bezout_res __var_a).
+
+proj_gcd :
+  __var_a : cc.uT -> cc.eT (bezout_res __var_a) -> cc.eT __var_a.
+
+[__var_a : cc.uT, gcd : cc.eT __var_a, coef1 : cc.eT __var_a, coef2 : cc.eT __var_a]
+  proj_gcd __var_a (mk_bezout_res __var_a gcd coef1 coef2) --> gcd.
+
+proj_coef1 : __var_a : cc.uT -> cc.eT (bezout_res __var_a) -> cc.eT __var_a.
+
+[__var_a : cc.uT, gcd : cc.eT __var_a, coef1 : cc.eT __var_a, coef2 : cc.eT __var_a]
+  proj_coef1 __var_a (mk_bezout_res __var_a gcd coef1 coef2) --> coef1.
+
+proj_coef2 : __var_a:cc.uT -> cc.eT (bezout_res __var_a) -> cc.eT __var_a.
+
+[__var_a : cc.uT, gcd : cc.eT __var_a, coef1 : cc.eT __var_a, coef2 : cc.eT __var_a]
+  proj_coef2 __var_a (mk_bezout_res __var_a gcd coef1 coef2) --> coef2.
+
+
+cr_br (__var_a : cc.uT) (x : cc.eT __var_a) (y : cc.eT __var_a) (z : cc.eT __var_a) :=
+  mk_bezout_res __var_a x y z.
+
+br_gcd (__var_a : cc.uT) (x : cc.eT (bezout_res __var_a)) :=
+   proj_gcd __var_a x.
+
+br_coef1 (__var_a : cc.uT) (x : cc.eT (bezout_res __var_a)) :=
+   proj_coef1 __var_a x.
+
+br_coef2 (__var_a : cc.uT) (x : cc.eT (bezout_res __var_a)) := proj_coef2
+   __var_a x.
