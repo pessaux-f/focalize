@@ -429,7 +429,7 @@ let generate_def_dependency_equivalence env ctx generated_fields from name =
     ~only_for_Self_meths out_fmter
     memory.Misc_common.cfm_used_species_parameter_tys
     memory.Misc_common.cfm_dependencies_from_parameters
-    memory.Misc_common.cfm_dk_min_typ_env_names
+    memory.Misc_common.cfm_coq_min_typ_env_names
 ;;
 
 
@@ -541,65 +541,66 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
         (fun (meth, meth_ty_kind) ->
           if in_section then (
             match meth_ty_kind with
-             | Parsetree_utils.DETK_computational meth_ty ->
+            | Parsetree_utils.DETK_computational meth_ty ->
                 section_variable_list :=
                   SVVar (prefix, meth, meth_ty, new_print_ctx) :: !section_variable_list
-             | Parsetree_utils.DETK_logical lexpr ->
-                 (* Inside the logical expression of the method of the
-                    parameter "Self" must be printed as "_p_param_name_T". *)
-                 let self_map =
-                   Species_record_type_dk_generation.
-                     make_Self_cc_binding_species_param
-                       ~current_species: ctx.Context.scc_current_species
-                        species_param_name in
-                 let new_ctx' = { new_ctx with
-                   Context.scc_collections_carrier_mapping =
-                     self_map ::
-                       new_ctx.Context.scc_collections_carrier_mapping } in
-                 section_variable_list :=
-                   SVHyp (Species_record_type_dk_generation.SMS_from_param
-                            species_param_name,
-                          meth,
-                          lexpr,
-                          new_ctx') :: !section_variable_list)
+            | Parsetree_utils.DETK_logical lexpr ->
+                (* Inside the logical expression of the method of the
+                   parameter "Self" must be printed as "_p_param_name_T". *)
+                let self_map =
+                  Species_record_type_dk_generation.
+                    make_Self_cc_binding_species_param
+                    ~current_species: ctx.Context.scc_current_species
+                    species_param_name in
+                let new_ctx' = { new_ctx with
+                                 Context.scc_collections_carrier_mapping =
+                                 self_map ::
+                                 new_ctx.Context.scc_collections_carrier_mapping } in
+                section_variable_list :=
+                  SVHyp (Species_record_type_dk_generation.SMS_from_param
+                           species_param_name,
+                         meth,
+                         lexpr,
+                         new_ctx') :: !section_variable_list)
           else (
             match meth_ty_kind with
-             | Parsetree_utils.DETK_computational meth_ty ->
+            | Parsetree_utils.DETK_computational meth_ty ->
                 print_arg (fun out -> Format.fprintf out "%s%a"
-                                      prefix
-                                      Parsetree_utils.pp_vname_with_operators_expanded
-                                      meth)
-                          (fun out -> Format.fprintf out "cc.eT (%a)"
-                                      (Types.pp_type_simple_to_dk new_print_ctx)
-                                      meth_ty)
-                          out_fmter;
-             | Parsetree_utils.DETK_logical lexpr ->
-                 (* Inside the logical expression of the method of the
-                    parameter "Self" must be printed as "_p_param_name_T". *)
-                 let self_map =
-                   Species_record_type_dk_generation.
-                     make_Self_cc_binding_species_param
-                       ~current_species: ctx.Context.scc_current_species
-                        species_param_name in
-                 let new_ctx' = { new_ctx with
-                   Context.scc_collections_carrier_mapping =
-                     self_map ::
-                       new_ctx.Context.scc_collections_carrier_mapping } in
+                    prefix
+                    Parsetree_utils.pp_vname_with_operators_expanded
+                    meth)
+                  (fun out -> Format.fprintf out "cc.eT (%a)"
+                      (Types.pp_type_simple_to_dk new_print_ctx)
+                      meth_ty)
+                  out_fmter;
+            | Parsetree_utils.DETK_logical lexpr ->
+                (* Inside the logical expression of the method of the
+                   parameter "Self" must be printed as "_p_param_name_T". *)
+                let self_map =
+                  Species_record_type_dk_generation.
+                    make_Self_cc_binding_species_param
+                    ~current_species: ctx.Context.scc_current_species
+                    species_param_name in
+                let new_ctx' = { new_ctx with
+                  Context.scc_collections_carrier_mapping =
+                    self_map :: new_ctx.Context.scc_collections_carrier_mapping
+                } in
                 print_arg (fun out -> Format.fprintf out "%s%a"
-                                      prefix
-                                      Parsetree_utils.pp_vname_with_operators_expanded
-                                      meth)
-                          (fun out -> Format.fprintf out "dk_logic.eP (";
-                                   Species_record_type_dk_generation.generate_logical_expr
-                                     new_ctx' ~in_recursive_let_section_of: [] ~local_idents: []
-                                     ~self_methods_status:
-                                     (Species_record_type_dk_generation.SMS_from_param
-                                        species_param_name)
-                                     ~recursive_methods_status:
-                                     Species_record_type_dk_generation.RMS_regular
-                                     env lexpr;
-                                   Format.fprintf out_fmter ")")
-                          out_fmter)
+                    prefix
+                    Parsetree_utils.pp_vname_with_operators_expanded
+                    meth)
+                  (fun out -> Format.fprintf out "dk_logic.eP (";
+                    Species_record_type_dk_generation.generate_logical_expr
+                      new_ctx' ~in_recursive_let_section_of: []
+                      ~local_idents: []
+                      ~self_methods_status:
+                        (Species_record_type_dk_generation.SMS_from_param
+                         species_param_name)
+                      ~recursive_methods_status:
+                        Species_record_type_dk_generation.RMS_regular
+                      env lexpr ;
+                    Format.fprintf out_fmter ")")
+                  out_fmter)
         )
         meths_from_param)
     dependencies_from_params;
@@ -613,85 +614,91 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
               account. *)
            match meth_dep with
            | Env.TypeInformation.MDEM_Defined_carrier sch ->
-              let ty = Types.specialize sch in
-              if in_section then
-                section_variable_list :=
-                  SVTypeAlias ("abst_T",
-                               ty,
-                               new_print_ctx)
-                  :: !section_variable_list
-              else
-                print_defined_arg (fun out -> Format.fprintf out "abst_T")
-                                  (fun out -> Format.fprintf out "%a"
-                                             (Types.pp_type_simple_to_dk new_print_ctx)
-                                             ty)
-                                  out_fmter;
-              (* Anything defined is not abstracted. *)
-              []
+               let ty = Types.specialize sch in
+               if in_section then
+                 section_variable_list :=
+                   SVTypeAlias ("abst_T",
+                                ty,
+                                new_print_ctx)
+                   :: !section_variable_list
+               else
+                 print_defined_arg (fun out -> Format.fprintf out "abst_T")
+                   (fun out -> Format.fprintf out "%a"
+                       (Types.pp_type_simple_to_dk new_print_ctx)
+                       ty)
+                   out_fmter;
+               (* Anything defined is not abstracted. *)
+               []
            | Env.TypeInformation.MDEM_Defined_computational (fr, _, n, _, sch, _) ->
-              let ty = Types.specialize sch in
-              if not in_section then
-                begin
-                  print_defined_arg (fun out -> Format.fprintf out "abst_%a"
-                                               Parsetree_utils.pp_vname_with_operators_expanded
-                                               n)
-                                    (fun out -> generate_def_dependency_equivalence
-                                               env new_ctx generated_fields fr n)
-                                    out_fmter;
-                end;
-              []
+               let ty = Types.specialize sch in
+               if not in_section then
+                 begin
+                   print_defined_arg (fun out -> Format.fprintf out "abst_%a"
+                       Parsetree_utils.pp_vname_with_operators_expanded
+                       n)
+                     (fun out -> generate_def_dependency_equivalence
+                         env new_ctx generated_fields fr n)
+                     out_fmter;
+                 end;
+               []
            | Env.TypeInformation.MDEM_Defined_logical (fr, n, b) ->
-              if not in_section then
-                begin
-                  print_defined_arg (fun out -> Format.fprintf out "abst_%a"
-                                               Parsetree_utils.pp_vname_with_operators_expanded
-                                               n)
-                                    (fun out -> ())
-                                    out_fmter;
-                end;
-              []
+               if not in_section then (
+                 print_defined_arg
+                   (fun out -> Format.fprintf out "abst_%a"
+                       Parsetree_utils.pp_vname_with_operators_expanded n)
+                   (fun out -> ())
+                   out_fmter
+                 );
+               []
            | Env.TypeInformation.MDEM_Declared_carrier ->
                (* Note that by construction, the carrier is first in the env. *)
                if in_section then
-                 section_variable_list := SVType "abst" :: !section_variable_list
+                 section_variable_list :=
+                   SVType "abst" :: !section_variable_list
                else
-                 print_arg (fun out -> Format.fprintf out "abst_T")
-                           (fun out -> Format.fprintf out "cc.uT")
-                           out_fmter;
+                 print_arg
+                   (fun out -> Format.fprintf out "abst_T")
+                   (fun out -> Format.fprintf out "cc.uT")
+                   out_fmter ;
                [Parsetree.Vlident "rep"]
            | Env.TypeInformation.MDEM_Declared_computational (n, sch) ->
                (* Due to a decl-dependency, hence: abstract. *)
                let ty = Types.specialize sch in
                if in_section then
                  section_variable_list :=
-                   SVVar ("abst_", n, ty, new_print_ctx) :: !section_variable_list
+                   SVVar
+                     ("abst_", n, ty, new_print_ctx) :: !section_variable_list
                else
-                 print_arg (fun out -> Format.fprintf out "abst_%a"
-                                      Parsetree_utils.pp_vname_with_operators_expanded n)
-                           (fun out -> Format.fprintf out "cc.eT %a"
-                                      (Types.pp_type_simple_to_dk new_print_ctx) ty)
-                           out_fmter;
+                 print_arg
+                   (fun out -> Format.fprintf out "abst_%a"
+                       Parsetree_utils.pp_vname_with_operators_expanded n)
+                   (fun out -> Format.fprintf out "cc.eT %a"
+                       (Types.pp_type_simple_to_dk new_print_ctx) ty)
+                   out_fmter;
                [n]
            | Env.TypeInformation.MDEM_Declared_logical (n, b) ->
                if in_section then
                  section_variable_list :=
-                   SVHyp (Species_record_type_dk_generation.SMS_abstracted,
-                          n,
-                          b,
-                          new_ctx) :: !section_variable_list
+                   SVHyp
+                     (Species_record_type_dk_generation.SMS_abstracted,
+                      n, b, new_ctx) :: !section_variable_list
                else
                  begin
-                   print_arg (fun out -> Format.fprintf out "abst_%a"
-                                        Parsetree_utils.pp_vname_with_operators_expanded n)
-                             (fun out -> Format.fprintf out "dk_logic.eP (";
-                                      Species_record_type_dk_generation.generate_logical_expr
-                                        new_ctx ~local_idents: [] ~in_recursive_let_section_of: []
-                                        ~self_methods_status:
-                                        Species_record_type_dk_generation.SMS_abstracted env b
-                                        ~recursive_methods_status:
-                                        Species_record_type_dk_generation.RMS_regular;
-                                      Format.fprintf out ")")
-                             out_fmter;
+                   print_arg
+                     (fun out ->
+                       Format.fprintf out "abst_%a"
+                         Parsetree_utils.pp_vname_with_operators_expanded n)
+                     (fun out -> Format.fprintf out "dk_logic.eP (";
+                       Species_record_type_dk_generation.generate_logical_expr
+                         new_ctx ~local_idents: []
+                         ~in_recursive_let_section_of: []
+                         ~self_methods_status:
+                         Species_record_type_dk_generation.SMS_abstracted
+                         env b
+                         ~recursive_methods_status:
+                           Species_record_type_dk_generation.RMS_regular ;
+                       Format.fprintf out ")")
+                     out_fmter;
                  end;
                [n])
          min_dk_env) in
@@ -1221,7 +1228,7 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                        ctx print_ctx env ~self_manifest ~rec_kind
                        memory.Misc_common.cfm_used_species_parameter_tys
                        memory.Misc_common.cfm_dependencies_from_parameters
-                       memory.Misc_common.cfm_dk_min_typ_env_names vname params
+                       memory.Misc_common.cfm_coq_min_typ_env_names vname params
                        scheme body
                  | Env.RC_non_rec  ->
                      Format.fprintf out_fmter "@[<2>abst_%a"
@@ -2909,8 +2916,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            ai.Env.TypeInformation.ad_dependencies_from_parameters ;
          Misc_common.cfm_dependencies_from_parameters_in_type =
            ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-         Misc_common.cfm_coq_min_typ_env_names = abstracted_methods;
-         Misc_common.cfm_dk_min_typ_env_names = abstracted_methods } in
+         Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
        Misc_common.CSF_let_rec [compiled]
 ;;
 
@@ -2965,8 +2971,7 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
            ai.Env.TypeInformation.ad_dependencies_from_parameters ;
          Misc_common.cfm_dependencies_from_parameters_in_type =
            ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-         Misc_common.cfm_coq_min_typ_env_names = [];
-         Misc_common.cfm_dk_min_typ_env_names = abstracted_methods} in
+         Misc_common.cfm_coq_min_typ_env_names = [] } in
        Misc_common.CSF_let_rec [compiled]
 ;;
 
@@ -3045,8 +3050,7 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
              ai.Env.TypeInformation.ad_dependencies_from_parameters ;
            Misc_common.cfm_dependencies_from_parameters_in_type =
              ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-           Misc_common.cfm_coq_min_typ_env_names = abstracted_methods ;
-           Misc_common.cfm_dk_min_typ_env_names = abstracted_methods} in
+           Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
          Misc_common.CSF_let_rec [compiled_field]
          )
    | (_, name1, _, _, _, _, _, _) ::
@@ -3085,14 +3089,13 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos g
         Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
         (* Since the "sig " has no code, it can't refer to some of our
            methods ! *)
-        Misc_common.cfm_coq_min_typ_env_names = [];
-        Misc_common.cfm_dk_min_typ_env_names = [] } in
+        Misc_common.cfm_coq_min_typ_env_names = [] } in
       Misc_common.CSF_sig compiled_field
   | Env.TypeInformation.SF_let (from, name, params, scheme, body, _, _, _) ->
       let abstraction_info = List.assoc name fields_abstraction_infos in
       (* No recursivity, then the method cannot call itself in its body then
          no need to set the [scc_lambda_lift_params_mapping] of the context. *)
-      let dk_min_typ_env_names =
+      let coq_min_typ_env_names =
         generate_non_recursive_field_binding
           ctx print_ctx env
           abstraction_info.Env.TypeInformation.ad_min_dk_env
@@ -3118,15 +3121,14 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos g
           abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters;
         Misc_common.cfm_dependencies_from_parameters_in_type =
           abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-        Misc_common.cfm_coq_min_typ_env_names = [];
-        Misc_common.cfm_dk_min_typ_env_names = dk_min_typ_env_names } in
+        Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_let compiled_field
   | Env.TypeInformation.SF_let_rec l ->
       generate_recursive_let_definition
         ctx print_ctx env ~self_manifest fields_abstraction_infos generated_fields l
   | Env.TypeInformation.SF_theorem (from, name, _, logical_expr, pr, _) ->
       let abstraction_info = List.assoc name fields_abstraction_infos in
-      let dk_min_typ_env_names =
+      let coq_min_typ_env_names =
         generate_theorem
           ctx print_ctx env abstraction_info.Env.TypeInformation.ad_min_dk_env
           ~self_manifest
@@ -3146,8 +3148,7 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos g
           abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters;
         Misc_common.cfm_dependencies_from_parameters_in_type =
          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-        Misc_common.cfm_coq_min_typ_env_names = [];
-        Misc_common.cfm_dk_min_typ_env_names = dk_min_typ_env_names } in
+        Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_theorem compiled_field
   | Env.TypeInformation.SF_property (from, name, _, lexpr, _) ->
       let abstraction_info = List.assoc name fields_abstraction_infos in
@@ -3165,8 +3166,7 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos g
           abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters ;
         Misc_common.cfm_dependencies_from_parameters_in_type =
           abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-        Misc_common.cfm_coq_min_typ_env_names = [];
-        Misc_common.cfm_dk_min_typ_env_names = [] } in
+        Misc_common.cfm_coq_min_typ_env_names = [] } in
       Misc_common.CSF_property compiled_field
 ;;
 
@@ -3666,9 +3666,9 @@ let generate_collection_generator ctx print_ctx env compiled_species_fields
       (fun n ->
         Format.fprintf out_fmter "@ local_%a"
           Parsetree_utils.pp_vname_with_operators_expanded n)
-      field_memory.Misc_common.cfm_dk_min_typ_env_names;
+      field_memory.Misc_common.cfm_coq_min_typ_env_names ;
     (* That's all for this field code generation. *)
-    Format.fprintf out_fmter ")@]@\n";
+    Format.fprintf out_fmter ")@]@\n" ;
     if Configuration.get_verbose () then
       Format.eprintf "End of Dk code for method generator of '%a'.@."
         Sourcify.pp_vname field_memory.Misc_common.cfm_method_name in
@@ -3968,7 +3968,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                       cfm_dependencies_from_parameters_in_type ;
                   Env.mi_abstracted_methods =
                     compiled_field_memory.Misc_common.
-                      cfm_dk_min_typ_env_names }]
+                      cfm_coq_min_typ_env_names }]
            | Misc_common.CSF_let_rec compiled_field_memories ->
                List.map
                  (fun cfm ->
@@ -3982,7 +3982,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                      Env.mi_dependencies_from_parameters_in_type =
                        cfm.Misc_common.cfm_dependencies_from_parameters_in_type ;
                      Env.mi_abstracted_methods =
-                       cfm.Misc_common.cfm_dk_min_typ_env_names })
+                       cfm.Misc_common.cfm_coq_min_typ_env_names })
                  compiled_field_memories
            | Misc_common.CSF_property compiled_field_memory ->
                [ { Env.mi_name =
@@ -4005,7 +4005,7 @@ let species_compile env ~current_unit out_fmter species_def species_descr
                       used. *)
                    Env.mi_abstracted_methods =
                      compiled_field_memory.Misc_common.
-                       cfm_dk_min_typ_env_names }])
+                       cfm_coq_min_typ_env_names }])
          compiled_fields) in
   (species_descr.Env.TypeInformation.spe_sig_params,
    species_binding_info, extra_args_from_spe_params, Env.COS_species)
@@ -4322,7 +4322,7 @@ let make_collection_effective_methods ctx env implemented_species_name
     record_type_args_instanciations2 =
   let out_fmter = ctx.Context.scc_out_fmter in
   let current_unit = ctx.Context.scc_current_unit in
-  let (_, species_name) = ctx.scc_current_species in
+  let (_, species_name) = ctx.Context.scc_current_species in
   (* First, the definition of the carrier. *)
   generate_rep_definition
      ctx collection_descr.Env.TypeInformation.spe_sig_methods ;

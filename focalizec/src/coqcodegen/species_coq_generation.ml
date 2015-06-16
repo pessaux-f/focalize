@@ -3263,8 +3263,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            ai.Env.TypeInformation.ad_dependencies_from_parameters ;
          Misc_common.cfm_dependencies_from_parameters_in_type =
            ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-         Misc_common.cfm_coq_min_typ_env_names = abstracted_methods ;
-         Misc_common.cfm_dk_min_typ_env_names = [] } in
+         Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
        Misc_common.CSF_let_rec [compiled]
 ;;
 
@@ -3320,8 +3319,7 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
            ai.Env.TypeInformation.ad_dependencies_from_parameters ;
          Misc_common.cfm_dependencies_from_parameters_in_type =
            ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-         Misc_common.cfm_coq_min_typ_env_names = abstracted_methods;
-         Misc_common.cfm_dk_min_typ_env_names = abstracted_methods} in
+         Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
        Misc_common.CSF_let_rec [compiled]
 ;;
 
@@ -3401,8 +3399,7 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
              ai.Env.TypeInformation.ad_dependencies_from_parameters ;
            Misc_common.cfm_dependencies_from_parameters_in_type =
              ai.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-           Misc_common.cfm_coq_min_typ_env_names = abstracted_methods;
-           Misc_common.cfm_dk_min_typ_env_names = abstracted_methods} in
+           Misc_common.cfm_coq_min_typ_env_names = abstracted_methods } in
          Misc_common.CSF_let_rec [compiled_field]
          )
       )
@@ -3441,8 +3438,7 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos
         Misc_common.cfm_dependencies_from_parameters_in_type = [] ;
         (* Since the "sig " has no code, it can't refer to some of our
            methods ! *)
-        Misc_common.cfm_coq_min_typ_env_names = [];
-        Misc_common.cfm_dk_min_typ_env_names = []} in
+        Misc_common.cfm_coq_min_typ_env_names = [] } in
       Misc_common.CSF_sig compiled_field
   | Env.TypeInformation.SF_let (from, name, params, scheme, body, _, _, _) ->
       let abstraction_info = List.assoc name fields_abstraction_infos in
@@ -3473,8 +3469,7 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos
           abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters;
         Misc_common.cfm_dependencies_from_parameters_in_type =
           abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-        Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names;
-        Misc_common.cfm_dk_min_typ_env_names = coq_min_typ_env_names} in
+        Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_let compiled_field
   | Env.TypeInformation.SF_let_rec l ->
       generate_recursive_let_definition
@@ -3502,8 +3497,7 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos
           abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters;
         Misc_common.cfm_dependencies_from_parameters_in_type =
          abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-        Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names;
-        Misc_common.cfm_dk_min_typ_env_names = coq_min_typ_env_names} in
+        Misc_common.cfm_coq_min_typ_env_names = coq_min_typ_env_names } in
       Misc_common.CSF_theorem compiled_field
   | Env.TypeInformation.SF_property (from, name, _, lexpr, _) ->
       (* "Property"s are discarded. However we compute their dependencies. *)
@@ -3521,8 +3515,7 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos
           abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters ;
         Misc_common.cfm_dependencies_from_parameters_in_type =
           abstraction_info.Env.TypeInformation.ad_dependencies_from_parameters_in_type ;
-        Misc_common.cfm_coq_min_typ_env_names = [];
-        Misc_common.cfm_dk_min_typ_env_names = []} in
+        Misc_common.cfm_coq_min_typ_env_names = [] } in
       Misc_common.CSF_property compiled_field
 ;;
 
