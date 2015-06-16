@@ -44,7 +44,7 @@
     ; Let's go to the beginning of the line.
     (beginning-of-line 1)
     ; (message (thing-at-point 'line)) ; DEBUG
-    (if (re-search-forward focalize-keywords eol t)
+    (if (re-search-forward focalize-keywords-and-punct eol t)
         (let ((found_token (match-string 0))) ; IN
           found_token)
       ; ELSE
@@ -59,11 +59,25 @@
     ; Go to the end of the line.
     (end-of-line 1)
     ; (message (thing-at-point 'line)) ; DEBUG
-    (if (re-search-backward focalize-keywords bol t)
+    (if (re-search-backward focalize-keywords-and-punct bol t)
         (let ((found_token (match-string 0))) ; IN
+          ; (message "Found last: %s" found_token)
           found_token)
       ; ELSE
       "")
+    ) ; END LET
+  )
+
+
+;; Check if the last keyword or punctuation of the line is a ;; This must be
+;; used only when the last keyword or punctuation of the line was detected as
+;; being a ;. This is to solve ambiguity between ; and ;; when matching in
+;; backward.
+(defun check-if-last-keyword-of-line-is-semi-semi ()
+  (let ((bol (progn (beginning-of-line 1) (point)))) ; IN
+    ; Go to the end of the line.
+    (end-of-line 1)
+    (re-search-backward ";;" bol t)
     ) ; END LET
   )
 
@@ -89,8 +103,19 @@
   (let ((end_kw (last-keyword-of-line))) ; IN
     (cond
      ((member
-       end_kw '("let" "else" "then" "begin" "species" "collection"))
+       end_kw '("let" "else" "then" "begin" "species" "collection" "="))
       focalize-indent-quantum)
+     ((member end_kw '(";"))
+      ; Check if we found 1 or 2 semi.
+      (if (check-if-last-keyword-of-line-is-semi-semi)
+        ; THEN
+        ; End of a species or a collection: go back full left.
+        (- 0 (count-current-line-indent))
+        ; ELSE
+        ; In case of semi, we privilegiate the case corresponding to an end of
+        ; method: Hence, we go back to the first indentation level (i.e. the
+        ; one of the hosting species.
+        (+ (- 0 (count-current-line-indent)) focalize-indent-quantum)))
      (t    ; DEFAULT
       0)
      ) ; END COND
@@ -109,7 +134,7 @@
         (progn
           (setq the_end (line-beginning-position))
           (let ((displace (count-lines beg the_end))) ; IN
-            (message "Jump: %d" displace)
+            ; (message "Jump: %d" displace)
             displace) ; END LET
           ) ; END PROGN
       ; ELSE
@@ -162,9 +187,9 @@
               ((from_current_line (parse-line-to-indent-and-compute-indent)))
               ; IN
               ; And finally, really indent with the found amount.
-            (message
-             "prev_indent_amount: %d from_prev_line:%d from_current_line:%d"
-             prev_indent_amount from_prev_line from_current_line)
+            ; (message
+            ;  "prev_indent_amount: %d from_prev_line:%d from_current_line:%d"
+            ;  prev_indent_amount from_prev_line from_current_line)
             (indent-line-to
              (+ from_current_line (+ from_prev_line prev_indent_amount)))
             (point)
@@ -254,6 +279,8 @@
   )
 
 
+;; Regexp matching keywords. This is used for highlightign stuff. This list
+;; serves as the basis of stuf used (below) for indentation.
 (defconst focalize-keywords
   (concat "\\<"
     (regexp-opt
@@ -266,9 +293,16 @@
        "property" "prove" "qed" "rec" "representation" "Self"
        "signature" "species" "step" "structural" "termination" "then"
        "theorem" "true" "type" "use" "with") t)
-    "\\>")
+    "\\>"
+    )
   )
 
+
+;; Regexp matching keywords and (some) punctuation. This regexp is used
+;; for indentation since this latter do not only rely on keywords.
+(defconst focalize-keywords-and-punct
+  (concat focalize-keywords "\\|" (regexp-opt '(";" "=") t))
+  )
 
 ;; Stuff to highlight.
 (defvar focalize-font-lock-keywords
@@ -321,6 +355,5 @@
   ; Don't know why ^_^ ... but must always be called...
   (run-mode-hooks 'focalize-mode-hook)
   )
-
 
 (provide 'focalize)

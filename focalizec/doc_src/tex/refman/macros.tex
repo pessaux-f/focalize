@@ -111,3 +111,19 @@
 % \def\nextsyntaxclassleft#1{
 % \cr\noalign{\smallskip\goodbreak}$\hfilneg#1\quad\hfil$
 % }
+
+\newenvironment{compact-itemize}{
+\begin{itemize}
+     \setlength{\itemsep}{1pt}
+     \setlength{\parskip}{0pt}
+     \setlength{\parsep}{0pt}}
+{\end{itemize}
+}
+
+\newenvironment{compact-enumerate}{
+\begin{enumerate}
+     \setlength{\itemsep}{1pt}
+     \setlength{\parskip}{0pt}
+     \setlength{\parsep}{0pt}}
+{\end{enumerate}
+}

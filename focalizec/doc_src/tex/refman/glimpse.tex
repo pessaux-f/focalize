@@ -21,7 +21,7 @@ proofs of these properties.
 We now informely describe each of these ``things'', called the {\em methods}
 of the species.
 
-\begin{itemize}
+\begin{compact-itemize}
   \item The
     {\tt representation} gives the data representation of the entities
     manipulated by the {\em species}. It is a type
@@ -107,7 +107,7 @@ of the species.
     accompanying the statement will be processed by {\focal}, {\zenon} and
     ultimately checked with the {\coq} theorem prover.
 
-\end{itemize}
+\end{compact-itemize}
 
 Regarding properties and theorems, note that like in any formal development,
 the difficulty may be more to express a true, interesting and meaningful
@@ -630,7 +630,7 @@ ensure that all the modifications are consistently propagated to any place
 that needs to be changed.
 
 {\focal} deals with two types of dependencies:
-\begin{itemize}
+\begin{compact-itemize}
 \item The {\bf decl}-dependency: a {\em method} $A$ decl-depends on a
   {\em method} $B$, if the {\bf declaration} of $B$ is required to
   state $A$.
@@ -639,7 +639,7 @@ that needs to be changed.
   {\bf definition} of $B$ is required to state $A$ (and more
   especially, to prove the property stated by the {\em theorem}
   $A$).
-\end{itemize}
+\end{compact-itemize}
 
 The redefinition of a function may invalidate the proofs that use the
 properties of the body of the function. All the proofs which truly depend of

@@ -74,7 +74,7 @@ collection. Here ``abstracted'' means that the
 representation is not visible but we can refer to it
 as an abstract type. In other words, {\tt Elem -> Self -> Self}
 stands for the type of a function:
-\begin{itemize}
+\begin{compact-itemize}
 \item taking a first argument whose type is the representation  of a
   collection having a compatible interface with the interface {\tt
     Basic\_object}. (This especially means that such an argument is
@@ -83,7 +83,7 @@ stands for the type of a function:
     the current species,
   \item and returning a value whose type is the representation  of the
     current species.
-\end{itemize}
+\end{compact-itemize}
 
 \noindent{\bf Why a collection parameter and not a species parameter?}
 
@@ -521,7 +521,7 @@ this {\bf fresh redefinition} of {\tt n} will be used in the method
 
 \smallskip
 This mechanism enables two programming features:
-\begin{itemize}
+\begin{compact-itemize}
   \item The mean to use a method known by its type (i.e. its prototype
     in term of Software Engineering), but for which we do not know, or
     we don't need or we don't want yet to provide an implementation.
@@ -531,7 +531,7 @@ This mechanism enables two programming features:
     inheriting species can provide some new information
     (representation, functions, ..) which allow a more efficient
     implementation of a given function.
-\end{itemize}
+\end{compact-itemize}
 
 
 
@@ -541,10 +541,10 @@ We previously saw that methods of a species can use other methods of
 this species and methods from its collection parameters. This induce
 what we call {\bf dependencies}\index{dependency}. There are two kinds
 of dependencies, depending on their nature:
-\begin{itemize}
+\begin{compact-itemize}
   \item {\bf Decl-dependencies}
   \item {\bf Def-dependencies}
-\end{itemize}
+\end{compact-itemize}
 In order to understand the difference between, we must inspect further
 the notion of representation, function, and theorem.
 

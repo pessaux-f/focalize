@@ -31,8 +31,9 @@ val generate_termination_lemmas :
     unit
 
 val transform_recursive_calls_args_into_tuple :
-  Context.species_compil_context -> local_idents: Parsetree.vname list ->
-    Parsetree.vname -> Parsetree.expr -> Parsetree.expr
+  Context.species_compil_context -> current_unit: Parsetree.module_name ->
+  local_idents: Parsetree.vname list -> Parsetree.vname -> Parsetree.expr ->
+  Parsetree.expr
 
 val print_user_termination_obls_for_order :
   Parsetree.vname ->

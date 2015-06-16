@@ -26,7 +26,7 @@ A {\bf type constructor} is, roughly speaking, a type name.
 
 {\focal} provides the basic built-in
 types (constructors):
-\begin{itemize}
+\begin{compact-itemize}
   \item {\tt int} for signed machine integers,
   \item {\tt bool} for boolean values ({\tt true} and {\tt false} that
     are hardwired in the syntax or {\tt True} and {\tt False} that are
@@ -35,7 +35,7 @@ types (constructors):
   \item {\tt unit} for the trivial type whose only value is {\tt ()},
   \item {\tt char} for characters literals,
   \item {\tt string} for strings literals.
-\end{itemize}
+\end{compact-itemize}
 Note that these types are translated to {\ocaml} types; for example
 {\tt int} on 32-bits architecture encode values between $-2^{30}$
 and $+2^{30}-1$.
@@ -251,7 +251,7 @@ An important attention must be taken for constructors having
 ``several'' arguments. {\focal} provides 2 different
 (``type-incompatible'') ways to make a value constructor carrying
 several values.
-\begin{itemize}
+\begin{compact-itemize}
 \item Either the constructor has {\bf 1} argument that is a tuple,
   i.e. a type expression involving the {\tt *} constructor.
 
@@ -275,7 +275,7 @@ type t2 =
 \end{lstlisting}}
 
 \noindent means that the constructor {\tt Cstr2} has {\bf 3 arguments}.
-\end{itemize}
+\end{compact-itemize}
 
 \medskip
 This especially important since when matching on such value
@@ -526,10 +526,10 @@ different type expressions are different variables, that is
 $'a \to {\tt int}$ and ${\tt bool} \to 'a$ are compatible.
 
 For example, we consider the two following types:
-\begin{itemize}
+\begin{compact-itemize}
   \item $t_1 = 'a \rightarrow {\tt\ int\ } \rightarrow 'b \rightarrow 'c$
   \item $t_2 = {\tt bool\ } \rightarrow 'd \rightarrow 'd \rightarrow 'e$
-\end{itemize}
+\end{compact-itemize}
 
 In $t_1$ we replace: $'a$ by {\tt bool}, and we leave the others
 variables unchanged. We get the new type
@@ -848,20 +848,20 @@ There are several possibilities to bind an identifier.  Definitions
 introduce a basic or extended identifier and {\bf binds} it to the
 value of the expression stated in the definition.  There are three
 ways to introduce and directly bind an identifier:
-\begin{itemize}
+\begin{compact-itemize}
   \item by a {\tt let-in} construct,
   \item by a toplevel-{\tt let}-definition,
   \item by a method definition ({\tt let}).
- \end{itemize}
+ \end{compact-itemize}
  Each of these cases will
 be described in their related section.
 
 
 There are two ways to introduce basic identifiers as parameters:
-\begin{itemize}
+\begin{compact-itemize}
 \item in a function definition
  \item by a pattern inside a {\tt match-with} construct
-\end{itemize}
+\end{compact-itemize}
 Then the binding of the parameter is deferred until the application of
 the function or the pattern-matching mechanism.
  Each of these cases will
@@ -965,12 +965,12 @@ is used between its arguments as in {\tt x + 4}, the unary operator {\tt
 refer to those operators as regular identifiers (for instance as function
 parameters).
 This allows to use operators as any other identifiers, and
-\begin{itemize}
+\begin{compact-itemize}
   \item using them as regular function (i.e. in functional position),
   \item bind them as arguments of functions,
   \item use them as regular identifiers in expressions, for example to
     pass them as arguments of other functions.
-\end{itemize}
+\end{compact-itemize}
 The following example illustrate the second point:
 \begin{lstlisting}
 let twice(( + ), x, y, z) = (x + y) + z ;;
@@ -1349,7 +1349,7 @@ would have caught the discriminated value.
 \smallskip
 As a consequence of the structure of this construct, type constraints
 must be respected in order to have the whole expression well-typed:
-\begin{itemize}
+\begin{compact-itemize}
   \item The type of the discriminating expression must be compatible with the
     type of the patterns.
   \item thus all the patterns must have compatible
@@ -1359,7 +1359,7 @@ must be respected in order to have the whole expression well-typed:
   \item The patterns have to be mutually exclusive (except for the catch-all
         pattern, see below).
   \item The different cases have to capture every possible pattern.
-\end{itemize}
+\end{compact-itemize}
 
 \medskip In the example above, the patterns were constant. A value
 matches a constant pattern if and only if it is equal to this
@@ -1892,7 +1892,7 @@ simple description of these 3 means without going deeply in the
 technical mechanisms since this problem will be especially addressed
 in section \ref{making-proofs} and \ref{coq-proofs}. % [EJ] Seconde reference mal formee (9.0.6)
 
-\begin{itemize}
+\begin{compact-itemize}
 \item {\bf Consider the proof as ``assumed''}. This way is the
   simplest but also the weakest one since it consists in saying that
   no proof is given and the system must accept the statement as an axiom.
@@ -1915,7 +1915,7 @@ Although such a proof can introduce inconsistencies if the
 ``theorem'' is not a tautology and thus decrease confidence in the
 correctness of the {\focal} program, there are several cases where
 using this keyword may help.
-  \begin{itemize}
+  \begin{compact-itemize}
       \item The first case is simply that the developer doesn't know
         (yet ?) how to make the proof, doesn't have time yet to write
         it, or is not interested in proofs but still wants his program to
@@ -1976,7 +1976,7 @@ using this keyword may help.
         never overflow. If he cannot guarantee non-overflow, then this
         is a true problem of specification or design which should be
         re-considered.
-    \end{itemize}
+    \end{compact-itemize}
 
 In any case,  we advice the reader to use
 the test tool (or another mean) to comfort the confidence in the
@@ -2046,7 +2046,7 @@ theorem int_minus_plus: all x y z in int,
       Qed.
     *} ;;
 \end{lstlisting}}
-\end{itemize}
+\end{compact-itemize}
 
 
 
