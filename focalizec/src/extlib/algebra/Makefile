@@ -13,7 +13,6 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.45 2012-10-15 15:49:42 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -31,8 +30,8 @@ FOCALIZE_SRC=\
  constants.fcl\
  additive_law.fcl\
  multiplicative_law.fcl\
- weak_structures.fcl
-# rings_fields.fcl\
+ weak_structures.fcl \
+ rings_fields.fcl\
  randoms.fcl\
  integers.fcl\
  arrays.fcl\
@@ -106,7 +105,7 @@ include $(ROOT_DIR)/focalizec/.install_var
 include $(ROOT_DIR)/focalizec/.config_var
 
 FOCALIZEC=../../toplevel/focalizec
-FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
+FOCALIZE_COMP_FLAGS= -no-stdlib-path -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -no-dedukti-code
 
 CAML_FLAGS=-w A -warn-error  $(WARN_ERROR) -dtypes -I $(STDLIB_DIR)
 CAML_INCLUDES=-I $(STDLIB_DIR)
@@ -128,8 +127,8 @@ byt:\
  $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BYT_OBJS) $(FOCALIZE_BYT_OBJS_UNSAFE)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)\
- $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)
+# $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 bin:\
  $(EXTERNAL_BIN_OBJS) $(EXTERNAL_VOS)\
@@ -137,8 +136,8 @@ bin:\
  $(FOCALIZE_MLS) $(FOCALIZE_MLS_UNSAFE)\
  $(FOCALIZE_ZVS)\
  $(FOCALIZE_BIN_OBJS) $(FOCALIZE_BIN_OBJS_UNSAFE)\
- $(FOCALIZE_VS) $(FOCALIZE_VOS)\
- $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
+ $(FOCALIZE_VS) $(FOCALIZE_VOS)
+# $(FOCALIZE_SKS) $(FOCALIZE_DKOS)
 
 install:
 	@$(MKDIR) $(INSTALL_LIB_DIR) &&\

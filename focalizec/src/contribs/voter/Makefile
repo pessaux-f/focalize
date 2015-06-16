@@ -13,7 +13,6 @@
 #                                                                      #
 #**********************************************************************#
 
-# $Id: Makefile,v 1.19 2012-10-15 14:59:24 pessaux Exp $
 
 # Makefile for algebra structures implementations
 
@@ -31,7 +30,7 @@ FOCALIZEC=../../toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS=\
  -no-stdlib-path -I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR)\
- -I $(UTILSLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION)
+ -I $(UTILSLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) -no-dedukti-code
 
 CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ALGEBRALIB_DIR) -I $(UTILSLIB_DIR)
