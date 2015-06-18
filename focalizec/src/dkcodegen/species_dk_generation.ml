@@ -630,24 +630,23 @@ let generate_field_definition_prelude ~in_section ?sep ?without_types ctx print_
                    out_fmter;
                (* Anything defined is not abstracted. *)
                []
-           | Env.TypeInformation.MDEM_Defined_computational (fr, _, n, _, sch, _) ->
-               let ty = Types.specialize sch in
+           | Env.TypeInformation.MDEM_Defined_computational (fr, _, n, _, _, _) ->
                if not in_section then
                  begin
                    print_defined_arg (fun out -> Format.fprintf out "abst_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded
                        n)
-                     (fun out -> generate_def_dependency_equivalence
+                     (fun _ -> generate_def_dependency_equivalence
                          env new_ctx generated_fields fr n)
                      out_fmter;
                  end;
                []
-           | Env.TypeInformation.MDEM_Defined_logical (fr, n, b) ->
+           | Env.TypeInformation.MDEM_Defined_logical (_, n, _) ->
                if not in_section then (
                  print_defined_arg
                    (fun out -> Format.fprintf out "abst_%a"
                        Parsetree_utils.pp_vname_with_operators_expanded n)
-                   (fun out -> ())
+                   (fun _ -> ())
                    out_fmter
                  );
                []
@@ -949,27 +948,12 @@ let rec find_only_PN_subs_in_proof_nodes = function
 
 
 
-(* The [~in_zenon_by_def] boolean says if we are in a Zenon
-   "by definition of a rec function".
-   If we are in a Zenon "by definition of a rec function" we must emit the
-   "Termination_fct_namespace.species__fct".
-
-   {b Rem} : For Function.    *)
-let generate_final_recursive_definifion_body_With_Function out_fmter
-    ~in_zenon_by_def species_name name used_species_parameter_tys
-    dependencies_from_params abstracted_methods = ()
-;;
-
-
-
 (** To make recursive definitions working with Zenon.
 
     {b Rem} : For Function. *)
 let zenonify_by_recursive_meth_definition ctx print_ctx env
-    ~self_manifest ~rec_kind used_species_parameter_tys
-    dependencies_from_params abstracted_methods vname params scheme body =
+    ~self_manifest vname params scheme body =
   let out_fmter = ctx.Context.scc_out_fmter in
-  let species_name = snd ctx.Context.scc_current_species in
   Format.fprintf out_fmter
     "(; Method \"%a\" is recursive. Special syntax \"%%recursive\" for \
     Zenon. ;)@\n"
@@ -1091,7 +1075,7 @@ let ensure_enforced_dependencies_by_definition_are_definitions min_dk_env
 
 
 let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
-    generated_fields available_hyps by_def_expr_ident =
+    available_hyps by_def_expr_ident =
   let out_fmter = ctx.Context.scc_out_fmter in
   match by_def_expr_ident.Parsetree.ast_desc with
    | Parsetree.EI_local vname ->
@@ -1219,17 +1203,13 @@ let zenonify_by_definition ctx print_ctx env min_dk_env ~self_manifest
                    %a\". ;)@\n"
                    Sourcify.pp_expr_ident by_def_expr_ident ;
                  match is_rec with
-                 | Env.RC_rec rec_kind ->
+                 | Env.RC_rec _ ->
                      (* Since we are in the case of a method of Self, we must
                         find the abstraction_info and the abstracted_methods
                         in the already [generated_fields]. *)
-                     let memory =
-                       find_compiled_field_memory vname generated_fields in
                      zenonify_by_recursive_meth_definition
-                       ctx print_ctx env ~self_manifest ~rec_kind
-                       memory.Misc_common.cfm_used_species_parameter_tys
-                       memory.Misc_common.cfm_dependencies_from_parameters
-                       memory.Misc_common.cfm_coq_min_typ_env_names vname params
+                       ctx print_ctx env ~self_manifest
+                       vname params
                        scheme body
                  | Env.RC_non_rec  ->
                      Format.fprintf out_fmter "@[<2>abst_%a"
@@ -1718,7 +1698,7 @@ let close_quantifications_and_implications ctx avail_info =
     {b Exported} : No.                                                     *)
 (* *********************************************************************** *)
 let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
-    dependencies_from_params generated_fields available_hyps available_steps
+    dependencies_from_params available_hyps available_steps
     fact =
   let out_fmter = ctx.Context.scc_out_fmter in
   match fact.Parsetree.ast_desc with
@@ -1726,7 +1706,7 @@ let zenonify_fact ctx print_ctx env min_dk_env ~self_manifest
        (* Syntax: "by definition ...". This leads to a Dk Definition. *)
        List.iter
          (zenonify_by_definition
-           ctx print_ctx env min_dk_env ~self_manifest generated_fields
+           ctx print_ctx env min_dk_env ~self_manifest
            available_hyps)
          expr_idents
    | Parsetree.F_property expr_idents ->
@@ -1898,14 +1878,6 @@ let debug_available_steps steps =
 (* ************************************************************************* *)
 type zenon_statement_dk_generation_method =
   | ZSGM_from_logical_expr of Parsetree.logical_expr
-  | ZSGM_from_termination_lemma of
-      (Parsetree.expr *  (** Expression representing the measure or the
-                             order. *)
-       (int list) *      (** Indices of the recursive function parameters
-                             applied to the order/measure expression. This
-                             list will serve to identify which of them will
-                             have to be passed to the user-order. *)
-       Recursion.recursive_calls_description)
 ;;
 
 
@@ -1933,7 +1905,6 @@ let rec zenonify_proof_node section_name_seed node aim_gen_method =
               (begin
               match aim_gen_method with
                | ZSGM_from_logical_expr lexpr -> lexpr
-               | ZSGM_from_termination_lemma (_, _, _) -> assert false
               end)
           | Some logical_expr -> logical_expr) in
        let assumed_variables_and_lemmas =
@@ -1972,7 +1943,6 @@ and zenonify_proof_node_print_before ctx print_ctx env
               (begin
               match aim_gen_method with
                | ZSGM_from_logical_expr lexpr -> lexpr
-               | ZSGM_from_termination_lemma (_, _, _) -> assert false
               end)
           | Some logical_expr -> logical_expr) in
        Format.fprintf out_fmter "dk_logic.eP (";
@@ -2005,7 +1975,6 @@ and zenonify_proof_node_print_after ~in_nested_proof ctx print_ctx env min_dk_en
               (begin
               match aim_gen_method with
                | ZSGM_from_logical_expr lexpr -> lexpr
-               | ZSGM_from_termination_lemma (_, _, _) -> assert false
               end)
           | Some logical_expr -> logical_expr) in
        Format.fprintf out_fmter "(";
@@ -2024,39 +1993,10 @@ and zenonify_proof_node_print_after ~in_nested_proof ctx print_ctx env min_dk_en
          available_steps section_name_seed aim_gen_method default_aim_name
          parent_proof_opt proof
 
-(** Factorize theorem generation for Zenon, with dependencies enforcement. *)
-and emit_zenon_theorem_for_proof ctx print_ctx env min_dk_env
-    aim_gen_method aim_name enforced_deps =
-  let out_fmter = ctx.Context.scc_out_fmter in
-  (* [Unsure] Bad place to make the check. This should be made in something
-     like "abstration.ml". Ensure that the *)
-  ensure_enforced_dependencies_by_definition_are_definitions
-    min_dk_env enforced_deps ;
-  (* Now, print the lemma body. Inside, any method of "Self" is abstracted
-     (without lambda-lift) and named "abst_xxx". That's why we use the mode
-     [SMS_abstracted]. *)
-  Format.fprintf out_fmter "(; Theorem's body. ;)@\n";
-  let opt_for_zenon = "" in
-  Format.fprintf out_fmter "@[<2>%s%a :@ dk_logic.eP ("
-    opt_for_zenon Parsetree_utils.pp_vname_with_operators_expanded aim_name ;
-  (* Generate the aim depending on if we are in a regular proof or in the
-     initial stage of a termination proof. *)
-  (match aim_gen_method with
-  | ZSGM_from_logical_expr aim ->
-      Species_record_type_dk_generation.generate_logical_expr
-        ~local_idents: [] ~in_recursive_let_section_of: []
-        ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
-        ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
-        ctx env aim
-  | ZSGM_from_termination_lemma (order_expr, used_params_indices, rec_calls) ->
-      Format.fprintf out_fmter
-        "@ (; Termination proof ignored in Dedukti output ;)"
-  ) ;
-  Format.fprintf out_fmter ").@]@\n"
 
-(* Same for assumed proof *)
-and admit_zenon_theorem_for_proof ctx print_ctx env min_dk_env
-    aim_gen_method aim_name enforced_deps =
+(* Assumed proof *)
+and admit_zenon_theorem_for_proof ctx env min_dk_env
+    aim_gen_method enforced_deps =
   let out_fmter = ctx.Context.scc_out_fmter in
   (* [Unsure] Bad place to make the check. This should be made in something
      like "abstration.ml". Ensure that the *)
@@ -2066,22 +2006,16 @@ and admit_zenon_theorem_for_proof ctx print_ctx env min_dk_env
      (without lambda-lift) and named "abst_xxx". That's why we use the mode
      [SMS_abstracted]. *)
   Format.fprintf out_fmter "(; Assumed proof node. ;)@\n";
-  let opt_for_zenon = "" in
   Format.fprintf out_fmter "@[<2>dk_builtins.magic_prove (";
   (* Generate the aim depending on if we are in a regular proof or in the
      initial stage of a termination proof. *)
-  (match aim_gen_method with
+  match aim_gen_method with
   | ZSGM_from_logical_expr aim ->
       Species_record_type_dk_generation.generate_logical_expr
         ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_dk_generation.SMS_abstracted
         ~recursive_methods_status: Species_record_type_dk_generation.RMS_regular
         ctx env aim
-  | ZSGM_from_termination_lemma (order_expr, used_params_indices, rec_calls) ->
-      Format.fprintf out_fmter
-        "@ (; Termination proof ignored in Dedukt output ;)"
-  ) ;
-  Format.fprintf out_fmter ")@]@\n"
 
 and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
     ~self_manifest dependencies_from_params generated_fields available_hyps
@@ -2092,12 +2026,12 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
    | Parsetree.Pf_coq (enforced_deps, _)
    | Parsetree.Pf_assumed enforced_deps ->
        admit_zenon_theorem_for_proof
-         ctx print_ctx env min_dk_env
-         aim_gen_method aim_name enforced_deps ;
+         ctx env min_dk_env
+         aim_gen_method enforced_deps ;
        (* Proof is assumed, then simply use "magic_prove". *)
        Format.fprintf out_fmter "(; Proof was flagged as assumed. ;)@\n";
 
-   | Parsetree.Pf_dk (enforced_deps, script) ->
+   | Parsetree.Pf_dk (_, script) ->
        (* Dump verbatim the Dk code. *)
        Format.fprintf out_fmter "(%s)@\n" script;
    | Parsetree.Pf_node nodes ->
@@ -2157,24 +2091,8 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
               "%s%a :@ cc.eT %a.@\n"
               prefix Parsetree_utils.pp_vname_with_operators_expanded vname
               (Dk_pprint.pp_type_simple_to_dk pctx) ty
-         | SVHyp (meth_status, vname, lexpr, sctx) -> ()
-            (* let prefix = match meth_status with *)
-            (*   | Species_record_type_dk_generation.SMS_abstracted -> "abst_" *)
-            (*   | Species_record_type_dk_generation.SMS_from_param name -> *)
-            (*      "_p_" ^ (Parsetree_utils.name_of_vname name) ^ "_" *)
-            (*   | Species_record_type_dk_generation.SMS_from_record -> *)
-            (*      assert false (\* We never construct Hypothesis from record *\) *)
-            (* in *)
-            (* Format.fprintf out_fmter "%s%a :@ dk_logic.eP (" *)
-            (*   prefix *)
-            (*   Parsetree_utils.pp_vname_with_operators_expanded vname; *)
-            (* Species_record_type_dk_generation.generate_logical_expr *)
-            (*   sctx ~in_recursive_let_section_of: [] ~local_idents: [] *)
-            (*   ~self_methods_status:meth_status *)
-            (*   ~recursive_methods_status: *)
-            (*   Species_record_type_dk_generation.RMS_regular *)
-            (*   env lexpr ; *)
-            (* Format.fprintf out_fmter ").@\n" *))
+         | SVHyp _ -> ()
+         )
          (List.rev !section_variable_list);
        Format.fprintf out_fmter
          "@\n@\n@\n(; Methods to use for automated proof. ;)@\n";
@@ -2210,7 +2128,7 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
        List.iter
          (zenonify_fact
             ctx print_ctx env min_dk_env ~self_manifest
-            dependencies_from_params generated_fields available_hyps
+            dependencies_from_params available_hyps
             available_steps)
          real_facts;
        (* Now, print the lemma body. Inside, any method of "Self" is
@@ -2230,9 +2148,6 @@ and zenonify_proof ~in_nested_proof ~qed ctx print_ctx env min_dk_env
               ~recursive_methods_status:
                 Species_record_type_dk_generation.RMS_regular
               ctx env aim
-        | ZSGM_from_termination_lemma _ ->
-            Format.fprintf out_fmter
-              "@ (; Termination proof ignored in Dedukti output ;)"
        ) ;
        Format.fprintf out_fmter ").@\n" ;
        (* End of Zenon stuff. *)
@@ -2451,213 +2366,6 @@ let generate_theorem ctx print_ctx env min_dk_env used_species_parameter_tys
       end) in
   (* Return the names abstracted in the minimal typing environment. *)
   abstracted_methods
-;;
-
-
-
-(**
-    Since this function is called after the function
-    [bind_parameters_to_types_from_type_scheme] who was provided a type
-    scheme, the optionnal typec in the list are always or the form [Some] !
-
-    {b Rem} : Not exported outside this module. *)
-let print_types_as_tuple_if_several print_ctx out_fmter types =
-  let rec rec_print = function
-    | [] -> assert false
-    | [(_, ty)] ->
-        (* We force parentheses to prevent any associability problems since
-           we don't really print 1 unique type but several arbitrary type
-           expressions we want to group as a tuple. *)
-        Format.fprintf out_fmter "(%a)"
-          (Dk_pprint.pp_type_simple_to_dk print_ctx) ty
-    | (_, ty) :: q ->
-        (* Same remark than above for parentheses. *)
-        Format.fprintf out_fmter "(%a)@ *@ "
-          (Dk_pprint.pp_type_simple_to_dk print_ctx) ty ;
-        rec_print q in
-  match types with
-   | [] -> assert false
-   | [(_, _)] -> rec_print types
-   | _ ->
-       Format.fprintf out_fmter "(@[<1>(";
-       rec_print types;
-       Format.fprintf out_fmter ")%%type@])"
-;;
-
-
-
-(* ************************************************************** *)
-(* ('a * 'b) list -> ('a * 'c) list -> ('a * bool) list           *)
-(** {b Descr}: Find the variables that must be kept in the pattern
-    representing the tuple of a recursive function's arguments
-    the termination order, applies on them. For each variable of
-    the function (i.e. those in the list [fun_params_n_tys]) we
-    make a couple in the result with this variable's name and the
-    boolean value telling if the variable appears in the pattern.
-
-    {b Rem} : Not exported outside this module.                     *)
-(* ************************************************************** *)
-let pattern_from_used_variables fun_params_n_tys vars_used_by_order =
-  let rec rec_find = function
-    | [] -> []
-    | (h, _) :: q ->
-        (* Check if this function parameter is used by the order... *)
-        let component =
-          if Handy.list_mem_custom_eq
-              (fun (n, _) n' -> n = n') h vars_used_by_order then (h, true)
-          else (h, false) in
-        component :: (rec_find q) in
-  rec_find fun_params_n_tys
-;;
-
-
-
-(* ************************************************************************ *)
-(** {b Descr} : Prints the structure of the pattern with for each retained
-    variable (i.e. whose presence = [true]) its name followed by the string
-    [suffix] or "_" if the variable is not retained.
-    Note that the parentheses surrouding the pattern are printed by this
-    function.
-    Returns the list of generated idents as [Vlident]s.
-
-    {b Rem} : Not exported outside this module.                               *)
-(* ************************************************************************ *)
-let print_pattern_for_order out_fmter ~var_suffix description =
-  let rec rec_print = function
-    | [] -> assert false
-    | [(last_name, last_presence)] ->
-        (begin
-        if last_presence then
-          (Format.fprintf out_fmter "%a%s"
-             Parsetree_utils.pp_vname_with_operators_expanded last_name
-             var_suffix;
-           [Parsetree.Vlident
-              ((Parsetree_utils.name_of_vname last_name) ^ var_suffix)])
-        else
-          (Format.fprintf out_fmter "_";
-           [])
-        end)
-    | (name, presence) :: q ->
-        let printed =
-          if presence then
-            (Format.fprintf out_fmter "%a%s,@ "
-               Parsetree_utils.pp_vname_with_operators_expanded name
-               var_suffix;
-             [Parsetree.Vlident
-                ((Parsetree_utils.name_of_vname name) ^ var_suffix)])
-          else
-            (Format.fprintf out_fmter "_,@ "; []) in
-        printed @ (rec_print q) in
-  Format.fprintf out_fmter "(";
-  let printed = rec_print description in
-  Format.fprintf out_fmter ")";
-  printed
-;;
-
-
-
-(* [Unsure] Candidate for killing once match have disappeared in order
-  generation. *)
-let print_idents_as_tuple out_fmter idents =
-  let rec rec_print = function
-    | [] -> assert false
-    | [last] ->
-        Format.fprintf out_fmter "%a"
-          Parsetree_utils.pp_vname_with_operators_expanded last
-    | h :: q ->
-        Format.fprintf out_fmter "%a,@ "
-          Parsetree_utils.pp_vname_with_operators_expanded h;
-        rec_print q in
-  Format.fprintf out_fmter "(";
-  rec_print idents;
-  Format.fprintf out_fmter ")"
-;;
-
-
-
-(** {b Descr}: Prints the tuple of function arguments involved in a termination
-    order. Each function argument is obtained by a projection of the order
-    argument named [arg_name]. The projection is done using builtin Dk
-    definitions, depending on the indice of the initial function argument and
-    the number of arguments this initial function has.
-    The file dk_builtins.v contains a set of pre-defined (and non-exhaustive)
-    projection functions allwing to recover individual components of tuples
-    between 2 and 6 components. This is mostly to avoid using nested pattern
-    matchings to extract components from the tuples passed to the order (and
-    that represent the tuplification of all the initial function's arguments).
-    In effect, with pattern matching, we don't know how to automate parts of
-    the proof termination in Dk. *)
-let print_order_args_as_tuple out_fmter ~fun_arity arg_name indices =
-  if fun_arity = 1 then Format.fprintf out_fmter "%s" arg_name
-  else
-    let rec rec_print = function
-      | [] -> assert false
-      | [last] ->
-          if last = 0 then
-            Format.fprintf out_fmter
-              "(dk_builtins.__tpl_firstprj%d@ " fun_arity
-          else 
-            Format.fprintf out_fmter
-              "(dk_builtins.__tpl_lastprj%d@ " (fun_arity - last) ;
-          for _i = 1 to fun_arity do Format.fprintf out_fmter "_@ " done ;
-          Format.fprintf out_fmter "%s)" arg_name
-      | h :: q ->
-          if h = 0 then
-            Format.fprintf out_fmter
-              "(dk_builtins.__tpl_firtprj%d@ " fun_arity
-          else Format.fprintf out_fmter
-            "(dk_builtins.__tpl_lastprj%d@ " (fun_arity - h) ;
-          for _i = 1 to fun_arity do Format.fprintf out_fmter "_@ " done ;
-          Format.fprintf out_fmter "%s),@ " arg_name ;
-          rec_print q in
-    Format.fprintf out_fmter "(" ;
-    rec_print indices ;
-    Format.fprintf out_fmter ")"
-;;
-
-
-
-(* ************************************************************************ *)
-(* **************** CODE GENERATION FOR RECURSIVE METHODS. **************** *)
-(* ************************************************************************ *)
-
-
-(* ************************************************************************ *)
-(** {b Descr}: Dumps the code of the Dk Definition of the "xxx_wforder"
-    according to the kind of the provided termination proof. This order
-    will appear in the statement of the termination obligation as a part of
-    the whole goal. This part will state that this order is well-founded.
-    The parameters of this Definition contains the lambda-lifts induced by
-    dependencies and two tuples of the original arguments of the recursive
-    function. The order will have to be suitable to compare these two
-    tuples.
-
-    {b Rem} : For Function.
-
-    {b Exported}: No.                                                       *)
-(* ************************************************************************ *)
-let generate_termination_order_With_Function ctx print_ctx env name
-    fun_params_n_tys ai sorted_deps_from_params
-    generated_fields (* Only needed for "prelude". *)
-    opt_term_pr = ()
-;;
-
-
-
-(** {b Rem} :  For Function. Uses the "fname"_wforder previously generated
-    (i.e. the order as Function expects, not the user-order) and uses, for
-    this former application, the tuple of all variables / recursive args
-    of the function: not only those on which the user-order operates. *)
-let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
-    name fun_params_n_tys ai
-    sorted_deps_from_params generated_fields (* Only needed for "prelude". *)
-    recursive_calls opt_term_pr =
-    generate_field_definition_prelude
-      ~in_section: true ctx print_ctx env
-      ai.Env.TypeInformation.ad_min_dk_env
-      ai.Env.TypeInformation.ad_used_species_parameter_tys
-      sorted_deps_from_params generated_fields
-;;
 
 
 
@@ -2673,7 +2381,7 @@ let generate_termination_proof_With_Function ctx print_ctx env ~self_manifest
  *************************************************************************** *)
 (* TODO: split in several parts. Too big ! *)
 let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
-    ~self_manifest generated_fields from name params scheme body opt_term_pr
+    generated_fields from name params scheme body
     ai =
   let out_fmter = ctx.Context.scc_out_fmter in
   match body with
@@ -2708,10 +2416,6 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
            params_with_type in
        let return_ty =
          match return_ty_opt with None -> assert false | Some t -> t in
-       (* Compute the recursive calls information to generate the termination
-          proof obligation. *)
-       let recursive_calls =
-         Recursion.list_recursive_calls name params_with_type [] body_expr in
 
 (* [Unsure] *)
        let (abstracted_methods, new_ctx, new_print_ctx) =
@@ -2946,7 +2650,7 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
   (* Now, generate the prelude of the only method introduced by "let rec". *)
   Format.fprintf out_fmter "@[<2>Fixpoint %a@ "
     Parsetree_utils.pp_vname_with_operators_expanded name ;
-  let (abstracted_methods, new_ctx, new_print_ctx) =
+  let (_, new_ctx, new_print_ctx) =
     generate_field_definition_prelude
       ~in_section: false ctx' print_ctx env ai.Env.TypeInformation.ad_min_dk_env
       ai.Env.TypeInformation.ad_used_species_parameter_tys
@@ -2985,7 +2689,7 @@ let generate_defined_recursive_let_definition_With_Fixpoint ctx print_ctx env
 
     {b Visibility}: Not exported outside this module.
  *************************************************************************** *)
-let generate_recursive_let_definition ctx print_ctx env ~self_manifest
+let generate_recursive_let_definition ctx print_ctx env
     fields_abstraction_infos generated_fields l =
   match l with
    | [] ->
@@ -3003,8 +2707,8 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
              (* For the moment, if no termination proof is stated, we continue
                 using the "Function" scheme until better thing is available. *)
              generate_defined_recursive_let_definition_With_Function
-               ctx print_ctx env ~self_manifest generated_fields from name
-               params scheme body opt_term_pr ai
+               ctx print_ctx env generated_fields from name
+               params scheme body ai
          | Some term_pr -> (
              match term_pr.Parsetree.ast_desc with
                | Parsetree.TP_structural decr_arg_name ->
@@ -3018,8 +2722,8 @@ let generate_recursive_let_definition ctx print_ctx env ~self_manifest
                       continue using the "Function" scheme until better thing is
                       available. *)
                    generate_defined_recursive_let_definition_With_Function
-                     ctx print_ctx env ~self_manifest generated_fields from name
-                     params scheme body opt_term_pr ai
+                     ctx print_ctx env generated_fields from name
+                     params scheme body ai
             )
         )
        else (
@@ -3126,7 +2830,7 @@ let generate_methods ctx print_ctx env ~self_manifest fields_abstraction_infos g
       Misc_common.CSF_let compiled_field
   | Env.TypeInformation.SF_let_rec l ->
       generate_recursive_let_definition
-        ctx print_ctx env ~self_manifest fields_abstraction_infos generated_fields l
+        ctx print_ctx env fields_abstraction_infos generated_fields l
   | Env.TypeInformation.SF_theorem (from, name, _, logical_expr, pr, _) ->
       let abstraction_info = List.assoc name fields_abstraction_infos in
       let coq_min_typ_env_names =

@@ -140,91 +140,6 @@ let extend_dk_gen_env_with_type_external_mapping env nb_extra_args
 ;;
 
 
-
-(* Recursive definitions need to enforce an evaluation order:
-   some functions should only be applied to their arguments after
-   they have been reduced to values. This is ensured by a special
-   "call_by_value" higher-order and polymorphic function defined for
-   each type:
-
-   If T is a type with a polymorphic parameter poly_arg, then
-
-   call_by_value : poly_arg : cc.uT ->
-                   R : cc.uT ->
-                   (cc.eT (T poly_args) -> cc.eT R) ->
-                   cc.eT (T poly_arg) -> cc.eT R.
-
-   and for each possible value v of type T,
-
-   [ poly_arg : cc.uT, R : cc.uT, f : cc.eT (T poly_arg) -> cc.eT R ]
-       call_by_value_T poly_arg R f v --> f v.
-
-   This function defines this function call_by_value_T
- *)
-
-let generate_call_by_value_definition ctx env type_def_name type_descr =
-  let out_fmter = ctx.Context.rcc_out_fmter in
-  (* Build the print context for the methods once for all. *)
-  let print_ctx = {
-    Dk_pprint.dpc_current_unit = ctx.Context.rcc_current_unit ;
-    Dk_pprint.dpc_current_species = None;
-    Dk_pprint.dpc_collections_carrier_mapping =
-      ctx.Context.rcc_collections_carrier_mapping } in
-  (* We do not operate on a fresh instance of the type's identity scheme. We
-     directly work on the type scheme, taking care to perform *no* unifications
-     to prevent poluting it ! *)
-  let type_def_params = type_descr.Env.TypeInformation.type_params in
-  let (_, tydef_body) =
-    Types.scheme_split type_descr.Env.TypeInformation.type_identity in
-  (* Compute the number of extra polymorphic-induced arguments to the
-     constructor. *)
-  let nb_extra_args = List.length type_def_params in
-  match type_descr.Env.TypeInformation.type_kind with
-   | Env.TypeInformation.TK_abstract -> ()
-   | Env.TypeInformation.TK_external _ -> ()
-                                           (* We use the same hack than for inserting the rest of the type definition *)
-   | Env.TypeInformation.TK_variant cstrs ->
-       (begin
-       let sum_constructors_to_print =
-         List.map
-           (fun (sum_cstr_name, sum_cstr_arity, sum_cstr_scheme) ->
-             (* Recover the body of the scheme of the constructor. *)
-             let (_, sum_cstr_ty) = Types.scheme_split sum_cstr_scheme in
-             let sum_cstr_args =
-               (* We don't have anymore info about "Self"'s structure... *)
-               if sum_cstr_arity = Env.TypeInformation.CA_some then
-                 Types.extract_prod_ty
-                   ~self_manifest: None
-                   (Types.extract_fun_ty_arg ~self_manifest: None sum_cstr_ty)
-               else []
-             in
-
-             (sum_cstr_name, sum_cstr_ty, sum_cstr_args))
-           cstrs in
-       Format.fprintf out_fmter "@]@\n@\n";
-         (begin
-         (* Since any variant type constructors must be inserted in the
-            environment in order to know the number of extra leading "_" due to
-            polymorphism, we return the extended environment. *)
-         let env_with_value_constructors =
-           List.fold_left
-             (fun accu_env (sum_cstr_name, _, _) ->
-               Env.DkGenEnv.add_constructor
-                 sum_cstr_name
-                 { Env.DkGenInformation.cmi_num_polymorphics_extra_args =
-                     nb_extra_args ;
-                   Env.DkGenInformation.cmi_external_translation = None }
-                 accu_env)
-             env
-             sum_constructors_to_print in
-         ()
-          end)
-        end)
-   | Env.TypeInformation.TK_record fields ->
-      ()
-;;
-
-
 (* ************************************************************************* *)
 (* as_zenon_fact: bool -> Context.reduced_compil_context ->                  *)
 (*   Env.DkGenEnv.t -> Parsetree.vname ->                                   *)
@@ -433,9 +348,9 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
                           type_def_params
-                          (fun out -> List.iteri (fun i a -> Format.fprintf out "x_%d_@ " i))
+                          (fun out -> List.iteri (fun i _ -> Format.fprintf out "x_%d_@ " i))
                           cstr_args
-                          (fun out -> List.iteri (fun i a -> Format.fprintf out "@ x_%d_" i))
+                          (fun out -> List.iteri (fun i _ -> Format.fprintf out "@ x_%d_" i))
                           cstr_args;
                         end else begin
                           Format.fprintf out_fmter
@@ -454,7 +369,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           Parsetree_utils.pp_vname_with_operators_expanded curr_sum_cstr_name
                           (print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_spaces print_ctx)
                           type_def_params
-                          (fun out -> List.iteri (fun i a -> Format.fprintf out "x_%d_@ " i))
+                          (fun out -> List.iteri (fun i _ -> Format.fprintf out "x_%d_@ " i))
                           curr_cstr_args;
            end)
          sum_constructors_to_print
@@ -479,11 +394,30 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
                           Parsetree_utils.pp_vname_with_operators_expanded type_def_name
                           (print_types_parameters_with_spaces print_ctx) type_def_params
        ;
-       (* CBV has a rewrite rule for each constructor. *)
+
+         (* Recursive definitions need to enforce an evaluation order:
+   some functions should only be applied to their arguments after
+   they have been reduced to values. This is ensured by a special
+   "call_by_value" higher-order and polymorphic function defined for
+   each type:
+
+   If T is a type with a polymorphic parameter poly_arg, then
+
+   call_by_value : poly_arg : cc.uT ->
+                   R : cc.uT ->
+                   (cc.eT (T poly_args) -> cc.eT R) ->
+                   cc.eT (T poly_arg) -> cc.eT R.
+
+   and for each possible value v of type T,
+
+   [ poly_arg : cc.uT, R : cc.uT, f : cc.eT (T poly_arg) -> cc.eT R ]
+       call_by_value_T poly_arg R f v --> f v.
+
+ *)
        List.iter
          (fun (sum_cstr_name, _, cstr_args) ->
            (* The sum constructor name. *)
-           Format.fprintf out_fmter "@[(; CBV for type constructor %a (TODO) ;)@]@\n"
+           Format.fprintf out_fmter "@[(; CBV for type constructor %a  ;)@]@\n"
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name;
            Format.fprintf out_fmter "@[[";
            print_types_parameters_sharing_vmapping_and_empty_carrier_mapping_with_commas
@@ -505,7 +439,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            List.iter (Format.fprintf out_fmter "@ %a" (Dk_pprint.pp_type_simple_to_dk print_ctx))
                      type_def_params;
            List.iteri
-             (fun i ty -> Format.fprintf out_fmter "@ x_%d_" i)
+             (fun i _ -> Format.fprintf out_fmter "@ x_%d_" i)
              cstr_args;
            Format.fprintf out_fmter ")@ --> ";
            Format.fprintf out_fmter "f@ (%a"
@@ -513,7 +447,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
            List.iter (Format.fprintf out_fmter "@ %a" (Dk_pprint.pp_type_simple_to_dk print_ctx))
                      type_def_params;
            List.iteri
-             (fun i ty -> Format.fprintf out_fmter "@ x_%d_" i)
+             (fun i _ -> Format.fprintf out_fmter "@ x_%d_" i)
              cstr_args;
            Format.fprintf out_fmter ").@\n";
            (* (\* The type of the destructor. *)
