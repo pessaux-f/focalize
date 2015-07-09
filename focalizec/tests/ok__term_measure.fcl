@@ -4,7 +4,7 @@ use "wellfounded" ;;
 
 theorem zero_inf_one : 0 < 1 proof = assumed ;;
 
-theorem abs_basics : all x : int, ((x = 0) \/ (0 < x)) -> abs (x) = x
+theorem abs_basics : all x : int, ((x = 0) \/ (0 < x)) -> int_abs (x) = x
 proof = assumed ;;
 
 

@@ -9,7 +9,7 @@ open "basics" ;;
 
 
 let rec even (x : int) =
-  if x =0x 0 then true else odd (pred (x))
+  if x =0x 0 then true else odd (int_pred (x))
 and odd (y : int) =
-  if y =0x 0 then false else even (pred (y))
+  if y =0x 0 then false else even (int_pred (y))
 ;;

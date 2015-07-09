@@ -59,7 +59,7 @@ must_ok_complete: $(MUST_BE_OK_SRCS_COMPLETE)
 	@$(RM) must_ok_complete.log
 	@for i in $(MUST_BE_OK_SRCS_COMPLETE); do \
 		echo "PROCESSING: $$i" ; \
-	  $(CHECKED_FOCALIZEC) -I $(CHECKED_STDLIB) $$i; \
+	  $(CHECKED_FOCALIZEC) -no-dedukti-code -I $(CHECKED_STDLIB) $$i; \
 	  err=$$?; \
 	  case $$err in \
 	 		0);; \
@@ -75,7 +75,7 @@ must_ok_no_coq: $(MUST_BE_OK_SRCS_NO_COQ)
 	@$(RM) must_ok_no_coq.log
 	@for i in $(MUST_BE_OK_SRCS_NO_COQ); do \
 		echo "PROCESSING: $$i" ; \
-	  $(CHECKED_FOCALIZEC) -I $(CHECKED_STDLIB) -no-coq-code $$i; \
+	  $(CHECKED_FOCALIZEC) -no-dedukti-code -I $(CHECKED_STDLIB) -no-coq-code $$i; \
 		err=$$?;\
 	  case $$err in \
 		  0);; \
@@ -91,7 +91,7 @@ must_ko: $(MUST_BE_KO_SRCS)
 	@$(RM) must_ko.log
 	@for i in $(MUST_BE_KO_SRCS); do \
 		echo "PROCESSING: $$i" ; \
-	  $(CHECKED_FOCALIZEC) -I $(CHECKED_STDLIB) $$i; \
+	  $(CHECKED_FOCALIZEC) -no-dedukti-code -I $(CHECKED_STDLIB) $$i; \
 		err=$$?;\
 	  case $$err in \
 	    0) echo "***********************************************************" ; \
