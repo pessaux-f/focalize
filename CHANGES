@@ -14,7 +14,8 @@
   arguments in right number instead of full types/expression. Makes the
   generated code shorter and more readable.
 - Don't require Zenon source code to be present in a zenon subfolder
-
+- Fixed bug in the parser causing collision between documentation comments
+  and delimited identifiers.
 
 # Focalize 0.9.0
 ################

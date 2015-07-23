@@ -534,7 +534,7 @@ let store_delimited_ident_char c =
 
 let get_stored_delimited_ident () =
   let s = String.sub !delimited_ident_buff 0 !delimited_ident_index in
-  delimited_ident_buff := initial_external_code_buffer;
+  delimited_ident_buff := initial_delimited_ident_buffer;
   s
 ;;
 
