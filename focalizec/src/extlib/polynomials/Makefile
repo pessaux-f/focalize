@@ -31,9 +31,9 @@ STDLIB_DIR=$(ROOT_DIR)/focalizec/src/stdlib
 FOCALIZEC=$(ROOT_DIR)/focalizec/src/toplevel/focalizec
 
 FOCALIZE_COMP_FLAGS=\
-  -stop-before-coq -no-stdlib-path \
+  -no-stdlib-path -no-dedukti-code \
   -I $(STDLIB_DIR) $(FOCALIZEC_COQ_COMPATIBILITY_OPTION) \
-  -I $(ROOT_DIR)/focalizec/src/extlib/algebra
+  -I $(ROOT_DIR)/focalizec/src/extlib/algebra -zvtovopt -script
 
 CAML_FLAGS= -w A -warn-error $(WARN_ERROR) -dtypes
 CAML_INCLUDES=-I $(STDLIB_DIR) -I $(ROOT_DIR)/focalizec/src/extlib/algebra
