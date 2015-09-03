@@ -1600,47 +1600,13 @@ let ensure_species_well_formed ~current_species fields =
 (*   Env.TypeInformation.species_field list                               *)
 (** {b Descr} : Implements the erasing procedure of one field described
     in Virgile Prevosto's Phd, Section 3.9.5, page 53, definition 33.
-
-    {b Rem} : Because the erasing of one Let_rec leads to several Sig
-    fields this function takes 1 fields and may return several.
-    In the same spirit, because we don't have any "silent"  Sig for "rep"
-    (of course, "rep" is always a Sig when present), if we find "rep"
-    defined, then the only way to abstract it is to remove it. Hence this
-    function may also return an empty list of fields.
+    However, this definition was not minimalist: we can only erase
+    theorems, not the representation nor the lets.
 
    {b Exported} : No.                                                      *)
 (* *********************************************************************** *)
 let erase_field ~current_species field =
   match field with
-  | Env.TypeInformation.SF_sig (from, vname, _) ->
-    (* Also includes "rep". *)
-    let m_name_as_str = Parsetree_utils.name_of_vname vname in
-    if m_name_as_str = "rep" then
-      (begin
-      if Configuration.get_verbose () then
-        Format.eprintf "Erasing field '%a' coming from '%a'.@."
-          Sourcify.pp_vname vname
-          Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
-      []  (* No explicit "rep" means ... no "rep". *)
-      end)
-    else [field]
-  | Env.TypeInformation.SF_let (from, vname, _, sch, _, _, _, _) ->
-      if Configuration.get_verbose () then
-        Format.eprintf "Erasing field '%a' coming from '%a'.@."
-          Sourcify.pp_vname vname
-          Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
-      (* Turn the "let" into a "sig". *)
-      [Env.TypeInformation.SF_sig (from, vname, sch)]
-  | Env.TypeInformation.SF_let_rec l ->
-      (* Just turn the whole list into "sig"s. *)
-      List.map
-        (fun (from, n, _, sch, _, _, _, _) ->
-          if Configuration.get_verbose () then
-            Format.eprintf "Erasing field '%a' coming from '%a'.@."
-              Sourcify.pp_vname n
-              Sourcify.pp_qualified_species from.Env.fh_initial_apparition ;
-          Env.TypeInformation.SF_sig (from, n, sch))
-        l
   | Env.TypeInformation.SF_theorem (from, n, num_ty_vars, prop, _, deps_rep) ->
       if Configuration.get_verbose () then
         Format.eprintf "Erasing field '%a' coming from '%a'.@."
@@ -1667,8 +1633,12 @@ let erase_field ~current_species field =
 (* [Unsure] Recalculer ces dépendances ? Je pense que le plus safe serait
    de ne pas les changer ! *)
       let deps_rep' = { deps_rep with Env.TypeInformation.dor_def = false } in
-      [Env.TypeInformation.SF_property (from, n, num_ty_vars, prop, deps_rep')]
-  | _ -> [field]                       (* Everything else is unchanged. *)
+      Env.TypeInformation.SF_property (from, n, num_ty_vars, prop, deps_rep')
+    (* Everything else is unchanged. *)
+  | Env.TypeInformation.SF_sig (_, _, _)
+  | Env.TypeInformation.SF_let_rec _
+  | Env.TypeInformation.SF_let (_, _, _, _, _, _, _, _)
+  | Env.TypeInformation.SF_property (_, _, _, _, _) -> field
 ;;
 
 
@@ -1787,7 +1757,7 @@ let erase_fields_in_context ~current_species context fields =
               Parsetree_utils.SelfDepSet.union
                 rec_context (names_set_of_field m_field) in
             (* And then process the remaining fields. *)
-            erased_m_field @ (rec_erase new_context l_rem_fields)
+            erased_m_field :: (rec_erase new_context l_rem_fields)
             end)
       end) in
   (* ***************** *)
