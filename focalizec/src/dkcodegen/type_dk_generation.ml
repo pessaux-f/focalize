@@ -191,7 +191,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
   (* Now, generates the type definition's body. *)
   match type_descr.Env.TypeInformation.type_kind with
    | Env.TypeInformation.TK_abstract ->
-       Format.fprintf out_fmter "@[<2>%a__t@ "
+       Format.fprintf out_fmter "@[<2>def %a__t@ "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
@@ -209,7 +209,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
        else env
    | Env.TypeInformation.TK_external (external_expr, external_mapping) ->
        (begin
-       Format.fprintf out_fmter "@[<2>%a__t@ "
+       Format.fprintf out_fmter "@[<2>def %a__t@ "
          Parsetree_utils.pp_vname_with_operators_expanded type_def_name ;
        (* Print the parameter(s) stuff if any. *)
        print_types_parameters_sharing_vmapping_and_empty_carrier_mapping
@@ -315,7 +315,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
        List.iter
          (fun (sum_cstr_name, _, cstr_args) ->
            (* The sum constructor name. *)
-           Format.fprintf out_fmter "@\n%smatch__%a :@ @[<v 2>"
+           Format.fprintf out_fmter "@\ndef %smatch__%a :@ @[<v 2>"
              qualif
              Parsetree_utils.pp_vname_with_operators_expanded sum_cstr_name ;
            (* The type of the destructor.
@@ -379,7 +379,7 @@ let type_def_compile ~as_zenon_fact ctx env type_def_name type_descr =
        if not as_zenon_fact then
          (begin
              (* The call_by_value construction is higher-order so we don't give it to Zenon *)
-             Format.fprintf out_fmter "@[<2>call_by_value_%a__t : "
+             Format.fprintf out_fmter "@[<2>def call_by_value_%a__t : "
                Parsetree_utils.pp_vname_with_operators_expanded type_def_name;
        (* Print the parameter(s) stuff if any. Do it only now the unifications
           have been done with the sum constructors to be sure that thanks to

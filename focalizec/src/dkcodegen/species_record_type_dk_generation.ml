@@ -915,7 +915,7 @@ let rec let_binding_compile ctx ~opt_term_proof
   let toplevel_loc = if toplevel then Some bd.Parsetree.ast_loc else None in
   let out_fmter = ctx.Context.scc_out_fmter in
   (* Generate the binder and the bound name. *)
-  Format.fprintf out_fmter "%a"
+  Format.fprintf out_fmter "def %a"
     Parsetree_utils.pp_vname_with_operators_expanded
     bd.Parsetree.ast_desc.Parsetree.b_name ;
   (* Build the print context. *)

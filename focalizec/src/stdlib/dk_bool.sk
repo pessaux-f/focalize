@@ -3,141 +3,111 @@
 (; Bool ;)
 (; Declaration ;)
 bool : cc.uT.
-Bool : Type := cc.eT bool.
+def Bool : Type := cc.eT bool.
 
 (; Constructors ;)
 true : Bool.
 false : Bool.
 
 (; Values of type Bool are true and false ;)
-call_by_value_bool : R : cc.uT -> (Bool -> cc.eT R) -> Bool -> cc.eT R.
-[ R : cc.uT, f : Bool -> cc.eT R ]
-    call_by_value_bool R f true --> f true
-[ R : cc.uT, f : Bool -> cc.eT R ]
-    call_by_value_bool R f false --> f false.
+def call_by_value_bool : R : cc.uT -> (Bool -> cc.eT R) -> Bool -> cc.eT R.
+[f]
+    call_by_value_bool _ f true --> f true
+[f]
+    call_by_value_bool _ f false --> f false.
 
 (; Pattern-matching ;)
-match :
+def match :
   P : (Bool -> cc.uT) ->
   cc.eT (P true) ->
   cc.eT (P false) ->
   b : Bool ->
   cc.eT (P b).
-[P : Bool -> cc.uT,
- Ht : cc.eT (P true),
- Hf : cc.eT (P false) ]
-    match P Ht Hf true --> Ht
-[P : Bool -> cc.uT,
- Ht : cc.eT (P true),
- Hf : cc.eT (P false) ]
-    match P Ht Hf false --> Hf.
+[H] match _ H _ true  --> H
+[H] match _ _ H false --> H.
 
 (; Operations ;)
 (; polymorphic if .. then .. else .. ;)
-ite :
+def ite :
   A : cc.uT ->
   Bool ->
   cc.eT A ->
   cc.eT A ->
   cc.eT A.
-[ A : cc.uT,
-  x : cc.eT A,
-  y : cc.eT A,
-  b : Bool ]
+[A,x,y,b]
     ite A b x y
       -->
     match (b : Bool => A) x y b.
 
-match__true :
+def match__true :
   Bool ->
   A : cc.uT ->
   cc.eT A ->
   cc.eT A ->
   cc.eT A.
-[ A : cc.uT, b : Bool, t : cc.eT A, e : cc.eT A]
+[A,b,t,e]
     match__true b A t e --> ite A b t e.
 
-match__false :
+def match__false :
   Bool ->
   A : cc.uT ->
   cc.eT A ->
   cc.eT A ->
   cc.eT A.
-[ A : cc.uT, b : Bool, t : cc.eT A, e : cc.eT A]
+[A,b,t,e]
     match__false b A t e --> ite A b e t.
 
 (; boolean if .. then .. else .. ;)
-iteb : Bool -> Bool -> Bool -> Bool
+def iteb : Bool -> Bool -> Bool -> Bool
      := ite bool.
 
 (; negation ;)
-not : Bool -> Bool.
+def not : Bool -> Bool.
 [] not true --> false
 [] not false --> true
-[ b : Bool ] not (not b) --> b.
+[b] not (not b) --> b.
 
 (; binary operators ;)
-and : Bool -> Bool -> Bool.
-[ b : Bool ] and b true --> b
-[ b : Bool ] and true b --> b
-[ b : Bool ] and b false --> false
-[ b : Bool ] and false b --> false.
+def and : Bool -> Bool -> Bool.
+[b] and b true --> b
+[b] and true b --> b
+[]  and _ false --> false
+[]  and false _ --> false.
 
-or : Bool -> Bool -> Bool.
-[ b : Bool ] or b true --> true
-[ b : Bool ] or true b --> true
-[ b : Bool ] or b false --> b
-[ b : Bool ] or false b --> b.
+def or : Bool -> Bool -> Bool.
+[]  or _ true --> true
+[]  or true _ --> true
+[b] or b false --> b
+[b] or false b --> b.
 
-xor : Bool -> Bool -> Bool.
-[ b : Bool ] xor b true --> not b
-[ b : Bool ] xor true b --> not b
-[ b : Bool ] xor b false --> b
-[ b : Bool ] xor false b --> b.
+def xor : Bool -> Bool -> Bool.
+[b] xor b true --> not b
+[b] xor true b --> not b
+[b] xor b false --> b
+[b] xor false b --> b.
 
-imp : Bool -> Bool -> Bool.
-[ b : Bool ] imp b true --> true
-[ b : Bool ] imp true b --> b
-[ b : Bool ] imp b false --> not b
-[ b : Bool ] imp false b --> true.
+def imp : Bool -> Bool -> Bool.
+[] imp _ true --> true
+[b] imp true b --> b
+[b] imp b false --> not b
+[] imp false _ --> true.
 
-eqv : Bool -> Bool -> Bool.
-[ b : Bool ] eqv b true --> b
-[ b : Bool ] eqv true b --> b
-[ b : Bool ] eqv b false --> not b
-[ b : Bool ] eqv false b --> not b.
+def eqv : Bool -> Bool -> Bool.
+[b] eqv b true --> b
+[b] eqv true b --> b
+[b] eqv b false --> not b
+[b] eqv false b --> not b.
 
 (; Associativity ;)
-[ b1 : Bool, b2 : Bool, b3 : Bool ]
-    and b1 (and b2 b3) --> and (and b1 b2) b3.
-[ b1 : Bool, b2 : Bool, b3 : Bool ]
-    or b1 (or b2 b3) --> or (or b1 b2) b3.
-[ b1 : Bool, b2 : Bool, b3 : Bool ]
-    xor b1 (xor b2 b3) --> xor (xor b1 b2) b3.
+[b1,b2,b3] and b1 (and b2 b3) --> and (and b1 b2) b3.
+[b1,b2,b3] or b1 (or b2 b3) --> or (or b1 b2) b3.
+[b1,b2,b3] xor b1 (xor b2 b3) --> xor (xor b1 b2) b3.
 
 (; Distributivity ;)
-[ b1 : Bool, b2 : Bool, b3 : Bool ]
-    and b1 (or b2 b3) --> or (and b1 b2) (and b1 b3).
-[ b1 : Bool, b2 : Bool, b3 : Bool ]
-    and (or b1 b2) b3 --> or (and b1 b3) (and b2 b3).
+[b1,b2,b3] and b1 (or b2 b3) --> or (and b1 b2) (and b1 b3).
+[b1,b2,b3] and (or b1 b2) b3 --> or (and b1 b3) (and b2 b3).
 
-[ b1 : Bool, b2 : Bool ]
-    not (and b1 b2) --> or (not b1) (not b2).
-[ b1 : Bool, b2 : Bool ]
-    not (or b1 b2) --> and (not b1) (not b2).
-[ b1 : Bool, b2 : Bool ]
-    not (xor b1 b2) --> eqv (not b1) (not b2).
-[ b1 : Bool, b2 : Bool ]
-    not (eqv b1 b2) --> xor (not b1) (not b2).
-
-(; Indempotence ;)
-[ b : Bool ]
-    and b b --> b.
-[ b : Bool ]
-    or b b --> b.
-[ b : Bool ]
-    xor b b --> false.
-[ b : Bool ]
-    imp b b --> true.
-[ b : Bool ]
-    eqv b b --> true.
+[b1,b2] not (and b1 b2) --> or (not b1) (not b2).
+[b1,b2] not (or b1 b2) --> and (not b1) (not b2).
+[b1,b2] not (xor b1 b2) --> eqv (not b1) (not b2).
+[b1,b2] not (eqv b1 b2) --> xor (not b1) (not b2).

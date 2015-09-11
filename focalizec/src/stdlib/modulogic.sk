@@ -2,36 +2,36 @@
 
 (; Logic for Zenon Modulo ;)
 
-prop  : Type := dk_logic.Prop.
-proof : prop -> Type := dk_logic.eP.
-type  : Type := cc.uT.
-term  : type -> Type := cc.eT.
+def prop  : Type := dk_logic.Prop.
+def proof : prop -> Type := dk_logic.eP.
+def type  : Type := cc.uT.
+def term  : type -> Type := cc.eT.
 iota  : type.
 
 (; Symbols ;)
 
-True  : prop := dk_logic.True.
-False : prop := dk_logic.False.
+def True  : prop := dk_logic.True.
+def False : prop := dk_logic.False.
 
-not : prop -> prop := dk_logic.not.
-and : prop -> prop -> prop := dk_logic.and.
-or  : prop -> prop -> prop := dk_logic.or.
-imp : prop -> prop -> prop := dk_logic.imp.
-eqv : prop -> prop -> prop := dk_logic.eqv.
+def not : prop -> prop := dk_logic.not.
+def and : prop -> prop -> prop := dk_logic.and.
+def or  : prop -> prop -> prop := dk_logic.or.
+def imp : prop -> prop -> prop := dk_logic.imp.
+def eqv : prop -> prop -> prop := dk_logic.eqv.
 
-forall : a : type -> (term a -> prop) -> prop := dk_logic.forall.
-exists : a : type -> (term a -> prop) -> prop := dk_logic.exists.
+def forall : a : type -> (term a -> prop) -> prop := dk_logic.forall.
+def exists : a : type -> (term a -> prop) -> prop := dk_logic.exists.
 
-foralltype : (type -> prop) -> prop := dk_logic.forall_type.
-existstype : (type -> prop) -> prop := dk_logic.exists_type.
+def foralltype : (type -> prop) -> prop := dk_logic.forall_type.
+def existstype : (type -> prop) -> prop := dk_logic.exists_type.
 
-equal      : a : type -> term a -> term a -> prop := dk_logic.equal.
+def equal      : a : type -> term a -> term a -> prop := dk_logic.equal.
 
 (; Definition of Proofs of Symbols ;)
 
 (; The Sequent Type ;)
 
-seq : Type
+def seq : Type
     :=
       proof False.
 
@@ -112,21 +112,13 @@ xmid       : p : prop ->
 	       (q : prop)}
 : proof p -> proof (or p q)
 :=
-  H1 : proof p
-  => z : prop
-     => H2 : (proof p -> proof z)
-	=> H3 : (proof q -> proof z)
-	   => H2 H1.
+  dk_logic.or_intro1 p q.
 
 {lemme_notor_2 (p : prop)
 	       (q : prop)}
 : proof q -> proof (or p q)
 :=
-  H1 : proof q
-  => z : prop
-     => H2 : (proof p -> proof z)
-	=> H3 : (proof q -> proof z)
-	   => H3 H1.
+  dk_logic.or_intro2 p q.
 
 {lemme_notor_3 (p : prop)
 	       (q : prop)
@@ -176,11 +168,11 @@ xmid       : p : prop ->
 :=
   HP : proof p
   => H2 HP (HQ : proof q
-            => H3 (z : prop
-                   => H4 : (proof (imp p q) ->
-                            proof (imp q p) ->
-                            proof z)
-                      => H4 (__ : proof p => HQ) (__ : proof q => HP))).
+            => H3 (dk_logic.and_intro
+                    (imp p q)
+                    (imp q p)
+                    (__ : proof p => HQ)
+                    (__ : proof q => HP))).
 
 
 (; LLproof Deduction Rules ;)
@@ -284,7 +276,7 @@ seq
 :=
   H1 : (proof p -> proof q -> proof False)
   => H2 : proof (and p q)
-     => H2 False H1.
+     => H1 (dk_logic.and_elim1 p q H2) (dk_logic.and_elim2 p q H2).
 
 (; Ror ;)
 
@@ -299,7 +291,7 @@ seq
   H1 : (proof p -> proof False)
   => H2 : (proof q -> proof False)
      => H3 : proof (or p q)
-	=> H3 False H1 H2.
+	=> dk_logic.or_elim p q False H3 H1 H2.
 
 (; Rimply ;)
 
@@ -329,10 +321,14 @@ seq
   H1 : (proof (not p) -> proof (not q) -> proof False)
   => H2 : (proof p -> proof q -> proof False)
      => H3 : proof (eqv p q)
-	=> H3 False
-             (H4 : (proof p -> proof q)
-	      => H5 : (proof q -> proof p)
-		 => lemme_equiv_4 p q H5 H2 H4 H1 (lemme_equiv_2 p q H5 H2)).
+	=> lemme_equiv_4 p q
+                         (dk_logic.and_elim2 (imp p q) (imp q p) H3)
+                         H2
+                           (dk_logic.and_elim1 (imp p q) (imp q p) H3)
+                           H1
+                             (lemme_equiv_2 p q
+                                            (dk_logic.and_elim2 (imp p q) (imp q p) H3)
+                                            H2).
 
 (; Rnotand ;)
 
@@ -349,9 +345,7 @@ seq
      => H3 : proof (not (and p q))
 	=> H1 (H5 : proof p =>
                H2 (H6 : proof q =>
-                   H3 (z : prop =>
-                       (H4 : (proof p -> proof q -> proof z) =>
-                        H4 H5 H6)))).
+                   H3 (dk_logic.and_intro p q H5 H6))).
 
 (; Rnotor ;)
 
@@ -393,10 +387,9 @@ seq
   => H2 : (proof p -> proof (not (not q)))
      => H3 : proof (not (eqv p q))
         => (HNP : proof (not p)
-            => H3 (z : prop
-                   => H4 : (proof (imp p q) -> proof (imp q p) -> proof z)
-                      => H4 (HP : proof p => HNP HP q)
-                            (HQ : proof q => H1 HNP HQ p)))
+            => H3 (dk_logic.and_intro (imp p q) (imp q p)
+                                               (HP : proof p => HNP HP q)
+                                               (HQ : proof q => H1 HNP HQ p)))
            (lemme_notequiv_1 p q H2 H3).
 
 (; Rex ;)

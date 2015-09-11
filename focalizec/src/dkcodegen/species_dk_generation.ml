@@ -826,7 +826,7 @@ let generate_defined_non_recursive_method ctx print_ctx env min_dk_env
     Format.eprintf "Generating Dedukti code for field '%a'.@."
       Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Start the Dedukti function definition. *)
-  Format.fprintf out_fmter "@[<2>%a__%a"
+  Format.fprintf out_fmter "@[<2>def %a__%a"
     Sourcify.pp_vname (snd ctx.Context.scc_current_species)
     Parsetree_utils.pp_vname_with_operators_expanded name ;
   (* Generate the prelude of the method, i.e the sequence of parameters induced
@@ -2288,7 +2288,7 @@ let generate_defined_theorem ctx print_ctx env min_dk_env ~self_manifest
     Sourcify.pp_qualified_species from.Env.fh_initial_apparition;
   (* Now, generate the real theorem, using the temporarily created and applying
      the proof. *)
-  Format.fprintf out_fmter "@[<2>%a__%a@ "
+  Format.fprintf out_fmter "@[<2>def %a__%a@ "
     Sourcify.pp_vname (snd ctx.Context.scc_current_species)
     Parsetree_utils.pp_vname_with_operators_expanded name;
   (* Generate the prelude of the method, i.e the sequence of parameters and
@@ -2449,7 +2449,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
 
        (* Declare both symbols *)
        Format.fprintf out_fmter
-         "@[<2>%a__rec_%a@ : "
+         "@[<2>def %a__rec_%a@ : "
          Parsetree_utils.pp_vname_with_operators_expanded species_name
          Parsetree_utils.pp_vname_with_operators_expanded name;
 
@@ -2470,7 +2470,7 @@ let generate_defined_recursive_let_definition_With_Function ctx print_ctx env
          (Dk_pprint.pp_type_simple_to_dk new_print_ctx) return_ty ;
 
        Format.fprintf out_fmter
-         "@[<2>%a__%a@ : "
+         "@[<2>def %a__%a@ : "
          Parsetree_utils.pp_vname_with_operators_expanded species_name
          Parsetree_utils.pp_vname_with_operators_expanded name;
 
@@ -3311,7 +3311,7 @@ let generate_collection_generator ctx print_ctx env compiled_species_fields
     Sourcify.pp_vname current_species_name;
   (* The generic name of the collection generator: the species' name +
      "_collection_create". *)
-  Format.fprintf out_fmter "@[<2>%a__collection_create"
+  Format.fprintf out_fmter "@[<2>def %a__collection_create"
       Sourcify.pp_vname current_species_name;
   (* The collection generator first arguments are those corresponding to the
      IS species parameters carriers, hence to the record type parameters.
@@ -3867,7 +3867,7 @@ let generate_rep_definition ctx fields =
               Format.fprintf ctx.Context.scc_out_fmter
                 "(; Carrier's structure explicitly given by \"rep\". ;)@\n" ;
               Format.fprintf ctx.Context.scc_out_fmter
-                "@[<2>%a__me_as_carrier@ "
+                "@[<2>def %a__me_as_carrier@ "
                 Sourcify.pp_vname (snd ctx.Context.scc_current_species);
               (* Print the variables names... *)
               List.iter
@@ -3963,7 +3963,7 @@ let make_collection_effective_methods ctx env implemented_species_name
       | Env.TypeInformation.SF_theorem (_, n, _, _, _, _)
       | Env.TypeInformation.SF_let (_, n, _, _, _, _, _, _) ->
           Format.fprintf out_fmter
-            "@[<2>%a__%a :=@ @[<1>(proj_"
+            "@[<2>def %a__%a :=@ @[<1>(proj_"
             Sourcify.pp_vname species_name
             Parsetree_utils.pp_vname_with_operators_expanded n ;
           print_implemented_species_as_dk_module
@@ -3984,7 +3984,7 @@ let make_collection_effective_methods ctx env implemented_species_name
           List.iter
             (fun (_, n, _, _, _, _, _, _) ->
               Format.fprintf out_fmter
-                "@[<2>%a__%a :=@ @[<1>(proj_"
+                "@[<2>def %a__%a :=@ @[<1>(proj_"
                 Sourcify.pp_vname species_name
                 Parsetree_utils.pp_vname_with_operators_expanded n;
               print_implemented_species_as_dk_module
@@ -4171,7 +4171,7 @@ let collection_compile env ~current_unit out_fmter collection_def
      collection generator of the collection we implement and apply it to the
      functions it needs coming from the collection applied to its parameters
      if there are some. *)
-  Format.fprintf out_fmter "@[<2>%a__effective_collection :=@ "
+  Format.fprintf out_fmter "@[<2>def %a__effective_collection :=@ "
     Sourcify.pp_vname collection_name;
   (* Now, get the collection generator from the closed species we implement. *)
   let implemented_species_name =

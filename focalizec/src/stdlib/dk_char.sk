@@ -1,17 +1,17 @@
 #NAME dk_char.
 (; 7bits (ascii) characters ;)
 
-Char := cc.eT char.
+Char : Type.
+[] cc.eT char --> Char.
 
-call_by_value_char : R : cc.uT -> (Char -> cc.eT R) -> Char -> cc.eT R.
-[ R : cc.uT, f : Char -> cc.eT R, n : cc.eT nat ]
-    call_by_value_char R f (char_of_nat n) --> f (char_of_nat n).
+def call_by_value_char : R : cc.uT -> (Char -> cc.eT R) -> Char -> cc.eT R.
+[f,n] call_by_value_char _ f (char_of_nat n) --> f (char_of_nat n).
 
-to_nat : Char -> cc.eT nat.
+def to_nat : Char -> cc.eT nat.
 [ n : cc.eT nat ] to_nat (char_of_nat n) --> n.
 
-equal (c1 : Char) (c2 : Char) : cc.eT dk_bool.bool
+def equal (c1 : Char) (c2 : Char) : cc.eT dk_bool.bool
 := dk_nat.eq (to_nat c1) (to_nat c2).
 
-lt (c1 : Char) (c2 : Char) : cc.eT dk_bool.bool
+def lt (c1 : Char) (c2 : Char) : cc.eT dk_bool.bool
 := dk_nat.lt (to_nat c1) (to_nat c2).

@@ -29,7 +29,7 @@ type int =
   external
   | caml -> {* int *}
   | coq -> {* Z *}
-  | dedukti -> {* dk_int.int. call_by_value_int__t := dk_int.call_by_value_int *}
+  | dedukti -> {* dk_int.int. def call_by_value_int__t := dk_int.call_by_value_int *}
 ;;
 
 type unit =
@@ -38,7 +38,7 @@ type unit =
   external
   | caml -> {* unit *}
   | coq -> {* coq_builtins.bi__unit *}  (* FoCaLize's Coq definition of builtin. *)
-  | dedukti -> {* dk_builtins.unit. call_by_value_unit__t := dk_builtins.call_by_value_unit *}
+  | dedukti -> {* dk_builtins.unit. def call_by_value_unit__t := dk_builtins.call_by_value_unit *}
 
   with () =
   | caml -> {* () *}
@@ -59,7 +59,7 @@ type char =
   external
   | caml -> {* char *}
   | coq -> {* ascii *}
-  | dedukti -> {* char. call_by_value_char__t := dk_char.call_by_value_char *}
+  | dedukti -> {* char. def call_by_value_char__t := dk_char.call_by_value_char *}
 ;;
 
 type string =
@@ -67,7 +67,7 @@ type string =
   external
   | caml -> {* string *}
   | coq -> {* string *}  (* From the Ascii module. *)
-  | dedukti -> {* string. call_by_value_string__t := dk_string.call_by_value_string *}
+  | dedukti -> {* string. def call_by_value_string__t := dk_string.call_by_value_string *}
 ;;
 
 type bool =
@@ -84,11 +84,11 @@ type bool =
               Definition bool__t_rec := bool_rec
            *}  (* Builtin of Coq *)
   | dedukti -> {* dk_bool.bool.
-                  true := dk_bool.true.
-                  false := dk_bool.false.
-                  match__true := dk_bool.match__true.
-                  match__false := dk_bool.match__false.
-                  call_by_value_bool__t := dk_bool.call_by_value_bool *}
+                  def true := dk_bool.true.
+                  def false := dk_bool.false.
+                  def match__true := dk_bool.match__true.
+                  def match__false := dk_bool.match__false.
+                  def call_by_value_bool__t := dk_bool.call_by_value_bool *}
 
   with True =
   | caml -> {* true *}
@@ -119,9 +119,9 @@ type list ('a) =
               Definition list__t_rect := list_rect.
               Definition list__t_rec := list_rec *}
   | dedukti -> {* list __var_a.
-                  match__nil := dk_list.match__nil.
-                  match__cons := dk_list.match__cons.
-                  call_by_value_list__t := dk_list.call_by_value_list *}
+                  def match__nil := dk_list.match__nil.
+                  def match__cons := dk_list.match__cons.
+                  def call_by_value_list__t := dk_list.call_by_value_list *}
 
   with [] =
   | caml -> {* [] *}

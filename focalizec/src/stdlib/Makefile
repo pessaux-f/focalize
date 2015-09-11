@@ -72,6 +72,7 @@ EXTERNAL_DKOS=\
  dk_fail.dko\
  dk_opt.dko\
  dk_tuple.dko\
+ dk_sum.dko\
  dk_logic.dko\
  dk_list.dko\
  dk_nat.dko\
@@ -184,6 +185,6 @@ clean:
 depend:
 	$(CAMLDEP) *.mli *.ml > ./.depend
 	$(FOCALIZEDEP) *.fcl >> ./.depend
-	$(SKDEP) *.sk >> ./.depend
+	$(SKDEP) -v *.sk >> ./.depend
 
 include .depend
