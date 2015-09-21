@@ -16,6 +16,7 @@
 - Don't require Zenon source code to be present in a zenon subfolder
 - Fixed bug in the parser causing collision between documentation comments
   and delimited identifiers.
+- New Dedukti back-end as logical target language (in development).
 
 # Focalize 0.9.0
 ################
