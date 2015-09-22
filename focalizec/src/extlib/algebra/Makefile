@@ -172,9 +172,6 @@ install:
 	if [ "$(FOCALIZE_VOS)" != "" ] ; then\
 	  $(CP) $(FOCALIZE_VOS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
-	if [ "$(FOCALIZE_DKOS)" != "" ] ; then\
-	  $(CP) $(FOCALIZE_DKOS) $(INSTALL_LIB_DIR)/;\
-	fi &&\
 	if [ "$(EXTERNAL_CMIS)" != "" ] ; then\
 	  $(CP) $(EXTERNAL_CMIS) $(INSTALL_LIB_DIR)/;\
 	fi &&\
@@ -186,9 +183,6 @@ install:
 	fi &&\
 	if [ "$(EXTERNAL_VOS)" != "" ] ; then\
 	  $(CP) $(EXTERNAL_VOS) $(INSTALL_LIB_DIR)/;\
-	fi
-	if [ "$(EXTERNAL_DKOS)" != "" ] ; then\
-	  $(CP) $(EXTERNAL_DKOS) $(INSTALL_LIB_DIR)/;\
 	fi
 
 clean:
