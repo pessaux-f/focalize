@@ -2824,8 +2824,13 @@ let generate_measure_term_proof_for_Function
       Species_record_type_coq_generation.generate_expr
         ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
-        ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
+        ~recursive_methods_status:
+          Species_record_type_coq_generation.RMS_regular
         ctx env meas_expr ;
+      (* Print a space in case the function has only 1 argument, hence is not
+         a tuple, hence is not between parens. Otherwise, all is glued together
+         and may raise an "unbound identifier". *)
+      Format.fprintf out_fmter "@ " ;
       let fun_arity = List.length fun_params_n_tys in
       print_order_args_as_tuple
         out_fmter ~fun_arity "__c" [used_param_index] ;
@@ -2833,8 +2838,11 @@ let generate_measure_term_proof_for_Function
       Species_record_type_coq_generation.generate_expr
         ~local_idents: [] ~in_recursive_let_section_of: []
         ~self_methods_status: Species_record_type_coq_generation.SMS_abstracted
-        ~recursive_methods_status: Species_record_type_coq_generation.RMS_regular
-        ctx env meas_expr ;
+        ~recursive_methods_status:
+          Species_record_type_coq_generation.RMS_regular
+       ctx env meas_expr ;
+      (* Again a space as just above, for the same reason. *)
+      Format.fprintf out_fmter "@ " ;
       print_order_args_as_tuple
         out_fmter ~fun_arity "__d" [used_param_index] ;
       Format.fprintf out_fmter ")@]))@].@\n" ;
