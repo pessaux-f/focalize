@@ -2801,13 +2801,12 @@ let generate_measure_term_proof_for_Function
       Format.fprintf out_fmter
         ").@\n\
          intro __user_dec1.@\nintro __user_rem_dec_n_wf.@\n\
-         (* Separate decreasing obligations and well-foundation. *)@\n\
-         split.@\n" ;
+         (* Separate decreasing obligations and well-foundation. *)@\n" ;
       let nb_rec_calls = List.length recursive_calls in
       (* Repeat nb rec call times... *)
       for _i = 1 to nb_rec_calls do
         Format.fprintf out_fmter
-          "intros.@ apply coq_builtins.andb_intro;@ eauto.@\n"
+          "split.@ intros.@ apply coq_builtins.andb_intro;@ eauto.@\n"
       done ;
       (* Some verbatim Coq. *)
       Format.fprintf out_fmter
