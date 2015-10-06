@@ -1687,7 +1687,9 @@ and scope_termination_proof ctx env params_env tp =
            (Termination_only_on_fun_arg
               (tp.Parsetree.ast_loc, arg_name))
    | Parsetree.TP_lexicographic (orders_exprs, args, proof) ->
-       let scoped_orders_exprs = List.map (scope_expr ctx env) orders_exprs in
+       let env_for_orders_exprs = Env.ScopingEnv.append params_env env in
+       let scoped_orders_exprs =
+         List.map (scope_expr ctx env_for_orders_exprs) orders_exprs in
        let scoped_args =
          List.map
            (fun (arg_name, arg_type) ->
@@ -1710,7 +1712,8 @@ and scope_termination_proof ctx env params_env tp =
            Parsetree.TP_lexicographic
              (scoped_orders_exprs, scoped_args, scoped_proof) }
    | Parsetree.TP_measure (expr, (arg_name, arg_type), proof) ->
-       let scoped_expr = scope_expr ctx env expr in
+       let env_for_meas_exprs = Env.ScopingEnv.append params_env env in
+       let scoped_expr = scope_expr ctx env_for_meas_exprs expr in
        let scoped_arg = (
          if not
              (can_be_scoped_as_local_p
@@ -1729,7 +1732,8 @@ and scope_termination_proof ctx env params_env tp =
          Parsetree.ast_desc =
            Parsetree.TP_measure (scoped_expr, scoped_arg, scoped_proof) }
    | Parsetree.TP_order (expr, (arg_name, arg_type), proof) ->
-       let scoped_expr = scope_expr ctx env expr in
+       let env_for_order_expr = Env.ScopingEnv.append params_env env in
+       let scoped_expr = scope_expr ctx env_for_order_expr expr in
        let scoped_args = (
          if not
              (can_be_scoped_as_local_p

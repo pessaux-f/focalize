@@ -356,7 +356,7 @@ module DkGenInformation :
     type type_info = TypeInformation.type_description
   end
 
-  
+
 module ScopingEnv :
   sig
     type t
@@ -395,6 +395,8 @@ module ScopingEnv :
     val find_species :
         loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
       t -> ScopeInformation.species_binding_info
+
+    val append : t -> t -> t
   end
 
 type 'a binding_origin =
@@ -458,6 +460,7 @@ module TypingEnv :
         loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
           t -> TypeInformation.species_description
 
+    val append : t -> t -> t
   end
 
 (* For focaltest : *)
@@ -492,6 +495,8 @@ module MlGenEnv :
     val find_species :
       loc: Location.t -> current_unit: Types.fname -> Parsetree.ident ->
         t -> MlGenInformation.species_binding_info
+
+    val append : t -> t -> t
   end
 
 module CoqGenEnv :
@@ -535,6 +540,8 @@ module CoqGenEnv :
     val find_type :
       loc: Location.t -> current_unit: Types.fname ->
       Parsetree.ident -> t -> CoqGenInformation.type_info
+
+    val append : t -> t -> t
   end
 
 
@@ -578,7 +585,9 @@ module DkGenEnv :
         DkGenInformation.type_info -> t -> t
     val find_type :
       loc: Location.t -> current_unit: Types.fname ->
-      Parsetree.ident -> t -> DkGenInformation.type_info
+        Parsetree.ident -> t -> DkGenInformation.type_info
+
+    val append : t -> t -> t
   end
 
 exception No_available_OCaml_code_generation_envt of Types.fname

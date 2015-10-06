@@ -2408,6 +2408,14 @@ module Make(EMAccess : EnvModuleAccessSig) = struct
         | _ ->  raise (Unbound_type (vname, loc)));
         (* If we found a species with this name, issue the better message. *)
         raise (Unbound_collection (vname, loc))
+
+
+  let append (env1 : t) (env2 : t) =
+    { constructors = env1.constructors @ env2.constructors ;
+      labels = env1.labels @ env2.labels ;
+      types = env1.types @ env2.types ;
+      values = env1.values @ env2.values ;
+      species = env1.species @ env2.species }
 end
 ;;
 
