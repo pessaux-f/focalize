@@ -731,7 +731,17 @@ let generalize =
   (* Let's do the job now. *)
   (fun ty ->
     find_parameters ty ;
-    let scheme = { ts_vars = !found_ty_parameters ; ts_body = ty } in
+    (* Attention to reverse the list of the variables found otherwise they
+       will be in the wrong order compared to the (_ : Set)'s generated for
+       Coq. This was a long lasting bug that has never been found !
+       In effect, in a type scheme all 'a, 'b, 'c, 'a -> 'b -> 'c
+       correscponding to a function fun x y z -> ... we find the variables
+       in the order 'a, then 'b, then 'c. Since we add them in head of the
+       accumulation list, they are in reverse order. Hence, when binding
+       variable to their type (using bind_parameters_to_types_from_type_scheme
+       from MiscHelpers), not reversing this list would bind the variables to
+       their type variable in reverse order. *)
+    let scheme = { ts_vars = List.rev !found_ty_parameters ; ts_body = ty } in
     (* Clean up found parameters for further usages. *)
     found_ty_parameters := [] ;
     scheme)
