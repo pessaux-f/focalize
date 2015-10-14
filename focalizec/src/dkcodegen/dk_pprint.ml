@@ -1,3 +1,17 @@
+(* ************************************************************************** *)
+(*                                                                            *)
+(*                        FoCaLiZe compiler                                   *)
+(*                                                                            *)
+(*            Raphaël Cauderlier                                              *)
+(*                                                                            *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
+(*                                                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
+(*  Distributed only by permission.                                           *)
+(*                                                                            *)
+(* ************************************************************************** *)
+
 type dk_print_context = {
   dpc_current_unit : Types.fname ;
   dpc_current_species : Types.type_collection option ;

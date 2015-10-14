@@ -2,19 +2,16 @@
 (*                                                                            *)
 (*                        FoCaLiZe compiler                                   *)
 (*                                                                            *)
-(*            François Pessaux                                                *)
-(*            Pierre Weis                                                     *)
-(*            Damien Doligez                                                  *)
+(*            Raphaël Cauderlier                                              *)
 (*                                                                            *)
-(*                               LIP6  --  INRIA Rocquencourt                 *)
+(*               LIP6  --  INRIA Rocquencourt -- ENSTA ParisTech              *)
 (*                                                                            *)
-(*  Copyright 2007 - 2012 LIP6 and INRIA                                      *)
-(*            2012 ENSTA ParisTech                                            *)
+(*  Copyright 2007 - ... LIP6 and INRIA                                       *)
+(*            2012 - ... ENSTA ParisTech                                      *)
 (*  Distributed only by permission.                                           *)
 (*                                                                            *)
 (* ************************************************************************** *)
 
-(* $Id: rec_let_gen.ml,v 1.27 2012-10-30 11:55:07 pessaux Exp $ *)
 
 (* ************************************************************************** *)
 (** {b Descr} This mmodule contains utilities for recursive functions code
