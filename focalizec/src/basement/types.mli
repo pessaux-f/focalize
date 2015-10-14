@@ -14,7 +14,6 @@
 (*                                                                     *)
 (***********************************************************************)
 
-(* $Id: types.mli,v 1.57 2012-10-26 14:55:19 pessaux Exp $ *)
 
 (** Types of various identifiers in the abstract syntax tree. *)
 type fname = string

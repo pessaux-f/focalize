@@ -81,13 +81,12 @@ let compile_fcl input_file_name =
       input_file_name scoped_ast stuff_to_compile;
   (* Now go to the OCaml code generation if requested. *)
   let mlgen_toplevel_env =
-    if Configuration.get_generate_ocaml () then
-      (begin
+    if Configuration.get_generate_ocaml () then (
       let out_file_name = (Filename.chop_extension input_file_name) ^ ".ml" in
       Some
         (Main_ml_generation.root_compile
            ~current_unit ~out_file_name stuff_to_compile)
-      end)
+     )
     else None in
   (* Go to the Coq code generation if requested and generate the
      .zv file . *)
@@ -103,7 +102,8 @@ let compile_fcl input_file_name =
      .sk file . *)
   let dkgen_toplevel_env =
     if Configuration.get_generate_dk () then (
-      let out_file_name = (Filename.chop_extension input_file_name) ^ ".sk.zv" in
+      let out_file_name =
+        (Filename.chop_extension input_file_name) ^ ".sk.zv" in
       Some
         (Main_dk_generation.root_compile
            ~current_unit ~out_file_name stuff_to_compile)
