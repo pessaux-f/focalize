@@ -490,7 +490,7 @@ Let bi__int_plus (x : Z) (y : Z) := x + y.
 Let bi__int_opposite (x : Z) := - x.
 
 (* The multiplication function on Z * Z . *)
-Let bi__int_mult (x : Z) (y : Z) := x + y.
+Let bi__int_mult (x : Z) (y : Z) := x * y.
 
 (* The division function on Z * Z . *)
 Let bi__int_div (x : Z) (y : Z) := x / y.
