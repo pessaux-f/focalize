@@ -246,7 +246,8 @@ let rec div (a, b) = ...
 \end{lstlisting}
 }
 
-Then invoke the {\focalizec} compiler with the option {\tt -show-term-obls}.
+Then invoke the {\focalizec} compiler with the option {\tt -show-term-obls}
+(or shorter {\tt -sto}).
 During the compilation, the obligations get printed on the standard output
 like:
 
@@ -269,7 +270,8 @@ To summarize, a recursive function whose termination relies on a well-founded
 relation is given by the four following points:
 
 \begin{compact-enumerate}
-\item the relation,
+\item the relation (which can be an arbitrary expression, not only an
+      identifier),
 \item the theorem stating that this relation is well-founded,
 \item a theorem for each recursive call, stating that the arguments
   of the recursive calls are smaller than the initial arguments
@@ -293,7 +295,7 @@ relation is given by the four following points:
 
 \subsection{Termination by a measure}
 {\bf Note}: some explanations of this section come from
-\cite{Dubois-Pessaux-termproofs}.
+\cite{Dubois-Pessaux-termproofs-TFP2015}.
 
 We consider here the particular case when the termination relies on a
 \emph{measure} -- a  function that returns a natural number --
@@ -405,7 +407,10 @@ whose termination relies on a measure is given by the four following
 points:
 \begin{compact-enumerate}
 \item The measure function returning a regular integer (which
-  raises the issue that $<$ is well-founded on naturals, not integers).
+  raises the issue that $<$ is well-founded on naturals, not integers). The
+  measure can be an arbitrary expression, not only an identifier
+  (c.f. Section \ref{measure-arbitrary-expr} for a more detailled
+        discussion).
 \item The theorem stating that the measure is always positive or null.
 \item A theorem for each recursive call, stating that the measure on the
   argument of interest decreases.
@@ -422,3 +427,49 @@ points:
   \end{lstlisting}
   }
 \end{compact-enumerate}
+
+
+
+\subsubsection{Using Other Function Parameters or Arbitrary Expression}
+\label{measure-arbitrary-expr}
+As previously stated, although the user usually states his relation or his
+measure by giving the name of the corresponding function, any arbitrary
+expression can be used. In the case of a measure, this makes possible
+to also use some other parameters of the function than the decreasing one.
+
+In the (non-meaningful and dummy) following example, the function
+{\tt mem} (whose termination could be proved in a simpler way since it
+is structural) has twos parameters and the non-decreasing one, {\tt x}, is
+also used in the measure expression.
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+let dummy (x : int) = 0 ;;
+let rec mem (l, x: int) =
+  match l with
+  | [] -> false
+  | h :: q ->  h = x || (mem (q, x))
+termination proof = measure (function ll -> dummy (x) + length (ll)) on l
+...
+\end{lstlisting}
+}
+
+This obviously impacts the proof obligations since {\tt x} must be
+bound in their statements, leading to an additional
+\lstinline"all x : int" to bind {\tt x}. The compiler takes care of
+this point while printing the obligations to the user.
+
+\noindent
+{\scriptsize
+\begin{lstlisting}
+  (* Obligation 1: strict decreasing at each recursive call. *)
+  <1>1 prove all l : list(int) , all x : int, all q : list(int), all h : int,
+         l = h :: q -> dummy (x) + length (q) < dummy (x) + length (l)
+       ...
+  (* Obligation 2: measure always >= 0. *)
+  <1>2 prove all x : int, all l: list (int), 0 <= dummy (x) + length (l)
+       ...
+  <42>e qed coq proof {*wf_qed*} ;;
+\end{lstlisting}
+}
